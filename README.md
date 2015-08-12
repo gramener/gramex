@@ -86,7 +86,8 @@ Components
 Others
 --------------------------------------------------------------------------------
 
-- Provide sample datasets
+- Sample datasets
+- App store for apps and data
 
 Contributing
 --------------------------------------------------------------------------------
