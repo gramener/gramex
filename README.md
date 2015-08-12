@@ -1,8 +1,14 @@
 Gramex 1.0
 ================================================================================
 
-A new version of Gramex that is async and applies the Grammar of Graphics.
+Gramex 1.0 is a backward-incompatible re-boot of the visualisation platform.
+This is the work-in-progress design for Gramex 1.0. It is based on our learnings
+and needs.
 
+Gramex 1.0 is more modular. Many of its parts can be used independently. It can
+use third party modules easily.
+
+It has 3 parts: the server, services, and components.
 
 Server
 --------------------------------------------------------------------------------
