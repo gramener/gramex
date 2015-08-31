@@ -51,27 +51,26 @@ Gramex has:
 Server
 --------------------------------------------------------------------------------
 
-The server is the core I/O engine. It translates requests into responses and
-provides a set of services.
+The server is the core engine of Gramex. It offers a set of services such as URL
+mapping, logging, caching, etc that applications can use.
 
-The server is asynchronous. It executes on an event loop. Handlers can use
-asynchronous functionality (e.g. deferred execution).
+The server is configured by YAML file. The server has a default `gramex.yaml`.
+Gramex runs in a home directory, which can have a `gramex.yaml` that overrides
+it. The YAML file configures each service independently:
 
-The server is configured by a default `gramex.yaml`. Gramex runs in a home
-directory, which can have a `gramex.yaml` that overrides it. It has the
-following structure:
+    - conf:         # Configuration files
+    - app:          # Main app configuration section
+    - url:          # URL mapping section
+    - log:          # Logging configuration
+    - cache:        # Caching configuration
+    - ...           # etc. -- one section per service
 
-    - app:
-        app-keys: app-values
-    - urls:
-        url-mapper Configuration parameters
-    - service 1:
-        service 1 configuration parameters
-    - service 2:
-        service 2 configuration parameters
-    - ...
+The server provides an admin view that allows admins to see (and perhaps
+modify?) the configurations.
 
-The server runs a separate thread(s) that do the following:
+The server is asynchronous. It executes on an event loop that applications can
+use (for deferred execution, for example). The server also runs a separate
+thread that can:
 
 - Interrupt long requests, even without the consent of the app. (For example, if
   the connection closes, just stop the function.)
@@ -81,38 +80,63 @@ The server runs a separate thread(s) that do the following:
 
 - Will we allow new event loops on threads for handlers?
 
-The server provides an admin view that allows admins to see (and perhaps
-modify?) the configuration.
+### Conf
 
+`gramex.yaml` file may have a `conf:` section that lists additional YAML
+configurations.
 
-### URL Mapping
+    conf:                         # Load additional configurations
+      - app:                      # ... into the app: section from:
+        - */gramex.yaml           #   All gramex.yaml under 1st-level dir
+      - url:                      # ... into the url: section from:
+        - */gramex.url.yaml       #   All gramex.url.yaml under 1st-level dir
+        - d:/app/gramex.url.yaml  #   A specific gramex.url.yaml file
+      - log:                      # ... into the log: section from:
+        - ...                     #   etc
 
-The `urls` configuration maps a URL pattern to a handler. For example:
+This is not recursive. If the `conf:` section has a `conf:` sub-section, it is
+ignored.
 
-      - url: /secc/.*                       # All URLs beginning with /secc/
-        handler: TemplateHandler            # Handles templates
-        name: SECC                          # An unique name for this handler
-        path: d:/secc/                      # Path option passed to handler
-      - url: /data
-        handler: DataAPIHandler
-      - url: /auth
-        handler: SAMLHandler
-      - url: /oauth
-        handler: OAuthHandler
-      - url: /log
-        handler: GoogleAnalyticsLikeHandler
-      - url: /websocket
-        handler: WebSocketHandler
+### App
 
-The `app` configuration allows more URL specs as YAML files. For example:
+The `app:` section defines the settings for the [Tornado app](app-settings).
+
+[app-settings](http://tornado.readthedocs.org/en/stable/web.html#tornado.web.Application.settings)
 
     app:
-      - urls: */gramex.conf.yaml              # Any gramex.conf.yaml under this
-                                              # folder's first-level sub-folder
-      - urls: d:/novartis/gramex.conf.yaml    # A specific gramex.conf.yaml file
+      - listen: 8888              # Port to bind to
+      - others:                   # Structure of these parameters?
+      - settings:                 # Tornado app settings
+        - autoreload: True
+        - debug: True
+        - etc.
 
-These files are monitored and loaded under the `urls` section in the order
-specified.
+Only settings that can be specified in YAML are allowed, not settings that
+require Python.
+
+### URL
+
+The `url:` configuration maps URL patterns to handlers (via [URLSpec](urlspec)).
+For example:
+
+    - url:                                  # Main URL mapping section
+      - pattern: /secc/.*                   # All URLs beginning with /secc/
+        handler: TemplateHandler            # Handles templates
+        name: SECC                          # An unique name for this handler
+        kwargs:                             # Options passed to handler
+          - path: d:/secc/
+      - pattern: /data
+        handler: DataAPIHandler
+      - pattern: /auth
+        handler: SAMLHandler
+      - pattern: /oauth
+        handler: OAuthHandler
+      - pattern: /log
+        handler: GoogleAnalyticsLikeHandler
+      - pattern: /websocket
+        handler: WebSocketHandler
+
+[urlspec]: http://tornado.readthedocs.org/en/stable/web.html#tornado.web.URLSpec
 
 ### Services
 
