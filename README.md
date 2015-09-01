@@ -91,8 +91,10 @@ thread that can:
 - Deferred logging
 - etc.
 
-- Will we allow new event loops on threads for handlers?
+However, all request handlers will run on a single thread, since Tornado
+[RequestHandler is not thread-safe](thread-safety).
 
+[thread-safety]: http://tornado.readthedocs.org/en/latest/web.html#thread-safety-notes
 
 ### Conf
 
