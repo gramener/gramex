@@ -116,9 +116,6 @@ path relative to the imported `.yaml` folder, use:
 
     path: !!python/name:Path.relative "folder/index.html"
 
-Gramex will reload `gramex.yaml` and the above configs periodically. (How often?
-Is this configurable?)
-
 ### App
 
 The `app:` section defines the settings for the [Tornado app](app-settings).
@@ -211,13 +208,23 @@ The `schedule:` section defines when specific code is to run.
             - weekdays: *
             - years: *
             - startup: true                 # In addition, run on startup
-          handler:
+          function:
           kwargs:
         - times:
-          handler:
+          function: !!python/name:module.function
           kwargs:
 
 Use [parse-crontab](https://github.com/josiahcarlson/parse-crontab) to parse.
+
+All default services provided by Gramex are part of the scheduler. For example,
+`gramex.yaml` configurations are reloaded every 5 minutes.
+
+    schedule:
+        - times:
+          - name: Reload Gramex config periodically
+          - minutes: */5
+          - function: !!python/name: gramex.reload_config
+
 
 ### Services
 
