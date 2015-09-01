@@ -340,17 +340,10 @@ Thoughts
 - How will we incorporate dynamic interactive controls?
 - How will we incorporate autolysis?
 - Voice / video rendering
-
-Thoughts on interactivity
---------------------------------------------------------------------------------
-
-There are 3 things:
-
-1. Events / components (brushing, clicking, sliding, etc)
-2. Actions (filter, zoom-in, etc)
-3. Combinations (click-to-filter, etc)
-
-We don't have a catalogue of any of these
+- Interactivity involves 3 things (We don't have a catalogue of any of these):
+    1. Events / components (brushing, clicking, sliding, etc)
+    2. Actions (filter, zoom-in, etc)
+    3. Combinations (click-to-filter, etc)
 
 Discussion notes
 --------------------------------------------------------------------------------
