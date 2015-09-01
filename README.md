@@ -176,24 +176,27 @@ is triggered.
     error:
         page-not-found:
             code: 404
-            handler: SimpleHTMLPageHandler
+            function: SimpleErrorPage
             kwargs:
               h1: Page not found
               body: This is not the page you are looking for
         old-version-of-page:
             code: 404
-            handler: SimpleHTMLPageHandler
+            function: SimpleErrorPage
             kwargs:
               h1: Page not found
               body: This is an old version. Go to page xxx
         custom-error:
             code: 500
-            handler: TemplateHandler
+            function: ErrorTemplateHandler
             path: 500.html
 
-Is this possible? An error handler is just a Tornado handler whose `.get()`
-method will be called in place of the original request, with any additional
-parameters from the exception passed to it.
+The `function:` is called from [RequestHandler write_error()][write-error] as
+`function(handler, status_code, **kwargs)`. In addition the provided `kwargs`,
+an `exc_info` triple will be available as `kwargs['exc_info']`.
+
+[write-error]: http://tornado.readthedocs.org/en/latest/web.html#tornado.web.RequestHandler.write_error
+
 
 ### Schedule
 
