@@ -51,12 +51,25 @@ Gramex has:
 Server
 --------------------------------------------------------------------------------
 
-The server is the core engine of Gramex. It offers a set of services such as URL
-mapping, logging, caching, etc that applications can use.
+The server is the core engine of Gramex. It offers services such as URL mapping,
+logging, caching, etc that applications use.
 
-The server is configured by YAML file. The server has a default `gramex.yaml`.
-Gramex runs in a home directory, which can have a `gramex.yaml` that overrides
-it. The YAML file configures each service independently:
+The server is configured by layered config files. The server has a default
+`gramex.yaml`. Gramex runs in a home directory, which can have a `gramex.yaml`,
+and can define other config files that further over-ride it.
+
+Configuration is stored in an ordered dictionary `gramex.config`:
+
+    {
+      "D:/gramex/gramex.conf.yaml": { ... },
+      "D:/app/gramex.conf.yaml": { ... },
+      "D:/app/demo1/gramex.conf.yaml": { ... }
+    }
+
+Apps can update these, or add a new key to `gramex.config`. Run
+`gramex.reconfigure()` to update all configurations (except `app:` and `conf:`).
+
+Each service has a corresponding configration section:
 
     - conf:         # Configuration files
     - app:          # Main app configuration section
@@ -65,17 +78,8 @@ it. The YAML file configures each service independently:
     - cache:        # Caching configuration
     - ...           # etc. -- one section per service
 
-How to modify this list from within the app?
-
-    for urlspec in urllist:
-        config.url.append(urlspec)
-
-    tornado.web.add_handler(**urlspec)
-    tornado.log.AddHandler(...)
-
-The server provides an admin view that allows admins to see (and perhaps
-modify?) the configurations. You cannot see *how* that configuration came about,
-but you can see the current configuration at any point.
+The server provides an admin view that allows admins to see (and modify) the
+configurations. (It does not show the history or source of the setting, though.)
 
 The server is asynchronous. It executes on an event loop that applications can
 use (for deferred execution, for example). The server also runs a separate
@@ -88,7 +92,6 @@ thread that can:
 - etc.
 
 - Will we allow new event loops on threads for handlers?
-
 
 
 ### Conf
