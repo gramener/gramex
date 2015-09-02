@@ -58,25 +58,23 @@ The server is configured by layered config files. The server has a default
 `gramex.yaml`. Gramex runs in a home directory, which can have a `gramex.yaml`,
 and can define other config files that further over-ride it.
 
-Configuration is stored in an ordered dictionary `gramex.config`:
+Configurations are loaded as [ordered attrdicts][lya] files and stored in the
+variable `gramex.config`. Apps can update this and run `gramex.reconfigure()` to
+update all configurations (except `app:` and `conf:`).
 
-    {
-      "D:/gramex/gramex.conf.yaml": { ... },
-      "D:/app/gramex.conf.yaml": { ... },
-      "D:/app/demo1/gramex.conf.yaml": { ... }
-    }
+[lya]: https://github.com/mk-fg/layered-yaml-attrdict-config
 
-Apps can update these, or add a new key to `gramex.config`. Run
-`gramex.reconfigure()` to update all configurations (except `app:` and `conf:`).
+Configurations are pure YAML, and do not have any tags. The YAML files are
+grouped into one section per service:
 
-Each service has a corresponding configration section:
-
-    - conf:         # Configuration files
-    - app:          # Main app configuration section
-    - url:          # URL mapping section
-    - log:          # Logging configuration
-    - cache:        # Caching configuration
-    - ...           # etc. -- one section per service
+    version: 1.0    # Gramex and API version
+    conf: ...       # Configuration files
+    app: ...        # Main app configuration section
+    url: ...        # URL mapping section
+    log: ...        # Logging configuration
+    cache: ...      # Caching configuration
+    email: ...      # Email configuration
+    ...             # etc. -- one section per service
 
 The server provides an admin view that allows admins to see (and modify) the
 configurations. (It does not show the history or source of the setting, though.)
@@ -101,22 +99,22 @@ However, all request handlers will run on a single thread, since Tornado
 `gramex.yaml` file may have a `conf:` section that lists additional YAML
 configurations.
 
-    conf:                         # Load additional configurations
-      - app:                      # ... into the app: section from:
-        - */gramex.yaml           #   All gramex.yaml under 1st-level dir
-      - url:                      # ... into the url: section from:
-        - */gramex.url.yaml       #   All gramex.url.yaml under 1st-level dir
-        - d:/app/gramex.url.yaml  #   A specific gramex.url.yaml file
-      - log:                      # ... into the log: section from:
-        - ...                     #   etc
+    conf:                           # Load additional configurations
+      app:                          # ... into the app: section from:
+        subapps: */gramex.yaml      #   All gramex.yaml under 1st-level dir
+      url:                          # ... into the url: section from:
+        subapps: */gramex.url.yaml  #   All gramex.url.yaml under 1st-level dir
+        xyz: d:/xyz/gramex.url.yaml #   A specific gramex.url.yaml file
+      log:                          # ... into the log: section from:
+        ...                         #   etc
 
 This is not recursive. If the `conf:` section has a `conf:` sub-section, it is
 ignored.
 
-By default, all values are imported directly into `gramex.yaml`. To specify a
-path relative to the imported `.yaml` folder, use:
+Set a value to `!!null` to delete it. Keys with a `!!null` value are dropped
+after parsing.
 
-    path: !!python/name:Path.relative "folder/index.html"
+Relative paths?
 
 ### App
 
@@ -125,39 +123,33 @@ The `app:` section defines the settings for the [Tornado app](app-settings).
 [app-settings](http://tornado.readthedocs.org/en/stable/web.html#tornado.web.Application.settings)
 
     app:
-      - listen: 8888              # Port to bind to
-      - others:                   # Structure of these parameters?
-      - settings:                 # Tornado app settings
-        - autoreload: True
-        - debug: True
-        - etc.
+      listen: 8888              # Port to bind to
+      default_host: ...         # Optional name of default host
+      settings:                 # Tornado app settings
+        autoreload: True
+        debug: True
+        etc.
 
 Only settings that can be specified in YAML are allowed, not settings that
 require Python.
 
 ### URL
 
-The `url:` section maps URL patterns to handlers (via [URLSpec](urlspec)). For
-example:
-
-    - url:                                  # Main URL mapping section
-      - pattern: /secc/.*                   # All URLs beginning with /secc/
-        handler: TemplateHandler            # Handles templates
-        name: SECC                          # An unique name for this handler
-        kwargs:                             # Options passed to handler
-          - path: d:/secc/
-      - pattern: /data
-        handler: DataAPIHandler
-      - pattern: /auth
-        handler: SAMLHandler
-      - pattern: /oauth
-        handler: OAuthHandler
-      - pattern: /log
-        handler: GoogleAnalyticsLikeHandler
-      - pattern: /websocket
-        handler: WebSocketHandler
-
 [urlspec]: http://tornado.readthedocs.org/en/stable/web.html#tornado.web.URLSpec
+
+The `url:` section maps URL patterns to handlers (via [URLSpec](urlspec)). For
+example, this resets the application's handlers to a single handler. The key
+`app:` is the `name` for the `URLSpec`.
+
+    url:                                    # Main URL mapping section
+      app:                                  # A unique name for this handler
+        pattern: /app/.*                    # All URLs beginning with /app/
+        handler: TemplateHandler            # Handles templates
+        kwargs:                             # Options passed to handler
+          - path: d:/app/
+
+Gramex will have handlers for handling data (e.g. Data API), auth (OAuth, SAML,
+etc), logging, websockets, etc.
 
 ### Log
 
@@ -182,12 +174,6 @@ is triggered.
             kwargs:
               h1: Page not found
               body: This is not the page you are looking for
-        old-version-of-page:
-            code: 404
-            function: SimpleErrorPage
-            kwargs:
-              h1: Page not found
-              body: This is an old version. Go to page xxx
         custom-error:
             code: 500
             function: ErrorTemplateHandler
@@ -205,19 +191,17 @@ an `exc_info` triple will be available as `kwargs['exc_info']`.
 The `schedule:` section defines when specific code is to run.
 
     schedule:
-        - times:                            # Follows cron structure
-            - minutes: 0, 59, *, 30-40/5
-            - hours: 3
-            - dates: *, L
-            - months: *, jan, 1,
-            - weekdays: *
-            - years: *
-            - startup: true                 # In addition, run on startup
-          function:
-          kwargs:
-        - times:
-          function: !!python/name:module.function
-          kwargs:
+      some-scheduler-name:
+        times:                              # Follows cron structure
+          minutes: 0, 59, *, 30-40/5
+          hours: 3
+          dates: *, L
+          months: *, jan, 1,
+          weekdays: *
+          years: *
+        startup: true                 # In addition, run on startup
+        function:
+        kwargs: module.function
 
 Use [parse-crontab](https://github.com/josiahcarlson/parse-crontab) to parse.
 
@@ -225,11 +209,44 @@ All default services provided by Gramex are part of the scheduler. For example,
 `gramex.yaml` configurations are reloaded every 5 minutes.
 
     schedule:
-        - times:
-          - name: Reload Gramex config periodically
-          - minutes: */5
-          - function: !!python/name: gramex.reload_config
+      gramex-config:
+        times:
+          minutes: */5
+        function: gramex.reload_config
 
+### License
+
+The licensing mechanism handles the following scenarios:
+
+- I only want to sell only the treemap application
+- I only want SAML Auth, not OAuth
+- I only want visual, not analytic components
+- Only single user license
+
+How are services, handlers and components identified?
+
+The license configuration looks like this:
+
+    license:
+      default:                    # Name of license. (Multiple licenses possible)
+        key: ...                  # License key for this license
+        systems:                  # Systems this license is valid for
+          system-1:               # Name of the first system
+            method:               #   Algorithm used to compute the sysid
+            sysid:                #   System's unique ID based on algorithm
+          system-2:               # Name of the second system
+            method:               #   Algorithm used to compute next sysid
+            sysid:                #   ...
+        validity:                 # From when to when is the license valid
+          start: !!timestamp 2015-01-01T00:00:00Z
+          end:   !!timestamp 2016-01-01T00:00:00Z
+        users: 1                  # Optional: max users allowed
+        inventory:                # What's allwoed. (Values matter; keys are just labels)
+          treemap:                # Each permission is a key
+            services:             #   Allowed services
+              ...                 #     How to define these?
+            handlers:             #   Allowed handlers
+              ...                 #     How to define these?
 
 ### Services
 
@@ -249,8 +266,6 @@ All default services provided by Gramex are part of the scheduler. For example,
       - Hits (how often was this record retrieved)
       - Data
       - How to compute the data
-- **Licensing**
-    - Will each app have its license? Or is it at a Gramex level?
 
 - **Rendering** components to PDF, PPTX, PNG, SVG, etc.
 - **Computation workflow**.
@@ -296,22 +311,58 @@ Handlers
     - Apps can internally further limit access based on role (e.g. only admins
       can see all rows.)
 - **Uploads**
+- **AJAX support** for templates
 
 
 
 Components
 --------------------------------------------------------------------------------
 
-- Grammar of Graphics
-- Consistent rendering principles
+Layered data-driven approach
+
+- Composable components. Apply a component over another in a layered manner
 - Scaling and other transformations
 - Axes
-- Colour contrast
 - Default stroke colour, stroke width, padding, etc
 - Attribute lambda parameters
 - Transformable. Transforms should also be composable.
-- Ability to access template intermediate variables (layouts, scales, etc) from outside
+- Ability to access template intermediate variables (layouts, scales, etc) from
+  outside on server and client side
+- Themes
+- Any symbol instead of default symbols
+
+Flexible rendering:
+
 - Rendering may be on the client side or the server side
+- Rendered views can be edited on the client side as well
+- Renderable for PPTX, PDF, PNG, SVG, etc
+- Responsive on the server side (re-layout) or the client side (preserve aspect)
+- CSS classes reserved for components
+
+Containers and controls:
+
+- Grids
+- Themes
+- Standard components
+
+Interactive charts:
+
+- Animated transitions
+- Cross-filter like filtering
+- How will we incorporate dynamic interactive controls?
+- Interactivity involves 3 things (We don't have a catalogue of any of these):
+    1. Events / components (brushing, clicking, sliding, etc)
+    2. Actions (filter, zoom-in, etc)
+    3. Combinations (click-to-filter, etc)
+
+Intelligence:
+
+- Automated colour contrast
+- Automated placement of legends
+- Automated placement of labels
+- Automated placement of annotations
+- Text wrapping and fitting
+
 
 Others
 --------------------------------------------------------------------------------
@@ -339,13 +390,8 @@ Thoughts
     - Layouts (pack in a shape, grow from a point, stack in a grid)
     - Renderings (shape, photo, size/color/other attributes)
     - Narratives
-- How will we incorporate dynamic interactive controls?
 - How will we incorporate autolysis?
 - Voice / video rendering
-- Interactivity involves 3 things (We don't have a catalogue of any of these):
-    1. Events / components (brushing, clicking, sliding, etc)
-    2. Actions (filter, zoom-in, etc)
-    3. Combinations (click-to-filter, etc)
 
 Discussion notes
 --------------------------------------------------------------------------------
