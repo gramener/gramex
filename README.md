@@ -248,7 +248,7 @@ The license configuration looks like this:
             handlers:             #   Allowed handlers
               ...                 #     How to define these?
 
-### Services
+### Other Services
 
 - **Caching**
     - Output follows HTTP caching policy. Server acts as a caching HTTP proxy.
@@ -401,3 +401,13 @@ Discussion notes
   external engines (databases, Spark, etc.)
 - **Will we shift to PyPy?** No. Most libraries (such as database drivers, lxml,
   etc.) do not yet work on PyPy.
+
+Project plan
+--------------------------------------------------------------------------------
+
+Mon 7 Sep: Core server spec and prototype
+Mon 14 Sep: Handler and component spec
+Mon 21 Sep: Revised handler and component spec and prototype. Components listed
+Mon 26 Oct: Spec freeze. Components early release.
+Mon 9 Nov: Gramex 1.0 beta release to testing. Start bugfixing
+Mon 23 Nov: Gramex 1.0 release
