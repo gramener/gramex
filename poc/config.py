@@ -5,7 +5,8 @@ import yaml
 import logging
 import logging.config
 from pathlib import Path
-from orderedattrdict import AttrDict, AttrDictYAMLLoader
+from orderedattrdict import AttrDict
+from orderedattrdict.yamlutils import AttrDictYAMLLoader
 
 
 def open(path, default=AttrDict()):
@@ -13,7 +14,8 @@ def open(path, default=AttrDict()):
     if not path.exists():
         logging.warn('Cannot find YAML config: %s', path)
         return default
-    result = yaml.load(path.open(), Loader=AttrDictYAMLLoader)
+    with path.open() as handle:
+        result = yaml.load(handle, Loader=AttrDictYAMLLoader)
     if result is None:
         logging.warn('Empty YAML config: %s', path)
         return default
