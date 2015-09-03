@@ -1,0 +1,177 @@
+# Gramex APIs are versioned. The version key is required. Currently, 1.0 is the
+# only version supported.
+version: 1.0
+
+# The `app:` section defines the settings for the Tornado application.
+# http://tornado.readthedocs.org/en/stable/web.html#tornado.web.Application.settings
+app:
+    listen: 8888                # Port to bind to
+    settings:                   # Tornado app settings
+        # default_host: 'host'  # Optional name of default host
+        autoreload: False
+        debug: False
+        compress_response: True
+        serve_traceback: True
+        cookie_secret: secret-key
+        key_version:
+        login_url: /login
+        xsrf_cookies: True
+        twitter_consumer_key: ...
+        twitter_consumer_secret: ...
+        friendfeed_consumer_key: ...
+        friendfeed_consumer_secret: ...
+        google_consumer_key: ...
+        google_consumer_secret: ...
+        facebook_api_key: ...
+        facebook_secret: ...
+        autoescape: True
+        compiled_template_cache: True
+        template_path: .
+        static_hash_cache: True
+        static_path: './static'
+        static_url_prefix: '/static/'
+
+
+# The `url:` section maps URL patterns to handlers.
+# http://tornado.readthedocs.org/en/stable/web.html#tornado.web.URLSpec
+url:
+    main-app:                               # A unique name for this handler
+        pattern: /app/.*                    # All URLs beginning with /app/
+        handler: TemplateHandler            # are handled by TemplateHandler
+        kwargs:                             # Options passed to the handler
+            path: d:/app/
+
+    # The `import:` key may be included anywhere. The values are YAML files that
+    # are loaded in place and in order. (The keys are just identifiers and not
+    # used for anything.) After loading, the import: key is removed.
+
+    # Imports work recursively. You can have imports within imports. Once
+    # loaded, the import section is removed.
+
+    # You can specify a relative or an absolute path. Gramex proceeds with a
+    # warning if a file is missing. You can specify a `Path.glob` pattern as
+    # well. (Note: absolute glob patterns are not implemented by `Path.glob`.)
+
+    import:
+        app1: 'app1/gramex.url.yaml'        # relative path
+        app2: 'd:/temp/gramex.url.yaml'     # absolute path
+        subapps: '*/gramex.url.yaml'        # glob: 1st-level directory search
+        deepapps: '**/gramex.url.yaml'      # glob: full subtree search
+
+
+# The `log:` section defines the log handlers. It uses the same structure as the
+# Python logging schema. By default, the system `gramex.yaml` has a log handler
+# called `admin` that logs events for the admin page to display and filter.
+#
+# https://docs.python.org/2/library/logging.config.html#logging-config-dictschema
+log:
+    version: 1
+    handlers:
+        console:
+            class: logging.StreamHandler
+            level: INFO
+            stream: ext://sys.stdout
+        file:
+            class: logging.handlers.RotatingFileHandler
+            level: WARN
+            filename: warn.log
+            maxBytes: 1024
+            backupCount: 3
+
+
+# The `error:` section defines error responses. When you raise
+# `GramexError(key="...")`, Gramex calls the corresponding `function:` as
+# `function(handler, status_code, **kwargs)` from RequestHandler.write_error()
+# `kwargs['exc_info']` will have an `exc_info` triple.
+#
+# http://tornado.readthedocs.org/en/latest/web.html#tornado.web.RequestHandler.write_error
+error:
+    page-not-found:
+        code: 404
+        function: SimpleErrorPage
+        kwargs:
+          h1: Page not found
+          body: This is not the page you are looking for
+    custom-error:
+        code: 500
+        function: ErrorTemplateHandler
+        path: 500.html
+
+
+# The `schedule:` section defines when specific code is to run.
+#
+# https://github.com/josiahcarlson/parse-crontab
+schedule:
+    gramex-config-reload:               # Name of the service (to overridde via imports)
+        function: gramex.config.reload  # Run this function
+        times:
+            minutes: '*/10'             # Every 10 minutes
+    some-scheduler-name:
+        function: module.function       # Run this function
+        kwargs:                         # with these keys and values
+            key: value
+        times:                          # Follows cron structure
+            minutes: '0, 59, *, 30-40/5'
+            hours: 3
+            dates: '*, L'
+            months: '*, jan, 1'
+            weekdays: '*'
+            years: '*'
+        startup: true                   # In addition, run on startup
+
+
+
+# The `license:` section handles the following scenarios:
+# - I only want to sell only the treemap application
+# - I only want SAML Auth, not OAuth
+# - I only want visual, not analytic components
+# - Only single user license
+#
+# How are services, handlers and components identified?
+
+license:
+    default:                    # Name of license. (Multiple licenses possible)
+        key: ...                # License key for this license
+        systems:                # Systems this license is valid for
+            system-1:           # Name of the first system
+                method:         #   Algorithm used to compute the sysid
+                sysid:          #   System's unique ID based on algorithm
+            system-2:           # Name of the second system
+                method:         #   Algorithm used to compute next sysid
+                sysid:          #   ...
+        validity:               # From when to when is the license valid
+            start: !!timestamp 2015-01-01T00:00:00Z
+            end:   !!timestamp 2016-01-01T00:00:00Z
+        users: 1                # Optional: max users allowed
+        inventory:              # What's allwoed. (Values matter; keys are just labels)
+            treemap:            # Each permission is a key
+                services:       #   Allowed services
+                    ...         #     How to define these?
+                handlers:       #   Allowed handlers
+                    ...         #     How to define these?
+
+
+# email:
+
+# cache:
+#   - Output follows HTTP caching policy. Server acts as a caching HTTP proxy.
+#   - Any structure can be cached and re-used across apps
+#   - Any structure can be uniquely identified, possibly served as a URL
+#   - Cache management: Delete LRU (least recently used), LFU (least frequently
+#     used), etc. Based on memory / disk availability.
+#   - Cache storage: memory, disk (serialization)
+#   - Cache expiry, re-creation
+#   - Cache must be thread-safe
+#   - Cache record:
+#     - Namespace
+#     - Last updated
+#     - Context (e.g. user)
+#     - Hits (how often was this record retrieved)
+#     - Data
+#     - How to compute the data
+
+# - **Rendering** components to PDF, PPTX, PNG, SVG, etc.
+# - **Computation workflow**
+# - **Queues**: If dataframes have to be stored, for example, and we want to
+#   avoid too many dataframes being stored. Or if we need a cache with a limited
+#   memory usage.
