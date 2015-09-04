@@ -1,0 +1,10 @@
+# Libraries required for Gramex
+
+# General utilities
+pathlib                     # Python 3.3+ already has it
+orderedattrdict             # Anand's library
+
+# Application specific
+tornado                     # For the app
+PyYAML                      # For config loading
+crontab                     # For scheduler

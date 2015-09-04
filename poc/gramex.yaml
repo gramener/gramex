@@ -40,18 +40,17 @@ app:
 # The `url:` section maps URL patterns to handlers.
 # http://tornado.readthedocs.org/en/stable/web.html#tornado.web.URLSpec
 url:
-    main-app:                               # A unique name for this handler
-        pattern: /.*                        # All URLs beginning with /app/
-        handler: TemplateHandler            # are handled by TemplateHandler
+    temp-app:                               # A unique name for this handler
+        pattern: /temp.*                    # All URLs beginning with /app/
+        handler: gramex.TemplateHandler     # are handled by TemplateHandler
         kwargs:                             # Options passed to the handler
-            key: value
+            key: temp
 
-    # The `import:` key may be included anywhere. The values are YAML files that
-    # are loaded in place and in order. (The keys are just identifiers and not
-    # used for anything.) After loading, the import: key is removed.
+    # The `import:` key may be included anywhere. Its keys are just identifiers,
+    # not used for anything. Its values are YAML files. They are loaded at the
+    # end of the section, in order. After loading, the import: key is removed.
 
-    # Imports work recursively. You can have imports within imports. Once
-    # loaded, the import section is removed.
+    # Imports work recursively. You can have imports within imports.
 
     # You can specify a relative or an absolute path. Gramex proceeds with a
     # warning if a file is missing. You can specify a `Path.glob` pattern as
@@ -60,8 +59,8 @@ url:
     import:
         app1: 'app1/gramex.url.yaml'        # relative path
         app2: 'd:/temp/gramex.url.yaml'     # absolute path
-        subapps: '*/gramex.url.yaml'        # glob: 1st-level directory search
-        deepapps: '**/gramex.url.yaml'      # glob: full subtree search
+        # subapps: '*/gramex.url.yaml'        # glob: 1st-level directory search
+        # deepapps: '**/gramex.url.yaml'      # glob: full subtree search
 
 
 # The `log:` section defines the log handlers. It uses the same structure as the
@@ -71,26 +70,56 @@ url:
 # https://docs.python.org/2/library/logging.config.html#logging-config-dictschema
 log:
     version: 1
+    root:
+        level: DEBUG
+        handlers: [console, warnings]
     handlers:
         console:
             class: logging.StreamHandler
-            level: INFO
+            level: DEBUG
             stream: ext://sys.stdout
             formatter: console
-        file:
+        warnings:
             class: logging.handlers.RotatingFileHandler
             level: WARN
             filename: warn.log
+            formatter: file
             maxBytes: 1024
             backupCount: 3
+    loggers:
+        tornado.access: {}
+        tornado.application: {}
+        tornado.general: {}
     formatters:
         console:
             # TODO: use colorlog for console
             format: '%(levelname)1.1s %(asctime)s %(module)s:%(lineno)d %(message)s'
             datefmt: '%y%m%d %H:%M:%S'
-    root:
-        level: DEBUG
-        handlers: [console, file]
+        file:
+            format: '%(levelname)1.1s,%(asctime)s,%(module)s,%(lineno)d,"%(message)s"'
+            datefmt: '%Y-%m-%d %H:%M:%S'
+
+
+# The `schedule:` section defines when specific code is to run.
+#
+# https://github.com/josiahcarlson/parse-crontab
+schedule:
+    callback_time: 1000                     # Check every xx milliseconds
+    tasks:
+        gramex-reconfig:
+            function: gramex.init           # Reload Gramex config
+            minutes: '*/2'                  # Every 2 minutes
+        scheduled-message:
+            function: logging.info          # Run this function
+            kwargs:                         # with these keys and values
+                msg: This is a scheduled message
+            years: '*'                      # Every year (* is default)
+            months: 'jan, mar-may, 12'      # In Jan, Mar, Apr, May, Dec
+            dates: '1, L'                   # On the first and last days
+            weekdays: '*'                   # 0-6 or SUN-SAT
+            hours: '*/3'                    # Every 3rd hour
+            minutes: '*/5, 59'              # Every 5th minute, and 59th minute
+            startup: true                   # In addition, run on startup
 
 
 # The `error:` section defines error responses. When you raise
@@ -110,29 +139,6 @@ error:
         code: 500
         function: ErrorTemplateHandler
         path: 500.html
-
-
-# The `schedule:` section defines when specific code is to run.
-#
-# https://github.com/josiahcarlson/parse-crontab
-schedule:
-    gramex-config-reload:               # Name of the service (to overridde via imports)
-        function: gramex.config.reload  # Run this function
-        times:
-            minutes: '*/10'             # Every 10 minutes
-    some-scheduler-name:
-        function: module.function       # Run this function
-        kwargs:                         # with these keys and values
-            key: value
-        times:                          # Follows cron structure
-            minutes: '0, 59, *, 30-40/5'
-            hours: 3
-            dates: '*, L'
-            months: '*, jan, 1'
-            weekdays: '*'
-            years: '*'
-        startup: true                   # In addition, run on startup
-
 
 
 # The `license:` section handles the following scenarios:
