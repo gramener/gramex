@@ -20,3 +20,12 @@ def python_name(name):
     if not hasattr(module, object_name):
         raise NameError('%s: no object %s in %s' % (name, module_name, object_name))
     return getattr(module, object_name)
+
+
+def walk(node):
+    'Top-down recursive walk through nodes yielding key, value, node'
+    for key, value in node.items():
+        yield key, value, node
+        if hasattr(value, 'items'):
+            for item in walk(value):
+                yield item

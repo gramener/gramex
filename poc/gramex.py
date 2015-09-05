@@ -3,10 +3,9 @@ import logging
 import tornado.web
 import logging.config
 from pathlib import Path
-from config import LayeredConfig
+from config import ChainConfig, PathConfig
 from confutil import python_name
 from orderedattrdict import AttrDict
-from tornado.ioloop import PeriodicCallback
 
 # gramex.path.source = Path where Gramex is installed
 # gramex.path.home = Path where Gramex is running from
@@ -15,12 +14,13 @@ path = AttrDict(
     home=Path('.').absolute()
 )
 
-# config has the LayeredConfig object that loads all configurations
+# config has the ChainConfig object that loads all configurations
 # conf holds the final merged configurations
-config = LayeredConfig(
-    # ('default', path.source / 'gramex.yaml'),
-    ('base', path.home / 'gramex.yaml'),
-    'app')
+config = ChainConfig([
+    ('default', PathConfig(path.source / 'gramex.yaml')),
+    ('base', PathConfig(path.home / 'gramex.yaml')),
+    ('app', AttrDict())
+])
 
 # Service references
 service = AttrDict(conf=AttrDict(), tasks=AttrDict())
