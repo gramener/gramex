@@ -3,10 +3,9 @@ import logging
 import tornado.web
 import logging.config
 from pathlib import Path
-from config import ChainConfig, PathConfig
 from confutil import python_name
 from orderedattrdict import AttrDict
-from handlers import *
+from config import ChainConfig, PathConfig
 
 # config has the ChainConfig object that loads all configurations
 # conf holds the final merged configurations
