@@ -6,6 +6,7 @@ from pathlib import Path
 from config import ChainConfig, PathConfig
 from confutil import python_name
 from orderedattrdict import AttrDict
+from handlers import *
 
 # config has the ChainConfig object that loads all configurations
 # conf holds the final merged configurations
@@ -63,12 +64,3 @@ def config_urls(app, conf_url):
     del app.handlers[:]
     app.named_handlers.clear()
     app.add_handlers('.*$', handlers)
-
-
-class TemplateHandler(tornado.web.RequestHandler):
-    def initialize(self, **kwargs):
-        self.kwargs = kwargs
-
-    def get(self):
-        self.write('TemplateHandler:<p>{:s}</p>'.format(
-            str(self.kwargs)))
