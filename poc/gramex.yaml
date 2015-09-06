@@ -40,11 +40,20 @@ app:
 # The `url:` section maps URL patterns to handlers.
 # http://tornado.readthedocs.org/en/stable/web.html#tornado.web.URLSpec
 url:
-    temp-app:                               # A unique name for this handler
-        pattern: /temp.*                    # All URLs beginning with /app/
-        handler: gramex.TemplateHandler     # are handled by TemplateHandler
-        kwargs:                             # Options passed to the handler
-            key: temp
+    reload-config:
+        pattern: /reload-config
+        handler: handlers.Function      # Run a function and redirect
+        kwargs:
+            function: gramex.init       # Run gramex.init()
+            kwargs: {}                  # without any arguments
+            # redirect: /               # Redirects to referer or / by default
+
+    root-app:                           # A unique name for this handler
+        pattern: /(.*)                  # All URLs beginning with /
+        handler: tornado.web.StaticFileHandler     # are handled by DirectoryHandler
+        kwargs:                         # Options passed to the handler
+            path: .                     #   path is current directory
+            default_filename: README.md #   default filename
 
     # The `import:` key may be included anywhere. Its keys are just identifiers,
     # not used for anything. Its values are YAML files. They are loaded at the
