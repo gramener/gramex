@@ -16,24 +16,20 @@ Principles
 
 These are the core principles of Gramex.
 
-1. **Data, not code** We modify data to change the functionality of the
-   application, wherever posssible. Code is written only as a last resort,
-   either to provide very niche (and rare) functionality, or to cover a large
-   number of general-purpose cases.
+1. **Data, not code** Apps are written my changing configurations. Code is a
+   last resort.
+1. **YAML** for configurations, not XML (verbose), or JSON (no commenting).
+1. **Automated reloads**. Configurations are reloaded transparently.
+1. **Modular**. Nearly every part is a module, usable independently.
 1. **Modular licensing**. It can be broken down into smaller parts that can be
    licensed independently, with customisable trials.
 
 These are proposed principles, for discussion.
 
-1. **User-friendly* at every stage. Move from code to data. From data to GUI.
+1. **User-friendly** at every stage. Move from code to data. From data to GUI.
    From GUI to live editing.
 1. **Lazy computations**. Defer computation to as late as possible.
-1. **Modular**. Its parts can be used independently. It can use third party
-   modules easily.
-1. **Automated reloads**. Configurations are reloaded transparently.
 1. **RESTful**. Use REST APIs and friendly URLs.
-1. **YAML** for configuration, not XML (too verbose), or JSON (too strict, no
-   comments).
 
 Architecture
 --------------------------------------------------------------------------------
