@@ -54,7 +54,7 @@ def setup(schedule, tasks, ioloop=None):
     for name, task in tasks.items():
         task.stop()
     tasks.clear()
-    for name, sched in schedule.tasks.items():
+    for name, sched in schedule.items():
         try:
             tasks[name] = Task(name, sched, ioloop)
         except Exception as e:
