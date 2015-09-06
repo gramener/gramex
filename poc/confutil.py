@@ -18,7 +18,7 @@ def python_name(name):
         raise NameError('%s: no module %s' % (name, module_name))
     module = sys.modules[module_name]
     if not hasattr(module, object_name):
-        raise NameError('%s: no object %s in %s' % (name, module_name, object_name))
+        raise NameError('%s: no object %s in %s' % (name, object_name, module_name))
     return getattr(module, object_name)
 
 
