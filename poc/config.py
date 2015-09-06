@@ -51,7 +51,7 @@ def open(path, default=AttrDict()):
     return result
 
 
-pathstat = lambda p: AttrDict(path=p, stat=p.stat() if p.exists() else 0)
+pathstat = lambda p: AttrDict(path=p, stat=p.stat() if p.exists() else None)
 
 
 # TODO: Generalise load-processing
@@ -97,11 +97,11 @@ class PathConfig(AttrDict):
         # ... or if an imported file is deleted / updated
         for imp in self.__info__.imports:
             exists = imp.path.exists()
-            if not exists and imp.stat.mtime:
+            if not exists and imp.stat is not None:
                 reload = True
                 logging.info('Deleted config: %s', imp.path)
                 break
-            if exists and imp.path.stat().st_mtime > imp.stat.mtime:
+            if exists and imp.path.stat().st_mtime > imp.stat.st_mtime:
                 reload = True
                 logging.info('Updated config: %s', imp.path)
                 break
