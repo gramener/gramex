@@ -117,7 +117,7 @@ class PathConfig(AttrDict):
 
         # If the main path itself is missing, warn and don't reload
         if not path.exists():
-            logging.warn('Missing config: %s', path)
+            logging.warn('Missing PathConfig: %s', path.absolute())
             return self
 
         self.clear()
