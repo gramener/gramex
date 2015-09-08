@@ -11,6 +11,9 @@
 # Cache folders. Gramex creates these with --filecache
 .cache/
 
+# Ignore log files
+*.log*
+
 # Data files. Try not to commit data into the repo
 *.csv
 *.dat
