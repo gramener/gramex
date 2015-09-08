@@ -39,6 +39,7 @@ class ChainConfig(AttrDict):
 
 def open(path, default=AttrDict()):
     'Load a YAML path.Path as an ordered AttrDict'
+    path = path.absolute()
     if not path.exists():
         logging.warn('Missing config: %s', path)
         return default
