@@ -41,7 +41,7 @@ setup(
     zip_safe=False,
     keywords='gramex',
     entry_points={
-        'console_scripts': ['gramex = gramex.main']
+        'console_scripts': ['gramex = gramex:main']
     },
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
