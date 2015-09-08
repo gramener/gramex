@@ -63,3 +63,9 @@ def config_urls(app, conf_url):
     del app.handlers[:]
     app.named_handlers.clear()
     app.add_handlers('.*$', handlers)
+
+
+def main():
+    # Configure application
+    init(path='gramex.yaml')
+    tornado.ioloop.IOLoop.current().start()

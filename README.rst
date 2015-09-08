@@ -272,19 +272,6 @@ Others
 -  Sample datasets
 -  App store for apps and data
 
-Contributing
-------------
-
--  To **suggest a feature** or **ask a question**, raise an
-   `issue <http://code.gramener.com/s.anand/gramex/issues>`__.
--  To **comment on a line**, find the
-   `commit <http://code.gramener.com/s.anand/gramex/blame/master/README.md>`__
-   for the line and add a comment.
--  To **follow changes**, ask @s.anand to add you as a reporter to this
-   project.
--  For anything else, raise an
-   `issue <http://code.gramener.com/s.anand/gramex/issues>`__.
-
 Thoughts
 --------
 

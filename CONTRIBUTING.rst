@@ -10,6 +10,12 @@ You can contribute in many ways:
 Types of Contributions
 ----------------------
 
+Discussion
+~~~~~~~~~~
+
+To follow changes on the project, ask one of the :doc:`AUTHORS.rst` to add you
+as a reporter to this project.
+
 Report Bugs
 ~~~~~~~~~~~
 

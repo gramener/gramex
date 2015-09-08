@@ -40,6 +40,9 @@ setup(
     license="Other/Proprietary License",
     zip_safe=False,
     keywords='gramex',
+    entry_points={
+        'console_scripts': ['gramex = gramex.main']
+    },
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
         'Intended Audience :: Developers',
