@@ -51,7 +51,9 @@ def open(path, default=AttrDict()):
     return result
 
 
-pathstat = lambda p: AttrDict(path=p, stat=p.stat() if p.exists() else None)
+def pathstat(path):
+    'Freeze path along current status, returning an AttrDict'
+    return AttrDict(path=path, stat=path.stat() if path.exists() else None)
 
 
 # TODO: Generalise load-processing

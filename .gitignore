@@ -1,3 +1,7 @@
+# Ignore auto-generated documentation
+docs/gramex.rst
+docs/modules.rst
+
 # Ignore byte-compiled / optimised / DLL files
 *.py[cod]
 
@@ -68,6 +72,7 @@ $RECYCLE.BIN/
 
 # Packages
 *.egg
+*.eggs
 *.egg-info
 dist
 build

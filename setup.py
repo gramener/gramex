@@ -10,10 +10,6 @@ with open('README.rst') as readme_file:
 with open('HISTORY.rst') as history_file:
     history = history_file.read().replace('.. :changelog:', '')
 
-test_requirements = [
-    # TODO: put package test requirements here
-]
-
 setup(
     name='gramex',
     version='1.0.0',
@@ -54,5 +50,6 @@ setup(
         'Programming Language :: Python :: 3.4',
     ],
     test_suite='tests',
-    tests_require=test_requirements
+    tests_require=[
+    ]
 )

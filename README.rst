@@ -8,9 +8,8 @@ Setup
 -----
 
 Gramex is distributed internally via ``pip``. Install
-`Anaconda <http://continuum.io/downloads>`__. Then:
+`Anaconda <http://continuum.io/downloads>`__. Then::
 
-::
     # Install via SSH
     pip install git+ssh://git@code.gramener.com/s.anand/gramex.git@v1.0.0
 
