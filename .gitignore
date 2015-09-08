@@ -1,0 +1,103 @@
+# Ignore byte-compiled / optimised / DLL files
+*.py[cod]
+
+# Filenames should NOT have spaces
+* *
+
+# Ignore SQLite3 files. Gramex creates some automatically
+*.sqlite3
+*.sqlite3-journal
+
+# Cache folders. Gramex creates these with --filecache
+.cache/
+
+# Data files. Try not to commit data into the repo
+*.csv
+*.dat
+*.mdb
+
+# Zip files that aren't read by Pandas
+*.7z
+*.zip
+
+# Documents
+*.doc*
+*.pdf
+*.ppt*
+*.xls*
+
+# Avoid media files
+*.avi
+*.mp*
+*.wmv
+
+# Backup files
+~$*
+*~
+*.bak*
+
+# Sublime-text workspaces, etc
+*.sublime-*
+
+# IPython Notebook checkpoints
+.ipynb_checkpoints
+
+# Typically bash.exe.stackdump on Cygwin
+*.stackdump
+
+# Node modules
+node_modules/
+
+# Windows shortcut files
+*.lnk
+
+# Windows / Mac OS junk files
+Desktop.ini
+$RECYCLE.BIN/
+*[Tt]humbs.db
+*.DS_Store
+
+# R history files
+.RHistory
+
+# C extensions
+*.so
+
+# Packages
+*.egg
+*.egg-info
+dist
+build
+eggs
+parts
+bin
+var
+sdist
+develop-eggs
+.installed.cfg
+lib
+lib64
+
+# Installer logs
+pip-log.txt
+
+# Unit test / coverage reports
+.coverage
+.tox
+nosetests.xml
+htmlcov
+
+# Translations
+*.mo
+
+# Mr Developer
+.mr.developer.cfg
+.project
+.pydevproject
+
+# Complexity
+output/*.html
+output/*/index.html
+
+# Sphinx
+docs/_build

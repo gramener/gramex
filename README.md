@@ -18,7 +18,8 @@ These are the core principles of Gramex.
 
 1. **Data, not code** Apps are written my changing configurations. Code is a
    last resort.
-1. **YAML** for configurations, not XML (verbose), or JSON (no commenting).
+1. **YAML** for configurations, not XML (verbose), or JSON (no commenting). No
+   extensions -- only standard YAML.
 1. **Automated reloads**. Configurations are reloaded transparently.
 1. **Modular**. Nearly every part is a module, usable independently.
 1. **Modular licensing**. It can be broken down into smaller parts that can be
@@ -30,6 +31,7 @@ These are proposed principles, for discussion.
    From GUI to live editing.
 1. **Lazy computations**. Defer computation to as late as possible.
 1. **RESTful**. Use REST APIs and friendly URLs.
+1. **JS rendering**. All views are rendered via JS, not Python.
 
 Architecture
 --------------------------------------------------------------------------------
@@ -38,6 +40,8 @@ Gramex has:
 
 - **A core server**, which provides a variety of services (via Python libraries)
   to the entire application.
+- **Libraries** for apps to use. Like Python, there is one (and preferably only
+  one) obvious library for a task.
 - **Handlers**, which handle specific URL patterns as required. They may show
   templates, act as a websocket, provide a data interface, serve static files,
   etc.
@@ -64,7 +68,6 @@ Configurations are pure YAML, and do not have any tags. The YAML files are
 grouped into one section per service:
 
     version: 1.0    # Gramex and API version
-    import: ...     # Import more configuration files
     app: ...        # Main app configuration section
     url: ...        # URL mapping section
     log: ...        # Logging configuration
@@ -98,8 +101,63 @@ However, all request handlers will run on a single thread, since Tornado
 
 [thread-safety]: http://tornado.readthedocs.org/en/latest/web.html#thread-safety-notes
 
-Gramex has handlers for handling data (e.g. Data API), auth (OAuth, SAML, etc),
-logging, websockets, etc.
+Libraries
+--------------------------------------------------------------------------------
+
+Gramex uses and recommends the following libraries:
+
+- cryptography: [cryptography](https://cryptography.io/)
+- ETL:
+  [odo](http://odo.readthedocs.org/en/latest/),
+  [dask](http://dask.readthedocs.org/en/latest/) and
+  [blaze](http://blaze.pydata.org/en/latest/)
+
+These are candidates:
+
+- fake data: [fake-factory](https://pypi.python.org/pypi/fake-factory)
+- slugs: [awesome-slugify](https://pypi.python.org/pypi/awesome-slugify)
+  with [unslug](https://github.com/sanand0/awesome-slugify/tree/unslug)
+- NLP: Cannot use [spaCy](http://spacy.io/) due to license
+- machine learning: [scikit-learn] + [theano]
+
+Utilities
+--------------------------------------------------------------------------------
+
+- nice formatting (stats.units + humanize)
+  - use config to define custom units
+    - add units via mechanism like dictConfig()
+    - default units: lakhs, millions, bytes, time diff
+  - ordinal (1st, 2nd, 3rd, etc)
+  - andjoin (x, y and z)
+  - plurals (No flowers, 1 flower, 2 flowers, etc)
+- scales (stats.Map)
+  - rounding
+  - nice intervals
+  - replicate D3 scales
+- colors
+  - spaces
+  - manipulation (brighten, darken)
+  - blending
+  - standard palettes
+  - https://github.com/vaab/colour
+  - https://github.com/mattrobenolt/colors.py
+  - https://github.com/xav/grapefruit
+  - http://python-colormath.readthedocs.org/en/latest/
+  - http://colour-science.org/api/latest/html/index.html
+  - https://github.com/ubernostrum/webcolors
+  - https://pypi.python.org/pypi/colorutils/0.2
+- icon libraries
+- email
+
+Data processing utilities
+
+- Series.uniqmap:
+  - generalisation of stats.to_date
+  - get unique values (lazily), apply transformation, map it back to data
+- Cubes
+  - Groupby with subtotals (stats.groupby)
+  - Filters (stats.Filter)
+- sqlalchemy
 
 
 Handlers
@@ -112,20 +170,39 @@ Handlers
     - With `/app/` there is full flexibility on how to handle the URLs
     - No URLs outside `/app/` will be affected.
     - Configurations use data, not code. (e.g. YAML, not Python)
-- **Data store**. Perhaps using an API like
-  [Webstore](http://webstore.readthedocs.org/en/latest/index.html)
+- **Data API**. Perhaps like [Webstore](http://webstore.readthedocs.org/en/latest/index.html)
 - **Auth**
-    - Apps can pick an auth mechanism (OAuth, SAML, LDAP, etc.)
-    - An app can be an auth provided. By default, a `/admin/` app can provide
-      uer management functionality
-    - Users have roles. Apps expose a `function(user, roles, request)` to the
-      server that determines the rejection, type of rejection, error message,
-      log message, etc.
+    - Authentication mechanism (OAuth, SAML, LDAP, etc.)
+    - Admin: User - role mapping and expiry management
+    - Apps expose a `function(user, roles, request)` to the server that
+      determines the rejection, type of rejection, error message, log message,
+      etc.
     - Apps can internally further limit access based on role (e.g. only admins
       can see all rows.)
+    - An app can be an auth provider. By default, a `/admin/` app can provide
+      uer management functionality
 - **Uploads**
 - **AJAX support** for templates
+- **Websockets**
 
+How do these tie in?
+
+- Mixins for handlers?
+- **Composability** of handlers via composability of HTML using
+  [Web Components](https://github.com/WebComponents/webcomponentsjs)?
+  - Custom elements tree
+  - Declarative modifications: how?
+- **Composability** of handlers via middleware: decorators on handler methods:
+    decorators:
+      get:
+        gramex.auth.saml:
+          server: something
+        gramex.auth.required:
+          roles: [alpha, beta]
+      post:
+        ...
+- Database support (Redis, PostgreSQL, etc)?
+- Tornado UI modules?
 
 
 Components
@@ -214,8 +291,10 @@ Thoughts
   - [`asynchronous` directive pull request](https://github.com/tornadoweb/tornado/pull/553)
   - [`coroutine=` parameter pull request](https://github.com/tornadoweb/tornado/pull/1311)
 - Interesting libraries:
-  - Vega (with Vicent, ipython-vega-lite)
+  - [Vega](http://vega.github.io/)
   - ggvis.rstudio.com
+  - Watch OpenVisConf videos: https://www.youtube.com/user/BocoupLLC/videos
+- Packaging via [cookiecutter](https://github.com/audreyr/cookiecutter)
 
 
 Discussion notes
@@ -238,9 +317,14 @@ Normal dates indicate actual activity.
 - **Mon 31 Aug**: Begin Gramex 1.0
 - Mon 31 Aug: Define Gramex config syntax, logging and scheduling services
 - Tue 1 Sep: Define config layering, error handling, component requirements
-- *Wed 2 Sep*: Build prototype. Explore component approach. Share project plan
-- *Thu 3 Sep*: Build prototype. Explore component approach
-- **Fri 5 Sep**: Core server spec and prototype release
+- Wed 2 Sep: Build prototype. Explore component approach. Share project plan
+- Thu 3 Sep: Add config, scehduler and logger services. Explore component approach
+- Fri 4 Sep: Core server ready for release.
+- **Fri 4 Sep**: Core server spec and prototype release
+- *Mon 7 Sep*: Evaluate Vega
+- *Tue 8 Sep*: Evaluate WebComponents
+- *Fri 9 Sep*: Write client collateral on technology stack direction: Tornado,
+  Blaze, node?, Vega, WebComponents
 - **Mon 14 Sep**: Handler and component spec
 - **Mon 21 Sep**: Revised handler and component spec and prototype. Components listed
 - **Mon 26 Oct**: Spec freeze. Components early release.
