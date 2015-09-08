@@ -54,7 +54,10 @@ def open(path, default=AttrDict()):
 
 def pathstat(path):
     'Freeze path along current status, returning an AttrDict'
-    return AttrDict(path=path, stat=path.stat() if path.exists() else None)
+    # If path doesn't exist, create a dummy stat structure with
+    # safe defaults (old mtime, 0 filesize, etc)
+    stat = path.stat() if path.exists() else AttrDict(st_mtime=0, st_size=0)
+    return AttrDict(path=path, stat=stat)
 
 
 # TODO: Generalise load-processing
@@ -104,7 +107,8 @@ class PathConfig(AttrDict):
                 reload = True
                 logging.info('Deleted config: %s', imp.path)
                 break
-            if exists and imp.path.stat().st_mtime > imp.stat.st_mtime:
+            if exists and (imp.path.stat().st_mtime > imp.stat.st_mtime or
+                           imp.path.stat().st_size != imp.stat.st_size):
                 reload = True
                 logging.info('Updated config: %s', imp.path)
                 break
