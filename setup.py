@@ -1,11 +1,7 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 
-
-try:
-    from setuptools import setup
-except ImportError:
-    from distutils.core import setup
+# Require setuptools -- distutils does not support install_requires
+from setuptools import setup
 
 
 with open('README.rst') as readme_file:
@@ -13,10 +9,6 @@ with open('README.rst') as readme_file:
 
 with open('HISTORY.rst') as history_file:
     history = history_file.read().replace('.. :changelog:', '')
-
-requirements = [
-    # TODO: put package requirements here
-]
 
 test_requirements = [
     # TODO: put package test requirements here
@@ -36,7 +28,15 @@ setup(
     package_dir={'gramex':
                  'gramex'},
     include_package_data=True,
-    install_requires=requirements,
+    install_requires=[
+        # Abstract dependencies here, concrete dependencies in requirements.txt
+        # See https://packaging.python.org/en/latest/requirements.html
+        'pathlib',                  # Python 3.3+ already has it
+        'orderedattrdict',          # OrderedDict with attr access
+        'tornado >= 4.0',           # Web server
+        'PyYAML',                   # Parse YAML fils
+        'crontab',                  # Parse crontab entries
+    ],
     license="Other/Proprietary License",
     zip_safe=False,
     keywords='gramex',

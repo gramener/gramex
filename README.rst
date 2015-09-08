@@ -11,4 +11,5 @@ Gramex is distributed internally via ``pip``. Install
 `Anaconda <http://continuum.io/downloads>`__. Then run:
 
 ::
-    pip install -e git+git@code.gramener.com:s.anand/gramex.git#egg=gramex
+    pip install git+git@code.gramener.com:s.anand/gramex.git#egg=gramex
+    pip install git+http://code.gramener.com/s.anand/gramex.git#egg=gramex
