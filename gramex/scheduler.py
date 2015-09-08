@@ -1,9 +1,9 @@
 'Gramex scheduling service'
 
 import logging
-import confutil
 import tornado.ioloop
 from crontab import CronTab
+from .confutil import python_name
 
 
 class Task(object):
@@ -14,7 +14,7 @@ class Task(object):
     def __init__(self, name, schedule, ioloop=None):
         'Create a new task based on a schedule in ioloop (default to current)'
         self.name = name
-        self.function = confutil.python_name(schedule.function)
+        self.function = python_name(schedule.function)
         self.kwargs = schedule.get('kwargs', {})
         cron = (str(schedule.get(key, '*')).replace(' ', '') for key in self._units)
         self.cron = CronTab(' '.join(cron))

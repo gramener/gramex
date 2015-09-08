@@ -1,5 +1,5 @@
 import tornado.web
-from confutil import python_name
+from .confutil import python_name
 
 
 class Function(tornado.web.RequestHandler):

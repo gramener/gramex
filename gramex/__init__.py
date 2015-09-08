@@ -1,11 +1,11 @@
-import scheduler
 import logging
 import tornado.web
 import logging.config
 from pathlib import Path
-from confutil import python_name
 from orderedattrdict import AttrDict
-from config import ChainConfig, PathConfig
+from . import scheduler
+from .confutil import python_name
+from .config import ChainConfig, PathConfig
 
 __author__ = 'S Anand'
 __email__ = 's.anand@gramener.com'

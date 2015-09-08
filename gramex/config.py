@@ -3,9 +3,9 @@
 import yaml
 import logging
 from pathlib import Path
-from confutil import walk
 from orderedattrdict import AttrDict
 from orderedattrdict.yamlutils import AttrDictYAMLLoader
+from .confutil import walk
 
 
 class ChainConfig(AttrDict):
