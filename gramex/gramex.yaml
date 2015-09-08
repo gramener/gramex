@@ -48,6 +48,12 @@ url:
             kwargs: {}                  # without any arguments
             # redirect: /               # Redirects to referer or / by default
 
+    test-app:
+        pattern: /dirapp/(.*)                      # URLs with /dirapp/
+        handler: gramex.handlers.DirectoryHandler  # Handler used
+        kwargs:
+            path: 'd:/temp/'                       # Directory path
+
     root-app:                           # A unique name for this handler
         pattern: /(.*)                  # All URLs beginning with /
         handler: tornado.web.StaticFileHandler      # are static files
