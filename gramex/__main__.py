@@ -1,6 +1,4 @@
 'Run Gramex from current path'
-import tornado.ioloop
-from gramex import init
+import gramex
 
-init(path='gramex.yaml')
-tornado.ioloop.IOLoop.current().start()
+gramex.run()
