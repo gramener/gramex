@@ -11,13 +11,14 @@ __author__ = 'S Anand'
 __email__ = 's.anand@gramener.com'
 __version__ = '1.0.0'
 
+paths = AttrDict(
+    source=Path(__file__).absolute().parent,
+    base=Path('.')
+)
+
 # conf has the ChainConfig object that loads all configurations
 # conf holds the final merged configurations
-conf = ChainConfig([
-    ('source', PathConfig(Path(__file__).absolute().parent / 'gramex.yaml')),
-    ('base', PathConfig(Path('.') / 'gramex.yaml')),
-    ('app', AttrDict())
-])
+conf = ChainConfig()
 
 # Service configuration references
 service = AttrDict(
@@ -26,9 +27,13 @@ service = AttrDict(
 )
 
 
-def init(path=None):
-    if path is not None:
-        conf.base = PathConfig(path)
+def init(**kwargs):
+    paths.update(kwargs)
+    for name, path in paths.items():
+        if name not in conf:
+            conf[name] = PathConfig(path / 'gramex.yaml')
+    if 'app' not in conf:
+        conf.app = AttrDict()
 
     # Reload merged configuration and check for changes
     new_conf = +conf
@@ -68,5 +73,5 @@ def config_urls(app, conf_url):
 
 
 def run():
-    init(path='gramex.yaml')
+    init()
     tornado.ioloop.IOLoop.current().start()
