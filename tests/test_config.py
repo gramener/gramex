@@ -5,6 +5,11 @@ from gramex.config import ChainConfig, PathConfig
 from orderedattrdict import AttrDict
 
 
+def unlink(path):
+    if path.exists():
+        path.unlink()
+
+
 class TestChainConfig(unittest.TestCase):
     'Test gramex.conf.ChainConfig'
 
@@ -37,13 +42,11 @@ class TestPathConfig(unittest.TestCase):
         self.a = self.home / 'config.a.yaml'
         self.b = self.home / 'config.b.yaml'
         self.c = self.home / 'config.c.yaml'
-        # config.a.yaml links to config.c.yaml. It mist be missing initially
-        if self.c.exists():
-            self.c.unlink()
         self.final = self.home / 'config.final.yaml'
 
-    def test_load(self):
+    def test_merge(self):
         'Config files are loaded and merged'
+        unlink(self.c)
         conf = ChainConfig([
             ('a', PathConfig(self.a)),
             ('b', PathConfig(self.b))])
@@ -53,9 +56,13 @@ class TestPathConfig(unittest.TestCase):
         'Config files are updated on change'
         conf = ChainConfig(c=PathConfig(self.c))
 
-        # When the file is missing, it is blank
-        if self.c.exists():
-            self.c.unlink()
+        # When the file is missing, config is empty
+        unlink(self.c)
+        self.assertEqual(+conf, {})
+
+        # When the file is blank, config is empty
+        with self.c.open('w') as out:
+            out.write(u'')
         self.assertEqual(+conf, {})
 
         # Once created, it is automatically reloaded
@@ -64,5 +71,6 @@ class TestPathConfig(unittest.TestCase):
             yaml.dump(data, out)
         self.assertEqual(+conf, data)
 
-        # Remove the file finally
+        # Deleted file is detected
         self.c.unlink()
+        self.assertEqual(+conf, {})
