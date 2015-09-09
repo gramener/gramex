@@ -38,7 +38,7 @@ Release
 To make a new release, run this command. It should not report errors, and
 should provide satisfactory test coverage::
 
-    make clean-test lint docs test coverage
+    make release-test
 
 **Note**: This uses the ``python.exe`` in your ``PATH``. To change the Python
 used, run::

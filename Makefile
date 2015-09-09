@@ -62,6 +62,8 @@ docs:
 	$(MAKE) -C docs html
 	$(BROWSER) docs/_build/html/index.html
 
+release-test: clean-test lint docs test coverage
+
 release: clean
 	$(PYTHON) setup.py sdist upload
 	$(PYTHON) setup.py bdist_wheel upload
