@@ -12,7 +12,7 @@ with open('HISTORY.rst') as history_file:
 
 setup(
     name='gramex',
-    version='1.0.0',
+    version='1.0.2',
     description="Gramex is a declarative data analytics and visualization platform",
     long_description=readme + '\n\n' + history,
     author="S Anand",
