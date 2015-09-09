@@ -1,4 +1,4 @@
 'Run Gramex from current path'
 import gramex
 
-gramex.run()
+gramex.init()

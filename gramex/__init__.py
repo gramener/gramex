@@ -59,6 +59,9 @@ def init(**kwargs):
 
     service.conf = new_conf
 
+    if not ioloop._running:
+        tornado.ioloop.IOLoop.current().start()
+
 
 def config_urls(app, conf_url):
     'Set the '
@@ -70,8 +73,3 @@ def config_urls(app, conf_url):
     del app.handlers[:]
     app.named_handlers.clear()
     app.add_handlers('.*$', handlers)
-
-
-def run():
-    init()
-    tornado.ioloop.IOLoop.current().start()
