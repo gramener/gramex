@@ -16,7 +16,7 @@ setup(
     version=gramex.__version__,
     description="Gramex is a declarative data analytics and visualization platform",
     long_description=readme + '\n\n' + history,
-    author="S Anand",
+    author="Gramener",
     author_email='s.anand@gramener.com',
     url='http://code.gramener.com/s.anand/gramex',
     packages=[

@@ -57,7 +57,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Gramex'
-copyright = u'2015, S Anand'
+copyright = u'2015, Gramener'
 
 # The version info for the project you're documenting, acts as replacement
 # for |version| and |release|, also used in various other places throughout
@@ -213,7 +213,7 @@ latex_elements = {
 latex_documents = [
     ('index', 'gramex.tex',
      u'Gramex Documentation',
-     u'S Anand', 'manual'),
+     u'Gramener', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at
@@ -244,7 +244,7 @@ latex_documents = [
 man_pages = [
     ('index', 'gramex',
      u'Gramex Documentation',
-     [u'S Anand'], 1)
+     [u'Gramener'], 1)
 ]
 
 # If true, show URL addresses after external links.
@@ -259,7 +259,7 @@ man_pages = [
 texinfo_documents = [
     ('index', 'gramex',
      u'Gramex Documentation',
-     u'S Anand',
+     u'Gramener',
      'gramex',
      'One line description of project.',
      'Miscellaneous'),

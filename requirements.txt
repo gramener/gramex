@@ -2,7 +2,7 @@
 
 # General utilities
 pathlib                     # Python 3.3+ already has it
-orderedattrdict             # Anand's library
+orderedattrdict             # To load configs
 
 # Application specific
 tornado                     # For the app
