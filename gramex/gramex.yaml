@@ -48,18 +48,12 @@ url:
             kwargs: {}                  # without any arguments
             # redirect: /               # Redirects to referer or / by default
 
-    test-app:
-        pattern: /dirapp/(.*)                      # URLs with /dirapp/
-        handler: gramex.handlers.DirectoryHandler  # Handler used
-        kwargs:
-            path: 'd:/temp/'                       # Directory path
-
     root-app:                           # A unique name for this handler
         pattern: /(.*)                  # All URLs beginning with /
-        handler: tornado.web.StaticFileHandler      # are static files
+        handler: gramex.handlers.DirectoryHandler   # Handler used
         kwargs:                                     # Options to the handler
             path: .                                 #   path is current dir
-            default_filename: README.rst            #   default filename
+            default_filename: index.html            #   default filename
 
     # The `import:` key may be included anywhere. Its keys are just identifiers,
     # not used for anything. Its values are YAML files. They are loaded at the
