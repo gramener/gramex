@@ -45,7 +45,7 @@ used, run::
 
     export PYTHON=/path/to/python.exe       # e.g. path to Python 3.4+
 
-Update ``__version__ = 1.x.x`` in ``gramex/__init__.py`` and commit.
+Update ``__version__ = 1.x.x`` in :mod:`gramex` and commit.
 
 Create an annotated tag and push the code::
 

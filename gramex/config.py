@@ -18,7 +18,7 @@ class ChainConfig(AttrDict):
         ...     ('app2', AttrDict())
         ... ])
 
-    Any dict-compatible values are allowed. `+config` returns the merged values.
+    Any dict-compatible values are allowed. ``+config`` returns the merged values.
     '''
 
     def __pos__(self):
@@ -52,7 +52,7 @@ def open(path, default=AttrDict()):
     return result
 
 
-def pathstat(path):
+def _pathstat(path):
     'Freeze path along current status, returning an AttrDict'
     # If path doesn't exist, create a dummy stat structure with
     # safe defaults (old mtime, 0 filesize, etc)
@@ -61,12 +61,12 @@ def pathstat(path):
 
 
 # TODO: Generalise load-processing
-def imports(node, source):
+def _imports(node, source):
     '''
     Parse import: in the node relative to the source path.
     Return imported pathtime in the order they were imported.
     '''
-    imported_paths = [pathstat(source)]
+    imported_paths = [_pathstat(source)]
     root = source.absolute().parent
     for key, value, node in walk(node):
         if key == 'import':
@@ -74,7 +74,7 @@ def imports(node, source):
                 paths = root.glob(pattern) if '*' in pattern else [Path(pattern)]
                 for path in paths:
                     new_conf = open(path)
-                    imported_paths += [pathstat(path)] + imports(new_conf, source=path)
+                    imported_paths += [_pathstat(path)] + _imports(new_conf, source=path)
                     node.update(new_conf)
             # Delete the import key
             del node[key]
@@ -83,8 +83,8 @@ def imports(node, source):
 
 class PathConfig(AttrDict):
     '''
-    `conf = PathConfig(path)` loads the YAML file at `path` as an AttrDict.
-    `+conf` reloads the path if required.
+    ``conf = PathConfig(path)`` loads the YAML file at ``path`` as an AttrDict.
+    ``+conf`` reloads the path if required.
 
     Like http://configure.readthedocs.org/ but supports imports not inheritance.
     This lets us import YAML files in the middle of a YAML structure.
@@ -117,5 +117,5 @@ class PathConfig(AttrDict):
 
         self.clear()
         self.update(open(path))
-        self.__info__.imports = imports(self, path)
+        self.__info__.imports = _imports(self, path)
         return self

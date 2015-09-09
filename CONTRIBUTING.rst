@@ -61,10 +61,10 @@ If you are proposing a feature:
 Get Started!
 ------------
 
-Ready to contribute? Here's how to set up `gramex` for local development.
+Ready to contribute? Here's how to set up Gramex for local development.
 
-1. Fork the `gramex` repo on code.gramener.com.
-2. Install Anaconda from http://continuum.io/downloads
+1. Fork the `Gramex repo <https://code.gramener.com/s.anand/gramex>`__
+2. Install `Anaconda <http://continuum.io/downloads>`__
 3. Clone your fork locally::
 
     $ git clone git@code.gramener.com.com:your_name_here/gramex.git
