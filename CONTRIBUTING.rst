@@ -61,35 +61,61 @@ If you are proposing a feature:
 Get Started!
 ------------
 
-Ready to contribute? Here's how to set up Gramex for local development.
 
-1. Fork the `Gramex repo <https://code.gramener.com/s.anand/gramex>`__
-2. Install `Anaconda <http://continuum.io/downloads>`__
+- The `master <http://code.gramener.com/s.anand/gramex/tree/master/>`__ branch
+  holds the latest stable version.
+- The `dev <http://code.gramener.com/s.anand/gramex/tree/dev/>`__ branch has the
+  latest development version
+- Any other branches are temporary feature branches
+
+
+Gramex runs on Python 2.7+ and Python 3.4+ in Windows and Linux.
+To set up the development environment:
+
+1. Install `Anaconda <http://continuum.io/downloads>`__ and
+   `git <https://git-scm.com/>`__.
+2. Fork the `Gramex repo <https://code.gramener.com/s.anand/gramex>`__
 3. Clone your fork locally::
 
-    $ git clone git@code.gramener.com.com:your_name_here/gramex.git
+    git clone git@code.gramener.com:your_user_id/gramex.git
 
 4. Create a branch for local development::
 
-    $ git checkout -b name-of-your-bugfix-or-feature
+    git checkout -b <branch-name>
 
    Now you can make your changes locally.
 
-5. When you're done making changes, check that your changes pass flake8 and the tests, including testing other Python versions with tox::
+5. Install development requirements::
 
-    $ flake8 gramex tests
-    $ python setup.py test
-    $ tox
+    pip install -r gramex/requirements.txt
+    pip install -r gramex/dev-requirements.txt
 
-   To get flake8 and tox, just pip install them into your virtualenv.
+6. When you're done making changes, check that your changes pass flake8 and the
+   tests, as well as provide reasonable test coverage::
 
-6. Commit your changes and push your branch to GitHub::
+    make release-test
+
+   To run a subset of tests::
+
+    python -m unittest tests.test_gramex
+
+   **Note**: This uses the ``python.exe`` in your ``PATH``. To change the Python
+   used, run::
+
+    export PYTHON=/path/to/python         # e.g. path to Python 3.4+
+
+7. Commit your changes and push your branch to GitHub::
 
     $ git add .
     $ git commit -m "Your detailed description of your changes."
-    $ git push origin name-of-your-bugfix-or-feature
+    $ git push --set-upstream origin <branch-name>
 
 7. Submit a pull request through the code.gramener.com website.
+
+8. To delete your branch::
+
+    git branch -d <branch-name>
+    git push origin --delete <branch-name>
 
 Pull Request Guidelines
 -----------------------
@@ -102,9 +128,16 @@ Before you submit a pull request, check that it meets these guidelines:
    feature to the list in README.rst.
 3. The pull request should work for Python 2.7 and 3.4.
 
-Tips
-----
+Release
+-------
 
-To run a subset of tests::
+1. Test the release by running::
 
-    $ python -m unittest tests.test_gramex
+    make test-release
+
+2. Update ``__version__ = 1.x.x`` in :mod:`gramex` and commit.
+
+3. Create an annotated tag and push the code::
+
+    git tag -a v1.x.x
+    git push --follow-tags

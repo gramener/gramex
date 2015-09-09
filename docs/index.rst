@@ -12,10 +12,11 @@ Contents:
    :maxdepth: 2
 
    readme
-   building
    contributing
    authors
    history
+
+.. code-block:: yaml
 
 Indices and tables
 ==================
