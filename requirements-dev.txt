@@ -1,0 +1,8 @@
+# Additional libraries required to build Gramex
+
+# Documentation
+sphinx_rtd_theme
+
+# Testing
+coverage
+tox

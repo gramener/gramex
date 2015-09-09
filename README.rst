@@ -3,11 +3,10 @@ Gramex
 
 Gramex is a declarative data analytics and visualization platform.
 
+Installation
+------------
 
-Setup
------
-
-Gramex is distributed internally via ``pip``. Install
+Gramex is distributed via ``pip``. Install `git <https://git-scm.com/>`__ and
 `Anaconda <http://continuum.io/downloads>`__. Then::
 
     # Install via SSH
@@ -18,6 +17,12 @@ Gramex is distributed internally via ``pip``. Install
 
 The ``@master`` branch has the latest stable version. For the latest development
 version, use ``@dev`` instead of ``@master``.
+
+To upgrade an existing installation, run ``pip install --upgrade`` instead of
+``pip install``.
+
+Usage
+-----
 
 Run Gramex::
 
