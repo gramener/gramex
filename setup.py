@@ -2,6 +2,7 @@
 
 # Require setuptools -- distutils does not support install_requires
 from setuptools import setup
+import gramex
 
 
 with open('README.rst') as readme_file:
@@ -12,7 +13,7 @@ with open('HISTORY.rst') as history_file:
 
 setup(
     name='gramex',
-    version='1.0.2',
+    version=gramex.__version__,
     description="Gramex is a declarative data analytics and visualization platform",
     long_description=readme + '\n\n' + history,
     author="S Anand",

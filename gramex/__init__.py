@@ -9,7 +9,7 @@ from .config import ChainConfig, PathConfig
 
 __author__ = 'S Anand'
 __email__ = 's.anand@gramener.com'
-__version__ = '1.0.0'
+__version__ = '1.0.2'
 
 paths = AttrDict(
     source=Path(__file__).absolute().parent,
