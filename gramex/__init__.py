@@ -1,9 +1,8 @@
 import logging
-import logging.config
+import tornado.ioloop
 from pathlib import Path
 from orderedattrdict import AttrDict
 from . import services
-from .services import info
 from gramex.config import ChainConfig, PathConfig
 
 __author__ = 'S Anand'
@@ -39,5 +38,6 @@ def init(**kwargs):
                 logging.warning('No service named %s', key)
 
     # Start the IOLoop. TODO: can the app service start this delayed?
-    if not info.ioloop._running:
-        info.ioloop.start()
+    ioloop = tornado.ioloop.IOLoop.current()
+    if not ioloop._running:
+        ioloop.start()

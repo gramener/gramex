@@ -12,15 +12,15 @@ For example, if ``gramex.yaml`` contains this section::
 exists, a warning is raised.
 '''
 
-import logging
+import logging.config
 import tornado.web
+import tornado.ioloop
 from orderedattrdict import AttrDict
 from zope.dottedname.resolve import resolve
 from . import scheduler
 
 
 info = AttrDict(
-    ioloop=tornado.ioloop.IOLoop.current(),
     app=None,
     tasks=AttrDict(),
 )
@@ -39,7 +39,7 @@ def log(conf):
 
 def app(conf):
     "Set up tornado.web.Application() -- only if the ioloop hasn't started"
-    if info.ioloop._running:
+    if tornado.ioloop.IOLoop.current()._running:
         logging.warn('Ignoring app config change when running')
     else:
         info.app = tornado.web.Application(**conf.settings)
