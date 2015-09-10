@@ -36,7 +36,7 @@ def init(**kwargs):
                 conf[key] = val
                 getattr(services, key)(conf[key])
             else:
-                logging.error('No such service: %s', key)
+                logging.warning('No service named %s', key)
 
     # Start the IOLoop. TODO: can the app service start this delayed?
     if not info.ioloop._running:
