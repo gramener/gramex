@@ -1,75 +1,43 @@
 import logging
-import tornado.web
 import logging.config
 from pathlib import Path
 from orderedattrdict import AttrDict
-from . import scheduler
-from .confutil import python_name
-from .config import ChainConfig, PathConfig
+from . import services
+from .services import info
+from gramex.config import ChainConfig, PathConfig
 
 __author__ = 'S Anand'
 __email__ = 's.anand@gramener.com'
 __version__ = '1.0.2'
 
-paths = AttrDict(
-    source=Path(__file__).absolute().parent,
-    base=Path('.')
-)
+paths = AttrDict([
+    ('source', Path(__file__).absolute().parent),
+    ('base', Path('.')),
+])
 
-# conf has the ChainConfig object that loads all configurations
 # conf holds the final merged configurations
-conf = ChainConfig()
+conf = AttrDict()
 
-# Service configuration references
-service = AttrDict(
-    conf=AttrDict(log=None, app=None, schedule=None, url=None),
-    tasks=AttrDict(),
-)
+# The ChainConfig object that loads all configurations. init() updates it
+_config_chain = ChainConfig()
 
 
 def init(**kwargs):
+    # Initialise configuration layers with provided paths
     paths.update(kwargs)
     for name, path in paths.items():
-        if name not in conf:
-            conf[name] = PathConfig(path / 'gramex.yaml')
-    if 'app' not in conf:
-        conf.app = AttrDict()
+        if name not in _config_chain:
+            _config_chain[name] = PathConfig(path / 'gramex.yaml')
 
-    # Reload merged configuration and check for changes
-    new_conf = +conf
+    # Run all valid services. (The "+" before config_chain merges the chain.)
+    for key, val in (+_config_chain).items():
+        if key not in conf or conf[key] != val:
+            if hasattr(services, key):
+                conf[key] = val
+                getattr(services, key)(conf[key])
+            else:
+                logging.error('No such service: %s', key)
 
-    # Configure the logs first for better error reporting
-    if service.conf.log != new_conf.log:
-        logging.config.dictConfig(new_conf.log)
-
-    # Set up the app -- but only if the IOLoop isn't running yet
-    ioloop = tornado.ioloop.IOLoop.current()
-    if service.conf.app != new_conf.app:
-        if ioloop._running:
-            logging.warn('Ignoring app config change when running')
-        else:
-            service.app = tornado.web.Application(**new_conf.app.settings)
-            service.app.listen(**new_conf.app.listen)
-
-    if service.conf.schedule != new_conf.schedule:
-        scheduler.setup(schedule=new_conf.schedule, tasks=service.tasks)
-
-    if service.conf.url != new_conf.url:
-        config_urls(service.app, new_conf.url)
-
-    service.conf = new_conf
-
-    if not ioloop._running:
-        tornado.ioloop.IOLoop.current().start()
-
-
-def config_urls(app, conf_url):
-    'Set the '
-    handlers = []
-    for name, spec in conf_url.items():
-        urlspec = AttrDict(spec)
-        urlspec.handler = python_name(spec.handler)
-        handlers.append(tornado.web.URLSpec(name=name, **urlspec))
-    del app.handlers[:]
-    app.named_handlers.clear()
-    app.add_handlers('.*$', handlers)
+    # Start the IOLoop. TODO: can the app service start this delayed?
+    if not info.ioloop._running:
+        info.ioloop.start()

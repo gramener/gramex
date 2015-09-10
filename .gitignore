@@ -1,5 +1,5 @@
 # Ignore auto-generated documentation
-docs/gramex.rst
+docs/gramex*.rst
 docs/modules.rst
 
 # Ignore byte-compiled / optimised / DLL files

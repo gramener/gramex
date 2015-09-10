@@ -1,8 +1,9 @@
 import yaml
 import unittest
 from pathlib import Path
-from gramex.config import ChainConfig, PathConfig
+from gramex.config import ChainConfig, PathConfig, walk
 from orderedattrdict import AttrDict
+from orderedattrdict.yamlutils import AttrDictYAMLLoader
 
 
 def unlink(path):
@@ -74,3 +75,33 @@ class TestPathConfig(unittest.TestCase):
         # Deleted file is detected
         self.c.unlink()
         self.assertEqual(+conf, {})
+
+
+class TestConfig(unittest.TestCase):
+    def test_walk(self):
+        'Test gramex.confutil.walk'
+        o = yaml.load('''
+            a:
+                b:
+                    c: 1
+                    d: 2
+                e: 3
+                f:
+                    g:
+                        h: 4
+                        i: 5
+                j: 6
+            k: 7
+        ''', Loader=AttrDictYAMLLoader)
+        result = list(walk(o))
+        self.assertEqual(
+            [key for key, val, node in result],
+            list('abcdefghijk'))
+        self.assertEqual(
+            [val for key, val, node in result],
+            [o.a, o.a.b, o.a.b.c, o.a.b.d, o.a.e, o.a.f, o.a.f.g, o.a.f.g.h,
+             o.a.f.g.i, o.a.j, o.k])
+        self.assertEqual(
+            [node for key, val, node in result],
+            [o, o.a, o.a.b, o.a.b, o.a, o.a, o.a.f, o.a.f.g,
+             o.a.f.g, o.a, o])

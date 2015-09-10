@@ -3,6 +3,7 @@
 # General utilities
 pathlib                     # Python 3.3+ already has it
 orderedattrdict             # To load configs
+zope.dottedname             # To resolve Python names into objects
 
 # Application specific
 tornado                     # For the app

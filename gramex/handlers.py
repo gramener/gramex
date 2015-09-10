@@ -1,11 +1,11 @@
 import os
 from tornado.web import HTTPError, RequestHandler, StaticFileHandler
-from .confutil import python_name
+from zope.dottedname.resolve import resolve
 
 
 class Function(RequestHandler):
     def initialize(self, function, kwargs={}, redirect=None):
-        self.function = python_name(function)
+        self.function = resolve(function)
         self.kwargs = kwargs
         self.redirect_url = redirect
 
