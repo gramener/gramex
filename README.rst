@@ -59,6 +59,7 @@ These are the core principles of Gramex.
 4. **Modular**. Nearly every part is a module, usable independently.
 5. **Modular licensing**. It can be broken down into smaller parts that
    can be licensed independently, with customisable trials.
+6. **Web rendering**. All views are rendered via HTML/CSS/JS, not Python.
 
 These are proposed principles, for discussion.
 
@@ -66,7 +67,6 @@ These are proposed principles, for discussion.
    to GUI. From GUI to live editing.
 2. **Lazy computations**. Defer computation to as late as possible.
 3. **RESTful**. Use REST APIs and friendly URLs.
-4. **JS rendering**. All views are rendered via JS, not Python.
 
 Architecture
 ------------
@@ -250,6 +250,11 @@ How do these tie in?
 
 Components
 ----------
+
+**Browsers supported** are IE11, Edge, Chrome and Firefox.
+From Jan 12 2016, IE10 and below won't be supported by Microsoft.
+(`ref <https://support.microsoft.com/en-us/gp/microsoft-internet-explorer>`__).
+
 
 Layered data-driven approach
 
