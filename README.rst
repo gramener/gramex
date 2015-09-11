@@ -148,62 +148,22 @@ Libraries
 
 Gramex uses and recommends the following libraries:
 
--  cryptography: `cryptography <https://cryptography.io/>`__
--  ETL: `odo <http://odo.readthedocs.org/en/latest/>`__,
-   `dask <http://dask.readthedocs.org/en/latest/>`__ and
-   `blaze <http://blaze.pydata.org/en/latest/>`__
+- cryptography: `cryptography <https://cryptography.io/>`__
+- ETL: `odo <http://odo.readthedocs.org/en/latest/>`__,
+  `dask <http://dask.readthedocs.org/en/latest/>`__ and
+  `blaze <http://blaze.pydata.org/en/latest/>`__
 
 These are candidates:
 
--  fake data:
-   `fake-factory <https://pypi.python.org/pypi/fake-factory>`__
--  slugs:
-   `awesome-slugify <https://pypi.python.org/pypi/awesome-slugify>`__
-   with
-   `unslug <https://github.com/sanand0/awesome-slugify/tree/unslug>`__
--  NLP: Cannot use `spaCy <http://spacy.io/>`__ due to license
--  machine learning: [scikit-learn] + [theano]
-
-Utilities
----------
-
--  nice formatting (stats.units + humanize)
--  use config to define custom units
-
-   -  add units via mechanism like dictConfig()
-   -  default units: lakhs, millions, bytes, time diff
-
--  ordinal (1st, 2nd, 3rd, etc)
--  andjoin (x, y and z)
--  plurals (No flowers, 1 flower, 2 flowers, etc)
--  scales (stats.Map)
--  rounding
--  nice intervals
--  replicate D3 scales
--  colors
--  spaces
--  manipulation (brighten, darken)
--  blending
--  standard palettes
--  https://github.com/vaab/colour
--  https://github.com/mattrobenolt/colors.py
--  https://github.com/xav/grapefruit
--  http://python-colormath.readthedocs.org/en/latest/
--  http://colour-science.org/api/latest/html/index.html
--  https://github.com/ubernostrum/webcolors
--  https://pypi.python.org/pypi/colorutils/0.2
--  icon libraries
--  email
-
-Data processing utilities
-
--  Series.uniqmap:
--  generalisation of stats.to\_date
--  get unique values (lazily), apply transformation, map it back to data
--  Cubes
--  Groupby with subtotals (stats.groupby)
--  Filters (stats.Filter)
--  sqlalchemy
+- fake data:
+  `fake-factory <https://pypi.python.org/pypi/fake-factory>`__
+- slugs:
+  `awesome-slugify <https://pypi.python.org/pypi/awesome-slugify>`__
+  with
+  `unslug <https://github.com/sanand0/awesome-slugify/tree/unslug>`__
+- NLP: Cannot use `spaCy <http://spacy.io/>`__ due to license
+- machine learning: [scikit-learn] + [theano]
+- email
 
 Handlers
 --------
