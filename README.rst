@@ -372,9 +372,15 @@ Normal dates indicate actual activity.
 - Mon 7 Sep: Explore Vega, dask
 - Tue 8 Sep: Add DirectoryHandler, 1.0.0 release
 - Wed 9 Sep: Update documentation
-- *Fri 9 Sep*: Write client collateral on technology stack direction:
-  Tornado, Blaze, node?, Vega, WebComponents
 - **Mon 14 Sep**: Handler and component spec
+- *Mon 14 Sep*: Anand: create a HTML - YAML interconverter handler. This will be
+  the primary templating handler we will use
+- *Tue 15 Sep*: Pratap: create ``<vega-chart>`` and ``<vega-lite>`` webcomponents
+- *Wed 16 Sep*: Anand: create a Node.js handler in Tornado
+- *Thu 17 Sep*: Pratap: create examples of most charts on learn.gramener.com
+  using ``<vega-lite>`` or ``<vega-chart>``
+- *Fri 18 Sep*: Document handler and component spec. Write client collateral on
+  technology stack direction: Tornado, Blaze, node, Vega, Web components
 - **Mon 21 Sep**: Revised handler and component spec and prototype.
   Components listed
 - **Mon 26 Oct**: Spec freeze. Components early release.
