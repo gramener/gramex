@@ -171,75 +171,65 @@ These are candidates:
 Handlers
 --------
 
--  **Namespaced app folders**.
+A handler converts a HTTP request into a response. (It is an instance of Tornado
+`RequestHandler`_.)
 
-   -  Reserved namespaces
-   -  Add a directory ``app/``, and the URL mappings for ``/app/...``
-      will be taken from the ``app/`` directory.
-   -  With ``/app/`` there is full flexibility on how to handle the URLs
-   -  No URLs outside ``/app/`` will be affected.
-   -  Configurations use data, not code. (e.g. YAML, not Python)
+.. _RequestHandler: http://tornado.readthedocs.org/en/latest/web.html#request-handlers
 
--  **Data API**. Perhaps like
-   `Webstore <http://webstore.readthedocs.org/en/latest/index.html>`__
--  **Auth**
+Some default handlers are provided by Gramex, and this can be extended by users.
 
-   -  Authentication mechanism (OAuth, SAML, LDAP, etc.)
-   -  Admin: User - role mapping and expiry management
-   -  Apps expose a ``function(user, roles, request)`` to the server
-      that determines the rejection, type of rejection, error message,
-      log message, etc.
-   -  Apps can internally further limit access based on role (e.g. only
-      admins can see all rows.)
-   -  An app can be an auth provider. By default, a ``/admin/`` app can
-      provide uer management functionality
+DirectoryHandler
+~~~~~~~~~~~~~~~~
 
--  **Uploads**
--  **AJAX support** for templates
--  **Websockets**
+Displays files in a folder.
 
-How do these tie in?
+YAMLHandler
+~~~~~~~~~~~
 
--  Mixins for handlers?
--  **Composability** of handlers via composability of HTML via `Web
-   components`_
--  Custom elements tree
--  **Composability** of handlers via middleware: decorators on handler
-   methods: decorators: get: gramex.auth.saml: server: something
-   gramex.auth.required: roles: [alpha, beta] post: ...
--  Database support (Redis, PostgreSQL, etc)?
+Converts YAML to HTML via the `badgerfish`_ convention and renders the response.
+
+References:
+
+- badgerfish: http://www.sklar.com/badgerfish/
+- XML and JSON conventions: http://wiki.open311.org/JSON_and_XML_Conversion/
+- Yahoo convention: https://developer.yahoo.com/javascript/json.html#xml
+- xmlconv: https://github.com/chbrown/xmlconv/tree/master/lib
+
+TemplateHandler
+~~~~~~~~~~~~~~~
+
+Renders a Tornado template
 
 
-``yaml2html?()`` translates YAML (or HAML?) into HTML DOM::
+Other handlers
+~~~~~~~~~~~~~~
 
-    html:
-      head:
-        title: Hello world
-      body:
-        h1 class="main": Heading
-        p class="first": Paragraph
+We are considering these handlers.
 
-Also a ``html2yaml()``
+- **Middleware handlers** that add decorater methods on other handlers
+- **Namespaced app folders**.
+  - Reserved namespaces
+  - Add a directory ``app/``, and the URL mappings for ``/app/...``
+    will be taken from the ``app/`` directory.
+  - With ``/app/`` there is full flexibility on how to handle the URLs
+  - No URLs outside ``/app/`` will be affected.
+  - Configurations use data, not code. (e.g. YAML, not Python)
+- **Data API**. Perhaps like
+  `Webstore <http://webstore.readthedocs.org/en/latest/index.html>`__
+- **Auth**
+  - Authentication mechanism (OAuth, SAML, LDAP, etc.)
+  - Admin: User - role mapping and expiry management
+  - Apps expose a ``function(user, roles, request)`` to the server
+    that determines the rejection, type of rejection, error message,
+    log message, etc.
+  - Apps can internally further limit access based on role (e.g. only
+    admins can see all rows.)
+  - An app can be an auth provider. By default, a ``/admin/`` app can
+    provide uer management functionality
+- **Uploads**
+- **AJAX support** for templates
+- **Websockets**
 
-YAML provides an extension mechanism. See
-
-    # How to specify which file this extends?
-    link [rel="stylesheet"]:
-      @src: bootstrap.custom.min.css
-    h1: This is the title
-    ".row":
-      col:
-        leaflet-map:
-      col:
-        awesome-table:
-      col:
-        vega-lite:
-          width: 400
-          height: 200
-          data:
-            name: test
-            url: /data/test?...     # How to specify filters? From URL or otherwise?
-    footer: This is the footer
 
 Components
 ----------
@@ -250,7 +240,7 @@ Components
 .. _IE10 won't be supported: https://support.microsoft.com/en-us/gp/microsoft-internet-explorer
 
 `Web components`_ allow custom HTML elements. With a small `polyfill`_, target
-browsers are supproted.
+browsers are supported.
 
 .. _Web components: http://webcomponents.org/
 .. _polyfill: https://github.com/WebComponents/webcomponentsjs
