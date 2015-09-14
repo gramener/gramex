@@ -6,8 +6,10 @@ Gramex is a declarative data analytics and visualization platform.
 Installation
 ------------
 
-Gramex is distributed via ``pip``. Install `git <https://git-scm.com/>`__ and
-`Anaconda <http://continuum.io/downloads>`__. Then::
+Gramex is distributed via ``pip``. Install git_ and Anaconda_. Then::
+
+.. _git: https://git-scm.com/
+.. _Anaconda: http://continuum.io/downloads
 
     # Install via SSH
     pip install git+ssh://git@code.gramener.com/s.anand/gramex.git@master
@@ -94,11 +96,12 @@ default ``gramex.yaml``. Gramex runs in a home directory, which can have
 a ``gramex.yaml``, and can define other config files that further
 over-ride it.
 
-Configurations are loaded as `ordered
-attrdicts <https://github.com/mk-fg/layered-yaml-attrdict-config>`__
-files and stored in the variable ``gramex.config``. Apps can update this
-and run ``gramex.reconfigure()`` to update all configurations (except
-``app:`` and ``conf:``).
+Configurations are loaded as ordered `AttrDict`_ files and stored in the
+variable ``gramex.config``. Apps can update this and run
+``gramex.reconfigure()`` to update all configurations (except ``app:`` and
+``conf:``).
+
+.. _AttrDict: https://github.com/mk-fg/layered-yaml-attrdict-config
 
 Configurations are pure YAML, and do not have any tags. The YAML files
 are grouped into one section per service:
@@ -141,7 +144,7 @@ also runs a separate thread that can:
 -  etc.
 
 However, all request handlers will run on a single thread, since Tornado
-`RequestHandler is not thread-safe <thread-safety>`__.
+RequestHandler is not thread-safe.
 
 Libraries
 ---------
@@ -198,64 +201,100 @@ Handlers
 How do these tie in?
 
 -  Mixins for handlers?
--  **Composability** of handlers via composability of HTML using `Web
-   Components <https://github.com/WebComponents/webcomponentsjs>`__?
+-  **Composability** of handlers via composability of HTML via `Web
+   components`_
 -  Custom elements tree
--  Declarative modifications: how?
 -  **Composability** of handlers via middleware: decorators on handler
    methods: decorators: get: gramex.auth.saml: server: something
    gramex.auth.required: roles: [alpha, beta] post: ...
 -  Database support (Redis, PostgreSQL, etc)?
--  Tornado UI modules?
+
+
+``yaml2html?()`` translates YAML (or HAML?) into HTML DOM::
+
+    html:
+      head:
+        title: Hello world
+      body:
+        h1 class="main": Heading
+        p class="first": Paragraph
+
+Also a ``html2yaml()``
+
+YAML provides an extension mechanism. See
+
+    # How to specify which file this extends?
+    link [rel="stylesheet"]:
+      @src: bootstrap.custom.min.css
+    h1: This is the title
+    ".row":
+      col:
+        leaflet-map:
+      col:
+        awesome-table:
+      col:
+        vega-lite:
+          width: 400
+          height: 200
+          data:
+            name: test
+            url: /data/test?...     # How to specify filters? From URL or otherwise?
+    footer: This is the footer
 
 Components
 ----------
 
-**Browsers supported** are IE11, Edge, Chrome and Firefox.
-From Jan 12 2016, IE10 and below won't be supported by Microsoft.
-(`ref <https://support.microsoft.com/en-us/gp/microsoft-internet-explorer>`__).
+**Browsers supported** are IE11, Edge, Chrome, Firefox, mobile Safari. From Jan
+12 2016, `IE10 won't be supported`_.
+
+.. _IE10 won't be supported: https://support.microsoft.com/en-us/gp/microsoft-internet-explorer
+
+`Web components`_ allow custom HTML elements. With a small `polyfill`_, target
+browsers are supproted.
+
+.. _Web components: http://webcomponents.org/
+.. _polyfill: https://github.com/WebComponents/webcomponentsjs
+
 
 
 Layered data-driven approach
 
--  Composable components. Apply a component over another in a layered
-   manner
--  Scaling and other transformations
--  Axes
--  Default stroke colour, stroke width, padding, etc
--  Attribute lambda parameters
--  Transformable. Transforms should also be composable.
--  Ability to access template intermediate variables (layouts, scales,
-   etc) from outside on server and client side
--  Themes
--  Any symbol instead of default symbols
+- Composable components. Apply a component over another in a way
+- Scaling and other transformations
+- Axes
+- Default stroke colour, stroke width, padding, etc
+- Attribute lambda parameters
+- Transformable. Transforms should also be composable.
+- Ability to access template intermediate variables (layouts, scales,
+  etc) from outside on server and client side
+- Themes
+- Any symbol instead of default symbols
 
 Flexible rendering:
 
--  Rendering may be on the client side or the server side
--  Rendered views can be edited on the client side as well
--  Renderable for PPTX, PDF, PNG, SVG, etc
--  Responsive on the server side (re-layout) or the client side
-   (preserve aspect)
--  CSS classes reserved for components
+- Rendering may be on the client side or the server side
+- Rendered views can be edited on the client side as well
+- Renderable for PPTX, PDF, PNG, SVG, etc
+- Responsive on the server side (re-layout) or the client side
+  (preserve aspect)
+- CSS classes reserved for components
 
 Containers and controls:
 
--  Grids
--  Themes
--  Standard components
+- Grids
+- Themes
+- Standard components
 
 Interactive charts:
 
--  Animated transitions
--  Cross-filter like filtering
--  How will we incorporate dynamic interactive controls?
--  Interactivity involves 3 things (We don't have a catalogue of any of
-   these):
-
-   1. Events / components (brushing, clicking, sliding, etc)
-   2. Actions (filter, zoom-in, etc)
-   3. Combinations (click-to-filter, etc)
+- Animated transitions
+- Cross-filter like filtering
+- How will we incorporate dynamic interactive controls?
+- Interactivity involves 3 things (We don't have a catalogue of any of
+  these):
+    1. Events / components (brushing, clicking, sliding, etc)
+    2. Actions (filter, zoom-in, etc)
+    3. Combinations (click-to-filter, etc)
 
 Intelligence:
 
