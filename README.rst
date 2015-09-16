@@ -365,6 +365,8 @@ Normal dates indicate actual activity.
 - **Mon 14 Sep**: Handler and component spec
 - *Mon 14 Sep*: Anand: create a HTML - YAML interconverter handler. This will be
   the primary templating handler we will use
+- Mon 14 Sep: Explore web components
+- Tue 15 Sep: Create an XML - data interconversion engine
 - *Tue 15 Sep*: Pratap: create ``<vega-chart>`` and ``<vega-lite>`` webcomponents
 - *Wed 16 Sep*: Anand: create a Node.js handler in Tornado
 - *Thu 17 Sep*: Pratap: create examples of most charts on learn.gramener.com
