@@ -104,7 +104,7 @@ To set up the development environment:
 
     export PYTHON=/path/to/python         # e.g. path to Python 3.4+
 
-7. Commit your changes and push your branch to GitHub::
+7. Commit your changes and push your branch::
 
     $ git add .
     $ git commit -m "Your detailed description of your changes."
