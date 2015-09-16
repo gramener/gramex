@@ -49,9 +49,9 @@ test-all:
 	tox
 
 coverage:
-	coverage run --include='gramex*' setup.py test
-	coverage report -m
-	coverage html
+	$(PYTHON) -m coverage run --include='gramex*' setup.py test
+	$(PYTHON) -m coverage report -m
+	$(PYTHON) -m coverage html
 	$(BROWSER) htmlcov/index.html
 
 docs:
