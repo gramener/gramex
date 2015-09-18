@@ -9,3 +9,4 @@ zope.dottedname             # To resolve Python names into objects
 tornado                     # For the app
 PyYAML                      # For config loading
 crontab                     # For scheduler
+xmljson                     # Convert objects into / back from XML
