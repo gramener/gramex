@@ -1,4 +1,6 @@
 import os
+import xmljson
+from lxml import html
 from tornado.web import HTTPError, RequestHandler, StaticFileHandler
 from zope.dottedname.resolve import resolve
 
@@ -64,3 +66,17 @@ class DirectoryHandler(StaticFileHandler):
         if os.path.isdir(self.absolute_path):
             return 'text/html'
         return super(DirectoryHandler, self).get_content_type()
+
+
+class ObjectHandler(RequestHandler):
+    @staticmethod
+    def obj2html(obj):
+        etree = xmljson.badgerfish.etree(obj)[0]
+        return html.tostring(etree)
+
+    def initialize(self, mapping, content):
+        self.mapping = {key: resolve(val) for key, val in mapping.items()}
+        self.content = content
+
+    def get(self):
+        self.write(self.obj2html(self.content))

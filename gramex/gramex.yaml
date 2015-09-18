@@ -6,7 +6,7 @@ version: 1.0
 # http://tornado.readthedocs.org/en/stable/web.html#tornado.web.Application.settings
 app:
     listen:
-        port: 8888              # Port to bind to
+        port: 9988              # Port to bind to. (8888 used by Jupyter)
         xheaders: True
         max_buffer_size: 1000000000
         max_header_size: 1000000000
@@ -44,9 +44,29 @@ url:
         pattern: /reload-config
         handler: gramex.handlers.Function   # Run a function and redirect
         kwargs:
-            function: gramex.init       # Run gramex.init()
-            kwargs: {}                  # without any arguments
-            # redirect: /               # Redirects to referer or / by default
+            function: gramex.init           # Run gramex.init()
+            kwargs: {}                      # without any arguments
+            # redirect: /                   # Redirects to referer or / by default
+
+    help:
+        pattern: /help                          # The /help URL
+        handler: gramex.handlers.ObjectHandler  # uses the ObjectHandler
+        kwargs:                                 # that takes:
+          mapping:                              #   mapping: currently unused
+            html: xmljson.badgerfish.etree      #       will map tag to function
+            vega-chart: json.dumps              #       lets vega-chart use JSON
+          content:                              #   content: to be converted,
+            html:                               #       treated as BadgerFish
+              head:
+                "@lang": in
+                link:
+                  "@rel": stylesheet
+                  "@href": https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.5/css/bootstrap.min.css
+              body:
+                div:
+                    "@class": container-fluid
+                    h1: {"$": Help }
+                    p: {"$": This is the help for Gramex 1.0}
 
     root-app:                           # A unique name for this handler
         pattern: /(.*)                  # All URLs beginning with /
@@ -93,7 +113,7 @@ log:
             level: WARN
             filename: warn.log
             formatter: file
-            maxBytes: 1024
+            maxBytes: 10240
             backupCount: 3
     loggers:
         tornado.access: {}
