@@ -12,17 +12,20 @@ For example, if ``gramex.yaml`` contains this section::
 exists, a warning is raised.
 '''
 
+import gramex
 import logging.config
 import tornado.web
 import tornado.ioloop
 from orderedattrdict import AttrDict
 from zope.dottedname.resolve import resolve
 from . import scheduler
+from . import watcher
 
 
+# Service-specific information
 info = AttrDict(
     app=None,
-    tasks=AttrDict(),
+    schedule=AttrDict(),
 )
 
 
@@ -48,7 +51,7 @@ def app(conf):
 
 def schedule(conf):
     "Set up the Gramex PeriodicCallback scheduler"
-    scheduler.setup(schedule=conf, tasks=info.tasks)
+    scheduler.setup(schedule=conf, tasks=info.schedule)
 
 
 def url(conf):
@@ -61,3 +64,13 @@ def url(conf):
     del info.app.handlers[:]
     info.app.named_handlers.clear()
     info.app.add_handlers('.*$', handlers)
+
+
+def watch(conf):
+    "Set up file watchers"
+    watcher.watch(
+        'gramex-reconfigure',
+        paths=[pathinfo.path
+               for pathconfig in gramex.config_layers.values()
+               for pathinfo in pathconfig.__info__.imports],
+        on_modified=lambda event: gramex.init())

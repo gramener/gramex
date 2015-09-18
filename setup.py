@@ -33,6 +33,8 @@ setup(
         'tornado >= 4.0',           # Web server
         'PyYAML',                   # Parse YAML fils
         'crontab',                  # Parse crontab entries
+        'xmljson',                  # Convert objects into / back from XML
+        'watchdog',                 # Monitor file changes
     ],
     license="Other/Proprietary License",
     zip_safe=False,

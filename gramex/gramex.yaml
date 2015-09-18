@@ -66,7 +66,9 @@ url:
                 div:
                     "@class": container-fluid
                     h1: {"$": Help }
-                    p: {"$": This is the help for Gramex 1.0}
+                    p:
+                      - {"$": This is the help for Gramex 1.0.2}
+                      - {"$": More text to come here.}
 
     root-app:                           # A unique name for this handler
         pattern: /(.*)                  # All URLs beginning with /
@@ -113,7 +115,7 @@ log:
             level: WARN
             filename: warn.log
             formatter: file
-            maxBytes: 10240
+            maxBytes: 1048576   # 1MB
             backupCount: 3
     loggers:
         tornado.access: {}
@@ -135,7 +137,7 @@ log:
 schedule:
     gramex-reconfig:
         function: gramex.init           # Reload Gramex config
-        minutes: '*/2'                  # Every 2 minutes
+        minutes: '*/30'                 # Every 30 minutes
     scheduled-message:
         function: logging.info          # Run this function
         kwargs:                         # with these keys and values
@@ -148,6 +150,8 @@ schedule:
         minutes: '*/5, 59'              # Every 5th minute, and 59th minute
         startup: true                   # In addition, run on startup
 
+# Watch here
+watch: True
 
 # The `error:` section defines error responses. When you raise
 # `GramexError(key="...")`, Gramex calls the corresponding `function:` as
