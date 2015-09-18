@@ -45,7 +45,7 @@ class ChainConfig(AttrDict):
         return conf
 
 
-def open(path, default=AttrDict()):
+def _open(path, default=AttrDict()):
     'Load a YAML path.Path as an ordered AttrDict'
     path = path.absolute()
     if not path.exists():
@@ -81,7 +81,7 @@ def _imports(node, source):
             for name, pattern in value.items():
                 paths = root.glob(pattern) if '*' in pattern else [Path(pattern)]
                 for path in paths:
-                    new_conf = open(path)
+                    new_conf = _open(path)
                     imported_paths += [_pathstat(path)] + _imports(new_conf, source=path)
                     node.update(new_conf)
             # Delete the import key
@@ -91,11 +91,31 @@ def _imports(node, source):
 
 class PathConfig(AttrDict):
     '''
+    An ``AttrDict`` that is loaded from a path as a YAML file. For e.g.,
     ``conf = PathConfig(path)`` loads the YAML file at ``path`` as an AttrDict.
     ``+conf`` reloads the path if required.
 
     Like http://configure.readthedocs.org/ but supports imports not inheritance.
-    This lets us import YAML files in the middle of a YAML structure.
+    This lets us import YAML files in the middle of a YAML structure::
+
+        key:
+            import:
+                conf1: file1.yaml       # Import file1.yaml here
+                conf2: file2.yaml       # Import file2.yaml here
+
+    Each ``PathConfig`` object has an ``__info__`` attribute with the following
+    keys:
+
+    __info__.path
+        The path that this instance syncs with, stored as a ``pathlib.Path``
+    __info__.imports
+        A list of imported files, stored as an ``AttrDict`` with 2 attributes:
+
+        path
+            The path that was imported, stored as a ``pathlib.Path``
+        stat
+            The ``os.stat()`` information about this file (or ``None`` if the
+            file is missing.)
     '''
     def __init__(self, path):
         super(PathConfig, self).__init__()
@@ -120,10 +140,8 @@ class PathConfig(AttrDict):
                 reload = True
                 logging.info('Updated config: %s', imp.path)
                 break
-        if not reload:
-            return self
-
-        self.clear()
-        self.update(open(path))
-        self.__info__.imports = _imports(self, path)
+        if reload:
+            self.clear()
+            self.update(_open(path))
+            self.__info__.imports = _imports(self, path)
         return self
