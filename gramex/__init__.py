@@ -40,4 +40,5 @@ def init(**kwargs):
     # Start the IOLoop. TODO: can the app service start this delayed?
     ioloop = tornado.ioloop.IOLoop.current()
     if not ioloop._running:
+        logging.info('Listening on port %d', conf.app.listen.port)
         ioloop.start()
