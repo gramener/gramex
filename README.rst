@@ -6,10 +6,10 @@ Gramex is a declarative data analytics and visualization platform.
 Installation
 ------------
 
-Gramex is distributed via ``pip``. Install git_ and Anaconda_. Then::
-
 .. _git: https://git-scm.com/
 .. _Anaconda: http://continuum.io/downloads
+
+Gramex is distributed via ``pip``. Install `git`_ and `Anaconda`_. Then::
 
     # Install via SSH
     pip install git+ssh://git@code.gramener.com/s.anand/gramex.git@master
