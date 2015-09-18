@@ -96,12 +96,12 @@ class TestConfig(unittest.TestCase):
         result = list(walk(o))
         self.assertEqual(
             [key for key, val, node in result],
-            list('abcdefghijk'))
+            list('cdbehigfjak'))
         self.assertEqual(
             [val for key, val, node in result],
-            [o.a, o.a.b, o.a.b.c, o.a.b.d, o.a.e, o.a.f, o.a.f.g, o.a.f.g.h,
-             o.a.f.g.i, o.a.j, o.k])
+            [o.a.b.c, o.a.b.d, o.a.b, o.a.e, o.a.f.g.h, o.a.f.g.i, o.a.f.g,
+             o.a.f, o.a.j, o.a, o.k])
         self.assertEqual(
             [node for key, val, node in result],
-            [o, o.a, o.a.b, o.a.b, o.a, o.a, o.a.f, o.a.f.g,
-             o.a.f.g, o.a, o])
+            [o.a.b, o.a.b, o.a, o.a, o.a.f.g, o.a.f.g, o.a.f,
+             o.a, o.a, o, o])
