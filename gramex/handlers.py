@@ -45,12 +45,15 @@ class DirectoryHandler(StaticFileHandler):
     @classmethod
     def get_content(cls, abspath, start=None, end=None):
         if os.path.isdir(abspath):
-            body = ['<h1>Index of %s </h1><ul>' % abspath]
+            content = ['<h1>Index of %s </h1><ul>' % abspath]
             for name in os.listdir(abspath):
-                body.append('<li><a href="%s">%s</a></li>' % (name, name))
-            body.append('</ul>')
-            return ''.join(body)
-        return super(DirectoryHandler, cls).get_content(abspath, start, end)
+                content.append('<li><a href="%s">%s</a></li>' % (name, name))
+            content.append('</ul>')
+        else:
+            content = super(DirectoryHandler, cls).get_content(abspath, start, end)
+        if not isinstance(content, bytes):
+            content = ''.join(content)
+        return content
 
     def get_content_size(self):
         if os.path.isdir(self.absolute_path):
