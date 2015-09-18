@@ -9,27 +9,23 @@ __author__ = 'S Anand'
 __email__ = 's.anand@gramener.com'
 __version__ = '1.0.2'
 
-paths = AttrDict([
-    ('source', Path(__file__).absolute().parent),
-    ('base', Path('.')),
-])
+paths = AttrDict()              # paths where configurations are stored
+conf = AttrDict()               # holds the final merged configurations
+config_layers = ChainConfig()   # Loads all configurations. init() updates it
 
-# conf holds the final merged configurations
-conf = AttrDict()
-
-# The ChainConfig object that loads all configurations. init() updates it
-_config_chain = ChainConfig()
+paths['source'] = Path(__file__).absolute().parent
+paths['base'] = Path('.')
 
 
 def init(**kwargs):
     # Initialise configuration layers with provided paths
     paths.update(kwargs)
     for name, path in paths.items():
-        if name not in _config_chain:
-            _config_chain[name] = PathConfig(path / 'gramex.yaml')
+        if name not in config_layers:
+            config_layers[name] = PathConfig(path / 'gramex.yaml')
 
-    # Run all valid services. (The "+" before config_chain merges the chain.)
-    for key, val in (+_config_chain).items():
+    # Run all valid services. (The "+" before config_chain merges the chain)
+    for key, val in (+config_layers).items():
         if key not in conf or conf[key] != val:
             if hasattr(services, key):
                 conf[key] = val
