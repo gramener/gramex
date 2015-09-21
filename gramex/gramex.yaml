@@ -48,28 +48,6 @@ url:
             kwargs: {}                      # without any arguments
             # redirect: /                   # Redirects to referer or / by default
 
-    help:
-        pattern: /help                          # The /help URL
-        handler: gramex.handlers.ObjectHandler  # uses the ObjectHandler
-        kwargs:                                 # that takes:
-          mapping:                              #   mapping: currently unused
-            html: xmljson.badgerfish.etree      #       will map tag to function
-            vega-chart: json.dumps              #       lets vega-chart use JSON
-          content:                              #   content: to be converted,
-            html:                               #       treated as BadgerFish
-              head:
-                "@lang": in
-                link:
-                  "@rel": stylesheet
-                  "@href": https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.5/css/bootstrap.min.css
-              body:
-                div:
-                    "@class": container-fluid
-                    h1: {"$": Help }
-                    p:
-                      - {"$": This is the help for Gramex 1.0.2}
-                      - {"$": More text to come here.}
-
     root-app:                           # A unique name for this handler
         pattern: /(.*)                  # All URLs beginning with /
         handler: gramex.handlers.DirectoryHandler   # Handler used
@@ -87,11 +65,11 @@ url:
     # warning if a file is missing. You can specify a `Path.glob` pattern as
     # well. (Note: absolute glob patterns are not implemented by `Path.glob`.)
 
-    import:
-        app1: 'app1/gramex.url.yaml'        # relative path
-        app2: 'd:/temp/gramex.url.yaml'     # absolute path
-        # subapps: '*/gramex.url.yaml'        # glob: 1st-level directory search
-        # deepapps: '**/gramex.url.yaml'      # glob: full subtree search
+    # import:
+    #     app1: 'app1/gramex.url.yaml'        # relative path
+    #     app2: 'd:/temp/gramex.url.yaml'     # absolute path
+    #     subapps: '*/gramex.url.yaml'        # glob: 1st-level directory search
+    #     deepapps: '**/gramex.url.yaml'      # glob: full subtree search
 
 
 # The `log:` section defines the log handlers. It uses the same structure as the
@@ -103,20 +81,22 @@ log:
     version: 1
     root:
         level: DEBUG
-        handlers: [console, warnings]
+        handlers:
+            - console
+            # - warnings    # Add additional handlers here
     handlers:
         console:
             class: logging.StreamHandler
             level: DEBUG
             stream: ext://sys.stdout
             formatter: console
-        warnings:
-            class: logging.handlers.RotatingFileHandler
-            level: WARN
-            filename: warn.log
-            formatter: file
-            maxBytes: 1048576   # 1MB
-            backupCount: 3
+        # warnings:         # Here's an example of a handler for warnings
+        #     class: logging.handlers.RotatingFileHandler
+        #     level: WARN
+        #     filename: warn.log
+        #     formatter: file
+        #     maxBytes: 1048576   # 1MB
+        #     backupCount: 3
     loggers:
         tornado.access: {}
         tornado.application: {}
@@ -138,17 +118,17 @@ schedule:
     gramex-reconfig:
         function: gramex.init           # Reload Gramex config
         minutes: '*/30'                 # Every 30 minutes
-    scheduled-message:
-        function: logging.info          # Run this function
-        kwargs:                         # with these keys and values
-            msg: This is a scheduled message
-        years: '*'                      # Every year (* is default)
-        months: 'jan, mar-may, 12'      # In Jan, Mar, Apr, May, Dec
-        dates: '1, L'                   # On the first and last days
-        weekdays: '*'                   # 0-6 or SUN-SAT
-        hours: '*/3'                    # Every 3rd hour
-        minutes: '*/5, 59'              # Every 5th minute, and 59th minute
-        startup: true                   # In addition, run on startup
+    # scheduled-message:
+    #     function: logging.info          # Run this function
+    #     kwargs:                         # with these keys and values
+    #         msg: This is a scheduled message
+    #     years: '*'                      # Every year (* is default)
+    #     months: 'jan, mar-may, 12'      # In Jan, Mar, Apr, May, Dec
+    #     dates: '1, L'                   # On the first and last days
+    #     weekdays: '*'                   # 0-6 or SUN-SAT
+    #     hours: '*/3'                    # Every 3rd hour
+    #     minutes: '*/5, 59'              # Every 5th minute, and 59th minute
+    #     startup: true                   # In addition, run on startup
 
 # Watch here
 watch: True
@@ -159,17 +139,18 @@ watch: True
 # `kwargs['exc_info']` will have an `exc_info` triple.
 #
 # http://tornado.readthedocs.org/en/latest/web.html#tornado.web.RequestHandler.write_error
-error:
-    page-not-found:
-        code: 404
-        function: SimpleErrorPage
-        kwargs:
-          h1: Page not found
-          body: This is not the page you are looking for
-    custom-error:
-        code: 500
-        function: ErrorTemplateHandler
-        path: 500.html
+
+# error:
+#     page-not-found:
+#         code: 404
+#         function: SimpleErrorPage
+#         kwargs:
+#           h1: Page not found
+#           body: This is not the page you are looking for
+#     custom-error:
+#         code: 500
+#         function: ErrorTemplateHandler
+#         path: 500.html
 
 
 # The `license:` section handles the following scenarios:
@@ -180,26 +161,26 @@ error:
 #
 # How are services, handlers and components identified?
 
-license:
-    default:                    # Name of license. (Multiple licenses possible)
-        key: ...                # License key for this license
-        systems:                # Systems this license is valid for
-            system-1:           # Name of the first system
-                method:         #   Algorithm used to compute the sysid
-                sysid:          #   System's unique ID based on algorithm
-            system-2:           # Name of the second system
-                method:         #   Algorithm used to compute next sysid
-                sysid:          #   ...
-        validity:               # From when to when is the license valid
-            start: 2015-01-01 00:00:00
-            end: 2016-01-01 00:00:00
-        users: 1                # Optional: max users allowed
-        inventory:              # What's allwoed. (Values matter; keys are just labels)
-            treemap:            # Each permission is a key
-                services:       #   Allowed services
-                    ...         #     How to define these?
-                handlers:       #   Allowed handlers
-                    ...         #     How to define these?
+# license:
+#     default:                    # Name of license. (Multiple licenses possible)
+#         key: ...                # License key for this license
+#         systems:                # Systems this license is valid for
+#             system-1:           # Name of the first system
+#                 method:         #   Algorithm used to compute the sysid
+#                 sysid:          #   System's unique ID based on algorithm
+#             system-2:           # Name of the second system
+#                 method:         #   Algorithm used to compute next sysid
+#                 sysid:          #   ...
+#         validity:               # From when to when is the license valid
+#             start: 2015-01-01 00:00:00
+#             end: 2016-01-01 00:00:00
+#         users: 1                # Optional: max users allowed
+#         inventory:              # What's allwoed. (Values matter; keys are just labels)
+#             treemap:            # Each permission is a key
+#                 services:       #   Allowed services
+#                     ...         #     How to define these?
+#                 handlers:       #   Allowed handlers
+#                     ...         #     How to define these?
 
 
 # email:
