@@ -152,6 +152,7 @@ Libraries
 Gramex uses and recommends the following libraries:
 
 - cryptography: `cryptography <https://cryptography.io/>`__
+- file watching: `watchdog <http://pythonhosted.org/watchdog/>`__
 - ETL: `odo <http://odo.readthedocs.org/en/latest/>`__,
   `dask <http://dask.readthedocs.org/en/latest/>`__ and
   `blaze <http://blaze.pydata.org/en/latest/>`__
@@ -183,17 +184,20 @@ DirectoryHandler
 
 Displays files in a folder.
 
-YAMLHandler
-~~~~~~~~~~~
+ObjectHandler
+~~~~~~~~~~~~~
 
-Converts YAML to HTML via the `badgerfish`_ convention and renders the response.
+Converts YAML to HTML via the `BadgerFish`_ convention and renders the response.
 
 References:
 
-- badgerfish: http://www.sklar.com/badgerfish/
-- XML and JSON conventions: http://wiki.open311.org/JSON_and_XML_Conversion/
-- Yahoo convention: https://developer.yahoo.com/javascript/json.html#xml
-- xmlconv: https://github.com/chbrown/xmlconv/tree/master/lib
+- `BadgerFish`_
+- `XML and JSON conventions <http://wiki.open311.org/JSON_and_XML_Conversion/>`_
+- `Yahoo convention <https://developer.yahoo.com/javascript/json.html#xml>`_
+- `xmlconv <https://github.com/chbrown/xmlconv/tree/master/lib>`_
+
+.. _BadgerFish: http://www.sklar.com/badgerfish/
+
 
 TemplateHandler
 ~~~~~~~~~~~~~~~
@@ -348,7 +352,7 @@ Project plan
 **Bold dates** indicate milestones. *Italic dates* indicate plans.
 Normal dates indicate actual activity.
 
-- **Mon 31 Aug**: Begin Gramex 1.0
+- **Mon 31 Aug**: Begin Gramex 1.0. **Status: done, on time**
 - Mon 31 Aug: Define Gramex config syntax, logging and scheduling
   services
 - Tue 1 Sep: Define config layering, error handling, component
@@ -358,23 +362,29 @@ Normal dates indicate actual activity.
 - Thu 3 Sep: Add config, scehduler and logger services. Explore
   component approach
 - Fri 4 Sep: Core server ready for release.
-- **Fri 4 Sep**: Core server spec and prototype release
+- **Fri 4 Sep**: Core server spec and prototype release. **Status: done, on time**
 - Mon 7 Sep: Explore Vega, dask
 - Tue 8 Sep: Add DirectoryHandler, 1.0.0 release
 - Wed 9 Sep: Update documentation
-- **Mon 14 Sep**: Handler and component spec
-- *Mon 14 Sep*: Anand: create a HTML - YAML interconverter handler. This will be
-  the primary templating handler we will use
+- **Mon 14 Sep**: Handler and component spec. **Status: done, on time**
 - Mon 14 Sep: Explore web components
 - Tue 15 Sep: Create an XML - data interconversion engine
-- *Tue 15 Sep*: Pratap: create ``<vega-chart>`` and ``<vega-lite>`` webcomponents
-- *Wed 16 Sep*: Anand: create a Node.js handler in Tornado
-- *Thu 17 Sep*: Pratap: create examples of most charts on learn.gramener.com
-  using ``<vega-lite>`` or ``<vega-chart>``
-- *Fri 18 Sep*: Document handler and component spec. Write client collateral on
-  technology stack direction: Tornado, Blaze, node, Vega, Web components
+- Thu 17 Sep: create examples of Vega charts
+- Fri 18 Sep: Write high-level collateral on technology stack direction:
+  Tornado, Blaze, node, Vega, Web components
+- Sat 19 Sep: create a HTML - YAML interconverter handler. This will be the
+  primary templating handler we will use using ``<vega-chart>``
+- Sun 19 Sep: create ``<vega-chart>`` webcomponents
 - **Mon 21 Sep**: Revised handler and component spec and prototype.
-  Components listed
-- **Mon 26 Oct**: Spec freeze. Components early release.
+  Components listed. **Status: delayed**
+- *Mon 21 Sep 2015*: Create gallery and dashboards of vega components using
+  ``<vega-chart>`` to identify component API
+- *Tue 22 Sep 2015*: Finalise ``<vega-chart>`` API
+- *Wed 23 Sep 2015*: Create at least 5 full demo dashboards. Use it to identify server-side needs
+- *Thu 24 Sep 2015*: Define and start implementing server-side interface (data, templating)
+- *Fri 25 Sep 2015*: Data and template handlers
+- **Mon 28 Sep**: Data handler working with charts
+- **Mon 5 Oct**: Add ``<vega-lite>`` and more components. Document specs
+- **Mon 26 Oct**: Spec freeze. Components early release
 - **Mon 9 Nov**: Gramex 1.0 beta release to testing. Start bugfixing
 - **Mon 23 Nov**: Gramex 1.0 release
