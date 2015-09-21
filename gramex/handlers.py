@@ -1,6 +1,9 @@
 import os
+import yaml
 import xmljson
-from lxml import html
+import lxml.html
+from pathlib import Path
+from orderedattrdict.yamlutils import AttrDictYAMLLoader
 from tornado.web import HTTPError, RequestHandler, StaticFileHandler
 from zope.dottedname.resolve import resolve
 
@@ -68,15 +71,83 @@ class DirectoryHandler(StaticFileHandler):
         return super(DirectoryHandler, self).get_content_type()
 
 
-class ObjectHandler(RequestHandler):
+class TransformHandler(RequestHandler):
+    '''
+    Renders files in a path after transforming them. This is useful for a static
+    file handler that pre-processes responses. Here are some examples::
+
+        pattern: /help/(.*)
+        handler: gramex.handlers.TransformHandler   # This handler
+        kwargs:
+          path: help/                               # Serve files from help/
+          default_filename: index.yaml              # Directory index file
+          transform:
+            "*.md":                                 # Any file matching .md
+              transform: markdown.markdown          #   Convert .md to html
+              headers:
+                Content-Type: text/html             #   MIME type: text/html
+            "*.yaml":                               # YAML files use BadgerFish
+              transform: gramex.handlers.TransformHandler.badgerfish
+              headers:
+                Content-Type: text/html             #   MIME type: text/html
+            "*.lower":                              # Any .lower file
+              transform: string.lower               #   Convert to lowercase
+              headers:
+                Content-Type: text/plain            #   Serve as plain text
+
+    TODO:
+
+    - Write test cases
+    - Make this async
+    - Cache it
+    '''
     @staticmethod
-    def obj2html(obj):
-        etree = xmljson.badgerfish.etree(obj)[0]
-        return html.tostring(etree)
+    def badgerfish(content):
+        data = yaml.load(content, Loader=AttrDictYAMLLoader)
+        return lxml.html.tostring(xmljson.badgerfish.etree(data)[0],
+                                  doctype='<!DOCTYPE html>')
 
-    def initialize(self, mapping, content):
-        self.mapping = {key: resolve(val) for key, val in mapping.items()}
-        self.content = content
+    def initialize(self, path, default_filename=None, transform={}):
+        self.root = path
+        self.default_filename = default_filename
+        self.transform = {}
+        for pattern, trans in transform.items():
+            trans = dict(trans)
+            if 'transform' in trans:
+                trans['transform'] = resolve(trans['transform'])
+            self.transform[pattern] = trans
 
-    def get(self):
-        self.write(self.obj2html(self.content))
+    def get(self, path):
+        self.path = path
+        if os.path.sep != '/':
+            self.path = self.path.replace('/', os.path.sep)
+        absolute_path = os.path.abspath(os.path.join(self.root, self.path))
+
+        if (os.path.isdir(absolute_path) and
+                self.default_filename is not None):
+            if not self.request.path.endswith("/"):
+                self.redirect(self.request.path + "/", permanent=True)
+                return
+            absolute_path = os.path.join(absolute_path, self.default_filename)
+        if not os.path.exists(absolute_path):
+            raise HTTPError(404)
+        if not os.path.isfile(absolute_path):
+            raise HTTPError(403, "%s is not a file", self.path)
+
+        # Python 2.7 pathlib only accepts str, not unicode
+        path = Path(str(absolute_path))
+        with path.open('r+b') as handle:
+            content = handle.read()
+
+        # Apply first matching transforms
+        for pattern, trans in self.transform.items():
+            if path.match(pattern):
+                if 'transform' in trans:
+                    content = trans['transform'](content)
+                if 'header' in trans:
+                    for header_name, header_value in trans['header'].items():
+                        self.set_header(header_name, header_value)
+                break
+
+        self.write(content)
+        self.flush()
