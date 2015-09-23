@@ -28,13 +28,19 @@ setup(
     install_requires=[
         # Abstract dependencies here, concrete dependencies in requirements.txt
         # See https://packaging.python.org/en/latest/requirements.html
+
+        # General utilities
         'pathlib',                  # Python 3.3+ already has it
-        'orderedattrdict',          # OrderedDict with attr access
+        'orderedattrdict',          # OrderedDict with attr access for configs
+        'zope.dottedname',          # Resolve Python names into objects
+        'watchdog',                 # Monitor file changes
+        'six',                      # Python 3 compatibility
+
+        # Application specific
         'tornado >= 4.0',           # Web server
         'PyYAML',                   # Parse YAML fils
         'crontab',                  # Parse crontab entries
         'xmljson',                  # Convert objects into / back from XML
-        'watchdog',                 # Monitor file changes
     ],
     license="Other/Proprietary License",
     zip_safe=False,

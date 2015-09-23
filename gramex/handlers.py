@@ -13,25 +13,21 @@ class Function(RequestHandler):
     Renders the output of a function. It accepts these parameters when
     initialized:
 
-    ``function`` is a string that resolves into any Python function or method
-    (e.g. ``string.lower``). It is called as ``function(*args, **kwargs)``. By
-    default, the result is rendered as-is (and hence must be a string.) If you
-    ``redirect`` is specified, the result is discarded and the user is
-    redirected to ``redirect``.
-
-    ``args`` has all positional arguments to be passed to the function.
-
-    ``kwargs`` has all keyword arguments to be passed to the function.
-
-    ``headers`` has optional headers to set on the response.
-
-    ``redirect`` is the URL to redirect to when the result is done. This is
-    typically used to trigger calculations without displaying any output.
+    :arg string function: a string that resolves into any Python function or
+        method (e.g. ``string.lower``). It is called as ``function(*args,
+        **kwargs)``. By default, the result is rendered as-is (and hence must be
+        a string.) If you ``redirect`` is specified, the result is discarded and
+        the user is redirected to ``redirect``.
+    :arg list args: positional arguments to be passed to the function.
+    :arg dict kwargs: keyword arguments to be passed to the function.
+    :arg dict headers: headers to set on the response.
+    :arg string redirect: URL to redirect to when the result is done. Used to
+        trigger calculations without displaying any output.
 
     Here's a simple use -- to display a string as a response to a URL. This
     configuration renders "Hello world" at the URL `/hello`::
 
-        function: str                         # str()
+        function: six.text_type               # Display as text in Python 2 & 3
         args:
           - Hello world                       # with "Hello world"
 
