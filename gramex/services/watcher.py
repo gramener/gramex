@@ -26,10 +26,10 @@ class FileEventHandler(FileSystemEventHandler):
         self.watches = []
 
         for path in paths:
-            path = Path(path)
+            path = Path(path).absolute()
             parent = path.parent
             if parent.exists():
-                self.paths[parent.resolve()].add(str(path))
+                self.paths[parent.resolve()].add(path)
             else:
                 logging.warn('Parent directory does not exist: %s', path)
 
@@ -38,7 +38,8 @@ class FileEventHandler(FileSystemEventHandler):
             self.watches.append(observer.schedule(self, str(directory)))
 
     def dispatch(self, event):
-        if any(event.src_path in paths for paths in self.paths.values()):
+        source_path = Path(str(event.src_path)).absolute()
+        if any(source_path in paths for paths in self.paths.values()):
             super(FileEventHandler, self).dispatch(event)
 
     def unschedule(self):
