@@ -3,9 +3,9 @@ import yaml
 import xmljson
 import lxml.html
 from pathlib import Path
+from .functions import build_transform
 from orderedattrdict.yamlutils import AttrDictYAMLLoader
 from tornado.web import HTTPError, RequestHandler, StaticFileHandler
-from zope.dottedname.resolve import resolve
 
 
 class Function(RequestHandler):
@@ -54,16 +54,20 @@ class Function(RequestHandler):
     ... to get this result in JSON:
 
         {"display": "$600.00", "value": 600.0}
+
+    **TODO**: extend function to use URL query parameters
     '''
-    def initialize(self, function, args=[], kwargs={}, headers={}, redirect=None):
-        self.function = resolve(function)
-        self.args = args
-        self.kwargs = kwargs
+    def initialize(self, function, args=None, kwargs=None, headers={}, redirect=None):
+        self.function = build_transform({
+            'function': function,
+            'args': ['_'] if args is None else args,
+            'kwargs': {} if kwargs is None else kwargs
+        })
         self.headers = headers
         self.redirect_url = redirect
 
     def get(self):
-        result = self.function(*self.args, **self.kwargs)
+        result = self.function('')
         for header_name, header_value in self.headers.items():
             self.set_header(header_name, header_value)
         if self.redirect_url is not None:
@@ -82,7 +86,8 @@ class DirectoryHandler(StaticFileHandler):
     The usage is otherwise identical to `StaticFileHandler`_.
 
     .. _SimpleHTTPServer: https://docs.python.org/2/library/simplehttpserver.html
-    .. _StaticFileHandler: http://tornado.readthedocs.org/en/latest/web.html#tornado.web.StaticFileHandler
+    .. _StaticFileHandler:
+       http://tornado.readthedocs.org/en/latest/web.html#tornado.web.StaticFileHandler
     '''
 
     def validate_absolute_path(self, root, absolute_path):
@@ -170,7 +175,6 @@ class TransformHandler(RequestHandler):
     TODO:
 
     - Write test cases
-    - Make this async
     - Cache it
     '''
     @staticmethod
@@ -184,10 +188,10 @@ class TransformHandler(RequestHandler):
         self.default_filename = default_filename
         self.transform = {}
         for pattern, trans in transform.items():
-            trans = dict(trans)
-            if 'transform' in trans:
-                trans['transform'] = resolve(trans['transform'])
-            self.transform[pattern] = trans
+            self.transform[pattern] = {
+                'function': build_transform(trans),
+                'headers': trans.get('headers', {})
+            }
 
     def get(self, path):
         self.path = path
@@ -214,11 +218,9 @@ class TransformHandler(RequestHandler):
         # Apply first matching transforms
         for pattern, trans in self.transform.items():
             if path.match(pattern):
-                if 'transform' in trans:
-                    content = trans['transform'](content)
-                if 'header' in trans:
-                    for header_name, header_value in trans['header'].items():
-                        self.set_header(header_name, header_value)
+                content = trans['function'](content)
+                for header_name, header_value in trans['headers'].items():
+                    self.set_header(header_name, header_value)
                 break
 
         self.write(content)

@@ -191,9 +191,9 @@ displays "Hello world" at /hello as plain text::
         pattern: /hello                     # The URL /hello
         handler: gramex.handlers.Function   # Runs a function
         kwargs:
-          function: str                     # str()
+          function: six.text_type           # Convert to string
           args:                             # with these arguments:
-            - Hello hello-world             # just one "Hello world"
+            - Hello world                   # just one "Hello world"
           headers:
             Content-Type: text/plain        # Render as plain text
 
