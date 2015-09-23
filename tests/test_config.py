@@ -118,3 +118,18 @@ class TestConfig(unittest.TestCase):
             (0, 1, [1, 2, 3]),
             (1, 2, [1, 2, 3]),
             (2, 3, [1, 2, 3])])
+
+        o = yaml.load('''
+            -
+                x: 1
+            -
+                x: 2
+            -
+                x: 3
+        ''', Loader=AttrDictYAMLLoader)
+        result = list(walk(o))
+        self.assertEqual(
+            [('x', 1), (0, {'x': 1}),
+             ('x', 2), (1, {'x': 2}),
+             ('x', 3), (2, {'x': 3})],
+            [(key, val) for key, val, node in result])
