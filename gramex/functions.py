@@ -1,6 +1,11 @@
 'Functions to process functions'
 
+import yaml
+import xmljson
+import lxml.html
+from .config import walk
 from zope.dottedname.resolve import resolve
+from orderedattrdict.yamlutils import AttrDictYAMLLoader
 
 
 def build_transform(conf):
@@ -75,3 +80,16 @@ def build_transform(conf):
     function.__name__ = name
     function.__doc__ = doc
     return function
+
+
+def badgerfish(content, mapping={}, doctype='<!DOCTYPE html>'):
+    '''
+    A transform that converts string content to YAML, then maps nodes
+    using other functions, and renders the output as HTML.
+    '''
+    data = yaml.load(content, Loader=AttrDictYAMLLoader)
+    maps = {tag: build_transform(trans) for tag, trans in mapping.items()}
+    for tag, value, node in walk(data):
+        if tag in maps:
+            node[tag] = maps[tag](value)
+    return lxml.html.tostring(xmljson.badgerfish.etree(data)[0], doctype=doctype)

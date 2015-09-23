@@ -1,10 +1,6 @@
 import os
-import yaml
-import xmljson
-import lxml.html
 from pathlib import Path
 from .functions import build_transform
-from orderedattrdict.yamlutils import AttrDictYAMLLoader
 from tornado.web import HTTPError, RequestHandler, StaticFileHandler
 
 
@@ -164,7 +160,7 @@ class TransformHandler(RequestHandler):
               headers:
                 Content-Type: text/html             #   MIME type: text/html
             "*.yaml":                               # YAML files use BadgerFish
-              transform: gramex.handlers.TransformHandler.badgerfish
+              transform: gramex.functions.badgerfish
               headers:
                 Content-Type: text/html             #   MIME type: text/html
             "*.lower":                              # Any .lower file
@@ -177,12 +173,6 @@ class TransformHandler(RequestHandler):
     - Write test cases
     - Cache it
     '''
-    @staticmethod
-    def badgerfish(content):
-        data = yaml.load(content, Loader=AttrDictYAMLLoader)
-        return lxml.html.tostring(xmljson.badgerfish.etree(data)[0],
-                                  doctype='<!DOCTYPE html>')
-
     def initialize(self, path, default_filename=None, transform={}):
         self.root = path
         self.default_filename = default_filename
