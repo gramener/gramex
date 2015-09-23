@@ -10,22 +10,71 @@ from zope.dottedname.resolve import resolve
 
 class Function(RequestHandler):
     '''
-    Renders the output of a function. It accepts two parameters when
+    Renders the output of a function. It accepts these parameters when
     initialized:
 
     ``function`` is a string that resolves into any Python function or method
-    (e.g. ``string.lower``). It is called as ``function(**kwargs)``.
+    (e.g. ``string.lower``). It is called as ``function(*args, **kwargs)``. By
+    default, the result is rendered as-is (and hence must be a string.) If you
+    ``redirect`` is specified, the result is discarded and the user is
+    redirected to ``redirect``.
 
-    ``kwargs`` has all parameters to be passed to the function.
+    ``args`` has all positional arguments to be passed to the function.
+
+    ``kwargs`` has all keyword arguments to be passed to the function.
+
+    ``headers`` has optional headers to set on the response.
+
+    ``redirect`` is the URL to redirect to when the result is done. This is
+    typically used to trigger calculations without displaying any output.
+
+    Here's a simple use -- to display a string as a response to a URL. This
+    configuration renders "Hello world" at the URL `/hello`::
+
+        function: str                         # str()
+        args:
+          - Hello world                       # with "Hello world"
+
+    Only a single function call is allowed. To chain function calls or to do
+    anything more complex, create a Python function and call that instead. For
+    example, create a ``calculations.py`` with this method::
+
+        import json
+        def total(*items):
+            'Calculate total of all items and render as JSON: value and string'
+            total = sum(float(item) for item in items)
+            return json.dumps({
+                'display': '${:,.2f}'.format(total),
+                'value': total,
+            })
+
+    Now, you can use this configuration::
+
+        function: calculations.total
+        args: [100, 200.0, 300.00]
+        headers:
+          Content-Type: application/json
+
+    ... to get this result in JSON:
+
+        {"display": "$600.00", "value": 600.0}
     '''
-    def initialize(self, function, kwargs={}, redirect=None):
+    def initialize(self, function, args=[], kwargs={}, headers={}, redirect=None):
         self.function = resolve(function)
+        self.args = args
         self.kwargs = kwargs
+        self.headers = headers
         self.redirect_url = redirect
 
     def get(self):
-        self.function(**self.kwargs)
-        self.redirect(self.redirect_url or self.request.headers.get('Referer', '/'))
+        result = self.function(*self.args, **self.kwargs)
+        for header_name, header_value in self.headers.items():
+            self.set_header(header_name, header_value)
+        if self.redirect_url is not None:
+            self.redirect(self.redirect_url or self.request.headers.get('Referer', '/'))
+        else:
+            self.write(result)
+            self.flush()
 
 
 class DirectoryHandler(StaticFileHandler):

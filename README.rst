@@ -180,6 +180,33 @@ A handler converts a HTTP request into a response. (It is an instance of Tornado
 Gramex provides some default handlers. See :mod:`gramex.handlers` for the full
 list. Below are some of the commonly used ones.
 
+FunctionHandler
+~~~~~~~~~~~~~~~
+
+Runs a function and displays the output. For example, this configuration
+displays "Hello world" at /hello as plain text::
+
+    url:
+      hello-world:
+        pattern: /hello                     # The URL /hello
+        handler: gramex.handlers.Function   # Runs a function
+        kwargs:
+          function: str                     # str()
+          args:                             # with these arguments:
+            - Hello hello-world             # just one "Hello world"
+          headers:
+            Content-Type: text/plain        # Render as plain text
+
+To redirect to a different URL when the function is done, use ``redirect``::
+
+    url:
+      calculation:
+        pattern: /calc                      # The URL /calc
+        handler: gramex.handlers.Function   # Runs a function
+        kwargs:
+          function: module.calculation      # module.calculation()
+          redirect: /                       # and redirects to / thereafter
+
 DirectoryHandler
 ~~~~~~~~~~~~~~~~
 
