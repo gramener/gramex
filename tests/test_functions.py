@@ -1,9 +1,9 @@
 import unittest
-from gramex.functions import build_transform
+from gramex.transforms import build_transform, badgerfish
 
 
 class BuildTransform(unittest.TestCase):
-    'Test gramex.functions.build_transform'
+    'Test gramex.transforms.build_transform'
 
     def test_identity(self):
         'function: defaults to lambda x: x'
@@ -61,3 +61,33 @@ class BuildTransform(unittest.TestCase):
                 'separators': [',', ':'],
             }})
         self.assertEqual(fn([1, 2]), "[1,2]")
+
+
+class Badgerfish(unittest.TestCase):
+    'Test gramex.transforms.badgerfish'
+
+    def test_transform(self):
+        self.assertEqual(badgerfish('''
+        html:
+          "@lang": en
+          p: text
+          div:
+            p: text
+        '''), '<!DOCTYPE html>\n<html lang="en"><p>text</p><div><p>text</p></div></html>')
+
+    def test_mapping(self):
+        result = badgerfish('''
+        html:
+          json:
+            x: 1
+            y: 2
+        ''', mapping={
+            'json': {
+                'function': 'json.dumps',
+                'kwargs': {'separators': [',', ':']},
+            }
+        })
+
+        self.assertEqual(
+            result,
+            '<!DOCTYPE html>\n<html><json>{"x":1,"y":2}</json></html>')
