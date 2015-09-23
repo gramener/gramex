@@ -8,12 +8,17 @@ from orderedattrdict.yamlutils import AttrDictYAMLLoader
 
 
 def walk(node):
-    'Bottom-up recursive walk through nodes yielding key, value, node'
-    for key, value in node.items():
-        if hasattr(value, 'items'):
+    'Bottom-up recursive walk through nodes yielding key/index, value, node'
+    if hasattr(node, 'items'):
+        for key, value in node.items():
             for item in walk(value):
                 yield item
-        yield key, value, node
+            yield key, value, node
+    elif isinstance(node, list):
+        for index, value in enumerate(node):
+            for item in walk(value):
+                yield item
+            yield index, value, node
 
 
 class ChainConfig(AttrDict):

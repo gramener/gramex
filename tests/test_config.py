@@ -78,8 +78,8 @@ class TestPathConfig(unittest.TestCase):
 
 
 class TestConfig(unittest.TestCase):
-    def test_walk(self):
-        'Test gramex.confutil.walk'
+    def test_walk_dict(self):
+        'Test gramex.config.walk with dicts'
         o = yaml.load('''
             a:
                 b:
@@ -105,3 +105,16 @@ class TestConfig(unittest.TestCase):
             [node for key, val, node in result],
             [o.a.b, o.a.b, o.a, o.a, o.a.f.g, o.a.f.g, o.a.f,
              o.a, o.a, o, o])
+
+    def test_walk_list(self):
+        'Test gramex.config.walk with lists'
+        o = yaml.load('''
+            - 1
+            - 2
+            - 3
+        ''', Loader=AttrDictYAMLLoader)
+        result = list(walk(o))
+        self.assertEqual(result, [
+            (0, 1, [1, 2, 3]),
+            (1, 2, [1, 2, 3]),
+            (2, 3, [1, 2, 3])])
