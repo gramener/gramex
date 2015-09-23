@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from .functions import build_transform
+from .transforms import build_transform
 from tornado.web import HTTPError, RequestHandler, StaticFileHandler
 
 
@@ -160,7 +160,7 @@ class TransformHandler(RequestHandler):
               headers:
                 Content-Type: text/html             #   MIME type: text/html
             "*.yaml":                               # YAML files use BadgerFish
-              transform: gramex.functions.badgerfish
+              transform: gramex.transforms.badgerfish
               headers:
                 Content-Type: text/html             #   MIME type: text/html
             "*.lower":                              # Any .lower file

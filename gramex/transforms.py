@@ -15,13 +15,16 @@ def build_transform(conf):
 
     The configuration object may have these three keys:
 
-    - ``function``: name of a Python function to call. Defaults to the identity
-      function, i.e. ``lambda x: x``.
-    - ``args``: list of positional arguments to pass to the function. ``"_"`` is
-      replaced with ``content``. Unless specified, it defaults to ``["_"]`` --
-      that is, the function takes ``content`` as its sole positional argument.
-    - ``kwargs``: keywords arguments to pass to the function. A value of ``"_"``
-      is replaced with ``content``.
+    function
+        name of a Python function to call. Defaults to the identity
+        function, i.e. ``lambda x: x``.
+    args
+        list of positional arguments to pass to the function. ``"_"`` is
+        replaced with ``content``. Unless specified, it defaults to ``["_"]`` --
+        that is, the function takes ``content`` as its sole positional argument.
+    kwargs
+        keywords arguments to pass to the function. A value of ``"_"``
+        is replaced with ``content``.
 
     For example, ``json(content, separators=[',', ':'])`` is defined as::
 
