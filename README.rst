@@ -177,17 +177,53 @@ A handler converts a HTTP request into a response. (It is an instance of Tornado
 
 .. _RequestHandler: http://tornado.readthedocs.org/en/latest/web.html#request-handlers
 
-Some default handlers are provided by Gramex, and this can be extended by users.
+Gramex provides some default handlers. See :mod:`gramex.handlers` for the full
+list. Below are some of the commonly used ones.
 
 DirectoryHandler
 ~~~~~~~~~~~~~~~~
 
-Displays files in a folder.
+Displays files in a folder. This configuration serves files from the current
+directory at ``/``::
 
-ObjectHandler
-~~~~~~~~~~~~~
+    url:
+      root-app:                         # A unique name for this handler
+        pattern: /(.*)                  # All URLs beginning with /
+        handler: gramex.handlers.DirectoryHandler   # Handler used
+        kwargs:                                     # Options to the handler
+            path: .                                 #   path is current dir
+            default_filename: index.html            #   default filename
 
-Converts YAML to HTML via the `BadgerFish`_ convention and renders the response.
+
+TransformHandler
+~~~~~~~~~~~~~~~~
+
+Converts the configuration into other formats such as HTML using different
+conventions.
+
+For example, to create a static blog that serves YAML and Markdown files as
+HTML, use::
+
+    url:                                  # Add a URL configuration
+      blog-app:                           # named blog-app.
+        pattern: /blog/(.*)               # The /blog/ URL uses TransformHandler
+        handler: gramex.handlers.TransformHandler
+        kwargs:                           # with these arguments:
+          path: D:/blog/                  # Serve files from this folder
+          default_filename: index.yaml    # Directory index file
+          transform:
+            "*.yaml":                     # Convert .yaml to HTML via BadgerFish
+              transform: gramex.handlers.TransformHandler.badgerfish
+              headers:
+                "Content-Type": text/html
+            "*.md":                       # Convert .md to HTML via Markdown
+              transform: markdown.markdown
+              headers:
+                "Content-Type": text/html
+
+Any ``*.yaml`` file is transformed via :func:`gramex.handlers.TransformHandler.badgerfish` into HTML via the
+`BadgerFish`_ convention before the response is rendered. Any ``*.md`` file
+is transformed via ``markdown.markdown`` into HTML.
 
 References:
 
@@ -212,24 +248,24 @@ We are considering these handlers.
 
 - **Middleware handlers** that add decorater methods on other handlers
 - **Namespaced app folders**.
-  - Reserved namespaces
-  - Add a directory ``app/``, and the URL mappings for ``/app/...``
-    will be taken from the ``app/`` directory.
-  - With ``/app/`` there is full flexibility on how to handle the URLs
-  - No URLs outside ``/app/`` will be affected.
-  - Configurations use data, not code. (e.g. YAML, not Python)
+    - Reserved namespaces
+    - Add a directory ``app/``, and the URL mappings for ``/app/...``
+      will be taken from the ``app/`` directory.
+    - With ``/app/`` there is full flexibility on how to handle the URLs
+    - No URLs outside ``/app/`` will be affected.
+    - Configurations use data, not code. (e.g. YAML, not Python)
 - **Data API**. Perhaps like
   `Webstore <http://webstore.readthedocs.org/en/latest/index.html>`__
 - **Auth**
-  - Authentication mechanism (OAuth, SAML, LDAP, etc.)
-  - Admin: User - role mapping and expiry management
-  - Apps expose a ``function(user, roles, request)`` to the server
-    that determines the rejection, type of rejection, error message,
-    log message, etc.
-  - Apps can internally further limit access based on role (e.g. only
-    admins can see all rows.)
-  - An app can be an auth provider. By default, a ``/admin/`` app can
-    provide uer management functionality
+    - Authentication mechanism (OAuth, SAML, LDAP, etc.)
+    - Admin: User - role mapping and expiry management
+    - Apps expose a ``function(user, roles, request)`` to the server
+      that determines the rejection, type of rejection, error message,
+      log message, etc.
+    - Apps can internally further limit access based on role (e.g. only
+      admins can see all rows.)
+    - An app can be an auth provider. By default, a ``/admin/`` app can
+      provide uer management functionality
 - **Uploads**
 - **AJAX support** for templates
 - **Websockets**
@@ -284,11 +320,10 @@ Interactive charts:
 - Animated transitions
 - Cross-filter like filtering
 - How will we incorporate dynamic interactive controls?
-- Interactivity involves 3 things (We don't have a catalogue of any of
-  these):
-    1. Events / components (brushing, clicking, sliding, etc)
-    2. Actions (filter, zoom-in, etc)
-    3. Combinations (click-to-filter, etc)
+- Interactivity involves 3 things (We need a catalogue of all of these):
+    - Events / components (brushing, clicking, sliding, etc)
+    - Actions (filter, zoom-in, etc)
+    - Combinations (click-to-filter, etc)
 
 Intelligence:
 

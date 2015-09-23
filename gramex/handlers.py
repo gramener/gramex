@@ -9,6 +9,15 @@ from zope.dottedname.resolve import resolve
 
 
 class Function(RequestHandler):
+    '''
+    Renders the output of a function. It accepts two parameters when
+    initialized:
+
+    ``function`` is a string that resolves into any Python function or method
+    (e.g. ``string.lower``). It is called as ``function(**kwargs)``.
+
+    ``kwargs`` has all parameters to be passed to the function.
+    '''
     def initialize(self, function, kwargs={}, redirect=None):
         self.function = resolve(function)
         self.kwargs = kwargs
@@ -20,6 +29,17 @@ class Function(RequestHandler):
 
 
 class DirectoryHandler(StaticFileHandler):
+    '''
+    Serves files in a directory like `StaticFileHandler`_, but lists files in
+    the directory if the `default_filename` is missing. This behaviour is like
+    `SimpleHTTPServer`_.
+
+    The usage is otherwise identical to `StaticFileHandler`_.
+
+    .. _SimpleHTTPServer: https://docs.python.org/2/library/simplehttpserver.html
+    .. _StaticFileHandler: http://tornado.readthedocs.org/en/latest/web.html#tornado.web.StaticFileHandler
+    '''
+
     def validate_absolute_path(self, root, absolute_path):
         '''
         Return directory itself for directory
@@ -49,6 +69,11 @@ class DirectoryHandler(StaticFileHandler):
 
     @classmethod
     def get_content(cls, abspath, start=None, end=None):
+        '''
+        Return contents of the file at ``abspath`` from ``start`` byte to
+        ``end`` byte. If the file is missing and the ``default_filename`` is
+        also missing, render the directory index instead.
+        '''
         if os.path.isdir(abspath):
             content = ['<h1>Index of %s </h1><ul>' % abspath]
             for name in os.listdir(abspath):
@@ -61,11 +86,13 @@ class DirectoryHandler(StaticFileHandler):
         return content
 
     def get_content_size(self):
+        'Return the size of the requested file in bytes'
         if os.path.isdir(self.absolute_path):
             return len(self.get_content(self.absolute_path))
         return super(DirectoryHandler, self).get_content_size()
 
     def get_content_type(self):
+        'Return the MIME type of the requested file in bytes'
         if os.path.isdir(self.absolute_path):
             return 'text/html'
         return super(DirectoryHandler, self).get_content_type()
