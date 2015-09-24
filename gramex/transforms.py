@@ -89,6 +89,8 @@ def badgerfish(content, mapping={}, doctype='<!DOCTYPE html>'):
     '''
     A transform that converts string content to YAML, then maps nodes
     using other functions, and renders the output as HTML.
+
+    The specs for this function are in progress.
     '''
     data = yaml.load(content, Loader=AttrDictYAMLLoader)
     maps = {tag: build_transform(trans) for tag, trans in mapping.items()}

@@ -3,20 +3,20 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to Gramex's documentation!
-======================================
-
-Contents:
+Gramex: Gramener's Visualization Server
+=======================================
 
 .. toctree::
    :maxdepth: 2
 
    readme
+   design
+   server
+   handlers
+   components
    contributing
    authors
    history
-
-.. code-block:: yaml
 
 Indices and tables
 ==================

@@ -58,9 +58,8 @@ If you are proposing a feature:
 * Remember that this is a volunteer-driven project, and that contributions
   are welcome :)
 
-Get Started!
-------------
-
+Building Gramex
+---------------
 
 - The `master <http://code.gramener.com/s.anand/gramex/tree/master/>`__ branch
   holds the latest stable version.
@@ -131,6 +130,8 @@ Before you submit a pull request, check that it meets these guidelines:
 Release
 -------
 
+When releasing a new version of Gramex:
+
 1. Test the release by running::
 
     make test-release
@@ -141,3 +142,60 @@ Release
 
     git tag -a v1.x.x
     git push --follow-tags
+
+Features you can take up
+------------------------
+
+These are planned features that we need help with.
+
+- :func:`gramex.handlers.TransformHandler`:
+    - Write test cases
+    - Cache the transformed result based on the file / directory stat
+    - Allow ``default_filename`` and ``path`` to be a list. The handler searches
+      the paths and files one by one and renders the first match.
+- In :mod:`gramex.transforms` write a template transform that renders Tornado
+  templates.
+
+Project plan
+------------
+
+**Bold dates** indicate milestones. *Italic dates* indicate plans.
+Normal dates indicate actual activity.
+
+- **Mon 31 Aug**: Begin Gramex 1.0. **Status: done, on time**
+- Mon 31 Aug: Define Gramex config syntax, logging and scheduling
+  services
+- Tue 1 Sep: Define config layering, error handling, component
+  requirements
+- Wed 2 Sep: Build prototype. Explore component approach. Share project
+  plan
+- Thu 3 Sep: Add config, scehduler and logger services. Explore
+  component approach
+- Fri 4 Sep: Core server ready for release.
+- **Fri 4 Sep**: Core server spec and prototype release. **Status: done, on time**
+- Mon 7 Sep: Explore Vega, dask
+- Tue 8 Sep: Add DirectoryHandler, 1.0.0 release
+- Wed 9 Sep: Update documentation
+- **Mon 14 Sep**: Handler and component spec. **Status: done, on time**
+- Mon 14 Sep: Explore web components
+- Tue 15 Sep: Create an XML - data interconversion engine
+- Thu 17 Sep: create examples of Vega charts
+- Fri 18 Sep: Write high-level collateral on technology stack direction:
+  Tornado, Blaze, node, Vega, Web components
+- Sat 19 Sep: create a HTML - YAML interconverter handler. This will be the
+  primary templating handler we will use using ``<vega-chart>``
+- Sun 19 Sep: create ``<vega-chart>`` webcomponents
+- **Mon 21 Sep**: Revised handler and component spec and prototype.
+  Components listed. **Status: delayed**
+- Mon 21 Sep 2015: Create gallery of vega components. Create TransformHandler
+- Tue 22 Sep 2015: Extend the component gallery.
+- Wed 23 Sep 2015: Extend the component gallery. Create BadgerFish transform
+- Thu 24 Sep 2015: Finalise ``<vega-chart>`` API
+- *Wed 23 Sep 2015*: Create at least 5 full demo dashboards. Use it to identify server-side needs
+- *Thu 24 Sep 2015*: Define and start implementing server-side interface (data, templating)
+- *Fri 25 Sep 2015*: Data and template handlers
+- **Mon 28 Sep**: Data handler working with charts
+- **Mon 5 Oct**: Add ``<vega-lite>`` and more components. Document specs
+- **Mon 26 Oct**: Spec freeze. Components early release
+- **Mon 9 Nov**: Gramex 1.0 beta release to testing. Start bugfixing
+- **Mon 23 Nov**: Gramex 1.0 release

@@ -167,11 +167,6 @@ class TransformHandler(RequestHandler):
               transform: string.lower               #   Convert to lowercase
               headers:
                 Content-Type: text/plain            #   Serve as plain text
-
-    TODO:
-
-    - Write test cases
-    - Cache it
     '''
     def initialize(self, path, default_filename=None, transform={}):
         self.root = path
