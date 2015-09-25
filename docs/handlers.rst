@@ -9,6 +9,9 @@ A handler converts a HTTP request into a response. (It is an instance of Tornado
 Gramex provides these handlers. (See :mod:`gramex.handlers` for full
 documentation.)
 
+
+.. _FunctionHandler:
+
 FunctionHandler
 ~~~~~~~~~~~~~~~
 
@@ -39,6 +42,9 @@ To redirect to a different URL when the function is done, use ``redirect``::
           function: module.calculation      # module.calculation()
           redirect: /                       # and redirects to / thereafter
 
+
+.. _DirectoryHandler:
+
 DirectoryHandler
 ~~~~~~~~~~~~~~~~
 
@@ -53,6 +59,8 @@ directory at ``/``::
             path: .                                 #   path is current dir
             default_filename: index.html            #   default filename
 
+
+.. _TransformHandler:
 
 TransformHandler
 ~~~~~~~~~~~~~~~~
