@@ -159,6 +159,9 @@ When releasing a new version of Gramex:
 
 1. Test the release by running::
 
+    export PYTHON=/path/to/python2.7
+    make test-release
+    export PYTHON=/path/to/python3.4
     make test-release
 
 2. Update ``__version__ = 1.x.x`` in :mod:`gramex` and commit.
