@@ -78,11 +78,17 @@ To set up the development environment:
 
     git clone git@code.gramener.com:your_user_id/gramex.git
 
-4. Create a branch for local development::
+4. In the gramex folder, create a branch for local development::
 
+    cd gramex
     git checkout -b <branch-name>
 
    Now you can make your changes locally.
+
+5. Install this branch in editable mode. This "installs" the gramex folder in
+   development mode. Changes to this folder are reflected in the environment::
+
+    pip install -e .
 
 5. Install development requirements::
 

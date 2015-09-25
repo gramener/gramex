@@ -14,7 +14,6 @@ Gramex: Gramener's Visualization Server
    server
    handlers
    components
-   distribution
    contributing
    authors
    history
