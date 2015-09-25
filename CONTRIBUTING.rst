@@ -127,6 +127,31 @@ Before you submit a pull request, check that it meets these guidelines:
    feature to the list in README.rst.
 3. The pull request should work for Python 2.7 and 3.4.
 
+Gramex documentation
+--------------------
+
+Gramex documentation is hosted at https://learn.gramener.com/gramex/. To set
+this up:
+
+1. Add the ``ec2@gramener.com`` SSH key as a
+   `deploy key <http://code.gramener.com/s.anand/gramex/deploy_keys>`_
+2. Add ``https://gramener.com/hook/`` as a
+   `web hook <http://code.gramener.com/s.anand/gramex/hooks>`_
+3. In https://gramener.com/hook/ go to Paths and add a hook:
+   - url: ``git@code.gramener.com:s.anand/gramex.git``
+   - folder: ``/mnt/gramener/apps/gramex/``
+   - command: ``make docs``
+4. ``ssh learn.gramener.com`` and run::
+
+    cd /mnt/gramener/apps/gramex      # Go to the Gramex folder
+    git checkout dev                  # Check out the dev branch
+    pip install -r requirements.txt   # install dependencies
+
+    # Link the docs under https://learn.gramener.com/gramex/
+    cd /mnt/gramener/learn.gramener.com
+    ln -s /mnt/gramener/apps/gramex/docs/_build/html
+
+
 Release
 -------
 
@@ -143,10 +168,40 @@ When releasing a new version of Gramex:
     git tag -a v1.x.x
     git push --follow-tags
 
-Features you can take up
-------------------------
+Release plan
+------------
 
-These are planned features that we need help with.
+Version 1.0.2
+~~~~~~~~~~~~~
+
+- ``<vega-chart>`` spec as open source npm package
+    - Definition:
+        - ``<vega-chart src="">...json...</vegachart>``.
+          Use ``src`` attribute (not ``href`` -- see `link vs src`_)
+        - Embedded JSON overrides ``src`` spec via .update()
+    - No API to update the spec. Just expose the objects. To completely redraw,
+      replace the DOM element.
+    - How to bundle dependencies?
+        - https://github.com/jsdelivr/jsdelivr
+        - https://github.com/cdnjs/cdnjs
+    - Check with @jheer and @arvind -- get their blessings
+- How to bundle this with Gramex?
+
+.. _link vs src: http://stackoverflow.com/a/7794936/100904
+
+Version 1.0.3
+~~~~~~~~~~~~~
+
+- Data handler that provides connectivity to databases, files, etc. via odo
+
+Version 1.0.4
+~~~~~~~~~~~~~
+
+- Sample datasets
+- Gallery
+
+Features in future releases
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 - :func:`gramex.handlers.TransformHandler`:
     - Write test cases
@@ -156,46 +211,19 @@ These are planned features that we need help with.
 - In :mod:`gramex.transforms` write a template transform that renders Tornado
   templates.
 
+
 Project plan
 ------------
 
-**Bold dates** indicate milestones. *Italic dates* indicate plans.
-Normal dates indicate actual activity.
+**Bold dates** indicate milestones.
 
 - **Mon 31 Aug**: Begin Gramex 1.0. **Status: done, on time**
-- Mon 31 Aug: Define Gramex config syntax, logging and scheduling
-  services
-- Tue 1 Sep: Define config layering, error handling, component
-  requirements
-- Wed 2 Sep: Build prototype. Explore component approach. Share project
-  plan
-- Thu 3 Sep: Add config, scehduler and logger services. Explore
-  component approach
-- Fri 4 Sep: Core server ready for release.
 - **Fri 4 Sep**: Core server spec and prototype release. **Status: done, on time**
-- Mon 7 Sep: Explore Vega, dask
-- Tue 8 Sep: Add DirectoryHandler, 1.0.0 release
-- Wed 9 Sep: Update documentation
 - **Mon 14 Sep**: Handler and component spec. **Status: done, on time**
-- Mon 14 Sep: Explore web components
-- Tue 15 Sep: Create an XML - data interconversion engine
-- Thu 17 Sep: create examples of Vega charts
-- Fri 18 Sep: Write high-level collateral on technology stack direction:
-  Tornado, Blaze, node, Vega, Web components
-- Sat 19 Sep: create a HTML - YAML interconverter handler. This will be the
-  primary templating handler we will use using ``<vega-chart>``
-- Sun 19 Sep: create ``<vega-chart>`` webcomponents
 - **Mon 21 Sep**: Revised handler and component spec and prototype.
   Components listed. **Status: delayed**
-- Mon 21 Sep 2015: Create gallery of vega components. Create TransformHandler
-- Tue 22 Sep 2015: Extend the component gallery.
-- Wed 23 Sep 2015: Extend the component gallery. Create BadgerFish transform
-- Thu 24 Sep 2015: Finalise ``<vega-chart>`` API
-- *Wed 23 Sep 2015*: Create at least 5 full demo dashboards. Use it to identify server-side needs
-- *Thu 24 Sep 2015*: Define and start implementing server-side interface (data, templating)
-- *Fri 25 Sep 2015*: Data and template handlers
-- **Mon 28 Sep**: Data handler working with charts
-- **Mon 5 Oct**: Add ``<vega-lite>`` and more components. Document specs
+- **Mon 28 Sep**: `Version 1.0.2`_
+- **Mon 5 Oct**: `Version 1.0.3`_ and `Version 1.0.4`_
 - **Mon 26 Oct**: Spec freeze. Components early release
 - **Mon 9 Nov**: Gramex 1.0 beta release to testing. Start bugfixing
 - **Mon 23 Nov**: Gramex 1.0 release
