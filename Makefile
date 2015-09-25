@@ -60,6 +60,8 @@ docs:
 	sphinx-apidoc -o docs/ gramex
 	$(MAKE) -C docs clean
 	$(MAKE) -C docs html
+
+doc: docs
 	$(BROWSER) docs/_build/html/index.html
 
 release-test: clean-test lint docs test coverage
