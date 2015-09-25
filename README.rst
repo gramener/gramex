@@ -34,3 +34,5 @@ Gramex runs at ``http://127.0.0.1:9988/`` and will show the current directory by
 default.
 
 You may also run Gramex via ``python -m gramex``.
+
+For usage instructions, visit https://learn.gramener.com/gramex/
