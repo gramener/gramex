@@ -4,7 +4,7 @@ from .transforms import build_transform
 from tornado.web import HTTPError, RequestHandler, StaticFileHandler
 
 
-class Function(RequestHandler):
+class FunctionHandler(RequestHandler):
     '''
     Renders the output of a function. It accepts these parameters when
     initialized:

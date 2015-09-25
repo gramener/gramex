@@ -42,7 +42,7 @@ app:
 url:
     reload-config:
         pattern: /reload-config
-        handler: gramex.handlers.Function   # Run a function and redirect
+        handler: gramex.handlers.FunctionHandler    # Run function and redirect
         kwargs:
             function: gramex.init           # Run gramex.init()
             kwargs: {}                      # without any arguments

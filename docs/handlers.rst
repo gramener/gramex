@@ -18,7 +18,7 @@ displays "Hello world" at /hello as plain text::
     url:
       hello-world:
         pattern: /hello                     # The URL /hello
-        handler: gramex.handlers.Function   # Runs a function
+        handler: gramex.handlers.FunctionHandler   # Runs a function
         kwargs:
           function: six.text_type           # Convert to string
           args:                             # with these arguments:
@@ -34,7 +34,7 @@ To redirect to a different URL when the function is done, use ``redirect``::
     url:
       calculation:
         pattern: /calc                      # The URL /calc
-        handler: gramex.handlers.Function   # Runs a function
+        handler: gramex.handlers.FunctionHandler   # Runs a function
         kwargs:
           function: module.calculation      # module.calculation()
           redirect: /                       # and redirects to / thereafter
