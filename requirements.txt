@@ -1,14 +1,17 @@
 # Libraries required for Gramex
 
+# For setup
+setuptools >= 16.0          # 16.0 has good error message support
+
 # General utilities
-pathlib                     # Python 3.3+ already has it
-orderedattrdict             # OrderedDict with attr access for configs
-zope.dottedname             # Resolve Python names into objects
-watchdog                    # Monitor file changes
 six                         # Python 3 compatibility
+pathlib                     # Manipulate paths. Part of Python 3.3+
+orderedattrdict >= 1.3      # OrderedDict with attr access for configs
+zope.dottedname >= 4.1      # Resolve Python names into objects
+watchdog >= 0.8             # Monitor file changes
 
 # Application specific
-tornado                     # For the app
-PyYAML                      # For config loading
-crontab                     # For scheduler
-xmljson                     # Convert objects into / back from XML
+tornado >= 4.0              # Web server
+PyYAML >= 3.10              # Parse YAML files for config
+crontab >= 0.20             # Parse crontab entries for scheduler
+xmljson >= 0.1.5            # Convert objects into / back from XML

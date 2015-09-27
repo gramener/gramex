@@ -2,6 +2,8 @@
 
 # Require setuptools -- distutils does not support install_requires
 from setuptools import setup
+from pip.req import parse_requirements
+from pip.download import PipSession
 import gramex
 
 
@@ -10,6 +12,9 @@ with open('README.rst') as readme_file:
 
 with open('HISTORY.rst') as history_file:
     history = history_file.read().replace('.. :changelog:', '')
+
+install_requires = [str(entry.req) for entry in
+                    parse_requirements('requirements.txt', session=PipSession())]
 
 setup(
     name='gramex',
@@ -25,23 +30,7 @@ setup(
     package_dir={'gramex':
                  'gramex'},
     include_package_data=True,
-    install_requires=[
-        # Abstract dependencies here, concrete dependencies in requirements.txt
-        # See https://packaging.python.org/en/latest/requirements.html
-
-        # General utilities
-        'pathlib',                  # Python 3.3+ already has it
-        'orderedattrdict',          # OrderedDict with attr access for configs
-        'zope.dottedname',          # Resolve Python names into objects
-        'watchdog',                 # Monitor file changes
-        'six',                      # Python 3 compatibility
-
-        # Application specific
-        'tornado >= 4.0',           # Web server
-        'PyYAML',                   # Parse YAML fils
-        'crontab',                  # Parse crontab entries
-        'xmljson',                  # Convert objects into / back from XML
-    ],
+    install_requires=install_requires,
     license="Other/Proprietary License",
     zip_safe=False,
     keywords='gramex',
