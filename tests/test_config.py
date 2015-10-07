@@ -138,11 +138,16 @@ class TestConfig(unittest.TestCase):
     def test_merge(self):
         'Test gramex.config.merge'
         def check(a, b, c):
+            'Check if merge(a, b) is c. Parameters are in YAML'
+            old = yaml.load(a, Loader=AttrDictYAMLLoader)
+            new = yaml.load(b, Loader=AttrDictYAMLLoader)
+            # merging a + b gives c
             self.assertEqual(
                 yaml.load(c, Loader=AttrDictYAMLLoader),
-                merge(
-                    yaml.load(a, Loader=AttrDictYAMLLoader),
-                    yaml.load(b, Loader=AttrDictYAMLLoader)))
+                merge(old, new))
+            # old and new are unchanged
+            self.assertEqual(old, yaml.load(a, Loader=AttrDictYAMLLoader))
+            self.assertEqual(new, yaml.load(b, Loader=AttrDictYAMLLoader))
 
         check('x: 1', 'y: 2', 'x: 1\ny: 2')
         check('x: {a: 1}', 'x: {a: 2}', 'x: {a: 2}')

@@ -3,6 +3,7 @@
 import yaml
 import logging
 from pathlib import Path
+from copy import deepcopy
 from orderedattrdict import AttrDict
 from orderedattrdict.yamlutils import AttrDictYAMLLoader
 
@@ -21,20 +22,24 @@ def walk(node):
             yield index, value, node
 
 
-def merge(old, new):
+def merge(old, new, overwrite=False):
     '''
     Update old dict with items in new. If old[key] is a dict, update old[key]
     with new[key] to preserve existing keys in old[key].
 
         >>> merge({'a': {'x': 1}}, {'a': {'y': 2}})
         {'a': {'x': 1, 'y': 2}}
+
+    If ``overwrite=True``, the old dict is overwritten. By default, a new
+    deepcopy is created.
     '''
+    result = old if overwrite else deepcopy(old)
     for key in new:
-        if key in old and hasattr(old[key], 'items'):
-            merge(old[key], new[key])
+        if key in result and hasattr(result[key], 'items'):
+            merge(result[key], new[key], overwrite=True)
         else:
-            old[key] = new[key]
-    return old
+            result[key] = new[key]
+    return result
 
 
 class ChainConfig(AttrDict):
@@ -56,7 +61,7 @@ class ChainConfig(AttrDict):
         for name, config in self.items():
             if hasattr(config, '__pos__'):
                 config.__pos__()
-            merge(conf, config)
+            conf = merge(conf, config)
 
         # Remove keys where the value is None
         for key, value, node in walk(conf):
