@@ -35,7 +35,7 @@ def merge(old, new, overwrite=False):
     '''
     result = old if overwrite else deepcopy(old)
     for key in new:
-        if key in result and hasattr(result[key], 'items'):
+        if key in result and hasattr(result[key], 'items') and hasattr(new[key], 'items'):
             merge(result[key], new[key], overwrite=True)
         else:
             result[key] = new[key]

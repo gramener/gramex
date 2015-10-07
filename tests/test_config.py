@@ -151,5 +151,7 @@ class TestConfig(unittest.TestCase):
 
         check('x: 1', 'y: 2', 'x: 1\ny: 2')
         check('x: {a: 1}', 'x: {a: 2}', 'x: {a: 2}')
+        check('x: {a: 1}', 'x: null', 'x: null')
         check('x: {a: 1}', 'x: {b: 2}', 'x: {a: 1, b: 2}')
         check('x: {a: {p: 1}}', 'x: {a: {q: 1}, b: 2}', 'x: {a: {p: 1, q: 1}, b: 2}')
+        check('x: {a: {p: 1}}', 'x: {a: null, b: null}', 'x: {a: null, b: null}')
