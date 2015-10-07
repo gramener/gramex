@@ -1,40 +1,25 @@
 Components
 ----------
 
-`Web components`_ allow custom HTML elements. With a small `polyfill`_, target
-browsers are supported.
+Visual components are rendered by default on the DOM as `web components`_ or
+custom HTML elements. With a small `polyfill`_, target browsers are supported.
 
 .. _Web components: http://webcomponents.org/
 .. _polyfill: https://github.com/WebComponents/webcomponentsjs
 
+Vega is the charting engine of choice, but may not be the only one. (Leaflet
+maps, for example, may be an option.)
 
-Layered data-driven approach
+Components can be rendered on the client side or the server side, in multiple
+formats (including PPTX, images, and SVG.)
 
-- Composable components. Apply a component over another in a way
-- Scaling and other transformations
-- Axes
-- Default stroke colour, stroke width, padding, etc
-- Attribute lambda parameters
-- Transformable. Transforms should also be composable.
-- Ability to access template intermediate variables (layouts, scales,
-  etc) from outside on server and client side
-- Themes
-- Any symbol instead of default symbols
+Components are packaged into a chartogram
 
-Flexible rendering:
+- a single Javascript file
+- managed by an npm module
+- served via github.io (dev) / jsdelivr (prod)
 
-- Rendering may be on the client side or the server side
-- Rendered views can be edited on the client side as well
-- Renderable for PPTX, PDF, PNG, SVG, etc
-- Responsive on the server side (re-layout) or the client side
-  (preserve aspect)
-- CSS classes reserved for components
 
-Containers and controls:
-
-- Grids
-- Themes
-- Standard components
 
 Interactive charts:
 
