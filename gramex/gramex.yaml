@@ -130,6 +130,15 @@ schedule:
     #     minutes: '*/5, 59'              # Every 5th minute, and 59th minute
     #     startup: true                   # In addition, run on startup
 
+
+# Define custom MIME types here
+mime:
+    .yml:       text/yaml
+    .yaml:      text/yaml
+    .md:        text/markdown
+    .markdown:  text/markdown
+
+
 # Watch here
 watch: True
 

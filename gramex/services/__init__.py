@@ -13,6 +13,7 @@ exists, a warning is raised.
 '''
 
 import gramex
+import mimetypes
 import logging.config
 import tornado.web
 import tornado.ioloop
@@ -65,6 +66,11 @@ def url(conf):
     info.app.named_handlers.clear()
     info.app.add_handlers('.*$', handlers)
 
+
+def mime(conf):
+    "Set up MIME types"
+    for ext, type in conf.items():
+        mimetypes.add_type(type, ext, strict=True)
 
 def watch(conf):
     "Set up file watchers"
