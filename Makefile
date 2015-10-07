@@ -61,7 +61,7 @@ docs:
 	$(MAKE) -C docs clean
 	$(MAKE) -C docs html
 
-doc: docs
+showdocs:
 	$(BROWSER) docs/_build/html/index.html
 
 release-test: clean-test lint docs test coverage
