@@ -21,6 +21,22 @@ def walk(node):
             yield index, value, node
 
 
+def merge(old, new):
+    '''
+    Update old dict with items in new. If old[key] is a dict, update old[key]
+    with new[key] to preserve existing keys in old[key].
+
+        >>> merge({'a': {'x': 1}}, {'a': {'y': 2}})
+        {'a': {'x': 1, 'y': 2}}
+    '''
+    for key in new:
+        if key in old and hasattr(old[key], 'items'):
+            merge(old[key], new[key])
+        else:
+            old[key] = new[key]
+    return old
+
+
 class ChainConfig(AttrDict):
     '''
     An AttrDict that manages multiple configurations as layers.
@@ -40,7 +56,7 @@ class ChainConfig(AttrDict):
         for name, config in self.items():
             if hasattr(config, '__pos__'):
                 config.__pos__()
-            conf.update(config)
+            merge(conf, config)
 
         # Remove keys where the value is None
         for key, value, node in walk(conf):
@@ -88,7 +104,7 @@ def _imports(node, source):
                 for path in paths:
                     new_conf = _open(path)
                     imported_paths += [_pathstat(path)] + _imports(new_conf, source=path)
-                    node.update(new_conf)
+                    merge(node, new_conf)
             # Delete the import key
             del node[key]
     return imported_paths

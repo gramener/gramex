@@ -1,7 +1,8 @@
+import json
 import yaml
 import unittest
 from pathlib import Path
-from gramex.config import ChainConfig, PathConfig, walk
+from gramex.config import ChainConfig, PathConfig, walk, merge
 from orderedattrdict import AttrDict
 from orderedattrdict.yamlutils import AttrDictYAMLLoader
 
@@ -133,3 +134,17 @@ class TestConfig(unittest.TestCase):
              ('x', 2), (1, {'x': 2}),
              ('x', 3), (2, {'x': 3})],
             [(key, val) for key, val, node in result])
+
+    def test_merge(self):
+        'Test gramex.config.merge'
+        def check(a, b, c):
+            self.assertEqual(
+                yaml.load(c, Loader=AttrDictYAMLLoader),
+                merge(
+                    yaml.load(a, Loader=AttrDictYAMLLoader),
+                    yaml.load(b, Loader=AttrDictYAMLLoader)))
+
+        check('x: 1', 'y: 2', 'x: 1\ny: 2')
+        check('x: {a: 1}', 'x: {a: 2}', 'x: {a: 2}')
+        check('x: {a: 1}', 'x: {b: 2}', 'x: {a: 1, b: 2}')
+        check('x: {a: {p: 1}}', 'x: {a: {q: 1}, b: 2}', 'x: {a: {p: 1, q: 1}, b: 2}')
