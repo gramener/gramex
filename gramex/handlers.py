@@ -23,9 +23,14 @@ class FunctionHandler(RequestHandler):
     Here's a simple use -- to display a string as a response to a URL. This
     configuration renders "Hello world" at the URL `/hello`::
 
-        function: six.text_type               # Display as text in Python 2 & 3
-        args:
-          - Hello world                       # with "Hello world"
+        url:
+          hello-world:
+            pattern: /hello                             # The URL /hello
+            handler: gramex.handlers.FunctionHandler    # Runs a function
+            kwargs:
+              function: six.text_type                   # Display as text in Python 2 & 3
+              args:
+                - Hello world                           # with "Hello world"
 
     Only a single function call is allowed. To chain function calls or to do
     anything more complex, create a Python function and call that instead. For
@@ -51,7 +56,24 @@ class FunctionHandler(RequestHandler):
 
         {"display": "$600.00", "value": 600.0}
 
-    **TODO**: extend function to use URL query parameters
+    If no ``args`` is specified, the Tornado `RequestHandler`_ is passed as the
+    only positional argument. For example, in ``calculations.py``, add::
+
+        def add(handler):
+            return str(sum(float(x) for x in handler.get_arguments('x')))
+
+    .. _RequestHandler: http://tornado.readthedocs.org/en/stable/web.html#request-handlers
+
+    Now, the following configuration::
+
+        function: calculations.add
+
+    ... takes the URL ``?x=1&x=2&x=3`` to add up 1, 2, 3 and display ``6.0``.
+
+    To redirect to a different URL when the function is done, use ``redirect``::
+
+        function: module.calculation      # Run module.calculation(handler)
+        redirect: /                       # and redirect to / thereafter
     '''
     def initialize(self, function, args=None, kwargs=None, headers={}, redirect=None):
         self.function = build_transform({
@@ -63,7 +85,7 @@ class FunctionHandler(RequestHandler):
         self.redirect_url = redirect
 
     def get(self):
-        result = self.function('')
+        result = self.function(self)
         for header_name, header_value in self.headers.items():
             self.set_header(header_name, header_value)
         if self.redirect_url is not None:

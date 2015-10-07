@@ -29,19 +29,8 @@ displays "Hello world" at /hello as plain text::
           headers:
             Content-Type: text/plain        # Render as plain text
 
-For more details on creating functions and passing arguments, see
-:func:`gramex.transforms.build_transform`.
-
-To redirect to a different URL when the function is done, use ``redirect``::
-
-    url:
-      calculation:
-        pattern: /calc                      # The URL /calc
-        handler: gramex.handlers.FunctionHandler   # Runs a function
-        kwargs:
-          function: module.calculation      # module.calculation()
-          redirect: /                       # and redirects to / thereafter
-
+See :class:`gramex.handlers.FunctionHandler` For more details on creating
+functions and passing arguments.
 
 .. _DirectoryHandler:
 
