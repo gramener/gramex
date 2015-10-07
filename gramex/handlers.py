@@ -137,12 +137,6 @@ class DirectoryHandler(StaticFileHandler):
             return len(self.get_content(self.absolute_path))
         return super(DirectoryHandler, self).get_content_size()
 
-    def get_content_type(self):
-        'Return the MIME type of the requested file in bytes'
-        if os.path.isdir(self.absolute_path):
-            return 'text/html'
-        return super(DirectoryHandler, self).get_content_type()
-
 
 class TransformHandler(RequestHandler):
     '''
