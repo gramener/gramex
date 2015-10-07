@@ -123,7 +123,8 @@ class DirectoryHandler(StaticFileHandler):
         if os.path.isdir(abspath):
             content = ['<h1>Index of %s </h1><ul>' % abspath]
             for name in os.listdir(abspath):
-                content.append('<li><a href="%s">%s</a></li>' % (name, name))
+                isdir = '/' if os.path.isdir(os.path.join(abspath, name)) else ''
+                content.append('<li><a href="%s">%s%s</a></li>' % (name, name, isdir))
             content.append('</ul>')
         else:
             content = super(DirectoryHandler, cls).get_content(abspath, start, end)
