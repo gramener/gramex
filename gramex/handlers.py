@@ -140,19 +140,19 @@ class DirectoryHandler(StaticFileHandler):
         '''
         Return contents of the file at ``abspath`` from ``start`` byte to
         ``end`` byte. If the file is missing and the ``default_filename`` is
-        also missing, render the directory index instead.
+        also missing, render the directory index instead (ignoring start/end.)
+
+        The result is a byte-string.
         '''
         if os.path.isdir(abspath):
-            content = ['<h1>Index of %s </h1><ul>' % abspath]
+            content = [u'<h1>Index of %s </h1><ul>' % abspath]
             for name in os.listdir(abspath):
-                isdir = '/' if os.path.isdir(os.path.join(abspath, name)) else ''
-                content.append('<li><a href="%s">%s%s</a></li>' % (name, name, isdir))
-            content.append('</ul>')
+                isdir = u'/' if os.path.isdir(os.path.join(abspath, name)) else ''
+                content.append(u'<li><a href="%s">%s%s</a></li>' % (name, name, isdir))
+            content.append(u'</ul>')
+            return u''.join(content).encode('utf-8')
         else:
-            content = super(DirectoryHandler, cls).get_content(abspath, start, end)
-        if not isinstance(content, bytes):
-            content = ''.join(content)
-        return content
+            return super(DirectoryHandler, cls).get_content(abspath, start, end)
 
     def get_content_size(self):
         'Return the size of the requested file in bytes'
