@@ -78,6 +78,7 @@ def mime(conf):
     for ext, type in conf.items():
         mimetypes.add_type(type, ext, strict=True)
 
+
 def watch(conf):
     "Set up file watchers"
     watcher.watch(
