@@ -48,7 +48,8 @@ url:
             kwargs: {}                      # without any arguments
             # redirect: /                   # Redirects to referer or / by default
 
-    root-app:                           # A unique name for this handler
+    default:                            # A unique name for this handler
+        priority: -1                    # Apply this pattern with low than normal priority
         pattern: /(.*)                  # All URLs beginning with /
         handler: gramex.handlers.DirectoryHandler   # Handler used
         kwargs:                                     # Options to the handler

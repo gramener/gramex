@@ -58,10 +58,16 @@ def schedule(conf):
 def url(conf):
     "Set up the tornado web app URL handlers"
     handlers = []
-    for name, spec in conf.items():
+    # Sort the handlers in descending order of priority
+    specs = sorted(conf.items(), key=lambda item: item[1].get('priority', 0), reverse=True)
+    for name, spec in specs:
         urlspec = AttrDict(spec)
         urlspec.handler = resolve(spec.handler)
-        handlers.append(tornado.web.URLSpec(name=name, **urlspec))
+        handlers.append(tornado.web.URLSpec(
+            name=name,
+            pattern=urlspec.pattern,
+            handler=urlspec.handler,
+            kwargs=urlspec.get('kwargs', None)))
     del info.app.handlers[:]
     info.app.named_handlers.clear()
     info.app.add_handlers('.*$', handlers)
