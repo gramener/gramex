@@ -107,7 +107,7 @@ def _imports(node, source):
             for name, pattern in value.items():
                 paths = root.glob(pattern) if '*' in pattern else [Path(pattern)]
                 for path in paths:
-                    new_conf = _open(path)
+                    new_conf = _open(root.joinpath(path))
                     imported_paths += [_pathstat(path)] + _imports(new_conf, source=path)
                     merge(node, new_conf, overwrite=True)
             # Delete the import key
