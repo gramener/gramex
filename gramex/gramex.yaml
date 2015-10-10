@@ -55,6 +55,7 @@ url:
         kwargs:                                     # Options to the handler
             path: .                                 #   path is current dir
             default_filename: index.html            #   default filename
+            index: true                             #   display the index
 
     # The `import:` key may be included anywhere. Its keys are just identifiers,
     # not used for anything. Its values are YAML files. They are loaded at the

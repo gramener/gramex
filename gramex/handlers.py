@@ -1,9 +1,8 @@
-import os
-import hashlib
+import datetime
+import mimetypes
 from pathlib import Path
 from .transforms import build_transform
-from tornado.web import HTTPError, RequestHandler, StaticFileHandler
-from tornado.util import bytes_type
+from tornado.web import HTTPError, RequestHandler
 
 
 class FunctionHandler(RequestHandler):
@@ -97,7 +96,7 @@ class FunctionHandler(RequestHandler):
             self.flush()
 
 
-class DirectoryHandler(StaticFileHandler):
+class DirectoryHandler(RequestHandler):
     '''
     Serves files with transformations. It accepts these parameters:
 
@@ -108,9 +107,29 @@ class DirectoryHandler(StaticFileHandler):
     :arg dict transform: Transformations that should be applied to the files.
         The key matches a `glob pattern`_ (e.g. ``'*.md'`` or ``'data/*'``.) The
         value is a dict with the same structure as :class:`FunctionHandler`,
-        with keys ``function``, ``headers``, etc. The ``function`` parameter is
-        passed the `RequestHandler`_ by default. The handler's ``.content``
-        attribute has the file contents.s
+        and accepts these keys:
+
+        ``encoding``
+            The encoding to load the file as.
+
+        ``function``
+            A string that resolves into any Python function or method (e.g.
+            ``markdown.markdown``). By default, it is called as
+            ``function(file_contents)`` and the result is rendered as-is (hence
+            must be a string.)
+
+        ``args``
+            an optional list of positional arguments to be passed to the
+            function. By default, this is just ``[_]`` where ``_`` is the file
+            contents. For example, to pass the file contents as the second
+            parameter, use ``args: [xx, _]``
+
+        ``kwargs``:
+            an optional list of keyword arguments to be passed to the function.
+            ``_`` is replaced with the file contents.
+
+        ``headers``:
+            HTTP headers to set on the response.
 
     This example mimics SimpleHTTPServer_::
 
@@ -119,14 +138,9 @@ class DirectoryHandler(StaticFileHandler):
         kwargs:
             path: .                                 # shows files in the current directory
             default_filename: index.html            # Show index.html instead of directories
+            index: true                             # List files if index.html doesn't exist
 
-    To render Markdown as HTML, create this ``blog.py``::
-
-        from markdown import markdown
-        def to_markdown(handler, **kwargs):
-            return markdown(handler.content, **kwargs)
-
-    ... and set up the handlers::
+    To render Markdown as HTML, set up this handler::
 
         pattern: /blog/(.*)                         # Any URL starting with blog
         handler: gramex.handlers.DirectoryHandler   # uses this handler
@@ -135,7 +149,8 @@ class DirectoryHandler(StaticFileHandler):
           default_filename: README.md               # using README.md as default
           transform:
             "*.md":                                 # Any file matching .md
-              function: blog.to_markdown            #   Convert .md to html
+              encoding: cp1252                      #   Open files with CP1252 encoding
+              function: markdown.markdown           #   Convert from markdown to html
               kwargs:
                 safe_mode: escape                   #   Pass safe_mode='escape'
                 output_format: html5                #   Output in HTML5
@@ -144,116 +159,78 @@ class DirectoryHandler(StaticFileHandler):
 
     .. _glob pattern: https://docs.python.org/3/library/pathlib.html#pathlib.Path.glob
     .. _SimpleHTTPServer: https://docs.python.org/2/library/simplehttpserver.html
-    .. _StaticFileHandler:
-       http://tornado.readthedocs.org/en/latest/web.html#tornado.web.StaticFileHandler
-
-    This method inherits from Tornado's StaticFileHandler_,
     '''
 
-    def initialize(self, path, default_filename=None, transform={}):
-        super(DirectoryHandler, self).initialize(path, default_filename)
+    SUPPORTED_METHODS = ("GET", "HEAD")
+
+    def initialize(self, path, default_filename=None, index=None, transform={}):
+        self.root = Path(path).resolve()
+        self.default_filename = default_filename
+        self.index = index
         self.transform = {}
         for pattern, trans in transform.items():
             self.transform[pattern] = {
                 'function': build_transform(trans),
-                'headers': trans.get('headers', {})
+                'headers': trans.get('headers', {}),
+                'encoding': trans.get('encoding'),
             }
 
-    def validate_absolute_path(self, root, absolute_path):
-        # If absolute_path is a directory, return it as-is.
-        # Otherwise same as StaticFileHandler.validate_absolute_path
-        root = os.path.abspath(root) + os.path.sep
-        # The trailing slash also needs to be temporarily added back
-        # the requested path so a request to root/ will match.
-        if not (absolute_path + os.path.sep).startswith(root):
-            raise HTTPError(403, "%s is not in root static directory",
-                            self.path)
-        if os.path.isdir(absolute_path):
-            if not self.request.path.endswith("/"):
-                self.redirect(self.request.path + "/", permanent=True)
+    def head(self, path):
+        return self.get(path, include_body=False)
+
+    def get(self, path, include_body=True):
+        self.path = (self.root / str(path)).absolute()
+        # relative_to() raises ValueError if path is not under root
+        self.path.relative_to(self.root)
+
+        if self.path.is_dir():
+            final_path = self.path / self.default_filename if self.default_filename else self.path
+            if not (self.default_filename and final_path.exists()) and not self.index:
+                raise HTTPError(404)
+            # Ensure URL has a trailing '/' when displaying the index / default file
+            if not self.request.path.endswith('/'):
+                self.redirect(self.request.path + '/', permanent=True)
                 return
-            if self.default_filename is not None:
-                default_file = os.path.join(absolute_path, self.default_filename)
-                if os.path.isfile(default_file):
-                    return default_file
-            # Now, we have a directory ending with "/" without a
-            # default_filename, so just allow it.
-            return absolute_path
-        if not os.path.exists(absolute_path):
-            raise HTTPError(404)
-        if not os.path.isfile(absolute_path):
-            raise HTTPError(403, "%s is not a file", self.path)
-        return absolute_path
+        else:
+            final_path = self.path
+            if not final_path.exists():
+                raise HTTPError(404)
+            if not final_path.is_file():
+                raise HTTPError(403, '%s is not a file or directory', self.path)
 
-    def get_transform(self, abspath):
-        '''
-        Return the first applicable transform for the absolute path.
-        Else return ``False``.
-
-        The returned ``transform`` has a callable ``function`` that is called
-        with the handler.
-        '''
-        if not hasattr(self, '_current_transform'):
-            self._current_transform = False
-            path = Path(str(abspath))
-            for pattern, trans in self.transform.items():
-                if path.match(pattern):
-                    self._current_transform = trans
-                    break
-        return self._current_transform
-
-    def get_content(self, abspath, start=None, end=None):
-        '''
-        Return contents of the file at ``abspath`` from ``start`` byte to
-        ``end`` byte. If the file is missing and the ``default_filename`` is
-        also missing, render the directory index instead (ignoring start/end.)
-
-        The result is a byte-string or a byte-string generator
-        '''
-        if os.path.isdir(abspath):
-            content = [u'<h1>Index of %s </h1><ul>' % abspath]
-            for name in os.listdir(abspath):
-                isdir = u'/' if os.path.isdir(os.path.join(abspath, name)) else ''
-                content.append(u'<li><a href="%s">%s%s</a></li>' % (name, name, isdir))
+        if self.path.is_dir() and self.index and not (
+                self.default_filename and final_path.exists()):
+            self.set_header('Content-Type', 'text/html')
+            content = [u'<h1>Index of %s </h1><ul>' % self.path]
+            for path in self.path.iterdir():
+                content.append(u'<li><a href="{name:s}">{name:s}{dir:s}</a></li>'.format(
+                    name=path.relative_to(self.path),
+                    dir='/' if path.is_dir() else ''))
             content.append(u'</ul>')
-            return u''.join(content).encode('utf-8')
-        else:
-            content = super(DirectoryHandler, self).get_content(abspath, start, end)
-            transform = self.get_transform(abspath)
-            if transform:
-                for header_name, header_value in transform['headers'].items():
-                    self.set_header(header_name, header_value)
-                if not hasattr(self, 'content'):
-                    self.content = (content if isinstance(content, bytes_type)
-                                    else bytes_type().join(content))
-                    self.content = transform['function'](self)
-                return self.content
-            return content
+            self.content = ''.join(content)
 
-    def get_content_version(self, abspath):
-        'Returns version string for the resource at the given path'
-        data = self.get_content(abspath)
-        hasher = hashlib.md5()
-        if isinstance(data, bytes_type):
-            hasher.update(data)
         else:
-            for chunk in data:
-                hasher.update(chunk)
-        return hasher.hexdigest()
+            modified = final_path.stat().st_mtime
+            self.set_header('Last-Modified', datetime.datetime.utcfromtimestamp(modified))
 
-    def get_content_size(self):
-        'Return the size of the requested file in bytes'
-        if os.path.isdir(self.absolute_path) or self.get_transform(self.absolute_path):
-            return len(self.get_content(self.absolute_path))
-        else:
-            return super(DirectoryHandler, self).get_content_size()
+            mime_type, encoding = mimetypes.guess_type(str(final_path))
+            if mime_type:
+                self.set_header('Content-Type', mime_type)
 
-    def _get_cached_version(self, abs_path):
-        with self._lock:
-            hashes = self._static_hashes
-            if abs_path not in hashes:
-                hashes[abs_path] = self.get_content_version(abs_path)
-            hsh = hashes.get(abs_path)
-            if hsh:
-                return hsh
-        return None
+            transform = {}
+            for pattern, trans in self.transform.items():
+                if final_path.match(pattern):
+                    transform = trans
+                    break
+            encoding = transform.get('encoding', encoding)
+
+            with final_path.open('r', encoding=encoding) as file:
+                self.content = file.read()
+                if transform:
+                    for header_name, header_value in transform['headers'].items():
+                        self.set_header(header_name, header_value)
+                    self.content = transform['function'](self.content)
+                self.set_header('Content-Length', len(self.content))
+
+        if include_body:
+            self.write(self.content)
