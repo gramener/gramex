@@ -1,0 +1,61 @@
+app:
+  listen:
+    port: 9999      # Use a diffent port for testing
+
+url:
+  dir/noindex:
+    pattern: /dir/noindex/(.*)
+    handler: gramex.handlers.DirectoryHandler
+    kwargs:
+      path: dir
+      index: false
+  dir/index:
+    pattern: /dir/index/(.*)
+    handler: gramex.handlers.DirectoryHandler
+    kwargs:
+      path: dir
+      index: true
+  dir/default-present-index:
+    pattern: /dir/default-present-index/(.*)
+    handler: gramex.handlers.DirectoryHandler
+    kwargs:
+      path: dir
+      default_filename: index.html
+      index: true
+  dir/default-missing-index:
+    pattern: /dir/default-missing-index/(.*)
+    handler: gramex.handlers.DirectoryHandler
+    kwargs:
+      path: dir
+      default_filename: nonexistent-file
+      index: true
+  dir/default-present-noindex:
+    pattern: /dir/default-present-noindex/(.*)
+    handler: gramex.handlers.DirectoryHandler
+    kwargs:
+      path: dir
+      default_filename: index.html
+      index: false
+  dir/default-missing-noindex:
+    pattern: /dir/default-missing-noindex/(.*)
+    handler: gramex.handlers.DirectoryHandler
+    kwargs:
+      path: dir
+      default_filename: nonexistent-file
+      index: false
+  dir/transform:
+    pattern: /dir/transform/(.*)
+    handler: gramex.handlers.DirectoryHandler
+    kwargs:
+      path: dir
+      transform:
+        "*.md":
+          encoding: utf-8
+          function: markdown.markdown
+          headers:
+            Content-Type: text/html; charset=utf-8
+        "*.yaml":
+          encoding: utf-8
+          function: gramex.transforms.badgerfish
+          headers:
+            Content-Type: text/html; charset=utf-8
