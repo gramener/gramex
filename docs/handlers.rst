@@ -29,8 +29,8 @@ displays "Hello world" at /hello as plain text::
           headers:
             Content-Type: text/plain        # Render as plain text
 
-See :class:`gramex.handlers.FunctionHandler` For more details on creating
-functions and passing arguments.
+See :class:`gramex.handlers.FunctionHandler` for details.
+
 
 .. _DirectoryHandler:
 
@@ -48,61 +48,7 @@ directory at ``/``::
             path: .                                 #   path is current dir
             default_filename: index.html            #   default filename
 
-
-.. _TransformHandler:
-
-TransformHandler
-~~~~~~~~~~~~~~~~
-
-Converts the configuration into other formats such as HTML using transformation
-functions.
-
-For example, to create a static blog that serves Markdown files as HTML, use::
-
-    url:                                  # Add a URL configuration
-      blog-app:                           # named blog-app.
-        pattern: /blog/(.*)               # The /blog/ URL uses TransformHandler
-        handler: gramex.handlers.TransformHandler
-        kwargs:                           # with these arguments:
-          path: D:/blog/                  # Serve files from this folder
-          default_filename: index.md      # Directory index file
-          transform:
-            "*.md":                           # Convert .md to HTML via Markdown
-              function: markdown.markdown     # Run markdown.markdown(file)
-              headers:
-                "Content-Type": text/html     # Response is served as text/html
-
-The ``function:`` can be any Python function that a string input and returns a
-string output. :func:`gramex.transforms.build_transform` explains how to
-configure Python functions as transforms.
-
-You can specify different transformations for different file patterns. For
-example, to serve YAML files as HTML via :func:`gramex.transform.badgerfish`::
-
-    url:                                  # Add a URL configuration
-      blog-app:                           # named blog-app.
-        pattern: /blog/(.*)               # The /blog/ URL uses TransformHandler
-        handler: gramex.handlers.TransformHandler
-        kwargs:                           # with these arguments:
-          path: .                         # Serve files from this folder
-          default_filename: index.yaml    # Directory index file
-          transform:
-            "*.yaml":                     # Convert .yaml to HTML via BadgerFish
-              function: gramex.transforms.badgerfish
-              kwargs:
-                mapping:                      # badgerfish() allows tag transforms
-                  vega-chart:                 # All <vega-chart> tag contents
-                    function: json.dumps      # are rendered as JSON
-              headers:
-                "Content-Type": text/html
-            "*.md":                           # Convert .md to HTML via Markdown
-              function: markdown.markdown     # Run markdown.markdown(file)
-              headers:
-                "Content-Type": text/html     # Response is served as text/html
-
-Any ``*.yaml`` file is transformed via :func:`gramex.transform.badgerfish` into
-HTML via the `BadgerFish`_ convention before the response is rendered. Any
-``*.md`` file is transformed via ``markdown.markdown`` into HTML.
+See :class:`gramex.handlers.DirectoryHandler` for details.
 
 .. _BadgerFish: http://www.sklar.com/badgerfish/
 

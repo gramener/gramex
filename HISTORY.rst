@@ -6,9 +6,9 @@ History
 1.0.2 (2015-09-26)
 ~~~~~~~~~~~~~~~~~~
 
-* Implement :ref:`FunctionHandler` that renders any function and
-  :ref:`TransformHandler` that renders files transformed by functions (like
-  converting Markdown or YAML to HTML)
+* Implement :ref:`FunctionHandler` that renders any function
+* :ref:`DirectoryHandler` transforms files (e.g. converting
+  Markdown or YAML to HTML)
 * When a configuration file is changed, it is reloaded immediately
 * Document Gramex at https://learn.gramener.com/gramex/
 
