@@ -139,6 +139,7 @@ mime:
     .yaml:      text/yaml
     .md:        text/markdown
     .markdown:  text/markdown
+    .json:      application/json
 
 
 # Watch here
