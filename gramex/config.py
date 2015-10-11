@@ -1,4 +1,23 @@
-'Manages YAML config files as layered configurations with imports.'
+'''
+Manages YAML config files as layered configurations with imports.
+
+:class:PathConfig loads YAML files from a path::
+
+    pc = PathConfig('/path/to/file.yaml')
+
+This can be reloaded via the ``+`` operator. ``+pc`` reloads the YAML file
+(but only if it is newer than before.)
+
+:class:ChainConfig chains multiple YAML files into a single config. For example
+this merges ``base.yaml`` and ``next.yaml`` in sequence::
+
+    cc = ChainConfig()
+    cc['base'] = PathConfig('base.yaml')
+    cc['next'] = PathConfig('next.yaml')
+
+To get the merged file, use ``+cc``. This updates the PathConfig files and
+merges the YAMLs.
+'''
 
 import yaml
 import logging
@@ -9,7 +28,26 @@ from orderedattrdict.yamlutils import AttrDictYAMLLoader
 
 
 def walk(node):
-    'Bottom-up recursive walk through nodes yielding key/index, value, node'
+    '''
+    Bottom-up recursive walk through a data structure yielding a (key, value,
+    node) tuple for every entry.
+
+    For example::
+
+        >>> list(walk([{'x': 1}]))
+        [
+            ('x', 1, {'x': 1}),         # leaf:   key, value, node
+            (0, {'x': 1}, [{'x': 1}])   # parent: index, value, node
+        ]
+
+    Circular linkage can lead to a RuntimeError::
+
+        >>> x = {}
+        >>> x['x'] = x
+        >>> list(walk(x))
+        ...
+        RuntimeError: maximum recursion depth exceeded
+    '''
     if hasattr(node, 'items'):
         for key, value in node.items():
             for item in walk(value):
@@ -72,7 +110,7 @@ class ChainConfig(AttrDict):
 
 
 def _open(path, default=AttrDict()):
-    'Load a YAML path.Path as an ordered AttrDict'
+    'Load a YAML path.Path as an ordered AttrDict, with log messages'
     path = path.absolute()
     if not path.exists():
         logging.warn('Missing config: %s', path)
@@ -87,7 +125,11 @@ def _open(path, default=AttrDict()):
 
 
 def _pathstat(path):
-    'Freeze path along current status, returning an AttrDict'
+    '''
+    Return a path stat object, which has 2 attributes/keys: ``.path`` is the
+    same as the ``path`` parameter. ``stat`` is the result of ``os.stat``. If
+    path is missing, ``stat`` has ``st_mtime`` and ``st_size`` set to ``0``.
+    '''
     # If path doesn't exist, create a dummy stat structure with
     # safe defaults (old mtime, 0 filesize, etc)
     stat = path.stat() if path.exists() else AttrDict(st_mtime=0, st_size=0)
@@ -95,14 +137,49 @@ def _pathstat(path):
 
 
 # TODO: Generalise load-processing
-def _imports(node, source):
+def _imports(config, source):
     '''
-    Parse import: in the node relative to the source path.
-    Return imported pathtime in the order they were imported.
+    Post-process a config for imports.
+
+    ``config`` is the data to process. ``source`` is the path where it was
+    loaded from.
+
+    If ``config`` has an ``import:`` key, treat all values below that as YAML
+    files (specified relative to ``source``) and import them in sequence.
+
+    Return a list of imported paths as :func:_pathstat objects. (This includes
+    ``source``.)
+
+    For example, if the ``source`` is  ``base.yaml`` (which has the below
+    configuration) and is loaded into ``config``::
+
+        app:
+            port: 20
+            start: true
+        path: /
+        import:
+            something: update.yaml
+
+    ... and ``update.yaml`` looks like this::
+
+        app:
+            port: 30
+            new: yes
+
+    ... then after this function is called, ``config`` looks like this::
+
+        app:
+            port: 30        # Updated by update.yaml
+            start: true     # From base.yaml
+            new: yes        # From update.yaml
+        path: /             # From base.yaml
+
+    The ``import:`` keys are deleted. The return value contains :func:_pathstat
+    values for ``base.yaml`` and ``update.yaml`` in that order.
     '''
     imported_paths = [_pathstat(source)]
     root = source.absolute().parent
-    for key, value, node in walk(node):
+    for key, value, node in walk(config):
         if key == 'import':
             for name, pattern in value.items():
                 paths = root.glob(pattern) if '*' in pattern else [Path(pattern)]
