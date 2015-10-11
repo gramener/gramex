@@ -1,0 +1,3 @@
+import:
+    b: config.b.yaml
+    temp: config.temp.yaml

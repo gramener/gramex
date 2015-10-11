@@ -1,0 +1,36 @@
+html:
+  head:
+    title: How Doth The Little Crocodile
+    style: |
+      @import url(https://fonts.googleapis.com/css?family=Roboto|Merriweather);
+      h1, h2, h3 { font-family: Roboto, sans-serif; }
+      h1 { color: #5b9bd5; }
+      h2 { color: #ed7d31; }
+      body {
+          font-family: Merriweather, serif;
+          max-width: 40rem;
+          margin: 2em auto;
+          line-height: 1.5;
+      }
+      .stanza {
+        margin-bottom: 1.5em;
+      }
+  body:
+    h1: How Doth The Little Crocodile
+    h2: By Lewis Carroll
+
+    section:
+      -
+        '@class': stanza
+        div:
+          - How doth the little crocodile
+          - Improve his shining tail,
+          - And pour the waters of the Nile
+          - On every golden scale!
+      -
+        '@class': stanza
+        div:
+          - How cheerfully he seems to grin
+          - How neatly spreads his claws,
+          - And welcomes little fishes in,
+          - With gently smiling jaws!

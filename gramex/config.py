@@ -107,9 +107,9 @@ def _imports(node, source):
             for name, pattern in value.items():
                 paths = root.glob(pattern) if '*' in pattern else [Path(pattern)]
                 for path in paths:
-                    new_conf = _open(path)
-                    imported_paths += [_pathstat(path)] + _imports(new_conf, source=path)
-                    merge(node, new_conf)
+                    new_conf = _open(root.joinpath(path))
+                    imported_paths += _imports(new_conf, source=path)
+                    merge(node, new_conf, overwrite=True)
             # Delete the import key
             del node[key]
     return imported_paths
@@ -149,7 +149,7 @@ class PathConfig(AttrDict):
         self.__pos__()
 
     def __pos__(self):
-        '+config reloads a layer named name (if it has a path)'
+        '+config reloads this config (if it has a path)'
         path = self.__info__.path
 
         # We must reload the layer if nothing has been imported...

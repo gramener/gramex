@@ -1,7 +1,8 @@
-import os
+import datetime
+import mimetypes
 from pathlib import Path
 from .transforms import build_transform
-from tornado.web import HTTPError, RequestHandler, StaticFileHandler
+from tornado.web import HTTPError, RequestHandler
 
 
 class FunctionHandler(RequestHandler):
@@ -23,9 +24,14 @@ class FunctionHandler(RequestHandler):
     Here's a simple use -- to display a string as a response to a URL. This
     configuration renders "Hello world" at the URL `/hello`::
 
-        function: six.text_type               # Display as text in Python 2 & 3
-        args:
-          - Hello world                       # with "Hello world"
+        url:
+          hello-world:
+            pattern: /hello                             # The URL /hello
+            handler: gramex.handlers.FunctionHandler    # Runs a function
+            kwargs:
+              function: six.text_type                   # Display as text in Python 2 & 3
+              args:
+                - Hello world                           # with "Hello world"
 
     Only a single function call is allowed. To chain function calls or to do
     anything more complex, create a Python function and call that instead. For
@@ -51,7 +57,24 @@ class FunctionHandler(RequestHandler):
 
         {"display": "$600.00", "value": 600.0}
 
-    **TODO**: extend function to use URL query parameters
+    If no ``args`` is specified, the Tornado `RequestHandler`_ is passed as the
+    only positional argument. For example, in ``calculations.py``, add::
+
+        def add(handler):
+            return str(sum(float(x) for x in handler.get_arguments('x')))
+
+    .. _RequestHandler: http://tornado.readthedocs.org/en/stable/web.html#request-handlers
+
+    Now, the following configuration::
+
+        function: calculations.add
+
+    ... takes the URL ``?x=1&x=2&x=3`` to add up 1, 2, 3 and display ``6.0``.
+
+    To redirect to a different URL when the function is done, use ``redirect``::
+
+        function: module.calculation      # Run module.calculation(handler)
+        redirect: /                       # and redirect to / thereafter
     '''
     def initialize(self, function, args=None, kwargs=None, headers={}, redirect=None):
         self.function = build_transform({
@@ -63,7 +86,7 @@ class FunctionHandler(RequestHandler):
         self.redirect_url = redirect
 
     def get(self):
-        result = self.function('')
+        result = self.function(self)
         for header_name, header_value in self.headers.items():
             self.set_header(header_name, header_value)
         if self.redirect_url is not None:
@@ -73,140 +96,141 @@ class FunctionHandler(RequestHandler):
             self.flush()
 
 
-class DirectoryHandler(StaticFileHandler):
+class DirectoryHandler(RequestHandler):
     '''
-    Serves files in a directory like `StaticFileHandler`_, but lists files in
-    the directory if the `default_filename` is missing. This behaviour is like
-    `SimpleHTTPServer`_.
+    Serves files with transformations. It accepts these parameters:
 
-    The usage is otherwise identical to `StaticFileHandler`_.
+    :arg string path: The root directory from which files are served.
+    :arg string default_filename: If the URL maps to a directory, this filename
+        is displayed by default. For example, ``index.html`` or ``README.md``.
+        The default is ``None``, which displays all files in the directory.
+    :arg dict transform: Transformations that should be applied to the files.
+        The key matches a `glob pattern`_ (e.g. ``'*.md'`` or ``'data/*'``.) The
+        value is a dict with the same structure as :class:`FunctionHandler`,
+        and accepts these keys:
 
-    .. _SimpleHTTPServer: https://docs.python.org/2/library/simplehttpserver.html
-    .. _StaticFileHandler:
-       http://tornado.readthedocs.org/en/latest/web.html#tornado.web.StaticFileHandler
-    '''
+        ``encoding``
+            The encoding to load the file as.
 
-    def validate_absolute_path(self, root, absolute_path):
-        '''
-        Return directory itself for directory
-        '''
-        root = os.path.abspath(root) + os.path.sep
-        # The trailing slash also needs to be temporarily added back
-        # the requested path so a request to root/ will match.
-        if not (absolute_path + os.path.sep).startswith(root):
-            raise HTTPError(403, "%s is not in root static directory",
-                            self.path)
-        if os.path.isdir(absolute_path):
-            if not self.request.path.endswith("/"):
-                self.redirect(self.request.path + "/", permanent=True)
-                return
-            if self.default_filename is not None:
-                default_file = os.path.join(absolute_path, self.default_filename)
-                if os.path.isfile(default_file):
-                    return default_file
-            # Now, we have a directory ending with "/" without a
-            # default_filename, so just allow it.
-            return absolute_path
-        if not os.path.exists(absolute_path):
-            raise HTTPError(404)
-        if not os.path.isfile(absolute_path):
-            raise HTTPError(403, "%s is not a file", self.path)
-        return absolute_path
+        ``function``
+            A string that resolves into any Python function or method (e.g.
+            ``markdown.markdown``). By default, it is called as
+            ``function(file_contents)`` and the result is rendered as-is (hence
+            must be a string.)
 
-    @classmethod
-    def get_content(cls, abspath, start=None, end=None):
-        '''
-        Return contents of the file at ``abspath`` from ``start`` byte to
-        ``end`` byte. If the file is missing and the ``default_filename`` is
-        also missing, render the directory index instead.
-        '''
-        if os.path.isdir(abspath):
-            content = ['<h1>Index of %s </h1><ul>' % abspath]
-            for name in os.listdir(abspath):
-                content.append('<li><a href="%s">%s</a></li>' % (name, name))
-            content.append('</ul>')
-        else:
-            content = super(DirectoryHandler, cls).get_content(abspath, start, end)
-        if not isinstance(content, bytes):
-            content = ''.join(content)
-        return content
+        ``args``
+            an optional list of positional arguments to be passed to the
+            function. By default, this is just ``[_]`` where ``_`` is the file
+            contents. For example, to pass the file contents as the second
+            parameter, use ``args: [xx, _]``
 
-    def get_content_size(self):
-        'Return the size of the requested file in bytes'
-        if os.path.isdir(self.absolute_path):
-            return len(self.get_content(self.absolute_path))
-        return super(DirectoryHandler, self).get_content_size()
+        ``kwargs``:
+            an optional list of keyword arguments to be passed to the function.
+            ``_`` is replaced with the file contents.
 
-    def get_content_type(self):
-        'Return the MIME type of the requested file in bytes'
-        if os.path.isdir(self.absolute_path):
-            return 'text/html'
-        return super(DirectoryHandler, self).get_content_type()
+        ``headers``:
+            HTTP headers to set on the response.
 
+    This example mimics SimpleHTTPServer_::
 
-class TransformHandler(RequestHandler):
-    '''
-    Renders files in a path after transforming them. This is useful for a static
-    file handler that pre-processes responses. Here are some examples::
-
-        pattern: /help/(.*)
-        handler: gramex.handlers.TransformHandler   # This handler
+        pattern: /(.*)                              # Any URL
+        handler: gramex.handlers.DirectoryHandler   # uses this handler
         kwargs:
-          path: help/                               # Serve files from help/
-          default_filename: index.yaml              # Directory index file
+            path: .                                 # shows files in the current directory
+            default_filename: index.html            # Show index.html instead of directories
+            index: true                             # List files if index.html doesn't exist
+
+    To render Markdown as HTML, set up this handler::
+
+        pattern: /blog/(.*)                         # Any URL starting with blog
+        handler: gramex.handlers.DirectoryHandler   # uses this handler
+        kwargs:
+          path: blog/                               # Serve files from blog/
+          default_filename: README.md               # using README.md as default
           transform:
             "*.md":                                 # Any file matching .md
-              transform: markdown.markdown          #   Convert .md to html
+              encoding: cp1252                      #   Open files with CP1252 encoding
+              function: markdown.markdown           #   Convert from markdown to html
+              kwargs:
+                safe_mode: escape                   #   Pass safe_mode='escape'
+                output_format: html5                #   Output in HTML5
               headers:
                 Content-Type: text/html             #   MIME type: text/html
-            "*.yaml":                               # YAML files use BadgerFish
-              transform: gramex.transforms.badgerfish
-              headers:
-                Content-Type: text/html             #   MIME type: text/html
-            "*.lower":                              # Any .lower file
-              transform: string.lower               #   Convert to lowercase
-              headers:
-                Content-Type: text/plain            #   Serve as plain text
+
+    .. _glob pattern: https://docs.python.org/3/library/pathlib.html#pathlib.Path.glob
+    .. _SimpleHTTPServer: https://docs.python.org/2/library/simplehttpserver.html
     '''
-    def initialize(self, path, default_filename=None, transform={}):
-        self.root = path
+
+    SUPPORTED_METHODS = ("GET", "HEAD")
+
+    def initialize(self, path, default_filename=None, index=None, transform={}):
+        self.root = Path(path).resolve()
         self.default_filename = default_filename
+        self.index = index
         self.transform = {}
         for pattern, trans in transform.items():
             self.transform[pattern] = {
                 'function': build_transform(trans),
-                'headers': trans.get('headers', {})
+                'headers': trans.get('headers', {}),
+                'encoding': trans.get('encoding'),
             }
 
-    def get(self, path):
-        self.path = path
-        if os.path.sep != '/':
-            self.path = self.path.replace('/', os.path.sep)
-        absolute_path = os.path.abspath(os.path.join(self.root, self.path))
+    def head(self, path):
+        return self.get(path, include_body=False)
 
-        if (os.path.isdir(absolute_path) and
-                self.default_filename is not None):
-            if not self.request.path.endswith("/"):
-                self.redirect(self.request.path + "/", permanent=True)
+    def get(self, path, include_body=True):
+        self.path = (self.root / str(path)).absolute()
+        # relative_to() raises ValueError if path is not under root
+        self.path.relative_to(self.root)
+
+        if self.path.is_dir():
+            final_path = self.path / self.default_filename if self.default_filename else self.path
+            if not (self.default_filename and final_path.exists()) and not self.index:
+                raise HTTPError(404)
+            # Ensure URL has a trailing '/' when displaying the index / default file
+            if not self.request.path.endswith('/'):
+                self.redirect(self.request.path + '/', permanent=True)
                 return
-            absolute_path = os.path.join(absolute_path, self.default_filename)
-        if not os.path.exists(absolute_path):
-            raise HTTPError(404)
-        if not os.path.isfile(absolute_path):
-            raise HTTPError(403, "%s is not a file", self.path)
+        else:
+            final_path = self.path
+            if not final_path.exists():
+                raise HTTPError(404)
+            if not final_path.is_file():
+                raise HTTPError(403, '%s is not a file or directory', self.path)
 
-        # Python 2.7 pathlib only accepts str, not unicode
-        path = Path(str(absolute_path))
-        with path.open('r+b') as handle:
-            content = handle.read()
+        if self.path.is_dir() and self.index and not (
+                self.default_filename and final_path.exists()):
+            self.set_header('Content-Type', 'text/html')
+            content = [u'<h1>Index of %s </h1><ul>' % self.path]
+            for path in self.path.iterdir():
+                content.append(u'<li><a href="{name:s}">{name:s}{dir:s}</a></li>'.format(
+                    name=path.relative_to(self.path),
+                    dir='/' if path.is_dir() else ''))
+            content.append(u'</ul>')
+            self.content = ''.join(content)
 
-        # Apply first matching transforms
-        for pattern, trans in self.transform.items():
-            if path.match(pattern):
-                content = trans['function'](content)
-                for header_name, header_value in trans['headers'].items():
-                    self.set_header(header_name, header_value)
-                break
+        else:
+            modified = final_path.stat().st_mtime
+            self.set_header('Last-Modified', datetime.datetime.utcfromtimestamp(modified))
 
-        self.write(content)
-        self.flush()
+            mime_type, encoding = mimetypes.guess_type(str(final_path))
+            if mime_type:
+                self.set_header('Content-Type', mime_type)
+
+            transform = {}
+            for pattern, trans in self.transform.items():
+                if final_path.match(pattern):
+                    transform = trans
+                    break
+            encoding = transform.get('encoding', encoding)
+
+            with final_path.open('r', encoding=encoding) as file:
+                self.content = file.read()
+                if transform:
+                    for header_name, header_value in transform['headers'].items():
+                        self.set_header(header_name, header_value)
+                    self.content = transform['function'](self.content)
+                self.set_header('Content-Length', len(self.content))
+
+        if include_body:
+            self.write(self.content)
