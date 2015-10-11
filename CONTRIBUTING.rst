@@ -166,11 +166,13 @@ When releasing a new version of Gramex:
 1. Test the release by running::
 
     export PYTHON=/path/to/python2.7
-    make test-release
+    make release-test
     export PYTHON=/path/to/python3.4
-    make test-release
+    make release-test
 
-2. Update ``__version__ = 1.x.x`` in :mod:`gramex` and commit.
+2. Update the following and commit:
+    - ``docs/HISTORY.rst`` with the release notes
+    - :mod:`gramex` -- set ``__version__ = 1.x.x``
 
 3. Create an annotated tag and push the code::
 
@@ -180,7 +182,7 @@ When releasing a new version of Gramex:
 Release plan
 ------------
 
-Version 1.0.2
+Version 1.0.3
 ~~~~~~~~~~~~~
 
 - ``<vega-chart>`` spec as open source npm package
@@ -198,12 +200,12 @@ Version 1.0.2
 
 .. _link vs src: http://stackoverflow.com/a/7794936/100904
 
-Version 1.0.3
+Version 1.0.4
 ~~~~~~~~~~~~~
 
 - Data handler that provides connectivity to databases, files, etc. via odo
 
-Version 1.0.4
+Version 1.0.5
 ~~~~~~~~~~~~~
 
 - Sample datasets
@@ -212,8 +214,7 @@ Version 1.0.4
 Features in future releases
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- :func:`gramex.handlers.TransformHandler`:
-    - Write test cases
+- :func:`gramex.handlers.DirectoryHandler`:
     - Cache the transformed result based on the file / directory stat
     - Allow ``default_filename`` and ``path`` to be a list. The handler searches
       the paths and files one by one and renders the first match.
