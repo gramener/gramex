@@ -97,4 +97,5 @@ def badgerfish(content, mapping={}, doctype='<!DOCTYPE html>'):
     for tag, value, node in walk(data):
         if tag in maps:
             node[tag] = maps[tag](value)
-    return lxml.html.tostring(xmljson.badgerfish.etree(data)[0], doctype=doctype)
+    return lxml.html.tostring(xmljson.badgerfish.etree(data)[0],
+                              doctype=doctype, encoding='unicode')
