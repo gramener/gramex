@@ -47,3 +47,21 @@ Gramex has:
    as a websocket, provide a data interface, serve static files, etc.
 3. :doc:`components` that render content of different kinds (charts, tables,
    UI components, etc.)
+
+Decisions
+---------
+
+URL patterns must be explicit
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Gramex 0.x allowed URLs to be **rebased**. For example, if an app is deployed at
+`/` it can be served at `/app/` with URLs automatically getting corrected.
+
+This requires the application to consistently use ``rebase_uri`` and the front-
+end proxy to send an ``X-Request-URI`` header. Using ``rebase_uri`` is no longer
+possible with views being generated on the front-end. ``X-Request-URI`` needs a
+front-end proxy like nginx, which can be difficult to configure.
+
+So we prefer simplicity over functionality and disallow rebasing.
+
+Henceforth, apps must know their exact (final) URL.
