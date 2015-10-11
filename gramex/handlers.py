@@ -17,7 +17,7 @@ class FunctionHandler(RequestHandler):
         the user is redirected to ``redirect``.
     :arg list args: positional arguments to be passed to the function.
     :arg dict kwargs: keyword arguments to be passed to the function.
-    :arg dict headers: headers to set on the response.
+    :arg dict headers: HTTP headers to set on the response.
     :arg string redirect: URL to redirect to when the result is done. Used to
         trigger calculations without displaying any output.
 
@@ -104,6 +104,7 @@ class DirectoryHandler(RequestHandler):
     :arg string default_filename: If the URL maps to a directory, this filename
         is displayed by default. For example, ``index.html`` or ``README.md``.
         The default is ``None``, which displays all files in the directory.
+    :arg dict headers: HTTP headers to set on the response.
     :arg dict transform: Transformations that should be applied to the files.
         The key matches a `glob pattern`_ (e.g. ``'*.md'`` or ``'data/*'``.) The
         value is a dict with the same structure as :class:`FunctionHandler`,
@@ -163,10 +164,11 @@ class DirectoryHandler(RequestHandler):
 
     SUPPORTED_METHODS = ("GET", "HEAD")
 
-    def initialize(self, path, default_filename=None, index=None, transform={}):
+    def initialize(self, path, default_filename=None, index=None, headers={}, transform={}):
         self.root = Path(path).resolve()
         self.default_filename = default_filename
         self.index = index
+        self.headers = headers
         self.transform = {}
         for pattern, trans in transform.items():
             self.transform[pattern] = {
@@ -216,6 +218,9 @@ class DirectoryHandler(RequestHandler):
             mime_type, encoding = mimetypes.guess_type(str(final_path))
             if mime_type:
                 self.set_header('Content-Type', mime_type)
+
+            for header_name, header_value in self.headers.items():
+                self.set_header(header_name, header_value)
 
             transform = {}
             for pattern, trans in self.transform.items():
