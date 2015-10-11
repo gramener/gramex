@@ -4,7 +4,7 @@ import yaml
 import xmljson
 import lxml.html
 from .config import walk
-from zope.dottedname.resolve import resolve
+from pydoc import locate
 from orderedattrdict.yamlutils import AttrDictYAMLLoader
 
 
@@ -71,7 +71,7 @@ def build_transform(conf):
         function = None
     else:
         result.append('\treturn function(*args, **kwargs)')
-        function = resolve(conf['function'])
+        function = locate(conf['function'])
         doc = conf['function'].__doc__
         name = conf['function']
 
@@ -97,4 +97,5 @@ def badgerfish(content, mapping={}, doctype='<!DOCTYPE html>'):
     for tag, value, node in walk(data):
         if tag in maps:
             node[tag] = maps[tag](value)
-    return lxml.html.tostring(xmljson.badgerfish.etree(data)[0], doctype=doctype)
+    return lxml.html.tostring(xmljson.badgerfish.etree(data)[0],
+                              doctype=doctype, encoding='unicode')

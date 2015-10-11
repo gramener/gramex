@@ -26,7 +26,9 @@ class TestChainConfig(unittest.TestCase):
 
     def test_overlay(self):
         '+ChainConfig updates configs successively'
-        conf = ChainConfig(a=AttrDict(), b=AttrDict())
+        conf = ChainConfig()
+        conf.a = AttrDict()
+        conf.b = AttrDict()
         conf.a.x = 1
         conf.a.y = 2
         conf.b.x = 2
