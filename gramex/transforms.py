@@ -4,7 +4,7 @@ import yaml
 import xmljson
 import lxml.html
 from .config import walk
-from zope.dottedname.resolve import resolve
+from pydoc import locate
 from orderedattrdict.yamlutils import AttrDictYAMLLoader
 
 
@@ -71,7 +71,7 @@ def build_transform(conf):
         function = None
     else:
         result.append('\treturn function(*args, **kwargs)')
-        function = resolve(conf['function'])
+        function = locate(conf['function'])
         doc = conf['function'].__doc__
         name = conf['function']
 

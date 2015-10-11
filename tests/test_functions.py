@@ -14,7 +14,7 @@ class BuildTransform(unittest.TestCase):
             fn(1, 2)
 
     def test_function(self):
-        fn = build_transform({'function': 'string.lower'})
+        fn = build_transform({'function': 'str.lower'})
         self.assertEqual(fn('ABC'), 'abc')
         self.assertEqual(fn('aBc'), 'abc')
 
@@ -25,20 +25,20 @@ class BuildTransform(unittest.TestCase):
         'args: passed as positional arguments. _ represents input'
         # Splits content by comma
         fn = build_transform({
-            'function': 'string.split',
+            'function': 'str.split',
             'args': ['_', ',']})
         self.assertEqual(fn('a,b,c'), ['a', 'b', 'c'])
 
         # Splits "abcdeabcdeabcde" with content
         fn = build_transform({
-            'function': 'string.split',
+            'function': 'str.split',
             'args': ['abcdeabcdeabcde', '_']})
         self.assertEqual(fn('a'), ['', 'bcde', 'bcde', 'bcde'])
         self.assertEqual(fn('b'), ['a', 'cdea', 'cdea', 'cde'])
 
-        # string.lower(), if called without arguments, raises TypeError
+        # str.lower(), if called without arguments, raises TypeError
         fn = build_transform({
-            'function': 'string.lower',
+            'function': 'str.lower',
             'args': []})
         with self.assertRaises(TypeError):
             fn('ABC')

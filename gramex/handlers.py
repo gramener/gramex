@@ -11,7 +11,7 @@ class FunctionHandler(RequestHandler):
     initialized:
 
     :arg string function: a string that resolves into any Python function or
-        method (e.g. ``string.lower``). It is called as ``function(*args,
+        method (e.g. ``str.lower``). It is called as ``function(*args,
         **kwargs)``. By default, the result is rendered as-is (and hence must be
         a string.) If you ``redirect`` is specified, the result is discarded and
         the user is redirected to ``redirect``.

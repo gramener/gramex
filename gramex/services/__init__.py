@@ -18,7 +18,7 @@ import logging.config
 import tornado.web
 import tornado.ioloop
 from orderedattrdict import AttrDict
-from zope.dottedname.resolve import resolve
+from pydoc import locate
 from . import scheduler
 from . import watcher
 
@@ -62,7 +62,7 @@ def url(conf):
     specs = sorted(conf.items(), key=lambda item: item[1].get('priority', 0), reverse=True)
     for name, spec in specs:
         urlspec = AttrDict(spec)
-        urlspec.handler = resolve(spec.handler)
+        urlspec.handler = locate(spec.handler)
         handlers.append(tornado.web.URLSpec(
             name=name,
             pattern=urlspec.pattern,
