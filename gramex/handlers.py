@@ -203,7 +203,7 @@ class DirectoryHandler(RequestHandler):
             self.set_header('Content-Type', 'text/html')
             content = [u'<h1>Index of %s </h1><ul>' % self.path]
             for path in self.path.iterdir():
-                content.append(u'<li><a href="{name:s}">{name:s}{dir:s}</a></li>'.format(
+                content.append(u'<li><a href="{name!s:s}">{name!s:s}{dir!s:s}</a></li>'.format(
                     name=path.relative_to(self.path),
                     dir='/' if path.is_dir() else ''))
             content.append(u'</ul>')
