@@ -163,7 +163,7 @@ Release
 
 When releasing a new version of Gramex:
 
-1. Test the release by running::
+1. Test the ``dev`` branch release by running::
 
     export PYTHON=/path/to/python2.7
     make release-test
@@ -172,11 +172,13 @@ When releasing a new version of Gramex:
 
 2. Update the following and commit:
     - ``docs/HISTORY.rst`` with the release notes
-    - :mod:`gramex` -- set ``__version__ = 1.x.x``
+    - ``gramex/__init__.py`` -- set ``__version__ = 1.x.x``
 
-3. Create an annotated tag and push the code::
+3. Merge with master, create an annotated tag and push the code::
 
-    git tag -a v1.x.x
+    git checkout master
+    git merge dev
+    git tag -a v1.x.x           # Annotate with a one-line summary of features
     git push --follow-tags
 
 Release plan

@@ -8,7 +8,7 @@ from gramex.config import ChainConfig, PathConfig
 
 __author__ = 'S Anand'
 __email__ = 's.anand@gramener.com'
-__version__ = '1.0.2'
+__version__ = '1.0.3'
 
 paths = AttrDict()              # paths where configurations are stored
 conf = AttrDict()               # holds the final merged configurations
