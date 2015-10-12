@@ -18,23 +18,47 @@ class BuildTransform(unittest.TestCase):
         self.assertEqual(fn('ABC'), 'abc')
         self.assertEqual(fn('aBc'), 'abc')
 
-        fn = build_transform({'function': 'six.moves.builtins.sum'})
+        fn = build_transform({'function': 'sum'})
         self.assertEqual(fn([1, 2, 3]), 6)
 
     def test_args(self):
-        'args: passed as positional arguments. _ represents input'
-        # Splits content by comma
-        fn = build_transform({
-            'function': 'str.split',
-            'args': ['_', ',']})
-        self.assertEqual(fn('a,b,c'), ['a', 'b', 'c'])
+        'args: passed as positional arguments'
 
-        # Splits "abcdeabcdeabcde" with content
-        fn = build_transform({
-            'function': 'str.split',
-            'args': ['abcdeabcdeabcde', '_']})
-        self.assertEqual(fn('a'), ['', 'bcde', 'bcde', 'bcde'])
-        self.assertEqual(fn('b'), ['a', 'cdea', 'cdea', 'cde'])
+        # Arguments are taken explicitly by default
+        join = build_transform({'function': 'str.join', 'args': [',', ['a', 'b']]})
+        self.assertEqual(join('anything'), 'a,b')
+
+        # Single input variable is replaced in args
+        join = build_transform({
+                   'function': 'str.join',
+                   'args': ['|', 'input']},
+                   vars='input')
+        self.assertEqual(join(['a', 'b', 'c']), 'a|b|c')
+
+        # Multiple input variables are replaced in args
+        join = build_transform({
+            'function': 'str.join',
+            'args': ['separator', 'string_list']},
+            vars=['separator', 'string_list'])
+        self.assertEqual(join(string_list=['a', 'b', 'c'], separator=','), 'a,b,c')
+
+        # args defaults to vars
+        join = build_transform({'function': 'str.join'}, vars=['sep', 'str'])
+        self.assertEqual(join(',', ['a', 'b', 'c']), 'a,b,c')
+
+        # args can have a different order than vars
+        join = build_transform({
+            'function': 'str.join',
+            'args': ['sep', 'list']},
+            vars=['list', 'sep'])
+        self.assertEqual(join(['a', 'b', 'c'], ','), 'a,b,c')
+
+        # args can be explicit strings, and a subset of the vars
+        join = build_transform({
+            'function': 'str.join',
+            'args': [',', 'list']},
+            vars=['sep', 'list'])
+        self.assertEqual(join(sep='anything', list=['a', 'b', 'c']), 'a,b,c')
 
         # str.lower(), if called without arguments, raises TypeError
         fn = build_transform({
@@ -59,7 +83,7 @@ class BuildTransform(unittest.TestCase):
             'kwargs': {
                 'obj': '_',
                 'separators': [',', ':'],
-            }})
+            }}, vars='_')
         self.assertEqual(fn([1, 2]), "[1,2]")
 
 

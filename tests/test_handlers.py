@@ -1,6 +1,7 @@
 import os
 import io
 import sys
+import json
 import requests
 import markdown
 import unittest
@@ -100,6 +101,9 @@ class TestDirectoryHandler(TestGramex):
             self.check('/dir/transform/markdown.md', text=markdown.markdown(f.read()))
         with io.open(os.path.join(self.folder, 'dir/badgerfish.yaml'), 'r', encoding='utf-8') as f:
             self.check('/dir/transform/badgerfish.yaml', text=badgerfish(f.read()))
+
+        self.check('/dir/args/?x=1', text=json.dumps({'x': ['1']}))
+        self.check('/dir/args/?x=1&x=2&y=3', text=json.dumps({'x': ['1', '2'], 'y': ['3']}))
 
     def test_default_config(self):
         'Check default gramex.yaml configuration'

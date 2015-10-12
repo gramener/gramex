@@ -11,10 +11,12 @@ class FunctionHandler(RequestHandler):
     initialized:
 
     :arg string function: a string that resolves into any Python function or
-        method (e.g. ``str.lower``). It is called as ``function(*args,
-        **kwargs)``. By default, the result is rendered as-is (and hence must be
-        a string.) If you ``redirect`` is specified, the result is discarded and
-        the user is redirected to ``redirect``.
+        method (e.g. ``str.lower``). By default, it is called as
+        ``function(handler)`` where handler is this RequestHandler, but you can
+        override ``args`` and ``kwargs`` below to replace it with other
+        parameters. The result is rendered as-is (and hence must be a string.)
+        If ``redirect`` is specified, the result is discarded and the user is
+        redirected to ``redirect``.
     :arg list args: positional arguments to be passed to the function.
     :arg dict kwargs: keyword arguments to be passed to the function.
     :arg dict headers: HTTP headers to set on the response.
@@ -29,7 +31,7 @@ class FunctionHandler(RequestHandler):
             pattern: /hello                             # The URL /hello
             handler: gramex.handlers.FunctionHandler    # Runs a function
             kwargs:
-              function: six.text_type                   # Display as text in Python 2 & 3
+              function: str                             # Display string as-is
               args:
                 - Hello world                           # with "Hello world"
 
@@ -76,14 +78,10 @@ class FunctionHandler(RequestHandler):
         function: module.calculation      # Run module.calculation(handler)
         redirect: /                       # and redirect to / thereafter
     '''
-    def initialize(self, function, args=None, kwargs=None, headers={}, redirect=None):
-        self.function = build_transform({
-            'function': function,
-            'args': ['_'] if args is None else args,
-            'kwargs': {} if kwargs is None else kwargs
-        })
-        self.headers = headers
-        self.redirect_url = redirect
+    def initialize(self, **kwargs):
+        self.function = build_transform(kwargs, vars='handler')
+        self.headers = kwargs.get('headers', {})
+        self.redirect_url = kwargs.get('redirect', None)
 
     def get(self):
         result = self.function(self)
@@ -116,19 +114,20 @@ class DirectoryHandler(RequestHandler):
 
         ``function``
             A string that resolves into any Python function or method (e.g.
-            ``markdown.markdown``). By default, it is called as
-            ``function(file_contents)`` and the result is rendered as-is (hence
-            must be a string.)
+            ``markdown.markdown``). By default, it is called with the file
+            contents as ``function(content)`` and the result is rendered as-is
+            (hence must be a string.)
 
         ``args``
-            an optional list of positional arguments to be passed to the
-            function. By default, this is just ``[_]`` where ``_`` is the file
-            contents. For example, to pass the file contents as the second
-            parameter, use ``args: [xx, _]``
+            optional positional arguments to be passed to the function. By
+            default, this is just ``['content']`` where ``content`` is the file
+            contents. You can also pass the handler via ``['handler']``, or both
+            of them in any order.
 
         ``kwargs``:
             an optional list of keyword arguments to be passed to the function.
-            ``_`` is replaced with the file contents.
+            ``handler`` and ``content`` are replaced with the RequestHandler and
+            file contents respectively.
 
         ``headers``:
             HTTP headers to set on the response.
@@ -173,7 +172,7 @@ class DirectoryHandler(RequestHandler):
         self.transform = {}
         for pattern, trans in transform.items():
             self.transform[pattern] = {
-                'function': build_transform(trans),
+                'function': build_transform(trans, vars=['content', 'handler'], args=['content']),
                 'headers': trans.get('headers', {}),
                 'encoding': trans.get('encoding'),
             }
@@ -235,7 +234,7 @@ class DirectoryHandler(RequestHandler):
                 if transform:
                     for header_name, header_value in transform['headers'].items():
                         self.set_header(header_name, header_value)
-                    self.content = transform['function'](self.content)
+                    self.content = transform['function'](self.content, self)
                 self.set_header('Content-Length', len(self.content))
 
         if include_body:

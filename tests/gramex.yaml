@@ -59,3 +59,14 @@ url:
           function: gramex.transforms.badgerfish
           headers:
             Content-Type: text/html; charset=utf-8
+
+  dir/args:
+    pattern: /dir/args/(.*)
+    handler: gramex.handlers.DirectoryHandler
+    kwargs:
+      path: dir
+      default_filename: index.html
+      transform:
+        'index.html':
+          function: utils.args_as_json
+          args: handler
