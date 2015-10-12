@@ -111,7 +111,8 @@ class DirectoryHandler(RequestHandler):
         and accepts these keys:
 
         ``encoding``
-            The encoding to load the file as.
+            The encoding to load the file as. If you don't specify an encoding,
+            file contents are passed to ``function`` as a binary string.
 
         ``function``
             A string that resolves into any Python function or method (e.g.
@@ -215,7 +216,7 @@ class DirectoryHandler(RequestHandler):
             modified = final_path.stat().st_mtime
             self.set_header('Last-Modified', datetime.datetime.utcfromtimestamp(modified))
 
-            mime_type, encoding = mimetypes.guess_type(str(final_path))
+            mime_type, content_encoding = mimetypes.guess_type(str(final_path))
             if mime_type:
                 self.set_header('Content-Type', mime_type)
 
@@ -227,9 +228,9 @@ class DirectoryHandler(RequestHandler):
                 if final_path.match(pattern):
                     transform = trans
                     break
-            encoding = transform.get('encoding', encoding)
 
-            with final_path.open('r', encoding=encoding) as file:
+            encoding = transform.get('encoding')
+            with final_path.open('rb' if encoding is None else 'r', encoding=encoding) as file:
                 self.content = file.read()
                 if transform:
                     for header_name, header_value in transform['headers'].items():

@@ -94,6 +94,8 @@ class TestDirectoryHandler(TestGramex):
         self.check('/dir/default-missing-noindex/text.txt', path='dir/text.txt')
         self.check('/dir/default-missing-noindex/subdir/text.txt', path='dir/subdir/text.txt')
 
+        self.check('/dir/noindex/binary.zip', path='dir/binary.zip')
+
         with io.open(os.path.join(self.folder, 'dir/markdown.md'), 'r', encoding='utf-8') as f:
             self.check('/dir/transform/markdown.md', text=markdown.markdown(f.read()))
         with io.open(os.path.join(self.folder, 'dir/badgerfish.yaml'), 'r', encoding='utf-8') as f:
