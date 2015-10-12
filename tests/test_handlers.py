@@ -21,8 +21,8 @@ class TestGramex(unittest.TestCase):
             stdout=DEVNULL,
         )
 
-    def get(self, url):
-        return requests.get('http://localhost:9999' + url)
+    def get(self, url, **kwargs):
+        return requests.get('http://localhost:9999' + url, **kwargs)
 
     def tearDown(self):
         self.process.terminate()
@@ -83,3 +83,8 @@ class TestDirectoryHandler(TestGramex):
             self.check('/dir/transform/markdown.md', text=markdown.markdown(f.read()))
         with io.open(os.path.join(self.folder, 'dir/badgerfish.yaml'), 'r', encoding='utf-8') as f:
             self.check('/dir/transform/badgerfish.yaml', text=badgerfish(f.read()))
+
+    def test_default_config(self):
+        'Check default gramex.yaml configuration'
+        r = self.get('/reload-config', allow_redirects=False)
+        self.assertEqual(r.status_code, 302, '/reload-config works and redirects')

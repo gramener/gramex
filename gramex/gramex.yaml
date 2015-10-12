@@ -45,8 +45,9 @@ url:
         handler: gramex.handlers.FunctionHandler    # Run function and redirect
         kwargs:
             function: gramex.init           # Run gramex.init()
-            kwargs: {}                      # without any arguments
-            # redirect: /                   # Redirects to referer or / by default
+            args: []                        # without any positional
+            kwargs: {}                      # or keyword arguments
+            redirect: /                     # Redirects to referer or / by default
 
     default:                            # A unique name for this handler
         priority: -1                    # Apply this pattern with low than normal priority
