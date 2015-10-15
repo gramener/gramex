@@ -34,3 +34,15 @@ html:
           - How neatly spreads his claws,
           - And welcomes little fishes in,
           - With gently smiling jaws!
+      -
+        '@class': unicode
+        div:
+          - © by the author — “Lewis Carroll”
+          - ₨ 0
+          - £ 0
+          - € 0
+
+      -
+        '@class': import
+        import:
+          para1: badgerfish.para1.yaml

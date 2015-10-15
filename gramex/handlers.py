@@ -160,6 +160,15 @@ class DirectoryHandler(RequestHandler):
 
     .. _glob pattern: https://docs.python.org/3/library/pathlib.html#pathlib.Path.glob
     .. _SimpleHTTPServer: https://docs.python.org/2/library/simplehttpserver.html
+
+    This handler exposes the following ``pathlib.Path`` attributes:
+
+    ``root``
+        Root path for this handler. Same as the ``path`` argument
+    ``path``
+        Absolute Path requested by the user, without adding a default filename
+    ``file``
+        Absolute Path served to the user, after adding a default filename
     '''
 
     SUPPORTED_METHODS = ("GET", "HEAD")
@@ -186,22 +195,22 @@ class DirectoryHandler(RequestHandler):
         self.path.relative_to(self.root)
 
         if self.path.is_dir():
-            final_path = self.path / self.default_filename if self.default_filename else self.path
-            if not (self.default_filename and final_path.exists()) and not self.index:
+            self.file = self.path / self.default_filename if self.default_filename else self.path
+            if not (self.default_filename and self.file.exists()) and not self.index:
                 raise HTTPError(404)
             # Ensure URL has a trailing '/' when displaying the index / default file
             if not self.request.path.endswith('/'):
                 self.redirect(self.request.path + '/', permanent=True)
                 return
         else:
-            final_path = self.path
-            if not final_path.exists():
+            self.file = self.path
+            if not self.file.exists():
                 raise HTTPError(404)
-            if not final_path.is_file():
+            if not self.file.is_file():
                 raise HTTPError(403, '%s is not a file or directory', self.path)
 
         if self.path.is_dir() and self.index and not (
-                self.default_filename and final_path.exists()):
+                self.default_filename and self.file.exists()):
             self.set_header('Content-Type', 'text/html')
             content = [u'<h1>Index of %s </h1><ul>' % self.path]
             for path in self.path.iterdir():
@@ -212,10 +221,10 @@ class DirectoryHandler(RequestHandler):
             self.content = ''.join(content)
 
         else:
-            modified = final_path.stat().st_mtime
+            modified = self.file.stat().st_mtime
             self.set_header('Last-Modified', datetime.datetime.utcfromtimestamp(modified))
 
-            mime_type, content_encoding = mimetypes.guess_type(str(final_path))
+            mime_type, content_encoding = mimetypes.guess_type(str(self.file))
             if mime_type:
                 self.set_header('Content-Type', mime_type)
 
@@ -224,12 +233,12 @@ class DirectoryHandler(RequestHandler):
 
             transform = {}
             for pattern, trans in self.transform.items():
-                if final_path.match(pattern):
+                if self.file.match(pattern):
                     transform = trans
                     break
 
             encoding = transform.get('encoding')
-            with final_path.open('rb' if encoding is None else 'r', encoding=encoding) as file:
+            with self.file.open('rb' if encoding is None else 'r', encoding=encoding) as file:
                 self.content = file.read()
                 if transform:
                     for header_name, header_value in transform['headers'].items():

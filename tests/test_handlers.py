@@ -6,6 +6,8 @@ import requests
 import markdown
 import unittest
 import subprocess
+from pathlib import Path
+from orderedattrdict import AttrDict
 from gramex.transforms import badgerfish
 
 
@@ -106,14 +108,19 @@ class TestDirectoryHandler(TestGramex):
 
         self.check('/dir/noindex/binary.zip', path='dir/binary.zip')
 
-        with io.open(os.path.join(self.folder, 'dir/markdown.md'), 'r', encoding='utf-8') as f:
-            self.check('/dir/transform/markdown.md', text=markdown.markdown(f.read()))
-        with io.open(os.path.join(self.folder, 'dir/badgerfish.yaml'), 'r', encoding='utf-8') as f:
-            self.check('/dir/transform/badgerfish.yaml', text=badgerfish(f.read()))
-
         self.check('/dir/args/?x=1', text=json.dumps({'x': ['1']}))
         self.check('/dir/args/?x=1&x=2&y=3', text=json.dumps({'x': ['1', '2'], 'y': ['3']},
                                                              sort_keys=True))
+
+    def test_transforms(self):
+        with io.open(os.path.join(self.folder, 'dir/markdown.md'), 'r', encoding='utf-8') as f:
+            self.check('/dir/transform/markdown.md', text=markdown.markdown(f.read()))
+
+        source = os.path.join(self.folder, 'dir/badgerfish.yaml')
+        handler = AttrDict(file=Path(source))
+        with io.open(os.path.join(self.folder, 'dir/badgerfish.yaml'), 'r', encoding='utf-8') as f:
+            self.check('/dir/transform/badgerfish.yaml', text=badgerfish(f.read(), handler))
+            self.check('/dir/transform/badgerfish.yaml', text='imported file')
 
     def test_default_config(self):
         'Check default gramex.yaml configuration'
