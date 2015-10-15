@@ -65,6 +65,7 @@ url:
         "*.yaml":
           encoding: utf-8
           function: gramex.transforms.badgerfish
+          args: [content, handler]
           headers:
             Content-Type: text/html; charset=utf-8
   dir/args:

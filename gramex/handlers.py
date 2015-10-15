@@ -161,14 +161,14 @@ class DirectoryHandler(RequestHandler):
     .. _glob pattern: https://docs.python.org/3/library/pathlib.html#pathlib.Path.glob
     .. _SimpleHTTPServer: https://docs.python.org/2/library/simplehttpserver.html
 
-    This handler has the following computed attributes:
+    This handler exposes the following ``pathlib.Path`` attributes:
 
     ``root``
         Root path for this handler. Same as the ``path`` argument
     ``path``
-        Absolute path requested by the user, without adding a default filename
+        Absolute Path requested by the user, without adding a default filename
     ``file``
-        Absolute path served to the user, after adding a default filename
+        Absolute Path served to the user, after adding a default filename
     '''
 
     SUPPORTED_METHODS = ("GET", "HEAD")

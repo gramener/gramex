@@ -55,7 +55,6 @@ def schedule(conf):
     scheduler.setup(schedule=conf, tasks=info.schedule)
 
 
-
 def _sort_url_patterns(entry):
     # URLs are resolved in this order:
     name, spec = entry
@@ -66,6 +65,7 @@ def _sort_url_patterns(entry):
         -(pattern.count('*') +
           pattern.count('+')),      # by wildcards (wildcards get lower priority)
     )
+
 
 def url(conf):
     "Set up the tornado web app URL handlers"
