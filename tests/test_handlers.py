@@ -103,7 +103,8 @@ class TestDirectoryHandler(TestGramex):
             self.check('/dir/transform/badgerfish.yaml', text=badgerfish(f.read()))
 
         self.check('/dir/args/?x=1', text=json.dumps({'x': ['1']}))
-        self.check('/dir/args/?x=1&x=2&y=3', text=json.dumps({'x': ['1', '2'], 'y': ['3']}))
+        self.check('/dir/args/?x=1&x=2&y=3', text=json.dumps({'x': ['1', '2'], 'y': ['3']},
+                                                             sort_keys=True))
 
     def test_default_config(self):
         'Check default gramex.yaml configuration'
