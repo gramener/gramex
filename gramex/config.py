@@ -116,7 +116,7 @@ def _open(path, default=AttrDict()):
         logging.warn('Missing config: %s', path)
         return default
     logging.debug('Loading config: %s', path)
-    with path.open() as handle:
+    with path.open(encoding='utf-8') as handle:
         result = yaml.load(handle, Loader=AttrDictYAMLLoader)
     if result is None:
         logging.warn('Empty config: %s', path)
