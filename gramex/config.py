@@ -136,8 +136,7 @@ def _pathstat(path):
     return AttrDict(path=path, stat=stat)
 
 
-# TODO: Generalise load-processing
-def _imports(config, source):
+def load_imports(config, source):
     '''
     Post-process a config for imports.
 
@@ -185,7 +184,7 @@ def _imports(config, source):
                 paths = root.glob(pattern) if '*' in pattern else [Path(pattern)]
                 for path in paths:
                     new_conf = _open(root.joinpath(path))
-                    imported_paths += _imports(new_conf, source=path)
+                    imported_paths += load_imports(new_conf, source=path)
                     merge(node, new_conf, overwrite=True)
             # Delete the import key
             del node[key]
@@ -246,5 +245,5 @@ class PathConfig(AttrDict):
         if reload:
             self.clear()
             self.update(_open(path))
-            self.__info__.imports = _imports(self, path)
+            self.__info__.imports = load_imports(self, path)
         return self
