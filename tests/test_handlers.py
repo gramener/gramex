@@ -28,19 +28,28 @@ class TestGramex(unittest.TestCase):
     def tearDown(self):
         self.process.terminate()
 
-
-class TestDirectoryHandler(TestGramex):
-    'Test gramex.handlers.DirectoryHandler'
-
     def check(self, url, path=None, code=200, text=None):
         r = self.get(url)
         self.assertEqual(r.status_code, code, url)
         if text is not None:
-            self.assertIn(text, r.text, url)
+            self.assertIn(text, r.text, '%s: %s != %s' % (url, text, r.text))
         if path is not None:
             with open(os.path.join(self.folder, path), 'rb') as file:
                 self.assertEqual(r.content, file.read(), url)
         return r
+
+    def test_url_priority(self):
+        self.check('/path/abc', text='/path/.*')
+        self.check('/path/file', text='/path/file')
+        self.check('/path/dir', text='/path/.*')
+        self.check('/path/dir/', text='/path/dir/.*')
+        self.check('/path/dir/abc', text='/path/dir/.*')
+        self.check('/path/dir/file', text='/path/dir/file')
+        self.check('/path/priority', text='/path/priority')
+
+
+class TestDirectoryHandler(TestGramex):
+    'Test gramex.handlers.DirectoryHandler'
 
     def test_directory_handler(self):
         'Test DirectoryHandler'

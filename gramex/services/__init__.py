@@ -55,11 +55,23 @@ def schedule(conf):
     scheduler.setup(schedule=conf, tasks=info.schedule)
 
 
+
+def _sort_url_patterns(entry):
+    # URLs are resolved in this order:
+    name, spec = entry
+    pattern = spec.pattern
+    return (
+        spec.get('priority', 0),    # by explicity priority: parameter
+        pattern.count('/'),         # by path depth (deeper paths are higher)
+        -(pattern.count('*') +
+          pattern.count('+')),      # by wildcards (wildcards get lower priority)
+    )
+
 def url(conf):
     "Set up the tornado web app URL handlers"
     handlers = []
     # Sort the handlers in descending order of priority
-    specs = sorted(conf.items(), key=lambda item: item[1].get('priority', 0), reverse=True)
+    specs = sorted(conf.items(), key=_sort_url_patterns, reverse=True)
     for name, spec in specs:
         urlspec = AttrDict(spec)
         urlspec.handler = locate(spec.handler)

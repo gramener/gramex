@@ -3,6 +3,14 @@ app:
     port: 9999      # Use a diffent port for testing
 
 url:
+  # TestGramex
+  pathdepth1: {pattern: "/path/.*",       handler: "gramex.handlers.FunctionHandler", kwargs: {function: "str", args: ["/path/.*"],       }}
+  pathdepth2: {pattern: "/path/file",     handler: "gramex.handlers.FunctionHandler", kwargs: {function: "str", args: ["/path/file"],     }}
+  pathdepth3: {pattern: "/path/dir/.*",   handler: "gramex.handlers.FunctionHandler", kwargs: {function: "str", args: ["/path/dir/.*"],   }}
+  pathdepth4: {pattern: "/path/dir/file", handler: "gramex.handlers.FunctionHandler", kwargs: {function: "str", args: ["/path/dir/file"], }}
+  pathdepth5: {pattern: "/path/priority", priority: 1, handler: "gramex.handlers.FunctionHandler", kwargs: {function: "str", args: ["/path/priority"], }}
+
+  # TestDirectoryHandler
   dir/noindex:
     pattern: /dir/noindex/(.*)
     handler: gramex.handlers.DirectoryHandler
@@ -59,7 +67,6 @@ url:
           function: gramex.transforms.badgerfish
           headers:
             Content-Type: text/html; charset=utf-8
-
   dir/args:
     pattern: /dir/args/(.*)
     handler: gramex.handlers.DirectoryHandler
