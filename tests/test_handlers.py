@@ -1,5 +1,4 @@
 import os
-import io
 import sys
 import json
 import requests
@@ -28,6 +27,7 @@ def setUpModule():
         env=env,
         stdout=getattr(subprocess, 'DEVNULL', open(os.devnull, 'w')),
     )
+
 
 def tearDownModule():
     'Terminate Gramex'
