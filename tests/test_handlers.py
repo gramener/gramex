@@ -106,7 +106,7 @@ class TestDirectoryHandler(TestGramex):
         self.check('/dir/default-missing-noindex/text.txt', path='dir/text.txt')
         self.check('/dir/default-missing-noindex/subdir/text.txt', path='dir/subdir/text.txt')
 
-        self.check('/dir/noindex/binary.zip', path='dir/binary.zip')
+        self.check('/dir/noindex/binary.bin', path='dir/binary.bin')
 
         self.check('/dir/args/?x=1', text=json.dumps({'x': ['1']}))
         self.check('/dir/args/?x=1&x=2&y=3', text=json.dumps({'x': ['1', '2'], 'y': ['3']},
