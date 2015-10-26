@@ -1,5 +1,4 @@
 import os
-import io
 import sys
 import json
 import requests
@@ -11,24 +10,35 @@ from orderedattrdict import AttrDict
 from gramex.transforms import badgerfish
 
 
+info = AttrDict(
+    folder=Path(__file__).absolute().parent,
+    process=None,
+)
+
+
+def setUpModule():
+    'Run Gramex in this folder using the current gramex.conf.yaml'
+    # Ensure that PYTHONPATH has this repo and ONLY this repo
+    env = dict(os.environ)
+    env['PYTHONPATH'] = str(info.folder.parent)
+    info.process = subprocess.Popen(
+        [sys.executable, '-m', 'gramex'],
+        cwd=str(info.folder),
+        env=env,
+        stdout=getattr(subprocess, 'DEVNULL', open(os.devnull, 'w')),
+    )
+
+
+def tearDownModule():
+    'Terminate Gramex'
+    info.process.terminate()
+
+
 class TestGramex(unittest.TestCase):
     'Base class to test Gramex running as a subprocess'
 
-    def setUp(self):
-        self.folder = os.path.dirname(os.path.abspath(__file__))
-        DEVNULL = getattr(subprocess, 'DEVNULL', open(os.devnull, 'w'))
-        self.process = subprocess.Popen(
-            # TODO: ensure that you run the right gramex
-            [sys.executable, '-m', 'gramex'],
-            cwd=self.folder,
-            stdout=DEVNULL,
-        )
-
     def get(self, url, **kwargs):
         return requests.get('http://localhost:9999' + url, **kwargs)
-
-    def tearDown(self):
-        self.process.terminate()
 
     def check(self, url, path=None, code=200, text=None):
         r = self.get(url)
@@ -36,7 +46,7 @@ class TestGramex(unittest.TestCase):
         if text is not None:
             self.assertIn(text, r.text, '%s: %s != %s' % (url, text, r.text))
         if path is not None:
-            with open(os.path.join(self.folder, path), 'rb') as file:
+            with (info.folder / path).open('rb') as file:
                 self.assertEqual(r.content, file.read(), url)
         return r
 
@@ -53,7 +63,7 @@ class TestGramex(unittest.TestCase):
 class TestDirectoryHandler(TestGramex):
     'Test gramex.handlers.DirectoryHandler'
 
-    def test_directory_handler(self):
+    def test_directory(self):
         'Test DirectoryHandler'
         def adds_slash(url, check):
             self.assertFalse(url.endswith('/'), 'redirect_with_slash url must not end with /')
@@ -106,19 +116,18 @@ class TestDirectoryHandler(TestGramex):
         self.check('/dir/default-missing-noindex/text.txt', path='dir/text.txt')
         self.check('/dir/default-missing-noindex/subdir/text.txt', path='dir/subdir/text.txt')
 
-        self.check('/dir/noindex/binary.zip', path='dir/binary.zip')
+        self.check('/dir/noindex/binary.bin', path='dir/binary.bin')
 
         self.check('/dir/args/?x=1', text=json.dumps({'x': ['1']}))
         self.check('/dir/args/?x=1&x=2&y=3', text=json.dumps({'x': ['1', '2'], 'y': ['3']},
                                                              sort_keys=True))
 
     def test_transforms(self):
-        with io.open(os.path.join(self.folder, 'dir/markdown.md'), 'r', encoding='utf-8') as f:
+        with (info.folder / 'dir/markdown.md').open(encoding='utf-8') as f:
             self.check('/dir/transform/markdown.md', text=markdown.markdown(f.read()))
 
-        source = os.path.join(self.folder, 'dir/badgerfish.yaml')
-        handler = AttrDict(file=Path(source))
-        with io.open(os.path.join(self.folder, 'dir/badgerfish.yaml'), 'r', encoding='utf-8') as f:
+        handler = AttrDict(file=info.folder / 'dir/badgerfish.yaml')
+        with (info.folder / 'dir/badgerfish.yaml').open(encoding='utf-8') as f:
             self.check('/dir/transform/badgerfish.yaml', text=badgerfish(f.read(), handler))
             self.check('/dir/transform/badgerfish.yaml', text='imported file')
 

@@ -71,31 +71,36 @@ Building Gramex
 Gramex runs on Python 2.7+ and Python 3.4+ in Windows and Linux.
 To set up the development environment:
 
-1. Install `Anaconda <http://continuum.io/downloads>`__ and
-   `git <https://git-scm.com/>`__.
-2. Fork the `Gramex repo <https://code.gramener.com/s.anand/gramex>`__
-3. Clone your fork locally::
+1. Install `Anaconda <http://continuum.io/downloads>`__
+2. You need `git` and `make`. On Windows, use
+   `git <https://git-scm.com/>`__ and
+   `make <http://gnuwin32.sourceforge.net/packages/make.htm>`__, or use
+   `cygwin <https://cygwin.com/install.html>`__
+3. Fork the `Gramex repo <https://code.gramener.com/s.anand/gramex>`__
+4. Clone your fork locally::
 
     git clone git@code.gramener.com:your_user_id/gramex.git
+    (OR)
+    git clone http://code.gramener.com/your_user_id/gramex.git
 
-4. In the gramex folder, create a branch for local development::
+5. In the gramex folder, create a branch for local development::
 
     cd gramex
     git checkout -b <branch-name>
 
    Now you can make your changes locally.
 
-5. Install this branch in editable mode. This "installs" the gramex folder in
+6. Install development requirements::
+
+    pip install -r requirements.txt
+    pip install -r requirements-dev.txt
+
+7. Install this branch in editable mode. This "installs" the gramex folder in
    development mode. Changes to this folder are reflected in the environment::
 
     pip install -e .
 
-5. Install development requirements::
-
-    pip install -r gramex/requirements.txt
-    pip install -r gramex/dev-requirements.txt
-
-6. When you're done making changes, check that your changes pass flake8 and the
+8. When you're done making changes, check that your changes pass flake8 and the
    tests, as well as provide reasonable test coverage::
 
     make release-test
@@ -109,15 +114,15 @@ To set up the development environment:
 
     export PYTHON=/path/to/python         # e.g. path to Python 3.4+
 
-7. Commit your changes and push your branch::
+9. Commit your changes and push your branch::
 
     $ git add .
     $ git commit -m "Your detailed description of your changes."
     $ git push --set-upstream origin <branch-name>
 
-7. Submit a pull request through the code.gramener.com website.
+10. Submit a pull request through the code.gramener.com website.
 
-8. To delete your branch::
+11. To delete your branch::
 
     git branch -d <branch-name>
     git push origin --delete <branch-name>
