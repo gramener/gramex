@@ -65,3 +65,18 @@ front-end proxy like nginx, which can be difficult to configure.
 So we prefer simplicity over functionality and disallow rebasing.
 
 Henceforth, apps must know their exact (final) URL.
+
+Use HTML5 web components to build templates
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+We need a *simple* mechanism to construct and extend templates.
+
+One possibility is to use YAML or JSON to generate HTML and build a GUI around
+it. But:
+
+  - There's no simple data structure to represent inline statements like "abc
+    <i>italics</i> def" and multi-keys like "<br><br>".
+  - There's no simple extension mechanism to modify attributes and nodes
+
+Instead, we can use HTML itself as the language. Tooling support is limited but
+growing.
