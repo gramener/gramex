@@ -5,4 +5,5 @@ sphinx_rtd_theme
 
 # Testing
 coverage
+markdown
 tox
