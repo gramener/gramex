@@ -26,9 +26,12 @@ setup(
     url='http://code.gramener.com/s.anand/gramex',
     packages=[
         'gramex',
+        'gramex.services',
     ],
-    package_dir={'gramex':
-                 'gramex'},
+    package_dir={
+        'gramex': 'gramex',
+        'gramex.services': 'gramex/services',
+    },
     include_package_data=True,
     install_requires=install_requires,
     license="Other/Proprietary License",
