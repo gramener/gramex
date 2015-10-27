@@ -78,3 +78,35 @@ url:
         'index.html':
           function: utils.args_as_json
           args: handler
+
+  # TestDirectoryHandler
+  data/csv:
+    pattern: /datastorecsv/
+    handler: gramex.handlers.DataHandler
+    kwargs:
+      driver: sqlalchemy
+      url: sqlite:///actors.db
+      table: actors
+      parameters: {encoding: utf8}
+      headers:
+        Content-Type: text/csv
+  data/json:
+    pattern: /datastorejson/
+    handler: gramex.handlers.DataHandler
+    kwargs:
+      driver: sqlalchemy
+      url: sqlite:///actors.db
+      table: actors
+      parameters: {encoding: utf8}
+      headers:
+        Content-Type: application/json
+  data/html:
+    pattern: /datastorehtml/
+    handler: gramex.handlers.DataHandler
+    kwargs:
+      driver: sqlalchemy
+      url: sqlite:///actors.db
+      table: actors
+      parameters: {encoding: utf8}
+      headers:
+        Content-Type: text/html

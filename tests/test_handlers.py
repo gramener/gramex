@@ -5,10 +5,16 @@ import requests
 import markdown
 import unittest
 import subprocess
+import pandas as pd
+import pandas.util.testing as pdt
 from pathlib import Path
+from sqlalchemy import create_engine
 from orderedattrdict import AttrDict
 from gramex.transforms import badgerfish
-
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 
 info = AttrDict(
     folder=Path(__file__).absolute().parent,
@@ -135,3 +141,39 @@ class TestDirectoryHandler(TestGramex):
         'Check default gramex.yaml configuration'
         r = self.get('/reload-config', allow_redirects=False)
         self.assertIn(r.status_code, (301, 302), '/reload-config works and redirects')
+
+
+class TestDataHandler(TestGramex):
+    'Test gramex.handlers.DataHandler'
+    data = pd.read_csv(StringIO(
+        """category,name,rating,votes
+        Actors,Humphrey Bogart,0.57019677,108
+        Actors,Cary Grant,0.438601513,142
+        Actors,James Stewart,0.988373838,120
+        Actors,Marlon Brando,0.102044811,108
+        Actors,Fred Astaire,0.208876756,84
+        Actresses,Katharine Hepburn,0.039187792,63
+        Actresses,Bette Davis,0.282806963,14
+        Actresses,Audrey Hepburn,0.120196561,94
+        Actresses,Ingrid Bergman,0.296140198,52
+        Actors,Spencer Tracy,0.466310773,192
+        Actors,Charlie Chaplin,0.244425592,76"""))
+
+    def test_createdb(self):
+        engine = create_engine('sqlite:///tests/actors.db')
+        self.data.to_sql('actors', con=engine, index=False)
+
+
+    def test_pingdb(self):
+        for frmt in ['csv', 'json', 'html']:
+            self.check('/datastore%s/' % frmt, code=200)
+        self.check('/datastorexyz/', code=404)
+
+    def test_fetchdb(self):
+        base = 'http://localhost:9999/datastore'
+        pdt.assert_frame_equal(self.data, pd.read_csv(base + 'csv/'))
+        pdt.assert_frame_equal(self.data, pd.read_json(base + 'json/'))
+        # TODO: pd.read_html(base + 'html/')
+
+    def test_removedb(self):
+        os.remove('tests/actors.db')
