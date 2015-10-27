@@ -157,12 +157,11 @@ class TestDataHandler(TestGramex):
         Actresses,Audrey Hepburn,0.120196561,94
         Actresses,Ingrid Bergman,0.296140198,52
         Actors,Spencer Tracy,0.466310773,192
-        Actors,Charlie Chaplin,0.244425592,76"""))
+        Actors,Charlie Chaplin,0.244425592,76"""), skipinitialspace=True)
 
     def test_createdb(self):
         engine = create_engine('sqlite:///tests/actors.db')
         self.data.to_sql('actors', con=engine, index=False)
-
 
     def test_pingdb(self):
         for frmt in ['csv', 'json', 'html']:
@@ -174,6 +173,30 @@ class TestDataHandler(TestGramex):
         pdt.assert_frame_equal(self.data, pd.read_csv(base + 'csv/'))
         pdt.assert_frame_equal(self.data, pd.read_json(base + 'json/'))
         # TODO: pd.read_html(base + 'html/')
+
+    def test_querydb(self):
+        base = 'http://localhost:9999/datastore'
+        # select, where, sort, offset, limit
+        pdt.assert_frame_equal(self.data[:5],
+                               pd.read_csv(base + 'csv/?_limit=5'))
+        pdt.assert_frame_equal(self.data[5:].reset_index(drop=True),
+                               pd.read_csv(base + 'csv/?_offset=5'))
+        pdt.assert_frame_equal(self.data.sort('votes').reset_index(drop=True),
+                               pd.read_csv(base + 'csv/?_sort=asc:votes'))
+        pdt.assert_frame_equal(self.data[['name', 'votes']],
+                               pd.read_csv(base + 'csv/?_select=name&_select=votes'))
+        pdt.assert_frame_equal(self.data.query('category=="Actors"').reset_index(drop=True),
+                               pd.read_csv(base + 'csv/?_where=category==Actors'))
+        pdt.assert_frame_equal(self.data.query('category!="Actors"').reset_index(drop=True),
+                               pd.read_csv(base + 'csv/?_where=category!Actors'))
+        pdt.assert_frame_equal(self.data[self.data.name.str.contains('Brando')].reset_index(drop=True),
+                               pd.read_csv(base + 'csv/?_where=name~Brando'))
+        pdt.assert_frame_equal(self.data[~self.data.name.str.contains('Brando')].reset_index(drop=True),
+                               pd.read_csv(base + 'csv/?_where=name!~Brando'))
+        pdt.assert_frame_equal(self.data.query('votes>100').reset_index(drop=True),
+                               pd.read_csv(base + 'csv/?_where=votes>100'))
+        pdt.assert_frame_equal(self.data.query('150 > votes > 100').reset_index(drop=True),
+                               pd.read_csv(base + 'csv/?_where=votes<150&_where=votes>100'))
 
     def test_removedb(self):
         os.remove('tests/actors.db')
