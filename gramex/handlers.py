@@ -306,7 +306,7 @@ class DataHandler(RequestHandler):
         table = meta.tables[self.params['table']]
 
         if qargs.get('_select'):
-            query = select(qargs.get('_select'))
+            query = select([table.c[c] for c in qargs.get('_select')])
         else:
             query = select([table])
 
