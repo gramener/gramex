@@ -16,7 +16,11 @@ setup(
     # package_data includes data files for binary & source distributions
     # include_package_data is only for source distributions, uses MANIFEST.in
     package_data={
-        'gramex': ['gramex.yaml', 'release.json']
+        'gramex': [
+            os.path.join(dirpath, filename).lstrip('gramex/')
+            for dirpath, dirnames, filenames in os.walk('gramex/lib')
+            for filename in filenames
+        ] + ['gramex.yaml', 'release.json']
     },
     include_package_data=True,
 

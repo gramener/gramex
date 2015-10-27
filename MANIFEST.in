@@ -1,6 +1,7 @@
 # Include package specific files
 include gramex/gramex.yaml
 include gramex/release.json
+recursive-include gramex/lib *
 
 # Include requirement dependencies
 include requirements.txt
