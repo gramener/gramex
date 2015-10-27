@@ -47,6 +47,9 @@ class TestPathConfig(unittest.TestCase):
         self.temp = self.home / 'config.temp.yaml'
         self.imp = self.home / 'config.import.yaml'
         self.final = self.home / 'config.final.yaml'
+        self.base = self.home / 'config.template.base.yaml'
+        self.child = self.home / 'config.template.child.yaml'
+        self.subdir = self.home / 'dir/config.template.subdir.yaml'
 
     def test_merge(self):
         'Config files are loaded and merged'
@@ -99,6 +102,15 @@ class TestPathConfig(unittest.TestCase):
         # Once removed, it no longer used
         unlink(self.temp)
         self.assertEqual(+conf_imp, +conf_b)
+
+    def test_templating(self):
+        conf = +ChainConfig(
+            base=PathConfig(self.base),
+            child=PathConfig(self.child),
+        )
+        self.assertEqual(conf.base_this, str(self.base.parent) + '/path')
+        self.assertEqual(conf.child_this, str(self.child.parent) + '/path')
+        self.assertEqual(conf.subdir_this, str(self.subdir.parent) + '/path')
 
 
 class TestConfig(unittest.TestCase):

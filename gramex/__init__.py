@@ -11,8 +11,8 @@ paths = AttrDict()              # paths where configurations are stored
 conf = AttrDict()               # holds the final merged configurations
 config_layers = ChainConfig()   # Loads all configurations. init() updates it
 
-paths['source'] = Path(__file__).absolute().parent
-paths['base'] = Path('.')
+paths['source'] = Path(__file__).absolute().parent      # Where gramex source code is
+paths['base'] = Path('.')                               # Where gramex is run from
 
 # release.json holds this version's release information
 with (paths['source'] / 'release.json').open() as _release_file:

@@ -23,6 +23,7 @@ import yaml
 import logging
 from pathlib import Path
 from copy import deepcopy
+from six import string_types
 from orderedattrdict import AttrDict
 from orderedattrdict.yamlutils import AttrDictYAMLLoader
 
@@ -74,7 +75,7 @@ def merge(old, new, overwrite=False):
     result = old if overwrite else deepcopy(old)
     for key in new:
         if key in result and hasattr(result[key], 'items') and hasattr(new[key], 'items'):
-            merge(result[key], new[key], overwrite=True)
+            merge(old=result[key], new=new[key], overwrite=True)
         else:
             result[key] = new[key]
     return result
@@ -99,7 +100,7 @@ class ChainConfig(AttrDict):
         for name, config in self.items():
             if hasattr(config, '__pos__'):
                 config.__pos__()
-            conf = merge(conf, config)
+            merge(old=conf, new=config, overwrite=True)
 
         # Remove keys where the value is None
         for key, value, node in walk(conf):
@@ -109,8 +110,8 @@ class ChainConfig(AttrDict):
         return conf
 
 
-def _open(path, default=AttrDict()):
-    'Load a YAML path.Path as an ordered AttrDict, with log messages'
+def _yaml_open(path, default=AttrDict()):
+    'Load a YAML path.Path as AttrDict. Replace {.} with path directory'
     path = path.absolute()
     if not path.exists():
         logging.warn('Missing config: %s', path)
@@ -121,6 +122,10 @@ def _open(path, default=AttrDict()):
     if result is None:
         logging.warn('Empty config: %s', path)
         return default
+    for key, value, node in walk(result):
+        if isinstance(value, string_types):
+            if '{.}' in value:
+                node[key] = value.replace('{.}', str(path.parent))
     return result
 
 
@@ -183,9 +188,9 @@ def load_imports(config, source):
             for name, pattern in value.items():
                 paths = root.glob(pattern) if '*' in pattern else [Path(pattern)]
                 for path in paths:
-                    new_conf = _open(root.joinpath(path))
+                    new_conf = _yaml_open(root.joinpath(path))
                     imported_paths += load_imports(new_conf, source=path)
-                    merge(node, new_conf, overwrite=True)
+                    merge(old=node, new=new_conf, overwrite=True)
             # Delete the import key
             del node[key]
     return imported_paths
@@ -244,6 +249,6 @@ class PathConfig(AttrDict):
                 break
         if reload:
             self.clear()
-            self.update(_open(path))
-            self.__info__.imports = load_imports(self, path)
+            self.update(_yaml_open(path))
+            self.__info__.imports = load_imports(self, source=path)
         return self

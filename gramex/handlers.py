@@ -103,7 +103,9 @@ class DirectoryHandler(RequestHandler):
     '''
     Serves files with transformations. It accepts these parameters:
 
-    :arg string path: The root directory from which files are served.
+    :arg string path: The root directory from which files are served. Relative
+        paths are specified from the base directory (where gramex starts from.)
+        Use $source
     :arg string default_filename: If the URL maps to a directory, this filename
         is displayed by default. For example, ``index.html`` or ``README.md``.
         The default is ``None``, which displays all files in the directory.

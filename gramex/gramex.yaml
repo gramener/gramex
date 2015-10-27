@@ -58,6 +58,13 @@ url:
             default_filename: index.html            #   default filename
             index: true                             #   display the index
 
+    lib:                                # The handler for component libraries
+        pattern: /lib/(.*)              # Anything under /lib/
+        handler: gramex.handlers.DirectoryHandler
+        kwargs:
+            path: "{.}/lib"             # maps to /lib/ under the Gramex source folder
+                                        # {.} is replaced with the conf file's folder
+
     # The `import:` key may be included anywhere. Its keys are just identifiers,
     # not used for anything. Its values are YAML files. They are loaded at the
     # end of the section, in order. After loading, the import: key is removed.
