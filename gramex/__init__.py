@@ -1,4 +1,5 @@
 import sys
+import json
 import logging
 import tornado.ioloop
 from pathlib import Path
@@ -6,18 +7,19 @@ from orderedattrdict import AttrDict
 from . import services
 from gramex.config import ChainConfig, PathConfig
 
-__author__ = 'S Anand'
-__email__ = 's.anand@gramener.com'
-__version__ = '1.0.3'
-
 paths = AttrDict()              # paths where configurations are stored
 conf = AttrDict()               # holds the final merged configurations
 config_layers = ChainConfig()   # Loads all configurations. init() updates it
 
-_sys_path = list(sys.path)      # Preserve original sys.path
-
 paths['source'] = Path(__file__).absolute().parent
 paths['base'] = Path('.')
+
+# release.json holds this version's release information
+with (paths['source'] / 'release.json').open() as _release_file:
+    release = json.load(_release_file, object_pairs_hook=AttrDict)
+    __version__ = release.version
+
+_sys_path = list(sys.path)      # Preserve original sys.path
 
 
 def init(**kwargs):

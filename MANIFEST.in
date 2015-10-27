@@ -1,13 +1,24 @@
+# Include package specific files
+include gramex/gramex.yaml
+include gramex/release.json
+
+# Include requirement dependencies
+include requirements.txt
+include requirements-dev.txt
+
+# Include core docs
 include AUTHORS.rst
 include CONTRIBUTING.rst
 include HISTORY.rst
 include LICENSE
 include README.rst
 
-include gramex/gramex.yaml
-
+# Include test cases
 recursive-include tests *
-recursive-exclude * __pycache__
-recursive-exclude * *.py[co]
 
+# Include documentation
 recursive-include docs *.rst conf.py Makefile make.bat
+
+# Exclude Python build files
+recursive-exclude * __pycache__
+recursive-exclude * *.py[cod]
