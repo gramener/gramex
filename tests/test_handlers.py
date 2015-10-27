@@ -42,9 +42,10 @@ def tearDownModule():
 
 class TestGramex(unittest.TestCase):
     'Base class to test Gramex running as a subprocess'
+    base = 'http://localhost:9999'
 
     def get(self, url, **kwargs):
-        return requests.get('http://localhost:9999' + url, **kwargs)
+        return requests.get(self.base + url, **kwargs)
 
     def check(self, url, path=None, code=200, text=None):
         r = self.get(url)
@@ -172,31 +173,34 @@ class TestDataHandler(TestGramex):
         self.check('/datastorexyz/', code=404)
 
     def test_fetchdb(self):
-        base = 'http://localhost:9999/datastore'
+        base = self.base + '/datastore'
         pdt.assert_frame_equal(self.data, pd.read_csv(base + 'csv/'))
         pdt.assert_frame_equal(self.data, pd.read_json(base + 'json/'))
         # TODO: pd.read_html(base + 'html/')
 
     def test_querydb(self):
-        base = 'http://localhost:9999/datastore'
+        def eq(a, b):
+            return pdt.assert_frame_equal(a.reset_index(drop=True), b)
+
         # select, where, sort, offset, limit
-        pdt.assert_frame_equal(self.data[:5],
-                               pd.read_csv(base + 'csv/?_limit=5'))
-        pdt.assert_frame_equal(self.data[5:].reset_index(drop=True),
-                               pd.read_csv(base + 'csv/?_offset=5'))
-        pdt.assert_frame_equal(self.data.sort('votes').reset_index(drop=True),
-                               pd.read_csv(base + 'csv/?_sort=asc:votes'))
-        pdt.assert_frame_equal(self.data[['name', 'votes']],
-                               pd.read_csv(base + 'csv/?_select=name&_select=votes'))
-        pdt.assert_frame_equal(self.data.query('category=="Actors"').reset_index(drop=True),
-                               pd.read_csv(base + 'csv/?_where=category==Actors'))
-        pdt.assert_frame_equal(self.data.query('category!="Actors"').reset_index(drop=True),
-                               pd.read_csv(base + 'csv/?_where=category!Actors'))
-        pdt.assert_frame_equal(self.data[self.data.name.str.contains('Brando')].reset_index(drop=True),
-                               pd.read_csv(base + 'csv/?_where=name~Brando'))
-        pdt.assert_frame_equal(self.data[~self.data.name.str.contains('Brando')].reset_index(drop=True),
-                               pd.read_csv(base + 'csv/?_where=name!~Brando'))
-        pdt.assert_frame_equal(self.data.query('votes>100').reset_index(drop=True),
-                               pd.read_csv(base + 'csv/?_where=votes>100'))
-        pdt.assert_frame_equal(self.data.query('150 > votes > 100').reset_index(drop=True),
-                               pd.read_csv(base + 'csv/?_where=votes<150&_where=votes>100'))
+        base = self.base + '/datastore'
+        eq(self.data[:5],
+           pd.read_csv(base + 'csv/?_limit=5'))
+        eq(self.data[5:],
+           pd.read_csv(base + 'csv/?_offset=5'))
+        eq(self.data.sort('votes'),
+           pd.read_csv(base + 'csv/?_sort=asc:votes'))
+        eq(self.data[['name', 'votes']],
+           pd.read_csv(base + 'csv/?_select=name&_select=votes'))
+        eq(self.data.query('category=="Actors"'),
+           pd.read_csv(base + 'csv/?_where=category==Actors'))
+        eq(self.data.query('category!="Actors"'),
+           pd.read_csv(base + 'csv/?_where=category!Actors'))
+        eq(self.data[self.data.name.str.contains('Brando')],
+           pd.read_csv(base + 'csv/?_where=name~Brando'))
+        eq(self.data[~self.data.name.str.contains('Brando')],
+           pd.read_csv(base + 'csv/?_where=name!~Brando'))
+        eq(self.data.query('votes>100'),
+           pd.read_csv(base + 'csv/?_where=votes>100'))
+        eq(self.data.query('150 > votes > 100'),
+           pd.read_csv(base + 'csv/?_where=votes<150&_where=votes>100'))

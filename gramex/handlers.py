@@ -284,7 +284,9 @@ class DataHandler(RequestHandler):
                     table: flags                        # to this table
                     parameters: {encoding: utf8}        # with additional parameters provided
                     headers:
-                        Content-Type: text/csv          # and served as csv, ('application/json', 'text/html')
+                        Content-Type: text/csv          # and served as csv
+                        # Content-Type: application/json  # or JSON
+                        # Content-Type: text/html         # or HTML
 
     '''
     def initialize(self, **kwargs):
