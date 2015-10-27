@@ -160,11 +160,13 @@ class TestDataHandler(TestGramex):
         Actors,Spencer Tracy,0.466310773,192
         Actors,Charlie Chaplin,0.244425592,76"""), skipinitialspace=True)
 
-    def setUp(self):
+    @classmethod
+    def setUpClass(self):
         engine = create_engine('sqlite:///tests/actors.db')
         self.data.to_sql('actors', con=engine, index=False)
 
-    def tearDown(self):
+    @classmethod
+    def tearDownClass(self):
         os.remove('tests/actors.db')
 
     def test_pingdb(self):
