@@ -72,60 +72,71 @@ Gramex runs on Python 2.7+ and Python 3.4+ in Windows and Linux.
 To set up the development environment:
 
 1. Install `Anaconda <http://continuum.io/downloads>`__
-2. You need `git` and `make`. On Windows, use
+2. Install `node.js <https://nodejs.org/>`__. Then install `bower <http://bower.io/>`__::
+
+      npm install -g bower
+
+3. Install `git` and `make`. On Windows, use
    `git <https://git-scm.com/>`__ and
    `make <http://gnuwin32.sourceforge.net/packages/make.htm>`__, or use
    `cygwin <https://cygwin.com/install.html>`__
-3. Fork the `Gramex repo <https://code.gramener.com/s.anand/gramex>`__
-4. Clone your fork locally::
+4. Fork the `Gramex repo <https://code.gramener.com/s.anand/gramex>`__
+5. Clone your fork locally::
 
-    git clone git@code.gramener.com:your_user_id/gramex.git
-    (OR)
-    git clone http://code.gramener.com/your_user_id/gramex.git
+      git clone git@code.gramener.com:your_user_id/gramex.git
+      (OR)
+      git clone http://code.gramener.com/your_user_id/gramex.git
 
-5. In the gramex folder, create a branch for local development::
+   ... and change to the ``gramex`` folder::
 
-    cd gramex
-    git checkout -b <branch-name>
-
-   Now you can make your changes locally.
+      cd gramex
 
 6. Install development requirements::
 
-    pip install -r requirements.txt
-    pip install -r requirements-dev.txt
+      pip install -r requirements.txt
+      pip install -r requirements-dev.txt
 
-7. Install this branch in editable mode. This "installs" the gramex folder in
+7. Install bower components::
+
+      bower install
+
+8. In the gramex folder, create a branch for local development::
+
+      git checkout -b <branch-name>
+
+   Now you can make your changes locally.
+
+9. Install this branch in editable mode. This "installs" the gramex folder in
    development mode. Changes to this folder are reflected in the environment::
 
-    pip install -e .
+      pip install -e .
 
-8. When you're done making changes, check that your changes pass flake8 and the
-   tests, as well as provide reasonable test coverage::
+10. When you're done making changes, check that your changes pass flake8 and the
+    tests, as well as provide reasonable test coverage::
 
-    make release-test
+      make release-test
 
-   To run a subset of tests::
+    To run a subset of tests::
 
-    python -m unittest tests.test_gramex
+      python -m unittest tests.test_gramex
 
-   **Note**: This uses the ``python.exe`` in your ``PATH``. To change the Python
-   used, run::
+    **Note**: This uses the ``python.exe`` in your ``PATH``. To change the Python
+    used, run::
 
-    export PYTHON=/path/to/python         # e.g. path to Python 3.4+
+      export PYTHON=/path/to/python         # e.g. path to Python 3.4+
 
-9. Commit your changes and push your branch::
+11. Commit your changes and push your branch::
 
-    $ git add .
-    $ git commit -m "Your detailed description of your changes."
-    $ git push --set-upstream origin <branch-name>
+      $ git add .
+      $ git commit -m "Your detailed description of your changes."
+      $ git push --set-upstream origin <branch-name>
 
-10. Submit a pull request through the code.gramener.com website.
+12. Submit a pull request through the code.gramener.com website.
 
-11. To delete your branch::
+13. To delete your branch::
 
-    git branch -d <branch-name>
-    git push origin --delete <branch-name>
+      git branch -d <branch-name>
+      git push origin --delete <branch-name>
 
 Pull Request Guidelines
 -----------------------
@@ -177,7 +188,7 @@ When releasing a new version of Gramex:
 
 2. Update the following and commit:
     - ``docs/HISTORY.rst`` with the release notes
-    - ``gramex/__init__.py`` -- set ``__version__ = 1.x.x``
+    - ``gramex/release.json`` -- set ``"version": "1.x.x"``
 
 3. Merge with master, create an annotated tag and push the code::
 

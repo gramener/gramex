@@ -9,7 +9,7 @@ History
 * Implement :ref:`FunctionHandler` that renders any function
 * :ref:`DirectoryHandler` transforms files (e.g. converting
   Markdown or YAML to HTML)
-* :ref:`gramex.transforms.badgerfish` transform converts YAML to HTML
+* :func:`gramex.transforms.badgerfish` transform converts YAML to HTML
 * When a configuration file is changed, it is reloaded immediately
 * Document Gramex at https://learn.gramener.com/gramex/
 * Add test cases for handlers
