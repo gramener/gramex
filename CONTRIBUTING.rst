@@ -227,20 +227,3 @@ Features in future releases
       the paths and files one by one and renders the first match.
 - In :mod:`gramex.transforms` write a template transform that renders Tornado
   templates.
-
-
-Project plan
-------------
-
-**Bold dates** indicate milestones.
-
-- **Mon 31 Aug**: Begin Gramex 1.0. **Status: done, on time**
-- **Fri 4 Sep**: Core server spec and prototype release. **Status: done, on time**
-- **Mon 14 Sep**: Handler and component spec. **Status: done, on time**
-- **Mon 21 Sep**: Revised handler and component spec and prototype.
-  Components listed. **Status: delayed**
-- **Mon 28 Sep**: `Version 1.0.2`_
-- **Mon 5 Oct**: `Version 1.0.3`_ and `Version 1.0.4`_
-- **Mon 26 Oct**: Spec freeze. Components early release
-- **Mon 9 Nov**: Gramex 1.0 beta release to testing. Start bugfixing
-- **Mon 23 Nov**: Gramex 1.0 release
