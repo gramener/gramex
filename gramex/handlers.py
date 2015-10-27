@@ -1,8 +1,13 @@
+import re
+import yaml
 import datetime
 import mimetypes
+import pandas as pd
 from pathlib import Path
+from orderedattrdict import AttrDict
 from .transforms import build_transform
 from tornado.web import HTTPError, RequestHandler
+from sqlalchemy import create_engine, MetaData, select, asc, desc, and_
 
 
 class FunctionHandler(RequestHandler):
@@ -248,3 +253,115 @@ class DirectoryHandler(RequestHandler):
 
         if include_body:
             self.write(self.content)
+
+
+drivers = {}
+
+
+class DataHandler(RequestHandler):
+    '''
+    Serves data in specified format from datasource. It accepts these parameters:
+
+    :arg dict kwargs: keyword arguments to be passed to the function.
+    :arg string url: The path at which datasource (db, csv) is located.
+    :arg string driver: Connector to be used to connect to datasource
+        Like -(sqlalchemy, pandas.read_csv). Currently supports sqlalchemy.
+    :arg dict parameters: Additional keyword arguments for driver.
+    :arg dict headers: HTTP headers to set on the response.
+        Currently supports csv, json, html table
+
+    Here's a simple use -- to return a csv file as a response to a URL. This
+    configuration renders `flags` table in t`utorial.db` database as `file.csv`
+    at the URL `/datastore/flags`::
+
+        url:
+            flags:
+                pattern: /datastore/flags               # Any URL starting with /datastore/flags
+                handler: datastore.DataHandler          # uses DataHandler
+                kwargs:
+                    driver: sqlalchemy                  # Using sqlalchemy driver
+                    url: sqlite:///C:/path/tutorial.db  # Connects to database at this path/url
+                    table: flags                        # to this table
+                    parameters: {encoding: utf8}        # with additional parameters provided
+                    headers:
+                        Content-Type: text/csv          # and served as csv, ('application/json', 'text/html')
+
+    '''
+    def initialize(self, **kwargs):
+        self.params = kwargs
+
+    def get(self):
+        args = AttrDict(self.params)
+        if args.driver != 'sqlalchemy':
+            raise NotImplementedError('Only driver=sqlalchemy is supported')
+
+        key = yaml.dump(args)
+        if key not in drivers:
+            parameters = args.get('parameters', {})
+            drivers[key] = create_engine(self.params['url'], **parameters)
+        self.driver = drivers[key]
+
+        qargs = self.request.arguments
+        meta = MetaData(bind=self.driver, reflect=True)
+        table = meta.tables[self.params['table']]
+
+        if qargs.get('_select'):
+            query = select([table.c[c] for c in qargs.get('_select')])
+        else:
+            query = select([table])
+
+        if qargs.get('_where'):
+            wh_re = re.compile(r'(\w+)([=><|&~!]{1,2})(\w+)')
+            wheres = []
+            for where in qargs.get('_where'):
+                match = wh_re.search(where)
+                if match is None:
+                    continue
+                col, oper, val = match.groups()
+                col = table.c[col]
+                if oper == '==':
+                    wheres.append(col == val)
+                elif oper == '!':
+                    wheres.append(col != val)
+                elif oper == '~':
+                    wheres.append(col.ilike('%' + val + '%'))
+                elif oper == '!~':
+                    wheres.append(col.notlike('%' + val + '%'))
+                elif oper == '>=':
+                    wheres.append(col >= val)
+                elif oper == '<=':
+                    wheres.append(col <= val)
+                elif oper == '>':
+                    wheres.append(col > val)
+                elif oper == '<':
+                    wheres.append(col < val)
+            query = query.where(and_(*wheres))
+
+        if qargs.get('_sort'):
+            order = {'asc': asc, 'desc': desc}
+            sorts = []
+            for sort in qargs.get('_sort'):
+                odr, col = sort.split(':', 1)
+                sorts.append(order.get(odr, asc)(col))
+            query = query.order_by(*sorts)
+
+        if qargs.get('_offset'):
+            query = query.offset(qargs.get('_offset')[0])
+        if qargs.get('_limit'):
+            query = query.limit(qargs.get('_limit')[0])
+
+        self.result = pd.read_sql_query(query, self.driver)
+
+        for header_name, header_value in self.params['headers'].items():
+            self.set_header(header_name, header_value)
+
+        if self.params['headers']['Content-Type'] == 'application/json':
+            self.content = self.result.to_json(orient='records')
+        if self.params['headers']['Content-Type'] == 'text/html':
+            self.content = self.result.to_html()
+        if self.params['headers']['Content-Type'] == 'text/csv':
+            self.content = self.result.to_csv(index=False)
+            self.set_header("Content-Disposition", "attachment;filename=file.csv")
+
+        self.write(self.content)
+        self.flush()
