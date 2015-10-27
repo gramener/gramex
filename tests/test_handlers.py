@@ -159,9 +159,12 @@ class TestDataHandler(TestGramex):
         Actors,Spencer Tracy,0.466310773,192
         Actors,Charlie Chaplin,0.244425592,76"""), skipinitialspace=True)
 
-    def test_createdb(self):
+    def setUp(self):
         engine = create_engine('sqlite:///tests/actors.db')
         self.data.to_sql('actors', con=engine, index=False)
+
+    def tearDown(self):
+        os.remove('tests/actors.db')
 
     def test_pingdb(self):
         for frmt in ['csv', 'json', 'html']:
@@ -197,6 +200,3 @@ class TestDataHandler(TestGramex):
                                pd.read_csv(base + 'csv/?_where=votes>100'))
         pdt.assert_frame_equal(self.data.query('150 > votes > 100').reset_index(drop=True),
                                pd.read_csv(base + 'csv/?_where=votes<150&_where=votes>100'))
-
-    def test_removedb(self):
-        os.remove('tests/actors.db')
