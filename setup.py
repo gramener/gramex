@@ -20,6 +20,8 @@ setup(
             os.path.join(dirpath, filename).lstrip('gramex/')
             for dirpath, dirnames, filenames in os.walk('gramex/lib')
             for filename in filenames
+            # Skip vega-lite file that has a $ in the filename.
+            if '$' not in filename
         ] + ['gramex.yaml', 'release.json']
     },
     include_package_data=True,

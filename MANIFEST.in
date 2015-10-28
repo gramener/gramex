@@ -23,3 +23,6 @@ recursive-include docs *.rst conf.py Makefile make.bat
 # Exclude Python build files
 recursive-exclude * __pycache__
 recursive-exclude * *.py[cod]
+
+# This vega-lite file has a $ in the filename. Exclude it explicitly
+recursive-exclude * *-Wildlife__Size-O.json
