@@ -64,6 +64,7 @@ url:
         kwargs:
             path: "{.}/lib"             # maps to /lib/ under the Gramex source folder
                                         # {.} is replaced with the conf file's folder
+            index: true                 # Allow browsing the libraries
 
     # The `import:` key may be included anywhere. Its keys are just identifiers,
     # not used for anything. Its values are YAML files. They are loaded at the
