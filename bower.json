@@ -23,8 +23,9 @@
     "bootstrap": "~3.3.5",
     "font-awesome": "~4.4.0",
     "underscore": "~1.8.3",
-    "d3": "~3.5.6",
     "webcomponentsjs": "~0.7.15",
-    "vega": "~2.3.1"
+    "vega": "~2.3.1",
+    "vega-lite": "~0.8.3",
+    "chartogram": "git@code.gramener.com:s.anand/chartogram.git#init"
   }
 }
