@@ -6,57 +6,24 @@ little bit helps, and credit will always be given.
 
 You can contribute in many ways:
 
-Types of Contributions
-----------------------
+.. _issues page: http://code.gramener.com/sanand/gramex/issues
 
-Discussion
-~~~~~~~~~~
-
-To follow changes on the project, ask one of the :doc:`authors` to add you
-as a reporter to this project.
-
-Report Bugs
-~~~~~~~~~~~
-
-Report bugs at http://code.gramener.com/sanand/gramex/issues.
-
-If you are reporting a bug, please include:
-
-* Your operating system and browser -- name and version.
-* Any details about your local setup that might be helpful in troubleshooting.
-* Detailed steps to reproduce the bug.
-
-Fix Bugs
-~~~~~~~~
-
-Look through the GitLab issues for bugs. Anything tagged with "bug"
-is open to whoever wants to implement it.
-
-Implement Features
-~~~~~~~~~~~~~~~~~~
-
-Look through the GitLab issues for features. Anything tagged with "feature"
-is open to whoever wants to implement it.
-
-Write Documentation
-~~~~~~~~~~~~~~~~~~~
-
-Gramex could always use more documentation, whether as part of the
-official Gramex docs, in docstrings, or even on the web in blog posts,
-articles, and such.
-
-Submit Feedback
-~~~~~~~~~~~~~~~
-
-The best way to send feedback is to file an issue at
-http://code.gramener.com/s.anand/gramex/issues.
-
-If you are proposing a feature:
-
-* Explain in detail how it would work.
-* Keep the scope as narrow as possible, to make it easier to implement.
-* Remember that this is a volunteer-driven project, and that contributions
-  are welcome :)
+- **Discussion**: To follow changes on the project, ask one of the
+  :doc:`authors` to add you as a reporter to this project.
+- **Report bugs** on the `issues page`_. Please include:
+    - Your operating system and browser -- name and version.
+    - Any details about your local setup that might be helpful in troubleshooting.
+    - Detailed steps to reproduce the bug.
+- **Fix bugs**. Look through the `issues page`_ for bugs. Anything tagged with
+  "bug" is open to whoever wants to implement it.
+- **Implement features**. Look through the `issues page`_ for features. Anything
+  tagged with "feature" is open to whoever wants to implement it.
+- **Write documentation**. Gramex could always use more documentation, whether
+  as part of the official Gramex docs, in docstrings, or even on the web in blog
+  posts, articles, and such.
+- **Submit Feedback**: The best way to send feedback is to file an issue on the
+  `issues page`_. If you are proposing a feature, explain in detail how it would
+  work, and keep the scope as narrow as possible to make it easier to implement.
 
 Building Gramex
 ---------------
@@ -179,18 +146,23 @@ Release
 
 When releasing a new version of Gramex:
 
-1. Test the ``dev`` branch release by running::
+1. Test the ``dev`` branch by running::
 
     export PYTHON=/path/to/python2.7
     make release-test
     export PYTHON=/path/to/python3.4
     make release-test
 
-2. Update the following and commit:
-    - ``docs/HISTORY.rst`` with the release notes
-    - ``gramex/release.json`` -- set ``"version": "1.x.x"``
+2. Build and upload the release::
 
-3. Merge with master, create an annotated tag and push the code::
+    make release
+
+3. Update the following and commit:
+    - ``docs/HISTORY.rst`` -- add release notes
+    - ``README.rst`` -- update the version number
+    - ``gramex/release.json`` -- update the version number
+
+4. Merge with master, create an annotated tag and push the code::
 
     git checkout master
     git merge dev

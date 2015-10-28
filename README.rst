@@ -1,3 +1,5 @@
+.. |Gramex| replace:: Gramex |version|
+
 Gramex
 ======
 
@@ -6,23 +8,12 @@ Gramex is an extensible data analytics and visualization platform for business.
 Install
 -------
 
-.. _git: https://git-scm.com/
 .. _Anaconda: http://continuum.io/downloads
+.. _Gramex: https://learn.gramener.com/downloads/release/gramex-1.0.3.zip
 
-Gramex is distributed via ``pip``. To install Gramex:
-
-1. Install `git`_
-2. Install `Anaconda`_.
-3. Install Gramex. You can either install via SSH::
-
-    pip install --upgrade git+ssh://git@code.gramener.com/s.anand/gramex.git@master
-
-  ... or via HTTP, typing in your username and password::
-
-    pip install --upgrade git+http://code.gramener.com/s.anand/gramex.git@master
-
-The ``@master`` branch has the latest stable version. For the latest development
-version, replace ``@master`` with ``@dev``.
+1. Download and install `Anaconda`_.
+2. Download |Gramex|_
+3. Install by typing ``pip install gramex-1.0.3.zip``
 
 Uninstall
 ~~~~~~~~~
@@ -39,9 +30,8 @@ To install Gramex without an Internet connection:
 
 1. Create a folder called ``offline``
 2. Download `Anaconda`_ into ``offline``
-3. Download Python modules by running::
-
-    pip install --download /path/to/offline git+ssh://git@code.gramener.com/s.anand/gramex.git@master
+3. Download |Gramex|_ into ``offline``
+4. In the ``offline`` folder, run ``pip install --download . gramex-1.0.3.zip``
 
 On the target machine:
 
@@ -59,14 +49,18 @@ Run Gramex::
     gramex
 
 Gramex runs at ``http://127.0.0.1:9988/`` and will show the current directory by
-default.
-
-You may also run Gramex via ``python -m gramex``.
+default. You may also run Gramex via ``python -m gramex``.
 
 For usage instructions, visit https://learn.gramener.com/gramex/
 
+If this does not work:
+
+- Make sure that typing ``gramex`` runs the |Gramex| executable, and is
+  not aliased to a different command
+- Make sure no other packages or modules named ``gramex`` are in your
+  ``PYTHONPATH`` environment variable
 
 License
 -------
 
-This version of Gramex does not require a license.
+|Gramex| does not require a license.

@@ -1,5 +1,7 @@
 # Set the environment variable PYTHON to your custom Python exe
 PYTHON ?= python
+# This is the location where releases are uploaded to
+UPLOAD = ubuntu@gramener.com:/mnt/gramener/downloads/release/
 
 .PHONY: clean-pyc clean-build docs clean
 
@@ -67,8 +69,9 @@ showdocs:
 release-test: clean-test lint docs test coverage
 
 release: clean
-	$(PYTHON) setup.py sdist upload
-	$(PYTHON) setup.py bdist_wheel upload
+	$(PYTHON) setup.py sdist
+	$(PYTHON) setup.py bdist_wheel
+	rsync -avzP dist/* $(UPLOAD)
 
 dist: clean
 	$(PYTHON) setup.py sdist
