@@ -56,12 +56,18 @@ coverage:
 	$(PYTHON) -m coverage html
 	$(BROWSER) htmlcov/index.html
 
+PDFLATEX := $(shell pdflatex -version 2>/dev/null)
 docs:
 	rm -f docs/gramex.rst
 	rm -f docs/modules.rst
 	sphinx-apidoc -o docs/ gramex
 	$(MAKE) -C docs clean
 	$(MAKE) -C docs html
+ifdef PDFLATEX
+	$(MAKE) -C docs latexpdf
+else
+	@echo "No pdflatex found. Install pdflatex to build PDF docs"
+endif
 
 showdocs:
 	$(BROWSER) docs/_build/html/index.html

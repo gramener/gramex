@@ -46,9 +46,11 @@ To set up the development environment:
 3. Install `git` and `make`. On Windows, use
    `git <https://git-scm.com/>`__ and
    `make <http://gnuwin32.sourceforge.net/packages/make.htm>`__, or use
-   `cygwin <https://cygwin.com/install.html>`__
-4. Fork the `Gramex repo <https://code.gramener.com/s.anand/gramex>`__
-5. Clone your fork locally::
+   `cygwin <https://cygwin.com/install.html>`__.
+4. Optionally, to create PDF documentation, install
+   `MiKTeX <http://miktex.org/>`__ and add it to your PATH
+5. Fork the `Gramex repo <https://code.gramener.com/s.anand/gramex>`__
+6. Clone your fork locally::
 
       git clone git@code.gramener.com:your_user_id/gramex.git
       (OR)
@@ -58,25 +60,25 @@ To set up the development environment:
 
       cd gramex
 
-6. Install development requirements::
+7. Install development requirements, and also this branch in editable mode. This
+   "installs" the gramex folder in development mode. Changes to this folder are
+   reflected in the environment::
 
-      pip install -r requirements.txt
-      pip install -r requirements-dev.txt
+      pip install -r requirements.txt         # Base requirements
+      pip install -r requirements-dev.txt     # Additional development requirements
+      pip uninstall gramex                    # Uninstall any previous gramex repo
+      pip install -e .                        # Install this repo as gramex
 
-7. Install bower components::
+8. Install bower components. This requires SSH keys to be set up for github.com
+   and code.gramener.com::
 
       bower install
 
-8. In the gramex folder, create a branch for local development::
+9. In the gramex folder, create a branch for local development::
 
       git checkout -b <branch-name>
 
    Now you can make your changes locally.
-
-9. Install this branch in editable mode. This "installs" the gramex folder in
-   development mode. Changes to this folder are reflected in the environment::
-
-      pip install -e .
 
 10. When you're done making changes, check that your changes pass flake8 and the
     tests, as well as provide reasonable test coverage::
