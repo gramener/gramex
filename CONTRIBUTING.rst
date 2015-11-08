@@ -69,10 +69,15 @@ To set up the development environment:
       pip uninstall gramex                    # Uninstall any previous gramex repo
       pip install -e .                        # Install this repo as gramex
 
-8. Install bower components. This requires SSH keys to be set up for github.com
-   and code.gramener.com::
+8. Install bower components::
 
       bower install
+
+   This requires SSH keys to be set up for github.com and code.gramener.com. If
+   your SSH keys are not set up, and you prefer to *always use https** instead,
+   type this::
+
+      git config url."https://".insteadOf "git://"
 
 9. In the gramex folder, create a branch for local development::
 
