@@ -273,7 +273,7 @@ class DataHandler(RequestHandler):
         Currently supports csv, json, html table
 
     Here's a simple use -- to return a csv file as a response to a URL. This
-    configuration renders `flags` table in t`utorial.db` database as `file.csv`
+    configuration renders `flags` table in `tutorial.db` database as `file.csv`
     at the URL `/datastore/flags`::
 
         url:

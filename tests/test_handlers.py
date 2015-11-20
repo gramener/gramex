@@ -178,7 +178,8 @@ class TestDataHandler(TestGramex):
         base = self.base + '/datastore'
         pdt.assert_frame_equal(self.data, pd.read_csv(base + 'csv/'))
         pdt.assert_frame_equal(self.data, pd.read_json(base + 'json/'))
-        # TODO: pd.read_html(base + 'html/')
+        pdt.assert_frame_equal(self.data, pd.read_html(base + 'html/')[0]
+                               .drop('Unnamed: 0', 1), check_less_precise=True)
 
     def test_querydb(self):
         def eq(a, b):
