@@ -279,7 +279,7 @@ class DataHandler(RequestHandler):
         url:
             flags:
                 pattern: /datastore/flags               # Any URL starting with /datastore/flags
-                handler: datastore.DataHandler          # uses DataHandler
+                handler: gramex.handlers.DataHandler          # uses DataHandler
                 kwargs:
                     driver: sqlalchemy                  # Using sqlalchemy driver
                     url: sqlite:///C:/path/tutorial.db  # Connects to database at this path/url
