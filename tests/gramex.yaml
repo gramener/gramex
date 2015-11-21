@@ -79,9 +79,9 @@ url:
           function: utils.args_as_json
           args: handler
 
-  # TestDirectoryHandler
+  # TestDataHandler for Sqlite
   data/csv:
-    pattern: /datastorecsv/
+    pattern: /datastore/sqlite/csv/
     handler: gramex.handlers.DataHandler
     kwargs:
       driver: sqlalchemy
@@ -91,7 +91,7 @@ url:
       headers:
         Content-Type: text/csv
   data/json:
-    pattern: /datastorejson/
+    pattern: /datastore/sqlite/json/
     handler: gramex.handlers.DataHandler
     kwargs:
       driver: sqlalchemy
@@ -101,11 +101,43 @@ url:
       headers:
         Content-Type: application/json
   data/html:
-    pattern: /datastorehtml/
+    pattern: /datastore/sqlite/html/
     handler: gramex.handlers.DataHandler
     kwargs:
       driver: sqlalchemy
       url: sqlite:///actors.db
+      table: actors
+      parameters: {encoding: utf8}
+      headers:
+        Content-Type: text/html
+
+  # Test datahandler for MySQL
+  data/mysql/csv:
+    pattern: /datastore/mysql/csv/
+    handler: gramex.handlers.DataHandler
+    kwargs:
+      driver: sqlalchemy
+      url: mysql://root@localhost/test_datahandler
+      table: actors
+      parameters: {encoding: utf8}
+      headers:
+        Content-Type: text/csv
+  data/mysql/json:
+    pattern: /datastore/mysql/json/
+    handler: gramex.handlers.DataHandler
+    kwargs:
+      driver: sqlalchemy
+      url: mysql://root@localhost/test_datahandler
+      table: actors
+      parameters: {encoding: utf8}
+      headers:
+        Content-Type: application/json
+  data/mysql/html:
+    pattern: /datastore/mysql/html/
+    handler: gramex.handlers.DataHandler
+    kwargs:
+      driver: sqlalchemy
+      url: mysql://root@localhost/test_datahandler
       table: actors
       parameters: {encoding: utf8}
       headers:
