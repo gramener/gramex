@@ -117,7 +117,7 @@ url:
     handler: gramex.handlers.DataHandler
     kwargs:
       driver: sqlalchemy
-      url: mysql://root@localhost/test_datahandler
+      url: mysql+pymysql://root@localhost/test_datahandler
       table: actors
       parameters: {encoding: utf8}
       headers:
@@ -127,7 +127,7 @@ url:
     handler: gramex.handlers.DataHandler
     kwargs:
       driver: sqlalchemy
-      url: mysql://root@localhost/test_datahandler
+      url: mysql+pymysql://root@localhost/test_datahandler
       table: actors
       parameters: {encoding: utf8}
       headers:
@@ -137,7 +137,7 @@ url:
     handler: gramex.handlers.DataHandler
     kwargs:
       driver: sqlalchemy
-      url: mysql://root@localhost/test_datahandler
+      url: mysql+pymysql://root@localhost/test_datahandler
       table: actors
       parameters: {encoding: utf8}
       headers:
