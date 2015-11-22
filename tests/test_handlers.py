@@ -6,11 +6,13 @@ import markdown
 import unittest
 import subprocess
 import pandas as pd
-import pandas.util.testing as pdt
+import sqlalchemy as sa
 from pathlib import Path
-from sqlalchemy import create_engine
+import pandas.util.testing as pdt
 from orderedattrdict import AttrDict
+from nose.plugins.skip import SkipTest
 from gramex.transforms import badgerfish
+
 try:
     from StringIO import StringIO
 except ImportError:
@@ -146,6 +148,7 @@ class TestDirectoryHandler(TestGramex):
 
 class TestDataHandler(TestGramex):
     'Test gramex.handlers.DataHandler'
+    database = 'sqlite'
     data = pd.read_csv(StringIO(
         """category,name,rating,votes
         Actors,Humphrey Bogart,0.57019677,108
@@ -162,7 +165,7 @@ class TestDataHandler(TestGramex):
 
     @classmethod
     def setUpClass(self):
-        engine = create_engine('sqlite:///tests/actors.db')
+        engine = sa.create_engine('sqlite:///tests/actors.db')
         self.data.to_sql('actors', con=engine, index=False)
 
     @classmethod
@@ -171,14 +174,14 @@ class TestDataHandler(TestGramex):
 
     def test_pingdb(self):
         for frmt in ['csv', 'json', 'html']:
-            self.check('/datastore%s/' % frmt, code=200)
-        self.check('/datastorexyz/', code=404)
+            self.check('/datastore/%s/%s/' % (self.database, frmt), code=200)
+        self.check('/datastore/' + self.database + '/xyz', code=404)
 
     def test_fetchdb(self):
-        base = self.base + '/datastore'
-        pdt.assert_frame_equal(self.data, pd.read_csv(base + 'csv/'))
-        pdt.assert_frame_equal(self.data, pd.read_json(base + 'json/'))
-        pdt.assert_frame_equal(self.data, pd.read_html(base + 'html/')[0]
+        base = self.base + '/datastore/' + self.database
+        pdt.assert_frame_equal(self.data, pd.read_csv(base + '/csv/'))
+        pdt.assert_frame_equal(self.data, pd.read_json(base + '/json/'))
+        pdt.assert_frame_equal(self.data, pd.read_html(base + '/html/')[0]
                                .drop('Unnamed: 0', 1), check_less_precise=True)
 
     def test_querydb(self):
@@ -186,7 +189,7 @@ class TestDataHandler(TestGramex):
             return pdt.assert_frame_equal(a.reset_index(drop=True), b)
 
         # select, where, sort, offset, limit
-        base = self.base + '/datastore'
+        base = self.base + '/datastore/' + self.database + '/'
         eq(self.data[:5],
            pd.read_csv(base + 'csv/?_limit=5'))
         eq(self.data[5:],
@@ -207,3 +210,23 @@ class TestDataHandler(TestGramex):
            pd.read_csv(base + 'csv/?_where=votes>100'))
         eq(self.data.query('150 > votes > 100'),
            pd.read_csv(base + 'csv/?_where=votes<150&_where=votes>100'))
+
+class TestMysqlDataHandler(TestDataHandler):
+    # The parent TestDataHandler executes test cases for sqlite;
+    # This class overwrites few of it properties to test it in MySQL
+    database = 'mysql'
+    engine = sa.create_engine('mysql://root@localhost/')
+    @classmethod
+    def setUpClass(self):
+        try:
+            self.engine.execute("CREATE DATABASE test_datahandler")
+            self.engine.dispose()
+            self.engine = sa.create_engine('mysql://root@localhost/test_datahandler')
+            self.data.to_sql('actors', con=self.engine, index=False)
+        except sa.exc.OperationalError:
+            raise SkipTest('Unable to connect to MySQL database')
+
+    @classmethod
+    def tearDownClass(self):
+        self.engine.execute("DROP DATABASE test_datahandler")
+        self.engine.dispose()
