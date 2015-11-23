@@ -151,7 +151,7 @@ class TestDataHandler(TestGramex):
     database = 'sqlite'
     data = pd.read_csv(StringIO(
         """category,name,rating,votes
-        Actors,Humphrey Bogart,0.57019677,108
+        Actors,Humphrey Bogart,0.57019677,109
         Actors,Cary Grant,0.438601513,142
         Actors,James Stewart,0.988373838,120
         Actors,Marlon Brando,0.102044811,108
