@@ -8,3 +8,4 @@ coverage
 markdown
 tox
 PyMySQL
+psycopg2

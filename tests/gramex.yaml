@@ -142,3 +142,35 @@ url:
       parameters: {encoding: utf8}
       headers:
         Content-Type: text/html
+
+  # Test datahandler for PostgreSQL
+  data/postgresql/csv:
+    pattern: /datastore/postgresql/csv/
+    handler: gramex.handlers.DataHandler
+    kwargs:
+      driver: sqlalchemy
+      url: postgresql://postgres@localhost/test_datahandler
+      table: actors
+      parameters: {encoding: utf8}
+      headers:
+        Content-Type: text/csv
+  data/postgresql/json:
+    pattern: /datastore/postgresql/json/
+    handler: gramex.handlers.DataHandler
+    kwargs:
+      driver: sqlalchemy
+      url: postgresql://postgres@localhost/test_datahandler
+      table: actors
+      parameters: {encoding: utf8}
+      headers:
+        Content-Type: application/json
+  data/postgresql/html:
+    pattern: /datastore/postgresql/html/
+    handler: gramex.handlers.DataHandler
+    kwargs:
+      driver: sqlalchemy
+      url: postgresql://postgres@localhost/test_datahandler
+      table: actors
+      parameters: {encoding: utf8}
+      headers:
+        Content-Type: text/html

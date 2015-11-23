@@ -215,6 +215,7 @@ class TestDataHandler(TestGramex):
         eq(self.data.query('150 > votes > 100'),
            pd.read_csv(base + 'csv/?_where=votes<150&_where=votes>100&xyz=8765'))
 
+
 class TestMysqlDataHandler(TestDataHandler):
     # The parent TestDataHandler executes test cases for sqlite;
     # This class overwrites few of it properties to test it in MySQL
@@ -233,4 +234,32 @@ class TestMysqlDataHandler(TestDataHandler):
     @classmethod
     def tearDownClass(self):
         self.engine.execute("DROP DATABASE test_datahandler")
+        self.engine.dispose()
+
+
+class TestPostgresDataHandler(TestDataHandler):
+    database = 'postgresql'
+    engine = sa.create_engine('postgresql://postgres@localhost/postgres')
+    @classmethod
+    def setUpClass(self):
+        try:
+            conn = self.engine.connect()
+            conn.execute('commit')
+            conn.execute('CREATE DATABASE test_datahandler')
+            conn.close()
+            self.engine = sa.create_engine('postgresql://postgres@localhost/test_datahandler')
+            self.data.to_sql('actors', con=self.engine, index=False)
+            self.engine.dispose()
+        except sa.exc.OperationalError:
+            raise SkipTest('Unable to connect to PostgreSQL database')
+
+    @classmethod
+    def tearDownClass(self):
+        self.engine = sa.create_engine('postgresql://postgres@localhost/postgres')
+        conn = self.engine.connect()
+        conn.execute('commit')
+        # Terminate all other sessions using the test_datahandler database
+        conn.execute("SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname='test_datahandler'")
+        conn.execute('DROP DATABASE test_datahandler')
+        conn.close()
         self.engine.dispose()
