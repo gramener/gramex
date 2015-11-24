@@ -263,3 +263,43 @@ class TestPostgresDataHandler(TestDataHandler):
         conn.execute('DROP DATABASE test_datahandler')
         conn.close()
         self.engine.dispose()
+
+
+class TestBlazeDataHandler(TestDataHandler):
+    'Test gramex.handlers.DataHandler'
+    database = 'blazesqlite'
+
+    def test_querydb(self):
+        def eq(a, b):
+            return pdt.assert_frame_equal(a.reset_index(drop=True), b)
+
+        # select, where, sort, offset, limit
+        base = self.base + '/datastore/' + self.database + '/'
+        eq(self.data[:5],
+           pd.read_csv(base + 'csv/?_limit=5'))
+        eq(self.data[5:],
+           pd.read_csv(base + 'csv/?_offset=5'))
+        eq(self.data.sort('votes'),
+           pd.read_csv(base + 'csv/?_sort=asc:votes'))
+        eq(self.data.sort('votes', ascending=False)[:5],
+           pd.read_csv(base + 'csv/?_limit=5&_sort=desc:votes'))
+        eq(self.data.sort(['category', 'name'], ascending=[False, False]),
+           pd.read_csv(base + 'csv/?_sort=desc:category&_sort=desc:name'))
+        eq(self.data[['name', 'votes']],
+           pd.read_csv(base + 'csv/?_select=name&_select=votes'))
+        eq(self.data.query('category=="Actors"'),
+           pd.read_csv(base + 'csv/?_where=category==Actors'))
+        eq(self.data.query('category!="Actors"'),
+           pd.read_csv(base + 'csv/?_where=category!Actors'))
+        eq(self.data.query('votes>100'),
+           pd.read_csv(base + 'csv/?_where=votes>100'))
+        eq(self.data.query('150 > votes > 100'),
+           pd.read_csv(base + 'csv/?_where=votes<150&_where=votes>100&xyz=8765'))
+
+
+class TestBlazeMysqlDataHandler(TestMysqlDataHandler, TestBlazeDataHandler):
+    'Test gramex.handlers.DataHandler'
+    database = 'blazemysql'
+
+    def test_querydb(self):
+        TestBlazeDataHandler.test_querydb(self)
