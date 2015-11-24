@@ -3,6 +3,7 @@ import yaml
 import datetime
 import mimetypes
 import pandas as pd
+import blaze as bz
 from pathlib import Path
 from orderedattrdict import AttrDict
 from .transforms import build_transform
@@ -267,7 +268,8 @@ class DataHandler(RequestHandler):
     :arg dict kwargs: keyword arguments to be passed to the function.
     :arg string url: The path at which datasource (db, csv) is located.
     :arg string driver: Connector to be used to connect to datasource
-        Like -(sqlalchemy, pandas.read_csv). Currently supports sqlalchemy.
+        Like -(sqlalchemy, pandas.read_csv, blaze).
+        Currently supports sqlalchemy, blaze.
     :arg dict parameters: Additional keyword arguments for driver.
     :arg dict headers: HTTP headers to set on the response.
         Currently supports csv, json, html table
@@ -279,14 +281,14 @@ class DataHandler(RequestHandler):
         url:
             flags:
                 pattern: /datastore/flags               # Any URL starting with /datastore/flags
-                handler: gramex.handlers.DataHandler          # uses DataHandler
+                handler: gramex.handlers.DataHandler    # uses DataHandler
                 kwargs:
                     driver: sqlalchemy                  # Using sqlalchemy driver
                     url: sqlite:///C:/path/tutorial.db  # Connects to database at this path/url
                     table: flags                        # to this table
                     parameters: {encoding: utf8}        # with additional parameters provided
                     headers:
-                        Content-Type: text/csv          # and served as csv
+                        Content-Type: text/csv            # and served as csv
                         # Content-Type: application/json  # or JSON
                         # Content-Type: text/html         # or HTML
 
@@ -296,65 +298,128 @@ class DataHandler(RequestHandler):
 
     def get(self):
         args = AttrDict(self.params)
-        if args.driver != 'sqlalchemy':
-            raise NotImplementedError('Only driver=sqlalchemy is supported')
-
         key = yaml.dump(args)
-        if key not in drivers:
+
+        if args.driver == 'sqlalchemy':
+            if key not in drivers:
+                parameters = args.get('parameters', {})
+                drivers[key] = create_engine(self.params['url'], **parameters)
+            self.driver = drivers[key]
+
+            qargs = self.request.arguments
+            meta = MetaData(bind=self.driver, reflect=True)
+            table = meta.tables[self.params['table']]
+
+            if qargs.get('_select'):
+                query = select([table.c[c] for c in qargs.get('_select')])
+            else:
+                query = select([table])
+
+            if qargs.get('_where'):
+                wh_re = re.compile(r'(\w+)([=><|&~!]{1,2})(\w+)')
+                wheres = []
+                for where in qargs.get('_where'):
+                    match = wh_re.search(where)
+                    if match is None:
+                        continue
+                    col, oper, val = match.groups()
+                    col = table.c[col]
+                    if oper == '==':
+                        wheres.append(col == val)
+                    elif oper == '!':
+                        wheres.append(col != val)
+                    elif oper == '~':
+                        wheres.append(col.ilike('%' + val + '%'))
+                    elif oper == '!~':
+                        wheres.append(col.notlike('%' + val + '%'))
+                    elif oper == '>=':
+                        wheres.append(col >= val)
+                    elif oper == '<=':
+                        wheres.append(col <= val)
+                    elif oper == '>':
+                        wheres.append(col > val)
+                    elif oper == '<':
+                        wheres.append(col < val)
+                query = query.where(and_(*wheres))
+
+            if qargs.get('_sort'):
+                order = {'asc': asc, 'desc': desc}
+                sorts = []
+                for sort in qargs.get('_sort'):
+                    odr, col = sort.split(':', 1)
+                    sorts.append(order.get(odr, asc)(col))
+                query = query.order_by(*sorts)
+
+            if qargs.get('_offset'):
+                query = query.offset(qargs.get('_offset')[0])
+            if qargs.get('_limit'):
+                query = query.limit(qargs.get('_limit')[0])
+
+            self.result = pd.read_sql_query(query, self.driver)
+
+        elif args.driver == 'blaze':
+            '''TODO: Not caching blaze connections
+
+            '''
             parameters = args.get('parameters', {})
-            drivers[key] = create_engine(self.params['url'], **parameters)
-        self.driver = drivers[key]
+            bzcon = bz.Data(self.params['url'] + '::' + self.params['table'],
+                            **parameters)
+            qargs = self.request.arguments
+            table = bz.TableSymbol('table', bzcon.dshape)
+            query = table
 
-        qargs = self.request.arguments
-        meta = MetaData(bind=self.driver, reflect=True)
-        table = meta.tables[self.params['table']]
+            if qargs.get('_where'):
+                wh_re = re.compile(r'(\w+)([=><|&~!]{1,2})(\w+)')
+                wheres = None
+                for where in qargs.get('_where'):
+                    match = wh_re.search(where)
+                    if match is None:
+                        continue
+                    col, oper, val = match.groups()
+                    col = table[col]
+                    if oper == '==':
+                        whr = (col == val)
+                    elif oper == '>=':
+                        whr = (col >= val)
+                    elif oper == '<=':
+                        whr = (col <= val)
+                    elif oper == '>':
+                        whr = (col > val)
+                    elif oper == '<':
+                        whr = (col < val)
+                    elif oper == '!':
+                        whr = (col != val)
+                    wheres = whr if wheres is None else wheres & whr
+                query = query[wheres]
 
-        if qargs.get('_select'):
-            query = select([table.c[c] for c in qargs.get('_select')])
+            if qargs.get('_sort'):
+                order = {'asc': True, 'desc': False}
+                sorts = []
+                for sort in qargs.get('_sort'):
+                    odr, col = sort.split(':', 1)
+                    sorts.append(col)
+                query = query.sort(sorts, ascending=order[odr])
+
+            offset = qargs.get('_offset', [None])[0]
+            limit = qargs.get('_limit', [None])[0]
+            if offset:
+                offset = int(offset)
+            if limit:
+                limit = int(limit)
+            if offset and limit:
+                limit += offset
+            if offset or limit:
+                query = query[offset:limit]
+
+            if qargs.get('_select'):
+                query = query[qargs.get('_select')]
+
+            # TODO: Improve json, csv, html outputs using native odo
+            self.result = bz.odo(bz.compute(query, bzcon.data), pd.DataFrame)
+
         else:
-            query = select([table])
+            raise NotImplementedError('driver=%s is not supported yet.' % args.driver)
 
-        if qargs.get('_where'):
-            wh_re = re.compile(r'(\w+)([=><|&~!]{1,2})(\w+)')
-            wheres = []
-            for where in qargs.get('_where'):
-                match = wh_re.search(where)
-                if match is None:
-                    continue
-                col, oper, val = match.groups()
-                col = table.c[col]
-                if oper == '==':
-                    wheres.append(col == val)
-                elif oper == '!':
-                    wheres.append(col != val)
-                elif oper == '~':
-                    wheres.append(col.ilike('%' + val + '%'))
-                elif oper == '!~':
-                    wheres.append(col.notlike('%' + val + '%'))
-                elif oper == '>=':
-                    wheres.append(col >= val)
-                elif oper == '<=':
-                    wheres.append(col <= val)
-                elif oper == '>':
-                    wheres.append(col > val)
-                elif oper == '<':
-                    wheres.append(col < val)
-            query = query.where(and_(*wheres))
-
-        if qargs.get('_sort'):
-            order = {'asc': asc, 'desc': desc}
-            sorts = []
-            for sort in qargs.get('_sort'):
-                odr, col = sort.split(':', 1)
-                sorts.append(order.get(odr, asc)(col))
-            query = query.order_by(*sorts)
-
-        if qargs.get('_offset'):
-            query = query.offset(qargs.get('_offset')[0])
-        if qargs.get('_limit'):
-            query = query.limit(qargs.get('_limit')[0])
-
-        self.result = pd.read_sql_query(query, self.driver)
 
         for header_name, header_value in self.params['headers'].items():
             self.set_header(header_name, header_value)
