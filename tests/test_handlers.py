@@ -194,11 +194,11 @@ class TestDataHandler(TestGramex):
            pd.read_csv(base + 'csv/?_limit=5'))
         eq(self.data[5:],
            pd.read_csv(base + 'csv/?_offset=5'))
-        eq(self.data.sort('votes'),
+        eq(self.data.sort_values(by='votes'),
            pd.read_csv(base + 'csv/?_sort=asc:votes'))
-        eq(self.data.sort('votes', ascending=False)[:5],
+        eq(self.data.sort_values(by='votes', ascending=False)[:5],
            pd.read_csv(base + 'csv/?_limit=5&_sort=desc:votes'))
-        eq(self.data.sort(['category', 'name'], ascending=[False, False]),
+        eq(self.data.sort_values(by=['category', 'name'], ascending=[False, False]),
            pd.read_csv(base + 'csv/?_sort=desc:category&_sort=desc:name'))
         eq(self.data[['name', 'votes']],
            pd.read_csv(base + 'csv/?_select=name&_select=votes'))
@@ -279,11 +279,11 @@ class TestBlazeDataHandler(TestDataHandler):
            pd.read_csv(base + 'csv/?_limit=5'))
         eq(self.data[5:],
            pd.read_csv(base + 'csv/?_offset=5'))
-        eq(self.data.sort('votes'),
+        eq(self.data.sort_values(by='votes'),
            pd.read_csv(base + 'csv/?_sort=asc:votes'))
-        eq(self.data.sort('votes', ascending=False)[:5],
+        eq(self.data.sort_values(by='votes', ascending=False)[:5],
            pd.read_csv(base + 'csv/?_limit=5&_sort=desc:votes'))
-        eq(self.data.sort(['category', 'name'], ascending=[False, False]),
+        eq(self.data.sort_values(by=['category', 'name'], ascending=[False, False]),
            pd.read_csv(base + 'csv/?_sort=desc:category&_sort=desc:name'))
         eq(self.data[['name', 'votes']],
            pd.read_csv(base + 'csv/?_select=name&_select=votes'))
