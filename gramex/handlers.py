@@ -431,6 +431,19 @@ class DataHandler(RequestHandler):
             if qargs.get('_select'):
                 query = query[qargs.get('_select')]
 
+            if qargs.get('_groupby') and qargs.get('_aggfunc'):
+                raise NotImplementedError('TODO: summary reduction expression bit tricky')
+                byargs = [bz.merge([query[col] for col in qargs.get('_groupby')])]
+                byaggs = {'min': bz.min}
+                agg_re = re.compile(r'(\w+)\:(\w+)\((\w+)\)')
+                for agg in qargs.get('_aggfunc'):
+                    match = agg_re.search(agg)
+                    if match is None:
+                        continue
+                    name, oper, col = match.groups()
+                    byargs.append(name=byaggs[oper](query[col]))
+                query = bz.by(*byargs)
+
             # TODO: Improve json, csv, html outputs using native odo
             self.result = bz.odo(bz.compute(query, bzcon.data), pd.DataFrame)
 
