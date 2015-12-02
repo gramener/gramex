@@ -309,13 +309,13 @@ class DataHandler(RequestHandler):
             qargs = self.request.arguments
             meta = sa.MetaData(bind=self.driver, reflect=True)
             table = meta.tables[self.params['table']]
-            _selects = qargs.get('_select')
-            _wheres = qargs.get('_where')
-            _groups = qargs.get('_groupby')
-            _aggs = qargs.get('_agg')
-            _sorts = qargs.get('_sort')
-            _offsets = qargs.get('_offset')
-            _limits = qargs.get('_limit')
+            _selects = qargs.get('select')
+            _wheres = qargs.get('where')
+            _groups = qargs.get('groupby')
+            _aggs = qargs.get('agg')
+            _sorts = qargs.get('sort')
+            _offsets = qargs.get('offset')
+            _limits = qargs.get('limit')
 
             if _wheres:
                 wh_re = re.compile(r'(\w+)([=><|&~!]{1,2})(\w+)')
@@ -396,11 +396,11 @@ class DataHandler(RequestHandler):
             qargs = self.request.arguments
             table = bz.TableSymbol('table', bzcon.dshape)
             query = table
-            _selects = qargs.get('_select')
-            _wheres = qargs.get('_where')
-            _groups = qargs.get('_groupby')
-            _aggs = qargs.get('_agg')
-            _sorts = qargs.get('_sort')
+            _selects = qargs.get('select')
+            _wheres = qargs.get('where')
+            _groups = qargs.get('groupby')
+            _aggs = qargs.get('agg')
+            _sorts = qargs.get('sort')
 
             if _wheres:
                 wh_re = re.compile(r'(\w+)([=><|&~!]{1,2})(\w+)')
@@ -448,8 +448,8 @@ class DataHandler(RequestHandler):
                     sorts.append(col)
                 query = query.sort(sorts, ascending=order[odr])
 
-            offset = qargs.get('_offset', [None])[0]
-            limit = qargs.get('_limit', [None])[0]
+            offset = qargs.get('offset', [None])[0]
+            limit = qargs.get('limit', [None])[0]
             if offset:
                 offset = int(offset)
             if limit:
