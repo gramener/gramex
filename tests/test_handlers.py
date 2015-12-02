@@ -222,29 +222,29 @@ class TestDataHandler(TestGramex):
 
         # Aggregation cases
         eqdt((self.data.groupby('category', as_index=False)
-              .agg({'rating': max, 'votes': sum})
-              .rename(columns={'rating': 'ratemax', 'votes': 'votesum'})),
+              .agg({'rating': 'min', 'votes': 'sum'})
+              .rename(columns={'rating': 'ratemin', 'votes': 'votesum'})),
              pd.read_csv(base + 'csv/?groupby=category' +
-                         '&agg=ratemax:max(rating)&agg=votesum:sum(votes)'))
+                         '&agg=ratemin:min(rating)&agg=votesum:sum(votes)'))
 
         eqdt((self.data.query('120 > votes > 60')
               .groupby('category', as_index=False)
-              .agg({'rating': max, 'votes': sum})
-              .rename(columns={'rating':'ratemax', 'votes':'votesum'})
-              .sort_values(by='votesum', ascending=True)),
+              .agg({'rating': 'max', 'votes': 'count'})
+              .rename(columns={'rating':'ratemax', 'votes':'votecount'})
+              .sort_values(by='votecount', ascending=True)),
              pd.read_csv(base + 'csv/?groupby=category' +
-                         '&agg=ratemax:max(rating)&agg=votesum:sum(votes)' +
-                         '&where=votes<120&where=votes>60&sort=votesum:asc'))
+                         '&agg=ratemax:max(rating)&agg=votecount:count(votes)' +
+                         '&where=votes<120&where=votes>60&sort=votecount:asc'))
 
         eqdt((self.data.query('120 > votes > 60')
               .groupby('category', as_index=False)
-              .agg({'rating': max, 'votes': sum})
-              .rename(columns={'rating':'ratemax', 'votes':'votesum'})
-              .loc[1:, ['category', 'votesum']]),
+              .agg({'rating': pd.np.mean, 'votes': pd.Series.nunique})
+              .rename(columns={'rating':'ratemean', 'votes':'votenu'})
+              .loc[1:, ['category', 'votenu']]),
              pd.read_csv(base + 'csv/?groupby=category' +
-                         '&agg=ratemax:max(rating)&agg=votesum:sum(votes)' +
+                         '&agg=ratemean:mean(rating)&agg=votenu:nunique(votes)' +
                          '&where=votes<120&where=votes>60' +
-                         '&select=category&select=votesum&offset=1'))
+                         '&select=category&select=votenu&offset=1'))
 
 
 class TestMysqlDataHandler(TestDataHandler):
@@ -333,29 +333,29 @@ class TestBlazeDataHandler(TestDataHandler):
 
         # Aggregation cases
         eq((self.data.groupby('category', as_index=False)
-            .agg({'rating': max, 'votes': sum})
-            .rename(columns={'rating': 'ratemax', 'votes': 'votesum'})),
+            .agg({'rating': 'min', 'votes': 'sum'})
+            .rename(columns={'rating': 'ratemin', 'votes': 'votesum'})),
            pd.read_csv(base + 'csv/?groupby=category' +
-                       '&agg=ratemax:max(rating)&agg=votesum:sum(votes)'))
+                       '&agg=ratemin:min(rating)&agg=votesum:sum(votes)'))
 
         eq((self.data.query('120 > votes > 60')
             .groupby('category', as_index=False)
-            .agg({'rating': max, 'votes': sum})
-            .rename(columns={'rating':'ratemax', 'votes':'votesum'})
-            .sort_values(by='votesum', ascending=True)),
+            .agg({'rating': 'max', 'votes': 'count'})
+            .rename(columns={'rating':'ratemax', 'votes':'votecount'})
+            .sort_values(by='votecount', ascending=True)),
            pd.read_csv(base + 'csv/?groupby=category' +
-                       '&agg=ratemax:max(rating)&agg=votesum:sum(votes)' +
-                       '&where=votes<120&where=votes>60&sort=votesum:asc'))
+                       '&agg=ratemax:max(rating)&agg=votecount:count(votes)' +
+                       '&where=votes<120&where=votes>60&sort=votecount:asc'))
 
         eq((self.data.query('120 > votes > 60')
             .groupby('category', as_index=False)
-            .agg({'rating': max, 'votes': sum})
-            .rename(columns={'rating':'ratemax', 'votes':'votesum'})
-            .loc[1:, ['category', 'votesum']]),
+            .agg({'rating': pd.np.mean, 'votes': pd.Series.nunique})
+            .rename(columns={'rating':'ratemean', 'votes':'votenu'})
+            .loc[1:, ['category', 'votenu']]),
            pd.read_csv(base + 'csv/?groupby=category' +
-                       '&agg=ratemax:max(rating)&agg=votesum:sum(votes)' +
+                       '&agg=ratemean:mean(rating)&agg=votenu:nunique(votes)' +
                        '&where=votes<120&where=votes>60' +
-                       '&select=category&select=votesum&offset=1'))
+                       '&select=category&select=votenu&offset=1'))
 
 
 class TestBlazeMysqlDataHandler(TestMysqlDataHandler, TestBlazeDataHandler):

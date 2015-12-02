@@ -328,12 +328,6 @@ class DataHandler(RequestHandler):
                     col = table.c[col]
                     if oper in ['==', '=']:
                         wheres.append(col == val)
-                    elif oper == '!=':
-                        wheres.append(col != val)
-                    elif oper == '~':
-                        wheres.append(col.ilike('%' + val + '%'))
-                    elif oper == '!~':
-                        wheres.append(col.notlike('%' + val + '%'))
                     elif oper == '>=':
                         wheres.append(col >= val)
                     elif oper == '<=':
@@ -342,20 +336,30 @@ class DataHandler(RequestHandler):
                         wheres.append(col > val)
                     elif oper == '<':
                         wheres.append(col < val)
+                    elif oper == '!=':
+                        wheres.append(col != val)
+                    elif oper == '~':
+                        wheres.append(col.ilike('%' + val + '%'))
+                    elif oper == '!~':
+                        wheres.append(col.notlike('%' + val + '%'))
                 wheres = sa.and_(*wheres)
 
             if _groups and _aggs:
                 grps = [table.c[c] for c in _groups]
                 aggselects = grps[:]
                 safuncs = {'min': sa.func.min, 'max': sa.func.max,
-                           'sum': sa.func.sum, 'count': sa.func.count}
+                           'sum': sa.func.sum, 'count': sa.func.count,
+                           'mean': sa.func.avg, 'nunique': sa.func.count}
                 agg_re = re.compile(r'(\w+)\:(\w+)\((\w+)\)')
                 for agg in _aggs:
                     match = agg_re.search(agg)
                     if match is None:
                         continue
                     name, oper, col = match.groups()
-                    aggselects.append(safuncs[oper](table.c[col]).label(name))
+                    if oper == 'nunique':
+                        aggselects.append(sa.func.count(table.c[col].distinct()).label(name))
+                    else:
+                        aggselects.append(safuncs[oper](table.c[col]).label(name))
 
                 if _selects:
                     aggselects = [grp for grp in aggselects if grp.key in _selects]
@@ -428,7 +432,8 @@ class DataHandler(RequestHandler):
 
             if _groups and _aggs:
                 byaggs = {'min': bz.min, 'max': bz.max,
-                          'sum': bz.sum, 'count': bz.count}
+                          'sum': bz.sum, 'count': bz.count,
+                          'mean': bz.mean, 'nunique': bz.nunique}
                 agg_re = re.compile(r'(\w+)\:(\w+)\((\w+)\)')
                 grps = bz.merge(*[query[col] for col in _groups])
                 aggs = {}
