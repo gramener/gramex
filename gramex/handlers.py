@@ -355,13 +355,13 @@ class DataHandler(RequestHandler):
             if qargs.get('_limit'):
                 query = query.limit(qargs.get('_limit')[0])
 
-            if qargs.get('_groupby') and qargs.get('_aggfunc'):
+            if qargs.get('_groupby') and qargs.get('_agg'):
                 grps = [query.c[c] for c in qargs.get('_groupby')]
                 aggselects = grps[:]
                 safuncs = {'min': sa.func.min, 'max': sa.func.max,
                            'sum': sa.func.sum, 'count': sa.func.count}
                 agg_re = re.compile(r'(\w+)\:(\w+)\((\w+)\)')
-                for agg in qargs.get('_aggfunc'):
+                for agg in qargs.get('_agg'):
                     match = agg_re.search(agg)
                     if match is None:
                         continue
@@ -431,18 +431,19 @@ class DataHandler(RequestHandler):
             if qargs.get('_select'):
                 query = query[qargs.get('_select')]
 
-            if qargs.get('_groupby') and qargs.get('_aggfunc'):
-                raise NotImplementedError('TODO: summary reduction expression bit tricky')
-                byargs = [bz.merge([query[col] for col in qargs.get('_groupby')])]
-                byaggs = {'min': bz.min}
+            if qargs.get('_groupby') and qargs.get('_agg'):
+                byaggs = {'min': bz.min, 'max': bz.max,
+                          'sum': bz.sum, 'count': bz.count}
                 agg_re = re.compile(r'(\w+)\:(\w+)\((\w+)\)')
-                for agg in qargs.get('_aggfunc'):
+                grps = bz.merge(*[query[col] for col in qargs.get('_groupby')])
+                aggs = {}
+                for agg in qargs.get('_agg'):
                     match = agg_re.search(agg)
                     if match is None:
                         continue
                     name, oper, col = match.groups()
-                    byargs.append(name=byaggs[oper](query[col]))
-                query = bz.by(*byargs)
+                    aggs[name] = byaggs[oper](query[col])
+                query = bz.by(grps, **aggs)
 
             # TODO: Improve json, csv, html outputs using native odo
             self.result = bz.odo(bz.compute(query, bzcon.data), pd.DataFrame)
