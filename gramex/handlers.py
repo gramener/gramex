@@ -309,16 +309,18 @@ class DataHandler(RequestHandler):
             qargs = self.request.arguments
             meta = sa.MetaData(bind=self.driver, reflect=True)
             table = meta.tables[self.params['table']]
+            _selects = qargs.get('_select')
+            _wheres = qargs.get('_where')
+            _groups = qargs.get('_groupby')
+            _aggs = qargs.get('_agg')
+            _sorts = qargs.get('_sort')
+            _offsets = qargs.get('_offset')
+            _limits = qargs.get('_limit')
 
-            if qargs.get('_select'):
-                query = sa.select([table.c[c] for c in qargs.get('_select')])
-            else:
-                query = sa.select([table])
-
-            if qargs.get('_where'):
+            if _wheres:
                 wh_re = re.compile(r'(\w+)([=><|&~!]{1,2})(\w+)')
                 wheres = []
-                for where in qargs.get('_where'):
+                for where in _wheres:
                     match = wh_re.search(where)
                     if match is None:
                         continue
@@ -340,43 +342,53 @@ class DataHandler(RequestHandler):
                         wheres.append(col > val)
                     elif oper == '<':
                         wheres.append(col < val)
-                query = query.where(sa.and_(*wheres))
+                wheres = sa.and_(*wheres)
 
-            if qargs.get('_sort'):
-                order = {'asc': sa.asc, 'desc': sa.desc}
-                sorts = []
-                for sort in qargs.get('_sort'):
-                    odr, col = sort.split(':', 1)
-                    sorts.append(order.get(odr, sa.asc)(col))
-                query = query.order_by(*sorts)
-
-            if qargs.get('_offset'):
-                query = query.offset(qargs.get('_offset')[0])
-            if qargs.get('_limit'):
-                query = query.limit(qargs.get('_limit')[0])
-
-            if qargs.get('_groupby') and qargs.get('_agg'):
-                grps = [query.c[c] for c in qargs.get('_groupby')]
+            if _groups and _aggs:
+                grps = [table.c[c] for c in _groups]
                 aggselects = grps[:]
                 safuncs = {'min': sa.func.min, 'max': sa.func.max,
                            'sum': sa.func.sum, 'count': sa.func.count}
                 agg_re = re.compile(r'(\w+)\:(\w+)\((\w+)\)')
-                for agg in qargs.get('_agg'):
+                for agg in _aggs:
                     match = agg_re.search(agg)
                     if match is None:
                         continue
                     name, oper, col = match.groups()
-                    aggselects.append(safuncs[oper](query.c[col]).label(name))
+                    aggselects.append(safuncs[oper](table.c[col]).label(name))
 
-                query = (sa.select(aggselects)
-                           .select_from(query)
-                           .group_by(*grps))
+                if _selects:
+                    aggselects = [grp for grp in aggselects if grp.key in _selects]
+
+                query = sa.select(aggselects)
+                if _wheres:
+                    query = query.where(wheres)
+                query = query.group_by(*grps)
+            else:
+                if _selects:
+                    query = sa.select([table.c[c] for c in _selects])
+                else:
+                    query = sa.select([table])
+                if _wheres:
+                    query = query.where(wheres)
+
+            if _sorts:
+                order = {'asc': sa.asc, 'desc': sa.desc}
+                sorts = []
+                for sort in _sorts:
+                    odr, col = sort.split(':', 1)
+                    sorts.append(order.get(odr, sa.asc)(col))
+                query = query.order_by(*sorts)
+
+            if _offsets:
+                query = query.offset(_offsets[0])
+            if _limits:
+                query = query.limit(_limits[0])
 
             self.result = pd.read_sql_query(query, self.driver)
 
         elif args.driver == 'blaze':
             '''TODO: Not caching blaze connections
-
             '''
             parameters = args.get('parameters', {})
             bzcon = bz.Data(self.params['url'] + '::' + self.params['table'],
@@ -384,11 +396,16 @@ class DataHandler(RequestHandler):
             qargs = self.request.arguments
             table = bz.TableSymbol('table', bzcon.dshape)
             query = table
+            _selects = qargs.get('_select')
+            _wheres = qargs.get('_where')
+            _groups = qargs.get('_groupby')
+            _aggs = qargs.get('_agg')
+            _sorts = qargs.get('_sort')
 
-            if qargs.get('_where'):
+            if _wheres:
                 wh_re = re.compile(r'(\w+)([=><|&~!]{1,2})(\w+)')
                 wheres = None
-                for where in qargs.get('_where'):
+                for where in _wheres:
                     match = wh_re.search(where)
                     if match is None:
                         continue
@@ -409,10 +426,24 @@ class DataHandler(RequestHandler):
                     wheres = whr if wheres is None else wheres & whr
                 query = query[wheres]
 
-            if qargs.get('_sort'):
+            if _groups and _aggs:
+                byaggs = {'min': bz.min, 'max': bz.max,
+                          'sum': bz.sum, 'count': bz.count}
+                agg_re = re.compile(r'(\w+)\:(\w+)\((\w+)\)')
+                grps = bz.merge(*[query[col] for col in _groups])
+                aggs = {}
+                for agg in _aggs:
+                    match = agg_re.search(agg)
+                    if match is None:
+                        continue
+                    name, oper, col = match.groups()
+                    aggs[name] = byaggs[oper](query[col])
+                query = bz.by(grps, **aggs)
+
+            if _sorts:
                 order = {'asc': True, 'desc': False}
                 sorts = []
-                for sort in qargs.get('_sort'):
+                for sort in _sorts:
                     odr, col = sort.split(':', 1)
                     sorts.append(col)
                 query = query.sort(sorts, ascending=order[odr])
@@ -428,22 +459,8 @@ class DataHandler(RequestHandler):
             if offset or limit:
                 query = query[offset:limit]
 
-            if qargs.get('_select'):
-                query = query[qargs.get('_select')]
-
-            if qargs.get('_groupby') and qargs.get('_agg'):
-                byaggs = {'min': bz.min, 'max': bz.max,
-                          'sum': bz.sum, 'count': bz.count}
-                agg_re = re.compile(r'(\w+)\:(\w+)\((\w+)\)')
-                grps = bz.merge(*[query[col] for col in qargs.get('_groupby')])
-                aggs = {}
-                for agg in qargs.get('_agg'):
-                    match = agg_re.search(agg)
-                    if match is None:
-                        continue
-                    name, oper, col = match.groups()
-                    aggs[name] = byaggs[oper](query[col])
-                query = bz.by(grps, **aggs)
+            if _selects:
+                query = query[_selects]
 
             # TODO: Improve json, csv, html outputs using native odo
             self.result = bz.odo(bz.compute(query, bzcon.data), pd.DataFrame)
