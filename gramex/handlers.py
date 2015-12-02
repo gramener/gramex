@@ -8,7 +8,7 @@ from pathlib import Path
 from orderedattrdict import AttrDict
 from .transforms import build_transform
 from tornado.web import HTTPError, RequestHandler
-from sqlalchemy import create_engine, MetaData, select, asc, desc, and_
+import sqlalchemy as sa
 
 
 class FunctionHandler(RequestHandler):
@@ -303,17 +303,17 @@ class DataHandler(RequestHandler):
         if args.driver == 'sqlalchemy':
             if key not in drivers:
                 parameters = args.get('parameters', {})
-                drivers[key] = create_engine(self.params['url'], **parameters)
+                drivers[key] = sa.create_engine(self.params['url'], **parameters)
             self.driver = drivers[key]
 
             qargs = self.request.arguments
-            meta = MetaData(bind=self.driver, reflect=True)
+            meta = sa.MetaData(bind=self.driver, reflect=True)
             table = meta.tables[self.params['table']]
 
             if qargs.get('_select'):
-                query = select([table.c[c] for c in qargs.get('_select')])
+                query = sa.select([table.c[c] for c in qargs.get('_select')])
             else:
-                query = select([table])
+                query = sa.select([table])
 
             if qargs.get('_where'):
                 wh_re = re.compile(r'(\w+)([=><|&~!]{1,2})(\w+)')
@@ -340,20 +340,37 @@ class DataHandler(RequestHandler):
                         wheres.append(col > val)
                     elif oper == '<':
                         wheres.append(col < val)
-                query = query.where(and_(*wheres))
+                query = query.where(sa.and_(*wheres))
 
             if qargs.get('_sort'):
-                order = {'asc': asc, 'desc': desc}
+                order = {'asc': sa.asc, 'desc': sa.desc}
                 sorts = []
                 for sort in qargs.get('_sort'):
                     odr, col = sort.split(':', 1)
-                    sorts.append(order.get(odr, asc)(col))
+                    sorts.append(order.get(odr, sa.asc)(col))
                 query = query.order_by(*sorts)
 
             if qargs.get('_offset'):
                 query = query.offset(qargs.get('_offset')[0])
             if qargs.get('_limit'):
                 query = query.limit(qargs.get('_limit')[0])
+
+            if qargs.get('_groupby') and qargs.get('_agg'):
+                grps = [query.c[c] for c in qargs.get('_groupby')]
+                aggselects = grps[:]
+                safuncs = {'min': sa.func.min, 'max': sa.func.max,
+                           'sum': sa.func.sum, 'count': sa.func.count}
+                agg_re = re.compile(r'(\w+)\:(\w+)\((\w+)\)')
+                for agg in qargs.get('_agg'):
+                    match = agg_re.search(agg)
+                    if match is None:
+                        continue
+                    name, oper, col = match.groups()
+                    aggselects.append(safuncs[oper](query.c[col]).label(name))
+
+                query = (sa.select(aggselects)
+                           .select_from(query)
+                           .group_by(*grps))
 
             self.result = pd.read_sql_query(query, self.driver)
 
@@ -413,6 +430,20 @@ class DataHandler(RequestHandler):
 
             if qargs.get('_select'):
                 query = query[qargs.get('_select')]
+
+            if qargs.get('_groupby') and qargs.get('_agg'):
+                byaggs = {'min': bz.min, 'max': bz.max,
+                          'sum': bz.sum, 'count': bz.count}
+                agg_re = re.compile(r'(\w+)\:(\w+)\((\w+)\)')
+                grps = bz.merge(*[query[col] for col in qargs.get('_groupby')])
+                aggs = {}
+                for agg in qargs.get('_agg'):
+                    match = agg_re.search(agg)
+                    if match is None:
+                        continue
+                    name, oper, col = match.groups()
+                    aggs[name] = byaggs[oper](query[col])
+                query = bz.by(grps, **aggs)
 
             # TODO: Improve json, csv, html outputs using native odo
             self.result = bz.odo(bz.compute(query, bzcon.data), pd.DataFrame)
