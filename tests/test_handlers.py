@@ -207,8 +207,10 @@ class TestDataHandler(TestGramex):
            pd.read_csv(base + 'csv/?select=name&select=votes'))
         eq(self.data.query('category=="Actors"'),
            pd.read_csv(base + 'csv/?where=category==Actors'))
+        eq(self.data.query('category=="Actors"'),
+           pd.read_csv(base + 'csv/?where=category=Actors'))
         eq(self.data.query('category!="Actors"'),
-           pd.read_csv(base + 'csv/?where=category!Actors'))
+           pd.read_csv(base + 'csv/?where=category!=Actors'))
         eq(self.data[self.data.name.str.contains('Brando')],
            pd.read_csv(base + 'csv/?where=name~Brando'))
         eq(self.data[~self.data.name.str.contains('Brando')],
@@ -318,8 +320,10 @@ class TestBlazeDataHandler(TestDataHandler):
            pd.read_csv(base + 'csv/?select=name&select=votes'))
         eq(self.data.query('category=="Actors"'),
            pd.read_csv(base + 'csv/?where=category==Actors'))
+        eq(self.data.query('category=="Actors"'),
+           pd.read_csv(base + 'csv/?where=category=Actors'))
         eq(self.data.query('category!="Actors"'),
-           pd.read_csv(base + 'csv/?where=category!Actors'))
+           pd.read_csv(base + 'csv/?where=category!=Actors'))
         eq(self.data.query('votes>100'),
            pd.read_csv(base + 'csv/?where=votes>100'))
         eq(self.data.query('150 > votes > 100'),

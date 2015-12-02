@@ -326,9 +326,9 @@ class DataHandler(RequestHandler):
                         continue
                     col, oper, val = match.groups()
                     col = table.c[col]
-                    if oper == '==':
+                    if oper in ['==', '=']:
                         wheres.append(col == val)
-                    elif oper == '!':
+                    elif oper == '!=':
                         wheres.append(col != val)
                     elif oper == '~':
                         wheres.append(col.ilike('%' + val + '%'))
@@ -411,7 +411,7 @@ class DataHandler(RequestHandler):
                         continue
                     col, oper, val = match.groups()
                     col = table[col]
-                    if oper == '==':
+                    if oper in ['==', '=']:
                         whr = (col == val)
                     elif oper == '>=':
                         whr = (col >= val)
@@ -421,7 +421,7 @@ class DataHandler(RequestHandler):
                         whr = (col > val)
                     elif oper == '<':
                         whr = (col < val)
-                    elif oper == '!':
+                    elif oper == '!=':
                         whr = (col != val)
                     wheres = whr if wheres is None else wheres & whr
                 query = query[wheres]
