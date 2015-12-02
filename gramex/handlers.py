@@ -376,7 +376,7 @@ class DataHandler(RequestHandler):
                 order = {'asc': sa.asc, 'desc': sa.desc}
                 sorts = []
                 for sort in _sorts:
-                    odr, col = sort.split(':', 1)
+                    col, odr = sort.partition(':')[::2]
                     sorts.append(order.get(odr, sa.asc)(col))
                 query = query.order_by(*sorts)
 
@@ -444,9 +444,9 @@ class DataHandler(RequestHandler):
                 order = {'asc': True, 'desc': False}
                 sorts = []
                 for sort in _sorts:
-                    odr, col = sort.split(':', 1)
+                    col, odr = sort.partition(':')[::2]
                     sorts.append(col)
-                query = query.sort(sorts, ascending=order[odr])
+                query = query.sort(sorts, ascending=order.get(odr, True))
 
             offset = qargs.get('offset', [None])[0]
             limit = qargs.get('limit', [None])[0]

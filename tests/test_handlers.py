@@ -198,11 +198,11 @@ class TestDataHandler(TestGramex):
         eq(self.data[5:],
            pd.read_csv(base + 'csv/?offset=5'))
         eq(self.data.sort_values(by='votes'),
-           pd.read_csv(base + 'csv/?sort=asc:votes'))
+           pd.read_csv(base + 'csv/?sort=votes'))
         eq(self.data.sort_values(by='votes', ascending=False)[:5],
-           pd.read_csv(base + 'csv/?limit=5&sort=desc:votes'))
+           pd.read_csv(base + 'csv/?limit=5&sort=votes:desc'))
         eq(self.data.sort_values(by=['category', 'name'], ascending=[False, False]),
-           pd.read_csv(base + 'csv/?sort=desc:category&sort=desc:name'))
+           pd.read_csv(base + 'csv/?sort=category:desc&sort=name:desc'))
         eq(self.data[['name', 'votes']],
            pd.read_csv(base + 'csv/?select=name&select=votes'))
         eq(self.data.query('category=="Actors"'),
@@ -234,7 +234,7 @@ class TestDataHandler(TestGramex):
               .sort_values(by='votesum', ascending=True)),
              pd.read_csv(base + 'csv/?groupby=category' +
                          '&agg=ratemax:max(rating)&agg=votesum:sum(votes)' +
-                         '&where=votes<120&where=votes>60&sort=asc:votesum'))
+                         '&where=votes<120&where=votes>60&sort=votesum:asc'))
 
         eqdt((self.data.query('120 > votes > 60')
               .groupby('category', as_index=False)
@@ -311,11 +311,11 @@ class TestBlazeDataHandler(TestDataHandler):
         eq(self.data[5:],
            pd.read_csv(base + 'csv/?offset=5'))
         eq(self.data.sort_values(by='votes'),
-           pd.read_csv(base + 'csv/?sort=asc:votes'))
+           pd.read_csv(base + 'csv/?sort=votes'))
         eq(self.data.sort_values(by='votes', ascending=False)[:5],
-           pd.read_csv(base + 'csv/?limit=5&sort=desc:votes'))
+           pd.read_csv(base + 'csv/?limit=5&sort=votes:desc'))
         eq(self.data.sort_values(by=['category', 'name'], ascending=[False, False]),
-           pd.read_csv(base + 'csv/?sort=desc:category&sort=desc:name'))
+           pd.read_csv(base + 'csv/?sort=category:desc&sort=name:desc'))
         eq(self.data[['name', 'votes']],
            pd.read_csv(base + 'csv/?select=name&select=votes'))
         eq(self.data.query('category=="Actors"'),
@@ -345,7 +345,7 @@ class TestBlazeDataHandler(TestDataHandler):
             .sort_values(by='votesum', ascending=True)),
            pd.read_csv(base + 'csv/?groupby=category' +
                        '&agg=ratemax:max(rating)&agg=votesum:sum(votes)' +
-                       '&where=votes<120&where=votes>60&sort=asc:votesum'))
+                       '&where=votes<120&where=votes>60&sort=votesum:asc'))
 
         eq((self.data.query('120 > votes > 60')
             .groupby('category', as_index=False)
