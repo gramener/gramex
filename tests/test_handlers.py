@@ -188,6 +188,9 @@ class TestDataHandler(TestGramex):
         def eq(a, b):
             return pdt.assert_frame_equal(a.reset_index(drop=True), b)
 
+        def eqdt(a, b):
+            return pdt.assert_frame_equal(a.reset_index(drop=True), b, check_dtype=False)
+
         # select, where, sort, offset, limit
         base = self.base + '/datastore/' + self.database + '/'
         eq(self.data[:5],
@@ -214,6 +217,32 @@ class TestDataHandler(TestGramex):
            pd.read_csv(base + 'csv/?_where=votes>100'))
         eq(self.data.query('150 > votes > 100'),
            pd.read_csv(base + 'csv/?_where=votes<150&_where=votes>100&xyz=8765'))
+
+        # Aggregation cases
+        eqdt((self.data.groupby('category', as_index=False)
+              .agg({'rating': max, 'votes': sum})
+              .rename(columns={'rating': 'ratemax', 'votes': 'votesum'})),
+             pd.read_csv(base + 'csv/?_groupby=category' +
+                         '&_agg=ratemax:max(rating)&_agg=votesum:sum(votes)'))
+
+        eqdt((self.data.query('120 > votes > 60')
+              .groupby('category', as_index=False)
+              .agg({'rating': max, 'votes': sum})
+              .rename(columns={'rating':'ratemax', 'votes':'votesum'})
+              .sort_values(by='votesum', ascending=True)),
+             pd.read_csv(base + 'csv/?_groupby=category' +
+                         '&_agg=ratemax:max(rating)&_agg=votesum:sum(votes)' +
+                         '&_where=votes<120&_where=votes>60&_sort=asc:votesum'))
+
+        eqdt((self.data.query('120 > votes > 60')
+              .groupby('category', as_index=False)
+              .agg({'rating': max, 'votes': sum})
+              .rename(columns={'rating':'ratemax', 'votes':'votesum'})
+              .loc[1:, ['category', 'votesum']]),
+             pd.read_csv(base + 'csv/?_groupby=category' +
+                         '&_agg=ratemax:max(rating)&_agg=votesum:sum(votes)' +
+                         '&_where=votes<120&_where=votes>60' +
+                         '&_select=category&_select=votesum&_offset=1'))
 
 
 class TestMysqlDataHandler(TestDataHandler):
@@ -295,6 +324,34 @@ class TestBlazeDataHandler(TestDataHandler):
            pd.read_csv(base + 'csv/?_where=votes>100'))
         eq(self.data.query('150 > votes > 100'),
            pd.read_csv(base + 'csv/?_where=votes<150&_where=votes>100&xyz=8765'))
+
+        # TODO like & notlike operators name~Brando  name!~Brando
+
+        # Aggregation cases
+        eq((self.data.groupby('category', as_index=False)
+            .agg({'rating': max, 'votes': sum})
+            .rename(columns={'rating': 'ratemax', 'votes': 'votesum'})),
+           pd.read_csv(base + 'csv/?_groupby=category' +
+                       '&_agg=ratemax:max(rating)&_agg=votesum:sum(votes)'))
+
+        eq((self.data.query('120 > votes > 60')
+            .groupby('category', as_index=False)
+            .agg({'rating': max, 'votes': sum})
+            .rename(columns={'rating':'ratemax', 'votes':'votesum'})
+            .sort_values(by='votesum', ascending=True)),
+           pd.read_csv(base + 'csv/?_groupby=category' +
+                       '&_agg=ratemax:max(rating)&_agg=votesum:sum(votes)' +
+                       '&_where=votes<120&_where=votes>60&_sort=asc:votesum'))
+
+        eq((self.data.query('120 > votes > 60')
+            .groupby('category', as_index=False)
+            .agg({'rating': max, 'votes': sum})
+            .rename(columns={'rating':'ratemax', 'votes':'votesum'})
+            .loc[1:, ['category', 'votesum']]),
+           pd.read_csv(base + 'csv/?_groupby=category' +
+                       '&_agg=ratemax:max(rating)&_agg=votesum:sum(votes)' +
+                       '&_where=votes<120&_where=votes>60' +
+                       '&_select=category&_select=votesum&_offset=1'))
 
 
 class TestBlazeMysqlDataHandler(TestMysqlDataHandler, TestBlazeDataHandler):
