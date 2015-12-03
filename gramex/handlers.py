@@ -309,13 +309,16 @@ class DataHandler(RequestHandler):
             qargs = self.request.arguments
             meta = sa.MetaData(bind=self.driver, reflect=True)
             table = meta.tables[self.params['table']]
-            _selects = qargs.get('select')
-            _wheres = qargs.get('where')
-            _groups = qargs.get('groupby')
-            _aggs = qargs.get('agg')
-            _sorts = qargs.get('sort')
-            _offsets = qargs.get('offset')
-            _limits = qargs.get('limit')
+
+            qdefault = self.params.get('default', {})
+            qquery = self.params.get('query', {})
+            _selects = qquery.get('select') or qargs.get('select') or qdefault.get('select')
+            _wheres = qquery.get('where') or qargs.get('where') or qdefault.get('where')
+            _groups = qquery.get('groupby') or qargs.get('groupby') or qdefault.get('groupby')
+            _aggs = qquery.get('agg') or qargs.get('agg') or qdefault.get('agg')
+            _sorts = qquery.get('sort') or qargs.get('sort') or qdefault.get('sort')
+            _offsets = qquery.get('offset') or qargs.get('offset') or qdefault.get('offset')
+            _limits = qquery.get('limit') or qargs.get('limit') or qdefault.get('limit')
 
             if _wheres:
                 wh_re = re.compile(r'(\w+)([=><|&~!]{1,2})(\w+)')
@@ -400,11 +403,17 @@ class DataHandler(RequestHandler):
             qargs = self.request.arguments
             table = bz.TableSymbol('table', bzcon.dshape)
             query = table
-            _selects = qargs.get('select')
-            _wheres = qargs.get('where')
-            _groups = qargs.get('groupby')
-            _aggs = qargs.get('agg')
-            _sorts = qargs.get('sort')
+
+            qdefault = self.params.get('default', {})
+            qquery = self.params.get('query', {})
+            _selects = qquery.get('select') or qargs.get('select') or qdefault.get('select')
+            _wheres = qquery.get('where') or qargs.get('where') or qdefault.get('where')
+            _groups = qquery.get('groupby') or qargs.get('groupby') or qdefault.get('groupby')
+            _aggs = qquery.get('agg') or qargs.get('agg') or qdefault.get('agg')
+            _sorts = qquery.get('sort') or qargs.get('sort') or qdefault.get('sort')
+            # hack
+            _offsets = qquery.get('offset') or qargs.get('offset') or qdefault.get('offset') or [None]
+            _limits = qquery.get('limit') or qargs.get('limit') or qdefault.get('limit') or [None]
 
             if _wheres:
                 wh_re = re.compile(r'(\w+)([=><|&~!]{1,2})(\w+)')
@@ -453,8 +462,8 @@ class DataHandler(RequestHandler):
                     sorts.append(col)
                 query = query.sort(sorts, ascending=order.get(odr, True))
 
-            offset = qargs.get('offset', [None])[0]
-            limit = qargs.get('limit', [None])[0]
+            offset = _offsets[0]
+            limit = _limits[0]
             if offset:
                 offset = int(offset)
             if limit:
