@@ -364,3 +364,23 @@ class TestBlazeMysqlDataHandler(TestMysqlDataHandler, TestBlazeDataHandler):
 
     def test_querydb(self):
         TestBlazeDataHandler.test_querydb(self)
+
+
+class TestDataHandlerConfig(TestDataHandler):
+    'Test gramex.handlers.DataHandler'
+    database = 'sqliteconfig'
+
+    def test_pingdb(self):
+        self.check('/datastore/%s/csv/' % (self.database), code=200)
+        self.check('/datastore/' + self.database + '/xyz', code=404)
+
+    def test_fetchdb(self):
+        pass
+
+    def test_querydb(self):
+        def eq(a, b):
+            return pdt.assert_frame_equal(a.reset_index(drop=True), b)
+
+        base = self.base + '/datastore/' + self.database + '/'
+        eq(self.data.query('votes < 120')[:5],
+           pd.read_csv(base + 'csv/?limit=5'))
