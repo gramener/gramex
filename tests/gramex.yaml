@@ -238,3 +238,17 @@ url:
       parameters: {encoding: utf8}
       headers:
         Content-Type: text/html
+
+  # TestDataHandlerConfig for Sqlite
+  data/sqliteconfig/csv:
+    pattern: /datastore/sqliteconfig/csv/
+    handler: gramex.handlers.DataHandler
+    kwargs:
+      driver: sqlalchemy
+      url: sqlite:///actors.db
+      table: actors
+      parameters: {encoding: utf8}
+      headers:
+        Content-Type: text/csv
+      default:
+        where: [votes<120]
