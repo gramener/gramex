@@ -370,17 +370,36 @@ class TestDataHandlerConfig(TestDataHandler):
     'Test gramex.handlers.DataHandler'
     database = 'sqliteconfig'
 
-    def test_pingdb(self):
-        self.check('/datastore/%s/csv/' % (self.database), code=200)
-        self.check('/datastore/' + self.database + '/xyz', code=404)
+    def test_pingdb(self): pass
 
-    def test_fetchdb(self):
-        pass
+    def test_fetchdb(self): pass
 
     def test_querydb(self):
         def eq(a, b):
             return pdt.assert_frame_equal(a.reset_index(drop=True), b)
 
-        base = self.base + '/datastore/' + self.database + '/'
+        def dbcase(case):
+            return '%s/datastore/%s%s/' % (self.base, self.database, case)
+
         eq(self.data.query('votes < 120')[:5],
-           pd.read_csv(base + 'csv/?limit=5'))
+           pd.read_csv(dbcase(1) + 'csv/?limit=5'))
+        eq(self.data.query('votes > 120')[:5],
+           pd.read_csv(dbcase(1) + 'csv/?where=votes>120&limit=5'))
+        eq(self.data.query('votes < 120')[:5],
+           pd.read_csv(dbcase(2) + 'csv/?limit=5'))
+        eq(self.data.query('votes < 120')[:5],
+           pd.read_csv(dbcase(3) + 'csv/?limit=5'))
+        eq(self.data.query('votes < 120')[:5],
+           pd.read_csv(dbcase(3) + 'csv/?where=votes>120&limit=5'))
+        eq(self.data.query('votes < 120').loc[:, ['rating', 'votes']],
+           pd.read_csv(dbcase(4) + 'csv/?where=votes>120' +
+                       '&select=rating&select=votes'))
+        eq(self.data.query('votes < 120').loc[:, ['rating', 'votes']],
+           pd.read_csv(dbcase(5) + 'csv/?where=votes>120' +
+                       '&select=rating&select=votes'))
+        eq((self.data.query('votes < 120')
+            .groupby('category', as_index=False)
+            .agg({'rating': pd.np.mean, 'votes': pd.Series.nunique})
+            .rename(columns={'rating':'ratemean', 'votes':'votenu'})
+            .loc[:, ['category', 'votenu']]),
+           pd.read_csv(dbcase(6) + 'csv/'))
