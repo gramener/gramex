@@ -397,7 +397,7 @@ class TestDataHandlerConfig(TestDataHandler):
         eq(self.data.query('votes < 120').loc[:, ['rating', 'votes']],
            pd.read_csv(dbcase(5) + 'csv/?where=votes>120' +
                        '&select=rating&select=votes'))
-        eq((self.data.query('votes < 120')
+        eq((self.data.query('votes < 120 and rating > 0.4')
             .groupby('category', as_index=False)
             .agg({'rating': pd.np.mean, 'votes': pd.Series.nunique})
             .rename(columns={'rating':'ratemean', 'votes':'votenu'})

@@ -319,3 +319,4 @@ url:
           votenu: nunique(votes)
         where:
           votes: "<120"
+          rating: ">0.4"
