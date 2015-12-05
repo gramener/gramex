@@ -339,7 +339,7 @@ class DataHandler(RequestHandler):
             table = meta.tables[args['table']]
 
             if _wheres:
-                wh_re = re.compile(r'([a-zA-Z0-9.]*)([=><|&~!]{1,2})([a-zA-Z0-9.]*)')
+                wh_re = re.compile(r'([^=><~!]+)([=><~!]{1,2})([^=><~!]+)')
                 wheres = []
                 for where in _wheres:
                     match = wh_re.search(where)
@@ -371,7 +371,7 @@ class DataHandler(RequestHandler):
                 safuncs = {'min': sa.func.min, 'max': sa.func.max,
                            'sum': sa.func.sum, 'count': sa.func.count,
                            'mean': sa.func.avg, 'nunique': sa.func.count}
-                agg_re = re.compile(r'([a-zA-Z0-9.]*)\:([a-zA-Z0-9.]*)\(([a-zA-Z0-9.]*)\)')
+                agg_re = re.compile(r'([^:]+):([aA-zZ]+)\(([^:]+)\)')
                 for agg in _aggs:
                     match = agg_re.search(agg)
                     if match is None:
@@ -416,7 +416,8 @@ class DataHandler(RequestHandler):
             '''TODO: Not caching blaze connections
             '''
             parameters = args.get('parameters', {})
-            bzcon = bz.Data(args['url'] + '::' + args['table'],
+            bzcon = bz.Data(args['url'] +
+                            ('::' + args['table'] if args.get('table') else ''),
                             **parameters)
             table = bz.TableSymbol('table', bzcon.dshape)
             query = table
@@ -426,7 +427,7 @@ class DataHandler(RequestHandler):
             _limits = _limits or [None]
 
             if _wheres:
-                wh_re = re.compile(r'([a-zA-Z0-9.]*)([=><|&~!]{1,2})([a-zA-Z0-9.]*)')
+                wh_re = re.compile(r'([^=><~!]+)([=><~!]{1,2})([^=><~!]+)')
                 wheres = None
                 for where in _wheres:
                     match = wh_re.search(where)
@@ -453,7 +454,7 @@ class DataHandler(RequestHandler):
                 byaggs = {'min': bz.min, 'max': bz.max,
                           'sum': bz.sum, 'count': bz.count,
                           'mean': bz.mean, 'nunique': bz.nunique}
-                agg_re = re.compile(r'([a-zA-Z0-9.]*)\:([a-zA-Z0-9.]*)\(([a-zA-Z0-9.]*)\)')
+                agg_re = re.compile(r'([^:]+):([aA-zZ]+)\(([^:]+)\)')
                 grps = bz.merge(*[query[col] for col in _groups])
                 aggs = {}
                 for agg in _aggs:

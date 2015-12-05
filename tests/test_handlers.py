@@ -269,6 +269,7 @@ class TestMysqlDataHandler(TestDataHandler):
 
 
 class TestPostgresDataHandler(TestDataHandler):
+    'Test gramex.handlers.DataHandler for PostgreSQL database via sqlalchemy driver'
     database = 'postgresql'
     engine = sa.create_engine('postgresql://postgres@localhost/postgres')
     @classmethod
@@ -297,7 +298,7 @@ class TestPostgresDataHandler(TestDataHandler):
 
 
 class TestBlazeDataHandler(TestDataHandler):
-    'Test gramex.handlers.DataHandler'
+    'Test gramex.handlers.DataHandler for SQLite database via blaze driver'
     database = 'blazesqlite'
 
     def test_querydb(self):
@@ -359,7 +360,7 @@ class TestBlazeDataHandler(TestDataHandler):
 
 
 class TestBlazeMysqlDataHandler(TestMysqlDataHandler, TestBlazeDataHandler):
-    'Test gramex.handlers.DataHandler'
+    'Test gramex.handlers.DataHandler for MySQL database via blaze driver'
     database = 'blazemysql'
 
     def test_querydb(self):
