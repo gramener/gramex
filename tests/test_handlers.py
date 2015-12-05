@@ -269,6 +269,7 @@ class TestMysqlDataHandler(TestDataHandler):
 
 
 class TestPostgresDataHandler(TestDataHandler):
+    'Test gramex.handlers.DataHandler for PostgreSQL database via sqlalchemy driver'
     database = 'postgresql'
     engine = sa.create_engine('postgresql://postgres@localhost/postgres')
     @classmethod
@@ -297,7 +298,7 @@ class TestPostgresDataHandler(TestDataHandler):
 
 
 class TestBlazeDataHandler(TestDataHandler):
-    'Test gramex.handlers.DataHandler'
+    'Test gramex.handlers.DataHandler for SQLite database via blaze driver'
     database = 'blazesqlite'
 
     def test_querydb(self):
@@ -359,8 +360,47 @@ class TestBlazeDataHandler(TestDataHandler):
 
 
 class TestBlazeMysqlDataHandler(TestMysqlDataHandler, TestBlazeDataHandler):
-    'Test gramex.handlers.DataHandler'
+    'Test gramex.handlers.DataHandler for MySQL database via blaze driver'
     database = 'blazemysql'
 
     def test_querydb(self):
         TestBlazeDataHandler.test_querydb(self)
+
+
+class TestDataHandlerConfig(TestDataHandler):
+    'Test gramex.handlers.DataHandler'
+    database = 'sqliteconfig'
+
+    def test_pingdb(self): pass
+
+    def test_fetchdb(self): pass
+
+    def test_querydb(self):
+        def eq(a, b):
+            return pdt.assert_frame_equal(a.reset_index(drop=True), b)
+
+        def dbcase(case):
+            return '%s/datastore/%s%s/' % (self.base, self.database, case)
+
+        eq(self.data.query('votes < 120')[:5],
+           pd.read_csv(dbcase(1) + 'csv/?limit=5'))
+        eq(self.data.query('votes > 120')[:5],
+           pd.read_csv(dbcase(1) + 'csv/?where=votes>120&limit=5'))
+        eq(self.data.query('votes < 120')[:5],
+           pd.read_csv(dbcase(2) + 'csv/?limit=5'))
+        eq(self.data.query('votes < 120')[:5],
+           pd.read_csv(dbcase(3) + 'csv/?limit=5'))
+        eq(self.data.query('votes < 120')[:5],
+           pd.read_csv(dbcase(3) + 'csv/?where=votes>120&limit=5'))
+        eq(self.data.query('votes < 120').loc[:, ['rating', 'votes']],
+           pd.read_csv(dbcase(4) + 'csv/?where=votes>120' +
+                       '&select=rating&select=votes'))
+        eq(self.data.query('votes < 120').loc[:, ['rating', 'votes']],
+           pd.read_csv(dbcase(5) + 'csv/?where=votes>120' +
+                       '&select=rating&select=votes'))
+        eq((self.data.query('votes < 120 and rating > 0.4')
+            .groupby('category', as_index=False)
+            .agg({'rating': pd.np.mean, 'votes': pd.Series.nunique})
+            .rename(columns={'rating':'ratemean', 'votes':'votenu'})
+            .loc[:, ['category', 'votenu']]),
+           pd.read_csv(dbcase(6) + 'csv/'))

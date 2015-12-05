@@ -238,3 +238,85 @@ url:
       parameters: {encoding: utf8}
       headers:
         Content-Type: text/html
+
+  # TestDataHandlerConfig for Sqlite
+  data/sqliteconfig1/csv:
+    pattern: /datastore/sqliteconfig1/csv/
+    handler: gramex.handlers.DataHandler
+    kwargs:
+      driver: sqlalchemy
+      url: sqlite:///actors.db
+      table: actors
+      headers:
+        Content-Type: text/csv
+      default:
+        where: [votes<120]
+  data/sqliteconfig2/csv:
+    pattern: /datastore/sqliteconfig2/csv/
+    handler: gramex.handlers.DataHandler
+    kwargs:
+      driver: sqlalchemy
+      url: sqlite:///actors.db
+      table: actors
+      headers:
+        Content-Type: text/csv
+      default:
+        where: votes<120
+  data/sqliteconfig3/csv:
+    pattern: /datastore/sqliteconfig3/csv/
+    handler: gramex.handlers.DataHandler
+    kwargs:
+      driver: sqlalchemy
+      url: sqlite:///actors.db
+      table: actors
+      headers:
+        Content-Type: text/csv
+      query:
+        where: votes<120
+  data/sqliteconfig4/csv:
+    pattern: /datastore/sqliteconfig4/csv/
+    handler: gramex.handlers.DataHandler
+    kwargs:
+      driver: sqlalchemy
+      url: sqlite:///actors.db
+      table: actors
+      headers:
+        Content-Type: text/csv
+      default:
+        select: ["rating", "votes"]
+      query:
+        where: votes<120
+  data/sqliteconfig5/csv:
+    pattern: /datastore/sqliteconfig5/csv/
+    handler: gramex.handlers.DataHandler
+    kwargs:
+      driver: sqlalchemy
+      url: sqlite:///actors.db
+      table: actors
+      headers:
+        Content-Type: text/csv
+      default:
+        select:
+          rating: "any-value"
+          votes:
+      query:
+        where: votes<120
+  data/sqliteconfig6/csv:
+    pattern: /datastore/sqliteconfig6/csv/
+    handler: gramex.handlers.DataHandler
+    kwargs:
+      driver: blaze
+      url: sqlite:///actors.db
+      table: actors
+      headers:
+        Content-Type: text/csv
+      default:
+        select: ["category", "votenu"]
+        groupby: "category"
+      query:
+        agg:
+          ratemean: mean(rating)
+          votenu: nunique(votes)
+        where:
+          votes: "<120"
+          rating: ">0.4"

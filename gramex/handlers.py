@@ -300,25 +300,46 @@ class DataHandler(RequestHandler):
         args = AttrDict(self.params)
         key = yaml.dump(args)
 
+        qargs = self.request.arguments
+        qconfig = {'query': args.get('query', {}),
+                   'default': args.get('default', {})}
+        delims = {'agg': ':', 'sort': ':', 'where': ''}
+        nojoins = ['select', 'groupby']
+
+        for q in qconfig:
+            if qconfig[q]:
+                tmp = AttrDict()
+                for key in qconfig[q].keys():
+                    val = qconfig[q][key]
+                    if isinstance(val, list):
+                        tmp[key] = val
+                    elif isinstance(val, dict):
+                        tmp[key] = [k if key in nojoins
+                                    else k + delims[key] + v
+                                    for k, v in val.items()]
+                    elif isinstance(val, (str, int)):
+                        tmp[key] = [val]
+                qconfig[q] = tmp
+
+        def getq(key):
+            return qconfig['query'].get(key) or qargs.get(key) or qconfig['default'].get(key)
+
+        _selects, _wheres = getq('select'), getq('where')
+        _groups, _aggs = getq('groupby'), getq('agg')
+        _offsets, _limits = getq('offset'), getq('limit')
+        _sorts = getq('sort')
+
         if args.driver == 'sqlalchemy':
             if key not in drivers:
                 parameters = args.get('parameters', {})
-                drivers[key] = sa.create_engine(self.params['url'], **parameters)
+                drivers[key] = sa.create_engine(args['url'], **parameters)
             self.driver = drivers[key]
 
-            qargs = self.request.arguments
             meta = sa.MetaData(bind=self.driver, reflect=True)
-            table = meta.tables[self.params['table']]
-            _selects = qargs.get('select')
-            _wheres = qargs.get('where')
-            _groups = qargs.get('groupby')
-            _aggs = qargs.get('agg')
-            _sorts = qargs.get('sort')
-            _offsets = qargs.get('offset')
-            _limits = qargs.get('limit')
+            table = meta.tables[args['table']]
 
             if _wheres:
-                wh_re = re.compile(r'(\w+)([=><|&~!]{1,2})(\w+)')
+                wh_re = re.compile(r'([^=><~!]+)([=><~!]{1,2})([^=><~!]+)')
                 wheres = []
                 for where in _wheres:
                     match = wh_re.search(where)
@@ -350,7 +371,7 @@ class DataHandler(RequestHandler):
                 safuncs = {'min': sa.func.min, 'max': sa.func.max,
                            'sum': sa.func.sum, 'count': sa.func.count,
                            'mean': sa.func.avg, 'nunique': sa.func.count}
-                agg_re = re.compile(r'(\w+)\:(\w+)\((\w+)\)')
+                agg_re = re.compile(r'([^:]+):([aA-zZ]+)\(([^:]+)\)')
                 for agg in _aggs:
                     match = agg_re.search(agg)
                     if match is None:
@@ -395,19 +416,18 @@ class DataHandler(RequestHandler):
             '''TODO: Not caching blaze connections
             '''
             parameters = args.get('parameters', {})
-            bzcon = bz.Data(self.params['url'] + '::' + self.params['table'],
+            bzcon = bz.Data(args['url'] +
+                            ('::' + args['table'] if args.get('table') else ''),
                             **parameters)
-            qargs = self.request.arguments
             table = bz.TableSymbol('table', bzcon.dshape)
             query = table
-            _selects = qargs.get('select')
-            _wheres = qargs.get('where')
-            _groups = qargs.get('groupby')
-            _aggs = qargs.get('agg')
-            _sorts = qargs.get('sort')
+
+            # hack
+            _offsets = _offsets or [None]
+            _limits = _limits or [None]
 
             if _wheres:
-                wh_re = re.compile(r'(\w+)([=><|&~!]{1,2})(\w+)')
+                wh_re = re.compile(r'([^=><~!]+)([=><~!]{1,2})([^=><~!]+)')
                 wheres = None
                 for where in _wheres:
                     match = wh_re.search(where)
@@ -434,7 +454,7 @@ class DataHandler(RequestHandler):
                 byaggs = {'min': bz.min, 'max': bz.max,
                           'sum': bz.sum, 'count': bz.count,
                           'mean': bz.mean, 'nunique': bz.nunique}
-                agg_re = re.compile(r'(\w+)\:(\w+)\((\w+)\)')
+                agg_re = re.compile(r'([^:]+):([aA-zZ]+)\(([^:]+)\)')
                 grps = bz.merge(*[query[col] for col in _groups])
                 aggs = {}
                 for agg in _aggs:
@@ -453,8 +473,8 @@ class DataHandler(RequestHandler):
                     sorts.append(col)
                 query = query.sort(sorts, ascending=order.get(odr, True))
 
-            offset = qargs.get('offset', [None])[0]
-            limit = qargs.get('limit', [None])[0]
+            offset = _offsets[0]
+            limit = _limits[0]
             if offset:
                 offset = int(offset)
             if limit:
@@ -474,14 +494,14 @@ class DataHandler(RequestHandler):
             raise NotImplementedError('driver=%s is not supported yet.' % args.driver)
 
 
-        for header_name, header_value in self.params['headers'].items():
+        for header_name, header_value in args['headers'].items():
             self.set_header(header_name, header_value)
 
-        if self.params['headers']['Content-Type'] == 'application/json':
+        if args['headers']['Content-Type'] == 'application/json':
             self.content = self.result.to_json(orient='records')
-        if self.params['headers']['Content-Type'] == 'text/html':
+        if args['headers']['Content-Type'] == 'text/html':
             self.content = self.result.to_html()
-        if self.params['headers']['Content-Type'] == 'text/csv':
+        if args['headers']['Content-Type'] == 'text/csv':
             self.content = self.result.to_csv(index=False)
             self.set_header("Content-Disposition", "attachment;filename=file.csv")
 
