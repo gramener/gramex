@@ -15,6 +15,10 @@ Install
 2. Download |Gramex|_
 3. Install by typing ``pip install gramex-1.0.3.zip``
 
+To set up the master branch, run::
+
+    source <(wget -qO- http://code.gramener.com/s.anand/gramex/raw/master/setup.sh)
+
 Uninstall
 ~~~~~~~~~
 
