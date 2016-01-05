@@ -251,14 +251,14 @@ class TestMysqlDataHandler(TestDataHandler):
     # The parent TestDataHandler executes test cases for sqlite;
     # This class overwrites few of it properties to test it in MySQL
     database = 'mysql'
-    engine = sa.create_engine('mysql+pymysql://root@localhost/')
 
     @classmethod
     def setUpClass(self):
+        self.engine = sa.create_engine('mysql://root@localhost/')
         try:
             self.engine.execute("CREATE DATABASE test_datahandler")
             self.engine.dispose()
-            self.engine = sa.create_engine('mysql+pymysql://root@localhost/test_datahandler')
+            self.engine = sa.create_engine('mysql://root@localhost/test_datahandler')
             self.data.to_sql('actors', con=self.engine, index=False)
         except sa.exc.OperationalError:
             raise SkipTest('Unable to connect to MySQL database')
@@ -272,10 +272,10 @@ class TestMysqlDataHandler(TestDataHandler):
 class TestPostgresDataHandler(TestDataHandler):
     'Test gramex.handlers.DataHandler for PostgreSQL database via sqlalchemy driver'
     database = 'postgresql'
-    engine = sa.create_engine('postgresql://postgres@localhost/postgres')
 
     @classmethod
     def setUpClass(self):
+        self.engine = sa.create_engine('postgresql://postgres@localhost/postgres')
         try:
             conn = self.engine.connect()
             conn.execute('commit')
