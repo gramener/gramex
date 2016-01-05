@@ -455,7 +455,7 @@ class DataHandler(RequestHandler):
                           'sum': bz.sum, 'count': bz.count,
                           'mean': bz.mean, 'nunique': bz.nunique}
                 agg_re = re.compile(r'([^:]+):([aA-zZ]+)\(([^:]+)\)')
-                grps = bz.merge(*[query[col] for col in _groups])
+                grps = bz.merge(*[query[group] for group in _groups])
                 aggs = {}
                 for agg in _aggs:
                     match = agg_re.search(agg)
@@ -492,7 +492,6 @@ class DataHandler(RequestHandler):
 
         else:
             raise NotImplementedError('driver=%s is not supported yet.' % args.driver)
-
 
         for header_name, header_value in args['headers'].items():
             self.set_header(header_name, header_value)

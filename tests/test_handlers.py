@@ -230,7 +230,7 @@ class TestDataHandler(TestGramex):
         eqdt((self.data.query('120 > votes > 60')
               .groupby('category', as_index=False)
               .agg({'rating': 'max', 'votes': 'count'})
-              .rename(columns={'rating':'ratemax', 'votes':'votecount'})
+              .rename(columns={'rating': 'ratemax', 'votes': 'votecount'})
               .sort_values(by='votecount', ascending=True)),
              pd.read_csv(base + 'csv/?groupby=category' +
                          '&agg=ratemax:max(rating)&agg=votecount:count(votes)' +
@@ -239,7 +239,7 @@ class TestDataHandler(TestGramex):
         eqdt((self.data.query('120 > votes > 60')
               .groupby('category', as_index=False)
               .agg({'rating': pd.np.mean, 'votes': pd.Series.nunique})
-              .rename(columns={'rating':'ratemean', 'votes':'votenu'})
+              .rename(columns={'rating': 'ratemean', 'votes': 'votenu'})
               .loc[1:, ['category', 'votenu']]),
              pd.read_csv(base + 'csv/?groupby=category' +
                          '&agg=ratemean:mean(rating)&agg=votenu:nunique(votes)' +
@@ -252,6 +252,7 @@ class TestMysqlDataHandler(TestDataHandler):
     # This class overwrites few of it properties to test it in MySQL
     database = 'mysql'
     engine = sa.create_engine('mysql+pymysql://root@localhost/')
+
     @classmethod
     def setUpClass(self):
         try:
@@ -272,6 +273,7 @@ class TestPostgresDataHandler(TestDataHandler):
     'Test gramex.handlers.DataHandler for PostgreSQL database via sqlalchemy driver'
     database = 'postgresql'
     engine = sa.create_engine('postgresql://postgres@localhost/postgres')
+
     @classmethod
     def setUpClass(self):
         try:
@@ -291,7 +293,8 @@ class TestPostgresDataHandler(TestDataHandler):
         conn = self.engine.connect()
         conn.execute('commit')
         # Terminate all other sessions using the test_datahandler database
-        conn.execute("SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname='test_datahandler'")
+        conn.execute("SELECT pg_terminate_backend(pid) FROM pg_stat_activity "
+                     "WHERE datname='test_datahandler'")
         conn.execute('DROP DATABASE test_datahandler')
         conn.close()
         self.engine.dispose()
@@ -342,7 +345,7 @@ class TestBlazeDataHandler(TestDataHandler):
         eq((self.data.query('120 > votes > 60')
             .groupby('category', as_index=False)
             .agg({'rating': 'max', 'votes': 'count'})
-            .rename(columns={'rating':'ratemax', 'votes':'votecount'})
+            .rename(columns={'rating': 'ratemax', 'votes': 'votecount'})
             .sort_values(by='votecount', ascending=True)),
            pd.read_csv(base + 'csv/?groupby=category' +
                        '&agg=ratemax:max(rating)&agg=votecount:count(votes)' +
@@ -351,7 +354,7 @@ class TestBlazeDataHandler(TestDataHandler):
         eq((self.data.query('120 > votes > 60')
             .groupby('category', as_index=False)
             .agg({'rating': pd.np.mean, 'votes': pd.Series.nunique})
-            .rename(columns={'rating':'ratemean', 'votes':'votenu'})
+            .rename(columns={'rating': 'ratemean', 'votes': 'votenu'})
             .loc[1:, ['category', 'votenu']]),
            pd.read_csv(base + 'csv/?groupby=category' +
                        '&agg=ratemean:mean(rating)&agg=votenu:nunique(votes)' +
@@ -401,6 +404,6 @@ class TestDataHandlerConfig(TestDataHandler):
         eq((self.data.query('votes < 120 and rating > 0.4')
             .groupby('category', as_index=False)
             .agg({'rating': pd.np.mean, 'votes': pd.Series.nunique})
-            .rename(columns={'rating':'ratemean', 'votes':'votenu'})
+            .rename(columns={'rating': 'ratemean', 'votes': 'votenu'})
             .loc[:, ['category', 'votenu']]),
            pd.read_csv(dbcase(6) + 'csv/'))
