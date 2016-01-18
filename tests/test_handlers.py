@@ -267,6 +267,7 @@ class TestMysqlDataHandler(TestDataHandler):
     def setUpClass(self):
         self.engine = sa.create_engine('mysql+pymysql://root@localhost/')
         try:
+            self.engine.execute("DROP DATABASE IF EXISTS test_datahandler")
             self.engine.execute("CREATE DATABASE test_datahandler")
             self.engine.dispose()
             self.engine = sa.create_engine('mysql+pymysql://root@localhost/test_datahandler')
@@ -289,6 +290,8 @@ class TestPostgresDataHandler(TestDataHandler):
         self.engine = sa.create_engine('postgresql://postgres@localhost/postgres')
         try:
             conn = self.engine.connect()
+            conn.execute('commit')
+            conn.execute('DROP DATABASE IF EXISTS test_datahandler')
             conn.execute('commit')
             conn.execute('CREATE DATABASE test_datahandler')
             conn.close()
