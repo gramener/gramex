@@ -37,8 +37,10 @@ mkdir -p $TMP/gramex
 wget http://code.gramener.com/s.anand/gramex/repository/archive.tar.bz2?ref=dev -O $TMP/gramex.tar.bz2
 tar -xjf $TMP/gramex.tar.bz2 -C $TMP/gramex --strip-components 1
 
-# Install Gramex. (If it was already installed, pip will upgrade)
-pip install --upgrade $TMP/gramex
+# Install Gramex. (If it was already installed, pip will upgrade.)
+# --ignore-installed is added to work around a setuptools bug
+# https://github.com/pypa/pip/issues/2751#issuecomment-165390180
+pip install --upgrade --ignore-installed $TMP/gramex
 
 # Inform the user
 # -------------------------------------

@@ -10,14 +10,20 @@ Install
 
 .. _Anaconda: http://continuum.io/downloads
 .. _Gramex: https://learn.gramener.com/downloads/release/gramex-1.0.3.zip
+.. _update Anaconda: http://docs.continuum.io/anaconda/install#updating-from-older-anaconda-versions
+.. _XCode: https://developer.apple.com/xcode/download/
 
-1. Download and install `Anaconda`_.
-2. Download |Gramex|_
-3. Install by typing ``pip install gramex-1.0.3.zip``
-
-To set up the master branch, run::
+On Linux, run this command to set up Gramex (replace ``master`` with ``dev`` for
+the latest version)::
 
     source <(wget -qO- http://code.gramener.com/s.anand/gramex/raw/master/setup.sh)
+
+On any system:
+
+1. Download and install `Anaconda`_ (2.4.1 or later -- `update Anaconda`_ if required)
+2. On a Mac, download and install `XCode`_
+3. Download |Gramex|_
+4. Install by typing ``pip install --upgrade --ignore-installed gramex-1.0.3.zip``
 
 Uninstall
 ~~~~~~~~~
@@ -57,12 +63,15 @@ default. You may also run Gramex via ``python -m gramex``.
 
 For usage instructions, visit https://learn.gramener.com/gramex/
 
-If this does not work:
+### Troubleshooting
+
+If Gramex is not running:
 
 - Make sure that typing ``gramex`` runs the |Gramex| executable, and is
-  not aliased to a different command
-- Make sure no other packages or modules named ``gramex`` are in your
-  ``PYTHONPATH`` environment variable
+  not aliased to a different command.
+- Make sure Gramex 0.x (or any other module named ``gramex``) is **NOT** in your
+  ``PYTHONPATH``. Run ``python -c "import gramex;print gramex.__file__"`` and
+  confirm that this is where the latest Gramex was installed.
 
 License
 -------

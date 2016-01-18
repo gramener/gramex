@@ -254,11 +254,11 @@ class TestMysqlDataHandler(TestDataHandler):
 
     @classmethod
     def setUpClass(self):
-        self.engine = sa.create_engine('mysql://root@localhost/')
+        self.engine = sa.create_engine('mysql+pymysql://root@localhost/')
         try:
             self.engine.execute("CREATE DATABASE test_datahandler")
             self.engine.dispose()
-            self.engine = sa.create_engine('mysql://root@localhost/test_datahandler')
+            self.engine = sa.create_engine('mysql+pymysql://root@localhost/test_datahandler')
             self.data.to_sql('actors', con=self.engine, index=False)
         except sa.exc.OperationalError:
             raise SkipTest('Unable to connect to MySQL database')

@@ -38,7 +38,7 @@ Building Gramex
 Gramex runs on Python 2.7+ and Python 3.4+ in Windows and Linux.
 To set up the development environment:
 
-1. Install `Anaconda <http://continuum.io/downloads>`__
+1. Install `Anaconda <http://continuum.io/downloads>`__ (version 2.4 or higher)
 2. Install `node.js <https://nodejs.org/>`__. Then install `bower <http://bower.io/>`__::
 
       npm install -g bower
