@@ -57,14 +57,19 @@ class FunctionHandler(RequestHandler):
 
     Now, you can use this configuration::
 
-        function: calculations.total
-        args: [100, 200.0, 300.00]
-        headers:
-          Content-Type: application/json
+        url:
+          total:
+            pattern: /total                             # The URL /total
+            handler: gramex.handlers.FunctionHandler    # Runs a function
+            kwargs:
+              function: calculations.total              # calculations.total(100, 200.0)
+              args: [100, 200.0]
+              headers:
+                Content-Type: application/json          # Returns the result as JSON
 
     ... to get this result in JSON::
 
-        {"display": "$600.00", "value": 600.0}
+        {"display": "$300.00", "value": 300.0}
 
     If no ``args`` is specified, the Tornado `RequestHandler`_ is passed as the
     only positional argument. For example, in ``calculations.py``, add::
@@ -79,6 +84,24 @@ class FunctionHandler(RequestHandler):
         function: calculations.add
 
     ... takes the URL ``?x=1&x=2&x=3`` to add up 1, 2, 3 and display ``6.0``.
+
+    You can pass the handler along with custom arguments. The string
+    ``'handler'`` is replaced by the RequestHandler. For example::
+
+        url:
+          method:
+            pattern: /method                       # The URL /method
+            handler: gramex.handlers.FunctionHandler    # Runs a function
+            kwargs:
+              function: calculations.method
+              args:
+                  - handler           # This is replaced with the RequestHandler
+                  - 10
+              kwargs:
+                  h: handler          # This is replaced with the RequestHandler
+                  val: 0
+
+    ... calls ``calculations.method(handler, 10, h=handler, val=0)``.
 
     You can specify wildcards in the URL pattern. For example::
 
@@ -98,8 +121,10 @@ class FunctionHandler(RequestHandler):
 
     To redirect to a different URL when the function is done, use ``redirect``::
 
-        function: module.calculation      # Run module.calculation(handler)
-        redirect: /                       # and redirect to / thereafter
+        url:
+          lookup:
+            function: calculation.run     # Run calculation.run(handler)
+            redirect: /                   # and redirect to / thereafter
     '''
     def initialize(self, **kwargs):
         self.function = build_transform(kwargs, vars='handler')
@@ -151,8 +176,8 @@ class DirectoryHandler(RequestHandler):
 
         ``kwargs``:
             an optional list of keyword arguments to be passed to the function.
-            ``handler`` and ``content`` are replaced with the RequestHandler and
-            file contents respectively.
+            A value with of ``handler`` and ``content`` is replaced with the
+            RequestHandler and file contents respectively.
 
         ``headers``:
             HTTP headers to set on the response.

@@ -69,6 +69,17 @@ class TestGramex(unittest.TestCase):
         self.check('/path/priority', text='/path/priority')
 
 
+class TestFunctionHandler(TestGramex):
+    'Test gramex.handlers.FunctionHandler'
+
+    def test_args(self):
+        'Test arguments'
+        self.check('/func/args', text='{"args": [0, 1], "kwargs": {"a": "a", "b": "b"}}')
+        self.check('/func/handler', text='{"args": ["Handler"], "kwargs": {}')
+        self.check('/func/composite',
+                   text='{"args": [0, "Handler"], "kwargs": {"a": "a", "handler": "Handler"}}')
+
+
 class TestDirectoryHandler(TestGramex):
     'Test gramex.handlers.DirectoryHandler'
 

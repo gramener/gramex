@@ -10,6 +10,33 @@ url:
   pathdepth4: {pattern: "/path/dir/file", handler: "gramex.handlers.FunctionHandler", kwargs: {function: "str", args: ["/path/dir/file"], }}
   pathdepth5: {pattern: "/path/priority", priority: 1, handler: "gramex.handlers.FunctionHandler", kwargs: {function: "str", args: ["/path/priority"], }}
 
+  # TestFunctionHandler
+  func/args:
+    pattern: /func/args
+    handler: gramex.handlers.FunctionHandler
+    kwargs:
+      function: utils.params_as_json
+      args: [0, 1]
+      kwargs:
+        a: "a"
+        b: "b"
+
+  func/handler:
+    pattern: /func/handler
+    handler: gramex.handlers.FunctionHandler
+    kwargs:
+      function: utils.params_as_json
+
+  func/composite:
+    pattern: /func/composite
+    handler: gramex.handlers.FunctionHandler
+    kwargs:
+      function: utils.params_as_json
+      args: [0, handler]
+      kwargs:
+        a: "a"
+        handler: "handler"
+
   # TestDirectoryHandler
   dir/noindex:
     pattern: /dir/noindex/(.*)
