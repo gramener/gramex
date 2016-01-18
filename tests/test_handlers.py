@@ -13,11 +13,6 @@ from orderedattrdict import AttrDict
 from nose.plugins.skip import SkipTest
 from gramex.transforms import badgerfish
 
-try:
-    from StringIO import StringIO
-except ImportError:
-    from io import StringIO
-
 info = AttrDict(
     folder=Path(__file__).absolute().parent,
     process=None,
@@ -160,28 +155,21 @@ class TestDirectoryHandler(TestGramex):
 class TestDataHandler(TestGramex):
     'Test gramex.handlers.DataHandler'
     database = 'sqlite'
-    data = pd.read_csv(StringIO(
-        """category,name,rating,votes
-        Actors,Humphrey Bogart,0.57019677,109
-        Actors,Cary Grant,0.438601513,142
-        Actors,James Stewart,0.988373838,120
-        Actors,Marlon Brando,0.102044811,108
-        Actors,Fred Astaire,0.208876756,84
-        Actresses,Katharine Hepburn,0.039187792,63
-        Actresses,Bette Davis,0.282806963,14
-        Actresses,Audrey Hepburn,0.120196561,94
-        Actresses,Ingrid Bergman,0.296140198,52
-        Actors,Spencer Tracy,0.466310773,192
-        Actors,Charlie Chaplin,0.244425592,76"""), skipinitialspace=True)
+    folder = Path(__file__).absolute().parent
+    data = pd.read_csv(str(folder / 'actors.csv'))
 
     @classmethod
     def setUpClass(self):
-        engine = sa.create_engine('sqlite:///tests/actors.db')
-        self.data.to_sql('actors', con=engine, index=False)
+        self.db = self.folder / 'actors.db'
+        if self.db.is_file():
+            self.db.unlink()
+        self.engine = sa.create_engine('sqlite:///' + str(self.db))
+        self.data.to_sql('actors', con=self.engine, index=False)
 
     @classmethod
     def tearDownClass(self):
-        os.remove('tests/actors.db')
+        if self.db.is_file():
+            self.db.unlink()
 
     def test_pingdb(self):
         for frmt in ['csv', 'json', 'html']:

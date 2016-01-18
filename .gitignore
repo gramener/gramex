@@ -20,6 +20,7 @@ docs/modules.rst
 
 # Data files. Try not to commit data into the repo
 *.csv
+!tests/actors.csv
 *.dat
 *.mdb
 
