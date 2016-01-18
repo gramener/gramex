@@ -3,6 +3,16 @@
 History
 -------
 
+1.0.3 (2016-01-18)
+~~~~~~~~~~~~~~~~~~
+
+* Implement :ref:`DataHandler` that displays data from databases (via
+  `SQLAlchemy <http://www.sqlalchemy.org/>`__ and `Blaze <http://blaze.pydata.org/>`__)
+* :ref:`DirectoryHandler`:
+    - lets gramex.yaml specify input file encoding (defaults to UTF-8)
+    - takes both content as well as the handler as input
+* gramex.yaml URL priority can be specified explicitly using ``priority:``
+
 1.0.2 (2015-10-11)
 ~~~~~~~~~~~~~~~~~~
 
