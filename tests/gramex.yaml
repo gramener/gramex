@@ -347,3 +347,27 @@ url:
         where:
           votes: "<120"
           rating: ">0.4"
+
+# Store Gramex logs in gramex.log
+log:
+    version: 1
+    root:
+        level: DEBUG
+        handlers:
+            - filehandler
+    handlers:
+        filehandler:
+            class: logging.handlers.TimedRotatingFileHandler
+            level: DEBUG
+            filename: gramex.log
+            formatter: file
+            when: 'D'
+            backupCount: 3
+    loggers:
+        tornado.access: {}
+        tornado.application: {}
+        tornado.general: {}
+    formatters:
+        file:
+            format: '%(levelname)1.1s,%(asctime)s,%(module)s,%(lineno)d,"%(message)s"'
+            datefmt: '%Y-%m-%d %H:%M:%S'
