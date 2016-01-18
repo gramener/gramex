@@ -80,3 +80,15 @@ it. But:
 
 Instead, we can use HTML itself as the language. Tooling support is limited but
 growing.
+
+Use Python as the HTTP server
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Data processing needs to happen in Python in any case. The library ecosystem is
+much richer here. The ecosystem for enterprise auth and database connectivity is
+also richer.
+
+What Node does better than Python is rendering pages on the server side. This
+may not be required in every project. When required, we can integrate with Node.
+
+So, Gramex 1.0 will be a Python server with Python-based HTML processing.
