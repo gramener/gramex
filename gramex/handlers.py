@@ -5,6 +5,7 @@ import mimetypes
 import pandas as pd
 import blaze as bz
 from pathlib import Path
+from tornado.escape import utf8
 from orderedattrdict import AttrDict
 from .transforms import build_transform
 from tornado.web import HTTPError, RequestHandler
@@ -61,7 +62,7 @@ class FunctionHandler(RequestHandler):
         headers:
           Content-Type: application/json
 
-    ... to get this result in JSON:
+    ... to get this result in JSON::
 
         {"display": "$600.00", "value": 600.0}
 
@@ -79,6 +80,22 @@ class FunctionHandler(RequestHandler):
 
     ... takes the URL ``?x=1&x=2&x=3`` to add up 1, 2, 3 and display ``6.0``.
 
+    You can specify wildcards in the URL pattern. For example::
+
+        url:
+          lookup:
+            pattern: /name/([a-z]+)/age/([0-9]+)        # e.g. /name/john/age/21
+            handler: gramex.handlers.FunctionHandler    # Runs a function
+            kwargs:
+              function: calculations.name_age           # Run this function
+
+    When you access ``/name/john/age/21``, ``john`` and ``21`` can be accessed
+    via ``handler.path_args`` as follows::
+
+        def name_age(handler):
+            name = handler.path_args[0]
+            age = handler.path_args[1]
+
     To redirect to a different URL when the function is done, use ``redirect``::
 
         function: module.calculation      # Run module.calculation(handler)
@@ -89,7 +106,7 @@ class FunctionHandler(RequestHandler):
         self.headers = kwargs.get('headers', {})
         self.redirect_url = kwargs.get('redirect', None)
 
-    def get(self):
+    def get(self, *path_args):
         result = self.function(self)
         for header_name, header_value in self.headers.items():
             self.set_header(header_name, header_value)
@@ -252,7 +269,7 @@ class DirectoryHandler(RequestHandler):
                     for header_name, header_value in transform['headers'].items():
                         self.set_header(header_name, header_value)
                     self.content = transform['function'](self.content, self)
-                self.set_header('Content-Length', len(self.content))
+                self.set_header('Content-Length', len(utf8(self.content)))
 
         if include_body:
             self.write(self.content)
