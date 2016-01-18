@@ -342,7 +342,6 @@ class DataHandler(RequestHandler):
         args = AttrDict(self.params)
         key = yaml.dump(args)
 
-        qargs = self.request.arguments
         qconfig = {'query': args.get('query', {}),
                    'default': args.get('default', {})}
         delims = {'agg': ':', 'sort': ':', 'where': ''}
@@ -364,7 +363,9 @@ class DataHandler(RequestHandler):
                 qconfig[q] = tmp
 
         def getq(key):
-            return qconfig['query'].get(key) or qargs.get(key) or qconfig['default'].get(key)
+            return (qconfig['query'].get(key) or
+                    self.get_arguments(key) or
+                    qconfig['default'].get(key))
 
         _selects, _wheres = getq('select'), getq('where')
         _groups, _aggs = getq('groupby'), getq('agg')
