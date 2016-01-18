@@ -36,7 +36,44 @@ Building Gramex
 
 
 Gramex runs on Python 2.7+ and Python 3.4+ in Windows and Linux.
-To set up the development environment:
+To set up the development environment on Ubuntu, run this script::
+
+    # Install Anaconda
+    wget https://3230d63b5fc54e62148e-c95ac804525aac4b6dba79b00b39d1d3.ssl.cf1.rackcdn.com/Anaconda3-2.4.1-Linux-x86_64.sh -O /tmp/anaconda.sh
+    bash /tmp/anaconda.sh -b -p $HOME/anaconda
+    export PATH=$HOME/anaconda/bin:$PATH
+    cat >> $HOME/.bashrc <<EOF
+
+    # Add Anaconda to PATH
+    export PATH=$HOME/anaconda/bin:\$PATH
+    EOF
+
+    # Install nodejs and bower
+    curl -sL https://deb.nodesource.com/setup_4.x | sudo -E bash -
+    sudo apt-get install -y nodejs
+    sudo npm install -g bower
+
+    # Install git and make
+    sudo apt-get install -y git make
+
+    # Clone the repo. Replace s.anand with your repo
+    git clone http://code.gramener.com/s.anand/gramex.git
+
+    # Install PostgreSQL
+    sudo apt-get -y install postgresql postgresql-contrib libpq-dev python-dev
+
+    # Install requirements
+    cd gramex
+    pip install -r requirements.txt         # Base requirements
+    pip install -r requirements-dev.txt     # Additional development requirements
+    pip uninstall gramex                    # Uninstall any previous gramex repo
+    pip install -e .                        # Install this repo as gramex
+
+    # Install Bower components
+    bower --config.analytics=false install
+
+
+To manually set up the development environment, follow these steps.
 
 1. Install `Anaconda <http://continuum.io/downloads>`__ (version 2.4 or higher)
 2. Install `node.js <https://nodejs.org/>`__. Then install `bower <http://bower.io/>`__::
@@ -74,40 +111,43 @@ To set up the development environment:
       bower install
 
    This requires SSH keys to be set up for github.com and code.gramener.com. If
-   your SSH keys are not set up, and you prefer to *always use https** instead,
+   your SSH keys are not set up, or you prefer to **always use https** instead,
    type this::
 
       git config url."https://".insteadOf "git://"
 
-9. In the gramex folder, create a branch for local development::
+Contributing to Gramex
+----------------------
+
+1. In the gramex folder, create a branch for local development::
 
       git checkout -b <branch-name>
 
    Now you can make your changes locally.
 
-10. When you're done making changes, check that your changes pass flake8 and the
-    tests, as well as provide reasonable test coverage::
+2. When you're done making changes, check that your changes pass flake8 and the
+   tests, as well as provide reasonable test coverage::
 
-      make release-test
+        make release-test
 
-    To run a subset of tests::
+   To run a subset of tests::
 
-      python -m unittest tests.test_gramex
+        python -m unittest tests.test_gramex
 
-    **Note**: This uses the ``python.exe`` in your ``PATH``. To change the Python
-    used, run::
+   **Note**: This uses the ``python.exe`` in your ``PATH``. To change the Python
+   used, run::
 
       export PYTHON=/path/to/python         # e.g. path to Python 3.4+
 
-11. Commit your changes and push your branch::
+3. Commit your changes and push your branch::
 
       $ git add .
       $ git commit -m "Your detailed description of your changes."
       $ git push --set-upstream origin <branch-name>
 
-12. Submit a pull request through the code.gramener.com website.
+4. Submit a pull request through the code.gramener.com website.
 
-13. To delete your branch::
+5. To delete your branch::
 
       git branch -d <branch-name>
       git push origin --delete <branch-name>
@@ -175,45 +215,3 @@ When releasing a new version of Gramex:
     git merge dev
     git tag -a v1.x.x           # Annotate with a one-line summary of features
     git push --follow-tags
-
-Release plan
-------------
-
-Version 1.0.3
-~~~~~~~~~~~~~
-
-- ``<vega-chart>`` spec as open source npm package
-    - Definition:
-        - ``<vega-chart src="">...json...</vegachart>``.
-          Use ``src`` attribute (not ``href`` -- see `link vs src`_)
-        - Embedded JSON overrides ``src`` spec via .update()
-    - No API to update the spec. Just expose the objects. To completely redraw,
-      replace the DOM element.
-    - How to bundle dependencies?
-        - https://github.com/jsdelivr/jsdelivr
-        - https://github.com/cdnjs/cdnjs
-    - Check with @jheer and @arvind -- get their blessings
-- How to bundle this with Gramex?
-
-.. _link vs src: http://stackoverflow.com/a/7794936/100904
-
-Version 1.0.4
-~~~~~~~~~~~~~
-
-- Data handler that provides connectivity to databases, files, etc. via odo
-
-Version 1.0.5
-~~~~~~~~~~~~~
-
-- Sample datasets
-- Gallery
-
-Features in future releases
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-- :func:`gramex.handlers.DirectoryHandler`:
-    - Cache the transformed result based on the file / directory stat
-    - Allow ``default_filename`` and ``path`` to be a list. The handler searches
-      the paths and files one by one and renders the first match.
-- In :mod:`gramex.transforms` write a template transform that renders Tornado
-  templates.
