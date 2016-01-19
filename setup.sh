@@ -7,6 +7,8 @@
 #
 # To use it, this repo must be publicly accessible.
 
+sudo apt-get update
+
 export TMP=/tmp
 
 # Install Anaconda 2.4.1 with Python 3
