@@ -22,7 +22,7 @@ On any system:
 
 1. Download and install `Anaconda`_ (2.4.1 or later -- `update Anaconda`_ if required)
 2. On a Mac, download and install `XCode`_
-3. Download |Gramex|_
+3. Download |Gramex|_ (do not unzip it)
 4. Install by typing ``pip install --upgrade --ignore-installed gramex-1.0.3.zip``
 
 Uninstall
