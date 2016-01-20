@@ -103,7 +103,7 @@ class ChainConfig(AttrDict):
             merge(old=conf, new=config, overwrite=True)
 
         # Remove keys where the value is None
-        for key, value, node in walk(conf):
+        for key, value, node in list(walk(conf)):
             if value is None:
                 del node[key]
 
