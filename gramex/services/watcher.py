@@ -31,7 +31,7 @@ class FileEventHandler(FileSystemEventHandler):
             if parent.exists():
                 self.paths[parent.resolve()].add(path)
             else:
-                logging.warn('Parent directory does not exist: %s', path)
+                logging.warning('Parent directory does not exist: %s', path)
 
         self.__dict__.update(events)
         for directory, path in self.paths.items():

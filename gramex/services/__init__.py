@@ -44,7 +44,7 @@ def log(conf):
 def app(conf):
     "Set up tornado.web.Application() -- only if the ioloop hasn't started"
     if tornado.ioloop.IOLoop.current()._running:
-        logging.warn('Ignoring app config change when running')
+        logging.warning('Ignoring app config change when running')
     else:
         info.app = tornado.web.Application(**conf.settings)
         info.app.listen(**conf.listen)

@@ -114,13 +114,13 @@ def _yaml_open(path, default=AttrDict()):
     'Load a YAML path.Path as AttrDict. Replace {.} with path directory'
     path = path.absolute()
     if not path.exists():
-        logging.warn('Missing config: %s', path)
+        logging.warning('Missing config: %s', path)
         return default
     logging.debug('Loading config: %s', path)
     with path.open(encoding='utf-8') as handle:
         result = yaml.load(handle, Loader=AttrDictYAMLLoader)
     if result is None:
-        logging.warn('Empty config: %s', path)
+        logging.warning('Empty config: %s', path)
         return default
     for key, value, node in walk(result):
         if isinstance(value, string_types):
