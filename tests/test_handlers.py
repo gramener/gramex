@@ -1,6 +1,8 @@
 import os
 import sys
 import json
+import time
+import logging
 import requests
 import markdown
 import unittest
@@ -17,6 +19,7 @@ info = AttrDict(
     folder=Path(__file__).absolute().parent,
     process=None,
 )
+BASE = 'http://localhost:9999'
 
 
 def setUpModule():
@@ -31,6 +34,18 @@ def setUpModule():
         stdout=getattr(subprocess, 'DEVNULL', open(os.devnull, 'w')),
     )
 
+    # Wait until Gramex has started
+    seconds_to_wait = 10
+    attempts_per_second = 2
+    for attempt in range(int(seconds_to_wait * attempts_per_second)):
+        try:
+            r = requests.get(BASE + '/')
+        # Catch any connection error, not timeout or or HTTP errors
+        # http://stackoverflow.com/a/16511493/100904
+        except requests.exceptions.ConnectionError:
+            logging.info('Could not connect to %s', BASE)
+            time.sleep(1.0 / attempts_per_second)
+
 
 def tearDownModule():
     'Terminate Gramex'
@@ -39,10 +54,9 @@ def tearDownModule():
 
 class TestGramex(unittest.TestCase):
     'Base class to test Gramex running as a subprocess'
-    base = 'http://localhost:9999'
 
     def get(self, url, **kwargs):
-        return requests.get(self.base + url, **kwargs)
+        return requests.get(BASE + url, **kwargs)
 
     def check(self, url, path=None, code=200, text=None):
         r = self.get(url)
@@ -177,7 +191,7 @@ class TestDataHandler(TestGramex):
         self.check('/datastore/' + self.database + '/xyz', code=404)
 
     def test_fetchdb(self):
-        base = self.base + '/datastore/' + self.database
+        base = BASE + '/datastore/' + self.database
         pdt.assert_frame_equal(self.data, pd.read_csv(base + '/csv/'))
         pdt.assert_frame_equal(self.data, pd.read_json(base + '/json/'))
         pdt.assert_frame_equal(self.data, pd.read_html(base + '/html/')[0]
@@ -191,7 +205,7 @@ class TestDataHandler(TestGramex):
             return pdt.assert_frame_equal(a.reset_index(drop=True), b, check_dtype=False)
 
         # select, where, sort, offset, limit
-        base = self.base + '/datastore/' + self.database + '/'
+        base = BASE + '/datastore/' + self.database + '/'
         eq(self.data[:5],
            pd.read_csv(base + 'csv/?limit=5'))
         eq(self.data[5:],
@@ -311,7 +325,7 @@ class TestBlazeDataHandler(TestDataHandler):
             return pdt.assert_frame_equal(a.reset_index(drop=True), b)
 
         # select, where, sort, offset, limit
-        base = self.base + '/datastore/' + self.database + '/'
+        base = BASE + '/datastore/' + self.database + '/'
         eq(self.data[:5],
            pd.read_csv(base + 'csv/?limit=5'))
         eq(self.data[5:],
@@ -385,7 +399,7 @@ class TestDataHandlerConfig(TestDataHandler):
             return pdt.assert_frame_equal(a.reset_index(drop=True), b)
 
         def dbcase(case):
-            return '%s/datastore/%s%s/' % (self.base, self.database, case)
+            return '%s/datastore/%s%s/' % (BASE, self.database, case)
 
         eq(self.data.query('votes < 120')[:5],
            pd.read_csv(dbcase(1) + 'csv/?limit=5'))
