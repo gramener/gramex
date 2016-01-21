@@ -183,7 +183,7 @@ def load_imports(config, source):
     '''
     imported_paths = [_pathstat(source)]
     root = source.absolute().parent
-    for key, value, node in walk(config):
+    for key, value, node in list(walk(config)):
         if key == 'import':
             for name, pattern in value.items():
                 paths = root.glob(pattern) if '*' in pattern else [Path(pattern)]
