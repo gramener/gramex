@@ -94,20 +94,34 @@ log:
         level: DEBUG
         handlers:
             - console
-            # - warnings    # Add additional handlers here
+            # - info
+            # - warnings
     handlers:
         console:
             class: logging.StreamHandler
             level: DEBUG
             stream: ext://sys.stdout
             formatter: console
-        # warnings:         # Here's an example of a handler for warnings
-        #     class: logging.handlers.RotatingFileHandler
-        #     level: WARN
-        #     filename: warn.log
-        #     formatter: file
-        #     maxBytes: 1048576   # 1MB
-        #     backupCount: 3
+        # Write all information logs into info.log, back up daily
+        info:
+            class: logging.handlers.TimedRotatingFileHandler
+            when: D
+            level: INFO
+            filename: info.log
+            formatter: file
+            encoding: utf-8
+            # interval: 1           # Daily
+            # utc: False
+            backupCount: 30         # Keep only last 30 backups
+        # Write warnings into warn.log (up to 10 MB, then warn.log.1, etc)
+        warnings:
+            class: logging.handlers.RotatingFileHandler
+            level: WARN
+            filename: warn.log
+            formatter: file
+            encoding: utf-8
+            maxBytes: 10485760   # 10MB
+            backupCount: 3
     loggers:
         tornado.access: {}
         tornado.application: {}
