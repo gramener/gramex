@@ -65,8 +65,8 @@ yes | bower --config.analytics=false install
 
 # Install nginx
 # -------------------------------------
-wget -q -O /tmp/nginx_signing.key http://nginx.org/keys/nginx_signing.key
-sudo apt-key add /tmp/nginx_signing.key
+wget -q -O $TMP/nginx_signing.key http://nginx.org/keys/nginx_signing.key
+sudo apt-key add $TMP/nginx_signing.key
 cat <<EOF | sudo tee /etc/apt/sources.list.d/nginx.list
 deb http://nginx.org/packages/ubuntu/ trusty nginx
 deb-src http://nginx.org/packages/ubuntu/ trusty nginx
