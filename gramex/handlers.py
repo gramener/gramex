@@ -1,9 +1,10 @@
 import re
 import yaml
+import logging
 import datetime
 import mimetypes
-import pandas as pd
 import blaze as bz
+import pandas as pd
 from pathlib import Path
 from tornado.escape import utf8
 from orderedattrdict import AttrDict
@@ -264,9 +265,15 @@ class DirectoryHandler(RequestHandler):
             self.set_header('Content-Type', 'text/html')
             content = [u'<h1>Index of %s </h1><ul>' % self.path]
             for path in self.path.iterdir():
-                content.append(u'<li><a href="{name!s:s}">{name!s:s}{dir!s:s}</a></li>'.format(
-                    name=path.relative_to(self.path),
-                    dir='/' if path.is_dir() else ''))
+                # On Windows, pathlib on Python 2.7 won't handle Unicode. Ignore such files.
+                # https://bitbucket.org/pitrou/pathlib/issues/25
+                try:
+                    content.append(u'<li><a href="{name!s:s}">{name!s:s}{dir!s:s}</a></li>'.format(
+                        name=path.relative_to(self.path),
+                        dir='/' if path.is_dir() else ''))
+                except UnicodeDecodeError:
+                    logging.warn("DirectoryHandler can't show unicode file {:s}".format(
+                        repr(path)))
             content.append(u'</ul>')
             self.content = ''.join(content)
 
