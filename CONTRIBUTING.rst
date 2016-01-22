@@ -38,40 +38,7 @@ Building Gramex
 Gramex runs on Python 2.7+ and Python 3.4+ in Windows and Linux.
 To set up the development environment on Ubuntu, run this script::
 
-    # Install Anaconda
-    wget https://3230d63b5fc54e62148e-c95ac804525aac4b6dba79b00b39d1d3.ssl.cf1.rackcdn.com/Anaconda3-2.4.1-Linux-x86_64.sh -O /tmp/anaconda.sh
-    bash /tmp/anaconda.sh -b -p $HOME/anaconda
-    export PATH=$HOME/anaconda/bin:$PATH
-    cat >> $HOME/.bashrc <<EOF
-
-    # Add Anaconda to PATH
-    export PATH=$HOME/anaconda/bin:\$PATH
-    EOF
-
-    # Install nodejs and bower
-    curl -sL https://deb.nodesource.com/setup_4.x | sudo -E bash -
-    sudo apt-get install -y nodejs
-    sudo npm install -g bower
-
-    # Install git and make
-    sudo apt-get install -y git make
-
-    # Clone the repo. Replace s.anand with your repo
-    git clone http://code.gramener.com/s.anand/gramex.git
-
-    # Install PostgreSQL
-    sudo apt-get -y install postgresql postgresql-contrib libpq-dev python-dev
-
-    # Install requirements
-    cd gramex
-    pip install -r requirements.txt         # Base requirements
-    pip install -r requirements-dev.txt     # Additional development requirements
-    pip uninstall gramex                    # Uninstall any previous gramex repo
-    pip install -e .                        # Install this repo as gramex
-
-    # Install Bower components
-    bower --config.analytics=false install
-
+    source <(wget -qO- http://code.gramener.com/s.anand/gramex/raw/master/setup-dev.sh)
 
 To manually set up the development environment, follow these steps.
 

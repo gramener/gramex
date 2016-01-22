@@ -6,6 +6,7 @@
 #   source <(wget -qO- http://code.gramener.com/s.anand/gramex/raw/master/setup.sh)
 #
 # To use it, this repo must be publicly accessible.
+# Note: "source" ensures that the PATH environment variable is exported.
 
 sudo apt-get update
 
