@@ -202,7 +202,9 @@ class TestDataHandler(TestGramex):
             return pdt.assert_frame_equal(a.reset_index(drop=True), b)
 
         def eqdt(a, b):
-            return pdt.assert_frame_equal(a.reset_index(drop=True), b, check_dtype=False)
+            return pdt.assert_frame_equal(a.reset_index(drop=True).sort_index(axis=1),
+                                          b.sort_index(axis=1),
+                                          check_dtype=False)
 
         # select, where, sort, offset, limit
         base = BASE + '/datastore/' + self.database + '/'
@@ -322,7 +324,8 @@ class TestBlazeDataHandler(TestDataHandler):
 
     def test_querydb(self):
         def eq(a, b):
-            return pdt.assert_frame_equal(a.reset_index(drop=True), b)
+            return pdt.assert_frame_equal(a.reset_index(drop=True).sort_index(axis=1),
+                                          b.sort_index(axis=1))
 
         # select, where, sort, offset, limit
         base = BASE + '/datastore/' + self.database + '/'
