@@ -39,7 +39,7 @@ def setUpModule():
     attempts_per_second = 2
     for attempt in range(int(seconds_to_wait * attempts_per_second)):
         try:
-            r = requests.get(BASE + '/')
+            requests.get(BASE + '/')
         # Catch any connection error, not timeout or or HTTP errors
         # http://stackoverflow.com/a/16511493/100904
         except requests.exceptions.ConnectionError:
