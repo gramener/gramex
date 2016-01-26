@@ -15,8 +15,8 @@ import sqlalchemy as sa
 
 class FunctionHandler(RequestHandler):
     '''
-    Renders the output of a function. It accepts these parameters when
-    initialized:
+    Renders the output of a function when the URL is called via GET or POST. It
+    accepts these parameters when initialized:
 
     :arg string function: a string that resolves into any Python function or
         method (e.g. ``str.lower``). By default, it is called as
@@ -141,6 +141,9 @@ class FunctionHandler(RequestHandler):
         else:
             self.write(result)
             self.flush()
+
+    def post(self, *path_args):
+        return self.get(*path_args)
 
 
 class DirectoryHandler(RequestHandler):
