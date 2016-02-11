@@ -42,7 +42,8 @@ To set up the development environment on Ubuntu, run this script::
 
 To manually set up the development environment, follow these steps.
 
-1. Install `Anaconda <http://continuum.io/downloads>`__ (version 2.4 or higher)
+1. Install `Anaconda <http://continuum.io/downloads>`__ (version 2.4 or higher).
+   On a Mac, also install `Xcode <https://developer.apple.com/xcode/download/>`__.
 2. Install `node.js <https://nodejs.org/>`__. Then install `bower <http://bower.io/>`__::
 
       npm install -g bower

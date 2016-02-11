@@ -11,7 +11,7 @@ Install
 .. _Anaconda: http://continuum.io/downloads
 .. _Gramex: https://learn.gramener.com/downloads/release/gramex-1.0.3.zip
 .. _update Anaconda: http://docs.continuum.io/anaconda/install#updating-from-older-anaconda-versions
-.. _XCode: https://developer.apple.com/xcode/download/
+.. _Xcode: https://developer.apple.com/xcode/download/
 
 On **Linux**, run this command to set up Gramex (replace ``master`` with ``dev`` for
 the development version)::
@@ -21,7 +21,7 @@ the development version)::
 On **Windows or Mac**:
 
 1. Download and install `Anaconda`_ (2.4.1 or later -- `update Anaconda`_ if required)
-2. On a Mac, download and install `XCode`_
+2. On a Mac, download and install `Xcode`_
 3. Run ``pip install --upgrade --ignore-installed http://code.gramener.com/s.anand/gramex/repository/archive.tar.bz2?ref=master``
    (replace ``master`` with ``dev`` for the development version)
 
