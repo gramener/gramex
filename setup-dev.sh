@@ -41,6 +41,9 @@ sudo ln -s /usr/bin/nodejs /usr/bin/node
 # Install git and make
 sudo apt-get install -y git make
 
+# Install SQLite3
+sudo apt-get -y install sqlite3
+
 # Install PostgreSQL
 sudo apt-get -y install postgresql postgresql-contrib libpq-dev python-dev
 
