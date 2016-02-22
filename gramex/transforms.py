@@ -115,6 +115,8 @@ def build_transform(conf, vars=[], args=None):
     else:
         result.append('\treturn function(*args, **kwargs)')
         function = locate(conf['function'])
+        if function is None:
+            raise NameError('Cannot find function %s' % conf['function'])
         doc = conf['function'].__doc__
         name = conf['function']
 
