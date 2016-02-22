@@ -30,9 +30,9 @@ class BuildTransform(unittest.TestCase):
 
         # Single input variable is replaced in args
         join = build_transform({
-                   'function': 'str.join',
-                   'args': ['|', 'input']},
-                   vars='input')
+            'function': 'str.join',
+            'args': ['|', 'input']},
+            vars='input')
         self.assertEqual(join(['a', 'b', 'c']), 'a|b|c')
 
         # Multiple input variables are replaced in args

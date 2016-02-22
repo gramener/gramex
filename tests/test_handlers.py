@@ -393,9 +393,11 @@ class TestDataHandlerConfig(TestDataHandler):
     'Test gramex.handlers.DataHandler'
     database = 'sqliteconfig'
 
-    def test_pingdb(self): pass
+    def test_pingdb(self):
+        pass
 
-    def test_fetchdb(self): pass
+    def test_fetchdb(self):
+        pass
 
     def test_querydb(self):
         def eq(a, b):
