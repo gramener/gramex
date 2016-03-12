@@ -109,12 +109,16 @@ class ChainConfig(AttrDict):
 
         return conf
 
+# Paths that users have already been warned about. Don't warn them again
+_warned_paths = set()
 
 def _yaml_open(path, default=AttrDict()):
     'Load a YAML path.Path as AttrDict. Replace {.} with path directory'
     path = path.absolute()
     if not path.exists():
-        logging.warning('Missing config: %s', path)
+        if path not in _warned_paths:
+            logging.warning('Missing config: %s', path)
+            _warned_paths.add(path)
         return default
     logging.debug('Loading config: %s', path)
     with path.open(encoding='utf-8') as handle:
