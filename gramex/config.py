@@ -112,6 +112,7 @@ class ChainConfig(AttrDict):
 # Paths that users have already been warned about. Don't warn them again
 _warned_paths = set()
 
+
 def _yaml_open(path, default=AttrDict()):
     'Load a YAML path.Path as AttrDict. Replace {.} with path directory'
     path = path.absolute()

@@ -250,7 +250,7 @@ class DataHandler(RequestHandler):
         if args['headers']['Content-Type'] == 'text/html':
             self.content = self.result.to_html()
         if args['headers']['Content-Type'] == 'text/csv':
-            self.content = self.result.to_csv(index=False)
+            self.content = self.result.to_csv(index=False, encoding='utf-8')
             self.set_header("Content-Disposition", "attachment;filename=file.csv")
 
         self.write(self.content)
