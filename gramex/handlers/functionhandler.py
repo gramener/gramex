@@ -75,8 +75,8 @@ class FunctionHandler(RequestHandler):
 
     ... takes the URL ``?x=1&x=2&x=3`` to add up 1, 2, 3 and display ``6.0``.
 
-    You can pass the handler along with custom arguments. The string
-    ``'handler'`` is replaced by the RequestHandler. For example::
+    You can pass the handler along with custom arguments. ``=handler`` is
+    replaced by the RequestHandler. For example::
 
         url:
           method:
@@ -85,10 +85,10 @@ class FunctionHandler(RequestHandler):
             kwargs:
               function: calculations.method
               args:
-                  - handler           # This is replaced with the RequestHandler
+                  - =handler          # This is replaced with the RequestHandler
                   - 10
               kwargs:
-                  h: handler          # This is replaced with the RequestHandler
+                  h: =handler         # This is replaced with the RequestHandler
                   val: 0
 
     ... calls ``calculations.method(handler, 10, h=handler, val=0)``.
@@ -117,12 +117,12 @@ class FunctionHandler(RequestHandler):
             redirect: /                   # and redirect to / thereafter
     '''
     def initialize(self, **kwargs):
-        self.function = build_transform(kwargs, vars='handler')
+        self.function = build_transform(kwargs, vars={'handler': None})
         self.headers = kwargs.get('headers', {})
         self.redirect_url = kwargs.get('redirect', None)
 
     def get(self, *path_args):
-        result = self.function(self)
+        result = self.function(handler=self)
         for header_name, header_value in self.headers.items():
             self.set_header(header_name, header_value)
         if self.redirect_url is not None:

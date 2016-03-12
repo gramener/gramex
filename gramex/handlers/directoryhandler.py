@@ -96,7 +96,7 @@ class DirectoryHandler(RequestHandler):
         self.transform = {}
         for pattern, trans in transform.items():
             self.transform[pattern] = {
-                'function': build_transform(trans, vars=['content', 'handler'], args=['content']),
+                'function': build_transform(trans, vars={'content': None, 'handler': None}),
                 'headers': trans.get('headers', {}),
                 'encoding': trans.get('encoding'),
             }
@@ -164,7 +164,7 @@ class DirectoryHandler(RequestHandler):
                 if transform:
                     for header_name, header_value in transform['headers'].items():
                         self.set_header(header_name, header_value)
-                    self.content = transform['function'](self.content, self)
+                    self.content = transform['function'](handler=self, content=self.content)
                 self.set_header('Content-Length', len(utf8(self.content)))
 
         if include_body:
