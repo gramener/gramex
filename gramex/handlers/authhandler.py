@@ -3,7 +3,8 @@ import json
 import tornado.web
 from tornado.web import RequestHandler
 from tornado.escape import json_encode
-from tornado.auth import GoogleOAuth2Mixin, FacebookGraphMixin
+from tornado.auth import (GoogleOAuth2Mixin, FacebookGraphMixin,
+                          TwitterMixin)
 
 
 class GoogleAuth(RequestHandler, GoogleOAuth2Mixin):
@@ -58,3 +59,20 @@ class FacebookAuth(RequestHandler, FacebookGraphMixin):
                 extra_params={
                     'fields': 'name,email,first_name,last_name,'
                               'gender,link,username,locale,timezone'})
+
+
+class TwitterAuth(RequestHandler, TwitterMixin):
+    @tornado.gen.coroutine
+    def get(self):
+        # TODO: Test
+        redirect_uri = (self.request.protocol + '://' + self.request.host +
+                        self.request.path)
+        if self.get_argument("oauth_token", None):
+            user = yield self.get_authenticated_user()
+            self.set_secure_cookie(self.settings['cookie_secret'],
+                                   str(time.time()))
+            self.set_secure_cookie('user', str(user['username']))
+            self.redirect('/')
+        else:
+            yield self.authenticate_redirect(
+                callback_uri=redirect_uri)
