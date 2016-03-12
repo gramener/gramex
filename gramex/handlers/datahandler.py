@@ -1,15 +1,16 @@
 import re
 import yaml
+import tornado.web
 import blaze as bz
 import pandas as pd
 import sqlalchemy as sa
 from orderedattrdict import AttrDict
-from tornado.web import RequestHandler
+from .basehandler import BaseHandler
 
 drivers = {}
 
 
-class DataHandler(RequestHandler):
+class DataHandler(BaseHandler):
     '''
     Serves data in specified format from datasource. It accepts these parameters:
 
@@ -44,6 +45,7 @@ class DataHandler(RequestHandler):
     def initialize(self, **kwargs):
         self.params = kwargs
 
+    @tornado.web.authenticated
     def get(self):
         args = AttrDict(self.params)
         key = yaml.dump(args)

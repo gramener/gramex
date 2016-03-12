@@ -1,8 +1,9 @@
-from tornado.web import RequestHandler
+import tornado.web
+from .basehandler import BaseHandler
 from ..transforms import build_transform
 
 
-class FunctionHandler(RequestHandler):
+class FunctionHandler(BaseHandler):
     '''
     Renders the output of a function when the URL is called via GET or POST. It
     accepts these parameters when initialized:
@@ -117,10 +118,12 @@ class FunctionHandler(RequestHandler):
             redirect: /                   # and redirect to / thereafter
     '''
     def initialize(self, **kwargs):
+        self.params = kwargs
         self.function = build_transform(kwargs, vars='handler')
         self.headers = kwargs.get('headers', {})
         self.redirect_url = kwargs.get('redirect', None)
 
+    @tornado.web.authenticated
     def get(self, *path_args):
         result = self.function(self)
         for header_name, header_value in self.headers.items():

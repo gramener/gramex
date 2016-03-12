@@ -1,13 +1,16 @@
 import logging
 import datetime
 import mimetypes
+import tornado.web
+from gramex import conf
 from pathlib import Path
 from tornado.escape import utf8
+from tornado.web import HTTPError
+from .basehandler import BaseHandler
 from ..transforms import build_transform
-from tornado.web import HTTPError, RequestHandler
 
 
-class DirectoryHandler(RequestHandler):
+class DirectoryHandler(BaseHandler):
     '''
     Serves files with transformations. It accepts these parameters:
 
@@ -88,7 +91,11 @@ class DirectoryHandler(RequestHandler):
 
     SUPPORTED_METHODS = ("GET", "HEAD")
 
-    def initialize(self, path, default_filename=None, index=None, headers={}, transform={}):
+    def initialize(self, path, default_filename=None, index=None,
+                   headers={}, transform={}, **kwargs):
+        self.params = {
+            'auth': kwargs.get(
+                'auth', conf.app.settings.get('auth', False))}
         self.root = Path(path).resolve()
         self.default_filename = default_filename
         self.index = index
@@ -104,6 +111,7 @@ class DirectoryHandler(RequestHandler):
     def head(self, path):
         return self.get(path, include_body=False)
 
+    @tornado.web.authenticated
     def get(self, path, include_body=True):
         self.path = (self.root / str(path)).absolute()
         # relative_to() raises ValueError if path is not under root
