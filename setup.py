@@ -4,12 +4,22 @@
 from setuptools import setup, find_packages
 from pip.req import parse_requirements
 from pip.download import PipSession
+from io import open
 import os
 import json
 
+with open('README.rst', encoding='utf-8') as handle:
+    long_description = handle.read() + '\n\n'
+
+with open('HISTORY.rst', encoding='utf-8') as handle:
+    long_description += handle.read().replace('.. :changelog:', '')
+
+# release.json contains name, description, version, etc
+with open('gramex/release.json', encoding='utf-8') as handle:
+    release_args = json.load(handle)
+
 setup(
-    long_description=(open('README.rst').read() + '\n\n' +
-                      open('HISTORY.rst').read().replace('.. :changelog:', '')),
+    long_description=long_description,
     packages=find_packages(),
 
     # Read: http://stackoverflow.com/a/2969087/100904
@@ -36,7 +46,5 @@ setup(
     tests_require=[
         'markdown',
     ],
-
-    # release.json contains name, description, version, etc
-    **json.load(open('gramex/release.json'))
+    **release_args
 )
