@@ -8,7 +8,7 @@ class BaseHandler(RequestHandler):
         app_auth = conf.app.settings.get('auth', False)
         route_auth = self.params.get('auth', app_auth)
         if not route_auth:
-            return {'user': 'static'}
+            return 'static'
         user_json = self.get_secure_cookie('user')
         if not user_json:
             return None

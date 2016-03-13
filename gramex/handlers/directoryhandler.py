@@ -93,9 +93,7 @@ class DirectoryHandler(BaseHandler):
 
     def initialize(self, path, default_filename=None, index=None,
                    headers={}, transform={}, **kwargs):
-        self.params = {
-            'auth': kwargs.get(
-                'auth', conf.app.settings.get('auth', False))}
+        self.params = kwargs
         self.root = Path(path).resolve()
         self.default_filename = default_filename
         self.index = index
