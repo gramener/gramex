@@ -27,15 +27,22 @@ url:
     kwargs:
       function: utils.params_as_json
 
+  func/dumpx:
+    pattern: /func/dumpx
+    handler: gramex.handlers.FunctionHandler
+    kwargs:
+      function: utils.params_as_json
+      args: =handler.get_arguments('x')
+
   func/composite:
     pattern: /func/composite
     handler: gramex.handlers.FunctionHandler
     kwargs:
       function: utils.params_as_json
-      args: [0, handler]
+      args: [0, =handler]
       kwargs:
-        a: "a"
-        handler: "handler"
+        a: a
+        handler: =handler
 
   # TestDirectoryHandler
   dir/noindex:
@@ -87,12 +94,13 @@ url:
         "*.md":
           encoding: utf-8
           function: markdown.markdown
+          args: =content
           headers:
             Content-Type: text/html; charset=utf-8
         "*.yaml":
           encoding: utf-8
           function: gramex.transforms.badgerfish
-          args: [content, handler]
+          args: [=content, =handler]
           headers:
             Content-Type: text/html; charset=utf-8
   dir/args:
@@ -104,7 +112,7 @@ url:
       transform:
         'index.html':
           function: utils.args_as_json
-          args: handler
+          args: =handler
 
   # TestDataHandler for Sqlite
   data/csv:

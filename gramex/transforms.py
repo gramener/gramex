@@ -4,125 +4,128 @@ import six
 import yaml
 import xmljson
 import lxml.html
-from .config import walk, load_imports
 from pydoc import locate
+from orderedattrdict import AttrDict
 from orderedattrdict.yamlutils import AttrDictYAMLLoader
 
+from .config import walk, load_imports
 
-def build_transform(conf, vars=[], args=None):
+
+def _identity(*args, **kwargs):
+    'Return positional arguments as-is. Ignore keyword arguments.'
+    if len(args) == 1:
+        return args[0]
+    return args
+
+
+def _arg_repr(arg):
     '''
-    Builds a new function based on a configuration object. For example::
+    Arguments starting with ``=`` are converted into the variable. Otherwise,
+    values are treated as strings. For example, ``=x`` is the variable ``x`` but
+    ``x`` is the string ``"x"``. ``==x`` is the string ``"=x"``.
+    '''
+    if isinstance(arg, six.string_types) and len(arg) > 1:
+        if arg[0] == '=':
+            return repr(arg[1:]) if arg[1] == '=' else arg[1:]
+    return repr(arg)
 
-        fn = build_transform({
+
+def build_transform(conf, vars={}):
+    '''
+    Converts a YAML function configuration into a callable function. For e.g.::
+
+        function: json.dumps
+        args: ["x"]
+        kwargs:
+            separators: [",", ":"]
+
+    translates to::
+
+        fn = build_transform(conf={
             'function': 'json.dumps',
-            'kwargs': {
-                'separators': [',', ':']
-            }
+            'args': ['x']
+            'kwargs': {'separators': [',', ':']}
         })
 
-    ... makes  ``fn(content)`` the same as ``json.dumps(content, separators=[',', ':'])``.
+    which becomes::
 
-    The first parameter ``conf`` is a configuration dictionary with three keys:
+        def transform(_val):
+            return json.dumps(
+                'x',
+                separators=[',', ':']
+            )
 
-    function
-        name of a Python function to call. Defaults to ``lambda x: x``.
-    args
-        positional arguments to pass to the function. Defaults to ``['_content']``
-    kwargs
-        keywords arguments to pass to the function. Defaults to ``{}``
+    The returned function takes a single argument by default. You can change the
+    arguments it accepts using ``vars``. For example::
 
-    If no ``function`` is provided, the result returns its input arguments as-is::
+        fn = build_transform(..., vars={'x': None, 'y': 1})
 
-        >>> identity = build_transform({})
-        >>> identity('x') == 'x'
+    creates::
 
-    Any ``args`` are passed directly to the function. These are used as-is::
+        def transfom(x=None, y=1)
 
-        >>> join = build_transform({'function': 'str.join', 'args': [',', ['a', 'b']]})
-        >>> join('anything') == 'a,b'
+    In the ``conf`` parameter, ``args`` and ``kwargs`` values are interpreted
+    literally. But values starting with ``=`` like ``=args`` are treated as
+    variables. (Start ``==`` to represent a string that begins with ``=``.) For
+    example, when this is called with ``vars={"args": {}}``::
 
-    When calling the returned function, you can pass arguments. Defines these as
-    ``vars``. For example, if you want to call ``join(string_list)``, then
-    define ``vars=['string_list']``. Thereafter, any value of ``'string_list'``
-    in ``args`` or ``kwargs`` is replaced with the ``string_list`` value you
-    pass to ``join(string_list)``. For example::
+        function: json.dumps
+        args: '=args["data"]'
+        kwargs:
+            separators:
+                - =args["comma"]
+                - =args["colon"]
 
-        >>> join = build_transform({
-        ...     'function': 'str.join',
-        ...     'args': ['|', 'string_list']},
-        ...     vars=['string_list'])
-        >>> join(string_list=['a', 'b', 'c']) == 'a|b|c'
+    becomes::
 
-    You can pass multiple arguments this way. For example::
-
-        >>> join = build_transform({
-        ...     'function': 'str.join',
-        ...     'args': ['separator', 'string_list']},
-        ...     vars=['separator', 'string_list'])
-        >>> join(string_list=['a', 'b', 'c'], separator=',') == 'a,b,c'
-
-    By default, whatever you provide as ``vars`` is used in the configuration
-    ``args`` in the same order. So the above is identical to this::
-
-        >>> join = build_transform({'function': 'str.join'}, vars=['sep', 'str'])
-        >>> join(',', ['a', 'b', 'c']) == 'a,b,c'
-
-    Not all ``vars`` need to be used by the function. For example, though
-    ``sep=`` is passed below, it is ignored::
-
-        >>> join = build_transform({
-        ...     'function': 'str.join',
-        ...     'args': [',', 'list']},
-        ...     vars=['sep', 'list'])
-        >>> join(sep='anything', list=['a', 'b', 'c']) == 'a,b,c'
+        def transform(args={}):
+            return json.dumps(
+                args["data"],
+                separators=[args["comma"], args["colon"]]
+            )
     '''
-    # If vars is provided as a string, convert it to a list of string
-    if not vars:
-        vars = ['_content']
-    vars = [vars] if isinstance(vars, six.string_types) else [str(x) for x in vars]
 
-    # Use conf['args'] if available, ensuring that it's a string. Default to vars
+    # The returned function takes a single argument by default
+    if not vars:
+        vars = {'_val': None}
+
+    # Create the following code:
+    #   def transform(vars):
+    #       return function(
+    body = ['def transform(',
+            ', '.join('{:s}={!r:}'.format(var, val) for var, val in vars.items()),
+            '):\n',
+            '\treturn function(\n']
+
+    # If args is a string, convert to a list with that string
+    # If args is not specified, use vars' keys as args
     if 'args' in conf:
         args = conf['args']
         args = [args] if isinstance(args, six.string_types) else list(args)
-    elif args is None:
-        args = vars
-
-    # kwargs defaults to a dict
-    kwargs = dict(conf.get('kwargs', {}))
-
-    # We create a Python string that contains the function. This is to speed
-    # things up by pre-compiling and avoiding if conditions.
-    result = ['def transform(' + ', '.join(vars) + '):']
-
-    # Replace any vars in args with the variable
-    for index, arg in enumerate(args):
-        if arg in vars:
-            result.append('\targs[%d] = %s' % (index, arg))
-
-    # Replace any vars in kwargs with the variable
-    for key, arg in kwargs.items():
-        if arg in vars:
-            result.append('\tkwargs[%s] = %s' % (repr(key), arg))
-
-    # If no function is defined, use the identity function. Else, compile it
-    # in the global context
-    if 'function' not in conf:
-        result.append('\treturn ' + ', '.join(args))
-        doc = 'Return arguments as-is'
-        name = 'identity'
-        function = None
     else:
-        result.append('\treturn function(*args, **kwargs)')
+        args = ['=%s' % var for var in vars.keys()]
+
+    # Add the function, arguments, and kwargs
+    for arg in args:
+        body.append('\t\t%s,\n' % _arg_repr(arg))
+    for key, val in conf.get('kwargs', {}).items():
+        body.append('\t\t%s=%s,\n' % (key, _arg_repr(val)))
+
+    body.append('\t)\n')
+
+    if 'function' not in conf:
+        function = _identity
+        doc = _identity.__doc__
+        name = 'identity'
+    else:
         function = locate(conf['function'])
         if function is None:
             raise NameError('Cannot find function %s' % conf['function'])
-        doc = conf['function'].__doc__
+        doc = function.__doc__
         name = conf['function']
 
-    # Compile the function
-    context = {'args': args, 'kwargs': kwargs, 'function': function}
-    exec('\n'.join(result), context)
+    context = {'function': function, 'AttrDict': AttrDict}
+    exec(''.join(body), context)
 
     function = context['transform']
     function.__name__ = name
