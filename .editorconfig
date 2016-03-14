@@ -1,21 +1,26 @@
-# http://editorconfig.org
+# .editorconfig maintains consistent coding styles between different editors.
+# Get plugins at http://editorconfig.org/
+#   - Sublime text: https://github.com/sindresorhus/editorconfig-sublime
+#   - Notepad++: https://github.com/editorconfig/editorconfig-notepad-plus-plus
 
 root = true
 
 [*]
-indent_style = space
-indent_size = 4
-trim_trailing_whitespace = true
-insert_final_newline = true
-charset = utf-8
 end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+charset = utf-8
+indent_style = space
+indent_size = 2
 
-[*.bat]
-indent_style = tab
-end_of_line = crlf
-
-[LICENSE]
-insert_final_newline = false
+[*.py]
+indent_size = 4
 
 [Makefile]
 indent_style = tab
+indent_size = 4
+
+# Markdown files require trailing whitespace
+# http://robandlauren.com/2013/11/21/configuring-sublime-text-markdown/
+[*.md]
+trim_trailing_whitespace = false
