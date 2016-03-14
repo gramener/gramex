@@ -79,7 +79,22 @@ class DirectoryHandler(BaseHandler):
     .. _glob pattern: https://docs.python.org/3/library/pathlib.html#pathlib.Path.glob
     .. _SimpleHTTPServer: https://docs.python.org/2/library/simplehttpserver.html
 
-    This handler exposes the following ``pathlib.Path`` attributes:
+    To restrict to serving specific files, you can identify them in the pattern::
+
+        pattern: /blog/(.*\.md$|style\.css)         # Serve only .md files or style.css
+        handler: gramex.handlers.DirectoryHandler
+        kwargs:
+            path: blog/
+
+    **Note**: there is a ``default`` URL handler that automatically serves files
+    from the home directory of your folder. To override that, override the
+    ``default`` pattern::
+
+        url:
+          default:                                  # This overrides the default URL handler
+            pattern: ...
+
+    DirectoryHandler exposes the following ``pathlib.Path`` attributes:
 
     ``root``
         Root path for this handler. Same as the ``path`` argument
