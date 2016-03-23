@@ -45,7 +45,7 @@ lint:
 	flake8 gramex tests
 
 test:
-	$(PYTHON) setup.py test
+	$(PYTHON) setup.py nosetests
 
 test-all:
 	tox

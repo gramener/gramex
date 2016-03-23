@@ -45,6 +45,8 @@ setup(
     test_suite='tests',
     tests_require=[
         'markdown',
+        'psycopg2',
+        'pymysql',
     ],
     **release_args
 )
