@@ -1,7 +1,6 @@
 import re
 import yaml
 import tornado.web
-import blaze as bz
 import pandas as pd
 import sqlalchemy as sa
 from orderedattrdict import AttrDict
@@ -166,6 +165,8 @@ class DataHandler(BaseHandler):
         elif args.driver == 'blaze':
             '''TODO: Not caching blaze connections
             '''
+            # Import blaze on demand -- it's a very slow import
+            import blaze as bz                      # noqa
             parameters = args.get('parameters', {})
             bzcon = bz.Data(args['url'] +
                             ('::' + args['table'] if args.get('table') else ''),
