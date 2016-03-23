@@ -63,8 +63,6 @@ default. You may also run Gramex via ``python -m gramex``.
 
 For usage instructions, visit https://learn.gramener.com/gramex/
 
-### Troubleshooting
-
 If Gramex is not running:
 
 - Make sure that typing ``gramex`` runs the |Gramex| executable, and is
