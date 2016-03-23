@@ -7,12 +7,14 @@ from tornado.auth import (GoogleOAuth2Mixin, FacebookGraphMixin,
                           TwitterMixin)
 
 
+def now():
+    return '{:0.3f}'.format(time.time())
+
+
 class GoogleAuth(RequestHandler, GoogleOAuth2Mixin):
     @tornado.gen.coroutine
     def get(self):
-        redirect_uri = (self.request.protocol + '://' +
-                        self.request.host +
-                        self.request.path)
+        redirect_uri = '{.protocol:s}://{.host:s}{.path:s}'.format(self.request)
         if self.get_argument('code', False):
             access = yield self.get_authenticated_user(
                 redirect_uri=redirect_uri,
@@ -24,8 +26,7 @@ class GoogleAuth(RequestHandler, GoogleOAuth2Mixin):
                 access["access_token"])
             user = json.loads(response.body)["email"]
 
-            self.set_secure_cookie(self.settings['cookie_secret'],
-                                   str(time.time()))
+            self.set_secure_cookie(self.settings['cookie_secret'], now())
             self.set_secure_cookie('user', json_encode(user))
             self.redirect('/')
         else:
@@ -40,16 +41,14 @@ class GoogleAuth(RequestHandler, GoogleOAuth2Mixin):
 class FacebookAuth(RequestHandler, FacebookGraphMixin):
     @tornado.gen.coroutine
     def get(self):
-        redirect_uri = (self.request.protocol + '://' + self.request.host +
-                        self.request.path)
+        redirect_uri = '{.protocol:s}://{.host:s}{.path:s}'.format(self.request)
         if self.get_argument("code", False):
             user = yield self.get_authenticated_user(
                 redirect_uri=redirect_uri,
                 client_id=self.settings["facebook_api_key"],
                 client_secret=self.settings["facebook_secret"],
                 code=self.get_argument("code"))
-            self.set_secure_cookie(self.settings['cookie_secret'],
-                                   str(time.time()))
+            self.set_secure_cookie(self.settings['cookie_secret'], now())
             self.set_secure_cookie('user', json_encode(user['name']))
             self.redirect('/')
         else:
@@ -65,14 +64,11 @@ class TwitterAuth(RequestHandler, TwitterMixin):
     @tornado.gen.coroutine
     def get(self):
         # TODO: Test
-        redirect_uri = (self.request.protocol + '://' + self.request.host +
-                        self.request.path)
+        redirect_uri = '{.protocol:s}://{.host:s}{.path:s}'.format(self.request)
         if self.get_argument("oauth_token", None):
             user = yield self.get_authenticated_user()
-            self.set_secure_cookie(self.settings['cookie_secret'],
-                                   str(time.time()))
-            self.set_secure_cookie('user', str(user['username']))
+            self.set_secure_cookie(self.settings['cookie_secret'], now())
+            self.set_secure_cookie('user', json_encode(user['username']))
             self.redirect('/')
         else:
-            yield self.authenticate_redirect(
-                callback_uri=redirect_uri)
+            yield self.authenticate_redirect(callback_uri=redirect_uri)

@@ -16,7 +16,7 @@ class Task(object):
         self.name = name
         self.function = locate(schedule.function)
         self.kwargs = schedule.get('kwargs', {})
-        cron = (str(schedule.get(key, '*')).replace(' ', '') for key in self._units)
+        cron = (schedule.get(key, '*').replace(' ', '') for key in self._units)
         self.cron = CronTab(' '.join(cron))
         self.ioloop = ioloop or tornado.ioloop.IOLoop.current()
         # Run now if the task is to be run on startup, and app hasn't started

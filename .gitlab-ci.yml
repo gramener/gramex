@@ -1,2 +1,5 @@
+validate:
+  script: flake8
+
 unittest:
-  script: python setup.py test
+  script: make test

@@ -2,7 +2,6 @@ import logging
 import datetime
 import mimetypes
 import tornado.web
-from gramex import conf
 from pathlib import Path
 from tornado.escape import utf8
 from tornado.web import HTTPError
@@ -126,14 +125,14 @@ class DirectoryHandler(BaseHandler):
 
     @tornado.web.authenticated
     def get(self, path, include_body=True):
-        self.path = (self.root / str(path)).absolute()
+        self.path = (self.root / path).absolute()
         # relative_to() raises ValueError if path is not under root
         self.path.relative_to(self.root)
 
         if self.path.is_dir():
             self.file = self.path / self.default_filename if self.default_filename else self.path
             if not (self.default_filename and self.file.exists()) and not self.index:
-                raise HTTPError(404)
+                raise HTTPError(status_code=404)
             # Ensure URL has a trailing '/' when displaying the index / default file
             if not self.request.path.endswith('/'):
                 self.redirect(self.request.path + '/', permanent=True)
@@ -141,9 +140,11 @@ class DirectoryHandler(BaseHandler):
         else:
             self.file = self.path
             if not self.file.exists():
-                raise HTTPError(404)
+                raise HTTPError(status_code=404)
             if not self.file.is_file():
-                raise HTTPError(403, '%s is not a file or directory', self.path)
+                raise HTTPError(
+                    status_code=403,
+                    log_message='%s is not a file or directory' % self.path)
 
         if self.path.is_dir() and self.index and not (
                 self.default_filename and self.file.exists()):
@@ -166,8 +167,8 @@ class DirectoryHandler(BaseHandler):
             modified = self.file.stat().st_mtime
             self.set_header('Last-Modified', datetime.datetime.utcfromtimestamp(modified))
 
-            mime_type, content_encoding = mimetypes.guess_type(str(self.file))
-            if mime_type:
+            mime_type = mimetypes.types_map.get(self.file.suffix)
+            if mime_type is not None:
                 self.set_header('Content-Type', mime_type)
 
             for header_name, header_value in self.headers.items():
