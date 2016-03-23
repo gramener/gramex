@@ -4,6 +4,7 @@
 sphinx_rtd_theme
 
 # Testing
+nose
 coverage
 markdown
 tox
