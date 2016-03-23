@@ -2,4 +2,4 @@ validate:
   script: flake8
 
 unittest:
-  script: make test
+  script: python setup.py nosetests
