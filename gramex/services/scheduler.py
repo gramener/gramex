@@ -9,21 +9,28 @@ from pydoc import locate
 class Task(object):
     'Run a task. Then schedule it at the next occurrance.'
 
-    _units = 'minutes hours dates months weekdays years'.split()
-
     def __init__(self, name, schedule, ioloop=None):
         'Create a new task based on a schedule in ioloop (default to current)'
         self.name = name
         self.function = locate(schedule.function)
         self.kwargs = schedule.get('kwargs', {})
-        cron = (schedule.get(key, '*').replace(' ', '') for key in self._units)
-        self.cron = CronTab(' '.join(cron))
         self.ioloop = ioloop or tornado.ioloop.IOLoop.current()
-        # Run now if the task is to be run on startup, and app hasn't started
-        if schedule.get('startup') and not self.ioloop._running:
-            self.callback = self.ioloop.call_later(0, self.run)
-        else:
+
+        # Run now if the task is to be run on startup
+        if schedule.get('startup'):
+            # Don't re-run if the config was reloaded
+            if not self.ioloop._running:
+                self.function(**self.kwargs)
+
+        # Run on schedule if any of the schedule periods are specified
+        periods = 'minutes hours dates months weekdays years'.split()
+        if any(schedule.get(key) for key in periods):
+            # Convert all valid values into strings (e.g. 30 => '30'), and ignore any spaces
+            cron = (str(schedule.get(key, '*')).replace(' ', '') for key in periods)
+            self.cron = CronTab(' '.join(cron))
             self._schedule()
+        elif not schedule.get('startup'):
+            logging.warn('schedule: %s has no schedule nor startup', name)
 
     def run(self):
         'Run task. Then set up next callback.'
