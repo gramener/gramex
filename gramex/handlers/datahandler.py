@@ -42,15 +42,11 @@ class DataHandler(BaseHandler):
 
     '''
     def initialize(self, **kwargs):
-        self.params = kwargs
+        self.params = AttrDict(kwargs)
+        self.driver_key = yaml.dump(kwargs)
 
-    @tornado.web.authenticated
-    def get(self):
-        args = AttrDict(self.params)
-        driver_key = yaml.dump(args)
-
-        qconfig = {'query': args.get('query', {}),
-                   'default': args.get('default', {})}
+        qconfig = {'query': self.params.get('query', {}),
+                   'default': self.params.get('default', {})}
         delims = {'agg': ':', 'sort': ':', 'where': ''}
         nojoins = ['select', 'groupby']
 
@@ -68,26 +64,31 @@ class DataHandler(BaseHandler):
                     elif isinstance(val, (str, int)):
                         tmp[key] = [val]
                 qconfig[q] = tmp
+        self.qconfig = qconfig
 
-        def getq(key):
-            return (qconfig['query'].get(key) or
-                    self.get_arguments(key) or
-                    qconfig['default'].get(key))
+    def getq(self, key, default_value=None):
+        return (self.qconfig['query'].get(key) or
+                self.get_arguments(key) or
+                self.qconfig['default'].get(key) or
+                default_value)
 
-        _selects, _wheres = getq('select'), getq('where')
-        _groups, _aggs = getq('groupby'), getq('agg')
-        _offsets, _limits = getq('offset'), getq('limit')
-        _sorts = getq('sort')
-        _formats = getq('format')
+    @tornado.web.authenticated
+    def get(self):
+        _selects, _wheres = self.getq('select'), self.getq('where')
+        _groups, _aggs = self.getq('groupby'), self.getq('agg')
+        _offset = self.getq('offset', [None])[0]
+        _limit = self.getq('limit', [None])[0]
+        _sorts = self.getq('sort')
+        _formats = self.getq('format', ['json'])
 
-        if args.driver == 'sqlalchemy':
-            if driver_key not in drivers:
-                parameters = args.get('parameters', {})
-                drivers[driver_key] = sa.create_engine(args['url'], **parameters)
-            self.driver = drivers[driver_key]
+        if self.params.driver == 'sqlalchemy':
+            if self.driver_key not in drivers:
+                parameters = self.params.get('parameters', {})
+                drivers[self.driver_key] = sa.create_engine(self.params['url'], **parameters)
+            self.driver = drivers[self.driver_key]
 
             meta = sa.MetaData(bind=self.driver, reflect=True)
-            table = meta.tables[args['table']]
+            table = meta.tables[self.params['table']]
 
             if _wheres:
                 wh_re = re.compile(r'([^=><~!]+)([=><~!]{1,2})([^=><~!]+)')
@@ -156,28 +157,24 @@ class DataHandler(BaseHandler):
                     sorts.append(order.get(odr, sa.asc)(col))
                 query = query.order_by(*sorts)
 
-            if _offsets:
-                query = query.offset(_offsets[0])
-            if _limits:
-                query = query.limit(_limits[0])
+            if _offset:
+                query = query.offset(_offset)
+            if _limit:
+                query = query.limit(_limit)
 
             self.result = pd.read_sql_query(query, self.driver)
 
-        elif args.driver == 'blaze':
+        elif self.params.driver == 'blaze':
             '''TODO: Not caching blaze connections
             '''
             # Import blaze on demand -- it's a very slow import
             import blaze as bz                      # noqa
-            parameters = args.get('parameters', {})
-            bzcon = bz.Data(args['url'] +
-                            ('::' + args['table'] if args.get('table') else ''),
+            parameters = self.params.get('parameters', {})
+            bzcon = bz.Data(self.params['url'] +
+                            ('::' + self.params['table'] if self.params.get('table') else ''),
                             **parameters)
             table = bz.TableSymbol('table', bzcon.dshape)
             query = table
-
-            # hack
-            _offsets = _offsets or [None]
-            _limits = _limits or [None]
 
             if _wheres:
                 wh_re = re.compile(r'([^=><~!]+)([=><~!]{1,2})([^=><~!]+)')
@@ -226,16 +223,14 @@ class DataHandler(BaseHandler):
                     sorts.append(col)
                 query = query.sort(sorts, ascending=order.get(odr, True))
 
-            offset = _offsets[0]
-            limit = _limits[0]
-            if offset:
-                offset = int(offset)
-            if limit:
-                limit = int(limit)
-            if offset and limit:
-                limit += offset
-            if offset or limit:
-                query = query[offset:limit]
+            if _offset:
+                _offset = int(_offset)
+            if _limit:
+                _limit = int(_limit)
+            if _offset and _limit:
+                _limit += _offset
+            if _offset or _limit:
+                query = query[_offset:_limit]
 
             if _selects:
                 query = query[_selects]
@@ -244,7 +239,7 @@ class DataHandler(BaseHandler):
             self.result = bz.odo(bz.compute(query, bzcon.data), pd.DataFrame)
 
         else:
-            raise NotImplementedError('driver=%s is not supported yet.' % args.driver)
+            raise NotImplementedError('driver=%s is not supported yet.' % self.params.driver)
 
         # Set content and type based on format
         if 'json' in _formats:
@@ -261,7 +256,7 @@ class DataHandler(BaseHandler):
             raise NotImplementedError('format=%s is not supported yet.' % _formats)
 
         # Allow headers to be overridden
-        for header_name, header_value in args.get('headers', {}).items():
+        for header_name, header_value in self.params.get('headers', {}).items():
             self.set_header(header_name, header_value)
 
         self.write(self.content)
