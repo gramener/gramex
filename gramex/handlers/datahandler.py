@@ -246,16 +246,23 @@ class DataHandler(BaseHandler):
         else:
             raise NotImplementedError('driver=%s is not supported yet.' % args.driver)
 
-        for header_name, header_value in args['headers'].items():
-            self.set_header(header_name, header_value)
-
-        if args['headers']['Content-Type'] == 'application/json':
+        # Set content and type based on format
+        if 'json' in _formats:
+            self.set_header('Content-Type', 'application/json')
             self.content = self.result.to_json(orient='records')
-        if args['headers']['Content-Type'] == 'text/html':
-            self.content = self.result.to_html()
-        if args['headers']['Content-Type'] == 'text/csv':
-            self.content = self.result.to_csv(index=False, encoding='utf-8')
+        elif 'csv' in _formats:
+            self.set_header('Content-Type', 'text/csv')
             self.set_header("Content-Disposition", "attachment;filename=file.csv")
+            self.content = self.result.to_csv(index=False, encoding='utf-8')
+        elif 'html' in _formats:
+            self.set_header('Content-Type', 'text/html')
+            self.content = self.result.to_html()
+        else:
+            raise NotImplementedError('format=%s is not supported yet.' % _formats)
+
+        # Allow headers to be overridden
+        for header_name, header_value in args.get('headers', {}).items():
+            self.set_header(header_name, header_value)
 
         self.write(self.content)
         self.flush()

@@ -404,7 +404,7 @@ class TestDataHandlerConfig(TestSqliteHandler):
             return pdt.assert_frame_equal(a.reset_index(drop=True), b)
 
         def dbcase(case):
-            return '%s/datastore/%s%s/' % (BASE, self.database, case)
+            return '%s/datastore/%s%d/' % (BASE, self.database, case)
 
         eq(self.data.query('votes < 120')[:5],
            pd.read_csv(dbcase(1) + 'csv/?limit=5'))
@@ -428,3 +428,6 @@ class TestDataHandlerConfig(TestSqliteHandler):
             .rename(columns={'rating': 'ratemean', 'votes': 'votenu'})
             .loc[:, ['category', 'votenu']]),
            pd.read_csv(dbcase(6) + 'csv/'))
+        # 7: no matter what the URL args are, votes, limit & format are frozen
+        eq(self.data.query('votes < 120')[:5],
+           pd.read_csv(dbcase(7) + 'csv/?votes=99&limit=99&format=json'))
