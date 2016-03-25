@@ -167,24 +167,9 @@ class TestDirectoryHandler(TestGramex):
         self.assertIn(r.status_code, (301, 302), '/reload-config works and redirects')
 
 
-class TestDataHandler(TestGramex):
-    'Test gramex.handlers.DataHandler'
-    database = 'sqlite'
+class DataHandlerTestMixin(object):
     folder = Path(__file__).absolute().parent
     data = pd.read_csv(str(folder / 'actors.csv'))
-
-    @classmethod
-    def setUpClass(self):
-        self.db = self.folder / 'actors.db'
-        if self.db.is_file():
-            self.db.unlink()
-        self.engine = sa.create_engine('sqlite:///' + str(self.db))
-        self.data.to_sql('actors', con=self.engine, index=False)
-
-    @classmethod
-    def tearDownClass(self):
-        if self.db.is_file():
-            self.db.unlink()
 
     def test_pingdb(self):
         for frmt in ['csv', 'json', 'html']:
@@ -263,9 +248,26 @@ class TestDataHandler(TestGramex):
                          '&select=category&select=votenu&offset=1'))
 
 
-class TestMysqlDataHandler(TestDataHandler):
-    # The parent TestDataHandler executes test cases for sqlite;
-    # This class overwrites few of it properties to test it in MySQL
+class TestSqliteHandler(TestGramex, DataHandlerTestMixin):
+    'Test gramex.handlers.DataHandler for SQLite database via sqlalchemy driver'
+    database = 'sqlite'
+
+    @classmethod
+    def setUpClass(self):
+        self.db = self.folder / 'actors.db'
+        if self.db.is_file():
+            self.db.unlink()
+        self.engine = sa.create_engine('sqlite:///' + str(self.db))
+        self.data.to_sql('actors', con=self.engine, index=False)
+
+    @classmethod
+    def tearDownClass(self):
+        if self.db.is_file():
+            self.db.unlink()
+
+
+class TestMysqlDataHandler(TestGramex, DataHandlerTestMixin):
+    'Test gramex.handlers.DataHandler for MySQL database via sqlalchemy driver'
     database = 'mysql'
 
     @classmethod
@@ -286,7 +288,7 @@ class TestMysqlDataHandler(TestDataHandler):
         self.engine.dispose()
 
 
-class TestPostgresDataHandler(TestDataHandler):
+class TestPostgresDataHandler(TestGramex, DataHandlerTestMixin):
     'Test gramex.handlers.DataHandler for PostgreSQL database via sqlalchemy driver'
     database = 'postgresql'
 
@@ -319,7 +321,7 @@ class TestPostgresDataHandler(TestDataHandler):
         self.engine.dispose()
 
 
-class TestBlazeDataHandler(TestDataHandler):
+class TestBlazeDataHandler(TestSqliteHandler):
     'Test gramex.handlers.DataHandler for SQLite database via blaze driver'
     database = 'blazesqlite'
 
@@ -386,11 +388,8 @@ class TestBlazeMysqlDataHandler(TestMysqlDataHandler, TestBlazeDataHandler):
     'Test gramex.handlers.DataHandler for MySQL database via blaze driver'
     database = 'blazemysql'
 
-    def test_querydb(self):
-        TestBlazeDataHandler.test_querydb(self)
 
-
-class TestDataHandlerConfig(TestDataHandler):
+class TestDataHandlerConfig(TestSqliteHandler):
     'Test gramex.handlers.DataHandler'
     database = 'sqliteconfig'
 
