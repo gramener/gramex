@@ -123,8 +123,7 @@ url:
       url: sqlite:///actors.db
       table: actors
       parameters: {encoding: utf8}
-      headers:
-        Content-Type: text/csv
+      default: {format: csv}
   data/json:
     pattern: /datastore/sqlite/json/
     handler: gramex.handlers.DataHandler
@@ -133,8 +132,7 @@ url:
       url: sqlite:///actors.db
       table: actors
       parameters: {encoding: utf8}
-      headers:
-        Content-Type: application/json
+      default: {format: json}
   data/html:
     pattern: /datastore/sqlite/html/
     handler: gramex.handlers.DataHandler
@@ -143,8 +141,7 @@ url:
       url: sqlite:///actors.db
       table: actors
       parameters: {encoding: utf8}
-      headers:
-        Content-Type: text/html
+      default: {format: html}
 
   # Test datahandler for MySQL
   data/mysql/csv:
@@ -155,8 +152,7 @@ url:
       url: mysql+pymysql://root@localhost/test_datahandler
       table: actors
       parameters: {encoding: utf8}
-      headers:
-        Content-Type: text/csv
+      default: {format: csv}
   data/mysql/json:
     pattern: /datastore/mysql/json/
     handler: gramex.handlers.DataHandler
@@ -165,8 +161,7 @@ url:
       url: mysql+pymysql://root@localhost/test_datahandler
       table: actors
       parameters: {encoding: utf8}
-      headers:
-        Content-Type: application/json
+      default: {format: json}
   data/mysql/html:
     pattern: /datastore/mysql/html/
     handler: gramex.handlers.DataHandler
@@ -175,8 +170,7 @@ url:
       url: mysql+pymysql://root@localhost/test_datahandler
       table: actors
       parameters: {encoding: utf8}
-      headers:
-        Content-Type: text/html
+      default: {format: html}
 
   # Test datahandler for PostgreSQL
   data/postgresql/csv:
@@ -187,8 +181,7 @@ url:
       url: postgresql://postgres@localhost/test_datahandler
       table: actors
       parameters: {encoding: utf8}
-      headers:
-        Content-Type: text/csv
+      default: {format: csv}
   data/postgresql/json:
     pattern: /datastore/postgresql/json/
     handler: gramex.handlers.DataHandler
@@ -197,8 +190,7 @@ url:
       url: postgresql://postgres@localhost/test_datahandler
       table: actors
       parameters: {encoding: utf8}
-      headers:
-        Content-Type: application/json
+      default: {format: json}
   data/postgresql/html:
     pattern: /datastore/postgresql/html/
     handler: gramex.handlers.DataHandler
@@ -207,8 +199,7 @@ url:
       url: postgresql://postgres@localhost/test_datahandler
       table: actors
       parameters: {encoding: utf8}
-      headers:
-        Content-Type: text/html
+      default: {format: html}
 
   # TestDataHandler for blaze sqlite
   data/blaze/csv:
@@ -219,8 +210,7 @@ url:
       url: sqlite:///actors.db
       table: actors
       parameters: {encoding: utf8}
-      headers:
-        Content-Type: text/csv
+      default: {format: csv}
   data/blaze/json:
     pattern: /datastore/blazesqlite/json/
     handler: gramex.handlers.DataHandler
@@ -229,8 +219,7 @@ url:
       url: sqlite:///actors.db
       table: actors
       parameters: {encoding: utf8}
-      headers:
-        Content-Type: application/json
+      default: {format: json}
   data/blaze/html:
     pattern: /datastore/blazesqlite/html/
     handler: gramex.handlers.DataHandler
@@ -239,8 +228,7 @@ url:
       url: sqlite:///actors.db
       table: actors
       parameters: {encoding: utf8}
-      headers:
-        Content-Type: text/html
+      default: {format: html}
 
   # Test datahandler for blaze MySQL
   data/blazemysql/csv:
@@ -251,8 +239,7 @@ url:
       url: mysql+pymysql://root@localhost/test_datahandler
       table: actors
       parameters: {encoding: utf8}
-      headers:
-        Content-Type: text/csv
+      default: {format: csv}
   data/blazemysql/json:
     pattern: /datastore/blazemysql/json/
     handler: gramex.handlers.DataHandler
@@ -261,8 +248,7 @@ url:
       url: mysql+pymysql://root@localhost/test_datahandler
       table: actors
       parameters: {encoding: utf8}
-      headers:
-        Content-Type: application/json
+      default: {format: json}
   data/blazemysql/html:
     pattern: /datastore/blazemysql/html/
     handler: gramex.handlers.DataHandler
@@ -271,8 +257,7 @@ url:
       url: mysql+pymysql://root@localhost/test_datahandler
       table: actors
       parameters: {encoding: utf8}
-      headers:
-        Content-Type: text/html
+      default: {format: html}
 
   # TestDataHandlerConfig for Sqlite
   data/sqliteconfig1/csv:
@@ -282,9 +267,8 @@ url:
       driver: sqlalchemy
       url: sqlite:///actors.db
       table: actors
-      headers:
-        Content-Type: text/csv
       default:
+        format: csv
         where: [votes<120]
   data/sqliteconfig2/csv:
     pattern: /datastore/sqliteconfig2/csv/
@@ -293,9 +277,8 @@ url:
       driver: sqlalchemy
       url: sqlite:///actors.db
       table: actors
-      headers:
-        Content-Type: text/csv
       default:
+        format: csv
         where: votes<120
   data/sqliteconfig3/csv:
     pattern: /datastore/sqliteconfig3/csv/
@@ -304,8 +287,8 @@ url:
       driver: sqlalchemy
       url: sqlite:///actors.db
       table: actors
-      headers:
-        Content-Type: text/csv
+      default:
+        format: csv
       query:
         where: votes<120
   data/sqliteconfig4/csv:
@@ -315,9 +298,8 @@ url:
       driver: sqlalchemy
       url: sqlite:///actors.db
       table: actors
-      headers:
-        Content-Type: text/csv
       default:
+        format: csv
         select: ["rating", "votes"]
       query:
         where: votes<120
@@ -328,9 +310,8 @@ url:
       driver: sqlalchemy
       url: sqlite:///actors.db
       table: actors
-      headers:
-        Content-Type: text/csv
       default:
+        format: csv
         select:
           rating: "any-value"
           votes:
@@ -343,9 +324,8 @@ url:
       driver: blaze
       url: sqlite:///actors.db
       table: actors
-      headers:
-        Content-Type: text/csv
       default:
+        format: csv
         select: ["category", "votenu"]
         groupby: "category"
       query:
@@ -355,6 +335,18 @@ url:
         where:
           votes: "<120"
           rating: ">0.4"
+  data/sqliteconfig7/csv:
+    pattern: /datastore/sqliteconfig7/csv/
+    handler: gramex.handlers.DataHandler
+    kwargs:
+      driver: sqlalchemy
+      url: sqlite:///actors.db
+      table: actors
+      parameters: {encoding: utf8}
+      query:
+        format: csv
+        where: [votes<120]
+        limit: 5
 
 # Store Gramex logs in gramex.log
 log:
