@@ -47,7 +47,7 @@ class DataHandler(BaseHandler):
     @tornado.web.authenticated
     def get(self):
         args = AttrDict(self.params)
-        key = yaml.dump(args)
+        driver_key = yaml.dump(args)
 
         qconfig = {'query': args.get('query', {}),
                    'default': args.get('default', {})}
@@ -78,12 +78,13 @@ class DataHandler(BaseHandler):
         _groups, _aggs = getq('groupby'), getq('agg')
         _offsets, _limits = getq('offset'), getq('limit')
         _sorts = getq('sort')
+        _formats = getq('format')
 
         if args.driver == 'sqlalchemy':
-            if key not in drivers:
+            if driver_key not in drivers:
                 parameters = args.get('parameters', {})
-                drivers[key] = sa.create_engine(args['url'], **parameters)
-            self.driver = drivers[key]
+                drivers[driver_key] = sa.create_engine(args['url'], **parameters)
+            self.driver = drivers[driver_key]
 
             meta = sa.MetaData(bind=self.driver, reflect=True)
             table = meta.tables[args['table']]
