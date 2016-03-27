@@ -111,6 +111,32 @@ class FunctionHandler(BaseHandler):
             name = handler.path_args[0]
             age = handler.path_args[1]
 
+    You can use asynchronous functions via Tornado's `Coroutines`_ like this::
+
+        @tornado.gen.coroutine
+        def fetch(url1, url2):
+            client = tornado.httpclient.AsyncHTTPClient()
+            r1, r2 = yield [client.fetch(url1), client.fetch(url2)]
+            raise tornado.gen.Return(r1.body + r2.body)
+
+    This `fetch` function can be used as a FunctionHandler.
+
+    The simplest way to call a blocking function asynchronously is to use a
+    ``ThreadPoolExecutor``::
+
+        thread_pool = tornado.concurrent.ThreadPoolExecutor(4)
+
+        @tornado.gen.coroutine
+        def calculate(data1, data2):
+            group1, group2 = yield [
+                thread_pool.submit(data1.groupby, ['category']),
+                thread_pool.submit(data2.groupby, ['category']),
+            ]
+            result = thead_pool.submit(pd.concat, [group1, group2])
+            raise tornado.gen.Return(result)
+
+    .. _Coroutines: http://tornado.readthedocs.org/en/stable/guide/coroutines.html
+
     To redirect to a different URL when the function is done, use ``redirect``::
 
         url:
