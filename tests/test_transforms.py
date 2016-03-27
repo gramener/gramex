@@ -3,7 +3,7 @@ import unittest
 from orderedattrdict import AttrDict
 from orderedattrdict.yamlutils import AttrDictYAMLLoader
 
-from gramex.transforms import build_transform, _identity, badgerfish
+from gramex.transforms import build_transform, badgerfish
 
 
 def yaml_parse(text):
@@ -22,12 +22,9 @@ class BuildTransform(unittest.TestCase):
                 msg + ': ' + attr[3:]
             )
 
-    def test_identity(self):
-        'function: defaults to lambda x: x'
-        def transform(_val):
-            return _identity(_val)
-        fn = build_transform({})
-        self.eqfn(fn, transform, 'test_identity')
+    def test_no_function_raises_error(self):
+        with self.assertRaises(KeyError):
+            build_transform({})
 
     def test_fn(self):
         def transform(_val):

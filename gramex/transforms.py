@@ -11,13 +11,6 @@ from orderedattrdict.yamlutils import AttrDictYAMLLoader
 from .config import walk, load_imports
 
 
-def _identity(*args, **kwargs):
-    'Return positional arguments as-is. Ignore keyword arguments.'
-    if len(args) == 1:
-        return args[0]
-    return args
-
-
 def _arg_repr(arg):
     '''
     Arguments starting with ``=`` are converted into the variable. Otherwise,
@@ -89,9 +82,18 @@ def build_transform(conf, vars={}):
     if not vars:
         vars = {'_val': None}
 
+    if 'function' not in conf:
+        raise KeyError('No function in conf %s' % conf)
+
+    function = locate(conf['function'])
+    if function is None:
+        raise NameError('Cannot find function %s' % conf['function'])
+    doc = function.__doc__
+    name = conf['function']
+
     # Create the following code:
-    #   def transform(vars):
-    #       return function(
+    #   def transform(var=default, var=default, ...):
+    #       return function(arg, arg, kwarg=value, kwarg=value, ...)
     body = ['def transform(',
             ', '.join('{:s}={!r:}'.format(var, val) for var, val in vars.items()),
             '):\n',
@@ -113,20 +115,11 @@ def build_transform(conf, vars={}):
 
     body.append('\t)\n')
 
-    if 'function' not in conf:
-        function = _identity
-        doc = _identity.__doc__
-        name = 'identity'
-    else:
-        function = locate(conf['function'])
-        if function is None:
-            raise NameError('Cannot find function %s' % conf['function'])
-        doc = function.__doc__
-        name = conf['function']
-
-    context = {'function': function, 'AttrDict': AttrDict}
+    # Compile the function
+    context = {'function': function}
     exec(''.join(body), context)
 
+    # Get the transformed function and return it
     function = context['transform']
     function.__name__ = name
     function.__doc__ = doc
