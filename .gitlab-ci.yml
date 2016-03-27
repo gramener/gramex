@@ -1,5 +1,26 @@
-validate:
-  script: flake8
+# Documentation on starting services:
+#   http://doc.gitlab.com/ce/ci/services/postgres.html
+#   http://doc.gitlab.com/ce/ci/services/mysql.html
+services:
+  - postgres:latest
+  - mysql:latest
+
+variables:
+  POSTGRES_DB: postgres
+  POSTGRES_USER: postgres
+  POSTGRES_PASSWORD: ""
+  MYSQL_DATABASE: test_datahandler
+  MYSQL_USER: root
+  MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
 
 unittest:
-  script: python setup.py nosetests
+  script:
+    # First, make sure there are no PEP8 errors
+    - flake8
+
+    # psycopg2 requires pg_config which is in libpq-dev
+    # http://stackoverflow.com/a/12037133/100904
+    - apt-get install -y libpq-dev
+
+    # Run unit tests
+    - python setup.py nosetests
