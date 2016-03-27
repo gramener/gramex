@@ -69,6 +69,10 @@ class TestGramex(unittest.TestCase):
                 self.assertEqual(r.content, file.read(), url)
         return r
 
+
+class TestURLPriority(TestGramex):
+    'Test Gramex URL priority sequence'
+
     def test_url_priority(self):
         self.check('/path/abc', text='/path/.*')
         self.check('/path/file', text='/path/file')

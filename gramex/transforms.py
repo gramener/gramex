@@ -4,6 +4,7 @@ import six
 import yaml
 import xmljson
 import lxml.html
+import tornado.gen
 from pydoc import locate
 from orderedattrdict import AttrDict
 from orderedattrdict.yamlutils import AttrDictYAMLLoader
@@ -119,8 +120,8 @@ def build_transform(conf, vars={}):
     context = {'function': function}
     exec(''.join(body), context)
 
-    # Get the transformed function and return it
-    function = context['transform']
+    # Get the transformed function and return it as a generator
+    function = tornado.gen.coroutine(context['transform'])
     function.__name__ = name
     function.__doc__ = doc
     return function
@@ -139,6 +140,6 @@ def badgerfish(content, handler=None, mapping={}, doctype='<!DOCTYPE html>'):
     maps = {tag: build_transform(trans) for tag, trans in mapping.items()}
     for tag, value, node in walk(data):
         if tag in maps:
-            node[tag] = maps[tag](value)
+            node[tag] = maps[tag](value).result()
     return lxml.html.tostring(xmljson.badgerfish.etree(data)[0],
                               doctype=doctype, encoding='unicode')

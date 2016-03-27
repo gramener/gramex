@@ -1,4 +1,5 @@
 import tornado.web
+import tornado.gen
 from .basehandler import BaseHandler
 from ..transforms import build_transform
 
@@ -122,8 +123,10 @@ class FunctionHandler(BaseHandler):
         self.function = build_transform(kwargs, vars={'handler': None})
         self.headers = kwargs.get('headers', {})
         self.redirect_url = kwargs.get('redirect', None)
+        self.post = self.get
 
     @tornado.web.authenticated
+    @tornado.gen.coroutine
     def get(self, *path_args):
         result = self.function(handler=self)
         for header_name, header_value in self.headers.items():
@@ -131,8 +134,5 @@ class FunctionHandler(BaseHandler):
         if self.redirect_url is not None:
             self.redirect(self.redirect_url or self.request.headers.get('Referer', '/'))
         else:
-            self.write(result)
+            self.write(result.result())
             self.flush()
-
-    def post(self, *path_args):
-        return self.get(*path_args)

@@ -1,5 +1,6 @@
 import yaml
 import unittest
+import tornado.gen
 from orderedattrdict import AttrDict
 from orderedattrdict.yamlutils import AttrDictYAMLLoader
 
@@ -14,7 +15,7 @@ class BuildTransform(unittest.TestCase):
     'Test gramex.transforms.build_transform'
 
     def eqfn(self, a, b, msg=None):
-        a_code, b_code = a.__code__, b.__code__
+        a_code, b_code = a.__code__, tornado.gen.coroutine(b).__code__
         for attr in ('co_code', 'co_argcount', 'co_nlocals'):
             self.assertEqual(
                 getattr(a_code, attr),

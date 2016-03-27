@@ -2,6 +2,7 @@ import logging
 import datetime
 import mimetypes
 import tornado.web
+import tornado.gen
 from pathlib import Path
 from tornado.escape import utf8
 from tornado.web import HTTPError
@@ -124,6 +125,7 @@ class DirectoryHandler(BaseHandler):
         return self.get(path, include_body=False)
 
     @tornado.web.authenticated
+    @tornado.gen.coroutine
     def get(self, path, include_body=True):
         self.path = (self.root / path).absolute()
         # relative_to() raises ValueError if path is not under root
@@ -186,7 +188,7 @@ class DirectoryHandler(BaseHandler):
                 if transform:
                     for header_name, header_value in transform['headers'].items():
                         self.set_header(header_name, header_value)
-                    self.content = transform['function'](handler=self, content=self.content)
+                    self.content = transform['function'](handler=self, content=self.content).result()
                 self.set_header('Content-Length', len(utf8(self.content)))
 
         if include_body:
