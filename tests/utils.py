@@ -1,7 +1,9 @@
 import json
+import pandas as pd
 from tornado import gen
 from tornado.web import RequestHandler
 from tornado.httpclient import AsyncHTTPClient
+from concurrent.futures import ThreadPoolExecutor
 
 
 def args_as_json(handler):
@@ -25,7 +27,7 @@ def params_as_json(*args, **kwargs):
         return result
 
 @gen.coroutine
-def async_task(*args, **kwargs):
+def async_args(*args, **kwargs):
     'Run params_as_json asynchronously'
     result = yield gen.Task(params_as_json, *args, **kwargs)
     raise gen.Return(result)
@@ -45,3 +47,23 @@ def async_http2(url1, url2):
     httpclient = AsyncHTTPClient()
     r1, r2 = yield [httpclient.fetch(url1), httpclient.fetch(url2)]
     raise gen.Return(r1.body + r2.body)
+
+
+thread_pool = ThreadPoolExecutor(4)
+
+
+def count_group(df, col):
+    return df.groupby(col)[col].count()
+
+
+@gen.coroutine
+def async_calc(handler):
+    rows = 1000
+    cols = ['A', 'B', 'C']
+    df = pd.DataFrame(
+        pd.np.arange(rows * len(cols)).reshape((rows, len(cols))),
+        columns=cols)
+    df = df % 4
+    counts = yield [thread_pool.submit(count_group, df, col) for col in cols]
+    # result is [[250,250,250],[250,250,250],[250,250,250],[250,250,250]]
+    raise gen.Return(pd.concat(counts, axis=1).to_json(orient='values'))

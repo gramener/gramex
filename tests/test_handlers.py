@@ -95,10 +95,12 @@ class TestFunctionHandler(TestGramex):
         self.check('/func/dumpx?x=1&x=2', text='{"args": [["1", "2"]], "kwargs": {}}')
 
     def test_async(self):
-        self.check('/func/asyncargs', text='{"args": [0, 1], "kwargs": {"a": "a", "b": "b"}}')
-        self.check('/func/asynchttp', text='{"args": [["1", "2"]], "kwargs": {}}')
-        self.check('/func/asynchttp2',
+        self.check('/func/async_args', text='{"args": [0, 1], "kwargs": {"a": "a", "b": "b"}}')
+        self.check('/func/async_http', text='{"args": [["1", "2"]], "kwargs": {}}')
+        self.check('/func/async_http2',
                    text='{"args": [["1"]], "kwargs": {}}{"args": [["2"]], "kwargs": {}}')
+        self.check('/func/async_calc',
+                   text='[[250,250,250],[250,250,250],[250,250,250],[250,250,250]]')
 
 
 class TestDirectoryHandler(TestGramex):
