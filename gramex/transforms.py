@@ -7,7 +7,6 @@ import lxml.html
 import tornado.gen
 import tornado.concurrent
 from pydoc import locate
-from orderedattrdict import AttrDict
 from orderedattrdict.yamlutils import AttrDictYAMLLoader
 
 from .config import walk, load_imports
