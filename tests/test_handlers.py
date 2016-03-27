@@ -162,7 +162,8 @@ class TestDirectoryHandler(TestGramex):
 
         handler = AttrDict(file=info.folder / 'dir/badgerfish.yaml')
         with (info.folder / 'dir/badgerfish.yaml').open(encoding='utf-8') as f:
-            self.check('/dir/transform/badgerfish.yaml', text=badgerfish(f.read(), handler))
+            result = yield badgerfish(f.read(), handler)
+            self.check('/dir/transform/badgerfish.yaml', text=result)
             self.check('/dir/transform/badgerfish.yaml', text='imported file')
 
     def test_default_config(self):

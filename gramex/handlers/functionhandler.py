@@ -134,5 +134,6 @@ class FunctionHandler(BaseHandler):
         if self.redirect_url is not None:
             self.redirect(self.redirect_url or self.request.headers.get('Referer', '/'))
         else:
-            self.write(result.result())
+            value = yield result
+            self.write(value)
             self.flush()
