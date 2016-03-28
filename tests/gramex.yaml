@@ -21,18 +21,21 @@ url:
         a: "a"
         b: "b"
 
+  func/async_args:
+    pattern: /func/async_args
+    handler: gramex.handlers.FunctionHandler
+    kwargs:
+      function: utils.async_args
+      args: [0, 1]
+      kwargs:
+        a: "a"
+        b: "b"
+
   func/handler:
     pattern: /func/handler
     handler: gramex.handlers.FunctionHandler
     kwargs:
       function: utils.params_as_json
-
-  func/dumpx:
-    pattern: /func/dumpx
-    handler: gramex.handlers.FunctionHandler
-    kwargs:
-      function: utils.params_as_json
-      args: =handler.get_arguments('x')
 
   func/composite:
     pattern: /func/composite
@@ -43,6 +46,46 @@ url:
       kwargs:
         a: a
         handler: =handler
+
+  func/compositenested:
+    pattern: /func/compositenested
+    handler: gramex.handlers.FunctionHandler
+    kwargs:
+      function: utils.params_as_json
+      args: [0, =handler]
+      kwargs:
+        a:
+          b: 1
+        handler: =handler
+
+  func/dumpx:
+    pattern: /func/dumpx
+    handler: gramex.handlers.FunctionHandler
+    kwargs:
+      function: utils.params_as_json
+      args: =handler.get_arguments('x')
+
+  func/async_http:
+    pattern: /func/async_http
+    handler: gramex.handlers.FunctionHandler
+    kwargs:
+      function: utils.async_http
+      args: "http://localhost:9999/func/dumpx?x=1&x=2"
+
+  func/async_http2:
+    pattern: /func/async_http2
+    handler: gramex.handlers.FunctionHandler
+    kwargs:
+      function: utils.async_http2
+      args:
+        - "http://localhost:9999/func/dumpx?x=1"
+        - "http://localhost:9999/func/dumpx?x=2"
+
+  func/async_calc:
+    pattern: /func/async_calc
+    handler: gramex.handlers.FunctionHandler
+    kwargs:
+      function: utils.async_calc
 
   # TestDirectoryHandler
   dir/noindex:

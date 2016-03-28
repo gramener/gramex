@@ -1,4 +1,5 @@
 import tornado.web
+import tornado.gen
 from .basehandler import BaseHandler
 from ..transforms import build_transform
 
@@ -110,6 +111,32 @@ class FunctionHandler(BaseHandler):
             name = handler.path_args[0]
             age = handler.path_args[1]
 
+    You can use asynchronous functions via Tornado's `Coroutines`_ like this::
+
+        @tornado.gen.coroutine
+        def fetch(url1, url2):
+            client = tornado.httpclient.AsyncHTTPClient()
+            r1, r2 = yield [client.fetch(url1), client.fetch(url2)]
+            raise tornado.gen.Return(r1.body + r2.body)
+
+    This `fetch` function can be used as a FunctionHandler.
+
+    The simplest way to call a blocking function asynchronously is to use a
+    ``ThreadPoolExecutor``::
+
+        thread_pool = concurrent.futures.ThreadPoolExecutor(4)
+
+        @tornado.gen.coroutine
+        def calculate(data1, data2):
+            group1, group2 = yield [
+                thread_pool.submit(data1.groupby, ['category']),
+                thread_pool.submit(data2.groupby, ['category']),
+            ]
+            result = thead_pool.submit(pd.concat, [group1, group2])
+            raise tornado.gen.Return(result)
+
+    .. _Coroutines: http://tornado.readthedocs.org/en/stable/guide/coroutines.html
+
     To redirect to a different URL when the function is done, use ``redirect``::
 
         url:
@@ -122,8 +149,10 @@ class FunctionHandler(BaseHandler):
         self.function = build_transform(kwargs, vars={'handler': None})
         self.headers = kwargs.get('headers', {})
         self.redirect_url = kwargs.get('redirect', None)
+        self.post = self.get
 
     @tornado.web.authenticated
+    @tornado.gen.coroutine
     def get(self, *path_args):
         result = self.function(handler=self)
         for header_name, header_value in self.headers.items():
@@ -131,8 +160,6 @@ class FunctionHandler(BaseHandler):
         if self.redirect_url is not None:
             self.redirect(self.redirect_url or self.request.headers.get('Referer', '/'))
         else:
-            self.write(result)
+            value = yield result
+            self.write(value)
             self.flush()
-
-    def post(self, *path_args):
-        return self.get(*path_args)

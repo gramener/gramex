@@ -4,18 +4,13 @@ import six
 import yaml
 import xmljson
 import lxml.html
+import tornado.gen
+import tornado.concurrent
 from pydoc import locate
 from orderedattrdict import AttrDict
 from orderedattrdict.yamlutils import AttrDictYAMLLoader
 
 from .config import walk, load_imports
-
-
-def _identity(*args, **kwargs):
-    'Return positional arguments as-is. Ignore keyword arguments.'
-    if len(args) == 1:
-        return args[0]
-    return args
 
 
 def _arg_repr(arg):
@@ -30,7 +25,10 @@ def _arg_repr(arg):
     return repr(arg)
 
 
-def build_transform(conf, vars={}):
+_build_transform_cache = {}
+
+
+def build_transform(conf, vars={}, _coroutine=True):
     '''
     Converts a YAML function configuration into a callable function. For e.g.::
 
@@ -84,18 +82,33 @@ def build_transform(conf, vars={}):
                 separators=[args["comma"], args["colon"]]
             )
     '''
+    # If the input is already cached, return it.
+    cache_key = yaml.dump(conf), yaml.dump(vars)
+    if cache_key in _build_transform_cache:
+        return _build_transform_cache[cache_key]
 
     # The returned function takes a single argument by default
     if not vars:
         vars = {'_val': None}
 
+    if 'function' not in conf:
+        raise KeyError('No function in conf %s' % conf)
+
+    function = locate(conf['function'])
+    if function is None:
+        raise NameError('Cannot find function %s' % conf['function'])
+    doc = function.__doc__
+    name = conf['function']
+
     # Create the following code:
-    #   def transform(vars):
-    #       return function(
-    body = ['def transform(',
-            ', '.join('{:s}={!r:}'.format(var, val) for var, val in vars.items()),
-            '):\n',
-            '\treturn function(\n']
+    #   def transform(var=default, var=default, ...):
+    #       result = function(arg, arg, kwarg=value, kwarg=value, ...)
+    body = [
+        'def transform(',
+        ', '.join('{:s}={!r:}'.format(var, val) for var, val in vars.items()),
+        '):\n',
+        '\tresult = function(\n',
+    ]
 
     # If args is a string, convert to a list with that string
     # If args is not specified, use vars' keys as args
@@ -111,28 +124,37 @@ def build_transform(conf, vars={}):
     for key, val in conf.get('kwargs', {}).items():
         body.append('\t\t%s=%s,\n' % (key, _arg_repr(val)))
 
-    body.append('\t)\n')
+    # If the result is a future,  yield it. Else, return it.
+    body += [
+        '\t)\n',
+        '\tif is_future(result): result = yield result\n',
+        '\traise Return(result)',
+    ]
 
-    if 'function' not in conf:
-        function = _identity
-        doc = _identity.__doc__
-        name = 'identity'
-    else:
-        function = locate(conf['function'])
-        if function is None:
-            raise NameError('Cannot find function %s' % conf['function'])
-        doc = function.__doc__
-        name = conf['function']
-
-    context = {'function': function, 'AttrDict': AttrDict}
+    # Compile the function with context variables
+    context = {
+        'function': function,
+        'is_future': tornado.concurrent.is_future,
+        'Return': tornado.gen.Return,
+        'AttrDict': AttrDict
+    }
     exec(''.join(body), context)
 
+    # Return the transformed function
     function = context['transform']
+    # Convert it into a coroutine if _coroutine is True (default). But test
+    # cases may pass _coroutine=False to test the raw conversion functionality.
+    if _coroutine:
+        function = tornado.gen.coroutine(function)
     function.__name__ = name
     function.__doc__ = doc
+
+    # Cache the result and return it
+    _build_transform_cache[cache_key] = function
     return function
 
 
+@tornado.gen.coroutine
 def badgerfish(content, handler=None, mapping={}, doctype='<!DOCTYPE html>'):
     '''
     A transform that converts string content to YAML, then maps nodes
@@ -146,6 +168,6 @@ def badgerfish(content, handler=None, mapping={}, doctype='<!DOCTYPE html>'):
     maps = {tag: build_transform(trans) for tag, trans in mapping.items()}
     for tag, value, node in walk(data):
         if tag in maps:
-            node[tag] = maps[tag](value)
-    return lxml.html.tostring(xmljson.badgerfish.etree(data)[0],
-                              doctype=doctype, encoding='unicode')
+            node[tag] = yield maps[tag](value)
+    raise tornado.gen.Return(lxml.html.tostring(xmljson.badgerfish.etree(data)[0],
+                                                doctype=doctype, encoding='unicode'))

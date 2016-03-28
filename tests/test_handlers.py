@@ -69,6 +69,10 @@ class TestGramex(unittest.TestCase):
                 self.assertEqual(r.content, file.read(), url)
         return r
 
+
+class TestURLPriority(TestGramex):
+    'Test Gramex URL priority sequence'
+
     def test_url_priority(self):
         self.check('/path/abc', text='/path/.*')
         self.check('/path/file', text='/path/file')
@@ -88,6 +92,17 @@ class TestFunctionHandler(TestGramex):
         self.check('/func/handler', text='{"args": ["Handler"], "kwargs": {}')
         self.check('/func/composite',
                    text='{"args": [0, "Handler"], "kwargs": {"a": "a", "handler": "Handler"}}')
+        self.check('/func/compositenested',
+                   text='{"args": [0, "Handler"], "kwargs": {"a": {"b": 1}, "handler": "Handler"}}')
+        self.check('/func/dumpx?x=1&x=2', text='{"args": [["1", "2"]], "kwargs": {}}')
+
+    def test_async(self):
+        self.check('/func/async_args', text='{"args": [0, 1], "kwargs": {"a": "a", "b": "b"}}')
+        self.check('/func/async_http', text='{"args": [["1", "2"]], "kwargs": {}}')
+        self.check('/func/async_http2',
+                   text='{"args": [["1"]], "kwargs": {}}{"args": [["2"]], "kwargs": {}}')
+        self.check('/func/async_calc',
+                   text='[[250,250,250],[250,250,250],[250,250,250],[250,250,250]]')
 
 
 class TestDirectoryHandler(TestGramex):
@@ -158,7 +173,8 @@ class TestDirectoryHandler(TestGramex):
 
         handler = AttrDict(file=info.folder / 'dir/badgerfish.yaml')
         with (info.folder / 'dir/badgerfish.yaml').open(encoding='utf-8') as f:
-            self.check('/dir/transform/badgerfish.yaml', text=badgerfish(f.read(), handler))
+            result = yield badgerfish(f.read(), handler)
+            self.check('/dir/transform/badgerfish.yaml', text=result)
             self.check('/dir/transform/badgerfish.yaml', text='imported file')
 
     def test_default_config(self):
