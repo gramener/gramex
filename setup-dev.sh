@@ -58,10 +58,9 @@ git clone http://code.gramener.com/s.anand/gramex.git
 
 # Install requirements
 cd gramex
-pip install -r requirements.txt         # Base requirements
-pip install -r requirements-dev.txt     # Additional development requirements
 pip uninstall gramex                    # Uninstall any previous gramex repo
 pip install -e .                        # Install this repo as gramex
+python setup.py test                    # Run test cases
 
 # Install Bower components (saying yes to everything)
 yes | bower --config.analytics=false install
