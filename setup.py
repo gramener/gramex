@@ -18,6 +18,11 @@ with open('HISTORY.rst', encoding='utf-8') as handle:
 with open('gramex/release.json', encoding='utf-8') as handle:
     release_args = json.load(handle)
 
+req_install = [str(entry.req) for entry in parse_requirements(
+               'requirements.txt', session=PipSession())]
+req_tests = [str(entry.req) for entry in parse_requirements(
+             'requirements-dev.txt', session=PipSession())]
+
 setup(
     long_description=long_description,
     packages=find_packages(),
@@ -35,18 +40,12 @@ setup(
         ] + ['gramex.yaml', 'release.json']
     },
     include_package_data=True,
-
-    install_requires=[str(entry.req) for entry in
-                      parse_requirements('requirements.txt', session=PipSession())],
+    install_requires=req_install,
     zip_safe=False,
     entry_points={
         'console_scripts': ['gramex = gramex:init']
     },
     test_suite='tests',
-    tests_require=[
-        'markdown',
-        'psycopg2',
-        'pymysql',
-    ],
+    tests_require=req_tests,
     **release_args
 )

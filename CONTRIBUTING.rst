@@ -69,8 +69,6 @@ To manually set up the development environment, follow these steps.
    "installs" the gramex folder in development mode. Changes to this folder are
    reflected in the environment::
 
-      pip install -r requirements.txt         # Base requirements
-      pip install -r requirements-dev.txt     # Additional development requirements
       pip uninstall gramex                    # Uninstall any previous gramex repo
       pip install -e .                        # Install this repo as gramex
 
