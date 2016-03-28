@@ -124,7 +124,7 @@ class FunctionHandler(BaseHandler):
     The simplest way to call a blocking function asynchronously is to use a
     ``ThreadPoolExecutor``::
 
-        thread_pool = tornado.concurrent.ThreadPoolExecutor(4)
+        thread_pool = concurrent.futures.ThreadPoolExecutor(4)
 
         @tornado.gen.coroutine
         def calculate(data1, data2):
