@@ -54,7 +54,8 @@ class BuildTransform(unittest.TestCase):
     def test_fn(self):
         def transform(_val):
             result = len(_val)
-            if is_future(result): result = yield result
+            if is_future(result):
+                result = yield result
             raise Return(result)
         fn = _build_transform(yaml_parse('''
             function: len
@@ -64,7 +65,8 @@ class BuildTransform(unittest.TestCase):
     def test_fn_args(self):
         def transform(_val):
             result = max(1, 2)
-            if is_future(result): result = yield result
+            if is_future(result):
+                result = yield result
             raise Return(result)
         fn = _build_transform(yaml_parse('''
             function: max
@@ -75,7 +77,8 @@ class BuildTransform(unittest.TestCase):
     def test_fn_args_var(self):
         def transform(x=1, y=2):
             result = max(x, y, 3)
-            if is_future(result): result = yield result
+            if is_future(result):
+                result = yield result
             raise Return(result)
         fn = _build_transform(yaml_parse('''
             function: max
@@ -89,7 +92,8 @@ class BuildTransform(unittest.TestCase):
     def test_fn_kwargs(self):
         def transform(_val):
             result = dict(_val, a=1, b=2)
-            if is_future(result): result = yield result
+            if is_future(result):
+                result = yield result
             raise Return(result)
         fn = _build_transform(yaml_parse('''
             function: dict
@@ -100,7 +104,8 @@ class BuildTransform(unittest.TestCase):
     def test_fn_kwargs_complex(self):
         def transform(_val):
             result = dict(_val, a=[1, 2], b=AttrDict([('b1', 'x'), ('b2', 'y')]))
-            if is_future(result): result = yield result
+            if is_future(result):
+                result = yield result
             raise Return(result)
         fn = _build_transform(yaml_parse('''
             function: dict
@@ -115,7 +120,8 @@ class BuildTransform(unittest.TestCase):
     def test_fn_kwargs_var(self):
         def transform(x=1, y=2):
             result = dict(x, y, a=x, b=y, c=3)
-            if is_future(result): result = yield result
+            if is_future(result):
+                result = yield result
             raise Return(result)
         fn = _build_transform(yaml_parse('''
             function: dict
@@ -126,7 +132,8 @@ class BuildTransform(unittest.TestCase):
     def test_fn_args_kwargs(self):
         def transform(_val):
             result = format(1, 2, a=3, b=4, c=5)
-            if is_future(result): result = yield result
+            if is_future(result):
+                result = yield result
             raise Return(result)
         fn = _build_transform(yaml_parse('''
             function: format
@@ -138,7 +145,8 @@ class BuildTransform(unittest.TestCase):
     def test_fn_args_kwargs_var(self):
         def transform(x=1, y=2):
             result = format(x, y, a=x, b=y, c=3)
-            if is_future(result): result = yield result
+            if is_future(result):
+                result = yield result
             raise Return(result)
         fn = _build_transform(yaml_parse('''
             function: format
@@ -150,7 +158,8 @@ class BuildTransform(unittest.TestCase):
     def test_coroutine(self):
         def transform(_val):
             result = gen_str(_val)
-            if is_future(result): result = yield result
+            if is_future(result):
+                result = yield result
             raise Return(result)
         fn = _build_transform(yaml_parse('''
             function: tests.test_transforms.gen_str
