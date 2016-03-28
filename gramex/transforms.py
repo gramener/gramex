@@ -25,6 +25,9 @@ def _arg_repr(arg):
     return repr(arg)
 
 
+_build_transform_cache = {}
+
+
 def build_transform(conf, vars={}, _coroutine=True):
     '''
     Converts a YAML function configuration into a callable function. For e.g.::
@@ -79,6 +82,10 @@ def build_transform(conf, vars={}, _coroutine=True):
                 separators=[args["comma"], args["colon"]]
             )
     '''
+    # If the input is already cached, return it.
+    cache_key = yaml.dump(conf), yaml.dump(vars)
+    if cache_key in _build_transform_cache:
+        return _build_transform_cache[cache_key]
 
     # The returned function takes a single argument by default
     if not vars:
@@ -141,6 +148,9 @@ def build_transform(conf, vars={}, _coroutine=True):
         function = tornado.gen.coroutine(function)
     function.__name__ = name
     function.__doc__ = doc
+
+    # Cache the result and return it
+    _build_transform_cache[cache_key] = function
     return function
 
 
