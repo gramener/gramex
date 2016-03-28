@@ -7,6 +7,7 @@ import lxml.html
 import tornado.gen
 import tornado.concurrent
 from pydoc import locate
+from orderedattrdict import AttrDict
 from orderedattrdict.yamlutils import AttrDictYAMLLoader
 
 from .config import walk, load_imports
@@ -127,7 +128,8 @@ def build_transform(conf, vars={}, _coroutine=True):
     context = {
         'function': function,
         'is_future': tornado.concurrent.is_future,
-        'Return': tornado.gen.Return
+        'Return': tornado.gen.Return,
+        'AttrDict': AttrDict
     }
     exec(''.join(body), context)
 

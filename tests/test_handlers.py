@@ -92,6 +92,8 @@ class TestFunctionHandler(TestGramex):
         self.check('/func/handler', text='{"args": ["Handler"], "kwargs": {}')
         self.check('/func/composite',
                    text='{"args": [0, "Handler"], "kwargs": {"a": "a", "handler": "Handler"}}')
+        self.check('/func/compositenested',
+                   text='{"args": [0, "Handler"], "kwargs": {"a": {"b": 1}, "handler": "Handler"}}')
         self.check('/func/dumpx?x=1&x=2', text='{"args": [["1", "2"]], "kwargs": {}}')
 
     def test_async(self):
