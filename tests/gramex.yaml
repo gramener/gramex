@@ -47,6 +47,17 @@ url:
         a: a
         handler: =handler
 
+  func/compositenested:
+    pattern: /func/compositenested
+    handler: gramex.handlers.FunctionHandler
+    kwargs:
+      function: utils.params_as_json
+      args: [0, =handler]
+      kwargs:
+        a:
+          b: 1
+        handler: =handler
+
   func/dumpx:
     pattern: /func/dumpx
     handler: gramex.handlers.FunctionHandler
