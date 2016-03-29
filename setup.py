@@ -5,7 +5,6 @@ from setuptools import setup, find_packages
 from pip.req import parse_requirements
 from pip.download import PipSession
 from io import open
-import os
 import json
 
 with open('README.rst', encoding='utf-8') as handle:
@@ -18,11 +17,6 @@ with open('HISTORY.rst', encoding='utf-8') as handle:
 with open('gramex/release.json', encoding='utf-8') as handle:
     release_args = json.load(handle)
 
-req_install = [str(entry.req) for entry in parse_requirements(
-               'requirements.txt', session=PipSession())]
-req_tests = [str(entry.req) for entry in parse_requirements(
-             'requirements-dev.txt', session=PipSession())]
-
 setup(
     long_description=long_description,
     packages=find_packages(),
@@ -31,21 +25,20 @@ setup(
     # package_data includes data files for binary & source distributions
     # include_package_data is only for source distributions, uses MANIFEST.in
     package_data={
-        'gramex': [
-            os.path.join(dirpath, filename).lstrip('gramex/')
-            for dirpath, dirnames, filenames in os.walk('gramex/lib')
-            for filename in filenames
-            # Skip vega-lite file that has a $ in the filename.
-            if '$' not in filename
-        ] + ['gramex.yaml', 'release.json']
+        'gramex': ['gramex.yaml', 'release.json']
     },
     include_package_data=True,
-    install_requires=req_install,
+    install_requires=[str(entry.req) for entry in parse_requirements(
+                      'requirements.txt', session=PipSession())],
     zip_safe=False,
     entry_points={
         'console_scripts': ['gramex = gramex:init']
     },
     test_suite='tests',
-    tests_require=req_tests,
+    tests_require=[
+        'nose',
+        'coverage',
+        'sphinx_rtd_theme',         # For documentation
+    ],
     **release_args
 )
