@@ -31,7 +31,7 @@ def setUpModule():
         [sys.executable, '-m', 'gramex'],
         cwd=str(info.folder),
         env=env,
-        stdout=getattr(subprocess, 'DEVNULL', open(os.devnull, 'w')),
+        # stdout=getattr(subprocess, 'DEVNULL', open(os.devnull, 'w')),
     )
 
     # Wait until Gramex has started

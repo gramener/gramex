@@ -397,20 +397,13 @@ log:
     root:
         level: DEBUG
         handlers:
-            - filehandler
+            - error
     handlers:
-        filehandler:
-            class: logging.handlers.TimedRotatingFileHandler
-            level: DEBUG
-            filename: gramex.log
-            formatter: file
-            when: 'D'
-            backupCount: 3
-    loggers:
-        tornado.access: {}
-        tornado.application: {}
-        tornado.general: {}
+        error:
+            class: logging.StreamHandler
+            level: INFO
+            stream: ext://sys.stdout
+            formatter: inline
     formatters:
-        file:
-            format: '%(levelname)1.1s,%(asctime)s,%(module)s,%(lineno)d,"%(message)s"'
-            datefmt: '%Y-%m-%d %H:%M:%S'
+        inline:
+            format: '        %(message)s'
