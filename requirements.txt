@@ -19,7 +19,6 @@ xmljson >= 0.1.5    # transforms.badgerfish to convert objects to/from XML
 # Optional dependencies (batteries included principle)
 markdown            # For Markdown transfroms
 PyMySQL             # For MySQL connections
-psycopg2            # For PostgreSQL connections
 
 
 # Conda dependencies
@@ -28,3 +27,7 @@ psycopg2            # For PostgreSQL connections
 
 # lxml >= 3.6.0       # transforms.badgerfish to convert objects to/from XML
 # blaze >= 0.9.1      # handlers.DataHandler to treat database tables as DataFrames
+
+# These are *not* part of Anaconda, but exclude it for now until we figure out
+# conda installs as part of the setup
+# psycopg2            # For PostgreSQL connections
