@@ -23,4 +23,5 @@ unittest:
     - apt-get install -y libpq-dev
 
     # Run unit tests
+    - pip install -e .
     - python setup.py nosetests
