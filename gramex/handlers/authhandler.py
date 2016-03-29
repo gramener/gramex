@@ -14,7 +14,7 @@ def now():
 class GoogleAuth(RequestHandler, GoogleOAuth2Mixin):
     @tornado.gen.coroutine
     def get(self):
-        redirect_uri = '{0.protocol:s}://{0.host:s}{0.uri:s}'.format(self.request)
+        redirect_uri = '{0.protocol:s}://{0.host:s}{0.path:s}'.format(self.request)
         if self.get_argument('code', False):
             access = yield self.get_authenticated_user(
                 redirect_uri=redirect_uri,
@@ -41,7 +41,7 @@ class GoogleAuth(RequestHandler, GoogleOAuth2Mixin):
 class FacebookAuth(RequestHandler, FacebookGraphMixin):
     @tornado.gen.coroutine
     def get(self):
-        redirect_uri = '{0.protocol:s}://{0.host:s}{0.uri:s}'.format(self.request)
+        redirect_uri = '{0.protocol:s}://{0.host:s}{0.path:s}'.format(self.request)
         if self.get_argument("code", False):
             user = yield self.get_authenticated_user(
                 redirect_uri=redirect_uri,
@@ -64,7 +64,7 @@ class TwitterAuth(RequestHandler, TwitterMixin):
     @tornado.gen.coroutine
     def get(self):
         # TODO: Test
-        redirect_uri = '{0.protocol:s}://{0.host:s}{0.uri:s}'.format(self.request)
+        redirect_uri = '{0.protocol:s}://{0.host:s}{0.path:s}'.format(self.request)
         if self.get_argument("oauth_token", None):
             user = yield self.get_authenticated_user()
             self.set_secure_cookie(self.settings['cookie_secret'], now())
