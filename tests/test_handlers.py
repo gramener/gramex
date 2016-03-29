@@ -22,7 +22,7 @@ info = AttrDict(
 BASE = 'http://localhost:9999'
 
 
-def setUpModule():
+def setup_module():
     'Run Gramex in this folder using the current gramex.conf.yaml'
     # Ensure that PYTHONPATH has this repo and ONLY this repo
     env = dict(os.environ)
@@ -48,7 +48,7 @@ def setUpModule():
             time.sleep(1.0 / attempts_per_second)
 
 
-def tearDownModule():
+def teardown_module():
     'Terminate Gramex'
     info.process.terminate()
 
@@ -93,7 +93,8 @@ class TestFunctionHandler(TestGramex):
         self.check('/func/composite',
                    text='{"args": [0, "Handler"], "kwargs": {"a": "a", "handler": "Handler"}}')
         self.check('/func/compositenested',
-                   text='{"args": [0, "Handler"], "kwargs": {"a": {"b": 1}, "handler": "Handler"}}')
+                   text='{"args": [0, "Handler"], "kwargs": {"a": {"b": 1}, '
+                        '"handler": "Handler"}}')
         self.check('/func/dumpx?x=1&x=2', text='{"args": [["1", "2"]], "kwargs": {}}')
 
     def test_async(self):
@@ -269,17 +270,17 @@ class TestSqliteHandler(TestGramex, DataHandlerTestMixin):
     database = 'sqlite'
 
     @classmethod
-    def setUpClass(self):
-        self.db = self.folder / 'actors.db'
-        if self.db.is_file():
-            self.db.unlink()
-        self.engine = sa.create_engine('sqlite:///' + str(self.db))
-        self.data.to_sql('actors', con=self.engine, index=False)
+    def setUpClass(cls):
+        cls.db = cls.folder / 'actors.db'
+        if cls.db.is_file():
+            cls.db.unlink()
+        cls.engine = sa.create_engine('sqlite:///' + str(cls.db))
+        cls.data.to_sql('actors', con=cls.engine, index=False)
 
     @classmethod
-    def tearDownClass(self):
-        if self.db.is_file():
-            self.db.unlink()
+    def tearDownClass(cls):
+        if cls.db.is_file():
+            cls.db.unlink()
 
 
 class TestMysqlDataHandler(TestGramex, DataHandlerTestMixin):
@@ -287,21 +288,21 @@ class TestMysqlDataHandler(TestGramex, DataHandlerTestMixin):
     database = 'mysql'
 
     @classmethod
-    def setUpClass(self):
-        self.engine = sa.create_engine('mysql+pymysql://root@localhost/')
+    def setUpClass(cls):
+        cls.engine = sa.create_engine('mysql+pymysql://root@localhost/')
         try:
-            self.engine.execute("DROP DATABASE IF EXISTS test_datahandler")
-            self.engine.execute("CREATE DATABASE test_datahandler")
-            self.engine.dispose()
-            self.engine = sa.create_engine('mysql+pymysql://root@localhost/test_datahandler')
-            self.data.to_sql('actors', con=self.engine, index=False)
+            cls.engine.execute("DROP DATABASE IF EXISTS test_datahandler")
+            cls.engine.execute("CREATE DATABASE test_datahandler")
+            cls.engine.dispose()
+            cls.engine = sa.create_engine('mysql+pymysql://root@localhost/test_datahandler')
+            cls.data.to_sql('actors', con=cls.engine, index=False)
         except sa.exc.OperationalError:
             raise SkipTest('Unable to connect to MySQL database')
 
     @classmethod
-    def tearDownClass(self):
-        self.engine.execute("DROP DATABASE test_datahandler")
-        self.engine.dispose()
+    def tearDownClass(cls):
+        cls.engine.execute("DROP DATABASE test_datahandler")
+        cls.engine.dispose()
 
 
 class TestPostgresDataHandler(TestGramex, DataHandlerTestMixin):
@@ -309,32 +310,32 @@ class TestPostgresDataHandler(TestGramex, DataHandlerTestMixin):
     database = 'postgresql'
 
     @classmethod
-    def setUpClass(self):
-        self.engine = sa.create_engine('postgresql://postgres@localhost/postgres')
+    def setUpClass(cls):
+        cls.engine = sa.create_engine('postgresql://postgres@localhost/postgres')
         try:
-            conn = self.engine.connect()
+            conn = cls.engine.connect()
             conn.execute('commit')
             conn.execute('DROP DATABASE IF EXISTS test_datahandler')
             conn.execute('commit')
             conn.execute('CREATE DATABASE test_datahandler')
             conn.close()
-            self.engine = sa.create_engine('postgresql://postgres@localhost/test_datahandler')
-            self.data.to_sql('actors', con=self.engine, index=False)
-            self.engine.dispose()
+            cls.engine = sa.create_engine('postgresql://postgres@localhost/test_datahandler')
+            cls.data.to_sql('actors', con=cls.engine, index=False)
+            cls.engine.dispose()
         except sa.exc.OperationalError:
             raise SkipTest('Unable to connect to PostgreSQL database')
 
     @classmethod
-    def tearDownClass(self):
-        self.engine = sa.create_engine('postgresql://postgres@localhost/postgres')
-        conn = self.engine.connect()
+    def tearDownClass(cls):
+        cls.engine = sa.create_engine('postgresql://postgres@localhost/postgres')
+        conn = cls.engine.connect()
         conn.execute('commit')
         # Terminate all other sessions using the test_datahandler database
         conn.execute("SELECT pg_terminate_backend(pid) FROM pg_stat_activity "
                      "WHERE datname='test_datahandler'")
         conn.execute('DROP DATABASE test_datahandler')
         conn.close()
-        self.engine.dispose()
+        cls.engine.dispose()
 
 
 class TestBlazeDataHandler(TestSqliteHandler):
