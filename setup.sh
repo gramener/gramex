@@ -41,6 +41,11 @@ setup_python() {
 setup_gramex() {
   setup_python
 
+  # Install Conda dependencies
+  $wget requirements-conda.txt http://code.gramener.com/s.anand/gramex/raw/master/requirements.txt
+  conda install -f requirements-conda.txt
+  rm -f requirements-conda.txt
+
   # Install Gramex
   # -------------------------------------
   # If it was already installed, pip will upgrade.

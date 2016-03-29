@@ -39,7 +39,6 @@ setup(
         'nose',
         'coverage',
         'sphinx_rtd_theme',         # For documentation
-        'psycopg2',                 # See requirements.txt
     ],
     **release_args
 )
