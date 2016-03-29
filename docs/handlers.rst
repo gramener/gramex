@@ -32,10 +32,12 @@ displays "Hello world" at /hello as plain text::
 See :class:`gramex.handlers.FunctionHandler` for details.
 
 
-.. _DirectoryHandler:
+.. _FileHandler:
 
-DirectoryHandler
-~~~~~~~~~~~~~~~~
+FileHandler
+~~~~~~~~~~~
+
+(In version 1.0.3 and before, this was called ``DirectoryHandler``. Both work.)
 
 Displays files in a folder. This configuration serves files from the current
 directory at ``/``::
@@ -43,12 +45,12 @@ directory at ``/``::
     url:
       root-app:                         # A unique name for this handler
         pattern: /(.*)                  # All URLs beginning with /
-        handler: gramex.handlers.DirectoryHandler   # Handler used
+        handler: gramex.handlers.FileHandler        # Handler used
         kwargs:                                     # Options to the handler
             path: .                                 #   path is current dir
             default_filename: index.html            #   default filename
 
-See :class:`gramex.handlers.DirectoryHandler` for details.
+See :class:`gramex.handlers.FileHandler` for details.
 
 .. _BadgerFish: http://www.sklar.com/badgerfish/
 

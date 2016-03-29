@@ -87,50 +87,50 @@ url:
     kwargs:
       function: utils.async_calc
 
-  # TestDirectoryHandler
+  # TestFileHandler
   dir/noindex:
     pattern: /dir/noindex/(.*)
-    handler: gramex.handlers.DirectoryHandler
+    handler: gramex.handlers.FileHandler
     kwargs:
       path: dir
       index: false
   dir/index:
     pattern: /dir/index/(.*)
-    handler: gramex.handlers.DirectoryHandler
+    handler: gramex.handlers.FileHandler
     kwargs:
       path: dir
       index: true
   dir/default-present-index:
     pattern: /dir/default-present-index/(.*)
-    handler: gramex.handlers.DirectoryHandler
+    handler: gramex.handlers.FileHandler
     kwargs:
       path: dir
       default_filename: index.html
       index: true
   dir/default-missing-index:
     pattern: /dir/default-missing-index/(.*)
-    handler: gramex.handlers.DirectoryHandler
+    handler: gramex.handlers.FileHandler
     kwargs:
       path: dir
       default_filename: nonexistent-file
       index: true
   dir/default-present-noindex:
     pattern: /dir/default-present-noindex/(.*)
-    handler: gramex.handlers.DirectoryHandler
+    handler: gramex.handlers.FileHandler
     kwargs:
       path: dir
       default_filename: index.html
       index: false
   dir/default-missing-noindex:
     pattern: /dir/default-missing-noindex/(.*)
-    handler: gramex.handlers.DirectoryHandler
+    handler: gramex.handlers.FileHandler
     kwargs:
       path: dir
       default_filename: nonexistent-file
       index: false
   dir/transform:
     pattern: /dir/transform/(.*)
-    handler: gramex.handlers.DirectoryHandler
+    handler: gramex.handlers.FileHandler
     kwargs:
       path: dir
       transform:
@@ -148,7 +148,7 @@ url:
             Content-Type: text/html; charset=utf-8
   dir/args:
     pattern: /dir/args/(.*)
-    handler: gramex.handlers.DirectoryHandler
+    handler: gramex.handlers.FileHandler
     kwargs:
       path: dir
       default_filename: index.html

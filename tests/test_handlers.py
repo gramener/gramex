@@ -106,11 +106,16 @@ class TestFunctionHandler(TestGramex):
                    text='[[250,250,250],[250,250,250],[250,250,250],[250,250,250]]')
 
 
-class TestDirectoryHandler(TestGramex):
-    'Test gramex.handlers.DirectoryHandler'
+class TestFileHandler(TestGramex):
+    'Test gramex.handlers.FileHandler'
 
-    def test_directory(self):
-        'Test DirectoryHandler'
+    def test_directoryhandler(self):
+        'DirectoryHandler == FileHandler'
+        from gramex.handlers import DirectoryHandler, FileHandler
+        self.assertEqual(DirectoryHandler, FileHandler)
+
+    def test_filehandler(self):
+        'Test FileHandler'
         def adds_slash(url, check):
             self.assertFalse(url.endswith('/'), 'redirect_with_slash url must not end with /')
             r = self.get(url)

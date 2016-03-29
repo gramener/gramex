@@ -10,7 +10,7 @@ from .basehandler import BaseHandler
 from ..transforms import build_transform
 
 
-class DirectoryHandler(BaseHandler):
+class FileHandler(BaseHandler):
     '''
     Serves files with transformations. It accepts these parameters:
 
@@ -53,7 +53,7 @@ class DirectoryHandler(BaseHandler):
     This example mimics SimpleHTTPServer_::
 
         pattern: /(.*)                              # Any URL
-        handler: gramex.handlers.DirectoryHandler   # uses this handler
+        handler: gramex.handlers.FileHandler        # uses this handler
         kwargs:
             path: .                                 # shows files in the current directory
             default_filename: index.html            # Show index.html instead of directories
@@ -62,7 +62,7 @@ class DirectoryHandler(BaseHandler):
     To render Markdown as HTML, set up this handler::
 
         pattern: /blog/(.*)                         # Any URL starting with blog
-        handler: gramex.handlers.DirectoryHandler   # uses this handler
+        handler: gramex.handlers.FileHandler        # uses this handler
         kwargs:
           path: blog/                               # Serve files from blog/
           default_filename: README.md               # using README.md as default
@@ -82,7 +82,7 @@ class DirectoryHandler(BaseHandler):
     To restrict to serving specific files, you can identify them in the pattern::
 
         pattern: /blog/(.*\.md$|style\.css)         # Serve only .md files or style.css
-        handler: gramex.handlers.DirectoryHandler
+        handler: gramex.handlers.FileHandler
         kwargs:
             path: blog/
 
@@ -94,7 +94,7 @@ class DirectoryHandler(BaseHandler):
           default:                                  # This overrides the default URL handler
             pattern: ...
 
-    DirectoryHandler exposes the following ``pathlib.Path`` attributes:
+    FileHandler exposes the following ``pathlib.Path`` attributes:
 
     ``root``
         Root path for this handler. Same as the ``path`` argument
@@ -160,7 +160,7 @@ class DirectoryHandler(BaseHandler):
                         name=path.relative_to(self.path),
                         dir='/' if path.is_dir() else ''))
                 except UnicodeDecodeError:
-                    logging.warn("DirectoryHandler can't show unicode file {:s}".format(
+                    logging.warn("FileHandler can't show unicode file {:s}".format(
                         repr(path)))
             content.append(u'</ul>')
             self.content = ''.join(content)
