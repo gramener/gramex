@@ -22,7 +22,7 @@ info = AttrDict(
 BASE = 'http://localhost:9999'
 
 
-def setup_module():
+def setUpModule():
     'Run Gramex in this folder using the current gramex.conf.yaml'
     # Ensure that PYTHONPATH has this repo and ONLY this repo
     env = dict(os.environ)
@@ -48,7 +48,7 @@ def setup_module():
             time.sleep(1.0 / attempts_per_second)
 
 
-def teardown_module():
+def tearDownModule():
     'Terminate Gramex'
     info.process.terminate()
 
