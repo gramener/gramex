@@ -3,10 +3,19 @@
 History
 -------
 
+1.0.4 (2016-03-30)
+~~~~~~~~~~~~~~~~~~
+
+* ``FunctionHandler`` supports co-routines and works asynchronously
+* ``FileHandler`` is the new name for ``DirectoryHandler`` (both will work)
+* Implement authentication via Google, Twitter and Facebook OAuth
+* Simpler installation steps
+
+
 1.0.3 (2016-01-18)
 ~~~~~~~~~~~~~~~~~~
 
-* Implement :ref:`DataHandler` that displays data from databases (via
+* Implement ``DataHandler`` that displays data from databases (via
   `SQLAlchemy <http://www.sqlalchemy.org/>`__ and `Blaze <http://blaze.pydata.org/>`__)
 * ``DirectoryHandler``:
     - lets gramex.yaml specify input file encoding (defaults to UTF-8)

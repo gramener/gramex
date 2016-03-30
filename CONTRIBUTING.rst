@@ -96,8 +96,7 @@ When releasing a new version of Gramex:
     make release
 
 3. Update the following and commit:
-    - ``docs/HISTORY.rst`` -- add release notes
-    - ``README.rst`` -- update the version number
+    - ``HISTORY.rst`` -- add release notes
     - ``gramex/release.json`` -- update the version number
 
 4. Merge with master, create an annotated tag and push the code::
