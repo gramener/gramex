@@ -5,15 +5,15 @@ app:
 url:
   # TestGramex
   pathdepth1: {pattern: "/path/.*",       handler: "gramex.handlers.FunctionHandler", kwargs: {function: "str", args: ["/path/.*"],       }}
-  pathdepth2: {pattern: "/path/file",     handler: "gramex.handlers.FunctionHandler", kwargs: {function: "str", args: ["/path/file"],     }}
-  pathdepth3: {pattern: "/path/dir/.*",   handler: "gramex.handlers.FunctionHandler", kwargs: {function: "str", args: ["/path/dir/.*"],   }}
-  pathdepth4: {pattern: "/path/dir/file", handler: "gramex.handlers.FunctionHandler", kwargs: {function: "str", args: ["/path/dir/file"], }}
-  pathdepth5: {pattern: "/path/priority", priority: 1, handler: "gramex.handlers.FunctionHandler", kwargs: {function: "str", args: ["/path/priority"], }}
+  pathdepth2: {pattern: "/path/file",     handler: "FunctionHandler", kwargs: {function: "str", args: ["/path/file"],     }}
+  pathdepth3: {pattern: "/path/dir/.*",   handler: "FunctionHandler", kwargs: {function: "str", args: ["/path/dir/.*"],   }}
+  pathdepth4: {pattern: "/path/dir/file", handler: "FunctionHandler", kwargs: {function: "str", args: ["/path/dir/file"], }}
+  pathdepth5: {pattern: "/path/priority", priority: 1, handler: "FunctionHandler", kwargs: {function: "str", args: ["/path/priority"], }}
 
   # TestFunctionHandler
   func/args:
     pattern: /func/args
-    handler: gramex.handlers.FunctionHandler
+    handler: FunctionHandler
     kwargs:
       function: utils.params_as_json
       args: [0, 1]
@@ -23,7 +23,7 @@ url:
 
   func/async_args:
     pattern: /func/async_args
-    handler: gramex.handlers.FunctionHandler
+    handler: FunctionHandler
     kwargs:
       function: utils.async_args
       args: [0, 1]
@@ -33,13 +33,13 @@ url:
 
   func/handler:
     pattern: /func/handler
-    handler: gramex.handlers.FunctionHandler
+    handler: FunctionHandler
     kwargs:
       function: utils.params_as_json
 
   func/composite:
     pattern: /func/composite
-    handler: gramex.handlers.FunctionHandler
+    handler: FunctionHandler
     kwargs:
       function: utils.params_as_json
       args: [0, =handler]
@@ -49,7 +49,7 @@ url:
 
   func/compositenested:
     pattern: /func/compositenested
-    handler: gramex.handlers.FunctionHandler
+    handler: FunctionHandler
     kwargs:
       function: utils.params_as_json
       args: [0, =handler]
@@ -60,21 +60,21 @@ url:
 
   func/dumpx:
     pattern: /func/dumpx
-    handler: gramex.handlers.FunctionHandler
+    handler: FunctionHandler
     kwargs:
       function: utils.params_as_json
       args: =handler.get_arguments('x')
 
   func/async_http:
     pattern: /func/async_http
-    handler: gramex.handlers.FunctionHandler
+    handler: FunctionHandler
     kwargs:
       function: utils.async_http
       args: "http://localhost:9999/func/dumpx?x=1&x=2"
 
   func/async_http2:
     pattern: /func/async_http2
-    handler: gramex.handlers.FunctionHandler
+    handler: FunctionHandler
     kwargs:
       function: utils.async_http2
       args:
@@ -83,54 +83,54 @@ url:
 
   func/async_calc:
     pattern: /func/async_calc
-    handler: gramex.handlers.FunctionHandler
+    handler: FunctionHandler
     kwargs:
       function: utils.async_calc
 
   # TestFileHandler
   dir/noindex:
     pattern: /dir/noindex/(.*)
-    handler: gramex.handlers.FileHandler
+    handler: FileHandler
     kwargs:
       path: dir
       index: false
   dir/index:
     pattern: /dir/index/(.*)
-    handler: gramex.handlers.FileHandler
+    handler: FileHandler
     kwargs:
       path: dir
       index: true
   dir/default-present-index:
     pattern: /dir/default-present-index/(.*)
-    handler: gramex.handlers.FileHandler
+    handler: FileHandler
     kwargs:
       path: dir
       default_filename: index.html
       index: true
   dir/default-missing-index:
     pattern: /dir/default-missing-index/(.*)
-    handler: gramex.handlers.FileHandler
+    handler: FileHandler
     kwargs:
       path: dir
       default_filename: nonexistent-file
       index: true
   dir/default-present-noindex:
     pattern: /dir/default-present-noindex/(.*)
-    handler: gramex.handlers.FileHandler
+    handler: FileHandler
     kwargs:
       path: dir
       default_filename: index.html
       index: false
   dir/default-missing-noindex:
     pattern: /dir/default-missing-noindex/(.*)
-    handler: gramex.handlers.FileHandler
+    handler: FileHandler
     kwargs:
       path: dir
       default_filename: nonexistent-file
       index: false
   dir/transform:
     pattern: /dir/transform/(.*)
-    handler: gramex.handlers.FileHandler
+    handler: FileHandler
     kwargs:
       path: dir
       transform:
@@ -142,13 +142,13 @@ url:
             Content-Type: text/html; charset=utf-8
         "*.yaml":
           encoding: utf-8
-          function: gramex.transforms.badgerfish
+          function: badgerfish
           args: [=content, =handler]
           headers:
             Content-Type: text/html; charset=utf-8
   dir/args:
     pattern: /dir/args/(.*)
-    handler: gramex.handlers.FileHandler
+    handler: FileHandler
     kwargs:
       path: dir
       default_filename: index.html
@@ -160,7 +160,7 @@ url:
   # TestDataHandler for Sqlite
   data/csv:
     pattern: /datastore/sqlite/csv/
-    handler: gramex.handlers.DataHandler
+    handler: DataHandler
     kwargs:
       driver: sqlalchemy
       url: sqlite:///actors.db
@@ -169,7 +169,7 @@ url:
       default: {format: csv}
   data/json:
     pattern: /datastore/sqlite/json/
-    handler: gramex.handlers.DataHandler
+    handler: DataHandler
     kwargs:
       driver: sqlalchemy
       url: sqlite:///actors.db
@@ -178,7 +178,7 @@ url:
       default: {format: json}
   data/html:
     pattern: /datastore/sqlite/html/
-    handler: gramex.handlers.DataHandler
+    handler: DataHandler
     kwargs:
       driver: sqlalchemy
       url: sqlite:///actors.db
@@ -189,7 +189,7 @@ url:
   # Test datahandler for MySQL
   data/mysql/csv:
     pattern: /datastore/mysql/csv/
-    handler: gramex.handlers.DataHandler
+    handler: DataHandler
     kwargs:
       driver: sqlalchemy
       url: mysql+pymysql://root@localhost/test_datahandler
@@ -198,7 +198,7 @@ url:
       default: {format: csv}
   data/mysql/json:
     pattern: /datastore/mysql/json/
-    handler: gramex.handlers.DataHandler
+    handler: DataHandler
     kwargs:
       driver: sqlalchemy
       url: mysql+pymysql://root@localhost/test_datahandler
@@ -207,7 +207,7 @@ url:
       default: {format: json}
   data/mysql/html:
     pattern: /datastore/mysql/html/
-    handler: gramex.handlers.DataHandler
+    handler: DataHandler
     kwargs:
       driver: sqlalchemy
       url: mysql+pymysql://root@localhost/test_datahandler
@@ -218,7 +218,7 @@ url:
   # Test datahandler for PostgreSQL
   data/postgresql/csv:
     pattern: /datastore/postgresql/csv/
-    handler: gramex.handlers.DataHandler
+    handler: DataHandler
     kwargs:
       driver: sqlalchemy
       url: postgresql://postgres@localhost/test_datahandler
@@ -227,7 +227,7 @@ url:
       default: {format: csv}
   data/postgresql/json:
     pattern: /datastore/postgresql/json/
-    handler: gramex.handlers.DataHandler
+    handler: DataHandler
     kwargs:
       driver: sqlalchemy
       url: postgresql://postgres@localhost/test_datahandler
@@ -236,7 +236,7 @@ url:
       default: {format: json}
   data/postgresql/html:
     pattern: /datastore/postgresql/html/
-    handler: gramex.handlers.DataHandler
+    handler: DataHandler
     kwargs:
       driver: sqlalchemy
       url: postgresql://postgres@localhost/test_datahandler
@@ -247,7 +247,7 @@ url:
   # TestDataHandler for blaze sqlite
   data/blaze/csv:
     pattern: /datastore/blazesqlite/csv/
-    handler: gramex.handlers.DataHandler
+    handler: DataHandler
     kwargs:
       driver: blaze
       url: sqlite:///actors.db
@@ -256,7 +256,7 @@ url:
       default: {format: csv}
   data/blaze/json:
     pattern: /datastore/blazesqlite/json/
-    handler: gramex.handlers.DataHandler
+    handler: DataHandler
     kwargs:
       driver: blaze
       url: sqlite:///actors.db
@@ -265,7 +265,7 @@ url:
       default: {format: json}
   data/blaze/html:
     pattern: /datastore/blazesqlite/html/
-    handler: gramex.handlers.DataHandler
+    handler: DataHandler
     kwargs:
       driver: blaze
       url: sqlite:///actors.db
@@ -276,7 +276,7 @@ url:
   # Test datahandler for blaze MySQL
   data/blazemysql/csv:
     pattern: /datastore/blazemysql/csv/
-    handler: gramex.handlers.DataHandler
+    handler: DataHandler
     kwargs:
       driver: blaze
       url: mysql+pymysql://root@localhost/test_datahandler
@@ -285,7 +285,7 @@ url:
       default: {format: csv}
   data/blazemysql/json:
     pattern: /datastore/blazemysql/json/
-    handler: gramex.handlers.DataHandler
+    handler: DataHandler
     kwargs:
       driver: blaze
       url: mysql+pymysql://root@localhost/test_datahandler
@@ -294,7 +294,7 @@ url:
       default: {format: json}
   data/blazemysql/html:
     pattern: /datastore/blazemysql/html/
-    handler: gramex.handlers.DataHandler
+    handler: DataHandler
     kwargs:
       driver: blaze
       url: mysql+pymysql://root@localhost/test_datahandler
@@ -305,7 +305,7 @@ url:
   # TestDataHandlerConfig for Sqlite
   data/sqliteconfig1/csv:
     pattern: /datastore/sqliteconfig1/csv/
-    handler: gramex.handlers.DataHandler
+    handler: DataHandler
     kwargs:
       driver: sqlalchemy
       url: sqlite:///actors.db
@@ -315,7 +315,7 @@ url:
         where: [votes<120]
   data/sqliteconfig2/csv:
     pattern: /datastore/sqliteconfig2/csv/
-    handler: gramex.handlers.DataHandler
+    handler: DataHandler
     kwargs:
       driver: sqlalchemy
       url: sqlite:///actors.db
@@ -325,7 +325,7 @@ url:
         where: votes<120
   data/sqliteconfig3/csv:
     pattern: /datastore/sqliteconfig3/csv/
-    handler: gramex.handlers.DataHandler
+    handler: DataHandler
     kwargs:
       driver: sqlalchemy
       url: sqlite:///actors.db
@@ -336,7 +336,7 @@ url:
         where: votes<120
   data/sqliteconfig4/csv:
     pattern: /datastore/sqliteconfig4/csv/
-    handler: gramex.handlers.DataHandler
+    handler: DataHandler
     kwargs:
       driver: sqlalchemy
       url: sqlite:///actors.db
@@ -348,7 +348,7 @@ url:
         where: votes<120
   data/sqliteconfig5/csv:
     pattern: /datastore/sqliteconfig5/csv/
-    handler: gramex.handlers.DataHandler
+    handler: DataHandler
     kwargs:
       driver: sqlalchemy
       url: sqlite:///actors.db
@@ -362,7 +362,7 @@ url:
         where: votes<120
   data/sqliteconfig6/csv:
     pattern: /datastore/sqliteconfig6/csv/
-    handler: gramex.handlers.DataHandler
+    handler: DataHandler
     kwargs:
       driver: blaze
       url: sqlite:///actors.db
@@ -380,7 +380,7 @@ url:
           rating: ">0.4"
   data/sqliteconfig7/csv:
     pattern: /datastore/sqliteconfig7/csv/
-    handler: gramex.handlers.DataHandler
+    handler: DataHandler
     kwargs:
       driver: sqlalchemy
       url: sqlite:///actors.db

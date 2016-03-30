@@ -15,8 +15,7 @@ class FileHandler(BaseHandler):
     Serves files with transformations. It accepts these parameters:
 
     :arg string path: The root directory from which files are served. Relative
-        paths are specified from the base directory (where gramex starts from.)
-        Use $source
+        paths are specified from where gramex was run.
     :arg string default_filename: If the URL maps to a directory, this filename
         is displayed by default. For example, ``index.html`` or ``README.md``.
         The default is ``None``, which displays all files in the directory.
@@ -52,29 +51,29 @@ class FileHandler(BaseHandler):
 
     This example mimics SimpleHTTPServer_::
 
-        pattern: /(.*)                              # Any URL
-        handler: gramex.handlers.FileHandler        # uses this handler
+        pattern: /(.*)                          # Any URL
+        handler: FileHandler                    # uses this handler
         kwargs:
-            path: .                                 # shows files in the current directory
-            default_filename: index.html            # Show index.html instead of directories
-            index: true                             # List files if index.html doesn't exist
+            path: .                             # shows files in the current directory
+            default_filename: index.html        # Show index.html instead of directories
+            index: true                         # List files if index.html doesn't exist
 
     To render Markdown as HTML, set up this handler::
 
-        pattern: /blog/(.*)                         # Any URL starting with blog
-        handler: gramex.handlers.FileHandler        # uses this handler
+        pattern: /blog/(.*)                     # Any URL starting with blog
+        handler: FileHandler                    # uses this handler
         kwargs:
-          path: blog/                               # Serve files from blog/
-          default_filename: README.md               # using README.md as default
+          path: blog/                           # Serve files from blog/
+          default_filename: README.md           # using README.md as default
           transform:
-            "*.md":                                 # Any file matching .md
-              encoding: cp1252                      #   Open files with CP1252 encoding
-              function: markdown.markdown           #   Convert from markdown to html
+            "*.md":                             # Any file matching .md
+              encoding: cp1252                  #   Open files with CP1252 encoding
+              function: markdown.markdown       #   Convert from markdown to html
               kwargs:
-                safe_mode: escape                   #   Pass safe_mode='escape'
-                output_format: html5                #   Output in HTML5
+                safe_mode: escape               #   Pass safe_mode='escape'
+                output_format: html5            #   Output in HTML5
               headers:
-                Content-Type: text/html             #   MIME type: text/html
+                Content-Type: text/html         #   MIME type: text/html
 
     .. _glob pattern: https://docs.python.org/3/library/pathlib.html#pathlib.Path.glob
     .. _SimpleHTTPServer: https://docs.python.org/2/library/simplehttpserver.html
@@ -82,7 +81,7 @@ class FileHandler(BaseHandler):
     To restrict to serving specific files, you can identify them in the pattern::
 
         pattern: /blog/(.*\.md$|style\.css)         # Serve only .md files or style.css
-        handler: gramex.handlers.FileHandler
+        handler: FileHandler
         kwargs:
             path: blog/
 

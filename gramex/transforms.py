@@ -6,11 +6,10 @@ import xmljson
 import lxml.html
 import tornado.gen
 import tornado.concurrent
-from pydoc import locate
 from orderedattrdict import AttrDict
 from orderedattrdict.yamlutils import AttrDictYAMLLoader
 
-from .config import walk, load_imports
+from .config import walk, load_imports, locate
 
 
 def _arg_repr(arg):
@@ -94,7 +93,7 @@ def build_transform(conf, vars={}, _coroutine=True):
     if 'function' not in conf:
         raise KeyError('No function in conf %s' % conf)
 
-    function = locate(conf['function'])
+    function = locate(conf['function'], modules=['gramex.transforms'])
     if function is None:
         raise NameError('Cannot find function %s' % conf['function'])
     doc = function.__doc__

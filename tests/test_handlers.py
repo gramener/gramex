@@ -84,7 +84,7 @@ class TestURLPriority(TestGramex):
 
 
 class TestFunctionHandler(TestGramex):
-    'Test gramex.handlers.FunctionHandler'
+    'Test FunctionHandler'
 
     def test_args(self):
         'Test arguments'
@@ -107,7 +107,7 @@ class TestFunctionHandler(TestGramex):
 
 
 class TestFileHandler(TestGramex):
-    'Test gramex.handlers.FileHandler'
+    'Test FileHandler'
 
     def test_directoryhandler(self):
         'DirectoryHandler == FileHandler'
@@ -271,7 +271,7 @@ class DataHandlerTestMixin(object):
 
 
 class TestSqliteHandler(TestGramex, DataHandlerTestMixin):
-    'Test gramex.handlers.DataHandler for SQLite database via sqlalchemy driver'
+    'Test DataHandler for SQLite database via sqlalchemy driver'
     database = 'sqlite'
 
     @classmethod
@@ -289,7 +289,7 @@ class TestSqliteHandler(TestGramex, DataHandlerTestMixin):
 
 
 class TestMysqlDataHandler(TestGramex, DataHandlerTestMixin):
-    'Test gramex.handlers.DataHandler for MySQL database via sqlalchemy driver'
+    'Test DataHandler for MySQL database via sqlalchemy driver'
     database = 'mysql'
 
     @classmethod
@@ -311,7 +311,7 @@ class TestMysqlDataHandler(TestGramex, DataHandlerTestMixin):
 
 
 class TestPostgresDataHandler(TestGramex, DataHandlerTestMixin):
-    'Test gramex.handlers.DataHandler for PostgreSQL database via sqlalchemy driver'
+    'Test DataHandler for PostgreSQL database via sqlalchemy driver'
     database = 'postgresql'
 
     @classmethod
@@ -344,7 +344,7 @@ class TestPostgresDataHandler(TestGramex, DataHandlerTestMixin):
 
 
 class TestBlazeDataHandler(TestSqliteHandler):
-    'Test gramex.handlers.DataHandler for SQLite database via blaze driver'
+    'Test DataHandler for SQLite database via blaze driver'
     database = 'blazesqlite'
 
     def test_querydb(self):
@@ -407,12 +407,12 @@ class TestBlazeDataHandler(TestSqliteHandler):
 
 
 class TestBlazeMysqlDataHandler(TestMysqlDataHandler, TestBlazeDataHandler):
-    'Test gramex.handlers.DataHandler for MySQL database via blaze driver'
+    'Test DataHandler for MySQL database via blaze driver'
     database = 'blazemysql'
 
 
 class TestDataHandlerConfig(TestSqliteHandler):
-    'Test gramex.handlers.DataHandler'
+    'Test DataHandler'
     database = 'sqliteconfig'
 
     def test_pingdb(self):

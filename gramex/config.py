@@ -24,6 +24,7 @@ import logging
 from pathlib import Path
 from copy import deepcopy
 from six import string_types
+from pydoc import locate as _locate
 from orderedattrdict import AttrDict
 from orderedattrdict.yamlutils import AttrDictYAMLLoader
 
@@ -257,3 +258,25 @@ class PathConfig(AttrDict):
             self.update(_yaml_open(path))
             self.__info__.imports = load_imports(self, source=path)
         return self
+
+
+def locate(path, modules=[], forceload=0):
+    '''
+    Locate an object by name or dotted path.
+
+    For example, ``locate('str')`` returns the ``str`` built-in.
+    ``locate('gramex.handlers.FileHandler')`` returns the class
+    ``gramex.handlers.FileHandler``.
+
+    ``names`` is a mapping of pre-defined names to objects. So ``locate('x',
+    names={'x': str})`` will return ``str``.
+
+    ``modules`` is a list of modules to search for the path in first. So
+    ``locate('FileHandler', modules=[gramex.handlers])`` will return
+    ``gramex.handlers.FileHandler``.
+    '''
+    for module_name in modules:
+        module = _locate(module_name, forceload)
+        if hasattr(module, path):
+            return getattr(module, path)
+    return _locate(path, forceload)

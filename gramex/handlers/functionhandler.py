@@ -27,12 +27,12 @@ class FunctionHandler(BaseHandler):
 
         url:
           hello-world:
-            pattern: /hello                             # The URL /hello
-            handler: gramex.handlers.FunctionHandler    # Runs a function
+            pattern: /hello             # The URL /hello
+            handler: FunctionHandler    # Runs a function
             kwargs:
-              function: str                             # Display string as-is
+              function: str             # Display string as-is
               args:
-                - Hello world                           # with "Hello world"
+                - Hello world           # with "Hello world"
 
     Only a single function call is allowed. To chain function calls or to do
     anything more complex, create a Python function and call that instead. For
@@ -143,12 +143,14 @@ class FunctionHandler(BaseHandler):
           lookup:
             function: calculation.run     # Run calculation.run(handler)
             redirect: /                   # and redirect to / thereafter
+
+    TODO: redirect: "" redirects to referrer. Add test case for this.
     '''
-    def initialize(self, **kwargs):
+    def initialize(self, headers={}, redirect=None, **kwargs):
         self.params = kwargs
         self.function = build_transform(kwargs, vars={'handler': None})
-        self.headers = kwargs.get('headers', {})
-        self.redirect_url = kwargs.get('redirect', None)
+        self.headers = headers
+        self.redirect_url = redirect
         self.post = self.get
 
     @tornado.web.authenticated

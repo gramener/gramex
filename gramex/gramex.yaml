@@ -42,7 +42,7 @@ app:
 url:
     reload-config:
         pattern: /reload-config
-        handler: gramex.handlers.FunctionHandler    # Run function and redirect
+        handler: FunctionHandler            # Run function and redirect
         kwargs:
             function: gramex.init           # Run gramex.init()
             args: []                        # without any positional
@@ -52,7 +52,7 @@ url:
     default:                            # A unique name for this handler
         priority: -1                    # Apply this pattern with low than normal priority
         pattern: /(.*)                  # All URLs beginning with /
-        handler: gramex.handlers.FileHandler        # Handler used
+        handler: FileHandler                        # Handler used
         kwargs:                                     # Options to the handler
             path: .                                 #   path is current dir
             default_filename: index.html            #   default filename
@@ -60,7 +60,7 @@ url:
 
     lib:                                # The handler for component libraries
         pattern: /lib/(.*)              # Anything under /lib/
-        handler: gramex.handlers.FileHandler
+        handler: FileHandler
         kwargs:
             path: "{.}/lib"             # maps to /lib/ under the Gramex source folder
                                         # {.} is replaced with the conf file's folder

@@ -18,9 +18,9 @@ import logging.config
 import tornado.web
 import tornado.ioloop
 from orderedattrdict import AttrDict
-from pydoc import locate
 from . import scheduler
 from . import watcher
+from ..config import locate
 
 
 # Service-specific information
@@ -74,7 +74,7 @@ def url(conf):
     specs = sorted(conf.items(), key=_sort_url_patterns, reverse=True)
     for name, spec in specs:
         urlspec = AttrDict(spec)
-        urlspec.handler = locate(spec.handler)
+        urlspec.handler = locate(spec.handler, modules=['gramex.handlers'])
         handlers.append(tornado.web.URLSpec(
             name=name,
             pattern=urlspec.pattern,
