@@ -85,7 +85,8 @@ Release
 
 When releasing a new version of Gramex:
 
-1. Test the ``dev`` branch on Python 2.7, 3.4 and 3.5::
+1. Check `build errors <http://code.gramener.com/s.anand/gramex/builds>`__.
+   Test the ``dev`` branch on Python 2.7, 3.4 and 3.5::
 
     PYTHON=/path/to/python2.7 make release-test
     PYTHON=/path/to/python3.4 make release-test

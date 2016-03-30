@@ -23,5 +23,6 @@ unittest:
     - apt-get install -y libpq-dev
 
     # Run unit tests
+    - conda install -f requirements-conda.txt
     - pip install -e .
     - python setup.py nosetests
