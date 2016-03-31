@@ -40,15 +40,6 @@ app:
 # The `url:` section maps URL patterns to handlers.
 # http://tornado.readthedocs.org/en/stable/web.html#tornado.web.URLSpec
 url:
-    reload-config:
-        pattern: /reload-config
-        handler: FunctionHandler            # Run function and redirect
-        kwargs:
-            function: gramex.init           # Run gramex.init()
-            args: []                        # without any positional
-            kwargs: {}                      # or keyword arguments
-            redirect: /                     # Redirects to referer or / by default
-
     default:                            # A unique name for this handler
         priority: -1                    # Apply this pattern with low than normal priority
         pattern: /(.*)                  # All URLs beginning with /
@@ -57,14 +48,6 @@ url:
             path: .                                 #   path is current dir
             default_filename: index.html            #   default filename
             index: true                             #   display the index
-
-    lib:                                # The handler for component libraries
-        pattern: /lib/(.*)              # Anything under /lib/
-        handler: FileHandler
-        kwargs:
-            path: "{.}/lib"             # maps to /lib/ under the Gramex source folder
-                                        # {.} is replaced with the conf file's folder
-            index: true                 # Allow browsing the libraries
 
     # The `import:` key may be included anywhere. Its keys are just identifiers,
     # not used for anything. Its values are YAML files. They are loaded at the
