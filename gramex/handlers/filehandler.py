@@ -82,7 +82,7 @@ class FileHandler(BaseHandler):
     @tornado.web.authenticated
     @tornado.gen.coroutine
     def get(self, path=None, include_body=True):
-        self.path = (self.root / path  if path is not None else self.root).absolute()
+        self.path = (self.root / path if path is not None else self.root).absolute()
         # relative_to() raises ValueError if path is not under root
         self.path.relative_to(self.root)
 
