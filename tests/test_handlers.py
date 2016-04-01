@@ -20,18 +20,21 @@ class TestGramex(unittest.TestCase):
 
     def check(self, url, path=None, code=200, text=None, headers=None):
         r = self.get(url)
-        self.assertEqual(r.status_code, code, url)
+        self.assertEqual(r.status_code, code, '%s: code %d != %d' % (url, r.status_code, code))
         if text is not None:
-            self.assertIn(text, r.text, '%s: %s != %s' % (url, text, r.text))
+            self.assertIn(text, r.text, '%s: %s not in %s' % (url, text, r.text))
         if path is not None:
             with (server.info.folder / path).open('rb') as file:
-                self.assertEqual(r.content, file.read(), url)
+                self.assertEqual(r.content, file.read(), '%s != %s' % (url, path))
         if headers is not None:
             for header, value in headers.items():
                 if value is None:
-                    self.assertFalse(header in r.headers)
+                    self.assertFalse(header in r.headers,
+                                     '%s: should not have header %s' % (url, header))
                 else:
-                    self.assertEqual(r.headers[header], value)
+                    actual = r.headers[header]
+                    self.assertEqual(actual, value,
+                                     '%s: header %s = %s != %s' % (url, header, actual, value))
         return r
 
 
