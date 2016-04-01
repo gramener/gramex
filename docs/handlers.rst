@@ -20,7 +20,7 @@ displays "Hello world" at /hello as plain text::
     url:
       hello-world:
         pattern: /hello                     # The URL /hello
-        handler: gramex.handlers.FunctionHandler   # Runs a function
+        handler: FunctionHandler            # Runs a function
         kwargs:
           function: six.text_type           # Convert to string
           args:                             # with these arguments:
@@ -45,7 +45,7 @@ Now, you can use this configuration::
     url:
       total:
         pattern: /total                             # The URL /total
-        handler: gramex.handlers.FunctionHandler    # Runs a function
+        handler: FunctionHandler                    # Runs a function
         kwargs:
           function: calculations.total              # calculations.total(100, 200.0)
           args: [100, 200.0]
@@ -64,7 +64,7 @@ You can specify wildcards in the URL pattern. For example::
     url:
       lookup:
         pattern: /name/([a-z]+)/age/([0-9]+)        # e.g. /name/john/age/21
-        handler: gramex.handlers.FunctionHandler    # Runs a function
+        handler: FunctionHandler                    # Runs a function
         kwargs:
           function: calculations.name_age           # Run this function
 
@@ -96,8 +96,8 @@ replaced by the RequestHandler. For example::
 
     url:
       method:
-        pattern: /method                       # The URL /method
-        handler: gramex.handlers.FunctionHandler    # Runs a function
+        pattern: /method          # The URL /method
+        handler: FunctionHandler  # Runs a function
         kwargs:
           function: calculations.method
           args:
@@ -166,7 +166,7 @@ directory at ``/``::
     url:
       root-app:                         # A unique name for this handler
         pattern: /(.*)                  # All URLs beginning with /
-        handler: gramex.handlers.FileHandler    # Handler used
+        handler: FileHandler            # Handler used
         kwargs:                                 # Options to the handler
             path: .                             #   path is current dir
             default_filename: index.html        #   default filename
