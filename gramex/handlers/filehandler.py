@@ -49,50 +49,6 @@ class FileHandler(BaseHandler):
         ``headers``:
             HTTP headers to set on the response.
 
-    This example mimics SimpleHTTPServer_::
-
-        pattern: /(.*)                          # Any URL
-        handler: FileHandler                    # uses this handler
-        kwargs:
-            path: .                             # shows files in the current directory
-            default_filename: index.html        # Show index.html instead of directories
-            index: true                         # List files if index.html doesn't exist
-
-    To render Markdown as HTML, set up this handler::
-
-        pattern: /blog/(.*)                     # Any URL starting with blog
-        handler: FileHandler                    # uses this handler
-        kwargs:
-          path: blog/                           # Serve files from blog/
-          default_filename: README.md           # using README.md as default
-          transform:
-            "*.md":                             # Any file matching .md
-              encoding: cp1252                  #   Open files with CP1252 encoding
-              function: markdown.markdown       #   Convert from markdown to html
-              kwargs:
-                safe_mode: escape               #   Pass safe_mode='escape'
-                output_format: html5            #   Output in HTML5
-              headers:
-                Content-Type: text/html         #   MIME type: text/html
-
-    .. _glob pattern: https://docs.python.org/3/library/pathlib.html#pathlib.Path.glob
-    .. _SimpleHTTPServer: https://docs.python.org/2/library/simplehttpserver.html
-
-    To restrict to serving specific files, you can identify them in the pattern::
-
-        pattern: /blog/(.*\.md$|style\.css)         # Serve only .md files or style.css
-        handler: FileHandler
-        kwargs:
-            path: blog/
-
-    **Note**: there is a ``default`` URL handler that automatically serves files
-    from the home directory of your folder. To override that, override the
-    ``default`` pattern::
-
-        url:
-          default:                                  # This overrides the default URL handler
-            pattern: ...
-
     FileHandler exposes the following ``pathlib.Path`` attributes:
 
     ``root``
