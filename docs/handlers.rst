@@ -181,6 +181,31 @@ files from the home directory of your folder. To override that, override the
         pattern: ...
 
 
+Redirection
+:::::::::::
+
+To serve a specific file a URL, i.e. effectively offering URL redirection,
+specify the appropriate pattern and path. For example, if you have a
+``data.csv``, you can serve it at ``/data`` as follows::
+
+    pattern: /data
+    handler: FileHandler
+    kwargs:
+      path: data.csv
+
+The URL will be served with the MIME type of the file. CSV files have a MIME
+type ``text/csv`` and a ``Content-Disposition`` set to download the file. You
+can override these headers::
+
+    pattern: /data
+    handler: FileHandler
+    kwargs:
+      path: data.csv
+      headers:
+        Content-Type: text/plain
+        Content-Disposition: none
+
+
 File patterns
 :::::::::::::
 
@@ -189,7 +214,7 @@ To restrict to serving specific files, you can identify them in the pattern::
     pattern: /blog/(.*\.md$|style\.css)         # Serve only .md files or style.css
     handler: FileHandler
     kwargs:
-        path: blog/
+      path: blog/
 
 Transforms
 ::::::::::

@@ -18,7 +18,7 @@ class TestGramex(unittest.TestCase):
     def get(self, url, **kwargs):
         return requests.get(server.base_url + url, **kwargs)
 
-    def check(self, url, path=None, code=200, text=None):
+    def check(self, url, path=None, code=200, text=None, headers=None):
         r = self.get(url)
         self.assertEqual(r.status_code, code, url)
         if text is not None:
@@ -26,6 +26,12 @@ class TestGramex(unittest.TestCase):
         if path is not None:
             with (server.info.folder / path).open('rb') as file:
                 self.assertEqual(r.content, file.read(), url)
+        if headers is not None:
+            for header, value in headers.items():
+                if value is None:
+                    self.assertFalse(header in r.headers)
+                else:
+                    self.assertEqual(r.headers[header], value)
         return r
 
 
@@ -131,6 +137,11 @@ class TestFileHandler(TestGramex):
         self.check('/dir/args/?x=1', text=json.dumps({'x': ['1']}))
         self.check('/dir/args/?x=1&x=2&y=3', text=json.dumps({'x': ['1', '2'], 'y': ['3']},
                                                              sort_keys=True))
+
+        self.check('/dir/data', code=200, path='dir/data.csv', headers={
+            'Content-Type': 'text/plain',
+            'Content-Disposition': None
+        })
 
     def test_transforms(self):
         with (server.info.folder / 'dir/markdown.md').open(encoding='utf-8') as f:

@@ -157,6 +157,15 @@ url:
           function: utils.args_as_json
           args: =handler
 
+  dir/data:
+    pattern: /dir/data                # Check that a pattern without brackets works
+    handler: FileHandler
+    kwargs:
+      path: dir/data.csv
+      headers:
+        Content-Type: text/plain      # Test header overriding
+        Content-Disposition: null     # Test header clearing
+
   # TestDataHandler for Sqlite
   data/csv:
     pattern: /datastore/sqlite/csv/
