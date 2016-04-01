@@ -197,6 +197,10 @@ class DataHandler(BaseHandler):
                         whr = (col < val)
                     elif oper == '!=':
                         whr = (col != val)
+                    elif oper == '~':
+                        whr = (col.like('*' + val + '*'))
+                    elif oper == '!~':
+                        whr = (~col.like('*' + val + '*'))
                     wheres = whr if wheres is None else wheres & whr
                 query = query[wheres]
 

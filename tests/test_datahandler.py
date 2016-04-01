@@ -169,64 +169,6 @@ class TestBlazeDataHandler(TestSqliteHandler):
     'Test DataHandler for SQLite database via blaze driver'
     database = 'blazesqlite'
 
-    def test_querydb(self):
-        def eq(a, b):
-            return pdt.assert_frame_equal(a.reset_index(drop=True).sort_index(axis=1),
-                                          b.sort_index(axis=1))
-
-        # select, where, sort, offset, limit
-        base = server.base_url + '/datastore/' + self.database + '/'
-        eq(self.data[:5],
-           pd.read_csv(base + 'csv/?limit=5'))
-        eq(self.data[5:],
-           pd.read_csv(base + 'csv/?offset=5'))
-        eq(self.data.sort_values(by='votes'),
-           pd.read_csv(base + 'csv/?sort=votes'))
-        eq(self.data.sort_values(by='votes', ascending=False)[:5],
-           pd.read_csv(base + 'csv/?limit=5&sort=votes:desc'))
-        eq(self.data.sort_values(by=['category', 'name'], ascending=[False, False]),
-           pd.read_csv(base + 'csv/?sort=category:desc&sort=name:desc'))
-        eq(self.data[['name', 'votes']],
-           pd.read_csv(base + 'csv/?select=name&select=votes'))
-        eq(self.data.query('category=="Actors"'),
-           pd.read_csv(base + 'csv/?where=category==Actors'))
-        eq(self.data.query('category=="Actors"'),
-           pd.read_csv(base + 'csv/?where=category=Actors'))
-        eq(self.data.query('category!="Actors"'),
-           pd.read_csv(base + 'csv/?where=category!=Actors'))
-        eq(self.data.query('votes>100'),
-           pd.read_csv(base + 'csv/?where=votes>100'))
-        eq(self.data.query('150 > votes > 100'),
-           pd.read_csv(base + 'csv/?where=votes<150&where=votes>100&xyz=8765'))
-
-        # TODO like & notlike operators name~Brando  name!~Brando
-
-        # Aggregation cases
-        eq((self.data.groupby('category', as_index=False)
-            .agg({'rating': 'min', 'votes': 'sum'})
-            .rename(columns={'rating': 'ratemin', 'votes': 'votesum'})),
-           pd.read_csv(base + 'csv/?groupby=category' +
-                       '&agg=ratemin:min(rating)&agg=votesum:sum(votes)'))
-
-        eq((self.data.query('120 > votes > 60')
-            .groupby('category', as_index=False)
-            .agg({'rating': 'max', 'votes': 'count'})
-            .rename(columns={'rating': 'ratemax', 'votes': 'votecount'})
-            .sort_values(by='votecount', ascending=True)),
-           pd.read_csv(base + 'csv/?groupby=category' +
-                       '&agg=ratemax:max(rating)&agg=votecount:count(votes)' +
-                       '&where=votes<120&where=votes>60&sort=votecount:asc'))
-
-        eq((self.data.query('120 > votes > 60')
-            .groupby('category', as_index=False)
-            .agg({'rating': pd.np.mean, 'votes': pd.Series.nunique})
-            .rename(columns={'rating': 'ratemean', 'votes': 'votenu'})
-            .loc[1:, ['category', 'votenu']]),
-           pd.read_csv(base + 'csv/?groupby=category' +
-                       '&agg=ratemean:mean(rating)&agg=votenu:nunique(votes)' +
-                       '&where=votes<120&where=votes>60' +
-                       '&select=category&select=votenu&offset=1'))
-
 
 class TestBlazeMysqlDataHandler(TestMysqlDataHandler, TestBlazeDataHandler):
     'Test DataHandler for MySQL database via blaze driver'
