@@ -236,7 +236,6 @@ To render Markdown as HTML, set up this handler::
           headers:
             Content-Type: text/html         #   MIME type: text/html
 
-.. _glob pattern: https://docs.python.org/3/library/pathlib.html#pathlib.Path.glob
 .. _SimpleHTTPServer: https://docs.python.org/2/library/simplehttpserver.html
 
 

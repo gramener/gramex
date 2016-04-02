@@ -49,6 +49,8 @@ class FileHandler(BaseHandler):
         ``headers``:
             HTTP headers to set on the response.
 
+    .. _glob pattern: https://docs.python.org/3/library/pathlib.html#pathlib.Path.glob
+
     FileHandler exposes the following ``pathlib.Path`` attributes:
 
     ``root``

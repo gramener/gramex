@@ -10,10 +10,10 @@ Gramex: Gramener's Visualization Server
    :maxdepth: 2
 
    readme
-   design
    server
    handlers
    components
+   design
    contributing
    authors
    history
