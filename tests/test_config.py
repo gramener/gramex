@@ -107,8 +107,8 @@ class TestPathConfig(unittest.TestCase):
         # Change conf2.test and ensure that its original contents are replaced,
         # not just merged with previous value
         with self.conf2.open(mode='w', encoding='utf-8') as handle:
-            yaml.dump({'url': {'b': 2}}, handle)
-        self.assertEqual(+conf, {'url': {'b': 2}})
+            yaml.dump({'url': {'b': 10}}, handle)
+        self.assertEqual(+conf, {'url': {'b': 10}})
 
 
     def test_import(self):
