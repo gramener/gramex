@@ -50,6 +50,12 @@ class TestPathConfig(unittest.TestCase):
         self.base = self.home / 'config.template.base.yaml'
         self.child = self.home / 'config.template.child.yaml'
         self.subdir = self.home / 'dir/config.template.subdir.yaml'
+        self.conf1 = self.home / Path('conf1.test')
+        self.conf2 = self.home / Path('conf2.test')
+
+    def tearDown(self):
+        unlink(self.conf1)
+        unlink(self.conf2)
 
     def test_merge(self):
         'Config files are loaded and merged'
@@ -81,6 +87,26 @@ class TestPathConfig(unittest.TestCase):
         # Deleted file is detected
         self.temp.unlink()
         self.assertEqual(+conf, {})
+
+    def test_chain_update(self):
+        'Chained config files are changed on update'
+        # Set up a configuration with 2 files -- conf1.test and conf2.test.
+        with self.conf1.open(mode='w', encoding='utf-8') as handle:
+            yaml.dump({'url': {}}, handle)
+        with self.conf2.open(mode='w', encoding='utf-8') as handle:
+            yaml.dump({'url': {'a': 1}}, handle)
+
+        conf = ChainConfig()
+        conf.conf1 = PathConfig(self.conf1)
+        conf.conf2 = PathConfig(self.conf2)
+        self.assertEqual(+conf, {'url': {'a': 1}})
+
+        # Change conf2.test and ensure that its original contents are replaced,
+        # not just merged with previous value
+        with self.conf2.open(mode='w', encoding='utf-8') as handle:
+            yaml.dump({'url': {'b': 2}}, handle)
+        self.assertEqual(+conf, {'url': {'b': 2}})
+
 
     def test_import(self):
         'Check if config files are imported'

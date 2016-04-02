@@ -3,6 +3,7 @@ import json
 import logging
 import tornado.ioloop
 from pathlib import Path
+from copy import deepcopy
 from orderedattrdict import AttrDict
 from . import services
 from gramex.config import ChainConfig, PathConfig
@@ -40,7 +41,7 @@ def init(**kwargs):
     for key, val in (+config_layers).items():
         if key not in conf or conf[key] != val:
             if hasattr(services, key):
-                conf[key] = val
+                conf[key] = deepcopy(val)
                 getattr(services, key)(conf[key])
             else:
                 logging.warning('No service named %s', key)
