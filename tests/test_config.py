@@ -1,3 +1,4 @@
+import os
 import yaml
 import unittest
 from pathlib import Path
@@ -47,9 +48,11 @@ class TestPathConfig(unittest.TestCase):
         self.temp = self.home / 'config.temp.yaml'
         self.imp = self.home / 'config.import.yaml'
         self.final = self.home / 'config.final.yaml'
-        self.base = self.home / 'config.template.base.yaml'
-        self.child = self.home / 'config.template.child.yaml'
-        self.subdir = self.home / 'dir/config.template.subdir.yaml'
+        self.chain = AttrDict(
+            base=self.home / 'config.template.base.yaml',
+            child=self.home / 'config.template.child.yaml',
+            subdir=self.home / 'dir/config.template.subdir.yaml',
+        )
         self.conf1 = self.home / Path('conf1.test')
         self.conf2 = self.home / Path('conf2.test')
 
@@ -130,13 +133,26 @@ class TestPathConfig(unittest.TestCase):
         self.assertEqual(+conf_imp, +conf_b)
 
     def test_templating(self):
+        'Templates interpolate string variables'
         conf = +ChainConfig(
-            base=PathConfig(self.base),
-            child=PathConfig(self.child),
+            base=PathConfig(self.chain.base),
+            child=PathConfig(self.chain.child),
         )
-        self.assertEqual(conf.base_this, str(self.base.parent) + '/path')
-        self.assertEqual(conf.child_this, str(self.child.parent) + '/path')
-        self.assertEqual(conf.subdir_this, str(self.subdir.parent) + '/path')
+        # Custom variables are deleted after use
+        self.assertFalse('variables' in conf)
+        for key in ['base', 'child', 'subdir']:
+            # {.} maps to YAML file's directory
+            self.assertEqual(conf['%s_DOT' % key], str(self.chain[key].parent))
+            # {YAMLPATH} maps to YAML file's directory
+            self.assertEqual(conf['%s_YAMLPATH' % key], str(self.chain[key].parent))
+            # Environment variables are present by default
+            self.assertEqual(conf['%s_PATH' % key], os.environ.get('PATH', ''))
+            # Non-existent variables map to ''
+            self.assertEqual(conf['%s_NONEXISTENT' % key], os.environ.get('NONEXISTENT', ''))
+            # Custom variables are applied
+            self.assertEqual(conf['%s_THIS' % key], key)
+            # Custom variables are inherited
+            self.assertEqual(conf['%s_ROOT' % key], conf.base_ROOT)
 
 
 class TestConfig(unittest.TestCase):

@@ -1,1 +1,9 @@
-subdir_this: "{.}/path"
+variables:
+  THIS: "subdir"
+
+subdir_DOT: "{.}"
+subdir_YAMLPATH: "{YAMLPATH}"
+subdir_PATH: "{PATH}"
+subdir_NONEXISTENT: "{NONEXISTENT}"
+subdir_ROOT: "{ROOT}"
+subdir_THIS: "{THIS}"

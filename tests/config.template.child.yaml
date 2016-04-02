@@ -1,1 +1,9 @@
-child_this: "{.}/path"
+variables:
+  THIS: "child"
+
+child_DOT: "{.}"
+child_YAMLPATH: "{YAMLPATH}"
+child_PATH: "{PATH}"
+child_NONEXISTENT: "{NONEXISTENT}"
+child_ROOT: "{ROOT}"
+child_THIS: "{THIS}"

@@ -49,23 +49,6 @@ url:
             default_filename: index.html            #   default filename
             index: true                             #   display the index
 
-    # The `import:` key may be included anywhere. Its keys are just identifiers,
-    # not used for anything. Its values are YAML files. They are loaded at the
-    # end of the section, in order. After loading, the import: key is removed.
-
-    # Imports work recursively. You can have imports within imports.
-
-    # You can specify a relative or an absolute path. Gramex proceeds with a
-    # warning if a file is missing. You can specify a `Path.glob` pattern as
-    # well. (Note: absolute glob patterns are not implemented by `Path.glob`.)
-
-    # import:
-    #     app1: 'app1/gramex.url.yaml'        # relative path
-    #     app2: 'd:/temp/gramex.url.yaml'     # absolute path
-    #     subapps: '*/gramex.url.yaml'        # glob: 1st-level directory search
-    #     deepapps: '**/gramex.url.yaml'      # glob: full subtree search
-
-
 # The `log:` section defines the log handlers. It uses the same structure as the
 # Python logging schema. By default, the system `gramex.yaml` has a log handler
 # called `admin` that logs events for the admin page to display and filter.

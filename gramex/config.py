@@ -19,13 +19,15 @@ To get the merged file, use ``+cc``. This updates the PathConfig files and
 merges the YAMLs.
 '''
 
+import os
 import yaml
+import string
 import logging
 from pathlib import Path
 from copy import deepcopy
 from six import string_types
 from pydoc import locate as _locate
-from orderedattrdict import AttrDict
+from orderedattrdict import AttrDict, DefaultAttrDict
 from orderedattrdict.yamlutils import AttrDictYAMLLoader
 
 
@@ -112,10 +114,14 @@ class ChainConfig(AttrDict):
 
 # Paths that users have already been warned about. Don't warn them again
 _warned_paths = set()
+# Initialise YAML variables with environment
+_variables = DefaultAttrDict(str)
+_variables.update(os.environ)
+_format = string.Formatter().vformat
 
 
 def _yaml_open(path, default=AttrDict()):
-    'Load a YAML path.Path as AttrDict. Replace {.} with path directory'
+    'Load a YAML path.Path as AttrDict. Replace {VAR} with variables'
     path = path.absolute()
     if not path.exists():
         if path not in _warned_paths:
@@ -128,10 +134,23 @@ def _yaml_open(path, default=AttrDict()):
     if result is None:
         logging.warning('Empty config: %s', path)
         return default
+
+    # Update context with the variables section
+    if 'variables' in result:
+        _variables.update(result['variables'])
+        del result['variables']
+    _variables.update({
+        'YAMLPATH': str(path.parent),
+        'YAMLFILE': str(path),
+    })
+
+    # Substitute variables
     for key, value, node in walk(result):
         if isinstance(value, string_types):
-            if '{.}' in value:
-                node[key] = value.replace('{.}', str(path.parent))
+            # Backward compatibility: before v1.0.4, we used {.} for {YAMLPATH}
+            value = value.replace('{.}', '{YAMLPATH}')
+            # Substitute with variables in context, defaulting to ''
+            node[key] = _format(value, args=[], kwargs=_variables)
     return result
 
 

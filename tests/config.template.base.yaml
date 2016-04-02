@@ -1,3 +1,13 @@
-base_this: "{.}/path"
+variables:
+  ROOT: "base"
+  THIS: "base"
+
+base_DOT: "{.}"
+base_YAMLPATH: "{YAMLPATH}"
+base_PATH: "{PATH}"
+base_NONEXISTENT: "{NONEXISTENT}"
+base_ROOT: "{ROOT}"
+base_THIS: "{THIS}"
+
 import:
-    child: dir/config.template.subdir.yaml
+    subdir: dir/config.template.subdir.yaml
