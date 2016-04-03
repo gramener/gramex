@@ -3,7 +3,8 @@ import yaml
 import inspect
 import unittest
 from dis import dis
-from tornado.gen import coroutine, Return, Task
+from types import GeneratorType
+from tornado.gen import coroutine, Task
 from orderedattrdict import AttrDict
 from orderedattrdict.yamlutils import AttrDictYAMLLoader
 from gramex.transforms import build_transform, badgerfish
@@ -31,9 +32,9 @@ class BuildTransform(unittest.TestCase):
         src, tgt = a_code.co_code, b_code.co_code
         if src != tgt:
             # Print the disassembled code to make debugging easier
-            print('Compiled by build_transform from YAML')
+            print('Compiled by build_transform from YAML')      # noqa
             dis(src)
-            print('Tested against test case')
+            print('Tested against test case')                   # noqa
             dis(tgt)
         self.assertEqual(src, tgt, '%s: code mismatch' % msg)
 
