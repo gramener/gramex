@@ -110,7 +110,6 @@ class TestPathConfig(unittest.TestCase):
             yaml.dump({'url': {'b': 10}}, handle)
         self.assertEqual(+conf, {'url': {'b': 10}})
 
-
     def test_import(self):
         'Check if config files are imported'
         conf_imp = ChainConfig(conf=PathConfig(self.imp))
