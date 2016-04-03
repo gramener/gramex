@@ -5,7 +5,7 @@ import yaml
 import xmljson
 import lxml.html
 import tornado.gen
-import tornado.concurrent
+from types import GeneratorType
 from orderedattrdict import AttrDict
 from orderedattrdict.yamlutils import AttrDictYAMLLoader
 
@@ -18,16 +18,18 @@ def _arg_repr(arg):
     values are treated as strings. For example, ``=x`` is the variable ``x`` but
     ``x`` is the string ``"x"``. ``==x`` is the string ``"=x"``.
     '''
-    if isinstance(arg, six.string_types) and len(arg) > 1:
-        if arg[0] == '=':
-            return repr(arg[1:]) if arg[1] == '=' else arg[1:]
-    return repr(arg)
+    if isinstance(arg, six.string_types):
+        if arg.startswith('=='):
+            return repr(arg[1:])        # "==x" becomes '"=x"'
+        elif arg.startswith('='):
+            return arg[1:]              # "=x" becomes 'x'
+    return repr(arg)                    # "x" becomes '"x"', 1 becomes '1', etc
 
 
 _build_transform_cache = {}
 
 
-def build_transform(conf, vars={}, _coroutine=True):
+def build_transform(conf, vars={}):
     '''
     Converts a YAML function configuration into a callable function. For e.g.::
 
@@ -47,10 +49,11 @@ def build_transform(conf, vars={}, _coroutine=True):
     which becomes::
 
         def transform(_val):
-            return json.dumps(
+            result = json.dumps(
                 'x',
                 separators=[',', ':']
             )
+            return result if isinstance(result, GeneratorType) else (result,)
 
     The returned function takes a single argument by default. You can change the
     arguments it accepts using ``vars``. For example::
@@ -60,6 +63,10 @@ def build_transform(conf, vars={}, _coroutine=True):
     creates::
 
         def transfom(x=None, y=1)
+
+    The returned function always returns an iterable containing the values. If
+    the function returns a single value, you can get it on the first iteration.
+    If the function returns a generator object, that is returned as-is.
 
     In the ``conf`` parameter, ``args`` and ``kwargs`` values are interpreted
     literally. But values starting with ``=`` like ``=args`` are treated as
@@ -123,17 +130,17 @@ def build_transform(conf, vars={}, _coroutine=True):
     for key, val in conf.get('kwargs', {}).items():
         body.append('\t\t%s=%s,\n' % (key, _arg_repr(val)))
 
-    # If the result is a future,  yield it. Else, return it.
+    # If the result is a generator object, return it. Else, create a tuple and
+    # return that. This ensures that the returned value is always an iterable
     body += [
         '\t)\n',
-        '\tif is_future(result): result = yield result\n',
-        '\traise Return(result)',
+        '\treturn result if isinstance(result, GeneratorType) else (result,)',
     ]
 
     # Compile the function with context variables
     context = {
         'function': function,
-        'is_future': tornado.concurrent.is_future,
+        'GeneratorType': GeneratorType,
         'Return': tornado.gen.Return,
         'AttrDict': AttrDict
     }
@@ -141,10 +148,6 @@ def build_transform(conf, vars={}, _coroutine=True):
 
     # Return the transformed function
     function = context['transform']
-    # Convert it into a coroutine if _coroutine is True (default). But test
-    # cases may pass _coroutine=False to test the raw conversion functionality.
-    if _coroutine:
-        function = tornado.gen.coroutine(function)
     function.__name__ = name
     function.__doc__ = doc
 

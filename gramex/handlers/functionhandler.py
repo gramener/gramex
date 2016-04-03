@@ -13,9 +13,9 @@ class FunctionHandler(BaseHandler):
         method (e.g. ``str.lower``). By default, it is called as
         ``function(handler)`` where handler is this RequestHandler, but you can
         override ``args`` and ``kwargs`` below to replace it with other
-        parameters. The result is rendered as-is (and hence must be a string.)
-        If ``redirect`` is specified, the result is discarded and the user is
-        redirected to ``redirect``.
+        parameters. The result is rendered as-is (and hence must be a string, or
+        a Future that resolves to a string.) You can also yield one or more
+        results. These are written immediately, in order.
     :arg list args: positional arguments to be passed to the function.
     :arg dict kwargs: keyword arguments to be passed to the function.
     :arg dict headers: HTTP headers to set on the response.
@@ -38,6 +38,8 @@ class FunctionHandler(BaseHandler):
         if self.redirect_url is not None:
             self.redirect(self.redirect_url or self.request.headers.get('Referer', '/'))
         else:
-            value = yield result
-            self.write(value)
-            self.flush()
+            for item in result:
+                if tornado.concurrent.is_future(item):
+                    item = yield item
+                self.write(item)
+                self.flush()

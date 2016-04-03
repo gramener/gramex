@@ -21,8 +21,8 @@ url:
         a: "a"
         b: "b"
 
-  func/async_args:
-    pattern: /func/async_args
+  func/async/args:
+    pattern: /func/async/args
     handler: FunctionHandler
     kwargs:
       function: utils.async_args
@@ -65,15 +65,15 @@ url:
       function: utils.params_as_json
       args: =handler.get_arguments('x')
 
-  func/async_http:
-    pattern: /func/async_http
+  func/async/http:
+    pattern: /func/async/http
     handler: FunctionHandler
     kwargs:
       function: utils.async_http
       args: "http://localhost:9999/func/dumpx?x=1&x=2"
 
-  func/async_http2:
-    pattern: /func/async_http2
+  func/async/http2:
+    pattern: /func/async/http2
     handler: FunctionHandler
     kwargs:
       function: utils.async_http2
@@ -81,11 +81,23 @@ url:
         - "http://localhost:9999/func/dumpx?x=1"
         - "http://localhost:9999/func/dumpx?x=2"
 
-  func/async_calc:
-    pattern: /func/async_calc
+  func/async/calc:
+    pattern: /func/async/calc
     handler: FunctionHandler
     kwargs:
       function: utils.async_calc
+
+  func/iterator:
+    pattern: /func/iterator
+    handler: FunctionHandler
+    kwargs:
+      function: utils.iterator
+
+  func/iterator/async:
+    pattern: /func/iterator/async
+    handler: FunctionHandler
+    kwargs:
+      function: utils.iterator_async
 
   # TestFileHandler
   dir/noindex:

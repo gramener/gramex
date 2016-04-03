@@ -55,7 +55,6 @@ class TestFunctionHandler(TestGramex):
     'Test FunctionHandler'
 
     def test_args(self):
-        'Test arguments'
         self.check('/func/args', text='{"args": [0, 1], "kwargs": {"a": "a", "b": "b"}}')
         self.check('/func/handler', text='{"args": ["Handler"], "kwargs": {}')
         self.check('/func/composite',
@@ -66,12 +65,16 @@ class TestFunctionHandler(TestGramex):
         self.check('/func/dumpx?x=1&x=2', text='{"args": [["1", "2"]], "kwargs": {}}')
 
     def test_async(self):
-        self.check('/func/async_args', text='{"args": [0, 1], "kwargs": {"a": "a", "b": "b"}}')
-        self.check('/func/async_http', text='{"args": [["1", "2"]], "kwargs": {}}')
-        self.check('/func/async_http2',
+        self.check('/func/async/args', text='{"args": [0, 1], "kwargs": {"a": "a", "b": "b"}}')
+        self.check('/func/async/http', text='{"args": [["1", "2"]], "kwargs": {}}')
+        self.check('/func/async/http2',
                    text='{"args": [["1"]], "kwargs": {}}{"args": [["2"]], "kwargs": {}}')
-        self.check('/func/async_calc',
+        self.check('/func/async/calc',
                    text='[[250,250,250],[250,250,250],[250,250,250],[250,250,250]]')
+
+    def test_iterator(self):
+        self.check('/func/iterator?x=1&x=2&x=3', text='123')
+        self.check('/func/iterator/async?x=1&x=2&x=3', text='123')
 
 
 class TestFileHandler(TestGramex):

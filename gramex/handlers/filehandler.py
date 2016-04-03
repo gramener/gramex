@@ -145,7 +145,13 @@ class FileHandler(BaseHandler):
                 if transform:
                     for header_name, header_value in transform['headers'].items():
                         self.set_header(header_name, header_value)
-                    self.content = yield transform['function'](handler=self, content=self.content)
+
+                    output = []
+                    for item in transform['function'](handler=self, content=self.content):
+                        if tornado.concurrent.is_future(item):
+                            item = yield item
+                        output.append(item)
+                    self.content = ''.join(output)
                 self.set_header('Content-Length', len(utf8(self.content)))
 
         if include_body:

@@ -27,6 +27,21 @@ def params_as_json(*args, **kwargs):
         return result
 
 
+def iterator(handler):
+    for val in handler.get_arguments('x'):
+        yield str(val)
+
+
+def str_callback(value, callback):
+    callback(str(value))
+
+
+def iterator_async(handler):
+    for val in handler.get_arguments('x'):
+        future = gen.Task(str_callback, val)
+        yield future
+
+
 @gen.coroutine
 def async_args(*args, **kwargs):
     'Run params_as_json asynchronously'

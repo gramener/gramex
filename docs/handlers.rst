@@ -109,7 +109,6 @@ replaced by the RequestHandler. For example::
 
 ... calls ``calculations.method(handler, 10, h=handler, val=0)``.
 
-
 Asynchronous functions
 ::::::::::::::::::::::
 
@@ -123,7 +122,7 @@ You can use asynchronous functions via Tornado's `Coroutines`_ like this::
 
 This ``fetch`` function can be used as a FunctionHandler.
 
-The simplest way to call a blocking function asynchronously is to use a
+The simplest way to call any blocking function asynchronously is to use a
 ``ThreadPoolExecutor``::
 
     thread_pool = concurrent.futures.ThreadPoolExecutor(4)
@@ -138,6 +137,23 @@ The simplest way to call a blocking function asynchronously is to use a
         raise tornado.gen.Return(result)
 
 .. _Coroutines: http://tornado.readthedocs.org/en/stable/guide/coroutines.html
+
+Streaming output
+::::::::::::::::
+
+You can push partial results as soon as they are computed by yielding them. For
+example, the ``slow`` function below will render "abc" and 1 second later,
+render "def". You can see the display building up::
+
+    def slow(handler):
+        yield 'abc'
+        time.sleep(1)
+        yield 'def'
+
+When a function yields a string value, it will be displayed immediately. The
+function can also yield a Future, which will be displayed as soon as it is
+resolved. (Yielded Futures will be rendered in the same order as they are
+yielded.)
 
 Redirection
 :::::::::::
