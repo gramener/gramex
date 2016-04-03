@@ -5,8 +5,12 @@ import tornado.ioloop
 from pathlib import Path
 from copy import deepcopy
 from orderedattrdict import AttrDict
-from . import services
 from gramex.config import ChainConfig, PathConfig
+
+logging.basicConfig(level=logging.INFO)
+logging.info('Loading Gramex...')
+
+from . import services          # noqa -- load services after print a noad
 
 paths = AttrDict()              # Paths where configurations are stored
 conf = AttrDict()               # Final merged configurations

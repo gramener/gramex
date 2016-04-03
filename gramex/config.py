@@ -265,7 +265,7 @@ class PathConfig(AttrDict):
             exists = imp.path.exists()
             if not exists and imp.stat is not None:
                 reload = True
-                logging.info('Deleted config: %s', imp.path)
+                logging.info('No config found: %s', imp.path)
                 break
             if exists and (imp.path.stat().st_mtime > imp.stat.st_mtime or
                            imp.path.stat().st_size != imp.stat.st_size):
