@@ -38,7 +38,9 @@ class FunctionHandler(BaseHandler):
         if self.redirect_url is not None:
             self.redirect(self.redirect_url or self.request.headers.get('Referer', '/'))
         else:
+            # build_transform results are iterable. Loop through each item
             for item in result:
+                # Resolve futures and write the result immediately
                 if tornado.concurrent.is_future(item):
                     item = yield item
                 self.write(item)

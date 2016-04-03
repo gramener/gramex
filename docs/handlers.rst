@@ -155,6 +155,21 @@ function can also yield a Future, which will be displayed as soon as it is
 resolved. (Yielded Futures will be rendered in the same order as they are
 yielded.)
 
+For example, this function will load multiple URLs in parallel and stream the
+output::
+
+    @tornado.gen.coroutine
+    def fetch_body(url):
+        httpclient = tornado.httpclient.AsyncHTTPClient()
+        response = yield httpclient.fetch(url)
+        raise tornado.gen.Return(response.body)
+
+    def fetch(handler):
+        future1 = fetch_body('https://httpbin.org/delay/1')
+        future2 = fetch_body('https://httpbin.org/delay/2')
+        yield future1
+        yield future2
+
 Redirection
 :::::::::::
 
