@@ -1,8 +1,7 @@
 import time
-import json
 import tornado.web
 from tornado.web import RequestHandler
-from tornado.escape import json_encode
+from tornado.escape import json_encode, json_decode
 from tornado.auth import (GoogleOAuth2Mixin, FacebookGraphMixin,
                           TwitterMixin)
 
@@ -24,7 +23,7 @@ class GoogleAuth(RequestHandler, GoogleOAuth2Mixin):
             response = yield http_client.fetch(
                 'https://www.googleapis.com/oauth2/v1/userinfo?access_token=' +
                 access["access_token"])
-            user = json.loads(response.body)["email"]
+            user = json_decode(response.body)["email"]
 
             self.set_secure_cookie(self.settings['cookie_secret'], now())
             self.set_secure_cookie('user', json_encode(user))
