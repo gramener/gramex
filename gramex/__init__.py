@@ -51,3 +51,12 @@ def init(**kwargs):
     if not ioloop._running:
         logging.info('Listening on port %d', conf.app.listen.port)
         ioloop.start()
+
+
+def shutdown():
+    'Shut down this instance'
+    # Shut down tornado
+    ioloop = tornado.ioloop.IOLoop.current()
+    if ioloop._running:
+        logging.info('Shutting down Gramex...')
+        ioloop.stop()

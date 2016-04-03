@@ -1,15 +1,15 @@
 import os
-import sys
 import time
 import logging
 import requests
-import subprocess
+import threading
 from pathlib import Path
 from orderedattrdict import AttrDict
+import gramex
 
 info = AttrDict(
     folder=Path(__file__).absolute().parent,
-    process=None,
+    thread=None,
 )
 base_url = 'http://localhost:9999'
 
@@ -17,20 +17,16 @@ base_url = 'http://localhost:9999'
 def start_gramex():
     "Run Gramex in this file's folder using the current gramex.conf.yaml"
     # Don't start Gramex if it's already running
-    if info.process is not None:
+    if info.thread is not None:
         return
 
-    # Ensure that PYTHONPATH has this repo and ONLY this repo
-    env = dict(os.environ)
-    env['PYTHONPATH'] = str(info.folder.parent)
-    info.process = subprocess.Popen(
-        [sys.executable, '-m', 'gramex'],
-        cwd=str(info.folder),
-        env=env,
-        # stdout=getattr(subprocess, 'DEVNULL', open(os.devnull, 'w')),
-    )
+    def run_gramex():
+        os.chdir(str(info.folder))
+        gramex.init()
 
-    # Wait until Gramex has started
+    info.thread = threading.Thread(name='server', target=run_gramex)
+    info.thread.start()
+
     seconds_to_wait = 10
     attempts_per_second = 2
     for attempt in range(int(seconds_to_wait * attempts_per_second)):
@@ -46,5 +42,6 @@ def start_gramex():
 
 def stop_gramex():
     'Terminate Gramex'
-    info.process.terminate()
-    info.process = None
+    if info.thread is not None:
+        gramex.shutdown()
+        info.thread = None

@@ -3,7 +3,7 @@ variables:
 
 subdir_DOT: "{.}"
 subdir_YAMLPATH: "{YAMLPATH}"
-subdir_PATH: "{PATH}"
+subdir_HOME: "{HOME}"
 subdir_NONEXISTENT: "{NONEXISTENT}"
 subdir_ROOT: "{ROOT}"
 subdir_THIS: "{THIS}"

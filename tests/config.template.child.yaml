@@ -3,7 +3,7 @@ variables:
 
 child_DOT: "{.}"
 child_YAMLPATH: "{YAMLPATH}"
-child_PATH: "{PATH}"
+child_HOME: "{HOME}"
 child_NONEXISTENT: "{NONEXISTENT}"
 child_ROOT: "{ROOT}"
 child_THIS: "{THIS}"

@@ -146,7 +146,7 @@ class TestPathConfig(unittest.TestCase):
             # {YAMLPATH} maps to YAML file's directory
             self.assertEqual(conf['%s_YAMLPATH' % key], str(self.chain[key].parent))
             # Environment variables are present by default
-            self.assertEqual(conf['%s_PATH' % key], os.environ.get('PATH', ''))
+            self.assertEqual(conf['%s_HOME' % key], os.environ.get('HOME', ''))
             # Non-existent variables map to ''
             self.assertEqual(conf['%s_NONEXISTENT' % key], os.environ.get('NONEXISTENT', ''))
             # Custom variables are applied
