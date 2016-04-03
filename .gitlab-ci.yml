@@ -20,9 +20,9 @@ unittest:
 
     # psycopg2 requires pg_config which is in libpq-dev
     # http://stackoverflow.com/a/12037133/100904
-    - apt-get install -y libpq-dev
+    - apt-get install -q -y libpq-dev
 
     # Run unit tests
-    - conda install --file requirements-conda.txt
-    - pip install -e .
+    - conda install -q -y --file requirements-conda.txt
+    - pip install -q -e .
     - python setup.py nosetests
