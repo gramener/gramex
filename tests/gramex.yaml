@@ -158,6 +158,15 @@ url:
           args: [=content, =handler]
           headers:
             Content-Type: text/html; charset=utf-8
+        "template.*":
+          encoding: utf-8
+          function: template
+          args: =content
+          kwargs:
+            handler: =handler
+            param: x
+          headers:
+            Content-Type: text/html; charset=utf-8
   dir/args:
     pattern: /dir/args/(.*)
     handler: FileHandler

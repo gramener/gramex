@@ -1,0 +1,1 @@
+{{ param }} = {{ handler.get_argument(param) }}

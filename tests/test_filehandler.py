@@ -83,12 +83,18 @@ class TestFileHandler(TestGramex):
             'Content-Disposition': None
         })
 
-    def test_transforms(self):
+    def test_markdown(self):
         with (server.info.folder / 'dir/markdown.md').open(encoding='utf-8') as f:
             self.check('/dir/transform/markdown.md', text=markdown.markdown(f.read()))
 
+    def test_badgerfish(self):
         handler = AttrDict(file=server.info.folder / 'dir/badgerfish.yaml')
         with (server.info.folder / 'dir/badgerfish.yaml').open(encoding='utf-8') as f:
             result = yield badgerfish(f.read(), handler)
             self.check('/dir/transform/badgerfish.yaml', text=result)
             self.check('/dir/transform/badgerfish.yaml', text='imported file')
+
+    def test_template(self):
+        # gramex.yaml has configured template.* to take handler and x as params
+        self.check('/dir/transform/template.txt?x=1', text='x = 1')
+        self.check('/dir/transform/template.txt?x=abc', text='x = abc')
