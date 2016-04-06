@@ -32,7 +32,7 @@ setup(
                       'requirements.txt', session=PipSession())],
     zip_safe=False,
     entry_points={
-        'console_scripts': ['gramex = gramex:init']
+        'console_scripts': ['gramex = gramex:commandline']
     },
     test_suite='tests',
     tests_require=[

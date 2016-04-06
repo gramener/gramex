@@ -7,11 +7,6 @@ from copy import deepcopy
 from orderedattrdict import AttrDict
 from gramex.config import ChainConfig, PathConfig
 
-logging.basicConfig(level=logging.INFO)
-logging.info('Loading Gramex...')
-
-from . import services          # noqa -- load services after print a noad
-
 paths = AttrDict()              # Paths where configurations are stored
 conf = AttrDict()               # Final merged configurations
 config_layers = ChainConfig()   # Loads all configurations. init() updates it
@@ -25,6 +20,23 @@ with (paths['source'] / 'release.json').open() as _release_file:
     __version__ = release.version
 
 _sys_path = list(sys.path)      # Preserve original sys.path
+
+
+# Entry Points
+# ------------
+# There are 2 entry points into Gramex: commandline() and init().
+# commandline() will be called by python -m gramex, gramex.exe, etc.
+# init() will be called after import gramex -- when using Gramex as a library.
+
+def commandline(**kwargs):
+    'Run Gramex from the command line'
+    # Set logging level to info at startup. (Services may override logging level.)
+    # This ensures that startup info is printed when Gramex is run the first time.
+    logging.basicConfig(level=logging.INFO)
+    logging.info('Initializing Gramex...')
+
+    # Initialize Gramex
+    init(**kwargs)
 
 
 def init(**kwargs):
@@ -42,6 +54,7 @@ def init(**kwargs):
     sys.path[:] = _sys_path + list(syspaths)
 
     # Run all valid services. (The "+" before config_chain merges the chain)
+    from . import services      # noqa -- deferred import for optimisation
     for key, val in (+config_layers).items():
         if key not in conf or conf[key] != val:
             if hasattr(services, key):
@@ -59,7 +72,6 @@ def init(**kwargs):
 
 def shutdown():
     'Shut down this instance'
-    # Shut down tornado
     ioloop = tornado.ioloop.IOLoop.current()
     if ioloop._running:
         logging.info('Shutting down Gramex...')

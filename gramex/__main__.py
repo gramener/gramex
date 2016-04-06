@@ -2,4 +2,4 @@
 
 import gramex
 
-gramex.init()
+gramex.commandline()
