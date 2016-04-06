@@ -22,11 +22,11 @@ displays "Hello world" at /hello as plain text::
         pattern: /hello                     # The URL /hello
         handler: FunctionHandler            # Runs a function
         kwargs:
-          function: six.text_type           # Convert to string
-          args:                             # with these arguments:
-            - Hello world                   # just one "Hello world"
-          headers:
-            Content-Type: text/plain        # Render as plain text
+            function: six.text_type         # Convert to string
+            args:                           # with these arguments:
+                - Hello world               # just one "Hello world"
+            headers:
+                Content-Type: text/plain    # Render as plain text
 
 You can call a function that you have defined. For example, create a
 ``calculations.py`` with this method::
@@ -47,10 +47,10 @@ Now, you can use this configuration::
         pattern: /total                             # The URL /total
         handler: FunctionHandler                    # Runs a function
         kwargs:
-          function: calculations.total              # calculations.total(100, 200.0)
-          args: [100, 200.0]
-          headers:
-            Content-Type: application/json          # Returns the result as JSON
+            function: calculations.total            # calculations.total(100, 200.0)
+            args: [100, 200.0]
+            headers:
+                Content-Type: application/json      # Returns the result as JSON
 
 ... to get this result in JSON::
 
@@ -66,7 +66,7 @@ You can specify wildcards in the URL pattern. For example::
         pattern: /name/([a-z]+)/age/([0-9]+)        # e.g. /name/john/age/21
         handler: FunctionHandler                    # Runs a function
         kwargs:
-          function: calculations.name_age           # Run this function
+            function: calculations.name_age         # Run this function
 
 When you access ``/name/john/age/21``, ``john`` and ``21`` can be accessed
 via ``handler.path_args`` as follows::
@@ -222,7 +222,7 @@ specify the appropriate pattern and path. For example, if you have a
     pattern: /data
     handler: FileHandler
     kwargs:
-      path: data.csv
+        path: data.csv
 
 The URL will be served with the MIME type of the file. CSV files have a MIME
 type ``text/csv`` and a ``Content-Disposition`` set to download the file. You
@@ -231,10 +231,10 @@ can override these headers::
     pattern: /data
     handler: FileHandler
     kwargs:
-      path: data.csv
-      headers:
-        Content-Type: text/plain
-        Content-Disposition: none
+        path: data.csv
+        headers:
+            Content-Type: text/plain
+            Content-Disposition: none
 
 
 File patterns
@@ -250,25 +250,53 @@ To restrict to serving specific files, you can identify them in the pattern::
 Transforms
 ::::::::::
 
-To render Markdown as HTML, set up this handler::
+The output of files can be transformed using any arbitrary function. For
+example, to render Markdown as HTML, set up this handler::
 
-    pattern: /blog/(.*)                     # Any URL starting with blog
-    handler: FileHandler                    # uses this handler
+    pattern: /blog/(.*)                       # Any URL starting with blog
+    handler: FileHandler                      # uses this handler
     kwargs:
-      path: blog/                           # Serve files from blog/
-      default_filename: README.md           # using README.md as default
+        path: blog/                           # Serve files from blog/
+        default_filename: README.md           # using README.md as default
+        transform:
+            "*.md":                           # Any file matching .md
+                encoding: cp1252              #   Open files with CP1252 encoding
+                function: markdown.markdown   #   Convert from markdown to html
+                kwargs:
+                    safe_mode: escape         #   Pass safe_mode='escape'
+                    output_format: html5      #   Output in HTML5
+                headers:
+                    Content-Type: text/html   #   MIME type: text/html
+
+This runs ``markdown.markdown`` on the file and renders the output.
+
+Any function can be used as a transform. Gramex provides the following (commonly
+used) transforms::
+
+1. **template**. Use ``function: template`` to render the file as a Tornado
+   template. Any ``kwargs`` passed will be sent as variables to the template.
+   For example::
+
       transform:
-        "*.md":                             # Any file matching .md
-          encoding: cp1252                  #   Open files with CP1252 encoding
-          function: markdown.markdown       #   Convert from markdown to html
-          kwargs:
-            safe_mode: escape               #   Pass safe_mode='escape'
-            output_format: html5            #   Output in HTML5
-          headers:
-            Content-Type: text/html         #   MIME type: text/html
+          "template.*.html":
+              function: template            # Convert as a Tornado template
+              args: =content                # Using the contents of the file (default)
+              kwargs:                       # Pass it the following parameters
+                  title: Hello world        # The title variable is "Hello world"
+                  hander: =handler          # The handler variable is the RequestHandler
 
-.. _SimpleHTTPServer: https://docs.python.org/2/library/simplehttpserver.html
+2. **badgerfish**. Use ``function: badgerfish`` to convert YAML files into HTML.
+   For example, this YAML file is converted into a HTML as you would logically
+   expect::
 
+      html:
+        head:
+          title: Sample file
+        body:
+          h1: Sample file
+          p:
+            - First paragraph
+            - Second paragraph
 
 See :class:`gramex.handlers.FileHandler` for details.
 
