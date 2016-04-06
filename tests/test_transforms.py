@@ -1,13 +1,15 @@
 from __future__ import print_function
+import os
 import yaml
 import inspect
 import unittest
+from io import open
 from dis import dis
 from types import GeneratorType
 from tornado.gen import coroutine, Task
 from orderedattrdict import AttrDict
 from orderedattrdict.yamlutils import AttrDictYAMLLoader
-from gramex.transforms import build_transform, badgerfish
+from gramex.transforms import build_transform, badgerfish, template
 
 
 def yaml_parse(text):
@@ -175,3 +177,15 @@ class Badgerfish(unittest.TestCase):
         self.assertEqual(
             result,
             '<!DOCTYPE html>\n<html><json>{"x":1,"y":2}</json></html>')
+
+
+class Template(unittest.TestCase):
+    'Test gramex.transforms.template'
+    def check(self, content, expected, **kwargs):
+        result = yield template(content, **kwargs)
+        self.assertEqual(result, expected)
+
+    def test_template(self):
+        self.check('{{ 1 }}', '1')
+        self.check('{{ 1 + 2 }}', '3')
+        self.check('{{ x + y }}', '3', x=1,  y=2)
