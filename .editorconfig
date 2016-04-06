@@ -24,3 +24,7 @@ indent_size = 4
 # http://robandlauren.com/2013/11/21/configuring-sublime-text-markdown/
 [*.md]
 trim_trailing_whitespace = false
+
+# 4-space indentation is clearer on YAML files
+[*.yaml]
+indent_size = 4
