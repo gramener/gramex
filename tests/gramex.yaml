@@ -178,6 +178,21 @@ url:
           function: utils.args_as_json
           args: =handler
 
+  dir/merge:
+    pattern: /dir/merge
+    handler: FileHandler
+    kwargs:
+      path:
+        - dir/alpha.txt
+        - dir/beta.txt
+      transform:
+        'alpha.txt':
+          function: str.upper
+          args: =content
+        'beta.txt':
+          function: str.title
+          args: =content
+
   dir/data:
     pattern: /dir/data                # Check that a pattern without brackets works
     handler: FileHandler

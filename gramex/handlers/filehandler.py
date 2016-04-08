@@ -14,8 +14,16 @@ class FileHandler(BaseHandler):
     '''
     Serves files with transformations. It accepts these parameters:
 
-    :arg string path: The root directory from which files are served. Relative
-        paths are specified from where gramex was run.
+    :arg string path: Can be one of three things:
+
+        - The filename to serve. For all files matching the pattern, this
+          filename is returned.
+        - The root directory from which files are served. The first parameter of
+          the URL pattern is the file path under this directory. Relative paths
+          are specified from where gramex was run.
+        - A list of files to serve. These files are concatenated and served one
+          after the other.
+
     :arg string default_filename: If the URL maps to a directory, this filename
         is displayed by default. For example, ``index.html`` or ``README.md``.
         The default is ``None``, which displays all files in the directory.
@@ -66,7 +74,10 @@ class FileHandler(BaseHandler):
     def initialize(self, path, default_filename=None, index=None,
                    headers={}, transform={}, **kwargs):
         self.params = kwargs
-        self.root = Path(path).resolve()
+        if isinstance(path, list):
+            self.root = [Path(path_item).resolve() for path_item in path]
+        else:
+            self.root = Path(path).resolve()
         self.default_filename = default_filename
         self.index = index
         self.headers = headers
@@ -84,9 +95,22 @@ class FileHandler(BaseHandler):
     @tornado.web.authenticated
     @tornado.gen.coroutine
     def get(self, path=None, include_body=True):
-        self.path = (self.root / path if path is not None else self.root).absolute()
-        # relative_to() raises ValueError if path is not under root
-        self.path.relative_to(self.root)
+        self.include_body = include_body
+        if isinstance(self.root, list):
+            for path_item in self.root:
+                yield self._get_path(path_item)
+        else:
+            if path is None:
+                yield self._get_path(self.root)
+            else:
+                target = (self.root / path).resolve()
+                # relative_to() raises ValueError if path is not under root
+                target.relative_to(self.root)
+                yield self._get_path(target)
+
+    @tornado.gen.coroutine
+    def _get_path(self, path):
+        self.path = path
 
         if self.path.is_dir():
             self.file = self.path / self.default_filename if self.default_filename else self.path
@@ -154,5 +178,6 @@ class FileHandler(BaseHandler):
                     self.content = ''.join(output)
                 self.set_header('Content-Length', len(utf8(self.content)))
 
-        if include_body:
+        if self.include_body:
             self.write(self.content)
+            self.flush()

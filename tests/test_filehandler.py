@@ -83,6 +83,9 @@ class TestFileHandler(TestGramex):
             'Content-Disposition': None
         })
 
+    def test_filehandle_errors(self):
+        self.check('/dir/noindex/../gramex.yaml', code=500)
+
     def test_markdown(self):
         with (server.info.folder / 'dir/markdown.md').open(encoding='utf-8') as f:
             self.check('/dir/transform/markdown.md', text=markdown.markdown(f.read()))
@@ -98,3 +101,6 @@ class TestFileHandler(TestGramex):
         # gramex.yaml has configured template.* to take handler and x as params
         self.check('/dir/transform/template.txt?x=1', text='x = 1')
         self.check('/dir/transform/template.txt?x=abc', text='x = abc')
+
+    def test_merge(self):
+        self.check('/dir/merge', text='ALPHA.TXT\nBeta.Txt\n')
