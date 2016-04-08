@@ -247,6 +247,7 @@ To restrict to serving specific files, you can identify them in the pattern::
     kwargs:
       path: blog/
 
+
 Transforms
 ::::::::::
 
@@ -297,6 +298,23 @@ used) transforms::
           p:
             - First paragraph
             - Second paragraph
+
+Concatenation
+:::::::::::::
+
+You can concatenate multiple files and serve them as a single file. For example::
+
+    pattern: /contents
+    handler: FileHandler
+    kwargs:
+        path:
+            - heading.md
+            - body.md
+            - footer.md
+
+This concatenates all files in ``path`` in sequence. If transforms are
+specified, the transforms are applied first.
+
 
 See :class:`gramex.handlers.FileHandler` for details.
 
