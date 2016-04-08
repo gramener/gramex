@@ -1,5 +1,6 @@
 import sys
 import json
+import yaml
 import logging
 import tornado.ioloop
 from pathlib import Path
@@ -35,22 +36,45 @@ def commandline(**kwargs):
     logging.basicConfig(level=logging.INFO)
     logging.info('Initializing Gramex...')
 
-    # Initialize Gramex
-    init(**kwargs)
+    # Parse command line arguments.
+    # --listen.port=8080 => {'listen': {'port': 8080}}
+    cmd = AttrDict()
+    for arg in sys.argv[1:]:
+        if arg.startswith('--') and '=' in arg:
+            name, value = arg[2:].split('=', 1)
+            keys = name.split('.')
+            base = cmd
+            for key in keys[:-1]:
+                base = base.setdefault(key, AttrDict())
+            base[keys[-1]] = yaml.load(value)
+
+    # Initialize Gramex, adding command line arguments as a config layer
+    init(cmd=AttrDict(app=cmd))
 
 
 def init(**kwargs):
-    # Initialise configuration layers with provided paths
+    '''
+    Update Gramex configurations and start / restart the instance.
+
+    ``gramex.init()`` can be called any time to refresh configuration files.
+
+    ``gramex.init(key=val)`` adds ``val`` as a configuration layer named
+    ``key``. The next time ``gramex.init(key=...)`` is called, the key is
+    ignored. But every time ``gramex.init(...)`` is called subsequently, the
+    ``val`` is re-evaluated and stored in ``gramex.conf``.
+    '''
+    # Initialise configuration layers with provided configurations
     paths.update(kwargs)
-    for name, path in paths.items():
-        if name not in config_layers:
-            config_layers[name] = PathConfig(path / 'gramex.yaml')
+    for key, val in paths.items():
+        if key not in config_layers:
+            config_layers[key] = PathConfig(val / 'gramex.yaml') if isinstance(val, Path) else val
 
     # Add imported folders to sys.path
     syspaths = set()
     for path_config in config_layers.values():
-        for imp in path_config.__info__.imports:
-            syspaths.add(str(imp.path.absolute().parent))
+        if hasattr(path_config, '__info__'):
+            for imp in path_config.__info__.imports:
+                syspaths.add(str(imp.path.absolute().parent))
     sys.path[:] = _sys_path + list(syspaths)
 
     # Run all valid services. (The "+" before config_chain merges the chain)

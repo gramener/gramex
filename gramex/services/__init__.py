@@ -93,9 +93,11 @@ def mime(conf):
 
 def watch(conf):
     "Set up file watchers"
-    watcher.watch(
-        'gramex-reconfigure',
-        paths=[pathinfo.path
-               for pathconfig in gramex.config_layers.values()
-               for pathinfo in pathconfig.__info__.imports],
-        on_modified=lambda event: gramex.init())
+    # Watch all imported files
+    paths = []
+    for path_config in gramex.config_layers.values():
+        if hasattr(path_config, '__info__'):
+            for pathinfo in path_config.__info__.imports:
+                paths.append(pathinfo.path)
+
+    watcher.watch('gramex-reconfigure', paths=paths, on_modified=lambda event: gramex.init())
