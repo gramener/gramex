@@ -178,18 +178,32 @@ url:
           function: utils.args_as_json
           args: =handler
 
-  dir/merge:
-    pattern: /dir/merge
+  dir/merge.txt:
+    pattern: /dir/merge.txt
     handler: FileHandler
     kwargs:
       path:
         - dir/alpha.txt
-        - dir/beta.txt
+        - dir/beta.html
       transform:
         'alpha.txt':
           function: str.upper
           args: =content
-        'beta.txt':
+        'beta.html':
+          function: str.title
+          args: =content
+  dir/merge.html:
+    pattern: /dir/merge.html
+    handler: FileHandler
+    kwargs:
+      path:
+        - dir/beta.html
+        - dir/alpha.txt
+      transform:
+        'beta.html':
+          function: str.upper
+          args: =content
+        'alpha.txt':
           function: str.title
           args: =content
 

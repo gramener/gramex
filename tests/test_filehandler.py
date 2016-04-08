@@ -103,4 +103,9 @@ class TestFileHandler(TestGramex):
         self.check('/dir/transform/template.txt?x=abc', text='x = abc')
 
     def test_merge(self):
-        self.check('/dir/merge', text='ALPHA.TXT\nBeta.Txt\n')
+        self.check('/dir/merge.txt', text='ALPHA.TXT\nBeta.Html\n', headers={
+            'Content-Type': 'text/plain'
+        })
+        self.check('/dir/merge.html', text='BETA.HTML\nAlpha.Txt\n', headers={
+            'Content-Type': 'text/html'
+        })
