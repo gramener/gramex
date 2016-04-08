@@ -75,9 +75,9 @@ class FileHandler(BaseHandler):
                    headers={}, transform={}, **kwargs):
         self.params = kwargs
         if isinstance(path, list):
-            self.root = [Path(path_item).resolve() for path_item in path]
+            self.root = [Path(path_item).absolute() for path_item in path]
         else:
-            self.root = Path(path).resolve()
+            self.root = Path(path).absolute()
         self.default_filename = default_filename
         self.index = index
         self.headers = headers
@@ -99,14 +99,20 @@ class FileHandler(BaseHandler):
         if isinstance(self.root, list):
             for path_item in self.root:
                 yield self._get_path(path_item)
+        elif path is None:
+            yield self._get_path(self.root)
         else:
-            if path is None:
-                yield self._get_path(self.root)
-            else:
+            # If the file doesn't exist, raise a 404: Not Found
+            try:
                 target = (self.root / path).resolve()
-                # relative_to() raises ValueError if path is not under root
+            except OSError:
+                raise HTTPError(status_code=404)
+            # If the file is not under root, raise a 403: Forbidden
+            try:
                 target.relative_to(self.root)
-                yield self._get_path(target)
+            except ValueError:
+                raise HTTPError(status_code=403)
+            yield self._get_path(target)
 
     @tornado.gen.coroutine
     def _get_path(self, path):
@@ -122,8 +128,6 @@ class FileHandler(BaseHandler):
                 return
         else:
             self.file = self.path
-            if not self.file.exists():
-                raise HTTPError(status_code=404)
             if not self.file.is_file():
                 raise HTTPError(
                     status_code=403,

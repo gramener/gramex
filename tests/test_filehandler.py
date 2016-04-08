@@ -84,7 +84,9 @@ class TestFileHandler(TestGramex):
         })
 
     def test_filehandle_errors(self):
-        self.check('/dir/noindex/../gramex.yaml', code=500)
+        self.check('/nonexistent', code=404)
+        self.check('/dir/noindex/../gramex.yaml', code=403)
+        self.check('/dir/noindex/../nonexistent', code=404)
 
     def test_markdown(self):
         with (server.info.folder / 'dir/markdown.md').open(encoding='utf-8') as f:
