@@ -13,6 +13,11 @@ variables:
   MYSQL_USER: root
   MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
 
+  # Define variables for nosetests pointing to the database servers
+  # See http://doc.gitlab.com/ee/ci/docker/using_docker_images.html
+  POSTGRES_SERVER: postgres
+  MYSQL_SERVER: mysql
+
 unittest:
   script:
     # First, make sure there are no PEP8 errors

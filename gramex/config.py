@@ -140,7 +140,7 @@ def _yaml_open(path, default=AttrDict()):
     # key: {default: value} sets the value if it's not already set
     if 'variables' in result:
         for key, val in result['variables'].items():
-            if isinstance(val, dict):
+            if hasattr(val, 'get'):
                 variables.setdefault(key, val.get('default'))
             else:
                 variables[key] = val

@@ -1,3 +1,7 @@
+variables:
+  MYSQL_SERVER: {default: localhost}
+  POSTGRES_SERVER: {default: localhost}
+
 app:
   listen:
     port: 9999      # Use a diffent port for testing
@@ -251,7 +255,7 @@ url:
     handler: DataHandler
     kwargs:
       driver: sqlalchemy
-      url: mysql+pymysql://root@localhost/test_datahandler
+      url: mysql+pymysql://root@{MYSQL_SERVER}/test_datahandler
       table: actors
       parameters: {encoding: utf8}
       default: {format: csv}
@@ -260,7 +264,7 @@ url:
     handler: DataHandler
     kwargs:
       driver: sqlalchemy
-      url: mysql+pymysql://root@localhost/test_datahandler
+      url: mysql+pymysql://root@{MYSQL_SERVER}/test_datahandler
       table: actors
       parameters: {encoding: utf8}
       default: {format: json}
@@ -269,7 +273,7 @@ url:
     handler: DataHandler
     kwargs:
       driver: sqlalchemy
-      url: mysql+pymysql://root@localhost/test_datahandler
+      url: mysql+pymysql://root@{MYSQL_SERVER}/test_datahandler
       table: actors
       parameters: {encoding: utf8}
       default: {format: html}
@@ -280,7 +284,7 @@ url:
     handler: DataHandler
     kwargs:
       driver: sqlalchemy
-      url: postgresql://postgres@localhost/test_datahandler
+      url: postgresql://postgres@{POSTGRES_SERVER}/test_datahandler
       table: actors
       parameters: {encoding: utf8}
       default: {format: csv}
@@ -289,7 +293,7 @@ url:
     handler: DataHandler
     kwargs:
       driver: sqlalchemy
-      url: postgresql://postgres@localhost/test_datahandler
+      url: postgresql://postgres@{POSTGRES_SERVER}/test_datahandler
       table: actors
       parameters: {encoding: utf8}
       default: {format: json}
@@ -298,7 +302,7 @@ url:
     handler: DataHandler
     kwargs:
       driver: sqlalchemy
-      url: postgresql://postgres@localhost/test_datahandler
+      url: postgresql://postgres@{POSTGRES_SERVER}/test_datahandler
       table: actors
       parameters: {encoding: utf8}
       default: {format: html}
@@ -338,7 +342,7 @@ url:
     handler: DataHandler
     kwargs:
       driver: blaze
-      url: mysql+pymysql://root@localhost/test_datahandler
+      url: mysql+pymysql://root@{MYSQL_SERVER}/test_datahandler
       table: actors
       parameters: {encoding: utf8}
       default: {format: csv}
@@ -347,7 +351,7 @@ url:
     handler: DataHandler
     kwargs:
       driver: blaze
-      url: mysql+pymysql://root@localhost/test_datahandler
+      url: mysql+pymysql://root@{MYSQL_SERVER}/test_datahandler
       table: actors
       parameters: {encoding: utf8}
       default: {format: json}
@@ -356,7 +360,7 @@ url:
     handler: DataHandler
     kwargs:
       driver: blaze
-      url: mysql+pymysql://root@localhost/test_datahandler
+      url: mysql+pymysql://root@{MYSQL_SERVER}/test_datahandler
       table: actors
       parameters: {encoding: utf8}
       default: {format: html}

@@ -5,7 +5,7 @@ from pathlib import Path
 from nose.plugins.skip import SkipTest
 from .test_handlers import TestGramex
 from . import server
-
+import gramex.config
 
 setUpModule = server.start_gramex
 tearDownModule = server.stop_gramex
@@ -116,15 +116,16 @@ class TestMysqlDataHandler(TestGramex, DataHandlerTestMixin):
 
     @classmethod
     def setUpClass(cls):
-        cls.engine = sa.create_engine('mysql+pymysql://root@localhost/')
+        cls.dburl = 'mysql+pymysql://root@%s/' % gramex.config.variables.MYSQL_SERVER
+        cls.engine = sa.create_engine(cls.dburl)
         try:
             cls.engine.execute("DROP DATABASE IF EXISTS test_datahandler")
             cls.engine.execute("CREATE DATABASE test_datahandler")
             cls.engine.dispose()
-            cls.engine = sa.create_engine('mysql+pymysql://root@localhost/test_datahandler')
+            cls.engine = sa.create_engine(cls.dburl + 'test_datahandler')
             cls.data.to_sql('actors', con=cls.engine, index=False)
         except sa.exc.OperationalError:
-            raise SkipTest('Unable to connect to MySQL database')
+            raise SkipTest('Unable to connect to %s' % cls.dburl)
 
     @classmethod
     def tearDownClass(cls):
@@ -138,7 +139,8 @@ class TestPostgresDataHandler(TestGramex, DataHandlerTestMixin):
 
     @classmethod
     def setUpClass(cls):
-        cls.engine = sa.create_engine('postgresql://postgres@localhost/postgres')
+        cls.dburl = 'postgresql://postgres@%s/' % gramex.config.variables.POSTGRES_SERVER
+        cls.engine = sa.create_engine(cls.dburl + 'postgres')
         try:
             conn = cls.engine.connect()
             conn.execute('commit')
@@ -146,15 +148,15 @@ class TestPostgresDataHandler(TestGramex, DataHandlerTestMixin):
             conn.execute('commit')
             conn.execute('CREATE DATABASE test_datahandler')
             conn.close()
-            cls.engine = sa.create_engine('postgresql://postgres@localhost/test_datahandler')
+            cls.engine = sa.create_engine(cls.dburl + 'test_datahandler')
             cls.data.to_sql('actors', con=cls.engine, index=False)
             cls.engine.dispose()
         except sa.exc.OperationalError:
-            raise SkipTest('Unable to connect to PostgreSQL database')
+            raise SkipTest('Unable to connect to %s' % cls.dburl)
 
     @classmethod
     def tearDownClass(cls):
-        cls.engine = sa.create_engine('postgresql://postgres@localhost/postgres')
+        cls.engine = sa.create_engine(cls.dburl + 'postgres')
         conn = cls.engine.connect()
         conn.execute('commit')
         # Terminate all other sessions using the test_datahandler database
