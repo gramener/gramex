@@ -10,6 +10,7 @@ import gramex
 info = AttrDict(
     folder=Path(__file__).absolute().parent,
     thread=None,
+    exception=None,
 )
 base_url = 'http://localhost:9999'
 
@@ -22,7 +23,10 @@ def start_gramex():
 
     def run_gramex():
         os.chdir(str(info.folder))
-        gramex.init()
+        try:
+            gramex.init()
+        except Exception as e:
+            info.exception = e
 
     info.thread = threading.Thread(name='server', target=run_gramex)
     info.thread.start()
@@ -37,7 +41,10 @@ def start_gramex():
         # http://stackoverflow.com/a/16511493/100904
         except requests.exceptions.ConnectionError:
             logging.info('Could not connect to %s', base_url)
-            time.sleep(1.0 / attempts_per_second)
+            if info.exception is None:
+                time.sleep(1.0 / attempts_per_second)
+            else:
+                raise info.exception
 
 
 def stop_gramex():
