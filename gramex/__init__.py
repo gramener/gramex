@@ -2,6 +2,7 @@ import sys
 import json
 import yaml
 import logging
+import webbrowser
 import tornado.ioloop
 from pathlib import Path
 from copy import deepcopy
@@ -91,6 +92,8 @@ def init(**kwargs):
     ioloop = tornado.ioloop.IOLoop.current()
     if not ioloop._running:
         logging.info('Listening on port %d', conf.app.listen.port)
+        if conf.app.browser:
+            webbrowser.open('http://127.0.0.1:%d/' % conf.app.listen.port)
         ioloop.start()
 
 

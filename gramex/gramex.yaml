@@ -5,6 +5,7 @@ version: 1.0
 # The `app:` section defines the settings for the Tornado application.
 # http://tornado.readthedocs.org/en/stable/web.html#tornado.web.Application.settings
 app:
+    browser: False              # Open the browser on startup
     listen:
         port: 9988              # Port to bind to. (8888 used by Jupyter)
         xheaders: True
