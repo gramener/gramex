@@ -115,8 +115,8 @@ class ChainConfig(AttrDict):
 # Paths that users have already been warned about. Don't warn them again
 _warned_paths = set()
 # Initialise YAML variables with environment
-_variables = DefaultAttrDict(str)
-_variables.update(os.environ)
+variables = DefaultAttrDict(str)
+variables.update(os.environ)
 _format = string.Formatter().vformat
 
 
@@ -135,11 +135,17 @@ def _yaml_open(path, default=AttrDict()):
         logging.warning('Empty config: %s', path)
         return default
 
-    # Update context with the variables section
+    # Update context with the variables section.
+    # key: value overrides the value
+    # key: {default: value} sets the value if it's not already set
     if 'variables' in result:
-        _variables.update(result['variables'])
+        for key, val in result['variables'].items():
+            if isinstance(val, dict):
+                variables.setdefault(key, val.get('default'))
+            else:
+                variables[key] = val
         del result['variables']
-    _variables.update({
+    variables.update({
         'YAMLPATH': str(path.parent),
         'YAMLFILE': str(path),
     })
@@ -150,7 +156,7 @@ def _yaml_open(path, default=AttrDict()):
             # Backward compatibility: before v1.0.4, we used {.} for {YAMLPATH}
             value = value.replace('{.}', '{YAMLPATH}')
             # Substitute with variables in context, defaulting to ''
-            node[key] = _format(value, args=[], kwargs=_variables)
+            node[key] = _format(value, args=[], kwargs=variables)
     return result
 
 

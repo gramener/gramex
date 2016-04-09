@@ -150,8 +150,10 @@ class TestPathConfig(unittest.TestCase):
             self.assertEqual(conf['%s_NONEXISTENT' % key], os.environ.get('NONEXISTENT', ''))
             # Custom variables are applied
             self.assertEqual(conf['%s_THIS' % key], key)
-            # Custom variables are inherited
+            # Custom variables are inherited. Defaults do not override
             self.assertEqual(conf['%s_ROOT' % key], conf.base_ROOT)
+            # Default variables are set
+            self.assertEqual(conf['%s_DEFAULT' % key], key)
 
 
 class TestConfig(unittest.TestCase):

@@ -1,5 +1,7 @@
 variables:
+  ROOT: {default: subdir}
   THIS: "subdir"
+  SUBDIR_DEFAULT: {default: subdir}
 
 subdir_DOT: "{.}"
 subdir_YAMLPATH: "{YAMLPATH}"
@@ -7,3 +9,4 @@ subdir_HOME: "{HOME}"
 subdir_NONEXISTENT: "{NONEXISTENT}"
 subdir_ROOT: "{ROOT}"
 subdir_THIS: "{THIS}"
+subdir_DEFAULT: "{SUBDIR_DEFAULT}"

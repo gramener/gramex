@@ -53,9 +53,8 @@ are available. For example::
 You can define or override variables using the ``variables:`` section::
 
     variables:
-      URLROOT: "/site"
-
-This is available as ``{URLROOT}`` to all configurations imported thereafter.
+      URLROOT: "/site"                  # Define {URLROOT}
+      HOME: {default: "/home"}          # Define {HOME} if not defined earlier
 
 
 Services
