@@ -4,12 +4,12 @@ variables:
   BASE_DEFAULT: {default: base}
 
 base_DOT: "{.}"
-base_YAMLPATH: "{YAMLPATH}"
-base_HOME: "{HOME}"
-base_NONEXISTENT: "{NONEXISTENT}"
-base_ROOT: "{ROOT}"
-base_THIS: "{THIS}"
-base_DEFAULT: "{BASE_DEFAULT}"
+base_YAMLPATH: $YAMLPATH
+base_HOME: $HOME
+base_NONEXISTENT: $NONEXISTENT
+base_ROOT: $ROOT
+base_THIS: $THIS
+base_DEFAULT: $BASE_DEFAULT
 
 import:
     subdir: dir/config.template.subdir.yaml

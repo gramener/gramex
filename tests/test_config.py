@@ -142,7 +142,7 @@ class TestPathConfig(unittest.TestCase):
         for key in ['base', 'child', 'subdir']:
             # {.} maps to YAML file's directory
             self.assertEqual(conf['%s_DOT' % key], str(self.chain[key].parent))
-            # {YAMLPATH} maps to YAML file's directory
+            # $YAMLPATH maps to YAML file's directory
             self.assertEqual(conf['%s_YAMLPATH' % key], str(self.chain[key].parent))
             # Environment variables are present by default
             self.assertEqual(conf['%s_HOME' % key], os.environ.get('HOME', ''))

@@ -117,7 +117,6 @@ _warned_paths = set()
 # Initialise YAML variables with environment
 variables = DefaultAttrDict(str)
 variables.update(os.environ)
-_format = string.Formatter().vformat
 
 
 def _yaml_open(path, default=AttrDict()):
@@ -154,9 +153,9 @@ def _yaml_open(path, default=AttrDict()):
     for key, value, node in walk(result):
         if isinstance(value, string_types):
             # Backward compatibility: before v1.0.4, we used {.} for {YAMLPATH}
-            value = value.replace('{.}', '{YAMLPATH}')
+            value = value.replace('{.}', '$YAMLPATH')
             # Substitute with variables in context, defaulting to ''
-            node[key] = _format(value, args=[], kwargs=variables)
+            node[key] = string.Template(value).substitute(variables)
     return result
 
 

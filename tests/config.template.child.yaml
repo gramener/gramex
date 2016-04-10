@@ -4,9 +4,9 @@ variables:
   CHILD_DEFAULT: {default: child}
 
 child_DOT: "{.}"
-child_YAMLPATH: "{YAMLPATH}"
-child_HOME: "{HOME}"
-child_NONEXISTENT: "{NONEXISTENT}"
-child_ROOT: "{ROOT}"
-child_THIS: "{THIS}"
-child_DEFAULT: "{CHILD_DEFAULT}"
+child_YAMLPATH: $YAMLPATH
+child_HOME: $HOME
+child_NONEXISTENT: $NONEXISTENT
+child_ROOT: $ROOT
+child_THIS: $THIS
+child_DEFAULT: $CHILD_DEFAULT

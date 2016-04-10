@@ -44,17 +44,17 @@ Imports work recursively. You can have imports within imports.
 Variables
 ~~~~~~~~~
 
-Variables are written as ``{VARIABLE}``. By default, all environment variables
-are available. For example::
+Variables are written as ``$VARIABLE`` or ``${VARIABLE}``. By default, all
+environment variables are available. For example::
 
     import:
-      home_config: {HOME}/gramex.yaml   # imports gramex.yaml from your home directory
+      home_config: $HOME/gramex.yaml    # imports gramex.yaml from your home directory
 
 You can define or override variables using the ``variables:`` section::
 
     variables:
-      URLROOT: "/site"                  # Define {URLROOT}
-      HOME: {default: "/home"}          # Define {HOME} if not defined earlier
+      URLROOT: "/site"                  # Define $URLROOT
+      HOME: {default: "/home"}          # Define $HOME if not defined earlier
 
 
 Services
