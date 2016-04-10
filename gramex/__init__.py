@@ -103,7 +103,10 @@ def init(**kwargs):
     if not ioloop._running:
         logging.info('Listening on port %d', conf.app.listen.port)
         if conf.app.browser:
-            webbrowser.open('http://127.0.0.1:%d/' % conf.app.listen.port)
+            url = 'http://127.0.0.1:%d/' % conf.app.listen.port
+            browser = webbrowser.get()
+            logging.info('Opening %s in %s browser', url, browser.__class__.__name__)
+            browser.open(url)
         ioloop.start()
 
 
