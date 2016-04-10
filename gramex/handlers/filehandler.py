@@ -1,3 +1,4 @@
+import string
 import logging
 import datetime
 import mimetypes
@@ -8,6 +9,12 @@ from tornado.escape import utf8
 from tornado.web import HTTPError
 from .basehandler import BaseHandler
 from ..transforms import build_transform
+
+
+# Directory indices are served using this template by default
+_template_path = Path(__file__).absolute().parent / 'filehandler.template.html'
+with _template_path.open(encoding='utf-8') as handle:
+    dir_template = string.Template(handle.read())
 
 
 class FileHandler(BaseHandler):
@@ -27,6 +34,10 @@ class FileHandler(BaseHandler):
     :arg string default_filename: If the URL maps to a directory, this filename
         is displayed by default. For example, ``index.html`` or ``README.md``.
         The default is ``None``, which displays all files in the directory.
+    :arg boolean index: If ``true``, shows a directory index. If ``false``,
+        raises a HTTP 404 error when users try to access a directory.
+    :arg string index_template: The file to be used as the template for
+        displaying the index. It can use 2 variables: ``$title`` and ``$body``.
     :arg dict headers: HTTP headers to set on the response.
     :arg dict transform: Transformations that should be applied to the files.
         The key matches a `glob pattern`_ (e.g. ``'*.md'`` or ``'data/*'``.) The
@@ -72,7 +83,7 @@ class FileHandler(BaseHandler):
     SUPPORTED_METHODS = ("GET", "HEAD")
 
     def initialize(self, path, default_filename=None, index=None,
-                   headers={}, transform={}, **kwargs):
+                   index_template=None, headers={}, transform={}, **kwargs):
         self.params = kwargs
         if isinstance(path, list):
             self.root = [Path(path_item).absolute() for path_item in path]
@@ -80,6 +91,11 @@ class FileHandler(BaseHandler):
             self.root = Path(path).absolute()
         self.default_filename = default_filename
         self.index = index
+        if index_template is not None:
+            with Path(index_template).open(encoding='utf-8') as handle:
+                self.index_template = string.Template(handle.read())
+        else:
+            self.index_template = dir_template
         self.headers = headers
         self.transform = {}
         for pattern, trans in transform.items():
@@ -136,7 +152,7 @@ class FileHandler(BaseHandler):
         if self.path.is_dir() and self.index and not (
                 self.default_filename and self.file.exists()):
             self.set_header('Content-Type', 'text/html')
-            content = [u'<h1>Index of %s </h1><ul>' % self.path]
+            content = []
             for path in self.path.iterdir():
                 # On Windows, pathlib on Python 2.7 won't handle Unicode. Ignore such files.
                 # https://bitbucket.org/pitrou/pathlib/issues/25
@@ -148,7 +164,7 @@ class FileHandler(BaseHandler):
                     logging.warn("FileHandler can't show unicode file {:s}".format(
                         repr(path)))
             content.append(u'</ul>')
-            self.content = ''.join(content)
+            self.content = self.index_template.substitute(title=self.path, body=''.join(content))
 
         else:
             modified = self.file.stat().st_mtime
