@@ -13,6 +13,7 @@ exists, a warning is raised.
 '''
 
 import gramex
+import posixpath
 import mimetypes
 import logging.config
 import tornado.web
@@ -77,7 +78,7 @@ def url(conf):
         urlspec.handler = locate(spec.handler, modules=['gramex.handlers'])
         handlers.append(tornado.web.URLSpec(
             name=name,
-            pattern=urlspec.pattern,
+            pattern=posixpath.normpath(urlspec.pattern),
             handler=urlspec.handler,
             kwargs=urlspec.get('kwargs', None)))
     del info.app.handlers[:]

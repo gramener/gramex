@@ -56,6 +56,14 @@ You can define or override variables using the ``variables:`` section::
       URLROOT: "/site"                  # Define $URLROOT
       HOME: {default: "/home"}          # Define $HOME if not defined earlier
 
+The following pre-defined variables are available in every YAML file:
+
+- ``YAMLFILE``: absolute path to the current YAML file
+- ``YAMLPATH``: absolute path to the current YAML file's directory
+- ``YAMLURL``: relative path to the current YAML file's directory from the
+  current working directory. For example, ``base/dir/gramex.yaml`` has a
+  ``$YAMLURL`` of ``base/dir``.
+
 
 Services
 --------

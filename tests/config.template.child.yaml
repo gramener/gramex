@@ -5,6 +5,8 @@ variables:
 
 child_DOT: "{.}"
 child_YAMLPATH: $YAMLPATH
+child_YAMLURL: $YAMLURL
+child_YAMLURL_EXPECTED: tests
 child_HOME: $HOME
 child_NONEXISTENT: $NONEXISTENT
 child_ROOT: $ROOT

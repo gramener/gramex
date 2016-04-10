@@ -144,6 +144,8 @@ class TestPathConfig(unittest.TestCase):
             self.assertEqual(conf['%s_DOT' % key], str(self.chain[key].parent))
             # $YAMLPATH maps to YAML file's directory
             self.assertEqual(conf['%s_YAMLPATH' % key], str(self.chain[key].parent))
+            # $YAMLURL is the relative path to YAML file's directory
+            self.assertEqual(conf['%s_YAMLURL' % key], conf['%s_YAMLURL_EXPECTED' % key])
             # Environment variables are present by default
             self.assertEqual(conf['%s_HOME' % key], os.environ.get('HOME', ''))
             # Non-existent variables map to ''

@@ -47,6 +47,14 @@ class TestURLPriority(TestGramex):
         self.check('/path/priority', text='/path/priority')
 
 
+class TestURLNormalization(TestGramex):
+    'Test URL pattern normalization'
+
+    def test_url_normalization(self):
+        self.check('/path/norm1', text='/path/norm1')
+        self.check('/path/norm2', text='/path/norm2')
+
+
 class TestFunctionHandler(TestGramex):
     'Test FunctionHandler'
 

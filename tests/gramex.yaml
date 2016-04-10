@@ -9,10 +9,13 @@ app:
 url:
   # TestGramex
   pathdepth1: {pattern: "/path/.*",       handler: "gramex.handlers.FunctionHandler", kwargs: {function: "str", args: ["/path/.*"],       }}
-  pathdepth2: {pattern: "/path/file",     handler: "FunctionHandler", kwargs: {function: "str", args: ["/path/file"],     }}
-  pathdepth3: {pattern: "/path/dir/.*",   handler: "FunctionHandler", kwargs: {function: "str", args: ["/path/dir/.*"],   }}
-  pathdepth4: {pattern: "/path/dir/file", handler: "FunctionHandler", kwargs: {function: "str", args: ["/path/dir/file"], }}
+  pathdepth2: {pattern: "/path/file",     handler: FunctionHandler, kwargs: {function: str, args: ["/path/file"],     }}
+  pathdepth3: {pattern: "/path/dir/.*",   handler: FunctionHandler, kwargs: {function: str, args: ["/path/dir/.*"],   }}
+  pathdepth4: {pattern: "/path/dir/file", handler: FunctionHandler, kwargs: {function: str, args: ["/path/dir/file"], }}
   pathdepth5: {pattern: "/path/priority", priority: 1, handler: "FunctionHandler", kwargs: {function: "str", args: ["/path/priority"], }}
+
+  pathnorm1: {pattern: "/./path/norm1", handler: FunctionHandler, kwargs: {function: str, args: ["/path/norm1"],    }}
+  pathnorm2: {pattern: "/path/./norm2", handler: FunctionHandler, kwargs: {function: str, args: ["/path/norm2"],    }}
 
   # TestFunctionHandler
   func/args:

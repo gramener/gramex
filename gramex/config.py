@@ -144,9 +144,13 @@ def _yaml_open(path, default=AttrDict()):
             else:
                 variables[key] = val
         del result['variables']
+
+    # Variables based on YAML file location
+    relative_url = os.path.relpath(str(path.parent)).replace(os.path.sep, '/')
     variables.update({
-        'YAMLPATH': str(path.parent),
-        'YAMLFILE': str(path),
+        'YAMLPATH': str(path.parent),   # Path to YAML folder
+        'YAMLFILE': str(path),          # Path to YAML file
+        'YAMLURL': relative_url,        # Relative URL from cwd to YAML folder
     })
 
     # Substitute variables

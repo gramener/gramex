@@ -5,6 +5,8 @@ variables:
 
 base_DOT: "{.}"
 base_YAMLPATH: $YAMLPATH
+base_YAMLURL: $YAMLURL
+base_YAMLURL_EXPECTED: tests
 base_HOME: $HOME
 base_NONEXISTENT: $NONEXISTENT
 base_ROOT: $ROOT
