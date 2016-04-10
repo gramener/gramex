@@ -1,3 +1,4 @@
+import os
 import sys
 import json
 import yaml
@@ -49,6 +50,12 @@ def commandline(**kwargs):
                 base = base.setdefault(key, AttrDict())
             base[keys[-1]] = yaml.load(value)
 
+
+    # Use current dir as base (where gramex is run from) if there's a gramex.yaml.
+    # Else use source/help
+    if not os.path.isfile('gramex.yaml'):
+        paths['base'] = paths['source'] / 'help'
+
     # Initialize Gramex, adding command line arguments as a config layer
     init(cmd=AttrDict(app=cmd))
 
@@ -87,6 +94,9 @@ def init(**kwargs):
                 getattr(services, key)(conf[key])
             else:
                 logging.warning('No service named %s', key)
+
+    # Switch to the base folder
+    os.chdir(str(paths['base']))
 
     # Start the IOLoop. TODO: can the app service start this delayed?
     ioloop = tornado.ioloop.IOLoop.current()
