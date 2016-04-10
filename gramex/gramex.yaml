@@ -51,10 +51,8 @@ url:
             index: true                             #   display the index
 
 # The `log:` section defines the log handlers. It uses the same structure as the
-# Python logging schema. By default, the system `gramex.yaml` has a log handler
-# called `admin` that logs events for the admin page to display and filter.
-#
-# https://docs.python.org/2/library/logging.config.html#logging-config-dictschema
+# Python logging schema.
+# https://docs.python.org/3/library/logging.config.html#logging-config-dictschema
 log:
     version: 1
     root:
@@ -67,31 +65,6 @@ log:
             level: DEBUG
             stream: ext://sys.stdout
             formatter: console
-
-        # Here are some sample log file formats
-        # -------------------------------------------------------------------
-        # Write all information logs into info.log, back up daily
-        # info:
-        #     class: logging.handlers.TimedRotatingFileHandler
-        #     level: INFO
-        #     formatter: file         # save it as a file
-        #     filename: info.log      # file name to save as
-        #     encoding: utf-8         # encoded as UTF-8
-        #     when: D                 # rotate the log file day-wise
-        #     interval: 1             # every single day
-        #     utc: False              # using local time zone, not UTC
-        #     backupCount: 30         # keep only last 30 backups
-
-        # Write warnings into warn.log (up to 10 MB, then warn.log.1, etc)
-        # warnings:
-        #     class: logging.handlers.RotatingFileHandler
-        #     level: WARN
-        #     formatter: file
-        #     filename: warn.log      #
-        #     encoding: utf-8         # encoded as UTF-8
-        #     maxBytes: 10485760      # limit the file to up to 10MB
-        #     backupCount: 3          # keep the last 3 backups
-
     loggers:
         tornado.access: {}
         tornado.application: {}

@@ -50,7 +50,6 @@ def commandline(**kwargs):
                 base = base.setdefault(key, AttrDict())
             base[keys[-1]] = yaml.load(value)
 
-
     # Use current dir as base (where gramex is run from) if there's a gramex.yaml.
     # Else use source/help
     if not os.path.isfile('gramex.yaml'):
