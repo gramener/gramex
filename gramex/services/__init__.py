@@ -13,12 +13,12 @@ exists, a warning is raised.
 '''
 
 import yaml
-import urlparse
 import posixpath
 import mimetypes
 import logging.config
 import tornado.web
 import tornado.ioloop
+import six.moves.urllib.parse as urlparse
 from orderedattrdict import AttrDict
 from . import scheduler
 from . import watcher

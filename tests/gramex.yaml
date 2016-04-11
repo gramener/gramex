@@ -198,9 +198,11 @@ url:
         - dir/beta.html
       transform:
         'alpha.txt':
+          encoding: utf-8
           function: str.upper
           args: =content
         'beta.html':
+          encoding: utf-8
           function: str.title
           args: =content
   dir/merge.html:
@@ -212,9 +214,11 @@ url:
         - dir/alpha.txt
       transform:
         'beta.html':
+          encoding: utf-8
           function: str.upper
           args: =content
         'alpha.txt':
+          encoding: utf-8
           function: str.title
           args: =content
 
