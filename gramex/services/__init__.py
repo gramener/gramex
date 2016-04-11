@@ -13,6 +13,7 @@ exists, a warning is raised.
 '''
 
 import gramex
+import urlparse
 import posixpath
 import mimetypes
 import logging.config
@@ -68,6 +69,15 @@ def _sort_url_patterns(entry):
     )
 
 
+def _url_normalize(pattern):
+    'Remove double slashes, ../, ./ etc in the URL path. Remove URL fragment'
+    url = urlparse.urlsplit(pattern)
+    path = posixpath.normpath(url.path)
+    if url.path.endswith('/'):
+        path += '/'
+    return urlparse.urlunsplit((url.scheme, url.netloc, path, url.query, ''))
+
+
 def url(conf):
     "Set up the tornado web app URL handlers"
     handlers = []
@@ -78,7 +88,7 @@ def url(conf):
         urlspec.handler = locate(spec.handler, modules=['gramex.handlers'])
         handlers.append(tornado.web.URLSpec(
             name=name,
-            pattern=posixpath.normpath(urlspec.pattern),
+            pattern=_url_normalize(urlspec.pattern),
             handler=urlspec.handler,
             kwargs=urlspec.get('kwargs', None)))
     del info.app.handlers[:]
