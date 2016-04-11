@@ -461,6 +461,12 @@ url:
         where: [votes<120]
         limit: 5
 
+  watcher:
+    pattern: /watcher
+    handler: FileHandler
+    kwargs:
+      path: watcher.txt
+
 # Store Gramex logs in gramex.log
 log:
     version: 1
@@ -477,3 +483,10 @@ log:
     formatters:
         inline:
             format: '        %(message)s'
+
+watch:
+  watch_template:
+    paths: watcher.txt
+    on_modified: utils.on_modified
+    on_created: utils.on_created
+    on_deleted: utils.on_deleted

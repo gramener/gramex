@@ -76,13 +76,16 @@ def init(**kwargs):
         if key not in config_layers:
             config_layers[key] = PathConfig(val / 'gramex.yaml') if isinstance(val, Path) else val
 
-    # Add imported folders to sys.path
-    syspaths = set()
+    # Locate all config files
+    config_files = set()
     for path_config in config_layers.values():
         if hasattr(path_config, '__info__'):
-            for imp in path_config.__info__.imports:
-                syspaths.add(str(imp.path.absolute().parent))
-    sys.path[:] = _sys_path + list(syspaths)
+            for pathinfo in path_config.__info__.imports:
+                config_files.add(pathinfo.path)
+    config_files = list(config_files)
+
+    # Add config file folders to sys.path
+    sys.path[:] = _sys_path + [str(path.absolute().parent) for path in config_files]
 
     # Run all valid services. (The "+" before config_chain merges the chain)
     from . import services      # noqa -- deferred import for optimisation
@@ -93,6 +96,9 @@ def init(**kwargs):
                 getattr(services, key)(conf[key])
             else:
                 logging.warning('No service named %s', key)
+
+    # Set up a watch on config files (including imported files)
+    services.watcher.watch('gramex-reconfig', paths=config_files, on_modified=lambda event: init())
 
     # Switch to the base folder
     os.chdir(str(paths['base']))

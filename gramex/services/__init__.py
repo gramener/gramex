@@ -12,6 +12,7 @@ For example, if ``gramex.yaml`` contains this section::
 exists, a warning is raised.
 '''
 
+import yaml
 import gramex
 import urlparse
 import posixpath
@@ -104,11 +105,18 @@ def mime(conf):
 
 def watch(conf):
     "Set up file watchers"
-    # Watch all imported files
-    paths = []
-    for path_config in gramex.config_layers.values():
-        if hasattr(path_config, '__info__'):
-            for pathinfo in path_config.__info__.imports:
-                paths.append(pathinfo.path)
-
-    watcher.watch('gramex-reconfigure', paths=paths, on_modified=lambda event: gramex.init())
+    events = {'on_modified', 'on_created', 'on_deleted', 'on_moved', 'on_any_event'}
+    for name, config in conf.items():
+        if 'paths' not in config:
+            logging.error('No "paths" in watch config: %s', yaml.dump(config))
+            continue
+        if not set(config.keys()) & events:
+            logging.error('No events in watch config: %s', yaml.dump(config))
+            continue
+        if not isinstance(config['paths'], (list, set, tuple)):
+            config['paths'] = [config['paths']]
+        for event in events:
+            if event in config:
+                if not callable(config[event]):
+                    config[event] = locate(config[event])
+        watcher.watch(name, **config)

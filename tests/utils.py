@@ -5,6 +5,8 @@ from tornado.web import RequestHandler
 from tornado.httpclient import AsyncHTTPClient
 from concurrent.futures import ThreadPoolExecutor
 
+watch_info = []
+
 
 def args_as_json(handler):
     return json.dumps({arg: handler.get_arguments(arg) for arg in handler.request.arguments},
@@ -83,3 +85,15 @@ def async_calc(handler):
     counts = yield [thread_pool.submit(count_group, df, col) for col in cols]
     # result is [[250,250,250],[250,250,250],[250,250,250],[250,250,250]]
     raise gen.Return(pd.concat(counts, axis=1).to_json(orient='values'))
+
+
+def on_created(event):
+    watch_info.append({'event': event, 'type': 'created'})
+
+
+def on_modified(event):
+    watch_info.append({'event': event, 'type': 'modified'})
+
+
+def on_deleted(event):
+    watch_info.append({'event': event, 'type': 'deleted'})

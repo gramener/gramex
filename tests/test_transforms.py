@@ -1,9 +1,7 @@
 from __future__ import print_function
-import os
 import yaml
 import inspect
 import unittest
-from io import open
 from dis import dis
 from types import GeneratorType
 from tornado.gen import coroutine, Task
@@ -188,4 +186,4 @@ class Template(unittest.TestCase):
     def test_template(self):
         self.check('{{ 1 }}', '1')
         self.check('{{ 1 + 2 }}', '3')
-        self.check('{{ x + y }}', '3', x=1,  y=2)
+        self.check('{{ x + y }}', '3', x=1, y=2)

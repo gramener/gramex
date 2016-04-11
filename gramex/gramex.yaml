@@ -108,8 +108,12 @@ mime:
     .json:      application/json
 
 
-# Watch here
-watch: True
+# Set up file watches here
+# watch:
+#     gramex-reconfig:
+#         paths: $YAMLPATH
+#         on_modified: gramex.init
+
 
 # The `error:` section defines error responses. When you raise
 # `GramexError(key="...")`, Gramex calls the corresponding `function:` as
