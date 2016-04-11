@@ -13,7 +13,6 @@ exists, a warning is raised.
 '''
 
 import yaml
-import gramex
 import urlparse
 import posixpath
 import mimetypes
