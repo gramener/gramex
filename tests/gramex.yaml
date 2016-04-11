@@ -199,11 +199,11 @@ url:
       transform:
         'alpha.txt':
           encoding: utf-8
-          function: str.upper
+          function: six.text_type.upper
           args: =content
         'beta.html':
           encoding: utf-8
-          function: str.title
+          function: six.text_type.title
           args: =content
   dir/merge.html:
     pattern: /dir/merge.html
@@ -215,11 +215,11 @@ url:
       transform:
         'beta.html':
           encoding: utf-8
-          function: str.upper
+          function: six.text_type.upper
           args: =content
         'alpha.txt':
           encoding: utf-8
-          function: str.title
+          function: six.text_type.title
           args: =content
 
   dir/data:
