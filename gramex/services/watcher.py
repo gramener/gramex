@@ -14,8 +14,8 @@ from watchdog.events import FileSystemEventHandler
 observer = Observer()
 observer.start()
 
-# A mapping of {name: FileEventHandler}
-handlers = AttrDict()
+handlers = AttrDict()       # handler[name] = FileEventHandler
+watches = AttrDict()        # watches[directory] = ObservedWatch
 
 
 class FileEventHandler(FileSystemEventHandler):
@@ -35,7 +35,12 @@ class FileEventHandler(FileSystemEventHandler):
 
         self.__dict__.update(events)
         for directory, path in self.paths.items():
-            self.watches.append(observer.schedule(self, str(directory)))
+            directory = str(directory)
+            if directory in watches:
+                observer.add_handler_for_watch(self, watches[directory])
+            else:
+                watches[directory] = observer.schedule(self, directory)
+                self.watches.append(watches[directory])
 
     def dispatch(self, event):
         source_path = Path(str(event.src_path)).absolute()
@@ -44,7 +49,9 @@ class FileEventHandler(FileSystemEventHandler):
 
     def unschedule(self):
         for watch in self.watches:
-            observer.unschedule(watch)
+            observer.remove_handler_for_watch(self, watch)
+            # TODO: if there are no handlers, remove the observer?
+            # observer.unschedule(watch)
 
 
 def watch(name, paths, **events):
