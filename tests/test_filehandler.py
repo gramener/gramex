@@ -85,6 +85,7 @@ class TestFileHandler(TestGramex):
 
     def test_filehandle_errors(self):
         self.check('/nonexistent', code=404)
+        self.check('/dir/nonexistent-file', code=404)
         self.check('/dir/noindex/../gramex.yaml', code=403)
         self.check('/dir/noindex/../nonexistent', code=404)
 

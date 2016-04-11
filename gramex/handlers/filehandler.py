@@ -144,10 +144,10 @@ class FileHandler(BaseHandler):
                 return
         else:
             self.file = self.path
-            if not self.file.is_file():
-                raise HTTPError(
-                    status_code=403,
-                    log_message='%s is not a file or directory' % self.path)
+            if not self.file.exists():
+                raise HTTPError(status_code=404)
+            elif not self.file.is_file():
+                raise HTTPError(status_code=403, log_message='%s is not a file' % self.path)
 
         if self.path.is_dir() and self.index and not (
                 self.default_filename and self.file.exists()):

@@ -147,6 +147,11 @@ url:
       path: dir
       default_filename: nonexistent-file
       index: false
+  dir/nonexistent-file:
+    pattern: /dir/nonexistent-file
+    handler: FileHandler
+    kwargs:
+      path: nonexistent-file
   dir/transform:
     pattern: /dir/transform/(.*)
     handler: FileHandler
@@ -184,7 +189,6 @@ url:
         'index.html':
           function: utils.args_as_json
           args: =handler
-
   dir/merge.txt:
     pattern: /dir/merge.txt
     handler: FileHandler
