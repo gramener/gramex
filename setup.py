@@ -30,7 +30,7 @@ setup(
             'release.json',
             'handlers/filehandler.template.html',
             'help/background.jpg',
-            'html/index.html',
+            'help/index.html',
         ]
     },
     include_package_data=True,
