@@ -146,12 +146,19 @@ def _yaml_open(path, default=AttrDict()):
         del result['variables']
 
     # Variables based on YAML file location
-    relative_url = os.path.relpath(str(path.parent)).replace(os.path.sep, '/')
-    variables.update({
-        'YAMLPATH': str(path.parent),   # Path to YAML folder
+    yaml_path = str(path.parent)
+    yaml_vars = {
+        'YAMLPATH': yaml_path,          # Path to YAML folder
         'YAMLFILE': str(path),          # Path to YAML file
-        'YAMLURL': relative_url,        # Relative URL from cwd to YAML folder
-    })
+    }
+    try:
+        # Relative URL from cwd to YAML folder. However, if the YAML is in a
+        # different drive than the current directory, this will fail. In that
+        # case ignore it.
+        yaml_vars['YAMLURL'] = os.path.relpath(yaml_path).replace(os.path.sep, '/')
+    except ValueError:
+        pass
+    variables.update(yaml_vars)
 
     # Substitute variables
     for key, value, node in walk(result):
