@@ -25,7 +25,13 @@ setup(
     # package_data includes data files for binary & source distributions
     # include_package_data is only for source distributions, uses MANIFEST.in
     package_data={
-        'gramex': ['gramex.yaml', 'release.json']
+        'gramex': [
+            'gramex.yaml',
+            'release.json',
+            'handlers/filehandler.template.html',
+            'help/background.jpg',
+            'html/index.html',
+        ]
     },
     include_package_data=True,
     install_requires=[str(entry.req) for entry in parse_requirements(
