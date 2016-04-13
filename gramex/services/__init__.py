@@ -73,7 +73,7 @@ def _url_normalize(pattern):
     'Remove double slashes, ../, ./ etc in the URL path. Remove URL fragment'
     url = urlparse.urlsplit(pattern)
     path = posixpath.normpath(url.path)
-    if url.path.endswith('/') and not url.path.endswith('/'):
+    if url.path.endswith('/') and not path.endswith('/'):
         path += '/'
     return urlparse.urlunsplit((url.scheme, url.netloc, path, url.query, ''))
 
