@@ -173,6 +173,7 @@ class _Subprocess(object):
             # If the buffer size is 0 or negative, use the default buffer size to read
             if buffer_size <= 0:
                 buffer_size = io.DEFAULT_BUFFER_SIZE
+
             def _write(stream, callback, future):
                 'Call callback with content from stream. On EOF mark future as done'
                 while True:
