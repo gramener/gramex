@@ -152,6 +152,21 @@ url:
     handler: FileHandler
     kwargs:
       path: nonexistent-file
+  dir/normalize/slash:
+    pattern: /dir/normalize/slash/(.*)/
+    handler: FileHandler
+    kwargs:
+      path: dir
+  dir/normalize/dot:
+    pattern: /./dir/./normalize/./dot/./(.*)
+    handler: FileHandler
+    kwargs:
+      path: dir
+  dir/normalize/dotdot:
+    pattern: /abc/../dir/normalize/abc/../dotdot/(.*)
+    handler: FileHandler
+    kwargs:
+      path: dir
   dir/transform:
     pattern: /dir/transform/(.*)
     handler: FileHandler

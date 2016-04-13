@@ -83,6 +83,11 @@ class TestFileHandler(TestGramex):
             'Content-Disposition': None
         })
 
+    def test_url_normalize(self):
+        self.check('/dir/normalize/slash/index.html/', path='dir/index.html')
+        self.check('/dir/normalize/dot/index.html', path='dir/index.html')
+        self.check('/dir/normalize/dotdot/index.html', path='dir/index.html')
+
     def test_filehandle_errors(self):
         self.check('/nonexistent', code=404)
         self.check('/dir/nonexistent-file', code=404)
