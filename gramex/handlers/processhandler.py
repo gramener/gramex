@@ -1,4 +1,5 @@
 import io
+import os
 import sys
 import subprocess
 import tornado.web
@@ -20,31 +21,32 @@ class ProcessHandler(BaseHandler):
     Runs sub-processes with transformations. It accepts these parameters:
 
     :arg list/string args: The first value is the command. The rest are optional
-        arguments. This is the same as in `Popen`_.
+        string arguments. This is the same as in `Popen`_.
     :arg boolean shell: ``True`` passes the ``args`` through the shell, allowing
         wildcards like ``*``. If ``shell=True`` then use a single string for
         ``args`` that includes the arguments.
     :arg string cwd: Current working directory from where the command will run.
         Defaults to the same directory Gramex ran from.
-    :arg string stdout: The process output can be sent to:
+    :arg string stdout: (**TODO**) The process output can be sent to:
 
         - ``pipe``: Display the (transformed) output. This is the default
         - ``null``: Ignore the output
         - ``filename.txt``: Save output to a ``filename.txt``
 
-    :arg string stderr: The process error stream has the same options as stdout.
+    :arg string stderr: (**TODO**) The process error stream has the same options as stdout.
         It can also be set to just ``stdout`` to re-use the stdout option.
-    :arg string stdin: Not yet implemented
+    :arg string stdin: (**TODO**)
     :arg int/string buffer: 'line' will write lines as they are generated.
         Numbers indicate the number of bytes to buffer. Defaults to
         ``io.DEFAULT_BUFFER_SIZE``.
     :arg string redirect: URL to redirect to when the result is done. Used to
         trigger calculations without displaying any output.
     :arg dict headers: HTTP headers to set on the response.
-    :arg dict transform: Transformations that should be applied to the files.
-        The key matches a `glob pattern`_ (e.g. ``'*.md'`` or ``'data/*'``.) The
-        value is a dict with the same structure as :class:`FunctionHandler`,
-        and accepts these keys:
+    :arg dict transform: (**TODO**)
+        Transformations that should be applied to the files. The key matches a
+        `glob pattern`_ (e.g. ``'*.md'`` or ``'data/*'``.) The value is a dict
+        with the same structure as :class:`FunctionHandler`, and accepts these
+        keys:
 
         ``encoding``
             The encoding to load the file as. If you don't specify an encoding,
@@ -79,7 +81,7 @@ class ProcessHandler(BaseHandler):
         self.params = kwargs
         self.args = args
         self.shell = shell
-        self.cwd = cwd
+        self.cwd = os.path.abspath(cwd)     # Normalize .., etc
         self.redirect = redirect
         self._write_lock = RLock()
 
@@ -90,6 +92,7 @@ class ProcessHandler(BaseHandler):
 
         def sub(s, **kwargs):
             return kwargs.get(s, stream_map.get(s, s))
+
         self.stdout = sub(stdout)
         self.stderr = sub(stderr, stdout=self.stdout)
         self.stdin = sub(stdin)

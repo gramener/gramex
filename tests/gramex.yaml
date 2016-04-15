@@ -486,6 +486,25 @@ url:
     kwargs:
       path: watcher.txt
 
+  process/args:
+    pattern: /process/args
+    handler: ProcessHandler
+    kwargs:
+      args: [python, "$YAMLPATH/utils.py", a, '1', 'x y']
+  process/shell:
+    pattern: /process/shell
+    handler: ProcessHandler
+    kwargs:
+      args: 'python $YAMLPATH/utils.py a 1 "x y"'
+      shell: True
+  process/cwd:
+    pattern: /process/shell
+    handler: ProcessHandler
+    kwargs:
+      args: 'python $YAMLPATH/utils.py a 1 "x y"'
+      shell: True
+      cwd: $YAMLPATH/..
+
 # Store Gramex logs in gramex.log
 log:
     version: 1
