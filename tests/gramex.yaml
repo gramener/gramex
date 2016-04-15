@@ -498,12 +498,11 @@ url:
       args: 'python $YAMLPATH/utils.py a 1 "x y"'
       shell: True
   process/cwd:
-    pattern: /process/shell
+    pattern: /process/cwd
     handler: ProcessHandler
     kwargs:
-      args: 'python $YAMLPATH/utils.py a 1 "x y"'
-      shell: True
-      cwd: $YAMLPATH/..
+      args: [python, "$YAMLPATH/utils.py", a, '1', 'x y']
+      cwd: "${YAMLPATH}/../"
 
 # Store Gramex logs in gramex.log
 log:
