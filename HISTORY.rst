@@ -3,6 +3,38 @@
 History
 -------
 
+1.0.5 (2016-04-15)
+~~~~~~~~~~~~~~~~~~
+
+* Gramex config YAML files support custom variables. You can define a variable
+  in the ``variables:`` section and use it as ``$VARIABLE`` anywhere in the YAML
+  file, its imports or in subsequent layers. They default to environment
+  variables.
+* You can use the pre-defined variables ``$YAMLFILE`` (current YAML file name),
+  ``$YAMLPATH`` (current YAML directory), and ``$YAMLURL`` (relative URL path
+  from where Gramex is running to current YAML directory) in your template.
+* Command line arguments override the ``app:`` configuration. So running
+  ``gramex --listen.port=8999`` from the command line will run Gramex on port
+  8999, irrespective of the port configuration.
+* Add a ``browser: true`` to automatically start the browser on Gramex launch.
+  You can also use ``gramex --browser=true``.
+* ``ProcessHandler`` implemented. It runs any program as a sub-process and
+  streams the output to the request.
+* ``FunctionHandler`` accepts co-routines for asynchronous processing. Functions
+  can also ``yield`` strings that will be immediately written and flushed,
+  providing a streaming interface.
+* ``FileHandler`` accepts multiple ``path``s as an array. The output of these
+  files are concatenated after transformated.
+* In the ``FileHandler`` config, you can use ``pattern: /abc`` instead of
+  ``pattern: /(abc)`` if you are mapping a single URL to a single path.
+* ``FileHandler`` supports ``function: template`` in the transforms section.
+  This treats the file as a tornado template and renders the output.
+* ``FileHandler`` directory listing looks prettier now.
+* ``DataHandler`` supports ``like`` and ``notlike`` operations.
+* The ``watch:`` section of ``gramex.yaml`` allows you to trigger events when
+  files are changed.
+
+
 1.0.4 (2016-03-30)
 ~~~~~~~~~~~~~~~~~~
 

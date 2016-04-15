@@ -97,6 +97,7 @@ When releasing a new version of Gramex:
     make release
 
 3. Update the following and commit:
+
     - ``HISTORY.rst`` -- add release notes
     - ``gramex/release.json`` -- update the version number
 
