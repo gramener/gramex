@@ -96,12 +96,15 @@ When releasing a new version of Gramex:
 
     make release
 
-3. Update the following and commit:
+3. Update the following and commit to ``dev`` branch:
 
     - ``HISTORY.rst`` -- add release notes
     - ``gramex/release.json`` -- update the version number
 
-4. Merge with master, create an annotated tag and push the code::
+4. Push the ``dev`` branch to the server and ensure that there are no build
+   errors.
+
+5. Merge with master, create an annotated tag and push the code::
 
     git checkout master
     git merge dev
