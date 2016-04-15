@@ -1,4 +1,5 @@
 import os
+import six
 import yaml
 import unittest
 from pathlib import Path
@@ -78,7 +79,7 @@ class TestPathConfig(unittest.TestCase):
 
         # When the file is blank, config is empty
         with self.temp.open('w') as out:
-            out.write(u'')
+            out.write(six.text_type(''))
         self.assertEqual(+conf, {})
 
         # Once created, it is automatically reloaded

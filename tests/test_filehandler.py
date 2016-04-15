@@ -1,3 +1,6 @@
+import io
+import os
+import six
 import json
 import markdown
 from orderedattrdict import AttrDict
@@ -13,6 +16,17 @@ redirect_codes = (301, 302)
 
 class TestFileHandler(TestGramex):
     'Test FileHandler'
+
+    def setUp(self):
+        # Create a unicode filename to test if FileHandler's directory listing shows it
+        folder = os.path.dirname(os.path.abspath(__file__))
+        self.unicode_file = os.path.join(folder, 'dir', 'subdir', u'unicode\u2013file.txt')
+        with io.open(self.unicode_file, 'w', encoding='utf-8') as out:
+            out.write(six.text_type(self.unicode_file))
+
+    def tearDown(self):
+        # Delete unicode file created
+        os.unlink(self.unicode_file)
 
     def test_directoryhandler(self):
         'DirectoryHandler == FileHandler'
