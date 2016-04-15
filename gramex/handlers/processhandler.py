@@ -81,7 +81,7 @@ class ProcessHandler(BaseHandler):
         self.params = kwargs
         self.args = args
         self.shell = shell
-        self.cwd = os.path.abspath(cwd)     # Normalize .., etc
+        self.cwd = cwd if cwd is None else os.path.abspath(cwd)     # Normalize path
         self.redirect = redirect
         self._write_lock = RLock()
 
@@ -117,6 +117,7 @@ class ProcessHandler(BaseHandler):
         proc = _Subprocess(
             self.args,
             shell=self.shell,
+            cwd=self.cwd,
             stream_stdout=self._write,
             stream_stderr=self._write,
             buffer_size=self.buffer_size,
