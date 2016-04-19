@@ -147,6 +147,20 @@ url:
       path: dir
       default_filename: nonexistent-file
       index: false
+  dir/indextemplate:
+    pattern: /dir/indextemplate/(.*)
+    handler: FileHandler
+    kwargs:
+      path: dir
+      index: true
+      index_template: index.template.html
+  dir/no-indextemplate:
+    pattern: /dir/no-indextemplate/(.*)
+    handler: FileHandler
+    kwargs:
+      path: dir
+      index: true
+      index_template: nonexistent.template.html
   dir/nonexistent-file:
     pattern: /dir/nonexistent-file
     handler: FileHandler

@@ -88,14 +88,25 @@ class TestFileHandler(TestGramex):
 
         self.check('/dir/noindex/binary.bin', path='dir/binary.bin')
 
-        self.check('/dir/args/?x=1', text=json.dumps({'x': ['1']}))
-        self.check('/dir/args/?x=1&x=2&y=3', text=json.dumps({'x': ['1', '2'], 'y': ['3']},
-                                                             sort_keys=True))
-
         self.check('/dir/data', code=200, path='dir/data.csv', headers={
             'Content-Type': 'text/plain',
             'Content-Disposition': None
         })
+
+    def test_args(self):
+        self.check('/dir/args/?x=1', text=json.dumps({'x': ['1']}))
+        self.check('/dir/args/?x=1&x=2&y=3', text=json.dumps({'x': ['1', '2'], 'y': ['3']},
+                                                             sort_keys=True))
+
+    def test_index_template(self):
+        # Custom index_template is used in directories
+        self.check('/dir/indextemplate/', code=200, text='<title>indextemplate</title>')
+        self.check('/dir/indextemplate/', code=200, text='text.txt</a>')
+        # Custom index_template is used in sub-directories
+        self.check('/dir/indextemplate/subdir/', code=200, text='<title>indextemplate</title>')
+        self.check('/dir/indextemplate/subdir/', code=200, text='text.txt</a>')
+        # Non-existent index templates default to Gramex filehandler.template.html
+        self.check('/dir/no-indextemplate/', code=200, text='File list by Gramex')
 
     def test_url_normalize(self):
         self.check('/dir/normalize/slash/index.html/', path='dir/index.html')

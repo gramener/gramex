@@ -12,9 +12,16 @@ from ..transforms import build_transform
 
 
 # Directory indices are served using this template by default
-_template_path = Path(__file__).absolute().parent / 'filehandler.template.html'
-with _template_path.open(encoding='utf-8') as handle:
-    dir_template = string.Template(handle.read())
+_default_index_template = Path(__file__).absolute().parent / 'filehandler.template.html'
+
+
+def read_template(path):
+    if not path.exists():
+        logging.warn('Missing directory template "%s". Using "%s"' %
+                     (path, _default_index_template))
+        path = _default_index_template
+    with path.open(encoding='utf-8') as handle:
+        return string.Template(handle.read())
 
 
 class FileHandler(BaseHandler):
@@ -37,7 +44,10 @@ class FileHandler(BaseHandler):
     :arg boolean index: If ``true``, shows a directory index. If ``false``,
         raises a HTTP 404 error when users try to access a directory.
     :arg string index_template: The file to be used as the template for
-        displaying the index. It can use 2 variables: ``$title`` and ``$body``.
+        displaying the index. It can use 2 string variables: ``$title`` (the
+        directory name) and ``$body`` (an unordered list with all filenames as
+        links). If this file is missing, it defaults to Gramex's default
+        ``filehandler.template.html``.
     :arg dict headers: HTTP headers to set on the response.
     :arg dict transform: Transformations that should be applied to the files.
         The key matches a `glob pattern`_ (e.g. ``'*.md'`` or ``'data/*'``.) The
@@ -91,11 +101,8 @@ class FileHandler(BaseHandler):
             self.root = Path(path).absolute()
         self.default_filename = default_filename
         self.index = index
-        if index_template is not None:
-            with Path(index_template).open(encoding='utf-8') as handle:
-                self.index_template = string.Template(handle.read())
-        else:
-            self.index_template = dir_template
+        self.index_template = read_template(
+            Path(index_template) if index_template is not None else _default_index_template)
         self.headers = headers
         self.transform = {}
         for pattern, trans in transform.items():

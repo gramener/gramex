@@ -14,11 +14,13 @@ class TestGramex(unittest.TestCase):
     def get(self, url, **kwargs):
         return requests.get(server.base_url + url, **kwargs)
 
-    def check(self, url, path=None, code=200, text=None, headers=None):
+    def check(self, url, path=None, code=200, text=None, no_text=None, headers=None):
         r = self.get(url)
         self.assertEqual(r.status_code, code, '%s: code %d != %d' % (url, r.status_code, code))
         if text is not None:
             self.assertIn(text, r.text, '%s: %s not in %s' % (url, text, r.text))
+        if no_text is not None:
+            self.assertNotIn(text, r.text, '%s: %s should not be in %s' % (url, text, r.text))
         if path is not None:
             with (server.info.folder / path).open('rb') as file:
                 self.assertEqual(r.content, file.read(), '%s != %s' % (url, path))
