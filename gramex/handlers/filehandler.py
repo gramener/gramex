@@ -172,7 +172,7 @@ class FileHandler(BaseHandler):
                         path=str(path.relative_to(self.path)) + ('/' if path.is_dir() else '')
                     ))
                 except UnicodeDecodeError:
-                    logging.warn("FileHandler can't show unicode file {:r}".format(path))
+                    logging.warn("FileHandler can't show unicode file {!r:s}".format(path))
             content.append(u'</ul>')
             self.content = self.index_template.substitute(path=self.path, body=''.join(content))
 
