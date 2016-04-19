@@ -44,10 +44,13 @@ class FileHandler(BaseHandler):
     :arg boolean index: If ``true``, shows a directory index. If ``false``,
         raises a HTTP 404 error when users try to access a directory.
     :arg string index_template: The file to be used as the template for
-        displaying the index. It can use 2 string variables: ``$title`` (the
-        directory name) and ``$body`` (an unordered list with all filenames as
-        links). If this file is missing, it defaults to Gramex's default
-        ``filehandler.template.html``.
+        displaying the index. If this file is missing, it defaults to Gramex's
+        default ``filehandler.template.html``. It can use these string
+        variables:
+
+        - ``$path`` - the directory name
+        - ``$body`` - an unordered list with all filenames as links
+
     :arg dict headers: HTTP headers to set on the response.
     :arg dict transform: Transformations that should be applied to the files.
         The key matches a `glob pattern`_ (e.g. ``'*.md'`` or ``'data/*'``.) The
@@ -160,18 +163,18 @@ class FileHandler(BaseHandler):
                 self.default_filename and self.file.exists()):
             self.set_header('Content-Type', 'text/html')
             content = []
+            file_template = string.Template(u'<li><a href="$path">$path</a></li>')
             for path in self.path.iterdir():
                 # On Windows, pathlib on Python 2.7 won't handle Unicode. Ignore such files.
                 # https://bitbucket.org/pitrou/pathlib/issues/25
                 try:
-                    content.append(u'<li><a href="{name!s:s}">{name!s:s}{dir!s:s}</a></li>'.format(
-                        name=path.relative_to(self.path),
-                        dir='/' if path.is_dir() else ''))
+                    content.append(file_template.substitute(
+                        path=str(path.relative_to(self.path)) + ('/' if path.is_dir() else '')
+                    ))
                 except UnicodeDecodeError:
-                    logging.warn("FileHandler can't show unicode file {:s}".format(
-                        repr(path)))
+                    logging.warn("FileHandler can't show unicode file {:r}".format(path))
             content.append(u'</ul>')
-            self.content = self.index_template.substitute(title=self.path, body=''.join(content))
+            self.content = self.index_template.substitute(path=self.path, body=''.join(content))
 
         else:
             modified = self.file.stat().st_mtime

@@ -117,7 +117,8 @@ url:
     pattern: /dir/index/(.*)
     handler: FileHandler
     kwargs:
-      path: dir
+      # Adding a slash at the end of "dir/" should not disrupt anything
+      path: dir/
       index: true
   dir/default-present-index:
     pattern: /dir/default-present-index/(.*)
