@@ -136,7 +136,7 @@ def _calc_value(val, key):
         for result in function(key):
             return result
     else:
-        return val
+        return string.Template(val).substitute(variables)
 
 
 def _yaml_open(path, default=AttrDict()):

@@ -9,6 +9,7 @@ variables:
         default:
             function: six.text_type
             args: ['child']
+    DERIVED: $THIS/derived
 
 child_DOT: "{.}"
 child_YAMLPATH: $YAMLPATH
@@ -21,3 +22,4 @@ child_THIS: $THIS
 child_DEFAULT: $CHILD_DEFAULT
 child_FUNCTION: $FUNCTION
 child_DEFAULT_FUNCTION: $DEFAULT_FUNCTION
+child_DERIVED: $DERIVED

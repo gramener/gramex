@@ -10,6 +10,7 @@ variables:
         default:
             function: six.text_type
             args: ['base']
+    DERIVED: $THIS/derived
 
 base_DOT: "{.}"
 base_YAMLPATH: $YAMLPATH
@@ -22,6 +23,7 @@ base_THIS: $THIS
 base_DEFAULT: $BASE_DEFAULT
 base_FUNCTION: $FUNCTION
 base_DEFAULT_FUNCTION: $DEFAULT_FUNCTION
+base_DERIVED: $DERIVED
 
 import:
     subdir: dir/config.template.subdir.yaml

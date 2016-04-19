@@ -161,6 +161,8 @@ class TestPathConfig(unittest.TestCase):
             self.assertEqual(conf['%s_FUNCTION' % key], key)
             # Default functions "underride" values
             self.assertEqual(conf['%s_DEFAULT_FUNCTION' % key], 'base')
+            # Derived variables
+            self.assertEqual(conf['%s_DERIVED' % key], '%s/derived' % key)
 
 
 class TestConfig(unittest.TestCase):
