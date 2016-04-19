@@ -132,7 +132,7 @@ class TestPathConfig(unittest.TestCase):
         unlink(self.temp)
         self.assertEqual(+conf_imp, +conf_b)
 
-    def test_templating(self):
+    def test_variables(self):
         'Templates interpolate string variables'
         conf = +ChainConfig(
             base=PathConfig(self.chain.base),
@@ -157,6 +157,10 @@ class TestPathConfig(unittest.TestCase):
             self.assertEqual(conf['%s_ROOT' % key], conf.base_ROOT)
             # Default variables are set
             self.assertEqual(conf['%s_DEFAULT' % key], key)
+            # Functions run and override values
+            self.assertEqual(conf['%s_FUNCTION' % key], key)
+            # Default functions "underride" values
+            self.assertEqual(conf['%s_DEFAULT_FUNCTION' % key], 'base')
 
 
 class TestConfig(unittest.TestCase):

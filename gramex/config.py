@@ -119,6 +119,26 @@ variables = DefaultAttrDict(str)
 variables.update(os.environ)
 
 
+def _calc_value(val, key):
+    '''
+    Calculate the value to assign to this key.
+
+    If ``val`` is not a dictionary that has a ``function`` key, return it as-is.
+
+    If it has a function key, call that function (with specified args, kwargs,
+    etc) and allow the ``key`` parameter as an argument.
+
+    If the function is a generator, the first value is used.
+    '''
+    if hasattr(val, 'get') and val.get('function'):
+        from .transforms import build_transform
+        function = build_transform(val, vars={'key': None})
+        for result in function(key):
+            return result
+    else:
+        return val
+
+
 def _yaml_open(path, default=AttrDict()):
     'Load a YAML path.Path as AttrDict. Replace {VAR} with variables'
     path = path.absolute()
@@ -135,14 +155,16 @@ def _yaml_open(path, default=AttrDict()):
         return default
 
     # Update context with the variables section.
-    # key: value overrides the value
-    # key: {default: value} sets the value if it's not already set
+    # key: value                     sets key = value
+    # key: {function: fn}            sets key = fn(key)
+    # key: {default: value}          sets key = value if it's not already set
+    # key: {default: {function: fn}} sets key = fn(key) if it's not already set
     if 'variables' in result:
         for key, val in result['variables'].items():
-            if hasattr(val, 'get'):
-                variables.setdefault(key, val.get('default'))
+            if hasattr(val, 'get') and 'default' in val and 'function' not in val:
+                variables.setdefault(key, _calc_value(val['default'], key))
             else:
-                variables[key] = val
+                variables[key] = _calc_value(val, key)
         del result['variables']
 
     # Variables based on YAML file location
