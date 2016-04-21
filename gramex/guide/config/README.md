@@ -28,8 +28,7 @@ for additional information.
 
 The `app:` section controls Gramex's startup. It has these sub-sections.
 
-1. `browser:` is `True` if the browser should open the home page when Gramex is
-   launched. (default: `False`)
+1. `browser:` is the URL to open when Gramex is launched. (default: `False`)
 2. `listen:` holds keyword arguments for the HTTP server. The most important
    parameter is the `port:` (default: 9988.) The remaining parameters are passed
    to [HTTPServer()][http://www.tornadoweb.org/en/stable/_modules/tornado/httpse
@@ -40,7 +39,7 @@ The `app:` section controls Gramex's startup. It has these sub-sections.
 These are the parameters you will use the most:
 
     app:
-        browser: True                     # Open the browser when the app starts
+        browser: /                        # Open browser to "/" when app starts
         listen:
             port: 9999                    # Run on a different port
         settings:
@@ -52,7 +51,7 @@ These are the parameters you will use the most:
 The app section alone can be over-ridden from the command line. (Other sections
 cannot.) For example:
 
-    gramex --listen.port=8888 --browser=True
+    gramex --listen.port=8888 --browser=/
 
 ... will override the `gramex.yaml` parameters for the `port` and `browser`.
 
