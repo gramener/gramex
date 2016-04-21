@@ -13,9 +13,10 @@ exists, a warning is raised.
 '''
 
 import yaml
+import logging
 import posixpath
 import mimetypes
-import logging.config
+import webbrowser
 import tornado.web
 import tornado.ioloop
 import six.moves.urllib.parse as urlparse
@@ -119,3 +120,18 @@ def watch(conf):
                 if not callable(config[event]):
                     config[event] = locate(config[event])
         watcher.watch(name, **config)
+
+
+def browser(appconf):
+    '''
+    browser: True opens the application home page on localhost.
+    browser: url opens the application to a specific URL
+    '''
+    if not appconf.browser:
+        return
+    url = 'http://127.0.0.1:%d/' % appconf.listen.port
+    if isinstance(appconf.browser, str):
+        url = urlparse.urljoin(url, appconf.browser)
+    browser = webbrowser.get()
+    logging.info('Opening %s in %s browser', url, browser.__class__.__name__)
+    browser.open(url)
