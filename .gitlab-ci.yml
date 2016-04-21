@@ -23,10 +23,6 @@ unittest:
     # First, make sure there are no PEP8 errors
     - flake8
 
-    # psycopg2 requires pg_config which is in libpq-dev
-    # http://stackoverflow.com/a/12037133/100904
-    - apt-get install -qq -y libpq-dev
-
     # Run unit tests
     - conda install -q -y --file requirements-conda.txt
     - pip install -q -e .
