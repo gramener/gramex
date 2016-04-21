@@ -25,6 +25,10 @@ classes: toc
 
 **Exercise**: Load a dataset into MySQL or PostgreSQL, and create a DataHandler that exposes that table.
 
+## [Gramex runs processes](processhandler/)
+
+**Exercise**: Display the results of `git log` on a git repository.
+
 ## [Gramex authentication](auth/)
 
 **Exercise**: Make gramex-guide without authetication and create google-auth only to `/blog/`.

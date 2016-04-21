@@ -18,9 +18,8 @@ url:
         handler: FileHandler
         kwargs:
             path: index.html
-
-    config:
-        pattern: /$YAMLURL/config
+    final-config:
+        pattern: /$YAMLURL/final-config
         handler: FunctionHandler
         kwargs:
             function: guide.config
@@ -40,7 +39,6 @@ url:
                     encoding: utf-8
                     headers:
                         Content-Type: text/html
-
     # /source/path shows the raw file as plain text
     source:
         priority: +1

@@ -1,4 +1,4 @@
-title: Connect Gramex to data
+title: Gramex connects to data
 
 `DataHandler` let's you fetch data from CSV files and databases, and returns the result as CSV, JSON or HTML tables.
 

@@ -16,7 +16,8 @@
       <li><a href="$guide_root/config/">Configurations control Gramex</a></li>
       <li><a href="$guide_root/functionhandler/">Gramex runs Python functions</a></li>
       <li><a href="$guide_root/filehandler/">Gramex renders files</a></li>
-      <li><a href="$guide_root/datahandler/">Connect Gramex to data</a></li>
+      <li><a href="$guide_root/datahandler/">Gramex connects to data</a></li>
+      <li><a href="$guide_root/processhandler/">Gramex runs processes</a></li>
       <li><a href="$guide_root/auth/">Gramex authentication</a></li>
       <li><a href="$guide_root/chart/">Gramex charts</a></li>
       <li><a href="$guide_root/scheduler/">Gramex can schedule tasks</a></li>

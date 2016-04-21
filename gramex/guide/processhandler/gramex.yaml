@@ -1,0 +1,10 @@
+url:
+    ping-google:
+        pattern: /$YAMLURL/ping-google
+        handler: ProcessHandler
+        kwargs:
+            args: ping -n 4 www.google.com
+            shell: true
+            buffer: line
+            headers:
+                Content-Type: text/x-plain
