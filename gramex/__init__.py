@@ -14,7 +14,6 @@ conf = AttrDict()               # Final merged configurations
 config_layers = ChainConfig()   # Loads all configurations. init() updates it
 
 paths['source'] = Path(__file__).absolute().parent      # Where gramex source code is
-paths['base'] = Path('.')                               # Where gramex is run from
 
 # Populate __version__ from release.json
 with (paths['source'] / 'release.json').open() as _release_file:
@@ -52,10 +51,10 @@ def commandline(**kwargs):
     # Use current dir as base (where gramex is run from) if there's a gramex.yaml.
     # Else use source/help
     if not os.path.isfile('gramex.yaml'):
-        paths['base'] = paths['source'] / 'help'
+        os.chdir(str(paths['source'] / 'help'))
 
-    # Initialize Gramex, adding command line arguments as a config layer
-    init(cmd=AttrDict(app=cmd))
+    # Initialize Gramex, adding current dir and command line args as config layers
+    init(base=Path('.'), cmd=AttrDict(app=cmd))
 
 
 def init(**kwargs):
@@ -98,9 +97,6 @@ def init(**kwargs):
 
     # Set up a watch on config files (including imported files)
     services.watcher.watch('gramex-reconfig', paths=config_files, on_modified=lambda event: init())
-
-    # Switch to the base folder
-    os.chdir(str(paths['base']))
 
     # Start the IOLoop. TODO: can the app service start this delayed?
     ioloop = tornado.ioloop.IOLoop.current()
