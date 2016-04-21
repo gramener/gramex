@@ -20,6 +20,10 @@ def setUpModule():
     with io.open(files.unicode_file, 'w', encoding='utf-8') as out:
         out.write(six.text_type(files.unicode_file))
 
+    # Create a symlink to test if these are displayed in a directory listing without errors
+    files.symlink = os.path.join(folder, 'dir', 'subdir', 'symlink.txt')
+    os.symlink(os.path.join(folder, 'gramex.yaml'), files.symlink)
+
 
 def tearDownModule():
     server.stop_gramex()
