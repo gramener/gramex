@@ -8,25 +8,30 @@ from gramex.transforms import badgerfish
 from . import server
 from .test_handlers import TestGramex
 
+files = AttrDict()
 
-setUpModule = server.start_gramex
-tearDownModule = server.stop_gramex
-redirect_codes = (301, 302)
+
+def setUpModule():
+    server.start_gramex()
+
+    # Create a unicode filename to test if FileHandler's directory listing shows it
+    folder = os.path.dirname(os.path.abspath(__file__))
+    files.unicode_file = os.path.join(folder, 'dir', 'subdir', u'unicode\u2013file.txt')
+    with io.open(files.unicode_file, 'w', encoding='utf-8') as out:
+        out.write(six.text_type(files.unicode_file))
+
+
+def tearDownModule():
+    server.stop_gramex()
+
+    # Delete files created
+    for filename in files.values():
+        if os.path.exists(filename):
+            os.unlink(filename)
 
 
 class TestFileHandler(TestGramex):
     'Test FileHandler'
-
-    def setUp(self):
-        # Create a unicode filename to test if FileHandler's directory listing shows it
-        folder = os.path.dirname(os.path.abspath(__file__))
-        self.unicode_file = os.path.join(folder, 'dir', 'subdir', u'unicode\u2013file.txt')
-        with io.open(self.unicode_file, 'w', encoding='utf-8') as out:
-            out.write(six.text_type(self.unicode_file))
-
-    def tearDown(self):
-        # Delete unicode file created
-        os.unlink(self.unicode_file)
 
     def test_directoryhandler(self):
         'DirectoryHandler == FileHandler'
@@ -40,6 +45,7 @@ class TestFileHandler(TestGramex):
             r = self.get(url)
             if check:
                 self.assertTrue(r.url.endswith('/'), url)
+                redirect_codes = (301, 302)
                 self.assertIn(r.history[0].status_code, redirect_codes, url)
             else:
                 self.assertEqual(len(r.history), 0)
@@ -116,7 +122,7 @@ class TestFileHandler(TestGramex):
     def test_filehandle_errors(self):
         self.check('/nonexistent', code=404)
         self.check('/dir/nonexistent-file', code=404)
-        self.check('/dir/noindex/../gramex.yaml', code=403)
+        self.check('/dir/noindex/../../gramex.yaml', code=404)
         self.check('/dir/noindex/../nonexistent', code=404)
 
     def test_markdown(self):
