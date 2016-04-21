@@ -7,6 +7,7 @@ import tornado.gen
 from pathlib import Path
 from tornado.escape import utf8
 from tornado.web import HTTPError
+from six.moves.urllib.parse import urljoin
 from .basehandler import BaseHandler
 from ..transforms import build_transform
 
@@ -128,20 +129,18 @@ class FileHandler(BaseHandler):
         elif path is None:
             yield self._get_path(self.root)
         else:
-            # If the file doesn't exist, raise a 404: Not Found
-            try:
-                target = (self.root / path).resolve()
-            except OSError:
-                raise HTTPError(status_code=404)
-            # If the file is not under root, raise a 403: Forbidden
-            try:
-                target.relative_to(self.root)
-            except ValueError:
-                raise HTTPError(status_code=403)
-            yield self._get_path(target)
+            # Collapse all the ../ etc in the URL
+            path = urljoin('/', path)[1:]
+            yield self._get_path(self.root / path)
 
     @tornado.gen.coroutine
     def _get_path(self, path):
+        # If the file doesn't exist, raise a 404: Not Found
+        try:
+            path = path.resolve()
+        except OSError:
+            raise HTTPError(status_code=404)
+
         self.path = path
 
         if self.path.is_dir():
@@ -163,13 +162,21 @@ class FileHandler(BaseHandler):
                 self.default_filename and self.file.exists()):
             self.set_header('Content-Type', 'text/html')
             content = []
-            file_template = string.Template(u'<li><a href="$path">$path</a></li>')
+            file_template = string.Template(u'<li><a href="$path">$name</a></li>')
             for path in self.path.iterdir():
+                if path.is_symlink():
+                    name_suffix, path_suffix = ' &#x25ba;', ''
+                elif path.is_dir():
+                    name_suffix = path_suffix = '/'
+                else:
+                    name_suffix = path_suffix = ''
                 # On Windows, pathlib on Python 2.7 won't handle Unicode. Ignore such files.
                 # https://bitbucket.org/pitrou/pathlib/issues/25
                 try:
+                    path = str(path.relative_to(self.path))
                     content.append(file_template.substitute(
-                        path=str(path.relative_to(self.path)) + ('/' if path.is_dir() else '')
+                        path=path + path_suffix,
+                        name=path + name_suffix,
                     ))
                 except UnicodeDecodeError:
                     logging.warn("FileHandler can't show unicode file {!r:s}".format(path))
