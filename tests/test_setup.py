@@ -9,9 +9,12 @@ class TestSetup(unittest.TestCase):
     src_dir = os.path.dirname(inspect.getfile(gramex))
 
     def exists(self, path):
-        self.assertTrue(os.path.exists(os.path.join(self.src_dir, path)))
+        self.assertTrue(os.path.exists(os.path.join(self.src_dir, path)),
+                        'Missing %s' % path)
 
     def test_setup(self):
         self.exists('handlers/filehandler.template.html')
-        self.exists('help/index.html')
-        self.exists('help/background.jpg')
+        self.exists('guide/index.html')
+        self.exists('guide/gramex.yaml')
+        self.exists('guide/README.md')
+        self.exists('guide/install/README.md')

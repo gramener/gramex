@@ -2,7 +2,9 @@
 include gramex/gramex.yaml
 include gramex/release.json
 include gramex/handlers/filehandler.template.html
-recursive-incude gramex/help
+
+# Include Gramex guide
+recursive-include gramex/guide *
 
 # Include requirement dependencies
 include requirements.txt
@@ -20,6 +22,7 @@ recursive-include tests *
 # Include documentation
 recursive-include docs *.rst conf.py Makefile make.bat
 
-# Exclude Python build files
+# Exclude Python build files and binary databases
 recursive-exclude * __pycache__
 recursive-exclude * *.py[cod]
+recursive-exclude * *.sqlite3

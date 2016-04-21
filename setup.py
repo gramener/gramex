@@ -4,8 +4,48 @@
 from setuptools import setup, find_packages
 from pip.req import parse_requirements
 from pip.download import PipSession
+from fnmatch import fnmatch
 from io import open
 import json
+import os
+
+
+def read_gitignore(path):
+    'Read .gitignore paths as an iterable of patterns'
+    with open(path, encoding='utf-8') as handle:
+        for line in handle.readlines():
+            line = line.strip()
+            if line and not line.startswith('#'):
+                yield line
+
+ignore_patterns = list(read_gitignore('.gitignore'))
+
+
+def recursive_include(root, path, ignores=[]):
+    'Go to root dir and yield all files under path that'
+    # Change to root directory
+    cwd = os.getcwd()
+    os.chdir(root)
+    for root, dirs, files in os.walk(path):
+        # Do not parse directories that are in .gitignore
+        for index in range(len(dirs) - 1, 0, -1):
+            name = dirs[index]
+            for pattern in ignores:
+                if fnmatch(name, pattern):
+                    del dirs[index]
+        # Yield all files that are not in .gitignore
+        for name in files:
+            target = os.path.join(root, name)
+            ignore = False
+            for pattern in ignores:
+                if fnmatch(name, pattern) or fnmatch(target, pattern):
+                    ignore = True
+                    break
+            if not ignore:
+                yield target
+    # Change back to original directory
+    os.chdir(cwd)
+
 
 with open('README.rst', encoding='utf-8') as handle:
     long_description = handle.read() + '\n\n'
@@ -29,9 +69,7 @@ setup(
             'gramex.yaml',
             'release.json',
             'handlers/filehandler.template.html',
-            'help/background.jpg',
-            'help/index.html',
-        ]
+        ] + list(recursive_include('gramex', 'guide', ignore_patterns))
     },
     include_package_data=True,
     install_requires=[str(entry.req) for entry in parse_requirements(
