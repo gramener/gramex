@@ -53,8 +53,9 @@ def commandline(**kwargs):
     if not os.path.isfile('gramex.yaml'):
         os.chdir(str(paths['source'] / 'help'))
 
-    # Initialize Gramex, adding current dir and command line args as config layers
-    init(base=Path('.'), cmd=AttrDict(app=cmd))
+    # Initialize Gramex in the current dir, and command line args as config layers
+    paths['base'] = Path('.')
+    init(cmd=AttrDict(app=cmd))
 
 
 def init(**kwargs):
