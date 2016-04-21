@@ -7,7 +7,7 @@ import tornado.ioloop
 from pathlib import Path
 from copy import deepcopy
 from orderedattrdict import AttrDict
-from gramex.config import ChainConfig, PathConfig, variables
+from gramex.config import ChainConfig, PathConfig
 
 paths = AttrDict()              # Paths where configurations are stored
 conf = AttrDict()               # Final merged configurations
@@ -50,10 +50,12 @@ def commandline(**kwargs):
             base[keys[-1]] = yaml.load(value)
 
     # Use current dir as base (where gramex is run from) if there's a gramex.yaml.
-    # Else use source/help
+    # Else use source/guide, and point the user to the welcome screen
     if not os.path.isfile('gramex.yaml'):
-        os.chdir(str(paths['source'] / 'help'))
+        os.chdir(str(paths['source'] / 'guide'))
         paths['base'] = Path('.')
+        if 'browser' not in cmd:
+            cmd['browser'] = '/welcome'
 
     # Initialize Gramex in the current dir, and command line args as config layers
     init(cmd=AttrDict(app=cmd))

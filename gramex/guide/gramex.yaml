@@ -1,0 +1,57 @@
+app:
+  settings:
+    # auth: True
+    login_url: /login/google/
+    cookie_secret: COOKIE_NAME
+    google_oauth:
+      key: 561570650771-o7fc5aga4c80obn8vdt4bt2mi9crtodr.apps.googleusercontent.com
+      secret: 77z5fx1SxXmrjJ_R7vlAIXcf
+    autoreload: False
+    debug: False
+
+import:
+    subdirectories: '*/gramex.yaml'
+
+url:
+    welcome:
+        pattern: /$YAMLURL/welcome
+        handler: FileHandler
+        kwargs:
+            path: index.html
+
+    config:
+        pattern: /$YAMLURL/config
+        handler: FunctionHandler
+        kwargs:
+            function: guide.config
+            headers:
+                Content-Type: text/yaml
+    markdown:
+        pattern: /$YAMLURL/(.*)
+        handler: FileHandler
+        kwargs:
+            path: $YAMLPATH
+            default_filename: README.md
+            index: true
+            transform:
+                "*.md":
+                    function: guide.markdown_template
+                    args: [=content, =handler]
+                    encoding: utf-8
+                    headers:
+                        Content-Type: text/html
+
+    # /source/path shows the raw file as plain text
+    source:
+        priority: +1
+        pattern: /$YAMLURL/(.*)\.source
+        handler: FileHandler
+        kwargs:
+            path: $YAMLPATH
+            Content-Type: text/plain
+
+watch:
+    markdown_template:
+        paths: $YAMLPATH/markdown.template
+        on_created: guide.load_markdown_template
+        on_modified: guide.load_markdown_template

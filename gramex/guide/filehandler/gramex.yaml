@@ -1,0 +1,22 @@
+url:
+  filehandler:
+    pattern: /$YAMLURL/filehandler/(.*)         # Any URL starting with filehandler
+    handler: FileHandler                        # uses this handler
+    kwargs:
+      path: $YAMLURL/filehandler                # Serve files from filehandler/
+      default_filename: README.md               # using README.md as default
+      index: True                               # List files if README.md is missing
+      transform:
+        "*.md":                                 # Any file matching .md
+          function: markdown.markdown           #   Convert .md to html
+          args: =content                        #   Pass the content as positional arg
+          encoding: utf-8
+          kwargs:                               #   Pass these arguments to markdown.markdown
+            output_format: html5                #     Output in HTML5
+          headers:                              #   Use these HTTP headers:
+            Content-Type: text/html             #     MIME type: text/html
+        "*.yaml":                               # YAML files use BadgerFish
+          function: badgerfish                  # transformed via gramex.transforms.badgerfish()
+          args: =content
+          headers:
+            Content-Type: text/html             # and served as HTML

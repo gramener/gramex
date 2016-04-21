@@ -1,0 +1,2 @@
+This is a plain text file.
+It is rendered with a Content-Type: text/plain.

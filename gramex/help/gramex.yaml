@@ -1,5 +1,0 @@
-# This help application is shown if run Gramex from a dir without gramex.yaml.
-# It is just a simple HTML website of the current folder.
-
-app:
-    browser: True

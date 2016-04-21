@@ -1,0 +1,4 @@
+url:
+  google-login:
+    pattern: /$YAMLURL/login/google/
+    handler: GoogleAuth
