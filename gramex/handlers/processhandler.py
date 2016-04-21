@@ -77,7 +77,7 @@ class ProcessHandler(BaseHandler):
     '''
 
     def initialize(self, args, shell=False, cwd=None, stdout='pipe', stderr='stdout', stdin=None,
-                   buffer_size=0, redirect=None, headers={}, transform={}, **kwargs):
+                   buffer=0, redirect=None, headers={}, transform={}, **kwargs):
         self.params = kwargs
         self.args = args
         self.shell = shell
@@ -96,7 +96,7 @@ class ProcessHandler(BaseHandler):
         self.stdout = sub(stdout)
         self.stderr = sub(stderr, stdout=self.stdout)
         self.stdin = sub(stdin)
-        self.buffer_size = buffer_size
+        self.buffer_size = buffer
 
         self.headers = headers
         self.transform = {}
