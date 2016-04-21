@@ -86,3 +86,10 @@ dist: clean
 
 install: clean
 	$(PYTHON) setup.py install
+
+deploy-on-ec2: docs
+	# Copy the Gramex guide
+	# from /mnt/gramener/apps/gramex/gramex/guide
+	# to /mnt/gramener/apps/v1/guide
+	rm -rf ../v1/guide
+	cp -R gramex/guide ../v1/
