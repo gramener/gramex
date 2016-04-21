@@ -7,13 +7,14 @@ import tornado.ioloop
 from pathlib import Path
 from copy import deepcopy
 from orderedattrdict import AttrDict
-from gramex.config import ChainConfig, PathConfig
+from gramex.config import ChainConfig, PathConfig, variables
 
 paths = AttrDict()              # Paths where configurations are stored
 conf = AttrDict()               # Final merged configurations
 config_layers = ChainConfig()   # Loads all configurations. init() updates it
 
 paths['source'] = Path(__file__).absolute().parent      # Where gramex source code is
+paths['base'] = Path('.')                               # Where gramex is run from
 
 # Populate __version__ from release.json
 with (paths['source'] / 'release.json').open() as _release_file:
@@ -52,9 +53,9 @@ def commandline(**kwargs):
     # Else use source/help
     if not os.path.isfile('gramex.yaml'):
         os.chdir(str(paths['source'] / 'help'))
+        paths['base'] = Path('.')
 
     # Initialize Gramex in the current dir, and command line args as config layers
-    paths['base'] = Path('.')
     init(cmd=AttrDict(app=cmd))
 
 
