@@ -505,18 +505,30 @@ url:
     pattern: /process/args
     handler: ProcessHandler
     kwargs:
-      args: [python, "$YAMLPATH/utils.py", a, '1', 'x y']
+      args: [python, "$YAMLPATH/processtest.py", a, '1', 'x y']
+  process/args-no-stderr:
+    pattern: /process/args-no-stderr
+    handler: ProcessHandler
+    kwargs:
+      args: [python, "$YAMLPATH/processtest.py", a, '1', 'x y']
+      stderr: false
+  process/args-no-stdout:
+    pattern: /process/args-no-stdout
+    handler: ProcessHandler
+    kwargs:
+      args: [python, "$YAMLPATH/processtest.py", a, '1', 'x y']
+      stdout: false
   process/shell:
     pattern: /process/shell
     handler: ProcessHandler
     kwargs:
-      args: 'python $YAMLPATH/utils.py a 1 "x y"'
+      args: 'python $YAMLPATH/processtest.py a 1 "x y"'
       shell: True
   process/cwd:
     pattern: /process/cwd
     handler: ProcessHandler
     kwargs:
-      args: [python, "$YAMLPATH/utils.py", a, '1', 'x y']
+      args: [python, "$YAMLPATH/processtest.py", a, '1', 'x y']
       cwd: "${YAMLPATH}/../"
 
 # Store Gramex logs in gramex.log

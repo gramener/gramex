@@ -11,7 +11,7 @@ class TestProcessHandler(TestGramex):
     folder = os.path.dirname(os.path.abspath(__file__))
 
     def check_result(self, url, code=200, cmd=None, cwd=None, stdout=True, stderr=True):
-        cmd = cmd or self.folder + '/utils.py'
+        cmd = cmd or self.folder + '/processtest.py'
         cwd = cwd or gramex.paths.base.absolute()
         r = self.get(url)
         self.assertEqual(r.status_code, code)
@@ -34,6 +34,10 @@ class TestProcessHandler(TestGramex):
 
     def test_args(self):
         self.check_result('/process/args')
+
+    def test_streams(self):
+        self.check_result('/process/args-no-stdout', stdout=False)
+        self.check_result('/process/args-no-stderr', stderr=False)
 
     def test_shell(self):
         self.check_result(url='/process/shell')

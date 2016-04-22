@@ -30,7 +30,7 @@ class ProcessHandler(BaseHandler):
     :arg string stdout: (**TODO**) The process output can be sent to:
 
         - ``pipe``: Display the (transformed) output. This is the default
-        - ``null``: Ignore the output
+        - ``false``: Ignore the output
         - ``filename.txt``: Save output to a ``filename.txt``
 
     :arg string stderr: (**TODO**) The process error stream has the same options as stdout.
@@ -76,7 +76,7 @@ class ProcessHandler(BaseHandler):
 
     '''
 
-    def initialize(self, args, shell=False, cwd=None, stdout='pipe', stderr='stdout', stdin=None,
+    def initialize(self, args, shell=False, cwd=None, stdout='pipe', stderr='pipe', stdin=None,
                    buffer=0, redirect=None, headers={}, transform={}, **kwargs):
         self.params = kwargs
         self.args = args
@@ -84,19 +84,18 @@ class ProcessHandler(BaseHandler):
         self.cwd = cwd if cwd is None else os.path.abspath(cwd)     # Normalize path
         self.redirect = redirect
         self._write_lock = RLock()
-
-        # Replace stdout, stderr, stream values
-        stream_map = {
-            'pipe': subprocess.PIPE,        # show on Gramex console
-        }
-
-        def sub(s, **kwargs):
-            return kwargs.get(s, stream_map.get(s, s))
-
-        self.stdout = sub(stdout)
-        self.stderr = sub(stderr, stdout=self.stdout)
-        self.stdin = sub(stdin)
         self.buffer_size = buffer
+
+        def parse_stream(stream):
+            if stream == 'pipe':
+                return self._write
+            elif not stream:
+                return self._null
+            else:
+                raise NotImplementedError('stream %s is not implemented' % stream)
+
+        self.stream_stdout = parse_stream(stdout)
+        self.stream_stderr = self.stream_stdout if stderr == 'stdout' else parse_stream(stderr)
 
         self.headers = headers
         self.transform = {}
@@ -118,8 +117,8 @@ class ProcessHandler(BaseHandler):
             self.args,
             shell=self.shell,
             cwd=self.cwd,
-            stream_stdout=self._write,
-            stream_stderr=self._write,
+            stream_stdout=self.stream_stdout,
+            stream_stderr=self.stream_stderr,
             buffer_size=self.buffer_size,
         )
         yield proc.wait_for_exit()
@@ -128,6 +127,9 @@ class ProcessHandler(BaseHandler):
         with self._write_lock:
             self.write(data)
             self.flush()
+
+    def _null(self, data):
+        pass
 
 
 class _Subprocess(object):
@@ -191,7 +193,6 @@ class _Subprocess(object):
                         break
 
         self.proc = subprocess.Popen(args, **kwargs)
-        self.queue = {}         # Stores the output as a queue of bytes
         self.thread = {}        # Has the running threads
         self.future = {}        # Stores the futures indicating stream close
         callback = {
@@ -199,13 +200,11 @@ class _Subprocess(object):
             'stderr': stream_stderr,
         }
         for stream in ('stdout', 'stderr'):
-            self.queue[stream] = q = Queue()
             self.future[stream] = f = Future()
-            # Thread writes from self.proc.stdout to self.queue['stdout']
-            # and similarly for stderr
+            # Thread writes from self.proc.stdout / stderr to appropriate callback
             self.thread[stream] = t = Thread(
                 target=_write,
-                args=(getattr(self.proc, stream), callback[stream] or q.put, f),
+                args=(getattr(self.proc, stream), callback[stream], f),
             )
             t.daemon = True     # Thread dies with the program
             t.start()
