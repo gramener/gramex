@@ -21,8 +21,9 @@ def setUpModule():
         out.write(six.text_type(files.unicode_file))
 
     # Create a symlink to test if these are displayed in a directory listing without errors
-    files.symlink = os.path.join(folder, 'dir', 'subdir', 'symlink.txt')
-    os.symlink(os.path.join(folder, 'gramex.yaml'), files.symlink)
+    if hasattr(os, 'symlink'):
+        files.symlink = os.path.join(folder, 'dir', 'subdir', 'symlink.txt')
+        os.symlink(os.path.join(folder, 'gramex.yaml'), files.symlink)
 
 
 def tearDownModule():

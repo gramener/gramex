@@ -12,7 +12,7 @@ class TestGramex(unittest.TestCase):
     'Base class to test Gramex running as a subprocess'
 
     def get(self, url, **kwargs):
-        return requests.get(server.base_url + url, **kwargs)
+        return requests.get(server.base_url + url, timeout=10, **kwargs)
 
     def check(self, url, path=None, code=200, text=None, no_text=None, headers=None):
         r = self.get(url)
