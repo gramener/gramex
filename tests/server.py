@@ -35,11 +35,11 @@ def start_gramex():
     attempts_per_second = 2
     for attempt in range(int(seconds_to_wait * attempts_per_second)):
         try:
-            requests.get(base_url + '/')
+            requests.get(base_url + '/', timeout=2.0)
             break
         # Catch any connection error, not timeout or or HTTP errors
         # http://stackoverflow.com/a/16511493/100904
-        except requests.exceptions.ConnectionError:
+        except (requests.exceptions.ConnectionError, requests.exceptions.Timeout):
             logging.info('Could not connect to %s', base_url)
             if info.exception is None:
                 time.sleep(1.0 / attempts_per_second)
