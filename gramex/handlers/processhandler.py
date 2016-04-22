@@ -1,17 +1,13 @@
 import io
 import os
+import six
 import sys
+import logging
 import subprocess
 import tornado.web
 import tornado.gen
 from threading import Thread, RLock
 from tornado.concurrent import Future
-
-try:
-    from Queue import Queue  # Python 2.7
-except ImportError:
-    from queue import Queue  # Python 3.x
-
 from .basehandler import BaseHandler
 from ..transforms import build_transform
 
@@ -34,7 +30,6 @@ class ProcessHandler(BaseHandler):
         - ``filename.txt``: Save output to a ``filename.txt``
 
     :arg string stderr: (**TODO**) The process error stream has the same options as stdout.
-        It can also be set to just ``stdout`` to re-use the stdout option.
     :arg string stdin: (**TODO**)
     :arg int/string buffer: 'line' will write lines as they are generated.
         Numbers indicate the number of bytes to buffer. Defaults to
@@ -76,26 +71,52 @@ class ProcessHandler(BaseHandler):
 
     '''
 
-    def initialize(self, args, shell=False, cwd=None, stdout='pipe', stderr='pipe', stdin=None,
+    def initialize(self, args, shell=False, cwd=None, stdout=None, stderr=None, stdin=None,
                    buffer=0, redirect=None, headers={}, transform={}, **kwargs):
         self.params = kwargs
         self.args = args
         self.shell = shell
-        self.cwd = cwd if cwd is None else os.path.abspath(cwd)     # Normalize path
         self.redirect = redirect
         self._write_lock = RLock()
         self.buffer_size = buffer
+        # Normalize current directory for path, if provided
+        self.cwd = cwd if cwd is None else os.path.abspath(cwd)
+        # File handles for stdout/stderr are cached in self.handles
+        self.handles = {}
 
-        def parse_stream(stream):
-            if stream == 'pipe':
-                return self._write
-            elif not stream:
-                return self._null
-            else:
-                raise NotImplementedError('stream %s is not implemented' % stream)
+        def _callbacks(targets, name):
+            # stdout/stderr are can be specified as a scalar or a list.
+            # Convert it into a list of callback fn(data)
 
-        self.stream_stdout = parse_stream(stdout)
-        self.stream_stderr = self.stream_stdout if stderr == 'stdout' else parse_stream(stderr)
+            # if no target is specified, stream to RequestHandler
+            if targets is None:
+                targets = ['pipe']
+            # if a string is specified, treat it as the sole file output
+            elif not isinstance(targets, list):
+                targets = [targets]
+
+            callbacks = []
+            for target in targets:
+                # pipe write to the RequestHandler
+                if target == 'pipe':
+                    callbacks.append(self._write)
+                # false-y values are ignored. (False, 0, etc)
+                elif not target:
+                    pass
+                # strings are treated as files
+                elif isinstance(target, six.string_types):
+                    # cache file handles for re-use between stdout, stderr
+                    if target not in self.handles:
+                        self.handles[target] = io.open(target, mode='wb')
+                    handle = self.handles[target]
+                    callbacks.append(handle.write)
+                # warn on unknown parameters (e.g. numbers, True, etc)
+                else:
+                    logging.warn('ProcessHandler: %s: %s is not implemented' % (name, target))
+            return callbacks
+
+        self.stream_stdout = _callbacks(stdout, name='stdout')
+        self.stream_stderr = _callbacks(stderr, name='stderr')
 
         self.headers = headers
         self.transform = {}
@@ -128,8 +149,10 @@ class ProcessHandler(BaseHandler):
             self.write(data)
             self.flush()
 
-    def _null(self, data):
-        pass
+    def on_finish(self):
+        'Close all open handles after the request has finished'
+        for target, handle in self.handles.items():
+            handle.close()
 
 
 class _Subprocess(object):
@@ -152,7 +175,7 @@ class _Subprocess(object):
         yield proc.wait_for_exit()
 
     '''
-    def __init__(self, args, stream_stdout=None, stream_stderr=None, buffer_size=0, **kwargs):
+    def __init__(self, args, stream_stdout=[], stream_stderr=[], buffer_size=0, **kwargs):
         self.args = args
         self.kwargs = kwargs
 
@@ -165,12 +188,13 @@ class _Subprocess(object):
         kwargs['close_fds'] = 'posix' in sys.builtin_module_names
 
         if hasattr(buffer_size, 'lower') and 'line' in buffer_size.lower():
-            def _write(stream, callback, future):
-                'Call callback with content from stream. On EOF mark future as done'
+            def _write(stream, callbacks, future):
+                'Call callbacks with content from stream. On EOF mark future as done'
                 while True:
                     content = stream.readline()
                     if len(content) > 0:
-                        callback(content)
+                        for callback in callbacks:
+                            callback(content)
                     else:
                         stream.close()
                         future.set_result('')
@@ -180,13 +204,14 @@ class _Subprocess(object):
             if buffer_size <= 0:
                 buffer_size = io.DEFAULT_BUFFER_SIZE
 
-            def _write(stream, callback, future):
-                'Call callback with content from stream. On EOF mark future as done'
+            def _write(stream, callbacks, future):
+                'Call callbacks with content from stream. On EOF mark future as done'
                 while True:
                     content = stream.read(buffer_size)
                     size = len(content)
                     if size > 0:
-                        callback(content)
+                        for callback in callbacks:
+                            callback(content)
                     if size < buffer_size:
                         stream.close()
                         future.set_result('')
@@ -195,16 +220,16 @@ class _Subprocess(object):
         self.proc = subprocess.Popen(args, **kwargs)
         self.thread = {}        # Has the running threads
         self.future = {}        # Stores the futures indicating stream close
-        callback = {
+        callbacks = {
             'stdout': stream_stdout,
             'stderr': stream_stderr,
         }
         for stream in ('stdout', 'stderr'):
             self.future[stream] = f = Future()
-            # Thread writes from self.proc.stdout / stderr to appropriate callback
+            # Thread writes from self.proc.stdout / stderr to appropriate callbacks
             self.thread[stream] = t = Thread(
                 target=_write,
-                args=(getattr(self.proc, stream), callback[stream], f),
+                args=(getattr(self.proc, stream), callbacks[stream], f),
             )
             t.daemon = True     # Thread dies with the program
             t.start()

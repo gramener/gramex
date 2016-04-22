@@ -506,6 +506,13 @@ url:
     handler: ProcessHandler
     kwargs:
       args: [python, "$YAMLPATH/processtest.py", a, '1', 'x y']
+  process/args-pipe:
+    pattern: /process/args-pipe
+    handler: ProcessHandler
+    kwargs:
+      args: [python, "$YAMLPATH/processtest.py", a, '1', 'x y']
+      stdout: pipe
+      stderr: pipe
   process/args-no-stderr:
     pattern: /process/args-no-stderr
     handler: ProcessHandler
@@ -518,6 +525,26 @@ url:
     kwargs:
       args: [python, "$YAMLPATH/processtest.py", a, '1', 'x y']
       stdout: false
+  process/args-stdout-file:
+    pattern: /process/args-stdout-file
+    handler: ProcessHandler
+    kwargs:
+      args: [python, "$YAMLPATH/processtest.py", a, '1', 'x y']
+      stdout: $YAMLPATH/processtest.stdout
+  process/args-both-file:
+    pattern: /process/args-both-file
+    handler: ProcessHandler
+    kwargs:
+      args: [python, "$YAMLPATH/processtest.py", a, '1', 'x y']
+      stdout: $YAMLPATH/processtest.both
+      stderr: $YAMLPATH/processtest.both
+  process/args-multi-file:
+    pattern: /process/args-multi-file
+    handler: ProcessHandler
+    kwargs:
+      args: [python, "$YAMLPATH/processtest.py", a, '1', 'x y']
+      stdout: [$YAMLPATH/processtest.stdout.1, $YAMLPATH/processtest.stdout.2, pipe]
+      stderr: [$YAMLPATH/processtest.stderr.1, $YAMLPATH/processtest.stderr.2, pipe]
   process/shell:
     pattern: /process/shell
     handler: ProcessHandler
