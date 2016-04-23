@@ -33,9 +33,8 @@ def markdown_template(content, handler):
     kwargs.body = _template.markdown.convert(content)
     for key, val in _template.markdown.Meta.items():
         kwargs[key] = val[0]
-    # guide_root has the relative URL from the displayed file to gramex-guide root
-    folder = str(handler.file / '..')
-    kwargs.guide_root = os.path.relpath(_template.root, folder).replace(os.path.sep, '/')
+    # GUIDE_ROOT has the absolute URL of the Gramex guide
+    kwargs.GUIDE_ROOT = gramex.config.variables.GUIDE_ROOT
     return _template.template.substitute(kwargs)
 
 

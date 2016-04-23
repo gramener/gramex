@@ -1,3 +1,6 @@
+variables:
+    GUIDE_ROOT: $YAMLURL
+
 app:
   settings:
     # auth: True
@@ -39,7 +42,7 @@ url:
                     encoding: utf-8
                     headers:
                         Content-Type: text/html
-    # /source/path shows the raw file as plain text
+    # /path.source shows the raw file as plain text
     source:
         priority: +1
         pattern: /$YAMLURL/(.*)\.source

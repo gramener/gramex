@@ -276,7 +276,7 @@ The following pre-defined variables are available in every YAML file:
 - `YAMLPATH`: absolute path to the current YAML file's directory
 - `YAMLURL`: relative path to the current YAML file's directory from the
   current working directory. For example, `base/dir/gramex.yaml` has a
-  `$YAMLURL` of `base/dir`.
+  `$YAMLURL` of `base/dir`, and `gramex.yaml` has a `$YAMLURL` of `.`.
 
 
 ## Inheritence
