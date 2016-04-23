@@ -143,6 +143,8 @@ class ProcessHandler(BaseHandler):
             buffer_size=self.buffer_size,
         )
         yield proc.wait_for_exit()
+        # Wait for process to finish
+        proc.proc.wait()
 
     def _write(self, data):
         with self._write_lock:
@@ -150,8 +152,7 @@ class ProcessHandler(BaseHandler):
             self.flush()
 
     def on_finish(self):
-        'Close process and all open handles after the request has finished'
-        proc.proc.wait()
+        'Close all open handles after the request has finished'
         for target, handle in self.handles.items():
             handle.close()
 
