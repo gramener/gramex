@@ -100,9 +100,6 @@ example, create a file called `hello.py` with the following content:
 
 Now, you can use `handler: hello.Hello` to send the response `hello world`.
 
-
-
-
 [requesthandler]: http://tornado.readthedocs.org/en/latest/web.html#request-handlers
 
 ## Logging
@@ -337,7 +334,7 @@ computed value of applications port:
 
 `gramex.conf` is meant for reading. Do not change its value.
 
-You can see this applications `gramex.conf` at [/config](../config)
+You can see this applications `gramex.conf` at [/final-config](../final-config)
 
 If the underlying YAML files change, then `gramex.init()` is automatically
 reloaded and all services are re-initialized.
