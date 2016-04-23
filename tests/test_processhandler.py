@@ -85,3 +85,7 @@ class TestProcessHandler(TestGramex):
     def test_cwd(self):
         cwd = str(gramex.paths.base.absolute().parent)
         self.check_url(url='/process/cwd', cwd=cwd)
+
+    def test_errors(self):
+        self.check(url='/process/nonexistent-command', code=500)
+        self.check(url='/process/error', code=200, text='ZeroDivisionError')

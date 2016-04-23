@@ -150,7 +150,8 @@ class ProcessHandler(BaseHandler):
             self.flush()
 
     def on_finish(self):
-        'Close all open handles after the request has finished'
+        'Close process and all open handles after the request has finished'
+        proc.proc.wait()
         for target, handle in self.handles.items():
             handle.close()
 

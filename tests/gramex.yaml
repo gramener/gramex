@@ -562,6 +562,16 @@ url:
     kwargs:
       args: [python, "$YAMLPATH/processtest.py", a, '1', 'x y']
       cwd: "${YAMLPATH}/../"
+  process/nonexistent-command:
+    pattern: /process/nonexistent-command
+    handler: ProcessHandler
+    kwargs:
+      args: nonexistent-command
+  process/error:
+    pattern: /process/error
+    handler: ProcessHandler
+    kwargs:
+      args: [python, "$YAMLPATH/throwerror.py"]
 
 # Store Gramex logs in gramex.log
 log:
