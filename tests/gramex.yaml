@@ -167,6 +167,11 @@ url:
     handler: FileHandler
     kwargs:
       path: nonexistent-file
+  dir/single-file:
+    pattern: /dir/single-file/(.*)
+    handler: FileHandler
+    kwargs:
+      path: dir/text.txt
   dir/normalize/slash:
     pattern: /dir/normalize/slash/(.*)/
     handler: FileHandler

@@ -131,7 +131,7 @@ class FileHandler(BaseHandler):
         else:
             # Collapse all the ../ etc in the URL
             path = urljoin('/', path)[1:]
-            yield self._get_path(self.root / path)
+            yield self._get_path(self.root / path if self.root.is_dir() else self.root)
 
     @tornado.gen.coroutine
     def _get_path(self, path):

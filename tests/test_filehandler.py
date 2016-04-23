@@ -99,6 +99,10 @@ class TestFileHandler(TestGramex):
 
         self.check('/dir/noindex/binary.bin', path='dir/binary.bin')
 
+        self.check('/dir/single-file/', path='dir/text.txt')
+        self.check('/dir/single-file/alpha', path='dir/text.txt')
+        self.check('/dir/single-file/alpha/beta', path='dir/text.txt')
+
         self.check('/dir/data', code=200, path='dir/data.csv', headers={
             'Content-Type': 'text/plain',
             'Content-Disposition': None
