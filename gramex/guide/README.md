@@ -44,3 +44,7 @@ classes: toc
 ## [Gramex watches files](watch/)
 
 **Exercise**: Make Gramex log a message when a file is changed.
+
+## [Deployment patterns](deploy/)
+
+**Exercise**: TBD
