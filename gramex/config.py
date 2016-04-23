@@ -154,19 +154,6 @@ def _yaml_open(path, default=AttrDict()):
         logging.warning('Empty config: %s', path)
         return default
 
-    # Update context with the variables section.
-    # key: value                     sets key = value
-    # key: {function: fn}            sets key = fn(key)
-    # key: {default: value}          sets key = value if it's not already set
-    # key: {default: {function: fn}} sets key = fn(key) if it's not already set
-    if 'variables' in result:
-        for key, val in result['variables'].items():
-            if hasattr(val, 'get') and 'default' in val and 'function' not in val:
-                variables.setdefault(key, _calc_value(val['default'], key))
-            else:
-                variables[key] = _calc_value(val, key)
-        del result['variables']
-
     # Variables based on YAML file location
     yaml_path = str(path.parent)
     yaml_vars = {
@@ -181,6 +168,19 @@ def _yaml_open(path, default=AttrDict()):
     except ValueError:
         pass
     variables.update(yaml_vars)
+
+    # Update context with the variables section.
+    # key: value                     sets key = value
+    # key: {function: fn}            sets key = fn(key)
+    # key: {default: value}          sets key = value if it's not already set
+    # key: {default: {function: fn}} sets key = fn(key) if it's not already set
+    if 'variables' in result:
+        for key, val in result['variables'].items():
+            if hasattr(val, 'get') and 'default' in val and 'function' not in val:
+                variables.setdefault(key, _calc_value(val['default'], key))
+            else:
+                variables[key] = _calc_value(val, key)
+        del result['variables']
 
     # Substitute variables
     for key, value, node in walk(result):

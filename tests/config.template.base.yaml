@@ -2,6 +2,7 @@ variables:
     ROOT: "base"
     THIS: "base"
     BASE_DEFAULT: {default: base}
+    YAMLURL_VAR: $YAMLURL
     FUNCTION:
         function: six.text_type
         args: ['base']
@@ -24,6 +25,8 @@ base_DEFAULT: $BASE_DEFAULT
 base_FUNCTION: $FUNCTION
 base_DEFAULT_FUNCTION: $DEFAULT_FUNCTION
 base_DERIVED: $DERIVED
+base_YAMLURL_VAR: $YAMLURL_VAR
+base_YAMLURL_VAR_EXPECTED: tests
 
 import:
     subdir: dir/config.template.subdir.yaml

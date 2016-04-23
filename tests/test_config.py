@@ -163,6 +163,8 @@ class TestPathConfig(unittest.TestCase):
             self.assertEqual(conf['%s_DEFAULT_FUNCTION' % key], 'base')
             # Derived variables
             self.assertEqual(conf['%s_DERIVED' % key], '%s/derived' % key)
+            # $URLROOT is the frozen to base $YAMLURL
+            self.assertEqual(conf['%s_YAMLURL_VAR' % key], conf['%s_YAMLURL_VAR_EXPECTED' % key])
 
 
 class TestConfig(unittest.TestCase):

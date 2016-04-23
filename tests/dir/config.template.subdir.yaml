@@ -2,6 +2,7 @@ variables:
     ROOT: {default: subdir}
     THIS: "subdir"
     SUBDIR_DEFAULT: {default: subdir}
+    YAMLURL_VAR: $YAMLURL
     FUNCTION:
         function: six.text_type
         args: ['subdir']
@@ -23,3 +24,5 @@ subdir_DEFAULT: $SUBDIR_DEFAULT
 subdir_FUNCTION: $FUNCTION
 subdir_DEFAULT_FUNCTION: $DEFAULT_FUNCTION
 subdir_DERIVED: $DERIVED
+subdir_YAMLURL_VAR: $YAMLURL_VAR
+subdir_YAMLURL_VAR_EXPECTED: tests/dir
