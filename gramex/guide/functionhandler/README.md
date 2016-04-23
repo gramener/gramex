@@ -134,7 +134,16 @@ available, in order:
 See the output at [fetch?x=0&x=1&x=2](fetch?x=0&x=1&x=2).
 
 The simplest way to call *any blocking function* asynchronously is to use a
-`ThreadPoolExecutor`:
+[ThreadPoolExecutor][ThreadPoolExecutor]. For example, usng this code in a
+`FunctionHandler` will run `slow_calculation` in a separate thread without
+blocking Gramex.:
+
+    result = yield thread_pool.submit(slow_calculation, *args, **kwargs)
+
+[ThreadPoolExecutor]: https://docs.python.org/3/library/concurrent.futures.html#concurrent.futures.ThreadPoolExecutor
+
+You can run execute multiple steps in parallel and consolidate their result as
+well. For example:
 
     thread_pool = concurrent.futures.ThreadPoolExecutor(4)
 
