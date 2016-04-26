@@ -89,25 +89,26 @@ def init(**kwargs):
     # Add config file folders to sys.path
     sys.path[:] = _sys_path + [str(path.absolute().parent) for path in config_files]
 
-    # Run all valid services. (The "+" before config_chain merges the chain)
+    # Set up a watch on config files (including imported files)
     from . import services      # noqa -- deferred import for optimisation
+    services.watcher.watch('gramex-reconfig', paths=config_files, on_modified=lambda event: init())
+
+    # Run all valid services. (The "+" before config_chain merges the chain)
+    # Services may return callbacks to be run at the end
+    callbacks = []
     for key, val in (+config_layers).items():
         if key not in conf or conf[key] != val:
             if hasattr(services, key):
                 conf[key] = deepcopy(val)
-                getattr(services, key)(conf[key])
+                callback = getattr(services, key)(conf[key])
+                if callable(callback):
+                    callbacks.append(callback)
             else:
                 logging.warning('No service named %s', key)
 
-    # Set up a watch on config files (including imported files)
-    services.watcher.watch('gramex-reconfig', paths=config_files, on_modified=lambda event: init())
-
-    # Start the IOLoop. TODO: can the app service start this delayed?
-    ioloop = tornado.ioloop.IOLoop.current()
-    if not ioloop._running:
-        logging.info('Listening on port %d', conf.app.listen.port)
-        services.browser(conf.app)
-        ioloop.start()
+    # Run the callbacks. Specifically, the app service starts the Tornado ioloop
+    for callback in callbacks:
+        callback()
 
 
 def shutdown():

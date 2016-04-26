@@ -46,11 +46,28 @@ def log(conf):
 
 def app(conf):
     "Set up tornado.web.Application() -- only if the ioloop hasn't started"
-    if tornado.ioloop.IOLoop.current()._running:
+    ioloop = tornado.ioloop.IOLoop.current()
+    if ioloop._running:
         logging.warning('Ignoring app config change when running')
     else:
         info.app = tornado.web.Application(**conf.settings)
         info.app.listen(**conf.listen)
+
+        def callback():
+            logging.info('Listening on port %d', conf.listen.port)
+
+            # browser: True opens the application home page on localhost.
+            # browser: url opens the application to a specific URL
+            if conf.browser:
+                url = 'http://127.0.0.1:%d/' % conf.listen.port
+                if isinstance(conf.browser, str):
+                    url = urlparse.urljoin(url, conf.browser)
+                browser = webbrowser.get()
+                logging.info('Opening %s in %s browser', url, browser.__class__.__name__)
+                browser.open(url)
+            ioloop.start()
+
+        return callback
 
 
 def schedule(conf):
@@ -120,18 +137,3 @@ def watch(conf):
                 if not callable(config[event]):
                     config[event] = locate(config[event])
         watcher.watch(name, **config)
-
-
-def browser(appconf):
-    '''
-    browser: True opens the application home page on localhost.
-    browser: url opens the application to a specific URL
-    '''
-    if not appconf.browser:
-        return
-    url = 'http://127.0.0.1:%d/' % appconf.listen.port
-    if isinstance(appconf.browser, str):
-        url = urlparse.urljoin(url, appconf.browser)
-    browser = webbrowser.get()
-    logging.info('Opening %s in %s browser', url, browser.__class__.__name__)
-    browser.open(url)
