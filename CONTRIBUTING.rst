@@ -24,6 +24,7 @@ To set up the development environment:
 3. Clone the dev branch and install it::
 
       $ git clone -b dev git@code.gramener.com:s.anand/gramex.git gramex
+      $ conda config --add channels clinicalgraphics      # For psycopg2 win-64
       $ conda install --file gramex/requirements-conda.txt
       $ pip install -e gramex
 
