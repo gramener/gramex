@@ -31,6 +31,7 @@ _sys_path = list(sys.path)      # Preserve original sys.path
 # commandline() will be called by python -m gramex, gramex.exe, etc.
 # init() will be called after import gramex -- when using Gramex as a library.
 
+
 def commandline(**kwargs):
     'Run Gramex from the command line'
     # Set logging level to info at startup. (Services may override logging level.)
