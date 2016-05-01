@@ -68,6 +68,7 @@ class DataHandler(BaseHandler):
                         tmp[key] = [val]
                 qconfig[q] = tmp
         self.qconfig = qconfig
+        super(DataHandler, self).initialize(**kwargs)
 
     def getq(self, key, default_value=None):
         return (self.qconfig['query'].get(key) or

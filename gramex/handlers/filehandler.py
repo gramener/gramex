@@ -115,6 +115,7 @@ class FileHandler(BaseHandler):
                 'headers': trans.get('headers', {}),
                 'encoding': trans.get('encoding'),
             }
+        super(FileHandler, self).initialize(**kwargs)
 
     def head(self, path=None):
         return self.get(path, include_body=False)

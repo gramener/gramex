@@ -594,6 +594,41 @@ url:
     kwargs:
       args: [python, "$YAMLPATH/throwerror.py"]
 
+  cache/randomchar:
+    pattern: /cache/randomchar
+    handler: FunctionHandler
+    kwargs:
+      function: utils.randomchar
+    cache: {}
+  cache/pathkey:
+    pattern: /cache/pathkey
+    handler: FunctionHandler
+    kwargs:
+      function: utils.randomchar
+    cache:
+      key: '{request.path}'
+  cache/host:
+    pattern: /cache/host.*
+    handler: FunctionHandler
+    kwargs:
+      function: utils.randomchar
+    cache:
+      key: '{request.host}'
+  cache/args:
+    pattern: /cache/args.*
+    handler: FunctionHandler
+    kwargs:
+      function: utils.randomchar
+    cache:
+      key: '{request.path}{args[x]}'
+  cache/header-test:
+    pattern: /cache/header-test
+    handler: FunctionHandler
+    kwargs:
+      function: utils.randomchar
+    cache:
+      key: '{request.host}{headers[test]}'
+
 # Store Gramex logs in gramex.log
 log:
     version: 1

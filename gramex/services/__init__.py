@@ -13,6 +13,7 @@ exists, a warning is raised.
 '''
 
 import yaml
+import string
 import logging
 import posixpath
 import mimetypes
@@ -24,6 +25,7 @@ import six.moves.urllib.parse as urlparse
 from orderedattrdict import AttrDict
 from . import scheduler
 from . import watcher
+from . import urlcache
 from ..config import locate
 
 
@@ -101,6 +103,88 @@ def _url_normalize(pattern):
     return urlparse.urlunsplit((url.scheme, url.netloc, path, url.query, ''))
 
 
+class DefaultFormatter(string.Formatter):
+    def __init__(self, missing=''):
+        self.missing = missing
+
+    def get_field(self, field_name, args, kwargs):
+        try:
+            val = super(DefaultFormatter, self).get_field(field_name, args, kwargs)
+        except (KeyError, AttributeError):
+            val = None, field_name
+        return val
+
+    def format_field(self, value, spec):
+        if value is None:
+            return self.missing
+        return super(DefaultFormatter, self).format_field(value, spec)
+
+
+def _cache_generator(conf, name):
+    '''
+    The ``url:`` section of ``gramex.yaml`` can specify a ``cache:`` section. For
+    example::
+
+        url:
+            home:
+                pattern: /
+                handler: ...
+                cache:
+                    key: {request.uri}{request.cookies[user]}
+                    store: memory
+                    expires:
+                        duration: 1 minute
+
+    This function takes the ``cache`` section of the configuration and returns a
+    "cache" function. This function accepts a RequestHandler and returns a
+    ``CacheFile`` instance.
+
+    Here's a typical usage::
+
+        cache_method = _cache_generator(conf.cache)     # one-time initialisation
+        cache_file = cache_method(handler)              # used inside a hander
+
+    The cache_file instance exposes the following interface::
+
+        cache_file.get()        # returns None
+        cache_file.write('abc')
+        cache_file.write('def')
+        cache_file.close()
+        cache_file.get()        # returns 'abcdef'
+
+    The ``key`` can use the following ``request`` attributes:
+
+    - method: HTTP request method, e.g. "GET" or "POST"
+    - uri: The requested uri.
+    - path: The path portion of `uri`
+    - query:  The query portion of `uri`
+    - version:  HTTP version specified in request, e.g. "HTTP/1.1"
+    - remote_ip: Client's IP address as a string.
+    - protocol: The protocol used, either "http" or "https".
+    - host: The requested hostname, usually taken from the ``Host`` header.
+
+    ``headers`` and ``args`` can also be used as dictionaries. Missing
+    values default to empty strings.
+    '''
+    # Get the store. Defaults to the first store in the cache: section
+    default_store = list(info.cache.keys())[0] if len(info.cache) > 0 else None
+    store_name = conf.get('store', default_store)
+    if store_name not in info.cache:
+        logging.warn('url %s: %s store missing', name, store_name)
+    store = info.cache.get(store_name)
+
+    key = conf.get('key', '{request.uri}')
+    fmt = DefaultFormatter(missing='~').format
+    cachefile_class = urlcache.get_cachefile(store)
+
+    def get_cachefile(handler):
+        req = handler.request
+        keyval = fmt(key, request=req, headers=req.headers, args=req.arguments)
+        return cachefile_class(key=keyval, store=store, handler=handler)
+
+    return get_cachefile
+
+
 def url(conf):
     "Set up the tornado web app URL handlers"
     handlers = []
@@ -109,11 +193,15 @@ def url(conf):
     for name, spec in specs:
         urlspec = AttrDict(spec)
         urlspec.handler = locate(spec.handler, modules=['gramex.handlers'])
+        kwargs = urlspec.get('kwargs', {})
+        if 'cache' in urlspec:
+            kwargs['cache'] = _cache_generator(urlspec['cache'], name=name)
         handlers.append(tornado.web.URLSpec(
             name=name,
             pattern=_url_normalize(urlspec.pattern),
             handler=urlspec.handler,
-            kwargs=urlspec.get('kwargs', None)))
+            kwargs=kwargs,
+        ))
     del info.app.handlers[:]
     info.app.named_handlers.clear()
     info.app.add_handlers('.*$', handlers)

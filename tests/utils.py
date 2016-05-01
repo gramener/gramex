@@ -1,6 +1,7 @@
 'Test case utilities'
 
 import json
+import random
 import pandas as pd
 from tornado import gen
 from tornado.web import RequestHandler
@@ -87,6 +88,10 @@ def async_calc(handler):
     counts = yield [thread_pool.submit(count_group, df, col) for col in cols]
     # result is [[250,250,250],[250,250,250],[250,250,250],[250,250,250]]
     raise gen.Return(pd.concat(counts, axis=1).to_json(orient='values'))
+
+
+def randomchar(handler):
+    return str(random.randrange(10000000))
 
 
 def on_created(event):

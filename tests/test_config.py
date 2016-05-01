@@ -7,6 +7,21 @@ from gramex.config import ChainConfig, PathConfig, walk, merge
 from orderedattrdict import AttrDict
 from orderedattrdict.yamlutils import AttrDictYAMLLoader
 
+info = AttrDict(
+    home=Path(__file__).absolute().parent,
+)
+
+
+def setUpModule():
+    # Ensure that we're running gramex from the parent of this tests/ directory.
+    # The configurations (config.template.*yaml) are based on this assumption.
+    info.cwd = os.getcwd()
+    os.chdir(str(info.home.parent))
+
+
+def tearDownModule():
+    os.chdir(info.cwd)
+
 
 def unlink(path):
     if path.exists():
@@ -43,19 +58,18 @@ class TestPathConfig(unittest.TestCase):
     'Test gramex.conf.PathConfig'
 
     def setUp(self):
-        self.home = Path(__file__).absolute().parent
-        self.a = self.home / 'config.a.yaml'
-        self.b = self.home / 'config.b.yaml'
-        self.temp = self.home / 'config.temp.yaml'
-        self.imp = self.home / 'config.import.yaml'
-        self.final = self.home / 'config.final.yaml'
+        self.a = info.home / 'config.a.yaml'
+        self.b = info.home / 'config.b.yaml'
+        self.temp = info.home / 'config.temp.yaml'
+        self.imp = info.home / 'config.import.yaml'
+        self.final = info.home / 'config.final.yaml'
         self.chain = AttrDict(
-            base=self.home / 'config.template.base.yaml',
-            child=self.home / 'config.template.child.yaml',
-            subdir=self.home / 'dir/config.template.subdir.yaml',
+            base=info.home / 'config.template.base.yaml',
+            child=info.home / 'config.template.child.yaml',
+            subdir=info.home / 'dir/config.template.subdir.yaml',
         )
-        self.conf1 = self.home / Path('conf1.test')
-        self.conf2 = self.home / Path('conf2.test')
+        self.conf1 = info.home / Path('conf1.test')
+        self.conf2 = info.home / Path('conf2.test')
 
     def tearDown(self):
         unlink(self.conf1)
@@ -134,6 +148,7 @@ class TestPathConfig(unittest.TestCase):
 
     def test_variables(self):
         'Templates interpolate string variables'
+        # Create configuration with 2 layers and a subdirectory import
         conf = +ChainConfig(
             base=PathConfig(self.chain.base),
             child=PathConfig(self.chain.child),

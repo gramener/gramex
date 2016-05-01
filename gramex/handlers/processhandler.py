@@ -83,6 +83,7 @@ class ProcessHandler(BaseHandler):
         self.cwd = cwd if cwd is None else os.path.abspath(cwd)
         # File handles for stdout/stderr are cached in self.handles
         self.handles = {}
+        super(ProcessHandler, self).initialize(**kwargs)
 
         def _callbacks(targets, name):
             # stdout/stderr are can be specified as a scalar or a list.

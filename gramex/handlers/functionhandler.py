@@ -28,6 +28,7 @@ class FunctionHandler(BaseHandler):
         self.headers = headers
         self.redirect_url = redirect
         self.post = self.get
+        super(FunctionHandler, self).initialize(**kwargs)
 
     @tornado.web.authenticated
     @tornado.gen.coroutine
