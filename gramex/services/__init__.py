@@ -31,6 +31,7 @@ from ..config import locate
 info = AttrDict(
     app=None,
     schedule=AttrDict(),
+    cache=AttrDict(),
 )
 
 
@@ -141,3 +142,52 @@ def watch(conf):
                 if not callable(config[event]):
                     config[event] = locate(config[event])
         watcher.watch(name, **config)
+
+
+def cache(conf):
+    "Set up caches"
+    caches = {
+        'memory': {
+            'policy': {
+                'default': 'LRUCache',
+                'lru': 'LRUCache',
+                'lfu': 'LFUCache',
+                # 'fifo': 'TBD'
+            },
+            'size': 20000000,     # 20MiB
+        },
+        'disk': {
+            'policy': {
+                'default': 'least-recently-stored',
+                'lru': 'least-recently-used',
+                'lfu': 'least-frequently-used',
+                'fifo': 'least-recently-stored',
+            },
+            'size': 1000000000,     # 1GiB
+        }
+    }
+
+    for name, config in conf.items():
+        cache_type = config.type.lower()
+        if cache_type not in caches:
+            logging.warn('cache: %s has unknown type %s', name, config.type)
+            continue
+
+        cache_params = caches[cache_type]
+        policy = config.get('policy', 'default')
+        if policy not in cache_params['policy']:
+            logging.warn('%s cache: %s has unknown policy %s', config.type, name, policy)
+            continue
+
+        size = config.get('size', cache_params['size'])
+
+        if cache_type == 'memory':
+            import cachetools       # noqa: import late for efficiency
+            cache_class = getattr(cachetools, cache_params['policy'][policy])
+            info.cache[name] = cache_class(maxsize=size, getsizeof=len)
+
+        elif cache_type == 'disk':
+            import diskcache        # noqa: import late for efficiency
+            path = config.get('path', '.cache-' + name)
+            info.cache[name] = diskcache.Cache(
+                path, size_limit=size, eviction_policy=cache_params['policy'][policy])

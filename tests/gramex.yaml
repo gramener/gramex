@@ -6,6 +6,27 @@ app:
   listen:
     port: 9999      # Use a diffent port for testing
 
+cache:
+    memory:
+        type: memory
+    memory-lru:
+        type: memory
+        policy: lru
+    memory-lfu:
+        type: memory
+        policy: lfu
+    memory-nonexistent:
+        type: memory
+        policy: nonexistent
+    memory-lru-20:
+        type: memory
+        policy: lru
+        size: 20
+    disk:
+        type: disk
+        path: $YAMLPATH/.cache-url
+    # We could test more disk caches, but they're slow
+
 url:
   # TestGramex
   pathdepth1: {pattern: "/path/.*",       handler: "gramex.handlers.FunctionHandler", kwargs: {function: "str", args: ["/path/.*"],       }}

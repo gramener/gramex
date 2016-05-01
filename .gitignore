@@ -15,8 +15,8 @@ tests/**/*.test
 *.sqlite3
 *.sqlite3-journal
 
-# Cache folders. Gramex creates these with --filecache
-.cache/
+# Cache folders used for testing
+.cache-*
 
 # Ignore log files
 *.log*

@@ -37,6 +37,10 @@ app:
         static_path: './static'
         static_url_prefix: '/static/'
 
+# Define system caches.
+# This section MUST be before the url: section. Otherwise, the urls cannot use the cache
+cache: {}
+
 
 # The `url:` section maps URL patterns to handlers.
 # http://tornado.readthedocs.org/en/stable/web.html#tornado.web.URLSpec
