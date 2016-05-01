@@ -16,13 +16,14 @@ config_layers = ChainConfig()   # Loads all configurations. init() updates it
 paths['source'] = Path(__file__).absolute().parent      # Where gramex source code is
 paths['base'] = Path('.')                               # Where gramex is run from
 
+callbacks = {}                  # Services callbacks
+
 # Populate __version__ from release.json
 with (paths['source'] / 'release.json').open() as _release_file:
     release = json.load(_release_file, object_pairs_hook=AttrDict)
     __version__ = release.version
 
 _sys_path = list(sys.path)      # Preserve original sys.path
-
 
 # Entry Points
 # ------------
@@ -66,6 +67,8 @@ def init(**kwargs):
     Update Gramex configurations and start / restart the instance.
 
     ``gramex.init()`` can be called any time to refresh configuration files.
+    Services are re-initialised if their configurations have changed. Service
+    callbacks are always re-run (even if the configuration hasn't changed.)
 
     ``gramex.init(key=val)`` adds ``val`` as a configuration layer named
     ``key``. The next time ``gramex.init(key=...)`` is called, the key is
@@ -95,20 +98,20 @@ def init(**kwargs):
 
     # Run all valid services. (The "+" before config_chain merges the chain)
     # Services may return callbacks to be run at the end
-    callbacks = []
     for key, val in (+config_layers).items():
         if key not in conf or conf[key] != val:
             if hasattr(services, key):
                 conf[key] = deepcopy(val)
                 callback = getattr(services, key)(conf[key])
                 if callable(callback):
-                    callbacks.append(callback)
+                    callbacks[key] = callback
             else:
                 logging.warning('No service named %s', key)
 
     # Run the callbacks. Specifically, the app service starts the Tornado ioloop
-    for callback in callbacks:
-        callback()
+    for key in (+config_layers).keys():
+        if key in callbacks:
+            callbacks[key]()
 
 
 def shutdown():
