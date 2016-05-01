@@ -3,6 +3,32 @@
 History
 -------
 
+1.0.6 (2016-05-01)
+~~~~~~~~~~~~~~~~~~
+
+* In the ``app:`` section, the ``browser:`` key accepts either ``true`` or any
+  URL. If a URL is provided, it opens the browser at that URL on startup. If
+  ``true``, it opens the browser to the home page of the application.
+* Gramex config variables (in the ``variables:`` section) may contain other
+  variables. For example, you can define a variable ``HOME`` in a
+  ``config.yaml``. This can be re-used in the variables section of an imported
+  YAML file as ``$HOME``.
+* Config variables can be computed using the ``function:`` parameter. For
+  example, ``VAR: {function: module.fn}`` will run ``module.fn()`` and assign
+  ``$VAR`` the returned value.
+* ``FileHandler`` supports an ``index_template:`` key that allows customised
+  directory listings. It can be any custom-styled HTML file that uses ``$path``
+  and ``$body`` respectively to represent the full path to the directory and the
+  contents of the directory.
+* ``DataHandler`` is now asynchronous. Requests won't be blocked while queries run.
+* ``ProcessHandler`` accepts ``stdout`` and ``stderr`` parameters. These can be
+  ``false`` to ignore the output, or set to any file name (to save the output /
+  errors in that file.) The default for ``stdout`` and ``stderr`` is ``pipe``,
+  which sends the output to the browser.
+* Gramex defers loading of services to ensure a faster initial loading time.
+* Gramex guide is a part of Gramex. There's no need to install it separately.
+
+
 1.0.5 (2016-04-15)
 ~~~~~~~~~~~~~~~~~~
 
