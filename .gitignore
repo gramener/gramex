@@ -24,6 +24,7 @@ tests/**/*.test
 # Data files. Try not to commit data into the repo
 *.csv
 !tests/**/*.csv
+!gramex/guide/chart/*.csv
 *.dat
 *.mdb
 tests/*.db
