@@ -72,8 +72,11 @@ setup(
         ] + list(recursive_include('gramex', 'guide', ignore_patterns))
     },
     include_package_data=True,
-    install_requires=[str(entry.req) for entry in parse_requirements(
-                      'requirements.txt', session=PipSession())],
+    install_requires=[
+        str(entry.req)
+        for entry in parse_requirements('requirements.txt', session=PipSession())
+        if entry.match_markers()
+    ],
     zip_safe=False,
     entry_points={
         'console_scripts': ['gramex = gramex:commandline']
