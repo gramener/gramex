@@ -54,6 +54,9 @@ def app(conf):
         info.app.listen(**conf.listen)
 
         def callback():
+            if ioloop._running:
+                return
+
             logging.info('Listening on port %d', conf.listen.port)
 
             # browser: True opens the application home page on localhost.
