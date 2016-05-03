@@ -121,6 +121,7 @@ for example:
             level: WARN           # Ignore anything less severe than warnings
             handlers:
                 - console         # Write the output to the console
+                - warn-log        # In addition, write warnings to warn.csv
 
 Gramex offers the following pre-defined handlers:
 
@@ -152,7 +153,7 @@ archiving it into warn.log.1, etc.
             class: logging.handlers.RotatingFileHandler
             level: WARN
             formatter: file         # save it as a CSV file
-            filename: warn.log      #
+            filename: warn.log      # file name to save as
             encoding: utf-8         # encoded as UTF-8
             maxBytes: 10485760      # limit the file to up to 10MB
             backupCount: 3          # keep the last 3 backups
