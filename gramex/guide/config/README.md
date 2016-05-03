@@ -105,18 +105,31 @@ Now, you can use `handler: hello.Hello` to send the response `hello world`.
 ## Logging
 
 The `log:` section defines Gramex's logging behaviour. It uses the same
-structure as the [Python logging schema][logging-schema]. This example only
-displays warning messages on the console:
+structure as the [Python logging schema][logging-schema]. The default
+configuration shows all information messages on the console:
 
     log:
         root:
-            level: WARN
             handlers:
                 - console
 
-Gramex offers a pre-defined handler called `console`. You can define your own
-handlers under the `log:` section. Here is a handler that write information logs
-into `info.log`, backing it up daily:
+You can edit the logging level to only displays warning messages on the console,
+for example:
+
+    log:
+        root:
+            level: WARN           # Ignore anything less severe than warnings
+            handlers:
+                - console         # Write the output to the console
+
+Gramex offers the following pre-defined handlers:
+
+- `console`: writes information logs to the console
+- `access-log` writes information logs to a CSV file `access.csv`
+- `warn-log` writes warnings to a CSV file `warn.csv`
+
+You can define your own handlers under the `log:` section. Here is a handler
+that write information logs into `info.log`, backing it up daily:
 
     handlers:
         info:
@@ -129,6 +142,7 @@ into `info.log`, backing it up daily:
             interval: 1             # every single day
             utc: False              # using local time zone, not UTC
             backupCount: 30         # keep only last 30 backups
+            delay: true             # do not create file until called
 
 This handler wrings warnings into warn.log, letting it grow up to 10 MB, then
 archiving it into warn.log.1, etc.
@@ -142,6 +156,7 @@ archiving it into warn.log.1, etc.
             encoding: utf-8         # encoded as UTF-8
             maxBytes: 10485760      # limit the file to up to 10MB
             backupCount: 3          # keep the last 3 backups
+            delay: true             # do not create file until called
 
 The `file` formatter is defined in Gramex, and saves the output as a CSV file.
 Here is its definition:

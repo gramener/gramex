@@ -65,6 +65,28 @@ log:
             level: DEBUG
             stream: ext://sys.stdout
             formatter: console
+        access-log:
+            class: logging.handlers.TimedRotatingFileHandler
+            level: INFO
+            formatter: file         # save it as a CSV file
+            filename: access.log    # file name to save as
+            encoding: utf-8         # encoded as UTF-8
+            when: W0                # rotate the log file weekly
+            interval: 1             # every single week
+            utc: False              # using local time zone, not UTC
+            backupCount: 52         # keep only last 52 backups
+            delay: true             # do not create file until called
+        warn-log:
+            class: logging.handlers.TimedRotatingFileHandler
+            level: WARN
+            formatter: file         # save it as a CSV file
+            filename: warn.log      # file name to save as
+            encoding: utf-8         # encoded as UTF-8
+            when: W0                # rotate the log file weekly
+            interval: 1             # every single week
+            utc: False              # using local time zone, not UTC
+            backupCount: 52         # keep only last 52 backups
+            delay: true             # do not create file until called
     loggers:
         tornado.access: {}
         tornado.application: {}
