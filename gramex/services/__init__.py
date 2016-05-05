@@ -11,7 +11,9 @@ For example, if ``gramex.yaml`` contains this section::
 ... then :func:`log` is called as ``log({"version": 1})``. If no such function
 exists, a warning is raised.
 '''
+from __future__ import unicode_literals
 
+import six
 import yaml
 import string
 import logging
@@ -103,21 +105,57 @@ def _url_normalize(pattern):
     return urlparse.urlunsplit((url.scheme, url.netloc, path, url.query, ''))
 
 
-class DefaultFormatter(string.Formatter):
-    def __init__(self, missing=''):
-        self.missing = missing
+def _get_cache_key(conf, name):
+    '''
+    Parse the cache.key parameter. Return a function that takes the request and
+    returns the cache key value.
 
-    def get_field(self, field_name, args, kwargs):
-        try:
-            val = super(DefaultFormatter, self).get_field(field_name, args, kwargs)
-        except (KeyError, AttributeError):
-            val = None, field_name
-        return val
+    The cache key is a string or a list of strings. The strings can be:
 
-    def format_field(self, value, spec):
-        if value is None:
-            return self.missing
-        return super(DefaultFormatter, self).format_field(value, spec)
+    - ``request.attr`` => ``request.attr`` can be any request attribute.
+    - ``header.key`` => ``request.headers[key]``
+    - ``cookies.key`` => ``request.cookies[key].value``
+    - ``args.key`` => ``requst.arguments[key]`` joined with a comma.
+
+    Invalid key strings are ignored with a warning. If all key strings are
+    invalid, the default cache.key of ``request.uri`` is used.
+    '''
+    default_key = 'request.uri'
+    keys = conf.get('key', default_key)
+    if not isinstance(keys, list):
+        keys = [keys]
+    key_getters = []
+    for key in keys:
+        parts = key.split('.', 2)
+        if len(parts) < 2:
+            logging.warn('url %s: ignoring invalid cache key %s', name, key)
+            continue
+        # convert second part into a Python string representation
+        val = repr(parts[1])
+        if parts[0] == 'request':
+            key_getters.append('getattr(request, %s, missing)' % val)
+        elif parts[0].startswith('header'):
+            key_getters.append('request.headers.get(%s, missing)' % val)
+        elif parts[0].startswith('cookie'):
+            key_getters.append(
+                'request.cookies[%s].value if %s in request.cookies else missing' % (val, val))
+        elif parts[0].startswith('arg'):
+            key_getters.append('argsep.join(request.arguments.get(%s, [missing_b]))' % val)
+        else:
+            logging.warn('url %s: ignoring invalid cache key %s', name, key)
+    # If none of the keys are valid, use the default request key
+    if not len(key_getters):
+        key_getters = [default_key]
+
+    method = 'def cache_key(request):\n'
+    method += '\treturn (%s)' % ', '.join(key_getters)
+    context = {
+        'missing': '~',
+        'missing_b': b'~',      # args are binary
+        'argsep': b', ',        # join args using binary comma
+    }
+    exec(method, context)
+    return context['cache_key']
 
 
 def _cache_generator(conf, name):
@@ -130,7 +168,7 @@ def _cache_generator(conf, name):
                 pattern: /
                 handler: ...
                 cache:
-                    key: {request.uri}{request.cookies[user]}
+                    key: request.uri
                     store: memory
                     expires:
                         duration: 1 minute
@@ -151,20 +189,6 @@ def _cache_generator(conf, name):
         cache_file.write('def')
         cache_file.close()
         cache_file.get()        # returns 'abcdef'
-
-    The ``key`` can use the following ``request`` attributes:
-
-    - method: HTTP request method, e.g. "GET" or "POST"
-    - uri: The requested uri.
-    - path: The path portion of `uri`
-    - query:  The query portion of `uri`
-    - version:  HTTP version specified in request, e.g. "HTTP/1.1"
-    - remote_ip: Client's IP address as a string.
-    - protocol: The protocol used, either "http" or "https".
-    - host: The requested hostname, usually taken from the ``Host`` header.
-
-    ``headers`` and ``args`` can also be used as dictionaries. Missing
-    values default to empty strings.
     '''
     # cache: can be True (to use default settings) or False (to disable cache)
     if conf is True:
@@ -179,14 +203,11 @@ def _cache_generator(conf, name):
         logging.warn('url %s: %s store missing', name, store_name)
     store = info.cache.get(store_name)
 
-    key = conf.get('key', '{request.uri}')
-    fmt = DefaultFormatter(missing='~').format
+    cache_key = _get_cache_key(conf, name)
     cachefile_class = urlcache.get_cachefile(store)
 
     def get_cachefile(handler):
-        req = handler.request
-        keyval = fmt(key, request=req, headers=req.headers, args=req.arguments)
-        return cachefile_class(key=keyval, store=store, handler=handler)
+        return cachefile_class(key=cache_key(handler.request), store=store, handler=handler)
 
     return get_cachefile
 

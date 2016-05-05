@@ -47,26 +47,6 @@ class TestCacheConstructor(unittest.TestCase):
         self.assertEqual(cache['disk']._dir, info.folder + '/.cache-url')
 
 
-class TestDefaultFormatter(unittest.TestCase):
-    def test_formatter(self):
-        eq = self.assertEqual
-        fmt = gramex.services.DefaultFormatter(missing='~').format
-        eq(fmt('{a} {b}'), '~ ~')
-        eq(fmt('{a} {b}', a=1), '1 ~')
-        eq(fmt('{a} {b}', a=1, b=2), '1 2')
-        request = AttrDict(
-            uri='/dir/path?x=1&y=2',
-            path='/dir/path',
-            query='?x=1&y=2',
-            arguments={'x': '1', 'y': '2'},
-            headers={'User-Agent': 'python'},
-        )
-        eq(fmt('{request.path}', request=request), '/dir/path')
-        eq(fmt('{headers[User-Agent]}', headers=request.headers), 'python')
-        eq(fmt('{request.path}-{headers[User-Agent]}-{headers[test]}',
-               request=request, headers=request.headers), '/dir/path-python-~')
-
-
 class TestCacheBehaviour(TestGramex):
     'Test Gramex handler caching behaviour'
 
@@ -99,4 +79,14 @@ class TestCacheBehaviour(TestGramex):
 
         r1 = self.get('/cache/header-test')
         r2 = self.get('/cache/header-test', headers={'Test': 'abc'})
+        self.ne(r1, r2)
+
+        r1 = self.get('/cache/cookie-test')
+        r2 = self.get('/cache/cookie-test', cookies={'user': 'abc'})
+        r3 = self.get('/cache/cookie-test', cookies={'user': 'def'})
+        self.ne(r1, r2)
+        self.ne(r2, r3)
+
+        r1 = self.get('/cache/invalid-keys-ignored')
+        r2 = self.get('/cache/invalid-keys-ignored-changed-url?x=1')
         self.ne(r1, r2)

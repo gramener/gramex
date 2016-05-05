@@ -606,28 +606,42 @@ url:
     kwargs:
       function: utils.randomchar
     cache:
-      key: '{request.path}'
+      key: request.path
   cache/host:
     pattern: /cache/host.*
     handler: FunctionHandler
     kwargs:
       function: utils.randomchar
     cache:
-      key: '{request.host}'
+      key: request.host
   cache/args:
     pattern: /cache/args.*
     handler: FunctionHandler
     kwargs:
       function: utils.randomchar
     cache:
-      key: '{request.path}{args[x]}'
+      key: [request.path, args.x, invalid.key]
+  cache/cookie-test:
+    pattern: /cache/cookie-test
+    handler: FunctionHandler
+    kwargs:
+      function: utils.randomchar
+    cache:
+      key: [request.host, cookies.user, invalid.key]
   cache/header-test:
     pattern: /cache/header-test
     handler: FunctionHandler
     kwargs:
       function: utils.randomchar
     cache:
-      key: '{request.host}{headers[test]}'
+      key: [request.host, headers.test, invalid.key]
+  cache/invalid-keys-ignored:
+    pattern: /cache/invalid-keys-ignored.*
+    handler: FunctionHandler
+    kwargs:
+      function: utils.randomchar
+    cache:
+      key: [invalid, invalid.invalid]
 
 # Store Gramex logs in gramex.log
 log:
