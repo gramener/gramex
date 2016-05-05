@@ -39,8 +39,9 @@ app:
 
 # Define system caches.
 # This section MUST be before the url: section. Otherwise, the urls cannot use the cache
-cache: {}
-
+cache:
+    memory:
+        type: memory                    # A default in-memory cache
 
 # The `url:` section maps URL patterns to handlers.
 # http://tornado.readthedocs.org/en/stable/web.html#tornado.web.URLSpec

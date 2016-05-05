@@ -166,6 +166,12 @@ def _cache_generator(conf, name):
     ``headers`` and ``args`` can also be used as dictionaries. Missing
     values default to empty strings.
     '''
+    # cache: can be True (to use default settings) or False (to disable cache)
+    if conf is True:
+        conf = {}
+    elif conf is False:
+        return None
+
     # Get the store. Defaults to the first store in the cache: section
     default_store = list(info.cache.keys())[0] if len(info.cache) > 0 else None
     store_name = conf.get('store', default_store)

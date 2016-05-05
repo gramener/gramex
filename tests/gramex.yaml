@@ -599,7 +599,7 @@ url:
     handler: FunctionHandler
     kwargs:
       function: utils.randomchar
-    cache: {}
+    cache: true
   cache/pathkey:
     pattern: /cache/pathkey
     handler: FunctionHandler
