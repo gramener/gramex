@@ -13,3 +13,21 @@ url:
             function: random.choice
             args: [['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j']]
         cache: true
+
+    cache-full-url:
+        pattern: /$YAMLURL/cache-full-url
+        handler: FunctionHandler
+        kwargs:
+            function: random.choice
+            args: [['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j']]
+        cache:
+            key: request.uri          # This is the default cache key
+
+    cache-only-path:
+        pattern: /$YAMLURL/cache-only-path
+        handler: FunctionHandler
+        kwargs:
+            function: random.choice
+            args: [['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j']]
+        cache:
+            key: request.path     # only use the request path, not arguments
