@@ -13,9 +13,7 @@ exists, a warning is raised.
 '''
 from __future__ import unicode_literals
 
-import six
 import yaml
-import string
 import logging
 import posixpath
 import mimetypes
