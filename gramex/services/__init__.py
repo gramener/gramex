@@ -19,6 +19,7 @@ import mimetypes
 import webbrowser
 import tornado.web
 import tornado.ioloop
+import logging.config
 import six.moves.urllib.parse as urlparse
 from orderedattrdict import AttrDict
 from . import scheduler
