@@ -1,0 +1,15 @@
+url:
+    random:
+        pattern: /$YAMLURL/random
+        handler: FunctionHandler
+        kwargs:
+            function: random.choice
+            args: [['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j']]
+
+    random-cached:
+        pattern: /$YAMLURL/random-cached
+        handler: FunctionHandler
+        kwargs:
+            function: random.choice
+            args: [['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j']]
+        cache: true

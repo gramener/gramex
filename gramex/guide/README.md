@@ -33,6 +33,10 @@ classes: toc
 
 **Exercise**: Make gramex-guide without authetication and create google-auth only to `/blog/`.
 
+## [Gramex caches requests](cache/)
+
+**Exercise**: TBD
+
 ## [Gramex charts](chart/)
 
 **Exercise**: Draw a simple pie chart using data from DataHandler.
