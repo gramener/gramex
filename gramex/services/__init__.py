@@ -259,7 +259,7 @@ def watch(conf):
 
 def cache(conf):
     "Set up caches"
-    caches = {
+    cache_types = {
         'memory': {
             'policy': {
                 'default': 'LRUCache',
@@ -282,11 +282,11 @@ def cache(conf):
 
     for name, config in conf.items():
         cache_type = config.type.lower()
-        if cache_type not in caches:
+        if cache_type not in cache_types:
             logging.warn('cache: %s has unknown type %s', name, config.type)
             continue
 
-        cache_params = caches[cache_type]
+        cache_params = cache_types[cache_type]
         policy = config.get('policy', 'default')
         if policy not in cache_params['policy']:
             logging.warn('%s cache: %s has unknown policy %s', config.type, name, policy)
