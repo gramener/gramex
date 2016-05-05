@@ -42,7 +42,7 @@ setup_gramex() {
   setup_python
 
   # Install Conda dependencies
-  $wget requirements-conda.txt http://code.gramener.com/s.anand/gramex/raw/master/requirements.txt
+  $wget http://code.gramener.com/s.anand/gramex/raw/master/requirements-conda.txt
   conda install -f requirements-conda.txt
   rm -f requirements-conda.txt
 
