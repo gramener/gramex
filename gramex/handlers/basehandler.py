@@ -4,14 +4,18 @@ from tornado.escape import json_decode
 
 
 class BaseHandler(RequestHandler):
+    '''
+    BaseHandler provides auth, caching and other services common to all request
+    handlers. All RequestHandlers must inherit from BaseHandler.
+    '''
 
     def initialize(self, cache=None, **kwargs):
         if cache is not None:
             self.cachefile = cache(self)
             self.original_get = self.get
-            self.get = self.cached_get
+            self.get = self._cached_get
 
-    def cached_get(self, *args, **kwargs):
+    def _cached_get(self, *args, **kwargs):
         cached = self.cachefile.get()
         if cached is not None:
             self.write(cached)
