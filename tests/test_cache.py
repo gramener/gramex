@@ -32,14 +32,7 @@ class TestCacheConstructor(unittest.TestCase):
     def test_memory_cache(self):
         cache = gramex.services.info.cache
         self.assertIsInstance(cache['memory'], cachetools.LRUCache)
-        self.assertIsInstance(cache['memory-lru'], cachetools.LRUCache)
-        self.assertIsInstance(cache['memory-lfu'], cachetools.LFUCache)
-
-        self.assertNotIn('memory-nonexistent', cache)
-
-        self.assertIsInstance(cache['memory-lru-20'], cachetools.LRUCache)
-        self.assertEqual(cache['memory-lru-20'].maxsize, 20)
-
+        self.assertEqual(cache['memory-20'].maxsize, 20)
 
     def test_disk_cache(self):
         cache = gramex.services.info.cache

@@ -89,13 +89,11 @@ root `cache:` section as follows:
     cache:
         small-in-memory-cache:  # Define a name for the cache
             type: memory        # This is an in-memory cache
-            policy: lfu         # lru = least recently used. lfu = least frequently used
             size: 100000        # Just allow 100K of data in the cache
 
         big-disk-cache:         # Define a name for the cache
             type: disk          # This is an on-disk cache
             path: $YAMLPATH/.cache  # Location of the disk cache directory
-            policy: fifo        # fifo = first-in-first-out, lru = least recently used, lfu = least frequently used
             size: 1000000000    # Allow ~1GB of data in the cache
 
 By default, Gramex defines a cache called `memory` that has a 20MB LRU in-memory

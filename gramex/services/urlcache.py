@@ -10,6 +10,7 @@ etc.) The parent CacheFile implements the no-caching behaviour.
 
 See gramex.handlers.BaseHandler for examples on how to use these objects.
 '''
+from __future__ import unicode_literals
 
 
 def get_cachefile(store):
@@ -60,4 +61,5 @@ class MemoryCacheFile(CacheFile):
 
 
 class DiskCacheFile(MemoryCacheFile):
+    'Identical interface to MemoryCacheFile'
     pass

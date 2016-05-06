@@ -9,18 +9,8 @@ app:
 cache:
     memory:
         type: memory
-    memory-lru:
+    memory-20:
         type: memory
-        policy: lru
-    memory-lfu:
-        type: memory
-        policy: lfu
-    memory-nonexistent:
-        type: memory
-        policy: nonexistent
-    memory-lru-20:
-        type: memory
-        policy: lru
         size: 20
     disk:
         type: disk
