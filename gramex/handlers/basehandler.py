@@ -1,6 +1,8 @@
-from gramex import conf
+from gramex import conf, __version__ as version
 from tornado.web import RequestHandler
 from tornado.escape import json_decode
+
+server_header = 'Gramex/%s' % version
 
 
 class BaseHandler(RequestHandler):
@@ -15,10 +17,21 @@ class BaseHandler(RequestHandler):
             self.original_get = self.get
             self.get = self._cached_get
 
+    def set_default_headers(self):
+        self.set_header('Server', server_header)
+
     def _cached_get(self, *args, **kwargs):
         cached = self.cachefile.get()
+        headers_written = set()
         if cached is not None:
-            self.write(cached)
+            self.set_status(cached['status'])
+            for name, value in cached['headers']:
+                if name in headers_written:
+                    self.add_header(name, value)
+                else:
+                    self.set_header(name, value)
+                    headers_written.add(name)
+            self.write(cached['body'])
         else:
             self.cachefile.wrap(self)
             self.original_get(*args, **kwargs)

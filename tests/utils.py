@@ -90,8 +90,30 @@ def async_calc(handler):
     raise gen.Return(pd.concat(counts, axis=1).to_json(orient='values'))
 
 
-def randomchar(handler):
-    return str(random.randrange(10000000))
+def httpbin(handler, mime='json', rand=None, status=200):
+    '''
+    Prints all request parameters. Accepts the following arguments:
+
+    - ?mime=[json|html]
+    - ?rand=<number>
+    - ?status=<code>
+    '''
+    mime_type = {
+        'json': 'application/json',
+        'html': 'text/html',
+    }
+
+    response = {
+        'headers': {key: handler.request.headers.get(key) for key in handler.request.headers},
+        'args': handler.request.arguments,
+    }
+    rand = handler.get_argument('rand', rand)
+    if rand is not None:
+        response['rand'] = random.randrange(int(rand))
+
+    handler.set_status(status)
+    handler.set_header('Content-Type', mime_type[mime])
+    return json.dumps(response, indent=4)
 
 
 def on_created(event):

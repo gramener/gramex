@@ -584,52 +584,70 @@ url:
     kwargs:
       args: [python, "$YAMLPATH/throwerror.py"]
 
+  httpbin:
+    pattern: /httpbin
+    handler: FunctionHandler
+    kwargs:
+      function: utils.httpbin
+  cache/randomchar-nocache:
+    pattern: /cache/randomchar-nocache
+    handler: FunctionHandler
+    kwargs:
+      function: utils.httpbin
+      kwargs: {rand: 99999999}
   cache/randomchar:
     pattern: /cache/randomchar
     handler: FunctionHandler
     kwargs:
-      function: utils.randomchar
+      function: utils.httpbin
+      kwargs: {rand: 99999999, mime: html}
     cache: true
   cache/pathkey:
     pattern: /cache/pathkey
     handler: FunctionHandler
     kwargs:
-      function: utils.randomchar
+      function: utils.httpbin
+      kwargs: {rand: 99999999, mime: json}
     cache:
       key: request.path
   cache/host:
     pattern: /cache/host.*
     handler: FunctionHandler
     kwargs:
-      function: utils.randomchar
+      function: utils.httpbin
+      kwargs: {rand: 99999999}
     cache:
       key: request.host
   cache/args:
     pattern: /cache/args.*
     handler: FunctionHandler
     kwargs:
-      function: utils.randomchar
+      function: utils.httpbin
+      kwargs: {rand: 99999999}
     cache:
       key: [request.path, args.x, invalid.key]
   cache/cookie-test:
     pattern: /cache/cookie-test
     handler: FunctionHandler
     kwargs:
-      function: utils.randomchar
+      function: utils.httpbin
+      kwargs: {rand: 99999999}
     cache:
       key: [request.host, cookies.user, invalid.key]
   cache/header-test:
     pattern: /cache/header-test
     handler: FunctionHandler
     kwargs:
-      function: utils.randomchar
+      function: utils.httpbin
+      kwargs: {rand: 99999999}
     cache:
       key: [request.host, headers.test, invalid.key]
   cache/invalid-keys-ignored:
     pattern: /cache/invalid-keys-ignored.*
     handler: FunctionHandler
     kwargs:
-      function: utils.randomchar
+      function: utils.httpbin
+      kwargs: {rand: 99999999}
     cache:
       key: [invalid, invalid.invalid]
 

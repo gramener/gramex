@@ -8,6 +8,7 @@ import gramex.services
 from . import server
 from orderedattrdict import AttrDict
 from .test_handlers import TestGramex
+from gramex.services.urlcache import ignore_headers
 
 info = AttrDict()
 
@@ -42,9 +43,13 @@ class TestCacheConstructor(unittest.TestCase):
 
 class TestCacheBehaviour(TestGramex):
     'Test Gramex handler caching behaviour'
+    @staticmethod
+    def headers(r):
+        return {name: r.headers[name] for name in r.headers if name not in ignore_headers}
 
     def eq(self, r1, r2):
         self.assertTrue(r1.status_code == r2.status_code == 200)
+        self.assertDictEqual(self.headers(r1), self.headers(r2))
         self.assertEqual(r1.text, r2.text)
 
     def ne(self, r1, r2):
@@ -52,6 +57,9 @@ class TestCacheBehaviour(TestGramex):
         self.assertNotEqual(r1.text, r2.text)
 
     def test_cache_key(self):
+        r1 = self.get('/cache/randomchar-nocache')
+        self.ne(r1, self.get('/cache/randomchar-nocache'))
+
         r1 = self.get('/cache/randomchar')
         self.eq(r1, self.get('/cache/randomchar'))
         self.ne(r1, self.get('/cache/randomchar?x=1'))

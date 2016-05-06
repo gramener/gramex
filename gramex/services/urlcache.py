@@ -12,6 +12,20 @@ See gramex.handlers.BaseHandler for examples on how to use these objects.
 '''
 from __future__ import unicode_literals
 
+import json
+
+# HTTP Headers that should not be cached
+ignore_headers = {
+    # Do not cache headers referenced anywhere in tornado.http1connection
+    'Content-Encoding', 'Vary', 'Transfer-Encoding', 'Expect',
+    'Keep-Alive', 'Connection', 'X-Consumed-Content-Encoding',
+    # Do not cache things that SHOULD or WILL be recomputed anyway
+    'Date',             # This is the current date, not the Last-Modified date
+    'Server',           # Always show Gramex/version
+    'Etag',             # Automatically added by Tornado
+    'Content-Length',   # Automatically added by Tornado
+}
+
 
 def get_cachefile(store):
     if store.__class__.__module__.startswith('cachetools'):
@@ -38,7 +52,8 @@ class CacheFile(object):
 
 class MemoryCacheFile(CacheFile):
     def get(self):
-        return self.store.get(self.key)
+        result = self.store.get(self.key)
+        return None if result is None else json.loads(result)
 
     def wrap(self, handler):
         self._write_buffer = []
@@ -50,7 +65,14 @@ class MemoryCacheFile(CacheFile):
             self._write_buffer.append(handler._write_buffer[-1])
 
         def on_finish():
-            self.store[self.key] = b''.join(self._write_buffer)
+            self.store[self.key] = json.dumps({
+                'status': handler._status_code,
+                'headers': [
+                    [name, value] for name, value in handler._headers.get_all()
+                    if name not in ignore_headers
+                ],
+                'body': b''.join(self._write_buffer)
+            })
             self._on_finish()
 
         handler.write = write
