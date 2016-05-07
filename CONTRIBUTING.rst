@@ -28,6 +28,9 @@ To set up the development environment:
       $ conda install --file gramex/requirements-conda.txt
       $ pip install -e gramex
 
+.. _Anaconda: http://continuum.io/downloads
+.. _update Anaconda: http://docs.continuum.io/anaconda/install#updating-from-older-anaconda-versions
+
 
 Contributing to Gramex
 ----------------------

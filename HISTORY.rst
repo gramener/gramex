@@ -49,7 +49,7 @@ History
 * ``FunctionHandler`` accepts co-routines for asynchronous processing. Functions
   can also ``yield`` strings that will be immediately written and flushed,
   providing a streaming interface.
-* ``FileHandler`` accepts multiple ``path``s as an array. The output of these
+* ``FileHandler`` accepts multiple ``path`` as an array. The output of these
   files are concatenated after transformated.
 * In the ``FileHandler`` config, you can use ``pattern: /abc`` instead of
   ``pattern: /(abc)`` if you are mapping a single URL to a single path.

@@ -41,12 +41,12 @@ Architecture
 
 Gramex has:
 
-1. A :doc:`server` that provides core services (URL handling, authentication,
-   logging, etc.) to the entire web server.
-2. :doc:`handlers` that respond to HTTP requests. They may show templates, act
-   as a websocket, provide a data interface, serve static files, etc.
-3. :doc:`components` that render content of different kinds (charts, tables,
-   UI components, etc.)
+1. A server that provides core services (URL handling, authentication, logging,
+   etc.) to the entire web server.
+2. Handlers that respond to HTTP requests. They may show templates, act as a
+   websocket, provide a data interface, serve static files, etc.
+3. Components that render content of different kinds (charts, tables, UI
+   components, etc.)
 
 Decisions
 ---------
