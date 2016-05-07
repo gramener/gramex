@@ -81,6 +81,24 @@ For example, this configuration caches based on the request, browser and user, e
               - headers.user-agent      # the browser
               - cookies.user            # and the user token
 
+
+## Cache expiry
+
+You can specify a expiry duration. For example [cache-expiry](cache-expiry)
+caches the response for 5 seconds.
+
+    cache-expiry:
+        pattern: /$YAMLURL/cache-expiry
+        handler: FunctionHandler
+        kwargs:
+            function: random.choice
+            args: [['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j']]
+        cache:
+            expiry:
+                duration: 5             # Cache the request for 5 seconds
+
+
+
 ## Cache stores
 
 Gramex provides an in-memory cache, but you can define your own cache in the
