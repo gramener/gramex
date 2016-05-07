@@ -13,7 +13,7 @@ See gramex.handlers.BaseHandler for examples on how to use these objects.
 from __future__ import unicode_literals
 
 import json
-import cachetools
+import logging
 from diskcache import Cache as DiskCache
 from .ttlcache import TTLCache as MemoryCache
 

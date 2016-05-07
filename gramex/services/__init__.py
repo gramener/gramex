@@ -26,6 +26,7 @@ from orderedattrdict import AttrDict
 from . import scheduler
 from . import watcher
 from . import urlcache
+from .ttlcache import MAXTTL
 from ..config import locate
 
 
@@ -204,8 +205,7 @@ def _cache_generator(conf, name):
     cache_key = _get_cache_key(conf, name)
     cachefile_class = urlcache.get_cachefile(store)
     cache_expiry = conf.get('expiry', {})
-    expiry_duration = 86400 * 365 * 10
-    cache_expiry_duration = cache_expiry.get('duration', expiry_duration)
+    cache_expiry_duration = cache_expiry.get('duration', MAXTTL)
 
     def get_cachefile(handler):
         return cachefile_class(key=cache_key(handler.request), store=store,

@@ -7,7 +7,7 @@ import time
 from cachetools import Cache
 
 # CHANGE: MAXTTL is the default TTL = 10 years
-MAXTTL = 86400 * 365 * 10
+MAXTTL = 86400 * 365 * 10       # noqa: ignore well known magic constants
 
 
 class _Link(object):
@@ -215,12 +215,12 @@ class TTLCache(Cache):
                 return (key, self.pop(key))
 
     if hasattr(collections.OrderedDict, 'move_to_end'):
-        def __getlink(self, key):
+        def __getlink(self, key):       # noqa: ignore N802: function name should be in lowercase
             value = self.__links[key]
             self.__links.move_to_end(key)
             return value
     else:
-        def __getlink(self, key):
+        def __getlink(self, key):       # noqa: ignore N802: function name should be in lowercase
             value = self.__links.pop(key)
             self.__links[key] = value
             return value
