@@ -28,23 +28,24 @@ def tearDownModule():
 class TestCacheConstructor(unittest.TestCase):
     'Test gramex.services.cache() as a pure function'
 
+    def check_cache_expiry(self, cache):
+        cache.set('persistent', 'value', 10)
+        cache.set('transient', 'value', -1)
+        self.assertEqual(cache.get('persistent'), 'value')
+        self.assertEqual(cache.get('transient'), None)
+
     def test_memory_cache(self):
         cache = gramex.services.info.cache
         self.assertIsInstance(cache['memory'], MemoryCache)
         cache_size = 20
         self.assertEqual(cache['memory-20'].maxsize, cache_size)
-
-    def test_memory_cache_expiry(self):
-        memory_cache = gramex.services.info.cache['memory-20']
-        memory_cache.set('persistent', 'value', 10)
-        memory_cache.set('transient', 'value', -1)
-        self.assertEqual(memory_cache.get('persistent'), 'value')
-        self.assertEqual(memory_cache.get('transient'), None)
+        self.check_cache_expiry(cache['memory-20'])
 
     def test_disk_cache(self):
         cache = gramex.services.info.cache
         self.assertIsInstance(cache['disk'], DiskCache)
         self.assertEqual(cache['disk']._dir, info.folder + '/.cache-url')
+        self.check_cache_expiry(cache['disk'])
 
 
 class TestCacheBehaviour(TestGramex):
