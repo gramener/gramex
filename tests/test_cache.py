@@ -1,16 +1,14 @@
-import io
 import os
 import unittest
-import diskcache
-import cachetools
 import gramex.config
 import gramex.services
 from . import server
 from orderedattrdict import AttrDict
 from .test_handlers import TestGramex
-from gramex.services.urlcache import ignore_headers
+from gramex.services.urlcache import ignore_headers, MemoryCache, DiskCache
 
 info = AttrDict()
+HTTP_OK = 200
 
 
 def setUpModule():
@@ -32,12 +30,20 @@ class TestCacheConstructor(unittest.TestCase):
 
     def test_memory_cache(self):
         cache = gramex.services.info.cache
-        self.assertIsInstance(cache['memory'], cachetools.LRUCache)
-        self.assertEqual(cache['memory-20'].maxsize, 20)
+        self.assertIsInstance(cache['memory'], MemoryCache)
+        cache_size = 20
+        self.assertEqual(cache['memory-20'].maxsize, cache_size)
+
+    def test_memory_cache_expiry(self):
+        memory_cache = gramex.services.info.cache['memory-20']
+        memory_cache.set('persistent', 'value', 10)
+        memory_cache.set('transient', 'value', -1)
+        self.assertEqual(memory_cache.get('persistent'), 'value')
+        self.assertEqual(memory_cache.get('transient'), None)
 
     def test_disk_cache(self):
         cache = gramex.services.info.cache
-        self.assertIsInstance(cache['disk'], diskcache.Cache)
+        self.assertIsInstance(cache['disk'], DiskCache)
         self.assertEqual(cache['disk']._dir, info.folder + '/.cache-url')
 
 
@@ -48,12 +54,12 @@ class TestCacheBehaviour(TestGramex):
         return {name: r.headers[name] for name in r.headers if name not in ignore_headers}
 
     def eq(self, r1, r2):
-        self.assertTrue(r1.status_code == r2.status_code == 200)
+        self.assertTrue(r1.status_code == r2.status_code == HTTP_OK)
         self.assertDictEqual(self.headers(r1), self.headers(r2))
         self.assertEqual(r1.text, r2.text)
 
     def ne(self, r1, r2):
-        self.assertTrue(r1.status_code == r2.status_code == 200)
+        self.assertTrue(r1.status_code == r2.status_code == HTTP_OK)
         self.assertNotEqual(r1.text, r2.text)
 
     def test_cache_key(self):

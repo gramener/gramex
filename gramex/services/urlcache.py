@@ -13,6 +13,9 @@ See gramex.handlers.BaseHandler for examples on how to use these objects.
 from __future__ import unicode_literals
 
 import json
+import cachetools
+from diskcache import Cache as DiskCache
+from .ttlcache import TTLCache as MemoryCache
 
 # HTTP Headers that should not be cached
 ignore_headers = {
@@ -28,20 +31,22 @@ ignore_headers = {
 
 
 def get_cachefile(store):
-    if store.__class__.__module__.startswith('cachetools'):
+    if isinstance(store, MemoryCache):
         return MemoryCacheFile
-    elif store.__class__.__module__.startswith('diskcache'):
+    elif isinstance(store, DiskCache):
         return DiskCacheFile
     else:
+        logging.warn('cache: ignoring unknown store %s', store)
         return CacheFile
 
 
 class CacheFile(object):
 
-    def __init__(self, key, store, handler):
+    def __init__(self, key, store, handler, expire=None):
         self.key = key
         self.store = store
         self.handler = handler
+        self.expire = expire
 
     def get(self):
         return None
@@ -65,14 +70,18 @@ class MemoryCacheFile(CacheFile):
             self._write_buffer.append(handler._write_buffer[-1])
 
         def on_finish():
-            self.store[self.key] = json.dumps({
-                'status': handler._status_code,
-                'headers': [
-                    [name, value] for name, value in handler._headers.get_all()
-                    if name not in ignore_headers
-                ],
-                'body': b''.join(self._write_buffer)
-            })
+            self.store.set(
+                key=self.key,
+                value=json.dumps({
+                    'status': handler._status_code,
+                    'headers': [
+                        [name, value] for name, value in handler._headers.get_all()
+                        if name not in ignore_headers
+                    ],
+                    'body': b''.join(self._write_buffer)
+                }),
+                expire=self.expire,
+            )
             self._on_finish()
 
         handler.write = write

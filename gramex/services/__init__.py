@@ -203,9 +203,13 @@ def _cache_generator(conf, name):
 
     cache_key = _get_cache_key(conf, name)
     cachefile_class = urlcache.get_cachefile(store)
+    cache_expiry = conf.get('expiry', {})
+    expiry_duration = 86400 * 365 * 10
+    cache_expiry_duration = cache_expiry.get('duration', expiry_duration)
 
     def get_cachefile(handler):
-        return cachefile_class(key=cache_key(handler.request), store=store, handler=handler)
+        return cachefile_class(key=cache_key(handler.request), store=store,
+                               handler=handler, expire=cache_expiry_duration)
 
     return get_cachefile
 
@@ -278,11 +282,9 @@ def cache(conf):
         size = config.get('size', cache_params['size'])
 
         if cache_type == 'memory':
-            import cachetools       # noqa: import late for efficiency
-            info.cache[name] = cachetools.LRUCache(maxsize=size, getsizeof=len)
+            info.cache[name] = urlcache.MemoryCache(maxsize=size, getsizeof=len)
 
         elif cache_type == 'disk':
-            import diskcache        # noqa: import late for efficiency
             path = config.get('path', '.cache-' + name)
-            info.cache[name] = diskcache.Cache(
+            info.cache[name] = urlcache.DiskCache(
                 path, size_limit=size, eviction_policy='least-recently-stored')
