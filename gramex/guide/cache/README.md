@@ -97,7 +97,8 @@ caches the response for 5 seconds.
             expiry:
                 duration: 5             # Cache the request for 5 seconds
 
-
+By default, the cache expires either after 10 years, or when the cache store
+runs out of space.
 
 ## Cache stores
 
@@ -114,6 +115,26 @@ root `cache:` section as follows:
             path: $YAMLPATH/.cache  # Location of the disk cache directory
             size: 1000000000    # Allow ~1GB of data in the cache
 
-By default, Gramex defines a cache called `memory` that has a 20MB LRU in-memory
-cache based on [cachetools](http://pythonhosted.org/cachetools/). Disk caches
-are based on the [diskcache](http://www.grantjenks.com/docs/diskcache/) library.
+By default, Gramex provides a cache called `memory` that has a 20MB in-memory
+cache based on [cachetools](http://pythonhosted.org/cachetools/). When the size
+limit is reached, the least recently used items are discarded.
+
+Disk caches are based on the
+[diskcache](http://www.grantjenks.com/docs/diskcache/) library. When the size
+limit is reached, the oldest items are discarded.
+
+### Using cache stores
+
+Your functions can access these caches at `gramex.services.info.cache[<key>]`.
+For example, the default in-memory Gramex cache is at
+`gramex.services.info.cache.memory`. The disk cache above is at
+`gramex.services.info.cache['big-disk-cache']`.
+
+The cache stores can be treated like a dictionary. They also support a `.set()`
+method which accepts an `expire=` parameter. For example:
+
+    cache = gramex.services.info.cache['big-disk-cache']
+    cache['key'] = 'value'
+    cache['key']      # returns 'value'
+    del cache['key']  # clears the key
+    cache.set('key', 'value', expire=30)    # key expires in 30 seconds
