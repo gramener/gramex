@@ -40,4 +40,4 @@ url:
             args: [['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j']]
         cache:
             expiry:
-                duration: 5             # Cache the request for 2 seconds
+                duration: 5             # Cache the request for 5 seconds
