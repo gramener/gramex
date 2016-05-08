@@ -2,7 +2,6 @@ import json
 import tornado.escape
 from .basehandler import BaseHandler
 
-# TODO: populate this via services.url hook and from path data
 datastore = {}
 
 
@@ -23,21 +22,17 @@ class JSONHandler(BaseHandler):
     '''
     def jsonwalk(self, jsonpath, create=False):
         ''
-        # Path key defaults to the portion of the URL before the jsonpath
-        if self.path is None:
-            full_path = tornado.escape.url_unescape(self.request.path)
-            self.path = full_path[:len(full_path) - len(jsonpath)]
-
+        # Path key defaults to the URL spec name.
         # Set the default data provided.
-        # TODO: make this a one-type setup via services.url hooks
-        datastore.setdefault(self.path, self.default_data)
+        pathkey = self.name if self.path is None else self.path
+        datastore.setdefault(pathkey, self.default_data)
 
         # TODO: data persistence
 
-        parent, key, data = datastore, self.path, datastore[self.path]
+        parent, key, data = datastore, pathkey, datastore[pathkey]
         if not jsonpath:
             return parent, key, data
-        keys = [self.path] + jsonpath.split('/')
+        keys = [pathkey] + jsonpath.split('/')
         for index, key in enumerate(keys[1:]):
             if hasattr(data, '__contains__') and key in data:
                 parent, data = data, data[key]
@@ -57,6 +52,7 @@ class JSONHandler(BaseHandler):
         return parent, key, data
 
     def initialize(self, path=None, data=None, **kwargs):
+        self.name = kwargs['name']
         self.path = path
         self.default_data = data
         self.json_kwargs = {
