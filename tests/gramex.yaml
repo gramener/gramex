@@ -4,7 +4,9 @@ variables:
 
 app:
   listen:
-    port: 9999      # Use a diffent port for testing
+    port: 9999              # Avoid clash with default Gramex port running tests
+  settings:
+    xsrf_cookies: false     # Temporarily disable for testing
 
 cache:
     memory:
@@ -650,6 +652,19 @@ url:
       kwargs: {rand: 99999999}
     cache:
       key: [invalid, invalid.invalid]
+
+  json/get:
+    pattern: /json/get/(.*)
+    handler: JSONHandler
+    kwargs:
+        data:
+            x: "1"
+            y: {z: 2}
+            z: [a, b, {m: 1, n: 2}]
+  json/write:
+    pattern: /json/write/(.*)
+    handler: JSONHandler
+
 
 # Store Gramex logs in gramex.log
 log:
