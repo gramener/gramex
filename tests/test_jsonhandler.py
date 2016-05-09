@@ -72,6 +72,11 @@ class TestJSONHandler(TestGramex):
         self.check('/json/write/', text=dump(data))
         self.delete('/json/write/')
 
+        # Empty put does not raise an error, returns empty value
+        r = self.put('/json/write/', data='')
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.text, '')
+
         # put creates deep trees
         self.check('/json/write/', text='null')
         self.put('/json/write/a/b', data=dump(data))

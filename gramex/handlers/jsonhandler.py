@@ -2,6 +2,7 @@ import os
 import json
 import time
 import logging
+import tornado.web
 import tornado.escape
 from .basehandler import BaseHandler
 
@@ -25,6 +26,12 @@ class JSONHandler(BaseHandler):
     :arg string data: optional initial dataset, used only if path is not
         specified. Defaults to null
     '''
+    def parse_body_as_json(self):
+        try:
+            return tornado.escape.json_decode(self.request.body)
+        except json.decoder.JSONDecodeError:
+            raise tornado.web.HTTPError(400, log_message='Bad JSON', reason='Bad JSON')
+
     def jsonwalk(self, jsonpath, create=False):
         ''
         if self.path:
@@ -102,14 +109,15 @@ class JSONHandler(BaseHandler):
 
     def put(self, jsonpath):
         parent, key, data = self.jsonwalk(jsonpath, create=True)
-        data = parent[key] = tornado.escape.json_decode(self.request.body)
-        self.write(json.dumps(data, **self.json_kwargs))
-        self.changed = True
+        if self.request.body:
+            data = parent[key] = self.parse_body_as_json()
+            self.write(json.dumps(data, **self.json_kwargs))
+            self.changed = True
 
     def patch(self, jsonpath):
         parent, key, data = self.jsonwalk(jsonpath)
         if data is not None:
-            data = tornado.escape.json_decode(self.request.body)
+            data = self.parse_body_as_json()
             parent[key].update(data)
             self.changed = True
         self.write(json.dumps(data, **self.json_kwargs))
