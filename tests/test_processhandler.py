@@ -2,7 +2,6 @@ import io
 import os
 import time
 import gramex
-from gramex.services import info
 from . import server
 from .test_handlers import TestGramex
 
@@ -41,7 +40,8 @@ class TestProcessHandler(TestGramex):
         path = os.path.join(self.folder, path)
         self.assertTrue(os.path.exists(path))
         # Wait a bit until the path is closed, then open it and return the handle
-        time.sleep(0.1)
+        delay = 0.1
+        time.sleep(delay)
         handle = io.open(path, encoding='utf-8')
         try:
             lines = [line.strip() for line in handle.readlines()]

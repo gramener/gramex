@@ -10,6 +10,7 @@ from . import server
 from .test_handlers import TestGramex
 
 files = AttrDict()
+HTTP_OK = 200
 
 
 def setUpModule():
@@ -74,7 +75,7 @@ class TestJSONHandler(TestGramex):
 
         # Empty put does not raise an error, returns empty value
         r = self.put('/json/write/', data='')
-        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.status_code, HTTP_OK)
         self.assertEqual(r.text, '')
 
         # put creates deep trees
@@ -106,7 +107,6 @@ class TestJSONHandler(TestGramex):
         self.patch('/json/write/', data=dump({key2: val}))
         self.check('/json/write/', text=dump({key: val2, key2: val}))
         self.delete('/json/write')
-
 
     def test_path(self):
         folder = os.path.dirname(os.path.abspath(__file__))
