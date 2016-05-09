@@ -21,9 +21,13 @@ classes: toc
 
 **Exercise**: Make `/blog/` render a simple Markdown-based blog.
 
-## [Gramex offers a data API](datahandler/)
+## [Gramex connects to data](datahandler/)
 
 **Exercise**: Load a dataset into MySQL or PostgreSQL, and create a DataHandler that exposes that table.
+
+## [Gramex writes data](jsonhandler/)
+
+**Exercise**: TBD
 
 ## [Gramex runs processes](processhandler/)
 

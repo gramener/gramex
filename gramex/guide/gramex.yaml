@@ -11,6 +11,7 @@ app:
       secret: 77z5fx1SxXmrjJ_R7vlAIXcf
     autoreload: False
     debug: False
+    xsrf_cookies: False
 
 import:
     subdirectories: '*/gramex.yaml'

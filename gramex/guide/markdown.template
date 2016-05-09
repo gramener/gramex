@@ -17,6 +17,7 @@
       <li><a href="/$GUIDE_ROOT/functionhandler/">Run functions</a></li>
       <li><a href="/$GUIDE_ROOT/filehandler/">Render files</a></li>
       <li><a href="/$GUIDE_ROOT/datahandler/">Connect to data</a></li>
+      <li><a href="/$GUIDE_ROOT/jsonhandler/">Save data</a></li>
       <li><a href="/$GUIDE_ROOT/processhandler/">Run processes</a></li>
       <li><a href="/$GUIDE_ROOT/auth/">Authentication</a></li>
       <li><a href="/$GUIDE_ROOT/cache/">Cache requests</a></li>

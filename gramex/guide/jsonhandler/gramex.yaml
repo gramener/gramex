@@ -1,0 +1,8 @@
+url:
+    jsonhandler-data:
+        pattern: /$YAMLURL/data/(.*)
+        handler: JSONHandler
+        kwargs:
+            data:
+                y: {a: 1, b: 2}
+                z: [1, 2, 3]
