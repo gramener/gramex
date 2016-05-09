@@ -669,7 +669,6 @@ url:
     handler: JSONHandler
     kwargs:
       path: $YAMLPATH/jsonhandler.json
-      data: {x: 1}
 
 # Store Gramex logs in gramex.log
 log:

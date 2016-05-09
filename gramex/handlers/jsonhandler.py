@@ -22,30 +22,32 @@ class JSONHandler(BaseHandler):
 
     :arg string path: optional file where the JSON data is persisted. If not
         specified, the JSON data is not persisted.
-    :arg string data: optional initial dataset, if path does not exist. Defaults
-        to null
+    :arg string data: optional initial dataset, used only if path is not
+        specified. Defaults to null
     '''
     def jsonwalk(self, jsonpath, create=False):
         ''
-        # Path key defaults to the URL spec name.
-        # Set the default data provided.
-        pathkey = self.name if self.path is None else self.path
-        _datastore.setdefault(pathkey, self.default_data)
-
         if self.path:
+            pathkey = self.path
+            _datastore.setdefault(pathkey, None)
             self.changed = False
             if os.path.exists(pathkey):
-                # Initialise data from file
+                # Initialise data from file if it's beeup updated
                 if _loaded.get(pathkey, 0) <= os.stat(pathkey).st_mtime:
-                    with open(pathkey, mode='rb') as handle:
+                    # Don't use encoding when reading JSON. We're using ensure_ascii=True
+                    # Besides, when handling Py2 & Py3, just ignoring encoding works best
+                    with open(pathkey, mode='r') as handle:     # noqa
                         try:
-                            _datastore[pathkey] = json.load(handle, encoding='utf-8')
+                            _datastore[pathkey] = json.load(handle)
                             _loaded[pathkey] = time.time()
                         except ValueError:
                             logging.warn('Invalid JSON in %s', pathkey)
                             self.changed = True
-            elif _datastore[pathkey] is not None:
+            else:
                 self.changed = True
+        else:
+            pathkey = self.name
+            _datastore.setdefault(pathkey, self.default_data)
 
         # Walk down the path and find the parent, key and data represented by jsonpath
         parent, key, data = _datastore, pathkey, _datastore[pathkey]
@@ -75,6 +77,7 @@ class JSONHandler(BaseHandler):
         self.path = path
         self.default_data = data
         self.json_kwargs = {
+            'ensure_ascii': True,
             'separators': (',', ':'),
         }
 
@@ -121,6 +124,8 @@ class JSONHandler(BaseHandler):
     def on_finish(self):
         # Write data to disk if changed
         if self.path and self.changed:
-            with open(self.path, mode='wb') as handle:
-                json.dump(_datastore.get(self.path), handle, encoding='utf-8', **self.json_kwargs)
+            # Don't use encoding when reading JSON. We're using ensure_ascii=True
+            # Besides, when handling Py2 & Py3, just ignoring encoding works best
+            with open(self.path, mode='w') as handle:       # noqa
+                json.dump(_datastore.get(self.path), handle, **self.json_kwargs)
             _loaded[self.path] = time.time()

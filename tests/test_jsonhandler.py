@@ -114,10 +114,9 @@ class TestJSONHandler(TestGramex):
             with io.open(jsonfile, encoding='utf-8') as handle:
                 self.assertEqual(handle.read(), dump(data))
 
-        data = conf.url['json/path'].kwargs.data
-        match_jsonfile(data)
-        self.assertTrue(os.path.exists(jsonfile))
-        files.jsonfile = jsonfile
+        self.check('/json/path/', text=dump(None))
+        # At this point, jsonfile ought to be created, but the server thread may
+        # not be done. So we'll test it later.
 
         key, val = u'\u2013', -1
         key2, val2 = u'\u00A3', None
@@ -126,6 +125,13 @@ class TestJSONHandler(TestGramex):
         # test put
         self.put('/json/path/', data=dump(data))
         match_jsonfile(data)
+
+        # By this time, jsonfile definitely ought to be created -- since the
+        # server thread has served the next request.
+        self.assertTrue(os.path.exists(jsonfile))
+        files.jsonfile = jsonfile
+
+        # test put at a non-existent deep node
         self.put(u'/json/path/%s/1' % key, data=dump(data))
         match_jsonfile({key: {'1': data}})
 
