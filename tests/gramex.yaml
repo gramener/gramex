@@ -664,7 +664,12 @@ url:
   json/write:
     pattern: /json/write/(.*)
     handler: JSONHandler
-
+  json/path:
+    pattern: /json/path/(.*)
+    handler: JSONHandler
+    kwargs:
+      path: $YAMLPATH/jsonhandler.json
+      data: {x: 1}
 
 # Store Gramex logs in gramex.log
 log:

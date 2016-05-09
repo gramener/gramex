@@ -1,10 +1,15 @@
 from __future__ import unicode_literals
 
+import io
+import os
 import json
 import requests
 from gramex import conf
+from orderedattrdict import AttrDict
 from . import server
 from .test_handlers import TestGramex
+
+files = AttrDict()
 
 
 def setUpModule():
@@ -13,6 +18,11 @@ def setUpModule():
 
 def tearDownModule():
     server.stop_gramex()
+
+    # Delete files created
+    for filename in files.values():
+        if os.path.exists(filename):
+            os.unlink(filename)
 
 
 def dump(data):
@@ -74,13 +84,14 @@ class TestJSONHandler(TestGramex):
         self.check('/json/write/', text=dump({'a': {'b': data}}))
         self.delete('/json/write/')
 
-        #
+        # write into sub-keys
         self.check('/json/write/', text='null')
         self.put('/json/write/', data=dump(data))
         self.put(u'/json/write/%s/1' % key, data=dump(data))
         self.check('/json/write/', text=dump({key: {'1': data}}))
         self.delete('/json/write/')
 
+        # test patch for update
         self.check('/json/write/', text='null')
         self.put('/json/write/', data=dump(data))
         self.patch('/json/write/', data=dump(data))
@@ -90,3 +101,46 @@ class TestJSONHandler(TestGramex):
         self.patch('/json/write/', data=dump({key2: val}))
         self.check('/json/write/', text=dump({key: val2, key2: val}))
         self.delete('/json/write')
+
+
+    def test_path(self):
+        folder = os.path.dirname(os.path.abspath(__file__))
+        jsonfile = os.path.join(folder, 'jsonhandler.json')
+        if os.path.exists(jsonfile):
+            os.unlink(jsonfile)
+
+        def match_jsonfile(data):
+            self.check('/json/path/', text=dump(data))
+            with io.open(jsonfile, encoding='utf-8') as handle:
+                self.assertEqual(handle.read(), dump(data))
+
+        data = conf.url['json/path'].kwargs.data
+        match_jsonfile(data)
+        self.assertTrue(os.path.exists(jsonfile))
+        files.jsonfile = jsonfile
+
+        key, val = u'\u2013', -1
+        key2, val2 = u'\u00A3', None
+        data = {key: val}
+
+        # test put
+        self.put('/json/path/', data=dump(data))
+        match_jsonfile(data)
+        self.put(u'/json/path/%s/1' % key, data=dump(data))
+        match_jsonfile({key: {'1': data}})
+
+        # test delete
+        self.delete('/json/path/')
+        match_jsonfile(None)
+
+        # test patch
+        self.put('/json/path/', data=dump(data))
+        self.patch('/json/path/', data=dump(data))
+        match_jsonfile(data)
+        self.patch('/json/path/', data=dump({key: val2}))
+        match_jsonfile({key: val2})
+        self.patch('/json/path/', data=dump({key2: val}))
+        match_jsonfile({key: val2, key2: val})
+
+        # cleanup
+        self.delete('/json/path')
