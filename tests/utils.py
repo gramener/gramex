@@ -1,12 +1,14 @@
 'Test case utilities'
 
 import json
+import time
 import random
 import pandas as pd
 from tornado import gen
 from tornado.web import RequestHandler
 from tornado.httpclient import AsyncHTTPClient
 from concurrent.futures import ThreadPoolExecutor
+from gramex.services import info
 
 watch_info = []
 
@@ -126,3 +128,9 @@ def on_modified(event):
 
 def on_deleted(event):
     watch_info.append({'event': event, 'type': 'deleted'})
+
+
+def slow_count(var, count=1, delay=0.01):
+    for x in range(count):
+        info[var] = x
+        time.sleep(delay)

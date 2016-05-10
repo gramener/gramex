@@ -83,7 +83,7 @@ def app(conf):
 
 def schedule(conf):
     "Set up the Gramex PeriodicCallback scheduler"
-    scheduler.setup(schedule=conf, tasks=info.schedule)
+    scheduler.setup(schedule=conf, tasks=info.schedule, threadpool=info.threadpool)
 
 
 def threadpool(conf):

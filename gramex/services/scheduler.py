@@ -2,25 +2,38 @@
 
 import logging
 import tornado.ioloop
-from crontab import CronTab
 from pydoc import locate
+from crontab import CronTab
 
 
 class Task(object):
     'Run a task. Then schedule it at the next occurrance.'
 
-    def __init__(self, name, schedule, ioloop=None):
-        'Create a new task based on a schedule in ioloop (default to current)'
+    def __init__(self, name, schedule, threadpool, ioloop=None):
+        '''
+        Create a new task based on a schedule in ioloop (default to current).
+
+        The schedule configuration accepts:
+
+        - startup: True to run at startup
+        - minutes, hours, dates, months, weekdays, years: cron schedule
+        - thread: True to run in a separate thread
+        '''
         self.name = name
         self.function = locate(schedule.function)
+        self.args = schedule.get('args', [])
         self.kwargs = schedule.get('kwargs', {})
         self.ioloop = ioloop or tornado.ioloop.IOLoop.current()
+
+        if schedule.get('thread'):
+            fn = self.function
+            self.function = lambda *args, **kwargs: threadpool.submit(fn, *args, **kwargs)
 
         # Run now if the task is to be run on startup
         if schedule.get('startup'):
             # Don't re-run if the config was reloaded
             if not self.ioloop._running:
-                self.function(**self.kwargs)
+                self.function(*self.args, **self.kwargs)
 
         # Run on schedule if any of the schedule periods are specified
         periods = 'minutes hours dates months weekdays years'.split()
@@ -36,7 +49,7 @@ class Task(object):
         'Run task. Then set up next callback.'
         logging.info('Running %s', self.name)
         try:
-            self.function(**self.kwargs)
+            self.function(*self.args, **self.kwargs)
         finally:
             # Do not schedule if stopped (e.g. via self.stop())
             if self.callback is not None:
@@ -56,13 +69,13 @@ class Task(object):
         self.callback = self.ioloop.call_later(delay, self.run)
 
 
-def setup(schedule, tasks, ioloop=None):
+def setup(schedule, tasks, threadpool, ioloop=None):
     'Create tasks running on ioloop for the given schedule, store it in tasks'
     for name, task in tasks.items():
         task.stop()
     tasks.clear()
     for name, sched in schedule.items():
         try:
-            tasks[name] = Task(name, sched, ioloop)
+            tasks[name] = Task(name, sched, threadpool, ioloop)
         except Exception as e:
             logging.exception(e)

@@ -693,3 +693,14 @@ watch:
     on_modified: utils.on_modified
     on_created: utils.on_created
     on_deleted: utils.on_deleted
+
+schedule:
+  schedule-startup-set-key:
+    function: utils.slow_count          # Set global value schedule-key to 1
+    args: ['schedule-key', 1]
+    startup: true
+  schedule-startup-slow:
+    function: utils.slow_count          # Set global schedule-count every 10ms
+    args: ['schedule-count', 200]
+    startup: true
+    thread: true
