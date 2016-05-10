@@ -4,12 +4,11 @@ import tornado.gen
 import tornado.web
 import pandas as pd
 import sqlalchemy as sa
-import concurrent.futures
+from gramex.services import info
 from orderedattrdict import AttrDict
 from .basehandler import BaseHandler
 
 drivers = {}
-thread_pool = concurrent.futures.ThreadPoolExecutor(8)
 
 
 class DataHandler(BaseHandler):
@@ -251,9 +250,9 @@ class DataHandler(BaseHandler):
         )
 
         if self.params.driver == 'sqlalchemy':
-            self.result = yield thread_pool.submit(self._sqlalchemy, **kwargs)
+            self.result = yield info.threadpool.submit(self._sqlalchemy, **kwargs)
         elif self.params.driver == 'blaze':
-            self.result = yield thread_pool.submit(self._blaze, **kwargs)
+            self.result = yield info.threadpool.submit(self._blaze, **kwargs)
         else:
             raise NotImplementedError('driver=%s is not supported yet.' % self.params.driver)
 

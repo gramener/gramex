@@ -38,7 +38,7 @@ class Task(object):
         try:
             self.function(**self.kwargs)
         finally:
-            # Do not schedule if self.function has stopped the task
+            # Do not schedule if stopped (e.g. via self.stop())
             if self.callback is not None:
                 self._schedule()
 

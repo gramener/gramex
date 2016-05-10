@@ -21,6 +21,7 @@ import webbrowser
 import tornado.web
 import tornado.ioloop
 import logging.config
+import concurrent.futures
 import six.moves.urllib.parse as urlparse
 from orderedattrdict import AttrDict
 from . import scheduler
@@ -35,6 +36,7 @@ info = AttrDict(
     app=None,
     schedule=AttrDict(),
     cache=AttrDict(),
+    threadpool=concurrent.futures.ThreadPoolExecutor(1),
 )
 
 
@@ -59,6 +61,7 @@ def app(conf):
         info.app.listen(**conf.listen)
 
         def callback():
+            'Called after all services are started. Opens browser if required'
             if ioloop._running:
                 return
 
@@ -81,6 +84,15 @@ def app(conf):
 def schedule(conf):
     "Set up the Gramex PeriodicCallback scheduler"
     scheduler.setup(schedule=conf, tasks=info.schedule)
+
+
+def threadpool(conf):
+    "Set up a global threadpool executor"
+    # By default, use a single worker. If a different value is specified, use it
+    workers = 1
+    if conf and hasattr(conf, 'get'):
+        workers = conf.get('workers', workers)
+    info.threadpool = concurrent.futures.ThreadPoolExecutor(workers)
 
 
 def _sort_url_patterns(entry):

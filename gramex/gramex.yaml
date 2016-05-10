@@ -105,6 +105,10 @@ log:
             format: '%(levelname)1.1s,%(asctime)s,%(module)s,%(lineno)d,"%(message)s"'
             datefmt: '%Y-%m-%d %H:%M:%S'
 
+# Configure the thread pool that's shared across Gramex to run parallel threads
+threadpool:
+    workers: 8                  # Max number of parallel threads
+
 
 # The `schedule:` section defines when specific code is to run.
 #
