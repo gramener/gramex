@@ -6,6 +6,7 @@ import random
 import pandas as pd
 from tornado import gen
 from tornado.web import RequestHandler
+from tornado.escape import recursive_unicode
 from tornado.httpclient import AsyncHTTPClient
 from concurrent.futures import ThreadPoolExecutor
 from gramex.services import info
@@ -107,7 +108,7 @@ def httpbin(handler, mime='json', rand=None, status=200):
 
     response = {
         'headers': {key: handler.request.headers.get(key) for key in handler.request.headers},
-        'args': handler.request.arguments,
+        'args': recursive_unicode(handler.request.arguments),
     }
     rand = handler.get_argument('rand', rand)
     if rand is not None:

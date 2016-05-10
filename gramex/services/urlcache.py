@@ -14,6 +14,7 @@ from __future__ import unicode_literals
 
 import json
 import logging
+from six.moves import cPickle as pickle
 from diskcache import Cache as DiskCache
 from .ttlcache import TTLCache as MemoryCache
 
@@ -39,6 +40,13 @@ def get_cachefile(store):
         logging.warn('cache: ignoring unknown store %s', store)
         return CacheFile
 
+# In Python 3, json does not support byte encoding. Use pickle instead. (It's faster in Pythom 3)
+try:
+    json.dumps(b'')
+    dumps, loads = json.dumps, json.loads
+except TypeError:
+    dumps, loads = pickle.dumps, pickle.loads
+
 
 class CacheFile(object):
 
@@ -58,7 +66,7 @@ class CacheFile(object):
 class MemoryCacheFile(CacheFile):
     def get(self):
         result = self.store.get(self.key)
-        return None if result is None else json.loads(result)
+        return None if result is None else loads(result)
 
     def wrap(self, handler):
         self._write_buffer = []
@@ -72,7 +80,7 @@ class MemoryCacheFile(CacheFile):
         def on_finish():
             self.store.set(
                 key=self.key,
-                value=json.dumps({
+                value=dumps({
                     'status': handler._status_code,
                     'headers': [
                         [name, value] for name, value in handler._headers.get_all()

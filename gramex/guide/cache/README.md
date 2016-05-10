@@ -138,3 +138,17 @@ method which accepts an `expire=` parameter. For example:
     cache['key']      # returns 'value'
     del cache['key']  # clears the key
     cache.set('key', 'value', expire=30)    # key expires in 30 seconds
+
+
+## Mixing Python versions
+
+The cache implementation in Python 2 is different from Python 3 because:
+
+- `diskcache`'s sqlite3 versions differ between Python 2 and Python 3
+- The cache is stored as a pickle dump in Python 3, and a json dump in Python 2.
+  (JSON is faster in Python 2, but slower in Python 3, and does not encode
+  bytestrings, besides.)
+
+This means that you cannot have Gramex instances on Python 2 and Python 3 share
+the same cache. (Gramex instances running the same Python version can share the
+cache.)
