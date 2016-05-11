@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 import os
+import pathlib
 import unittest
 import gramex.config
 import gramex.services
@@ -11,6 +12,7 @@ from .test_handlers import TestGramex
 from gramex.services.urlcache import ignore_headers, MemoryCache, DiskCache
 
 info = AttrDict()
+files = AttrDict()
 
 
 def setUpModule():
@@ -25,6 +27,11 @@ def setUpModule():
 
 def tearDownModule():
     server.stop_gramex()
+
+    # Delete files created
+    for filename in files.values():
+        if os.path.exists(filename):
+            os.unlink(filename)
 
 
 class TestCacheConstructor(unittest.TestCase):
@@ -103,16 +110,20 @@ class TestCacheFunctionHandler(TestGramex):
 
 
 class TestCacheFileHandler(TestGramex):
-    # We'll use this file to test caching
-    filename = u'.cache-file\u2013unicode.txt'
+    try:
+        filename = u'.cache-file\u2013unicode.txt'
+        pathlib.Path(filename)
+    except UnicodeError:
+        filename = '.cache-file.txt'
+    content = u'\u2013'
 
     def test_cache(self):
         cache_file = os.path.join(info.folder, 'dir', self.filename)
 
-        def check_value(text):
+        def check_value(content):
             r = self.get(u'/cache/filehandler/%s' % self.filename)
             self.assertEqual(r.status_code, 200)
-            self.assertEqual(r.content, text.encode('utf-8'))
+            self.assertEqual(r.content, content)
 
         # # Delete the file. The initial response should be a 404
         if os.path.exists(cache_file):
@@ -122,18 +133,19 @@ class TestCacheFileHandler(TestGramex):
 
         # Create the file. The response should be what we write
         with open(cache_file, 'wb') as handle:
-            handle.write(self.filename.encode('utf-8'))
-        check_value(self.filename)
+            handle.write(self.content.encode('utf-8'))
+        files.cache_file = self.filename
+        check_value(self.content.encode('utf-8'))
 
         # Modify the file. The response should be what it was originally.
         with open(cache_file, 'wb') as handle:
-            handle.write((self.filename + self.filename).encode('utf-8'))
-        check_value(self.filename)
+            handle.write((self.content + self.content).encode('utf-8'))
+        check_value(self.content.encode('utf-8'))
 
         # Delete the file. The response should be what it was.
         if os.path.exists(cache_file):
             os.unlink(cache_file)
-        check_value(self.filename)
+        check_value(self.content.encode('utf-8'))
 
     def test_error_cache(self):
         cache_file = os.path.join(info.folder, 'dir', self.filename)
@@ -145,6 +157,6 @@ class TestCacheFileHandler(TestGramex):
 
         # Create the file. The response should be cached as a 404
         with open(cache_file, 'wb') as handle:
-            handle.write(self.filename.encode('utf-8'))
+            handle.write(self.content.encode('utf-8'))
         r = self.get(u'/cache/filehandler-error/%s' % self.filename)
         self.assertEqual(r.status_code, 404)

@@ -1,7 +1,10 @@
+from __future__ import unicode_literals
+
 import io
 import os
 import six
 import json
+import pathlib
 import markdown
 from orderedattrdict import AttrDict
 from gramex.transforms import badgerfish
@@ -61,6 +64,13 @@ class TestFileHandler(TestGramex):
         self.check('/dir/noindex/index.html', path='dir/index.html')
         self.check('/dir/noindex/text.txt', path='dir/text.txt')
         self.check('/dir/noindex/subdir/text.txt', path='dir/subdir/text.txt')
+
+        # Check unicode filenames only if pathlib supports them
+        try:
+            pathlib.Path(files.unicode_file)
+            self.check(u'/dir/noindex/subdir/unicode\u2013file.txt', code=200)
+        except UnicodeError:
+            pass
 
         self.check('/dir/index/', code=200, text='subdir/</a>')
         adds_slash('/dir/index/subdir', True)
