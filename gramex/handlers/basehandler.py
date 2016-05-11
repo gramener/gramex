@@ -1,3 +1,4 @@
+import tornado.gen
 from gramex import conf, __version__ as version
 from tornado.web import RequestHandler
 from tornado.escape import json_decode
@@ -20,6 +21,7 @@ class BaseHandler(RequestHandler):
     def set_default_headers(self):
         self.set_header('Server', server_header)
 
+    @tornado.gen.coroutine
     def _cached_get(self, *args, **kwargs):
         cached = self.cachefile.get()
         headers_written = set()
@@ -34,7 +36,7 @@ class BaseHandler(RequestHandler):
             self.write(cached['body'])
         else:
             self.cachefile.wrap(self)
-            self.original_get(*args, **kwargs)
+            yield self.original_get(*args, **kwargs)
 
     def get_current_user(self):
         app_auth = conf.app.settings.get('auth', False)
