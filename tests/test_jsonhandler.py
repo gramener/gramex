@@ -68,12 +68,6 @@ class TestJSONHandler(TestGramex):
         self.check('/json/write/', text=dump({'a': {'b': data}}))
         self.delete('/json/write/')
 
-        # trailing slash does not matter
-        self.check('/json/write/', text='null')
-        self.put('/json/write/a/b', data=dump(data))
-        self.check('/json/write/', text=dump({'a': {'b': data}}))
-        self.delete('/json/write/')
-
         # write into sub-keys
         self.check('/json/write/', text='null')
         self.put('/json/write/', data=dump(data))
