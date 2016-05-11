@@ -14,7 +14,7 @@ from __future__ import unicode_literals
 
 import json
 import logging
-from six.moves import cPickle as pickle
+from six.moves import cPickle
 from diskcache import Cache as DiskCache
 from .ttlcache import TTLCache as MemoryCache
 
@@ -45,7 +45,7 @@ try:
     json.dumps(b'')
     dumps, loads = json.dumps, json.loads
 except TypeError:
-    dumps, loads = pickle.dumps, pickle.loads
+    dumps, loads = cPickle.dumps, cPickle.loads
 
 
 class CacheFile(object):
