@@ -23,6 +23,7 @@ import tornado.ioloop
 import logging.config
 import concurrent.futures
 import six.moves.urllib.parse as urlparse
+from six.moves import http_client
 from orderedattrdict import AttrDict
 from . import scheduler
 from . import watcher
@@ -217,11 +218,13 @@ def _cache_generator(conf, name):
     cache_key = _get_cache_key(conf, name)
     cachefile_class = urlcache.get_cachefile(store)
     cache_expiry = conf.get('expiry', {})
+    cache_statuses = conf.get('status', [http_client.OK])
     cache_expiry_duration = cache_expiry.get('duration', MAXTTL)
 
     def get_cachefile(handler):
         return cachefile_class(key=cache_key(handler.request), store=store,
-                               handler=handler, expire=cache_expiry_duration)
+                               handler=handler, expire=cache_expiry_duration,
+                               statuses=set(cache_statuses))
 
     return get_cachefile
 

@@ -658,6 +658,13 @@ url:
     kwargs:
       path: dir
     cache: true
+  cache/filehandler-errors:
+    pattern: /cache/filehandler-error/(.*)
+    handler: FileHandler
+    kwargs:
+      path: dir
+    cache:
+        status: [200, 404]
 
   json/get:
     pattern: /json/get/(.*)

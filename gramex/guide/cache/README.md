@@ -22,8 +22,6 @@ But adding the `cache:` to this URL caches it the first time it is called. When
             args: [['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j']]
         cache: true
 
-**Note**: Currently, only responses that return a HTTP 200 are cached. Any other
-response is not cached.
 
 ## Cache keys
 
@@ -125,6 +123,19 @@ limit is reached, the least recently used items are discarded.
 Disk caches are based on the
 [diskcache](http://www.grantjenks.com/docs/diskcache/) library. When the size
 limit is reached, the oldest items are discarded.
+
+## Cache status
+
+By default, only requests that return a HTTP 200 status code are cached. You can
+cache other status codes via the `status:` configuration.
+
+    url:
+      cache-errors:
+        pattern: /$YAMLURL/cache-errors
+        ...
+        cache:
+            status: [200, 404, 500]         # Cache all of these HTTP responses
+
 
 ### Using cache stores
 

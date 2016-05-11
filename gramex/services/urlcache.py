@@ -50,11 +50,12 @@ except TypeError:
 
 class CacheFile(object):
 
-    def __init__(self, key, store, handler, expire=None):
+    def __init__(self, key, store, handler, expire=None, statuses=None):
         self.key = key
         self.store = store
         self.handler = handler
         self.expire = expire
+        self.statuses = statuses
 
     def get(self):
         return None
@@ -79,7 +80,7 @@ class MemoryCacheFile(CacheFile):
 
         def on_finish():
             # Cache contents only for HTTP 200 responses
-            if handler.get_status() == 200:
+            if handler.get_status() in self.statuses:
                 self.store.set(
                     key=self.key,
                     value=dumps({
