@@ -1,9 +1,13 @@
+import os
 import requests
 import unittest
 from six.moves import http_client
+from orderedattrdict import AttrDict
 from . import server
 from gramex import conf
 from gramex.services import info
+
+tempfiles = AttrDict()
 
 
 def setUp():
@@ -12,6 +16,10 @@ def setUp():
 
 def tearDown():
     server.stop_gramex()
+
+    for filename in tempfiles.values():
+        if os.path.exists(filename):
+            os.unlink(filename)
 
 
 class TestGramex(unittest.TestCase):

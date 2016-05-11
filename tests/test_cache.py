@@ -7,11 +7,10 @@ import gramex.config
 import gramex.services
 from six.moves import http_client
 from orderedattrdict import AttrDict
-from . import TestGramex
+from . import TestGramex, tempfiles
 from gramex.services.urlcache import ignore_headers, MemoryCache, DiskCache
 
 info = AttrDict()
-files = AttrDict()
 
 
 def setUpModule():
@@ -19,13 +18,6 @@ def setUpModule():
     info.folder = os.path.dirname(os.path.abspath(__file__))
     info.config = gramex.config.PathConfig(os.path.join(info.folder, 'gramex.yaml'))
     gramex.services.cache(info.config.cache)
-
-
-def tearDownModule():
-    # Delete files created
-    for filename in files.values():
-        if os.path.exists(filename):
-            os.unlink(filename)
 
 
 class TestCacheConstructor(unittest.TestCase):
@@ -128,7 +120,7 @@ class TestCacheFileHandler(TestGramex):
         # Create the file. The response should be what we write
         with open(cache_file, 'wb') as handle:
             handle.write(self.content.encode('utf-8'))
-        files.cache_file = self.filename
+        tempfiles.cache_file = self.filename
         check_value(self.content.encode('utf-8'))
 
         # Modify the file. The response should be what it was originally.

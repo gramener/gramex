@@ -8,29 +8,20 @@ import pathlib
 import markdown
 from orderedattrdict import AttrDict
 from gramex.transforms import badgerfish
-from . import server, TestGramex
-
-files = AttrDict()
+from . import server, tempfiles, TestGramex
 
 
 def setUpModule():
     # Create a unicode filename to test if FileHandler's directory listing shows it
     folder = os.path.dirname(os.path.abspath(__file__))
-    files.unicode_file = os.path.join(folder, 'dir', 'subdir', u'unicode\u2013file.txt')
-    with io.open(files.unicode_file, 'w', encoding='utf-8') as out:
-        out.write(six.text_type(files.unicode_file))
+    tempfiles.unicode_file = os.path.join(folder, 'dir', 'subdir', u'unicode\u2013file.txt')
+    with io.open(tempfiles.unicode_file, 'w', encoding='utf-8') as out:
+        out.write(six.text_type(tempfiles.unicode_file))
 
     # Create a symlink to test if these are displayed in a directory listing without errors
     if hasattr(os, 'symlink'):
-        files.symlink = os.path.join(folder, 'dir', 'subdir', 'symlink.txt')
-        os.symlink(os.path.join(folder, 'gramex.yaml'), files.symlink)
-
-
-def tearDownModule():
-    # Delete files created
-    for filename in files.values():
-        if os.path.exists(filename):
-            os.unlink(filename)
+        tempfiles.symlink = os.path.join(folder, 'dir', 'subdir', 'symlink.txt')
+        os.symlink(os.path.join(folder, 'gramex.yaml'), tempfiles.symlink)
 
 
 class TestFileHandler(TestGramex):
@@ -62,7 +53,7 @@ class TestFileHandler(TestGramex):
 
         # Check unicode filenames only if pathlib supports them
         try:
-            pathlib.Path(files.unicode_file)
+            pathlib.Path(tempfiles.unicode_file)
             self.check(u'/dir/noindex/subdir/unicode\u2013file.txt', code=200)
         except UnicodeError:
             pass

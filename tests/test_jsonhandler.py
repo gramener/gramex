@@ -7,16 +7,7 @@ import requests
 from gramex import conf
 from six.moves import http_client
 from orderedattrdict import AttrDict
-from . import server, TestGramex
-
-files = AttrDict()
-
-
-def tearDownModule():
-    # Delete files created
-    for filename in files.values():
-        if os.path.exists(filename):
-            os.unlink(filename)
+from . import server, tempfiles, TestGramex
 
 
 def dump(data):
@@ -127,7 +118,7 @@ class TestJSONHandler(TestGramex):
         # By this time, jsonfile definitely ought to be created -- since the
         # server thread has served the next request.
         self.assertTrue(os.path.exists(jsonfile))
-        files.jsonfile = jsonfile
+        tempfiles.jsonfile = jsonfile
 
         # test put at a non-existent deep node
         self.put(u'/json/path/%s/1' % key, data=dump(data))
