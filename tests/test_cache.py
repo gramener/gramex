@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 import os
 import unittest
 import gramex.config
@@ -48,7 +50,7 @@ class TestCacheConstructor(unittest.TestCase):
         self.check_cache_expiry(cache['disk'])
 
 
-class TestCacheBehaviour(TestGramex):
+class TestCacheFunctionHandler(TestGramex):
     'Test Gramex handler caching behaviour'
     @staticmethod
     def headers(r):
@@ -98,3 +100,38 @@ class TestCacheBehaviour(TestGramex):
         r1 = self.get('/cache/invalid-keys-ignored')
         r2 = self.get('/cache/invalid-keys-ignored-changed-url?x=1')
         self.ne(r1, r2)
+
+
+class TestCacheFileHandler(TestGramex):
+
+    def test_cache(self):
+        # We'll use this file to test caching
+        # filename = u'.cache-file\u2013unicode.txt'
+        filename = u'.cache-file.txt'
+        cache_file = os.path.join(info.folder, 'dir', filename)
+
+        def check_value(text):
+            r = self.get(u'/cache/filehandler/%s' % filename)
+            self.assertEqual(r.status_code, 200)
+            self.assertEqual(r.text, text)
+
+        # # Delete the file. The initial response should be a 404
+        if os.path.exists(cache_file):
+            os.unlink(cache_file)
+        r = self.get(u'/cache/filehandler/%s' % filename)
+        self.assertEqual(r.status_code, 404)
+
+        # Create the file. The response should be what we write
+        with open(cache_file, 'wb') as handle:
+            handle.write(filename.encode('utf-8'))
+        check_value(filename)
+
+        # Modify the file. The response should be what it was originally.
+        with open(cache_file, 'wb') as handle:
+            handle.write((filename + filename).encode('utf-8'))
+        check_value(filename)
+
+        # Delete the file. The response should be what it was.
+        if os.path.exists(cache_file):
+            os.unlink(cache_file)
+        check_value(filename)

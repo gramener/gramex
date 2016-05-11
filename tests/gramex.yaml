@@ -652,6 +652,12 @@ url:
       kwargs: {rand: 99999999}
     cache:
       key: [invalid, invalid.invalid]
+  cache/filehandler:
+    pattern: /cache/filehandler/(.*)
+    handler: FileHandler
+    kwargs:
+      path: dir
+    cache: true
 
   json/get:
     pattern: /json/get/(.*)
