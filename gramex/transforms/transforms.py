@@ -1,5 +1,5 @@
 import six
-import yaml
+import json
 import tornado.gen
 from types import GeneratorType
 from orderedattrdict import AttrDict
@@ -25,7 +25,7 @@ _build_transform_cache = {}
 
 def build_transform(conf, vars={}):
     '''
-    Converts a YAML function configuration into a callable function. For e.g.::
+    Converts a function configuration into a callable function. For e.g.::
 
         function: json.dumps
         args: ["x"]
@@ -83,7 +83,8 @@ def build_transform(conf, vars={}):
             )
     '''
     # If the input is already cached, return it.
-    cache_key = yaml.dump(conf), yaml.dump(vars)
+    conf = {key: val for key, val in conf.items() if key in {'function', 'args', 'kwargs'}}
+    cache_key = json.dumps(conf), json.dumps(vars)
     if cache_key in _build_transform_cache:
         return _build_transform_cache[cache_key]
 
