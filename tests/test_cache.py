@@ -104,8 +104,7 @@ class TestCacheFunctionHandler(TestGramex):
 
 class TestCacheFileHandler(TestGramex):
     # We'll use this file to test caching
-    # filename = u'.cache-file\u2013unicode.txt'
-    filename = u'.cache-file.txt'
+    filename = u'.cache-file\u2013unicode.txt'
 
     def test_cache(self):
         cache_file = os.path.join(info.folder, 'dir', self.filename)
@@ -113,7 +112,7 @@ class TestCacheFileHandler(TestGramex):
         def check_value(text):
             r = self.get(u'/cache/filehandler/%s' % self.filename)
             self.assertEqual(r.status_code, 200)
-            self.assertEqual(r.text, text)
+            self.assertEqual(r.content, text.encode('utf-8'))
 
         # # Delete the file. The initial response should be a 404
         if os.path.exists(cache_file):
