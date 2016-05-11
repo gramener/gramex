@@ -78,18 +78,20 @@ class MemoryCacheFile(CacheFile):
             self._write_buffer.append(handler._write_buffer[-1])
 
         def on_finish():
-            self.store.set(
-                key=self.key,
-                value=dumps({
-                    'status': handler._status_code,
-                    'headers': [
-                        [name, value] for name, value in handler._headers.get_all()
-                        if name not in ignore_headers
-                    ],
-                    'body': b''.join(self._write_buffer)
-                }),
-                expire=self.expire,
-            )
+            # Cache contents only for HTTP 200 responses
+            if handler.get_status() == 200:
+                self.store.set(
+                    key=self.key,
+                    value=dumps({
+                        'status': handler._status_code,
+                        'headers': [
+                            [name, value] for name, value in handler._headers.get_all()
+                            if name not in ignore_headers
+                        ],
+                        'body': b''.join(self._write_buffer)
+                    }),
+                    expire=self.expire,
+                )
             self._on_finish()
 
         handler.write = write

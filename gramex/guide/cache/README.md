@@ -22,6 +22,9 @@ But adding the `cache:` to this URL caches it the first time it is called. When
             args: [['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j']]
         cache: true
 
+**Note**: Currently, only responses that return a HTTP 200 are cached. Any other
+response is not cached.
+
 ## Cache keys
 
 The response from any handler is cached against a cache key. By default, this is
