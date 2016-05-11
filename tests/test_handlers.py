@@ -3,8 +3,6 @@ import unittest
 from . import server
 
 
-setUpModule = server.start_gramex
-tearDownModule = server.stop_gramex
 redirect_codes = (301, 302)
 
 

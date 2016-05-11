@@ -13,13 +13,7 @@ from .test_handlers import TestGramex
 files = AttrDict()
 
 
-def setUpModule():
-    server.start_gramex()
-
-
 def tearDownModule():
-    server.stop_gramex()
-
     # Delete files created
     for filename in files.values():
         if os.path.exists(filename):

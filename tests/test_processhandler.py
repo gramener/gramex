@@ -2,11 +2,7 @@ import io
 import os
 import time
 import gramex
-from . import server
 from .test_handlers import TestGramex
-
-setUpModule = server.start_gramex
-tearDownModule = server.stop_gramex
 
 
 class TestProcessHandler(TestGramex):

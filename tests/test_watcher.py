@@ -4,11 +4,7 @@ import six
 import sys
 import time
 from pydoc import locate
-from . import server
 from .test_handlers import TestGramex
-
-setUpModule = server.start_gramex
-tearDownModule = server.stop_gramex
 
 # Since watch loads functions using locate(), we need to load it the same way.
 # Otherwise, the utils imported by watch is different from utils imported here.

@@ -5,7 +5,6 @@ import pathlib
 import unittest
 import gramex.config
 import gramex.services
-from . import server
 from six.moves import http_client
 from orderedattrdict import AttrDict
 from .test_handlers import TestGramex
@@ -21,13 +20,8 @@ def setUpModule():
     info.config = gramex.config.PathConfig(os.path.join(info.folder, 'gramex.yaml'))
     gramex.services.cache(info.config.cache)
 
-    # Set up the server for testing the cache
-    server.start_gramex()
-
 
 def tearDownModule():
-    server.stop_gramex()
-
     # Delete files created
     for filename in files.values():
         if os.path.exists(filename):
@@ -122,14 +116,14 @@ class TestCacheFileHandler(TestGramex):
 
         def check_value(content):
             r = self.get(u'/cache/filehandler/%s' % self.filename)
-            self.assertEqual(r.status_code, 200)
+            self.assertEqual(r.status_code, http_client.OK)
             self.assertEqual(r.content, content)
 
         # # Delete the file. The initial response should be a 404
         if os.path.exists(cache_file):
             os.unlink(cache_file)
         r = self.get(u'/cache/filehandler/%s' % self.filename)
-        self.assertEqual(r.status_code, 404)
+        self.assertEqual(r.status_code, http_client.NOT_FOUND)
 
         # Create the file. The response should be what we write
         with open(cache_file, 'wb') as handle:
@@ -153,10 +147,10 @@ class TestCacheFileHandler(TestGramex):
         if os.path.exists(cache_file):
             os.unlink(cache_file)
         r = self.get(u'/cache/filehandler-error/%s' % self.filename)
-        self.assertEqual(r.status_code, 404)
+        self.assertEqual(r.status_code, http_client.NOT_FOUND)
 
-        # Create the file. The response should be cached as a 404
+        # Create the file. The response should be cached as 404
         with open(cache_file, 'wb') as handle:
             handle.write(self.content.encode('utf-8'))
         r = self.get(u'/cache/filehandler-error/%s' % self.filename)
-        self.assertEqual(r.status_code, 404)
+        self.assertEqual(r.status_code, http_client.NOT_FOUND)

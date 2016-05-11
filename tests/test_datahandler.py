@@ -7,9 +7,6 @@ from .test_handlers import TestGramex
 from . import server
 import gramex.config
 
-setUpModule = server.start_gramex
-tearDownModule = server.stop_gramex
-
 
 class DataHandlerTestMixin(object):
     folder = Path(__file__).absolute().parent

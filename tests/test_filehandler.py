@@ -15,8 +15,6 @@ files = AttrDict()
 
 
 def setUpModule():
-    server.start_gramex()
-
     # Create a unicode filename to test if FileHandler's directory listing shows it
     folder = os.path.dirname(os.path.abspath(__file__))
     files.unicode_file = os.path.join(folder, 'dir', 'subdir', u'unicode\u2013file.txt')
@@ -30,8 +28,6 @@ def setUpModule():
 
 
 def tearDownModule():
-    server.stop_gramex()
-
     # Delete files created
     for filename in files.values():
         if os.path.exists(filename):
