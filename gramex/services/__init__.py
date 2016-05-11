@@ -238,7 +238,7 @@ def url(conf):
         urlspec = AttrDict(spec)
         urlspec.handler = locate(spec.handler, modules=['gramex.handlers'])
         kwargs = urlspec.get('kwargs', {})
-        kwargs['name'], kwargs['conf'] = name, conf
+        kwargs['name'], kwargs['conf'] = name, spec
 
         # If there's a cache section, get the cache method for use by BaseHandler
         if 'cache' in urlspec:
