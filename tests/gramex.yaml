@@ -683,7 +683,7 @@ url:
     kwargs:
       path: $YAMLPATH/jsonhandler.json
 
-# Store Gramex logs in gramex.log
+# Display Gramex logs on console with indentation
 log:
     version: 1
     root:
