@@ -73,7 +73,6 @@ class ProcessHandler(BaseHandler):
 
     def initialize(self, args, shell=False, cwd=None, stdout=None, stderr=None, stdin=None,
                    buffer=0, redirect=None, headers={}, transform={}, **kwargs):
-        self.params = kwargs
         self.args = args
         self.shell = shell
         self.redirect = redirect
@@ -180,7 +179,6 @@ class _Subprocess(object):
     '''
     def __init__(self, args, stream_stdout=[], stream_stderr=[], buffer_size=0, **kwargs):
         self.args = args
-        self.kwargs = kwargs
 
         # self.proc.stdout & self.proc.stderr are streams with process output
         kwargs['stdout'] = kwargs['stderr'] = subprocess.PIPE

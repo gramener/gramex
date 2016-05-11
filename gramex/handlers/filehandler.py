@@ -100,7 +100,6 @@ class FileHandler(BaseHandler):
 
     def initialize(self, path, default_filename=None, index=None,
                    index_template=None, headers={}, transform={}, **kwargs):
-        self.params = kwargs
         if isinstance(path, list):
             self.root = [Path(path_item).absolute() for path_item in path]
         else:

@@ -23,7 +23,6 @@ class FunctionHandler(BaseHandler):
         trigger calculations without displaying any output.
     '''
     def initialize(self, headers={}, redirect=None, **kwargs):
-        self.params = kwargs
         self.function = build_transform(kwargs, vars={'handler': None})
         self.headers = headers
         self.redirect_url = redirect

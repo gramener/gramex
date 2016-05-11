@@ -13,6 +13,7 @@ class BaseHandler(RequestHandler):
     '''
 
     def initialize(self, cache=None, **kwargs):
+        self.kwargs = kwargs
         if cache is not None:
             self.cachefile = cache(self)
             self.original_get = self.get
@@ -40,7 +41,7 @@ class BaseHandler(RequestHandler):
 
     def get_current_user(self):
         app_auth = conf.app.settings.get('auth', False)
-        route_auth = self.params.get('auth', app_auth)
+        route_auth = self.kwargs.get('auth', app_auth)
         if not route_auth:
             return 'static'
         user_json = self.get_secure_cookie('user')
