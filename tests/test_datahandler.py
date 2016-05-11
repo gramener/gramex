@@ -3,8 +3,7 @@ import sqlalchemy as sa
 import pandas.util.testing as pdt
 from pathlib import Path
 from nose.plugins.skip import SkipTest
-from .test_handlers import TestGramex
-from . import server
+from . import server, TestGramex
 import gramex.config
 
 

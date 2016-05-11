@@ -8,8 +8,7 @@ import pathlib
 import markdown
 from orderedattrdict import AttrDict
 from gramex.transforms import badgerfish
-from . import server
-from .test_handlers import TestGramex
+from . import server, TestGramex
 
 files = AttrDict()
 

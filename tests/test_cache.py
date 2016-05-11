@@ -7,7 +7,7 @@ import gramex.config
 import gramex.services
 from six.moves import http_client
 from orderedattrdict import AttrDict
-from .test_handlers import TestGramex
+from . import TestGramex
 from gramex.services.urlcache import ignore_headers, MemoryCache, DiskCache
 
 info = AttrDict()

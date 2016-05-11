@@ -4,7 +4,7 @@ import six
 import sys
 import time
 from pydoc import locate
-from .test_handlers import TestGramex
+from . import TestGramex
 
 # Since watch loads functions using locate(), we need to load it the same way.
 # Otherwise, the utils imported by watch is different from utils imported here.

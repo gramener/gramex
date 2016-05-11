@@ -2,7 +2,7 @@ import io
 import os
 import time
 import gramex
-from .test_handlers import TestGramex
+from . import TestGramex
 
 
 class TestProcessHandler(TestGramex):
