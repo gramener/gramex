@@ -5,12 +5,12 @@ import os
 import json
 import requests
 from gramex import conf
+from six.moves import http_client
 from orderedattrdict import AttrDict
 from . import server
 from .test_handlers import TestGramex
 
 files = AttrDict()
-HTTP_OK = 200
 
 
 def setUpModule():
@@ -75,7 +75,7 @@ class TestJSONHandler(TestGramex):
 
         # Empty put does not raise an error, returns empty value
         r = self.put('/json/write/', data='')
-        self.assertEqual(r.status_code, HTTP_OK)
+        self.assertEqual(r.status_code, http_client.OK)
         self.assertEqual(r.text, '')
 
         # put creates deep trees

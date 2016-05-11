@@ -5,12 +5,12 @@ import unittest
 import gramex.config
 import gramex.services
 from . import server
+from six.moves import http_client
 from orderedattrdict import AttrDict
 from .test_handlers import TestGramex
 from gramex.services.urlcache import ignore_headers, MemoryCache, DiskCache
 
 info = AttrDict()
-HTTP_OK = 200
 
 
 def setUpModule():
@@ -57,12 +57,12 @@ class TestCacheFunctionHandler(TestGramex):
         return {name: r.headers[name] for name in r.headers if name not in ignore_headers}
 
     def eq(self, r1, r2):
-        self.assertTrue(r1.status_code == r2.status_code == HTTP_OK)
+        self.assertTrue(r1.status_code == r2.status_code == http_client.OK)
         self.assertDictEqual(self.headers(r1), self.headers(r2))
         self.assertEqual(r1.text, r2.text)
 
     def ne(self, r1, r2):
-        self.assertTrue(r1.status_code == r2.status_code == HTTP_OK)
+        self.assertTrue(r1.status_code == r2.status_code == http_client.OK)
         self.assertNotEqual(r1.text, r2.text)
 
     def test_cache_key(self):
