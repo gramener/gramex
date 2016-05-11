@@ -10,7 +10,12 @@ def now():
     return '{:0.3f}'.format(time.time())
 
 
-class GoogleAuth(RequestHandler, GoogleOAuth2Mixin):
+class AuthHandler(RequestHandler):
+    def initialize(self, **kwargs):
+        pass
+
+
+class GoogleAuth(AuthHandler, GoogleOAuth2Mixin):
     @tornado.gen.coroutine
     def get(self):
         redirect_uri = '{0.protocol:s}://{0.host:s}{0.path:s}'.format(self.request)
