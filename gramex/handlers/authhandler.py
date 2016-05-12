@@ -2,8 +2,7 @@ import time
 import tornado.web
 from tornado.web import RequestHandler
 from tornado.escape import json_encode, json_decode
-from tornado.auth import (GoogleOAuth2Mixin, FacebookGraphMixin,
-                          TwitterMixin)
+from tornado.auth import GoogleOAuth2Mixin, FacebookGraphMixin, TwitterMixin
 
 
 def now():
@@ -11,6 +10,10 @@ def now():
 
 
 class AuthHandler(RequestHandler):
+    '''
+    The parent handler for all Auth handlers. Does not derive from BaseHandler.
+    It does not support caching or get_current_user().
+    '''
     def initialize(self, **kwargs):
         pass
 
@@ -42,7 +45,7 @@ class GoogleAuth(AuthHandler, GoogleOAuth2Mixin):
                 extra_params={'approval_prompt': 'auto'})
 
 
-class FacebookAuth(RequestHandler, FacebookGraphMixin):
+class FacebookAuth(AuthHandler, FacebookGraphMixin):
     @tornado.gen.coroutine
     def get(self):
         redirect_uri = '{0.protocol:s}://{0.host:s}{0.path:s}'.format(self.request)
@@ -64,7 +67,7 @@ class FacebookAuth(RequestHandler, FacebookGraphMixin):
                               'gender,link,username,locale,timezone'})
 
 
-class TwitterAuth(RequestHandler, TwitterMixin):
+class TwitterAuth(AuthHandler, TwitterMixin):
     @tornado.gen.coroutine
     def get(self):
         # TODO: Test
