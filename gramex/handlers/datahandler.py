@@ -30,13 +30,15 @@ class DataHandler(BaseHandler):
 
         url:
             flags:
-                pattern: /datastore/flags               # Any URL starting with /datastore/flags
-                handler: DataHandler                    # uses DataHandler
+                pattern: /datastore/flags                 # Any URL starting with /datastore/flags
+                handler: DataHandler                      # uses DataHandler
                 kwargs:
-                    driver: sqlalchemy                  # Using sqlalchemy driver
-                    url: sqlite:///C:/path/tutorial.db  # Connects to database at this path/url
-                    table: flags                        # to this table
-                    parameters: {encoding: utf8}        # with additional parameters provided
+                    driver: sqlalchemy                    # Using sqlalchemy driver
+                    url: $YAMLPATH/tutorial.db            # Connects to database at this path/url
+                    table: flags                          # to this table
+                    parameters: {encoding: utf8}          # with additional parameters provided
+                    default: {}                           # default query parameters
+                    query: {}                             # query parameter overrides
                     headers:
                         Content-Type: text/csv            # and served as csv
                         # Content-Type: application/json  # or JSON

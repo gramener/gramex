@@ -101,6 +101,18 @@ caches the response for 5 seconds.
 By default, the cache expires either after 10 years, or when the cache store
 runs out of space.
 
+## Cache status
+
+By default, only requests that return a HTTP 200 status code are cached. You can
+cache other status codes via the `status:` configuration.
+
+    url:
+      cache-errors:
+        pattern: /$YAMLURL/cache-errors
+        ...
+        cache:
+            status: [200, 404, 500]         # Cache all of these HTTP responses
+
 ## Cache stores
 
 Gramex provides an in-memory cache, but you can define your own cache in the
@@ -123,19 +135,6 @@ limit is reached, the least recently used items are discarded.
 Disk caches are based on the
 [diskcache](http://www.grantjenks.com/docs/diskcache/) library. When the size
 limit is reached, the oldest items are discarded.
-
-## Cache status
-
-By default, only requests that return a HTTP 200 status code are cached. You can
-cache other status codes via the `status:` configuration.
-
-    url:
-      cache-errors:
-        pattern: /$YAMLURL/cache-errors
-        ...
-        cache:
-            status: [200, 404, 500]         # Cache all of these HTTP responses
-
 
 ### Using cache stores
 
