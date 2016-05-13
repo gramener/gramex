@@ -56,5 +56,5 @@ class TestSchedule(TestGramex):
         # Run this test as soon as Gramex starts to check if schedule has run
         self.assertIn('schedule-key', info, 'Schedule was run at startup')
         self.check('/', code=http_client.OK)
-        max_count = conf.schedule['schedule-startup-slow'].args[1] - 1
+        max_count = conf.schedule['schedule-startup-slow'].kwargs.count - 1
         self.assertTrue(0 < info['schedule-count'] < max_count, 'Schedule still running')

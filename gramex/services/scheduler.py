@@ -4,6 +4,7 @@ import logging
 import tornado.ioloop
 from pydoc import locate
 from crontab import CronTab
+from ..transforms import build_transform
 
 
 class Task(object):
@@ -20,20 +21,19 @@ class Task(object):
         - thread: True to run in a separate thread
         '''
         self.name = name
-        self.function = locate(schedule.function)
-        self.args = schedule.get('args', [])
-        self.kwargs = schedule.get('kwargs', {})
+        self.function = build_transform(schedule, vars={})
         self.ioloop = ioloop or tornado.ioloop.IOLoop.current()
+        self.callback = None
 
         if schedule.get('thread'):
             fn = self.function
-            self.function = lambda *args, **kwargs: threadpool.submit(fn, *args, **kwargs)
+            self.function = lambda: threadpool.submit(fn)
 
         # Run now if the task is to be run on startup
         if schedule.get('startup'):
             # Don't re-run if the config was reloaded
             if not self.ioloop._running:
-                self.function(*self.args, **self.kwargs)
+                self.function()
 
         # Run on schedule if any of the schedule periods are specified
         periods = 'minutes hours dates months weekdays years'.split()
@@ -49,7 +49,7 @@ class Task(object):
         'Run task. Then set up next callback.'
         logging.info('Running %s', self.name)
         try:
-            self.function(*self.args, **self.kwargs)
+            self.function()
         finally:
             # Do not schedule if stopped (e.g. via self.stop())
             if self.callback is not None:
