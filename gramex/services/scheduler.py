@@ -2,7 +2,6 @@
 
 import logging
 import tornado.ioloop
-from pydoc import locate
 from crontab import CronTab
 from ..transforms import build_transform
 
