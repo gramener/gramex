@@ -23,7 +23,7 @@ def _arg_repr(arg):
 _build_transform_cache = {}
 
 
-def build_transform(conf, vars={}):
+def build_transform(conf, vars=None):
     '''
     Converts a function configuration into a callable function. For e.g.::
 
@@ -56,7 +56,9 @@ def build_transform(conf, vars={}):
 
     creates::
 
-        def transfom(x=None, y=1)
+        def transfom(x=None, y=1):
+
+    Or pass ``vars={}`` for function that does not accept any parameters.
 
     The returned function always returns an iterable containing the values. If
     the function returns a single value, you can get it on the first iteration.
@@ -89,7 +91,7 @@ def build_transform(conf, vars={}):
         return _build_transform_cache[cache_key]
 
     # The returned function takes a single argument by default
-    if not vars:
+    if vars is None:
         vars = {'_val': None}
 
     if 'function' not in conf:

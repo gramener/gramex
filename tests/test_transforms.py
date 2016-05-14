@@ -56,6 +56,16 @@ class BuildTransform(unittest.TestCase):
         '''))
         self.eqfn(fn, transform)
 
+    def test_fn_no_args(self):
+        def transform():
+            result = max(1, 2)
+            return result if isinstance(result, GeneratorType) else (result,)
+        fn = build_transform(yaml_parse('''
+            function: max
+            args: [1, 2]
+        '''), vars={})
+        self.eqfn(fn, transform)
+
     def test_fn_args(self):
         def transform(_val):
             result = max(1, 2)

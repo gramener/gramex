@@ -18,7 +18,7 @@ def badgerfish(content, handler=None, mapping={}, doctype='<!DOCTYPE html>'):
     data = yaml.load(content, Loader=AttrDictYAMLLoader)
     if handler is not None and hasattr(handler, 'file'):
         load_imports(data, handler.file)
-    maps = {tag: build_transform(trans) for tag, trans in mapping.items()}
+    maps = {tag: build_transform(trans, vars={'val': None}) for tag, trans in mapping.items()}
     for tag, value, node in walk(data):
         if tag in maps:
             node[tag] = yield maps[tag](value)
