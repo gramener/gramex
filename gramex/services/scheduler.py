@@ -26,13 +26,11 @@ class Task(object):
 
         if schedule.get('thread'):
             fn = self.function
-            self.function = lambda: threadpool.submit(fn)
-
-        # Run now if the task is to be run on startup
-        if schedule.get('startup'):
-            # Don't re-run if the config was reloaded
-            if not self.ioloop._running:
-                self.function()
+            def on_done(future):
+                exception = future.exception(timeout=0)
+                if exception:
+                    logging.error('%s (thread): %s', name, exception)
+            self.function = lambda: threadpool.submit(fn).add_done_callback(on_done)
 
         # Run on schedule if any of the schedule periods are specified
         periods = 'minutes hours dates months weekdays years'.split()
@@ -43,6 +41,10 @@ class Task(object):
             self._schedule()
         elif not schedule.get('startup'):
             logging.warn('schedule: %s has no schedule nor startup', name)
+
+        # Run now if the task is to be run on startup. Don't re-run if the config was reloaded
+        if schedule.get('startup') and not self.ioloop._running:
+            self.function()
 
     def run(self):
         'Run task. Then set up next callback.'

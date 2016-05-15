@@ -37,6 +37,7 @@ info = AttrDict(
     app=None,
     schedule=AttrDict(),
     cache=AttrDict(),
+    # Initialise with a single worker by default. threadpool.workers overrides this
     threadpool=concurrent.futures.ThreadPoolExecutor(1),
 )
 
