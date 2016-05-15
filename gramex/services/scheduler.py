@@ -26,10 +26,12 @@ class Task(object):
 
         if schedule.get('thread'):
             fn = self.function
+
             def on_done(future):
                 exception = future.exception(timeout=0)
                 if exception:
                     logging.error('%s (thread): %s', name, exception)
+
             self.function = lambda: threadpool.submit(fn).add_done_callback(on_done)
 
         # Run on schedule if any of the schedule periods are specified
