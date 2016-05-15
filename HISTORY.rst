@@ -3,6 +3,31 @@
 History
 -------
 
+1.0.7 (2016-05-15)
+~~~~~~~~~~~~~~~~~~
+
+* We have a new `JSONHandler`_ that implements a JSON store. It is similar to
+  the `Firebase API`_. It lets you save, modify and retrieve any JSON structure.
+  It is intended for small data (typically under 1MB) like settings.
+* All handlers support `caching`_. Any request can be cached for a fixed
+  duration. The cache can be in-memory or disk-based (shareable across
+  instances) and both caches have a size limit imposed. The cache key can also
+  be configured.
+* The `scheduler`_ supports threads. Using the ``thread: true`` configuration
+  runs the scheduled task in a separate thread.
+* The `log`_ section now supports 2 additional handlers (apart from ``console``):
+    * ``access-log`` writes information logs to a CSV file ``access.csv``
+    * ``warn-log`` writes warnings to a CSV file ``warn.csv``
+* A new ``threadpool:`` service has been added. This is used internally by
+  services to run code in a separate thread. You can use ``threapool.workers``
+  to specify the number of concurrent threads that are allowed.
+* Gramex handlers are now passed a ``name`` and ``conf`` parameter which
+  identifies the name and configuration used to create them.
+* The ``AuthHandler`` falls back to weaker HTTPS certificate verification --
+  specifically if Google authentication fails due to older HTTPS certificates on
+  systems.
+
+
 1.0.6 (2016-05-01)
 ~~~~~~~~~~~~~~~~~~
 
@@ -104,3 +129,10 @@ History
 ~~~~~~~~~~~~~~~~~~
 
 * First release of core server
+
+
+.. _Firebase API: https://www.firebase.com/docs/rest/api/
+.. _JSONHandler: https://learn.gramener.com/guide/jsonhandler/
+.. _caching: https://learn.gramener.com/guide/cache/
+.. _scheduler: https://learn.gramener.com/guide/scheduler/
+.. _log: https://learn.gramener.com/guide/config/#logging
