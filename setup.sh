@@ -31,6 +31,22 @@ setup_git() {
   fi
 }
 
+setup_node() {
+  if command_exists node; then
+    echo "Using existing $(node --version)"
+  else
+    echo "Installing node..."
+    source <(wget -qO- https://deb.nodesource.com/setup_4.x)
+    apt-get install -y -q nodejs
+  fi
+  if command_exists bower; then
+    echo "Using existing $(bower --version)"
+  else
+    echo 'Installing bower...'
+    npm install -g bower
+  fi
+}
+
 setup_python() {
   if command_exists conda; then
     echo "Using existing $(conda -V 2>&1)"
@@ -50,6 +66,7 @@ setup_python() {
 
 setup_gramex() {
   setup_git
+  setup_node
   setup_python
 
   # Install Conda dependencies

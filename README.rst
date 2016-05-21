@@ -10,21 +10,23 @@ Install
 
 .. _Anaconda: http://continuum.io/downloads
 .. _Git for Windows: https://git-for-windows.github.io/
+.. _node: https://nodejs.org/en/
 .. _update Anaconda: http://docs.continuum.io/anaconda/install#updating-from-older-anaconda-versions
 .. _Xcode: https://developer.apple.com/xcode/download/
 
-On **Linux**, run this command to set up Gramex (replace ``master`` with ``dev`` for
-the development version)::
+On **Linux**, run this command to set up Gramex::
 
     source <(wget -qO- http://code.gramener.com/s.anand/gramex/raw/master/setup.sh)
 
-On **Windows or Mac**:
+On **Windows or Mac** (or for manual install on Linux):
 
 1. Download and install `Git for Windows`_
-2. Download and install `Anaconda`_ 4.0.0 or later -- `update Anaconda`_ if required
-3. On a Mac, download and install `Xcode`_
-4. Run ``pip install --upgrade --ignore-installed http://code.gramener.com/s.anand/gramex/repository/archive.tar.bz2?ref=master``
+2. Download and install `node`_
+3. Download and install `Anaconda`_ 4.0.0 or later -- `update Anaconda`_ if required
+4. On Mac, download and install `Xcode`_
+5. Run ``pip install --upgrade --ignore-installed http://code.gramener.com/s.anand/gramex/repository/archive.tar.bz2?ref=master``
    (replace ``master`` with ``dev`` for the development version)
+6. Run ``npm install bower``
 
 Uninstall
 ~~~~~~~~~
