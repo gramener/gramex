@@ -180,6 +180,7 @@ as a Tornado template, use the following configuration:
             kwargs:
                 path: page.html             # named page.html
                 transform:
+                  "*.html":                 # Apply the transform to all HTML files
                     function: template      # Render page.html as a template
                     kwargs:                 # Pass it the following variables
                         title: "Variables"  # title is an explicit string
