@@ -64,24 +64,23 @@ def walk(node):
             yield index, value, node
 
 
-def merge(old, new, overwrite=False):
+def merge(old, new, mode='overwrite'):
     '''
-    Update old dict with items in new. If old[key] is a dict, update old[key]
-    with new[key] to preserve existing keys in old[key].
+    Update old dict with new dict recursively.
 
         >>> merge({'a': {'x': 1}}, {'a': {'y': 2}})
         {'a': {'x': 1, 'y': 2}}
 
-    If ``overwrite=True``, the old dict is overwritten. By default, a new
-    deepcopy is created.
+    If ``mode='overwrite'``, the old dict is overwritten (default).
+    If ``mode='setdefault'``, the old dict values are updated only if missing.
     '''
-    result = old if overwrite else deepcopy(old)
     for key in new:
-        if key in result and hasattr(result[key], 'items') and hasattr(new[key], 'items'):
-            merge(old=result[key], new=new[key], overwrite=True)
+        if key in old and hasattr(old[key], 'items') and hasattr(new[key], 'items'):
+            merge(old=old[key], new=new[key], mode=mode)
         else:
-            result[key] = deepcopy(new[key])
-    return result
+            if mode == 'overwrite' or key not in old:
+                old[key] = deepcopy(new[key])
+    return old
 
 
 class ChainConfig(AttrDict):
@@ -103,7 +102,7 @@ class ChainConfig(AttrDict):
         for name, config in self.items():
             if hasattr(config, '__pos__'):
                 config.__pos__()
-            merge(old=conf, new=config, overwrite=True)
+            merge(old=conf, new=config, mode='overwrite')
 
         # Remove keys where the value is None
         for key, value, node in list(walk(conf)):
@@ -257,7 +256,7 @@ def load_imports(config, source):
                 for path in paths:
                     new_conf = _yaml_open(root.joinpath(path))
                     imported_paths += load_imports(new_conf, source=path)
-                    merge(old=node, new=new_conf, overwrite=True)
+                    merge(old=node, new=new_conf, mode='setdefault')
             # Delete the import key
             del node[key]
     return imported_paths

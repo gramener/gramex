@@ -28,6 +28,7 @@ base_DERIVED: $DERIVED
 base_YAMLURL_VAR: $YAMLURL_VAR
 base_YAMLURL_VAR_EXPECTED: tests
 base_GRAMEXPATH: $GRAMEXPATH
+path: $YAMLPATH
 
 import:
     subdir: dir/config.template.subdir.yaml

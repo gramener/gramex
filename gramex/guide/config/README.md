@@ -228,6 +228,26 @@ subdirectories.
 
 Imports work recursively. You can have imports within imports.
 
+You can use imports within sections. For example:
+
+    url:
+      app1: 'app1/gramex.yaml'      # Imports app1/gramex.yaml into the url: section
+
+The imported configuration is overridden by the importing configuration. For
+example, `app1/gramex.yaml` has:
+
+    x: 1
+    y: 2
+
+Then, this configuration:
+
+    import:
+        app1: 'app1/gramex.yaml'
+    x: 2      # Override the x:1 set in app1/gramex.yaml
+
+... will override the value in the import. The order is unimportant -- ``x: 2``
+could be placed above the import as well. Imported values are always overridden.
+
 ## Variables
 
 Templates can use variables. Variables are written as `$VARIABLE` or

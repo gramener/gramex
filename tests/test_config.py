@@ -184,6 +184,9 @@ class TestPathConfig(unittest.TestCase):
             self.assertEqual(conf['%s_YAMLURL_VAR' % key], conf['%s_YAMLURL_VAR_EXPECTED' % key])
             # $GRAMEXPATH is the gramex path
             self.assertEqual(conf['%s_GRAMEXPATH' % key], os.path.dirname(inspect.getfile(gramex)))
+        # Imports do not override, but do setdefault
+        self.assertEqual(conf['path'], str(self.chain['base'].parent))
+        self.assertEqual(conf['subpath'], str(self.chain['subdir'].parent))
 
 
 class TestConfig(unittest.TestCase):
@@ -245,16 +248,16 @@ class TestConfig(unittest.TestCase):
 
     def test_merge(self):
         'Test gramex.config.merge'
-        def check(a, b, c):
+        def check(a, b, c, mode='overwrite'):
             'Check if merge(a, b) is c. Parameters are in YAML'
             old = yaml.load(a, Loader=AttrDictYAMLLoader)
             new = yaml.load(b, Loader=AttrDictYAMLLoader)
             # merging a + b gives c
             self.assertEqual(
                 yaml.load(c, Loader=AttrDictYAMLLoader),
-                merge(old, new))
-            # old and new are unchanged
-            self.assertEqual(old, yaml.load(a, Loader=AttrDictYAMLLoader))
+                merge(old, new, mode))
+            # new is unchanged
+            # self.assertEqual(old, yaml.load(a, Loader=AttrDictYAMLLoader))
             self.assertEqual(new, yaml.load(b, Loader=AttrDictYAMLLoader))
 
         check('x: 1', 'y: 2', 'x: 1\ny: 2')
@@ -263,3 +266,5 @@ class TestConfig(unittest.TestCase):
         check('x: {a: 1}', 'x: {b: 2}', 'x: {a: 1, b: 2}')
         check('x: {a: {p: 1}}', 'x: {a: {q: 1}, b: 2}', 'x: {a: {p: 1, q: 1}, b: 2}')
         check('x: {a: {p: 1}}', 'x: {a: null, b: null}', 'x: {a: null, b: null}')
+        check('x: 1', 'x: 2', 'x: 1', mode='underwrite')
+        check('x: {a: 1, c: 3}', 'x: {a: 2, b: 2}', 'x: {a: 1, c: 3, b: 2}', mode='underwrite')
