@@ -182,15 +182,19 @@ as a Tornado template, use the following configuration:
                 transform:
                   "*.html":                 # Apply the transform to all HTML files
                     function: template      # Render page.html as a template
-                    kwargs:                 # Pass it the following variables
+                    kwargs:                 # Optionally, pass it the following variables
                         title: "Variables"  # title is an explicit string
                         path: $YAMLPATH     # path is the current YAML file path
                         home: $HOME         # home is the YAML variable HOME (blank if not defined)
                         series: [a, b, c]   # series is a list of values
 
+By default, the template receives a single keyword argument `handler`. You can
+add other keyword arguments in `kwargs:` as shown above.
+
 The file can contain any template feature. Here's a sample `page.html`.
 
     <h1>{{ title }}</h1>
+    <p>argument x is {{ handler.get_argument('x', None) }}</p>
     <p>path is: {{ path }}.</p>
     <p>home is: {{ home }}.</p>
     <ul>

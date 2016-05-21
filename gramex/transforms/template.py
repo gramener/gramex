@@ -7,9 +7,9 @@ template_cache = LRUCache(maxsize=1000)
 
 
 @tornado.gen.coroutine
-def template(content, *args, **kwargs):
+def template(content, handler, **kwargs):
     if content in template_cache:
         tmpl = template_cache[content]
     else:
         tmpl = template_cache[content] = tornado.template.Template(content)
-    raise tornado.gen.Return(tmpl.generate(**kwargs).decode('utf-8'))
+    raise tornado.gen.Return(tmpl.generate(handler=handler, **kwargs).decode('utf-8'))

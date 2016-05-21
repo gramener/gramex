@@ -227,6 +227,9 @@ url:
             param: x
           headers:
             Content-Type: text/html; charset=utf-8
+        "template-handler.txt":
+            encoding: utf-8
+            function: template
   dir/args:
     pattern: /dir/args/(.*)
     handler: FileHandler

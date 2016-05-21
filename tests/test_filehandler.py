@@ -145,6 +145,7 @@ class TestFileHandler(TestGramex):
         # gramex.yaml has configured template.* to take handler and x as params
         self.check('/dir/transform/template.txt?x=1', text='x = 1')
         self.check('/dir/transform/template.txt?x=abc', text='x = abc')
+        self.check('/dir/transform/template-handler.txt', code=200)
 
     def test_merge(self):
         self.check('/dir/merge.txt', text='ALPHA.TXT\nBeta.Html\n', headers={
