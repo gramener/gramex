@@ -114,6 +114,9 @@ class ChainConfig(AttrDict):
 
 # Paths that users have already been warned about. Don't warn them again
 _warned_paths = set()
+# Get the directory where gramex is located. This is the same as the directory
+# where this file (config.py) is located.
+_gramex_path = os.path.dirname(os.path.abspath(__file__))
 # Initialise YAML variables with environment
 variables = DefaultAttrDict(str)
 variables.update(os.environ)
@@ -157,6 +160,7 @@ def _yaml_open(path, default=AttrDict()):
     # Variables based on YAML file location
     yaml_path = str(path.parent)
     yaml_vars = {
+        'GRAMEXPATH': _gramex_path,     # Path to Gramex root directory
         'YAMLPATH': yaml_path,          # Path to YAML folder
         'YAMLFILE': str(path),          # Path to YAML file
     }

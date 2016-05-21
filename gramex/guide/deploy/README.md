@@ -2,7 +2,48 @@ title: Deployment patterns
 
 Development and deployment are usually on different machines with different
 configurations, file paths, database locations, etc. All of these can be
-configured in `gramex.yaml` using variables.
+configured in `gramex.yaml` using pre-defined variables.
+
+### Pre-defined variables
+
+The following pre-defined variables are available in every YAML file:
+
+- `$YAMLFILE`: absolute path to the current YAML file
+- `$YAMLPATH`: absolute path to the current YAML file's directory
+- `$YAMLURL`: relative path to the current YAML file's directory from the
+  current working directory. For example, `base/dir/gramex.yaml` has a
+  `$YAMLURL` of `base/dir`, and `gramex.yaml` has a `$YAMLURL` of `.`.
+- `$GRAMEXPATH`: absolute path to the Gramex directory
+
+For example, if you have the following directory structure:
+
+    /app              # Gramex is run from here. It is the current directory
+      /component      # Inside a sub-directory, we have a component
+        /gramex.yaml  # ... along with its configuration
+        /index.html   # ... and a home page
+
+Inside `/app/component/gramex.yaml`, here's what the variables mean:
+
+    url:
+        relative-url:
+            # This pattern: translates to /app/component/index.html
+            # Note: leading slash (/) before $YAMLURL is REQUIRED
+            pattern: /$YAMLURL/index.html
+            handler: FileHandler
+            kwargs:
+                path: $YAMLPATH/        # This translates to /app/component/
+
+If you want to refer to a file in the Gramex source directory, use
+`$GRAMEXPATH`. For example, this maps [config](config) to Gramex's root
+`gramex.yaml`.
+
+    url:
+        gramex-config-file:
+            pattern: /$YAMLURL/config           # Map config under current URL
+            handler: FileHandler
+            kwargs:
+                path: $GRAMEXPATH/gramex.yaml   # to the core Gramex config file
+
 
 ## URLs
 

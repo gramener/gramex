@@ -284,15 +284,8 @@ to `$HOME` only if it's not already defined.
 
 Once the variables are assigned, the `variables` section is removed.
 
-### Pre-defined variables
-
-The following pre-defined variables are available in every YAML file:
-
-- `YAMLFILE`: absolute path to the current YAML file
-- `YAMLPATH`: absolute path to the current YAML file's directory
-- `YAMLURL`: relative path to the current YAML file's directory from the
-  current working directory. For example, `base/dir/gramex.yaml` has a
-  `$YAMLURL` of `base/dir`, and `gramex.yaml` has a `$YAMLURL` of `.`.
+To learn about pre-defined variables, and how these variables are used in
+practice, read [deployment patterns](../deploy/).
 
 
 ## Inheritence

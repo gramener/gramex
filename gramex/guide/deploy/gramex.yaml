@@ -10,3 +10,8 @@ url:
                     args: =content                # Using the contents of the file (default)
                     kwargs:                       # Pass it the following parameters
                         GUIDE_ROOT: $GUIDE_ROOT   # GUIDE_ROOT is the absolute URL to the Gramex guide
+    gramex-config-file:
+        pattern: /$YAMLURL/config                 # Map config under current URL
+        handler: FileHandler
+        kwargs:
+            path: $GRAMEXPATH/gramex.yaml         # to the core Gramex config ile
