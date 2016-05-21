@@ -21,6 +21,16 @@ else
   wget='wget -O'
 fi
 
+
+setup_git() {
+  if command_exists git; then
+    echo "Using existing $(git --version 2>&1)"
+  else
+    echo "Installing git..."
+    apt-get install -y -q git
+  fi
+}
+
 setup_python() {
   if command_exists conda; then
     echo "Using existing $(conda -V 2>&1)"
@@ -39,6 +49,7 @@ setup_python() {
 }
 
 setup_gramex() {
+  setup_git
   setup_python
 
   # Install Conda dependencies
