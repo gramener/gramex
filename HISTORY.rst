@@ -15,7 +15,7 @@ History
   be configured.
 * The `scheduler`_ supports threads. Using the ``thread: true`` configuration
   runs the scheduled task in a separate thread.
-* The `log`_ section now supports 2 additional handlers (apart from ``console``):
+* The `log`_ section now supports 2 additional handlers (apart from ``console``).
     * ``access-log`` writes information logs to a CSV file ``access.csv``
     * ``warn-log`` writes warnings to a CSV file ``warn.csv``
 * A new ``threadpool:`` service has been added. This is used internally by
