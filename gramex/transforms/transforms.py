@@ -23,7 +23,7 @@ def _arg_repr(arg):
 _build_transform_cache = {}
 
 
-def build_transform(conf, vars=None):
+def build_transform(conf, vars=None, filename='transform'):
     '''
     Converts a function configuration into a callable function. For e.g.::
 
@@ -48,6 +48,9 @@ def build_transform(conf, vars=None):
                 separators=[',', ':']
             )
             return result if isinstance(result, GeneratorType) else (result,)
+
+    ``build_transform`` also takes an optional ``name=`` parameter that defines
+    the "filename" of the returned function. This is useful for log messages.
 
     The returned function takes a single argument by default. You can change the
     arguments it accepts using ``vars``. For example::
@@ -146,7 +149,8 @@ def build_transform(conf, vars=None):
         'Return': tornado.gen.Return,
         'AttrDict': AttrDict
     }
-    exec(''.join(body), context)
+    code = compile(''.join(body), filename=filename, mode='exec')
+    exec(code, context)
 
     # Return the transformed function
     function = context['transform']

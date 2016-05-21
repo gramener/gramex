@@ -112,7 +112,8 @@ class FileHandler(BaseHandler):
         self.transform = {}
         for pattern, trans in transform.items():
             self.transform[pattern] = {
-                'function': build_transform(trans, vars={'content': None, 'handler': None}),
+                'function': build_transform(trans, vars={'content': None, 'handler': None},
+                                            filename='url>%s' % kwargs['name']),
                 'headers': trans.get('headers', {}),
                 'encoding': trans.get('encoding'),
             }

@@ -1,7 +1,9 @@
 import os
 import six
 import yaml
+import inspect
 import unittest
+import gramex
 from pathlib import Path
 from gramex.config import ChainConfig, PathConfig, walk, merge
 from orderedattrdict import AttrDict
@@ -180,6 +182,8 @@ class TestPathConfig(unittest.TestCase):
             self.assertEqual(conf['%s_DERIVED' % key], '%s/derived' % key)
             # $URLROOT is the frozen to base $YAMLURL
             self.assertEqual(conf['%s_YAMLURL_VAR' % key], conf['%s_YAMLURL_VAR_EXPECTED' % key])
+            # $GRAMEXPATH is the gramex path
+            self.assertEqual(conf['%s_GRAMEXPATH' % key], os.path.dirname(inspect.getfile(gramex)))
 
 
 class TestConfig(unittest.TestCase):

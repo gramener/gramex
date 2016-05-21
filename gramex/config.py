@@ -132,7 +132,7 @@ def _calc_value(val, key):
     '''
     if hasattr(val, 'get') and val.get('function'):
         from .transforms import build_transform
-        function = build_transform(val, vars={'key': None})
+        function = build_transform(val, vars={'key': None}, filename='config>%s' % key)
         for result in function(key):
             return result
     else:
