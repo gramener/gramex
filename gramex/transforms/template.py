@@ -1,8 +1,15 @@
 import tornado.gen
 import tornado.template
+from cachetools import LRUCache
+
+# A fixed number of templates are compiled and cached
+template_cache = LRUCache(maxsize=1000)
 
 
 @tornado.gen.coroutine
-def template(content, **kwargs):
-    tmpl = tornado.template.Template(content)
+def template(content, *args, **kwargs):
+    if content in template_cache:
+        tmpl = template_cache[content]
+    else:
+        tmpl = template_cache[content] = tornado.template.Template(content)
     raise tornado.gen.Return(tmpl.generate(**kwargs).decode('utf-8'))
