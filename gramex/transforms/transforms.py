@@ -84,6 +84,11 @@ def build_transform(conf, vars=None):
                 separators=[args["comma"], args["colon"]]
             )
     '''
+    # Ensure that the transform is a dict. This is a common mistake. We forget
+    # the pattern: prefix
+    if not hasattr(conf, 'items'):
+        raise ValueError('transform: needs {pattern: spec} dicts, but got %s' % repr(conf))
+
     # If the input is already cached, return it.
     conf = {key: val for key, val in conf.items() if key in {'function', 'args', 'kwargs'}}
     cache_key = json.dumps(conf), json.dumps(vars)
