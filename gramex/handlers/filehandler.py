@@ -202,7 +202,7 @@ class FileHandler(BaseHandler):
                         self.set_header(header_name, header_value)
 
                     output = []
-                    for item in transform['function'](handler=self, content=self.content):
+                    for item in transform['function'](content=self.content, handler=self):
                         if tornado.concurrent.is_future(item):
                             item = yield item
                         output.append(item)
