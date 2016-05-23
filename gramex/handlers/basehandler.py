@@ -1,4 +1,5 @@
 import tornado.gen
+from collections import OrderedDict
 from gramex import conf, __version__ as version
 from tornado.web import RequestHandler
 from tornado.escape import json_decode
@@ -13,12 +14,13 @@ class BaseHandler(RequestHandler):
     handlers. All RequestHandlers must inherit from BaseHandler.
     '''
     @classmethod
-    def setup(self, transform={}, **kwargs):
-        self.transform = {}
+    def setup(cls, transform={}, **kwargs):
+        cls.transform = {}
         for pattern, trans in transform.items():
-            self.transform[pattern] = {
-                'function': build_transform(trans, vars={'content': None, 'handler': None},
-                                            filename='url>%s' % self.name),
+            cls.transform[pattern] = {
+                'function': build_transform(
+                    trans, vars=OrderedDict((('content', None), ('handler', None))),
+                    filename='url>%s' % cls.name),
                 'headers': trans.get('headers', {}),
                 'encoding': trans.get('encoding'),
             }

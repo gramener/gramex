@@ -45,12 +45,14 @@ class DataHandler(BaseHandler):
                         # Content-Type: text/html         # or HTML
 
     '''
-    def initialize(self, **kwargs):
-        self.params = AttrDict(kwargs)
-        self.driver_key = yaml.dump(kwargs)
+    @classmethod
+    def setup(cls, **kwargs):
+        super(DataHandler, cls).setup(**kwargs)
+        cls.params = AttrDict(kwargs)
+        cls.driver_key = yaml.dump(kwargs)
 
-        qconfig = {'query': self.params.get('query', {}),
-                   'default': self.params.get('default', {})}
+        qconfig = {'query': cls.params.get('query', {}),
+                   'default': cls.params.get('default', {})}
         delims = {'agg': ':', 'sort': ':', 'where': ''}
         nojoins = ['select', 'groupby']
 
@@ -68,8 +70,7 @@ class DataHandler(BaseHandler):
                     elif isinstance(val, (str, int)):
                         tmp[key] = [val]
                 qconfig[q] = tmp
-        self.qconfig = qconfig
-        super(DataHandler, self).initialize(**kwargs)
+        cls.qconfig = qconfig
 
     def getq(self, key, default_value=None):
         return (self.qconfig['query'].get(key) or

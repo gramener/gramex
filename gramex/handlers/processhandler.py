@@ -28,7 +28,7 @@ class ProcessHandler(BaseHandler):
         - ``false``: Ignore the output
         - ``filename.txt``: Save output to a ``filename.txt``
 
-    :arg string stderr: (**TODO**) The process error stream has the same options as stdout.
+    :arg string stderr: The process error stream has the same options as stdout.
     :arg string stdin: (**TODO**)
     :arg int/string buffer: 'line' will write lines as they are generated.
         Numbers indicate the number of bytes to buffer. Defaults to
@@ -69,56 +69,57 @@ class ProcessHandler(BaseHandler):
     .. _Popen: https://docs.python.org/3/library/subprocess.html#subprocess.Popen
 
     '''
-
-    def initialize(self, args, shell=False, cwd=None, stdout=None, stderr=None, stdin=None,
-                   buffer=0, redirect=None, headers={}, **kwargs):
-        self.args = args
-        self.shell = shell
-        self.redirect = redirect
-        self._write_lock = RLock()
-        self.buffer_size = buffer
+    @classmethod
+    def setup(cls, args, shell=False, cwd=None, buffer=0, redirect=None, headers={}, **kwargs):
+        super(ProcessHandler, cls).setup(**kwargs)
+        cls.args = args
+        cls.shell = shell
+        cls.redirect = redirect
+        cls._write_lock = RLock()
+        cls.buffer_size = buffer
         # Normalize current directory for path, if provided
-        self.cwd = cwd if cwd is None else os.path.abspath(cwd)
-        # File handles for stdout/stderr are cached in self.handles
-        self.handles = {}
+        cls.cwd = cwd if cwd is None else os.path.abspath(cwd)
+        # File handles for stdout/stderr are cached in cls.handles
+        cls.handles = {}
+
+        cls.headers = headers
+        cls.post = cls.get
+
+    def stream_callbacks(self, targets, name):
+        # stdout/stderr are can be specified as a scalar or a list.
+        # Convert it into a list of callback fn(data)
+
+        # if no target is specified, stream to RequestHandler
+        if targets is None:
+            targets = ['pipe']
+        # if a string is specified, treat it as the sole file output
+        elif not isinstance(targets, list):
+            targets = [targets]
+
+        callbacks = []
+        for target in targets:
+            # pipe write to the RequestHandler
+            if target == 'pipe':
+                callbacks.append(self._write)
+            # false-y values are ignored. (False, 0, etc)
+            elif not target:
+                pass
+            # strings are treated as files
+            elif isinstance(target, six.string_types):
+                # cache file handles for re-use between stdout, stderr
+                if target not in self.handles:
+                    self.handles[target] = io.open(target, mode='wb')
+                handle = self.handles[target]
+                callbacks.append(handle.write)
+            # warn on unknown parameters (e.g. numbers, True, etc)
+            else:
+                logging.warn('ProcessHandler: %s: %s is not implemented' % (name, target))
+        return callbacks
+
+    def initialize(self, stdout=None, stderr=None, stdin=None, **kwargs):
         super(ProcessHandler, self).initialize(**kwargs)
-
-        def _callbacks(targets, name):
-            # stdout/stderr are can be specified as a scalar or a list.
-            # Convert it into a list of callback fn(data)
-
-            # if no target is specified, stream to RequestHandler
-            if targets is None:
-                targets = ['pipe']
-            # if a string is specified, treat it as the sole file output
-            elif not isinstance(targets, list):
-                targets = [targets]
-
-            callbacks = []
-            for target in targets:
-                # pipe write to the RequestHandler
-                if target == 'pipe':
-                    callbacks.append(self._write)
-                # false-y values are ignored. (False, 0, etc)
-                elif not target:
-                    pass
-                # strings are treated as files
-                elif isinstance(target, six.string_types):
-                    # cache file handles for re-use between stdout, stderr
-                    if target not in self.handles:
-                        self.handles[target] = io.open(target, mode='wb')
-                    handle = self.handles[target]
-                    callbacks.append(handle.write)
-                # warn on unknown parameters (e.g. numbers, True, etc)
-                else:
-                    logging.warn('ProcessHandler: %s: %s is not implemented' % (name, target))
-            return callbacks
-
-        self.stream_stdout = _callbacks(stdout, name='stdout')
-        self.stream_stderr = _callbacks(stderr, name='stderr')
-
-        self.headers = headers
-        self.post = self.get
+        self.stream_stdout = self.stream_callbacks(stdout, name='stdout')
+        self.stream_stderr = self.stream_callbacks(stderr, name='stderr')
 
     @tornado.gen.coroutine
     def get(self, *path_args):

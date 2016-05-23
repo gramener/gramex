@@ -22,18 +22,20 @@ class FunctionHandler(BaseHandler):
     :arg string redirect: URL to redirect to when the result is done. Used to
         trigger calculations without displaying any output.
     '''
-    def initialize(self, headers={}, redirect=None, **kwargs):
-        self.function = build_transform(kwargs, vars={'handler': None},
-                                        filename='url>%s' % self.name)
-        self.headers = headers
-        self.redirect_url = redirect
-        self.post = self.get
-        super(FunctionHandler, self).initialize(**kwargs)
+    @classmethod
+    def setup(cls, headers={}, redirect=None, **kwargs):
+        super(FunctionHandler, cls).setup(**kwargs)
+        # Don't use cls.function = build_transform(...) -- Python treats it as a method
+        cls.info = {'function': build_transform(kwargs, vars={'handler': None},
+                                                filename='url>%s' % cls.name)}
+        cls.headers = headers
+        cls.redirect_url = redirect
+        cls.post = cls.get
 
     @tornado.web.authenticated
     @tornado.gen.coroutine
     def get(self, *path_args):
-        result = self.function(handler=self)
+        result = self.info['function'](handler=self)
         for header_name, header_value in self.headers.items():
             self.set_header(header_name, header_value)
         if self.redirect_url is not None:

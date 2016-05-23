@@ -97,18 +97,19 @@ class FileHandler(BaseHandler):
 
     SUPPORTED_METHODS = ("GET", "HEAD")
 
-    def initialize(self, path, default_filename=None, index=None,
-                   index_template=None, headers={}, **kwargs):
+    @classmethod
+    def setup(cls, path, default_filename=None, index=None,
+              index_template=None, headers={}, **kwargs):
+        super(FileHandler, cls).setup(**kwargs)
         if isinstance(path, list):
-            self.root = [Path(path_item).absolute() for path_item in path]
+            cls.root = [Path(path_item).absolute() for path_item in path]
         else:
-            self.root = Path(path).absolute()
-        self.default_filename = default_filename
-        self.index = index
-        self.index_template = read_template(
+            cls.root = Path(path).absolute()
+        cls.default_filename = default_filename
+        cls.index = index
+        cls.index_template = read_template(
             Path(index_template) if index_template is not None else _default_index_template)
-        self.headers = headers
-        super(FileHandler, self).initialize(**kwargs)
+        cls.headers = headers
 
     def head(self, path=None):
         return self.get(path, include_body=False)

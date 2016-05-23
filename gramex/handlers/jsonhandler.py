@@ -79,22 +79,24 @@ class JSONHandler(BaseHandler):
             return parent, key, None
         return parent, key, data
 
-    def initialize(self, path=None, data=None, **kwargs):
-        self.path = path
-        self.default_data = data
-        self.json_kwargs = {
+    @classmethod
+    def setup(cls, path=None, data=None, **kwargs):
+        super(JSONHandler, cls).setup(**kwargs)
+        cls.path = path
+        cls.default_data = data
+        cls.json_kwargs = {
             'ensure_ascii': True,
             'separators': (',', ':'),
         }
 
+    def initialize(self, **kwargs):
+        super(JSONHandler, self).initialize(**kwargs)
         # Set the method to the ?x-http-method-overrride argument or the
         # X-HTTP-Method-Override header if they exist
         if 'x-http-method-override' in self.request.arguments:
             self.request.method = self.get_argument('x-http-method-override')
         elif 'X-HTTP-Method-Override' in self.request.headers:
             self.request.method = self.request.headers['X-HTTP-Method-Override']
-
-        super(JSONHandler, self).initialize(**kwargs)
         self.set_header('Content-Type', 'application/json')
 
     def get(self, jsonpath):
