@@ -56,3 +56,7 @@ classes: toc
 ## [Deployment patterns](deploy/)
 
 **Exercise**: TBD
+
+## [Debugging Gramex](debug/)
+
+**Exercise**: TBD
