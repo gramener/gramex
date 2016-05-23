@@ -42,3 +42,56 @@ A few suggestions:
    `print('\n\n'); print("longvar", longvar)`
 4. Remove all print statements before committing your code into the `master` or
    `dev` branch.
+
+
+## Profiling
+
+`gramex.debug` provides support for timing and line profiling.
+
+### Timer
+
+`timer()` prints the time since last called. For example:
+
+    from gramex.debug import timer
+
+    def function(handler):
+        timer('start')
+        some_code()
+        timer('ran some_code()')
+
+prints this log message:
+
+    I 05-May 08:16:38 debug:54 0.102s start [module.function:56]
+    I 05-May 08:16:38 debug:54 0.012s ran some_code() [module.function:58]
+
+The log message includes the time taken to get to the line (e.g. `0.102s`), the
+message logged, and the `module.function:line-number` from where the `timer()`
+was called.
+
+
+`Timer()` is similar to `timer()`, but shows the time for an block of code. For
+example:
+
+    from gramex.debug import Timer
+
+    def function(handler):
+        with Timer('run some_code()'):
+            some_code()
+
+prints this log message:
+
+    I 05-May 08:16:38 debug:54 0.012s run some_code() [module.function:56]
+
+The log message includes the time taken to get to the line (e.g. `0.102s`), the
+message logged, and the `module.function:line-number` from where the `Timer()`
+was called.
+
+
+`lineprofile` is a decorator that prints the time taken for each line of a
+function. For example:
+
+    @lineprofile
+    def function(handler):
+        # ... your code here...
+
+prints line-by-line statistics about the function.
