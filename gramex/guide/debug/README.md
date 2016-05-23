@@ -106,8 +106,11 @@ was called.
 `lineprofile` is a decorator that prints the time taken for each line of a
 function. For example:
 
+    from gramex.debug import lineprofile
+
     @lineprofile
     def function(handler):
         # ... your code here...
 
-prints line-by-line statistics about the function.
+prints line-by-line statistics about the function. This requires the
+[line_profiler](https://github.com/rkern/line_profiler) module to run.
