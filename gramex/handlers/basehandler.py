@@ -2,6 +2,7 @@ import tornado.gen
 from gramex import conf, __version__ as version
 from tornado.web import RequestHandler
 from tornado.escape import json_decode
+from ..transforms import build_transform
 
 server_header = 'Gramex/%s' % version
 
@@ -12,12 +13,21 @@ class BaseHandler(RequestHandler):
     handlers. All RequestHandlers must inherit from BaseHandler.
     '''
 
-    def initialize(self, cache=None, **kwargs):
+    def initialize(self, cache=None, transform={}, **kwargs):
         self.kwargs = kwargs
         if cache is not None:
             self.cachefile = cache(self)
             self.original_get = self.get
             self.get = self._cached_get
+
+        self.transform = {}
+        for pattern, trans in transform.items():
+            self.transform[pattern] = {
+                'function': build_transform(trans, vars={'content': None, 'handler': None},
+                                            filename='url>%s' % kwargs['name']),
+                'headers': trans.get('headers', {}),
+                'encoding': trans.get('encoding'),
+            }
 
     def set_default_headers(self):
         self.set_header('Server', server_header)

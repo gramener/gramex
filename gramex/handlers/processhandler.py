@@ -9,7 +9,6 @@ import tornado.gen
 from threading import Thread, RLock
 from tornado.concurrent import Future
 from .basehandler import BaseHandler
-from ..transforms import build_transform
 
 
 class ProcessHandler(BaseHandler):
@@ -72,7 +71,7 @@ class ProcessHandler(BaseHandler):
     '''
 
     def initialize(self, args, shell=False, cwd=None, stdout=None, stderr=None, stdin=None,
-                   buffer=0, redirect=None, headers={}, transform={}, **kwargs):
+                   buffer=0, redirect=None, headers={}, **kwargs):
         self.args = args
         self.shell = shell
         self.redirect = redirect
@@ -119,15 +118,6 @@ class ProcessHandler(BaseHandler):
         self.stream_stderr = _callbacks(stderr, name='stderr')
 
         self.headers = headers
-        self.transform = {}
-        for pattern, trans in transform.items():
-            self.transform[pattern] = {
-                'function': build_transform(trans, vars={'content': None, 'handler': None},
-                                            filename='url>%s' % kwargs['name']),
-                'headers': trans.get('headers', {}),
-                'encoding': trans.get('encoding'),
-            }
-
         self.post = self.get
 
     @tornado.gen.coroutine

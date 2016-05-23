@@ -11,7 +11,6 @@ from tornado.escape import utf8
 from tornado.web import HTTPError
 from six.moves.urllib.parse import urljoin
 from .basehandler import BaseHandler
-from ..transforms import build_transform
 
 
 # Directory indices are served using this template by default
@@ -99,7 +98,7 @@ class FileHandler(BaseHandler):
     SUPPORTED_METHODS = ("GET", "HEAD")
 
     def initialize(self, path, default_filename=None, index=None,
-                   index_template=None, headers={}, transform={}, **kwargs):
+                   index_template=None, headers={}, **kwargs):
         if isinstance(path, list):
             self.root = [Path(path_item).absolute() for path_item in path]
         else:
@@ -109,14 +108,6 @@ class FileHandler(BaseHandler):
         self.index_template = read_template(
             Path(index_template) if index_template is not None else _default_index_template)
         self.headers = headers
-        self.transform = {}
-        for pattern, trans in transform.items():
-            self.transform[pattern] = {
-                'function': build_transform(trans, vars={'content': None, 'handler': None},
-                                            filename='url>%s' % kwargs['name']),
-                'headers': trans.get('headers', {}),
-                'encoding': trans.get('encoding'),
-            }
         super(FileHandler, self).initialize(**kwargs)
 
     def head(self, path=None):
