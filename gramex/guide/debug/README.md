@@ -43,6 +43,22 @@ A few suggestions:
 4. Remove all print statements before committing your code into the `master` or
    `dev` branch.
 
+## Reloading
+
+Gramex can [autoreload](http://www.tornadoweb.org/en/stable/autoreload.html) if
+any dependent Python files change. To enable this behaviour, use the following
+settings in `gramex.yaml`:
+
+    app:
+        settings:
+            debug: true
+
+Or use it from the command line:
+
+    gramex --settings.debug=true
+
+**This uses a lot of CPU**. It also serves tracebacks on error. Do not enable
+this on production systems.
 
 ## Profiling
 
