@@ -12,14 +12,8 @@ class BaseHandler(RequestHandler):
     BaseHandler provides auth, caching and other services common to all request
     handlers. All RequestHandlers must inherit from BaseHandler.
     '''
-
-    def initialize(self, transform={}, **kwargs):
-        self.kwargs = kwargs
-        if self.cache:
-            self.cachefile = self.cache()
-            self.original_get = self.get
-            self.get = self._cached_get
-
+    @classmethod
+    def setup(self, transform={}, **kwargs):
         self.transform = {}
         for pattern, trans in transform.items():
             self.transform[pattern] = {
@@ -28,6 +22,13 @@ class BaseHandler(RequestHandler):
                 'headers': trans.get('headers', {}),
                 'encoding': trans.get('encoding'),
             }
+
+    def initialize(self, **kwargs):
+        self.kwargs = kwargs
+        if self.cache:
+            self.cachefile = self.cache()
+            self.original_get = self.get
+            self.get = self._cached_get
 
     def set_default_headers(self):
         self.set_header('Server', server_header)
