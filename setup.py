@@ -85,6 +85,7 @@ setup(
     tests_require=[
         'nose',
         'coverage',
+        'testfixtures',             # For logcapture
         'sphinx_rtd_theme',         # For documentation
     ],
     **release_args
