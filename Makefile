@@ -39,6 +39,7 @@ clean-test:
 	rm -fr .tox/
 	rm -f .coverage
 	rm -fr htmlcov/
+	rm -fr tests/.cache-url
 
 lint:
 	flake8 gramex tests
