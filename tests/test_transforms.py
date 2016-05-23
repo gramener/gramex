@@ -43,6 +43,10 @@ class BuildTransform(unittest.TestCase):
         src, tgt = a_code.co_nlocals, b_code.co_nlocals
         self.assertEqual(src, tgt, '%s: nlocals %d != %d' % (msg, src, tgt))
 
+    def check_transform(self, transform, yaml_code, vars=None):
+        fn = build_transform(yaml_parse(yaml_code), vars=vars)
+        self.eqfn(fn, transform)
+
     def test_no_function_raises_error(self):
         with self.assertRaises(KeyError):
             build_transform({})
@@ -51,108 +55,114 @@ class BuildTransform(unittest.TestCase):
         def transform(_val):
             result = len(_val)
             return result if isinstance(result, GeneratorType) else (result,)
-        fn = build_transform(yaml_parse('''
+        self.check_transform(transform, '''
             function: len
-        '''))
-        self.eqfn(fn, transform)
+        ''')
 
     def test_fn_no_args(self):
         def transform():
             result = max(1, 2)
             return result if isinstance(result, GeneratorType) else (result,)
-        fn = build_transform(yaml_parse('''
+        self.check_transform(transform, '''
             function: max
             args: [1, 2]
-        '''), vars={})
-        self.eqfn(fn, transform)
+        ''', vars={})
 
     def test_fn_args(self):
         def transform(_val):
             result = max(1, 2)
             return result if isinstance(result, GeneratorType) else (result,)
-        fn = build_transform(yaml_parse('''
+        self.check_transform(transform, '''
             function: max
             args: [1, 2]
-        '''))
-        self.eqfn(fn, transform)
+        ''')
+
+        def transform(_val):
+            result = len('abc')
+            return result if isinstance(result, GeneratorType) else (result,)
+        self.check_transform(transform, '''
+            function: len
+            args: abc
+        ''')
+
+        def transform(_val):
+            result = range(10)
+            return result if isinstance(result, GeneratorType) else (result,)
+        self.check_transform(transform, '''
+            function: range
+            args: 10
+        ''')
 
     def test_fn_args_var(self):
         def transform(x=1, y=2):
             result = max(x, y, 3)
             return result if isinstance(result, GeneratorType) else (result,)
-        fn = build_transform(yaml_parse('''
+        self.check_transform(transform, '''
             function: max
             args:
                 - =x
                 - =y
                 - 3
-        '''), vars=AttrDict([('x', 1), ('y', 2)]))
-        self.eqfn(fn, transform)
+        ''', vars=AttrDict([('x', 1), ('y', 2)]))
 
     def test_fn_kwargs(self):
         def transform(_val):
             result = dict(_val, a=1, b=2)
             return result if isinstance(result, GeneratorType) else (result,)
-        fn = build_transform(yaml_parse('''
+        self.check_transform(transform, '''
             function: dict
             kwargs: {a: 1, b: 2}
-        '''))
-        self.eqfn(fn, transform)
+        ''')
 
     def test_fn_kwargs_complex(self):
         def transform(_val):
             result = dict(_val, a=[1, 2], b=AttrDict([('b1', 'x'), ('b2', 'y')]))
             return result if isinstance(result, GeneratorType) else (result,)
-        fn = build_transform(yaml_parse('''
+        self.check_transform(transform, '''
             function: dict
             kwargs:
                 a: [1, 2]
                 b:
                     b1: x
                     b2: y
-        '''))
-        self.eqfn(fn, transform)
+        ''')
 
     def test_fn_kwargs_var(self):
         def transform(x=1, y=2):
             result = dict(x, y, a=x, b=y, c=3, d='=4')
             return result if isinstance(result, GeneratorType) else (result,)
-        fn = build_transform(yaml_parse('''
+        self.check_transform(transform, '''
             function: dict
             kwargs: {a: =x, b: =y, c: 3, d: ==4}
-        '''), vars=AttrDict([('x', 1), ('y', 2)]))
-        self.eqfn(fn, transform)
+        ''', vars=AttrDict([('x', 1), ('y', 2)]))
 
     def test_fn_args_kwargs(self):
         def transform(_val):
             result = format(1, 2, a=3, b=4, c=5, d='=6')
             return result if isinstance(result, GeneratorType) else (result,)
-        fn = build_transform(yaml_parse('''
+        self.check_transform(transform, '''
             function: format
             args: [1, 2]
             kwargs: {a: 3, b: 4, c: 5, d: ==6}
-        '''))
-        self.eqfn(fn, transform)
+        ''')
 
     def test_fn_args_kwargs_var(self):
         def transform(x=1, y=2):
             result = format(x, y, a=x, b=y, c=3)
             return result if isinstance(result, GeneratorType) else (result,)
-        fn = build_transform(yaml_parse('''
+        self.check_transform(transform, '''
             function: format
             args: [=x, =y]
             kwargs: {a: =x, b: =y, c: =3}
-        '''), vars=AttrDict([('x', 1), ('y', 2)]))
-        self.eqfn(fn, transform)
+        ''', vars=AttrDict([('x', 1), ('y', 2)]))
 
     def test_coroutine(self):
         def transform(_val):
             result = gen_str(_val)
             return result if isinstance(result, GeneratorType) else (result,)
-        fn = build_transform(yaml_parse('''
+        self.check_transform(transform, '''
             function: tests.test_transforms.gen_str
-        '''))
-        self.eqfn(fn, transform)
+        ''')
 
 
 class Badgerfish(unittest.TestCase):

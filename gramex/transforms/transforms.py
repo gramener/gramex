@@ -121,12 +121,13 @@ def build_transform(conf, vars=None, filename='transform'):
         '\tresult = function(\n',
     ]
 
-    # If args is a string, convert to a list with that string
-    # If args is not specified, use vars' keys as args
     if 'args' in conf:
         args = conf['args']
-        args = [args] if isinstance(args, six.string_types) else list(args)
+        # If args is not a list, convert to a list with that value
+        if not isinstance(args, list):
+            args = [args]
     else:
+        # If args is not specified, use vars' keys as args
         args = ['=%s' % var for var in vars.keys()]
 
     # Add the function, arguments, and kwargs
