@@ -21,12 +21,12 @@ tests/**/*.test
 # Ignore log files
 *.log*
 
-# Data files. Try not to commit data into the repo
+# Don't commit CSV files, except what's required by Gramex or for testing
 *.csv
 !tests/**/*.csv
 !gramex/guide/chart/*.csv
-*.dat
-*.mdb
+
+# Don't commit databases created by test cases
 tests/*.db
 
 # Zip files that aren't read by Pandas
@@ -58,8 +58,9 @@ tests/*.db
 # Typically bash.exe.stackdump on Cygwin
 *.stackdump
 
-# Node modules
-node_modules/
+# Node modules and bower components
+node_modules
+bower_components
 
 # Windows shortcut files
 *.lnk
