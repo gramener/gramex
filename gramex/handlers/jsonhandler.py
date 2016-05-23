@@ -80,7 +80,6 @@ class JSONHandler(BaseHandler):
         return parent, key, data
 
     def initialize(self, path=None, data=None, **kwargs):
-        self.name = kwargs['name']
         self.path = path
         self.default_data = data
         self.json_kwargs = {

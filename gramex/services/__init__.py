@@ -222,6 +222,8 @@ def _cache_generator(conf, name):
     cache_statuses = conf.get('status', [http_client.OK])
     cache_expiry_duration = cache_expiry.get('duration', MAXTTL)
 
+    # This method will be added to the handler class as "cache", and called as
+    # self.cache()
     def get_cachefile(handler):
         return cachefile_class(key=cache_key(handler.request), store=store,
                                handler=handler, expire=cache_expiry_duration,
@@ -237,13 +239,22 @@ def url(conf):
     specs = sorted(conf.items(), key=_sort_url_patterns, reverse=True)
     for name, spec in specs:
         urlspec = AttrDict(spec)
-        urlspec.handler = locate(spec.handler, modules=['gramex.handlers'])
-        kwargs = urlspec.get('kwargs', {})
-        kwargs['name'], kwargs['conf'] = name, spec
+        handler = locate(spec.handler, modules=['gramex.handlers'])
 
+        # Create a subclass of the handler with additional attributes.
+        class_vars = {'name': name, 'conf': spec}
         # If there's a cache section, get the cache method for use by BaseHandler
         if 'cache' in urlspec:
-            kwargs['cache'] = _cache_generator(urlspec['cache'], name=name)
+            class_vars['cache'] = _cache_generator(urlspec['cache'], name=name)
+        else:
+            class_vars['cache'] = None
+        urlspec.handler = type(spec.handler, (handler, ), class_vars)
+
+        # If there's a setup method, call it to initialize the class
+        kwargs = urlspec.get('kwargs', {})
+        if hasattr(handler, 'setup'):
+            urlspec.handler.setup(**kwargs)
+
         handlers.append(tornado.web.URLSpec(
             name=name,
             pattern=_url_normalize(urlspec.pattern),

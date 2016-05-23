@@ -24,7 +24,7 @@ class FunctionHandler(BaseHandler):
     '''
     def initialize(self, headers={}, redirect=None, **kwargs):
         self.function = build_transform(kwargs, vars={'handler': None},
-                                        filename='url>%s' % kwargs['name'])
+                                        filename='url>%s' % self.name)
         self.headers = headers
         self.redirect_url = redirect
         self.post = self.get

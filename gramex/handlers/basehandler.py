@@ -13,10 +13,10 @@ class BaseHandler(RequestHandler):
     handlers. All RequestHandlers must inherit from BaseHandler.
     '''
 
-    def initialize(self, cache=None, transform={}, **kwargs):
+    def initialize(self, transform={}, **kwargs):
         self.kwargs = kwargs
-        if cache is not None:
-            self.cachefile = cache(self)
+        if self.cache:
+            self.cachefile = self.cache()
             self.original_get = self.get
             self.get = self._cached_get
 
@@ -24,7 +24,7 @@ class BaseHandler(RequestHandler):
         for pattern, trans in transform.items():
             self.transform[pattern] = {
                 'function': build_transform(trans, vars={'content': None, 'handler': None},
-                                            filename='url>%s' % kwargs['name']),
+                                            filename='url>%s' % self.name),
                 'headers': trans.get('headers', {}),
                 'encoding': trans.get('encoding'),
             }
