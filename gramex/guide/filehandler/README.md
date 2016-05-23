@@ -201,6 +201,37 @@ The file can contain any template feature. Here's a sample `page.html`.
         {% for item in series %}<li>{{ item }}</li>{% end %}
     </ul>
 
+## Forms
+
+If you're submitting forms using the POST method, you need to submit an
+[_xsrf][xsrf] field that has the value of the `_xsrf` cookie. You can either
+include it in the template using handlers' built-in `xsrf_token` property:
+
+    <form method="POST">
+      <input type="hidden" name="_xsrf" value="{{ handler.xsrf_token }}">
+    </form>
+
+... or extract it dynamically using JavaScript. Here is an example that uses
+[cookie.js](https://github.com/florian/cookie.js) and 
+[jQuery](https://jquery.com/). Install them:
+
+    bower install cookie jquery --save
+
+Then extract the cookie and add a hidden input to your form:
+
+    <script src="bower_components/cookie/cookie.min.js"></script>
+    <script src="bower_components/jquery/dist/jquery.min.js"></script>
+    <script>
+    $('<input>').attr({
+      'type': 'hidden',
+      'name': '_xsrf',
+      'value': cookie.get('_xsrf')
+    })
+    .appendTo('form[method="POST"]')
+    </script>
+
+[xsrf]: http://www.tornadoweb.org/en/stable/guide/security.html#cross-site-request-forgery-protection
+
 
 ## Concatenation
 
