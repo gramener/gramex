@@ -12,6 +12,10 @@ variables:
             function: six.text_type
             args: ['base']
     DERIVED: $THIS/derived
+    NUMERIC: 1
+    BOOLEAN: true
+    OBJECT: {x: 1}
+    LIST: [1, 2]
 
 base_DOT: "{.}"
 base_YAMLPATH: $YAMLPATH
@@ -28,7 +32,17 @@ base_DERIVED: $DERIVED
 base_YAMLURL_VAR: $YAMLURL_VAR
 base_YAMLURL_VAR_EXPECTED: tests
 base_GRAMEXPATH: $GRAMEXPATH
+
 path: $YAMLPATH
+
+numeric: "$NUMERIC"
+boolean: '$BOOLEAN'
+object: $OBJECT
+list: $LIST
+numeric_subst: "/${NUMERIC}"
+boolean_subst: "/${BOOLEAN}"
+object_subst: "/${OBJECT}"
+list_subst: "/${LIST}"
 
 import:
     subdir: dir/config.template.subdir.yaml

@@ -137,8 +137,16 @@ def _calc_value(val, key):
         function = build_transform(val, vars={'key': None}, filename='config>%s' % key)
         for result in function(key):
             return result
+    elif not isinstance(val, string_types):
+        return val
     else:
-        return string.Template(val).substitute(variables)
+        # Direct variables are substituted as-is. For example, $x will return
+        # variables['x'] without converting it to a string. Otherwise, treat it
+        # as a string tempate. So "/$x/" will return "/1/" if x=1.
+        if val.startswith('$') and val[1:] in variables:
+            return variables[val[1:]]
+        else:
+            return string.Template(val).substitute(variables)
 
 
 def _yaml_open(path, default=AttrDict()):
@@ -191,7 +199,7 @@ def _yaml_open(path, default=AttrDict()):
             # Backward compatibility: before v1.0.4, we used {.} for {YAMLPATH}
             value = value.replace('{.}', '$YAMLPATH')
             # Substitute with variables in context, defaulting to ''
-            node[key] = string.Template(value).substitute(variables)
+            node[key] = _calc_value(value, key)
     return result
 
 

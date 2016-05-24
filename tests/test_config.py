@@ -188,6 +188,19 @@ class TestPathConfig(unittest.TestCase):
         self.assertEqual(conf['path'], str(self.chain['base'].parent))
         self.assertEqual(conf['subpath'], str(self.chain['subdir'].parent))
 
+        # Check if variable types are preserved
+        self.assertEqual(conf['numeric'], 1)
+        self.assertEqual(conf['boolean'], True)
+        self.assertEqual(conf['object'], {'x': 1})
+        self.assertEqual(conf['list'], [1, 2])
+
+        # Check if variables of different types are string substituted
+        self.assertEqual(conf['numeric_subst'], '/1')
+        self.assertEqual(conf['boolean_subst'], '/True')
+        # Actually, conf['object_subst'] is "/AttrDict([('x', 1)])". Let's not test that.
+        # self.assertEqual(conf['object_subst'], "/{'x': 1}")
+        self.assertEqual(conf['list_subst'], '/[1, 2]')
+
 
 class TestConfig(unittest.TestCase):
     def test_walk_dict(self):

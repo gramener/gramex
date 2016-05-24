@@ -273,6 +273,19 @@ home, but does not override a previous value.
 `$PATH` is set to `/site/path`. Its value is based on the previously defined
 `$URLROOT`.
 
+Variables can be of any type. For example:
+
+    variables:
+      NUMBER: 10
+      BOOLEAN: false
+
+They are substituted as-is if the variable is used directly. If it's part of a
+string substitution, then it is converted into a string. For example:
+
+    number: $NUMBER             # This is the int 10
+    number: /$NUMBER            # This is the string "/10"
+    mix: a-${BOOLEAN}-b       # This is the string "a-False-b"
+
 ### Computed variables
 
 Variables can also be computed. For example, this runs `utils.get_root` to
