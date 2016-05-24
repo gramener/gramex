@@ -121,6 +121,23 @@ variables = DefaultAttrDict(str)
 variables.update(os.environ)
 
 
+def _substitute_variable(val):
+    '''
+    If val contains a ${VAR} or $VAR and VAR is in the variables global,
+    substitute it.
+
+    Direct variables are substituted as-is. For example, $x will return
+    variables['x'] without converting it to a string. Otherwise, treat it as a
+    string tempate. So "/$x/" will return "/1/" if x=1.
+    '''
+    if not isinstance(val, string_types):
+        return val
+    if val.startswith('$') and val[1:] in variables:
+        return variables[val[1:]]
+    else:
+        return string.Template(val).substitute(variables)
+
+
 def _calc_value(val, key):
     '''
     Calculate the value to assign to this key.
@@ -137,16 +154,8 @@ def _calc_value(val, key):
         function = build_transform(val, vars={'key': None}, filename='config>%s' % key)
         for result in function(key):
             return result
-    elif not isinstance(val, string_types):
-        return val
     else:
-        # Direct variables are substituted as-is. For example, $x will return
-        # variables['x'] without converting it to a string. Otherwise, treat it
-        # as a string tempate. So "/$x/" will return "/1/" if x=1.
-        if val.startswith('$') and val[1:] in variables:
-            return variables[val[1:]]
-        else:
-            return string.Template(val).substitute(variables)
+        return _substitute_variable(val)
 
 
 def _yaml_open(path, default=AttrDict()):
@@ -199,7 +208,7 @@ def _yaml_open(path, default=AttrDict()):
             # Backward compatibility: before v1.0.4, we used {.} for {YAMLPATH}
             value = value.replace('{.}', '$YAMLPATH')
             # Substitute with variables in context, defaulting to ''
-            node[key] = _calc_value(value, key)
+            node[key] = _substitute_variable(value)
     return result
 
 
