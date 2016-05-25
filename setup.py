@@ -67,6 +67,7 @@ setup(
     package_data={
         'gramex': [
             'gramex.yaml',
+            'apps.yaml',
             'release.json',
             'handlers/filehandler.template.html',
         ] + list(recursive_include('gramex', 'guide', ignore_patterns))

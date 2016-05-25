@@ -20,6 +20,7 @@ merges the YAMLs.
 '''
 
 import os
+import sys
 import yaml
 import string
 import logging
@@ -116,9 +117,29 @@ _warned_paths = set()
 # Get the directory where gramex is located. This is the same as the directory
 # where this file (config.py) is located.
 _gramex_path = os.path.dirname(os.path.abspath(__file__))
-# Initialise YAML variables with environment
-variables = DefaultAttrDict(str)
-variables.update(os.environ)
+
+
+def _setup_variables():
+    '''Initialise variables'''
+    variables = DefaultAttrDict(str)
+    # Load all environment variables
+    variables.update(os.environ)
+
+    # Define GRAMEXDATA folder based on the system
+    if 'GRAMEXDATA' not in variables:
+        if sys.platform == 'linux2' or sys.platform == 'cygwin':
+            variables['GRAMEXDATA'] = os.path.abspath('~/.config/gramexdata')
+        elif sys.platform == 'win32':
+            variables['GRAMEXDATA'] = os.path.join(variables['LOCALAPPDATA'], 'Gramex Data')
+        elif sys.platform == 'darwin':
+            variables['GRAMEXDATA'] = os.path.abspath('~/Library/Application Support/Gramex Data')
+        else:
+            variables['GRAMEXDATA'] = os.path.abspath('.')
+            logging.warn('$GRAMEXDATA set to %s for OS %s', variables['GRAMEXDATA'], sys.platform)
+
+    return variables
+
+variables = _setup_variables()
 
 
 def _substitute_variable(val):

@@ -40,7 +40,7 @@ def parse_command_line(commands):
     example, ``gramex --listen.port 80`` returns ``{"listen": {"port": 80}}``.
     '''
     group = '_'
-    args = AttrDict({group: True})
+    args = AttrDict({group: []})
     for arg in commands:
         if arg.startswith('-'):
             group, value = arg.lstrip('-'), 'True'
@@ -70,11 +70,26 @@ def parse_command_line(commands):
 
 def commandline(commands):
     'Run Gramex from the command line'
-    cmd = parse_command_line(commands)
-
     # Set logging level to info at startup. (Services may override logging level.)
-    # This ensures that startup info is printed when Gramex is run the first time.
     logging.basicConfig(level=logging.INFO)
+
+    # args has all optional command line args as a dict of values / lists.
+    # cmd has all positional arguments as a list.
+    args = parse_command_line(commands)
+    cmd = args.pop('_')
+
+    # Any positional argument is treated as a gramex command
+    if len(cmd):
+        base_command = cmd[0].lower()
+        if base_command == 'install':
+            from gramex.install import install
+            return install, {'cmd': cmd, 'args': args}
+        if base_command == 'uninstall':
+            from gramex.install import uninstall
+            return uninstall, {'cmd': cmd, 'args': args}
+        raise NotImplementedError('Unknown gramex command: %s' % ' '.join(cmd))
+
+    # If no command is given, start gramex
     logging.info('Initializing Gramex...')
 
     # Use current dir as base (where gramex is run from) if there's a gramex.yaml.
@@ -82,10 +97,10 @@ def commandline(commands):
     if not os.path.isfile('gramex.yaml'):
         os.chdir(str(paths['source'] / 'guide'))
         paths['base'] = Path('.')
-        if 'browser' not in cmd:
-            cmd['browser'] = '/welcome'
+        if 'browser' not in args:
+            args['browser'] = '/welcome'
 
-    return init, {'cmd': AttrDict(app=cmd)}
+    return init, {'cmd': AttrDict(app=args)}
 
 
 def init(**kwargs):

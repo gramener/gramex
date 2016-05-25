@@ -5,12 +5,12 @@ from gramex import parse_command_line
 class TestParse(unittest.TestCase):
     def test_parse(self):
         def eq(cmd, value):
-            value.setdefault('_', True)
+            value.setdefault('_', [])
             return self.assertEqual(parse_command_line(cmd), value)
 
         # Positional arguments
         eq([], {})
-        eq(['x'], {'_': 'x'})
+        eq(['x'], {'_': ['x']})
         eq(['x', 'y'], {'_': ['x', 'y']})
 
         # Single optional argument
@@ -34,7 +34,7 @@ class TestParse(unittest.TestCase):
         eq(['-x', '1', '--y', '2'], {'x': 1, 'y': 2})
 
         # Positional + optional arguments
-        eq(['x', '-x=1', 'x', '--y=2', '-z'], {'_': 'x', 'x': [1, 'x'], 'y': 2, 'z': True})
+        eq(['x', '-x=1', 'x', '--y=2', '-z'], {'_': ['x'], 'x': [1, 'x'], 'y': 2, 'z': True})
 
         # Key breakup
         eq(['-p.q=1'], {'p': {'q': 1}})
