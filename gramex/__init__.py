@@ -25,31 +25,57 @@ with (paths['source'] / 'release.json').open() as _release_file:
 
 _sys_path = list(sys.path)      # Preserve original sys.path
 
-# Entry Points
-# ------------
-# There are 2 entry points into Gramex: commandline() and init().
-# commandline() will be called by python -m gramex, gramex.exe, etc.
-# init() will be called after import gramex -- when using Gramex as a library.
+
+def parse_command_line(commands):
+    '''
+    Parse command line arguments. For example:
+
+        gramex cmd1 cmd2 --a=1 2 -b x --c --p.q=4
+
+    returns:
+
+        {"_": ["cmd1", "cmd2"], "a": [1, 2], "b": "x", "c": True, "p": {"q": [4]}}
+
+    Values are parsed as YAML. Arguments with '.' are split into subgroups. For
+    example, ``gramex --listen.port 80`` returns ``{"listen": {"port": 80}}``.
+    '''
+    group = '_'
+    args = AttrDict({group: True})
+    for arg in commands:
+        if arg.startswith('-'):
+            group, value = arg.lstrip('-'), 'True'
+            if '=' in group:
+                group, value = group.split('=', 1)
+        else:
+            value = arg
+
+        value = yaml.load(value)
+        base = args
+        keys = group.split('.')
+        for key in keys[:-1]:
+            base = base.setdefault(key, AttrDict())
+
+        # Add the key to the base.
+        # If it's already there, make it a list.
+        # If it's already a list, append to it.
+        if keys[-1] not in base or base[keys[-1]] is True:
+            base[keys[-1]] = value
+        elif not isinstance(base[keys[-1]], list):
+            base[keys[-1]] = [base[keys[-1]], value]
+        else:
+            base[keys[-1]].append(value)
+
+    return args
 
 
-def commandline(**kwargs):
+def commandline(commands):
     'Run Gramex from the command line'
+    cmd = parse_command_line(commands)
+
     # Set logging level to info at startup. (Services may override logging level.)
     # This ensures that startup info is printed when Gramex is run the first time.
     logging.basicConfig(level=logging.INFO)
     logging.info('Initializing Gramex...')
-
-    # Parse command line arguments.
-    # --listen.port=8080 => {'listen': {'port': 8080}}
-    cmd = AttrDict()
-    for arg in sys.argv[1:]:
-        if arg.startswith('--') and '=' in arg:
-            name, value = arg[2:].split('=', 1)
-            keys = name.split('.')
-            base = cmd
-            for key in keys[:-1]:
-                base = base.setdefault(key, AttrDict())
-            base[keys[-1]] = yaml.load(value)
 
     # Use current dir as base (where gramex is run from) if there's a gramex.yaml.
     # Else use source/guide, and point the user to the welcome screen
@@ -59,8 +85,7 @@ def commandline(**kwargs):
         if 'browser' not in cmd:
             cmd['browser'] = '/welcome'
 
-    # Initialize Gramex in the current dir, and command line args as config layers
-    init(cmd=AttrDict(app=cmd))
+    return init, {'cmd': AttrDict(app=cmd)}
 
 
 def init(**kwargs):
