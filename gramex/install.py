@@ -13,7 +13,10 @@ from gramex.config import ChainConfig, PathConfig, variables
 
 
 def zip_prefix_filter(members, prefix):
-    'Return only members starting with the prefix, with the prefix stripped out'
+    '''
+    Return only ZIP file members starting with the directory prefix, with the
+    prefix stripped out.
+    '''
     if not prefix.endswith('/'):
         prefix += '/'
     offset = len(prefix)
@@ -32,13 +35,14 @@ def download_zip(url, target, contentdir=True, rootdir=None):
     based on its type.
     '''
     if os.path.exists(url):
-        zipfile = ZipFile(url)
+        handle = url
     else:
         logging.info('Downloading: %s', url)
         response = requests.get(url)
         response.raise_for_status()
-        zipfile = ZipFile(six.BytesIO(response.content))
+        handle = six.BytesIO(response.content)
 
+    zipfile = ZipFile(handle)
     members = zipfile.infolist()
     if contentdir:
         members = zip_prefix_filter(members, os.path.commonprefix(zipfile.namelist()))
@@ -81,12 +85,12 @@ def save_user_config(appname, value):
 
 
 def install(cmd, args):
-    if len(cmd) < 2:
+    if len(cmd) < 1:
         apps = (+apps_config).keys()
         logging.error('gramex install [%s]', '|'.join(apps))
         return
 
-    appname = cmd[1]
+    appname = cmd.pop(0)
     logging.info('Installing: %s', appname)
 
     apps_config['cmd'] = {appname: args}
@@ -107,12 +111,12 @@ def install(cmd, args):
 
 
 def uninstall(cmd, args):
-    if len(cmd) < 2:
+    if len(cmd) < 1:
         apps = (+apps_config['user']).keys()
         logging.error('gramex uninstall [%s]', '|'.join(apps))
         return
 
-    appname = cmd[1]
+    appname = cmd.pop(0)
     logging.info('Uninstalling: %s', appname)
 
     # Delete the target directory if it exists

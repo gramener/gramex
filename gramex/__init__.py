@@ -79,14 +79,15 @@ def commandline(commands):
     cmd = args.pop('_')
 
     # Any positional argument is treated as a gramex command
-    if len(cmd):
-        base_command = cmd[0].lower()
+    if len(cmd) > 0:
+        params = {'cmd': cmd, 'args': args}
+        base_command = cmd.pop(0).lower()
         if base_command == 'install':
             from gramex.install import install
-            return install, {'cmd': cmd, 'args': args}
-        if base_command == 'uninstall':
+            return install, params
+        elif base_command == 'uninstall':
             from gramex.install import uninstall
-            return uninstall, {'cmd': cmd, 'args': args}
+            return uninstall, params
         raise NotImplementedError('Unknown gramex command: %s' % ' '.join(cmd))
 
     # If no command is given, start gramex
