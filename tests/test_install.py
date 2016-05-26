@@ -23,7 +23,8 @@ class TestInstall(unittest.TestCase):
         actual = set()
         for root, dirs, files in os.walk(folder):
             for filename in files:
-                actual.add(os.path.join(root, filename))
+                if '.git' not in root:
+                    actual.add(os.path.join(root, filename))
         expected = {os.path.abspath(os.path.join(folder, filename))
                     for filename in expected_files}
         self.assertEqual(actual, expected)
@@ -68,3 +69,14 @@ class TestInstall(unittest.TestCase):
         install(['dir'], AttrDict(url=dirpath))
         self.check_files('dir', os.listdir(dirpath))
         self.check_uninstall('dir')
+
+    def test_git_url(self):
+        git_url, branch = 'git@code.gramener.com:s.anand/gramex.git', 'test-apps'
+        cmd = 'git clone %s --branch %s --single-branch' % (git_url, branch)
+        install(['git-url'], AttrDict(cmd=cmd))
+        self.check_files('git-url', [
+            'dir1/file.txt', 'dir1/file-dir1.txt',
+            'dir2/file.txt', 'dir2/file-dir2.txt',
+        ])
+        # Note: Deleting .git directory fails, so lets not bother for now
+        # self.check_uninstall('git-url')

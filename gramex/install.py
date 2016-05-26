@@ -132,7 +132,7 @@ def install(cmd, args):
         logging.info('Installing: %s', appname)
         app_config = get_app_config(appname, args)
         if 'url' in app_config:
-           # Download the app URL into target directory
+            # Download the app URL into target directory
             download_zip(
                 url=app_config.url,
                 target=app_config.target,
