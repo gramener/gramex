@@ -71,7 +71,7 @@ class TestInstall(unittest.TestCase):
         self.check_uninstall('dir')
 
     def test_git_url(self):
-        git_url, branch = 'git@code.gramener.com:s.anand/gramex.git', 'test-apps'
+        git_url, branch = 'http://code.gramener.com/s.anand/gramex.git', 'test-apps'
         cmd = 'git clone %s --branch %s --single-branch' % (git_url, branch)
         install(['git-url'], AttrDict(cmd=cmd))
         self.check_files('git-url', [
