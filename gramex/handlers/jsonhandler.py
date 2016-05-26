@@ -131,10 +131,11 @@ class JSONHandler(BaseHandler):
         self.write('null')
 
     def on_finish(self):
-        # Write data to disk if changed
+        # Write data to disk if changed. on_finish is called after writing the
+        # data, so the client is not waiting for the response.
         if self.path and self.changed:
-            # Don't use encoding when reading JSON. We're using ensure_ascii=True
-            # Besides, when handling Py2 & Py3, just ignoring encoding works best
-            with open(self.path, mode='w') as handle:       # noqa
+            # Don't use encoding when reading JSON. We use ensure_ascii=True.
+            # When handling Py2 & Py3, just ignoring encoding works best.
+            with open(self.path, mode='wb') as handle:
                 json.dump(_datastore.get(self.path), handle, **self.json_kwargs)
             _loaded[self.path] = time.time()
