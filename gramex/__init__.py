@@ -78,7 +78,7 @@ def callback_commandline(commands):
     Returns a callback method and kwargs for the callback method.
     '''
     # Ensure that log colours are printed properly on cygwin.
-    if os.getenv('TERM') == 'cygwin':   # colorama.init() gets it wrong on Cygwin
+    if sys.platform == 'cygwin':        # colorama.init() gets it wrong on Cygwin
         import colorlog.escape_codes    # noqa: Let colorlog call colorama.init() first
         import colorama
         colorama.init(convert=True)     # Now we'll override with convert=True
