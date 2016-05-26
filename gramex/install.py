@@ -1,11 +1,14 @@
 import os
 import six
+import sys
 import yaml
+import shlex
 import shutil
 import logging
 import datetime
 import requests
 from pathlib import Path
+from subprocess import Popen
 from orderedattrdict import AttrDict
 from zipfile import ZipFile
 import gramex
@@ -17,8 +20,8 @@ def zip_prefix_filter(members, prefix):
     Return only ZIP file members starting with the directory prefix, with the
     prefix stripped out.
     '''
-    if not prefix.endswith('/'):
-        prefix += '/'
+    if not prefix:
+        return members
     offset = len(prefix)
     result = []
     for zipinfo in members:
@@ -34,9 +37,18 @@ def download_zip(url, target, contentdir=True, rootdir=None):
     Download url into path. url can be http, https, ftp. It will be unzipped
     based on its type.
     '''
+    # If the URL is a directory, copy it
+    if os.path.isdir(url):
+        if os.path.exists(target):
+            shutil.rmtree(target)
+        shutil.copytree(url, target)
+        return
+
+    # If it's a file, unzip it
     if os.path.exists(url):
         handle = url
     else:
+        # Otherwise, assume that it's a URL containing a ZIP file
         logging.info('Downloading: %s', url)
         response = requests.get(url)
         response.raise_for_status()
@@ -45,15 +57,22 @@ def download_zip(url, target, contentdir=True, rootdir=None):
     zipfile = ZipFile(handle)
     members = zipfile.infolist()
     if contentdir:
-        members = zip_prefix_filter(members, os.path.commonprefix(zipfile.namelist()))
+        prefix = os.path.commonprefix(zipfile.namelist())
+        if prefix.endswith('/'):
+            members = zip_prefix_filter(members, prefix)
     if rootdir is not None:
+        rootdir = rootdir.replace('\\', '/')
+        if not rootdir.endswith('/'):
+            rootdir += '/'
         members = zip_prefix_filter(members, rootdir)
 
-    if os.path.exists(target):
-        shutil.rmtree(target)
-    zipfile.extractall(target, members)
-
-    logging.info('Extracted: %s', target)
+    if len(members):
+        if os.path.exists(target):
+            shutil.rmtree(target)
+        zipfile.extractall(target, members)
+        logging.info('Extracted %d files into %s', len(members), target)
+    else:
+        logging.warn('No files after filtering %s with root dir %s', url, rootdir)
 
 
 app_dir = Path(variables.get('GRAMEXDATA')) / 'apps'
@@ -68,6 +87,7 @@ apps_config['user'] = PathConfig(user_config_file)
 
 app_keys = {
     'url': 'URL / filename of a ZIP file to install',
+    'cmd': 'Command used to install file',
     'rootdir': 'Sub-directory under "url" to install (optional)',
     'contentdir': 'Strip root directory with a single child (optional, default=True)',
     'target': 'Local directory where the app is installed',
@@ -111,8 +131,8 @@ def install(cmd, args):
     for appname in cmd:
         logging.info('Installing: %s', appname)
         app_config = get_app_config(appname, args)
-        # Download the app URL into target directory
         if 'url' in app_config:
+           # Download the app URL into target directory
             download_zip(
                 url=app_config.url,
                 target=app_config.target,
@@ -121,8 +141,19 @@ def install(cmd, args):
             )
             app_config['installed'] = {'time': datetime.datetime.utcnow()}
             save_user_config(appname, app_config)
+        elif 'cmd' in app_config:
+            appcmd = app_config.cmd
+            if isinstance(appcmd, six.string_types):
+                appcmd = shlex.split(appcmd)
+            if '$TARGET' in appcmd:
+                appcmd = [app_config.target if arg == '$TARGET' else arg for arg in appcmd]
+            else:
+                appcmd.append(app_config.target)
+            proc = Popen(appcmd, bufsize=-1, stdout=sys.stdout, stderr=sys.stderr)
+            proc.communicate()
+            save_user_config(appname, app_config)
         else:
-            logging.error('Cannot find URL to install %s. Use --url=...', appname)
+            logging.error('Use --url=... or --cmd=... to specific source of %s', appname)
 
 
 def uninstall(cmd, args):

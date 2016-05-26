@@ -6,10 +6,12 @@ from gramex.config import variables
 from gramex.install import install, uninstall, run
 from . import server
 
+folder = os.path.dirname(os.path.abspath(__file__))
+
 
 class TestInstall(unittest.TestCase):
     zip_url = urljoin(server.base_url, 'install-test.zip')
-    zip_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'install-test.zip')
+    zip_file = os.path.join(folder, 'install-test.zip')
 
     @staticmethod
     def appdir(appname):
@@ -55,3 +57,14 @@ class TestInstall(unittest.TestCase):
         self.check_zip('zip-contentdir', contentdir=False, files={
             'common-root/dir1/dir1.txt', 'common-root/dir1/file.txt',
             'common-root/dir2/dir2.txt', 'common-root/dir2/file.txt'})
+
+    def test_zip_flat(self):
+        install(['zip-flat'], AttrDict(url=urljoin(server.base_url, 'install-test-flat.zip')))
+        self.check_files('zip-flat', ['file1.txt', 'file2.txt'])
+        self.check_uninstall('zip-flat')
+
+    def test_dir(self):
+        dirpath = os.path.join(folder, 'dir', 'subdir')
+        install(['dir'], AttrDict(url=dirpath))
+        self.check_files('dir', os.listdir(dirpath))
+        self.check_uninstall('dir')
