@@ -98,6 +98,7 @@ def get_app_config(appname, args):
     app_config.target = str(app_dir / app_config.get('target', appname))
     return app_config
 
+
 def install(cmd, args):
     if len(cmd) < 1:
         apps = (+apps_config).keys()

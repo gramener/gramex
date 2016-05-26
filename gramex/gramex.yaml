@@ -68,8 +68,7 @@ log:
         console:
             class: logging.StreamHandler
             level: DEBUG
-            stream: ext://sys.stdout
-            formatter: console
+            formatter: colored
         access-log:
             class: logging.handlers.TimedRotatingFileHandler
             level: INFO
@@ -98,8 +97,11 @@ log:
         tornado.general: {}
     formatters:
         console:
-            # TODO: use colorlog for console
             format: '%(levelname)1.1s %(asctime)s %(module)s:%(lineno)d %(message)s'
+            datefmt: '%m-%b %H:%M:%S'
+        colored:
+            '()': colorlog.ColoredFormatter
+            format: '%(log_color)s%(levelname)-8s%(reset)s%(asctime)s %(bold_yellow)s%(module)s:%(lineno)d%(reset)s %(message)s'
             datefmt: '%m-%b %H:%M:%S'
         file:
             format: '%(levelname)1.1s,%(asctime)s,%(module)s,%(lineno)d,"%(message)s"'

@@ -3,6 +3,7 @@ import sys
 import json
 import yaml
 import logging
+import logging.config
 import tornado.ioloop
 from pathlib import Path
 from copy import deepcopy
@@ -76,8 +77,16 @@ def callback_commandline(commands):
 
     Returns a callback method and kwargs for the callback method.
     '''
-    # Set logging level to info at startup. (Services may override logging level.)
-    logging.basicConfig(level=logging.INFO)
+    # Ensure that log colours are printed properly on cygwin.
+    if os.getenv('TERM') == 'cygwin':   # colorama.init() gets it wrong on Cygwin
+        import colorlog.escape_codes    # noqa: Let colorlog call colorama.init() first
+        import colorama
+        colorama.init(convert=True)     # Now we'll override with convert=True
+
+    # Set logging config at startup. (Services may override this.)
+    log_config = (+PathConfig(paths['source'] / 'gramex.yaml')).get('log', AttrDict())
+    log_config.root.level = logging.INFO
+    logging.config.dictConfig(log_config)
 
     # args has all optional command line args as a dict of values / lists.
     # cmd has all positional arguments as a list.
@@ -103,7 +112,8 @@ def callback_commandline(commands):
     # Else use source/guide, and point the user to the welcome screen
     if not os.path.isfile('gramex.yaml'):
         from gramex.install import run
-        return run, {'cmd': ['guide'], 'args': {'browser': True}}
+        args.setdefault('browser', True)
+        return run, {'cmd': ['guide'], 'args': args}
 
     return init, {'cmd': AttrDict(app=args)}
 
