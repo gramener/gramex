@@ -14,6 +14,7 @@ exists, a warning is raised.
 from __future__ import unicode_literals
 
 import yaml
+import atexit
 import logging
 import posixpath
 import mimetypes
@@ -40,6 +41,7 @@ info = AttrDict(
     # Initialise with a single worker by default. threadpool.workers overrides this
     threadpool=concurrent.futures.ThreadPoolExecutor(1),
 )
+atexit.register(info.threadpool.shutdown)
 
 
 def version(conf):
@@ -95,6 +97,7 @@ def threadpool(conf):
     if conf and hasattr(conf, 'get'):
         workers = conf.get('workers', workers)
     info.threadpool = concurrent.futures.ThreadPoolExecutor(workers)
+    atexit.register(info.threadpool.shutdown)
 
 
 def _sort_url_patterns(entry):
@@ -319,3 +322,4 @@ def cache(conf):
             path = config.get('path', '.cache-' + name)
             info.cache[name] = urlcache.DiskCache(
                 path, size_limit=size, eviction_policy='least-recently-stored')
+            atexit.register(info.cache[name].close)

@@ -3,6 +3,7 @@ The file watch service uses `watchdoc <https://pythonhosted.org/watchdog/>`_ to
 monitor files, and run functions when the file changes.
 '''
 
+import atexit
 import logging
 from pathlib import Path
 from collections import defaultdict
@@ -13,6 +14,7 @@ from watchdog.events import FileSystemEventHandler
 # There's only one observer. Start it at the beginning and schedule stuff later
 observer = Observer()
 observer.start()
+atexit.register(observer.stop)
 
 handlers = AttrDict()       # handler[name] = FileEventHandler
 watches = AttrDict()        # watches[directory] = ObservedWatch
