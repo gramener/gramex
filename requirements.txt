@@ -11,6 +11,7 @@ orderedattrdict >= 1.4.2  # OrderedDict with attr access for configs
 watchdog >= 0.8           # Monitor file changes
 tornado >= 4.3            # Web server
 PyYAML >= 3.10            # Parse YAML files for config
+colorama >= 0.3.7         # Used by colorlog. Anaconda has colorama, but 0.3.7 fixes an exit-reset-code bug
 colorlog >= 2.7.0         # Coloured log files
 
 # Handler / service specific
