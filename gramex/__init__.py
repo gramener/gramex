@@ -68,8 +68,14 @@ def parse_command_line(commands):
     return args
 
 
-def commandline(commands):
-    'Run Gramex from the command line'
+def callback_commandline(commands):
+    '''
+    Find what method should be run based on the command line programs. This
+    refactoring allows us to test gramex.commandline() to see if it processes
+    the command line correctly, without actually running the commands.
+
+    Returns a callback method and kwargs for the callback method.
+    '''
     # Set logging level to info at startup. (Services may override logging level.)
     logging.basicConfig(level=logging.INFO)
 
@@ -80,28 +86,32 @@ def commandline(commands):
 
     # Any positional argument is treated as a gramex command
     if len(cmd) > 0:
-        params = {'cmd': cmd, 'args': args}
+        kwargs = {'cmd': cmd, 'args': args}
         base_command = cmd.pop(0).lower()
         if base_command == 'install':
             from gramex.install import install
-            return install, params
+            return install, kwargs
         elif base_command == 'uninstall':
             from gramex.install import uninstall
-            return uninstall, params
+            return uninstall, kwargs
+        elif base_command == 'run':
+            from gramex.install import run
+            return run, kwargs
         raise NotImplementedError('Unknown gramex command: %s' % ' '.join(cmd))
-
-    # If no command is given, start gramex
-    logging.info('Initializing Gramex...')
 
     # Use current dir as base (where gramex is run from) if there's a gramex.yaml.
     # Else use source/guide, and point the user to the welcome screen
     if not os.path.isfile('gramex.yaml'):
-        os.chdir(str(paths['source'] / 'guide'))
-        paths['base'] = Path('.')
-        if 'browser' not in args:
-            args['browser'] = '/welcome'
+        from gramex.install import run
+        return run, {'cmd': ['guide'], 'args': {'browser': True}}
 
     return init, {'cmd': AttrDict(app=args)}
+
+
+def commandline():
+    'Run Gramex from the command line. Called via setup.py console_scripts'
+    callback, kwargs = callback_commandline(sys.argv[1:])
+    callback(**kwargs)
 
 
 def init(**kwargs):

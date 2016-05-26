@@ -104,7 +104,7 @@ was called.
 
 
 `lineprofile` is a decorator that prints the time taken for each line of a
-function. For example:
+function every time it is called. For example:
 
     from gramex.debug import lineprofile
 

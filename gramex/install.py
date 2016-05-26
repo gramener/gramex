@@ -84,6 +84,12 @@ def save_user_config(appname, value):
         yaml.dump(user_config, handle, indent=4, default_flow_style=False)
 
 
+def get_app_config(appname, args):
+    apps_config['cmd'] = {appname: args}
+    app_config = (+apps_config).get(appname, {})
+    app_config.target = str(app_dir / app_config.get('target', appname))
+    return app_config
+
 def install(cmd, args):
     if len(cmd) < 1:
         apps = (+apps_config).keys()
@@ -93,15 +99,12 @@ def install(cmd, args):
     appname = cmd.pop(0)
     logging.info('Installing: %s', appname)
 
-    apps_config['cmd'] = {appname: args}
-    app_config = (+apps_config).get(appname, {})
-
+    app_config = get_app_config(appname, args)
     # Download the app URL into target directory
-    target = str(app_dir / app_config.get('target', appname))
     if 'url' in app_config:
         download_zip(
             url=app_config.url,
-            target=target,
+            target=app_config.target,
             contentdir=app_config.get('contentdir', True),
             rootdir=app_config.get('rootdir', None),
         )
@@ -120,11 +123,30 @@ def uninstall(cmd, args):
     logging.info('Uninstalling: %s', appname)
 
     # Delete the target directory if it exists
-    apps_config['cmd'] = {appname: args}
-    app_config = (+apps_config).get(appname, {})
-    target = str(app_dir / app_config.get('target', appname))
-    if os.path.exists(target):
-        shutil.rmtree(target)
+    app_config = get_app_config(appname, args)
+    if os.path.exists(app_config.target):
+        if app_config.target.startswith(variables['GRAMEXDATA']):
+            shutil.rmtree(app_config.target)
+        else:
+            logging.warn('Not removing directory %s (outside $GRAMEXDATA)', app_config.target)
     else:
-        logging.error('No directory %s to remove', target)
+        logging.error('No directory %s to remove', app_config.target)
     save_user_config(appname, None)
+
+
+def run(cmd, args):
+    if len(cmd) < 1:
+        apps = (+apps_config['user']).keys()
+        logging.error('gramex run [%s]', '|'.join(apps))
+        return
+
+    appname = cmd.pop(0)
+    logging.info('Initializing %s on Gramex %s', appname, gramex.__version__)
+
+    app_config = get_app_config(appname, args)
+    if os.path.exists(app_config.target):
+        os.chdir(app_config.target)
+        gramex.paths['base'] = Path('.')
+        gramex.init(cmd=AttrDict(app=args))
+    else:
+        logging.error('No directory %s to run', app_config.target)
