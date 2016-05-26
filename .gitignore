@@ -29,9 +29,10 @@ tests/**/*.test
 # Don't commit databases created by test cases
 tests/*.db
 
-# Zip files that aren't read by Pandas
+# Don't commit ZIP files, except what's required for testing
 *.7z
 *.zip
+!tests/*.zip
 
 # Documents
 *.doc*
