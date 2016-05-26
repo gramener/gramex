@@ -113,23 +113,7 @@ threadpool:
 
 
 # The `schedule:` section defines when specific code is to run.
-#
-# https://github.com/josiahcarlson/parse-crontab
-schedule:
-    gramex-reconfig:
-        function: gramex.init           # Reload Gramex config
-        minutes: '*/30'                 # Every 30 minutes
-    # scheduled-message:
-    #     function: logging.info          # Run this function
-    #     kwargs:                         # with these keys and values
-    #         msg: This is a scheduled message
-    #     years: '*'                      # Every year (* is default)
-    #     months: 'jan, mar-may, 12'      # In Jan, Mar, Apr, May, Dec
-    #     dates: '1, L'                   # On the first and last days
-    #     weekdays: '*'                   # 0-6 or SUN-SAT
-    #     hours: '*/3'                    # Every 3rd hour
-    #     minutes: '*/5, 59'              # Every 5th minute, and 59th minute
-    #     startup: true                   # In addition, run on startup
+schedule: {}
 
 
 # Define custom MIME types here
