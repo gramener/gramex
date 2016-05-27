@@ -138,13 +138,14 @@ def run_setup(config):
         setup_file = os.path.join(target, setup['file'])
         if not os.path.exists(setup_file):
             continue
-        exe = which(exe)
-        if exe is None:
-            logging.info('Cannot run %s. No %s found', setup_file, exe)
+        exe_path = which(exe)
+        if exe_path is None:
+            logging.info('Skipping %s. No %s found', setup_file, exe)
             continue
-        cmd = setup['cmd'].replace('$FILE', setup_file).replace('$EXE', exe)
+        cmd = setup['cmd'].replace('$FILE', setup_file).replace('$EXE', exe_path)
         logging.info('Running %s', cmd)
-        proc = Popen(cmd, cwd=target, bufsize=-1, stdout=sys.stdout, stderr=sys.stderr)
+        proc = Popen(shlex.split(appcmd), cwd=target, bufsize=-1,
+                     stdout=sys.stdout, stderr=sys.stderr)
         proc.communicate()
 
 
