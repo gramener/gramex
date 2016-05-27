@@ -128,11 +128,11 @@ def _setup_variables():
     # Define GRAMEXDATA folder based on the system
     if 'GRAMEXDATA' not in variables:
         if sys.platform == 'linux2' or sys.platform == 'cygwin':
-            variables['GRAMEXDATA'] = os.path.abspath('~/.config/gramexdata')
+            variables['GRAMEXDATA'] = os.path.expanduser('~/.config/gramexdata')
         elif sys.platform == 'win32':
             variables['GRAMEXDATA'] = os.path.join(variables['LOCALAPPDATA'], 'Gramex Data')
         elif sys.platform == 'darwin':
-            variables['GRAMEXDATA'] = os.path.abspath('~/Library/Application Support/Gramex Data')
+            variables['GRAMEXDATA'] = os.path.expanduser('~/Library/Application Support/Gramex Data')
         else:
             variables['GRAMEXDATA'] = os.path.abspath('.')
             logging.warn('$GRAMEXDATA set to %s for OS %s', variables['GRAMEXDATA'], sys.platform)
