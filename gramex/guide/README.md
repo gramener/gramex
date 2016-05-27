@@ -13,6 +13,10 @@ classes: toc
 
 **Exercise**: Create a `gramex.yaml` that runs Gramex on port 80 and logs every request to a file.
 
+## [Gramex runs apps](apps/)
+
+**Exercise**: TBD
+
 ## [Gramex runs Python functions](functionhandler/)
 
 **Exercise**: Make </greet> show "Hello {name}" when a `?name=` parameter is passed.

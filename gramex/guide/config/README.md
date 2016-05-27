@@ -80,7 +80,7 @@ identifiers. The mappings have these keys:
   `/blog/(.*)` matches all pages starting with `/blog/`. Any parts of the URL in
   brackets are passed to the handler as arguments.
 - `handler`: The name of the Tornado [RequestHandler][requesthandler] to run.
-  Gramex provides these by default:
+  Gramex provides many handlers by default. Here are some commonly used ones:
     - [FunctionHandler](../functionhandler/): runs any function and renders the output
     - [FileHandler](../filehandler/): transforms & displays files
     - [DataHandler](../datahandler/): renders data from databases or files
