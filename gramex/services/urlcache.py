@@ -13,10 +13,10 @@ See gramex.handlers.BaseHandler for examples on how to use these objects.
 from __future__ import unicode_literals
 
 import json
-import logging
 from six.moves import cPickle
 from diskcache import Cache as DiskCache
 from .ttlcache import TTLCache as MemoryCache
+from ..config import app_log
 
 # HTTP Headers that should not be cached
 ignore_headers = {
@@ -37,7 +37,7 @@ def get_cachefile(store):
     elif isinstance(store, DiskCache):
         return DiskCacheFile
     else:
-        logging.warn('cache: ignoring unknown store %s', store)
+        app_log.warn('cache: ignoring unknown store %s', store)
         return CacheFile
 
 # In Python 3, json does not support byte encoding. Use pickle instead. (It's faster in Pythom 3)

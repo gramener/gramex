@@ -31,6 +31,8 @@ from pydoc import locate as _locate
 from orderedattrdict import AttrDict, DefaultAttrDict
 from orderedattrdict.yamlutils import AttrDictYAMLLoader
 
+app_log = logging.getLogger('gramex')
+
 
 def walk(node):
     '''
@@ -136,7 +138,7 @@ def _setup_variables():
                 '~/Library/Application Support/Gramex Data')
         else:
             variables['GRAMEXDATA'] = os.path.abspath('.')
-            logging.warn('$GRAMEXDATA set to %s for OS %s', variables['GRAMEXDATA'], sys.platform)
+            app_log.warn('$GRAMEXDATA set to %s for OS %s', variables['GRAMEXDATA'], sys.platform)
 
     return variables
 
@@ -185,14 +187,14 @@ def _yaml_open(path, default=AttrDict()):
     path = path.absolute()
     if not path.exists():
         if path not in _warned_paths:
-            logging.warning('Missing config: %s', path)
+            app_log.warning('Missing config: %s', path)
             _warned_paths.add(path)
         return default
-    logging.debug('Loading config: %s', path)
+    app_log.debug('Loading config: %s', path)
     with path.open(encoding='utf-8') as handle:
         result = yaml.load(handle, Loader=AttrDictYAMLLoader)
     if result is None:
-        logging.warning('Empty config: %s', path)
+        app_log.warning('Empty config: %s', path)
         return default
 
     # Variables based on YAML file location
@@ -345,12 +347,12 @@ class PathConfig(AttrDict):
             exists = imp.path.exists()
             if not exists and imp.stat is not None:
                 reload = True
-                logging.info('No config found: %s', imp.path)
+                app_log.info('No config found: %s', imp.path)
                 break
             if exists and (imp.path.stat().st_mtime > imp.stat.st_mtime or
                            imp.path.stat().st_size != imp.stat.st_size):
                 reload = True
-                logging.info('Updated config: %s', imp.path)
+                app_log.info('Updated config: %s', imp.path)
                 break
         if reload:
             self.clear()

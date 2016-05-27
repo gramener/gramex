@@ -2,13 +2,13 @@ import io
 import os
 import six
 import sys
-import logging
 import subprocess
 import tornado.web
 import tornado.gen
 from threading import Thread, RLock
 from tornado.concurrent import Future
 from .basehandler import BaseHandler
+from gramex.config import app_log
 
 
 class ProcessHandler(BaseHandler):
@@ -113,7 +113,7 @@ class ProcessHandler(BaseHandler):
                 callbacks.append(handle.write)
             # warn on unknown parameters (e.g. numbers, True, etc)
             else:
-                logging.warn('ProcessHandler: %s: %s is not implemented' % (name, target))
+                app_log.warn('ProcessHandler: %s: %s is not implemented' % (name, target))
         return callbacks
 
     def initialize(self, stdout=None, stderr=None, stdin=None, **kwargs):

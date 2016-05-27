@@ -1,10 +1,10 @@
 import os
 import json
 import time
-import logging
 import tornado.web
 import tornado.escape
 from .basehandler import BaseHandler
+from gramex.config import app_log
 
 _datastore = {}         # Contents of the JSON data stores
 _loaded = {}            # Time when persistent stores were last loaded
@@ -48,7 +48,7 @@ class JSONHandler(BaseHandler):
                             _datastore[pathkey] = json.load(handle)
                             _loaded[pathkey] = time.time()
                         except ValueError:
-                            logging.warn('Invalid JSON in %s', pathkey)
+                            app_log.warn('Invalid JSON in %s', pathkey)
                             self.changed = True
             else:
                 self.changed = True

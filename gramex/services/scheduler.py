@@ -1,9 +1,9 @@
 'Gramex scheduling service'
 
-import logging
 import tornado.ioloop
 from crontab import CronTab
 from ..transforms import build_transform
+from ..config import app_log
 
 
 class Task(object):
@@ -30,7 +30,7 @@ class Task(object):
             def on_done(future):
                 exception = future.exception(timeout=0)
                 if exception:
-                    logging.error('%s (thread): %s', name, exception)
+                    app_log.error('%s (thread): %s', name, exception)
 
             self.function = lambda: threadpool.submit(fn).add_done_callback(on_done)
 
@@ -42,7 +42,7 @@ class Task(object):
             self.cron = CronTab(' '.join(cron))
             self._schedule()
         elif not schedule.get('startup'):
-            logging.warn('schedule: %s has no schedule nor startup', name)
+            app_log.warn('schedule: %s has no schedule nor startup', name)
 
         # Run now if the task is to be run on startup. Don't re-run if the config was reloaded
         if schedule.get('startup') and not self.ioloop._running:
@@ -50,7 +50,7 @@ class Task(object):
 
     def run(self):
         'Run task. Then set up next callback.'
-        logging.info('Running %s', self.name)
+        app_log.info('Running %s', self.name)
         try:
             self.function()
         finally:
@@ -61,14 +61,14 @@ class Task(object):
     def stop(self):
         'Suspend task, clearing any pending callbacks'
         if self.callback is not None:
-            logging.debug('Stopping %s', self.name)
+            app_log.debug('Stopping %s', self.name)
             self.ioloop.remove_timeout(self.callback)
             self.callback = None
 
     def _schedule(self):
         'Schedule next run. Do NOT call twice: creates two callbacks'
         delay = self.cron.next()
-        logging.debug('Scheduling %s after %.0fs', self.name, delay)
+        app_log.debug('Scheduling %s after %.0fs', self.name, delay)
         self.callback = self.ioloop.call_later(delay, self.run)
 
 
@@ -81,4 +81,4 @@ def setup(schedule, tasks, threadpool, ioloop=None):
         try:
             tasks[name] = Task(name, sched, threadpool, ioloop)
         except Exception as e:
-            logging.exception(e)
+            app_log.exception(e)

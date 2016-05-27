@@ -8,7 +8,7 @@ import tornado.ioloop
 from pathlib import Path
 from copy import deepcopy
 from orderedattrdict import AttrDict
-from gramex.config import ChainConfig, PathConfig
+from gramex.config import ChainConfig, PathConfig, app_log
 
 paths = AttrDict()              # Paths where configurations are stored
 conf = AttrDict()               # Final merged configurations
@@ -168,7 +168,7 @@ def init(**kwargs):
                 if callable(callback):
                     callbacks[key] = callback
             else:
-                logging.warning('No service named %s', key)
+                app_log.warning('No service named %s', key)
 
     # Run the callbacks. Specifically, the app service starts the Tornado ioloop
     for key in (+config_layers).keys():
@@ -180,5 +180,5 @@ def shutdown():
     'Shut down this instance'
     ioloop = tornado.ioloop.IOLoop.current()
     if ioloop._running:
-        logging.info('Shutting down Gramex...')
+        app_log.info('Shutting down Gramex...')
         ioloop.stop()

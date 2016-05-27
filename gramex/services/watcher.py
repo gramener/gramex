@@ -4,12 +4,12 @@ monitor files, and run functions when the file changes.
 '''
 
 import atexit
-import logging
 from pathlib import Path
 from collections import defaultdict
 from orderedattrdict import AttrDict
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
+from ..config import app_log
 
 # There's only one observer. Start it at the beginning and schedule stuff later
 observer = Observer()
@@ -33,7 +33,7 @@ class FileEventHandler(FileSystemEventHandler):
             if parent.exists():
                 self.paths[parent.resolve()].add(path)
             else:
-                logging.warning('Parent directory does not exist: %s', path)
+                app_log.warning('Parent directory does not exist: %s', path)
 
         self.__dict__.update(events)
         for directory, path in self.paths.items():

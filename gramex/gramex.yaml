@@ -64,6 +64,12 @@ log:
         level: DEBUG
         handlers:
             - console
+    loggers:
+        gramex: {}
+        # Disable tornado loggers. Let them propagate to root
+        tornado.access: {}
+        tornado.application: {}
+        tornado.general: {}
     handlers:
         console:
             class: logging.StreamHandler
@@ -91,10 +97,6 @@ log:
             utc: False              # using local time zone, not UTC
             backupCount: 52         # keep only last 52 backups
             delay: true             # do not create file until called
-    loggers:
-        tornado.access: {}
-        tornado.application: {}
-        tornado.general: {}
     formatters:
         console:
             format: '%(levelname)1.1s %(asctime)s %(module)s:%(lineno)d %(message)s'

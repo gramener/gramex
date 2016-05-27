@@ -15,7 +15,6 @@ from __future__ import unicode_literals
 
 import yaml
 import atexit
-import logging
 import posixpath
 import mimetypes
 import webbrowser
@@ -30,7 +29,7 @@ from . import scheduler
 from . import watcher
 from . import urlcache
 from .ttlcache import MAXTTL
-from ..config import locate
+from ..config import locate, app_log
 
 
 # Service-specific information
@@ -59,7 +58,7 @@ def app(conf):
     "Set up tornado.web.Application() -- only if the ioloop hasn't started"
     ioloop = tornado.ioloop.IOLoop.current()
     if ioloop._running:
-        logging.warning('Ignoring app config change when running')
+        app_log.warning('Ignoring app config change when running')
     else:
         info.app = tornado.web.Application(**conf.settings)
         info.app.listen(**conf.listen)
@@ -69,7 +68,7 @@ def app(conf):
             if ioloop._running:
                 return
 
-            logging.info('Listening on port %d', conf.listen.port)
+            app_log.info('Listening on port %d', conf.listen.port)
 
             # browser: True opens the application home page on localhost.
             # browser: url opens the application to a specific URL
@@ -78,7 +77,7 @@ def app(conf):
                 if isinstance(conf.browser, str):
                     url = urlparse.urljoin(url, conf.browser)
                 browser = webbrowser.get()
-                logging.info('Opening %s in %s browser', url, browser.__class__.__name__)
+                app_log.info('Opening %s in %s browser', url, browser.__class__.__name__)
                 browser.open(url)
             ioloop.start()
 
@@ -144,7 +143,7 @@ def _get_cache_key(conf, name):
     for key in keys:
         parts = key.split('.', 2)
         if len(parts) < 2:
-            logging.warn('url %s: ignoring invalid cache key %s', name, key)
+            app_log.warn('url %s: ignoring invalid cache key %s', name, key)
             continue
         # convert second part into a Python string representation
         val = repr(parts[1])
@@ -158,7 +157,7 @@ def _get_cache_key(conf, name):
         elif parts[0].startswith('arg'):
             key_getters.append('argsep.join(request.arguments.get(%s, [missing_b]))' % val)
         else:
-            logging.warn('url %s: ignoring invalid cache key %s', name, key)
+            app_log.warn('url %s: ignoring invalid cache key %s', name, key)
     # If none of the keys are valid, use the default request key
     if not len(key_getters):
         key_getters = [default_key]
@@ -216,7 +215,7 @@ def _cache_generator(conf, name):
     default_store = list(info.cache.keys())[0] if len(info.cache) > 0 else None
     store_name = conf.get('store', default_store)
     if store_name not in info.cache:
-        logging.warn('url %s: %s store missing', name, store_name)
+        app_log.warn('url %s: %s store missing', name, store_name)
     store = info.cache.get(store_name)
 
     cache_key = _get_cache_key(conf, name)
@@ -281,10 +280,10 @@ def watch(conf):
     events = {'on_modified', 'on_created', 'on_deleted', 'on_moved', 'on_any_event'}
     for name, config in conf.items():
         if 'paths' not in config:
-            logging.error('No "paths" in watch config: %s', yaml.dump(config))
+            app_log.error('No "paths" in watch config: %s', yaml.dump(config))
             continue
         if not set(config.keys()) & events:
-            logging.error('No events in watch config: %s', yaml.dump(config))
+            app_log.error('No events in watch config: %s', yaml.dump(config))
             continue
         if not isinstance(config['paths'], (list, set, tuple)):
             config['paths'] = [config['paths']]
@@ -309,7 +308,7 @@ def cache(conf):
     for name, config in conf.items():
         cache_type = config.type.lower()
         if cache_type not in cache_types:
-            logging.warn('cache: %s has unknown type %s', name, config.type)
+            app_log.warn('cache: %s has unknown type %s', name, config.type)
             continue
 
         cache_params = cache_types[cache_type]

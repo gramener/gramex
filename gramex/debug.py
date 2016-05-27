@@ -4,12 +4,12 @@ Debugging and profiling tools for Gramex
 import gc
 import timeit
 import inspect
-import logging
 import functools
 try:
     import line_profiler
 except ImportError:
     line_profiler = None
+from gramex.config import app_log
 
 
 def _caller():
@@ -28,7 +28,7 @@ def _make_timer():
 
     def timer(msg):
         end = timeit.default_timer()
-        logging.info('%0.3fs %s %s', end - Context.start, msg, _caller())
+        app_log.info('%0.3fs %s %s', end - Context.start, msg, _caller())
         Context.start = end
 
     return timer
@@ -46,12 +46,12 @@ class Timer(object):
         end = timeit.default_timer()
         if self.gc_old:
             gc.enable()
-        logging.info('%0.3fs %s %s', end - self.start, self.msg, _caller())
+        app_log.info('%0.3fs %s %s', end - self.start, self.msg, _caller())
 
 
 if line_profiler is None:
     def line_profiler(func):
-        logging.warn('@lineprofile requires line_profiler module')
+        app_log.warn('@lineprofile requires line_profiler module')
         return func
 else:
     def lineprofile(func):

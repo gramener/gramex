@@ -1,11 +1,11 @@
 import ssl
 import time
-import logging
 import tornado.web
 from tornado.web import RequestHandler
 from tornado.escape import json_encode, json_decode
 from tornado.httpclient import HTTPClient, AsyncHTTPClient
 from tornado.auth import GoogleOAuth2Mixin, FacebookGraphMixin, TwitterMixin
+from gramex.config import app_log
 
 
 def now():
@@ -38,12 +38,12 @@ class AuthHandler(RequestHandler):
                 try:
                     import certifi      # noqa: late import to minimise dependencies
                     AsyncHTTPClient.configure(None, defaults=dict(ca_certs=certifi.old_where()))
-                    logging.warn('Using old SSL certificates for compatibility')
+                    app_log.warn('Using old SSL certificates for compatibility')
                 except ImportError:
                     pass
             except Exception:
                 # Ignore any other kind of exception
-                logging.warn('Gramex has no direct Internet connection.')
+                app_log.warn('Gramex has no direct Internet connection.')
             _client.close()
             cls.ssl_checked = True
 

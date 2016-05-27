@@ -5,7 +5,6 @@ import yaml
 import shlex
 import shutil
 import string
-import logging
 import datetime
 import requests
 from shutilwhich import which
@@ -14,7 +13,7 @@ from subprocess import Popen
 from orderedattrdict import AttrDict
 from zipfile import ZipFile
 import gramex
-from gramex.config import ChainConfig, PathConfig, variables
+from gramex.config import ChainConfig, PathConfig, variables, app_log
 
 
 def zip_prefix_filter(members, prefix):
@@ -49,7 +48,7 @@ def download_zip(config):
         if os.path.exists(target):
             shutil.rmtree(target)
         shutil.copytree(url, target)
-        logging.info('Copied %s into %s', url, target)
+        app_log.info('Copied %s into %s', url, target)
         return
 
     # If it's a file, unzip it
@@ -57,7 +56,7 @@ def download_zip(config):
         handle = url
     else:
         # Otherwise, assume that it's a URL containing a ZIP file
-        logging.info('Downloading: %s', url)
+        app_log.info('Downloading: %s', url)
         response = requests.get(url)
         response.raise_for_status()
         handle = six.BytesIO(response.content)
@@ -74,7 +73,7 @@ def download_zip(config):
     if os.path.exists(target):
         shutil.rmtree(target)
     zipfile.extractall(target, files)
-    logging.info('Extracted %d files into %s', len(files), target)
+    app_log.info('Extracted %d files into %s', len(files), target)
 
 
 def run_command(config):
@@ -91,7 +90,7 @@ def run_command(config):
         appcmd = [config.target if arg == 'TARGET' else arg for arg in appcmd]
     else:
         appcmd.append(config.target)
-    logging.info('Running %s', ' '.join(appcmd))
+    app_log.info('Running %s', ' '.join(appcmd))
     if os.path.exists(config.target):
         shutil.rmtree(config.target)
     proc = Popen(appcmd, bufsize=-1, stdout=sys.stdout, stderr=sys.stderr)
@@ -133,10 +132,10 @@ def run_setup(config):
             continue
         exe_path = which(exe)
         if exe_path is None:
-            logging.info('Skipping %s. No %s found', setup_file, exe)
+            app_log.info('Skipping %s. No %s found', setup_file, exe)
             continue
         cmd = string.Template(setup['cmd']).substitute(FILE=setup_file, EXE=exe_path)
-        logging.info('Running %s', cmd)
+        app_log.info('Running %s', cmd)
         proc = Popen(shlex.split(cmd), cwd=target, bufsize=-1,
                      stdout=sys.stdout, stderr=sys.stderr)
         proc.communicate()
@@ -189,11 +188,11 @@ def get_app_config(appname, args):
 def install(cmd, args):
     if len(cmd) < 1:
         apps = (+apps_config).keys()
-        logging.error('gramex install [%s]', '|'.join(apps))
+        app_log.error('gramex install [%s]', '|'.join(apps))
         return
 
     appname = cmd[0]
-    logging.info('Installing: %s', appname)
+    app_log.info('Installing: %s', appname)
     app_config = get_app_config(appname, args)
     if 'url' in app_config:
         download_zip(app_config)
@@ -203,7 +202,7 @@ def install(cmd, args):
         app_config.url = cmd[1]
         download_zip(app_config)
     else:
-        logging.error('Use --url=... or --cmd=... to specific source of %s', appname)
+        app_log.error('Use --url=... or --cmd=... to specific source of %s', appname)
         return
 
     # Post-installation
@@ -215,14 +214,14 @@ def install(cmd, args):
 def uninstall(cmd, args):
     if len(cmd) < 1:
         apps = (+apps_config['user']).keys()
-        logging.error('gramex uninstall [%s]', '|'.join(apps))
+        app_log.error('gramex uninstall [%s]', '|'.join(apps))
         return
     if len(cmd) > 1 and args:
-        logging.error('Arguments allowed only with single app. Ignoring %s', ', '.join(cmd[1:]))
+        app_log.error('Arguments allowed only with single app. Ignoring %s', ', '.join(cmd[1:]))
         cmd = cmd[:1]
 
     for appname in cmd:
-        logging.info('Uninstalling: %s', appname)
+        app_log.info('Uninstalling: %s', appname)
 
         # Delete the target directory if it exists
         app_config = get_app_config(appname, args)
@@ -230,22 +229,22 @@ def uninstall(cmd, args):
             if app_config.target.startswith(variables['GRAMEXDATA']):
                 shutil.rmtree(app_config.target)
             else:
-                logging.warn('Not removing directory %s (outside $GRAMEXDATA)', app_config.target)
+                app_log.warn('Not removing directory %s (outside $GRAMEXDATA)', app_config.target)
         else:
-            logging.error('No directory %s to remove', app_config.target)
+            app_log.error('No directory %s to remove', app_config.target)
         save_user_config(appname, None)
 
 
 def run(cmd, args):
     if len(cmd) < 1:
         apps = (+apps_config['user']).keys()
-        logging.error('gramex run [%s]', '|'.join(apps))
+        app_log.error('gramex run [%s]', '|'.join(apps))
         return
     if len(cmd) > 1:
-        logging.error('Can only run one app. Ignoring %s', ', '.join(cmd[1:]))
+        app_log.error('Can only run one app. Ignoring %s', ', '.join(cmd[1:]))
 
     appname = cmd.pop(0)
-    logging.info('Initializing %s on Gramex %s', appname, gramex.__version__)
+    app_log.info('Initializing %s on Gramex %s', appname, gramex.__version__)
 
     app_config = get_app_config(appname, args)
     target = app_config.target
@@ -261,4 +260,4 @@ def run(cmd, args):
         save_user_config(appname, app_config)
         gramex.init(cmd=AttrDict(app=app_config['run']))
     else:
-        logging.error('No directory %s to run for %s', app_config.target, appname)
+        app_log.error('No directory %s to run for %s', app_config.target, appname)

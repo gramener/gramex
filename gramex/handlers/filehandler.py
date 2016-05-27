@@ -1,7 +1,6 @@
 from __future__ import unicode_literals
 
 import string
-import logging
 import datetime
 import mimetypes
 import tornado.web
@@ -11,6 +10,7 @@ from tornado.escape import utf8
 from tornado.web import HTTPError
 from six.moves.urllib.parse import urljoin
 from .basehandler import BaseHandler
+from gramex.config import app_log
 
 
 # Directory indices are served using this template by default
@@ -19,7 +19,7 @@ _default_index_template = Path(__file__).absolute().parent / 'filehandler.templa
 
 def read_template(path):
     if not path.exists():
-        logging.warn('Missing directory template "%s". Using "%s"' %
+        app_log.warn('Missing directory template "%s". Using "%s"' %
                      (path, _default_index_template))
         path = _default_index_template
     with path.open(encoding='utf-8') as handle:
@@ -174,7 +174,7 @@ class FileHandler(BaseHandler):
                         name=path + name_suffix,
                     ))
                 except UnicodeDecodeError:
-                    logging.warn("FileHandler can't show unicode file {!r:s}".format(path))
+                    app_log.warn("FileHandler can't show unicode file {!r:s}".format(path))
             content.append(u'</ul>')
             self.content = self.index_template.substitute(path=self.path, body=''.join(content))
 
