@@ -1,10 +1,12 @@
 import os
 import shutil
+import requests
 import unittest
 from pathlib import Path
 from shutilwhich import which
 from orderedattrdict import AttrDict
 from six.moves.urllib.parse import urljoin
+import gramex
 from gramex.config import variables, PathConfig
 from gramex.install import install, uninstall, run
 from . import server
@@ -61,19 +63,43 @@ class TestInstall(unittest.TestCase):
         self.check_zip('zip', files={
             'dir1/dir1.txt', 'dir1/file.txt', 'dir2/dir2.txt', 'dir2/file.txt'})
 
-    def test_zip_rootdir(self):
-        self.check_zip('zip-dir1', rootdir='dir1', files={'dir1.txt', 'file.txt'})
-        self.check_zip('zip-dir2', rootdir='dir2', files={'dir2.txt', 'file.txt'})
-
     def test_zip_url_contentdir(self):
         self.check_zip('zip-contentdir', contentdir=False, files={
             'common-root/dir1/dir1.txt', 'common-root/dir1/file.txt',
             'common-root/dir2/dir2.txt', 'common-root/dir2/file.txt'})
 
     def test_zip_flat(self):
+        # This ZIP file has members directly under the root. Test such cases
         install(['zip-flat'], AttrDict(url=urljoin(server.base_url, 'install-test-flat.zip')))
         self.check_files('zip-flat', ['file1.txt', 'file2.txt'])
         self.check_uninstall('zip-flat')
+
+    def test_url_in_cmd(self):
+        install(['url-cmd', self.zip_url], AttrDict())
+        self.check_files('url-cmd', {
+            'dir1/dir1.txt', 'dir1/file.txt', 'dir2/dir2.txt', 'dir2/file.txt'})
+        self.check_uninstall('url-cmd')
+
+    def test_run(self):
+        # When you call gramex run run-app --dir=dir1 --browser=False, ensure
+        # that gramex.init() is run from dir1 and is passed --browser=False.
+        # We do that by mocking gramex.init() with check_init()
+        result = AttrDict()
+
+        def check_init(**kwargs):
+            result.cwd = os.getcwd()
+            result.opts = kwargs.get('cmd', {}).get('app', {})
+
+        install(['run-app', self.zip_url], AttrDict())
+        old_init = gramex.init
+        old_cwd = os.getcwd()
+        setattr(gramex, 'init', check_init)
+        run(['run-app'], AttrDict(dir='dir1', browser=False))
+        setattr(gramex, 'init', old_init)
+        os.chdir(old_cwd)
+        self.assertEqual(result.cwd, self.appdir('run-app/dir1/'))
+        self.assertEqual(result.opts.get('browser'), False)
+        self.check_uninstall('run-app')
 
     def test_dir(self):
         dirpath = os.path.join(folder, 'dir', 'subdir')
@@ -90,17 +116,21 @@ class TestInstall(unittest.TestCase):
     def test_git_url(self):
         git_files = ['dir1/file.txt', 'dir1/file-dir1.txt', 'dir2/file.txt', 'dir2/file-dir2.txt']
         git_url, branch = 'http://code.gramener.com/s.anand/gramex.git', 'test-apps'
+        try:
+            requests.get(git_url)
+        except requests.RequestException:
+            self.skipTest('Unable to connect to code.gramener.com')
 
         cmd = 'git clone %s --branch %s --single-branch' % (git_url, branch)
         install(['git-url'], AttrDict(cmd=cmd))
         self.check_files('git-url', git_files)
+        # Note: Deleting .git directory fails, so lets not bother for now.
+        # This also allows us to test whether overwriting a repo works.
+        # self.check_uninstall('git-url')
 
-        cmd = 'git clone %s $TARGET --branch %s --single-branch' % (git_url, branch)
+        cmd = 'git clone %s TARGET --branch %s --single-branch' % (git_url, branch)
         install(['git-url'], AttrDict(cmd=cmd))
         self.check_files('git-url', git_files)
-
-        # Note: Deleting .git directory fails, so lets not bother for now
-        # self.check_uninstall('git-url')
 
     def test_setup(self):
         dirpath = os.path.join(folder, 'dir', 'install')

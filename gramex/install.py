@@ -4,6 +4,7 @@ import sys
 import yaml
 import shlex
 import shutil
+import string
 import logging
 import datetime
 import requests
@@ -39,7 +40,6 @@ def download_zip(config):
     If config.url is a directory, copy it.
     If config.url is a file or a URL (http, https, ftp), unzip it.
     If config.contentdir is True, skip parent folders with single subfolder.
-    If config.rootdir is set, extract only from that directory.
     If no files match, log a warning.
     '''
     url, target = config.url, config.target
@@ -69,15 +69,6 @@ def download_zip(config):
         prefix = os.path.commonprefix(zipfile.namelist())
         if prefix.endswith('/'):
             files = zip_prefix_filter(files, prefix)
-    rootdir = config.get('rootdir', None)
-    if rootdir is not None:
-        rootdir = rootdir.replace('\\', '/')
-        if not rootdir.endswith('/'):
-            rootdir += '/'
-        files = zip_prefix_filter(files, rootdir)
-    if not len(files):
-        logging.warn('No files after filtering %s with root dir %s', url, rootdir)
-        return
 
     # Extract relevant files from ZIP file
     if os.path.exists(target):
@@ -88,24 +79,30 @@ def download_zip(config):
 
 def run_command(config):
     '''
-    Run config.cmd. If the command has a $TARGET, replace it with config.target.
+    Run config.cmd. If the command has a TARGET, replace it with config.target.
     Else append config.target as an argument.
     '''
     appcmd = config.cmd
     # Split the command into an array of words
     if isinstance(appcmd, six.string_types):
         appcmd = shlex.split(appcmd)
-    # Replace $TARGET with the actual target
-    if '$TARGET' in appcmd:
-        appcmd = [config.target if arg == '$TARGET' else arg for arg in appcmd]
+    # Replace TARGET with the actual target
+    if 'TARGET' in appcmd:
+        appcmd = [config.target if arg == 'TARGET' else arg for arg in appcmd]
     else:
         appcmd.append(config.target)
     logging.info('Running %s', ' '.join(appcmd))
+    if os.path.exists(config.target):
+        shutil.rmtree(config.target)
     proc = Popen(appcmd, bufsize=-1, stdout=sys.stdout, stderr=sys.stderr)
     proc.communicate()
 
 
 setup_paths = AttrDict()
+setup_paths['make'] = {
+    'file': 'Makefile',
+    'cmd': '"$EXE"'
+}
 setup_paths['powershell'] = {
     'file': 'setup.ps1',
     'cmd': '"$EXE" -File "$FILE"'
@@ -113,10 +110,6 @@ setup_paths['powershell'] = {
 setup_paths['bash'] = {
     'file': 'setup.sh',
     'cmd': '"$EXE" "$FILE"'
-}
-setup_paths['make'] = {
-    'file': 'Makefile',
-    'cmd': '"$EXE"'
 }
 setup_paths['python'] = {
     'file': 'setup.py',
@@ -142,7 +135,7 @@ def run_setup(config):
         if exe_path is None:
             logging.info('Skipping %s. No %s found', setup_file, exe)
             continue
-        cmd = setup['cmd'].replace('$FILE', setup_file).replace('$EXE', exe_path)
+        cmd = string.Template(setup['cmd']).substitute(FILE=setup_file, EXE=exe_path)
         logging.info('Running %s', cmd)
         proc = Popen(shlex.split(cmd), cwd=target, bufsize=-1,
                      stdout=sys.stdout, stderr=sys.stderr)
@@ -162,7 +155,7 @@ apps_config['user'] = PathConfig(user_config_file)
 app_keys = {
     'url': 'URL / filename of a ZIP file to install',
     'cmd': 'Command used to install file',
-    'rootdir': 'Sub-directory under "url" to install (optional)',
+    'dir': 'Sub-directory under "url" to run from (optional)',
     'contentdir': 'Strip root directory with a single child (optional, default=True)',
     'target': 'Local directory where the app is installed',
     'installed': 'Additional installation information about the app',
@@ -198,25 +191,25 @@ def install(cmd, args):
         apps = (+apps_config).keys()
         logging.error('gramex install [%s]', '|'.join(apps))
         return
-    if len(cmd) > 1 and args:
-        logging.error('Arguments allowed only with single app. Ignoring %s', ', '.join(cmd[1:]))
-        cmd = cmd[:1]
 
-    for appname in cmd:
-        logging.info('Installing: %s', appname)
-        app_config = get_app_config(appname, args)
-        if 'url' in app_config:
-            download_zip(app_config)
-        elif 'cmd' in app_config:
-            run_command(app_config)
-        else:
-            logging.error('Use --url=... or --cmd=... to specific source of %s', appname)
-            return
+    appname = cmd[0]
+    logging.info('Installing: %s', appname)
+    app_config = get_app_config(appname, args)
+    if 'url' in app_config:
+        download_zip(app_config)
+    elif 'cmd' in app_config:
+        run_command(app_config)
+    elif len(cmd) == 2:
+        app_config.url = cmd[1]
+        download_zip(app_config)
+    else:
+        logging.error('Use --url=... or --cmd=... to specific source of %s', appname)
+        return
 
-        # Post-installation
-        run_setup(app_config)
-        app_config['installed'] = {'time': datetime.datetime.utcnow()}
-        save_user_config(appname, app_config)
+    # Post-installation
+    run_setup(app_config)
+    app_config['installed'] = {'time': datetime.datetime.utcnow()}
+    save_user_config(appname, app_config)
 
 
 def uninstall(cmd, args):
@@ -255,8 +248,11 @@ def run(cmd, args):
     logging.info('Initializing %s on Gramex %s', appname, gramex.__version__)
 
     app_config = get_app_config(appname, args)
-    if os.path.exists(app_config.target):
-        os.chdir(app_config.target)
+    target = app_config.target
+    if 'dir' in app_config:
+        target = os.path.join(target, app_config.dir)
+    if os.path.isdir(target):
+        os.chdir(target)
         gramex.paths['base'] = Path('.')
         # If we run with updated parameters, save them for the next run
         app_config.update({key: val for key, val in args.items() if key in app_keys})
@@ -265,4 +261,4 @@ def run(cmd, args):
         save_user_config(appname, app_config)
         gramex.init(cmd=AttrDict(app=app_config['run']))
     else:
-        logging.error('No directory %s to run', app_config.target)
+        logging.error('No directory %s to run for %s', app_config.target, appname)
