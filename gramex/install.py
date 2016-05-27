@@ -141,6 +141,7 @@ def run_setup(config):
         exe = which(exe)
         if exe is None:
             logging.info('Cannot run %s. No %s found', setup_file, exe)
+            continue
         cmd = setup['cmd'].replace('$FILE', setup_file).replace('$EXE', exe)
         logging.info('Running %s', cmd)
         proc = Popen(cmd, cwd=target, bufsize=-1, stdout=sys.stdout, stderr=sys.stderr)
