@@ -7,6 +7,7 @@ import shutil
 import logging
 import datetime
 import requests
+from shutilwhich import which
 from pathlib import Path
 from subprocess import Popen
 from orderedattrdict import AttrDict
@@ -32,16 +33,23 @@ def zip_prefix_filter(members, prefix):
     return result
 
 
-def download_zip(url, target, contentdir=True, rootdir=None):
+def download_zip(config):
     '''
-    Download url into path. url can be http, https, ftp. It will be unzipped
-    based on its type.
+    Download config.url into config.target.
+    If config.url is a directory, copy it.
+    If config.url is a file or a URL (http, https, ftp), unzip it.
+    If config.contentdir is True, skip parent folders with single subfolder.
+    If config.rootdir is set, extract only from that directory.
+    If no files match, log a warning.
     '''
+    url, target = config.url, config.target
+
     # If the URL is a directory, copy it
     if os.path.isdir(url):
         if os.path.exists(target):
             shutil.rmtree(target)
         shutil.copytree(url, target)
+        logging.info('Copied %s into %s', url, target)
         return
 
     # If it's a file, unzip it
@@ -54,25 +62,89 @@ def download_zip(url, target, contentdir=True, rootdir=None):
         response.raise_for_status()
         handle = six.BytesIO(response.content)
 
+    # Identify relevant files from the ZIP file
     zipfile = ZipFile(handle)
-    members = zipfile.infolist()
-    if contentdir:
+    files = zipfile.infolist()
+    if config.get('contentdir', True):
         prefix = os.path.commonprefix(zipfile.namelist())
         if prefix.endswith('/'):
-            members = zip_prefix_filter(members, prefix)
+            files = zip_prefix_filter(files, prefix)
+    rootdir = config.get('rootdir', None)
     if rootdir is not None:
         rootdir = rootdir.replace('\\', '/')
         if not rootdir.endswith('/'):
             rootdir += '/'
-        members = zip_prefix_filter(members, rootdir)
-
-    if len(members):
-        if os.path.exists(target):
-            shutil.rmtree(target)
-        zipfile.extractall(target, members)
-        logging.info('Extracted %d files into %s', len(members), target)
-    else:
+        files = zip_prefix_filter(files, rootdir)
+    if not len(files):
         logging.warn('No files after filtering %s with root dir %s', url, rootdir)
+        return
+
+    # Extract relevant files from ZIP file
+    if os.path.exists(target):
+        shutil.rmtree(target)
+    zipfile.extractall(target, files)
+    logging.info('Extracted %d files into %s', len(files), target)
+
+
+def run_command(config):
+    '''
+    Run config.cmd. If the command has a $TARGET, replace it with config.target.
+    Else append config.target as an argument.
+    '''
+    appcmd = config.cmd
+    # Split the command into an array of words
+    if isinstance(appcmd, six.string_types):
+        appcmd = shlex.split(appcmd)
+    # Replace $TARGET with the actual target
+    if '$TARGET' in appcmd:
+        appcmd = [config.target if arg == '$TARGET' else arg for arg in appcmd]
+    else:
+        appcmd.append(config.target)
+    logging.info('Running %s', ' '.join(appcmd))
+    proc = Popen(appcmd, bufsize=-1, stdout=sys.stdout, stderr=sys.stderr)
+    proc.communicate()
+
+
+setup_paths = AttrDict()
+setup_paths['powershell'] = {
+    'file': 'setup.ps1',
+    'cmd': '"$EXE" -File "$FILE"'
+}
+setup_paths['bash'] = {
+    'file': 'setup.sh',
+    'cmd': '"$EXE" "$FILE"'
+}
+setup_paths['make'] = {
+    'file': 'Makefile',
+    'cmd': '"$EXE"'
+}
+setup_paths['python'] = {
+    'file': 'setup.py',
+    'cmd': '"$EXE" "$FILE"'
+}
+setup_paths['npm'] = {
+    'file': 'package.json',
+    'cmd': '"$EXE" install'
+}
+setup_paths['bower'] = {
+    'file': 'bower.json',
+    'cmd': '"$EXE" install'
+}
+
+
+def run_setup(config):
+    target = config.target
+    for exe, setup in setup_paths.items():
+        setup_file = os.path.join(target, setup['file'])
+        if not os.path.exists(setup_file):
+            continue
+        exe = which(exe)
+        if exe is None:
+            logging.info('Cannot run %s. No %s found', setup_file, exe)
+        cmd = setup['cmd'].replace('$FILE', setup_file).replace('$EXE', exe)
+        logging.info('Running %s', cmd)
+        proc = Popen(cmd, cwd=target, bufsize=-1, stdout=sys.stdout, stderr=sys.stderr)
+        proc.communicate()
 
 
 app_dir = Path(variables.get('GRAMEXDATA')) / 'apps'
@@ -132,28 +204,17 @@ def install(cmd, args):
         logging.info('Installing: %s', appname)
         app_config = get_app_config(appname, args)
         if 'url' in app_config:
-            # Download the app URL into target directory
-            download_zip(
-                url=app_config.url,
-                target=app_config.target,
-                contentdir=app_config.get('contentdir', True),
-                rootdir=app_config.get('rootdir', None),
-            )
-            app_config['installed'] = {'time': datetime.datetime.utcnow()}
-            save_user_config(appname, app_config)
+            download_zip(app_config)
         elif 'cmd' in app_config:
-            appcmd = app_config.cmd
-            if isinstance(appcmd, six.string_types):
-                appcmd = shlex.split(appcmd)
-            if '$TARGET' in appcmd:
-                appcmd = [app_config.target if arg == '$TARGET' else arg for arg in appcmd]
-            else:
-                appcmd.append(app_config.target)
-            proc = Popen(appcmd, bufsize=-1, stdout=sys.stdout, stderr=sys.stderr)
-            proc.communicate()
-            save_user_config(appname, app_config)
+            run_command(app_config)
         else:
             logging.error('Use --url=... or --cmd=... to specific source of %s', appname)
+            return
+
+        # Post-installation
+        run_setup(app_config)
+        app_config['installed'] = {'time': datetime.datetime.utcnow()}
+        save_user_config(appname, app_config)
 
 
 def uninstall(cmd, args):

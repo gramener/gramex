@@ -13,6 +13,7 @@ tornado >= 4.3            # Web server
 PyYAML >= 3.10            # Parse YAML files for config
 colorama >= 0.3.7         # Used by colorlog. Anaconda has colorama, but 0.3.7 fixes an exit-reset-code bug
 colorlog >= 2.7.0         # Coloured log files
+shutilwhich >= 1.1.0      # shutil.which backport
 
 # Handler / service specific
 crontab >= 0.20           # services.schedule to parse crontab entries

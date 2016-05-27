@@ -1,0 +1,23 @@
+{
+  "name": "gramex-bower-package",
+  "authors": [
+    "S Anand <s.anand@gramener.com>"
+  ],
+  "description": "Dummy bower package",
+  "main": "bower-setup.txt",
+  "keywords": [
+    "bower",
+    "dummy",
+    "setup"
+  ],
+  "license": "MIT",
+  "homepage": "",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}

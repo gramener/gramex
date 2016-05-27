@@ -1,0 +1,20 @@
+{
+  "name": "gramex-npm-install",
+  "version": "1.0.0",
+  "description": "Test gramex npm setup",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "gramex",
+    "test",
+    "npm",
+    "setup"
+  ],
+  "author": "S Anand <s.anand@gramener.com>",
+  "license": "ISC",
+  "dependencies": {
+    "gramex-npm-package": "file:gramex-npm-package"
+  }
+}

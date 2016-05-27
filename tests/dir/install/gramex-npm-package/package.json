@@ -1,0 +1,16 @@
+{
+  "name": "gramex-npm-package",
+  "version": "1.0.0",
+  "description": "Dummy npm package",
+  "main": "npm-setup.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "npm",
+    "dummy",
+    "setup"
+  ],
+  "author": "S Anand <s.anand@gramener.com>",
+  "license": "ISC"
+}

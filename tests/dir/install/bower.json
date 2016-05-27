@@ -1,0 +1,27 @@
+{
+  "name": "gramex-bower-install",
+  "authors": [
+    "S Anand <s.anand@gramener.com>"
+  ],
+  "description": "Test Gramex bower setup",
+  "main": "main.js",
+  "keywords": [
+    "gramex",
+    "test",
+    "bower",
+    "setup"
+  ],
+  "license": "MIT",
+  "homepage": "https://learn.gramener.com/guide/",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "gramex-bower-package": "./gramex-bower-package/"
+  }
+}
