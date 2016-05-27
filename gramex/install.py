@@ -144,7 +144,7 @@ def run_setup(config):
             continue
         cmd = setup['cmd'].replace('$FILE', setup_file).replace('$EXE', exe_path)
         logging.info('Running %s', cmd)
-        proc = Popen(shlex.split(appcmd), cwd=target, bufsize=-1,
+        proc = Popen(shlex.split(cmd), cwd=target, bufsize=-1,
                      stdout=sys.stdout, stderr=sys.stderr)
         proc.communicate()
 
