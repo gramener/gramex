@@ -22,8 +22,8 @@ def _rmtree_readonly(remove, path, exc_info):
     # https://bugs.python.org/issue19643
     # https://bugs.python.org/msg218021
     if issubclass(exc_info[0], WindowsError) and exc_info[1].winerror == 5:
-       os.chmod(path, stat.S_IWRITE)
-       return remove(path)
+        os.chmod(path, stat.S_IWRITE)
+        return remove(path)
     raise exc_info[1]
 
 
