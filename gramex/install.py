@@ -205,13 +205,13 @@ def install(cmd, args):
     appname = cmd[0]
     app_log.info('Installing: %s', appname)
     app_config = get_app_config(appname, args)
-    if 'url' in app_config:
+    if len(cmd) == 2:
+        app_config.url = cmd[1]
+        download_zip(app_config)
+    elif 'url' in app_config:
         download_zip(app_config)
     elif 'cmd' in app_config:
         run_command(app_config)
-    elif len(cmd) == 2:
-        app_config.url = cmd[1]
-        download_zip(app_config)
     else:
         app_log.error('Use --url=... or --cmd=... to specific source of %s', appname)
         return
