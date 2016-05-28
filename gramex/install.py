@@ -2,6 +2,7 @@ import os
 import six
 import sys
 import yaml
+import stat
 import shlex
 import shutil
 import string
@@ -14,6 +15,16 @@ from orderedattrdict import AttrDict
 from zipfile import ZipFile
 import gramex
 from gramex.config import ChainConfig, PathConfig, variables, app_log
+
+
+def _rmtree_readonly(remove, path, exc_info):
+    '''onerror callback for rmtree that deletes read-only files on Windows'''
+    # https://bugs.python.org/issue19643
+    # https://bugs.python.org/msg218021
+    if issubclass(exc_info[0], WindowsError) and exc_info[1].winerror == 5:
+       os.chmod(path, stat.S_IWRITE)
+       return remove(path)
+    raise exc_info[1]
 
 
 def zip_prefix_filter(members, prefix):
@@ -46,7 +57,7 @@ def download_zip(config):
     # If the URL is a directory, copy it
     if os.path.isdir(url):
         if os.path.exists(target):
-            shutil.rmtree(target)
+            shutil.rmtree(target, onerror=_rmtree_readonly)
         shutil.copytree(url, target)
         app_log.info('Copied %s into %s', url, target)
         return
@@ -71,7 +82,7 @@ def download_zip(config):
 
     # Extract relevant files from ZIP file
     if os.path.exists(target):
-        shutil.rmtree(target)
+        shutil.rmtree(target, onerror=_rmtree_readonly)
     zipfile.extractall(target, files)
     app_log.info('Extracted %d files into %s', len(files), target)
 
@@ -92,7 +103,7 @@ def run_command(config):
         appcmd.append(config.target)
     app_log.info('Running %s', ' '.join(appcmd))
     if os.path.exists(config.target):
-        shutil.rmtree(config.target)
+        shutil.rmtree(config.target, onerror=_rmtree_readonly)
     proc = Popen(appcmd, bufsize=-1, stdout=sys.stdout, stderr=sys.stderr)
     proc.communicate()
 
@@ -227,7 +238,7 @@ def uninstall(cmd, args):
         app_config = get_app_config(appname, args)
         if os.path.exists(app_config.target):
             if app_config.target.startswith(variables['GRAMEXDATA']):
-                shutil.rmtree(app_config.target)
+                shutil.rmtree(app_config.target, onerror=_rmtree_readonly)
             else:
                 app_log.warn('Not removing directory %s (outside $GRAMEXDATA)', app_config.target)
         else:

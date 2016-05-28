@@ -124,13 +124,13 @@ class TestInstall(unittest.TestCase):
         cmd = 'git clone %s --branch %s --single-branch' % (git_url, branch)
         install(['git-url'], AttrDict(cmd=cmd))
         self.check_files('git-url', git_files)
-        # Note: Deleting .git directory fails, so lets not bother for now.
-        # This also allows us to test whether overwriting a repo works.
-        # self.check_uninstall('git-url')
+        # TODO: Do not uninstall. Check if overwriting works.
+        self.check_uninstall('git-url')
 
         cmd = 'git clone %s TARGET --branch %s --single-branch' % (git_url, branch)
         install(['git-url'], AttrDict(cmd=cmd))
         self.check_files('git-url', git_files)
+        self.check_uninstall('git-url')
 
     def test_setup(self):
         dirpath = os.path.join(folder, 'dir', 'install')
