@@ -18,6 +18,7 @@ import atexit
 import signal
 import posixpath
 import mimetypes
+import threading
 import webbrowser
 import tornado.web
 import tornado.ioloop
@@ -82,21 +83,23 @@ def app(conf):
                 app_log.info('Opening %s in %s browser', url, browser.__class__.__name__)
                 browser.open(url)
 
-            # On Windows, Tornado does not exit on Ctrl-C. The solution is at
-            # http://stackoverflow.com/a/17105220/100904
+            # On Windows, Tornado does not exit on Ctrl-C. This is a workaround.
             # When Ctrl-C is pressed, signal_handler() sets _exit to [True].
             # check_exit() periodically watches and calls shutdown().
-            exit = [False]
+            # But signal handlers can only be set in the main thread.
+            # So ignore if we're not in the main thread (e.g. for nosetests.)
+            if isinstance(threading.current_thread(), threading._MainThread):
+                exit = [False]
 
-            def check_exit():
-                if exit[0] is True:
-                    shutdown()
+                def check_exit():
+                    if exit[0] is True:
+                        shutdown()
 
-            def signal_handler(signum, frame):
-                exit[0] = True
+                def signal_handler(signum, frame):
+                    exit[0] = True
 
-            signal.signal(signal.SIGINT, signal_handler)
-            tornado.ioloop.PeriodicCallback(check_exit, callback_time=500).start()
+                signal.signal(signal.SIGINT, signal_handler)
+                tornado.ioloop.PeriodicCallback(check_exit, callback_time=500).start()
 
             ioloop.start()
 
