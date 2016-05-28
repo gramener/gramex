@@ -15,6 +15,7 @@ from __future__ import unicode_literals
 
 import yaml
 import atexit
+import signal
 import posixpath
 import mimetypes
 import webbrowser
@@ -28,6 +29,7 @@ from orderedattrdict import AttrDict
 from . import scheduler
 from . import watcher
 from . import urlcache
+from .. import shutdown
 from .ttlcache import MAXTTL
 from ..config import locate, app_log
 
@@ -79,6 +81,23 @@ def app(conf):
                 browser = webbrowser.get()
                 app_log.info('Opening %s in %s browser', url, browser.__class__.__name__)
                 browser.open(url)
+
+            # On Windows, Tornado does not exit on Ctrl-C. The solution is at
+            # http://stackoverflow.com/a/17105220/100904
+            # When Ctrl-C is pressed, signal_handler() sets _exit to [True].
+            # check_exit() periodically watches and calls shutdown().
+            exit = [False]
+
+            def check_exit():
+                if exit[0] is True:
+                    shutdown()
+
+            def signal_handler(signum, frame):
+                exit[0] = True
+
+            signal.signal(signal.SIGINT, signal_handler)
+            tornado.ioloop.PeriodicCallback(check_exit, callback_time=500).start()
+
             ioloop.start()
 
         return callback

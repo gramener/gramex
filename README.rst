@@ -74,12 +74,8 @@ If Gramex is not running:
   ``PYTHONPATH``. Run ``python -c "import gramex;print gramex.__file__"`` and
   confirm that this is where the latest Gramex was installed.
 
-Shutdown
---------
+Press Ctrl+C to terminate Gramex.
 
-On Windows, press Ctrl-Break to terminate Gramex. Ctrl-C will not work.
-
-On Linux / Mac, press Ctrl-C to terminate Gramex.
 
 License
 -------
