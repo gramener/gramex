@@ -79,7 +79,7 @@ if os.name == 'nt':
 
     def getch():
         'Return character if something was typed on the console, else None'
-        return msvcrt.getch().decode('utf-8') if msvcrt.kbhit() else None
+        return msvcrt.getch() if msvcrt.kbhit() else None
 
 # Posix (Linux, OS X)
 else:

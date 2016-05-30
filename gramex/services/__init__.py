@@ -97,7 +97,7 @@ def app(conf):
                     if exit[0] is True:
                         shutdown()
                     # If Ctrl-D is pressed, run the Python debugger
-                    if debug.getch() == '\x04' and conf.get('pdb', False):
+                    if debug.getch() == b'\x04':
                         import ipdb as pdb
                         pdb.set_trace()
 
@@ -105,7 +105,7 @@ def app(conf):
                     exit[0] = True
 
                 signal.signal(signal.SIGINT, signal_handler)
-                tornado.ioloop.PeriodicCallback(check_exit, callback_time=500).start()
+                tornado.ioloop.PeriodicCallback(check_exit, callback_time=100).start()
 
             ioloop.start()
 
