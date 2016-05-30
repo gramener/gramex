@@ -115,6 +115,7 @@ def callback_commandline(commands):
         args.setdefault('browser', True)
         return run, {'cmd': ['guide'], 'args': args}
 
+    app_log.info('Initializing %s on Gramex %s', os.getcwd(), __version__)
     return init, {'cmd': AttrDict(app=args)}
 
 
