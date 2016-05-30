@@ -92,17 +92,13 @@ def app(conf):
             # So ignore if we're not in the main thread (e.g. for nosetests.)
             if isinstance(threading.current_thread(), threading._MainThread):
                 exit = [False]
-                ctrl_d = '\x04'
 
                 def check_exit():
                     if exit[0] is True:
                         shutdown()
-                    key_pressed = debug.getch()
-                    if key_pressed == ctrl_d:
-                        try:
-                            import ipdb as pdb
-                        except ImportError:
-                            import pdb
+                    # If Ctrl-D is pressed, run the Python debugger
+                    if debug.getch() == '\x04' and conf.get('pdb', False):
+                        import ipdb as pdb
                         pdb.set_trace()
 
                 def signal_handler(signum, frame):

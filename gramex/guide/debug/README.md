@@ -8,16 +8,18 @@ The Python debugger lets you stop, inspect and step through code line-by-line.
 You can learn more from this
 [video tutorial on pdb](https://www.youtube.com/watch?v=lnlZGhnULn4).
 
-There are 1 ways to start the debugger:
+There are many ways to start the debugger:
 
 1. Add this line: `import ipdb; ipdb.set_trace()` to your code. Python will
    run until this line and start the debugger.
 1. When Gramex is running, you press `Ctrl+D` on the console at any time. Python
    will start the debugger.
+1. Run `gramex --debug_exception=true`. When there's an exception, Python will
+   start the debugger at the line before the error.
 1. Run Gramex via `python -m pdb /path/to/gramex/__main__.py`.
 
-You can also use [WinPDB](http://winpdb.org/docs/) -- a cross-platform debugger
--- on Gramex using:
+You can also use [WinPDB](http://winpdb.org/docs/) -- a cross-platform GUI for
+pdb -- on Gramex using:
 
     conda install -c jacob-barhak -c anaconda winpdb
     winpdb.bat /path/to/gramex/__main__.py

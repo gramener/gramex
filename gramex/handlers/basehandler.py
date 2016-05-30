@@ -24,6 +24,8 @@ class BaseHandler(RequestHandler):
                 'headers': trans.get('headers', {}),
                 'encoding': trans.get('encoding'),
             }
+        if conf.app.get('debug_exception', False):
+            cls.log_exception = cls.debug_exception
 
     def initialize(self, **kwargs):
         self.kwargs = kwargs
@@ -61,3 +63,8 @@ class BaseHandler(RequestHandler):
         if not user_json:
             return None
         return json_decode(user_json)
+
+    def debug_exception(self, typ, value, tb):
+        super(BaseHandler, self).log_exception(typ, value, tb)
+        import ipdb as pdb
+        pdb.post_mortem(tb)
