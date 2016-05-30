@@ -196,6 +196,17 @@ def get_app_config(appname, args):
     return app_config
 
 
+def flatten_config(config, base=None):
+    'Get flattened configurations'
+    for key, value in config.items():
+        keystr = key if base is None else base + '.' + key
+        if hasattr(value, 'items'):
+            for sub in flatten_config(value, keystr):
+                yield sub
+        else:
+            yield keystr, value
+
+
 def install(cmd, args):
     if len(cmd) < 1:
         apps = (+apps_config).keys()
@@ -255,9 +266,12 @@ def run(cmd, args):
         app_log.error('Can only run one app. Ignoring %s', ', '.join(cmd[1:]))
 
     appname = cmd.pop(0)
-    app_log.info('Initializing %s on Gramex %s', appname, gramex.__version__)
 
     app_config = get_app_config(appname, args)
+    # Tell the user what configs are used
+    app_log.info('Initializing %s on Gramex %s %s', appname, gramex.__version__,
+                 ' '.join(['--%s=%s' % arg for arg in flatten_config(args.get('run', {}))]))
+
     target = app_config.target
     if 'dir' in app_config:
         target = os.path.join(target, app_config.dir)

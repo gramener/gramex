@@ -26,9 +26,9 @@ If the path points to ZIP file, the file is unzipped. For example:
 
 You can specify a URL instead of a local path. For example:
 
-    gramex install timesnow http://code.gramener.com/nikhil.kabbin/times-now/repository/archive.zip
+    gramex install <appname> http://code.gramener.com/<user>/<repo>/repository/archive.zip
 
-... will install the Times Now app as `timesnow`. To run it, use `gramex run timesnow`.
+... will install the app (if it's publicly accessible). To run it, use `gramex run <appname>`.
 
 You can install from a Git repository by running a git command. For example:
 
@@ -69,11 +69,20 @@ If you want to run the app from a different subdirectory by default, use the `--
 
     gramex run <appname> --dir=subdirectory-name
 
+If you want to run an app from a directory without installing it, use the `--target=DIR` option. For example:
+
+    gramex run <appname> --target=/path/to/app
+
+Thereafter, running `gramex run <appname>` will automatically start from `/path/to/app`.
+
 You can pass any command line options as mentioned in the [config docs](../config/#command-line). For example:
 
     gramex run <appname> --listen.port=1234
 
-... starts the application on port 1234.
+... starts the application on port 1234. These options are persisted. So the next time you run `<appname>`, the port will set to 1234. You can clear this setting by running:
+
+    gramex run <appname> --listen.port=
+
 
 ## Uninstalling
 
@@ -86,3 +95,30 @@ This will direct the entire folder where the app was installed. Locally saved da
 To list apps that can be uninstalled, run:
 
     gramex uninstall
+
+## Creating apps
+
+To create an app, create a git repository on a Git repository. If it's a public repository (e.g. on Github), use:
+
+    gramex install <appname> https://github.com/<user>/<repo>/archive/master.zip
+
+On code.gramener.com, you can use:
+
+    gramex install <appname> http://code.gramener.com/<user>/<repo>/repository/archive.zip?ref=master
+
+If it's a private repository, you ca also install it with your [private access token](http://code.gramener.com/profile/account):
+
+    gramex install <appname> http://code.gramener.com/<user>/<repo>/repository/archive.zip?ref=master&access_token=<access_token>
+
+You can also use `git` to install the app. For example:
+
+    gramex install <appname> --cmd="git clone git@code.gramener.com/<user>/<repo>.git"
+
+If you prefer HTTP access, use this. It will prompt the user for a username and password:
+
+    gramex install <appname> --cmd="git clone http://code.gramener.com/<user>/<repo>.git"
+
+### Deploying data
+
+- Public data: public .zip file hosted on demo.gramener.com / share.gramener.com / anywhere
+- Private data: SSH/rsync, or use GDrive APIs / request password / ...
