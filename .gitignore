@@ -111,6 +111,9 @@ htmlcov
 .project
 .pydevproject
 
+# Pycharm
+.idea
+
 # Complexity
 output/*.html
 output/*/index.html
