@@ -1,6 +1,7 @@
 '''
 Debugging and profiling tools for Gramex
 '''
+import os
 import gc
 import timeit
 import inspect
@@ -32,6 +33,9 @@ def _make_timer():
         Context.start = end
 
     return timer
+
+# Create a single global instance of timer
+timer = _make_timer()
 
 
 class Timer(object):
@@ -68,4 +72,39 @@ else:
             return result
         return wrapper
 
-timer = _make_timer()
+
+# Windows
+if os.name == 'nt':
+    import msvcrt
+
+    def getch():
+        'Return character if something was typed on the console, else None'
+        return msvcrt.getch().decode('utf-8') if msvcrt.kbhit() else None
+
+# Posix (Linux, OS X)
+else:
+    import sys
+    import termios
+    import atexit
+    from select import select
+
+    def _init_non_blocking_terminal():
+        fd = sys.stdin.fileno()
+        old_term = termios.tcgetattr(fd)
+        # Support normal-terminal reset at exit
+        atexit.register(lambda: termios.tcsetattr(fd, termios.TCSAFLUSH, old_term))
+
+        # New terminal setting unbuffered
+        new_term = termios.tcgetattr(fd)
+        new_term[3] = (new_term[3] & ~termios.ICANON & ~termios.ECHO)
+        termios.tcsetattr(fd, termios.TCSAFLUSH, new_term)
+
+    def getch():
+        'Return character if something was typed on the console, else None'
+        dr, dw, de = select([sys.stdin], [], [], 0)
+        if dr != []:
+            return sys.stdin.read(1)
+        else:
+            return None
+
+    _init_non_blocking_terminal()

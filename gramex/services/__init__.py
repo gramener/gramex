@@ -30,6 +30,7 @@ from orderedattrdict import AttrDict
 from . import scheduler
 from . import watcher
 from . import urlcache
+from .. import debug
 from .. import shutdown
 from .ttlcache import MAXTTL
 from ..config import locate, app_log
@@ -83,17 +84,26 @@ def app(conf):
                 app_log.info('Opening %s in %s browser', url, browser.__class__.__name__)
                 browser.open(url)
 
-            # On Windows, Tornado does not exit on Ctrl-C. This is a workaround.
+            # Ensure that we call shutdown() on Ctrl-C.
+            # On Windows, Tornado does not exit on Ctrl-C. This also fixes that.
             # When Ctrl-C is pressed, signal_handler() sets _exit to [True].
             # check_exit() periodically watches and calls shutdown().
             # But signal handlers can only be set in the main thread.
             # So ignore if we're not in the main thread (e.g. for nosetests.)
             if isinstance(threading.current_thread(), threading._MainThread):
                 exit = [False]
+                ctrl_d = '\x04'
 
                 def check_exit():
                     if exit[0] is True:
                         shutdown()
+                    key_pressed = debug.getch()
+                    if key_pressed == ctrl_d:
+                        try:
+                            import ipdb as pdb
+                        except ImportError:
+                            import pdb
+                        pdb.set_trace()
 
                 def signal_handler(signum, frame):
                     exit[0] = True

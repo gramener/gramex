@@ -4,29 +4,44 @@ This page documents ways of debugging a Gramex application.
 
 ## Python debugger
 
-The Python debugger lets you stop and step through code line-by-line. Add this
-code anywhere in your function:
+The Python debugger lets you stop, inspect and step through code line-by-line.
+You can learn more from this
+[video tutorial on pdb](https://www.youtube.com/watch?v=lnlZGhnULn4).
 
-    import ipdb; ipdb.set_trace()     # BREAKPOINT
+There are 1 ways to start the debugger:
 
-If you don't have IPython, you can also use the Python debugger.
+1. Add this line: `import ipdb; ipdb.set_trace()` to your code. Python will
+   run until this line and start the debugger.
+1. When Gramex is running, you press `Ctrl+D` on the console at any time. Python
+   will start the debugger.
+1. Run Gramex via `python -m pdb /path/to/gramex/__main__.py`.
 
-    import pdb; pdb.set_trace()       # BREAKPOINT
+You can also use [WinPDB](http://winpdb.org/docs/) -- a cross-platform debugger
+-- on Gramex using:
 
-When Python runs this line, it stops and opens an debugger. You can run any
-Python command from the prompt. For example:
+    conda install -c jacob-barhak -c anaconda winpdb
+    winpdb.bat /path/to/gramex/__main__.py
 
-    print(variable)                             # print a variable
-    import pprint; pprint.pprint(variable)      # pretty-print a complex variable
-    variable = new_value                        # change a variable
+(On Linux / Mac, use `winpdb` instead of `winpdb.bat`.)
 
-Some useful commands you can use on the debugger:
+Here are some useful things you can do on the debugger:
 
-    c or continue     # Continue running the program
+- Break at a function: `b <function>`, then run by typing `c`.
+- Reload a module. `import(<module>); reload(<module>)`
+
+Useful commands you can use on the debugger:
+
+    c                 # Continue running the program
+    pp value          # Pretty-print value
+    !<python-code>    # Run the Python code in the current context
+    b function        # Set a breakpoint at a function
+    b file:line       # Set a breakpoint at file, on line
+    clear function    # Clear breakpoint at a function
     s or step         # Step into the current line's function
     n or next         # Next line (without entering the current function)
     l or list         # List the code
     h or help         # Help -- list available commands
+
 
 ## Print statements
 
@@ -62,7 +77,8 @@ this on production systems.
 
 ## Profiling
 
-`gramex.debug` provides support for timing and line profiling.
+`gramex.debug` provides support for timing and line profiling via `timer`,
+`Timer` and `lineprofile`.
 
 ### Timer
 
