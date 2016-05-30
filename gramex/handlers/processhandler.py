@@ -162,8 +162,8 @@ class _Subprocess(object):
 
         proc = _Subprocess(
             args,
-            on_stdout=self._write,
-            on_stderr=self._write,
+            on_stdout=[self._write],
+            on_stderr=[self._write],
             **kwargs
         )
         yield proc.wait_for_exit()
