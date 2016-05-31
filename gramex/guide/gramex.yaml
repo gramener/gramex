@@ -43,6 +43,19 @@ url:
                     encoding: utf-8
                     headers:
                         Content-Type: text/html
+    guide-markdown:
+        pattern: /$YAMLURL/(roadmap)
+        handler: FileHandler
+        kwargs:
+            path: $YAMLPATH/*.md
+            transform:
+                "*.md":
+                    function: guide.markdown_template
+                    args: [=content, =handler]
+                    encoding: utf-8
+                    headers:
+                        Content-Type: text/html
+
     # /path.source shows the raw file as plain text
     source:
         priority: +1
