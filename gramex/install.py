@@ -231,6 +231,7 @@ def install(cmd, args):
     run_setup(app_config)
     app_config['installed'] = {'time': datetime.datetime.utcnow()}
     save_user_config(appname, app_config)
+    app_log.info('Installed. Run `gramex run %s`', appname)
 
 
 def uninstall(cmd, args):
