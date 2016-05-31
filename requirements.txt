@@ -25,3 +25,4 @@ futures >= 3.0.5 ; python_version < '3'   # handlers.datahandler uses futures (b
 # Optional dependencies (batteries included principle)
 markdown            # For Markdown transfroms
 PyMySQL             # For MySQL connections
+ipdb                # For debugging
