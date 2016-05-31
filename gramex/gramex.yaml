@@ -20,17 +20,9 @@ app:
         compress_response: True
         serve_traceback: True
         cookie_secret: secret-key
-        key_version:
+        key_version: 2
         login_url: /login
         xsrf_cookies: True
-        twitter_consumer_key: ...
-        twitter_consumer_secret: ...
-        friendfeed_consumer_key: ...
-        friendfeed_consumer_secret: ...
-        google_consumer_key: ...
-        google_consumer_secret: ...
-        facebook_api_key: ...
-        facebook_secret: ...
         autoescape: True
         compiled_template_cache: True
         template_path: .
@@ -114,10 +106,8 @@ log:
 threadpool:
     workers: 8                  # Max number of parallel threads
 
-
 # The `schedule:` section defines when specific code is to run.
 schedule: {}
-
 
 # Define custom MIME types here
 mime:
@@ -126,86 +116,3 @@ mime:
     .md:        text/markdown
     .markdown:  text/markdown
     .json:      application/json
-
-
-# Set up file watches here
-# watch:
-#     gramex-reconfig:
-#         paths: $YAMLPATH
-#         on_modified: gramex.init
-
-
-# The `error:` section defines error responses. When you raise
-# `GramexError(key="...")`, Gramex calls the corresponding `function:` as
-# `function(handler, status_code, **kwargs)` from RequestHandler.write_error()
-# `kwargs['exc_info']` will have an `exc_info` triple.
-#
-# http://tornado.readthedocs.org/en/latest/web.html#tornado.web.RequestHandler.write_error
-
-# error:
-#     page-not-found:
-#         code: 404
-#         function: SimpleErrorPage
-#         kwargs:
-#           h1: Page not found
-#           body: This is not the page you are looking for
-#     custom-error:
-#         code: 500
-#         function: ErrorTemplateHandler
-#         path: 500.html
-
-
-# The `license:` section handles the following scenarios:
-# - I only want to sell only the treemap application
-# - I only want SAML Auth, not OAuth
-# - I only want visual, not analytic components
-# - Only single user license
-#
-# How are services, handlers and components identified?
-
-# license:
-#     default:                    # Name of license. (Multiple licenses possible)
-#         key: ...                # License key for this license
-#         systems:                # Systems this license is valid for
-#             system-1:           # Name of the first system
-#                 method:         #   Algorithm used to compute the sysid
-#                 sysid:          #   System's unique ID based on algorithm
-#             system-2:           # Name of the second system
-#                 method:         #   Algorithm used to compute next sysid
-#                 sysid:          #   ...
-#         validity:               # From when to when is the license valid
-#             start: 2015-01-01 00:00:00
-#             end: 2016-01-01 00:00:00
-#         users: 1                # Optional: max users allowed
-#         inventory:              # What's allwoed. (Values matter; keys are just labels)
-#             treemap:            # Each permission is a key
-#                 services:       #   Allowed services
-#                     ...         #     How to define these?
-#                 handlers:       #   Allowed handlers
-#                     ...         #     How to define these?
-
-
-# email:
-
-# cache:
-#   - Output follows HTTP caching policy. Server acts as a caching HTTP proxy.
-#   - Any structure can be cached and re-used across apps
-#   - Any structure can be uniquely identified, possibly served as a URL
-#   - Cache management: Delete LRU (least recently used), LFU (least frequently
-#     used), etc. Based on memory / disk availability.
-#   - Cache storage: memory, disk (serialization)
-#   - Cache expiry, re-creation
-#   - Cache must be thread-safe
-#   - Cache record:
-#     - Namespace
-#     - Last updated
-#     - Context (e.g. user)
-#     - Hits (how often was this record retrieved)
-#     - Data
-#     - How to compute the data
-
-# - **Rendering** components to PDF, PPTX, PNG, SVG, etc.
-# - **Computation workflow**
-# - **Queues**: If dataframes have to be stored, for example, and we want to
-#   avoid too many dataframes being stored. Or if we need a cache with a limited
-#   memory usage.
