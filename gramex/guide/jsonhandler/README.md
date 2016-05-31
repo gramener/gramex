@@ -17,36 +17,44 @@ available on Internet Explorer. Use [jQuery.ajax][jquery-ajax] instead.
 
 You can read data via a GET request:
 
+    :::js
     fetch('data/')      // OUTPUT
 
 You can read data from a specific key:
 
+    :::js
     fetch('data/y')     // OUTPUT
 
 ... or from a sub-key:
 
+    :::js
     fetch('data/y/a')   // OUTPUT
 
 Missing keys return `null`:
 
+    :::js
     fetch('data/na')    // OUTPUT
 
 Array values can be accessed via integer path elements:
 
+    :::js
     fetch('data/z/0')   // OUTPUT
 
 ## PUT - write data
 
 You can write JSON data via a PUT request:
 
+    :::js
     fetch('data/new', {method: 'PUT', body: '{"x": 1}'})   // OUTPUT
 
 This stores the JSON value as-is:
 
+    :::js
     fetch('data/new')   // OUTPUT
 
 Incorrect values raise an error:
 
+    :::js
     fetch('data/invalid', {method: 'PUT', body: 'xxx'})
 
     // OUTPUT
@@ -55,28 +63,34 @@ Incorrect values raise an error:
 
 You can update existing data via PATCH. For example, the initial data:
 
+    :::js
     fetch('data/y')    // OUTPUT
 
 ... can be updated via PATCH:
 
+    :::js
     fetch('data/y', {method: 'PATCH', body: '{"c":3}'})   // OUTPUT
 
 The result is:
 
+    :::js
     fetch('data/y')    // OUTPUT
 
 ## DELETE - remove data
 
 You can delete any key via DELETE. For example, the initial data:
 
+    :::js
     fetch('data/y')   // OUTPUT
 
 ... can have keys removed:
 
+    :::js
     fetch('data/y/a', {method: 'DELETE'})     // OUTPUT
 
 The result is:
 
+    :::js
     fetch('data/y')   // OUTPUT
 
 ## Method override
@@ -84,6 +98,7 @@ The result is:
 You can use the `X-HTTP-Method-Override` header to overide the method. For
 example, this is the same as a PUT request:
 
+    :::js
     fetch('data/new?x-http-method-override=PUT', {
         method: 'POST',
         headers: new Headers({'X-HTTP-Method-Override': 'PUT'}),
@@ -92,6 +107,7 @@ example, this is the same as a PUT request:
 
 You an also use the `?x-http-method-override=` query parameter:
 
+    :::js
     fetch('data/new?x-http-method-override=PUT', {
         method: 'POST',
         body: '1'

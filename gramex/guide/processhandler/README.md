@@ -3,6 +3,7 @@ title: Gramex runs processes
 `ProcessHandler` runs processes and streams their output/errors. For example, to
 see the results of pinging www.google.com, add this to `gramex.yaml`:
 
+    :::yaml
     url:
         ping-google:
             pattern: /ping-google                 # At this URL
@@ -32,6 +33,7 @@ You can redirect `stdout` and `stderr` from the process. For example, this URL
 [ping-google-file](ping-google-file) saves `stdout` to [ping.txt](ping.txt) as
 well as displays the output. It hides the `stderr`:
 
+    :::yaml
     url:
         ping-google-file:
             pattern: /ping-google-file

@@ -21,6 +21,7 @@ There are many ways to start the debugger:
 You can also use [WinPDB](http://winpdb.org/docs/) -- a cross-platform GUI for
 pdb -- on Gramex using:
 
+    :::shell
     conda install -c jacob-barhak -c anaconda winpdb
     winpdb.bat /path/to/gramex/__main__.py
 
@@ -66,12 +67,14 @@ Gramex can [autoreload](http://www.tornadoweb.org/en/stable/autoreload.html) if
 any dependent Python files change. To enable this behaviour, use the following
 settings in `gramex.yaml`:
 
+    :::yaml
     app:
         settings:
             debug: true
 
 Or use it from the command line:
 
+    :::shell
     gramex --settings.debug=true
 
 **This uses a lot of CPU**. It also serves tracebacks on error. Do not enable
@@ -86,6 +89,7 @@ this on production systems.
 
 `timer()` prints the time since last called. For example:
 
+    :::python
     from gramex.debug import timer
 
     def function(handler):
@@ -106,6 +110,7 @@ was called.
 `Timer()` is similar to `timer()`, but shows the time for an block of code. For
 example:
 
+    :::python
     from gramex.debug import Timer
 
     def function(handler):
@@ -124,6 +129,7 @@ was called.
 `lineprofile` is a decorator that prints the time taken for each line of a
 function every time it is called. For example:
 
+    :::python
     from gramex.debug import lineprofile
 
     @lineprofile

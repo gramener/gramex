@@ -2,6 +2,7 @@ title: Gramex watches files
 
 The `watch:` section in [gramex.yaml](gramex.yaml) triggers events when files are modified. For example:
 
+    :::yaml
     watch:                                  # Define files to watch
         data-files:                         # Create a watched named data-files
             paths:                          # Watch for these files
@@ -29,6 +30,7 @@ Your functions can watch files efficiently. For example, this code will run
 `event` is a [watchdog event][event].
 
 
+    :::python
     from gramex.services.watcher import watch
 
     def log(event):

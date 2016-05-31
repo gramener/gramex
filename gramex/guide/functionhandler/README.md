@@ -4,6 +4,7 @@ The [FunctionHandler](functionhandler) runs a function and displays the output.
 For example, this configuration maps the URL [total](total) to a
 FunctionHandler:
 
+    :::yaml
     url:
         total:
             pattern: total                              # The "total" URL
@@ -18,6 +19,7 @@ It runs `calculations.total()` with the arguments `100, 200, 300` and returns
 the result as `application/json`. [calculations.py](calculations.py) defines
 `total` as below:
 
+    :::python
     def total(*items):
         return json.dumps(sum(float(item) for item in items))
 
@@ -40,6 +42,7 @@ Try it below:
 
 To set this up, [gramex.yaml](gramex.yaml) used the following configuration:
 
+    :::yaml
     url:
         add:
             pattern: add                                # The "add" URL
@@ -55,6 +58,7 @@ add up all `x` arguments.
 
 You can specify wildcards in the URL pattern. For example:
 
+    :::yaml
     url:
       lookup:
         pattern: /name/([a-z]+)/age/([0-9]+)        # e.g. /name/john/age/21
@@ -65,6 +69,7 @@ You can specify wildcards in the URL pattern. For example:
 When you access `/name/john/age/21`, `john` and `21` can be accessed
 via `handler.path_args` as follows:
 
+    :::python
     def name_age(handler):
         name = handler.path_args[0]
         age = handler.path_args[1]
@@ -75,6 +80,7 @@ via `handler.path_args` as follows:
 You can pass any options you want to functions. For example, to call
 `calculations.method(handler, 10, h=handler, val=0)`, you can use:
 
+    :::yaml
     url:
       method:
         pattern: /method          # The URL /method
@@ -95,6 +101,7 @@ the browser, use `yield`. For example, [slow?x=1&x=2&x=3](slow?x=1&x=2&x=3) uses
 the function below to print the values 1, 2, 3 as soon as they are "calculated".
 (You won't see the effect on learn.gramener.com. Try it on your machine.)
 
+    :::python
     def slow_print(handler):
         for value in handler.get_arguments('x'):
             time.sleep(1)
@@ -113,6 +120,7 @@ runs in parallel while Gramex continues. When the function ends, the code
 resumes. Use [coroutines][coroutines] to achieve this. For example, this fetches
 a URL's body without blocking:
 
+    :::python
     async_http_client = tornado.httpclient.AsyncHTTPClient()
 
     @tornado.gen.coroutine
@@ -125,6 +133,7 @@ You can combine this with the `yield` statement to fetch
 mutiple URLs asynchronously, and display them as soon as the results are
 available, in order:
 
+    :::python
     def urls(handler):
         for delay in handler.get_arguments('x'):
             futures = [fetch_body('https://httpbin.org/delay/%s' % x) for x in handler.get_arguments('x')]
@@ -138,6 +147,7 @@ The simplest way to call *any blocking function* asynchronously is to use a
 `FunctionHandler` will run `slow_calculation` in a separate thread without
 blocking Gramex.:
 
+    :::python
     result = yield thread_pool.submit(slow_calculation, *args, **kwargs)
 
 [ThreadPoolExecutor]: https://docs.python.org/3/library/concurrent.futures.html#concurrent.futures.ThreadPoolExecutor
@@ -145,6 +155,7 @@ blocking Gramex.:
 You can run execute multiple steps in parallel and consolidate their result as
 well. For example:
 
+    :::python
     thread_pool = concurrent.futures.ThreadPoolExecutor(4)
 
     @tornado.gen.coroutine
@@ -160,6 +171,7 @@ well. For example:
 
 To redirect to a different URL when the function is done, use `redirect`:
 
+    :::yaml
     url:
       lookup:
         function: calculation.run     # Run calculation.run(handler)

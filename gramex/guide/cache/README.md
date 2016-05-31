@@ -4,6 +4,7 @@ The `url:` handlers accept a `cache:` key that defines caching behaviour. For
 example, this configuration at [random](random) generates random letters every
 time it is called:
 
+    :::yaml
     random:
         pattern: /$YAMLURL/random
         handler: FunctionHandler
@@ -14,6 +15,7 @@ time it is called:
 But adding the `cache:` to this URL caches it the first time it is called. When
 [random-cached](random-cached) is reloaded, the same letter is shown every time.
 
+    :::yaml
     random-cached:
         pattern: /$YAMLURL/random-cached
         handler: FunctionHandler
@@ -36,6 +38,7 @@ cache the full URL. But
 [cache-only-path?x=2](cache-only-path?x=2) return the same value because they
 only cache the path.
 
+    :::yaml
     cache-full-url:
         pattern: /$YAMLURL/cache-full-url
         handler: FunctionHandler
@@ -74,6 +77,7 @@ The key can accept multiple values. The values can either be:
 
 For example, this configuration caches based on the request, browser and user, ensuring that the user 
 
+    :::yaml
     cache-by-user-and-browser:
         ...
         cache:
@@ -88,6 +92,7 @@ For example, this configuration caches based on the request, browser and user, e
 You can specify a expiry duration. For example [cache-expiry](cache-expiry)
 caches the response for 5 seconds.
 
+    :::yaml
     cache-expiry:
         pattern: /$YAMLURL/cache-expiry
         handler: FunctionHandler
@@ -106,6 +111,7 @@ runs out of space.
 By default, only requests that return a HTTP 200 status code are cached. You can
 cache other status codes via the `status:` configuration.
 
+    :::yaml
     url:
       cache-errors:
         pattern: /$YAMLURL/cache-errors
@@ -118,6 +124,7 @@ cache other status codes via the `status:` configuration.
 Gramex provides an in-memory cache, but you can define your own cache in the
 root `cache:` section as follows:
 
+    :::yaml
     cache:
         small-in-memory-cache:  # Define a name for the cache
             type: memory        # This is an in-memory cache
@@ -146,6 +153,7 @@ For example, the default in-memory Gramex cache is at
 The cache stores can be treated like a dictionary. They also support a `.set()`
 method which accepts an `expire=` parameter. For example:
 
+    :::python
     cache = gramex.services.info.cache['big-disk-cache']
     cache['key'] = 'value'
     cache['key']      # returns 'value'

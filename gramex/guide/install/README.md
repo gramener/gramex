@@ -2,6 +2,7 @@ title: Install Gramex
 
 On **Linux**, run this command to set up Gramex (replace `master` with `dev` for the development version):
 
+    :::shell
     source <(wget -qO- http://code.gramener.com/s.anand/gramex/raw/master/setup.sh)
 
 On **Windows or Mac**:
@@ -12,10 +13,12 @@ On **Windows or Mac**:
 
 Then run:
 
+    :::shell
     pip install --upgrade --ignore-installed http://code.gramener.com/s.anand/gramex/repository/archive.tar.bz2?ref=master
 
 For the development version, replace `master` with `dev` at the end:
 
+    :::shell
     pip install --upgrade --ignore-installed http://code.gramener.com/s.anand/gramex/repository/archive.tar.bz2?ref=dev
 
 [anaconda]: http://continuum.io/downloads
@@ -27,4 +30,5 @@ For the development version, replace `master` with `dev` at the end:
 
 To remove Gramex, run:
 
+    :::shell
     pip uninstall gramex

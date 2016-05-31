@@ -20,12 +20,11 @@ pre, code {
 }
 
 pre {
-    font-size: 0.8rem;
-    background-color: #44546a;
     color: #fff;
     padding: 0.5rem 1rem;
     margin: 0 -1rem;
     overflow-x: auto;
+    width: 50em;
 }
 
 code {
@@ -133,3 +132,69 @@ h1 { margin-top: 3rem; }
     color: #0563c1;
 }
 
+/* Based on https://github.com/richleland/pygments-css/blob/master/monokai.css */
+.codehilite pre { background-color: #000; }
+.codehilite .hll { background-color: #49483e }
+.codehilite .c { color: #fff2b2 } /* Comment */
+.codehilite .err { color: #960050; background-color: #1e0010 } /* Error */
+.codehilite .k { color: #66d9ef } /* Keyword */
+.codehilite .l { color: #d9d5e1 } /* Literal */
+.codehilite .n { color: #f8f8f2 } /* Name */
+.codehilite .o { color: #f92672 } /* Operator */
+.codehilite .p { color: #f8f8f2 } /* Punctuation */
+.codehilite .cm { color: #fff2b2 } /* Comment.Multiline */
+.codehilite .cp { color: #fff2b2 } /* Comment.Preproc */
+.codehilite .c1 { color: #fff2b2 } /* Comment.Single */
+.codehilite .cs { color: #fff2b2 } /* Comment.Special */
+.codehilite .ge { font-style: italic } /* Generic.Emph */
+.codehilite .gs { font-weight: bold } /* Generic.Strong */
+.codehilite .kc { color: #66d9ef } /* Keyword.Constant */
+.codehilite .kd { color: #66d9ef } /* Keyword.Declaration */
+.codehilite .kn { color: #f92672 } /* Keyword.Namespace */
+.codehilite .kp { color: #66d9ef } /* Keyword.Pseudo */
+.codehilite .kr { color: #66d9ef } /* Keyword.Reserved */
+.codehilite .kt { color: #66d9ef } /* Keyword.Type */
+.codehilite .ld { color: #e6db74 } /* Literal.Date */
+.codehilite .m { color: #d9d5e1 } /* Literal.Number */
+.codehilite .s { color: #e6db74 } /* Literal.String */
+.codehilite .na { color: #a6e22e } /* Name.Attribute */
+.codehilite .nb { color: #f8f8f2 } /* Name.Builtin */
+.codehilite .nc { color: #a6e22e } /* Name.Class */
+.codehilite .no { color: #66d9ef } /* Name.Constant */
+.codehilite .nd { color: #a6e22e } /* Name.Decorator */
+.codehilite .ni { color: #f8f8f2 } /* Name.Entity */
+.codehilite .ne { color: #a6e22e } /* Name.Exception */
+.codehilite .nf { color: #a6e22e } /* Name.Function */
+.codehilite .nl { color: #f8f8f2 } /* Name.Label */
+.codehilite .nn { color: #f8f8f2 } /* Name.Namespace */
+.codehilite .nx { color: #a6e22e } /* Name.Other */
+.codehilite .py { color: #f8f8f2 } /* Name.Property */
+.codehilite .nt { color: #f92672 } /* Name.Tag */
+.codehilite .nv { color: #f8f8f2 } /* Name.Variable */
+.codehilite .ow { color: #f92672 } /* Operator.Word */
+.codehilite .w { color: #f8f8f2 } /* Text.Whitespace */
+.codehilite .mf { color: #d9d5e1 } /* Literal.Number.Float */
+.codehilite .mh { color: #d9d5e1 } /* Literal.Number.Hex */
+.codehilite .mi { color: #d9d5e1 } /* Literal.Number.Integer */
+.codehilite .mo { color: #d9d5e1 } /* Literal.Number.Oct */
+.codehilite .sb { color: #e6db74 } /* Literal.String.Backtick */
+.codehilite .sc { color: #e6db74 } /* Literal.String.Char */
+.codehilite .sd { color: #e6db74 } /* Literal.String.Doc */
+.codehilite .s2 { color: #e6db74 } /* Literal.String.Double */
+.codehilite .se { color: #d9d5e1 } /* Literal.String.Escape */
+.codehilite .sh { color: #e6db74 } /* Literal.String.Heredoc */
+.codehilite .si { color: #e6db74 } /* Literal.String.Interpol */
+.codehilite .sx { color: #e6db74 } /* Literal.String.Other */
+.codehilite .sr { color: #e6db74 } /* Literal.String.Regex */
+.codehilite .s1 { color: #e6db74 } /* Literal.String.Single */
+.codehilite .ss { color: #e6db74 } /* Literal.String.Symbol */
+.codehilite .bp { color: #f8f8f2 } /* Name.Builtin.Pseudo */
+.codehilite .vc { color: #f8f8f2 } /* Name.Variable.Class */
+.codehilite .vg { color: #f8f8f2 } /* Name.Variable.Global */
+.codehilite .vi { color: #f8f8f2 } /* Name.Variable.Instance */
+.codehilite .il { color: #d9d5e1 } /* Literal.Number.Integer.Long */
+
+.codehilite .gh { } /* Generic Heading & Diff Header */
+.codehilite .gu { color: #75715e; } /* Generic.Subheading & Diff Unified/Comment? */
+.codehilite .gd { color: #f92672; } /* Generic.Deleted & Diff Deleted */
+.codehilite .gi { color: #a6e22e; } /* Generic.Inserted & Diff Inserted */

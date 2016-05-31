@@ -3,6 +3,7 @@ title: Configurations control Gramex
 All features of Gramex are controlled by `gramex.yaml`. It has the following
 optional sections:
 
+    :::yaml
     app: ...        # Main app configuration
     url: ...        # Map URLs to files or functions
     log: ...        # Logging configuration
@@ -12,12 +13,15 @@ optional sections:
 
 Here's a simple `gramex.yaml` that serves the file `html.html` as the home page.
 
+    :::yaml
     url:                            # URL configuration section
         root:                       # Add a configuration called "root"
             pattern: /              # It maps the URL / (the home page)...
             handler: FileHandler    # ... to a Gramex FileHandler
             kwargs:                 # ... and passes it these arguments:
                 path: home.html     # Use home.html as the path to serve
+
+Here is a full [reference of gramex.yaml configurations](reference).
 
 # Configuration syntax
 
@@ -38,6 +42,7 @@ The `app:` section controls Gramex's startup. It has these sub-sections.
 
 These are the parameters you will use the most:
 
+    :::yaml
     app:
         browser: /                        # Open browser to "/" when app starts
         listen:
@@ -51,6 +56,7 @@ These are the parameters you will use the most:
 The app section alone can be over-ridden from the command line. (Other sections
 cannot.) For example:
 
+    :::shell
     gramex --listen.port=8888 --browser=/
 
 ... will override the `gramex.yaml` parameters for the `port` and `browser`.
@@ -59,6 +65,7 @@ cannot.) For example:
 
 The `url:` section maps URLs to content. Here is an example:
 
+    :::yaml
     url:
         homepage:                           # A unique name for this mapping
             pattern: /                      # Map the URL /
@@ -92,6 +99,7 @@ identifiers. The mappings have these keys:
 You an write your own handler by extending [RequestHandler][requesthandler]. For
 example, create a file called `hello.py` with the following content:
 
+    :::python
     from tornado.web import RequestHandler
 
     class Hello(RequestHandler):
@@ -108,6 +116,7 @@ The `log:` section defines Gramex's logging behaviour. It uses the same
 structure as the [Python logging schema][logging-schema]. The default
 configuration shows all information messages on the console:
 
+    :::yaml
     log:
         root:
             handlers:
@@ -116,6 +125,7 @@ configuration shows all information messages on the console:
 You can edit the logging level to only displays warning messages on the console,
 for example:
 
+    :::yaml
     log:
         root:
             level: WARN           # Ignore anything less severe than warnings
@@ -132,6 +142,7 @@ Gramex offers the following pre-defined handlers:
 You can define your own handlers under the `log:` section. Here is a handler
 that write information logs into `info.log`, backing it up daily:
 
+    :::yaml
     handlers:
         info:
             class: logging.handlers.TimedRotatingFileHandler
@@ -148,6 +159,7 @@ that write information logs into `info.log`, backing it up daily:
 This handler wrings warnings into warn.log, letting it grow up to 10 MB, then
 archiving it into warn.log.1, etc.
 
+    :::yaml
     handlers:
         warnings:
             class: logging.handlers.RotatingFileHandler
@@ -162,6 +174,7 @@ archiving it into warn.log.1, etc.
 The `file` formatter is defined in Gramex, and saves the output as a CSV file.
 Here is its definition:
 
+    :::yaml
     formatters:
         file:
             format: '%(levelname)1.1s,%(asctime)s,%(module)s,%(lineno)d,"%(message)s"'
@@ -200,6 +213,7 @@ See the [scheduler](../scheduler/) documentation for examples.
 
 The `mime:` section lets you add custom MIME types for extensions. For example:
 
+    :::yaml
     mime:
         .yml: text/yaml
 
@@ -211,6 +225,7 @@ header.
 
 One config file can import another. For example:
 
+    :::yaml
     import:
         app1: 'app1/gramex.yaml'      # import this YAML file (relative path)
         app2: 'd:/temp/gramex.yaml'   # import this YAML file (absolute path)
@@ -230,17 +245,20 @@ Imports work recursively. You can have imports within imports.
 
 You can use imports within sections. For example:
 
+    :::yaml
     url:
       app1: 'app1/gramex.yaml'      # Imports app1/gramex.yaml into the url: section
 
 The imported configuration is overridden by the importing configuration. For
 example, `app1/gramex.yaml` has:
 
+    :::yaml
     x: 1
     y: 2
 
 Then, this configuration:
 
+    :::yaml
     import:
         app1: 'app1/gramex.yaml'
     x: 2      # Override the x:1 set in app1/gramex.yaml
@@ -254,11 +272,13 @@ Templates can use variables. Variables are written as `$VARIABLE` or
 `${VARIABLE}`. All environment variables are available as variables by default.
 For example:
 
+    :::yaml
     import:
       home_config: $HOME/gramex.yaml    # imports gramex.yaml from your home directory
 
 You can define or override variables using the `variables:` section like this:
 
+    :::yaml
     variables:
       URLROOT: "/site"                  # Define $URLROOT
       HOME: {default: "/home"}          # Define $HOME if not defined earlier
@@ -275,6 +295,7 @@ home, but does not override a previous value.
 
 Variables can be of any type. For example:
 
+    :::yaml
     variables:
       NUMBER: 10
       BOOLEAN: false
@@ -282,6 +303,7 @@ Variables can be of any type. For example:
 They are substituted as-is if the variable is used directly. If it's part of a
 string substitution, then it is converted into a string. For example:
 
+    :::yaml
     number: $NUMBER             # This is the int 10
     number: /$NUMBER            # This is the string "/10"
     mix: a-${BOOLEAN}-b       # This is the string "a-False-b"
@@ -291,6 +313,7 @@ string substitution, then it is converted into a string. For example:
 Variables can also be computed. For example, this runs `utils.get_root` to
 assign `$URLROOT`:
 
+    :::yaml
     variables:
       URLROOT:
         function: utils.get_root
@@ -299,6 +322,7 @@ By default, the function is called with the variable name as key, i.e.
 `utils.get_root(key='URLROOT')`. But you can specify any arguments. For example,
 this calls `utils.get_root('URLROOT', 'test', x=1)`:
 
+    :::yaml
     variables:
       URLROOT:
         function: utils.get_root
@@ -308,6 +332,7 @@ this calls `utils.get_root('URLROOT', 'test', x=1)`:
 Computed variables can also use defaults. For example, this assigns `get_home()`
 to `$HOME` only if it's not already defined.
 
+    :::yaml
     variables:
       HOME:
         function: utils.get_home
@@ -325,6 +350,7 @@ practice, read [deployment patterns](../deploy/).
 
 Configurations can be overwritten. For example:
 
+    :::yaml
     a: 1          # This is defined first
     a: 2          # ... but this overrides it
 
@@ -332,6 +358,7 @@ will only use the second line.
 
 Imports over-write the entire key. For example, if `a.yaml` has:
 
+    :::yaml
     key:
       x: 1
       y: 2
@@ -340,6 +367,7 @@ Imports over-write the entire key. For example, if `a.yaml` has:
 
 ... and `b.yaml` has:
 
+    :::yaml
     key:
       z: 3
 
@@ -350,6 +378,7 @@ Gramex uses 3 different configuration files. The first is Gramex's own
 These *update* keys, rather than overwriting them. For example, Gramex's
 `gramex.yaml` has the following `url:` section:
 
+    :::yaml
     url:
         default:
             pattern: /(.*)
@@ -357,6 +386,7 @@ These *update* keys, rather than overwriting them. For example, Gramex's
 
 When your `gramex.yaml` uses a `url:` section like this:
 
+    :::yaml
     url:
         homepage:
             pattern: /
@@ -371,6 +401,7 @@ be overwritten.
 Configurations are available in `gramex.conf`. For example, this will print the
 computed value of applications port:
 
+    :::python
     import gramex
     print(gramex.conf.app.listen.port)
 

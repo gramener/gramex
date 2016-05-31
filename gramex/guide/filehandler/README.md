@@ -3,6 +3,7 @@ title: Gramex renders files
 [gramex.yaml](../gramex.yaml) uses the [FileHandler][filehandler]
 to display files. This folder uses the following configuration:
 
+    :::yaml
     url:
       markdown:
         pattern: /$YAMLURL/(.*)               # Any URL under the current gramex.yaml folder
@@ -22,6 +23,7 @@ and `$YAMLPATH` is replaced by the directory of `gramex.yaml`.
 files from the home directory of your folder. To prevent that, override the
 `default` pattern:
 
+    :::yaml
     url:
       default:                          # This overrides the default URL handler
         pattern: ...
@@ -36,6 +38,7 @@ absolute path, and `$body` replaced by a list of all files in that directory.
 
 For example,
 
+    :::yaml
       static:
         pattern: /static/(.*)                 # Any URL starting with /static/
         handler: FileHandler                  # uses this handler
@@ -47,6 +50,7 @@ For example,
 
 Here is a trivial `template.html`. This must be placed in the same :
 
+    :::html
     <h1>$path</h1>
     $body
 
@@ -56,6 +60,7 @@ Here is a trivial `template.html`. This must be placed in the same :
 You can specify any URL for any file. For example, to map the file
 `filehandler/data.csv` to the URL `/filehandler/data`, use this configuration:
 
+    :::yaml
     pattern: /filehandler/data    # The URL /filehandler/data
     handler: FileHandler          # uses this handler
     kwargs:
@@ -64,6 +69,7 @@ You can specify any URL for any file. For example, to map the file
 You can also map regular expressions to file patterns. For example, to add a
 `.yaml` extension automatically to a path, use:
 
+    :::yaml
     url:
       yaml-extensions:
         pattern: "/yaml/(.*)"         # yaml/anything
@@ -75,6 +81,7 @@ For example, [yaml/gramex](yaml/gramex) actually renders [gramex.yaml](gramex.ya
 
 To replace `.html` extension with `.yaml`, use:
 
+    :::yaml
     url:
       replace-html-with-yaml:
         pattern: "/(.*)\\.html"       # Note the double backslash instead of single backslash
@@ -90,6 +97,7 @@ pattern. For example, this configuration maps `/style.css` and `/script.js` to
 the home directory. To ensure that this takes priority over others, you can add
 a higher value to the `priority` (which defaults to 0.)
 
+    :::yaml
     url:
       assets:
         pattern: /(style.css|script.js)             # Any of these to URLs
@@ -105,6 +113,7 @@ The URL will be served with the MIME type of the file. CSV files have a MIME
 type `text/csv` and a `Content-Disposition` set to download the file. You
 can override these headers:
 
+    :::yaml
     pattern: /filehandler/data
     handler: FileHandler
     kwargs:
@@ -119,6 +128,7 @@ can override these headers:
 Rather than render files as-is, the following parameters transform the markdown
 into HTML:
 
+    :::yaml
     # ... contd ...
       transform:
         "*.md":                                 # Any file matching .md
@@ -134,6 +144,7 @@ Any `.md` file will be displayed as HTML -- including this file (which is [READM
 Any transformation is possible. For example, this configuration converts YAML
 into HTML using the [BadgerFish](http://www.sklar.com/badgerfish/) convention.
 
+    :::yaml
     # ... contd ...
         "*.yaml":                               # YAML files use BadgerFish
           function: badgerfish                  # transformed via gramex.transforms.badgerfish()
@@ -143,6 +154,7 @@ into HTML using the [BadgerFish](http://www.sklar.com/badgerfish/) convention.
 
 Using this, the following file [page.yaml](page.yaml) is rendered as HTML:
 
+    :::yaml
     html:
       "@lang": en
       head:
@@ -174,6 +186,7 @@ used) transforms:
    template][template]. Any `kwargs` passed will be sent as variables to the
    template. For example:
 
+        :::yaml
         transform:
             "template.*.html":
                 function: template            # Convert as a Tornado template
@@ -186,6 +199,7 @@ used) transforms:
    For example, this YAML file is converted into a HTML as you would logically
    expect:
 
+        :::yaml
         html:
           head:
             title: Sample file
@@ -200,6 +214,7 @@ used) transforms:
 The `template` transform renders files as [Tornado templates][template]. To
 serve a file as a Tornado template, use the following configuration:
 
+    :::yaml
     url:
         template:
             pattern: /page                  # The URL /page
@@ -220,6 +235,7 @@ add other keyword arguments in `kwargs:` as shown above.
 
 The file can contain any template feature. Here's a sample `page.html`.
 
+    :::html
     <h1>{{ title }}</h1>
     <p>argument x is {{ handler.get_argument('x', None) }}</p>
     <p>path is: {{ path }}.</p>
@@ -234,6 +250,7 @@ If you're submitting forms using the POST method, you need to submit an
 [_xsrf][xsrf] field that has the value of the `_xsrf` cookie. You can either
 include it in the template using handlers' built-in `xsrf_token` property:
 
+    :::html
     <form method="POST">
       <input type="hidden" name="_xsrf" value="{{ handler.xsrf_token }}">
     </form>
@@ -242,10 +259,12 @@ include it in the template using handlers' built-in `xsrf_token` property:
 [cookie.js](https://github.com/florian/cookie.js) and 
 [jQuery](https://jquery.com/). Install them:
 
+    :::shell
     bower install cookie jquery --save
 
 Then extract the cookie and add a hidden input to your form:
 
+    :::html
     <script src="bower_components/cookie/cookie.min.js"></script>
     <script src="bower_components/jquery/dist/jquery.min.js"></script>
     <script>
@@ -261,6 +280,7 @@ Then extract the cookie and add a hidden input to your form:
 
 You can also disable XSRF in your **root** `gramex.yaml`:
 
+    :::yaml
     app:
       settings:
         xsrf_cookies: false
@@ -271,6 +291,7 @@ Or start Gramex from the command line with a `--settings.xsrf_cookies=false`.
 
 You can concatenate multiple files and serve them as a single file. For example:
 
+    :::yaml
     pattern: /contents
     handler: FileHandler
     kwargs:

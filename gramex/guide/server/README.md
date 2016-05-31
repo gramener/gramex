@@ -10,6 +10,7 @@ this guide.
 To start off, create a `gramex.yaml` with the lines shown below and run
 `gramex`from there. You will see a list of files in that folder.
 
+    :::yaml
     app:
         browser: /
 

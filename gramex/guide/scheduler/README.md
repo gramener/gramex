@@ -31,6 +31,7 @@ In addition, the schedule is specified via the `minutes`, `hours`, `dates`, `wee
 
 For example, this configuration runs at on the 15th and 45th minute every 4 hours on the first and last day of the month (if it's a weekday) in 2016-17.
 
+    :::yaml
     run-when-i-say:
         function: schedule_utils.log_time
         minutes: '15, 45'           # Every 15th & 45th minute
@@ -42,12 +43,14 @@ For example, this configuration runs at on the 15th and 45th minute every 4 hour
 
 This configuration runs only on startup:
 
+    :::yaml
     run-on-startup:
         function: schedule_utils.log_time
         startup: true
 
 This configuration runs every hour on a separate thread:
 
+    :::yaml
     run-every-hour:
         function: schedule_utils.log_time
         hours: '*'

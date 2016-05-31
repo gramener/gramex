@@ -28,12 +28,14 @@ Examples:
 
 These parameters can be specified specified in the URL. But you can also set these as defaults. For example, adding this section under `kwargs:` ensures that the default format is HTML and the default limit is 100 -- but the URL can override it.
 
+    :::yaml
     default:
         format: html
         limit: 100
 
 You can make the parameters non-over-ridable using `query:` instead of `default:`. For example, this section forces the format to html, irrespective of what the `?format=` value is. However, `?limit=` will override the default of 100.
 
+    :::yaml
     query:
         format: html
     default:

@@ -2,6 +2,7 @@ title: Gramex Authentication
 
 [gramex.yaml](gramex.yaml) uses GoogleAuth handler to authenticate this application. It uses the following configuration:
 
+    :::yaml
     app:
         settings:                                  # Tornado app settings
             auth: True                             # Enable authentication
@@ -21,6 +22,7 @@ The configuration below directs login to [/login/google/](/login/google/) to a G
 
 The `auth:` setting, cascades down to all other URL patterns (handlers) unless over-written with `auth:` under `kwargs:` parameter of `handler:` specs
 
+    :::yaml
     lib:
         pattern: /lib/(.*)              # Anything under /lib/
         handler: FileHandler

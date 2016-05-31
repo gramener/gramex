@@ -24,6 +24,7 @@ For example, if you have the following directory structure:
 
 Inside `/app/component/gramex.yaml`, here's what the variables mean:
 
+    :::yaml
     url:
         relative-url:
             # This pattern: translates to /app/component/index.html
@@ -37,6 +38,7 @@ If you want to refer to a file in the Gramex source directory, use
 `$GRAMEXPATH`. For example, this maps [config](config) to Gramex's root
 `gramex.yaml`.
 
+    :::yaml
     url:
         gramex-config-file:
             pattern: /$YAMLURL/config           # Map config under current URL
@@ -53,11 +55,13 @@ allow the application to work in both places.
 
 Suppose `/gramex.yaml` imports all sub-directories:
 
+    :::yaml
     import:
         apps: */gramex.yaml       # Import all gramex.yaml from 1st-level sub-directories
 
 ... and `/app/gramex.yaml` has:
 
+    :::yaml
     url:
         page-name:
             pattern: /$YAMLURL/page         # Note the /$YAMLURL prefix
@@ -75,6 +79,7 @@ The correct file (`/app/page.html`) is rendered in both cases because
 You can modify the app name using `../new-app-name`. For example, this pattern
 directs the URL `/new-app-name/page` to `/app/page.html`.
 
+    :::yaml
             pattern: /$YAMLURL/../new-app-name/page
 
 ### Using relative URLs
@@ -90,10 +95,12 @@ helpful. This requires server-side templating.
 You can use a [Tornado template like this](template.html.source) that using a
 pre-defined variable, e.g. `APP_ROOT`.
 
+    :::html
     <link rel="stylesheet" href="/{{ APP_ROOT }}/style.css">
 
 In `gramex.yaml`, we pass `APP_ROOT` to the that's set to `$YAMLURL`. For example:
 
+    :::yaml
     variables:
         APP_ROOT: $YAMLURL       # Pre-define APP_ROOT as the absolute URL to gramex.yaml's directory
 
