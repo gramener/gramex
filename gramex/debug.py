@@ -88,26 +88,28 @@ else:
     import atexit
     from select import select
 
-    def _init_non_blocking_terminal():
-        if not sys.__stdin__.isatty():
-            return
+    if sys.__stdin__.isatty():
+        def _init_non_blocking_terminal():
+            fd = sys.__stdin__.fileno()
+            old_term = termios.tcgetattr(fd)
+            # Support normal-terminal reset at exit
+            atexit.register(lambda: termios.tcsetattr(fd, termios.TCSAFLUSH, old_term))
 
-        fd = sys.__stdin__.fileno()
-        old_term = termios.tcgetattr(fd)
-        # Support normal-terminal reset at exit
-        atexit.register(lambda: termios.tcsetattr(fd, termios.TCSAFLUSH, old_term))
+            # New terminal setting unbuffered
+            new_term = termios.tcgetattr(fd)
+            new_term[3] = (new_term[3] & ~termios.ICANON & ~termios.ECHO)
+            termios.tcsetattr(fd, termios.TCSAFLUSH, new_term)
 
-        # New terminal setting unbuffered
-        new_term = termios.tcgetattr(fd)
-        new_term[3] = (new_term[3] & ~termios.ICANON & ~termios.ECHO)
-        termios.tcsetattr(fd, termios.TCSAFLUSH, new_term)
+        def getch():
+            'Return character if something was typed on the console, else None'
+            dr, dw, de = select([sys.stdin], [], [], 0)
+            if dr != []:
+                return sys.stdin.read(1)
+            else:
+                return None
 
-    def getch():
-        'Return character if something was typed on the console, else None'
-        dr, dw, de = select([sys.stdin], [], [], 0)
-        if dr != []:
-            return sys.stdin.read(1)
-        else:
+        _init_non_blocking_terminal()
+
+    else:
+        def getch():
             return None
-
-    _init_non_blocking_terminal()
