@@ -135,7 +135,8 @@ for example:
 
 Gramex offers the following pre-defined handlers:
 
-- `console`: writes information logs to the console
+- `console`: writes information logs to the console in colour
+- `text`: writes information logs to the console without colours (suitable for nohup, redirecting to a file, etc)
 - `access-log` writes information logs to a CSV file `access.csv`
 - `warn-log` writes warnings to a CSV file `warn.csv`
 

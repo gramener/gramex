@@ -66,8 +66,10 @@ log:
     handlers:
         console:
             class: logging.StreamHandler
-            level: DEBUG
-            formatter: colored
+            formatter: console
+        text:
+            class: logging.StreamHandler
+            formatter: text
         access-log:
             class: logging.handlers.TimedRotatingFileHandler
             level: INFO
@@ -91,10 +93,10 @@ log:
             backupCount: 52         # keep only last 52 backups
             delay: true             # do not create file until called
     formatters:
-        console:
+        text:
             format: '%(levelname)1.1s %(asctime)s %(module)s:%(lineno)d %(message)s'
             datefmt: '%m-%b %H:%M:%S'
-        colored:
+        console:
             '()': colorlog.ColoredFormatter
             format: '%(log_color)s%(levelname)-8s%(reset)s%(asctime)s %(bold_yellow)s%(module)s:%(lineno)d%(reset)s %(message)s'
             datefmt: '%m-%b %H:%M:%S'
