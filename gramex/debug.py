@@ -89,10 +89,10 @@ else:
     from select import select
 
     def _init_non_blocking_terminal():
-        fd = sys.stdin.fileno()
-        if not os.isatty(fd):
+        if not sys.__stdin__.isatty():
             return
 
+        fd = sys.__stdin__.fileno()
         old_term = termios.tcgetattr(fd)
         # Support normal-terminal reset at exit
         atexit.register(lambda: termios.tcsetattr(fd, termios.TCSAFLUSH, old_term))
