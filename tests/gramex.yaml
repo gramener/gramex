@@ -282,6 +282,24 @@ url:
         Content-Type: text/plain      # Test header overriding
         Content-Disposition: null     # Test header clearing
 
+  dir/pattern-text:
+    pattern: "/dir/pattern/(.*)/text"
+    handler: FileHandler
+    kwargs:
+      path: "dir/*.txt"
+
+  dir/pattern-html:
+    pattern: "/dir/pattern/(.*)\\.web"
+    handler: FileHandler
+    kwargs:
+      path: "dir/*.html"
+
+  dir/pattern-subdir:
+    pattern: "/dir/pattern/(.*)/sub"
+    handler: FileHandler
+    kwargs:
+      path: "dir/*/text.txt"
+
   # TestDataHandler for Sqlite
   data/csv:
     pattern: /datastore/sqlite/csv/

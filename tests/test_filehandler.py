@@ -154,3 +154,12 @@ class TestFileHandler(TestGramex):
         self.check('/dir/merge.html', text='BETA.HTML\nAlpha.Txt\n', headers={
             'Content-Type': 'text/html'
         })
+
+    def test_pattern(self):
+        self.check('/dir/pattern/alpha/text', path='dir/alpha.txt')
+        self.check('/dir/pattern/text/text', path='dir/text.txt')
+        self.check('/dir/pattern/subdir/text/text', path='dir/subdir/text.txt')
+        self.check('/dir/pattern/text/na/text', code=404)
+        self.check('/dir/pattern/text.na/text', code=404)
+        self.check('/dir/pattern/index.web', path='dir/index.html')
+        self.check('/dir/pattern/subdir/sub', path='dir/subdir/text.txt')

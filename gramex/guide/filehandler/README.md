@@ -1,19 +1,22 @@
 title: Gramex renders files
 
-[gramex.yaml](gramex.yaml) uses the [FileHandler][filehandler]
+[gramex.yaml](../gramex.yaml) uses the [FileHandler][filehandler]
 to display files. This folder uses the following configuration:
 
     url:
-      filehandler:
-        pattern: /filehandler/(.*)            # Any URL starting with /filehandler/
+      markdown:
+        pattern: /$YAMLURL/(.*)               # Any URL under the current gramex.yaml folder
         handler: FileHandler                  # uses this handler
         kwargs:
-          path: filehandler                   # Serve files from filehandler/
+          path: $YAMLPATH                     # Serve files from this YAML file's directory
           default_filename: README.md         # using README.md as default
           index: true                         # List files if README.md is missing
 
-Any file under the `filehandler` folder is shown as is. If a directory has a
+Any file under the current folder is shown as is. If a directory has a
 `README.md`, that is shown by default.
+
+`$YAMLURL` is replaced by the current URL's path (in this case, `/filehandler/`)
+and `$YAMLPATH` is replaced by the directory of `gramex.yaml`.
 
 **Note**: Gramex comes with a `default` URL handler that automatically serves
 files from the home directory of your folder. To prevent that, override the
@@ -58,19 +61,27 @@ You can specify any URL for any file. For example, to map the file
     kwargs:
         path: filehandler/data.csv  # and maps to this file
 
-## MIME types
+You can also map regular expressions to file patterns. For example, to add a
+`.yaml` extension automatically to a path, use:
 
-The URL will be served with the MIME type of the file. CSV files have a MIME
-type `text/csv` and a `Content-Disposition` set to download the file. You
-can override these headers:
+    url:
+      yaml-extensions:
+        pattern: "/yaml/(.*)"         # yaml/anything
+        handler: FileHandler
+        kwargs:
+          path: "*.yaml"              # becomes anything.yaml, replacing the * here
 
-    pattern: /filehandler/data
-    handler: FileHandler
-    kwargs:
-        path: filehandler/data.csv
-        headers:
-            Content-Type: text/plain      # Display as plain text
-            Content-Disposition: none     # Do not download the file
+For example, [yaml/gramex](yaml/gramex) actually renders [gramex.yaml](gramex.yaml).
+
+To replace `.html` extension with `.yaml`, use:
+
+    url:
+      replace-html-with-yaml:
+        pattern: "/(.*)\\.html"       # Note the double backslash instead of single backslash
+        handler: FileHandler
+        kwargs:
+          path: "*.yaml"              # The part in brackets replaces the * here
+
 
 ## File patterns
 
@@ -86,6 +97,22 @@ a higher value to the `priority` (which defaults to 0.)
         handler: FileHandler                        # uses this handler
         kwargs:
           path: .                                   # Serve files from /
+
+
+## MIME types
+
+The URL will be served with the MIME type of the file. CSV files have a MIME
+type `text/csv` and a `Content-Disposition` set to download the file. You
+can override these headers:
+
+    pattern: /filehandler/data
+    handler: FileHandler
+    kwargs:
+        path: filehandler/data.csv
+        headers:
+            Content-Type: text/plain      # Display as plain text
+            Content-Disposition: none     # Do not download the file
+
 
 ## Transforming content
 
@@ -170,8 +197,8 @@ used) transforms:
 
 ## Templates
 
-The `template` renders files as [Tornado templates][template]. To serve a file
-as a Tornado template, use the following configuration:
+The `template` transform renders files as [Tornado templates][template]. To
+serve a file as a Tornado template, use the following configuration:
 
     url:
         template:

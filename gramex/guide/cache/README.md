@@ -1,4 +1,4 @@
-# Caching requests
+title: Caching requests
 
 The `url:` handlers accept a `cache:` key that defines caching behaviour. For
 example, this configuration at [random](random) generates random letters every

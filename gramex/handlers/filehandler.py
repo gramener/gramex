@@ -30,13 +30,15 @@ class FileHandler(BaseHandler):
     '''
     Serves files with transformations. It accepts these parameters:
 
-    :arg string path: Can be one of three things:
+    :arg string path: Can be one of these:
 
         - The filename to serve. For all files matching the pattern, this
           filename is returned.
         - The root directory from which files are served. The first parameter of
           the URL pattern is the file path under this directory. Relative paths
           are specified from where gramex was run.
+        - A wildcard path where `*` is replaced by the URL pattern's first
+          `(..)` group.
         - A list of files to serve. These files are concatenated and served one
           after the other.
 
@@ -101,8 +103,11 @@ class FileHandler(BaseHandler):
     def setup(cls, path, default_filename=None, index=None,
               index_template=None, headers={}, **kwargs):
         super(FileHandler, cls).setup(**kwargs)
+        cls.root, cls.pattern = None, None
         if isinstance(path, list):
             cls.root = [Path(path_item).absolute() for path_item in path]
+        elif '*' in path:
+            cls.pattern = path
         else:
             cls.root = Path(path).absolute()
         cls.default_filename = default_filename
@@ -119,14 +124,19 @@ class FileHandler(BaseHandler):
     def get(self, path=None, include_body=True):
         self.include_body = include_body
         if isinstance(self.root, list):
+            # Concatenate multiple files and serve them one after another
             for path_item in self.root:
                 yield self._get_path(path_item)
         elif path is None:
+            # No group has been specified in the pattern. So just serve root
             yield self._get_path(self.root)
         else:
-            # Collapse all the ../ etc in the URL
+            # Eliminate parent directory references like `../` in the URL
             path = urljoin('/', path)[1:]
-            yield self._get_path(self.root / path if self.root.is_dir() else self.root)
+            if self.pattern:
+                yield self._get_path(Path(self.pattern.replace('*', path)).absolute())
+            else:
+                yield self._get_path(self.root / path if self.root.is_dir() else self.root)
 
     @tornado.gen.coroutine
     def _get_path(self, path):
