@@ -13,6 +13,7 @@ Features for the next 2 releases are below. Bugs to be fixed are at the
 - Visual filtering of data
 - Integration with ActiveDirectory, SAML, OAuth
 
+
 ## 1.0.10 (1 Jul 2016): Data entry
 
 - Data uploads and management
@@ -30,7 +31,6 @@ This is a work-in-progress list of features on the Gramex 1.0 roadmap.
 ## Caching
 
 - Data caching
-- Request caching
 
 ## Collaboration
 
@@ -71,6 +71,7 @@ This is a work-in-progress list of features on the Gramex 1.0 roadmap.
 
 - Performant asynchronous-flushing key-based logging (e.g. who, what, when, etc)
 - Usage tracking: who uses what
+- Log file viewer
 - Feature tracking: what aspects of Gramex is used more
 
 ## Security

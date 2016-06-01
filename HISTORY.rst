@@ -3,6 +3,42 @@
 History
 -------
 
+1.0.8 (2016-06-01)
+~~~~~~~~~~~~~~~~~~
+
+* Gramex supports installation of `apps`_. You can run ``gramex install <app>
+  <url>`` to install an app from a folder, git repo, URL, etc. Apps can define
+  setup scripts (such as bower install, etc.) which will be executed after the
+  app is installed. ``gramex uninstall <app>`` uninstalls the app
+* Apps are run via ``gramex run <app>``. Local apps are run via ``gramex run
+  <app> --target=DIR``. Any command line options (e.g. ``--listen.port=8888`` or
+  ``--browser=true``) will be stored and re-used with the next ``gramex run
+  <app>``.
+* The new `debug`_ module has two timer methods ``gramex.debug.timer`` and
+  ``gramex.debug.Timer``, and a line profiler decorator
+  ``gramex.debug.lineprofile``. These will help profile your functions.
+* Press ``Ctrl+D`` on the Gramex console to start the interactive IPython
+  debugger. This freezes Gramex and lets you run commands inside Gramex.
+* Run ``gramex --debug_exception=true`` to start the debugger when any handler
+  encounters an exception.
+* `FileHandler`_ supports pattern mapping. This makes it easier to flexibly map
+  URL patterns to filenames.
+* ``gramex.yaml`` can use two new variables: ``$GRAMEXPATH`` -- the path where
+  Gramex is installed, and ``$GRAMEXDATA`` -- the path where Gramex apps are
+  installed by default.
+* You can override values after an ``import:`` in ``gramex.yaml``.
+* Console logs are now in colour on all platforms.
+* ``Ctrl+C`` will shutdown Gramex gracefully. You no longer need ``Ctrl+Break``.
+
+There are two changes that may disrupt your code:
+
+* If you have invalid functions in ``gramex.yaml``, Gramex will no longer run.
+  Remove or fix them.
+* Files served by Gramex's ``default`` FileHandler are cached on the browser for
+  1 minute. Press ``Ctrl+F5`` to reload. Override the ``default`` FileHandler to
+  change this behaviour.
+
+
 1.0.7 (2016-05-15)
 ~~~~~~~~~~~~~~~~~~
 
@@ -41,7 +77,7 @@ History
 * Config variables can be computed using the ``function:`` parameter. For
   example, ``VAR: {function: module.fn}`` will run ``module.fn()`` and assign
   ``$VAR`` the returned value.
-* ``FileHandler`` supports an ``index_template:`` key that allows customised
+* `FileHandler`_ supports an ``index_template:`` key that allows customised
   directory listings. It can be any custom-styled HTML file that uses ``$path``
   and ``$body`` respectively to represent the full path to the directory and the
   contents of the directory.
@@ -74,13 +110,13 @@ History
 * ``FunctionHandler`` accepts co-routines for asynchronous processing. Functions
   can also ``yield`` strings that will be immediately written and flushed,
   providing a streaming interface.
-* ``FileHandler`` accepts multiple ``path`` as an array. The output of these
+* `FileHandler`_ accepts multiple ``path`` as an array. The output of these
   files are concatenated after transformated.
-* In the ``FileHandler`` config, you can use ``pattern: /abc`` instead of
+* In the `FileHandler`_ config, you can use ``pattern: /abc`` instead of
   ``pattern: /(abc)`` if you are mapping a single URL to a single path.
-* ``FileHandler`` supports ``function: template`` in the transforms section.
+* `FileHandler`_ supports ``function: template`` in the transforms section.
   This treats the file as a tornado template and renders the output.
-* ``FileHandler`` directory listing looks prettier now.
+* `FileHandler`_ directory listing looks prettier now.
 * ``DataHandler`` supports ``like`` and ``notlike`` operations.
 * The ``watch:`` section of ``gramex.yaml`` allows you to trigger events when
   files are changed.
@@ -90,7 +126,7 @@ History
 ~~~~~~~~~~~~~~~~~~
 
 * ``FunctionHandler`` supports co-routines and works asynchronously
-* ``FileHandler`` is the new name for ``DirectoryHandler`` (both will work)
+* `FileHandler`_ is the new name for ``DirectoryHandler`` (both will work)
 * Implement authentication via Google, Twitter and Facebook OAuth
 * Simpler installation steps
 
@@ -133,6 +169,9 @@ History
 
 .. _Firebase API: https://www.firebase.com/docs/rest/api/
 .. _JSONHandler: https://learn.gramener.com/guide/jsonhandler/
+.. _FileHandler: https://learn.gramener.com/guide/filehandler/
 .. _caching: https://learn.gramener.com/guide/cache/
 .. _scheduler: https://learn.gramener.com/guide/scheduler/
 .. _log: https://learn.gramener.com/guide/config/#logging
+.. _apps: https://learn.gramener.com/guide/apps/
+.. _debug: https://learn.gramener.com/guide/debug/
