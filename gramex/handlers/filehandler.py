@@ -126,7 +126,7 @@ class FileHandler(BaseHandler):
         if isinstance(self.root, list):
             # Concatenate multiple files and serve them one after another
             for path_item in self.root:
-                yield self._get_path(path_item)
+                yield self._get_path(path_item, multipart=True)
         elif path is None:
             # No group has been specified in the pattern. So just serve root
             yield self._get_path(self.root)
@@ -139,7 +139,7 @@ class FileHandler(BaseHandler):
                 yield self._get_path(self.root / path if self.root.is_dir() else self.root)
 
     @tornado.gen.coroutine
-    def _get_path(self, path):
+    def _get_path(self, path, multipart=False):
         # If the file doesn't exist, raise a 404: Not Found
         try:
             path = path.resolve()
@@ -222,4 +222,6 @@ class FileHandler(BaseHandler):
 
         if self.include_body:
             self.write(self.content)
-            self.flush()
+            # Do not lush unless it's multipart. Flushing disables Etag
+            if multipart:
+                self.flush()

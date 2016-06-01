@@ -1,5 +1,6 @@
 import tornado.web
 import tornado.gen
+from types import GeneratorType
 from .basehandler import BaseHandler
 from ..transforms import build_transform
 
@@ -41,10 +42,15 @@ class FunctionHandler(BaseHandler):
         if self.redirect_url is not None:
             self.redirect(self.redirect_url or self.request.headers.get('Referer', '/'))
         else:
+            # Use multipart to check if the respose has multiple parts. Don't
+            # flush unless it's multipart. Flushing disables Etag
+            multipart = isinstance(result, GeneratorType) or len(result) > 1
+
             # build_transform results are iterable. Loop through each item
             for item in result:
                 # Resolve futures and write the result immediately
                 if tornado.concurrent.is_future(item):
                     item = yield item
                 self.write(item)
-                self.flush()
+                if multipart:
+                    self.flush()

@@ -279,4 +279,3 @@ class DataHandler(BaseHandler):
             self.set_header(header_name, header_value)
 
         self.write(self.content)
-        self.flush()

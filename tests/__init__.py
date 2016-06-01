@@ -40,9 +40,12 @@ class TestGramex(unittest.TestCase):
                 self.assertEqual(r.content, file.read(), '%s != %s' % (url, path))
         if headers is not None:
             for header, value in headers.items():
-                if value is None:
+                if value is None or value is False:
                     self.assertFalse(header in r.headers,
                                      '%s: should not have header %s' % (url, header))
+                elif value is True:
+                    self.assertTrue(header in r.headers,
+                                    '%s: should have header %s' % (url, header))
                 else:
                     actual = r.headers[header]
                     self.assertEqual(actual, value,

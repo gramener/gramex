@@ -141,6 +141,8 @@ class ProcessHandler(BaseHandler):
     def _write(self, data):
         with self._write_lock:
             self.write(data)
+            # Flush every time. This disables Etag, but processes have
+            # side-effects, so we should not be caching these requests anyway.
             self.flush()
 
     def on_finish(self):

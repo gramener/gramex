@@ -163,3 +163,11 @@ class TestFileHandler(TestGramex):
         self.check('/dir/pattern/text.na/text', code=404)
         self.check('/dir/pattern/index.web', path='dir/index.html')
         self.check('/dir/pattern/subdir/sub', path='dir/subdir/text.txt')
+
+    def test_etag(self):
+        # Single static files compute an Etag
+        self.check('/dir/index/index.html', headers={'Etag': True})
+        # Directory templates also compute an Etag
+        self.check('/dir/index/', headers={'Etag': True})
+        # Non-existent files do not have an etag
+        self.check('/dir/noindex/', code=404, headers={'Etag': False})
