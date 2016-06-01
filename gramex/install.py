@@ -1,3 +1,59 @@
+'''
+# This docstring is in YAML, and is used by the usage variable.
+# It documents the help for the Gramex command line commands supported.
+
+install: |
+    usage:
+        gramex install <app> <url> [--target=DIR]
+        gramex install <app> --cmd="COMMAND" [--target=DIR]
+
+    "app" is any name you want to locally call the application.
+
+    "url" can be a:
+        - local ZIP file (/path/to/app.zip)
+        - local directory (/path/to/directory)
+        - URL of a ZIP file (https://github.com/user/repo/archive/master.zip)
+
+    target is the directory to install at (defaults to user data directory.)
+
+    cmd is a shell command to run. If it has the word "TARGET" in caps, it is
+    replaced by the target directory.
+
+    After installation, Gramex runs the following commands if possible:
+        - make
+        - powershell -File setup.ps1
+        - bash setup.sh
+        - python setup.py
+        - npm install
+        - bower install
+
+run: |
+    usage: gramex run <app> [--target=DIR] [--dir=DIR] [--<options>=<value>]
+
+    "app" is the name of the locally installed application.
+
+    If "app" is not installed, specify --target=DIR to run from DIR. The next
+    "gramex run app" will automatically run from DIR.
+
+    "dir" is a *sub-directory* under "target" to run from. This is useful if
+    "app" has multiple sub-applications.
+
+    All Gramex command line options can be used. These are saved. For example:
+
+        gramex run app --target=/path/to/dir --listen.port=8899 --browser=true
+
+    ... will preserve the "target", "listen.port" and "browser" values. Running
+    "gramex run app" will re-use these values. To clear values, use "--option="
+
+uninstall: |
+    usage: gramex uninstall <app> [<app> ...]
+
+    "app" is the name of the locally installed application. You can uninstall
+    multiple applications in one command.
+
+    All information about the application is lost. You cannot undo this.
+'''
+
 import os
 import six
 import sys
@@ -15,6 +71,8 @@ from orderedattrdict import AttrDict
 from zipfile import ZipFile
 import gramex
 from gramex.config import ChainConfig, PathConfig, variables, app_log
+
+usage = yaml.load(__doc__)
 
 
 def _rmtree_readonly(remove, path, exc_info):
@@ -210,7 +268,7 @@ def flatten_config(config, base=None):
 def install(cmd, args):
     if len(cmd) < 1:
         apps = (+apps_config).keys()
-        app_log.error('gramex install [%s]', '|'.join(apps))
+        app_log.error('gramex install [%s]\n\n%s', '|'.join(apps), usage['install'].strip())
         return
 
     appname = cmd[0]
@@ -237,7 +295,7 @@ def install(cmd, args):
 def uninstall(cmd, args):
     if len(cmd) < 1:
         apps = (+apps_config['user']).keys()
-        app_log.error('gramex uninstall [%s]', '|'.join(apps))
+        app_log.error('gramex uninstall [%s]\n\n%s', '|'.join(apps), usage['uninstall'].strip())
         return
     if len(cmd) > 1 and args:
         app_log.error('Arguments allowed only with single app. Ignoring %s', ', '.join(cmd[1:]))
@@ -261,7 +319,7 @@ def uninstall(cmd, args):
 def run(cmd, args):
     if len(cmd) < 1:
         apps = (+apps_config['user']).keys()
-        app_log.error('gramex run [%s]', '|'.join(apps))
+        app_log.error('gramex run [%s]\n\n%s', '|'.join(apps), usage['run'].strip())
         return
     if len(cmd) > 1:
         app_log.error('Can only run one app. Ignoring %s', ', '.join(cmd[1:]))
