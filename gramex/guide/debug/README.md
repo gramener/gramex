@@ -31,6 +31,7 @@ Here are some useful things you can do on the debugger:
 
 - Break at a function: `b <function>`, then run by typing `c`.
 - Reload a module. `import(<module>); reload(<module>)`
+- Print Gramex URL configuration. `import gramex, yaml; p yaml.dump(gramex.conf.url)`
 
 Useful commands you can use on the debugger:
 
