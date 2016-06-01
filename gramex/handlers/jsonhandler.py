@@ -136,6 +136,6 @@ class JSONHandler(BaseHandler):
         if self.path and self.changed:
             # Don't use encoding when reading JSON. We use ensure_ascii=True.
             # When handling Py2 & Py3, just ignoring encoding works best.
-            with open(self.path, mode='wb') as handle:
+            with open(self.path, mode='w') as handle:       # noqa
                 json.dump(_datastore.get(self.path), handle, **self.json_kwargs)
             _loaded[self.path] = time.time()
