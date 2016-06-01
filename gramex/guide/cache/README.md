@@ -1,5 +1,49 @@
 title: Caching requests
 
+Responses can be cached on the browser or the server. This section explains how
+both work.
+
+# Browser caching
+
+The `Cache-Control:` header supersedes previous caching headers (e.g. Expires).
+Modern browsers support Cache-Control. This is all we need.
+
+Here is an example of how to use `Cache-Control:`:
+
+    url:
+        pattern: /$YAMLURL/path       # Pick any pattern
+        handler: FileHandler          # and handler
+        kwargs:
+          path: $YAMLPATH/path        # Pass it any arguments
+          headers:                    # Define HTTP headers
+            Cache-Control: max-age=3600   # Keep page in browser cache for 1 hour (3600 seconds)
+
+The cache is used by browsers as well as proxies. You can also specify these
+additional options:
+
+- `no-store`: Always check with the server. Always download the response again.
+- `no-cache`: Always check with the server, but store result. Download if response has changed.
+- `private`: Cache on browsers, not intermediate proxies. The data is sensitive.
+- `public`: Cache even if the HTTP status code is an error, or if HTTP authentication is used.
+
+Here are some typical Cache-Control headers. The durations given here are
+indicative. Change them based on your needs.
+
+- **External libraries**: cache publicly for 10 years. They never change.
+  <br>`Cache-Control: public, max-age=315360000`
+- **Static files**: cache publicly for a day. They change rarely.
+  <br>`Cache-Control: public, max-age=86400`
+- **Shared dashboards**: cache publicly for an hour. Data refreshes slowly.
+  <br>`Cache-Control: public, max-age=3600`
+- **User dashboards**: cache *privately* for an hour.
+  <br>`Cache-Control: private, max-age=3600`
+
+To [reload ignoring the cache](http://stackoverflow.com/a/385491/100904), press
+Ctrl-F5 on the browser.
+
+
+# Server caching
+
 The `url:` handlers accept a `cache:` key that defines caching behaviour. For
 example, this configuration at [random](random) generates random letters every
 time it is called:
