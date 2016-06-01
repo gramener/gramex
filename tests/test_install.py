@@ -1,5 +1,4 @@
 import os
-import shutil
 import requests
 import unittest
 from pathlib import Path
@@ -40,7 +39,6 @@ class TestInstall(unittest.TestCase):
         self.assertTrue('cmd' in conf[appname] or 'url' in conf[appname])
         self.assertTrue('installed' in conf[appname])
         self.assertTrue('time' in conf[appname].installed)
-
 
     def check_uninstall(self, appname):
         '''Check that appname exists. Uninstall appname. It should be removed'''
@@ -100,12 +98,6 @@ class TestInstall(unittest.TestCase):
         self.assertEqual(result.cwd, self.appdir('run-app/dir1/'))
         self.assertEqual(result.opts.get('browser'), False)
         self.check_uninstall('run-app')
-
-    def test_dir(self):
-        dirpath = os.path.join(folder, 'dir', 'subdir')
-        install(['dir'], AttrDict(url=dirpath))
-        self.check_files('dir', os.listdir(dirpath))
-        self.check_uninstall('dir')
 
     def test_dir(self):
         dirpath = os.path.join(folder, 'dir', 'subdir')

@@ -6,7 +6,6 @@ import json
 import requests
 from gramex import conf
 from six.moves import http_client
-from orderedattrdict import AttrDict
 from . import server, tempfiles, TestGramex
 
 
