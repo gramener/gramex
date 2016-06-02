@@ -101,7 +101,7 @@ log:
             class: logging.handlers.TimedRotatingFileHandler
             level: INFO
             formatter: file         # save it as a CSV file
-            filename: access.log    # file name to save as
+            filename: $GRAMEXDATA/logs/access.csv    # file name to save as
             encoding: utf-8         # encoded as UTF-8
             when: W0                # rotate the log file weekly
             interval: 1             # every single week
@@ -112,7 +112,7 @@ log:
             class: logging.handlers.TimedRotatingFileHandler
             level: WARN
             formatter: file         # save it as a CSV file
-            filename: warn.log      # file name to save as
+            filename: $GRAMEXDATA/logs/warn.csv      # file name to save as
             encoding: utf-8         # encoded as UTF-8
             when: W0                # rotate the log file weekly
             interval: 1             # every single week

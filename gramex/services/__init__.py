@@ -13,6 +13,7 @@ exists, a warning is raised.
 '''
 from __future__ import unicode_literals
 
+import os
 import yaml
 import atexit
 import signal
@@ -55,6 +56,13 @@ def version(conf):
 
 def log(conf):
     "Set up logging using Python's standard logging.config.dictConfig()"
+    # Create directories for directories mentioned by handlers if logs are used
+    active_handlers = set(conf.get('root', {}).get('handlers', []))
+    for handler, handler_conf in conf.get('handlers', {}).items():
+        if handler in active_handlers and 'filename' in handler_conf:
+            path = os.path.dirname(handler_conf.filename)
+            if not os.path.exists(path):
+                os.makedirs(path)
     logging.config.dictConfig(conf)
 
 
