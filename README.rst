@@ -26,6 +26,8 @@ On **Windows or Mac** (or for manual install on Linux):
    (replace ``master`` with ``dev`` for the development version)
 4. Optional: Install `Git for Windows`_ and `node`_. Then run ``npm install bower``
 
+.. --ignore-installed is required to work around an Anaconda bug: https://github.com/pypa/pip/issues/2751#issuecomment-165390180
+
 Uninstall
 ~~~~~~~~~
 
