@@ -139,3 +139,4 @@ class JSONHandler(BaseHandler):
             with open(self.path, mode='w') as handle:       # noqa
                 json.dump(_datastore.get(self.path), handle, **self.json_kwargs)
             _loaded[self.path] = time.time()
+        super(JSONHandler, self).on_finish()

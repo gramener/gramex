@@ -16,7 +16,7 @@ class AuthHandler(RequestHandler):
     It does not support caching or get_current_user().
     '''
     @classmethod
-    def setup(self, **kwargs):
+    def setup(cls, **kwargs):
         utils.check_old_certs()
 
 

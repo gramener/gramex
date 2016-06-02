@@ -149,6 +149,7 @@ class ProcessHandler(BaseHandler):
         'Close all open handles after the request has finished'
         for target, handle in self.handles.items():
             handle.close()
+        super(ProcessHandler, self).on_finish()
 
 
 class _Subprocess(object):
