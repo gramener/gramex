@@ -3,7 +3,7 @@ import tornado.web
 from tornado.web import RequestHandler
 from tornado.escape import json_encode, json_decode
 from tornado.auth import GoogleOAuth2Mixin, FacebookGraphMixin, TwitterMixin
-from .. import utils
+import gramex.config
 
 
 def now():
@@ -17,7 +17,7 @@ class AuthHandler(RequestHandler):
     '''
     @classmethod
     def setup(cls, **kwargs):
-        utils.check_old_certs()
+        gramex.config.check_old_certs()
 
 
 class GoogleAuth(AuthHandler, GoogleOAuth2Mixin):
