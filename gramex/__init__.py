@@ -106,7 +106,7 @@ def callback_commandline(commands):
         elif base_command == 'run':
             from gramex.install import run
             return run, kwargs
-        raise NotImplementedError('Unknown gramex command: %s' % ' '.join(cmd))
+        raise NotImplementedError('Unknown gramex command: %s' % ' '.join(base_command))
 
     # Use current dir as base (where gramex is run from) if there's a gramex.yaml.
     # Else use source/guide, and point the user to the welcome screen
