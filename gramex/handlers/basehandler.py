@@ -1,11 +1,11 @@
 import tornado.gen
-from collections import OrderedDict
-from gramex import conf, __version__ as version
+from orderedattrdict import AttrDict
 from tornado.web import RequestHandler
 from tornado.escape import json_decode
+from .. import conf, __version__
 from ..transforms import build_transform
 
-server_header = 'Gramex/%s' % version
+server_header = 'Gramex/%s' % __version__
 
 
 class BaseHandler(RequestHandler):
@@ -19,12 +19,12 @@ class BaseHandler(RequestHandler):
         for pattern, trans in transform.items():
             cls.transform[pattern] = {
                 'function': build_transform(
-                    trans, vars=OrderedDict((('content', None), ('handler', None))),
+                    trans, vars=AttrDict((('content', None), ('handler', None))),
                     filename='url>%s' % cls.name),
                 'headers': trans.get('headers', {}),
                 'encoding': trans.get('encoding'),
             }
-        if conf.app.get('debug_exception', False):
+        if conf.app.get('debug', {}).get('exception', False):
             cls.log_exception = cls.debug_exception
 
     def initialize(self, **kwargs):

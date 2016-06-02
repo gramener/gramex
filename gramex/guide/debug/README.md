@@ -14,8 +14,9 @@ There are many ways to start the debugger:
    run until this line and start the debugger.
 1. When Gramex is running, you press `Ctrl+D` on the console at any time. Python
    will start the debugger.
-1. Run `gramex --debug_exception=true`. When there's an exception, Python will
-   start the debugger at the line before the error.
+1. Run `gramex --debug.exception=true`. When there's an exception, Python will start the
+   debugger at the line before the error. (This was `debug_exception=True` in
+   Gramex 1.0.7.)
 1. Run Gramex via `python -m pdb /path/to/gramex/__main__.py`.
 
 You can also use [WinPDB](http://winpdb.org/docs/) -- a cross-platform GUI for
