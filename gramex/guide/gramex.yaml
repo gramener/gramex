@@ -43,6 +43,11 @@ url:
                     encoding: utf-8
                     headers:
                         Content-Type: text/html
+    root-config:
+        pattern: /$YAMLURL/root.gramex.yaml
+        handler: FileHandler
+        kwargs:
+            path: $GRAMEXPATH/gramex.yaml
     guide-markdown:
         pattern: /$YAMLURL/(roadmap)
         handler: FileHandler

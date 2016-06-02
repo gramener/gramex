@@ -21,7 +21,7 @@ Here's a simple `gramex.yaml` that serves the file `html.html` as the home page.
             kwargs:                 # ... and passes it these arguments:
                 path: home.html     # Use home.html as the path to serve
 
-Here is a full [reference of gramex.yaml configurations](reference).
+Here is a full [reference of gramex.yaml configurations](../root.gramex.yaml).
 
 # Configuration syntax
 
