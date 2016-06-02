@@ -49,6 +49,11 @@ app:
         facebook_api_key: ...           # For Facebook login
         facebook_secret: ...            # For Facebook login
 
+    session:
+        type: json                      # Type of store to use: hdf5, json or memory
+        path: $GRAMEXDATA/session.json  # Path to the store (ignored for memory)
+        expiry: 31                      # Session cookies expiry in days
+
 
 # Define system caches.
 # This section MUST be before the url: section. Otherwise, the urls cannot use the cache
