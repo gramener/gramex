@@ -278,6 +278,9 @@ def url(conf):
     for name, spec in specs:
         urlspec = AttrDict(spec)
         handler = locate(spec.handler, modules=['gramex.handlers'])
+        if handler is None:
+            logging.error('Cannot locate handler %s in url.%s', spec.handler, name)
+            continue
 
         # Create a subclass of the handler with additional attributes.
         class_vars = {'name': name, 'conf': spec}
