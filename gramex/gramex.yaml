@@ -35,7 +35,7 @@ app:
         key_version: 2                  # Cookie encryption version. 2 is the latest
 
         # Template parameters
-        autoescape: True                # Escape HTML tags in templates
+        autoescape: xhtml_escape        # Escape HTML tags in templates
         template_path: .                # Default location of templates (not currently used)
         static_path: './static'         # Local path for static files (not currently used)
         static_url_prefix: '/static/'   # URL prefix for static files (not currently used)
