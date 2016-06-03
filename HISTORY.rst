@@ -19,7 +19,7 @@ History
   ``gramex.debug.lineprofile``. These will help profile your functions.
 * Press ``Ctrl+D`` on the Gramex console to start the interactive IPython
   debugger. This freezes Gramex and lets you run commands inside Gramex.
-* Run ``gramex --debug_exception=true`` to start the debugger when any handler
+* Run ``gramex --debug.exception=true`` to start the debugger when any handler
   encounters an exception.
 * `FileHandler`_ supports pattern mapping. This makes it easier to flexibly map
   URL patterns to filenames.
