@@ -145,10 +145,12 @@ See the output at [fetch?x=0&x=1&x=2](fetch?x=0&x=1&x=2).
 The simplest way to call *any blocking function* asynchronously is to use a
 [ThreadPoolExecutor][ThreadPoolExecutor]. For example, usng this code in a
 `FunctionHandler` will run `slow_calculation` in a separate thread without
-blocking Gramex.:
+blocking Gramex. Gramex provides a global threadpool that you can use. It's at
+`gramex.services.info.threadpool`.
 
     :::python
-    result = yield thread_pool.submit(slow_calculation, *args, **kwargs)
+    from gramex.services import info
+    result = yield info.threadpool.submit(slow_calculation, *args, **kwargs)
 
 [ThreadPoolExecutor]: https://docs.python.org/3/library/concurrent.futures.html#concurrent.futures.ThreadPoolExecutor
 
@@ -156,13 +158,13 @@ You can run execute multiple steps in parallel and consolidate their result as
 well. For example:
 
     :::python
-    thread_pool = concurrent.futures.ThreadPoolExecutor(4)
+    from gramex.services import info
 
     @tornado.gen.coroutine
     def calculate(data1, data2):
         group1, group2 = yield [
-            thread_pool.submit(data1.groupby, ['category']),
-            thread_pool.submit(data2.groupby, ['category']),
+            info.threadpool.submit(data1.groupby, ['category']),
+            info.threadpool.submit(data2.groupby, ['category']),
         ]
         result = thead_pool.submit(pd.concat, [group1, group2])
         raise tornado.gen.Return(result)
