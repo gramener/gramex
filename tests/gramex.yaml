@@ -20,6 +20,15 @@ cache:
     # We could test more disk caches, but they're slow
 
 url:
+  invalid-handler:
+    pattern: /invalid-handler
+    handler: NonExistent
+  invalid-function:
+    pattern: /invalid-function
+    handler: FunctionHandler
+    kwargs:
+        function: nonexistent
+
   # TestGramex
   pathdepth1: {pattern: "/path/.*",       handler: "gramex.handlers.FunctionHandler", kwargs: {function: "str", args: ["/path/.*"],       }}
   pathdepth2: {pattern: "/path/file",     handler: FunctionHandler, kwargs: {function: str, args: ["/path/file"],     }}

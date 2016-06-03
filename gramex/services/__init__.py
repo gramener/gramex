@@ -279,7 +279,7 @@ def url(conf):
         urlspec = AttrDict(spec)
         handler = locate(spec.handler, modules=['gramex.handlers'])
         if handler is None:
-            logging.error('Cannot locate handler %s in url.%s', spec.handler, name)
+            app_log.error('url %s: ignoring missing handler %s', name, spec.handler)
             continue
 
         # Create a subclass of the handler with additional attributes.
@@ -294,7 +294,10 @@ def url(conf):
         # If there's a setup method, call it to initialize the class
         kwargs = urlspec.get('kwargs', {})
         if hasattr(handler, 'setup'):
-            urlspec.handler.setup(**kwargs)
+            try:
+                urlspec.handler.setup(**kwargs)
+            except Exception:
+                app_log.exception('url %s: setup exception in handler %s', name, spec.handler)
 
         handlers.append(tornado.web.URLSpec(
             name=name,
