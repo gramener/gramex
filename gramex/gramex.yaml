@@ -42,12 +42,6 @@ app:
 
         # Login parameters
         login_url: /login               # URL used to log in
-        twitter_consumer_key: ...       # For Twitter login
-        twitter_consumer_secret: ...    # For Twitter login
-        google_consumer_key: ...        # For Google login
-        google_consumer_secret: ...     # For Google login
-        facebook_api_key: ...           # For Facebook login
-        facebook_secret: ...            # For Facebook login
 
     session:
         type: json                      # Type of store to use: hdf5, json or memory
