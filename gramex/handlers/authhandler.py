@@ -5,6 +5,7 @@ import tornado.gen
 from tornado.escape import json_encode, json_decode
 from tornado.auth import GoogleOAuth2Mixin, FacebookGraphMixin, TwitterMixin
 from gramex.config import check_old_certs, app_log
+from gramex.services import info
 from .basehandler import BaseHandler
 
 
@@ -103,9 +104,10 @@ def async(method, *args, **kwargs):
 
 class LDAPAuth(AuthHandler):
     errors = {
-        'no-user': 'No user named %s',
-        'no-pass': 'Invalid credentials for %s',
-        'other': 'Could not log in %s',
+        'search': 'Unable to search for {user} on {url}',
+        'user': 'No user named {user}',
+        'password': 'Invalid credentials for {user}',
+        'other': 'Could not log in {user}',
     }
 
     @classmethod
@@ -120,39 +122,46 @@ class LDAPAuth(AuthHandler):
                 app_log.exception('LDAP:%s: invalid option %s=%s', cls.name, key, value)
         cls.template = kwargs['template']
         cls.base = kwargs['base']
-        cls.ldap = ldap.initialize(kwargs['url'])
-        if kwargs.get('tls'):
-            try:
-                # setup() is not a coroutine, so stick to the synchronous method
-                cls.ldap.start_tls_s()
-            except ldap.CONNECT_ERROR:
-                app_log.exception('LDAP:%s: cannot connect via TLS' % cls.name)
+        cls.url = kwargs['url']
+        cls.ldap = ldap.initialize(cls.url)
         cls.user_attr = kwargs.get('user', 'uid')
+        cls.tls_checked = set()
+        cls.errors.update(kwargs.get('errors', {}))
 
     def get(self):
-        self.render(self.template, error=None)
+        self.render(self.template, error=None, user=None)
 
     @tornado.gen.coroutine
     def post(self):
         user, password = self.get_argument('user'), self.get_argument('password')
 
-        def report_error(level, error, exc_info=False):
+        def report_error(level, code, exc_info=False):
+            error = self.errors[code].format(url=self.url, user=user)
+            app_log.log(level, 'LDAP: ' + error, exc_info=exc_info)
             self.render(self.template, error=error, user=user)
-            app_log.log(level, 'LDAP: ' + self.errors[error] % user, exc_info=exc_info)
+            raise tornado.gen.Return()
 
         import ldap
-        udn = yield async(self.ldap.search, self.base, ldap.SCOPE_SUBTREE,
-                          '(%s=%s)' % (self.user_attr, user))
-        if not udn:
-            report_error(logging.INFO, error='no-user')
-        else:
+        if not self.tls_checked and self.conf.kwargs.get('tls'):
+            self.tls_checked.add(True)
             try:
-                yield async(self.ldap.simple_bind, udn[0][0], password)
-            except ldap.INVALID_CREDENTIALS, ldap.UNWILLING_TO_PERFORM:
-                app_log.info('LDAP: ' + self.errors['no-pass'])
-                report_error(logging.DEBUG, error='no-pass', exc_info=True)
-            except ldap.LDAPError:
-                report_error(logging.INFO, error='other', exc_info=True)
-            else:
-                self.session['user'] = user
-                self.redirect('.')
+                yield info.threadpool.submit(self.ldap.start_tls_s)
+            except Exception:
+                app_log.error('LDAP: Cannot connect securely to %s', self.url, exc_info=True)
+
+        try:
+            user_dn = yield async(self.ldap.search, self.base, ldap.SCOPE_SUBTREE,
+                                  '(%s=%s)' % (self.user_attr, user))
+        except ldap.LDAPError:
+            report_error(logging.ERROR, code='search', exc_info=True)
+        if not user_dn:
+            report_error(logging.INFO, code='user')
+        try:
+            yield async(self.ldap.simple_bind, user_dn[0][0], password)
+        except ldap.INVALID_CREDENTIALS, ldap.UNWILLING_TO_PERFORM:
+            report_error(logging.INFO, code='password', exc_info=False)
+        except ldap.LDAPError:
+            report_error(logging.ERROR, code='other', exc_info=True)
+
+        self.session['user'] = user_dn[0]
+        self.redirect('.')
