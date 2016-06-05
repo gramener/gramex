@@ -6,7 +6,7 @@ To start you off, there's a `database.sqlite3` in this application folder. (Gram
 
 The `DataHandler` below exposes the flags table in `database.sqlite3` at the URL [flags](flags).
 
-<iframe src="gramex.yaml"></iframe>
+<iframe frameborder="0" src="gramex.yaml"></iframe>
 
 Once we have this setup, we can query the data with a combination of parameters like `select`, `where`, `groupby`, `agg`, `offset`, `limit`, `sort`
 

@@ -25,7 +25,7 @@ the result as `application/json`. [calculations.py](calculations.py) defines
 
 You can see all configurations used in this page in [gramex.yaml](gramex.yaml):
 
-<iframe src="gramex.yaml"></iframe>
+<iframe frameborder="0" src="gramex.yaml"></iframe>
 
 ## Passing arguments
 

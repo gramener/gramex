@@ -5,7 +5,7 @@ title: Gramex writes data
 
 The following configuration creates a REST API endpoint at [data/](data/):
 
-<iframe src="gramex.yaml"></iframe>
+<iframe frameborder="0" src="gramex.yaml"></iframe>
 
 **NOTE**: The examples below use the [Fetch API][fetch-api] which is not
 available on Internet Explorer. Use [jQuery.ajax][jquery-ajax] instead.

@@ -6,9 +6,6 @@ app:
     # auth: True
     login_url: /login/google/
     cookie_secret: COOKIE_NAME
-    google_oauth:
-      key: 561570650771-o7fc5aga4c80obn8vdt4bt2mi9crtodr.apps.googleusercontent.com
-      secret: 77z5fx1SxXmrjJ_R7vlAIXcf
     autoreload: False
     debug: False
     xsrf_cookies: False

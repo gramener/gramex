@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LDAP Login page</title>
+  <link rel="stylesheet" href="../style.css">
+  <style>
+  label {
+    display: block;
+    margin-top: 1.5em;
+    text-transform: uppercase;
+    font-size: 75%;
+    letter-spacing: 0.1em;
+  }
+  input, button, .alert {
+    display: block;
+    margin: 4px -8px;
+    padding: 4px 8px;
+  }
+  button {
+    margin-top: 1.5em;
+  }
+  .content {
+    width: 100%;
+  }
+  .alert {
+    background-color: #fee;
+    margin-top: 1.5em;
+  }
+  .alert h2 {
+    margin-top: 0;
+  }
+  </style>
+</head>
+<body class="container">
+
+  <nav class="menu">
+    <h1><a href=".">Back to Auth</a></h1>
+  </nav>
+
+  <section class="content">
+    <h1>LDAP login</h1>
+
+    {% set host = handler.conf.kwargs.host %}
+    <p>This form will connect to <code>{{ host }}</code>.</p>
+    {% if host.endswith('freeipa.org') %}
+      <p><a href="http://www.freeipa.org/page/Demo">See list of logins</a>. You can log in as <code>admin</code> with password <code>Secret123</code>.</p>
+    {% elif host.endswith('forumsys.com') %}
+      <p><a href="http://www.forumsys.com/en/tutorials/integration-how-to/ldap/online-ldap-test-server/">See list of logins</a>. You can log in as <code>euler</code> with password <code>password</code>.</p>
+    {% end %}
+
+    <form method="POST">
+      <input type="hidden" name="_xsrf" value="{{ handler.xsrf_token }}">
+      <label for="user">Username</label>
+      <input name="user" placeholder="LDAP username">
+      <label for="password">Password</label>
+      <input name="password" type="password" placeholder="LDAP password">
+      <button type="submit">Log in</button>
+    </form>
+
+    {% if error %}
+      <div class="alert">
+        <h2>Error logging in</h2>
+        <p><strong>code</strong> {{ error['code'] }}</p>
+        <p><strong>error</strong> {{ error['error'] }}</p>
+      </div>
+    {% end %}
+  <section>
+
+</body>
+</html>

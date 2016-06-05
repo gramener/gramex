@@ -19,11 +19,12 @@ pre, code {
     font-family: Consolas, monospace;
 }
 
-pre {
+/* IFrames are typically used as examples. They take up full width */
+pre, iframe {
     color: #fff;
     padding: 0.5rem 1rem;
     margin: 0 -1rem;
-    overflow-x: auto;
+    overflow: auto;
     width: 50em;
 }
 
@@ -39,10 +40,9 @@ pre code {
     padding: 0;
 }
 
-/* IFrames are typically used as examples. They take up full width */
 iframe {
-    width: 100%;
     height: 10rem;
+    background-color: #eee;
 }
 
 /* Table of contents counter and display */
@@ -59,6 +59,17 @@ iframe {
 
 /* Provide enough space on top of all headings */
 h1 { margin-top: 3rem; }
+
+/* Form styling */
+button, input, select, textarea {
+  font-family: Roboto, "Segoe UI", sans-serif;
+  font-size: 100%;
+  margin: 0;
+  -webkit-box-sizing: border-box;
+     -moz-box-sizing: border-box;
+          box-sizing: border-box;
+}
+
 
 /* Lay out the page */
 

@@ -2,7 +2,7 @@ title: Schedule tasks
 
 The `schedule:` section in [gramex.yaml](gramex.yaml) lets you run tasks on startup or at specific times. Here is an example:
 
-<iframe src="gramex.yaml"></iframe>
+<iframe frameborder="0" src="gramex.yaml"></iframe>
 
 Each named schedule section has the following keys:
 

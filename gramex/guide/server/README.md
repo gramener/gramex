@@ -24,4 +24,4 @@ You can include other files from here. This page includes an image at
 
 Below are the contents of [static/plain.txt](static/plain.txt): a plain text file.
 
-<iframe src="static/plain.txt"></iframe>
+<iframe frameborder="0" src="static/plain.txt"></iframe>
