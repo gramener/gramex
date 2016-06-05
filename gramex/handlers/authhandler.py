@@ -108,75 +108,46 @@ def async(method, *args, **kwargs):
 
 class LDAPAuth(AuthHandler):
     errors = {
-        'search': 'Unable to search for {user} on {url}',
-        'user': 'No user named {user}',
-        'password': 'Invalid credentials for {user}',
-        'other': 'Could not log in {user}',
+        'auth': 'Could not log in user',
+        'conn': 'Connection error at {host}',
+        'search': 'Cannot get attributes for user on {host}',
     }
 
-    @classmethod
-    def setup(cls, **kwargs):
-        super(LDAPAuth, cls).setup(**kwargs)
-
-        import ldap
-        for key, value in kwargs.get('options', {}).items():
-            try:
-                ldap.set_option(getattr(ldap, key, key), getattr(ldap, value, value))
-            except Exception:
-                app_log.exception('LDAP:%s: invalid option %s=%s', cls.name, key, value)
-        cls.template = kwargs['template']
-        cls.base = kwargs['base']
-        cls.url = kwargs['url']
-        cls.ldap = ldap.initialize(cls.url)
-        cls.user_attr = kwargs.get('user', 'uid')
-        cls.tls_checked = set()
-        cls.errors.update(kwargs.get('errors', {}))
-
     def get(self):
-        self.render(self.template, error=None, user=None)
+        self.render(self.conf.kwargs.template, error=None, user=None)
+
+    def report_error(self, code, exc_info=False):
+        error = self.errors[code].format(host=self.conf.kwargs.host, args=self.request.arguments)
+        app_log.error('LDAP: ' + error, exc_info=exc_info)
+        self.render(self.conf.kwargs.template, error={'code': code, 'error': error})
+        raise tornado.gen.Return()
 
     @tornado.gen.coroutine
     def post(self):
-        user, password = self.get_argument('user'), self.get_argument('password')
+        import ldap3
+        kwargs = self.conf.kwargs
 
-        def report_error(level, code, exc_info=False):
-            error = self.errors[code].format(url=self.url, user=user)
-            app_log.log(level, 'LDAP: ' + error, exc_info=exc_info)
-            self.render(self.template, error=error, user=user)
-            raise tornado.gen.Return()
-
-        import ldap
-
-        # As setup() is not a coroutine, do a one-time TLS setup
-        if not self.tls_checked and self.conf.kwargs.get('tls'):
-            # Do not repeat the TLS check again
-            self.tls_checked.add(True)
-            try:
-                yield info.threadpool.submit(self.ldap.start_tls_s)
-            except Exception:
-                # If we can't connect via TLS, that's OK, just continue
-                app_log.error('LDAP: Cannot connect securely to %s', self.url, exc_info=True)
-
-        # Search for the given user
+        # First, bind the server with the provided user ID and password.
+        q = {key: self.get_argument(key) for key in self.request.arguments}
+        server = ldap3.Server(kwargs.host, kwargs.get('port'), kwargs.get('use_ssl', False))
+        conn = ldap3.Connection(server, kwargs.user.format(**q), kwargs.password.format(**q))
         try:
-            user_dn = yield async(self.ldap.search, self.base, ldap.SCOPE_SUBTREE,
-                                  '(%s=%s)' % (self.user_attr, user))
-        except ldap.LDAPError:
-            report_error(logging.ERROR, code='search', exc_info=True)
-        if not user_dn:
-            report_error(logging.INFO, code='user')
+            result = yield info.threadpool.submit(conn.bind)
+            if result is False:
+                self.report_error('auth', exc_info=False)
+        except ldap3.LDAPException:
+            self.report_error('conn', exc_info=True)
 
-        # Check for the password
+        # We now have a valid user. Get additional attributes
+        self.session['user'] = {'dn': conn.user}
         try:
-            yield async(self.ldap.simple_bind, user_dn[0][0], password)
-        except (ldap.INVALID_CREDENTIALS, ldap.UNWILLING_TO_PERFORM):
-            report_error(logging.INFO, code='password', exc_info=False)
-        except ldap.LDAPError:
-            report_error(logging.ERROR, code='other', exc_info=True)
+            result = yield info.threadpool.submit(conn.search, conn.user, '(objectClass=*)',
+                                                  attributes=ldap3.ALL_ATTRIBUTES)
+        except ldap3.LDAPException:
+            self.report_error('search', exc_info=True)
+        if result and len(conn.entries) > 0:
+            # Attributes may continue binary data. Get the result as JSON and then use the dict
+            import json
+            self.session['user'].update(json.loads(conn.entries[0].entry_to_json()))
 
-        # The return value is a list of search results. Take the first element.
-        # This is a tuple (dn, {user_info}). Just take the user_info dict, and
-        # add the dn as an item.
-        self.session['user'] = user_dn[0][1]
-        self.session['user']['dn'] = user_dn[0][0]
         self.redirect(self.session.get('next', '/'))
