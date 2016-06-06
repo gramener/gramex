@@ -66,6 +66,12 @@ url:
     kwargs:
       function: utils.params_as_json
 
+  func/attributes:
+    pattern: /func/attributes
+    handler: FunctionHandler
+    kwargs:
+        function: utils.attributes
+
   func/composite:
     pattern: /func/composite
     handler: FunctionHandler

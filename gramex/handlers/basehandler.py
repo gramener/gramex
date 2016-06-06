@@ -175,7 +175,7 @@ class BaseHandler(RequestHandler):
         The session object is an AttrDict. Ensure that it contains JSON
         serializable objects.
         '''
-        if self._session is None:
+        if getattr(self, '_session', None) is None:
             session_id = self.get_secure_cookie('sid', max_age_days=self._session_days)
             # If there's no session id cookie "sid", create a random 32-char cookie
             if session_id is None:
@@ -191,7 +191,7 @@ class BaseHandler(RequestHandler):
 
     def save_session(self):
         '''Persist the session object as a JSON'''
-        if self._session is None:
+        if getattr(self, '_session', None) is None:
             return
         # If the JSON representation of the session object has changed, save it
         session_json = json.dumps(self._session, ensure_ascii=True, separators=(',', ':'))

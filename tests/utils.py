@@ -35,6 +35,14 @@ def params_as_json(*args, **kwargs):
         return result
 
 
+def attributes(self):
+    assert self.name == 'func/attributes'
+    assert self.conf.pattern == '/func/attributes'
+    assert self.kwargs['function'] == 'utils.attributes'
+    assert self.session.id
+    return 'OK'
+
+
 def iterator(handler):
     for val in handler.get_arguments('x'):
         yield str(val)

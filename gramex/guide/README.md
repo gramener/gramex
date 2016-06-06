@@ -57,6 +57,10 @@ classes: toc
 
 **Exercise**: Make Gramex log a message when a file is changed.
 
+## [Writing handlers](handlers/)
+
+**Exercise**: TBD
+
 ## [Deployment patterns](deploy/)
 
 **Exercise**: TBD

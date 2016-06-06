@@ -25,6 +25,7 @@
       <li><a href="/$GUIDE_ROOT/chart/">Charts</a></li>
       <li><a href="/$GUIDE_ROOT/scheduler/">Schedule tasks</a></li>
       <li><a href="/$GUIDE_ROOT/watch/">Watch files</a></li>
+      <li><a href="/$GUIDE_ROOT/handlers/">Write handlers</a></li>
       <li><a href="/$GUIDE_ROOT/deploy/">Deployment patterns</a></li>
     </ul>
   </nav>

@@ -20,3 +20,10 @@ class TestURLNormalization(TestGramex):
     def test_url_normalization(self):
         self.check('/path/norm1', text='/path/norm1')
         self.check('/path/norm2', text='/path/norm2')
+
+
+class TestAttributes(TestGramex):
+    'Ensure that BaseHandler subclasses have relevant attributes'
+
+    def test_attributes(self):
+        self.check('/func/attributes', code=200)

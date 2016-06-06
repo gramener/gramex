@@ -1,0 +1,10 @@
+url:
+    handler/custom:
+        pattern: /$YAMLURL/custom
+        handler: handlerutil.CustomHandler
+
+    handler/setup:
+        pattern: /$YAMLURL/setup
+        handler: handlerutil.SetupHandler
+        kwargs:
+            name: ABC
