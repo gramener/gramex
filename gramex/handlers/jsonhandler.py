@@ -29,7 +29,7 @@ class JSONHandler(BaseHandler):
     def parse_body_as_json(self):
         try:
             return tornado.escape.json_decode(self.request.body)
-        except json.decoder.JSONDecodeError:
+        except ValueError:
             raise tornado.web.HTTPError(status_code=400, log_message='Bad JSON', reason='Bad JSON')
 
     def jsonwalk(self, jsonpath, create=False):
