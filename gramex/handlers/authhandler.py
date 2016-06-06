@@ -15,48 +15,6 @@ class AuthHandler(BaseHandler):
         super(AuthHandler, cls).setup(**kwargs)
         check_old_certs()
 
-        # Set up redirect methods
-        cls._redirects = []
-        for key, value in kwargs.get('redirect', {}).items():
-            if key == 'query':
-                cls._redirects.append(lambda h, v=value: h.get_argument(v, None))
-            elif key == 'header':
-                cls._redirects.append(lambda h, v=value: h.request.headers.get(v))
-            elif key == 'url':
-                cls._redirects.append(lambda h, v=value: v)
-
-        # Check whether external URLs are allowed
-        if not kwargs.get('redirect', {}).get('external', False):
-            def no_external(method):
-                def redirect_method(handler):
-                    next_uri = method(handler)
-                    if next_uri is not None:
-                        target = urllib_parse.urlparse(next_uri)
-                        if not target.scheme and not target.netloc:
-                            return next_uri
-                        source = urllib_parse.urlparse(handler.request.uri)
-                        if source.scheme == target.scheme and source.netloc == target.netloc:
-                            return next_uri
-                return redirect_method
-
-            cls._redirects = [no_external(method) for method in cls._redirects]
-
-    def save_redirect_page(self):
-        '''
-        The redirect page is set based on the the gramex.yaml ``redirect:``
-        configuration.
-
-        - The ``next`` URL query parameter
-        - The ``redirect:` configuration in gramex.yaml. ('referer' indictes the )
-        '''
-        next_url = '/'
-        for method in self._redirects:
-            next_url = method(self)
-            if next_url:
-                next_url = next_url
-                break
-        self.session['_next_url'] = next_url
-
 
 class GoogleAuth(AuthHandler, GoogleOAuth2Mixin):
     @tornado.gen.coroutine
@@ -69,7 +27,7 @@ class GoogleAuth(AuthHandler, GoogleOAuth2Mixin):
             self.session['user'] = yield self.oauth2_request(
                 "https://www.googleapis.com/oauth2/v1/userinfo",
                 access_token=access["access_token"])
-            self.redirect(self.session.get('_next_url', '/'))
+            self.redirect_next()
         else:
             self.save_redirect_page()
             yield self.authorize_redirect(
@@ -106,7 +64,7 @@ class FacebookAuth(AuthHandler, FacebookGraphMixin):
                 client_id=self.conf.kwargs['key'],
                 client_secret=self.conf.kwargs['secret'],
                 code=self.get_argument('code'))
-            self.redirect(self.session.get('_next_url', '/'))
+            self.redirect_next()
         else:
             self.save_redirect_page()
             yield self.authorize_redirect(
@@ -125,7 +83,7 @@ class TwitterAuth(AuthHandler, TwitterMixin):
     def get(self):
         if self.get_argument("oauth_token", None):
             self.session['user'] = yield self.get_authenticated_user()
-            self.redirect(self.session.get('_next_url', '/'))
+            self.redirect_next()
         else:
             self.save_redirect_page()
             yield self.authenticate_redirect()
@@ -195,4 +153,4 @@ class LDAPAuth(AuthHandler):
             import json
             self.session['user'].update(json.loads(conn.entries[0].entry_to_json()))
 
-        self.redirect(self.session.get('_next_url', '/'))
+        self.redirect_next()

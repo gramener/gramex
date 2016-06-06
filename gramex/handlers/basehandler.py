@@ -7,7 +7,7 @@ import tornado.gen
 from binascii import b2a_base64
 from orderedattrdict import AttrDict
 from tornado.web import RequestHandler
-from tornado.escape import json_decode
+from six.moves.urllib_parse import urlparse
 from .. import conf, __version__
 from ..transforms import build_transform
 
@@ -21,7 +21,12 @@ class BaseHandler(RequestHandler):
     handlers. All RequestHandlers must inherit from BaseHandler.
     '''
     @classmethod
-    def setup(cls, transform={}, **kwargs):
+    def setup(cls, transform={}, redirect={}, **kwargs):
+        '''
+        One-time setup for all request handlers. This is called only when
+        gramex.yaml is parsed / changed.
+        '''
+        # transform: sets up transformations on ouput that some handlers use
         cls.transform = {}
         cls._on_finish_class = []
         for pattern, trans in transform.items():
@@ -33,12 +38,12 @@ class BaseHandler(RequestHandler):
                 'encoding': trans.get('encoding'),
             }
 
-        # Set up debug handling
+        # app.debug.exception enables debugging exceptions using pdb
         debug_conf = conf.app.get('debug')
         if debug_conf and debug_conf.get('exception', False):
             cls.log_exception = cls.debug_exception
 
-        # If gramex.yaml has a session: section, set up session handling.
+        # app.session: sets up session handling.
         # handler.session returns the session object. It is saved on finish.
         session_conf = conf.app.get('session')
         if session_conf is not None:
@@ -56,6 +61,46 @@ class BaseHandler(RequestHandler):
             cls.session = property(cls.get_session)
             cls._session_days = session_conf.get('expiry')
             cls._on_finish_class.append(cls.save_session)
+
+        # redirect: sets up redirect methods
+        cls.redirects = []
+        for key, value in redirect.items():
+            if key == 'query':
+                cls.redirects.append(lambda h, v=value: h.get_argument(v, None))
+            elif key == 'header':
+                cls.redirects.append(lambda h, v=value: h.request.headers.get(v))
+            elif key == 'url':
+                cls.redirects.append(lambda h, v=value: v)
+        # redirect.external=False disallows external URLs
+        if not redirect.get('external', False):
+            def no_external(method):
+                def redirect_method(handler):
+                    next_uri = method(handler)
+                    if next_uri is not None:
+                        target = urlparse(next_uri)
+                        if not target.scheme and not target.netloc:
+                            return next_uri
+                        source = urlparse(handler.request.uri)
+                        if source.scheme == target.scheme and source.netloc == target.netloc:
+                            return next_uri
+                return redirect_method
+
+            cls.redirects = [no_external(method) for method in cls.redirects]
+
+    def save_redirect_page(self):
+        '''
+        Loop through all redirect: methods and save the first available redirect
+        page against the session. Defaults to previously set value, else '/'.
+        '''
+        for method in self.redirects:
+            next_url = method(self)
+            if next_url:
+                self.session['_next_url'] = next_url
+                return
+        self.session.setdefault('_next_url', '/')
+
+    def redirect_next(self):
+        self.redirect(self.session.pop('_next_url', '/'))
 
     def initialize(self, **kwargs):
         self.kwargs = kwargs
@@ -86,14 +131,7 @@ class BaseHandler(RequestHandler):
             yield self.original_get(*args, **kwargs)
 
     def get_current_user(self):
-        app_auth = conf.app.settings.get('auth', False)
-        route_auth = self.kwargs.get('auth', app_auth)
-        if not route_auth:
-            return 'static'
-        user_json = self.get_secure_cookie('user')
-        if not user_json:
-            return None
-        return json_decode(user_json)
+        return self.session.get('user')
 
     def debug_exception(self, typ, value, tb):
         super(BaseHandler, self).log_exception(typ, value, tb)
