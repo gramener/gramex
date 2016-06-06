@@ -5,7 +5,7 @@ title: Gramex Authentication
 Gramex identifies sessions through a secure cookie named `sid`, and stores
 information against each session as a persistent key-value store. This is
 available as `handler.session` in every handler. For example, here is the
-contents of your `handler.session` variable now:
+contents of your [session](session) variable now:
 
 <iframe frameborder="0" src="session"></iframe>
 
@@ -167,3 +167,67 @@ override this:
 
 You can test this at
 [ldap2?next=https://gramener.com/](ldap2?next=https://gramener.com/).
+
+## User information
+
+All handlers store the information retrieved about the user in
+`handler.session['user']`, typically as a dictionary. All handlers have access
+to this information via `handler.get_current_user()` by default.
+
+# Authorization
+
+To restrict pages to specific users, use the `kwargs.auth` configuration. This
+works on all Gramex handlers (that derive from `BaseHandler`).
+
+If you don't specify `auth:` in the `kwargs:` section, the `auth:` defined in
+`app.settings` will be used. If that's not defined, then the handler is publicly
+accessible to all.
+
+`auth: true` just requires that you must log in. In this example, you can access
+[must-login](must-login) only if you are logged in.
+
+    url:
+        auth/must-login:
+            pattern: /$YAMLURL/must-login
+            handler: FileHandler
+            kwargs:
+                path: $YAMLPATH/secret.html
+                auth: true
+
+`auth:` can also lets you define conditions. For example, you can access
+[dotcom](dotcom) only if your email ends with `.com`, and access
+[dotorg](dotorg) only if your email ends with `.org`.
+
+    url:
+        auth/dotcom:
+            pattern: /$YAMLURL/dotcom
+            handler: FileHandler
+            kwargs:
+                path: $YAMLPATH/secret.html
+                auth:
+                    condition:                          # Allow only if condition is true
+                        function: six.string_type.endswith            # Call this function
+                        args: [=handler.session.user.email, '.com']   # with these 2 arguments
+        auth/dotorg:
+            pattern: /$YAMLURL/dotorg
+            handler: FileHandler
+            kwargs:
+                path: $YAMLPATH/secret.html
+                auth:
+                    condition:                          # Allow only if condition is true
+                        function: six.string_type.endswith            # Call this function
+                        args: [=handler.session.user.email, '.org']   # with these 2 arguments
+
+You can specify any function of your choice. The function must return (or yield)
+`True` to allow the user access, and `False` to raise a HTTP 403 error.
+
+`auth:` can check for membership. For example, you can access [en-male](en-male)
+only if your gender is `male` and your locale is `en` or `es`:
+
+        auth:
+            membership:           # The following user object keys must match
+                gender: male      # user.gender must be male
+                locale: [en, es]  # user.locale must be en or es
+
+If the `user` object has nested attributes, you can access them via `.`. For
+example, `attributes.cn` refers to `handlers.session.user.attributes.cn`.

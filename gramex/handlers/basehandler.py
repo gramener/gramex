@@ -3,11 +3,13 @@ from __future__ import unicode_literals
 import os
 import json
 import atexit
+import httplib
+import functools
 import tornado.gen
 from binascii import b2a_base64
 from orderedattrdict import AttrDict
-from tornado.web import RequestHandler
-from six.moves.urllib_parse import urlparse
+from six.moves.urllib_parse import urlparse, urlsplit, urlencode
+from tornado.web import RequestHandler, HTTPError
 from .. import conf, __version__
 from ..transforms import build_transform
 
@@ -21,7 +23,7 @@ class BaseHandler(RequestHandler):
     handlers. All RequestHandlers must inherit from BaseHandler.
     '''
     @classmethod
-    def setup(cls, transform={}, redirect={}, **kwargs):
+    def setup(cls, transform={}, redirect={}, auth=None, **kwargs):
         '''
         One-time setup for all request handlers. This is called only when
         gramex.yaml is parsed / changed.
@@ -84,8 +86,40 @@ class BaseHandler(RequestHandler):
                         if source.scheme == target.scheme and source.netloc == target.netloc:
                             return next_uri
                 return redirect_method
-
             cls.redirects = [no_external(method) for method in cls.redirects]
+
+        # auth: if there's no auth: in handler, default to app.auth
+        if auth is None:
+            auth = conf.app.get('auth')
+        # Treat True as an empty dict, i.e. auth: {}
+        if auth is True:
+            auth = AttrDict()
+        # If auth is False or None, ignore it. Otherwise, process the auth
+        if auth is not None and auth is not False:
+            # Wrap available methods via an @authorized decorator
+            for method in auth.get('method', ['get', 'post', 'put', 'delete', 'patch']):
+                func = getattr(cls, method)
+                if callable(func):
+                    setattr(cls, method, authorized(func))
+
+            cls.permissions = []
+            if auth.get('condition'):
+                cls.permissions.append(
+                    build_transform(auth['condition'], vars=AttrDict(handler=None),
+                                    filename='url>%s.auth.permission' % cls.name))
+            for keypath, values in auth.get('membership', {}).items():
+                cls.permissions.append(check_membership(keypath, values))
+
+    def initialize(self, **kwargs):
+        self.kwargs = kwargs
+        self._session, self._session_json = None, 'null'
+        if self.cache:
+            self.cachefile = self.cache()
+            self.original_get = self.get
+            self.get = self._cached_get
+
+    def set_default_headers(self):
+        self.set_header('Server', server_header)
 
     def save_redirect_page(self):
         '''
@@ -101,17 +135,6 @@ class BaseHandler(RequestHandler):
 
     def redirect_next(self):
         self.redirect(self.session.pop('_next_url', '/'))
-
-    def initialize(self, **kwargs):
-        self.kwargs = kwargs
-        self._session, self._session_json = None, 'null'
-        if self.cache:
-            self.cachefile = self.cache()
-            self.original_get = self.get
-            self.get = self._cached_get
-
-    def set_default_headers(self):
-        self.set_header('Server', server_header)
 
     @tornado.gen.coroutine
     def _cached_get(self, *args, **kwargs):
@@ -231,3 +254,61 @@ class JSONStore(KeyStore):
         self.handle.seek(0)
         json.dump(self.store, self.handle, ensure_ascii=True, separators=(',', ':'))
         self.handle.close()
+
+
+def authorized(method):
+    @functools.wraps(method)
+    def wrapper(self, *args, **kwargs):
+        # If the user is not authenticated, get them to log in.
+        # This section is identical to @tornado.web.authenticated
+        if not self.current_user:
+            if self.request.method in ('GET', 'HEAD'):
+                url = self.get_login_url()
+                if '?' not in url:
+                    if urlsplit(url).scheme:
+                        # if login url is absolute, make next absolute too
+                        next_url = self.request.full_url()
+                    else:
+                        next_url = self.request.uri
+                    url += '?' + urlencode(dict(next=next_url))
+                self.redirect(url)
+                return
+            raise HTTPError(httplib.FORBIDDEN)
+
+        # If the user is not authorized, display a template or raise error
+        for permit_generator in self.permissions:
+            for result in permit_generator(self):
+                if not result:
+                    template = self.conf.kwargs.auth.get('template')
+                    if template:
+                        self.render(template)
+                        return
+                    raise HTTPError(httplib.FORBIDDEN)
+
+        # Run the method if the user is authenticated and authorized
+        return method(self, *args, **kwargs)
+
+    return wrapper
+
+
+def check_membership(keypath, values):
+    values = set(values) if isinstance(values, list) else set([values])
+
+    def ismember(self):
+        node = objectpath(self.session.get('user', {}), keypath)
+        if node is None:
+            yield False
+        elif isinstance(node, list):
+            yield len(set(node) & values) > 0
+        else:
+            yield node in values
+    return ismember
+
+
+def objectpath(node, keypath):
+    for key in keypath.split('.'):
+        if key in node:
+            node = node[key]
+        else:
+            return None
+    return node

@@ -119,7 +119,6 @@ class FileHandler(BaseHandler):
     def head(self, path=None):
         return self.get(path, include_body=False)
 
-    @tornado.web.authenticated
     @tornado.gen.coroutine
     def get(self, path=None, include_body=True):
         self.include_body = include_body

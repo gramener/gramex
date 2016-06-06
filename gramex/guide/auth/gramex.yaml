@@ -64,11 +64,6 @@ url:
                 url: /$YAMLURL
                 external: true
 
-    # auth/activedirectory
-    # auth/kerberos
-    # auth/saml
-
-
     auth/user:
         pattern: /$YAMLURL/user
         handler: FunctionHandler
@@ -87,3 +82,40 @@ url:
             function: authutil.store_value
             headers:
                 Content-Type: application/json
+
+    auth/must-login:
+        pattern: /$YAMLURL/must-login
+        handler: FileHandler
+        kwargs:
+            path: $YAMLPATH/secret.html
+            auth: true
+
+    auth/dotcom:
+        pattern: /$YAMLURL/dotcom
+        handler: FileHandler
+        kwargs:
+            path: $YAMLPATH/secret.html
+            auth:
+                condition:                          # Allow only if condition is true
+                    function: six.text_type.endswith              # Call this function
+                    args: [=handler.session.user.email, '.com']   # with these 2 arguments
+    auth/dotorg:
+        pattern: /$YAMLURL/dotorg
+        handler: FileHandler
+        kwargs:
+            path: $YAMLPATH/secret.html
+            auth:
+                condition:                          # Allow only if condition is true
+                    function: six.text_type.endswith              # Call this function
+                    args: [=handler.session.user.email, '.org']   # with these 2 arguments
+
+    auth/en-male:
+        pattern: /$YAMLURL/en-male
+        handler: FileHandler
+        kwargs:
+            path: $YAMLPATH/secret.html
+            auth:
+            auth:
+                membership:           # The following user object keys must match
+                    gender: male      # user.gender must be male
+                    locale: [en, es]  # user.locale must be en or es

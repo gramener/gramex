@@ -239,7 +239,6 @@ class DataHandler(BaseHandler):
         # TODO: Improve json, csv, html outputs using native odo
         return bz.odo(bz.compute(query, bzcon.data), pd.DataFrame)
 
-    @tornado.web.authenticated
     @tornado.gen.coroutine
     def get(self):
         kwargs = dict(

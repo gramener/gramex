@@ -33,7 +33,6 @@ class FunctionHandler(BaseHandler):
         cls.redirect_url = redirect
         cls.post = cls.get
 
-    @tornado.web.authenticated
     @tornado.gen.coroutine
     def get(self, *path_args):
         result = self.info['function'](handler=self)
