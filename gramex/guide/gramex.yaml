@@ -57,6 +57,16 @@ url:
                     headers:
                         Content-Type: text/html
 
+    # Static files are cached on the browser and on the serve
+    static:
+        pattern: /$YAMLURL/(.*.css)
+        handler: FileHandler
+        cache: true                                     # Cache on the server
+        kwargs:
+            path: $YAMLPATH/*
+            headers:
+                Cache-Control: public, max-age=300      # Cache on the browser for 5 minutes
+
     # /path.source shows the raw file as plain text
     source:
         priority: +1
