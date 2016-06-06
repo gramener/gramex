@@ -3,11 +3,11 @@ from __future__ import unicode_literals
 import os
 import json
 import atexit
-import httplib
 import functools
 import tornado.gen
 from binascii import b2a_base64
 from orderedattrdict import AttrDict
+from six.moves.http_client import FORBIDDEN
 from six.moves.urllib_parse import urlparse, urlsplit, urlencode
 from tornado.web import RequestHandler, HTTPError
 from .. import conf, __version__
@@ -273,7 +273,7 @@ def authorized(method):
                     url += '?' + urlencode(dict(next=next_url))
                 self.redirect(url)
                 return
-            raise HTTPError(httplib.FORBIDDEN)
+            raise HTTPError(FORBIDDEN)
 
         # If the user is not authorized, display a template or raise error
         for permit_generator in self.permissions:
@@ -283,7 +283,7 @@ def authorized(method):
                     if template:
                         self.render(template)
                         return
-                    raise HTTPError(httplib.FORBIDDEN)
+                    raise HTTPError(FORBIDDEN)
 
         # Run the method if the user is authenticated and authorized
         return method(self, *args, **kwargs)
