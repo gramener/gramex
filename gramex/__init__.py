@@ -125,6 +125,23 @@ def commandline():
     callback(**kwargs)
 
 
+def check_new_gramex(repo):
+    '''If a newer version of gramex is available, logs a warning'''
+    from shutilwhich import which
+    if not which('git'):
+        return
+    import subprocess
+    result = subprocess.check_output(['git', 'ls-remote', '--tags', '--refs', '-q', repo],
+                                     universal_newlines=True)
+    # '...\n00cb1d\trefs/tags/v1.0.8' -> 1.0.8
+    latest_version = result.strip().split('\n')[-1].split('v')[-1]
+    if latest_version > __version__:
+        app_log.error('UPGRADE to Gramex %s (you have %s). ' +
+                      'See https://learn.gramener.com/guide/', latest_version, __version__)
+    else:
+        app_log.info('Gramex %s is up to date', __version__)
+
+
 def init(**kwargs):
     '''
     Update Gramex configurations and start / restart the instance.

@@ -130,7 +130,17 @@ threadpool:
     workers: 8                  # Max number of parallel threads
 
 # The `schedule:` section defines when specific code is to run.
-schedule: {}
+schedule:
+    # Every day and on startup, check if Gramex needs to be updated
+    gramex-upgrade:
+        function: gramex.check_new_gramex
+        kwargs:
+            repo: http://code.gramener.com/s.anand/gramex.git
+        startup: true
+        minutes: 0
+        hours: 0
+        dates: '*'
+        thread: true
 
 # Define custom MIME types here
 mime:
