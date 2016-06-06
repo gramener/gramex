@@ -207,7 +207,10 @@ class BaseHandler(RequestHandler):
 
 class KeyStore(object):
     def __init__(self, path):
-        self.path = path
+        self.path = os.path.abspath(path)
+        folder = os.path.dirname(self.path)
+        if not os.path.exists(folder):
+            os.makedirs(folder)
         self.store = {}
         atexit.register(self.close)
 
