@@ -1,3 +1,4 @@
+import os
 import unittest
 from gramex.debug import timer, Timer
 from testfixtures import LogCapture
@@ -8,15 +9,21 @@ class TestDebug(unittest.TestCase):
         with LogCapture() as logs:
             timer('start')
             timer('middle')
-        self.assertEqual(len(logs.records), 2)
-        self.assertEqual('start', logs.records[0].args[1])
-        self.assertEqual('middle', logs.records[1].args[1])
-        self.assertIn('test_debug.py:test_timer', logs.records[0].args[2])
-        self.assertIn('test_debug.py:test_timer', logs.records[1].args[2])
+        self.assertGreaterEqual(len(logs.records), 2)
+        self.assertGreaterEqual(
+            {rec.args[1] for rec in logs.records},
+            {'start', 'middle'})
+        self.assertGreaterEqual(
+            {rec.args[2].split(os.sep)[-1].rsplit(':', 1)[0] for rec in logs.records},
+            {'test_debug.py:test_timer', 'test_debug.py:test_timer'})
 
         with LogCapture() as logs:
             with Timer('msg'):
                 pass
-        self.assertEqual(len(logs.records), 1)
-        self.assertEqual('msg', logs.records[0].args[1])
-        self.assertIn('test_debug.py:test_timer', logs.records[0].args[2])
+        self.assertGreaterEqual(len(logs.records), 1)
+        self.assertGreaterEqual(
+            {rec.args[1] for rec in logs.records},
+            {'msg'})
+        self.assertGreaterEqual(
+            {rec.args[2].split(os.sep)[-1].rsplit(':', 1)[0] for rec in logs.records},
+            {'test_debug.py:test_timer'})
