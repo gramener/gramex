@@ -14,7 +14,7 @@ class SetupHandler(BaseHandler):
         cls.name = kwargs.get('name', 'NA')             # Perform any one-time setup here
         cls.count = Counter()
 
-    def initialize(self, **kwargs):                     # initialize() is called with the same kwargs
+    def initialize(self, **kwargs):                     # initialize() is called with same kwargs
         super(SetupHandler, self).initialize(**kwargs)  # You MUST call the BaseHandler initialize
         self.count[self.name] += 1                      # Perform any recurring operations here
 
