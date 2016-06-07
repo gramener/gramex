@@ -23,10 +23,10 @@ app:
         compress_response: True         # GZip the HTTP response
 
         # Debug parameters
-        autoreload: False               # Reload Gramex when imported Python file changes
-        compiled_template_cache: True   # Cache template files across requests
-        static_hash_cache: True         # Cache static files across requests
-        serve_traceback: True           # Show traceback on browser if there's an error
+        # autoreload: False               # Reload Gramex when imported Python file changes
+        # compiled_template_cache: True   # Cache template files across requests
+        # static_hash_cache: True         # Cache static files across requests
+        # serve_traceback: True           # Show traceback on browser if there's an error
         debug: False                    # = autoreload + !compiled_template_cache + !static_hash_cache + serve_traceback
 
         # Cookie parameters

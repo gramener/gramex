@@ -14,14 +14,12 @@ To start off, create a `gramex.yaml` with the lines shown below and run
     app:
         browser: /
 
+Now run `gramex` (or `python -m gramex`) from the folder with `gramex.yaml`. You
+should see a list of files in that folder. (You may need to press Ctrl-R or
+Ctrl-F5 to refresh the page.)
+
 If your folder has an `index.html` file, it is displayed instead of the
-directory listing.
+directory listing. You can now create static web applications with no additional
+configuration.
 
-You can include other files from here. This page includes an image at
-[static/image.svg](static/image.svg).
-
-![static image](static/image.svg)
-
-Below are the contents of [static/plain.txt](static/plain.txt): a plain text file.
-
-<iframe frameborder="0" src="static/plain.txt"></iframe>
+Here is a [sample directory listing](static/).

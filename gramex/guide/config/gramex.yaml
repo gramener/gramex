@@ -1,0 +1,4 @@
+url:
+    config/hello:
+        pattern: /$YAMLURL/hello
+        handler: hello.Hello

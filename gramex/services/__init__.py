@@ -17,6 +17,7 @@ import os
 import yaml
 import atexit
 import signal
+import socket
 import posixpath
 import mimetypes
 import threading
@@ -73,7 +74,15 @@ def app(conf):
         app_log.warning('Ignoring app config change when running')
     else:
         info.app = tornado.web.Application(**conf.settings)
-        info.app.listen(**conf.listen)
+        try:
+            info.app.listen(**conf.listen)
+        except socket.error as e:
+            if e.errno != 10048:
+                raise
+            logging.error('Port %d is busy. Use --listen.port= for a different port',
+                          conf.listen.port)
+            import sys
+            sys.exit(1)
 
         def callback():
             'Called after all services are started. Opens browser if required'

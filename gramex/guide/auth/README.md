@@ -25,9 +25,17 @@ configuration in `gramex.yaml`. Here is the default configuration:
 
     :::yaml
     app:
-      session:
-        expiry: 31                      # Session cookies expiry in days
+        session:
+            expiry: 31                      # Session cookies expiry in days
 
+The cookies are encrypted using the `app.settings.cookie_secret` key. Change
+this to a random secret value, either via `gramex --settings.cookie_secret=...`
+or in you `gramex.yaml`:
+
+    :::yaml
+    app:
+        settings:
+            cookie_secret: ...
 
 # Authentication
 

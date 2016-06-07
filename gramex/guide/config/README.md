@@ -39,17 +39,8 @@ The `app:` section controls Gramex's startup. It has these sub-sections.
    rver.html#HTTPServer].
 3. `settings:` holds the Tornado
    [application settings](http://www.tornadoweb.org/en/stable/web.html#tornado.web.Application.settings).
-
-These are the parameters you will use the most:
-
-    :::yaml
-    app:
-        browser: /                        # Open browser to "/" when app starts
-        listen:
-            port: 9999                    # Run on a different port
-        settings:
-            debug: True                   # Run in debug mode instead of production mode
-            cookie_secret: your-secret    # A unique secret ID for your application
+4. `debug:` holds the [debug settings](../debug/)
+5. `session:` holds [session settings](../auth/)
 
 ## Command line
 
@@ -67,7 +58,7 @@ The `url:` section maps URLs to content. Here is an example:
 
     :::yaml
     url:
-        homepage:                           # A unique name for this mapping
+        homepage:                           # "homepage" can be replaced with any unique name
             pattern: /                      # Map the URL /
             handler: FileHandler            # using a built-in FileHandler
             kwargs:                         # Pass these options to FileHandler
@@ -96,17 +87,24 @@ identifiers. The mappings have these keys:
   priority of 0. Use 1, 2, etc for higher priority, -1, -2, etc for lower
   priority. Mappings with a higher priority override those with lower priority.
 
-You an write your own handler by extending [RequestHandler][requesthandler]. For
+You an write your own handler by extending [BaseHandler](../handlers/). For
 example, create a file called `hello.py` with the following content:
 
     :::python
-    from tornado.web import RequestHandler
+    from gramex.handlers import BaseHandler
 
-    class Hello(RequestHandler):
+    class Hello(BaseHandler):
         def get(self):
             self.write('hello world')
 
-Now, you can use `handler: hello.Hello` to send the response `hello world`.
+Now, you can add this configuration to your `url:` section:
+
+    :::yaml
+        hello:                        # a name you want to give to the handler
+            pattern: /hello           # URL pattern
+            handler: hello.Hello      # class that implements the handler
+
+This renders "hello world" at the URL [/hello](hello).
 
 [requesthandler]: http://tornado.readthedocs.org/en/latest/web.html#request-handlers
 

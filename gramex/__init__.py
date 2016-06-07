@@ -112,10 +112,10 @@ def callback_commandline(commands):
     # Else use source/guide, and point the user to the welcome screen
     if not os.path.isfile('gramex.yaml'):
         from gramex.install import run
-        args.setdefault('browser', True)
+        args.setdefault('browser', '/welcome')
         return run, {'cmd': ['guide'], 'args': args}
 
-    app_log.info('Initializing %s on Gramex %s', os.getcwd(), __version__)
+    app_log.info('Initializing %s on Gramex %s. Please wait...', os.getcwd(), __version__)
     return init, {'cmd': AttrDict(app=args)}
 
 
@@ -131,8 +131,13 @@ def check_new_gramex(repo):
     if not which('git'):
         return
     import subprocess
-    result = subprocess.check_output(['git', 'ls-remote', '--tags', '--refs', '-q', repo],
-                                     universal_newlines=True)
+    try:
+        result = subprocess.check_output(['git', 'ls-remote', '--tags', '--refs', '-q', repo],
+                                         universal_newlines=True)
+    except subprocess.CalledProcessError:
+        app_log.debug('Unable to check for Gramex upgrades')
+        return
+
     # '...\n00cb1d\trefs/tags/v1.0.8' -> 1.0.8
     latest_version = result.strip().split('\n')[-1].split('v')[-1]
     if latest_version > __version__:

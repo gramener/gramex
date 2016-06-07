@@ -25,6 +25,11 @@ For the development version, replace `master` with `dev` at the end:
 [update]: http://docs.continuum.io/anaconda/install#updating-from-older-anaconda-versions
 [xcode]: https://developer.apple.com/xcode/download/
 
+Notes:
+
+- You should not be running any other copies of Gramex or other Python
+  applications when running `pip install`.
+
 
 # Uninstall Gramex
 
