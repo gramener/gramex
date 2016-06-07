@@ -7,7 +7,7 @@ template_cache = LRUCache(maxsize=1000)
 
 
 @tornado.gen.coroutine
-def template(content, handler, **kwargs):
+def template(content, handler=None, **kwargs):
     if content in template_cache:
         tmpl = template_cache[content]
     else:
