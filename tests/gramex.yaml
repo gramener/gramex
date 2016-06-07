@@ -725,12 +725,14 @@ url:
     handler: FileHandler
     kwargs:
       path: dir
+      allow: .cache-file*
     cache: true
   cache/filehandler-errors:
     pattern: /cache/filehandler-error/(.*)
     handler: FileHandler
     kwargs:
       path: dir
+      allow: .cache-file*
     cache:
         status: [200, 404]
 
