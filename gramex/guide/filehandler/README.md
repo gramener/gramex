@@ -107,6 +107,38 @@ a higher value to the `priority` (which defaults to 0.)
           path: .                                   # Serve files from /
 
 
+## Ignore files
+
+To prevent certain files from ever being served, specify the
+`handlers.FileHandler.ignore` setting. By default, this is:
+
+    :::yaml
+    handlers:
+        FileHandler:
+            ignore:
+                - gramex.yaml           # Always ignore gramex.yaml in Filehandlers
+                - ".*"                  # Hide dotfiles
+
+The `gramex.yaml` file and all files beginning with `.` will be hidden. You can
+customise this further via the `allow:` and `ignore:` configurations in the
+handler. For example:
+
+    :::yaml
+    url:
+        unsafe-handler:
+            pattern: "/(.*)"
+            handler: FileHandler
+            kwargs:
+                path: .
+                ignore:
+                    - secret.txt        # Also ignore secret.txt
+                allow:
+                    - gramex.yaml       # But allow gramex.yaml to be shown
+
+In the above configuration, `secret.txt` will not be accessible, but
+`gramex.yaml` will be.
+
+
 ## MIME types
 
 The URL will be served with the MIME type of the file. CSV files have a MIME

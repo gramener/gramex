@@ -315,6 +315,38 @@ url:
     kwargs:
       path: "dir/*/text.txt"
 
+  dir/ignore-file:
+    pattern: "/dir/ignore-file/(.*)"
+    handler: FileHandler
+    kwargs:
+      path: dir/
+      ignore: ignore-file.txt
+
+  dir/ignore-list:
+    pattern: "/dir/ignore-list/(.*)"
+    handler: FileHandler
+    kwargs:
+      path: dir/
+      ignore:
+        - ignore-list.txt
+
+  # Allow overrides global handler ignores
+  dir/allow-file:
+    pattern: "/dir/allow-file/(.*)"
+    handler: FileHandler
+    kwargs:
+      path: dir/
+      allow: gramex.yaml
+
+  # Allow overrides local ignores
+  dir/allow-ignore:
+    pattern: "/dir/allow-ignore/(.*)"
+    handler: FileHandler
+    kwargs:
+      path: dir/
+      ignore: ignore-file.txt
+      allow: ignore-file.txt
+
   # TestDataHandler for Sqlite
   data/csv:
     pattern: /datastore/sqlite/csv/

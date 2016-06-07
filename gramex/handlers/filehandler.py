@@ -11,8 +11,9 @@ from tornado.web import HTTPError
 from six.moves.urllib.parse import urljoin
 from .basehandler import BaseHandler
 from gramex.config import app_log
+from gramex import conf as gramex_conf
 
-
+FORBIDDEN, NOT_FOUND = 403, 404
 # Directory indices are served using this template by default
 _default_index_template = Path(__file__).absolute().parent / 'filehandler.template.html'
 
@@ -24,6 +25,10 @@ def read_template(path):
         path = _default_index_template
     with path.open(encoding='utf-8') as handle:
         return string.Template(handle.read())
+
+
+def make_list(value):
+    return value if isinstance(value, list) else [value]
 
 
 class FileHandler(BaseHandler):
@@ -46,7 +51,11 @@ class FileHandler(BaseHandler):
         is displayed by default. For example, ``index.html`` or ``README.md``.
         The default is ``None``, which displays all files in the directory.
     :arg boolean index: If ``true``, shows a directory index. If ``false``,
-        raises a HTTP 404 error when users try to access a directory.
+        raises a HTTP 404: Not Found error when users try to access a directory.
+    :arg list ignore: List of glob patterns to ignore. Even if the path matches
+        these, the files will not be served.
+    :arg list allow: List of glob patterns to allow. This overrides the ignore
+        patterns, so use with care.
     :arg string index_template: The file to be used as the template for
         displaying the index. If this file is missing, it defaults to Gramex's
         default ``filehandler.template.html``. It can use these string
@@ -100,7 +109,7 @@ class FileHandler(BaseHandler):
     SUPPORTED_METHODS = ("GET", "HEAD")
 
     @classmethod
-    def setup(cls, path, default_filename=None, index=None,
+    def setup(cls, path, default_filename=None, index=None, ignore=[], allow=[],
               index_template=None, headers={}, **kwargs):
         super(FileHandler, cls).setup(**kwargs)
         cls.root, cls.pattern = None, None
@@ -112,6 +121,9 @@ class FileHandler(BaseHandler):
             cls.root = Path(path).absolute()
         cls.default_filename = default_filename
         cls.index = index
+        cls.ignore = set(gramex_conf.get('handlers', {}).get('FileHandler', {}).get('ignore', []))
+        cls.ignore.update(make_list(ignore))
+        cls.allow = set(make_list(allow))
         cls.index_template = read_template(
             Path(index_template) if index_template is not None else _default_index_template)
         cls.headers = headers
@@ -137,20 +149,36 @@ class FileHandler(BaseHandler):
             else:
                 yield self._get_path(self.root / path if self.root.is_dir() else self.root)
 
+    def allowed(self, path):
+        '''A path is allowed if it matches any allow:, or matches no ignore:'''
+        for ignore in self.ignore:
+            if path.match(ignore):
+                # Check allows only if an ignore: is matched.
+                # If any allow: is matched, allow it
+                for allow in self.allow:
+                    if path.match(allow):
+                        return True
+                app_log.debug('%s: Disallow "%s". It matches "%s"', self.name, path, ignore)
+                return False
+        return True
+
     @tornado.gen.coroutine
     def _get_path(self, path, multipart=False):
         # If the file doesn't exist, raise a 404: Not Found
         try:
             path = path.resolve()
         except OSError:
-            raise HTTPError(status_code=404)
+            raise HTTPError(status_code=NOT_FOUND)
+
+        if not self.allowed(path):
+            raise HTTPError(status_code=FORBIDDEN)
 
         self.path = path
 
         if self.path.is_dir():
             self.file = self.path / self.default_filename if self.default_filename else self.path
             if not (self.default_filename and self.file.exists()) and not self.index:
-                raise HTTPError(status_code=404)
+                raise HTTPError(status_code=NOT_FOUND)
             # Ensure URL has a trailing '/' when displaying the index / default file
             if not self.request.path.endswith('/'):
                 self.redirect(self.request.path + '/', permanent=True)
@@ -158,9 +186,9 @@ class FileHandler(BaseHandler):
         else:
             self.file = self.path
             if not self.file.exists():
-                raise HTTPError(status_code=404)
+                raise HTTPError(status_code=NOT_FOUND)
             elif not self.file.is_file():
-                raise HTTPError(status_code=403, log_message='%s is not a file' % self.path)
+                raise HTTPError(status_code=FORBIDDEN, log_message='%s is not a file' % self.path)
 
         if self.path.is_dir() and self.index and not (
                 self.default_filename and self.file.exists()):

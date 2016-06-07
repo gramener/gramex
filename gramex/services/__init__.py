@@ -144,6 +144,10 @@ def threadpool(conf):
     atexit.register(info.threadpool.shutdown)
 
 
+def handlers(conf):
+    pass
+
+
 def _sort_url_patterns(entry):
     # URLs are resolved in this order:
     name, spec = entry

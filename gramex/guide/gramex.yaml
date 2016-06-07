@@ -12,6 +12,11 @@ app:
 import:
     subdirectories: '*/gramex.yaml'
 
+handlers:
+    FileHandler:
+        ignore:
+            - ".*"                      # Hide only dotfiles, allow gramex.yaml
+
 url:
     welcome:
         pattern: /$YAMLURL/welcome

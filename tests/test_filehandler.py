@@ -171,3 +171,13 @@ class TestFileHandler(TestGramex):
         self.check('/dir/index/', headers={'Etag': True})
         # Non-existent files do not have an etag
         self.check('/dir/noindex/', code=404, headers={'Etag': False})
+
+    def test_ignore(self):
+        self.check('/dir/index/gramex.yaml', code=403)
+        self.check('/dir/index/.hidden', code=403)
+        self.check('/dir/index/ignore-file.txt', code=200)
+        self.check('/dir/ignore-file/ignore-file.txt', code=403)
+        self.check('/dir/index/ignore-list.txt', code=200)
+        self.check('/dir/ignore-list/ignore-list.txt', code=403)
+        self.check('/dir/allow-file/gramex.yaml', code=200)
+        self.check('/dir/allow-ignore/ignore-file.txt', code=200)

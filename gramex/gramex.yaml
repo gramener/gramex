@@ -55,6 +55,13 @@ cache:
     memory:
         type: memory                    # A default in-memory cache
 
+# Intiailise handlers
+handlers:
+    FileHandler:
+        ignore:
+            - gramex.yaml               # Always ignore gramex.yaml in Filehandlers
+            - ".*"                      # Hide dotfiles
+
 # The `url:` section maps URL patterns to handlers.
 # http://tornado.readthedocs.org/en/stable/web.html#tornado.web.URLSpec
 url:
