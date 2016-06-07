@@ -4,8 +4,8 @@ This page documents ways of debugging a Gramex application.
 
 ## Debug mode
 
-Run Gramex with a `--settings.debug` to trigger [debug mode](debug-mode) in
-TOrnado. This auto-reloads templates, Python scripts, etc.
+Run Gramex with a `--settings.debug` to trigger [debug mode][debug-mode] in
+Tornado. This auto-reloads templates, Python scripts, etc.
 
 [debug-mode]: http://www.tornadoweb.org/en/stable/guide/running.html?highlight=debug#debug-mode-and-automatic-reloading
 

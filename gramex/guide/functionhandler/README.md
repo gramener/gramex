@@ -1,6 +1,6 @@
 title: Gramex runs Python functions
 
-The [FunctionHandler](functionhandler) runs a function and displays the output.
+The [FunctionHandler][functionhandler] runs a function and displays the output.
 For example, this configuration maps the URL [total](total) to a
 FunctionHandler:
 
