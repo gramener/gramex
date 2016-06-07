@@ -77,7 +77,8 @@ def app(conf):
         try:
             info.app.listen(**conf.listen)
         except socket.error as e:
-            if e.errno != 10048:
+            port_used_codes = dict(windows=10048, linux=98)
+            if e.errno not in port_used_codes.values():
                 raise
             logging.error('Port %d is busy. Use --listen.port= for a different port',
                           conf.listen.port)
