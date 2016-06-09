@@ -11,6 +11,7 @@ from six.moves.http_client import FORBIDDEN
 from six.moves.urllib_parse import urlparse, urlsplit, urlencode
 from tornado.web import RequestHandler, HTTPError
 from .. import conf, __version__
+from ..config import objectpath
 from ..transforms import build_transform
 
 server_header = 'Gramex/%s' % __version__
@@ -307,12 +308,3 @@ def check_membership(keypath, values):
         else:
             yield node in values
     return ismember
-
-
-def objectpath(node, keypath):
-    for key in keypath.split('.'):
-        if key in node:
-            node = node[key]
-        else:
-            return None
-    return node

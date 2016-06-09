@@ -415,3 +415,20 @@ def check_old_certs():
             app_log.warn('Gramex has no direct Internet connection.')
         _client.close()
         _checked_old_certs.append(True)
+
+
+def objectpath(node, keypath, default=None):
+    '''
+    Traverse down a dot-separated object path into dict items or object attrs.
+    For example, ``objectpath(handler, 'request.headers.User-Agent')`` returns
+    ``handler.request.headers['User-Agent']``. Dictionary access is preferred.
+    Returns ``None`` if the path is not found.
+    '''
+    for key in keypath.split('.'):
+        if hasattr(node, '__getitem__'):
+            node = node.get(key)
+        else:
+            node = getattr(node, key, None)
+        if node is None:
+            return default
+    return node

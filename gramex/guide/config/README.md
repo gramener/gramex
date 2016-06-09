@@ -305,7 +305,25 @@ string substitution, then it is converted into a string. For example:
     :::yaml
     number: $NUMBER             # This is the int 10
     number: /$NUMBER            # This is the string "/10"
-    mix: a-${BOOLEAN}-b       # This is the string "a-False-b"
+    mix: a-${BOOLEAN}-b         # This is the string "a-False-b"
+
+### Predefined variables
+
+In addition to environment variables, there are some pre-defined variables:
+
+- `$GRAMEXDATA` is the directory where local Gramex data is stored. This is at:
+    - `%LOCALAPPDATA%\Gramex Data\` on Windows
+    - `~/.config/gramexdata/` on Linux
+    - `~/Library/Application Support/Gramex Data/` on OS X
+- `$GRAMEXPATH` is the directory where Gramex is installed.
+
+There are a set of pre-defined variables that are based on the YAML file that is
+procesed. For example, if you're processing `D:/app/config/gramex.yaml`, and
+running Gramex from `D:/app/`, then:
+
+- `$YAMLPATH` is the absolute directory of the current YAML file being processed. e.g. `D:/app/config/gramex.yaml`.
+- `$YAMLFILE` is the current YAML file being processed, e.g. `D:/app/config/`
+- `$YAMLURL` is the relative URL path to the directory of the current YAML file (without leading / trailing slashes), e.g. `config`
 
 ### Computed variables
 

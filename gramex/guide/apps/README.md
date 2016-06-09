@@ -11,11 +11,7 @@ An app is any collection of files. You can install an app from a folder, a ZIP f
 
 ... will copy the files from `/path/to/app-name/` to the Gramex app directory. You can run it using `gramex run <appname>`.
 
-The Gramex app directory is at:
-
-- `%LOCALAPPDATA%\Gramex Data\apps\` on Windows
-- `~/.config/gramexdata/apps/` on Linux
-- `~/Library/Application Support/Gramex Data/apps/` on OS X
+The Gramex app directory is at `$GRAMEXDATA/apps/`. To locate this on your system, see [config docs](../config/) [predefined variables](../config#predefined-variables).
 
 The app is installed under a directory named `<appname>` under the Gramex app directory.
 

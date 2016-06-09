@@ -1,19 +1,59 @@
+from __future__ import unicode_literals
+import io
+import csv
+import logging
 import functools
 import tornado.web
 import tornado.gen
 from tornado.auth import (GoogleOAuth2Mixin, FacebookGraphMixin, TwitterMixin,
                           urllib_parse, _auth_return_future)
-from gramex.config import check_old_certs, app_log
+from gramex.config import check_old_certs, app_log, objectpath
 from gramex.services import info
 from .basehandler import BaseHandler
+
+
+def csv_encode(values, *args, **kwargs):
+    '''
+    Encode an array of unicode values into a comma-separated string. All
+    csv.writer parameters are valid.
+    '''
+    buf = io.BytesIO()
+    writer = csv.writer(buf, *args, **kwargs)
+    writer.writerow([v.encode('utf-8') for v in values])
+    return buf.getvalue().strip()
 
 
 class AuthHandler(BaseHandler):
     '''The parent handler for all Auth handlers.'''
     @classmethod
-    def setup(cls, **kwargs):
+    def setup(cls, log={}, **kwargs):
         super(AuthHandler, cls).setup(**kwargs)
         check_old_certs()
+        if log and hasattr(log, '__getitem__') and log.get('fields'):
+            cls.log_fields = log['fields']
+            cls.logger = logging.getLogger(log.get('logger', 'user'))
+        else:
+            cls.log_user_event = cls.noop
+
+    def log_user_event(self, event, **kwargs):
+        self.logger.info(csv_encode(
+            [event] + [objectpath(self, f, '') for f in self.log_fields]))
+
+    def noop(self, *args, **kwargs):
+        pass
+
+    def set_user(self, user, id):
+        user['id'] = user[id]
+        self.session['user'] = user
+        self.log_user_event(event='login')
+
+
+class LogoutHandler(AuthHandler):
+    def get(self):
+        self.save_redirect_page()
+        self.log_user_event(event='logout')
+        self.session.pop('user', None)
+        self.redirect_next()
 
 
 class GoogleAuth(AuthHandler, GoogleOAuth2Mixin):
@@ -24,9 +64,10 @@ class GoogleAuth(AuthHandler, GoogleOAuth2Mixin):
             access = yield self.get_authenticated_user(
                 redirect_uri=redirect_uri,
                 code=self.get_argument('code'))
-            self.session['user'] = yield self.oauth2_request(
-                "https://www.googleapis.com/oauth2/v1/userinfo",
-                access_token=access["access_token"])
+            user = yield self.oauth2_request(
+                'https://www.googleapis.com/oauth2/v1/userinfo',
+                access_token=access['access_token'])
+            self.set_user(user, id='id')
             self.redirect_next()
         else:
             self.save_redirect_page()
@@ -42,15 +83,15 @@ class GoogleAuth(AuthHandler, GoogleOAuth2Mixin):
         '''Override this method to use self.conf.kwargs instead of self.settings'''
         http = self.get_auth_http_client()
         body = urllib_parse.urlencode({
-            "redirect_uri": redirect_uri,
-            "code": code,
-            "client_id": self.conf.kwargs['key'],
-            "client_secret": self.conf.kwargs['secret'],
-            "grant_type": "authorization_code",
+            'redirect_uri': redirect_uri,
+            'code': code,
+            'client_id': self.conf.kwargs['key'],
+            'client_secret': self.conf.kwargs['secret'],
+            'grant_type': 'authorization_code',
         })
         http.fetch(self._OAUTH_ACCESS_TOKEN_URL,
                    functools.partial(self._on_access_token, callback),
-                   method="POST", body=body,
+                   method='POST', body=body,
                    headers={'Content-Type': 'application/x-www-form-urlencoded'})
 
 
@@ -58,12 +99,13 @@ class FacebookAuth(AuthHandler, FacebookGraphMixin):
     @tornado.gen.coroutine
     def get(self):
         redirect_uri = '{0.protocol:s}://{0.host:s}{0.path:s}'.format(self.request)
-        if self.get_argument("code", False):
-            self.session['user'] = yield self.get_authenticated_user(
+        if self.get_argument('code', False):
+            user = yield self.get_authenticated_user(
                 redirect_uri=redirect_uri,
                 client_id=self.conf.kwargs['key'],
                 client_secret=self.conf.kwargs['secret'],
                 code=self.get_argument('code'))
+            self.set_user(user, id='id')
             self.redirect_next()
         else:
             self.save_redirect_page()
@@ -81,8 +123,9 @@ class FacebookAuth(AuthHandler, FacebookGraphMixin):
 class TwitterAuth(AuthHandler, TwitterMixin):
     @tornado.gen.coroutine
     def get(self):
-        if self.get_argument("oauth_token", None):
-            self.session['user'] = yield self.get_authenticated_user()
+        if self.get_argument('oauth_token', None):
+            user = yield self.get_authenticated_user()
+            self.set_user(user, id='username')
             self.redirect_next()
         else:
             self.save_redirect_page()
@@ -90,22 +133,6 @@ class TwitterAuth(AuthHandler, TwitterMixin):
 
     def _oauth_consumer_token(self):
         return dict(key=self.conf.kwargs['key'], secret=self.conf.kwargs['secret'])
-
-
-@tornado.gen.coroutine
-def async(method, *args, **kwargs):
-    '''
-    Generic coroutine for LDAP functions. LDAP offers async functions that
-    return a message ID. We poll the LDAP object via ``.result()`` for a
-    response and return it when available.
-    '''
-    message_id = method(*args, **kwargs)
-    ldap_object = method.im_self
-    while True:
-        typ, data = ldap_object.result(message_id)
-        if typ is not None:
-            raise tornado.gen.Return(data)
-        yield tornado.gen.sleep(kwargs.get('delay', default=0.05))
 
 
 class LDAPAuth(AuthHandler):
@@ -142,7 +169,7 @@ class LDAPAuth(AuthHandler):
             self.report_error('conn', exc_info=True)
 
         # We now have a valid user. Get additional attributes
-        self.session['user'] = {'dn': conn.user}
+        user = {'dn': conn.user}
         try:
             result = yield info.threadpool.submit(conn.search, conn.user, '(objectClass=*)',
                                                   attributes=ldap3.ALL_ATTRIBUTES)
@@ -151,6 +178,7 @@ class LDAPAuth(AuthHandler):
         if result and len(conn.entries) > 0:
             # Attributes may continue binary data. Get the result as JSON and then use the dict
             import json
-            self.session['user'].update(json.loads(conn.entries[0].entry_to_json()))
+            user.update(json.loads(conn.entries[0].entry_to_json()))
 
+        self.set_user(user, id='dn')
         self.redirect_next()

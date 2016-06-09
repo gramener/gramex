@@ -87,6 +87,11 @@ log:
             - console
     loggers:
         gramex: {}
+        user:
+            level: INFO
+            propagate: propagate    # Do not propagate to root handler
+            handlers:
+                - user
         # Disable tornado loggers. Let them propagate to root
         tornado.access: {}
         tornado.application: {}
@@ -120,6 +125,17 @@ log:
             utc: False              # using local time zone, not UTC
             backupCount: 52         # keep only last 52 backups
             delay: true             # do not create file until called
+        user:
+            class: logging.handlers.TimedRotatingFileHandler
+            level: INFO
+            formatter: csv-message  # Just save the time and message as-is
+            filename: $GRAMEXDATA/logs/user.csv    # file name to save as
+            encoding: utf-8         # encoded as UTF-8
+            when: W0                # rotate the log file weekly
+            interval: 1             # every single week
+            utc: False              # using local time zone, not UTC
+            backupCount: 52         # keep only last 52 backups
+            delay: true             # do not create file until called
     formatters:
         text:
             format: '%(levelname)1.1s %(asctime)s %(module)s:%(lineno)d %(message)s'
@@ -130,6 +146,9 @@ log:
             datefmt: '%m-%b %H:%M:%S'
         file:
             format: '%(levelname)1.1s,%(asctime)s,%(module)s,%(lineno)d,"%(message)s"'
+            datefmt: '%Y-%m-%d %H:%M:%S'
+        csv-message:
+            format: '%(asctime)s,%(message)s'
             datefmt: '%Y-%m-%d %H:%M:%S'
 
 # Configure the thread pool that's shared across Gramex to run parallel threads

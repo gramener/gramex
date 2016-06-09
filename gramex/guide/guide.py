@@ -18,7 +18,7 @@ _template = AttrDict(
         'markdown.extensions.meta',
         'markdown.extensions.codehilite',
         'markdown.extensions.smarty',
-        'markdown.extensions.headerid',
+        'markdown.extensions.toc',
     ], output_format='html5'),
 )
 

@@ -135,6 +135,22 @@ field. Additional fields (e.g. for domain) are optional. The `user:` and
 
 [xsrf]: http://www.tornadoweb.org/en/stable/guide/security.html#cross-site-request-forgery-protection
 
+## Log out
+
+This configuration creates a [logout page](logout):
+
+    :::yaml
+    auth/logout
+        pattern: /$YAMLURL/logout   # Map this URL
+        handler: LogoutHandler      # to the logout handler
+        redirect:                   # Redirect options are applied in order
+            query: next             # If ?next= is specified, use it
+            url: /$YAMLURL          # Else redirect to the directory where this gramex.yaml is present
+
+After logging out, the user is re-directed to the URL specified by `?next=`.
+Else, they're redirected to the current page. Read the
+[redirection](#redirection) section for more.
+
 ## Redirection
 
 After users logs in, they are redirected based on the common `redirect:` section
@@ -181,6 +197,37 @@ You can test this at
 All handlers store the information retrieved about the user in
 `handler.session['user']`, typically as a dictionary. All handlers have access
 to this information via `handler.get_current_user()` by default.
+
+## Logging
+
+You can configure a logging action for when the user logs in or logs out via the
+`log:` configuration. For example:
+
+    auth/twitter:
+        pattern: /$YAMLURL/twitter
+        handler: TwitterAuth
+        kwargs:
+            key: XkCVNZD5sfWECxHGAGnlHGQFa
+            secret: yU00bx5dHYMbge9IyO5H1KeC5uFnWndntG7u6CH6O4HDZHQg0p
+            log:                                # Log this when a user logs in via this handler
+                fields:                         # List of fields:
+                  - session.id                  #   handler.session['id']
+                  - session.user.username       #   handler.session['user']['username']
+                  - request.remote_ip           #   handler.request.remote_ip
+                  - request.headers.User-Agent  #   handler.request.headers['User-Agent']
+
+This will log the result into the `user` logger, which saves the data as a CSV file in `$GRAMEXDATA/logs/user.csv`. (See [predefined variables](../config/#predefined-variables) to locate `$GRAMEXDATA`.)
+
+You can define your own logging handler for the `user` logger in the [log section](../config/#logging). Here's a sample definition:
+
+    log:
+        handlers:
+            user:
+                class: logging.handlers.FileHandler     # Save it as a file
+                filename: $YAMLPATH/user.csv            # under YAML file's directory as user.csv
+                formatter: csv-message                  # Format message as-is. (Don't change this line)
+
+You can also use more sophisticated loggers such as [TimedRotatingFileHandler](https://docs.python.org/3/library/logging.handlers.html#logging.handlers.TimedRotatingFileHandler).
 
 # Authorization
 
