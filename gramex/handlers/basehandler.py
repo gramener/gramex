@@ -28,9 +28,10 @@ class BaseHandler(RequestHandler):
         One-time setup for all request handlers. This is called only when
         gramex.yaml is parsed / changed.
         '''
+        cls._on_finish_methods = []
+
         # transform: sets up transformations on ouput that some handlers use
         cls.transform = {}
-        cls._on_finish_class = []
         for pattern, trans in transform.items():
             cls.transform[pattern] = {
                 'function': build_transform(
@@ -62,7 +63,7 @@ class BaseHandler(RequestHandler):
             cls._session_store = session_store_cache[key]
             cls.session = property(cls.get_session)
             cls._session_days = session_conf.get('expiry')
-            cls._on_finish_class.append(cls.save_session)
+            cls._on_finish_methods.append(cls.save_session)
 
         # redirect: sets up redirect methods
         cls.redirects = []
@@ -201,7 +202,7 @@ class BaseHandler(RequestHandler):
 
     def on_finish(self):
         # Loop through class-level callbacks
-        for callback in self._on_finish_class:
+        for callback in self._on_finish_methods:
             callback(self)
 
 
