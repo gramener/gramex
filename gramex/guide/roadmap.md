@@ -11,7 +11,7 @@ Features for the next 2 releases are below. Bugs to be fixed are at the
 - Data discovery and metadata explorer
 - Data table display
 - Visual filtering of data
-- Integration with ActiveDirectory, SAML, OAuth
+- Integration with ActiveDirectory, OAuth
 
 
 ## 1.0.10 (1 Jul 2016): Data entry
@@ -83,3 +83,10 @@ This is a work-in-progress list of features on the Gramex 1.0 roadmap.
 - Custom login templates
 - Access control for URLs
 - XSRF, XSS, etc
+
+
+## Decisions
+
+- 9 Jun 2016: Integration with SAML deferred for lack of an easy-to-install SAML
+  library on Windows. python-saml (and python3-saml) require `xmlsec` which is
+  difficult to install.
