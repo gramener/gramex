@@ -52,13 +52,14 @@ class BaseHandler(RequestHandler):
         session_conf = conf.app.get('session')
         if session_conf is not None:
             key = store_type, store_path = session_conf.get('type'), session_conf.get('path')
+            flush = session_conf.get('flush')
             if key not in session_store_cache:
                 if store_type == 'memory':
-                    session_store_cache[key] = KeyStore(store_path)
+                    session_store_cache[key] = KeyStore(store_path, flush=flush)
                 elif store_type == 'json':
-                    session_store_cache[key] = JSONStore(store_path)
+                    session_store_cache[key] = JSONStore(store_path, flush=flush)
                 elif store_type == 'hdf5':
-                    session_store_cache[key] = HDF5Store(store_path)
+                    session_store_cache[key] = HDF5Store(store_path, flush=flush)
                 else:
                     raise NotImplementedError('Session type: %s not implemented' % store_type)
             cls._session_store = session_store_cache[key]
@@ -174,8 +175,7 @@ class BaseHandler(RequestHandler):
         create it. By default, the session object contains a "id" holding the
         "sid" value.
 
-        The session object is an AttrDict. Ensure that it contains JSON
-        serializable objects.
+        The session is a dict. You must ensure that it is JSON serializable.
         '''
         if getattr(self, '_session', None) is None:
             session_id = self.get_secure_cookie('sid', max_age_days=self._session_days)
@@ -184,22 +184,15 @@ class BaseHandler(RequestHandler):
                 session_id = b2a_base64(os.urandom(24))[:-1]
                 self.set_secure_cookie('sid', session_id, expires_days=self._session_days)
             session_id = session_id.decode('ascii')
-            # The session data is stored as JSON. Load it. If missing, use an empty AttrDict
-            self._session_json = self._session_store.load(session_id, '{}')
-            self._session = json.loads(self._session_json, object_pairs_hook=AttrDict)
-            # Overwrite the .id to the session ID even if a handler has changed it
-            self._session.id = session_id
+            self._session = self._session_store.load(session_id, {})
+            # Overwrite id to the session ID even if a handler has changed it
+            self._session['id'] = session_id
         return self._session
 
     def save_session(self):
         '''Persist the session object as a JSON'''
-        if getattr(self, '_session', None) is None:
-            return
-        # If the JSON representation of the session object has changed, save it
-        session_json = json.dumps(self._session, ensure_ascii=True, separators=(',', ':'))
-        if session_json != self._session_json:
-            self._session_store.dump(self._session.id, session_json)
-            self._session_json = session_json
+        if getattr(self, '_session', None) is not None:
+            self._session_store.dump(self._session['id'], self._session)
 
     def on_finish(self):
         # Loop through class-level callbacks
@@ -208,46 +201,77 @@ class BaseHandler(RequestHandler):
 
 
 class KeyStore(object):
-    def __init__(self, path):
+    '''
+    Base class for persistent dictionaries. (But KeyStore is not persistent.)
+
+        >>> store = KeyStore(path)
+        >>> value = store.load(key, None)
+        >>> store.dump(key, value)
+        >>> store.close()
+    '''
+    def __init__(self, path, flush=None):
+        '''Initialise the KeyStore at path'''
+        # Ensure that path directory exists
         self.path = os.path.abspath(path)
         folder = os.path.dirname(self.path)
         if not os.path.exists(folder):
             os.makedirs(folder)
         self.store = {}
+        # Periodically flush buffers
+        if flush is not None:
+            tornado.ioloop.PeriodicCallback(self.flush, callback_time=flush).start()
+        # Call close() when Python gracefully exits
         atexit.register(self.close)
 
+    def keys(self):
+        '''Return all keys in the store'''
+        return self.store.keys()
+
     def load(self, key, default=None):
-        return self.store.get(key, default)
+        '''Same as store.get(), but called "load" to indicate persistence'''
+        return self.store.get(key, {} if default is None else default)
 
     def dump(self, key, value):
+        '''Same as store[key] = value'''
         self.store[key] = value
 
+    def flush(self):
+        '''Write to disk'''
+        pass
+
     def close(self):
+        '''Flush and close all open handles'''
         pass
 
 
 class HDF5Store(KeyStore):
-    def __init__(self, path):
-        super(HDF5Store, self).__init__(path)
+    def __init__(self, path, *args, **kwargs):
+        super(HDF5Store, self).__init__(path, *args, **kwargs)
         import h5py
         self.store = h5py.File(self.path, 'a')
 
     def load(self, key, default=None):
-        result = self.store.get(key, default)
-        return result.value if hasattr(result, 'value') else result
+        result = self.store.get(key, None)
+        if result is None:
+            return default
+        json_value = result.value if hasattr(result, 'value') else result
+        return json.loads(json_value, object_pairs_hook=AttrDict)
 
     def dump(self, key, value):
         if key in self.store:
             del self.store[key]
-        self.store[key] = value
+        self.store[key] = json.dumps(value, ensure_ascii=True, separators=(',', ':'))
+
+    def flush(self):
+        self.store.flush()
 
     def close(self):
         self.store.close()
 
 
 class JSONStore(KeyStore):
-    def __init__(self, path):
-        super(JSONStore, self).__init__(path)
+    def __init__(self, path, *args, **kwargs):
+        super(JSONStore, self).__init__(path, *args, **kwargs)
         try:
             self.handle = open(self.path, 'r+')     # noqa: no encoding for json
             self.store = json.load(self.handle)
@@ -255,9 +279,12 @@ class JSONStore(KeyStore):
             self.handle = open(self.path, 'w')      # noqa: no encoding for json
             self.store = {}
 
-    def close(self):
+    def flush(self):
         self.handle.seek(0)
         json.dump(self.store, self.handle, ensure_ascii=True, separators=(',', ':'))
+
+    def close(self):
+        self.flush()
         self.handle.close()
 
 

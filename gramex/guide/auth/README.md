@@ -192,11 +192,39 @@ override this:
 You can test this at
 [ldap2?next=https://gramener.com/](ldap2?next=https://gramener.com/).
 
+## Login actions
+
+When a user logs in or logs out, you can register actions as follows:
+
+    url:
+      login/google:
+        pattern: /$YAMLURL/google
+        handler: GoogleAuth
+        kwargs:
+          key: YOURKEY
+          secret: YOURSECRET
+          action:                                     # Run multiple function on Google auth
+              -                                       # The first action
+                function: ensure_single_session       #   ... logs user out of all other sessions
+              -                                       # The section action
+                function: sys.stderr.write            #   ... writes to the console
+                args: 'Logged in via Google'          #   ... this message
+
+For example, the [ldap login](ldap) page is set with `ensure_single_session`.
+You can log in on multiple browsers. Every log in will log out other sessions.
+
+You can write your own custom functions. By default, the function will be passed
+the `handler` object. You can define any other `args` or `kwargs` to pass
+instead. The actions will be executed in order.
+
+When calling actions, `handler.current_user` will have the user object on all
+auth handlers and the `LogoutHandler`.
+
 ## User information
 
 All handlers store the information retrieved about the user in
 `handler.session['user']`, typically as a dictionary. All handlers have access
-to this information via `handler.get_current_user()` by default.
+to this information via `handler.current_user` by default.
 
 ## Logging
 
@@ -212,7 +240,7 @@ You can configure a logging action for when the user logs in or logs out via the
             log:                                # Log this when a user logs in via this handler
                 fields:                         # List of fields:
                   - session.id                  #   handler.session['id']
-                  - session.user.username       #   handler.session['user']['username']
+                  - current_user.username       #   handler.current_user['username']
                   - request.remote_ip           #   handler.request.remote_ip
                   - request.headers.User-Agent  #   handler.request.headers['User-Agent']
 
@@ -262,7 +290,7 @@ accessible to all.
                 auth:
                     condition:                          # Allow only if condition is true
                         function: six.string_type.endswith            # Call this function
-                        args: [=handler.session.user.email, '.com']   # with these 2 arguments
+                        args: [=handler.current_user.email, '.com']   # with these 2 arguments
         auth/dotorg:
             pattern: /$YAMLURL/dotorg
             handler: FileHandler
@@ -271,7 +299,7 @@ accessible to all.
                 auth:
                     condition:                          # Allow only if condition is true
                         function: six.string_type.endswith            # Call this function
-                        args: [=handler.session.user.email, '.org']   # with these 2 arguments
+                        args: [=handler.current_user.email, '.org']   # with these 2 arguments
 
 You can specify any function of your choice. The function must return (or yield)
 `True` to allow the user access, and `False` to raise a HTTP 403 error.
@@ -285,4 +313,4 @@ only if your gender is `male` and your locale is `en` or `es`:
                 locale: [en, es]  # user.locale must be en or es
 
 If the `user` object has nested attributes, you can access them via `.`. For
-example, `attributes.cn` refers to `handlers.session.user.attributes.cn`.
+example, `attributes.cn` refers to `handlers.current_user.attributes.cn`.

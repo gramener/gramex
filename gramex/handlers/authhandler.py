@@ -1,15 +1,18 @@
 from __future__ import unicode_literals
 import io
 import csv
+import six
 import logging
 import functools
 import tornado.web
 import tornado.gen
 from tornado.auth import (GoogleOAuth2Mixin, FacebookGraphMixin, TwitterMixin,
                           urllib_parse, _auth_return_future)
+from orderedattrdict import AttrDict
 from gramex.config import check_old_certs, app_log, objectpath
 from gramex.services import info
 from .basehandler import BaseHandler
+from ..transforms import build_transform
 
 
 def csv_encode(values, *args, **kwargs):
@@ -19,14 +22,17 @@ def csv_encode(values, *args, **kwargs):
     '''
     buf = io.BytesIO()
     writer = csv.writer(buf, *args, **kwargs)
-    writer.writerow([v.encode('utf-8') for v in values])
+    writer.writerow([
+        v if isinstance(v, six.binary_type) else
+        v.encode('utf-8') if isinstance(v, six.text_type) else repr(v)
+        for v in values])
     return buf.getvalue().strip()
 
 
 class AuthHandler(BaseHandler):
     '''The parent handler for all Auth handlers.'''
     @classmethod
-    def setup(cls, log={}, **kwargs):
+    def setup(cls, log={}, action=None, **kwargs):
         super(AuthHandler, cls).setup(**kwargs)
         check_old_certs()
         if log and hasattr(log, '__getitem__') and log.get('fields'):
@@ -34,6 +40,14 @@ class AuthHandler(BaseHandler):
             cls.logger = logging.getLogger(log.get('logger', 'user'))
         else:
             cls.log_user_event = cls.noop
+        cls.actions = []
+        if action is not None:
+            if not isinstance(action, list):
+                action = [action]
+            for conf in action:
+                cls.actions.append(build_transform(
+                    conf, vars=AttrDict(handler=None),
+                    filename='url>%s>%s' % (cls.name, conf.function)))
 
     def log_user_event(self, event, **kwargs):
         self.logger.info(csv_encode(
@@ -45,15 +59,19 @@ class AuthHandler(BaseHandler):
     def set_user(self, user, id):
         user['id'] = user[id]
         self.session['user'] = user
+        for callback in self.actions:
+            callback(self)
         self.log_user_event(event='login')
 
 
 class LogoutHandler(AuthHandler):
     def get(self):
         self.save_redirect_page()
-        self.log_user_event(event='logout')
+        for callback in self.actions:
+            callback(self)
         self.session.pop('user', None)
         self.redirect_next()
+        self.log_user_event(event='logout')
 
 
 class GoogleAuth(AuthHandler, GoogleOAuth2Mixin):

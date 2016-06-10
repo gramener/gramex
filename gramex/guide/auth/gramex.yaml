@@ -4,7 +4,7 @@ url:
         handler: LogoutHandler
         kwargs:
             log:
-                fields: [session.id, session.user.email, request.remote_ip, request.headers.User-Agent]
+                fields: [session.id, current_user.email, request.remote_ip, request.headers.User-Agent]
             redirect:
                 query: next
                 url: /$YAMLURL
@@ -19,7 +19,7 @@ url:
             key: 817932882244-gdr59t3mpqh5554d1bgdjuh38g6a7ahh.apps.googleusercontent.com
             secret: lwArXkw21KCqDPuJrel-WeQO
             log:
-                fields: [session.id, session.user.email, request.remote_ip, request.headers.User-Agent]
+                fields: [session.id, current_user.email, request.remote_ip, request.headers.User-Agent]
             redirect:
                 query: next
                 url: /$YAMLURL
@@ -33,7 +33,7 @@ url:
             key: '794214110679951'
             secret: a026887ed94aef25f2f637bf154349df
             log:
-                fields: [session.id, session.user.name, request.remote_ip, request.headers.User-Agent]
+                fields: [session.id, current_user.name, request.remote_ip, request.headers.User-Agent]
             redirect:
                 query: next
                 url: /$YAMLURL
@@ -47,7 +47,7 @@ url:
             key: XkCVNZD5sfWECxHGAGnlHGQFa
             secret: yU00bx5dHYMbge9IyO5H1KeC5uFnWndntG7u6CH6O4HDZHQg0p
             log:
-                fields: [session.id, session.user.username, request.remote_ip, request.headers.User-Agent]
+                fields: [session.id, current_user.username, request.remote_ip, request.headers.User-Agent]
             redirect:
                 query: next
                 url: /$YAMLURL
@@ -62,7 +62,9 @@ url:
             user: 'uid={user},cn=users,cn=accounts,dc=demo1,dc=freeipa,dc=org'
             password: '{password}'
             log:
-                fields: [session.id, session.user.email, request.remote_ip, request.headers.User-Agent]
+                fields: [session.id, current_user.dn, request.remote_ip, request.headers.User-Agent]
+            action:
+                function: ensure_single_session
             redirect:
                 query: next
                 url: /$YAMLURL
@@ -116,7 +118,7 @@ url:
             auth:
                 condition:                          # Allow only if condition is true
                     function: six.text_type.endswith              # Call this function
-                    args: [=handler.session.user.email, '.com']   # with these 2 arguments
+                    args: [=handler.current_user.email, '.com']   # with these 2 arguments
     auth/dotorg:
         pattern: /$YAMLURL/dotorg
         handler: FileHandler
@@ -125,7 +127,7 @@ url:
             auth:
                 condition:                          # Allow only if condition is true
                     function: six.text_type.endswith              # Call this function
-                    args: [=handler.session.user.email, '.org']   # with these 2 arguments
+                    args: [=handler.current_user.email, '.org']   # with these 2 arguments
 
     auth/en-male:
         pattern: /$YAMLURL/en-male

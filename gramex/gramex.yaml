@@ -1,3 +1,6 @@
+# This is the base configuration file for Gramex. To override it, copy the
+# setting to your `gramex.yaml` and change it.
+
 # Gramex APIs are versioned. The version key is required. Currently, 1.0 is the
 # only version supported.
 version: 1.0
@@ -47,6 +50,7 @@ app:
         type: json                      # Type of store to use: hdf5, json or memory
         path: $GRAMEXDATA/session.json  # Path to the store (ignored for memory)
         expiry: 31                      # Session cookies expiry in days
+        flush: 60000                    # Write store to disk periodically (in milliseconds)
 
 
 # Define system caches.
@@ -89,7 +93,7 @@ log:
         gramex: {}
         user:
             level: INFO
-            propagate: propagate    # Do not propagate to root handler
+            propagate: false            # Do not propagate to root handler
             handlers:
                 - user
         # Disable tornado loggers. Let them propagate to root
@@ -151,9 +155,9 @@ log:
             format: '%(asctime)s,%(message)s'
             datefmt: '%Y-%m-%d %H:%M:%S'
 
-# Configure the thread pool that's shared across Gramex to run parallel threads
+# Configure the thread pool that's shared across Gramex to run parallel threads.
 threadpool:
-    workers: 8                  # Max number of parallel threads
+    workers: 16                 # Max number of parallel threads
 
 # The `schedule:` section defines when specific code is to run.
 schedule:
