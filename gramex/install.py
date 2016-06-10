@@ -43,7 +43,8 @@ run: |
         gramex run app --target=/path/to/dir --listen.port=8899 --browser=true
 
     ... will preserve the "target", "listen.port" and "browser" values. Running
-    "gramex run app" will re-use these values. To clear values, use "--option="
+    "gramex run app" will re-use these values. To clear the option, leave the
+    value blank. For example "--browser=" will clear the browser option.
 
 uninstall: |
     usage: gramex uninstall <app> [<app> ...]
