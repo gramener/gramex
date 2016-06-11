@@ -1,0 +1,5 @@
+user,password,roles
+alpha,alpha123,employee manager
+beta,beta123,manager admin
+gamma,gamma123,employee
+delta,delta123,

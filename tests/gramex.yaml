@@ -753,6 +753,27 @@ url:
     kwargs:
       path: $YAMLPATH/jsonhandler.json
 
+  auth/db:
+    pattern: /auth/db
+    handler: DBAuth
+    kwargs:
+        template: $YAMLPATH/dbauth.html
+        # This is created by schedule.create-user-database
+        url: 'mysql+pymysql://root@${MYSQL_SERVER}/test_auth'
+        table: users
+        user:
+            column: user
+            arg: user
+        password:
+            column: password
+            arg: password
+            function: six.text_type.__add__
+            args: [=content, '123']
+        redirect:
+            query: next
+            header: NEXT
+            url: /dir/index/
+
 # Display Gramex logs on console with indentation
 log:
     version: 1

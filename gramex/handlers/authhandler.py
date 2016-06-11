@@ -12,7 +12,7 @@ from orderedattrdict import AttrDict
 from gramex.config import check_old_certs, app_log, objectpath
 from gramex.services import info
 from .basehandler import BaseHandler
-from ..transforms import build_transform, template
+from ..transforms import build_transform
 
 
 def csv_encode(values, *args, **kwargs):
@@ -163,6 +163,7 @@ class LDAPAuth(AuthHandler):
     def report_error(self, code, exc_info=False):
         error = self.errors[code].format(host=self.conf.kwargs.host, args=self.request.arguments)
         app_log.error('LDAP: ' + error, exc_info=exc_info)
+        self.set_status(status_code=401)
         self.render(self.conf.kwargs.template, error={'code': code, 'error': error})
         raise tornado.gen.Return()
 
@@ -211,17 +212,22 @@ class DBAuth(AuthHandler):
     @classmethod
     def setup(cls, url, table, user, password, **kwargs):
         super(DBAuth, cls).setup(**kwargs)
-        from sqlalchemy import create_engine, MetaData
-        cls.user, cls.password = user, password
+        from sqlalchemy import create_engine
+        cls.user, cls.password, cls.tablename = user, password, table
         cls.engine = create_engine(url, **kwargs.get('parameters', {}))
-        meta = MetaData(bind=cls.engine)
-        meta.reflect()
-        cls.table = meta.tables[table]
         cls.encrypt = []
         if 'function' in password:
             cls.encrypt.append(build_transform(
                 password, vars=AttrDict(content=None),
                 filename='url>%s>encrypt' % (cls.name)))
+
+    @classmethod
+    def bind_to_db(cls):
+        if not hasattr(cls, 'table'):
+            from sqlalchemy import MetaData
+            meta = MetaData(bind=cls.engine)
+            meta.reflect()
+            cls.table = meta.tables[cls.tablename]
 
     def get(self):
         self.save_redirect_page()
@@ -234,6 +240,12 @@ class DBAuth(AuthHandler):
         for encrypt in self.encrypt:
             for result in encrypt(password):
                 password = result
+
+        # To access the table, we need to connect to the database. Doing that in
+        # setup() is too early -- schedule or other methods may not have created
+        # the table by then. So try here, and retry every request.
+        self.bind_to_db()
+
         from sqlalchemy import and_
         query = self.table.select().where(and_(
             self.table.c[self.user.column] == user,
@@ -245,4 +257,8 @@ class DBAuth(AuthHandler):
             self.set_user(dict(user), id=self.user.column)
             self.redirect_next()
         else:
-            self.render(self.conf.kwargs.template, error={'code': 'auth', 'error': 'Cannot log in'})
+            self.set_status(status_code=401)
+            self.render(self.conf.kwargs.template, error={
+                'code': 'auth',
+                'error': 'Cannot log in'
+            })

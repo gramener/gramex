@@ -10,7 +10,7 @@ def store_value(handler):
 
 
 def create_user_database(url, table, user, password, salt):
-    engine = sqlalchemy.create_engine(url)
+    engine = sqlalchemy.create_engine(url, encoding='utf-8')
     folder = os.path.dirname(os.path.abspath(engine.url.database))
     if not os.path.exists(folder):
         os.makedirs(folder)
