@@ -5,56 +5,19 @@
 # only version supported.
 version: 1.0
 
-# The `app:` section defines the settings for the main Gramex application
-app:
-    browser: False                      # Open the browser on startup
+# Define custom MIME types here
+mime:
+    .yml:       text/yaml
+    .yaml:      text/yaml
+    .md:        text/markdown
+    .markdown:  text/markdown
+    .json:      application/json
 
-    debug:
-        exception: False                # Start debugger on exceptions
-
-    listen:
-        port: 9988                      # Port to bind to. (8888 used by Jupyter)
-        xheaders: True                  # X-Real-Ip/X-Forwarded-For and X-Scheme/X-Forwarded-Proto override remote IP, scheme
-        max_buffer_size: 1000000000     # Max length of data that can be POSTed
-        max_header_size: 1000000000     # Max length of header that can be received
-        max_body_size: 1000000000       # Max length of data that can be uploaded
-
-    # These are Tornado application settings. See
-    # http://tornado.readthedocs.org/en/stable/web.html#tornado.web.Application.settings
-    settings:                           # Tornado app settings
-        # default_host: 'host'          # Optional name of default host
-        compress_response: True         # GZip the HTTP response
-
-        # Debug parameters
-        # autoreload: False               # Reload Gramex when imported Python file changes
-        # compiled_template_cache: True   # Cache template files across requests
-        # static_hash_cache: True         # Cache static files across requests
-        # serve_traceback: True           # Show traceback on browser if there's an error
-        debug: False                    # = autoreload + !compiled_template_cache + !static_hash_cache + serve_traceback
-
-        # Cookie parameters
-        xsrf_cookies: True              # Reject POST/PUT/DELETE unless _xsrf header / form input is present
-        cookie_secret: secret-key       # Encrypt cookies with this secret key
-        key_version: 2                  # Cookie encryption version. 2 is the latest
-
-        # Template parameters
-        autoescape: xhtml_escape        # Escape HTML tags in templates
-        template_path: .                # Default location of templates (not currently used)
-        static_path: './static'         # Local path for static files (not currently used)
-        static_url_prefix: '/static/'   # URL prefix for static files (not currently used)
-
-        # Login parameters
-        login_url: /login               # URL used to log in
-
-    session:
-        type: json                      # Type of store to use: hdf5, json or memory
-        path: $GRAMEXDATA/session.json  # Path to the store (ignored for memory)
-        expiry: 31                      # Session cookies expiry in days
-        flush: 60000                    # Write store to disk periodically (in milliseconds)
-
+# Configure the thread pool that's shared across Gramex to run parallel threads.
+threadpool:
+    workers: 16                 # Max number of parallel threads
 
 # Define system caches.
-# This section MUST be before the url: section. Otherwise, the urls cannot use the cache
 cache:
     memory:
         type: memory                    # A default in-memory cache
@@ -65,20 +28,6 @@ handlers:
         ignore:
             - gramex.yaml               # Always ignore gramex.yaml in Filehandlers
             - ".*"                      # Hide dotfiles
-
-# The `url:` section maps URL patterns to handlers.
-# http://tornado.readthedocs.org/en/stable/web.html#tornado.web.URLSpec
-url:
-    default:                            # A unique name for this handler
-        priority: -1                    # Apply this pattern with low than normal priority
-        pattern: /(.*)                  # All URLs beginning with /
-        handler: FileHandler                # Handler used
-        kwargs:                             # Options to the handler
-            path: .                         #   path is current dir
-            default_filename: index.html    #   default filename
-            index: true                     #   display the index
-            headers:
-                Cache-Control: max-age=60   # By default, cache for a minute
 
 # The `log:` section defines the log handlers. It uses the same structure as the
 # Python logging schema.
@@ -155,9 +104,57 @@ log:
             format: '%(asctime)s,%(message)s'
             datefmt: '%Y-%m-%d %H:%M:%S'
 
-# Configure the thread pool that's shared across Gramex to run parallel threads.
-threadpool:
-    workers: 16                 # Max number of parallel threads
+# ------------------------------------------------------------------------------
+# The app, schedule, url sections are defined at the end to allow these to use
+# earlier services.
+
+# The `app:` section defines the settings for the main Gramex application
+app:
+    browser: False                      # Open the browser on startup
+
+    debug:
+        exception: False                # Start debugger on exceptions
+
+    listen:
+        port: 9988                      # Port to bind to. (8888 used by Jupyter)
+        xheaders: True                  # X-Real-Ip/X-Forwarded-For and X-Scheme/X-Forwarded-Proto override remote IP, scheme
+        max_buffer_size: 1000000000     # Max length of data that can be POSTed
+        max_header_size: 1000000000     # Max length of header that can be received
+        max_body_size: 1000000000       # Max length of data that can be uploaded
+
+    # These are Tornado application settings. See
+    # http://tornado.readthedocs.org/en/stable/web.html#tornado.web.Application.settings
+    settings:                           # Tornado app settings
+        # default_host: 'host'          # Optional name of default host
+        compress_response: True         # GZip the HTTP response
+
+        # Debug parameters
+        # autoreload: False               # Reload Gramex when imported Python file changes
+        # compiled_template_cache: True   # Cache template files across requests
+        # static_hash_cache: True         # Cache static files across requests
+        # serve_traceback: True           # Show traceback on browser if there's an error
+        debug: False                    # = autoreload + !compiled_template_cache + !static_hash_cache + serve_traceback
+
+        # Cookie parameters
+        xsrf_cookies: True              # Reject POST/PUT/DELETE unless _xsrf header / form input is present
+        cookie_secret: secret-key       # Encrypt cookies with this secret key
+        key_version: 2                  # Cookie encryption version. 2 is the latest
+
+        # Template parameters
+        autoescape: xhtml_escape        # Escape HTML tags in templates
+        template_path: .                # Default location of templates (not currently used)
+        static_path: './static'         # Local path for static files (not currently used)
+        static_url_prefix: '/static/'   # URL prefix for static files (not currently used)
+
+        # Login parameters
+        login_url: /login               # URL used to log in
+
+    session:
+        type: json                      # Type of store to use: hdf5, json or memory
+        path: $GRAMEXDATA/session.json  # Path to the store (ignored for memory)
+        expiry: 31                      # Session cookies expiry in days
+        flush: 60000                    # Write store to disk periodically (in milliseconds)
+
 
 # The `schedule:` section defines when specific code is to run.
 schedule:
@@ -172,10 +169,16 @@ schedule:
         dates: '*'
         thread: true
 
-# Define custom MIME types here
-mime:
-    .yml:       text/yaml
-    .yaml:      text/yaml
-    .md:        text/markdown
-    .markdown:  text/markdown
-    .json:      application/json
+# http://tornado.readthedocs.org/en/stable/web.html#tornado.web.URLSpec
+# Define this section at the end, to allow it to use previous services.
+url:
+    default:                            # A unique name for this handler
+        priority: -1                    # Apply this pattern with low than normal priority
+        pattern: /(.*)                  # All URLs beginning with /
+        handler: FileHandler                # Handler used
+        kwargs:                             # Options to the handler
+            path: .                         #   path is current dir
+            default_filename: index.html    #   default filename
+            index: true                     #   display the index
+            headers:
+                Cache-Control: max-age=60   # By default, cache for a minute
