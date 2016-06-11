@@ -11,6 +11,7 @@
   <nav class="menu">
     <h1><a href="/$GUIDE_ROOT/">Gramex Guide</a></h1>
     <ul>
+      <li><a href="/$GUIDE_ROOT/about/">About Gramex</a></li>
       <li><a href="/$GUIDE_ROOT/install/">Install Gramex</a></li>
       <li><a href="/$GUIDE_ROOT/server/">Web server</a></li>
       <li><a href="/$GUIDE_ROOT/config/">Configurations</a></li>
@@ -27,6 +28,7 @@
       <li><a href="/$GUIDE_ROOT/watch/">Watch files</a></li>
       <li><a href="/$GUIDE_ROOT/handlers/">Write handlers</a></li>
       <li><a href="/$GUIDE_ROOT/deploy/">Deployment patterns</a></li>
+      <li><a href="https://learn.gramener.com/gramex/gramex.html">Reference</a></li>
     </ul>
   </nav>
 

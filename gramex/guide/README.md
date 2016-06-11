@@ -1,6 +1,10 @@
 title: Gramex Guide
 classes: toc
 
+## [About Gramex](about/)
+
+**Exercise**: Write a haiku in praise of Gramex.
+
 ## [Install Gramex](install/)
 
 **Exercise**: Install Gramex on your system and run `gramex`.
@@ -70,3 +74,5 @@ classes: toc
 **Exercise**: TBD
 
 ## [Roadmap](roadmap)
+
+## [Reference](https://learn.gramener.com/gramex/gramex.html)
