@@ -4,6 +4,7 @@ import random
 import sqlalchemy
 from passlib.hash import sha256_crypt
 
+
 def store_value(handler):
     handler.session.setdefault('randkey', random.randint(0, 1000))
     return json.dumps(handler.session, indent=4)
