@@ -259,8 +259,12 @@ class DBAuth(AuthHandler):
         ))
         result = self.engine.execute(query)
         user = result.fetchone()
+
         if user is not None:
-            self.set_user(dict(user), id=self.user.column)
+            # Delete password from user object before storing it in the session
+            user = dict(user)
+            user.pop(self.password.column, None)
+            self.set_user(user, id=self.user.column)
             self.redirect_next()
         else:
             self.set_status(status_code=401)
