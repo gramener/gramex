@@ -6,6 +6,7 @@
 lxml >= 3.6.0       # transforms.badgerfish to convert objects to/from XML
 blaze = 0.9.1       # handlers.DataHandler to treat database tables as DataFrames
 ldap3 >= 1.0.4      # handlers.LDAPAuth
+passlib >= 1.6.5    # handlers.DBAuth
 
 # NOT part of Anaconda
 psycopg2 >= 2.6.1   # For PostgreSQL connections

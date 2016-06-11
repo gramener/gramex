@@ -105,8 +105,9 @@ url:
             password:
                 column: $USER_DATABASE_PASSWORDCOLUMN
                 arg: password
-                function: six.text_type.__add__
-                args: [=content, $USER_DATABASE_SALT]
+                function: passlib.hash.sha256_crypt.encrypt
+                args: =content
+                kwargs: {salt: $USER_DATABASE_SALT}
             redirect:
                 query: next
                 url: /$YAMLURL

@@ -119,7 +119,7 @@ This configuration creates an [LDAP login page](ldap):
         pattern: /$YAMLURL/ldap                 # Map this URL
         handler: LDAPAuth                       # to the LDAP auth handler
         kwargs:
-            template: $YAMLPATH/ldap.html       # This has the login form
+            template: $YAMLPATH/ldap.html       # Render the login form template
             host: ipa.demo1.freeipa.org         # Server to connect to
             use_ssl: true                       # Whether to use SSL or not
             port: 636                           # Optional. Usually 389 for LDAP, 636 for LDAPS
@@ -132,8 +132,64 @@ field. Additional fields (e.g. for domain) are optional. The `user:` and
 `{braces}` are replaced by form fields -- so if the user enters `admin` in the
 `user` field, `uid={user},cn=...` becomes `uid=admin,cn=...`.
 
+Here is a minimal `ldap.html` template:
+
+    :::html
+    <form method="POST">
+      {% if error %}<p>error code: {{ error['code'] }}, message: {{ error['message'] }}</p>{% end %}
+      <input type="hidden" name="_xsrf" value="{{ handler.xsrf_token }}">
+      <input name="user">
+      <input name="password" type="password">
+      <button type="submit">Submit</button>
+    </form>
 
 [xsrf]: http://www.tornadoweb.org/en/stable/guide/security.html#cross-site-request-forgery-protection
+
+
+## Database
+
+This configuration lets you log in from a [database table](db):
+
+    :::yaml
+    pattern: /$YAMLURL/db                 # Map this URL
+    handler: DBAuth                       # to the DBAuth handler
+    kwargs:
+        template: $YAMLPATH/dbauth.html   # Render the login form template
+        url: sqlite:///$YAMLPATH/auth.db  # Pick up list of users from this sqlalchemy URL
+        table: users                      # ... and this table
+        user:
+            column: user                  # The users.user column is matched with
+            arg: user                     # ... the ?user= argument from the form
+        password:
+            column: password              # The users.password column is matched with
+            arg: password                 # ... the ?password= argument from the form
+            # If the database holds encrypted passwords, specify the same
+            # encryption method here. If the form password is the same as the
+            # database password, skip this section.
+            function: passlib.hash.sha256_crypt.encrypt
+            args: '=content'
+            kwargs: {salt: 'secret-key'}
+
+The [login page](db) should provide a username, password and an [xsrf][xsrf]
+field. In this configuration, the usernames and passwords are stored in the `users`
+table of the SQLite `auth.db` file. The `user` and `password` columns of the
+table map to the `user` and `password` query arguments.
+
+Here is a minimal `dbauth.html` template:
+
+    :::html
+    <form method="POST">
+      {% if error %}<p>error code: {{ error['code'] }}, message: {{ error['message'] }}</p>{% end %}
+      <input type="hidden" name="_xsrf" value="{{ handler.xsrf_token }}">
+      <input name="user">
+      <input name="password" type="password">
+      <button type="submit">Submit</button>
+    </form>
+
+The password supports optional encryption. Before the password is compared with
+the database, it is encrypted using the provided function. You can also use
+client-side (JavaScript) instead, and disable this.
+
 
 ## Log out
 
@@ -196,6 +252,7 @@ You can test this at
 
 When a user logs in or logs out, you can register actions as follows:
 
+    :::yaml
     url:
       login/google:
         pattern: /$YAMLURL/google
