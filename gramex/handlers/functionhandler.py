@@ -27,14 +27,17 @@ class FunctionHandler(BaseHandler):
     def setup(cls, headers={}, redirect=None, **kwargs):
         super(FunctionHandler, cls).setup(**kwargs)
         # Don't use cls.function = build_transform(...) -- Python treats it as a method
-        cls.info = {'function': build_transform(kwargs, vars={'handler': None},
-                                                filename='url>%s' % cls.name)}
+        cls.info = {}
+        cls.info['function'] = build_transform(kwargs, vars={'handler': None},
+                                               filename='url>%s' % cls.name)
         cls.headers = headers
         cls.redirect_url = redirect
         cls.post = cls.get
 
     @tornado.gen.coroutine
     def get(self, *path_args):
+        if 'function' not in self.info:
+            raise ValueError('Invalid function definition in url:%s' % self.name)
         result = self.info['function'](handler=self)
         for header_name, header_value in self.headers.items():
             self.set_header(header_name, header_value)
