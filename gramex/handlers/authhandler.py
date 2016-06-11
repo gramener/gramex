@@ -12,7 +12,7 @@ from orderedattrdict import AttrDict
 from gramex.config import check_old_certs, app_log, objectpath
 from gramex.services import info
 from .basehandler import BaseHandler
-from ..transforms import build_transform
+from ..transforms import build_transform, template
 
 
 def csv_encode(values, *args, **kwargs):
@@ -160,10 +160,6 @@ class LDAPAuth(AuthHandler):
         'search': 'Cannot get attributes for user on {host}',
     }
 
-    def get(self):
-        self.save_redirect_page()
-        self.render(self.conf.kwargs.template, error=None, user=None)
-
     def report_error(self, code, exc_info=False):
         error = self.errors[code].format(host=self.conf.kwargs.host, args=self.request.arguments)
         app_log.error('LDAP: ' + error, exc_info=exc_info)
@@ -200,3 +196,53 @@ class LDAPAuth(AuthHandler):
 
         self.set_user(user, id='dn')
         self.redirect_next()
+
+
+class DBAuth(AuthHandler):
+    '''
+    Eventually, change this to use an abstract base class for local
+    authentication methods -- i.e. where **we** render the login screen, not a third party service.
+
+    The login page is rendered in case of a login error as well. The page is a
+    Tornado template that is passed an ``error`` variable. ``error`` is ``None``
+    by default. If the login fails, it must be a ``dict`` with attributes
+    specific to the handler.
+    '''
+    @classmethod
+    def setup(cls, url, table, user, password, **kwargs):
+        super(DBAuth, cls).setup(**kwargs)
+        from sqlalchemy import create_engine, MetaData
+        cls.user, cls.password = user, password
+        cls.engine = create_engine(url, **kwargs.get('parameters', {}))
+        meta = MetaData(bind=cls.engine)
+        meta.reflect()
+        cls.table = meta.tables[table]
+        cls.encrypt = []
+        if 'function' in password:
+            cls.encrypt.append(build_transform(
+                password, vars=AttrDict(content=None),
+                filename='url>%s>encrypt' % (cls.name)))
+
+    def get(self):
+        self.save_redirect_page()
+        self.render(self.conf.kwargs.template, error=None)
+
+    @tornado.gen.coroutine
+    def post(self):
+        user = self.get_argument(self.user.arg)
+        password = self.get_argument(self.password.arg)
+        for encrypt in self.encrypt:
+            for result in encrypt(password):
+                password = result
+        from sqlalchemy import and_
+        query = self.table.select().where(and_(
+            self.table.c[self.user.column] == user,
+            self.table.c[self.password.column] == password,
+        ))
+        result = self.engine.execute(query)
+        user = result.fetchone()
+        if user is not None:
+            self.set_user(dict(user), id=self.user.column)
+            self.redirect_next()
+        else:
+            self.render(self.conf.kwargs.template, error={'code': 'auth', 'error': 'Cannot log in'})

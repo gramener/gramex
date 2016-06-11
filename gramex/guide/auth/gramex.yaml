@@ -1,3 +1,10 @@
+variables:
+    USER_DATABASE_URL: sqlite:///$GRAMEXDATA/guide/auth.db
+    USER_DATABASE_TABLE: users
+    USER_DATABASE_USERCOLUMN: user
+    USER_DATABASE_PASSWORDCOLUMN: password
+    USER_DATABASE_SALT: abc
+
 url:
     auth/logout:
         pattern: /$YAMLURL/logout
@@ -84,6 +91,26 @@ url:
                 url: /$YAMLURL
                 external: true
 
+    auth/db:
+        pattern: /$YAMLURL/db
+        handler: DBAuth
+        kwargs:
+            template: $YAMLPATH/db.html
+            # This is created by schedule.create-user-database
+            url: $USER_DATABASE_URL
+            table: $USER_DATABASE_TABLE
+            user:
+                column: $USER_DATABASE_USERCOLUMN
+                arg: user
+            password:
+                column: $USER_DATABASE_PASSWORDCOLUMN
+                arg: password
+                function: six.text_type.__add__
+                args: [=content, $USER_DATABASE_SALT]
+            redirect:
+                query: next
+                url: /$YAMLURL
+
     auth/user:
         pattern: /$YAMLURL/user
         handler: FunctionHandler
@@ -139,3 +166,14 @@ url:
                 membership:           # The following user object keys must match
                     gender: male      # user.gender must be male
                     locale: [en, es]  # user.locale must be en or es
+
+schedule:
+    create-user-database:
+        function: authutil.create_user_database     # Run this function
+        kwargs:                                     # Pass the following parameters
+            url: $USER_DATABASE_URL
+            table: $USER_DATABASE_TABLE
+            user: $USER_DATABASE_USERCOLUMN
+            password: $USER_DATABASE_PASSWORDCOLUMN
+            salt: $USER_DATABASE_SALT
+        startup: true

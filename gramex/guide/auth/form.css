@@ -1,0 +1,25 @@
+label {
+  display: block;
+  margin-top: 1.5em;
+  text-transform: uppercase;
+  font-size: 75%;
+  letter-spacing: 0.1em;
+}
+input, button, .alert {
+  display: block;
+  margin: 4px -8px;
+  padding: 4px 8px;
+}
+button {
+  margin-top: 1.5em;
+}
+.content {
+  width: 100%;
+}
+.alert {
+  background-color: #fee;
+  margin-top: 1.5em;
+}
+.alert h2 {
+  margin-top: 0;
+}
