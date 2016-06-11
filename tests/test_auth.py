@@ -46,7 +46,6 @@ class TestSession(TestGramex):
 
 
 class TestDBAuth(TestGramex):
-
     @classmethod
     def setUpClass(cls):
         folder = os.path.dirname(os.path.abspath(__file__))
@@ -76,7 +75,7 @@ class TestDBAuth(TestGramex):
             headers['NEXT'] = header_next
         r = self.session.get(self.url, params=params, headers=headers)
         tree = lxml.html.fromstring(r.text)
-        self.assertEqual(tree.xpath('.//h1')[0].text, 'DBAuth')
+        self.assertEqual(tree.xpath('.//h1')[0].text, 'Auth')
 
         # Create form submission data
         data = {'user': user, 'password': password}
@@ -111,3 +110,33 @@ class TestDBAuth(TestGramex):
     def test_redirect(self):
         self.ok('alpha', 'alpha', query_next='/func/args', check_next='/func/args')
         self.ok('alpha', 'alpha', header_next='/func/args', check_next='/func/args')
+
+
+class TestLDAPAuth(TestGramex):
+    def post(self, user, password):
+        self.url = server.base_url + '/auth/ldap'
+        r = requests.get(self.url)
+        tree = lxml.html.fromstring(r.text)
+
+        # Create form submission data
+        data = {'user': user, 'password': password}
+        data['xsrf'] = tree.xpath('.//input[@name="_xsrf"]')[0].get('value')
+
+        # Submitting the correct password redirects
+        return requests.post(self.url, timeout=10, data=data)
+        self.assertEqual(r.status_code, OK)
+
+    def test_ldap(self):
+        r = self.post('admin', 'Secret123')
+        if r.status_code == UNAUTHORIZED and r.headers.get('Auth-Error', None) == 'conn':
+            raise SkipTest('Unable to connect to LDAP server')
+        self.assertEqual(r.status_code, OK)
+        self.assertEqual(r.url, server.base_url + '/')
+
+    def test_ldap_wrong_password(self):
+        r = self.post('admin', 'wrong-password')
+        if r.status_code == UNAUTHORIZED and r.headers.get('Auth-Error', None) == 'conn':
+            raise SkipTest('Unable to connect to LDAP server')
+        self.assertEqual(r.status_code, UNAUTHORIZED)
+        self.assertEqual(r.headers.get('Auth-Error', None), 'auth')
+        self.assertEqual(r.url, self.url)

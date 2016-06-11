@@ -1,4 +1,4 @@
-<h1>DBAuth</h1>
+<h1>Auth</h1>
 {% if error %}
   <p>error code: {{ error['code'] }}</p>
 {% end %}
@@ -6,4 +6,5 @@
   <input type="hidden" name="_xsrf" value="{{ handler.xsrf_token }}">
   <input name="user">
   <input name="password" type="password">
+  <button type="submit">Submit</button>
 </form>

@@ -154,9 +154,13 @@ class TwitterAuth(AuthHandler, TwitterMixin):
 
 
 class LDAPAuth(AuthHandler):
+    def get(self):
+        self.save_redirect_page()
+        self.render(self.conf.kwargs.template, error=None)
+
     errors = {
-        'auth': 'Could not log in user',
         'conn': 'Connection error at {host}',
+        'auth': 'Could not log in user',
         'search': 'Cannot get attributes for user on {host}',
     }
 
@@ -164,6 +168,7 @@ class LDAPAuth(AuthHandler):
         error = self.errors[code].format(host=self.conf.kwargs.host, args=self.request.arguments)
         app_log.error('LDAP: ' + error, exc_info=exc_info)
         self.set_status(status_code=401)
+        self.set_header('Auth-Error', code)
         self.render(self.conf.kwargs.template, error={'code': code, 'error': error})
         raise tornado.gen.Return()
 
@@ -245,6 +250,7 @@ class DBAuth(AuthHandler):
         # setup() is too early -- schedule or other methods may not have created
         # the table by then. So try here, and retry every request.
         self.bind_to_db()
+        # TODO: if this bind does not work, report an error on connection
 
         from sqlalchemy import and_
         query = self.table.select().where(and_(

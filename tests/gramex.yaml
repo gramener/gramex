@@ -761,11 +761,21 @@ url:
         headers:
             Content-Type: application/json
 
+  auth/ldap:
+    pattern: /auth/ldap
+    handler: LDAPAuth
+    kwargs:
+        template: $YAMLPATH/auth.html       # This has the login form
+        host: ipa.demo1.freeipa.org         # Server to connect to
+        use_ssl: true                       # Whether to use SSL or not
+        user: 'uid={user},cn=users,cn=accounts,dc=demo1,dc=freeipa,dc=org'
+        password: '{password}'
+
   auth/db:
     pattern: /auth/db
     handler: DBAuth
     kwargs:
-        template: $YAMLPATH/dbauth.html
+        template: $YAMLPATH/auth.html
         # This is created by schedule.create-user-database
         url: 'mysql+pymysql://root@${MYSQL_SERVER}/test_auth'
         table: users
