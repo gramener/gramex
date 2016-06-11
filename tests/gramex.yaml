@@ -753,6 +753,14 @@ url:
     kwargs:
       path: $YAMLPATH/jsonhandler.json
 
+  auth/session:
+    pattern: /auth/session
+    handler: FunctionHandler
+    kwargs:
+        function: utils.session
+        headers:
+            Content-Type: application/json
+
   auth/db:
     pattern: /auth/db
     handler: DBAuth

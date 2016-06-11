@@ -143,3 +143,10 @@ def slow_count(var, count=1, delay=0.01):
     for x in range(count):
         info[var] = x
         time.sleep(delay)
+
+
+def session(handler):
+    var = handler.get_argument('var', None)
+    if var is not None:
+        handler.session['var'] = var
+    return json.dumps(handler.session, indent=4)

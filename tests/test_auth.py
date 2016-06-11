@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 import os
+import json
 import requests
 import lxml.html
 import pandas as pd
@@ -9,6 +10,39 @@ from six.moves.http_client import OK, UNAUTHORIZED
 import gramex.config
 from . import TestGramex
 from . import server
+
+
+class TestSession(TestGramex):
+    @classmethod
+    def setupClass(cls):
+        cls.session1 = requests.Session()
+        cls.session2 = requests.Session()
+        cls.url = server.base_url + '/auth/session'
+
+    def test_session(self):
+        r1 = self.session1.get(self.url + '?var=x')
+        self.assertIn('sid', r1.cookies)
+        self.data1 = json.loads(r1.text)
+        self.assertIn('id', self.data1)
+        self.assertEqual(self.data1['var'], 'x')
+
+        r2 = self.session2.get(self.url)
+        self.assertIn('sid', r2.cookies)
+        self.data2 = json.loads(r2.text)
+        self.assertIn('id', self.data2)
+        self.assertNotIn('var', self.data2)
+
+        self.assertNotEqual(r1.cookies['sid'], r2.cookies['sid'])
+        self.assertNotEqual(self.data1['id'], self.data2['id'])
+
+        # Test persistence under graceful shutdown
+        server.stop_gramex()
+        server.start_gramex()
+        r1 = self.session1.get(self.url)
+        self.assertEqual(self.data1, json.loads(r1.text))
+        self.assertEqual(self.data1['var'], 'x')
+        r2 = self.session2.get(self.url)
+        self.assertEqual(self.data2, json.loads(r2.text))
 
 
 class TestDBAuth(TestGramex):
@@ -32,7 +66,6 @@ class TestDBAuth(TestGramex):
 
         cls.session = requests.Session()
         cls.url = server.base_url + '/auth/db'
-
 
     def post(self, user, password, query_next=None, header_next=None):
         # Get the login page
