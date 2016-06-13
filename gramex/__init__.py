@@ -115,7 +115,7 @@ def callback_commandline(commands):
         args.setdefault('browser', '/welcome')
         return run, {'cmd': ['guide'], 'args': args}
 
-    app_log.info('Initializing %s on Gramex %s. Please wait...', os.getcwd(), __version__)
+    app_log.info('Gramex %s | %s loading...', __version__, os.getcwd())
     return init, {'cmd': AttrDict(app=args)}
 
 
@@ -181,7 +181,8 @@ def init(**kwargs):
     globals()['service'] = services.info    # gramex.service = gramex.services.info
 
     # Set up a watch on config files (including imported files)
-    services.watcher.watch('gramex-reconfig', paths=config_files, on_modified=lambda event: init())
+    from services import watcher
+    watcher.watch('gramex-reconfig', paths=config_files, on_modified=lambda event: init())
 
     # Run all valid services. (The "+" before config_chain merges the chain)
     # Services may return callbacks to be run at the end

@@ -14,7 +14,6 @@ exists, a warning is raised.
 from __future__ import unicode_literals
 
 import os
-import yaml
 import atexit
 import signal
 import socket
@@ -23,14 +22,11 @@ import mimetypes
 import threading
 import webbrowser
 import tornado.web
-import tornado.ioloop
 import logging.config
 import concurrent.futures
 import six.moves.urllib.parse as urlparse
 from six.moves import http_client
 from orderedattrdict import AttrDict
-from . import scheduler
-from . import watcher
 from . import urlcache
 from .. import debug
 from .. import shutdown
@@ -38,7 +34,7 @@ from .ttlcache import MAXTTL
 from ..config import locate, app_log
 
 
-# Service-specific information
+# Service information, available as gramex.service after gramex.init() is called
 info = AttrDict(
     app=None,
     schedule=AttrDict(),
@@ -70,6 +66,8 @@ def log(conf):
 
 def app(conf):
     '''Set up tornado.web.Application() -- only if the ioloop hasn't started'''
+    import tornado.ioloop
+
     ioloop = tornado.ioloop.IOLoop.current()
     if ioloop._running:
         app_log.warning('Ignoring app config change when running')
@@ -133,6 +131,7 @@ def app(conf):
 
 def schedule(conf):
     '''Set up the Gramex PeriodicCallback scheduler'''
+    from . import scheduler
     scheduler.setup(schedule=conf, tasks=info.schedule, threadpool=info.threadpool)
 
 
@@ -334,6 +333,9 @@ def mime(conf):
 
 def watch(conf):
     '''Set up file watchers'''
+    import yaml
+    from . import watcher
+
     events = {'on_modified', 'on_created', 'on_deleted', 'on_moved', 'on_any_event'}
     for name, config in conf.items():
         if 'paths' not in config:

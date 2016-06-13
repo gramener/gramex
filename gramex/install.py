@@ -329,7 +329,7 @@ def run(cmd, args):
 
     app_config = get_app_config(appname, args)
     # Tell the user what configs are used
-    app_log.info('Initializing %s on Gramex %s %s', appname, gramex.__version__,
+    app_log.info('Gramex %s | %s %s loading...', gramex.__version__, appname,
                  ' '.join(['--%s=%s' % arg for arg in flatten_config(args.get('run', {}))]))
 
     target = app_config.target
