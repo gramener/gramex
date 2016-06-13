@@ -3,7 +3,7 @@ variables:
 
 app:
   settings:
-    login_url: /auth/google
+    login_url: /$YAMLURL/auth/google
     cookie_secret: COOKIE_NAME
     autoreload: False
     debug: False
