@@ -15,7 +15,7 @@ def create_user_database(url, table, user, password, salt):
     folder = os.path.dirname(os.path.abspath(engine.url.database))
     if not os.path.exists(folder):
         os.makedirs(folder)
-    engine.execute('DROP TABLE %s' % table)
+    engine.execute('DROP TABLE IF EXISTS %s' % table)
     engine.execute('CREATE TABLE %s (%s text, %s text, role)' %
                    (table, user, password))
     result = engine.execute('SELECT * FROM %s LIMIT 1' % table)

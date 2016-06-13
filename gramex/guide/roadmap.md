@@ -2,8 +2,12 @@ title: Gramex Roadmap
 
 # Releases
 
+See the [release notes](https://learn.gramener.com/gramex/history.html) for
+information about past releases.
+
 Features for the next 2 releases are below. Bugs to be fixed are at the
 [issue tracker](http://code.gramener.com/s.anand/gramex/issues).
+
 
 ## Release 1.0.9 (15 Jun 2016): Data load & Auth
 
@@ -12,7 +16,6 @@ Features for the next 2 releases are below. Bugs to be fixed are at the
 - Data table display
 - Visual filtering of data
 - Integration with ActiveDirectory, OAuth
-
 
 ## 1.0.10 (1 Jul 2016): Data entry
 

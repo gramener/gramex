@@ -1,5 +1,5 @@
 variables:
-    USER_DATABASE_URL: sqlite:///$GRAMEXDATA/guide/auth.db
+    USER_DATABASE_URL: sqlite:///$GRAMEXDATA/apps/guide/auth.db
     USER_DATABASE_TABLE: users
     USER_DATABASE_USERCOLUMN: user
     USER_DATABASE_PASSWORDCOLUMN: password
