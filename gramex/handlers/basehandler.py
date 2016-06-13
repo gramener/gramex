@@ -42,9 +42,9 @@ class BaseHandler(RequestHandler):
                 'encoding': trans.get('encoding'),
             }
 
-        # app.debug.exception enables debugging exceptions using pdb
-        debug_conf = conf.app.get('debug')
-        if debug_conf and debug_conf.get('exception', False):
+        # app.settings.debug enables debugging exceptions using pdb
+        if conf.app.settings.get('debug', False):
+            app_log.debug('Press Ctrl+D for debugging with Python debugger')
             cls.log_exception = cls.debug_exception
 
         # app.session: sets up session handling.

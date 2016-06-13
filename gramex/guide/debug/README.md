@@ -5,7 +5,11 @@ This page documents ways of debugging a Gramex application.
 ## Debug mode
 
 Run Gramex with a `--settings.debug` to trigger [debug mode][debug-mode] in
-Tornado. This auto-reloads templates, Python scripts, etc.
+Tornado. This auto-reloads templates, Python scripts, etc. when any of them
+change.
+
+Press `Ctrl+D` on the console to start the [Python debugger](#python-debugger)
+inside Gramex at any time.
 
 [debug-mode]: http://www.tornadoweb.org/en/stable/guide/running.html?highlight=debug#debug-mode-and-automatic-reloading
 
@@ -22,12 +26,13 @@ There are many ways to start the debugger:
    run until this line and start the debugger.
 1. When Gramex is running, you press `Ctrl+D` on the console at any time. Python
    will start the debugger.
-1. Run `gramex --debug.exception=true`. When there's an exception, Python will start the
-   debugger at the line before the error. (This was `debug_exception=True` in
-   Gramex 1.0.7.)
+1. Run `gramex --settings.debug`. When there's an exception, Python will start
+   the debugger at the line before the error. (This was called `debug_exception`
+   in Gramex 1.0.7 and `debug.exception` in Gramex 1.0.8. It is not merged into
+   `settings.debug`.)
 1. Run Gramex via `python -m pdb /path/to/gramex/__main__.py`.
 
-You can also use [WinPDB](http://winpdb.org/docs/) -- a cross-platform GUI for
+You can use [WinPDB](http://winpdb.org/docs/) -- a cross-platform GUI for
 pdb -- on Gramex using:
 
     :::shell

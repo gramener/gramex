@@ -117,9 +117,6 @@ eventlog:
 app:
     browser: False                      # Open the browser on startup
 
-    debug:
-        exception: False                # Start debugger on exceptions
-
     listen:
         port: 9988                      # Port to bind to. (8888 used by Jupyter)
         xheaders: True                  # X-Real-Ip/X-Forwarded-For and X-Scheme/X-Forwarded-Proto override remote IP, scheme
@@ -133,12 +130,13 @@ app:
         # default_host: 'host'          # Optional name of default host
         compress_response: True         # GZip the HTTP response
 
+        # Debug=true enables all the below parameters, as well as Ctrl+D for pdb debugging on console
+        debug: False                    # autoreload + !compiled_template_cache + !static_hash_cache + serve_traceback
         # Debug parameters
         # autoreload: False               # Reload Gramex when imported Python file changes
         # compiled_template_cache: True   # Cache template files across requests
         # static_hash_cache: True         # Cache static files across requests
         # serve_traceback: True           # Show traceback on browser if there's an error
-        debug: False                    # = autoreload + !compiled_template_cache + !static_hash_cache + serve_traceback
 
         # Cookie parameters
         xsrf_cookies: True              # Reject POST/PUT/DELETE unless _xsrf header / form input is present
