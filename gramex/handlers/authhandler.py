@@ -9,8 +9,8 @@ import tornado.gen
 from tornado.auth import (GoogleOAuth2Mixin, FacebookGraphMixin, TwitterMixin,
                           urllib_parse, _auth_return_future)
 from orderedattrdict import AttrDict
+import gramex
 from gramex.config import check_old_certs, app_log, objectpath
-from gramex.services import info
 from .basehandler import BaseHandler
 from ..transforms import build_transform
 
@@ -182,7 +182,7 @@ class LDAPAuth(AuthHandler):
         server = ldap3.Server(kwargs.host, kwargs.get('port'), kwargs.get('use_ssl', True))
         conn = ldap3.Connection(server, kwargs.user.format(**q), kwargs.password.format(**q))
         try:
-            result = yield info.threadpool.submit(conn.bind)
+            result = yield gramex.service.threadpool.submit(conn.bind)
             if result is False:
                 self.report_error('auth', exc_info=False)
         except ldap3.LDAPException:
@@ -191,8 +191,8 @@ class LDAPAuth(AuthHandler):
         # We now have a valid user. Get additional attributes
         user = {'dn': conn.user}
         try:
-            result = yield info.threadpool.submit(conn.search, conn.user, '(objectClass=*)',
-                                                  attributes=ldap3.ALL_ATTRIBUTES)
+            result = yield gramex.service.threadpool.submit(
+                conn.search, conn.user, '(objectClass=*)', attributes=ldap3.ALL_ATTRIBUTES)
         except ldap3.LDAPException:
             self.report_error('search', exc_info=True)
         if result and len(conn.entries) > 0:

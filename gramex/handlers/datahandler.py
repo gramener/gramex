@@ -4,7 +4,7 @@ import tornado.gen
 import tornado.web
 import pandas as pd
 import sqlalchemy as sa
-from gramex.services import info
+import gramex
 from orderedattrdict import AttrDict
 from .basehandler import BaseHandler
 
@@ -252,9 +252,9 @@ class DataHandler(BaseHandler):
         )
 
         if self.params.driver == 'sqlalchemy':
-            self.result = yield info.threadpool.submit(self._sqlalchemy, **kwargs)
+            self.result = yield gramex.service.threadpool.submit(self._sqlalchemy, **kwargs)
         elif self.params.driver == 'blaze':
-            self.result = yield info.threadpool.submit(self._blaze, **kwargs)
+            self.result = yield gramex.service.threadpool.submit(self._blaze, **kwargs)
         else:
             raise NotImplementedError('driver=%s is not supported yet.' % self.params.driver)
 

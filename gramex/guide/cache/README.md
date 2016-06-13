@@ -189,16 +189,16 @@ limit is reached, the oldest items are discarded.
 
 ### Using cache stores
 
-Your functions can access these caches at `gramex.services.info.cache[<key>]`.
+Your functions can access these caches at `gramex.service.cache[<key>]`.
 For example, the default in-memory Gramex cache is at
-`gramex.services.info.cache.memory`. The disk cache above is at
-`gramex.services.info.cache['big-disk-cache']`.
+`gramex.service.cache.memory`. The disk cache above is at
+`gramex.service.cache['big-disk-cache']`.
 
 The cache stores can be treated like a dictionary. They also support a `.set()`
 method which accepts an `expire=` parameter. For example:
 
     :::python
-    cache = gramex.services.info.cache['big-disk-cache']
+    cache = gramex.service.cache['big-disk-cache']
     cache['key'] = 'value'
     cache['key']      # returns 'value'
     del cache['key']  # clears the key

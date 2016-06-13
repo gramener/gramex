@@ -146,11 +146,10 @@ The simplest way to call *any blocking function* asynchronously is to use a
 [ThreadPoolExecutor][ThreadPoolExecutor]. For example, usng this code in a
 `FunctionHandler` will run `slow_calculation` in a separate thread without
 blocking Gramex. Gramex provides a global threadpool that you can use. It's at
-`gramex.services.info.threadpool`.
+`gramex.service.threadpool`.
 
     :::python
-    from gramex.services import info
-    result = yield info.threadpool.submit(slow_calculation, *args, **kwargs)
+    result = yield gramex.service.threadpool.submit(slow_calculation, *args, **kwargs)
 
 [ThreadPoolExecutor]: https://docs.python.org/3/library/concurrent.futures.html#concurrent.futures.ThreadPoolExecutor
 
@@ -158,15 +157,13 @@ You can run execute multiple steps in parallel and consolidate their result as
 well. For example:
 
     :::python
-    from gramex.services import info
-
     @tornado.gen.coroutine
     def calculate(data1, data2):
         group1, group2 = yield [
-            info.threadpool.submit(data1.groupby, ['category']),
-            info.threadpool.submit(data2.groupby, ['category']),
+            gramex.service.threadpool.submit(data1.groupby, ['category']),
+            gramex.service.threadpool.submit(data2.groupby, ['category']),
         ]
-        result = thead_pool.submit(pd.concat, [group1, group2])
+        result = gramex.service.threadpool.submit(pd.concat, [group1, group2])
         raise tornado.gen.Return(result)
 
 ## Redirection

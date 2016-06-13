@@ -45,18 +45,19 @@ info = AttrDict(
     cache=AttrDict(),
     # Initialise with a single worker by default. threadpool.workers overrides this
     threadpool=concurrent.futures.ThreadPoolExecutor(1),
+    eventlog=AttrDict(),
 )
 atexit.register(info.threadpool.shutdown)
 
 
 def version(conf):
-    "Check if config version is supported. Currently, only 1.0 is supported"
+    '''Check if config version is supported. Currently, only 1.0 is supported'''
     if conf != 1.0:
         raise NotImplementedError('version: %s is not supported. Only 1.0', conf)
 
 
 def log(conf):
-    "Set up logging using Python's standard logging.config.dictConfig()"
+    '''Set up logging using Python's standard logging.config.dictConfig()'''
     # Create directories for directories mentioned by handlers if logs are used
     active_handlers = set(conf.get('root', {}).get('handlers', []))
     for handler, handler_conf in conf.get('handlers', {}).items():
@@ -68,7 +69,7 @@ def log(conf):
 
 
 def app(conf):
-    "Set up tornado.web.Application() -- only if the ioloop hasn't started"
+    '''Set up tornado.web.Application() -- only if the ioloop hasn't started'''
     ioloop = tornado.ioloop.IOLoop.current()
     if ioloop._running:
         app_log.warning('Ignoring app config change when running')
@@ -131,12 +132,12 @@ def app(conf):
 
 
 def schedule(conf):
-    "Set up the Gramex PeriodicCallback scheduler"
+    '''Set up the Gramex PeriodicCallback scheduler'''
     scheduler.setup(schedule=conf, tasks=info.schedule, threadpool=info.threadpool)
 
 
 def threadpool(conf):
-    "Set up a global threadpool executor"
+    '''Set up a global threadpool executor'''
     # By default, use a single worker. If a different value is specified, use it
     workers = 1
     if conf and hasattr(conf, 'get'):
@@ -285,7 +286,7 @@ def _cache_generator(conf, name):
 
 
 def url(conf):
-    "Set up the tornado web app URL handlers"
+    '''Set up the tornado web app URL handlers'''
     handlers = []
     # Sort the handlers in descending order of priority
     specs = sorted(conf.items(), key=_sort_url_patterns, reverse=True)
@@ -326,13 +327,13 @@ def url(conf):
 
 
 def mime(conf):
-    "Set up MIME types"
+    '''Set up MIME types'''
     for ext, type in conf.items():
         mimetypes.add_type(type, ext, strict=True)
 
 
 def watch(conf):
-    "Set up file watchers"
+    '''Set up file watchers'''
     events = {'on_modified', 'on_created', 'on_deleted', 'on_moved', 'on_any_event'}
     for name, config in conf.items():
         if 'paths' not in config:
@@ -351,7 +352,7 @@ def watch(conf):
 
 
 def cache(conf):
-    "Set up caches"
+    '''Set up caches'''
     cache_types = {
         'memory': {
             'size': 20000000,       # 20MiB

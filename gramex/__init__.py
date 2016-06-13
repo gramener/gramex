@@ -177,8 +177,10 @@ def init(**kwargs):
     # Add config file folders to sys.path
     sys.path[:] = _sys_path + [str(path.absolute().parent) for path in config_files]
 
-    # Set up a watch on config files (including imported files)
     from . import services      # noqa -- deferred import for optimisation
+    globals()['service'] = services.info    # gramex.service = gramex.services.info
+
+    # Set up a watch on config files (including imported files)
     services.watcher.watch('gramex-reconfig', paths=config_files, on_modified=lambda event: init())
 
     # Run all valid services. (The "+" before config_chain merges the chain)
