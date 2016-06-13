@@ -8,7 +8,7 @@ import tornado.ioloop
 from pathlib import Path
 from copy import deepcopy
 from orderedattrdict import AttrDict
-from gramex.config import ChainConfig, PathConfig, app_log
+from gramex.config import ChainConfig, PathConfig, app_log, variables
 
 paths = AttrDict()              # Paths where configurations are stored
 conf = AttrDict()               # Final merged configurations
@@ -125,26 +125,58 @@ def commandline():
     callback(**kwargs)
 
 
-def gramex_update(repo):
+def gramex_update(url):
     '''If a newer version of gramex is available, logs a warning'''
-    from shutilwhich import which
-    if not which('git'):
-        return
-    import subprocess
-    try:
-        result = subprocess.check_output(['git', 'ls-remote', '--tags', '--refs', '-q', repo],
-                                         universal_newlines=True)
-    except subprocess.CalledProcessError:
-        app_log.debug('Unable to check for Gramex upgrades')
+    import time
+    import platform
+    from . import services
+
+    if not services.info.eventlog:
+        app_log.error('eventlog: service is not running. So Gramex update is disabled')
+
+    conn = services.info.eventlog.conn
+    query = 'SELECT * FROM events WHERE event="update" ORDER BY time DESC LIMIT 1'
+    update = conn.execute(query).fetchone()
+    delay = 24 * 60 * 60            # Wait for one day before updates
+    if update is not None and time.time() < update.time + delay:
+        app_log.debug('Gramex update ran recently. Deferring check.')
         return
 
-    # '...\n00cb1d\trefs/tags/v1.0.8' -> 1.0.8
-    latest_version = result.strip().split('\n')[-1].split('v')[-1]
-    if latest_version > __version__:
-        app_log.error('UPGRADE to Gramex %s (you have %s). ' +
-                      'See https://learn.gramener.com/guide/', latest_version, __version__)
-    else:
-        app_log.info('Gramex %s is up to date', __version__)
+    meta = {
+        'dir': variables.get('GRAMEXDATA'),
+        'uname': platform.uname(),
+    }
+    query = ('SELECT * FROM events' if update is None else
+             'SELECT * FROM events WHERE time > %s ORDER BY time' % update.time)
+    logs = [dict(log, **meta) for log in conn.execute(query)]
+
+    def check_version(future):
+        exception = future.exception()
+        if exception:
+            app_log.error('Gramex update: HTTP %d %s (%s)', exception.code, exception.message, url)
+            return
+
+        result = future.result()
+        try:
+            data = json.loads(result.body)
+        except ValueError:
+            app_log.error('Gramex update: JSON invalid: %s', result.body)
+            return
+        if not isinstance(data, dict) or 'version' not in data:
+            app_log.error('Gramex update: response invalid: %s', result.body)
+            return
+        services.info.eventlog.add('update', result.body)
+        if data.get('version') < __version__:
+            app_log.error('Gramex %s is available. See https://learn.gramener.com/guide/',
+                          data['version'])
+        elif data.get('version') > __version__:
+            app_log.warn('Gramex update: your version %s is ahead of the stable %s',
+                         __version__, data['version'])
+
+    import tornado.httpclient
+    http_client = tornado.httpclient.AsyncHTTPClient()
+    future = http_client.fetch(url, method='POST', body=json.dumps(logs))
+    future.add_done_callback(check_version)
 
 
 def init(**kwargs):

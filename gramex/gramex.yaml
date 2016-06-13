@@ -104,11 +104,10 @@ log:
             format: '%(asctime)s,%(message)s'
             datefmt: '%Y-%m-%d %H:%M:%S'
 
-# Application event logs are captured in this database.
+# Application event logs are captured in this database. The logs are stored in a
+# table called "events".
 eventlog:
-    path: $GRAMEXDATA/logs/events.db    # Location of application event logs.
-    table: events                       # Table to store events in
-
+    path: $GRAMEXDATA/logs/events.db          # Location of application event logs.
 
 # ------------------------------------------------------------------------------
 # The app, schedule, url sections are defined at the end to allow these to use
@@ -168,12 +167,11 @@ schedule:
     gramex_update:
         function: gramex.gramex_update
         kwargs:
-            repo: http://code.gramener.com/s.anand/gramex.git
+            url: https://gramener.com/gramex-update
         startup: true
         minutes: 0
         hours: 0
         dates: '*'
-        thread: true
 
 # http://tornado.readthedocs.org/en/stable/web.html#tornado.web.URLSpec
 # Define this section at the end, to allow it to use previous services.

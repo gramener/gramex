@@ -326,11 +326,7 @@ def run(cmd, args):
         app_log.error('Can only run one app. Ignoring %s', ', '.join(cmd[1:]))
 
     appname = cmd.pop(0)
-
     app_config = get_app_config(appname, args)
-    # Tell the user what configs are used
-    app_log.info('Gramex %s | %s %s loading...', gramex.__version__, appname,
-                 ' '.join(['--%s=%s' % arg for arg in flatten_config(args.get('run', {}))]))
 
     target = app_config.target
     if 'dir' in app_config:
@@ -343,6 +339,9 @@ def run(cmd, args):
         app_config.setdefault('run', {}).update(
             {key: val for key, val in args.items() if key not in app_keys})
         save_user_config(appname, app_config)
+        # Tell the user what configs are used
+        app_log.info('Gramex %s | %s %s loading...', gramex.__version__, appname, ' '.join(
+            ['--%s=%s' % arg for arg in flatten_config(app_config.get('run', {}))]))
         gramex.init(cmd=AttrDict(app=app_config['run']))
     else:
         app_log.error('No directory %s to run for %s', app_config.target, appname)

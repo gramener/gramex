@@ -395,14 +395,16 @@ def eventlog(conf):
     folder = os.path.dirname(os.path.abspath(conf.path))
     if not os.path.exists(folder):
         os.makedirs(folder)
-    info.eventlog.conn = conn = sqlite3.connect(conf.path)
-    conn.execute('CREATE TABLE IF NOT EXISTS "%s" (time REAL, event TEXT, data TEXT)' % conf.table)
-    insert_query = 'INSERT INTO "%s" VALUES (?, ?, ?)' % conf.table
+    info.eventlog.conn = conn = sqlite3.connect(conf.path, check_same_thread=False)
+    conn.row_factory = sqlite3.Row
+    conn.execute('CREATE TABLE IF NOT EXISTS events (time REAL, event TEXT, data TEXT)')
+    conn.commit()
 
     def add(event_name, data):
         '''Write a message into the application event log'''
         data = json.dumps(data, ensure_ascii=True, separators=(',', ':'))
-        info.eventlog.conn.execute(insert_query, [time.time(), event_name, data])
+        info.eventlog.conn.execute('INSERT INTO events VALUES (?, ?, ?)',
+                                   [time.time(), event_name, data])
         conn.commit()
 
     def shutdown():
