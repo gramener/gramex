@@ -1,8 +1,8 @@
 import tornado.web
 import tornado.gen
 from types import GeneratorType
+from gramex.transforms import build_transform
 from .basehandler import BaseHandler
-from ..transforms import build_transform
 
 
 class FunctionHandler(BaseHandler):

@@ -3,7 +3,7 @@ import json
 import tornado.gen
 from types import GeneratorType
 from orderedattrdict import AttrDict
-from ..config import locate
+from gramex.config import locate
 
 
 def _arg_repr(arg):

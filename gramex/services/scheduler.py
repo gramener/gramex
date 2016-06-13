@@ -2,8 +2,8 @@
 
 import tornado.ioloop
 from crontab import CronTab
-from ..transforms import build_transform
-from ..config import app_log
+from gramex.transforms import build_transform
+from gramex.config import app_log
 
 
 class Task(object):

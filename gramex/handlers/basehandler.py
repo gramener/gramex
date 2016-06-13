@@ -10,9 +10,9 @@ from orderedattrdict import AttrDict
 from six.moves.http_client import FORBIDDEN
 from six.moves.urllib_parse import urlparse, urlsplit, urlencode
 from tornado.web import RequestHandler, HTTPError
-from .. import conf, __version__
-from ..config import objectpath
-from ..transforms import build_transform
+from gramex import conf, __version__
+from gramex.config import objectpath
+from gramex.transforms import build_transform
 
 server_header = 'Gramex/%s' % __version__
 session_store_cache = {}

@@ -9,7 +9,7 @@ from collections import defaultdict
 from orderedattrdict import AttrDict
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
-from ..config import app_log
+from gramex.config import app_log
 
 # There's only one observer. Start it at the beginning and schedule stuff later
 observer = Observer()

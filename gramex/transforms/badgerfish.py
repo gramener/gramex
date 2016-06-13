@@ -3,8 +3,8 @@ import xmljson
 import lxml.html
 import tornado.gen
 from orderedattrdict.yamlutils import AttrDictYAMLLoader
+from gramex.config import walk, load_imports
 from . import build_transform
-from ..config import walk, load_imports
 
 
 @tornado.gen.coroutine

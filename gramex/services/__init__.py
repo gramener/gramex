@@ -28,12 +28,10 @@ import concurrent.futures
 import six.moves.urllib.parse as urlparse
 from six.moves import http_client
 from orderedattrdict import AttrDict
+from gramex import debug, shutdown, __version__
+from gramex.config import locate, app_log
 from . import urlcache
-from .. import debug
-from .. import shutdown
-from .. import __version__
 from .ttlcache import MAXTTL
-from ..config import locate, app_log
 
 
 # Service information, available as gramex.service after gramex.init() is called

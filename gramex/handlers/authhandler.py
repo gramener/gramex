@@ -11,8 +11,8 @@ from tornado.auth import (GoogleOAuth2Mixin, FacebookGraphMixin, TwitterMixin,
 from orderedattrdict import AttrDict
 import gramex
 from gramex.config import check_old_certs, app_log, objectpath
+from gramex.transforms import build_transform
 from .basehandler import BaseHandler
-from ..transforms import build_transform
 
 
 def csv_encode(values, *args, **kwargs):

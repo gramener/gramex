@@ -16,7 +16,7 @@ import json
 from six.moves import cPickle
 from diskcache import Cache as DiskCache
 from .ttlcache import TTLCache as MemoryCache
-from ..config import app_log
+from gramex.config import app_log
 
 # HTTP Headers that should not be cached
 ignore_headers = {
