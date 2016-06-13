@@ -5,45 +5,45 @@ import os
 import json
 import requests
 from gramex import conf
-from six.moves import http_client
+from six.moves.http_client import OK
 from . import server, tempfiles, TestGramex
 
 
 def dump(data):
-    return json.dumps(data, separators=(',', ':'))
+    return json.dumps(data, ensure_ascii=True)
 
 
 class TestJSONHandler(TestGramex):
     'Test FileHandler'
 
+    def json(self, method, url, compare='nocompare', code=OK, **kwargs):
+        if 'data' in kwargs and isinstance(kwargs['data'], dict):
+            kwargs['data'] = dump(kwargs['data'])
+        r = getattr(requests, method)(server.base_url + url, timeout=1, **kwargs)
+        self.assertEqual(r.status_code, code, '%s: code %d != %d' % (url, r.status_code, code))
+        if compare != 'nocompare':
+            self.assertEqual(json.loads(r.text), compare)
+        return r
+
     def test_get(self):
         data = conf.url['json/get'].kwargs.data
-        self.check('/json/get/', text=dump(data))
-        self.check('/json/get/x', text=dump(data.x))
-        self.check('/json/get/x', text=dump(data.x))
-        self.check('/json/get/y', text=dump(data.y))
-        self.check('/json/get/z', text=dump(data.z))
-        self.check('/json/get/z/0', text=dump(data.z[0]))
-        self.check('/json/get/z/1', text=dump(data.z[1]))
-        self.check('/json/get/z/2', text=dump(data.z[2]))
-        self.check('/json/get/z/2/m', text=dump(data.z[2].m))
-        self.check('/json/get/z/2/n', text=dump(data.z[2].n))
+        self.json('get', '/json/get/', data)
+        self.json('get', '/json/get/x', data.x)
+        self.json('get', '/json/get/x', data.x)
+        self.json('get', '/json/get/y', data.y)
+        self.json('get', '/json/get/z', data.z)
+        self.json('get', '/json/get/z/0', data.z[0])
+        self.json('get', '/json/get/z/1', data.z[1])
+        self.json('get', '/json/get/z/2', data.z[2])
+        self.json('get', '/json/get/z/2/m', data.z[2].m)
+        self.json('get', '/json/get/z/2/n', data.z[2].n)
 
-        self.check('/json/get//', text='null')
-        self.check('/json/get/0', text='null')
-        self.check('/json/get/na', text='null')
-        self.check('/json/get/x/na', text='null')
-        self.check('/json/get/z/3', text='null')
-        self.check('/json/get/z/na', text='null')
-
-    def put(self, url, **kwargs):
-        return requests.put(server.base_url + url, timeout=1, **kwargs)
-
-    def patch(self, url, **kwargs):
-        return requests.patch(server.base_url + url, timeout=1, **kwargs)
-
-    def delete(self, url, **kwargs):
-        return requests.delete(server.base_url + url, timeout=1, **kwargs)
+        self.json('get', '/json/get//', None)
+        self.json('get', '/json/get/0', None)
+        self.json('get', '/json/get/na', None)
+        self.json('get', '/json/get/x/na', None)
+        self.json('get', '/json/get/z/3', None)
+        self.json('get', '/json/get/z/na', None)
 
     def test_write(self):
         key, val = u'\u2013', -1
@@ -51,39 +51,50 @@ class TestJSONHandler(TestGramex):
         data = {key: val}
 
         # put writes on root element, delete deletes it
-        self.check('/json/write/', text='null')
-        self.put('/json/write/', data=dump(data))
-        self.check('/json/write/', text=dump(data))
-        self.delete('/json/write/')
+        self.json('get', '/json/write/', None)
+        self.json('put', '/json/write/', data, data=data)
+        self.json('get', '/json/write/', data)
+        self.json('delete', '/json/write/', None)
 
         # Empty put does not raise an error, returns empty value
-        r = self.put('/json/write/', data='')
-        self.assertEqual(r.status_code, http_client.OK)
-        self.assertEqual(r.text, '')
+        r = self.json('put', '/json/write/', None, data='')
 
         # put creates deep trees
-        self.check('/json/write/', text='null')
-        self.put('/json/write/a/b', data=dump(data))
-        self.check('/json/write/', text=dump({'a': {'b': data}}))
-        self.delete('/json/write/')
+        self.json('get', '/json/write/', None)
+        self.json('put', '/json/write/a/b', data, data=data)
+        self.json('get', '/json/write/', {'a': {'b': data}})
+        self.json('delete', '/json/write/', None)
 
         # write into sub-keys
-        self.check('/json/write/', text='null')
-        self.put('/json/write/', data=dump(data))
-        self.put(u'/json/write/%s/1' % key, data=dump(data))
-        self.check('/json/write/', text=dump({key: {'1': data}}))
-        self.delete('/json/write/')
+        self.json('get', '/json/write/', None)
+        self.json('put', '/json/write/', data, data=data)
+        self.json('put', u'/json/write/%s/1' % key, data, data=data)
+        self.json('get', '/json/write/', {key: {'1': data}})
+        self.json('delete', '/json/write/', None)
 
         # test patch for update
-        self.check('/json/write/', text='null')
-        self.put('/json/write/', data=dump(data))
-        self.patch('/json/write/', data=dump(data))
-        self.check('/json/write/', text=dump(data))
-        self.patch('/json/write/', data=dump({key: val2}))
-        self.check('/json/write/', text=dump({key: val2}))
-        self.patch('/json/write/', data=dump({key2: val}))
-        self.check('/json/write/', text=dump({key: val2, key2: val}))
-        self.delete('/json/write')
+        temp = {key: val}
+        self.json('get', '/json/write/', None)
+        self.json('put', '/json/write/', temp, data=temp)
+        self.json('patch', '/json/write/', temp, data=temp)
+        self.json('get', '/json/write/', temp)
+        self.json('patch', '/json/write/', {key: val2}, data={key: val2})
+        temp.update({key: val2})
+        self.json('get', '/json/write/', temp)
+        self.json('patch', '/json/write/', {key2: val}, data={key2: val})
+        temp.update({key2: val})
+        self.json('get', '/json/write/', temp)
+        self.json('delete', '/json/write/', None)
+
+        # test post for adding new keys
+        self.json('get', '/json/write/', None)
+        name = self.json('post', '/json/write/', data=data).json()['name']
+        temp = {name: data}
+        self.json('get', '/json/write/', temp)
+        name = self.json('post', '/json/write/', data=data).json()['name']
+        temp[name] = data
+        self.json('get', '/json/write/', temp)
+        self.json('delete', '/json/write/', None)
 
     def test_path(self):
         folder = os.path.dirname(os.path.abspath(__file__))
@@ -91,12 +102,12 @@ class TestJSONHandler(TestGramex):
         if os.path.exists(jsonfile):
             os.unlink(jsonfile)
 
-        def match_jsonfile(data):
-            self.check('/json/path/', text=dump(data))
+        def match_jsonfile(compare):
+            self.json('get', '/json/path/', compare)
             with io.open(jsonfile, encoding='utf-8') as handle:
-                self.assertEqual(handle.read(), dump(data))
+                self.assertEqual(json.loads(handle.read()), compare)
 
-        self.check('/json/path/', text=dump(None))
+        self.json('get', '/json/path/', None)
         # At this point, jsonfile ought to be created, but the server thread may
         # not be done. So we'll test it later.
 
@@ -105,7 +116,7 @@ class TestJSONHandler(TestGramex):
         data = {key: val}
 
         # test put
-        self.put('/json/path/', data=dump(data))
+        self.json('put', '/json/path/', data, data=data)
         match_jsonfile(data)
 
         # By this time, jsonfile definitely ought to be created -- since the
@@ -114,21 +125,24 @@ class TestJSONHandler(TestGramex):
         tempfiles.jsonfile = jsonfile
 
         # test put at a non-existent deep node
-        self.put(u'/json/path/%s/1' % key, data=dump(data))
+        self.json('put', u'/json/path/%s/1' % key, data, data=data)
         match_jsonfile({key: {'1': data}})
 
         # test delete
-        self.delete('/json/path/')
+        self.json('delete', '/json/path/', None)
         match_jsonfile(None)
 
         # test patch
-        self.put('/json/path/', data=dump(data))
-        self.patch('/json/path/', data=dump(data))
-        match_jsonfile(data)
-        self.patch('/json/path/', data=dump({key: val2}))
-        match_jsonfile({key: val2})
-        self.patch('/json/path/', data=dump({key2: val}))
-        match_jsonfile({key: val2, key2: val})
+        temp = {key: val}
+        self.json('put', '/json/path/', temp, data=temp)
+        self.json('patch', '/json/path/', temp, data=temp)
+        match_jsonfile(temp)
+        self.json('patch', '/json/path/', {key: val2}, data={key: val2})
+        temp.update({key: val2})
+        match_jsonfile(temp)
+        self.json('patch', '/json/path/', {key2: val}, data={key2: val})
+        temp.update({key2: val})
+        match_jsonfile(temp)
 
         # cleanup
-        self.delete('/json/path')
+        self.json('delete', '/json/path/', None)

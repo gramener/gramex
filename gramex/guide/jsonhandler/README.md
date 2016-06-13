@@ -56,8 +56,27 @@ Incorrect values raise an error:
 
     :::js
     fetch('data/invalid', {method: 'PUT', body: 'xxx'})
-
     // OUTPUT
+
+## POST - add data
+
+You can add new records via a POST request. First, let's start with an empty
+object.
+
+    :::js
+    fetch('data/list', {method: 'DELETE'})    // OUTPUT
+
+... and POST a record to it.
+
+    :::js
+    fetch('data/list', {method: 'POST', body: '{"x": 1}'}) // OUTPUT
+
+Records are added with a unique random key. The final dataset looks like this:
+
+    :::js
+    fetch('data/list')
+    // OUTPUT
+
 
 ## PATCH - update data
 
@@ -116,17 +135,19 @@ You an also use the `?x-http-method-override=` query parameter:
 **NOTE:** The method must be in capitals, e.g. `PUT`, `DELETE`, `PATCH`, etc.
 
 <script>
-function run(element) {
+var pre = [].slice.call(document.querySelectorAll('pre'))
+function next() {
+  var element = pre.shift()
   var text = element.textContent
   if (text.match(/OUTPUT/))
     eval(text).then(function(response) {
       return response.text()
     }).then(function(result) {
-      element.textContent = text.replace(/OUTPUT/, 'returns: ' + result)
+      element.innerHTML = element.innerHTML.replace(/OUTPUT/, 'returns: ' + result)
+      if (pre.length > 0) {
+        next()
+      }
     })
 }
-
-var pre = document.querySelectorAll('pre')
-for (var i=0, l=pre.length; i<l; i++)
-  run(pre[i])
+next()
 </script>

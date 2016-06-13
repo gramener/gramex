@@ -1,12 +1,13 @@
 import os
 import json
 import time
+import uuid
 import tornado.web
 import tornado.escape
 from .basehandler import BaseHandler
 from gramex.config import app_log
 
-_datastore = {}         # Contents of the JSON data stores
+_jsonstores = {}        # Contents of the JSON data stores
 _loaded = {}            # Time when persistent stores were last loaded
 
 
@@ -33,34 +34,35 @@ class JSONHandler(BaseHandler):
             raise tornado.web.HTTPError(status_code=400, log_message='Bad JSON', reason='Bad JSON')
 
     def jsonwalk(self, jsonpath, create=False):
-        ''
+        '''Return a parent, key, value from the JSON store where parent[key] == value'''
+        # Load data from self.path JSON file if it's specified, exists, and newer than last load.
+        # Otherwise, load the default data provided.
         if self.path:
-            pathkey = self.path
-            _datastore.setdefault(pathkey, None)
+            path = self.path
+            _jsonstores.setdefault(path, None)
             self.changed = False
-            if os.path.exists(pathkey):
-                # Initialise data from file if it's beeup updated
-                if _loaded.get(pathkey, 0) <= os.stat(pathkey).st_mtime:
+            if os.path.exists(path):
+                if _loaded.get(path, 0) <= os.stat(path).st_mtime:
                     # Don't use encoding when reading JSON. We're using ensure_ascii=True
                     # Besides, when handling Py2 & Py3, just ignoring encoding works best
-                    with open(pathkey, mode='r') as handle:     # noqa
+                    with open(path, mode='r') as handle:     # noqa
                         try:
-                            _datastore[pathkey] = json.load(handle)
-                            _loaded[pathkey] = time.time()
+                            _jsonstores[path] = json.load(handle)
+                            _loaded[path] = time.time()
                         except ValueError:
-                            app_log.warn('Invalid JSON in %s', pathkey)
+                            app_log.warn('Invalid JSON in %s', path)
                             self.changed = True
             else:
                 self.changed = True
         else:
-            pathkey = self.name
-            _datastore.setdefault(pathkey, self.default_data)
+            path = self.name
+            _jsonstores.setdefault(path, self.default_data)
 
         # Walk down the path and find the parent, key and data represented by jsonpath
-        parent, key, data = _datastore, pathkey, _datastore[pathkey]
+        parent, key, data = _jsonstores, path, _jsonstores[path]
         if not jsonpath:
             return parent, key, data
-        keys = [pathkey] + jsonpath.split('/')
+        keys = [path] + jsonpath.split('/')
         for index, key in enumerate(keys[1:]):
             if hasattr(data, '__contains__') and key in data:
                 parent, data = data, data[key]
@@ -100,22 +102,35 @@ class JSONHandler(BaseHandler):
         self.set_header('Content-Type', 'application/json')
 
     def get(self, jsonpath):
-        'Return the JSON data at jsonpath. HTTP Return null for invalid paths.'
+        '''Return the JSON data at jsonpath. Return null for invalid paths.'''
         parent, key, data = self.jsonwalk(jsonpath, create=False)
         self.write(json.dumps(data, **self.json_kwargs))
 
     def post(self, jsonpath):
-        # TODO: implement POST
-        pass
+        '''Add data as a new unique key under jsonpath. Return {name: new_key}'''
+        parent, key, data = self.jsonwalk(jsonpath, create=True)
+        if self.request.body:
+            if data is None:
+                parent[key] = data = {}
+            new_key = str(uuid.uuid4())
+            data[new_key] = self.parse_body_as_json()
+            self.write(json.dumps({'name': new_key}, **self.json_kwargs))
+            self.changed = True
+        else:
+            self.write(json.dumps(None))
 
     def put(self, jsonpath):
+        '''Set JSON data at jsonpath. Return the data provided'''
         parent, key, data = self.jsonwalk(jsonpath, create=True)
         if self.request.body:
             data = parent[key] = self.parse_body_as_json()
             self.write(json.dumps(data, **self.json_kwargs))
             self.changed = True
+        else:
+            self.write(json.dumps(None))
 
     def patch(self, jsonpath):
+        '''Update JSON data at jsonpath. Return the data provided'''
         parent, key, data = self.jsonwalk(jsonpath)
         if data is not None:
             data = self.parse_body_as_json()
@@ -124,6 +139,7 @@ class JSONHandler(BaseHandler):
         self.write(json.dumps(data, **self.json_kwargs))
 
     def delete(self, jsonpath):
+        '''Delete data at jsonpath. Return null'''
         parent, key, data = self.jsonwalk(jsonpath)
         if data is not None:
             del parent[key]
@@ -137,6 +153,6 @@ class JSONHandler(BaseHandler):
             # Don't use encoding when reading JSON. We use ensure_ascii=True.
             # When handling Py2 & Py3, just ignoring encoding works best.
             with open(self.path, mode='w') as handle:       # noqa
-                json.dump(_datastore.get(self.path), handle, **self.json_kwargs)
+                json.dump(_jsonstores.get(self.path), handle, **self.json_kwargs)
             _loaded[self.path] = time.time()
         super(JSONHandler, self).on_finish()
