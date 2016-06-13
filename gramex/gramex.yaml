@@ -106,10 +106,8 @@ log:
 
 # Application event logs are captured in this database.
 eventlog:
-    path: $GRAMEXDATA/logs/events.db    # Location of the event log data
-    # Push to server at most every days (0 means on every startup. Fractional values allowed)
-    server: server POST URL             #
-    days: 1
+    path: $GRAMEXDATA/logs/events.db    # Location of application event logs.
+    table: events                       # Table to store events in
 
 
 # ------------------------------------------------------------------------------
@@ -167,8 +165,8 @@ app:
 # The `schedule:` section defines when specific code is to run.
 schedule:
     # Every day and on startup, check if Gramex needs to be updated
-    gramex-upgrade:
-        function: gramex.check_new_gramex
+    gramex_update:
+        function: gramex.gramex_update
         kwargs:
             repo: http://code.gramener.com/s.anand/gramex.git
         startup: true

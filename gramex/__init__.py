@@ -125,7 +125,7 @@ def commandline():
     callback(**kwargs)
 
 
-def check_new_gramex(repo):
+def gramex_update(repo):
     '''If a newer version of gramex is available, logs a warning'''
     from shutilwhich import which
     if not which('git'):

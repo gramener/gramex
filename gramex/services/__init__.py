@@ -14,6 +14,7 @@ exists, a warning is raised.
 from __future__ import unicode_literals
 
 import os
+import sys
 import atexit
 import signal
 import socket
@@ -30,6 +31,7 @@ from orderedattrdict import AttrDict
 from . import urlcache
 from .. import debug
 from .. import shutdown
+from .. import __version__
 from .ttlcache import MAXTTL
 from ..config import locate, app_log
 
@@ -381,3 +383,35 @@ def cache(conf):
             info.cache[name] = urlcache.DiskCache(
                 path, size_limit=size, eviction_policy='least-recently-stored')
             atexit.register(info.cache[name].close)
+
+
+def eventlog(conf):
+    '''Set up the application event logger'''
+    if not conf.path:
+        return
+
+    import json
+    import time
+    import sqlite3
+
+    folder = os.path.dirname(os.path.abspath(conf.path))
+    if not os.path.exists(folder):
+        os.makedirs(folder)
+    info.eventlog.conn = conn = sqlite3.connect(conf.path)
+    conn.execute('CREATE TABLE IF NOT EXISTS "%s" (time REAL, event TEXT, data TEXT)' % conf.table)
+    insert_query = 'INSERT INTO "%s" VALUES (?, ?, ?)' % conf.table
+
+    def add(event_name, data):
+        '''Write a message into the application event log'''
+        data = json.dumps(data, ensure_ascii=True, separators=(',', ':'))
+        info.eventlog.conn.execute(insert_query, [time.time(), event_name, data])
+        conn.commit()
+
+    def shutdown():
+        add('shutdown', {'version': __version__, 'pid': os.getpid()})
+        info.eventlog.conn.close()
+
+    info.eventlog.add = add
+    add('startup', {'version': __version__, 'pid': os.getpid(),
+                    'args': sys.argv, 'cwd': os.getcwd()})
+    atexit.register(shutdown)
