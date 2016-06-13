@@ -35,10 +35,13 @@ url:
         pattern: /$YAMLURL/facebook
         handler: FacebookAuth
         kwargs:
-            # https://developers.facebook.com/apps/794214110679951/settings/
-            # callback: localhost:9988
-            key: '794214110679951'
-            secret: a026887ed94aef25f2f637bf154349df
+            # Test app (localhost:9988): https://developers.facebook.com/apps/794214110679951/settings/
+            # key: '794214110679951'
+            # secret: 'a026887ed94aef25f2f637bf154349df'
+
+            # Production app: https://developers.facebook.com/apps/163328100435225/settings/
+            key: '163328100435225'
+            secret: 'c71c7e17d5a16ce7662ec75858e9631f'
             log:
                 fields: [session.id, current_user.name, request.remote_ip, request.headers.User-Agent]
             redirect:
@@ -49,10 +52,13 @@ url:
         pattern: /$YAMLURL/twitter
         handler: TwitterAuth
         kwargs:
-            # https://apps.twitter.com/app/12449610/keys
-            # callback: 127.0.0.1:9988/auth/twitter
-            key: XkCVNZD5sfWECxHGAGnlHGQFa
-            secret: yU00bx5dHYMbge9IyO5H1KeC5uFnWndntG7u6CH6O4HDZHQg0p
+            # Test app (127.0.0.1:9988): https://apps.twitter.com/app/12449610/keys
+            # key: XkCVNZD5sfWECxHGAGnlHGQFa
+            # secret: yU00bx5dHYMbge9IyO5H1KeC5uFnWndntG7u6CH6O4HDZHQg0p
+
+            # Production app: https://apps.twitter.com/app/9510381/keys
+            key: 5Ab9olPCo8OA8S1R2BY29FAxB
+            secret: BgRPCvxaQsYU3QivHvrthwQA1vwDr22UQDLuUK8egqvgUid1md
             log:
                 fields: [session.id, current_user.username, request.remote_ip, request.headers.User-Agent]
             redirect:
