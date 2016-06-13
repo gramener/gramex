@@ -143,6 +143,28 @@ button, input, select, textarea {
     color: #0563c1;
 }
 
+/* Clipboard copy button */
+.codehilite {
+  position: relative;
+  width: 50em;
+}
+.codehilite .copy-button {
+  position: absolute;
+  right: 0;
+  top: 0.5rem;
+  background-color: rgba(255, 255, 255, 0.25);
+  color: #fff;
+  outline: none;
+  border: none;
+  margin: 0;
+  padding: 0 6px 2px 6px;
+  font-size: 0.8rem;
+}
+.codehilite .copy-button:hover {
+  background-color: #fff;
+  color: #000;
+}
+
 /* Based on https://github.com/richleland/pygments-css/blob/master/monokai.css */
 .codehilite pre { background-color: #000; }
 .codehilite .hll { background-color: #49483e }

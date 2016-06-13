@@ -62,9 +62,10 @@ url:
                     headers:
                         Content-Type: text/html
 
-    # Static files are cached on the browser and on the serve
+    # Static files are cached on the browser and on the server
     static:
-        pattern: /$YAMLURL/(.*.css)
+        pattern: /$YAMLURL/(.*.css|.*.js)
+        priority: 1                                     # Override markdown: handler
         handler: FileHandler
         cache: true                                     # Cache on the server
         kwargs:
