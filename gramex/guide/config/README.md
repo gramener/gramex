@@ -133,6 +133,7 @@ for example:
 
 Gramex offers the following pre-defined handlers:
 
+- `none`: disables logging
 - `console`: writes information logs to the console in colour
 - `text`: writes information logs to the console without colours (suitable for nohup, redirecting to a file, etc)
 - `access-log` writes information logs to a CSV file `access.csv`

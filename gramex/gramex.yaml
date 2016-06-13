@@ -50,6 +50,8 @@ log:
         tornado.application: {}
         tornado.general: {}
     handlers:
+        none:
+            class: logging.NullHandler
         console:
             class: logging.StreamHandler
             formatter: console
