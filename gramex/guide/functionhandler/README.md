@@ -178,6 +178,14 @@ To redirect to a different URL when the function is done, use `redirect`:
 
 Note: Using `redirect: ""` redirects to referrer.
 
+If you want the function to dynamally redirect to a URL, use
+`handler.set_header()`:
+
+    :::python
+    def run(handler):
+        handler.set_header('Location', '/url-to-redirect-to')
+        return ''
+
 
 [requesthandler]: https://tornado.readthedocs.org/en/stable/web.html#request-handlers
 [asynchttpclient]: https://tornado.readthedocs.org/en/latest/httpclient.html#tornado.httpclient.AsyncHTTPClient
