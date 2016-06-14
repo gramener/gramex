@@ -14,7 +14,7 @@ class GramexUpdateHandler(BaseHandler):
 
     def get(self):
         # When a user casually visits the page, render friendly output
-        self.write('Hello')
+        self.render('index.html', version=gramex.__version__)
 
     def post(self):
         # Log all messages
