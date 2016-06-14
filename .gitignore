@@ -21,10 +21,10 @@ tests/**/*.test
 # Ignore log files
 *.log*
 
-# Don't commit CSV files, except what's required by Gramex or for testing
+# Don't commit CSV files, except what's required for testing or by Gramex apps
 *.csv
 !tests/**/*.csv
-!gramex/guide/chart/*.csv
+!gramex/apps/**/*.csv
 
 # Don't commit databases created by test cases
 tests/*.db

@@ -70,7 +70,7 @@ setup(
             'apps.yaml',
             'release.json',
             'handlers/filehandler.template.html',
-        ] + list(recursive_include('gramex', 'guide', ignore_patterns))
+        ] + list(recursive_include('gramex', 'apps', ignore_patterns))
     },
     include_package_data=True,
     install_requires=[

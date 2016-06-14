@@ -4,8 +4,8 @@ include gramex/apps.yaml
 include gramex/release.json
 include gramex/handlers/filehandler.template.html
 
-# Include Gramex guide
-recursive-include gramex/guide *
+# Include Gramex apps
+recursive-include gramex/apps *
 
 # Include requirement dependencies
 include requirements.txt

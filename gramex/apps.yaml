@@ -1,2 +1,2 @@
 guide:
-    target: $GRAMEXPATH/guide/
+    target: $GRAMEXPATH/apps/guide/
