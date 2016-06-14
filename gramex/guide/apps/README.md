@@ -92,6 +92,19 @@ You can pass any command line options as mentioned in the [config docs](../confi
     gramex run <appname> --listen.port=
 
 
+## Updating
+
+To update an application, run::
+
+    :::shell
+    gramex update <appname>
+
+`update` is just an alias for `install`. It just runs `gramex install <appname>`
+again. It uses the existing `--url` or `--cmd` to re-install the app.
+
+This deletes the application data folder. Applications should persist data in
+`$GRAMEXDATA/data/<appname>` to avoid losing it on re-install.
+
 ## Uninstalling
 
 To uninstall an app, run:

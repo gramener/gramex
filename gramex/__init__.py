@@ -97,7 +97,7 @@ def callback_commandline(commands):
     if len(cmd) > 0:
         kwargs = {'cmd': cmd, 'args': args}
         base_command = cmd.pop(0).lower()
-        if base_command == 'install':
+        if base_command in ('install', 'update'):
             from gramex.install import install
             return install, kwargs
         elif base_command == 'uninstall':
