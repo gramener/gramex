@@ -14,7 +14,7 @@ class TestSetup(unittest.TestCase):
 
     def test_setup(self):
         self.exists('handlers/filehandler.template.html')
-        self.exists('guide/index.html')
-        self.exists('guide/gramex.yaml')
-        self.exists('guide/README.md')
-        self.exists('guide/install/README.md')
+        self.exists('apps/guide/index.html')
+        self.exists('apps/guide/gramex.yaml')
+        self.exists('apps/guide/README.md')
+        self.exists('apps/guide/install/README.md')
