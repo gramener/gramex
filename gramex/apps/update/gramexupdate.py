@@ -26,6 +26,7 @@ class GramexUpdateHandler(BaseHandler):
             self.finish('Invalid POST data. Expecting JSON array')
             return
         for log in logs:
+            log['ip'] = self.request.remote_ip
             self.log.info(json.dumps(log, **self.json_kwargs))
         # Return the latest Gramex version
         self.write(json.dumps({
