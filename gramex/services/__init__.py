@@ -101,9 +101,12 @@ def app(conf):
             if conf.browser:
                 if isinstance(conf.browser, str):
                     url = urlparse.urljoin(url, conf.browser)
-                browser = webbrowser.get()
-                app_log.info('Opening %s in %s browser', url, browser.__class__.__name__)
-                browser.open(url)
+                try:
+                    browser = webbrowser.get()
+                    app_log.info('Opening %s in %s browser', url, browser.__class__.__name__)
+                    browser.open(url)
+                except webbrowser.Error:
+                    app_log.info('Unable to open browser')
 
             # Ensure that we call shutdown() on Ctrl-C.
             # On Windows, Tornado does not exit on Ctrl-C. This also fixes that.
