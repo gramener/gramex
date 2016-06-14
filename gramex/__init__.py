@@ -138,7 +138,7 @@ def gramex_update(url):
     query = 'SELECT * FROM events WHERE event="update" ORDER BY time DESC LIMIT 1'
     update = conn.execute(query).fetchone()
     delay = 24 * 60 * 60            # Wait for one day before updates
-    if update is not None and time.time() < update.time + delay:
+    if update is not None and time.time() < update['time'] + delay:
         app_log.debug('Gramex update ran recently. Deferring check.')
         return
 
@@ -147,7 +147,7 @@ def gramex_update(url):
         'uname': platform.uname(),
     }
     query = ('SELECT * FROM events' if update is None else
-             'SELECT * FROM events WHERE time > %s ORDER BY time' % update.time)
+             'SELECT * FROM events WHERE time > %s ORDER BY time' % update['time'])
     logs = [dict(log, **meta) for log in conn.execute(query)]
 
     def check_version(future):
@@ -172,6 +172,8 @@ def gramex_update(url):
         elif data.get('version') > __version__:
             app_log.warn('Gramex update: your version %s is ahead of the stable %s',
                          __version__, data['version'])
+        else:
+            app_log.debug('Gramex version %s is up to date', __version__)
 
     import tornado.httpclient
     http_client = tornado.httpclient.AsyncHTTPClient()
