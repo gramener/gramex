@@ -34,7 +34,7 @@ class AuthHandler(BaseHandler):
     @classmethod
     def setup(cls, log={}, action=None, **kwargs):
         super(AuthHandler, cls).setup(**kwargs)
-        check_old_certs()
+        gramex.service.threadpool.submit(check_old_certs)
         if log and hasattr(log, '__getitem__') and log.get('fields'):
             cls.log_fields = log['fields']
             cls.logger = logging.getLogger(log.get('logger', 'user'))

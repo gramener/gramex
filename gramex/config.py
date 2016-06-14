@@ -394,6 +394,8 @@ def check_old_certs():
     https://github.com/tornadoweb/tornado/issues/1534
     '''
     if not _checked_old_certs:
+        _checked_old_certs.append(True)
+
         import ssl
         from tornado.httpclient import HTTPClient, AsyncHTTPClient
 
@@ -410,11 +412,14 @@ def check_old_certs():
                 app_log.warn('Using old SSL certificates for compatibility')
             except ImportError:
                 pass
+            try:
+                _client.fetch("https://accounts.google.com/")
+            except ssl.SSLError:
+                app_log.error('Gramex cannot connect to HTTPS sites. Auth may fail')
         except Exception:
             # Ignore any other kind of exception
-            app_log.warn('Gramex has no direct Internet connection.')
+            app_log.warn('Gramex has no direct Internet connection')
         _client.close()
-        _checked_old_certs.append(True)
 
 
 def objectpath(node, keypath, default=None):

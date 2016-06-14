@@ -207,6 +207,8 @@ class _Subprocess(object):
                     size = len(content)
                     if size > 0:
                         for callback in callbacks:
+                            # This may raise a ValueError: write to closed file.
+                            # TODO: decide how to handle it.
                             callback(content)
                     if size < buffer_size:
                         stream.close()
