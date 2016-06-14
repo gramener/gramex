@@ -27,6 +27,9 @@ install: |
         - npm install
         - bower install
 
+    Installed apps:
+    {apps}
+
 run: |
     usage: gramex run <app> [--target=DIR] [--dir=DIR] [--<options>=<value>]
 
@@ -46,6 +49,9 @@ run: |
     "gramex run app" will re-use these values. To clear the option, leave the
     value blank. For example "--browser=" will clear the browser option.
 
+    Installed apps:
+    {apps}
+
 uninstall: |
     usage: gramex uninstall <app> [<app> ...]
 
@@ -53,6 +59,9 @@ uninstall: |
     multiple applications in one command.
 
     All information about the application is lost. You cannot undo this.
+
+    Installed apps:
+    {apps}
 '''
 
 import os
@@ -266,10 +275,18 @@ def flatten_config(config, base=None):
             yield keystr, value
 
 
+def show_usage(command):
+    apps = (+apps_config).keys()
+    return 'gramex {command}\n\n{desc}'.format(
+        command=command,
+        desc=usage[command].strip().format(
+            apps='\n'.join('- ' + app for app in sorted(apps))
+        ))
+
+
 def install(cmd, args):
     if len(cmd) < 1:
-        apps = (+apps_config).keys()
-        app_log.error('gramex install [%s]\n\n%s', '|'.join(apps), usage['install'].strip())
+        app_log.error(show_usage('install'))
         return
 
     appname = cmd[0]
@@ -295,8 +312,7 @@ def install(cmd, args):
 
 def uninstall(cmd, args):
     if len(cmd) < 1:
-        apps = (+apps_config['user']).keys()
-        app_log.error('gramex uninstall [%s]\n\n%s', '|'.join(apps), usage['uninstall'].strip())
+        app_log.error(show_usage('uninstall'))
         return
     if len(cmd) > 1 and args:
         app_log.error('Arguments allowed only with single app. Ignoring %s', ', '.join(cmd[1:]))
@@ -319,8 +335,7 @@ def uninstall(cmd, args):
 
 def run(cmd, args):
     if len(cmd) < 1:
-        apps = (+apps_config['user']).keys()
-        app_log.error('gramex run [%s]\n\n%s', '|'.join(apps), usage['run'].strip())
+        app_log.error(show_usage('run'))
         return
     if len(cmd) > 1:
         app_log.error('Can only run one app. Ignoring %s', ', '.join(cmd[1:]))
