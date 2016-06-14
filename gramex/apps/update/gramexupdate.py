@@ -1,7 +1,7 @@
 import json
 import logging
-from tornado.web import HTTPError
 import gramex
+from six.moves.http_client import BAD_REQUEST
 from gramex.handlers.basehandler import BaseHandler
 
 
@@ -22,7 +22,7 @@ class GramexUpdateHandler(BaseHandler):
             logs = json.loads(self.request.body, encoding='utf-8')
             assert isinstance(logs, list)
         except (ValueError, AssertionError):
-            self.set_status(400)
+            self.set_status(BAD_REQUEST)
             self.finish('Invalid POST data. Expecting JSON array')
             return
         for log in logs:
