@@ -1,2 +1,4 @@
 guide:
     target: $GRAMEXPATH/apps/guide/
+gramex-update:
+    target: $GRAMEXPATH/apps/update/

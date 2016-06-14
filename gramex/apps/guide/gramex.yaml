@@ -1,13 +1,12 @@
 variables:
-    GUIDE_ROOT: $YAMLURL
+    GUIDE_ROOT: $YAMLURL                # Used by guide.py to pass to markdown.template
 
 app:
   settings:
-    login_url: /$YAMLURL/auth/google
+    login_url: /$YAMLURL/auth/db        # Use DB Auth by default -- it works offline
     cookie_secret: COOKIE_NAME
     autoreload: False
     debug: False
-    xsrf_cookies: False
 
 import:
     subdirectories: '*/gramex.yaml'

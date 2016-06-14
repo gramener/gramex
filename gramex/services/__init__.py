@@ -56,11 +56,15 @@ def log(conf):
     '''Set up logging using Python's standard logging.config.dictConfig()'''
     # Create directories for directories mentioned by handlers if logs are used
     active_handlers = set(conf.get('root', {}).get('handlers', []))
+    for logger in conf.get('loggers', {}).values():
+        active_handlers |= set(logger.get('handlers', []))
     for handler, handler_conf in conf.get('handlers', {}).items():
-        if handler in active_handlers and 'filename' in handler_conf:
-            path = os.path.dirname(handler_conf.filename)
-            if not os.path.exists(path):
-                os.makedirs(path)
+        if handler in active_handlers:
+            filename = handler_conf.get('filename')
+            if filename:
+                folder = os.path.dirname(handler_conf.filename)
+                if not os.path.exists(folder):
+                    os.makedirs(folder)
     logging.config.dictConfig(conf)
 
 

@@ -1,0 +1,33 @@
+variables:
+    LOGFILE: $GRAMEXDATA/data/update/log.jsonl  # Location where log file is stored
+
+app:
+    settings:
+        debug: False
+        autoreload: False
+
+url:
+    update:
+        pattern: /$YAMLURL/
+        handler: gramexupdate.GramexUpdateHandler
+        kwargs:
+            path: $LOGFILE
+
+log:
+    loggers:
+        gramexupdate:
+            level: INFO
+            propagate: false    # Do not propagate to root handler
+            handlers:
+                - gramex-update-log
+    handlers:
+        gramex-update-log:
+            class: logging.handlers.TimedRotatingFileHandler
+            level: INFO
+            formatter: message      # save the message as-is
+            filename: $LOGFILE      # into a JSON-line file
+            encoding: utf-8         # encoded as UTF-8
+            when: midnight          # rotate the log file at midnight
+            interval: 1             # every single day
+            utc: true               # using UTC -- the server may be located anywhere
+            delay: true             # do not create file until called

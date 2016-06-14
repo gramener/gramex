@@ -105,6 +105,9 @@ log:
         csv-message:
             format: '%(asctime)s,%(message)s'
             datefmt: '%Y-%m-%d %H:%M:%S'
+        message:
+            format: '%(message)s'
+            datefmt: '%Y-%m-%d %H:%M:%S'
 
 # Application event logs are captured in this database. The logs are stored in a
 # table called "events".
@@ -167,7 +170,7 @@ schedule:
     gramex_update:
         function: gramex.gramex_update
         kwargs:
-            url: https://gramener.com/gramex-update
+            url: https://gramener.com/gramex-update/
         startup: true
         minutes: 0
         hours: 0
