@@ -85,13 +85,27 @@ from gramex.config import ChainConfig, PathConfig, variables, app_log
 usage = yaml.load(__doc__)
 
 
-def _rmtree_readonly(remove, path, exc_info):
-    '''onerror callback for rmtree that deletes read-only files on Windows'''
-    # https://bugs.python.org/issue19643
-    # https://bugs.python.org/msg218021
-    if issubclass(exc_info[0], WindowsError) and exc_info[1].winerror == 5:
-        os.chmod(path, stat.S_IWRITE)
-        return remove(path)
+def _ensure_remove(remove, path, exc_info):
+    '''onerror callback for rmtree that tries hard to delete files'''
+    if issubclass(exc_info[0], WindowsError):
+        # Delete read-only files on Windows
+        # https://bugs.python.org/issue19643
+        # https://bugs.python.org/msg218021
+        if exc_info[1].winerror == 5:
+            os.chmod(path, stat.S_IWRITE)
+            return remove(path)
+        # Delay delete a bit if directory is used by another process.
+        # Typically happens on uninstall immediately after bower / npm / git
+        # (e.g. during testing.)
+        if exc_info[1].winerror == 32:
+            import time
+            delays = [0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1.0]
+            for delay in delays:
+                time.sleep(delay)
+                try:
+                    return remove(path)
+                except WindowsError:
+                    pass
     raise exc_info[1]
 
 
@@ -125,7 +139,7 @@ def download_zip(config):
     # If the URL is a directory, copy it
     if os.path.isdir(url):
         if os.path.exists(target):
-            shutil.rmtree(target, onerror=_rmtree_readonly)
+            shutil.rmtree(target, onerror=_ensure_remove)
         shutil.copytree(url, target)
         app_log.info('Copied %s into %s', url, target)
         return
@@ -150,7 +164,7 @@ def download_zip(config):
 
     # Extract relevant files from ZIP file
     if os.path.exists(target):
-        shutil.rmtree(target, onerror=_rmtree_readonly)
+        shutil.rmtree(target, onerror=_ensure_remove)
     zipfile.extractall(target, files)
     app_log.info('Extracted %d files into %s', len(files), target)
 
@@ -171,7 +185,7 @@ def run_command(config):
         appcmd.append(config.target)
     app_log.info('Running %s', ' '.join(appcmd))
     if os.path.exists(config.target):
-        shutil.rmtree(config.target, onerror=_rmtree_readonly)
+        shutil.rmtree(config.target, onerror=_ensure_remove)
     proc = Popen(appcmd, bufsize=-1, stdout=sys.stdout, stderr=sys.stderr)
     proc.communicate()
 
@@ -325,7 +339,7 @@ def uninstall(cmd, args):
         app_config = get_app_config(appname, args)
         if os.path.exists(app_config.target):
             if app_config.target.startswith(variables['GRAMEXDATA']):
-                shutil.rmtree(app_config.target, onerror=_rmtree_readonly)
+                shutil.rmtree(app_config.target, onerror=_ensure_remove)
             else:
                 app_log.warn('Not removing directory %s (outside $GRAMEXDATA)', app_config.target)
         else:
