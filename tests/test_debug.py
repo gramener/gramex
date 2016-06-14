@@ -9,21 +9,25 @@ class TestDebug(unittest.TestCase):
         with LogCapture() as logs:
             timer('start')
             timer('middle')
-        self.assertGreaterEqual(len(logs.records), 2)
-        self.assertGreaterEqual(
-            {rec.args[1] for rec in logs.records},
-            {'start', 'middle'})
-        self.assertGreaterEqual(
-            {rec.args[2].split(os.sep)[-1].rsplit(':', 1)[0] for rec in logs.records},
-            {'test_debug.py:test_timer', 'test_debug.py:test_timer'})
+        args = [rec.args for rec in logs.records
+                if len(rec.args) > 2 and 'test_debug.py:test_timer' in rec.args[2]]
+        self.assertEqual(len(args), 2)
+        self.assertEqual(
+            [arg[1] for arg in args],
+            ['start', 'middle'])
+        self.assertEqual(
+            [arg[2].split(os.sep)[-1].rsplit(':', 1)[0] for arg in args],
+            ['test_debug.py:test_timer', 'test_debug.py:test_timer'])
 
         with LogCapture() as logs:
             with Timer('msg'):
                 pass
-        self.assertGreaterEqual(len(logs.records), 1)
-        self.assertGreaterEqual(
-            {rec.args[1] for rec in logs.records},
-            {'msg'})
-        self.assertGreaterEqual(
-            {rec.args[2].split(os.sep)[-1].rsplit(':', 1)[0] for rec in logs.records},
-            {'test_debug.py:test_timer'})
+        args = [rec.args for rec in logs.records
+                if len(rec.args) > 2 and 'test_debug.py:test_timer' in rec.args[2]]
+        self.assertEqual(len(args), 1)
+        self.assertEqual(
+            [arg[1] for arg in args],
+            ['msg'])
+        self.assertEqual(
+            [arg[2].split(os.sep)[-1].rsplit(':', 1)[0] for arg in args],
+            ['test_debug.py:test_timer'])
