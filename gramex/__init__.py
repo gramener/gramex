@@ -153,7 +153,7 @@ def gramex_update(url):
     def check_version(future):
         exception = future.exception()
         if exception:
-            app_log.error('Gramex update: HTTP %d %s (%s)', exception.code, exception.message, url)
+            app_log.error('Gramex update error: %s (%s)', exception, url)
             return
 
         result = future.result()

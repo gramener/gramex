@@ -190,31 +190,14 @@ def run_command(config):
     proc.communicate()
 
 
-setup_paths = AttrDict()
-setup_paths['make'] = {
-    'file': 'Makefile',
-    'cmd': '"$EXE"'
-}
-setup_paths['powershell'] = {
-    'file': 'setup.ps1',
-    'cmd': '"$EXE" -File "$FILE"'
-}
-setup_paths['bash'] = {
-    'file': 'setup.sh',
-    'cmd': '"$EXE" "$FILE"'
-}
-setup_paths['python'] = {
-    'file': 'setup.py',
-    'cmd': '"$EXE" "$FILE"'
-}
-setup_paths['npm'] = {
-    'file': 'package.json',
-    'cmd': '"$EXE" install'
-}
-setup_paths['bower'] = {
-    'file': 'bower.json',
-    'cmd': '"$EXE" install'
-}
+setup_paths = AttrDict((
+    ('make', {'file': 'Makefile', 'cmd': '"$EXE"'}),
+    ('powershell', {'file': 'setup.ps1', 'cmd': '"$EXE" -File "$FILE"'}),
+    ('bash', {'file': 'setup.sh', 'cmd': '"$EXE" "$FILE"'}),
+    ('python', {'file': 'setup.py', 'cmd': '"$EXE" "$FILE"'}),
+    ('npm', {'file': 'package.json', 'cmd': '"$EXE" install'}),
+    ('bower', {'file': 'bower.json', 'cmd': '"$EXE" install'}),
+))
 
 
 def run_setup(config):
@@ -272,9 +255,13 @@ def save_user_config(appname, value):
 
 
 def get_app_config(appname, args):
+    '''
+    Get the stored configuration for appname, and override it with args.
+    ``.target`` defaults to $GRAMEXDATA/apps/<appname>.
+    '''
     apps_config['cmd'] = {appname: args}
     app_config = (+apps_config).get(appname, {})
-    app_config.target = str(app_dir / app_config.get('target', appname))
+    app_config.setdefault('target', str(app_dir / app_config.get('target', appname)))
     return app_config
 
 

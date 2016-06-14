@@ -13,6 +13,22 @@ from . import server
 folder = os.path.dirname(os.path.abspath(__file__))
 
 
+class MockGramex(object):
+    def __init__(self, target, instance=gramex, method='init'):
+        self.instance = instance
+        self.method = method
+        self.target = target
+        self.original = getattr(instance, method)
+
+    def __enter__(self):
+        self.cwd = os.getcwd()
+        setattr(self.instance, self.method, self.target)
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        setattr(self.instance, self.method, self.original)
+        os.chdir(self.cwd)
+
+
 class TestInstall(unittest.TestCase):
     zip_url = urljoin(server.base_url, 'install-test.zip')
     zip_file = os.path.join(folder, 'install-test.zip')
@@ -40,12 +56,14 @@ class TestInstall(unittest.TestCase):
         self.assertTrue('installed' in conf[appname])
         self.assertTrue('time' in conf[appname].installed)
 
-    def check_uninstall(self, appname):
+    def check_uninstall(self, appname, exist_check=True):
         '''Check that appname exists. Uninstall appname. It should be removed'''
         folder = self.appdir(appname)
-        self.assertTrue(os.path.exists(folder))
+        if exist_check:
+            self.assertTrue(os.path.exists(folder))
         uninstall([appname], {})
-        self.assertFalse(os.path.exists(folder))
+        if exist_check:
+            self.assertFalse(os.path.exists(folder))
 
     def check_zip(self, appname, files, **params):
         '''Test installing and uninstalling a zipfile via URL and as a file'''
@@ -89,15 +107,19 @@ class TestInstall(unittest.TestCase):
             result.opts = kwargs.get('cmd', {}).get('app', {})
 
         install(['run-app', self.zip_url], AttrDict())
-        old_init = gramex.init
-        old_cwd = os.getcwd()
-        setattr(gramex, 'init', check_init)
-        run(['run-app'], AttrDict(dir='dir1', browser=False))
-        setattr(gramex, 'init', old_init)
-        os.chdir(old_cwd)
+        with MockGramex(check_init):
+            run(['run-app'], AttrDict(dir='dir1', browser=False))
         self.assertEqual(result.cwd, self.appdir('run-app/dir1/'))
         self.assertEqual(result.opts.get('browser'), False)
         self.check_uninstall('run-app')
+
+        # Run with --target
+        with MockGramex(check_init):
+            run(['run-app-target'], AttrDict(target='.', browser=True))
+        self.assertEqual(result.cwd, os.getcwd())
+        self.assertEqual(result.opts.get('browser'), True)
+        self.check_uninstall('run-app-target', exist_check=False)
+
 
     def test_dir(self):
         dirpath = os.path.join(folder, 'dir', 'subdir')
