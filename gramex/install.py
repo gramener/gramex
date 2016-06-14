@@ -359,4 +359,4 @@ def run(cmd, args):
             ['--%s=%s' % arg for arg in flatten_config(app_config.get('run', {}))]))
         gramex.init(cmd=AttrDict(app=app_config['run']))
     else:
-        app_log.error('No directory %s to run for %s', app_config.target, appname)
+        app_log.error('%s: no directory %s', appname, app_config.target)
