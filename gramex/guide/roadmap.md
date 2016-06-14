@@ -22,6 +22,7 @@ Features for the next 2 releases are below. Bugs to be fixed are at the
 - Data uploads and management
 - Excel / CSV upload for data entry, with conflict management
 - Form-based data entry
+- Auto annotations (like [teletext.io](https://teletext.io/help/get-started))
 
 # Features
 

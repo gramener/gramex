@@ -78,7 +78,10 @@ if os.name == 'nt':
     import msvcrt
 
     def getch():
-        'Return character if something was typed on the console, else None'
+        '''
+        Return character if something was typed on the console, else None.
+        TODO: flush the buffer
+        '''
         return msvcrt.getch() if msvcrt.kbhit() else None
 
 # Posix (Linux, OS X)
@@ -101,7 +104,10 @@ else:
             termios.tcsetattr(fd, termios.TCSAFLUSH, new_term)
 
         def getch():
-            'Return character if something was typed on the console, else None'
+            '''
+            Return character if something was typed on the console, else None.
+            TODO: flush the buffer
+            '''
             dr, dw, de = select([sys.stdin], [], [], 0)
             if dr != []:
                 return sys.stdin.read(1)
