@@ -88,16 +88,17 @@ usage = yaml.load(__doc__)
 def _ensure_remove(remove, path, exc_info):
     '''onerror callback for rmtree that tries hard to delete files'''
     if issubclass(exc_info[0], WindowsError):
+        import winerror
         # Delete read-only files on Windows
         # https://bugs.python.org/issue19643
         # https://bugs.python.org/msg218021
-        if exc_info[1].winerror == 5:
+        if exc_info[1].winerror == winerror.ERROR_ACCESS_DENIED:
             os.chmod(path, stat.S_IWRITE)
             return remove(path)
         # Delay delete a bit if directory is used by another process.
         # Typically happens on uninstall immediately after bower / npm / git
         # (e.g. during testing.)
-        if exc_info[1].winerror == 32:
+        if exc_info[1].winerror == winerror.ERROR_SHARING_VIOLATION:
             import time
             delays = [0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1.0]
             for delay in delays:
