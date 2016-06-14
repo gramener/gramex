@@ -154,9 +154,9 @@ This configuration lets you log in from a [database table](db):
     pattern: /$YAMLURL/db                 # Map this URL
     handler: DBAuth                       # to the DBAuth handler
     kwargs:
-        template: $YAMLPATH/dbauth.html   # Render the login form template
-        url: sqlite:///$YAMLPATH/auth.db  # Pick up list of users from this sqlalchemy URL
-        table: users                      # ... and this table
+        template: $YAMLPATH/dbauth.html     # Render the login form template
+        url: sqlite:///$YAML/auth.db  # Pick up list of users from this sqlalchemy URL
+        table: users                        # ... and this table
         user:
             column: user                  # The users.user column is matched with
             arg: user                     # ... the ?user= argument from the form
@@ -189,6 +189,9 @@ Here is a minimal `dbauth.html` template:
 The password supports optional encryption. Before the password is compared with
 the database, it is encrypted using the provided function. You can also use
 client-side (JavaScript) instead, and disable this.
+
+For an example of how to create users in a database, see `create_user_database`
+from [authutil.py](authutil.py).
 
 
 ## Log out
@@ -309,7 +312,7 @@ You can define your own logging handler for the `user` logger in the [log sectio
         handlers:
             user:
                 class: logging.handlers.FileHandler     # Save it as a file
-                filename: $YAMLPATH/user.csv            # under YAML file's directory as user.csv
+                filename: $GRAMEXDATA/logs/user.csv     # under the Gramex data directory as logs/user.csv
                 formatter: csv-message                  # Format message as-is. (Don't change this line)
 
 You can also use more sophisticated loggers such as [TimedRotatingFileHandler](https://docs.python.org/3/library/logging.handlers.html#logging.handlers.TimedRotatingFileHandler).
