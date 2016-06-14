@@ -93,8 +93,8 @@ def app(conf):
 
             # browser: True opens the application home page on localhost.
             # browser: url opens the application to a specific URL
+            url = 'http://127.0.0.1:%d/' % conf.listen.port
             if conf.browser:
-                url = 'http://127.0.0.1:%d/' % conf.listen.port
                 if isinstance(conf.browser, str):
                     url = urlparse.urljoin(url, conf.browser)
                 browser = webbrowser.get()
@@ -114,9 +114,14 @@ def app(conf):
                     if exit[0] is True:
                         shutdown()
                     # If Ctrl-D is pressed, run the Python debugger
-                    if debug.getch() == b'\x04':
+                    char = debug.getch()
+                    if char == b'\x04':
                         import ipdb as pdb
                         pdb.set_trace()
+                    # If Ctrl-B is pressed, start the browser
+                    if char == b'\x02':
+                        browser = webbrowser.get()
+                        browser.open(url)
 
                 def signal_handler(signum, frame):
                     exit[0] = True

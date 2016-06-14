@@ -2,6 +2,23 @@ title: Debugging Gramex
 
 This page documents ways of debugging a Gramex application.
 
+## Browser
+
+To open the browser when Gramex starts, use `--browser`.
+
+If you forget to start using `--browser`, you can press `Ctrl+B` on the Gramex
+console to start the browser.
+
+To start the browser at a specific URL, use `--browser=url`. The URL need not be
+a local URL.
+
+To save this setting locally, use `gramex run <appname> --target=. --browser`.
+The next time you run `gramex run <appname>`, the setting will be saved. To
+disable the `--browser` option, use `--browser=` (note the `=` at the end.)
+
+You can add it to [gramex.yaml](../config/) under `app` as `browser: true` or
+`browser: url`.
+
 ## Debug mode
 
 Run Gramex with a `--settings.debug` to trigger [debug mode][debug-mode] in
