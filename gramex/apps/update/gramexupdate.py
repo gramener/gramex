@@ -11,10 +11,12 @@ class GramexUpdateHandler(BaseHandler):
         super(GramexUpdateHandler, cls).setup(**kwargs)
         cls.log = logging.getLogger('gramexupdate')
         cls.json_kwargs = {'ensure_ascii': True, 'separators': (',', ':')}
+        folder = os.path.dirname(os.path.abspath(__file__))
+        cls.template = os.path.join(folder, 'index.html')
 
     def get(self):
         # When a user casually visits the page, render friendly output
-        self.render('index.html', version=gramex.__version__)
+        self.render(self.template, version=gramex.__version__)
 
     def post(self):
         # Log all messages
