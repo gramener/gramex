@@ -3,6 +3,33 @@
 History
 -------
 
+1.0.9 (2016-06-15)
+~~~~~~~~~~~~~~~~~~
+
+* Gramex supports `sessions`_. Whether a user is logged in or not,
+  ``handler.session`` is a persistent dictionary that you can use to store
+  information against that user session.
+* Users can log in via LDAP and ActiveDirectory using the `LDAPAuth`_ handler.
+* Users can log in via any database table containing user IDs and passwords
+  using the `DBAuth`_ handler.
+* All auth handlers support a consistent `auth redirection`_, allowing apps to
+  redirect them to the right page after login.
+* Users can log out via the `LogoutHandler`_.
+* User login is logged via `auth logging`_ to a CSV file.
+* When a user logs in, you can perform custom actions (such as logging them out
+  of other sessions)
+* All URLs support `authorization`_ via an `auth:` section. You can check if the
+  user is member of a group, or any arbitrary condition defined as a Python
+  function.
+* `FileHandler`_ allows you to `ignore files`_ matching a pattern.
+* Gramex automatically logs startup and shutdown events using the ``eventlog:``
+  service. It checks the `Gramex update page`_ daily for updates, and uploads
+  the event log.
+* A new ``none`` pre-defined `log`_ handler is available. It ignores log events.
+* ``gramex update <app>`` re-installs the app.
+* Press ``Ctrl+B`` on the console to start the browser (in case you forgot
+  ``--browser``.)
+
 1.0.8 (2016-06-01)
 ~~~~~~~~~~~~~~~~~~
 
@@ -175,3 +202,13 @@ There are two changes that may disrupt your code:
 .. _log: https://learn.gramener.com/guide/config/#logging
 .. _apps: https://learn.gramener.com/guide/apps/
 .. _debug: https://learn.gramener.com/guide/debug/
+.. _sessions: https://learn.gramener.com/guide/auth/#sessions
+.. _LDAPAuth: https://learn.gramener.com/guide/auth/#ldap
+.. _DBAuth: https://learn.gramener.com/guide/auth/#database
+.. _LogoutHandler: https://learn.gramener.com/guide/auth/#log-out
+.. _login actions: https://learn.gramener.com/guide/auth/#login-actions
+.. _auth logging: https://learn.gramener.com/guide/auth/#logging
+.. _authorization: https://learn.gramener.com/guide/auth/#authorization
+.. _Gramex update page: https://gramener.com/gramex-update/
+.. _ignore files: https://learn.gramener.com/guide/filehandler/#ignore-files
+.. _auth redirection: https://learn.gramener.com/guide/auth/#redirection
