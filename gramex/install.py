@@ -110,6 +110,17 @@ def _ensure_remove(remove, path, exc_info):
     raise exc_info[1]
 
 
+def safe_rmtree(target):
+    if not os.path.exists(target):
+        return True
+    elif target.startswith(variables['GRAMEXDATA']):
+        shutil.rmtree(target, onerror=_ensure_remove)
+        return True
+    else:
+        app_log.warn('Not removing directory %s (outside $GRAMEXDATA)', target)
+        return False
+
+
 def zip_prefix_filter(members, prefix):
     '''
     Return only ZIP file members starting with the directory prefix, with the
@@ -140,9 +151,15 @@ def download_zip(config):
     # If the URL is a directory, copy it
     if os.path.isdir(url):
         if os.path.exists(target):
-            shutil.rmtree(target, onerror=_ensure_remove)
-        shutil.copytree(url, target)
-        app_log.info('Copied %s into %s', url, target)
+            url = os.path.abspath(url).lower().strip(os.sep)
+            target = os.path.abspath(target).lower().strip(os.sep)
+            if url != target:
+                if not safe_rmtree(target):
+                    return
+        if url != target:
+            shutil.copytree(url, target)
+            app_log.info('Copied %s into %s', url, target)
+        config.url = url
         return
 
     # If it's a file, unzip it
@@ -164,10 +181,9 @@ def download_zip(config):
             files = zip_prefix_filter(files, prefix)
 
     # Extract relevant files from ZIP file
-    if os.path.exists(target):
-        shutil.rmtree(target, onerror=_ensure_remove)
-    zipfile.extractall(target, files)
-    app_log.info('Extracted %d files into %s', len(files), target)
+    if safe_rmtree(target):
+        zipfile.extractall(target, files)
+        app_log.info('Extracted %d files into %s', len(files), target)
 
 
 def run_command(config):
@@ -185,8 +201,8 @@ def run_command(config):
     else:
         appcmd.append(config.target)
     app_log.info('Running %s', ' '.join(appcmd))
-    if os.path.exists(config.target):
-        shutil.rmtree(config.target, onerror=_ensure_remove)
+    if not safe_rmtree(config.target):
+        return
     proc = Popen(appcmd, bufsize=-1, stdout=sys.stdout, stderr=sys.stderr)
     proc.communicate()
 
@@ -263,6 +279,7 @@ def get_app_config(appname, args):
     apps_config['cmd'] = {appname: args}
     app_config = (+apps_config).get(appname, {})
     app_config.setdefault('target', str(app_dir / app_config.get('target', appname)))
+    app_config.target = os.path.abspath(app_config.target)
     return app_config
 
 
@@ -326,10 +343,7 @@ def uninstall(cmd, args):
         # Delete the target directory if it exists
         app_config = get_app_config(appname, args)
         if os.path.exists(app_config.target):
-            if app_config.target.startswith(variables['GRAMEXDATA']):
-                shutil.rmtree(app_config.target, onerror=_ensure_remove)
-            else:
-                app_log.warn('Not removing directory %s (outside $GRAMEXDATA)', app_config.target)
+            safe_rmtree(app_config.target)
         else:
             app_log.error('No directory %s to remove', app_config.target)
         save_user_config(appname, None)
@@ -351,10 +365,11 @@ def run(cmd, args):
     if os.path.isdir(target):
         os.chdir(target)
         gramex.paths['base'] = Path('.')
-        # If we run with updated parameters, save them for the next run
-        app_config.update({key: val for key, val in args.items() if key in app_keys})
-        app_config.setdefault('run', {}).update(
-            {key: val for key, val in args.items() if key not in app_keys})
+        # If we run with updated parameters, save for next run under the .run config
+        run_config = app_config.setdefault('run', {})
+        for key, val in args.items():
+            if key not in app_keys:
+                run_config[key] = app_config.pop(key)
         save_user_config(appname, app_config)
         # Tell the user what configs are used
         app_log.info('Gramex %s | %s %s loading...', gramex.__version__, appname, ' '.join(
