@@ -114,3 +114,4 @@ When releasing a new version of Gramex:
     git merge dev
     git tag -a v1.x.x           # Annotate with a one-line summary of features
     git push --follow-tags
+    git checkout dev            # Switch back to dev
