@@ -12,6 +12,7 @@ mime:
     .md:        text/markdown
     .markdown:  text/markdown
     .json:      application/json
+    .svg:       image/svg+xml
 
 # Configure the thread pool that's shared across Gramex to run parallel threads.
 threadpool:
