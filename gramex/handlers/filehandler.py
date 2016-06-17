@@ -150,7 +150,10 @@ class FileHandler(BaseHandler):
                 yield self._get_path(self.root / path if self.root.is_dir() else self.root)
 
     def allowed(self, path):
-        '''A path is allowed if it matches any allow:, or matches no ignore:'''
+        '''
+        A path is allowed if it matches any allow:, or matches no ignore:.
+        Override this method for a custom implementation.
+        '''
         for ignore in self.ignore:
             if path.match(ignore):
                 # Check allows only if an ignore: is matched.

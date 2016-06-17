@@ -1,17 +1,7 @@
 title: Configurations control Gramex
 
-All features of Gramex are controlled by `gramex.yaml`. It has the following
-optional sections:
-
-    :::yaml
-    app: ...        # Main app configuration
-    url: ...        # Map URLs to files or functions
-    log: ...        # Logging configuration
-    schedule: ...   # Scheduled tasks
-    mime: ...       # Custom mime type definitions
-    variables: ...  # Custom variable definition
-
-Here's a simple `gramex.yaml` that serves the file `html.html` as the home page.
+All features of Gramex are controlled by `gramex.yaml`. Here's a simple
+`gramex.yaml` that serves the file `html.html` as the home page.
 
     :::yaml
     url:                            # URL configuration section
@@ -20,6 +10,16 @@ Here's a simple `gramex.yaml` that serves the file `html.html` as the home page.
             handler: FileHandler    # ... to a Gramex FileHandler
             kwargs:                 # ... and passes it these arguments:
                 path: home.html     # Use home.html as the path to serve
+    app:
+        browser: /                  # Open the home page when the app loads
+
+Create this `home.html` in the same directory:
+
+    :::html
+    <h1>Hello Gramex</h1>
+
+Run `gramex` from that directory. You should see "Hello Gramex" on your browser.
+(You may need to press `Ctrl+F5` or `Ctrl+R` to refresh the cache.
 
 Here is a full [reference of gramex.yaml configurations](../root.gramex.yaml).
 
@@ -35,8 +35,8 @@ The `app:` section controls Gramex's startup. It has these sub-sections.
 1. `browser:` is the URL to open when Gramex is launched. (default: `False`)
 2. `listen:` holds keyword arguments for the HTTP server. The most important
    parameter is the `port:` (default: 9988.) The remaining parameters are passed
-   to [HTTPServer()][http://www.tornadoweb.org/en/stable/_modules/tornado/httpse
-   rver.html#HTTPServer].
+   to [HTTPServer()](http://www.tornadoweb.org/en/stable/_modules/tornado/httpse
+   rver.html#HTTPServer).
 3. `settings:` holds the Tornado
    [application settings](http://www.tornadoweb.org/en/stable/web.html#tornado.web.Application.settings).
 4. `debug:` holds the [debug settings](../debug/)
@@ -100,6 +100,7 @@ example, create a file called `hello.py` with the following content:
 Now, you can add this configuration to your `url:` section:
 
     :::yaml
+    url:                # Do not include this line if you already have it
         hello:                        # a name you want to give to the handler
             pattern: /hello           # URL pattern
             handler: hello.Hello      # class that implements the handler
@@ -131,16 +132,20 @@ for example:
                 - console         # Write the output to the console
                 - warn-log        # In addition, write warnings to warn.csv
 
+Visit any non-existent page (e.g. `/nonexistent`) to see the warning. The
+warnings are stored in `$GRAMEXDATA/logs/warn.csv`. `$GRAMEXDATA`'s location
+varies based on the OS. See [predefined variables](#predefined-variables).
+
 Gramex offers the following pre-defined handlers:
 
 - `none`: disables logging
 - `console`: writes information logs to the console in colour
 - `text`: writes information logs to the console without colours (suitable for nohup, redirecting to a file, etc)
-- `access-log` writes information logs to a CSV file `access.csv`
-- `warn-log` writes warnings to a CSV file `warn.csv`
+- `access-log` writes information logs to a CSV file `$GRAMEXDATA/logs/access.csv`
+- `warn-log` writes warnings to a CSV file `$GRAMEXDATA/logs/warn.csv`
 
 You can define your own handlers under the `log:` section. Here is a handler
-that write information logs into `info.log`, backing it up daily:
+that writes information logs into `info.log`, backing it up daily:
 
     :::yaml
     handlers:
@@ -156,8 +161,8 @@ that write information logs into `info.log`, backing it up daily:
             backupCount: 30         # keep only last 30 backups
             delay: true             # do not create file until called
 
-This handler wrings warnings into warn.log, letting it grow up to 10 MB, then
-archiving it into warn.log.1, etc.
+This handler wrings warnings into `warn.log`, letting it grow up to 10 MB, then
+archiving it into `warn.log.1`, etc.
 
     :::yaml
     handlers:
