@@ -31,7 +31,17 @@ class BaseHandler(RequestHandler):
         '''
         cls._on_finish_methods = []
 
-        # transform: sets up transformations on ouput that some handlers use
+        cls.setup_transform(transform)
+        cls.setup_redirect(redirect)
+        cls.setup_auth(auth)
+        cls.setup_session(conf.app.get('session'))
+
+        # app.settings.debug enables debugging exceptions using pdb
+        if conf.app.settings.get('debug', False):
+            cls.log_exception = cls.debug_exception
+
+    @classmethod
+    def setup_transform(cls, transform):
         cls.transform = {}
         for pattern, trans in transform.items():
             cls.transform[pattern] = {
@@ -42,31 +52,29 @@ class BaseHandler(RequestHandler):
                 'encoding': trans.get('encoding'),
             }
 
-        # app.settings.debug enables debugging exceptions using pdb
-        if conf.app.settings.get('debug', False):
-            cls.log_exception = cls.debug_exception
+    @classmethod
+    def setup_session(cls, session_conf):
+        '''handler.session returns the session object. It is saved on finish.'''
+        if session_conf is None:
+            return
+        key = store_type, store_path = session_conf.get('type'), session_conf.get('path')
+        flush = session_conf.get('flush')
+        if key not in session_store_cache:
+            if store_type == 'memory':
+                session_store_cache[key] = KeyStore(store_path, flush=flush)
+            elif store_type == 'json':
+                session_store_cache[key] = JSONStore(store_path, flush=flush)
+            elif store_type == 'hdf5':
+                session_store_cache[key] = HDF5Store(store_path, flush=flush)
+            else:
+                raise NotImplementedError('Session type: %s not implemented' % store_type)
+        cls._session_store = session_store_cache[key]
+        cls.session = property(cls.get_session)
+        cls._session_days = session_conf.get('expiry')
+        cls._on_finish_methods.append(cls.save_session)
 
-        # app.session: sets up session handling.
-        # handler.session returns the session object. It is saved on finish.
-        session_conf = conf.app.get('session')
-        if session_conf is not None:
-            key = store_type, store_path = session_conf.get('type'), session_conf.get('path')
-            flush = session_conf.get('flush')
-            if key not in session_store_cache:
-                if store_type == 'memory':
-                    session_store_cache[key] = KeyStore(store_path, flush=flush)
-                elif store_type == 'json':
-                    session_store_cache[key] = JSONStore(store_path, flush=flush)
-                elif store_type == 'hdf5':
-                    session_store_cache[key] = HDF5Store(store_path, flush=flush)
-                else:
-                    raise NotImplementedError('Session type: %s not implemented' % store_type)
-            cls._session_store = session_store_cache[key]
-            cls.session = property(cls.get_session)
-            cls._session_days = session_conf.get('expiry')
-            cls._on_finish_methods.append(cls.save_session)
-
-        # redirect: sets up redirect methods
+    @classmethod
+    def setup_redirect(cls, redirect):
         cls.redirects = []
         for key, value in redirect.items():
             if key == 'query':
@@ -90,6 +98,8 @@ class BaseHandler(RequestHandler):
                 return redirect_method
             cls.redirects = [no_external(method) for method in cls.redirects]
 
+    @classmethod
+    def setup_auth(cls, auth):
         # auth: if there's no auth: in handler, default to app.auth
         if auth is None:
             auth = conf.app.get('auth')
