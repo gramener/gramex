@@ -149,7 +149,10 @@ class JSONHandler(BaseHandler):
     def on_finish(self):
         # Write data to disk if changed. on_finish is called after writing the
         # data, so the client is not waiting for the response.
-        if self.path and self.changed:
+        if self.path and getattr(self, 'changed', False):
+            folder = os.path.dirname(os.path.abspath(self.path))
+            if not os.path.exists(folder):
+                os.makedirs(folder)
             # Don't use encoding when reading JSON. We use ensure_ascii=True.
             # When handling Py2 & Py3, just ignoring encoding works best.
             with open(self.path, mode='w') as handle:       # noqa

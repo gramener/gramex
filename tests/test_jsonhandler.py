@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 import io
 import os
 import json
+import shutil
 import requests
 from gramex import conf
 from six.moves.http_client import OK
@@ -97,10 +98,10 @@ class TestJSONHandler(TestGramex):
         self.json('delete', '/json/write/', None)
 
     def test_path(self):
-        folder = os.path.dirname(os.path.abspath(__file__))
+        folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), '.jsonpath')
         jsonfile = os.path.join(folder, 'jsonhandler.json')
-        if os.path.exists(jsonfile):
-            os.unlink(jsonfile)
+        if os.path.exists(folder):
+            shutil.rmtree(folder)
 
         def match_jsonfile(compare):
             self.json('get', '/json/path/', compare)
@@ -146,3 +147,6 @@ class TestJSONHandler(TestGramex):
 
         # cleanup
         self.json('delete', '/json/path/', None)
+
+        if os.path.exists(folder):
+            shutil.rmtree(folder)

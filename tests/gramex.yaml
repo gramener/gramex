@@ -751,7 +751,7 @@ url:
     pattern: /json/path/(.*)
     handler: JSONHandler
     kwargs:
-      path: $YAMLPATH/jsonhandler.json
+      path: $YAMLPATH/.jsonpath/jsonhandler.json
 
   auth/session:
     pattern: /auth/session
