@@ -217,3 +217,24 @@ The cache implementation in Python 2 is different from Python 3 because:
 This means that you cannot have Gramex instances on Python 2 and Python 3 share
 the same cache. (Gramex instances running the same Python version can share the
 cache.)
+
+
+# Examples
+
+## Static files
+
+You can cache static files with both server and client side caching. For
+example, to cache the `bower_components` directory, use this configuration:
+
+    :::yaml
+    bower_components:
+      pattern: /$YAMLURL/bower_components/(.*)      # Map everything under bower_components
+      handler: FileHandler                          # via a FileHandler
+      kwargs:
+        path: $YAMLPATH/bower_components/           # to the bower_components/ directory
+        headers:
+          Cache-Control: public, max-age=315360000  # Cache for 10 years on the browser
+      cache: true                                   # Also cache on the server
+
+To force a refresh, append `?v=xx` where `xx` is a new number. (The use of `?v=`
+is arbitrary. You can use any query parameter instead of `v`.)

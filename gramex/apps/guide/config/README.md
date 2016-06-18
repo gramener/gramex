@@ -144,37 +144,49 @@ Gramex offers the following pre-defined handlers:
 - `access-log` writes information logs to a CSV file `$GRAMEXDATA/logs/access.csv`
 - `warn-log` writes warnings to a CSV file `$GRAMEXDATA/logs/warn.csv`
 
+To override the file names in `access-log` or `warn-log`, override the `filename:`:
+
+    :::yaml
+    log:
+        handlers:
+            access-log:
+                filename: $YAMLPATH/access.csv    # Place it in the same directory as gramex.yaml
+            warn-log:
+                filename: D:/temp/warn.csv        # Place it at an absolute path
+
 You can define your own handlers under the `log:` section. Here is a handler
 that writes information logs into `info.log`, backing it up daily:
 
     :::yaml
-    handlers:
-        info:
-            class: logging.handlers.TimedRotatingFileHandler
-            level: INFO
-            formatter: file         # save it as a CSV file
-            filename: info.log      # file name to save as
-            encoding: utf-8         # encoded as UTF-8
-            when: D                 # rotate the log file day-wise
-            interval: 1             # every single day
-            utc: False              # using local time zone, not UTC
-            backupCount: 30         # keep only last 30 backups
-            delay: true             # do not create file until called
+    log:
+        handlers:
+            info:
+                class: logging.handlers.TimedRotatingFileHandler
+                level: INFO
+                formatter: file         # save it as a CSV file
+                filename: info.log      # file name to save as
+                encoding: utf-8         # encoded as UTF-8
+                when: D                 # rotate the log file day-wise
+                interval: 1             # every single day
+                utc: False              # using local time zone, not UTC
+                backupCount: 30         # keep only last 30 backups
+                delay: true             # do not create file until called
 
 This handler wrings warnings into `warn.log`, letting it grow up to 10 MB, then
 archiving it into `warn.log.1`, etc.
 
     :::yaml
-    handlers:
-        warnings:
-            class: logging.handlers.RotatingFileHandler
-            level: WARN
-            formatter: file         # save it as a CSV file
-            filename: warn.log      # file name to save as
-            encoding: utf-8         # encoded as UTF-8
-            maxBytes: 10485760      # limit the file to up to 10MB
-            backupCount: 3          # keep the last 3 backups
-            delay: true             # do not create file until called
+    log:
+        handlers:
+            warnings:
+                class: logging.handlers.RotatingFileHandler
+                level: WARN
+                formatter: file         # save it as a CSV file
+                filename: warn.log      # file name to save as
+                encoding: utf-8         # encoded as UTF-8
+                maxBytes: 10485760      # limit the file to up to 10MB
+                backupCount: 3          # keep the last 3 backups
+                delay: true             # do not create file until called
 
 The `file` formatter is defined in Gramex, and saves the output as a CSV file.
 Here is its definition:

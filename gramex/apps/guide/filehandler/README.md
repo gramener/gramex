@@ -90,6 +90,10 @@ To replace `.html` extension with `.yaml`, use:
           path: "*.yaml"              # The part in brackets replaces the * here
 
 
+## Caching 
+
+See how to cache [static files](../caching/#static-files)
+
 ## File patterns
 
 If you want to map a subset of files to a folder, you can mark them in the
