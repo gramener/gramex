@@ -28,8 +28,9 @@ from pathlib import Path
 from copy import deepcopy
 from six import string_types
 from pydoc import locate as _locate
+from yaml import Loader, MappingNode
+from yaml.constructor import ConstructorError
 from orderedattrdict import AttrDict, DefaultAttrDict
-from orderedattrdict.yamlutils import AttrDictYAMLLoader
 
 app_log = logging.getLogger('gramex')
 
@@ -182,6 +183,42 @@ def _calc_value(val, key):
         return _substitute_variable(val)
 
 
+def _from_yaml(loader, node):
+    '''Load mapping as AttrDict, preserving order. Raise error on duplicate keys'''
+    # Based on yaml.constructor.SafeConstructor.construct_mapping()
+    attrdict = AttrDict()
+    yield attrdict
+    if not isinstance(node, MappingNode):
+        raise ConstructorError(
+            None, None, 'expected a mapping node, but found %s' % node.id, node.start_mark)
+    loader.flatten_mapping(node)
+    for key_node, value_node in node.value:
+        key = loader.construct_object(key_node, deep=False)
+        try:
+            hash(key)
+        except TypeError as exc:
+            raise ConstructorError(
+                'while constructing a mapping', node.start_mark,
+                'found unacceptable key (%s)' % exc, key_node.start_mark)
+        if key in attrdict:
+            raise ConstructorError(
+                'while constructing a mapping', node.start_mark,
+                'found duplicate key (%s)' % key, key_node.start_mark)
+        attrdict[key] = loader.construct_object(value_node, deep=False)
+
+
+class ConfigYAMLLoader(Loader):
+    '''A YAML loader that loads mappings into ordered AttrDict.
+    Raises error on duplicate keys.
+
+    >>> attrdict = yaml.load('x: 1\ny: 2', Loader=ConfigYAMLLoader)
+    '''
+    def __init__(self, *args, **kwargs):
+        super(ConfigYAMLLoader, self).__init__(*args, **kwargs)
+        self.add_constructor(u'tag:yaml.org,2002:map', _from_yaml)
+        self.add_constructor(u'tag:yaml.org,2002:omap', _from_yaml)
+
+
 def _yaml_open(path, default=AttrDict()):
     'Load a YAML path.Path as AttrDict. Replace {VAR} with variables'
     path = path.absolute()
@@ -192,7 +229,7 @@ def _yaml_open(path, default=AttrDict()):
         return default
     app_log.debug('Loading config: %s', path)
     with path.open(encoding='utf-8') as handle:
-        result = yaml.load(handle, Loader=AttrDictYAMLLoader)
+        result = yaml.load(handle, Loader=ConfigYAMLLoader)
     if result is None:
         app_log.warning('Empty config: %s', path)
         return default

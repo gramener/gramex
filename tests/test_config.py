@@ -5,9 +5,9 @@ import inspect
 import unittest
 import gramex
 from pathlib import Path
-from gramex.config import ChainConfig, PathConfig, walk, merge
 from orderedattrdict import AttrDict
-from orderedattrdict.yamlutils import AttrDictYAMLLoader
+from yaml.constructor import ConstructorError
+from gramex.config import ChainConfig, PathConfig, walk, merge, ConfigYAMLLoader
 
 info = AttrDict(
     home=Path(__file__).absolute().parent,
@@ -217,7 +217,7 @@ class TestConfig(unittest.TestCase):
                         i: 5
                 j: 6
             k: 7
-        ''', Loader=AttrDictYAMLLoader)
+        ''', Loader=ConfigYAMLLoader)
         result = list(walk(o))
         self.assertEqual(
             [key for key, val, node in result],
@@ -237,7 +237,7 @@ class TestConfig(unittest.TestCase):
             - 1
             - 2
             - 3
-        ''', Loader=AttrDictYAMLLoader)
+        ''', Loader=ConfigYAMLLoader)
         result = list(walk(o))
         self.assertEqual(result, [
             (0, 1, [1, 2, 3]),
@@ -251,7 +251,7 @@ class TestConfig(unittest.TestCase):
                 x: 2
             -
                 x: 3
-        ''', Loader=AttrDictYAMLLoader)
+        ''', Loader=ConfigYAMLLoader)
         result = list(walk(o))
         self.assertEqual(
             [('x', 1), (0, {'x': 1}),
@@ -263,15 +263,15 @@ class TestConfig(unittest.TestCase):
         'Test gramex.config.merge'
         def check(a, b, c, mode='overwrite'):
             'Check if merge(a, b) is c. Parameters are in YAML'
-            old = yaml.load(a, Loader=AttrDictYAMLLoader)
-            new = yaml.load(b, Loader=AttrDictYAMLLoader)
+            old = yaml.load(a, Loader=ConfigYAMLLoader)
+            new = yaml.load(b, Loader=ConfigYAMLLoader)
             # merging a + b gives c
             self.assertEqual(
-                yaml.load(c, Loader=AttrDictYAMLLoader),
+                yaml.load(c, Loader=ConfigYAMLLoader),
                 merge(old, new, mode))
             # new is unchanged
-            # self.assertEqual(old, yaml.load(a, Loader=AttrDictYAMLLoader))
-            self.assertEqual(new, yaml.load(b, Loader=AttrDictYAMLLoader))
+            # self.assertEqual(old, yaml.load(a, Loader=ConfigYAMLLoader))
+            self.assertEqual(new, yaml.load(b, Loader=ConfigYAMLLoader))
 
         check('x: 1', 'y: 2', 'x: 1\ny: 2')
         check('x: {a: 1}', 'x: {a: 2}', 'x: {a: 2}')
@@ -281,3 +281,21 @@ class TestConfig(unittest.TestCase):
         check('x: {a: {p: 1}}', 'x: {a: null, b: null}', 'x: {a: null, b: null}')
         check('x: 1', 'x: 2', 'x: 1', mode='underwrite')
         check('x: {a: 1, c: 3}', 'x: {a: 2, b: 2}', 'x: {a: 1, c: 3, b: 2}', mode='underwrite')
+
+    def test_no_duplicates(self):
+        dup_keys = '''
+            a: 1
+            a: 2
+        '''
+        self.assertEqual(yaml.load(dup_keys), {'a': 2})
+        with self.assertRaises(ConstructorError):
+            yaml.load(dup_keys, Loader=ConfigYAMLLoader)
+
+        dup_keys = '''
+            a:
+                b: 1
+                b: 2
+        '''
+        self.assertEqual(yaml.load(dup_keys), {'a': {'b': 2}})
+        with self.assertRaises(ConstructorError):
+            yaml.load(dup_keys, Loader=ConfigYAMLLoader)
