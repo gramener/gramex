@@ -169,7 +169,6 @@ url:
         kwargs:
             path: $YAMLPATH/secret.html
             auth:
-            auth:
                 membership:           # The following user object keys must match
                     gender: male      # user.gender must be male
                     locale: [en, es]  # user.locale must be en or es

@@ -68,6 +68,14 @@ def log(conf):
     logging.config.dictConfig(conf)
 
 
+class GramexApp(tornado.web.Application):
+    def log_request(self, handler):
+        if hasattr(handler, 'log_request'):
+            handler.log_request()
+            return
+        super(GramexApp, self).log_request(handler)
+
+
 def app(conf):
     '''Set up tornado.web.Application() -- only if the ioloop hasn't started'''
     import tornado.ioloop
@@ -76,7 +84,7 @@ def app(conf):
     if ioloop._running:
         app_log.warning('Ignoring app config change when running')
     else:
-        info.app = tornado.web.Application(**conf.settings)
+        info.app = GramexApp(**conf.settings)
         try:
             info.app.listen(**conf.listen)
         except socket.error as e:

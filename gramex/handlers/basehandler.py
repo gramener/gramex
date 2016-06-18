@@ -5,13 +5,15 @@ import json
 import atexit
 import functools
 import tornado.gen
+from textwrap import dedent
 from binascii import b2a_base64
-from orderedattrdict import AttrDict
+from orderedattrdict import AttrDict, DefaultAttrDict
 from six.moves.http_client import FORBIDDEN
 from six.moves.urllib_parse import urlparse, urlsplit, urlencode
+from tornado.log import access_log
 from tornado.web import RequestHandler, HTTPError
 from gramex import conf, __version__
-from gramex.config import objectpath
+from gramex.config import objectpath, app_log
 from gramex.transforms import build_transform
 
 server_header = 'Gramex/%s' % __version__
@@ -24,7 +26,7 @@ class BaseHandler(RequestHandler):
     handlers. All RequestHandlers must inherit from BaseHandler.
     '''
     @classmethod
-    def setup(cls, transform={}, redirect={}, auth=None, **kwargs):
+    def setup(cls, transform={}, redirect={}, auth=None, log={}, **kwargs):
         '''
         One-time setup for all request handlers. This is called only when
         gramex.yaml is parsed / changed.
@@ -35,6 +37,7 @@ class BaseHandler(RequestHandler):
         cls.setup_redirect(redirect)
         cls.setup_auth(auth)
         cls.setup_session(conf.app.get('session'))
+        cls.setup_log(log or objectpath(conf, 'handlers.BaseHandler.log'))
 
         # app.settings.debug enables debugging exceptions using pdb
         if conf.app.settings.get('debug', False):
@@ -121,6 +124,67 @@ class BaseHandler(RequestHandler):
                                     filename='url>%s.auth.permission' % cls.name))
             for keypath, values in auth.get('membership', {}).items():
                 cls.permissions.append(check_membership(keypath, values))
+
+    @classmethod
+    def setup_log(cls, log):
+        if log is None or (isinstance(log, dict) and 'format' not in log):
+            return
+        params = DefaultAttrDict(int)
+        try:
+            log['format'] % params
+        except (TypeError, ValueError):
+            app_log.error('Invalid log.format: %s', log['format'])
+            return
+        direct_vars = {
+            'method': 'handler.request.method',
+            'uri': 'handler.request.uri',
+            'ip': 'handler.request.remote_ip',
+            'status': 'handler.get_status()',
+            'duration': 'handler.request.request_time() * 1000',
+            'size': 'handler.get_content_size()',
+            'user': 'handler.current_user or ""',
+            'session': 'handler.session.get("id", "")',
+        }
+        object_vars = {
+            'args': 'handler.get_argument("%(key)s")',
+            'headers': 'handler.request.headers.get("%(key)s")',
+            'cookies': 'handler.request.cookies["%(key)s"].value ' +
+                       'if "%(key)s" in request.cookies else ""',
+            'env': 'os.environ.get("%(key)s", "")',
+        }
+        code = dedent('''
+            def log_request(handler):
+                obj = {}
+                status = obj['status'] = handler.get_status()
+            %s
+                if status < 400:
+                    log_method = access_log.info
+                elif status < 500:
+                    log_method = access_log.warning
+                else:
+                    log_method = access_log.error
+                log_method(log_format %% obj)
+        ''')
+        obj = []
+        for key in params:
+            if key in direct_vars:
+                obj.append('    obj["%s"] = %s' % (key, direct_vars[key]))
+                continue
+            if '.' in key:
+                prefix, value = key.split('.', 2)
+                if prefix in object_vars:
+                    obj.append('    obj["%s"] = %s' % (key, object_vars[prefix] % {'key': key}))
+                    continue
+            app_log.error('Unknown key %s in log.format: %s', key, log['format'])
+            return
+
+        context = {
+            'log_format': log['format'],
+            'access_log': access_log,
+        }
+        code = compile(code % '\n'.join(obj), filename='url:' + cls.name, mode='exec')
+        exec(code, context)
+        cls.log_request = context['log_request']
 
     def initialize(self, **kwargs):
         self.kwargs = kwargs
