@@ -314,14 +314,16 @@ Then extract the cookie and add a hidden input to your form:
 
 [xsrf]: http://www.tornadoweb.org/en/stable/guide/security.html#cross-site-request-forgery-protection
 
-You can also disable XSRF in your **root** `gramex.yaml`:
+The XSRF cookie is set when a FileHandler [template](#templates) access `handler.xsrf_token`.
+
+You can disable XSRF in `gramex.yaml` (but this is **not recommended**):
 
     :::yaml
     app:
       settings:
         xsrf_cookies: false
 
-Or start Gramex from the command line with a `--settings.xsrf_cookies=false`.
+For debugging without XSRF, start Gramex with a `--settings.xsrf_cookies=false` from the command line.
 
 ## Concatenation
 

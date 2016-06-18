@@ -31,6 +31,8 @@ def load_markdown_template(event=None):
 def markdown_template(content, handler):
     kwargs = DefaultAttrDict(str)
     kwargs.body = _template.markdown.convert(content)
+    if 'xsrf' in content:
+        handler.xsrf_token
     for key, val in _template.markdown.Meta.items():
         kwargs[key] = val[0]
     # GUIDE_ROOT has the absolute URL of the Gramex guide
