@@ -228,7 +228,7 @@ def init(**kwargs):
                 if callable(callback):
                     callbacks[key] = callback
             else:
-                app_log.warning('No service named %s', key)
+                app_log.error('No service named %s', key)
 
     # Run the callbacks. Specifically, the app service starts the Tornado ioloop
     for key in (+config_layers).keys():
