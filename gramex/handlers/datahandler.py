@@ -51,6 +51,14 @@ class DataHandler(BaseHandler):
         cls.params = AttrDict(kwargs)
         cls.driver_key = yaml.dump(kwargs)
 
+        driver = kwargs.get('driver')
+        if driver == 'sqlalchemy':
+            cls.driver_method = cls._sqlalchemy
+        elif driver == 'blaze':
+            cls.driver_method = cls._blaze
+        else:
+            raise NotImplementedError('driver=%s is not supported yet.' % driver)
+
         qconfig = {'query': cls.params.get('query', {}),
                    'default': cls.params.get('default', {})}
         delims = {'agg': ':', 'sort': ':', 'where': ''}
@@ -251,12 +259,7 @@ class DataHandler(BaseHandler):
             _sorts=self.getq('sort'),
         )
 
-        if self.params.driver == 'sqlalchemy':
-            self.result = yield gramex.service.threadpool.submit(self._sqlalchemy, **kwargs)
-        elif self.params.driver == 'blaze':
-            self.result = yield gramex.service.threadpool.submit(self._blaze, **kwargs)
-        else:
-            raise NotImplementedError('driver=%s is not supported yet.' % self.params.driver)
+        self.result = yield gramex.service.threadpool.submit(self.driver_method, **kwargs)
 
         # Set content and type based on format
         formats = self.getq('format', ['json'])
