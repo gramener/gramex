@@ -247,7 +247,7 @@ class DataHandler(BaseHandler):
             _groups=self.getq('groupby'),
             _aggs=self.getq('agg'),
             _offset=self.getq('offset', [None])[0],
-            _limit=self.getq('limit', [None])[0],
+            _limit=self.getq('limit', [100])[0],
             _sorts=self.getq('sort'),
         )
 

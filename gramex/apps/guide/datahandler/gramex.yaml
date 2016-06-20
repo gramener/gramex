@@ -3,7 +3,7 @@ url:
     pattern: /$YAMLURL/flags                # Any URL starting with /datastore/flags
     handler: DataHandler                    # uses DataHandler
     kwargs:
-      driver: blaze                         # with balze or sqlalchemy driver
+      driver: blaze                         # with blaze or sqlalchemy driver
       url: sqlite:///$YAMLPATH/database.sqlite3     # to connect database at this path/url
       table: flags                          # on this table
       parameters: {encoding: utf8}          # with additional parameters provided
