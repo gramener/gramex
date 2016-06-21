@@ -6,6 +6,7 @@ import json
 import shutil
 import requests
 from gramex import conf
+from gramex.install import _ensure_remove
 from six.moves.http_client import OK
 from . import server, tempfiles, TestGramex
 
@@ -101,7 +102,7 @@ class TestJSONHandler(TestGramex):
         folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), '.jsonpath')
         jsonfile = os.path.join(folder, 'jsonhandler.json')
         if os.path.exists(folder):
-            shutil.rmtree(folder)
+            shutil.rmtree(folder, onerror=_ensure_remove)
 
         def match_jsonfile(compare):
             self.json('get', '/json/path/', compare)
@@ -149,4 +150,4 @@ class TestJSONHandler(TestGramex):
         self.json('delete', '/json/path/', None)
 
         if os.path.exists(folder):
-            shutil.rmtree(folder)
+            shutil.rmtree(folder, onerror=_ensure_remove)
