@@ -22,9 +22,10 @@ On **Windows or Mac** (or for manual install on Linux):
 
 1. Download and install `Anaconda`_ 4.0.0 or later -- `update Anaconda`_ if required
 2. On Mac, download and install `Xcode`_. Then run ``conda install -c gramener watchdog``.
-3. Run ``pip install --upgrade --ignore-installed http://code.gramener.com/s.anand/gramex/repository/archive.tar.bz2?ref=master``
+3. On Windows / Linux, run ``conda install -y -c anaconda -c odm2 psycopg2 ldap3``.
+4. Run ``pip install --upgrade --ignore-installed http://code.gramener.com/s.anand/gramex/repository/archive.tar.bz2?ref=master``
    (replace ``master`` with ``dev`` for the development version)
-4. Optional: Install `Git for Windows`_ and `node`_. Then run ``npm install bower``
+5. Optional: Install `Git for Windows`_ and `node`_. Then run ``npm install bower``
 
 .. --ignore-installed is required to work around an Anaconda bug: https://github.com/pypa/pip/issues/2751#issuecomment-165390180
 
