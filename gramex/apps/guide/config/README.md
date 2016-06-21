@@ -35,8 +35,7 @@ The `app:` section controls Gramex's startup. It has these sub-sections.
 1. `browser:` is the URL to open when Gramex is launched. (default: `False`)
 2. `listen:` holds keyword arguments for the HTTP server. The most important
    parameter is the `port:` (default: 9988.) The remaining parameters are passed
-   to [HTTPServer()](http://www.tornadoweb.org/en/stable/_modules/tornado/httpse
-   rver.html#HTTPServer).
+   to [HTTPServer()](http://www.tornadoweb.org/en/stable/_modules/tornado/httpserver.html#HTTPServer).
 3. `settings:` holds the Tornado
    [application settings](http://www.tornadoweb.org/en/stable/web.html#tornado.web.Application.settings).
 4. `debug:` holds the [debug settings](../debug/)
