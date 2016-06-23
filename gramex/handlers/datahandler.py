@@ -53,6 +53,7 @@ class DataHandler(BaseHandler):
         cls.driver_key = yaml.dump(kwargs)
 
         driver = kwargs.get('driver')
+        cls.driver_name = driver
         if driver in ['sqlalchemy', 'blaze']:
             cls.driver_method = getattr(cls, '_' + driver)
         else:
@@ -87,6 +88,15 @@ class DataHandler(BaseHandler):
                 qconfig[q] = tmp
         cls.qconfig = qconfig
 
+    def initialize(self, **kwargs):
+        super(DataHandler, self).initialize(**kwargs)
+        # Set the method to the ?x-http-method-overrride argument or the
+        # X-HTTP-Method-Override header if they exist
+        if 'x-http-method-override' in self.request.arguments:
+            self.request.method = self.get_argument('x-http-method-override')
+        elif 'X-HTTP-Method-Override' in self.request.headers:
+            self.request.method = self.request.headers['X-HTTP-Method-Override']
+
     def getq(self, key, default_value=None):
         return (self.qconfig['query'].get(key) or
                 self.get_arguments(key) or
@@ -97,9 +107,9 @@ class DataHandler(BaseHandler):
         if self.driver_key not in drivers:
             parameters = self.params.get('parameters', {})
             drivers[self.driver_key] = sa.create_engine(self.params['url'], **parameters)
-        self.driver = drivers[self.driver_key]
+        self.driver_engine = drivers[self.driver_key]
 
-        meta = sa.MetaData(bind=self.driver, reflect=True)
+        meta = sa.MetaData(bind=self.driver_engine, reflect=True)
         table = meta.tables[self.params['table']]
         return table
 
@@ -178,7 +188,7 @@ class DataHandler(BaseHandler):
         if _limit:
             query = query.limit(_limit)
 
-        return pd.read_sql_query(query, self.driver)
+        return pd.read_sql_query(query, self.driver_engine)
 
     def _sqlalchemy_post(self, _vals):
         table = self._sqlalchemy_gettable()
@@ -186,7 +196,7 @@ class DataHandler(BaseHandler):
         for posttransform in self.posttransform:
             for value in posttransform(content):
                 content = value
-        self.driver.execute(table.insert(), **content)
+        self.driver_engine.execute(table.insert(), **content)
         return pd.DataFrame()
 
     def _blaze(self, _selects, _wheres, _groups, _aggs, _offset, _limit, _sorts):
@@ -305,6 +315,8 @@ class DataHandler(BaseHandler):
 
     @tornado.gen.coroutine
     def post(self):
+        if self.driver_name != 'sqlalchemy':
+            raise NotImplementedError('driver=%s is not supported yet.' % self.driver_name)
         kwargs = {'_vals': self.getq('val')}
         self.result = yield gramex.service.threadpool.submit(self._sqlalchemy_post, **kwargs)
         self._render()
