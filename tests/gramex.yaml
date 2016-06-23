@@ -226,13 +226,13 @@ url:
           function: markdown.markdown
           args: =content
           headers:
-            Content-Type: text/html; charset=utf-8
+            Content-Type: text/html; charset=UTF-8
         "*.yaml":
           encoding: utf-8
           function: badgerfish
           args: [=content, =handler]
           headers:
-            Content-Type: text/html; charset=utf-8
+            Content-Type: text/html; charset=UTF-8
         "template.*":
           encoding: utf-8
           function: template
@@ -241,7 +241,7 @@ url:
             handler: =handler
             param: x
           headers:
-            Content-Type: text/html; charset=utf-8
+            Content-Type: text/html; charset=UTF-8
         "template-handler.txt":
             encoding: utf-8
             function: template

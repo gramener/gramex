@@ -59,7 +59,7 @@ class TestJSONHandler(TestGramex):
         self.json('delete', '/json/write/', None)
 
         # Empty put does not raise an error, returns empty value
-        r = self.json('put', '/json/write/', None, data='')
+        self.json('put', '/json/write/', None, data='')
 
         # put creates deep trees
         self.json('get', '/json/write/', None)

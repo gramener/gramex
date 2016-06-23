@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
 import io
@@ -14,7 +15,7 @@ from . import server, tempfiles, TestGramex
 def setUpModule():
     # Create a unicode filename to test if FileHandler's directory listing shows it
     folder = os.path.dirname(os.path.abspath(__file__))
-    tempfiles.unicode_file = os.path.join(folder, 'dir', 'subdir', u'unicode\u2013file.txt')
+    tempfiles.unicode_file = os.path.join(folder, 'dir', 'subdir', u'unicode–file.txt')
     with io.open(tempfiles.unicode_file, 'w', encoding='utf-8') as out:
         out.write(six.text_type(tempfiles.unicode_file))
 
@@ -54,7 +55,7 @@ class TestFileHandler(TestGramex):
         # Check unicode filenames only if pathlib supports them
         try:
             pathlib.Path(tempfiles.unicode_file)
-            self.check(u'/dir/noindex/subdir/unicode\u2013file.txt', code=200)
+            self.check(u'/dir/noindex/subdir/unicode–file.txt', code=200)
         except UnicodeError:
             pass
 
@@ -105,8 +106,10 @@ class TestFileHandler(TestGramex):
         })
 
     def test_args(self):
-        self.check('/dir/args/?x=1', text=json.dumps({'x': ['1']}))
-        self.check('/dir/args/?x=1&x=2&y=3', text=json.dumps({'x': ['1', '2'], 'y': ['3']},
+        # Unicode query names are not supported -- so leave those as ?x= or ?y=
+        # Unicode query values are supported -- so use greek characters
+        self.check('/dir/args/?x=σ', text=json.dumps({'x': ['σ']}))
+        self.check('/dir/args/?x=σ&x=λ&y=►', text=json.dumps({'x': ['σ', 'λ'], 'y': ['►']},
                                                              sort_keys=True))
 
     def test_index_template(self):
@@ -139,20 +142,20 @@ class TestFileHandler(TestGramex):
         with (server.info.folder / 'dir/badgerfish.yaml').open(encoding='utf-8') as f:
             result = yield badgerfish(f.read(), handler)
             self.check('/dir/transform/badgerfish.yaml', text=result)
-            self.check('/dir/transform/badgerfish.yaml', text='imported file')
+            self.check('/dir/transform/badgerfish.yaml', text='imported file α')
 
     def test_template(self):
         # gramex.yaml has configured template.* to take handler and x as params
-        self.check('/dir/transform/template.txt?x=1', text='x = 1')
-        self.check('/dir/transform/template.txt?x=abc', text='x = abc')
+        self.check('/dir/transform/template.txt?x=►', text='x – ►')
+        self.check('/dir/transform/template.txt?x=λ', text='x – λ')
         self.check('/dir/transform/template-handler.txt', code=200)
 
     def test_merge(self):
-        self.check('/dir/merge.txt', text='ALPHA.TXT\nBeta.Html\n', headers={
-            'Content-Type': 'text/plain'
+        self.check('/dir/merge.txt', text='Α.TXT\nΒ.Html\n', headers={
+            'Content-Type': 'text/plain; charset=UTF-8'
         })
-        self.check('/dir/merge.html', text='BETA.HTML\nAlpha.Txt\n', headers={
-            'Content-Type': 'text/html'
+        self.check('/dir/merge.html', text='Β.HTML\nΑ.Txt\n', headers={
+            'Content-Type': 'text/html; charset=UTF-8'
         })
 
     def test_pattern(self):

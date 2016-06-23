@@ -120,7 +120,6 @@ class TestInstall(unittest.TestCase):
         self.assertEqual(result.opts.get('browser'), True)
         self.check_uninstall('run-app-target', exist_check=False)
 
-
     def test_dir(self):
         dirpath = os.path.join(folder, 'dir', 'subdir')
         install(['dir'], AttrDict(url=dirpath))

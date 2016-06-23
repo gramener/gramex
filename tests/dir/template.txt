@@ -1,1 +1,1 @@
-{{ param }} = {{ handler.get_argument(param) }}
+{{ param }} – {{ handler.get_argument(param) }}

@@ -195,7 +195,7 @@ class FileHandler(BaseHandler):
 
         if self.path.is_dir() and self.index and not (
                 self.default_filename and self.file.exists()):
-            self.set_header('Content-Type', 'text/html')
+            self.set_header('Content-Type', 'text/html; charset=UTF-8')
             content = []
             file_template = string.Template(u'<li><a href="$path">$name</a></li>')
             for path in self.path.iterdir():
@@ -224,7 +224,7 @@ class FileHandler(BaseHandler):
 
             mime_type = mimetypes.types_map.get(self.file.suffix)
             if mime_type is not None:
-                self.set_header('Content-Type', mime_type)
+                self.set_header('Content-Type', mime_type + '; charset=UTF-8')
 
             for header_name, header_value in self.headers.items():
                 self.set_header(header_name, header_value)
@@ -252,6 +252,6 @@ class FileHandler(BaseHandler):
 
         if self.include_body:
             self.write(self.content)
-            # Do not lush unless it's multipart. Flushing disables Etag
+            # Do not flush unless it's multipart. Flushing disables Etag
             if multipart:
                 self.flush()
