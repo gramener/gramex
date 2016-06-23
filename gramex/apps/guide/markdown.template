@@ -16,11 +16,11 @@
       <li><a href="/$GUIDE_ROOT/install/">Install Gramex</a></li>
       <li><a href="/$GUIDE_ROOT/server/">Web server</a></li>
       <li><a href="/$GUIDE_ROOT/config/">Configurations</a></li>
-      <li><a href="/$GUIDE_ROOT/functionhandler/">Run functions</a></li>
-      <li><a href="/$GUIDE_ROOT/filehandler/">Render files</a></li>
-      <li><a href="/$GUIDE_ROOT/datahandler/">Connect to data</a></li>
-      <li><a href="/$GUIDE_ROOT/jsonhandler/">Save data</a></li>
-      <li><a href="/$GUIDE_ROOT/processhandler/">Run processes</a></li>
+      <li><a href="/$GUIDE_ROOT/functionhandler/">FunctionHandler</a></li>
+      <li><a href="/$GUIDE_ROOT/filehandler/">FileHandler</a></li>
+      <li><a href="/$GUIDE_ROOT/datahandler/">DataHandler</a></li>
+      <li><a href="/$GUIDE_ROOT/jsonhandler/">JSONHandler</a></li>
+      <li><a href="/$GUIDE_ROOT/processhandler/">ProcessHandler</a></li>
       <li><a href="/$GUIDE_ROOT/auth/">Authentication</a></li>
       <li><a href="/$GUIDE_ROOT/cache/">Cache requests</a></li>
       <li><a href="/$GUIDE_ROOT/chart/">Charts</a></li>

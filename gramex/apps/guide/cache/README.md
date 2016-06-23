@@ -219,9 +219,7 @@ the same cache. (Gramex instances running the same Python version can share the
 cache.)
 
 
-# Examples
-
-## Static files
+## Cache static files
 
 You can cache static files with both server and client side caching. For
 example, to cache the `bower_components` directory, use this configuration:

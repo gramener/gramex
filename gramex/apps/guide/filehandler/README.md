@@ -55,7 +55,7 @@ Here is a trivial `template.html`. This must be placed in the same :
     $body
 
 
-## Redirecting content
+## Redirecting files
 
 You can specify any URL for any file. For example, to map the file
 `filehandler/data.csv` to the URL `/filehandler/data`, use this configuration:
@@ -350,7 +350,7 @@ You can disable XSRF in `gramex.yaml` (but this is **not recommended**):
 
 For debugging without XSRF, start Gramex with a `--settings.xsrf_cookies=false` from the command line.
 
-## Concatenation
+## File concatenation
 
 You can concatenate multiple files and serve them as a single file. For example:
 

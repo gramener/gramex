@@ -27,7 +27,7 @@ You can see all configurations used in this page in [gramex.yaml](gramex.yaml):
 
 <iframe frameborder="0" src="gramex.yaml"></iframe>
 
-## Passing arguments
+## Function arguments
 
 You can define what parameters to pass to the function. By default, the Tornado
 [RequestHandler][requesthandler] is passed. The [add](add) URL takes the

@@ -4,18 +4,9 @@ Development and deployment are usually on different machines with different
 configurations, file paths, database locations, etc. All of these can be
 configured in `gramex.yaml` using pre-defined variables.
 
-### Pre-defined variables
+### Deployment variables
 
-The following pre-defined variables are available in every YAML file:
-
-- `$YAMLFILE`: absolute path to the current YAML file
-- `$YAMLPATH`: absolute path to the current YAML file's directory
-- `$YAMLURL`: relative path to the current YAML file's directory from the
-  current working directory. For example, `base/dir/gramex.yaml` has a
-  `$YAMLURL` of `base/dir`, and `gramex.yaml` has a `$YAMLURL` of `.`.
-- `$GRAMEXPATH`: absolute path to the Gramex directory
-
-For example, if you have the following directory structure:
+[Predefined variables](../config/#predefined-variables) are useful in deployment. For example, say you have the following directory structure:
 
     /app              # Gramex is run from here. It is the current directory
       /component      # Inside a sub-directory, we have a component
@@ -46,8 +37,10 @@ If you want to refer to a file in the Gramex source directory, use
             kwargs:
                 path: $GRAMEXPATH/gramex.yaml   # to the core Gramex config file
 
+Typically, applications store data in `$GRAMEXDATA/data/<appname>/`. Create and use this directory for your data storage needs.
 
-## URLs
+
+## Relative URL mapping
 
 Your app may be running at `http://localhost:9988/` on your system, but will be
 running at `http://server/app/` on the server. Use relative URLs and paths to

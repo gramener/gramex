@@ -57,7 +57,7 @@ Any arguments passed to the handler are passed to the `setup()` and
                 name: ABC
 
 
-## Attributes
+## BaseHandler Attributes
 
 The following attributes are available to `BaseHandler` instances:
 

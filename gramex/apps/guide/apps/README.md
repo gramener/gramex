@@ -2,7 +2,7 @@ title: Gramex Apps
 
 Gramex lets you install, manage and run applications.
 
-## Installing
+## Installing apps
 
 An app is any collection of files. You can install an app from a folder, a ZIP file, a git repository, or any other location. For example:
 
@@ -57,7 +57,7 @@ Gramex also updates an `apps.yaml` file in the Gramex app directory capturing de
 
 Currently, installing an application will delete everything in the target folder. This behaviour may change in the future.
 
-## Running
+## Running apps
 
 To run an installed application, run:
 
@@ -92,7 +92,7 @@ You can pass any command line options as mentioned in the [config docs](../confi
     gramex run <appname> --listen.port=
 
 
-## Updating
+## Updating apps
 
 To update an application, run::
 
@@ -105,7 +105,7 @@ again. It uses the existing `--url` or `--cmd` to re-install the app.
 This deletes the application data folder. Applications should persist data in
 `$GRAMEXDATA/data/<appname>` to avoid losing it on re-install.
 
-## Uninstalling
+## Uninstalling apps
 
 To uninstall an app, run:
 
@@ -146,7 +146,7 @@ If you prefer HTTP access, use this. It will prompt the user for a username and 
     :::shell
     gramex install <appname> --cmd="git clone http://code.gramener.com/<user>/<repo>.git"
 
-### Deploying data
+### Deploying app data
 
 - Public data: public .zip file hosted on demo.gramener.com / share.gramener.com / anywhere
 - Private data: SSH/rsync, or use GDrive APIs / request password / ...

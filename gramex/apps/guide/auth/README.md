@@ -47,7 +47,7 @@ is as follows:
 3. If credentials are valid, store the user details and redirect the user. Else
    show an error message.
 
-## Google
+## Google auth
 
 This configuration creates a [Google login page](google):
 
@@ -70,7 +70,7 @@ To get the application key and secret:
 - Copy the "Client secret" and "Client ID" to the application settings
 
 
-## Facebook
+## Facebook auth
 
 This configuration creates a [Facebook login page](facebook):
 
@@ -89,7 +89,7 @@ This configuration creates a [Facebook login page](facebook):
 - Copy the Application ID and App secret to the application settings
 
 
-## Twitter
+## Twitter auth
 
 This configuration creates a [Twitter login page](twitter):
 
@@ -110,7 +110,7 @@ This configuration creates a [Twitter login page](twitter):
 - Copy the Consumer Key (API Key) and Consumer Secret (API Secret) to the application settings
 
 
-## LDAP
+## LDAP auth
 
 This configuration creates an [LDAP login page](ldap):
 
@@ -146,7 +146,7 @@ Here is a minimal `ldap.html` template:
 [xsrf]: http://www.tornadoweb.org/en/stable/guide/security.html#cross-site-request-forgery-protection
 
 
-## Database
+## Database auth
 
 This configuration lets you log in from a [database table](db):
 
@@ -210,7 +210,7 @@ After logging out, the user is re-directed to the URL specified by `?next=`.
 Else, they're redirected to the current page. Read the
 [redirection](#redirection) section for more.
 
-## Redirection
+## Redirection after login
 
 After users logs in, they are redirected based on the common `redirect:` section
 in the auth handler kwargs. This redirect URL can be based on:
@@ -280,13 +280,13 @@ instead. The actions will be executed in order.
 When calling actions, `handler.current_user` will have the user object on all
 auth handlers and the `LogoutHandler`.
 
-## User information
+## User attributes
 
 All handlers store the information retrieved about the user in
 `handler.session['user']`, typically as a dictionary. All handlers have access
 to this information via `handler.current_user` by default.
 
-## Logging
+## Logging logins
 
 You can configure a logging action for when the user logs in or logs out via the
 `log:` configuration. For example:

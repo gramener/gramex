@@ -1,10 +1,20 @@
 '''
+Run `python search.py` to auto-update search.json from the README.md headers.
+You can also manually add any page > heading-fragment > keyword with a value
+other than -1. For example,
+
+    "apps": {
+      "creating-apps": {
+        "Creating apps": -1,    // Already exists
+        "Cloning apps": 2,      // Manually added with a value other than -1
+      },
 
 '''
 
 import io
 import os
 import json
+import logging
 import markdown
 from orderedattrdict import DefaultAttrDict
 from markdown.extensions import Extension
@@ -53,6 +63,7 @@ def markdown_index(folder):
 
 
 if __name__ == '__main__':
+    logging.basicConfig(level=logging.INFO)
     folder = os.path.dirname(os.path.abspath(__file__))
 
     result = {}
@@ -64,10 +75,26 @@ if __name__ == '__main__':
             except ValueError:
                 pass
 
-    for (path, frag), texts in markdown_index(folder).items():
+    found = set()
+    default_val = -1
+    # Add items from the Markdown files
+    for (path, frag), texts in markdown_index(os.path.join(folder, '..')).items():
         base = result.setdefault(path, {}).setdefault(frag, {})
         for text in texts:
-            base.setdefault(text, 1)
+            base.setdefault(text, default_val)
+            found.add((path, frag, text))
 
+    # Remove default items not found
+    for path in list(result.keys()):
+        for frag in list(result[path].keys()):
+            for text in list(result[path][frag].keys()):
+                if (path, frag, text) not in found:
+                    if result[path][frag][text] == default_val:
+                        logging.info('Deleting %s - %s - %s', path, frag, text)
+                        del result[path][frag][text]
+                    else:
+                        logging.info('Retaining %s - %s - %s', path, frag, text)
+
+    # Save the search index
     with open(index_file, 'w') as handle:           # noqa: for Py2 & Py3 compatibility
         json.dump(result, handle, ensure_ascii=True, sort_keys=True, indent=2)

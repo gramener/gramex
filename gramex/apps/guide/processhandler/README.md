@@ -27,7 +27,7 @@ buffer before flushing, or `line` to flush the output after every line.
 `text/plain` is buffered by the browser, and you will cannot see the live
 updates.)
 
-## Redirecting output
+## ProcessHandler redirection
 
 You can redirect `stdout` and `stderr` from the process. For example, this URL
 [ping-google-file](ping-google-file) saves `stdout` to [ping.txt](ping.txt) as

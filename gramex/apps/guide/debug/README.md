@@ -2,7 +2,7 @@ title: Debugging Gramex
 
 This page documents ways of debugging a Gramex application.
 
-## Browser
+## Browser on startup
 
 To open the browser when Gramex starts, use `--browser`.
 

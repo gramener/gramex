@@ -24,7 +24,7 @@ Examples:
 - [?groupby=Continent&agg=count:nunique(Name)&agg=shapes:count(Shapes)&sort=count:desc](flags?groupby=Continent&agg=count:nunique(Name)&agg=shapes:count(Shapes)&sort=count:desc): For every Continent, show the number of unique countries and the numbrr of countries with shapes
 
 
-## Defaults
+## DataHandler defaults
 
 These parameters can be specified specified in the URL. But you can also set these as defaults. For example, adding this section under `kwargs:` ensures that the default format is HTML and the default limit is 10 -- but the URL can override it.
 

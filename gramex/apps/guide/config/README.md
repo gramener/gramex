@@ -41,7 +41,7 @@ The `app:` section controls Gramex's startup. It has these sub-sections.
 4. `debug:` holds the [debug settings](../debug/)
 5. `session:` holds [session settings](../auth/)
 
-## Command line
+## Command line args
 
 The app section alone can be over-ridden from the command line. (Other sections
 cannot.) For example:
@@ -51,7 +51,7 @@ cannot.) For example:
 
 ... will override the `gramex.yaml` parameters for the `port` and `browser`.
 
-## URLs
+## URL mapping
 
 The `url:` section maps URLs to content. Here is an example:
 
@@ -225,7 +225,7 @@ See the [scheduler](../scheduler/) documentation for examples.
 
 [crontab]: https://en.wikipedia.org/wiki/Cron#Format
 
-## MIME types
+## Custom MIME types
 
 The `mime:` section lets you add custom MIME types for extensions. For example:
 
@@ -237,7 +237,7 @@ The `mime:` section lets you add custom MIME types for extensions. For example:
 [FileHandler](../filehandler/) and other services to set the `Content-Type`
 header.
 
-## Imports
+## YAML imports
 
 One config file can import another. For example:
 
@@ -282,7 +282,7 @@ Then, this configuration:
 ... will override the value in the import. The order is unimportant -- ``x: 2``
 could be placed above the import as well. Imported values are always overridden.
 
-## Variables
+## YAML variables
 
 Templates can use variables. Variables are written as `$VARIABLE` or
 `${VARIABLE}`. All environment variables are available as variables by default.
@@ -326,21 +326,17 @@ string substitution, then it is converted into a string. For example:
 
 ### Predefined variables
 
-In addition to environment variables, there are some pre-defined variables:
+In addition to environment variables, the following pre-defined variables are available in every YAML file. (The examples assume you are processing `D:/app/config/gramex.yaml`, and running Gramex from `D:/app/`):
 
+- `$YAMLFILE`: absolute path to the current YAML file, e.g. `D:/app/config/gramex.yaml`
+- `$YAMLPATH`: absolute directory of the current YAML file, e.g. `D:/app/config/`
+- `$YAMLURL`: is the relative URL path to the directory of the current YAML file (without leading / trailing slashes) from the current working directory. e.g. `base/dir/gramex.yaml` has a `$YAMLURL` of `base/dir`, and `gramex.yaml` has a `$YAMLURL` of `.`.
+- `$GRAMEXPATH`: absolute path to the Gramex directory
 - `$GRAMEXDATA` is the directory where local Gramex data is stored. This is at:
     - `%LOCALAPPDATA%\Gramex Data\` on Windows
     - `~/.config/gramexdata/` on Linux
     - `~/Library/Application Support/Gramex Data/` on OS X
-- `$GRAMEXPATH` is the directory where Gramex is installed.
 
-There are a set of pre-defined variables that are based on the YAML file that is
-procesed. For example, if you're processing `D:/app/config/gramex.yaml`, and
-running Gramex from `D:/app/`, then:
-
-- `$YAMLPATH` is the absolute directory of the current YAML file being processed. e.g. `D:/app/config/gramex.yaml`.
-- `$YAMLFILE` is the current YAML file being processed, e.g. `D:/app/config/`
-- `$YAMLURL` is the relative URL path to the directory of the current YAML file (without leading / trailing slashes), e.g. `config`
 
 ### Computed variables
 
@@ -380,7 +376,7 @@ To learn about pre-defined variables, and how these variables are used in
 practice, read [deployment patterns](../deploy/).
 
 
-## Inheritence
+## YAML inheritence
 
 Configurations can be overwritten. For example:
 
@@ -430,7 +426,7 @@ When your `gramex.yaml` uses a `url:` section like this:
 If the application uses the same key as Gramex's `gramex.yaml`, the latter will
 be overwritten.
 
-## Access
+## Configuration access
 
 Configurations are available in `gramex.conf`. For example, this will print the
 computed value of applications port:
