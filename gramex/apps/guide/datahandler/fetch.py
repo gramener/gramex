@@ -21,5 +21,10 @@ def data():
     engine = create_engine('sqlite:///%s' % filepath, encoding='utf-8')
     flags.to_sql('flags', engine, index=False)
 
-def bigint(val):
-    return int(val) * 10
+
+def bigint(content):
+    for k, v in content.items():
+        if k == 'c2':
+            v = int(v)
+            content[k] = v * v
+    return content

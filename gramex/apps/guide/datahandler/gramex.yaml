@@ -9,12 +9,9 @@ url:
       parameters: {encoding: utf8}          # with additional parameters provided
       default:
         format: html                        # Can also be json or csv
-      schema:
-        c1:
-          column: c3               # c1 query value is posted to c3 column
-          function: fetch.bigint   # or any function like passlib.hash.sha256_crypt.encrypt
-        c2:
-          column: c2
+      posttransform:
+        function: fetch.bigint   # or any function like passlib.hash.sha256_crypt.encrypt
+        args: =content
 schedule:
   data-setup:
     function: fetch.data

@@ -58,12 +58,13 @@ class DataHandler(BaseHandler):
         else:
             raise NotImplementedError('driver=%s is not supported yet.' % driver)
 
-        cls.schema = kwargs.get('schema', {})
-        schema = cls.schema
-        cls.schema_funcs = {}
-        for k in schema:
-            if 'function' in schema[k]:
-                cls.schema_funcs[k] = build_transform(schema[k])
+        posttransform = kwargs.get('posttransform', {})
+        cls.posttransform = []
+        if 'function' in posttransform:
+            cls.posttransform.append(
+                build_transform(
+                    posttransform, vars=AttrDict(content=None),
+                    filename='url>%s' % cls.name))
 
         qconfig = {'query': cls.params.get('query', {}),
                    'default': cls.params.get('default', {})}
@@ -181,14 +182,11 @@ class DataHandler(BaseHandler):
 
     def _sqlalchemy_post(self, _vals):
         table = self._sqlalchemy_gettable()
-        data = {}
-        for x in _vals:
-            col, val = x.split('=')
-            if col in self.schema_funcs:
-                val = self.schema_funcs[col](val)[0]  # ugly
-            col_alias = self.schema.get(col, {'column': col})['column']
-            data[col_alias] = val
-        self.driver.execute(table.insert(), **data)
+        content = dict(x.split('=') for x in _vals)
+        for posttransform in self.posttransform:
+            for value in posttransform(content):
+                content = value
+        self.driver.execute(table.insert(), **content)
         return pd.DataFrame()
 
     def _blaze(self, _selects, _wheres, _groups, _aggs, _offset, _limit, _sorts):
