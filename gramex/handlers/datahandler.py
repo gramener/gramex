@@ -6,6 +6,7 @@ import pandas as pd
 import sqlalchemy as sa
 import gramex
 from orderedattrdict import AttrDict
+from gramex.transforms import build_transform
 from .basehandler import BaseHandler
 
 drivers = {}
@@ -52,12 +53,17 @@ class DataHandler(BaseHandler):
         cls.driver_key = yaml.dump(kwargs)
 
         driver = kwargs.get('driver')
-        if driver == 'sqlalchemy':
-            cls.driver_method = cls._sqlalchemy
-        elif driver == 'blaze':
-            cls.driver_method = cls._blaze
+        if driver in ['sqlalchemy', 'blaze']:
+            cls.driver_method = getattr(cls, '_' + driver)
         else:
             raise NotImplementedError('driver=%s is not supported yet.' % driver)
+
+        cls.schema = kwargs.get('schema', {})
+        schema = cls.schema
+        cls.schema_funcs = {}
+        for k in schema:
+            if 'function' in schema[k]:
+                cls.schema_funcs[k] = build_transform(schema[k])
 
         qconfig = {'query': cls.params.get('query', {}),
                    'default': cls.params.get('default', {})}
@@ -86,7 +92,7 @@ class DataHandler(BaseHandler):
                 self.qconfig['default'].get(key) or
                 default_value)
 
-    def _sqlalchemy(self, _selects, _wheres, _groups, _aggs, _offset, _limit, _sorts):
+    def _sqlalchemy_gettable(self):
         if self.driver_key not in drivers:
             parameters = self.params.get('parameters', {})
             drivers[self.driver_key] = sa.create_engine(self.params['url'], **parameters)
@@ -94,6 +100,10 @@ class DataHandler(BaseHandler):
 
         meta = sa.MetaData(bind=self.driver, reflect=True)
         table = meta.tables[self.params['table']]
+        return table
+
+    def _sqlalchemy(self, _selects, _wheres, _groups, _aggs, _offset, _limit, _sorts):
+        table = self._sqlalchemy_gettable()
 
         if _wheres:
             wh_re = re.compile(r'([^=><~!]+)([=><~!]{1,2})([^=><~!]+)')
@@ -168,6 +178,18 @@ class DataHandler(BaseHandler):
             query = query.limit(_limit)
 
         return pd.read_sql_query(query, self.driver)
+
+    def _sqlalchemy_post(self, _vals):
+        table = self._sqlalchemy_gettable()
+        data = {}
+        for x in _vals:
+            col, val = x.split('=')
+            if col in self.schema_funcs:
+                val = self.schema_funcs[col](val)[0]  # ugly
+            col_alias = self.schema.get(col, {'column': col})['column']
+            data[col_alias] = val
+        self.driver.execute(table.insert(), **data)
+        return pd.DataFrame()
 
     def _blaze(self, _selects, _wheres, _groups, _aggs, _offset, _limit, _sorts):
         # Import blaze on demand -- it's a very slow import
@@ -247,20 +269,7 @@ class DataHandler(BaseHandler):
         # TODO: Improve json, csv, html outputs using native odo
         return bz.odo(bz.compute(query, bzcon.data), pd.DataFrame)
 
-    @tornado.gen.coroutine
-    def get(self):
-        kwargs = dict(
-            _selects=self.getq('select'),
-            _wheres=self.getq('where'),
-            _groups=self.getq('groupby'),
-            _aggs=self.getq('agg'),
-            _offset=self.getq('offset', [None])[0],
-            _limit=self.getq('limit', [100])[0],
-            _sorts=self.getq('sort'),
-        )
-
-        self.result = yield gramex.service.threadpool.submit(self.driver_method, **kwargs)
-
+    def _render(self):
         # Set content and type based on format
         formats = self.getq('format', ['json'])
         if 'json' in formats:
@@ -280,4 +289,25 @@ class DataHandler(BaseHandler):
         for header_name, header_value in self.params.get('headers', {}).items():
             self.set_header(header_name, header_value)
 
+    @tornado.gen.coroutine
+    def get(self):
+        kwargs = dict(
+            _selects=self.getq('select'),
+            _wheres=self.getq('where'),
+            _groups=self.getq('groupby'),
+            _aggs=self.getq('agg'),
+            _offset=self.getq('offset', [None])[0],
+            _limit=self.getq('limit', [100])[0],
+            _sorts=self.getq('sort'),
+        )
+
+        self.result = yield gramex.service.threadpool.submit(self.driver_method, **kwargs)
+        self._render()
+        self.write(self.content)
+
+    @tornado.gen.coroutine
+    def post(self):
+        kwargs = {'_vals': self.getq('val')}
+        self.result = yield gramex.service.threadpool.submit(self._sqlalchemy_post, **kwargs)
+        self._render()
         self.write(self.content)

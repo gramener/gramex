@@ -20,3 +20,6 @@ def data():
     flags = pd.read_csv(url, encoding='cp1252')
     engine = create_engine('sqlite:///%s' % filepath, encoding='utf-8')
     flags.to_sql('flags', engine, index=False)
+
+def bigint(val):
+    return int(val) * 10
