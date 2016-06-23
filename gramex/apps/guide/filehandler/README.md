@@ -110,6 +110,21 @@ a higher value to the `priority` (which defaults to 0.)
         kwargs:
           path: .                                   # Serve files from /
 
+This can work across directories as well. For example, this maps the `static`
+and `bower_components` and specifies a 1-day expiry for any files under them.
+
+    :::yaml
+    url:
+      static-files:
+        # Any file under the current directory, starting with bower_components/
+        # or with static/ is mapped to a FileHandler
+        pattern: /$YAMLURL/(bower_components/.*|static/.*)
+        handler: FileHandler
+        kwargs:
+          path: $YAMLPATH/                          # Base is the current directory
+          headers:
+            Cache-Control: public, max-age=86400    # Cache publicly for 1 day
+
 
 ## Ignore files
 
