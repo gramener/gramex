@@ -155,7 +155,7 @@ This configuration lets you log in from a [database table](db):
     handler: DBAuth                       # to the DBAuth handler
     kwargs:
         template: $YAMLPATH/dbauth.html     # Render the login form template
-        url: sqlite:///$YAML/auth.db  # Pick up list of users from this sqlalchemy URL
+        url: sqlite:///$YAMLPATH/auth.db    # Pick up list of users from this sqlalchemy URL
         table: users                        # ... and this table
         user:
             column: user                  # The users.user column is matched with

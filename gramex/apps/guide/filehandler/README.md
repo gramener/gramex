@@ -260,7 +260,8 @@ serve a file as a Tornado template, use the following configuration:
                 transform:
                   "*.html":                 # Apply the transform to all HTML files
                     function: template      # Render page.html as a template
-                    kwargs:                 # Optionally, pass it the following variables
+                    # The rest of this configuration is optional
+                    kwargs:                 # You can pass additional variables to the template
                         title: "Variables"  # title is an explicit string
                         path: $YAMLPATH     # path is the current YAML file path
                         home: $HOME         # home is the YAML variable HOME (blank if not defined)
