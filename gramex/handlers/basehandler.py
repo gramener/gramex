@@ -38,7 +38,6 @@ class BaseHandler(RequestHandler):
         cls.setup_auth(auth)
         cls.setup_session(conf.app.get('session'))
         cls.setup_log(log or objectpath(conf, 'handlers.BaseHandler.log'))
-        print('url:%s: xsrf=%r' % (cls.name, set_xsrf))
         cls._set_xsrf = set_xsrf
 
         # app.settings.debug enables debugging exceptions using pdb

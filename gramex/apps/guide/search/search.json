@@ -225,7 +225,8 @@
       "File patterns": 1
     },
     "forms": {
-      "Forms": 1
+      "Forms": 1,
+      "XSRF": 1
     },
     "ignore-files": {
       "Ignore files": 1
