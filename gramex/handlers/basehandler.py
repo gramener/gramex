@@ -26,7 +26,7 @@ class BaseHandler(RequestHandler):
     handlers. All RequestHandlers must inherit from BaseHandler.
     '''
     @classmethod
-    def setup(cls, transform={}, redirect={}, auth=None, log={}, **kwargs):
+    def setup(cls, transform={}, redirect={}, auth=None, log={}, set_xsrf=None, **kwargs):
         '''
         One-time setup for all request handlers. This is called only when
         gramex.yaml is parsed / changed.
@@ -38,6 +38,8 @@ class BaseHandler(RequestHandler):
         cls.setup_auth(auth)
         cls.setup_session(conf.app.get('session'))
         cls.setup_log(log or objectpath(conf, 'handlers.BaseHandler.log'))
+        print('url:%s: xsrf=%r' % (cls.name, set_xsrf))
+        cls._set_xsrf = set_xsrf
 
         # app.settings.debug enables debugging exceptions using pdb
         if conf.app.settings.get('debug', False):
@@ -193,6 +195,8 @@ class BaseHandler(RequestHandler):
             self.cachefile = self.cache()
             self.original_get = self.get
             self.get = self._cached_get
+        if self._set_xsrf:
+            self.xsrf_token
 
     def set_default_headers(self):
         self.set_header('Server', server_header)

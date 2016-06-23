@@ -1,3 +1,5 @@
+import requests
+from . import server
 from . import TestGramex
 
 
@@ -27,3 +29,21 @@ class TestAttributes(TestGramex):
 
     def test_attributes(self):
         self.check('/func/attributes', code=200)
+
+
+class TestXSRF(TestGramex):
+    'Test BaseHandler xsrf: setting'
+
+    def test_xsrf(self):
+        r = self.check('/path/norm')
+        self.assertFalse('Set-Cookie' in r.headers)
+
+        # First request sets xsrf cookie
+        session = requests.Session()
+        r = session.get(server.base_url + '/xsrf', timeout=10)
+        self.assertTrue('Set-Cookie' in r.headers)
+        self.assertTrue(r.headers['Set-Cookie'].startswith('_xsrf'))
+
+        # Next request does not set xsrf cookie, because it already exists
+        r = session.get(server.base_url + '/xsrf', timeout=10)
+        self.assertFalse('Set-Cookie' in r.headers)

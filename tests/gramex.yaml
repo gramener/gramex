@@ -792,6 +792,14 @@ url:
             header: NEXT
             url: /dir/index/
 
+  xsrf:
+    pattern: /xsrf
+    handler: FunctionHandler
+    kwargs:
+        function: "str"
+        args: "xsrf"
+        set_xsrf: true
+
 # Display Gramex logs on console with indentation
 log:
     version: 1

@@ -330,7 +330,16 @@ Then extract the cookie and add a hidden input to your form:
 
 [xsrf]: http://www.tornadoweb.org/en/stable/guide/security.html#cross-site-request-forgery-protection
 
-The XSRF cookie is set when a FileHandler [template](#templates) access `handler.xsrf_token`.
+The XSRF cookie is automatically set when a FileHandler [template](#templates) accesses `handler.xsrf_token`. To set it explicitly, add `set_xsrf: true` to the handler kwargs like this:
+
+    :::yaml
+    url:
+      name:
+        pattern: ...              # When this page is visited,
+        handler: ...              # no matter what the handler is,
+        kwargs:
+          ...
+          set_xsrf: true          # set the xsrf cookie
 
 You can disable XSRF in `gramex.yaml` (but this is **not recommended**):
 
