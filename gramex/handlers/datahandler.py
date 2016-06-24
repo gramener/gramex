@@ -113,35 +113,39 @@ class DataHandler(BaseHandler):
         table = meta.tables[self.params['table']]
         return table
 
+    def _sqlalchemy_wheres(self, _wheres, table):
+        wh_re = re.compile(r'([^=><~!]+)([=><~!]{1,2})([^=><~!]+)')
+        wheres = []
+        for where in _wheres:
+            match = wh_re.search(where)
+            if match is None:
+                continue
+            col, oper, val = match.groups()
+            col = table.c[col]
+            if oper in ['==', '=']:
+                wheres.append(col == val)
+            elif oper == '>=':
+                wheres.append(col >= val)
+            elif oper == '<=':
+                wheres.append(col <= val)
+            elif oper == '>':
+                wheres.append(col > val)
+            elif oper == '<':
+                wheres.append(col < val)
+            elif oper == '!=':
+                wheres.append(col != val)
+            elif oper == '~':
+                wheres.append(col.ilike('%' + val + '%'))
+            elif oper == '!~':
+                wheres.append(col.notlike('%' + val + '%'))
+        wheres = sa.and_(*wheres)
+        return wheres
+
     def _sqlalchemy(self, _selects, _wheres, _groups, _aggs, _offset, _limit, _sorts):
         table = self._sqlalchemy_gettable()
 
         if _wheres:
-            wh_re = re.compile(r'([^=><~!]+)([=><~!]{1,2})([^=><~!]+)')
-            wheres = []
-            for where in _wheres:
-                match = wh_re.search(where)
-                if match is None:
-                    continue
-                col, oper, val = match.groups()
-                col = table.c[col]
-                if oper in ['==', '=']:
-                    wheres.append(col == val)
-                elif oper == '>=':
-                    wheres.append(col >= val)
-                elif oper == '<=':
-                    wheres.append(col <= val)
-                elif oper == '>':
-                    wheres.append(col > val)
-                elif oper == '<':
-                    wheres.append(col < val)
-                elif oper == '!=':
-                    wheres.append(col != val)
-                elif oper == '~':
-                    wheres.append(col.ilike('%' + val + '%'))
-                elif oper == '!~':
-                    wheres.append(col.notlike('%' + val + '%'))
-            wheres = sa.and_(*wheres)
+            wheres = self._sqlalchemy_wheres(_wheres, table)
 
         if _groups and _aggs:
             grps = [table.c[c] for c in _groups]
@@ -197,6 +201,19 @@ class DataHandler(BaseHandler):
             for value in posttransform(content):
                 content = value
         self.driver_engine.execute(table.insert(), **content)
+        return pd.DataFrame()
+
+    def _sqlalchemy_delete(self, _wheres):
+        table = self._sqlalchemy_gettable()
+        wheres = self._sqlalchemy_wheres(_wheres, table)
+        self.driver_engine.execute(table.delete().where(wheres))
+        return pd.DataFrame()
+
+    def _sqlalchemy_put(self, _vals, _wheres):
+        table = self._sqlalchemy_gettable()
+        content = dict(x.split('=') for x in _vals)
+        wheres = self._sqlalchemy_wheres(_wheres, table)
+        self.driver_engine.execute(table.update().where(wheres).values(content))
         return pd.DataFrame()
 
     def _blaze(self, _selects, _wheres, _groups, _aggs, _offset, _limit, _sorts):
@@ -319,5 +336,23 @@ class DataHandler(BaseHandler):
             raise NotImplementedError('driver=%s is not supported yet.' % self.driver_name)
         kwargs = {'_vals': self.getq('val')}
         self.result = yield gramex.service.threadpool.submit(self._sqlalchemy_post, **kwargs)
+        self._render()
+        self.write(self.content)
+
+    @tornado.gen.coroutine
+    def delete(self):
+        if self.driver_name != 'sqlalchemy':
+            raise NotImplementedError('driver=%s is not supported yet.' % self.driver_name)
+        kwargs = {'_wheres': self.getq('where')}
+        self.result = yield gramex.service.threadpool.submit(self._sqlalchemy_delete, **kwargs)
+        self._render()
+        self.write(self.content)
+
+    @tornado.gen.coroutine
+    def put(self):
+        if self.driver_name != 'sqlalchemy':
+            raise NotImplementedError('driver=%s is not supported yet.' % self.driver_name)
+        kwargs = {'_vals': self.getq('val'), '_wheres': self.getq('where')}
+        self.result = yield gramex.service.threadpool.submit(self._sqlalchemy_put, **kwargs)
         self._render()
         self.write(self.content)
