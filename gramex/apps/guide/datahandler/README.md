@@ -1,12 +1,33 @@
 title: Gramex connects to data
 
-`DataHandler` let's you fetch data from CSV files and databases, and returns the result as CSV, JSON or HTML tables.
+`DataHandler` let's you fetch data from CSV files and databases, and returns the result as CSV, JSON or HTML tables. Here is a sample configuration that browses [gorilla genes](genome?format=html&limit=10):
+
+    :::yaml
+    url:
+        genome-data:
+            pattern: /genome
+            handler: DataHandler
+            kwargs:
+                driver: sqlalchemy
+                url: mysql+pymysql://anonymous@ensembldb.ensembl.org://gorilla_gorilla_core_84_31::gene
+
+(This uses the public [ensemble gene database](http://ensembldb.ensembl.org/info/data/mysql.html).)
 
 To start you off, there's a `database.sqlite3` in this application folder. (Gramex downloaded [flags data](https://gramener.com/flags/) on startup. See [fetch.data()](fetch.py) and the scheduler in [gramex.yaml](gramex.yaml).
 
 The `DataHandler` below exposes the flags table in `database.sqlite3` at the URL [flags](flags).
 
-<iframe frameborder="0" src="gramex.yaml"></iframe>
+    :::yaml
+    flags:
+      pattern: /$YAMLURL/flags                # The URL /datastore/flags
+      handler: DataHandler                    # uses DataHandler
+      kwargs:
+        driver: blaze                         # with blaze or sqlalchemy driver
+        url: sqlite:///$YAMLPATH/database.sqlite3     # to connect database at this path/url
+        table: flags                          # on this table
+        parameters: {encoding: utf8}          # with additional parameters provided
+        default:
+          format: html                        # Can also be json or csv
 
 Once we have this setup, we can query the data with a combination of parameters like `select`, `where`, `groupby`, `agg`, `offset`, `limit`, `sort`
 

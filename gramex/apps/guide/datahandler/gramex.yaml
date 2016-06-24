@@ -1,6 +1,13 @@
 url:
+  genome:
+    pattern: /$YAMLURL/genome               # The URL /datastore/genome
+    handler: DataHandler                    # Uses the datahandler
+    kwargs:
+        driver: sqlalchemy                  # via SQLalchemy, and connects to this DB
+        url: mysql+pymysql://anonymous@ensembldb.ensembl.org/gorilla_gorilla_core_84_31
+        table: gene
   flags:
-    pattern: /$YAMLURL/flags                # Any URL starting with /datastore/flags
+    pattern: /$YAMLURL/flags                # The URL /datastore/flags
     handler: DataHandler                    # uses DataHandler
     kwargs:
       driver: blaze                         # with blaze or sqlalchemy driver
