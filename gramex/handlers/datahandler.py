@@ -114,7 +114,7 @@ class DataHandler(BaseHandler):
         return table
 
     def _sqlalchemy_wheres(self, _wheres, table):
-        wh_re = re.compile(r'([^=><~!]+)([=><~!]{1,2})([^=><~!]+)')
+        wh_re = re.compile(r'([^=><~!]+)([=><~!]{1,2})([\s\S]+)')
         wheres = []
         for where in _wheres:
             match = wh_re.search(where)
@@ -196,7 +196,7 @@ class DataHandler(BaseHandler):
 
     def _sqlalchemy_post(self, _vals):
         table = self._sqlalchemy_gettable()
-        content = dict(x.split('=') for x in _vals)
+        content = dict(x.split('=', 1) for x in _vals)
         for posttransform in self.posttransform:
             for value in posttransform(content):
                 content = value
@@ -211,7 +211,7 @@ class DataHandler(BaseHandler):
 
     def _sqlalchemy_put(self, _vals, _wheres):
         table = self._sqlalchemy_gettable()
-        content = dict(x.split('=') for x in _vals)
+        content = dict(x.split('=', 1) for x in _vals)
         wheres = self._sqlalchemy_wheres(_wheres, table)
         self.driver_engine.execute(table.update().where(wheres).values(content))
         return pd.DataFrame()
@@ -229,7 +229,7 @@ class DataHandler(BaseHandler):
         query = table
 
         if _wheres:
-            wh_re = re.compile(r'([^=><~!]+)([=><~!]{1,2})([^=><~!]+)')
+            wh_re = re.compile(r'([^=><~!]+)([=><~!]{1,2})([\s\S]+)')
             wheres = None
             for where in _wheres:
                 match = wh_re.search(where)
@@ -334,7 +334,7 @@ class DataHandler(BaseHandler):
     def post(self):
         if self.driver_name != 'sqlalchemy':
             raise NotImplementedError('driver=%s is not supported yet.' % self.driver_name)
-        kwargs = {'_vals': self.getq('val')}
+        kwargs = {'_vals': self.getq('val', [])}
         self.result = yield gramex.service.threadpool.submit(self._sqlalchemy_post, **kwargs)
         self._render()
         self.write(self.content)

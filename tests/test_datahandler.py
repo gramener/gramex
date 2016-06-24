@@ -1,3 +1,7 @@
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+
+import requests
 import pandas as pd
 import sqlalchemy as sa
 import pandas.util.testing as pdt
@@ -88,6 +92,46 @@ class DataHandlerTestMixin(object):
                          '&where=votes<120&where=votes>60' +
                          '&select=category&select=votenu&offset=1'))
 
+    def test_querypostdb(self):
+        base = server.base_url + '/datastore/' + self.database + '/csv/'
+
+        def eq(method, path, data, where, b):
+            method(base + path, data=data)
+            a = pd.read_csv(base + where)
+            assert a.equals(pd.DataFrame(b)) or b is None
+
+        NAN = pd.np.nan
+        # create
+        eq(requests.post, '', {'val': 'name=xgram1'},
+           '?where=name=xgram1',
+           [{'category': NAN, 'name': 'xgram1', 'rating': NAN, 'votes': NAN}])
+        eq(requests.post, '?val=name=xgram2', {},
+           '?where=name=xgram2',
+           [{'category': NAN, 'name': 'xgram2', 'rating': NAN, 'votes': NAN}])
+        eq(requests.post, '?val=name=xgram3&val=votes=20', {},
+           '?where=name=xgram3&where=votes=20',
+           [{'category': NAN, 'name': 'xgram3', 'rating': NAN, 'votes': 20}])
+        eq(requests.post, '?val=name=xgram=x', {},
+           '?where=name=xgram=x',
+           [{'category': NAN, 'name': 'xgram=x', 'rating': NAN, 'votes': NAN}])
+        # post empty dict
+        requests.post(base, data={})
+        # read
+        assert pd.read_csv(base).isnull().all(axis=1).sum() == 1
+        assert pd.read_csv(base + '?where=name~xgram').shape[0] == 4
+        # update
+        eq(requests.put, '?where=name=xgram1', {'val': 'votes=111'},
+           '?where=name=xgram1',
+           [{'category': NAN, 'name': 'xgram1', 'rating': NAN, 'votes': 111}])
+        # delete
+        eq(requests.delete, '?where=name~xgram', {}, '?where=name~xgram', None)
+        expected = pd.read_csv(base).to_dict(orient='records')
+        # fails for #& and + deletes all records
+        for sym in '*!~@%^*()_=':
+            eq(requests.delete, '?where=name=' + sym, {}, '', expected)
+        for uni in ['ασλ►', 'Æ©á']:
+            eq(requests.delete, '?where=name=' + uni, {}, '', expected)
+
 
 class TestSqliteHandler(TestGramex, DataHandlerTestMixin):
     'Test DataHandler for SQLite database via sqlalchemy driver'
@@ -168,11 +212,15 @@ class TestBlazeDataHandler(TestSqliteHandler):
     'Test DataHandler for SQLite database via blaze driver'
     database = 'blazesqlite'
 
+    def test_querypostdb(self):
+        raise SkipTest('Test test_querypostdb is skipped')
 
 class TestBlazeMysqlDataHandler(TestMysqlDataHandler, TestBlazeDataHandler):
     'Test DataHandler for MySQL database via blaze driver'
     database = 'blazemysql'
 
+    def test_querypostdb(self):
+        raise SkipTest('Test test_querypostdb is skipped')
 
 class TestDataHandlerConfig(TestSqliteHandler):
     'Test DataHandler'
@@ -183,6 +231,9 @@ class TestDataHandlerConfig(TestSqliteHandler):
 
     def test_fetchdb(self):
         pass
+
+    def test_querypostdb(self):
+        raise SkipTest('Test test_querypostdb is skipped')
 
     def test_querydb(self):
         def eq(a, b):
