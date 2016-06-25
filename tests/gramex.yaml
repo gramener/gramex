@@ -384,7 +384,7 @@ url:
       driver: sqlalchemy
       url: mysql+pymysql://root@$MYSQL_SERVER/test_datahandler
       table: actors
-      parameters: {encoding: utf8}
+      parameters: {encoding: utf8, connect_args: {charset: utf8}}
       default: {format: csv}
   data/mysql/json:
     pattern: /datastore/mysql/json/
@@ -393,7 +393,7 @@ url:
       driver: sqlalchemy
       url: mysql+pymysql://root@$MYSQL_SERVER/test_datahandler
       table: actors
-      parameters: {encoding: utf8}
+      parameters: {encoding: utf8, connect_args: {charset: utf8}}
       default: {format: json}
   data/mysql/html:
     pattern: /datastore/mysql/html/
@@ -402,7 +402,7 @@ url:
       driver: sqlalchemy
       url: mysql+pymysql://root@$MYSQL_SERVER/test_datahandler
       table: actors
-      parameters: {encoding: utf8}
+      parameters: {encoding: utf8, connect_args: {charset: utf8}}
       default: {format: html}
 
   # Test datahandler for PostgreSQL

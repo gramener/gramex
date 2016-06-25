@@ -4,8 +4,9 @@ from __future__ import unicode_literals
 import requests
 import pandas as pd
 import sqlalchemy as sa
-import pandas.util.testing as pdt
 from pathlib import Path
+import pandas.util.testing as pdt
+from six.moves.http_client import OK
 from nose.plugins.skip import SkipTest
 from . import server, TestGramex
 import gramex.config
@@ -96,8 +97,9 @@ class DataHandlerTestMixin(object):
         base = server.base_url + '/datastore/' + self.database + '/csv/'
 
         def eq(method, path, data, where, b):
-            method(base + path, data=data)
-            a = pd.read_csv(base + where)
+            r = method(base + path, data=data)
+            assert r.status_code == OK
+            a = pd.read_csv(base + where, encoding='utf-8')
             assert a.equals(pd.DataFrame(b)) or b is None
 
         NAN = pd.np.nan
@@ -114,23 +116,41 @@ class DataHandlerTestMixin(object):
         eq(requests.post, '?val=name=xgram=x', {},
            '?where=name=xgram=x',
            [{'category': NAN, 'name': 'xgram=x', 'rating': NAN, 'votes': NAN}])
-        # post empty dict
-        requests.post(base, data={})
-        # read
-        assert pd.read_csv(base).isnull().all(axis=1).sum() == 1
-        assert pd.read_csv(base + '?where=name~xgram').shape[0] == 4
         # update
-        eq(requests.put, '?where=name=xgram1', {'val': 'votes=111'},
+        eq(requests.put, '?where=name=xgram1', {'val': 'votes=11'},
            '?where=name=xgram1',
-           [{'category': NAN, 'name': 'xgram1', 'rating': NAN, 'votes': 111}])
+           [{'category': NAN, 'name': 'xgram1', 'rating': NAN, 'votes': 11}])
+        # read
+        assert pd.read_csv(base + '?where=name~xgram').shape[0] == 4
         # delete
         eq(requests.delete, '?where=name~xgram', {}, '?where=name~xgram', None)
-        expected = pd.read_csv(base).to_dict(orient='records')
+
+        # special characters test
+        syms = list('*!~@%^()_=') + ['ασλ', 'Æ©á']
         # fails for #& and + deletes all records
-        for sym in '*!~@%^*()_=':
-            eq(requests.delete, '?where=name=' + sym, {}, '', expected)
-        for uni in ['ασλ►', 'Æ©á']:
-            eq(requests.delete, '?where=name=' + uni, {}, '', expected)
+        # crud with special chars
+        for sym in syms:
+            val = 'xgram' + sym
+            safe_val = requests.utils.quote(val.encode('utf8'))
+            # ceate
+            eq(requests.post, '?val=name=' + val, {},
+               '?where=name=' + safe_val,
+               [{'category': NAN, 'name': val, 'rating': NAN, 'votes': NAN}])
+            # update
+            eq(requests.put, '?where=name=' + val, {'val': 'votes=1'},
+               '?where=name=' + safe_val,
+               [{'category': NAN, 'name': val, 'rating': NAN, 'votes': 1}])
+            # delete
+            eq(requests.delete, '?where=name=' + val, {},
+               '?where=name=' + safe_val, None)
+
+        # Edge cases
+        # POST val is empty -- Insert an empty dict
+        requests.post(base, data={})
+        assert pd.read_csv(base).isnull().all(axis=1).sum() == 1
+        # PUT val is empty -- returns 200
+        # PUT  where is empty -- raise error that WHERE is required
+        # DELETE where is empty -- raise error that WHERE is required
 
 
 class TestSqliteHandler(TestGramex, DataHandlerTestMixin):
