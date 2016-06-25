@@ -6,8 +6,8 @@ import pandas as pd
 import sqlalchemy as sa
 from pathlib import Path
 import pandas.util.testing as pdt
-from six.moves.http_client import OK, NOT_FOUND
 from nose.plugins.skip import SkipTest
+from six.moves.http_client import OK, NOT_FOUND, INTERNAL_SERVER_ERROR
 from . import server, TestGramex
 import gramex.config
 
@@ -40,10 +40,10 @@ class DataHandlerTestMixin(object):
 
         # select, where, sort, offset, limit
         base = server.base_url + '/datastore/' + self.database + '/'
-        eq(self.data[:5],
-           pd.read_csv(base + 'csv/?limit=5'))
-        eq(self.data[5:],
-           pd.read_csv(base + 'csv/?offset=5'))
+        eq(self.data[:5], pd.read_csv(base + 'csv/?limit=5'))
+        eq(self.data[5:], pd.read_csv(base + 'csv/?offset=5'))
+        eq(self.data, pd.read_csv(base + 'csv/?sort='))
+        eq(self.data, pd.read_csv(base + 'csv/?sort=nonexistent'))
         eq(self.data.sort_values(by='votes'),
            pd.read_csv(base + 'csv/?sort=votes'))
         eq(self.data.sort_values(by='votes', ascending=False)[:5],
@@ -66,6 +66,11 @@ class DataHandlerTestMixin(object):
            pd.read_csv(base + 'csv/?where=votes>100'))
         eq(self.data.query('150 > votes > 100'),
            pd.read_csv(base + 'csv/?where=votes<150&where=votes>100&xyz=8765'))
+        # format
+        eq(self.data[:5], pd.read_csv(base + 'csv/?limit=5&format='))
+        eq(self.data[:5], pd.read_json(base + 'csv/?limit=5&format=json'))
+        r = requests.get(base + 'csv/?limit=5&format=nonexistent')
+        self.assertEqual(r.status_code, INTERNAL_SERVER_ERROR)
 
         # Aggregation cases
         eqdt((self.data.groupby('category', as_index=False)
@@ -96,8 +101,8 @@ class DataHandlerTestMixin(object):
     def test_querypostdb(self):
         base = server.base_url + '/datastore/' + self.database + '/csv/'
 
-        def eq(method, path, data, where, b):
-            response = method(base + path, data=data)
+        def eq(method, payload, data, where, b):
+            response = method(base, params=payload, data=data)
             self.assertEqual(response.status_code, OK)
             a = pd.read_csv(base + where, encoding='utf-8')
             assert a.equals(pd.DataFrame(b)) or b is None
@@ -107,41 +112,41 @@ class DataHandlerTestMixin(object):
         eq(requests.post, '', {'val': 'name=xgram1'},
            '?where=name=xgram1',
            [{'category': NAN, 'name': 'xgram1', 'rating': NAN, 'votes': NAN}])
-        eq(requests.post, '?val=name=xgram2', {},
+        eq(requests.post, 'val=name=xgram2', {},
            '?where=name=xgram2',
            [{'category': NAN, 'name': 'xgram2', 'rating': NAN, 'votes': NAN}])
-        eq(requests.post, '?val=name=xgram3&val=votes=20', {},
+        eq(requests.post, 'val=name=xgram3&val=votes=20', {},
            '?where=name=xgram3&where=votes=20',
            [{'category': NAN, 'name': 'xgram3', 'rating': NAN, 'votes': 20}])
-        eq(requests.post, '?val=name=xgram=x', {},
+        eq(requests.post, 'val=name=xgram=x', {},
            '?where=name=xgram=x',
            [{'category': NAN, 'name': 'xgram=x', 'rating': NAN, 'votes': NAN}])
         # update
-        eq(requests.put, '?where=name=xgram1', {'val': 'votes=11'},
+        eq(requests.put, 'where=name=xgram1', {'val': 'votes=11'},
            '?where=name=xgram1',
            [{'category': NAN, 'name': 'xgram1', 'rating': NAN, 'votes': 11}])
         # read
         assert pd.read_csv(base + '?where=name~xgram').shape[0] == 4
         # delete
-        eq(requests.delete, '?where=name~xgram', {}, '?where=name~xgram', None)
+        eq(requests.delete, 'where=name~xgram', {}, '?where=name~xgram', None)
 
         # special characters test
-        syms = list('*!~@%^()_=') + ['ασλ', 'Æ©á']
-        # fails for #& and + deletes all records
+        syms = list('*!~@%^()_=+') + ['ασλ', 'Æ©á']
+        # fails for #& and space
         # crud with special chars
         for sym in syms:
             val = 'xgram' + sym
             safe_val = requests.utils.quote(val.encode('utf8'))
             # ceate
-            eq(requests.post, '?val=name=' + val, {},
+            eq(requests.post, 'val=name=' + safe_val, {},
                '?where=name=' + safe_val,
                [{'category': NAN, 'name': val, 'rating': NAN, 'votes': NAN}])
             # update
-            eq(requests.put, '?where=name=' + val, {'val': 'votes=1'},
+            eq(requests.put, 'where=name=' + safe_val, {'val': 'votes=1'},
                '?where=name=' + safe_val,
                [{'category': NAN, 'name': val, 'rating': NAN, 'votes': 1}])
             # delete
-            eq(requests.delete, '?where=name=' + val, {},
+            eq(requests.delete, 'where=name=' + safe_val, {},
                '?where=name=' + safe_val, None)
 
         # Edge cases

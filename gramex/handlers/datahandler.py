@@ -145,10 +145,12 @@ class DataHandler(BaseHandler):
 
     def _sqlalchemy(self, _selects, _wheres, _groups, _aggs, _offset, _limit, _sorts):
         table = self._sqlalchemy_gettable()
+        columns = table.columns.keys()
 
         if _wheres:
             wheres = self._sqlalchemy_wheres(_wheres, table)
 
+        alias_cols = []
         if _groups and _aggs:
             grps = [table.c[c] for c in _groups]
             aggselects = grps[:]
@@ -161,6 +163,7 @@ class DataHandler(BaseHandler):
                 if match is None:
                     continue
                 name, oper, col = match.groups()
+                alias_cols.append(name)
                 if oper == 'nunique':
                     aggselects.append(sa.func.count(table.c[col].distinct()).label(name))
                 else:
@@ -186,6 +189,8 @@ class DataHandler(BaseHandler):
             sorts = []
             for sort in _sorts:
                 col, odr = sort.partition(':')[::2]
+                if col not in columns + alias_cols:
+                    continue
                 sorts.append(order.get(odr, sa.asc)(col))
             query = query.order_by(*sorts)
 
@@ -234,6 +239,7 @@ class DataHandler(BaseHandler):
                         ('::' + self.params['table'] if self.params.get('table') else ''),
                         **parameters)
         table = bz.TableSymbol('table', bzcon.dshape)
+        columns = table.columns
         query = table
 
         if _wheres:
@@ -264,6 +270,7 @@ class DataHandler(BaseHandler):
                 wheres = whr if wheres is None else wheres & whr
             query = query[wheres]
 
+        alias_cols = []
         if _groups and _aggs:
             byaggs = {'min': bz.min, 'max': bz.max,
                       'sum': bz.sum, 'count': bz.count,
@@ -276,6 +283,7 @@ class DataHandler(BaseHandler):
                 if match is None:
                     continue
                 name, oper, col = match.groups()
+                alias_cols.append(name)
                 aggs[name] = byaggs[oper](query[col])
             query = bz.by(grps, **aggs)
 
@@ -284,8 +292,11 @@ class DataHandler(BaseHandler):
             sorts = []
             for sort in _sorts:
                 col, odr = sort.partition(':')[::2]
+                if col not in columns + alias_cols:
+                    continue
                 sorts.append(col)
-            query = query.sort(sorts, ascending=order.get(odr, True))
+            if sorts:
+                query = query.sort(sorts, ascending=order.get(odr, True))
 
         if _offset:
             _offset = int(_offset)
@@ -304,7 +315,9 @@ class DataHandler(BaseHandler):
 
     def _render(self):
         # Set content and type based on format
-        formats = self.getq('format', ['json'])
+        formats = self.getq('format', [])
+        if '' in formats:
+            formats += self.qconfig['default'].get('format', ['json'])
         if 'json' in formats:
             self.set_header('Content-Type', 'application/json')
             self.content = self.result.to_json(orient='records')
