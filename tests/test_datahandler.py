@@ -6,7 +6,7 @@ import pandas as pd
 import sqlalchemy as sa
 from pathlib import Path
 import pandas.util.testing as pdt
-from six.moves.http_client import OK
+from six.moves.http_client import OK, NOT_FOUND
 from nose.plugins.skip import SkipTest
 from . import server, TestGramex
 import gramex.config
@@ -97,8 +97,8 @@ class DataHandlerTestMixin(object):
         base = server.base_url + '/datastore/' + self.database + '/csv/'
 
         def eq(method, path, data, where, b):
-            r = method(base + path, data=data)
-            assert r.status_code == OK
+            response = method(base + path, data=data)
+            self.assertEqual(response.status_code, OK)
             a = pd.read_csv(base + where, encoding='utf-8')
             assert a.equals(pd.DataFrame(b)) or b is None
 
@@ -148,9 +148,17 @@ class DataHandlerTestMixin(object):
         # POST val is empty -- Insert an empty dict
         requests.post(base, data={})
         assert pd.read_csv(base).isnull().all(axis=1).sum() == 1
-        # PUT val is empty -- returns 200
-        # PUT  where is empty -- raise error that WHERE is required
-        # DELETE where is empty -- raise error that WHERE is required
+        cases = [
+            # PUT val is empty -- raise error that VALS is required
+            {'method': requests.put, 'data': {'where': 'name=xgram'}},
+            # PUT  where is empty -- raise error that WHERE is required
+            {'method': requests.put, 'data': {'val': 'name=xgram'}},
+            # DELETE where is empty -- raise error that WHERE is required
+            {'method': requests.delete, 'data': {}},
+        ]
+        for case in cases:
+            response = case['method'](base, data=case['data'])
+            self.assertEqual(response.status_code, NOT_FOUND)
 
 
 class TestSqliteHandler(TestGramex, DataHandlerTestMixin):

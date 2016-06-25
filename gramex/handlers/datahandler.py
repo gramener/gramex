@@ -5,7 +5,9 @@ import tornado.web
 import pandas as pd
 import sqlalchemy as sa
 import gramex
+from tornado.web import HTTPError
 from orderedattrdict import AttrDict
+from six.moves.http_client import NOT_FOUND
 from gramex.transforms import build_transform
 from .basehandler import BaseHandler
 
@@ -204,12 +206,18 @@ class DataHandler(BaseHandler):
         return pd.DataFrame()
 
     def _sqlalchemy_delete(self, _wheres):
+        if not _wheres:
+            raise HTTPError(NOT_FOUND, log_message='WHERE is required in DELETE method')
         table = self._sqlalchemy_gettable()
         wheres = self._sqlalchemy_wheres(_wheres, table)
         self.driver_engine.execute(table.delete().where(wheres))
         return pd.DataFrame()
 
     def _sqlalchemy_put(self, _vals, _wheres):
+        if not _vals:
+            raise HTTPError(NOT_FOUND, log_message='VALS is required in PUT method')
+        if not _wheres:
+            raise HTTPError(NOT_FOUND, log_message='WHERE is required in PUT method')
         table = self._sqlalchemy_gettable()
         content = dict(x.split('=', 1) for x in _vals)
         wheres = self._sqlalchemy_wheres(_wheres, table)
@@ -352,7 +360,7 @@ class DataHandler(BaseHandler):
     def put(self):
         if self.driver_name != 'sqlalchemy':
             raise NotImplementedError('driver=%s is not supported yet.' % self.driver_name)
-        kwargs = {'_vals': self.getq('val'), '_wheres': self.getq('where')}
+        kwargs = {'_vals': self.getq('val', []), '_wheres': self.getq('where')}
         self.result = yield gramex.service.threadpool.submit(self._sqlalchemy_put, **kwargs)
         self._render()
         self.write(self.content)
