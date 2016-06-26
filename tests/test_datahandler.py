@@ -246,27 +246,32 @@ class TestBlazeDataHandler(TestSqliteHandler):
     database = 'blazesqlite'
 
     def test_querypostdb(self):
-        raise SkipTest('Test test_querypostdb is skipped')
+        # POST is not implemented for Blaze driver
+        pass
 
 class TestBlazeMysqlDataHandler(TestMysqlDataHandler, TestBlazeDataHandler):
     'Test DataHandler for MySQL database via blaze driver'
     database = 'blazemysql'
 
     def test_querypostdb(self):
-        raise SkipTest('Test test_querypostdb is skipped')
+        # POST is not implemented for Blaze driver
+        pass
 
 class TestDataHandlerConfig(TestSqliteHandler):
     'Test DataHandler'
     database = 'sqliteconfig'
 
     def test_pingdb(self):
+        # We've already run this test in TestSqliteHandler
         pass
 
     def test_fetchdb(self):
+        # We've already run this test in TestSqliteHandler
         pass
 
     def test_querypostdb(self):
-        raise SkipTest('Test test_querypostdb is skipped')
+        # We've already run this test in TestSqliteHandler
+        pass
 
     def test_querydb(self):
         def eq(a, b):
