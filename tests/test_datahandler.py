@@ -105,7 +105,10 @@ class DataHandlerTestMixin(object):
             response = method(base, params=payload, data=data)
             self.assertEqual(response.status_code, OK)
             a = pd.read_csv(base + where, encoding='utf-8')
-            assert a.equals(pd.DataFrame(b)) or b is None
+            if b is None:
+                self.assertEqual(len(a), 0)
+            else:
+                assert a.equals(pd.DataFrame(b))
 
         NAN = pd.np.nan
         # create
@@ -130,24 +133,17 @@ class DataHandlerTestMixin(object):
         # delete
         eq(requests.delete, 'where=name~xgram', {}, '?where=name~xgram', None)
 
-        # special characters test
-        syms = list('*!~@%^()_=+') + ['ασλ', 'Æ©á']
-        # fails for #& and space
         # crud with special chars
-        for sym in syms:
-            val = 'xgram' + sym
-            safe_val = requests.utils.quote(val.encode('utf8'))
-            # ceate
-            eq(requests.post, 'val=name=' + safe_val, {},
-               '?where=name=' + safe_val,
-               [{'category': NAN, 'name': val, 'rating': NAN, 'votes': NAN}])
-            # update
-            eq(requests.put, 'where=name=' + safe_val, {'val': 'votes=1'},
-               '?where=name=' + safe_val,
-               [{'category': NAN, 'name': val, 'rating': NAN, 'votes': 1}])
-            # delete
-            eq(requests.delete, 'where=name=' + safe_val, {},
-               '?where=name=' + safe_val, None)
+        val = 'xgram-' + ''.join(chr(x) for x in range(32, 128)) + 'ασλÆ©á '
+        safe_val = requests.utils.quote(val.encode('utf8'))
+        eq(requests.post, {'val': 'name=' + val}, {},
+           '?where=name=' + safe_val,
+           [{'category': NAN, 'name': val, 'rating': NAN, 'votes': NAN}])
+        eq(requests.put, {'where': 'name=' + val}, {'val': 'votes=1'},
+           '?where=name=' + safe_val,
+           [{'category': NAN, 'name': val, 'rating': NAN, 'votes': 1}])
+        eq(requests.delete, {'where': 'name=' + val}, {},
+           '?where=name=' + safe_val, None)
 
         # Edge cases
         # POST val is empty -- Insert an empty dict
