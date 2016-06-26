@@ -10,13 +10,15 @@ url:
     pattern: /$YAMLURL/flags                # The URL /datastore/flags
     handler: DataHandler                    # uses DataHandler
     kwargs:
-      driver: blaze                         # with blaze or sqlalchemy driver
+      driver: sqlalchemy                    # with blaze or sqlalchemy driver
       url: sqlite:///$YAMLPATH/database.sqlite3     # to connect database at this path/url
       table: flags                          # on this table
       parameters: {encoding: utf8}          # with additional parameters provided
       default:
         format: html                        # Can also be json or csv
-
+      posttransform:
+        function: fetch.bigint   # or any function like passlib.hash.sha256_crypt.encrypt
+        args: =content
 schedule:
   data-setup:
     function: fetch.data

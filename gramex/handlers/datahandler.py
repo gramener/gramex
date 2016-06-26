@@ -5,7 +5,10 @@ import tornado.web
 import pandas as pd
 import sqlalchemy as sa
 import gramex
+from tornado.web import HTTPError
 from orderedattrdict import AttrDict
+from six.moves.http_client import NOT_FOUND
+from gramex.transforms import build_transform
 from .basehandler import BaseHandler
 
 drivers = {}
@@ -52,12 +55,19 @@ class DataHandler(BaseHandler):
         cls.driver_key = yaml.dump(kwargs)
 
         driver = kwargs.get('driver')
-        if driver == 'sqlalchemy':
-            cls.driver_method = cls._sqlalchemy
-        elif driver == 'blaze':
-            cls.driver_method = cls._blaze
+        cls.driver_name = driver
+        if driver in ['sqlalchemy', 'blaze']:
+            cls.driver_method = getattr(cls, '_' + driver)
         else:
             raise NotImplementedError('driver=%s is not supported yet.' % driver)
+
+        posttransform = kwargs.get('posttransform', {})
+        cls.posttransform = []
+        if 'function' in posttransform:
+            cls.posttransform.append(
+                build_transform(
+                    posttransform, vars=AttrDict(content=None),
+                    filename='url>%s' % cls.name))
 
         qconfig = {'query': cls.params.get('query', {}),
                    'default': cls.params.get('default', {})}
@@ -80,48 +90,67 @@ class DataHandler(BaseHandler):
                 qconfig[q] = tmp
         cls.qconfig = qconfig
 
+    def initialize(self, **kwargs):
+        super(DataHandler, self).initialize(**kwargs)
+        # Set the method to the ?x-http-method-overrride argument or the
+        # X-HTTP-Method-Override header if they exist
+        if 'x-http-method-override' in self.request.arguments:
+            self.request.method = self.get_argument('x-http-method-override')
+        elif 'X-HTTP-Method-Override' in self.request.headers:
+            self.request.method = self.request.headers['X-HTTP-Method-Override']
+
     def getq(self, key, default_value=None):
         return (self.qconfig['query'].get(key) or
-                self.get_arguments(key) or
+                self.get_arguments(key, strip=False) or
                 self.qconfig['default'].get(key) or
                 default_value)
 
-    def _sqlalchemy(self, _selects, _wheres, _groups, _aggs, _offset, _limit, _sorts):
+    def _sqlalchemy_gettable(self):
         if self.driver_key not in drivers:
             parameters = self.params.get('parameters', {})
             drivers[self.driver_key] = sa.create_engine(self.params['url'], **parameters)
-        self.driver = drivers[self.driver_key]
+        self.driver_engine = drivers[self.driver_key]
 
-        meta = sa.MetaData(bind=self.driver, reflect=True)
+        meta = sa.MetaData(bind=self.driver_engine, reflect=True)
         table = meta.tables[self.params['table']]
+        return table
+
+    def _sqlalchemy_wheres(self, _wheres, table):
+        wh_re = re.compile(r'([^=><~!]+)([=><~!]{1,2})([\s\S]+)')
+        wheres = []
+        for where in _wheres:
+            match = wh_re.search(where)
+            if match is None:
+                continue
+            col, oper, val = match.groups()
+            col = table.c[col]
+            if oper in ['==', '=']:
+                wheres.append(col == val)
+            elif oper == '>=':
+                wheres.append(col >= val)
+            elif oper == '<=':
+                wheres.append(col <= val)
+            elif oper == '>':
+                wheres.append(col > val)
+            elif oper == '<':
+                wheres.append(col < val)
+            elif oper == '!=':
+                wheres.append(col != val)
+            elif oper == '~':
+                wheres.append(col.ilike('%' + val + '%'))
+            elif oper == '!~':
+                wheres.append(col.notlike('%' + val + '%'))
+        wheres = sa.and_(*wheres)
+        return wheres
+
+    def _sqlalchemy(self, _selects, _wheres, _groups, _aggs, _offset, _limit, _sorts):
+        table = self._sqlalchemy_gettable()
+        columns = table.columns.keys()
 
         if _wheres:
-            wh_re = re.compile(r'([^=><~!]+)([=><~!]{1,2})([^=><~!]+)')
-            wheres = []
-            for where in _wheres:
-                match = wh_re.search(where)
-                if match is None:
-                    continue
-                col, oper, val = match.groups()
-                col = table.c[col]
-                if oper in ['==', '=']:
-                    wheres.append(col == val)
-                elif oper == '>=':
-                    wheres.append(col >= val)
-                elif oper == '<=':
-                    wheres.append(col <= val)
-                elif oper == '>':
-                    wheres.append(col > val)
-                elif oper == '<':
-                    wheres.append(col < val)
-                elif oper == '!=':
-                    wheres.append(col != val)
-                elif oper == '~':
-                    wheres.append(col.ilike('%' + val + '%'))
-                elif oper == '!~':
-                    wheres.append(col.notlike('%' + val + '%'))
-            wheres = sa.and_(*wheres)
+            wheres = self._sqlalchemy_wheres(_wheres, table)
 
+        alias_cols = []
         if _groups and _aggs:
             grps = [table.c[c] for c in _groups]
             aggselects = grps[:]
@@ -134,6 +163,7 @@ class DataHandler(BaseHandler):
                 if match is None:
                     continue
                 name, oper, col = match.groups()
+                alias_cols.append(name)
                 if oper == 'nunique':
                     aggselects.append(sa.func.count(table.c[col].distinct()).label(name))
                 else:
@@ -159,6 +189,8 @@ class DataHandler(BaseHandler):
             sorts = []
             for sort in _sorts:
                 col, odr = sort.partition(':')[::2]
+                if col not in columns + alias_cols:
+                    continue
                 sorts.append(order.get(odr, sa.asc)(col))
             query = query.order_by(*sorts)
 
@@ -167,7 +199,35 @@ class DataHandler(BaseHandler):
         if _limit:
             query = query.limit(_limit)
 
-        return pd.read_sql_query(query, self.driver)
+        return pd.read_sql_query(query, self.driver_engine)
+
+    def _sqlalchemy_post(self, _vals):
+        table = self._sqlalchemy_gettable()
+        content = dict(x.split('=', 1) for x in _vals)
+        for posttransform in self.posttransform:
+            for value in posttransform(content):
+                content = value
+        self.driver_engine.execute(table.insert(), **content)
+        return pd.DataFrame()
+
+    def _sqlalchemy_delete(self, _wheres):
+        if not _wheres:
+            raise HTTPError(NOT_FOUND, log_message='WHERE is required in DELETE method')
+        table = self._sqlalchemy_gettable()
+        wheres = self._sqlalchemy_wheres(_wheres, table)
+        self.driver_engine.execute(table.delete().where(wheres))
+        return pd.DataFrame()
+
+    def _sqlalchemy_put(self, _vals, _wheres):
+        if not _vals:
+            raise HTTPError(NOT_FOUND, log_message='VALS is required in PUT method')
+        if not _wheres:
+            raise HTTPError(NOT_FOUND, log_message='WHERE is required in PUT method')
+        table = self._sqlalchemy_gettable()
+        content = dict(x.split('=', 1) for x in _vals)
+        wheres = self._sqlalchemy_wheres(_wheres, table)
+        self.driver_engine.execute(table.update().where(wheres).values(content))
+        return pd.DataFrame()
 
     def _blaze(self, _selects, _wheres, _groups, _aggs, _offset, _limit, _sorts):
         # Import blaze on demand -- it's a very slow import
@@ -179,10 +239,11 @@ class DataHandler(BaseHandler):
                         ('::' + self.params['table'] if self.params.get('table') else ''),
                         **parameters)
         table = bz.TableSymbol('table', bzcon.dshape)
+        columns = table.columns
         query = table
 
         if _wheres:
-            wh_re = re.compile(r'([^=><~!]+)([=><~!]{1,2})([^=><~!]+)')
+            wh_re = re.compile(r'([^=><~!]+)([=><~!]{1,2})([\s\S]+)')
             wheres = None
             for where in _wheres:
                 match = wh_re.search(where)
@@ -209,6 +270,7 @@ class DataHandler(BaseHandler):
                 wheres = whr if wheres is None else wheres & whr
             query = query[wheres]
 
+        alias_cols = []
         if _groups and _aggs:
             byaggs = {'min': bz.min, 'max': bz.max,
                       'sum': bz.sum, 'count': bz.count,
@@ -221,6 +283,7 @@ class DataHandler(BaseHandler):
                 if match is None:
                     continue
                 name, oper, col = match.groups()
+                alias_cols.append(name)
                 aggs[name] = byaggs[oper](query[col])
             query = bz.by(grps, **aggs)
 
@@ -229,8 +292,11 @@ class DataHandler(BaseHandler):
             sorts = []
             for sort in _sorts:
                 col, odr = sort.partition(':')[::2]
+                if col not in columns + alias_cols:
+                    continue
                 sorts.append(col)
-            query = query.sort(sorts, ascending=order.get(odr, True))
+            if sorts:
+                query = query.sort(sorts, ascending=order.get(odr, True))
 
         if _offset:
             _offset = int(_offset)
@@ -247,22 +313,11 @@ class DataHandler(BaseHandler):
         # TODO: Improve json, csv, html outputs using native odo
         return bz.odo(bz.compute(query, bzcon.data), pd.DataFrame)
 
-    @tornado.gen.coroutine
-    def get(self):
-        kwargs = dict(
-            _selects=self.getq('select'),
-            _wheres=self.getq('where'),
-            _groups=self.getq('groupby'),
-            _aggs=self.getq('agg'),
-            _offset=self.getq('offset', [None])[0],
-            _limit=self.getq('limit', [100])[0],
-            _sorts=self.getq('sort'),
-        )
-
-        self.result = yield gramex.service.threadpool.submit(self.driver_method, **kwargs)
-
+    def _render(self):
         # Set content and type based on format
-        formats = self.getq('format', ['json'])
+        formats = self.getq('format', [])
+        if '' in formats:
+            formats += self.qconfig['default'].get('format', ['json'])
         if 'json' in formats:
             self.set_header('Content-Type', 'application/json')
             self.content = self.result.to_json(orient='records')
@@ -280,4 +335,45 @@ class DataHandler(BaseHandler):
         for header_name, header_value in self.params.get('headers', {}).items():
             self.set_header(header_name, header_value)
 
+    @tornado.gen.coroutine
+    def get(self):
+        kwargs = dict(
+            _selects=self.getq('select'),
+            _wheres=self.getq('where'),
+            _groups=self.getq('groupby'),
+            _aggs=self.getq('agg'),
+            _offset=self.getq('offset', [None])[0],
+            _limit=self.getq('limit', [100])[0],
+            _sorts=self.getq('sort'),
+        )
+
+        self.result = yield gramex.service.threadpool.submit(self.driver_method, **kwargs)
+        self._render()
+        self.write(self.content)
+
+    @tornado.gen.coroutine
+    def post(self):
+        if self.driver_name != 'sqlalchemy':
+            raise NotImplementedError('driver=%s is not supported yet.' % self.driver_name)
+        kwargs = {'_vals': self.getq('val', [])}
+        self.result = yield gramex.service.threadpool.submit(self._sqlalchemy_post, **kwargs)
+        self._render()
+        self.write(self.content)
+
+    @tornado.gen.coroutine
+    def delete(self):
+        if self.driver_name != 'sqlalchemy':
+            raise NotImplementedError('driver=%s is not supported yet.' % self.driver_name)
+        kwargs = {'_wheres': self.getq('where')}
+        self.result = yield gramex.service.threadpool.submit(self._sqlalchemy_delete, **kwargs)
+        self._render()
+        self.write(self.content)
+
+    @tornado.gen.coroutine
+    def put(self):
+        if self.driver_name != 'sqlalchemy':
+            raise NotImplementedError('driver=%s is not supported yet.' % self.driver_name)
+        kwargs = {'_vals': self.getq('val', []), '_wheres': self.getq('where')}
+        self.result = yield gramex.service.threadpool.submit(self._sqlalchemy_put, **kwargs)
+        self._render()
         self.write(self.content)
