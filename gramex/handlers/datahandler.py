@@ -316,18 +316,16 @@ class DataHandler(BaseHandler):
     def _render(self):
         # Set content and type based on format
         formats = self.getq('format', [])
-        if '' in formats:
-            formats += self.qconfig['default'].get('format', ['json'])
-        if 'json' in formats:
-            self.set_header('Content-Type', 'application/json')
-            self.content = self.result.to_json(orient='records')
-        elif 'csv' in formats:
+        if 'csv' in formats:
             self.set_header('Content-Type', 'text/csv')
             self.set_header("Content-Disposition", "attachment;filename=file.csv")
             self.content = self.result.to_csv(index=False, encoding='utf-8')
         elif 'html' in formats:
             self.set_header('Content-Type', 'text/html')
             self.content = self.result.to_html()
+        elif 'json' in formats or '' in formats or len(formats) == 0:
+            self.set_header('Content-Type', 'application/json')
+            self.content = self.result.to_json(orient='records')
         else:
             raise NotImplementedError('format=%s is not supported yet.' % formats)
 

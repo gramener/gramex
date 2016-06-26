@@ -67,8 +67,10 @@ class DataHandlerTestMixin(object):
         eq(self.data.query('150 > votes > 100'),
            pd.read_csv(base + 'csv/?where=votes<150&where=votes>100&xyz=8765'))
         # format
-        eq(self.data[:5], pd.read_csv(base + 'csv/?limit=5&format='))
+        eq(self.data[:5], pd.read_csv(base + 'csv/?limit=5'))
+        eq(self.data[:5], pd.read_json(base + 'csv/?limit=5&format='))
         eq(self.data[:5], pd.read_json(base + 'csv/?limit=5&format=json'))
+        eq(self.data[:5], pd.read_json(base + 'csv/?limit=5&format=xx&format=json'))
         r = requests.get(base + 'csv/?limit=5&format=nonexistent')
         self.assertEqual(r.status_code, INTERNAL_SERVER_ERROR)
 
