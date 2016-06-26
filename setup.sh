@@ -56,7 +56,7 @@ setup_python() {
 
     # Python 3 in Anaconda 2.4.1, 64-bit. From https://www.continuum.io/downloads#_unix
     echo "Downloading 64-bit Anaconda 4.0.0 for Python 3..."
-    $wget anaconda.sh https://3230d63b5fc54e62148e-c95ac804525aac4b6dba79b00b39d1d3.ssl.cf1.rackcdn.com/Anaconda3-4.0.0-Linux-x86_64.sh
+    $wget anaconda.sh http://repo.continuum.io/archive/Anaconda3-4.0.0-Linux-x86_64.sh
     bash anaconda.sh -b -p $BASE
     rm -rf anaconda.sh
     export PATH=$BASE/bin:$PATH
