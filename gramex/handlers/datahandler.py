@@ -89,6 +89,8 @@ class DataHandler(BaseHandler):
                         tmp[key] = [val]
                 qconfig[q] = tmp
         cls.qconfig = qconfig
+        # Create a cached metadata store for SQLAlchemy engines
+        cls.meta = sa.MetaData()
 
     def initialize(self, **kwargs):
         super(DataHandler, self).initialize(**kwargs)
@@ -109,11 +111,9 @@ class DataHandler(BaseHandler):
         if self.driver_key not in drivers:
             parameters = self.params.get('parameters', {})
             drivers[self.driver_key] = sa.create_engine(self.params['url'], **parameters)
-        self.driver_engine = drivers[self.driver_key]
+        self.engine = drivers[self.driver_key]
 
-        meta = sa.MetaData(bind=self.driver_engine, reflect=True)
-        table = meta.tables[self.params['table']]
-        return table
+        return sa.Table(self.params['table'], self.meta, autoload=True, autoload_with=self.engine)
 
     def _sqlalchemy_wheres(self, _wheres, table):
         wh_re = re.compile(r'([^=><~!]+)([=><~!]{1,2})([\s\S]+)')
@@ -199,7 +199,7 @@ class DataHandler(BaseHandler):
         if _limit:
             query = query.limit(_limit)
 
-        return pd.read_sql_query(query, self.driver_engine)
+        return pd.read_sql_query(query, self.engine)
 
     def _sqlalchemy_post(self, _vals):
         table = self._sqlalchemy_gettable()
@@ -207,7 +207,7 @@ class DataHandler(BaseHandler):
         for posttransform in self.posttransform:
             for value in posttransform(content):
                 content = value
-        self.driver_engine.execute(table.insert(), **content)
+        self.engine.execute(table.insert(), **content)
         return pd.DataFrame()
 
     def _sqlalchemy_delete(self, _wheres):
@@ -215,7 +215,7 @@ class DataHandler(BaseHandler):
             raise HTTPError(NOT_FOUND, log_message='WHERE is required in DELETE method')
         table = self._sqlalchemy_gettable()
         wheres = self._sqlalchemy_wheres(_wheres, table)
-        self.driver_engine.execute(table.delete().where(wheres))
+        self.engine.execute(table.delete().where(wheres))
         return pd.DataFrame()
 
     def _sqlalchemy_put(self, _vals, _wheres):
@@ -226,7 +226,7 @@ class DataHandler(BaseHandler):
         table = self._sqlalchemy_gettable()
         content = dict(x.split('=', 1) for x in _vals)
         wheres = self._sqlalchemy_wheres(_wheres, table)
-        self.driver_engine.execute(table.update().where(wheres).values(content))
+        self.engine.execute(table.update().where(wheres).values(content))
         return pd.DataFrame()
 
     def _blaze(self, _selects, _wheres, _groups, _aggs, _offset, _limit, _sorts):
