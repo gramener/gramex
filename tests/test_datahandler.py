@@ -194,7 +194,8 @@ class TestMysqlDataHandler(TestGramex, DataHandlerTestMixin):
         cls.engine = sa.create_engine(cls.dburl)
         try:
             cls.engine.execute("DROP DATABASE IF EXISTS test_datahandler")
-            cls.engine.execute("CREATE DATABASE test_datahandler")
+            cls.engine.execute("CREATE DATABASE test_datahandler "
+                               "CHARACTER SET utf8 COLLATE utf8_general_ci")
             cls.engine.dispose()
             cls.engine = sa.create_engine(cls.dburl + 'test_datahandler')
             cls.data.to_sql('actors', con=cls.engine, index=False)
@@ -220,7 +221,7 @@ class TestPostgresDataHandler(TestGramex, DataHandlerTestMixin):
             conn.execute('commit')
             conn.execute('DROP DATABASE IF EXISTS test_datahandler')
             conn.execute('commit')
-            conn.execute('CREATE DATABASE test_datahandler')
+            conn.execute("CREATE DATABASE test_datahandler ENCODING 'UTF8'")
             conn.close()
             cls.engine = sa.create_engine(cls.dburl + 'test_datahandler')
             cls.data.to_sql('actors', con=cls.engine, index=False)
