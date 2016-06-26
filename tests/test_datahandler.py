@@ -110,24 +110,24 @@ class DataHandlerTestMixin(object):
             else:
                 assert a.equals(pd.DataFrame(b))
 
-        NAN = pd.np.nan
+        nan = pd.np.nan
         # create
         eq(requests.post, '', {'val': 'name=xgram1'},
            '?where=name=xgram1',
-           [{'category': NAN, 'name': 'xgram1', 'rating': NAN, 'votes': NAN}])
+           [{'category': nan, 'name': 'xgram1', 'rating': nan, 'votes': nan}])
         eq(requests.post, 'val=name=xgram2', {},
            '?where=name=xgram2',
-           [{'category': NAN, 'name': 'xgram2', 'rating': NAN, 'votes': NAN}])
+           [{'category': nan, 'name': 'xgram2', 'rating': nan, 'votes': nan}])
         eq(requests.post, 'val=name=xgram3&val=votes=20', {},
            '?where=name=xgram3&where=votes=20',
-           [{'category': NAN, 'name': 'xgram3', 'rating': NAN, 'votes': 20}])
+           [{'category': nan, 'name': 'xgram3', 'rating': nan, 'votes': 20}])
         eq(requests.post, 'val=name=xgram=x', {},
            '?where=name=xgram=x',
-           [{'category': NAN, 'name': 'xgram=x', 'rating': NAN, 'votes': NAN}])
+           [{'category': nan, 'name': 'xgram=x', 'rating': nan, 'votes': nan}])
         # update
         eq(requests.put, 'where=name=xgram1', {'val': 'votes=11'},
            '?where=name=xgram1',
-           [{'category': NAN, 'name': 'xgram1', 'rating': NAN, 'votes': 11}])
+           [{'category': nan, 'name': 'xgram1', 'rating': nan, 'votes': 11}])
         # read
         assert pd.read_csv(base + '?where=name~xgram').shape[0] == 4
         # delete
@@ -138,10 +138,10 @@ class DataHandlerTestMixin(object):
         safe_val = requests.utils.quote(val.encode('utf8'))
         eq(requests.post, {'val': 'name=' + val}, {},
            '?where=name=' + safe_val,
-           [{'category': NAN, 'name': val, 'rating': NAN, 'votes': NAN}])
+           [{'category': nan, 'name': val, 'rating': nan, 'votes': nan}])
         eq(requests.put, {'where': 'name=' + val}, {'val': 'votes=1'},
            '?where=name=' + safe_val,
-           [{'category': NAN, 'name': val, 'rating': NAN, 'votes': 1}])
+           [{'category': nan, 'name': val, 'rating': nan, 'votes': 1}])
         eq(requests.delete, {'where': 'name=' + val}, {},
            '?where=name=' + safe_val, None)
 
@@ -246,6 +246,7 @@ class TestBlazeDataHandler(TestSqliteHandler):
         # POST is not implemented for Blaze driver
         pass
 
+
 class TestBlazeMysqlDataHandler(TestMysqlDataHandler, TestBlazeDataHandler):
     'Test DataHandler for MySQL database via blaze driver'
     database = 'blazemysql'
@@ -253,6 +254,7 @@ class TestBlazeMysqlDataHandler(TestMysqlDataHandler, TestBlazeDataHandler):
     def test_querypostdb(self):
         # POST is not implemented for Blaze driver
         pass
+
 
 class TestDataHandlerConfig(TestSqliteHandler):
     'Test DataHandler'
