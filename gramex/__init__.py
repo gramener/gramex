@@ -157,15 +157,16 @@ def gramex_update(url):
             return
 
         result = future.result()
+        body = result.body.decode('utf-8')
         try:
-            data = json.loads(result.body)
+            data = json.loads(body)
         except ValueError:
-            app_log.error('Gramex update: JSON invalid: %s', result.body)
+            app_log.error('Gramex update: JSON invalid: %s', body)
             return
         if not isinstance(data, dict) or 'version' not in data:
-            app_log.error('Gramex update: response invalid: %s', result.body)
+            app_log.error('Gramex update: response invalid: %s', body)
             return
-        services.info.eventlog.add('update', result.body)
+        services.info.eventlog.add('update', body)
         if data.get('version') < __version__:
             app_log.error('Gramex %s is available. See https://learn.gramener.com/guide/',
                           data['version'])
