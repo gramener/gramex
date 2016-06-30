@@ -1,3 +1,4 @@
+import six
 import json
 import gramex
 import tornado.gen
@@ -55,15 +56,15 @@ class TwitterRESTHandler(BaseHandler):
         for header, header_value in params.get('headers', {}).items():
             self.set_header(header, header_value)
 
-        if response.body:
-            kwargs = {'content': response.body}
-            self.result = yield gramex.service.threadpool.submit(self.transforms, **kwargs)
-            self.write(self.result)
+        content = response.body
+        if content and response.code == 200:
+            content = yield gramex.service.threadpool.submit(self.transforms, content=content)
+        if not isinstance(content, (six.binary_type, six.text_type)):
+            content = json.dumps(content, ensure_ascii=True, separators=(',', ':'))
+        self.write(content)
 
     def transforms(self, content):
-        result = json.loads(content)
-        if not isinstance(result, dict):
-            result = {'result': result}
+        result = json.loads(content.decode('utf-8'))
         for posttransform in self.posttransform:
             for value in posttransform(result):
                 result = value
