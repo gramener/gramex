@@ -4,13 +4,15 @@ import gramex
 import tornado.gen
 from oauthlib import oauth1
 from orderedattrdict import AttrDict
+from six.moves.http_client import OK
 from gramex.transforms import build_transform
 from tornado.httpclient import AsyncHTTPClient
 from tornado.httputil import url_concat, responses
 from .basehandler import BaseHandler
 
+NETWORK_TIMEOUT = 599
 custom_responses = {
-    599: 'Network Timeout'
+    NETWORK_TIMEOUT: 'Network Timeout'
 }
 
 
@@ -57,7 +59,7 @@ class TwitterRESTHandler(BaseHandler):
             self.set_header(header, header_value)
 
         content = response.body
-        if content and response.code == 200:
+        if content and response.code == OK:
             content = yield gramex.service.threadpool.submit(self.transforms, content=content)
         if not isinstance(content, (six.binary_type, six.text_type)):
             content = json.dumps(content, ensure_ascii=True, separators=(',', ':'))
