@@ -1,0 +1,13 @@
+url:
+  twitterapi:
+    pattern: /$YAMLURL/twitterapi/(.*)
+    handler: TwitterRESTHandler
+    kwargs:
+      consumer_key: n2Gk3ycY8JAwTmJxNqMGw
+      consumer_secret: LTZ60WxkiZksPs6kslyzzrKW2DDIlKPU8Thfie8NDmg
+      access_token:  1234136874-9Y0Pas6ZOQQzbOUn5fGCxDd4NbdjzoobvllCj3O
+      access_token_secret: 7DdkktVcdCElLkLgafV1d5WSBlJyXGkMeDV96a9d5E
+      # endpoint:  defaults to https://api.twitter.com/1.1/
+      posttransform:
+        function: api.update
+        args: =content

@@ -753,6 +753,15 @@ url:
     kwargs:
       path: $YAMLPATH/.jsonpath/jsonhandler.json
 
+  api/twitter:
+    pattern: /api/twitter/(.*)
+    handler: TwitterRESTHandler
+    kwargs:
+      consumer_key: n2Gk3ycY8JAwTmJxNqMGw
+      consumer_secret: LTZ60WxkiZksPs6kslyzzrKW2DDIlKPU8Thfie8NDmg
+      access_token:  1234136874-9Y0Pas6ZOQQzbOUn5fGCxDd4NbdjzoobvllCj3O
+      access_token_secret: 7DdkktVcdCElLkLgafV1d5WSBlJyXGkMeDV96a9d5E
+
   auth/session:
     pattern: /auth/session
     handler: FunctionHandler
