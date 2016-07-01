@@ -42,7 +42,7 @@ class TestXSRF(TestGramex):
         session = requests.Session()
         r = session.get(server.base_url + '/xsrf', timeout=10)
         self.assertTrue('Set-Cookie' in r.headers)
-        self.assertTrue(r.headers['Set-Cookie'].startswith('_xsrf'))
+        self.assertTrue('_xsrf' in r.headers['Set-Cookie'])
 
         # Next request does not set xsrf cookie, because it already exists
         r = session.get(server.base_url + '/xsrf', timeout=10)
