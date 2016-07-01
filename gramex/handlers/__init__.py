@@ -9,9 +9,10 @@ from .datahandler import DataHandler
 from .authhandler import (GoogleAuth, FacebookAuth, TwitterAuth, LDAPAuth, DBAuth, LogoutHandler)
 from .processhandler import ProcessHandler
 from .jsonhandler import JSONHandler
+from .twitterresthandler import TwitterRESTHandler
 
 DirectoryHandler = FileHandler
 
 __all__ = ['BaseHandler', 'FunctionHandler', 'FileHandler', 'DirectoryHandler',
            'DataHandler', 'JSONHandler', 'GoogleAuth', 'FacebookAuth', 'TwitterAuth', 'LDAPAuth',
-           'DBAuth', 'LogoutHandler', 'ProcessHandler']
+           'DBAuth', 'LogoutHandler', 'ProcessHandler', 'TwitterRESTHandler']
