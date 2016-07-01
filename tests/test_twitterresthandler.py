@@ -1,9 +1,9 @@
 import requests
 import concurrent.futures
-from six.moves.http_client import OK, METHOD_NOT_ALLOWED, BAD_REQUEST
 from gramex.handlers.twitterresthandler import NETWORK_TIMEOUT
 from . import server, TestGramex
 
+OK, METHOD_NOT_ALLOWED, BAD_REQUEST = 200, 405, 400
 threadpool = concurrent.futures.ThreadPoolExecutor(8)
 
 

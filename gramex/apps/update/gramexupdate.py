@@ -2,8 +2,9 @@ import os
 import json
 import logging
 import gramex
-from six.moves.http_client import BAD_REQUEST
 from gramex.handlers.basehandler import BaseHandler
+
+BAD_REQUEST = 400
 
 
 class GramexUpdateHandler(BaseHandler):

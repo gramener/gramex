@@ -8,7 +8,6 @@ import tornado.gen
 from textwrap import dedent
 from binascii import b2a_base64
 from orderedattrdict import AttrDict, DefaultAttrDict
-from six.moves.http_client import FORBIDDEN
 from six.moves.urllib_parse import urlparse, urlsplit, urlencode
 from tornado.log import access_log
 from tornado.web import RequestHandler, HTTPError
@@ -18,6 +17,7 @@ from gramex.transforms import build_transform
 
 server_header = 'Gramex/%s' % __version__
 session_store_cache = {}
+FORBIDDEN = 403
 
 
 class BaseHandler(RequestHandler):

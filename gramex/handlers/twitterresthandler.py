@@ -4,12 +4,12 @@ import gramex
 import tornado.gen
 from oauthlib import oauth1
 from orderedattrdict import AttrDict
-from six.moves.http_client import OK
 from gramex.transforms import build_transform
 from tornado.httpclient import AsyncHTTPClient
 from tornado.httputil import url_concat, responses
 from .basehandler import BaseHandler
 
+OK = 200
 NETWORK_TIMEOUT = 599
 custom_responses = {
     NETWORK_TIMEOUT: 'Network Timeout'

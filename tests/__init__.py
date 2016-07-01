@@ -1,12 +1,12 @@
 import os
 import requests
 import unittest
-from six.moves import http_client
 from orderedattrdict import AttrDict
 from . import server
 from gramex import conf
 from gramex.services import info
 
+OK = 200
 tempfiles = AttrDict()
 
 
@@ -58,6 +58,6 @@ class TestSchedule(TestGramex):
     def test_schedule(self):
         # Run this test as soon as Gramex starts to check if schedule has run
         self.assertIn('schedule-key', info, 'Schedule was run at startup')
-        self.check('/', code=http_client.OK)
+        self.check('/', code=OK)
         max_count = conf.schedule['schedule-startup-slow'].kwargs.count - 1
         self.assertTrue(0 < info['schedule-count'] < max_count, 'Schedule still running')
