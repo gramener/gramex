@@ -18,19 +18,22 @@ custom_responses = {
 
 class TwitterRESTHandler(BaseHandler):
     @classmethod
-    def setup(cls, **kwargs):
+    def setup(cls, transform={}, methods=['post'], **kwargs):
         super(TwitterRESTHandler, cls).setup(**kwargs)
 
-        posttransform = kwargs.get('posttransform', {})
-        cls.posttransform = []
-        if 'function' in posttransform:
-            cls.posttransform.append(
-                build_transform(
-                    posttransform, vars=AttrDict(content=None),
-                    filename='url>%s' % cls.name))
+        cls.transform = []
+        if 'function' in transform:
+            cls.transform.append(build_transform(transform, vars=AttrDict(content=None),
+                                                 filename='url>%s' % cls.name))
+        if not isinstance(methods, list):
+            methods = [methods]
+        methods = set(method.lower().strip() for method in methods)
+        for method in ('get', 'post', 'put', 'patch'):
+            if method in methods:
+                setattr(cls, method, cls.run)
 
     @tornado.gen.coroutine
-    def post(self, path):
+    def run(self, path):
         args = {key: self.get_argument(key) for key in self.request.arguments}
         params = self.conf.kwargs
         client = oauth1.Client(
@@ -67,7 +70,7 @@ class TwitterRESTHandler(BaseHandler):
 
     def transforms(self, content):
         result = json.loads(content.decode('utf-8'))
-        for posttransform in self.posttransform:
-            for value in posttransform(result):
+        for transform in self.transform:
+            for value in transform(result):
                 result = value
         return result

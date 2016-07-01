@@ -757,11 +757,22 @@ url:
     pattern: /api/twitter/(.*)
     handler: TwitterRESTHandler
     kwargs:
-      # Gramener > Gramex Test app: https://apps.twitter.com/app/12449610/keys
+      # Gramener > Gramex guide app: https://apps.twitter.com/app/12449610/keys
       consumer_key: XkCVNZD5sfWECxHGAGnlHGQFa
       consumer_secret: yU00bx5dHYMbge9IyO5H1KeC5uFnWndntG7u6CH6O4HDZHQg0p
-      access_token: 445767176-jDMwN0oRYvEdTDTVLS6FSXufbP7pOQrgmnyKGjt4
-      access_token_secret: hXrfLh1l2ClDh0RhXJd8lIpwQxQFtEjJpduKV2DyAyRVY
+      access_token: 445767176-pqio8PuGlpzULSstlZQbLhRqFJfNBjWFH5LqNRgI
+      access_token_secret: zVosr4wIS3aM80hErmWUkMePZ6vX830yI7VKxar6xZqgp
+
+  api/twitter-get:
+    pattern: /api/twitter-get/(.*)
+    handler: TwitterRESTHandler
+    kwargs:
+      # Gramener > Gramex guide app: https://apps.twitter.com/app/12449610/keys
+      consumer_key: XkCVNZD5sfWECxHGAGnlHGQFa
+      consumer_secret: yU00bx5dHYMbge9IyO5H1KeC5uFnWndntG7u6CH6O4HDZHQg0p
+      access_token: 445767176-pqio8PuGlpzULSstlZQbLhRqFJfNBjWFH5LqNRgI
+      access_token_secret: zVosr4wIS3aM80hErmWUkMePZ6vX830yI7VKxar6xZqgp
+      methods: GET
 
   auth/session:
     pattern: /auth/session

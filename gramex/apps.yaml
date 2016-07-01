@@ -2,3 +2,5 @@ guide:
     target: $GRAMEXPATH/apps/guide/
 gramex-update:
     target: $GRAMEXPATH/apps/update/
+wrangler:
+    cmd: git clone http://code.gramener.com/pratap.vardhan/wrangler.git

@@ -24,6 +24,9 @@ Features for the next 2 releases are below. Bugs to be fixed are at the
 - Form-based data entry
 - Auto annotations (like [teletext.io](https://teletext.io/help/get-started))
 
+## 1.0.11 (15 Jul 2016): 
+
+
 # Features
 
 This is a work-in-progress list of features on the Gramex 1.0 roadmap.
