@@ -757,10 +757,11 @@ url:
     pattern: /api/twitter/(.*)
     handler: TwitterRESTHandler
     kwargs:
-      consumer_key: n2Gk3ycY8JAwTmJxNqMGw
-      consumer_secret: LTZ60WxkiZksPs6kslyzzrKW2DDIlKPU8Thfie8NDmg
-      access_token:  1234136874-9Y0Pas6ZOQQzbOUn5fGCxDd4NbdjzoobvllCj3O
-      access_token_secret: 7DdkktVcdCElLkLgafV1d5WSBlJyXGkMeDV96a9d5E
+      # Gramener > Gramex Test app: https://apps.twitter.com/app/12449610/keys
+      consumer_key: XkCVNZD5sfWECxHGAGnlHGQFa
+      consumer_secret: yU00bx5dHYMbge9IyO5H1KeC5uFnWndntG7u6CH6O4HDZHQg0p
+      access_token: 445767176-jDMwN0oRYvEdTDTVLS6FSXufbP7pOQrgmnyKGjt4
+      access_token_secret: hXrfLh1l2ClDh0RhXJd8lIpwQxQFtEjJpduKV2DyAyRVY
 
   auth/session:
     pattern: /auth/session
