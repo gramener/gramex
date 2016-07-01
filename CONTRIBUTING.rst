@@ -90,10 +90,9 @@ Release
 When releasing a new version of Gramex:
 
 1. Check `build errors <http://code.gramener.com/s.anand/gramex/builds>`__.
-   Test the ``dev`` branch on Python 2.7, 3.4 and 3.5::
+   Test the ``dev`` branch on Python 2.7 and 3.5::
 
     PYTHON=/path/to/python2.7 make release-test
-    PYTHON=/path/to/python3.4 make release-test
     PYTHON=/path/to/python3.5 make release-test
 
 2. Build and upload the release::
@@ -104,6 +103,7 @@ When releasing a new version of Gramex:
 
     - ``HISTORY.rst`` -- add release notes
     - ``gramex/release.json`` -- update the version number
+    - Run ``gramex/apps/guide/search/search.py``
 
 4. Push the ``dev`` branch to the server and ensure that there are no build
    errors.

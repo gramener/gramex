@@ -3,6 +3,27 @@
 History
 -------
 
+1.10 (2016-07-01)
+~~~~~~~~~~~~~~~~~
+
+* `DataHandler`_ can now write back into relational databases. This lets you
+  create form-based applications easily.
+* `DataHandler`_ displays only the first 100 rows by default. (It used to
+  display the entire table, which was slow.)
+* `DataHandler`_ caches metadata (i.e. table column names) until restarted or
+  until ``gramex.yaml`` changes. This speeds up DataHandler considerably.
+* `TwitterRESTHandler`_ lets you access the Twitter API easily without blocking
+  the server.
+* You can add ``set_xsrf: true`` to the ``kwargs:`` of any URL handler. This
+  sets the XSRF cookie when the URL is loaded.
+* If ``gramex.yaml`` has duplicate keys, Gramex raises an error, warning you
+  up-front.
+* The ``handlers.BaseHandler.log.format`` config lets you define the application
+  log format. The default value is
+  ``'%(status)d %(method)s %(uri)s (%(ip)s) %(duration).1fms %(user)s'``. It can
+  be overridden to use any other format.
+
+
 1.0.9 (2016-06-15)
 ~~~~~~~~~~~~~~~~~~
 
@@ -197,15 +218,17 @@ There are two changes that may disrupt your code:
 .. _Firebase API: https://www.firebase.com/docs/rest/api/
 .. _JSONHandler: https://learn.gramener.com/guide/jsonhandler/
 .. _FileHandler: https://learn.gramener.com/guide/filehandler/
+.. _DataHandler: https://learn.gramener.com/guide/datahandler/
+.. _TwitterRESTHandler: https://learn.gramener.com/guide/twitterresthandler/
+.. _LogoutHandler: https://learn.gramener.com/guide/auth/#log-out
+.. _LDAPAuth: https://learn.gramener.com/guide/auth/#ldap
+.. _DBAuth: https://learn.gramener.com/guide/auth/#database
 .. _caching: https://learn.gramener.com/guide/cache/
 .. _scheduler: https://learn.gramener.com/guide/scheduler/
 .. _log: https://learn.gramener.com/guide/config/#logging
 .. _apps: https://learn.gramener.com/guide/apps/
 .. _debug: https://learn.gramener.com/guide/debug/
 .. _sessions: https://learn.gramener.com/guide/auth/#sessions
-.. _LDAPAuth: https://learn.gramener.com/guide/auth/#ldap
-.. _DBAuth: https://learn.gramener.com/guide/auth/#database
-.. _LogoutHandler: https://learn.gramener.com/guide/auth/#log-out
 .. _login actions: https://learn.gramener.com/guide/auth/#login-actions
 .. _auth logging: https://learn.gramener.com/guide/auth/#logging
 .. _authorization: https://learn.gramener.com/guide/auth/#authorization

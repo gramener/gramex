@@ -4,18 +4,17 @@
     "url": "http://code.gramener.com/s.anand/gramex",
     "author": "Gramener",
     "author_email": "s.anand@gramener.com",
-    "version": "1.0.9",
+    "version": "1.10",
     "license": "Other/Proprietary License",
     "keywords": "gramex",
     "classifiers": [
-        "Development Status :: 3 - Alpha",
+        "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
         "License :: Other/Proprietary License",
         "Natural Language :: English",
         "Programming Language :: Python :: 2",
         "Programming Language :: Python :: 2.7",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.4",
         "Programming Language :: Python :: 3.5"
     ]
 }
