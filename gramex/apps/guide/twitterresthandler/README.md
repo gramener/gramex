@@ -19,7 +19,7 @@ Here is a sample usage:
 Follow the steps for [Twitter auth](../auth/#twitter-auth) to get the keys above.
 
 Now, `POST /twitter/search/tweets.json?q=beer` will return tweets about beer.
-Reference: [GET search/tweets](search-tweets).
+Reference: [GET search/tweets][search-tweets].
 It's the same as `GET https://api.twitter.com/1.1/search/tweets.json?q=beer`,
 but without the need for authentication.
 

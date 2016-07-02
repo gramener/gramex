@@ -92,7 +92,7 @@ To replace `.html` extension with `.yaml`, use:
 
 ## Caching 
 
-See how to cache [static files](../caching/#static-files)
+See how to cache [static files](../cache/#static-files)
 
 ## File patterns
 
