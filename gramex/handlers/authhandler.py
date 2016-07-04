@@ -12,7 +12,7 @@ from orderedattrdict import AttrDict
 import gramex
 from gramex.config import check_old_certs, app_log, objectpath
 from gramex.transforms import build_transform
-from .basehandler import BaseHandler
+from .basehandler import BaseHandler, redirected
 
 
 def csv_encode(values, *args, **kwargs):
@@ -65,12 +65,11 @@ class AuthHandler(BaseHandler):
 
 
 class LogoutHandler(AuthHandler):
+    @redirected
     def get(self):
-        self.save_redirect_page()
         for callback in self.actions:
             callback(self)
         self.session.pop('user', None)
-        self.redirect_next()
         self.log_user_event(event='logout')
 
 

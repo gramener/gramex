@@ -399,6 +399,22 @@ def authorized(method):
     return wrapper
 
 
+def redirected(method):
+    '''
+    Saves the redirect configuration up front. After the function is executed,
+    redirects the user to the target page.
+    '''
+    @functools.wraps(method)
+    def wrapper(self, *args, **kwargs):
+        if self.redirects:
+            self.save_redirect_page()
+        result = method(self, *args, **kwargs)
+        if self.redirects:
+            self.redirect_next()
+        return result
+    return wrapper
+
+
 def check_membership(keypath, values):
     values = set(values) if isinstance(values, list) else set([values])
 

@@ -1,5 +1,4 @@
 import os
-import six
 import time
 import json
 import gramex
@@ -7,61 +6,53 @@ import mimetypes
 import tornado.gen
 from orderedattrdict import AttrDict
 from gramex.transforms import build_transform
-from .basehandler import BaseHandler, HDF5Store
+from .basehandler import BaseHandler, HDF5Store, redirected
+
+MILLISECONDS = 1000
 
 
-def memoize(f):
-    """memoizer"""
-    _memoized = {}
-
-    def memoized(*args, **kwargs):
-        key = pathkey(*args)
-        if key not in _memoized:
-            _memoized[key] = f(*args, **kwargs)
-        return _memoized[key]
-    return memoized
-
-
-def pathkey(*args):
-    if len(args) > 1:
-        args = (os.path.join(*args), )
-    return os.path.abspath(*args)
-
-
-@memoize
 class FileUpload(object):
-    def __init__(self, *args, **kwargs):
-        self.path = pathkey(*args)
-        if not os.path.isdir(self.path):
+    stores = {}
+
+    def __init__(self, path, keys='file', **kwargs):
+        self.path = os.path.abspath(path)
+        if not os.path.exists(self.path):
             os.makedirs(self.path)
-        self.store = HDF5Store(os.path.join(self.path, 'meta'))
-        self.files = [self.store.load(k) for k in self.store.keys()]
+        if self.path not in self.stores:
+            self.stores[self.path] = HDF5Store(os.path.join(self.path, '.meta.h5'))
+        self.store = self.stores[self.path]
+        self.keys = keys if isinstance(keys, list) else [keys]
 
     def addfiles(self, handler, *args, **kwargs):
-        files = handler.request.files
         filemetas = []
-        for upload in files.get('file', []):
-            filename, ext = os.path.splitext(upload['filename'])
-            filepath = self.uniq_filename(filename, ext)
-            filename_ = os.path.basename(filepath)
-            with open(filepath, 'wb') as handle:
-                handle.write(upload['body'])
-            mime = upload['content_type'] or mimetypes.guess_type(filepath)[0]
-            filemeta = AttrDict({
-                'name': upload['filename'],
-                'file': filename_,
-                'created': time.time(),
-                'user': handler.get_current_user(),
-                'size': os.stat(filepath).st_size,
-                'mime': mime,
-                'data': handler.request.arguments})
-            filemeta = handler.transforms(filemeta)
-            self.files.append(filemeta)
-            self.store.dump(filename_, filemeta)
-            filemetas.append(filemeta)
+        for key in self.keys:
+            for upload in handler.request.files.get(key, []):
+                original_name = upload.get('filename', None)
+                filepath = self.uniq_filename(original_name)
+                with open(filepath, 'wb') as handle:
+                    handle.write(upload['body'])
+                filename = os.path.basename(filepath)
+                stat = os.stat(filepath)
+                # TODO: what if the guess_type fails as well? octet-stream or something
+                mime = upload['content_type'] or mimetypes.guess_type(filepath)[0]
+                filemeta = AttrDict({
+                    'key': key,
+                    'filename': original_name,
+                    'file': filename,
+                    'created': time.time() * MILLISECONDS,  # JS parseable timestamp
+                    'user': handler.get_current_user(),
+                    'size': stat.st_size,
+                    'mime': mime,
+                    'data': handler.request.arguments
+                })
+                filemeta = handler.transforms(filemeta)
+                self.store.dump(filename, filemeta)
+                filemetas.append(filemeta)
         return filemetas
 
-    def uniq_filename(self, name, ext):
+    def uniq_filename(self, filename):
+        # TODO: what if filename is nonexistent, i.e. None or ''
+        name, ext = os.path.splitext(filename)
         filepath = os.path.join(self.path, name + ext)
         if not os.path.exists(filepath):
             return filepath
@@ -74,10 +65,16 @@ class FileUpload(object):
 
 class UploadHandler(BaseHandler):
     @classmethod
-    def setup(cls, transform={}, **kwargs):
+    def setup(cls, path, keys='file', transform={}, methods=[], **kwargs):
         super(UploadHandler, cls).setup(**kwargs)
-        cls.params = AttrDict(kwargs)
-        cls.uploader = FileUpload(cls.params.path)
+        cls.uploader = FileUpload(path, keys=keys)
+
+        # methods=['get'] will show all file into as JSON on GET
+        if not isinstance(methods, list):
+            methods = [methods]
+        methods = {method.lower() for method in methods}
+        if 'get' in methods:
+            cls.get = cls.fileinfo
 
         cls.transform = []
         if 'function' in transform:
@@ -85,15 +82,17 @@ class UploadHandler(BaseHandler):
                                                  filename='url>%s' % cls.name))
 
     @tornado.gen.coroutine
-    def post(self, *args, **kwargs):
-        content = yield gramex.service.threadpool.submit(self.uploader.addfiles, self)
-        if not isinstance(content, (six.binary_type, six.text_type)):
-            content = json.dumps(content, ensure_ascii=True, separators=(',', ':'))
-        self.write(content)
+    def fileinfo(self, *args, **kwargs):
+        store = self.uploader.store
+        self.set_header('Content-Type', 'application/json')
+        self.write(json.dumps({k: store.load(k) for k in store.keys()}, indent=2))
 
     @tornado.gen.coroutine
-    def get(self, *args, **kwargs):
-        self.write(json.dumps(self.uploader.files))
+    @redirected
+    def post(self, *args, **kwargs):
+        content = yield gramex.service.threadpool.submit(self.uploader.addfiles, self)
+        self.set_header('Content-Type', 'application/json')
+        self.write(json.dumps(content, ensure_ascii=True, separators=(',', ':')))
 
     def transforms(self, content):
         for transform in self.transform:
