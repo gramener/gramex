@@ -774,6 +774,13 @@ url:
       access_token_secret: zVosr4wIS3aM80hErmWUkMePZ6vX830yI7VKxar6xZqgp
       methods: GET
 
+  upload:
+    pattern: /upload
+    handler: UploadHandler
+    kwargs:
+      path: $YAMLPATH/uploads
+      keys: [image, text, unknown]
+
   auth/session:
     pattern: /auth/session
     handler: FunctionHandler
