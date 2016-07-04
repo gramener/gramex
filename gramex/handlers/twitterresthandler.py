@@ -33,7 +33,7 @@ class TwitterRESTHandler(BaseHandler):
                 setattr(cls, method, cls.run)
 
     @tornado.gen.coroutine
-    def run(self, path):
+    def run(self, path=None):
         args = {key: self.get_argument(key) for key in self.request.arguments}
         params = self.conf.kwargs
         client = oauth1.Client(
@@ -42,6 +42,7 @@ class TwitterRESTHandler(BaseHandler):
             resource_owner_key=params.access_token,
             resource_owner_secret=params.access_token_secret)
         endpoint = params.get('endpoint', 'https://api.twitter.com/1.1/')
+        path = params.get('path', path)
         uri, headers, body = client.sign(url_concat(endpoint + path, args))
         http_client = AsyncHTTPClient()
         response = yield http_client.fetch(uri, headers=headers, raise_error=False)

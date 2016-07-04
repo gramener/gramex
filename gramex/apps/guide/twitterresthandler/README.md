@@ -7,7 +7,7 @@ Here is a sample usage:
     :::yaml
     url:
         twitter:
-            pattern: '/twitter/(.*)'
+            pattern: /twitter/(.*)
             handler: TwitterRESTHandler
             kwargs:
                 consumer_key: '...'
@@ -18,14 +18,28 @@ Here is a sample usage:
 
 Follow the steps for [Twitter auth](../auth/#twitter-auth) to get the keys above.
 
+The `methods:` parameter specifies which methods to use to access the API. The
+default is just `POST`. You can replace it with `[GET, POST]` to use either
+GET or POST, or `GET` to use only the `GET` HTTP method.
+
 Now, `POST /twitter/search/tweets.json?q=beer` will return tweets about beer.
 Reference: [GET search/tweets][search-tweets].
 It's the same as `GET https://api.twitter.com/1.1/search/tweets.json?q=beer`,
 but without the need for authentication.
 
-The `methods:` parameter specifies which methods to use to access the API. The
-default is just `POST`. You can replace it with `[GET, POST]` to use either
-GET or POST, or `GET` to use only the `GET` HTTP method.
+To use just a specific REST API, use the `path:` parameter. For example:
+
+    :::yaml
+    url:
+        twitter:
+            pattern: /twitter/search          # Maps this URL
+            handler: TwitterRESTHandler
+            kwargs:
+                path: search/tweets.json      # specifically to the API 
+                ...
+
+... maps `/twitter/search` to `https://api.twitter.com/1.1/search/tweets.json`
+with the relevant authentication.
 
 The examples below use [jQuery.ajax][jquery-ajax] and the [cookie.js][cookie.js] libraries.
 
@@ -37,7 +51,7 @@ The examples below use [jQuery.ajax][jquery-ajax] and the [cookie.js][cookie.js]
 
 ## Twitter search
 
-The following request fetches the latest Tweet for Gramener:
+The following request [searches](https://dev.twitter.com/rest/reference/get/search/tweets) for metnions of Gramener and fetches the first response:
 
     :::js
     var xsrf = {'X-Xsrftoken': cookie.get('_xsrf')}
@@ -51,6 +65,8 @@ The endpoint `/search/tweets.json` is the same as that in the Twitter API, which
 
 ## Twitter followers
 
+This script fetches the [list of followers](https://dev.twitter.com/rest/reference/get/followers/list) for Gramener:
+
     :::js
     var xsrf = {'X-Xsrftoken': cookie.get('_xsrf')}
     $.ajax('api/followers/list.json', {
@@ -58,6 +74,45 @@ The endpoint `/search/tweets.json` is the same as that in the Twitter API, which
       method: 'POST',
       data: {'screen_name': 'gramener'}
     })
+
+## Twitter transforms
+
+You can use the `transform:` configuration to modify the response in any way. Here is a simple transform that adds the sentiment to each tweet:
+
+    :::yaml
+    twittersentiment:
+        pattern: /$YAMLURL/sentiment
+        handler: TwitterRESTHandler
+        kwargs:
+          ...
+          path: search/tweets.json
+          transform:
+            function: twitterutils.add_sentiment
+
+Here's what `twitterutils.add_sentiment` looks for the last about Gramener:
+
+    :::python
+    from textblob import TextBlob
+    def add_sentiment(result):
+        for tweet in result['statuses']:
+            blob = TextBlob(tweet['text'])
+            tweet['sentiment'] = blob.sentiment.polarity
+        return result
+
+This transforms the tweets to add a `sentiment:` key measuring its sentiment.
+
+    :::js
+    var xsrf = {'X-Xsrftoken': cookie.get('_xsrf')}
+    $.ajax('sentiment', {
+      headers: xsrf,
+      method: 'POST',
+      data: {'q': 'gramener', 'count': '1'}
+    })  // OUTPUT
+
+The transform should either return a JSON-encodable object, or a string.
+
+Transforms are executed in a separate thread. This makes the application more responsive. But you need to ensure that your code is thread-safe.
+
 
 ## Parallel AJAX requests
 
@@ -86,14 +141,15 @@ requests.
 
     $.when(q1, q2) // OUTPUT
 
-
 <script>
 var xsrf = {'X-Xsrftoken': cookie.get('_xsrf')}
 var pre = [].slice.call(document.querySelectorAll('pre'))
 
 function condense(result) {
   var field = [].concat(result)[0].statuses[0]
-  return {
+  if (!field)
+    return result
+  result = {
     'id_str'      : field.id_str,
     'created_at'  : field.created_at,
     'text'        : field.text,
@@ -104,6 +160,9 @@ function condense(result) {
     },
     '...'         : '...'
   }
+  if ('sentiment' in field)
+    result.sentiment = field.sentiment
+  return result
 }
 
 
