@@ -24,6 +24,8 @@ Extending `BaseHandler` automatically provides these features:
 - [Authentication and authorization](../auth/) via the `auth:` settings
 - Transforms that are used by [ProcessHandler](../processhandler/) and [FileHandler](../filehandler/)
 
+**Note**: when naming your Python script, avoid namespaces such as `services.` or `handlers.` -- these are already used by Gramex, and will not reflect your custom handler.
+
 
 ## Initialisation
 
