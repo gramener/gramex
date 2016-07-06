@@ -118,3 +118,34 @@ To test this, open the following URLs:
 
 In every case, the correct absolute path for `/style.css` is used,
 irrespective of which path the app is deployed at.
+
+
+## HTTPS Server
+
+To set up Gramex as a HTTPS server, you need a certificate file and a key file,
+both in PEM format. Use the following settings in `gramex.yaml`:
+
+    :::yaml
+    app:
+        listen:
+            port: 443
+            ssl_options:
+                certfile: "path/to/certificate.pem"
+                keyfile: "path/to/privatekey.pem"
+
+You can then connect to `https://your-gramex-server/`.
+
+To generate a self-signed HTTPS certificate for testing, run:
+
+    :::bash
+    openssl genrsa -out privatekey.pem 1024
+    openssl req -new -key privatekey.pem -out certrequest.csr
+    openssl x509 -req -in certrequest.csr -signkey privatekey.pem -out certificate.pem
+
+Or you can use these pre-created [privatekey.pem](privatekey.pem) and
+[certificate.pem](certificate.pem) for localhost. (This was created with subject
+`/C=IN/ST=KA/L=Bangalore/O=Gramener/CN=localhost/emailAddress=s.anand@gramener.com`
+and is meant for `localhost`.)
+
+All browsers will report that this connection is not trusted, since it is a
+self-signed certificate. Ignore the warning proceed to the website.

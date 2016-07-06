@@ -235,6 +235,9 @@
     "deployment-variables": {
       "Deployment variables": -1
     }, 
+    "https-server": {
+      "HTTPS Server": -1
+    }, 
     "pre-defined-variables": {}, 
     "relative-url-mapping": {
       "Relative URL mapping": -1
@@ -382,6 +385,9 @@
     }, 
     "twitter-search": {
       "Twitter search": -1
+    }, 
+    "twitter-transforms": {
+      "Twitter transforms": -1
     }
   }, 
   "watch": {
