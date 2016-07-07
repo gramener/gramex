@@ -1,4 +1,5 @@
 import os
+import pip
 import requests
 import unittest
 from pathlib import Path
@@ -147,6 +148,7 @@ class TestInstall(unittest.TestCase):
 
     def test_setup(self):
         dirpath = os.path.join(folder, 'dir', 'install')
+        pip.main(['uninstall', '-y', '-r', os.path.join(dirpath, 'requirements.txt')])
         install(['setup'], AttrDict(url=dirpath))
 
         result = set()
@@ -170,5 +172,7 @@ class TestInstall(unittest.TestCase):
             result.add('bower_components/gramex-bower-package/bower.json')
             result.add('bower_components/gramex-bower-package/bower-setup.txt')
             result.add('bower_components/gramex-bower-package/.bower.json')
+        if which('pip'):
+            import dicttoxml
         self.check_files('setup', result)
         self.check_uninstall('setup')

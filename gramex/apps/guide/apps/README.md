@@ -48,6 +48,7 @@ After unzipping / copying, it runs a setup script from that directory in this or
 
 - If `Makefile` is present, run `make` if make is available
 - If `setup.ps1` is present, run `powershell -File setup.ps1` if PowerShell is available (Windows)
+- If `requirements.txt` is present, run `pip install --upgrade -r requirements.txt` if pip is available
 - If `setup.sh` is present, run `bash setup.sh` if bash is available
 - If `setup.py` is present, run `python setup.py` if Python is available
 - If `package.json` is present, run `npm install` if npm is available

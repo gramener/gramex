@@ -211,6 +211,7 @@ setup_paths = AttrDict((
     ('make', {'file': 'Makefile', 'cmd': '"$EXE"'}),
     ('powershell', {'file': 'setup.ps1', 'cmd': '"$EXE" -File "$FILE"'}),
     ('bash', {'file': 'setup.sh', 'cmd': '"$EXE" "$FILE"'}),
+    ('pip', {'file': 'requirements.txt', 'cmd': '"$EXE" install --upgrade -r "$FILE"'}),
     ('python', {'file': 'setup.py', 'cmd': '"$EXE" "$FILE"'}),
     ('npm', {'file': 'package.json', 'cmd': '"$EXE" install'}),
     ('bower', {'file': 'bower.json', 'cmd': '"$EXE" install'}),
