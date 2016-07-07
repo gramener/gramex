@@ -1,9 +1,12 @@
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+
 import os
 import shutil
 import requests
 from gramex import conf
 from gramex.install import _ensure_remove
-from six.moves.http_client import OK
+from six.moves.http_client import OK, METHOD_NOT_ALLOWED
 from gramex.handlers.uploadhandler import FileUpload
 from . import server, TestGramex
 
@@ -23,13 +26,19 @@ class TestUploadHandler(TestGramex):
     def test_upload(self):
         self.path = conf.url['upload'].kwargs.path
         url = conf.url['upload'].pattern
-        assert os.path.isfile(os.path.join(self.path, '.meta.h5'))
-        self.upload(url, {})
-        self.upload(url, {'text': open('config.a.yaml')}, ['config.a.yaml'])
-        self.upload(url, {'nopk': open('config.b.yaml')})
-        self.upload(url, {'image': open('config.a.yaml')}, ['config.a.1.yaml'])
-        self.upload(url, {'image': open('config.a.yaml'), 'text': open('config.b.yaml')},
-                    ['config.a.2.yaml', 'config.b.yaml'])
+
+        self.assertTrue(os.path.isfile(os.path.join(self.path, '.meta.h5')))
+        self.assertEqual(requests.get(server.base_url + url).status_code, METHOD_NOT_ALLOWED)
+        tests = [
+            {'files': {}},
+            {'files': {'text': open('config.a.yaml')}, 'keys': ['config.a.yaml']},
+            {'files': {'nopk': open('config.b.yaml')}},
+            {'files': {'image': open('config.a.yaml')}, 'keys': ['config.a.1.yaml']},
+            {'files': {'image': open('config.a.yaml'), 'text': open('config.b.yaml')},
+             'keys': ['config.a.2.yaml', 'config.b.yaml']},
+            {'files': {'unknown': ('file.csv', 'some,λ\nanother,λ\n')}, 'keys': ['file.csv']}]
+        for test in tests:
+            self.upload(url, **test)
 
         FileUpload(self.path).store.close()
         if os.path.exists(self.path):
