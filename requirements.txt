@@ -29,3 +29,4 @@ markdown            # For Markdown transfroms
 PyMySQL             # For MySQL connections
 ipdb                # For debugging
 textblob            # For Gramex Guide TwitterRESTHandler example
+pyodbc              # For database connections
