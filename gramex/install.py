@@ -19,16 +19,25 @@ install: |
     cmd is a shell command to run. If it has the word "TARGET" in caps, it is
     replaced by the target directory.
 
-    After installation, Gramex runs the following commands if possible:
-        - make
-        - powershell -File setup.ps1
-        - bash setup.sh
-        - python setup.py
-        - npm install
-        - bower install
+    After installation, runs "gramex setup" which runs the Makefile, setup.ps1,
+    setup.sh, requirements.txt, setup.py, npm install and bower install.
 
     Installed apps:
     {apps}
+
+setup: |
+    usage: gramex setup [--target=DIR]
+
+    target is the directory to set up (defaults to current directory.)
+
+    Run the following commands at that directory in sequence, if possible:
+        - make
+        - powershell -File setup.ps1
+        - bash setup.sh
+        - pip install --upgrade -r requirements.txt
+        - python setup.py
+        - npm install
+        - bower install
 
 run: |
     usage: gramex run <app> [--target=DIR] [--dir=DIR] [--<options>=<value>]
@@ -328,6 +337,13 @@ def install(cmd, args):
     app_config['installed'] = {'time': datetime.datetime.utcnow()}
     save_user_config(appname, app_config)
     app_log.info('Installed. Run `gramex run %s`', appname)
+
+
+def setup(cmd, args):
+    app_config = AttrDict(args)
+    app_config.setdefault('target', os.getcwd())
+    app_config.target = os.path.abspath(app_config.target)
+    run_setup(app_config)
 
 
 def uninstall(cmd, args):

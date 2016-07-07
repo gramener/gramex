@@ -44,7 +44,13 @@ The `--cmd="..."` command is run as is, with the target app directory added at t
     :::shell
     gramex install g --cmd="git clone git@code.gramener.com/s.anand/g.git TARGET"
 
-After unzipping / copying, it runs a setup script from that directory in this order:
+Gramex also updates an `apps.yaml` file in the Gramex app directory capturing details about the installation (allowing you to uninstall the application.)
+
+Currently, installing an application will delete everything in the target folder. This behaviour may change in the future.
+
+## Setting up apps
+
+After installing an app, Gramex automatically runs setup scripts from that directory in this order:
 
 - If `Makefile` is present, run `make` if make is available
 - If `setup.ps1` is present, run `powershell -File setup.ps1` if PowerShell is available (Windows)
@@ -54,9 +60,7 @@ After unzipping / copying, it runs a setup script from that directory in this or
 - If `package.json` is present, run `npm install` if npm is available
 - If `bower.json` is present, run `bower install` if bower is available
 
-Gramex also updates an `apps.yaml` file in the Gramex app directory capturing details about the installation (allowing you to uninstall the application.)
-
-Currently, installing an application will delete everything in the target folder. This behaviour may change in the future.
+You can also set up an app "in-place" by running `gramex setup` from that directory, or by running `gramex setup --target=DIR` from any other directory.
 
 ## Running apps
 
