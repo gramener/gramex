@@ -214,6 +214,7 @@ def run_command(config):
         return
     proc = Popen(appcmd, bufsize=-1, stdout=sys.stdout, stderr=sys.stderr)
     proc.communicate()
+    return proc.returncode
 
 
 setup_paths = AttrDict((
@@ -327,7 +328,10 @@ def install(cmd, args):
     elif 'url' in app_config:
         download_zip(app_config)
     elif 'cmd' in app_config:
-        run_command(app_config)
+        returncode = run_command(app_config)
+        if returncode != 0:
+            app_log.error('Command failed with return code %d. Aborting installation', returncode)
+            return
     else:
         app_log.error('Use --url=... or --cmd=... to specific source of %s', appname)
         return
