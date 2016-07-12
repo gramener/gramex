@@ -22,12 +22,12 @@ The `DataHandler` below exposes the flags table in `database.sqlite3` at the URL
       pattern: /$YAMLURL/flags                # The URL /datastore/flags
       handler: DataHandler                    # uses DataHandler
       kwargs:
-        driver: blaze                         # with blaze or sqlalchemy driver
-        url: sqlite:///$YAMLPATH/database.sqlite3     # to connect database at this path/url
-        table: flags                          # on this table
-        parameters: {encoding: utf8}          # with additional parameters provided
-        default:
-          format: html                        # Can also be json or csv
+          driver: blaze                               # with blaze or sqlalchemy driver
+          url: sqlite:///$YAMLPATH/database.sqlite3   # to connect database at this path/url
+          table: flags                                # on this table
+          parameters: {encoding: utf8}                # with additional parameters provided
+          default:
+              format: html                            # Can also be json or csv
 
 Once we have this setup, we can query the data with a combination of parameters like `select`, `where`, `groupby`, `agg`, `offset`, `limit`, `sort`
 
@@ -43,6 +43,26 @@ Once we have this setup, we can query the data with a combination of parameters 
 Examples:
 
 - [?groupby=Continent&agg=count:nunique(Name)&agg=shapes:count(Shapes)&sort=count:desc](flags?groupby=Continent&agg=count:nunique(Name)&agg=shapes:count(Shapes)&sort=count:desc): For every Continent, show the number of unique countries and the numbrr of countries with shapes
+
+Here are some examples of DataHandler ``kwargs`` to connect to databases:
+
+    # MySQL root on localhost
+    kwargs:
+        driver: sqlalchemy
+        url: mysql+pymysql://root@localhost/database
+        table: tablename
+
+    # MySQL user / password on any server
+    kwargs:
+        driver: sqlalchemy
+        url: mysql+pymysql://username:password@servername/database
+        table: tablename
+
+    # PostgreSQL user / password on any server
+    kwargs:
+        driver: sqlalchemy
+        url: postgresql://username:password@servername/database
+        table: tablename
 
 
 ## DataHandler defaults
