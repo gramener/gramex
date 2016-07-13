@@ -4,23 +4,27 @@ import gramex
 import tornado.gen
 from oauthlib import oauth1
 from orderedattrdict import AttrDict
-from gramex.transforms import build_transform
+from six.moves.http_client import OK, NOT_FOUND
+from tornado.web import HTTPError
+from tornado.auth import TwitterMixin
 from tornado.httpclient import AsyncHTTPClient
 from tornado.httputil import url_concat, responses
+from gramex.transforms import build_transform
 from .basehandler import BaseHandler
 
-OK = 200
 NETWORK_TIMEOUT = 599
 custom_responses = {
     NETWORK_TIMEOUT: 'Network Timeout'
 }
 
 
-class TwitterRESTHandler(BaseHandler):
+class TwitterRESTHandler(BaseHandler, TwitterMixin):
     @classmethod
     def setup(cls, transform={}, methods=['post'], **kwargs):
         super(TwitterRESTHandler, cls).setup(**kwargs)
 
+        # Twitter user information is stored in
+        cls.twitter_info = 'user.twitter'
         cls.transform = []
         if 'function' in transform:
             cls.transform.append(build_transform(transform, vars=AttrDict(content=None),
@@ -35,7 +39,16 @@ class TwitterRESTHandler(BaseHandler):
     @tornado.gen.coroutine
     def run(self, path=None):
         args = {key: self.get_argument(key) for key in self.request.arguments}
-        params = self.conf.kwargs
+        params = AttrDict(self.conf.kwargs)
+        # update params with session parameters
+        if any(k not in params for k in ('access_token', 'access_token_secret')):
+            info = self.session.get(self.twitter_info, {})
+            if info:
+                params['access_token'] = info['access_token']['key']
+                params['access_token_secret'] = info['access_token']['secret']
+            else:
+                raise HTTPError(NOT_FOUND, 'access_token missing')
+
         client = oauth1.Client(
             params.consumer_key,
             client_secret=params.consumer_secret,
@@ -75,3 +88,17 @@ class TwitterRESTHandler(BaseHandler):
             for value in transform(result):
                 result = value
         return result
+
+    @tornado.gen.coroutine
+    def get(self, path=None):
+        if self.get_argument('oauth_token', None):
+            self.session[self.twitter_info] = yield self.get_authenticated_user()
+            self.redirect_next()
+        else:
+            self.save_redirect_page()
+            yield self.authorize_redirect(callback_uri=self.request.protocol + "://" +
+                                          self.request.host + self.request.uri)
+
+    def _oauth_consumer_token(self):
+        return dict(key=self.conf.kwargs['consumer_key'],
+                    secret=self.conf.kwargs['consumer_secret'])

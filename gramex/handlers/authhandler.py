@@ -66,12 +66,14 @@ class AuthHandler(BaseHandler):
 
 class LogoutHandler(AuthHandler):
     def get(self):
-        self.save_redirect_page()
+        if self.redirects:
+            self.save_redirect_page()
         for callback in self.actions:
             callback(self)
         self.session.pop('user', None)
-        self.redirect_next()
         self.log_user_event(event='logout')
+        if self.redirects:
+            self.redirect_next()
 
 
 class GoogleAuth(AuthHandler, GoogleOAuth2Mixin):
@@ -147,7 +149,8 @@ class TwitterAuth(AuthHandler, TwitterMixin):
             self.redirect_next()
         else:
             self.save_redirect_page()
-            yield self.authenticate_redirect()
+            yield self.authenticate_redirect(callback_uri=self.request.protocol + "://" +
+                                             self.request.host + self.request.uri)
 
     def _oauth_consumer_token(self):
         return dict(key=self.conf.kwargs['key'], secret=self.conf.kwargs['secret'])
