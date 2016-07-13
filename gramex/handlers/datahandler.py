@@ -238,8 +238,8 @@ class DataHandler(BaseHandler):
         bzcon = bz.Data(self.params['url'] +
                         ('::' + self.params['table'] if self.params.get('table') else ''),
                         **parameters)
-        table = bz.TableSymbol('table', bzcon.dshape)
-        columns = table.columns
+        table = bz.Symbol('table', bzcon.dshape)
+        columns = table.fields
         query = table
 
         if _wheres:
