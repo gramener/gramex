@@ -21,6 +21,11 @@ class TestUploadHandler(TestGramex):
         for key, rjs in zip(keys, json):
             self.assertTrue(os.path.isfile(os.path.join(self.path, key)))
             self.assertEqual(rjs['file'], key)
+        if data:
+            for val in json:
+                self.assertEqual(val['status'], 'pass')
+                self.assertEqual(val['key'], data['rm'])
+                self.assertFalse(os.path.isfile(os.path.join(self.path, data['rm'])))
         return r
 
     def test_upload(self):
@@ -37,7 +42,8 @@ class TestUploadHandler(TestGramex):
             {'files': {'image': open('config.a.yaml'), 'text': open('config.b.yaml')},
              'keys': ['config.a.2.yaml', 'config.b.yaml']},
             {'files': {'unknown': ('file.csv', 'some,λ\nanother,λ\n')}, 'keys': ['file.csv']},
-            {'files': {'unknown': ('file', 'noextensionfile')}, 'keys': ['file']}]
+            {'files': {'unknown': ('file', 'noextensionfile')}, 'keys': ['file']},
+            {'files': {}, 'data': {'rm': 'file'}}]
         # requests fails for unicode filename :: RFC 7578 and nofilenames
         for test in tests:
             self.upload(url, **test)

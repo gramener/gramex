@@ -38,9 +38,9 @@ class TwitterRESTHandler(BaseHandler, TwitterMixin):
     def run(self, path):
         args = {key: self.get_argument(key) for key in self.request.arguments}
         params = self.conf.kwargs
-        info = self.session.get('twitter_info', {})
-        # update params with session parameters if any
-        if not all(k in params for k in ('access_token', 'access_token_secret')):
+        # update params with session parameters
+        if any(k not in params for k in ('access_token', 'access_token_secret')):
+            info = self.session.get('twitter_info', {})
             if info:
                 params.update(info)
             else:
