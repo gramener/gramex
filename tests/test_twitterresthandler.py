@@ -27,7 +27,7 @@ class TestTwitterRESTHandler(TestGramex):
             'timeline': {'path': 'statuses/user_timeline.json', 'data': tweets},
             'get-ok': {'method': 'get', 'url': '/api/twitter-get/', 'path': 'search/tweets.json',
                        'data': search},
-            'get-fail': {'method': 'get', 'path': 'search/tweets.json', 'data': search},
+            'get-redirect': {'method': 'get', 'path': 'search/tweets.json', 'data': search},
             'post-fail': {'method': 'post', 'url': '/api/twitter-get/',
                           'path': 'search/tweets.json', 'data': search},
         }
@@ -54,5 +54,5 @@ class TestTwitterRESTHandler(TestGramex):
                 self.assertEqual(len(result), 2)
                 self.assertEqual(result[0]['user']['screen_name'].lower(), 'gramener')
 
-        self.assertEqual(response['get-fail'].status_code, METHOD_NOT_ALLOWED)
+        self.assertEqual(response['get-redirect'].status_code, OK)
         self.assertEqual(response['post-fail'].status_code, METHOD_NOT_ALLOWED)
