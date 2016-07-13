@@ -14,18 +14,21 @@ MILLISECONDS = 1000
 class FileUpload(object):
     stores = {}
 
-    def __init__(self, path, keys='file', **kwargs):
+    def __init__(self, path, keys={'file': ['file']}, **kwargs):
         self.path = os.path.abspath(path)
         if not os.path.exists(self.path):
             os.makedirs(self.path)
         if self.path not in self.stores:
             self.stores[self.path] = HDF5Store(os.path.join(self.path, '.meta.h5'))
         self.store = self.stores[self.path]
-        self.keys = keys if isinstance(keys, list) else [keys]
+        self.keys = keys
+        if 'file' not in keys:
+            keys['file'] = ['file']
+        self.keys['file'] = keys['file'] if isinstance(keys['file'], list) else [keys['file']]
 
     def addfiles(self, handler, *args, **kwargs):
         filemetas = []
-        for key in self.keys:
+        for key in self.keys['file']:
             for upload in handler.request.files.get(key, []):
                 original_name = upload.get('filename', None)
                 filepath = self.uniq_filename(original_name)
@@ -50,6 +53,19 @@ class FileUpload(object):
                 filemetas.append(filemeta)
         return filemetas
 
+    def deletefiles(self, keys):
+        status = []
+        for key in keys:
+            stat = {'status': 'fail', 'key': key}
+            if key in self.store.store:
+                path = os.path.join(self.path, key)
+                if os.path.exists(path):
+                    os.remove(path)
+                    del self.store.store[key]
+                    stat['status'] = 'pass'
+            status.append(stat)
+        return status
+
     def uniq_filename(self, filename):
         # TODO: what if filename is nonexistent, i.e. None or ''
         name, ext = os.path.splitext(filename)
@@ -65,7 +81,7 @@ class FileUpload(object):
 
 class UploadHandler(BaseHandler):
     @classmethod
-    def setup(cls, path, keys='file', transform={}, methods=[], **kwargs):
+    def setup(cls, path, keys={'file': ['file']}, transform={}, methods=[], **kwargs):
         super(UploadHandler, cls).setup(**kwargs)
         cls.uploader = FileUpload(path, keys=keys)
 
@@ -91,6 +107,10 @@ class UploadHandler(BaseHandler):
     @redirected
     def post(self, *args, **kwargs):
         content = yield gramex.service.threadpool.submit(self.uploader.addfiles, self)
+        delete = self.uploader.keys.get('delete', None)
+        if delete:
+            keys = self.get_arguments(delete)
+            content += yield gramex.service.threadpool.submit(self.uploader.deletefiles, keys)
         self.set_header('Content-Type', 'application/json')
         self.write(json.dumps(content, ensure_ascii=True, separators=(',', ':')))
 

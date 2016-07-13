@@ -29,6 +29,9 @@ tests/**/*.test
 # Don't commit databases created by test cases
 tests/*.db
 
+# Don't commit uploads created by test cases
+tests/uploads
+
 # Don't commit ZIP files, except what's required for testing
 *.7z
 *.zip

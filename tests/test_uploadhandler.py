@@ -14,8 +14,8 @@ from . import server, TestGramex
 class TestUploadHandler(TestGramex):
     'Test UploadHandler'
 
-    def upload(self, url, files, keys=[], code=OK):
-        r = requests.post(server.base_url + url, files=files)
+    def upload(self, url, files, keys=[], data={}, code=OK):
+        r = requests.post(server.base_url + url, files=files, data=data)
         self.assertEqual(r.status_code, code, '%s: code %d != %d' % (url, r.status_code, code))
         json = r.json()
         for key, rjs in zip(keys, json):
@@ -36,7 +36,9 @@ class TestUploadHandler(TestGramex):
             {'files': {'image': open('config.a.yaml')}, 'keys': ['config.a.1.yaml']},
             {'files': {'image': open('config.a.yaml'), 'text': open('config.b.yaml')},
              'keys': ['config.a.2.yaml', 'config.b.yaml']},
-            {'files': {'unknown': ('file.csv', 'some,λ\nanother,λ\n')}, 'keys': ['file.csv']}]
+            {'files': {'unknown': ('file.csv', 'some,λ\nanother,λ\n')}, 'keys': ['file.csv']},
+            {'files': {'unknown': ('file', 'noextensionfile')}, 'keys': ['file']}]
+        # requests fails for unicode filename :: RFC 7578 and nofilenames
         for test in tests:
             self.upload(url, **test)
 

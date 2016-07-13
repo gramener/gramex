@@ -779,7 +779,9 @@ url:
     handler: UploadHandler
     kwargs:
       path: $YAMLPATH/uploads
-      keys: [image, text, unknown]
+      keys:
+        file: [image, text, unknown]
+        delete: rm
 
   auth/session:
     pattern: /auth/session
