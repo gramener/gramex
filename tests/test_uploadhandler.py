@@ -18,11 +18,11 @@ class TestUploadHandler(TestGramex):
         r = requests.post(server.base_url + url, files=files, data=data)
         self.assertEqual(r.status_code, code, '%s: code %d != %d' % (url, r.status_code, code))
         json = r.json()
-        for key, rjs in zip(keys, json):
+        for key, rjs in zip(keys, json['upload']):
             self.assertTrue(os.path.isfile(os.path.join(self.path, key)))
             self.assertEqual(rjs['file'], key)
         if data:
-            for val in json:
+            for val in json['delete']:
                 self.assertEqual(val['key'], data['rm'])
                 self.assertTrue(val['success'])
                 self.assertFalse(os.path.isfile(os.path.join(self.path, data['rm'])))

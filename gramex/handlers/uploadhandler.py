@@ -6,7 +6,7 @@ import mimetypes
 import tornado.gen
 from orderedattrdict import AttrDict
 from gramex.transforms import build_transform
-from .basehandler import BaseHandler, HDF5Store, redirected
+from .basehandler import BaseHandler, HDF5Store
 
 MILLISECONDS = 1000
 
@@ -14,7 +14,9 @@ MILLISECONDS = 1000
 class FileUpload(object):
     stores = {}
 
-    def __init__(self, path, keys={'file': ['file']}, **kwargs):
+    def __init__(self, path, keys=None, **kwargs):
+        if keys is None:
+            keys = {'file': ['file'], 'delete': ['delete']}
         self.path = os.path.abspath(path)
         if not os.path.exists(self.path):
             os.makedirs(self.path)
@@ -26,9 +28,9 @@ class FileUpload(object):
             keys['file'] = ['file']
         self.keys['file'] = keys['file'] if isinstance(keys['file'], list) else [keys['file']]
 
-    def addfiles(self, handler, *args, **kwargs):
+    def addfiles(self, handler):
         filemetas = []
-        for key in self.keys['file']:
+        for key in self.keys.get('file', []):
             for upload in handler.request.files.get(key, []):
                 original_name = upload.get('filename', None)
                 filepath = self.uniq_filename(original_name)
@@ -53,17 +55,18 @@ class FileUpload(object):
                 filemetas.append(filemeta)
         return filemetas
 
-    def deletefiles(self, keys):
+    def deletefiles(self, handler):
         status = []
-        for key in keys:
-            stat = {'success': False, 'key': key}
-            if key in self.store.store:
-                path = os.path.join(self.path, key)
-                if os.path.exists(path):
-                    os.remove(path)
-                    del self.store.store[key]
-                    stat['success'] = True
-            status.append(stat)
+        for delete_key in self.keys.get('delete', []):
+            for key in handler.get_arguments(delete_key):
+                stat = {'success': False, 'key': key}
+                if key in self.store.store:
+                    path = os.path.join(self.path, key)
+                    if os.path.exists(path):
+                        os.remove(path)
+                        del self.store.store[key]
+                        stat['success'] = True
+                status.append(stat)
         return status
 
     def uniq_filename(self, filename):
@@ -81,7 +84,7 @@ class FileUpload(object):
 
 class UploadHandler(BaseHandler):
     @classmethod
-    def setup(cls, path, keys={'file': ['file']}, transform={}, methods=[], **kwargs):
+    def setup(cls, path, keys=None, transform={}, methods=[], **kwargs):
         super(UploadHandler, cls).setup(**kwargs)
         cls.uploader = FileUpload(path, keys=keys)
 
@@ -104,15 +107,16 @@ class UploadHandler(BaseHandler):
         self.write(json.dumps({k: store.load(k) for k in store.keys()}, indent=2))
 
     @tornado.gen.coroutine
-    @redirected
     def post(self, *args, **kwargs):
-        content = yield gramex.service.threadpool.submit(self.uploader.addfiles, self)
-        delete = self.uploader.keys.get('delete', None)
-        if delete:
-            keys = self.get_arguments(delete)
-            content += yield gramex.service.threadpool.submit(self.uploader.deletefiles, keys)
+        if self.redirects:
+            self.save_redirect_page()
+        upload = yield gramex.service.threadpool.submit(self.uploader.addfiles, self)
+        delete = yield gramex.service.threadpool.submit(self.uploader.deletefiles, self)
         self.set_header('Content-Type', 'application/json')
-        self.write(json.dumps(content, ensure_ascii=True, separators=(',', ':')))
+        self.write(json.dumps({'upload': upload, 'delete': delete},
+                              ensure_ascii=True, separators=(',', ':')))
+        if self.redirects:
+            self.redirect_next()
 
     def transforms(self, content):
         for transform in self.transform:
