@@ -1,0 +1,2 @@
+# Install this module to test if modules in requirements.txt are installed
+dicttoxml >= 1.7.3        # released on 14 Jun 2016

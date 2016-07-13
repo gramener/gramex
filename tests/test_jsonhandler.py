@@ -7,8 +7,9 @@ import shutil
 import requests
 from gramex import conf
 from gramex.install import _ensure_remove
-from six.moves.http_client import OK
 from . import server, tempfiles, TestGramex
+
+OK = 200
 
 
 def dump(data):

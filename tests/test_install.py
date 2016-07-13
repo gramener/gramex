@@ -1,4 +1,5 @@
 import os
+import pip
 import requests
 import unittest
 from pathlib import Path
@@ -32,6 +33,7 @@ class MockGramex(object):
 class TestInstall(unittest.TestCase):
     zip_url = urljoin(server.base_url, 'install-test.zip')
     zip_file = os.path.join(folder, 'install-test.zip')
+    install_path = os.path.join(folder, 'dir', 'install')
 
     @staticmethod
     def appdir(appname):
@@ -146,14 +148,14 @@ class TestInstall(unittest.TestCase):
         self.check_uninstall('git-url')
 
     def test_setup(self):
-        dirpath = os.path.join(folder, 'dir', 'install')
-        install(['setup'], AttrDict(url=dirpath))
+        pip.main(['uninstall', '-y', '-r', os.path.join(self.install_path, 'requirements.txt')])
+        install(['setup'], AttrDict(url=self.install_path))
 
         result = set()
-        for root, dirs, files in os.walk(dirpath):
+        for root, dirs, files in os.walk(self.install_path):
             for filename in files:
                 path = os.path.join(root, filename)
-                result.add(os.path.relpath(path, dirpath))
+                result.add(os.path.relpath(path, self.install_path))
 
         if which('powershell'):
             result.add('powershell-setup.txt')
@@ -170,5 +172,11 @@ class TestInstall(unittest.TestCase):
             result.add('bower_components/gramex-bower-package/bower.json')
             result.add('bower_components/gramex-bower-package/bower-setup.txt')
             result.add('bower_components/gramex-bower-package/.bower.json')
+        if which('pip'):
+            import dicttoxml
         self.check_files('setup', result)
         self.check_uninstall('setup')
+
+
+def tearDown():
+    pip.main(['uninstall', '-y', '-r', os.path.join(TestInstall.install_path, 'requirements.txt')])

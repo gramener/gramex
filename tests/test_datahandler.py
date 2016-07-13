@@ -7,9 +7,10 @@ import sqlalchemy as sa
 from pathlib import Path
 import pandas.util.testing as pdt
 from nose.plugins.skip import SkipTest
-from six.moves.http_client import OK, NOT_FOUND, INTERNAL_SERVER_ERROR
 from . import server, TestGramex
 import gramex.config
+
+OK, NOT_FOUND, INTERNAL_SERVER_ERROR = 200, 404, 500
 
 
 class DataHandlerTestMixin(object):

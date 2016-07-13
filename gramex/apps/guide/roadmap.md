@@ -8,23 +8,19 @@ information about past releases.
 Features for the next 2 releases are below. Bugs to be fixed are at the
 [issue tracker](http://code.gramener.com/s.anand/gramex/issues).
 
+## 1.11 (11 Jul 2016): Data entry
 
-## Release 1.0.9 (15 Jun 2016): Data load & Auth
-
-- Connectors for multiple databases, relational and non-relational
 - Data discovery and metadata explorer
 - Data table display
 - Visual filtering of data
-- Integration with ActiveDirectory, OAuth
-
-## 1.0.10 (1 Jul 2016): Data entry
-
+- Form-based data entry
 - Data uploads and management
 - Excel / CSV upload for data entry, with conflict management
-- Form-based data entry
-- Auto annotations (like [teletext.io](https://teletext.io/help/get-started))
+- Editable text annotations (like [teletext.io](https://teletext.io/help/get-started))
 
-## 1.0.11 (15 Jul 2016): 
+## 1.12 (21 Jul 2016): Charts
+
+- D3 charts that support core requirements
 
 
 # Features

@@ -5,11 +5,11 @@ import pathlib
 import unittest
 import gramex.config
 import gramex.services
-from six.moves import http_client
 from orderedattrdict import AttrDict
 from . import TestGramex, tempfiles
 from gramex.services.urlcache import ignore_headers, MemoryCache, DiskCache
 
+OK, NOT_FOUND = 200, 404
 info = AttrDict()
 
 
@@ -50,12 +50,12 @@ class TestCacheFunctionHandler(TestGramex):
         return {name: r.headers[name] for name in r.headers if name not in ignore_headers}
 
     def eq(self, r1, r2):
-        self.assertTrue(r1.status_code == r2.status_code == http_client.OK)
+        self.assertTrue(r1.status_code == r2.status_code == OK)
         self.assertDictEqual(self.headers(r1), self.headers(r2))
         self.assertEqual(r1.text, r2.text)
 
     def ne(self, r1, r2):
-        self.assertTrue(r1.status_code == r2.status_code == http_client.OK)
+        self.assertTrue(r1.status_code == r2.status_code == OK)
         self.assertNotEqual(r1.text, r2.text)
 
     def test_cache_key(self):
@@ -108,14 +108,14 @@ class TestCacheFileHandler(TestGramex):
 
         def check_value(content):
             r = self.get(u'/cache/filehandler/%s' % self.filename)
-            self.assertEqual(r.status_code, http_client.OK)
+            self.assertEqual(r.status_code, OK)
             self.assertEqual(r.content, content)
 
         # # Delete the file. The initial response should be a 404
         if os.path.exists(cache_file):
             os.unlink(cache_file)
         r = self.get(u'/cache/filehandler/%s' % self.filename)
-        self.assertEqual(r.status_code, http_client.NOT_FOUND)
+        self.assertEqual(r.status_code, NOT_FOUND)
 
         # Create the file. The response should be what we write
         with open(cache_file, 'wb') as handle:
@@ -139,10 +139,10 @@ class TestCacheFileHandler(TestGramex):
         if os.path.exists(cache_file):
             os.unlink(cache_file)
         r = self.get(u'/cache/filehandler-error/%s' % self.filename)
-        self.assertEqual(r.status_code, http_client.NOT_FOUND)
+        self.assertEqual(r.status_code, NOT_FOUND)
 
         # Create the file. The response should be cached as 404
         with open(cache_file, 'wb') as handle:
             handle.write(self.content.encode('utf-8'))
         r = self.get(u'/cache/filehandler-error/%s' % self.filename)
-        self.assertEqual(r.status_code, http_client.NOT_FOUND)
+        self.assertEqual(r.status_code, NOT_FOUND)

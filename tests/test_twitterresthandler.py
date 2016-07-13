@@ -1,9 +1,9 @@
 import requests
 import concurrent.futures
-from six.moves.http_client import OK, METHOD_NOT_ALLOWED, BAD_REQUEST
 from gramex.handlers.twitterresthandler import NETWORK_TIMEOUT
 from . import server, TestGramex
 
+OK, METHOD_NOT_ALLOWED, BAD_REQUEST = 200, 405, 400
 threadpool = concurrent.futures.ThreadPoolExecutor(8)
 
 
@@ -36,10 +36,13 @@ class TestTwitterRESTHandler(TestGramex):
         done, not_done = concurrent.futures.wait(futures)
         response = {future.name: future.result() for future in done}
 
-        self.assertEqual(response['bad-request'].status_code, BAD_REQUEST)
-        for key in ('search-url', 'search-body', 'show', 'timeline', 'get-ok'):
+        for key in ('bad-request', 'search-url', 'search-body', 'show', 'timeline', 'get-ok'):
             r = response[key]
+            # Ignore timeouts. These happen quite often
             if r.status_code == NETWORK_TIMEOUT:
+                continue
+            if key == 'bad-request':
+                self.assertEqual(r.status_code, BAD_REQUEST)
                 continue
             self.assertEqual(r.status_code, OK)
             result = r.json()

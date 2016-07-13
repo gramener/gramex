@@ -61,3 +61,93 @@ You can make the parameters non-over-ridable using `query:` instead of `default:
         format: html
     default:
         limit: 10
+
+## Database edits
+
+You can use the `POST`, `PUT` and `DELETE` methods to add, update or delete rows in a database using DataHandler. You need to use [XSRF cookies](../filehandler/#forms) when using these methods.
+
+(The examples below use [jQuery.ajax][jquery-ajax] and the [cookie.js][cookie.js] libraries.)
+
+[jquery-ajax]: http://api.jquery.com/jquery.ajax/
+[cookie.js]: https://github.com/florian/cookie.js
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cookie.js/1.2.0/cookie.min.js"></script>
+
+### DataHandler insert
+
+`POST` creates a new row. You can specify the `val` parameter with one or module `column=value` expressions. For example, this inserts a row with the `Name` column as `United Asian Kingdom` and `ID` of `UAK`:
+
+    :::js
+    var xsrf = {'X-Xsrftoken': cookie.get('_xsrf')}
+    $.ajax('flags', {
+      headers: xsrf,
+      method: 'POST',                     // Add a new rows
+      traditional: true,                  // Required when using $.ajax
+      data: {
+        val: [
+          'Name=United Asian Kingdom',    // Name column is United Asian Kingdom
+          'ID=UAK'                        // ID column is UAK
+        ]
+      }
+    })
+
+### DataHandler update
+
+`PUT` updates existing rows. The `where` parameter selects the rows to be updated. The `val` parameter defines the values to be updated. For example, this updates all rows where the `ID` is `UAK` and sets the `Content` and `Text` columns:
+
+    :::js
+    $.ajax('flags', {
+      headers: xsrf,
+      method: 'PUT',                      // Update one or more rows
+      traditional: true,                  // Required when using $.ajax
+      data: {
+        where: 'ID=UAK',                  // Update the rows where ID is UAK
+        val: [
+          'Continent=Asia',               // Continent column is set to Asia
+          'Text=Mottos'                   // Text column is set to Mottos
+        ]
+      }
+    })
+
+Here is the output of the updated row:
+
+    :::js
+    $.ajax('flags', {
+      headers: xsrf,
+      method: 'GET',
+      data: {where: 'ID=UAK'}
+    })
+    // OUTPUT
+
+### DataHandler delete
+
+`DELETE` deletes existing rows. The `where` parameter selects the rows to be deleted. FOr example, this deletes all rows where the `ID` is `UAK`:
+
+    :::js
+    $.ajax('flags', {
+      headers: xsrf,
+      method: 'DELETE',               // Delete all rows
+      data: {
+        where: 'ID=UAK',              // where the ID column is UAK
+        where: 'Continent=Asia'       // AND the Content column is Asia
+      }
+    })
+
+<script>
+var xsrf = {'X-Xsrftoken': cookie.get('_xsrf')}
+var pre = [].slice.call(document.querySelectorAll('pre'))
+
+function next() {
+  var element = pre.shift()
+  var text = element.textContent
+  if (text.match(/\$.ajax/)) {
+    eval(text)
+      .always(function(result) {
+        element.innerHTML = element.innerHTML.replace(/OUTPUT/, 'OUTPUT<br>' + result)
+        if (pre.length > 0) next()
+      })
+  }
+  else if (pre.length > 0) next()
+}
+next()
+</script>

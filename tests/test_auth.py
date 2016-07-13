@@ -6,10 +6,11 @@ import lxml.html
 import pandas as pd
 import sqlalchemy as sa
 from nose.plugins.skip import SkipTest
-from six.moves.http_client import OK, UNAUTHORIZED
 import gramex.config
 from . import TestGramex
 from . import server
+
+OK, UNAUTHORIZED = 200, 401
 
 
 class TestSession(TestGramex):

@@ -7,11 +7,11 @@ import sqlalchemy as sa
 import gramex
 from tornado.web import HTTPError
 from orderedattrdict import AttrDict
-from six.moves.http_client import NOT_FOUND
 from gramex.transforms import build_transform
 from .basehandler import BaseHandler
 
 drivers = {}
+NOT_FOUND = 404
 
 
 class DataHandler(BaseHandler):
