@@ -101,10 +101,10 @@ url:
         pattern: /$YAMLURL/db
         handler: DBAuth
         kwargs:
-            template: $YAMLPATH/db.html
             # This is created by schedule.create-user-database
             url: $USER_DATABASE_URL
             table: $USER_DATABASE_TABLE
+            template: $YAMLPATH/db.html
             user:
                 column: $USER_DATABASE_USERCOLUMN
                 arg: user

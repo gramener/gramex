@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login</title>
+</head>
+<body>
+  <h1>Login</h1>
+
+  {% if error %}
+    <div class="alert">
+      <h2>Error logging in</h2>
+      <p><strong>code</strong> {{ error['code'] }}</p>
+      <p><strong>error</strong> {{ error['error'] }}</p>
+    </div>
+  {% end %}
+
+  {% set kwargs = handler.conf.kwargs %}
+  {% try %}{% set user = kwargs.user.arg %}{% except %}{% set user = 'user' %}{% end %}
+  {% try %}{% set password = kwargs.password.arg %}{% except %}{% set password = 'password' %}{% end %}
+  <form method="POST">
+    <input type="hidden" name="_xsrf" value="{{ handler.xsrf_token }}">
+    <p>
+      <label for="{{ user }}">Username</label>
+      <input name="{{ user }}" placeholder="Username">
+    </p>
+    <p>
+      <label for="{{ password }}">Password</label>
+      <input name="{{ password }}" type="password" placeholder="Password">
+    </p>
+    <button type="submit">Log in</button>
+  </form>
+</body>
+</html>

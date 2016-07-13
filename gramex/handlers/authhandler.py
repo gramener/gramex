@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 import io
+import os
 import csv
 import six
 import logging
@@ -13,6 +14,9 @@ import gramex
 from gramex.config import check_old_certs, app_log, objectpath
 from gramex.transforms import build_transform
 from .basehandler import BaseHandler
+
+_auth_template = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                              'auth.template.html')
 
 
 def csv_encode(values, *args, **kwargs):
@@ -157,9 +161,14 @@ class TwitterAuth(AuthHandler, TwitterMixin):
 
 
 class LDAPAuth(AuthHandler):
+    @classmethod
+    def setup(cls, **kwargs):
+        super(LDAPAuth, cls).setup(**kwargs)
+        cls.template = kwargs.get('template', _auth_template)
+
     def get(self):
         self.save_redirect_page()
-        self.render(self.conf.kwargs.template, error=None)
+        self.render(self.template, error=None)
 
     errors = {
         'conn': 'Connection error at {host}',
@@ -172,7 +181,7 @@ class LDAPAuth(AuthHandler):
         app_log.error('LDAP: ' + error, exc_info=exc_info)
         self.set_status(status_code=401)
         self.set_header('Auth-Error', code)
-        self.render(self.conf.kwargs.template, error={'code': code, 'error': error})
+        self.render(self.template, error={'code': code, 'error': error})
         raise tornado.gen.Return()
 
     @tornado.gen.coroutine
@@ -216,13 +225,41 @@ class DBAuth(AuthHandler):
     Tornado template that is passed an ``error`` variable. ``error`` is ``None``
     by default. If the login fails, it must be a ``dict`` with attributes
     specific to the handler.
+
+    The configuration (``kwargs``) for DBAuth looks like this::
+
+        template: $YAMLPATH/auth.template.html  # Render the login form template
+        url: sqlite:///$YAMLPATH/auth.db    # Pick up list of users from this sqlalchemy URL
+        table: users                        # ... and this table
+        user:
+            column: user                    # The users.user column is matched with
+            arg: user                       # ... the ?user= argument from the form
+        password:
+            column: password                # The users.password column is matched with
+            arg: password                   # ... the ?password= argument from the form
+            function: passlib.hash.sha256_crypt.encrypt         # Encryption function
+            kwargs: {salt: 'secret-key'}                        # Salt key
+        forgot:
+            arg: forgot                     # ?forgot= is used as the forgot password parameter
+            template: $YAMLPATH/forgot.html # Forgot password template
+            minutes_to_expiry: 15           # Minutes after which the link will expire
+            email_column: user              # Database table column with email ID
+
+    The login flow is as follows:
+
+    1. User visits the DBAuth page => shows template (with the user name and password inputs)
+    2. User enters user name and password, and submits. Browser redirects with a POST request
+    3. Application checks username and password. On match, redirects.
+    4. On any error, shows template (with error)
     '''
     @classmethod
     def setup(cls, url, table, user, password, **kwargs):
         super(DBAuth, cls).setup(**kwargs)
         from sqlalchemy import create_engine
         cls.user, cls.password, cls.tablename = user, password, table
+        cls.forgot = kwargs.pop('forgot', None)
         cls.engine = create_engine(url, **kwargs.get('parameters', {}))
+        cls.template = kwargs.get('template', _auth_template)
         cls.encrypt = []
         if 'function' in password:
             cls.encrypt.append(build_transform(
@@ -239,7 +276,7 @@ class DBAuth(AuthHandler):
 
     def get(self):
         self.save_redirect_page()
-        self.render(self.conf.kwargs.template, error=None)
+        self.render(self.template, error=None)
 
     @tornado.gen.coroutine
     def post(self):
@@ -271,7 +308,7 @@ class DBAuth(AuthHandler):
             self.redirect_next()
         else:
             self.set_status(status_code=401)
-            self.render(self.conf.kwargs.template, error={
+            self.render(self.template, error={
                 'code': 'auth',
                 'error': 'Cannot log in'
             })
