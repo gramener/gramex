@@ -56,13 +56,13 @@ class FileUpload(object):
     def deletefiles(self, keys):
         status = []
         for key in keys:
-            stat = {'status': 'fail', 'key': key}
+            stat = {'success': False, 'key': key}
             if key in self.store.store:
                 path = os.path.join(self.path, key)
                 if os.path.exists(path):
                     os.remove(path)
                     del self.store.store[key]
-                    stat['status'] = 'pass'
+                    stat['success'] = True
             status.append(stat)
         return status
 

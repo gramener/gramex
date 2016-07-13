@@ -23,6 +23,8 @@ class TwitterRESTHandler(BaseHandler, TwitterMixin):
     def setup(cls, transform={}, methods=['post'], **kwargs):
         super(TwitterRESTHandler, cls).setup(**kwargs)
 
+        # Twitter user information is stored in
+        cls.twitter_info = 'user.twitter'
         cls.transform = []
         if 'function' in transform:
             cls.transform.append(build_transform(transform, vars=AttrDict(content=None),
@@ -37,14 +39,15 @@ class TwitterRESTHandler(BaseHandler, TwitterMixin):
     @tornado.gen.coroutine
     def run(self, path=None):
         args = {key: self.get_argument(key) for key in self.request.arguments}
-        params = self.conf.kwargs
+        params = AttrDict(self.conf.kwargs)
         # update params with session parameters
         if any(k not in params for k in ('access_token', 'access_token_secret')):
-            info = self.session.get('twitter_info', {})
+            info = self.session.get(self.twitter_info, {})
             if info:
-                params.update(info)
+                params['access_token'] = info['access_token']['key']
+                params['access_token_secret'] = info['access_token']['secret']
             else:
-                raise HTTPError(NOT_FOUND, log_message='access_token missing')
+                raise HTTPError(NOT_FOUND, 'access_token missing')
 
         client = oauth1.Client(
             params.consumer_key,
@@ -87,21 +90,14 @@ class TwitterRESTHandler(BaseHandler, TwitterMixin):
         return result
 
     @tornado.gen.coroutine
-    def get(self, path):
+    def get(self, path=None):
         if self.get_argument('oauth_token', None):
-            info = yield self.get_authenticated_user()
-            info['access_token'].update({
-                'consumer_key': self.conf.kwargs['consumer_key'],
-                'consumer_secret': self.conf.kwargs['consumer_secret'],
-                'access_token': info['access_token']['key'],
-                'access_token_secret': info['access_token']['secret']})
-            # Store the information in the session, for now.
-            # Later, gramex.yaml can define where to store it Perhaps as a function
-            self.session['twitter_info'] = info['access_token']
+            self.session[self.twitter_info] = yield self.get_authenticated_user()
             self.redirect_next()
         else:
             self.save_redirect_page()
-            yield self.authorize_redirect()
+            yield self.authorize_redirect(callback_uri=self.request.protocol + "://" +
+                                          self.request.host + self.request.uri)
 
     def _oauth_consumer_token(self):
         return dict(key=self.conf.kwargs['consumer_key'],
