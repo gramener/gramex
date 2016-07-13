@@ -12,7 +12,6 @@ from tornado.httputil import url_concat, responses
 from gramex.transforms import build_transform
 from .basehandler import BaseHandler
 
-OK = 200
 NETWORK_TIMEOUT = 599
 custom_responses = {
     NETWORK_TIMEOUT: 'Network Timeout'
