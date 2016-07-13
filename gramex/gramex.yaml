@@ -27,7 +27,7 @@ cache:
 handlers:
     BaseHandler:
         log:
-            format: '%(status)d %(method)s %(uri)s (%(ip)s) %(duration).1fms %(user)s'
+            format: '%(status)d %(method)s %(uri)s (%(ip)s) %(duration).1fms'
 
     FileHandler:
         ignore:
