@@ -23,8 +23,8 @@ class TestUploadHandler(TestGramex):
             self.assertEqual(rjs['file'], key)
         if data:
             for val in json:
-                self.assertEqual(val['status'], 'pass')
                 self.assertEqual(val['key'], data['rm'])
+                self.assertTrue(val['success'])
                 self.assertFalse(os.path.isfile(os.path.join(self.path, data['rm'])))
         return r
 
