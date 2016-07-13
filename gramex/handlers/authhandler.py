@@ -146,7 +146,8 @@ class TwitterAuth(AuthHandler, TwitterMixin):
             self.redirect_next()
         else:
             self.save_redirect_page()
-            yield self.authenticate_redirect()
+            yield self.authenticate_redirect(callback_uri=self.request.protocol + "://" +
+                                             self.request.host + self.request.uri)
 
     def _oauth_consumer_token(self):
         return dict(key=self.conf.kwargs['key'], secret=self.conf.kwargs['secret'])
