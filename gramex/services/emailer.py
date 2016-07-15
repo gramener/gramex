@@ -1,5 +1,4 @@
 import smtplib
-import tornado.gen
 from email import encoders
 from mimetypes import guess_type
 from email.mime.multipart import MIMEMultipart
