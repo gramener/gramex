@@ -3,6 +3,29 @@
 History
 -------
 
+1.11 (2016-07-15)
+~~~~~~~~~~~~~~~~~
+
+* A data browser app is ready. Run ``gramex install databrowser`` and then
+  ``gramex run databrowser`` to run it at any time.
+* `UploadHandler`_ allows users to upload and manage files.
+* `TwitterRESTHandler`_ allows end-users to log in and use their own access.
+  tokens. It can also limit the API to just a single method.
+* By default, `TwitterAuth`_ redirects users back to the same URL that initiated
+  the login request.
+* The `email`_ service allows developers to send emails via SMTP services (e.g.
+  GMail, Yahoo, etc.)
+* ``gramex setup`` can be run in any directory to run the `apps`_ setup. It runs
+  ``setup.sh``, ``setup.py``, ``Makefile``, ``npm install``, ``bower install``,
+  etc.
+* If an app has ``requirements.txt``, the `apps`_ setup also runs ``pip install
+  -r requirements.txt``.
+* The ``template:`` config is now optional for `LDAPAuth`_ and `DBAuth`_. A
+  built-in (but minimal) login screen is available by default.
+* The ``redirect:`` config (used by many handlers) supports relative URLs.
+* Gramex's log no longer shows the user name on the console by default. This was
+  making the request logs quite long.
+
 1.10 (2016-07-01)
 ~~~~~~~~~~~~~~~~~
 
@@ -223,6 +246,8 @@ There are two changes that may disrupt your code:
 .. _LogoutHandler: https://learn.gramener.com/guide/auth/#log-out
 .. _LDAPAuth: https://learn.gramener.com/guide/auth/#ldap
 .. _DBAuth: https://learn.gramener.com/guide/auth/#database
+.. _TwitterAuth: https://learn.gramener.com/guide/auth/#twitter-auth
+.. _UploadHandler: https://learn.gramener.com/guide/auth/uploadhandler/
 .. _caching: https://learn.gramener.com/guide/cache/
 .. _scheduler: https://learn.gramener.com/guide/scheduler/
 .. _log: https://learn.gramener.com/guide/config/#logging
@@ -235,3 +260,4 @@ There are two changes that may disrupt your code:
 .. _Gramex update page: https://gramener.com/gramex-update/
 .. _ignore files: https://learn.gramener.com/guide/filehandler/#ignore-files
 .. _auth redirection: https://learn.gramener.com/guide/auth/#redirection
+.. _email: https://learn.gramener.com/guide/email/

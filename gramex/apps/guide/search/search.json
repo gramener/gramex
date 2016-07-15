@@ -224,6 +224,11 @@
       "Using relative URLs": -1
     }
   },
+  "email": {
+    "": {
+      "Send email": -1
+    }
+  },
   "filehandler": {
     "": {
       "Gramex renders files": -1
@@ -368,12 +373,13 @@
     "": {
       "Gramex handles file uploads": -1
     },
+    "upload-arguments": {
+      "Upload arguments": -1
+    },
     "upload-deletion": {
       "Upload deletion": -1
     },
-    "upload-keys": {
-      "Upload keys": -1
-    },
+    "upload-keys": {},
     "upload-listing": {
       "Upload listing": -1
     }
