@@ -57,6 +57,10 @@ classes: toc
 
 **Exercise**: Draw a simple pie chart using data from DataHandler.
 
+## [Gramex can send emails](email/)
+
+**Exercise**: Write a form that lets users send an email.
+
 ## [Gramex can schedule tasks](scheduler/)
 
 **Exercise**: Make Gramex log the time into <code>time.log</code> on startup, and every 2 minutes.
