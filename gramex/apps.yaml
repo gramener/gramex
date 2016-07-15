@@ -5,4 +5,4 @@ gramex-update:
 wrangler:
     cmd: git clone http://code.gramener.com/s.anand/wrangler.git
 databrowse:
-    cmd: git clone http://code.gramener.com/s.anand/databrowse.git
+    cmd: git clone http://code.gramener.com/soumya.ranjan/databrowse.git
