@@ -4,7 +4,6 @@ import gramex
 import tornado.gen
 from oauthlib import oauth1
 from orderedattrdict import AttrDict
-from six.moves.http_client import OK, NOT_FOUND
 from tornado.web import HTTPError
 from tornado.auth import TwitterMixin
 from tornado.httpclient import AsyncHTTPClient
@@ -12,7 +11,7 @@ from tornado.httputil import url_concat, responses
 from gramex.transforms import build_transform
 from .basehandler import BaseHandler
 
-NETWORK_TIMEOUT = 599
+OK, BAD_REQUEST, NETWORK_TIMEOUT = 200, 400, 599
 custom_responses = {
     NETWORK_TIMEOUT: 'Network Timeout'
 }
@@ -47,7 +46,7 @@ class TwitterRESTHandler(BaseHandler, TwitterMixin):
                 params['access_token'] = info['access_token']['key']
                 params['access_token_secret'] = info['access_token']['secret']
             else:
-                raise HTTPError(NOT_FOUND, 'access_token missing')
+                raise HTTPError(BAD_REQUEST, reason='access_token missing')
 
         client = oauth1.Client(
             params.consumer_key,
