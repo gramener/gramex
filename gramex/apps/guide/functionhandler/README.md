@@ -74,9 +74,6 @@ via `handler.path_args` as follows:
         name = handler.path_args[0]
         age = handler.path_args[1]
 
-
-## Function arguments
-
 You can pass any options you want to functions. For example, to call
 `calculations.method(handler, 10, h=handler, val=0)`, you can use:
 
