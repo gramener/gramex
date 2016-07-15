@@ -1,8 +1,6 @@
 title: Gramex accesses Twitter data
 
-`TwitterRESTHandler` offers a proxy for the [Twitter 1.1 REST API](https://dev.twitter.com/rest/public), with the added advantage of being asynchronous.
-
-Here is a sample usage:
+`TwitterRESTHandler` offers a proxy for the [Twitter 1.1 REST API](https://dev.twitter.com/rest/public), with the added advantage of being asynchronous. Here is an example:
 
     :::yaml
     url:
@@ -10,22 +8,18 @@ Here is a sample usage:
             pattern: /twitter/(.*)
             handler: TwitterRESTHandler
             kwargs:
+                # Visit https://apps.twitter.com/ to get these keys
                 consumer_key: '...'
                 consumer_secret: '...'
                 access_token: '...'
                 access_token_secret: '...'
-                methods: [GET, POST]          # Allow GET / POST requests to this endpoint
 
 Follow the steps for [Twitter auth](../auth/#twitter-auth) to get the keys above.
 
-The `methods:` parameter specifies which methods to use to access the API. The
-default is just `POST`. You can replace it with `[GET, POST]` to use either
-GET or POST, or `GET` to use only the `GET` HTTP method.
-
-Now, `POST /twitter/search/tweets.json?q=beer` will return tweets about beer.
-Reference: [GET search/tweets][search-tweets].
+Now, `POST /twitter/search/tweets.json?q=beer` will 
+[search for tweets][search-tweets] about beer.
 It's the same as `GET https://api.twitter.com/1.1/search/tweets.json?q=beer`,
-but without the need for authentication.
+but pre-authenticated with the keys provided in `kwargs`.
 
 To use just a specific REST API, use the `path:` parameter. For example:
 
@@ -141,21 +135,62 @@ requests.
 
     $.when(q1, q2) // OUTPUT
 
+## Twitter GET requests
+
+The `methods:` parameter specifies which methods to use to access the API. The
+default is just `POST`. You can replace it with `[GET, POST]` to use either
+GET or POST, or `GET` to use only the `GET` HTTP method.
+
+This example lets you use either GET or POST requests.
+
+    :::yaml
+    url:
+        twitter:
+            pattern: /twitter/search          # Maps this URL
+            handler: TwitterRESTHandler
+            kwargs:
+                ...
+                methods: [GET, POST]          # Allows using GET and POST requests
+
+## Twitter OAuth
+
+The above examples allowed you to query Twitter with a pre-defined access token.
+But for users to use their own account to access the API, do the following:
+
+1. Create a `TwitterRESTHandler` at a URL (e.g.
+   [oauth-api/](oauth-api/?next=../)). Do not specify an `access_token` or
+   `access_token_secret`. It will redirect the user to Twitter and log them in.
+2. Any request now made to `oauth-api/...` will use the user's access token.
+
+The first time you make a request to `/oauth-api/` (see below), you will see an
+error message saying `access_token missing`. But visit
+[oauth-api/?next=../](oauth-api/) and log into Twitter. Then the request below
+will return the first tweet on your timeline.
+
+    :::js
+    var xsrf = {'X-Xsrftoken': cookie.get('_xsrf')}
+    $.ajax('oauth-api/statuses/home_timeline.json', {
+      headers: xsrf,
+      method: 'POST',
+      data: {'count': '1'}
+    })  // OUTPUT
+
 <script>
 var xsrf = {'X-Xsrftoken': cookie.get('_xsrf')}
 var pre = [].slice.call(document.querySelectorAll('pre'))
 
 function condense(result) {
-  var field = [].concat(result)[0].statuses[0]
-  if (!field)
+  var field = [].concat(result)[0]
+  field = field.statuses ? field.statuses[0] : field
+  if (!field || !field.user)
     return result
   result = {
     'id_str'      : field.id_str,
     'created_at'  : field.created_at,
     'text'        : field.text,
     'user'        : {
-        'name'      : field.user.name,
-        'time_zone' : field.user.time_zone,
+        'name'      : field.user ? field.user.name : '',
+        'time_zone' : field.user ? field.user.time_zone : '',
         '...'       : '...'
     },
     '...'         : '...'
@@ -172,22 +207,29 @@ function replace(e, regex, text) {
 }
 
 function next() {
-  var regex = /\/\/ OUTPUT/
-  var element = pre.shift()
-  // Behind the scenes, use GET instead of POST because we want to cache the requests
-  var text = element.textContent.replace(/method: 'POST'/ig, "method: 'GET'")
-  if (text.match(regex))
+  var output_regex = /\/\/ OUTPUT/,
+      element = pre.shift(),
+      text = element.textContent
+
+  // Behind the scenes, use GET instead of POST because we want to cache the requests.
+  // But only for /api/, not for /oauth-api/
+  if (!text.match(/oauth-api/))
+    text = text.replace(/method: 'POST'/ig, "method: 'GET'")
+
+  if (text.match(output_regex))
     if (text.match(/\$.when/)) {
       // Use GET to evaluate, since it can be cached
       eval(text).then(function(res1, res2) {
         var result = []
         for (var r of [res1, res2])
           result.push(condense(r))
-        replace(element, regex, JSON.stringify(result, null, 2))
+        replace(element, output_regex, JSON.stringify(result, null, 2))
       })
     }
     else if (text.match(/\$.ajax/)) {
-      eval(text).always(function(result) { replace(element, regex, JSON.stringify(condense(result), null, 2)) })
+      eval(text).always(function(result) {
+        replace(element, output_regex, JSON.stringify(condense(result), null, 2))
+      })
     }
   if (pre.length > 0) { next() }
 }
