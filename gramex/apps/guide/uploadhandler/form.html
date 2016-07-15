@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>File upload page</title>
+  <link rel="stylesheet" href="../style.css">
+  <style>
+  table {
+    border-collapse: collapse;
+    width: 60em;
+  }
+  td, th {
+    text-align: left;
+    border: 1px solid #ccc;
+    padding: 0.2rem 0.5rem;
+  }
+  </style>
+</head>
+<body class="container">
+
+  <nav class="menu">
+    <h1><a href=".">Back to Upload</a></h1>
+  </nav>
+
+  <section class="content">
+    <h1>Upload files</h1>
+
+    <form action="upload" method="POST" enctype="multipart/form-data">
+      <input name="file" type="file">
+      <input name="name" placeholder="Description">
+      <input type="hidden" name="_xsrf" value="{{ handler.xsrf_token }}">
+      <button type="submit">Submit</button>
+    </form>
+
+    {% import os %}
+    {% import gramex.handlers.uploadhandler %}
+    {% set path = os.path.join(gramex.config.variables['GRAMEXDATA'], 'apps', 'guide', 'upload') %}
+    {% set uploader = gramex.handlers.uploadhandler.FileUpload(path) %}
+
+    <h2>Files uploaded</h2>
+    <p>Path: <code>{{ path }}</code></p>
+    <form action="upload" method="POST">
+      <input type="hidden" name="_xsrf" value="{{ handler.xsrf_token }}">
+      <table>
+        <thead>
+          <tr><th>Del</th><th>Name</th><th>Filename</th><th>Size</th><th>MIME type</th><th>Created (UTC)</th></tr>
+        </thead>
+        <tbody>
+          {% for key, info in uploader.info().items() %}
+            <tr>
+              <td><input type="checkbox" name="delete" value="{{ key }}"></td>
+              <td>{{ ', '.join(info['data'].get('name', [])) }}</td>
+              <td>{{ info['filename'] }}</td>
+              <td>{{ info['size'] }}</td>
+              <td>{{ info['mime'] }}</td>
+              <td>{{ datetime.datetime.utcfromtimestamp(info['created'] / 1000).strftime('%a %d-%b %H:%M') }}</td>
+            </tr>
+          {% end %}
+        </tbody>
+      </table>
+      <p><button type="submit">Delete selected files</button></p>
+    </form>
+  </section>
+</body>
+</html>

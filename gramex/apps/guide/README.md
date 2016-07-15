@@ -33,6 +33,14 @@ classes: toc
 
 **Exercise**: TBD
 
+## [Gramex authentication](auth/)
+
+**Exercise**: Make gramex-guide without authetication and create google-auth only to `/blog/`.
+
+## [Gramex uploads files](uploadhandler/)
+
+**Exercise**: TBD
+
 ## [Gramex runs processes](processhandler/)
 
 **Exercise**: Display the results of `git log` on a git repository.
@@ -40,10 +48,6 @@ classes: toc
 ## [Gramex accesses Twitter data](twitterresthandler/)
 
 **Exercise**: Create a dashboard showing the latest tweets and followers of any user, along with the popular tweets that mention them.
-
-## [Gramex authentication](auth/)
-
-**Exercise**: Make gramex-guide without authetication and create google-auth only to `/blog/`.
 
 ## [Gramex caches requests](cache/)
 
