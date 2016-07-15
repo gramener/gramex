@@ -25,7 +25,8 @@ class SMTPMailer(object):
         sender = kwargs.get('sender', self.email)
         to = _merge(kwargs.get('to', self.email))
         msg = message(**kwargs)
-        server = smtplib.SMTP(self.client['host'], self.client.get('port', 587))
+        default_port = 587
+        server = smtplib.SMTP(self.client['host'], self.client.get('port', default_port))
         server.starttls()
         server.login(self.email, self.password)
         server.sendmail(sender, to, msg.as_string())
