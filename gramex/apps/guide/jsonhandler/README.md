@@ -46,7 +46,7 @@ Array values can be accessed via integer path elements:
 
 ## PUT - write data
 
-You can write JSON data via a PUT request. This requires an [XSRF token](../filehandler/#forms).
+You can write JSON data via a PUT request. This requires an [XSRF token](../filehandler/#xsrf).
 
     :::js
     var xsrf = {'X-Xsrftoken': cookie.get('_xsrf')}
@@ -72,7 +72,7 @@ Incorrect values raise an error:
 
 ## POST - add data
 
-You can add new records via a POST request. This requires an [XSRF token](../filehandler/#forms). First, let's start with an empty object.
+You can add new records via a POST request. This requires an [XSRF token](../filehandler/#xsrf). First, let's start with an empty object.
 
     :::js
     $.ajax('data/list', {

@@ -71,7 +71,7 @@ To get the application key and secret:
 
 <div class="example">
   <a class="example-demo" href="gmail/">Google Auth example</a>
-  <a class="example-src" href="http://code.gramener.com/s.anand/gramex/tree/dev/gramex/apps/guide/auth/gmail/">Source</a>
+  <a class="example-src" href="http://code.gramener.com/s.anand/gramex/tree/master/gramex/apps/guide/auth/gmail/">Source</a>
 </div>
 
 ### SSL certificate error

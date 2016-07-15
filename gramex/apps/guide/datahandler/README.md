@@ -84,7 +84,7 @@ You can make the parameters non-over-ridable using `query:` instead of `default:
 
 ## Database edits
 
-You can use the `POST`, `PUT` and `DELETE` methods to add, update or delete rows in a database using DataHandler. You need to use [XSRF cookies](../filehandler/#forms) when using these methods.
+You can use the `POST`, `PUT` and `DELETE` methods to add, update or delete rows in a database using DataHandler. You need to use [XSRF cookies](../filehandler/#xsrf) when using these methods.
 
 (The examples below use [jQuery.ajax][jquery-ajax] and the [cookie.js][cookie.js] libraries.)
 

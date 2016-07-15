@@ -96,5 +96,5 @@ if __name__ == '__main__':
                         logging.info('Retaining %s - %s - %s', path, frag, text)
 
     # Save the search index
-    with open(index_file, 'w') as handle:           # noqa: for Py2 & Py3 compatibility
+    with io.open(index_file, 'w', newline='') as handle:    # noqa: for Py2 & Py3 compatibility
         json.dump(result, handle, ensure_ascii=True, sort_keys=True, indent=2)

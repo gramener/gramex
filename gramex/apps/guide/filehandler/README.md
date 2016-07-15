@@ -296,7 +296,7 @@ The file can contain any template feature. Here's a sample `page.html`.
         {% for item in series %}<li>{{ item }}</li>{% end %}
     </ul>
 
-## Forms
+## XSRF
 
 If you're submitting forms using the POST method, you need to submit an
 [_xsrf][xsrf] field that has the value of the `_xsrf` cookie. You can either
@@ -307,7 +307,20 @@ include it in the template using handlers' built-in `xsrf_token` property:
       <input type="hidden" name="_xsrf" value="{{ handler.xsrf_token }}">
     </form>
 
-... or extract it dynamically using JavaScript. Here is an example that uses
+To render a file as a template, use:
+
+    :::yaml
+    url:
+        template:
+            pattern: /page                  # The URL /page
+            handler: FileHandler            # displays a file
+            kwargs:
+                path: page.html             # named page.html
+                transform:
+                  "*.html":                 # Apply the transform to all HTML files
+                    function: template      # Render page.html as a template
+
+You can extract it dynamically using JavaScript. Here is an example that uses
 [cookie.js](https://github.com/florian/cookie.js) and 
 [jQuery](https://jquery.com/). Install them:
 
@@ -330,16 +343,18 @@ Then extract the cookie and add a hidden input to your form:
 
 [xsrf]: http://www.tornadoweb.org/en/stable/guide/security.html#cross-site-request-forgery-protection
 
-The XSRF cookie is automatically set when a FileHandler [template](#templates) accesses `handler.xsrf_token`. To set it explicitly, add `set_xsrf: true` to the handler kwargs like this:
+The XSRF cookie is automatically set when a FileHandler [template](#templates)
+accesses `handler.xsrf_token`. You can also set it explicitly, by adding a
+`set_xsrf: true` configuration to `kwargs` like this:
 
     :::yaml
     url:
-      name:
-        pattern: ...              # When this page is visited,
-        handler: ...              # no matter what the handler is,
-        kwargs:
-          ...
-          set_xsrf: true          # set the xsrf cookie
+        name:
+            pattern: ...              # When this page is visited,
+            handler: ...              # no matter what the handler is,
+            kwargs:
+                ...
+                set_xsrf: true        # set the xsrf cookie
 
 You can disable XSRF in `gramex.yaml` (but this is **not recommended**):
 

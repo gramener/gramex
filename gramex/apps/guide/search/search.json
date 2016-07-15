@@ -2,398 +2,386 @@
   "about": {
     "": {
       "About Gramex": -1
-    }, 
+    },
     "gramex-projects": {
       "Gramex Projects": -1
-    }, 
-    "projects": {}
-  }, 
+    }
+  },
   "apps": {
     "": {
       "Gramex Apps": -1
-    }, 
+    },
     "creating-apps": {
       "Creating apps": -1
-    }, 
+    },
     "deploying-app-data": {
       "Deploying app data": -1
-    }, 
-    "deploying-data": {}, 
-    "installing": {}, 
+    },
     "installing-apps": {
       "Installing apps": -1
-    }, 
-    "running": {}, 
+    },
     "running-apps": {
       "Running apps": -1
-    }, 
-    "uninstalling": {}, 
+    },
+    "setting-up-apps": {
+      "Setting up apps": -1
+    },
     "uninstalling-apps": {
       "Uninstalling apps": -1
-    }, 
-    "updating": {}, 
+    },
     "updating-apps": {
       "Updating apps": -1
     }
-  }, 
+  },
   "auth": {
     "": {
       "Gramex Authentication": -1
-    }, 
+    },
     "authentication": {
       "Authentication": -1
-    }, 
+    },
     "authorization": {
       "Authorization": -1
-    }, 
-    "database": {}, 
+    },
     "database-auth": {
       "Database auth": -1
-    }, 
-    "facebook": {}, 
+    },
     "facebook-auth": {
       "Facebook auth": -1
-    }, 
-    "google": {}, 
+    },
     "google-auth": {
       "Google auth": -1
-    }, 
-    "ldap": {}, 
+    },
     "ldap-auth": {
       "LDAP auth": -1
-    }, 
+    },
     "log-out": {
       "Log out": -1
-    }, 
-    "logging": {}, 
-    "logging-auth": {}, 
+    },
     "logging-logins": {
       "Logging logins": -1
-    }, 
+    },
     "login-actions": {
       "Login actions": -1
-    }, 
-    "redirection": {}, 
+    },
     "redirection-after-login": {
       "Redirection after login": -1
-    }, 
+    },
     "sessions": {
       "Sessions": -1
-    }, 
-    "twitter": {}, 
+    },
+    "ssl-certificate-error": {
+      "SSL certificate error": -1
+    },
     "twitter-auth": {
       "Twitter auth": -1
-    }, 
+    },
     "user-attributes": {
       "User attributes": -1
-    }, 
-    "user-information": {}
-  }, 
+    }
+  },
   "cache": {
     "": {
       "Caching requests": -1
-    }, 
+    },
     "browser-caching": {
       "Browser caching": -1
-    }, 
+    },
     "cache-expiry": {
       "Cache expiry": -1
-    }, 
+    },
     "cache-keys": {
       "Cache keys": -1
-    }, 
+    },
     "cache-static-files": {
       "Cache static files": -1
-    }, 
+    },
     "cache-status": {
       "Cache status": -1
-    }, 
+    },
     "cache-stores": {
       "Cache stores": -1
-    }, 
-    "examples": {}, 
+    },
     "mixing-python-versions": {
       "Mixing Python versions": -1
-    }, 
+    },
     "server-caching": {
       "Server caching": -1
-    }, 
-    "static-files": {}, 
+    },
     "using-cache-stores": {
       "Using cache stores": -1
     }
-  }, 
+  },
   "chart": {
     "": {
       "Gramex Charts": -1
     }
-  }, 
+  },
   "config": {
     "": {
       "Configurations control Gramex": -1
-    }, 
+    },
     "app-configuration": {
       "App configuration": -1
-    }, 
-    "command-line": {}, 
+    },
     "command-line-args": {
       "Command line args": -1
-    }, 
+    },
     "computed-variables": {
       "Computed variables": -1
-    }, 
+    },
     "configuration-access": {
       "Configuration access": -1
-    }, 
+    },
     "configuration-syntax": {
       "Configuration syntax": -1
-    }, 
+    },
     "custom-mime-types": {
       "Custom MIME types": -1
-    }, 
-    "imports": {}, 
-    "inheritence": {}, 
+    },
     "logging": {
       "Logging": -1
-    }, 
-    "mime-types": {}, 
+    },
     "predefined-variables": {
       "Predefined variables": -1
-    }, 
+    },
     "scheduling": {
       "Scheduling": -1
-    }, 
+    },
     "url-mapping": {
       "URL mapping": -1
-    }, 
-    "urls": {}, 
-    "variables": {}, 
+    },
     "yaml-imports": {
       "YAML imports": -1
-    }, 
+    },
     "yaml-inheritence": {
       "YAML inheritence": -1
-    }, 
+    },
     "yaml-variables": {
       "YAML variables": -1
     }
-  }, 
+  },
   "datahandler": {
     "": {
       "Gramex connects to data": -1
-    }, 
+    },
     "database-edits": {
       "Database edits": -1
-    }, 
+    },
     "datahandler-defaults": {
       "DataHandler defaults": -1
-    }, 
+    },
     "datahandler-delete": {
       "DataHandler delete": -1
-    }, 
+    },
     "datahandler-insert": {
       "DataHandler insert": -1
-    }, 
+    },
     "datahandler-update": {
       "DataHandler update": -1
-    }, 
-    "defaults": {}
-  }, 
+    }
+  },
   "debug": {
     "": {
       "Debugging Gramex": -1
-    }, 
-    "browser": {}, 
+    },
     "browser-on-startup": {
       "Browser on startup": -1
-    }, 
+    },
     "debug-mode": {
-      "Debug mode": -1, 
-      "ipdb": 2, 
-      "pdb": 2
-    }, 
+      "Debug mode": -1
+    },
     "print-statements": {
       "Print statements": -1
-    }, 
+    },
     "profiling": {
       "Profiling": -1
-    }, 
+    },
     "python-debugger": {
       "Python debugger": -1
-    }, 
+    },
     "reloading": {
       "Reloading": -1
-    }, 
+    },
     "timer": {
       "Timer": -1
     }
-  }, 
+  },
   "deploy": {
     "": {
       "Deployment patterns": -1
-    }, 
+    },
     "deployment-variables": {
       "Deployment variables": -1
-    }, 
+    },
     "https-server": {
       "HTTPS Server": -1
-    }, 
-    "pre-defined-variables": {}, 
+    },
     "relative-url-mapping": {
       "Relative URL mapping": -1
-    }, 
-    "urls": {}, 
+    },
     "using-relative-urls": {
       "Using relative URLs": -1
     }
-  }, 
+  },
   "filehandler": {
     "": {
       "Gramex renders files": -1
-    }, 
+    },
     "caching": {
       "Caching": -1
-    }, 
-    "concatenation": {}, 
+    },
     "directory-listing": {
       "Directory listing": -1
-    }, 
+    },
     "file-concatenation": {
       "File concatenation": -1
-    }, 
+    },
     "file-patterns": {
       "File patterns": -1
-    }, 
-    "forms": {
-      "Forms": -1, 
-      "XSRF": 2
-    }, 
+    },
     "ignore-files": {
       "Ignore files": -1
-    }, 
+    },
     "mime-types": {
       "MIME types": -1
-    }, 
-    "redirecting-content": {}, 
+    },
     "redirecting-files": {
       "Redirecting files": -1
-    }, 
+    },
     "templates": {
       "Templates": -1
-    }, 
+    },
     "transforming-content": {
       "Transforming content": -1
+    },
+    "xsrf": {
+      "XSRF": -1
     }
-  }, 
+  },
   "functionhandler": {
     "": {
       "Gramex runs Python functions": -1
-    }, 
+    },
     "asynchronous-functions": {
       "Asynchronous functions": -1
-    }, 
+    },
     "function-arguments": {
       "Function arguments": -1
-    }, 
-    "function-arguments_1": {
-      "Function arguments": -1
-    }, 
-    "passing-arguments": {}, 
+    },
     "redirection": {
       "Redirection": -1
-    }, 
+    },
     "streaming-output": {
       "Streaming output": -1
     }
-  }, 
+  },
   "handlers": {
     "": {
       "Writing handlers": -1
-    }, 
-    "attributes": {}, 
+    },
     "basehandler-attributes": {
       "BaseHandler Attributes": -1
-    }, 
+    },
     "initialisation": {
       "Initialisation": -1
     }
-  }, 
+  },
   "install": {
     "": {
       "Install Gramex": -1
-    }, 
+    },
     "uninstall-gramex": {
       "Uninstall Gramex": -1
     }
-  }, 
+  },
   "jsonhandler": {
     "": {
       "Gramex writes data": -1
-    }, 
+    },
     "delete-remove-data": {
       "DELETE - remove data": -1
-    }, 
+    },
     "get-read-data": {
       "GET - read data": -1
-    }, 
+    },
     "method-override": {
       "Method override": -1
-    }, 
+    },
     "patch-update-data": {
       "PATCH - update data": -1
-    }, 
+    },
     "post-add-data": {
       "POST - add data": -1
-    }, 
+    },
     "put-write-data": {
       "PUT - write data": -1
     }
-  }, 
+  },
   "processhandler": {
     "": {
       "Gramex runs processes": -1
-    }, 
+    },
     "processhandler-redirection": {
       "ProcessHandler redirection": -1
-    }, 
-    "redirecting-output": {}
-  }, 
+    }
+  },
   "scheduler": {
     "": {
       "Schedule tasks": -1
     }
-  }, 
+  },
   "search": {
     "": {
       "Index of topics": -1
     }
-  }, 
+  },
   "server": {
     "": {
       "Gramex is a web server": -1
     }
-  }, 
+  },
   "twitterresthandler": {
     "": {
       "Gramex accesses Twitter data": -1
-    }, 
+    },
     "parallel-ajax-requests": {
       "Parallel AJAX requests": -1
-    }, 
+    },
     "twitter-followers": {
       "Twitter followers": -1
-    }, 
+    },
+    "twitter-get-requests": {
+      "Twitter GET requests": -1
+    },
+    "twitter-oauth": {
+      "Twitter OAuth": -1
+    },
     "twitter-search": {
       "Twitter search": -1
-    }, 
+    },
     "twitter-transforms": {
       "Twitter transforms": -1
     }
-  }, 
+  },
+  "uploadhandler": {
+    "": {
+      "Gramex handles file uploads": -1
+    },
+    "upload-deletion": {
+      "Upload deletion": -1
+    },
+    "upload-keys": {
+      "Upload keys": -1
+    },
+    "upload-listing": {
+      "Upload listing": -1
+    }
+  },
   "watch": {
     "": {
       "Gramex watches files": -1
-    }, 
+    },
     "watching-files": {
       "Watching files": -1
     }
