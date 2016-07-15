@@ -351,9 +351,20 @@ accessible to all.
                 path: $YAMLPATH/secret.html
                 auth: true
 
-`auth:` can also lets you define conditions. For example, you can access
-[dotcom](dotcom) only if your email ends with `.com`, and access
-[dotorg](dotorg) only if your email ends with `.org`.
+`auth:` can check for membership. For example, you can access [en-male](en-male)
+only if your gender is `male` and your locale is `en` or `es`:
+
+        auth:
+            membership:           # The following user object keys must match
+                gender: male      # user.gender must be male
+                locale: [en, es]  # user.locale must be en or es
+
+If the `user` object has nested attributes, you can access them via `.`. For
+example, `attributes.cn` refers to `handlers.current_user.attributes.cn`.
+
+`auth:` lets you define conditions. For example, you can access [dotcom](dotcom)
+only if your email ends with `.com`, and access [dotorg](dotorg) only if your
+email ends with `.org`.
 
     url:
         auth/dotcom:
@@ -377,14 +388,3 @@ accessible to all.
 
 You can specify any function of your choice. The function must return (or yield)
 `True` to allow the user access, and `False` to raise a HTTP 403 error.
-
-`auth:` can check for membership. For example, you can access [en-male](en-male)
-only if your gender is `male` and your locale is `en` or `es`:
-
-        auth:
-            membership:           # The following user object keys must match
-                gender: male      # user.gender must be male
-                locale: [en, es]  # user.locale must be en or es
-
-If the `user` object has nested attributes, you can access them via `.`. For
-example, `attributes.cn` refers to `handlers.current_user.attributes.cn`.
