@@ -317,9 +317,15 @@ class KeyStore(object):
     Base class for persistent dictionaries. (But KeyStore is not persistent.)
 
         >>> store = KeyStore(path)
-        >>> value = store.load(key, None)
-        >>> store.dump(key, value)
-        >>> store.close()
+        >>> value = store.load(key, None)   # Load a value. It's like dict.get()
+        >>> store.dump(key, value)          # Save a value. It's like dict.set(), but doesn't flush
+        >>> store.flush()                   # Saves to disk
+        >>> store.close()                   # Close the store
+
+    You can initialize a KeyStore with a ``flush=`` parameter. The store is
+    flushed to disk via ``store.flush()`` every ``flush`` seconds.
+
+    When the program exits, ``.close()`` is automatically called.
     '''
     def __init__(self, path, flush=None):
         '''Initialise the KeyStore at path'''
@@ -349,14 +355,21 @@ class KeyStore(object):
 
     def flush(self):
         '''Write to disk'''
-        pass
+        raise NotImplementedError()
 
     def close(self):
         '''Flush and close all open handles'''
-        pass
+        raise NotImplementedError()
 
 
 class HDF5Store(KeyStore):
+    '''
+    A KeyStore that stores data in a HDF5 file. Typical usage::
+
+        >>> store = HDF5Store('file.h5', flush=15)
+        >>> value = store.load(key)
+        >>> store.dump(key, value)
+    '''
     def __init__(self, path, *args, **kwargs):
         super(HDF5Store, self).__init__(path, *args, **kwargs)
         import h5py
@@ -382,6 +395,15 @@ class HDF5Store(KeyStore):
 
 
 class JSONStore(KeyStore):
+    '''
+    A KeyStore that stores data in a JSON file. Typical usage::
+
+        >>> store = JSONStore('file.h5', flush=15)
+        >>> value = store.load(key)
+        >>> store.dump(key, value)
+
+    This is less efficient than HDF5Store for large data, but is human-readable.
+    '''
     def __init__(self, path, *args, **kwargs):
         super(JSONStore, self).__init__(path, *args, **kwargs)
         try:
