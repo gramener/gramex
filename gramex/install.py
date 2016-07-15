@@ -122,7 +122,8 @@ def _ensure_remove(remove, path, exc_info):
 def safe_rmtree(target):
     if not os.path.exists(target):
         return True
-    elif target.startswith(variables['GRAMEXDATA']):
+    # TODO: check case insensitive in Windows, but case sensitive on other OS
+    elif target.lower().startswith(variables['GRAMEXDATA'].lower()):
         shutil.rmtree(target, onerror=_ensure_remove)
         return True
     else:
