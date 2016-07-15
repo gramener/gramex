@@ -28,6 +28,10 @@ class FileUpload(object):
             keys['file'] = ['file']
         self.keys['file'] = keys['file'] if isinstance(keys['file'], list) else [keys['file']]
 
+    def info(self):
+        store = self.store
+        return {k: store.load(k) for k in store.keys()}
+
     def addfiles(self, handler):
         filemetas = []
         for key in self.keys.get('file', []):
@@ -83,6 +87,15 @@ class FileUpload(object):
 
 
 class UploadHandler(BaseHandler):
+    '''
+    UploadHandler lets users upload files. Here's a typical configuration::
+
+        path: /$GRAMEXDATA/apps/appname/    # Save files here
+        keys: [upload, file]                # <input name=""> can be upload / file
+        redirect:                           # After uploading the file,
+            query: next                     #   ... redirect to ?next=
+            url: /$YAMLURL/                 #   ... else to this directory
+    '''
     @classmethod
     def setup(cls, path, keys=None, transform={}, methods=[], **kwargs):
         super(UploadHandler, cls).setup(**kwargs)
@@ -102,9 +115,8 @@ class UploadHandler(BaseHandler):
 
     @tornado.gen.coroutine
     def fileinfo(self, *args, **kwargs):
-        store = self.uploader.store
         self.set_header('Content-Type', 'application/json')
-        self.write(json.dumps({k: store.load(k) for k in store.keys()}, indent=2))
+        self.write(json.dumps(self.uploader.info(), indent=2))
 
     @tornado.gen.coroutine
     def post(self, *args, **kwargs):
