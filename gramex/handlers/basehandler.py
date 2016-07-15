@@ -8,7 +8,7 @@ import tornado.gen
 from textwrap import dedent
 from binascii import b2a_base64
 from orderedattrdict import AttrDict, DefaultAttrDict
-from six.moves.urllib_parse import urlparse, urlsplit, urlencode
+from six.moves.urllib_parse import urlparse, urlsplit, urljoin, urlencode
 from tornado.log import access_log
 from tornado.web import RequestHandler, HTTPError
 from gramex import conf, __version__
@@ -79,14 +79,42 @@ class BaseHandler(RequestHandler):
 
     @classmethod
     def setup_redirect(cls, redirect):
+        '''
+        Any handler can have a ``redirect:`` kwarg that looks like this::
+
+            redirect:
+                query: next         # If the URL has a ?next=..., redirect to that page next
+                header: X-Next      # Else if the header has an X-Next=... redirect to that
+                url: ...            # Else redirect to this URL
+
+        Only these 3 keys are allowed. All are optional, and checked in the
+        order specified. So, for example::
+
+            redirect:
+                header: X-Next      # Checks the X-Next header first
+                query: next         # If it's missing, uses the ?next=
+
+        When any BaseHandler subclass calls ``self.save_redirect_page()``, it
+        stores the redirect URL in ``session['_next_url']``. The URL is
+        calculated relative to the handler's URL.
+
+        After that, when the subclass calls ``self.redirect_next()``, it
+        redirects to ``session['_next_url']`` and clears the value. (If the
+        ``_next_url`` was not stored, we redirect to the home page ``/``.)
+
+        Only some handlers implement redirection. But they all implement it in
+        this same consistent way.
+        '''
         cls.redirects = []
+        add = cls.redirects.append
         for key, value in redirect.items():
             if key == 'query':
-                cls.redirects.append(lambda h, v=value: h.get_argument(v, None))
+                add(lambda h, v=value: h.get_argument(v, None))
             elif key == 'header':
-                cls.redirects.append(lambda h, v=value: h.request.headers.get(v))
+                add(lambda h, v=value: h.request.headers.get(v))
             elif key == 'url':
-                cls.redirects.append(lambda h, v=value: v)
+                add(lambda h, v=value: v)
+
         # redirect.external=False disallows external URLs
         if not redirect.get('external', False):
             def no_external(method):
@@ -203,16 +231,24 @@ class BaseHandler(RequestHandler):
     def save_redirect_page(self):
         '''
         Loop through all redirect: methods and save the first available redirect
-        page against the session. Defaults to previously set value, else '/'.
+        page against the session. Defaults to previously set value, else ``/``.
+
+        See :func:setup_redirect
         '''
         for method in self.redirects:
             next_url = method(self)
             if next_url:
-                self.session['_next_url'] = next_url
+                self.session['_next_url'] = urljoin(self.request.uri, next_url)
                 return
         self.session.setdefault('_next_url', '/')
 
     def redirect_next(self):
+        '''
+        Redirect the user ``session['_next_url']``. If it does not exist,
+        redirect to the home page ``/``.
+
+        See :func:setup_redirect
+        '''
         self.redirect(self.session.pop('_next_url', '/'))
 
     @tornado.gen.coroutine
