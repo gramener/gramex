@@ -1,6 +1,10 @@
 variables:
     GUIDE_ROOT: $YAMLURL                # Used by guide.py to pass to markdown.template
 
+log:
+    root:
+        level: INFO                     # Just log info, not debug
+
 app:
   settings:
     login_url: /$YAMLURL/auth/db        # Use DB Auth by default -- it works offline
