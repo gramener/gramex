@@ -183,3 +183,6 @@ schedule:
             password: $USER_DATABASE_PASSWORDCOLUMN
             salt: $USER_DATABASE_SALT
         startup: true
+
+import:
+    apps: '*/gramex.yaml'

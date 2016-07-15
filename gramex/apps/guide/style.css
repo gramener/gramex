@@ -143,6 +143,33 @@ button, input, select, textarea {
     color: #0563c1;
 }
 
+/* Example apps */
+.example {
+  font-family: Roboto, "Segoe UI", sans-serif;
+  font-size: 1.5rem;
+  font-weight: bold;
+  padding: 0 1rem;
+  margin: 1rem -1rem;
+
+  border: 1px solid rgba(0,0,0,.2);
+  background-color: rgba(237, 125, 55, 0.3);
+  box-shadow: 1px 1px 1px black;
+}
+.example a {
+  border: none;
+}
+.example:before {
+  content: "\25cd";
+  font-size: 4rem;
+  line-height: 0;
+  position: relative;
+  top: 01rem;
+}
+.example-src {
+  float: right;
+}
+
+
 /* Clipboard copy button */
 .codehilite {
   position: relative;

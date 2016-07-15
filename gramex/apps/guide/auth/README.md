@@ -69,6 +69,19 @@ To get the application key and secret:
 - Set the Authorized redirect URIs to point to your auth handler. (You can ignore Authorized Javascript origins)
 - Copy the "Client secret" and "Client ID" to the application settings
 
+<div class="example">
+  <a class="example-demo" href="gmail/">Google Auth example</a>
+  <a class="example-src" href="http://code.gramener.com/s.anand/gramex/tree/dev/gramex/apps/guide/auth/gmail/">Source</a>
+</div>
+
+### SSL certificate error
+
+Google auth and connections to HTTPS sites may fail with a
+`CERTIFICATE_VERIFY_FAILED` error. Here are possible solutions:
+
+1. Run `conda update python` to upgrade to the latest version of Python, which will use the latest `ssl` module.
+2. Run `conda install certifi==2015.04.28` to downgrade to an older version of `certifi`. See this [Tornado issue](https://github.com/tornadoweb/tornado/issues/1534#issuecomment-183962419)
+
 
 ## Facebook auth
 
