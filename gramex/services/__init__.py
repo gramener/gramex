@@ -443,6 +443,6 @@ def email(conf):
 
     for name, config in conf.items():
         if config['type'] in ('gmail', 'hotmail', 'yahoo', 'ses', 'mandrill'):
-            info.email[name] = SMTPMailer(config)
+            info.email[name] = SMTPMailer(**config)
         else:
             raise NotImplementedError

@@ -1,51 +1,40 @@
-import six
-import gramex
 import smtplib
 import tornado.gen
 from email import encoders
 from mimetypes import guess_type
-from email.MIMEMultipart import MIMEMultipart
-from email.MIMEText import MIMEText
-from email.MIMEBase import MIMEBase
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.mime.base import MIMEBase
+from gramex.config import app_log
 
 
 class SMTPMailer(object):
     clients = {
-        'gmail': {'domain': 'smtp.gmail.com', 'port': 587},
-        'yahoo': {'domain': 'smtp.mail.yahoo.com', 'port': 587},
-        'hotmail': {'domain': 'smtp.live.com', 'port': 587},
-        'mandrill': {'domain': 'smtp.mandrillapp.com', 'port': 587}}
+        'gmail': {'host': 'smtp.gmail.com'},
+        'yahoo': {'host': 'smtp.mail.yahoo.com'},
+        'live': {'host': 'smtp.live.com'},
+        'mandrill': {'host': 'smtp.mandrillapp.com'}
+    }
 
-    def __init__(self, config):
-        self.email = config.email
-        self.password = config.password
-        self.type = config.type
+    def __init__(self, type, email, password):
+        self.type = type
+        self.email = email
+        self.password = password
+        self.client = self.clients[type]
 
-    @tornado.gen.coroutine
-    def send_mail(self, to, sender=None, cc=[], bcc=[], reply_to=None,
-                  subject='', body=None, attachments=[],
-                  html=None, **kwargs):
-        sender = sender or self.email
-        msg = message(
-            sender, to, cc=cc, bcc=bcc, reply_to=reply_to,
-            subject=subject, body=body, attachments=attachments, html=html,
-            **kwargs)
-        response = yield gramex.service.threadpool.submit(
-            self.connect, sender=sender, to=to,
-            msg=msg)
-        raise tornado.gen.Return(response)
-
-    def connect(self, sender, to, msg):
-        client = self.clients[self.type]
-        server = smtplib.SMTP(client['domain'], client['port'])
+    def mail(self, **kwargs):
+        sender = kwargs.get('sender', self.email)
+        to = _merge(kwargs.get('to', self.email))
+        msg = message(**kwargs)
+        server = smtplib.SMTP(self.client['host'], self.client.get('port', 587))
         server.starttls()
         server.login(self.email, self.password)
         server.sendmail(sender, to, msg.as_string())
         server.quit()
+        app_log.info('Email sent via %s to %s', self.email, to)
 
 
-def message(sender, to, cc=[], bcc=[], reply_to=None,
-            subject='', body=None, attachments=[], html=None, **kwargs):
+def message(body=None, html=None, attachments=[], **kwargs):
     if body and html:
         msg = MIMEMultipart('alternative')
         msg.attach(MIMEText(body, 'plain'))
@@ -72,14 +61,17 @@ def message(sender, to, cc=[], bcc=[], reply_to=None,
             msg_addon.attach(msg)
         msg = msg_addon
 
-        msg['From'] = sender
-        for k, v in six.iteritems({'To': to, 'Cc': cc, 'Bcc': bcc}):
-            msg[k] = ', '.join(v) if isinstance(v, list) else v
-        msg['Reply-To'] = reply_to
-        msg['Subject'] = subject
+    # set headers
+    for arg, value in kwargs.items():
+        header = '-'.join([
+            # All SMTP headers are capitalised, except abbreviations
+            w.upper() if w in {'ID', 'MTS', 'IPMS'} else w.capitalize()
+            for w in arg.split('_')
+        ])
+        msg[header] = _merge(value)
 
-        # set headers
-        for arg, v in six.iteritems(kwargs):
-            msg[arg.replace('_', '-')] = v
+    return msg
 
-        return msg
+
+def _merge(value):
+    return ', '.join(value) if isinstance(value, list) else value
