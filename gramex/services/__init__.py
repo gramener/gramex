@@ -31,6 +31,7 @@ from gramex import debug, shutdown, __version__
 from gramex.config import locate, app_log
 from . import urlcache
 from .ttlcache import MAXTTL
+from .emailer import SMTPMailer
 
 OK = 200
 # Service information, available as gramex.service after gramex.init() is called
@@ -41,6 +42,7 @@ info = AttrDict(
     # Initialise with a single worker by default. threadpool.workers overrides this
     threadpool=concurrent.futures.ThreadPoolExecutor(1),
     eventlog=AttrDict(),
+    email=AttrDict()
 )
 atexit.register(info.threadpool.shutdown)
 
@@ -434,3 +436,13 @@ def eventlog(conf):
     add('startup', {'version': __version__, 'pid': os.getpid(),
                     'args': sys.argv, 'cwd': os.getcwd()})
     atexit.register(shutdown)
+
+
+def email(conf):
+    '''Set up email service'''
+
+    for name, config in conf.items():
+        if config['type'] in ('gmail', 'hotmail', 'yahoo', 'ses', 'mandrill'):
+            info.email[name] = SMTPMailer(config)
+        else:
+            raise NotImplementedError
