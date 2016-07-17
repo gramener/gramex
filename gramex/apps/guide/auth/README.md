@@ -216,9 +216,10 @@ This configuration creates a [logout page](logout):
     auth/logout
         pattern: /$YAMLURL/logout   # Map this URL
         handler: LogoutHandler      # to the logout handler
-        redirect:                   # Redirect options are applied in order
-            query: next             # If ?next= is specified, use it
-            url: /$YAMLURL          # Else redirect to the directory where this gramex.yaml is present
+        kwargs:
+            redirect:                   # Redirect options are applied in order
+                query: next             # If ?next= is specified, use it
+                url: /$YAMLURL          # Else redirect to the directory where this gramex.yaml is present
 
 After logging out, the user is re-directed to the URL specified by `?next=`.
 Else, they're redirected to the current page. Read the
