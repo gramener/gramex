@@ -1,5 +1,4 @@
 from __future__ import unicode_literals
-import io
 import os
 import csv
 import six
@@ -18,17 +17,28 @@ from .basehandler import BaseHandler
 _auth_template = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                               'auth.template.html')
 
+# Python 3 csv.writer.writerow writes as str(), which is unicode in Py3.
+# Python 2 csv.writer.writerow writes as str(), which is bytes in Py2.
+# So we use cStringIO.StringIO in Py2 (which handles bytes).
+# Since Py3 doesn't have cStringIO, we use io.StringIO (which handles unicode)
+try:
+    import cStringIO
+    StringIOClass = cStringIO.StringIO
+except ImportError:
+    import io
+    StringIOClass = io.StringIO
+
 
 def csv_encode(values, *args, **kwargs):
     '''
     Encode an array of unicode values into a comma-separated string. All
     csv.writer parameters are valid.
     '''
-    buf = io.BytesIO()
+    buf = StringIOClass()
     writer = csv.writer(buf, *args, **kwargs)
     writer.writerow([
-        v if isinstance(v, six.binary_type) else
-        v.encode('utf-8') if isinstance(v, six.text_type) else repr(v)
+        v if isinstance(v, six.text_type) else
+        v.decode('utf-8') if isinstance(v, six.binary_type) else repr(v)
         for v in values])
     return buf.getvalue().strip()
 
