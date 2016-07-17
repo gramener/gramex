@@ -73,8 +73,7 @@ class FileUpload(object):
         return status
 
     def uniq_filename(self, filename):
-        # TODO: what if filename is nonexistent, i.e. None or ''
-        name, ext = os.path.splitext(filename)
+        name, ext = os.path.splitext(filename or 'noname.bin')
         filepath = os.path.join(self.path, name + ext)
         if not os.path.exists(filepath):
             return filepath
