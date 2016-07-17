@@ -42,8 +42,7 @@ class FileUpload(object):
                     handle.write(upload['body'])
                 filename = os.path.basename(filepath)
                 stat = os.stat(filepath)
-                # TODO: what if the guess_type fails as well? octet-stream or something
-                mime = upload['content_type'] or mimetypes.guess_type(filepath)[0]
+                mime = upload['content_type'] or mimetypes.guess_type(filepath, strict=False)[0]
                 filemeta = AttrDict({
                     'key': key,
                     'filename': original_name,
@@ -51,7 +50,7 @@ class FileUpload(object):
                     'created': time.time() * MILLISECONDS,  # JS parseable timestamp
                     'user': handler.get_current_user(),
                     'size': stat.st_size,
-                    'mime': mime,
+                    'mime': mime or 'application/octet-stream',
                     'data': handler.request.arguments
                 })
                 filemeta = handler.transforms(filemeta)

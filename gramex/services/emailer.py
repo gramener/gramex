@@ -49,7 +49,7 @@ def message(body=None, html=None, attachments=[], **kwargs):
         msg_addon.attach(msg)
         for filename in attachments:
             content = open(filename, 'rb').read()
-            content_type, encoding = guess_type(filename)
+            content_type, encoding = guess_type(filename, strict=False)
             if content_type is None or encoding is not None:
                 content_type = 'application/octet-stream'
             maintype, subtype = content_type.split('/', 1)
