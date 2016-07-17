@@ -139,6 +139,9 @@
     "custom-mime-types": {
       "Custom MIME types": -1
     },
+    "handler-logging": {
+      "Handler logging": -1
+    },
     "logging": {
       "Logging": -1
     },
