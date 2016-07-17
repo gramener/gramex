@@ -111,24 +111,31 @@ The key can accept multiple values. The values can either be:
     - `request.protocol`: Different caches for "http" vs "https"
     - `request.host`: Different caches when serving on multiple domain names
     - `request.method`: Different caches for "GET" vs "POST", etc
-- `headers.<header>`: For example, `headers.Content-Type` returns the
-  `Content-Type` header. The match is case-insensitive. Multiple values are
-  joined by comma.
+- `headers.<header>`: This translates to `handler.request.headers[header]`. For
+  example, `headers.Content-Type` returns the `Content-Type` header. The match
+  is case-insensitive. Multiple values are joined by comma.
 - `args.<arg>`: For example, `args.x` returns the value of the `?x=` query
   parameter. Multiple values are joined by comma.
-- `cookies.<cookie>`. For example, `cookies.user` returns the value of the
-  `user` cookie.
+- `cookies.<cookie>`. This translates to `handler.request.cookies[cookie]`. For
+  example, `cookies.user` returns the value of the `user` cookie.
+- `user.<attr>`: This translates to `handler.current_user[attr]`. For example,
+  `user.email` returns the user's email attribute if it is set.
 
-For example, this configuration caches based on the request, browser and user, ensuring that the user 
+For example, this configuration caches based on the request URI and user. Each
+URI is cached independently for each user ID.
 
     :::yaml
     cache-by-user-and-browser:
         ...
         cache:
-            key:                        # Cache based on
-              - request.uri             # the URL requested
-              - headers.user-agent      # the browser
-              - cookies.user            # and the user token
+            key:                # Cache based on
+              - request.uri     # the URL requested
+              - user.id         # and handler.current_user['email'] if it exists
+
+Google, Facebook, Twitter and LDAP provide the `user.id` attribute. DB Auth
+provides it if your user table has an `id` column. But you can use any other
+attribute instead of `id` -- e.g. `user.email` for Google, `user.screen_name`
+for Twitter, etc.
 
 
 ## Cache expiry

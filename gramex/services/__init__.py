@@ -198,10 +198,11 @@ def _get_cache_key(conf, name):
 
     The cache key is a string or a list of strings. The strings can be:
 
-    - ``request.attr`` => ``request.attr`` can be any request attribute.
+    - ``request.attr`` => ``request.attr`` can be any request attribute, as str
     - ``header.key`` => ``request.headers[key]``
     - ``cookies.key`` => ``request.cookies[key].value``
-    - ``args.key`` => ``requst.arguments[key]`` joined with a comma.
+    - ``args.key`` => ``request.arguments[key]`` joined with a comma.
+    - ``user.key`` => ``handler.current_user[key]`` as str
 
     Invalid key strings are ignored with a warning. If all key strings are
     invalid, the default cache.key of ``request.uri`` is used.
@@ -219,12 +220,15 @@ def _get_cache_key(conf, name):
         # convert second part into a Python string representation
         val = repr(parts[1])
         if parts[0] == 'request':
-            key_getters.append('getattr(request, %s, missing)' % val)
+            key_getters.append('str(getattr(request, %s, missing))' % val)
         elif parts[0].startswith('header'):
             key_getters.append('request.headers.get(%s, missing)' % val)
         elif parts[0].startswith('cookie'):
             key_getters.append(
                 'request.cookies[%s].value if %s in request.cookies else missing' % (val, val))
+        elif parts[0].startswith('user'):
+            key_getters.append('str(handler.current_user.get(%s, missing)) '
+                               'if handler.current_user else missing' % val)
         elif parts[0].startswith('arg'):
             key_getters.append('argsep.join(request.arguments.get(%s, [missing_b]))' % val)
         else:
@@ -233,7 +237,8 @@ def _get_cache_key(conf, name):
     if not len(key_getters):
         key_getters = [default_key]
 
-    method = 'def cache_key(request):\n'
+    method = 'def cache_key(handler):\n'
+    method += '\trequest = handler.request\n'
     method += '\treturn (%s)' % ', '.join(key_getters)
     context = {
         'missing': '~',
@@ -298,7 +303,7 @@ def _cache_generator(conf, name):
     # This method will be added to the handler class as "cache", and called as
     # self.cache()
     def get_cachefile(handler):
-        return cachefile_class(key=cache_key(handler.request), store=store,
+        return cachefile_class(key=cache_key(handler), store=store,
                                handler=handler, expire=cache_expiry_duration,
                                statuses=set(cache_statuses))
 

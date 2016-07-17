@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
 import os
@@ -5,6 +6,7 @@ import pathlib
 import unittest
 import gramex.config
 import gramex.services
+from nose.tools import eq_
 from orderedattrdict import AttrDict
 from . import TestGramex, tempfiles
 from gramex.services.urlcache import ignore_headers, MemoryCache, DiskCache
@@ -41,6 +43,59 @@ class TestCacheConstructor(unittest.TestCase):
         self.assertIsInstance(cache['disk'], DiskCache)
         self.assertEqual(cache['disk']._dir, info.folder + '/.cache-url')
         self.check_cache_expiry(cache['disk'])
+
+
+class TestCacheKey(unittest.TestCase):
+    'Test Gramex cache: key behaviour'
+    def request(val):
+        return AttrDict(request=AttrDict(val))
+
+    # Check if request.* renders value as string
+    cache_key = gramex.services._get_cache_key({'key': ['request.abc']}, 'request')
+    eq_(cache_key(request({'x': 1})), '~')
+    eq_(cache_key(request({'abc': None})), 'None')
+    eq_(cache_key(request({'abc': 'λ–►'})), 'λ–►')
+    eq_(cache_key(request({'abc': {'x': 1}})), "{'x': 1}")
+
+    def user(val):
+        return AttrDict(request=AttrDict(uri='uri'), current_user=val)
+
+    # Check if user.* works
+    cache_key = gramex.services._get_cache_key({'key': ['request.uri', 'user.attr']}, 'user')
+    eq_(cache_key(user(None)), ('uri', '~'))
+    eq_(cache_key(user({})), ('uri', '~'))
+    eq_(cache_key(user({'attr': 'λ–►'})), ('uri', 'λ–►'))
+    eq_(cache_key(user({'attr': {'x': 1}})), ('uri', "{'x': 1}"))
+    eq_(cache_key(user({'attr': eq_}))[0], 'uri')
+
+    def cookie(key, value):
+        return AttrDict(request=AttrDict(uri='uri', cookies={key: AttrDict(value=value)}))
+
+    # Check if cookies.* works
+    cache_key = gramex.services._get_cache_key({'key': ['request.uri', 'cookies.sid']}, 'cookie')
+    eq_(cache_key(cookie('x', 1)), ('uri', '~'))
+    eq_(cache_key(cookie('sid', '')), ('uri', ''))
+    eq_(cache_key(cookie('sid', 'λ–►')), ('uri', 'λ–►'))
+
+    def header(key, value):
+        return AttrDict(request=AttrDict(uri='uri', headers={key: value}))
+
+    # Check if headers.* works
+    cache_key = gramex.services._get_cache_key({'key': ['request.uri', 'headers.key']}, 'headers')
+    eq_(cache_key(header('x', 1)), ('uri', '~'))
+    eq_(cache_key(header('key', '')), ('uri', ''))
+    eq_(cache_key(header('key', 'λ–►')), ('uri', 'λ–►'))
+
+    def arg(key, *values):
+        return AttrDict(request=AttrDict(uri='uri', arguments=AttrDict({key: values})))
+
+    # Check if args.* works
+    cache_key = gramex.services._get_cache_key({'key': ['request.uri', 'args.key']}, 'args')
+    eq_(cache_key(arg('x', b'x')), ('uri', b'~'))
+    eq_(cache_key(arg('key', b'')), ('uri', b''))
+    eq_(cache_key(arg('key', b'a')), ('uri', b'a'))
+    eq_(cache_key(arg('key', b'a', b'b')), ('uri', b'a, b'))
+
 
 
 class TestCacheFunctionHandler(TestGramex):
