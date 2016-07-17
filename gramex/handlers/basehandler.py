@@ -170,28 +170,31 @@ class BaseHandler(RequestHandler):
             'ip': 'handler.request.remote_ip',
             'status': 'handler.get_status()',
             'duration': 'handler.request.request_time() * 1000',
-            'size': 'handler.get_content_size()',
+            # TODO: get_content_size() is not available in RequestHandler
+            # 'size': 'handler.get_content_size()',
             'user': 'handler.current_user or ""',
             'session': 'handler.session.get("id", "")',
         }
         object_vars = {
-            'args': 'handler.get_argument("%(key)s")',
-            'headers': 'handler.request.headers.get("%(key)s")',
-            'cookies': 'handler.request.cookies["%(key)s"].value ' +
-                       'if "%(key)s" in request.cookies else ""',
-            'env': 'os.environ.get("%(key)s", "")',
+            'args': 'handler.get_argument("%(value)s", "")',
+            'headers': 'handler.request.headers.get("%(value)s", "")',
+            'cookies': 'handler.request.cookies["%(value)s"].value ' +
+                       'if "%(value)s" in handler.request.cookies else ""',
+            'user': '(handler.current_user or {}).get("%(value)s", "")',
+            'env': 'os.environ.get("%(value)s", "")',
         }
         code = dedent('''
-            def log_request(handler):
+            def log_request(handler, log_method=None):
                 obj = {}
                 status = obj['status'] = handler.get_status()
             %s
-                if status < 400:
-                    log_method = access_log.info
-                elif status < 500:
-                    log_method = access_log.warning
-                else:
-                    log_method = access_log.error
+                if log_method is None:
+                    if status < 400:
+                        log_method = access_log.info
+                    elif status < 500:
+                        log_method = access_log.warning
+                    else:
+                        log_method = access_log.error
                 log_method(log_format %% obj)
         ''')
         obj = []
@@ -202,14 +205,18 @@ class BaseHandler(RequestHandler):
             if '.' in key:
                 prefix, value = key.split('.', 2)
                 if prefix in object_vars:
-                    obj.append('    obj["%s"] = %s' % (key, object_vars[prefix] % {'key': key}))
+                    obj.append('    obj["%s"] = %s' % (key, object_vars[prefix] % {
+                        'key': key,
+                        'prefix': prefix,
+                        'value': value,
+                    }))
                     continue
-            app_log.error('Unknown key %s in log.format: %s', key, log['format'])
-            return
+            app_log.error('Skipping unknown key %s in log.format: %s', key, log['format'])
 
         context = {
             'log_format': log['format'],
             'access_log': access_log,
+            'os': os,
         }
         code = compile(code % '\n'.join(obj), filename='url:' + cls.name, mode='exec')
         exec(code, context)

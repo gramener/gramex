@@ -830,6 +830,14 @@ url:
         args: "xsrf"
         set_xsrf: true
 
+  logtest:
+    pattern: /logtest
+    handler: FunctionHandler
+    kwargs:
+        function: utils.logtest
+        log:
+            format: '%(method)s %(uri)s %(ip)s %(status)s %(duration)s %(args.x)s %(headers.head)s %(cookies.sid)s %(user.id)s %(env.HOME)s'
+
 # Display Gramex logs on console with indentation
 log:
     version: 1

@@ -150,3 +150,13 @@ def session(handler):
     if var is not None:
         handler.session['var'] = var
     return json.dumps(handler.session, indent=4)
+
+
+def logtest(handler):
+    result = {}
+
+    def log_method(s):
+        result['log'] = s
+
+    handler.log_request(log_method)
+    return result['log']
