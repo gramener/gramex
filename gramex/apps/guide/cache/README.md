@@ -130,7 +130,7 @@ URI is cached independently for each user ID.
         cache:
             key:                # Cache based on
               - request.uri     # the URL requested
-              - user.id         # and handler.current_user['email'] if it exists
+              - user.id         # and handler.current_user['id'] if it exists
 
 Google, Facebook, Twitter and LDAP provide the `user.id` attribute. DB Auth
 provides it if your user table has an `id` column. But you can use any other
