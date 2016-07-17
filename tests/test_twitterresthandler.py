@@ -47,7 +47,8 @@ class TestTwitterRESTHandler(TestGramex):
             self.assertEqual(r.status_code, OK)
             result = r.json()
             if key in ('search-url', 'search-body'):
-                self.assertEqual(len(result['statuses']), 2)
+                # Even if we ask for 2 tweets, Twitter may return less
+                self.assertLessEqual(len(result['statuses']), 2)
             elif key == 'show':
                 self.assertEqual(result['screen_name'].lower(), 'gramener')
             elif key == 'timeline':
