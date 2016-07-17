@@ -26,6 +26,7 @@ import tornado.web
 import logging.config
 import concurrent.futures
 import six.moves.urllib.parse as urlparse
+from six import text_type
 from orderedattrdict import AttrDict
 from gramex import debug, shutdown, __version__
 from gramex.config import locate, app_log
@@ -220,14 +221,14 @@ def _get_cache_key(conf, name):
         # convert second part into a Python string representation
         val = repr(parts[1])
         if parts[0] == 'request':
-            key_getters.append('str(getattr(request, %s, missing))' % val)
+            key_getters.append('u(getattr(request, %s, missing))' % val)
         elif parts[0].startswith('header'):
             key_getters.append('request.headers.get(%s, missing)' % val)
         elif parts[0].startswith('cookie'):
             key_getters.append(
                 'request.cookies[%s].value if %s in request.cookies else missing' % (val, val))
         elif parts[0].startswith('user'):
-            key_getters.append('str(handler.current_user.get(%s, missing)) '
+            key_getters.append('u(handler.current_user.get(%s, missing)) '
                                'if handler.current_user else missing' % val)
         elif parts[0].startswith('arg'):
             key_getters.append('argsep.join(request.arguments.get(%s, [missing_b]))' % val)
@@ -244,6 +245,7 @@ def _get_cache_key(conf, name):
         'missing': '~',
         'missing_b': b'~',      # args are binary
         'argsep': b', ',        # join args using binary comma
+        'u': text_type          # convert to unicode
     }
     exec(method, context)
     return context['cache_key']
