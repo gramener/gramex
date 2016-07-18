@@ -106,11 +106,9 @@ class FileHandler(BaseHandler):
         Absolute Path served to the user, after adding a default filename
     '''
 
-    SUPPORTED_METHODS = ("GET", "HEAD", "POST")
-
     @classmethod
     def setup(cls, path, default_filename=None, index=None, ignore=[], allow=[],
-              index_template=None, headers={}, **kwargs):
+              index_template=None, headers={}, methods=['GET', 'HEAD', 'POST'], **kwargs):
         super(FileHandler, cls).setup(**kwargs)
         cls.root, cls.pattern = None, None
         if isinstance(path, list):
@@ -127,13 +125,19 @@ class FileHandler(BaseHandler):
         cls.index_template = read_template(
             Path(index_template) if index_template is not None else _default_index_template)
         cls.headers = headers
-        cls.post = cls.get
-
-    def head(self, path=None):
-        return self.get(path, include_body=False)
+        # Set supported methods
+        if not isinstance(methods, (tuple, list)):
+            methods = [methods]
+        for method in methods:
+            method = method.lower()
+            setattr(cls, method, cls._head if method == 'head' else cls._get)
 
     @tornado.gen.coroutine
-    def get(self, path=None, include_body=True):
+    def _head(self, path=None):
+        yield self._get(path, include_body=False)
+
+    @tornado.gen.coroutine
+    def _get(self, path=None, include_body=True):
         self.include_body = include_body
         if isinstance(self.root, list):
             # Concatenate multiple files and serve them one after another

@@ -372,6 +372,22 @@ You can disable XSRF in `gramex.yaml` (but this is **not recommended**):
 
 For debugging without XSRF, start Gramex with a `--settings.xsrf_cookies=false` from the command line.
 
+## FileHandler HTTP methods
+
+By default FileHandler supports `GET`, `HEAD` and `POST` methods. You can map
+any of the following methods to the file using the `methods:` configuration as
+follows:
+
+    :::yaml
+    url:
+        name:
+            pattern: ...
+            handler: FileHandler
+            kwargs:
+                ...
+                methods: [GET, HEAD, POST, DELETE, PATCH, PUT, OPTIONS]
+
+
 ## File concatenation
 
 You can concatenate multiple files and serve them as a single file. For example:

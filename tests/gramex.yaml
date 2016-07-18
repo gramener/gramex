@@ -347,6 +347,20 @@ url:
       ignore: ignore-file.txt
       allow: ignore-file.txt
 
+  methods/get-only:
+    pattern: /methods/get-only
+    handler: FileHandler
+    kwargs:
+        path: index.template.html
+        methods: GET
+  methods/head-put-delete:
+    pattern: /methods/head-put-delete
+    handler: FileHandler
+    kwargs:
+        path: index.template.html
+        methods: [HEAD, put, DELete]
+
+
   # TestDataHandler for Sqlite
   data/csv:
     pattern: /datastore/sqlite/csv/
