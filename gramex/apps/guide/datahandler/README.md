@@ -110,6 +110,7 @@ You can use the `POST`, `PUT` and `DELETE` methods to add, update or delete rows
         ]
       }
     })
+    // OUTPUT
 
 ### DataHandler update
 
@@ -135,13 +136,13 @@ Here is the output of the updated row:
     $.ajax('flags', {
       headers: xsrf,
       method: 'GET',
-      data: {where: 'ID=UAK'}
+      data: {where: 'ID=UAK', format: 'json'}
     })
     // OUTPUT
 
 ### DataHandler delete
 
-`DELETE` deletes existing rows. The `where` parameter selects the rows to be deleted. FOr example, this deletes all rows where the `ID` is `UAK`:
+`DELETE` deletes existing rows. The `where` parameter selects the rows to be deleted. For example, this deletes all rows where the `ID` is `UAK`:
 
     :::js
     $.ajax('flags', {
@@ -163,7 +164,7 @@ function next() {
   if (text.match(/\$.ajax/)) {
     eval(text)
       .always(function(result) {
-        element.innerHTML = element.innerHTML.replace(/OUTPUT/, 'OUTPUT<br>' + result)
+        element.innerHTML = element.innerHTML.replace(/OUTPUT/, 'OUTPUT<br>' + JSON.stringify(result))
         if (pre.length > 0) next()
       })
   }

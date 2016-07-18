@@ -135,12 +135,14 @@ To prevent certain files from ever being served, specify the
     handlers:
         FileHandler:
             ignore:
-                - gramex.yaml           # Always ignore gramex.yaml in Filehandlers
-                - ".*"                  # Hide dotfiles
+                - gramex.yaml     # Always ignore gramex.yaml in Filehandlers
+                - ".*"            # Hide dotfiles
 
-The `gramex.yaml` file and all files beginning with `.` will be hidden. You can
-customise this further via the `allow:` and `ignore:` configurations in the
-handler. For example:
+The `gramex.yaml` file and all files beginning with `.` will be hidden by
+default. You can change the above setting in your `gramex.yaml` file.
+
+You can customise this further via the `allow:` and `ignore:` configurations in
+the handler. For example:
 
     :::yaml
     url:
@@ -342,6 +344,11 @@ Then extract the cookie and add a hidden input to your form:
     </script>
 
 [xsrf]: http://www.tornadoweb.org/en/stable/guide/security.html#cross-site-request-forgery-protection
+
+If you use AJAX or any other HTTP method to submit the form, you can submit XSRF tokens in 2 ways:
+
+1. As the `_xsrf` argument of the method (either in the URL or the body)
+2. As the `X-Xsrftoken` or `X-Csrftoken` HTTP header
 
 The XSRF cookie is automatically set when a FileHandler [template](#templates)
 accesses `handler.xsrf_token`. You can also set it explicitly, by adding a
