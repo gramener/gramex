@@ -106,7 +106,7 @@ class FileHandler(BaseHandler):
         Absolute Path served to the user, after adding a default filename
     '''
 
-    SUPPORTED_METHODS = ("GET", "HEAD")
+    SUPPORTED_METHODS = ("GET", "HEAD", "POST")
 
     @classmethod
     def setup(cls, path, default_filename=None, index=None, ignore=[], allow=[],
@@ -127,6 +127,7 @@ class FileHandler(BaseHandler):
         cls.index_template = read_template(
             Path(index_template) if index_template is not None else _default_index_template)
         cls.headers = headers
+        cls.post = cls.get
 
     def head(self, path=None):
         return self.get(path, include_body=False)
