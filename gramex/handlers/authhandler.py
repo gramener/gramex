@@ -2,6 +2,8 @@ from __future__ import unicode_literals
 import os
 import csv
 import six
+import time
+import uuid
 import logging
 import functools
 import tornado.web
@@ -275,6 +277,8 @@ class DBAuth(AuthHandler):
             cls.encrypt.append(build_transform(
                 password, vars=AttrDict(content=None),
                 filename='url>%s>encrypt' % (cls.name)))
+        if cls.forgot:
+            cls.recovery_conn = cls.setup_recovery_db()
 
     @classmethod
     def bind_to_db(cls):
@@ -286,21 +290,30 @@ class DBAuth(AuthHandler):
 
     def get(self):
         self.save_redirect_page()
-        self.render(self.template, error=None)
+        template = self.template
+        if self.forgot and 'forgot' in self.request.arguments:
+            template = self.forgot.template
+        self.render(template, error=None)
 
     @tornado.gen.coroutine
     def post(self):
-        user = self.get_argument(self.user.arg)
-        password = self.get_argument(self.password.arg)
-        for encrypt in self.encrypt:
-            for result in encrypt(password):
-                password = result
-
         # To access the table, we need to connect to the database. Doing that in
         # setup() is too early -- schedule or other methods may not have created
         # the table by then. So try here, and retry every request.
         self.bind_to_db()
         # TODO: if this bind does not work, report an error on connection
+
+        if self.forgot and 'forgot' in self.request.arguments:
+            self.forgot_password()
+        else:
+            self.login()
+
+    def login(self):
+        user = self.get_argument(self.user.arg)
+        password = self.get_argument(self.password.arg)
+        for encrypt in self.encrypt:
+            for result in encrypt(password):
+                password = result
 
         from sqlalchemy import and_
         query = self.table.select().where(and_(
@@ -322,3 +335,83 @@ class DBAuth(AuthHandler):
                 'code': 'auth',
                 'error': 'Cannot log in'
             })
+
+    def forgot_password(self):
+        template = self.forgot.template
+        error = {'code': 'auth'}
+        forgot = self.get_argument('forgot')
+        # if POST ?forgot=<token>&password=...
+        if forgot:
+            cursor = self.recovery_conn.cursor()
+            cursor.execute('SELECT * from users WHERE token = "%s"' % forgot)
+            row = cursor.fetchone()
+            # if system generated token in database
+            if row is not None:
+                row = dict(row)
+                # if token is not expired
+                if row['expire'] > time.time():
+                    password = self.get_argument(self.password.arg)
+                    for encrypt in self.encrypt:
+                        for result in encrypt(password):
+                            password = result
+                    # update password in database
+                    values = {
+                        self.user.column: row['user'],
+                        self.password.column: password}
+                    query = self.table.update().where(
+                        self.table.c[self.user.column] == row['user']
+                    ).values(values)
+                    self.engine.execute(query)
+                    error = {}
+                else:
+                    self.set_status(status_code=401)
+                    error['error'] = 'Token expired'
+            else:
+                self.set_status(status_code=401)
+                error['error'] = 'Invalid Token'
+        # else POST ?forgot&user=...
+        else:
+            user = self.get_argument(self.user.arg)
+            query = self.table.select().where(
+                self.table.c[self.user.column] == user
+            )
+            result = self.engine.execute(query)
+            user = result.fetchone()
+            # if user in register userbase
+            if user is not None:
+                user = dict(user)
+                # generate token and set expiry
+                token = uuid.uuid4().hex
+                expire = time.time() + (self.forgot.minutes_to_expiry * 60)
+                # store values into database
+                self.recovery_conn.execute(
+                    'INSERT INTO users VALUES (?, ?, ?, ?)',
+                    [user[self.user.column], user['email'], token, expire])
+                self.recovery_conn.commit()
+                # send password reset mail to user
+                mailer = gramex.service.email[self.forgot.email_from]
+                reset_url = self.request.protocol + '://' + self.request.host + self.request.uri
+                reset_url += '=' + token
+                body = 'Go to the following page and choose a new password: %s' % reset_url
+                gramex.service.threadpool.submit(
+                    mailer.mail,
+                    to=user['email'],
+                    subject='Password reset',
+                    body=body)
+                error = {}
+            else:
+                self.set_status(status_code=401)
+                error['error'] = 'No user found'
+        self.render(template, error=error)
+
+    @classmethod
+    def setup_recovery_db(cls):
+        import sqlite3
+        # create database at GRAMEXDATA location
+        path = os.path.join(gramex.variables.GRAMEXDATA, 'auth.recovery.db')
+        conn = sqlite3.connect(path, check_same_thread=False)
+        conn.row_factory = sqlite3.Row
+        conn.execute('CREATE TABLE IF NOT EXISTS users '
+                     '(user TEXT, email TEXT, token TEXT, expire REAL)')
+        conn.commit()
+        return conn
