@@ -10,11 +10,11 @@ Gramex: Gramener's Visualization Server
    :maxdepth: 2
 
    readme
+   components
+   design
    gramex.handlers
    gramex.services
    gramex.transforms
-   components
-   design
    contributing
    authors
    history
