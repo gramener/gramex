@@ -254,7 +254,8 @@ class DBAuth(AuthHandler):
             function: passlib.hash.sha256_crypt.encrypt         # Encryption function
             kwargs: {salt: 'secret-key'}                        # Salt key
         forgot:
-            arg: forgot                     # ?forgot= is used as the forgot password parameter
+            key: forgot                     # ?forgot= is used as the forgot password parameter
+            arg: email                      # ?email= is used as the email parameter
             template: $YAMLPATH/forgot.html # Forgot password template
             minutes_to_expiry: 15           # Minutes after which the link will expire
             email_column: user              # Database table column with email ID
@@ -274,7 +275,7 @@ class DBAuth(AuthHandler):
     3. Application generates a new password link (valid for ``minutes_to_expiry`` minutes).
     4. Application emails new password link to the email ID associated with user
     5. User is sent to ``?forgot=<token>`` => shows forgot password template (with password)
-    6. User enters new password (ideally twice) and submits => ``POST ?forgot=<token>&password=...``
+    6. User enters new password (twice) and submits => ``POST ?forgot=<token>&password=...``
     7. Application checks if token is valid. If yes, sets associated user's password and redirects
     8. On any error, shows forgot password template (with error)
     '''
@@ -288,11 +289,12 @@ class DBAuth(AuthHandler):
         cls.user.setdefault('arg', 'user')
         cls.password.setdefault('arg', 'password')
         if cls.forgot:
+            default_minutes_to_expiry = 15
             cls.forgot.setdefault('template', _forgot_template)
             cls.forgot.setdefault('key', 'forgot')
             cls.forgot.setdefault('arg', 'email')
             cls.forgot.setdefault('email_column', 'email')
-            cls.forgot.setdefault('minutes_to_expiry', 15)
+            cls.forgot.setdefault('minutes_to_expiry', default_minutes_to_expiry)
             cls.forgot.setdefault('email_subject', 'Password reset')
             # TODO: default email_from to the first available email service
         cls.encrypt = []
@@ -379,8 +381,6 @@ class DBAuth(AuthHandler):
 
             # If a mathing user exists in the database
             if user is not None and user[email_column]:
-                # TODO: TODAY: is this line required?
-                user = dict(user)
                 # generate token and set expiry
                 token = uuid.uuid4().hex
                 expire = time.time() + (self.forgot.minutes_to_expiry * 60)
@@ -430,7 +430,9 @@ class DBAuth(AuthHandler):
                     values = {
                         self.user.column: row['user'],
                         self.password.column: password}
-                    query = self.table.update().where(self.table.c[self.user.column] == row['user']).values(values)
+                    query = self.table.update().where(
+                        self.table.c[self.user.column] == row['user']
+                    ).values(values)
                     # TODO: TODAY: after usage, delete the token
                     self.engine.execute(query)
                     error = {}
