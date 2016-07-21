@@ -162,30 +162,72 @@ user enters `admin` in the `user` field, `uid={user},cn=...` becomes
 
 ## Database auth
 
-This configuration lets you log in from a [database table](db):
+This is the minimal configuration that lets you log in from a [database table](dbsimple):
 
     :::yaml
-    pattern: /$YAMLURL/db                 # Map this URL
-    handler: DBAuth                       # to the DBAuth handler
-    kwargs:
-        url: sqlite:///$YAMLPATH/auth.db  # Pick up list of users from this sqlalchemy URL
-        table: users                      # ... and this table
-        template: $YAMLPATH/dbauth.html   # Display login form using this template (optional)
-        user:
-            column: user                  # The users.user column is matched with
-            arg: user                     # ... the ?user= argument from the form
-        password:
-            column: password              # The users.password column is matched with
-            arg: password                 # ... the ?password= argument from the form
-            # If the database holds encrypted passwords, specify the same
-            # encryption method here. If the form password is the same as the
-            # database password, skip this section.
-            function: passlib.hash.sha256_crypt.encrypt
-            args: '=content'
-            kwargs: {salt: 'secret-key'}
+    url:
+      auth/db:
+        pattern: /db                          # Map this URL
+        handler: DBAuth                       # to the DBAuth handler
+        kwargs:
+            url: sqlite:///path/to/auth.db    # Pick up list of users from this sqlalchemy URL
+            table: users                      # ... and this table
+            user:
+                column: user                  # The user column in users table has the user ID
+            password:
+                column: password              # The password column in the users table has the password
 
-You should create a [HTML login template](ldap) that requests a username and
-password (along with a hidden [xsrf][xsrf] field). Here is a minimal template:
+Now create an `auth.db` with a table called `users` as follows:
+
+    user      password
+    -----     --------
+    name1     pwd1
+    name2     pwd2
+    ...       ...
+
+The code that creates this database is:
+
+    :::python
+    engine = sqlalchemy.create_engine('sqlite:///auth.db', encoding='utf-8')
+    engine.execute('CREATE TABLE users (user text, password text)')
+    engine.execute('INSERT INTO %s VALUES (?, ?)' % table, [
+        ['name1', 'pwd1'],
+        ['name2', 'pwd2'],
+        # ...
+    ])
+
+With this, you can log into `/db` as `name1` and `pwd1`, etc. It displays a
+[minimal HTML template][auth-template] that asks for an ID and password, and
+matches it with the `auth.db` sqlite3 database. 
+
+[auth-template]: http://code.gramener.com/s.anand/gramex/blob/master/gramex/handlers/auth.template.html
+
+You can configure several aspects of this flow. Below is a full configuration --
+[click here to try it out](db):
+
+    :::yaml
+    url:
+      auth/db:
+        pattern: /$YAMLURL/db                 # Map this URL
+        handler: DBAuth                       # to the DBAuth handler
+        kwargs:
+            url: sqlite:///$YAMLPATH/auth.db  # Pick up list of users from this sqlalchemy URL
+            table: users                      # ... and this table
+            template: $YAMLPATH/dbauth.html   # Display login form using this template (optional)
+            user:
+                column: user                  # The users.user column is matched with
+                arg: user                     # ... the ?user= argument from the form
+            password:
+                column: password              # The users.password column is matched with
+                arg: password                 # ... the ?password= argument from the form
+                # You should encrypt passwords when storing them.
+                # The function below specifies the encryption method:
+                function: passlib.hash.sha256_crypt.encrypt
+                args: '=content'              # The first parameter is the raw password
+                kwargs: {salt: 'secret-key'}  # Change secret-key to something unique
+
+You can create a [HTML login form](ldap) that requests a username and password
+(along with a hidden [xsrf][xsrf] field). Here is a minimal template:
 
     :::html
     <form method="POST">
@@ -206,6 +248,71 @@ client-side (JavaScript) instead, and disable this.
 
 For an example of how to create users in a database, see `create_user_database`
 from [authutil.py](authutil.py).
+
+### Forgot password
+
+`DBAuth` has a forgot password feature. The minimal configuration required is
+below:
+
+    url:
+      auth/db:
+        pattern: /db
+        handler: DBAuth
+        kwargs:
+            url: sqlite:///path/to/auth.db
+            table: users
+            user:
+                column: user
+            password:
+                column: password
+            forgot:
+                email_from: gramex-guide-gmail    # Name of the email service to use for sending emails
+
+Just add a `forgot:` section with an `email_from:` parameter that points to the
+same of an [email service](../email/).
+
+The `forgot:` section takes the following parameters (default values are shown):
+
+- `email_from: ...`. This is mandatory. Create an [email service](../email/) and
+  mention the name of the service here. Forgot password emails will be sent via
+  that service. (The sender name will be the same as that service.)
+- `minutes_to_expiry: 15`. The number of minutes after which the token expires.
+- `template: forgot.template.html`. The name of the template file used to render
+  the forgot password page. Copy [forgot.template.html][forgot-template] and
+  modify it as required. Specify the path to your template in `template:`
+- `arg: email`. The forgot password template allows the user to enter an email
+  or a user ID. The name of the email argument is configured by `arg:`. (The
+  name of the user ID argument is already specified in `user.arg`)
+- `email_column: email`. The name of the email column in the database table.
+- `email_text: ...`. The text of the email that is sent to the user. This is a
+  template string where `{reset_url}` is replaced with the password reset URL.
+  You can use any database table columns as keys. For example, if the user ID is
+  in the `user` column, `email_text: {user} password reset link is {reset_url}`
+  will replace `{user}` with the value in the user column, and `{reset_url}`
+  with the actual password reset URL.
+- `email_subject: ...`. The subject of the email that is sent to the user. This
+  is a template similar to `email_text`.
+- `key: forgot`. By default, the forgot password URL uses a `?forgot=`. You can
+  change that to any other key.
+
+Here is a more complete example:
+
+    :::yaml
+    forgot:
+        email_from: gramex-guide-gmail    # Name of the email service to use for sending emails
+        minutes_to_expiry: 15             # Minutes after which the link will expire
+        template: $YAMLPATH/forgot.html   # Forgot password template
+        arg: email                        # ?email= is used to submit the email ID of the user
+        email_column: email               # The database column that contains the email ID
+        email_subject: Password reset     # Subject of the email
+        email_text: |
+            This is an email from Gramex guide.
+            You clicked on the forgot password like for user {user}.
+            Visit this link to reset the password: {reset_url}
+        key: forgot                       # ?forgot= is used as the forgot password parameter
+
+
+[forgot-template]: http://code.gramener.com/s.anand/gramex/blob/master/gramex/handlers/forgot.template.html
 
 
 ## Log out

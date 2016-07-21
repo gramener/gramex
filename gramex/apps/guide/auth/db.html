@@ -37,6 +37,10 @@
       <input name="password" type="password" placeholder="Password">
       <button type="submit">Log in</button>
     </form>
+
+    {% if handler.conf.kwargs.get('forgot') %}
+      <p><a href="?{{ kwargs.forgot.key }}">Forgot your password?</a></p>
+    {% end %}
   <section>
 
 </body>
