@@ -260,6 +260,7 @@ class DBAuth(AuthHandler):
             minutes_to_expiry: 15           # Minutes after which the link will expire
             email_column: user              # Database table column with email ID
             email_from: email-service       # Name of the email service to use for sending emails
+            email_text: 'This email is for {user}, {email}'
 
     The login flow is as follows:
 
@@ -296,6 +297,7 @@ class DBAuth(AuthHandler):
             cls.forgot.setdefault('email_column', 'email')
             cls.forgot.setdefault('minutes_to_expiry', default_minutes_to_expiry)
             cls.forgot.setdefault('email_subject', 'Password reset')
+            cls.forgot.setdefault('email_text', 'This email is for {user}, {email}')
             # TODO: default email_from to the first available email service
         cls.encrypt = []
         if 'function' in password:
@@ -303,7 +305,7 @@ class DBAuth(AuthHandler):
                 password, vars=AttrDict(content=None),
                 filename='url>%s>encrypt' % (cls.name)))
         if cls.forgot:
-            cls.recovery_conn = cls.setup_recovery_db()
+            cls.recover = cls.setup_recover_db()
 
     @classmethod
     def bind_to_db(cls):
@@ -385,17 +387,18 @@ class DBAuth(AuthHandler):
                 token = uuid.uuid4().hex
                 expire = time.time() + (self.forgot.minutes_to_expiry * 60)
                 # store values into database
-                self.recovery_conn.execute(
-                    'INSERT INTO users VALUES (?, ?, ?, ?)',
-                    [user[self.user.column], user[email_column], token, expire])
-                self.recovery_conn.commit()
+                values = {
+                    'user': user[self.user.column],
+                    'email': user[email_column],
+                    'token': token,
+                    'expire': expire}
+                self.recover['engine'].execute(
+                    self.recover['table'].insert(), values)
                 # send password reset mail to user
                 mailer = gramex.service.email[self.forgot.email_from]
                 reset_url = self.request.protocol + '://' + self.request.host + self.request.path
                 reset_url += '?' + urllib_parse.urlencode({self.forgot.key: token})
-                # TODO: TODAY: provide an email template
-                body = 'Go to the following page and choose a new password for %s: %s' % (
-                    user[self.user.arg], reset_url)
+                body = self.forgot.email_text.format(**user) + ' : %s' % reset_url
                 # TODO: after the email is sent, if there's an exception, log the exception
                 gramex.service.threadpool.submit(
                     mailer.mail,
@@ -413,13 +416,12 @@ class DBAuth(AuthHandler):
 
         # Step 2: User clicks on email, submits new password via POST ?forgot=<token>&password=...
         else:
-            cursor = self.recovery_conn.cursor()
-            # TODO: TODAY: Use sqlalchemy for future portability into a different DB
-            cursor.execute('SELECT * from users WHERE token = "%s"' % forgot_key)
-            row = cursor.fetchone()
+            result = self.recover['engine'].execute(
+                self.recover['table'].select().where(
+                    self.recover['table'].c['token'] == forgot_key))
+            row = result.fetchone()
             # if system generated token in database
             if row is not None:
-                row = dict(row)
                 # if token is not expired
                 if row['expire'] > time.time():
                     password = self.get_argument(self.password.arg)
@@ -445,13 +447,15 @@ class DBAuth(AuthHandler):
         self.render(template, error=error)
 
     @classmethod
-    def setup_recovery_db(cls):
-        import sqlite3
-        # create database at GRAMEXDATA location
-        path = os.path.join(gramex.variables.GRAMEXDATA, 'auth.recovery.db')
-        conn = sqlite3.connect(path, check_same_thread=False)
-        conn.row_factory = sqlite3.Row
+    def setup_recover_db(cls):
+        from sqlalchemy import create_engine, MetaData
+        # create database at GRAMEXDATA locastion
+        path = os.path.join(gramex.variables.GRAMEXDATA, 'auth.recover.db')
+        url = 'sqlite:///{}'.format(path)
+        engine = create_engine(url)
+        conn = engine.connect()
         conn.execute('CREATE TABLE IF NOT EXISTS users '
                      '(user TEXT, email TEXT, token TEXT, expire REAL)')
-        conn.commit()
-        return conn
+        meta = MetaData(bind=engine)
+        meta.reflect()
+        return {'engine': engine, 'table': meta.tables['users']}
