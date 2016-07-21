@@ -8,22 +8,11 @@ information about past releases.
 Features for the next 2 releases are below. Bugs to be fixed are at the
 [issue tracker](http://code.gramener.com/s.anand/gramex/issues).
 
-## 1.11 (15 Jul 2016): Data entry
-
-- Data discovery and metadata explorer
-- Data table display
-- Visual filtering of data
-- Data uploads and management
-- Email service
-
-## 1.12 (21 Jul 2016): Charts
-
-- Form-based data entry
-- Forgot password management for DBAuth
-- D3 charts that support core requirements
-
 ## 1.13 (31 Jul 2016)
 
+- NTLM auth
+- Conditiona variables
+- D3 charts that support core requirements
 - Editable text annotations (like [teletext.io](https://teletext.io/help/get-started))
 
 
