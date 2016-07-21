@@ -10,6 +10,7 @@ from .basehandler import BaseHandler
 
 drivers = {}
 NOT_FOUND = 404
+sa, pd, bz = None, None, None       # Initialize late-loaded libraries to avoid flake8 errors
 
 
 class DataHandler(BaseHandler):
