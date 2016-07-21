@@ -297,7 +297,8 @@ class DBAuth(AuthHandler):
             cls.forgot.setdefault('email_column', 'email')
             cls.forgot.setdefault('minutes_to_expiry', default_minutes_to_expiry)
             cls.forgot.setdefault('email_subject', 'Password reset')
-            cls.forgot.setdefault('email_text', 'This email is for {user}, {email}')
+            cls.forgot.setdefault(
+                'email_text', 'Visit {reset_url} to reset password for user {user} ({email})')
             # TODO: default email_from to the first available email service
         cls.encrypt = []
         if 'function' in password:
@@ -398,7 +399,7 @@ class DBAuth(AuthHandler):
                 mailer = gramex.service.email[self.forgot.email_from]
                 reset_url = self.request.protocol + '://' + self.request.host + self.request.path
                 reset_url += '?' + urllib_parse.urlencode({self.forgot.key: token})
-                body = self.forgot.email_text.format(**user) + ' : %s' % reset_url
+                body = self.forgot.email_text.format(reset_url=reset_url, **user)
                 # TODO: after the email is sent, if there's an exception, log the exception
                 gramex.service.threadpool.submit(
                     mailer.mail,
