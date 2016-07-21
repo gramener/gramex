@@ -6,6 +6,7 @@ import os
 import six
 import json
 import pathlib
+import requests
 import markdown
 from orderedattrdict import AttrDict
 from gramex.transforms import badgerfish
@@ -184,3 +185,21 @@ class TestFileHandler(TestGramex):
         self.check('/dir/ignore-list/ignore-list.txt', code=403)
         self.check('/dir/allow-file/gramex.yaml', code=200)
         self.check('/dir/allow-ignore/ignore-file.txt', code=200)
+
+    def test_methods(self):
+        config = {
+            '/methods/get-only': {
+                200: ('get',),
+                405: ('head', 'post', 'put', 'delete', 'patch', 'options'),
+            },
+            '/methods/head-put-delete': {
+                200: ('head', 'put', 'delete'),
+                405: ('get', 'post', 'patch', 'options'),
+            }
+        }
+        for url, results in config.items():
+            for code, methods in results.items():
+                for method in methods:
+                    r = getattr(requests, method)(server.base_url + url)
+                    self.assertEqual(r.status_code, code,
+                                     '%s %s should return %d' % (method, url, code))
