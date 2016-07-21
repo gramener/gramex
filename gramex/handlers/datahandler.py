@@ -53,19 +53,21 @@ class DataHandler(BaseHandler):
         cls.driver_key = yaml.dump(kwargs)
 
         # Identify driver. Import heavy libraries on demand for speed
+        import importlib
+        global_dict = globals()
         driver = kwargs.get('driver')
         cls.driver_name = driver
         if driver == 'sqlalchemy':
-            import sqlalchemy as sa
+            global_dict['sa'] = importlib.import_module('sqlalchemy')
             cls.driver_method = cls._sqlalchemy
         elif driver == 'blaze':
-            import blaze as bz
+            global_dict['bz'] = importlib.import_module('blaze')
             cls.driver_method = cls._blaze
         else:
             raise NotImplementedError('driver=%s is not supported yet.' % driver)
 
         # Import common heavy libraries
-        import pandas as pd
+        global_dict['pd'] = importlib.import_module('pandas')
 
         posttransform = kwargs.get('posttransform', {})
         cls.posttransform = []
