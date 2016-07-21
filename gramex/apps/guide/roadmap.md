@@ -10,8 +10,11 @@ Features for the next 2 releases are below. Bugs to be fixed are at the
 
 ## 1.13 (31 Jul 2016)
 
-- NTLM auth
-- Conditiona variables
+- NTLM authentication
+- Improved test coverage
+- Simple conditionals in configuration files
+- Mechanism to add configuration / settings pages
+- Monitoring & logging report usage
 - D3 charts that support core requirements
 - Editable text annotations (like [teletext.io](https://teletext.io/help/get-started))
 

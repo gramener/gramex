@@ -3,6 +3,19 @@
 History
 -------
 
+
+1.12 (2016-07-21)
+~~~~~~~~~~~~~~~~~
+
+* `DBAuth`_ features a forgot password feature.
+* `FileHandler`_ supports ``POST`` and other HTTP methods via the ``methods:``
+  configuration. ``POST`` is now available by default.
+* The ``cache:`` key supports user attributes. You can cache responses based on
+  the user.
+* Gramex loads a bit faster by importing slow modules (e.g. Pandas) only if
+  required.
+
+
 1.11 (2016-07-15)
 ~~~~~~~~~~~~~~~~~
 

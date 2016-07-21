@@ -103,7 +103,7 @@ When releasing a new version of Gramex:
 
     - ``HISTORY.rst`` -- add release notes
     - ``gramex/release.json`` -- update the version number
-    - Run ``gramex/apps/guide/search/search.py``
+    - Run ``gramex/apps/guide/search/search.py`` using Python 3
 
 4. Push the ``dev`` branch to the server and ensure that there are no build
    errors.
