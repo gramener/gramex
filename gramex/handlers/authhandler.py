@@ -18,6 +18,8 @@ from .basehandler import BaseHandler
 
 _auth_template = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                               'auth.template.html')
+_forgot_template = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                'forgot.template.html')
 
 # Python 3 csv.writer.writerow writes as str(), which is unicode in Py3.
 # Python 2 csv.writer.writerow writes as str(), which is bytes in Py2.
@@ -256,6 +258,7 @@ class DBAuth(AuthHandler):
             template: $YAMLPATH/forgot.html # Forgot password template
             minutes_to_expiry: 15           # Minutes after which the link will expire
             email_column: user              # Database table column with email ID
+            email_from: email-service       # Name of the email service to use for sending emails
 
     The login flow is as follows:
 
@@ -263,15 +266,35 @@ class DBAuth(AuthHandler):
     2. User enters user name and password, and submits. Browser redirects with a POST request
     3. Application checks username and password. On match, redirects.
     4. On any error, shows template (with error)
+
+    The forgot password flow is as follows:
+
+    1. User visits ``?forgot`` => shows forgot password template (with the user name)
+    2. User enters user name and submits. Browser redirects to ``POST ?forgot&user=...``
+    3. Application generates a new password link (valid for ``minutes_to_expiry`` minutes).
+    4. Application emails new password link to the email ID associated with user
+    5. User is sent to ``?forgot=<token>`` => shows forgot password template (with password)
+    6. User enters new password (ideally twice) and submits => ``POST ?forgot=<token>&password=...``
+    7. Application checks if token is valid. If yes, sets associated user's password and redirects
+    8. On any error, shows forgot password template (with error)
     '''
     @classmethod
-    def setup(cls, url, table, user, password, **kwargs):
+    def setup(cls, url, table, user, password, forgot=None, **kwargs):
         super(DBAuth, cls).setup(**kwargs)
         from sqlalchemy import create_engine
-        cls.user, cls.password, cls.tablename = user, password, table
-        cls.forgot = kwargs.pop('forgot', None)
+        cls.user, cls.password, cls.tablename, cls.forgot = user, password, table, forgot
         cls.engine = create_engine(url, **kwargs.get('parameters', {}))
         cls.template = kwargs.get('template', _auth_template)
+        cls.user.setdefault('arg', 'user')
+        cls.password.setdefault('arg', 'password')
+        if cls.forgot:
+            cls.forgot.setdefault('template', _forgot_template)
+            cls.forgot.setdefault('key', 'forgot')
+            cls.forgot.setdefault('arg', 'email')
+            cls.forgot.setdefault('email_column', 'email')
+            cls.forgot.setdefault('minutes_to_expiry', 15)
+            cls.forgot.setdefault('email_subject', 'Password reset')
+            # TODO: default email_from to the first available email service
         cls.encrypt = []
         if 'function' in password:
             cls.encrypt.append(build_transform(
@@ -291,7 +314,7 @@ class DBAuth(AuthHandler):
     def get(self):
         self.save_redirect_page()
         template = self.template
-        if self.forgot and 'forgot' in self.request.arguments:
+        if self.forgot and self.forgot.key in self.request.arguments:
             template = self.forgot.template
         self.render(template, error=None)
 
@@ -303,7 +326,7 @@ class DBAuth(AuthHandler):
         self.bind_to_db()
         # TODO: if this bind does not work, report an error on connection
 
-        if self.forgot and 'forgot' in self.request.arguments:
+        if self.forgot and self.forgot.key in self.request.arguments:
             self.forgot_password()
         else:
             self.login()
@@ -339,11 +362,60 @@ class DBAuth(AuthHandler):
     def forgot_password(self):
         template = self.forgot.template
         error = {'code': 'auth'}
-        forgot = self.get_argument('forgot')
-        # if POST ?forgot=<token>&password=...
-        if forgot:
+        forgot_key = self.get_argument(self.forgot.key)
+
+        # Step 1: user submits their user ID / email via POST ?forgot&user=...
+        if not forgot_key:
+            # Get the user based on the user ID or email ID (in that priority)
+            forgot_user = self.get_argument(self.user.arg, None)
+            forgot_email = self.get_argument(self.forgot.arg, None)
+            if forgot_user:
+                query = self.table.c[self.user.column] == forgot_user
+            else:
+                query = self.table.c[self.forgot.email_column] == forgot_email
+            result = self.engine.execute(self.table.select().where(query))
+            user = result.fetchone()
+            email_column = self.forgot.get('email_column', 'email')
+
+            # If a mathing user exists in the database
+            if user is not None and user[email_column]:
+                # TODO: TODAY: is this line required?
+                user = dict(user)
+                # generate token and set expiry
+                token = uuid.uuid4().hex
+                expire = time.time() + (self.forgot.minutes_to_expiry * 60)
+                # store values into database
+                self.recovery_conn.execute(
+                    'INSERT INTO users VALUES (?, ?, ?, ?)',
+                    [user[self.user.column], user[email_column], token, expire])
+                self.recovery_conn.commit()
+                # send password reset mail to user
+                mailer = gramex.service.email[self.forgot.email_from]
+                reset_url = self.request.protocol + '://' + self.request.host + self.request.path
+                reset_url += '?' + urllib_parse.urlencode({self.forgot.key: token})
+                # TODO: TODAY: provide an email template
+                body = 'Go to the following page and choose a new password for %s: %s' % (
+                    user[self.user.arg], reset_url)
+                # TODO: after the email is sent, if there's an exception, log the exception
+                gramex.service.threadpool.submit(
+                    mailer.mail,
+                    to=user[email_column],
+                    subject=self.forgot.email_subject,
+                    body=body)
+                error = {}                          # Render at the end with no errors
+            # If no user matches the user ID or email ID
+            else:
+                self.set_status(status_code=401)
+                if user is None:
+                    error['error'] = 'No user matching %s found' % (forgot_user or forgot_email)
+                elif not user[email_column]:
+                    error['error'] = 'No email matching %s found' % (forgot_user or forgot_email)
+
+        # Step 2: User clicks on email, submits new password via POST ?forgot=<token>&password=...
+        else:
             cursor = self.recovery_conn.cursor()
-            cursor.execute('SELECT * from users WHERE token = "%s"' % forgot)
+            # TODO: TODAY: Use sqlalchemy for future portability into a different DB
+            cursor.execute('SELECT * from users WHERE token = "%s"' % forgot_key)
             row = cursor.fetchone()
             # if system generated token in database
             if row is not None:
@@ -358,9 +430,8 @@ class DBAuth(AuthHandler):
                     values = {
                         self.user.column: row['user'],
                         self.password.column: password}
-                    query = self.table.update().where(
-                        self.table.c[self.user.column] == row['user']
-                    ).values(values)
+                    query = self.table.update().where(self.table.c[self.user.column] == row['user']).values(values)
+                    # TODO: TODAY: after usage, delete the token
                     self.engine.execute(query)
                     error = {}
                 else:
@@ -369,39 +440,6 @@ class DBAuth(AuthHandler):
             else:
                 self.set_status(status_code=401)
                 error['error'] = 'Invalid Token'
-        # else POST ?forgot&user=...
-        else:
-            user = self.get_argument(self.user.arg)
-            query = self.table.select().where(
-                self.table.c[self.user.column] == user
-            )
-            result = self.engine.execute(query)
-            user = result.fetchone()
-            # if user in register userbase
-            if user is not None:
-                user = dict(user)
-                # generate token and set expiry
-                token = uuid.uuid4().hex
-                expire = time.time() + (self.forgot.minutes_to_expiry * 60)
-                # store values into database
-                self.recovery_conn.execute(
-                    'INSERT INTO users VALUES (?, ?, ?, ?)',
-                    [user[self.user.column], user['email'], token, expire])
-                self.recovery_conn.commit()
-                # send password reset mail to user
-                mailer = gramex.service.email[self.forgot.email_from]
-                reset_url = self.request.protocol + '://' + self.request.host + self.request.uri
-                reset_url += '=' + token
-                body = 'Go to the following page and choose a new password: %s' % reset_url
-                gramex.service.threadpool.submit(
-                    mailer.mail,
-                    to=user['email'],
-                    subject='Password reset',
-                    body=body)
-                error = {}
-            else:
-                self.set_status(status_code=401)
-                error['error'] = 'No user found'
         self.render(template, error=error)
 
     @classmethod
