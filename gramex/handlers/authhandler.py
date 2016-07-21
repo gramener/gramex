@@ -399,13 +399,12 @@ class DBAuth(AuthHandler):
                 mailer = gramex.service.email[self.forgot.email_from]
                 reset_url = self.request.protocol + '://' + self.request.host + self.request.path
                 reset_url += '?' + urllib_parse.urlencode({self.forgot.key: token})
-                body = self.forgot.email_text.format(reset_url=reset_url, **user)
                 # TODO: after the email is sent, if there's an exception, log the exception
                 gramex.service.threadpool.submit(
                     mailer.mail,
                     to=user[email_column],
-                    subject=self.forgot.email_subject,
-                    body=body)
+                    subject=self.forgot.email_subject.format(reset_url=reset_url, **user),
+                    body=self.forgot.email_text.format(reset_url=reset_url, **user))
                 error = {}                          # Render at the end with no errors
             # If no user matches the user ID or email ID
             else:
