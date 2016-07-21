@@ -12,6 +12,9 @@ Gramex: Gramener's Visualization Server
    readme
    components
    design
+   gramex.handlers
+   gramex.services
+   gramex.transforms
    contributing
    authors
    history
