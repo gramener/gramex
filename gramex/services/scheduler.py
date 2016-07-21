@@ -79,6 +79,7 @@ def setup(schedule, tasks, threadpool, ioloop=None):
     tasks.clear()
     for name, sched in schedule.items():
         try:
+            app_log.info('Initialising schedule:%s', name)
             tasks[name] = Task(name, sched, threadpool, ioloop)
         except Exception as e:
             app_log.exception(e)
