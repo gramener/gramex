@@ -134,40 +134,6 @@ url:
                 query: next
                 url: /$YAMLURL
 
-    auth/forgot:
-        pattern: /$YAMLURL/forgot
-        handler: DBAuth
-        kwargs:
-            # This is created by schedule.create-user-database
-            url: $USER_DATABASE_URL
-            table: $USER_DATABASE_TABLE
-            template: $YAMLPATH/db.html
-            user:
-                column: $USER_DATABASE_USERCOLUMN
-                arg: user
-            password:
-                column: $USER_DATABASE_PASSWORDCOLUMN
-                arg: password
-                function: passlib.hash.sha256_crypt.encrypt
-                args: =content
-                kwargs: {salt: $USER_DATABASE_SALT}
-            forgot:
-                email_from: gramex-guide-gmail    # Name of the email service to use for sending emails
-                minutes_to_expiry: 15             # Minutes after which the link will expire
-                template: $YAMLPATH/forgot.html   # Forgot password template
-                arg: email                        # ?email= is used to submit the email ID of the user
-                email_column: email               # The database column that contains the email ID
-                email_subject: Password reset     # Subject of the email
-                email_text: |
-                    This is an email from Gramex guide.
-                    You clicked on the forgot password like for user {user}.
-                    Visit this link to reset the password: {reset_url}
-                key: forgot                       # ?forgot= is used as the forgot password parameter
-
-            redirect:
-                query: next
-                url: /$YAMLURL
-
     auth/user:
         pattern: /$YAMLURL/user
         handler: FunctionHandler
