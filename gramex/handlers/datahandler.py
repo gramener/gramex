@@ -2,8 +2,6 @@ import re
 import yaml
 import tornado.gen
 import tornado.web
-import pandas as pd
-import sqlalchemy as sa
 import gramex
 from tornado.web import HTTPError
 from orderedattrdict import AttrDict
@@ -54,12 +52,20 @@ class DataHandler(BaseHandler):
         cls.params = AttrDict(kwargs)
         cls.driver_key = yaml.dump(kwargs)
 
+        # Identify driver. Import heavy libraries on demand for speed
         driver = kwargs.get('driver')
         cls.driver_name = driver
-        if driver in ['sqlalchemy', 'blaze']:
-            cls.driver_method = getattr(cls, '_' + driver)
+        if driver == 'sqlalchemy':
+            import sqlalchemy as sa
+            cls.driver_method = cls._sqlalchemy
+        elif driver == 'blaze':
+            import blaze as bz
+            cls.driver_method = cls._blaze
         else:
             raise NotImplementedError('driver=%s is not supported yet.' % driver)
+
+        # Import common heavy libraries
+        import pandas as pd
 
         posttransform = kwargs.get('posttransform', {})
         cls.posttransform = []
@@ -230,9 +236,6 @@ class DataHandler(BaseHandler):
         return pd.DataFrame()
 
     def _blaze(self, _selects, _wheres, _groups, _aggs, _offset, _limit, _sorts):
-        # Import blaze on demand -- it's a very slow import
-        import blaze as bz                      # noqa
-
         # TODO: Not caching blaze connections
         parameters = self.params.get('parameters', {})
         bzcon = bz.Data(self.params['url'] +
