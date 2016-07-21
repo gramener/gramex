@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login</title>
+</head>
+<body>
+  <h1>Forgot password</h1>
+
+  {% if error %}
+    <div class="alert">
+      <h2>Error logging in</h2>
+      <p><strong>code</strong> {{ error['code'] }}</p>
+      <p><strong>error</strong> {{ error['error'] }}</p>
+    </div>
+  {% end %}
+
+  {% set token = handler.get_argument('forgot', None) %}
+  {% if not token %}
+
+    {# Step 1: User clicks on forgot password link #}
+    {% if handler.request.method == 'GET' %}
+      <p>Fill in your user ID or email and we'll send a reset password link.</p>
+      <form method="POST">
+        <input type="hidden" name="_xsrf" value="{{ handler.xsrf_token }}">
+        <input name="user" placeholder="Your username">
+        OR <input name="email" placeholder="Your email">
+        <button type="submit">Send reset password email</button>
+      </form>
+
+    {# Step 2: User submitted username / password #}
+    {% else %}
+      {% set kwargs = handler.conf.kwargs %}
+      {% if not error %}
+        {% try %}{% set user = kwargs.user.arg %}{% except %}{% set user = 'user' %}{% end %}
+        {% try %}{% set email = kwargs.forgot.email_column %}{% except %}{% set email = 'email' %}{% end %}
+        <p>We sent a reset password email to <code>{{ handler.get_argument(user, None) or handler.get_argument(email, None) }}</code></p>
+      {% else %}
+        <p>Back to the <a href="?{{ kwargs.forgot.key }}">forgot password page</a>.</p>
+      {% end %}
+    {% end %}
+
+  {% else %}
+    {# Step 3: User clicks on reset password link #}
+    {% if handler.request.method == 'GET' %}
+      <form method="POST">
+        <p>Select your new password.</p>
+        <input type="hidden" name="_xsrf" value="{{ handler.xsrf_token }}">
+        <input name="password" type="password" placeholder="password">
+        <!-- TODO: add a confirm password check -->
+        <button type="submit">Change password</button>
+      </form>
+
+    {# Step 4: User submits a new password #}
+    {% else %}
+      {% if not error %}
+        <p>Your password has been reset. Please <a href="{{ handler.request.path }}">log in</a> with your new password.</p>
+      {% else %}
+        {# We've already displayed the error message on top. Optionally, add any other message for errors. #}
+      {% end %}
+    {% end %}
+  {% end %}
+
+</body>
+</html>
