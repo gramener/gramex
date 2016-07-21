@@ -56,8 +56,13 @@ class TestGramex(unittest.TestCase):
 class TestSchedule(TestGramex):
 
     def test_schedule(self):
-        # Run this test as soon as Gramex starts to check if schedule has run
+        # Run this test as soon as Gramex starts to check if schedule has run.
         self.assertIn('schedule-key', info, 'Schedule was run at startup')
         self.check('/', code=OK)
+
+        # This tests that long running threads run in parallel. We run
+        # utils.slow_count every 10ms for kwargs.count seconds. If this test
+        # fails, increase schedule.schedule-startup-slow.kwargs.count. It may be
+        # due to slow startup.
         max_count = conf.schedule['schedule-startup-slow'].kwargs.count - 1
         self.assertTrue(0 < info['schedule-count'] < max_count, 'Schedule still running')

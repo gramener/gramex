@@ -884,6 +884,6 @@ schedule:
   schedule-startup-slow:
     function: utils.slow_count          # Set global schedule-count every 10ms
     args: 'schedule-count'
-    kwargs: {count: 200}
+    kwargs: {count: 1000}
     startup: true
     thread: true
