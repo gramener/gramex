@@ -416,9 +416,9 @@ class DBAuth(AuthHandler):
 
         # Step 2: User clicks on email, submits new password via POST ?forgot=<token>&password=...
         else:
+            where = self.recover['table'].c['token'] == forgot_key
             result = self.recover['engine'].execute(
-                self.recover['table'].select().where(
-                    self.recover['table'].c['token'] == forgot_key))
+                self.recover['table'].select().where(where))
             row = result.fetchone()
             # if system generated token in database
             if row is not None:
@@ -435,8 +435,9 @@ class DBAuth(AuthHandler):
                     query = self.table.update().where(
                         self.table.c[self.user.column] == row['user']
                     ).values(values)
-                    # TODO: TODAY: after usage, delete the token
                     self.engine.execute(query)
+                    self.recover['engine'].execute(
+                        self.recover['table'].delete(where))
                     error = {}
                 else:
                     self.set_status(status_code=401)
@@ -452,7 +453,7 @@ class DBAuth(AuthHandler):
         # create database at GRAMEXDATA locastion
         path = os.path.join(gramex.variables.GRAMEXDATA, 'auth.recover.db')
         url = 'sqlite:///{}'.format(path)
-        engine = create_engine(url)
+        engine = create_engine(url, encoding=str('utf-8'))
         conn = engine.connect()
         conn.execute('CREATE TABLE IF NOT EXISTS users '
                      '(user TEXT, email TEXT, token TEXT, expire REAL)')
