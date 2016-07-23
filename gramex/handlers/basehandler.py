@@ -51,7 +51,7 @@ class BaseHandler(RequestHandler):
             cls.transform[pattern] = {
                 'function': build_transform(
                     trans, vars=AttrDict((('content', None), ('handler', None))),
-                    filename='url>%s' % cls.name),
+                    filename='url:%s' % cls.name),
                 'headers': trans.get('headers', {}),
                 'encoding': trans.get('encoding'),
             }
