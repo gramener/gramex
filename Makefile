@@ -38,7 +38,7 @@ clean-pyc:
 clean-test:
 	rm -fr .tox/
 	rm -f .coverage
-	rm -fr htmlcov/
+	rm -fr cover/
 	rm -fr tests/.cache-url
 
 lint:
@@ -51,10 +51,8 @@ test-all:
 	tox
 
 coverage:
-	$(PYTHON) -m coverage run --include='gramex*' setup.py test
-	$(PYTHON) -m coverage report -m
-	$(PYTHON) -m coverage html
-	$(BROWSER) htmlcov/index.html
+	$(PYTHON) -m nose --with-coverage --cover-package=gramex --cover-erase --cover-inclusive --cover-html --cover-branches
+	$(BROWSER) cover/index.html
 
 docs:
 	rm -f docs/gramex* docs/modules.rst
@@ -73,7 +71,7 @@ endif
 showdocs:
 	$(BROWSER) docs/_build/html/index.html
 
-release-test: clean-test lint docs test coverage
+release-test: clean-test lint docs coverage
 
 release: clean
 	$(PYTHON) setup.py sdist
