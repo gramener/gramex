@@ -61,6 +61,8 @@ class DataHandler(BaseHandler):
         if driver == 'sqlalchemy':
             global_dict['sa'] = importlib.import_module('sqlalchemy')
             cls.driver_method = cls._sqlalchemy
+            # Create a cached metadata store for SQLAlchemy engines
+            cls.meta = sa.MetaData()
         elif driver == 'blaze':
             global_dict['bz'] = importlib.import_module('blaze')
             cls.driver_method = cls._blaze
@@ -98,8 +100,6 @@ class DataHandler(BaseHandler):
                         tmp[key] = [val]
                 qconfig[q] = tmp
         cls.qconfig = qconfig
-        # Create a cached metadata store for SQLAlchemy engines
-        cls.meta = sa.MetaData()
 
     def initialize(self, **kwargs):
         super(DataHandler, self).initialize(**kwargs)
