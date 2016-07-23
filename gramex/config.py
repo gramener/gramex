@@ -184,7 +184,9 @@ def _calc_value(val, key):
 
 
 def _from_yaml(loader, node):
-    '''Load mapping as AttrDict, preserving order. Raise error on duplicate keys'''
+    '''
+    Load mapping as AttrDict, preserving order. Raise error on duplicate keys
+    '''
     # Based on yaml.constructor.SafeConstructor.construct_mapping()
     attrdict = AttrDict()
     yield attrdict
@@ -208,10 +210,12 @@ def _from_yaml(loader, node):
 
 
 class ConfigYAMLLoader(Loader):
-    '''A YAML loader that loads mappings into ordered AttrDict.
-    Raises error on duplicate keys::
+    '''
+    A YAML loader that loads a YAML file into an ordered AttrDict. Usage::
 
-        >>> attrdict = yaml.load('x: 1\ny: 2', Loader=ConfigYAMLLoader)
+        >>> attrdict = yaml.load(yaml_string, Loader=ConfigYAMLLoader)
+
+    If there are duplicate keys, this raises an error.
     '''
     def __init__(self, *args, **kwargs):
         super(ConfigYAMLLoader, self).__init__(*args, **kwargs)
@@ -220,7 +224,9 @@ class ConfigYAMLLoader(Loader):
 
 
 def _yaml_open(path, default=AttrDict()):
-    '''Load a YAML path.Path as AttrDict. Replace {VAR} with variables'''
+    '''
+    Load a YAML path.Path as AttrDict. Replace {VAR} with variables
+    '''
     path = path.absolute()
     if not path.exists():
         if path not in _warned_paths:

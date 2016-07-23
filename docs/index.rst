@@ -8,16 +8,16 @@ Gramex: Gramener's Visualization Server
 
 .. toctree::
    :maxdepth: 2
+   :caption: Captions
+   :titlesonly:
 
-   readme
+   About <readme>
    components
    design
-   gramex.handlers
-   gramex.services
-   gramex.transforms
-   contributing
-   authors
-   history
+   API <gramex>
+   Contributing to Gramex <contributing>
+   Authors <authors>
+   Changelog <history>
 
 Indices and tables
 ==================

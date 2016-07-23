@@ -57,9 +57,8 @@ coverage:
 	$(BROWSER) htmlcov/index.html
 
 docs:
-	rm -f docs/gramex.rst
-	rm -f docs/modules.rst
-	sphinx-apidoc -o docs/ gramex
+	rm -f docs/gramex* docs/modules.rst
+	sphinx-apidoc -o docs/ gramex --no-toc
 	$(MAKE) -C docs clean
 	$(MAKE) -C docs html
 
