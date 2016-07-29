@@ -3,7 +3,7 @@ import json
 import tornado.gen
 from types import GeneratorType
 from orderedattrdict import AttrDict
-from gramex.config import locate
+from gramex.config import locate, variables
 
 
 def _arg_repr(arg):
@@ -161,3 +161,32 @@ def build_transform(conf, vars=None, filename='transform'):
     # Cache the result and return it
     _build_transform_cache[cache_key] = function
     return function
+
+
+def condition(*args):
+    '''
+    Variables can also be computed based on conditions
+
+    variables:
+        OS:
+            default: 'No OS variable defined'
+        PORT:
+            function: condition
+            args:
+                - $OS.startswith('Windows')
+                - 9991
+                - $OS.startswith('Linux')
+                - 9992
+                - 8883
+    '''
+    from string import Template
+    var_defaults = {}
+    for var in variables:
+        var_defaults[var] = "variables.get('%s', '')" % var
+    # could use iter, range(.., 2)
+    for cond, val in zip(args[0::2], args[1::2]):
+        if eval(Template(cond).substitute(var_defaults)):
+            return val
+
+    if len(args) % 2 != 0:
+        return args[-1]
