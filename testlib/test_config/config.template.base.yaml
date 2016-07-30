@@ -60,6 +60,12 @@ variables:
             - False
             - invalid
             - condition7
+    CONDITION8:
+        function: condition
+        args:
+            '1 == 2': invalid
+            '2 == 3': invalid
+        default: condition8
 
 base_DOT: "{.}"
 base_YAMLPATH: $YAMLPATH
@@ -92,10 +98,11 @@ import:
     subdir: dir/config.template.subdir.yaml
 
 conditions:
-    condition1: $CONDITION1
-    condition2: $CONDITION2
-    condition3: $CONDITION3
-    condition4: $CONDITION4
-    condition5: $CONDITION5
-    condition6: $CONDITION6
-    condition7: $CONDITION7
+    condition1: is-$CONDITION1
+    condition2: is-$CONDITION2
+    condition3: is-$CONDITION3
+    condition4: is-$CONDITION4
+    condition5: is-$CONDITION5
+    condition6: is-$CONDITION6
+    condition7: is-$CONDITION7
+    condition8: is-$CONDITION8

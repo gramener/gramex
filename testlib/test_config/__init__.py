@@ -203,7 +203,7 @@ class TestPathConfig(unittest.TestCase):
 
         # Check condition variables
         for key, val in conf['conditions'].items():
-            self.assertEqual(key, val)
+            self.assertEqual('is-' + key, val)
 
 
 class TestConfig(unittest.TestCase):
