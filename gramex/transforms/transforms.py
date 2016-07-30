@@ -195,5 +195,8 @@ def condition(*args):
         elif bool(cond):
             return val
 
-    if len(args) % 2 != 0:
+    # If none of the conditions matched, we'll be here.
+    # If there are an odd number of arguments and there's at least one condition,
+    # treat the last as a default.
+    if len(args) % 2 == 1 and len(args) > 2:
         return args[-1]
