@@ -285,13 +285,11 @@ class BaseHandler(RequestHandler):
                 if mime_type:
                     error_config.setdefault('headers', {}).setdefault('Content-Type', mime_type)
             elif 'function' in error_config:
-                cls.error[error_code] = {
-                    'function': build_transform(
-                        error_config,
-                        vars=AttrDict((('status_code', None), ('kwargs', None), ('handler', None))),
-                        filename='url:%s.error.%d' % (cls.name, error_code)
-                    )
-                }
+                cls.error[error_code] = {'function': build_transform(
+                    error_config,
+                    vars=AttrDict((('status_code', None), ('kwargs', None), ('handler', None))),
+                    filename='url:%s.error.%d' % (cls.name, error_code)
+                )}
             else:
                 app_log.error('url.%s.error.%d must have a path or function key',
                               cls.name, error_code)
