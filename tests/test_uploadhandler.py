@@ -36,11 +36,11 @@ class TestUploadHandler(TestGramex):
         self.assertEqual(requests.get(server.base_url + url).status_code, METHOD_NOT_ALLOWED)
         tests = [
             {'files': {}},
-            {'files': {'text': open('config.a.yaml')}, 'keys': ['config.a.yaml']},
-            {'files': {'nopk': open('config.b.yaml')}},
-            {'files': {'image': open('config.a.yaml')}, 'keys': ['config.a.1.yaml']},
-            {'files': {'image': open('config.a.yaml'), 'text': open('config.b.yaml')},
-             'keys': ['config.a.2.yaml', 'config.b.yaml']},
+            {'files': {'text': open('userdata.csv')}, 'keys': ['userdata.csv']},
+            {'files': {'nopk': open('actors.csv')}},
+            {'files': {'image': open('userdata.csv')}, 'keys': ['userdata.1.csv']},
+            {'files': {'image': open('userdata.csv'), 'text': open('actors.csv')},
+             'keys': ['userdata.2.csv', 'actors.csv']},
             {'files': {'unknown': ('file.csv', 'some,λ\nanother,λ\n')}, 'keys': ['file.csv']},
             {'files': {'unknown': ('file', 'noextensionfile')}, 'keys': ['file']},
             {'files': {}, 'data': {'rm': 'file'}}]
