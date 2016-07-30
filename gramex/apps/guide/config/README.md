@@ -272,6 +272,66 @@ If any of these keys are not available, the logger logs an empty string in its
 place.
 
 
+## Error handlers
+
+URL handlers allow custom logging of errors. For example, to show a custom 404 page, use:
+
+    :::yaml
+    url:
+        pattern: ...
+        handler: ...
+        kwargs:
+            ...
+            error:
+                404:
+                  path: error-page.html
+
+Here is an example of an [error-page](error-page). The error page is rendered as
+a template with 3 keyword arguments:
+
+- `status_code`: the HTTP status code of the error
+- `kwargs`: if this error was caused by an uncaught exception or raising a
+  HTTPError, `kwargs['exc_info']` is available as an exception triple
+- `handler`: the handler object
+
+The error page can also be a function. For example:
+
+    :::yaml
+    url:
+        pattern: ...
+        handler: ...
+        kwargs:
+            ...
+            error:
+                500:
+                  function: config_error_page.show_error
+
+The function is passed the same 3 keyword arguments mentioned above. Its return
+value is rendered as a string.
+
+Both methods support some customisations. Here is a full example showing the
+customisations:
+
+    :::yaml
+    url:
+        pattern: ...
+        handler: ...
+        kwargs:
+            ...
+            error:
+                404:
+                  path: error-page.json     # Content-Type is set to application/json based on extension
+                  autoescape: false         # To avoid converting quotes to &quot; etc
+                  whitespace: oneline       # Remove all whitespace. 'single' preserves newlines. 'all' preserves all whitespace
+                  headers:                  # Override HTTP headers
+                      Content-Type: text/plain
+                500:
+                  function: config_error_page.show_error    # Show this functions output
+                  args: [=status_code, =kwargs, =handler]   # These are the default arguments passed
+                  headers:                                  # Override HTTP headers
+                      Cache-Control: no-cache
+
+
 ## Scheduling
 
 The `schedule:` section schedules functions to run at specific times or on

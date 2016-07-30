@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Error page</title>
+  <link rel="stylesheet" href="../style.css">
+</head>
+<body class="container">
+
+  <nav class="menu">
+    <h1><a href=".">Back to Config</a></h1>
+  </nav>
+
+  <section class="content">
+    <h1>{{ status_code }} Error Page</h1>
+    <p>This is an error page. It acts as a template and is passed 3 keyword arguments:</p>
+    <ol>
+      <li><code>status_code</code>: currently, this is <code>{{ status_code }}</code></li>
+      <li><code>kwargs</code>: if this error was caused by an uncaught exception or raising a HTTPError, <code>kwargs['exc_info']</code> is available as an exception triple.</li>
+      <li><code>handler</code>: the handler object. For example, <code>handler.request.uri</code> is <code>{{ handler.request.uri }}</code>.</li>
+    </ol>
+    <p>You may show any information you want here.</p>
+  </section>
+</body>
+</html>

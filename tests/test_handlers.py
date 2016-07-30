@@ -4,7 +4,7 @@ from . import TestGramex
 
 
 class TestURLPriority(TestGramex):
-    'Test Gramex URL priority sequence'
+    '''Test Gramex URL priority sequence'''
 
     def test_url_priority(self):
         self.check('/path/abc', text='/path/.*')
@@ -17,7 +17,7 @@ class TestURLPriority(TestGramex):
 
 
 class TestURLNormalization(TestGramex):
-    'Test URL pattern normalization'
+    '''Test URL pattern normalization'''
 
     def test_url_normalization(self):
         self.check('/path/norm1', text='/path/norm1')
@@ -25,14 +25,14 @@ class TestURLNormalization(TestGramex):
 
 
 class TestAttributes(TestGramex):
-    'Ensure that BaseHandler subclasses have relevant attributes'
+    '''Ensure that BaseHandler subclasses have relevant attributes'''
 
     def test_attributes(self):
         self.check('/func/attributes', code=200)
 
 
 class TestXSRF(TestGramex):
-    'Test BaseHandler xsrf: setting'
+    '''Test BaseHandler xsrf: setting'''
 
     def test_xsrf(self):
         r = self.check('/path/norm')
@@ -47,3 +47,13 @@ class TestXSRF(TestGramex):
         # Next request does not set xsrf cookie, because it already exists
         r = session.get(server.base_url + '/xsrf', timeout=10)
         self.assertFalse('Set-Cookie' in r.headers)
+
+class TestErrorHandling(TestGramex):
+    '''Test BaseHandler error: setting'''
+    def test_error(self):
+        for code, url in ((404, '/error/404-template-na'), (500, '/error/500-function')):
+            r = self.check(url, code=code)
+            self.assertEqual(r.headers['Content-Type'], 'application/json')
+            result = r.json()
+            self.assertEqual(result['status_code'], code)
+            self.assertTrue(result['handler.request.uri'].endswith(url))

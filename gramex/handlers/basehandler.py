@@ -1,15 +1,19 @@
 from __future__ import unicode_literals
 
+import io
 import os
 import json
 import atexit
+import mimetypes
 import functools
 import tornado.gen
 from textwrap import dedent
+from types import GeneratorType
 from binascii import b2a_base64
 from orderedattrdict import AttrDict, DefaultAttrDict
 from six.moves.urllib_parse import urlparse, urlsplit, urljoin, urlencode
 from tornado.log import access_log
+from tornado.template import Template
 from tornado.web import RequestHandler, HTTPError
 from gramex import conf, __version__
 from gramex.config import objectpath, app_log
@@ -26,7 +30,8 @@ class BaseHandler(RequestHandler):
     handlers. All RequestHandlers must inherit from BaseHandler.
     '''
     @classmethod
-    def setup(cls, transform={}, redirect={}, auth=None, log={}, set_xsrf=None, **kwargs):
+    def setup(cls, transform={}, redirect={}, auth=None, log={}, set_xsrf=None,
+              error=None, **kwargs):
         '''
         One-time setup for all request handlers. This is called only when
         gramex.yaml is parsed / changed.
@@ -38,6 +43,7 @@ class BaseHandler(RequestHandler):
         cls.setup_auth(auth)
         cls.setup_session(conf.app.get('session'))
         cls.setup_log(log or objectpath(conf, 'handlers.BaseHandler.log'))
+        cls.setup_error(error)
         cls._set_xsrf = set_xsrf
 
         # app.settings.debug enables debugging exceptions using pdb
@@ -150,19 +156,22 @@ class BaseHandler(RequestHandler):
             if auth.get('condition'):
                 cls.permissions.append(
                     build_transform(auth['condition'], vars=AttrDict(handler=None),
-                                    filename='url>%s.auth.permission' % cls.name))
+                                    filename='url:%s.auth.permission' % cls.name))
             for keypath, values in auth.get('membership', {}).items():
                 cls.permissions.append(check_membership(keypath, values))
 
     @classmethod
     def setup_log(cls, log):
-        if log is None or (isinstance(log, dict) and 'format' not in log):
+        if log is None:
+            return
+        if not isinstance(log, dict) or 'format' not in log:
+            app_log.error('url:%s.log is not a dict with a format key', cls.name)
             return
         params = DefaultAttrDict(int)
         try:
             log['format'] % params
         except (TypeError, ValueError):
-            app_log.error('Invalid log.format: %s', log['format'])
+            app_log.error('url:%s.log.format invalid: %s', cls.name, log['format'])
             return
         direct_vars = {
             'method': 'handler.request.method',
@@ -222,6 +231,74 @@ class BaseHandler(RequestHandler):
         exec(code, context)
         cls.log_request = context['log_request']
 
+    @classmethod
+    def setup_error(cls, error):
+        '''
+        Sample configuration::
+
+            error:
+                404:
+                    path: template.json         # Use a template
+                    autoescape: false           # with no autoescape
+                    whitespace: single          # as a single line
+                    headers:
+                        Content-Type: application/json
+                500:
+                    function: module.fn
+                    args: [=status_code, =kwargs, =handler]
+        '''
+        if not error:
+            return
+        if not isinstance(error, dict):
+            app_log.error('url:%s.error is not a dict', cls.name)
+            return
+        # Compile all errors handlers
+        cls.error = {}
+        for error_code, error_config in error.items():
+            try:
+                error_code = int(error_code)
+                assert 100 <= error_code <= 1000
+            except (ValueError, AssertionError):
+                app_log.error('url.%s.error code %s is not a number (100 - 1000)',
+                              cls.name, error_code)
+                continue
+            if not isinstance(error_config, dict):
+                app_log.error('url:%s.error.%d is not a dict', cls.name, error_code)
+                return
+            if 'path' in error_config:
+                encoding = error_config.get('encoding', 'utf-8')
+                template_kwargs = {}
+                if 'autoescape' in error_config:
+                    if not error_config['autoescape']:
+                        template_kwargs['autoescape'] = None
+                    else:
+                        app_log.error('url:%s.error.%d.autoescape can only be false',
+                                      cls.name, error_code)
+                if 'whitespace' in error_config:
+                    template_kwargs['whitespace'] = error_config['whitespace']
+                # TODO: every time the template changes, recompile it. Add watch, remove old watch
+                with io.open(error_config['path'], 'r', encoding=encoding) as handle:
+                    cls.error[error_code] = {
+                        'function': Template(handle.read(), **template_kwargs).generate
+                    }
+                mime_type, encoding = mimetypes.guess_type(error_config['path'], strict=False)
+                if mime_type:
+                    error_config.setdefault('headers', {}).setdefault('Content-Type', mime_type)
+            elif 'function' in error_config:
+                cls.error[error_code] = {
+                    'function': build_transform(
+                        error_config,
+                        vars=AttrDict((('status_code', None), ('kwargs', None), ('handler', None))),
+                        filename='url:%s.error.%d' % (cls.name, error_code)
+                    )
+                }
+            else:
+                app_log.error('url.%s.error.%d must have a path or function key',
+                              cls.name, error_code)
+        if error_code in cls.error:
+            cls.error[error_code]['conf'] = error_config
+        cls._write_error, cls.write_error = cls.write_error, cls._write_custom_error
+
     def initialize(self, **kwargs):
         self.kwargs = kwargs
         self._session, self._session_json = None, 'null'
@@ -261,19 +338,23 @@ class BaseHandler(RequestHandler):
     @tornado.gen.coroutine
     def _cached_get(self, *args, **kwargs):
         cached = self.cachefile.get()
-        headers_written = set()
         if cached is not None:
             self.set_status(cached['status'])
-            for name, value in cached['headers']:
-                if name in headers_written:
-                    self.add_header(name, value)
-                else:
-                    self.set_header(name, value)
-                    headers_written.add(name)
+            self._write_headers(cached['headers'])
             self.write(cached['body'])
         else:
             self.cachefile.wrap(self)
             yield self.original_get(*args, **kwargs)
+
+    def _write_headers(self, headers):
+        '''Write headers from a list of pairs that may be duplicated'''
+        headers_written = set()
+        for name, value in headers:
+            if name in headers_written:
+                self.add_header(name, value)
+            else:
+                self.set_header(name, value)
+                headers_written.add(name)
 
     def get_current_user(self):
         return self.session.get('user')
@@ -282,6 +363,26 @@ class BaseHandler(RequestHandler):
         super(BaseHandler, self).log_exception(typ, value, tb)
         import ipdb as pdb
         pdb.post_mortem(tb)
+
+    def _write_custom_error(self, status_code, **kwargs):
+        if status_code in self.error:
+            try:
+                result = self.error[status_code]['function'](
+                    status_code=status_code, kwargs=kwargs, handler=self)
+                self._write_headers(self.error[status_code]['conf'].get('headers', {}).items())
+                # result may be a generator / tuple from build_transform,
+                # or a str from Template.generate. Handle either case
+                if isinstance(result, (GeneratorType, tuple)):
+                    for item in result:
+                        self.write(item)
+                else:
+                    self.write(result)
+                return
+            except Exception:
+                app_log.exception('url:%s.error.%d error handler raised an exception:' %
+                                  (self.name, status_code))
+        # If error was not written, use the default error
+        self._write_error(status_code, **kwargs)
 
     @property
     def session(self):

@@ -852,6 +852,27 @@ url:
         log:
             format: '%(method)s %(uri)s %(ip)s %(status)s %(duration)s %(args.x)s %(headers.head)s %(cookies.sid)s %(user.id)s %(env.HOME)s'
 
+  error/404-template:
+    pattern: /error/404-template(.*)
+    handler: FileHandler
+    kwargs:
+        path: $YAMLPATH/dir/
+        error:
+            404:
+                path: $YAMLPATH/error-404.json
+                autoescape: false
+                whitespace: single
+  error/500-function:
+    pattern: /error/500-function
+    handler: FunctionHandler
+    kwargs:
+        function: utils.zero_division_error
+        error:
+            500:
+                function: utils.handle_error
+                headers:
+                    Content-Type: application/json
+
 # Display Gramex logs on console with indentation
 log:
     version: 1

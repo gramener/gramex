@@ -2,3 +2,13 @@ url:
     config/hello:
         pattern: /$YAMLURL/hello
         handler: hello.Hello
+
+    config/files:
+        priority: 1
+        pattern: /$YAMLURL/(error.*)
+        handler: FileHandler
+        kwargs:
+            path: $YAMLPATH/handler
+            error:
+                404:
+                    path: $YAMLPATH/error-page.html

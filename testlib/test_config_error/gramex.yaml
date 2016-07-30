@@ -31,3 +31,15 @@ url:
         kwargs:
             log:
                 format: '%(nonexistent)'    # log.format keys should be valid
+
+    error_no_dict:
+        pattern: /error_no_dict
+        handler: JSONHandler
+        kwargs:
+            error: []                   # error must be a dict
+
+    error_no_keys:
+        pattern: /error_code_no_keys
+        handler: JSONHandler
+        kwargs:
+            error: {a: 0, 1: 0, 1001: 0}        # error keys must be 100 <= int <= 1000

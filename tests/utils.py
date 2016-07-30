@@ -160,3 +160,16 @@ def logtest(handler):
 
     handler.log_request(log_method)
     return result['log']
+
+
+def zero_division_error(handler):
+    '''Dummy function that raises a ZeroDivisionError exception'''
+    1 / 0
+
+
+def handle_error(status_code, kwargs, handler):
+    return json.dumps({
+      'status_code': status_code,
+      'kwargs': repr(kwargs),
+      'handler.request.uri': handler.request.uri,
+    })
