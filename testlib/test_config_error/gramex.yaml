@@ -1,0 +1,33 @@
+url:
+    log_not_dict:
+        pattern: /log_not_dict
+        handler: JSONHandler
+        kwargs:
+            log: [1, 2, 3]      # log should be a dict
+
+    log_no_format:
+        pattern: /log_no_format
+        handler: JSONHandler
+        kwargs:
+            log: {a: 1}         # log.format should exist
+
+    log_format_not_string:
+        pattern: /log_format_not_string
+        handler: JSONHandler
+        kwargs:
+            log:
+                format: 1       # log.format should be a string
+
+    log_format_invalid:
+        pattern: /log_format_invalid
+        handler: JSONHandler
+        kwargs:
+            log:
+                format: '%0'    # log.format should be a valid format string
+
+    log_format_unknown:
+        pattern: /log_format_invalid
+        handler: JSONHandler
+        kwargs:
+            log:
+                format: '%(nonexistent)'    # log.format keys should be valid
