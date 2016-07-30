@@ -507,6 +507,44 @@ Once the variables are assigned, the `variables` section is removed.
 To learn about pre-defined variables, and how these variables are used in
 practice, read [deployment patterns](../deploy/).
 
+### Conditional variables
+
+A useful pre-defined function that you can use is `condition`. This sets the
+variable based on a condition. This example sets `$DEBUG` based on `$OS`:
+
+    :::yaml
+    variables:
+        PORT:
+          function: condition                   # Set value as condition(...)
+          args:                                 # Pass a dictionary
+              "'windows' in $OS.lower()": 4444  # On Windows, run on port 4444
+              "'linux' in $OS.lower()": 8888    # On Linux, in port 8888
+          default: 9999                         # By default, in port 9999
+
+This is the same `condition({"'windows' in $OS.lower()': 4444,  ...})`
+
+- The keys are conditions. They are evaluated as Python expressions
+- Any `$` variables in the keys are substituted with their current values
+- If the result of the condition is true, the value is used. Otherwise, the next condition is evaluated
+- If no condition is valid, the `default` value is used.
+
+The same can be achieved using a slightly different syntax:
+
+    :::yaml
+    variables:
+        PORT:
+          function: condition                   # Set value as condition(...)
+          args:                                 # Pass a dictionary
+              - "'windows' in $OS.lower()"      # On Windows
+              - 4444                            # run on port 4444
+              - 'linux' in $OS.lower()"         # On Linux
+              - 8888                            # Run on port 8888
+              - 9999                            # By default, in port 9999
+
+Instead of a dictionary of (condition, value) pairs, we pass a list of
+(condition1, value1, condition2, value2, ... [default]). If there are an odd
+number of values, the last is treated as the default value.
+
 
 ## YAML inheritence
 

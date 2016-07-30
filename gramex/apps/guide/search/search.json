@@ -133,6 +133,9 @@
     "computed-variables": {
       "Computed variables": -1
     },
+    "conditional-variables": {
+      "Conditional variables": -1
+    },
     "configuration-access": {
       "Configuration access": -1
     },
@@ -141,6 +144,9 @@
     },
     "custom-mime-types": {
       "Custom MIME types": -1
+    },
+    "error-handlers": {
+      "Error handlers": -1
     },
     "handler-logging": {
       "Handler logging": -1
