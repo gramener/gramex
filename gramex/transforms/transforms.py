@@ -184,8 +184,15 @@ def condition(*args):
     for var in variables:
         var_defaults[var] = "variables.get('%s', '')" % var
     # could use iter, range(.., 2)
-    for cond, val in zip(args[0::2], args[1::2]):
-        if eval(Template(cond).substitute(var_defaults)):
+    if len(args) == 1 and isinstance(args[0], dict):
+        pairs = args[0].items()
+    else:
+        pairs = zip(args[0::2], args[1::2])
+    for cond, val in pairs:
+        if isinstance(cond, six.string_types):
+            if eval(Template(cond).substitute(var_defaults)):
+                return val
+        elif bool(cond):
             return val
 
     if len(args) % 2 != 0:
