@@ -65,6 +65,7 @@ setup(
     # package_data includes data files for binary & source distributions
     # include_package_data is only for source distributions, uses MANIFEST.in
     package_data={
+        # Add a matching list in testlib/test_setup.py for verification
         'gramex': [
             'gramex.yaml',
             'apps.yaml',

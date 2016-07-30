@@ -15,7 +15,7 @@ variables:
 subdir_DOT: "{.}"
 subdir_YAMLPATH: $YAMLPATH
 subdir_YAMLURL: $YAMLURL
-subdir_YAMLURL_EXPECTED: tests/dir
+subdir_YAMLURL_EXPECTED: test_config/dir
 subdir_HOME: $HOME
 subdir_NONEXISTENT: $NONEXISTENT
 subdir_ROOT: $ROOT
@@ -25,7 +25,7 @@ subdir_FUNCTION: $FUNCTION
 subdir_DEFAULT_FUNCTION: $DEFAULT_FUNCTION
 subdir_DERIVED: $DERIVED
 subdir_YAMLURL_VAR: $YAMLURL_VAR
-subdir_YAMLURL_VAR_EXPECTED: tests/dir
+subdir_YAMLURL_VAR_EXPECTED: test_config/dir
 subdir_GRAMEXPATH: $GRAMEXPATH
 
 path: $YAMLPATH     # import must not over-ride path in config.template.base.yaml

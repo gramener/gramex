@@ -161,7 +161,7 @@ class BuildTransform(unittest.TestCase):
             result = gen_str(_val)
             return result if isinstance(result, GeneratorType) else (result,)
         self.check_transform(transform, '''
-            function: tests.test_transforms.gen_str
+            function: testlib.test_transforms.gen_str
         ''')
 
 
