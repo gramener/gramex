@@ -17,6 +17,50 @@ variables:
     OBJECT: {x: 1}
     LIST: [1, 2]
 
+    CONDITION1:
+        function: condition
+        args:
+            - "$ROOT == 'base'"
+            - condition1
+        default: invalid
+    CONDITION2:
+        function: condition
+        args:
+            - $NUMERIC >= 2
+            - invalid
+            - $NUMERIC <= 0
+            - invalid
+            - 0 < $NUMERIC < 2
+            - condition2
+        default: invalid
+    CONDITION3:
+        function: condition
+        args:
+            - "'x' in $OBJECT and sum($LIST) == 3"
+            - condition3
+    CONDITION4:
+        function: condition
+        args:
+            - False
+            - invalid
+        default: condition4
+    CONDITION5:
+        function: condition
+        args:
+            "$ROOT == 'base'": condition5
+    CONDITION6:
+        function: condition
+        args:
+            '$NUMERIC >= 2': invalid
+            '$NUMERIC <= 0': invalid
+            '0 < $NUMERIC < 2': condition6
+    CONDITION7:
+        function: condition
+        args:
+            - False
+            - invalid
+            - condition7
+
 base_DOT: "{.}"
 base_YAMLPATH: $YAMLPATH
 base_YAMLURL: $YAMLURL
@@ -46,3 +90,12 @@ list_subst: "/${LIST}"
 
 import:
     subdir: dir/config.template.subdir.yaml
+
+conditions:
+    condition1: $CONDITION1
+    condition2: $CONDITION2
+    condition3: $CONDITION3
+    condition4: $CONDITION4
+    condition5: $CONDITION5
+    condition6: $CONDITION6
+    condition7: $CONDITION7

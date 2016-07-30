@@ -201,6 +201,10 @@ class TestPathConfig(unittest.TestCase):
         # self.assertEqual(conf['object_subst'], "/{'x': 1}")
         self.assertEqual(conf['list_subst'], '/[1, 2]')
 
+        # Check condition variables
+        for key, val in conf['conditions'].items():
+            self.assertEqual(key, val)
+
 
 class TestConfig(unittest.TestCase):
     def test_walk_dict(self):
