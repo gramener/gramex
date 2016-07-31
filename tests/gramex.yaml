@@ -886,6 +886,23 @@ url:
       auth: true
       path: $YAMLPATH/uploads
       methods: GET
+  auth/membership:
+    pattern: /auth/membership
+    handler: FileHandler
+    kwargs:
+        path: dir/alpha.txt
+        auth:
+            membership:
+                user: [alpha, beta]
+  auth/condition:
+    pattern: /auth/condition
+    handler: FileHandler
+    kwargs:
+        path: dir/alpha.txt
+        auth:
+            condition:
+                function: six.text_type.endswith
+                args: [=handler.current_user.user, 'ta']        # beta, delta
 
   xsrf:
     pattern: /xsrf

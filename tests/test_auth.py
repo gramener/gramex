@@ -116,14 +116,14 @@ class TestDBAuth(DBAuthBase):
 
 
 class TestAuthorize(DBAuthBase):
-    def initialize(self, url):
+    def initialize(self, url, user='alpha'):
         self.session = requests.Session()
         r = self.session.get(server.base_url + url)
         self.assertEqual(r.url, server.base_url + '/login?' + urlencode({'next': url}))
         r = self.session.post(server.base_url + url)
         self.assertEqual(r.url, server.base_url + url)
         self.assertEqual(r.status_code, UNAUTHORIZED)
-        self.ok('alpha', 'alpha', check_next='/dir/index/')
+        self.ok(user, user, check_next='/dir/index/')
 
     def test_auth_filehandler(self):
         self.initialize('/auth/filehandler')
@@ -150,6 +150,21 @@ class TestAuthorize(DBAuthBase):
     def test_auth_uploadhandler(self):
         self.initialize('/auth/uploadhandler')
 
+    def test_auth_membership(self):
+        self.initialize('/auth/membership')
+        self.check('/auth/membership', path='dir/alpha.txt', session=self.session)
+        self.ok('beta', 'beta', check_next='/dir/index/')
+        self.check('/auth/membership', path='dir/alpha.txt', session=self.session)
+        self.ok('gamma', 'gamma', check_next='/dir/index/')
+        self.check('/auth/membership', code=FORBIDDEN, session=self.session)
+
+    def test_auth_condition(self):
+        self.initialize('/auth/condition', user='beta')
+        self.check('/auth/condition', path='dir/alpha.txt', session=self.session)
+        self.ok('delta', 'delta', check_next='/dir/index/')
+        self.check('/auth/condition', path='dir/alpha.txt', session=self.session)
+        self.ok('alpha', 'alpha', check_next='/dir/index/')
+        self.check('/auth/condition', code=FORBIDDEN, session=self.session)
 
 
 class TestLDAPAuth(TestGramex):
