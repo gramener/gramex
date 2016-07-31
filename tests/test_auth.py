@@ -6,11 +6,12 @@ import lxml.html
 import pandas as pd
 import sqlalchemy as sa
 from nose.plugins.skip import SkipTest
+from six.moves.urllib_parse import urlencode
 import gramex.config
 from . import TestGramex
 from . import server
 
-OK, UNAUTHORIZED = 200, 401
+OK, UNAUTHORIZED, FORBIDDEN = 200, 401, 403
 
 
 class TestSession(TestGramex):
@@ -46,7 +47,7 @@ class TestSession(TestGramex):
         self.assertEqual(self.data2, json.loads(r2.text))
 
 
-class TestDBAuth(TestGramex):
+class DBAuthBase(TestGramex):
     @classmethod
     def setUpClass(cls):
         folder = os.path.dirname(os.path.abspath(__file__))
@@ -67,7 +68,7 @@ class TestDBAuth(TestGramex):
         cls.session = requests.Session()
         cls.url = server.base_url + '/auth/db'
 
-    def post(self, user, password, query_next=None, header_next=None):
+    def login(self, user, password, query_next=None, header_next=None):
         # Get the login page
         params, headers = {}, {}
         if query_next is not None:
@@ -87,17 +88,18 @@ class TestDBAuth(TestGramex):
 
     def ok(self, *args, **kwargs):
         check_next = kwargs.pop('check_next')
-        r = self.post(*args, **kwargs)
+        r = self.login(*args, **kwargs)
         self.assertEqual(r.status_code, OK)
         self.assertNotRegexpMatches(r.text, 'error code')
         self.assertEqual(r.url, server.base_url + check_next)
 
     def unauthorized(self, *args, **kwargs):
-        r = self.post(*args, **kwargs)
+        r = self.login(*args, **kwargs)
         self.assertEqual(r.status_code, UNAUTHORIZED)
         self.assertRegexpMatches(r.text, 'error code')
         self.assertEqual(r.url, self.url)
 
+class TestDBAuth(DBAuthBase):
     def test_login(self):
         self.ok('alpha', 'alpha', check_next='/dir/index/')
         self.ok('beta', 'beta', check_next='/dir/index/')
@@ -113,8 +115,45 @@ class TestDBAuth(TestGramex):
         self.ok('alpha', 'alpha', header_next='/func/args', check_next='/func/args')
 
 
+class TestAuthorize(DBAuthBase):
+    def initialize(self, url):
+        self.session = requests.Session()
+        r = self.session.get(server.base_url + url)
+        self.assertEqual(r.url, server.base_url + '/login?' + urlencode({'next': url}))
+        r = self.session.post(server.base_url + url)
+        self.assertEqual(r.url, server.base_url + url)
+        self.assertEqual(r.status_code, UNAUTHORIZED)
+        self.ok('alpha', 'alpha', check_next='/dir/index/')
+
+    def test_auth_filehandler(self):
+        self.initialize('/auth/filehandler')
+        self.check('/auth/filehandler', path='dir/alpha.txt', session=self.session)
+
+    def test_auth_functionhandler(self):
+        self.initialize('/auth/functionhandler')
+        self.check('/auth/functionhandler', text='OK', session=self.session)
+
+    def test_auth_datahandler(self):
+        self.initialize('/auth/datahandler')
+
+    def test_auth_jsonhandler(self):
+        self.initialize('/auth/jsonhandler/')
+        r = self.check('/auth/jsonhandler/', session=self.session)
+        self.assertEqual(r.json(), {'x': 1})
+
+    def test_auth_processhandler(self):
+        self.initialize('/auth/processhandler')
+
+    def test_auth_twitterresthandler(self):
+        self.initialize('/auth/twitterresthandler')
+
+    def test_auth_uploadhandler(self):
+        self.initialize('/auth/uploadhandler')
+
+
+
 class TestLDAPAuth(TestGramex):
-    def post(self, user, password):
+    def login(self, user, password):
         self.url = server.base_url + '/auth/ldap'
         r = requests.get(self.url)
         tree = lxml.html.fromstring(r.text)
@@ -128,14 +167,14 @@ class TestLDAPAuth(TestGramex):
         self.assertEqual(r.status_code, OK)
 
     def test_ldap(self):
-        r = self.post('admin', 'Secret123')
+        r = self.login('admin', 'Secret123')
         if r.status_code == UNAUTHORIZED and r.headers.get('Auth-Error', None) == 'conn':
             raise SkipTest('Unable to connect to LDAP server')
         self.assertEqual(r.status_code, OK)
         self.assertEqual(r.url, server.base_url + '/')
 
     def test_ldap_wrong_password(self):
-        r = self.post('admin', 'wrong-password')
+        r = self.login('admin', 'wrong-password')
         if r.status_code == UNAUTHORIZED and r.headers.get('Auth-Error', None) == 'conn':
             raise SkipTest('Unable to connect to LDAP server')
         self.assertEqual(r.status_code, UNAUTHORIZED)

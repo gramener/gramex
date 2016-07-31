@@ -25,11 +25,12 @@ def tearDown():
 class TestGramex(unittest.TestCase):
     'Base class to test Gramex running as a subprocess'
 
-    def get(self, url, **kwargs):
-        return requests.get(server.base_url + url, timeout=10, **kwargs)
+    def get(self, url, session=None, **kwargs):
+        req = session or requests
+        return req.get(server.base_url + url, timeout=10, **kwargs)
 
-    def check(self, url, path=None, code=200, text=None, no_text=None, headers=None):
-        r = self.get(url)
+    def check(self, url, path=None, code=200, text=None, no_text=None, headers=None, session=None):
+        r = self.get(url, session=session)
         self.assertEqual(r.status_code, code, '%s: code %d != %d' % (url, r.status_code, code))
         if text is not None:
             self.assertIn(text, r.text, '%s: %s not in %s' % (url, text, r.text))

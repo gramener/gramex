@@ -836,6 +836,57 @@ url:
             header: NEXT
             url: /dir/index/
 
+  auth/functionhandler:
+    pattern: /auth/functionhandler
+    handler: FunctionHandler
+    kwargs:
+        auth: true
+        function: six.text_type
+        args: 'OK'
+  auth/filehandler:
+    pattern: /auth/filehandler
+    handler: FileHandler
+    kwargs:
+        auth: true
+        path: dir/alpha.txt
+  auth/datahandler:
+    pattern: /auth/datahandler
+    handler: DataHandler
+    kwargs:
+        auth: true
+        driver: sqlalchemy
+        url: sqlite:///actors.db        # This dataset doesn't actually exist
+        table: actors
+  auth/jsonhandler:
+    pattern: /auth/jsonhandler/(.*)
+    handler: JSONHandler
+    kwargs:
+        auth: true
+        data: {x: 1}
+  auth/processhandler:
+    pattern: /auth/processhandler
+    handler: ProcessHandler
+    kwargs:
+        auth: true
+        args: [python, "$YAMLPATH/processtest.py", a, '1', 'x y']
+  auth/twitterresthandler:
+    pattern: /auth/twitterresthandler
+    handler: TwitterRESTHandler
+    kwargs:
+      auth: true
+      # Gramener > Gramex guide app: https://apps.twitter.com/app/12449610/keys
+      consumer_key: XkCVNZD5sfWECxHGAGnlHGQFa
+      consumer_secret: yU00bx5dHYMbge9IyO5H1KeC5uFnWndntG7u6CH6O4HDZHQg0p
+      access_token: 445767176-pqio8PuGlpzULSstlZQbLhRqFJfNBjWFH5LqNRgI
+      access_token_secret: zVosr4wIS3aM80hErmWUkMePZ6vX830yI7VKxar6xZqgp
+  auth/uploadhandler:
+    pattern: /auth/uploadhandler
+    handler: UploadHandler
+    kwargs:
+      auth: true
+      path: $YAMLPATH/uploads
+      methods: GET
+
   xsrf:
     pattern: /xsrf
     handler: FunctionHandler
