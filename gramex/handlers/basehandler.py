@@ -21,7 +21,7 @@ from gramex.transforms import build_transform
 
 server_header = 'Gramex/%s' % __version__
 session_store_cache = {}
-FORBIDDEN = 403
+UNAUTHORIZED, FORBIDDEN = 401, 403
 
 
 class BaseHandler(RequestHandler):
@@ -418,6 +418,7 @@ class BaseHandler(RequestHandler):
             callback(self)
 
     def authorize(self):
+        # If the user isn't logged in, redirect to login URL or send a 401
         if not self.current_user:
             if self.request.method in ('GET', 'HEAD'):
                 url = self.get_login_url()
@@ -430,9 +431,9 @@ class BaseHandler(RequestHandler):
                     url += '?' + urlencode(dict(next=next_url))
                 self.redirect(url)
                 return
-            raise HTTPError(FORBIDDEN)
+            raise HTTPError(UNAUTHORIZED)
 
-        # If the user is not authorized, display a template or raise error
+        # If the user doesn't have permissions, show a template or send a 403
         for permit_generator in self.permissions:
             for result in permit_generator(self):
                 if not result:
