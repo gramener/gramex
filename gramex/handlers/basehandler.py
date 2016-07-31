@@ -36,6 +36,7 @@ class BaseHandler(RequestHandler):
         One-time setup for all request handlers. This is called only when
         gramex.yaml is parsed / changed.
         '''
+        cls._on_init_methods = []
         cls._on_finish_methods = []
 
         cls.setup_transform(transform)
@@ -146,12 +147,7 @@ class BaseHandler(RequestHandler):
             auth = AttrDict()
         # If auth is False or None, ignore it. Otherwise, process the auth
         if auth is not None and auth is not False:
-            # Wrap available methods via an @authorized decorator
-            for method in auth.get('method', ['get', 'post', 'put', 'delete', 'patch']):
-                func = getattr(cls, method)
-                if callable(func):
-                    setattr(cls, method, authorized(func))
-
+            cls._on_init_methods.append(cls.authorize)
             cls.permissions = []
             if auth.get('condition'):
                 cls.permissions.append(
@@ -307,6 +303,10 @@ class BaseHandler(RequestHandler):
         if self._set_xsrf:
             self.xsrf_token
 
+    def prepare(self):
+        for method in self._on_init_methods:
+            method(self)
+
     def set_default_headers(self):
         self.set_header('Server', server_header)
 
@@ -416,6 +416,31 @@ class BaseHandler(RequestHandler):
         # Loop through class-level callbacks
         for callback in self._on_finish_methods:
             callback(self)
+
+    def authorize(self):
+        if not self.current_user:
+            if self.request.method in ('GET', 'HEAD'):
+                url = self.get_login_url()
+                if '?' not in url:
+                    if urlsplit(url).scheme:
+                        # if login url is absolute, make next absolute too
+                        next_url = self.request.full_url()
+                    else:
+                        next_url = self.request.uri
+                    url += '?' + urlencode(dict(next=next_url))
+                self.redirect(url)
+                return
+            raise HTTPError(FORBIDDEN)
+
+        # If the user is not authorized, display a template or raise error
+        for permit_generator in self.permissions:
+            for result in permit_generator(self):
+                if not result:
+                    template = self.conf.kwargs.auth.get('template')
+                    if template:
+                        self.render(template)
+                        return
+                    raise HTTPError(FORBIDDEN)
 
 
 class KeyStore(object):
@@ -531,41 +556,6 @@ class JSONStore(KeyStore):
     def close(self):
         self.flush()
         self.handle.close()
-
-
-def authorized(method):
-    @functools.wraps(method)
-    def wrapper(self, *args, **kwargs):
-        # If the user is not authenticated, get them to log in.
-        # This section is identical to @tornado.web.authenticated
-        if not self.current_user:
-            if self.request.method in ('GET', 'HEAD'):
-                url = self.get_login_url()
-                if '?' not in url:
-                    if urlsplit(url).scheme:
-                        # if login url is absolute, make next absolute too
-                        next_url = self.request.full_url()
-                    else:
-                        next_url = self.request.uri
-                    url += '?' + urlencode(dict(next=next_url))
-                self.redirect(url)
-                return
-            raise HTTPError(FORBIDDEN)
-
-        # If the user is not authorized, display a template or raise error
-        for permit_generator in self.permissions:
-            for result in permit_generator(self):
-                if not result:
-                    template = self.conf.kwargs.auth.get('template')
-                    if template:
-                        self.render(template)
-                        return
-                    raise HTTPError(FORBIDDEN)
-
-        # Run the method if the user is authenticated and authorized
-        return method(self, *args, **kwargs)
-
-    return wrapper
 
 
 def check_membership(keypath, values):
