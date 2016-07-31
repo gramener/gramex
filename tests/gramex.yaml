@@ -901,7 +901,7 @@ url:
         path: dir/alpha.txt
         auth:
             condition:
-                function: six.text_type.endswith
+                function: str.endswith
                 args: [=handler.current_user.user, 'ta']        # beta, delta
 
   xsrf:
