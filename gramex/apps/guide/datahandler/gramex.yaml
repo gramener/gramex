@@ -23,4 +23,4 @@ schedule:
   data-setup:
     function: fetch.data
     startup: true
-    hours: '*'                              # Re-run in case data gets corrupted
+    minutes: */5                            # Re-run in case data gets corrupted
