@@ -355,7 +355,9 @@ class BaseHandler(RequestHandler):
                 headers_written.add(name)
 
     def get_current_user(self):
-        return self.session.get('user')
+        '''Return the ``user`` key from the session as an AttrDict if it exists.'''
+        result = self.session.get('user')
+        return AttrDict(result) if isinstance(result, dict) else result
 
     def debug_exception(self, typ, value, tb):
         super(BaseHandler, self).log_exception(typ, value, tb)
