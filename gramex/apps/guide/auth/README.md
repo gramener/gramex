@@ -482,7 +482,7 @@ email ends with `.org`.
                 path: $YAMLPATH/secret.html
                 auth:
                     condition:                          # Allow only if condition is true
-                        function: six.string_type.endswith            # Call this function
+                        function: six.text_type.endswith              # Call this function
                         args: [=handler.current_user.email, '.com']   # with these 2 arguments
         auth/dotorg:
             pattern: /$YAMLURL/dotorg
@@ -491,7 +491,7 @@ email ends with `.org`.
                 path: $YAMLPATH/secret.html
                 auth:
                     condition:                          # Allow only if condition is true
-                        function: six.string_type.endswith            # Call this function
+                        function: six.text_type.endswith              # Call this function
                         args: [=handler.current_user.email, '.org']   # with these 2 arguments
 
 You can specify any function of your choice. The function must return (or yield)
