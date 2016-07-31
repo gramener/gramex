@@ -33,8 +33,6 @@ class ProcessHandler(BaseHandler):
     :arg int/string buffer: 'line' will write lines as they are generated.
         Numbers indicate the number of bytes to buffer. Defaults to
         ``io.DEFAULT_BUFFER_SIZE``.
-    :arg string redirect: URL to redirect to when the result is done. Used to
-        trigger calculations without displaying any output.
     :arg dict headers: HTTP headers to set on the response.
     :arg dict transform: (**TODO**)
         Transformations that should be applied to the files. The key matches a
@@ -70,11 +68,10 @@ class ProcessHandler(BaseHandler):
 
     '''
     @classmethod
-    def setup(cls, args, shell=False, cwd=None, buffer=0, redirect=None, headers={}, **kwargs):
+    def setup(cls, args, shell=False, cwd=None, buffer=0, headers={}, **kwargs):
         super(ProcessHandler, cls).setup(**kwargs)
         cls.args = args
         cls.shell = shell
-        cls.redirect = redirect
         cls._write_lock = RLock()
         cls.buffer_size = buffer
         # Normalize current directory for path, if provided
@@ -123,6 +120,7 @@ class ProcessHandler(BaseHandler):
 
     @tornado.gen.coroutine
     def get(self, *path_args):
+        self.save_redirect_page()
         for header_name, header_value in self.headers.items():
             self.set_header(header_name, header_value)
 
@@ -137,6 +135,7 @@ class ProcessHandler(BaseHandler):
         yield proc.wait_for_exit()
         # Wait for process to finish
         proc.proc.wait()
+        self.redirect_next()
 
     def _write(self, data):
         with self._write_lock:
@@ -146,7 +145,7 @@ class ProcessHandler(BaseHandler):
             self.flush()
 
     def on_finish(self):
-        'Close all open handles after the request has finished'
+        '''Close all open handles after the request has finished'''
         for target, handle in self.handles.items():
             handle.close()
         super(ProcessHandler, self).on_finish()
