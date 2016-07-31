@@ -5,7 +5,6 @@ import os
 import json
 import atexit
 import mimetypes
-import functools
 import tornado.gen
 from textwrap import dedent
 from types import GeneratorType
