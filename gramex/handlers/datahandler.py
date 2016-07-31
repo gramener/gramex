@@ -41,6 +41,7 @@ class DataHandler(BaseHandler):
                     parameters: {encoding: utf8}          # with additional parameters provided
                     default: {}                           # default query parameters
                     query: {}                             # query parameter overrides
+                    thread: false                         # Run in synchronous mode
                     headers:
                         Content-Type: text/csv            # and served as csv
                         # Content-Type: application/json  # or JSON
@@ -52,6 +53,7 @@ class DataHandler(BaseHandler):
         super(DataHandler, cls).setup(**kwargs)
         cls.params = AttrDict(kwargs)
         cls.driver_key = yaml.dump(kwargs)
+        cls.thread = kwargs.get('thread', True)
 
         # Identify driver. Import heavy libraries on demand for speed
         import importlib
@@ -351,7 +353,10 @@ class DataHandler(BaseHandler):
             _sorts=self.getq('sort'),
         )
 
-        self.result = yield gramex.service.threadpool.submit(self.driver_method, **kwargs)
+        if self.thread:
+            self.result = yield gramex.service.threadpool.submit(self.driver_method, **kwargs)
+        else:
+            self.result = self.driver_method(**kwargs)
         self._render()
         self.write(self.content)
 
@@ -360,7 +365,10 @@ class DataHandler(BaseHandler):
         if self.driver_name != 'sqlalchemy':
             raise NotImplementedError('driver=%s is not supported yet.' % self.driver_name)
         kwargs = {'_vals': self.getq('val', [])}
-        self.result = yield gramex.service.threadpool.submit(self._sqlalchemy_post, **kwargs)
+        if self.thread:
+            self.result = yield gramex.service.threadpool.submit(self._sqlalchemy_post, **kwargs)
+        else:
+            self.result = self._sqlalchemy_post(**kwargs)
         self._render()
         self.write(self.content)
 
@@ -369,7 +377,10 @@ class DataHandler(BaseHandler):
         if self.driver_name != 'sqlalchemy':
             raise NotImplementedError('driver=%s is not supported yet.' % self.driver_name)
         kwargs = {'_wheres': self.getq('where')}
-        self.result = yield gramex.service.threadpool.submit(self._sqlalchemy_delete, **kwargs)
+        if self.thread:
+            self.result = yield gramex.service.threadpool.submit(self._sqlalchemy_delete, **kwargs)
+        else:
+            self.result = self._sqlalchemy_delete(**kwargs)
         self._render()
         self.write(self.content)
 
@@ -378,6 +389,9 @@ class DataHandler(BaseHandler):
         if self.driver_name != 'sqlalchemy':
             raise NotImplementedError('driver=%s is not supported yet.' % self.driver_name)
         kwargs = {'_vals': self.getq('val', []), '_wheres': self.getq('where')}
-        self.result = yield gramex.service.threadpool.submit(self._sqlalchemy_put, **kwargs)
+        if self.thread:
+            self.result = yield gramex.service.threadpool.submit(self._sqlalchemy_put, **kwargs)
+        else:
+            self.result = self._sqlalchemy_put(**kwargs)
         self._render()
         self.write(self.content)
