@@ -815,6 +815,21 @@ url:
         user: 'uid={user},cn=users,cn=accounts,dc=demo1,dc=freeipa,dc=org'
         password: '{password}'
 
+  auth/simple:
+    pattern: /auth/simple
+    handler: SimpleAuth
+    kwargs:
+        template: $YAMLPATH/auth.html
+        user: {arg: user}
+        password: {arg: password}
+        credentials:
+            alpha: alpha
+            beta: beta
+        redirect:
+            query: next
+            header: NEXT
+            url: /dir/index/
+
   auth/db:
     pattern: /auth/db
     handler: DBAuth

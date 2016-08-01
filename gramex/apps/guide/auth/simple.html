@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simple Login page</title>
+  <link rel="stylesheet" href="../style.css">
+  <link rel="stylesheet" href="form.css">
+</head>
+<body class="container">
+
+  <nav class="menu">
+    <h1><a href=".">Back to Auth</a></h1>
+  </nav>
+
+  <section class="content">
+    <h1>Simple login</h1>
+
+    {% if error %}
+      <div class="alert">
+        <h2>Error logging in</h2>
+        <p><strong>code</strong> {{ error['code'] }}</p>
+        <p><strong>error</strong> {{ error['error'] }}</p>
+      </div>
+    {% end %}
+
+    <p>You can log in as <code>alpha</code> or as <code>beta</code>. The password is the same as the username.</p>
+
+    <form method="POST">
+      <input type="hidden" name="_xsrf" value="{{ handler.xsrf_token }}">
+      <label for="user">Username</label>
+      <input name="user" placeholder="Username">
+      <label for="password">Password</label>
+      <input name="password" type="password" placeholder="Password">
+      <button type="submit">Log in</button>
+    </form>
+  <section>
+
+</body>
+</html>

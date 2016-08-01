@@ -16,6 +16,18 @@ url:
                 query: next
                 url: /$YAMLURL
 
+    auth/simple:
+        pattern: /$YAMLURL/simple
+        handler: SimpleAuth
+        kwargs:
+            template: $YAMLPATH/simple.html     # This has the login form
+            credentials:
+                alpha: alpha                    # User: alpha has password: alpha
+                beta: beta                      # Similarly for beta
+            redirect:
+                query: next
+                url: /$YAMLURL
+
     auth/google:
         pattern: /$YAMLURL/google
         handler: GoogleAuth

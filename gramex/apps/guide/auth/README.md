@@ -47,6 +47,32 @@ is as follows:
 3. If credentials are valid, store the user details and redirect the user. Else
    show an error message.
 
+## Simple auth
+
+This configuration creates a [simple auth page](simple):
+
+    :::yaml
+    url:
+        login/simple:
+            pattern: /$YAMLURL/simple   # Map this URL
+            handler: SimpleAuth         # to the SimpleAuth handler
+            kwargs:
+                credentials:            # Specify the user IDs and passwords
+                    alpha: alpha        # User: alpha has password: alpha
+                    beta: beta          # Similarly for beta
+                template: $YAMLPATH/simple.html   # Optional login template
+
+This setup is useful only for testing. It stores passwords in plain text.
+**DO NOT USE IT IN PRODUCTION.**
+
+You should create a [HTML login form](simple) that requests a username and
+password (with an [xsrf][xsrf] field). See [login templates](#login-templates) to
+learn how to create one.
+
+Once logged in, you can redirect the user to a specific page. See the
+[redirection](#redirection-after-login) section for more.
+
+
 ## Google auth
 
 This configuration creates a [Google login page](google):
@@ -137,27 +163,18 @@ This configuration creates an [LDAP login page](ldap):
             port: 636                           # Optional. Usually 389 for LDAP, 636 for LDAPS
             user: 'uid={user},cn=users,cn=accounts,dc=demo1,dc=freeipa,dc=org'
             password: '{password}'
-            template: $YAMLPATH/ldap.html       # Display login form using this template (optional)
+            template: $YAMLPATH/ldap.html       # Optional login template
 
-You should create a [HTML login template](ldap) that requests a username and
-password (along with a hidden [xsrf][xsrf] field). Here is a minimal template:
+You should create a [HTML login form](ldap) that requests a username and password
+(with an [xsrf][xsrf] field). See [login templates](#login-templates) to learn
+how to create one.
 
-    :::html
-    <form method="POST">
-      {% if error %}<p>error code: {{ error['code'] }}, message: {{ error['message'] }}</p>{% end %}
-      <input type="hidden" name="_xsrf" value="{{ handler.xsrf_token }}">
-      <input name="user">
-      <input name="password" type="password">
-      <button type="submit">Submit</button>
-    </form>
-
-Additional fields (e.g. for domain) are optional. The `user:` and `password:`
-configuration in `gramex.yaml` maps form fields to the LDAP user ID and
-password. Strings inside `{braces}` are replaced by form fields -- so if the
-user enters `admin` in the `user` field, `uid={user},cn=...` becomes
+The `user:` and `password:` configuration in `gramex.yaml` maps form fields to
+the user ID and password. Strings inside `{braces}` are replaced by form fields
+-- so if the user enters `admin` in the `user` field, `uid={user},cn=...` becomes
 `uid=admin,cn=...`.
 
-[xsrf]: http://www.tornadoweb.org/en/stable/guide/security.html#cross-site-request-forgery-protection
+[xsrf]: ../filehandler/#xsrf
 
 
 ## Database auth
@@ -213,7 +230,7 @@ You can configure several aspects of this flow. Below is a full configuration --
         kwargs:
             url: sqlite:///$YAMLPATH/auth.db  # Pick up list of users from this sqlalchemy URL
             table: users                      # ... and this table
-            template: $YAMLPATH/dbauth.html   # Display login form using this template (optional)
+            template: $YAMLPATH/dbauth.html   # Optional login template
             user:
                 column: user                  # The users.user column is matched with
                 arg: user                     # ... the ?user= argument from the form
@@ -226,17 +243,9 @@ You can configure several aspects of this flow. Below is a full configuration --
                 args: '=content'              # The first parameter is the raw password
                 kwargs: {salt: 'secret-key'}  # Change secret-key to something unique
 
-You can create a [HTML login form](ldap) that requests a username and password
-(along with a hidden [xsrf][xsrf] field). Here is a minimal template:
-
-    :::html
-    <form method="POST">
-      {% if error %}<p>error code: {{ error['code'] }}, message: {{ error['message'] }}</p>{% end %}
-      <input type="hidden" name="_xsrf" value="{{ handler.xsrf_token }}">
-      <input name="user">
-      <input name="password" type="password">
-      <button type="submit">Submit</button>
-    </form>
+You should create a [HTML login form](db) that requests a username and password
+(with an [xsrf][xsrf] field). See [login templates](#login-templates) to learn
+how to create one.
 
 In the `gramex.yaml` configuration above, the usernames and passwords are stored
 in the `users` table of the SQLite `auth.db` file. The `user` and `password`
@@ -330,7 +339,31 @@ This configuration creates a [logout page](logout):
 
 After logging out, the user is re-directed to the URL specified by `?next=`.
 Else, they're redirected to the current page. Read the
-[redirection](#redirection) section for more.
+[redirection](#redirection-after-login) section for more.
+
+
+## Login templates
+
+Several auth mechanisms (such as [SimpleAuth](#simple-auth),
+[LDAPAuth](#ldap-auth), [DBAuth](#database-auth)) use a template to request the
+user ID and password. This is a minimal template:
+
+    :::html
+    <form method="POST">
+      {% if error %}<p>error code: {{ error['code'] }}, message: {{ error['message'] }}</p>{% end %}
+      <input name="user">
+      <input name="password" type="password">
+      <input type="hidden" name="_xsrf" value="{{ handler.xsrf_token }}">
+      <button type="submit">Submit</button>
+    </form>
+
+If `error` is set, we display the `error['code']` and `error['message']`.
+Otherwise, we have 3 input fields:
+
+- `user`: the user name. By default, the name of the field should be `user`, but this can be configured
+- `password`: the password. The name of this field can also be configured
+- `_xsrf`: the [XSRF][xsrf] token for this request.
+
 
 ## Redirection after login
 

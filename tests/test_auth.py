@@ -47,26 +47,10 @@ class TestSession(TestGramex):
         self.assertEqual(self.data2, json.loads(r2.text))
 
 
-class DBAuthBase(TestGramex):
+class AuthBase(TestGramex):
     @classmethod
     def setUpClass(cls):
-        folder = os.path.dirname(os.path.abspath(__file__))
-        cls.data = pd.read_csv(os.path.join(folder, 'userdata.csv'), encoding='cp1252')
-        cls.dburl = 'mysql+pymysql://root@%s/' % gramex.config.variables.MYSQL_SERVER
-        # sqlalchemy needs encoding to be a `str` in both Python 2.x and 3.x
-        encoding = str('utf-8')
-        cls.engine = sa.create_engine(cls.dburl, encoding=encoding)
-        try:
-            cls.engine.execute('DROP DATABASE IF EXISTS test_auth')
-            cls.engine.execute('CREATE DATABASE test_auth')
-            cls.engine.dispose()
-            cls.engine = sa.create_engine(cls.dburl + 'test_auth', encoding=encoding)
-            cls.data.to_sql('users', con=cls.engine, index=False)
-        except sa.exc.OperationalError:
-            raise SkipTest('Unable to connect to %s' % cls.dburl)
-
         cls.session = requests.Session()
-        cls.url = server.base_url + '/auth/db'
 
     def login(self, user, password, query_next=None, header_next=None):
         # Get the login page
@@ -99,7 +83,8 @@ class DBAuthBase(TestGramex):
         self.assertRegexpMatches(r.text, 'error code')
         self.assertEqual(r.url, self.url)
 
-class TestDBAuth(DBAuthBase):
+
+class LoginMixin(object):
     def test_login(self):
         self.ok('alpha', 'alpha', check_next='/dir/index/')
         self.ok('beta', 'beta', check_next='/dir/index/')
@@ -113,6 +98,38 @@ class TestDBAuth(DBAuthBase):
     def test_redirect(self):
         self.ok('alpha', 'alpha', query_next='/func/args', check_next='/func/args')
         self.ok('alpha', 'alpha', header_next='/func/args', check_next='/func/args')
+
+
+class TestSimpleAuth(AuthBase, LoginMixin):
+    @classmethod
+    def setUpClass(cls):
+        AuthBase.setUpClass()
+        cls.url = server.base_url + '/auth/simple'
+
+
+class DBAuthBase(AuthBase):
+    @classmethod
+    def setUpClass(cls):
+        super(DBAuthBase, cls).setUpClass()
+        folder = os.path.dirname(os.path.abspath(__file__))
+        cls.data = pd.read_csv(os.path.join(folder, 'userdata.csv'), encoding='cp1252')
+        cls.dburl = 'mysql+pymysql://root@%s/' % gramex.config.variables.MYSQL_SERVER
+        # sqlalchemy needs encoding to be a `str` in both Python 2.x and 3.x
+        encoding = str('utf-8')
+        cls.engine = sa.create_engine(cls.dburl, encoding=encoding)
+        try:
+            cls.engine.execute('DROP DATABASE IF EXISTS test_auth')
+            cls.engine.execute('CREATE DATABASE test_auth')
+            cls.engine.dispose()
+            cls.engine = sa.create_engine(cls.dburl + 'test_auth', encoding=encoding)
+            cls.data.to_sql('users', con=cls.engine, index=False)
+        except sa.exc.OperationalError:
+            raise SkipTest('Unable to connect to %s' % cls.dburl)
+        cls.url = server.base_url + '/auth/db'
+
+
+class TestDBAuth(DBAuthBase, LoginMixin):
+    pass
 
 
 class TestAuthorize(DBAuthBase):

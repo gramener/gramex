@@ -230,7 +230,7 @@ class LDAPAuth(AuthHandler):
         self.redirect_next()
 
 
-class DBAuth(AuthHandler):
+class SimpleAuth(AuthHandler):
     '''
     Eventually, change this to use an abstract base class for local
     authentication methods -- i.e. where **we** render the login screen, not a third party service.
@@ -240,6 +240,56 @@ class DBAuth(AuthHandler):
     by default. If the login fails, it must be a ``dict`` with attributes
     specific to the handler.
 
+    The simplest configuration (``kwargs``) for SimpleAuth is::
+
+        credentials:                        # Mapping of user IDs and passwords
+            user1: password1                # user1 maps to password1
+            user2: password2
+
+    The full configuration (``kwargs``) for SimpleAuth looks like this::
+
+        template: $YAMLPATH/auth.template.html  # Render the login form template
+        user:
+            arg: user                       # ... the ?user= argument from the form.
+        password:
+            arg: password                   # ... the ?password= argument from the form
+        data:
+            ...                             # Same as above
+
+    The login flow is as follows:
+
+    1. User visits the SimpleAuth page => shows template (with the user name and password inputs)
+    2. User enters user name and password, and submits. Browser redirects with a POST request
+    3. Application checks username and password. On match, redirects.
+    4. On any error, shows template (with error)
+    '''
+    @classmethod
+    def setup(cls, **kwargs):
+        super(SimpleAuth, cls).setup(**kwargs)
+        cls.template = kwargs.get('template', _auth_template)
+        cls.user = kwargs.get('user', AttrDict())
+        cls.password = kwargs.get('password', AttrDict())
+        cls.credentials = kwargs.get('credentials', {})
+        cls.user.setdefault('arg', 'user')
+        cls.password.setdefault('arg', 'password')
+
+    def get(self):
+        self.save_redirect_page()
+        self.render(self.template, error=None)
+
+    def post(self):
+        user = self.get_argument(self.user.arg)
+        password = self.get_argument(self.password.arg)
+        if self.credentials.get(user) == password:
+            self.set_user({'user': user}, id='user')
+            self.redirect_next()
+        else:
+            self.set_status(status_code=401)
+            self.render(self.template, error={'code': 'auth', 'error': 'Cannot log in'})
+
+
+class DBAuth(SimpleAuth):
+    '''
     The configuration (``kwargs``) for DBAuth looks like this::
 
         template: $YAMLPATH/auth.template.html  # Render the login form template
@@ -282,13 +332,10 @@ class DBAuth(AuthHandler):
     '''
     @classmethod
     def setup(cls, url, table, user, password, forgot=None, **kwargs):
-        super(DBAuth, cls).setup(**kwargs)
+        super(DBAuth, cls).setup(user=user, password=password, **kwargs)
         from sqlalchemy import create_engine
-        cls.user, cls.password, cls.tablename, cls.forgot = user, password, table, forgot
+        cls.tablename, cls.forgot = table, forgot
         cls.engine = create_engine(url, **kwargs.get('parameters', {}))
-        cls.template = kwargs.get('template', _auth_template)
-        cls.user.setdefault('arg', 'user')
-        cls.password.setdefault('arg', 'password')
         if cls.forgot:
             default_minutes_to_expiry = 15
             cls.forgot.setdefault('template', _forgot_template)
@@ -299,14 +346,13 @@ class DBAuth(AuthHandler):
             cls.forgot.setdefault('email_subject', 'Password reset')
             cls.forgot.setdefault(
                 'email_text', 'Visit {reset_url} to reset password for user {user} ({email})')
+            cls.recover = cls.setup_recover_db()
             # TODO: default email_from to the first available email service
         cls.encrypt = []
         if 'function' in password:
             cls.encrypt.append(build_transform(
                 password, vars=AttrDict(content=None),
                 filename='url>%s>encrypt' % (cls.name)))
-        if cls.forgot:
-            cls.recover = cls.setup_recover_db()
 
     @classmethod
     def bind_to_db(cls):
