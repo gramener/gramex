@@ -17,4 +17,5 @@ DirectoryHandler = FileHandler
 
 __all__ = ['BaseHandler', 'FunctionHandler', 'FileHandler', 'DirectoryHandler',
            'DataHandler', 'JSONHandler', 'GoogleAuth', 'FacebookAuth', 'TwitterAuth', 'LDAPAuth',
-           'DBAuth', 'LogoutHandler', 'ProcessHandler', 'TwitterRESTHandler', 'UploadHandler']
+           'SimpleAuth', 'DBAuth', 'LogoutHandler', 'ProcessHandler', 'TwitterRESTHandler',
+           'UploadHandler']
