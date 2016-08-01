@@ -26,6 +26,7 @@ The `DataHandler` below exposes the flags table in `database.sqlite3` at the URL
           url: sqlite:///$YAMLPATH/database.sqlite3   # to connect database at this path/url
           table: flags                                # on this table
           parameters: {encoding: utf8}                # with additional parameters provided
+          thread: false                               # Disable threading if you see weird bugs
           default:
               format: html                            # Can also be json or csv
 
@@ -63,6 +64,11 @@ Here are some examples of DataHandler ``kwargs`` to connect to databases:
         driver: sqlalchemy
         url: postgresql://username:password@servername/database
         table: tablename
+
+**A note on threading**. By default, DataHandler runs the query in a separate
+thread. However, this code is not currently stable. If you find tables that seem
+to be missing columns, or errors that are not reproducible, use `thread: false`
+to disable threading (as of v1.13.) Upcoming versions will fix threading issues.
 
 
 ## DataHandler defaults
