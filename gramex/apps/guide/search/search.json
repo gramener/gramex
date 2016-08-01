@@ -67,11 +67,17 @@
     "login-actions": {
       "Login actions": -1
     },
+    "login-templates": {
+      "Login templates": -1
+    },
     "redirection-after-login": {
       "Redirection after login": -1
     },
     "sessions": {
       "Sessions": -1
+    },
+    "simple-auth": {
+      "Simple auth": -1
     },
     "ssl-certificate-error": {
       "SSL certificate error": -1

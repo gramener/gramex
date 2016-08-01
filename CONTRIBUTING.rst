@@ -95,20 +95,16 @@ When releasing a new version of Gramex:
     PYTHON=/path/to/python2.7 make release-test
     PYTHON=/path/to/python3.5 make release-test
 
-2. Build and upload the release::
-
-    make release
-
-3. Update the following and commit to ``dev`` branch:
+2. Update the following and commit to ``dev`` branch:
 
     - ``HISTORY.rst`` -- add release notes
     - ``gramex/release.json`` -- update the version number
     - Run ``gramex/apps/guide/search/search.py`` using Python 3
 
-4. Push the ``dev`` branch to the server and ensure that there are no build
+3. Push the ``dev`` branch to the server and ensure that there are no build
    errors.
 
-5. Merge with master, create an annotated tag and push the code::
+4. Merge with master, create an annotated tag and push the code::
 
     git checkout master
     git merge dev

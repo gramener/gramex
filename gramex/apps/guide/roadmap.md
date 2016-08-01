@@ -8,18 +8,14 @@ information about past releases.
 Features for the next 2 releases are below. Bugs to be fixed are at the
 [issue tracker](http://code.gramener.com/s.anand/gramex/issues).
 
-## 1.13 (31 Jul 2016)
+## 1.14 (11 Aug 2016)
 
-- Kerberos authentication
-- Improved test coverage
-- Simple conditionals in configuration files
-- Custom error messages
 - Twitter streaming & storage
-- Mechanism to add configuration / settings pages
+- Kerberos authentication
+- DataHandler can run arbitary SQL queries
 - Monitoring & logging report usage
-- D3 charts that support core requirements
-- Editable text annotations (like [teletext.io](https://teletext.io/help/get-started))
-
+- Mechanism to add configuration / settings pages
+- Improved test coverage
 
 # Features
 
@@ -37,6 +33,7 @@ This is a work-in-progress list of features on the Gramex 1.0 roadmap.
 
 - Commenting
 - Workflow
+- Editable text annotations (like [teletext.io](https://teletext.io/help/get-started))
 
 ## Component gallery
 
@@ -84,7 +81,6 @@ This is a work-in-progress list of features on the Gramex 1.0 roadmap.
 - Custom login templates
 - Access control for URLs
 - XSRF, XSS, etc
-
 
 ## Decisions
 

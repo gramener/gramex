@@ -3,6 +3,18 @@
 History
 -------
 
+1.13 (2016-08-01)
+~~~~~~~~~~~~~~~~~
+
+- All handlers support custom `error handlers`_. You can show custom 404, 500
+  pages.
+- `SimpleAuth`_ is an extremely simple login handler you can use for testing
+- `ProcessHandler`_ supports the ``redirect:`` config (used by many handlers)
+  to redirect the user after the process is executed.
+- `DataHandler`_ supports a ``thread: false``. This switches to a synchronous
+  version that is (currently) less buggy.
+- Variables can be assigned different values in different environments via a
+  simple `conditional variables`_ syntax.
 
 1.12 (2016-07-21)
 ~~~~~~~~~~~~~~~~~
@@ -14,7 +26,6 @@ History
   the user.
 * Gramex loads a bit faster by importing slow modules (e.g. Pandas) only if
   required.
-
 
 1.11 (2016-07-15)
 ~~~~~~~~~~~~~~~~~
@@ -258,7 +269,8 @@ There are two changes that may disrupt your code:
 .. _TwitterRESTHandler: https://learn.gramener.com/guide/twitterresthandler/
 .. _LogoutHandler: https://learn.gramener.com/guide/auth/#log-out
 .. _LDAPAuth: https://learn.gramener.com/guide/auth/#ldap
-.. _DBAuth: https://learn.gramener.com/guide/auth/#database
+.. _DBAuth: https://learn.gramener.com/guide/auth/#simple-auth
+.. _DBAuth: https://learn.gramener.com/guide/auth/#database-auth
 .. _TwitterAuth: https://learn.gramener.com/guide/auth/#twitter-auth
 .. _UploadHandler: https://learn.gramener.com/guide/auth/uploadhandler/
 .. _caching: https://learn.gramener.com/guide/cache/
@@ -274,3 +286,5 @@ There are two changes that may disrupt your code:
 .. _ignore files: https://learn.gramener.com/guide/filehandler/#ignore-files
 .. _auth redirection: https://learn.gramener.com/guide/auth/#redirection
 .. _email: https://learn.gramener.com/guide/email/
+.. _conditional variables: https://learn.gramener.com/guide/config/#conditional-variables
+.. _error handlers: https://learn.gramener.com/guide/config/#error-handlers
