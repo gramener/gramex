@@ -350,14 +350,14 @@ user ID and password. This is a minimal template:
 
     :::html
     <form method="POST">
-      {% if error %}<p>error code: {{ error['code'] }}, message: {{ error['message'] }}</p>{% end %}
+      {% if error %}<p>error code: {{ error['code'] }}, message: {{ error['error'] }}</p>{% end %}
       <input name="user">
       <input name="password" type="password">
       <input type="hidden" name="_xsrf" value="{{ handler.xsrf_token }}">
       <button type="submit">Submit</button>
     </form>
 
-If `error` is set, we display the `error['code']` and `error['message']`.
+If `error` is set, we display the `error['code']` and `error['error']`.
 Otherwise, we have 3 input fields:
 
 - `user`: the user name. By default, the name of the field should be `user`, but this can be configured
@@ -400,8 +400,12 @@ ignore the `next=` parameter. However, you can specify `external: true` to
 override this:
 
     ::yaml
-        kwargs:
-          external: true
+      kwargs:
+        ...
+        redirect:                     # Under the redirect section,
+            external: true            # add an external: true
+            query: next               # The ?next= can now be an external URL
+            url: http://example.com/  # So can the pre-defined URL
 
 You can test this at
 [ldap2?next=https://gramener.com/](ldap2?next=https://gramener.com/).
