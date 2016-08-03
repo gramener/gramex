@@ -134,11 +134,11 @@ class TestSimpleAuth(AuthBase, LoginMixin):
         # log into first session
         self.session = session1
         self.ok('alpha', 'alpha', check_next='/dir/index/')
-        self.assertDictContainsSubset({'user': 'alpha', 'id': 'alpha'}, self.get_session())
+        self.assertEquals({'user': 'alpha', 'id': 'alpha'}, self.get_session()['user'])
         # log into second sessioj
         self.session = session2
         self.ok('alpha', 'alpha', check_next='/dir/index/')
-        self.assertDictContainsSubset({'user': 'alpha', 'id': 'alpha'}, self.get_session())
+        self.assertEquals({'user': 'alpha', 'id': 'alpha'}, self.get_session()['user'])
         # first session should be logged out now
         self.session = session1
         self.assertTrue('user' not in self.get_session())
