@@ -133,11 +133,11 @@ class TestSimpleAuth(AuthBase, LoginMixin):
         session1, session2 = requests.Session(), requests.Session()
         # log into first session
         self.session = session1
-        self.ok('alpha', 'alpha')
+        self.ok('alpha', 'alpha', check_next='/dir/index/')
         self.assertDictContainsSubset({'user': 'alpha', 'id': 'alpha'}, self.get_session())
         # log into second sessioj
         self.session = session2
-        self.ok('alpha', 'alpha')
+        self.ok('alpha', 'alpha', check_next='/dir/index/')
         self.assertDictContainsSubset({'user': 'alpha', 'id': 'alpha'}, self.get_session())
         # first session should be logged out now
         self.session = session1
