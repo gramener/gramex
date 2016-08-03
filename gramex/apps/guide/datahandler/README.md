@@ -9,7 +9,8 @@ title: Gramex connects to data
             handler: DataHandler
             kwargs:
                 driver: sqlalchemy
-                url: mysql+pymysql://anonymous@ensembldb.ensembl.org://gorilla_gorilla_core_84_31::gene
+                url: mysql+pymysql://anonymous@ensembldb.ensembl.org/gorilla_gorilla_core_84_31
+                table: gene
 
 (This uses the public [ensemble gene database](http://ensembldb.ensembl.org/info/data/mysql.html).)
 
