@@ -173,3 +173,8 @@ def handle_error(status_code, kwargs, handler):
       'kwargs': repr(kwargs),
       'handler.request.uri': handler.request.uri,
     })
+
+
+def set_session(handler, **kwargs):
+    for key, value in kwargs.items():
+        handler.session[key] = value

@@ -829,6 +829,13 @@ url:
             query: next
             header: NEXT
             url: /dir/index/
+        action:
+            -
+              function: utils.set_session
+              kwargs:
+                action_set: true
+            -
+              function: ensure_single_session
 
   auth/db:
     pattern: /auth/db

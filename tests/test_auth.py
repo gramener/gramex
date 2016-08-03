@@ -115,10 +115,33 @@ class LoginMixin(object):
 
 
 class TestSimpleAuth(AuthBase, LoginMixin):
+    # Just apply LoginMixin tests to AuthBase
     @classmethod
     def setUpClass(cls):
         AuthBase.setUpClass()
         cls.url = server.base_url + '/auth/simple'
+
+    # Run additional tests for session and login features
+    def get_session(self):
+        return self.session.get(server.base_url + '/auth/session').json()
+
+    def test_login_action(self):
+        self.login('alpha', 'alpha')
+        self.assertDictContainsSubset({'action_set': True}, self.get_session())
+
+    def test_ensure_single_session(self):
+        session1, session2 = requests.Session(), requests.Session()
+        # log into first session
+        self.session = session1
+        self.ok('alpha', 'alpha')
+        self.assertDictContainsSubset({'user': 'alpha', 'id': 'alpha'}, self.get_session())
+        # log into second sessioj
+        self.session = session2
+        self.ok('alpha', 'alpha')
+        self.assertDictContainsSubset({'user': 'alpha', 'id': 'alpha'}, self.get_session())
+        # first session should be logged out now
+        self.session = session1
+        self.assertTrue('user' not in self.get_session())
 
 
 class DBAuthBase(AuthBase):
@@ -143,6 +166,7 @@ class DBAuthBase(AuthBase):
 
 
 class TestDBAuth(DBAuthBase, LoginMixin):
+    # Just apply LoginMixin tests to DBAuthBase
     pass
 
 
