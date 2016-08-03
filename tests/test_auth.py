@@ -99,6 +99,20 @@ class LoginMixin(object):
         self.ok('alpha', 'alpha', query_next='/func/args', check_next='/func/args')
         self.ok('alpha', 'alpha', header_next='/func/args', check_next='/func/args')
 
+    def test_internal_redirect(self):
+        # Passing a full HTTP URL that matches the local host still works
+        url = server.base_url + '/func/args'
+        self.ok('alpha', 'alpha', query_next=url, check_next='/func/args')
+        self.ok('alpha', 'alpha', header_next=url, check_next='/func/args')
+
+    def test_external_redirect(self):
+        # When redirecting to an external URL fall back to the default url: specified
+        self.ok('alpha', 'alpha', query_next='https://gramener.com/', check_next='/dir/index/')
+        self.ok('alpha', 'alpha', header_next='https://gramener.com/', check_next='/dir/index/')
+        newport = server.base_url.rsplit(':', 1)[0] + ':1234'
+        self.ok('alpha', 'alpha', query_next=newport, check_next='/dir/index/')
+        self.ok('alpha', 'alpha', header_next=newport, check_next='/dir/index/')
+
 
 class TestSimpleAuth(AuthBase, LoginMixin):
     @classmethod

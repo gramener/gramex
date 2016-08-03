@@ -130,9 +130,10 @@ class BaseHandler(RequestHandler):
                         target = urlparse(next_uri)
                         if not target.scheme and not target.netloc:
                             return next_uri
-                        source = urlparse(handler.request.uri)
-                        if source.scheme == target.scheme and source.netloc == target.netloc:
+                        req = handler.request
+                        if req.protocol == target.scheme and req.host == target.netloc:
                             return next_uri
+                        app_log.error('Not redirecting to external url: %s', next_uri)
                 return redirect_method
             cls.redirects = [no_external(method) for method in cls.redirects]
 
