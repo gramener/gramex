@@ -3,6 +3,6 @@ guide:
 gramex-update:
     target: $GRAMEXPATH/apps/update/
 wrangler:
-    cmd: git clone http://code.gramener.com/s.anand/wrangler.git
+    cmd: git clone https://code.gramener.com/s.anand/wrangler.git
 databrowse:
-    cmd: git clone http://code.gramener.com/soumya.ranjan/databrowse.git
+    cmd: git clone https://code.gramener.com/soumya.ranjan/databrowse.git
