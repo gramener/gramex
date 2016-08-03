@@ -23,3 +23,35 @@ directory listing. You can now create static web applications with no additional
 configuration.
 
 Here is a [sample directory listing](static/).
+
+
+## Gramex 0.x changes
+
+If you're familiar with [Gramex 0.x](https://learn.gramener.com/docs/server),
+Gramex 1.x is similar, but it doesn't display HTML files by default. To mimic
+the behaviour, use the following `gramex.yaml`:
+
+    :::yaml
+    url:
+      templates:                              # A unique name for this handler
+          pattern: /(.*)                      # All URLs beginning with /
+          handler: FileHandler                # Handler used
+          kwargs:                             # Options to the handler
+              path: .                         #   path is current dir
+              default_filename: index.html    #   / becomes /index.html
+              index: true                     #   display file list if index.html missing
+              transform:
+                  "*.html":                   # Transform all .html files
+                      function: template      # as templates
+
+Now, any `.html` file will be treated as a template, similar to Gramex 0.x. But
+there are some key differences:
+
+1. `file.html` was be rendered at `/file` as well as `/file.html` by Gramex 0.x.
+   Gramex 1.x will only render at `/file.html`.
+2. Gramex 0.x supported a non-standard `{% code %} ... {% end %}` template tag.
+   Gramex 1.x only supports standard [Tornado templates][tornado-templates].
+3. Gramex 0.x had a variety of server-side visualisations.
+   Gramex 1.x only supports client-side visualisations.
+
+[tornado-templates]: http://tornado.readthedocs.io/en/stable/template.html
