@@ -13,7 +13,65 @@ NOT_FOUND = 404
 sa, pd, bz = None, None, None       # Initialize late-loaded libraries to avoid flake8 errors
 
 
-class DataHandler(BaseHandler):
+class DataMixin(object):
+    @classmethod
+    def setup_data(cls, kwargs):
+        cls.params = AttrDict(kwargs)
+        cls.thread = kwargs.get('thread', True)
+
+        qconfig = {'query': cls.params.get('query', {}),
+                   'default': cls.params.get('default', {})}
+        delims = {'agg': ':', 'sort': ':', 'where': ''}
+        nojoins = ['select', 'groupby']
+
+        for q in qconfig:
+            if qconfig[q]:
+                tmp = AttrDict()
+                for key in qconfig[q].keys():
+                    val = qconfig[q][key]
+                    if isinstance(val, list):
+                        tmp[key] = val
+                    elif isinstance(val, dict):
+                        tmp[key] = [k if key in nojoins
+                                    else k + delims[key] + v
+                                    for k, v in val.items()]
+                    elif isinstance(val, (str, int)):
+                        tmp[key] = [val]
+                qconfig[q] = tmp
+        cls.qconfig = qconfig
+
+    def getq(self, key, default_value=None):
+        return (self.qconfig['query'].get(key) or
+                self.get_arguments(key, strip=False) or
+                self.qconfig['default'].get(key) or
+                default_value)
+
+    def _engine(self):
+        url, parameters = self.params['url'], self.params.get('parameters', {})
+        driver_key = yaml.dump([url, parameters])
+        if driver_key not in drivers:
+            import sqlalchemy as sa
+            drivers[driver_key] = sa.create_engine(url, **parameters)
+        self.engine = drivers[driver_key]
+
+    def renderdata(self):
+        # Set content and type based on format
+        formats = self.getq('format', [])
+        if 'csv' in formats:
+            self.set_header('Content-Type', 'text/csv')
+            self.set_header("Content-Disposition", "attachment;filename=file.csv")
+            self.write(self.result.to_csv(index=False, encoding='utf-8'))
+        elif 'html' in formats:
+            self.set_header('Content-Type', 'text/html')
+            self.write(self.result.to_html())
+        elif 'json' in formats or '' in formats or len(formats) == 0:
+            self.set_header('Content-Type', 'application/json')
+            self.write(self.result.to_json(orient='records'))
+        else:
+            raise NotImplementedError('format=%s is not supported yet.' % formats)
+
+
+class DataHandler(BaseHandler, DataMixin):
     '''
     Serves data in specified format from datasource. It accepts these parameters:
 
@@ -51,9 +109,7 @@ class DataHandler(BaseHandler):
     @classmethod
     def setup(cls, **kwargs):
         super(DataHandler, cls).setup(**kwargs)
-        cls.params = AttrDict(kwargs)
-        cls.driver_key = yaml.dump(kwargs)
-        cls.thread = kwargs.get('thread', True)
+        cls.setup_data(kwargs)
 
         # Identify driver. Import heavy libraries on demand for speed
         import importlib
@@ -82,27 +138,6 @@ class DataHandler(BaseHandler):
                     posttransform, vars=AttrDict(content=None),
                     filename='url>%s' % cls.name))
 
-        qconfig = {'query': cls.params.get('query', {}),
-                   'default': cls.params.get('default', {})}
-        delims = {'agg': ':', 'sort': ':', 'where': ''}
-        nojoins = ['select', 'groupby']
-
-        for q in qconfig:
-            if qconfig[q]:
-                tmp = AttrDict()
-                for key in qconfig[q].keys():
-                    val = qconfig[q][key]
-                    if isinstance(val, list):
-                        tmp[key] = val
-                    elif isinstance(val, dict):
-                        tmp[key] = [k if key in nojoins
-                                    else k + delims[key] + v
-                                    for k, v in val.items()]
-                    elif isinstance(val, (str, int)):
-                        tmp[key] = [val]
-                qconfig[q] = tmp
-        cls.qconfig = qconfig
-
     def initialize(self, **kwargs):
         super(DataHandler, self).initialize(**kwargs)
         # Set the method to the ?x-http-method-overrride argument or the
@@ -112,18 +147,8 @@ class DataHandler(BaseHandler):
         elif 'X-HTTP-Method-Override' in self.request.headers:
             self.request.method = self.request.headers['X-HTTP-Method-Override']
 
-    def getq(self, key, default_value=None):
-        return (self.qconfig['query'].get(key) or
-                self.get_arguments(key, strip=False) or
-                self.qconfig['default'].get(key) or
-                default_value)
-
     def _sqlalchemy_gettable(self):
-        if self.driver_key not in drivers:
-            parameters = self.params.get('parameters', {})
-            drivers[self.driver_key] = sa.create_engine(self.params['url'], **parameters)
-        self.engine = drivers[self.driver_key]
-
+        self._engine()
         return sa.Table(self.params['table'], self.meta, autoload=True, autoload_with=self.engine)
 
     def _sqlalchemy_wheres(self, _wheres, table):
@@ -321,22 +346,6 @@ class DataHandler(BaseHandler):
         # TODO: Improve json, csv, html outputs using native odo
         return bz.odo(bz.compute(query, bzcon.data), pd.DataFrame)
 
-    def render(self):
-        # Set content and type based on format
-        formats = self.getq('format', [])
-        if 'csv' in formats:
-            self.set_header('Content-Type', 'text/csv')
-            self.set_header("Content-Disposition", "attachment;filename=file.csv")
-            self.write(self.result.to_csv(index=False, encoding='utf-8'))
-        elif 'html' in formats:
-            self.set_header('Content-Type', 'text/html')
-            self.write(self.result.to_html())
-        elif 'json' in formats or '' in formats or len(formats) == 0:
-            self.set_header('Content-Type', 'application/json')
-            self.write(self.result.to_json(orient='records'))
-        else:
-            raise NotImplementedError('format=%s is not supported yet.' % formats)
-
         # Allow headers to be overridden
         for header_name, header_value in self.params.get('headers', {}).items():
             self.set_header(header_name, header_value)
@@ -357,7 +366,7 @@ class DataHandler(BaseHandler):
             self.result = yield gramex.service.threadpool.submit(self.driver_method, **kwargs)
         else:
             self.result = self.driver_method(**kwargs)
-        self.render()
+        self.renderdata()
 
     @tornado.gen.coroutine
     def post(self):
@@ -368,7 +377,7 @@ class DataHandler(BaseHandler):
             self.result = yield gramex.service.threadpool.submit(self._sqlalchemy_post, **kwargs)
         else:
             self.result = self._sqlalchemy_post(**kwargs)
-        self.render()
+        self.renderdata()
 
     @tornado.gen.coroutine
     def delete(self):
@@ -379,7 +388,7 @@ class DataHandler(BaseHandler):
             self.result = yield gramex.service.threadpool.submit(self._sqlalchemy_delete, **kwargs)
         else:
             self.result = self._sqlalchemy_delete(**kwargs)
-        self.render()
+        self.renderdata()
 
     @tornado.gen.coroutine
     def put(self):
@@ -390,4 +399,55 @@ class DataHandler(BaseHandler):
             self.result = yield gramex.service.threadpool.submit(self._sqlalchemy_put, **kwargs)
         else:
             self.result = self._sqlalchemy_put(**kwargs)
-        self.render()
+        self.renderdata()
+
+
+class QueryHandler(BaseHandler, DataMixin):
+    '''
+    Exposes parametrized SQL queries via a REST API.
+
+    Sample configuration::
+
+        pattern: /$YAMLURL/query
+        handler: QueryHandler
+        kwargs:
+            url: sqlite:///database.db
+            sql: SELECT * FROM table ORDER BY :key
+            default:
+                key: ...
+                limit:
+                format:
+            query:
+                limit:
+                format:
+            columns:
+                col: type
+            headers:
+                ...
+            redirect:
+                ...
+    '''
+    @classmethod
+    def setup(cls, **kwargs):
+        super(QueryHandler, cls).setup(**kwargs)
+        cls.setup_data(kwargs)
+        from sqlalchemy import text
+        cls.query = text(kwargs['sql'])
+
+    def run(self, stmt, limit):
+        self._engine()
+        import pandas as pd
+        chunks = pd.read_sql(stmt, self.engine, chunksize=limit)
+        return chunks.next()
+
+    @tornado.gen.coroutine
+    def get(self):
+        # Bind the query and run it
+        args = {key: self.getq(key, [''])[0] for key in self.query._bindparams}
+        stmt = self.query.bindparams(**args)
+        limit = int(self.getq('limit', [100])[0])
+        if self.thread:
+            self.result = yield gramex.service.threadpool.submit(self.run, stmt, limit)
+        else:
+            self.result = self.run(stmt, limit)
+        self.renderdata()

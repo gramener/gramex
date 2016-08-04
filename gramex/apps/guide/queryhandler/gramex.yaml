@@ -1,0 +1,23 @@
+url:
+  queryhandler/genome:
+    pattern: /$YAMLURL/genome
+    handler: QueryHandler
+    kwargs:
+        url: mysql+pymysql://anonymous@ensembldb.ensembl.org/gorilla_gorilla_core_84_31
+        sql: SELECT * FROM gene
+
+  queryhandler/flags:
+    pattern: /$YAMLURL/flags                # The flags URL...
+    handler: QueryHandler                   # uses QueryHandler
+    kwargs:
+      url: sqlite:///$YAMLPATH/../datahandler/database.sqlite3     # to connect database at this path/url
+      sql: >                              # Run this (multi-line) SQL query
+          SELECT * FROM flags
+          WHERE continent=:continent
+          AND c1>:c1
+      default:
+        continent: Africa                 # By default, the continent is Africa
+        limit: 10                         # Limit is set to 10
+        format: html                      # Can also be json or csv
+      query:
+        c1: 10

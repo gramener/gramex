@@ -14,7 +14,9 @@ title: Gramex connects to data
 
 (This uses the public [ensemble gene database](http://ensembldb.ensembl.org/info/data/mysql.html).)
 
-To start you off, there's a `database.sqlite3` in this application folder. (Gramex downloaded [flags data](https://gramener.com/flags/) on startup. See [fetch.data()](fetch.py) and the scheduler in [gramex.yaml](gramex.yaml).
+To start you off, there's a `database.sqlite3` in this application folder.
+(Gramex downloaded [flags data](https://gramener.com/flags/) on startup. See
+[fetch.data()](fetch.py) and the scheduler in [gramex.yaml](gramex.yaml).
 
 The `DataHandler` below exposes the flags table in `database.sqlite3` at the URL [flags](flags).
 

@@ -29,6 +29,10 @@ classes: toc
 
 **Exercise**: Load a dataset into MySQL or PostgreSQL, and create a DataHandler that exposes that table.
 
+## [Gramex runs SQL queries](queryhandler/)
+
+**Exercise**: TBD
+
 ## [Gramex writes data](jsonhandler/)
 
 **Exercise**: TBD
