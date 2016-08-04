@@ -321,19 +321,19 @@ class DataHandler(BaseHandler):
         # TODO: Improve json, csv, html outputs using native odo
         return bz.odo(bz.compute(query, bzcon.data), pd.DataFrame)
 
-    def _render(self):
+    def render(self):
         # Set content and type based on format
         formats = self.getq('format', [])
         if 'csv' in formats:
             self.set_header('Content-Type', 'text/csv')
             self.set_header("Content-Disposition", "attachment;filename=file.csv")
-            self.content = self.result.to_csv(index=False, encoding='utf-8')
+            self.write(self.result.to_csv(index=False, encoding='utf-8'))
         elif 'html' in formats:
             self.set_header('Content-Type', 'text/html')
-            self.content = self.result.to_html()
+            self.write(self.result.to_html())
         elif 'json' in formats or '' in formats or len(formats) == 0:
             self.set_header('Content-Type', 'application/json')
-            self.content = self.result.to_json(orient='records')
+            self.write(self.result.to_json(orient='records'))
         else:
             raise NotImplementedError('format=%s is not supported yet.' % formats)
 
@@ -357,8 +357,7 @@ class DataHandler(BaseHandler):
             self.result = yield gramex.service.threadpool.submit(self.driver_method, **kwargs)
         else:
             self.result = self.driver_method(**kwargs)
-        self._render()
-        self.write(self.content)
+        self.render()
 
     @tornado.gen.coroutine
     def post(self):
@@ -369,8 +368,7 @@ class DataHandler(BaseHandler):
             self.result = yield gramex.service.threadpool.submit(self._sqlalchemy_post, **kwargs)
         else:
             self.result = self._sqlalchemy_post(**kwargs)
-        self._render()
-        self.write(self.content)
+        self.render()
 
     @tornado.gen.coroutine
     def delete(self):
@@ -381,8 +379,7 @@ class DataHandler(BaseHandler):
             self.result = yield gramex.service.threadpool.submit(self._sqlalchemy_delete, **kwargs)
         else:
             self.result = self._sqlalchemy_delete(**kwargs)
-        self._render()
-        self.write(self.content)
+        self.render()
 
     @tornado.gen.coroutine
     def put(self):
@@ -393,5 +390,4 @@ class DataHandler(BaseHandler):
             self.result = yield gramex.service.threadpool.submit(self._sqlalchemy_put, **kwargs)
         else:
             self.result = self._sqlalchemy_put(**kwargs)
-        self._render()
-        self.write(self.content)
+        self.render()
