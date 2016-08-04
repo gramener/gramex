@@ -161,6 +161,34 @@ Here is the output of the updated row:
       }
     })
 
+### DataHandler formats
+
+By default, DataHandler renders data as JSON. You can override that with the
+`format` config. For example, consider the [flags](flags?format=html&limit=10).
+By default, the format can be overridden by the URL. For example:
+
+- [flags?format=html](flags?format=html) renders as HTML
+- [flags?format=json](flags?format=json) renders as JSON
+- [flags?format=csv](flags?format=csv) renders as a CSV download named `file.csv`
+
+The default format is JSON. Change it using [datahandler defaults](#datahandler-defaults).
+In this example, the default format is HTML, but the URL can override it.
+
+    :::yaml
+        kwargs:                         # Add this entry under the handler kwargs:
+            ...
+            default: {format: html}     # Change default to HTML
+
+In this example, the format is always CSV. The filename will be `test.csv`.
+
+    :::yaml
+        kwargs:                         # Add this entry under the handler kwargs:
+            ...
+            query: {format: csv}        # Freeze CSV as the format
+            headers:
+                Content-Disposition: "attachment;filename=test.csv"
+
+
 <script>
 var xsrf = {'X-Xsrftoken': cookie.get('_xsrf')}
 var pre = [].slice.call(document.querySelectorAll('pre'))
