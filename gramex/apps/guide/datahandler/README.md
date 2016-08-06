@@ -68,6 +68,11 @@ Here are some examples of DataHandler ``kwargs`` to connect to databases:
         url: postgresql://username:password@servername/database
         table: tablename
 
+    # SQL Server (via ODBC) user / password on any server
+    kwargs:
+        driver: sqlalchemy
+        url: mssql+pyodbc://username:password@odbc-connection-name
+
 **A note on threading**. By default, DataHandler runs the query in a separate
 thread. However, this code is not currently stable. If you find tables that seem
 to be missing columns, or errors that are not reproducible, use `thread: false`
