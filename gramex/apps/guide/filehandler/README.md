@@ -176,95 +176,9 @@ can override these headers:
             Content-Disposition: none     # Do not download the file
 
 
-## Transforming content
-
-Rather than render files as-is, the following parameters transform the markdown
-into HTML:
-
-    :::yaml
-    # ... contd ...
-      transform:
-        "*.md":                                 # Any file matching .md
-          function: markdown.markdown           #   Convert .md to html
-          args: =content                        #   Pass the content as positional arg
-          kwargs:                               #   Pass these arguments to markdown.markdown
-            output_format: html5                #     Output in HTML5
-          headers:                              #   Use these HTTP headers:
-            Content-Type: text/html             #     MIME type: text/html
-
-Any `.md` file will be displayed as HTML -- including this file (which is [README.md](README.md.source).)
-
-Any transformation is possible. For example, this configuration converts YAML
-into HTML using the [BadgerFish](http://www.sklar.com/badgerfish/) convention.
-
-    :::yaml
-    # ... contd ...
-        "*.yaml":                               # YAML files use BadgerFish
-          function: badgerfish                  # transformed via gramex.transforms.badgerfish()
-          args: =content
-          headers:
-            Content-Type: text/html             # and served as HTML
-
-Using this, the following file [page.yaml](page.yaml) is rendered as HTML:
-
-    :::yaml
-    html:
-      "@lang": en
-      head:
-        meta:
-          - {"@charset": utf-8}
-          - {"@name": viewport, "@content": "width=device-width, initial-scale=1.0"}
-        title: Page title
-        link: {"@rel": stylesheet, "@href": /style.css}
-      body:
-        h1: Page constructed using YAML
-        p: This file was created as YAML and converted into HTML using the BadgerFish convention.
-
-Transforms take the following keys:
-
-- **function**: The function to call as `function(*args, **kwargs)` using the
-  `args` and `kwargs` below. You can use `=content` for the content and
-  `=handler` for the handler in both `args` and `kwargs`.
-- **args**: Positional parameters to pass. Defaults to the file contents.
-- **kwargs**: Keyword parameters to pass.
-- **encoding**: If blank, the file is treated as binary. The transform
-  `function` MUST accept the content as binary. If you specify an encoding, the
-  file is loaded with that encoding.
-- **headers**: HTTP headers for the response.
-
-Any function can be used as a transform. Gramex provides the following (commonly
-used) transforms:
-
-1. **template**. Use `function: template` to render the file as a [Tornado
-   template][template]. Any `kwargs` passed will be sent as variables to the
-   template. For example:
-
-        :::yaml
-        transform:
-            "template.*.html":
-                function: template            # Convert as a Tornado template
-                args: =content                # Using the contents of the file (default)
-                kwargs:                       # Pass it the following parameters
-                    title: Hello world        # The title variable is "Hello world"
-                    hander: =handler          # The handler variable is the RequestHandler
-
-2. **badgerfish**. Use `function: badgerfish` to convert YAML files into HTML.
-   For example, this YAML file is converted into a HTML as you would logically
-   expect:
-
-        :::yaml
-        html:
-          head:
-            title: Sample file
-          body:
-            h1: Sample file
-            p:
-              - First paragraph
-              - Second paragraph
-
 ## Templates
 
-The `template` transform renders files as [Tornado templates][template]. To
+The `template` configuration renders files as [Tornado templates][template]. To
 serve a file as a Tornado template, use the following configuration:
 
     :::yaml
@@ -274,28 +188,14 @@ serve a file as a Tornado template, use the following configuration:
             handler: FileHandler            # displays a file
             kwargs:
                 path: page.html             # named page.html
-                transform:
-                  "*.html":                 # Apply the transform to all HTML files
-                    function: template      # Render page.html as a template
-                    # The rest of this configuration is optional
-                    kwargs:                 # You can pass additional variables to the template
-                        title: "Variables"  # title is an explicit string
-                        path: $YAMLPATH     # path is the current YAML file path
-                        home: $HOME         # home is the YAML variable HOME (blank if not defined)
-                        series: [a, b, c]   # series is a list of values
-
-By default, the template receives a single keyword argument `handler`. You can
-add other keyword arguments in `kwargs:` as shown above.
+                template: "*.html"          # Apply the transform to all HTML files
 
 The file can contain any template feature. Here's a sample `page.html`.
 
     :::html
-    <h1>{{ title }}</h1>
     <p>argument x is {{ handler.get_argument('x', None) }}</p>
-    <p>path is: {{ path }}.</p>
-    <p>home is: {{ home }}.</p>
     <ul>
-        {% for item in series %}<li>{{ item }}</li>{% end %}
+        {% for item in [1, 2, 3] %}<li>{{ item }}</li>{% end %}
     </ul>
 
 ## XSRF
@@ -407,3 +307,104 @@ specified, the transforms are applied before concatenation
 
 [filehandler]: https://learn.gramener.com/gramex/gramex.handlers.html#gramex.handlers.FileHandler
 [template]: http://www.tornadoweb.org/en/stable/template.html
+
+
+## Transforming content
+
+Rather than render files as-is, the following parameters transform the markdown
+into HTML:
+
+    :::yaml
+    # ... contd ...
+      transform:
+        "*.md":                                 # Any file matching .md
+          function: markdown.markdown           #   Convert .md to html
+          args: =content                        #   Pass the content as positional arg
+          kwargs:                               #   Pass these arguments to markdown.markdown
+            output_format: html5                #     Output in HTML5
+          headers:                              #   Use these HTTP headers:
+            Content-Type: text/html             #     MIME type: text/html
+
+Any `.md` file will be displayed as HTML -- including this file (which is [README.md](README.md.source).)
+
+Any transformation is possible. For example, this configuration converts YAML
+into HTML using the [BadgerFish](http://www.sklar.com/badgerfish/) convention.
+
+    :::yaml
+    # ... contd ...
+        "*.yaml":                               # YAML files use BadgerFish
+          function: badgerfish                  # transformed via gramex.transforms.badgerfish()
+          args: =content
+          headers:
+            Content-Type: text/html             # and served as HTML
+
+Using this, the following file [page.yaml](page.yaml) is rendered as HTML:
+
+    :::yaml
+    html:
+      "@lang": en
+      head:
+        meta:
+          - {"@charset": utf-8}
+          - {"@name": viewport, "@content": "width=device-width, initial-scale=1.0"}
+        title: Page title
+        link: {"@rel": stylesheet, "@href": /style.css}
+      body:
+        h1: Page constructed using YAML
+        p: This file was created as YAML and converted into HTML using the BadgerFish convention.
+
+Transforms take the following keys:
+
+- **function**: The function to call as `function(*args, **kwargs)` using the
+  `args` and `kwargs` below. You can use `=content` for the content and
+  `=handler` for the handler in both `args` and `kwargs`.
+- **args**: Positional parameters to pass. Defaults to the file contents.
+- **kwargs**: Keyword parameters to pass.
+- **encoding**: If blank, the file is treated as binary. The transform
+  `function` MUST accept the content as binary. If you specify an encoding, the
+  file is loaded with that encoding.
+- **headers**: HTTP headers for the response.
+
+Any function can be used as a transform. Gramex provides the following (commonly
+used) transforms:
+
+1. **template**. Use `function: template` to render the file as a [Tornado
+   template][template]. Any `kwargs` passed will be sent as variables to the
+   template. For example:
+
+        :::yaml
+        transform:
+            "template.*.html":
+                function: template            # Convert as a Tornado template
+                args: =content                # Using the contents of the file (default)
+                kwargs:                       # Pass it the following parameters
+                    hander: =handler          # The handler variable is the RequestHandler
+                    title: Hello world        # The title variable is "Hello world"
+                    path: $YAMLPATH           # path is the current YAML file path
+                    home: $HOME               # home is the YAML variable HOME (blank if not defined)
+                    series: [a, b, c]         # series is a list of values
+
+    With this structure, the following template will render fine:
+
+        :::yaml
+        <h1>{{ title }}</h1>
+        <p>argument x is {{ handler.get_argument('x', None) }}</p>
+        <p>path is: {{ path }}.</p>
+        <p>home is: {{ home }}.</p>
+        <ul>
+            {% for item in [series] %}<li>{{ item }}</li>{% end %}
+        </ul>
+
+2. **badgerfish**. Use `function: badgerfish` to convert YAML files into HTML.
+   For example, this YAML file is converted into a HTML as you would logically
+   expect:
+
+        :::yaml
+        html:
+          head:
+            title: Sample file
+          body:
+            h1: Sample file
+            p:
+              - First paragraph
+              - Second paragraph

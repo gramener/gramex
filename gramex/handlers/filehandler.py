@@ -8,6 +8,7 @@ import tornado.gen
 from pathlib import Path
 from tornado.escape import utf8
 from tornado.web import HTTPError
+from orderedattrdict import AttrDict
 from six.moves.urllib.parse import urljoin
 from .basehandler import BaseHandler
 from gramex.config import app_log
@@ -63,7 +64,10 @@ class FileHandler(BaseHandler):
 
         - ``$path`` - the directory name
         - ``$body`` - an unordered list with all filenames as links
-
+    :arg string template: Indicates that the contents of files matching this
+        string pattern must be treated as a Tornado template. This is the same as
+        specifying a ``function: template`` with the template string as a
+        pattern. (new in Gramex 1.14).
     :arg dict headers: HTTP headers to set on the response.
     :arg dict transform: Transformations that should be applied to the files.
         The key matches a `glob pattern`_ (e.g. ``'*.md'`` or ``'data/*'``.) The
@@ -108,8 +112,14 @@ class FileHandler(BaseHandler):
 
     @classmethod
     def setup(cls, path, default_filename=None, index=None, ignore=[], allow=[],
-              index_template=None, headers={}, methods=['GET', 'HEAD', 'POST'], **kwargs):
+              index_template=None, template=None, headers={}, methods=['GET', 'HEAD', 'POST'],
+              **kwargs):
+        # Convert template: '*.html' into transform: {'*.html': {function: template}}
+        # Do this before BaseHandler setup so that it can invoke the transforms required
+        if template is not None:
+            kwargs.setdefault('transform', AttrDict())[template] = AttrDict(function='template')
         super(FileHandler, cls).setup(**kwargs)
+
         cls.root, cls.pattern = None, None
         if isinstance(path, list):
             cls.root = [Path(path_item).absolute() for path_item in path]

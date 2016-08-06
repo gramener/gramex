@@ -138,18 +138,24 @@ class TestFileHandler(TestGramex):
         with (server.info.folder / 'dir/markdown.md').open(encoding='utf-8') as f:
             self.check('/dir/transform/markdown.md', text=markdown.markdown(f.read()))
 
-    def test_badgerfish(self):
+    def test_transform_badgerfish(self):
         handler = AttrDict(file=server.info.folder / 'dir/badgerfish.yaml')
         with (server.info.folder / 'dir/badgerfish.yaml').open(encoding='utf-8') as f:
             result = yield badgerfish(f.read(), handler)
             self.check('/dir/transform/badgerfish.yaml', text=result)
             self.check('/dir/transform/badgerfish.yaml', text='imported file α')
 
-    def test_template(self):
+    def test_transform_template(self):
         # gramex.yaml has configured template.* to take handler and x as params
         self.check('/dir/transform/template.txt?x=►', text='x – ►')
         self.check('/dir/transform/template.txt?x=λ', text='x – λ')
         self.check('/dir/transform/template-handler.txt', code=200)
+
+    def test_template(self):
+        self.check('/dir/template/index-template.txt?arg=►', text='– ►')
+        self.check('/dir/template/non-index-template.txt?arg=►', text='– ►')
+        self.check('/dir/template-index/index-template.txt?arg=►', text='– ►')
+        self.check('/dir/template-index/non-index-template.txt', path='dir/non-index-template.txt')
 
     def test_merge(self):
         self.check('/dir/merge.txt', text='Α.TXT\nΒ.Html\n', headers={

@@ -245,6 +245,18 @@ url:
         "template-handler.txt":
             encoding: utf-8
             function: template
+  dir/template:
+    pattern: "/dir/template/(.*)"
+    handler: FileHandler
+    kwargs:
+        path: dir/
+        template: '*'
+  dir/template-index:
+    pattern: "/dir/template-index/(.*)"
+    handler: FileHandler
+    kwargs:
+        path: dir/
+        template: 'index*'
   dir/args:
     pattern: /dir/args/(.*)
     handler: FileHandler

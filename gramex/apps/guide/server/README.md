@@ -40,9 +40,7 @@ the behaviour, use the following `gramex.yaml`:
               path: .                         #   path is current dir
               default_filename: index.html    #   / becomes /index.html
               index: true                     #   display file list if index.html missing
-              transform:
-                  "*.html":                   # Transform all .html files
-                      function: template      # as templates
+              template: '*.html'              # Transform all .html files
 
 Now, any `.html` file will be treated as a template, similar to Gramex 0.x. But
 there are some key differences:

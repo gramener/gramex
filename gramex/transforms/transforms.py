@@ -155,8 +155,8 @@ def build_transform(conf, vars=None, filename='transform'):
 
     # Return the transformed function
     function = context['transform']
-    function.__name__ = name
-    function.__doc__ = doc
+    function.__name__ = str(name)
+    function.__doc__ = str(doc)
 
     # Cache the result and return it
     _build_transform_cache[cache_key] = function
