@@ -530,7 +530,7 @@ class HDF5Store(KeyStore):
         # h5py.h5f.get_obj_ids often raises a ValueError: Not a file id.
         # This is presumably if the file handle has been closed. Log & ignore.
         except ValueError:
-            app_log.warning('HDF5Store("%s").close() error ignored', self.path)
+            app_log.debug('HDF5Store("%s").close() error ignored', self.path)
 
 
 class JSONStore(KeyStore):
