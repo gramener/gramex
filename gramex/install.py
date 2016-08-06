@@ -119,6 +119,14 @@ def _ensure_remove(remove, path, exc_info):
     raise exc_info[1]
 
 
+# On non-Windows systems, _ensure_remove just raises the exception
+try:
+    WindowsError
+except NameError:
+    def _ensure_remove(remove, path, exc_info):     # noqa -- redefine function
+        raise exc_info[1]
+
+
 def safe_rmtree(target):
     if not os.path.exists(target):
         return True
