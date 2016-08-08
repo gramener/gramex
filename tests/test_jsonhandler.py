@@ -6,10 +6,9 @@ import json
 import shutil
 import requests
 from gramex import conf
+from gramex.http import OK
 from gramex.install import _ensure_remove
 from . import server, tempfiles, TestGramex
-
-OK = 200
 
 
 def dump(data):

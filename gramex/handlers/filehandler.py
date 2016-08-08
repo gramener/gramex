@@ -13,8 +13,8 @@ from six.moves.urllib.parse import urljoin
 from .basehandler import BaseHandler
 from gramex.config import app_log
 from gramex import conf as gramex_conf
+from gramex.http import FORBIDDEN, NOT_FOUND
 
-FORBIDDEN, NOT_FOUND = 403, 404
 # Directory indices are served using this template by default
 _default_index_template = Path(__file__).absolute().parent / 'filehandler.template.html'
 

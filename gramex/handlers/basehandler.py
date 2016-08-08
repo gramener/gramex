@@ -17,10 +17,10 @@ from tornado.web import RequestHandler, HTTPError
 from gramex import conf, __version__
 from gramex.config import objectpath, app_log
 from gramex.transforms import build_transform
+from gramex.http import UNAUTHORIZED, FORBIDDEN
 
 server_header = 'Gramex/%s' % __version__
 session_store_cache = {}
-UNAUTHORIZED, FORBIDDEN = 401, 403
 
 
 class BaseHandler(RequestHandler):

@@ -6,10 +6,12 @@ import time
 import datetime
 import tornado.httpclient
 from oauthlib import oauth1
-from gramex.config import app_log
 from tornado.ioloop import IOLoop
 from tornado.httputil import HTTPHeaders, parse_response_start_line
 from six.moves.urllib_parse import urlencode
+from gramex.config import app_log
+from gramex.http import (RATE_LIMITED, TOO_MANY_REQUESTS, CLIENT_TIMEOUT,
+                         INTERNAL_SERVER_ERROR, GATEWAY_TIMEOUT)
 
 
 class TwitterStream(object):
@@ -78,23 +80,23 @@ class TwitterStream(object):
 
         try:
             self.headers = None
-            response = self.client.fetch(self.req)
+            self.client.fetch(self.req)
             self.delay = 0
         except tornado.httpclient.HTTPError as e:
             # HTTPError is raised for non-200 HTTP status codes.
             # For rate limiting, start with 1 minute and double each attempt
-            if e.code in {420, 429}:
+            if e.code in {RATE_LIMITED, TOO_MANY_REQUESTS}:
                 self.delay = self.delay * 2 if self.delay else 60
                 app_log.error('TwitterStream HTTP %d (rate limited): %s. Retry: %ss',
                               e.code, e.response, self.delay)
             # For Tornado timeout errors, reconnect immediately
-            elif e.code == 599:
+            elif e.code == CLIENT_TIMEOUT:
                 self.delay = 0
                 app_log.error('TwitterStream HTTP %d (timeout): %s. Retry: %ss',
                               e.code, e.response, self.delay)
             # For server errors, start with 5 seconds and double until 320 seconds
-            elif 500 <= e.code <= 504:
-                self.delay = min(320, self.delay * 2 if self.delay else 1)
+            elif INTERNAL_SERVER_ERROR <= e.code <= GATEWAY_TIMEOUT:
+                self.delay = min(320, self.delay * 2 if self.delay else 1)      # noqa: 320 seconds
                 app_log.error('TwitterStream HTTP %d: %s. Retry: %ss',
                               e.code, e.response, self.delay)
             # For client errors (e.g. wrong params), disable connection
@@ -104,7 +106,7 @@ class TwitterStream(object):
         except Exception as e:
             # Other errors are possible, such as IOError.
             # Increase the delay in reconnects by 250ms each attempt, up to 16 seconds.
-            self.delay = min(16, self.delay + 0.25)
+            self.delay = min(16, self.delay + 0.25)         # noqa: 16 seconds, 0.25 seconds
             app_log.error('TwitterStream exception %s. Retry: %ss', e, self.delay)
 
     def _stream(self, data):
@@ -143,10 +145,7 @@ class TwitterStream(object):
 
     def process_json(self, message):
         '''Subclass this to process tweets differently'''
-        if 'user' in message:
-            app_log.info(message['user']['screen_name'] + ':' + repr(message['text'][:20]))
-        else:
-            app_log.info(str(message))
+        app_log.info(repr(message))
 
     def header_callback(self, line):
         try:

@@ -9,8 +9,7 @@ import pandas.util.testing as pdt
 from nose.plugins.skip import SkipTest
 from . import server, TestGramex
 import gramex.config
-
-OK, NOT_FOUND, INTERNAL_SERVER_ERROR = 200, 404, 500
+from gramex.http import OK, NOT_FOUND, INTERNAL_SERVER_ERROR
 
 
 class DataHandlerTestMixin(object):

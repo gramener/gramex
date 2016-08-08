@@ -4,9 +4,9 @@ import unittest
 from orderedattrdict import AttrDict
 from . import server
 from gramex import conf
+from gramex.http import OK
 from gramex.services import info
 
-OK = 200
 tempfiles = AttrDict()
 
 

@@ -10,10 +10,10 @@ from tornado.httpclient import AsyncHTTPClient
 from tornado.httputil import url_concat, responses
 from gramex.transforms import build_transform
 from .basehandler import BaseHandler
+from gramex.http import OK, BAD_REQUEST, CLIENT_TIMEOUT
 
-OK, BAD_REQUEST, NETWORK_TIMEOUT = 200, 400, 599
 custom_responses = {
-    NETWORK_TIMEOUT: 'Network Timeout'
+    CLIENT_TIMEOUT: 'Client Timeout'
 }
 
 

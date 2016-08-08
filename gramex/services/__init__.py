@@ -29,11 +29,11 @@ from six import text_type
 from orderedattrdict import AttrDict
 from gramex import debug, shutdown, __version__
 from gramex.config import locate, app_log
+from gramex.http import OK
 from . import urlcache
 from .ttlcache import MAXTTL
 from .emailer import SMTPMailer
 
-OK = 200
 # Service information, available as gramex.service after gramex.init() is called
 info = AttrDict(
     app=None,

@@ -9,9 +9,9 @@ import gramex.services
 from nose.tools import eq_
 from orderedattrdict import AttrDict
 from . import TestGramex, tempfiles
+from gramex.http import OK, NOT_FOUND
 from gramex.services.urlcache import ignore_headers, MemoryCache, DiskCache
 
-OK, NOT_FOUND = 200, 404
 info = AttrDict()
 
 

@@ -8,10 +8,9 @@ import sqlalchemy as sa
 from nose.plugins.skip import SkipTest
 from six.moves.urllib_parse import urlencode
 import gramex.config
+from gramex.http import OK, UNAUTHORIZED, FORBIDDEN
 from . import TestGramex
 from . import server
-
-OK, UNAUTHORIZED, FORBIDDEN = 200, 401, 403
 
 
 class TestSession(TestGramex):
