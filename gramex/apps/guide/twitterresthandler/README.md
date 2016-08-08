@@ -175,6 +175,44 @@ will return the first tweet on your timeline.
       data: {'count': '1'}
     })  // OUTPUT
 
+
+## Twitter streaming
+
+The [Twitter streaming API](https://dev.twitter.com/streaming/overview) provides
+a live source of tweets. This can be set up as a schedule:
+
+    :::yaml
+    schedule:
+        twitter-stream:
+            function: TwitterStream
+            kwargs:
+                track: beer,wine                # Track these keywords
+                follow: Starbucks,Microsoft     # OR follow these users' tweets
+                path: tweets.{:%Y-%m-%d}.jsonl  # Save the results in this file
+                # Visit https://apps.twitter.com/ to get these keys
+                consumer_key: ...
+                consumer_secret: ...
+                access_token: ...
+                access_token_secret: ...
+            startup: true                       # Run on startup
+            thread: true                        # in a separate thread (REQUIRED)
+
+This runs the `TwitterStream` class on startup in a separate thread.
+`TwitterStream` opens a permanent connection to Twitter and receives all tweets
+matching either `beer` or `wine`. It also receives any tweets from `@Starbucks`
+and `@Microsoft`.
+
+The results are saved in `tweets.xxx.jsonl`. (The extension `.jsonl` indicates
+the [JSON Lines](http://jsonlines.org/) format.) You can use standard Python
+[date formatting](http://strftime.org/). For example, `{:%b-%Y}.jsonl` will
+create files like `Jan-2016.jsonl`, `Feb-2016.jsonl`, etc. while `{:%H-%M}.jsonl`
+will save the tweets into an hour-minute files. (It will append to the file, so
+you won't lose data.)
+
+Note: You can run multiple Twitter streams, but you need different access keys
+for each.
+
+
 <script>
 var xsrf = {'X-Xsrftoken': cookie.get('_xsrf')}
 var pre = [].slice.call(document.querySelectorAll('pre'))
