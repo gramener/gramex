@@ -20,7 +20,7 @@ class Task(object):
         - thread: True to run in a separate thread
         '''
         self.name = name
-        self.function = build_transform(schedule, vars={}, filename='schedule>%s' % name)
+        self.function = build_transform(schedule, vars={}, filename='schedule:%s' % name)
         self.ioloop = ioloop or tornado.ioloop.IOLoop.current()
         self.callback = None
 

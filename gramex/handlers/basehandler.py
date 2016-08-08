@@ -386,6 +386,11 @@ class BaseHandler(RequestHandler):
 
     @property
     def session(self):
+        '''
+        By default, session is not implemented. You need to specify a
+        ``session:`` section in ``gramex.yaml`` to activate it. It is replaced by
+        the ``get_session`` method as a property.
+        '''
         raise NotImplementedError('Specify a session: section in gramex.yaml')
 
     def get_session(self):

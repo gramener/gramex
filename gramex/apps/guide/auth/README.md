@@ -37,6 +37,39 @@ or in you `gramex.yaml`:
         settings:
             cookie_secret: ...
 
+## Session data
+
+Session data is stored in a session store that is configured as follows:
+
+    :::yaml
+    app:
+        session:
+            type: json                      # Type of store to use: hdf5, json or memory
+            path: $GRAMEXDATA/session.json  # Path to the store (ignored for memory)
+            expiry: 31                      # Session cookies expiry in days
+            flush: 60000                    # Write store to disk periodically (in milliseconds)
+
+Sessions can be stored in memory (`type: memory`) but these will not be saved
+across sessions. Persistent sessions are stored as `type: json`. (Currently,
+`type: hdf5` is 100x slower for any volume.)
+
+You can access the session data directly from the session store file, or via
+Gramex as follows:
+
+    :::python
+    from gramex.handlers.basehandler import session_store_cache
+    # Loop through each session store -- there may be multiple stores
+    for store in session_store_cache.values():
+        for session_id in store.store:
+            print('Found session ID', session_id)
+
+You can also access session data from inside a handler via:
+
+    :::python
+    for session_id in handler._session_store.store:
+        print('Found session ID', session_id)
+
+
 # Authentication
 
 Gramex allows users to log in using various single sign-on methods. The flow

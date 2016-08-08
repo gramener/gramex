@@ -7,7 +7,6 @@ For example, if ``gramex.yaml`` contains this section::
     log:
         version: 1
 
-
 ... then :func:`log` is called as ``log({"version": 1})``. If no such function
 exists, a warning is raised.
 '''
@@ -168,6 +167,10 @@ def threadpool(conf):
 
 
 def handlers(conf):
+    '''
+    The handlers: config is used by the url: handlers to set up the defaults.
+    No explicit configuration is required.
+    '''
     pass
 
 
@@ -184,7 +187,7 @@ def _sort_url_patterns(entry):
 
 
 def _url_normalize(pattern):
-    'Remove double slashes, ../, ./ etc in the URL path. Remove URL fragment'
+    '''Remove double slashes, ../, ./ etc in the URL path. Remove URL fragment'''
     url = urlparse.urlsplit(pattern)
     path = posixpath.normpath(url.path)
     if url.path.endswith('/') and not path.endswith('/'):
