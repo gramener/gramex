@@ -1,9 +1,9 @@
 import requests
 import concurrent.futures
-from gramex.handlers.twitterresthandler import NETWORK_TIMEOUT
+from gramex.handlers.twitterresthandler import TwitterRESTHandler
+from gramex.http import OK, METHOD_NOT_ALLOWED, BAD_REQUEST, CLIENT_TIMEOUT
 from . import server, TestGramex
 
-OK, METHOD_NOT_ALLOWED, BAD_REQUEST = 200, 405, 400
 threadpool = concurrent.futures.ThreadPoolExecutor(8)
 
 
@@ -39,7 +39,7 @@ class TestTwitterRESTHandler(TestGramex):
         for key in ('bad-request', 'search-url', 'search-body', 'show', 'timeline', 'get-ok'):
             r = response[key]
             # Ignore timeouts. These happen quite often
-            if r.status_code == NETWORK_TIMEOUT:
+            if r.status_code == CLIENT_TIMEOUT:
                 continue
             if key == 'bad-request':
                 self.assertEqual(r.status_code, BAD_REQUEST)
