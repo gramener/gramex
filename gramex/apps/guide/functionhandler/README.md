@@ -27,6 +27,9 @@ You can see all configurations used in this page in [gramex.yaml](gramex.yaml):
 
 <iframe frameborder="0" src="gramex.yaml"></iframe>
 
+FunctionHandler handles `GET` *and* `POST` requests by default. That is, the
+same function is called irrespective of whether the method is `GET` or `POST`.
+
 ## Function arguments
 
 You can define what parameters to pass to the function. By default, the Tornado
