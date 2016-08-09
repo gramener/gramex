@@ -263,7 +263,18 @@ accesses `handler.xsrf_token`. You can also set it explicitly, by adding a
                 ...
                 set_xsrf: true        # set the xsrf cookie
 
-You can disable XSRF in `gramex.yaml` (but this is **not recommended**):
+You can disable XSRF for a specific handler like this:
+
+    :::yaml
+    url:
+        name:
+            pattern: ...              # When this page is visited,
+            handler: ...              # no matter what the handler is,
+            kwargs:
+                ...
+                xsrf_cookies: false   # Disable XSRF cookies
+
+You can disable XSRF for *all handlers* like this (but this is **not recommended**):
 
     :::yaml
     app:

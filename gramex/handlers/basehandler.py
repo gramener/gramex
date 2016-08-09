@@ -30,7 +30,7 @@ class BaseHandler(RequestHandler):
     '''
     @classmethod
     def setup(cls, transform={}, redirect={}, auth=None, log={}, set_xsrf=None,
-              error=None, **kwargs):
+              error=None, xsrf_cookies=None, **kwargs):
         '''
         One-time setup for all request handlers. This is called only when
         gramex.yaml is parsed / changed.
@@ -44,6 +44,7 @@ class BaseHandler(RequestHandler):
         cls.setup_session(conf.app.get('session'))
         cls.setup_log(log or objectpath(conf, 'handlers.BaseHandler.log'))
         cls.setup_error(error)
+        cls.setup_xsrf(xsrf_cookies)
         cls._set_xsrf = set_xsrf
 
         # app.settings.debug enables debugging exceptions using pdb
@@ -292,6 +293,21 @@ class BaseHandler(RequestHandler):
         if error_code in cls.error:
             cls.error[error_code]['conf'] = error_config
         cls._write_error, cls.write_error = cls.write_error, cls._write_custom_error
+
+    @classmethod
+    def setup_xsrf(cls, xsrf_cookies):
+        '''
+        Sample configuration::
+
+            xsrf_cookies: false         # Disables xsrf_cookies
+            xsrf_cookies: true          # or anything other than false keeps it enabled
+        '''
+        if xsrf_cookies is False:
+            cls.check_xsrf_cookie = cls.noop
+
+    def noop(self):
+        '''Does nothing. Used when overriding functions or providing a dummy operation'''
+        pass
 
     def initialize(self, **kwargs):
         self.kwargs = kwargs
