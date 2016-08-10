@@ -10,7 +10,7 @@ from .authhandler import (GoogleAuth, FacebookAuth, TwitterAuth, LDAPAuth, Simpl
                           LogoutHandler)
 from .processhandler import ProcessHandler
 from .jsonhandler import JSONHandler
-from .twitterresthandler import TwitterRESTHandler
+from .socialhandler import TwitterRESTHandler
 from .uploadhandler import UploadHandler
 
 DirectoryHandler = FileHandler

@@ -20,8 +20,8 @@ class TwitterStream(object):
 
         >>> from gramex.transforms import TwitterStream
         >>> stream = TwitterStream(track='modi,mms', path='save-as-file.json',
-        ...                        consumer_key=..., consumer_secret=...,
-        ...                        access_token=..., access_token_secret=...)
+        ...                        key=..., secret=...,
+        ...                        access_key=..., access_secret=...)
 
     This saves all tweets mentioning ``modi`` or ``mms`` in ``save-as-file.json``
     with each line representing a tweet in JSN format.
@@ -62,10 +62,10 @@ class TwitterStream(object):
 
     def fetch_tweets(self, tweet_params):
         oauth = oauth1.Client(
-            self.params['consumer_key'],
-            client_secret=self.params['consumer_secret'],
-            resource_owner_key=self.params['access_token'],
-            resource_owner_secret=self.params['access_token_secret'])
+            client_key=self.params['key'],
+            client_secret=self.params['secret'],
+            resource_owner_key=self.params['access_key'],
+            resource_owner_secret=self.params['access_secret'])
         headers = {
             'Content-Type': 'application/x-www-form-urlencoded',
             'User-Agent': 'Gramex',

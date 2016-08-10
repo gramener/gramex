@@ -9,10 +9,10 @@ title: Gramex accesses Twitter data
             handler: TwitterRESTHandler
             kwargs:
                 # Visit https://apps.twitter.com/ to get these keys
-                consumer_key: '...'
-                consumer_secret: '...'
-                access_token: '...'
-                access_token_secret: '...'
+                key: '...'
+                secret: '...'
+                access_key: '...'
+                access_secret: '...'
 
 Follow the steps for [Twitter auth](../auth/#twitter-auth) to get the keys above.
 
@@ -158,12 +158,12 @@ The above examples allowed you to query Twitter with a pre-defined access token.
 But for users to use their own account to access the API, do the following:
 
 1. Create a `TwitterRESTHandler` at a URL (e.g.
-   [oauth-api/](oauth-api/?next=../)). Do not specify an `access_token` or
-   `access_token_secret`. It will redirect the user to Twitter and log them in.
+   [oauth-api/](oauth-api/?next=../)). Do not specify an `access_key` or
+   `access_secret`. It will redirect the user to Twitter and log them in.
 2. Any request now made to `oauth-api/...` will use the user's access token.
 
 The first time you make a request to `/oauth-api/` (see below), you will see an
-error message saying `access_token missing`. But visit
+error message saying `access token missing`. But visit
 [oauth-api/?next=../](oauth-api/) and log into Twitter. Then the request below
 will return the first tweet on your timeline.
 
@@ -190,10 +190,10 @@ a live source of tweets. This can be set up as a schedule:
                 follow: Starbucks,Microsoft     # OR follow these users' tweets
                 path: tweets.{:%Y-%m-%d}.jsonl  # Save the results in this file
                 # Visit https://apps.twitter.com/ to get these keys
-                consumer_key: ...
-                consumer_secret: ...
-                access_token: ...
-                access_token_secret: ...
+                key: ...
+                secret: ...
+                access_key: ...
+                access_secret: ...
             startup: true                       # Run on startup
             thread: true                        # in a separate thread (REQUIRED)
 

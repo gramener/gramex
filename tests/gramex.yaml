@@ -784,20 +784,20 @@ url:
     handler: TwitterRESTHandler
     kwargs:
       # Gramener > Gramex guide app: https://apps.twitter.com/app/12449610/keys
-      consumer_key: XkCVNZD5sfWECxHGAGnlHGQFa
-      consumer_secret: yU00bx5dHYMbge9IyO5H1KeC5uFnWndntG7u6CH6O4HDZHQg0p
-      access_token: 445767176-pqio8PuGlpzULSstlZQbLhRqFJfNBjWFH5LqNRgI
-      access_token_secret: zVosr4wIS3aM80hErmWUkMePZ6vX830yI7VKxar6xZqgp
+      key: XkCVNZD5sfWECxHGAGnlHGQFa
+      secret: yU00bx5dHYMbge9IyO5H1KeC5uFnWndntG7u6CH6O4HDZHQg0p
+      access_key: 445767176-pqio8PuGlpzULSstlZQbLhRqFJfNBjWFH5LqNRgI
+      access_secret: zVosr4wIS3aM80hErmWUkMePZ6vX830yI7VKxar6xZqgp
 
   api/twitter-get:
     pattern: /api/twitter-get/(.*)
     handler: TwitterRESTHandler
     kwargs:
       # Gramener > Gramex guide app: https://apps.twitter.com/app/12449610/keys
-      consumer_key: XkCVNZD5sfWECxHGAGnlHGQFa
-      consumer_secret: yU00bx5dHYMbge9IyO5H1KeC5uFnWndntG7u6CH6O4HDZHQg0p
-      access_token: 445767176-pqio8PuGlpzULSstlZQbLhRqFJfNBjWFH5LqNRgI
-      access_token_secret: zVosr4wIS3aM80hErmWUkMePZ6vX830yI7VKxar6xZqgp
+      key: XkCVNZD5sfWECxHGAGnlHGQFa
+      secret: yU00bx5dHYMbge9IyO5H1KeC5uFnWndntG7u6CH6O4HDZHQg0p
+      access_key: 445767176-pqio8PuGlpzULSstlZQbLhRqFJfNBjWFH5LqNRgI
+      access_secret: zVosr4wIS3aM80hErmWUkMePZ6vX830yI7VKxar6xZqgp
       methods: GET
 
   upload:
@@ -909,10 +909,10 @@ url:
     kwargs:
       auth: true
       # Gramener > Gramex guide app: https://apps.twitter.com/app/12449610/keys
-      consumer_key: XkCVNZD5sfWECxHGAGnlHGQFa
-      consumer_secret: yU00bx5dHYMbge9IyO5H1KeC5uFnWndntG7u6CH6O4HDZHQg0p
-      access_token: 445767176-pqio8PuGlpzULSstlZQbLhRqFJfNBjWFH5LqNRgI
-      access_token_secret: zVosr4wIS3aM80hErmWUkMePZ6vX830yI7VKxar6xZqgp
+      key: XkCVNZD5sfWECxHGAGnlHGQFa
+      secret: yU00bx5dHYMbge9IyO5H1KeC5uFnWndntG7u6CH6O4HDZHQg0p
+      access_key: 445767176-pqio8PuGlpzULSstlZQbLhRqFJfNBjWFH5LqNRgI
+      access_secret: zVosr4wIS3aM80hErmWUkMePZ6vX830yI7VKxar6xZqgp
   auth/uploadhandler:
     pattern: /auth/uploadhandler
     handler: UploadHandler

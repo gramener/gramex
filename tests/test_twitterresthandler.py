@@ -1,6 +1,6 @@
 import requests
 import concurrent.futures
-from gramex.handlers.twitterresthandler import TwitterRESTHandler
+from gramex.handlers.socialhandler import TwitterRESTHandler
 from gramex.http import OK, METHOD_NOT_ALLOWED, BAD_REQUEST, CLIENT_TIMEOUT
 from . import server, TestGramex
 
