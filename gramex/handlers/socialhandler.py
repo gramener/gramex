@@ -5,7 +5,7 @@ import tornado.gen
 from oauthlib import oauth1
 from orderedattrdict import AttrDict
 from tornado.web import HTTPError
-from tornado.auth import TwitterMixin
+from tornado.auth import TwitterMixin, FacebookGraphMixin
 from tornado.httputil import url_concat, responses
 from gramex.transforms import build_transform
 from .basehandler import BaseHandler
@@ -112,3 +112,47 @@ class TwitterRESTHandler(BaseHandler, SocialMixin, TwitterMixin):
     def _oauth_consumer_token(self):
         return dict(key=self.conf.kwargs['key'],
                     secret=self.conf.kwargs['secret'])
+
+
+class FacebookGraphHandler(BaseHandler, SocialMixin, FacebookGraphMixin):
+
+    @classmethod
+    def setup(cls, **kwargs):
+        super(FacebookGraphHandler, cls).setup(**kwargs)
+        cls.setup_social('user.facebook', **kwargs)
+
+    @tornado.gen.coroutine
+    def run(self, path=None):
+        args = {key: self.get_argument(key) for key in self.request.arguments}
+        if 'access_token' in self.conf.kwargs:
+            args['access_token'] = self.conf.kwargs['access_token']
+        else:
+            info = self.session.get(self.user_info, {})
+            if 'access_token' in info:
+                args['access_token'] = info['access_token']
+            else:
+                raise HTTPError(BAD_REQUEST, reason='access token missing')
+
+        uri = url_concat(self._FACEBOOK_BASE_URL + '/' + self.conf.kwargs.get('path', path), args)
+        http = self.get_auth_http_client()
+        response = yield http.fetch(uri, raise_error=False)
+        result = yield self.social_response(response)
+        self.write(result)
+
+    @tornado.gen.coroutine
+    def get(self, path=None):
+        redirect_uri = self.request.protocol + "://" + self.request.host + self.request.uri
+        if self.get_argument('code', False):
+            self.session[self.user_info] = yield self.get_authenticated_user(
+                redirect_uri=redirect_uri,
+                client_id=self.conf.kwargs['key'],
+                client_secret=self.conf.kwargs['secret'],
+                code=self.get_argument('code'))
+            self.redirect_next()
+        else:
+            self.save_redirect_page()
+            scope = self.conf.kwargs.get('scope', 'read_stream')
+            yield self.authorize_redirect(
+                redirect_uri=redirect_uri,
+                client_id=self.conf.kwargs['key'],
+                extra_params={'scope': scope})
