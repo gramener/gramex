@@ -154,6 +154,8 @@ class TestFileHandler(TestGramex):
     def test_template(self):
         self.check('/dir/template/index-template.txt?arg=►', text='– ►')
         self.check('/dir/template/non-index-template.txt?arg=►', text='– ►')
+        self.check('/dir/template-true/index-template.txt?arg=►', text='– ►')
+        self.check('/dir/template-true/non-index-template.txt?arg=►', text='– ►')
         self.check('/dir/template-index/index-template.txt?arg=►', text='– ►')
         self.check('/dir/template-index/non-index-template.txt', path='dir/non-index-template.txt')
 

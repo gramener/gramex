@@ -251,6 +251,12 @@ url:
     kwargs:
         path: dir/
         template: '*'
+  dir/template-true:
+    pattern: "/dir/template-true/(.*)"
+    handler: FileHandler
+    kwargs:
+        path: dir/
+        template: true
   dir/template-index:
     pattern: "/dir/template-index/(.*)"
     handler: FileHandler
