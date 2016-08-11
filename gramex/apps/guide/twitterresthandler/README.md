@@ -1,6 +1,6 @@
 title: Gramex accesses Twitter data
 
-`TwitterRESTHandler` offers a proxy for the [Twitter 1.1 REST API](https://dev.twitter.com/rest/public), with the added advantage of being asynchronous. Here is an example:
+`TwitterRESTHandler` offers a proxy for the [Twitter 1.1 REST API](https://dev.twitter.com/rest/public). Here is an example:
 
     :::yaml
     url:
@@ -43,6 +43,27 @@ The examples below use [jQuery.ajax][jquery-ajax] and the [cookie.js][cookie.js]
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cookie.js/1.2.0/cookie.min.js"></script>
 
+## Twitter OAuth
+
+The above examples allowed you to query Twitter with a pre-defined access token.
+But for users to use their own account to access the API, **do not specify an
+`access_key` or `access_secret`**. It will redirect the user to Twitter and log
+them in.
+
+For example, the first time you make a POST request to `oauth-api/` (see output
+below), you will see an error message saying `access token missing`. But visit
+[oauth-api/?next=../](oauth-api/) and log into Twitter. Then the request below
+will return the first tweet on your timeline.
+
+    :::js
+    var xsrf = {'X-Xsrftoken': cookie.get('_xsrf')}
+    $.ajax('oauth-api/statuses/home_timeline.json', {
+      headers: xsrf,
+      method: 'POST',
+      data: {'count': '1'}
+    })  // OUTPUT
+
+
 ## Twitter search
 
 The following request [searches](https://dev.twitter.com/rest/reference/get/search/tweets) for metnions of Gramener and fetches the first response:
@@ -81,7 +102,8 @@ You can use the `transform:` configuration to modify the response in any way. He
           ...
           path: search/tweets.json
           transform:
-            function: twitterutils.add_sentiment
+              sentiment: 
+                  function: twitterutils.add_sentiment
 
 Here's what `twitterutils.add_sentiment` looks for the last about Gramener:
 
@@ -151,30 +173,6 @@ This example lets you use either GET or POST requests.
             kwargs:
                 ...
                 methods: [GET, POST]          # Allows using GET and POST requests
-
-## Twitter OAuth
-
-The above examples allowed you to query Twitter with a pre-defined access token.
-But for users to use their own account to access the API, do the following:
-
-1. Create a `TwitterRESTHandler` at a URL (e.g.
-   [oauth-api/](oauth-api/?next=../)). Do not specify an `access_key` or
-   `access_secret`. It will redirect the user to Twitter and log them in.
-2. Any request now made to `oauth-api/...` will use the user's access token.
-
-The first time you make a request to `/oauth-api/` (see below), you will see an
-error message saying `access token missing`. But visit
-[oauth-api/?next=../](oauth-api/) and log into Twitter. Then the request below
-will return the first tweet on your timeline.
-
-    :::js
-    var xsrf = {'X-Xsrftoken': cookie.get('_xsrf')}
-    $.ajax('oauth-api/statuses/home_timeline.json', {
-      headers: xsrf,
-      method: 'POST',
-      data: {'count': '1'}
-    })  // OUTPUT
-
 
 ## Twitter streaming
 

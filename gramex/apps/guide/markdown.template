@@ -21,9 +21,11 @@
       <li><a href="/$GUIDE_ROOT/datahandler/">DataHandler</a></li>
       <li><a href="/$GUIDE_ROOT/queryhandler/">QueryHandler</a></li>
       <li><a href="/$GUIDE_ROOT/jsonhandler/">JSONHandler</a></li>
-      <li><a href="/$GUIDE_ROOT/auth/">Authentication</a></li>
+      <li><a href="/$GUIDE_ROOT/auth/">Auth handlers</a></li>
       <li><a href="/$GUIDE_ROOT/uploadhandler/">UploadHandler</a></li>
       <li><a href="/$GUIDE_ROOT/processhandler/">ProcessHandler</a></li>
+      <li><a href="/$GUIDE_ROOT/twitterresthandler/">TwitterRESTHandler</a></li>
+      <li><a href="/$GUIDE_ROOT/facebookgraphhandler/">FacebookGraphHandler</a></li>
       <li><a href="/$GUIDE_ROOT/cache/">Cache requests</a></li>
       <li><a href="/$GUIDE_ROOT/chart/">Charts</a></li>
       <li><a href="/$GUIDE_ROOT/email/">Send email</a></li>

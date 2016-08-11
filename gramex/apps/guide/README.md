@@ -53,6 +53,10 @@ classes: toc
 
 **Exercise**: Create a dashboard showing the latest tweets and followers of any user, along with the popular tweets that mention them.
 
+## [Gramex accesses Facebook data](facebookgraphhandler/)
+
+**Exercise**: Create an album showing the latest photos of any user.
+
 ## [Gramex caches requests](cache/)
 
 **Exercise**: TBD

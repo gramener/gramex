@@ -1,40 +1,41 @@
 url:
-  twitterresthandler/oauth-api:
-    pattern: /$YAMLURL/oauth-api/(.*)
-    handler: TwitterRESTHandler
-    kwargs:
-      # Gramener > Gramex guide app: https://apps.twitter.com/app/12449610/keys
-      key: XkCVNZD5sfWECxHGAGnlHGQFa
-      secret: yU00bx5dHYMbge9IyO5H1KeC5uFnWndntG7u6CH6O4HDZHQg0p
-      redirect:
-        query: next
-        url: /$YAMLURL/
-
   twitterresthandler/api:
     pattern: /$YAMLURL/api/(.*)
     handler: TwitterRESTHandler
     kwargs:
-      # Gramener > Gramex guide app: https://apps.twitter.com/app/12449610/keys
-      key: XkCVNZD5sfWECxHGAGnlHGQFa
-      secret: yU00bx5dHYMbge9IyO5H1KeC5uFnWndntG7u6CH6O4HDZHQg0p
-      access_key: 445767176-pqio8PuGlpzULSstlZQbLhRqFJfNBjWFH5LqNRgI
-      access_secret: zVosr4wIS3aM80hErmWUkMePZ6vX830yI7VKxar6xZqgp
-      methods: ['get', 'post']
+        # Gramener > Gramex guide app: https://apps.twitter.com/app/12449610/keys
+        key: XkCVNZD5sfWECxHGAGnlHGQFa
+        secret: yU00bx5dHYMbge9IyO5H1KeC5uFnWndntG7u6CH6O4HDZHQg0p
+        access_key: 445767176-pqio8PuGlpzULSstlZQbLhRqFJfNBjWFH5LqNRgI
+        access_secret: zVosr4wIS3aM80hErmWUkMePZ6vX830yI7VKxar6xZqgp
+        methods: ['get', 'post']
     cache:
         duration: 600       # Cache for 5 minutes. This is just a demo anyway.
+
+  twitterresthandler/oauth-api:
+    pattern: /$YAMLURL/oauth-api/(.*)
+    handler: TwitterRESTHandler
+    kwargs:
+        # Gramener > Gramex guide app: https://apps.twitter.com/app/12449610/keys
+        key: XkCVNZD5sfWECxHGAGnlHGQFa
+        secret: yU00bx5dHYMbge9IyO5H1KeC5uFnWndntG7u6CH6O4HDZHQg0p
+        redirect:
+            query: next
+            url: /$YAMLURL/
 
   twitterresthandler/sentiment:
     pattern: /$YAMLURL/sentiment
     handler: TwitterRESTHandler
     kwargs:
-      # Gramener > Gramex guide app: https://apps.twitter.com/app/12449610/keys
-      path: search/tweets.json
-      key: XkCVNZD5sfWECxHGAGnlHGQFa
-      secret: yU00bx5dHYMbge9IyO5H1KeC5uFnWndntG7u6CH6O4HDZHQg0p
-      access_key: 445767176-pqio8PuGlpzULSstlZQbLhRqFJfNBjWFH5LqNRgI
-      access_secret: zVosr4wIS3aM80hErmWUkMePZ6vX830yI7VKxar6xZqgp
-      methods: ['get', 'post']
-      transform:
-        function: twitterutils.add_sentiment
+        # Gramener > Gramex guide app: https://apps.twitter.com/app/12449610/keys
+        path: search/tweets.json
+        key: XkCVNZD5sfWECxHGAGnlHGQFa
+        secret: yU00bx5dHYMbge9IyO5H1KeC5uFnWndntG7u6CH6O4HDZHQg0p
+        access_key: 445767176-pqio8PuGlpzULSstlZQbLhRqFJfNBjWFH5LqNRgI
+        access_secret: zVosr4wIS3aM80hErmWUkMePZ6vX830yI7VKxar6xZqgp
+        methods: ['get', 'post']
+        transform:
+            sentiment:
+                function: twitterutils.add_sentiment
     cache:
         duration: 600       # Cache for 5 minutes. This is just a demo anyway.
