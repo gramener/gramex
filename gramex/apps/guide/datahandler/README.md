@@ -43,6 +43,7 @@ Once we have this setup, we can query the data with a combination of parameters 
 - `offset` - excludes the first n number of records. E.g. [?offset=5&limit=5](flags?offset=5&limit=5) shows the next 5 rows
 - `sort` - sorts the records on a column in ascending order by default. You can change the order with the `:asc` / `:desc` suffixes. E.g. [?sort=Symbols:desc](flags?sort=Symbols:desc)
 - `format` - determines the output format. Can be `html`, `json`, `csv`. E.g. [?format=json](flags?format=json)
+- `count` - set to any value to send an `X-Count` HTTP header to the number of rows in the query, ignoring `limit` and `offset`.
 
 Examples:
 

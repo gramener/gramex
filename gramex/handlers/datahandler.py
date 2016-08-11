@@ -63,18 +63,20 @@ class DataMixin(object):
     def renderdata(self):
         # Set content and type based on format
         formats = self.getq('format', [])
+        if 'count' in self.result:
+            self.set_header('X-Count', self.result['count'])
         if 'csv' in formats:
             self.write_headers(**{
                 'Content-Type': 'text/csv',
                 'Content-Disposition': 'attachment;filename=file.csv'
             })
-            self.write(self.result.to_csv(index=False, encoding='utf-8'))
+            self.write(self.result['data'].to_csv(index=False, encoding='utf-8'))
         elif 'html' in formats:
             self.write_headers(**{'Content-Type': 'text/html'})
-            self.write(self.result.to_html())
+            self.write(self.result['data'].to_html())
         elif 'json' in formats or '' in formats or len(formats) == 0:
             self.write_headers(**{'Content-Type': 'application/json'})
-            self.write(self.result.to_json(orient='records'))
+            self.write(self.result['data'].to_json(orient='records'))
         else:
             raise NotImplementedError('format=%s is not supported yet.' % formats)
 
@@ -187,7 +189,7 @@ class DataHandler(BaseHandler, DataMixin):
         wheres = sa.and_(*wheres)
         return wheres
 
-    def _sqlalchemy(self, _selects, _wheres, _groups, _aggs, _offset, _limit, _sorts):
+    def _sqlalchemy(self, _selects, _wheres, _groups, _aggs, _offset, _limit, _sorts, _count):
         table = self._sqlalchemy_gettable()
         columns = table.columns.keys()
 
@@ -228,6 +230,10 @@ class DataHandler(BaseHandler, DataMixin):
             if _wheres:
                 query = query.where(wheres)
 
+        # Create a query that returns the count before we sort, offset or limit.
+        # .alias() prevents "Every derived table must have its own alias" error.
+        count_query = query.alias('count_table').count()
+
         if _sorts:
             order = {'asc': sa.asc, 'desc': sa.desc}
             sorts = []
@@ -243,7 +249,13 @@ class DataHandler(BaseHandler, DataMixin):
         if _limit:
             query = query.limit(_limit)
 
-        return pd.read_sql_query(query, self.engine)
+        result = {
+            'query': query,
+            'data': pd.read_sql_query(query, self.engine),
+        }
+        if _count:
+            result['count'] = self.engine.execute(count_query).fetchone()[0]
+        return result
 
     def _sqlalchemy_post(self, _vals):
         table = self._sqlalchemy_gettable()
@@ -251,16 +263,18 @@ class DataHandler(BaseHandler, DataMixin):
         for posttransform in self.posttransform:
             for value in posttransform(content):
                 content = value
-        self.engine.execute(table.insert(), **content)
-        return pd.DataFrame()
+        query = table.insert()
+        self.engine.execute(query, **content)
+        return {'query': query, 'data': pd.DataFrame()}
 
     def _sqlalchemy_delete(self, _wheres):
         if not _wheres:
             raise HTTPError(NOT_FOUND, log_message='WHERE is required in DELETE method')
         table = self._sqlalchemy_gettable()
         wheres = self._sqlalchemy_wheres(_wheres, table)
-        self.engine.execute(table.delete().where(wheres))
-        return pd.DataFrame()
+        query = table.delete().where(wheres)
+        self.engine.execute(query)
+        return {'query': query, 'data': pd.DataFrame()}
 
     def _sqlalchemy_put(self, _vals, _wheres):
         if not _vals:
@@ -270,10 +284,11 @@ class DataHandler(BaseHandler, DataMixin):
         table = self._sqlalchemy_gettable()
         content = dict(x.split('=', 1) for x in _vals)
         wheres = self._sqlalchemy_wheres(_wheres, table)
-        self.engine.execute(table.update().where(wheres).values(content))
-        return pd.DataFrame()
+        query = table.update().where(wheres).values(content)
+        self.engine.execute(query)
+        return {'query': query, 'data': pd.DataFrame()}
 
-    def _blaze(self, _selects, _wheres, _groups, _aggs, _offset, _limit, _sorts):
+    def _blaze(self, _selects, _wheres, _groups, _aggs, _offset, _limit, _sorts, _count):
         # TODO: Not caching blaze connections
         parameters = self.params.get('parameters', {})
         bzcon = bz.Data(self.params['url'] +
@@ -328,6 +343,8 @@ class DataHandler(BaseHandler, DataMixin):
                 aggs[name] = byaggs[oper](query[col])
             query = bz.by(grps, **aggs)
 
+        count_query = query.count()
+
         if _sorts:
             order = {'asc': True, 'desc': False}
             sorts = []
@@ -352,7 +369,14 @@ class DataHandler(BaseHandler, DataMixin):
             query = query[_selects]
 
         # TODO: Improve json, csv, html outputs using native odo
-        return bz.odo(bz.compute(query, bzcon.data), pd.DataFrame)
+        result = {
+            'query': query,
+            'data': bz.odo(bz.compute(query, bzcon.data), pd.DataFrame),
+        }
+        if _count:
+            count = bz.odo(bz.compute(count_query, bzcon.data), pd.DataFrame)
+            result['count'] = count.iloc[0, 0]
+        return result
 
     @tornado.gen.coroutine
     def get(self):
@@ -364,6 +388,7 @@ class DataHandler(BaseHandler, DataMixin):
             _offset=self.getq('offset', [None])[0],
             _limit=self.getq('limit', [100])[0],
             _sorts=self.getq('sort'),
+            _count=self.getq('count', [''])[0],
         )
 
         if self.thread:

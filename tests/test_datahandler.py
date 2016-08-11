@@ -18,7 +18,7 @@ class DataHandlerTestMixin(object):
 
     def test_pingdb(self):
         for frmt in ['csv', 'json', 'html']:
-            self.check('/datastore/%s/%s/' % (self.database, frmt),
+            self.check('/datastore/%s/%s/?count=1' % (self.database, frmt),
                        code=200, headers={'Etag': True, 'X-Test': 'abc'})
         self.check('/datastore/' + self.database + '/xyz', code=404)
 
@@ -110,7 +110,7 @@ class DataHandlerTestMixin(object):
             if b is None:
                 self.assertEqual(len(a), 0)
             else:
-                assert a.equals(pd.DataFrame(b))
+                pdt.assert_frame_equal(a, pd.DataFrame(b))
 
         nan = pd.np.nan
         # create
@@ -131,7 +131,7 @@ class DataHandlerTestMixin(object):
            '?where=name=xgram1',
            [{'category': nan, 'name': 'xgram1', 'rating': nan, 'votes': 11}])
         # read
-        assert pd.read_csv(base + '?where=name~xgram').shape[0] == 4
+        self.assertEqual(pd.read_csv(base + '?where=name~xgram').shape[0], 4)
         # delete
         eq(requests.delete, 'where=name~xgram', {}, '?where=name~xgram', None)
 
@@ -150,7 +150,7 @@ class DataHandlerTestMixin(object):
         # Edge cases
         # POST val is empty -- Insert an empty dict
         requests.post(base, data={})
-        assert pd.read_csv(base).isnull().all(axis=1).sum() == 1
+        self.assertEqual(pd.read_csv(base).isnull().all(axis=1).sum(), 1)
         cases = [
             # PUT val is empty -- raise error that VALS is required
             {'method': requests.put, 'data': {'where': 'name=xgram'}},
