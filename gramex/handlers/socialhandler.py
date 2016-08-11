@@ -7,7 +7,6 @@ from orderedattrdict import AttrDict
 from tornado.web import HTTPError
 from tornado.auth import TwitterMixin, FacebookGraphMixin
 from tornado.httputil import url_concat, responses
-from gramex.transforms import build_transform
 from .basehandler import BaseHandler
 from gramex.http import OK, BAD_REQUEST, CLIENT_TIMEOUT
 
