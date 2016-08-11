@@ -117,6 +117,8 @@ class FileHandler(BaseHandler):
         # Convert template: '*.html' into transform: {'*.html': {function: template}}
         # Do this before BaseHandler setup so that it can invoke the transforms required
         if template is not None:
+            if template is True:
+                template = '*'
             kwargs.setdefault('transform', AttrDict())[template] = AttrDict(function='template')
         super(FileHandler, cls).setup(**kwargs)
 

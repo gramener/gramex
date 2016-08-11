@@ -198,6 +198,9 @@ The file can contain any template feature. Here's a sample `page.html`.
         {% for item in [1, 2, 3] %}<li>{{ item }}</li>{% end %}
     </ul>
 
+You can use `template: true` as an alternative to `template: '*'`, where all
+files are treated as templates.
+
 ## XSRF
 
 If you're submitting forms using the POST method, you need to submit an
