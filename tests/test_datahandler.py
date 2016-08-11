@@ -19,7 +19,7 @@ class DataHandlerTestMixin(object):
     def test_pingdb(self):
         for frmt in ['csv', 'json', 'html']:
             self.check('/datastore/%s/%s/' % (self.database, frmt),
-                       code=200, headers={'Etag': True})
+                       code=200, headers={'Etag': True, 'X-Test': 'abc'})
         self.check('/datastore/' + self.database + '/xyz', code=404)
 
     def test_fetchdb(self):

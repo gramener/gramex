@@ -54,18 +54,26 @@ class DataMixin(object):
             drivers[driver_key] = sa.create_engine(url, **parameters)
         self.engine = drivers[driver_key]
 
+    def write_headers(self, **headers):
+        # Allow headers to be overridden
+        headers.update(self.params.get('headers', {}))
+        for header_name, header_value in headers.items():
+            self.set_header(header_name, header_value)
+
     def renderdata(self):
         # Set content and type based on format
         formats = self.getq('format', [])
         if 'csv' in formats:
-            self.set_header('Content-Type', 'text/csv')
-            self.set_header("Content-Disposition", "attachment;filename=file.csv")
+            self.write_headers(**{
+                'Content-Type': 'text/csv',
+                'Content-Disposition': 'attachment;filename=file.csv'
+            })
             self.write(self.result.to_csv(index=False, encoding='utf-8'))
         elif 'html' in formats:
-            self.set_header('Content-Type', 'text/html')
+            self.write_headers(**{'Content-Type': 'text/html'})
             self.write(self.result.to_html())
         elif 'json' in formats or '' in formats or len(formats) == 0:
-            self.set_header('Content-Type', 'application/json')
+            self.write_headers(**{'Content-Type': 'application/json'})
             self.write(self.result.to_json(orient='records'))
         else:
             raise NotImplementedError('format=%s is not supported yet.' % formats)
@@ -345,10 +353,6 @@ class DataHandler(BaseHandler, DataMixin):
 
         # TODO: Improve json, csv, html outputs using native odo
         return bz.odo(bz.compute(query, bzcon.data), pd.DataFrame)
-
-        # Allow headers to be overridden
-        for header_name, header_value in self.params.get('headers', {}).items():
-            self.set_header(header_name, header_value)
 
     @tornado.gen.coroutine
     def get(self):

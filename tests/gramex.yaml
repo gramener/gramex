@@ -383,6 +383,7 @@ url:
       table: actors
       parameters: {encoding: utf8}
       default: {format: csv}
+      headers: {X-Test: abc}
   data/json:
     pattern: /datastore/sqlite/json/
     handler: DataHandler
@@ -392,6 +393,7 @@ url:
       table: actors
       parameters: {encoding: utf8}
       default: {format: json}
+      headers: {X-Test: abc}
   data/html:
     pattern: /datastore/sqlite/html/
     handler: DataHandler
@@ -401,6 +403,7 @@ url:
       table: actors
       parameters: {encoding: utf8}
       default: {format: html}
+      headers: {X-Test: abc}
 
   # Test datahandler for MySQL
   data/mysql/csv:
@@ -412,6 +415,7 @@ url:
       table: actors
       parameters: {encoding: utf8, connect_args: {charset: utf8}}
       default: {format: csv}
+      headers: {X-Test: abc}
   data/mysql/json:
     pattern: /datastore/mysql/json/
     handler: DataHandler
@@ -421,6 +425,7 @@ url:
       table: actors
       parameters: {encoding: utf8, connect_args: {charset: utf8}}
       default: {format: json}
+      headers: {X-Test: abc}
   data/mysql/html:
     pattern: /datastore/mysql/html/
     handler: DataHandler
@@ -430,6 +435,7 @@ url:
       table: actors
       parameters: {encoding: utf8, connect_args: {charset: utf8}}
       default: {format: html}
+      headers: {X-Test: abc}
 
   # Test datahandler for PostgreSQL
   data/postgresql/csv:
@@ -441,6 +447,7 @@ url:
       table: actors
       parameters: {encoding: utf8}
       default: {format: csv}
+      headers: {X-Test: abc}
   data/postgresql/json:
     pattern: /datastore/postgresql/json/
     handler: DataHandler
@@ -450,6 +457,7 @@ url:
       table: actors
       parameters: {encoding: utf8}
       default: {format: json}
+      headers: {X-Test: abc}
   data/postgresql/html:
     pattern: /datastore/postgresql/html/
     handler: DataHandler
@@ -459,6 +467,7 @@ url:
       table: actors
       parameters: {encoding: utf8}
       default: {format: html}
+      headers: {X-Test: abc}
 
   # TestDataHandler for blaze sqlite
   data/blaze/csv:
@@ -470,6 +479,7 @@ url:
       table: actors
       parameters: {encoding: utf8}
       default: {format: csv}
+      headers: {X-Test: abc}
   data/blaze/json:
     pattern: /datastore/blazesqlite/json/
     handler: DataHandler
@@ -479,6 +489,7 @@ url:
       table: actors
       parameters: {encoding: utf8}
       default: {format: json}
+      headers: {X-Test: abc}
   data/blaze/html:
     pattern: /datastore/blazesqlite/html/
     handler: DataHandler
@@ -488,6 +499,7 @@ url:
       table: actors
       parameters: {encoding: utf8}
       default: {format: html}
+      headers: {X-Test: abc}
 
   # Test datahandler for blaze MySQL
   data/blazemysql/csv:
@@ -499,6 +511,7 @@ url:
       table: actors
       parameters: {encoding: utf8}
       default: {format: csv}
+      headers: {X-Test: abc}
   data/blazemysql/json:
     pattern: /datastore/blazemysql/json/
     handler: DataHandler
@@ -508,6 +521,7 @@ url:
       table: actors
       parameters: {encoding: utf8}
       default: {format: json}
+      headers: {X-Test: abc}
   data/blazemysql/html:
     pattern: /datastore/blazemysql/html/
     handler: DataHandler
@@ -517,6 +531,7 @@ url:
       table: actors
       parameters: {encoding: utf8}
       default: {format: html}
+      headers: {X-Test: abc}
 
   # TestDataHandlerConfig for Sqlite
   data/sqliteconfig1/csv:
@@ -529,6 +544,7 @@ url:
       default:
         format: csv
         where: [votes<120]
+      headers: {X-Test: abc}
   data/sqliteconfig2/csv:
     pattern: /datastore/sqliteconfig2/csv/
     handler: DataHandler
@@ -539,6 +555,7 @@ url:
       default:
         format: csv
         where: votes<120
+      headers: {X-Test: abc}
   data/sqliteconfig3/csv:
     pattern: /datastore/sqliteconfig3/csv/
     handler: DataHandler
@@ -550,6 +567,7 @@ url:
         format: csv
       query:
         where: votes<120
+      headers: {X-Test: abc}
   data/sqliteconfig4/csv:
     pattern: /datastore/sqliteconfig4/csv/
     handler: DataHandler
@@ -562,6 +580,7 @@ url:
         select: ["rating", "votes"]
       query:
         where: votes<120
+      headers: {X-Test: abc}
   data/sqliteconfig5/csv:
     pattern: /datastore/sqliteconfig5/csv/
     handler: DataHandler
@@ -576,6 +595,7 @@ url:
           votes:
       query:
         where: votes<120
+      headers: {X-Test: abc}
   data/sqliteconfig6/csv:
     pattern: /datastore/sqliteconfig6/csv/
     handler: DataHandler
@@ -594,6 +614,7 @@ url:
         where:
           votes: "<120"
           rating: ">0.4"
+      headers: {X-Test: abc}
   data/sqliteconfig7/csv:
     pattern: /datastore/sqliteconfig7/csv/
     handler: DataHandler
@@ -606,6 +627,7 @@ url:
         format: csv
         where: [votes<120]
         limit: 5
+      headers: {X-Test: abc}
 
   watcher:
     pattern: /watcher
