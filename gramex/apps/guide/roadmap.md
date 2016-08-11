@@ -8,11 +8,12 @@ information about past releases.
 Features for the next 2 releases are below. Bugs to be fixed are at the
 [issue tracker](http://code.gramener.com/s.anand/gramex/issues).
 
-## 1.14 (11 Aug 2016)
+## 1.15 (21 Aug 2016)
 
-- Twitter streaming & storage
-- Kerberos authentication
-- DataHandler can run arbitary SQL queries
+- Twitter streaming storage
+- Websocket handlers
+- Excel formatted downloads
+- DataHandler templates / forms
 - Monitoring & logging report usage
 - Mechanism to add configuration / settings pages
 - Improved test coverage
@@ -74,12 +75,11 @@ This is a work-in-progress list of features on the Gramex 1.0 roadmap.
 
 ## Security
 
+- Kerberos authentication
 - Role and metadata synchronisation
 - User management (add / change / delete users, assign roles, expiry, etc)
 - Password management (2FA, forgot password, reset password, expiry, force signle session, etc)
 - Login tracking (IP, history, device)
-- Custom login templates
-- Access control for URLs
 - XSRF, XSS, etc
 
 ## Decisions
