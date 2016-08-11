@@ -22,10 +22,7 @@ class SocialMixin(object):
         # Session key that stores the user info
         cls.user_info = user_info
 
-        # Set up transforms
-        if 'function' in transform:
-            cls.transform.append(build_transform(transform, vars=AttrDict(content=None),
-                                                 filename='url>%s' % cls.name))
+        # Set up methods
         if not isinstance(methods, list):
             methods = [methods]
         methods = set(method.lower().strip() for method in methods)
@@ -53,17 +50,19 @@ class SocialMixin(object):
         # Transform content
         content = response.body
         if content and response.code == OK:
-            content = yield gramex.service.threadpool.submit(self.transforms, content=content)
+            content = yield gramex.service.threadpool.submit(self.run_transforms, content=content)
         # Convert to JSON if required
         if not isinstance(content, (six.binary_type, six.text_type)):
             content = json.dumps(content, ensure_ascii=True, separators=(',', ':'))
         raise tornado.gen.Return(content)
 
-    def transforms(self, content):
+    def run_transforms(self, content):
         result = json.loads(content.decode('utf-8'))
-        for transform in self.transform:
-            for value in transform(result):
+        for name, transform in self.transform.items():
+            for value in transform['function'](result):
                 result = value
+            for header, header_value in transform.get('headers', {}).items():
+                self.set_header(header, header_value)
         return result
 
 

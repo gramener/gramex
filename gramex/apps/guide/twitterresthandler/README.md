@@ -109,7 +109,7 @@ Here's what `twitterutils.add_sentiment` looks for the last about Gramener:
 
     :::python
     from textblob import TextBlob
-    def add_sentiment(result):
+    def add_sentiment(result, handler):
         for tweet in result['statuses']:
             blob = TextBlob(tweet['text'])
             tweet['sentiment'] = blob.sentiment.polarity
