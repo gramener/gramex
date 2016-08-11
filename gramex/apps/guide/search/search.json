@@ -73,6 +73,9 @@
     "redirection-after-login": {
       "Redirection after login": -1
     },
+    "session-data": {
+      "Session data": -1
+    },
     "sessions": {
       "Sessions": -1
     },
@@ -192,6 +195,9 @@
     "datahandler-delete": {
       "DataHandler delete": -1
     },
+    "datahandler-formats": {
+      "DataHandler formats": -1
+    },
     "datahandler-insert": {
       "DataHandler insert": -1
     },
@@ -245,6 +251,14 @@
   "email": {
     "": {
       "Send email": -1
+    }
+  },
+  "facebookgraphhandler": {
+    "": {
+      "Gramex accesses Facebook data": -1
+    },
+    "facebook-oauth": {
+      "Facebook OAuth": -1
     }
   },
   "filehandler": {
@@ -352,6 +366,11 @@
       "ProcessHandler redirection": -1
     }
   },
+  "queryhandler": {
+    "": {
+      "Gramex runs SQL queries": -1
+    }
+  },
   "scheduler": {
     "": {
       "Schedule tasks": -1
@@ -389,6 +408,9 @@
     },
     "twitter-search": {
       "Twitter search": -1
+    },
+    "twitter-streaming": {
+      "Twitter streaming": -1
     },
     "twitter-transforms": {
       "Twitter transforms": -1

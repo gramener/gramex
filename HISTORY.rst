@@ -3,6 +3,21 @@
 History
 -------
 
+1.14 (2016-08-11)
+~~~~~~~~~~~~~~~~~
+
+- `TwitterStream`_ is a scheduler function that provides Twitter Streaming API
+  support.
+- `FacebookGraphHandler`_ lets you use the Facebook data via the Graph API.
+- `QueryHandler`_ lets you execute arbitrary SQL queries with parameters.
+- `DataHandler`_ accepts a ``?count=1`` parameter and returns an ``X-Count``
+  HTTP header that has the number of rows in the query (ignoring limit/offset).
+- All handlers support an ``xsrf_cookies: false`` to disable XSRF cookies for a
+  specific handler.
+- Add a ``template: "*.html"`` to `FileHandler`_ kwargs to render all HTML files
+  as Tornado templates. ``template: true`` renders all files as templates.
+
+
 1.13 (2016-08-01)
 ~~~~~~~~~~~~~~~~~
 
@@ -266,12 +281,15 @@ There are two changes that may disrupt your code:
 .. _JSONHandler: https://learn.gramener.com/guide/jsonhandler/
 .. _FileHandler: https://learn.gramener.com/guide/filehandler/
 .. _DataHandler: https://learn.gramener.com/guide/datahandler/
+.. _QueryHandler: https://learn.gramener.com/guide/queryhandler/
 .. _TwitterRESTHandler: https://learn.gramener.com/guide/twitterresthandler/
+.. _FacebookGraphHandler: https://learn.gramener.com/guide/facebookgraphhandler/
 .. _LogoutHandler: https://learn.gramener.com/guide/auth/#log-out
 .. _LDAPAuth: https://learn.gramener.com/guide/auth/#ldap
 .. _DBAuth: https://learn.gramener.com/guide/auth/#simple-auth
 .. _DBAuth: https://learn.gramener.com/guide/auth/#database-auth
 .. _TwitterAuth: https://learn.gramener.com/guide/auth/#twitter-auth
+.. _TwitterStream: https://learn.gramener.com/guide/twitterresthandler/#twitter-streaming
 .. _UploadHandler: https://learn.gramener.com/guide/auth/uploadhandler/
 .. _caching: https://learn.gramener.com/guide/cache/
 .. _scheduler: https://learn.gramener.com/guide/scheduler/
