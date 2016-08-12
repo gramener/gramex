@@ -21,6 +21,8 @@ For the development version, replace `master` with `dev` at the end:
     :::shell
     pip install --upgrade --ignore-installed http://code.gramener.com/s.anand/gramex/repository/archive.tar.bz2?ref=dev
 
+If you are behind a HTTP proxy, use `pip install --proxy=http://{proxy-host}:{port} --upgrade ...`.
+
 [anaconda]: http://continuum.io/downloads
 [update]: http://docs.continuum.io/anaconda/install#updating-from-older-anaconda-versions
 [xcode]: https://developer.apple.com/xcode/download/
