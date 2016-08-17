@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import re
 import requests
 import pandas as pd
 import sqlalchemy as sa
@@ -66,6 +67,11 @@ class DataHandlerTestMixin(object):
            pd.read_csv(base + 'csv/?where=votes>100'))
         eq(self.data.query('150 > votes > 100'),
            pd.read_csv(base + 'csv/?where=votes<150&where=votes>100&xyz=8765'))
+        # ?q=a%e matches "Actresses" (category) and Charlie, James & Astaire (name)
+        q = re.compile(r'a.*e', re.IGNORECASE).search
+        result = self.data.T.apply(lambda row: bool(q(row['name']) or q(row['category'])))
+        eq(self.data[result], pd.read_csv(base + 'csv/?q=a%e'))
+
         # format
         eq(self.data[:5], pd.read_csv(base + 'csv/?limit=5'))
         eq(self.data[:5], pd.read_json(base + 'csv/?limit=5&format='))

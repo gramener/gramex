@@ -44,10 +44,11 @@ Once we have this setup, we can query the data with a combination of parameters 
 - `sort` - sorts the records on a column in ascending order by default. You can change the order with the `:asc` / `:desc` suffixes. E.g. [?sort=Symbols:desc](flags?sort=Symbols:desc)
 - `format` - determines the output format. Can be `html`, `json`, `csv`. E.g. [?format=json](flags?format=json)
 - `count` - set to any value to send an `X-Count` HTTP header to the number of rows in the query, ignoring `limit` and `offset`.
+- `q` searches in all text columns for the string. (If you use `group`, columns are searched *after grouping*.)
 
 Examples:
 
-- [?groupby=Continent&agg=count:nunique(Name)&agg=shapes:count(Shapes)&sort=count:desc](flags?groupby=Continent&agg=count:nunique(Name)&agg=shapes:count(Shapes)&sort=count:desc): For every Continent, show the number of unique countries and the numbrr of countries with shapes
+- [?groupby=Continent&agg=count:nunique(Name)&agg=shapes:count(Shapes)&sort=count:desc&q=america](flags?groupby=Continent&agg=count:nunique(Name)&agg=shapes:count(Shapes)&sort=count:desc&q=america): For every American continent, show the number of unique countries and the number of countries with shapes.
 
 Here are some examples of DataHandler ``kwargs`` to connect to databases:
 

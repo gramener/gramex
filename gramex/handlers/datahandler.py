@@ -189,7 +189,8 @@ class DataHandler(BaseHandler, DataMixin):
         wheres = sa.and_(*wheres)
         return wheres
 
-    def _sqlalchemy(self, _selects, _wheres, _groups, _aggs, _offset, _limit, _sorts, _count):
+    def _sqlalchemy(self, _selects, _wheres, _groups, _aggs, _offset, _limit,
+                    _sorts, _count, _q):
         table = self._sqlalchemy_gettable()
         columns = table.columns.keys()
 
@@ -229,6 +230,12 @@ class DataHandler(BaseHandler, DataMixin):
                 query = sa.select([table])
             if _wheres:
                 query = query.where(wheres)
+
+        if _q:
+            query = query.where(sa.or_(
+                column.ilike('%' + _q + '%') for column in table.columns
+                if isinstance(column.type, sa.types.String)
+            ))
 
         # Create a query that returns the count before we sort, offset or limit.
         # .alias() prevents "Every derived table must have its own alias" error.
@@ -288,7 +295,9 @@ class DataHandler(BaseHandler, DataMixin):
         self.engine.execute(query)
         return {'query': query, 'data': pd.DataFrame()}
 
-    def _blaze(self, _selects, _wheres, _groups, _aggs, _offset, _limit, _sorts, _count):
+    def _blaze(self, _selects, _wheres, _groups, _aggs, _offset, _limit, _sorts,
+               _count, _q):
+        import datashape
         # TODO: Not caching blaze connections
         parameters = self.params.get('parameters', {})
         bzcon = bz.Data(self.params['url'] +
@@ -343,6 +352,15 @@ class DataHandler(BaseHandler, DataMixin):
                 aggs[name] = byaggs[oper](query[col])
             query = bz.by(grps, **aggs)
 
+        if _q:
+            wheres = None
+            for col in columns:
+                if isinstance(table[col].dshape.measure.ty, datashape.coretypes.String):
+                    whr = table[col].like('*' + _q + '*')
+                    wheres = whr if wheres is None else wheres | whr
+            if wheres is not None:
+                query = query[wheres]
+
         count_query = query.count()
 
         if _sorts:
@@ -389,6 +407,7 @@ class DataHandler(BaseHandler, DataMixin):
             _limit=self.getq('limit', [100])[0],
             _sorts=self.getq('sort'),
             _count=self.getq('count', [''])[0],
+            _q=self.getq('q', [''])[0]
         )
 
         if self.thread:
