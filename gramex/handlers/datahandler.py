@@ -5,6 +5,7 @@ import tornado.web
 import gramex
 from tornado.web import HTTPError
 from orderedattrdict import AttrDict
+from six.moves import cStringIO as StringIO
 from gramex.transforms import build_transform
 from .basehandler import BaseHandler
 
@@ -74,6 +75,16 @@ class DataMixin(object):
         elif 'html' in formats:
             self.write_headers(**{'Content-Type': 'text/html'})
             self.write(self.result['data'].to_html())
+        elif 'xlsx' in formats:
+            output = StringIO()
+            writer = pd.ExcelWriter(output, engine='xlsxwriter')
+            self.result['data'].to_excel(writer, index=False)
+            writer.close()
+            self.write_headers(**{
+                'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'Content-Disposition': 'attachment;filename=file.xlsx'
+            })
+            self.write(output.getvalue())
         elif 'json' in formats or '' in formats or len(formats) == 0:
             self.write_headers(**{'Content-Type': 'application/json'})
             self.write(self.result['data'].to_json(orient='records'))

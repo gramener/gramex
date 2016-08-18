@@ -29,7 +29,7 @@ Here's a similar configuration for [flags data](flags):
                 default:
                     continent: Africa               # By default, :continent is Africa
                     limit: 10                       # By default, display 10 rows
-                    format: html                    # By default, render as html (can be json/csv)
+                    format: html                    # By default, render as html (can be json/csv/xlsx)
                 query:
                   c1: 10                            # :c1 is always forced to 10
 
@@ -38,7 +38,7 @@ This displays African flags. The SQL query can contain parameters (e.g.
 similar to [DataHandler default](../datahandler/#datahandler-defaults).
 
 You can also specify the default `limit:` (number of rows) in the response as
-well as the `format:` (which can be `html`, `csv` or `json` -- see
+well as the `format:` (which can be `html`, `csv`, `xlsx` or `json` -- see
 [DataHandler formats](../datahandler/#datahandler-formats).)
 
 URL query parameters can override these. For example:

@@ -18,7 +18,7 @@ class DataHandlerTestMixin(object):
     data = pd.read_csv(str(folder / 'actors.csv'))
 
     def test_pingdb(self):
-        for frmt in ['csv', 'json', 'html']:
+        for frmt in ['csv', 'json', 'html', 'xlsx']:
             self.check('/datastore/%s/%s/?count=1' % (self.database, frmt),
                        code=200, headers={'Etag': True, 'X-Test': 'abc'})
         self.check('/datastore/' + self.database + '/xyz', code=404)
@@ -29,6 +29,7 @@ class DataHandlerTestMixin(object):
         pdt.assert_frame_equal(self.data, pd.read_json(base + '/json/'))
         pdt.assert_frame_equal(self.data, pd.read_html(base + '/html/')[0]
                                .drop('Unnamed: 0', 1), check_less_precise=True)
+        pdt.assert_frame_equal(self.data, pd.read_excel(base + '/xlsx/'))
 
     def test_querydb(self):
         def eq(a, b):

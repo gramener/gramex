@@ -410,6 +410,16 @@ url:
       parameters: {encoding: utf8}
       default: {format: html}
       headers: {X-Test: abc}
+  data/xlsx:
+    pattern: /datastore/sqlite/xlsx/
+    handler: DataHandler
+    kwargs:
+      driver: sqlalchemy
+      url: sqlite:///actors.db
+      table: actors
+      parameters: {encoding: utf8}
+      default: {format: xlsx}
+      headers: {X-Test: abc}
 
   # Test datahandler for MySQL
   data/mysql/csv:
@@ -441,6 +451,16 @@ url:
       table: actors
       parameters: {encoding: utf8, connect_args: {charset: utf8}}
       default: {format: html}
+      headers: {X-Test: abc}
+  data/mysql/xlsx:
+    pattern: /datastore/mysql/xlsx/
+    handler: DataHandler
+    kwargs:
+      driver: sqlalchemy
+      url: mysql+pymysql://root@$MYSQL_SERVER/test_datahandler
+      table: actors
+      parameters: {encoding: utf8, connect_args: {charset: utf8}}
+      default: {format: xlsx}
       headers: {X-Test: abc}
 
   # Test datahandler for PostgreSQL
@@ -474,6 +494,16 @@ url:
       parameters: {encoding: utf8}
       default: {format: html}
       headers: {X-Test: abc}
+  data/postgresql/xlsx:
+    pattern: /datastore/postgresql/xlsx/
+    handler: DataHandler
+    kwargs:
+      driver: sqlalchemy
+      url: postgresql://postgres@$POSTGRES_SERVER/test_datahandler
+      table: actors
+      parameters: {encoding: utf8}
+      default: {format: xlsx}
+      headers: {X-Test: abc}
 
   # TestDataHandler for blaze sqlite
   data/blaze/csv:
@@ -506,6 +536,16 @@ url:
       parameters: {encoding: utf8}
       default: {format: html}
       headers: {X-Test: abc}
+  data/blaze/xlsx:
+    pattern: /datastore/blazesqlite/xlsx/
+    handler: DataHandler
+    kwargs:
+      driver: blaze
+      url: sqlite:///actors.db
+      table: actors
+      parameters: {encoding: utf8}
+      default: {format: xlsx}
+      headers: {X-Test: abc}
 
   # Test datahandler for blaze MySQL
   data/blazemysql/csv:
@@ -537,6 +577,16 @@ url:
       table: actors
       parameters: {encoding: utf8}
       default: {format: html}
+      headers: {X-Test: abc}
+  data/blazemysql/xlsx:
+    pattern: /datastore/blazemysql/xlsx/
+    handler: DataHandler
+    kwargs:
+      driver: blaze
+      url: mysql+pymysql://root@$MYSQL_SERVER/test_datahandler
+      table: actors
+      parameters: {encoding: utf8}
+      default: {format: xlsx}
       headers: {X-Test: abc}
 
   # TestDataHandlerConfig for Sqlite

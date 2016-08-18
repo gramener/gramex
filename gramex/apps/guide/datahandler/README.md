@@ -1,6 +1,6 @@
 title: Gramex connects to data
 
-`DataHandler` let's you fetch data from CSV files and databases, and returns the result as CSV, JSON or HTML tables. Here is a sample configuration that browses [gorilla genes](genome?format=html&limit=10):
+`DataHandler` let's you fetch data from CSV files and databases, and returns the result as CSV, JSON, XLSX or HTML tables. Here is a sample configuration that browses [gorilla genes](genome?format=html&limit=10):
 
     :::yaml
     url:
@@ -31,7 +31,7 @@ The `DataHandler` below exposes the flags table in `database.sqlite3` at the URL
           parameters: {encoding: utf8}                # with additional parameters provided
           thread: false                               # Disable threading if you see weird bugs
           default:
-              format: html                            # Can also be json or csv
+              format: html                            # Can also be json, csv, xlsx
 
 Once we have this setup, we can query the data with a combination of parameters like `select`, `where`, `groupby`, `agg`, `offset`, `limit`, `sort`
 
@@ -42,7 +42,7 @@ Once we have this setup, we can query the data with a combination of parameters 
 - `limit` - limits the result to n number of records. By default, the first 100 rows are displayed. E.g. [?limit=5](flags?limit=5) shows the first 5 rows.
 - `offset` - excludes the first n number of records. E.g. [?offset=5&limit=5](flags?offset=5&limit=5) shows the next 5 rows
 - `sort` - sorts the records on a column in ascending order by default. You can change the order with the `:asc` / `:desc` suffixes. E.g. [?sort=Symbols:desc](flags?sort=Symbols:desc)
-- `format` - determines the output format. Can be `html`, `json`, `csv`. E.g. [?format=json](flags?format=json)
+- `format` - determines the output format. Can be `html`, `json`, `csv`, `xlsx`. E.g. [?format=json](flags?format=json)
 - `count` - set to any value to send an `X-Count` HTTP header to the number of rows in the query, ignoring `limit` and `offset`.
 - `q` searches in all text columns for the string. (If you use `group`, columns are searched *after grouping*.)
 
@@ -179,6 +179,7 @@ By default, the format can be overridden by the URL. For example:
 - [flags?format=html](flags?format=html) renders as HTML
 - [flags?format=json](flags?format=json) renders as JSON
 - [flags?format=csv](flags?format=csv) renders as a CSV download named `file.csv`
+- [flags?format=xlsx](flags?format=xlsx) renders as an Excel download named `file.xlsx`
 
 The default format is JSON. Change it using [datahandler defaults](#datahandler-defaults).
 In this example, the default format is HTML, but the URL can override it.
