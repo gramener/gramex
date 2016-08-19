@@ -1,4 +1,5 @@
 import re
+import json
 import yaml
 import tornado.gen
 import tornado.web
@@ -6,11 +7,11 @@ import gramex
 from tornado.web import HTTPError
 from orderedattrdict import AttrDict
 from six.moves import cStringIO as StringIO
+from gramex.http import NOT_FOUND
 from gramex.transforms import build_transform
 from .basehandler import BaseHandler
 
 drivers = {}
-NOT_FOUND = 404
 sa, pd, bz = None, None, None       # Initialize late-loaded libraries to avoid flake8 errors
 
 
@@ -66,30 +67,42 @@ class DataMixin(object):
         formats = self.getq('format', [])
         if 'count' in self.result:
             self.set_header('X-Count', self.result['count'])
+        self._write_format_headers()
         if 'csv' in formats:
-            self.write_headers(**{
-                'Content-Type': 'text/csv',
-                'Content-Disposition': 'attachment;filename=file.csv'
-            })
             self.write(self.result['data'].to_csv(index=False, encoding='utf-8'))
         elif 'html' in formats:
-            self.write_headers(**{'Content-Type': 'text/html'})
             self.write(self.result['data'].to_html())
         elif 'xlsx' in formats:
             output = StringIO()
-            writer = pd.ExcelWriter(output, engine='xlsxwriter')
-            self.result['data'].to_excel(writer, index=False)
-            writer.close()
-            self.write_headers(**{
-                'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                'Content-Disposition': 'attachment;filename=file.xlsx'
-            })
+            with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+                self.result['data'].to_excel(writer, index=False)
             self.write(output.getvalue())
         elif 'json' in formats or '' in formats or len(formats) == 0:
-            self.write_headers(**{'Content-Type': 'application/json'})
             self.write(self.result['data'].to_json(orient='records'))
+
+    _FORMAT_HEADERS = {
+        '': {'Content-Type': 'application/json'},
+        'csv': {'Content-Type': 'text/csv', 'Content-Disposition': 'attachment;filename=file.csv'},
+        'html': {'Content-Type': 'text/html'},
+        'json': {'Content-Type': 'application/json'},
+        'xlsx': {
+            'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Content-Disposition': 'attachment;filename=file.xlsx'
+        },
+    }
+
+    def _write_format_headers(self):
+        '''Write the Content-Type / Content Disposition headers based on format'''
+        formats = self.getq('format', [])
+        for fmt in self._FORMAT_HEADERS:
+            if fmt in formats:
+                self.write_headers(**self._FORMAT_HEADERS[fmt])
+                break
         else:
-            raise NotImplementedError('format=%s is not supported yet.' % formats)
+            if len(formats) == 0:
+                self.write_headers(**self._FORMAT_HEADERS['json'])
+            else:
+                raise NotImplementedError('format=%s is not supported yet.' % formats)
 
 
 class DataHandler(BaseHandler, DataMixin):
@@ -491,22 +504,82 @@ class QueryHandler(BaseHandler, DataMixin):
         super(QueryHandler, cls).setup(**kwargs)
         cls.setup_data(kwargs)
         from sqlalchemy import text
-        cls.query = text(kwargs['sql'])
+        if isinstance(kwargs['sql'], dict):
+            cls.query = AttrDict([
+                (key, text(val)) for key, val in kwargs['sql'].items()])
+        else:
+            cls.query = text(kwargs['sql'])
 
     def run(self, stmt, limit):
         self._engine()
         import pandas as pd
         chunks = pd.read_sql(stmt, self.engine, chunksize=limit)
-        return chunks.next()
+        return {
+            'query': stmt,
+            'data': chunks.next()
+        }
+
+    def renderdatas(self):
+        '''Render multiple datasets'''
+        # Set content and type based on format
+        self._write_format_headers()
+        formats = self.getq('format', [])
+        if 'csv' in formats:
+            self.write('\n'.join(
+                'QUERY: %s\n%s' % (key, result['data'].to_csv(index=False, encoding='utf-8'))
+                for key, result in self.result.items()
+            ))
+        elif 'html' in formats:
+            for key, result in self.result.items():
+                self.write('<h1>%s</h1>' % key)
+                self.write(result['data'].to_html())
+        elif 'xlsx' in formats:
+            output = StringIO()
+            with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+                for key, result in self.result.items():
+                    result['data'].to_excel(writer, index=False, sheet_name=key)
+            self.write(output.getvalue())
+        elif 'json' in formats or '' in formats or len(formats) == 0:
+            self.write('{')
+            for index, (key, result) in enumerate(self.result.items()):
+                if index > 0:
+                    self.write(',')
+                self.write(json.dumps(key) + ':')
+                self.write(result['data'].to_json(orient='records'))
+            self.write('}')
 
     @tornado.gen.coroutine
     def get(self):
-        # Bind the query and run it
-        args = {key: self.getq(key, [''])[0] for key in self.query._bindparams}
-        stmt = self.query.bindparams(**args)
         limit = int(self.getq('limit', [100])[0])
-        if self.thread:
-            self.result = yield gramex.service.threadpool.submit(self.run, stmt, limit)
+        if isinstance(self.query, dict):
+            # Bind all queries and run them in parallel
+            args = {
+                key: self.getq(key, [''])[0]
+                for name, query in self.query.items()
+                for key, _bindparams in query._bindparams
+            }
+            stmts = AttrDict([
+                (key, query.bindparams(**args))
+                for key, query in self.query.items()
+            ])
+            if self.thread:
+                futures = AttrDict([
+                    (key, gramex.service.threadpool.submit(self.run, stmt, limit))
+                    for key, stmt in stmts.items()
+                ])
+                self.result = AttrDict()
+                for key, future in futures.items():
+                    self.result[key] = yield future
+            else:
+                self.result = AttrDict([
+                    (key, self.run(stmt, limit)) for key, stmt in stmts.items()])
+            self.renderdatas()
         else:
-            self.result = self.run(stmt, limit)
-        self.renderdata()
+            # Bind query and run it
+            args = {key: self.getq(key, [''])[0] for key in self.query._bindparams}
+            stmt = self.query.bindparams(**args)
+            if self.thread:
+                self.result = yield gramex.service.threadpool.submit(self.run, stmt, limit)
+            else:
+                self.result = self.run(stmt, limit)
+            self.renderdata()

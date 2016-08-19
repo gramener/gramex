@@ -18,7 +18,7 @@ Here's a similar configuration for [flags data](flags):
 
     url:
         flags:
-            pattern: /$YAMLURL/flags                # The flags URL...
+            pattern: /$YAMLURL/flags                # The "/flags" URL...
             handler: QueryHandler                   # uses QueryHandler
             kwargs:
                 url: sqlite:///database.sqlite3     # SQLAlchemy database URL
@@ -52,3 +52,28 @@ URL query parameters. For example:
 
 - [flags?c1=0](flags?c1=0) will not set `c1` to 0 -- the `query:` section has
   frozen this value at 10.
+
+## Multiple SQL queries
+
+You can create a dictionary of multiple SQL queries. For example:
+
+    url:
+        flags:
+            pattern: /$YAMLURL/multi                # The "/multi" URL...
+            handler: QueryHandler                   # uses QueryHandler
+            kwargs:
+                url: sqlite:///database.sqlite3     # SQLAlchemy database URL
+                sql:
+                    europe: 'SELECT ID, Name, Continent FROM flags WHERE Continent="Europe"'
+                    vertical-stripes: 'SELECT * FROM flags WHERE Stripes="Vertical"'
+                    reddish: 'SELECT COUNT(*) AS count_of_red_flags FROM flags WHERE c1>50'
+
+The [result](multi) appears in:
+
+- [CSV](multi?format=csv) as tables with headings, separated by a blank line
+- [HTML](multi?format=html) as tables with headings
+- [JSON](multi?format=json) as an object. The `sql:` keys are the keys, the values hold the data
+- [XLSX](multi?format=xlsx) as sheets. The sheet name is the `sql:` key
+
+Every parameter and arguments is applicable for each query. The results are
+always in the same order as in the `sql:` config.

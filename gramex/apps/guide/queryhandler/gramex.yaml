@@ -21,3 +21,16 @@ url:
         format: html                      # Can also be json or csv
       query:
         c1: 10
+
+  queryhandler/multi:
+    pattern: /$YAMLURL/multi                # The "/multi" URL...
+    handler: QueryHandler                   # uses QueryHandler
+    kwargs:
+        url: sqlite:///$YAMLPATH/../datahandler/database.sqlite3     # to connect database at this path/url
+        sql:
+            europe: 'SELECT ID, Name, Continent FROM flags WHERE Continent="Europe"'
+            vertical-stripes: 'SELECT * FROM flags WHERE Stripes="Vertical"'
+            reddish: 'SELECT COUNT(*) AS count_of_red_flags FROM flags WHERE c1>50'
+        default:
+          limit: 10
+          format: html
