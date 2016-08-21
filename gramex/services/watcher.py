@@ -3,9 +3,9 @@ The file watch service uses `watchdoc <https://pythonhosted.org/watchdog/>`_ to
 monitor files, and run functions when the file changes.
 '''
 
+import os
 import atexit
-from pathlib import Path
-from collections import defaultdict
+from fnmatch import fnmatch
 from orderedattrdict import AttrDict
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
@@ -21,32 +21,39 @@ watches = AttrDict()        # watches[directory] = ObservedWatch
 
 
 class FileEventHandler(FileSystemEventHandler):
+    '''
+    Each FileEventHandler is associated with a set of events from a config.
+    It maps a set of paths to these events.
+    '''
     def __init__(self, paths=[], **events):
         super(FileEventHandler, self).__init__()
 
-        self.paths = defaultdict(set)
-        self.watches = []
-
+        self.patterns = set()       # List of absolute path patterns
+        self.folders = set()        # List of folders matching these paths
         for path in paths:
-            path = Path(path).absolute()
-            parent = path.parent
-            if parent.exists():
-                self.paths[parent.resolve()].add(path)
+            # paths can be pathlib.Path or str. Convert to str before proceeding
+            path = os.path.abspath(str(path))
+            if os.path.isdir(path):
+                self.patterns.add(os.path.join(path, '*'))
+                self.folders.add(path)
             else:
-                app_log.warning('Parent directory does not exist: %s', path)
+                self.patterns.add(path)
+                self.folders.add(os.path.dirname(path))
 
+        self.watches = []           # ObservedWatch objects for this handler
         self.__dict__.update(events)
-        for directory, path in self.paths.items():
-            directory = str(directory)
-            if directory in watches:
-                observer.add_handler_for_watch(self, watches[directory])
+        for folder in self.folders:
+            if folder in watches:
+                observer.add_handler_for_watch(self, watches[folder])
+            elif os.path.exists(folder):
+                watches[folder] = observer.schedule(self, folder, recursive=True)
+                self.watches.append(watches[folder])
             else:
-                watches[directory] = observer.schedule(self, directory)
-                self.watches.append(watches[directory])
+                app_log.warning('watch directory %s does not exist', folder)
 
     def dispatch(self, event):
-        source_path = Path(str(event.src_path)).absolute()
-        if any(source_path in paths for paths in self.paths.values()):
+        path = os.path.abspath(event.src_path)
+        if any(fnmatch(path, pattern) for pattern in self.patterns):
             super(FileEventHandler, self).dispatch(event)
 
     def unschedule(self):

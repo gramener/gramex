@@ -685,12 +685,6 @@ url:
         limit: 5
       headers: {X-Test: abc}
 
-  watcher:
-    pattern: /watcher
-    handler: FileHandler
-    kwargs:
-      path: watcher.txt
-
   process/args:
     pattern: /process/args
     handler: ProcessHandler
@@ -1075,6 +1069,13 @@ watch:
     paths: watcher.txt
     on_modified: utils.on_modified
     on_created: utils.on_created
+    on_deleted: utils.on_deleted
+  watch_patterns:
+    paths:
+        - dir/
+        - watch.*.test
+    on_created: utils.on_created
+    on_modified: utils.on_modified
     on_deleted: utils.on_deleted
   no-paths: {}
   no-events:
