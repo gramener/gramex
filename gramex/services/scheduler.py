@@ -1,4 +1,4 @@
-'Gramex scheduling service'
+'''Gramex scheduling service'''
 
 import tornado.ioloop
 from crontab import CronTab
@@ -52,7 +52,7 @@ class Task(object):
         'Run task. Then set up next callback.'
         app_log.info('Running %s', self.name)
         try:
-            self.function()
+            self.result = self.function()
         finally:
             # Do not schedule if stopped (e.g. via self.stop())
             if self.callback is not None:
