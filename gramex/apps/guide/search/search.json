@@ -369,6 +369,9 @@
   "queryhandler": {
     "": {
       "Gramex runs SQL queries": -1
+    },
+    "multiple-sql-queries": {
+      "Multiple SQL queries": -1
     }
   },
   "scheduler": {

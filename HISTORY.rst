@@ -3,6 +3,22 @@
 History
 -------
 
+1.15 (2016-08-21)
+~~~~~~~~~~~~~~~~~
+
+- `DataHandler`_ supports a ``?q=`` parameter that searches all text columns
+- `QueryHandler`_ supports multiple SQL queries in a single request
+- `DataHandler`_ and `QueryHandler`_ support a ``?format=xlsx`` to download as
+  Excel. In QueryHandler, multiple SQL queries translate to multiple sheets
+- `TwitterStream`_ scheduler can now write to SQLAlchemy databases, as well as
+  run a custom function when it receives a tweet
+- The `watch`_ service supports wildcards and directories in paths. You can watch
+  for changes to a pattern of files or any files under a directory
+- ``gramex.transforms.flattener`` transform that flattens JSON hierarchies based
+  on a custom field mapping
+- ``gramex.init(force_reload=True)`` reloads services. To support this,
+  ``build_transform`` is no longer cached.
+
 1.14 (2016-08-11)
 ~~~~~~~~~~~~~~~~~
 
@@ -228,7 +244,7 @@ There are two changes that may disrupt your code:
   This treats the file as a tornado template and renders the output.
 * `FileHandler`_ directory listing looks prettier now.
 * ``DataHandler`` supports ``like`` and ``notlike`` operations.
-* The ``watch:`` section of ``gramex.yaml`` allows you to trigger events when
+* The `watch`_ section of ``gramex.yaml`` allows you to trigger events when
   files are changed.
 
 
@@ -306,3 +322,4 @@ There are two changes that may disrupt your code:
 .. _email: https://learn.gramener.com/guide/email/
 .. _conditional variables: https://learn.gramener.com/guide/config/#conditional-variables
 .. _error handlers: https://learn.gramener.com/guide/config/#error-handlers
+.. _watch: https://learn.gramener.com/guide/watch/
