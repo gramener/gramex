@@ -6,14 +6,15 @@ The `watch:` section in [gramex.yaml](../gramex.yaml) triggers events when files
     watch:                                  # Define files to watch
         data-files:                         # Create a watched named data-files
             paths:                          # Watch for these files
-                - $YAMLPATH/data.csv        # - data.csv in this YAML file's folder
+                - $YAMLPATH/dir/            # - any file under the dir/ subdirectory
+                - $YAMLPATH/*.txt           # - any CSV file under this folder
+                - $YAMLPATH/data.csv        # - data.csv in this folder
                 - data.xslx                 # - data.xlsx from where Gramex was started
             on_modified: module.function    # When file is changed, call module.function(event)
 
 Each named watch has the following keys:
 
-- `paths`: a file or a list of files to watch for. Currently, wildcards and
-  directories are not supported.
+- `paths`: a list of files, directories or wildcards to watch for
 - `on_modified`: called when the file is modified
 - `on_created`: called when the file is created
 - `on_deleted`: called when the file is deleted
@@ -21,7 +22,18 @@ Each named watch has the following keys:
 - `on_any_event`: called for any change in the file
 
 The event handler functions are called with a single argument `event`. The
-`event` is a [watchdog event][event].
+`event` is a [watchdog event][event]. Is has the following attributes:
+
+- `event.src_path`: the path that triggered the event
+- `event.is_directory`: True if the path is a directory
+- `event.event_type`: type of the event.
+
+Here is a sample event handler that prints the event:
+
+    :::python
+    def watch_file(event):
+        print(event.src_path, event.is_directory, event.event_type)
+
 
 ## Watching files
 
