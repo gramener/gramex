@@ -20,9 +20,6 @@ def _arg_repr(arg):
     return repr(arg)                    # "x" becomes '"x"', 1 becomes '1', etc
 
 
-_build_transform_cache = {}
-
-
 def build_transform(conf, vars=None, filename='transform'):
     '''
     Converts a function configuration into a callable function. For e.g.::
@@ -92,11 +89,7 @@ def build_transform(conf, vars=None, filename='transform'):
     if not hasattr(conf, 'items'):
         raise ValueError('transform: needs {pattern: spec} dicts, but got %s' % repr(conf))
 
-    # If the input is already cached, return it.
     conf = {key: val for key, val in conf.items() if key in {'function', 'args', 'kwargs'}}
-    cache_key = json.dumps(conf), json.dumps(vars)
-    if cache_key in _build_transform_cache:
-        return _build_transform_cache[cache_key]
 
     # The returned function takes a single argument by default
     if vars is None:
@@ -158,8 +151,6 @@ def build_transform(conf, vars=None, filename='transform'):
     function.__name__ = str(name)
     function.__doc__ = str(doc)
 
-    # Cache the result and return it
-    _build_transform_cache[cache_key] = function
     return function
 
 

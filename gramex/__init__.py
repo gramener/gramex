@@ -185,7 +185,7 @@ def gramex_update(url):
     future.add_done_callback(check_version)
 
 
-def init(**kwargs):
+def init(force_reload=False, **kwargs):
     '''
     Update Gramex configurations and start / restart the instance.
 
@@ -225,7 +225,7 @@ def init(**kwargs):
     # Run all valid services. (The "+" before config_chain merges the chain)
     # Services may return callbacks to be run at the end
     for key, val in (+config_layers).items():
-        if key not in conf or conf[key] != val:
+        if key not in conf or conf[key] != val or force_reload:
             if hasattr(services, key):
                 conf[key] = deepcopy(val)
                 callback = getattr(services, key)(conf[key])
