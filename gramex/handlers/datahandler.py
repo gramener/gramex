@@ -1,3 +1,4 @@
+import io
 import re
 import json
 import yaml
@@ -6,7 +7,6 @@ import tornado.web
 import gramex
 from tornado.web import HTTPError
 from orderedattrdict import AttrDict
-from six.moves import cStringIO as StringIO
 from gramex.http import NOT_FOUND
 from gramex.transforms import build_transform
 from .basehandler import BaseHandler
@@ -73,9 +73,9 @@ class DataMixin(object):
         elif 'html' in formats:
             self.write(self.result['data'].to_html())
         elif 'xlsx' in formats:
-            output = StringIO()
+            output = io.BytesIO()
             with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-                self.result['data'].to_excel(writer, index=False, encoding=None)
+                self.result['data'].to_excel(writer, index=False)
             self.write(output.getvalue())
         elif 'json' in formats or '' in formats or len(formats) == 0:
             self.write(self.result['data'].to_json(orient='records'))
