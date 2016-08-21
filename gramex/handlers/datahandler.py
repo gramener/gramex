@@ -75,7 +75,7 @@ class DataMixin(object):
         elif 'xlsx' in formats:
             output = io.BytesIO()
             with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-                self.result['data'].to_excel(writer, index=False)
+                self.result['data'].to_excel(writer, index=False, encoding=None)
             self.write(output.getvalue())
         elif 'json' in formats or '' in formats or len(formats) == 0:
             self.write(self.result['data'].to_json(orient='records'))
@@ -534,7 +534,7 @@ class QueryHandler(BaseHandler, DataMixin):
                 self.write('<h1>%s</h1>' % key)
                 self.write(result['data'].to_html())
         elif 'xlsx' in formats:
-            output = StringIO()
+            output = io.BytesIO()
             with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
                 for key, result in self.result.items():
                     result['data'].to_excel(writer, index=False, sheet_name=key, encoding=None)
