@@ -3,7 +3,7 @@ import json
 import tornado.gen
 from types import GeneratorType
 from orderedattrdict import AttrDict
-from gramex.config import locate, variables
+from gramex.config import app_log, locate, variables
 
 
 def _arg_repr(arg):
@@ -200,3 +200,63 @@ def condition(*args):
     # treat the last as a default.
     if len(args) % 2 == 1 and len(args) > 2:
         return args[-1]
+
+
+def flattener(fields, default=None, filename='flatten'):
+    '''
+    Generates a function that flattens deep dictionaries. For example::
+
+        >>> flat = flattener({
+                'id': 'id',
+                'name': 'user.screen_name'
+            })
+        >>> flat({'id': 1, 'user': {'screen_name': 'name'}})
+        {'id': 1, 'name': 'name'}
+
+    Fields map as follows::
+
+        ''    => obj
+        True  => obj
+        1     => obj[1]
+        'x'   => obj['x']
+        'x.y' => obj['x']['y']
+        '1.x' => obj[1]['x']
+
+    Missing values map to ``None``. You can change ``None`` to '' passing a
+    ``default=''`` or any other default value.
+    '''
+    body = [
+        'def %s(obj):\n' % filename,
+        '\tr = AttrDict()\n',
+    ]
+
+    def assign(field, target, catch_errors=False):
+        field = repr(field)
+        if catch_errors:
+            body.append('\ttry: r[%s] = %s\n' % (field, target))
+            body.append('\texcept (KeyError, TypeError, IndexError): r[%s] = default\n' % field)
+        else:
+            body.append('\tr[%s] = %s\n' % (field, target))
+
+    for field, source in fields.items():
+        if not isinstance(field, six.string_types):
+            app_log.error('flattener:%s: key %s is not a str', filename, field)
+            continue
+        if isinstance(source, six.string_types):
+            target = 'obj'
+            if source:
+                for item in source.split('.'):
+                    target += ('[%s]' if item.isdigit() else '[%r]') % item
+            assign(field, target, catch_errors=True)
+        elif source is True:
+            assign(field, 'obj')
+        elif isinstance(source, int) and not isinstance(source, bool):
+            assign(field, 'obj[%d]' % source, catch_errors=True)
+        else:
+            app_log.error('flattener:%s: value %s is not a str/int', filename, source)
+            continue
+    body.append('\treturn r')
+    code = compile(''.join(body), filename='flattener:%s' % filename, mode='exec')
+    context = {'AttrDict': AttrDict, 'default': default}
+    eval(code, context)
+    return context[filename]

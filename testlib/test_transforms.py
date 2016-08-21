@@ -7,7 +7,7 @@ from types import GeneratorType
 from tornado.gen import coroutine, Task
 from orderedattrdict import AttrDict
 from orderedattrdict.yamlutils import AttrDictYAMLLoader
-from gramex.transforms import build_transform, badgerfish, template
+from gramex.transforms import build_transform, flattener, badgerfish, template
 
 
 def yaml_parse(text):
@@ -207,3 +207,62 @@ class Template(unittest.TestCase):
         self.check('{{ 1 }}', '1')
         self.check('{{ 1 + 2 }}', '3')
         self.check('{{ x + y }}', '3', x=1, y=2)
+
+
+class Flattener(unittest.TestCase):
+    def test_dict(self):
+        fieldmap = {
+            'all1': '',
+            'all2': True,
+            'x': 'x',
+            'y.z': 'y.z',
+            'z.1': 'z.1',
+        }
+        flat = flattener(fieldmap)
+        src = {'x': 'X', 'y': {'z': 'Y.Z'}, 'z': ['Z.0', 'Z.1']}
+        out = flat(src)
+        self.assertEqual(out.keys(), fieldmap.keys())
+        self.assertEqual(out['all1'], src)
+        self.assertEqual(out['all2'], src)
+        self.assertEqual(out['x'], src['x'])
+        self.assertEqual(out['y.z'], src['y']['z'])
+        self.assertEqual(out['z.1'], src['z'][1])
+
+    def test_list(self):
+        # Integer values must be interpreted as array indices
+        fieldmap = {
+            '0': 0,
+            '1': '1',
+            '2.0': '2.0',
+        }
+        flat = flattener(fieldmap)
+        src = [0, 1, [2]]
+        out = flat(src)
+        self.assertEqual(out.keys(), fieldmap.keys())
+        self.assertEqual(out['0'], src[0])
+        self.assertEqual(out['1'], src[1])
+        self.assertEqual(out['2.0'], src[2][0])
+
+    def test_invalid(self):
+        # None of these fields are valid. Don't raise an error, just ignore
+        fieldmap = {
+            0: 'int-invalid',
+            0.0: 'float-invalid',
+            ('a', 'b'): 'tuple-invalid',
+            'false-invalid': False,
+            'none-invalid': None,
+            'float-invalid': 1.0,
+            'dict-invalid': {},
+            'tuple-invalid': tuple(),
+            'set-invalid': set(),
+            'list-invalid': [],
+        }
+        out = flattener(fieldmap)({})
+        self.assertEqual(len(out.keys()), 0)
+
+    def test_default(self):
+        fieldmap = {'x': 'x', 'y.a': 'y.a', 'y.1': 'y.1', 'z.a': 'z.a', '1': 1}
+        default = 1
+        flat = flattener(fieldmap, default=default)
+        out = flat({'z': {}, 'y': []})
+        self.assertEqual(out, {key: default for key in fieldmap})

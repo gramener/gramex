@@ -1,6 +1,6 @@
 '''Functions to transform data'''
 
-from .transforms import build_transform, condition
+from .transforms import build_transform, condition, flattener
 from .badgerfish import badgerfish
 from .template import template
 from .auth import ensure_single_session
@@ -12,5 +12,6 @@ __all__ = [
     'template',
     'ensure_single_session',
     'condition',
+    'flattener',
     'TwitterStream',
 ]
