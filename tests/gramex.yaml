@@ -1076,6 +1076,12 @@ watch:
     on_modified: utils.on_modified
     on_created: utils.on_created
     on_deleted: utils.on_deleted
+  no-paths: {}
+  no-events:
+    paths: dir
+  invalid-event:
+    paths: dir
+    on_modified: nonexistent            # This should not throw an error, only report a warning
 
 schedule:
   schedule-startup-set-key:

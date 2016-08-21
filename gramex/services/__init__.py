@@ -364,23 +364,25 @@ def mime(conf):
 
 def watch(conf):
     '''Set up file watchers'''
-    import yaml
     from . import watcher
 
     events = {'on_modified', 'on_created', 'on_deleted', 'on_moved', 'on_any_event'}
     for name, config in conf.items():
         if 'paths' not in config:
-            app_log.error('No "paths" in watch config: %s', yaml.dump(config))
+            app_log.error('watch:%s has no "paths"', name)
             continue
         if not set(config.keys()) & events:
-            app_log.error('No events in watch config: %s', yaml.dump(config))
+            app_log.error('watch:%s has no events (on_modified, ...)', name)
             continue
         if not isinstance(config['paths'], (list, set, tuple)):
             config['paths'] = [config['paths']]
         for event in events:
             if event in config:
                 if not callable(config[event]):
-                    config[event] = locate(config[event])
+                    config[event] = locate(config[event], modules=['gramex.transforms'])
+                    if not callable(config[event]):
+                        app_log.error('watch:%s.%s is not callable', name, event)
+                        config[event] = lambda event: None
         watcher.watch(name, **config)
 
 

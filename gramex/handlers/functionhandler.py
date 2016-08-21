@@ -29,7 +29,7 @@ class FunctionHandler(BaseHandler):
         # Don't use cls.function = build_transform(...) -- Python treats it as a method
         cls.info = {}
         cls.info['function'] = build_transform(kwargs, vars={'handler': None},
-                                               filename='url>%s' % cls.name)
+                                               filename='url:%s' % cls.name)
         cls.headers = headers
         cls.redirect_url = redirect
         cls.post = cls.get
