@@ -8,11 +8,13 @@ information about past releases.
 Features for the next 2 releases are below. Bugs to be fixed are at the
 [issue tracker](http://code.gramener.com/s.anand/gramex/issues).
 
-## 1.15 (21 Aug 2016)
+## 1.16 (1 Sep 2016)
 
-- Twitter streaming storage
 - Websocket handlers
-- Excel formatted downloads
+- Twitter streaming: dynamic change of parameters
+- Kerberos authentication
+- Live reloading of modified Python files
+- Better Excel formatting
 - DataHandler templates / forms
 - Monitoring & logging report usage
 - Mechanism to add configuration / settings pages
