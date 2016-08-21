@@ -10,6 +10,7 @@ from tornado.ioloop import IOLoop
 from tornado.httputil import HTTPHeaders, parse_response_start_line
 from six.moves.urllib_parse import urlencode
 from gramex.config import app_log
+from gramex.transforms import flattener, build_transform
 from gramex.http import (RATE_LIMITED, TOO_MANY_REQUESTS, CLIENT_TIMEOUT,
                          INTERNAL_SERVER_ERROR, GATEWAY_TIMEOUT)
 
@@ -39,10 +40,23 @@ class TwitterStream(object):
 
         # Set up writers
         if 'path' in kwargs:
-            self.stream = self.stream_path = None
-            self.process_bytes = self._write_stream
-            self._rotate_stream()
-        # TODO: setup database writer
+            self.stream = StreamWriter(kwargs['path'])
+            self.process_bytes = self.stream.write
+        elif 'function' in kwargs:
+            self.process_json = build_transform(
+                kwargs, vars={'message': {}}, filename='TwitterStream:function')
+        elif kwargs.get('driver') == 'sqlalchemy':
+            import sqlalchemy as sa
+            meta = sa.MetaData()
+            engine = sa.create_engine(kwargs['url'], **kwargs.get('parameters', {}))
+            table = sa.Table(kwargs['table'], meta, autoload=True, autoload_with=engine)
+            fields = kwargs['fields']
+            for field in list(fields.keys()):
+                if field not in table.columns:
+                    app_log.error('TwitterStream field %s not in table' % field)
+                    fields.pop(field)
+            flatten = flattener(fields=fields)
+            self.process_json = lambda tweet: engine.execute(table.insert(flatten(tweet)))
 
         self.buf = bytearray()
         self.client = tornado.httpclient.HTTPClient()
@@ -109,6 +123,17 @@ class TwitterStream(object):
             self.delay = min(16, self.delay + 0.25)         # noqa: 16 seconds, 0.25 seconds
             app_log.error('TwitterStream exception %s. Retry: %ss', e, self.delay)
 
+    def header_callback(self, line):
+        try:
+            if self.headers is None:
+                start_line = parse_response_start_line(line)
+                self.http_version, self.status_code, self.http_reason = start_line
+                self.headers = HTTPHeaders()
+            else:
+                self.headers.parse_line(line)
+        except Exception:
+            app_log.exception('Cannot parse header %s' % line)
+
     def _stream(self, data):
         buf = self.buf
         buf.extend(data)
@@ -147,24 +172,16 @@ class TwitterStream(object):
         '''Subclass this to process tweets differently'''
         app_log.info(repr(message))
 
-    def header_callback(self, line):
-        try:
-            if self.headers is None:
-                start_line = parse_response_start_line(line)
-                self.http_version, self.status_code, self.http_reason = start_line
-                self.headers = HTTPHeaders()
-            else:
-                self.headers.parse_line(line)
-        except Exception:
-            app_log.exception('Cannot parse header %s' % line)
 
-    def _write_stream(self, data):
-        self.stream.write(data)
-        self.stream.write('\n')
+class StreamWriter(object):
+    def __init__(self, path):
+        self.path = path
+        self.stream = self.stream_path = None
+        self.rotate()
 
-    def _rotate_stream(self):
+    def rotate(self):
         '''
-        Create and rotate Twitter file streams.
+        Create and rotate file streams.
 
         The ``path`` format string determines the filename. For example,
         ``tweets.{:%Y-%m-%d}.jsonl`` creates a filename based on the current
@@ -181,13 +198,17 @@ class TwitterStream(object):
             self.stream.flush()
 
         # Set up new stream (if required, based on the filename)
-        path = self.params['path'].format(datetime.datetime.utcnow())
+        path = self.path.format(datetime.datetime.utcnow())
         if path != self.stream_path:
             if self.stream is not None:
                 self.stream.close()
             self.stream_path = path
             self.stream = open(path, 'ab')
-            app_log.info('TwitterStream writing to %s', path)
+            app_log.debug('StreamWriter writing to %s', path)
 
         # Schedule the next call after a minute
-        IOLoop.current().call_later(60, self._rotate_stream)
+        IOLoop.current().call_later(60, self.rotate)
+
+    def write(self, data):
+        self.stream.write(data)
+        self.stream.write('\n')
