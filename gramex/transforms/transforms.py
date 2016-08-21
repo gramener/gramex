@@ -1,5 +1,4 @@
 import six
-import json
 import tornado.gen
 from types import GeneratorType
 from orderedattrdict import AttrDict
