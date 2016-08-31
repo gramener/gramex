@@ -84,6 +84,7 @@ By default, `UploadHandler` uses the `file` query parameter to hold files, and
 the `delete` query parameter to delete files. You can change that by specifying
 a `keys:` configuration:
 
+    :::yaml
     url:
         uploadhandler:
             pattern: ...
@@ -98,6 +99,7 @@ a `keys:` configuration:
 
 `UploadHandler` accepts a `transform:` config that processes the files after they have been saved. For example:
 
+    :::yaml
     url:
         uploadhandler:
             pattern: ...
@@ -111,6 +113,7 @@ a `keys:` configuration:
 
 This calls `module.func(file_metadata)` where `file_metadata` is an AttrDict with the keys mentioned in [Upload listing](#upload-listing). For example, this function will save CSV files as `data.json`:
 
+    :::python
     def func(metadata):
         if metadata.mime == 'text/csv':
             path = os.path.join('... upload path ...', metadata.file)
