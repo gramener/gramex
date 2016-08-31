@@ -57,3 +57,16 @@ class TestErrorHandling(TestGramex):
             result = r.json()
             self.assertEqual(result['status_code'], code)
             self.assertTrue(result['handler.request.uri'].endswith(url))
+
+class TestXSRF(TestGramex):
+    '''Test xsrf_cookies: kwargs'''
+
+    def test_xsrf_false(self):
+        '''When xsrf_cookies is set to False, POST works'''
+        r = requests.post(server.base_url + '/xsrf/no')
+        self.assertEqual(200, r.status_code)
+
+    def test_xsrf_true(self):
+        '''When xsrf_cookies is set to True, POST fails without _xsrf'''
+        r = requests.post(server.base_url + '/xsrf/yes')
+        self.assertEqual(r.status_code, 403)

@@ -5,8 +5,6 @@ variables:
 app:
   listen:
     port: 9999              # Avoid clash with default Gramex port running tests
-  settings:
-    xsrf_cookies: false     # Temporarily disable for testing
 
 cache:
     memory:
@@ -371,13 +369,14 @@ url:
     kwargs:
         path: index.template.html
         methods: GET
+        xsrf_cookies: false
   methods/head-put-delete:
     pattern: /methods/head-put-delete
     handler: FileHandler
     kwargs:
         path: index.template.html
         methods: [HEAD, put, DELete]
-
+        xsrf_cookies: false
 
   # TestDataHandler for Sqlite
   data/csv:
@@ -390,6 +389,7 @@ url:
       parameters: {encoding: utf8}
       default: {format: csv}
       headers: {X-Test: abc}
+      xsrf_cookies: false
   data/json:
     pattern: /datastore/sqlite/json/
     handler: DataHandler
@@ -400,6 +400,7 @@ url:
       parameters: {encoding: utf8}
       default: {format: json}
       headers: {X-Test: abc}
+      xsrf_cookies: false
   data/html:
     pattern: /datastore/sqlite/html/
     handler: DataHandler
@@ -410,6 +411,7 @@ url:
       parameters: {encoding: utf8}
       default: {format: html}
       headers: {X-Test: abc}
+      xsrf_cookies: false
   data/xlsx:
     pattern: /datastore/sqlite/xlsx/
     handler: DataHandler
@@ -420,6 +422,7 @@ url:
       parameters: {encoding: utf8}
       default: {format: xlsx}
       headers: {X-Test: abc}
+      xsrf_cookies: false
 
   # Test datahandler for MySQL
   data/mysql/csv:
@@ -432,6 +435,7 @@ url:
       parameters: {encoding: utf8, connect_args: {charset: utf8}}
       default: {format: csv}
       headers: {X-Test: abc}
+      xsrf_cookies: false
   data/mysql/json:
     pattern: /datastore/mysql/json/
     handler: DataHandler
@@ -442,6 +446,7 @@ url:
       parameters: {encoding: utf8, connect_args: {charset: utf8}}
       default: {format: json}
       headers: {X-Test: abc}
+      xsrf_cookies: false
   data/mysql/html:
     pattern: /datastore/mysql/html/
     handler: DataHandler
@@ -452,6 +457,7 @@ url:
       parameters: {encoding: utf8, connect_args: {charset: utf8}}
       default: {format: html}
       headers: {X-Test: abc}
+      xsrf_cookies: false
   data/mysql/xlsx:
     pattern: /datastore/mysql/xlsx/
     handler: DataHandler
@@ -462,6 +468,7 @@ url:
       parameters: {encoding: utf8, connect_args: {charset: utf8}}
       default: {format: xlsx}
       headers: {X-Test: abc}
+      xsrf_cookies: false
 
   # Test datahandler for PostgreSQL
   data/postgresql/csv:
@@ -474,6 +481,7 @@ url:
       parameters: {encoding: utf8}
       default: {format: csv}
       headers: {X-Test: abc}
+      xsrf_cookies: false
   data/postgresql/json:
     pattern: /datastore/postgresql/json/
     handler: DataHandler
@@ -484,6 +492,7 @@ url:
       parameters: {encoding: utf8}
       default: {format: json}
       headers: {X-Test: abc}
+      xsrf_cookies: false
   data/postgresql/html:
     pattern: /datastore/postgresql/html/
     handler: DataHandler
@@ -494,6 +503,7 @@ url:
       parameters: {encoding: utf8}
       default: {format: html}
       headers: {X-Test: abc}
+      xsrf_cookies: false
   data/postgresql/xlsx:
     pattern: /datastore/postgresql/xlsx/
     handler: DataHandler
@@ -504,6 +514,7 @@ url:
       parameters: {encoding: utf8}
       default: {format: xlsx}
       headers: {X-Test: abc}
+      xsrf_cookies: false
 
   # TestDataHandler for blaze sqlite
   data/blaze/csv:
@@ -516,6 +527,7 @@ url:
       parameters: {encoding: utf8}
       default: {format: csv}
       headers: {X-Test: abc}
+      xsrf_cookies: false
   data/blaze/json:
     pattern: /datastore/blazesqlite/json/
     handler: DataHandler
@@ -526,6 +538,7 @@ url:
       parameters: {encoding: utf8}
       default: {format: json}
       headers: {X-Test: abc}
+      xsrf_cookies: false
   data/blaze/html:
     pattern: /datastore/blazesqlite/html/
     handler: DataHandler
@@ -536,6 +549,7 @@ url:
       parameters: {encoding: utf8}
       default: {format: html}
       headers: {X-Test: abc}
+      xsrf_cookies: false
   data/blaze/xlsx:
     pattern: /datastore/blazesqlite/xlsx/
     handler: DataHandler
@@ -546,6 +560,7 @@ url:
       parameters: {encoding: utf8}
       default: {format: xlsx}
       headers: {X-Test: abc}
+      xsrf_cookies: false
 
   # Test datahandler for blaze MySQL
   data/blazemysql/csv:
@@ -558,6 +573,7 @@ url:
       parameters: {encoding: utf8}
       default: {format: csv}
       headers: {X-Test: abc}
+      xsrf_cookies: false
   data/blazemysql/json:
     pattern: /datastore/blazemysql/json/
     handler: DataHandler
@@ -568,6 +584,7 @@ url:
       parameters: {encoding: utf8}
       default: {format: json}
       headers: {X-Test: abc}
+      xsrf_cookies: false
   data/blazemysql/html:
     pattern: /datastore/blazemysql/html/
     handler: DataHandler
@@ -578,6 +595,7 @@ url:
       parameters: {encoding: utf8}
       default: {format: html}
       headers: {X-Test: abc}
+      xsrf_cookies: false
   data/blazemysql/xlsx:
     pattern: /datastore/blazemysql/xlsx/
     handler: DataHandler
@@ -588,6 +606,7 @@ url:
       parameters: {encoding: utf8}
       default: {format: xlsx}
       headers: {X-Test: abc}
+      xsrf_cookies: false
 
   # TestDataHandlerConfig for Sqlite
   data/sqliteconfig1/csv:
@@ -601,6 +620,7 @@ url:
         format: csv
         where: [votes<120]
       headers: {X-Test: abc}
+      xsrf_cookies: false
   data/sqliteconfig2/csv:
     pattern: /datastore/sqliteconfig2/csv/
     handler: DataHandler
@@ -612,6 +632,7 @@ url:
         format: csv
         where: votes<120
       headers: {X-Test: abc}
+      xsrf_cookies: false
   data/sqliteconfig3/csv:
     pattern: /datastore/sqliteconfig3/csv/
     handler: DataHandler
@@ -624,6 +645,7 @@ url:
       query:
         where: votes<120
       headers: {X-Test: abc}
+      xsrf_cookies: false
   data/sqliteconfig4/csv:
     pattern: /datastore/sqliteconfig4/csv/
     handler: DataHandler
@@ -637,6 +659,7 @@ url:
       query:
         where: votes<120
       headers: {X-Test: abc}
+      xsrf_cookies: false
   data/sqliteconfig5/csv:
     pattern: /datastore/sqliteconfig5/csv/
     handler: DataHandler
@@ -652,6 +675,7 @@ url:
       query:
         where: votes<120
       headers: {X-Test: abc}
+      xsrf_cookies: false
   data/sqliteconfig6/csv:
     pattern: /datastore/sqliteconfig6/csv/
     handler: DataHandler
@@ -671,6 +695,7 @@ url:
           votes: "<120"
           rating: ">0.4"
       headers: {X-Test: abc}
+      xsrf_cookies: false
   data/sqliteconfig7/csv:
     pattern: /datastore/sqliteconfig7/csv/
     handler: DataHandler
@@ -684,6 +709,7 @@ url:
         where: [votes<120]
         limit: 5
       headers: {X-Test: abc}
+      xsrf_cookies: false
 
   process/args:
     pattern: /process/args
@@ -845,11 +871,14 @@ url:
   json/write:
     pattern: /json/write/(.*)
     handler: JSONHandler
+    kwargs:
+      xsrf_cookies: false
   json/path:
     pattern: /json/path/(.*)
     handler: JSONHandler
     kwargs:
       path: $YAMLPATH/.jsonpath/jsonhandler.json
+      xsrf_cookies: false
 
   api/twitter:
     pattern: /api/twitter/(.*)
@@ -860,6 +889,7 @@ url:
       secret: yU00bx5dHYMbge9IyO5H1KeC5uFnWndntG7u6CH6O4HDZHQg0p
       access_key: 445767176-pqio8PuGlpzULSstlZQbLhRqFJfNBjWFH5LqNRgI
       access_secret: zVosr4wIS3aM80hErmWUkMePZ6vX830yI7VKxar6xZqgp
+      xsrf_cookies: false
 
   api/twitter-get:
     pattern: /api/twitter-get/(.*)
@@ -871,6 +901,7 @@ url:
       access_key: 445767176-pqio8PuGlpzULSstlZQbLhRqFJfNBjWFH5LqNRgI
       access_secret: zVosr4wIS3aM80hErmWUkMePZ6vX830yI7VKxar6xZqgp
       methods: GET
+      xsrf_cookies: false
 
   upload:
     pattern: /upload
@@ -880,6 +911,7 @@ url:
       keys:
         file: [image, text, unknown]
         delete: rm
+      xsrf_cookies: false
 
   auth/session:
     pattern: /auth/session
@@ -898,6 +930,7 @@ url:
         use_ssl: true                       # Whether to use SSL or not
         user: 'uid={user},cn=users,cn=accounts,dc=demo1,dc=freeipa,dc=org'
         password: '{password}'
+        xsrf_cookies: false
 
   auth/simple:
     pattern: /auth/simple
@@ -920,6 +953,7 @@ url:
                 action_set: true
             -
               function: ensure_single_session
+        xsrf_cookies: false
 
   auth/db:
     pattern: /auth/db
@@ -941,6 +975,7 @@ url:
             query: next
             header: NEXT
             url: /dir/index/
+        xsrf_cookies: false
 
   auth/functionhandler:
     pattern: /auth/functionhandler
@@ -949,12 +984,14 @@ url:
         auth: true
         function: six.text_type
         args: 'OK'
+        xsrf_cookies: false
   auth/filehandler:
     pattern: /auth/filehandler
     handler: FileHandler
     kwargs:
         auth: true
         path: dir/alpha.txt
+        xsrf_cookies: false
   auth/datahandler:
     pattern: /auth/datahandler
     handler: DataHandler
@@ -963,18 +1000,21 @@ url:
         driver: sqlalchemy
         url: sqlite:///actors.db        # This dataset doesn't actually exist
         table: actors
+        xsrf_cookies: false
   auth/jsonhandler:
     pattern: /auth/jsonhandler/(.*)
     handler: JSONHandler
     kwargs:
         auth: true
         data: {x: 1}
+        xsrf_cookies: false
   auth/processhandler:
     pattern: /auth/processhandler
     handler: ProcessHandler
     kwargs:
         auth: true
         args: [python, "$YAMLPATH/processtest.py", a, '1', 'x y']
+        xsrf_cookies: false
   auth/twitterresthandler:
     pattern: /auth/twitterresthandler
     handler: TwitterRESTHandler
@@ -985,6 +1025,7 @@ url:
       secret: yU00bx5dHYMbge9IyO5H1KeC5uFnWndntG7u6CH6O4HDZHQg0p
       access_key: 445767176-pqio8PuGlpzULSstlZQbLhRqFJfNBjWFH5LqNRgI
       access_secret: zVosr4wIS3aM80hErmWUkMePZ6vX830yI7VKxar6xZqgp
+      xsrf_cookies: false
   auth/uploadhandler:
     pattern: /auth/uploadhandler
     handler: UploadHandler
@@ -992,6 +1033,7 @@ url:
       auth: true
       path: $YAMLPATH/uploads
       methods: GET
+      xsrf_cookies: false
   auth/membership:
     pattern: /auth/membership
     handler: FileHandler
@@ -1000,6 +1042,7 @@ url:
         auth:
             membership:
                 user: [alpha, beta]
+        xsrf_cookies: false
   auth/condition:
     pattern: /auth/condition
     handler: FileHandler
@@ -1009,6 +1052,7 @@ url:
             condition:
                 function: str.endswith
                 args: [=handler.current_user.user, 'ta']        # beta, delta
+        xsrf_cookies: false
 
   xsrf:
     pattern: /xsrf
@@ -1017,6 +1061,18 @@ url:
         function: "str"
         args: "xsrf"
         set_xsrf: true
+  xsrf/yes:
+    pattern: /xsrf/yes
+    handler: FileHandler
+    kwargs:
+      path: $YAMLPATH/dir/index.html
+      xsrf_cookies: true
+  xsrf/no:
+    pattern: /xsrf/no
+    handler: FileHandler
+    kwargs:
+      path: $YAMLPATH/dir/index.html
+      xsrf_cookies: false
 
   logtest:
     pattern: /logtest
