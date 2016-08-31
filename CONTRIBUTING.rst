@@ -41,9 +41,13 @@ Contributing to Gramex
 
    Now you can make your changes locally.
 
-2. When you're done making changes, run ``make release-test`` to test flake8,
-   unit tests and coverage. (To run a subset of tests, use ``nosetests
-   tests.test_gramex``.)
+2. When you're done making changes, run flake8, unit tests and coverage.
+   (To run a subset of tests, use ``... nosetests tests.test_gramex``)::
+
+      conda install -q -y --file requirements-conda.txt
+      pip install -q -e .
+      flake8
+      python setup.py nosetests
 
 3. Commit your changes and push your branch::
 

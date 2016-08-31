@@ -26,4 +26,4 @@ class TestURLLog(TestGramex):
         self.assertEqual(parts[6], 'abc')
         # self.assertEqual(parts[7], sid)
         # self.assertEqual(parts[8], sid)
-        self.assertEqual(parts[9], os.environ['HOME'])
+        self.assertEqual(parts[9], os.path.expanduser('~'))
