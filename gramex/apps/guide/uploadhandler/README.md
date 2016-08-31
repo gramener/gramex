@@ -93,3 +93,27 @@ a `keys:` configuration:
                 keys:                     # Define what query parameters to use
                   file: [file, upload]    # Use <input id="file"> and/or <input id="upload">
                   delete: [del, rm]       # Use <input id="del"> and/or <input id="rm">
+
+## Process uploads
+
+`UploadHandler` accepts a `transform:` config that processes the files after they have been saved. For example:
+
+    url:
+        uploadhandler:
+            pattern: ...
+            handler: UploadHandler
+            kwargs:
+                path: ...
+                transform:
+                    function: module.func     # Run module.func()
+                    args: =content            # Optional: call with file metadata
+                    kwargs: {}                # Optional: additional keyword args
+
+This calls `module.func(file_metadata)` where `file_metadata` is an AttrDict with the keys mentioned in [Upload listing](#upload-listing). For example, this function will save CSV files as `data.json`:
+
+    def func(metadata):
+        if metadata.mime == 'text/csv':
+            path = os.path.join('... upload path ...', metadata.file)
+            pd.read_csv(path).to_json('data.json')
+
+The value returned by `module.func()` (if any) replaces `file_metadata`. This is stored in the UploadHandler's list of file metadata.

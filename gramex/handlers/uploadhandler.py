@@ -5,6 +5,7 @@ import gramex
 import mimetypes
 import tornado.gen
 from orderedattrdict import AttrDict
+from gramex.config import app_log
 from gramex.transforms import build_transform
 from .basehandler import BaseHandler, HDF5Store
 
@@ -131,5 +132,9 @@ class UploadHandler(BaseHandler):
     def transforms(self, content):
         for transform in self.transform:
             for value in transform(content):
-                content = value
+                if isinstance(value, dict):
+                    content = value
+                elif value is not None:
+                    app_log.error('UploadHandler %s: transform returned %r, not dict',
+                                  self.name, value)
         return content
