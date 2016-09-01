@@ -43,7 +43,7 @@ well as the `format:` (which can be `html`, `csv`, `xlsx` or `json` -- see
 
 URL query parameters can override these. For example:
 
-- [flags?content=Europe](flags?content=Europe) shows flags for Europe
+- [flags?continent=Europe](flags?continent=Europe) shows flags for Europe
 - [flags?format=json](flags?format=json) renders the flags in JSON
 - [flags?limit=20](flags?limit=20) shows 20 rows instead of the default 10
 
