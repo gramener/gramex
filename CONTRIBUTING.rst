@@ -42,6 +42,7 @@ Contributing to Gramex
    Now you can make your changes locally.
 
 2. When you're done making changes, run flake8, unit tests and coverage.
+   On Windows, you may need to [enable Powershell scripts](http://stackoverflow.com/a/18533754/100904).
    (To run a subset of tests, use ``... nosetests tests.test_gramex``)::
 
       conda install -q -y --file requirements-conda.txt
