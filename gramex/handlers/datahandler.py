@@ -476,7 +476,7 @@ class DataHandler(BaseHandler, DataMixin):
 
 class QueryHandler(BaseHandler, DataMixin):
     '''
-    Exposes parametrized SQL queries via a REST API.
+    Exposes parameterized SQL queries via a REST API.
 
     Sample configuration::
 
@@ -516,7 +516,7 @@ class QueryHandler(BaseHandler, DataMixin):
         chunks = pd.read_sql(stmt, self.engine, chunksize=limit)
         return {
             'query': stmt,
-            'data': chunks.next()
+            'data': next(chunks)
         }
 
     def renderdatas(self):
