@@ -130,7 +130,7 @@ def _setup_variables():
 
     # Define GRAMEXDATA folder based on the system
     if 'GRAMEXDATA' not in variables:
-        if sys.platform == 'linux2' or sys.platform == 'cygwin':
+        if sys.platform.startswith('linux') or sys.platform == 'cygwin':
             variables['GRAMEXDATA'] = os.path.expanduser('~/.config/gramexdata')
         elif sys.platform == 'win32':
             variables['GRAMEXDATA'] = os.path.join(variables['LOCALAPPDATA'], 'Gramex Data')
