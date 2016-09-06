@@ -332,6 +332,62 @@ customisations:
                       Cache-Control: no-cache
 
 
+## Redirection
+
+Most URL handlers (not all) accept a `redirect:` parameter that redirects the
+user after completing the action. For example, after a
+[FunctionHandler](../functionahandler/) executes or after
+[logging in](../auth/) or after an
+[UploadHandler](../uploadhandler/) is done. Here is the syntax:
+
+    :::yaml
+    url:
+        pattern: ...
+        handler: ...
+        kwargs:
+            ...
+            redirect:
+                url: /path-to-redirect      # Redirect to this URL
+
+After the handler is executed, the browser is redirected to `/path-to-redirect`.
+This can be a relative or an absolute URL.
+
+Redirection can be customised based on:
+
+- a URL `query` parameter
+- a HTTP `header`, or
+- a direct `url`
+
+These can be specified in any order, and are all optional. (If none of these is
+specified, the user is redirected to the home page `/`.) For example:
+
+    :::yaml
+        kwargs:
+          ...
+          redirect:             # Redirect options are applied in order
+            query: next         # If ?next= is specified, use it
+            header: Referer     # Else use the HTTP header Referer if it exists
+            url: /$YAMLURL      # Else redirect to the directory where this gramex.yaml is present
+
+With this configuration, `?next=../config/` will take you to the `../config/`
+page.
+
+By default, the URL must redirect to the same server (for security reasons). So
+`?next=https://some-other-domain.com/` will ignore the `next=` parameter.
+However, you can specify `external: true` to override this:
+
+    ::yaml
+        kwargs:
+          ...
+          redirect:                     # Under the redirect section,
+              external: true            # add an external: true
+              query: next               # The ?next= can now be an external URL
+              url: http://example.com/  # So can the pre-defined URL
+
+You can test this at
+[ldap2?next=https://gramener.com/](ldap2?next=https://gramener.com/).
+
+
 ## Scheduling
 
 The `schedule:` section schedules functions to run at specific times or on
@@ -368,6 +424,7 @@ The `mime:` section lets you add custom MIME types for extensions. For example:
 ... maps the `.yml` extension to the `text/yaml` MIME type. This is used by
 [FileHandler](../filehandler/) and other services to set the `Content-Type`
 header.
+
 
 ## YAML imports
 

@@ -30,6 +30,10 @@ You can see all configurations used in this page in [gramex.yaml](gramex.yaml):
 FunctionHandler handles `GET` *and* `POST` requests by default. That is, the
 same function is called irrespective of whether the method is `GET` or `POST`.
 
+After the function executes, users can be redirected via the `redirect:` config
+documented the [redirection configuration](../config/#redirection).
+
+
 ## Function arguments
 
 You can define what parameters to pass to the function. By default, the Tornado
@@ -165,26 +169,6 @@ well. For example:
         ]
         result = gramex.service.threadpool.submit(pd.concat, [group1, group2])
         raise tornado.gen.Return(result)
-
-## Redirection
-
-To redirect to a different URL when the function is done, use `redirect`:
-
-    :::yaml
-    url:
-      lookup:
-        function: calculation.run     # Run calculation.run(handler)
-        redirect: /                   # and redirect to / thereafter
-
-Note: Using `redirect: ""` redirects to referrer.
-
-If you want the function to dynamally redirect to a URL, use
-`handler.set_header()`:
-
-    :::python
-    def run(handler):
-        handler.set_header('Location', '/url-to-redirect-to')
-        return ''
 
 
 [requesthandler]: https://tornado.readthedocs.org/en/stable/web.html#request-handlers

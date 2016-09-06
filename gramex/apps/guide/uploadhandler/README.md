@@ -26,6 +26,9 @@ Any file posted with a name of `file` is uploaded. Here is a sample HTML form:
   <a class="example-src" href="http://code.gramener.com/s.anand/gramex/tree/master/gramex/apps/guide/uploadhandler/form.html">Source</a>
 </div>
 
+After the file is uploaded, users can be redirected via the `redirect:` config
+documented the [redirection configuration](../config/#redirection).
+
 ## Upload listing
 
 You can retrieve the list of files uploaded via AJAX if you include a `methods:

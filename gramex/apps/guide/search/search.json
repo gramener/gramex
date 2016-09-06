@@ -70,9 +70,6 @@
     "login-templates": {
       "Login templates": -1
     },
-    "redirection-after-login": {
-      "Redirection after login": -1
-    },
     "session-data": {
       "Session data": -1
     },
@@ -165,6 +162,9 @@
     },
     "predefined-variables": {
       "Predefined variables": -1
+    },
+    "redirection": {
+      "Redirection": -1
     },
     "scheduling": {
       "Scheduling": -1
@@ -309,9 +309,6 @@
     "function-arguments": {
       "Function arguments": -1
     },
-    "redirection": {
-      "Redirection": -1
-    },
     "streaming-output": {
       "Streaming output": -1
     }
@@ -390,8 +387,7 @@
     },
     "gramex-0x-changes": {
       "Gramex 0.x changes": -1
-    },
-    "gramex-0x-differences": {}
+    }
   },
   "twitterresthandler": {
     "": {
@@ -422,6 +418,9 @@
   "uploadhandler": {
     "": {
       "Gramex handles file uploads": -1
+    },
+    "process-uploads": {
+      "Process uploads": -1
     },
     "upload-arguments": {
       "Upload arguments": -1

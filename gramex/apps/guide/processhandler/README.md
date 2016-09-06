@@ -27,6 +27,10 @@ buffer before flushing, or `line` to flush the output after every line.
 `text/plain` is buffered by the browser, and you will cannot see the live
 updates.)
 
+After the handler executes, users can be redirected via the `redirect:` config
+documented the [redirection configuration](../config/#redirection).
+
+
 ## ProcessHandler redirection
 
 You can redirect `stdout` and `stderr` from the process. For example, this URL

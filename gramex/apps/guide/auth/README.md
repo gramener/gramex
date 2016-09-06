@@ -99,11 +99,11 @@ This setup is useful only for testing. It stores passwords in plain text.
 **DO NOT USE IT IN PRODUCTION.**
 
 You should create a [HTML login form](simple) that requests a username and
-password (with an [xsrf][xsrf] field). See [login templates](#login-templates) to
-learn how to create one.
+password (with an [xsrf][xsrf] field). See [login templates](#login-templates)
+to learn how to create one.
 
-Once logged in, you can redirect the user to a specific page. See the
-[redirection](#redirection-after-login) section for more.
+After users log in, they are redirected based on the common `redirect:` section
+documented the [redirection configuration](../config/#redirection).
 
 
 ## Google auth
@@ -371,8 +371,8 @@ This configuration creates a [logout page](logout):
                 url: /$YAMLURL          # Else redirect to the directory where this gramex.yaml is present
 
 After logging out, the user is re-directed to the URL specified by `?next=`.
-Else, they're redirected to the current page. Read the
-[redirection](#redirection-after-login) section for more.
+Else, they're redirected to the current page. 
+See [redirection configuration](../config/#redirection).
 
 
 ## Login templates
@@ -397,51 +397,6 @@ Otherwise, we have 3 input fields:
 - `password`: the password. The name of this field can also be configured
 - `_xsrf`: the [XSRF][xsrf] token for this request.
 
-
-## Redirection after login
-
-After users logs in, they are redirected based on the common `redirect:` section
-in the auth handler kwargs. This redirect URL can be based on:
-
-- a URL `query` parameter
-- a HTTP `header`, or
-- a direct `url`
-
-For example:
-
-    :::yaml
-    url:
-      login/google:
-        pattern: /$YAMLURL/google
-        handler: GoogleAuth
-        kwargs:
-          key: YOURKEY
-          secret: YOURSECRET
-          redirect:                 # Redirect options are applied in order
-            query: next             # If ?next= is specified, use it
-            header: Referer         # Else use the HTTP header Referer if it exists
-            url: /$YAMLURL          # Else redirect to the directory where this gramex.yaml is present
-
-If none of these is specified, the user is redirected to the home page `/`.
-
-In the above configuration, [google?next=../config/](google?next=../config/)
-will take you to the [config](../config/) page after logging in.
-
-By default, the URL must redirect to the same server (for security reasons). So
-[google?next=https://gramener.com/](google?next=https://gramener.com/) will
-ignore the `next=` parameter. However, you can specify `external: true` to
-override this:
-
-    ::yaml
-      kwargs:
-        ...
-        redirect:                     # Under the redirect section,
-            external: true            # add an external: true
-            query: next               # The ?next= can now be an external URL
-            url: http://example.com/  # So can the pre-defined URL
-
-You can test this at
-[ldap2?next=https://gramener.com/](ldap2?next=https://gramener.com/).
 
 ## Login actions
 

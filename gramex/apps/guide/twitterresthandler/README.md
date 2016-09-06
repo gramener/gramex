@@ -63,6 +63,9 @@ will return the first tweet on your timeline.
       data: {'count': '1'}
     })  // OUTPUT
 
+After the OAuth login, users can be redirected via the `redirect:` config
+documented the [redirection configuration](../config/#redirection).
+
 
 ## Twitter search
 

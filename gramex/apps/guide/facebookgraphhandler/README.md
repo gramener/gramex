@@ -59,6 +59,8 @@ page. The request below will show your name.
       method: 'POST',
     })  // OUTPUT
 
+After the OAuth login, users can be redirected via the `redirect:` config
+documented the [redirection configuration](../config/#redirection).
 
 Additional documentation:
 
