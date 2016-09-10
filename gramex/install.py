@@ -169,8 +169,8 @@ def download_zip(config):
     # If the URL is a directory, copy it
     if os.path.isdir(url):
         if os.path.exists(target):
-            url = os.path.abspath(url).lower().strip(os.sep)
-            target = os.path.abspath(target).lower().strip(os.sep)
+            url = os.path.abspath(url).lower().rstrip(os.sep)
+            target = os.path.abspath(target).lower().rstrip(os.sep)
             if url != target:
                 if not safe_rmtree(target):
                     return
