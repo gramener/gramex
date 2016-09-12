@@ -18,12 +18,23 @@ This creates an `SMTPMailer` instance that can be used as follows:
     result = mailer.mail(
         to='person@example.com',
         subject='Subject',
-        body='Email text')
+        body='Email text',
+        attachments=['1.pdf', '2.txt'])
 
 <div class="example">
   <a class="example-demo" href="mail">Try a sample email</a>
   <a class="example-src" href="http://code.gramener.com/s.anand/gramex/tree/master/gramex/apps/guide/email/emailapp.py">Source</a>
 </div>
+
+Attachments can be specified as filenames or as a dictionary with the `body` and
+`content_type` or `filename` keys. For example:
+
+      attachments=['file.pdf']
+      attachments=[{'filename': 'file.pdf', 'body': open('file.pdf', 'rb').read()}]
+      attachments=[{'content_type': 'application/pdf', 'body': open('file.pdf', 'rb').read()}]
+
+(The attachment `dict` format is consistent with the `handler.request.files`
+structure that holds uploaded files.)
 
 You can use the following types for email as of now:
 

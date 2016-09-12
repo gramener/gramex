@@ -35,6 +35,31 @@ class SMTPMailer(object):
 
 
 def message(body=None, html=None, attachments=[], **kwargs):
+    '''
+    Returns a MIME message object based on text or HTML content, and optional
+    attachments. It accepts 3 parameters:
+
+    - ``body`` is the text content of the email
+    - ``html`` is the HTML content of the email. If both ``html`` and ``body``
+      are specified, the email contains both parts. Email clients may decide to
+      show one or the other.
+    - ``attachments`` is an array of file names or dicts. Each dict must have:
+        - ``body`` -- a byte array of the content
+        - ``content_type`` indicating the MIME type or ``filename`` indicating the file name
+
+    In addition, any keyword arguments passed are treated as message headers.
+    Some common message header keys are ``From``, ``To``, ``Cc``, ``Bcc``,
+    ``Subject``, ``Reply-To``, and ``On-Behalf-Of``. The values must be strings.
+
+    Here are some examples::
+
+        >>> message(from='a@example.org', to='b@example.org', subject=sub, body=text)
+        >>> message(to='b@example.org', subject=sub, body=text, html=html)
+        >>> message(to='b@example.org', subject=sub, body=text, attachments=['file.pdf'])
+        >>> message(to='b@example.org', subject=sub, body=text, attachments=[
+                {'filename': 'test.txt', 'body': 'File contents'}
+            ])
+    '''
     if body and html:
         msg = MIMEMultipart('alternative')
         msg.attach(MIMEText(body, 'plain'))
@@ -47,10 +72,16 @@ def message(body=None, html=None, attachments=[], **kwargs):
     if attachments:
         msg_addon = MIMEMultipart()
         msg_addon.attach(msg)
-        for filename in attachments:
-            content = open(filename, 'rb').read()
-            content_type, encoding = guess_type(filename, strict=False)
-            if content_type is None or encoding is not None:
+        for doc in attachments:
+            if isinstance(doc, dict):
+                filename = doc.get('filename', 'data.bin')
+                content_type = doc.get('content_type', guess_type(filename, strict=False)[0])
+                content = doc['body']
+            else:
+                filename = doc
+                content = open(filename, 'rb').read()
+                content_type = guess_type(filename, strict=False)[0]
+            if content_type is None:
                 content_type = 'application/octet-stream'
             maintype, subtype = content_type.split('/', 1)
             msg = MIMEBase(maintype, subtype)
