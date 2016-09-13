@@ -2,9 +2,8 @@ import os
 import random
 from unittest import TestCase
 from email.mime.text import MIMEText
-from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
-from gramex.services.emailer import message, SMTPMailer
+from gramex.services.emailer import message
 
 
 class TestEmailer(TestCase):
