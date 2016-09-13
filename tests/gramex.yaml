@@ -921,6 +921,15 @@ url:
         headers:
             Content-Type: application/json
 
+  auth/logout:
+    pattern: /auth/logout
+    handler: LogoutHandler
+    kwargs:
+        redirect:
+            query: next
+            header: NEXT
+            url: /dir/index/
+
   auth/ldap:
     pattern: /auth/ldap
     handler: LDAPAuth

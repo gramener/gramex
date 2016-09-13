@@ -51,14 +51,19 @@ class AuthBase(TestGramex):
     def setUpClass(cls):
         cls.session = requests.Session()
 
-    def login(self, user, password, query_next=None, header_next=None):
+    @staticmethod
+    def redirect_kwargs(query_next, header_next):
         # Get the login page
         params, headers = {}, {}
         if query_next is not None:
             params['next'] = query_next
         if header_next is not None:
             headers['NEXT'] = header_next
-        r = self.session.get(self.url, params=params, headers=headers)
+        return {'params': params, 'headers': headers}
+
+    def login(self, user, password, query_next=None, header_next=None):
+        params = self.redirect_kwargs(query_next, header_next)
+        r = self.session.get(self.url, **params)
         tree = lxml.html.fromstring(r.text)
         self.assertEqual(tree.xpath('.//h1')[0].text, 'Auth')
 
@@ -67,13 +72,24 @@ class AuthBase(TestGramex):
         data['xsrf'] = tree.xpath('.//input[@name="_xsrf"]')[0].get('value')
 
         # Submitting the correct password redirects
-        return self.session.post(self.url, timeout=10, data=data, headers=headers)
+        return self.session.post(self.url, timeout=10, data=data, headers=params['headers'])
 
-    def ok(self, *args, **kwargs):
+    def logout(self, query_next=None, header_next=None):
+        url = server.base_url + '/auth/logout'
+        return self.session.get(url, timeout=10, **self.redirect_kwargs(query_next, header_next))
+
+    def login_ok(self, *args, **kwargs):
         check_next = kwargs.pop('check_next')
         r = self.login(*args, **kwargs)
         self.assertEqual(r.status_code, OK)
         self.assertNotRegexpMatches(r.text, 'error code')
+        self.assertEqual(r.url, server.base_url + check_next)
+
+    def logout_ok(self, *args, **kwargs):
+        check_next = kwargs.pop('check_next')
+        # logout() does not accept user, password. So Just pass the kwargs
+        r = self.logout(**kwargs)
+        self.assertEqual(r.status_code, OK)
         self.assertEqual(r.url, server.base_url + check_next)
 
     def unauthorized(self, *args, **kwargs):
@@ -85,8 +101,8 @@ class AuthBase(TestGramex):
 
 class LoginMixin(object):
     def test_login(self):
-        self.ok('alpha', 'alpha', check_next='/dir/index/')
-        self.ok('beta', 'beta', check_next='/dir/index/')
+        self.login_ok('alpha', 'alpha', check_next='/dir/index/')
+        self.login_ok('beta', 'beta', check_next='/dir/index/')
 
     def test_login_wrong_password(self):
         self.unauthorized('alpha', 'beta')
@@ -95,22 +111,23 @@ class LoginMixin(object):
         self.unauthorized('nonexistent', 'beta')
 
     def test_redirect(self):
-        self.ok('alpha', 'alpha', query_next='/func/args', check_next='/func/args')
-        self.ok('alpha', 'alpha', header_next='/func/args', check_next='/func/args')
+        for method in [self.login_ok, self.logout_ok]:
+            method('alpha', 'alpha', query_next='/func/args', check_next='/func/args')
+            method('alpha', 'alpha', header_next='/func/args', check_next='/func/args')
 
     def test_internal_redirect(self):
         # Passing a full HTTP URL that matches the local host still works
         url = server.base_url + '/func/args'
-        self.ok('alpha', 'alpha', query_next=url, check_next='/func/args')
-        self.ok('alpha', 'alpha', header_next=url, check_next='/func/args')
+        for method in [self.login_ok, self.logout_ok]:
+            method('alpha', 'alpha', query_next=url, check_next='/func/args')
+            method('alpha', 'alpha', header_next=url, check_next='/func/args')
 
     def test_external_redirect(self):
-        # When redirecting to an external URL fall back to the default url: specified
-        self.ok('alpha', 'alpha', query_next='https://gramener.com/', check_next='/dir/index/')
-        self.ok('alpha', 'alpha', header_next='https://gramener.com/', check_next='/dir/index/')
-        newport = server.base_url.rsplit(':', 1)[0] + ':1234'
-        self.ok('alpha', 'alpha', query_next=newport, check_next='/dir/index/')
-        self.ok('alpha', 'alpha', header_next=newport, check_next='/dir/index/')
+        # When redirecting to an external URL or new port fall back to the default url: specified
+        for external in ['https://gramener.com/', server.base_url.rsplit(':', 1)[0] + ':1234']:
+            for method in [self.login_ok, self.logout_ok]:
+                method('alpha', 'alpha', query_next=external, check_next='/dir/index/')
+                method('alpha', 'alpha', header_next=external, check_next='/dir/index/')
 
 
 class TestSimpleAuth(AuthBase, LoginMixin):
@@ -128,15 +145,21 @@ class TestSimpleAuth(AuthBase, LoginMixin):
         self.login('alpha', 'alpha')
         self.assertDictContainsSubset({'action_set': True}, self.get_session())
 
+    def test_logout_action(self):
+        self.login_ok('alpha', 'alpha', check_next='/dir/index/')
+        self.assertEquals({'user': 'alpha', 'id': 'alpha'}, self.get_session()['user'])
+        self.logout_ok(check_next='/dir/index/')
+        self.assertTrue('user' not in self.get_session())
+
     def test_ensure_single_session(self):
         session1, session2 = requests.Session(), requests.Session()
         # log into first session
         self.session = session1
-        self.ok('alpha', 'alpha', check_next='/dir/index/')
+        self.login_ok('alpha', 'alpha', check_next='/dir/index/')
         self.assertEquals({'user': 'alpha', 'id': 'alpha'}, self.get_session()['user'])
         # log into second sessioj
         self.session = session2
-        self.ok('alpha', 'alpha', check_next='/dir/index/')
+        self.login_ok('alpha', 'alpha', check_next='/dir/index/')
         self.assertEquals({'user': 'alpha', 'id': 'alpha'}, self.get_session()['user'])
         # first session should be logged out now
         self.session = session1
@@ -177,7 +200,7 @@ class TestAuthorize(DBAuthBase):
         r = self.session.post(server.base_url + url)
         self.assertEqual(r.url, server.base_url + url)
         self.assertEqual(r.status_code, UNAUTHORIZED)
-        self.ok(user, user, check_next='/dir/index/')
+        self.login_ok(user, user, check_next='/dir/index/')
 
     def test_auth_filehandler(self):
         self.initialize('/auth/filehandler')
@@ -207,17 +230,17 @@ class TestAuthorize(DBAuthBase):
     def test_auth_membership(self):
         self.initialize('/auth/membership')
         self.check('/auth/membership', path='dir/alpha.txt', session=self.session)
-        self.ok('beta', 'beta', check_next='/dir/index/')
+        self.login_ok('beta', 'beta', check_next='/dir/index/')
         self.check('/auth/membership', path='dir/alpha.txt', session=self.session)
-        self.ok('gamma', 'gamma', check_next='/dir/index/')
+        self.login_ok('gamma', 'gamma', check_next='/dir/index/')
         self.check('/auth/membership', code=FORBIDDEN, session=self.session)
 
     def test_auth_condition(self):
         self.initialize('/auth/condition', user='beta')
         self.check('/auth/condition', path='dir/alpha.txt', session=self.session)
-        self.ok('delta', 'delta', check_next='/dir/index/')
+        self.login_ok('delta', 'delta', check_next='/dir/index/')
         self.check('/auth/condition', path='dir/alpha.txt', session=self.session)
-        self.ok('alpha', 'alpha', check_next='/dir/index/')
+        self.login_ok('alpha', 'alpha', check_next='/dir/index/')
         self.check('/auth/condition', code=FORBIDDEN, session=self.session)
 
 
