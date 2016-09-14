@@ -170,7 +170,7 @@ class DataHandler(BaseHandler, DataMixin):
             cls.posttransform.append(
                 build_transform(
                     posttransform, vars=AttrDict(content=None),
-                    filename='url>%s' % cls.name))
+                    filename='url:%s' % cls.name))
 
     def initialize(self, **kwargs):
         super(DataHandler, self).initialize(**kwargs)

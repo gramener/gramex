@@ -65,7 +65,7 @@ class AuthHandler(BaseHandler):
             for conf in action:
                 cls.actions.append(build_transform(
                     conf, vars=AttrDict(handler=None),
-                    filename='url>%s>%s' % (cls.name, conf.function)))
+                    filename='url:%s:%s' % (cls.name, conf.function)))
 
     def log_user_event(self, event, **kwargs):
         self.logger.info(csv_encode(
@@ -352,7 +352,7 @@ class DBAuth(SimpleAuth):
         if 'function' in password:
             cls.encrypt.append(build_transform(
                 password, vars=AttrDict(content=None),
-                filename='url>%s>encrypt' % (cls.name)))
+                filename='url:%s:encrypt' % (cls.name)))
 
     @classmethod
     def bind_to_db(cls):
