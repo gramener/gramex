@@ -109,8 +109,9 @@ class UploadHandler(BaseHandler):
 
         cls.transform = []
         if 'function' in transform:
-            cls.transform.append(build_transform(transform, vars=AttrDict(content=None),
-                                                 filename='url>%s' % cls.name))
+            cls.transform.append(build_transform(
+                    transform, vars=AttrDict((('content', None), ('handler', None))),
+                    filename='url:%s' % cls.name))
 
     @tornado.gen.coroutine
     def fileinfo(self, *args, **kwargs):
@@ -131,7 +132,7 @@ class UploadHandler(BaseHandler):
 
     def transforms(self, content):
         for transform in self.transform:
-            for value in transform(content):
+            for value in transform(content, self):
                 if isinstance(value, dict):
                     content = value
                 elif value is not None:
