@@ -8,6 +8,7 @@ import requests
 from gramex import conf
 from gramex.http import OK
 from gramex.install import _ensure_remove
+from gramex.handlers.jsonhandler import store
 from . import server, tempfiles, TestGramex
 
 
@@ -17,6 +18,18 @@ def dump(data):
 
 class TestJSONHandler(TestGramex):
     'Test FileHandler'
+
+    @classmethod
+    def setUpClass(cls):
+        cls.folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), '.jsonpath')
+        cls.jsonfile = os.path.join(cls.folder, 'jsonhandler.json')
+        if os.path.exists(cls.folder):
+            shutil.rmtree(cls.folder, onerror=_ensure_remove)
+
+    @classmethod
+    def tearDownClass(cls):
+        if os.path.exists(cls.folder):
+            shutil.rmtree(cls.folder, onerror=_ensure_remove)
 
     def json(self, method, url, compare='nocompare', code=OK, **kwargs):
         if 'data' in kwargs and isinstance(kwargs['data'], dict):
@@ -98,17 +111,12 @@ class TestJSONHandler(TestGramex):
         self.json('get', '/json/write/', temp)
         self.json('delete', '/json/write/', None)
 
+    def match_jsonfile(self, compare):
+        self.json('get', '/json/path/', compare)
+        with io.open(self.jsonfile, encoding='utf-8') as handle:
+            self.assertEqual(json.loads(handle.read()), compare)
+
     def test_path(self):
-        folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), '.jsonpath')
-        jsonfile = os.path.join(folder, 'jsonhandler.json')
-        if os.path.exists(folder):
-            shutil.rmtree(folder, onerror=_ensure_remove)
-
-        def match_jsonfile(compare):
-            self.json('get', '/json/path/', compare)
-            with io.open(jsonfile, encoding='utf-8') as handle:
-                self.assertEqual(json.loads(handle.read()), compare)
-
         self.json('get', '/json/path/', None)
         # At this point, jsonfile ought to be created, but the server thread may
         # not be done. So we'll test it later.
@@ -119,35 +127,41 @@ class TestJSONHandler(TestGramex):
 
         # test put
         self.json('put', '/json/path/', data, data=data)
-        match_jsonfile(data)
+        self.match_jsonfile(data)
 
         # By this time, jsonfile definitely ought to be created -- since the
         # server thread has served the next request.
-        self.assertTrue(os.path.exists(jsonfile))
-        tempfiles.jsonfile = jsonfile
+        self.assertTrue(os.path.exists(self.jsonfile))
+        tempfiles.jsonfile = self.jsonfile
 
         # test put at a non-existent deep node
         self.json('put', u'/json/path/%s/1' % key, data, data=data)
-        match_jsonfile({key: {'1': data}})
+        self.match_jsonfile({key: {'1': data}})
 
         # test delete
         self.json('delete', '/json/path/', None)
-        match_jsonfile(None)
+        self.match_jsonfile(None)
 
         # test patch
         temp = {key: val}
         self.json('put', '/json/path/', temp, data=temp)
         self.json('patch', '/json/path/', temp, data=temp)
-        match_jsonfile(temp)
+        self.match_jsonfile(temp)
         self.json('patch', '/json/path/', {key: val2}, data={key: val2})
         temp.update({key: val2})
-        match_jsonfile(temp)
+        self.match_jsonfile(temp)
         self.json('patch', '/json/path/', {key2: val}, data={key2: val})
         temp.update({key2: val})
-        match_jsonfile(temp)
+        self.match_jsonfile(temp)
+
+        # Test store contents
+        self.assertEqual(store['json/get'],
+                         conf.url['json/get'].kwargs.data)
+        # Ensure that the JSON file in the path is stored in jsonhander.store
+        path = conf.url['json/path'].kwargs.path
+        with io.open(path, 'r') as handle:      # noqa
+            data = json.load(handle)
+        self.assertEqual(store[path], data)
 
         # cleanup
         self.json('delete', '/json/path/', None)
-
-        if os.path.exists(folder):
-            shutil.rmtree(folder, onerror=_ensure_remove)

@@ -7,8 +7,13 @@ import tornado.escape
 from .basehandler import BaseHandler
 from gramex.config import app_log
 
-_jsonstores = {}        # Contents of the JSON data stores
+# JSONHandler data is stored in store. Each handler is specified with a path.
+# store[path] holds the full data for that handler. It is saved in path at the
+# end of each request (if the data has changed.) The time data was last synced is
+# stored in _loaded[path].
+store = {}              # Contents of the JSON data stores
 _loaded = {}            # Time when persistent stores were last loaded
+_jsonstores = store     # Internal legacy alias for store
 
 
 class JSONHandler(BaseHandler):
