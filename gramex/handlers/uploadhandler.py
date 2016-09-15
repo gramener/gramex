@@ -110,8 +110,8 @@ class UploadHandler(BaseHandler):
         cls.transform = []
         if 'function' in transform:
             cls.transform.append(build_transform(
-                    transform, vars=AttrDict((('content', None), ('handler', None))),
-                    filename='url:%s' % cls.name))
+                transform, vars=AttrDict((('content', None), ('handler', None))),
+                filename='url:%s' % cls.name))
 
     @tornado.gen.coroutine
     def fileinfo(self, *args, **kwargs):
