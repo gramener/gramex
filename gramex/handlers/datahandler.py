@@ -67,7 +67,6 @@ class DataMixin(object):
         formats = self.getq('format', [])
         if 'count' in self.result:
             self.set_header('X-Count', self.result['count'])
-        self._write_format_headers()
         if 'csv' in formats:
             self.write(self.result['data'].to_csv(index=False, encoding='utf-8'))
         elif 'html' in formats:
@@ -420,6 +419,9 @@ class DataHandler(BaseHandler, DataMixin):
             result['count'] = count.iloc[0, 0]
         return result
 
+    def prepare(self):
+        self._write_format_headers()
+
     @tornado.gen.coroutine
     def get(self):
         kwargs = dict(
@@ -522,7 +524,6 @@ class QueryHandler(BaseHandler, DataMixin):
     def renderdatas(self):
         '''Render multiple datasets'''
         # Set content and type based on format
-        self._write_format_headers()
         formats = self.getq('format', [])
         if 'csv' in formats:
             self.write('\n'.join(
@@ -547,6 +548,9 @@ class QueryHandler(BaseHandler, DataMixin):
                 self.write(json.dumps(key) + ':')
                 self.write(result['data'].to_json(orient='records'))
             self.write('}')
+
+    def prepare(self):
+        self._write_format_headers()
 
     @tornado.gen.coroutine
     def get(self):
