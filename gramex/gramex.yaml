@@ -34,6 +34,7 @@ handlers:
         ignore:
             - gramex.yaml               # Always ignore gramex.yaml in Filehandlers
             - ".*"                      # Hide dotfiles
+            - "*.py*"                   # Hide Python scripts
 
 # The `log:` section defines the log handlers. It uses the same structure as the
 # Python logging schema.
