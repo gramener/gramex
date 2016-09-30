@@ -3,7 +3,7 @@ import random
 from unittest import TestCase
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from gramex.services.emailer import message
+from gramex.services.emailer import message, recipients
 
 
 class TestEmailer(TestCase):
@@ -14,6 +14,20 @@ class TestEmailer(TestCase):
         random.seed(0)
         msg2 = msg2.as_string()
         self.assertEqual(msg1, msg2)
+
+    def test_recipients(self):
+        def msg_eq(src, result):
+            self.assertEqual(set(src), set(result))
+        msg_eq(recipients(to='a@z'), ['a@z'])
+        msg_eq(recipients(to='a@z,b@z'), ['a@z', 'b@z'])
+        msg_eq(recipients(to=['a@z', 'b@z']), ['a@z', 'b@z'])
+        msg_eq(recipients(to=['a@z,b@z', 'c@z']), ['a@z', 'b@z', 'c@z'])
+        msg_eq(recipients(to='A <a@z>'), ['A <a@z>'])
+        msg_eq(recipients(to='A <a@z>, B <b@z>'), ['A <a@z>', 'B <b@z>'])
+        msg_eq(recipients(to='a@z,b@z', Cc='c@z'), ['a@z', 'b@z', 'c@z'])
+        msg_eq(recipients(to='a@z', Cc='b@z,c@z'), ['a@z', 'b@z', 'c@z'])
+        msg_eq(recipients(To='a@z', Bcc='b@z,c@z'), ['a@z', 'b@z', 'c@z'])
+        msg_eq(recipients(TO='a@z', CC='b@z', BCC='c@z'), ['a@z', 'b@z', 'c@z'])
 
     def test_message(self):
         text = 'This is some text'

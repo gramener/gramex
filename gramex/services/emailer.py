@@ -1,9 +1,11 @@
 import smtplib
+from six import string_types
 from email import encoders
 from mimetypes import guess_type
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
+from email.utils import formataddr, getaddresses
 from gramex.config import app_log
 
 
@@ -22,8 +24,11 @@ class SMTPMailer(object):
         self.client = self.clients[type]
 
     def mail(self, **kwargs):
+        '''
+        Sends an email. It accepts any email parameter in RFC 2822
+        '''
         sender = kwargs.get('sender', self.email)
-        to = _merge(kwargs.get('to', self.email))
+        to = recipients(**kwargs)
         msg = message(**kwargs)
         default_port = 587
         server = smtplib.SMTP(self.client['host'], self.client.get('port', default_port))
@@ -32,6 +37,24 @@ class SMTPMailer(object):
         server.sendmail(sender, to, msg.as_string())
         server.quit()
         app_log.info('Email sent via %s to %s', self.email, to)
+
+
+def recipients(**kwargs):
+    '''
+    Returns a list of RFC-822 formatted email addresses given:
+
+    - a string with comma-separated emails
+    - a list of strings with emails
+    - a list of strings with comma-separated emails
+    '''
+    recipients = []
+    for key in kwargs:
+        if key.lower() in {'to', 'cc', 'bcc'}:
+            to = kwargs[key]
+            if isinstance(to, string_types):
+                to = [to]
+            recipients += [formataddr(pair) for pair in getaddresses(to)]
+    return recipients
 
 
 def message(body=None, html=None, attachments=[], **kwargs):
