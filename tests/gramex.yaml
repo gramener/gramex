@@ -1006,9 +1006,8 @@ url:
     handler: DataHandler
     kwargs:
         auth: true
-        driver: sqlalchemy
-        url: sqlite:///actors.db        # This dataset doesn't actually exist
-        table: actors
+        driver: blaze
+        url: actors.csv
         xsrf_cookies: false
   auth/jsonhandler:
     pattern: /auth/jsonhandler/(.*)

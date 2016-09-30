@@ -420,6 +420,7 @@ class DataHandler(BaseHandler, DataMixin):
         return result
 
     def prepare(self):
+        super(DataHandler, self).prepare()
         self._write_format_headers()
 
     @tornado.gen.coroutine
@@ -550,6 +551,7 @@ class QueryHandler(BaseHandler, DataMixin):
             self.write('}')
 
     def prepare(self):
+        super(QueryHandler, self).prepare()
         self._write_format_headers()
 
     @tornado.gen.coroutine
