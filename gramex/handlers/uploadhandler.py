@@ -5,6 +5,7 @@ import gramex
 import mimetypes
 import tornado.gen
 from orderedattrdict import AttrDict
+from tornado.escape import recursive_unicode
 from gramex.config import app_log
 from gramex.transforms import build_transform
 from .basehandler import BaseHandler, HDF5Store
@@ -22,7 +23,7 @@ class FileUpload(object):
         if not os.path.exists(self.path):
             os.makedirs(self.path)
         if self.path not in self.stores:
-            self.stores[self.path] = HDF5Store(os.path.join(self.path, '.meta.h5'))
+            self.stores[self.path] = HDF5Store(os.path.join(self.path, '.meta.h5'), flush=5)
         self.store = self.stores[self.path]
         self.keys = keys
         if 'file' not in keys:
@@ -52,7 +53,7 @@ class FileUpload(object):
                     'user': handler.get_current_user(),
                     'size': stat.st_size,
                     'mime': mime or 'application/octet-stream',
-                    'data': handler.request.arguments
+                    'data': recursive_unicode(handler.request.arguments),
                 })
                 filemeta = handler.transforms(filemeta)
                 self.store.dump(filename, filemeta)

@@ -12,7 +12,6 @@ See gramex.handlers.BaseHandler for examples on how to use these objects.
 '''
 from __future__ import unicode_literals
 
-import json
 from six.moves import cPickle
 from diskcache import Cache as DiskCache
 from .ttlcache import TTLCache as MemoryCache

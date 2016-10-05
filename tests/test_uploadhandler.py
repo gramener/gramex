@@ -12,7 +12,9 @@ from . import server, TestGramex
 
 
 class TestUploadHandler(TestGramex):
-    'Test UploadHandler'
+    @classmethod
+    def setUpClass(cls):
+        cls.path = conf.url['upload'].kwargs.path
 
     def upload(self, url, files, keys=[], data={}, code=OK):
         r = requests.post(server.base_url + url, files=files, data=data)
@@ -29,25 +31,27 @@ class TestUploadHandler(TestGramex):
         return r
 
     def test_upload(self):
-        self.path = conf.url['upload'].kwargs.path
         url = conf.url['upload'].pattern
 
         self.assertTrue(os.path.isfile(os.path.join(self.path, '.meta.h5')))
         self.assertEqual(requests.get(server.base_url + url).status_code, METHOD_NOT_ALLOWED)
+        data = {'x': '1', 'y': 1}
         tests = [
             {'files': {}},
-            {'files': {'text': open('userdata.csv')}, 'keys': ['userdata.csv']},
-            {'files': {'nopk': open('actors.csv')}},
-            {'files': {'image': open('userdata.csv')}, 'keys': ['userdata.1.csv']},
+            {'files': {'text': open('userdata.csv')}, 'keys': ['userdata.csv'], 'data': data},
+            {'files': {'nopk': open('actors.csv')}, 'data': data},
+            {'files': {'image': open('userdata.csv')}, 'keys': ['userdata.1.csv'], 'data': data},
             {'files': {'image': open('userdata.csv'), 'text': open('actors.csv')},
              'keys': ['userdata.2.csv', 'actors.csv']},
             {'files': {'unknown': ('file.csv', 'some,λ\nanother,λ\n')}, 'keys': ['file.csv']},
             {'files': {'unknown': ('file', 'noextensionfile')}, 'keys': ['file']},
-            {'files': {}, 'data': {'rm': 'file'}}]
+            {'files': {}, 'data': {'rm': 'file'}, 'data': data}]
         # requests fails for unicode filename :: RFC 7578 and nofilenames
         for test in tests:
             self.upload(url, **test)
 
-        FileUpload(self.path).store.close()
-        if os.path.exists(self.path):
-            shutil.rmtree(self.path, onerror=_ensure_remove)
+    @classmethod
+    def tearDownClass(cls):
+        FileUpload(cls.path).store.close()
+        if os.path.exists(cls.path):
+            shutil.rmtree(cls.path, onerror=_ensure_remove)

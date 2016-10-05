@@ -242,7 +242,7 @@ class FileHandler(BaseHandler):
             mime_type = mimetypes.types_map.get(self.file.suffix)
             if mime_type is not None:
                 if mime_type.startswith('text/'):
-                     mime_type += '; charset=UTF-8'
+                    mime_type += '; charset=UTF-8'
                 self.set_header('Content-Type', mime_type)
 
             for header_name, header_value in self.headers.items():
