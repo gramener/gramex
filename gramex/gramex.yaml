@@ -14,6 +14,8 @@ mime:
     .json:      application/json
     .svg:       image/svg+xml
     .py:        text/plain
+    .h5:        application/x-hdf5
+    .hdf5:      application/x-hdf5
 
 # Configure the thread pool that's shared across Gramex to run parallel threads.
 threadpool:

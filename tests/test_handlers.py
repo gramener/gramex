@@ -1,6 +1,8 @@
+import os
 import requests
 from . import server
 from . import TestGramex
+from gramex.http import OK, NOT_FOUND, INTERNAL_SERVER_ERROR, FORBIDDEN
 
 
 class TestURLPriority(TestGramex):
@@ -28,7 +30,7 @@ class TestAttributes(TestGramex):
     '''Ensure that BaseHandler subclasses have relevant attributes'''
 
     def test_attributes(self):
-        self.check('/func/attributes', code=200)
+        self.check('/func/attributes', code=OK)
 
 
 class TestXSRF(TestGramex):
@@ -48,25 +50,55 @@ class TestXSRF(TestGramex):
         r = session.get(server.base_url + '/xsrf', timeout=10)
         self.assertFalse('Set-Cookie' in r.headers)
 
+    def test_xsrf_false(self):
+        '''When xsrf_cookies is set to False, POST works'''
+        r = requests.post(server.base_url + '/xsrf/no')
+        self.assertEqual(OK, r.status_code)
+
+    def test_xsrf_true(self):
+        '''When xsrf_cookies is set to True, POST fails without _xsrf'''
+        r = requests.post(server.base_url + '/xsrf/yes')
+        self.assertEqual(r.status_code, FORBIDDEN)
+
+
 class TestErrorHandling(TestGramex):
     '''Test BaseHandler error: setting'''
     def test_error(self):
-        for code, url in ((404, '/error/404-template-na'), (500, '/error/500-function')):
+        for code, url in ((NOT_FOUND, '/error/404-template-na'),
+                          (INTERNAL_SERVER_ERROR, '/error/500-function')):
             r = self.check(url, code=code)
             self.assertEqual(r.headers['Content-Type'], 'application/json')
             result = r.json()
             self.assertEqual(result['status_code'], code)
             self.assertTrue(result['handler.request.uri'].endswith(url))
 
-class TestXSRF(TestGramex):
-    '''Test xsrf_cookies: kwargs'''
 
-    def test_xsrf_false(self):
-        '''When xsrf_cookies is set to False, POST works'''
-        r = requests.post(server.base_url + '/xsrf/no')
-        self.assertEqual(200, r.status_code)
+class TestMime(TestGramex):
+    def setUp(self):
+        self.mime_map = {
+            '.yml': 'text/yaml; charset=UTF-8',
+            '.yaml': 'text/yaml; charset=UTF-8',
+            '.md': 'text/markdown; charset=UTF-8',
+            '.markdown': 'text/markdown; charset=UTF-8',
+            '.json': 'application/json',
+            '.svg': 'image/svg+xml',
+            # '.py': 'text/plain; charset=UTF-8',       # .py files are forbidden by default
+            '.h5': 'application/x-hdf5',
+            '.hdf5': 'application/x-hdf5',
+        }
+        self.files = set()
+        folder = os.path.dirname(os.path.abspath(__file__))
+        for ext, mime in self.mime_map.items():
+            path = os.path.join(folder, 'dir', 'gen' + ext)
+            self.files.add(path)
+            with open(path, 'wb') as out:
+                pass
 
-    def test_xsrf_true(self):
-        '''When xsrf_cookies is set to True, POST fails without _xsrf'''
-        r = requests.post(server.base_url + '/xsrf/yes')
-        self.assertEqual(r.status_code, 403)
+    def test_mime(self):
+        for ext, mime in self.mime_map.items():
+            r = self.check('/dir/gen' + ext)
+            self.assertEqual(r.headers['Content-Type'], mime)
+
+    def tearDown(self):
+        for file in self.files:
+            os.unlink(file)
