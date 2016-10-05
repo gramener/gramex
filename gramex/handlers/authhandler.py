@@ -357,9 +357,9 @@ class DBAuth(SimpleAuth):
     @classmethod
     def bind_to_db(cls):
         if not hasattr(cls, 'table'):
-            from sqlalchemy import MetaData
+            from sqlalchemy import MetaData, Table
             meta = MetaData(bind=cls.engine)
-            cls.table = sa.Table(cls.tablename, meta, autoload=True, autoload_with=cls.engine)
+            cls.table = Table(cls.tablename, meta, autoload=True, autoload_with=cls.engine)
 
     def get(self):
         self.save_redirect_page()
@@ -495,7 +495,7 @@ class DBAuth(SimpleAuth):
     @classmethod
     def setup_recover_db(cls):
         '''Set up the database that stores password recovery tokens'''
-        from sqlalchemy import create_engine, MetaData
+        from sqlalchemy import create_engine, MetaData, Table
         # create database at GRAMEXDATA locastion
         path = os.path.join(gramex.variables.GRAMEXDATA, 'auth.recover.db')
         url = 'sqlite:///{}'.format(path)
@@ -504,5 +504,5 @@ class DBAuth(SimpleAuth):
         conn.execute('CREATE TABLE IF NOT EXISTS users '
                      '(user TEXT, email TEXT, token TEXT, expire REAL)')
         meta = MetaData(bind=engine)
-        user_table = sa.Table('users', meta, autoload=True, autoload_with=engine)
+        user_table = Table('users', meta, autoload=True, autoload_with=engine)
         return {'engine': engine, 'table': user_table}
