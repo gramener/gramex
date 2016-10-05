@@ -3,13 +3,14 @@ from __future__ import unicode_literals
 
 import os
 import pathlib
+import requests
 import unittest
 import gramex.config
 import gramex.services
 from nose.tools import eq_
 from orderedattrdict import AttrDict
 from . import TestGramex, tempfiles
-from gramex.http import OK, NOT_FOUND
+from gramex.http import OK, NOT_FOUND, NOT_MODIFIED
 from gramex.services.urlcache import ignore_headers, MemoryCache, DiskCache
 
 info = AttrDict()
@@ -78,7 +79,8 @@ class TestCacheKey(unittest.TestCase):
             return AttrDict(request=AttrDict(uri='uri', cookies={key: AttrDict(value=value)}))
 
         # Check if cookies.* works
-        cache_key = gramex.services._get_cache_key({'key': ['request.uri', 'cookies.sid']}, 'cookie')
+        cache_key = gramex.services._get_cache_key(
+            {'key': ['request.uri', 'cookies.sid']}, 'cookie')
         eq_(cache_key(cookie('x', 1)), ('uri', '~'))
         eq_(cache_key(cookie('sid', '')), ('uri', ''))
         eq_(cache_key(cookie('sid', 'λ–►')), ('uri', 'λ–►'))
@@ -88,7 +90,8 @@ class TestCacheKey(unittest.TestCase):
             return AttrDict(request=AttrDict(uri='uri', headers={key: value}))
 
         # Check if headers.* works
-        cache_key = gramex.services._get_cache_key({'key': ['request.uri', 'headers.key']}, 'headers')
+        cache_key = gramex.services._get_cache_key(
+            {'key': ['request.uri', 'headers.key']}, 'headers')
         eq_(cache_key(header('x', 1)), ('uri', '~'))
         eq_(cache_key(header('key', '')), ('uri', ''))
         eq_(cache_key(header('key', 'λ–►')), ('uri', 'λ–►'))
@@ -156,55 +159,78 @@ class TestCacheFunctionHandler(TestGramex):
         r2 = self.get('/cache/invalid-keys-ignored-changed-url?x=1')
         self.ne(r1, r2)
 
+    def test_304_cache(self):
+        # Make a request and note the number of times the request was called
+        session = requests.Session()
+        r1 = self.get('/cache/increment', session=session)
+        incr = gramex.services.info.increment
+        # Call a NEW URL with the Etag. It should return a 304 after recomputing.
+        r2 = self.get('/cache/increment2', headers={'If-None-Match': r1.headers['Etag']})
+        self.assertEqual(r2.status_code, NOT_MODIFIED)
+        incr += 1
+        self.assertEqual(incr, gramex.services.info.increment)
+        # Call the same URL. The result should've been cached by now. Variable shouldn't increment.
+        r3 = self.get('/cache/increment2', headers={'If-None-Match': r1.headers['Etag']})
+        self.assertEqual(r3.status_code, NOT_MODIFIED)
+        self.assertEqual(incr, gramex.services.info.increment)
+
 
 class TestCacheFileHandler(TestGramex):
-    try:
-        filename = u'.cache-file\u2013unicode.txt'
-        pathlib.Path(filename)
-    except UnicodeError:
-        filename = '.cache-file.txt'
-    content = u'\u2013'
+    @classmethod
+    def setUpClass(cls):
+        try:
+            cls.filename = '.cache-file\u2013unicode.txt'
+            pathlib.Path(cls.filename)
+        except UnicodeError:
+            cls.filename = '.cache-file.txt'
+        cls.content = '\u2013'
+        cls.cache_file = os.path.join(info.folder, 'dir', cls.filename)
 
     def test_cache(self):
-        cache_file = os.path.join(info.folder, 'dir', self.filename)
 
         def check_value(content):
-            r = self.get(u'/cache/filehandler/%s' % self.filename)
+            r = self.get('/cache/filehandler/%s' % self.filename)
             self.assertEqual(r.status_code, OK)
             self.assertEqual(r.content, content)
 
         # # Delete the file. The initial response should be a 404
-        if os.path.exists(cache_file):
-            os.unlink(cache_file)
-        r = self.get(u'/cache/filehandler/%s' % self.filename)
+        if os.path.exists(self.cache_file):
+            os.unlink(self.cache_file)
+        r = self.get('/cache/filehandler/%s' % self.filename)
         self.assertEqual(r.status_code, NOT_FOUND)
 
         # Create the file. The response should be what we write
-        with open(cache_file, 'wb') as handle:
+        with open(self.cache_file, 'wb') as handle:
             handle.write(self.content.encode('utf-8'))
         tempfiles.cache_file = self.filename
         check_value(self.content.encode('utf-8'))
 
         # Modify the file. The response should be what it was originally.
-        with open(cache_file, 'wb') as handle:
+        with open(self.cache_file, 'wb') as handle:
             handle.write((self.content + self.content).encode('utf-8'))
         check_value(self.content.encode('utf-8'))
 
         # Delete the file. The response should be what it was.
-        if os.path.exists(cache_file):
-            os.unlink(cache_file)
+        if os.path.exists(self.cache_file):
+            os.unlink(self.cache_file)
         check_value(self.content.encode('utf-8'))
 
     def test_error_cache(self):
-        cache_file = os.path.join(info.folder, 'dir', self.filename)
-
-        if os.path.exists(cache_file):
-            os.unlink(cache_file)
-        r = self.get(u'/cache/filehandler-error/%s' % self.filename)
+        if os.path.exists(self.cache_file):
+            os.unlink(self.cache_file)
+        r = self.get('/cache/filehandler-error/%s' % self.filename)
         self.assertEqual(r.status_code, NOT_FOUND)
 
         # Create the file. The response should be cached as 404
-        with open(cache_file, 'wb') as handle:
+        with open(self.cache_file, 'wb') as handle:
             handle.write(self.content.encode('utf-8'))
-        r = self.get(u'/cache/filehandler-error/%s' % self.filename)
+        r = self.get('/cache/filehandler-error/%s' % self.filename)
         self.assertEqual(r.status_code, NOT_FOUND)
+
+    def test_binary_cache(self):
+        self.check('/cache/filehandler/binary.bin')
+
+    @classmethod
+    def tearDownClass(cls):
+        if os.path.exists(cls.cache_file):
+            os.unlink(cls.cache_file)

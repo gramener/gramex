@@ -159,8 +159,7 @@ runs out of space.
 
 ## Cache status
 
-By default, only requests that return a HTTP 200 status code are cached. You can
-cache other status codes via the `status:` configuration.
+By default, only requests that return a HTTP 200 or HTTP 304 status code are cached. You can cache other status codes via the `status:` configuration.
 
     :::yaml
     url:

@@ -17,6 +17,7 @@ from six.moves import cPickle
 from diskcache import Cache as DiskCache
 from .ttlcache import TTLCache as MemoryCache
 from gramex.config import app_log
+from gramex.http import OK, NOT_MODIFIED
 
 # HTTP Headers that should not be cached
 ignore_headers = {
@@ -40,13 +41,6 @@ def get_cachefile(store):
         app_log.warn('cache: ignoring unknown store %s', store)
         return CacheFile
 
-# In Python 3, json does not support byte encoding. Use pickle instead. (It's faster in Pythom 3)
-try:
-    json.dumps(b'')
-    dumps, loads = json.dumps, json.loads
-except TypeError:
-    dumps, loads = cPickle.dumps, cPickle.loads
-
 
 class CacheFile(object):
 
@@ -67,7 +61,7 @@ class CacheFile(object):
 class MemoryCacheFile(CacheFile):
     def get(self):
         result = self.store.get(self.key)
-        return None if result is None else loads(result)
+        return None if result is None else cPickle.loads(result)
 
     def wrap(self, handler):
         self._write_buffer = []
@@ -79,18 +73,19 @@ class MemoryCacheFile(CacheFile):
             self._write_buffer.append(handler._write_buffer[-1])
 
         def on_finish():
-            # Cache contents only for HTTP 200 responses
-            if handler.get_status() in self.statuses:
+            # Cache contents only for allowed HTTP responses
+            status = handler.get_status()
+            if status in self.statuses:
                 self.store.set(
                     key=self.key,
-                    value=dumps({
-                        'status': handler._status_code,
+                    value=cPickle.dumps({
+                        'status': OK if status == NOT_MODIFIED else status,
                         'headers': [
                             [name, value] for name, value in handler._headers.get_all()
                             if name not in ignore_headers
                         ],
                         'body': b''.join(self._write_buffer)
-                    }),
+                    }, cPickle.HIGHEST_PROTOCOL),
                     expire=self.expire,
                 )
             self._on_finish()
@@ -100,5 +95,5 @@ class MemoryCacheFile(CacheFile):
 
 
 class DiskCacheFile(MemoryCacheFile):
-    'Identical interface to MemoryCacheFile'
+    '''Identical interface to MemoryCacheFile'''
     pass

@@ -170,12 +170,25 @@ def zero_division_error(handler):
 
 def handle_error(status_code, kwargs, handler):
     return json.dumps({
-      'status_code': status_code,
-      'kwargs': repr(kwargs),
-      'handler.request.uri': handler.request.uri,
+        'status_code': status_code,
+        'kwargs': repr(kwargs),
+        'handler.request.uri': handler.request.uri,
     })
 
 
 def set_session(handler, **kwargs):
     for key, value in kwargs.items():
         handler.session[key] = value
+
+
+def increment(handler):
+    '''
+    This function is used to check the cache. Suppose we fetch a page, then
+    Gramex is restarted, and we fetch it again. Gramex recomputes the results,
+    which don't change. So the ETag will match the browser. Then Gramex returns a
+    304.
+
+    This 304 must still be cached as a 200, with the correct result.
+    '''
+    info.increment = 1 + info.get('increment', 0)
+    return 'Constant result'

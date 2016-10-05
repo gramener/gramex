@@ -29,7 +29,7 @@ from six import text_type
 from orderedattrdict import AttrDict
 from gramex import debug, shutdown, __version__
 from gramex.config import locate, app_log
-from gramex.http import OK
+from gramex.http import OK, NOT_MODIFIED
 from . import urlcache
 from .ttlcache import MAXTTL
 from .emailer import SMTPMailer
@@ -302,7 +302,7 @@ def _cache_generator(conf, name):
     cache_key = _get_cache_key(conf, name)
     cachefile_class = urlcache.get_cachefile(store)
     cache_expiry = conf.get('expiry', {})
-    cache_statuses = conf.get('status', [OK])
+    cache_statuses = conf.get('status', [OK, NOT_MODIFIED])
     cache_expiry_duration = cache_expiry.get('duration', MAXTTL)
 
     # This method will be added to the handler class as "cache", and called as

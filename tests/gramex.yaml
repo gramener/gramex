@@ -796,6 +796,18 @@ url:
       function: utils.httpbin
       kwargs: {rand: 99999999, mime: html}
     cache: true
+  cache/increment:
+    pattern: /cache/increment
+    handler: FunctionHandler
+    kwargs:
+      function: utils.increment
+    cache: true
+  cache/increment2:
+    pattern: /cache/increment2
+    handler: FunctionHandler
+    kwargs:
+      function: utils.increment
+    cache: true
   cache/pathkey:
     pattern: /cache/pathkey
     handler: FunctionHandler
