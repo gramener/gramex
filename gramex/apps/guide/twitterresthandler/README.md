@@ -105,7 +105,7 @@ You can use the `transform:` configuration to modify the response in any way. He
           ...
           path: search/tweets.json
           transform:
-              sentiment: 
+              sentiment:
                   function: twitterutils.add_sentiment
 
 Here's what `twitterutils.add_sentiment` looks for the last about Gramener:
@@ -131,6 +131,24 @@ This transforms the tweets to add a `sentiment:` key measuring its sentiment.
 The transform should either return a JSON-encodable object, or a string.
 
 Transforms are executed in a separate thread. This makes the application more responsive. But you need to ensure that your code is thread-safe.
+
+To append all tweets into a JSON-Line file, use a function like this:
+
+    :::python
+    def save_tweet_transform(result, handler):
+        with open('tweets.jsonl', 'a') as out:
+            for status in result['statuses']:
+              json.dump(status, out + '\n')
+        return result
+
+You can then include this in the TwitterHandler transform section as follows:
+
+    :::yaml
+        ...
+        kwargs:
+          transform:
+              sentiment:
+                  function: module.save_tweet_transform
 
 
 ## Parallel AJAX requests
