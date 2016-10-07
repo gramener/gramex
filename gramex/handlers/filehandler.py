@@ -6,12 +6,13 @@ import mimetypes
 import tornado.web
 import tornado.gen
 from pathlib import Path
+from six import string_types
 from tornado.escape import utf8
 from tornado.web import HTTPError
 from orderedattrdict import AttrDict
 from six.moves.urllib.parse import urljoin
 from .basehandler import BaseHandler
-from gramex.config import app_log
+from gramex.config import objectpath, app_log
 from gramex import conf as gramex_conf
 from gramex.http import FORBIDDEN, NOT_FOUND
 
@@ -26,10 +27,6 @@ def read_template(path):
         path = _default_index_template
     with path.open(encoding='utf-8') as handle:
         return string.Template(handle.read())
-
-
-def make_list(value):
-    return value if isinstance(value, list) else [value]
 
 
 class FileHandler(BaseHandler):
@@ -131,18 +128,35 @@ class FileHandler(BaseHandler):
             cls.root = Path(path).absolute()
         cls.default_filename = default_filename
         cls.index = index
-        cls.ignore = set(gramex_conf.get('handlers', {}).get('FileHandler', {}).get('ignore', []))
-        cls.ignore.update(make_list(ignore))
-        cls.allow = set(make_list(allow))
+        cls.ignore = cls.set(objectpath(gramex_conf, 'handlers.FileHandler.ignore', []))
+        cls.ignore.update(cls.set(ignore))
+        cls.allow = cls.set(objectpath(gramex_conf, 'handlers.FileHandler.allow', []))
+        cls.allow.update(cls.set(allow))
         cls.index_template = read_template(
             Path(index_template) if index_template is not None else _default_index_template)
-        cls.headers = headers
+        cls.headers = dict(objectpath(gramex_conf, 'handlers.FileHandler.headers', {}))
+        cls.headers.update(headers)
         # Set supported methods
         if not isinstance(methods, (tuple, list)):
             methods = [methods]
         for method in methods:
             method = method.lower()
             setattr(cls, method, cls._head if method == 'head' else cls._get)
+
+    @classmethod
+    def set(cls, value):
+        '''
+        Convert value to a set. If value is already a list, set, tuple, return as is.
+        Ensure that the values are non-empty strings.
+        '''
+        result = set(value) if isinstance(value, (list, tuple, set)) else set([value])
+        for pattern in result:
+            if not pattern:
+                app_log.warn('%s: Ignoring empty pattern "%r"', cls.name, pattern)
+            elif not isinstance(pattern, string_types):
+                app_log.warn('%s: pattern "%r" is not a string. Ignoring.', cls.name, pattern)
+            result.add(pattern)
+        return result
 
     @tornado.gen.coroutine
     def _head(self, path=None):

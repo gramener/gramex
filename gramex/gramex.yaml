@@ -37,6 +37,7 @@ handlers:
             - gramex.yaml               # Always ignore gramex.yaml in Filehandlers
             - ".*"                      # Hide dotfiles
             - "*.py*"                   # Hide Python scripts
+        allow: '.allow'                 # Allow special dotfile
 
 # The `log:` section defines the log handlers. It uses the same structure as the
 # Python logging schema.
@@ -154,6 +155,9 @@ app:
 
         # Cookie parameters
         xsrf_cookies: True              # Reject POST/PUT/DELETE unless _xsrf header / form input is present
+        xsrf_cookie_kwargs:
+            httponly: true              # Don't allow JavaScript access to cookies
+            # secure: false               # Allow cookies only in HTTPS
         cookie_secret: secret-key       # Encrypt cookies with this secret key
         key_version: 2                  # Cookie encryption version. 2 is the latest
 

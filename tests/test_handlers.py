@@ -102,3 +102,8 @@ class TestMime(TestGramex):
     def tearDown(self):
         for file in self.files:
             os.unlink(file)
+
+
+class TestBaseHandler(TestGramex):
+    def test_headers(self):
+        self.check('/', headers={'X-BaseHandler': 'base'})

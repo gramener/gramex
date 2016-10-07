@@ -193,6 +193,8 @@ class TestFileHandler(TestGramex):
         self.check('/dir/ignore-list/ignore-list.txt', code=403)
         self.check('/dir/allow-file/gramex.yaml', code=200)
         self.check('/dir/allow-ignore/ignore-file.txt', code=200)
+        self.check('/server.py', code=403)               # Ignore .py files by default
+        self.check('/dir/index/.allow', code=200)        # But .allow is allowed
 
     def test_methods(self):
         config = {
@@ -211,3 +213,10 @@ class TestFileHandler(TestGramex):
                     r = getattr(requests, method)(server.base_url + url)
                     self.assertEqual(r.status_code, code,
                                      '%s %s should return %d' % (method, url, code))
+
+    def test_headers(self):
+        r = self.check('/header/', headers={
+            'X-FileHandler-Header': 'updated',
+            'X-FileHandler': 'updated',
+            'X-FileHandler-Base': 'base',
+        })

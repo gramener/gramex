@@ -325,6 +325,10 @@ class BaseHandler(RequestHandler):
 
     def set_default_headers(self):
         self.set_header('Server', server_header)
+        # Set BaseHandler headers.
+        # Don't set headers for the specific class -- they are overrides, not default headers.
+        for key, val in objectpath(conf, 'handlers.BaseHandler.headers', {}).items():
+            self.set_header(key, val)
 
     def save_redirect_page(self):
         '''

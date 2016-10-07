@@ -4,41 +4,13 @@ Development and deployment are usually on different machines with different
 configurations, file paths, database locations, etc. All of these can be
 configured in `gramex.yaml` using pre-defined variables.
 
-### Deployment variables
+## Security
 
-[Predefined variables](../config/#predefined-variables) are useful in deployment. For example, say you have the following directory structure:
-
-    /app              # Gramex is run from here. It is the current directory
-      /component      # Inside a sub-directory, we have a component
-        /gramex.yaml  # ... along with its configuration
-        /index.html   # ... and a home page
-
-Inside `/app/component/gramex.yaml`, here's what the variables mean:
+Some common security options are pre-configured in `$GRAMEXPATH/deploy.yaml`. To enable these options, add this line to your `gramex.yaml`:
 
     :::yaml
-    url:
-        relative-url:
-            # This pattern: translates to /app/component/index.html
-            # Note: leading slash (/) before $YAMLURL is REQUIRED
-            pattern: /$YAMLURL/index.html
-            handler: FileHandler
-            kwargs:
-                path: $YAMLPATH/        # This translates to /app/component/
-
-If you want to refer to a file in the Gramex source directory, use
-`$GRAMEXPATH`. For example, this maps [config](config) to Gramex's root
-`gramex.yaml`.
-
-    :::yaml
-    url:
-        gramex-config-file:
-            pattern: /$YAMLURL/config           # Map config under current URL
-            handler: FileHandler
-            kwargs:
-                path: $GRAMEXPATH/gramex.yaml   # to the core Gramex config file
-
-Typically, applications store data in `$GRAMEXDATA/data/<appname>/`. Create and use this directory for your data storage needs.
-
+    import:
+      deploy: $GRAMEXPATH/deploy.yaml
 
 ## Relative URL mapping
 
@@ -118,6 +90,42 @@ To test this, open the following URLs:
 
 In every case, the correct absolute path for `/style.css` is used,
 irrespective of which path the app is deployed at.
+
+
+### Deployment variables
+
+[Predefined variables](../config/#predefined-variables) are useful in deployment. For example, say you have the following directory structure:
+
+    /app              # Gramex is run from here. It is the current directory
+      /component      # Inside a sub-directory, we have a component
+        /gramex.yaml  # ... along with its configuration
+        /index.html   # ... and a home page
+
+Inside `/app/component/gramex.yaml`, here's what the variables mean:
+
+    :::yaml
+    url:
+        relative-url:
+            # This pattern: translates to /app/component/index.html
+            # Note: leading slash (/) before $YAMLURL is REQUIRED
+            pattern: /$YAMLURL/index.html
+            handler: FileHandler
+            kwargs:
+                path: $YAMLPATH/        # This translates to /app/component/
+
+If you want to refer to a file in the Gramex source directory, use
+`$GRAMEXPATH`. For example, this maps [config](config) to Gramex's root
+`gramex.yaml`.
+
+    :::yaml
+    url:
+        gramex-config-file:
+            pattern: /$YAMLURL/config           # Map config under current URL
+            handler: FileHandler
+            kwargs:
+                path: $GRAMEXPATH/gramex.yaml   # to the core Gramex config file
+
+Typically, applications store data in `$GRAMEXDATA/data/<appname>/`. Create and use this directory for your data storage needs.
 
 
 ## HTTPS Server

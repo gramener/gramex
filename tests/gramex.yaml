@@ -2,6 +2,15 @@ variables:
   MYSQL_SERVER: {default: localhost}
   POSTGRES_SERVER: {default: localhost}
 
+handlers:
+  BaseHandler:
+    headers:
+      X-BaseHandler: base
+  FileHandler:
+    headers:
+      X-FileHandler: base
+      X-FileHandler-Base: base
+
 app:
   listen:
     port: 9999              # Avoid clash with default Gramex port running tests
@@ -303,6 +312,14 @@ url:
           encoding: utf-8
           function: six.text_type.title
           args: =content
+  dir/headers:
+    pattern: /header/
+    handler: FileHandler
+    kwargs:
+      path: dir/index.html
+      headers:
+        X-FileHandler-Header: updated
+        X-FileHandler: updated
 
   dir/data:
     pattern: /dir/data                # Check that a pattern without brackets works

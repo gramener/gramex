@@ -1,0 +1,41 @@
+# A more secure set of options for deployment
+
+handlers:
+    BaseHandler:
+        headers:
+            X-Frame-Options: SAMEORIGIN         # Don't place in an iframe from external site
+            X-Content-Type-Options: nosniff     # Browsers should not perform MIME-type sniffing
+
+    # Restrict the files allowed by FileHandlers explicitly
+    FileHandler:
+        ignore: '*'                 # By default, ignore all files
+        allow:                      # TODO: should this be case-insensitive?
+            - '*.css'
+            - '*.eot'
+            - '*.gif'
+            - '*.html'
+            - '*.jp*g'
+            - '*.js'
+            - '*.pdf'
+            - '*.png'
+            - '*.svg'
+            - '*.ttf'
+            - '*.txt'
+            - '*.woff*'
+
+app:
+    settings:
+        # You should change this to an environment variable via $VARIABLE
+        cookie_secret: deploy-secret-key        # Encrypt cookies with this secret key
+
+url:
+    default:                            # Override the default handler with a more secure version
+        priority: -1                    # Apply this pattern with low than normal priority
+        pattern: /(.*)                  # All URLs beginning with /
+        handler: FileHandler                # Handler used
+        kwargs:                             # Options to the handler
+            path: .                         #   path is current dir
+            default_filename: index.html    # Explicitly prevent
+            index: false                    # Disable listing of files for higher security
+            headers:
+                Cache-Control: private, max-age=60  # Cache all files privately for a minute
