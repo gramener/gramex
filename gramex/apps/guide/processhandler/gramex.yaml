@@ -1,24 +1,24 @@
 url:
-    ping-google:
-        pattern: /$YAMLURL/ping-google        # At this URL
+    nslookup-google:
+        pattern: /$YAMLURL/nslookup-google    # At this URL
         handler: ProcessHandler               # run a process
         kwargs:
-            args: ping -n 4 www.google.com    # The full command to run
+            args: nslookup www.google.com     # The full command to run
             shell: true                       # using the shell
             buffer: line                      # Show the result line by line
             headers:
                 Content-Type: text/x-plain    # as a text file
 
-    ping-google-file:
-        pattern: /$YAMLURL/ping-google-file
+    nslookup-google-file:
+        pattern: /$YAMLURL/nslookup-google-file
         handler: ProcessHandler
         kwargs:
-            args: ping -n 4 www.google.com
+            args: nslookup www.google.com
             shell: true
             buffer: line
             stdout:
-                - $YAMLPATH/ping.txt    # Redirect to ping.txt in same folder as YAML file
-                - pipe                  # Additionally, display the output
+                - $YAMLPATH/nslookup.txt    # Redirect to nslookup.txt in same folder as YAML file
+                - pipe                      # Additionally, display the output
             stderr: false
             headers:
                 Content-Type: text/x-plain
