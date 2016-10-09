@@ -539,7 +539,12 @@ class HDF5Store(KeyStore):
         if result is None:
             return default
         json_value = result.value if hasattr(result, 'value') else result
-        return json.loads(json_value, object_pairs_hook=AttrDict)
+        try:
+            return json.loads(json_value, object_pairs_hook=AttrDict)
+        except ValueError:
+            app_log.error('HDF5Store("%s").load("%s") is not JSON ("%r..."")',
+                          self.path, key, json_value)
+            return default
 
     def dump(self, key, value):
         if key in self.store:

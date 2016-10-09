@@ -32,7 +32,8 @@ class FileUpload(object):
 
     def info(self):
         store = self.store
-        return {k: store.load(k) for k in store.keys()}
+        info = [(k, store.load(k)) for k in store.keys()]
+        return {k: v for k, v in info if v is not None}
 
     def addfiles(self, handler):
         filemetas = []
