@@ -123,6 +123,10 @@ def app(conf):
             # check_exit() periodically watches and calls shutdown().
             # But signal handlers can only be set in the main thread.
             # So ignore if we're not in the main thread (e.g. for nosetests.)
+            #
+            # Note: The PeriodicCallback takes up a small amount of CPU time.
+            # Note: getch() doesn't handle keyboard buffer queue.
+            # Note: This is no guarantee that shutdown() will be called.
             if isinstance(threading.current_thread(), threading._MainThread):
                 exit = [False]
 
@@ -143,7 +147,7 @@ def app(conf):
                     exit[0] = True
 
                 signal.signal(signal.SIGINT, signal_handler)
-                tornado.ioloop.PeriodicCallback(check_exit, callback_time=100).start()
+                tornado.ioloop.PeriodicCallback(check_exit, callback_time=500).start()
 
             ioloop.start()
 
