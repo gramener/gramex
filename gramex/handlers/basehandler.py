@@ -496,7 +496,7 @@ class KeyStore(object):
         self.store = {}
         # Periodically flush buffers
         if flush is not None:
-            tornado.ioloop.PeriodicCallback(self.flush, callback_time=flush).start()
+            tornado.ioloop.PeriodicCallback(self.flush, callback_time=flush * 1000).start()
         # Call close() when Python gracefully exits
         atexit.register(self.close)
 
