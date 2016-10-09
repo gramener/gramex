@@ -336,7 +336,7 @@ customisations:
 
 Most URL handlers (not all) accept a `redirect:` parameter that redirects the
 user after completing the action. For example, after a
-[FunctionHandler](../functionahandler/) executes or after
+[FunctionHandler](../functionhandler/) executes or after
 [logging in](../auth/) or after an
 [UploadHandler](../uploadhandler/) is done. Here is the syntax:
 
@@ -385,7 +385,7 @@ However, you can specify `external: true` to override this:
               url: http://example.com/  # So can the pre-defined URL
 
 You can test this at
-[ldap2?next=https://gramener.com/](ldap2?next=https://gramener.com/).
+[../auth/ldap2?next=https://gramener.com/](../auth/ldap2?next=https://gramener.com/).
 
 
 ## Scheduling

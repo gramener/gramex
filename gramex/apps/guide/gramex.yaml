@@ -25,7 +25,7 @@ url:
         pattern: /$YAMLURL/welcome
         handler: FileHandler
         kwargs:
-            path: index.html
+            path: $YAMLPATH/index.html
     final-config:
         pattern: /$YAMLURL/final-config
         handler: FunctionHandler
