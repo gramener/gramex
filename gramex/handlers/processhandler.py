@@ -120,7 +120,8 @@ class ProcessHandler(BaseHandler):
 
     @tornado.gen.coroutine
     def get(self, *path_args):
-        self.save_redirect_page()
+        if self.redirects:
+            self.save_redirect_page()
         for header_name, header_value in self.headers.items():
             self.set_header(header_name, header_value)
 
@@ -135,7 +136,8 @@ class ProcessHandler(BaseHandler):
         yield proc.wait_for_exit()
         # Wait for process to finish
         proc.proc.wait()
-        self.redirect_next()
+        if self.redirects:
+            self.redirect_next()
 
     def _write(self, data):
         with self._write_lock:

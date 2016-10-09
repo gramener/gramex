@@ -399,8 +399,8 @@ class BaseHandler(RequestHandler):
                     self.write(result)
                 return
             except Exception:
-                app_log.exception('url:%s.error.%d error handler raised an exception:' %
-                                  (self.name, status_code))
+                app_log.exception('url:%s.error.%d error handler raised an exception:',
+                                  self.name, status_code)
         # If error was not written, use the default error
         self._write_error(status_code, **kwargs)
 
