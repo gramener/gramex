@@ -65,12 +65,15 @@ setup(
     # package_data includes data files for binary & source distributions
     # include_package_data is only for source distributions, uses MANIFEST.in
     package_data={
+        # Add a matching line in MANIFEST.in
         # Add a matching list in testlib/test_setup.py for verification
         'gramex': [
             'gramex.yaml',
             'apps.yaml',
             'release.json',
             'handlers/filehandler.template.html',
+            'handlers/auth.template.html',
+            'handlers/forgot.template.html',
         ] + list(recursive_include('gramex', 'apps', ignore_patterns))
     },
     include_package_data=True,

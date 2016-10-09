@@ -18,6 +18,8 @@ class TestSetup(unittest.TestCase):
         self.exists('apps.yaml')
         self.exists('release.json')
         self.exists('handlers/filehandler.template.html')
+        self.exists('handlers/auth.template.html')
+        self.exists('handlers/forgot.template.html')
 
         # Ensure that the Gramex guide is installed by checking for a few files
         self.exists('apps/guide/index.html')

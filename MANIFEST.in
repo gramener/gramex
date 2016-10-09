@@ -3,6 +3,8 @@ include gramex/gramex.yaml
 include gramex/apps.yaml
 include gramex/release.json
 include gramex/handlers/filehandler.template.html
+include gramex/handlers/auth.template.html
+include gramex/handlers/forgot.template.html
 
 # Include Gramex apps
 recursive-include gramex/apps *
