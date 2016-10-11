@@ -24,6 +24,7 @@ url:
     welcome:
         pattern: /$YAMLURL/welcome
         handler: FileHandler
+        cache: {duration: 300}
         kwargs:
             path: $YAMLPATH/index.html
     final-config:
@@ -36,6 +37,7 @@ url:
     markdown:
         pattern: /$YAMLURL/(.*)
         handler: FileHandler
+        cache: {duration: 300}
         kwargs:
             path: $YAMLPATH
             default_filename: README.md
@@ -50,11 +52,13 @@ url:
     root-config:
         pattern: /$YAMLURL/root.gramex.yaml
         handler: FileHandler
+        cache: {duration: 300}
         kwargs:
             path: $GRAMEXPATH/gramex.yaml
     guide-markdown:
         pattern: /$YAMLURL/(roadmap)
         handler: FileHandler
+        cache: {duration: 300}
         kwargs:
             path: $YAMLPATH/*.md
             transform:
@@ -70,6 +74,7 @@ url:
         pattern: /$YAMLURL/(.*.css|.*.js)
         priority: 1                                     # Override markdown: handler
         handler: FileHandler
+        cache: {duration: 300}
         kwargs:
             path: $YAMLPATH/*
             headers:
@@ -80,6 +85,7 @@ url:
         priority: +1
         pattern: /$YAMLURL/(.*)\.source
         handler: FileHandler
+        cache: {duration: 300}
         kwargs:
             path: $YAMLPATH
             Content-Type: text/plain
