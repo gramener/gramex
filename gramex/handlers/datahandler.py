@@ -49,6 +49,7 @@ class DataMixin(object):
                 default_value)
 
     def _engine(self):
+        '''Initialise self.engine. Must be called before self.engine is used.'''
         url, parameters = self.params['url'], self.params.get('parameters', {})
         driver_key = yaml.dump([url, parameters])
         if driver_key not in drivers:
@@ -512,14 +513,19 @@ class QueryHandler(BaseHandler, DataMixin):
                 (key, text(val)) for key, val in kwargs['sql'].items()])
         else:
             cls.query = text(kwargs['sql'])
+        cls.post = cls.delete = cls.update = cls.get
 
     def run(self, stmt, limit):
         self._engine()
         import pandas as pd
-        chunks = pd.read_sql(stmt, self.engine, chunksize=limit)
+        if self.request.method.lower() == 'get':
+            result = next(pd.read_sql(stmt, self.engine, chunksize=limit))
+        else:
+            self.engine.execute(stmt)
+            result = pd.DataFrame()
         return {
             'query': stmt,
-            'data': next(chunks)
+            'data': result
         }
 
     def renderdatas(self):
