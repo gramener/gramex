@@ -970,6 +970,38 @@ url:
         password: '{password}'
         xsrf_cookies: false
 
+  auth/ldap2-bind:                          # Test the "bind" mode of LDAP auth
+    pattern: /auth/ldap2-bind
+    handler: LDAPAuth
+    kwargs:
+        template: $YAMLPATH/auth.html
+        host: ldap.forumsys.com
+        use_ssl: false                      # ldap.forumsys.com does not accept SSL
+        bind:                               # By default, bind as this user
+            user: 'uid=euler,dc=example,dc=com'
+            password: 'password'
+        search:
+            base: 'dc=example,dc=com'       # Search in this domain
+            filter: '(mail={user})'         # Using a mail ID filter
+            password: '{password}'          # and the password field as password
+        xsrf_cookies: false
+
+  auth/ldap2-bind-wrong-bind:               # Test the "bind" mode of LDAP auth with a wrong bind
+    pattern: /auth/ldap2-bind-wrong-bind
+    handler: LDAPAuth
+    kwargs:
+        template: $YAMLPATH/auth.html
+        host: ldap.forumsys.com
+        use_ssl: false                      # ldap.forumsys.com does not accept SSL
+        bind:                               # By default, bind as this user
+            user: 'uid=euler,dc=example,dc=com'
+            password: 'wrong-password'      # This will fail. We test for that.
+        search:
+            base: 'dc=example,dc=com'       # Search in this domain
+            filter: '(mail={user})'         # Using a mail ID filter
+            password: '{password}'          # and the password field as password
+        xsrf_cookies: false
+
   auth/simple:
     pattern: /auth/simple
     handler: SimpleAuth

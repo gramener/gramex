@@ -185,6 +185,7 @@ class LDAPAuth(AuthHandler):
         self.render(self.template, error=None)
 
     errors = {
+        'bind': 'Unable to log in bind.user at {host}',
         'conn': 'Connection error at {host}',
         'auth': 'Could not log in user',
         'search': 'Cannot get attributes for user on {host}',
@@ -199,32 +200,54 @@ class LDAPAuth(AuthHandler):
         raise tornado.gen.Return()
 
     @tornado.gen.coroutine
-    def post(self):
+    def bind(self, server, user, password, error):
         import ldap3
-        kwargs = self.conf.kwargs
-
-        # First, bind the server with the provided user ID and password.
-        q = {key: self.get_argument(key) for key in self.request.arguments}
-        server = ldap3.Server(kwargs.host, kwargs.get('port'), kwargs.get('use_ssl', True))
-        conn = ldap3.Connection(server, kwargs.user.format(**q), kwargs.password.format(**q))
+        conn = ldap3.Connection(server, user, password)
         try:
             result = yield gramex.service.threadpool.submit(conn.bind)
-            if result is False:
-                self.report_error('auth', exc_info=False)
+            if not result:
+                self.report_error(error, exc_info=False)
+                conn = None
+            raise tornado.gen.Return(conn)
         except ldap3.LDAPException:
             self.report_error('conn', exc_info=True)
 
-        # We now have a valid user. Get additional attributes
-        user = {'dn': conn.user}
+    @tornado.gen.coroutine
+    def post(self):
+        import ldap3
+        import json
+        kwargs = self.conf.kwargs
+        # First, bind the server with the provided user ID and password.
+        q = {key: self.get_argument(key) for key in self.request.arguments}
+        server = ldap3.Server(kwargs.host, kwargs.get('port'), kwargs.get('use_ssl', True))
+        if 'bind' in kwargs and 'search' in kwargs:
+            user, password, error = kwargs.bind.user, kwargs.bind.password, 'bind'
+            search_base, search_filter = kwargs.search.base, kwargs.search.filter.format(**q)
+        else:
+            user, password, error = kwargs.user.format(**q), kwargs.password.format(**q), 'auth'
+            search_base, search_filter = user, '(objectClass=*)'
+
+        conn = yield self.bind(server, user, password, error)
+        if not conn:
+            return
+
+        # SEARCH: for user specified by the POST query parameters
         try:
-            result = yield gramex.service.threadpool.submit(
-                conn.search, conn.user, '(objectClass=*)', attributes=ldap3.ALL_ATTRIBUTES)
+            result = conn.search(search_base, search_filter, attributes=ldap3.ALL_ATTRIBUTES)
+            if not result or not len(conn.entries):
+                self.report_error('search', exc_info=False)
+                return
+            else:
+                user = json.loads(conn.entries[0].entry_to_json())
         except ldap3.LDAPException:
-            self.report_error('search', exc_info=True)
-        if result and len(conn.entries) > 0:
-            # Attributes may continue binary data. Get the result as JSON and then use the dict
-            import json
-            user.update(json.loads(conn.entries[0].entry_to_json()))
+            self.report_error('conn', exc_info=True)
+
+        if 'bind' in kwargs and 'search' in kwargs:
+            # REBIND: ensure that the password matches
+            validate_user = yield self.bind(
+                server, user['dn'], kwargs.search.password.format(**q), 'auth')
+            if not validate_user:
+                return
 
         self.set_user(user, id='dn')
         self.redirect_next()

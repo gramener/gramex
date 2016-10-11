@@ -4,7 +4,6 @@
 # Gramex APIs are versioned. The version key is required. Currently, 1.0 is the
 # only version supported.
 version: 1.0
-
 # Define custom MIME types here
 mime:
     .yml:       text/yaml

@@ -184,7 +184,18 @@ This configuration creates a [Twitter login page](twitter):
 
 ## LDAP auth
 
-This configuration creates an [LDAP login page](ldap):
+There are 2 ways of logging into an LDAP server.
+
+1. **Direct** login with a user ID and password directly.
+2. **Bind** login as a "bind" user, search for an ID, and then validate the password
+
+The first method is simpler. The second is flexible -- it lets you log in with
+attributes other than the username. For example, you can log in with an employee
+ID or an email ID, etc instead of the "uid".
+
+### Direct LDAP login
+
+This configuration creates a [direct LDAP login page](ldap):
 
     :::yaml
     auth/ldap:
@@ -198,14 +209,43 @@ This configuration creates an [LDAP login page](ldap):
             password: '{password}'
             template: $YAMLPATH/ldap.html       # Optional login template
 
-You should create a [HTML login form](ldap) that requests a username and password
-(with an [xsrf][xsrf] field). See [login templates](#login-templates) to learn
-how to create one.
+You should create a [HTML login form](ldap) that requests a username and
+password. The form should have an [xsrf][xsrf] field -- or this LDAP handler
+should have `xsrf_cookies: false`.
 
 The `user:` and `password:` configuration in `gramex.yaml` maps form fields to
 the user ID and password. Strings inside `{braces}` are replaced by form fields
 -- so if the user enters `admin` in the `user` field, `uid={user},cn=...` becomes
 `uid=admin,cn=...`.
+
+### Bind LDAP login
+
+This configuration creates a [bind LDAP login page](ldap-bind):
+
+    :::yaml
+    auth/ldap-bind:
+        pattern: /$YAMLURL/ldap-bind            # Map this URL
+        handler: LDAPAuth                       # to the LDAP auth handler
+        kwargs:
+            template: $YAMLPATH/ldap.html       # This has the login form
+            host: ipa.demo1.freeipa.org         # Server to connect to
+            use_ssl: true                       # Whether to use SSL or not
+            bind:                               # Bind to the server with this ID/password
+                user: 'uid=admin,cn=users,cn=accounts,dc=demo1,dc=freeipa,dc=org'
+                password: 'Secret123'
+            search:
+                base: 'dc=demo1,dc=freeipa,dc=org'  # Search within this domain
+                filter: '(mail={user})'             # by email ID, rather than uid
+                password: '{password}'              # Use the password field as password
+
+This is similar to [direct LDAP login](#direct-ldap-login), but the sequence followed is:
+
+1. Gramex logs in as (`bind.user`, `bind.password`).
+2. When the user submits the form, Gramex searches the LDAP server under
+   `search.base` for `search.filter` -- which becomes
+   `(mail={whatever-username-was-entered})`.
+3. Finally, Gramex checks if the first returned user matches the password.
+
 
 [xsrf]: ../filehandler/#xsrf
 

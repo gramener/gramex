@@ -242,33 +242,3 @@ class TestAuthorize(DBAuthBase):
         self.check('/auth/condition', path='dir/alpha.txt', session=self.session)
         self.login_ok('alpha', 'alpha', check_next='/dir/index/')
         self.check('/auth/condition', code=FORBIDDEN, session=self.session)
-
-
-class TestLDAPAuth(TestGramex):
-    def login(self, user, password):
-        self.url = server.base_url + '/auth/ldap'
-        r = requests.get(self.url)
-        tree = lxml.html.fromstring(r.text)
-
-        # Create form submission data
-        data = {'user': user, 'password': password}
-        data['xsrf'] = tree.xpath('.//input[@name="_xsrf"]')[0].get('value')
-
-        # Submitting the correct password redirects
-        return requests.post(self.url, timeout=10, data=data)
-        self.assertEqual(r.status_code, OK)
-
-    def test_ldap(self):
-        r = self.login('admin', 'Secret123')
-        if r.status_code == UNAUTHORIZED and r.headers.get('Auth-Error', None) == 'conn':
-            raise SkipTest('Unable to connect to LDAP server')
-        self.assertEqual(r.status_code, OK)
-        self.assertEqual(r.url, server.base_url + '/')
-
-    def test_ldap_wrong_password(self):
-        r = self.login('admin', 'wrong-password')
-        if r.status_code == UNAUTHORIZED and r.headers.get('Auth-Error', None) == 'conn':
-            raise SkipTest('Unable to connect to LDAP server')
-        self.assertEqual(r.status_code, UNAUTHORIZED)
-        self.assertEqual(r.headers.get('Auth-Error', None), 'auth')
-        self.assertEqual(r.url, self.url)

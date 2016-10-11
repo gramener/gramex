@@ -95,6 +95,29 @@ url:
                 url: /$YAMLURL
                 external: true
 
+    auth/ldap-bind:
+        pattern: /$YAMLURL/ldap-bind            # Map this URL
+        handler: LDAPAuth                       # to the LDAP auth handler
+        kwargs:
+            template: $YAMLPATH/ldap.html       # This has the login form
+            host: ipa.demo1.freeipa.org         # Server to connect to
+            use_ssl: true                       # Whether to use SSL or not
+            bind:                               # Bind to the server with this ID/password
+                user: 'uid=admin,cn=users,cn=accounts,dc=demo1,dc=freeipa,dc=org'
+                password: 'Secret123'
+            search:
+                base: 'dc=demo1,dc=freeipa,dc=org'  # Search within this domain
+                filter: '(mail={user})'             # by email ID, rather than uid
+                password: '{password}'              # Use the password field as password
+            log:
+                fields: [session.id, current_user.dn, request.remote_ip, request.headers.User-Agent]
+            action:
+                function: ensure_single_session
+            redirect:
+                query: next
+                url: /$YAMLURL
+                external: true
+
     auth/ldap2:
         pattern: /$YAMLURL/ldap2
         handler: LDAPAuth
