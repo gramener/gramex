@@ -10,7 +10,7 @@ url:
     pattern: /$YAMLURL/flags                # The flags URL...
     handler: QueryHandler                   # uses QueryHandler
     kwargs:
-      url: sqlite:///$YAMLPATH/../datahandler/database.sqlite3     # to connect database at this path/url
+      url: sqlite:///$YAMLPATH/../datahandler/database.sqlite3      # to connect database at this path/url
       sql: >                              # Run this (multi-line) SQL query
           SELECT * FROM flags
           WHERE continent=:continent
@@ -21,6 +21,21 @@ url:
         format: html                      # Can also be json or csv
       query:
         c1: 10
+
+  queryhandler/update:
+    pattern: /$YAMLURL/update               # The update URL
+    handler: QueryHandler                   # uses QueryHandler
+    kwargs:
+        url: sqlite:///$YAMLPATH/../datahandler/database.sqlite3    # to connect database at this path/url
+        sql: UPDATE points SET y=:y WHERE x >= :x                   # Run this query
+
+  queryhandler/update-values:
+    pattern: /$YAMLURL/update-values
+    handler: QueryHandler
+    kwargs:
+        url: sqlite:///$YAMLPATH/../datahandler/database.sqlite3    # to connect database at this path/url
+        sql: SELECT * FROM points WHERE x >= :x                     # Run this query
+
 
   queryhandler/multi:
     pattern: /$YAMLURL/multi                # The "/multi" URL...

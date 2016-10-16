@@ -16,6 +16,7 @@ JSON, or HTML tables. Here is a sample configuration that browses [gorilla genes
 
 Here's a similar configuration for [flags data](flags):
 
+    :::yaml
     url:
         flags:
             pattern: /$YAMLURL/flags                # The "/flags" URL...
@@ -47,19 +48,68 @@ URL query parameters can override these. For example:
 - [flags?format=json](flags?format=json) renders the flags in JSON
 - [flags?limit=20](flags?limit=20) shows 20 rows instead of the default 10
 
+Here's the JSON output:
+
+    :::js
+    $.get('flags?format=json&limit=2')
+    // OUTPUT
+
 The `query:` section freezes these values, and they cannot be overridden by the
 URL query parameters. For example:
 
-- [flags?c1=0](flags?c1=0) will not set `c1` to 0 -- the `query:` section has
+- [flags?c1=0](flags?c1=0) will not filter for `c1=0` -- the `query:` section has
   frozen this value at 10.
+
+## QueryHandler POST
+
+You can write INSERT / UPDATE / DELETE queries. For example:
+
+    :::yaml
+    url:
+        update:
+            pattern: /$YAMLURL/update               # The update URL
+            handler: QueryHandler                   # uses QueryHandler
+            kwargs:
+                url: sqlite:///$YAMLPATH/../datahandler/database.sqlite3    # to connect database at this path/url
+                sql: UPDATE points SET y=:y WHERE x >= :x                   # Run this query
+
+You need to use the `POST` HTTP when running these queries. (`GET` may run the
+SQL query but will return an error.)
+
+You also need to use [XSRF cookies](../filehandler/#xsrf). Otherwise, you'll see
+this error:
+
+    :::js
+    $.post('update?y=12&x=9')       // This will report an error because XSRF is not set.
+    // OUTPUT
+
+A successful query returns a HTTP 200 with empty results.
+
+    :::js
+    var xsrf = {'X-Xsrftoken': cookie.get('_xsrf')}
+    $.ajax('update', {
+      headers: xsrf,
+      method: 'POST',               // Run the update query
+      traditional: true,            // Required when using $.ajax
+      data: {x: 9, y: 12}           // Where x >= 9, set y values to 12
+    })
+    // OUTPUT
+
+Now let's see the data. You will find that `y` is 12 for all values of x >= 9.
+
+    :::js
+    $.get('update-values?x=9')       // fetch values where x >= 9
+    // OUTPUT
+
 
 ## Multiple SQL queries
 
 You can create a dictionary of multiple SQL queries. For example:
 
+    :::yaml
     url:
         flags:
-            pattern: /$YAMLURL/multi                # The "/multi" URL...
+            pattern: /$YAMLURL/multi                # The /multi URL...
             handler: QueryHandler                   # uses QueryHandler
             kwargs:
                 url: sqlite:///database.sqlite3     # SQLAlchemy database URL
@@ -77,3 +127,6 @@ The [result](multi) appears in:
 
 Every parameter and arguments is applicable for each query. The results are
 always in the same order as in the `sql:` config.
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cookie.js/1.2.0/cookie.min.js"></script>
+<script src="../datahandler/show-output.js"></script>

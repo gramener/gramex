@@ -116,14 +116,17 @@ a `keys:` configuration:
                         - =handler            # Optional: 2nd parameter is the handler
                     kwargs: {}                # Optional: additional keyword args
 
-This calls `module.func(file_metadata)` where `file_metadata` is an AttrDict with the keys mentioned in [Upload listing](#upload-listing). For example, this function will save CSV files as `data.json`:
+This calls `module.func(content=file_metadata, handler=handler)` where
+`file_metadata` is an AttrDict with the keys mentioned in
+[Upload listing](#upload-listing). For example, this function will save CSV files as `data.json`:
 
     :::python
-    def func(metadata):
+    def func(metadata, handler):
         if metadata.mime == 'text/csv':
             path = os.path.join('... upload path ...', metadata.file)
             pd.read_csv(path).to_json('data.json')
 
-The value returned by `module.func()` (if any) replaces `file_metadata`. This is stored in the UploadHandler's list of file metadata.
+If `module.func()` returns a value, it replaces `file_metadata`. This allows you
+to add / modify delete keys in the [Upload listing](#upload-listing).
 
 If no `args` or `kwargs` are specified, the transform function is called with `(content, handler)` as the keyword arguments.

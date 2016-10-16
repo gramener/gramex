@@ -7,3 +7,6 @@ new Clipboard('.copy-button', {
     return trigger.nextElementSibling
   }
 })
+
+anchors.options.placement = 'left'
+anchors.add()

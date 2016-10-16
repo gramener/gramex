@@ -43,8 +43,14 @@
     "authorization": {
       "Authorization": -1
     },
+    "bind-ldap-login": {
+      "Bind LDAP login": -1
+    },
     "database-auth": {
       "Database auth": -1
+    },
+    "direct-ldap-login": {
+      "Direct LDAP login": -1
     },
     "facebook-auth": {
       "Facebook auth": -1
@@ -244,6 +250,9 @@
     "relative-url-mapping": {
       "Relative URL mapping": -1
     },
+    "security": {
+      "Security": -1
+    },
     "using-relative-urls": {
       "Using relative URLs": -1
     }
@@ -369,6 +378,9 @@
     },
     "multiple-sql-queries": {
       "Multiple SQL queries": -1
+    },
+    "queryhandler-post": {
+      "QueryHandler POST": -1
     }
   },
   "scheduler": {

@@ -49,11 +49,11 @@ iframe {
 .toc {
     counter-reset: toc;
 }
-.toc h2 a:before {
+.toc h2 a:not(.anchorjs-link):before {
     counter-increment: toc;
     content: counter(toc) ". ";
 }
-.toc h2 a:after {
+.toc h2 a:not(.anchorjs-link):after {
     content: " \025ba";
 }
 
@@ -129,7 +129,6 @@ button, input, select, textarea {
 
 .content a {
     text-decoration: none;
-    border-bottom: 1px solid #aaa;
     color: #0563c1;
     white-space: nowrap;
 }
@@ -139,8 +138,7 @@ button, input, select, textarea {
 }
 
 .content a:hover {
-    border-bottom: 2px solid #0563c1;
-    color: #0563c1;
+    color: #ed7d31;
 }
 
 /* Example apps */

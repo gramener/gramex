@@ -16,7 +16,7 @@ title: Gramex connects to data
 
 To start you off, there's a `database.sqlite3` in this application folder.
 (Gramex downloaded [flags data](https://gramener.com/flags/) on startup. See
-[fetch.data()](fetch.py) and the scheduler in [gramex.yaml](gramex.yaml).
+[dbsetup.flags()](dbsetup.py) and the scheduler in [gramex.yaml](gramex.yaml).
 
 The `DataHandler` below exposes the flags table in `database.sqlite3` at the URL [flags](flags).
 
@@ -199,21 +199,4 @@ In this example, the format is always CSV. The filename will be `test.csv`.
                 Content-Disposition: "attachment;filename=test.csv"
 
 
-<script>
-var xsrf = {'X-Xsrftoken': cookie.get('_xsrf')}
-var pre = [].slice.call(document.querySelectorAll('pre'))
-
-function next() {
-  var element = pre.shift()
-  var text = element.textContent
-  if (text.match(/\$.ajax/)) {
-    eval(text)
-      .always(function(result) {
-        element.innerHTML = element.innerHTML.replace(/OUTPUT/, 'OUTPUT<br>' + JSON.stringify(result))
-        if (pre.length > 0) next()
-      })
-  }
-  else if (pre.length > 0) next()
-}
-next()
-</script>
+<script src="show-output.js"></script>

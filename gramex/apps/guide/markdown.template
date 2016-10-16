@@ -47,6 +47,7 @@
   </section>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/1.5.10/clipboard.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/anchor-js/3.2.2/anchor.min.js"></script>
   <script src="/$GUIDE_ROOT/script.js"></script>
 </body>
 </html>

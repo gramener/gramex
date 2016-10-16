@@ -12,6 +12,8 @@ Some common security options are pre-configured in `$GRAMEXPATH/deploy.yaml`. To
     import:
       deploy: $GRAMEXPATH/deploy.yaml
 
+See [deploy.yaml](https://code.gramener.com/s.anand/gramex/blob/master/gramex/deploy.yaml) to understand the configurations.
+
 ## Relative URL mapping
 
 Your app may be running at `http://localhost:9988/` on your system, but will be

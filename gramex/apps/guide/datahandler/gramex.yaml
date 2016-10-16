@@ -1,26 +1,28 @@
 url:
-  genome:
-    pattern: /$YAMLURL/genome               # The URL /datastore/genome
-    handler: DataHandler                    # Uses the datahandler
-    kwargs:
-        driver: sqlalchemy                  # via SQLalchemy, and connects to this DB
-        url: mysql+pymysql://anonymous@ensembldb.ensembl.org/gorilla_gorilla_core_84_31
-        table: gene
-  flags:
-    pattern: /$YAMLURL/flags                # The URL /datastore/flags
-    handler: DataHandler                    # uses DataHandler
-    kwargs:
-      driver: sqlalchemy                    # with blaze or sqlalchemy driver
-      url: sqlite:///$YAMLPATH/database.sqlite3     # to connect database at this path/url
-      table: flags                          # on this table
-      parameters: {encoding: utf8}          # with additional parameters provided
-      default:
-        format: html                        # Can also be json or csv
-      posttransform:
-        function: fetch.bigint   # or any function like passlib.hash.sha256_crypt.encrypt
-        args: =content
+    genome:
+        pattern: /$YAMLURL/genome           # The URL /datastore/genome
+        handler: DataHandler                # Uses the datahandler
+        kwargs:
+            driver: sqlalchemy              # via SQLalchemy, and connects to this DB
+            url: mysql+pymysql://anonymous@ensembldb.ensembl.org/gorilla_gorilla_core_84_31
+            table: gene
+    flags:
+        pattern: /$YAMLURL/flags            # The URL /datastore/flags
+        handler: DataHandler                # uses DataHandler
+        kwargs:
+            driver: sqlalchemy              # with blaze or sqlalchemy driver
+            url: sqlite:///$YAMLPATH/database.sqlite3     # to connect database at this path/url
+            table: flags                    # on this table
+            parameters: {encoding: utf8}    # with additional parameters provided
+            default:
+              format: html                  # Can also be json or csv
+            posttransform:
+              function: dbsetup.bigint      # or any function like passlib.hash.sha256_crypt.encrypt
+              args: =content
 schedule:
-  data-setup:
-    function: fetch.data
-    startup: true
-    minutes: '*/5'                          # Re-run in case data gets corrupted
+    data-setup-flags:
+        function: dbsetup.flags
+        startup: true
+    data-setup-points:
+        function: dbsetup.points
+        startup: true
