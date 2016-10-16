@@ -3,6 +3,18 @@
 History
 -------
 
+1.16 (2016-10-16)
+~~~~~~~~~~~~~~~~~
+
+- Add a `deploy yaml`_ configuration that makes your deployment automatically more secure
+- `QueryHandler`_ supports INSERT/UPDATE/DELETE statements as well via POST requests.
+- The `email`_ service accepts [attachments from strings](https://learn.gramener.com/gramex/gramex.services.html#gramex.services.emailer.message)
+- `LDAPAuth`_ can [bind as an admin](https://learn.gramener.com/guide/auth/#bind-ldap-login) and log in as any user
+- Configuration in the ``handlers:`` section percolates to other handlers
+- `UploadHandler`_ transforms accept handler as a second cargument in addition to metadata
+- Fixed bugs to improve security, reduce the CPU usage, better JSON handling for binary data, HDF5store corruption, multiple email recipients, caching 304 responses,
+
+
 1.15 (2016-08-21)
 ~~~~~~~~~~~~~~~~~
 
@@ -323,3 +335,4 @@ There are two changes that may disrupt your code:
 .. _conditional variables: https://learn.gramener.com/guide/config/#conditional-variables
 .. _error handlers: https://learn.gramener.com/guide/config/#error-handlers
 .. _watch: https://learn.gramener.com/guide/watch/
+.. _deploy yaml: https://learn.gramener.com/guide/deploy/#security
