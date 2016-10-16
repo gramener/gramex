@@ -33,8 +33,8 @@ def flags():
 def points():
     """generate random data into database.sqlite3/points"""
     pd.DataFrame({
-        'x': [1,2,3,4,5,6,7,8,9,10],
-        'y': [10,9,8,7,6,5,4,3,2,1],
+        'x': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+        'y': [10, 9, 8, 7, 6, 5, 4, 3, 2, 1],
     }).to_sql('points', engine, index=False, if_exists='replace')
 
 
