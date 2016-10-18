@@ -63,7 +63,7 @@ def log(conf):
         if handler in active_handlers:
             filename = handler_conf.get('filename')
             if filename:
-                folder = os.path.dirname(handler_conf.filename)
+                folder = os.path.dirname(os.path.abspath(handler_conf.filename))
                 if not os.path.exists(folder):
                     os.makedirs(folder)
     logging.config.dictConfig(conf)
