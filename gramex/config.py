@@ -160,7 +160,10 @@ def _substitute_variable(val):
     if val.startswith('$') and val[1:] in variables:
         return variables[val[1:]]
     else:
-        return string.Template(val).substitute(variables)
+        try:
+            return string.Template(val).substitute(variables)
+        except ValueError:
+            raise ValueError('Use $$ instead of $ in %s' % val)
 
 
 def _calc_value(val, key):
