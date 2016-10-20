@@ -395,6 +395,323 @@ url:
         methods: [HEAD, put, DELete]
         xsrf_cookies: false
 
+  # TestQueryHandler for Sqlite
+  querydata/csv:
+    pattern: /datastoreq/sqlite/csv/
+    handler: QueryHandler
+    kwargs:
+      driver: sqlalchemy
+      url: sqlite:///actors.db
+      sql: >
+        select * from actors limit cast(:limit as integer)
+      parameters: {encoding: utf8}
+      default: {format: csv}
+      headers: {X-Test: abc}
+      xsrf_cookies: false
+
+  querydata/json:
+    pattern: /datastoreq/sqlite/json/
+    handler: QueryHandler
+    kwargs:
+      driver: sqlalchemy
+      url: sqlite:///actors.db
+      sql: >
+        select * from actors where name = :name
+      parameters: {encoding: utf8}
+      default: {format: json}
+      headers: {X-Test: abc}
+      xsrf_cookies: false
+
+  querydata/html:
+    pattern: /datastoreq/sqlite/html/
+    handler: QueryHandler
+    kwargs:
+      driver: sqlalchemy
+      url: sqlite:///actors.db
+      sql: >
+        select * from actors where votes > cast(:votes as integer)
+      parameters: {encoding: utf8}
+      default: {format: html}
+      headers: {X-Test: abc}
+      xsrf_cookies: false
+
+  querydata/likename:
+    pattern: /datastoreq/sqlite/json/like/
+    handler: QueryHandler
+    kwargs:
+      driver: sqlalchemy
+      url: sqlite:///actors.db
+      sql: >
+        select * from actors where name like replace(:name,'*','%')
+      parameters: {encoding: utf8}
+      default: {format: json}
+      headers: {X-Test: abc}
+      xsrf_cookies: false
+
+  querydata/mysql_csv:
+    pattern: /datastoreq/mysql/csv/
+    handler: QueryHandler
+    kwargs:
+      driver: sqlalchemy
+      url: mysql+pymysql://root@$MYSQL_SERVER/test_queryhandler
+      sql: >
+        SELECT category,name,rating,votes from (
+          SELECT
+            @i:=@i+1 AS iterator,
+            t.*
+          FROM
+          actors AS t,
+          (SELECT @i:=0) AS foo
+        ) X
+        where iterator < cast(coalesce(:limit,'1000') as SIGNED) + 1
+      parameters: {encoding: utf8}
+      default: {format: csv}
+      headers: {X-Test: abc}
+      xsrf_cookies: false
+
+  querydata/mysql_json:
+    pattern: /datastoreq/mysql/json/
+    handler: QueryHandler
+    kwargs:
+      driver: sqlalchemy
+      url: mysql+pymysql://root@$MYSQL_SERVER/test_queryhandler
+      sql: >
+        select * from actors where name = :name
+      parameters: {encoding: utf8}
+      default: {format: json}
+      headers: {X-Test: abc}
+      xsrf_cookies: false
+
+  querydata/mysql_html:
+    pattern: /datastoreq/mysql/html/
+    handler: QueryHandler
+    kwargs:
+      driver: sqlalchemy
+      url: mysql+pymysql://root@$MYSQL_SERVER/test_queryhandler
+      sql: >
+        select * from actors where votes > cast(:votes as signed)
+      parameters: {encoding: utf8}
+      default: {format: html}
+      headers: {X-Test: abc}
+      xsrf_cookies: false
+
+  querydata/mysql_likename:
+    pattern: /datastoreq/mysql/json/like/
+    handler: QueryHandler
+    kwargs:
+      driver: sqlalchemy
+      url: mysql+pymysql://root@$MYSQL_SERVER/test_queryhandler
+      sql: >
+        select * from actors where name like replace(:name,'*','%')
+      parameters: {encoding: utf8}
+      default: {format: json}
+      headers: {X-Test: abc}
+      xsrf_cookies: false
+
+  querydata/postgresql_csv:
+    pattern: /datastoreq/postgresql/csv/
+    handler: QueryHandler
+    kwargs:
+      driver: sqlalchemy
+      url: postgresql://postgres@$POSTGRES_SERVER/test_queryhandler
+      sql: >
+        select * from actors limit cast(:limit as integer)
+      parameters: {encoding: utf8}
+      default: {format: csv}
+      headers: {X-Test: abc}
+      xsrf_cookies: false
+
+  querydata/postgresql_json:
+    pattern: /datastoreq/postgresql/json/
+    handler: QueryHandler
+    kwargs:
+      driver: sqlalchemy
+      url: postgresql://postgres@$POSTGRES_SERVER/test_queryhandler
+      sql: >
+        select * from actors where name = :name
+      parameters: {encoding: utf8}
+      default: {format: json}
+      headers: {X-Test: abc}
+      xsrf_cookies: false
+
+  querydata/postgresql_html:
+    pattern: /datastoreq/postgresql/html/
+    handler: QueryHandler
+    kwargs:
+      driver: sqlalchemy
+      url: postgresql://postgres@$POSTGRES_SERVER/test_queryhandler
+      sql: >
+        select * from actors where votes > cast(:votes as integer)
+      parameters: {encoding: utf8}
+      default: {format: html}
+      headers: {X-Test: abc}
+      xsrf_cookies: false
+
+  querydata/postgresql_likename:
+    pattern: /datastoreq/postgresql/json/like/
+    handler: QueryHandler
+    kwargs:
+      driver: sqlalchemy
+      url: postgresql://postgres@$POSTGRES_SERVER/test_queryhandler
+      sql: >
+        select * from actors where name like replace(:name,'*','%')
+      parameters: {encoding: utf8}
+      default: {format: json}
+      headers: {X-Test: abc}
+      xsrf_cookies: false
+
+  querydata/sqlite_validate:
+    pattern: /datastoreq/sqlite/validate/
+    handler: QueryHandler
+    kwargs:
+      driver: sqlalchemy
+      url: sqlite:///actors.db
+      sql: >
+        select * from actors
+        where name = :name
+      parameters: {encoding: utf8}
+      default: {format: csv}
+      xsrf_cookies: false
+
+  querydata/mysql_validate:
+    pattern: /datastoreq/mysql/validate/
+    handler: QueryHandler
+    kwargs:
+      driver: sqlalchemy
+      url: mysql+pymysql://root@$MYSQL_SERVER/test_queryhandler
+      sql: >
+        select * from actors
+        where name = :name
+      parameters: {encoding: utf8}
+      default: {format: csv}
+      xsrf_cookies: false
+
+  querydata/postgresql_validate:
+    pattern: /datastoreq/postgresql/validate/
+    handler: QueryHandler
+    kwargs:
+      driver: sqlalchemy
+      url: postgresql://postgres@$POSTGRES_SERVER/test_queryhandler
+      sql: >
+        select * from actors
+        where name = :name
+      parameters: {encoding: utf8}
+      default: {format: csv}
+      xsrf_cookies: false
+
+  querydata/sqlite_insert:
+    pattern: /datastoreq/sqlite/insert/
+    handler: QueryHandler
+    kwargs:
+      driver: sqlalchemy
+      url: sqlite:///actors.db
+      sql: >
+        insert into actors(category,name,rating,votes)
+        values(:category,:name,:rating,:votes)
+      parameters: {encoding: utf8}
+      xsrf_cookies: false
+
+  querydata/sqlite_edit:
+    pattern: /datastoreq/sqlite/edit/
+    handler: QueryHandler
+    kwargs:
+      driver: sqlalchemy
+      url: sqlite:///actors.db
+      sql: >
+        update actors
+        set votes = cast(:votes as integer)
+        where name = :name
+      parameters: {encoding: utf8}
+      xsrf_cookies: false
+
+  querydata/sqlite_delete:
+    pattern: /datastoreq/sqlite/delete/
+    handler: QueryHandler
+    kwargs:
+      driver: sqlalchemy
+      url: sqlite:///actors.db
+      sql: >
+        delete from actors where name = :name
+      parameters: {encoding: utf8}
+      xsrf_cookies: false
+
+  querydata/mysql_insert:
+    pattern: /datastoreq/mysql/insert/
+    handler: QueryHandler
+    kwargs:
+      driver: sqlalchemy
+      url: mysql+pymysql://root@$MYSQL_SERVER/test_queryhandler
+      sql: >
+        insert into actors(category,name,rating,votes)
+        values(:category,:name,:rating,:votes)
+      parameters: {encoding: utf8}
+      xsrf_cookies: false
+
+  querydata/mysql_edit:
+    pattern: /datastoreq/mysql/edit/
+    handler: QueryHandler
+    kwargs:
+      driver: sqlalchemy
+      url: mysql+pymysql://root@$MYSQL_SERVER/test_queryhandler
+      sql: >
+        update actors
+        set votes = cast(:votes as SIGNED)
+        where name = :name
+      parameters: {encoding: utf8}
+      xsrf_cookies: false
+
+  querydata/mysql_delete:
+    pattern: /datastoreq/mysql/delete/
+    handler: QueryHandler
+    kwargs:
+      driver: sqlalchemy
+      url: mysql+pymysql://root@$MYSQL_SERVER/test_queryhandler
+      sql: >
+        delete from actors where name = :name
+      parameters: {encoding: utf8}
+      xsrf_cookies: false
+
+  querydata/postgresql_insert:
+    pattern: /datastoreq/postgresql/insert/
+    handler: QueryHandler
+    kwargs:
+      driver: sqlalchemy
+      url: postgresql://postgres@$POSTGRES_SERVER/test_queryhandler
+      sql: >
+        insert into actors(category,name,rating,votes)
+        values(
+          nullif(:category,''),
+          nullif(:name,''),
+          cast(coalesce(nullif(:rating,''),'0') as float),
+          cast(coalesce(nullif(:votes,''),'0') as integer)
+        )
+      parameters: {encoding: utf8}
+      xsrf_cookies: false
+
+  querydata/postgresql_edit:
+    pattern: /datastoreq/postgresql/edit/
+    handler: QueryHandler
+    kwargs:
+      driver: sqlalchemy
+      url: postgresql://postgres@$POSTGRES_SERVER/test_queryhandler
+      sql: >
+        update actors
+        set votes = cast(:votes as integer)
+        where name = :name
+      parameters: {encoding: utf8}
+      xsrf_cookies: false
+
+  querydata/postgresql_delete:
+    pattern: /datastoreq/postgresql/delete/
+    handler: QueryHandler
+    kwargs:
+      driver: sqlalchemy
+      url: postgresql://postgres@$POSTGRES_SERVER/test_queryhandler
+      sql: >
+        delete from actors where name = :name
+      parameters: {encoding: utf8}
+      xsrf_cookies: false
+
   # TestDataHandler for Sqlite
   data/csv:
     pattern: /datastore/sqlite/csv/
