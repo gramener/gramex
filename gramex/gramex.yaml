@@ -167,7 +167,7 @@ app:
         static_url_prefix: '/static/'   # URL prefix for static files (not currently used)
 
         # Login parameters
-        login_url: /login               # URL used to log in
+        login_url: /login/              # URL used to log in
 
     session:
         type: json                      # Type of store to use: hdf5, json or memory

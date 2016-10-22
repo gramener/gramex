@@ -196,7 +196,7 @@ class TestAuthorize(DBAuthBase):
     def initialize(self, url, user='alpha'):
         self.session = requests.Session()
         r = self.session.get(server.base_url + url)
-        self.assertEqual(r.url, server.base_url + '/login?' + urlencode({'next': url}))
+        self.assertEqual(r.url, server.base_url + '/login/?' + urlencode({'next': url}))
         r = self.session.post(server.base_url + url)
         self.assertEqual(r.url, server.base_url + url)
         self.assertEqual(r.status_code, UNAUTHORIZED)
