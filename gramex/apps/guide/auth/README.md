@@ -80,6 +80,10 @@ is as follows:
 3. If credentials are valid, store the user details and redirect the user. Else
    show an error message.
 
+After logging in, users are re-directed to the `?next=` URL. You can change this
+using the [redirection configuration](../config/#redirection).
+
+
 ## Simple auth
 
 This configuration creates a [simple auth page](simple):
@@ -101,9 +105,6 @@ This setup is useful only for testing. It stores passwords in plain text.
 You should create a [HTML login form](simple) that requests a username and
 password (with an [xsrf][xsrf] field). See [login templates](#login-templates)
 to learn how to create one.
-
-After users log in, they are redirected based on the common `redirect:` section
-documented the [redirection configuration](../config/#redirection).
 
 
 ## Google auth
@@ -405,14 +406,9 @@ This configuration creates a [logout page](logout):
     auth/logout
         pattern: /$YAMLURL/logout   # Map this URL
         handler: LogoutHandler      # to the logout handler
-        kwargs:
-            redirect:                   # Redirect options are applied in order
-                query: next             # If ?next= is specified, use it
-                url: /$YAMLURL          # Else redirect to the directory where this gramex.yaml is present
 
-After logging out, the user is re-directed to the URL specified by `?next=`.
-Else, they're redirected to the current page. 
-See [redirection configuration](../config/#redirection).
+After logging in, users are re-directed to the `?next=` URL. You can change this
+using the [redirection configuration](../config/#redirection).
 
 
 ## Login templates

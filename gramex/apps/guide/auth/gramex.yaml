@@ -12,9 +12,6 @@ url:
         kwargs:
             log:
                 fields: [session.id, current_user.email, request.remote_ip, request.headers.User-Agent]
-            redirect:
-                query: next
-                url: /$YAMLURL
 
     auth/simple:
         pattern: /$YAMLURL/simple

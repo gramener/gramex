@@ -51,14 +51,23 @@ class AuthHandler(BaseHandler):
     '''The parent handler for all Auth handlers.'''
     @classmethod
     def setup(cls, log={}, action=None, **kwargs):
-        super(AuthHandler, cls).setup(**kwargs)
+        # Switch SSL certificates if required to access Google, etc
         gramex.service.threadpool.submit(check_old_certs)
+
+        # Set up default redirection based on ?next=...
+        if 'redirect' not in kwargs:
+            kwargs['redirect'] = AttrDict(query='next')
+        super(AuthHandler, cls).setup(**kwargs)
+
+        # Set up logging for login/logout events
         if log and hasattr(log, '__getitem__') and log.get('fields'):
             cls.log_fields = log['fields']
             cls.logger = logging.getLogger(log.get('logger', 'user'))
         else:
             cls.log_user_event = cls.noop
         cls.actions = []
+
+        # Set up post-login actions
         if action is not None:
             if not isinstance(action, list):
                 action = [action]
