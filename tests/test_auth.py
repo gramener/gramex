@@ -193,10 +193,10 @@ class TestDBAuth(DBAuthBase, LoginMixin):
 
 
 class TestAuthorize(DBAuthBase):
-    def initialize(self, url, user='alpha'):
+    def initialize(self, url, user='alpha', login_url='/login/'):
         self.session = requests.Session()
         r = self.session.get(server.base_url + url)
-        self.assertEqual(r.url, server.base_url + '/login/?' + urlencode({'next': url}))
+        self.assertEqual(r.url, server.base_url + login_url + '?' + urlencode({'next': url}))
         r = self.session.post(server.base_url + url)
         self.assertEqual(r.url, server.base_url + url)
         self.assertEqual(r.status_code, UNAUTHORIZED)
@@ -242,3 +242,6 @@ class TestAuthorize(DBAuthBase):
         self.check('/auth/condition', path='dir/alpha.txt', session=self.session)
         self.login_ok('alpha', 'alpha', check_next='/dir/index/')
         self.check('/auth/condition', code=FORBIDDEN, session=self.session)
+
+    def test_auth_login_url(self):
+        self.initialize('/auth/login-url', login_url='/auth/simple')

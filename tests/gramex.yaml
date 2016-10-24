@@ -1439,6 +1439,14 @@ url:
                 function: str.endswith
                 args: [=handler.current_user.user, 'ta']        # beta, delta
         xsrf_cookies: false
+  auth/login-url:
+    pattern: /auth/login-url
+    handler: FileHandler
+    kwargs:
+        auth:
+          login_url: /auth/simple
+        path: dir/alpha.txt
+        xsrf_cookies: false
 
   xsrf:
     pattern: /xsrf

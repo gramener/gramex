@@ -148,6 +148,7 @@ class BaseHandler(RequestHandler):
             auth = AttrDict()
         # If auth is False or None, ignore it. Otherwise, process the auth
         if auth is not None and auth is not False:
+            cls._login_url = auth.get('login_url')
             cls._on_init_methods.append(cls.authorize)
             cls.permissions = []
             if auth.get('condition'):
@@ -448,7 +449,7 @@ class BaseHandler(RequestHandler):
         # If the user isn't logged in, redirect to login URL or send a 401
         if not self.current_user:
             if self.request.method in ('GET', 'HEAD'):
-                url = self.get_login_url()
+                url = self._login_url or self.get_login_url()
                 if '?' not in url:
                     if urlsplit(url).scheme:
                         # if login url is absolute, make next absolute too

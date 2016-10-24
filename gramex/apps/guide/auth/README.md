@@ -400,7 +400,7 @@ Here is a more complete example:
 
 ## Log out
 
-This configuration creates a [logout page](logout):
+This configuration creates a [logout page](logout?next=.):
 
     :::yaml
     auth/logout
@@ -474,6 +474,7 @@ to this information via `handler.current_user` by default.
 You can configure a logging action for when the user logs in or logs out via the
 `log:` configuration. For example:
 
+    :::yaml
     auth/twitter:
         pattern: /$YAMLURL/twitter
         handler: TwitterAuth
@@ -491,6 +492,7 @@ This will log the result into the `user` logger, which saves the data as a CSV f
 
 You can define your own logging handler for the `user` logger in the [log section](../config/#logging). Here's a sample definition:
 
+    :::yaml
     log:
         handlers:
             user:
@@ -512,6 +514,7 @@ accessible to all.
 `auth: true` just requires that you must log in. In this example, you can access
 [must-login](must-login) only if you are logged in.
 
+    :::yaml
     url:
         auth/must-login:
             pattern: /$YAMLURL/must-login
@@ -520,9 +523,40 @@ accessible to all.
                 path: $YAMLPATH/secret.html
                 auth: true
 
-`auth:` can check for membership. For example, you can access [en-male](en-male)
-only if your gender is `male` and your locale is `en` or `es`:
+## Login URLs
 
+By default, this will redirect users to `/login/`. This is configured in the `app.settings.login_url` like this:
+
+    :::yaml
+    app:
+        settings:
+            login_url: /login/    # This is the default login URL
+
+You need to either map `/login/` to an auth handler, or change the `login_url`
+to your auth handler URL.
+
+Each URL can choose its own login URL. For example, if you
+[logout](logout?next=.) and visit [use-simple](use-simple), you will always be
+taken to `auth/simple` even though `app.settings.login_url` is `/login/`:
+
+    :::yaml
+    url:
+        auth/use-simple:
+            pattern: /$YAMLURL/use-simple
+            handler: FileHandler
+            kwargs:
+                path: $YAMLPATH/secret.html
+                auth: true
+                    login_url: /$YAMLURL/simple     # Redirect users to this login page
+
+
+## Roles
+
+`auth:` can check for membership. For example, you can access [en-male](en-male)
+only if your gender is `male` and your locale is `en` or `es`. (To test it,
+[logout](logout?next=.) and [log in via Google](google).)
+
+    :::yaml
         auth:
             membership:           # The following user object keys must match
                 gender: male      # user.gender must be male
@@ -535,6 +569,7 @@ example, `attributes.cn` refers to `handlers.current_user.attributes.cn`.
 only if your email ends with `.com`, and access [dotorg](dotorg) only if your
 email ends with `.org`.
 
+    :::yaml
     url:
         auth/dotcom:
             pattern: /$YAMLURL/dotcom

@@ -221,6 +221,14 @@ url:
                     gender: male      # user.gender must be male
                     locale: [en, es]  # user.locale must be en or es
 
+    auth/use-simple:
+        pattern: /$YAMLURL/use-simple
+        handler: FileHandler
+        kwargs:
+            path: $YAMLPATH/secret.html
+            auth:
+                login_url: /$YAMLURL/simple
+
 schedule:
     create-user-database:
         function: authutil.create_user_database     # Run this function
