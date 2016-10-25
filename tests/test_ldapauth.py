@@ -36,7 +36,8 @@ class TestLDAPAuth(TestGramex):
             self.assertEqual(r.headers.get(key, None), value)
 
     def test_ldap(self):
-        self.check('admin', 'Secret123', url='/auth/ldap', status_code=OK)
+        # If someone changes this server's credentials, this may fail. That's OK
+        self.check('manager', 'Secret123', url='/auth/ldap', status_code=OK)    # May fail with 401
 
     def test_ldap_wrong_user(self):
         self.check('wrong-user', 'password', url='/auth/ldap', status_code=UNAUTHORIZED,
