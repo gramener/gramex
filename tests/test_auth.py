@@ -227,13 +227,17 @@ class TestAuthorize(DBAuthBase):
     def test_auth_uploadhandler(self):
         self.initialize('/auth/uploadhandler')
 
-    def test_auth_membership(self):
-        self.initialize('/auth/membership')
-        self.check('/auth/membership', path='dir/alpha.txt', session=self.session)
+    def test_auth_membership(self, url='/auth/membership'):
+        self.initialize(url)
+        self.check(url, path='dir/alpha.txt', session=self.session)
         self.login_ok('beta', 'beta', check_next='/dir/index/')
-        self.check('/auth/membership', path='dir/alpha.txt', session=self.session)
+        self.check(url, path='dir/alpha.txt', session=self.session)
         self.login_ok('gamma', 'gamma', check_next='/dir/index/')
-        self.check('/auth/membership', code=FORBIDDEN, session=self.session)
+        self.check(url, code=FORBIDDEN, session=self.session)
+
+    def test_auth_memberships(self):
+        # Same as test_auth_membership, but on a different URL
+        self.test_auth_membership('/auth/memberships')
 
     def test_auth_condition(self):
         self.initialize('/auth/condition', user='beta')

@@ -1429,6 +1429,18 @@ url:
             membership:
                 user: [alpha, beta]
         xsrf_cookies: false
+  auth/memberships:
+    pattern: /auth/memberships
+    handler: FileHandler
+    kwargs:
+        path: dir/alpha.txt
+        auth:
+            membership:
+                -
+                    user: alpha
+                -
+                    user: beta
+        xsrf_cookies: false
   auth/condition:
     pattern: /auth/condition
     handler: FileHandler

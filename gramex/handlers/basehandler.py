@@ -151,12 +151,17 @@ class BaseHandler(RequestHandler):
             cls._login_url = auth.get('login_url')
             cls._on_init_methods.append(cls.authorize)
             cls.permissions = []
+            # Add check for condition
             if auth.get('condition'):
                 cls.permissions.append(
                     build_transform(auth['condition'], vars=AttrDict(handler=None),
                                     filename='url:%s.auth.permission' % cls.name))
-            for keypath, values in auth.get('membership', {}).items():
-                cls.permissions.append(check_membership(keypath, values))
+            # Add check for membership
+            memberships = auth.get('membership', [])
+            if not isinstance(memberships, list):
+                memberships = [memberships]
+            if len(memberships):
+                cls.permissions.append(check_membership(memberships))
 
     @classmethod
     def setup_log(cls, log):
@@ -592,15 +597,46 @@ class JSONStore(KeyStore):
         self.handle.close()
 
 
-def check_membership(keypath, values):
-    values = set(values) if isinstance(values, list) else set([values])
 
-    def ismember(self):
-        node = objectpath(self.session.get('user', {}), keypath)
-        if node is None:
-            yield False
-        elif isinstance(node, list):
-            yield len(set(node) & values) > 0
+def check_membership(memberships):
+    '''
+    Return a generator that checks all memberships for a user, and yields True if
+    any membership is allowed, else False
+    '''
+    # Pre-process memberships into an array of {objectpath: set(values)}
+    conds = [{
+        keypath: set(values) if isinstance(values, list) else {values}
+        for keypath, values in cond.items()
+    } for cond in memberships]
+
+    def allowed(self):
+        user = self.session.get('user', {})
+        for cond in conds:
+            if _check_condition(cond, user):
+                yield True
+                break
         else:
-            yield node in values
-    return ismember
+            yield False
+
+    return allowed
+
+
+def _check_condition(condition, user):
+    '''
+    A condition is a dictionary of {keypath: values}. Extract the keypath from
+    the user. Check if the value is in the values list. If not, this condition
+    fails.
+    '''
+    for keypath, values in condition.items():
+        node = objectpath(user, keypath)
+        # If nothing exists at keypath, the check fails
+        if node is None:
+            return False
+        # If the value is a list, it must overlap with values
+        elif isinstance(node, list):
+            if not set(node) & values:
+                return False
+        # If the value is not a list, it must be present in values
+        elif node not in values:
+            return False
+    return True

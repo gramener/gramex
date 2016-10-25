@@ -565,6 +565,20 @@ only if your gender is `male` and your locale is `en` or `es`. (To test it,
 If the `user` object has nested attributes, you can access them via `.`. For
 example, `attributes.cn` refers to `handlers.current_user.attributes.cn`.
 
+You can specify multiple memberships that can be combined with AND or OR. This example allows (Females from @gramener.com) OR (Males with locale=en) OR (beta@example.org):
+
+    :::yaml
+        auth:
+            membership:
+                -                           # First rule
+                  gender: female                # Allow all women
+                  hd: gramener.com              # AND from gramener.com 
+                -                           # OR Second rule
+                  gender: male                  # Allow all men
+                  locale: en                    # with user.locale as "en"
+                -                           # OR Third rule
+                  user: beta@example.org       # Allow this user
+
 `auth:` lets you define conditions. For example, you can access [dotcom](dotcom)
 only if your email ends with `.com`, and access [dotorg](dotorg) only if your
 email ends with `.org`.
