@@ -592,3 +592,22 @@ email ends with `.org`.
 
 You can specify any function of your choice. The function must return (or yield)
 `True` to allow the user access, and `False` to raise a HTTP 403 error.
+
+## Templates for unauthorized
+
+When a user is logged in but does not have access to the page (because of the
+`auth` condition or membership), you can display a friendly message using
+`auth.template`. Visit [unauthorized-template](unauthorized-template) for an
+example. You will see the contents of `403-template.html` rendered.
+
+    :::yaml
+    url:
+        auth/unauthorized-template:
+            pattern: /$YAMLURL/unauthorized-template
+            handler: FileHandler
+            kwargs:
+                path: $YAMLPATH/secret.html
+                auth:
+                    membership:                     # Pick an unlikely condition to test template
+                        donkey: king                # This condition will usually be false
+                    template: $YAMLPATH/403-template.html   # Render template for forbidden users

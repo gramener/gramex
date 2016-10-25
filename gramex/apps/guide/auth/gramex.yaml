@@ -229,6 +229,16 @@ url:
             auth:
                 login_url: /$YAMLURL/simple
 
+    auth/unauthorized-template:
+        pattern: /$YAMLURL/unauthorized-template
+        handler: FileHandler
+        kwargs:
+            path: $YAMLPATH/secret.html
+            auth:
+                membership:                     # Pick an unlikely condition to test template
+                    donkey: king                # This condition will usually be false
+                template: $YAMLPATH/403-template.html   # Render template for forbidden users
+
 schedule:
     create-user-database:
         function: authutil.create_user_database     # Run this function
