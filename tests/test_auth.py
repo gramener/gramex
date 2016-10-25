@@ -245,3 +245,9 @@ class TestAuthorize(DBAuthBase):
 
     def test_auth_login_url(self):
         self.initialize('/auth/login-url', login_url='/auth/simple')
+
+    def test_auth_template(self):
+        self.initialize('/auth/unauthorized-template', user='alpha')
+        self.check('/auth/unauthorized-template', code=FORBIDDEN, text='403-template', session=self.session)
+        self.initialize('/auth/unauthorized-template', user='beta')
+        self.check('/auth/unauthorized-template', path='dir/alpha.txt', session=self.session)

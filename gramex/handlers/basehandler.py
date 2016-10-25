@@ -461,14 +461,14 @@ class BaseHandler(RequestHandler):
                 return
             raise HTTPError(UNAUTHORIZED)
 
-        # If the user doesn't have permissions, show a template or send a 403
+        # If the user doesn't have permissions, show 403 (with template)
         for permit_generator in self.permissions:
             for result in permit_generator(self):
                 if not result:
                     template = self.conf.kwargs.auth.get('template')
                     if template:
+                        self.set_status(FORBIDDEN)
                         self.render(template)
-                        return
                     raise HTTPError(FORBIDDEN)
 
 

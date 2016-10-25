@@ -1447,6 +1447,16 @@ url:
           login_url: /auth/simple
         path: dir/alpha.txt
         xsrf_cookies: false
+  auth/unauthorized-template:
+    pattern: /auth/unauthorized-template
+    handler: FileHandler
+    kwargs:
+      path: dir/alpha.txt
+      xsrf_cookies: false
+      auth:
+        membership:
+          user: beta
+        template: 403-template.html
 
   xsrf:
     pattern: /xsrf
