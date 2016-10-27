@@ -597,7 +597,6 @@ class JSONStore(KeyStore):
         self.handle.close()
 
 
-
 def check_membership(memberships):
     '''
     Return a generator that checks all memberships for a user, and yields True if
