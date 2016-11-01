@@ -225,7 +225,15 @@ To render a file as a template, use:
                   "*.html":                 # Apply the transform to all HTML files
                     function: template      # Render page.html as a template
 
-You can extract it dynamically using JavaScript. Here is an example that uses
+You can extract it dynamically using JavaScript. **This is disabled since Gramex 1.16**. You can enable it if security is not a consideration. Use:
+
+    :::yaml
+    app:
+        settings:
+            xsrf_cookie_kwargs:
+                httponly: false             # Allow JavaScript access to cookies
+
+Here is an example that uses
 [cookie.js](https://github.com/florian/cookie.js) and 
 [jQuery](https://jquery.com/). Install them:
 
