@@ -115,15 +115,25 @@ class GoogleAuth(AuthHandler, GoogleOAuth2Mixin):
                 'https://www.googleapis.com/oauth2/v1/userinfo',
                 access_token=access['access_token'])
             self.set_user(user, id='id')
+            self.session['google_access_token'] = access['access_token']
             self.redirect_next()
         else:
             self.save_redirect_page()
+            # Ensure user-specified scope has 'profile' and 'email'
+            scope = self.conf.kwargs.get('scope', [])
+            scope = scope if isinstance(scope, list) else [scope]
+            scope = list(set(scope) | {'profile', 'email'})
+            # Ensure extra_params has auto approval prompt
+            extra_params = self.conf.kwargs.get('extra_params', {})
+            if 'approval_prompt' not in extra_params:
+                extra_params['approval_prompt'] = 'auto'
+            # Return the list
             yield self.authorize_redirect(
                 redirect_uri=redirect_uri,
                 client_id=self.conf.kwargs['key'],
-                scope=['profile', 'email'],
+                scope=scope,
                 response_type='code',
-                extra_params={'approval_prompt': 'auto'})
+                extra_params=extra_params)
 
     @_auth_return_future
     def get_authenticated_user(self, redirect_uri, code, callback):

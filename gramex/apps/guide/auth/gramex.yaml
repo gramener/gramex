@@ -34,11 +34,22 @@ url:
             # callback: /auth/google on localhost:9988/, localhost:9999/, learn.gramener.com/guide/
             key: 817932882244-gdr59t3mpqh5554d1bgdjuh38g6a7ahh.apps.googleusercontent.com
             secret: lwArXkw21KCqDPuJrel-WeQO
+            scope:
+                - https://www.googleapis.com/auth/contacts.readonly
+                - https://www.googleapis.com/auth/gmail.readonly
             log:
                 fields: [session.id, current_user.email, request.remote_ip, request.headers.User-Agent]
             redirect:
                 query: next
                 url: /$YAMLURL
+
+    auth/contacts:
+        pattern: /$YAMLURL/contacts
+        handler: FunctionHandler
+        kwargs:
+            function: authutil.contacts
+            headers:
+                Content-Type: application/json
 
     auth/facebook:
         pattern: /$YAMLURL/facebook

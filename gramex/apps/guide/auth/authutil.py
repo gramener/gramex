@@ -1,7 +1,10 @@
 import os
 import json
 import random
+import tornado
+import datetime
 import sqlalchemy
+from urllib import urlencode
 from passlib.hash import sha256_crypt
 
 
@@ -40,3 +43,22 @@ def create_user_database(url, table, user, password, salt):
 def store_value(handler):
     handler.session.setdefault('randkey', random.randint(0, 1000))
     return json.dumps(handler.session, indent=4)
+
+
+async_http_client = tornado.httpclient.AsyncHTTPClient()
+
+
+@tornado.gen.coroutine
+def contacts(handler):
+    days = int(handler.get_argument('days', '30'))
+    start = (datetime.datetime.today() - datetime.timedelta(days=days))
+    result = yield async_http_client.fetch(
+        'https://www.google.com/m8/feeds/contacts/default/full?' + urlencode({
+            'updated-min': start.strftime('%Y-%m-%dT%H:%M:%S'),
+            'max-results': 500,
+            'alt': 'json',
+        }),
+        headers={'Authorization': 'Bearer ' + handler.session.get('google_access_token', '')},
+    )
+    contacts = json.loads(result.body)['feed']['entry']
+    raise tornado.gen.Return(json.dumps(contacts, indent=4))

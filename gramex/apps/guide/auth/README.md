@@ -134,6 +134,35 @@ To get the application key and secret:
   <a class="example-src" href="http://code.gramener.com/s.anand/gramex/tree/master/gramex/apps/guide/auth/gmail/">Source</a>
 </div>
 
+You can get access to Google APIs by specifying a scope. For example, this [accesses your contacts and mails](googleapi.html):
+
+    :::yaml
+    url:
+        login/google:
+            pattern: /$YAMLURL/google   # Map this URL
+            handler: GoogleAuth         # to the GoogleAuth handler
+            kwargs:
+                key: YOURKEY            # Set your app key
+                secret: YOURSECRET      # Set your app secret
+                scope:
+                    - https://www.googleapis.com/auth/contacts.readonly
+                    - https://www.googleapis.com/auth/gmail.readonly
+
+The bearer token is available in the session key `google_access_token`. You can
+pass this to any Google API with a `Authorization: Bearer <google_access_token>`
+HTTP header, or with a `?access_token=<google_access_token>` query parameter. For
+example, this code [fetches Google contacts](googleapi.html):
+
+    :::python
+    @tornado.gen.coroutine
+    def contacts(handler):
+        result = yield async_http_client.fetch(
+            'https://www.google.com/m8/feeds/contacts/default/full',
+            headers={'Authorization': 'Bearer ' + handler.session.get('google_access_token', '')},
+        )
+        raise tornado.gen.Return(result)
+
+
 ### SSL certificate error
 
 Google auth and connections to HTTPS sites may fail with a
