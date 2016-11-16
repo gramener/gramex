@@ -575,7 +575,7 @@ taken to `auth/simple` even though `app.settings.login_url` is `/login/`:
             handler: FileHandler
             kwargs:
                 path: $YAMLPATH/secret.html
-                auth: true
+                auth:
                     login_url: /$YAMLURL/simple     # Redirect users to this login page
 
 

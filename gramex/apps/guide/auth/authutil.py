@@ -60,5 +60,8 @@ def contacts(handler):
         }),
         headers={'Authorization': 'Bearer ' + handler.session.get('google_access_token', '')},
     )
-    contacts = json.loads(result.body)['feed']['entry']
+    try:
+        contacts = json.loads(result.body)['feed']['entry']
+    except Exception:
+        contacts = []
     raise tornado.gen.Return(json.dumps(contacts, indent=4))
