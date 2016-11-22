@@ -38,9 +38,18 @@ This displays African flags. The SQL query can contain parameters (e.g.
 `:continent`, `:c1`, etc.) The `default:` section defines their default values --
 similar to [DataHandler default](../datahandler/#datahandler-defaults).
 
-You can also specify the default `limit:` (number of rows) in the response as
-well as the `format:` (which can be `html`, `csv`, `xlsx` or `json` -- see
-[DataHandler formats](../datahandler/#datahandler-formats).)
+You can specify the default `limit:` (number of rows) in the response.
+
+The `format:` key can be `html`, `csv`, `xlsx` or `json` -- see
+[DataHandler formats](../datahandler/#datahandler-formats). You can specify the
+output as a downloable file with a filename, e.g. `test.csv` in the example here:
+
+    :::yaml
+        kwargs:                         # Add this entry under the handler kwargs:
+            ...
+            query: {format: csv}        # Freeze CSV as the format
+            headers:
+                Content-Disposition: "attachment;filename=test.csv"
 
 URL query parameters can override these. For example:
 

@@ -406,7 +406,9 @@ url:
         select * from actors limit cast(:limit as integer)
       parameters: {encoding: utf8}
       default: {format: csv}
-      headers: {X-Test: abc}
+      headers:
+        X-Test: abc
+        Content-Disposition: attachment;filename=alpha.csv
       xsrf_cookies: false
 
   querydata/json:
@@ -466,7 +468,9 @@ url:
         where iterator < cast(coalesce(:limit,'1000') as SIGNED) + 1
       parameters: {encoding: utf8}
       default: {format: csv}
-      headers: {X-Test: abc}
+      headers:
+        X-Test: abc
+        Content-Disposition: attachment;filename=alpha.csv
       xsrf_cookies: false
 
   querydata/mysql_json:
@@ -518,7 +522,9 @@ url:
         select * from actors limit cast(:limit as integer)
       parameters: {encoding: utf8}
       default: {format: csv}
-      headers: {X-Test: abc}
+      headers:
+        X-Test: abc
+        Content-Disposition: attachment;filename=alpha.csv
       xsrf_cookies: false
 
   querydata/postgresql_json:
@@ -722,7 +728,9 @@ url:
       table: actors
       parameters: {encoding: utf8}
       default: {format: csv}
-      headers: {X-Test: abc}
+      headers:
+        X-Test: abc
+        Content-Disposition: attachment;filename=alpha.csv
       xsrf_cookies: false
   data/json:
     pattern: /datastore/sqlite/json/
@@ -755,7 +763,9 @@ url:
       table: actors
       parameters: {encoding: utf8}
       default: {format: xlsx}
-      headers: {X-Test: abc}
+      headers:
+        X-Test: abc
+        Content-Disposition: attachment;filename=alpha.xlsx
       xsrf_cookies: false
 
   # Test datahandler for MySQL
@@ -768,7 +778,9 @@ url:
       table: actors
       parameters: {encoding: utf8, connect_args: {charset: utf8}}
       default: {format: csv}
-      headers: {X-Test: abc}
+      headers:
+        X-Test: abc
+        Content-Disposition: attachment;filename=alpha.csv
       xsrf_cookies: false
   data/mysql/json:
     pattern: /datastore/mysql/json/
@@ -801,7 +813,9 @@ url:
       table: actors
       parameters: {encoding: utf8, connect_args: {charset: utf8}}
       default: {format: xlsx}
-      headers: {X-Test: abc}
+      headers:
+        X-Test: abc
+        Content-Disposition: attachment;filename=alpha.xlsx
       xsrf_cookies: false
 
   # Test datahandler for PostgreSQL
@@ -814,7 +828,9 @@ url:
       table: actors
       parameters: {encoding: utf8}
       default: {format: csv}
-      headers: {X-Test: abc}
+      headers:
+        X-Test: abc
+        Content-Disposition: attachment;filename=alpha.csv
       xsrf_cookies: false
   data/postgresql/json:
     pattern: /datastore/postgresql/json/
@@ -847,7 +863,9 @@ url:
       table: actors
       parameters: {encoding: utf8}
       default: {format: xlsx}
-      headers: {X-Test: abc}
+      headers:
+        X-Test: abc
+        Content-Disposition: attachment;filename=alpha.xlsx
       xsrf_cookies: false
 
   # TestDataHandler for blaze sqlite
@@ -860,7 +878,9 @@ url:
       table: actors
       parameters: {encoding: utf8}
       default: {format: csv}
-      headers: {X-Test: abc}
+      headers:
+        X-Test: abc
+        Content-Disposition: attachment;filename=alpha.csv
       xsrf_cookies: false
   data/blaze/json:
     pattern: /datastore/blazesqlite/json/
@@ -893,7 +913,9 @@ url:
       table: actors
       parameters: {encoding: utf8}
       default: {format: xlsx}
-      headers: {X-Test: abc}
+      headers:
+        X-Test: abc
+        Content-Disposition: attachment;filename=alpha.xlsx
       xsrf_cookies: false
 
   # Test datahandler for blaze MySQL
@@ -906,7 +928,9 @@ url:
       table: actors
       parameters: {encoding: utf8}
       default: {format: csv}
-      headers: {X-Test: abc}
+      headers:
+        X-Test: abc
+        Content-Disposition: attachment;filename=alpha.csv
       xsrf_cookies: false
   data/blazemysql/json:
     pattern: /datastore/blazemysql/json/
@@ -939,7 +963,9 @@ url:
       table: actors
       parameters: {encoding: utf8}
       default: {format: xlsx}
-      headers: {X-Test: abc}
+      headers:
+        X-Test: abc
+        Content-Disposition: attachment;filename=alpha.xlsx
       xsrf_cookies: false
 
   # TestDataHandlerConfig for Sqlite
@@ -953,7 +979,9 @@ url:
       default:
         format: csv
         where: [votes<120]
-      headers: {X-Test: abc}
+      headers:
+        X-Test: abc
+        Content-Disposition: attachment;filename=alpha.csv
       xsrf_cookies: false
   data/sqliteconfig2/csv:
     pattern: /datastore/sqliteconfig2/csv/
@@ -965,7 +993,9 @@ url:
       default:
         format: csv
         where: votes<120
-      headers: {X-Test: abc}
+      headers:
+        X-Test: abc
+        Content-Disposition: attachment;filename=alpha.csv
       xsrf_cookies: false
   data/sqliteconfig3/csv:
     pattern: /datastore/sqliteconfig3/csv/
@@ -978,7 +1008,9 @@ url:
         format: csv
       query:
         where: votes<120
-      headers: {X-Test: abc}
+      headers:
+        X-Test: abc
+        Content-Disposition: attachment;filename=alpha.csv
       xsrf_cookies: false
   data/sqliteconfig4/csv:
     pattern: /datastore/sqliteconfig4/csv/
@@ -992,7 +1024,9 @@ url:
         select: ["rating", "votes"]
       query:
         where: votes<120
-      headers: {X-Test: abc}
+      headers:
+        X-Test: abc
+        Content-Disposition: attachment;filename=alpha.csv
       xsrf_cookies: false
   data/sqliteconfig5/csv:
     pattern: /datastore/sqliteconfig5/csv/
@@ -1008,7 +1042,9 @@ url:
           votes:
       query:
         where: votes<120
-      headers: {X-Test: abc}
+      headers:
+        X-Test: abc
+        Content-Disposition: attachment;filename=alpha.csv
       xsrf_cookies: false
   data/sqliteconfig6/csv:
     pattern: /datastore/sqliteconfig6/csv/
@@ -1028,7 +1064,9 @@ url:
         where:
           votes: "<120"
           rating: ">0.4"
-      headers: {X-Test: abc}
+      headers:
+        X-Test: abc
+        Content-Disposition: attachment;filename=alpha.csv
       xsrf_cookies: false
   data/sqliteconfig7/csv:
     pattern: /datastore/sqliteconfig7/csv/
@@ -1042,7 +1080,9 @@ url:
         format: csv
         where: [votes<120]
         limit: 5
-      headers: {X-Test: abc}
+      headers:
+        X-Test: abc
+        Content-Disposition: attachment;filename=alpha.csv
       xsrf_cookies: false
 
   process/args:

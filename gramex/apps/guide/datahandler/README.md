@@ -178,8 +178,8 @@ By default, the format can be overridden by the URL. For example:
 
 - [flags?format=html](flags?format=html) renders as HTML
 - [flags?format=json](flags?format=json) renders as JSON
-- [flags?format=csv](flags?format=csv) renders as a CSV download named `file.csv`
-- [flags?format=xlsx](flags?format=xlsx) renders as an Excel download named `file.xlsx`
+- [flags?format=csv](flags?format=csv) renders as a CSV download (named `file.csv` by default)
+- [flags?format=xlsx](flags?format=xlsx) renders as an Excel download (named `file.xlsx` by default)
 
 The default format is JSON. Change it using [datahandler defaults](#datahandler-defaults).
 In this example, the default format is HTML, but the URL can override it.
@@ -189,7 +189,7 @@ In this example, the default format is HTML, but the URL can override it.
             ...
             default: {format: html}     # Change default to HTML
 
-In this example, the format is always CSV. The filename will be `test.csv`.
+In this example, the format is always CSV. The file will be downloaded as `test.csv`.
 
     :::yaml
         kwargs:                         # Add this entry under the handler kwargs:

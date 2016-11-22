@@ -18,9 +18,13 @@ class DataHandlerTestMixin(object):
     data = pd.read_csv(str(folder / 'actors.csv'))
 
     def test_pingdb(self):
-        for frmt in ['csv', 'json', 'html', 'xlsx']:
-            self.check('/datastore/%s/%s/?count=1' % (self.database, frmt),
-                       code=200, headers={'Etag': True, 'X-Test': 'abc'})
+        for frmt in ['json', 'html']:
+            self.check('/datastore/%s/%s/?count=1' % (self.database, frmt), code=200, headers={
+                'Etag': True, 'X-Test': 'abc'})
+        for frmt in ['csv', 'xlsx']:
+            self.check('/datastore/%s/%s/?count=1' % (self.database, frmt), code=200, headers={
+                'Etag': True, 'X-Test': 'abc',
+                'Content-Disposition': 'attachment;filename=alpha.%s' % frmt})
         self.check('/datastore/' + self.database + '/xyz', code=404)
 
     def test_fetchdb(self):

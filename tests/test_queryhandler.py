@@ -17,13 +17,14 @@ class QueryHandlerTestMixin(object):
     data = pd.read_csv(str(folder / 'actors.csv'))
 
     def test_pingdb(self):
-        self.check('/datastoreq/' + self.database + '/csv/?limit=5',
-                   code=200, headers={'Etag': True, 'X-Test': 'abc'})
-        self.check('/datastoreq/' + self.database + '/json/?name=Charlie%20Chaplin',
-                   code=200, headers={'Etag': True, 'X-Test': 'abc'})
-        self.check('/datastoreq/' + self.database + '/html/?votes=100',
-                   code=200, headers={'Etag': True, 'X-Test': 'abc'})
-        self.check('/datastoreq/' + self.database + '/xyz', code=404)
+        url = '/datastoreq/' + self.database
+        self.check(url + '/csv/?limit=5', code=200, headers={
+            'Etag': True, 'X-Test': 'abc', 'Content-Disposition': 'attachment;filename=alpha.csv'})
+        self.check(url + '/json/?name=Charlie%20Chaplin', code=200, headers={
+            'Etag': True, 'X-Test': 'abc'})
+        self.check(url + '/html/?votes=100', code=200, headers={
+            'Etag': True, 'X-Test': 'abc'})
+        self.check(url + '/xyz', code=404)
 
     def test_fetchdb(self):
         base = server.base_url + '/datastoreq/' + self.database
