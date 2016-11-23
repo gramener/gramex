@@ -92,6 +92,7 @@ setup(
         'coverage',
         'testfixtures',             # For logcapture
         'sphinx_rtd_theme',         # For documentation
+        'websocket-client',         # For websocket testing
     ],
     **release_args
 )

@@ -2,8 +2,9 @@
 Handlers
 '''
 
-from .basehandler import BaseHandler
+from .basehandler import BaseHandler, BaseWebSocketHandler
 from .functionhandler import FunctionHandler
+from .websockethandler import WebSocketHandler
 from .filehandler import FileHandler
 from .datahandler import DataHandler, QueryHandler
 from .authhandler import (GoogleAuth, FacebookAuth, TwitterAuth, LDAPAuth, SimpleAuth, DBAuth,
@@ -15,8 +16,11 @@ from .uploadhandler import UploadHandler
 
 DirectoryHandler = FileHandler
 
-__all__ = ['BaseHandler', 'FunctionHandler', 'FileHandler', 'DirectoryHandler',
-           'DataHandler', 'QueryHandler', 'JSONHandler', 'GoogleAuth',
-           'FacebookAuth', 'TwitterAuth', 'LDAPAuth', 'SimpleAuth', 'DBAuth',
-           'LogoutHandler', 'ProcessHandler', 'TwitterRESTHandler',
-           'FacebookGraphHandler', 'UploadHandler']
+__all__ = [
+    'BaseHandler', 'FunctionHandler', 'FileHandler', 'DirectoryHandler',
+    'DataHandler', 'QueryHandler', 'JSONHandler', 'GoogleAuth',
+    'FacebookAuth', 'TwitterAuth', 'LDAPAuth', 'SimpleAuth', 'DBAuth',
+    'LogoutHandler', 'ProcessHandler', 'TwitterRESTHandler',
+    'FacebookGraphHandler', 'UploadHandler',
+    'BaseWebSocketHandler', 'WebSocketHandler',
+]

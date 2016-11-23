@@ -14,6 +14,7 @@ from six.moves.urllib_parse import urlparse, urlsplit, urljoin, urlencode
 from tornado.log import access_log
 from tornado.template import Template
 from tornado.web import RequestHandler, HTTPError
+from tornado.websocket import WebSocketHandler
 from gramex import conf, __version__
 from gramex.config import objectpath, app_log
 from gramex.transforms import build_transform
@@ -23,11 +24,7 @@ server_header = 'Gramex/%s' % __version__
 session_store_cache = {}
 
 
-class BaseHandler(RequestHandler):
-    '''
-    BaseHandler provides auth, caching and other services common to all request
-    handlers. All RequestHandlers must inherit from BaseHandler.
-    '''
+class BaseMixin(object):
     @classmethod
     def setup(cls, transform={}, redirect={}, auth=None, log={}, set_xsrf=None,
               error=None, xsrf_cookies=None, **kwargs):
@@ -315,27 +312,6 @@ class BaseHandler(RequestHandler):
         '''Does nothing. Used when overriding functions or providing a dummy operation'''
         pass
 
-    def initialize(self, **kwargs):
-        self.kwargs = kwargs
-        self._session, self._session_json = None, 'null'
-        if self.cache:
-            self.cachefile = self.cache()
-            self.original_get = self.get
-            self.get = self._cached_get
-        if self._set_xsrf:
-            self.xsrf_token
-
-    def prepare(self):
-        for method in self._on_init_methods:
-            method(self)
-
-    def set_default_headers(self):
-        self.set_header('Server', server_header)
-        # Set BaseHandler headers.
-        # Don't set headers for the specific class -- they are overrides, not default headers.
-        for key, val in objectpath(conf, 'handlers.BaseHandler.headers', {}).items():
-            self.set_header(key, val)
-
     def save_redirect_page(self):
         '''
         Loop through all redirect: methods and save the first available redirect
@@ -379,11 +355,6 @@ class BaseHandler(RequestHandler):
             else:
                 self.set_header(name, value)
                 headers_written.add(name)
-
-    def get_current_user(self):
-        '''Return the ``user`` key from the session as an AttrDict if it exists.'''
-        result = self.session.get('user')
-        return AttrDict(result) if isinstance(result, dict) else result
 
     def debug_exception(self, typ, value, tb):
         super(BaseHandler, self).log_exception(typ, value, tb)
@@ -433,7 +404,11 @@ class BaseHandler(RequestHandler):
             # If there's no session id cookie "sid", create a random 32-char cookie
             if session_id is None:
                 session_id = b2a_base64(os.urandom(24))[:-1]
-                self.set_secure_cookie('sid', session_id, expires_days=self._session_days)
+                # Websockets cannot set cookies. They raise a RuntimeError. Ignore those.
+                try:
+                    self.set_secure_cookie('sid', session_id, expires_days=self._session_days)
+                except RuntimeError:
+                    pass
             session_id = session_id.decode('ascii')
             self._session = self._session_store.load(session_id, {})
             # Overwrite id to the session ID even if a handler has changed it
@@ -445,10 +420,42 @@ class BaseHandler(RequestHandler):
         if getattr(self, '_session', None) is not None:
             self._session_store.dump(self._session['id'], self._session)
 
+
+class BaseHandler(RequestHandler, BaseMixin):
+    '''
+    BaseHandler provides auth, caching and other services common to all request
+    handlers. All RequestHandlers must inherit from BaseHandler.
+    '''
+    def initialize(self, **kwargs):
+        self.kwargs = kwargs
+        self._session, self._session_json = None, 'null'
+        if self.cache:
+            self.cachefile = self.cache()
+            self.original_get = self.get
+            self.get = self._cached_get
+        if self._set_xsrf:
+            self.xsrf_token
+
+    def prepare(self):
+        for method in self._on_init_methods:
+            method(self)
+
+    def set_default_headers(self):
+        self.set_header('Server', server_header)
+        # Set BaseHandler headers.
+        # Don't set headers for the specific class -- they are overrides, not default headers.
+        for key, val in objectpath(conf, 'handlers.BaseHandler.headers', {}).items():
+            self.set_header(key, val)
+
     def on_finish(self):
         # Loop through class-level callbacks
         for callback in self._on_finish_methods:
             callback(self)
+
+    def get_current_user(self):
+        '''Return the ``user`` key from the session as an AttrDict if it exists.'''
+        result = self.session.get('user')
+        return AttrDict(result) if isinstance(result, dict) else result
 
     def authorize(self):
         # If the user isn't logged in, redirect to login URL or send a 401
@@ -475,6 +482,47 @@ class BaseHandler(RequestHandler):
                         self.set_status(FORBIDDEN)
                         self.render(template)
                     raise HTTPError(FORBIDDEN)
+
+
+class BaseWebSocketHandler(WebSocketHandler, BaseMixin):
+    def initialize(self, **kwargs):
+        self.kwargs = kwargs
+        self._session, self._session_json = None, 'null'
+        if self.cache:
+            self.cachefile = self.cache()
+            self.original_get = self.get
+            self.get = self._cached_get
+        if self._set_xsrf:
+            self.xsrf_token
+
+    def open(self, *args, **kwargs):
+        for method in self._on_init_methods:
+            method(self)
+
+    def on_close(self):
+        # Loop through class-level callbacks
+        for callback in self._on_finish_methods:
+            callback(self)
+
+    def get_current_user(self):
+        '''Return the ``user`` key from the session as an AttrDict if it exists.'''
+        result = self.session.get('user')
+        return AttrDict(result) if isinstance(result, dict) else result
+
+    def authorize(self):
+        '''If a valid user isn't logged in, send a message and close connection'''
+        if not self.get_current_user():
+            error = HTTPError(UNAUTHORIZED)
+            self.write_message('{}'.format(error))
+            app_log.exception(error)
+            self.close()
+        for permit_generator in self.permissions:
+            for result in permit_generator(self):
+                if not result:
+                    error = HTTPError(FORBIDDEN)
+                    self.write_message('{}'.format(error))
+                    app_log.exception(error)
+                    self.close()
 
 
 class KeyStore(object):

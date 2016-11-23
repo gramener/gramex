@@ -13,6 +13,7 @@ from concurrent.futures import ThreadPoolExecutor
 from gramex.services import info
 
 watch_info = []
+ws_info = []
 
 
 def args_as_json(handler):
@@ -192,3 +193,21 @@ def increment(handler):
     '''
     info.increment = 1 + info.get('increment', 0)
     return 'Constant result'
+
+
+def ws_open(handler):
+    ws_info.append({'method': 'open'})
+
+
+def ws_on_close(handler):
+    ws_info.append({'method': 'on_close'})
+
+
+def ws_on_message(handler, message):
+    ws_info.append({'method': 'on_message', 'message': message})
+
+
+def ws_info_dump(handler):
+    result = json.dumps(ws_info, indent=4)
+    del ws_info[:]
+    return result
