@@ -288,6 +288,18 @@ class SimpleAuth(AuthHandler):
             user1: password1                # user1 maps to password1
             user2: password2
 
+    An alternate configuration is::
+
+        credentials:                        # Mapping of user IDs and user info
+            user1:                          # Each user ID has a dictionary of keys
+                password: password1         # One of them MUST be password
+                email: user1@example.org    # Any other attributes can be added
+                role: employee              # These are available from the session info
+            user2:
+                password: password2
+                email: user2@example.org
+                role: manager
+
     The full configuration (``kwargs``) for SimpleAuth looks like this::
 
         template: $YAMLPATH/auth.template.html  # Render the login form template
@@ -322,8 +334,13 @@ class SimpleAuth(AuthHandler):
     def post(self):
         user = self.get_argument(self.user.arg)
         password = self.get_argument(self.password.arg)
-        if self.credentials.get(user) == password:
+        info = self.credentials.get(user)
+        if info == password:
             self.set_user({'user': user}, id='user')
+            self.redirect_next()
+        elif hasattr(info, 'get') and info.get('password', None) == password:
+            info.setdefault('user', user)
+            self.set_user(info, id='user')
             self.redirect_next()
         else:
             self.set_status(status_code=401)

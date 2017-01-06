@@ -145,6 +145,11 @@ class TestSimpleAuth(AuthBase, LoginMixin):
         self.login('alpha', 'alpha')
         self.assertDictContainsSubset({'action_set': True}, self.get_session())
 
+    def test_attributes(self):
+        self.login('gamma', 'gamma')
+        self.assertEquals({'user': 'gamma', 'id': 'gamma', 'role': 'user', 'password': 'gamma'},
+                          self.get_session()['user'])
+
     def test_logout_action(self):
         self.login_ok('alpha', 'alpha', check_next='/dir/index/')
         self.assertEquals({'user': 'alpha', 'id': 'alpha'}, self.get_session()['user'])

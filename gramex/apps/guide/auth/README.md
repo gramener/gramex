@@ -97,14 +97,22 @@ This configuration creates a [simple auth page](simple):
                 credentials:            # Specify the user IDs and passwords
                     alpha: alpha        # User: alpha has password: alpha
                     beta: beta          # Similarly for beta
+                    gamma:              # The user gamma is defined as a mapping
+                        password: pwd   # One of the keys MUST be "password"
+                        role: user      # Additional keys can be defined
                 template: $YAMLPATH/simple.html   # Optional login template
 
 This setup is useful only for testing. It stores passwords in plain text.
 **DO NOT USE IT IN PRODUCTION.**
 
-You should create a [HTML login form](simple) that requests a username and
-password (with an [xsrf][xsrf] field). See [login templates](#login-templates)
-to learn how to create one.
+You can access user information via `handler.get_session()`. For user `alpha`,
+this would return `{'user': 'alpha', 'id': 'alpha'}`. For user `gamma`, this
+mapping would also have attributes `'role': 'user'` and `'password': 'pwd'`.
+
+The `template:` key is optional, but you should generally associate it with a
+[HTML login form file](simple) that requests a username and password (with an
+[xsrf][xsrf] field). See [login templates](#login-templates) to learn how to
+create one.
 
 
 ## Google auth

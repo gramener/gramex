@@ -1369,6 +1369,9 @@ url:
         credentials:
             alpha: alpha
             beta: beta
+            gamma:
+                password: gamma
+                role: user
         redirect:
             query: next
             header: NEXT
