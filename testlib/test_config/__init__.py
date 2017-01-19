@@ -31,7 +31,7 @@ def unlink(path):
 
 
 class TestChainConfig(unittest.TestCase):
-    'Test gramex.conf.ChainConfig'
+    '''Test gramex.conf.ChainConfig'''
 
     def test_attrdict(self):
         'ChainConfig is an AttrDict'
@@ -57,7 +57,7 @@ class TestChainConfig(unittest.TestCase):
 
 
 class TestPathConfig(unittest.TestCase):
-    'Test gramex.conf.PathConfig'
+    '''Test gramex.conf.PathConfig'''
 
     def setUp(self):
         self.a = info.home / 'config.a.yaml'
@@ -208,7 +208,7 @@ class TestPathConfig(unittest.TestCase):
 
 class TestConfig(unittest.TestCase):
     def test_walk_dict(self):
-        'Test gramex.config.walk with dicts'
+        '''Test gramex.config.walk with dicts'''
         o = yaml.load('''
             a:
                 b:

@@ -25,7 +25,7 @@ futures >= 3.0.5 ; python_version < '3'   # handlers.datahandler uses futures (b
 oauthlib >= 1.1.2         # OAuth request-signing
 
 # Optional dependencies (batteries included principle)
-markdown            # For Markdown transfroms
-PyMySQL             # For MySQL connections
-ipdb                # For debugging
-textblob            # For Gramex Guide TwitterRESTHandler example
+markdown                  # For Markdown transfroms
+PyMySQL                   # For MySQL connections
+ipdb                      # For debugging
+textblob                  # For Gramex Guide TwitterRESTHandler example

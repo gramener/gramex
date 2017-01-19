@@ -20,15 +20,21 @@ merges the YAMLs.
 '''
 
 import os
+import re
+import six
 import sys
 import yaml
 import string
 import logging
+import datetime
+import dateutil.tz
+import dateutil.parser
 from pathlib import Path
 from copy import deepcopy
 from six import string_types
 from pydoc import locate as _locate
 from yaml import Loader, MappingNode
+from json import JSONEncoder, JSONDecoder
 from yaml.constructor import ConstructorError
 from orderedattrdict import AttrDict, DefaultAttrDict
 
@@ -432,6 +438,50 @@ def locate(path, modules=[], forceload=0):
 
 
 _checked_old_certs = []
+
+
+class CustomJSONEncoder(JSONEncoder):
+    '''
+    Encodes object to JSON, additionally converting datetime into ISO 8601 format
+    '''
+    def default(self, obj):
+        if isinstance(obj, datetime.datetime):
+            # Use local timezone if no timezone is specified
+            if obj.tzinfo is None:
+                obj = obj.replace(tzinfo=dateutil.tz.tzlocal())
+            return obj.isoformat()
+        else:
+            return super(CustomJSONEncoder, self).default(obj)
+
+
+class CustomJSONDecoder(JSONDecoder):
+    '''
+    Decodes JSON string, converting ISO 8601 datetime to datetime
+    '''
+    # Check if a string might be a datetime. Handles variants like:
+    # 2001-02-03T04:05:06Z
+    # 2001-02-03T04:05:06+000
+    # 2001-02-03T04:05:06.000+0000
+    re_datetimeval = re.compile('\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}')
+    re_datetimestr = re.compile('"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}')
+
+    def __init__(self, *args, **kwargs):
+        self.old_object_pairs_hook = kwargs.get('object_pairs_hook')
+        kwargs['object_pairs_hook'] = self.convert
+        super(CustomJSONDecoder, self).__init__(*args, **kwargs)
+
+    def decode(self, obj):
+        if self.re_datetimestr.match(obj):
+            return dateutil.parser.parse(obj[1:-1])
+        return super(CustomJSONDecoder, self).decode(obj)
+
+    def convert(self, obj):
+        for index, (key, val) in enumerate(obj):
+            if isinstance(val, six.string_types) and self.re_datetimeval.match(val):
+                obj[index] = (key, dateutil.parser.parse(val))
+        if callable(self.old_object_pairs_hook):
+            return self.old_object_pairs_hook(obj)
+        return dict(obj)
 
 
 def check_old_certs():

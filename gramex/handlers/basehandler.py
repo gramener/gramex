@@ -16,7 +16,7 @@ from tornado.template import Template
 from tornado.web import RequestHandler, HTTPError
 from tornado.websocket import WebSocketHandler
 from gramex import conf, __version__
-from gramex.config import objectpath, app_log
+from gramex.config import objectpath, app_log, CustomJSONDecoder, CustomJSONEncoder
 from gramex.transforms import build_transform
 from gramex.http import UNAUTHORIZED, FORBIDDEN
 
@@ -594,7 +594,7 @@ class HDF5Store(KeyStore):
             return default
         json_value = result.value if hasattr(result, 'value') else result
         try:
-            return json.loads(json_value, object_pairs_hook=AttrDict)
+            return json.loads(json_value, object_pairs_hook=AttrDict, cls=CustomJSONDecoder)
         except ValueError:
             app_log.error('HDF5Store("%s").load("%s") is not JSON ("%r..."")',
                           self.path, key, json_value)
@@ -603,7 +603,8 @@ class HDF5Store(KeyStore):
     def dump(self, key, value):
         if key in self.store:
             del self.store[key]
-        self.store[key] = json.dumps(value, ensure_ascii=True, separators=(',', ':'))
+        self.store[key] = json.dumps(value, ensure_ascii=True, separators=(',', ':'),
+                                     cls=CustomJSONEncoder)
 
     def flush(self):
         self.store.flush()
@@ -631,14 +632,15 @@ class JSONStore(KeyStore):
         super(JSONStore, self).__init__(path, *args, **kwargs)
         try:
             self.handle = open(self.path, 'r+')     # noqa: no encoding for json
-            self.store = json.load(self.handle)
+            self.store = json.load(self.handle, cls=CustomJSONDecoder)
         except (IOError, ValueError):
             self.handle = open(self.path, 'w')      # noqa: no encoding for json
             self.store = {}
 
     def flush(self):
         self.handle.seek(0)
-        json.dump(self.store, self.handle, ensure_ascii=True, separators=(',', ':'))
+        json.dump(self.store, self.handle, ensure_ascii=True, separators=(',', ':'),
+                  cls=CustomJSONEncoder)
 
     def close(self):
         self.flush()
