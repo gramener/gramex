@@ -30,7 +30,8 @@ class TestJSON(unittest.TestCase):
             json.dumps(result))
 
     def test_decoder(self):
-        date = datetime.datetime(2001, 2, 3, 4, 5, 6, 0, dateutil.tz.tzutc())
+        date = datetime.datetime(year=2001, month=2, day=3, hour=4, minute=5, second=6,
+                                 microsecond=0, tzinfo=dateutil.tz.tzutc())
         datestr = '"2001-02-03T04:05:06+0000"'
         self.assertEqual(json.loads(datestr, cls=CustomJSONDecoder), date)
 
@@ -59,7 +60,6 @@ class TestJSON(unittest.TestCase):
         encoded = json.dumps(val, cls=CustomJSONEncoder)
         decoded = json.loads(encoded, cls=CustomJSONDecoder, object_pairs_hook=AttrDict)
         self.assertEqual(decoded, val)
-
 
     def test_roundtrip(self):
         date = datetime.datetime.now()
