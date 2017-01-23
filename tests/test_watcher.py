@@ -7,11 +7,11 @@ from pydoc import locate
 from contextlib import contextmanager
 from . import TestGramex
 
-# Since watch loads functions using locate(), we need to load it the same way.
-# Otherwise, the utils imported by watch is different from utils imported here.
 _folder = os.path.dirname(os.path.abspath(__file__))
 if _folder not in sys.path:
     sys.path.append(_folder)
+# Since watch loads functions using locate(), we need to load it the same way.
+# Otherwise, the utils imported by watch is different from utils imported here.
 watch_info = locate('utils.watch_info')
 
 

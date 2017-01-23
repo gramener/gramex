@@ -42,7 +42,7 @@ class Task(object):
             self.cron = CronTab(' '.join(cron))
             self._schedule()
         elif not schedule.get('startup'):
-            app_log.warn('schedule: %s has no schedule nor startup', name)
+            app_log.warn('schedule:%s has no schedule nor startup', name)
 
         # Run now if the task is to be run on startup. Don't re-run if the config was reloaded
         if schedule.get('startup') and not self.ioloop._running:

@@ -391,7 +391,7 @@ class PathConfig(AttrDict):
         self.__pos__()
 
     def __pos__(self):
-        '+config reloads this config (if it has a path)'
+        '''+config reloads this config (if it has a path)'''
         path = self.__info__.path
 
         # We must reload the layer if nothing has been imported...
