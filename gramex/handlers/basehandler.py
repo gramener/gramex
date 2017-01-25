@@ -6,6 +6,7 @@ import json
 import atexit
 import mimetypes
 import tornado.gen
+from hashlib import md5
 from textwrap import dedent
 from types import GeneratorType
 from binascii import b2a_base64
@@ -548,6 +549,7 @@ class KeyStore(object):
         if not os.path.exists(folder):
             os.makedirs(folder)
         self.store = {}
+        self.signature = None
         # Periodically flush buffers
         if flush is not None:
             tornado.ioloop.PeriodicCallback(self.flush, callback_time=flush * 1000).start()
@@ -638,9 +640,13 @@ class JSONStore(KeyStore):
             self.store = {}
 
     def flush(self):
-        self.handle.seek(0)
-        json.dump(self.store, self.handle, ensure_ascii=True, separators=(',', ':'),
-                  cls=CustomJSONEncoder)
+        json_value = json.dumps(self.store, ensure_ascii=True, separators=(',', ':'),
+                                cls=CustomJSONEncoder)
+        signature = md5(json_value).hexdigest()
+        if signature != self.signature:
+            self.handle.seek(0)
+            self.handle.write(json_value)
+            self.signature = signature
 
     def close(self):
         self.flush()
