@@ -1573,6 +1573,20 @@ url:
       on_close:
         function: utils.ws_on_close
 
+  ws/socket-auth:
+    pattern: /ws/auth
+    handler: WebSocketHandler
+    kwargs:
+      auth:
+        membership:
+          id: alpha
+      open:
+        function: utils.ws_open
+      on_message:
+        function: utils.ws_on_message
+      on_close:
+        function: utils.ws_on_close
+
   ws/info:
     pattern: /ws/info
     handler: FunctionHandler

@@ -496,9 +496,11 @@ class BaseWebSocketHandler(WebSocketHandler, BaseMixin):
         if self._set_xsrf:
             self.xsrf_token
 
-    def open(self, *args, **kwargs):
+    @tornado.web.asynchronous
+    def get(self, *args, **kwargs):
         for method in self._on_init_methods:
             method(self)
+        super(BaseWebSocketHandler, self).get(*args, **kwargs)
 
     def on_close(self):
         # Loop through class-level callbacks
@@ -513,17 +515,11 @@ class BaseWebSocketHandler(WebSocketHandler, BaseMixin):
     def authorize(self):
         '''If a valid user isn't logged in, send a message and close connection'''
         if not self.get_current_user():
-            error = HTTPError(UNAUTHORIZED)
-            self.write_message('{}'.format(error))
-            app_log.exception(error)
-            self.close()
+            raise HTTPError(UNAUTHORIZED)
         for permit_generator in self.permissions:
             for result in permit_generator(self):
                 if not result:
-                    error = HTTPError(FORBIDDEN)
-                    self.write_message('{}'.format(error))
-                    app_log.exception(error)
-                    self.close()
+                    raise HTTPError(FORBIDDEN)
 
 
 class KeyStore(object):
