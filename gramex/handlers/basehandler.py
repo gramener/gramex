@@ -642,7 +642,7 @@ class JSONStore(KeyStore):
     def flush(self):
         json_value = json.dumps(self.store, ensure_ascii=True, separators=(',', ':'),
                                 cls=CustomJSONEncoder)
-        signature = md5(json_value).hexdigest()
+        signature = md5(json_value.encode('utf-8')).hexdigest()
         if signature != self.signature:
             self.handle.seek(0)
             self.handle.write(json_value)
