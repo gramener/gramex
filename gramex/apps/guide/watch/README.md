@@ -38,8 +38,8 @@ Here is a sample event handler that prints the event:
 ## Watching files
 
 Your functions can watch files efficiently. For example, this code will run
-`log()` when `filename.txt` is created, deleted or modified. `log()` will be called with a 
-`event` is a [watchdog event][event].
+`log()` when `filename.txt` is created, deleted or modified. `log()` will be
+called with a [watchdog event][event].
 
 
     :::python
@@ -50,5 +50,9 @@ Your functions can watch files efficiently. For example, this code will run
 
     watch(name='unique-name', paths=['filename.txt'],
           on_created=log, on_deleted=log, on_modified=log)
+
+    # Now, when any changes are made to filename.txt, on_modified is called
+    # To stop watching, use this:
+    unwatch(name='unique-name')
 
 [event]: http://pythonhosted.org/watchdog/api.html#module-watchdog.events

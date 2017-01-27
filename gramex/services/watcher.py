@@ -25,42 +25,15 @@ class FileEventHandler(FileSystemEventHandler):
     Each FileEventHandler is associated with a set of events from a config.
     It maps a set of paths to these events.
     '''
-    def __init__(self, paths=[], **events):
+    def __init__(self, patterns, **events):
         super(FileEventHandler, self).__init__()
-
-        self.patterns = set()       # List of absolute path patterns
-        self.folders = set()        # List of folders matching these paths
-        for path in paths:
-            # paths can be pathlib.Path or str. Convert to str before proceeding
-            path = os.path.abspath(str(path))
-            if os.path.isdir(path):
-                self.patterns.add(os.path.join(path, '*'))
-                self.folders.add(path)
-            else:
-                self.patterns.add(path)
-                self.folders.add(os.path.dirname(path))
-
-        self.watches = []           # ObservedWatch objects for this handler
+        self.patterns = patterns
         self.__dict__.update(events)
-        for folder in self.folders:
-            if folder in watches:
-                observer.add_handler_for_watch(self, watches[folder])
-            elif os.path.exists(folder):
-                watches[folder] = observer.schedule(self, folder, recursive=True)
-                self.watches.append(watches[folder])
-            else:
-                app_log.warning('watch directory %s does not exist', folder)
 
     def dispatch(self, event):
         path = os.path.abspath(event.src_path)
         if any(fnmatch(path, pattern) for pattern in self.patterns):
             super(FileEventHandler, self).dispatch(event)
-
-    def unschedule(self):
-        for watch in self.watches:
-            observer.remove_handler_for_watch(self, watch)
-            # TODO: if there are no handlers, remove the observer?
-            # observer.unschedule(watch)
 
 
 def watch(name, paths, **events):
@@ -84,6 +57,8 @@ def watch(name, paths, **events):
     is created or modified, no message is shown, since the old handler has been
     replaced.
 
+    To remove this watch, call ``unwatch('test')``.
+
     :arg string name: Unique name of the watch.  To replace an existing watch,
         re-use the same name.
     :arg list paths: List of relative or absolute paths to watch.  The paths
@@ -94,6 +69,44 @@ def watch(name, paths, **events):
     :arg function on_moved(event): Called when any path is moved.
     :arg function on_any_event(event): Called on any of the above events.
     '''
+    # if name in handlers:
+    #     handlers[name].unschedule()
+    # handlers[name] = FileEventHandler(paths, **events)
+
+    # Create a series of schedules and handlers
     if name in handlers:
-        handlers[name].unschedule()
-    handlers[name] = FileEventHandler(paths, **events)
+        unwatch(name)
+    handlers[name] = []
+
+    patterns = set()        # List of absolute path patterns
+    folders = set()         # List of folders matching these paths
+    for path in paths:
+        # paths can be pathlib.Path or str. Convert to str before proceeding
+        path = os.path.abspath(str(path))
+        if os.path.isdir(path):
+            patterns.add(os.path.join(path, '*'))
+            folders.add(path)
+        else:
+            patterns.add(path)
+            folders.add(os.path.dirname(path))
+
+    handler = FileEventHandler(patterns, **events)
+
+    for folder in folders:
+        if folder in watches:
+            observer.add_handler_for_watch(handler, watches[folder])
+        elif os.path.exists(folder):
+            watches[folder] = observer.schedule(handler, folder, recursive=True)
+        else:
+            app_log.warning('watch directory %s does not exist', folder)
+            continue
+        handlers[name].append(AttrDict(name=name, handler=handler, watch=watches[folder],
+                                       folder=folder))
+
+
+def unwatch(name):
+    '''
+    Removes a named watch.
+    '''
+    for info in handlers.pop(name, []):
+        observer.remove_handler_for_watch(info.handler, info.watch)
