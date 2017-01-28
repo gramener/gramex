@@ -315,16 +315,20 @@ follows:
 You can concatenate multiple files and serve them as a single file. For example:
 
     :::yaml
-    pattern: /contents
+    pattern: /libraries.js
     handler: FileHandler
     kwargs:
         path:
-            - heading.md
-            - body.md
-            - footer.md
+            - bower_components/jquery/dist/jquery.min.js
+            - bower_components/bootstrap/dist/bootstrap.min.js
+            - bower_components/d3/d3.v3.min.js
+        headers:
+            Cache-Control: public, max-age=86400    # Cache publicly for 1 day
 
 This concatenates all files in `path` in sequence. If transforms are
-specified, the transforms are applied before concatenation
+specified, the transforms are applied before concatenation.
+
+This is useful to pack multiple static files into one, as the example shows.
 
 
 [filehandler]: https://learn.gramener.com/gramex/gramex.handlers.html#gramex.handlers.FileHandler
