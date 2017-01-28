@@ -1,4 +1,7 @@
-'From cachetools/ttl.py, modified where marked CHANGE:'
+'''
+Same as cachetools/ttl.py, but with option to specify an expiry for EACH key.
+'''
+# Modifications are marked with CHANGE:
 
 import collections
 import time

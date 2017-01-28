@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-'Test case utilities'
+'''Test case utilities'''
 
 import json
 import time
