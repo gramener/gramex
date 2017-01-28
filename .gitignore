@@ -25,6 +25,7 @@ tests/**/gen.*
 # Don't commit CSV files, except what's required for testing or by Gramex apps
 *.csv
 !tests/**/*.csv
+!testlib/**/*.csv
 !gramex/apps/**/*.csv
 
 # Don't commit databases created by test cases

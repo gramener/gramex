@@ -1,7 +1,10 @@
 title: Caching requests
 
-Responses can be cached on the browser or the server. This section explains how
-both work.
+Responses can be cached at various places:
+
+- [Cache the entire page on the browser](#browser-caching)
+- [Cache the entire page on the server](#server-caching)
+- [Cache data on the server](#data-caching)
 
 # Browser caching
 
@@ -67,7 +70,6 @@ But adding the `cache:` to this URL caches it the first time it is called. When
             function: random.choice
             args: [['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j']]
         cache: true
-
 
 ## Cache keys
 
@@ -210,7 +212,6 @@ method which accepts an `expire=` parameter. For example:
     del cache['key']  # clears the key
     cache.set('key', 'value', expire=30)    # key expires in 30 seconds
 
-
 ## Mixing Python versions
 
 The cache implementation in Python 2 is different from Python 3 because:
@@ -242,3 +243,47 @@ example, to cache the `bower_components` directory, use this configuration:
 
 To force a refresh, append `?v=xx` where `xx` is a new number. (The use of `?v=`
 is arbitrary. You can use any query parameter instead of `v`.)
+
+
+# Data caching
+
+You can load files and cache them unless they are reloaded using
+`gramex.cache.open`.
+
+    :::python
+    import gramex.cache
+    data = gramex.cache.open('data.csv', 'csv', encoding='utf-8')
+
+This loads `data.csv`  using `pd.read_csv('data.csv', encoding='utf-8')`. The
+next time this is called, if `data.csv` in unchanged, the cached results are
+returned.
+
+The 2nd parameter can be a custom function called as `function(path, **kwargs)`.
+For example:
+
+    :::python
+    # Return file size if it has changed
+    file_size = gramex.cache.open('data.csv', lambda path: os.stat(path).st_size)
+
+    # Read Excel file. Keyword arguments are passed to pd.read_excel
+    data = gramex.cache.open('data.xlsx', pd.read_excel, sheetname='Sheet1')
+
+There are some pre-defined string values you can use as well for the callback:
+
+- `gramex.cache.open(path, 'json', ...)` loads JSON files using `json.load`
+- `gramex.cache.open(path, 'yaml', ...)` loads YAML files using `yaml.load`
+- `gramex.cache.open(path, 'csv', ...)` loads CSV files using `pd.read_csv`
+- `gramex.cache.open(path, 'excel', ...)` loads Excel files using `pd.read_excel`
+- `gramex.cache.open(path, 'hdf', ...)` loads HDF files using `pd.read_hdf`
+- `gramex.cache.open(path, 'html', ...)` loads HTML files using `pd.read_html`
+- `gramex.cache.open(path, 'sas', ...)` loads SAS files using `pd.read_sas`
+- `gramex.cache.open(path, 'stata', ...)` loads Stata files using `pd.read_stata`
+- `gramex.cache.open(path, 'table', ...)` loads tabular text files using `pd.read_table`
+
+By default, the data is cached in an internal cache. You can specify a custom
+cache (e.g. a [cachetools](http://pythonhosted.org/cachetools/) LRU cache that
+has a maximum size) using an `_cache` parameter. For example:
+
+    :::python
+    cache = cachetools.LRUCache(maxsize=4)
+    data = gramex.cache.open(path, 'csv', _cache=cache)

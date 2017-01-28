@@ -76,6 +76,12 @@
     "login-templates": {
       "Login templates": -1
     },
+    "login-urls": {
+      "Login URLs": -1
+    },
+    "roles": {
+      "Roles": -1
+    },
     "session-data": {
       "Session data": -1
     },
@@ -87,6 +93,9 @@
     },
     "ssl-certificate-error": {
       "SSL certificate error": -1
+    },
+    "templates-for-unauthorized": {
+      "Templates for unauthorized": -1
     },
     "twitter-auth": {
       "Twitter auth": -1
@@ -116,6 +125,9 @@
     },
     "cache-stores": {
       "Cache stores": -1
+    },
+    "data-caching": {
+      "Data caching": -1
     },
     "mixing-python-versions": {
       "Mixing Python versions": -1
