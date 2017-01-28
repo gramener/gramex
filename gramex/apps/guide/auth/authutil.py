@@ -4,8 +4,8 @@ import random
 import tornado
 import datetime
 import sqlalchemy
-from urllib import urlencode
 from passlib.hash import sha256_crypt
+from six.moves.urllib.parse import urlencode
 
 
 def create_user_database(url, table, user, password, salt):
