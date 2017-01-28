@@ -718,6 +718,27 @@ url:
       parameters: {encoding: utf8}
       xsrf_cookies: false
 
+  querydata/filename:
+    pattern: /datastoreq/sqlite/csv/filename
+    handler: QueryHandler
+    kwargs:
+      driver: sqlalchemy
+      url: sqlite:///actors.db
+      sql: >
+        select * from actors limit cast(:limit as integer)
+      parameters: {encoding: utf8}
+      default: {format: csv, filename: top_actors.csv}
+
+  data/filename:
+    pattern: /datastore/sqlite/csv/filename
+    handler: DataHandler
+    kwargs:
+      driver: sqlalchemy
+      url: sqlite:///actors.db
+      table: actors
+      parameters: {encoding: utf8}
+      default: {format: csv, filename: top_actors.csv}
+
   # TestDataHandler for Sqlite
   data/csv:
     pattern: /datastore/sqlite/csv/

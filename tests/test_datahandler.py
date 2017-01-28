@@ -175,8 +175,7 @@ class DataHandlerTestMixin(object):
             self.assertEqual(response.status_code, NOT_FOUND)
 
 
-class TestSqliteHandler(TestGramex, DataHandlerTestMixin):
-    'Test DataHandler for SQLite database via sqlalchemy driver'
+class SqliteHandler(TestGramex, DataHandlerTestMixin):
     database = 'sqlite'
 
     @classmethod
@@ -193,8 +192,18 @@ class TestSqliteHandler(TestGramex, DataHandlerTestMixin):
             cls.db.unlink()
 
 
+class TestSqliteHandler(SqliteHandler):
+    '''Test DataHandler for SQLite database via sqlalchemy driver'''
+
+    def test_filename(self):
+        self.check('/datastore/sqlite/csv/filename?limit=5', headers={
+            'Content-Disposition': 'attachment;filename=top_actors.csv'})
+        self.check('/datastore/sqlite/csv/filename?limit=5&filename=name.csv', headers={
+            'Content-Disposition': 'attachment;filename=name.csv'})
+
+
 class TestMysqlDataHandler(TestGramex, DataHandlerTestMixin):
-    'Test DataHandler for MySQL database via sqlalchemy driver'
+    '''Test DataHandler for MySQL database via sqlalchemy driver'''
     database = 'mysql'
 
     @classmethod
@@ -218,7 +227,7 @@ class TestMysqlDataHandler(TestGramex, DataHandlerTestMixin):
 
 
 class TestPostgresDataHandler(TestGramex, DataHandlerTestMixin):
-    'Test DataHandler for PostgreSQL database via sqlalchemy driver'
+    '''Test DataHandler for PostgreSQL database via sqlalchemy driver'''
     database = 'postgresql'
 
     @classmethod
@@ -251,8 +260,8 @@ class TestPostgresDataHandler(TestGramex, DataHandlerTestMixin):
         cls.engine.dispose()
 
 
-class TestBlazeDataHandler(TestSqliteHandler):
-    'Test DataHandler for SQLite database via blaze driver'
+class TestBlazeDataHandler(SqliteHandler):
+    '''Test DataHandler for SQLite database via blaze driver'''
     database = 'blazesqlite'
 
     def test_querypostdb(self):
@@ -269,8 +278,8 @@ class TestBlazeMysqlDataHandler(TestMysqlDataHandler, TestBlazeDataHandler):
         pass
 
 
-class TestDataHandlerConfig(TestSqliteHandler):
-    'Test DataHandler'
+class TestDataHandlerConfig(SqliteHandler):
+    '''Test DataHandler'''
     database = 'sqliteconfig'
 
     def test_pingdb(self):

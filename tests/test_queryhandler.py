@@ -106,6 +106,12 @@ class TestSqliteHandler(TestGramex, QueryHandlerTestMixin):
         cls.engine = sa.create_engine('sqlite:///' + str(cls.db))
         cls.data.to_sql('actors', con=cls.engine, index=False)
 
+    def test_filename(self):
+        self.check('/datastoreq/sqlite/csv/filename?limit=5', headers={
+            'Content-Disposition': 'attachment;filename=top_actors.csv'})
+        self.check('/datastoreq/sqlite/csv/filename?limit=5&filename=name.csv', headers={
+            'Content-Disposition': 'attachment;filename=name.csv'})
+
     @classmethod
     def tearDownClass(cls):
         if cls.db.is_file():

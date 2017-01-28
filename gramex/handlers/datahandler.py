@@ -96,13 +96,17 @@ class DataMixin(object):
         formats = self.getq('format', [])
         for fmt in self._FORMAT_HEADERS:
             if fmt in formats:
-                self.write_headers(**self._FORMAT_HEADERS[fmt])
+                headers = dict(self._FORMAT_HEADERS[fmt])
                 break
         else:
             if len(formats) == 0:
-                self.write_headers(**self._FORMAT_HEADERS['json'])
+                headers = dict(self._FORMAT_HEADERS['json'])
             else:
                 raise NotImplementedError('format=%s is not supported yet.' % formats)
+        filename = self.getq('filename', [])
+        if len(filename) > 0:
+            headers['Content-Disposition'] = 'attachment;filename=%s' % filename[0]
+        self.write_headers(**headers)
 
 
 class DataHandler(BaseHandler, DataMixin):
@@ -493,6 +497,7 @@ class QueryHandler(BaseHandler, DataMixin):
                 key: ...
                 limit:
                 format:
+                filename:
             query:
                 limit:
                 format:

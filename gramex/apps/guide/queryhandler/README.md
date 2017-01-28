@@ -47,14 +47,14 @@ output as a downloable file with a filename, e.g. `test.csv` in the example here
     :::yaml
         kwargs:                         # Add this entry under the handler kwargs:
             ...
-            query: {format: csv}        # Freeze CSV as the format
-            headers:
-                Content-Disposition: "attachment;filename=test.csv"
+            query: {format: csv}            # Freeze CSV as the format
+            default: {filename: test.csv}   # Set the default filename
 
 URL query parameters can override these. For example:
 
 - [flags?continent=Europe](flags?continent=Europe) shows flags for Europe
 - [flags?format=json](flags?format=json) renders the flags in JSON
+- [flags?format=csv&filename=flags.csv](flags?format=csv&filename=flags.csv) downloads `flags.csv`
 - [flags?limit=20](flags?limit=20) shows 20 rows instead of the default 10
 
 Here's the JSON output:
@@ -133,6 +133,7 @@ The [result](multi) appears in:
 - [HTML](multi?format=html) as tables with headings
 - [JSON](multi?format=json) as an object. The `sql:` keys are the keys, the values hold the data
 - [XLSX](multi?format=xlsx) as sheets. The sheet name is the `sql:` key
+- [data.xlsx](multi?format=xlsx&filename=data.xlsx) as sheets. The download file name is `data.xlsx`
 
 Every parameter and arguments is applicable for each query. The results are
 always in the same order as in the `sql:` config.
