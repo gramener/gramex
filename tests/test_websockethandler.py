@@ -2,6 +2,7 @@
 
 from __future__ import unicode_literals
 
+import time
 from requests import Request
 from test_auth import AuthBase
 from nose.tools import eq_
@@ -26,6 +27,7 @@ class TestWebSocketHandler(AuthBase):
             ws = create_connection(base_url.replace('http://', 'ws://') + '/ws/socket')
             ws.send(msg)
             ws.close()
+            time.sleep(0.01)
             eq_(self.check('/ws/info').json(), [
                 {'method': 'open'},
                 {'method': 'on_message', 'message': msg},
@@ -54,13 +56,14 @@ class TestWebSocketHandler(AuthBase):
         self.assertEqual(exc.status_code, FORBIDDEN)
 
     def test_authorised_user(self):
-        """Log in as user alpha. Authorised users should get access."""
+        # Log in as user alpha. Authorised users should get access.
         self.login('alpha', 'alpha')
         ws = create_connection(base_url.replace('http://', 'ws://') + '/ws/auth', header=[
             'Cookie: {}'.format(get_cookie_header(self.session.cookies, Request(url=base_url)))
         ])
         ws.send(self.message)
         ws.close()
+        time.sleep(0.01)
         eq_(self.check('/ws/info').json(), [
             {'method': 'open'},
             {'method': 'on_message', 'message': self.message},
