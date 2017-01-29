@@ -467,6 +467,9 @@
   "websockethandler": {
     "": {
       "WebSocketHandler": -1
+    },
+    "websockets-via-nginx": {
+      "Websockets via nginx": -1
     }
   }
 }

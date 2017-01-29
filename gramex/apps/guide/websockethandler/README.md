@@ -65,6 +65,33 @@ To learn more about websockets:
 - Try this [Gramex chatbot](chat.html) and [view its source](chatbot-source)
 - Learn how to write [WebSockets in JS](websocket-clients)
 
+## Websockets via nginx
+
+To serve WebSockets from behind an nginx reverse proxy, use the following config:
+
+    http {
+      # Add this configuration inside the http section
+      # ----------------------------------------------
+      map $http_upgrade $connection_upgrade {
+          default upgrade;
+          ''      close;
+      }
+
+      server {
+        location / {
+          proxy_pass ...;
+
+          # Add this configuration inside the http > server > location section
+          # ------------------------------------------------------------------
+          proxy_http_version 1.1;
+          proxy_set_header Upgrade    $http_upgrade;
+          proxy_set_header Connection $connection_upgrade;
+          proxy_set_header Host       $host;
+          proxy_set_header X-Scheme   $scheme;
+        }
+      }
+    }
+
 [websockethandler]: https://learn.gramener.com/gramex/gramex.handlers.html#gramex.handlers.WebSocketHandler
 [chatbot-source]: https://code.gramener.com/s.anand/gramex/tree/dev/gramex/apps/guide/websockethandler/websocketchat.py
 [websocket-clients]: https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API/Writing_WebSocket_client_applications
