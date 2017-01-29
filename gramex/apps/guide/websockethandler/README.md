@@ -21,6 +21,10 @@ Here is a sample configuration:
                     function: pingbot.on_message    #   call on_message(handler, msg) in pingbot.py
                 on_close:                           # When websocket is closed
                     function: pingbot.on_close      #   call on_close(handler) in pingbot.py
+                origins:                            # Allow only from these domains.
+                    - gramener.com                  # This is optional.
+                    - localhost                     # If unspecified, all domains are allowed.
+                    - 127.0.0.1
 
 This passes on the `open`, `on_message` and `on_close` events to `pingbot.py`:
 
