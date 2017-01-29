@@ -3,6 +3,28 @@
 History
 -------
 
+1.17 (2016-01-29)
+~~~~~~~~~~~~~~~~~
+
+This version has a breaking change. The default login URL is ``/login/`` instead
+of ``/login``. This makes it easier to create custom login pages using
+FileHandler (e.g. ``/login/index.html``). If your application breaks, in your
+gramex.yaml ``app:`` section, add ``login_url: /login`` to revert the change.
+
+- `WebSocketHandler`_ lets you create websocket servers on Gramex.
+- `DataHandler`_ and `QueryHandler`_ support the ``?filename=`` parameter to specify a download filename
+- Several enhancements to authentication including:
+    - Each URL can have its own `login URL`_ via a ``login_url:`` key.
+    - `Roles`_ membership can be checked through multiple AND / OR combinations
+    - `Google Auth`_ now allows accessing logged-in users' Google data
+    - Auth handlers' `auth redirection`_ supports ``?next=`` by default
+    - `Login templates`_ are documented
+    - `SimpleAuth`_ now lets you add other attributes (e.g. roles) to the user object
+- Now `data caching`_ is easier with the ``gramex.cache.open()`` method
+- A major bug related to `watch`_ is fixed.
+- Some bugs related to JSONStore (used for session storage) are fixed
+
+
 1.16 (2016-10-16)
 ~~~~~~~~~~~~~~~~~
 
@@ -313,9 +335,12 @@ There are two changes that may disrupt your code:
 .. _TwitterRESTHandler: https://learn.gramener.com/guide/twitterresthandler/
 .. _FacebookGraphHandler: https://learn.gramener.com/guide/facebookgraphhandler/
 .. _LogoutHandler: https://learn.gramener.com/guide/auth/#log-out
+.. _WebSocketHandler: https://learn.gramener.com/guide/websockethandler/
 .. _LDAPAuth: https://learn.gramener.com/guide/auth/#ldap
+.. _Google Auth: https://learn.gramener.com/guide/auth/#google-auth
 .. _DBAuth: https://learn.gramener.com/guide/auth/#simple-auth
 .. _DBAuth: https://learn.gramener.com/guide/auth/#database-auth
+.. _SimpleAuth: https://learn.gramener.com/guide/auth/#simple-auth
 .. _TwitterAuth: https://learn.gramener.com/guide/auth/#twitter-auth
 .. _TwitterStream: https://learn.gramener.com/guide/twitterresthandler/#twitter-streaming
 .. _UploadHandler: https://learn.gramener.com/guide/auth/uploadhandler/
@@ -330,9 +355,13 @@ There are two changes that may disrupt your code:
 .. _authorization: https://learn.gramener.com/guide/auth/#authorization
 .. _Gramex update page: https://gramener.com/gramex-update/
 .. _ignore files: https://learn.gramener.com/guide/filehandler/#ignore-files
-.. _auth redirection: https://learn.gramener.com/guide/auth/#redirection
+.. _auth redirection: https://learn.gramener.com/guide/config/#redirection
 .. _email: https://learn.gramener.com/guide/email/
 .. _conditional variables: https://learn.gramener.com/guide/config/#conditional-variables
 .. _error handlers: https://learn.gramener.com/guide/config/#error-handlers
 .. _watch: https://learn.gramener.com/guide/watch/
 .. _deploy yaml: https://learn.gramener.com/guide/deploy/#security
+.. _Login templates: https://learn.gramener.com/guide/auth/#login-templates
+.. _login URL: https://learn.gramener.com/guide/auth/#login-urls
+.. _Roles: https://learn.gramener.com/guide/auth/#roles
+.. _data caching: https://learn.gramener.com/guide/cache/#data-caching
