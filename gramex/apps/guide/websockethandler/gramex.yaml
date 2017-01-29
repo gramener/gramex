@@ -1,0 +1,22 @@
+url:
+    websockethandler/pingbot:
+        pattern: /$YAMLURL/pingbot
+        handler: WebSocketHandler
+        kwargs:
+            open:                               # When websocket is opened
+                function: pingbot.open          #   call open(handler) in pingbot.py
+            on_message:                         # When client sends a message
+                function: pingbot.on_message    #   call on_message(handler, msg) in pingbot.py
+            on_close:                           # When websocket is closed
+                function: pingbot.on_close      #   call on_close(handler) in pingbot.py
+
+    websockethandler/chat:
+        pattern: /$YAMLURL/chat
+        handler: WebSocketHandler
+        kwargs:
+            open:
+                function: websocketchat.open
+            on_message:
+                function: websocketchat.on_message
+            on_close:
+                function: websocketchat.on_close

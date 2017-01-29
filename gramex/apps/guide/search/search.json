@@ -463,5 +463,10 @@
     "watching-files": {
       "Watching files": -1
     }
+  },
+  "websockethandler": {
+    "": {
+      "WebSocketHandler": -1
+    }
   }
 }

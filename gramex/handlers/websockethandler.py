@@ -3,6 +3,18 @@ from .basehandler import BaseWebSocketHandler
 
 
 class WebSocketHandler(BaseWebSocketHandler):
+    '''
+    Handles WebSockets. It accepts these parameters:
+
+    :arg function open: ``open(handler)`` is called when the connection is opened
+    :arg function on_message: ``on_message(handler, message)`` is called with a
+        string message when the client sends a message.
+    :arg function on_close: ``on_close(handler)`` is called when the websocket is
+        closed.
+
+    The handler has a ``.write_message(text)`` method that sends a message back
+    to the client.
+    '''
     @classmethod
     def setup(cls, **kwargs):
         super(WebSocketHandler, cls).setup(**kwargs)

@@ -49,6 +49,10 @@ classes: toc
 
 **Exercise**: Display the results of `git log` on a git repository.
 
+## [Gramex handles WebSockets](websockethandler/)
+
+**Exercise**: Create a simple chatbot.
+
 ## [Gramex accesses Twitter data](twitterresthandler/)
 
 **Exercise**: Create a dashboard showing the latest tweets and followers of any user, along with the popular tweets that mention them.
