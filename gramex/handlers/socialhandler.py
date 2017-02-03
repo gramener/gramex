@@ -17,7 +17,7 @@ custom_responses = {
 
 class SocialMixin(object):
     @classmethod
-    def setup_social(cls, user_info, transform={}, methods=['post'], **kwargs):
+    def setup_social(cls, user_info, transform={}, methods=['get', 'post'], **kwargs):
         # Session key that stores the user info
         cls.user_info = user_info
 
@@ -64,8 +64,16 @@ class SocialMixin(object):
                 self.set_header(header, header_value)
         return result
 
+    def write_error(self, status_code, **kwargs):
+        '''Write error responses in JSON'''
+        self.set_header('Content-Type', 'application/json; charset=UTF-8')
+        self.finish(json.dumps({'errors': [{
+            'code': status_code,
+            'message': self._reason,
+        }]}))
 
-class TwitterRESTHandler(BaseHandler, SocialMixin, TwitterMixin):
+
+class TwitterRESTHandler(SocialMixin, BaseHandler, TwitterMixin):
     '''
     Proxy for the Twitter 1.1 REST API via these ``kwargs``::
 
@@ -97,6 +105,11 @@ class TwitterRESTHandler(BaseHandler, SocialMixin, TwitterMixin):
 
     @tornado.gen.coroutine
     def run(self, path=None):
+        path = self.conf.kwargs.get('path', path)
+        if not path and self.request.method == 'GET':
+            yield self.login()
+            raise tornado.gen.Return()
+
         args = {key: self.get_argument(key) for key in self.request.arguments}
         params = AttrDict(self.conf.kwargs)
         # update params with session parameters
@@ -119,10 +132,11 @@ class TwitterRESTHandler(BaseHandler, SocialMixin, TwitterMixin):
         http = self.get_auth_http_client()
         response = yield http.fetch(uri, headers=headers, raise_error=False)
         result = yield self.social_response(response)
+        self.set_header('Content-Type', 'application/json; charset=UTF-8')
         self.write(result)
 
     @tornado.gen.coroutine
-    def get(self, path=None):
+    def login(self):
         if self.get_argument('oauth_token', None):
             self.session[self.user_info] = yield self.get_authenticated_user()
             self.redirect_next()
@@ -136,7 +150,7 @@ class TwitterRESTHandler(BaseHandler, SocialMixin, TwitterMixin):
                     secret=self.conf.kwargs['secret'])
 
 
-class FacebookGraphHandler(BaseHandler, SocialMixin, FacebookGraphMixin):
+class FacebookGraphHandler(SocialMixin, BaseHandler, FacebookGraphMixin):
     '''
     Proxy for the Facebook Graph API via these ``kwargs``::
 
@@ -147,7 +161,7 @@ class FacebookGraphHandler(BaseHandler, SocialMixin, FacebookGraphMixin):
             secret: your-consumer-secret
             access_token: your-access-token     # Optional -- picked up from session
             methods: [get, post]                # HTTP methods to use for the API
-            scope: read_stream,user_photos      # Permissions requested for the user
+            scope: user_posts,user_photos       # Permissions requested for the user
             path: /me/feed                      # Freeze Facebook Graph API request
 
     Now ``POST /facebook/me`` returns the same response as the Facebook Graph API
@@ -172,6 +186,11 @@ class FacebookGraphHandler(BaseHandler, SocialMixin, FacebookGraphMixin):
 
     @tornado.gen.coroutine
     def run(self, path=None):
+        path = self.conf.kwargs.get('path', path)
+        if not path and self.request.method == 'GET':
+            yield self.login()
+            raise tornado.gen.Return()
+
         args = {key: self.get_argument(key) for key in self.request.arguments}
         if 'access_token' in self.conf.kwargs:
             args['access_token'] = self.conf.kwargs['access_token']
@@ -190,7 +209,7 @@ class FacebookGraphHandler(BaseHandler, SocialMixin, FacebookGraphMixin):
         self.write(result)
 
     @tornado.gen.coroutine
-    def get(self, path=None):
+    def login(self):
         redirect_uri = self.request.protocol + "://" + self.request.host + self.request.uri
         if self.get_argument('code', False):
             self.session[self.user_info] = yield self.get_authenticated_user(
@@ -201,7 +220,7 @@ class FacebookGraphHandler(BaseHandler, SocialMixin, FacebookGraphMixin):
             self.redirect_next()
         else:
             self.save_redirect_page()
-            scope = self.conf.kwargs.get('scope', 'read_stream')
+            scope = self.conf.kwargs.get('scope', 'user_posts,read_insights')
             yield self.authorize_redirect(
                 redirect_uri=redirect_uri,
                 client_id=self.conf.kwargs['key'],

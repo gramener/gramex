@@ -11,59 +11,33 @@ title: Gramex accesses Facebook data
                 # Visit https://developers.facebook.com/apps/ to get these keys
                 key: '...'
                 secret: '...'
-                access_token: '...'
+            redirect:
+                header: Referer
+                url: /$YAMLURL/
 
 Follow the steps for [Facebook auth](../auth/#facebook-auth) to get the keys above.
 
-Now, `POST /facebook/me` will show your user information. It's the same as `GET
-https://graph.facebook.com/me`, but pre-authenticated with the keys provided in
-`kwargs`.
+Now, follow these steps:
 
-To use just a specific REST API, use the `path:` parameter. For example:
+1. Click on [/facebook/me](facebook/me)
+2. The first time you click on this, you get an "access token missing" error
+3. So visit [/facebook/](facebook/) to log into Facebook
+4. Now re-visit [/facebook/me](facebook/me)
+5. This shows the logged-in user's profile in JSON
 
-    :::yaml
-    url:
-        facebook/myphotos:
-            pattern: /facebook/myphotos       # Maps this URL
-            handler: FacebookGraphHandler
-            kwargs:
-                path: /me/photos              # specifically to this API call
-                ...
-
-... maps `/facebook/myphotos` to `https://graph.facebook.com/me/photos` with the
-relevant authentication.
-
-The examples below use [jQuery.ajax][jquery-ajax] and the [cookie.js][cookie.js] libraries.
-
-[jquery-ajax]: http://api.jquery.com/jquery.ajax/
-[cookie.js]: https://github.com/florian/cookie.js
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/cookie.js/1.2.0/cookie.min.js"></script>
-
-## Facebook OAuth
-
-The above examples allowed you to query Facebook with a pre-defined access
-token. But for users to use their own account to access the API, **do not
-specify an `access_token`. It will redirect the user to Facebook and log them
-in.
-
-For example, the first time you make a POST request to `oauth-api/` (see output
-below), you will see an error message saying `access token missing`. But visit
-[oauth-api/?next=../](oauth-api/?next=../) and log into Facebook. Then visit this
-page. The request below will show your name.
+The request below will show your name once you log in. To log in, visit
+[/facebook/](facebook/):
 
     :::js
-    var xsrf = {'X-Xsrftoken': cookie.get('_xsrf')}
-    $.ajax('oauth-api/me', {
-      headers: xsrf,
-      method: 'POST',
-    })  // OUTPUT
+    $.get('facebook/me')  // OUTPUT
 
 After the OAuth login, users can be redirected via the `redirect:` config
 documented the [redirection configuration](../config/#redirection).
 
-Additional documentation:
+The FacebookGraphHandler is very similar to the TwitterRESTHandler in many ways:
 
+- You can use the `path:` configuration to hard-code a specific request. See the
+  [Twitter paths](../twitterresthandler/#twitter-paths)
 - You can use the `transform:` configuration to modify the response in any way.
   See the [Twitter transforms](../twitterresthandler/#twitter-transforms)
   documentation.
@@ -72,15 +46,19 @@ Additional documentation:
 - Instead of `POST`, you can use the `GET` method as well. See the documentation
   on [Twitter GET requests](../twitterresthandler/#twitter-get-requests)
 
+See this [sample application](dashboard.html) and its [source][source] for examples of usage.
+
+
+[source]: https://code.gramener.com/s.anand/gramex/tree/dev/gramex/apps/guide/facebookgraphhandler
+
 
 <script>
-var xsrf = {'X-Xsrftoken': cookie.get('_xsrf')}
-var pre = [].slice.call(document.querySelectorAll('pre'))
-
 function replace(e, regex, text) {
     e.innerHTML = e.innerHTML.replace(regex, 
       '<p style="color: #ccc">// OUTPUT</p><p>' + text + '</p>')
 }
+
+var pre = [].slice.call(document.querySelectorAll('pre'))
 
 function next() {
   var output_regex = /\/\/ OUTPUT/,

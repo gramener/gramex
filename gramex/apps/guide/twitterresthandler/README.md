@@ -11,17 +11,51 @@ title: Gramex accesses Twitter data
                 # Visit https://apps.twitter.com/ to get these keys
                 key: '...'
                 secret: '...'
-                access_key: '...'
-                access_secret: '...'
+            redirect:
+                header: Referer
+                url: /$YAMLURL/
 
 Follow the steps for [Twitter auth](../auth/#twitter-auth) to get the keys above.
 
-Now, `POST /twitter/search/tweets.json?q=beer` will 
-[search for tweets][search-tweets] about beer.
-It's the same as `GET https://api.twitter.com/1.1/search/tweets.json?q=beer`,
-but pre-authenticated with the keys provided in `kwargs`.
+Now, follow these steps:
 
-To use just a specific REST API, use the `path:` parameter. For example:
+1. Click on [/twitter/search/tweets.json?q=beer](twitter/search/tweets.json?q=beer)
+2. The first time you click on this, you get an "access token missing" error
+3. So visit [/twitter/](twitter/) to log into Twitter
+4. Now re-visit [/twitter/search/tweets.json?q=beer](twitter/search/tweets.json?q=beer)
+5. This [searches for tweets][search-tweets] about beer
+
+## Twitter Pre-auth
+
+If you don't want the user to log in, and want to use a pre-authorised login, add
+the following to the `kwargs:` section:
+
+    :::yaml
+    url:
+        twitter-open:
+            pattern: /twitter-open/(.*)
+            handler: TwitterRESTHandler
+            kwargs:
+                # Visit https://apps.twitter.com/ to get these keys
+                key: '...'
+                secret: '...'
+                access_key: '...'
+                access_secret: '...'
+
+Now
+[/twitter-open/search/tweets.json?q=beer](twitter-open/search/tweets.json?q=beer)
+even without you logging into Twitter. It runs on behalf of the developer with
+their access token.
+
+To use this via jQuery, use this snippet:
+
+    :::js
+    $.get('twitter-open/statuses/home_timeline.json?count=1')
+    // OUTPUT
+
+## Twitter Paths
+
+To hard-code a specific REST API, use the `path:` parameter. For example:
 
     :::yaml
     url:
@@ -35,49 +69,38 @@ To use just a specific REST API, use the `path:` parameter. For example:
 ... maps `/twitter/search` to `https://api.twitter.com/1.1/search/tweets.json`
 with the relevant authentication.
 
-The examples below use [jQuery.ajax][jquery-ajax] and the [cookie.js][cookie.js] libraries.
-
-[jquery-ajax]: http://api.jquery.com/jquery.ajax/
-[cookie.js]: https://github.com/florian/cookie.js
 [search-tweets]: https://dev.twitter.com/rest/reference/get/search/tweets
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/cookie.js/1.2.0/cookie.min.js"></script>
 
 ## Twitter OAuth
 
-The above examples allowed you to query Twitter with a pre-defined access token.
-But for users to use their own account to access the API, **do not specify an
-`access_key` or `access_secret`**. It will redirect the user to Twitter and log
-them in.
+A typical Twitter app page will have the following flow:
 
-For example, the first time you make a POST request to `oauth-api/` (see output
-below), you will see an error message saying `access token missing`. But visit
-[oauth-api/?next=../](oauth-api/) and log into Twitter. Then the request below
-will return the first tweet on your timeline.
+1. Fetch the response via an AJAX query to the TwitterHandler
+2. If there's no error, display the response
+3. If there's an error,
+    - if the access token is missing, ask the user to log in
+
+For example:
 
     :::js
-    var xsrf = {'X-Xsrftoken': cookie.get('_xsrf')}
-    $.ajax('oauth-api/statuses/home_timeline.json', {
-      headers: xsrf,
-      method: 'POST',
-      data: {'count': '1'}
-    })  // OUTPUT
+    $.get('twitter/statuses/home_timeline.json')
+     .done(function(data) { display(data) })
+     .fail(function(xhr, status, msg) {
+        if (msg == 'access token missing')
+          location.href = 'twitter/'          // Redirect the user to log in
+        else
+          alert(msg)                          // Alert if it's some other error
+      })
 
-After the OAuth login, users can be redirected via the `redirect:` config
+After the login, users can be redirected via the `redirect:` config
 documented the [redirection configuration](../config/#redirection).
-
 
 ## Twitter search
 
-The following request [searches](https://dev.twitter.com/rest/reference/get/search/tweets) for metnions of Gramener and fetches the first response:
+The following request [searches](https://dev.twitter.com/rest/reference/get/search/tweets) for mentions of Gramener and fetches the first response:
 
     :::js
-    var xsrf = {'X-Xsrftoken': cookie.get('_xsrf')}
-    $.ajax('api/search/tweets.json', {
-      headers: xsrf,
-      method: 'POST',
-      data: {'q': 'gramener', 'count': '1'}
-    })  // OUTPUT
+    $.get('twitter-open/search/tweets.json?q=gramener&count=1')  // OUTPUT
 
 The endpoint `/search/tweets.json` is the same as that in the Twitter API, which internally acts as an input to the `api` Gramex endpoint.
 
@@ -86,12 +109,7 @@ The endpoint `/search/tweets.json` is the same as that in the Twitter API, which
 This script fetches the [list of followers](https://dev.twitter.com/rest/reference/get/followers/list) for Gramener:
 
     :::js
-    var xsrf = {'X-Xsrftoken': cookie.get('_xsrf')}
-    $.ajax('api/followers/list.json', {
-      headers: xsrf,
-      method: 'POST',
-      data: {'screen_name': 'gramener'}
-    })
+    $.get('twitter-open/followers/list.json?screen_name=gramener&count=1')  // OUTPUT
 
 ## Twitter transforms
 
@@ -121,12 +139,7 @@ Here's what `twitterutils.add_sentiment` looks for the last about Gramener:
 This transforms the tweets to add a `sentiment:` key measuring its sentiment.
 
     :::js
-    var xsrf = {'X-Xsrftoken': cookie.get('_xsrf')}
-    $.ajax('sentiment', {
-      headers: xsrf,
-      method: 'POST',
-      data: {'q': 'gramener', 'count': '1'}
-    })  // OUTPUT
+    $.get('sentiment?q=gramener&count=1')  // OUTPUT
 
 The transform should either return a JSON-encodable object, or a string.
 
@@ -163,28 +176,18 @@ We use jQuery's [$.when](http://api.jquery.com/jQuery.when/) to wait for all
 requests.
 
     :::js
-    var xsrf = {'X-Xsrftoken': cookie.get('_xsrf')}
-    var q1 = $.ajax('api/search/tweets.json', {
-      headers: xsrf,
-      method: 'POST',
-      data: {'q': 'gramener', 'count': '1'} // Latest tweet for Gramener
-    })
-
-    var q2 = $.ajax('api/search/tweets.json', {
-      headers: xsrf,
-      method: 'POST',
-      data: {'q': 'RichardDawkins', 'count': '1'} // Latest tweet for Richard Dawkins
-    })
-
+    // Latest tweet for Gramener
+    var q1 = $.get('twitter-open/search/tweets.json?q=gramener&count=1')
+    // Latest tweet for Richard Dawkins
+    var q2 = $.get('twitter-open/search/tweets.json?q=RichardDawkins&count=1')
     $.when(q1, q2) // OUTPUT
 
 ## Twitter GET requests
 
 The `methods:` parameter specifies which methods to use to access the API. The
-default is just `POST`. You can replace it with `[GET, POST]` to use either
-GET or POST, or `GET` to use only the `GET` HTTP method.
-
-This example lets you use either GET or POST requests.
+default is `[GET, POST]`. You can replace it with `[POST]` to just use POST. This
+prevents external sites from requesting the page. Note that you need to handle
+[XSRF](../filehandler/#xsrf) for POST requests.
 
     :::yaml
     url:
@@ -193,7 +196,7 @@ This example lets you use either GET or POST requests.
             handler: TwitterRESTHandler
             kwargs:
                 ...
-                methods: [GET, POST]          # Allows using GET and POST requests
+                methods: [POST]               # Allow only POST requests
 
 ## Twitter streaming
 
@@ -233,9 +236,6 @@ for each.
 
 
 <script>
-var xsrf = {'X-Xsrftoken': cookie.get('_xsrf')}
-var pre = [].slice.call(document.querySelectorAll('pre'))
-
 function condense(result) {
   var field = [].concat(result)[0]
   field = field.statuses ? field.statuses[0] : field
@@ -263,15 +263,12 @@ function replace(e, regex, text) {
       '<p style="color: #ccc">// OUTPUT</p><p>' + text + '</p>')
 }
 
+var pre = [].slice.call(document.querySelectorAll('pre'))
+
 function next() {
   var output_regex = /\/\/ OUTPUT/,
       element = pre.shift(),
       text = element.textContent
-
-  // Behind the scenes, use GET instead of POST because we want to cache the requests.
-  // But only for /api/, not for /oauth-api/
-  if (!text.match(/oauth-api/))
-    text = text.replace(/method: 'POST'/ig, "method: 'GET'")
 
   if (text.match(output_regex))
     if (text.match(/\$.when/)) {
@@ -283,7 +280,7 @@ function next() {
         replace(element, output_regex, JSON.stringify(result, null, 2))
       })
     }
-    else if (text.match(/\$.ajax/)) {
+    else if (text.match(/\$.(ajax|get)/)) {
       eval(text).always(function(result) {
         replace(element, output_regex, JSON.stringify(condense(result), null, 2))
       })

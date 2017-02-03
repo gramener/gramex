@@ -195,8 +195,11 @@ This configuration creates a [Facebook login page](facebook):
 
 - Go to the [Facebook apps page](https://developers.facebook.com/apps/)
 - Select an existing app, or add a new app. Select website. You can skip the quick start.
-- In the Settings tab on the left, set the URL of of your server's home page
+- In the Settings > Basic tab on the left
+  - Select Add Platform (+) > Website. Add the URL of your page. When testing, using `http://localhost:9988/` not `http://127.0.0.1:9988/`.
+  - Set the app domain of your server. (When testing locally, this will be `localhost`)
 - Copy the Application ID and App secret to the application settings
+- If you need an `access_token` for [FacebookGraphHandler](../facebookgraphhandler/), go to Settings > Advanced and copy the Client Token
 
 
 ## Twitter auth
