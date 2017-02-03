@@ -64,8 +64,8 @@ Now open this browser's JavaScript console. You should see the message returned 
 
 To learn more about websockets:
 
-- Try this [Gramex chatbot](chat.html) and [view its source](chatbot-source)
-- Learn how to write [WebSockets in JS](websocket-clients)
+- Try this [Gramex chatbot](chat.html) and [view its source][chatbot-source]
+- Learn how to write [WebSockets in JS][websocket-clients]
 
 ## Websockets via nginx
 
