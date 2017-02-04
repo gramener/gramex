@@ -620,11 +620,13 @@ class JSONStore(KeyStore):
     '''
     A KeyStore that stores data in a JSON file. Typical usage::
 
-        >>> store = JSONStore('file.h5', flush=15)
+        >>> store = JSONStore('file.json', flush=15)
         >>> value = store.load(key)
         >>> store.dump(key, value)
 
     This is less efficient than HDF5Store for large data, but is human-readable.
+    They also cannot support multiple instances. Only one JSONStore instance
+    is permitted per file.
     '''
     def __init__(self, path, *args, **kwargs):
         super(JSONStore, self).__init__(path, *args, **kwargs)

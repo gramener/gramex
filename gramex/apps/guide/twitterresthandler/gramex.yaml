@@ -22,7 +22,25 @@ url:
         access_key: 445767176-pqio8PuGlpzULSstlZQbLhRqFJfNBjWFH5LqNRgI
         access_secret: zVosr4wIS3aM80hErmWUkMePZ6vX830yI7VKxar6xZqgp
     cache:
-        duration: 600       # Cache for 5 minutes. The user is constant
+        duration: 600       # Cache for 10 min. The user is constant
+
+  twitterresthandler/persist:
+    pattern: /$YAMLURL/persist/(.*)
+    handler: TwitterRESTHandler
+    kwargs:
+        # Gramener > Gramex guide app: https://apps.twitter.com/app/12449610/keys
+        key: XkCVNZD5sfWECxHGAGnlHGQFa
+        secret: yU00bx5dHYMbge9IyO5H1KeC5uFnWndntG7u6CH6O4HDZHQg0p
+        # Persist access after first login
+        access_key: persist
+        access_secret: persist
+        redirect:
+            query: next
+            header: Referer
+            url: /$YAMLURL/
+    cache:
+        duration: 600       # Cache for 10 min. The user is constant
+
 
   twitterresthandler/sentiment:
     pattern: /$YAMLURL/sentiment
@@ -38,4 +56,4 @@ url:
             sentiment:
                 function: twitterutils.add_sentiment
     cache:
-        duration: 600       # Cache for 5 minutes. The user is constant
+        duration: 600       # Cache for 10 min. The user is constant

@@ -1,3 +1,4 @@
+import os
 import six
 import json
 import gramex
@@ -13,6 +14,7 @@ from gramex.http import OK, BAD_REQUEST, CLIENT_TIMEOUT
 custom_responses = {
     CLIENT_TIMEOUT: 'Client Timeout'
 }
+store_cache = {}
 
 
 class SocialMixin(object):
@@ -72,6 +74,56 @@ class SocialMixin(object):
             'message': self._reason,
         }]}))
 
+    def _get_store_key(self):
+        '''
+        Allows social mixins to store information in a single global JSONStore.
+        Keys are "$YAMLPATH: url-key". Any value may be stored against it.
+        '''
+        if 'store' not in store_cache:
+            store_path = os.path.join(gramex.config.variables['GRAMEXDATA'], 'socialstore.json')
+            store_cache['store'] = gramex.handlers.basehandler.JSONStore(store_path, flush=60)
+        base_key = '{}: {}'.format(os.getcwd(), self.name)
+        return store_cache['store'], base_key
+
+    def read_store(self):
+        '''
+        Read from this URL handler's social store. Typically returns a dict
+        '''
+        cache, key = self._get_store_key()
+        return cache.load(key, {})
+
+    def write_store(self, value):
+        '''
+        Write to this URL handler's social store. Typically stores a dict
+        '''
+        cache, key = self._get_store_key()
+        cache.dump(key, value)
+
+    def get_token(self, key, fetch=lambda info, key, val: info.get(key, val)):
+        '''
+        Returns an access token / key / secret with the following priority:
+
+        1. If YAML config specifies "persist" for the token, get it from the last
+           stored value. If none is stored, save and use the current session's
+           token
+        2. If YAML config specifies a token, use it
+        3. If YAML config does NOT specify a token, use current sessions' token
+
+        If after all of this, we don't have a token, raise an exception.
+        '''
+        info = self.session.get(self.user_info, {})
+        token = self.conf.kwargs.get(key, None)         # Get from config
+        session_token = fetch(info, key, None)
+        if token == 'persist':
+            token = self.read_store().get(key, None)    # If persist, use store
+            if token is None and session_token:         # Or persist from session
+                self.write_store(info)
+        if token is None:
+            token = session_token                       # Use session token
+        if token is None:                               # Ensure token is present
+            raise HTTPError(BAD_REQUEST, reason='token %s missing' % key)
+        return token
+
 
 class TwitterRESTHandler(SocialMixin, BaseHandler, TwitterMixin):
     '''
@@ -98,6 +150,10 @@ class TwitterRESTHandler(SocialMixin, BaseHandler, TwitterMixin):
     values and set ``methods`` to ``[get, post]`` to use both GET and POST
     requests to proxy the API.
     '''
+    @staticmethod
+    def get_from_token(info, key, val):
+        return info.get('access_token', {}).get(key.replace('access_', ''), val)
+
     @classmethod
     def setup(cls, **kwargs):
         super(TwitterRESTHandler, cls).setup(**kwargs)
@@ -112,14 +168,8 @@ class TwitterRESTHandler(SocialMixin, BaseHandler, TwitterMixin):
 
         args = {key: self.get_argument(key) for key in self.request.arguments}
         params = AttrDict(self.conf.kwargs)
-        # update params with session parameters
-        if any(k not in params for k in ('access_key', 'access_secret')):
-            info = self.session.get(self.user_info, {})
-            if info:
-                params['access_key'] = info['access_token']['key']
-                params['access_secret'] = info['access_token']['secret']
-            else:
-                raise HTTPError(BAD_REQUEST, reason='access token missing')
+        params['access_key'] = self.get_token('access_key', self.get_from_token)
+        params['access_secret'] = self.get_token('access_secret', self.get_from_token)
 
         client = oauth1.Client(
             client_key=params['key'],
@@ -138,7 +188,10 @@ class TwitterRESTHandler(SocialMixin, BaseHandler, TwitterMixin):
     @tornado.gen.coroutine
     def login(self):
         if self.get_argument('oauth_token', None):
-            self.session[self.user_info] = yield self.get_authenticated_user()
+            info = self.session[self.user_info] = yield self.get_authenticated_user()
+            if (any(self.conf.kwargs.get(key, None) == 'persist'
+                    for key in ('access_key', 'access_secret'))):
+                self.write_store(info)
             self.redirect_next()
         else:
             self.save_redirect_page()
@@ -192,15 +245,7 @@ class FacebookGraphHandler(SocialMixin, BaseHandler, FacebookGraphMixin):
             raise tornado.gen.Return()
 
         args = {key: self.get_argument(key) for key in self.request.arguments}
-        if 'access_token' in self.conf.kwargs:
-            args['access_token'] = self.conf.kwargs['access_token']
-        else:
-            info = self.session.get(self.user_info, {})
-            if 'access_token' in info:
-                args['access_token'] = info['access_token']
-            else:
-                raise HTTPError(BAD_REQUEST, reason='access token missing')
-
+        args['access_token'] = self.get_token('access_token')
         uri = url_concat(self._FACEBOOK_BASE_URL + '/' + self.conf.kwargs.get('path', path), args)
         http = self.get_auth_http_client()
         response = yield http.fetch(uri, raise_error=False)
@@ -212,11 +257,13 @@ class FacebookGraphHandler(SocialMixin, BaseHandler, FacebookGraphMixin):
     def login(self):
         redirect_uri = self.request.protocol + "://" + self.request.host + self.request.uri
         if self.get_argument('code', False):
-            self.session[self.user_info] = yield self.get_authenticated_user(
+            info = self.session[self.user_info] = yield self.get_authenticated_user(
                 redirect_uri=redirect_uri,
                 client_id=self.conf.kwargs['key'],
                 client_secret=self.conf.kwargs['secret'],
                 code=self.get_argument('code'))
+            if self.conf.kwargs.get('access_token', None) == 'persist':
+                self.write_store(info)
             self.redirect_next()
         else:
             self.save_redirect_page()

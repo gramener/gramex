@@ -95,6 +95,39 @@ For example:
 After the login, users can be redirected via the `redirect:` config
 documented the [redirection configuration](../config/#redirection).
 
+## Twitter Persist
+
+If your app needs to persist the user's access token, add `access_key: persist`
+and `access_secret: persist` to the kwargs. The first time, the user is asked to
+log in. Thereafter, the user's credentials are available for all future requests.
+
+This is typically used to show authenticated information on behalf of a user to
+the public. Typically, such requests are cached as well. Here is a sample
+configuration:
+
+    :::yaml
+    url:
+      twitter-persist:
+        pattern: /persist/(.*)
+        handler: TwitterRESTHandler
+        kwargs:
+            key: '...'
+            secret: '...'
+            access_key: persist       # Persist the access token after first login
+            access_secret: persist    # Persist the access token after first login
+        cache:
+            duration: 300             # Cache requests for 5 seconds
+
+Here is a sample response:
+
+    :::js
+    $.get('persist/statuses/home_timeline.json?count=1')  // OUTPUT
+
+The first time, you get an access_key error. Visit [/persist/](persist/) to log
+in. Thereafter, your access_key and access_secret will be stored and used for
+future requests until it expires, or a user logs in again at
+[/persist/](persist/).
+
 ## Twitter search
 
 The following request [searches](https://dev.twitter.com/rest/reference/get/search/tweets) for mentions of Gramener and fetches the first response:

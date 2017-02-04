@@ -48,6 +48,36 @@ The FacebookGraphHandler is very similar to the TwitterRESTHandler in many ways:
 
 See this [sample application](dashboard.html) and its [source][source] for examples of usage.
 
+## Facebook Persist
+
+If your app needs to persist the user's access token, add `access_token: persist`
+to the kwargs. The first time, the user is asked to log in. Thereafter, the
+user's credentials are available for all future requests.
+
+This is typically used to show the latest posts / photos of a user or page on
+every visit. Typically, such requests are cached as well. Here is a sample
+configuration:
+
+    :::yaml
+    url:
+      facebook-persist:
+        pattern: /persist/(.*)
+        handler: FacebookGraphHandler
+        kwargs:
+            key: '...'
+            secret: '...'
+            access_token: persist     # Persist the access token after first login
+        cache:
+            duration: 300             # Cache requests for 5 seconds
+
+Here is a sample response:
+
+    :::js
+    $.get('persist/me')  // OUTPUT
+
+The first time, you get an access_token error. Visit [/persist/](persist/) to log
+in. Thereafter, your access_token will be stored and used for future requests
+until it expires, or a user logs in again at [/persist/](persist/).
 
 [source]: https://code.gramener.com/s.anand/gramex/tree/dev/gramex/apps/guide/facebookgraphhandler
 
