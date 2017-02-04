@@ -1203,6 +1203,22 @@ url:
     kwargs:
       function: utils.increment
     cache: true
+  cache/increment-headers-dummy:
+    pattern: /cache/increment-headers-dummy
+    handler: FunctionHandler
+    kwargs:
+      function: utils.increment
+      headers:
+        Content-Type: text/plain
+    cache: true
+  cache/increment-headers:
+    pattern: /cache/increment-headers
+    handler: FunctionHandler
+    kwargs:
+      function: utils.increment
+      headers:
+        Content-Type: text/plain
+    cache: true
   cache/pathkey:
     pattern: /cache/pathkey
     handler: FunctionHandler

@@ -174,6 +174,24 @@ class TestCacheFunctionHandler(TestGramex):
         self.assertEqual(r3.status_code, NOT_MODIFIED)
         self.assertEqual(incr, gramex.services.info.increment)
 
+    def test_multi_browser(self):
+        # When a 304 is served as the first response, ensure original headers are not lost.
+        session1 = requests.Session()
+        # Request a dummy page to get the ETag
+        r1 = self.get('/cache/increment-headers-dummy', session=session1)
+        # Scenario: Browser 1 had a cached copy. But Gramex restarted.
+        # So now it requests the page again.
+        r2 = self.get('/cache/increment-headers', session=session1,
+                      headers={'If-None-Match': r1.headers['Etag']})
+        self.assertEqual(r2.status_code, NOT_MODIFIED)
+        # Now, the server has re-cached the response. Since the response was a
+        # 304 without headers, check that the server actually cached the original
+        # headers, and not the empty headers returned by a 304 response.
+        session2 = requests.Session()
+        r3 = self.get('/cache/increment-headers', session=session2)
+        self.assertEqual(r3.status_code, OK)
+        self.assertEqual(r3.headers['Content-Type'], 'text/plain')
+
 
 class TestCacheFileHandler(TestGramex):
     @classmethod

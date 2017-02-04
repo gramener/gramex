@@ -63,34 +63,31 @@ class MemoryCacheFile(CacheFile):
         return None if result is None else cPickle.loads(result)
 
     def wrap(self, handler):
-        self._write_buffer = []
-        self._write = handler.write
-        self._on_finish = handler.on_finish
+        self._finish = handler.finish
 
-        def write(chunk):
-            self._write(chunk)
-            self._write_buffer.append(handler._write_buffer[-1])
+        def finish(chunk=None):
+            # Save the headers and body originally written
+            headers = [[name, value] for name, value in handler._headers.get_all()
+                       if name not in ignore_headers]
+            body = b''.join(handler._write_buffer)
 
-        def on_finish():
-            # Cache contents only for allowed HTTP responses
+            # Call the original finish
+            self._finish(chunk)
+
+            # Cache headers and body (only for allowed HTTP responses)
             status = handler.get_status()
             if status in self.statuses:
                 self.store.set(
                     key=self.key,
                     value=cPickle.dumps({
                         'status': OK if status == NOT_MODIFIED else status,
-                        'headers': [
-                            [name, value] for name, value in handler._headers.get_all()
-                            if name not in ignore_headers
-                        ],
-                        'body': b''.join(self._write_buffer)
+                        'headers': headers,
+                        'body': body,
                     }, cPickle.HIGHEST_PROTOCOL),
                     expire=self.expire,
                 )
-            self._on_finish()
 
-        handler.write = write
-        handler.on_finish = on_finish
+        handler.finish = finish
 
 
 class DiskCacheFile(MemoryCacheFile):
