@@ -215,7 +215,7 @@ This configuration creates a [Twitter login page](twitter):
                 key: YOURKEY            # Set your app key
                 secret: YOURSECRET      # Set your app secret
 
-- Go to the [Twitter home page](https://apps.twitter.com/)
+- Go to the [Twitter app page](https://apps.twitter.com/)
 - Select Create New App
 - Enter a Name, Description and Website
 - In the Callback URL, enter the URL of the auth handler
@@ -563,6 +563,8 @@ accessible to all.
                 path: $YAMLPATH/secret.html
                 auth: true
 
+You can restrict who can log in using [roles](#roles) or any other condition.
+
 ## Login URLs
 
 By default, this will redirect users to `/login/`. This is configured in the `app.settings.login_url` like this:
@@ -601,6 +603,7 @@ only if your gender is `male` and your locale is `en` or `es`. (To test it,
             membership:           # The following user object keys must match
                 gender: male      # user.gender must be male
                 locale: [en, es]  # user.locale must be en or es
+                email: [..., ...] # user.email must be in in this list
 
 If the `user` object has nested attributes, you can access them via `.`. For
 example, `attributes.cn` refers to `handlers.current_user.attributes.cn`.
@@ -612,12 +615,12 @@ You can specify multiple memberships that can be combined with AND or OR. This e
             membership:
                 -                           # First rule
                   gender: female                # Allow all women
-                  hd: gramener.com              # AND from gramener.com 
+                  hd: [ibm.com, pwc.com]        # AND from ibm.com or pwc.com 
                 -                           # OR Second rule
                   gender: male                  # Allow all men
-                  locale: en                    # with user.locale as "en"
+                  locale: [en, es]              # with user.locale as "en" or "es"
                 -                           # OR Third rule
-                  user: beta@example.org       # Allow this user
+                  email: beta@example.org       # Allow this user
 
 `auth:` lets you define conditions. For example, you can access [dotcom](dotcom)
 only if your email ends with `.com`, and access [dotorg](dotorg) only if your
