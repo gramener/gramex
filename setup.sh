@@ -76,12 +76,8 @@ setup_gramex() {
 
   # Install Gramex
   # -------------------------------------
-  # If it was already installed, pip will upgrade.
-  # --ignore-installed is added to work around a setuptools bug
-  # https://github.com/pypa/pip/issues/2751#issuecomment-165390180
-  pip install --upgrade --ignore-installed http://code.gramener.com/s.anand/gramex/repository/archive.tar.bz2?ref=master
-
-  printf "SUCCESS: Gramex was installed.\nRun `gramex` to start the server."
+  pip install http://code.gramener.com/s.anand/gramex/repository/archive.tar.bz2?ref=master
+  printf "SUCCESS: Gramex was installed.\nRun 'gramex' to start the server."
 }
 
 # wrapped up in a function to protect against partial download
