@@ -76,6 +76,21 @@ class GramexApp(tornado.web.Application):
             return
         super(GramexApp, self).log_request(handler)
 
+    def clear_handlers(self):
+        '''
+        Clear all handlers in the application.
+        (Tornado does not provide a direct way of doing this.)
+        '''
+        # Up to Tornado 4.4, the handlers attribute stored the handlers
+        if hasattr(self, 'handlers'):
+            del self.handlers[:]
+            self.named_handlers.clear()
+
+        # From Tornado 4.5, there are routers that hold the rules
+        else:
+            del self.default_router.rules[:]
+            del self.wildcard_router.rules[:]
+
 
 def app(conf):
     '''Set up tornado.web.Application() -- only if the ioloop hasn't started'''
@@ -355,8 +370,7 @@ def url(conf):
             kwargs=kwargs,
         ))
 
-    del info.app.handlers[:]
-    info.app.named_handlers.clear()
+    info.app.clear_handlers()
     info.app.add_handlers('.*$', handlers)
 
 
