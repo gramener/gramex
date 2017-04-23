@@ -278,8 +278,9 @@
     "": {
       "Gramex accesses Facebook data": -1
     },
-    "facebook-oauth": {
-      "Facebook OAuth": -1
+    "facebook-oauth": {},
+    "facebook-persist": {
+      "Facebook Persist": -1
     }
   },
   "filehandler": {
@@ -390,6 +391,11 @@
       "PUT - write data": -1
     }
   },
+  "privacy": {
+    "": {
+      "Privacy policy": -1
+    }
+  },
   "processhandler": {
     "": {
       "Gramex runs processes": -1
@@ -442,6 +448,15 @@
     },
     "twitter-oauth": {
       "Twitter OAuth": -1
+    },
+    "twitter-paths": {
+      "Twitter Paths": -1
+    },
+    "twitter-persist": {
+      "Twitter Persist": -1
+    },
+    "twitter-pre-auth": {
+      "Twitter Pre-auth": -1
     },
     "twitter-search": {
       "Twitter search": -1

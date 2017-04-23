@@ -3,7 +3,26 @@
 History
 -------
 
-1.17 (2016-01-29)
+1.17.1 (2017-04-23)
+~~~~~~~~~~~~~~~~~~~
+This is a maintenance release with a few minor enhancements:
+
+- `TwitterRESTHandler`_ and `FacebookGraphHandler`_ use GET request by default.
+  This used to be the POST request. This is a **breaking change**.
+- Access token on `TwitterRESTHandler`_ and `FacebookGraphHandler`_ are persisted
+
+A series of important bugfixes are addressed:
+
+- Tornado 4.5 routing module uses a ``tornado.routing.Router`` Class instead of
+  handlers. This requires an alternate way of clearing existing handlers.
+- `scandir` requires a C-compiler to install. Change docs and setup script to
+  avoid upgrading libraries (particularly scandir) via ``--upgrade`` when running
+  pip install.
+- HTTP 304 requests (i.e. cached requests) preserve and re-send the same headers
+  as the original response
+
+
+1.17 (2017-01-29)
 ~~~~~~~~~~~~~~~~~
 
 This version has a breaking change. The default login URL is ``/login/`` instead
