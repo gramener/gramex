@@ -270,6 +270,7 @@ For example:
 
 There are some pre-defined string values you can use as well for the callback:
 
+- `gramex.cache.open(path, 'text', ...)` loads text files using `io.open`
 - `gramex.cache.open(path, 'json', ...)` loads JSON files using `json.load`
 - `gramex.cache.open(path, 'yaml', ...)` loads YAML files using `yaml.load`
 - `gramex.cache.open(path, 'csv', ...)` loads CSV files using `pd.read_csv`

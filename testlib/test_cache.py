@@ -7,6 +7,7 @@ import yaml
 import unittest
 import gramex.cache
 import pandas as pd
+from six import string_types
 from collections import OrderedDict
 from orderedattrdict import AttrDict
 from orderedattrdict.yamlutils import AttrDictYAMLLoader
@@ -74,7 +75,7 @@ class TestCache(unittest.TestCase):
         path = os.path.join(folder, 'data.csv')
         cache = {}
         result, reloaded = gramex.cache.open(path, 'csv', _reload_status=True, _cache=cache)
-        self.assertTrue(path in cache)
+        self.assertTrue((path, 'csv') in cache)
 
         # Initially, the file is loaded
         self.assertEqual(reloaded, True)
@@ -84,6 +85,16 @@ class TestCache(unittest.TestCase):
         self.assertEqual(reloaded, False)
 
         # If the cache is deleted, it reloads
-        del cache[path]
+        del cache[path, 'csv']
         result, reloaded = gramex.cache.open(path, 'csv', _reload_status=True, _cache=cache)
         self.assertEqual(reloaded, True)
+
+    def test_multiple_loaders(self):
+        # Loading the same file via different callbacks should return different results
+        path = os.path.join(folder, 'multiformat.csv')
+        data = gramex.cache.open(path, 'csv')
+        self.assertTrue(isinstance(data, pd.DataFrame))
+        text = gramex.cache.open(path, 'text')
+        self.assertTrue(isinstance(text, string_types))
+        none = gramex.cache.open(path, lambda path: None)
+        self.assertTrue(none is None)

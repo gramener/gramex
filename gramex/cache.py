@@ -29,6 +29,7 @@ def _opener(callback):
 
 _DEFAULT_CACHE = {}
 _CALLBACKS = dict(
+    text=_opener(lambda handle: handle.read()),
     yaml=_opener(yaml.load),
     json=_opener(json.load),
     csv=pd.read_csv,
@@ -49,6 +50,7 @@ def open(path, callback, **kwargs):
     The callback can be a function that accepts the filename and any other
     arguments, or a string that can be one of
 
+    - ``text``: reads files using io.open
     - ``yaml``: reads files using PyYAML
     - ``json``: reads files using json.load
     - ``csv``, ``excel``, ``hdf``, ``html``, ``sas``, ``stata``, ``table``: reads using Pandas
@@ -63,6 +65,9 @@ def open(path, callback, **kwargs):
 
         # Load data.csv as CSV into a Pandas DataFrame
         open('data.csv', 'csv', encoding='cp1252')
+
+        # Load data using a custom callback
+        open('data.fmt', my_format_reader_function, arg='value')
     '''
     # Pass _reload_status = True for testing purposes. This returns a tuple:
     # (result, reloaded) instead of just the result.
@@ -71,11 +76,13 @@ def open(path, callback, **kwargs):
 
     mtime = os.stat(path).st_mtime
     _cache = kwargs.pop('_cache', _DEFAULT_CACHE)
-    if path not in _cache or mtime > _cache[path]['mtime']:
+    callback_is_str = isinstance(callback, string_types)
+    key = (path, callback if callback_is_str else id(callback))
+    if key not in _cache or mtime > _cache[key]['mtime']:
         reloaded = True
         if callable(callback):
             data = callback(path, **kwargs)
-        elif isinstance(callback, string_types):
+        elif callback_is_str:
             method = _CALLBACKS.get(callback)
             if method is not None:
                 data = method(path, **kwargs)
@@ -83,7 +90,7 @@ def open(path, callback, **kwargs):
                 raise TypeError('gramex.cache.open(callback="%s") is not a known type', callback)
         else:
             raise TypeError('gramex.cache.open(callback=) must be a function, not %r', callback)
-        _cache[path] = {'data': data, 'mtime': mtime}
+        _cache[key] = {'data': data, 'mtime': mtime}
 
-    result = _cache[path]['data']
+    result = _cache[key]['data']
     return (result, reloaded) if _reload_status else result
