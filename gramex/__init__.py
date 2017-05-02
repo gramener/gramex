@@ -227,6 +227,7 @@ def init(force_reload=False, **kwargs):
     for key, val in (+config_layers).items():
         if key not in conf or conf[key] != val or force_reload:
             if hasattr(services, key):
+                app_log.debug('Loading service: %s', key)
                 conf[key] = deepcopy(val)
                 callback = getattr(services, key)(conf[key])
                 if callable(callback):
@@ -237,6 +238,7 @@ def init(force_reload=False, **kwargs):
     # Run the callbacks. Specifically, the app service starts the Tornado ioloop
     for key in (+config_layers).keys():
         if key in callbacks:
+            app_log.debug('Running callback: %s', key)
             callbacks[key]()
 
 

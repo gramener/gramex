@@ -340,6 +340,7 @@ def url(conf):
     # Sort the handlers in descending order of priority
     specs = sorted(conf.items(), key=_sort_url_patterns, reverse=True)
     for name, spec in specs:
+        app_log.debug('Initializing url: %s', name)
         urlspec = AttrDict(spec)
         handler = locate(spec.handler, modules=['gramex.handlers'])
         if handler is None:
