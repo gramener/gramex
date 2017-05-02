@@ -1,10 +1,11 @@
 '''Caching utilities'''
 import io
 import os
+import six
 import json
 import yaml
 import pandas as pd
-from six import string_types
+from gramex.config import app_log
 
 
 def _opener(callback):
@@ -76,7 +77,7 @@ def open(path, callback, **kwargs):
 
     mtime = os.stat(path).st_mtime
     _cache = kwargs.pop('_cache', _DEFAULT_CACHE)
-    callback_is_str = isinstance(callback, string_types)
+    callback_is_str = isinstance(callback, six.string_types)
     key = (path, callback if callback_is_str else id(callback))
     if key not in _cache or mtime > _cache[key]['mtime']:
         reloaded = True
@@ -94,3 +95,38 @@ def open(path, callback, **kwargs):
 
     result = _cache[key]['data']
     return (result, reloaded) if _reload_status else result
+
+
+# Date of file when module was last loaded. Used by reload_module
+_reload_dates = {}
+
+
+def reload_module(*modules):
+    '''
+    Reloads one or more modules if they are outdated, i.e. only if required the
+    underlying source file has changed.
+
+    For example::
+
+        import mymodule             # Load cached module
+        reload_module(mymodule)     # Reload module if the source has changed
+
+    This is most useful during template development. If your changes are in a
+    Python module, then adding these lines will pick up new module changes when
+    the template is re-run::
+
+        {% import mymodule %}
+        {% set reload_module(mymodule) %}
+    '''
+    for module in modules:
+        name = getattr(module, '__name__', None)
+        path = getattr(module, '__file__', None)
+        if name is None or path is None or not os.path.exists(path):
+            app_log.warn('Path for module %s is %s: not found', name, path)
+            continue
+        mtime = os.stat(path).st_mtime
+        if _reload_dates.get(name, 0) >= mtime:
+            continue
+        app_log.info('Reloading module %s', name)
+        six.moves.reload_module(module)
+        _reload_dates[name] = mtime

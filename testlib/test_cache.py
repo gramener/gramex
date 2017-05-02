@@ -21,7 +21,44 @@ def touch(path, times=None):
         os.utime(path, times)
 
 
-class TestCache(unittest.TestCase):
+class TestReloadModule(unittest.TestCase):
+    '''Test gramex.cache.reload_module'''
+
+    def test_reload_module(self):
+        # When loaded, the counter is not incremented
+        import test_cache.common
+        self.assertEqual(test_cache.common.val[0], 0)
+
+        # On first load, the counter is incremented once
+        import test_cache.mymodule
+        self.assertEqual(test_cache.common.val[0], 1)
+
+        # On second load, it stays cached
+        import test_cache.mymodule
+        self.assertEqual(test_cache.common.val[0], 1)
+
+        # On explicit reload_module, it still stays cached
+        gramex.cache.reload_module(test_cache.mymodule)
+        self.assertEqual(test_cache.common.val[0], 1)
+
+        # Change the module
+        time.sleep(0.005)
+        touch(test_cache.mymodule.__file__)
+
+        # Regular import does not reload
+        import test_cache.mymodule
+        self.assertEqual(test_cache.common.val[0], 1)
+
+        # ... but reload_module DOES reload, and the counter increments
+        gramex.cache.reload_module(test_cache.mymodule)
+        self.assertEqual(test_cache.common.val[0], 2)
+
+        # Subsequent call does not reload
+        gramex.cache.reload_module(test_cache.mymodule)
+        self.assertEqual(test_cache.common.val[0], 2)
+
+
+class TestOpen(unittest.TestCase):
     '''Test gramex.cache.open'''
 
     @staticmethod

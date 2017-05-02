@@ -288,3 +288,39 @@ has a maximum size) using an `_cache` parameter. For example:
     :::python
     cache = cachetools.LRUCache(maxsize=4)
     data = gramex.cache.open(path, 'csv', _cache=cache)
+
+# Module caching
+
+The Python `import` statement loads a module only once. If it has been loaded, it
+does not reload it.
+
+During development, this means that you need to restart Gramex every time you
+change a Python file.
+
+You can reload the module using `six.moves.reload_module(module_name)`, but this
+reloads them module every time, even if nothing has changed. If the module has
+any large calculations, this slows things down.
+
+Instead, use `gramex.cache.reload_module(module_name)`. This is like
+`six.moves.reload_module`, but it reloads *only if the file has changed.*
+
+For example, you can use it in a FunctionHandler:
+
+    :::python
+    import my_utils
+    import gramex.cache
+
+    def my_function_handler(handler):
+        # Code used during development -- reload module if source has changed
+        gramex.cache.reload_module(my_utils)
+        my_utils.method()
+
+You can use it inside a template:
+
+    {% import my_utils %}
+    {% import gramex.cache %}
+    {% set gramex.cache.reload_module(my_utils) %}
+    (Now my_utils.method() will have the latest saved code)
+
+In both these cases, whenever `my_utils.py` is updated, the latest version will
+be used to render the FunctionHandler or template.
