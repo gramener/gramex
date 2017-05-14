@@ -124,6 +124,13 @@ def reload_module(*modules):
         if name is None or path is None or not os.path.exists(path):
             app_log.warn('Path for module %s is %s: not found', name, path)
             continue
+        # On Python 3, __file__ points to the .py file. In Python 2, it's the .pyc file
+        # https://www.python.org/dev/peps/pep-3147/#file
+        if path.lower().endswith('.pyc'):
+            path = path[:-1]
+            if not os.path.exists(path):
+                app_log.warn('Path for module %s is %s: not found', name, path)
+                continue
         mtime = os.stat(path).st_mtime
         if _reload_dates.get(name, 0) >= mtime:
             continue

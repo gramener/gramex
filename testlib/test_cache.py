@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 import io
 import os
 import json
+import time
 import yaml
 import unittest
 import gramex.cache
