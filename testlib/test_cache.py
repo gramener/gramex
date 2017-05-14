@@ -43,7 +43,8 @@ class TestReloadModule(unittest.TestCase):
         self.assertEqual(test_cache.common.val[0], 1)
 
         # Change the module
-        time.sleep(0.005)
+        module_timestamp_delay = 0.005
+        time.sleep(module_timestamp_delay)
         touch(test_cache.mymodule.__file__)
 
         # Regular import does not reload
