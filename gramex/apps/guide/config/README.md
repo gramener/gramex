@@ -346,13 +346,17 @@ user after completing the action. For example, after a
         handler: ...
         kwargs:
             ...
-            redirect:
-                url: /path-to-redirect      # Redirect to this URL
+            # Redirect the browser to this path after execution
+            redirect: /$YAMLURL/path-to-redirect
+            # You can also specify an absolute path, e.g.
+            # redirect: /home
+            # ... or a relative path, e.g.
+            # redirect: ../css/style.css
 
-After the handler is executed, the browser is redirected to `/path-to-redirect`.
-This can be a relative or an absolute URL.
+**NOTE**: You can only redirect pages that don't return any content. If the
+handler renders content or triggers a download, redirection will fail.
 
-Redirection can be customised based on:
+Redirection can also be customised based on:
 
 - a URL `query` parameter
 - a HTTP `header`, or
@@ -367,7 +371,7 @@ specified, the user is redirected to the home page `/`.) For example:
           redirect:             # Redirect options are applied in order
             query: next         # If ?next= is specified, use it
             header: Referer     # Else use the HTTP header Referer if it exists
-            url: /$YAMLURL      # Else redirect to the directory where this gramex.yaml is present
+            url: /$YAMLURL/     # Else redirect to the directory where this gramex.yaml is present
 
 With this configuration, `?next=../config/` will take you to the `../config/`
 page.

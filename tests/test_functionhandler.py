@@ -30,3 +30,20 @@ class TestFunctionHandler(TestGramex):
         no_etag = {'headers': {'Etag': False}}
         self.check('/func/iterator?x=1&x=2&x=3', text='123', **no_etag)
         self.check('/func/iterator/async?x=1&x=2&x=3', text='123', **no_etag)
+
+    def test_redirect(self):
+        r = self.get('/func/redirect', allow_redirects=False)
+        self.assertEqual(r.headers.get('Location'), '/dir/index/')
+        self.assertEqual(r.headers.get('Increment'), '1')
+
+        r = self.get('/func/redirect?next=/abc', allow_redirects=False)
+        self.assertEqual(r.headers.get('Location'), '/abc')
+        self.assertEqual(r.headers.get('Increment'), '2')
+
+        r = self.get('/func/redirect', headers={'NEXT': '/abc'}, allow_redirects=False)
+        self.assertEqual(r.headers.get('Location'), '/abc')
+        self.assertEqual(r.headers.get('Increment'), '3')
+
+        r = self.get('/func/redirect?next=/def', headers={'NEXT': '/abc'}, allow_redirects=False)
+        self.assertEqual(r.headers.get('Location'), '/def')
+        self.assertEqual(r.headers.get('Increment'), '4')

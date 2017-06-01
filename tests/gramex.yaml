@@ -141,6 +141,16 @@ url:
     kwargs:
       function: utils.iterator_async
 
+  func/redirect:
+    pattern: /func/redirect
+    handler: FunctionHandler
+    kwargs:
+      function: utils.increment_header
+      redirect:
+        query: next
+        header: NEXT
+        url: /dir/index/
+
   # TestFileHandler
   dir/noindex:
     pattern: /dir/noindex/(.*)

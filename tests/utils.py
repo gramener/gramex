@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 '''Test case utilities'''
 
+import six
 import json
 import time
 import random
 import pandas as pd
+from collections import Counter
 from tornado import gen
 from tornado.web import RequestHandler
 from tornado.escape import recursive_unicode
@@ -14,6 +16,7 @@ from gramex.services import info
 
 watch_info = []
 ws_info = []
+counters = Counter()
 
 
 def args_as_json(handler):
@@ -22,15 +25,19 @@ def args_as_json(handler):
 
 
 def params_as_json(*args, **kwargs):
+    '''Return argument query parameters as a JSON object'''
     args = list(args)
     callback = kwargs.pop('callback', None)
+    # If a passed parameters is a request handler, replace with 'Handler'
     for index, arg in enumerate(args):
         if isinstance(arg, RequestHandler):
             args[index] = 'Handler'
     for key, arg in kwargs.items():
         if isinstance(arg, RequestHandler):
             kwargs[key] = 'Handler'
+    # Just dump the args as JSON
     result = json.dumps({'args': args, 'kwargs': kwargs}, sort_keys=True)
+    # If a callback was provided, pass through the callback. (Used by async_args)
     if callable(callback):
         callback(result)
     else:
@@ -62,14 +69,14 @@ def iterator_async(handler):
 
 @gen.coroutine
 def async_args(*args, **kwargs):
-    'Run params_as_json asynchronously'
+    '''Run params_as_json asynchronously'''
     result = yield gen.Task(params_as_json, *args, **kwargs)
     raise gen.Return(result)
 
 
 @gen.coroutine
 def async_http(url):
-    'Fetch a URL asynchronously'
+    '''Fetch a URL asynchronously'''
     httpclient = AsyncHTTPClient()
     result = yield httpclient.fetch(url)
     raise gen.Return(result.body)
@@ -77,7 +84,7 @@ def async_http(url):
 
 @gen.coroutine
 def async_http2(url1, url2):
-    'Fetch two URLs asynchronously'
+    '''Fetch two URLs asynchronously'''
     httpclient = AsyncHTTPClient()
     r1, r2 = yield [httpclient.fetch(url1), httpclient.fetch(url2)]
     raise gen.Return(r1.body + r2.body)
@@ -92,6 +99,7 @@ def count_group(df, col):
 
 @gen.coroutine
 def async_calc(handler):
+    '''Perform a slow calculation asynchronously'''
     rows = 1000
     cols = ['A', 'B', 'C']
     df = pd.DataFrame(
@@ -192,6 +200,16 @@ def increment(handler):
     This 304 must still be cached as a 200, with the correct result.
     '''
     info.increment = 1 + info.get('increment', 0)
+    return 'Constant result'
+
+
+def increment_header(handler):
+    '''
+    Returns a constantly incremented number in Increment: HTTP header each time.
+    Does not return any output. Used as a FunctionHandler in func/redirect
+    '''
+    counters['header'] += 1
+    handler.set_header('Increment', six.text_type(counters['header']))
     return 'Constant result'
 
 

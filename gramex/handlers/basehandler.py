@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 
 import io
 import os
+import six
 import json
 import atexit
 import mimetypes
@@ -99,6 +100,9 @@ class BaseMixin(object):
                 header: X-Next      # Checks the X-Next header first
                 query: next         # If it's missing, uses the ?next=
 
+        You can also specify a string for redirect. ``redirect: ...`` is the same
+        as ``redirect: {url: ...}``.
+
         When any BaseHandler subclass calls ``self.save_redirect_page()``, it
         stores the redirect URL in ``session['_next_url']``. The URL is
         calculated relative to the handler's URL.
@@ -110,6 +114,14 @@ class BaseMixin(object):
         Only some handlers implement redirection. But they all implement it in
         this same consistent way.
         '''
+        # Ensure that redirect is a dictionary before proceeding.
+        if isinstance(redirect, six.string_types):
+            redirect = {'url': redirect}
+        if not isinstance(redirect, dict):
+            app_log.error('url:%s.redirect must be a URL or a dict, not %s',
+                          cls.name, repr(redirect))
+            return
+
         cls.redirects = []
         add = cls.redirects.append
         for key, value in redirect.items():

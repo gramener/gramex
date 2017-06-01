@@ -1,8 +1,10 @@
 import tornado.web
 import tornado.gen
 from types import GeneratorType
+from gramex.config import app_log
 from gramex.transforms import build_transform
 from .basehandler import BaseHandler
+from tornado.util import unicode_type
 
 
 class FunctionHandler(BaseHandler):
@@ -24,35 +26,42 @@ class FunctionHandler(BaseHandler):
         trigger calculations without displaying any output.
     '''
     @classmethod
-    def setup(cls, headers={}, redirect=None, **kwargs):
+    def setup(cls, headers={}, **kwargs):
         super(FunctionHandler, cls).setup(**kwargs)
-        # Don't use cls.function = build_transform(...) -- Python treats it as a method
+        # Don't use cls.info.function = build_transform(...) -- Python treats it as a method
         cls.info = {}
         cls.info['function'] = build_transform(kwargs, vars={'handler': None},
                                                filename='url:%s' % cls.name)
         cls.headers = headers
-        cls.redirect_url = redirect
         cls.post = cls.get
 
     @tornado.gen.coroutine
     def get(self, *path_args):
+        if self.redirects:
+            self.save_redirect_page()
+
         if 'function' not in self.info:
             raise ValueError('Invalid function definition in url:%s' % self.name)
         result = self.info['function'](handler=self)
         for header_name, header_value in self.headers.items():
             self.set_header(header_name, header_value)
-        if self.redirect_url is not None:
-            self.redirect(self.redirect_url or self.request.headers.get('Referer', '/'))
-        else:
-            # Use multipart to check if the respose has multiple parts. Don't
-            # flush unless it's multipart. Flushing disables Etag
-            multipart = isinstance(result, GeneratorType) or len(result) > 1
 
-            # build_transform results are iterable. Loop through each item
-            for item in result:
-                # Resolve futures and write the result immediately
-                if tornado.concurrent.is_future(item):
-                    item = yield item
+        # Use multipart to check if the respose has multiple parts. Don't
+        # flush unless it's multipart. Flushing disables Etag
+        multipart = isinstance(result, GeneratorType) or len(result) > 1
+
+        # build_transform results are iterable. Loop through each item
+        for item in result:
+            # Resolve futures and write the result immediately
+            if tornado.concurrent.is_future(item):
+                item = yield item
+            if isinstance(item, (bytes, unicode_type, dict)):
                 self.write(item)
                 if multipart:
                     self.flush()
+            else:
+                app_log.warn('url:%s: FunctionHandler can write strings/dict, not %s',
+                             self.name, repr(item))
+
+        if self.redirects:
+            self.redirect_next()
