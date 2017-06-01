@@ -194,15 +194,17 @@ def handlers(conf):
 
 
 def _sort_url_patterns(entry):
-    # URLs are resolved in this order:
     name, spec = entry
     pattern = spec.pattern
+    # URLs are resolved in this order:
     return (
         spec.get('priority', 0),    # by explicity priority: parameter
         pattern.count('/'),         # by path depth (deeper paths are higher)
         -(pattern.count('*') +
           pattern.count('+')),      # by wildcards (wildcards get lower priority)
     )
+    # TODO: patterns like (js/.*|css/.*|img/.*) will have path depth of 3.
+    # But this should really count only as 1.
 
 
 def _url_normalize(pattern):

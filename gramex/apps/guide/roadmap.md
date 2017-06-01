@@ -8,9 +8,13 @@ information about past releases.
 Features for the next 2 releases are below. Bugs to be fixed are at the
 [issue tracker](http://code.gramener.com/s.anand/gramex/issues).
 
-## 1.16 (1 Sep 2016)
 
-- Websocket handlers
+# Features
+
+This is a work-in-progress list of features on the Gramex 1.0 roadmap.
+
+## Immediate features
+
 - Twitter streaming: dynamic change of parameters
 - Kerberos authentication
 - Live reloading of modified Python files
@@ -19,10 +23,6 @@ Features for the next 2 releases are below. Bugs to be fixed are at the
 - Monitoring & logging report usage
 - Mechanism to add configuration / settings pages
 - Improved test coverage
-
-# Features
-
-This is a work-in-progress list of features on the Gramex 1.0 roadmap.
 
 ## App packaging
 

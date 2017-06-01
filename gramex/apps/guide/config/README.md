@@ -284,7 +284,7 @@ URL handlers allow custom logging of errors. For example, to show a custom 404 p
             ...
             error:
                 404:
-                  path: error-page.html
+                  path: $YAMLPATH/error-page.html
 
 Here is an example of an [error-page](error-page). The error page is rendered as
 a template with 3 keyword arguments:
@@ -320,7 +320,7 @@ customisations:
             ...
             error:
                 404:
-                  path: error-page.json     # Content-Type is set to application/json based on extension
+                  path: $YAMLPATH/error-page.json   # Content-Type is set to application/json based on extension
                   autoescape: false         # To avoid converting quotes to &quot; etc
                   whitespace: oneline       # Remove all whitespace. 'single' preserves newlines. 'all' preserves all whitespace
                   headers:                  # Override HTTP headers
