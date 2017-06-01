@@ -69,6 +69,7 @@ setup(
         # Add a matching list in testlib/test_setup.py for verification
         'gramex': [
             'gramex.yaml',
+            'deploy.yaml',
             'apps.yaml',
             'release.json',
             'handlers/filehandler.template.html',
