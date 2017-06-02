@@ -47,6 +47,7 @@ log:
         level: DEBUG
         handlers:
             - console
+            - access-log
     loggers:
         gramex: {}
         user:
