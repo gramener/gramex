@@ -85,7 +85,7 @@ import datetime
 import requests
 from shutilwhich import which
 from pathlib import Path
-from subprocess import Popen
+from subprocess import Popen, check_output
 from orderedattrdict import AttrDict
 from zipfile import ZipFile
 import gramex
@@ -213,13 +213,22 @@ def run_command(config):
     # Split the command into an array of words
     if isinstance(appcmd, six.string_types):
         appcmd = shlex.split(appcmd)
+    # If the app is a Cygwin app, TARGET should be a Cygwin path too.
+    target = config.target
+    cygcheck, cygpath = which('cygcheck'), which('cygpath')
+    if cygcheck is not None and cygpath is not None:
+        app_path = check_output([cygpath, '-au', which(appcmd[0])]).strip()
+        is_cygwin_app = check_output([cygcheck, '-f', app_path]).strip()
+        if is_cygwin_app:
+            target = check_output([cygpath, '-au', target]).strip()
     # Replace TARGET with the actual target
     if 'TARGET' in appcmd:
-        appcmd = [config.target if arg == 'TARGET' else arg for arg in appcmd]
+        appcmd = [target if arg == 'TARGET' else arg for arg in appcmd]
     else:
-        appcmd.append(config.target)
+        appcmd.append(target)
     app_log.info('Running %s', ' '.join(appcmd))
     if not safe_rmtree(config.target):
+        app_log.error('Cannot delete target %s. Aborting installation', config.target)
         return
     proc = Popen(appcmd, bufsize=-1, stdout=sys.stdout, stderr=sys.stderr)
     proc.communicate()

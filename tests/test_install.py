@@ -139,9 +139,9 @@ class TestInstall(unittest.TestCase):
         cmd = 'git clone %s --branch %s --single-branch' % (git_url, branch)
         install(['git-url'], AttrDict(cmd=cmd))
         self.check_files('git-url', git_files)
-        # TODO: Do not uninstall. Check if overwriting works.
         self.check_uninstall('git-url')
 
+        # Check if overwriting works. Also check if usage of "TARGET" works.
         cmd = 'git clone %s TARGET --branch %s --single-branch' % (git_url, branch)
         install(['git-url'], AttrDict(cmd=cmd))
         self.check_files('git-url', git_files)
@@ -157,6 +157,8 @@ class TestInstall(unittest.TestCase):
                 path = os.path.join(root, filename)
                 result.add(os.path.relpath(path, self.install_path))
 
+        # See http://go.microsoft.com/fwlink/?LinkID=135170
+        # Requires: Set-ExecutionPolicy -ExecutionPolicy RemoteSigned
         if which('powershell'):
             result.add('powershell-setup.txt')
         if which('make'):
