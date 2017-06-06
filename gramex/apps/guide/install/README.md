@@ -39,3 +39,21 @@ To remove Gramex, run:
 
     :::shell
     pip uninstall gramex
+
+
+# Offline install
+
+To install on a machine without Internet access:
+
+- On your machine:
+  - Download [Anaconda][anaconda]. (Use 32-bit or 64-bit based on the *target* machine, not your machine.)
+  - Download the required packages listed
+    [here](https://code.gramener.com/s.anand/gramex/blob/master/requirements-conda.txt) and
+    [here](https://code.gramener.com/s.anand/gramex/blob/master/requirements.txt)
+    from the [Anaconda repository](https://repo.continuum.io/pkgs/free/) 
+  - Download [gramex.zip](https://code.gramener.com/s.anand/gramex/repository/archive.zip?ref=master)
+- Copy these to the target machine
+- On the target machine:
+  - Install Anaconda
+  - Run `conda install <package-name>` for each package you downloaded
+  - Run `pip install gramex.zip`
