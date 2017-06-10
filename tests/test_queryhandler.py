@@ -112,6 +112,11 @@ class TestSqliteHandler(TestGramex, QueryHandlerTestMixin):
         self.check('/datastoreq/sqlite/csv/filename?limit=5&filename=name.csv', headers={
             'Content-Disposition': 'attachment;filename=name.csv'})
 
+    def test_multiquery(self):
+        result = self.check('/datastoreq/sqlite/multiquery').json()
+        self.assertEqual(result['name'], self.data[['name']][:5].to_dict(orient='records'))
+        self.assertEqual(result['votes'], self.data[['votes']][:5].to_dict(orient='records'))
+
     @classmethod
     def tearDownClass(cls):
         if cls.db.is_file():
