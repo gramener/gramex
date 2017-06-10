@@ -573,7 +573,7 @@ class QueryHandler(BaseHandler, DataMixin):
             args = {
                 key: self.getq(key, [''])[0]
                 for name, query in self.query.items()
-                for key, _bindparams in query._bindparams
+                for key, _bindparams in query._bindparams.items()
             }
             stmts = AttrDict([
                 (key, query.bindparams(**args))
