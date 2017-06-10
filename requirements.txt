@@ -29,3 +29,7 @@ markdown                  # For Markdown transfroms
 PyMySQL                   # For MySQL connections
 ipdb                      # For debugging
 textblob                  # For Gramex Guide TwitterRESTHandler example
+
+# Derived dependencies (not used by Gramex directly)
+argh >= 0.24.1            # Required by watchdog
+pathtools >= 0.1.1        # Required by watchdog
