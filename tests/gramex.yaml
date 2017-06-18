@@ -750,8 +750,19 @@ url:
         votes: select votes from actors limit 5
       parameters: {encoding: utf8}
       default: {format: json}
+
+  querydata/multiparams:
+    pattern: /datastoreq/sqlite/multiparams
+    handler: QueryHandler
+    kwargs:
+      driver: sqlalchemy
+      url: sqlite:///actors.db
+      sql:
+        name: select name from actors where votes > :votes
+        votes: select votes from actors limit 5
+      parameters: {encoding: utf8}
+      default: {format: json, votes: 100}
       headers: {X-Test: abc}
-      xsrf_cookies: false
 
   data/filename:
     pattern: /datastore/sqlite/csv/filename

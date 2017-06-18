@@ -514,8 +514,7 @@ class QueryHandler(BaseHandler, DataMixin):
         cls.setup_data(kwargs)
         from sqlalchemy import text
         if isinstance(kwargs['sql'], dict):
-            cls.query = AttrDict([
-                (key, text(val)) for key, val in kwargs['sql'].items()])
+            cls.query = AttrDict([(key, text(val)) for key, val in kwargs['sql'].items()])
         else:
             cls.query = text(kwargs['sql'])
         cls.post = cls.delete = cls.update = cls.get
@@ -576,8 +575,8 @@ class QueryHandler(BaseHandler, DataMixin):
                 for key, _bindparams in query._bindparams.items()
             }
             stmts = AttrDict([
-                (key, query.bindparams(**args))
-                for key, query in self.query.items()
+                (key, q.bindparams(**{k: v for k, v in args.items() if k in q._bindparams}))
+                for key, q in self.query.items()
             ])
             if self.thread:
                 futures = AttrDict([
@@ -594,7 +593,8 @@ class QueryHandler(BaseHandler, DataMixin):
         else:
             # Bind query and run it
             args = {key: self.getq(key, [''])[0] for key in self.query._bindparams}
-            stmt = self.query.bindparams(**args)
+            stmt = self.query.bindparams(**{k: v for k, v in args.items()
+                                            if k in self.query._bindparams})
             if self.thread:
                 self.result = yield gramex.service.threadpool.submit(self.run, stmt, limit)
             else:

@@ -117,6 +117,12 @@ class TestSqliteHandler(TestGramex, QueryHandlerTestMixin):
         self.assertEqual(result['name'], self.data[['name']][:5].to_dict(orient='records'))
         self.assertEqual(result['votes'], self.data[['votes']][:5].to_dict(orient='records'))
 
+    def test_multiparams(self):
+        result = self.check('/datastoreq/sqlite/multiparams').json()
+        name_result = self.data[['name']][self.data['votes'] > 100].to_dict(orient='records')
+        self.assertEqual(result['name'], name_result)
+        self.assertEqual(result['votes'], self.data[['votes']][:5].to_dict(orient='records'))
+
     @classmethod
     def tearDownClass(cls):
         if cls.db.is_file():
