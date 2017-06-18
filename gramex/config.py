@@ -121,6 +121,7 @@ class ChainConfig(AttrDict):
 
         return conf
 
+
 # Paths that users have already been warned about. Don't warn them again
 _warned_paths = set()
 # Get the directory where gramex is located. This is the same as the directory
@@ -148,6 +149,7 @@ def _setup_variables():
             app_log.warn('$GRAMEXDATA set to %s for OS %s', variables['GRAMEXDATA'], sys.platform)
 
     return variables
+
 
 variables = _setup_variables()
 

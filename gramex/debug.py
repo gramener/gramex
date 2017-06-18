@@ -34,6 +34,7 @@ def _make_timer():
 
     return timer
 
+
 # Create a single global instance of timer
 timer = _make_timer()
 

@@ -18,6 +18,7 @@ def read_gitignore(path):
             if line and not line.startswith('#'):
                 yield line
 
+
 ignore_patterns = list(read_gitignore('.gitignore'))
 
 

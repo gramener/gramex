@@ -247,7 +247,6 @@ class Flattener(unittest.TestCase):
         # None of these fields are valid. Don't raise an error, just ignore
         fieldmap = {
             0: 'int-invalid',
-            0.0: 'float-invalid',
             ('a', 'b'): 'tuple-invalid',
             'false-invalid': False,
             'none-invalid': None,
@@ -256,6 +255,11 @@ class Flattener(unittest.TestCase):
             'tuple-invalid': tuple(),
             'set-invalid': set(),
             'list-invalid': [],
+        }
+        out = flattener(fieldmap)({})
+        self.assertEqual(len(out.keys()), 0)
+        fieldmap = {
+            0.0: 'float-invalid',
         }
         out = flattener(fieldmap)({})
         self.assertEqual(len(out.keys()), 0)
