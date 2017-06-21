@@ -1715,3 +1715,6 @@ schedule:
     kwargs: {count: 1000}
     startup: true
     thread: true
+
+# Import from all subdirectories
+import: {subdir: '*/gramex.yaml'}

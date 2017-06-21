@@ -1,0 +1,6 @@
+url:
+    subapp:
+        pattern: /$YAMLURL/
+        handler: FunctionHandler
+        kwargs:
+            function: subapp.run
