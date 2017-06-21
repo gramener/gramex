@@ -760,6 +760,7 @@ url:
       sql:
         name: select name from actors where votes > :votes
         votes: select votes from actors limit 5
+        empty: select name from actors where category = 'nonexistent'
       parameters: {encoding: utf8}
       default: {format: json, votes: 100}
       headers: {X-Test: abc}

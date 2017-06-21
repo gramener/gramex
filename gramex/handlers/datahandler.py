@@ -523,7 +523,10 @@ class QueryHandler(BaseHandler, DataMixin):
         self._engine()
         import pandas as pd
         if self.request.method.lower() == 'get':
-            result = next(pd.read_sql(stmt, self.engine, chunksize=limit))
+            try:
+                result = next(pd.read_sql(stmt, self.engine, chunksize=limit))
+            except StopIteration:
+                result = pd.DataFrame()
         else:
             self.engine.execute(stmt)
             result = pd.DataFrame()

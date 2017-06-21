@@ -67,7 +67,7 @@ class QueryHandlerTestMixin(object):
             response = method(base, params=payload)
             self.assertEqual(response.status_code, OK)
             if y is None:
-                self.assertEqual(len(requests.get(validation_base + where).text), 0)
+                self.assertEqual(len(requests.get(validation_base + where).text.strip()), 0)
             else:
                 x = pd.read_csv(validation_base + where, encoding='utf-8')
                 pdt.assert_frame_equal(x, pd.DataFrame(y))
@@ -122,6 +122,7 @@ class TestSqliteHandler(TestGramex, QueryHandlerTestMixin):
         name_result = self.data[['name']][self.data['votes'] > 100].to_dict(orient='records')
         self.assertEqual(result['name'], name_result)
         self.assertEqual(result['votes'], self.data[['votes']][:5].to_dict(orient='records'))
+        self.assertEqual(result['empty'], [])
 
     @classmethod
     def tearDownClass(cls):
