@@ -18,7 +18,7 @@ variables:
   POSTGRES_SERVER: postgres
   MYSQL_SERVER: mysql
 
-unittest:
+validate:
   script:
     # First, make sure there are no PEP8 errors
     - flake8

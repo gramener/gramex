@@ -228,15 +228,15 @@ cache.)
 
 ## Cache static files
 
-You can cache static files with both server and client side caching. For
-example, to cache the `bower_components` directory, use this configuration:
+You can cache static files with both server and client side caching. For example,
+to cache the `bower_components` and `assets` directories, use this configuration:
 
     :::yaml
-    bower_components:
-      pattern: /$YAMLURL/bower_components/(.*)      # Map everything under bower_components
-      handler: FileHandler                          # via a FileHandler
+    static_files:
+      pattern: /$YAMLURL/(bower_components/.*|assets/.*)    # Map all static files
+      handler: FileHandler
       kwargs:
-        path: $YAMLPATH/bower_components/           # to the bower_components/ directory
+        path: $YAMLPATH/                            # from under this directory
         headers:
           Cache-Control: public, max-age=315360000  # Cache for 10 years on the browser
       cache: true                                   # Also cache on the server
