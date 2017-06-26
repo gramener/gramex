@@ -75,11 +75,12 @@ def open(path, callback, **kwargs):
     _reload_status = kwargs.pop('_reload_status', False)
     reloaded = False
 
-    mtime = os.stat(path).st_mtime
+    stat = os.stat(path)
+    mtime, size = stat.st_mtime, stat.st_size
     _cache = kwargs.pop('_cache', _DEFAULT_CACHE)
     callback_is_str = isinstance(callback, six.string_types)
     key = (path, callback if callback_is_str else id(callback))
-    if key not in _cache or mtime > _cache[key]['mtime']:
+    if key not in _cache or mtime > _cache[key].get('mtime') or size != _cache[key].get('size'):
         reloaded = True
         if callable(callback):
             data = callback(path, **kwargs)
@@ -91,7 +92,7 @@ def open(path, callback, **kwargs):
                 raise TypeError('gramex.cache.open(callback="%s") is not a known type', callback)
         else:
             raise TypeError('gramex.cache.open(callback=) must be a function, not %r', callback)
-        _cache[key] = {'data': data, 'mtime': mtime}
+        _cache[key] = {'data': data, 'mtime': mtime, 'size': size}
 
     result = _cache[key]['data']
     return (result, reloaded) if _reload_status else result
