@@ -1445,7 +1445,7 @@ url:
     pattern: /auth/simple
     handler: SimpleAuth
     kwargs:
-        template: $YAMLPATH/auth.html
+        template: $YAMLPATH/simpleauth.html     # Created from auth.html dynamically
         user: {arg: user}
         password: {arg: password}
         credentials:

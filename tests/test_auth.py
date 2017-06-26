@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 import os
 import json
+import shutil
 import requests
 import lxml.html
 import pandas as pd
@@ -9,8 +10,7 @@ from nose.plugins.skip import SkipTest
 from six.moves.urllib_parse import urlencode
 import gramex.config
 from gramex.http import OK, UNAUTHORIZED, FORBIDDEN
-from . import TestGramex
-from . import server
+from . import TestGramex, server, tempfiles
 
 
 class TestSession(TestGramex):
@@ -135,6 +135,9 @@ class TestSimpleAuth(AuthBase, LoginMixin):
     @classmethod
     def setUpClass(cls):
         AuthBase.setUpClass()
+        cls.folder = os.path.dirname(os.path.abspath(__file__))
+        tempfiles.simple_auth = cls.template_file = os.path.join(cls.folder, 'simpleauth.html')
+        shutil.copyfile(os.path.join(cls.folder, 'auth.html'), cls.template_file)
         cls.url = server.base_url + '/auth/simple'
 
     # Run additional tests for session and login features
@@ -169,6 +172,14 @@ class TestSimpleAuth(AuthBase, LoginMixin):
         # first session should be logged out now
         self.session = session1
         self.assertTrue('user' not in self.get_session())
+
+    def test_change_template(self):
+        try:
+            self.check('/auth/simple', text='<h1>Auth</h1>')
+            shutil.copyfile(os.path.join(self.folder, 'auth2.html'), self.template_file)
+            self.check('/auth/simple', text='<h1>Auth 2</h1>')
+        finally:
+            shutil.copyfile(os.path.join(self.folder, 'auth.html'), self.template_file)
 
 
 class DBAuthBase(AuthBase):

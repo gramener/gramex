@@ -8,10 +8,12 @@ import logging
 import functools
 import tornado.web
 import tornado.gen
+from tornado.template import Template
 from tornado.auth import (GoogleOAuth2Mixin, FacebookGraphMixin, TwitterMixin,
                           urllib_parse, _auth_return_future)
 from orderedattrdict import AttrDict
 import gramex
+import gramex.cache
 from gramex.config import check_old_certs, app_log, objectpath
 from gramex.transforms import build_transform
 from .basehandler import BaseHandler
@@ -45,6 +47,11 @@ def csv_encode(values, *args, **kwargs):
         v.decode('utf-8') if isinstance(v, six.binary_type) else repr(v)
         for v in values])
     return buf.getvalue().strip()
+
+
+def _load_template(path):
+    with open(path, 'rb') as handle:
+        return Template(handle.read())
 
 
 class AuthHandler(BaseHandler):
@@ -89,6 +96,13 @@ class AuthHandler(BaseHandler):
         for callback in self.actions:
             callback(self)
         self.log_user_event(event='login')
+
+    def render_template(self, path, **kwargs):
+        '''Like self.render(), but reloads updated templates'''
+        template = gramex.cache.open(path, _load_template)
+        namespace = self.get_template_namespace()
+        namespace.update(kwargs)
+        self.finish(template.generate(**namespace))
 
 
 class LogoutHandler(AuthHandler):
@@ -201,7 +215,7 @@ class LDAPAuth(AuthHandler):
 
     def get(self):
         self.save_redirect_page()
-        self.render(self.template, error=None)
+        self.render_template(self.template, error=None)
 
     errors = {
         'bind': 'Unable to log in bind.user at {host}',
@@ -215,7 +229,7 @@ class LDAPAuth(AuthHandler):
         app_log.error('LDAP: ' + error, exc_info=exc_info)
         self.set_status(status_code=401)
         self.set_header('Auth-Error', code)
-        self.render(self.template, error={'code': code, 'error': error})
+        self.render_template(self.template, error={'code': code, 'error': error})
         raise tornado.gen.Return()
 
     @tornado.gen.coroutine
@@ -329,7 +343,7 @@ class SimpleAuth(AuthHandler):
 
     def get(self):
         self.save_redirect_page()
-        self.render(self.template, error=None)
+        self.render_template(self.template, error=None)
 
     def post(self):
         user = self.get_argument(self.user.arg)
@@ -344,7 +358,7 @@ class SimpleAuth(AuthHandler):
             self.redirect_next()
         else:
             self.set_status(status_code=401)
-            self.render(self.template, error={'code': 'auth', 'error': 'Cannot log in'})
+            self.render_template(self.template, error={'code': 'auth', 'error': 'Cannot log in'})
 
 
 class DBAuth(SimpleAuth):
@@ -425,7 +439,7 @@ class DBAuth(SimpleAuth):
         template = self.template
         if self.forgot and self.forgot.key in self.request.arguments:
             template = self.forgot.template
-        self.render(template, error=None)
+        self.render_template(template, error=None)
 
     @tornado.gen.coroutine
     def post(self):
@@ -463,7 +477,7 @@ class DBAuth(SimpleAuth):
             self.redirect_next()
         else:
             self.set_status(status_code=401)
-            self.render(self.template, error={
+            self.render_template(self.template, error={
                 'code': 'auth',
                 'error': 'Cannot log in'
             })
@@ -549,7 +563,7 @@ class DBAuth(SimpleAuth):
             else:
                 self.set_status(status_code=401)
                 error['error'] = 'Invalid Token'
-        self.render(template, error=error)
+        self.render_template(template, error=error)
 
     @classmethod
     def setup_recover_db(cls):
