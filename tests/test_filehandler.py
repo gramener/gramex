@@ -195,6 +195,8 @@ class TestFileHandler(TestGramex):
         self.check('/dir/allow-ignore/ignore-file.txt', code=200)
         self.check('/server.py', code=403)               # Ignore .py files by default
         self.check('/dir/index/.allow', code=200)        # But .allow is allowed
+        # Paths are resolved before ignoring
+        self.check('/dir/ignore-all-except/', path='dir/index.html')
 
     def test_methods(self):
         config = {

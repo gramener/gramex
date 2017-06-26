@@ -390,6 +390,15 @@ url:
       ignore: ignore-file.txt
       allow: ignore-file.txt
 
+  dir/ignore-all-except:
+    pattern: "/dir/ignore-all-except/(.*)"
+    handler: FileHandler
+    kwargs:
+      path: dir/
+      default_filename: index.html
+      ignore: '*'
+      allow: index.html
+
   methods/get-only:
     pattern: /methods/get-only
     handler: FileHandler

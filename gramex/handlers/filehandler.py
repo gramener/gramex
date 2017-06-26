@@ -204,11 +204,7 @@ class FileHandler(BaseHandler):
         except OSError:
             raise HTTPError(status_code=NOT_FOUND)
 
-        if not self.allowed(path):
-            raise HTTPError(status_code=FORBIDDEN)
-
         self.path = path
-
         if self.path.is_dir():
             self.file = self.path / self.default_filename if self.default_filename else self.path
             if not (self.default_filename and self.file.exists()) and not self.index:
@@ -223,6 +219,9 @@ class FileHandler(BaseHandler):
                 raise HTTPError(status_code=NOT_FOUND)
             elif not self.file.is_file():
                 raise HTTPError(status_code=FORBIDDEN, log_message='%s is not a file' % self.path)
+
+        if not self.allowed(self.file):
+            raise HTTPError(status_code=FORBIDDEN)
 
         if self.path.is_dir() and self.index and not (
                 self.default_filename and self.file.exists()):
