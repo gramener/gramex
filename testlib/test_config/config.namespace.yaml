@@ -1,0 +1,8 @@
+ns_star:
+    import: {sub: {path: config.b.yaml, namespace: '*'}}
+
+ns_c:
+    import: {sub: {path: config.b.yaml, namespace: 'c'}}
+
+ns_star_c:
+    import:  {sub: {path: config.b.yaml, namespace: ['*', 'c']}}

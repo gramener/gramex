@@ -7,7 +7,7 @@ import gramex
 from pathlib import Path
 from orderedattrdict import AttrDict
 from yaml.constructor import ConstructorError
-from gramex.config import ChainConfig, PathConfig, walk, merge, ConfigYAMLLoader
+from gramex.config import ChainConfig, PathConfig, walk, merge, ConfigYAMLLoader, _add_ns
 
 info = AttrDict(
     home=Path(__file__).absolute().parent,
@@ -34,7 +34,7 @@ class TestChainConfig(unittest.TestCase):
     '''Test gramex.conf.ChainConfig'''
 
     def test_attrdict(self):
-        'ChainConfig is an AttrDict'
+        '''ChainConfig is an AttrDict'''
         conf = ChainConfig(a=AttrDict(), b=AttrDict())
         conf.a.x = 1
         conf.a.y = 2
@@ -44,7 +44,7 @@ class TestChainConfig(unittest.TestCase):
         self.assertEqual(conf, {'a': {'x': 1, 'y': 2}, 'b': {'x': 3, 'y': 4}})
 
     def test_overlay(self):
-        '+ChainConfig updates configs successively'
+        '''+ChainConfig updates configs successively'''
         conf = ChainConfig()
         conf.a = AttrDict()
         conf.b = AttrDict()
@@ -64,6 +64,7 @@ class TestPathConfig(unittest.TestCase):
         self.b = info.home / 'config.b.yaml'
         self.temp = info.home / 'config.temp.yaml'
         self.imp = info.home / 'config.import.yaml'
+        self.ns = info.home / 'config.namespace.yaml'
         self.final = info.home / 'config.final.yaml'
         self.chain = AttrDict(
             base=info.home / 'config.template.base.yaml',
@@ -78,7 +79,7 @@ class TestPathConfig(unittest.TestCase):
         unlink(self.conf2)
 
     def test_merge(self):
-        'Config files are loaded and merged'
+        '''Config files are loaded and merged'''
         unlink(self.temp)
         conf = ChainConfig([
             ('a', PathConfig(self.a)),
@@ -86,7 +87,7 @@ class TestPathConfig(unittest.TestCase):
         self.assertEqual(+conf, PathConfig(self.final))
 
     def test_update(self):
-        'Config files are updated on change'
+        '''Config files are updated on change'''
         conf = ChainConfig(temp=PathConfig(self.temp))
 
         # When the file is missing, config is empty
@@ -109,7 +110,7 @@ class TestPathConfig(unittest.TestCase):
         self.assertEqual(+conf, {})
 
     def test_chain_update(self):
-        'Chained config files are changed on update'
+        '''Chained config files are changed on update'''
         # Set up a configuration with 2 files -- conf1.test and conf2.test.
         with self.conf1.open(mode='w', encoding='utf-8') as handle:
             yaml.dump({'url': {}}, handle)
@@ -128,7 +129,7 @@ class TestPathConfig(unittest.TestCase):
         self.assertEqual(+conf, {'url': {'b': 10}})
 
     def test_import(self):
-        'Check if config files are imported'
+        '''Check if config files are imported'''
         conf_imp = ChainConfig(conf=PathConfig(self.imp))
         conf_b = ChainConfig(conf=PathConfig(self.b))
 
@@ -148,8 +149,31 @@ class TestPathConfig(unittest.TestCase):
         unlink(self.temp)
         self.assertEqual(+conf_imp, +conf_b)
 
+    def test_add_ns(self):
+        '''Test _add_ns functionality'''
+        self.assertEqual(_add_ns({'x': 1}, '*', 'a'), {'a:x': 1})
+        self.assertEqual(_add_ns({'x': {'y': 1}}, 'x', 'a'), {'x': {'a:y': 1}})
+        self.assertEqual(_add_ns({'x': {'y': 1}}, ['*', 'x'], 'a'), {'a:x': {'a:y': 1}})
+        self.assertEqual(_add_ns({'x': {'y': 1}}, ['x', '*'], 'a'), {'a:x': {'a:y': 1}})
+
+    def test_namespace(self):
+        '''Test namespace functionality in import'''
+        conf_ns = +ChainConfig(conf=PathConfig(self.ns))
+        self.assertEqual(conf_ns.ns_star, {
+            'config.b.yaml:b': 2,
+            'config.b.yaml:c': {'xx': 3, 'yy': 4}
+        })
+        self.assertEqual(conf_ns.ns_c, {
+            'b': 2,
+            'c': {'config.b.yaml:xx': 3, 'config.b.yaml:yy': 4}
+        })
+        self.assertEqual(conf_ns.ns_star_c, {
+            'config.b.yaml:b': 2,
+            'config.b.yaml:c': {'config.b.yaml:xx': 3, 'config.b.yaml:yy': 4}
+        })
+
     def test_variables(self):
-        'Templates interpolate string variables'
+        '''Templates interpolate string variables'''
         # Create configuration with 2 layers and a subdirectory import
         conf = +ChainConfig(
             base=PathConfig(self.chain.base),
@@ -236,7 +260,7 @@ class TestConfig(unittest.TestCase):
              o.a, o.a, o, o])
 
     def test_walk_list(self):
-        'Test gramex.config.walk with lists'
+        '''Test gramex.config.walk with lists'''
         o = yaml.load('''
             - 1
             - 2
@@ -264,7 +288,7 @@ class TestConfig(unittest.TestCase):
             [(key, val) for key, val, node in result])
 
     def test_merge(self):
-        'Test gramex.config.merge'
+        '''Test gramex.config.merge'''
         def check(a, b, c, mode='overwrite'):
             'Check if merge(a, b) is c. Parameters are in YAML'
             old = yaml.load(a, Loader=ConfigYAMLLoader)

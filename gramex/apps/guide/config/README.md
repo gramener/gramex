@@ -458,22 +458,32 @@ You can use imports within sections. For example:
     url:
       app1: 'app1/gramex.yaml'      # Imports app1/gramex.yaml into the url: section
 
-The imported configuration is overridden by the importing configuration. For
-example, `app1/gramex.yaml` has:
+The imported configuration cannot change existing configuration. For example,
+`new.yaml` has:
 
     :::yaml
-    x: 1
-    y: 2
+    x: 2
 
 Then, this configuration:
 
     :::yaml
-    import:
-        app1: 'app1/gramex.yaml'
-    x: 2      # Override the x:1 set in app1/gramex.yaml
+    x: 1
+    import: {app: 'new.yaml'}
 
-... will override the value in the import. The order is unimportant -- ``x: 2``
-could be placed above the import as well. Imported values are always overridden.
+... will set x to 1. `new.yaml` will not update an existing configuration.
+
+When importing files, duplicated keys are dropped. For example, two `url:`
+sections may re-use the same `home:` or `login:` key. To ensure that all keys are
+used, you can use namespaces like this:
+
+    :::yaml
+    import:
+      apps: {path: */gramex.yaml', namespace: [url, schedule, cache]}
+
+This replaces the keys under `url:`, `schedule:`, and `cache:` with a unique
+prefix, ensuring that these sections are merged without conflict.
+
+
 
 ## YAML variables
 

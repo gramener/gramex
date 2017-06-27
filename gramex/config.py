@@ -304,6 +304,33 @@ def _pathstat(path):
     return AttrDict(path=path, stat=stat)
 
 
+def _add_ns(config, namespace, prefix):
+    '''
+    Given a YAML config (basically a dict), add prefix to specified namespaces.
+
+    For example::
+
+        >>> _add_ns({'x': 1}, '*', 'a')
+        {'a.x': 1}
+        >>> _add_ns({'x': {'y': 1}}, ['*', 'x'], 'a')
+        {'a.x': {'a.y': 1}}
+    '''
+    if not isinstance(namespace, list):
+        namespace = [namespace]
+    # Sort in descending order of key depth. So "x.y" is before "x" is before "*"
+    namespace = sorted(namespace, key=lambda ns: -1 if ns == '*' else ns.count('.'), reverse=True)
+    prefix += ':'
+    for keypath in namespace:
+        if keypath == '*':
+            el = config
+        else:
+            el = objectpath(config, keypath, default={})
+        if isinstance(el, dict):
+            for subkey in list(el.keys()):
+                el[prefix + subkey] = el.pop(subkey)
+    return config
+
+
 def load_imports(config, source):
     '''
     Post-process a config for imports.
@@ -325,7 +352,7 @@ def load_imports(config, source):
             start: true
         path: /
         import:
-            something: update.yaml
+            something: update*.yaml     # Can be any glob, e.g. */gramex.yaml
 
     ... and ``update.yaml`` looks like this::
 
@@ -336,22 +363,42 @@ def load_imports(config, source):
     ... then after this function is called, ``config`` looks like this::
 
         app:
-            port: 30        # Updated by update.yaml
+            port: 20        # From base.yaml. NOT updated by update.yaml
             start: true     # From base.yaml
             new: yes        # From update.yaml
         path: /             # From base.yaml
 
     The ``import:`` keys are deleted. The return value contains :func:_pathstat
     values for ``base.yaml`` and ``update.yaml`` in that order.
+
+    To import sub-keys as namespaces, use::
+
+        import:
+            app: {path: */gramex.yaml, namespace: 'url'}
+
+    This prefixes all keys under ``url:``. Here are more examples::
+
+        namespace: True             # Add namespace to all top-level keys
+        namespace: url              # Add namespace to url.*
+        namespace: log.loggers      # Add namespace to log.loggers.*
+        namespace: [True, url]      # Add namespace to top level keys and url.*
+
+    By default, the prefix is the relative path of the imported YAML file
+    (relative to the importer).
     '''
     imported_paths = [_pathstat(source)]
     root = source.absolute().parent
     for key, value, node in list(walk(config)):
         if key == 'import':
-            for name, pattern in value.items():
-                paths = root.glob(pattern) if '*' in pattern else [Path(pattern)]
+            for name, conf in value.items():
+                if not isinstance(conf, dict):
+                    conf = AttrDict(path=conf)
+                paths = root.glob(conf.path) if '*' in conf.path else [Path(conf.path)]
                 for path in paths:
                     new_conf = _yaml_open(root.joinpath(path))
+                    if 'namespace' in conf:
+                        prefix = Path(path).as_posix()
+                        new_conf = _add_ns(new_conf, conf['namespace'], prefix)
                     imported_paths += load_imports(new_conf, source=path)
                     merge(old=node, new=new_conf, mode='setdefault')
             # Delete the import key
