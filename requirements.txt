@@ -7,7 +7,7 @@ setuptools >= 16.0        # 16.0 has good error message support
 # General utilities
 six                       # Python 3 compatibility
 pathlib                   # Manipulate paths. Part of Python 3.3+
-orderedattrdict >= 1.4.2  # OrderedDict with attr access for configs
+orderedattrdict >= 1.4.3  # OrderedDict with attr access for configs
 watchdog >= 0.8           # Monitor file changes
 tornado >= 4.3            # Web server
 PyYAML >= 3.10            # Parse YAML files for config
@@ -29,6 +29,8 @@ markdown                  # For Markdown transfroms
 PyMySQL                   # For MySQL connections
 ipdb                      # For debugging
 textblob                  # For Gramex Guide TwitterRESTHandler example
+psycopg2 >= 2.7.1         # For PostgreSQL connections
+ldap3 >= 2.2.4            # For LDAP connections
 
 # Derived dependencies (not used by Gramex directly)
 argh >= 0.24.1            # Required by watchdog

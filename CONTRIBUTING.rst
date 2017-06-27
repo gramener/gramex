@@ -24,8 +24,6 @@ To set up the development environment:
 3. Clone the dev branch and install it::
 
       $ git clone -b dev git@code.gramener.com:s.anand/gramex.git gramex
-      $ conda config --add channels clinicalgraphics      # For psycopg2 win-64
-      $ conda install --file gramex/requirements-conda.txt
       $ pip install -e gramex
 
 .. _Anaconda: http://continuum.io/downloads
@@ -45,7 +43,6 @@ Contributing to Gramex
    On Windows, you may need to [enable Powershell scripts](http://stackoverflow.com/a/18533754/100904).
    (To run a subset of tests, use ``... nosetests tests.test_gramex``)::
 
-      conda install -q -y --file requirements-conda.txt
       pip install -q -e .
       flake8
       python setup.py nosetests

@@ -8,27 +8,16 @@ Gramex is an extensible data analytics and visualization platform for business.
 Install
 -------
 
-.. _Anaconda: http://continuum.io/downloads
-.. _Git for Windows: https://git-for-windows.github.io/
-.. _node: https://nodejs.org/en/
-.. _update Anaconda: http://docs.continuum.io/anaconda/install#updating-from-older-anaconda-versions
+.. _Anaconda: https://continuum.io/downloads
+.. _Update Anaconda: https://docs.continuum.io/anaconda/install#updating-from-older-anaconda-versions
 .. _Xcode: https://developer.apple.com/xcode/download/
 
-On **Linux**, run this command to set up Gramex::
-
-    source <(wget -qO- http://code.gramener.com/s.anand/gramex/raw/master/setup.sh)
-
-On **Windows or Mac** (or for manual install on Linux):
-
-1. Download and install `Anaconda`_ 4.0.0 or later -- `update Anaconda`_ if required
-2. On Mac, download and install `Xcode`_. Then run ``conda install -c gramener watchdog``.
-3. On Windows / Linux, run ``conda install -y -c anaconda -c odm2 psycopg2 ldap3``.
-4. Run ``pip install --upgrade --ignore-installed http://code.gramener.com/s.anand/gramex/repository/archive.tar.bz2?ref=master``
+1. Download and install `Anaconda`_ 4.4.0 or later. `Update Anaconda`_ if required
+2. **Only on Mac**, download and install `Xcode`_. Then run ``conda install -c gramener watchdog``.
+3. Run ``pip install https://code.gramener.com/s.anand/gramex/repository/archive.tar.bz2?ref=master``
    (replace ``master`` with ``dev`` for the development version).
-    - If installing ``scandir`` fails on Windows, try without ``--ignore-installed``
-5. Optional: Install `Git for Windows`_ and `node`_. Then run ``npm install bower``
 
-.. Note: pip install --ignore-installed was required for this Anaconda bug:
+.. Note: pip install --ignore-installed was removed because of this Anaconda bug:
 .. https://github.com/pypa/pip/issues/2751#issuecomment-165390180
 .. However, this forces an upgrade of scandir which fails on Windows.
 
@@ -43,7 +32,7 @@ To remove Gramex, run::
 Offline install
 ~~~~~~~~~~~~~~~
 
-.. _Gramex: http://code.gramener.com/s.anand/gramex/repository/archive.tar.bz2?ref=master
+.. _Gramex: https://code.gramener.com/s.anand/gramex/repository/archive.tar.bz2?ref=master
 
 To install Gramex without an Internet connection:
 
@@ -57,7 +46,7 @@ On the target machine:
 1. Install `Anaconda`_ from the ``offline`` folder
 2. Install gramex using::
 
-    pip install --no-index --find-links /path/to/offline gramex
+    pip install --no-index --find-links /path/to/offline gramex.tar.bz2
 
 
 Usage
