@@ -572,7 +572,7 @@ By default, this will redirect users to `/login/`. This is configured in the `ap
     :::yaml
     app:
         settings:
-            login_url: /login/    # This is the default login URL
+            login_url: /$YAMLURL/login/   # This is the default login URL
 
 You need to either map `/login/` to an auth handler, or change the `login_url`
 to your auth handler URL.
