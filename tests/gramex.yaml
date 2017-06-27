@@ -1445,7 +1445,7 @@ url:
     pattern: /auth/simple
     handler: SimpleAuth
     kwargs:
-        template: $YAMLPATH/simpleauth.html     # Created from auth.html dynamically
+        template: $YAMLPATH/auth.html
         user: {arg: user}
         password: {arg: password}
         credentials:
@@ -1466,6 +1466,16 @@ url:
             -
               function: ensure_single_session
         xsrf_cookies: false
+
+  auth/template:
+    pattern: /auth/template
+    handler: SimpleAuth
+    kwargs:
+        template: $YAMLPATH/authtemplate.html
+        user: {arg: user}
+        password: {arg: password}
+        credentials:
+            alpha: alpha
 
   auth/db:
     pattern: /auth/db

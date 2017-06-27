@@ -135,9 +135,6 @@ class TestSimpleAuth(AuthBase, LoginMixin):
     @classmethod
     def setUpClass(cls):
         AuthBase.setUpClass()
-        cls.folder = os.path.dirname(os.path.abspath(__file__))
-        tempfiles.simple_auth = cls.template_file = os.path.join(cls.folder, 'simpleauth.html')
-        shutil.copyfile(os.path.join(cls.folder, 'auth.html'), cls.template_file)
         cls.url = server.base_url + '/auth/simple'
 
     # Run additional tests for session and login features
@@ -173,13 +170,15 @@ class TestSimpleAuth(AuthBase, LoginMixin):
         self.session = session1
         self.assertTrue('user' not in self.get_session())
 
+
+class TestAuthTemplate(TestGramex):
     def test_change_template(self):
-        try:
-            self.check('/auth/simple', text='<h1>Auth</h1>')
-            shutil.copyfile(os.path.join(self.folder, 'auth2.html'), self.template_file)
-            self.check('/auth/simple', text='<h1>Auth 2</h1>')
-        finally:
-            shutil.copyfile(os.path.join(self.folder, 'auth.html'), self.template_file)
+        folder = os.path.dirname(os.path.abspath(__file__))
+        tempfiles.auth_template = auth_file = os.path.join(folder, 'authtemplate.html')
+        shutil.copyfile(os.path.join(folder, 'auth.html'), auth_file)
+        self.check('/auth/template', text='<h1>Auth</h1>')
+        shutil.copyfile(os.path.join(folder, 'auth2.html'), auth_file)
+        self.check('/auth/template', text='<h1>Auth 2</h1>')
 
 
 class DBAuthBase(AuthBase):
