@@ -20,10 +20,6 @@ variables:
 
 validate:
   script:
-    # First, make sure there are no PEP8 errors
     - flake8
-
-    # Run unit tests
-    - conda install -q -y --file requirements-conda.txt
     - pip install -q -e .
     - python setup.py nosetests
