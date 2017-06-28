@@ -650,6 +650,9 @@ email ends with `.org`.
 You can specify any function of your choice. The function must return (or yield)
 `True` to allow the user access, and `False` to raise a HTTP 403 error.
 
+To repeat auth conditions across multiple handlers, see [Reusing Configurations](#reusing-configurations).
+
+
 ## Templates for unauthorized
 
 When a user is logged in but does not have access to the page (because of the

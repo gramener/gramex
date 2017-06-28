@@ -287,7 +287,7 @@ URL handlers allow custom logging of errors. For example, to show a custom 404 p
                   path: $YAMLPATH/error-page.html
 
 Here is an example of an [error-page](error-page). The error page is rendered as
-a template with 3 keyword arguments:
+a Tornado template with 3 keyword arguments:
 
 - `status_code`: the HTTP status code of the error
 - `kwargs`: if this error was caused by an uncaught exception or raising a
@@ -308,6 +308,8 @@ The error page can also be a function. For example:
 
 The function is passed the same 3 keyword arguments mentioned above. Its return
 value is rendered as a string.
+
+To repeat error pages across multiple handlers, see [Reusing Configurations](#reusing-configurations).
 
 Both methods support some customisations. Here is a full example showing the
 customisations:
@@ -682,3 +684,44 @@ You can see this applications `gramex.conf` at [/final-config](../final-config)
 
 If the underlying YAML files change, then `gramex.init()` is automatically
 reloaded and all services are re-initialized.
+
+## Reusing configurations
+
+Sometimes, you need to re-use the same configurations multiple times. YAML's
+[anchors][anchors] support this. For example, this is how you re-use
+authentication:
+
+
+    :::yaml
+    url1:
+        pattern: ...
+        handler: ...
+        kwargs: ...
+          auth: &GRAMENER_AUTH          # Define a reference called GRAMENER_AUTH
+              membership:
+                  hd: [gramener.com]
+    url2:
+        pattern: ...
+        handler: ...
+        kwargs: ...
+          auth: *GRAMENER_AUTH          # Reuse GRAMENER_AUTH
+
+This is how you re-use error page definitions:
+
+    :::yaml
+    url1:
+        pattern: ...
+        handler: ...
+        kwargs:
+            ...
+            error: &DASHBOARD_ERROR      # Define a reference called DASHBOARD_ERROR
+                404: {path: $YAMLPATH/error-page.html}
+                500: {function: config_error_page.show_error}
+    url2:
+        pattern: ...
+        handler: ...
+        kwargs:
+            ...
+            error: *DASHBOARD_ERROR       # Reuse DASHBOARD_ERROR reference
+
+[anchors]: http://camel.readthedocs.io/en/latest/yamlref.html#anchors
