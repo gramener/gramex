@@ -28,41 +28,41 @@ class TestReloadModule(unittest.TestCase):
 
     def test_reload_module(self):
         # When loaded, the counter is not incremented
-        import test_cache.common
-        self.assertEqual(test_cache.common.val[0], 0)
+        from testlib.test_cache.common import val
+        self.assertEqual(val[0], 0)
 
         # On first load, the counter is incremented once
-        import test_cache.mymodule
-        self.assertEqual(test_cache.common.val[0], 1)
+        import testlib.test_cache.mymodule
+        self.assertEqual(val[0], 1)
 
         # On second load, it stays cached
-        import test_cache.mymodule
-        self.assertEqual(test_cache.common.val[0], 1)
+        import testlib.test_cache.mymodule
+        self.assertEqual(val[0], 1)
 
         # The first time, we get the reloaded date. The module may be reloaded
-        gramex.cache.reload_module(test_cache.mymodule)
-        count = test_cache.common.val[0]
+        gramex.cache.reload_module(testlib.test_cache.mymodule)
+        count = val[0]
         # On explicit reload_module, it still stays cached
-        gramex.cache.reload_module(test_cache.mymodule)
-        self.assertEqual(test_cache.common.val[0], count)
+        gramex.cache.reload_module(testlib.test_cache.mymodule)
+        self.assertEqual(val[0], count)
 
         # Change the module
-        pyfile = test_cache.mymodule.__file__.rstrip('c')
+        pyfile = testlib.test_cache.mymodule.__file__.rstrip('c')
         module_timestamp_delay = 0.005
         time.sleep(module_timestamp_delay)
         touch(pyfile)
 
         # Regular import does not reload
-        import test_cache.mymodule
-        self.assertEqual(test_cache.common.val[0], count)
+        import testlib.test_cache.mymodule
+        self.assertEqual(val[0], count)
 
         # ... but reload_module DOES reload, and the counter increments
-        gramex.cache.reload_module(test_cache.mymodule)
-        self.assertEqual(test_cache.common.val[0], count + 1)
+        gramex.cache.reload_module(testlib.test_cache.mymodule)
+        self.assertEqual(val[0], count + 1)
 
         # Subsequent call does not reload
-        gramex.cache.reload_module(test_cache.mymodule)
-        self.assertEqual(test_cache.common.val[0], count + 1)
+        gramex.cache.reload_module(testlib.test_cache.mymodule)
+        self.assertEqual(val[0], count + 1)
 
 
 class TestOpen(unittest.TestCase):
@@ -121,12 +121,12 @@ class TestOpen(unittest.TestCase):
             expected = Template(handle.read(), autoescape=None)
 
         def check(reload):
-            result, reloaded = gramex.cache.open(path, 'template', _reload_status=True,
-                                                 autoescape=None)
+            result, reloaded = gramex.cache.open(
+                path, 'template', _reload_status=True, encoding='utf-8', autoescape=None)
             self.assertEqual(reloaded, reload)
             self.assertTrue(isinstance(result, Template))
             self.assertEqual(result.generate(name='x'), expected.generate(name='x'))
-            self.assertEqual(result.generate(name='x'), '<b>x</b>\n')
+            self.assertEqual(result.generate(name='x'), b'<b>x</b>\n')
 
         self.check_file_cache(path, check)
 

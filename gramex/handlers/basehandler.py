@@ -291,7 +291,7 @@ class BaseMixin(object):
                     template_kwargs['whitespace'] = error_config['whitespace']
 
                 def _error_function(*args, **kwargs):
-                    tmpl = gramex.cache.open(error_config['path'], 'template')
+                    tmpl = gramex.cache.open(error_config['path'], 'template', autoescape=None)
                     return tmpl.generate(*args, **kwargs)
 
                 cls.error[error_code] = {'function': _error_function}
@@ -381,13 +381,13 @@ class BaseMixin(object):
                 result = self.error[status_code]['function'](
                     status_code=status_code, kwargs=kwargs, handler=self)
                 self._write_headers(self.error[status_code]['conf'].get('headers', {}).items())
-                # result may be a generator / tuple from build_transform,
-                # or a str from Template.generate. Handle either case
-                if isinstance(result, (GeneratorType, tuple)):
+                # result may be a generator / list from build_transform,
+                # or a str/bytes/unicode from Template.generate. Handle both
+                if isinstance(result, (six.string_types, six.binary_type)):
+                    self.write(result)
+                else:
                     for item in result:
                         self.write(item)
-                else:
-                    self.write(result)
                 return
             except Exception:
                 app_log.exception('url:%s.error.%d error handler raised an exception:',

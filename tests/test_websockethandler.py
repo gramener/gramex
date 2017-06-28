@@ -4,9 +4,9 @@ from __future__ import unicode_literals
 
 import time
 from requests import Request
-from test_auth import AuthBase
+from .test_auth import AuthBase
 from nose.tools import eq_
-from server import base_url
+from .server import base_url
 from websocket import create_connection, WebSocketException
 from gramex.http import OK, UNAUTHORIZED, FORBIDDEN
 from requests.cookies import get_cookie_header
@@ -35,25 +35,24 @@ class TestWebSocketHandler(AuthBase):
             ])
 
     def test_unauthorised(self):
-        exc = None
         try:
             ws = create_connection(base_url.replace('http://', 'ws://') + '/ws/auth')
-        except Exception as exc:
-            pass
-        self.assertTrue(isinstance(exc, WebSocketException))
-        self.assertEqual(exc.status_code, UNAUTHORIZED)
+        except WebSocketException as exc:
+            self.assertEqual(exc.status_code, UNAUTHORIZED)
+        else:
+            self.fail('Websocket allows access without login')
+
 
     def test_forbidden(self):
         self.login('beta', 'beta')
-        exc = None
         try:
             ws = create_connection(base_url.replace('http://', 'ws://') + '/ws/auth', header=[
                 'Cookie: {}'.format(get_cookie_header(self.session.cookies, Request(url=base_url)))
             ])
-        except Exception as exc:
-            pass
-        self.assertTrue(isinstance(exc, WebSocketException))
-        self.assertEqual(exc.status_code, FORBIDDEN)
+        except WebSocketException as exc:
+            self.assertEqual(exc.status_code, FORBIDDEN)
+        else:
+            self.fail('Websocket allows access for unallowed user')
 
     def test_authorised_user(self):
         # Log in as user alpha. Authorised users should get access.

@@ -128,11 +128,11 @@ def build_transform(conf, vars=None, filename='transform'):
     for key, val in conf.get('kwargs', {}).items():
         body.append('\t\t%s=%s,\n' % (key, _arg_repr(val)))
 
-    # If the result is a generator object, return it. Else, create a tuple and
+    # If the result is a generator object, return it. Else, create a list and
     # return that. This ensures that the returned value is always an iterable
     body += [
         '\t)\n',
-        '\treturn result if isinstance(result, GeneratorType) else (result,)',
+        '\treturn result if isinstance(result, GeneratorType) else [result,]',
     ]
 
     # Compile the function with context variables

@@ -215,12 +215,12 @@ def run_command(config):
         appcmd = shlex.split(appcmd)
     # If the app is a Cygwin app, TARGET should be a Cygwin path too.
     target = config.target
-    cygcheck, cygpath = which('cygcheck'), which('cygpath')
+    cygcheck, cygpath, kwargs = which('cygcheck'), which('cygpath'), {'universal_newlines': True}
     if cygcheck is not None and cygpath is not None:
-        app_path = check_output([cygpath, '-au', which(appcmd[0])]).strip()
-        is_cygwin_app = check_output([cygcheck, '-f', app_path]).strip()
+        app_path = check_output([cygpath, '-au', which(appcmd[0])], **kwargs).strip()
+        is_cygwin_app = check_output([cygcheck, '-f', app_path], **kwargs).strip()
         if is_cygwin_app:
-            target = check_output([cygpath, '-au', target]).strip()
+            target = check_output([cygpath, '-au', target], **kwargs).strip()
     # Replace TARGET with the actual target
     if 'TARGET' in appcmd:
         appcmd = [target if arg == 'TARGET' else arg for arg in appcmd]
@@ -230,7 +230,7 @@ def run_command(config):
     if not safe_rmtree(config.target):
         app_log.error('Cannot delete target %s. Aborting installation', config.target)
         return
-    proc = Popen(appcmd, bufsize=-1, stdout=sys.stdout, stderr=sys.stderr)
+    proc = Popen(appcmd, bufsize=-1, stdout=sys.stdout, stderr=sys.stderr, **kwargs)
     proc.communicate()
     return proc.returncode
 
@@ -259,7 +259,7 @@ def run_setup(config):
         cmd = string.Template(setup['cmd']).substitute(FILE=setup_file, EXE=exe_path)
         app_log.info('Running %s', cmd)
         proc = Popen(shlex.split(cmd), cwd=target, bufsize=-1,
-                     stdout=sys.stdout, stderr=sys.stderr)
+                     stdout=sys.stdout, stderr=sys.stderr, universal_newlines=True)
         proc.communicate()
 
 
