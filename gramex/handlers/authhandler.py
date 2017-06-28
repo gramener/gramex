@@ -8,7 +8,6 @@ import logging
 import functools
 import tornado.web
 import tornado.gen
-from tornado.template import Template
 from tornado.auth import (GoogleOAuth2Mixin, FacebookGraphMixin, TwitterMixin,
                           urllib_parse, _auth_return_future)
 from orderedattrdict import AttrDict

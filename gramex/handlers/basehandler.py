@@ -1,6 +1,5 @@
 from __future__ import unicode_literals
 
-import io
 import os
 import six
 import json
@@ -10,7 +9,6 @@ import tornado.gen
 import gramex.cache
 from hashlib import md5
 from textwrap import dedent
-from types import GeneratorType
 from binascii import b2a_base64
 from orderedattrdict import AttrDict, DefaultAttrDict
 from six.moves.urllib_parse import urlparse, urlsplit, urljoin, urlencode

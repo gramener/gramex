@@ -36,7 +36,7 @@ class TestReloadModule(unittest.TestCase):
         self.assertEqual(val[0], 1)
 
         # On second load, it stays cached
-        import testlib.test_cache.mymodule
+        import testlib.test_cache.mymodule      # noqa
         self.assertEqual(val[0], 1)
 
         # The first time, we get the reloaded date. The module may be reloaded
