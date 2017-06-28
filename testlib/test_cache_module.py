@@ -11,6 +11,7 @@ import pandas as pd
 from six import string_types
 from collections import OrderedDict
 from orderedattrdict import AttrDict
+from tornado.template import Template
 from orderedattrdict.yamlutils import AttrDictYAMLLoader
 from pandas.util.testing import assert_frame_equal
 
@@ -38,26 +39,30 @@ class TestReloadModule(unittest.TestCase):
         import test_cache.mymodule
         self.assertEqual(test_cache.common.val[0], 1)
 
+        # The first time, we get the reloaded date. The module may be reloaded
+        gramex.cache.reload_module(test_cache.mymodule)
+        count = test_cache.common.val[0]
         # On explicit reload_module, it still stays cached
         gramex.cache.reload_module(test_cache.mymodule)
-        self.assertEqual(test_cache.common.val[0], 1)
+        self.assertEqual(test_cache.common.val[0], count)
 
         # Change the module
+        pyfile = test_cache.mymodule.__file__.rstrip('c')
         module_timestamp_delay = 0.005
         time.sleep(module_timestamp_delay)
-        touch(test_cache.mymodule.__file__)
+        touch(pyfile)
 
         # Regular import does not reload
         import test_cache.mymodule
-        self.assertEqual(test_cache.common.val[0], 1)
+        self.assertEqual(test_cache.common.val[0], count)
 
         # ... but reload_module DOES reload, and the counter increments
         gramex.cache.reload_module(test_cache.mymodule)
-        self.assertEqual(test_cache.common.val[0], 2)
+        self.assertEqual(test_cache.common.val[0], count + 1)
 
         # Subsequent call does not reload
         gramex.cache.reload_module(test_cache.mymodule)
-        self.assertEqual(test_cache.common.val[0], 2)
+        self.assertEqual(test_cache.common.val[0], count + 1)
 
 
 class TestOpen(unittest.TestCase):
@@ -107,6 +112,21 @@ class TestOpen(unittest.TestCase):
             self.assertEqual(reloaded, reload)
             self.assertTrue(isinstance(result, AttrDict))
             self.assertEqual(result, expected)
+
+        self.check_file_cache(path, check)
+
+    def test_open_template(self):
+        path = os.path.join(folder, 'template.txt')
+        with io.open(path, encoding='utf-8') as handle:
+            expected = Template(handle.read(), autoescape=None)
+
+        def check(reload):
+            result, reloaded = gramex.cache.open(path, 'template', _reload_status=True,
+                                                 autoescape=None)
+            self.assertEqual(reloaded, reload)
+            self.assertTrue(isinstance(result, Template))
+            self.assertEqual(result.generate(name='x'), expected.generate(name='x'))
+            self.assertEqual(result.generate(name='x'), '<b>x</b>\n')
 
         self.check_file_cache(path, check)
 

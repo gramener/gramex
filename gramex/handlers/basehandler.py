@@ -7,6 +7,7 @@ import json
 import atexit
 import mimetypes
 import tornado.gen
+import gramex.cache
 from hashlib import md5
 from textwrap import dedent
 from types import GeneratorType
@@ -14,7 +15,6 @@ from binascii import b2a_base64
 from orderedattrdict import AttrDict, DefaultAttrDict
 from six.moves.urllib_parse import urlparse, urlsplit, urljoin, urlencode
 from tornado.log import access_log
-from tornado.template import Template
 from tornado.web import RequestHandler, HTTPError
 from tornado.websocket import WebSocketHandler
 from gramex import conf, __version__
@@ -289,11 +289,12 @@ class BaseMixin(object):
                                       cls.name, error_code)
                 if 'whitespace' in error_config:
                     template_kwargs['whitespace'] = error_config['whitespace']
-                # TODO: every time the template changes, recompile it. Add watch, remove old watch
-                with io.open(error_config['path'], 'r', encoding=encoding) as handle:
-                    cls.error[error_code] = {
-                        'function': Template(handle.read(), **template_kwargs).generate
-                    }
+
+                def _error_function(*args, **kwargs):
+                    tmpl = gramex.cache.open(error_config['path'], 'template')
+                    return tmpl.generate(*args, **kwargs)
+
+                cls.error[error_code] = {'function': _error_function}
                 mime_type, encoding = mimetypes.guess_type(error_config['path'], strict=False)
                 if mime_type:
                     error_config.setdefault('headers', {}).setdefault('Content-Type', mime_type)

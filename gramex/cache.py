@@ -5,6 +5,7 @@ import six
 import json
 import yaml
 import pandas as pd
+from tornado.template import Template
 from gramex.config import app_log
 
 
@@ -40,6 +41,7 @@ _CALLBACKS = dict(
     sas=pd.read_sas,
     stata=pd.read_stata,
     table=pd.read_table,
+    template=_opener(lambda handle, **kwargs: Template(handle.read(), **kwargs)),
 )
 
 

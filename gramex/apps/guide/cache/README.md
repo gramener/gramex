@@ -280,6 +280,7 @@ There are some pre-defined string values you can use as well for the callback:
 - `gramex.cache.open(path, 'sas', ...)` loads SAS files using `pd.read_sas`
 - `gramex.cache.open(path, 'stata', ...)` loads Stata files using `pd.read_stata`
 - `gramex.cache.open(path, 'table', ...)` loads tabular text files using `pd.read_table`
+- `gramex.cache.open(path, 'template', ...)` loads text using `tornado.template.Template`
 
 By default, the data is cached in an internal cache. You can specify a custom
 cache (e.g. a [cachetools](http://pythonhosted.org/cachetools/) LRU cache that

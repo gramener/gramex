@@ -49,11 +49,6 @@ def csv_encode(values, *args, **kwargs):
     return buf.getvalue().strip()
 
 
-def _load_template(path):
-    with open(path, 'rb') as handle:
-        return Template(handle.read())
-
-
 class AuthHandler(BaseHandler):
     '''The parent handler for all Auth handlers.'''
     @classmethod
@@ -99,7 +94,7 @@ class AuthHandler(BaseHandler):
 
     def render_template(self, path, **kwargs):
         '''Like self.render(), but reloads updated templates'''
-        template = gramex.cache.open(path, _load_template)
+        template = gramex.cache.open(path, 'template')
         namespace = self.get_template_namespace()
         namespace.update(kwargs)
         self.finish(template.generate(**namespace))
