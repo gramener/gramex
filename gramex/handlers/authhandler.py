@@ -242,7 +242,7 @@ class LDAPAuth(AuthHandler):
                 self.report_error(error, exc_info=False)
                 conn = None
             raise tornado.gen.Return(conn)
-        except ldap3.LDAPException:
+        except ldap3.core.exceptions.LDAPException:
             self.report_error('conn', exc_info=True)
 
     @tornado.gen.coroutine
@@ -272,7 +272,7 @@ class LDAPAuth(AuthHandler):
                 return
             else:
                 user = json.loads(conn.entries[0].entry_to_json())
-        except ldap3.LDAPException:
+        except ldap3.core.exceptions.LDAPException:
             self.report_error('conn', exc_info=True)
 
         if 'bind' in kwargs and 'search' in kwargs:

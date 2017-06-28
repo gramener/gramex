@@ -23,8 +23,11 @@ class TestLDAPAuth(TestGramex):
 
     def check(self, user, password, url, status_code, headers={}):
         self.url = server.base_url + url
-        r = self.login(user, password, self.url)
-        if r.status_code == UNAUTHORIZED and r.headers.get('Auth-Error', None) == 'conn':
+        try:
+            r = self.login(user, password, self.url)
+        except requests.exceptions.ReadTimeout:
+            raise SkipTest('Timeout connecting to LDAP server')
+        if r.headers.get('Auth-Error', None) == 'conn':
             raise SkipTest('Unable to connect to LDAP server')
         self.assertEqual(r.status_code, status_code)
         # If the response is an OK response, go to home page. Else stay on login page
