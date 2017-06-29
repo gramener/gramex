@@ -129,8 +129,16 @@ class TestInstall(unittest.TestCase):
         self.check_uninstall('dir')
 
     def test_git_url(self):
+        # This clones from a branch on this repo. To create it, run this on a fresh clone:
+        # git checkout --orphan test-apps-do-not-delete
+        # rm -rf .
+        # mkdir -p dir1 dir2
+        # touch dir1/file-dir1.txt dir1/file.txt dir2/file-dir2.txt dir2/file.txt
+        # git add dir1/file-dir1.txt dir1/file.txt dir2/file-dir2.txt dir2/file.txt
+        # git commit -m"Add test files to this branch -- used by Gramex test cases"
+        # git push -u origin test-apps-do-not-delete
         git_files = ['dir1/file.txt', 'dir1/file-dir1.txt', 'dir2/file.txt', 'dir2/file-dir2.txt']
-        git_url, branch = 'http://code.gramener.com/s.anand/gramex.git', 'test-apps'
+        git_url, branch = 'http://code.gramener.com/s.anand/gramex.git', 'test-apps-do-not-delete'
         try:
             requests.get(git_url)
         except requests.RequestException:
