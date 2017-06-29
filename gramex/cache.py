@@ -115,11 +115,8 @@ def reload_module(*modules):
         reload_module(mymodule)     # Reload module if the source has changed
 
     This is most useful during template development. If your changes are in a
-    Python module, then adding these lines will pick up new module changes when
-    the template is re-run::
-
-        {% import orderedattrdict %}
-        {% set reload_module(orderedattrdict) %}
+    Python module, add adding these lines to pick up new module changes when
+    the template is re-run.
     '''
     for module in modules:
         name = getattr(module, '__name__', None)
