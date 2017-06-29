@@ -123,7 +123,7 @@ def callback_commandline(commands):
 
 
 def commandline():
-    'Run Gramex from the command line. Called via setup.py console_scripts'
+    '''Run Gramex from the command line. Called via setup.py console_scripts'''
     callback, kwargs = callback_commandline(sys.argv[1:])
     callback(**kwargs)
 
@@ -243,7 +243,7 @@ def init(force_reload=False, **kwargs):
 
 
 def shutdown():
-    'Shut down this instance'
+    '''Shut down this instance'''
     ioloop = tornado.ioloop.IOLoop.current()
     if ioloop._running:
         app_log.info('Shutting down Gramex...')

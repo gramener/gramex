@@ -221,9 +221,7 @@ To render a file as a template, use:
             handler: FileHandler            # displays a file
             kwargs:
                 path: page.html             # named page.html
-                transform:
-                  "*.html":                 # Apply the transform to all HTML files
-                    function: template      # Render page.html as a template
+                template: true              # Render as a template
 
 You can extract it dynamically using JavaScript. **This is disabled since Gramex 1.16**. You can enable it if security is not a consideration. Use:
 
@@ -394,9 +392,10 @@ Transforms take the following keys:
 Any function can be used as a transform. Gramex provides the following (commonly
 used) transforms:
 
-1. **template**. Use `function: template` to render the file as a [Tornado
-   template][template]. Any `kwargs` passed will be sent as variables to the
-   template. For example:
+1. **template**. Use `template: true` to render a template. See
+   [Templates](#templates). But if you need to pass additional arguments to the
+   template, use `function: template`. Any `kwargs` passed will be sent as
+   variables to the template. For example:
 
         :::yaml
         transform:

@@ -19,6 +19,4 @@ url:
         handler: FileHandler
         kwargs:
             path: $YAMLPATH/mail.html
-            transform:
-                '*.html':
-                    function: template
+            template: true

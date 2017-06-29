@@ -27,7 +27,4 @@ url:
         handler: FileHandler                # Renders a file
         kwargs:
             path: $YAMLPATH/index.html      # index.html in the current directory
-            transform:
-                "index.html":
-                    function: template      # Make it a Tornado template
-
+            template: true                  # Make it a Tornado template
