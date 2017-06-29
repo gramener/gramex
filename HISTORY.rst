@@ -3,6 +3,42 @@
 History
 -------
 
+1.18 (2017-06-29)
+~~~~~~~~~~~~~~~~~
+This is a minor enhancement release with several critical bugfixes.
+
+- This version requires Anaconda 4.4.0. It also requires recent ldap3 and
+  psycopg2 versions. Please upgrade by running ``conda update conda`` and then
+  ``conda update anaconda``.
+- `Installation`_ is simpler. It's a one-line install using ``pip`` (no ``conda``).
+- Gramex runs on Python 3.6 (as well as Python 3.5 and 2.7)
+- `Module caching`_ is now available via ``gramex.cache.reload_module()``. You
+  can refresh Python files without restarting Gramex.
+- `Data caching`_ is more robust. It checks file sizes in addition to the
+  timestamp. ``gramex.cache.open()`` now supports loading Tornado templates,
+  apart from various data / text files. It also supports loading the same file
+  via multiple callbacks (e.g. loading a CSV file as ``csv`` and ``text``.)
+- `Login templates`_ are now reloaded every time the template changes.
+- Access logs enabled by default. These are weekly CSV files stored at:
+  - Windows: %LOCALAPPDATA%\Gramex Data\logs\access.csv
+  - Linux: ~/.config/gramexdata/logs/access.csv
+  - OS X: ~/Library/Application Support/Gramex Data/logs/access.csv
+- `YAML imports`_ allow namespaces. You mostly won't need this. But if you're
+  running multiple apps, this avoid conflict between URLs defined in each.
+- `QueryHandler`_ has some bugfixes. If you have multiple queries, and only some
+  of them use URL query parameters are arguments, it no longer fails. It also
+  does not crash if the query returns no results.
+- `FileHandler`_ was checking URLs against ``allow:`` and ``ignore:``. It should
+  have been checking file paths. As a result, the `deploy yaml`_ was disabling
+  sub-directories. Also, the `deploy yaml`_ file was not getting installed. Both
+  are fixed.
+- Several sections have improved documentation.
+  `Offline install`_.
+  `HTML email`_.
+  `Reusing configurations`_.
+  `Static file caching`_.
+
+
 1.17.1 (2017-04-23)
 ~~~~~~~~~~~~~~~~~~~
 This is a maintenance release with a few minor enhancements:
@@ -39,7 +75,7 @@ gramex.yaml ``app:`` section, add ``login_url: /login`` to revert the change.
     - Auth handlers' `auth redirection`_ supports ``?next=`` by default
     - `Login templates`_ are documented
     - `SimpleAuth`_ now lets you add other attributes (e.g. roles) to the user object
-- Now `data caching`_ is easier with the ``gramex.cache.open()`` method
+- `Data caching`_ is easier with the ``gramex.cache.open()`` method
 - A major bug related to `watch`_ is fixed.
 - Some bugs related to JSONStore (used for session storage) are fixed
 
@@ -383,4 +419,11 @@ There are two changes that may disrupt your code:
 .. _Login templates: https://learn.gramener.com/guide/auth/#login-templates
 .. _login URL: https://learn.gramener.com/guide/auth/#login-urls
 .. _Roles: https://learn.gramener.com/guide/auth/#roles
-.. _data caching: https://learn.gramener.com/guide/cache/#data-caching
+.. _Data caching: https://learn.gramener.com/guide/cache/#data-caching
+.. _Module caching: https://learn.gramener.com/guide/cache/#module-caching
+.. _YAML imports: https://learn.gramener.com/guide/config/#yaml-imports
+.. _Installation: https://learn.gramener.com/guide/install/
+.. _Offline install: https://learn.gramener.com/guide/install/#offline-install
+.. _HTML email: https://learn.gramener.com/guide/email/#html-email
+.. _Reusing configurations: https://learn.gramener.com/guide/config/#reusing-configurations
+.. _Static file caching: https://learn.gramener.com/guide/cache/#cache-static-files

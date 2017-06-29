@@ -132,6 +132,9 @@
     "mixing-python-versions": {
       "Mixing Python versions": -1
     },
+    "module-caching": {
+      "Module caching": -1
+    },
     "server-caching": {
       "Server caching": -1
     },
@@ -183,6 +186,9 @@
     },
     "redirection": {
       "Redirection": -1
+    },
+    "reusing-configurations": {
+      "Reusing configurations": -1
     },
     "scheduling": {
       "Scheduling": -1
@@ -272,6 +278,12 @@
   "email": {
     "": {
       "Send email": -1
+    },
+    "email-attachments": {
+      "Email attachments": -1
+    },
+    "html-email": {
+      "HTML email": -1
     }
   },
   "facebookgraphhandler": {
@@ -363,6 +375,12 @@
   "install": {
     "": {
       "Install Gramex": -1
+    },
+    "offline-install": {
+      "Offline install": -1
+    },
+    "troubleshooting": {
+      "Troubleshooting": -1
     },
     "uninstall-gramex": {
       "Uninstall Gramex": -1
