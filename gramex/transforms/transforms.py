@@ -155,19 +155,19 @@ def build_transform(conf, vars=None, filename='transform'):
 
 def condition(*args):
     '''
-    Variables can also be computed based on conditions
+    Variables can also be computed based on conditions::
 
-    variables:
-        OS:
+        variables:
+          OS:
             default: 'No OS variable defined'
-        PORT:
+          PORT:
             function: condition
             args:
-                - $OS.startswith('Windows')
-                - 9991
-                - $OS.startswith('Linux')
-                - 9992
-                - 8883
+              - $OS.startswith('Windows')
+              - 9991
+              - $OS.startswith('Linux')
+              - 9992
+              - 8883
     '''
     from string import Template
     var_defaults = {}

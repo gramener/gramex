@@ -118,8 +118,8 @@ def reload_module(*modules):
     Python module, then adding these lines will pick up new module changes when
     the template is re-run::
 
-        {% import mymodule %}
-        {% set reload_module(mymodule) %}
+        {% import orderedattrdict %}
+        {% set reload_module(orderedattrdict) %}
     '''
     for module in modules:
         name = getattr(module, '__name__', None)

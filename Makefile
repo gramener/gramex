@@ -42,7 +42,7 @@ clean-test:
 	rm -fr tests/.cache-url
 
 lint:
-	flake8 gramex tests
+	flake8 gramex testlib tests
 
 test:
 	$(PYTHON) setup.py nosetests

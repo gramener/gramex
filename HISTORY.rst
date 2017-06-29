@@ -296,8 +296,8 @@ There are two changes that may disrupt your code:
   directory listings. It can be any custom-styled HTML file that uses ``$path``
   and ``$body`` respectively to represent the full path to the directory and the
   contents of the directory.
-* ``DataHandler`` is now asynchronous. Requests won't be blocked while queries run.
-* ``ProcessHandler`` accepts ``stdout`` and ``stderr`` parameters. These can be
+* `DataHandler`_ is now asynchronous. Requests won't be blocked while queries run.
+* `ProcessHandler`_ accepts ``stdout`` and ``stderr`` parameters. These can be
   ``false`` to ignore the output, or set to any file name (to save the output /
   errors in that file.) The default for ``stdout`` and ``stderr`` is ``pipe``,
   which sends the output to the browser.
@@ -320,7 +320,7 @@ There are two changes that may disrupt your code:
   8999, irrespective of the port configuration.
 * Add a ``browser: true`` to automatically start the browser on Gramex launch.
   You can also use ``gramex --browser=true``.
-* ``ProcessHandler`` implemented. It runs any program as a sub-process and
+* `ProcessHandler`_ implemented. It runs any program as a sub-process and
   streams the output to the request.
 * ``FunctionHandler`` accepts co-routines for asynchronous processing. Functions
   can also ``yield`` strings that will be immediately written and flushed,
@@ -332,7 +332,7 @@ There are two changes that may disrupt your code:
 * `FileHandler`_ supports ``function: template`` in the transforms section.
   This treats the file as a tornado template and renders the output.
 * `FileHandler`_ directory listing looks prettier now.
-* ``DataHandler`` supports ``like`` and ``notlike`` operations.
+* `DataHandler`_ supports ``like`` and ``notlike`` operations.
 * The `watch`_ section of ``gramex.yaml`` allows you to trigger events when
   files are changed.
 
@@ -386,6 +386,7 @@ There are two changes that may disrupt your code:
 .. _JSONHandler: https://learn.gramener.com/guide/jsonhandler/
 .. _FileHandler: https://learn.gramener.com/guide/filehandler/
 .. _DataHandler: https://learn.gramener.com/guide/datahandler/
+.. _ProcessHandler: https://learn.gramener.com/guide/processhandler/
 .. _QueryHandler: https://learn.gramener.com/guide/queryhandler/
 .. _TwitterRESTHandler: https://learn.gramener.com/guide/twitterresthandler/
 .. _FacebookGraphHandler: https://learn.gramener.com/guide/facebookgraphhandler/
@@ -393,7 +394,6 @@ There are two changes that may disrupt your code:
 .. _WebSocketHandler: https://learn.gramener.com/guide/websockethandler/
 .. _LDAPAuth: https://learn.gramener.com/guide/auth/#ldap
 .. _Google Auth: https://learn.gramener.com/guide/auth/#google-auth
-.. _DBAuth: https://learn.gramener.com/guide/auth/#simple-auth
 .. _DBAuth: https://learn.gramener.com/guide/auth/#database-auth
 .. _SimpleAuth: https://learn.gramener.com/guide/auth/#simple-auth
 .. _TwitterAuth: https://learn.gramener.com/guide/auth/#twitter-auth
