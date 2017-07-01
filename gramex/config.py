@@ -472,9 +472,6 @@ def locate(path, modules=[], forceload=0):
     ``locate('gramex.handlers.FileHandler')`` returns the class
     ``gramex.handlers.FileHandler``.
 
-    ``names`` is a mapping of pre-defined names to objects. So ``locate('x',
-    names={'x': str})`` will return ``str``.
-
     ``modules`` is a list of modules to search for the path in first. So
     ``locate('FileHandler', modules=[gramex.handlers])`` will return
     ``gramex.handlers.FileHandler``.
