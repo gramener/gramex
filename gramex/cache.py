@@ -137,8 +137,8 @@ def reload_module(*modules):
                 app_log.warn('Path for module %s is %s: not found', name, path)
                 continue
         mtime = os.stat(path).st_mtime
-        if _reload_dates.get(name, 0) >= mtime:
-            continue
-        app_log.info('Reloading module %s', name)
-        six.moves.reload_module(module)
+        # The first time, don't reload it. Thereafter, if it's older, reload it
+        if name in _reload_dates and _reload_dates.get(name, 0) < mtime:
+            app_log.info('Reloading module %s', name)
+            six.moves.reload_module(module)
         _reload_dates[name] = mtime
