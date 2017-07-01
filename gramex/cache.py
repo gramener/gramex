@@ -31,11 +31,14 @@ def _opener(callback):
 
 _DEFAULT_CACHE = {}
 _CALLBACKS = dict(
+    txt=_opener(lambda handle: handle.read()),
     text=_opener(lambda handle: handle.read()),
     yaml=_opener(yaml.load),
     json=_opener(json.load),
     csv=pd.read_csv,
     excel=pd.read_excel,
+    xls=pd.read_excel,
+    xlsx=pd.read_excel,
     hdf=pd.read_hdf,
     html=pd.read_html,
     sas=pd.read_sas,
@@ -53,10 +56,12 @@ def open(path, callback, **kwargs):
     The callback can be a function that accepts the filename and any other
     arguments, or a string that can be one of
 
-    - ``text``: reads files using io.open
+    - ``text`` or ``txt``: reads files using io.open
     - ``yaml``: reads files using PyYAML
     - ``json``: reads files using json.load
-    - ``csv``, ``excel``, ``hdf``, ``html``, ``sas``, ``stata``, ``table``: reads using Pandas
+    - ``template``: reads files using tornado.Template
+    - ``csv``, ``excel``, ``xls``, `xlsx``, ``hdf``, ``html``, ``sas``,
+      ``stata``, ``table``: reads using Pandas
 
     For example::
 
