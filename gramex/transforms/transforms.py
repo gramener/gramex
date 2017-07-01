@@ -1,7 +1,9 @@
 import six
 import tornado.gen
+import gramex.transforms
 from types import GeneratorType
 from orderedattrdict import AttrDict
+from gramex.cache import reload_module
 from gramex.config import app_log, locate, variables
 
 
@@ -19,7 +21,7 @@ def _arg_repr(arg):
     return repr(arg)                    # "x" becomes '"x"', 1 becomes '1', etc
 
 
-def build_transform(conf, vars=None, filename='transform'):
+def build_transform(conf, vars=None, filename='transform', cache=False):
     '''
     Converts a function configuration into a callable function. For e.g.::
 
@@ -45,8 +47,10 @@ def build_transform(conf, vars=None, filename='transform'):
             )
             return result if isinstance(result, GeneratorType) else (result,)
 
-    ``build_transform`` also takes an optional ``name=`` parameter that defines
+    ``build_transform`` also takes an optional ``filename=`` parameter that sets
     the "filename" of the returned function. This is useful for log messages.
+
+    It also accepts an optional ``cache=`` parameter
 
     The returned function takes a single argument by default. You can change the
     arguments it accepts using ``vars``. For example::
@@ -97,11 +101,19 @@ def build_transform(conf, vars=None, filename='transform'):
     if 'function' not in conf:
         raise KeyError('No function in conf %s' % conf)
 
-    function = locate(conf['function'], modules=['gramex.transforms'])
-    if function is None:
-        raise NameError('Cannot find function %s' % conf['function'])
-    doc = function.__doc__
     name = conf['function']
+    # gramex.transforms.* can be specified without the gramex.transforms prefix
+    if hasattr(gramex.transforms, name):
+        name = 'gramex.transforms.' + name
+    function = locate(name)
+    if function is None:
+        raise NameError('Cannot find function %s' % name)
+
+    # Get module name. Ideally, we need a more robust mechanism. For example,
+    # six methods may report their module_name as __builtin__. Avoid that.
+    module_name = getattr(function, '__module__', None)
+    if name.startswith('six.'):
+        module_name = 'six'
 
     # Create the following code:
     #   def transform(var=default, var=default, ...):
@@ -110,7 +122,9 @@ def build_transform(conf, vars=None, filename='transform'):
         'def transform(',
         ', '.join('{:s}={!r:}'.format(var, val) for var, val in vars.items()),
         '):\n',
-        '\tresult = function(\n',
+        '' if cache or module_name is None else
+        '\timport %s\n\treload_module(%s)\n' % (module_name, module_name),
+        '\tresult = %s(\n' % name,
     ]
 
     if 'args' in conf:
@@ -137,7 +151,7 @@ def build_transform(conf, vars=None, filename='transform'):
 
     # Compile the function with context variables
     context = {
-        'function': function,
+        'reload_module': reload_module,
         'GeneratorType': GeneratorType,
         'Return': tornado.gen.Return,
         'AttrDict': AttrDict
@@ -148,7 +162,7 @@ def build_transform(conf, vars=None, filename='transform'):
     # Return the transformed function
     function = context['transform']
     function.__name__ = str(name)
-    function.__doc__ = str(doc)
+    function.__doc__ = str(function.__doc__)
 
     return function
 

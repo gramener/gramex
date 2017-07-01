@@ -29,7 +29,7 @@ def _opener(callback):
     return method
 
 
-_DEFAULT_CACHE = {}
+_OPEN_CACHE = {}
 _CALLBACKS = dict(
     txt=_opener(lambda handle: handle.read()),
     text=_opener(lambda handle: handle.read()),
@@ -84,7 +84,7 @@ def open(path, callback, **kwargs):
 
     stat = os.stat(path)
     mtime, size = stat.st_mtime, stat.st_size
-    _cache = kwargs.pop('_cache', _DEFAULT_CACHE)
+    _cache = kwargs.pop('_cache', _OPEN_CACHE)
     callback_is_str = isinstance(callback, six.string_types)
     key = (path, callback if callback_is_str else id(callback))
     if key not in _cache or mtime > _cache[key].get('mtime') or size != _cache[key].get('size'):
@@ -105,8 +105,8 @@ def open(path, callback, **kwargs):
     return (result, reloaded) if _reload_status else result
 
 
-# Date of file when module was last loaded. Used by reload_module
-_reload_dates = {}
+# Date and size of file when module was last loaded. Used by reload_module
+_MODULE_CACHE = {}
 
 
 def reload_module(*modules):
@@ -136,9 +136,12 @@ def reload_module(*modules):
             if not os.path.exists(path):
                 app_log.warn('Path for module %s is %s: not found', name, path)
                 continue
-        mtime = os.stat(path).st_mtime
-        # The first time, don't reload it. Thereafter, if it's older, reload it
-        if name in _reload_dates and _reload_dates.get(name, 0) < mtime:
+        # The first time, don't reload it. Thereafter, if it's older or resized, reload it
+        stat = os.stat(path)
+        time, size = stat.st_mtime, stat.st_size
+        updated = _MODULE_CACHE.get((name, 't'), time) < time
+        resized = _MODULE_CACHE.get((name, 's'), size) != size
+        if updated or resized:
             app_log.info('Reloading module %s', name)
             six.moves.reload_module(module)
-        _reload_dates[name] = mtime
+        _MODULE_CACHE[name, 't'], _MODULE_CACHE[name, 's'] = time, size

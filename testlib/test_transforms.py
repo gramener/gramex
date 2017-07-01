@@ -1,4 +1,6 @@
-from __future__ import print_function
+from __future__ import print_function, unicode_literals
+import io
+import os
 import yaml
 import inspect
 import unittest
@@ -8,10 +10,17 @@ from tornado.gen import coroutine, Task
 from orderedattrdict import AttrDict
 from orderedattrdict.yamlutils import AttrDictYAMLLoader
 from gramex.transforms import build_transform, flattener, badgerfish, template
+from gramex.cache import reload_module
+import testlib
 
 
 def yaml_parse(text):
     return yaml.load(text, Loader=AttrDictYAMLLoader)
+
+
+def remove(path):
+    if os.path.exists(path):
+        os.unlink(path)
 
 
 @coroutine
@@ -22,6 +31,8 @@ def gen_str(val):
 
 class BuildTransform(unittest.TestCase):
     '''Test build_transform CODE output'''
+    folder = os.path.dirname(os.path.abspath(__file__))
+    files = set()
 
     def eqfn(self, a, b):
         a_code, b_code = a.__code__, b.__code__
@@ -34,8 +45,10 @@ class BuildTransform(unittest.TestCase):
             # Print the disassembled code to make debugging easier
             print('Compiled by build_transform from YAML')      # noqa
             dis(src)
+            print(a_code.co_names)
             print('Tested against test case')                   # noqa
             dis(tgt)
+            print(b_code.co_names)
         self.assertEqual(src, tgt, '%s: code mismatch' % msg)
 
         src, tgt = a_code.co_argcount, b_code.co_argcount
@@ -43,9 +56,10 @@ class BuildTransform(unittest.TestCase):
         src, tgt = a_code.co_nlocals, b_code.co_nlocals
         self.assertEqual(src, tgt, '%s: nlocals %d != %d' % (msg, src, tgt))
 
-    def check_transform(self, transform, yaml_code, vars=None):
-        fn = build_transform(yaml_parse(yaml_code), vars=vars)
+    def check_transform(self, transform, yaml_code, vars=None, cache=True):
+        fn = build_transform(yaml_parse(yaml_code), vars=vars, cache=cache)
         self.eqfn(fn, transform)
+        return fn
 
     def test_no_function_raises_error(self):
         with self.assertRaises(KeyError):
@@ -158,11 +172,42 @@ class BuildTransform(unittest.TestCase):
 
     def test_coroutine(self):
         def transform(_val):
-            result = gen_str(_val)
+            result = testlib.test_transforms.gen_str(_val)
             return result if isinstance(result, GeneratorType) else [result, ]
         self.check_transform(transform, '''
             function: testlib.test_transforms.gen_str
         ''')
+
+    def test_cache_change(self):
+        dummy = os.path.join(self.folder, 'dummy.py')
+        self.files.add(dummy)
+        remove(dummy.replace('.py', '.pyc'))
+        with io.open(dummy, 'w') as handle:
+            handle.write('def value():\n\treturn 1\n')
+
+        def transform(_val):
+            import testlib.dummy
+            reload_module(testlib.dummy)
+            result = testlib.dummy.value()
+            return result if isinstance(result, GeneratorType) else [result, ]
+
+        fn = self.check_transform(transform, '''
+            function: testlib.dummy.value
+            args: []
+        ''', cache=False)
+        self.assertEqual(fn(), [1])
+
+        remove(dummy.replace('.py', '.pyc'))
+        with io.open(dummy, 'w') as handle:
+            handle.write('def value():\n\treturn 20\n')
+        self.assertEqual(fn(), [20])
+
+    @classmethod
+    def tearDownClass(cls):
+        # Remove temporary files
+        for path in cls.files:
+            if os.path.exists(path):
+                os.unlink(path)
 
 
 class Badgerfish(unittest.TestCase):
