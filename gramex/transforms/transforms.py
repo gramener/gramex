@@ -21,7 +21,7 @@ def _arg_repr(arg):
     return repr(arg)                    # "x" becomes '"x"', 1 becomes '1', etc
 
 
-def build_transform(conf, vars=None, filename='transform', cache=False):
+def build_transform(conf, vars=None, filename='transform', cache=True):
     '''
     Converts a function configuration into a callable function. For e.g.::
 
@@ -122,8 +122,8 @@ def build_transform(conf, vars=None, filename='transform', cache=False):
         'def transform(',
         ', '.join('{:s}={!r:}'.format(var, val) for var, val in vars.items()),
         '):\n',
-        '' if cache or module_name is None else
-        '\timport %s\n\treload_module(%s)\n' % (module_name, module_name),
+        '\timport %s\n' % module_name,
+        '' if cache or module_name is None else '\treload_module(%s)\n' % module_name,
         '\tresult = %s(\n' % name,
     ]
 
