@@ -3,8 +3,10 @@
 handlers:
     BaseHandler:
         headers:
-            X-Frame-Options: SAMEORIGIN         # Don't place in an iframe from external site
+            # https://www.veracode.com/blog/2014/03/guidelines-for-setting-security-headers
+            X-XSS-Protection: '1'               # Enable XSS protection
             X-Content-Type-Options: nosniff     # Browsers should not perform MIME-type sniffing
+            X-Frame-Options: SAMEORIGIN         # Don't place in an iframe from external site
 
     # Restrict the files allowed by FileHandlers explicitly
     FileHandler:
