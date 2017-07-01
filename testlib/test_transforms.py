@@ -45,10 +45,10 @@ class BuildTransform(unittest.TestCase):
             # Print the disassembled code to make debugging easier
             print('Compiled by build_transform from YAML')      # noqa
             dis(src)
-            print(a_code.co_names)
+            print(a_code.co_names)                              # noqa
             print('Tested against test case')                   # noqa
             dis(tgt)
-            print(b_code.co_names)
+            print(b_code.co_names)                              # noqa
         self.assertEqual(src, tgt, '%s: code mismatch' % msg)
 
         src, tgt = a_code.co_argcount, b_code.co_argcount
@@ -182,7 +182,7 @@ class BuildTransform(unittest.TestCase):
         dummy = os.path.join(self.folder, 'dummy.py')
         self.files.add(dummy)
         remove(dummy.replace('.py', '.pyc'))
-        with io.open(dummy, 'w') as handle:
+        with io.open(dummy, 'w', encoding='utf-8') as handle:
             handle.write('def value():\n\treturn 1\n')
 
         def transform(_val):
@@ -198,9 +198,9 @@ class BuildTransform(unittest.TestCase):
         self.assertEqual(fn(), [1])
 
         remove(dummy.replace('.py', '.pyc'))
-        with io.open(dummy, 'w') as handle:
-            handle.write('def value():\n\treturn 20\n')
-        self.assertEqual(fn(), [20])
+        with io.open(dummy, 'w', encoding='utf-8') as handle:
+            handle.write('def value():\n\treturn 2\n')
+        self.assertEqual(fn(), [2])
 
     @classmethod
     def tearDownClass(cls):
