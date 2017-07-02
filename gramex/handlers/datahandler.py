@@ -9,7 +9,6 @@ import gramex
 import pandas as pd
 import sqlalchemy as sa
 from tornado.web import HTTPError
-from tornado.template import Template
 from orderedattrdict import AttrDict
 from gramex.http import NOT_FOUND
 from gramex.transforms import build_transform
