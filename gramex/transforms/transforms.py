@@ -111,9 +111,12 @@ def build_transform(conf, vars=None, filename='transform', cache=False):
 
     # Get module name. Ideally, we need a more robust mechanism. For example,
     # six methods may report their module_name as __builtin__. Avoid that.
+    # Also, avoid importing builtins
     module_name = getattr(function, '__module__', None)
     if name.startswith('six.'):
         module_name = 'six'
+    if module_name in ('builtins', '__builtin__'):
+        module_name = None
 
     # Create the following code:
     #   def transform(var=default, var=default, ...):
@@ -122,8 +125,8 @@ def build_transform(conf, vars=None, filename='transform', cache=False):
         'def transform(',
         ', '.join('{:s}={!r:}'.format(var, val) for var, val in vars.items()),
         '):\n',
-        '\timport %s\n' % module_name,
-        '' if cache or module_name is None else '\treload_module(%s)\n' % module_name,
+        '\timport %s\n' % module_name if module_name else '',
+        '\treload_module(%s)\n' % module_name if module_name and not cache else '',
         '\tresult = %s(\n' % name,
     ]
 

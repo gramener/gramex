@@ -66,7 +66,6 @@ class BuildTransform(unittest.TestCase):
 
     def test_fn(self):
         def transform(_val):
-            import __builtins__         # noqa
             result = len(_val)
             return result if isinstance(result, GeneratorType) else [result, ]
         self.check_transform(transform, '''
@@ -75,7 +74,6 @@ class BuildTransform(unittest.TestCase):
 
     def test_fn_no_args(self):
         def transform():
-            import __builtins__         # noqa
             result = max(1, 2)
             return result if isinstance(result, GeneratorType) else [result, ]
         self.check_transform(transform, '''
@@ -85,7 +83,6 @@ class BuildTransform(unittest.TestCase):
 
     def test_fn_args(self):
         def transform(_val):
-            import __builtins__         # noqa
             result = max(1, 2)
             return result if isinstance(result, GeneratorType) else [result, ]
         self.check_transform(transform, '''
@@ -94,7 +91,6 @@ class BuildTransform(unittest.TestCase):
         ''')
 
         def transform(_val):
-            import __builtins__         # noqa
             result = len('abc')
             return result if isinstance(result, GeneratorType) else [result, ]
         self.check_transform(transform, '''
@@ -103,7 +99,6 @@ class BuildTransform(unittest.TestCase):
         ''')
 
         def transform(_val):
-            import __builtins__         # noqa
             result = range(10)
             return result if isinstance(result, GeneratorType) else [result, ]
         self.check_transform(transform, '''
@@ -113,7 +108,6 @@ class BuildTransform(unittest.TestCase):
 
     def test_fn_args_var(self):
         def transform(x=1, y=2):
-            import __builtins__         # noqa
             result = max(x, y, 3)
             return result if isinstance(result, GeneratorType) else [result, ]
         self.check_transform(transform, '''
@@ -126,7 +120,6 @@ class BuildTransform(unittest.TestCase):
 
     def test_fn_kwargs(self):
         def transform(_val):
-            import __builtins__         # noqa
             result = dict(_val, a=1, b=2)
             return result if isinstance(result, GeneratorType) else [result, ]
         self.check_transform(transform, '''
@@ -136,7 +129,6 @@ class BuildTransform(unittest.TestCase):
 
     def test_fn_kwargs_complex(self):
         def transform(_val):
-            import __builtins__         # noqa
             result = dict(_val, a=[1, 2], b=AttrDict([('b1', 'x'), ('b2', 'y')]))
             return result if isinstance(result, GeneratorType) else [result, ]
         self.check_transform(transform, '''
@@ -150,7 +142,6 @@ class BuildTransform(unittest.TestCase):
 
     def test_fn_kwargs_var(self):
         def transform(x=1, y=2):
-            import __builtins__         # noqa
             result = dict(x, y, a=x, b=y, c=3, d='=4')
             return result if isinstance(result, GeneratorType) else [result, ]
         self.check_transform(transform, '''
@@ -160,7 +151,6 @@ class BuildTransform(unittest.TestCase):
 
     def test_fn_args_kwargs(self):
         def transform(_val):
-            import __builtins__         # noqa
             result = format(1, 2, a=3, b=4, c=5, d='=6')
             return result if isinstance(result, GeneratorType) else [result, ]
         self.check_transform(transform, '''
@@ -171,7 +161,6 @@ class BuildTransform(unittest.TestCase):
 
     def test_fn_args_kwargs_var(self):
         def transform(x=1, y=2):
-            import __builtins__         # noqa
             result = format(x, y, a=x, b=y, c=3)
             return result if isinstance(result, GeneratorType) else [result, ]
         self.check_transform(transform, '''
@@ -210,8 +199,8 @@ class BuildTransform(unittest.TestCase):
 
         remove(dummy.replace('.py', '.pyc'))
         with io.open(dummy, 'w', encoding='utf-8') as handle:
-            handle.write('def value():\n\treturn 2\n')
-        self.assertEqual(fn(), [2])
+            handle.write('def value():\n\treturn 100\n')
+        self.assertEqual(fn(), [100])
 
     @classmethod
     def tearDownClass(cls):
