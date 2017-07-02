@@ -21,7 +21,7 @@ def _arg_repr(arg):
     return repr(arg)                    # "x" becomes '"x"', 1 becomes '1', etc
 
 
-def build_transform(conf, vars=None, filename='transform', cache=True):
+def build_transform(conf, vars=None, filename='transform', cache=False):
     '''
     Converts a function configuration into a callable function. For e.g.::
 
