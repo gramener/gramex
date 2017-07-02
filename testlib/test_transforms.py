@@ -43,7 +43,7 @@ class BuildTransform(unittest.TestCase):
         src, tgt = a_code.co_code, b_code.co_code
         if src != tgt:
             # Print the disassembled code to make debugging easier
-            print('Compiled by build_transform from YAML')      # noqa
+            print('\nCompiled by build_transform from YAML')    # noqa
             dis(src)
             print(a_code.co_names)                              # noqa
             print('Tested against test case')                   # noqa
@@ -67,6 +67,7 @@ class BuildTransform(unittest.TestCase):
 
     def test_fn(self):
         def transform(_val):
+            import __builtins__
             result = len(_val)
             return result if isinstance(result, GeneratorType) else [result, ]
         self.check_transform(transform, '''
@@ -75,6 +76,7 @@ class BuildTransform(unittest.TestCase):
 
     def test_fn_no_args(self):
         def transform():
+            import __builtins__
             result = max(1, 2)
             return result if isinstance(result, GeneratorType) else [result, ]
         self.check_transform(transform, '''
@@ -84,6 +86,7 @@ class BuildTransform(unittest.TestCase):
 
     def test_fn_args(self):
         def transform(_val):
+            import __builtins__
             result = max(1, 2)
             return result if isinstance(result, GeneratorType) else [result, ]
         self.check_transform(transform, '''
@@ -92,6 +95,7 @@ class BuildTransform(unittest.TestCase):
         ''')
 
         def transform(_val):
+            import __builtins__
             result = len('abc')
             return result if isinstance(result, GeneratorType) else [result, ]
         self.check_transform(transform, '''
@@ -100,6 +104,7 @@ class BuildTransform(unittest.TestCase):
         ''')
 
         def transform(_val):
+            import __builtins__
             result = range(10)
             return result if isinstance(result, GeneratorType) else [result, ]
         self.check_transform(transform, '''
@@ -109,6 +114,7 @@ class BuildTransform(unittest.TestCase):
 
     def test_fn_args_var(self):
         def transform(x=1, y=2):
+            import __builtins__
             result = max(x, y, 3)
             return result if isinstance(result, GeneratorType) else [result, ]
         self.check_transform(transform, '''
@@ -121,6 +127,7 @@ class BuildTransform(unittest.TestCase):
 
     def test_fn_kwargs(self):
         def transform(_val):
+            import __builtins__
             result = dict(_val, a=1, b=2)
             return result if isinstance(result, GeneratorType) else [result, ]
         self.check_transform(transform, '''
@@ -130,6 +137,7 @@ class BuildTransform(unittest.TestCase):
 
     def test_fn_kwargs_complex(self):
         def transform(_val):
+            import __builtins__
             result = dict(_val, a=[1, 2], b=AttrDict([('b1', 'x'), ('b2', 'y')]))
             return result if isinstance(result, GeneratorType) else [result, ]
         self.check_transform(transform, '''
@@ -143,6 +151,7 @@ class BuildTransform(unittest.TestCase):
 
     def test_fn_kwargs_var(self):
         def transform(x=1, y=2):
+            import __builtins__
             result = dict(x, y, a=x, b=y, c=3, d='=4')
             return result if isinstance(result, GeneratorType) else [result, ]
         self.check_transform(transform, '''
@@ -152,6 +161,7 @@ class BuildTransform(unittest.TestCase):
 
     def test_fn_args_kwargs(self):
         def transform(_val):
+            import __builtins__
             result = format(1, 2, a=3, b=4, c=5, d='=6')
             return result if isinstance(result, GeneratorType) else [result, ]
         self.check_transform(transform, '''
@@ -162,6 +172,7 @@ class BuildTransform(unittest.TestCase):
 
     def test_fn_args_kwargs_var(self):
         def transform(x=1, y=2):
+            import __builtins__
             result = format(x, y, a=x, b=y, c=3)
             return result if isinstance(result, GeneratorType) else [result, ]
         self.check_transform(transform, '''
@@ -172,6 +183,7 @@ class BuildTransform(unittest.TestCase):
 
     def test_coroutine(self):
         def transform(_val):
+            import testlib.test_transforms
             result = testlib.test_transforms.gen_str(_val)
             return result if isinstance(result, GeneratorType) else [result, ]
         self.check_transform(transform, '''
