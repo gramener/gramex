@@ -9,6 +9,18 @@ from tornado.template import Template
 from gramex.config import app_log
 
 
+_opener_defaults = dict(mode='r', buffering=-1, encoding='utf-8', errors='strict',
+                      newline=None, closefd=True)
+_markdown_defaults = dict(output_format='html5', extensions=[
+    'markdown.extensions.codehilite',
+    'markdown.extensions.extra',
+    'markdown.extensions.headerid',
+    'markdown.extensions.meta',
+    'markdown.extensions.sane_lists',
+    'markdown.extensions.smarty',
+])
+
+
 def _opener(callback):
     '''
     Converts method that accepts a handle into a method that accepts a file path.
@@ -19,14 +31,17 @@ def _opener(callback):
     All other arguments and keyword arguments are passed to the callback (e.g.
     json.load).
     '''
-    open_defaults = dict(mode='r', buffering=-1, encoding='utf-8', errors='strict',
-                         newline=None, closefd=True)
-
     def method(path, **kwargs):
-        open_args = {key: kwargs.pop(key, val) for key, val in open_defaults.items()}
+        open_args = {key: kwargs.pop(key, val) for key, val in _opener_defaults.items()}
         with io.open(path, **open_args) as handle:
             return callback(handle, **kwargs)
     return method
+
+
+@_opener
+def _markdown(handle, **kwargs):
+    from markdown import markdown
+    return markdown(handle.read(), **{k: kwargs.pop(k, v) for k, v in _markdown_defaults.items()})
 
 
 _OPEN_CACHE = {}
@@ -45,6 +60,8 @@ _CALLBACKS = dict(
     stata=pd.read_stata,
     table=pd.read_table,
     template=_opener(lambda handle, **kwargs: Template(handle.read(), **kwargs)),
+    md=_markdown,
+    markdown=_markdown,
 )
 
 
