@@ -134,7 +134,7 @@ class TestOpen(unittest.TestCase):
 
     def test_open_markdown(self):
         path = os.path.join(folder, 'markdown.md')
-        extensions=[
+        extensions = [
             'markdown.extensions.codehilite',
             'markdown.extensions.extra',
             'markdown.extensions.headerid',

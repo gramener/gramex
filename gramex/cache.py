@@ -10,7 +10,7 @@ from gramex.config import app_log
 
 
 _opener_defaults = dict(mode='r', buffering=-1, encoding='utf-8', errors='strict',
-                      newline=None, closefd=True)
+                        newline=None, closefd=True)
 _markdown_defaults = dict(output_format='html5', extensions=[
     'markdown.extensions.codehilite',
     'markdown.extensions.extra',
