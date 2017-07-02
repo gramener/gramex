@@ -774,6 +774,17 @@ url:
       default: {format: json, votes: 100}
       headers: {X-Test: abc}
 
+  querydata/template:
+    pattern: /datastoreq/template
+    handler: QueryHandler
+    kwargs:
+      driver: sqlalchemy
+      url: sqlite:///actors.db
+      sql: select * from actors limit cast(:limit as integer)
+      parameters: {encoding: utf8}
+      default: {format: template}
+      template: template.html
+
   data/filename:
     pattern: /datastore/sqlite/csv/filename
     handler: DataHandler
@@ -783,6 +794,16 @@ url:
       table: actors
       parameters: {encoding: utf8}
       default: {format: csv, filename: top_actors.csv}
+
+  data/template:
+    pattern: /datastore/template
+    handler: DataHandler
+    kwargs:
+        driver: sqlalchemy
+        url: sqlite:///actors.db
+        table: actors
+        default: {format: template, limit: 2}
+        template: template.html
 
   # TestDataHandler for Sqlite
   data/csv:

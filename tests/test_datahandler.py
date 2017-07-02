@@ -6,10 +6,11 @@ import requests
 import pandas as pd
 import sqlalchemy as sa
 from pathlib import Path
+from tornado.template import Template
 import pandas.util.testing as pdt
 from nose.plugins.skip import SkipTest
 from . import server, TestGramex
-import gramex.config
+import gramex
 from gramex.http import OK, NOT_FOUND, INTERNAL_SERVER_ERROR
 
 
@@ -200,6 +201,13 @@ class TestSqliteHandler(SqliteHandler):
             'Content-Disposition': 'attachment;filename=top_actors.csv'})
         self.check('/datastore/sqlite/csv/filename?limit=5&filename=name.csv', headers={
             'Content-Disposition': 'attachment;filename=name.csv'})
+
+    def test_template(self):
+        result = self.check('/datastore/sqlite/csv/filename?limit=5&format=template').text
+        self.assertIn('<!-- Comment for tests/test_datahandler.py -->', result)
+
+        result = self.check('/datastore/template').text
+        self.assertIn('<!-- Test template -->', result)
 
 
 class TestMysqlDataHandler(TestGramex, DataHandlerTestMixin):

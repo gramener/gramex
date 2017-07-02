@@ -5,7 +5,7 @@ import gramex
 
 
 class TestSetup(unittest.TestCase):
-    'Ensure pip install has the right set of files'
+    # Ensure pip install has the right set of files
     src_dir = os.path.dirname(inspect.getfile(gramex))
 
     def exists(self, path):
@@ -20,6 +20,8 @@ class TestSetup(unittest.TestCase):
         self.exists('handlers/filehandler.template.html')
         self.exists('handlers/auth.template.html')
         self.exists('handlers/forgot.template.html')
+        self.exists('handlers/datahandler.template.html')
+        self.exists('handlers/queryhandler.template.html')
 
         # Ensure that the Gramex guide is installed by checking for a few files
         self.exists('apps/guide/index.html')

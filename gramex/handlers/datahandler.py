@@ -1,18 +1,22 @@
 import io
+import os
 import re
 import json
 import yaml
 import tornado.gen
 import tornado.web
 import gramex
+import pandas as pd
+import sqlalchemy as sa
 from tornado.web import HTTPError
+from tornado.template import Template
 from orderedattrdict import AttrDict
 from gramex.http import NOT_FOUND
 from gramex.transforms import build_transform
 from .basehandler import BaseHandler
 
 drivers = {}
-sa, pd, bz = None, None, None       # Initialize late-loaded libraries to avoid flake8 errors
+folder = os.path.dirname(os.path.abspath(__file__))
 
 
 class DataMixin(object):
@@ -53,7 +57,6 @@ class DataMixin(object):
         url, parameters = self.params['url'], self.params.get('parameters', {})
         driver_key = yaml.dump([url, parameters])
         if driver_key not in drivers:
-            import sqlalchemy as sa
             drivers[driver_key] = sa.create_engine(url, **parameters)
         self.engine = drivers[driver_key]
 
@@ -77,6 +80,9 @@ class DataMixin(object):
             with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
                 self.result['data'].to_excel(writer, index=False, encoding=None)
             self.write(output.getvalue())
+        elif 'template' in formats:
+            tmpl = gramex.cache.open(self.params.get('template', self._template), 'template')
+            self.write(tmpl.generate(handler=self, **self.result))
         elif 'json' in formats or '' in formats or len(formats) == 0:
             self.write(self.result['data'].to_json(orient='records'))
 
@@ -85,6 +91,7 @@ class DataMixin(object):
         'csv': {'Content-Type': 'text/csv', 'Content-Disposition': 'attachment;filename=file.csv'},
         'html': {'Content-Type': 'text/html'},
         'json': {'Content-Type': 'application/json'},
+        'template': {'Content-Type': 'text/html'},
         'xlsx': {
             'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             'Content-Disposition': 'attachment;filename=file.xlsx'
@@ -144,29 +151,23 @@ class DataHandler(BaseHandler, DataMixin):
                         # Content-Type: text/html         # or HTML
 
     '''
+    _template = os.path.join(folder, 'datahandler.template.html')
+
     @classmethod
     def setup(cls, **kwargs):
         super(DataHandler, cls).setup(**kwargs)
         cls.setup_data(kwargs)
 
-        # Identify driver. Import heavy libraries on demand for speed
-        import importlib
-        global_dict = globals()
         driver = kwargs.get('driver')
         cls.driver_name = driver
         if driver == 'sqlalchemy':
-            global_dict['sa'] = importlib.import_module('sqlalchemy')
             cls.driver_method = cls._sqlalchemy
             # Create a cached metadata store for SQLAlchemy engines
             cls.meta = sa.MetaData()
         elif driver == 'blaze':
-            global_dict['bz'] = importlib.import_module('blaze')
             cls.driver_method = cls._blaze
         else:
             raise NotImplementedError('driver=%s is not supported yet.' % driver)
-
-        # Import common heavy libraries
-        global_dict['pd'] = importlib.import_module('pandas')
 
         posttransform = kwargs.get('posttransform', {})
         cls.posttransform = []
@@ -325,6 +326,7 @@ class DataHandler(BaseHandler, DataMixin):
 
     def _blaze(self, _selects, _wheres, _groups, _aggs, _offset, _limit, _sorts,
                _count, _q):
+        import blaze as bz
         import datashape
         # TODO: Not caching blaze connections
         parameters = self.params.get('parameters', {})
@@ -430,7 +432,7 @@ class DataHandler(BaseHandler, DataMixin):
 
     @tornado.gen.coroutine
     def get(self):
-        kwargs = dict(
+        self.query = dict(
             _selects=self.getq('select'),
             _wheres=self.getq('where'),
             _groups=self.getq('groupby'),
@@ -443,9 +445,9 @@ class DataHandler(BaseHandler, DataMixin):
         )
 
         if self.thread:
-            self.result = yield gramex.service.threadpool.submit(self.driver_method, **kwargs)
+            self.result = yield gramex.service.threadpool.submit(self.driver_method, **self.query)
         else:
-            self.result = self.driver_method(**kwargs)
+            self.result = self.driver_method(**self.query)
         self.renderdata()
 
     @tornado.gen.coroutine
@@ -508,6 +510,8 @@ class QueryHandler(BaseHandler, DataMixin):
             redirect:
                 ...
     '''
+    _template = os.path.join(folder, 'queryhandler.template.html')
+
     @classmethod
     def setup(cls, **kwargs):
         super(QueryHandler, cls).setup(**kwargs)
@@ -554,6 +558,9 @@ class QueryHandler(BaseHandler, DataMixin):
                 for key, result in self.result.items():
                     result['data'].to_excel(writer, index=False, sheet_name=key, encoding=None)
             self.write(output.getvalue())
+        elif 'template' in formats:
+            tmpl = gramex.cache.open(self.params.get('template', self._template), 'template')
+            self.write(tmpl.generate(handler=self, **self.result))
         elif 'json' in formats or '' in formats or len(formats) == 0:
             self.write('{')
             for index, (key, result) in enumerate(self.result.items()):

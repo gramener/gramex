@@ -1,0 +1,10 @@
+url:
+  data:
+    pattern: /$YAMLURL/
+    handler: DataHandler
+    kwargs:
+        driver: blaze
+        url: $YAMLPATH/../flags.csv
+        template: $YAMLPATH/template.html
+        default:
+            format: template

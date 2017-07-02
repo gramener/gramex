@@ -108,6 +108,23 @@ This renders "hello world" at the URL [/hello](hello).
 
 [requesthandler]: http://tornado.readthedocs.org/en/latest/web.html#request-handlers
 
+## Custom HTTP Headers
+
+The `kwargs:` section of `url:` accepts a `headers:` key that sets custom HTTP
+headers. For example:
+
+    :::yaml
+    pattern: /custom-header
+    handler: ...
+    kwargs:
+        ...
+        headers:
+            Content-Type: text/plain          # Display as plain text
+            Access-Control-Allow-Origin: *    # Allow CORS (all servers can access via AJAX)
+
+... adds the Content-Type and CORS settings to the response headers.
+
+
 ## Logging
 
 The `log:` section defines Gramex's logging behaviour. It uses the same

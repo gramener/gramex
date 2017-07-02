@@ -41,20 +41,37 @@ The `DataHandler` below exposes the flags table in `database.sqlite3` at the URL
 
 Once we have this setup, we can query the data with a combination of parameters like `select`, `where`, `groupby`, `agg`, `offset`, `limit`, `sort`
 
-- `select` retrieves specific columns. E.g. [?select=Name&select=Continent](flags?select=Name&select=Continent)
-- `where` filters the data. E.g. [?where=Stripes=Vertical](flags?where=Stripes==Vertical). You can use the operators `=` `&gt;=` `&lt;=` `&gt;` `&lt;` `!=`. Multiple conditions can be applied. E.g. [where=Continent=Asia&where=c1>50](flags?where=Continent=Asia&where=c1>50)
-- `group` to group records on columns and aggregate them. E.g. [?groupby=Continent&agg=c1:sum(c1)](flags?groupby=Continent&agg=c1:sum(c1))
-- `agg` - return a single value on grouped collection. Supported aggregations include `min`, `max`, `sum`, `count`, `mean` and `nunique`. E.g. [groupby=Continent&agg=nshapes:nunique(Shapes)](flags?groupby=Continent&agg=nshapes:nunique(Shapes))
-- `limit` - limits the result to n number of records. By default, the first 100 rows are displayed. E.g. [?limit=5](flags?limit=5) shows the first 5 rows.
-- `offset` - excludes the first n number of records. E.g. [?offset=5&limit=5](flags?offset=5&limit=5) shows the next 5 rows
-- `sort` - sorts the records on a column in ascending order by default. You can change the order with the `:asc` / `:desc` suffixes. E.g. [?sort=Symbols:desc](flags?sort=Symbols:desc)
-- `format` - determines the output format. Can be `html`, `json`, `csv`, `xlsx`. E.g. [?format=json](flags?format=json)
-- `count` - set to any value to send an `X-Count` HTTP header to the number of rows in the query, ignoring `limit` and `offset`.
-- `q` searches in all text columns for the string. (If you use `group`, columns are searched *after grouping*.)
+- `select` retrieves specific columns. E.g.
+  [?select=Name&select=Continent](flags?select=Name&select=Continent)
+- `where` filters the data. E.g.
+  [?where=Stripes=Vertical](flags?where=Stripes==Vertical). You can use the
+  operators `=` `&gt;=` `&lt;=` `&gt;` `&lt;` `!=`. Multiple conditions can be
+  applied. E.g.
+  [where=Continent=Asia&where=c1>50](flags?where=Continent=Asia&where=c1>50)
+- `group` to group records on columns and aggregate them. E.g.
+  [?groupby=Continent&agg=c1:sum(c1)](flags?groupby=Continent&agg=c1:sum(c1))
+- `agg` - return a single value on grouped collection. Supported aggregations
+  include `min`, `max`, `sum`, `count`, `mean` and `nunique`. E.g.
+  [groupby=Continent&agg=nshapes:nunique(Shapes)](flags?groupby=Continent&agg=nshapes:nunique(Shapes))
+- `limit` - limits the result to n number of records. By default, the first 100
+  rows are displayed. E.g. [?limit=5](flags?limit=5) shows the first 5 rows.
+- `offset` - excludes the first n number of records. E.g.
+  [?offset=5&limit=5](flags?offset=5&limit=5) shows the next 5 rows
+- `sort` - sorts the records on a column in ascending order by default. You can
+  change the order with the `:asc` / `:desc` suffixes. E.g.
+  [?sort=Symbols:desc](flags?sort=Symbols:desc)
+- `format` - determines the output format. Can be `html`, `json`, `csv`, `xlsx`,
+  `template`. E.g. [?format=json](flags?format=json)
+- `count` - set to any value to send an `X-Count` HTTP header to the number of
+  rows in the query, ignoring `limit` and `offset`.
+- `q` searches in all text columns for the string. (If you use `group`, columns
+  are searched *after grouping*.)
 
 Examples:
 
-- [?groupby=Continent&agg=count:nunique(Name)&agg=shapes:count(Shapes)&sort=count:desc&q=america](flags?groupby=Continent&agg=count:nunique(Name)&agg=shapes:count(Shapes)&sort=count:desc&q=america): For every American continent, show the number of unique countries and the number of countries with shapes.
+- [?groupby=Continent&agg=count:nunique(Name)&agg=shapes:count(Shapes)&sort=count:desc&q=america](flags?groupby=Continent&agg=count:nunique(Name)&agg=shapes:count(Shapes)&sort=count:desc&q=america):
+  For every American continent, show the number of unique countries and the
+  number of countries with shapes.
 
 ## DataHandler on files
 
@@ -69,11 +86,18 @@ DataHandler can expose data from files. For example:
           url: $YAMLPATH/flags.csv
           parameters: {encoding: utf8}
 
-Once we have this setup, we can query the data with a combination of parameters like `select`, `where`, `groupby`, `agg`, `offset`, `limit`, `sort`
+Once we have this setup, we can query the data with a combination of parameters
+like `select`, `where`, `groupby`, `agg`, `offset`, `limit`, `sort`
 
-- `select` retrieves specific columns. E.g. [?select=Name&select=Continent](flags-csv?select=Name&select=Continent)
-- `where` filters the data. E.g. [?where=Stripes=Vertical](flags-csv?where=Stripes==Vertical). You can use the operators `=` `&gt;=` `&lt;=` `&gt;` `&lt;` `!=`. Multiple conditions can be applied. E.g. [where=Continent=Asia&where=c1>50](flags-csv?where=Continent=Asia&where=c1>50)
-- `group` to group records on columns and aggregate them. E.g. [?groupby=Continent&agg=c1:sum(c1)](flags-csv?groupby=Continent&agg=c1:sum(c1))
+- `select` retrieves specific columns. E.g.
+  [?select=Name&select=Continent](flags-csv?select=Name&select=Continent)
+- `where` filters the data. E.g.
+  [?where=Stripes=Vertical](flags-csv?where=Stripes==Vertical). You can use the
+  operators `=` `&gt;=` `&lt;=` `&gt;` `&lt;` `!=`. Multiple conditions can be
+  applied. E.g.
+  [where=Continent=Asia&where=c1>50](flags-csv?where=Continent=Asia&where=c1>50)
+- `group` to group records on columns and aggregate them. E.g.
+  [?groupby=Continent&agg=c1:sum(c1)](flags-csv?groupby=Continent&agg=c1:sum(c1))
 - etc. See [DataHandler usage](#datahandler-usage)
 
 ## DataHandler on databases
@@ -110,14 +134,19 @@ to disable threading (as of v1.13.) Upcoming versions will fix threading issues.
 
 ## DataHandler defaults
 
-These parameters can be specified specified in the URL. But you can also set these as defaults. For example, adding this section under `kwargs:` ensures that the default format is HTML and the default limit is 10 -- but the URL can override it.
+These parameters can be specified specified in the URL. But you can also set
+these as defaults. For example, adding this section under `kwargs:` ensures that
+the default format is HTML and the default limit is 10 -- but the URL can
+override it.
 
     :::yaml
     default:
         format: html
         limit: 10
 
-You can make the parameters non-over-ridable using `query:` instead of `default:`. For example, this section forces the format to html, irrespective of what the `?format=` value is. However, `?limit=` will override the default of 10.
+You can make the parameters non-over-ridable using `query:` instead of
+`default:`. For example, this section forces the format to html, irrespective of
+what the `?format=` value is. However, `?limit=` will override the default of 10.
 
     :::yaml
     query:
@@ -125,9 +154,32 @@ You can make the parameters non-over-ridable using `query:` instead of `default:
     default:
         limit: 10
 
+## DataHandler templates
+
+The output of DataHandler can be rendered as a custom template using the
+`template` format. This can be used to create custom forms, render data as
+charts, or any other customised data rendering.
+
+Here is the default output of [?format=template](flags?format=template).
+
+You can specify a custom template using the `template:` key. See the example below.
+
+<div class="example">
+  <a class="example-demo" href="template/">DataHandler Template example</a>
+  <a class="example-src" href="http://code.gramener.com/s.anand/gramex/tree/master/gramex/apps/guide/datahandler/template/">Source</a>
+</div>
+
+The data and handler are passed to the template in variables called ``data`` and
+``handler``. You can render these variables in any format.
+
+If the tempate is not HTML, set [custom HTTP headers](../config/#custom-http-headers)
+to specify the correct `Content-Type`.
+
 ## Database edits
 
-You can use the `POST`, `PUT` and `DELETE` methods to add, update or delete rows in a database using DataHandler. You need to use [XSRF cookies](../filehandler/#xsrf) when using these methods.
+You can use the `POST`, `PUT` and `DELETE` methods to add, update or delete rows
+in a database using DataHandler. Use [XSRF cookies](../filehandler/#xsrf) when
+using these methods.
 
 (The examples below use [jQuery.ajax][jquery-ajax] and the [cookie.js][cookie.js] libraries.)
 
@@ -138,7 +190,9 @@ You can use the `POST`, `PUT` and `DELETE` methods to add, update or delete rows
 
 ### DataHandler insert
 
-`POST` creates a new row. You can specify the `val` parameter with one or module `column=value` expressions. For example, this inserts a row with the `Name` column as `United Asian Kingdom` and `ID` of `UAK`:
+`POST` creates a new row. You can specify the `val` parameter with one or module
+`column=value` expressions. For example, this inserts a row with the `Name`
+column as `United Asian Kingdom` and `ID` of `UAK`:
 
     :::js
     var xsrf = {'X-Xsrftoken': cookie.get('_xsrf')}
@@ -157,7 +211,10 @@ You can use the `POST`, `PUT` and `DELETE` methods to add, update or delete rows
 
 ### DataHandler update
 
-`PUT` updates existing rows. The `where` parameter selects the rows to be updated. The `val` parameter defines the values to be updated. For example, this updates all rows where the `ID` is `UAK` and sets the `Content` and `Text` columns:
+`PUT` updates existing rows. The `where` parameter selects the rows to be
+updated. The `val` parameter defines the values to be updated. For example, this
+updates all rows where the `ID` is `UAK` and sets the `Content` and `Text`
+columns:
 
     :::js
     $.ajax('flags', {
@@ -185,7 +242,8 @@ Here is the output of the updated row:
 
 ### DataHandler delete
 
-`DELETE` deletes existing rows. The `where` parameter selects the rows to be deleted. For example, this deletes all rows where the `ID` is `UAK`:
+`DELETE` deletes existing rows. The `where` parameter selects the rows to be
+deleted. For example, this deletes all rows where the `ID` is `UAK`:
 
     :::js
     $.ajax('flags', {

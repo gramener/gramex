@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Data Template</title>
+  <style>
+  * { box-sizing: border-box; }
+  body { font: 16px "Segoe UI", sans-serif; }
+  .table-right td, .table-right th {
+    text-align: right;
+    border-bottom: 1px solid #ccc;
+  }
+  pre { background-color: #333; color: #fff; padding: 8px; }
+  </style>
+</head>
+<body>
+  {% if isinstance(handler.query, dict) %}
+    {% for key, result in handler.result.items() %}
+      <h1>{{ key }}</h1>
+      <pre>{{ str(result['query']) }}</pre>
+      {% raw result['data'].to_html(index=False, classes='table-right data', na_rep='') %}
+    {% end %}
+  {% else %}
+    <h1>Data</h1>
+    <pre>{{ str(handler.result['query']) }}</pre>
+    {% raw handler.result['data'].to_html(index=False, classes='table-right data', na_rep='') %}
+  {% end %}
+
+  <h2>Configuration</h2>
+  {% import yaml %}
+  <pre>{{ yaml.dump(handler.kwargs, default_flow_style=False) }}</pre>
+
+  <script>
+  for (var i=0, el=document.querySelectorAll('.data'); i<el.length; i++)
+    el[i].removeAttribute('border')
+  </script>
+</body>
+</html>
+<!-- Comment for tests/test_queryhandler.py -->

@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Flags data</title>
+  <style>
+  * { box-sizing: border-box; }
+  body { font: 16px "Segoe UI", sans-serif; }
+  .table td, .table th { text-align: right; border-bottom: 1px solid #ccc; }
+  </style>
+</head>
+<body>
+  <h1>Flags data</h1>
+  {% raw data.to_html(classes='data table', index=False, na_rep='') %}
+
+  <script>
+  document.querySelector('.data').removeAttribute('border')
+  </script>
+</body>
+</html>

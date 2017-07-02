@@ -40,7 +40,7 @@ similar to [DataHandler default](../datahandler/#datahandler-defaults).
 
 You can specify the default `limit:` (number of rows) in the response.
 
-The `format:` key can be `html`, `csv`, `xlsx` or `json` -- see
+The `format:` key can be `html`, `csv`, `xlsx`, `json` or `template` -- see
 [DataHandler formats](../datahandler/#datahandler-formats). You can specify the
 output as a downloable file with a filename, e.g. `test.csv` in the example here:
 
@@ -68,6 +68,29 @@ URL query parameters. For example:
 
 - [flags?c1=0](flags?c1=0) will not filter for `c1=0` -- the `query:` section has
   frozen this value at 10.
+
+## QueryHandler templates
+
+QueryHandler templates are like [DataHandler templates](../datahandler/#datahandler-templates).
+You can render the data output in any form.
+
+Here is the default output of [flags?format=template](flags?format=template).
+
+You can specify a custom template file as `template: $YAMLPATH/template.html`
+under `kwargs:`. This template is passed the following variables:
+
+- `handler`: The QueryHandler instance
+- `query`: An sqlalchemy TextClause. Convert to `str(query)` to get the text query
+- `data`: The DataFrame that has the result
+
+In case of [Multiple SQL queries](#multiple-sql-queries), the template is passed:
+
+- `handler`: The QueryHandler instance
+- Each query key is passed as a variable. Its value is a dict with:
+    - `query`: An sqlalchemy TextClause. Convert to `str(query)` to get the text query
+    - `data`: The DataFrame that has the result for this key
+
+To iterate over the list of keys in the query, use ``handler.result``.
 
 ## QueryHandler POST
 

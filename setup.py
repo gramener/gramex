@@ -76,6 +76,8 @@ setup(
             'handlers/filehandler.template.html',
             'handlers/auth.template.html',
             'handlers/forgot.template.html',
+            'handlers/datahandler.template.html',
+            'handlers/queryhandler.template.html',
         ] + list(recursive_include('gramex', 'apps', ignore_patterns))
     },
     include_package_data=True,

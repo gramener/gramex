@@ -124,6 +124,13 @@ class TestSqliteHandler(TestGramex, QueryHandlerTestMixin):
         self.assertEqual(result['votes'], self.data[['votes']][:5].to_dict(orient='records'))
         self.assertEqual(result['empty'], [])
 
+    def test_template(self):
+        result = self.check('/datastoreq/sqlite/csv/filename?limit=5&format=template').text
+        self.assertIn('<!-- Comment for tests/test_queryhandler.py -->', result)
+
+        result = self.check('/datastoreq/template').text
+        self.assertIn('<!-- Test template -->', result)
+
     @classmethod
     def tearDownClass(cls):
         if cls.db.is_file():

@@ -36,3 +36,6 @@ schedule:
     data-setup-points:
         function: dbsetup.points
         startup: true
+
+import:
+    apps: '*/gramex.yaml'
