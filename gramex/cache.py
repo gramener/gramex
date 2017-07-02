@@ -77,6 +77,7 @@ def open(path, callback, **kwargs):
     - ``yaml``: reads files using PyYAML
     - ``json``: reads files using json.load
     - ``template``: reads files using tornado.Template
+    - ``markdown`` or ``md``: reads files using markdown.markdown
     - ``csv``, ``excel``, ``xls``, `xlsx``, ``hdf``, ``html``, ``sas``,
       ``stata``, ``table``: reads using Pandas
 
