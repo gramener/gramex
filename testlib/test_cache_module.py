@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 
 import io
 import os
+import six
 import json
 import time
 import yaml
@@ -9,6 +10,7 @@ import unittest
 import gramex.cache
 import pandas as pd
 from six import string_types
+from markdown import markdown
 from collections import OrderedDict
 from orderedattrdict import AttrDict
 from tornado.template import Template
@@ -127,6 +129,27 @@ class TestOpen(unittest.TestCase):
             self.assertTrue(isinstance(result, Template))
             self.assertEqual(result.generate(name='x'), expected.generate(name='x'))
             self.assertEqual(result.generate(name='x'), b'<b>x</b>\n')
+
+        self.check_file_cache(path, check)
+
+    def test_open_markdown(self):
+        path = os.path.join(folder, 'markdown.md')
+        extensions=[
+            'markdown.extensions.codehilite',
+            'markdown.extensions.extra',
+            'markdown.extensions.headerid',
+            'markdown.extensions.meta',
+            'markdown.extensions.sane_lists',
+            'markdown.extensions.smarty',
+        ]
+        with io.open(path, encoding='utf-8') as handle:
+            expected = markdown(handle.read(), output_format='html5', extensions=extensions)
+
+        def check(reload):
+            result, reloaded = gramex.cache.open(path, 'md', _reload_status=True, encoding='utf-8')
+            self.assertEqual(reloaded, reload)
+            self.assertTrue(isinstance(result, six.text_type))
+            self.assertEqual(result, expected)
 
         self.check_file_cache(path, check)
 
