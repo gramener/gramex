@@ -1,6 +1,8 @@
 title: Gramex connects to data
 
-`DataHandler` let's you fetch data from CSV files and databases, and returns the result as CSV, JSON, XLSX or HTML tables. Here is a sample configuration that browses [gorilla genes](genome?format=html&limit=10):
+`DataHandler` let's you fetch data from files and databases, and returns the
+result as CSV, JSON, XLSX or HTML tables. Here is a sample configuration that
+browses [gorilla genes](genome?format=html&limit=10):
 
     :::yaml
     url:
@@ -14,6 +16,8 @@ title: Gramex connects to data
 
 (This uses the public [ensemble gene database](http://ensembldb.ensembl.org/info/data/mysql.html).)
 
+## DataHandler on sqlite3
+
 To start you off, there's a `database.sqlite3` in this application folder.
 (Gramex downloaded [flags data](https://gramener.com/flags/) on startup. See
 [dbsetup.flags()](dbsetup.py) and the scheduler in [gramex.yaml](gramex.yaml).
@@ -22,7 +26,7 @@ The `DataHandler` below exposes the flags table in `database.sqlite3` at the URL
 
     :::yaml
     flags:
-      pattern: /$YAMLURL/flags                # The URL /datastore/flags
+      pattern: /$YAMLURL/flags                # The URL flags
       handler: DataHandler                    # uses DataHandler
       kwargs:
           driver: blaze                               # with blaze or sqlalchemy driver
@@ -32,6 +36,8 @@ The `DataHandler` below exposes the flags table in `database.sqlite3` at the URL
           thread: false                               # Disable threading if you see weird bugs
           default:
               format: html                            # Can also be json, csv, xlsx
+
+## DataHandler usage
 
 Once we have this setup, we can query the data with a combination of parameters like `select`, `where`, `groupby`, `agg`, `offset`, `limit`, `sort`
 
@@ -49,6 +55,28 @@ Once we have this setup, we can query the data with a combination of parameters 
 Examples:
 
 - [?groupby=Continent&agg=count:nunique(Name)&agg=shapes:count(Shapes)&sort=count:desc&q=america](flags?groupby=Continent&agg=count:nunique(Name)&agg=shapes:count(Shapes)&sort=count:desc&q=america): For every American continent, show the number of unique countries and the number of countries with shapes.
+
+## DataHandler on files
+
+DataHandler can expose data from files. For example:
+
+    :::yaml
+    flags-csv:
+      pattern: /$YAMLURL/flags-csv
+      handler: DataHandler
+      kwargs:
+          driver: blaze
+          url: $YAMLPATH/flags.csv
+          parameters: {encoding: utf8}
+
+Once we have this setup, we can query the data with a combination of parameters like `select`, `where`, `groupby`, `agg`, `offset`, `limit`, `sort`
+
+- `select` retrieves specific columns. E.g. [?select=Name&select=Continent](flags-csv?select=Name&select=Continent)
+- `where` filters the data. E.g. [?where=Stripes=Vertical](flags-csv?where=Stripes==Vertical). You can use the operators `=` `&gt;=` `&lt;=` `&gt;` `&lt;` `!=`. Multiple conditions can be applied. E.g. [where=Continent=Asia&where=c1>50](flags-csv?where=Continent=Asia&where=c1>50)
+- `group` to group records on columns and aggregate them. E.g. [?groupby=Continent&agg=c1:sum(c1)](flags-csv?groupby=Continent&agg=c1:sum(c1))
+- etc. See [DataHandler usage](#datahandler-usage)
+
+## DataHandler on databases
 
 Here are some examples of DataHandler ``kwargs`` to connect to databases:
 
@@ -79,7 +107,6 @@ Here are some examples of DataHandler ``kwargs`` to connect to databases:
 thread. However, this code is not currently stable. If you find tables that seem
 to be missing columns, or errors that are not reproducible, use `thread: false`
 to disable threading (as of v1.13.) Upcoming versions will fix threading issues.
-
 
 ## DataHandler defaults
 

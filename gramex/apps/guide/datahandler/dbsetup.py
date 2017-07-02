@@ -1,6 +1,6 @@
 import os.path
-import logging
 import pandas as pd
+from gramex.config import app_log
 from sqlalchemy import create_engine
 from sqlalchemy.exc import DatabaseError
 
@@ -13,21 +13,21 @@ def flags():
     """
     fetch flags data into database.sqlite3/flags
     """
-    url = 'https://gramener.com/flags/test.csv'
+    url = os.path.join(folder, 'flags.csv')
     try:
         flags = pd.read_sql_table('flags', engine)
         assert len(flags) > 1
-        logging.info('database.sqlite3 has flags table with data')
+        app_log.info('database.sqlite3 has flags table with data')
         return
     except DatabaseError:
-        # If the database is corrupted, delete it
+        app_log.info('database.sqlite3 corrupted. Removing it')
         os.unlink(filepath)
     except Exception:
         pass
 
     flags = pd.read_csv(url, encoding='cp1252')
     flags.to_sql('flags', engine, index=False)
-    logging.info('database.sqlite3 created with flags table')
+    app_log.info('database.sqlite3 created with flags table')
 
 
 def points():

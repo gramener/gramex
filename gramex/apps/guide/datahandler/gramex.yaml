@@ -1,13 +1,13 @@
 url:
     genome:
-        pattern: /$YAMLURL/genome           # The URL /datastore/genome
+        pattern: /$YAMLURL/genome           # The URL genome
         handler: DataHandler                # Uses the datahandler
         kwargs:
             driver: sqlalchemy              # via SQLalchemy, and connects to this DB
             url: mysql+pymysql://anonymous@ensembldb.ensembl.org/gorilla_gorilla_core_84_31
             table: gene
     flags:
-        pattern: /$YAMLURL/flags            # The URL /datastore/flags
+        pattern: /$YAMLURL/flags            # The URL flags
         handler: DataHandler                # uses DataHandler
         kwargs:
             driver: sqlalchemy              # with blaze or sqlalchemy driver
@@ -19,6 +19,16 @@ url:
             posttransform:
               function: dbsetup.bigint      # or any function like passlib.hash.sha256_crypt.encrypt
               args: =content
+    flags-csv:
+        pattern: /$YAMLURL/flags-csv
+        handler: DataHandler
+        kwargs:
+            driver: blaze
+            url: $YAMLPATH/flags.csv
+            parameters: {encoding: utf8}
+            default:
+              format: html                  # Can also be json or csv
+
 schedule:
     data-setup-flags:
         function: dbsetup.flags
