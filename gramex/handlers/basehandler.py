@@ -616,6 +616,7 @@ class HDF5Store(KeyStore):
                                      cls=CustomJSONEncoder)
 
     def flush(self):
+        app_log.debug('Flushing %s', self.path)
         self.store.flush()
 
     def close(self):
@@ -653,8 +654,10 @@ class JSONStore(KeyStore):
                                 cls=CustomJSONEncoder)
         signature = md5(json_value.encode('utf-8')).hexdigest()
         if signature != self.signature:
+            app_log.debug('Flushing %s', self.path)
             self.handle.seek(0)
             self.handle.write(json_value)
+            self.handle.flush()
             self.signature = signature
 
     def close(self):
