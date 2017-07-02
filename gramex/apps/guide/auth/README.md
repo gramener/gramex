@@ -301,7 +301,7 @@ This is the minimal configuration that lets you log in from a [database table](d
         pattern: /db                          # Map this URL
         handler: DBAuth                       # to the DBAuth handler
         kwargs:
-            url: sqlite:///path/to/auth.db    # Pick up list of users from this sqlalchemy URL
+            url: sqlite:///$YAMLPATH/auth.db  # Pick up list of users from this sqlalchemy URL
             table: users                      # ... and this table
             user:
                 column: user                  # The user column in users table has the user ID
@@ -321,7 +321,7 @@ The code that creates this database is:
     :::python
     engine = sqlalchemy.create_engine('sqlite:///auth.db', encoding='utf-8')
     engine.execute('CREATE TABLE users (user text, password text)')
-    engine.execute('INSERT INTO %s VALUES (?, ?)' % table, [
+    engine.execute('INSERT INTO users VALUES (?, ?)', [
         ['name1', 'pwd1'],
         ['name2', 'pwd2'],
         # ...
@@ -382,7 +382,7 @@ below:
         pattern: /db
         handler: DBAuth
         kwargs:
-            url: sqlite:///path/to/auth.db
+            url: sqlite:///$YAMLPATH/auth.db
             table: users
             user:
                 column: user
