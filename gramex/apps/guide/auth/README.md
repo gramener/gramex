@@ -312,8 +312,8 @@ Now create an `auth.db` with a table called `users` as follows:
 
     user      password
     -----     --------
-    name1     pwd1
-    name2     pwd2
+    alpha     alpha
+    beta      beta
     ...       ...
 
 The code that creates this database is:
@@ -322,12 +322,12 @@ The code that creates this database is:
     engine = sqlalchemy.create_engine('sqlite:///auth.db', encoding='utf-8')
     engine.execute('CREATE TABLE users (user text, password text)')
     engine.execute('INSERT INTO users VALUES (?, ?)', [
-        ['name1', 'pwd1'],
-        ['name2', 'pwd2'],
+        ['alpha', 'alpha'],
+        ['beta', 'beta'],
         # ...
     ])
 
-With this, you can log into `/db` as `name1` and `pwd1`, etc. It displays a
+With this, you can log into `/db` as `alpha` and `alpha`, etc. It displays a
 [minimal HTML template][auth-template] that asks for an ID and password, and
 matches it with the `auth.db` sqlite3 database. 
 
@@ -352,10 +352,9 @@ You can configure several aspects of this flow. Below is a full configuration --
                 column: password              # The users.password column is matched with
                 arg: password                 # ... the ?password= argument from the form
                 # You should encrypt passwords when storing them.
-                # The function below specifies the encryption method:
-                function: passlib.hash.sha256_crypt.encrypt
-                args: '=content'              # The first parameter is the raw password
-                kwargs: {salt: 'secret-key'}  # Change secret-key to something unique
+                # The function below specifies the encryption method.
+                # Remember to change secret-key to something unique
+                function: passlib.hash.sha256_crypt.encrypt(content, salt="secret-key")
 
 You should create a [HTML login form](db) that requests a username and password
 (with an [xsrf][xsrf] field). See [login templates](#login-templates) to learn
@@ -487,11 +486,10 @@ When a user logs in or logs out, you can register actions as follows:
           key: YOURKEY
           secret: YOURSECRET
           action:                                     # Run multiple function on Google auth
-              -                                       # The first action
-                function: ensure_single_session       #   ... logs user out of all other sessions
-              -                                       # The section action
-                function: sys.stderr.write            #   ... writes to the console
-                args: 'Logged in via Google'          #   ... this message
+              -
+                function: ensure_single_session       # Logs user out of all other sessions
+              -
+                function: sys.stderr.write('Logged in via Google')      # Write to console
 
 For example, the [ldap login](ldap) page is set with `ensure_single_session`.
 You can log in on multiple browsers. Every log in will log out other sessions.
@@ -635,8 +633,7 @@ email ends with `.org`.
                 path: $YAMLPATH/secret.html
                 auth:
                     condition:                          # Allow only if condition is true
-                        function: six.text_type.endswith              # Call this function
-                        args: [=handler.current_user.email, '.com']   # with these 2 arguments
+                        function: handler.current_user.email.endswith('.com')
         auth/dotorg:
             pattern: /$YAMLURL/dotorg
             handler: FileHandler
@@ -644,8 +641,7 @@ email ends with `.org`.
                 path: $YAMLPATH/secret.html
                 auth:
                     condition:                          # Allow only if condition is true
-                        function: six.text_type.endswith              # Call this function
-                        args: [=handler.current_user.email, '.org']   # with these 2 arguments
+                        function: handler.current_user.email.endswith('.org')
 
 You can specify any function of your choice. The function must return (or yield)
 `True` to allow the user access, and `False` to raise a HTTP 403 error.

@@ -46,8 +46,7 @@ url:
             index: true
             transform:
                 "*.md":
-                    function: guide.markdown_template
-                    args: [=content, =handler]
+                    function: guide.markdown_template(content, handler)
                     encoding: utf-8
                     headers:
                         Content-Type: text/html
@@ -65,8 +64,7 @@ url:
             path: $YAMLPATH/*.md
             transform:
                 "*.md":
-                    function: guide.markdown_template
-                    args: [=content, =handler]
+                    function: guide.markdown_template(content, handler)
                     encoding: utf-8
                     headers:
                         Content-Type: text/html

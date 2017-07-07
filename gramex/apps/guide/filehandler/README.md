@@ -342,8 +342,7 @@ into HTML:
     # ... contd ...
       transform:
         "*.md":                                 # Any file matching .md
-          function: markdown.markdown           #   Convert .md to html
-          args: =content                        #   Pass the content as positional arg
+          function: markdown.markdown(content)  #   Convert .md to html
           kwargs:                               #   Pass these arguments to markdown.markdown
             output_format: html5                #     Output in HTML5
           headers:                              #   Use these HTTP headers:
@@ -357,8 +356,7 @@ into HTML using the [BadgerFish](http://www.sklar.com/badgerfish/) convention.
     :::yaml
     # ... contd ...
         "*.yaml":                               # YAML files use BadgerFish
-          function: badgerfish                  # transformed via gramex.transforms.badgerfish()
-          args: =content
+          function: badgerfish(content)         # transformed via gramex.transforms.badgerfish()
           headers:
             Content-Type: text/html             # and served as HTML
 
@@ -403,11 +401,20 @@ used) transforms:
                 function: template            # Convert as a Tornado template
                 args: =content                # Using the contents of the file (default)
                 kwargs:                       # Pass it the following parameters
-                    hander: =handler          # The handler variable is the RequestHandler
+                    handler: =handler         # The handler variable is the RequestHandler
                     title: Hello world        # The title variable is "Hello world"
                     path: $YAMLPATH           # path is the current YAML file path
                     home: $HOME               # home is the YAML variable HOME (blank if not defined)
                     series: [a, b, c]         # series is a list of values
+
+    You can also write this as:
+
+        :::yaml
+        transform:
+            "template.*.html":
+                function: |
+                    template(content, handler=handler, title="Hello world", path="$YAMLPATH",
+                             home="$HOME", series=["a", "b", "c"])
 
     With this structure, the following template will render fine:
 
@@ -420,9 +427,9 @@ used) transforms:
             {% for item in [series] %}<li>{{ item }}</li>{% end %}
         </ul>
 
-2. **badgerfish**. Use `function: badgerfish` to convert YAML files into HTML.
-   For example, this YAML file is converted into a HTML as you would logically
-   expect:
+2. **badgerfish**. Use `function: badgerfish(content)` to convert YAML files into
+   HTML. For example, this YAML file is converted into a HTML as you would
+   logically expect:
 
         :::yaml
         html:

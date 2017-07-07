@@ -110,15 +110,11 @@ a `keys:` configuration:
             kwargs:
                 path: ...
                 transform:
-                    function: module.func     # Run module.func()
-                    args:
-                        - =content            # Optional: call with file metadata
-                        - =handler            # Optional: 2nd parameter is the handler
-                    kwargs: {}                # Optional: additional keyword args
+                    function: module.func(content, handler)
 
-This calls `module.func(content=file_metadata, handler=handler)` where
-`file_metadata` is an AttrDict with the keys mentioned in
-[Upload listing](#upload-listing). For example, this function will save CSV files as `data.json`:
+This calls `module.func(file_metadata, handler)` where `file_metadata` is an
+AttrDict with the keys mentioned in [Upload listing](#upload-listing). For
+example, this function will save CSV files as `data.json`:
 
     :::python
     def func(metadata, handler):

@@ -10,8 +10,7 @@ FunctionHandler:
             pattern: total                              # The "total" URL
             handler: FunctionHandler                    # runs a function
             kwargs:
-                function: calculations.total            # total() from calculations.py
-                args: [100, 200.0, 300.00]              # It always gets 100, 200, 300
+                function: calculations.total(100, 200)  # total() from calculations.py
                 headers:
                     Content-Type: application/json      # Display as JSON
 
@@ -90,13 +89,7 @@ You can pass any options you want to functions. For example, to call
         pattern: /method          # The URL /method
         handler: FunctionHandler  # Runs a function
         kwargs:
-          function: calculations.method
-          args:
-              - =handler          # This is replaced with the RequestHandler
-              - 10
-          kwargs:
-              h: =handler         # This is replaced with the RequestHandler
-              val: 0
+          function: calculations.method(handler, 10, h=handler, val=0)
 
 ## Streaming output
 

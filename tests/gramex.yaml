@@ -1,6 +1,10 @@
 variables:
   MYSQL_SERVER: {default: localhost}
   POSTGRES_SERVER: {default: localhost}
+  STRING: abc
+  NUMBER: 1
+  LIST: [1, 2, 3]
+  DICT: {b: 1}
 
 handlers:
   BaseHandler:
@@ -37,41 +41,61 @@ url:
         function: nonexistent
 
   # TestGramex
-  pathdepth1: {pattern: "/path/.*",       handler: "gramex.handlers.FunctionHandler", kwargs: {function: "str", args: ["/path/.*"],       }}
-  pathdepth2: {pattern: "/path/file",     handler: FunctionHandler, kwargs: {function: str, args: ["/path/file"],     }}
-  pathdepth3: {pattern: "/path/dir/.*",   handler: FunctionHandler, kwargs: {function: str, args: ["/path/dir/.*"],   }}
-  pathdepth4: {pattern: "/path/dir/file", handler: FunctionHandler, kwargs: {function: str, args: ["/path/dir/file"], }}
-  pathdepth5: {pattern: "/path/priority", priority: 1, handler: "FunctionHandler", kwargs: {function: "str", args: ["/path/priority"], }}
+  pathdepth1: {pattern: "/path/.*",       handler: "gramex.handlers.FunctionHandler", kwargs: {function: str("/path/.*")}}
+  pathdepth2: {pattern: "/path/file",     handler: FunctionHandler, kwargs: {function: str("/path/file")     }}
+  pathdepth3: {pattern: "/path/dir/.*",   handler: FunctionHandler, kwargs: {function: str("/path/dir/.*")   }}
+  pathdepth4: {pattern: "/path/dir/file", handler: FunctionHandler, kwargs: {function: str("/path/dir/file") }}
+  pathdepth5: {pattern: "/path/priority", priority: 1, handler: "FunctionHandler", kwargs: {function: str("/path/priority") }}
 
-  pathnorm1: {pattern: "/./path/norm1", handler: FunctionHandler, kwargs: {function: str, args: ["/path/norm1"],    }}
-  pathnorm2: {pattern: "/path/./norm2", handler: FunctionHandler, kwargs: {function: str, args: ["/path/norm2"],    }}
+  pathnorm1: {pattern: "/./path/norm1", handler: FunctionHandler, kwargs: {function: str("/path/norm1") }}
+  pathnorm2: {pattern: "/path/./norm2", handler: FunctionHandler, kwargs: {function: str("/path/norm2") }}
 
   # TestFunctionHandler
   func/args:
     pattern: /func/args
     handler: FunctionHandler
     kwargs:
+      function: utils.params_as_json(0, 1, a="a", b="b")
+
+  func/args-split:
+    pattern: /func/args-split
+    handler: FunctionHandler
+    kwargs:
       function: utils.params_as_json
       args: [0, 1]
-      kwargs:
-        a: "a"
-        b: "b"
+      kwargs: {a: a, b: b}
+
+  func/args-variable:
+    pattern: /func/args-variable
+    handler: FunctionHandler
+    kwargs:
+      function: utils.params_as_json("$STRING", $NUMBER, a="$STRING", b=$NUMBER)
 
   func/async/args:
     pattern: /func/async/args
     handler: FunctionHandler
     kwargs:
+      function: utils.async_args(0, 1, a="a", b="b")
+
+  func/async/args-split:
+    pattern: /func/async/args-split
+    handler: FunctionHandler
+    kwargs:
       function: utils.async_args
       args: [0, 1]
-      kwargs:
-        a: "a"
-        b: "b"
+      kwargs: {a: a, b: b}
 
   func/handler:
     pattern: /func/handler
     handler: FunctionHandler
     kwargs:
       function: utils.params_as_json
+
+  func/handler-null:
+    pattern: /func/handler-null
+    handler: FunctionHandler
+    kwargs:
+      function: utils.params_as_json()
 
   func/attributes:
     pattern: /func/attributes
@@ -83,36 +107,41 @@ url:
     pattern: /func/composite
     handler: FunctionHandler
     kwargs:
-      function: utils.params_as_json
-      args: [0, =handler]
-      kwargs:
-        a: a
-        handler: =handler
+      function: utils.params_as_json(0, handler, a="a", handler=handler)
 
   func/compositenested:
     pattern: /func/compositenested
     handler: FunctionHandler
     kwargs:
+      function: 'utils.params_as_json(0, handler, a={"b": 1}, handler=handler)'
+
+  func/compositenested-split:
+    pattern: /func/compositenested-split
+    handler: FunctionHandler
+    kwargs:
       function: utils.params_as_json
       args: [0, =handler]
-      kwargs:
-        a:
-          b: 1
-        handler: =handler
+      kwargs: {a: {b: 1}, handler: =handler}
+
+  func/compositenested-variable:
+    pattern: /func/compositenested-variable
+    handler: FunctionHandler
+    kwargs:
+      function: utils.params_as_json
+      args: [0, =handler]
+      kwargs: {a: $DICT, handler: =handler}
 
   func/dumpx:
     pattern: /func/dumpx
     handler: FunctionHandler
     kwargs:
-      function: utils.params_as_json
-      args: =handler.get_arguments('x')
+      function: utils.params_as_json(handler.get_arguments('x'))
 
   func/async/http:
     pattern: /func/async/http
     handler: FunctionHandler
     kwargs:
-      function: utils.async_http
-      args: "http://localhost:9999/func/dumpx?x=1&x=2"
+      function: utils.async_http("http://localhost:9999/func/dumpx?x=1&x=2")
 
   func/async/http2:
     pattern: /func/async/http2
@@ -240,23 +269,17 @@ url:
       transform:
         "*.md":
           encoding: utf-8
-          function: markdown.markdown
-          args: =content
+          function: markdown.markdown(content)
           headers:
             Content-Type: text/html; charset=UTF-8
         "*.yaml":
           encoding: utf-8
-          function: badgerfish
-          args: [=content, =handler]
+          function: badgerfish(content, handler)
           headers:
             Content-Type: text/html; charset=UTF-8
         "template.*":
           encoding: utf-8
-          function: template
-          args: =content
-          kwargs:
-            handler: =handler
-            param: x
+          function: template(content, handler=handler, param='x')
           headers:
             Content-Type: text/html; charset=UTF-8
         "template-handler.txt":
@@ -288,8 +311,7 @@ url:
       default_filename: index.html
       transform:
         'index.html':
-          function: utils.args_as_json
-          args: =handler
+          function: utils.args_as_json(handler)
   dir/merge.txt:
     pattern: /dir/merge.txt
     handler: FileHandler
@@ -300,12 +322,10 @@ url:
       transform:
         'alpha.txt':
           encoding: utf-8
-          function: six.text_type.upper
-          args: =content
+          function: six.text_type.upper(content)
         'beta.html':
           encoding: utf-8
-          function: six.text_type.title
-          args: =content
+          function: six.text_type.title(content)
   dir/merge.html:
     pattern: /dir/merge.html
     handler: FileHandler
@@ -316,12 +336,10 @@ url:
       transform:
         'beta.html':
           encoding: utf-8
-          function: six.text_type.upper
-          args: =content
+          function: six.text_type.upper(content)
         'alpha.txt':
           encoding: utf-8
-          function: six.text_type.title
-          args: =content
+          function: six.text_type.title(content)
   dir/headers:
     pattern: /header/
     handler: FileHandler
@@ -1248,14 +1266,12 @@ url:
     pattern: /cache/randomchar-nocache
     handler: FunctionHandler
     kwargs:
-      function: utils.httpbin
-      kwargs: {rand: 99999999}
+      function: utils.httpbin(handler, rand=99999999)
   cache/randomchar:
     pattern: /cache/randomchar
     handler: FunctionHandler
     kwargs:
-      function: utils.httpbin
-      kwargs: {rand: 99999999, mime: html}
+      function: utils.httpbin(handler, rand=99999999, mime="html")
     cache: true
   cache/increment:
     pattern: /cache/increment
@@ -1289,40 +1305,35 @@ url:
     pattern: /cache/pathkey
     handler: FunctionHandler
     kwargs:
-      function: utils.httpbin
-      kwargs: {rand: 99999999, mime: json}
+      function: utils.httpbin(handler, rand=99999999, mime='json')
     cache:
       key: request.path
   cache/host:
     pattern: /cache/host.*
     handler: FunctionHandler
     kwargs:
-      function: utils.httpbin
-      kwargs: {rand: 99999999}
+      function: utils.httpbin(handler, rand=99999999)
     cache:
       key: request.host
   cache/args:
     pattern: /cache/args.*
     handler: FunctionHandler
     kwargs:
-      function: utils.httpbin
-      kwargs: {rand: 99999999}
+      function: utils.httpbin(handler, rand=99999999)
     cache:
       key: [request.path, args.x, invalid.key]
   cache/cookie-test:
     pattern: /cache/cookie-test
     handler: FunctionHandler
     kwargs:
-      function: utils.httpbin
-      kwargs: {rand: 99999999}
+      function: utils.httpbin(handler, rand=99999999)
     cache:
       key: [request.host, cookies.user, invalid.key]
   cache/header-test:
     pattern: /cache/header-test
     handler: FunctionHandler
     kwargs:
-      function: utils.httpbin
-      kwargs: {rand: 99999999}
+      function: utils.httpbin(handler, rand=99999999)
     cache:
       key: [request.host, headers.test, invalid.key]
   cache/invalid-keys-ignored:

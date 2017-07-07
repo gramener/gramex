@@ -3,8 +3,7 @@ url:
         pattern: /$YAMLURL/total                    # /total
         handler: FunctionHandler                    # runs a function
         kwargs:
-            function: calculations.total            # total() from calculations.py
-            args: [100, 200.0, 300.00]              # It always gets 100, 200, 300
+            function: calculations.total(100, 200)  # total() from calculations.py
             headers:
                 Content-Type: application/json      # Display as JSON
 

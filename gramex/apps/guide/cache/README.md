@@ -56,8 +56,7 @@ time it is called:
         pattern: /$YAMLURL/random
         handler: FunctionHandler
         kwargs:
-            function: random.choice
-            args: [['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j']]
+            function: random.choice(['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j'])
 
 But adding the `cache:` to this URL caches it the first time it is called. When
 [random-cached](random-cached) is reloaded, the same letter is shown every time.
@@ -67,8 +66,7 @@ But adding the `cache:` to this URL caches it the first time it is called. When
         pattern: /$YAMLURL/random-cached
         handler: FunctionHandler
         kwargs:
-            function: random.choice
-            args: [['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j']]
+            function: random.choice(['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j'])
         cache: true
 
 ## Cache keys
@@ -89,8 +87,7 @@ only cache the path.
         pattern: /$YAMLURL/cache-full-url
         handler: FunctionHandler
         kwargs:
-            function: random.choice
-            args: [['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j']]
+            function: random.choice(['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j'])
         cache:
             key: request.uri          # This is the default cache key
 
@@ -98,8 +95,7 @@ only cache the path.
         pattern: /$YAMLURL/cache-only-path
         handler: FunctionHandler
         kwargs:
-            function: random.choice
-            args: [['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j']]
+            function: random.choice(['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j'])
         cache:
             key: request.path     # only use the request path, not arguments
 
@@ -150,8 +146,7 @@ caches the response for 5 seconds.
         pattern: /$YAMLURL/cache-expiry
         handler: FunctionHandler
         kwargs:
-            function: random.choice
-            args: [['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j']]
+            function: random.choice(['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j'])
         cache:
             expiry:
                 duration: 5             # Cache the request for 5 seconds

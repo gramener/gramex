@@ -6,20 +6,31 @@ class TestFunctionHandler(TestGramex):
 
     def test_args(self):
         etag = {'headers': {'Etag': True}}
-        self.check('/func/args', text='{"args": [0, 1], "kwargs": {"a": "a", "b": "b"}}', **etag)
+        text = '{"args": [0, 1], "kwargs": {"a": "a", "b": "b"}}'
+        self.check('/func/args', text=text, **etag)
+        self.check('/func/args-split', text=text, **etag)
+
+        text = '{"args": ["abc", 1], "kwargs": {"a": "abc", "b": 1}}'
+        self.check('/func/args-variable', text=text, **etag)
+
         self.check('/func/handler', text='{"args": ["Handler"], "kwargs": {}', **etag)
+        self.check('/func/handler-null', text='{"args": [], "kwargs": {}', **etag)
         self.check('/func/composite',
                    text='{"args": [0, "Handler"], "kwargs": {"a": "a", "handler": "Handler"}}',
                    **etag)
-        self.check('/func/compositenested',
-                   text='{"args": [0, "Handler"], "kwargs": {"a": {"b": 1}, '
-                        '"handler": "Handler"}}', **etag)
+
+        text = '{"args": [0, "Handler"], "kwargs": {"a": {"b": 1}, "handler": "Handler"}}'
+        self.check('/func/compositenested', text=text, **etag)
+        self.check('/func/compositenested-split', text=text, **etag)
+        self.check('/func/compositenested-variable', text=text, **etag)
+
         self.check('/func/dumpx?x=1&x=2', text='{"args": [["1", "2"]], "kwargs": {}}', **etag)
 
     def test_async(self):
         etag = {'headers': {'Etag': True}}
-        self.check('/func/async/args', text='{"args": [0, 1], "kwargs": {"a": "a", "b": "b"}}',
-                   **etag)
+        text = '{"args": [0, 1], "kwargs": {"a": "a", "b": "b"}}'
+        self.check('/func/async/args', text=text, **etag)
+        self.check('/func/async/args-split', text=text, **etag)
         self.check('/func/async/http', text='{"args": [["1", "2"]], "kwargs": {}}', **etag)
         self.check('/func/async/http2',
                    text='{"args": [["1"]], "kwargs": {}}{"args": [["2"]], "kwargs": {}}', **etag)

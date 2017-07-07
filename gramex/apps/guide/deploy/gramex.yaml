@@ -6,10 +6,9 @@ url:
             path: $YAMLPATH/template.html         # Using this template
             transform:
                 "template.html":
-                    function: template            # Convert as a Tornado template
-                    args: =content                # Using the contents of the file (default)
-                    kwargs:                       # Pass it the following parameters
-                        GUIDE_ROOT: $GUIDE_ROOT   # GUIDE_ROOT is the absolute URL to the Gramex guide
+                    # Convert to a Tornado template
+                    # GUIDE_ROOT is the absolute URL to the Gramex guide
+                    function: template(content, GUIDE_ROOT="$GUIDE_ROOT")
     gramex-config-file:
         pattern: /$YAMLURL/config                 # Map config under current URL
         handler: FileHandler

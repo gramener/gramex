@@ -60,9 +60,53 @@ class BuildTransform(unittest.TestCase):
         self.eqfn(fn, transform)
         return fn
 
-    def test_no_function_raises_error(self):
+    def test_invalid_function_raises_error(self):
         with self.assertRaises(KeyError):
             build_transform({})
+        with self.assertRaises(KeyError):
+            build_transform({'function': ''})
+        with self.assertRaises(ValueError):
+            build_transform({'function': 'x = 1'})
+        with self.assertRaises(ValueError):
+            build_transform({'function': 'x(); y()'})
+        with self.assertRaises(ValueError):
+            build_transform({'function': 'import json'})
+
+    def test_expr(self):
+        def transform(x=0):
+            result = x + 1
+            return result if isinstance(result, GeneratorType) else [result, ]
+        self.check_transform(transform, 'function: x + 1', vars={'x': 0})
+
+        def transform():
+            result = "abc"
+            return result if isinstance(result, GeneratorType) else [result, ]
+        self.check_transform(transform, '''function: '"abc"' ''', vars={})
+
+        def transform():
+            import gramex.cache, pandas     # noqa: build_transform does this
+            result = gramex.cache.open('x', pandas.read_csv).to_html()
+            return result if isinstance(result, GeneratorType) else [result, ]
+        fn = 'function: gramex.cache.open("x", pandas.read_csv).to_html()'
+        self.check_transform(transform, fn, vars={})
+
+        def transform(s=None):
+            result = 1 if "windows" in s.lower() else 2 if "linux" in s.lower() else 0
+            return result if isinstance(result, GeneratorType) else [result, ]
+        fn = 'function: 1 if "windows" in s.lower() else 2 if "linux" in s.lower() else 0'
+        self.check_transform(transform, fn, vars={'s': None})
+
+        def transform(_val):
+            result = condition(1, 0, -1)    # noqa: this is in gramex.transforms
+            return result if isinstance(result, GeneratorType) else [result, ]
+        self.check_transform(transform, 'function: condition(1, 0, -1)')
+
+        def transform(_val):
+            import six
+            result = six.text_type.upper(_val)
+            return result if isinstance(result, GeneratorType) else [result, ]
+        self.check_transform(transform, 'function: six.text_type.upper')
+        self.check_transform(transform, 'function: six.text_type.upper(_val)')
 
     def test_fn(self):
         def transform(_val):
@@ -80,6 +124,7 @@ class BuildTransform(unittest.TestCase):
             function: max
             args: [1, 2]
         ''', vars={})
+        self.check_transform(transform, 'function: max(1, 2)', vars={})
 
     def test_fn_args(self):
         def transform(_val):
@@ -89,6 +134,7 @@ class BuildTransform(unittest.TestCase):
             function: max
             args: [1, 2]
         ''')
+        self.check_transform(transform, 'function: max(1, 2)')
 
         def transform(_val):
             result = len('abc')
@@ -97,6 +143,7 @@ class BuildTransform(unittest.TestCase):
             function: len
             args: abc
         ''')
+        self.check_transform(transform, 'function: len("abc")')
 
         def transform(_val):
             result = range(10)
@@ -105,18 +152,21 @@ class BuildTransform(unittest.TestCase):
             function: range
             args: 10
         ''')
+        self.check_transform(transform, 'function: range(10)')
 
     def test_fn_args_var(self):
         def transform(x=1, y=2):
             result = max(x, y, 3)
             return result if isinstance(result, GeneratorType) else [result, ]
+        vars = AttrDict([('x', 1), ('y', 2)])
         self.check_transform(transform, '''
             function: max
             args:
                 - =x
                 - =y
                 - 3
-        ''', vars=AttrDict([('x', 1), ('y', 2)]))
+        ''', vars=vars)
+        self.check_transform(transform, 'function: max(x, y, 3)', vars=vars)
 
     def test_fn_kwargs(self):
         def transform(_val):
@@ -126,6 +176,7 @@ class BuildTransform(unittest.TestCase):
             function: dict
             kwargs: {a: 1, b: 2}
         ''')
+        self.check_transform(transform, 'function: dict(_val, a=1, b=2)')
 
     def test_fn_kwargs_complex(self):
         def transform(_val):
@@ -139,15 +190,20 @@ class BuildTransform(unittest.TestCase):
                     b1: x
                     b2: y
         ''')
+        self.check_transform(transform, '''
+            function: 'dict(_val, a=[1, 2], b=AttrDict([("b1", "x"), ("b2", "y")]))'
+        ''')
 
     def test_fn_kwargs_var(self):
         def transform(x=1, y=2):
             result = dict(x, y, a=x, b=y, c=3, d='=4')
             return result if isinstance(result, GeneratorType) else [result, ]
+        vars = AttrDict([('x', 1), ('y', 2)])
         self.check_transform(transform, '''
             function: dict
             kwargs: {a: =x, b: =y, c: 3, d: ==4}
-        ''', vars=AttrDict([('x', 1), ('y', 2)]))
+        ''', vars=vars)
+        self.check_transform(transform, 'function: dict(x, y, a=x, b=y, c=3, d="=4")', vars=vars)
 
     def test_fn_args_kwargs(self):
         def transform(_val):
@@ -158,16 +214,19 @@ class BuildTransform(unittest.TestCase):
             args: [1, 2]
             kwargs: {a: 3, b: 4, c: 5, d: ==6}
         ''')
+        self.check_transform(transform, 'function: format(1, 2, a=3, b=4, c=5, d="=6")')
 
     def test_fn_args_kwargs_var(self):
         def transform(x=1, y=2):
             result = format(x, y, a=x, b=y, c=3)
             return result if isinstance(result, GeneratorType) else [result, ]
+        vars = AttrDict([('x', 1), ('y', 2)])
         self.check_transform(transform, '''
             function: format
             args: [=x, =y]
             kwargs: {a: =x, b: =y, c: =3}
-        ''', vars=AttrDict([('x', 1), ('y', 2)]))
+        ''', vars=vars)
+        self.check_transform(transform, 'function: format(x, y, a=x, b=y, c=3)', vars=vars)
 
     def test_coroutine(self):
         def transform(_val):
@@ -177,6 +236,7 @@ class BuildTransform(unittest.TestCase):
         self.check_transform(transform, '''
             function: testlib.test_transforms.gen_str
         ''')
+        self.check_transform(transform, 'function: testlib.test_transforms.gen_str(_val)')
 
     def test_cache_change(self):
         dummy = os.path.join(self.folder, 'dummy.py')
@@ -196,10 +256,14 @@ class BuildTransform(unittest.TestCase):
             args: []
         ''', cache=False)
         self.assertEqual(fn(), [1])
+        fn = self.check_transform(transform, 'function: testlib.dummy.value()', cache=False)
+        self.assertEqual(fn(), [1])
 
         remove(dummy.replace('.py', '.pyc'))
         with io.open(dummy, 'w', encoding='utf-8') as handle:
             handle.write('def value():\n\treturn 100\n')
+        self.assertEqual(fn(), [100])
+        fn = self.check_transform(transform, 'function: testlib.dummy.value()', cache=False)
         self.assertEqual(fn(), [100])
 
     @classmethod

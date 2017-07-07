@@ -17,8 +17,7 @@ url:
             default:
               format: html                  # Can also be json or csv
             posttransform:
-              function: dbsetup.bigint      # or any function like passlib.hash.sha256_crypt.encrypt
-              args: =content
+              function: dbsetup.bigint(content)   # or any function like passlib.hash.sha256_crypt.encrypt
     flags-csv:
         pattern: /$YAMLURL/flags-csv
         handler: DataHandler

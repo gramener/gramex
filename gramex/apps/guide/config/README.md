@@ -67,8 +67,7 @@ The `url:` section maps URLs to content. Here is an example:
             pattern: /hello                 # Map the URL /hello
             handler: FunctionHandler        # using the build-in FunctionHandler
             kwargs:                         # Pass these options to FunctionHandler
-                function: str               # Run the str() function
-                args: Hello                 # with the argument "Hello"
+                function: str("Hello")      # Run the str() function with the argument "Hello"
 
 The `url:` section is a name - mapping dictionary. The names are just unique
 identifiers. The mappings have these keys:
@@ -345,8 +344,8 @@ customisations:
                   headers:                  # Override HTTP headers
                       Content-Type: text/plain
                 500:
-                  function: config_error_page.show_error    # Show this functions output
-                  args: [=status_code, =kwargs, =handler]   # These are the default arguments passed
+                  # Call your function errors.show with the predefined parameters available
+                  function: errors.show(status_code, kwargs, handler)
                   headers:                                  # Override HTTP headers
                       Cache-Control: no-cache
 
@@ -417,9 +416,8 @@ The `schedule:` section schedules functions to run at specific times or on
 startup. It has a name - schedule mapping. The names are unique identifiers. The
 schedules have the following keys:
 
-- `function:` name of the function to run
-- `args:` positional arguments for the function. By default, nothing is passed
-- `kwargs:` keyword arguments for the function. By default, nothing is passed
+- `function:` name of the function or expression to run. (If `function:` is the
+  function name, you can optionally add `args:` and `kwargs:`)
 - `startup`: True to run the function on startup (default: False)
 
 It also accepts a timing that is based on the [crontab format][crontab]. Here is
@@ -577,6 +575,13 @@ this calls `utils.get_root('URLROOT', 'test', x=1)`:
     :::yaml
     variables:
       URLROOT:
+        function: utils.get_root(key, 'test', x=1)
+
+This is another way of doing the same thing:
+
+    :::yaml
+    variables:
+      URLROOT:
         function: utils.get_root
         args: [=key, 'test']
         kwargs: {x: 1}
@@ -587,8 +592,8 @@ to `$HOME` only if it's not already defined.
     :::yaml
     variables:
       HOME:
-        function: utils.get_home
-        args: []
+        default:
+            function: utils.get_home()
 
 (Note: The function arguments cannot be variables as of now.)
 
@@ -599,42 +604,13 @@ practice, read [deployment patterns](../deploy/).
 
 ### Conditional variables
 
-A useful pre-defined function that you can use is `condition`. This sets the
-variable based on a condition. This example sets `$DEBUG` based on `$OS`:
+You can set variables based on a conditional expression. For example, this sets
+`$PORT` based on `$OS`:
 
     :::yaml
     variables:
         PORT:
-          function: condition                   # Set value as condition(...)
-          args:                                 # Pass a dictionary
-              "'windows' in $OS.lower()": 4444  # On Windows, run on port 4444
-              "'linux' in $OS.lower()": 8888    # On Linux, in port 8888
-          default: 9999                         # By default, in port 9999
-
-This is the same `condition({"'windows' in $OS.lower()': 4444,  ...})`
-
-- The keys are conditions. They are evaluated as Python expressions
-- Any `$` variables in the keys are substituted with their current values
-- If the result of the condition is true, the value is used. Otherwise, the next condition is evaluated
-- If no condition is valid, the `default` value is used.
-
-The same can be achieved using a slightly different syntax:
-
-    :::yaml
-    variables:
-        PORT:
-          function: condition                   # Set value as condition(...)
-          args:                                 # Pass a dictionary
-              - "'windows' in $OS.lower()"      # On Windows
-              - 4444                            # run on port 4444
-              - 'linux' in $OS.lower()"         # On Linux
-              - 8888                            # Run on port 8888
-              - 9999                            # By default, in port 9999
-
-Instead of a dictionary of (condition, value) pairs, we pass a list of
-(condition1, value1, condition2, value2, ... [default]). If there are an odd
-number of values, the last is treated as the default value.
-
+          function: 4444 if 'windows' if "$OS".lower() else 8888
 
 ## YAML inheritence
 

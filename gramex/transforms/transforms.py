@@ -1,4 +1,6 @@
+import ast
 import six
+import importlib
 import tornado.gen
 import gramex.transforms
 from types import GeneratorType
@@ -21,39 +23,99 @@ def _arg_repr(arg):
     return repr(arg)                    # "x" becomes '"x"', 1 becomes '1', etc
 
 
+def _full_name(tree):
+    '''Decompile ast tree for "x", "module.x", "package.module.x", etc'''
+    if isinstance(tree, ast.Name):
+        return tree.id
+    elif isinstance(tree, ast.Attribute):
+        parent = _full_name(tree.value)
+        return parent + '.' + tree.attr if parent is not None else parent
+    return None
+
+
+def module_names(node, vars):
+    '''
+    Collects a list of modules mentioned in an AST tree. Ignores things in vars
+
+    visitor = ModuleNameVisitor()
+    visitor.visit(ast.parse(expression))
+    visitor.modules
+    '''
+    context = []
+    modules = set()
+
+    def visit(node):
+        if not hasattr(node, '_fields'):
+            return
+        for child in ast.iter_child_nodes(node):
+            if isinstance(child, ast.Name):
+                if len(context) and context[-1]:
+                    module = [child.id]
+                    for p in context[::-1]:
+                        if p is not None:
+                            module.append(p)
+                        else:
+                            break
+                    if len(module) and module[0] not in vars:
+                        module.pop()
+                        while len(module):
+                            module_name = '.'.join(module)
+                            try:
+                                importlib.import_module(module_name)
+                            except ImportError:
+                                module.pop()
+                            else:
+                                modules.add(module_name)
+                                break
+            context.append(child.attr if isinstance(child, ast.Attribute) else None)
+            visit(child)
+            context.pop()
+
+    visit(node)
+    return modules
+
+
 def build_transform(conf, vars=None, filename='transform', cache=False):
     '''
-    Converts a function configuration into a callable function. For e.g.::
+    Converts an expression into a callable function. For e.g.::
+
+        function: json.dumps("x", separators: [",", ":"])
+
+    translates to::
+
+        fn = build_transform(conf={
+            'function': 'json.dumps("x", separators: [",", ":"])',
+        })
+
+    which becomes::
+
+        def transform(_val):
+            import json
+            result = json.dumps("x", separators=[",", ":""])
+            return result if isinstance(result, GeneratorType) else (result,)
+
+    The same can also be achieved via::
 
         function: json.dumps
         args: ["x"]
         kwargs:
             separators: [",", ":"]
 
-    translates to::
+    Any Python expression iss also allowed. The following are valid functions::
 
-        fn = build_transform(conf={
-            'function': 'json.dumps',
-            'args': ['x']
-            'kwargs': {'separators': [',', ':']}
-        })
-
-    which becomes::
-
-        def transform(_val):
-            result = json.dumps(
-                'x',
-                separators=[',', ':']
-            )
-            return result if isinstance(result, GeneratorType) else (result,)
+        function: 1                 # returns 1
+        function: _val + 1          # Increments the input parameter by 1
+        function: json.dumps(_val)  # Returns the input as a string
+        function: json.dumps        # This is the same as json.dumps(_val)
 
     ``build_transform`` also takes an optional ``filename=`` parameter that sets
     the "filename" of the returned function. This is useful for log messages.
 
-    It also accepts an optional ``cache=`` parameter
+    It takes an optional ``cache=True`` that permanently caches the transform.
+    The default is ``False`` that re-imports the function's module if changed.
 
-    The returned function takes a single argument by default. You can change the
-    arguments it accepts using ``vars``. For example::
+    The returned function takes a single argument called ``_val`` by default. You
+    can change the arguments it accepts using ``vars``. For example::
 
         fn = build_transform(..., vars={'x': None, 'y': 1})
 
@@ -70,27 +132,23 @@ def build_transform(conf, vars=None, filename='transform', cache=False):
     In the ``conf`` parameter, ``args`` and ``kwargs`` values are interpreted
     literally. But values starting with ``=`` like ``=args`` are treated as
     variables. (Start ``==`` to represent a string that begins with ``=``.) For
-    example, when this is called with ``vars={"args": {}}``::
+    example, when this is called with ``vars={"handler": None}``::
 
         function: json.dumps
-        args: '=args["data"]'
+        args: =handler
         kwargs:
-            separators:
-                - =args["comma"]
-                - =args["colon"]
+            key: abc
+            name: =handler.name
 
     becomes::
 
-        def transform(args={}):
-            return json.dumps(
-                args["data"],
-                separators=[args["comma"], args["colon"]]
-            )
+        def transform(handler=None):
+            return json.dumps(handler, key="abc", name=handler.name)
     '''
     # Ensure that the transform is a dict. This is a common mistake. We forget
     # the pattern: prefix
     if not hasattr(conf, 'items'):
-        raise ValueError('transform: needs {pattern: spec} dicts, but got %s' % repr(conf))
+        raise ValueError('transform needs {function: name}. Got %s' % repr(conf))
 
     conf = {key: val for key, val in conf.items() if key in {'function', 'args', 'kwargs'}}
 
@@ -98,73 +156,70 @@ def build_transform(conf, vars=None, filename='transform', cache=False):
     if vars is None:
         vars = {'_val': None}
 
-    if 'function' not in conf:
+    if 'function' not in conf or not conf['function']:
         raise KeyError('No function in conf %s' % conf)
 
-    name = conf['function']
-    # gramex.transforms.* can be specified without the gramex.transforms prefix
-    if hasattr(gramex.transforms, name):
-        name = 'gramex.transforms.' + name
-    function = locate(name)
-    if function is None:
-        raise NameError('Cannot find function %s' % name)
+    # Get the name of the function in case it's specified as a function call
+    # expr is the full function / expression, e.g. six.text_type("abc")
+    # tree is the ast result
+    expr = conf['function']
+    tree = ast.parse(expr)
+    if len(tree.body) != 1 or not isinstance(tree.body[0], ast.Expr):
+        raise ValueError('function: must be an Python function or expression, not %s', expr)
 
-    # Get module name. Ideally, we need a more robust mechanism. For example,
-    # six methods may report their module_name as __builtin__. Avoid that.
-    # Also, avoid importing builtins
-    module_name = getattr(function, '__module__', None)
-    if name.startswith('six.'):
-        module_name = 'six'
-    if module_name in ('builtins', '__builtin__'):
-        module_name = None
+    # Check whether to use the expression as is, or construct the expression
+    # If expr is like "x" or "module.x", construct it if it's callable
+    # Else, use the expression as-is
+    function_name = _full_name(tree.body[0].value)
+    modules = set()
+    if function_name is not None:
+        function = locate(function_name, modules=['gramex.transforms'])
+        if function is None:
+            raise NameError('Cannot find function %s' % function_name)
+        if callable(function):
+            if 'args' in conf:
+                # If args is not a list, convert to a list with that value
+                args = conf['args'] if isinstance(conf['args'], list) else [conf['args']]
+            else:
+                # If args is not specified, use vars' keys as args
+                args = ['=%s' % var for var in vars.keys()]
+            # Add the function, arguments, and kwargs
+            expr = function_name + '('
+            for arg in args:
+                expr += '%s, ' % _arg_repr(arg)
+            for key, val in conf.get('kwargs', {}).items():
+                expr += '%s=%s, ' % (key, _arg_repr(val))
+            expr += ')'
 
-    # Create the following code:
-    #   def transform(var=default, var=default, ...):
-    #       result = function(arg, arg, kwarg=value, kwarg=value, ...)
+    # Create the code
+    modules = ', '.join(modules | module_names(tree, vars))
     body = [
         'def transform(',
         ', '.join('{:s}={!r:}'.format(var, val) for var, val in vars.items()),
         '):\n',
-        '\timport %s\n' % module_name if module_name else '',
-        '\treload_module(%s)\n' % module_name if module_name and not cache else '',
-        '\tresult = %s(\n' % name,
+        '\timport %s\n' % modules if modules else '',
+        '\treload_module(%s)\n' % modules if modules and not cache else '',
+        '\tresult = %s\n' % expr,
     ]
-
-    if 'args' in conf:
-        args = conf['args']
-        # If args is not a list, convert to a list with that value
-        if not isinstance(args, list):
-            args = [args]
-    else:
-        # If args is not specified, use vars' keys as args
-        args = ['=%s' % var for var in vars.keys()]
-
-    # Add the function, arguments, and kwargs
-    for arg in args:
-        body.append('\t\t%s,\n' % _arg_repr(arg))
-    for key, val in conf.get('kwargs', {}).items():
-        body.append('\t\t%s=%s,\n' % (key, _arg_repr(val)))
 
     # If the result is a generator object, return it. Else, create a list and
     # return that. This ensures that the returned value is always an iterable
-    body += [
-        '\t)\n',
-        '\treturn result if isinstance(result, GeneratorType) else [result,]',
-    ]
+    body.append('\treturn result if isinstance(result, GeneratorType) else [result,]')
 
     # Compile the function with context variables
-    context = {
-        'reload_module': reload_module,
-        'GeneratorType': GeneratorType,
-        'Return': tornado.gen.Return,
-        'AttrDict': AttrDict
-    }
+    context = dict(
+        reload_module=reload_module,
+        GeneratorType=GeneratorType,
+        Return=tornado.gen.Return,
+        AttrDict=AttrDict,
+        **{key: getattr(gramex.transforms, key) for key in gramex.transforms.__all__}
+    )
     code = compile(''.join(body), filename=filename, mode='exec')
     exec(code, context)
 
     # Return the transformed function
     function = context['transform']
-    function.__name__ = str(name)
+    function.__name__ = str(function_name or filename)
     function.__doc__ = str(function.__doc__)
 
     return function

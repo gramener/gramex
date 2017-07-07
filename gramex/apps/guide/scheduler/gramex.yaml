@@ -1,8 +1,6 @@
 schedule:
     run-on-startup:
-        function: logging.info              # Run this function
-        kwargs:                             # Pass the following parameters
-            msg: Scheduled msg (on startup) # The content of the message
+        function: logging.info(msg="Scheduled msg (on startup")
         startup: true
     run-every-hour:
         function: schedule_utils.log_time   # Log the current time

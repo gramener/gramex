@@ -150,8 +150,7 @@ url:
                 column: $USER_DATABASE_USERCOLUMN
             password:
                 column: $USER_DATABASE_PASSWORDCOLUMN
-                function: passlib.hash.sha256_crypt.encrypt
-                kwargs: {salt: $USER_DATABASE_SALT}
+                function: passlib.hash.sha256_crypt.encrypt(content, salt="$USER_DATABASE_SALT")
             redirect:
                 query: next
                 url: /$YAMLURL
@@ -170,9 +169,7 @@ url:
             password:
                 column: $USER_DATABASE_PASSWORDCOLUMN
                 arg: password
-                function: passlib.hash.sha256_crypt.encrypt
-                args: =content
-                kwargs: {salt: $USER_DATABASE_SALT}
+                function: passlib.hash.sha256_crypt.encrypt(content, salt="$USER_DATABASE_SALT")
             redirect:
                 query: next
                 url: /$YAMLURL
@@ -181,8 +178,7 @@ url:
         pattern: /$YAMLURL/user
         handler: FunctionHandler
         kwargs:
-            function: json.dumps
-            args: =handler.session['user']
+            function: json.dumps(handler.session['user'])
             kwargs:
                 indent: 4
             headers:
@@ -210,8 +206,7 @@ url:
             path: $YAMLPATH/secret.html
             auth:
                 condition:                          # Allow only if condition is true
-                    function: six.text_type.endswith              # Call this function
-                    args: [=handler.current_user.email, '.com']   # with these 2 arguments
+                    function: handler.current_user.email.endswith('.com')
     auth/dotorg:
         pattern: /$YAMLURL/dotorg
         handler: FileHandler
@@ -219,8 +214,7 @@ url:
             path: $YAMLPATH/secret.html
             auth:
                 condition:                          # Allow only if condition is true
-                    function: six.text_type.endswith              # Call this function
-                    args: [=handler.current_user.email, '.org']   # with these 2 arguments
+                    function: handler.current_user.email.endswith('.org')
 
     auth/en-male:
         pattern: /$YAMLURL/en-male

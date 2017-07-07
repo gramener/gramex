@@ -79,10 +79,9 @@ In `gramex.yaml`, we pass `APP_ROOT` to the that's set to `$YAMLURL`. For exampl
                 path: $YAMLPATH/template.html         # Using this template
                 transform:
                     "template.html":
-                        function: template            # Convert as a Tornado template
-                        args: =content                # Using the contents of the file (default)
-                        kwargs:                       # Pass it the following parameters
-                            APP_ROOT: $APP_ROOT       # Pass the template the APP_ROOT variable
+                        # Convert to a Tornado template
+                        # Pass the template the APP_ROOT variable
+                        function: template(content, APP_ROOT="$APP_ROOT")
 
 To test this, open the following URLs:
 
