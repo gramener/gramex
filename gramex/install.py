@@ -88,6 +88,7 @@ from pathlib import Path
 from subprocess import Popen, check_output
 from orderedattrdict import AttrDict
 from zipfile import ZipFile
+from orderedattrdict.yamlutils import from_yaml         # noqa
 import gramex
 from gramex.config import ChainConfig, PathConfig, variables, app_log
 
@@ -297,7 +298,7 @@ def save_user_config(appname, value):
         app_config.update({key: value[key] for key in app_keys if key in value})
 
     with user_config_file.open(mode='w', encoding='utf-8') as handle:
-        yaml.dump(user_config, handle, indent=4, default_flow_style=False)
+        yaml.safe_dump(user_config, handle, indent=4, default_flow_style=False)
 
 
 def get_app_config(appname, args):
@@ -414,5 +415,9 @@ def run(cmd, args):
         app_log.info('Gramex %s | %s %s loading...', gramex.__version__, appname, ' '.join(
             ['--%s=%s' % arg for arg in flatten_config(app_config.get('run', {}))]))
         gramex.init(cmd=AttrDict(app=app_config['run']))
+    elif appname in apps_config['user']:
+        # The user configuration has a wrong path. Inform user
+        app_log.error('%s: no directory %s', appname, app_config.target)
+        app_log.error('Run "gramex uninstall %s" and try again.', appname)
     else:
         app_log.error('%s: no directory %s', appname, app_config.target)
