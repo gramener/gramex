@@ -5,11 +5,14 @@
 
 root = true
 
-[*]
+# Apply common styles for most standard text files.
+# Do not apply to * - that covers binary files as well
+[*.{js,html,php,py,css,svg,json,less,yaml,yml,scss,xml,sh,java,bat,R}]
 end_of_line = lf
 insert_final_newline = true
 trim_trailing_whitespace = true
 charset = utf-8
+# Stick to 2-space indenting by default, to conserve space
 indent_style = space
 indent_size = 2
 
@@ -24,7 +27,3 @@ indent_size = 4
 # http://robandlauren.com/2013/11/21/configuring-sublime-text-markdown/
 [*.md]
 trim_trailing_whitespace = false
-
-# 4-space indentation is clearer on YAML files
-[*.yaml]
-indent_size = 4
