@@ -34,7 +34,7 @@ from copy import deepcopy
 from six import string_types
 from pydoc import locate as _locate
 from yaml import Loader, MappingNode
-from json import JSONEncoder, JSONDecoder
+from json import loads, JSONEncoder, JSONDecoder
 from yaml.constructor import ConstructorError
 from orderedattrdict import AttrDict, DefaultAttrDict
 
@@ -491,13 +491,15 @@ class CustomJSONEncoder(JSONEncoder):
     Encodes object to JSON, additionally converting datetime into ISO 8601 format
     '''
     def default(self, obj):
+        if hasattr(obj, 'to_dict'):
+            # Slow but reliable. Handles conversion of numpy objects, mixed types, etc.
+            return loads(obj.to_json(orient='records', date_format='iso'))
         if isinstance(obj, datetime.datetime):
             # Use local timezone if no timezone is specified
             if obj.tzinfo is None:
                 obj = obj.replace(tzinfo=dateutil.tz.tzlocal())
             return obj.isoformat()
-        else:
-            return super(CustomJSONEncoder, self).default(obj)
+        return super(CustomJSONEncoder, self).default(obj)
 
 
 class CustomJSONDecoder(JSONDecoder):

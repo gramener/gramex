@@ -1,8 +1,10 @@
+# -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 import json
 import unittest
 import datetime
 import dateutil
+import pandas as pd
 from orderedattrdict import AttrDict
 from gramex.config import CustomJSONEncoder, CustomJSONDecoder
 
@@ -27,6 +29,12 @@ class TestJSON(unittest.TestCase):
         result = {'str': 'x', 'bool': True, 'num': 1, 'date': date.isoformat()}
         self.assertEqual(
             json.dumps(data, cls=CustomJSONEncoder),
+            json.dumps(result))
+
+        df1 = [{'x': 1.0, 'y': 'σ'}, {'x': None, 'y': None}, {'x': 0.0, 'y': '►'}]
+        result = {'x': df1}
+        self.assertEqual(
+            json.dumps({'x': pd.DataFrame(df1)}, cls=CustomJSONEncoder),
             json.dumps(result))
 
     def test_decoder(self):
