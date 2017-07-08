@@ -7,6 +7,7 @@ import unittest
 from collections import defaultdict
 from orderedattrdict import AttrDict
 import gramex.services.watcher as watcher
+from nose.tools import eq_
 
 _folder = os.path.dirname(os.path.abspath(__file__))
 
@@ -43,7 +44,7 @@ class TestWatch(unittest.TestCase):
             time.sleep(delay)
             if len(self.events[queue]) >= value:
                 break
-        self.assertEqual(len(self.events[queue]), value)
+        eq_(len(self.events[queue]), value)
 
     def other_events(self, key):
         '''
@@ -77,7 +78,7 @@ class TestWatch(unittest.TestCase):
         self.wait_for(('modified', key), result_count)
         self.wait_for(('created', key), result_count)
         # Ensure other events have not fired in the meantime
-        self.assertEqual(other_events, self.other_events(key))
+        eq_(other_events, self.other_events(key))
 
     def test_watch(self):
         # When a file is changed, fire events
@@ -99,7 +100,7 @@ class TestWatch(unittest.TestCase):
             watcher.unwatch('watch-' + key)
             watcher.unwatch('new-watch-' + key)
 
-        # self.assertEqual(list(watcher.observer._handlers.values()), [set()])
+        # eq_(list(watcher.observer._handlers.values()), [set()])
         for key in self.files.keys():
             self.register_and_check_watch(key, name='third-watch', times=10, result_count=1)
 

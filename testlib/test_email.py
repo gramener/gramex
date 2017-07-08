@@ -4,6 +4,7 @@ from unittest import TestCase
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from gramex.services.emailer import message, recipients
+from nose.tools import eq_
 
 
 class TestEmailer(TestCase):
@@ -13,11 +14,11 @@ class TestEmailer(TestCase):
         msg1 = msg1.as_string()
         random.seed(0)
         msg2 = msg2.as_string()
-        self.assertEqual(msg1, msg2)
+        eq_(msg1, msg2)
 
     def test_recipients(self):
         def msg_eq(src, result):
-            self.assertEqual(set(src), set(result))
+            eq_(set(src), set(result))
         msg_eq(recipients(to='a@z'), ['a@z'])
         msg_eq(recipients(to='a@z,b@z'), ['a@z', 'b@z'])
         msg_eq(recipients(to=['a@z', 'b@z']), ['a@z', 'b@z'])
@@ -54,4 +55,4 @@ class TestEmailer(TestCase):
     def check_attachment(self, img):
         msg = message(body='text', attachments=[img])
         img_part = list(msg.walk())[-1]
-        self.assertEqual(img_part.get_content_type(), 'image/jpeg')
+        eq_(img_part.get_content_type(), 'image/jpeg')

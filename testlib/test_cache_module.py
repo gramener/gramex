@@ -16,6 +16,7 @@ from orderedattrdict import AttrDict
 from tornado.template import Template
 from orderedattrdict.yamlutils import AttrDictYAMLLoader
 from pandas.util.testing import assert_frame_equal
+from nose.tools import eq_, ok_
 
 folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'test_cache')
 
@@ -31,22 +32,22 @@ class TestReloadModule(unittest.TestCase):
     def test_reload_module(self):
         # When loaded, the counter is not incremented
         from testlib.test_cache.common import val
-        self.assertEqual(val[0], 0)
+        eq_(val[0], 0)
 
         # On first load, the counter is incremented once
         import testlib.test_cache.mymodule
-        self.assertEqual(val[0], 1)
+        eq_(val[0], 1)
 
         # On second load, it stays cached
         import testlib.test_cache.mymodule      # noqa
-        self.assertEqual(val[0], 1)
+        eq_(val[0], 1)
 
         # The first time, we get the reloaded date. The module may be reloaded
         gramex.cache.reload_module(testlib.test_cache.mymodule)
         count = val[0]
         # On explicit reload_module, it still stays cached
         gramex.cache.reload_module(testlib.test_cache.mymodule)
-        self.assertEqual(val[0], count)
+        eq_(val[0], count)
 
         # Change the module
         pyfile = testlib.test_cache.mymodule.__file__.rstrip('c')
@@ -56,15 +57,15 @@ class TestReloadModule(unittest.TestCase):
 
         # Regular import does not reload
         import testlib.test_cache.mymodule
-        self.assertEqual(val[0], count)
+        eq_(val[0], count)
 
         # ... but reload_module DOES reload, and the counter increments
         gramex.cache.reload_module(testlib.test_cache.mymodule)
-        self.assertEqual(val[0], count + 1)
+        eq_(val[0], count + 1)
 
         # Subsequent call does not reload
         gramex.cache.reload_module(testlib.test_cache.mymodule)
-        self.assertEqual(val[0], count + 1)
+        eq_(val[0], count + 1)
 
 
 class TestOpen(unittest.TestCase):
@@ -84,7 +85,7 @@ class TestOpen(unittest.TestCase):
         def check(reload):
             result, reloaded = gramex.cache.open(path, 'csv', _reload_status=True,
                                                  encoding='utf-8')
-            self.assertEqual(reloaded, reload)
+            eq_(reloaded, reload)
             assert_frame_equal(result, expected)
 
         self.check_file_cache(path, check)
@@ -97,9 +98,9 @@ class TestOpen(unittest.TestCase):
         def check(reload):
             result, reloaded = gramex.cache.open(path, 'json', _reload_status=True,
                                                  object_pairs_hook=OrderedDict)
-            self.assertEqual(reloaded, reload)
-            self.assertTrue(isinstance(result, OrderedDict))
-            self.assertEqual(result, expected)
+            eq_(reloaded, reload)
+            ok_(isinstance(result, OrderedDict))
+            eq_(result, expected)
 
         self.check_file_cache(path, check)
 
@@ -111,9 +112,9 @@ class TestOpen(unittest.TestCase):
         def check(reload):
             result, reloaded = gramex.cache.open(path, 'yaml', _reload_status=True,
                                                  Loader=AttrDictYAMLLoader)
-            self.assertEqual(reloaded, reload)
-            self.assertTrue(isinstance(result, AttrDict))
-            self.assertEqual(result, expected)
+            eq_(reloaded, reload)
+            ok_(isinstance(result, AttrDict))
+            eq_(result, expected)
 
         self.check_file_cache(path, check)
 
@@ -125,10 +126,10 @@ class TestOpen(unittest.TestCase):
         def check(reload):
             result, reloaded = gramex.cache.open(
                 path, 'template', _reload_status=True, encoding='utf-8', autoescape=None)
-            self.assertEqual(reloaded, reload)
-            self.assertTrue(isinstance(result, Template))
-            self.assertEqual(result.generate(name='x'), expected.generate(name='x'))
-            self.assertEqual(result.generate(name='x'), b'<b>x</b>\n')
+            eq_(reloaded, reload)
+            ok_(isinstance(result, Template))
+            eq_(result.generate(name='x'), expected.generate(name='x'))
+            eq_(result.generate(name='x'), b'<b>x</b>\n')
 
         self.check_file_cache(path, check)
 
@@ -147,9 +148,9 @@ class TestOpen(unittest.TestCase):
 
         def check(reload):
             result, reloaded = gramex.cache.open(path, 'md', _reload_status=True, encoding='utf-8')
-            self.assertEqual(reloaded, reload)
-            self.assertTrue(isinstance(result, six.text_type))
-            self.assertEqual(result, expected)
+            eq_(reloaded, reload)
+            ok_(isinstance(result, six.text_type))
+            eq_(result, expected)
 
         self.check_file_cache(path, check)
 
@@ -157,26 +158,26 @@ class TestOpen(unittest.TestCase):
         path = os.path.join(folder, 'data.csv')
         cache = {}
         result, reloaded = gramex.cache.open(path, 'csv', _reload_status=True, _cache=cache)
-        self.assertTrue((path, 'csv') in cache)
+        ok_((path, 'csv') in cache)
 
         # Initially, the file is loaded
-        self.assertEqual(reloaded, True)
+        eq_(reloaded, True)
 
         # Next time, it's loaded from the cache
         result, reloaded = gramex.cache.open(path, 'csv', _reload_status=True, _cache=cache)
-        self.assertEqual(reloaded, False)
+        eq_(reloaded, False)
 
         # If the cache is deleted, it reloads
         del cache[path, 'csv']
         result, reloaded = gramex.cache.open(path, 'csv', _reload_status=True, _cache=cache)
-        self.assertEqual(reloaded, True)
+        eq_(reloaded, True)
 
     def test_multiple_loaders(self):
         # Loading the same file via different callbacks should return different results
         path = os.path.join(folder, 'multiformat.csv')
         data = gramex.cache.open(path, 'csv')
-        self.assertTrue(isinstance(data, pd.DataFrame))
+        ok_(isinstance(data, pd.DataFrame))
         text = gramex.cache.open(path, 'text')
-        self.assertTrue(isinstance(text, string_types))
+        ok_(isinstance(text, string_types))
         none = gramex.cache.open(path, lambda path: None)
-        self.assertTrue(none is None)
+        ok_(none is None)

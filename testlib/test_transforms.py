@@ -11,6 +11,7 @@ from orderedattrdict import AttrDict
 from orderedattrdict.yamlutils import AttrDictYAMLLoader
 from gramex.transforms import build_transform, flattener, badgerfish, template
 from gramex.cache import reload_module
+from nose.tools import eq_, assert_raises
 
 
 def yaml_parse(text):
@@ -24,7 +25,7 @@ def remove(path):
 
 @coroutine
 def gen_str(val):
-    'Sample coroutine method'
+    '''Sample coroutine method'''
     yield Task(str, val)
 
 
@@ -48,12 +49,12 @@ class BuildTransform(unittest.TestCase):
             print('Tested against test case')                   # noqa
             dis(tgt)
             print(b_code.co_names)                              # noqa
-        self.assertEqual(src, tgt, '%s: code mismatch' % msg)
+        eq_(src, tgt, '%s: code mismatch' % msg)
 
         src, tgt = a_code.co_argcount, b_code.co_argcount
-        self.assertEqual(src, tgt, '%s: argcount %d != %d' % (msg, src, tgt))
+        eq_(src, tgt, '%s: argcount %d != %d' % (msg, src, tgt))
         src, tgt = a_code.co_nlocals, b_code.co_nlocals
-        self.assertEqual(src, tgt, '%s: nlocals %d != %d' % (msg, src, tgt))
+        eq_(src, tgt, '%s: nlocals %d != %d' % (msg, src, tgt))
 
     def check_transform(self, transform, yaml_code, vars=None, cache=True):
         fn = build_transform(yaml_parse(yaml_code), vars=vars, cache=cache)
@@ -61,15 +62,15 @@ class BuildTransform(unittest.TestCase):
         return fn
 
     def test_invalid_function_raises_error(self):
-        with self.assertRaises(KeyError):
+        with assert_raises(KeyError):
             build_transform({})
-        with self.assertRaises(KeyError):
+        with assert_raises(KeyError):
             build_transform({'function': ''})
-        with self.assertRaises(ValueError):
+        with assert_raises(ValueError):
             build_transform({'function': 'x = 1'})
-        with self.assertRaises(ValueError):
+        with assert_raises(ValueError):
             build_transform({'function': 'x(); y()'})
-        with self.assertRaises(ValueError):
+        with assert_raises(ValueError):
             build_transform({'function': 'import json'})
 
     def test_expr(self):
@@ -255,16 +256,16 @@ class BuildTransform(unittest.TestCase):
             function: testlib.dummy.value
             args: []
         ''', cache=False)
-        self.assertEqual(fn(), [1])
+        eq_(fn(), [1])
         fn = self.check_transform(transform, 'function: testlib.dummy.value()', cache=False)
-        self.assertEqual(fn(), [1])
+        eq_(fn(), [1])
 
         remove(dummy.replace('.py', '.pyc'))
         with io.open(dummy, 'w', encoding='utf-8') as handle:
             handle.write('def value():\n\treturn 100\n')
-        self.assertEqual(fn(), [100])
+        eq_(fn(), [100])
         fn = self.check_transform(transform, 'function: testlib.dummy.value()', cache=False)
-        self.assertEqual(fn(), [100])
+        eq_(fn(), [100])
 
     @classmethod
     def tearDownClass(cls):
@@ -285,7 +286,7 @@ class Badgerfish(unittest.TestCase):
           div:
             p: text
         ''')
-        self.assertEqual(
+        eq_(
             result,
             '<!DOCTYPE html>\n<html lang="en"><p>text</p><div><p>text</p></div></html>')
 
@@ -301,7 +302,7 @@ class Badgerfish(unittest.TestCase):
                 'kwargs': {'separators': [',', ':']},
             }
         })
-        self.assertEqual(
+        eq_(
             result,
             '<!DOCTYPE html>\n<html><json>{"x":1,"y":2}</json></html>')
 
@@ -310,7 +311,7 @@ class Template(unittest.TestCase):
     'Test gramex.transforms.template'
     def check(self, content, expected, **kwargs):
         result = yield template(content, **kwargs)
-        self.assertEqual(result, expected)
+        eq_(result, expected)
 
     def test_template(self):
         self.check('{{ 1 }}', '1')
@@ -330,12 +331,12 @@ class Flattener(unittest.TestCase):
         flat = flattener(fieldmap)
         src = {'x': 'X', 'y': {'z': 'Y.Z'}, 'z': ['Z.0', 'Z.1']}
         out = flat(src)
-        self.assertEqual(out.keys(), fieldmap.keys())
-        self.assertEqual(out['all1'], src)
-        self.assertEqual(out['all2'], src)
-        self.assertEqual(out['x'], src['x'])
-        self.assertEqual(out['y.z'], src['y']['z'])
-        self.assertEqual(out['z.1'], src['z'][1])
+        eq_(out.keys(), fieldmap.keys())
+        eq_(out['all1'], src)
+        eq_(out['all2'], src)
+        eq_(out['x'], src['x'])
+        eq_(out['y.z'], src['y']['z'])
+        eq_(out['z.1'], src['z'][1])
 
     def test_list(self):
         # Integer values must be interpreted as array indices
@@ -347,10 +348,10 @@ class Flattener(unittest.TestCase):
         flat = flattener(fieldmap)
         src = [0, 1, [2]]
         out = flat(src)
-        self.assertEqual(out.keys(), fieldmap.keys())
-        self.assertEqual(out['0'], src[0])
-        self.assertEqual(out['1'], src[1])
-        self.assertEqual(out['2.0'], src[2][0])
+        eq_(out.keys(), fieldmap.keys())
+        eq_(out['0'], src[0])
+        eq_(out['1'], src[1])
+        eq_(out['2.0'], src[2][0])
 
     def test_invalid(self):
         # None of these fields are valid. Don't raise an error, just ignore
@@ -366,16 +367,16 @@ class Flattener(unittest.TestCase):
             'list-invalid': [],
         }
         out = flattener(fieldmap)({})
-        self.assertEqual(len(out.keys()), 0)
+        eq_(len(out.keys()), 0)
         fieldmap = {
             0.0: 'float-invalid',
         }
         out = flattener(fieldmap)({})
-        self.assertEqual(len(out.keys()), 0)
+        eq_(len(out.keys()), 0)
 
     def test_default(self):
         fieldmap = {'x': 'x', 'y.a': 'y.a', 'y.1': 'y.1', 'z.a': 'z.a', '1': 1}
         default = 1
         flat = flattener(fieldmap, default=default)
         out = flat({'z': {}, 'y': []})
-        self.assertEqual(out, {key: default for key in fieldmap})
+        eq_(out, {key: default for key in fieldmap})
