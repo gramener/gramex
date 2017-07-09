@@ -97,6 +97,7 @@ classes: toc
 
 **Exercise**: TBD
 
-## [Roadmap](roadmap)
+## Additiona links
 
-## [Reference](https://learn.gramener.com/gramex/gramex.html)
+- [Gramex roadmap](https://docs.google.com/spreadsheets/d/1D2xScjMWl29JtuuVP7PlsLM3OPJuMBr0VNvzzoR4HwQ/edit#gid=885343597)
+- [API reference](https://learn.gramener.com/gramex/gramex.html)

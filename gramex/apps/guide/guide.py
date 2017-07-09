@@ -2,48 +2,41 @@
 Utility functions for gramex-guide
 '''
 
-import io
 import os
 import yaml
 import string
 import markdown
-from orderedattrdict import AttrDict, DefaultAttrDict
+from orderedattrdict import DefaultAttrDict
 import gramex
 
 
-_template = AttrDict(
-    root=os.path.dirname(os.path.abspath(__file__)),
-    markdown=markdown.Markdown(extensions=[
-        'markdown.extensions.extra',
-        'markdown.extensions.meta',
-        'markdown.extensions.codehilite',
-        'markdown.extensions.smarty',
-        'markdown.extensions.toc',
-    ], output_format='html5'),
-)
-
-
-def load_markdown_template(event=None):
-    with io.open(os.path.join(_template.root, 'markdown.template'), encoding='utf-8') as handle:
-        _template.template = string.Template(handle.read())
+folder = os.path.dirname(os.path.abspath(__file__))
+template_path = os.path.join(folder, 'markdown.template')
+md = markdown.Markdown(extensions=[
+    'markdown.extensions.extra',
+    'markdown.extensions.meta',
+    'markdown.extensions.codehilite',
+    'markdown.extensions.smarty',
+    'markdown.extensions.headerid',
+    'markdown.extensions.sane_lists',
+    'markdown.extensions.toc',
+], output_format='html5')
+stringtemplate = gramex.cache.opener(string.Template, read=True)
 
 
 def markdown_template(content, handler):
+    # Template has optional parameters like $title. DefaultAttrDict prevents errors.
     kwargs = DefaultAttrDict(str)
-    kwargs.body = _template.markdown.convert(content)
-    if 'xsrf' in content:
-        handler.xsrf_token
-    for key, val in _template.markdown.Meta.items():
-        kwargs[key] = val[0]
     # GUIDE_ROOT has the absolute URL of the Gramex guide
     kwargs.GUIDE_ROOT = gramex.config.variables.GUIDE_ROOT
-    return _template.template.substitute(kwargs)
+    kwargs.body = md.convert(content)
+    for key, val in md.Meta.items():
+        kwargs[key] = val[0]
+    if 'xsrf' in content:
+        handler.xsrf_token
+    return gramex.cache.open(template_path, stringtemplate).substitute(kwargs)
 
 
 def config(handler):
-    'Dump the final resolved config'
+    '''Dump the final resolved config'''
     return yaml.dump(gramex.conf, default_flow_style=False)
-
-
-# On startup, load the markdown template once
-load_markdown_template()

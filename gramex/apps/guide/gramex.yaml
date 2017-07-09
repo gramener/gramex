@@ -23,23 +23,10 @@ handlers:
             - ".*"                      # Hide only dotfiles, allow gramex.yaml
 
 url:
-    welcome:
-        pattern: /$YAMLURL/welcome
-        handler: FileHandler
-        cache: {duration: 300}
-        kwargs:
-            path: $YAMLPATH/index.html
-    final-config:
-        pattern: /$YAMLURL/final-config
-        handler: FunctionHandler
-        kwargs:
-            function: guide.config
-            headers:
-                Content-Type: text/yaml
+    # Default FileHandler. Serve all .md files as Markdown
     markdown:
         pattern: /$YAMLURL/(.*)
         handler: FileHandler
-        cache: {duration: 300}
         kwargs:
             path: $YAMLPATH
             default_filename: README.md
@@ -50,24 +37,33 @@ url:
                     encoding: utf-8
                     headers:
                         Content-Type: text/html
+            headers:
+                Cache-Control: public, max-age=300
+    # The welcome page is the first page that's served when users login.
+    # Normally, / points README.md. Make /welcome point to the static welcome page
+    welcome:
+        pattern: /$YAMLURL/welcome
+        handler: FileHandler
+        kwargs:
+            path: $YAMLPATH/index.html
+            headers:
+                Cache-Control: public, max-age=300
+    # The final *computed* gramex.yaml configuration
+    final-config:
+        pattern: /$YAMLURL/final-config
+        handler: FunctionHandler
+        kwargs:
+            function: guide.config
+            headers:
+                Content-Type: text/yaml
+    # Just serve the root gramex.yaml file
     root-config:
         pattern: /$YAMLURL/root.gramex.yaml
         handler: FileHandler
-        cache: {duration: 300}
         kwargs:
             path: $GRAMEXPATH/gramex.yaml
-    guide-markdown:
-        pattern: /$YAMLURL/(roadmap)
-        handler: FileHandler
-        cache: {duration: 300}
-        kwargs:
-            path: $YAMLPATH/*.md
-            transform:
-                "*.md":
-                    function: guide.markdown_template(content, handler)
-                    encoding: utf-8
-                    headers:
-                        Content-Type: text/html
+            headers:
+                Cache-Control: public, max-age=300
 
     # Static files are cached on the browser
     static:
@@ -78,20 +74,15 @@ url:
         kwargs:
             path: $YAMLPATH/*
             headers:
-                Cache-Control: public, max-age=300      # Cache on the browser for 5 minutes
+                Cache-Control: public, max-age=300
 
     # /path.source shows the raw file as plain text
     source:
         priority: +1
         pattern: /$YAMLURL/(.*)\.source
         handler: FileHandler
-        cache: {duration: 300}
         kwargs:
             path: $YAMLPATH
-            Content-Type: text/plain
-
-watch:
-    markdown_template:
-        paths: $YAMLPATH/markdown.template
-        on_created: guide.load_markdown_template
-        on_modified: guide.load_markdown_template
+            headers:
+                Content-Type: text/plain
+                Cache-Control: public, max-age=300

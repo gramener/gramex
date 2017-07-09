@@ -22,6 +22,53 @@ disable the `--browser` option, use `--browser=` (note the `=` at the end.)
 You can add it to [gramex.yaml](../config/) under `app` as `browser: true`,
 `browser: url` or `browser: false`.
 
+## Reloading
+
+**Configurations auto-reload**. By default, Gramex auto-reloads `gramex.yaml`
+configurations (including any imported files). If you have a
+[FunctionHandler](../functionhandler/) defined as:
+
+    :::yaml
+    url:
+        pattern: /$YAMLURL/func/
+        handler: FunctionHandler
+        kwargs:
+            function: yourmodule.run
+
+When `yourmodule.py` is reloaded, the FunctionHandler automatically recompiles
+the new function (Gramex 1.19 onwards.)
+
+**Modules can auto-reload**. If you are manually importing any functions via an
+`import` statement in Python or template code, call
+[gramex.cache.reload_module](../cache/#module-caching). This ensures that modules
+are reloaded if required. For example:
+
+    :::python
+    import yourmodule1
+    import yourmodule2
+    import gramex.cache
+    gramex.cache.reload_module(yourmodule1, yourmodule2)
+
+Gramex can also [auto restart][restart] on Python files change when you
+run Gramex with ``gramex --settings.debug=true``. **This uses a lot of CPU**. It
+also serves tracebacks on error. Do not enable this on production systems.
+
+**Files can auto-reload**. When using [FileHandler](../filehandler/), files and
+modules are always auto-reloaded. So are
+[Login templates](../auth/#login-templates),
+[DataHandler templates](../datahandler/#datahandler-templates),
+[QueryHandler templates](../queryhandler/#queryhandler-templates), etc.
+
+When your code loads files, use [gramex.cache.open](../cache/#data-caching). This
+auto-reloads files if they have changed.
+
+**Queries can auto-reload**. For SQL data, use
+[gramex.cache.query](../cache/#query-caching). This re-runs the query if state
+has changed.
+
+[restart]: http://www.tornadoweb.org/en/stable/autoreload.html
+
+
 ## Debug mode
 
 Run Gramex with a `--settings.debug` to trigger [debug mode][debug-mode] in
@@ -96,25 +143,6 @@ A few suggestions:
 4. Remove all print statements before committing your code into the `master` or
    `dev` branch.
 
-
-## Reloading
-
-Gramex can [autoreload](http://www.tornadoweb.org/en/stable/autoreload.html) if
-any dependent Python files change. To enable this behaviour, use the following
-settings in `gramex.yaml`:
-
-    :::yaml
-    app:
-        settings:
-            debug: true
-
-Or use it from the command line:
-
-    :::shell
-    gramex --settings.debug=true
-
-**This uses a lot of CPU**. It also serves tracebacks on error. Do not enable
-this on production systems.
 
 ## Profiling
 
