@@ -85,7 +85,8 @@ class BuildTransform(unittest.TestCase):
         self.check_transform(transform, '''function: '"abc"' ''', vars={})
 
         def transform():
-            import gramex.cache, pandas     # noqa: build_transform does this
+            import gramex.cache
+            import pandas
             result = gramex.cache.open('x', pandas.read_csv).to_html()
             return result if isinstance(result, GeneratorType) else [result, ]
         fn = 'function: gramex.cache.open("x", pandas.read_csv).to_html()'

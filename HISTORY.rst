@@ -3,6 +3,35 @@
 History
 -------
 
+1.19 (2017-07-09)
+~~~~~~~~~~~~~~~~~
+This is a minor enhancement release with
+
+- There was a bug where sessions were not being flushed, forcing users to log in
+  when Gramex is restarted. This if fixed.
+  `#84 <https://code.gramener.com/s.anand/gramex/issues/84>`_
+- Instead of using ``args:`` and ``kwargs:`` in gramex.yaml, you can now use
+  ``function: method(arg, arg, key=val, ...)``.
+- The user interface of the default login templates is improved. Here is the new
+  `DBAuth login template`_.
+- `Reloading`_ of configurations, modules and files is seamless. You don't need
+  to restart Gramex when your Python code or templates change.
+- `Query caching`_ via ``gramex.cache.query()`` caches SQL query results
+- `DataHandler templates`_ and `QueryHandler templates`_ let you customize the
+  output of these handlers arbitrarily
+- :py:func:`gramex.cache.open` supports new formats: ``md`` for Markdown, ``xls`` or
+  ``xlsx`` for Excel, and ``template`` for Tornado templates.
+- :py:func:`gramex.cache.opener` makes it easier to create callbacks for
+  :py:func:`gramex.cache.open`.
+- :py:class:`gramex.config.CustomEncoder` is a custom JSON encoder that encodes
+  objects that contain DataFrames. This makes it easy to JSON dump objects that
+  contain DataFrames.
+- The `deploy yaml`_ configuration now protects against XSS attacks as well.
+- If Gramex is re-installed in a different location, the guide does not load. The
+  error message now asks the user to uninstall the guide.
+  `#76 <https://code.gramener.com/s.anand/gramex/issues/76>`_
+
+
 1.18 (2017-06-29)
 ~~~~~~~~~~~~~~~~~
 This is a minor enhancement release with several critical bugfixes.
@@ -12,12 +41,13 @@ This is a minor enhancement release with several critical bugfixes.
   ``conda update anaconda``.
 - `Installation`_ is simpler. It's a one-line install using ``pip`` (no ``conda``).
 - Gramex runs on Python 3.6 (as well as Python 3.5 and 2.7)
-- `Module caching`_ is now available via ``gramex.cache.reload_module()``. You
-  can refresh Python files without restarting Gramex.
+- `Module caching`_ is now available via :py:func:`gramex.cache.reload_module()`.
+  You can refresh Python files without restarting Gramex.
 - `Data caching`_ is more robust. It checks file sizes in addition to the
-  timestamp. ``gramex.cache.open()`` now supports loading Tornado templates,
-  apart from various data / text files. It also supports loading the same file
-  via multiple callbacks (e.g. loading a CSV file as ``csv`` and ``text``.)
+  timestamp. :py:func:`gramex.cache.open()` now supports loading Tornado
+  templates, apart from various data / text files. It also supports loading the
+  same file via multiple callbacks (e.g. loading a CSV file as ``csv`` and
+  ``text``.)
 - `Login templates`_ are now reloaded every time the template changes.
 - Access logs enabled by default. These are weekly CSV files stored at:
   - Windows: %LOCALAPPDATA%\Gramex Data\logs\access.csv
@@ -75,7 +105,7 @@ gramex.yaml ``app:`` section, add ``login_url: /login`` to revert the change.
     - Auth handlers' `auth redirection`_ supports ``?next=`` by default
     - `Login templates`_ are documented
     - `SimpleAuth`_ now lets you add other attributes (e.g. roles) to the user object
-- `Data caching`_ is easier with the ``gramex.cache.open()`` method
+- `Data caching`_ is easier with the :py:func:`gramex.cache.open()` method
 - A major bug related to `watch`_ is fixed.
 - Some bugs related to JSONStore (used for session storage) are fixed
 
@@ -103,10 +133,10 @@ gramex.yaml ``app:`` section, add ``login_url: /login`` to revert the change.
   run a custom function when it receives a tweet
 - The `watch`_ service supports wildcards and directories in paths. You can watch
   for changes to a pattern of files or any files under a directory
-- ``gramex.transforms.flattener`` transform that flattens JSON hierarchies based
+- :py:func:`gramex.transforms.flattener` transform that flattens JSON hierarchies based
   on a custom field mapping
-- ``gramex.init(force_reload=True)`` reloads services. To support this,
-  ``build_transform`` is no longer cached.
+- :py:func:`gramex.init` supports a ``force_reload=True`` that reloads services.
+  To support this, :py:func:`gramex.transforms.build_transform` is no longer cached.
 
 1.14 (2016-08-11)
 ~~~~~~~~~~~~~~~~~
@@ -427,3 +457,8 @@ There are two changes that may disrupt your code:
 .. _HTML email: https://learn.gramener.com/guide/email/#html-email
 .. _Reusing configurations: https://learn.gramener.com/guide/config/#reusing-configurations
 .. _Static file caching: https://learn.gramener.com/guide/cache/#cache-static-files
+.. _query caching: https://learn.gramener.com/guide/cache/#query-caching
+.. _DataHandler templates: https://learn.gramener.com/guide/datahandler/#datahandler-templates
+.. _QueryHandler templates: https://learn.gramener.com/guide/queryhandler/#queryhandler-templates
+.. _Reloading: https://learn.gramener.com/guide/debug/#reloading
+.. _DBAuth login template: https://learn.gramener.com/guide/auth/dbsimple

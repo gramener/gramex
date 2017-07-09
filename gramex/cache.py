@@ -26,12 +26,16 @@ def opener(callback, read=False):
     Converts any function that accepts a string or handle as its parameter into
     a function that takes the first parameter from a file path.
 
-    For example, ``jsonload = opener(json.load)`` allows ``jsonload('x.json')``
-    to return the parsed JSON contents of ``x.json``.
+    Here are a few examples::
 
-    For example, ``template = opener(string.Template, read=True)`` allows
-    ```template('abc.txt').substitute(x=val)`` to load ``abc.txt``, convert it
-    into a String template, and substitute values.
+        jsonload = opener(json.load)
+        jsonload('x.json')      # opens x.json and runs json.load(handle)
+        gramex.cache.open('x.json', jsonload)   # Loads x.json, cached
+
+        # read=True parameter passes the contents (not handle) to the function
+        template = opener(string.Template, read=True)
+        template('abc.txt').substitute(x=val)
+        gramex.cache.open('abc.txt', template).substitute(x=val)
 
     Keyword arguments applicable for ``io.open`` are passed to ``io.open``. These
     default to ``io.open(mode='r', buffering=-1, encoding='utf-8',

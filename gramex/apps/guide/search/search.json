@@ -135,6 +135,9 @@
     "module-caching": {
       "Module caching": -1
     },
+    "query-caching": {
+      "Query caching": -1
+    },
     "server-caching": {
       "Server caching": -1
     },
@@ -168,6 +171,9 @@
     },
     "configuration-syntax": {
       "Configuration syntax": -1
+    },
+    "custom-http-headers": {
+      "Custom HTTP Headers": -1
     },
     "custom-mime-types": {
       "Custom MIME types": -1
@@ -225,8 +231,23 @@
     "datahandler-insert": {
       "DataHandler insert": -1
     },
+    "datahandler-on-databases": {
+      "DataHandler on databases": -1
+    },
+    "datahandler-on-files": {
+      "DataHandler on files": -1
+    },
+    "datahandler-on-sqlite3": {
+      "DataHandler on sqlite3": -1
+    },
+    "datahandler-templates": {
+      "DataHandler templates": -1
+    },
     "datahandler-update": {
       "DataHandler update": -1
+    },
+    "datahandler-usage": {
+      "DataHandler usage": -1
     }
   },
   "debug": {
@@ -359,18 +380,10 @@
     }
   },
   "i18n": {
-    "": {
-      "Internationalisation": -1
-    },
-    "client": {
-      "Client": -1
-    },
-    "internationalisation": {
-      "Internationalisation": -1
-    },
-    "server": {
-      "Server": -1
-    }
+    "": {},
+    "client": {},
+    "internationalisation": {},
+    "server": {}
   },
   "install": {
     "": {
@@ -431,6 +444,9 @@
     },
     "queryhandler-post": {
       "QueryHandler POST": -1
+    },
+    "queryhandler-templates": {
+      "QueryHandler templates": -1
     }
   },
   "scheduler": {
