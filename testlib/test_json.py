@@ -60,7 +60,7 @@ class TestJSON(unittest.TestCase):
             'y': date
         })
         eq_(json.loads(data, cls=CustomJSONDecoder, object_pairs_hook=AttrDict),
-                         AttrDict([('x', 1), ('y', date)]))
+            AttrDict([('x', 1), ('y', date)]))
 
     def check_roundtrip(self, val):
         encoded = json.dumps(val, cls=CustomJSONEncoder)

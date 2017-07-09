@@ -7,8 +7,8 @@ import sqlalchemy as sa
 from pathlib import Path
 import pandas.util.testing as pdt
 from nose.plugins.skip import SkipTest
-from . import server, TestGramex
-import gramex.config
+from . import server, TestGramex, dbutils
+from gramex.config import variables
 from gramex.http import OK
 
 
@@ -95,16 +95,16 @@ class QueryHandlerTestMixin(object):
 
 
 class TestSqliteHandler(TestGramex, QueryHandlerTestMixin):
-    'Test QueryHandler for SQLite database via sqlalchemy driver'
+    # Test QueryHandler for SQLite database via sqlalchemy driver
     database = 'sqlite'
 
     @classmethod
     def setUpClass(cls):
-        cls.db = cls.folder / 'actors.db'
-        if cls.db.is_file():
-            cls.db.unlink()
-        cls.engine = sa.create_engine('sqlite:///' + str(cls.db))
-        cls.data.to_sql('actors', con=cls.engine, index=False)
+        dbutils.sqlite_create_db('actors.db', actors=cls.data)
+
+    @classmethod
+    def tearDownClass(cls):
+        dbutils.sqlite_drop_db('actors.db')
 
     def test_filename(self):
         self.check('/datastoreq/sqlite/csv/filename?limit=5', headers={
@@ -131,65 +131,28 @@ class TestSqliteHandler(TestGramex, QueryHandlerTestMixin):
         result = self.check('/datastoreq/template').text
         self.assertIn('<!-- Test template -->', result)
 
-    @classmethod
-    def tearDownClass(cls):
-        if cls.db.is_file():
-            cls.db.unlink()
-
 
 class TestMysqlQueryHandler(TestGramex, QueryHandlerTestMixin):
-    'Test QueryHandler for MySQL database via sqlalchemy driver'
+    # Test QueryHandler for MySQL database via sqlalchemy driver
     database = 'mysql'
 
     @classmethod
     def setUpClass(cls):
-        cls.dburl = 'mysql+pymysql://root@%s/' % gramex.config.variables.MYSQL_SERVER
-        cls.engine = sa.create_engine(cls.dburl)
-        try:
-            cls.engine.execute("DROP DATABASE IF EXISTS test_queryhandler")
-            cls.engine.execute("CREATE DATABASE test_queryhandler "
-                               "CHARACTER SET utf8 COLLATE utf8_general_ci")
-            cls.engine.dispose()
-            cls.engine = sa.create_engine(cls.dburl + 'test_queryhandler')
-            cls.data.to_sql('actors', con=cls.engine, index=False)
-        except sa.exc.OperationalError:
-            raise SkipTest('Unable to connect to %s' % cls.dburl)
+        dbutils.mysql_create_db(variables.MYSQL_SERVER, 'test_queryhandler', actors=cls.data)
 
     @classmethod
     def tearDownClass(cls):
-        cls.engine.execute("DROP DATABASE test_queryhandler")
-        cls.engine.dispose()
+        dbutils.mysql_drop_db(variables.MYSQL_SERVER, 'test_datahandler')
 
 
 class TestPostgresQueryHandler(TestGramex, QueryHandlerTestMixin):
-    'Test QueryHandler for PostgreSQL database via sqlalchemy driver'
+    # Test QueryHandler for PostgreSQL database via sqlalchemy driver
     database = 'postgresql'
 
     @classmethod
     def setUpClass(cls):
-        cls.dburl = 'postgresql://postgres@%s/' % gramex.config.variables.POSTGRES_SERVER
-        cls.engine = sa.create_engine(cls.dburl + 'postgres')
-        try:
-            conn = cls.engine.connect()
-            conn.execute('commit')
-            conn.execute('DROP DATABASE IF EXISTS test_queryhandler')
-            conn.execute('commit')
-            conn.execute("CREATE DATABASE test_queryhandler ENCODING 'UTF8'")
-            conn.close()
-            cls.engine = sa.create_engine(cls.dburl + 'test_queryhandler')
-            cls.data.to_sql('actors', con=cls.engine, index=False)
-            cls.engine.dispose()
-        except sa.exc.OperationalError:
-            raise SkipTest('Unable to connect to %s' % cls.dburl)
+        dbutils.postgres_create_db(variables.POSTGRES_SERVER, 'test_queryhandler', actors=cls.data)
 
     @classmethod
     def tearDownClass(cls):
-        cls.engine = sa.create_engine(cls.dburl + 'postgres')
-        conn = cls.engine.connect()
-        conn.execute('commit')
-        # Terminate all other sessions using the test_queryhandler database
-        conn.execute("SELECT pg_terminate_backend(pid) FROM pg_stat_activity "
-                     "WHERE datname='test_queryhandler'")
-        conn.execute('DROP DATABASE test_queryhandler')
-        conn.close()
-        cls.engine.dispose()
+        dbutils.postgres_drop_db(variables.POSTGRES_SERVER, 'test_queryhandler')

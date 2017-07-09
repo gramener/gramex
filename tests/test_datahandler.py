@@ -9,8 +9,9 @@ from pathlib import Path
 from tornado.template import Template
 import pandas.util.testing as pdt
 from nose.plugins.skip import SkipTest
-from . import server, TestGramex
+from . import server, TestGramex, dbutils
 import gramex
+from gramex.config import variables
 from gramex.http import OK, NOT_FOUND, INTERNAL_SERVER_ERROR
 
 
@@ -181,16 +182,11 @@ class SqliteHandler(TestGramex, DataHandlerTestMixin):
 
     @classmethod
     def setUpClass(cls):
-        cls.db = cls.folder / 'actors.db'
-        if cls.db.is_file():
-            cls.db.unlink()
-        cls.engine = sa.create_engine('sqlite:///' + str(cls.db))
-        cls.data.to_sql('actors', con=cls.engine, index=False)
+        dbutils.sqlite_create_db('actors.db', actors=cls.data)
 
     @classmethod
     def tearDownClass(cls):
-        if cls.db.is_file():
-            cls.db.unlink()
+        dbutils.sqlite_drop_db('actors.db')
 
 
 class TestSqliteHandler(SqliteHandler):
@@ -216,22 +212,11 @@ class TestMysqlDataHandler(TestGramex, DataHandlerTestMixin):
 
     @classmethod
     def setUpClass(cls):
-        cls.dburl = 'mysql+pymysql://root@%s/' % gramex.config.variables.MYSQL_SERVER
-        cls.engine = sa.create_engine(cls.dburl)
-        try:
-            cls.engine.execute("DROP DATABASE IF EXISTS test_datahandler")
-            cls.engine.execute("CREATE DATABASE test_datahandler "
-                               "CHARACTER SET utf8 COLLATE utf8_general_ci")
-            cls.engine.dispose()
-            cls.engine = sa.create_engine(cls.dburl + 'test_datahandler')
-            cls.data.to_sql('actors', con=cls.engine, index=False)
-        except sa.exc.OperationalError:
-            raise SkipTest('Unable to connect to %s' % cls.dburl)
+        dbutils.mysql_create_db(variables.MYSQL_SERVER, 'test_datahandler', actors=cls.data)
 
     @classmethod
     def tearDownClass(cls):
-        cls.engine.execute("DROP DATABASE test_datahandler")
-        cls.engine.dispose()
+        dbutils.mysql_drop_db(variables.MYSQL_SERVER, 'test_datahandler')
 
 
 class TestPostgresDataHandler(TestGramex, DataHandlerTestMixin):
@@ -240,33 +225,11 @@ class TestPostgresDataHandler(TestGramex, DataHandlerTestMixin):
 
     @classmethod
     def setUpClass(cls):
-        cls.dburl = 'postgresql://postgres@%s/' % gramex.config.variables.POSTGRES_SERVER
-        cls.engine = sa.create_engine(cls.dburl + 'postgres')
-        try:
-            conn = cls.engine.connect()
-            conn.execute('commit')
-            conn.execute('DROP DATABASE IF EXISTS test_datahandler')
-            conn.execute('commit')
-            conn.execute("CREATE DATABASE test_datahandler ENCODING 'UTF8'")
-            conn.close()
-            cls.engine = sa.create_engine(cls.dburl + 'test_datahandler')
-            cls.data.to_sql('actors', con=cls.engine, index=False)
-            cls.engine.dispose()
-        except sa.exc.OperationalError:
-            raise SkipTest('Unable to connect to %s' % cls.dburl)
+        dbutils.postgres_create_db(variables.POSTGRES_SERVER, 'test_datahandler', actors=cls.data)
 
     @classmethod
     def tearDownClass(cls):
-        cls.engine = sa.create_engine(cls.dburl + 'postgres')
-        conn = cls.engine.connect()
-        conn.execute('commit')
-        # Terminate all other sessions using the test_datahandler database
-        conn.execute("SELECT pg_terminate_backend(pid) FROM pg_stat_activity "
-                     "WHERE datname='test_datahandler'")
-        conn.execute('DROP DATABASE test_datahandler')
-        conn.close()
-        cls.engine.dispose()
-
+        dbutils.postgres_drop_db(variables.POSTGRES_SERVER, 'test_datahandler')
 
 class TestBlazeDataHandler(SqliteHandler):
     '''Test DataHandler for SQLite database via blaze driver'''

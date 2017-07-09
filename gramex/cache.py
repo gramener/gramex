@@ -44,7 +44,20 @@ def _markdown(handle, **kwargs):
     return markdown(handle.read(), **{k: kwargs.pop(k, v) for k, v in _markdown_defaults.items()})
 
 
+def stat(path):
+    '''
+    Returns a file status tuple - based on file last modified time and file size
+    '''
+    if os.path.exists(path):
+        stat = os.stat(path)
+        return (stat.st_mtime, stat.st_size)
+    return (None, None)
+
+
+# gramex.cache.open() stores its cache here.
+# {(path, callback): {data: ..., stat: ...}}
 _OPEN_CACHE = {}
+# List of callback string methods
 _CALLBACKS = dict(
     txt=_opener(lambda handle: handle.read()),
     text=_opener(lambda handle: handle.read()),
@@ -99,13 +112,13 @@ def open(path, callback, **kwargs):
     # (result, reloaded) instead of just the result.
     _reload_status = kwargs.pop('_reload_status', False)
     reloaded = False
-
-    stat = os.stat(path)
-    mtime, size = stat.st_mtime, stat.st_size
     _cache = kwargs.pop('_cache', _OPEN_CACHE)
+
     callback_is_str = isinstance(callback, six.string_types)
     key = (path, callback if callback_is_str else id(callback))
-    if key not in _cache or mtime > _cache[key].get('mtime') or size != _cache[key].get('size'):
+    cached = _cache.get(key, None)
+    fstat = stat(path)
+    if cached is None or fstat != cached.get('stat'):
         reloaded = True
         if callable(callback):
             data = callback(path, **kwargs)
@@ -117,13 +130,119 @@ def open(path, callback, **kwargs):
                 raise TypeError('gramex.cache.open(callback="%s") is not a known type', callback)
         else:
             raise TypeError('gramex.cache.open(callback=) must be a function, not %r', callback)
-        _cache[key] = {'data': data, 'mtime': mtime, 'size': size}
+        _cache[key] = {'data': data, 'stat': fstat}
 
     result = _cache[key]['data']
     return (result, reloaded) if _reload_status else result
 
 
-# Date and size of file when module was last loaded. Used by reload_module
+# gramex.cache.query() stores its cache here
+_QUERY_CACHE = {}
+_STATUS_METHODS = {}
+
+
+def _wheres(dbkey, tablekey, default_db, names, fn=None):
+    '''
+    Convert a table name list like ['sales', 'dept.sales']) to a WHERE clause
+    like ``(table="sales") OR (db="dept" AND table="sales")``.
+
+    TODO: escape the table names to avoid SQL injection attacks
+    '''
+    where = []
+    for name in names:
+        db, table = name.rsplit('.', 2) if '.' in name else (default_db, name)
+        if not fn:
+            where.append("({}='{}' AND {}='{}')".format(dbkey, db, tablekey, table))
+        else:
+            where.append("({}={}('{}') AND {}={}('{}'))".format(
+                dbkey, fn[0], db, tablekey, fn[1], table))
+    return ' OR '.join(where)
+
+
+def _table_status(engine, tables):
+    '''
+    Returns the last updated date of a list of tables.
+    '''
+    # Cache the SQL query or file date check function beforehand.
+    # Every time method is called with a URL and table list, run cached query
+    dialect = engine.dialect.name
+    key = (engine.url, tuple(tables))
+    db = engine.url.database
+    if _STATUS_METHODS.get(key, None) is None:
+        if len(tables) == 0:
+            raise ValueError('gramex.cache.query table list is empty: %s', repr(tables))
+        for name in tables:
+            if not name or not isinstance(name, six.string_types):
+                raise ValueError('gramex.cache.query invalid table list: %s', repr(tables))
+        if dialect == 'mysql':
+            # https://dev.mysql.com/doc/refman/5.7/en/tables-table.html
+            # Works only on MySQL 5.7 and above
+            q = ('SELECT update_time FROM information_schema.tables WHERE ' +
+                 _wheres('table_schema', 'table_name', db, tables))
+        elif dialect == 'mssql':
+            # https://goo.gl/b4aL9m
+            q = ('SELECT last_user_update FROM sys.dm_db_index_usage_stats WHERE ' +
+                 _wheres('database_id', 'object_id', db, tables, fn=['DB_ID', 'OBJECT_ID']))
+        elif dialect == 'postgresql':
+            # https://www.postgresql.org/docs/9.6/static/monitoring-stats.html
+            q = ('SELECT n_tup_ins, n_tup_upd, n_tup_del FROM pg_stat_all_tables WHERE ' +
+                 _wheres('schemaname', 'relname', 'public', tables))
+        elif dialect == 'sqlite':
+            if not db:
+                raise KeyError('gramex.cache.query does not support memory sqlite "%s"' % dialect)
+            q = db
+        else:
+            raise KeyError('gramex.cache.query cannot cache dialect "%s" yet' % dialect)
+        if dialect == 'sqlite':
+            _STATUS_METHODS[key] = lambda: stat(q)
+        else:
+            _STATUS_METHODS[key] = lambda: pd.read_sql(q, engine).to_json(orient='records')
+    return _STATUS_METHODS[key]()
+
+
+def query(sql, engine, state, **kwargs):
+    '''
+    Read SQL query or database table into a DataFrame. Caches results unless
+    state has changed.
+
+    The state can be specified in 3 ways:
+
+    1. A string. This must be as a lightweight SQL query. If the result changes,
+       the original SQL query is re-run.
+    2. A function. This is called to determine the state of the database.
+    3. A list of tables. This list of ["db.table"] names specifies which tables
+       to watch for. This is currently experimental.
+    '''
+    # Pass _reload_status = True for testing purposes. This returns a tuple:
+    # (result, reloaded) instead of just the result.
+    _reload_status = kwargs.pop('_reload_status', False)
+    reloaded = False
+    _cache = kwargs.pop('_cache', _QUERY_CACHE)
+
+    key = (sql, engine.url)
+    current_status = _cache.get(key, {}).get('status', None)
+    if isinstance(state, (list, tuple)):
+        status = _table_status(engine, tuple(state))
+    elif isinstance(state, six.string_types):
+        status = pd.read_sql(state, engine).to_dict(orient='list')
+    elif callable(state):
+        status = state()
+    else:
+        raise TypeError('gramex.cache.query(state=) must be a table list, query or fn, not %s',
+                        repr(state))
+
+    if status != current_status:
+        _cache[key] = {
+            'data': pd.read_sql(sql, engine, **kwargs),
+            'status': status,
+        }
+        reloaded = True
+
+    result = _cache[key]['data']
+    return (result, reloaded) if _reload_status else result
+
+
+# gramex.cache.reload_module() stores its cache here. {module_name: file_stat}
 _MODULE_CACHE = {}
 
 
@@ -155,11 +274,8 @@ def reload_module(*modules):
                 app_log.warn('Path for module %s is %s: not found', name, path)
                 continue
         # The first time, don't reload it. Thereafter, if it's older or resized, reload it
-        stat = os.stat(path)
-        time, size = stat.st_mtime, stat.st_size
-        updated = _MODULE_CACHE.get((name, 't'), time) < time
-        resized = _MODULE_CACHE.get((name, 's'), size) != size
-        if updated or resized:
+        fstat = stat(path)
+        if fstat != _MODULE_CACHE.get(name, fstat):
             app_log.info('Reloading module %s', name)
             six.moves.reload_module(module)
-        _MODULE_CACHE[name, 't'], _MODULE_CACHE[name, 's'] = time, size
+        _MODULE_CACHE[name] = fstat

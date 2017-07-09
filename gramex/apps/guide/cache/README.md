@@ -242,8 +242,8 @@ is arbitrary. You can use any query parameter instead of `v`.)
 
 # Data caching
 
-You can load files and cache them unless they are reloaded using
-`gramex.cache.open`.
+`gramex.cache.open` opens files and caches them unless they are changed. You can
+use this to load any type of file. For example:
 
     :::python
     import gramex.cache
@@ -253,17 +253,7 @@ This loads `data.csv`  using `pd.read_csv('data.csv', encoding='utf-8')`. The
 next time this is called, if `data.csv` in unchanged, the cached results are
 returned.
 
-The 2nd parameter can be a custom function called as `function(path, **kwargs)`.
-For example:
-
-    :::python
-    # Return file size if it has changed
-    file_size = gramex.cache.open('data.csv', lambda path: os.stat(path).st_size)
-
-    # Read Excel file. Keyword arguments are passed to pd.read_excel
-    data = gramex.cache.open('data.xlsx', pd.read_excel, sheetname='Sheet1')
-
-There are some pre-defined string values you can use as well for the callback:
+The 2nd parameter can be pre-defined string with the following values:
 
 - `gramex.cache.open(path, 'text', ...)` loads text files using `io.open`. You can use `txt` instead of `text`
 - `gramex.cache.open(path, 'json', ...)` loads JSON files using `json.load`
@@ -278,13 +268,50 @@ There are some pre-defined string values you can use as well for the callback:
 - `gramex.cache.open(path, 'template', ...)` loads text using `tornado.template.Template`
 - `gramex.cache.open(path, 'md', ...)` loads text using `markdown.markdown`. You can use `markdown` instead of `md`
 
-By default, the data is cached in an internal cache. You can specify a custom
-cache (e.g. a [cachetools](http://pythonhosted.org/cachetools/) LRU cache that
-has a maximum size) using an `_cache` parameter. For example:
+The 2nd parameter can also be a function like `function(path, **kwargs)`. For
+example:
 
     :::python
-    cache = cachetools.LRUCache(maxsize=4)
-    data = gramex.cache.open(path, 'csv', _cache=cache)
+    # Return file size if it has changed
+    file_size = gramex.cache.open('data.csv', lambda path: os.stat(path).st_size)
+
+    # Read Excel file. Keyword arguments are passed to pd.read_excel
+    data = gramex.cache.open('data.xlsx', pd.read_excel, sheetname='Sheet1')
+
+
+# Query caching
+
+`gramex.cache.query` returns SQL queries as DataFrames and caches the results.
+The next time it is called, the query re-runs only if required.
+
+For example, take this slow query:
+
+    :::python
+    query = '''
+        SELECT sales.date, product.name, SUM(sales.value)
+        FROM product, sales
+        WHERE product.id = sales.product_id
+        GROUP BY (sales.date, product.name)
+    '''
+
+If sales data is updated daily, we need not run this query unless the latest
+`date` has changed. Then we can use:
+
+    :::python
+    data = gramex.cache.query(query, engine, state='SELECT MAX(date) FROM sales')
+
+`gramex.cache.query` is just like [pd.read_sql][read_sql] but with an additional
+`state=` parameter. `state` can be a query -- typically a fast running query. If
+running the state query returns a different result, the original query is re-run.
+
+`state` can also be a function. For example, if a local file called `.updated` is
+changed every time the data is loaded, you can use:
+
+    :::python
+    data = gramex.cache.query(query, engine, state=lambda: os.stat('.updated').st_mtime)
+
+[read_sql]: https://pandas.pydata.org/pandas-docs/stable/generated/pandas.read_sql.html
+
 
 # Module caching
 
