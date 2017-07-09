@@ -17,7 +17,6 @@ md = markdown.Markdown(extensions=[
     'markdown.extensions.meta',
     'markdown.extensions.codehilite',
     'markdown.extensions.smarty',
-    'markdown.extensions.headerid',
     'markdown.extensions.sane_lists',
     'markdown.extensions.toc',
 ], output_format='html5')
