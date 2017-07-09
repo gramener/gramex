@@ -209,7 +209,7 @@ class TestCacheQuery(unittest.TestCase):
 
     def test_query_state_invalid(self):
         # Just take the sqlite URL for now
-        engine = sa.create_engine(self.urls[-1], encoding='utf-8')
+        engine = sa.create_engine(self.urls[-1])
         with assert_raises(ValueError, 'Empty state list raises an error'):
             gramex.cache.query('SELECT * FROM t1', engine, state=[])
         with assert_raises(ValueError, 'State list with invalid type raises an error'):
@@ -229,7 +229,7 @@ class TestCacheQuery(unittest.TestCase):
         for row in combinations:
             for url in row['urls']:
                 msg = 'failed at state=%s, url=%s' % (row['state'], url)
-                engine = sa.create_engine(url, encoding='utf-8')
+                engine = sa.create_engine(url)
                 kwargs = dict(sql=sql, engine=engine, state=row['state'], _reload_status=True)
                 eq_(gramex.cache.query(**kwargs)[1], True, msg)
                 eq_(gramex.cache.query(**kwargs)[1], False, msg)
