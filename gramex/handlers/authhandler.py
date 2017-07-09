@@ -13,7 +13,7 @@ from tornado.auth import (GoogleOAuth2Mixin, FacebookGraphMixin, TwitterMixin,
 from orderedattrdict import AttrDict
 import gramex
 import gramex.cache
-from gramex.config import check_old_certs, app_log, objectpath
+from gramex.config import check_old_certs, app_log, objectpath, str_utf8
 from gramex.transforms import build_transform
 from .basehandler import BaseHandler
 
@@ -566,7 +566,7 @@ class DBAuth(SimpleAuth):
         # create database at GRAMEXDATA locastion
         path = os.path.join(gramex.variables.GRAMEXDATA, 'auth.recover.db')
         url = 'sqlite:///{}'.format(path)
-        engine = create_engine(url, encoding=str('utf-8'))
+        engine = create_engine(url, encoding=str_utf8)
         conn = engine.connect()
         conn.execute('CREATE TABLE IF NOT EXISTS users '
                      '(user TEXT, email TEXT, token TEXT, expire REAL)')

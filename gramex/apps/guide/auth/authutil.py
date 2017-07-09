@@ -4,6 +4,7 @@ import random
 import tornado
 import datetime
 import sqlalchemy
+from gramex.config import str_utf8
 from passlib.hash import sha256_crypt
 from six.moves.urllib.parse import urlencode
 
@@ -11,7 +12,7 @@ from six.moves.urllib.parse import urlencode
 def create_user_database(url, table, user, password, salt):
     # Connect to the SQLAlchemy engine specified at url.
     # For example, this could be sqlite:///auth.db
-    engine = sqlalchemy.create_engine(url, encoding='utf-8')
+    engine = sqlalchemy.create_engine(url, encoding=str_utf8)
 
     # In the Gramex guide, we're using an sqlite3 database which is a file.
     # If the target folder doesn't exist, make sure we create it.

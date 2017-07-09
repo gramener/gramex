@@ -192,7 +192,7 @@ def build_transform(conf, vars=None, filename='transform', cache=False):
             expr += ')'
 
     # Create the code
-    modules = ', '.join(modules | module_names(tree, vars))
+    modules = ', '.join(sorted(modules | module_names(tree, vars)))
     body = [
         'def transform(',
         ', '.join('{:s}={!r:}'.format(var, val) for var, val in vars.items()),

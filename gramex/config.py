@@ -39,6 +39,7 @@ from yaml.constructor import ConstructorError
 from orderedattrdict import AttrDict, DefaultAttrDict
 
 app_log = logging.getLogger('gramex')
+str_utf8 = str('utf-8')             # noqa
 
 
 def walk(node):

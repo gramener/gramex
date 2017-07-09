@@ -10,7 +10,7 @@ import unittest
 import gramex.cache
 import pandas as pd
 import sqlalchemy as sa
-from gramex.config import variables
+from gramex.config import variables, str_utf8
 from tests import dbutils
 from six import string_types
 from markdown import markdown
@@ -209,10 +209,12 @@ class TestCacheQuery(unittest.TestCase):
 
     def test_query_state_invalid(self):
         # Just take the sqlite URL for now
-        engine = sa.create_engine(self.urls[-1])
-        with assert_raises(ValueError, 'Empty state list raises an error'):
+        engine = sa.create_engine(self.urls[-1], encoding=str_utf8)
+        # Empty state list raises an error
+        with assert_raises(ValueError):
             gramex.cache.query('SELECT * FROM t1', engine, state=[])
-        with assert_raises(ValueError, 'State list with invalid type raises an error'):
+        # State list with invalid type raises an error
+        with assert_raises(ValueError):
             gramex.cache.query('SELECT * FROM t1', engine, state=[None])
 
     def test_query_states(self):
@@ -229,7 +231,7 @@ class TestCacheQuery(unittest.TestCase):
         for row in combinations:
             for url in row['urls']:
                 msg = 'failed at state=%s, url=%s' % (row['state'], url)
-                engine = sa.create_engine(url)
+                engine = sa.create_engine(url, encoding=str_utf8)
                 kwargs = dict(sql=sql, engine=engine, state=row['state'], _reload_status=True)
                 eq_(gramex.cache.query(**kwargs)[1], True, msg)
                 eq_(gramex.cache.query(**kwargs)[1], False, msg)

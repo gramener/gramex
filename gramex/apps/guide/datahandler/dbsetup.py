@@ -1,12 +1,12 @@
 import os.path
 import pandas as pd
-from gramex.config import app_log
+from gramex.config import app_log, str_utf8
 from sqlalchemy import create_engine
 from sqlalchemy.exc import DatabaseError
 
 folder = os.path.dirname(os.path.abspath(__file__))
 filepath = os.path.join(folder, 'database.sqlite3')
-engine = create_engine('sqlite:///%s' % filepath, encoding='utf-8')
+engine = create_engine('sqlite:///%s' % filepath, encoding=str_utf8)
 
 
 def flags():
