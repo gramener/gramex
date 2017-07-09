@@ -32,8 +32,6 @@ def touch(path, times=None, data=None):
 
 
 class TestReloadModule(unittest.TestCase):
-    '''Test gramex.cache.reload_module'''
-
     def test_reload_module(self):
         # When loaded, the counter is not incremented
         from testlib.test_cache.common import val
@@ -73,9 +71,59 @@ class TestReloadModule(unittest.TestCase):
         eq_(val[0], count + 1)
 
 
-class TestOpen(unittest.TestCase):
-    '''Test gramex.cache.open'''
+class TestOpener(unittest.TestCase):
+    def check_args(self, *args, **kwargs):
+        return AttrDict(args=args, kwargs=kwargs)
 
+    def test_opener(self):
+        o = gramex.cache.opener(self.check_args)
+        path = os.path.join(folder, 'template.txt')
+
+        result = o(path)
+        eq_(type(result.args[0]), io.TextIOWrapper)
+        eq_(result.args[0].name, path)
+        eq_(result.args[0].encoding, 'utf-8')
+        eq_(result.kwargs, {})
+
+        result = o(path, encoding='cp1252')
+        eq_(type(result.args[0]), io.TextIOWrapper)
+        eq_(result.args[0].encoding, 'cp1252')
+        eq_(result.kwargs, {})
+
+        result = o(path, mode='rb', encoding=None, errors=None)
+        eq_(type(result.args[0]), io.BufferedReader)
+        eq_(result.kwargs, {})
+
+        result = o(path, num=1, s='a', none=None)
+        eq_(result.kwargs, {'num': 1, 's': 'a', 'none': None})
+
+    def test_reader(self):
+        o = gramex.cache.opener(self.check_args, read=True)
+        path = os.path.join(folder, 'template.txt')
+
+        with io.open(path, encoding='utf-8') as handle:
+            text = handle.read()
+        result = o(path)
+        eq_(result.args, (text, ))
+        eq_(result.kwargs, {})
+
+        with io.open(path, encoding='cp1252') as handle:
+            text = handle.read()
+        result = o(path, encoding='cp1252')
+        eq_(result.args, (text, ))
+        eq_(result.kwargs, {})
+
+        with io.open(path, mode='rb') as handle:
+            text = handle.read()
+        result = o(path, mode='rb', encoding=None, errors=None)
+        eq_(result.args, (text, ))
+        eq_(result.kwargs, {})
+
+        result = o(path, num=1, s='a', none=None)
+        eq_(result.kwargs, {'num': 1, 's': 'a', 'none': None})
+
+
+class TestOpen(unittest.TestCase):
     @staticmethod
     def check_file_cache(path, check):
         check(reload=True)
@@ -133,8 +181,9 @@ class TestOpen(unittest.TestCase):
                 path, 'template', _reload_status=True, encoding='utf-8', autoescape=None)
             eq_(reloaded, reload)
             ok_(isinstance(result, Template))
-            eq_(result.generate(name='x'), expected.generate(name='x'))
-            eq_(result.generate(name='x'), b'<b>x</b>\n')
+            val = result.generate(name='x')
+            eq_(val, expected.generate(name='x'))
+            eq_(val.split(b'\n')[0], b'<b>x</b>')
 
         self.check_file_cache(path, check)
 

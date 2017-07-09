@@ -1,1 +1,6 @@
 {{ '<b>' + name + '</b>' }}
+
+Do not change the first line above. That is used in the code.
+The rest of this file can be changed.
+
+Unicode: ±©®

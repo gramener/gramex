@@ -278,6 +278,28 @@ example:
     # Read Excel file. Keyword arguments are passed to pd.read_excel
     data = gramex.cache.open('data.xlsx', pd.read_excel, sheetname='Sheet1')
 
+To simplify creating these functions, use `gramex.cache.opener`. This converts
+functions that accept a handle or string into functions that accept a filename.
+`gramex.cache.opener` opens the file and returns the handle to the function.
+
+For example, to read using [pickle.load][pickle-load], use:
+
+    :::python
+    loader = gramex.cache.opener(pickle.load)
+    data = gramex.cache.open('template.pickle', loader)
+
+If your function accepts a string instead of a handle, add the `read=True`
+parameter. This passes the results of reading the handle instead of the handle.
+For example, to compute the [MD5 hash][hashlib] of a file, use:
+
+    :::python
+    m = hashlib.md5
+    loader = gramex.cache.opener(m.update, read=True)
+    data = gramex.cache.open('template.txt', mode='rb', encoding=None, errors=None)
+
+[template-strings]: https://docs.python.org/2/library/string.html#template-strings
+[pickle-load]: https://docs.python.org/2/library/pickle.html#pickle.load
+[hashlib]: https://docs.python.org/3/library/hashlib.html
 
 # Query caching
 

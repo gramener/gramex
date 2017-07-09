@@ -21,24 +21,43 @@ _markdown_defaults = dict(output_format='html5', extensions=[
 ])
 
 
-def _opener(callback):
+def opener(callback, read=False):
     '''
-    Converts method that accepts a handle into a method that accepts a file path.
-    For example, ``jsonload = _opener(json.load)`` allows ``jsonload('x.json')``
+    Converts any function that accepts a string or handle as its parameter into
+    a function that takes the first parameter from a file path.
+
+    For example, ``jsonload = opener(json.load)`` allows ``jsonload('x.json')``
     to return the parsed JSON contents of ``x.json``.
 
-    Any keyword arguments applicable for ``io.open`` are passed to ``io.open``.
-    All other arguments and keyword arguments are passed to the callback (e.g.
-    json.load).
+    For example, ``template = opener(string.Template, read=True)`` allows
+    ```template('abc.txt').substitute(x=val)`` to load ``abc.txt``, convert it
+    into a String template, and substitute values.
+
+    Keyword arguments applicable for ``io.open`` are passed to ``io.open``. These
+    default to ``io.open(mode='r', buffering=-1, encoding='utf-8',
+    errors='strict', newline=None, closefd=True)``. All other arguments and
+    keyword arguments are passed to the callback (e.g. to ``json.load``).
+
+    When reading binary files, pass ``mode='rb', encoding=None, errors=None``.
     '''
-    def method(path, **kwargs):
-        open_args = {key: kwargs.pop(key, val) for key, val in _opener_defaults.items()}
-        with io.open(path, **open_args) as handle:
-            return callback(handle, **kwargs)
+    if not callable(callback):
+        raise ValueError('opener requires a function as first parameter, not %s', repr(callback))
+    if read:
+        # Pass contents to callback
+        def method(path, **kwargs):
+            open_args = {key: kwargs.pop(key, val) for key, val in _opener_defaults.items()}
+            with io.open(path, **open_args) as handle:
+                return callback(handle.read(), **kwargs)
+    else:
+        # Pass handle to callback
+        def method(path, **kwargs):
+            open_args = {key: kwargs.pop(key, val) for key, val in _opener_defaults.items()}
+            with io.open(path, **open_args) as handle:
+                return callback(handle, **kwargs)
     return method
 
 
-@_opener
+@opener
 def _markdown(handle, **kwargs):
     from markdown import markdown
     return markdown(handle.read(), **{k: kwargs.pop(k, v) for k, v in _markdown_defaults.items()})
@@ -59,10 +78,10 @@ def stat(path):
 _OPEN_CACHE = {}
 # List of callback string methods
 _CALLBACKS = dict(
-    txt=_opener(lambda handle: handle.read()),
-    text=_opener(lambda handle: handle.read()),
-    yaml=_opener(yaml.load),
-    json=_opener(json.load),
+    txt=opener(six.text_type, read=True),
+    text=opener(six.text_type, read=True),
+    yaml=opener(yaml.load),
+    json=opener(json.load),
     csv=pd.read_csv,
     excel=pd.read_excel,
     xls=pd.read_excel,
@@ -72,7 +91,7 @@ _CALLBACKS = dict(
     sas=pd.read_sas,
     stata=pd.read_stata,
     table=pd.read_table,
-    template=_opener(lambda handle, **kwargs: Template(handle.read(), **kwargs)),
+    template=opener(Template, read=True),
     md=_markdown,
     markdown=_markdown,
 )
