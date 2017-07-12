@@ -269,22 +269,42 @@ class BuildTransform(unittest.TestCase):
         eq_(fn(), [100])
 
     def test_invalid_change(self):
+        fn = build_transform(yaml_parse('function: testlib.dummy.invalid\nargs: []'))
+
         remove(self.dummy.replace('.py', '.pyc'))
         with io.open(self.dummy, 'w', encoding='utf-8') as handle:
             handle.write('def invalid():\n\tsyntax error\n')
-
-        fn = build_transform(yaml_parse('function: testlib.dummy.invalid\nargs: []'))
         with assert_raises(SyntaxError):
             fn()
 
+        remove(self.dummy.replace('.py', '.pyc'))
         with io.open(self.dummy, 'w', encoding='utf-8') as handle:
-            handle.write('1/0\ndef invalid():\n\treturn 123\n')
+            handle.write('1/0\ndef invalid():\n\treturn 100\n')
         with assert_raises(ZeroDivisionError):
             fn()
 
+        remove(self.dummy.replace('.py', '.pyc'))
         with io.open(self.dummy, 'w', encoding='utf-8') as handle:
-            handle.write('def invalid():\n\treturn 123\n')
-        eq_(fn(), [123])
+            handle.write('def invalid():\n\treturn 100\n')
+        eq_(fn(), [100])
+
+    def test_import_levels(self):
+        def transform(_val):
+            import six
+            result = six.text_type(_val)
+            return result if isinstance(result, GeneratorType) else [result, ]
+        fn = self.check_transform(transform, 'function: six.text_type')
+        eq_(fn(b'abc'), ['abc'])
+
+        def transform(content):
+            import six
+            result = six.text_type.__add__(content, '123')
+            return result if isinstance(result, GeneratorType) else [result, ]
+        fn = self.check_transform(transform, '''
+            function: six.text_type.__add__
+            args: [=content, '123']
+        ''', vars=AttrDict(content=None))
+        eq_(fn('abc'), ['abc123'])
 
     @classmethod
     def tearDownClass(cls):

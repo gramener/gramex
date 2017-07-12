@@ -62,12 +62,14 @@ def module_names(node, vars):
                             module_name = '.'.join(module)
                             try:
                                 importlib.import_module(module_name)
+                                modules.add(module_name)
+                                break
                             except ImportError:
                                 module.pop()
                             # Anything other than an ImportError means we've identified the module.
                             # E.g. A SyntaxError means the file is right, it just has an error.
                             # Add these modules as well.
-                            finally:
+                            else:
                                 modules.add(module_name)
                                 break
             context.append(child.attr if isinstance(child, ast.Attribute) else None)

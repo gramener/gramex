@@ -485,7 +485,7 @@ def locate(path, modules=[], forceload=0):
             if hasattr(module, path):
                 return getattr(module, path)
         return _locate(path, forceload)
-    except ErrorDuringImport as e:
+    except ErrorDuringImport:
         app_log.exception('Exception when importing %s', path)
         return None
 
