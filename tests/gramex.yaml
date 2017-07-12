@@ -18,6 +18,8 @@ handlers:
 app:
   listen:
     port: 9999              # Avoid clash with default Gramex port running tests
+  session:
+    private_key: $YAMLPATH/id_rsa
 
 cache:
     memory:
@@ -1523,8 +1525,7 @@ url:
         password:
             column: password
             arg: password
-            function: six.text_type.__add__
-            args: [=content, '123']
+            function: content + '123'
         redirect:
             query: next
             header: NEXT

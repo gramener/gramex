@@ -306,6 +306,15 @@ class BuildTransform(unittest.TestCase):
         ''', vars=AttrDict(content=None))
         eq_(fn('abc'), ['abc123'])
 
+        def transform(handler):
+            result = str.endswith(handler.current_user.user, 'ta')
+            return result if isinstance(result, GeneratorType) else [result, ]
+        fn = self.check_transform(transform, '''
+            function: str.endswith
+            args: [=handler.current_user.user, 'ta']
+        ''', vars=AttrDict(handler=None))
+
+
     @classmethod
     def tearDownClass(cls):
         # Remove temporary files

@@ -12,6 +12,8 @@ import gramex.config
 from gramex.http import OK, UNAUTHORIZED, FORBIDDEN
 from . import TestGramex, server, tempfiles
 
+folder = os.path.dirname(os.path.abspath(__file__))
+
 
 class TestSession(TestGramex):
     @classmethod
@@ -138,8 +140,8 @@ class TestSimpleAuth(AuthBase, LoginMixin):
         cls.url = server.base_url + '/auth/simple'
 
     # Run additional tests for session and login features
-    def get_session(self):
-        return self.session.get(server.base_url + '/auth/session').json()
+    def get_session(self, headers=None):
+        return self.session.get(server.base_url + '/auth/session', headers=headers).json()
 
     def test_login_action(self):
         self.login('alpha', 'alpha')
@@ -170,10 +172,29 @@ class TestSimpleAuth(AuthBase, LoginMixin):
         self.session = session1
         self.assertTrue('user' not in self.get_session())
 
+    def test_override(self):
+        self.login_ok('alpha', 'alpha', check_next='/dir/index/')
+        self.assertEquals({'user': 'alpha', 'id': 'alpha'}, self.get_session()['user'])
+
+        from cryptography.hazmat.primitives import serialization
+        from cryptography.hazmat.primitives import hashes
+        from cryptography.hazmat.backends import default_backend
+        from cryptography.hazmat.primitives.asymmetric import padding
+        from base64 import b64encode
+        public_key_text = open(os.path.join(folder, 'id_rsa.pub.pem'), 'rb').read()
+        public_key = serialization.load_pem_public_key(public_key_text, backend=default_backend())
+        result = {'user': 'override', 'role': 'admin'}
+        pad = padding.OAEP(
+            mgf=padding.MGF1(algorithm=hashes.SHA256()),
+            algorithm=hashes.SHA256(),
+            label=None)
+        message = public_key.encrypt(json.dumps(result), pad)
+        session_data = self.get_session(headers={'Gramex-User': b64encode(message)})
+        self.assertEquals(result, session_data['user'])
+
 
 class TestAuthTemplate(TestGramex):
     def test_change_template(self):
-        folder = os.path.dirname(os.path.abspath(__file__))
         tempfiles.auth_template = auth_file = os.path.join(folder, 'authtemplate.html')
         shutil.copyfile(os.path.join(folder, 'auth.html'), auth_file)
         self.check('/auth/template', text='<h1>Auth</h1>')
@@ -185,7 +206,6 @@ class DBAuthBase(AuthBase):
     @classmethod
     def setUpClass(cls):
         super(DBAuthBase, cls).setUpClass()
-        folder = os.path.dirname(os.path.abspath(__file__))
         cls.data = pd.read_csv(os.path.join(folder, 'userdata.csv'), encoding='cp1252')
         cls.dburl = 'mysql+pymysql://root@%s/' % gramex.config.variables.MYSQL_SERVER
         # sqlalchemy needs encoding to be a `str` in both Python 2.x and 3.x

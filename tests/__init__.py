@@ -23,7 +23,7 @@ def tearDown():
 
 
 class TestGramex(unittest.TestCase):
-    'Base class to test Gramex running as a subprocess'
+    '''Base class to test Gramex running as a subprocess'''
 
     def get(self, url, session=None, **kwargs):
         req = session or requests

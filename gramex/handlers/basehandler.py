@@ -37,8 +37,10 @@ class BaseMixin(object):
 
         cls.setup_transform(transform)
         cls.setup_redirect(redirect)
-        cls.setup_auth(auth)
+        # Note: call setup_session before setup_auth to ensure that
+        # override_user is run before authorize
         cls.setup_session(conf.app.get('session'))
+        cls.setup_auth(auth)
         cls.setup_log(log or objectpath(conf, 'handlers.BaseHandler.log'))
         cls.setup_error(error)
         cls.setup_xsrf(xsrf_cookies)
@@ -80,6 +82,26 @@ class BaseMixin(object):
         cls.session = property(cls.get_session)
         cls._session_days = session_conf.get('expiry')
         cls._on_finish_methods.append(cls.save_session)
+
+        if 'private_key' in session_conf:
+            keyfile = session_conf['private_key']
+            if not os.path.exists(keyfile):
+                app_log.error('app.session.private_key: %s missing', keyfile)
+                return
+            with open(keyfile, 'rb') as handle:
+                keytext = handle.read()
+            from cryptography.hazmat.primitives import hashes, serialization
+            from cryptography.hazmat.backends import default_backend
+            from cryptography.hazmat.primitives.asymmetric import padding
+            from base64 import b64decode
+            key = serialization.load_pem_private_key(
+                keytext, password=None, backend=default_backend())
+            pad = padding.OAEP(
+                mgf=padding.MGF1(algorithm=hashes.SHA256()),
+                algorithm=hashes.SHA256(),
+                label=None)
+            cls._session_decrypt = lambda cls, s: json.loads(key.decrypt(b64decode(s), pad))
+            cls._on_init_methods.append(cls.override_user)
 
     @classmethod
     def setup_redirect(cls, redirect):
@@ -431,6 +453,21 @@ class BaseMixin(object):
         '''Persist the session object as a JSON'''
         if getattr(self, '_session', None) is not None:
             self._session_store.dump(self._session['id'], self._session)
+
+    def override_user(self):
+        '''
+        Use Gramex-User HTTP header to override current user for the session.
+        '''
+        cipher = self.request.headers.get('Gramex-User', None)
+        if cipher:
+            try:
+                user = self._session_decrypt(cipher)
+            except Exception:
+                app_log.error('%s: invalid Gramex-User: %s', self.name, cipher)
+                raise
+            else:
+                app_log.debug('%s: Overriding user to %r', self.name, user)
+                self.session['user'] = user
 
 
 class BaseHandler(RequestHandler, BaseMixin):
