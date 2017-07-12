@@ -13,6 +13,8 @@ from gramex.transforms import build_transform, flattener, badgerfish, template
 from gramex.cache import reload_module
 from nose.tools import eq_, assert_raises
 
+folder = os.path.dirname(os.path.abspath(__file__))
+
 
 def yaml_parse(text):
     return yaml.load(text, Loader=AttrDictYAMLLoader)
@@ -31,8 +33,8 @@ def gen_str(val):
 
 class BuildTransform(unittest.TestCase):
     '''Test build_transform CODE output'''
-    folder = os.path.dirname(os.path.abspath(__file__))
-    files = set()
+    dummy = os.path.join(folder, 'dummy.py')
+    files = set([dummy])
 
     def eqfn(self, a, b):
         a_code, b_code = a.__code__, b.__code__
@@ -241,10 +243,8 @@ class BuildTransform(unittest.TestCase):
         self.check_transform(transform, 'function: testlib.test_transforms.gen_str(_val)')
 
     def test_cache_change(self):
-        dummy = os.path.join(self.folder, 'dummy.py')
-        self.files.add(dummy)
-        remove(dummy.replace('.py', '.pyc'))
-        with io.open(dummy, 'w', encoding='utf-8') as handle:
+        remove(self.dummy.replace('.py', '.pyc'))
+        with io.open(self.dummy, 'w', encoding='utf-8') as handle:
             handle.write('def value():\n\treturn 1\n')
 
         def transform(_val):
@@ -261,12 +261,30 @@ class BuildTransform(unittest.TestCase):
         fn = self.check_transform(transform, 'function: testlib.dummy.value()', cache=False)
         eq_(fn(), [1])
 
-        remove(dummy.replace('.py', '.pyc'))
-        with io.open(dummy, 'w', encoding='utf-8') as handle:
+        remove(self.dummy.replace('.py', '.pyc'))
+        with io.open(self.dummy, 'w', encoding='utf-8') as handle:
             handle.write('def value():\n\treturn 100\n')
         eq_(fn(), [100])
         fn = self.check_transform(transform, 'function: testlib.dummy.value()', cache=False)
         eq_(fn(), [100])
+
+    def test_invalid_change(self):
+        remove(self.dummy.replace('.py', '.pyc'))
+        with io.open(self.dummy, 'w', encoding='utf-8') as handle:
+            handle.write('def invalid():\n\tsyntax error\n')
+
+        fn = build_transform(yaml_parse('function: testlib.dummy.invalid\nargs: []'))
+        with assert_raises(SyntaxError):
+            fn()
+
+        with io.open(self.dummy, 'w', encoding='utf-8') as handle:
+            handle.write('1/0\ndef invalid():\n\treturn 123\n')
+        with assert_raises(ZeroDivisionError):
+            fn()
+
+        with io.open(self.dummy, 'w', encoding='utf-8') as handle:
+            handle.write('def invalid():\n\treturn 123\n')
+        eq_(fn(), [123])
 
     @classmethod
     def tearDownClass(cls):

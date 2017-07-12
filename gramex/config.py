@@ -32,7 +32,7 @@ import dateutil.parser
 from pathlib import Path
 from copy import deepcopy
 from six import string_types
-from pydoc import locate as _locate
+from pydoc import locate as _locate, ErrorDuringImport
 from yaml import Loader, MappingNode
 from json import loads, JSONEncoder, JSONDecoder
 from yaml.constructor import ConstructorError
@@ -476,12 +476,18 @@ def locate(path, modules=[], forceload=0):
     ``modules`` is a list of modules to search for the path in first. So
     ``locate('FileHandler', modules=[gramex.handlers])`` will return
     ``gramex.handlers.FileHandler``.
+
+    If importing raises an Exception, log it and return None.
     '''
-    for module_name in modules:
-        module = _locate(module_name, forceload)
-        if hasattr(module, path):
-            return getattr(module, path)
-    return _locate(path, forceload)
+    try:
+        for module_name in modules:
+            module = _locate(module_name, forceload)
+            if hasattr(module, path):
+                return getattr(module, path)
+        return _locate(path, forceload)
+    except ErrorDuringImport as e:
+        app_log.exception('Exception when importing %s', path)
+        return None
 
 
 _checked_old_certs = []

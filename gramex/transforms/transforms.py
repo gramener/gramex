@@ -64,7 +64,10 @@ def module_names(node, vars):
                                 importlib.import_module(module_name)
                             except ImportError:
                                 module.pop()
-                            else:
+                            # Anything other than an ImportError means we've identified the module.
+                            # E.g. A SyntaxError means the file is right, it just has an error.
+                            # Add these modules as well.
+                            finally:
                                 modules.add(module_name)
                                 break
             context.append(child.attr if isinstance(child, ast.Attribute) else None)
@@ -148,7 +151,7 @@ def build_transform(conf, vars=None, filename='transform', cache=False):
     # Ensure that the transform is a dict. This is a common mistake. We forget
     # the pattern: prefix
     if not hasattr(conf, 'items'):
-        raise ValueError('transform needs {function: name}. Got %s' % repr(conf))
+        raise ValueError('%s: needs {function: name}. Got %s' % (filename, repr(conf)))
 
     conf = {key: val for key, val in conf.items() if key in {'function', 'args', 'kwargs'}}
 
@@ -157,7 +160,7 @@ def build_transform(conf, vars=None, filename='transform', cache=False):
         vars = {'_val': None}
 
     if 'function' not in conf or not conf['function']:
-        raise KeyError('No function in conf %s' % conf)
+        raise KeyError('%s: No function in conf %s' % (filename, conf))
 
     # Get the name of the function in case it's specified as a function call
     # expr is the full function / expression, e.g. six.text_type("abc")
@@ -165,18 +168,22 @@ def build_transform(conf, vars=None, filename='transform', cache=False):
     expr = conf['function']
     tree = ast.parse(expr)
     if len(tree.body) != 1 or not isinstance(tree.body[0], ast.Expr):
-        raise ValueError('function: must be an Python function or expression, not %s', expr)
+        raise ValueError('%s: function: must be an Python function or expression, not %s',
+                         (filename, expr))
 
     # Check whether to use the expression as is, or construct the expression
     # If expr is like "x" or "module.x", construct it if it's callable
     # Else, use the expression as-is
     function_name = _full_name(tree.body[0].value)
-    modules = set()
     if function_name is not None:
         function = locate(function_name, modules=['gramex.transforms'])
         if function is None:
-            raise NameError('Cannot find function %s' % function_name)
-        if callable(function):
+            app_log.error('%s: Cannot load function %s' % (filename, function_name))
+        # This section converts the function into an expression.
+        # We do this only if the original expression was a *callable* function.
+        # But if we can't load the original function (e.g. SyntaxError),
+        # treat that as a function as well, allowing users to correct it later.
+        if callable(function) or function is None:
             if 'args' in conf:
                 # If args is not a list, convert to a list with that value
                 args = conf['args'] if isinstance(conf['args'], list) else [conf['args']]
@@ -192,19 +199,17 @@ def build_transform(conf, vars=None, filename='transform', cache=False):
             expr += ')'
 
     # Create the code
-    modules = ', '.join(sorted(modules | module_names(tree, vars)))
+    modules = module_names(tree, vars)
+    modulestr = ', '.join(sorted(modules))
     body = [
-        'def transform(',
-        ', '.join('{:s}={!r:}'.format(var, val) for var, val in vars.items()),
-        '):\n',
-        '\timport %s\n' % modules if modules else '',
-        '\treload_module(%s)\n' % modules if modules and not cache else '',
+        'def transform(', ', '.join('{:s}={!r:}'.format(k, v) for k, v in vars.items()), '):\n',
+        '\timport %s\n' % modulestr if modulestr else '',
+        '\treload_module(%s)\n' % modulestr if modulestr and not cache else '',
         '\tresult = %s\n' % expr,
+        # If the result is a generator object, return it. Else, create a list and
+        # return that. This ensures that the returned value is always an iterable
+        '\treturn result if isinstance(result, GeneratorType) else [result,]',
     ]
-
-    # If the result is a generator object, return it. Else, create a list and
-    # return that. This ensures that the returned value is always an iterable
-    body.append('\treturn result if isinstance(result, GeneratorType) else [result,]')
 
     # Compile the function with context variables
     context = dict(
