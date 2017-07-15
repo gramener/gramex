@@ -48,39 +48,33 @@ class DataHandlerTestMixin(object):
 
         # select, where, sort, offset, limit
         base = server.base_url + '/datastore/' + self.database + '/'
-        eq(self.data[:5], pd.read_csv(base + 'csv/?limit=5'))
-        eq(self.data[5:], pd.read_csv(base + 'csv/?offset=5'))
-        eq(self.data, pd.read_csv(base + 'csv/?sort='))
-        eq(self.data, pd.read_csv(base + 'csv/?sort=nonexistent'))
-        eq(self.data.sort_values(by='votes'),
-           pd.read_csv(base + 'csv/?sort=votes'))
-        eq(self.data.sort_values(by='votes', ascending=False)[:5],
-           pd.read_csv(base + 'csv/?limit=5&sort=votes:desc'))
+        csv = lambda q: pd.read_csv(base + 'csv/' + q)
+        eq(self.data[:5], csv('?limit=5'))
+        eq(self.data[5:], csv('?offset=5'))
+        eq(self.data, csv('?sort='))
+        eq(self.data, csv('?sort=nonexistent'))
+        eq(self.data.sort_values(by='votes'), csv('?sort=votes'))
+        eq(self.data.sort_values(by='votes', ascending=False)[:5], csv('?limit=5&sort=votes:desc'))
         eq(self.data.sort_values(by=['category', 'name'], ascending=[False, False]),
-           pd.read_csv(base + 'csv/?sort=category:desc&sort=name:desc'))
-        eq(self.data[['name', 'votes']],
-           pd.read_csv(base + 'csv/?select=name&select=votes'))
-        eq(self.data.query('category=="Actors"'),
-           pd.read_csv(base + 'csv/?where=category==Actors'))
-        eq(self.data.query('category=="Actors"'),
-           pd.read_csv(base + 'csv/?where=category=Actors'))
-        eq(self.data.query('category!="Actors"'),
-           pd.read_csv(base + 'csv/?where=category!=Actors'))
-        eq(self.data[self.data.name.str.contains('Brando')],
-           pd.read_csv(base + 'csv/?where=name~Brando'))
-        eq(self.data[~self.data.name.str.contains('Brando')],
-           pd.read_csv(base + 'csv/?where=name!~Brando'))
-        eq(self.data.query('votes>100'),
-           pd.read_csv(base + 'csv/?where=votes>100'))
-        eq(self.data.query('150 > votes > 100'),
-           pd.read_csv(base + 'csv/?where=votes<150&where=votes>100&xyz=8765'))
+           csv('?sort=category:desc&sort=name:desc'))
+        eq(self.data[['name', 'votes']], csv('?select=name&select=votes'))
+        eq(self.data.query('category=="Actors"'), csv('?where=category==Actors'))
+        eq(self.data.query('category=="Actors"'), csv('?where=category=Actors'))
+        eq(self.data.query('category!="Actors"'), csv('?where=category!=Actors'))
+        eq(self.data.query('category=="Actors"'), csv('?where=category=Actors&where=name='))
+        eq(self.data.query('category=="Actors"'), csv('?where=category=Actors&where=na='))
+        eq(self.data.query('category=="Actors"'), csv('?where=category=Actors&where=votes>'))
+        eq(self.data[self.data.name.str.contains('Brando')], csv('?where=name~Brando'))
+        eq(self.data[~self.data.name.str.contains('Brando')], csv('?where=name!~Brando'))
+        eq(self.data.query('votes>100'), csv('?where=votes>100'))
+        eq(self.data.query('150 > votes > 100'), csv('?where=votes<150&where=votes>100&xyz=8765'))
         # ?q=a%e matches "Actresses" (category) and Charlie, James & Astaire (name)
         q = re.compile(r'a.*e', re.IGNORECASE).search
         result = self.data.T.apply(lambda row: bool(q(row['name']) or q(row['category'])))
-        eq(self.data[result], pd.read_csv(base + 'csv/?q=a%e'))
+        eq(self.data[result], csv('?q=a%e'))
 
         # format
-        eq(self.data[:5], pd.read_csv(base + 'csv/?limit=5'))
+        eq(self.data[:5], csv('?limit=5'))
         eq(self.data[:5], pd.read_json(base + 'csv/?limit=5&format='))
         eq(self.data[:5], pd.read_json(base + 'csv/?limit=5&format=json'))
         eq(self.data[:5], pd.read_json(base + 'csv/?limit=5&format=xx&format=json'))
@@ -91,27 +85,27 @@ class DataHandlerTestMixin(object):
         eqdt((self.data.groupby('category', as_index=False)
               .agg({'rating': 'min', 'votes': 'sum'})
               .rename(columns={'rating': 'ratemin', 'votes': 'votesum'})),
-             pd.read_csv(base + 'csv/?groupby=category' +
-                         '&agg=ratemin:min(rating)&agg=votesum:sum(votes)'))
+             csv('?groupby=category' +
+                 '&agg=ratemin:min(rating)&agg=votesum:sum(votes)'))
 
         eqdt((self.data.query('120 > votes > 60')
               .groupby('category', as_index=False)
               .agg({'rating': 'max', 'votes': 'count'})
               .rename(columns={'rating': 'ratemax', 'votes': 'votecount'})
               .sort_values(by='votecount', ascending=True)),
-             pd.read_csv(base + 'csv/?groupby=category' +
-                         '&agg=ratemax:max(rating)&agg=votecount:count(votes)' +
-                         '&where=votes<120&where=votes>60&sort=votecount:asc'))
+             csv('?groupby=category' +
+                 '&agg=ratemax:max(rating)&agg=votecount:count(votes)' +
+                 '&where=votes<120&where=votes>60&sort=votecount:asc'))
 
         eqdt((self.data.query('120 > votes > 60')
               .groupby('category', as_index=False)
               .agg({'rating': pd.np.mean, 'votes': pd.Series.nunique})
               .rename(columns={'rating': 'ratemean', 'votes': 'votenu'})
               .loc[1:, ['category', 'votenu']]),
-             pd.read_csv(base + 'csv/?groupby=category' +
-                         '&agg=ratemean:mean(rating)&agg=votenu:nunique(votes)' +
-                         '&where=votes<120&where=votes>60' +
-                         '&select=category&select=votenu&offset=1'))
+             csv('?groupby=category' +
+                 '&agg=ratemean:mean(rating)&agg=votenu:nunique(votes)' +
+                 '&where=votes<120&where=votes>60' +
+                 '&select=category&select=votenu&offset=1'))
 
     def test_querypostdb(self):
         base = server.base_url + '/datastore/' + self.database + '/csv/'

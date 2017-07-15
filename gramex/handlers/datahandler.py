@@ -362,7 +362,7 @@ class DataHandler(BaseHandler, DataMixin):
                 elif oper == '!~':
                     whr = (~col.like('*' + val + '*'))
                 wheres = whr if wheres is None else wheres & whr
-            query = query[wheres]
+            query = query if wheres is None else query[wheres]
 
         alias_cols = []
         if _groups and _aggs:
