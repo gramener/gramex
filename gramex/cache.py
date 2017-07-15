@@ -6,7 +6,7 @@ import json
 import yaml
 import pandas as pd
 from tornado.template import Template
-from gramex.config import app_log
+from gramex.config import app_log, PathConfig
 
 
 _opener_defaults = dict(mode='r', buffering=-1, encoding='utf-8', errors='strict',
@@ -98,6 +98,7 @@ _CALLBACKS = dict(
     template=opener(Template, read=True),
     md=_markdown,
     markdown=_markdown,
+    config=PathConfig,
 )
 
 
@@ -111,6 +112,8 @@ def open(path, callback, **kwargs):
 
     - ``text`` or ``txt``: reads files using io.open
     - ``yaml``: reads files using PyYAML
+    - ``config``: reads files using using :py:class:`gramex.config.PathConfig`.
+      Same as ``yaml``, but allows ``import:`` and variable substitution.
     - ``json``: reads files using json.load
     - ``template``: reads files using tornado.Template
     - ``markdown`` or ``md``: reads files using markdown.markdown
