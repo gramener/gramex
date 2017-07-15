@@ -314,7 +314,6 @@ class BuildTransform(unittest.TestCase):
             args: [=handler.current_user.user, 'ta']
         ''', vars=AttrDict(handler=None))
 
-
     @classmethod
     def tearDownClass(cls):
         # Remove temporary files
