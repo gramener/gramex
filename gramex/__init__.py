@@ -198,11 +198,16 @@ def init(force_reload=False, **kwargs):
     ignored. But every time ``gramex.init(...)`` is called subsequently, the
     ``val`` is re-evaluated and stored in ``gramex.conf``.
     '''
+    # List of URLs to warn about
+    warns = ['url.*', 'cache.*', 'schedule.*', 'watch.*',
+             'log.loggers.*', 'log.handlers.*', 'log.formatters.*']
+
     # Initialise configuration layers with provided configurations
     paths.update(kwargs)
     for key, val in paths.items():
         if key not in config_layers:
-            config_layers[key] = PathConfig(val / 'gramex.yaml') if isinstance(val, Path) else val
+            config_layers[key] = (PathConfig(val / 'gramex.yaml', warn=warns)
+                                  if isinstance(val, Path) else val)
 
     # Locate all config files
     config_files = set()

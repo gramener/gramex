@@ -31,6 +31,7 @@ import dateutil.tz
 import dateutil.parser
 from pathlib import Path
 from copy import deepcopy
+from fnmatch import fnmatch
 from six import string_types
 from pydoc import locate as _locate, ErrorDuringImport
 from yaml import Loader, MappingNode
@@ -38,7 +39,11 @@ from json import loads, JSONEncoder, JSONDecoder
 from yaml.constructor import ConstructorError
 from orderedattrdict import AttrDict, DefaultAttrDict
 
+# gramex.config.app_log is the default logger used by all of gramex
 app_log = logging.getLogger('gramex')
+
+# sqlalchemy.create_engine requires an encoding= that must be an str across
+# Python 2 and Python 3. Expose this for other modules to use
 str_utf8 = str('utf-8')             # noqa
 
 
@@ -75,7 +80,7 @@ def walk(node):
             yield index, value, node
 
 
-def merge(old, new, mode='overwrite'):
+def merge(old, new, mode='overwrite', warn=None, _path=''):
     '''
     Update old dict with new dict recursively.
 
@@ -84,13 +89,23 @@ def merge(old, new, mode='overwrite'):
 
     If ``mode='overwrite'``, the old dict is overwritten (default).
     If ``mode='setdefault'``, the old dict values are updated only if missing.
+
+    ``warn=`` is an optional list of key paths. Any conflict on dictionaries
+    matching any of these paths is logged as a warning. For example,
+    ``warn=['url.*', 'watch.*']`` warns if any url: sub-key or watch: sub-key
+    has a conflict.
     '''
     for key in new:
         if key in old and hasattr(old[key], 'items') and hasattr(new[key], 'items'):
-            merge(old=old[key], new=new[key], mode=mode)
-        else:
-            if mode == 'overwrite' or key not in old:
-                old[key] = deepcopy(new[key])
+            if warn is not None:
+                for pattern in warn:
+                    if fnmatch(_path, pattern):
+                        app_log.warn('Duplicate key: %s', _path)
+                        break
+            _path += '.' + key if _path else key
+            merge(old=old[key], new=new[key], mode=mode, warn=warn, _path=_path)
+        elif mode == 'overwrite' or key not in old:
+            old[key] = deepcopy(new[key])
     return old
 
 
@@ -108,7 +123,7 @@ class ChainConfig(AttrDict):
     '''
 
     def __pos__(self):
-        '+config returns layers merged in order, removing null keys'
+        '''+config returns layers merged in order, removing null keys'''
         conf = AttrDict()
         for name, config in self.items():
             if hasattr(config, '__pos__'):
@@ -332,7 +347,7 @@ def _add_ns(config, namespace, prefix):
     return config
 
 
-def load_imports(config, source):
+def load_imports(config, source, warn=None):
     '''
     Post-process a config for imports.
 
@@ -386,6 +401,11 @@ def load_imports(config, source):
 
     By default, the prefix is the relative path of the imported YAML file
     (relative to the importer).
+
+    ``warn=`` is an optional list of key paths. Any conflict on dictionaries
+    matching any of these paths is logged as a warning. For example,
+    ``warn=['url.*', 'watch.*']`` warns if any url: sub-key or watch: sub-key
+    has a conflict.
     '''
     imported_paths = [_pathstat(source)]
     root = source.absolute().parent
@@ -401,7 +421,7 @@ def load_imports(config, source):
                         prefix = Path(path).as_posix()
                         new_conf = _add_ns(new_conf, conf['namespace'], prefix)
                     imported_paths += load_imports(new_conf, source=path)
-                    merge(old=node, new=new_conf, mode='setdefault')
+                    merge(old=node, new=new_conf, mode='setdefault', warn=warn)
             # Delete the import key
             del node[key]
     return imported_paths
@@ -412,6 +432,11 @@ class PathConfig(AttrDict):
     An ``AttrDict`` that is loaded from a path as a YAML file. For e.g.,
     ``conf = PathConfig(path)`` loads the YAML file at ``path`` as an AttrDict.
     ``+conf`` reloads the path if required.
+
+    ``warn=`` is an optional list of key paths. Any conflict on dictionaries
+    matching any of these paths is logged as a warning. For example,
+    ``warn=['url.*', 'watch.*']`` warns if any url: sub-key or watch: sub-key
+    has a conflict.
 
     Like http://configure.readthedocs.org/ but supports imports not inheritance.
     This lets us import YAML files in the middle of a YAML structure::
@@ -426,6 +451,8 @@ class PathConfig(AttrDict):
 
     __info__.path
         The path that this instance syncs with, stored as a ``pathlib.Path``
+    __info__.warn
+        The keys to warn in case about in case of an import merge conflict
     __info__.imports
         A list of imported files, stored as an ``AttrDict`` with 2 attributes:
 
@@ -435,9 +462,9 @@ class PathConfig(AttrDict):
             The ``os.stat()`` information about this file (or ``None`` if the
             file is missing.)
     '''
-    def __init__(self, path):
+    def __init__(self, path, warn=None):
         super(PathConfig, self).__init__()
-        self.__info__ = AttrDict(path=Path(path), imports=[])
+        self.__info__ = AttrDict(path=Path(path), imports=[], warn=warn)
         self.__pos__()
 
     def __pos__(self):
@@ -461,7 +488,7 @@ class PathConfig(AttrDict):
         if reload:
             self.clear()
             self.update(_yaml_open(path))
-            self.__info__.imports = load_imports(self, source=path)
+            self.__info__.imports = load_imports(self, source=path, warn=self.__info__.warn)
         return self
 
 
