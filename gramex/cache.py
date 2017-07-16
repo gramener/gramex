@@ -4,6 +4,7 @@ import os
 import six
 import json
 import yaml
+import inspect
 import pandas as pd
 from tornado.template import Template
 from gramex.config import app_log, PathConfig
@@ -102,21 +103,21 @@ _CALLBACKS = dict(
 )
 
 
-def open(path, callback, **kwargs):
+def open(path, callback, rel=False, **kwargs):
     '''
     Reads a file, processes it via a callback, caches the result and returns it.
     When called again, returns the cached result unless the file has updated.
 
     The callback can be a function that accepts the filename and any other
-    arguments, or a string that can be one of
+    arguments, or a predefined string that can be one of
 
     - ``text`` or ``txt``: reads files using io.open
-    - ``yaml``: reads files using PyYAML
+    - ``yaml``: reads files using yaml.load via io.open
     - ``config``: reads files using using :py:class:`gramex.config.PathConfig`.
       Same as ``yaml``, but allows ``import:`` and variable substitution.
-    - ``json``: reads files using json.load
-    - ``template``: reads files using tornado.Template
-    - ``markdown`` or ``md``: reads files using markdown.markdown
+    - ``json``: reads files using json.load via io.open
+    - ``template``: reads files using tornado.Template via io.open
+    - ``markdown`` or ``md``: reads files using markdown.markdown via io.open
     - ``csv``, ``excel``, ``xls``, `xlsx``, ``hdf``, ``html``, ``sas``,
       ``stata``, ``table``: reads using Pandas
 
@@ -133,12 +134,26 @@ def open(path, callback, **kwargs):
 
         # Load data using a custom callback
         open('data.fmt', my_format_reader_function, arg='value')
+
+    ``rel=True`` opens the path relative to the caller function's file path. If
+    ``D:/app/calc.py`` calls ``open('data.csv', 'csv', rel=True)``, the path
+    is replaced with ``D:/app/data.csv``.
+
+    Any other keyword arguments are passed directly to the callback. If the
+    callback is a predefined string and uses io.open, all argument applicable to
+    io.open are passsed to io.open and the rest are passed to the callback.
     '''
     # Pass _reload_status = True for testing purposes. This returns a tuple:
     # (result, reloaded) instead of just the result.
     _reload_status = kwargs.pop('_reload_status', False)
     reloaded = False
     _cache = kwargs.pop('_cache', _OPEN_CACHE)
+
+    # Get the parent frame's filename. Compute path relative to that.
+    if rel:
+        stack = inspect.getouterframes(inspect.currentframe(), 2)
+        folder = os.path.dirname(os.path.abspath(stack[1][1]))
+        path = os.path.join(folder, path)
 
     callback_is_str = isinstance(callback, six.string_types)
     key = (path, callback if callback_is_str else id(callback))

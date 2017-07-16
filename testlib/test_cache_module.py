@@ -139,6 +139,14 @@ class TestOpen(unittest.TestCase):
         touch(path)
         check(reload=True)
 
+    def test_rel(self):
+        # Passing rel=True picks up the file from the current directory
+        path = 'test_cache/template.txt'
+        with io.open(os.path.join(folder, 'template.txt'), encoding='utf-8') as handle:
+            expected = handle.read()
+        result = gramex.cache.open(path, 'txt', rel=True)
+        eq_(result, expected)
+
     def test_open_csv(self):
         path = os.path.join(folder, 'data.csv')
         expected = pd.read_csv(path, encoding='utf-8')

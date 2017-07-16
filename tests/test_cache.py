@@ -24,7 +24,7 @@ def setUpModule():
 
 
 class TestCacheConstructor(unittest.TestCase):
-    'Test gramex.services.cache() as a pure function'
+    # Test gramex.services.cache() as a pure function
 
     def check_cache_expiry(self, cache):
         cache.set('persistent', 'value', 10)
@@ -47,7 +47,7 @@ class TestCacheConstructor(unittest.TestCase):
 
 
 class TestCacheKey(unittest.TestCase):
-    'Test Gramex cache: key behaviour'
+    # Test Gramex cache: key behaviour
 
     def test_request(self):
         def request(val):
@@ -109,7 +109,7 @@ class TestCacheKey(unittest.TestCase):
 
 
 class TestCacheFunctionHandler(TestGramex):
-    'Test Gramex handler caching behaviour'
+    # Test Gramex handler caching behaviour
     @staticmethod
     def headers(r):
         return {name: r.headers[name] for name in r.headers if name not in ignore_headers}

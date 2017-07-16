@@ -302,6 +302,15 @@ For example, to compute the [MD5 hash][hashlib] of a file, use:
 [pickle-load]: https://docs.python.org/2/library/pickle.html#pickle.load
 [hashlib]: https://docs.python.org/3/library/hashlib.html
 
+You can also pass a `rel=True` parameter if you want to specify the filename
+relative to the current folder. For example, if `D:/app/calc.py` has this code:
+
+    :::python
+    conf = gramex.cache.open('config.yaml', 'yaml', rel=True)
+
+... the `config.yaml` will be loaded from the **same directory** as the calling
+file, `D:/app/calc.py`, that is from `D:/app/config.yaml`.
+
 # Query caching
 
 `gramex.cache.query` returns SQL queries as DataFrames and caches the results.
