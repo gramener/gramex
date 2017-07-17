@@ -440,7 +440,9 @@ class BaseMixin(object):
                 session_id = b2a_base64(os.urandom(24))[:-1]
                 # Websockets cannot set cookies. They raise a RuntimeError. Ignore those.
                 try:
-                    self.set_secure_cookie('sid', session_id, expires_days=self._session_days)
+                    # Set HTTPOnly cookies. Set SecureFlag only on HTTPS requests
+                    self.set_secure_cookie('sid', session_id, expires_days=self._session_days,
+                                           httponly=True, secure=self.request.protocol == 'https')
                 except RuntimeError:
                     pass
             session_id = session_id.decode('ascii')
