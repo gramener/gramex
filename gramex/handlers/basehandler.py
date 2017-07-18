@@ -424,6 +424,19 @@ class BaseMixin(object):
         '''
         raise NotImplementedError('Specify a session: section in gramex.yaml')
 
+    def _set_new_session_id(self):
+        '''Sets a new random session ID. Returns a bytes object'''
+        session_id = b2a_base64(os.urandom(24))[:-1]
+        # Websockets cannot set cookies. They raise a RuntimeError. Ignore those.
+        try:
+            # Set HTTPOnly cookies. Set SecureFlag only on HTTPS requests
+            self.set_secure_cookie('sid', session_id, expires_days=self._session_days,
+                                   httponly=True, secure=self.request.protocol == 'https')
+        except RuntimeError:
+            pass
+        return session_id
+
+
     def get_session(self):
         '''
         Return the session object for the cookie "sid" value. If no "sid" cookie
@@ -437,14 +450,8 @@ class BaseMixin(object):
             session_id = self.get_secure_cookie('sid', max_age_days=self._session_days)
             # If there's no session id cookie "sid", create a random 32-char cookie
             if session_id is None:
-                session_id = b2a_base64(os.urandom(24))[:-1]
-                # Websockets cannot set cookies. They raise a RuntimeError. Ignore those.
-                try:
-                    # Set HTTPOnly cookies. Set SecureFlag only on HTTPS requests
-                    self.set_secure_cookie('sid', session_id, expires_days=self._session_days,
-                                           httponly=True, secure=self.request.protocol == 'https')
-                except RuntimeError:
-                    pass
+                session_id = self._set_new_session_id()
+            # Convert bytes session to unicode before using
             session_id = session_id.decode('ascii')
             self._session = self._session_store.load(session_id, {})
             # Overwrite id to the session ID even if a handler has changed it
@@ -455,6 +462,24 @@ class BaseMixin(object):
         '''Persist the session object as a JSON'''
         if getattr(self, '_session', None) is not None:
             self._session_store.dump(self._session['id'], self._session)
+
+    def new_session(self):
+        '''Change "sid" cookie, while retaining all other session information'''
+        # Load the old session object into self._session
+        old_session = getattr(self, '_session', None)
+        if old_session is None:
+            session_id = self.get_secure_cookie('sid', max_age_days=self._session_days)
+            # If no sid exists, create a new one and return
+            if session_id is None:
+                return self.get_session()
+            old_session = self._session = self._session_store.load(session_id, {})
+            old_session['id'] = session_id
+        # Update session ID
+        old_sid = old_session['id']
+        self._session['id'] = new_sid = self._set_new_session_id()
+        # Save data at the back end
+        self._session_store.dump(old_sid, {})
+        self._session_store.dump(new_sid, self._session)
 
     def override_user(self):
         '''

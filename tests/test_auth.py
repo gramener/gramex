@@ -113,7 +113,11 @@ class AuthBase(TestGramex):
 class LoginMixin(object):
     def test_login(self):
         self.login_ok('alpha', 'alpha', check_next='/dir/index/')
+        old_sid = self.session.cookies['sid']
         self.login_ok('beta', 'beta', check_next='/dir/index/')
+        new_sid = self.session.cookies['sid']
+        # Test session fixation: login changes sid
+        self.assertNotEqual(old_sid, new_sid)
 
     def test_login_wrong_password(self):
         self.unauthorized('alpha', 'beta')
@@ -173,7 +177,7 @@ class TestSimpleAuth(AuthBase, LoginMixin):
         self.session = session1
         self.login_ok('alpha', 'alpha', check_next='/dir/index/')
         self.assertEquals({'user': 'alpha', 'id': 'alpha'}, self.get_session()['user'])
-        # log into second sessioj
+        # log into second session
         self.session = session2
         self.login_ok('alpha', 'alpha', check_next='/dir/index/')
         self.assertEquals({'user': 'alpha', 'id': 'alpha'}, self.get_session()['user'])

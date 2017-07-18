@@ -85,8 +85,16 @@ class AuthHandler(BaseHandler):
         pass
 
     def set_user(self, user, id):
+        # When user logs in, change session ID and invalidate old session
+        # https://www.owasp.org/index.php/Session_fixation
+        self.new_session()
+        # The unique ID for a user varies across logins. For example, Google and
+        # Facebook provide an "id", but for Twitter, it's "username". For LDAP,
+        # it's "dn". Allow auth handlers to decide their own ID attribute and
+        # store it as "id" for consistency. Logging depends on this, for example.
         user['id'] = user[id]
         self.session['user'] = user
+        # Run post-login events (e.g. ensure_single_session) specified in config
         for callback in self.actions:
             callback(self)
         self.log_user_event(event='login')

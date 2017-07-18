@@ -2,10 +2,10 @@ title: Gramex Authentication
 
 ## Sessions
 
-Gramex identifies sessions through a secure cookie named `sid`, and stores
-information against each session as a persistent key-value store. This is
-available as `handler.session` in every handler. For example, here is the
-contents of your [session](session) variable now:
+Gramex identifies sessions through a cookie named `sid`, and stores information
+against each session as a persistent key-value store. This is available as
+`handler.session` in every handler. For example, here is the contents of your
+[session](session) variable now:
 
 <iframe frameborder="0" src="session"></iframe>
 
@@ -18,6 +18,11 @@ This has a `randkey` variable that was generated using the following code:
 
 The first time a user visits the [session](session) page, it generates the
 `randkey`. The next time this is preserved.
+
+The cookie is [HttpOnly](https://www.owasp.org/index.php/HttpOnly) - you cannot
+access it via JavaScript. On HTTPS connections, it is also a marked as a
+[Secure](https://www.owasp.org/index.php/SecureFlag) cookie - you cannot access
+the same cookie via HTTP.
 
 You can store any variable against a session. These are stored in the `sid`
 secure cookie for a duration that's controlled by the `app.session.expiry`
@@ -82,6 +87,9 @@ is as follows:
 
 After logging in, users are re-directed to the `?next=` URL. You can change this
 using the [redirection configuration](../config/#redirection).
+
+Every time the user logs in, the session ID is changed to prevent
+[session fixation](https://www.owasp.org/index.php/Session_fixation).
 
 
 ## Simple auth
