@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 import os
 import json
+import time
 import shutil
 import requests
 import lxml.html
@@ -145,7 +146,20 @@ class LoginMixin(object):
                 method('alpha', 'alpha', header_next=external, check_next='/dir/index/')
 
 
-class TestSimpleAuth(AuthBase, LoginMixin):
+class LoginFailureMixin(object):
+    def test_slow_down_attacks(self):
+        self.unauthorized('alpha', 'wrong')
+        time_start = time.time()
+        self.unauthorized('alpha', 'wrong')
+        time_failed = time.time()
+        # Second failure onwards, ensure a delay
+        self.assertTrue(time_failed - time_start >= 1)
+        self.login_ok('alpha', 'alpha', check_next='/dir/index/')
+        time_succeeded = time.time()
+        self.assertTrue(time_succeeded - time_failed < 1)
+
+
+class TestSimpleAuth(AuthBase, LoginMixin, LoginFailureMixin):
     # Just apply LoginMixin tests to AuthBase
     @classmethod
     def setUpClass(cls):
@@ -215,7 +229,7 @@ class TestAuthTemplate(TestGramex):
         self.check('/auth/template', text='<h1>Auth 2</h1>')
 
 
-class DBAuthBase(AuthBase):
+class DBAuthBase(AuthBase, LoginFailureMixin):
     @classmethod
     def setUpClass(cls):
         super(DBAuthBase, cls).setUpClass()

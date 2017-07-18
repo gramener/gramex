@@ -376,6 +376,9 @@ The password supports optional encryption. Before the password is compared with
 the database, it is encrypted using the provided function. You can also use
 client-side (JavaScript) instead, and disable this.
 
+If user login fails multiple times, the response is delayed to slow down password
+guessing attacks.
+
 For an example of how to create users in a database, see `create_user_database`
 from [authutil.py](authutil.py).
 
@@ -494,10 +497,10 @@ When a user logs in or logs out, you can register actions as follows:
           key: YOURKEY
           secret: YOURSECRET
           action:                                     # Run multiple function on Google auth
-              -
-                function: ensure_single_session       # Logs user out of all other sessions
-              -
-                function: sys.stderr.write('Logged in via Google')      # Write to console
+            -
+              function: ensure_single_session         # Logs user out of all other sessions
+            -
+              function: sys.stderr.write('Logged in via Google')      # Write to console
 
 For example, the [ldap login](ldap) page is set with `ensure_single_session`.
 You can log in on multiple browsers. Every log in will log out other sessions.

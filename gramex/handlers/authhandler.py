@@ -10,6 +10,7 @@ import tornado.web
 import tornado.gen
 from tornado.auth import (GoogleOAuth2Mixin, FacebookGraphMixin, TwitterMixin,
                           urllib_parse, _auth_return_future)
+from collections import Counter
 from orderedattrdict import AttrDict
 import gramex
 import gramex.cache
@@ -68,6 +69,9 @@ class AuthHandler(BaseHandler):
             cls.log_user_event = cls.noop
         cls.actions = []
 
+        # Count failed logins
+        cls.failed_logins = Counter()
+
         # Set up post-login actions
         if action is not None:
             if not isinstance(action, list):
@@ -94,10 +98,20 @@ class AuthHandler(BaseHandler):
         # store it as "id" for consistency. Logging depends on this, for example.
         user['id'] = user[id]
         self.session['user'] = user
+        self.failed_logins[user[id]] = 0
         # Run post-login events (e.g. ensure_single_session) specified in config
         for callback in self.actions:
             callback(self)
         self.log_user_event(event='login')
+
+    @tornado.gen.coroutine
+    def fail_user(self, user, id):
+        '''Not a user login failure. Delay response on multiple failures. Returns # failures'''
+        failures = self.failed_logins[user[id]] = self.failed_logins[user[id]] + 1
+        if failures > 3:
+            yield tornado.gen.sleep(5)
+        elif failures > 1:
+            yield tornado.gen.sleep(1)
 
     def render_template(self, path, **kwargs):
         '''Like self.render(), but reloads updated templates'''
@@ -343,10 +357,12 @@ class SimpleAuth(AuthHandler):
         cls.user.setdefault('arg', 'user')
         cls.password.setdefault('arg', 'password')
 
+    @tornado.gen.coroutine
     def get(self):
         self.save_redirect_page()
         self.render_template(self.template, error=None)
 
+    @tornado.gen.coroutine
     def post(self):
         user = self.get_argument(self.user.arg)
         password = self.get_argument(self.password.arg)
@@ -359,6 +375,7 @@ class SimpleAuth(AuthHandler):
             self.set_user(info, id='user')
             self.redirect_next()
         else:
+            yield self.fail_user({'user': user}, id='user')
             self.set_status(status_code=401)
             self.render_template(self.template, error={'code': 'auth', 'error': 'Cannot log in'})
 
@@ -478,11 +495,9 @@ class DBAuth(SimpleAuth):
             self.set_user(user, id=self.user.column)
             self.redirect_next()
         else:
+            yield self.fail_user(user, self.user.column)
             self.set_status(status_code=401)
-            self.render_template(self.template, error={
-                'code': 'auth',
-                'error': 'Cannot log in'
-            })
+            self.render_template(self.template, error={'code': 'auth', 'error': 'Cannot log in'})
 
     def forgot_password(self):
         template = self.forgot.template
