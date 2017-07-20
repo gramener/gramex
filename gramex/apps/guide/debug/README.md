@@ -189,16 +189,41 @@ The log message includes the time taken to get to the line (e.g. `0.102s`), the
 message logged, and the `module.function:line-number` from where the `Timer()`
 was called.
 
+### Line profile
 
 `lineprofile` is a decorator that prints the time taken for each line of a
-function every time it is called. For example:
+function every time it is called. This example prints each line's performance:
 
     :::python
+    import pandas as pd
     from gramex.debug import lineprofile
 
     @lineprofile
-    def function(handler):
-        # ... your code here...
+    def calc():
+        data = pd.Series([x*x for x in range(1000)])
+        diff = data.diff()
+        acf = data.autocorr()
+        return acf
 
-prints line-by-line statistics about the function. This requires the
-[line_profiler](https://github.com/rkern/line_profiler) module to run.
+Running `calc()` prints this result:
+
+    Timer unit: 3.52616e-07 s
+
+    Total time: 0.00198735 s
+    File: <ipython-input-8-af6a7bd543d9>
+    Function: calc at line 4
+
+    Line #      Hits         Time  Per Hit   % Time  Line Contents
+    ==============================================================
+         4                                           @lineprofile
+         5                                           def calc():
+         6      1001         3023      3.0     53.6      data = pd.Series([x*x for x in range(1000)])
+         7         1          613    613.0     10.9      diff = data.diff()
+         8         1         1998   1998.0     35.5      acf = data.autocorr()
+         9         1            2      2.0      0.0      return acf
+
+The % time columns is noteworthy. This tells us that more than 50% of the time
+is going into constructing the series in line 6.
+
+This requires the [line_profiler](https://github.com/rkern/line_profiler) module.
+Run `conda install line_profiler` to install it.
