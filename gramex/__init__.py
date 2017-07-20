@@ -1,3 +1,24 @@
+'''
+Gramex {__version__} Copyright (C) 2017 by Gramener
+
+Start the Gramex server on port 9988 at the current directory.
+If no gramex.yaml exists, show the guide (https://learn.gramener.com/guide/)
+
+Options
+  --listen.port=9090            Starts Gramex at port 9090
+  --browser                     Open the browser after startup
+  --settings.debug              Enable serving tracebacks and autoreload
+  --settings.xsrf_cookies=F     Disable XSRF cookies (only for testing)
+  --settings.cookie_secret=...  Change cookie encryption key
+
+Installation commands. Run to see help
+  gramex install                Install an app
+  gramex update                 Update an app
+  gramex setup                  Run make, npm install, bower install etc on app
+  gramex run                    Run an installed app
+  gramex uninstall              Uninstall an app
+'''
+
 import os
 import sys
 import json
@@ -93,6 +114,12 @@ def callback_commandline(commands):
     args = parse_command_line(commands)
     cmd = args.pop('_')
 
+    # If --help or -V --version is specified, print a message and end
+    if args.get('V') is True or args.get('version') is True:
+        return console, {'msg': 'Gramex %s' % __version__}
+    if args.get('help') is True:
+        return console, {'msg': __doc__.strip().format(**globals())}
+
     # Any positional argument is treated as a gramex command
     if len(cmd) > 0:
         kwargs = {'cmd': cmd, 'args': args}
@@ -183,6 +210,11 @@ def gramex_update(url):
     http_client = tornado.httpclient.AsyncHTTPClient()
     future = http_client.fetch(url, method='POST', body=json.dumps(logs))
     future.add_done_callback(check_version)
+
+
+def console(msg):
+    '''Write message to console'''
+    print(msg)              # noqa
 
 
 def init(force_reload=False, **kwargs):

@@ -14,7 +14,7 @@ from gramex.config import app_log
 
 
 def _caller():
-    '_caller() returns the "file:function:line" of the calling function'
+    '''_caller() returns the "file:function:line" of the calling function'''
     parent = inspect.getouterframes(inspect.currentframe())[2]
     return '[%s:%s:%d]' % (parent[1], parent[3], parent[2])
 
