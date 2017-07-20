@@ -1525,7 +1525,7 @@ url:
         password:
             column: password
             arg: password
-            function: content + '123'
+            function: utils.encrypt(handler, content)
         redirect:
             query: next
             header: NEXT

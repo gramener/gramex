@@ -7,11 +7,12 @@ import requests
 import lxml.html
 import pandas as pd
 import sqlalchemy as sa
+from orderedattrdict import AttrDict
 from nose.plugins.skip import SkipTest
 from six.moves.urllib_parse import urlencode
 import gramex.config
 from gramex.http import OK, UNAUTHORIZED, FORBIDDEN
-from . import TestGramex, server, tempfiles
+from . import TestGramex, server, tempfiles, utils
 
 folder = os.path.dirname(os.path.abspath(__file__))
 
@@ -73,7 +74,7 @@ class AuthBase(TestGramex):
             headers['NEXT'] = header_next
         return {'params': params, 'headers': headers}
 
-    def login(self, user, password, query_next=None, header_next=None):
+    def login(self, user, password, query_next=None, header_next=None, headers={}):
         params = self.redirect_kwargs(query_next, header_next)
         r = self.session.get(self.url, **params)
         tree = lxml.html.fromstring(r.text)
@@ -84,6 +85,8 @@ class AuthBase(TestGramex):
         data['xsrf'] = tree.xpath('.//input[@name="_xsrf"]')[0].get('value')
 
         # Submitting the correct password redirects
+        if headers is not None:
+            params['headers'].update(headers)
         return self.session.post(self.url, timeout=10, data=data, headers=params['headers'])
 
     def logout(self, query_next=None, header_next=None):
@@ -230,28 +233,37 @@ class TestAuthTemplate(TestGramex):
 
 
 class DBAuthBase(AuthBase, LoginFailureMixin):
+    @staticmethod
+    def create_database():
+        data = pd.read_csv(os.path.join(folder, 'userdata.csv'), encoding='cp1252')
+        data['password'] = data['password'] + data['salt']
+        dburl = 'mysql+pymysql://root@%s/' % gramex.config.variables.MYSQL_SERVER
+        # sqlalchemy needs encoding to be a `str` in both Python 2.x and 3.x
+        encoding = str('utf-8')
+        engine = sa.create_engine(dburl, encoding=encoding)
+        try:
+            engine.execute('DROP DATABASE IF EXISTS test_auth')
+            engine.execute('CREATE DATABASE test_auth')
+            engine.dispose()
+            engine = sa.create_engine(dburl + 'test_auth', encoding=encoding)
+            data.to_sql('users', con=engine, index=False)
+        except sa.exc.OperationalError:
+            raise SkipTest('Unable to connect to %s' % dburl)
+
     @classmethod
     def setUpClass(cls):
         super(DBAuthBase, cls).setUpClass()
-        cls.data = pd.read_csv(os.path.join(folder, 'userdata.csv'), encoding='cp1252')
-        cls.dburl = 'mysql+pymysql://root@%s/' % gramex.config.variables.MYSQL_SERVER
-        # sqlalchemy needs encoding to be a `str` in both Python 2.x and 3.x
-        encoding = str('utf-8')
-        cls.engine = sa.create_engine(cls.dburl, encoding=encoding)
-        try:
-            cls.engine.execute('DROP DATABASE IF EXISTS test_auth')
-            cls.engine.execute('CREATE DATABASE test_auth')
-            cls.engine.dispose()
-            cls.engine = sa.create_engine(cls.dburl + 'test_auth', encoding=encoding)
-            cls.data.to_sql('users', con=cls.engine, index=False)
-        except sa.exc.OperationalError:
-            raise SkipTest('Unable to connect to %s' % cls.dburl)
+        cls.create_database()
         cls.url = server.base_url + '/auth/db'
 
 
 class TestDBAuth(DBAuthBase, LoginMixin):
     # Just apply LoginMixin tests to DBAuthBase
-    pass
+    def test_salt(self):
+        self.unauthorized('epsilon', 'epsilon')
+        self.login_ok('epsilon', 'epsilon', headers={'salt': 'abc'}, check_next='/dir/index/')
+        self.unauthorized('alpha', 'alpha', headers={'salt': 'abc'})
+        self.login_ok('alpha', 'alpha', headers={'salt': '123'}, check_next='/dir/index/')
 
 
 class TestAuthorize(DBAuthBase):

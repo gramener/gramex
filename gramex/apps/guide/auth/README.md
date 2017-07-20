@@ -373,8 +373,10 @@ in the `users` table of the SQLite `auth.db` file. The `user` and `password`
 columns of the table map to the `user` and `password` query arguments.
 
 The password supports optional encryption. Before the password is compared with
-the database, it is encrypted using the provided function. You can also use
-client-side (JavaScript) instead, and disable this.
+the database, it is transformed via the `function:` provided. This function has access to 2 pre-defined variables:
+
+1. `handler`: the Handler object
+1. `content`: the user-provided password
 
 If user login fails multiple times, the response is delayed to slow down password
 guessing attacks.

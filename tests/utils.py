@@ -162,6 +162,10 @@ def session(handler):
     return json.dumps(handler.session, indent=4)
 
 
+def encrypt(handler, content):
+    return content + handler.request.headers.get('salt', '123')
+
+
 def logtest(handler):
     result = {}
 

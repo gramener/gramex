@@ -1,5 +1,6 @@
-user,password,roles
-alpha,alpha123,employee manager
-beta,beta123,manager admin
-gamma,gamma123,employee
-delta,delta123,
+user,password,roles,salt
+alpha,alpha,employee manager,123
+beta,beta,manager admin,123
+gamma,gamma,employee,123
+delta,delta,,123
+epsilon,epsilon,,abc

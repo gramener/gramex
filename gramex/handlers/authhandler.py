@@ -393,8 +393,8 @@ class DBAuth(SimpleAuth):
         password:
             column: password                # The users.password column is matched with
             arg: password                   # ... the ?password= argument from the form
-            function: passlib.hash.sha256_crypt.encrypt         # Encryption function
-            kwargs: {salt: 'secret-key'}                        # Salt key
+                                            # Optional encryption for password
+            function: passlib.hash.sha256_crypt.encrypt(content, salt='secret-key')
         forgot:
             key: forgot                     # ?forgot= is used as the forgot password parameter
             arg: email                      # ?email= is used as the email parameter
@@ -443,7 +443,7 @@ class DBAuth(SimpleAuth):
         cls.encrypt = []
         if 'function' in password:
             cls.encrypt.append(build_transform(
-                password, vars=AttrDict(content=None),
+                password, vars=AttrDict(handler=None, content=None),
                 filename='url:%s:encrypt' % (cls.name)))
 
     @classmethod
@@ -478,7 +478,7 @@ class DBAuth(SimpleAuth):
         user = self.get_argument(self.user.arg)
         password = self.get_argument(self.password.arg)
         for encrypt in self.encrypt:
-            for result in encrypt(password):
+            for result in encrypt(handler=self, content=password):
                 password = result
 
         from sqlalchemy import and_
@@ -562,7 +562,7 @@ class DBAuth(SimpleAuth):
                 if row['expire'] > time.time():
                     password = self.get_argument(self.password.arg)
                     for encrypt in self.encrypt:
-                        for result in encrypt(password):
+                        for result in encrypt(handler=self, content=password):
                             password = result
                     # update password in database
                     values = {
