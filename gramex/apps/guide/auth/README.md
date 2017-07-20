@@ -356,6 +356,7 @@ You can configure several aspects of this flow. Below is a full configuration --
             user:
                 column: user                  # The users.user column is matched with
                 arg: user                     # ... the ?user= argument from the form
+            delay: [1, 2, 5, 10]              # Delay for failed logins
             password:
                 column: password              # The users.password column is matched with
                 arg: password                 # ... the ?password= argument from the form
@@ -378,11 +379,16 @@ the database, it is transformed via the `function:` provided. This function has 
 1. `handler`: the Handler object
 1. `content`: the user-provided password
 
-If user login fails multiple times, the response is delayed to slow down password
-guessing attacks.
-
 For an example of how to create users in a database, see `create_user_database`
 from [authutil.py](authutil.py).
+
+If user login fails, the response is delayed to slow down password guessing
+attacks. `delay:` is a list of the delay durations. `delay: [1, 1, 5]` is the
+default. This means:
+
+- Delay for 1 second on the first failure
+- Delay for 1 second on the second failure
+- Delay for 5 seconds on any failure thereafter.
 
 ### Forgot password
 

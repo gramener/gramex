@@ -71,6 +71,14 @@ class AuthHandler(BaseHandler):
 
         # Count failed logins
         cls.failed_logins = Counter()
+        # Set delay for failed logins from the delay: parameter which can be a number or list
+        default_delay = [1, 1, 5]
+        cls.delay = kwargs.get('delay')
+        if isinstance(cls.delay, list) and not all(isinstance(n, (int, float)) for n in cls.delay):
+            app_log.warn('%s: Ignoring invalid delay: %r', cls.name, cls.delay)
+            cls.delay = default_delay
+        elif isinstance(cls.delay, (int, float)) or cls.delay is None:
+            cls.delay = default_delay
 
         # Set up post-login actions
         if action is not None:
@@ -108,10 +116,9 @@ class AuthHandler(BaseHandler):
     def fail_user(self, user, id):
         '''Not a user login failure. Delay response on multiple failures. Returns # failures'''
         failures = self.failed_logins[user[id]] = self.failed_logins[user[id]] + 1
-        if failures > 3:
-            yield tornado.gen.sleep(5)
-        elif failures > 1:
-            yield tornado.gen.sleep(1)
+        index = failures - 1
+        delay = self.delay[index] if index < len(self.delay) else self.delay[-1]
+        yield tornado.gen.sleep(delay)
 
     def render_template(self, path, **kwargs):
         '''Like self.render(), but reloads updated templates'''
@@ -487,13 +494,13 @@ class DBAuth(SimpleAuth):
             self.table.c[self.password.column] == password,
         ))
         result = self.engine.execute(query)
-        user = result.fetchone()
+        user_obj = result.fetchone()
 
-        if user is not None:
+        if user_obj is not None:
             # Delete password from user object before storing it in the session
-            user = dict(user)
-            user.pop(self.password.column, None)
-            self.set_user(user, id=self.user.column)
+            user_obj = dict(user_obj)
+            user_obj.pop(self.password.column, None)
+            self.set_user(user_obj, id=self.user.column)
             self.redirect_next()
         else:
             yield self.fail_user({'user': user}, 'user')

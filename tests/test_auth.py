@@ -151,15 +151,20 @@ class LoginMixin(object):
 
 class LoginFailureMixin(object):
     def test_slow_down_attacks(self):
-        self.unauthorized('alpha', 'wrong')
-        time_start = time.time()
-        self.unauthorized('alpha', 'wrong')
-        time_failed = time.time()
-        # Second failure onwards, ensure a delay
-        self.assertTrue(time_failed - time_start >= 1)
         self.login_ok('alpha', 'alpha', check_next='/dir/index/')
-        time_succeeded = time.time()
-        self.assertTrue(time_succeeded - time_failed < 1)
+        t0 = time.time()
+        # Second failure: delay of about 0.2 seconds
+        self.unauthorized('alpha', 'wrong')
+        t1 = time.time()
+        self.assertTrue(0.3 >= t1 - t0 >= 0.2)
+        # Third failure: delay of about 0.4 seconds
+        self.unauthorized('alpha', 'wrong')
+        t2 = time.time()
+        self.assertTrue(0.5 >= t2 - t1 >= 0.4)
+        # Successful login is instantaneous
+        self.login_ok('alpha', 'alpha', check_next='/dir/index/')
+        t3 = time.time()
+        self.assertTrue(t3 - t2 < 0.2)
 
 
 class TestSimpleAuth(AuthBase, LoginMixin, LoginFailureMixin):

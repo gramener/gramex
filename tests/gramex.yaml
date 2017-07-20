@@ -1488,6 +1488,7 @@ url:
             gamma:
                 password: gamma
                 role: user
+        delay: [0.2, 0.4]
         redirect:
             query: next
             header: NEXT
@@ -1526,6 +1527,7 @@ url:
             column: password
             arg: password
             function: utils.encrypt(handler, content)
+        delay: [0.2, 0.4]
         redirect:
             query: next
             header: NEXT
