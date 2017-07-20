@@ -471,8 +471,9 @@ class DBAuth(SimpleAuth):
         if self.forgot and self.forgot.key in self.request.arguments:
             self.forgot_password()
         else:
-            self.login()
+            yield self.login()
 
+    @tornado.gen.coroutine
     def login(self):
         user = self.get_argument(self.user.arg)
         password = self.get_argument(self.password.arg)
@@ -495,7 +496,7 @@ class DBAuth(SimpleAuth):
             self.set_user(user, id=self.user.column)
             self.redirect_next()
         else:
-            yield self.fail_user(user, self.user.column)
+            yield self.fail_user({'user': user}, 'user')
             self.set_status(status_code=401)
             self.render_template(self.template, error={'code': 'auth', 'error': 'Cannot log in'})
 
