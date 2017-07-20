@@ -113,7 +113,7 @@ def app(conf):
             sys.exit(1)
 
         def callback():
-            'Called after all services are started. Opens browser if required'
+            '''Called after all services are started. Opens browser if required'''
             if ioloop._running:
                 return
 
@@ -131,6 +131,8 @@ def app(conf):
                     browser.open(url)
                 except webbrowser.Error:
                     app_log.info('Unable to open browser')
+            else:
+                app_log.info('<Ctrl-B> opens the browser. <Ctrl-D> starts the debugger.')
 
             # Ensure that we call shutdown() on Ctrl-C.
             # On Windows, Tornado does not exit on Ctrl-C. This also fixes that.
