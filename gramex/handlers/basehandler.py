@@ -436,7 +436,6 @@ class BaseMixin(object):
             pass
         return session_id
 
-
     def get_session(self):
         '''
         Return the session object for the cookie "sid" value. If no "sid" cookie
