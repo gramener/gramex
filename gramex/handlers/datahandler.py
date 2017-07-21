@@ -318,6 +318,9 @@ class DataHandler(BaseHandler, DataMixin):
             raise HTTPError(NOT_FOUND, log_message='WHERE is required in PUT method')
         table = self._sqlalchemy_gettable()
         content = dict(x.split('=', 1) for x in _vals)
+        for posttransform in self.posttransform:
+            for value in posttransform(content):
+                content = value
         wheres = self._sqlalchemy_wheres(_wheres, table)
         query = table.update().where(wheres).values(content)
         self.engine.execute(query)
