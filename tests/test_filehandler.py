@@ -27,15 +27,14 @@ def setUpModule():
 
 
 class TestFileHandler(TestGramex):
-    'Test FileHandler'
+    '''Test FileHandler'''
 
     def test_directoryhandler(self):
-        'DirectoryHandler == FileHandler'
+        # DirectoryHandler == FileHandler
         from gramex.handlers import DirectoryHandler, FileHandler
         self.assertEqual(DirectoryHandler, FileHandler)
 
     def test_filehandler(self):
-        'Test FileHandler'
         def adds_slash(url, check):
             self.assertFalse(url.endswith('/'), 'redirect_with_slash url must not end with /')
             r = self.get(url)

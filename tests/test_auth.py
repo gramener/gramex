@@ -10,6 +10,7 @@ import sqlalchemy as sa
 from orderedattrdict import AttrDict
 from nose.plugins.skip import SkipTest
 from six.moves.urllib_parse import urlencode
+import gramex
 import gramex.config
 from gramex.http import OK, UNAUTHORIZED, FORBIDDEN
 from . import TestGramex, server, tempfiles, utils
@@ -40,14 +41,19 @@ class TestSession(TestGramex):
         self.assertNotEqual(r1.cookies['sid'], r2.cookies['sid'])
         self.assertNotEqual(self.data1['id'], self.data2['id'])
 
+        # Test expiry date. It should be within a second of now, plus expiry date
+        self.assertIn('_t', self.data1)
+        diff = time.time() + gramex.conf.app.session.expiry * 24 * 60 * 60 - self.data1['_t']
+        self.assertLess(abs(diff), 0.2)
+
         # Test persistence under graceful shutdown
         server.stop_gramex()
         server.start_gramex()
         r1 = self.session1.get(self.url)
-        self.assertEqual(self.data1, json.loads(r1.text))
+        self.assertEqual(self.data1, r1.json())
         self.assertEqual(self.data1['var'], 'x')
         r2 = self.session2.get(self.url)
-        self.assertEqual(self.data2, json.loads(r2.text))
+        self.assertEqual(self.data2, r2.json())
 
     def test_cookies(self):
         r = requests.get(self.url + '?var=x')

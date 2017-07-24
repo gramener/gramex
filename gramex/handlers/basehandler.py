@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 import os
 import six
 import json
+import time
 import atexit
 import mimetypes
 import tornado.gen
@@ -62,6 +63,20 @@ class BaseMixin(object):
                 'encoding': trans.get('encoding'),
             }
 
+    @staticmethod
+    def _purge(data):
+        '''
+        Clear any expired session keys based on _t.
+        setup_session makes the session store call this purge method.
+        Until v1.20 (31 Jul 2017) no _t keys were set.
+        TODO: In a release after 30 Sep 2017, clear sessions that lack an _t
+        '''
+        now = time.time()
+        for key in list(data.keys()):
+            val = data[key]
+            if val is None or (isinstance(val, dict) and val.get('_t', 9999999999) < now):
+                del data[key]
+
     @classmethod
     def setup_session(cls, session_conf):
         '''handler.session returns the session object. It is saved on finish.'''
@@ -71,11 +86,11 @@ class BaseMixin(object):
         flush = session_conf.get('flush')
         if key not in session_store_cache:
             if store_type == 'memory':
-                session_store_cache[key] = KeyStore(store_path, flush=flush)
+                session_store_cache[key] = KeyStore(store_path, flush=flush, purge=cls._purge)
             elif store_type == 'json':
-                session_store_cache[key] = JSONStore(store_path, flush=flush)
+                session_store_cache[key] = JSONStore(store_path, flush=flush, purge=cls._purge)
             elif store_type == 'hdf5':
-                session_store_cache[key] = HDF5Store(store_path, flush=flush)
+                session_store_cache[key] = HDF5Store(store_path, flush=flush, purge=cls._purge)
             else:
                 raise NotImplementedError('Session type: %s not implemented' % store_type)
         cls._session_store = session_store_cache[key]
@@ -452,7 +467,8 @@ class BaseMixin(object):
                 session_id = self._set_new_session_id()
             # Convert bytes session to unicode before using
             session_id = session_id.decode('ascii')
-            self._session = self._session_store.load(session_id, {})
+            expire = time.time() + self._session_days * 24 * 60 * 60
+            self._session = self._session_store.load(session_id, {'_t': expire})
             # Overwrite id to the session ID even if a handler has changed it
             self._session['id'] = session_id
         return self._session
@@ -471,7 +487,8 @@ class BaseMixin(object):
             # If no sid exists, create a new one and return
             if session_id is None:
                 return self.get_session()
-            old_session = self._session = self._session_store.load(session_id, {})
+            # If the old session isn't in the store, set expiry (_t) to the past to clear it
+            old_session = self._session = self._session_store.load(session_id, {'_t': 0})
             old_session['id'] = session_id
         # Update session ID
         old_sid = old_session['id']
@@ -609,9 +626,13 @@ class KeyStore(object):
     You can initialize a KeyStore with a ``flush=`` parameter. The store is
     flushed to disk via ``store.flush()`` every ``flush`` seconds.
 
+    If a ``purge=`` function is provided, it is called with with the data. The
+    function can change the data in-place, for example, removing any expired
+    entries. The return value is ignored.
+
     When the program exits, ``.close()`` is automatically called.
     '''
-    def __init__(self, path, flush=None):
+    def __init__(self, path, flush=None, purge=None):
         '''Initialise the KeyStore at path'''
         # Ensure that path directory exists
         self.path = os.path.abspath(path)
@@ -623,6 +644,12 @@ class KeyStore(object):
         # Periodically flush buffers
         if flush is not None:
             tornado.ioloop.PeriodicCallback(self.flush, callback_time=flush * 1000).start()
+        if callable(purge):
+            self.purge = purge
+        elif purge is None:
+            self.purge = lambda data: data
+        else:
+            app_log.error('KeyStore: purge=%r invalid. Must be callable', purge)
         # Call close() when Python gracefully exits
         atexit.register(self.close)
 
@@ -640,7 +667,7 @@ class KeyStore(object):
 
     def flush(self):
         '''Write to disk'''
-        raise NotImplementedError()
+        self.purge(self.store)
 
     def close(self):
         '''Flush and close all open handles'''
@@ -679,6 +706,7 @@ class HDF5Store(KeyStore):
                                      cls=CustomJSONEncoder)
 
     def flush(self):
+        super(HDF5Store, self).flush()
         app_log.debug('Flushing %s', self.path)
         self.store.flush()
 
@@ -713,6 +741,7 @@ class JSONStore(KeyStore):
             self.store = {}
 
     def flush(self):
+        super(JSONStore, self).flush()
         json_value = json.dumps(self.store, ensure_ascii=True, separators=(',', ':'),
                                 cls=CustomJSONEncoder)
         signature = md5(json_value.encode('utf-8')).hexdigest()
