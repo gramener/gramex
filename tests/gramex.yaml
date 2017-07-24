@@ -22,15 +22,15 @@ app:
     private_key: $YAMLPATH/id_rsa
 
 cache:
-    memory:
-        type: memory
-    memory-20:
-        type: memory
-        size: 20
-    disk:
-        type: disk
-        path: $YAMLPATH/.cache-url
-    # We could test more disk caches, but they're slow
+  memory:
+    type: memory
+  memory-20:
+    type: memory
+    size: 20
+  disk:
+    type: disk
+    path: $YAMLPATH/.cache-url
+  # We could test more disk caches, but they're slow
 
 url:
   invalid-handler:
@@ -103,7 +103,7 @@ url:
     pattern: /func/attributes
     handler: FunctionHandler
     kwargs:
-        function: utils.attributes
+      function: utils.attributes
 
   func/composite:
     pattern: /func/composite
@@ -291,20 +291,20 @@ url:
     pattern: "/dir/template/(.*)"
     handler: FileHandler
     kwargs:
-        path: dir/
-        template: '*'
+      path: dir/
+      template: '*'
   dir/template-true:
     pattern: "/dir/template-true/(.*)"
     handler: FileHandler
     kwargs:
-        path: dir/
-        template: true
+      path: dir/
+      template: true
   dir/template-index:
     pattern: "/dir/template-index/(.*)"
     handler: FileHandler
     kwargs:
-        path: dir/
-        template: 'index*'
+      path: dir/
+      template: 'index*'
   dir/args:
     pattern: /dir/args/(.*)
     handler: FileHandler
@@ -423,16 +423,16 @@ url:
     pattern: /methods/get-only
     handler: FileHandler
     kwargs:
-        path: index.template.html
-        methods: GET
-        xsrf_cookies: false
+      path: index.template.html
+      methods: GET
+      xsrf_cookies: false
   methods/head-put-delete:
     pattern: /methods/head-put-delete
     handler: FileHandler
     kwargs:
-        path: index.template.html
-        methods: [HEAD, put, DELete]
-        xsrf_cookies: false
+      path: index.template.html
+      methods: [HEAD, put, DELete]
+      xsrf_cookies: false
 
   # TestQueryHandler for Sqlite
   querydata/csv:
@@ -1366,10 +1366,10 @@ url:
     pattern: /json/get/(.*)
     handler: JSONHandler
     kwargs:
-        data:
-            x: "1"
-            y: {z: 2}
-            z: [a, b, {m: 1, n: 2}]
+      data:
+        x: "1"
+        y: {z: 2}
+        z: [a, b, {m: 1, n: 2}]
   json/write:
     pattern: /json/write/(.*)
     handler: JSONHandler
@@ -1419,158 +1419,166 @@ url:
     pattern: /auth/session
     handler: FunctionHandler
     kwargs:
-        function: utils.session
-        headers:
-            Content-Type: application/json
+      function: utils.session
+      headers:
+        Content-Type: application/json
+
+  auth/otp:
+    pattern: /auth/otp
+    handler: FunctionHandler
+    kwargs:
+      function: utils.otp
+      headers:
+        Content-Type: application/json
 
   auth/logout:
     pattern: /auth/logout
     handler: LogoutHandler
     kwargs:
-        redirect:
-            query: next
-            header: NEXT
-            url: /dir/index/
+      redirect:
+        query: next
+        header: NEXT
+        url: /dir/index/
 
   auth/ldap:
     pattern: /auth/ldap
     handler: LDAPAuth
     kwargs:
-        template: $YAMLPATH/auth.html       # This has the login form
-        host: ipa.demo1.freeipa.org         # Server to connect to
-        use_ssl: true                       # Whether to use SSL or not
-        user: 'uid={user},cn=users,cn=accounts,dc=demo1,dc=freeipa,dc=org'
-        password: '{password}'
-        xsrf_cookies: false
+      template: $YAMLPATH/auth.html       # This has the login form
+      host: ipa.demo1.freeipa.org         # Server to connect to
+      use_ssl: true                       # Whether to use SSL or not
+      user: 'uid={user},cn=users,cn=accounts,dc=demo1,dc=freeipa,dc=org'
+      password: '{password}'
+      xsrf_cookies: false
 
   auth/ldap2-bind:                          # Test the "bind" mode of LDAP auth
     pattern: /auth/ldap2-bind
     handler: LDAPAuth
     kwargs:
-        template: $YAMLPATH/auth.html
-        host: ldap.forumsys.com
-        use_ssl: false                      # ldap.forumsys.com does not accept SSL
-        bind:                               # By default, bind as this user
-            user: 'uid=euler,dc=example,dc=com'
-            password: 'password'
-        search:
-            base: 'dc=example,dc=com'       # Search in this domain
-            filter: '(mail={user})'         # Using a mail ID filter
-            password: '{password}'          # and the password field as password
-        xsrf_cookies: false
+      template: $YAMLPATH/auth.html
+      host: ldap.forumsys.com
+      use_ssl: false                      # ldap.forumsys.com does not accept SSL
+      bind:                               # By default, bind as this user
+        user: 'uid=euler,dc=example,dc=com'
+        password: 'password'
+      search:
+        base: 'dc=example,dc=com'       # Search in this domain
+        filter: '(mail={user})'         # Using a mail ID filter
+        password: '{password}'          # and the password field as password
+      xsrf_cookies: false
 
   auth/ldap2-bind-wrong-bind:               # Test the "bind" mode of LDAP auth with a wrong bind
     pattern: /auth/ldap2-bind-wrong-bind
     handler: LDAPAuth
     kwargs:
-        template: $YAMLPATH/auth.html
-        host: ldap.forumsys.com
-        use_ssl: false                      # ldap.forumsys.com does not accept SSL
-        bind:                               # By default, bind as this user
-            user: 'uid=euler,dc=example,dc=com'
-            password: 'wrong-password'      # This will fail. We test for that.
-        search:
-            base: 'dc=example,dc=com'       # Search in this domain
-            filter: '(mail={user})'         # Using a mail ID filter
-            password: '{password}'          # and the password field as password
-        xsrf_cookies: false
+      template: $YAMLPATH/auth.html
+      host: ldap.forumsys.com
+      use_ssl: false                      # ldap.forumsys.com does not accept SSL
+      bind:                               # By default, bind as this user
+        user: 'uid=euler,dc=example,dc=com'
+        password: 'wrong-password'      # This will fail. We test for that.
+      search:
+        base: 'dc=example,dc=com'       # Search in this domain
+        filter: '(mail={user})'         # Using a mail ID filter
+        password: '{password}'          # and the password field as password
+      xsrf_cookies: false
 
   auth/simple:
     pattern: /auth/simple
     handler: SimpleAuth
     kwargs:
-        template: $YAMLPATH/auth.html
-        user: {arg: user}
-        password: {arg: password}
-        credentials:
-            alpha: alpha
-            beta: beta
-            gamma:
-                password: gamma
-                role: user
-        delay: [0.2, 0.4]
-        redirect:
-            query: next
-            header: NEXT
-            url: /dir/index/
-        action:
-            -
-              function: utils.set_session
-              kwargs:
-                action_set: true
-            -
-              function: ensure_single_session
-        xsrf_cookies: false
+      template: $YAMLPATH/auth.html
+      user: {arg: user}
+      password: {arg: password}
+      credentials:
+        alpha: alpha
+        beta: beta
+        gamma:
+          password: gamma
+          role: user
+      delay: [0.2, 0.4]
+      redirect:
+        query: next
+        header: NEXT
+        url: /dir/index/
+      action:
+        -
+          function: utils.set_session
+          kwargs:
+            action_set: true
+        -
+          function: ensure_single_session
+      xsrf_cookies: false
 
   auth/template:
     pattern: /auth/template
     handler: SimpleAuth
     kwargs:
-        template: $YAMLPATH/authtemplate.html
-        user: {arg: user}
-        password: {arg: password}
-        credentials:
-            alpha: alpha
+      template: $YAMLPATH/authtemplate.html
+      user: {arg: user}
+      password: {arg: password}
+      credentials:
+        alpha: alpha
 
   auth/db:
     pattern: /auth/db
     handler: DBAuth
     kwargs:
-        template: $YAMLPATH/auth.html
-        # This is created by schedule.create-user-database
-        url: 'mysql+pymysql://root@${MYSQL_SERVER}/test_auth'
-        table: users
-        user:
-            column: user
-            arg: user
-        password:
-            column: password
-            arg: password
-            function: utils.encrypt(handler, content)
-        delay: [0.2, 0.4]
-        redirect:
-            query: next
-            header: NEXT
-            url: /dir/index/
-        xsrf_cookies: false
+      template: $YAMLPATH/auth.html
+      # This is created by schedule.create-user-database
+      url: 'mysql+pymysql://root@${MYSQL_SERVER}/test_auth'
+      table: users
+      user:
+          column: user
+          arg: user
+      password:
+          column: password
+          arg: password
+          function: utils.encrypt(handler, content)
+      delay: [0.2, 0.4]
+      redirect:
+          query: next
+          header: NEXT
+          url: /dir/index/
+      xsrf_cookies: false
 
   auth/functionhandler:
     pattern: /auth/functionhandler
     handler: FunctionHandler
     kwargs:
-        auth: true
-        function: six.text_type
-        args: 'OK'
-        xsrf_cookies: false
+      auth: true
+      function: six.text_type
+      args: 'OK'
+      xsrf_cookies: false
   auth/filehandler:
     pattern: /auth/filehandler
     handler: FileHandler
     kwargs:
-        auth: true
-        path: dir/alpha.txt
-        xsrf_cookies: false
+      auth: true
+      path: dir/alpha.txt
+      xsrf_cookies: false
   auth/datahandler:
     pattern: /auth/datahandler
     handler: DataHandler
     kwargs:
-        auth: true
-        driver: blaze
-        url: actors.csv
-        xsrf_cookies: false
+      auth: true
+      driver: blaze
+      url: actors.csv
+      xsrf_cookies: false
   auth/jsonhandler:
     pattern: /auth/jsonhandler/(.*)
     handler: JSONHandler
     kwargs:
-        auth: true
-        data: {x: 1}
-        xsrf_cookies: false
+      auth: true
+      data: {x: 1}
+      xsrf_cookies: false
   auth/processhandler:
     pattern: /auth/processhandler
     handler: ProcessHandler
     kwargs:
-        auth: true
-        args: [python, "$YAMLPATH/processtest.py", a, '1', 'x y']
-        xsrf_cookies: false
+      auth: true
+      args: [python, "$YAMLPATH/processtest.py", a, '1', 'x y']
+      xsrf_cookies: false
   auth/twitterresthandler:
     pattern: /auth/twitterresthandler
     handler: TwitterRESTHandler
@@ -1594,41 +1602,41 @@ url:
     pattern: /auth/membership
     handler: FileHandler
     kwargs:
-        path: dir/alpha.txt
-        auth:
-            membership:
-                user: [alpha, beta]
-        xsrf_cookies: false
+      path: dir/alpha.txt
+      auth:
+        membership:
+          user: [alpha, beta]
+      xsrf_cookies: false
   auth/memberships:
     pattern: /auth/memberships
     handler: FileHandler
     kwargs:
-        path: dir/alpha.txt
-        auth:
-            membership:
-                -
-                    user: alpha
-                -
-                    user: beta
-        xsrf_cookies: false
+      path: dir/alpha.txt
+      auth:
+        membership:
+          -
+            user: alpha
+          -
+            user: beta
+      xsrf_cookies: false
   auth/condition:
     pattern: /auth/condition
     handler: FileHandler
     kwargs:
-        path: dir/alpha.txt
-        auth:
-            condition:
-                function: str.endswith
-                args: [=handler.current_user.user, 'ta']        # beta, delta
-        xsrf_cookies: false
+      path: dir/alpha.txt
+      auth:
+        condition:
+          function: str.endswith
+          args: [=handler.current_user.user, 'ta']        # beta, delta
+      xsrf_cookies: false
   auth/login-url:
     pattern: /auth/login-url
     handler: FileHandler
     kwargs:
-        auth:
-          login_url: /auth/simple
-        path: dir/alpha.txt
-        xsrf_cookies: false
+      auth:
+        login_url: /auth/simple
+      path: dir/alpha.txt
+      xsrf_cookies: false
   auth/unauthorized-template:
     pattern: /auth/unauthorized-template
     handler: FileHandler
@@ -1644,9 +1652,9 @@ url:
     pattern: /xsrf
     handler: FunctionHandler
     kwargs:
-        function: "str"
-        args: "xsrf"
-        set_xsrf: true
+      function: "str"
+      args: "xsrf"
+      set_xsrf: true
   xsrf/yes:
     pattern: /xsrf/yes
     handler: FileHandler
@@ -1664,30 +1672,30 @@ url:
     pattern: /logtest
     handler: FunctionHandler
     kwargs:
-        function: utils.logtest
-        log:
-            format: '%(method)s %(uri)s %(ip)s %(status)s %(duration)s %(args.x)s %(headers.head)s %(cookies.sid)s %(user.id)s %(env.HOME)s'
+      function: utils.logtest
+      log:
+        format: '%(method)s %(uri)s %(ip)s %(status)s %(duration)s %(args.x)s %(headers.head)s %(cookies.sid)s %(user.id)s %(env.HOME)s'
 
   error/404-template:
     pattern: /error/404-template(.*)
     handler: FileHandler
     kwargs:
-        path: $YAMLPATH/dir/
-        error:
-            404:
-                path: $YAMLPATH/error-404.json
-                autoescape: false
-                whitespace: single
+      path: $YAMLPATH/dir/
+      error:
+        404:
+          path: $YAMLPATH/error-404.json
+          autoescape: false
+          whitespace: single
   error/500-function:
     pattern: /error/500-function
     handler: FunctionHandler
     kwargs:
-        function: utils.zero_division_error
-        error:
-            500:
-                function: utils.handle_error
-                headers:
-                    Content-Type: application/json
+      function: utils.zero_division_error
+      error:
+        500:
+          function: utils.handle_error
+          headers:
+            Content-Type: application/json
 
   ws/socket:
     pattern: /ws/socket
@@ -1726,18 +1734,18 @@ url:
 log:
     version: 1
     root:
-        level: DEBUG
-        handlers:
-            - error
+      level: DEBUG
+      handlers:
+        - error
     handlers:
-        error:
-            class: logging.StreamHandler
-            level: INFO
-            stream: ext://sys.stdout
-            formatter: inline
+      error:
+        class: logging.StreamHandler
+        level: INFO
+        stream: ext://sys.stdout
+        formatter: inline
     formatters:
-        inline:
-            format: '        %(message)s'
+      inline:
+        format: '        %(message)s'
 
 watch:
   watch_template:
@@ -1747,8 +1755,8 @@ watch:
     on_deleted: utils.on_deleted
   watch_patterns:
     paths:
-        - dir/
-        - watch.*.test
+      - dir/
+      - watch.*.test
     on_created: utils.on_created
     on_modified: utils.on_modified
     on_deleted: utils.on_deleted

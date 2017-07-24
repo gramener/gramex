@@ -234,6 +234,15 @@ url:
             auth:
                 login_url: /$YAMLURL/simple
 
+    auth/otp:
+        pattern: /$YAMLURL/otp
+        handler: FileHandler
+        kwargs:
+            path: $YAMLPATH/otp.html
+            template: true
+            headers:
+              Cache-Control: no-cache
+
     auth/unauthorized-template:
         pattern: /$YAMLURL/unauthorized-template
         handler: FileHandler

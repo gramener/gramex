@@ -10,7 +10,7 @@ import tornado.gen
 import gramex.cache
 from hashlib import md5
 from textwrap import dedent
-from binascii import b2a_base64
+from binascii import b2a_base64, hexlify
 from orderedattrdict import AttrDict, DefaultAttrDict
 from six.moves.urllib_parse import urlparse, urlsplit, urljoin, urlencode
 from tornado.log import access_log
@@ -19,7 +19,7 @@ from tornado.websocket import WebSocketHandler
 from gramex import conf, __version__
 from gramex.config import objectpath, app_log, CustomJSONDecoder, CustomJSONEncoder
 from gramex.transforms import build_transform
-from gramex.http import UNAUTHORIZED, FORBIDDEN
+from gramex.http import UNAUTHORIZED, FORBIDDEN, BAD_REQUEST
 
 server_header = 'Gramex/%s' % __version__
 session_store_cache = {}
@@ -97,6 +97,7 @@ class BaseMixin(object):
         cls.session = property(cls.get_session)
         cls._session_days = session_conf.get('expiry')
         cls._on_finish_methods.append(cls.save_session)
+        cls._on_init_methods.append(cls.override_user)
 
         if 'private_key' in session_conf:
             keyfile = session_conf['private_key']
@@ -116,7 +117,6 @@ class BaseMixin(object):
                 algorithm=hashes.SHA256(),
                 label=None)
             cls._session_decrypt = lambda cls, s: json.loads(key.decrypt(b64decode(s), pad))
-            cls._on_init_methods.append(cls.override_user)
 
     @classmethod
     def setup_redirect(cls, redirect):
@@ -497,20 +497,48 @@ class BaseMixin(object):
         self._session_store.dump(old_sid, {})
         self._session_store.dump(new_sid, self._session)
 
+    def otp(self, expire=60):
+        '''
+        Return a one-time password valid for ``expire`` seconds. When the
+        X-Gramex-OTP header
+        '''
+        user = self.current_user
+        if not user:
+            raise HTTPError(UNAUTHORIZED)
+        nbits = 16
+        otp = hexlify(os.urandom(nbits))
+        self._session_store.dump('otp:' + otp, {'user': user, '_t': time.time() + expire})
+        return otp
+
     def override_user(self):
         '''
-        Use Gramex-User HTTP header to override current user for the session.
+        Use ``X-Gramex-User`` HTTP header to override current user for the session.
+        Use ``X-Gramex-OTP`` HTTP header to set user based on OTP.
+        ``?gramex-otp=`` is a synonym for X-Gramex-OTP.
         '''
-        cipher = self.request.headers.get('Gramex-User', None)
+        headers = self.request.headers
+        cipher = headers.get('X-Gramex-User')
         if cipher:
             try:
                 user = self._session_decrypt(cipher)
             except Exception:
-                app_log.error('%s: invalid Gramex-User: %s', self.name, cipher)
-                raise
+                log_message = '%s: invalid X-Gramex-User: %s' % (self.name, cipher)
+                raise HTTPError(BAD_REQUEST, log_message)
             else:
                 app_log.debug('%s: Overriding user to %r', self.name, user)
                 self.session['user'] = user
+                return
+        otp = headers.get('X-Gramex-OTP') or self.get_argument('gramex-otp', None)
+        if otp:
+            otp_data = self._session_store.load('otp:' + otp, None)
+            if not isinstance(otp_data, dict) or '_t' not in otp_data or 'user' not in otp_data:
+                log_message = '%s: invalid X-Gramex-OTP: %s' % (self.name, otp)
+                raise HTTPError(BAD_REQUEST, log_message)
+            elif otp_data['_t'] < time.time():
+                log_message = '%s: expired X-Gramex-OTP: %s' % (self.name, otp)
+                raise HTTPError(BAD_REQUEST, log_message)
+            self._session_store.dump('otp:' + otp, None)
+            self.session['user'] = otp_data['user']
 
 
 class BaseHandler(RequestHandler, BaseMixin):
@@ -605,7 +633,7 @@ class BaseWebSocketHandler(WebSocketHandler, BaseMixin):
 
     def authorize(self):
         '''If a valid user isn't logged in, send a message and close connection'''
-        if not self.get_current_user():
+        if not self.current_user:
             raise HTTPError(UNAUTHORIZED)
         for permit_generator in self.permissions:
             for result in permit_generator(self):

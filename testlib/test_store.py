@@ -6,7 +6,7 @@ import time
 import shutil
 import unittest
 from nose.tools import eq_, ok_
-from gramex.handlers.basehandler import JSONStore, HDF5Store, BaseMixin
+from gramex.handlers.basehandler import JSONStore, BaseMixin
 
 folder = os.path.dirname(os.path.abspath(__file__))
 folder = os.path.join(folder, 'store')

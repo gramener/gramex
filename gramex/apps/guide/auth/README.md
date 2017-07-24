@@ -559,6 +559,30 @@ You can define your own logging handler for the `user` logger in the [log sectio
 
 You can also use more sophisticated loggers such as [TimedRotatingFileHandler](https://docs.python.org/3/library/logging.handlers.html#logging.handlers.TimedRotatingFileHandler).
 
+
+# Automated logins
+
+Gramex has two mechanisms to automate logins: [one-time passwords](#otp) and [encrypted users](#encrypted-user).
+
+## OTP
+
+Handlers support a `handler.otp(expire=seconds)` function. This returns a
+one-time password string linked to the *current user*. When you send a request
+with a `X-Gramex-OTP: <otp>` header or a `?gramex-otp=<otp>` query parameter,
+that session is automatically linked to the same user.
+
+<div class="example">
+  <a class="example-demo" href="otp">OTP example</a>
+  <a class="example-src" href="http://code.gramener.com/s.anand/gramex/tree/master/gramex/apps/guide/auth/otp.html">Source</a>
+</div>
+
+## Encrypted user
+
+You can pass a user object to Gramex via the `X-Gramex-User` HTTP header,
+encrypted using an SSH key. This is work in progress. See
+[#96](https://code.gramener.com/s.anand/gramex/issues/96).
+
+
 # Authorization
 
 To restrict pages to specific users, use the `kwargs.auth` configuration. This

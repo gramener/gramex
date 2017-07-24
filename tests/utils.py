@@ -194,6 +194,11 @@ def set_session(handler, **kwargs):
         handler.session[key] = value
 
 
+def otp(handler):
+    expire = int(handler.get_argument('expire', '0'))
+    return json.dumps(handler.otp(expire=expire))
+
+
 def increment(handler):
     '''
     This function is used to check the cache. Suppose we fetch a page, then

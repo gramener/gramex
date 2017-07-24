@@ -12,7 +12,7 @@ from nose.plugins.skip import SkipTest
 from six.moves.urllib_parse import urlencode
 import gramex
 import gramex.config
-from gramex.http import OK, UNAUTHORIZED, FORBIDDEN
+from gramex.http import OK, UNAUTHORIZED, FORBIDDEN, BAD_REQUEST
 from . import TestGramex, server, tempfiles, utils
 
 folder = os.path.dirname(os.path.abspath(__file__))
@@ -230,8 +230,34 @@ class TestSimpleAuth(AuthBase, LoginMixin, LoginFailureMixin):
             algorithm=hashes.SHA256(),
             label=None)
         message = public_key.encrypt(json.dumps(result), pad)
-        session_data = self.get_session(headers={'Gramex-User': b64encode(message)})
+        session_data = self.get_session(headers={'X-Gramex-User': b64encode(message)})
         self.assertEquals(result, session_data['user'])
+
+    def test_otp(self):
+        self.session = requests.Session()
+        self.login_ok('alpha', 'alpha', check_next='/dir/index/')
+        otp1 = self.session.get(server.base_url + '/auth/otp?expire=10').json()
+        otp2 = self.session.get(server.base_url + '/auth/otp?expire=10').json()
+        otp_dead = self.session.get(server.base_url + '/auth/otp?expire=0').json()
+        self.assertEquals({'user': 'alpha', 'id': 'alpha'}, self.get_session()['user'])
+
+        self.session = requests.Session()
+        self.assertTrue('user' not in self.get_session())
+        session_data = self.get_session(headers={'X-Gramex-OTP': otp1})
+        self.assertEquals({'user': 'alpha', 'id': 'alpha'}, session_data['user'])
+
+        self.session = requests.Session()
+        self.assertTrue('user' not in self.get_session())
+        session_data = self.session.get(server.base_url + '/auth/session',
+                                        params={'gramex-otp': otp2}).json()
+        self.assertEquals({'user': 'alpha', 'id': 'alpha'}, session_data['user'])
+
+        self.session = requests.Session()
+        for otp in [otp1, otp2, otp_dead, 'nan']:
+            r = self.session.get(server.base_url + '/auth/session', headers={'X-Gramex-OTP': otp})
+            self.assertEqual(r.status_code, BAD_REQUEST)
+            r = self.session.get(server.base_url + '/auth/session', params={'gramex-otp': otp})
+            self.assertEqual(r.status_code, BAD_REQUEST)
 
 
 class TestAuthTemplate(TestGramex):

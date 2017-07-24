@@ -11,8 +11,8 @@ def ensure_single_session(handler):
     user_id = handler.session.get('user', {}).get('id')
     if user_id is not None:
         for key in handler._session_store.keys():
-            # Ignore current session
-            if key == handler.session.get('id'):
+            # Ignore current session or OTP sessions
+            if key == handler.session.get('id') or key.startswith('otp:'):
                 continue
             # Remove user from all other sessions
             other_session = handler._session_store.load(key)
