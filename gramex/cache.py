@@ -103,7 +103,7 @@ _CALLBACKS = dict(
 )
 
 
-def open(path, callback, rel=False, **kwargs):
+def open(path, callback, transform=None, rel=False, **kwargs):
     '''
     Reads a file, processes it via a callback, caches the result and returns it.
     When called again, returns the cached result unless the file has updated.
@@ -134,6 +134,15 @@ def open(path, callback, rel=False, **kwargs):
 
         # Load data using a custom callback
         open('data.fmt', my_format_reader_function, arg='value')
+
+    ``transform=`` can be a function that processes the data returned by the
+    callback. For example::
+
+        # Returns the count of the CSV file, updating it only when changed
+        open('data.csv', 'csv', transform=lambda data: len(data))
+
+        # After loading data.xlsx into a DataFrame, returned the grouped result
+        open('data.xlsx', 'xslx', transform=lambda data: data.groupby('city')['sales'].sum())
 
     ``rel=True`` opens the path relative to the caller function's file path. If
     ``D:/app/calc.py`` calls ``open('data.csv', 'csv', rel=True)``, the path
@@ -171,6 +180,8 @@ def open(path, callback, rel=False, **kwargs):
                 raise TypeError('gramex.cache.open(callback="%s") is not a known type', callback)
         else:
             raise TypeError('gramex.cache.open(callback=) must be a function, not %r', callback)
+        if callable(transform):
+            data = transform(data)
         _cache[key] = {'data': data, 'stat': fstat}
 
     result = _cache[key]['data']

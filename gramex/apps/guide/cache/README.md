@@ -279,7 +279,28 @@ example:
     # Read Excel file. Keyword arguments are passed to pd.read_excel
     data = gramex.cache.open('data.xlsx', pd.read_excel, sheetname='Sheet1')
 
-To simplify creating these functions, use `gramex.cache.opener`. This converts
+To transform the data after loading, you can use a `transform=` function. For
+example:
+
+    :::python
+    # After loading, return len(data)
+    row_count = gramex.cache.open('data.csv', 'csv', transform=len)
+
+    # Return multiple calculations
+    def transform(data):
+        return {'count': len(data), 'groups': data.groupby('city')}
+    result = gramex.cache.open('data.csv', 'csv', transform=transform)
+
+You can also pass a `rel=True` parameter if you want to specify the filename
+relative to the current folder. For example, if `D:/app/calc.py` has this code:
+
+    :::python
+    conf = gramex.cache.open('config.yaml', 'yaml', rel=True)
+
+... the `config.yaml` will be loaded from the **same directory** as the calling
+file, `D:/app/calc.py`, that is from `D:/app/config.yaml`.
+
+To simplify creating callback functions, use `gramex.cache.opener`. This converts
 functions that accept a handle or string into functions that accept a filename.
 `gramex.cache.opener` opens the file and returns the handle to the function.
 
@@ -298,18 +319,9 @@ For example, to compute the [MD5 hash][hashlib] of a file, use:
     loader = gramex.cache.opener(m.update, read=True)
     data = gramex.cache.open('template.txt', mode='rb', encoding=None, errors=None)
 
-[template-strings]: https://docs.python.org/2/library/string.html#template-strings
 [pickle-load]: https://docs.python.org/2/library/pickle.html#pickle.load
 [hashlib]: https://docs.python.org/3/library/hashlib.html
 
-You can also pass a `rel=True` parameter if you want to specify the filename
-relative to the current folder. For example, if `D:/app/calc.py` has this code:
-
-    :::python
-    conf = gramex.cache.open('config.yaml', 'yaml', rel=True)
-
-... the `config.yaml` will be loaded from the **same directory** as the calling
-file, `D:/app/calc.py`, that is from `D:/app/config.yaml`.
 
 # Query caching
 

@@ -267,6 +267,17 @@ class TestOpen(unittest.TestCase):
         eq_(gramex.cache.stat(path), (stat.st_mtime, stat.st_size))
         eq_(gramex.cache.stat('nonexistent'), (None, None))
 
+    def test_transform(self):
+        cache = {}
+        path = os.path.join(folder, 'data.csv')
+        data = gramex.cache.open(path, 'csv', transform=len, _cache=cache)
+        eq_(data, len(pd.read_csv(path)))
+
+        cache = {}
+        path = os.path.join(folder, 'data.csv')
+        data = gramex.cache.open(path, 'csv', transform=lambda d: d['a'].sum(), _cache=cache)
+        eq_(data, pd.read_csv(path)['a'].sum())
+
 
 class TestSqliteCacheQuery(unittest.TestCase):
     data = pd.read_csv(os.path.join(folder, 'data.csv'), encoding='utf-8')
