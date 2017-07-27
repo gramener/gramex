@@ -770,6 +770,7 @@ class JSONStore(KeyStore):
         except (IOError, ValueError):
             self.handle = open(self.path, 'w')      # noqa: no encoding for json
             self.store = {}
+        self.changed = False
 
     def dump(self, key, value):
         '''Same as store[key] = value'''

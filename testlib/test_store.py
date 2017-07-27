@@ -24,6 +24,20 @@ class TestJSONStore(unittest.TestCase):
         cls.path = os.path.join(folder, 'data.json')
         cls.store = JSONStore(cls.path, flush=None, purge=BaseMixin._purge)
 
+    def test_01_flush(self):
+        # Run this test first to ensure flush() without dump() is possible
+        # https://stackoverflow.com/a/18627017/100904
+        self.store.flush()
+
+    def test_expiry(self):
+        self.store.dump('►', {'_t': 0})
+        self.store.dump('λ', {'_t': time.time() - 1})
+        self.store.dump('x', None)
+        self.store.flush()
+        with open(self.path, 'r') as handle:    # noqa: no encoding for json
+            data = json.load(handle)
+        eq_(data, {})
+
     def test_store(self):
         self.store.dump('►', 'α')
         self.store.flush()
@@ -36,15 +50,6 @@ class TestJSONStore(unittest.TestCase):
         with open(self.path, 'r') as handle:    # noqa: no encoding for json
             data = json.load(handle)
         eq_(data, {'►': 'α', 'λ': {'α': 1, 'β': None}})
-
-    def test_expiry(self):
-        self.store.dump('►', {'_t': 0})
-        self.store.dump('λ', {'_t': time.time() - 1})
-        self.store.dump('x', None)
-        self.store.flush()
-        with open(self.path, 'r') as handle:    # noqa: no encoding for json
-            data = json.load(handle)
-        eq_(data, {})
 
     @classmethod
     def teardownClass(cls):
