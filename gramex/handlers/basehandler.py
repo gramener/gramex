@@ -668,14 +668,13 @@ class KeyStore(object):
         if not os.path.exists(folder):
             os.makedirs(folder)
         self.store = {}
-        self.signature = None
         # Periodically flush buffers
         if flush is not None:
             tornado.ioloop.PeriodicCallback(self.flush, callback_time=flush * 1000).start()
         if callable(purge):
             self.purge = purge
         elif purge is None:
-            self.purge = lambda data: data
+            self.purge = lambda data: None
         else:
             app_log.error('KeyStore: purge=%r invalid. Must be callable', purge)
         # Call close() when Python gracefully exits
@@ -714,6 +713,7 @@ class HDF5Store(KeyStore):
         super(HDF5Store, self).__init__(path, *args, **kwargs)
         import h5py
         self.store = h5py.File(self.path, 'a')
+        self.changed = False
 
     def load(self, key, default=None):
         result = self.store.get(key, None)
@@ -732,11 +732,14 @@ class HDF5Store(KeyStore):
             del self.store[key]
         self.store[key] = json.dumps(value, ensure_ascii=True, separators=(',', ':'),
                                      cls=CustomJSONEncoder)
+        self.changed = True
 
     def flush(self):
         super(HDF5Store, self).flush()
-        app_log.debug('Flushing %s', self.path)
-        self.store.flush()
+        if self.changed:
+            app_log.debug('Flushing %s', self.path)
+            self.store.flush()
+            self.changed = False
 
     def close(self):
         try:
@@ -768,17 +771,21 @@ class JSONStore(KeyStore):
             self.handle = open(self.path, 'w')      # noqa: no encoding for json
             self.store = {}
 
+    def dump(self, key, value):
+        '''Same as store[key] = value'''
+        self.store[key] = value
+        self.changed = True
+
     def flush(self):
         super(JSONStore, self).flush()
-        json_value = json.dumps(self.store, ensure_ascii=True, separators=(',', ':'),
-                                cls=CustomJSONEncoder)
-        signature = md5(json_value.encode('utf-8')).hexdigest()
-        if signature != self.signature:
+        if self.changed:
             app_log.debug('Flushing %s', self.path)
+            json_value = json.dumps(self.store, ensure_ascii=True, separators=(',', ':'),
+                                    cls=CustomJSONEncoder)
             self.handle.seek(0)
             self.handle.write(json_value)
             self.handle.flush()
-            self.signature = signature
+            self.changed = False
 
     def close(self):
         self.flush()
