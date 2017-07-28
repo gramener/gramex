@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 import smtplib
 from six import string_types
 from email import encoders
@@ -5,11 +7,15 @@ from mimetypes import guess_type
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
+from email.mime.image import MIMEImage
 from email.utils import formataddr, getaddresses
 from gramex.config import app_log
 
 
 class SMTPMailer(object):
+    '''
+    Creates an object capable of sending HTML emails.
+    '''
     clients = {
         'gmail': {'host': 'smtp.gmail.com'},
         'yahoo': {'host': 'smtp.mail.yahoo.com'},
@@ -17,11 +23,12 @@ class SMTPMailer(object):
         'mandrill': {'host': 'smtp.mandrillapp.com'}
     }
 
-    def __init__(self, type, email, password):
+    def __init__(self, type, email, password, **kwargs):
         self.type = type
         self.email = email
         self.password = password
-        self.client = self.clients[type]
+        self.client = self.clients.get(type, {})
+        self.client.update(kwargs)
 
     def mail(self, **kwargs):
         '''
@@ -57,7 +64,7 @@ def recipients(**kwargs):
     return recipients
 
 
-def message(body=None, html=None, attachments=[], **kwargs):
+def message(body=None, html=None, attachments=[], images={}, **kwargs):
     '''
     Returns a MIME message object based on text or HTML content, and optional
     attachments. It accepts 3 parameters:
@@ -69,10 +76,13 @@ def message(body=None, html=None, attachments=[], **kwargs):
     - ``attachments`` is an array of file names or dicts. Each dict must have:
         - ``body`` -- a byte array of the content
         - ``content_type`` indicating the MIME type or ``filename`` indicating the file name
+    - ``images`` is a dict of ``{key: path}``. ``key`` may be anything. ``path``
+      is an absolute path. The HTML can show the image by including
+      ``<img src="cid:key">``
 
     In addition, any keyword arguments passed are treated as message headers.
-    Some common message header keys are ``From``, ``To``, ``Cc``, ``Bcc``,
-    ``Subject``, ``Reply-To``, and ``On-Behalf-Of``. The values must be strings.
+    Some common message header keys are ``from``, ``to``, ``cc``, ``bcc``,
+    ``subject``, ``reply_to``, and ``on_behalf_of``. The values must be strings.
 
     Here are some examples::
 
@@ -82,14 +92,25 @@ def message(body=None, html=None, attachments=[], **kwargs):
         >>> message(to='b@example.org', subject=sub, body=text, attachments=[
                 {'filename': 'test.txt', 'body': 'File contents'}
             ])
+        >>> message(to='b@example.org', subject=sub, html='<img src="cid:logo">',
+                    images={'logo': 'd:/images/logo.png'})
     '''
+    if html:
+        if not images:
+            msg = html_part = MIMEText(html, 'html')
+        else:
+            msg = html_part = MIMEMultipart('related')
+            html_part.attach(MIMEText(html, 'html'))
+            for name, path in images.items():
+                with open(path, 'rb') as handle:
+                    img = MIMEImage(handle.read())
+                    img.add_header('Content-ID', '<%s>' % name)
+                    html_part.attach(img)
     if body and html:
         msg = MIMEMultipart('alternative')
         msg.attach(MIMEText(body, 'plain'))
-        msg.attach(MIMEText(html, 'html'))
-    elif html:
-        msg = MIMEText(html, 'html')
-    else:
+        msg.attach(html_part)
+    elif not html:
         msg = MIMEText(body or '', 'plain')
 
     if attachments:

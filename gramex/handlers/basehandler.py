@@ -8,7 +8,6 @@ import atexit
 import mimetypes
 import tornado.gen
 import gramex.cache
-from hashlib import md5
 from textwrap import dedent
 from binascii import b2a_base64, hexlify
 from orderedattrdict import AttrDict, DefaultAttrDict

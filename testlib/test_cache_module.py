@@ -271,12 +271,12 @@ class TestOpen(unittest.TestCase):
         cache = {}
         path = os.path.join(folder, 'data.csv')
         data = gramex.cache.open(path, 'csv', transform=len, _cache=cache)
-        eq_(data, len(pd.read_csv(path)))
+        eq_(data, len(pd.read_csv(path)))                   # noqa
 
         cache = {}
         path = os.path.join(folder, 'data.csv')
         data = gramex.cache.open(path, 'csv', transform=lambda d: d['a'].sum(), _cache=cache)
-        eq_(data, pd.read_csv(path)['a'].sum())
+        eq_(data, pd.read_csv(path)['a'].sum())             # noqa
 
 
 class TestSqliteCacheQuery(unittest.TestCase):

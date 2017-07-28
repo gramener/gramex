@@ -19,6 +19,7 @@ In the `type:` section of `gramex.yaml` email configuration, the following types
 - `yahoo`: Yahoo Mail
 - `live`: Microsoft live mail
 - `mandrill`: [Mandrill](https://mandrill.zendesk.com/) email
+- `smtp`: Any SMTP mailer. Specify the SMTP host and port via `host:` and `port:`
 
 This creates an `SMTPMailer` instance that can be used as follows:
 
@@ -28,9 +29,29 @@ This creates an `SMTPMailer` instance that can be used as follows:
     mailer.mail(
         to='person@example.com',
         subject='Subject',
-        html='<strong>This is bold text</strong> and <em>this is in italics</em>.'
+        html='<strong>Bold text</strong>. <img src="cid:logo">'
         body='This plain text is shown if the client cannot render HTML',
-        attachments=['1.pdf', '2.txt'])
+        attachments=['1.pdf', '2.txt'],
+        images={'logo': '/path/to/logo.png'})
+
+The `mail()` method accepts the following arguments:
+
+- `to`: a string with comma-separated emails, or a list of strings with emails
+- `subject`: email subject
+- `body`: plain text email content
+- `html` HTML content of the email. If both `html` and `body` are specified, the
+  email contains both parts, with HTML taking preference.
+- `attachments`: array of absolute file paths
+- `images` is a dict of `{key: path}`. `path` is the absolute path to an image.
+  `key` may be anything. Include `<img src="cid:key">` in `html` to display it
+
+You can also pass any standard email header. Use small letters, replacing `-`
+with `_`. Here are some commonly used ones:
+
+- `cc`, `bcc`: a string with comma-separated emails, or a list of strings with emails
+- `from`: email id of sender. Defaults to the email ID of the account you've logged into
+- `reply_to`: email ID that appears when the recipient replies
+- `on_behalf_of`: email ID on behalf of whom you are sending this email
 
 See the source in the example below to understand how to use it.
 

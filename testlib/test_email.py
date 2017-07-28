@@ -2,9 +2,12 @@ import os
 import random
 from unittest import TestCase
 from email.mime.text import MIMEText
+from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
 from gramex.services.emailer import message, recipients
 from nose.tools import eq_
+
+folder = os.path.dirname(os.path.abspath(__file__))
 
 
 class TestEmailer(TestCase):
@@ -43,7 +46,6 @@ class TestEmailer(TestCase):
         self.eq(message(body=text, html=html), msg)
 
     def test_attachment(self):
-        folder = os.path.dirname(os.path.abspath(__file__))
         img = os.path.join(folder, 'small-image.jpg')
         self.check_attachment(img)
 
@@ -56,3 +58,14 @@ class TestEmailer(TestCase):
         msg = message(body='text', attachments=[img])
         img_part = list(msg.walk())[-1]
         eq_(img_part.get_content_type(), 'image/jpeg')
+
+    def test_images(self):
+        html = '<img src="cid:logo">'
+        img = os.path.join(folder, 'small-image.jpg')
+        msg = MIMEMultipart('related')
+        msg.attach(MIMEText(html, 'html'))
+        with open(img, 'rb') as handle:
+            img_part = MIMEImage(handle.read())
+            img_part.add_header('Content-ID', '<logo>')
+            msg.attach(img_part)
+        self.eq(message(html=html, images={'logo': img}), msg)
