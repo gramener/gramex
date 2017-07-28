@@ -25,7 +25,7 @@ This creates an `SMTPMailer` instance that can be used as follows:
     :::python
     import gramex
     mailer = gramex.service.email['gramex-guide-gmail']
-    result = mailer.mail(
+    mailer.mail(
         to='person@example.com',
         subject='Subject',
         html='<strong>This is bold text</strong> and <em>this is in italics</em>.'
@@ -66,3 +66,23 @@ Attachments can be specified as filenames or as a dictionary with the `body` and
 
 The attachment `dict` format is consistent with the `handler.request.files`
 structure that holds uploaded files.
+
+## Command-line emails
+
+Gramex can be used as a standalone library to send emails as well. Here is a
+sample Python application:
+
+    :::python
+    from gramex.services import SMTPMailer
+
+    mailer = SMTPMailer(
+      type='gmail',
+      email='gramex.guide@gmail.com',       # Replace with your email ID
+      password='tlpmupxnhucitpte',          # Replace with your passsword
+    )
+    mailer.mail(
+        to='person@example.com',
+        subject='Subject',
+        html='<strong>This is bold text</strong> and <em>this is in italics</em>.'
+        body='This plain text is shown if the client cannot render HTML',
+        attachments=['1.pdf', '2.txt'])
