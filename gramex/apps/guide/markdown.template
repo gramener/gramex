@@ -24,6 +24,7 @@
       <li><a href="/$GUIDE_ROOT/auth/">Auth handlers</a></li>
       <li><a href="/$GUIDE_ROOT/uploadhandler/">UploadHandler</a></li>
       <li><a href="/$GUIDE_ROOT/processhandler/">ProcessHandler</a></li>
+      <li><a href="/$GUIDE_ROOT/websockethandler/">WebSocketHandler</a></li>
       <li><a href="/$GUIDE_ROOT/twitterresthandler/">TwitterRESTHandler</a></li>
       <li><a href="/$GUIDE_ROOT/facebookgraphhandler/">FacebookGraphHandler</a></li>
       <li><a href="/$GUIDE_ROOT/cache/">Cache requests</a></li>
@@ -35,7 +36,8 @@
       <li><a href="/$GUIDE_ROOT/debug/">Debugging Gramex</a></li>
       <li><a href="/$GUIDE_ROOT/deploy/">Deployment patterns</a></li>
       <li><a href="/$GUIDE_ROOT/apps/">Applications</a></li>
-      <li><a href="https://learn.gramener.com/gramex/gramex.html">Reference</a></li>
+      <li><a href="/$GUIDE_ROOT/exercises/">Exercises</a></li>
+      <li><a target="_blank" href="https://learn.gramener.com/gramex/gramex.html">Python Reference</a></li>
     </ul>
   </nav>
 

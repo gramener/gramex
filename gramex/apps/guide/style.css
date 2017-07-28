@@ -45,18 +45,6 @@ iframe {
     background-color: #eee;
 }
 
-/* Table of contents counter and display */
-.toc {
-    counter-reset: toc;
-}
-.toc h2 a:not(.anchorjs-link):before {
-    counter-increment: toc;
-    content: counter(toc) ". ";
-}
-.toc h2 a:not(.anchorjs-link):after {
-    content: " \025ba";
-}
-
 /* Provide enough space on top of all headings */
 h1 { margin-top: 3rem; }
 

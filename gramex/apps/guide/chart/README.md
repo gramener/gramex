@@ -1,26 +1,29 @@
 title: Gramex Charts
 
-Gramex charts are created using [Vega](http://vega.github.io/vega/). To learn Vega, read the [Vega tutorial](http://gramener.github.io/vegatutorial/).
+Gramex is agnostic to client-side charting libraries. Here are a set of
+recommended libraries.
 
-<div id="pie-chart"></div>
+## Gramex Charts
 
-The data for this chart is in [pie-chart.csv](pie-chart.csv):
+[Gramex Charts](https://learn.gramener.com/gc) is a Gramener JavaScript charting
+library aimed at creating extensible visualizations. It is designed keeping these principles in mind:
 
-<pre class="code" data-href="pie-chart.csv"></pre>
+- Charts are **REACTIVE**. If called repeatedly, they must update, not add / rebuild.
+- Charts are **BOUND**. Multiple charts can be bound to a dataset and vice versa.
+- Charts are **RESPONSIVE**. They resize with their container.
+- Charts are **INSPECTABLE**. They expose their internals as properties.
+- Charts are **EXTENDABLE**. They only add container nodes (e.g. `<g>`) in the data join, allowing any other elements to be added afterwards.
+- Charts are **MODIFIABLE**. Chart internals are available. Developers can externally modify the chart attributes
 
-The code to create this chart is in [pie-chart.js](pie-chart.js):
+## D3
 
-<pre class="code" data-href="pie-chart.js"></pre>
+[D3](https://d3js.org/) is a powerful low-level JavaScript library that can bind
+visual features to data, allowing creation of custom charts.
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.16/d3.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/vega/2.5.2/vega.min.js"></script>
-<script src="pie-chart.js"></script>
-<script>
-d3.selectAll('.code')
-  .each(function() {
-    var el = d3.select(this)
-    d3.text(el.attr('data-href'), function(error, text) {
-      el.text(text)
-    })
-  })
-</script>
+## Vega
+
+[Vega](http://vega.github.io/vega/) is a high-level implementation of the grammar
+of graphics, allowing the creation of charts with the power of D3 but with
+greater ease.
+
+To learn Vega, read the [Vega tutorial](http://gramener.github.io/vegatutorial/).

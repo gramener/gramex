@@ -1,103 +1,36 @@
 title: Gramex Guide
 classes: toc
 
-## [About Gramex](about/)
+## Table of contents
 
-**Exercise**: Write a haiku in praise of Gramex.
+- [About Gramex](about/)
+- [Install Gramex](install/)
+- [Gramex is a web server](server/)
+- [Configurations control Gramex](config/)
+- [Gramex runs Python functions](functionhandler/)
+- [Gramex renders files](filehandler/)
+- [Gramex connects to data](datahandler/)
+- [Gramex runs SQL queries](queryhandler/)
+- [Gramex writes data](jsonhandler/)
+- [Gramex authentication](auth/)
+- [Gramex uploads files](uploadhandler/)
+- [Gramex runs processes](processhandler/)
+- [Gramex handles WebSockets](websockethandler/)
+- [Gramex accesses Twitter data](twitterresthandler/)
+- [Gramex accesses Facebook data](facebookgraphhandler/)
+- [Gramex caches requests](cache/)
+- [Gramex renders charts](chart/)
+- [Gramex can send emails](email/)
+- [Gramex can schedule tasks](scheduler/)
+- [Gramex watches files](watch/)
+- [Writing handlers](handlers/)
+- [Debugging Gramex](debug/)
+- [Deployment patterns](deploy/)
+- [Gramex runs apps](apps/)
+- [Try out some exercises](exercises/)
+- [Read the Python code reference](https://learn.gramener.com/gramex/gramex.html)
 
-## [Install Gramex](install/)
-
-**Exercise**: Install Gramex on your system and run `gramex`.
-
-## [Gramex is a web server](server/)
-
-**Exercise**: Create a `gramex.yaml` file in any directory and browse its contents.
-
-## [Configurations control Gramex](config/)
-
-**Exercise**: Create a `gramex.yaml` that runs Gramex on port 80 and logs every request to a file.
-
-## [Gramex runs Python functions](functionhandler/)
-
-**Exercise**: Make </greet> show "Hello {name}" when a `?name=` parameter is passed.
-
-## [Gramex renders files](filehandler/)
-
-**Exercise**: Make `/blog/` render a simple Markdown-based blog.
-
-## [Gramex connects to data](datahandler/)
-
-**Exercise**: Load a dataset into MySQL or PostgreSQL, and create a DataHandler that exposes that table.
-
-## [Gramex runs SQL queries](queryhandler/)
-
-**Exercise**: TBD
-
-## [Gramex writes data](jsonhandler/)
-
-**Exercise**: TBD
-
-## [Gramex authentication](auth/)
-
-**Exercise**: Make gramex-guide without authetication and create google-auth only to `/blog/`.
-
-## [Gramex uploads files](uploadhandler/)
-
-**Exercise**: TBD
-
-## [Gramex runs processes](processhandler/)
-
-**Exercise**: Display the results of `git log` on a git repository.
-
-## [Gramex handles WebSockets](websockethandler/)
-
-**Exercise**: Create a simple chatbot.
-
-## [Gramex accesses Twitter data](twitterresthandler/)
-
-**Exercise**: Create a dashboard showing the latest tweets and followers of any user, along with the popular tweets that mention them.
-
-## [Gramex accesses Facebook data](facebookgraphhandler/)
-
-**Exercise**: Create an album showing the latest photos of any user.
-
-## [Gramex caches requests](cache/)
-
-**Exercise**: TBD
-
-## [Gramex charts](chart/)
-
-**Exercise**: Draw a simple pie chart using data from DataHandler.
-
-## [Gramex can send emails](email/)
-
-**Exercise**: Write a form that lets users send an email.
-
-## [Gramex can schedule tasks](scheduler/)
-
-**Exercise**: Make Gramex log the time into <code>time.log</code> on startup, and every 2 minutes.
-
-## [Gramex watches files](watch/)
-
-**Exercise**: Make Gramex log a message when a file is changed.
-
-## [Writing handlers](handlers/)
-
-**Exercise**: TBD
-
-## [Debugging Gramex](debug/)
-
-**Exercise**: TBD
-
-## [Deployment patterns](deploy/)
-
-**Exercise**: TBD
-
-## [Gramex runs apps](apps/)
-
-**Exercise**: TBD
-
-## Additiona links
+## Additional links
 
 - [Gramex roadmap](https://docs.google.com/spreadsheets/d/1D2xScjMWl29JtuuVP7PlsLM3OPJuMBr0VNvzzoR4HwQ/edit#gid=885343597)
 - [API reference](https://learn.gramener.com/gramex/gramex.html)
