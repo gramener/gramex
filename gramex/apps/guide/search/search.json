@@ -43,6 +43,9 @@
     "authorization": {
       "Authorization": -1
     },
+    "automated-logins": {
+      "Automated logins": -1
+    },
     "bind-ldap-login": {
       "Bind LDAP login": -1
     },
@@ -51,6 +54,9 @@
     },
     "direct-ldap-login": {
       "Direct LDAP login": -1
+    },
+    "encrypted-user": {
+      "Encrypted user": -1
     },
     "facebook-auth": {
       "Facebook auth": -1
@@ -78,6 +84,9 @@
     },
     "login-urls": {
       "Login URLs": -1
+    },
+    "otp": {
+      "OTP": -1
     },
     "roles": {
       "Roles": -1
@@ -148,6 +157,15 @@
   "chart": {
     "": {
       "Gramex Charts": -1
+    },
+    "d3": {
+      "D3": -1
+    },
+    "gramex-charts": {
+      "Gramex Charts": -1
+    },
+    "vega": {
+      "Vega": -1
     }
   },
   "config": {
@@ -212,6 +230,11 @@
       "YAML variables": -1
     }
   },
+  "dashboard": {
+    "": {
+      "Templatize visualization dashboard creation": -1
+    }
+  },
   "datahandler": {
     "": {
       "Gramex connects to data": -1
@@ -260,6 +283,9 @@
     "debug-mode": {
       "Debug mode": -1
     },
+    "line-profile": {
+      "Line profile": -1
+    },
     "print-statements": {
       "Print statements": -1
     },
@@ -300,11 +326,19 @@
     "": {
       "Send email": -1
     },
+    "command-line-emails": {
+      "Command-line emails": -1
+    },
     "email-attachments": {
       "Email attachments": -1
     },
     "html-email": {
       "HTML email": -1
+    }
+  },
+  "exercises": {
+    "": {
+      "Gramex exercises": -1
     }
   },
   "facebookgraphhandler": {

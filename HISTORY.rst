@@ -3,6 +3,77 @@
 History
 -------
 
+1.20 (2017-07-31)
+~~~~~~~~~~~~~~~~~
+This is a major release with some critical enhancements and fixes.
+
+(This release supports Python 2, not Python 3. A patch for Python 3 will be
+released by 7 Aug 2017.)
+
+Firstly, caching is improved.
+
+- :py:func:`gramex.cache.open` accepts a ``transform=`` parameters that lets you
+  post-process the returned result. ``gramex.cache.open('data.xlsx', 'xlsx',
+  transform=process_data)`` ensures that ``process_data(data)`` is called only if
+  the ``data.xlsx`` has changed.
+- :py:func:`gramex.cache.open` supports a ``rel=True`` parameter. If specified,
+  it loads the file from the path relative to the calling file. So if
+  ``module.py`` calls ``gramex.cache.open('data.xlsx', 'xlsx', rel=True)`` loads
+  ``data.xlsx`` in the same directory as ``module.py``, not relative to gramex.
+- :py:func:`gramex.cache.open` supports a ``'config'`` mode that loads YAML files
+  just like Gramex does -- i.e. with environment variables support, and returning
+  the values as AttrDict instead of dict.
+
+Gramex supports inline images in HTML `email`_. This is useful when sending
+visualizations as images in emails.
+
+There is better support for programmatic authentication.
+
+- The ``X-Gramex-Key`` header lets you `override users`_ by specifying an
+  encrypted JSON object for the user. (Documentation pending)
+- `OTP`_ (one-time passwords) are now available.
+- The ``password:`` function in `DBAuth`_ can now accept a ``handler`` object
+  apart from the ``content`` (which is the password)
+
+There are a few security enhancements.
+
+- `DBAuth`_ and `SimpleAuth`_ delay the response on repeated login failures.
+  You can specify the ``delay:`` in ``gramex.yaml``.
+- Every time the user logs in, the session ID changes. This avoids
+  `session fixation`_.
+- The session ID cookie uses `HttpOnly`_ cookies. If the request is made on
+  HTTPS, it also uses `Secure`_ cookies.
+
+The performance of sessions has been improved as well.
+
+- Sessions stores were constantly polled to see if they had changed. This drains
+  the CPU. Now, changes are tracked. Sessions are saved only if there are
+  changes.
+- Expired sessions are cleared on the server. So the session store will no longer
+  bloat indefinitely.
+
+Command line usage of Gramex is improved.
+
+- ``gramex --help`` shows Gramex command line usage. ``gramex -V`` shows the version.
+- On startup, Gramex informs users of keyboard shortcuts available (``Ctrl+B`` for opening the browser and ``Ctrl+D`` for debugging.)
+- Gramex warns you when ``url:`` sections have duplicate keys, and override one
+  another. This helps when running on shared instances like ``uat.gramener.com``.
+- When loading a module (e.g. from a FunctionHandler), it would not get reloaded
+  if it had an error. This is fixed.
+
+There are a couple of obscure fixes to `DataHandler`_.
+
+- `DataHandler`_ no longer raises an error if you have empty values in queries,
+  like ``?city=``.
+- `DataHandler`_ has an undocumented ``posttransform`` method. It now works for
+  PUT method as well as POST, but continues to be undocumented.
+
+Finally, there are a few documentation updates.
+
+- A detailed `line profile`_ example is available.
+- All `exercises`_ have been consolidated into a single page.
+
+
 1.19 (2017-07-09)
 ~~~~~~~~~~~~~~~~~
 This is a minor enhancement release with
@@ -462,3 +533,10 @@ There are two changes that may disrupt your code:
 .. _QueryHandler templates: https://learn.gramener.com/guide/queryhandler/#queryhandler-templates
 .. _Reloading: https://learn.gramener.com/guide/debug/#reloading
 .. _DBAuth login template: https://learn.gramener.com/guide/auth/dbsimple
+.. _session fixation: https://www.owasp.org/index.php/Session_fixation
+.. _HttpOnly: https://www.owasp.org/index.php/HttpOnly
+.. _Secure: https://www.owasp.org/index.php/SecureFlag
+.. _override users: https://learn.gramener.com/guide/auth/#encrypted-user
+.. _OTP: https://learn.gramener.com/guide/auth/#otp
+.. _exercises: https://learn.gramener.com/guide/exercises/
+.. _line profile: https://learn.gramener.com/guide/debug/#line-profile
