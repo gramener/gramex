@@ -2,53 +2,118 @@
 from __future__ import unicode_literals
 
 import os
+import six
+import time
 import shutil
 import requests
+import gramex.cache
+from datetime import datetime
+from nose.tools import eq_, ok_
 from gramex import conf
 from gramex.install import _ensure_remove
-from six.moves.http_client import OK, METHOD_NOT_ALLOWED
+from gramex.http import OK, METHOD_NOT_ALLOWED, FORBIDDEN
 from gramex.handlers.uploadhandler import FileUpload
 from . import server, TestGramex
 
 
 class TestUploadHandler(TestGramex):
+    response_keys = ['key', 'filename', 'file', 'created', 'user', 'size', 'mime', 'data']
+
     @classmethod
     def setUpClass(cls):
-        cls.path = conf.url['upload'].kwargs.path
+        cls.path = six.text_type(conf.url['upload'].kwargs.path)
 
-    def upload(self, url, files, keys=[], data={}, code=OK):
-        r = requests.post(server.base_url + url, files=files, data=data)
-        self.assertEqual(r.status_code, code, '%s: code %d != %d' % (url, r.status_code, code))
+    def check_upload(self, url, files, names=[], data={}, code=OK):
+        r = requests.post(url, files=files, data=data)
+        eq_(r.status_code, code, '%s: code %d != %d' % (url, r.status_code, code))
         json = r.json()
-        for key, rjs in zip(keys, json['upload']):
-            self.assertTrue(os.path.isfile(os.path.join(self.path, key)))
-            self.assertEqual(rjs['file'], key)
+        for index, name in enumerate(names):
+            upload = json['upload'][index]
+            ok_(os.path.isfile(os.path.join(self.path, name)))
+            eq_(upload['file'], name)
+            for key in self.response_keys:
+                self.assertIn(key, upload)
+                # TODO: check that upload[key] has the correct value
         if data:
             for val in json['delete']:
-                self.assertEqual(val['key'], data['rm'])
-                self.assertTrue(val['success'])
+                eq_(val['key'], data['rm'])
+                ok_(val['success'])
                 self.assertFalse(os.path.isfile(os.path.join(self.path, data['rm'])))
         return r
 
     def test_upload(self):
-        url = conf.url['upload'].pattern
-
-        self.assertTrue(os.path.isfile(os.path.join(self.path, '.meta.h5')))
-        self.assertEqual(requests.get(server.base_url + url).status_code, METHOD_NOT_ALLOWED)
+        url = server.base_url + conf.url['upload'].pattern
+        ok_(os.path.isfile(os.path.join(self.path, '.meta.h5')))
+        eq_(requests.get(url).status_code, METHOD_NOT_ALLOWED)
         data = {'x': '1', 'y': 1}
-        tests = [
-            {'files': {}},
-            {'files': {'text': open('userdata.csv')}, 'keys': ['userdata.csv'], 'data': data},
-            {'files': {'nopk': open('actors.csv')}, 'data': data},
-            {'files': {'image': open('userdata.csv')}, 'keys': ['userdata.1.csv'], 'data': data},
-            {'files': {'image': open('userdata.csv'), 'text': open('actors.csv')},
-             'keys': ['userdata.2.csv', 'actors.csv']},
-            {'files': {'unknown': ('file.csv', 'some,λ\nanother,λ\n')}, 'keys': ['file.csv']},
-            {'files': {'unknown': ('file', 'noextensionfile')}, 'keys': ['file']},
-            {'files': {}, 'data': {'rm': 'file'}, 'data': data}]
-        # requests fails for unicode filename :: RFC 7578 and nofilenames
-        for test in tests:
-            self.upload(url, **test)
+        up = lambda **kwargs: self.check_upload(url, **kwargs)
+        # Empty upload
+        up(files={})
+        # Single upload with data
+        up(files={'text': open('userdata.csv')}, names=['userdata.csv'], data=data)
+        # Single upload with data but with wrong key - gets ignored
+        up(files={'nokey': open('actors.csv')}, names=[], data=data)
+        # Second upload creates a copy of the file with a new filename
+        up(files={'text': open('userdata.csv')}, names=['userdata.1.csv'], data=data)
+        # Multiple uploads
+        up(files={'image': open('userdata.csv'), 'text': open('actors.csv')},
+           names=['userdata.2.csv', 'actors.csv'])
+        # Filename with no extension, hence no MIME type
+        up(files={'unknown': ('file', open('actors.csv'))}, names=['file'])
+        # Save uploaded file as specific filename
+        up(files={'text': open('actors.csv')}, names=['α'], data={'save': 'α'})
+        # Save file under a sub-directory
+        up(files={'text': open('actors.csv')}, names=['高/α'], data={'save': '高/α'})
+        # Multiple uploads with renames
+        up(files={'image': open('userdata.csv'), 'text': open('actors.csv')},
+           names=['β', 'γ'], data={'save': ['β', 'γ']})
+        # Delete file
+        up(files={}, data={'rm': 'file'})
+
+        # Outside paths fail
+        for path in ['../actors.csv', '/actors.csv', '../upload/../β']:
+            r = requests.post(url, files={'text': open('actors.csv')}, data={'save': path})
+            eq_(r.status_code, FORBIDDEN)
+            ok_('outside' in r.reason.decode('utf-8'))
+
+    def test_upload_error(self):
+        url = server.base_url + conf.url['upload-error'].pattern
+        for path in ['δ', 'ε']:
+            r = requests.post(url, files={'file': open('actors.csv')}, data={'save': path})
+            eq_(r.status_code, OK)
+            r = requests.post(url, files={'file': open('actors.csv')}, data={'save': path})
+            eq_(r.status_code, FORBIDDEN)
+            r = requests.post(url, files={'file': open('actors.csv')}, data={'save': path})
+            eq_(r.status_code, FORBIDDEN)
+            ok_('file exists' in r.reason.decode('utf-8'))
+
+    def test_upload_overwrite(self):
+        url = server.base_url + conf.url['upload-overwrite'].pattern
+        base = conf.url['upload-overwrite'].kwargs.path
+        read = lambda f: gramex.cache.open(f, 'text', rel=True)
+        for path in ['ζ', 'η']:
+            r = requests.post(url, files={'file': open('actors.csv')}, data={'save': path})
+            eq_(r.status_code, OK)
+            eq_(read(os.path.join(base, path)), read('actors.csv'))
+            r = requests.post(url, files={'file': open('userdata.csv')}, data={'save': path})
+            eq_(r.status_code, OK)
+            eq_(read(os.path.join(base, path)), read('userdata.csv'))
+
+    def test_upload_backup(self):
+        url = server.base_url + conf.url['upload-backup'].pattern
+        base = conf.url['upload-backup'].kwargs.path
+        read = lambda f: gramex.cache.open(f, 'text', rel=True)
+        for path in ['θ', 'λ']:
+            r = requests.post(url, files={'file': open('actors.csv')}, data={'save': path})
+            eq_(r.status_code, OK)
+            eq_(read(os.path.join(base, path)), read('actors.csv'))
+            # Ensure that a backup file is created, and has the correct contents
+            r = requests.post(url, files={'file': open('userdata.csv')}, data={'save': path})
+            eq_(r.status_code, OK)
+            eq_(read(os.path.join(base, path)), read('userdata.csv'))
+            backup = r.json()['upload'][0].get('backup', None)
+            ok_('{}.{:%Y%m%d-%H}'.format(path, datetime.now()) in backup)
+            eq_(read(os.path.join(base, backup)), read('actors.csv'))
 
     @classmethod
     def tearDownClass(cls):

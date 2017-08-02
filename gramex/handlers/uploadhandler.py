@@ -1,13 +1,20 @@
+from __future__ import unicode_literals
 import os
+import six
 import time
 import json
 import gramex
+import shutil
 import mimetypes
 import tornado.gen
+from datetime import datetime
+from six.moves import zip_longest
 from orderedattrdict import AttrDict
+from tornado.web import HTTPError
 from tornado.escape import recursive_unicode
 from gramex.config import app_log
 from gramex.transforms import build_transform
+from gramex.http import FORBIDDEN, INTERNAL_SERVER_ERROR
 from .basehandler import BaseHandler, HDF5Store
 
 MILLISECONDS = 1000
@@ -18,14 +25,22 @@ class FileUpload(object):
 
     def __init__(self, path, keys=None, **kwargs):
         if keys is None:
-            keys = {'file': ['file'], 'delete': ['delete']}
+            keys = {}
+        for cat in ('file', 'delete', 'save'):
+            keys.setdefault(cat, [cat])
+            if not isinstance(keys[cat], list):
+                if isinstance(keys[cat], six.string_types):
+                    keys[cat] = [keys[cat]]
+                else:
+                    app_log.error('FileUpload: cat: %r must be a list or str', keys[cat])
+        self.keys = keys
         self.path = os.path.abspath(path)
         if not os.path.exists(self.path):
             os.makedirs(self.path)
         if self.path not in self.stores:
+            # TODO: allow other stores. #62
             self.stores[self.path] = HDF5Store(os.path.join(self.path, '.meta.h5'), flush=5)
         self.store = self.stores[self.path]
-        self.keys = keys
         if 'file' not in keys:
             keys['file'] = ['file']
         self.keys['file'] = keys['file'] if isinstance(keys['file'], list) else [keys['file']]
@@ -37,29 +52,66 @@ class FileUpload(object):
 
     def addfiles(self, handler):
         filemetas = []
-        for key in self.keys.get('file', []):
-            for upload in handler.request.files.get(key, []):
-                original_name = upload.get('filename', None)
-                filepath = self.uniq_filename(original_name)
-                with open(filepath, 'wb') as handle:
-                    handle.write(upload['body'])
-                filename = os.path.basename(filepath)
-                stat = os.stat(filepath)
-                mime = upload['content_type'] or mimetypes.guess_type(filepath, strict=False)[0]
-                filemeta = AttrDict({
-                    'key': key,
-                    'filename': original_name,
-                    'file': filename,
-                    'created': time.time() * MILLISECONDS,  # JS parseable timestamp
-                    'user': handler.get_current_user(),
-                    'size': stat.st_size,
-                    'mime': mime or 'application/octet-stream',
-                    'data': recursive_unicode(handler.request.arguments),
-                })
-                filemeta = handler.transforms(filemeta)
-                self.store.dump(filename, filemeta)
-                filemetas.append(filemeta)
+        uploads = [upload for key in self.keys.get('file', [])
+                   for upload in handler.request.files.get(key, [])]
+        filenames = [name for key in self.keys.get('save', [])
+                     for name in handler.get_arguments(key)]
+        if_exists = getattr(handler, 'if_exists', 'unique')
+        for upload, filename in zip_longest(uploads, filenames, fillvalue=None):
+            filemeta = self.save_file(upload, filename, if_exists)
+            filemeta.update(
+                key=key,
+                user=handler.get_current_user(),
+                data=recursive_unicode(handler.request.arguments),
+            )
+            filemeta = handler.transforms(filemeta)
+            self.store.dump(filemeta.file, filemeta)
+            filemetas.append(filemeta)
         return filemetas
+
+    def save_file(self, upload, filename, if_exists):
+        original_name = upload.get('filename', None)
+        filemeta = AttrDict(filename=original_name)
+        filename = filename or original_name or 'data.bin'
+        filepath = os.path.join(self.path, filename)
+        # Security check: don't allow files to be written outside path:
+        if not os.path.realpath(filepath).startswith(os.path.realpath(self.path)):
+            raise HTTPError(FORBIDDEN, reason='FileUpload: filename %s is outside path: %s' % (
+                filename, self.path))
+        if os.path.exists(filepath):
+            if if_exists == 'error':
+                raise HTTPError(FORBIDDEN, reason='FileUpload: file exists: %s' % filename)
+            elif if_exists == 'unique':
+                # Rename to file.1.ext or file.2.ext etc -- whatever's available
+                name, ext = os.path.splitext(filepath)
+                name_pattern = name + '.%s' + ext
+                i = 1
+                while os.path.exists(name_pattern % i):
+                    i += 1
+                filepath = name_pattern % i
+            elif if_exists == 'backup':
+                backup = '{}.{:%Y%m%d-%H%M%S}'.format(filepath, datetime.now())
+                shutil.copyfile(filepath, backup)
+                filemeta['backup'] = os.path.relpath(backup, self.path).replace(os.path.sep, '/')
+            elif if_exists != 'overwrite':
+                raise HTTPError(INTERNAL_SERVER_ERROR,
+                                reason='FileUpload: if_exists: %s invalid' % if_exists)
+        # Create the directory to write in, if reuqired
+        folder = os.path.dirname(filepath)
+        if not os.path.exists(folder):
+            os.makedirs(folder)
+        # Save the file
+        with open(filepath, 'wb') as handle:
+            handle.write(upload['body'])
+        mime = upload['content_type'] or mimetypes.guess_type(filepath, strict=False)[0]
+        filemeta.update(
+            file=os.path.relpath(filepath, self.path).replace(os.path.sep, '/'),
+            size=os.stat(filepath).st_size,
+            mime=mime or 'application/octet-stream',
+            created=time.time() * MILLISECONDS,  # JS parseable timestamp
+        )
+        return filemeta
+
 
     def deletefiles(self, handler):
         status = []
@@ -75,17 +127,6 @@ class FileUpload(object):
                 status.append(stat)
         return status
 
-    def uniq_filename(self, filename):
-        name, ext = os.path.splitext(filename or 'noname.bin')
-        filepath = os.path.join(self.path, name + ext)
-        if not os.path.exists(filepath):
-            return filepath
-        i = 1
-        name_pattern = os.path.join(self.path, name + '.%s' + ext)
-        while os.path.exists(name_pattern % i):
-            i += 1
-        return name_pattern % i
-
 
 class UploadHandler(BaseHandler):
     '''
@@ -98,8 +139,9 @@ class UploadHandler(BaseHandler):
             url: /$YAMLURL/                 #   ... else to this directory
     '''
     @classmethod
-    def setup(cls, path, keys=None, transform={}, methods=[], **kwargs):
+    def setup(cls, path, keys=None, if_exists='unique', transform={}, methods=[], **kwargs):
         super(UploadHandler, cls).setup(**kwargs)
+        cls.if_exists = if_exists
         cls.uploader = FileUpload(path, keys=keys)
 
         # methods=['get'] will show all file into as JSON on GET

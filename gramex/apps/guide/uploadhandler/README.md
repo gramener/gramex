@@ -29,6 +29,45 @@ Any file posted with a name of `file` is uploaded. Here is a sample HTML form:
 After the file is uploaded, users can be redirected via the `redirect:` config
 documented the [redirection configuration](../config/#redirection).
 
+## Saving uploads
+
+By default, the file is saved in the `path:` specified by `gramex.yaml`, with the
+filename passed by the browser.
+
+You can change the path where the file is saved using `<input name="save">`. See
+the example below:
+
+    :::html
+    <form action="upload" method="POST" enctype="multipart/form-data">
+      <input name="file" type="file">
+      <input name="save" value="folder/data.csv" disabled>
+      <button type="submit">Submit</button>
+      <input type="hidden" name="_xsrf" value="{{ handler.xsrf_token }}">
+    </form>
+
+This saves the file under `folder/data.csv`, which is under the `path:` section
+specified by `gramex.yaml`. `folder/` is created if required.
+
+If multiple file uploads are present, multiple `save` fields can be used to
+specify the filenames in order.
+
+If the `save` value refers to a path outside of the `path:` specified, the
+handler returns a HTTP 403.
+
+## Overwriting uploads
+
+If the [target location](#saving-uploads) already exists, there are 4 ways of
+handling it. This is specified by the `overwrite:` key in `gramex.yaml`.
+
+    :::yaml
+    handler: UploadHandler
+    kwargs:
+        path: ...
+        if_exists: error        # Raises a HTTP 403 with a reason saying "file exists"
+        if_exists: backup       # Move the original to filename.YYYYMMDD-HHMMSS
+        if_exists: overwrite    # Overwrite the original without backup
+        if_exists: unique       # Save to a new file: filename.1, filename.2, etc
+
 ## Upload listing
 
 You can retrieve the list of files uploaded via AJAX if you include a `methods:
@@ -59,7 +98,7 @@ The `uploader.info()` is a list of info objects with the following keys:
 
 - **key**: A unique key representing the filename
 - **filename**: Name of the uploaded file (as provided by the browser)
-- **file**: Name of the file saved under the upload PATH
+- **file**: Relative path + filename of the file saved under the upload `path:`
 - **created**: Upload time in milliseconds since epoch (compatible with JavaScript's `new Date()`)
 - **user**: User object, if the user had logged in when uploaded
 - **size**: Size of the uploaded file in bytes
@@ -73,19 +112,25 @@ To delete a file, submit a POST request to the UploadHandler with a `delete`
 key. Here is a sample AJAX request:
 
     :::js
-    var xsrf = {'X-Xsrftoken': cookie.get('_xsrf')}
     $.ajax('upload', {
       headers: xsrf,          // Set XSRF token
       method: 'POST',
-      data: '{"delete": delete_key}'
+      data: '{"delete": filename}'
     })
+
+The `filename` must be the name of the uploaded file, or relative path to the
+upload `path:`.
 
 
 ## Upload arguments
 
-By default, `UploadHandler` uses the `file` query parameter to hold files, and
-the `delete` query parameter to delete files. You can change that by specifying
-a `keys:` configuration:
+By default, `UploadHandler` uses these form keys:
+
+- `<input id="file" type="file">` is used to upload files
+- `<input id="delete" value="file.ext">` is used to delete `file.ext`
+- `<input id="save" value="path/uploaded.ext">` is used to save the file as `path/uploaded.ext`
+
+You can change the keys used via the `keys:` configuration.
 
     :::yaml
     url:
@@ -97,6 +142,7 @@ a `keys:` configuration:
                 keys:                     # Define what query parameters to use
                   file: [file, upload]    # Use <input id="file"> and/or <input id="upload">
                   delete: [del, rm]       # Use <input id="del"> and/or <input id="rm">
+                  save: [save]            # Use <input id="save"> to specify the save location
 
 ## Process uploads
 

@@ -1413,6 +1413,31 @@ url:
       keys:
         file: [image, text, unknown]
         delete: rm
+        # save: save        # Leave this at the default
+      xsrf_cookies: false
+
+  upload-error:
+    pattern: /upload-error
+    handler: UploadHandler
+    kwargs:
+      path: $YAMLPATH/uploads
+      if_exists: error
+      xsrf_cookies: false
+
+  upload-overwrite:
+    pattern: /upload-overwrite
+    handler: UploadHandler
+    kwargs:
+      path: $YAMLPATH/uploads
+      if_exists: overwrite
+      xsrf_cookies: false
+
+  upload-backup:
+    pattern: /upload-backup
+    handler: UploadHandler
+    kwargs:
+      path: $YAMLPATH/uploads
+      if_exists: backup
       xsrf_cookies: false
 
   auth/session:
