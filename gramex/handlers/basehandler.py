@@ -727,11 +727,12 @@ class HDF5Store(KeyStore):
             return default
 
     def dump(self, key, value):
-        if key in self.store:
-            del self.store[key]
-        self.store[key] = json.dumps(value, ensure_ascii=True, separators=(',', ':'),
-                                     cls=CustomJSONEncoder)
-        self.changed = True
+        if self.store.get(key) != value:
+            if key in self.store:
+                del self.store[key]
+            self.store[key] = json.dumps(value, ensure_ascii=True, separators=(',', ':'),
+                                         cls=CustomJSONEncoder)
+            self.changed = True
 
     def flush(self):
         super(HDF5Store, self).flush()
@@ -773,8 +774,9 @@ class JSONStore(KeyStore):
 
     def dump(self, key, value):
         '''Same as store[key] = value'''
-        self.store[key] = value
-        self.changed = True
+        if self.store.get(key) != value:
+            self.store[key] = value
+            self.changed = True
 
     def flush(self):
         super(JSONStore, self).flush()
