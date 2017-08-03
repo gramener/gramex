@@ -546,7 +546,9 @@ string substitution, then it is converted into a string. For example:
 
 ### Predefined variables
 
-In addition to environment variables, the following pre-defined variables are available in every YAML file. (The examples assume you are processing `D:/app/config/gramex.yaml`, and running Gramex from `D:/app/`):
+In addition to environment variables, the following pre-defined variables are
+available in every YAML file. (The examples assume you are processing
+`D:/app/config/gramex.yaml`, and running Gramex from `D:/app/`):
 
 - `$YAMLFILE`: absolute path to the current YAML file, e.g. `D:/app/config/gramex.yaml`
 - `$YAMLPATH`: absolute directory of the current YAML file, e.g. `D:/app/config/`
@@ -557,6 +559,12 @@ In addition to environment variables, the following pre-defined variables are av
     - `~/.config/gramexdata/` on Linux
     - `~/Library/Application Support/Gramex Data/` on OS X
 
+You can also access these from Python modules:
+
+    :::python
+    from gramex.config import variables
+    variables['GRAMEXPATH']     # Same as $GRAMEXPATH
+    variables['GRAMEXDATA']     # Same as $GRAMEXDATA
 
 ### Computed variables
 
