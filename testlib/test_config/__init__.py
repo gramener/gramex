@@ -171,6 +171,9 @@ class TestPathConfig(unittest.TestCase):
             'config.b.yaml:b': 2,
             'config.b.yaml:c': {'config.b.yaml:xx': 3, 'config.b.yaml:yy': 4}
         })
+        self.assertEqual(conf_ns.ns_import, {
+            'url': {'config.urlimport.yaml:handler': {'pattern': 'x', 'a': 1, 'b': 200, 'd': 'x'}}
+        })
 
     def test_variables(self):
         '''Templates interpolate string variables'''

@@ -343,7 +343,8 @@ def _add_ns(config, namespace, prefix):
             el = objectpath(config, keypath, default={})
         if isinstance(el, dict):
             for subkey in list(el.keys()):
-                el[prefix + subkey] = el.pop(subkey)
+                if subkey not in {'import'}:
+                    el[prefix + subkey] = el.pop(subkey)
     return config
 
 
@@ -416,11 +417,12 @@ def load_imports(config, source, warn=None):
                     conf = AttrDict(path=conf)
                 paths = root.glob(conf.path) if '*' in conf.path else [Path(conf.path)]
                 for path in paths:
-                    new_conf = _yaml_open(root.joinpath(path))
+                    abspath = root.joinpath(path)
+                    new_conf = _yaml_open(abspath)
                     if 'namespace' in conf:
                         prefix = Path(path).as_posix()
                         new_conf = _add_ns(new_conf, conf['namespace'], prefix)
-                    imported_paths += load_imports(new_conf, source=path)
+                    imported_paths += load_imports(new_conf, source=abspath)
                     merge(old=node, new=new_conf, mode='setdefault', warn=warn)
             # Delete the import key
             del node[key]

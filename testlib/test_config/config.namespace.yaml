@@ -6,3 +6,6 @@ ns_c:
 
 ns_star_c:
     import:  {sub: {path: config.b.yaml, namespace: ['*', 'c']}}
+
+ns_import:
+    import: {sub: {path: config.urlimport.yaml, namespace: url}}

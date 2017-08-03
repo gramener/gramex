@@ -177,9 +177,9 @@ def open(path, callback, transform=None, rel=False, **kwargs):
             if method is not None:
                 data = method(path, **kwargs)
             else:
-                raise TypeError('gramex.cache.open(callback="%s") is not a known type', callback)
+                raise TypeError('gramex.cache.open(callback="%s") is not a known type' % callback)
         else:
-            raise TypeError('gramex.cache.open(callback=) must be a function, not %r', callback)
+            raise TypeError('gramex.cache.open(callback=) must be a function, not %r' % callback)
         if callable(transform):
             data = transform(data)
         _cache[key] = {'data': data, 'stat': fstat}
