@@ -40,8 +40,8 @@ the example below:
     :::html
     <form action="upload" method="POST" enctype="multipart/form-data">
       <input name="file" type="file">
-      <input name="save" value="folder/data.csv" disabled>
       <button type="submit">Submit</button>
+      <input type="hidden" name="save" value="folder/data.csv">
       <input type="hidden" name="_xsrf" value="{{ handler.xsrf_token }}">
     </form>
 
@@ -53,6 +53,9 @@ specify the filenames in order.
 
 If the `save` value refers to a path outside of the `path:` specified, the
 handler returns a HTTP 403.
+
+To disable users from overwriting the filename, you can set `keys.save: []` in
+`gramex.yaml`. See [Upload arguments](#upload-arguments)
 
 ## Overwriting uploads
 
@@ -143,6 +146,13 @@ You can change the keys used via the `keys:` configuration.
                   file: [file, upload]    # Use <input id="file"> and/or <input id="upload">
                   delete: [del, rm]       # Use <input id="del"> and/or <input id="rm">
                   save: [save]            # Use <input id="save"> to specify the save location
+
+To prevent users from changing or setting the filename, use:
+
+    :::yaml
+      keys:
+        save: []    # No field names can override the user provided filename
+
 
 ## Process uploads
 

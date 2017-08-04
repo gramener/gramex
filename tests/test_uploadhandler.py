@@ -22,18 +22,23 @@ class TestUploadHandler(TestGramex):
     @classmethod
     def setUpClass(cls):
         cls.path = six.text_type(conf.url['upload'].kwargs.path)
+        cls.info = FileUpload(cls.path)
 
     def check_upload(self, url, files, names=[], data={}, code=OK):
         r = requests.post(url, files=files, data=data)
         eq_(r.status_code, code, '%s: code %d != %d' % (url, r.status_code, code))
         json = r.json()
+        meta = self.info.info()
         for index, name in enumerate(names):
             upload = json['upload'][index]
             ok_(os.path.isfile(os.path.join(self.path, name)))
             eq_(upload['file'], name)
+            ok_(upload['file'] in meta)
+            meta_entry = meta[upload['file']]
             for key in self.response_keys:
                 self.assertIn(key, upload)
                 # TODO: check that upload[key] has the correct value
+                eq_(meta_entry[key], upload[key])
         if data:
             for val in json['delete']:
                 eq_(val['key'], data['rm'])

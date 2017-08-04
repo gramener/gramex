@@ -707,6 +707,10 @@ class HDF5Store(KeyStore):
         >>> store = HDF5Store('file.h5', flush=15)
         >>> value = store.load(key)
         >>> store.dump(key, value)
+
+    Internally, it uses HDF5 groups to store data. Values are encoded as JSON
+    using gramex.config.CustomJSONEncoder (thus handling datetime.) Keys are JSON
+    encoded, and '/' is escaped as well (since HDF5 groups treat / as subgroups.)
     '''
     def __init__(self, path, *args, **kwargs):
         super(HDF5Store, self).__init__(path, *args, **kwargs)
@@ -715,24 +719,31 @@ class HDF5Store(KeyStore):
         self.changed = False
 
     def load(self, key, default=None):
+        # Keys cannot contain / in HDF5 store. Escape it
+        key = json.dumps(key, ensure_ascii=True)[1:-1].replace('/', '\t')
         result = self.store.get(key, None)
         if result is None:
             return default
-        json_value = result.value if hasattr(result, 'value') else result
         try:
-            return json.loads(json_value, object_pairs_hook=AttrDict, cls=CustomJSONDecoder)
+            return json.loads(result.value, object_pairs_hook=AttrDict, cls=CustomJSONDecoder)
         except ValueError:
             app_log.error('HDF5Store("%s").load("%s") is not JSON ("%r..."")',
-                          self.path, key, json_value)
+                          self.path, key, result.value)
             return default
 
     def dump(self, key, value):
+        # Keys cannot contain / in HDF5 store. Escape it
+        key = json.dumps(key, ensure_ascii=True)[1:-1].replace('/', '\t')
         if self.store.get(key) != value:
             if key in self.store:
                 del self.store[key]
             self.store[key] = json.dumps(value, ensure_ascii=True, separators=(',', ':'),
                                          cls=CustomJSONEncoder)
             self.changed = True
+
+    def keys(self):
+        # Keys cannot contain / in HDF5 store. Unescape it
+        return [json.loads('"%s"' % key.replace('\t', '/')) for key in self.store.keys()]
 
     def flush(self):
         super(HDF5Store, self).flush()
