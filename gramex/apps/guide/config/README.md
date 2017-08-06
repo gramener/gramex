@@ -219,74 +219,50 @@ You can create your own formatters in a similar way.
 
 ## Handler logging
 
-URL handlers have additional logging options. URL handler logs look like this:
+Gramex logs all requests to a CSV file at [$GRAMEXDATA](#predefined-variables)/logs/requests.csv.
+It has the following columns:
 
-    INFO    17-Jul 16:08:49 url:static 304 GET /page.html?x=1 (127.0.0.1) 5.0ms s.anand
+- `time`: Time of the request in milliseconds since epoch
+- `ip`: The IP address of the client requesting the page
+- `user.id`: The unique ID of the user requesting the page
+- `status`: The HTTP status code of the response (e.g. 200, 500)
+- `duration`: Time taken to serve the request in milliseconds
+- `method`: The HTTP method requested (e.g. GET or POST)
+- `uri`: The full URL requested
+- `error`: Any error raised while processing the request
 
-The elements of the log message are described here:
+You can read from this file via:
 
-    Standard logging fields
-    -----------------------
-    INFO              Log level
-    17-Jul 16:08:49   Time of the log
-    url:static        Log was produced by the URL handler named static
+    :::python
+    log_file = os.path.join(gramex.config.variables.GRAMEXDATA, 'logs', 'requests.csv')
+    logs = gramex.cache.open(log_file, 'csv')
 
-    Handler logging fields
-    ----------------------
-    304               HTTP status code
-    GET               HTTP method used
-    /page.html?x=1    URL requested
-    (127.0.0.1)       IP address of the client
-    5.0ms             Milliseconds taken to serve the request
-    s.anand           The user ID of the logged-in user (else None)
-
-The default handler logging fields are specified using this configuration:
-
+To change the location or keys to be logged for the entire application, use:
 
     :::yaml
     handlers:
         BaseHandler:
             log:
-                format: '%(status)d %(method)s %(uri)s (%(ip)s) %(duration).1fms %(user.id)s'
+                format: csv
+                path: /path/to/your/csv
+                keys: [time, your_keys, ...]
 
-You can override this, or you can specify a custom log message for a specific
-URL handler. For example:
+Apart from the keys mentioned earlier, you can also use:
+
+- `args.<key>`: A specific argument. E.g. `args.x` returns the value of `?x=...`
+- `headers.<key>`: A request HTTP header. E.g. `headers.User-Agent` is the browser's user agent
+- `session.<key>`: A HTTP session key. E.g. `session.user` is the user object
+- `cookies.<key>`: Logs a specific cookie. E.g. `cookie.sid` is the session ID cookie
+- `env.<key>`: Logs an environment variable. E.g. `env.HOME` logs the user's home directory
+
+If any of these keys are not available, the logger logs an empty string.
+
+**Note**: Up to Gramex 1.20, the default mechanism was to the console or the
+default [access-log](#logging) using:
 
     :::yaml
-    url:
-        handler-name:
-            pattern: ...
-            handler: ...
-            kwargs:
-                ...
-                log:                                  # Create a custom log format
-                    format: '%(uri)s %(user.email)s'  # Show URL and user's email ID
-
-The log format is just a Python string format. You can use standard Python
-formatting constructs. The following keys are available -- both for BaseHandler
-as well as for any handler:
-
-- `%(status)s`: The HTTP status of the response
-- `%(method)s`: The HTTP method used
-- `%(uri)s`: The URL requested
-- `%(ip)s`: The IP address of the client requesting the page
-- `%(duration)s`: Time taken to serve the request in milliseconds
-- `%(args.<key>)s`: A specific argument. For example, `%(args.x)s` will show the
-  value of `?x=...`. If multiple values are provided, the first value is shown.
-- `%(headers.<key>)s`: A request HTTP header. For example,
-  `%(headers.User-Agent)s` logs the browser's user agent string.
-- `%(cookies.<key>)s`: Logs a specific cookie. For example, `%(cookie.sid)s`
-  logs the session ID cookie.
-- `%(user.<key>)s`: Logs a key from `handler.current_user`, assuming it is a
-  dictionary. For example, `%(user.email)s` will log the user's email for Google
-  Auth. `%(user.screen_name)s` logs the Twitter screen name. `%(user.id)` logs
-  the unique user ID for most auth methods.
-- `%(env.<key>)s`: Logs an environment variable. For example, `%(env.HOME)` logs
-  the `$HOME` environment variable.
-
-If any of these keys are not available, the logger logs an empty string in its
-place.
-
+    log:
+        format: '%(status)d %(method)s %(uri)s (%(ip)s) %(duration).1fms %(user.id)s'
 
 ## Error handlers
 

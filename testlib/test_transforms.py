@@ -31,36 +31,36 @@ def gen_str(val):
     yield Task(str, val)
 
 
+def eqfn(actual, expected):
+    '''Checks if two functions are the same'''
+    # msg = parent function's name
+    msg = inspect.stack()[1][3]
+    a_code, e_code = actual.__code__, expected.__code__
+    actual, expected = a_code.co_code, e_code.co_code
+    if actual != expected:
+        # Print the disassembled code to make debugging easier
+        print('\nActual')           # noqa
+        dis(actual)
+        print(a_code.co_names)      # noqa
+        print('Expected')           # noqa
+        dis(expected)
+        print(e_code.co_names)      # noqa
+    eq_(actual, expected, '%s: code mismatch' % msg)
+
+    src, tgt = a_code.co_argcount, e_code.co_argcount
+    eq_(src, tgt, '%s: argcount %d != %d' % (msg, src, tgt))
+    src, tgt = a_code.co_nlocals, e_code.co_nlocals
+    eq_(src, tgt, '%s: nlocals %d != %d' % (msg, src, tgt))
+
+
 class BuildTransform(unittest.TestCase):
     '''Test build_transform CODE output'''
     dummy = os.path.join(folder, 'dummy.py')
     files = set([dummy])
 
-    def eqfn(self, a, b):
-        a_code, b_code = a.__code__, b.__code__
-
-        # msg = parent function's name
-        msg = inspect.stack()[1][3]
-
-        src, tgt = a_code.co_code, b_code.co_code
-        if src != tgt:
-            # Print the disassembled code to make debugging easier
-            print('\nCompiled by build_transform from YAML')    # noqa
-            dis(src)
-            print(a_code.co_names)                              # noqa
-            print('Tested against test case')                   # noqa
-            dis(tgt)
-            print(b_code.co_names)                              # noqa
-        eq_(src, tgt, '%s: code mismatch' % msg)
-
-        src, tgt = a_code.co_argcount, b_code.co_argcount
-        eq_(src, tgt, '%s: argcount %d != %d' % (msg, src, tgt))
-        src, tgt = a_code.co_nlocals, b_code.co_nlocals
-        eq_(src, tgt, '%s: nlocals %d != %d' % (msg, src, tgt))
-
     def check_transform(self, transform, yaml_code, vars=None, cache=True):
         fn = build_transform(yaml_parse(yaml_code), vars=vars, cache=cache)
-        self.eqfn(fn, transform)
+        eqfn(fn, transform)
         return fn
 
     def test_invalid_function_raises_error(self):

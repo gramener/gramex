@@ -29,7 +29,10 @@ cache:
 handlers:
     BaseHandler:
         log:
-            format: '%(status)d %(method)s %(uri)s (%(ip)s) %(duration).1fms %(user.id)s'
+            format: csv
+            path: $GRAMEXDATA/logs/requests.csv
+            keys: [time, ip, user.id, status, duration, method, uri, error]
+            # format: '%(status)d %(method)s %(uri)s (%(ip)s) %(duration).1fms %(user.id)s'
 
     FileHandler:
         ignore:

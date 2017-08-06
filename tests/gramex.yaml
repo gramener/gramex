@@ -1697,9 +1697,19 @@ url:
     pattern: /logtest
     handler: FunctionHandler
     kwargs:
-      function: utils.logtest
+      function: utils.log_format
       log:
-        format: '%(method)s %(uri)s %(ip)s %(status)s %(duration)s %(args.x)s %(headers.head)s %(cookies.sid)s %(user.id)s %(env.HOME)s'
+        format: '%(time)f|%(method)s|%(uri)s|%(ip)s|%(status)s|%(duration)s|%(user)s|%(error)s|%(args.x)s|%(request.protocol)s|%(headers.head)s|%(cookies.sid)s|%(user.id)s|%(env.HOME)s'
+
+  logcsv:
+    pattern: /logcsv
+    handler: FunctionHandler
+    kwargs:
+      function: utils.log_csv
+      log:
+        format: csv
+        path: $YAMLPATH/requests.log
+        keys: [time, method, uri, ip, status, duration, user, error, args.x, request.protocol, headers.head, cookies.sid, user.email, env.HOME]
 
   error/404-template:
     pattern: /error/404-template(.*)

@@ -5,25 +5,38 @@ from testfixtures import LogCapture
 
 
 class TestURLLog(TestGramex):
-    def test_log(self):
-        r = r = self.get('/logtest?x=1', headers={'head': 'abc'})
-        parts = r.text.split(' ')
-        # Log format has 10 items. These are the first 5:
-        # %(method)s %(uri)s %(ip)s %(status)s %(duration)s
-        self.assertEqual(len(parts), 10)
-        self.assertEqual(parts[0], 'GET')
-        self.assertEqual(parts[1], '/logtest?x=1')
-        self.assertIn(parts[2], ('127.0.0.1', '::1'))
-        self.assertEqual(parts[3], '200')
+    def check_log(self, url, separator):
+        r = self.get(url, params={'x': '1'}, headers={'head': 'abc'}, cookies={'sid': 'mysid'})
+        parts = r.text.strip().split(separator)
+        columns = ['time', 'method', 'uri', 'ip', 'status', 'duration', 'user', 'error', 'args.x',
+                   'request.protocol', 'headers.head', 'cookies.sid', 'user.id', 'env.HOME']
+        self.assertEqual(len(parts), len(columns))
+        log = dict(zip(columns, parts))
+        self.assertDictContainsSubset({
+            'method': 'GET',
+            'uri': url + '?x=1',
+            'status': '200',
+            'error': 'ZeroDivisionError: integer division or modulo by zero',
+            'args.x': '1',
+            # 'user': '',
+            # 'user.id', '',
+            'request.protocol': 'http',
+            'headers.head': 'abc',
+            'cookies.sid': 'mysid',
+            'env.HOME': os.path.expanduser('~'),
+        }, log)
+        self.assertIn(log['ip'], ('127.0.0.1', '::1'))
         try:
-            float(parts[4])
+            float(log['time'])
         except ValueError:
-            self.fail('/logtest duration is not a number')
+            self.fail('time is not a number')
+        try:
+            float(log['duration'])
+        except ValueError:
+            self.fail('duration is not a number')
 
-        # The next 5:
-        # %(args.x)s %(headers.head)s %(cookies.sid)s %(user.id)s %(env.HOME)s
-        self.assertEqual(parts[5], '1')
-        self.assertEqual(parts[6], 'abc')
-        # self.assertEqual(parts[7], sid)
-        # self.assertEqual(parts[8], sid)
-        self.assertEqual(parts[9], os.path.expanduser('~'))
+    def test_log_format(self):
+        self.check_log('/logtest', separator='|')
+
+    def test_log_csv(self):
+        self.check_log('/logcsv', separator=',')

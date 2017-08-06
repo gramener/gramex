@@ -112,7 +112,6 @@ class FileUpload(object):
         )
         return filemeta
 
-
     def deletefiles(self, handler):
         status = []
         for delete_key in self.keys.get('delete', []):

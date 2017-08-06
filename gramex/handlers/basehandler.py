@@ -1,11 +1,13 @@
 from __future__ import unicode_literals
 
 import os
+import csv
 import six
 import json
 import time
 import atexit
 import mimetypes
+import traceback
 import tornado.gen
 import gramex.cache
 from textwrap import dedent
@@ -209,74 +211,10 @@ class BaseMixin(object):
 
     @classmethod
     def setup_log(cls, log):
-        if log is None:
-            return
-        if not isinstance(log, dict) or 'format' not in log:
-            app_log.error('url:%s.log is not a dict with a format key', cls.name)
-            return
-        params = DefaultAttrDict(int)
         try:
-            log['format'] % params
-        except (TypeError, ValueError):
-            app_log.error('url:%s.log.format invalid: %s', cls.name, log['format'])
-            return
-        direct_vars = {
-            'method': 'handler.request.method',
-            'uri': 'handler.request.uri',
-            'ip': 'handler.request.remote_ip',
-            'status': 'handler.get_status()',
-            'duration': 'handler.request.request_time() * 1000',
-            # TODO: get_content_size() is not available in RequestHandler
-            # 'size': 'handler.get_content_size()',
-            'user': 'handler.current_user or ""',
-            'session': 'handler.session.get("id", "")',
-        }
-        object_vars = {
-            'args': 'handler.get_argument("%(value)s", "")',
-            'headers': 'handler.request.headers.get("%(value)s", "")',
-            'cookies': 'handler.request.cookies["%(value)s"].value ' +
-                       'if "%(value)s" in handler.request.cookies else ""',
-            'user': '(handler.current_user or {}).get("%(value)s", "")',
-            'env': 'os.environ.get("%(value)s", "")',
-        }
-        code = dedent('''
-            def log_request(handler, log_method=None):
-                obj = {}
-                status = obj['status'] = handler.get_status()
-            %s
-                if log_method is None:
-                    if status < 400:
-                        log_method = access_log.info
-                    elif status < 500:
-                        log_method = access_log.warning
-                    else:
-                        log_method = access_log.error
-                log_method(log_format %% obj)
-        ''')
-        obj = []
-        for key in params:
-            if key in direct_vars:
-                obj.append('    obj["%s"] = %s' % (key, direct_vars[key]))
-                continue
-            if '.' in key:
-                prefix, value = key.split('.', 2)
-                if prefix in object_vars:
-                    obj.append('    obj["%s"] = %s' % (key, object_vars[prefix] % {
-                        'key': key,
-                        'prefix': prefix,
-                        'value': value,
-                    }))
-                    continue
-            app_log.error('Skipping unknown key %s in log.format: %s', key, log['format'])
-
-        context = {
-            'log_format': log['format'],
-            'access_log': access_log,
-            'os': os,
-        }
-        code = compile(code % '\n'.join(obj), filename='url:' + cls.name, mode='exec')
-        exec(code, context)
-        cls.log_request = context['log_request']
+            cls.log_request = log_method(log)
+        except (ValueError, OSError):
+            app_log.log_exception('url:%s: cannot set up log: %r', cls.name, log)
 
     @classmethod
     def setup_error(cls, error):
@@ -297,8 +235,7 @@ class BaseMixin(object):
         if not error:
             return
         if not isinstance(error, dict):
-            app_log.error('url:%s.error is not a dict', cls.name)
-            return
+            return app_log.error('url:%s.error is not a dict', cls.name)
         # Compile all errors handlers
         cls.error = {}
         for error_code, error_config in error.items():
@@ -310,8 +247,7 @@ class BaseMixin(object):
                               cls.name, error_code)
                 continue
             if not isinstance(error_config, dict):
-                app_log.error('url:%s.error.%d is not a dict', cls.name, error_code)
-                return
+                return app_log.error('url:%s.error.%d is not a dict', cls.name, error_code)
             if 'path' in error_config:
                 encoding = error_config.get('encoding', 'utf-8')
                 template_kwargs = {}
@@ -575,6 +511,13 @@ class BaseHandler(RequestHandler, BaseMixin):
         '''Return the ``user`` key from the session as an AttrDict if it exists.'''
         result = self.session.get('user')
         return AttrDict(result) if isinstance(result, dict) else result
+
+    def log_exception(self, typ, value, tb):
+        '''Store the exception value for logging'''
+        super(BaseHandler, self).log_exception(typ, value, tb)
+        # _exception is stored for use by log_request. Sample error string:
+        # ZeroDivisionError: integer division or modulo by zero
+        self._exception = traceback.format_exception_only(typ, value)[0].strip()
 
     def authorize(self):
         # If the user isn't logged in, redirect to login URL or send a 401
@@ -847,3 +790,113 @@ def _check_condition(condition, user):
         elif node not in values:
             return False
     return True
+
+
+def log_method(log):
+    '''
+    Returns a log_request method that can be called as log_request(handler).
+    The method logs handler request information.
+
+    ``log`` is a dict that determines how request logs are saved. For example::
+
+        format: csv
+        path: $GRAMEXDATA/logs/request.csv
+        keys: [time, method, uri, ip, status, duration, user, ...]
+
+    This saves the logs at path as a CSV file with the columns being the keys specified
+
+    An alternate format is::
+
+        format: '%(status)d %(method)s %(uri)s (%(ip)s) %(duration).1fms %(user.id)s'
+
+    This writes the result to the logger (defaults to tornado.log.access_log).
+    '''
+    if log is None:
+        return
+    if not isinstance(log, dict) or 'format' not in log:
+        raise ValueError('log: is not a dict with a format key')
+    # Define direct keys. These can be used as-is
+    direct_vars = {
+        'time': 'round(time.time() * 1000, 0)',
+        'method': 'handler.request.method',
+        'uri': 'handler.request.uri',
+        'ip': 'handler.request.remote_ip',
+        'status': 'handler.get_status()',
+        'duration': 'round(handler.request.request_time() * 1000, 0)',
+        # TODO: get_content_size() is not available in RequestHandler
+        # 'size': 'handler.get_content_size()',
+        'user': 'json.dumps(handler.current_user)',
+        'session': 'handler.session.get("id", "")',
+        'error': 'getattr(handler, "_exception", "")',
+    }
+    # Define object keys for us as key.value. E.g. cookies.sid, user.email, etc
+    object_vars = {
+        'args': 'handler.get_argument("{val}", "")',
+        'request': 'getattr(handler.request, "{val}", "")',
+        'headers': 'handler.request.headers.get("{val}", "")',
+        'cookies': 'handler.request.cookies["{val}"].value ' +
+                   'if "{val}" in handler.request.cookies else ""',
+        'user': '(handler.current_user or {{}}).get("{val}", "")',
+        'env': 'os.environ.get("{val}", "")',
+    }
+    context = {'os': os, 'time': time, 'json': json}
+    # Generate the code
+    if log.get('format') == 'csv':
+        try:
+            keys = log['keys']
+        except KeyError:
+            raise ValueError('log.keys missing')
+        if 'path' not in log:
+            raise ValueError('log.path missing')
+        log_path = os.path.abspath(log['path'])
+        path_dir = os.path.dirname(log_path)
+        try:
+            if not os.path.exists(path_dir):
+                os.makedirs(path_dir)
+            handle = open(log_path, 'ab')
+            writer = csv.writer(handle)
+        except OSError:
+            raise OSError('Cannot open log.path: %s as CSV' % log_path)
+        assign = '        {value},'
+        code = dedent('''
+            def log_request(handler, writer=writer, handle=handle):
+                writer.writerow([
+            %s
+                ])
+                handle.flush()
+        ''')
+        context.update(writer=writer, handle=handle)
+    else:
+        keys = DefaultAttrDict(int)
+        try:
+            log['format'] % keys
+        except (TypeError, ValueError):
+            raise ValueError('log.format invalid: %s' % log['format'])
+        assign = '    obj["{key}"] = {value}'
+        code = dedent('''
+            def log_request(handler, logger=logger):
+                obj = {}
+                status = obj['status'] = handler.get_status()
+            %s
+                if status < 400:
+                    logger.info(log_format %% obj)
+                elif status < 500:
+                    logger.warning(log_format %% obj)
+                else:
+                    logger.error(log_format %% obj)
+        ''')
+        context.update(log_format=log['format'], logger=access_log)
+    obj = []
+    for key in keys:
+        if key in direct_vars:
+            obj.append(assign.format(key=key, value=direct_vars[key]))
+            continue
+        if '.' in key:
+            prefix, value = key.split('.', 2)
+            if prefix in object_vars:
+                obj.append(assign.format(key=key, value=object_vars[prefix].format(val=value)))
+                continue
+        app_log.error('Skipping unknown key %s in log.format: %s', key, log['format'])
+    code = compile(code % '\n'.join(obj), filename='log_method', mode='exec')
+    exec(code, context)
+    return context['log_request']

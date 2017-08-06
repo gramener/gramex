@@ -1,12 +1,15 @@
 # -*- coding: utf-8 -*-
 '''Test case utilities'''
 
+import csv
 import six
+import sys
 import json
 import time
 import random
 import pandas as pd
 from collections import Counter
+from orderedattrdict import AttrDict
 from tornado import gen
 from tornado.web import RequestHandler
 from tornado.escape import recursive_unicode
@@ -166,14 +169,29 @@ def encrypt(handler, content):
     return content + handler.request.headers.get('salt', '123')
 
 
-def logtest(handler):
+def log_format(handler):
     result = {}
 
-    def log_method(s):
+    def log(s):
         result['log'] = s
 
-    handler.log_request(log_method)
+    try:
+        1 / 0
+    except ZeroDivisionError:
+        handler.log_exception(*sys.exc_info())
+    handler.log_request(logger=AttrDict(info=log, warn=log, error=log))
     return result['log']
+
+
+def log_csv(handler):
+    result = six.StringIO()
+    writer = csv.writer(result)
+    try:
+        1 / 0
+    except ZeroDivisionError:
+        handler.log_exception(*sys.exc_info())
+    handler.log_request(writer=writer, handle=AttrDict(flush=lambda: 0))
+    return result.getvalue()
 
 
 def zero_division_error(handler):
