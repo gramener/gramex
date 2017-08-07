@@ -158,3 +158,86 @@ and is meant for `localhost`.)
 
 All browsers will report that this connection is not trusted, since it is a
 self-signed certificate. Ignore the warning proceed to the website.
+
+
+## Proxy servers
+
+Gramex is often deployed behind a reverse proxy. This allows a web server (like
+nginx, Apache, IIS, Tomcat) to pass requests to different ports running different
+applications.
+
+### nginx reverse proxy
+
+Here is a minimal HTTP reverse proxy configuration:
+
+    server {
+        listen 80;                              # 80 is the default HTTP port
+        server_name example.com;                # http://example.com/
+
+        # Ensures that Gramex gets the real host, IP and protocol of the request
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Scheme $scheme;
+        proxy_set_header X-Request-URI $request_uri;
+
+        location /project/ {                    # example.com/project/* maps to
+            proxy_pass http://127.0.0.1:9988/;  # 127.0.0.1:9988/
+        }
+    }
+
+The use of the trailing slash makes a big difference in nginx.
+
+    location /project/ { proxy_pass http://127.0.0.1:9988/; }   # Trailing slash
+    location /project/ { proxy_pass http://127.0.0.1:9988; }    # No trailing slash
+
+The first maps `example.com/project/*` to `http://127.0.0.1:9988/*`.
+The second maps it to `http://127.0.0.1:9988/project/*`.
+
+If you have Gramex running multiple applications under `/app1`, `/app2`, etc,
+your config file will be like:
+
+    location /app1/ { proxy_pass http://127.0.0.1:8001; }
+    location /app2/ { proxy_pass http://127.0.0.1:8001; }
+    location /app3/ { proxy_pass http://127.0.0.1:8001; }
+
+But if your have a single app running at `/` in each Gramex instance root, your
+config file will be like:
+
+    location /app1/ { proxy_pass http://127.0.0.1:8001/; }
+    location /app2/ { proxy_pass http://127.0.0.1:8002/; }
+    location /app3/ { proxy_pass http://127.0.0.1:8003/; }
+
+To let nginx cache responses, use:
+
+    # Ensure /var/cache/nginx/ is owned by nginx:nginx with 700 permissions
+    proxy_cache_path /var/cache/nginx/your-project-name
+                     levels=1:2
+                     keys_zone=your-project-name:100m
+                     inactive=10d
+                     max_size=2g;
+    proxy_cache your-project-name;
+    proxy_cache_key "$host$request_uri";
+    proxy_cache_use_stale error timeout updating http_502 http_503 http_504;
+
+To delete specific entries from the nginx cache, use
+[nginx-cache-purge](https://github.com/perusio/nginx-cache-purge).
+
+To allow websockets, add this configuration:
+
+    # Allow nginx configuration upgrade
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade    $http_upgrade;
+    proxy_set_header Connection $connection_upgrade;
+    proxy_set_header Host       $host;
+    proxy_set_header X-Scheme   $scheme;
+
+Additional notes:
+
+- nginx allows files up to 1MB to be uploaded. You can increase that via
+  [client_max_body_size](http://nginx.org/en/docs/http/ngx_http_core_module.html#client_max_body_size):
+- If your response takes more than 60 seconds, use
+  [proxy_read_timeout](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_read_timeout)
+  to increase the timeout. (But speed up your application!)
+- To pass the Gramex server version in the Server: HTTP header, use
+  "[proxy_pass_header](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_pass_header) Server;"
+- To enable HTTPS, read the Gramener wiki section on [SSL](https://learn.gramener.com/wiki/ssl.html)
