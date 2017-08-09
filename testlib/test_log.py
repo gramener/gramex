@@ -7,6 +7,9 @@ from tornado.log import access_log
 from gramex.handlers.basehandler import log_method
 from test_transforms import eqfn
 
+# log_request() requires this to be a global
+log_format = None
+
 
 class TestLogMethod(unittest.TestCase):
     @classmethod
@@ -43,11 +46,9 @@ class TestLogMethod(unittest.TestCase):
                   'user.email', 'env.HOME']
         ))
         self.methods.append(result)
-        eqfn(result, log_request)
+        eqfn(actual=result, expected=log_request)
 
     def test_format(self):
-        log_format = None
-
         def log_request(handler, logger=access_log):
             obj = {}
             status = obj['status'] = handler.get_status()
@@ -77,7 +78,7 @@ class TestLogMethod(unittest.TestCase):
                    '%(user.email)s%(env.HOME)s'
         ))
         self.methods.append(result)
-        eqfn(result, log_request)
+        eqfn(actual=result, expected=log_request)
 
     @classmethod
     def teardownClass(cls):
