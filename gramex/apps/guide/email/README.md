@@ -26,6 +26,9 @@ This creates an `SMTPMailer` instance that can be used as follows:
     :::python
     import gramex
     mailer = gramex.service.email['gramex-guide-gmail']
+    # Or, to construct the SMTPMailer when using Gramex as a library, use:
+    # from gramex.services import SMTPMailer
+    # mailer = SMTPMailer(type='gmail', email='gramex.guide@gmail.com', password='...')
     mailer.mail(
         to='person@example.com',
         subject='Subject',
