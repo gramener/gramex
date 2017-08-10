@@ -1,6 +1,13 @@
 title: Schedule tasks
 
-The `schedule:` section in [gramex.yaml](gramex.yaml) lets you run tasks on startup or at specific times. Here is an example:
+The `schedule:` section in [gramex.yaml](gramex.yaml) lets you run tasks on
+startup or at specific times. Here are some sample uses:
+
+- email insights every Wednesday
+- data refresh every 4 hours
+- post a tweet at 7:15 am every day
+
+Here is a sample configuration:
 
 <iframe frameborder="0" src="gramex.yaml"></iframe>
 

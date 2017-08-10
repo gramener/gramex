@@ -91,6 +91,24 @@ You can pass any options you want to functions. For example, to call
         kwargs:
           function: calculations.method(handler, 10, h=handler, val=0)
 
+To send the output as a download (e.g. as a PDF), use:
+
+    :::yaml
+    url:    ...
+            kwargs:
+                headers:
+                    Content-Type: application/pdf       # MIME type of download
+                    Content-Disposition: attachment; filename=download.pdf
+
+You can also specify this in your function:
+
+    :::python
+    def method(handler):
+        handler.set_header('Content-Type', 'application/pdf')
+        handler.set_header('Content-Disposition', 'attachment; filename=download.pdf')
+        return open('download.pdf', 'rb').read()
+
+
 ## Streaming output
 
 If you perform slow calculations and want to flush interim calculations out to

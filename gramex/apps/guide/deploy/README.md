@@ -49,6 +49,29 @@ directs the URL `/new-app-name/page` to `/app/page.html`.
     :::yaml
             pattern: /$YAMLURL/../new-app-name/page
 
+You also need this in [redirection URLs](https://learn.gramener.com/guide/config/#redirection).
+See this example:
+
+```yaml
+url:
+  auth/simple:
+    pattern: /$YAMLURL/simple
+    handler: SimpleAuth
+    kwargs:
+      credentials: {alpha: alpha}
+      redirect: {url: /$YAMLURL/}        # Note the $YAMLURL here
+```
+
+Using `/$YAMLURL/` redirects users back to *this* app's home page, rather than
+the global home page (which may be `uat.gramener.com/`.)
+
+**Tips**:
+
+- `/$YAMLURL/` will always have a `/` before and after it.
+- `pattern:` must always start with `/$YAMLURL/`
+- `url:` generally starts with `/$YAMLURL/`
+
+
 ### Using relative URLs
 
 In your HTML code, use relative URLs where possible. For example:
@@ -92,6 +115,40 @@ To test this, open the following URLs:
 In every case, the correct absolute path for `/style.css` is used,
 irrespective of which path the app is deployed at.
 
+## Using YAMLPATH
+
+`$YAMLPATH` is very similar to `$YAMLURL`. It is the relative path to the current
+`gramex.yaml` location.
+
+When using a `FileHandler` like this:
+
+```yaml
+url:
+  app-home:
+    pattern: /                  # This is hard-coded
+    handler: FileHandler
+    kwargs:
+      path: index.html          # This is hard-coded
+```
+
+... the locations are specified relative to where Gramex is running. To make it
+relative to where the `gramex.yaml` file is, use:
+
+```yaml
+url:
+  app-home:
+    pattern: /$YAMLURL/
+    handler: FileHandler
+    kwargs:
+      path: $YAMLPATH/index.html        # Path is relative to this directory
+```
+
+**Tips**:
+
+- `$YAMLPATH/` will never have a `/` before it, but generally have a `/` after it
+- `path:` must always start with a `$YAMLPATH/`
+- `url:` for DataHandler or QueryHandler can use it for SQLite or Blaze objects.
+  For example, `url: sqlite:///$YAMLPATH/sql.db`.
 
 ### Deployment variables
 

@@ -175,6 +175,17 @@ can override these headers:
             Content-Type: text/plain      # Display as plain text
             Content-Disposition: none     # Do not download the file
 
+To convert a file type into an attachment, use:
+
+
+    :::yaml
+    pattern: /filehandler/data
+    handler: FileHandler
+    kwargs:
+        path: filehandler/data.txt
+        headers:
+            Content-Type: text/plain
+            Content-Disposition: attachment; filename=data.txt    # Save as data.txt
 
 ## Templates
 
