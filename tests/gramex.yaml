@@ -182,6 +182,12 @@ url:
         header: NEXT
         url: /dir/index/
 
+  func/argparse:
+    pattern: /func/argparse
+    handler: FunctionHandler
+    kwargs:
+      function: utils.argparse
+
   # TestFileHandler
   dir/noindex:
     pattern: /dir/noindex/(.*)

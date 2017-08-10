@@ -109,6 +109,46 @@ You can also specify this in your function:
         return open('download.pdf', 'rb').read()
 
 
+## Parse URL arguments
+
+To simplify URL query parameter parsing, all handlers have a `handler.argparse()`
+function. This returns the URL query parameters as an attribute dictionary.
+
+For example:
+
+    :::python
+    def method(handler):
+        args = handler.argparse()
+        args.x      # This is the same as the last value of ?x
+        args.y      # This is the same as the last value of ?y
+
+When you pass `?x=a&y=b`, `args.x` is `a` and `args.y` is `b`.
+
+With multiple values, e.g. `?x=a&x=b`, `args.x` is takes the last value, `b`.
+
+You return all values as a list. For example:
+
+    :::python
+    args = handler.argparse(list)
+
+In this case:
+
+- `?x=1` sets `args.x` as `['1']`
+- `?x=1&x=2` sets `args.x` as `['1', '2']`
+
+You can configure each parameter. For example:
+
+    :::python
+    args = handler.argparse(
+        'name',                         # Raise error if ?name= is missing
+        department={'name': 'dept'},    # ?dept= is mapped to args.department
+        org={'default': 'Gramener'},    # If ?org= is missing, defaults to Gramener
+        age={'type': int},              # Convert ?age= to an integer
+        married={'type': bool},         # Convert ?married to a boolean
+        alias={'nargs': '*'},           # Convert all ?alias= to a list
+        gender={'choices': ['M', 'F']}, # Raise error if gender is not M or F
+    )
+
 ## Streaming output
 
 If you perform slow calculations and want to flush interim calculations out to

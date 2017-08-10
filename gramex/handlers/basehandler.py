@@ -21,7 +21,7 @@ from tornado.websocket import WebSocketHandler
 from gramex import conf, __version__
 from gramex.config import objectpath, app_log, CustomJSONDecoder, CustomJSONEncoder
 from gramex.transforms import build_transform
-from gramex.http import UNAUTHORIZED, FORBIDDEN, BAD_REQUEST
+from gramex.http import UNAUTHORIZED, FORBIDDEN, BAD_REQUEST, INTERNAL_SERVER_ERROR
 
 server_header = 'Gramex/%s' % __version__
 session_store_cache = {}
@@ -548,6 +548,98 @@ class BaseHandler(RequestHandler, BaseMixin):
                         self.set_status(FORBIDDEN)
                         self.render(template)
                     raise HTTPError(FORBIDDEN)
+
+    def argparse(self, *args, **kwargs):
+        '''
+        Parse URL query parameters and return an AttrDict.
+
+        All ``args`` are added to the AttrDict. Missing ones raise errors.
+
+        All ``kwargs`` are added too. Their values are dicts with these keys:
+
+        - name: Name of the URL query parameter to read. Defaults to the key
+        - required: Whether or not the query parameter may be omitted
+        - default: The value produced if the argument is missing
+        - nargs: The number of parameters that should be returned. '*' or '+'
+          return all values as a list.
+        - type: Python type to which the parameter should be converted (e.g. `int`)
+        - choices: A container of the allowable values for the argument (after type conversion)
+
+        If the first ``args`` is ``list``, remaining arguments are added as a
+        list. If the first ``args`` is ``bytes``, ``str`` or ``unicode``,
+        remaining arguments are added as the respective type. By default, all
+        arguments are added as six.text_type (str in PY3, unicode in PY2).
+        '''
+        result = AttrDict()
+
+        all_args = six.text_type
+        if len(args) > 0 and args[0] in (six.text_type, six.binary_type, list, None):
+            all_args, args = args[0], args[1:]
+
+        for key in args:
+            result[key] = self.get_argument(key, None)
+            if result[key] is None:
+                raise HTTPError(BAD_REQUEST, reason='%s: missing ?%s=' % (key, key))
+        for key, conf in kwargs.items():
+            name = conf.get('name', key)
+            val = self.get_arguments(name)
+
+            # default: set if query is missing
+            # required: check if query is defined at all
+            if len(val) == 0:
+                default = conf.get('default', None)
+                if default is not None:
+                    result[key] = default
+                    continue
+                if conf.get('required', False):
+                    raise HTTPError(BAD_REQUEST, reason='%s: missing ?%s=' % (key, name))
+
+            # nargs: select the subset of items
+            nargs = conf.get('nargs', None)
+            if isinstance(nargs, int):
+                val = val[:nargs]
+                if len(val) < nargs:
+                    val += [''] * (nargs - len(val))
+            elif nargs not in ('*', '+', None):
+                raise ValueError('%s: invalid nargs %s' % (key, nargs))
+
+            # type: convert to specified type
+            newtype = conf.get('type', None)
+            if newtype is not None:
+                newval = []
+                for v in val:
+                    try:
+                        newval.append(newtype(v))
+                    except ValueError:
+                        reason = "%s: type error ?%s=%s to %r" % (key, name, v, newtype)
+                        raise HTTPError(BAD_REQUEST, reason=reason)
+                val = newval
+
+            # choices: check valid items
+            choices = conf.get('choices', None)
+            if isinstance(choices, (list, dict, set)):
+                choices = set(choices)
+                for v in val:
+                    if v not in choices:
+                        reason = '%s: invalid choice ?%s=%s' % (key, name, v)
+                        raise HTTPError(BAD_REQUEST, reason=reason)
+
+            # Set the final value
+            if nargs is None:
+                result[key] = val[-1]
+            else:
+                result[key] = val
+
+        if all_args is list:
+            for key in self.request.arguments:
+                if key not in args and key not in kwargs:
+                    result[key] = self.get_arguments(key)
+        elif all_args in (six.string_types, six.binary_type):
+            for key in self.request.arguments:
+                if key not in args and key not in kwargs:
+                    result[key] = all_args(self.get_argument(key))
+
+        return result
 
 
 class BaseWebSocketHandler(WebSocketHandler, BaseMixin):
