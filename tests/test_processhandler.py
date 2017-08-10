@@ -9,7 +9,7 @@ class TestProcessHandler(TestGramex):
     folder = os.path.dirname(os.path.abspath(__file__))
 
     def check_stdout(self, lines, stdout, cwd=None):
-        'Check if the lines emitted contain the right stdout values'
+        '''Check if the lines emitted contain the right stdout values'''
         if stdout:
             cmd = self.folder + '/processtest.py'
             cwd = cwd or gramex.paths.base.absolute()
@@ -24,7 +24,7 @@ class TestProcessHandler(TestGramex):
             self.assertNotIn('stdout starts', lines)
 
     def check_stderr(self, lines, stderr):
-        'Check if the lines emitted contain the right stderr values'
+        '''Check if the lines emitted contain the right stderr values'''
         if stderr:
             self.assertIn('stderr starts', lines)
             self.assertIn('stderr ends', lines)
@@ -32,7 +32,7 @@ class TestProcessHandler(TestGramex):
             self.assertNotIn('stderr starts', lines)
 
     def check_path(self, path, cwd=None, stdout=True, stderr=True):
-        'Check if the path has the right stdout/stderr values'
+        '''Check if the path has the right stdout/stderr values'''
         path = os.path.join(self.folder, path)
         self.assertTrue(os.path.exists(path))
         # Wait a bit until the path is closed, then open it and return the handle

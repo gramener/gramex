@@ -252,3 +252,8 @@ class TestCacheFileHandler(TestGramex):
     def tearDownClass(cls):
         if os.path.exists(cls.cache_file):
             os.unlink(cls.cache_file)
+
+
+class TestSubprocess(TestGramex):
+    def test_subprocess(self):
+        self.check('/cache/subprocess', text='Showing logs\ncommit ')

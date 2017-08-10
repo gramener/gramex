@@ -15,6 +15,7 @@ from tornado.web import RequestHandler
 from tornado.escape import recursive_unicode
 from tornado.httpclient import AsyncHTTPClient
 from concurrent.futures import ThreadPoolExecutor
+from gramex.cache import Subprocess
 from gramex.services import info
 
 watch_info = []
@@ -256,3 +257,17 @@ def ws_info_dump(handler):
     result = json.dumps(ws_info, indent=4)
     del ws_info[:]
     return result
+
+
+@gen.coroutine
+def subprocess(handler):
+    '''Used by test_cache.TestSubprocess to check if gramex.cache.Subprocess works'''
+    proc = Subprocess(
+        ['git', 'log', '-n', '1'],
+        stream_stdout=[handler.write],
+        stream_stderr=[handler.write],
+        buffer_size='line',
+    )
+    handler.write('Showing logs\n')
+    yield proc.wait_for_exit()
+    raise gen.Return('')

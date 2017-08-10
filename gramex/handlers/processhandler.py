@@ -1,14 +1,12 @@
 import io
 import os
 import six
-import sys
-import subprocess
 import tornado.web
 import tornado.gen
-from threading import Thread, RLock
-from tornado.concurrent import Future
+from threading import RLock
 from .basehandler import BaseHandler
 from gramex.config import app_log
+from gramex.cache import Subprocess
 
 
 class ProcessHandler(BaseHandler):
@@ -22,7 +20,7 @@ class ProcessHandler(BaseHandler):
         ``args`` that includes the arguments.
     :arg string cwd: Current working directory from where the command will run.
         Defaults to the same directory Gramex ran from.
-    :arg string stdout: (**TODO**) The process output can be sent to:
+    :arg string stdout: The process output can be sent to:
 
         - ``pipe``: Display the (transformed) output. This is the default
         - ``false``: Ignore the output
@@ -125,7 +123,7 @@ class ProcessHandler(BaseHandler):
         for header_name, header_value in self.headers.items():
             self.set_header(header_name, header_value)
 
-        proc = _Subprocess(
+        proc = Subprocess(
             self.args,
             shell=self.shell,
             cwd=self.cwd,
@@ -151,87 +149,3 @@ class ProcessHandler(BaseHandler):
         for target, handle in self.handles.items():
             handle.close()
         super(ProcessHandler, self).on_finish()
-
-
-class _Subprocess(object):
-    '''
-    tornado.process.Subprocess does not work on Windows.
-    https://github.com/tornadoweb/tornado/issues/1585
-
-    This is a threaded alternative based on
-    http://stackoverflow.com/a/4896288/100904
-
-    Create an internal implementation that works. You can later expose it.
-    Don't worry about Tornado conventions. Just get it to work first.
-
-        proc = _Subprocess(
-            args,
-            on_stdout=[self._write],
-            on_stderr=[self._write],
-            **kwargs
-        )
-        yield proc.wait_for_exit()
-
-    '''
-    def __init__(self, args, stream_stdout=[], stream_stderr=[], buffer_size=0, **kwargs):
-        self.args = args
-
-        # self.proc.stdout & self.proc.stderr are streams with process output
-        kwargs['stdout'] = kwargs['stderr'] = subprocess.PIPE
-
-        # On UNIX, close all file descriptors except 0, 1, 2 before child
-        # process is executed. I've no idea why. Copied from
-        # http://stackoverflow.com/a/4896288/100904
-        kwargs['close_fds'] = 'posix' in sys.builtin_module_names
-
-        if hasattr(buffer_size, 'lower') and 'line' in buffer_size.lower():
-            def _write(stream, callbacks, future):
-                'Call callbacks with content from stream. On EOF mark future as done'
-                while True:
-                    content = stream.readline()
-                    if len(content) > 0:
-                        for callback in callbacks:
-                            callback(content)
-                    else:
-                        stream.close()
-                        future.set_result('')
-                        break
-        else:
-            # If the buffer size is 0 or negative, use the default buffer size to read
-            if buffer_size <= 0:
-                buffer_size = io.DEFAULT_BUFFER_SIZE
-
-            def _write(stream, callbacks, future):
-                'Call callbacks with content from stream. On EOF mark future as done'
-                while True:
-                    content = stream.read(buffer_size)
-                    size = len(content)
-                    if size > 0:
-                        for callback in callbacks:
-                            # This may raise a ValueError: write to closed file.
-                            # TODO: decide how to handle it.
-                            callback(content)
-                    if size < buffer_size:
-                        stream.close()
-                        future.set_result('')
-                        break
-
-        self.proc = subprocess.Popen(args, **kwargs)
-        self.thread = {}        # Has the running threads
-        self.future = {}        # Stores the futures indicating stream close
-        callbacks = {
-            'stdout': stream_stdout,
-            'stderr': stream_stderr,
-        }
-        for stream in ('stdout', 'stderr'):
-            self.future[stream] = f = Future()
-            # Thread writes from self.proc.stdout / stderr to appropriate callbacks
-            self.thread[stream] = t = Thread(
-                target=_write,
-                args=(getattr(self.proc, stream), callbacks[stream], f),
-            )
-            t.daemon = True     # Thread dies with the program
-            t.start()
-
-    def wait_for_exit(self):
-        return list(self.future.values())

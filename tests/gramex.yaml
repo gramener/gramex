@@ -1361,6 +1361,11 @@ url:
       allow: .cache-file*
     cache:
         status: [200, 404]
+  cache/subprocess:
+    pattern: /cache/subprocess
+    handler: FunctionHandler
+    kwargs:
+      function: utils.subprocess
 
   json/get:
     pattern: /json/get/(.*)

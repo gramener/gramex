@@ -2,10 +2,14 @@
 import io
 import os
 import six
+import sys
 import json
 import yaml
 import inspect
+import subprocess
 import pandas as pd
+from threading import Thread
+from tornado.concurrent import Future
 from tornado.template import Template
 from gramex.config import app_log, PathConfig
 
@@ -331,3 +335,87 @@ def reload_module(*modules):
             app_log.info('Reloading module %s', name)
             six.moves.reload_module(module)
         _MODULE_CACHE[name] = fstat
+
+
+class Subprocess(object):
+    '''
+    tornado.process.Subprocess does not work on Windows.
+    https://github.com/tornadoweb/tornado/issues/1585
+
+    This is a threaded alternative based on
+    http://stackoverflow.com/a/4896288/100904
+
+    Usage::
+
+        proc = Subprocess(
+            args,
+            stream_stdout=[self.write],     # List of write methods to stream stdout to
+            stream_stderr=[self.write],     # List of write methods to stream stderr to
+            buffer_size='line',             # Write line by line. Can also be a number of bytes
+            **kwargs
+        )
+        yield proc.wait_for_exit()
+
+    '''
+    def __init__(self, args, stream_stdout=[], stream_stderr=[], buffer_size=0, **kwargs):
+        self.args = args
+
+        # self.proc.stdout & self.proc.stderr are streams with process output
+        kwargs['stdout'] = kwargs['stderr'] = subprocess.PIPE
+
+        # On UNIX, close all file descriptors except 0, 1, 2 before child
+        # process is executed. I've no idea why. Copied from
+        # http://stackoverflow.com/a/4896288/100904
+        kwargs['close_fds'] = 'posix' in sys.builtin_module_names
+
+        if hasattr(buffer_size, 'lower') and 'line' in buffer_size.lower():
+            def _write(stream, callbacks, future):
+                '''Call callbacks with content from stream. On EOF mark future as done'''
+                while True:
+                    content = stream.readline()
+                    if len(content) > 0:
+                        for callback in callbacks:
+                            callback(content)
+                    else:
+                        stream.close()
+                        future.set_result('')
+                        break
+        else:
+            # If the buffer size is 0 or negative, use the default buffer size to read
+            if buffer_size <= 0:
+                buffer_size = io.DEFAULT_BUFFER_SIZE
+
+            def _write(stream, callbacks, future):
+                '''Call callbacks with content from stream. On EOF mark future as done'''
+                while True:
+                    content = stream.read(buffer_size)
+                    size = len(content)
+                    if size > 0:
+                        for callback in callbacks:
+                            # This may raise a ValueError: write to closed file.
+                            # TODO: decide how to handle it.
+                            callback(content)
+                    if size < buffer_size:
+                        stream.close()
+                        future.set_result('')
+                        break
+
+        self.proc = subprocess.Popen(args, **kwargs)
+        self.thread = {}        # Has the running threads
+        self.future = {}        # Stores the futures indicating stream close
+        callbacks = {
+            'stdout': stream_stdout,
+            'stderr': stream_stderr,
+        }
+        for stream in ('stdout', 'stderr'):
+            self.future[stream] = f = Future()
+            # Thread writes from self.proc.stdout / stderr to appropriate callbacks
+            self.thread[stream] = t = Thread(
+                target=_write,
+                args=(getattr(self.proc, stream), callbacks[stream], f),
+            )
+            t.daemon = True     # Thread dies with the program
+            t.start()
+
+    def wait_for_exit(self):
+        return list(self.future.values())
