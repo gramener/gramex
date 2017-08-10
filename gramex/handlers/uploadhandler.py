@@ -60,7 +60,7 @@ class FileUpload(object):
         for upload, filename in zip_longest(uploads, filenames, fillvalue=None):
             filemeta = self.save_file(upload, filename, if_exists)
             filemeta.update(
-                key=key,
+                key=filename,
                 user=handler.get_current_user(),
                 data=recursive_unicode(handler.request.arguments),
             )

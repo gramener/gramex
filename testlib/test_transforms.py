@@ -1,6 +1,7 @@
 from __future__ import print_function, unicode_literals
 import io
 import os
+import six
 import yaml
 import inspect
 import unittest
@@ -294,7 +295,7 @@ class BuildTransform(unittest.TestCase):
             result = six.text_type(_val)
             return result if isinstance(result, GeneratorType) else [result, ]
         fn = self.check_transform(transform, 'function: six.text_type')
-        eq_(fn(b'abc'), ['abc'])
+        eq_(fn(b'abc'), [six.text_type(b'abc')])
 
         def transform(content):
             import six

@@ -79,7 +79,8 @@ class TestUploadHandler(TestGramex):
         for path in ['../actors.csv', '/actors.csv', '../upload/../β']:
             r = requests.post(url, files={'text': open('actors.csv')}, data={'save': path})
             eq_(r.status_code, FORBIDDEN)
-            ok_('outside' in r.reason.decode('utf-8'))
+            msg = r.reason.decode('utf-8') if isinstance(r.reason, six.binary_type) else r.reason
+            ok_('outside' in msg)
 
     def test_upload_error(self):
         url = server.base_url + conf.url['upload-error'].pattern
@@ -90,7 +91,8 @@ class TestUploadHandler(TestGramex):
             eq_(r.status_code, FORBIDDEN)
             r = requests.post(url, files={'file': open('actors.csv')}, data={'save': path})
             eq_(r.status_code, FORBIDDEN)
-            ok_('file exists' in r.reason.decode('utf-8'))
+            msg = r.reason.decode('utf-8') if isinstance(r.reason, six.binary_type) else r.reason
+            ok_('file exists' in msg)
 
     def test_upload_overwrite(self):
         url = server.base_url + conf.url['upload-overwrite'].pattern

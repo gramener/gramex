@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+import io
 import os
 import csv
 import six
@@ -377,11 +378,13 @@ class BaseMixin(object):
     def _set_new_session_id(self):
         '''Sets a new random session ID. Returns a bytes object'''
         session_id = b2a_base64(os.urandom(24))[:-1]
+        kwargs = dict(httponly=True, expires_days=self._session_days)
+        # Use Secure cookies on HTTPS to prevent leakage into HTTP
+        if self.request.protocol == 'https':
+            kwargs['secure'] = True
         # Websockets cannot set cookies. They raise a RuntimeError. Ignore those.
         try:
-            # Set HTTPOnly cookies. Set SecureFlag only on HTTPS requests
-            self.set_secure_cookie('sid', session_id, expires_days=self._session_days,
-                                   httponly=True, secure=self.request.protocol == 'https')
+            self.set_secure_cookie('sid', session_id, **kwargs)
         except RuntimeError:
             pass
         return session_id
@@ -422,12 +425,13 @@ class BaseMixin(object):
             # If no sid exists, create a new one and return
             if session_id is None:
                 return self.get_session()
+            session_id = session_id.decode('ascii')
             # If the old session isn't in the store, set expiry (_t) to the past to clear it
             old_session = self._session = self._session_store.load(session_id, {'_t': 0})
             old_session['id'] = session_id
         # Update session ID
         old_sid = old_session['id']
-        self._session['id'] = new_sid = self._set_new_session_id()
+        self._session['id'] = new_sid = self._set_new_session_id().decode('ascii')
         # Save data at the back end
         self._session_store.dump(old_sid, {})
         self._session_store.dump(new_sid, self._session)
@@ -441,7 +445,7 @@ class BaseMixin(object):
         if not user:
             raise HTTPError(UNAUTHORIZED)
         nbits = 16
-        otp = hexlify(os.urandom(nbits))
+        otp = hexlify(os.urandom(nbits)).decode('ascii')
         self._session_store.dump('otp:' + otp, {'user': user, '_t': time.time() + expire})
         return otp
 
@@ -853,7 +857,9 @@ def log_method(log):
         try:
             if not os.path.exists(path_dir):
                 os.makedirs(path_dir)
-            handle = open(log_path, 'ab')
+            # In Python 2, csv writerow writes byte string. In PY3, it's to a unicode string.
+            # Open file handles accordingly
+            handle = open(log_path, 'ab') if six.PY2 else io.open(log_path, 'a', encoding='utf-8')
             writer = csv.writer(handle)
         except OSError:
             raise OSError('Cannot open log.path: %s as CSV' % log_path)

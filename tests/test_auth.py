@@ -41,10 +41,10 @@ class TestSession(TestGramex):
         self.assertNotEqual(r1.cookies['sid'], r2.cookies['sid'])
         self.assertNotEqual(self.data1['id'], self.data2['id'])
 
-        # Test expiry date. It should be within a second of now, plus expiry date
+        # Test expiry date. It should be within a few seconds of now, plus expiry date
         self.assertIn('_t', self.data1)
         diff = time.time() + gramex.conf.app.session.expiry * 24 * 60 * 60 - self.data1['_t']
-        self.assertLess(abs(diff), 0.2)
+        self.assertLess(abs(diff), 2)
 
         # Test persistence under graceful shutdown
         server.stop_gramex()
@@ -59,9 +59,10 @@ class TestSession(TestGramex):
         r = requests.get(self.url + '?var=x')
         cookies = {c.name: c for c in r.cookies}
         self.assertIn('sid', cookies)
-        self.assertIn('httponly', cookies['sid']._rest)
+        flags = [key.lower() for key in cookies['sid']._rest]
+        self.assertIn('httponly', flags)
         # HTTP requests should not have a secure flag
-        self.assertNotIn('secure', cookies['sid']._rest)
+        self.assertNotIn('secure', flags)
         # TODO: HTTPS requests SHOULD have a secure flag
 
 
@@ -229,7 +230,7 @@ class TestSimpleAuth(AuthBase, LoginMixin, LoginFailureMixin):
             mgf=padding.MGF1(algorithm=hashes.SHA256()),
             algorithm=hashes.SHA256(),
             label=None)
-        message = public_key.encrypt(json.dumps(result), pad)
+        message = public_key.encrypt(json.dumps(result).encode('utf-8'), pad)
         session_data = self.get_session(headers={'X-Gramex-User': b64encode(message)})
         self.assertEquals(result, session_data['user'])
 

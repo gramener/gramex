@@ -16,7 +16,6 @@ class TestURLLog(TestGramex):
             'method': 'GET',
             'uri': url + '?x=1',
             'status': '200',
-            'error': 'ZeroDivisionError: integer division or modulo by zero',
             'args.x': '1',
             # 'user': '',
             # 'user.id', '',
@@ -25,6 +24,7 @@ class TestURLLog(TestGramex):
             'cookies.sid': 'mysid',
             'env.HOME': os.path.expanduser('~'),
         }, log)
+        self.assertIn('ZeroDivisionError', log['error'])
         self.assertIn(log['ip'], ('127.0.0.1', '::1'))
         try:
             float(log['time'])

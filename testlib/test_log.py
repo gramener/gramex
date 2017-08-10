@@ -5,7 +5,7 @@ import inspect
 import unittest
 from tornado.log import access_log
 from gramex.handlers.basehandler import log_method
-from test_transforms import eqfn
+from .test_transforms import eqfn
 
 # log_request() requires this to be a global
 log_format = None
@@ -83,7 +83,9 @@ class TestLogMethod(unittest.TestCase):
     @classmethod
     def teardownClass(cls):
         for method in cls.methods:
-            handle = dict(inspect.getmembers(method))['func_globals'].get('handle')
+            members = dict(inspect.getmembers(method))
+            global_vars = members.get('func_globals') or members.get('__globals__')
+            handle = global_vars.get('handle')
             if handle:
                 if not handle.closed:
                     handle.close()
