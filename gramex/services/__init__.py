@@ -66,7 +66,10 @@ def log(conf):
                 folder = os.path.dirname(os.path.abspath(handler_conf.filename))
                 if not os.path.exists(folder):
                     os.makedirs(folder)
-    logging.config.dictConfig(conf)
+    try:
+        logging.config.dictConfig(conf)
+    except (ValueError, TypeError, AttributeError, ImportError):
+        app_log.exception('Error in log: configuration')
 
 
 class GramexApp(tornado.web.Application):
