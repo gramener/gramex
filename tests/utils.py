@@ -286,3 +286,7 @@ def argparse(handler):
         if 'type' in val:
             val['type'] = eval(val['type'])
     return json.dumps(handler.argparse(*args, **kwargs))
+
+
+def upload_transform(content):
+    return dict(alpha=1, beta=1, **content)

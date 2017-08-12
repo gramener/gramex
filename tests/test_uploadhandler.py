@@ -122,6 +122,15 @@ class TestUploadHandler(TestGramex):
             ok_('{}.{:%Y%m%d-%H}'.format(path, datetime.now()) in backup)
             eq_(read(os.path.join(base, backup)), read('actors.csv'))
 
+    def test_upload_transform(self):
+        for path in ['upload-transform', 'upload-transform-blank']:
+            url = server.base_url + conf.url[path].pattern
+            r = requests.post(url, files={'file': open('actors.csv')}, data={'data': 1})
+            eq_(r.status_code, 200)
+            upload = r.json()['upload'][0]
+            meta_entry = self.info.info()[upload['file']]
+            eq_(upload, meta_entry)
+
     @classmethod
     def tearDownClass(cls):
         FileUpload(cls.path).store.close()

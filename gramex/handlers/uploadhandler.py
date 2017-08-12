@@ -59,13 +59,14 @@ class FileUpload(object):
         if_exists = getattr(handler, 'if_exists', 'unique')
         for upload, filename in zip_longest(uploads, filenames, fillvalue=None):
             filemeta = self.save_file(upload, filename, if_exists)
+            key = filemeta['file']
             filemeta.update(
-                key=filename,
+                key=key,
                 user=handler.get_current_user(),
                 data=recursive_unicode(handler.request.arguments),
             )
             filemeta = handler.transforms(filemeta)
-            self.store.dump(filemeta.file, filemeta)
+            self.store.dump(key, filemeta)
             filemetas.append(filemeta)
         return filemetas
 
@@ -138,7 +139,7 @@ class UploadHandler(BaseHandler):
             url: /$YAMLURL/                 #   ... else to this directory
     '''
     @classmethod
-    def setup(cls, path, keys=None, if_exists='unique', transform={}, methods=[], **kwargs):
+    def setup(cls, path, keys=None, if_exists='unique', transform=None, methods=[], **kwargs):
         super(UploadHandler, cls).setup(**kwargs)
         cls.if_exists = if_exists
         cls.uploader = FileUpload(path, keys=keys)
@@ -151,10 +152,14 @@ class UploadHandler(BaseHandler):
             cls.get = cls.fileinfo
 
         cls.transform = []
-        if 'function' in transform:
-            cls.transform.append(build_transform(
-                transform, vars=AttrDict((('content', None), ('handler', None))),
-                filename='url:%s' % cls.name))
+        if transform is not None:
+            if isinstance(transform, dict) and 'function' in transform:
+                cls.transform.append(build_transform(
+                    transform, vars=AttrDict((('content', None), ('handler', None))),
+                    filename='url:%s' % cls.name))
+            else:
+                app_log.error('UploadHandler %s: no function: in transform: %r',
+                              cls.name, transform)
 
     @tornado.gen.coroutine
     def fileinfo(self, *args, **kwargs):

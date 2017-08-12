@@ -1451,6 +1451,33 @@ url:
       if_exists: backup
       xsrf_cookies: false
 
+  upload-transform:
+    pattern: /upload-transform
+    handler: UploadHandler
+    kwargs:
+      path: $YAMLPATH/uploads
+      xsrf_cookies: false
+      transform:
+        function: utils.upload_transform(content)
+
+  # If the transform does not return a dict, ignore it (logging an error)
+  upload-transform-blank:
+    pattern: /upload-transform-blank
+    handler: UploadHandler
+    kwargs:
+      path: $YAMLPATH/uploads
+      xsrf_cookies: false
+      transform:
+        function: six.text_type('')
+
+  upload-transform-invalid-transform:
+    pattern: /upload-transform
+    handler: UploadHandler
+    kwargs:
+      path: $YAMLPATH/uploads
+      xsrf_cookies: false
+      transform: invalid-transform
+
   auth/session:
     pattern: /auth/session
     handler: FunctionHandler
