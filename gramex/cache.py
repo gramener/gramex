@@ -169,7 +169,7 @@ def open(path, callback, transform=None, rel=False, **kwargs):
         path = os.path.join(folder, path)
 
     callback_is_str = isinstance(callback, six.string_types)
-    key = (path, callback if callback_is_str else id(callback))
+    key = (path, callback if callback_is_str else id(callback), id(transform))
     cached = _cache.get(key, None)
     fstat = stat(path)
     if cached is None or fstat != cached.get('stat'):
