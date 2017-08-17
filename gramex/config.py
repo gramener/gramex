@@ -150,8 +150,9 @@ def _setup_variables():
     variables = DefaultAttrDict(str)
     # Load all environment variables
     variables.update(os.environ)
-
-    # Define GRAMEXDATA folder based on the system
+    # GRAMEXPATH is the Gramex root directory
+    variables['GRAMEXPATH'] = _gramex_path
+    # GRAMEXDATA varies based on OS
     if 'GRAMEXDATA' not in variables:
         if sys.platform.startswith('linux') or sys.platform == 'cygwin':
             variables['GRAMEXDATA'] = os.path.expanduser('~/.config/gramexdata')
@@ -272,7 +273,6 @@ def _yaml_open(path, default=AttrDict()):
     # Variables based on YAML file location
     yaml_path = str(path.parent)
     yaml_vars = {
-        'GRAMEXPATH': _gramex_path,     # Path to Gramex root directory
         'YAMLPATH': yaml_path,          # Path to YAML folder
         'YAMLFILE': str(path),          # Path to YAML file
     }
