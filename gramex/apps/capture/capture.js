@@ -46,6 +46,12 @@ var server = require('webserver').create()
 var phantom_version = phantom.version.major + '.' + phantom.version.minor + '.' + phantom.version.patch
 var error
 
+// This app requires a minimum version of PhantomJS
+if (phantom_version < '2.1.1') {
+  console.error('Requires PhantomJS 2.1.1 or above, not', phantom_version)
+  phantom.exit(1)
+}
+
 // Render a URL based on parameters provided in q.
 // Save the result in a file, and call callback(file).
 function render(q, callback) {
