@@ -54,6 +54,7 @@ class Capture(object):
         self.timeout = timeout
         self.browser = AsyncHTTPClient()
         self.lock = Lock()
+        self.started = False
         self.start()
 
     def start(self):
