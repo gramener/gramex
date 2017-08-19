@@ -16,6 +16,9 @@ from .basehandler import BaseHandler
 
 
 class Capture(object):
+    default_port = 9900         # Default port to run CaptureJS at
+    check_interval = 0.05       # Frequency (seconds) to check if self.started
+
     '''
     Create a proxy for capture.js. Typical usage::
 
@@ -40,7 +43,7 @@ class Capture(object):
     '''
     def __init__(self, port=None, url=None, cmd=None, timeout=10):
         # Set default values for port, url and cmd
-        port = 9900 if port is None else port
+        port = self.default_port if port is None else port
         if url is None:
             url = 'http://localhost:%d/' % port
             if cmd is None:
@@ -133,7 +136,7 @@ class Capture(object):
             self.start()
             end_time = time.time() + self.timeout
             while not self.started and time.time() < end_time:
-                yield tornado.gen.sleep(0.05)
+                yield tornado.gen.sleep(self.check_interval)
         if not self.started:
             raise RuntimeError('capture.js not started. See logs')
         r = yield self.browser.fetch(
@@ -166,7 +169,7 @@ class Capture(object):
         if not self.started:
             end_time = time.time() + self.timeout
             while not self.started and time.time() < end_time:
-                time.sleep(0.05)
+                time.sleep(self.check_interval)
             if not self.started:
                 raise RuntimeError('capture.js not started. See logs')
         kwargs['url'] = url
