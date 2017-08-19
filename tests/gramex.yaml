@@ -1198,6 +1198,10 @@ url:
         Content-Disposition: attachment;filename=alpha.csv
       xsrf_cookies: false
 
+  capture:
+    pattern: /capture
+    handler: CaptureHandler
+
   process/args:
     pattern: /process/args
     handler: ProcessHandler

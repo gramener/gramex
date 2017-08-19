@@ -45,6 +45,7 @@ class TestArgs(TestGramex):
         f('?x=a', 'y: missing', 'x', 'y')
         f('?x=a&y=b', {'x': 'a', 'y': 'b'}, 'x', 'y')
 
+        f('', {}, x={})
         f('?x=a', {'y': 'a'}, y={'name': 'x'})
         f('?x=a', 'y: missing', y={'required': True})
         f('?x=a', {'y': 1}, y={'default': 1})

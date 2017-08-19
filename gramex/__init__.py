@@ -145,7 +145,7 @@ def callback_commandline(commands):
         args.setdefault('browser', '/welcome')
         return run, {'cmd': ['guide'], 'args': args}
 
-    app_log.info('Gramex %s | %s loading...', __version__, os.getcwd())
+    app_log.info('Gramex %s | %s | Python %s', __version__, os.getcwd(), sys.version)
     return init, {'cmd': AttrDict(app=args)}
 
 

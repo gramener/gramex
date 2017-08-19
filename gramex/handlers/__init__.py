@@ -13,6 +13,7 @@ from .processhandler import ProcessHandler
 from .jsonhandler import JSONHandler
 from .socialhandler import TwitterRESTHandler, FacebookGraphHandler
 from .uploadhandler import UploadHandler
+from .capturehandler import CaptureHandler, Capture
 
 DirectoryHandler = FileHandler
 
@@ -23,4 +24,5 @@ __all__ = [
     'LogoutHandler', 'ProcessHandler', 'TwitterRESTHandler',
     'FacebookGraphHandler', 'UploadHandler',
     'BaseWebSocketHandler', 'WebSocketHandler',
+    'CaptureHandler', 'Capture',
 ]

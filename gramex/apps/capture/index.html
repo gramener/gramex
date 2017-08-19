@@ -1,0 +1,99 @@
+<!DOCTYPE html><html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Capture</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif;
+      font-size: 16px;
+      line-height: 20px;
+      min-width: 480px;
+      max-width: 600px;
+      margin: 0 auto;
+      color: #444;
+      background-color: #fff;
+      background-size : 20px 20px;
+    }
+    h1 { margin: 30px 0 10px 0; font-size: 2em; line-height: 40px; }
+    p { margin: 0 0 20px 0; }
+    .shift { margin-left: 210px; }
+    label { text-align: right; width: 200px; display: inline-block; }
+    select, button, input, textarea { height: 30px; margin: 5px 10px; font-family: inherit; padding: 4px; }
+    select, input, textarea { width: 240px; border: 1px solid #ccc; background: rgba(255, 255, 255, .6);}
+    textarea[name="js"] { width: 380px; height: 3.6em; margin: 0 10px; vertical-align: top; line-height: 1.2; }
+    input[name="file"] { width: 141px; }
+    select[name="ext"] { width: 70px; }
+    select[name="format"] { width: 70px; }
+    select[name="orientation"] { width: 141px; }
+    input[name="width"] { width: 99px;}
+    input[name="height"] { width: 98px;}
+    input[name="delay"] { width: 98px;}
+    button { }
+    .hide { display: none; }
+  </style>
+</head><body>
+
+<h1 class="shift">Capture</h1>
+<form method="POST">
+  <p><label for="url">URL to capture</label><input name="url" required type="url"></p>
+  <p>
+    <label for="file">Save as (.pdf/.png/.jpg)</label>
+    <input name="file" type="text" value="screenshot">
+    <select name="ext" id="ext">
+      <option value="pdf" selected>PDF</option>
+      <option value="png">PNG</option>
+      <option value="jpg">JPG</option>
+    </select>
+  </p>
+  <div id="pdf-options">
+    <p>
+      <label for="format">Paper size</label>
+      <select name="format">
+        <option selected>A4</option>
+        <option>A3</option>
+        <option>A5</option>
+        <option>Legal</option>
+        <option>Letter</option>
+        <option>Tabloid</option>
+      </select>
+      <select name="orientation">
+        <option value="portrait">Portrait</option>
+        <option value="landscape">Landscape</option>
+      </select>
+    </p>
+    <p><label for="title">Footer title</label><input name="title" type="text"></p>
+  </div>
+  <div id="raster-options">
+    <p>
+      <label for="width">Screen size (px)</label>
+      <input name="width" type="number" value="1200">
+      &times;
+      <input name="height" type="number" value="768">
+    </p>
+    <p><label for="scale">Zoom</label><input name="scale" type="number" min="0" max="4" step="0.1" value="1"></p>
+    <p><label for="selector">Selector</label><input name="selector" placeholder="CSS selector, e.g. #id, .class"></p>
+  </div>
+  <p><label for="delay">Delay</label><input name="delay" type="number" min="0" max="10000" value="0"> milliseconds</p>
+  <p><label for="js">Javascript</label><textarea name="js" rows="3" placeholder="Paste JavaScript code or URL here"></textarea></p>
+  <p><label></label><button type="submit">Get screenshot</button></p>
+</form>
+
+<p class="shift">Click once &amp; be patient. I am slow &amp; single-threaded.</p>
+<p class="shift"><a href="https://code.gramener.com/s.anand/capture/">Source</a></p>
+
+<script>
+// Hide respective section based on extension
+var ext = document.getElementById('ext'),
+    pdf_options = document.getElementById('pdf-options'),
+    raster_options = document.getElementById('raster-options')
+function redraw() {
+  var pdf = ext.value.match(/pdf/i)
+  pdf_options.setAttribute('class', pdf ? '' : 'hide')
+  raster_options.setAttribute('class', pdf ? 'hide' : '')
+}
+// When the ext
+ext.addEventListener('change', redraw, false)
+redraw()
+</script>
+</body></html>

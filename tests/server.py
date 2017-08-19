@@ -16,7 +16,7 @@ base_url = 'http://localhost:9999'
 
 
 def start_gramex():
-    "Run Gramex in this file's folder using the current gramex.conf.yaml"
+    '''Run Gramex in this file's folder using the current gramex.conf.yaml'''
     # Don't start Gramex if it's already running
     if info.thread is not None:
         return
@@ -48,7 +48,7 @@ def start_gramex():
 
 
 def stop_gramex():
-    'Terminate Gramex'
+    '''Terminate Gramex'''
     if info.thread is not None:
         gramex.shutdown()
         info.thread = None

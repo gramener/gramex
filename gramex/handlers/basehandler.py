@@ -21,7 +21,7 @@ from tornado.websocket import WebSocketHandler
 from gramex import conf, __version__
 from gramex.config import objectpath, app_log, CustomJSONDecoder, CustomJSONEncoder
 from gramex.transforms import build_transform
-from gramex.http import UNAUTHORIZED, FORBIDDEN, BAD_REQUEST, INTERNAL_SERVER_ERROR
+from gramex.http import UNAUTHORIZED, FORBIDDEN, BAD_REQUEST
 
 server_header = 'Gramex/%s' % __version__
 session_store_cache = {}
@@ -580,22 +580,21 @@ class BaseHandler(RequestHandler, BaseMixin):
             result[key] = self.get_argument(key, None)
             if result[key] is None:
                 raise HTTPError(BAD_REQUEST, reason='%s: missing ?%s=' % (key, key))
-        for key, conf in kwargs.items():
-            name = conf.get('name', key)
+        for key, config in kwargs.items():
+            name = config.get('name', key)
             val = self.get_arguments(name)
 
             # default: set if query is missing
             # required: check if query is defined at all
             if len(val) == 0:
-                default = conf.get('default', None)
-                if default is not None:
-                    result[key] = default
+                if 'default' in config:
+                    result[key] = config['default']
                     continue
-                if conf.get('required', False):
+                if config.get('required', False):
                     raise HTTPError(BAD_REQUEST, reason='%s: missing ?%s=' % (key, name))
 
             # nargs: select the subset of items
-            nargs = conf.get('nargs', None)
+            nargs = config.get('nargs', None)
             if isinstance(nargs, int):
                 val = val[:nargs]
                 if len(val) < nargs:
@@ -604,7 +603,7 @@ class BaseHandler(RequestHandler, BaseMixin):
                 raise ValueError('%s: invalid nargs %s' % (key, nargs))
 
             # type: convert to specified type
-            newtype = conf.get('type', None)
+            newtype = config.get('type', None)
             if newtype is not None:
                 newval = []
                 for v in val:
@@ -616,7 +615,7 @@ class BaseHandler(RequestHandler, BaseMixin):
                 val = newval
 
             # choices: check valid items
-            choices = conf.get('choices', None)
+            choices = config.get('choices', None)
             if isinstance(choices, (list, dict, set)):
                 choices = set(choices)
                 for v in val:
@@ -626,7 +625,8 @@ class BaseHandler(RequestHandler, BaseMixin):
 
             # Set the final value
             if nargs is None:
-                result[key] = val[-1]
+                if len(val) > 0:
+                    result[key] = val[-1]
             else:
                 result[key] = val
 

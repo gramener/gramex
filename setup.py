@@ -97,6 +97,7 @@ setup(
         'testfixtures',             # For logcapture
         'sphinx_rtd_theme',         # For documentation
         'websocket-client',         # For websocket testing
+        'pdfminer.six',             # For CaptureHandler testing
     ],
     **release_args
 )
