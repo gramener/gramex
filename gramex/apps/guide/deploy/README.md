@@ -9,8 +9,7 @@ configured in `gramex.yaml` using pre-defined variables.
 Some common security options are pre-configured in `$GRAMEXPATH/deploy.yaml`. To enable these options, add this line to your `gramex.yaml`:
 
     :::yaml
-    import:
-      deploy: $GRAMEXPATH/deploy.yaml
+    import: $GRAMEXPATH/deploy.yaml
 
 See [deploy.yaml](https://code.gramener.com/s.anand/gramex/blob/master/gramex/deploy.yaml) to understand the configurations.
 
@@ -23,8 +22,7 @@ allow the application to work in both places.
 Suppose `/gramex.yaml` imports all sub-directories:
 
     :::yaml
-    import:
-        apps: */gramex.yaml       # Import all gramex.yaml from 1st-level sub-directories
+    import: */gramex.yaml   # Import all gramex.yaml from 1st-level sub-directories
 
 ... and `/app/gramex.yaml` has:
 

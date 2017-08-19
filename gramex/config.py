@@ -368,8 +368,7 @@ def load_imports(config, source, warn=None):
             port: 20
             start: true
         path: /
-        import:
-            something: update*.yaml     # Can be any glob, e.g. */gramex.yaml
+        import: update*.yaml    # Can be any glob, e.g. */gramex.yaml
 
     ... and ``update.yaml`` looks like this::
 
@@ -387,6 +386,12 @@ def load_imports(config, source, warn=None):
 
     The ``import:`` keys are deleted. The return value contains :func:_pathstat
     values for ``base.yaml`` and ``update.yaml`` in that order.
+
+    Multiple ``import:`` values can be specified as a dictionary::
+
+        import:
+            first-app: app1/*.yaml
+            next-app: app2/*.yaml
 
     To import sub-keys as namespaces, use::
 
@@ -412,6 +417,9 @@ def load_imports(config, source, warn=None):
     root = source.absolute().parent
     for key, value, node in list(walk(config)):
         if key == 'import':
+            # Allow "import: path" as a structure
+            if isinstance(value, six.string_types):
+                value = {'apps': value}
             for name, conf in value.items():
                 if not isinstance(conf, dict):
                     conf = AttrDict(path=conf)

@@ -64,6 +64,7 @@ class TestPathConfig(unittest.TestCase):
         self.b = info.home / 'config.b.yaml'
         self.temp = info.home / 'config.temp.yaml'
         self.imp = info.home / 'config.import.yaml'
+        self.imp2 = info.home / 'config.import2.yaml'
         self.ns = info.home / 'config.namespace.yaml'
         self.final = info.home / 'config.final.yaml'
         self.chain = AttrDict(
@@ -147,6 +148,9 @@ class TestPathConfig(unittest.TestCase):
 
         # Once removed, it no longer used
         unlink(self.temp)
+        self.assertEqual(+conf_imp, +conf_b)
+
+        conf_imp = ChainConfig(conf=PathConfig(self.imp2))
         self.assertEqual(+conf_imp, +conf_b)
 
     def test_add_ns(self):
