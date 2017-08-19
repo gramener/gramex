@@ -42,7 +42,7 @@ class TestCacheConstructor(unittest.TestCase):
     def test_disk_cache(self):
         cache = gramex.services.info.cache
         self.assertIsInstance(cache['disk'], DiskCache)
-        self.assertEqual(cache['disk']._dir, info.folder + '/.cache-url')
+        self.assertEqual(cache['disk']._directory, info.folder + '/.cache-url')
         self.check_cache_expiry(cache['disk'])
 
 

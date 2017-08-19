@@ -262,13 +262,13 @@ def ws_info_dump(handler):
 @gen.coroutine
 def subprocess(handler):
     '''Used by test_cache.TestSubprocess to check if gramex.cache.Subprocess works'''
+    handler.write('Showing logs\n')
     proc = Subprocess(
         ['git', 'log', '-n', '1'],
         stream_stdout=[handler.write],
         stream_stderr=[handler.write],
         buffer_size='line',
     )
-    handler.write('Showing logs\n')
     yield proc.wait_for_exit()
     raise gen.Return('')
 
