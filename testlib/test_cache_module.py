@@ -228,7 +228,8 @@ class TestOpen(unittest.TestCase):
         path = os.path.join(folder, 'data.csv')
         cache = {}
         result, reloaded = gramex.cache.open(path, 'csv', _reload_status=True, _cache=cache)
-        ok_((path, 'csv') in cache)
+        # Cache key is (path, format, id(transform))
+        ok_((path, 'csv', id(None)) in cache)
 
         # Initially, the file is loaded
         eq_(reloaded, True)
@@ -238,7 +239,7 @@ class TestOpen(unittest.TestCase):
         eq_(reloaded, False)
 
         # If the cache is deleted, it reloads
-        del cache[path, 'csv']
+        del cache[path, 'csv', id(None)]
         result, reloaded = gramex.cache.open(path, 'csv', _reload_status=True, _cache=cache)
         eq_(reloaded, True)
 
