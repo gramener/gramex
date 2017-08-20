@@ -269,15 +269,25 @@ class TestOpen(unittest.TestCase):
         eq_(gramex.cache.stat('nonexistent'), (None, None))
 
     def test_transform(self):
+        # Check that transform function is applied and used as a cache key
         cache = {}
         path = os.path.join(folder, 'data.csv')
-        data = gramex.cache.open(path, 'csv', transform=len, _cache=cache)
-        eq_(data, len(pd.read_csv(path)))                   # noqa
 
-        cache = {}
-        path = os.path.join(folder, 'data.csv')
-        data = gramex.cache.open(path, 'csv', transform=lambda d: d['a'].sum(), _cache=cache)
-        eq_(data, pd.read_csv(path)['a'].sum())             # noqa
+        data = gramex.cache.open(path, 'csv', transform=len, _cache=cache)
+        eq_(data, len(pd.read_csv(path)))                   # noqa - ignore encoding
+        self.assertIn((path, 'csv', id(len)), cache)
+
+        def transform2(d):
+            return d['a'].sum()
+
+        data = gramex.cache.open(path, 'csv', transform=transform2, _cache=cache)
+        eq_(data, pd.read_csv(path)['a'].sum())             # noqa - ignore encoding
+        self.assertIn((path, 'csv', id(transform2)), cache)
+
+        # Check that non-callable transforms are ignored but used as cache key
+        data = gramex.cache.open(path, 'csv', transform='ignore', _cache=cache)
+        assert_frame_equal(data, pd.read_csv(path))         # noqa - ignore encoding
+        self.assertIn((path, 'csv', id('ignore')), cache)
 
 
 class TestSqliteCacheQuery(unittest.TestCase):

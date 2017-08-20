@@ -148,6 +148,8 @@ def open(path, callback, transform=None, rel=False, **kwargs):
         # After loading data.xlsx into a DataFrame, returned the grouped result
         open('data.xlsx', 'xslx', transform=lambda data: data.groupby('city')['sales'].sum())
 
+    If ``transform=`` is not a callable, it is ignored.
+
     ``rel=True`` opens the path relative to the caller function's file path. If
     ``D:/app/calc.py`` calls ``open('data.csv', 'csv', rel=True)``, the path
     is replaced with ``D:/app/data.csv``.
