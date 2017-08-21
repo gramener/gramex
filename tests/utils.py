@@ -50,7 +50,7 @@ def params_as_json(*args, **kwargs):
 def attributes(self):
     assert self.name == 'func/attributes'
     assert self.conf.pattern == '/func/attributes'
-    assert self.kwargs['function'] == 'utils.attributes'
+    assert self.conf.kwargs['function'] == 'utils.attributes'
     assert self.session['id']
     return 'OK'
 

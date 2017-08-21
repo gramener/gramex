@@ -486,7 +486,6 @@ class BaseHandler(RequestHandler, BaseMixin):
     handlers. All RequestHandlers must inherit from BaseHandler.
     '''
     def initialize(self, **kwargs):
-        self.kwargs = kwargs
         # self.request.arguments does not handle unicode keys well.
         # In Py2, it returns a str (not unicode). In Py3, it returns latin-1 unicode.
         # Convert this to proper unicode using UTF-8 and store in self.args
@@ -660,7 +659,6 @@ class BaseHandler(RequestHandler, BaseMixin):
 
 class BaseWebSocketHandler(WebSocketHandler, BaseMixin):
     def initialize(self, **kwargs):
-        self.kwargs = kwargs
         self._session, self._session_json = None, 'null'
         if self.cache:
             self.cachefile = self.cache()

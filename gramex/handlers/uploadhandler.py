@@ -11,7 +11,6 @@ from datetime import datetime
 from six.moves import zip_longest
 from orderedattrdict import AttrDict
 from tornado.web import HTTPError
-from tornado.escape import recursive_unicode
 from gramex.config import app_log
 from gramex.transforms import build_transform
 from gramex.http import FORBIDDEN, INTERNAL_SERVER_ERROR
