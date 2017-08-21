@@ -248,7 +248,7 @@ class LDAPAuth(AuthHandler):
     }
 
     def report_error(self, code, exc_info=False):
-        error = self.errors[code].format(host=self.conf.kwargs.host, args=self.request.arguments)
+        error = self.errors[code].format(host=self.conf.kwargs.host, args=self.args)
         app_log.error('LDAP: ' + error, exc_info=exc_info)
         self.set_status(status_code=401)
         self.set_header('Auth-Error', code)
@@ -274,7 +274,7 @@ class LDAPAuth(AuthHandler):
         import json
         kwargs = self.conf.kwargs
         # First, bind the server with the provided user ID and password.
-        q = {key: self.get_argument(key) for key in self.request.arguments}
+        q = {key: vals[0] for key, vals in self.args.items()}
         server = ldap3.Server(kwargs.host, kwargs.get('port'), kwargs.get('use_ssl', True))
         if 'bind' in kwargs and 'search' in kwargs:
             user, password, error = kwargs.bind.user, kwargs.bind.password, 'bind'
@@ -463,7 +463,7 @@ class DBAuth(SimpleAuth):
     def get(self):
         self.save_redirect_page()
         template = self.template
-        if self.forgot and self.forgot.key in self.request.arguments:
+        if self.forgot and self.forgot.key in self.args:
             template = self.forgot.template
         self.render_template(template, error=None)
 
@@ -475,7 +475,7 @@ class DBAuth(SimpleAuth):
         self.bind_to_db()
         # TODO: if this bind does not work, report an error on connection
 
-        if self.forgot and self.forgot.key in self.request.arguments:
+        if self.forgot and self.forgot.key in self.args:
             self.forgot_password()
         else:
             yield self.login()

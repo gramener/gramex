@@ -677,20 +677,23 @@ Sometimes, you need to re-use the same configurations multiple times. YAML's
 [anchors][anchors] support this. For example, this is how you re-use
 authentication:
 
-
     :::yaml
     url1:
         pattern: ...
         handler: ...
         kwargs: ...
-          auth: &GRAMENER_AUTH          # Define a reference called GRAMENER_AUTH
-              membership:
+          auth: &GRAMENER_AUTH          # Define a variable called GRAMENER_AUTH
+              membership:               # Whatever is under auth: is copied into GRAMENER_AUTH
                   hd: [gramener.com]
     url2:
         pattern: ...
         handler: ...
         kwargs: ...
-          auth: *GRAMENER_AUTH          # Reuse GRAMENER_AUTH
+          auth: *GRAMENER_AUTH          # Use the variable GRAMENER_AUTH
+          # This is the same as copy-pasting the earlier auth: section here
+          # auth:
+          #     membership:
+          #         hd: [gramener.com]
 
 This is how you re-use error page definitions:
 

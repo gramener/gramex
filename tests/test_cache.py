@@ -98,14 +98,15 @@ class TestCacheKey(unittest.TestCase):
 
     def test_arg(self):
         def arg(key, *values):
-            return AttrDict(request=AttrDict(uri='uri', arguments=AttrDict({key: values})))
+            # Mimic a handler object with .request.uri=... and .args=...
+            return AttrDict(request=AttrDict(uri='uri'), args=AttrDict({key: values}))
 
         # Check if args.* works
         cache_key = gramex.services._get_cache_key({'key': ['request.uri', 'args.key']}, 'args')
-        eq_(cache_key(arg('x', b'x')), ('uri', b'~'))
-        eq_(cache_key(arg('key', b'')), ('uri', b''))
-        eq_(cache_key(arg('key', b'a')), ('uri', b'a'))
-        eq_(cache_key(arg('key', b'a', b'b')), ('uri', b'a, b'))
+        eq_(cache_key(arg('x', 'x')), ('uri', '~'))
+        eq_(cache_key(arg('key', '')), ('uri', ''))
+        eq_(cache_key(arg('key', 'a')), ('uri', 'a'))
+        eq_(cache_key(arg('key', 'a', 'b')), ('uri', 'a, b'))
 
 
 class TestCacheFunctionHandler(TestGramex):

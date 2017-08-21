@@ -487,6 +487,14 @@ class BaseHandler(RequestHandler, BaseMixin):
     '''
     def initialize(self, **kwargs):
         self.kwargs = kwargs
+        # self.request.arguments does not handle unicode keys well.
+        # In Py2, it returns a str (not unicode). In Py3, it returns latin-1 unicode.
+        # Convert this to proper unicode using UTF-8 and store in self.args
+        self.args = {}
+        for k in self.request.arguments:
+            key = (k if isinstance(k, six.binary_type) else k.encode('latin-1')).decode('utf-8')
+            self.args[key] = self.get_arguments(k)
+
         self._session, self._session_json = None, 'null'
         if self.cache:
             self.cachefile = self.cache()
@@ -494,6 +502,13 @@ class BaseHandler(RequestHandler, BaseMixin):
             self.get = self._cached_get
         if self._set_xsrf:
             self.xsrf_token
+
+        # Set the method to the ?x-http-method-overrride argument or the
+        # X-HTTP-Method-Override header if they exist
+        if 'x-http-method-override' in self.args:
+            self.request.method = self.args.pop('x-http-method-override')[0]
+        elif 'X-HTTP-Method-Override' in self.request.headers:
+            self.request.method = self.request.headers['X-HTTP-Method-Override']
 
     def prepare(self):
         for method in self._on_init_methods:
@@ -572,9 +587,9 @@ class BaseHandler(RequestHandler, BaseMixin):
         '''
         result = AttrDict()
 
-        all_args = six.text_type
+        args_type = six.text_type
         if len(args) > 0 and args[0] in (six.text_type, six.binary_type, list, None):
-            all_args, args = args[0], args[1:]
+            args_type, args = args[0], args[1:]
 
         for key in args:
             result[key] = self.get_argument(key, None)
@@ -630,14 +645,15 @@ class BaseHandler(RequestHandler, BaseMixin):
             else:
                 result[key] = val
 
-        if all_args is list:
-            for key in self.request.arguments:
+        # Parse remaining keys
+        if args_type is list:
+            for key, val in self.args.items():
                 if key not in args and key not in kwargs:
-                    result[key] = self.get_arguments(key)
-        elif all_args in (six.string_types, six.binary_type):
-            for key in self.request.arguments:
+                    result[key] = val
+        elif args_type in (six.string_types, six.binary_type):
+            for key, val in self.args.items():
                 if key not in args and key not in kwargs:
-                    result[key] = all_args(self.get_argument(key))
+                    result[key] = args_type(val[0])
 
         return result
 

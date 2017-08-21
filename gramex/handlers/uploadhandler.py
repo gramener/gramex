@@ -63,7 +63,7 @@ class FileUpload(object):
             filemeta.update(
                 key=key,
                 user=handler.get_current_user(),
-                data=recursive_unicode(handler.request.arguments),
+                data=handler.args,
             )
             filemeta = handler.transforms(filemeta)
             self.store.dump(key, filemeta)

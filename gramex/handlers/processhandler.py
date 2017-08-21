@@ -68,7 +68,7 @@ class ProcessHandler(BaseHandler):
     @classmethod
     def setup(cls, args, shell=False, cwd=None, buffer=0, headers={}, **kwargs):
         super(ProcessHandler, cls).setup(**kwargs)
-        cls.args = args
+        cls.cmdargs = args
         cls.shell = shell
         cls._write_lock = RLock()
         cls.buffer_size = buffer
@@ -124,7 +124,7 @@ class ProcessHandler(BaseHandler):
             self.set_header(header_name, header_value)
 
         proc = Subprocess(
-            self.args,
+            self.cmdargs,
             shell=self.shell,
             cwd=self.cwd,
             stream_stdout=self.stream_stdout,

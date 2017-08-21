@@ -106,11 +106,9 @@ class TestFileHandler(TestGramex):
         })
 
     def test_args(self):
-        # Unicode query names are not supported -- so leave those as ?x= or ?y=
-        # Unicode query values are supported -- so use greek characters
-        self.check('/dir/args/?x=σ', text=json.dumps({'x': ['σ']}))
-        self.check('/dir/args/?x=σ&x=λ&y=►', text=json.dumps(
-            {'x': ['σ', 'λ'], 'y': ['►']}, sort_keys=True))
+        self.check('/dir/args/?高=σ', text=json.dumps({'高': ['σ']}))
+        self.check('/dir/args/?高=σ&高=λ&س=►', text=json.dumps(
+            {'高': ['σ', 'λ'], 'س': ['►']}, sort_keys=True))
 
     def test_index_template(self):
         # Custom index_template is used in directories

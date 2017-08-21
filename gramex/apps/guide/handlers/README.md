@@ -19,12 +19,17 @@ You can use this in `gramex.yaml` to map it to [custom](custom):
 
 Extending `BaseHandler` automatically provides these features:
 
+- **Method overriding**. The `X-HTTP-Method-Override: PUT` HTTP header changes
+  the request to a `PUT` request. If the URL has `?x-http-method-override=PUT`,
+  it becomes a `PUT` request. Similarly for `GET`, `POST` or `DELETE`.
 - [Caching](../cache/) via the `cache:` settings
 - [Sessions](../auth/) via the `session:` settings
 - [Authentication and authorization](../auth/) via the `auth:` settings
 - Transforms that are used by [ProcessHandler](../processhandler/) and [FileHandler](../filehandler/)
 
-**Note**: when naming your Python script, avoid namespaces such as `services.` or `handlers.` -- these are already used by Gramex, and will not reflect your custom handler.
+**Note**: when naming your Python script, avoid namespaces such as `services.` or
+`handlers.` -- these are already used by Gramex, and will not reflect your custom
+handler.
 
 
 ## Initialisation
@@ -64,8 +69,11 @@ Any arguments passed to the handler are passed to the `setup()` and
 The following attributes are available to `BaseHandler` instances:
 
 - `handler.name` (str): the name of the URL configuration section that created this handler
-- `handler.conf` (AttrDict): the full configuration used to create the handler, parsed from YAML
-- `handler.kwargs` (dict): the `kwargs:` section of the handler
+- `handler.conf` (AttrDict): the full configuration used to create the handler,
+  parsed from YAML. For example, `handler.conf.pattern` has the `pattern:`
+  section. `handler.conf.kwargs` has the handler kwargs.
+- `handler.args` (dict): a unicode dictonary of URL query parameters. Values are
+  lists. For example, `?x=1` is passed as `handler.args = {'x': ['1']}`
 - `handler.session` (AttrDict): a unique object associated with each [session](../auth/)
 
 Apart from these, there are 4 other variables that may be created based on the

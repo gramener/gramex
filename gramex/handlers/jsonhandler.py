@@ -98,12 +98,6 @@ class JSONHandler(BaseHandler):
 
     def initialize(self, **kwargs):
         super(JSONHandler, self).initialize(**kwargs)
-        # Set the method to the ?x-http-method-overrride argument or the
-        # X-HTTP-Method-Override header if they exist
-        if 'x-http-method-override' in self.request.arguments:
-            self.request.method = self.get_argument('x-http-method-override')
-        elif 'X-HTTP-Method-Override' in self.request.headers:
-            self.request.method = self.request.headers['X-HTTP-Method-Override']
         self.set_header('Content-Type', 'application/json')
 
     def get(self, jsonpath):

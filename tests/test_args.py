@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+
 import six
 import json
 from gramex.http import BAD_REQUEST
@@ -5,7 +8,20 @@ from . import server, TestGramex
 
 
 class TestArgs(TestGramex):
-    def check_args(self, query, result, *args, **kwargs):
+    def test_args(self):
+        # Check BaseHandler creates a self.args in unicode
+        def f(query, args, **kwargs):
+            r = self.get('/httpbin' + query, **kwargs)
+            self.assertEqual(r.json()['args'], args)
+
+        f('?高=λ', {'高': ['λ']})
+        f('?高=λ&高=σ', {'高': ['λ', 'σ']})
+        f('?高=', {'高': ['']})
+        f('?高', {'高': ['']})
+        f('?=&高=λ&兴=σ&兴=█', {'高': ['λ'], '兴': ['σ', '█'], '': ['']})
+        f('?देश=भारत', {'देश': ['भारत']})
+
+    def check_argparse(self, query, result, *args, **kwargs):
         params = {'_q': json.dumps({'args': args, 'kwargs': kwargs})}
         r = self.get('/func/argparse' + query, params=params)
         if isinstance(result, six.string_types):
@@ -16,9 +32,9 @@ class TestArgs(TestGramex):
             result.pop('_q', None)
             self.assertEqual(result, result)
 
-    def test_args(self):
+    def test_argparse(self):
         # Check BaseHandler.argparse
-        f = self.check_args
+        f = self.check_argparse
 
         f('', {})
         f('?x=1', {'x': '1'})

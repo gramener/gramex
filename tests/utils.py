@@ -24,8 +24,7 @@ counters = Counter()
 
 
 def args_as_json(handler):
-    return json.dumps({arg: handler.get_arguments(arg) for arg in handler.request.arguments},
-                      sort_keys=True)
+    return json.dumps(handler.args, sort_keys=True)
 
 
 def params_as_json(*args, **kwargs):
@@ -130,7 +129,7 @@ def httpbin(handler, mime='json', rand=None, status=200):
 
     response = {
         'headers': {key: handler.request.headers.get(key) for key in handler.request.headers},
-        'args': recursive_unicode(handler.request.arguments),
+        'args': handler.args,
     }
     rand = handler.get_argument('rand', rand)
     if rand is not None:

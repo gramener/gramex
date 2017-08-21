@@ -176,15 +176,6 @@ class DataHandler(BaseHandler, DataMixin):
                     posttransform, vars=AttrDict(content=None),
                     filename='url:%s' % cls.name))
 
-    def initialize(self, **kwargs):
-        super(DataHandler, self).initialize(**kwargs)
-        # Set the method to the ?x-http-method-overrride argument or the
-        # X-HTTP-Method-Override header if they exist
-        if 'x-http-method-override' in self.request.arguments:
-            self.request.method = self.get_argument('x-http-method-override')
-        elif 'X-HTTP-Method-Override' in self.request.headers:
-            self.request.method = self.request.headers['X-HTTP-Method-Override']
-
     def _sqlalchemy_gettable(self):
         self._engine()
         return sa.Table(self.params['table'], self.meta, autoload=True, autoload_with=self.engine)

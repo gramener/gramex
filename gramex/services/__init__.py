@@ -231,7 +231,7 @@ def _get_cache_key(conf, name):
     - ``request.attr`` => ``request.attr`` can be any request attribute, as str
     - ``header.key`` => ``request.headers[key]``
     - ``cookies.key`` => ``request.cookies[key].value``
-    - ``args.key`` => ``request.arguments[key]`` joined with a comma.
+    - ``args.key`` => ``handler.args[key]`` joined with a comma.
     - ``user.key`` => ``handler.current_user[key]`` as str
 
     Invalid key strings are ignored with a warning. If all key strings are
@@ -260,7 +260,7 @@ def _get_cache_key(conf, name):
             key_getters.append('u(handler.current_user.get(%s, missing)) '
                                'if handler.current_user else missing' % val)
         elif parts[0].startswith('arg'):
-            key_getters.append('argsep.join(request.arguments.get(%s, [missing_b]))' % val)
+            key_getters.append('argsep.join(handler.args.get(%s, [missing]))' % val)
         else:
             app_log.warn('url %s: ignoring invalid cache key %s', name, key)
     # If none of the keys are valid, use the default request key
@@ -272,8 +272,7 @@ def _get_cache_key(conf, name):
     method += '\treturn (%s)' % ', '.join(key_getters)
     context = {
         'missing': '~',
-        'missing_b': b'~',      # args are binary
-        'argsep': b', ',        # join args using binary comma
+        'argsep': ', ',         # join args using comma
         'u': text_type          # convert to unicode
     }
     exec(method, context)

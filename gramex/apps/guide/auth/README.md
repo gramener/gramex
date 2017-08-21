@@ -624,14 +624,13 @@ taken to `auth/simple` even though `app.settings.login_url` is `/login/`:
 
     :::yaml
     url:
-        auth/use-simple:
-            pattern: /$YAMLURL/use-simple
+        auth/protected-page:
+            pattern: /$YAMLURL/protected-page
             handler: FileHandler
             kwargs:
-                path: $YAMLPATH/secret.html
+                path: $YAMLPATH/protected-page.html
                 auth:
-                    login_url: /$YAMLURL/simple     # Redirect users to this login page
-
+                    login_url: /$YAMLURL/login  # Redirect users to this login page
 
 ## Roles
 

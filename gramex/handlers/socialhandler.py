@@ -166,7 +166,7 @@ class TwitterRESTHandler(SocialMixin, BaseHandler, TwitterMixin):
             yield self.login()
             raise tornado.gen.Return()
 
-        args = {key: self.get_argument(key) for key in self.request.arguments}
+        args = {key: val[0] for key, val in self.args.items()}
         params = AttrDict(self.conf.kwargs)
         params['access_key'] = self.get_token('access_key', self.get_from_token)
         params['access_secret'] = self.get_token('access_secret', self.get_from_token)
@@ -244,7 +244,7 @@ class FacebookGraphHandler(SocialMixin, BaseHandler, FacebookGraphMixin):
             yield self.login()
             raise tornado.gen.Return()
 
-        args = {key: self.get_argument(key) for key in self.request.arguments}
+        args = {key: val[0] for key, val in self.args.items()}
         args['access_token'] = self.get_token('access_token')
         uri = url_concat(self._FACEBOOK_BASE_URL + '/' + self.conf.kwargs.get('path', path), args)
         http = self.get_auth_http_client()
