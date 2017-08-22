@@ -11,7 +11,7 @@ import os
 
 
 def read_gitignore(path):
-    'Read .gitignore paths as an iterable of patterns'
+    '''Read .gitignore paths as an iterable of patterns'''
     with open(path, encoding='utf-8') as handle:
         for line in handle.readlines():
             line = line.strip()
@@ -22,8 +22,8 @@ def read_gitignore(path):
 ignore_patterns = list(read_gitignore('.gitignore'))
 
 
-def recursive_include(root, path, ignores=[]):
-    'Go to root dir and yield all files under path that'
+def recursive_include(root, path, ignores=[], allows=[]):
+    '''Go to root dir and yield all files under path that'''
     # Change to root directory
     cwd = os.getcwd()
     os.chdir(root)
@@ -42,6 +42,11 @@ def recursive_include(root, path, ignores=[]):
                 if fnmatch(name, pattern) or fnmatch(target, pattern):
                     ignore = True
                     break
+            if len(allows) > 0:
+                for pattern in allows:
+                    if not fnmatch(name, pattern) or not fnmatch(target, pattern):
+                        ignore = True
+                        break
             if not ignore:
                 yield target
     # Change back to original directory
@@ -58,6 +63,17 @@ with open('HISTORY.rst', encoding='utf-8') as handle:
 with open('gramex/release.json', encoding='utf-8') as handle:
     release_args = json.load(handle)
 
+# Add a matching line in MANIFEST.in
+# Add a matching list in testlib/test_setup.py for verification
+gramex_files = [
+    'gramex.yaml',
+    'deploy.yaml',
+    'apps.yaml',
+    'release.json',
+]
+gramex_files += list(recursive_include('gramex', 'handlers', ignore_patterns, ['*.html']))
+gramex_files += list(recursive_include('gramex', 'apps', ignore_patterns))
+
 setup(
     long_description=long_description,
     packages=find_packages(),
@@ -66,19 +82,7 @@ setup(
     # package_data includes data files for binary & source distributions
     # include_package_data is only for source distributions, uses MANIFEST.in
     package_data={
-        # Add a matching line in MANIFEST.in
-        # Add a matching list in testlib/test_setup.py for verification
-        'gramex': [
-            'gramex.yaml',
-            'deploy.yaml',
-            'apps.yaml',
-            'release.json',
-            'handlers/filehandler.template.html',
-            'handlers/auth.template.html',
-            'handlers/forgot.template.html',
-            'handlers/datahandler.template.html',
-            'handlers/queryhandler.template.html',
-        ] + list(recursive_include('gramex', 'apps', ignore_patterns))
+        'gramex': gramex_files,
     },
     include_package_data=True,
     install_requires=[

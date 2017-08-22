@@ -15,8 +15,11 @@ class TestSetup(unittest.TestCase):
     def test_setup(self):
         # List all files mentioned in setup.py - package_data: key
         self.exists('gramex.yaml')
+        self.exists('deploy.yaml')
         self.exists('apps.yaml')
         self.exists('release.json')
+
+        # Ensure that handler HTML files are there by checking for all files
         self.exists('handlers/filehandler.template.html')
         self.exists('handlers/auth.template.html')
         self.exists('handlers/forgot.template.html')
