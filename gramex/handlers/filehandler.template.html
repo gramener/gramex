@@ -1,50 +1,48 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <title>$path</title>
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <style>
-      html, body {
-        height: 100%;
-        margin: 0;
-      }
-      body {
-        max-width: 40em;
-        margin: 0 auto;
-        color: white;
-        background-image: linear-gradient(rgb(75, 121, 161), rgb(40, 62, 81));
-        font-family: "Segoe UI", "Dejavu Sans", "Helvetica Neue", sans-serif;
-        font-size: 1.25rem;
-      }
-      h1 {
-        margin: 1rem 0 1.5rem 0;
-        font-size: 1.5em;
-        font-weight: normal;
-      }
-      ul {
-        margin: 0;
-        padding: 0;
-      }
-      li {
-        line-height: 1.5em;
-        list-style-type: none;
-        margin: 0;
-        padding: 0;
-      }
-      footer {
-        margin-top: 1.5em;
-        border-top: 1px solid white;
-        padding-top: 1.5em;
-      }
-      a { color: inherit; }
-      a:visited { color: #e8e8ff; }
-    </style>
-  </head>
-  <body>
-    <h1>$path</h1>
-    $body
-    <footer>File list by Gramex</footer>
-  </body>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>$path</title>
+  <style>
+  * { box-sizing: border-box; }
+  body { margin: 0 auto; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+  html { width: 100%; height: 100%; overflow: hidden; }
+  body {
+    max-width: 40em;
+    color: white;
+    background-image: linear-gradient(rgb(75, 121, 161), rgb(40, 62, 81));
+    font-family: "Segoe UI", "Dejavu Sans", "Helvetica Neue", sans-serif;
+    font-size: 1.25rem;
+  }
+  h1 {
+    margin: 1rem 0 1.5rem 0;
+    font-size: 1.5em;
+    font-weight: normal;
+  }
+  ul {
+    margin: 0;
+    padding: 0;
+  }
+  li {
+    line-height: 1.5em;
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+  }
+  footer {
+    margin-top: 1.5em;
+    border-top: 1px solid white;
+    padding-top: 1.5em;
+  }
+  a { color: inherit; }
+  a:visited { color: #e8e8ff; }
+  </style>
+</head>
+<body>
+  <h1>$path</h1>
+  $body
+  <footer>File list by Gramex</footer>
+</body>
 </html>
