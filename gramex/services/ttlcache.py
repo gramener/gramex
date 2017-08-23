@@ -108,7 +108,7 @@ class TTLCache(Cache):
         else:
             link.unlink()
         # CHANGE: Expire time based on expire parameter, or default TTL
-        link.expire = time + (expire or self.__ttl)
+        link.expire = time + (self.__ttl if expire is None else expire)
         link.next = root = self.__root
         link.prev = prev = root.prev
         prev.next = root.prev = link
