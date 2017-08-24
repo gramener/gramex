@@ -1,6 +1,6 @@
 '''
 Test utilities to create and drop databases.
-Used by test_datahandler.py, test_queryhandler.py, test_cache.py
+Used by test_datahandler.py, test_queryhandler.py, ../testlib/
 '''
 from __future__ import unicode_literals
 
@@ -13,7 +13,7 @@ folder = os.path.dirname(os.path.abspath(__file__))
 
 def mysql_create_db(server, db, **tables):
     url = 'mysql+pymysql://root@%s/' % server
-    engine = sa.create_engine(url, encoding=str_utf8)
+    engine = sa.create_engine(url + '?charset=utf8', encoding=str_utf8)
     try:
         engine.connect()
     except sa.exc.OperationalError:
@@ -21,11 +21,11 @@ def mysql_create_db(server, db, **tables):
     engine.execute("DROP DATABASE IF EXISTS %s" % db)
     engine.execute("CREATE DATABASE %s CHARACTER SET utf8 COLLATE utf8_general_ci" % db)
     engine.dispose()
-    engine = sa.create_engine(url + db, encoding=str_utf8)
+    engine = sa.create_engine(url + db + '?charset=utf8', encoding=str_utf8)
     for table_name, data in tables.items():
         data.to_sql(table_name, con=engine, index=False)
     engine.dispose()
-    return url + db
+    return url + db + '?charset=utf8'
 
 
 def mysql_drop_db(server, db):

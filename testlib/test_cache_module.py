@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
 import io
@@ -11,7 +12,6 @@ import gramex.cache
 import pandas as pd
 import sqlalchemy as sa
 from gramex.config import variables, str_utf8
-from tests import dbutils
 from six import string_types
 from markdown import markdown
 from collections import OrderedDict
@@ -20,8 +20,10 @@ from tornado.template import Template
 from orderedattrdict.yamlutils import AttrDictYAMLLoader
 from pandas.util.testing import assert_frame_equal
 from nose.tools import eq_, ok_, assert_raises
+import dbutils
+from . import folder
 
-folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'test_cache')
+folder = os.path.join(folder, 'test_cache')
 state_file = os.path.join(folder, '.state')
 
 

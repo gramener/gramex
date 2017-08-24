@@ -6,7 +6,6 @@ import pandas as pd
 import sqlalchemy as sa
 from pathlib import Path
 import pandas.util.testing as pdt
-from nose.plugins.skip import SkipTest
 from . import server, TestGramex, dbutils
 from gramex.config import variables
 from gramex.http import OK

@@ -8,7 +8,6 @@ import sqlalchemy as sa
 from pathlib import Path
 from tornado.template import Template
 import pandas.util.testing as pdt
-from nose.plugins.skip import SkipTest
 from . import server, TestGramex, dbutils
 import gramex
 from gramex.config import variables
