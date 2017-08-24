@@ -268,7 +268,7 @@ def _filter_db(engine, table, meta, controls, args):
     table = sqlalchemy.Table(table, metadata, autoload=True, autoload_with=engine)
     cols = table.columns
 
-    filters, sorts = meta['filters'], meta['sort']
+    filters = meta['filters']
     query = sqlalchemy.select([table])
     for key, vals in args.items():
         # Parse column names
