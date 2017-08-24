@@ -47,7 +47,7 @@ class DataMixin(object):
 
     def getq(self, key, default_value=None):
         return (self.qconfig['query'].get(key) or
-                self.get_arguments(key, strip=False) or
+                self.args.get(key, []) or
                 self.qconfig['default'].get(key) or
                 default_value)
 

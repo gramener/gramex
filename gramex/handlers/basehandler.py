@@ -596,7 +596,7 @@ class BaseHandler(RequestHandler, BaseMixin):
                 raise HTTPError(BAD_REQUEST, reason='%s: missing ?%s=' % (key, key))
         for key, config in kwargs.items():
             name = config.get('name', key)
-            val = self.get_arguments(name)
+            val = self.args.get(name, [])
 
             # default: set if query is missing
             # required: check if query is defined at all

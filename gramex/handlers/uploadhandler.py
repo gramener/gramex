@@ -54,7 +54,7 @@ class FileUpload(object):
         uploads = [upload for key in self.keys.get('file', [])
                    for upload in handler.request.files.get(key, [])]
         filenames = [name for key in self.keys.get('save', [])
-                     for name in handler.get_arguments(key)]
+                     for name in handler.args.get(key, [])]
         if_exists = getattr(handler, 'if_exists', 'unique')
         for upload, filename in zip_longest(uploads, filenames, fillvalue=None):
             filemeta = self.save_file(upload, filename, if_exists)
@@ -115,7 +115,7 @@ class FileUpload(object):
     def deletefiles(self, handler):
         status = []
         for delete_key in self.keys.get('delete', []):
-            for key in handler.get_arguments(delete_key):
+            for key in handler.args.get(delete_key, []):
                 stat = {'success': False, 'key': key}
                 if key in self.store.store:
                     path = os.path.join(self.path, key)
