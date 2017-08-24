@@ -110,6 +110,11 @@ class TestFilter(unittest.TestCase):
                sales[sales['देश'] == 'भारत'][cols])
         eq_(m['filters'], [('देश', '', ('भारत',))])
 
+        ignore_cols = ['product', 'city']
+        m = eq({'देश': ['भारत'], '_c': ['-' + c for c in ignore_cols]},
+               sales[sales['देश'] == 'भारत'][[c for c in sales.columns if c not in ignore_cols]])
+        eq_(m['filters'], [('देश', '', ('भारत',))])
+
         # Non-existent column does not raise an error for any operation
         for op in ['', '~', '!', '>', '<', '<~', '>', '>~']:
             m = eq({'nonexistent' + op: ['']}, sales)

@@ -74,10 +74,11 @@ def filter(url, args={}, meta={}, engine=None, table=None, ext=None, **kwargs):
 
     These URL query parameters control the output:
 
-    - ``?_sort=col`` sorts column col in ascending order. ?_sort=-col sorts in descending order.
+    - ``?_sort=col`` sorts column col in ascending order. ``?_sort=-col`` sorts
+      in descending order.
     - ``?_limit=100`` limits the result to 100 rows
     - ``?_offset=100`` starts showing the result from row 100. Default: 0
-    - ``?_c=x&_c=y`` returns only columns [x, y]
+    - ``?_c=x&_c=y`` returns only columns ``[x, y]``. ``?_c=-col`` drops col.
 
     If a column name matches one of the above, you cannot filter by that column.
     Avoid column names beginning with _.
@@ -161,13 +162,46 @@ def _filter_col(col, cols):
     return None, None
 
 
+def _filter_sort_columns(sort_filter, cols):
+    sorts, ignored_sorts = [], []
+    for col in sort_filter:
+        if col in cols:
+            sorts.append((col, True))
+        elif col.startswith('-') and col[1:] in cols:
+            sorts.append((col[1:], False))
+        else:
+            ignored_sorts.append(col)
+    return sorts, ignored_sorts
+
+
+def _filter_select_columns(col_filter, cols):
+    '''
+    Checks ?c=col&c=-col for filter(). Takes values of ?c= as col_filter and data
+    column names as cols. Returns 2 lists: show_cols as columns to show.
+    ignored_cols has column names not in the list, i.e. the ?c= parameters that
+    are ignored.
+    '''
+    selected_cols, excluded_cols, ignored_cols = [], set(), []
+    for col in col_filter:
+        if col in cols:
+            selected_cols.append(col)
+        elif col.startswith('-') and col[1:] in cols:
+            excluded_cols.add(col[1:])
+        else:
+            ignored_cols.append(col)
+    if len(excluded_cols) > 0 and len(selected_cols) == 0:
+        selected_cols = cols
+    show_cols = [col for col in selected_cols if col not in excluded_cols]
+    return show_cols, ignored_cols
+
+
 def _filter_frame(data, meta, controls, args):
     '''
     Returns a DataFrame in which the source DataFrame ``data`` is filtered using
     args. Additional controls like _sort, etc are in ``controls``. Metadata is
     stored in ``meta``.
     '''
-    filters, sorts = meta['filters'], meta['sort']
+    filters = meta['filters']
     for key, vals in args.items():
         # Parse column names
         col, op = _filter_col(key, data.columns)
@@ -199,24 +233,15 @@ def _filter_frame(data, meta, controls, args):
         filters.append((col, op, vals))
     # Apply controls
     if '_sort' in controls:
-        ignored_sorts = []
-        for col in controls['_sort']:
-            if col in data.columns:
-                sorts.append((col, True))
-            elif col.startswith('-') and col[1:] in data.columns:
-                sorts.append((col[1:], False))
-            else:
-                ignored_sorts.append(col)
-        if len(sorts) > 0:
-            data = data.sort_values([c[0] for c in sorts], ascending=[c[1] for c in sorts])
+        meta['sort'], ignored_sorts = _filter_sort_columns(controls['_sort'], data.columns)
+        if len(meta['sort']) > 0:
+            data = data.sort_values(by=[c[0] for c in meta['sort']],
+                                    ascending=[c[1] for c in meta['sort']])
         if len(ignored_sorts) > 0:
             meta['ignored'].append(('_sort', ignored_sorts))
     if '_c' in controls:
-        ignored_cols = []
-        for col in controls['_c']:
-            if col not in data.columns:
-                ignored_cols.append(col)
-        data = data[[col for col in controls['_c'] if col in data.columns]]
+        show_cols, ignored_cols = _filter_select_columns(controls['_c'], data.columns)
+        data = data[show_cols]
         if len(ignored_cols) > 0:
             meta['ignored'].append(('_c', ignored_cols))
     if '_offset' in controls:
@@ -280,25 +305,14 @@ def _filter_db(engine, table, meta, controls, args):
         filters.append((col, op, vals))
     # Apply controls
     if '_sort' in controls:
-        ignored_sorts = []
-        for col in controls['_sort']:
-            if col in cols:
-                sorts.append((col, True))
-                query = query.order_by(cols[col])
-            elif col.startswith('-') and col[1:] in cols:
-                sorts.append((col[1:], False))
-                query = query.order_by(cols[col[1:]].desc())
-            else:
-                ignored_sorts.append(col)
+        meta['sort'], ignored_sorts = _filter_sort_columns(controls['_sort'], list(cols.keys()))
+        for col, asc in meta['sort']:
+            query = query.order_by(cols[col] if asc else cols[col].desc())
         if len(ignored_sorts) > 0:
             meta['ignored'].append(('_sort', ignored_sorts))
     if '_c' in controls:
-        ignored_cols = []
-        for col in controls['_c']:
-            if col not in cols:
-                ignored_cols.append(col)
-        show_cols = [cols[col] for col in controls['_c'] if col in cols]
-        query = query.with_only_columns(show_cols)
+        show_cols, ignored_cols = _filter_select_columns(controls['_c'], list(cols.keys()))
+        query = query.with_only_columns([cols[col] for col in show_cols])
         if len(ignored_cols) > 0:
             meta['ignored'].append(('_c', ignored_cols))
         if len(show_cols) == 0:
