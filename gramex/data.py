@@ -1,12 +1,16 @@
 '''
 Interact with data from the browser
 '''
+from __future__ import unicode_literals
+
+import io
 import os
 import six
+import json
 import sqlalchemy
 import pandas as pd
 import gramex.cache
-
+from gramex.config import merge, CustomJSONEncoder
 
 _METADATA_CACHE = {}
 
@@ -26,6 +30,9 @@ def filter(url, args={}, meta={}, engine=None, table=None, ext=None, **kwargs):
     :arg dict meta: this dict is updated with metadata during the course of filtering
     :arg string table: table name (when url is an SQLAlchemy URL)
     :arg string ext: file extension (when url is a file). This defaults to the extension of the url
+    :arg dict kwargs: Additional parameters are passed to
+        :py:func:`gramex.cache.open` or ``sqlalchemy.create_engine``
+    :return: a filtered DataFrame
 
     Remaining kwargs are passed to :py:func:`gramex.cache.open` if ``url`` is a file, or
     ``sqlalchemy.create_engine`` if ``url`` is a SQLAlchemy URL.
@@ -311,3 +318,126 @@ def _filter_db(engine, table, meta, controls, args):
         query = query.limit(limit)
         meta['limit'] = limit
     return pd.read_sql(query, engine)
+
+
+def download(data, format='json', template=None, **kwargs):
+    '''
+    Download a DataFrame or dict of DataFrames in various formats. This is used
+    by :py:class:`gramex.handlers.FormHandler`. You are **strongly** advised to
+    try it before creating your own FunctionHandler.
+
+    Usage as a FunctionHandler::
+
+        def download_as_csv(handler):
+            handler.set_header('Content-Type', 'text/csv')
+            handler.set_header('Content-Disposition', 'attachment;filename=data.csv')
+            return gramex.data.download(dataframe, format='csv')
+
+    It takes the following arguments:
+
+    :arg dataset data: A DataFrame or a dict of DataFrames
+    :arg string format: Output format. Can be ``csv|json|html|xlsx|template``
+    :arg file template: Path to template file for ``template`` format
+    :arg dict kwargs: Additional parameters that are passed to the relevant renderer
+    :return: a byte-string with the download file contents
+
+    When ``data`` is a DataFrame, this is what different ``format=`` parameters return:
+
+    - ``csv`` returns a UTF-8-BOM encoded CSV file of the dataframe
+    - ``xlsx`` returns an Excel file with 1 sheet named ``data``.
+      kwargs are passed to ``.to_excel(index=False)``
+    - ``html`` returns a HTML file with a single table. kwargs are
+      passed to ``.to_html(index=False)``
+    - ``json`` returns a JSON file. kwargs are passed to
+      ``.to_json(orient='records', force_ascii=True)``.
+    - ``template`` returns a Tornado template rendered file. The
+      template receives ``data`` as ``data`` and any additional kwargs.
+
+    When ``data`` is a dict of DataFrames, the following additionally happens:
+
+    - ``format='csv'`` renders all DataFrames one below the other, adding the key
+      as heading
+    - ``format='xlsx'`` renders each DataFrame on a sheet whose name is the key
+    - ``format='html'`` renders tables below one aother with the key as heading
+    - ``format='json'`` renders as a dict of DataFrame JSONs. This uses
+      ``json.dumps`` with :py:func:`gramex.config.CustomEncoder`. ``kwargs`` are
+      passed to ``json.dumps(ensure_ascii=True)``
+    - ``format='template'`` receives ``data`` as a dict of DataFrames, as passed
+
+    You need to set the MIME types on the handler yourself. The recommended MIME types are::
+
+        html:   Content-Type: text/html; charset=UTF-8
+        xlsx:   Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+                Content-Disposition: attachment;filename=data.xlsx
+        json:   Content-Type: application/json
+        csv:    Content-Type: text/csv
+                Content-Disposition: attachment;filename=data.csv
+    '''
+    if isinstance(data, dict):
+        for key, val in data.items():
+            if not isinstance(val, pd.DataFrame):
+                raise ValueError('download({"%s": %r}) invalid type', key, type(val))
+        if not len(data):
+            raise ValueError('download() data requires at least 1 DataFrame')
+        multiple = True
+    elif not isinstance(data, pd.DataFrame):
+        raise ValueError('download(%r) invalid type', type(data))
+    else:
+        data = {'data': data}
+        multiple = False
+
+    def kw(**conf):
+        return merge(kwargs, conf, mode='setdefault')
+
+    if format == 'csv':
+        # csv.writer requires BytesIO in PY2 and StringIO in PY3.
+        # I can't see an elegant way out of this other than writing code for each.
+        if six.PY2:
+            out = io.BytesIO()
+            kw(index=False, encoding='utf-8')
+            # utf-8-sig encoding returns the result with a UTF-8 BOM. Easier to open in Excel
+            out.write(''.encode('utf-8-sig'))
+            for index, (key, val) in enumerate(data.items()):
+                if index > 0:
+                    out.write(b'\n')
+                if multiple:
+                    out.write(key.encode('utf-8') + b'\n')
+                val.to_csv(out, **kwargs)
+            return out.getvalue()
+        else:
+            out = io.StringIO()
+            kw(index=False)
+            for index, (key, val) in enumerate(data.items()):
+                if index > 0:
+                    out.write('\n')
+                if multiple:
+                    out.write(key + '\n')
+                val.to_csv(out, **kwargs)
+            # utf-8-sig encoding returns the result with a UTF-8 BOM. Easier to open in Excel
+            return out.getvalue().encode('utf-8-sig')
+    elif format == 'template':
+        return gramex.cache.open(template, 'template').generate(data=data, **kwargs)
+    elif format == 'html':
+        out = io.StringIO()
+        kw(index=False)
+        for key, val in data.items():
+            if multiple:
+                out.write('<h1>%s</h1>' % key)
+            val.to_html(out, **kwargs)
+        return out.getvalue().encode('utf-8')
+    elif format in {'xlsx', 'xls'}:
+        out = io.BytesIO()
+        kw(index=False)
+        # TODO: Create and use a FrameWriter
+        with pd.ExcelWriter(out, engine='xlsxwriter') as writer:
+            for key, val in data.items():
+                val.to_excel(writer, sheet_name=key, **kwargs)
+        return out.getvalue()
+    else:
+        if multiple:
+            kw(ensure_ascii=True)
+            return json.dumps(data, cls=CustomJSONEncoder, **kwargs)
+        else:
+            kw(orient='records', force_ascii=True)
+            data = list(data.values())[0]
+            return data.to_json(**kwargs).encode('utf-8')

@@ -24,10 +24,12 @@ tests/**/gen.*
 # Ignore log files
 *.log*
 
-# Don't commit CSV files, except what's required for testing or by Gramex apps
+# Don't commit data files, except what's required for testing or by Gramex apps
 *.csv
+*.xls*
 !tests/**/*.csv
 !testlib/**/*.csv
+!testlib/*.xlsx
 !gramex/apps/**/*.csv
 
 # Don't commit databases created by test cases
@@ -45,7 +47,6 @@ tests/uploads
 *.doc*
 *.pdf
 *.ppt*
-*.xls*
 
 # Avoid media files
 *.avi

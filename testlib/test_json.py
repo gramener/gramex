@@ -36,8 +36,8 @@ class TestJSON(unittest.TestCase):
         df1 = [{'x': 1.0, 'y': 'σ'}, {'x': None, 'y': None}, {'x': 0.0, 'y': '►'}]
         result = {'x': df1}
         eq_(
-            json.dumps({'x': pd.DataFrame(df1)}, cls=CustomJSONEncoder),
-            json.dumps(result))
+            json.dumps({'x': pd.DataFrame(df1)}, cls=CustomJSONEncoder, sort_keys=True),
+            json.dumps(result, sort_keys=True))
 
     def test_decoder(self):
         date = datetime.datetime(year=2001, month=2, day=3, hour=4, minute=5, second=6,

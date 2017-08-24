@@ -1,11 +1,16 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import io
 import os
+import six
+import json
 import unittest
 import gramex.data
 import gramex.cache
-from nose.tools import eq_, assert_raises
+import pandas as pd
+from orderedattrdict import AttrDict
+from nose.tools import eq_, ok_, assert_raises
 from pandas.util.testing import assert_frame_equal
 import dbutils
 from . import folder
@@ -164,3 +169,73 @@ class TestFilter(unittest.TestCase):
             dbutils.postgres_drop_db('localhost', 'test_filter')
         if 'sqlite' in cls.db:
             dbutils.sqlite_drop_db('test_filter.db')
+
+
+class TestDownload(unittest.TestCase):
+    @classmethod
+    def setupClass(cls):
+        cls.sales_file = os.path.join(folder, 'sales.xlsx')
+        cls.sales = gramex.cache.open(cls.sales_file, 'xlsx')
+        cls.dummy = pd.DataFrame({
+            'खुश': ['高兴', 'سعيد'],
+            'length': [1.2, None],
+        })
+
+    def test_download_csv(self):
+        out = gramex.data.download(self.dummy, format='csv')
+        ok_(out.startswith(''.encode('utf-8-sig')))
+        assert_frame_equal(pd.read_csv(io.BytesIO(out), encoding='utf-8'), self.dummy)
+
+        out = gramex.data.download(AttrDict([
+            ('dummy', self.dummy),
+            ('sales', self.sales),
+        ]), format='csv')
+        lines = out.splitlines(True)
+        eq_(lines[0], 'dummy\n'.encode('utf-8-sig'))
+        actual = pd.read_csv(io.BytesIO(b''.join(lines[1:4])), encoding='utf-8')
+        assert_frame_equal(actual, self.dummy)
+
+        eq_(lines[5], 'sales\n'.encode('utf-8'))
+        actual = pd.read_csv(io.BytesIO(b''.join(lines[6:])), encoding='utf-8')
+        assert_frame_equal(actual, self.sales)
+
+    def test_download_json(self):
+        out = gramex.data.download(self.dummy, format='json')
+        assert_frame_equal(pd.read_json(io.BytesIO(out)), self.dummy)
+
+        out = gramex.data.download({'dummy': self.dummy, 'sales': self.sales}, format='json')
+        result = json.loads(out, object_pairs_hook=AttrDict)
+
+        def from_json(key):
+            s = json.dumps(result[key])
+            # PY2 returns str (binary). PY3 returns str (unicode). Ensure it's binary
+            if isinstance(s, six.text_type):
+                s = s.encode('utf-8')
+            return pd.read_json(io.BytesIO(s))
+
+        assert_frame_equal(from_json('dummy'), self.dummy, check_like=True)
+        assert_frame_equal(from_json('sales'), self.sales, check_like=True)
+
+    def test_download_excel(self):
+        out = gramex.data.download(self.dummy, format='xlsx')
+        assert_frame_equal(pd.read_excel(io.BytesIO(out)), self.dummy)
+
+        out = gramex.data.download({'dummy': self.dummy, 'sales': self.sales}, format='xlsx')
+        result = pd.read_excel(io.BytesIO(out), sheetname=None)
+        assert_frame_equal(result['dummy'], self.dummy)
+        assert_frame_equal(result['sales'], self.sales)
+
+    def test_download_html(self):
+        # Note: In Python 2, pd.read_html returns .columns.inferred_type=mixed
+        # instead of unicde. So check column type only in PY3 not PY2
+        out = gramex.data.download(self.dummy, format='html')
+        result = pd.read_html(io.BytesIO(out), encoding='utf-8')[0]
+        assert_frame_equal(result, self.dummy, check_column_type=six.PY3)
+
+        out = gramex.data.download(AttrDict([
+            ('dummy', self.dummy),
+            ('sales', self.sales)
+        ]), format='html')
+        result = pd.read_html(io.BytesIO(out), encoding='utf-8')
+        assert_frame_equal(result[0], self.dummy, check_column_type=six.PY3)
+        assert_frame_equal(result[1], self.sales, check_column_type=six.PY3)

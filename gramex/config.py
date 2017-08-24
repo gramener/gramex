@@ -33,6 +33,7 @@ from pathlib import Path
 from copy import deepcopy
 from fnmatch import fnmatch
 from six import string_types
+from collections import OrderedDict
 from pydoc import locate as _locate, ErrorDuringImport
 from yaml import Loader, MappingNode
 from json import loads, JSONEncoder, JSONDecoder
@@ -537,7 +538,8 @@ class CustomJSONEncoder(JSONEncoder):
     def default(self, obj):
         if hasattr(obj, 'to_dict'):
             # Slow but reliable. Handles conversion of numpy objects, mixed types, etc.
-            return loads(obj.to_json(orient='records', date_format='iso'))
+            return loads(obj.to_json(orient='records', date_format='iso'),
+                         object_pairs_hook=OrderedDict)
         if isinstance(obj, datetime.datetime):
             # Use local timezone if no timezone is specified
             if obj.tzinfo is None:

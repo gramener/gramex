@@ -302,7 +302,7 @@ class BaseMixin(object):
         Loop through all redirect: methods and save the first available redirect
         page against the session. Defaults to previously set value, else ``/``.
 
-        See :func:setup_redirect
+        See :py:func:`setup_redirect`
         '''
         for method in self.redirects:
             next_url = method(self)
@@ -316,7 +316,7 @@ class BaseMixin(object):
         Redirect the user ``session['_next_url']``. If it does not exist,
         redirect to the home page ``/``.
 
-        See :func:setup_redirect
+        See :py:func:`setup_redirect`
         '''
         self.redirect(self.session.pop('_next_url', '/'))
 
