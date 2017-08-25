@@ -28,7 +28,7 @@ class TestFilter(unittest.TestCase):
             postgres=os.environ.get('POSTGRES_SERVER', 'localhost'),
         )
 
-    def check_filter(self, na_position='last', **kwargs):
+    def check_filter(self, df=None, na_position='last', **kwargs):
         '''
         Tests a filter method. The filter method filters the sales dataset using
         an "args" dict as argument. This is used to test filter with frame, file
@@ -41,7 +41,7 @@ class TestFilter(unittest.TestCase):
             assert_frame_equal(actual, expected, check_like=True)
             return meta
 
-        sales = self.sales
+        sales = self.sales if df is None else df
 
         meta = eq({}, sales)
         eq_(meta['filters'], [])
@@ -149,6 +149,11 @@ class TestFilter(unittest.TestCase):
             gramex.data.filter(url=self.sales_file, transform='2.1', sheetname='dummy'),
             gramex.cache.open(self.sales_file, 'excel', transform='2.2', sheetname='dummy'),
         )
+        self.check_filter(
+            url=self.sales_file,
+            transform=lambda d: d[d['sales'] > 100],
+            df=self.sales[self.sales['sales'] > 100],
+        )
         with assert_raises(ValueError):
             gramex.data.filter(url='', engine='nonexistent')
         with assert_raises(OSError):
@@ -160,16 +165,25 @@ class TestFilter(unittest.TestCase):
         url = dbutils.mysql_create_db(self.server.mysql, 'test_filter', sales=self.sales)
         self.db['mysql'] = True
         self.check_filter(url=url, table='sales', na_position='first')
+        self.check_filter(url=url, table='sales', na_position='last',
+                          transform=lambda d: d[d['sales'] > 100],
+                          df=self.sales[self.sales['sales'] > 100])
 
     def test_filter_postgres(self):
         url = dbutils.postgres_create_db(self.server.postgres, 'test_filter', sales=self.sales)
         self.db['postgres'] = True
         self.check_filter(url=url, table='sales', na_position='last')
+        self.check_filter(url=url, table='sales', na_position='last',
+                          transform=lambda d: d[d['sales'] > 100],
+                          df=self.sales[self.sales['sales'] > 100])
 
     def test_filter_sqlite(self):
         url = dbutils.sqlite_create_db('test_filter.db', sales=self.sales)
         self.db['sqlite'] = True
         self.check_filter(url=url, table='sales', na_position='first')
+        self.check_filter(url=url, table='sales', na_position='first',
+                          transform=lambda d: d[d['sales'] > 100],
+                          df=self.sales[self.sales['sales'] > 100])
 
     @classmethod
     def tearDownClass(cls):

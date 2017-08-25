@@ -15,7 +15,7 @@ from gramex.config import merge
 _METADATA_CACHE = {}
 
 
-def filter(url, args={}, meta={}, engine=None, table=None, ext=None, **kwargs):
+def filter(url, args={}, meta={}, engine=None, table=None, ext=None, transform=None, **kwargs):
     '''
     Filters data using URL query parameters. Typical usage::
 
@@ -30,6 +30,7 @@ def filter(url, args={}, meta={}, engine=None, table=None, ext=None, **kwargs):
     :arg dict meta: this dict is updated with metadata during the course of filtering
     :arg string table: table name (when url is an SQLAlchemy URL)
     :arg string ext: file extension (when url is a file). This defaults to the extension of the url
+    :arg function transform: takes a DataFrame and returns a revised DataFrame used for filtering
     :arg dict kwargs: Additional parameters are passed to
         :py:func:`gramex.cache.open` or ``sqlalchemy.create_engine``
     :return: a filtered DataFrame
@@ -140,13 +141,20 @@ def filter(url, args={}, meta={}, engine=None, table=None, ext=None, **kwargs):
         if ext not in {'csv', 'xls', 'xlsx', 'hdf', 'sas', 'stata', 'table'}:
             raise ValueError('ext: %s invalid. Can be csv|xls|xlsx|...' % ext)
         # Get the full dataset. Then filter it
-        data = gramex.cache.open(url, ext, **kwargs)
+        data = gramex.cache.open(url, ext, transform=transform, **kwargs)
         return _filter_frame(data, meta=meta, controls=controls, args=args)
     elif engine == 'sqlalchemy':
         if table is None:
             raise ValueError('No table: specified')
         engine = sqlalchemy.create_engine(url, **kwargs)
-        return _filter_db(engine, table, meta=meta, controls=controls, args=args)
+        # If transform= is passed, read the full dataset to apply the transform.
+        if callable(transform):
+            data = gramex.cache.query(table, engine, [table])
+            data = transform(data)
+            return _filter_frame(data, meta=meta, controls=controls, args=args)
+        # If no transform= is passed, run the query on the database
+        else:
+            return _filter_db(engine, table, meta=meta, controls=controls, args=args)
     else:
         raise ValueError('engine: %s invalid. Can be sqlalchemy|file|dataframe' % engine)
 
