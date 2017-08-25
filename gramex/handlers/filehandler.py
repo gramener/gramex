@@ -108,9 +108,8 @@ class FileHandler(BaseHandler):
     '''
 
     @classmethod
-    def setup(cls, path, default_filename=None, index=None, ignore=[], allow=[],
-              index_template=None, template=None, headers={}, methods=['GET', 'HEAD', 'POST'],
-              **kwargs):
+    def setup(cls, path, default_filename=None, index=None, index_template=None,
+              template=None, headers={}, methods=['GET', 'HEAD', 'POST'], **kwargs):
         # Convert template: '*.html' into transform: {'*.html': {function: template}}
         # Do this before BaseHandler setup so that it can invoke the transforms required
         if template is not None:
@@ -128,10 +127,8 @@ class FileHandler(BaseHandler):
             cls.root = Path(path).absolute()
         cls.default_filename = default_filename
         cls.index = index
-        cls.ignore = cls.set(objectpath(gramex_conf, 'handlers.FileHandler.ignore', []))
-        cls.ignore.update(cls.set(ignore))
-        cls.allow = cls.set(objectpath(gramex_conf, 'handlers.FileHandler.allow', []))
-        cls.allow.update(cls.set(allow))
+        cls.ignore = cls.set(cls.conf.kwargs.ignore)
+        cls.allow = cls.set(cls.conf.kwargs.allow)
         cls.index_template = read_template(
             Path(index_template) if index_template is not None else _default_index_template)
         cls.headers = dict(objectpath(gramex_conf, 'handlers.FileHandler.headers', {}))

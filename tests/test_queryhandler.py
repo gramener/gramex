@@ -36,7 +36,7 @@ class QueryHandlerTestMixin(object):
 
         pdt.assert_frame_equal(
             self.data.query('votes > 90').reset_index(drop=True),
-            pd.read_html(base + '/html/?votes=90')[0].drop('Unnamed: 0', 1).reset_index(drop=True),
+            pd.read_html(base + '/html/?votes=90')[0].reset_index(drop=True),
             check_less_precise=True
         )
 
@@ -62,8 +62,9 @@ class QueryHandlerTestMixin(object):
         delete_base = server.base_url + '/datastoreq/' + self.database + '/delete/'
         validation_base = server.base_url + '/datastoreq/' + self.database + '/validate/'
 
-        def eq(base, method, payload, where, y):
-            response = method(base, params=payload)
+        def eq(url, method, params, where, y):
+            # call url?params via method.
+            response = method(url, params=params)
             self.assertEqual(response.status_code, OK)
             if y is None:
                 self.assertEqual(len(requests.get(validation_base + where).text.strip()), 0)

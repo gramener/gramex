@@ -10,6 +10,7 @@ import gramex.data
 import gramex.cache
 import pandas as pd
 from orderedattrdict import AttrDict
+from nose.plugins.skip import SkipTest
 from nose.tools import eq_, ok_, assert_raises
 from pandas.util.testing import assert_frame_equal
 import dbutils
@@ -22,6 +23,10 @@ class TestFilter(unittest.TestCase):
         cls.sales_file = os.path.join(folder, 'sales.xlsx')
         cls.sales = gramex.cache.open(cls.sales_file, 'xlsx')
         cls.db = {}
+        cls.server = AttrDict(
+            mysql=os.environ.get('MYSQL_SERVER', 'localhost'),
+            postgres=os.environ.get('POSTGRES_SERVER', 'localhost'),
+        )
 
     def check_filter(self, na_position='last', **kwargs):
         '''
@@ -152,12 +157,12 @@ class TestFilter(unittest.TestCase):
             gramex.data.filter(url=os.path.join(folder, 'test_cache_module.py'))
 
     def test_filter_mysql(self):
-        url = dbutils.mysql_create_db('localhost', 'test_filter', sales=self.sales)
+        url = dbutils.mysql_create_db(self.server.mysql, 'test_filter', sales=self.sales)
         self.db['mysql'] = True
         self.check_filter(url=url, table='sales', na_position='first')
 
     def test_filter_postgres(self):
-        url = dbutils.postgres_create_db('localhost', 'test_filter', sales=self.sales)
+        url = dbutils.postgres_create_db(self.server.postgres, 'test_filter', sales=self.sales)
         self.db['postgres'] = True
         self.check_filter(url=url, table='sales', na_position='last')
 
@@ -169,9 +174,9 @@ class TestFilter(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         if 'mysql' in cls.db:
-            dbutils.mysql_drop_db('localhost', 'test_filter')
+            dbutils.mysql_drop_db(cls.server.mysql, 'test_filter')
         if 'postgres' in cls.db:
-            dbutils.postgres_drop_db('localhost', 'test_filter')
+            dbutils.postgres_drop_db(cls.server.postgres, 'test_filter')
         if 'sqlite' in cls.db:
             dbutils.sqlite_drop_db('test_filter.db')
 
@@ -244,3 +249,6 @@ class TestDownload(unittest.TestCase):
         result = pd.read_html(io.BytesIO(out), encoding='utf-8')
         assert_frame_equal(result[0], self.dummy, check_column_type=six.PY3)
         assert_frame_equal(result[1], self.sales, check_column_type=six.PY3)
+
+    def test_template(self):
+        raise SkipTest('TODO')

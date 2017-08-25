@@ -19,7 +19,7 @@ from tornado.log import access_log
 from tornado.web import RequestHandler, HTTPError
 from tornado.websocket import WebSocketHandler
 from gramex import conf, __version__
-from gramex.config import objectpath, app_log, CustomJSONDecoder, CustomJSONEncoder
+from gramex.config import merge, objectpath, app_log, CustomJSONDecoder, CustomJSONEncoder
 from gramex.transforms import build_transform
 from gramex.http import UNAUTHORIZED, FORBIDDEN, BAD_REQUEST
 
@@ -38,6 +38,7 @@ class BaseMixin(object):
         cls._on_init_methods = []
         cls._on_finish_methods = []
 
+        cls.setup_default_kwargs()
         cls.setup_transform(transform)
         cls.setup_redirect(redirect)
         # Note: call setup_session before setup_auth to ensure that
@@ -52,6 +53,13 @@ class BaseMixin(object):
         # app.settings.debug enables debugging exceptions using pdb
         if conf.app.settings.get('debug', False):
             cls.log_exception = cls.debug_exception
+
+    @classmethod
+    def setup_default_kwargs(cls):
+        '''Use configs under handlers.<ClassName>.* as the default for kwargs'''
+        merge(cls.conf.setdefault('kwargs', {}),
+              objectpath(conf, 'handlers.' + cls.conf.handler, {}),
+              mode='setdefault')
 
     @classmethod
     def setup_transform(cls, transform):
@@ -515,8 +523,9 @@ class BaseHandler(RequestHandler, BaseMixin):
 
     def set_default_headers(self):
         self.set_header('Server', server_header)
-        # Set BaseHandler headers.
-        # Don't set headers for the specific class -- they are overrides, not default headers.
+        # Only set BaseHandler headers.
+        # Don't set headers for the specific class. Those are overrides handled
+        # by the respective classes, not the default headers.
         for key, val in objectpath(conf, 'handlers.BaseHandler.headers', {}).items():
             self.set_header(key, val)
 

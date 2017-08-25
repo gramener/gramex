@@ -6,11 +6,11 @@ from __future__ import unicode_literals
 import io
 import os
 import six
-import json
 import sqlalchemy
 import pandas as pd
 import gramex.cache
-from gramex.config import merge, CustomJSONEncoder
+from tornado.escape import json_encode
+from gramex.config import merge
 
 _METADATA_CACHE = {}
 
@@ -373,10 +373,8 @@ def download(data, format='json', template=None, **kwargs):
       as heading
     - ``format='xlsx'`` renders each DataFrame on a sheet whose name is the key
     - ``format='html'`` renders tables below one aother with the key as heading
-    - ``format='json'`` renders as a dict of DataFrame JSONs. This uses
-      ``json.dumps`` with :py:func:`gramex.config.CustomEncoder`. ``kwargs`` are
-      passed to ``json.dumps(ensure_ascii=True)``
-    - ``format='template'`` receives ``data`` as a dict of DataFrames, as passed
+    - ``format='json'`` renders as a dict of DataFrame JSONs
+    - ``format='template'`` receives ``data`` and all ``kwargs`` as passed.
 
     You need to set the MIME types on the handler yourself. The recommended MIME types are::
 
@@ -390,12 +388,12 @@ def download(data, format='json', template=None, **kwargs):
     if isinstance(data, dict):
         for key, val in data.items():
             if not isinstance(val, pd.DataFrame):
-                raise ValueError('download({"%s": %r}) invalid type', key, type(val))
+                raise ValueError('download({"%s": %r}) invalid type' % (key, type(val)))
         if not len(data):
             raise ValueError('download() data requires at least 1 DataFrame')
         multiple = True
     elif not isinstance(data, pd.DataFrame):
-        raise ValueError('download(%r) invalid type', type(data))
+        raise ValueError('download(%r) invalid type' % type(data))
     else:
         data = {'data': data}
         multiple = False
@@ -409,15 +407,15 @@ def download(data, format='json', template=None, **kwargs):
         if six.PY2:
             out = io.BytesIO()
             kw(index=False, encoding='utf-8')
-            # utf-8-sig encoding returns the result with a UTF-8 BOM. Easier to open in Excel
-            out.write(''.encode('utf-8-sig'))
             for index, (key, val) in enumerate(data.items()):
                 if index > 0:
                     out.write(b'\n')
                 if multiple:
                     out.write(key.encode('utf-8') + b'\n')
                 val.to_csv(out, **kwargs)
-            return out.getvalue()
+            result = out.getvalue()
+            # utf-8-sig encoding returns the result with a UTF-8 BOM. Easier to open in Excel
+            return ''.encode('utf-8-sig') + result if result.strip() else result
         else:
             out = io.StringIO()
             kw(index=False)
@@ -427,10 +425,12 @@ def download(data, format='json', template=None, **kwargs):
                 if multiple:
                     out.write(key + '\n')
                 val.to_csv(out, **kwargs)
+            result = out.getvalue()
             # utf-8-sig encoding returns the result with a UTF-8 BOM. Easier to open in Excel
-            return out.getvalue().encode('utf-8-sig')
+            return result.encode('utf-8-sig') if result.strip() else result.encode('utf-8')
     elif format == 'template':
-        return gramex.cache.open(template, 'template').generate(data=data, **kwargs)
+        return gramex.cache.open(template, 'template').generate(
+            data=data if multiple else data['data'], **kwargs)
     elif format == 'html':
         out = io.StringIO()
         kw(index=False)
@@ -448,10 +448,17 @@ def download(data, format='json', template=None, **kwargs):
                 val.to_excel(writer, sheet_name=key, **kwargs)
         return out.getvalue()
     else:
+        out = io.BytesIO()
+        kw(orient='records', force_ascii=True)
         if multiple:
-            kw(ensure_ascii=True)
-            return json.dumps(data, cls=CustomJSONEncoder, **kwargs)
+            out.write(b'{')
+            for index, (key, val) in enumerate(data.items()):
+                if index > 0:
+                    out.write(b',')
+                out.write(json_encode(key).encode('utf-8'))
+                out.write(b':')
+                out.write(val.to_json(**kwargs).encode('utf-8'))
+            out.write(b'}')
         else:
-            kw(orient='records', force_ascii=True)
-            data = list(data.values())[0]
-            return data.to_json(**kwargs).encode('utf-8')
+            out.write(data['data'].to_json(**kwargs).encode('utf-8'))
+        return out.getvalue()

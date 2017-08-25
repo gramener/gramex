@@ -32,8 +32,8 @@ class DataHandlerTestMixin(object):
         base = server.base_url + '/datastore/' + self.database
         pdt.assert_frame_equal(self.data, pd.read_csv(base + '/csv/'))
         pdt.assert_frame_equal(self.data, pd.read_json(base + '/json/'))
-        pdt.assert_frame_equal(self.data, pd.read_html(base + '/html/')[0]
-                               .drop('Unnamed: 0', 1), check_less_precise=True)
+        pdt.assert_frame_equal(self.data, pd.read_html(base + '/html/')[0],
+                               check_less_precise=True)
         pdt.assert_frame_equal(self.data, pd.read_excel(base + '/xlsx/'))
 
     def test_querydb(self):

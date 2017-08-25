@@ -1,7 +1,5 @@
-import io
 import os
 import re
-import json
 import yaml
 import tornado.gen
 import tornado.web
@@ -10,6 +8,7 @@ import pandas as pd
 import sqlalchemy as sa
 from tornado.web import HTTPError
 from orderedattrdict import AttrDict
+from gramex.data import download
 from gramex.http import NOT_FOUND
 from gramex.transforms import build_transform
 from .basehandler import BaseHandler
@@ -47,7 +46,7 @@ class DataMixin(object):
 
     def getq(self, key, default_value=None):
         return (self.qconfig['query'].get(key) or
-                self.args.get(key, []) or
+                self.get_arguments(key, strip=False) or
                 self.qconfig['default'].get(key) or
                 default_value)
 
@@ -67,23 +66,13 @@ class DataMixin(object):
 
     def renderdata(self):
         # Set content and type based on format
-        formats = self.getq('format', [])
         if 'count' in self.result:
             self.set_header('X-Count', self.result['count'])
-        if 'csv' in formats:
-            self.write(self.result['data'].to_csv(index=False, encoding='utf-8'))
-        elif 'html' in formats:
-            self.write(self.result['data'].to_html())
-        elif 'xlsx' in formats:
-            output = io.BytesIO()
-            with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-                self.result['data'].to_excel(writer, index=False, encoding=None)
-            self.write(output.getvalue())
-        elif 'template' in formats:
-            tmpl = gramex.cache.open(self.params.get('template', self._template), 'template')
-            self.write(tmpl.generate(handler=self, **self.result))
-        elif 'json' in formats or '' in formats or len(formats) == 0:
-            self.write(self.result['data'].to_json(orient='records'))
+        fmt = self.getq('format', [None])[0]
+        kwargs = {}
+        if fmt == 'template':
+            kwargs.update(template=self.params.get('template', self._template), handler=self)
+        self.write(download(self.result['data'], fmt, **kwargs))
 
     _FORMAT_HEADERS = {
         '': {'Content-Type': 'application/json'},
@@ -534,34 +523,14 @@ class QueryHandler(BaseHandler, DataMixin):
 
     def renderdatas(self):
         '''Render multiple datasets'''
-        # Set content and type based on format
-        formats = self.getq('format', [])
-        if 'csv' in formats:
-            self.write('\n'.join(
-                'QUERY: %s\n%s' % (key, result['data'].to_csv(index=False, encoding='utf-8'))
-                for key, result in self.result.items()
-            ))
-        elif 'html' in formats:
-            for key, result in self.result.items():
-                self.write('<h1>%s</h1>' % key)
-                self.write(result['data'].to_html())
-        elif 'xlsx' in formats:
-            output = io.BytesIO()
-            with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-                for key, result in self.result.items():
-                    result['data'].to_excel(writer, index=False, sheet_name=key, encoding=None)
-            self.write(output.getvalue())
-        elif 'template' in formats:
-            tmpl = gramex.cache.open(self.params.get('template', self._template), 'template')
-            self.write(tmpl.generate(handler=self, **self.result))
-        elif 'json' in formats or '' in formats or len(formats) == 0:
-            self.write('{')
-            for index, (key, result) in enumerate(self.result.items()):
-                if index > 0:
-                    self.write(',')
-                self.write(json.dumps(key) + ':')
-                self.write(result['data'].to_json(orient='records'))
-            self.write('}')
+        fmt = self.getq('format', [None])[0]
+        kwargs = {}
+        if fmt == 'template':
+            kwargs.update(template=self.params.get('template', self._template), handler=self)
+        else:
+            self.result = {key: val['data'] for key, val in self.result.items()}
+        self.write(download(self.result, fmt, **kwargs))
+        # csv: 'QUERY: %s\n%s' % (key, result['data'].to_csv(index=False, encoding='utf-8'))
 
     def prepare(self):
         super(QueryHandler, self).prepare()
