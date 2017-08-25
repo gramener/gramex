@@ -59,8 +59,8 @@ class BuildTransform(unittest.TestCase):
     dummy = os.path.join(folder, 'dummy.py')
     files = set([dummy])
 
-    def check_transform(self, transform, yaml_code, vars=None, cache=True):
-        fn = build_transform(yaml_parse(yaml_code), vars=vars, cache=cache)
+    def check_transform(self, transform, yaml_code, vars=None, cache=True, iter=True):
+        fn = build_transform(yaml_parse(yaml_code), vars=vars, cache=cache, iter=iter)
         eqfn(fn, transform)
         return fn
 
@@ -81,6 +81,11 @@ class BuildTransform(unittest.TestCase):
             result = x + 1
             return result if isinstance(result, GeneratorType) else [result, ]
         self.check_transform(transform, 'function: x + 1', vars={'x': 0})
+
+        def transform(x=0):
+            result = x + 1
+            return result
+        self.check_transform(transform, 'function: x + 1', vars={'x': 0}, iter=False)
 
         def transform():
             result = "abc"

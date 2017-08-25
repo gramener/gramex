@@ -80,7 +80,7 @@ def module_names(node, vars):
     return modules
 
 
-def build_transform(conf, vars=None, filename='transform', cache=False):
+def build_transform(conf, vars=None, filename='transform', cache=False, iter=True):
     '''
     Converts an expression into a callable function. For e.g.::
 
@@ -106,7 +106,7 @@ def build_transform(conf, vars=None, filename='transform', cache=False):
         kwargs:
             separators: [",", ":"]
 
-    Any Python expression iss also allowed. The following are valid functions::
+    Any Python expression is also allowed. The following are valid functions::
 
         function: 1                 # returns 1
         function: _val + 1          # Increments the input parameter by 1
@@ -126,13 +126,17 @@ def build_transform(conf, vars=None, filename='transform', cache=False):
 
     creates::
 
-        def transfom(x=None, y=1):
+        def transform(x=None, y=1):
+            ...
 
     Or pass ``vars={}`` for function that does not accept any parameters.
 
-    The returned function always returns an iterable containing the values. If
-    the function returns a single value, you can get it on the first iteration.
-    If the function returns a generator object, that is returned as-is.
+    The returned function returns an iterable containing the values. If the
+    function returns a single value, you can get it on the first iteration. If
+    the function returns a generator object, that is returned as-is.
+
+    But if ``iter=False`` is passed, the returned function just contains the
+    returned value as-is -- not as a list.
 
     In the ``conf`` parameter, ``args`` and ``kwargs`` values are interpreted
     literally. But values starting with ``=`` like ``=args`` are treated as
@@ -210,7 +214,8 @@ def build_transform(conf, vars=None, filename='transform', cache=False):
         '\tresult = %s\n' % expr,
         # If the result is a generator object, return it. Else, create a list and
         # return that. This ensures that the returned value is always an iterable
-        '\treturn result if isinstance(result, GeneratorType) else [result,]',
+        '\treturn result if isinstance(result, GeneratorType) else [result,]' if iter else
+        '\treturn result',
     ]
 
     # Compile the function with context variables
