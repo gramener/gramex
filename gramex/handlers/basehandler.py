@@ -911,6 +911,18 @@ def _check_condition(condition, user):
     return True
 
 
+handle_cache = {}
+
+
+def _handle(path):
+    '''Returns a cached append-binary handle to path'''
+    if path not in handle_cache:
+        # In Python 2, csv writerow writes byte string. In PY3, it's to a unicode string.
+        # Open file handles accordingly
+        handle_cache[path] = open(path, 'ab') if six.PY2 else io.open(path, 'a', encoding='utf-8')
+    return handle_cache[path]
+
+
 def log_method(log):
     '''
     Returns a log_request method that can be called as log_request(handler).
@@ -972,9 +984,7 @@ def log_method(log):
         try:
             if not os.path.exists(path_dir):
                 os.makedirs(path_dir)
-            # In Python 2, csv writerow writes byte string. In PY3, it's to a unicode string.
-            # Open file handles accordingly
-            handle = open(log_path, 'ab') if six.PY2 else io.open(log_path, 'a', encoding='utf-8')
+            handle = _handle(log_path)
             writer = csv.writer(handle)
         except OSError:
             raise OSError('Cannot open log.path: %s as CSV' % log_path)
