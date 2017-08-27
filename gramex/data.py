@@ -15,7 +15,8 @@ from gramex.config import merge
 _METADATA_CACHE = {}
 
 
-def filter(url, args={}, meta={}, engine=None, table=None, ext=None, transform=None, **kwargs):
+def filter(url, args={}, meta={}, engine=None, table=None, ext=None,
+           query=None, transform=None, **kwargs):
     '''
     Filters data using URL query parameters. Typical usage::
 
@@ -28,9 +29,12 @@ def filter(url, args={}, meta={}, engine=None, table=None, ext=None, transform=N
     :arg source url: Pandas DataFrame, sqlalchemy URL or file name
     :arg dict args: URL query parameters as a dict of lists. Pass handler.args or parse_qs results
     :arg dict meta: this dict is updated with metadata during the course of filtering
-    :arg string table: table name (when url is an SQLAlchemy URL)
-    :arg string ext: file extension (when url is a file). This defaults to the extension of the url
-    :arg function transform: takes a DataFrame and returns a revised DataFrame used for filtering
+    :arg string table: table name (if url is an SQLAlchemy URL)
+    :arg string ext: file extension (if url is a file). Defaults to url extension
+    :arg string query: optional SQL query to execute (if url is a database).
+        Loads entire query result in memory before filtering
+    :arg function transform: optional in-memory transform. Takes a DataFrame and
+        returns a DataFrame. Applied to both file and SQLAlchemy urls.
     :arg dict kwargs: Additional parameters are passed to
         :py:func:`gramex.cache.open` or ``sqlalchemy.create_engine``
     :return: a filtered DataFrame
@@ -131,7 +135,8 @@ def filter(url, args={}, meta={}, engine=None, table=None, ext=None, transform=N
 
     # Use the appropriate filter function based on the engine
     if engine == 'dataframe':
-        return _filter_frame(url, meta=meta, controls=controls, args=args)
+        data = transform(url) if callable(transform) else url
+        return _filter_frame(data, meta=meta, controls=controls, args=args)
     elif engine == 'file':
         if not os.path.exists(url):
             raise OSError('url: %s not found' % url)
@@ -148,9 +153,10 @@ def filter(url, args={}, meta={}, engine=None, table=None, ext=None, transform=N
             raise ValueError('No table: specified')
         engine = sqlalchemy.create_engine(url, **kwargs)
         # If transform= is passed, read the full dataset to apply the transform.
-        if callable(transform):
-            data = gramex.cache.query(table, engine, [table])
-            data = transform(data)
+        if callable(transform) or query:
+            data = gramex.cache.query(query if query else table, engine, [table])
+            if callable(transform):
+                data = transform(data)
             return _filter_frame(data, meta=meta, controls=controls, args=args)
         # If no transform= is passed, run the query on the database
         else:

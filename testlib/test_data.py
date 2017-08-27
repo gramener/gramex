@@ -22,7 +22,7 @@ class TestFilter(unittest.TestCase):
     def setupClass(cls):
         cls.sales_file = os.path.join(folder, 'sales.xlsx')
         cls.sales = gramex.cache.open(cls.sales_file, 'xlsx')
-        cls.db = {}
+        cls.db = set()
         cls.server = AttrDict(
             mysql=os.environ.get('MYSQL_SERVER', 'localhost'),
             postgres=os.environ.get('POSTGRES_SERVER', 'localhost'),
@@ -140,10 +140,10 @@ class TestFilter(unittest.TestCase):
         with assert_raises(ValueError):
             eq({'_offset': ['abc']}, sales)
 
-    def test_filter_frame(self):
+    def test_frame(self):
         self.check_filter(url=self.sales)
 
-    def test_filter_file(self):
+    def test_file(self):
         self.check_filter(url=self.sales_file)
         assert_frame_equal(
             gramex.data.filter(url=self.sales_file, transform='2.1', sheetname='dummy'),
@@ -161,29 +161,30 @@ class TestFilter(unittest.TestCase):
         with assert_raises(ValueError):
             gramex.data.filter(url=os.path.join(folder, 'test_cache_module.py'))
 
-    def test_filter_mysql(self):
+    def check_filter_db(self, dbname, url, na_position):
+        self.db.add(dbname)
+        df = self.sales[self.sales['sales'] > 100]
+        self.check_filter(url=url, table='sales', na_position=na_position)
+        self.check_filter(url=url, table='sales', na_position=na_position,
+                          transform=lambda d: d[d['sales'] > 100], df=df)
+        self.check_filter(url=url, table='sales', na_position=na_position,
+                          query='SELECT * FROM sales WHERE sales > 100', df=df)
+        self.check_filter(url=url, table='sales', na_position=na_position,
+                          query='SELECT * FROM sales WHERE sales > 100',
+                          transform=lambda d: d[d['growth'] < 0.5],
+                          df=df[df['growth'] < 0.5])
+
+    def test_mysql(self):
         url = dbutils.mysql_create_db(self.server.mysql, 'test_filter', sales=self.sales)
-        self.db['mysql'] = True
-        self.check_filter(url=url, table='sales', na_position='first')
-        self.check_filter(url=url, table='sales', na_position='last',
-                          transform=lambda d: d[d['sales'] > 100],
-                          df=self.sales[self.sales['sales'] > 100])
+        self.check_filter_db('mysql', url, na_position='first')
 
-    def test_filter_postgres(self):
+    def test_postgres(self):
         url = dbutils.postgres_create_db(self.server.postgres, 'test_filter', sales=self.sales)
-        self.db['postgres'] = True
-        self.check_filter(url=url, table='sales', na_position='last')
-        self.check_filter(url=url, table='sales', na_position='last',
-                          transform=lambda d: d[d['sales'] > 100],
-                          df=self.sales[self.sales['sales'] > 100])
+        self.check_filter_db('postgres', url, na_position='last')
 
-    def test_filter_sqlite(self):
+    def test_sqlite(self):
         url = dbutils.sqlite_create_db('test_filter.db', sales=self.sales)
-        self.db['sqlite'] = True
-        self.check_filter(url=url, table='sales', na_position='first')
-        self.check_filter(url=url, table='sales', na_position='first',
-                          transform=lambda d: d[d['sales'] > 100],
-                          df=self.sales[self.sales['sales'] > 100])
+        self.check_filter_db('sqlite', url, na_position='first')
 
     @classmethod
     def tearDownClass(cls):
