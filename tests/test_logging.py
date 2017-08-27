@@ -1,7 +1,5 @@
 import os
-from . import server
 from . import TestGramex
-from testfixtures import LogCapture
 
 
 class TestURLLog(TestGramex):

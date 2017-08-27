@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 import six
 import json
 from gramex.http import BAD_REQUEST
-from . import server, TestGramex
+from . import TestGramex
 
 
 class TestArgs(TestGramex):

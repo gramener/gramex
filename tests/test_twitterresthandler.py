@@ -1,6 +1,5 @@
 import requests
 import concurrent.futures
-from gramex.handlers.socialhandler import TwitterRESTHandler
 from gramex.http import OK, METHOD_NOT_ALLOWED, BAD_REQUEST, CLIENT_TIMEOUT
 from . import server, TestGramex
 
@@ -14,8 +13,6 @@ def async_fetch(name, path, method='post', url='/api/twitter/', **kwargs):
 
 
 class TestTwitterRESTHandler(TestGramex):
-    'Test TwitterRESTHandler'
-
     def test_twitter(self):
         search = {'q': 'gramener', 'count': 2}
         tweets = {'screen_name': 'gramener', 'count': 2}

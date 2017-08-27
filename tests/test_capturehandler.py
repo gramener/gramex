@@ -8,24 +8,24 @@ import logging
 from PIL import Image
 from unittest import SkipTest
 from nose.tools import eq_, ok_
-from unicodedata import normalize
 from pdfminer.high_level import extract_text_to_fp
 from gramex.handlers import Capture
 from . import TestGramex, server
 
 _captures = {}
 
+
 def get_capture(name, **kwargs):
     '''Return a cached Capture() object constructed with kwargs'''
     if name in _captures:
         return _captures[name]
     capture = _captures[name] = Capture(**kwargs)
-    end_time = time.time() + 5
+    end_time, delay = time.time() + 5, 0.05
     logging.info('Waiting for capture.js...')
     while not capture.started:
         if time.time() > end_time:
             raise RuntimeError('capture.js took too long to start')
-        time.sleep(0.05)
+        time.sleep(delay)
     return capture
 
 
@@ -74,11 +74,13 @@ class TestCaptureHandler(TestGramex):
 
     def check_img_contents(self, result, colors=True):
         img = Image.open(io.BytesIO(result)).convert(mode='RGBA')
-        eq_(img.size, (1200, 768))
+        size, max_colors = (1200, 768), 65536
+        eq_(img.size, size)
         # dir/index.html has a style="color:red" block in it. So check that there's enough red
         if colors:
-            colors = {color: freq for freq, color in img.getcolors(65536)}
-            self.assertGreater(colors.get((255, 0, 0, 255), 0), 100)
+            colors = {color: freq for freq, color in img.getcolors(max_colors)}
+            red = (255, 0, 0, 255)
+            self.assertGreater(colors.get(red, 0), 100)
 
     def test_capture_png(self):
         result = self.capture.png(url=server.base_url + '/dir/')

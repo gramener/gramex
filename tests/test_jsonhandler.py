@@ -17,7 +17,6 @@ def dump(data):
 
 
 class TestJSONHandler(TestGramex):
-    'Test FileHandler'
 
     @classmethod
     def setUpClass(cls):

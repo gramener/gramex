@@ -6,7 +6,7 @@ from gramex.http import OK, NOT_FOUND, INTERNAL_SERVER_ERROR, FORBIDDEN
 
 
 class TestURLPriority(TestGramex):
-    '''Test Gramex URL priority sequence'''
+    # Test Gramex URL priority sequence
 
     def test_url_priority(self):
         self.check('/path/abc', text='/path/.*')
@@ -19,7 +19,7 @@ class TestURLPriority(TestGramex):
 
 
 class TestURLNormalization(TestGramex):
-    '''Test URL pattern normalization'''
+    # Test URL pattern normalization
 
     def test_url_normalization(self):
         self.check('/path/norm1', text='/path/norm1')
@@ -27,14 +27,14 @@ class TestURLNormalization(TestGramex):
 
 
 class TestAttributes(TestGramex):
-    '''Ensure that BaseHandler subclasses have relevant attributes'''
+    # Ensure that BaseHandler subclasses have relevant attributes
 
     def test_attributes(self):
         self.check('/func/attributes', code=OK)
 
 
 class TestXSRF(TestGramex):
-    '''Test BaseHandler xsrf: setting'''
+    # Test BaseHandler xsrf: setting
 
     def test_xsrf(self):
         r = self.check('/path/norm')
@@ -51,18 +51,18 @@ class TestXSRF(TestGramex):
         self.assertFalse('Set-Cookie' in r.headers)
 
     def test_xsrf_false(self):
-        '''When xsrf_cookies is set to False, POST works'''
+        # When xsrf_cookies is set to False, POST works
         r = requests.post(server.base_url + '/xsrf/no')
         self.assertEqual(OK, r.status_code)
 
     def test_xsrf_true(self):
-        '''When xsrf_cookies is set to True, POST fails without _xsrf'''
+        # When xsrf_cookies is set to True, POST fails without _xsrf
         r = requests.post(server.base_url + '/xsrf/yes')
         self.assertEqual(r.status_code, FORBIDDEN)
 
 
 class TestErrorHandling(TestGramex):
-    '''Test BaseHandler error: setting'''
+    # Test BaseHandler error: setting
     def test_error(self):
         for code, url in ((NOT_FOUND, '/error/404-template-na'),
                           (INTERNAL_SERVER_ERROR, '/error/500-function')):
@@ -91,7 +91,7 @@ class TestMime(TestGramex):
         for ext, mime in self.mime_map.items():
             path = os.path.join(folder, 'dir', 'gen' + ext)
             self.files.add(path)
-            with open(path, 'wb') as out:
+            with open(path, 'wb'):
                 pass
 
     def test_mime(self):

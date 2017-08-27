@@ -14,7 +14,6 @@ localtz = dateutil.tz.tzlocal()
 
 
 class TestJSON(unittest.TestCase):
-    '''Test custom JSON handler'''
 
     def test_encoder(self):
         # Naive date is converted into a tz aware date

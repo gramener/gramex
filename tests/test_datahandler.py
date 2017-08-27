@@ -4,19 +4,16 @@ from __future__ import unicode_literals
 import re
 import requests
 import pandas as pd
-import sqlalchemy as sa
 from pathlib import Path
-from tornado.template import Template
 import pandas.util.testing as pdt
 from . import server, TestGramex, dbutils
-import gramex
 from gramex.config import variables
 from gramex.http import OK, NOT_FOUND, INTERNAL_SERVER_ERROR
 
 
 class DataHandlerTestMixin(object):
     folder = Path(__file__).absolute().parent
-    data = pd.read_csv(str(folder / 'actors.csv'))
+    data = pd.read_csv(str(folder / 'actors.csv'), encoding='utf-8')
 
     def test_pingdb(self):
         for frmt in ['json', 'html']:
@@ -30,9 +27,9 @@ class DataHandlerTestMixin(object):
 
     def test_fetchdb(self):
         base = server.base_url + '/datastore/' + self.database
-        pdt.assert_frame_equal(self.data, pd.read_csv(base + '/csv/'))
+        pdt.assert_frame_equal(self.data, pd.read_csv(base + '/csv/', encoding='utf-8'))
         pdt.assert_frame_equal(self.data, pd.read_json(base + '/json/'))
-        pdt.assert_frame_equal(self.data, pd.read_html(base + '/html/')[0],
+        pdt.assert_frame_equal(self.data, pd.read_html(base + '/html/', encoding='utf-8')[0],
                                check_less_precise=True)
         pdt.assert_frame_equal(self.data, pd.read_excel(base + '/xlsx/'))
 
@@ -47,33 +44,36 @@ class DataHandlerTestMixin(object):
 
         # select, where, sort, offset, limit
         base = server.base_url + '/datastore/' + self.database + '/'
-        csv = lambda q: pd.read_csv(base + 'csv/' + q)
-        eq(self.data[:5], csv('?limit=5'))
-        eq(self.data[5:], csv('?offset=5'))
-        eq(self.data, csv('?sort='))
-        eq(self.data, csv('?sort=nonexistent'))
-        eq(self.data.sort_values(by='votes'), csv('?sort=votes'))
-        eq(self.data.sort_values(by='votes', ascending=False)[:5], csv('?limit=5&sort=votes:desc'))
+
+        def get(q):
+            return pd.read_csv(base + 'csv/' + q, encoding='utf-8')
+
+        eq(self.data[:5], get('?limit=5'))
+        eq(self.data[5:], get('?offset=5'))
+        eq(self.data, get('?sort='))
+        eq(self.data, get('?sort=nonexistent'))
+        eq(self.data.sort_values(by='votes'), get('?sort=votes'))
+        eq(self.data.sort_values(by='votes', ascending=False)[:5], get('?limit=5&sort=votes:desc'))
         eq(self.data.sort_values(by=['category', 'name'], ascending=[False, False]),
-           csv('?sort=category:desc&sort=name:desc'))
-        eq(self.data[['name', 'votes']], csv('?select=name&select=votes'))
-        eq(self.data.query('category=="Actors"'), csv('?where=category==Actors'))
-        eq(self.data.query('category=="Actors"'), csv('?where=category=Actors'))
-        eq(self.data.query('category!="Actors"'), csv('?where=category!=Actors'))
-        eq(self.data.query('category=="Actors"'), csv('?where=category=Actors&where=name='))
-        eq(self.data.query('category=="Actors"'), csv('?where=category=Actors&where=na='))
-        eq(self.data.query('category=="Actors"'), csv('?where=category=Actors&where=votes>'))
-        eq(self.data[self.data.name.str.contains('Brando')], csv('?where=name~Brando'))
-        eq(self.data[~self.data.name.str.contains('Brando')], csv('?where=name!~Brando'))
-        eq(self.data.query('votes>100'), csv('?where=votes>100'))
-        eq(self.data.query('150 > votes > 100'), csv('?where=votes<150&where=votes>100&xyz=8765'))
+           get('?sort=category:desc&sort=name:desc'))
+        eq(self.data[['name', 'votes']], get('?select=name&select=votes'))
+        eq(self.data.query('category=="Actors"'), get('?where=category==Actors'))
+        eq(self.data.query('category=="Actors"'), get('?where=category=Actors'))
+        eq(self.data.query('category!="Actors"'), get('?where=category!=Actors'))
+        eq(self.data.query('category=="Actors"'), get('?where=category=Actors&where=name='))
+        eq(self.data.query('category=="Actors"'), get('?where=category=Actors&where=na='))
+        eq(self.data.query('category=="Actors"'), get('?where=category=Actors&where=votes>'))
+        eq(self.data[self.data.name.str.contains('Brando')], get('?where=name~Brando'))
+        eq(self.data[~self.data.name.str.contains('Brando')], get('?where=name!~Brando'))
+        eq(self.data.query('votes>100'), get('?where=votes>100'))
+        eq(self.data.query('150 > votes > 100'), get('?where=votes<150&where=votes>100&xyz=8765'))
         # ?q=a%e matches "Actresses" (category) and Charlie, James & Astaire (name)
         q = re.compile(r'a.*e', re.IGNORECASE).search
         result = self.data.T.apply(lambda row: bool(q(row['name']) or q(row['category'])))
-        eq(self.data[result], csv('?q=a%e'))
+        eq(self.data[result], get('?q=a%e'))
 
         # format
-        eq(self.data[:5], csv('?limit=5'))
+        eq(self.data[:5], get('?limit=5'))
         eq(self.data[:5], pd.read_json(base + 'csv/?limit=5&format='))
         eq(self.data[:5], pd.read_json(base + 'csv/?limit=5&format=json'))
         eq(self.data[:5], pd.read_json(base + 'csv/?limit=5&format=xx&format=json'))
@@ -84,7 +84,7 @@ class DataHandlerTestMixin(object):
         eqdt((self.data.groupby('category', as_index=False)
               .agg({'rating': 'min', 'votes': 'sum'})
               .rename(columns={'rating': 'ratemin', 'votes': 'votesum'})),
-             csv('?groupby=category' +
+             get('?groupby=category' +
                  '&agg=ratemin:min(rating)&agg=votesum:sum(votes)'))
 
         eqdt((self.data.query('120 > votes > 60')
@@ -92,7 +92,7 @@ class DataHandlerTestMixin(object):
               .agg({'rating': 'max', 'votes': 'count'})
               .rename(columns={'rating': 'ratemax', 'votes': 'votecount'})
               .sort_values(by='votecount', ascending=True)),
-             csv('?groupby=category' +
+             get('?groupby=category' +
                  '&agg=ratemax:max(rating)&agg=votecount:count(votes)' +
                  '&where=votes<120&where=votes>60&sort=votecount:asc'))
 
@@ -101,7 +101,7 @@ class DataHandlerTestMixin(object):
               .agg({'rating': pd.np.mean, 'votes': pd.Series.nunique})
               .rename(columns={'rating': 'ratemean', 'votes': 'votenu'})
               .loc[1:, ['category', 'votenu']]),
-             csv('?groupby=category' +
+             get('?groupby=category' +
                  '&agg=ratemean:mean(rating)&agg=votenu:nunique(votes)' +
                  '&where=votes<120&where=votes>60' +
                  '&select=category&select=votenu&offset=1'))
@@ -137,12 +137,13 @@ class DataHandlerTestMixin(object):
            '?where=name=xgram1',
            [{'category': nan, 'name': 'xgram1', 'rating': nan, 'votes': 11}])
         # read
-        self.assertEqual(pd.read_csv(base + '?where=name~xgram').shape[0], 4)
+        self.assertEqual(pd.read_csv(base + '?where=name~xgram', encoding='utf-8').shape[0], 4)
         # delete
         eq(requests.delete, 'where=name~xgram', {}, '?where=name~xgram', None)
 
         # crud with special chars
-        val = 'xgram-' + ''.join(chr(x) for x in range(32, 128)) + 'ασλÆ©á '
+        ascii_min, ascii_max = 32, 128
+        val = 'xgram-' + ''.join(chr(x) for x in range(ascii_min, ascii_max)) + 'ασλÆ©á '
         safe_val = requests.utils.quote(val.encode('utf8'))
         eq(requests.post, {'val': 'name=' + val}, {},
            '?where=name=' + safe_val,
@@ -156,7 +157,7 @@ class DataHandlerTestMixin(object):
         # Edge cases
         # POST val is empty -- Insert an empty dict
         requests.post(base, data={})
-        self.assertEqual(pd.read_csv(base).isnull().all(axis=1).sum(), 1)
+        self.assertEqual(pd.read_csv(base, encoding='utf-8').isnull().all(axis=1).sum(), 1)
         cases = [
             # PUT val is empty -- raise error that VALS is required
             {'method': requests.put, 'data': {'where': 'name=xgram'}},
@@ -183,7 +184,7 @@ class SqliteHandler(TestGramex, DataHandlerTestMixin):
 
 
 class TestSqliteHandler(SqliteHandler):
-    '''Test DataHandler for SQLite database via sqlalchemy driver'''
+    # Test DataHandler for SQLite database via sqlalchemy driver
 
     def test_filename(self):
         self.check('/datastore/sqlite/csv/filename?limit=5', headers={
@@ -200,7 +201,7 @@ class TestSqliteHandler(SqliteHandler):
 
 
 class TestMysqlDataHandler(TestGramex, DataHandlerTestMixin):
-    '''Test DataHandler for MySQL database via sqlalchemy driver'''
+    # Test DataHandler for MySQL database via sqlalchemy driver
     database = 'mysql'
 
     @classmethod
@@ -213,7 +214,7 @@ class TestMysqlDataHandler(TestGramex, DataHandlerTestMixin):
 
 
 class TestPostgresDataHandler(TestGramex, DataHandlerTestMixin):
-    '''Test DataHandler for PostgreSQL database via sqlalchemy driver'''
+    # Test DataHandler for PostgreSQL database via sqlalchemy driver
     database = 'postgresql'
 
     @classmethod
@@ -224,8 +225,9 @@ class TestPostgresDataHandler(TestGramex, DataHandlerTestMixin):
     def tearDownClass(cls):
         dbutils.postgres_drop_db(variables.POSTGRES_SERVER, 'test_datahandler')
 
+
 class TestBlazeDataHandler(SqliteHandler):
-    '''Test DataHandler for SQLite database via blaze driver'''
+    # Test DataHandler for SQLite database via blaze driver
     database = 'blazesqlite'
 
     def test_querypostdb(self):
@@ -234,7 +236,6 @@ class TestBlazeDataHandler(SqliteHandler):
 
 
 class TestBlazeMysqlDataHandler(TestMysqlDataHandler, TestBlazeDataHandler):
-    'Test DataHandler for MySQL database via blaze driver'
     database = 'blazemysql'
 
     def test_querypostdb(self):
@@ -243,7 +244,6 @@ class TestBlazeMysqlDataHandler(TestMysqlDataHandler, TestBlazeDataHandler):
 
 
 class TestDataHandlerConfig(SqliteHandler):
-    '''Test DataHandler'''
     database = 'sqliteconfig'
 
     def test_pingdb(self):
@@ -266,27 +266,27 @@ class TestDataHandlerConfig(SqliteHandler):
             return '%s/datastore/%s%d/' % (server.base_url, self.database, case)
 
         eq(self.data.query('votes < 120')[:5],
-           pd.read_csv(dbcase(1) + 'csv/?limit=5'))
+           pd.read_csv(dbcase(1) + 'csv/?limit=5', encoding='utf-8'))
         eq(self.data.query('votes > 120')[:5],
-           pd.read_csv(dbcase(1) + 'csv/?where=votes>120&limit=5'))
+           pd.read_csv(dbcase(1) + 'csv/?where=votes>120&limit=5', encoding='utf-8'))
         eq(self.data.query('votes < 120')[:5],
-           pd.read_csv(dbcase(2) + 'csv/?limit=5'))
+           pd.read_csv(dbcase(2) + 'csv/?limit=5', encoding='utf-8'))
         eq(self.data.query('votes < 120')[:5],
-           pd.read_csv(dbcase(3) + 'csv/?limit=5'))
+           pd.read_csv(dbcase(3) + 'csv/?limit=5', encoding='utf-8'))
         eq(self.data.query('votes < 120')[:5],
-           pd.read_csv(dbcase(3) + 'csv/?where=votes>120&limit=5'))
+           pd.read_csv(dbcase(3) + 'csv/?where=votes>120&limit=5', encoding='utf-8'))
         eq(self.data.query('votes < 120').loc[:, ['rating', 'votes']],
            pd.read_csv(dbcase(4) + 'csv/?where=votes>120' +
-                       '&select=rating&select=votes'))
+                       '&select=rating&select=votes', encoding='utf-8'))
         eq(self.data.query('votes < 120').loc[:, ['rating', 'votes']],
            pd.read_csv(dbcase(5) + 'csv/?where=votes>120' +
-                       '&select=rating&select=votes'))
+                       '&select=rating&select=votes', encoding='utf-8'))
         eq((self.data.query('votes < 120 and rating > 0.4')
             .groupby('category', as_index=False)
             .agg({'rating': pd.np.mean, 'votes': pd.Series.nunique})
             .rename(columns={'rating': 'ratemean', 'votes': 'votenu'})
             .loc[:, ['category', 'votenu']]),
-           pd.read_csv(dbcase(6) + 'csv/'))
+           pd.read_csv(dbcase(6) + 'csv/', encoding='utf-8'))
         # 7: no matter what the URL args are, votes, limit & format are frozen
         eq(self.data.query('votes < 120')[:5],
-           pd.read_csv(dbcase(7) + 'csv/?votes=99&limit=99&format=json'))
+           pd.read_csv(dbcase(7) + 'csv/?votes=99&limit=99&format=json', encoding='utf-8'))

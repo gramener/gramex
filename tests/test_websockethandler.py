@@ -1,5 +1,3 @@
-"""WebSocketHandler test cases"""
-
 from __future__ import unicode_literals
 
 import time
@@ -8,12 +6,13 @@ from .test_auth import AuthBase
 from nose.tools import eq_
 from .server import base_url
 from websocket import create_connection, WebSocketException
-from gramex.http import OK, UNAUTHORIZED, FORBIDDEN
+from gramex.http import UNAUTHORIZED, FORBIDDEN
 from requests.cookies import get_cookie_header
 
 
 class TestWebSocketHandler(AuthBase):
-    """Test WebSocketHandler."""
+    delay = 0.01
+
     @classmethod
     def setUpClass(cls):
         cls.message = 'Hello'
@@ -27,7 +26,7 @@ class TestWebSocketHandler(AuthBase):
             ws = create_connection(base_url.replace('http://', 'ws://') + '/ws/socket')
             ws.send(msg)
             ws.close()
-            time.sleep(0.01)
+            time.sleep(self.delay)
             eq_(self.check('/ws/info').json(), [
                 {'method': 'open'},
                 {'method': 'on_message', 'message': msg},
@@ -36,17 +35,16 @@ class TestWebSocketHandler(AuthBase):
 
     def test_unauthorised(self):
         try:
-            ws = create_connection(base_url.replace('http://', 'ws://') + '/ws/auth')
+            create_connection(base_url.replace('http://', 'ws://') + '/ws/auth')
         except WebSocketException as exc:
             self.assertEqual(exc.status_code, UNAUTHORIZED)
         else:
             self.fail('Websocket allows access without login')
 
-
     def test_forbidden(self):
         self.login('beta', 'beta')
         try:
-            ws = create_connection(base_url.replace('http://', 'ws://') + '/ws/auth', header=[
+            create_connection(base_url.replace('http://', 'ws://') + '/ws/auth', header=[
                 'Cookie: {}'.format(get_cookie_header(self.session.cookies, Request(url=base_url)))
             ])
         except WebSocketException as exc:
@@ -62,7 +60,7 @@ class TestWebSocketHandler(AuthBase):
         ])
         ws.send(self.message)
         ws.close()
-        time.sleep(0.01)
+        time.sleep(self.delay)
         eq_(self.check('/ws/info').json(), [
             {'method': 'open'},
             {'method': 'on_message', 'message': self.message},

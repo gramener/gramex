@@ -8,6 +8,7 @@ import json
 import pathlib
 import requests
 import markdown
+from gramex.http import OK, FORBIDDEN, METHOD_NOT_ALLOWED
 from orderedattrdict import AttrDict
 from gramex.transforms import badgerfish
 from . import server, tempfiles, TestGramex
@@ -27,8 +28,6 @@ def setUpModule():
 
 
 class TestFileHandler(TestGramex):
-    '''Test FileHandler'''
-
     def test_directoryhandler(self):
         # DirectoryHandler == FileHandler
         from gramex.handlers import DirectoryHandler, FileHandler
@@ -55,27 +54,27 @@ class TestFileHandler(TestGramex):
         # Check unicode filenames only if pathlib supports them
         try:
             pathlib.Path(tempfiles.unicode_file)
-            self.check(u'/dir/noindex/subdir/unicode–file.txt', code=200)
+            self.check(u'/dir/noindex/subdir/unicode–file.txt')
         except UnicodeError:
             pass
 
-        self.check('/dir/index/', code=200, text='subdir/</a>')
+        self.check('/dir/index/', text='subdir/</a>')
         adds_slash('/dir/index/subdir', True)
-        self.check('/dir/index/subdir/', code=200, text='text.txt</a>')
+        self.check('/dir/index/subdir/', code=OK, text='text.txt</a>')
         self.check('/dir/index/index.html', path='dir/index.html')
         self.check('/dir/index/text.txt', path='dir/text.txt')
         self.check('/dir/index/subdir/text.txt', path='dir/subdir/text.txt')
 
         self.check('/dir/default-present-index/', path='dir/index.html')
         adds_slash('/dir/default-present-index/subdir', True)
-        self.check('/dir/default-present-index/subdir/', code=200, text='text.txt</a>')
+        self.check('/dir/default-present-index/subdir/', text='text.txt</a>')
         self.check('/dir/default-present-index/index.html', path='dir/index.html')
         self.check('/dir/default-present-index/text.txt', path='dir/text.txt')
         self.check('/dir/default-present-index/subdir/text.txt', path='dir/subdir/text.txt')
 
-        self.check('/dir/default-missing-index/', code=200, text='subdir/</a>')
+        self.check('/dir/default-missing-index/', text='subdir/</a>')
         adds_slash('/dir/default-missing-index/subdir', True)
-        self.check('/dir/default-missing-index/subdir/', code=200, text='text.txt</a>')
+        self.check('/dir/default-missing-index/subdir/', text='text.txt</a>')
         self.check('/dir/default-missing-index/index.html', path='dir/index.html')
         self.check('/dir/default-missing-index/text.txt', path='dir/text.txt')
         self.check('/dir/default-missing-index/subdir/text.txt', path='dir/subdir/text.txt')
@@ -100,7 +99,7 @@ class TestFileHandler(TestGramex):
         self.check('/dir/single-file/alpha', path='dir/text.txt')
         self.check('/dir/single-file/alpha/beta', path='dir/text.txt')
 
-        self.check('/dir/data', code=200, path='dir/data.csv', headers={
+        self.check('/dir/data', path='dir/data.csv', headers={
             'Content-Type': 'text/plain',
             'Content-Disposition': None
         })
@@ -112,13 +111,13 @@ class TestFileHandler(TestGramex):
 
     def test_index_template(self):
         # Custom index_template is used in directories
-        self.check('/dir/indextemplate/', code=200, text='<title>indextemplate</title>')
-        self.check('/dir/indextemplate/', code=200, text='text.txt</a>')
+        self.check('/dir/indextemplate/', text='<title>indextemplate</title>')
+        self.check('/dir/indextemplate/', text='text.txt</a>')
         # Custom index_template is used in sub-directories
-        self.check('/dir/indextemplate/subdir/', code=200, text='<title>indextemplate</title>')
-        self.check('/dir/indextemplate/subdir/', code=200, text='text.txt</a>')
+        self.check('/dir/indextemplate/subdir/', text='<title>indextemplate</title>')
+        self.check('/dir/indextemplate/subdir/', text='text.txt</a>')
         # Non-existent index templates default to Gramex filehandler.template.html
-        self.check('/dir/no-indextemplate/', code=200, text='File list by Gramex')
+        self.check('/dir/no-indextemplate/', text='File list by Gramex')
 
     def test_url_normalize(self):
         self.check('/dir/normalize/slash/index.html/', path='dir/index.html')
@@ -146,7 +145,7 @@ class TestFileHandler(TestGramex):
         # gramex.yaml has configured template.* to take handler and x as params
         self.check('/dir/transform/template.txt?x=►', text='x – ►')
         self.check('/dir/transform/template.txt?x=λ', text='x – λ')
-        self.check('/dir/transform/template-handler.txt', code=200)
+        self.check('/dir/transform/template-handler.txt')
 
     def test_template(self):
         self.check('/dir/template/index-template.txt?arg=►', text='– ►')
@@ -182,28 +181,28 @@ class TestFileHandler(TestGramex):
         self.check('/dir/noindex/', code=404, headers={'Etag': False})
 
     def test_ignore(self):
-        self.check('/dir/index/gramex.yaml', code=403)
-        self.check('/dir/index/.hidden', code=403)
-        self.check('/dir/index/ignore-file.txt', code=200)
-        self.check('/dir/ignore-file/ignore-file.txt', code=403)
-        self.check('/dir/index/ignore-list.txt', code=200)
-        self.check('/dir/ignore-list/ignore-list.txt', code=403)
-        self.check('/dir/allow-file/gramex.yaml', code=200)
-        self.check('/dir/allow-ignore/ignore-file.txt', code=200)
-        self.check('/server.py', code=403)               # Ignore .py files by default
-        self.check('/dir/index/.allow', code=200)        # But .allow is allowed
+        self.check('/dir/index/gramex.yaml', code=FORBIDDEN)
+        self.check('/dir/index/.hidden', code=FORBIDDEN)
+        self.check('/dir/index/ignore-file.txt')
+        self.check('/dir/ignore-file/ignore-file.txt', code=FORBIDDEN)
+        self.check('/dir/index/ignore-list.txt')
+        self.check('/dir/ignore-list/ignore-list.txt', code=FORBIDDEN)
+        self.check('/dir/allow-file/gramex.yaml')
+        self.check('/dir/allow-ignore/ignore-file.txt')
+        self.check('/server.py', code=FORBIDDEN)     # Ignore .py files by default
+        self.check('/dir/index/.allow')        # But .allow is allowed
         # Paths are resolved before ignoring
         self.check('/dir/ignore-all-except/', path='dir/index.html')
 
     def test_methods(self):
         config = {
             '/methods/get-only': {
-                200: ('get',),
-                405: ('head', 'post', 'put', 'delete', 'patch', 'options'),
+                OK: ('get',),
+                METHOD_NOT_ALLOWED: ('head', 'post', 'put', 'delete', 'patch', 'options'),
             },
             '/methods/head-put-delete': {
-                200: ('head', 'put', 'delete'),
-                405: ('get', 'post', 'patch', 'options'),
+                OK: ('head', 'put', 'delete'),
+                METHOD_NOT_ALLOWED: ('get', 'post', 'patch', 'options'),
             }
         }
         for url, results in config.items():
@@ -214,7 +213,7 @@ class TestFileHandler(TestGramex):
                                      '%s %s should return %d' % (method, url, code))
 
     def test_headers(self):
-        r = self.check('/header/', headers={
+        self.check('/header/', headers={
             'X-FileHandler-Header': 'updated',
             'X-FileHandler': 'updated',
             'X-FileHandler-Base': 'base',

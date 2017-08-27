@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 
 import requests
 import pandas as pd
-import sqlalchemy as sa
 from pathlib import Path
 import pandas.util.testing as pdt
 from . import server, TestGramex, dbutils
@@ -13,7 +12,7 @@ from gramex.http import OK
 
 class QueryHandlerTestMixin(object):
     folder = Path(__file__).absolute().parent
-    data = pd.read_csv(str(folder / 'actors.csv'))
+    data = pd.read_csv(str(folder / 'actors.csv'), encoding='utf-8')
 
     def test_pingdb(self):
         url = '/datastoreq/' + self.database
@@ -27,7 +26,7 @@ class QueryHandlerTestMixin(object):
 
     def test_fetchdb(self):
         base = server.base_url + '/datastoreq/' + self.database
-        pdt.assert_frame_equal(self.data, pd.read_csv(base + '/csv/?limit=100'))
+        pdt.assert_frame_equal(self.data, pd.read_csv(base + '/csv/?limit=100', encoding='utf-8'))
 
         pdt.assert_frame_equal(
             self.data.query('name == "Charlie Chaplin"').reset_index(drop=True),
@@ -36,7 +35,7 @@ class QueryHandlerTestMixin(object):
 
         pdt.assert_frame_equal(
             self.data.query('votes > 90').reset_index(drop=True),
-            pd.read_html(base + '/html/?votes=90')[0].reset_index(drop=True),
+            pd.read_html(base + '/html/?votes=90', encoding='utf-8')[0].reset_index(drop=True),
             check_less_precise=True
         )
 
@@ -51,7 +50,7 @@ class QueryHandlerTestMixin(object):
 
         base = server.base_url + '/datastoreq/' + self.database + '/'
 
-        eq(self.data[:5], pd.read_csv(base + 'csv/?limit=5'))
+        eq(self.data[:5], pd.read_csv(base + 'csv/?limit=5', encoding='utf-8'))
 
         eq(self.data[self.data.name.str.contains('Brando')],
            pd.read_json(base + 'json/like/?name=*Brando*'))
@@ -142,7 +141,7 @@ class TestMysqlQueryHandler(TestGramex, QueryHandlerTestMixin):
 
     @classmethod
     def tearDownClass(cls):
-        dbutils.mysql_drop_db(variables.MYSQL_SERVER, 'test_datahandler')
+        dbutils.mysql_drop_db(variables.MYSQL_SERVER, 'test_queryhandler')
 
 
 class TestPostgresQueryHandler(TestGramex, QueryHandlerTestMixin):

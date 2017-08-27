@@ -2,8 +2,6 @@ from . import TestGramex
 
 
 class TestFunctionHandler(TestGramex):
-    'Test FunctionHandler'
-
     def test_args(self):
         etag = {'headers': {'Etag': True}}
         text = '{"args": [0, 1], "kwargs": {"a": "a", "b": "b"}}'

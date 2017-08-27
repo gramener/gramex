@@ -183,7 +183,7 @@ class TestInstall(unittest.TestCase):
             result.add('bower_components/gramex-bower-package/bower-setup.txt')
             result.add('bower_components/gramex-bower-package/.bower.json')
         if which('pip'):
-            import dicttoxml
+            import dicttoxml            # noqa
         self.check_files('setup', result)
         self.check_uninstall('setup')
 

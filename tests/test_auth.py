@@ -7,13 +7,12 @@ import requests
 import lxml.html
 import pandas as pd
 import sqlalchemy as sa
-from orderedattrdict import AttrDict
 from nose.plugins.skip import SkipTest
 from six.moves.urllib_parse import urlencode
 import gramex
 import gramex.config
 from gramex.http import OK, UNAUTHORIZED, FORBIDDEN, BAD_REQUEST
-from . import TestGramex, server, tempfiles, utils
+from . import TestGramex, server, tempfiles
 
 folder = os.path.dirname(os.path.abspath(__file__))
 
@@ -157,22 +156,27 @@ class LoginMixin(object):
 
 
 class LoginFailureMixin(object):
+    def check_delay(self, start, min=None, max=None):
+        t = time.time()
+        if min > 0:
+            self.assertGreaterEqual(t - start, min)
+        if max > 0:
+            self.assertLessEqual(t - start, max)
+        return t
+
     def test_slow_down_attacks(self):
         # gramex.yaml configures the delays as [0.2, 0.4]. Test this
         self.login_ok('alpha', 'alpha', check_next='/dir/index/')
         t0 = time.time()
         # First failure: delay of at least 0.2 seconds
         self.unauthorized('alpha', 'wrong')
-        t1 = time.time()
-        self.assertGreaterEqual(t1 - t0, 0.2)
+        t1 = self.check_delay(t0, min=0.2)
         # Second failure: delay of at least 0.4 seconds
         self.unauthorized('alpha', 'wrong')
-        t2 = time.time()
-        self.assertGreaterEqual(t2 - t1, 0.4)
+        t2 = self.check_delay(t1, min=0.4)
         # Successful login is instantaneous
         self.login_ok('alpha', 'alpha', check_next='/dir/index/')
-        t3 = time.time()
-        self.assertLess(t3 - t2, 0.2)
+        self.check_delay(t2, max=0.2)
 
 
 class TestSimpleAuth(AuthBase, LoginMixin, LoginFailureMixin):
@@ -365,6 +369,7 @@ class TestAuthorize(DBAuthBase):
 
     def test_auth_template(self):
         self.initialize('/auth/unauthorized-template', user='alpha')
-        self.check('/auth/unauthorized-template', code=FORBIDDEN, text='403-template', session=self.session)
+        self.check('/auth/unauthorized-template', code=FORBIDDEN,
+                   text='403-template', session=self.session)
         self.initialize('/auth/unauthorized-template', user='beta')
         self.check('/auth/unauthorized-template', path='dir/alpha.txt', session=self.session)

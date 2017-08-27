@@ -12,7 +12,6 @@ from collections import Counter
 from orderedattrdict import AttrDict
 from tornado import gen
 from tornado.web import RequestHandler
-from tornado.escape import recursive_unicode
 from tornado.httpclient import AsyncHTTPClient
 from concurrent.futures import ThreadPoolExecutor
 from gramex.cache import Subprocess

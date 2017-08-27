@@ -11,6 +11,7 @@ from gramex.config import str_utf8
 
 folder = os.path.dirname(os.path.abspath(__file__))
 
+
 def mysql_create_db(server, db, **tables):
     url = 'mysql+pymysql://root@%s/' % server
     engine = sa.create_engine(url + '?charset=utf8', encoding=str_utf8)
