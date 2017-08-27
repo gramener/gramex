@@ -8,6 +8,7 @@ from gramex.http import OK
 from gramex.services import info
 
 tempfiles = AttrDict()
+folder = os.path.dirname(os.path.abspath(__file__))
 
 
 def setUp():

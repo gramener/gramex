@@ -1198,6 +1198,63 @@ url:
         Content-Disposition: attachment;filename=alpha.csv
       xsrf_cookies: false
 
+  formhandler/file:
+    pattern: /formhandler/file
+    handler: FormHandler
+    kwargs:
+      url: sales.xlsx
+
+  formhandler/mysql:
+    pattern: /formhandler/mysql
+    handler: FormHandler
+    kwargs:
+      url: mysql+pymysql://root@$MYSQL_SERVER/test_formhandler?charset=utf8
+      table: sales
+
+  formhandler/postgres:
+    pattern: /formhandler/postgres
+    handler: FormHandler
+    kwargs:
+      url: postgresql://postgres@$POSTGRES_SERVER/test_formhandler
+      table: sales
+
+  formhandler/sqlite:
+    pattern: /formhandler/sqlite
+    handler: FormHandler
+    kwargs:
+      url: sqlite:///formhandler.db
+      table: sales
+
+  formhandler/file-multi:
+    pattern: /formhandler/file-multi
+    handler: FormHandler
+    kwargs:
+      big:
+        url: sales.xlsx
+        sheetname: sales
+        function: data[data['sales'] > 100]
+      by-growth:
+        url: sales.xlsx
+        function: data.sort_values('growth')
+
+  formhandler/sqlite-multi:
+    pattern: /formhandler/sqlite-multi
+    handler: FormHandler
+    kwargs:
+      big:
+        url: sqlite:///formhandler.db
+        table: sales
+        query: 'SELECT * FROM sales WHERE sales > 100'
+      by-growth:
+        url: sqlite:///formhandler.db
+        table: sales
+        function: data.sort_values('growth')
+      big-by-growth:
+        url: sqlite:///formhandler.db
+        table: sales
+        query: 'SELECT * FROM sales WHERE sales > 100'
+        function: data.sort_values('growth')
+
   capture:
     pattern: /capture
     handler: CaptureHandler

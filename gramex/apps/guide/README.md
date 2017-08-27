@@ -9,7 +9,7 @@ classes: toc
 - [Configurations control Gramex](config/)
 - [Gramex runs Python functions](functionhandler/)
 - [Gramex renders files](filehandler/)
-- [Gramex connects to data](datahandler/)
+- [Gramex connects to data](formhandler/)
 - [Gramex runs SQL queries](queryhandler/)
 - [Gramex writes data](jsonhandler/)
 - [Gramex authentication](auth/)

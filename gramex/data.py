@@ -245,6 +245,7 @@ def _filter_frame(data, meta, controls, args):
         elif op == '~':
             data = data[data[col].str.contains('|'.join(vals))]
         filters.append((col, op, vals))
+
     # Apply controls
     if '_sort' in controls:
         meta['sort'], ignored_sorts = _filter_sort_columns(controls['_sort'], data.columns)

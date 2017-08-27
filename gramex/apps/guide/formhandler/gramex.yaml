@@ -1,0 +1,38 @@
+url:
+    formhandler-flags:
+      pattern: /$YAMLURL/flags
+      handler: FormHandler
+      kwargs:
+        url: $YAMLPATH/flags.csv
+        formats:
+          text:
+            format: template
+            template: $YAMLPATH/text-template.txt
+            headers:
+              Content-Type: text/plain
+
+    formhandler-continent:
+      pattern: /$YAMLURL/continent
+      handler: FormHandler
+      kwargs:
+        url: $YAMLPATH/flags.csv
+        function: data.groupby('Continent').sum().reset_index()
+
+    formhandler-query:
+      pattern: /$YAMLURL/query
+      handler: FormHandler
+      kwargs:
+        url: sqlite:///$YAMLPATH/../datahandler/database.sqlite3
+        table: flags
+        query: 'SELECT Continent, COUNT(*) AS num, SUM(c1) FROM flags GROUP BY Continent'
+
+    formhandler-multidata:
+      pattern: /$YAMLURL/multidata
+      handler: FormHandler
+      kwargs:
+        continents:
+          url: $YAMLPATH/flags.csv
+          function: data.groupby('Continent').sum().reset_index()
+        stripes:
+          url: $YAMLPATH/flags.csv
+          function: data.groupby('Stripes').sum().reset_index()

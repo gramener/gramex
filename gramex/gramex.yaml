@@ -25,7 +25,8 @@ cache:
     memory:
         type: memory                    # A default in-memory cache
 
-# Intiailise handlers
+# Intiailise handlers kwargs.
+# BaseHandler.setup_default_kwargs() adds these as defaults for each handler.
 handlers:
     BaseHandler:
         log:
@@ -40,6 +41,30 @@ handlers:
             - ".*"                      # Hide dotfiles
             - "*.py*"                   # Hide Python scripts
         allow: '.allow'                 # Allow special dotfile
+
+    FormHandler:
+        formats:
+            json:
+                format: json
+                headers:
+                    Content-Type: application/json
+            csv:
+                format: csv
+                headers:
+                    Content-Type: text/csv
+                    Content-Disposition: attachment;filename=data.csv
+            html:
+                format: html
+                headers:
+                    Content-Type: text/html; charset=UTF-8
+            xlsx:
+                format: xlsx
+                headers:
+                    Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+                    Content-Disposition: attachment;filename=data.xlsx
+        default:
+          _limit: 10000      # Limit entries by default
+
 
 # The `log:` section defines the log handlers. It uses the same structure as the
 # Python logging schema.

@@ -14,6 +14,7 @@ from .jsonhandler import JSONHandler
 from .socialhandler import TwitterRESTHandler, FacebookGraphHandler
 from .uploadhandler import UploadHandler
 from .capturehandler import CaptureHandler, Capture
+from .formhandler import FormHandler
 
 DirectoryHandler = FileHandler
 
@@ -25,4 +26,5 @@ __all__ = [
     'FacebookGraphHandler', 'UploadHandler',
     'BaseWebSocketHandler', 'WebSocketHandler',
     'CaptureHandler', 'Capture',
+    'FormHandler'
 ]

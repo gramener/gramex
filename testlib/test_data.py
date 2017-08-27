@@ -14,19 +14,16 @@ from nose.plugins.skip import SkipTest
 from nose.tools import eq_, ok_, assert_raises
 from pandas.util.testing import assert_frame_equal
 import dbutils
-from . import folder
+from . import folder, sales_file
 
 
 class TestFilter(unittest.TestCase):
-    @classmethod
-    def setupClass(cls):
-        cls.sales_file = os.path.join(folder, 'sales.xlsx')
-        cls.sales = gramex.cache.open(cls.sales_file, 'xlsx')
-        cls.db = set()
-        cls.server = AttrDict(
-            mysql=os.environ.get('MYSQL_SERVER', 'localhost'),
-            postgres=os.environ.get('POSTGRES_SERVER', 'localhost'),
-        )
+    sales = gramex.cache.open(sales_file, 'xlsx')
+    db = set()
+    server = AttrDict(
+        mysql=os.environ.get('MYSQL_SERVER', 'localhost'),
+        postgres=os.environ.get('POSTGRES_SERVER', 'localhost'),
+    )
 
     def check_filter(self, df=None, na_position='last', **kwargs):
         '''
@@ -38,7 +35,7 @@ class TestFilter(unittest.TestCase):
             meta = {}
             actual = gramex.data.filter(meta=meta, args=args, **kwargs)
             expected.index = actual.index
-            assert_frame_equal(actual, expected, check_like=True)
+            assert_frame_equal(actual, expected)
             return meta
 
         sales = self.sales if df is None else df
@@ -144,13 +141,13 @@ class TestFilter(unittest.TestCase):
         self.check_filter(url=self.sales)
 
     def test_file(self):
-        self.check_filter(url=self.sales_file)
+        self.check_filter(url=sales_file)
         assert_frame_equal(
-            gramex.data.filter(url=self.sales_file, transform='2.1', sheetname='dummy'),
-            gramex.cache.open(self.sales_file, 'excel', transform='2.2', sheetname='dummy'),
+            gramex.data.filter(url=sales_file, transform='2.1', sheetname='dummy'),
+            gramex.cache.open(sales_file, 'excel', transform='2.2', sheetname='dummy'),
         )
         self.check_filter(
-            url=self.sales_file,
+            url=sales_file,
             transform=lambda d: d[d['sales'] > 100],
             df=self.sales[self.sales['sales'] > 100],
         )
@@ -199,8 +196,7 @@ class TestFilter(unittest.TestCase):
 class TestDownload(unittest.TestCase):
     @classmethod
     def setupClass(cls):
-        cls.sales_file = os.path.join(folder, 'sales.xlsx')
-        cls.sales = gramex.cache.open(cls.sales_file, 'xlsx')
+        cls.sales = gramex.cache.open(sales_file, 'xlsx')
         cls.dummy = pd.DataFrame({
             'खुश': ['高兴', 'سعيد'],
             'length': [1.2, None],
