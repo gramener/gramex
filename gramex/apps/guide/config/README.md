@@ -119,7 +119,7 @@ headers. For example:
         ...
         headers:
             Content-Type: text/plain          # Display as plain text
-            Access-Control-Allow-Origin: *    # Allow CORS (all servers can access via AJAX)
+            Access-Control-Allow-Origin: '*'  # Allow CORS (all servers can access via AJAX)
 
 ... adds the Content-Type and CORS settings to the response headers.
 
