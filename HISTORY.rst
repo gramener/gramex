@@ -114,7 +114,7 @@ Command line usage of Gramex is improved.
 - On startup, Gramex informs users of keyboard shortcuts available (``Ctrl+B`` for opening the browser and ``Ctrl+D`` for debugging.)
 - Gramex warns you when ``url:`` sections have duplicate keys, and override one
   another. This helps when running on shared instances like ``uat.gramener.com``.
-- When loading a module (e.g. from a FunctionHandler), it would not get reloaded
+- When loading a module (e.g. from a `FunctionHandler`_), it would not get reloaded
   if it had an error. This is fixed.
 
 There are a couple of obscure fixes to `DataHandler`_.
@@ -479,7 +479,7 @@ There are two changes that may disrupt your code:
   You can also use ``gramex --browser=true``.
 * `ProcessHandler`_ implemented. It runs any program as a sub-process and
   streams the output to the request.
-* ``FunctionHandler`` accepts co-routines for asynchronous processing. Functions
+* `FunctionHandler`_ accepts co-routines for asynchronous processing. Functions
   can also ``yield`` strings that will be immediately written and flushed,
   providing a streaming interface.
 * `FileHandler`_ accepts multiple ``path`` as an array. The output of these
@@ -497,7 +497,7 @@ There are two changes that may disrupt your code:
 1.0.4 (2016-03-30)
 ~~~~~~~~~~~~~~~~~~
 
-* ``FunctionHandler`` supports co-routines and works asynchronously
+* `FunctionHandler`_ supports co-routines and works asynchronously
 * `FileHandler`_ is the new name for ``DirectoryHandler`` (both will work)
 * Implement authentication via Google, Twitter and Facebook OAuth
 * Simpler installation steps
@@ -506,7 +506,7 @@ There are two changes that may disrupt your code:
 1.0.3 (2016-01-18)
 ~~~~~~~~~~~~~~~~~~
 
-* Implement ``DataHandler`` that displays data from databases (via
+* Implement `DataHandler`_ that displays data from databases (via
   `SQLAlchemy <http://www.sqlalchemy.org/>`__ and `Blaze <http://blaze.pydata.org/>`__)
 * ``DirectoryHandler``:
     - lets gramex.yaml specify input file encoding (defaults to UTF-8)
@@ -516,7 +516,7 @@ There are two changes that may disrupt your code:
 1.0.2 (2015-10-11)
 ~~~~~~~~~~~~~~~~~~
 
-* Implement ``FunctionHandler`` that renders any function
+* Implement `FunctionHandler`_ that renders any function
 * ``DirectoryHandler`` transforms files (e.g. converting Markdown or YAML to
   HTML)
 * ``gramex.transforms.badgerfish`` transform converts YAML to HTML
@@ -540,6 +540,7 @@ There are two changes that may disrupt your code:
 
 
 .. _Firebase API: https://www.firebase.com/docs/rest/api/
+.. _FunctionHandler: https://learn.gramener.com/guide/functionhandler/
 .. _JSONHandler: https://learn.gramener.com/guide/jsonhandler/
 .. _FileHandler: https://learn.gramener.com/guide/filehandler/
 .. _DataHandler: https://learn.gramener.com/guide/datahandler/
