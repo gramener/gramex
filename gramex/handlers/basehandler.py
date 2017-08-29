@@ -574,24 +574,75 @@ class BaseHandler(RequestHandler, BaseMixin):
 
     def argparse(self, *args, **kwargs):
         '''
-        Parse URL query parameters and return an AttrDict.
+        Parse URL query parameters and return an AttrDict. For example::
 
-        All ``args`` are added to the AttrDict. Missing ones raise errors.
+            args = handler.argparse('x', 'y')
+            args.x      # is the last value of ?x=value
+            args.y      # is the last value of ?y=value
 
-        All ``kwargs`` are added too. Their values are dicts with these keys:
+        A missing ``?x=`` or ``?y=`` raises a HTTP 400 error mentioning the
+        missing key.
+
+        For optional arguments, use::
+
+            args = handler.argparse(z={'default': ''})
+            args.z      # returns '' if ?z= is missing
+
+        You can convert the value to a type::
+
+            args = handler.argparse(limit={'type': int, 'default': 100})
+            args.limit      # returns ?limit= as an integer
+
+        You can restrict the choice of values. If the query parameter is not in
+        choices, we raise a HTTP 400 error mentioning the invalid key & value::
+
+            args = handler.argparse(gender={'choices': ['M', 'F']})
+            args.gender      # returns ?gender= which will be 'M' or 'F'
+
+        You can retrieve multiple values as a list::
+
+            args = handler.argparse(cols={'nargs': '*', 'default': []})
+            args.cols       # returns an array with all ?col= values
+
+        ``type:`` conversion and ``choices:`` apply to each value in the list.
+
+        To return all arguments as a list, pass ``list`` as the first parameter::
+
+            args = handler.argparse(list, 'x', 'y')
+            args.x      # ?x=1 sets args.x to ['1'], not '1'
+            args.y      # Similarly for ?y=1
+
+        To handle unicode arguments and return all arguments as ``str`` or
+        ``unicode`` or ``bytes``, pass the type as the first parameter::
+
+            args = handler.argparse(str, 'x', 'y')
+            args = handler.argparse(bytes, 'x', 'y')
+            args = handler.argparse(unicode, 'x', 'y')
+
+        By default, all arguments are added as str in PY3 and unicode in PY2.
+
+        There are the full list of parameters you can pass to each keyword
+        argument:
 
         - name: Name of the URL query parameter to read. Defaults to the key
         - required: Whether or not the query parameter may be omitted
-        - default: The value produced if the argument is missing
+        - default: The value produced if the argument is missing. Implies required=False
         - nargs: The number of parameters that should be returned. '*' or '+'
           return all values as a list.
         - type: Python type to which the parameter should be converted (e.g. `int`)
         - choices: A container of the allowable values for the argument (after type conversion)
 
-        If the first ``args`` is ``list``, remaining arguments are added as a
-        list. If the first ``args`` is ``bytes``, ``str`` or ``unicode``,
-        remaining arguments are added as the respective type. By default, all
-        arguments are added as six.text_type (str in PY3, unicode in PY2).
+        You can combine all these options. For example::
+
+            args = handler.argparse(
+                'name',                         # Raise error if ?name= is missing
+                department={'name': 'dept'},    # ?dept= is mapped to args.department
+                org={'default': 'Gramener'},    # If ?org= is missing, defaults to Gramener
+                age={'type': int},              # Convert ?age= to an integer
+                married={'type': bool},         # Convert ?married to a boolean
+                alias={'nargs': '*'},           # Convert all ?alias= to a list
+                gender={'choices': ['M', 'F']}, # Raise error if gender is not M or F
+            )
         '''
         result = AttrDict()
 

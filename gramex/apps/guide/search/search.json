@@ -154,6 +154,17 @@
       "Using cache stores": -1
     }
   },
+  "capturehandler": {
+    "": {
+      "Gramex takes screenshots": -1
+    },
+    "screenshot-library": {
+      "Screenshot library": -1
+    },
+    "screenshot-service": {
+      "Screenshot service": -1
+    }
+  },
   "chart": {
     "": {
       "Gramex Charts": -1
@@ -312,6 +323,12 @@
     "https-server": {
       "HTTPS Server": -1
     },
+    "nginx-reverse-proxy": {
+      "nginx reverse proxy": -1
+    },
+    "proxy-servers": {
+      "Proxy servers": -1
+    },
     "relative-url-mapping": {
       "Relative URL mapping": -1
     },
@@ -320,6 +337,9 @@
     },
     "using-relative-urls": {
       "Using relative URLs": -1
+    },
+    "using-yamlpath": {
+      "Using YAMLPATH": -1
     }
   },
   "email": {
@@ -388,6 +408,29 @@
       "XSRF": -1
     }
   },
+  "formhandler": {
+    "": {
+      "Gramex connects to data": -1
+    },
+    "formhandler-defaults": {
+      "FormHandler defaults": -1
+    },
+    "formhandler-filters": {
+      "FormHandler filters": -1
+    },
+    "formhandler-formats": {
+      "FormHandler formats": -1
+    },
+    "formhandler-multiple-datasets": {
+      "FormHandler multiple datasets": -1
+    },
+    "formhandler-templates": {
+      "FormHandler templates": -1
+    },
+    "formhandler-transforms": {
+      "FormHandler transforms": -1
+    }
+  },
   "functionhandler": {
     "": {
       "Gramex runs Python functions": -1
@@ -397,6 +440,9 @@
     },
     "function-arguments": {
       "Function arguments": -1
+    },
+    "parse-url-arguments": {
+      "Parse URL arguments": -1
     },
     "streaming-output": {
       "Streaming output": -1
@@ -540,8 +586,14 @@
     "": {
       "Gramex handles file uploads": -1
     },
+    "overwriting-uploads": {
+      "Overwriting uploads": -1
+    },
     "process-uploads": {
       "Process uploads": -1
+    },
+    "saving-uploads": {
+      "Saving uploads": -1
     },
     "upload-arguments": {
       "Upload arguments": -1

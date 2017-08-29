@@ -3,12 +3,68 @@
 History
 -------
 
+1.21 (2017-08-29)
+~~~~~~~~~~~~~~~~~
+This is a major release with new functionality. There are two new handlers.
+
+- `CaptureHandler`_ takes image screenshots and PDF downloads from Gramex. It
+  uses PhantomJS behind the scenes. Future releases will allow Chrome headless.
+- `FormHandler`_ is a simplified replacement for `DataHandler`_ and
+  `QueryHandler`_. If you want to expose data from any file or database after
+  transforming it, use `FormHandler`_.
+
+`UploadHandler`_ is also improved. Specifically:
+
+- You can `overwrite uploads`_ in the way you want.
+- You can customise the `uploaded filename`_.
+
+All requests are now logged under ``$GRAMEXDATA/logs/requests.csv``, independent
+of the console display. This will be used in the next release to show app usage.
+
+When writing code, there are a few new features:
+
+- `YAML imports`_ are simplified. You can now write ``import: filename.yaml``
+  instead of ``import: {key: filename.yaml}``.
+- It's easier to `parse URL arguments`_ inside `FunctionHandler`_. All handlers
+  have a ``handler.args`` dict that has the URL arguments. ``?x=1`` sets
+  ``handlers.args`` to ``{'x': ["1"]}``. Unlike Tornado's ``.get_arguments()``,
+  this supports Unicode keys.
+- You can also `parse URL arguments`_ using ``handler.argparse()``, which lets
+  you convert arguments to the right type, restrict values and so on.
+- You can convert GET requests to POST, PUT or DELETE via  `method overrides`_.
+  This works on ANY handler. Add a ``X-HTTP-Method-Override: POST`` header or
+  ``?x-http-method-override=POST`` to the URL to convert GET to POST.
+- :py:func:`gramex.data.filter` lets you filter DataFrames using URL arguments.
+  This is the powerful filtering mechanism behind `FormHandler`_.
+- :py:func:`gramex.data.download` helps create downloadable CSV, XLSX, JSON or
+  HTML files from one or more DataFrames.
+- When running a subprocess, use :py:func:`gramex.cache.Subprocess`. This is an
+  async method and does not block other requests.
+- ``gramex.conf.variables.GRAMEXPATH`` can be used to identify the PATH where
+  Gramex source libraries are located.
+
+Documentation is also improved to cover:
+
+- Sending `email attachments`_ and `command line emails`_
+- Accessing `predefined variables`_ from a FunctionHandler
+- Deploying an `nginx reverse proxy`_ server
+
+There are a number of bugfixes on this release. The most important are:
+
+- This release works on Python 3 as well. (The previous release 1.20 did not.)
+- Session keys can contain Unicode characters. (Earlier, this raised an error.)
+- :py:func:`gramex.cache.open` returns separate results for different transforms
+- If the ``log:`` configuration has an error, Gramex does not stop working
+
+There is one deprecation this release. ``handler.kwargs`` is now
+``handler.conf.kwargs``. (This is a largely unused feature of Gramex.)
+
+
 1.20 (2017-07-31)
 ~~~~~~~~~~~~~~~~~
 This is a major release with some critical enhancements and fixes.
 
-(This release supports Python 2, not Python 3. A patch for Python 3 will be
-released by 7 Aug 2017.)
+(NOTE: This release supports Python 2, not Python 3 due to a temporary bug.)
 
 Firstly, caching is improved.
 
@@ -499,7 +555,9 @@ There are two changes that may disrupt your code:
 .. _SimpleAuth: https://learn.gramener.com/guide/auth/#simple-auth
 .. _TwitterAuth: https://learn.gramener.com/guide/auth/#twitter-auth
 .. _TwitterStream: https://learn.gramener.com/guide/twitterresthandler/#twitter-streaming
-.. _UploadHandler: https://learn.gramener.com/guide/auth/uploadhandler/
+.. _UploadHandler: https://learn.gramener.com/guide/uploadhandler/
+.. _CaptureHandler: https://learn.gramener.com/guide/capturehandler/
+.. _FormHandler: https://learn.gramener.com/guide/formhandler/
 .. _caching: https://learn.gramener.com/guide/cache/
 .. _scheduler: https://learn.gramener.com/guide/scheduler/
 .. _log: https://learn.gramener.com/guide/config/#logging
@@ -540,3 +598,12 @@ There are two changes that may disrupt your code:
 .. _OTP: https://learn.gramener.com/guide/auth/#otp
 .. _exercises: https://learn.gramener.com/guide/exercises/
 .. _line profile: https://learn.gramener.com/guide/debug/#line-profile
+.. _overwrite uploads: https://learn.gramener.com/guide/uploadhandler/#overwriting-uploads
+.. _uploaded filename: https://learn.gramener.com/guide/uploadhandler/#saving-uploads
+.. _BaseHandler attributes: https://learn.gramener.com/guide/handlers/#basehandler-attributes
+.. _parse URL arguments: https://learn.gramener.com/guide/functionhandler/#parse-url-arguments
+.. _method overrides: https://learn.gramener.com/guide/jsonhandler/#method-override
+.. _email attachments: https://learn.gramener.com/guide/email/#email-attachments
+.. _command line emails: https://learn.gramener.com/guide/email/#command-line-emails
+.. _predefined variables: https://learn.gramener.com/guide/config/#predefined-variables
+.. _nginx reverse proxy: https://learn.gramener.com/guide/deploy/#nginx-reverse-proxy

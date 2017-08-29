@@ -59,8 +59,8 @@ To set this up, [gramex.yaml](gramex.yaml) used the following configuration:
                     Content-Type: application/json      # Display as JSON
   
 [calculations.add(handler)](calculations.py) is called with the Tornado
-[RequestHandler][requesthandler]. It accesses `handler.get_arguments('x')` to
-add up all `x` arguments.
+[RequestHandler][requesthandler]. It accesses the URL query parameters to add up
+all `x` arguments.
 
 You can specify wildcards in the URL pattern. For example:
 
@@ -111,6 +111,16 @@ You can also specify this in your function:
 
 ## Parse URL arguments
 
+All URL query parameters are stored in ``handler.args`` as a dict with Unicode
+keys and list values. For example:
+
+    ?x=1        => {'x': ['1']}
+    ?x=1&x=2    => {'x': ['1', '2']}
+    ?x=1&y=2    => {'x': ['1'], 'y': ['2']}
+
+It is better to use ``handler.args`` than Tornado's ``.get_arguments()`` because
+Tornado does not support Unicode keys well.
+
 To simplify URL query parameter parsing, all handlers have a `handler.argparse()`
 function. This returns the URL query parameters as an attribute dictionary.
 
@@ -122,21 +132,46 @@ For example:
         args.x      # This is the same as the last value of ?x
         args.y      # This is the same as the last value of ?y
 
-When you pass `?x=a&y=b`, `args.x` is `a` and `args.y` is `b`.
+When you pass `?x=a&y=b`, `args.x` is `a` and `args.y` is `b`. With multiple
+values, e.g. `?x=a&x=b`, `args.x` is takes the last value, `b`.
 
-With multiple values, e.g. `?x=a&x=b`, `args.x` is takes the last value, `b`.
+A missing `?x=` or `?y=` raises a HTTP 400 error mentioning the missing key.
 
-You return all values as a list. For example:
+For optional arguments, use:
 
     :::python
-    args = handler.argparse(list)
+    args = handler.argparse(z={'default': ''})
+    args.z          # returns '' if ?z= is missing
 
-In this case:
+You can convert the value to a type:
 
-- `?x=1` sets `args.x` as `['1']`
-- `?x=1&x=2` sets `args.x` as `['1', '2']`
+    :::python
+    args = handler.argparse(limit={'type': int, 'default': 100})
+    args.limit      # returns ?limit= as an integer
 
-You can configure each parameter. For example:
+You can restrict the choice of values. If the query parameter is not in
+choices, we raise a HTTP 400 error mentioning the invalid key & value:
+
+    :::python
+    args = handler.argparse(gender={'choices': ['M', 'F']})
+    args.gender      # returns ?gender= which will be 'M' or 'F'
+
+You can retrieve multiple values as a list::
+
+    :::python
+    args = handler.argparse(cols={'nargs': '*', 'default': []})
+    args.cols       # returns an array with all ?col= values
+
+`type:` conversion and `choices:` apply to each value in the list.
+
+To return all arguments as a list, pass `list` as the first parameter::
+
+    :::python
+    args = handler.argparse(list, 'x', 'y')
+    args.x          # ?x=1 sets args.x to ['1'], not '1'
+    args.y          # Similarly for ?y=1
+
+You can combine all these options. For example:
 
     :::python
     args = handler.argparse(
@@ -191,7 +226,9 @@ available, in order:
     :::python
     def urls(handler):
     # Initiate the requests
-        futures = [fetch_body('https://httpbin.org/delay/%s' % x) for x in handler.get_arguments('x')]
+        args = handler.argparse(x={'nargs': '*'})
+        # Initiate the requests
+        futures = [fetch_body('https://httpbin.org/delay/%s' % x) for x in args.x]
         # Yield the futures one by one
         for future in futures:
             yield future
