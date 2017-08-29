@@ -158,9 +158,9 @@ class LoginMixin(object):
 class LoginFailureMixin(object):
     def check_delay(self, start, min=None, max=None):
         t = time.time()
-        if min > 0:
+        if min is not None and min > 0:
             self.assertGreaterEqual(t - start, min)
-        if max > 0:
+        if max is not None and max > 0:
             self.assertLessEqual(t - start, max)
         return t
 
