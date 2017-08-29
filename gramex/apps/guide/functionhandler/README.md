@@ -158,7 +158,7 @@ the function below to print the values 1, 2, 3 as soon as they are "calculated".
 
     :::python
     def slow_print(handler):
-        for value in handler.get_arguments('x'):
+        for value in handler.args.get('x', []):
             time.sleep(1)
             yield 'Calculated: %s\n' % value
 
@@ -190,10 +190,11 @@ available, in order:
 
     :::python
     def urls(handler):
-        for delay in handler.get_arguments('x'):
-            futures = [fetch_body('https://httpbin.org/delay/%s' % x) for x in handler.get_arguments('x')]
-            for future in futures:
-                yield future
+    # Initiate the requests
+        futures = [fetch_body('https://httpbin.org/delay/%s' % x) for x in handler.get_arguments('x')]
+        # Yield the futures one by one
+        for future in futures:
+            yield future
 
 See the output at [fetch?x=0&x=1&x=2](fetch?x=0&x=1&x=2).
 
