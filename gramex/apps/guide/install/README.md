@@ -40,7 +40,7 @@ To remove Gramex, run `pip uninstall gramex`
 
 # Offline install
 
-To install Gramex without an Internet connection:
+First, do the following on a system **with an Internet connection**:
 
 1. Create a folder called `offline`
 2. Download [Anaconda][anaconda] into `offline`
@@ -49,7 +49,8 @@ To install Gramex without an Internet connection:
 
 If you are behind a HTTP proxy, use `pip download --proxy=http://{proxy-host}:{port} ...`.
 
-On the target machine, go to the offline folder. Then:
+Copy the `offline` folder to the target machine (which need not have an Internet
+connection). Then:
 
 1. Install the [Anaconda][anaconda] executable
-2. Run `pip install --no-index --find-links . gramex.tar.bz2`
+2. From the `offline` folder, run `pip install --no-index --find-links . gramex.tar.bz2`
