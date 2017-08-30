@@ -97,6 +97,12 @@ In JavaScript:
         '?url=' + encodeURIComponent(url) +
         '&header=' + encodeURIComponent(header))
 
+Or:
+
+    $('.some-button').on('click', function() {
+        location.href = 'capture?ext=png&url=' + encodeURIComponent(url)
+    })
+
 **Authentication is implicit**. The cookies passed to `capture` are passed to the
 `?url=` parameter. This is exactly as-if the user clicking the capture link were
 visiting the target page.
