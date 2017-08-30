@@ -94,10 +94,8 @@ function render(q, callback) {
 
   function save() {
     console.log('Saving', q.url, 'to', q.file)
-    setTimeout(function() {
-      page.render(q.file)
-      callback(q.file)
-    }, parseFloat(q.delay || 0))
+    page.render(q.file)
+    callback(q.file)
   }
 
   // In case PhantomJS is unable to load the page, log the error
@@ -109,38 +107,41 @@ function render(q, callback) {
   // Open the page
   console.log('Opening', q.url)
   page.open(q.url, function(status) {
-    error.status = status
-    if (status == 'fail')
-      return callback()
-    // If a selector is specified (for images), set the clipRect.
-    if (q.selector) {
-      var clipRect = page.evaluate(function(selector) {
-        var query = document.querySelector(selector)
-        if (query)
-          return query.getBoundingClientRect()
-      }, decodeURIComponent(q.selector))
-      if (clipRect)
-        page.clipRect = {
-          top: clipRect.top,
-          left: clipRect.left,
-          width: clipRect.width,
-          height: clipRect.height
+    setTimeout(function() {
+      error.status = status
+      if (status == 'fail')
+        return callback()
+      // If a selector is specified (for images), set the clipRect.
+      if (q.selector) {
+        var clipRect = page.evaluate(function(selector) {
+          var query = document.querySelector(selector)
+          if (query)
+            return query.getBoundingClientRect()
+        }, decodeURIComponent(q.selector))
+        if (clipRect) {
+          page.clipRect = {
+            top: clipRect.top,
+            left: clipRect.left,
+            width: clipRect.width,
+            height: clipRect.height
+          }
         }
-    }
-    if (q.js) {
-      var js = decodeURIComponent(q.js)
-      if (q.js.match(/^http/))
-        page.includeJs(js, save)
-      else {
-        fs.write('inject.js', js, 'w')
-        if (!page.injectJs('inject.js'))
-          console.log('Failed to inject JS')
-        save()
-        fs.remove('inject.js')
       }
-    }
-    else
-      save()
+      if (q.js) {
+        var js = decodeURIComponent(q.js)
+        if (q.js.match(/^http/))
+          page.includeJs(js, save)
+        else {
+          fs.write('inject.js', js, 'w')
+          if (!page.injectJs('inject.js'))
+            console.log('Failed to inject JS')
+          save()
+          fs.remove('inject.js')
+        }
+      }
+      else
+        save()
+    }, parseFloat(q.delay || 0))
   })
 }
 

@@ -115,7 +115,8 @@ To try this, [log in](../auth/simple?next=../capturehandler/) and then
 You can override the user by explicitly passing a cookie string using `?cookie=`.
 
 If `capture.js` was not started, or it terminated, you can restart it by adding
-`?start` to the URL.
+`?start` to the URL. It is safe to add `?start` even if the server is running. It
+restarts `capture.js` only if required.
 
 # Screenshot library
 
