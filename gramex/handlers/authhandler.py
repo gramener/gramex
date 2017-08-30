@@ -52,7 +52,7 @@ def csv_encode(values, *args, **kwargs):
 class AuthHandler(BaseHandler):
     '''The parent handler for all Auth handlers.'''
     @classmethod
-    def setup(cls, log={}, action=None, **kwargs):
+    def setup(cls, log={}, action=None, delay=None, session_expiry=None, **kwargs):
         # Switch SSL certificates if required to access Google, etc
         gramex.service.threadpool.submit(check_old_certs)
 
@@ -73,12 +73,15 @@ class AuthHandler(BaseHandler):
         cls.failed_logins = Counter()
         # Set delay for failed logins from the delay: parameter which can be a number or list
         default_delay = [1, 1, 5]
-        cls.delay = kwargs.get('delay')
+        cls.delay = delay
         if isinstance(cls.delay, list) and not all(isinstance(n, (int, float)) for n in cls.delay):
             app_log.warn('%s: Ignoring invalid delay: %r', cls.name, cls.delay)
             cls.delay = default_delay
         elif isinstance(cls.delay, (int, float)) or cls.delay is None:
             cls.delay = default_delay
+
+        # Set up session expiry
+        cls.session_expiry = session_expiry
 
         # Set up post-login actions
         if action is not None:
@@ -99,7 +102,7 @@ class AuthHandler(BaseHandler):
     def set_user(self, user, id):
         # When user logs in, change session ID and invalidate old session
         # https://www.owasp.org/index.php/Session_fixation
-        self.new_session()
+        self.get_session(expires_days=self.session_expiry, new=True)
         # The unique ID for a user varies across logins. For example, Google and
         # Facebook provide an "id", but for Twitter, it's "username". For LDAP,
         # it's "dn". Allow auth handlers to decide their own ID attribute and

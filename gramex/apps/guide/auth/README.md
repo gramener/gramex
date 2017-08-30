@@ -33,6 +33,9 @@ configuration in `gramex.yaml`. Here is the default configuration:
         session:
             expiry: 31                      # Session cookies expiry in days
 
+You can override session expiry duration with a `session_expiry: <days>` kwarg
+under any auth handler. See [session expiry](#session-expiry).
+
 The cookies are encrypted using the `app.settings.cookie_secret` key. Change
 this to a random secret value, either via `gramex --settings.cookie_secret=...`
 or in you `gramex.yaml`:
@@ -558,6 +561,31 @@ You can define your own logging handler for the `user` logger in the [log sectio
                 formatter: csv-message                  # Format message as-is. (Don't change this line)
 
 You can also use more sophisticated loggers such as [TimedRotatingFileHandler](https://docs.python.org/3/library/logging.handlers.html#logging.handlers.TimedRotatingFileHandler).
+
+## Session expiry
+
+Gramex sessions expire in 31 days by default. This is configured under
+`app.session.expiry`.
+
+All auth handlers accept a `session_expiry: <days>` kwarg that changes the expiry
+date when the user logs in with that handler. For example:
+
+    :::yaml
+    url:
+        auth/expiry:
+            pattern: /$YAMLURL/expiry
+            handler: SimpleAuth
+            kwargs:
+                session_expiry: 0.0003          # Session expires in 26 seconds
+                credentials: {alpha: alpha}
+
+<div class="example">
+  <a class="example-demo" href="expiry">Session expiry example</a>
+  <a class="example-src" href="http://code.gramener.com/s.anand/gramex/tree/master/gramex/apps/guide/auth/gramex.yaml">Source</a>
+</div>
+
+This can be used to configure sessions that have a long expiry (e.g. for mobile
+applications) or short expiry (e.g. for secure data applications.)
 
 
 # Automated logins

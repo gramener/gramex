@@ -234,6 +234,15 @@ url:
             auth:
                 login_url: /$YAMLURL/simple
 
+    auth/expiry:
+        pattern: /$YAMLURL/expiry
+        handler: SimpleAuth
+        kwargs:
+            session_expiry: 0.0003          # Session expires in 26 seconds
+            credentials: {alpha: alpha}
+            template: $YAMLPATH/expiry.html # Use this login template for the demo
+            redirect: /$YAMLURL/expiry
+
     auth/otp:
         pattern: /$YAMLURL/otp
         handler: FileHandler

@@ -1573,7 +1573,6 @@ url:
       use_ssl: true                       # Whether to use SSL or not
       user: 'uid={user},cn=users,cn=accounts,dc=demo1,dc=freeipa,dc=org'
       password: '{password}'
-      xsrf_cookies: false
 
   auth/ldap2-bind:                          # Test the "bind" mode of LDAP auth
     pattern: /auth/ldap2-bind
@@ -1589,7 +1588,6 @@ url:
         base: 'dc=example,dc=com'       # Search in this domain
         filter: '(mail={user})'         # Using a mail ID filter
         password: '{password}'          # and the password field as password
-      xsrf_cookies: false
 
   auth/ldap2-bind-wrong-bind:               # Test the "bind" mode of LDAP auth with a wrong bind
     pattern: /auth/ldap2-bind-wrong-bind
@@ -1605,7 +1603,6 @@ url:
         base: 'dc=example,dc=com'       # Search in this domain
         filter: '(mail={user})'         # Using a mail ID filter
         password: '{password}'          # and the password field as password
-      xsrf_cookies: false
 
   auth/simple:
     pattern: /auth/simple
@@ -1632,7 +1629,19 @@ url:
             action_set: true
         -
           function: ensure_single_session
-      xsrf_cookies: false
+
+  auth/expiry:
+    pattern: /auth/expiry
+    handler: SimpleAuth
+    kwargs:
+      session_expiry: 0.001
+      template: $YAMLPATH/auth.html
+      credentials:
+        alpha: alpha
+      redirect:
+        query: next
+        header: NEXT
+        url: /dir/index/
 
   auth/template:
     pattern: /auth/template
@@ -1664,7 +1673,6 @@ url:
           query: next
           header: NEXT
           url: /dir/index/
-      xsrf_cookies: false
 
   auth/functionhandler:
     pattern: /auth/functionhandler

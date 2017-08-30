@@ -88,7 +88,7 @@ class AuthBase(TestGramex):
 
         # Create form submission data
         data = {'user': user, 'password': password}
-        data['xsrf'] = tree.xpath('.//input[@name="_xsrf"]')[0].get('value')
+        data['_xsrf'] = tree.xpath('.//input[@name="_xsrf"]')[0].get('value')
 
         # Submitting the correct password redirects
         if headers is not None:
@@ -264,6 +264,24 @@ class TestSimpleAuth(AuthBase, LoginMixin, LoginFailureMixin):
             self.assertEqual(r.status_code, BAD_REQUEST)
             r = self.session.get(server.base_url + '/auth/session', params={'gramex-otp': otp})
             self.assertEqual(r.status_code, BAD_REQUEST)
+
+
+class TestExpiry(AuthBase):
+    # Just apply LoginMixin tests to AuthBase
+    @classmethod
+    def setUpClass(cls):
+        AuthBase.setUpClass()
+        cls.url = server.base_url + '/auth/expiry'
+
+    # Run additional tests for session and login features
+    def test_expiry(self, headers=None):
+        self.login('alpha', 'alpha')
+        expires = {c.name: c.expires for c in self.session.cookies}.get('sid', 0)
+        days = gramex.conf.url['auth/expiry'].kwargs.session_expiry
+        to_expire = time.time() + days * 24 * 60 * 60
+        self.assertLess(abs(to_expire - expires), 2)
+        session = self.session.get(server.base_url + '/auth/session', headers=headers).json()
+        self.assertLess(abs(to_expire - session.get('_t', 0)), 2)
 
 
 class TestAuthTemplate(TestGramex):

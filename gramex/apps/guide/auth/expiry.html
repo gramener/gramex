@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Session expiry</title>
+  <link rel="stylesheet" href="../style.css">
+  <link rel="stylesheet" href="form.css">
+</head>
+<body class="container">
+
+  <nav class="menu">
+    <h1><a href=".">Back to Auth</a></h1>
+  </nav>
+
+  <section class="content">
+    <h1>Session Expiry example</h1>
+
+    {% if error %}
+      <div class="alert">
+        <h2>Error logging in</h2>
+        <p><strong>code</strong> {{ error['code'] }}</p>
+        <p><strong>error</strong> {{ error['error'] }}</p>
+      </div>
+    {% end %}
+
+    {% import time %}
+    {% import json %}
+    {% import gramex %}
+    {% if handler.current_user %}
+      <p>Your are logged in as:</p>
+      <div class="codehilite"><pre>{{ json.dumps(handler.current_user, indent=4) }}</pre></div>
+    {% else %}
+      <p>You are not logged in.</p>
+    {% end %}
+
+    <p>Your session expires in {{ '{:,.0f}'.format(handler.session['_t'] - time.time()) }} seconds</p>
+
+    <p>You can log in below as <code>alpha</code> with password <code>alpha</code>.
+       When you log in, your session will expire in
+       {{ '{:,.0f}'.format(handler.conf.kwargs.session_expiry * 24 * 60 * 60) }} seconds.
+       But when you log in through other login pages like <a href="simple">simple</a>,
+       the session will expire only after {{ gramex.conf.app.session.expiry }} days.</p>
+
+    <form method="POST">
+      <input type="hidden" name="_xsrf" value="{{ handler.xsrf_token }}">
+      <label for="user">Username</label>
+      <input name="user" placeholder="Username">
+      <label for="password">Password</label>
+      <input name="password" type="password" placeholder="Password">
+      <button type="submit">Log in</button>
+    </form>
+  <section>
+
+</body>
+</html>

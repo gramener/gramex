@@ -94,15 +94,16 @@ class BaseMixin(object):
             return
         key = store_type, store_path = session_conf.get('type'), session_conf.get('path')
         flush = session_conf.get('flush')
-        if key not in session_store_cache:
-            if store_type == 'memory':
-                session_store_cache[key] = KeyStore(store_path, flush=flush, purge=cls._purge)
-            elif store_type == 'json':
-                session_store_cache[key] = JSONStore(store_path, flush=flush, purge=cls._purge)
-            elif store_type == 'hdf5':
-                session_store_cache[key] = HDF5Store(store_path, flush=flush, purge=cls._purge)
-            else:
-                raise NotImplementedError('Session type: %s not implemented' % store_type)
+        if key in session_store_cache:
+            pass
+        elif store_type == 'memory':
+            session_store_cache[key] = KeyStore(store_path, flush=flush, purge=cls._purge)
+        elif store_type == 'json':
+            session_store_cache[key] = JSONStore(store_path, flush=flush, purge=cls._purge)
+        elif store_type == 'hdf5':
+            session_store_cache[key] = HDF5Store(store_path, flush=flush, purge=cls._purge)
+        else:
+            raise NotImplementedError('Session type: %s not implemented' % store_type)
         cls._session_store = session_store_cache[key]
         cls.session = property(cls.get_session)
         cls._session_days = session_conf.get('expiry')
@@ -383,10 +384,10 @@ class BaseMixin(object):
         '''
         raise NotImplementedError('Specify a session: section in gramex.yaml')
 
-    def _set_new_session_id(self):
-        '''Sets a new random session ID. Returns a bytes object'''
+    def _set_new_session_id(self, expires_days):
+        '''Sets a new random session ID as the sid: cookie. Returns a bytes object'''
         session_id = b2a_base64(os.urandom(24))[:-1]
-        kwargs = dict(httponly=True, expires_days=self._session_days)
+        kwargs = dict(httponly=True, expires_days=expires_days)
         # Use Secure cookies on HTTPS to prevent leakage into HTTP
         if self.request.protocol == 'https':
             kwargs['secure'] = True
@@ -397,7 +398,7 @@ class BaseMixin(object):
             pass
         return session_id
 
-    def get_session(self):
+    def get_session(self, expires_days=None, new=False):
         '''
         Return the session object for the cookie "sid" value. If no "sid" cookie
         exists, set up a new one. If no session object exists for the sid,
@@ -405,44 +406,49 @@ class BaseMixin(object):
         "sid" value.
 
         The session is a dict. You must ensure that it is JSON serializable.
+
+        ``new=`` creates a new session to avoid session fixation.
+        https://www.owasp.org/index.php/Session_fixation.
+        :py:function:`gramex.handlers.authhandler.AuthHandler.set_user` uses it.
+        When the user logs in. If no old session exists, it returns a new session
+        object. If an old session exists, it creates a new session "sid" and new
+        session object, copying all old contents, but updates the "id" and expiry
+        (_t).
         '''
+        if expires_days is None:
+            expires_days = self._session_days
+        created_new_sid = False
         if getattr(self, '_session', None) is None:
-            session_id = self.get_secure_cookie('sid', max_age_days=self._session_days)
+            # Populate self._session based on the sid. If there's no sid cookie,
+            # generate one and create an associated session object
+            session_id = self.get_secure_cookie('sid', max_age_days=9999999)
             # If there's no session id cookie "sid", create a random 32-char cookie
             if session_id is None:
-                session_id = self._set_new_session_id()
+                session_id = self._set_new_session_id(expires_days)
+                created_new_sid = True
             # Convert bytes session to unicode before using
             session_id = session_id.decode('ascii')
-            expire = time.time() + self._session_days * 24 * 60 * 60
-            self._session = self._session_store.load(session_id, {'_t': expire})
+            # If there's no stored session associated with it, create it
+            expires = time.time() + expires_days * 24 * 60 * 60
+            self._session = self._session_store.load(session_id, {'_t': expires})
             # Overwrite id to the session ID even if a handler has changed it
             self._session['id'] = session_id
+        # At this point, the "sid" cookie and self._session exist and are synced
+
+        if new and not created_new_sid:
+            old_sid = self._session['id']
+            new_sid = self._set_new_session_id(expires_days).decode('ascii')
+            # Update expiry and new SID on session
+            self._session.update(id=new_sid, _t=time.time() + expires_days * 24 * 60 * 60)
+            # Delete old contents. No _t also means expired
+            self._session_store.dump(old_sid, {})
+
         return self._session
 
     def save_session(self):
         '''Persist the session object as a JSON'''
         if getattr(self, '_session', None) is not None:
             self._session_store.dump(self._session['id'], self._session)
-
-    def new_session(self):
-        '''Change "sid" cookie, while retaining all other session information'''
-        # Load the old session object into self._session
-        old_session = getattr(self, '_session', None)
-        if old_session is None:
-            session_id = self.get_secure_cookie('sid', max_age_days=self._session_days)
-            # If no sid exists, create a new one and return
-            if session_id is None:
-                return self.get_session()
-            session_id = session_id.decode('ascii')
-            # If the old session isn't in the store, set expiry (_t) to the past to clear it
-            old_session = self._session = self._session_store.load(session_id, {'_t': 0})
-            old_session['id'] = session_id
-        # Update session ID
-        old_sid = old_session['id']
-        self._session['id'] = new_sid = self._set_new_session_id().decode('ascii')
-        # Save data at the back end
-        self._session_store.dump(old_sid, {})
-        self._session_store.dump(new_sid, self._session)
 
     def otp(self, expire=60):
         '''
@@ -930,7 +936,7 @@ def check_membership(memberships):
     } for cond in memberships]
 
     def allowed(self):
-        user = self.session.get('user', {})
+        user = self.current_user
         for cond in conds:
             if _check_condition(cond, user):
                 yield True
