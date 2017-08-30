@@ -1,0 +1,4 @@
+url:
+  capturehandler-capture:
+    pattern: /$YAMLURL/capture
+    handler: CaptureHandler

@@ -55,7 +55,7 @@ Try it here:
 
 - [PDF screenshot](capture?ext=pdf)
 - [PNG screenshot](capture?ext=png)
-- [GIF screenshot](capture?ext=jpg)
+- [JPEG screenshot](capture?ext=jpg)
 - [GIF screenshot](capture?ext=gif)
 
 It accepts the following arguments:
@@ -99,8 +99,14 @@ In JavaScript:
 
 **Authentication is implicit**. The cookies passed to `capture` are passed to the
 `?url=` parameter. This is exactly as-if the user clicking the capture link were
-visiting the target page. You can override this by explicitly passing a cookie
-string using `?cookie=`.
+visiting the target page.
+
+To try this, [log in](../auth/simple?next=../capturehandler/) and then
+[take a screenshot](capture?ext=pdf).
+
+<iframe frameborder="0" src="../auth/session"></iframe>
+
+You can override the user by explicitly passing a cookie string using `?cookie=`.
 
 If `capture.js` was not started, or it terminated, you can restart it by adding
 `?start` to the URL.
