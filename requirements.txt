@@ -10,7 +10,7 @@ pathlib                   # Manipulate paths. Part of Python 3.3+
 orderedattrdict >= 1.4.3  # OrderedDict with attr access for configs
 watchdog >= 0.8           # Monitor file changes
 tornado >= 4.3            # Web server
-PyYAML >= 3.10            # Parse YAML files for config
+pyyaml >= 3.10            # Parse YAML files for config
 colorama >= 0.3.7         # Used by colorlog. Anaconda has colorama, but 0.3.7 fixes an exit-reset-code bug
 colorlog >= 2.7.0         # Coloured log files
 shutilwhich >= 1.1.0      # shutil.which backport
@@ -26,7 +26,7 @@ oauthlib >= 1.1.2         # OAuth request-signing
 
 # Optional dependencies (batteries included principle)
 markdown                  # For Markdown transfroms
-PyMySQL                   # For MySQL connections
+pymysql                   # For MySQL connections
 ipdb                      # For debugging
 textblob                  # For Gramex Guide TwitterRESTHandler example
 psycopg2 >= 2.7.1         # For PostgreSQL connections
