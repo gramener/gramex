@@ -225,7 +225,10 @@ def _filter_frame(data, meta, controls, args):
 
         # Apply type conversion for values
         conv = data[col].dtype.type
-        vals = tuple(conv(val) for val in vals)
+        vals = tuple(conv(val) for val in vals if val)
+        if len(vals) == 0:
+            meta['ignored'].append((key, vals))
+            continue
 
         # Apply filters
         if op == '':

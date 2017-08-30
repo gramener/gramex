@@ -96,6 +96,37 @@ To control the output, you can use these control arguments:
 - [?_c=Continent&_c=Name](flags?_c=Continent&_c=Name&_format=html) ► show only the Continent and Names columns
 - [?_c=-Continent&_c=-Name](flags?_c=-Continent&_c=-Name&_format=html) ► show all columns except the Continent and Names columns
 
+## FormHandler forms
+
+FormHandler is designed to work without JavaScript. For example:
+
+    :::html
+    <form action="flags">
+      <p><label><input name="Name~"> Search for country name</label></p>
+      <p><label><input name="c1>~" type="number" min="0" max="100"> Min c1 value</label></p>
+      <p><label><input name="c1<~" type="number" min="0" max="100"> Max c1 value</label></p>
+      <p><select name="_sort">
+        <option value="c1">Sort by c1 ascending</option>
+        <option value="-c2">Sort by c1 descending</option>
+      </select></p>
+      <input type="hidden" name="_format" value="html">
+      <button type="submit">Filter</button>
+    </form>
+
+<form action="flags">
+  <p><label><input name="Name~" value="stan"> Country search</label></p>
+  <p><label><input name="c1>~" type="number" min="0" max="100" value="0"> Min c1 value</label></p>
+  <p><label><input name="c1<~" type="number" min="0" max="100" value="50"> Max c1 value</label></p>
+  <p><select name="_sort">
+    <option value="c1">Sort by c1 ascending</option>
+    <option value="-c2">Sort by c1 descending</option>
+  </select></p>
+  <button type="submit">Apply filters</button>
+  <input type="hidden" name="_format" value="html">
+</form>
+
+This form filters without using any JavaScript code. It applies the URL query
+parameters directly.
 
 ## FormHandler transforms
 

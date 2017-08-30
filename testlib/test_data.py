@@ -63,6 +63,10 @@ class TestFilter(unittest.TestCase):
                sales[(sales['city'] > 'Bangalore') & (sales['city'] < 'Singapore')])
         eq_(set(m['filters']), {('city', '>', ('Bangalore',)), ('city', '<', ('Singapore',))})
 
+        # Ignore empty columns
+        m = eq({'city': ['Hyderabad', 'Coimbatore', ''], 'c1': [''], 'c2>': [''], 'city~': ['']},
+               sales[sales['city'].isin(['Hyderabad', 'Coimbatore'])])
+
         m = eq({'city>~': ['Bangalore'], 'city<~': ['Singapore']},
                sales[(sales['city'] >= 'Bangalore') & (sales['city'] <= 'Singapore')])
         eq_(set(m['filters']), {('city', '>~', ('Bangalore',)), ('city', '<~', ('Singapore',))})

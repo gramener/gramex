@@ -11,7 +11,7 @@ class TestMembership(unittest.TestCase):
     '''Test check_membership'''
 
     def check(self, condition, **kwargs):
-        user = AttrDict(session=AttrDict(user=AttrDict(kwargs)))
+        user = AttrDict(current_user=AttrDict(kwargs))
         self.assertEqual(all(self.auth(user)), condition)
 
     def test_no_condition(self):
