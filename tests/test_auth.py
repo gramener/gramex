@@ -71,17 +71,19 @@ class AuthBase(TestGramex):
         cls.session = requests.Session()
 
     @staticmethod
-    def redirect_kwargs(query_next, header_next):
+    def redirect_kwargs(query_next, header_next, referer):
         # Get the login page
         params, headers = {}, {}
         if query_next is not None:
             params['next'] = query_next
         if header_next is not None:
             headers['NEXT'] = header_next
+        if referer is not None:
+            headers['Referer'] = referer
         return {'params': params, 'headers': headers}
 
-    def login(self, user, password, query_next=None, header_next=None, headers={}):
-        params = self.redirect_kwargs(query_next, header_next)
+    def login(self, user, password, query_next=None, header_next=None, referer=None, headers={}):
+        params = self.redirect_kwargs(query_next, header_next, referer)
         r = self.session.get(self.url, **params)
         tree = lxml.html.fromstring(r.text)
         self.assertEqual(tree.xpath('.//h1')[0].text, 'Auth')
@@ -282,6 +284,25 @@ class TestExpiry(AuthBase):
         self.assertLess(abs(to_expire - expires), 2)
         session = self.session.get(server.base_url + '/auth/session', headers=headers).json()
         self.assertLess(abs(to_expire - session.get('_t', 0)), 2)
+
+
+class TestAuthRedirect(AuthBase):
+    # Just apply LoginMixin tests to AuthBase
+    @classmethod
+    def setUpClass(cls):
+        AuthBase.setUpClass()
+        cls.url = server.base_url + '/auth/simple-no-redirect'
+
+    def test_redirect(self):
+        next_url, ref_url = '/dir/index.html', '/dir/beta.html'
+        # By default, if no redirect is specified, then ?next= is used
+        self.login_ok('alpha', 'alpha', query_next=next_url, check_next=next_url)
+        # If ?next= is missing, Referer is used
+        self.login_ok('alpha', 'alpha', referer=ref_url, check_next=ref_url)
+        # But ?next= takes precedence over Refer
+        self.login_ok('alpha', 'alpha', query_next=next_url, referer=ref_url, check_next=next_url)
+        # If neither is specified, use /
+        self.login_ok('alpha', 'alpha', check_next='/')
 
 
 class TestAuthTemplate(TestGramex):

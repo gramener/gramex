@@ -58,7 +58,7 @@ class AuthHandler(BaseHandler):
 
         # Set up default redirection based on ?next=...
         if 'redirect' not in kwargs:
-            kwargs['redirect'] = AttrDict(query='next')
+            kwargs['redirect'] = AttrDict(query='next', header='Referer')
         super(AuthHandler, cls).setup(**kwargs)
 
         # Set up logging for login/logout events

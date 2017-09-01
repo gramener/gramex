@@ -1634,6 +1634,14 @@ url:
           function: ensure_single_session
       xsrf_cookies: false
 
+  auth/simple-no-redirect:
+    pattern: /auth/simple-no-redirect
+    handler: SimpleAuth
+    kwargs:
+      template: $YAMLPATH/auth.html
+      credentials:
+        alpha: alpha
+
   auth/expiry:
     pattern: /auth/expiry
     handler: SimpleAuth
