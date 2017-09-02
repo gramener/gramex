@@ -360,7 +360,7 @@ class BaseMixin(object):
             try:
                 result = self.error[status_code]['function'](
                     status_code=status_code, kwargs=kwargs, handler=self)
-                self._write_headers(self.error[status_code]['conf'].get('headers', {}).items())
+                self._write_headers(self.error[status_code].get('conf', {}).get('headers', {}).items())
                 # result may be a generator / list from build_transform,
                 # or a str/bytes/unicode from Template.generate. Handle both
                 if isinstance(result, (six.string_types, six.binary_type)):
