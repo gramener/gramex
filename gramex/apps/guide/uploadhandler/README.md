@@ -67,7 +67,7 @@ handling it. This is specified by the `overwrite:` key in `gramex.yaml`.
     kwargs:
         path: ...
         if_exists: error        # Raises a HTTP 403 with a reason saying "file exists"
-        if_exists: backup       # Move the original to filename.YYYYMMDD-HHMMSS
+        if_exists: backup       # Move the original to filename.YYYYMMDD-HHMMSS.ext
         if_exists: overwrite    # Overwrite the original without backup
         if_exists: unique       # Save to a new file: filename.1, filename.2, etc
 

@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 import os
+import re
 import six
 import shutil
 import requests
@@ -118,7 +119,9 @@ class TestUploadHandler(TestGramex):
             eq_(r.status_code, OK)
             eq_(read(os.path.join(base, path)), read('userdata.csv'))
             backup = r.json()['upload'][0].get('backup', None)
-            ok_('{}.{:%Y%m%d-%H}'.format(path, datetime.now()) in backup)
+            name, ext = os.path.splitext(path)
+            backup_re = r'{}.{:%Y%m%d-%H}\d\d\d\d{}'.format(name, datetime.now(), ext)
+            ok_(re.match(backup_re, backup))
             eq_(read(os.path.join(base, backup)), read('actors.csv'))
 
     def test_upload_transform(self):

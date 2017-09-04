@@ -90,7 +90,8 @@ class FileUpload(object):
                     i += 1
                 filepath = name_pattern % i
             elif if_exists == 'backup':
-                backup = '{}.{:%Y%m%d-%H%M%S}'.format(filepath, datetime.now())
+                name, ext = os.path.splitext(filepath)
+                backup = '{}.{:%Y%m%d-%H%M%S}{}'.format(name, datetime.now(), ext)
                 shutil.copyfile(filepath, backup)
                 filemeta['backup'] = os.path.relpath(backup, self.path).replace(os.path.sep, '/')
             elif if_exists != 'overwrite':
