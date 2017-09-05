@@ -344,7 +344,11 @@ class BaseMixin(object):
         '''Write headers from a list of pairs that may be duplicated'''
         headers_written = set()
         for name, value in headers:
-            if name in headers_written:
+            # If value is explicitly False or None, clear header.
+            # This gives a way to clear pre-set headers like the Server header
+            if value is False or value is None:
+                self.clear_header(name)
+            elif name in headers_written:
                 self.add_header(name, value)
             else:
                 self.set_header(name, value)
@@ -360,7 +364,8 @@ class BaseMixin(object):
             try:
                 result = self.error[status_code]['function'](
                     status_code=status_code, kwargs=kwargs, handler=self)
-                self._write_headers(self.error[status_code].get('conf', {}).get('headers', {}).items())
+                headers = self.error[status_code].get('conf', {}).get('headers', {})
+                self._write_headers(headers.items())
                 # result may be a generator / list from build_transform,
                 # or a str/bytes/unicode from Template.generate. Handle both
                 if isinstance(result, (six.string_types, six.binary_type)):
@@ -528,12 +533,12 @@ class BaseHandler(RequestHandler, BaseMixin):
             method(self)
 
     def set_default_headers(self):
-        self.set_header('Server', server_header)
         # Only set BaseHandler headers.
         # Don't set headers for the specific class. Those are overrides handled
         # by the respective classes, not the default headers.
-        for key, val in objectpath(conf, 'handlers.BaseHandler.headers', {}).items():
-            self.set_header(key, val)
+        headers = [('Server', server_header)]
+        headers += list(objectpath(conf, 'handlers.BaseHandler.headers', {}).items())
+        self._write_headers(headers)
 
     def on_finish(self):
         # Loop through class-level callbacks

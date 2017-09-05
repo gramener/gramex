@@ -43,7 +43,7 @@ class TestSession(TestGramex):
         # Test expiry date. It should be within a few seconds of now, plus expiry date
         self.assertIn('_t', self.data1)
         diff = time.time() + gramex.conf.app.session.expiry * 24 * 60 * 60 - self.data1['_t']
-        self.assertLess(abs(diff), 2)
+        self.assertLess(abs(diff), 3)
 
         # Test persistence under graceful shutdown
         server.stop_gramex()
@@ -71,7 +71,7 @@ class AuthBase(TestGramex):
         cls.session = requests.Session()
 
     @staticmethod
-    def redirect_kwargs(query_next, header_next, referer):
+    def redirect_kwargs(query_next, header_next, referer=None):
         # Get the login page
         params, headers = {}, {}
         if query_next is not None:
@@ -299,7 +299,7 @@ class TestAuthRedirect(AuthBase):
         self.login_ok('alpha', 'alpha', query_next=next_url, check_next=next_url)
         # If ?next= is missing, Referer is used
         self.login_ok('alpha', 'alpha', referer=ref_url, check_next=ref_url)
-        # But ?next= takes precedence over Refer
+        # But ?next= takes precedence over Referer
         self.login_ok('alpha', 'alpha', query_next=next_url, referer=ref_url, check_next=next_url)
         # If neither is specified, use /
         self.login_ok('alpha', 'alpha', check_next='/')
