@@ -1,12 +1,13 @@
 from __future__ import unicode_literals
 
+import os
 import six
 import json
 import time
 import datetime
 import tornado.httpclient
 from oauthlib import oauth1
-from tornado.ioloop import IOLoop
+from tornado.ioloop import IOLoop, PeriodicCallback
 from tornado.httputil import HTTPHeaders, parse_response_start_line
 from six.moves.urllib_parse import urlencode
 from gramex.config import app_log
@@ -20,12 +21,21 @@ class TwitterStream(object):
     Starts a Twitter Streaming client. Sample usage::
 
         >>> from gramex.transforms import TwitterStream
-        >>> stream = TwitterStream(track='modi,mms', path='save-as-file.json',
-        ...                        key=..., secret=...,
-        ...                        access_key=..., access_secret=...)
+        >>> stream = TwitterStream(
+        ...     track='modi,mms',
+        ...     path='save-as-file.json',
+        ...     key='...',
+        ...     secret='...',
+        ...     access_key='...',
+        ...     access_secret='...',
+        ...     flush=True)
 
     This saves all tweets mentioning ``modi`` or ``mms`` in ``save-as-file.json``
     with each line representing a tweet in JSN format.
+
+    If ``flush=True``, the file is flushed on every tweet. If ``flush=<number>``,
+    the file is flushed every ``<number>`` seconds. If ``flush=False`` (default),
+    the file is flushed only when the file or app is closed.
 
     This function runs forever, so run it in a separate thread.
     '''
@@ -40,7 +50,7 @@ class TwitterStream(object):
 
         # Set up writers
         if 'path' in kwargs:
-            self.stream = StreamWriter(kwargs['path'])
+            self.stream = StreamWriter(kwargs['path'], flush=kwargs.get('flush', False))
             self.process_bytes = self.stream.write
         elif 'function' in kwargs:
             self.process_json = build_transform(
@@ -174,10 +184,21 @@ class TwitterStream(object):
 
 
 class StreamWriter(object):
-    def __init__(self, path):
+    def __init__(self, path, flush=False):
         self.path = path
-        self.stream = self.stream_path = None
+        self.stream = self.stream_path = self.flush_on_write = None
+        if isinstance(flush, bool):
+            self.flush_on_write = flush
+        elif isinstance(flush, (int, float)):
+            self.flush_loop = PeriodicCallback(self.flush, flush * 1000)
+            self.flush_loop.start()
+        else:
+            raise ValueError('flush=%r is not int/bool' % flush)
         self.rotate()
+
+    def flush(self):
+        if self.stream is not None:
+            self.stream.flush()
 
     def rotate(self):
         '''
@@ -193,16 +214,17 @@ class StreamWriter(object):
         i.e. based on ``hours``, ``days``, ``weeks``, etc. It defaults to every
         minute.
         '''
-        # First, flush the stream to ensure that data is not lost
-        if self.stream is not None:
-            self.stream.flush()
-
-        # Set up new stream (if required, based on the filename)
+        # First, flush the stream to ensure that data is not lost.
+        # Then set up new stream (if required, based on the filename)
+        self.flush()
         path = self.path.format(datetime.datetime.utcnow())
         if path != self.stream_path:
             if self.stream is not None:
                 self.stream.close()
             self.stream_path = path
+            folder = os.path.dirname(os.path.abspath(path))
+            if not os.path.exists(folder):
+                os.makedirs(folder)
             self.stream = open(path, 'ab')
             app_log.debug('StreamWriter writing to %s', path)
 
@@ -212,3 +234,5 @@ class StreamWriter(object):
     def write(self, data):
         self.stream.write(data)
         self.stream.write('\n')
+        if self.flush_on_write:
+            self.stream.flush()
