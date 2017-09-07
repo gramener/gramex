@@ -1793,6 +1793,24 @@ url:
           user: beta
         template: 403-template.html
 
+  pptx/source:
+    pattern: /pptx/source
+    handler: PPTXHandler
+    kwargs:
+      source: template.pptx
+  pptx/change-text:
+    pattern: /pptx/change-text
+    handler: PPTXHandler
+    kwargs:
+      source: template.pptx
+      change-text:
+        slide-number: 1
+        Text1: {text: New Text1}
+        Arabic: {text: سعيد}
+        Chinese: {text: 高兴}
+        Hindi: {text: खुश}
+        Russian: {text: счастливый}
+
   xsrf:
     pattern: /xsrf
     handler: FunctionHandler

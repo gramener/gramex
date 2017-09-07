@@ -32,6 +32,9 @@ tests/**/gen.*
 !testlib/*.xlsx
 !gramex/apps/**/*.csv
 
+*.ppt*
+!tests/template.pptx
+
 # Don't commit databases created by test cases
 tests/*.db
 
@@ -46,7 +49,6 @@ tests/uploads
 # Documents
 *.doc*
 *.pdf
-*.ppt*
 
 # Avoid media files
 *.avi

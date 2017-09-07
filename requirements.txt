@@ -23,6 +23,7 @@ cachetools >= 1.1.6       # services.cache for memory cache
 diskcache >= 2.8.3        # services.cache for disk cache
 futures >= 3.0.5 ; python_version < '3'   # handlers.datahandler uses futures (backport for 2.7)
 oauthlib >= 1.1.2         # OAuth request-signing
+pptgen                    # PPTXHandler
 
 # Optional dependencies (batteries included principle)
 markdown                  # For Markdown transfroms
