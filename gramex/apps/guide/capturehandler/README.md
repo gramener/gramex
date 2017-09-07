@@ -70,6 +70,7 @@ It accepts the following arguments:
 
 - `?url=`: URL to take a screenshot of. This defaults to `Referer` header. So if
   you link to a `capture` page, the source page is generally used.
+- `?file=`: screenshot file name. Defaults to `screenshot`
 - `?ext=`: format of output. Can be pdf, png, gif or jpg
 - `?selector=`: Restrict screenshot to (optional) CSS selector in URL
 - `?delay=`: milliseconds to wait for before taking a screenshot. This value must
