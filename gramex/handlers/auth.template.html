@@ -40,7 +40,7 @@
     </div>
   {% end %}
 
-  {% set kwargs = handler.conf.kwargs %}
+  {% set kwargs = handler.kwargs %}
   {% try %}{% set user = kwargs.user.arg %}{% except %}{% set user = 'user' %}{% end %}
   {% try %}{% set password = kwargs.password.arg %}{% except %}{% set password = 'password' %}{% end %}
   <form method="POST">

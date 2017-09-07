@@ -127,8 +127,8 @@ class FileHandler(BaseHandler):
             cls.root = Path(path).absolute()
         cls.default_filename = default_filename
         cls.index = index
-        cls.ignore = cls.set(cls.conf.kwargs.ignore)
-        cls.allow = cls.set(cls.conf.kwargs.allow)
+        cls.ignore = cls.set(cls.kwargs.ignore)
+        cls.allow = cls.set(cls.kwargs.allow)
         cls.index_template = read_template(
             Path(index_template) if index_template is not None else _default_index_template)
         cls.headers = dict(objectpath(gramex_conf, 'handlers.FileHandler.headers', {}))

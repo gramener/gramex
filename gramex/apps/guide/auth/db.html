@@ -24,8 +24,8 @@
       </div>
     {% end %}
 
-    {% set url = handler.conf.kwargs.url %}
-    {% set table = handler.conf.kwargs.table %}
+    {% set url = handler.kwargs.url %}
+    {% set table = handler.kwargs.table %}
     <p>This form will log in using the credentials in the <code>{{ table }}</code> table of <code>{{ url }}</code>.</p>
     <p>You can log in as <code>alpha</code>, <code>beta</code>, <code>gamma</code> or <code>delta</code>. The password is the same as the username.</p>
 
@@ -38,7 +38,7 @@
       <button type="submit">Log in</button>
     </form>
 
-    {% if handler.conf.kwargs.get('forgot') %}
+    {% if handler.kwargs.get('forgot') %}
       <p><a href="?{{ kwargs.forgot.key }}">Forgot your password?</a></p>
     {% end %}
   <section>

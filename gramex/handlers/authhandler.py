@@ -160,30 +160,30 @@ class GoogleAuth(AuthHandler, GoogleOAuth2Mixin):
         else:
             self.save_redirect_page()
             # Ensure user-specified scope has 'profile' and 'email'
-            scope = self.conf.kwargs.get('scope', [])
+            scope = self.kwargs.get('scope', [])
             scope = scope if isinstance(scope, list) else [scope]
             scope = list(set(scope) | {'profile', 'email'})
             # Ensure extra_params has auto approval prompt
-            extra_params = self.conf.kwargs.get('extra_params', {})
+            extra_params = self.kwargs.get('extra_params', {})
             if 'approval_prompt' not in extra_params:
                 extra_params['approval_prompt'] = 'auto'
             # Return the list
             yield self.authorize_redirect(
                 redirect_uri=redirect_uri,
-                client_id=self.conf.kwargs['key'],
+                client_id=self.kwargs['key'],
                 scope=scope,
                 response_type='code',
                 extra_params=extra_params)
 
     @_auth_return_future
     def get_authenticated_user(self, redirect_uri, code, callback):
-        '''Override this method to use self.conf.kwargs instead of self.settings'''
+        '''Override this method to use self.kwargs instead of self.settings'''
         http = self.get_auth_http_client()
         body = urllib_parse.urlencode({
             'redirect_uri': redirect_uri,
             'code': code,
-            'client_id': self.conf.kwargs['key'],
-            'client_secret': self.conf.kwargs['secret'],
+            'client_id': self.kwargs['key'],
+            'client_secret': self.kwargs['secret'],
             'grant_type': 'authorization_code',
         })
         http.fetch(self._OAUTH_ACCESS_TOKEN_URL,
@@ -199,8 +199,8 @@ class FacebookAuth(AuthHandler, FacebookGraphMixin):
         if self.get_argument('code', False):
             user = yield self.get_authenticated_user(
                 redirect_uri=redirect_uri,
-                client_id=self.conf.kwargs['key'],
-                client_secret=self.conf.kwargs['secret'],
+                client_id=self.kwargs['key'],
+                client_secret=self.kwargs['secret'],
                 code=self.get_argument('code'))
             self.set_user(user, id='id')
             self.redirect_next()
@@ -208,9 +208,9 @@ class FacebookAuth(AuthHandler, FacebookGraphMixin):
             self.save_redirect_page()
             yield self.authorize_redirect(
                 redirect_uri=redirect_uri,
-                client_id=self.conf.kwargs['key'],
+                client_id=self.kwargs['key'],
                 extra_params={
-                    'fields': ','.join(self.conf.kwargs.get('fields', [
+                    'fields': ','.join(self.kwargs.get('fields', [
                         'name', 'email', 'first_name', 'last_name', 'gender',
                         'link', 'username', 'locale', 'timezone',
                     ])),
@@ -230,7 +230,7 @@ class TwitterAuth(AuthHandler, TwitterMixin):
                                              self.request.host + self.request.uri)
 
     def _oauth_consumer_token(self):
-        return dict(key=self.conf.kwargs['key'], secret=self.conf.kwargs['secret'])
+        return dict(key=self.kwargs['key'], secret=self.kwargs['secret'])
 
 
 class LDAPAuth(AuthHandler):
@@ -251,7 +251,7 @@ class LDAPAuth(AuthHandler):
     }
 
     def report_error(self, code, exc_info=False):
-        error = self.errors[code].format(host=self.conf.kwargs.host, args=self.args)
+        error = self.errors[code].format(host=self.kwargs.host, args=self.args)
         app_log.error('LDAP: ' + error, exc_info=exc_info)
         self.set_status(status_code=401)
         self.set_header('Auth-Error', code)
@@ -275,7 +275,7 @@ class LDAPAuth(AuthHandler):
     def post(self):
         import ldap3
         import json
-        kwargs = self.conf.kwargs
+        kwargs = self.kwargs
         # First, bind the server with the provided user ID and password.
         q = {key: vals[0] for key, vals in self.args.items()}
         server = ldap3.Server(kwargs.host, kwargs.get('port'), kwargs.get('use_ssl', True))

@@ -38,7 +38,10 @@ class BaseMixin(object):
         cls._on_init_methods = []
         cls._on_finish_methods = []
 
+        # handler.kwargs returns kwargs with BaseHandler kwargs removed
+        cls.kwargs = AttrDict(kwargs)
         cls.setup_default_kwargs()
+
         cls.setup_transform(transform)
         cls.setup_redirect(redirect)
         # Note: call setup_session before setup_auth to ensure that
@@ -57,9 +60,9 @@ class BaseMixin(object):
     @classmethod
     def setup_default_kwargs(cls):
         '''Use configs under handlers.<ClassName>.* as the default for kwargs'''
-        merge(cls.conf.setdefault('kwargs', {}),
-              objectpath(conf, 'handlers.' + cls.conf.handler, {}),
-              mode='setdefault')
+        update = objectpath(conf, 'handlers.' + cls.conf.handler, {})
+        merge(cls.conf.setdefault('kwargs', {}), update, mode='setdefault')
+        merge(cls.kwargs, update, mode='setdefault')
 
     @classmethod
     def setup_transform(cls, transform):

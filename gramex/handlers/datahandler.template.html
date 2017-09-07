@@ -35,7 +35,7 @@
 
   <h2>Configuration</h2>
   {% import yaml %}
-  <pre>{{ yaml.dump(handler.conf.kwargs, default_flow_style=False) }}</pre>
+  <pre>{{ yaml.dump(handler.kwargs, default_flow_style=False) }}</pre>
 
   <script>
   document.querySelector('.data').removeAttribute('border')

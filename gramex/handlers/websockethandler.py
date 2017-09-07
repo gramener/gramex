@@ -36,7 +36,7 @@ class WebSocketHandler(BaseWebSocketHandler):
                     filename='url:%s.%s' % (cls.name, method)))
 
     def check_origin(self, origin):
-        origins = self.conf.kwargs.get('origins', [])
+        origins = self.kwargs.get('origins', [])
         if not origins:
             return True
         if isinstance(origins, string_types):

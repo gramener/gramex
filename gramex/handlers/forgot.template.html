@@ -54,7 +54,7 @@
 
     {# Step 2: User submitted username / password #}
     {% else %}
-      {% set kwargs = handler.conf.kwargs %}
+      {% set kwargs = handler.kwargs %}
       {% if not error %}
         {% try %}{% set user = kwargs.user.arg %}{% except %}{% set user = 'user' %}{% end %}
         {% try %}{% set email = kwargs.forgot.email_column %}{% except %}{% set email = 'email' %}{% end %}

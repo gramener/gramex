@@ -24,8 +24,8 @@
       </div>
     {% end %}
 
-    {% set host = handler.conf.kwargs.host %}
-    {% set bind = handler.conf.kwargs.get('bind', None) %}
+    {% set host = handler.kwargs.host %}
+    {% set bind = handler.kwargs.get('bind', None) %}
     <p>This form will connect to <code>{{ host }}</code>.</p>
     {% if host.endswith('freeipa.org') %}
       <p><a href="http://www.freeipa.org/page/Demo">See list of logins</a>. You can log in as <code>employee{{ '@demo1.freeipa.org' if bind else '' }}</code> with password <code>Secret123</code>.</p>
