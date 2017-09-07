@@ -41,6 +41,14 @@ port:
                 cmd: phantomjs --ssl-protocol=any /path/to/capture.js --port=9902
                 url: http://localhost:9902/
 
+By default, requests timeout within 10 seconds. To change this, use `timeout:`.
+
+    :::yaml
+            pattern: /$YAMLURL/capture
+            handler: CaptureHandler
+            kwargs:
+                timeout: 20     # Wait for max 20 seconds for server to respond
+
 # Screenshot service
 
 You can add a link from any page to the `capture` page to take a screenshot.
@@ -64,7 +72,8 @@ It accepts the following arguments:
   you link to a `capture` page, the source page is generally used.
 - `?ext=`: format of output. Can be pdf, png, gif or jpg
 - `?selector=`: Restrict screenshot to (optional) CSS selector in URL
-- `?delay=`: milliseconds to wait for before taking a screenshot
+- `?delay=`: milliseconds to wait for before taking a screenshot. This value must
+  be less than the `timeout:` set in the `kwargs:` section
 - `?format=`: A3, A4, A5, Legal, Letter or Tabloid. Defaults to A4. For PDF
 - `?orientation=`: portrait or landscape. Defaults to portrait. For PDF
 - `?header=`: header for the page. For PDF
