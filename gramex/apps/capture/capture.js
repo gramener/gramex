@@ -99,10 +99,16 @@ function render(q, callback) {
   }
 
   // In case PhantomJS is unable to load the page, log the error
-  page.onResourceError = function(resourceError) {
-    error.msg.push(resourceError)
-    console.error('Error: ' + resourceError.url + ': ' + resourceError.errorString)
+  page.onResourceError = function(r) {
+    error.msg.push(r)
+    console.error('ERR:', r.errorCode, r.url, r.errorString)
   }
+
+  var debug = +q.debug
+  if (debug >= 2)
+    page.onResourceRequested = function(r) { console.log('REQ:', r.url) }
+  if (debug >= 1)
+    page.onResourceReceived = function(r) { console.log('GOT:', r.status, r.statusText, r.url) }
 
   // Open the page
   console.log('Opening', q.url)

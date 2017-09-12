@@ -131,6 +131,8 @@ class Capture(object):
     @tornado.gen.coroutine
     def capture_async(self, **kwargs):
         '''
+        Returns a screenshot of the URL. Runs asynchronously in Gramex. Arguments
+        are same as :py:func:`capture`
         '''
         # If ?start is provided, start server and wait until timeout
         if 'start' in kwargs:
@@ -162,6 +164,7 @@ class Capture(object):
         :arg int width: screen width. Default: 1200. For PNG/GIF/JPG
         :arg int height: screen height. Default: 768. For PNG/GIF/JPG
         :arg float scale: zooms the screen by a factor. For PNG/GIF/JPG
+        :arg int debug: sets log level for HTTP requests (2) and responses (1)
         :return: a bytestring with the binary contents of the screenshot
         :rtype: bytes
         :raises RuntimeError: if capture.js is not running or fails
@@ -245,6 +248,7 @@ class CaptureHandler(BaseHandler):
             format={'choices': ['A3', 'A4', 'A5', 'Legal', 'Letter', 'Tabloid'], 'default': 'A4'},
             orientation={'choices': ['portrait', 'landscape'], 'default': 'portrait'},
             start={},
+            debug={},
         )
         if args['url'] is None:
             self.write('Missing ?url=')
