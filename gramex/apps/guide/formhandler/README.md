@@ -166,13 +166,24 @@ on top of this query. For example:
 - [query](query?_format=html) returns data grouped by Continent
 - [query?num>=20](query?num>=20&_format=html) ► continents where number of countries > 20
 
-**NOTE:** The `query` is passed as-is to the DB driver. Remember 2 things:
+The query string is string-formatted using the arguments. For example:
 
-1. Escape strings based on the driver. E.g. `... WHERE col LIKE '%.com'` should
-   be `... WHERE col LIKE '%%.com'` for
-   [pymysql](http://pymysql.readthedocs.io/en/latest/), since `%` is treated as a
-   formatting string.
-1. Use the correct SQL flavour. E.g. SQL Server, uses `SELECT TOP 10 FROM table`
+    :::yaml
+          query: 'SELECT {group}, COUNT(*) FROM table GROUP BY {group}'
+
+will group by whatever is passed as `?group=`. For example, `?group=city` returns
+`SELECT city, COUNT(*) FROM table GROUP BY city`.
+
+**WARNING**:
+
+1. `query` ignores URL query parameters with spaces. `?group=city name` or
+   `?group=city+name` **WON'T** select the `"city name"` column. It will fail --
+   to avoid [SQL injection](https://en.wikipedia.org/wiki/SQL_injection) attack.
+2. The `query` is passed as-is to the DB driver. Escape strings based on the
+   driver. E.g. `... WHERE col LIKE '%.com'` should be `... WHERE col LIKE
+   '%%.com'` for [pymysql](http://pymysql.readthedocs.io/en/latest/), since `%`
+   is treated as a formatting string.
+3. Use the correct SQL flavour. E.g. SQL Server, uses `SELECT TOP 10 FROM table`
    instead of `SELECT * FROM table LIMIT 10`.
 
 ## FormHandler defaults

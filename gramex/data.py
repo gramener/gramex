@@ -5,6 +5,7 @@ from __future__ import unicode_literals
 
 import io
 import os
+import re
 import six
 import sqlalchemy
 import pandas as pd
@@ -29,10 +30,12 @@ def filter(url, args={}, meta={}, engine=None, table=None, ext=None,
     :arg source url: Pandas DataFrame, sqlalchemy URL or file name
     :arg dict args: URL query parameters as a dict of lists. Pass handler.args or parse_qs results
     :arg dict meta: this dict is updated with metadata during the course of filtering
-    :arg string table: table name (if url is an SQLAlchemy URL)
+    :arg string table: table name (if url is an SQLAlchemy URL), ``.format``-ed
+        using ``args``.
     :arg string ext: file extension (if url is a file). Defaults to url extension
-    :arg string query: optional SQL query to execute (if url is a database).
-        Loads entire query result in memory before filtering
+    :arg string query: optional SQL query to execute (if url is a database),
+        ``.format``-ed using ``args``. Loads entire result in memory before
+        filtering.
     :arg function transform: optional in-memory transform. Takes a DataFrame and
         returns a DataFrame. Applied to both file and SQLAlchemy urls.
     :arg dict kwargs: Additional parameters are passed to
@@ -49,7 +52,22 @@ def filter(url, args={}, meta={}, engine=None, table=None, ext=None,
     ... then calling the handler with ``?x=1&y=2`` returns all rows in
     ``dataframe`` where x is 1 and y is 2.
 
-    The URL supports operators like this:
+    If a table or query is passsed to an SQLAlchemy url, it is formatted using
+    ``args``. For example::
+
+        data = gramex.data.filter('mysql://server/db', table='{xxx}', args=handler.args)
+
+    ... when passed ``?xxx=sales`` returns rows from the sales table. Similarly::
+
+        data = gramex.data.filter('mysql://server/db', args=handler.args,
+                                  query='SELECT {col}, COUNT(*) FROM table GROUP BY {col}')
+
+    ... when passsed ``?col=City`` replaces ``{col}`` with ``City``.
+
+    **NOTE**: To avoid SQL injection attacks, only values without spaces are
+    allowed. So ``?col=City Name`` or ``?col=City+Name`` **will not** work.
+
+    The URL supports operators filter like this:
 
     - ``?x=val`` selects x == val
     - ``?x!=val`` selects x != val
@@ -151,10 +169,12 @@ def filter(url, args={}, meta={}, engine=None, table=None, ext=None,
     elif engine == 'sqlalchemy':
         if table is None:
             raise ValueError('No table: specified')
+        params = {k: v[0] for k, v in args.items() if len(v) > 0 and _sql_safe(v[0])}
+        table = table.format(**params)
         engine = sqlalchemy.create_engine(url, **kwargs)
         # If transform= is passed, read the full dataset to apply the transform.
         if callable(transform) or query:
-            data = gramex.cache.query(query if query else table, engine, [table])
+            data = gramex.cache.query(query.format(**params) if query else table, engine, [table])
             if callable(transform):
                 data = transform(data)
             return _filter_frame(data, meta=meta, controls=controls, args=args)
@@ -163,6 +183,15 @@ def filter(url, args={}, meta={}, engine=None, table=None, ext=None,
             return _filter_db(engine, table, meta=meta, controls=controls, args=args)
     else:
         raise ValueError('engine: %s invalid. Can be sqlalchemy|file|dataframe' % engine)
+
+
+def _sql_safe(val):
+    '''Return True if val is safe for insertion in an SQL query'''
+    if isinstance(val, six.string_types):
+        return not re.search(r'\s', val)
+    elif isinstance(val, six.integer_types) or isinstance(val, (float, bool)):
+        return True
+    return False
 
 
 def _filter_col(col, cols):

@@ -12,7 +12,7 @@ import pandas as pd
 from orderedattrdict import AttrDict
 from nose.plugins.skip import SkipTest
 from nose.tools import eq_, ok_, assert_raises
-from pandas.util.testing import assert_frame_equal
+from pandas.util.testing import assert_frame_equal as afe
 import dbutils
 from . import folder, sales_file
 
@@ -35,7 +35,7 @@ class TestFilter(unittest.TestCase):
             meta = {}
             actual = gramex.data.filter(meta=meta, args=args, **kwargs)
             expected.index = actual.index
-            assert_frame_equal(actual, expected)
+            afe(actual, expected)
             return meta
 
         sales = self.sales if df is None else df
@@ -146,7 +146,7 @@ class TestFilter(unittest.TestCase):
 
     def test_file(self):
         self.check_filter(url=sales_file)
-        assert_frame_equal(
+        afe(
             gramex.data.filter(url=sales_file, transform='2.1', sheetname='dummy'),
             gramex.cache.open(sales_file, 'excel', transform='2.2', sheetname='dummy'),
         )
@@ -174,6 +174,21 @@ class TestFilter(unittest.TestCase):
                           query='SELECT * FROM sales WHERE sales > 100',
                           transform=lambda d: d[d['growth'] < 0.5],
                           df=df[df['growth'] < 0.5])
+        afe(gramex.data.filter(url=url, table='{x}', args={'x': ['sales']}), self.sales)
+        actual = gramex.data.filter(
+            url=url, table='{兴}', args={'兴': ['sales'], 'col': ['growth'], 'val': [0]},
+            query='SELECT * FROM {兴} WHERE {col} > {val}'
+        )
+        expected = self.sales[self.sales['growth'] > 0]
+        expected.index = actual.index
+        afe(actual, expected)
+
+        # Arguments with spaces raise an Exception
+        with assert_raises(Exception):
+            gramex.data.filter(url=url, table='{x}', args={'x': ['a b']})
+        with assert_raises(Exception):
+            gramex.data.filter(url=url, table='{x}', args={'x': ['sales'], 'p': ['a b']},
+                               query='SELECT * FROM {x} WHERE {p} > 0')
 
     def test_mysql(self):
         url = dbutils.mysql_create_db(self.server.mysql, 'test_filter', sales=self.sales)
@@ -209,7 +224,7 @@ class TestDownload(unittest.TestCase):
     def test_download_csv(self):
         out = gramex.data.download(self.dummy, format='csv')
         ok_(out.startswith(''.encode('utf-8-sig')))
-        assert_frame_equal(pd.read_csv(io.BytesIO(out), encoding='utf-8'), self.dummy)
+        afe(pd.read_csv(io.BytesIO(out), encoding='utf-8'), self.dummy)
 
         out = gramex.data.download(AttrDict([
             ('dummy', self.dummy),
@@ -218,15 +233,15 @@ class TestDownload(unittest.TestCase):
         lines = out.splitlines(True)
         eq_(lines[0], 'dummy\n'.encode('utf-8-sig'))
         actual = pd.read_csv(io.BytesIO(b''.join(lines[1:4])), encoding='utf-8')
-        assert_frame_equal(actual, self.dummy)
+        afe(actual, self.dummy)
 
         eq_(lines[5], 'sales\n'.encode('utf-8'))
         actual = pd.read_csv(io.BytesIO(b''.join(lines[6:])), encoding='utf-8')
-        assert_frame_equal(actual, self.sales)
+        afe(actual, self.sales)
 
     def test_download_json(self):
         out = gramex.data.download(self.dummy, format='json')
-        assert_frame_equal(pd.read_json(io.BytesIO(out)), self.dummy)
+        afe(pd.read_json(io.BytesIO(out)), self.dummy)
 
         out = gramex.data.download({'dummy': self.dummy, 'sales': self.sales}, format='json')
         result = json.loads(out, object_pairs_hook=AttrDict)
@@ -238,32 +253,32 @@ class TestDownload(unittest.TestCase):
                 s = s.encode('utf-8')
             return pd.read_json(io.BytesIO(s))
 
-        assert_frame_equal(from_json('dummy'), self.dummy, check_like=True)
-        assert_frame_equal(from_json('sales'), self.sales, check_like=True)
+        afe(from_json('dummy'), self.dummy, check_like=True)
+        afe(from_json('sales'), self.sales, check_like=True)
 
     def test_download_excel(self):
         out = gramex.data.download(self.dummy, format='xlsx')
-        assert_frame_equal(pd.read_excel(io.BytesIO(out)), self.dummy)
+        afe(pd.read_excel(io.BytesIO(out)), self.dummy)
 
         out = gramex.data.download({'dummy': self.dummy, 'sales': self.sales}, format='xlsx')
         result = pd.read_excel(io.BytesIO(out), sheetname=None)
-        assert_frame_equal(result['dummy'], self.dummy)
-        assert_frame_equal(result['sales'], self.sales)
+        afe(result['dummy'], self.dummy)
+        afe(result['sales'], self.sales)
 
     def test_download_html(self):
         # Note: In Python 2, pd.read_html returns .columns.inferred_type=mixed
         # instead of unicde. So check column type only in PY3 not PY2
         out = gramex.data.download(self.dummy, format='html')
         result = pd.read_html(io.BytesIO(out), encoding='utf-8')[0]
-        assert_frame_equal(result, self.dummy, check_column_type=six.PY3)
+        afe(result, self.dummy, check_column_type=six.PY3)
 
         out = gramex.data.download(AttrDict([
             ('dummy', self.dummy),
             ('sales', self.sales)
         ]), format='html')
         result = pd.read_html(io.BytesIO(out), encoding='utf-8')
-        assert_frame_equal(result[0], self.dummy, check_column_type=six.PY3)
-        assert_frame_equal(result[1], self.sales, check_column_type=six.PY3)
+        afe(result[0], self.dummy, check_column_type=six.PY3)
+        afe(result[1], self.sales, check_column_type=six.PY3)
 
     def test_template(self):
         raise SkipTest('TODO')

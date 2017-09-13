@@ -417,7 +417,7 @@ class BaseMixin(object):
 
         ``new=`` creates a new session to avoid session fixation.
         https://www.owasp.org/index.php/Session_fixation.
-        :py:function:`gramex.handlers.authhandler.AuthHandler.set_user` uses it.
+        :py:func:`gramex.handlers.authhandler.AuthHandler.set_user` uses it.
         When the user logs in. If no old session exists, it returns a new session
         object. If an old session exists, it creates a new session "sid" and new
         session object, copying all old contents, but updates the "id" and expiry
