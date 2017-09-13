@@ -148,7 +148,9 @@ The return value must be a DataFrame. This will be used for calculations.
 `function:` also works with SQLAlchemy databases. It loads the **entire** table
 before transforming, so ensure that you have enough memory.
 
-You may also use a `query:` for SQLAlchemy databases. For example:
+## FormHandler queries
+
+You may also use a `query:` to select data from an SQLAlchemy databases. For example:
 
     :::yaml
     url:
@@ -176,14 +178,15 @@ will group by whatever is passed as `?group=`. For example, `?group=city` return
 
 **WARNING**:
 
-1. `query` ignores URL query parameters with spaces. `?group=city name` or
+1. `query` loads the full result into memory. So keep the result small.
+2. `query` ignores URL query parameters with spaces. `?group=city name` or
    `?group=city+name` **WON'T** select the `"city name"` column. It will fail --
    to avoid [SQL injection](https://en.wikipedia.org/wiki/SQL_injection) attack.
-2. The `query` is passed as-is to the DB driver. Escape strings based on the
+3. The `query` is passed as-is to the DB driver. Escape strings based on the
    driver. E.g. `... WHERE col LIKE '%.com'` should be `... WHERE col LIKE
    '%%.com'` for [pymysql](http://pymysql.readthedocs.io/en/latest/), since `%`
    is treated as a formatting string.
-3. Use the correct SQL flavour. E.g. SQL Server, uses `SELECT TOP 10 FROM table`
+4. Use the correct SQL flavour. E.g. SQL Server, uses `SELECT TOP 10 FROM table`
    instead of `SELECT * FROM table LIMIT 10`.
 
 ## FormHandler defaults
