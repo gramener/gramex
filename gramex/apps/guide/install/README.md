@@ -17,9 +17,9 @@ If you are behind a HTTP proxy, use `pip install --proxy=http://{proxy-host}:{po
 [xcode]: https://developer.apple.com/xcode/download/
 [gramex]: https://code.gramener.com/s.anand/gramex/repository/archive.tar.bz2?ref=master
 
-[//]: # Note: pip install --ignore-installed was removed because of this Anaconda bug:
-[//]: # https://github.com/pypa/pip/issues/2751#issuecomment-165390180
-[//]: # However, this forces an upgrade of scandir which fails on Windows.
+Note: `pip install --ignore-installed` was removed because of an
+[Anaconda bug](https://github.com/pypa/pip/issues/2751#issuecomment-165390180) -
+re-installing scandir fails on Windows.
 
 # Troubleshooting
 
