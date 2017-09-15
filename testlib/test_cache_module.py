@@ -348,6 +348,12 @@ class TestSqliteCacheQuery(unittest.TestCase):
             eq_(gramex.cache.query(**kwargs)[1], False, msg)
             eq_(gramex.cache.query(**kwargs)[1], False, msg)
 
+        # If state is None, always reload the query
+        kwargs['state'] = None
+        eq_(gramex.cache.query(**kwargs)[1], True, msg)
+        eq_(gramex.cache.query(**kwargs)[1], True, msg)
+        eq_(gramex.cache.query(**kwargs)[1], True, msg)
+
 
 class TestMySQLCacheQuery(TestSqliteCacheQuery):
     states = ['SELECT COUNT(*) FROM t1', lambda: gramex.cache.stat(state_file)]

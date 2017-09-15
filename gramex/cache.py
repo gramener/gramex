@@ -260,10 +260,10 @@ def _table_status(engine, tables):
     return _STATUS_METHODS[key]()
 
 
-def query(sql, engine, state, **kwargs):
+def query(sql, engine, state=None, **kwargs):
     '''
     Read SQL query or database table into a DataFrame. Caches results unless
-    state has changed.
+    state has changed. It always re-runs the query unless state is specified.
 
     The state can be specified in 3 ways:
 
@@ -287,6 +287,9 @@ def query(sql, engine, state, **kwargs):
         status = pd.read_sql(state, engine).to_dict(orient='list')
     elif callable(state):
         status = state()
+    elif state is None:
+        # Create a new status every time, so that the query is always re-run
+        status = object()
     else:
         raise TypeError('gramex.cache.query(state=) must be a table list, query or fn, not %s',
                         repr(state))
