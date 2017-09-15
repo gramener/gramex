@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 '''Test case utilities'''
 
+import os
 import csv
 import six
 import sys
@@ -261,15 +262,21 @@ def ws_info_dump(handler):
 @gen.coroutine
 def subprocess(handler):
     '''Used by test_cache.TestSubprocess to check if gramex.cache.Subprocess works'''
-    handler.write('Showing logs\n')
-    proc = Subprocess(
-        ['git', 'log', '-n', '1'],
-        stream_stdout=[handler.write],
-        stream_stderr=[handler.write],
-        buffer_size='line',
-    )
-    yield proc.wait_for_exit()
-    raise gen.Return('')
+    kwargs = {}
+    if handler.args.get('out'):
+        kwargs['stream_stdout'] = [handler.write] * len(handler.args['out'])
+    if handler.args.get('err'):
+        kwargs['stream_stderr'] = [handler.write] * len(handler.args['err'])
+    if handler.args.get('buf'):
+        buf = handler.args['buf'][0]
+        kwargs['buffer_size'] = int(buf) if buf.isdigit() else buf
+    if handler.args.get('env'):
+        kwargs['env'] = dict(os.environ)
+        kwargs['env']['GRAMEX'] = 'test'
+    handler.write('stream: ')
+    proc = Subprocess(handler.args['args'], universal_newlines=True, **kwargs)
+    stdout, stderr = yield proc.wait_for_exit()
+    raise gen.Return('return: ' + stdout + stderr)
 
 
 def argparse(handler):
@@ -289,3 +296,28 @@ def argparse(handler):
 
 def upload_transform(content):
     return dict(alpha=1, beta=1, **content)
+
+
+def write_stream():
+    '''
+    Interleaves stdout, stderr messages: O0 E0 O1 E1 O2 E2.
+    Finally prints the GRAMEX environment variable.
+    Used by test_cache.TestSubprocess
+    '''
+    delay = 0.02
+    for n in range(0, 3):
+        sys.stdout.write('o%d\n' % n)
+        sys.stdout.flush()
+        time.sleep(delay)
+        sys.stderr.write('e%d\n' % n)
+        sys.stderr.flush()
+        time.sleep(delay)
+    if 'GRAMEX' in os.environ:
+        sys.stdout.write('GRAMEX: ' + os.environ['GRAMEX'])
+
+
+if __name__ == '__main__':
+    # Call the method mentioned in the command line
+    method_name = sys.argv[1]
+    method = globals().get(method_name)
+    method()

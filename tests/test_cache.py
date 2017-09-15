@@ -2,14 +2,16 @@
 from __future__ import unicode_literals
 
 import os
+import shlex
 import pathlib
 import requests
 import unittest
 import gramex.config
 import gramex.services
+from six.moves.urllib.parse import urlencode
 from nose.tools import eq_
 from orderedattrdict import AttrDict
-from . import TestGramex, tempfiles
+from . import TestGramex, tempfiles, folder
 from gramex.http import OK, NOT_FOUND, NOT_MODIFIED
 from gramex.services.urlcache import ignore_headers, MemoryCache, DiskCache
 
@@ -257,4 +259,28 @@ class TestCacheFileHandler(TestGramex):
 
 class TestSubprocess(TestGramex):
     def test_subprocess(self):
-        self.check('/cache/subprocess', text='Showing logs\ncommit ')
+        def proc(cmd, **kwargs):
+            kwargs['args'] = shlex.split(cmd)
+            return '/cache/subprocess?' + urlencode(kwargs, doseq=True)
+
+        # Test that args runs commands
+        self.check(proc('git log -n 1'), text='commit ')
+        # Test that subprocess streams stdout & stderr. This runs 'python utils.py write_stream'
+        # This writes o0, o1, o2 on stdout and e0, e1, e2 on stderr, interleaved
+        cmd = 'python "%s" write_stream' % os.path.join(folder, 'utils.py')
+        self.check(proc(cmd), text='stream: return: o0\no1\no2\ne0\ne1\ne2\n')
+        self.check(proc(cmd, out=1, err=1, buf='line'), text='stream: o0\ne0\no1\ne1\no2\ne2\n')
+        # Only one of stdout/stderr is streamed
+        self.check(proc(cmd, out=1, buf='line'), text='stream: o0\no1\no2\nreturn: e0\ne1\ne2\n')
+        self.check(proc(cmd, err=1, buf='line'), text='stream: e0\ne1\ne2\nreturn: o0\no1\no2\n')
+        # Test that buffer_size is obeyed. We pick buf=6 because it will cover 2 rows - 'o0\no1\n'
+        self.check(proc(cmd, out=1, err=1, buf=6), text='stream: o0\no1\ne0\ne1\n')
+        # Test that kwargs is passed to subprocess.Popen()
+        self.check(proc(cmd, env=1), text='GRAMEX: test')
+
+        # Test that streams accepts multiple fuctions that accept a bytestring
+        self.check(proc(cmd, out=[1, 2], buf='line'), text='stream: o0\no0\no1\no1\no2\no2\n')
+        self.check(proc(cmd, err=[1, 2], buf='line'), text='stream: e0\ne0\ne1\ne1\ne2\ne2\n')
+
+        # If the process raises an Exception, ensure that it is raised
+        # Ensure that this works with unicode

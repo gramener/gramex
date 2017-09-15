@@ -392,3 +392,54 @@ You can use it inside a template:
 
 In both these cases, whenever `my_utils.py` is updated, the latest version will
 be used to render the FunctionHandler or template.
+
+
+# Subprocess streaming
+
+You can run an OS command asynchronously using `gramex.cache.Subprocess`. Use
+this instead of [subprocess.Popen][popen] because the latter will block Gramex
+until the command runs.
+
+[popen]: https://docs.python.org/3/library/subprocess.html#popen-constructor
+
+Basic usage:
+
+    :::python
+    @tornado.gen.coroutine
+    def function_handler(handler):
+        proc = gramex.cache.Subprocess(['python', '-V'])
+        out, err = yield proc.wait_for_exit()
+        # out contains stdout result. err contains stderr result
+        raise tornado.gen.Return('Python version is ' + err.decode('utf-8'))
+
+`out` and `err` contain the stdout and stderr from running `python -V` as bytes.
+All keyword arguments supported by `subprocess.Popen` are supported here.
+
+Streaming is supported. This lets you read the contents of stdout and stderr
+*while the program runs*. Example:
+
+    :::python
+    @tornado.gen.coroutine
+    def function_handler(handler):
+        proc = gramex.cache.Subprocess(['flake8'],
+                                       stream_stdout=[handler.write],
+                                       buffer_size='line')
+        out, err = yield proc.wait_for_exit()
+        # out will be an empty byte string since stream_stdout is specified
+
+This reads the output of `flake8` line by line (since `buffer_size='line'`) and
+writes the output by calling `handler.write`. The returned value for `out` is an
+empty string.
+
+`stream_stdout` is a list of functions. You can provide any other method here.
+For example:
+
+    :::python
+    out = []
+    proc = gramex.cache.Subprocess(['flake8'],
+                                   stream_stdout=[out.append],
+                                   buffer_size='line')
+
+... will write the output line-by-line into the `out` list using `out.append`.
+
+`stream_stderr` works the same was as `stream_stdout` but on stderr instead.

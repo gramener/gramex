@@ -1,4 +1,6 @@
 '''Caching utilities'''
+from __future__ import unicode_literals
+
 import io
 import os
 import six
@@ -356,8 +358,25 @@ class Subprocess(object):
             buffer_size='line',             # Write line by line. Can also be a number of bytes
             **kwargs
         )
-        yield proc.wait_for_exit()
+        stdout, stderr = yield proc.wait_for_exit()
 
+    :arg list args: command line arguments passed as a list to Subprocess
+    :arg methodlist stream_stdout: optional list of write methods - called when stdout has data
+    :arg methodlist stream_stderr: optional list of write methods - called when stderr has data
+    :arg str_or_int buffer_size: 'line' to write line by line. number for chunk size
+    :arg dict kwargs: additional kwargs passed to subprocess.Popen
+
+    stream_stdout and stream_stderr can be a list of functions that accept a byte
+    string and process it.
+
+    If stream_stdout is empty or missing, the returned ``stdout`` value contains
+    the stdout contents as bytes. Otherwise, it is passed to all stream_stdout
+    methods and the returned ``stdout`` is empty. (Same for ``stderr``)
+
+    Examples::
+
+        stdout, stderr = yield Subprocess(['ls', '-la']).wait_for_exit()
+        _, stderr = yield Subprocess(['git', 'log'], stream_stdout=[handler.write]).wait_for_exit()
     '''
     def __init__(self, args, stream_stdout=[], stream_stderr=[], buffer_size=0, **kwargs):
         self.args = args
@@ -370,8 +389,10 @@ class Subprocess(object):
         # http://stackoverflow.com/a/4896288/100904
         kwargs['close_fds'] = 'posix' in sys.builtin_module_names
 
+        # Buffering has 2 modes. buffer_size='line' reads and writes line by line
+        # buffer_size=<number> reads in byte chunks. Define the appropriate method
         if hasattr(buffer_size, 'lower') and 'line' in buffer_size.lower():
-            def _write(stream, callbacks, future):
+            def _write(stream, callbacks, future, retval):
                 '''Call callbacks with content from stream. On EOF mark future as done'''
                 while True:
                     content = stream.readline()
@@ -380,14 +401,14 @@ class Subprocess(object):
                             callback(content)
                     else:
                         stream.close()
-                        future.set_result('')
+                        future.set_result(retval())
                         break
         else:
             # If the buffer size is 0 or negative, use the default buffer size to read
             if buffer_size <= 0:
                 buffer_size = io.DEFAULT_BUFFER_SIZE
 
-            def _write(stream, callbacks, future):
+            def _write(stream, callbacks, future, retval):
                 '''Call callbacks with content from stream. On EOF mark future as done'''
                 while True:
                     content = stream.read(buffer_size)
@@ -399,25 +420,36 @@ class Subprocess(object):
                             callback(content)
                     if size < buffer_size:
                         stream.close()
-                        future.set_result('')
+                        future.set_result(retval())
                         break
 
         self.proc = subprocess.Popen(args, **kwargs)
         self.thread = {}        # Has the running threads
         self.future = {}        # Stores the futures indicating stream close
-        callbacks = {
-            'stdout': stream_stdout,
-            'stderr': stream_stderr,
-        }
+
+        callbacks_lookup = {'stdout': stream_stdout, 'stderr': stream_stderr}
         for stream in ('stdout', 'stderr'):
-            self.future[stream] = f = Future()
+            callbacks = callbacks_lookup[stream]
+            # If stream_stdout or stream_stderr are not defined, construct a
+            # BytesIO and return its value when the stream is closed
+            if not callbacks:
+                ret_stream = io.BytesIO()
+                callbacks = [ret_stream.write]
+                retval = ret_stream.getvalue
+            else:
+                retval = lambda: b''        # noqa
+            self.future[stream] = future = Future()
             # Thread writes from self.proc.stdout / stderr to appropriate callbacks
             self.thread[stream] = t = Thread(
                 target=_write,
-                args=(getattr(self.proc, stream), callbacks[stream], f),
-            )
+                args=(getattr(self.proc, stream), callbacks, future, retval))
             t.daemon = True     # Thread dies with the program
             t.start()
 
     def wait_for_exit(self):
-        return list(self.future.values())
+        '''
+        Returns futures for (stdout, stderr). To wait for the process to complete, use::
+
+            stdout, stderr = yield proc.wait_for_exit()
+        '''
+        return [self.future['stdout'], self.future['stderr']]
