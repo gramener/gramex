@@ -159,7 +159,6 @@ You may also use a `query:` to select data from an SQLAlchemy databases. For exa
         handler: FormHandler
         kwargs:
           url: sqlite:///$YAMLPATH/database.sqlite3
-          table: flags
           query: 'SELECT Continent, COUNT(*) AS num, SUM(c1) FROM flags GROUP BY Continent'
 
 ... returns the query result. [FormHandler filters](#formhandler-filters) apply

@@ -170,6 +170,14 @@ class TestFilter(unittest.TestCase):
                           transform=lambda d: d[d['sales'] > 100], df=df)
         self.check_filter(url=url, table='sales', na_position=na_position,
                           query='SELECT * FROM sales WHERE sales > 100', df=df)
+        self.check_filter(url=url, table=['sales', 'sales'], na_position=na_position,
+                          query='SELECT * FROM sales WHERE sales > 100',
+                          transform=lambda d: d[d['growth'] < 0.5],
+                          df=df[df['growth'] < 0.5])
+        self.check_filter(url=url, na_position=na_position,
+                          query='SELECT * FROM sales WHERE sales > 100',
+                          transform=lambda d: d[d['growth'] < 0.5],
+                          df=df[df['growth'] < 0.5])
         self.check_filter(url=url, table='sales', na_position=na_position,
                           query='SELECT * FROM sales WHERE sales > 100',
                           transform=lambda d: d[d['growth'] < 0.5],
@@ -182,6 +190,12 @@ class TestFilter(unittest.TestCase):
         expected = self.sales[self.sales['growth'] > 0]
         expected.index = actual.index
         afe(actual, expected)
+
+        # Test invalid parameters
+        with assert_raises(ValueError):
+            gramex.data.filter(url=url, table=1, query='SELECT * FROM sales WHERE sales > 100')
+        with assert_raises(ValueError):
+            gramex.data.filter(url=url, table={}, query='SELECT * FROM sales WHERE sales > 100')
 
         # Arguments with spaces raise an Exception
         with assert_raises(Exception):

@@ -52,7 +52,7 @@ def filter(url, args={}, meta={}, engine=None, table=None, ext=None,
     ... then calling the handler with ``?x=1&y=2`` returns all rows in
     ``dataframe`` where x is 1 and y is 2.
 
-    If a table or query is passsed to an SQLAlchemy url, it is formatted using
+    If a table or query is passed to an SQLAlchemy url, it is formatted using
     ``args``. For example::
 
         data = gramex.data.filter('mysql://server/db', table='{xxx}', args=handler.args)
@@ -167,20 +167,31 @@ def filter(url, args={}, meta={}, engine=None, table=None, ext=None,
         data = gramex.cache.open(url, ext, transform=transform, **kwargs)
         return _filter_frame(data, meta=meta, controls=controls, args=args)
     elif engine == 'sqlalchemy':
-        if table is None:
-            raise ValueError('No table: specified')
-        params = {k: v[0] for k, v in args.items() if len(v) > 0 and _sql_safe(v[0])}
-        table = table.format(**params)
         engine = sqlalchemy.create_engine(url, **kwargs)
-        # If transform= is passed, read the full dataset to apply the transform.
-        if callable(transform) or query:
-            data = gramex.cache.query(query.format(**params) if query else table, engine, [table])
+        params = {k: v[0] for k, v in args.items() if len(v) > 0 and _sql_safe(v[0])}
+        if query:
+            query, state = query.format(**params), None
+            if isinstance(table, six.text_type):
+                state = [table.format(**params)]
+            elif isinstance(table, (list, tuple)):
+                state = [t.format(**params) for t in table]
+            elif table is None:
+                state = None
+            else:
+                raise ValueError('table: must be string or list of strings')
+            data = gramex.cache.query(query, engine, state)
             if callable(transform):
                 data = transform(data)
             return _filter_frame(data, meta=meta, controls=controls, args=args)
-        # If no transform= is passed, run the query on the database
+        elif table:
+            table = table.format(**params)
+            if callable(transform):
+                data = gramex.cache.query(table, engine, [table])
+                return _filter_frame(transform(data), meta=meta, controls=controls, args=args)
+            else:
+                return _filter_db(engine, table, meta=meta, controls=controls, args=args)
         else:
-            return _filter_db(engine, table, meta=meta, controls=controls, args=args)
+            raise ValueError('No table: or query: specified')
     else:
         raise ValueError('engine: %s invalid. Can be sqlalchemy|file|dataframe' % engine)
 
