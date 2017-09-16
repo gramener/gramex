@@ -41,10 +41,6 @@ class BaseMixin(object):
         # handler.kwargs returns kwargs with BaseHandler kwargs removed
         cls.kwargs = AttrDict(kwargs)
         cls.setup_default_kwargs()
-        # Update defaults from BaseHandler. Only log and error (for now).
-        # Use objectpath instead of a direct reference - in case handler.BaseHandler is undefined
-        log = merge(log or {}, objectpath(conf, 'handlers.BaseHandler.log', {}), 'setdefault')
-        err = merge(error or {}, objectpath(conf, 'handlers.BaseHandler.error', {}), 'setdefault')
 
         cls.setup_transform(transform)
         cls.setup_redirect(redirect)
@@ -52,8 +48,10 @@ class BaseMixin(object):
         # override_user is run before authorize
         cls.setup_session(conf.app.get('session'))
         cls.setup_auth(auth)
-        cls.setup_log(log)
-        cls.setup_error(err)
+        # Update defaults from BaseHandler. Only log and error (for now).
+        # Use objectpath instead of a direct reference - in case handler.BaseHandler is undefined
+        cls.setup_log(log or objectpath(conf, 'handlers.BaseHandler.log', {}))
+        cls.setup_error(error or objectpath(conf, 'handlers.BaseHandler.error', {}))
         cls.setup_xsrf(xsrf_cookies)
         cls._set_xsrf = set_xsrf
 

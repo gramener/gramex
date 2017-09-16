@@ -171,14 +171,14 @@ def filter(url, args={}, meta={}, engine=None, table=None, ext=None,
         params = {k: v[0] for k, v in args.items() if len(v) > 0 and _sql_safe(v[0])}
         if query:
             query, state = query.format(**params), None
-            if isinstance(table, six.text_type):
+            if isinstance(table, six.string_types):
                 state = [table.format(**params)]
             elif isinstance(table, (list, tuple)):
                 state = [t.format(**params) for t in table]
             elif table is None:
                 state = None
             else:
-                raise ValueError('table: must be string or list of strings')
+                raise ValueError('table: must be string or list of strings, not %r' % table)
             data = gramex.cache.query(query, engine, state)
             if callable(transform):
                 data = transform(data)

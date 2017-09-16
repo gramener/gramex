@@ -100,7 +100,10 @@ class TestFormHandler(TestGramex):
             self.check_filter('/formhandler/sqlite-multi', na_position='last', key='big-by-growth',
                               df=self.sales[self.sales['sales'] > 100].sort_values('growth'))
         finally:
-            dbutils.sqlite_drop_db('formhandler.db')
+            try:
+                dbutils.sqlite_drop_db('formhandler.db')
+            except OSError:
+                pass
 
     def test_mysql(self):
         dbutils.mysql_create_db(variables.MYSQL_SERVER, 'test_formhandler', sales=self.sales)
