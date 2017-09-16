@@ -5,6 +5,7 @@ import inspect
 import unittest
 import gramex
 from pathlib import Path
+from nose.tools import eq_, ok_
 from orderedattrdict import AttrDict
 from yaml.constructor import ConstructorError
 from gramex.config import ChainConfig, PathConfig, walk, merge, ConfigYAMLLoader, _add_ns
@@ -38,10 +39,10 @@ class TestChainConfig(unittest.TestCase):
         conf = ChainConfig(a=AttrDict(), b=AttrDict())
         conf.a.x = 1
         conf.a.y = 2
-        self.assertEqual(conf, {'a': {'x': 1, 'y': 2}, 'b': {}})
+        eq_(conf, {'a': {'x': 1, 'y': 2}, 'b': {}})
         conf.b.x = 3
         conf.b.y = 4
-        self.assertEqual(conf, {'a': {'x': 1, 'y': 2}, 'b': {'x': 3, 'y': 4}})
+        eq_(conf, {'a': {'x': 1, 'y': 2}, 'b': {'x': 3, 'y': 4}})
 
     def test_overlay(self):
         '''+ChainConfig updates configs successively'''
@@ -51,9 +52,9 @@ class TestChainConfig(unittest.TestCase):
         conf.a.x = 1
         conf.a.y = 2
         conf.b.x = 2
-        self.assertEqual(+conf, {'x': 2, 'y': 2})
+        eq_(+conf, {'x': 2, 'y': 2})
         conf.b.x = None
-        self.assertEqual(+conf, {'y': 2})
+        eq_(+conf, {'y': 2})
 
 
 class TestPathConfig(unittest.TestCase):
@@ -85,7 +86,7 @@ class TestPathConfig(unittest.TestCase):
         conf = ChainConfig([
             ('a', PathConfig(self.a)),
             ('b', PathConfig(self.b))])
-        self.assertEqual(+conf, PathConfig(self.final))
+        eq_(+conf, PathConfig(self.final))
 
     def test_update(self):
         '''Config files are updated on change'''
@@ -93,22 +94,22 @@ class TestPathConfig(unittest.TestCase):
 
         # When the file is missing, config is empty
         unlink(self.temp)
-        self.assertEqual(+conf, {})
+        eq_(+conf, {})
 
         # When the file is blank, config is empty
         with self.temp.open('w') as out:
             out.write(six.text_type(''))
-        self.assertEqual(+conf, {})
+        eq_(+conf, {})
 
         # Once created, it is automatically reloaded
         data = AttrDict(a=1, b=2)
         with self.temp.open('w') as out:
             yaml.dump(data, out)
-        self.assertEqual(+conf, data)
+        eq_(+conf, data)
 
         # Deleted file is detected
         self.temp.unlink()
-        self.assertEqual(+conf, {})
+        eq_(+conf, {})
 
     def test_chain_update(self):
         '''Chained config files are changed on update'''
@@ -121,13 +122,13 @@ class TestPathConfig(unittest.TestCase):
         conf = ChainConfig()
         conf.conf1 = PathConfig(self.conf1)
         conf.conf2 = PathConfig(self.conf2)
-        self.assertEqual(+conf, {'url': {'a': 1}})
+        eq_(+conf, {'url': {'a': 1}})
 
         # Change conf2.test and ensure that its original contents are replaced,
         # not just merged with previous value
         with self.conf2.open(mode='w', encoding='utf-8') as handle:
             yaml.dump({'url': {'b': 10}}, handle)
-        self.assertEqual(+conf, {'url': {'b': 10}})
+        eq_(+conf, {'url': {'b': 10}})
 
     def test_import(self):
         '''Check if config files are imported'''
@@ -136,7 +137,7 @@ class TestPathConfig(unittest.TestCase):
 
         # When temp is missing, config matches b
         unlink(self.temp)
-        self.assertEqual(+conf_imp, +conf_b)
+        eq_(+conf_imp, +conf_b)
 
         # Once temp file is created, it is automatically imported
         data = AttrDict(a=1, b=2)
@@ -144,38 +145,38 @@ class TestPathConfig(unittest.TestCase):
             yaml.dump(data, out)
         result = +conf_b
         result.update(data)
-        self.assertEqual(+conf_imp, result)
+        eq_(+conf_imp, result)
 
         # Once removed, it no longer used
         unlink(self.temp)
-        self.assertEqual(+conf_imp, +conf_b)
+        eq_(+conf_imp, +conf_b)
 
         conf_imp = ChainConfig(conf=PathConfig(self.imp2))
-        self.assertEqual(+conf_imp, +conf_b)
+        eq_(+conf_imp, +conf_b)
 
     def test_add_ns(self):
         '''Test _add_ns functionality'''
-        self.assertEqual(_add_ns({'x': 1}, '*', 'a'), {'a:x': 1})
-        self.assertEqual(_add_ns({'x': {'y': 1}}, 'x', 'a'), {'x': {'a:y': 1}})
-        self.assertEqual(_add_ns({'x': {'y': 1}}, ['*', 'x'], 'a'), {'a:x': {'a:y': 1}})
-        self.assertEqual(_add_ns({'x': {'y': 1}}, ['x', '*'], 'a'), {'a:x': {'a:y': 1}})
+        eq_(_add_ns({'x': 1}, '*', 'a'), {'a:x': 1})
+        eq_(_add_ns({'x': {'y': 1}}, 'x', 'a'), {'x': {'a:y': 1}})
+        eq_(_add_ns({'x': {'y': 1}}, ['*', 'x'], 'a'), {'a:x': {'a:y': 1}})
+        eq_(_add_ns({'x': {'y': 1}}, ['x', '*'], 'a'), {'a:x': {'a:y': 1}})
 
     def test_namespace(self):
         '''Test namespace functionality in import'''
         conf_ns = +ChainConfig(conf=PathConfig(self.ns))
-        self.assertEqual(conf_ns.ns_star, {
+        eq_(conf_ns.ns_star, {
             'config.b.yaml:b': 2,
             'config.b.yaml:c': {'xx': 3, 'yy': 4}
         })
-        self.assertEqual(conf_ns.ns_c, {
+        eq_(conf_ns.ns_c, {
             'b': 2,
             'c': {'config.b.yaml:xx': 3, 'config.b.yaml:yy': 4}
         })
-        self.assertEqual(conf_ns.ns_star_c, {
+        eq_(conf_ns.ns_star_c, {
             'config.b.yaml:b': 2,
             'config.b.yaml:c': {'config.b.yaml:xx': 3, 'config.b.yaml:yy': 4}
         })
-        self.assertEqual(conf_ns.ns_import, {
+        eq_(conf_ns.ns_import, {
             'url': {'config.urlimport.yaml:handler': {'pattern': 'x', 'a': 1, 'b': 200, 'd': 'x'}}
         })
 
@@ -187,54 +188,54 @@ class TestPathConfig(unittest.TestCase):
             child=PathConfig(self.chain.child),
         )
         # Custom variables are deleted after use
-        self.assertFalse('variables' in conf)
+        ok_('variables' not in conf)
         for key in ['base', 'child', 'subdir']:
             # {.} maps to YAML file's directory
-            self.assertEqual(conf['%s_DOT' % key], str(self.chain[key].parent))
+            eq_(conf['%s_DOT' % key], str(self.chain[key].parent))
             # $YAMLPATH maps to YAML file's directory
-            self.assertEqual(conf['%s_YAMLPATH' % key], str(self.chain[key].parent))
+            eq_(conf['%s_YAMLPATH' % key], str(self.chain[key].parent))
             # $YAMLURL is the relative path to YAML file's directory
-            self.assertEqual(conf['%s_YAMLURL' % key], conf['%s_YAMLURL_EXPECTED' % key])
+            eq_(conf['%s_YAMLURL' % key], conf['%s_YAMLURL_EXPECTED' % key])
             # Environment variables are present by default
-            self.assertEqual(conf['%s_HOME' % key], os.environ.get('HOME', ''))
+            eq_(conf['%s_HOME' % key], os.environ.get('HOME', ''))
             # Non-existent variables map to ''
-            self.assertEqual(conf['%s_NONEXISTENT' % key], os.environ.get('NONEXISTENT', ''))
+            eq_(conf['%s_NONEXISTENT' % key], os.environ.get('NONEXISTENT', ''))
             # Custom variables are applied
-            self.assertEqual(conf['%s_THIS' % key], key)
+            eq_(conf['%s_THIS' % key], key)
             # Custom variables are inherited. Defaults do not override
-            self.assertEqual(conf['%s_ROOT' % key], conf.base_ROOT)
+            eq_(conf['%s_ROOT' % key], conf.base_ROOT)
             # Default variables are set
-            self.assertEqual(conf['%s_DEFAULT' % key], key)
+            eq_(conf['%s_DEFAULT' % key], key)
             # Functions run and override values
-            self.assertEqual(conf['%s_FUNCTION' % key], key)
+            eq_(conf['%s_FUNCTION' % key], key)
             # Default functions "underride" values
-            self.assertEqual(conf['%s_DEFAULT_FUNCTION' % key], 'base')
+            eq_(conf['%s_DEFAULT_FUNCTION' % key], 'base')
             # Derived variables
-            self.assertEqual(conf['%s_DERIVED' % key], '%s/derived' % key)
+            eq_(conf['%s_DERIVED' % key], '%s/derived' % key)
             # $URLROOT is the frozen to base $YAMLURL
-            self.assertEqual(conf['%s_YAMLURL_VAR' % key], conf['%s_YAMLURL_VAR_EXPECTED' % key])
+            eq_(conf['%s_YAMLURL_VAR' % key], conf['%s_YAMLURL_VAR_EXPECTED' % key])
             # $GRAMEXPATH is the gramex path
-            self.assertEqual(conf['%s_GRAMEXPATH' % key], os.path.dirname(inspect.getfile(gramex)))
+            eq_(conf['%s_GRAMEXPATH' % key], os.path.dirname(inspect.getfile(gramex)))
         # Imports do not override, but do setdefault
-        self.assertEqual(conf['path'], str(self.chain['base'].parent))
-        self.assertEqual(conf['subpath'], str(self.chain['subdir'].parent))
+        eq_(conf['path'], str(self.chain['base'].parent))
+        eq_(conf['subpath'], str(self.chain['subdir'].parent))
 
         # Check if variable types are preserved
-        self.assertEqual(conf['numeric'], 1)
-        self.assertEqual(conf['boolean'], True)
-        self.assertEqual(conf['object'], {'x': 1})
-        self.assertEqual(conf['list'], [1, 2])
+        eq_(conf['numeric'], 1)
+        eq_(conf['boolean'], True)
+        eq_(conf['object'], {'x': 1})
+        eq_(conf['list'], [1, 2])
 
         # Check if variables of different types are string substituted
-        self.assertEqual(conf['numeric_subst'], '/1')
-        self.assertEqual(conf['boolean_subst'], '/True')
+        eq_(conf['numeric_subst'], '/1')
+        eq_(conf['boolean_subst'], '/True')
         # Actually, conf['object_subst'] is "/AttrDict([('x', 1)])". Let's not test that.
-        # self.assertEqual(conf['object_subst'], "/{'x': 1}")
-        self.assertEqual(conf['list_subst'], '/[1, 2]')
+        # eq_(conf['object_subst'], "/{'x': 1}")
+        eq_(conf['list_subst'], '/[1, 2]')
 
         # Check condition variables
         for key, val in conf['conditions'].items():
-            self.assertEqual('is-' + key, val)
+            eq_('is-' + key, val)
 
 
 class TestConfig(unittest.TestCase):
@@ -254,14 +255,14 @@ class TestConfig(unittest.TestCase):
             k: 7
         ''', Loader=ConfigYAMLLoader)
         result = list(walk(o))
-        self.assertEqual(
+        eq_(
             [key for key, val, node in result],
             list('cdbehigfjak'))
-        self.assertEqual(
+        eq_(
             [val for key, val, node in result],
             [o.a.b.c, o.a.b.d, o.a.b, o.a.e, o.a.f.g.h, o.a.f.g.i, o.a.f.g,
              o.a.f, o.a.j, o.a, o.k])
-        self.assertEqual(
+        eq_(
             [node for key, val, node in result],
             [o.a.b, o.a.b, o.a, o.a, o.a.f.g, o.a.f.g, o.a.f,
              o.a, o.a, o, o])
@@ -274,7 +275,7 @@ class TestConfig(unittest.TestCase):
             - 3
         ''', Loader=ConfigYAMLLoader)
         result = list(walk(o))
-        self.assertEqual(result, [
+        eq_(result, [
             (0, 1, [1, 2, 3]),
             (1, 2, [1, 2, 3]),
             (2, 3, [1, 2, 3])])
@@ -288,7 +289,7 @@ class TestConfig(unittest.TestCase):
                 x: 3
         ''', Loader=ConfigYAMLLoader)
         result = list(walk(o))
-        self.assertEqual(
+        eq_(
             [('x', 1), (0, {'x': 1}),
              ('x', 2), (1, {'x': 2}),
              ('x', 3), (2, {'x': 3})],
@@ -297,16 +298,16 @@ class TestConfig(unittest.TestCase):
     def test_merge(self):
         '''Test gramex.config.merge'''
         def check(a, b, c, mode='overwrite'):
-            'Check if merge(a, b) is c. Parameters are in YAML'
+            '''Check if merge(a, b) is c. Parameters are in YAML'''
             old = yaml.load(a, Loader=ConfigYAMLLoader)
             new = yaml.load(b, Loader=ConfigYAMLLoader)
             # merging a + b gives c
-            self.assertEqual(
+            eq_(
                 yaml.load(c, Loader=ConfigYAMLLoader),
                 merge(old, new, mode))
             # new is unchanged
-            # self.assertEqual(old, yaml.load(a, Loader=ConfigYAMLLoader))
-            self.assertEqual(new, yaml.load(b, Loader=ConfigYAMLLoader))
+            # eq_(old, yaml.load(a, Loader=ConfigYAMLLoader))
+            eq_(new, yaml.load(b, Loader=ConfigYAMLLoader))
 
         check('x: 1', 'y: 2', 'x: 1\ny: 2')
         check('x: {a: 1}', 'x: {a: 2}', 'x: {a: 2}')
@@ -317,12 +318,22 @@ class TestConfig(unittest.TestCase):
         check('x: 1', 'x: 2', 'x: 1', mode='underwrite')
         check('x: {a: 1, c: 3}', 'x: {a: 2, b: 2}', 'x: {a: 1, c: 3, b: 2}', mode='underwrite')
 
+        # Check basic behaviour
+        eq_(merge({'a': 1}, {'a': 2}), {'a': 2})
+        eq_(merge({'a': 1}, {'a': 2}, mode='setdefault'), {'a': 1})
+        eq_(merge({'a': {'b': 1}}, {'a': {'b': 2}}), {'a': {'b': 2}})
+        eq_(merge({'a': {'b': 1}}, {'a': {'b': 2}}, mode='setdefault'), {'a': {'b': 1}})
+
+        # Ensure int keys will work
+        eq_(merge({1: {1: 1}}, {1: {1: 2}}), {1: {1: 2}})
+        eq_(merge({1: {1: 1}}, {1: {1: 2}}, mode='setdefault'), {1: {1: 1}})
+
     def test_no_duplicates(self):
         dup_keys = '''
             a: 1
             a: 2
         '''
-        self.assertEqual(yaml.load(dup_keys), {'a': 2})
+        eq_(yaml.load(dup_keys), {'a': 2})
         with self.assertRaises(ConstructorError):
             yaml.load(dup_keys, Loader=ConfigYAMLLoader)
 
@@ -331,6 +342,6 @@ class TestConfig(unittest.TestCase):
                 b: 1
                 b: 2
         '''
-        self.assertEqual(yaml.load(dup_keys), {'a': {'b': 2}})
+        eq_(yaml.load(dup_keys), {'a': {'b': 2}})
         with self.assertRaises(ConstructorError):
             yaml.load(dup_keys, Loader=ConfigYAMLLoader)

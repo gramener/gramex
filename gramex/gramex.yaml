@@ -34,6 +34,10 @@ handlers:
             path: $GRAMEXDATA/logs/requests.csv
             keys: [time, ip, user.id, status, duration, method, uri, error]
             # format: '%(status)d %(method)s %(uri)s (%(ip)s) %(duration).1fms %(user.id)s'
+        error:
+            403: {path: $YAMLPATH/handlers/403.html}
+            404: {path: $YAMLPATH/handlers/404.html}
+            500: {path: $YAMLPATH/handlers/500.html}
 
     FileHandler:
         ignore:

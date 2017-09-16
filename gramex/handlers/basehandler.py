@@ -29,7 +29,7 @@ session_store_cache = {}
 
 class BaseMixin(object):
     @classmethod
-    def setup(cls, transform={}, redirect={}, auth=None, log={}, set_xsrf=None,
+    def setup(cls, transform={}, redirect={}, auth=None, log=None, set_xsrf=None,
               error=None, xsrf_cookies=None, **kwargs):
         '''
         One-time setup for all request handlers. This is called only when
@@ -41,6 +41,10 @@ class BaseMixin(object):
         # handler.kwargs returns kwargs with BaseHandler kwargs removed
         cls.kwargs = AttrDict(kwargs)
         cls.setup_default_kwargs()
+        # Update defaults from BaseHandler. Only log and error (for now).
+        # Use objectpath instead of a direct reference - in case handler.BaseHandler is undefined
+        log = merge(log or {}, objectpath(conf, 'handlers.BaseHandler.log', {}), 'setdefault')
+        err = merge(error or {}, objectpath(conf, 'handlers.BaseHandler.error', {}), 'setdefault')
 
         cls.setup_transform(transform)
         cls.setup_redirect(redirect)
@@ -48,8 +52,8 @@ class BaseMixin(object):
         # override_user is run before authorize
         cls.setup_session(conf.app.get('session'))
         cls.setup_auth(auth)
-        cls.setup_log(log or objectpath(conf, 'handlers.BaseHandler.log'))
-        cls.setup_error(error)
+        cls.setup_log(log)
+        cls.setup_error(err)
         cls.setup_xsrf(xsrf_cookies)
         cls._set_xsrf = set_xsrf
 
@@ -227,7 +231,7 @@ class BaseMixin(object):
         try:
             cls.log_request = log_method(log)
         except (ValueError, OSError):
-            app_log.log_exception('url:%s: cannot set up log: %r', cls.name, log)
+            app_log.exception('url:%s: cannot set up log: %r', cls.name, log)
 
     @classmethod
     def setup_error(cls, error):
@@ -273,11 +277,13 @@ class BaseMixin(object):
                 if 'whitespace' in error_config:
                     template_kwargs['whitespace'] = error_config['whitespace']
 
-                def _error_function(*args, **kwargs):
-                    tmpl = gramex.cache.open(error_config['path'], 'template', autoescape=None)
-                    return tmpl.generate(*args, **kwargs)
+                def get_error_fn(error_config):
+                    def error(*args, **kwargs):
+                        tmpl = gramex.cache.open(error_config['path'], 'template', autoescape=None)
+                        return tmpl.generate(*args, **kwargs)
+                    return error
 
-                cls.error[error_code] = {'function': _error_function}
+                cls.error[error_code] = {'function': get_error_fn(error_config)}
                 mime_type, encoding = mimetypes.guess_type(error_config['path'], strict=False)
                 if mime_type:
                     error_config.setdefault('headers', {}).setdefault('Content-Type', mime_type)

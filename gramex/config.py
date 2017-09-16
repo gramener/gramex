@@ -103,7 +103,7 @@ def merge(old, new, mode='overwrite', warn=None, _path=''):
                     if fnmatch(_path, pattern):
                         app_log.warn('Duplicate key: %s', _path)
                         break
-            _path += '.' + key if _path else key
+            _path += ('.' if _path else '') + six.text_type(key)
             merge(old=old[key], new=new[key], mode=mode, warn=warn, _path=_path)
         elif mode == 'overwrite' or key not in old:
             old[key] = deepcopy(new[key])
