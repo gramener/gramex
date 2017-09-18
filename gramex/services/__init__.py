@@ -483,3 +483,8 @@ def email(conf):
             info.email[name] = SMTPMailer(**config)
         else:
             raise NotImplementedError
+
+
+def test(conf):
+    '''Set up test service'''
+    pass
