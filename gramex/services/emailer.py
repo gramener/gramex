@@ -29,6 +29,8 @@ class SMTPMailer(object):
         self.password = password
         self.client = self.clients.get(type, {})
         self.client.update(kwargs)
+        if 'host' not in self.client:
+            raise ValueError('Missing SMTP host')
 
     def mail(self, **kwargs):
         '''

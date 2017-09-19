@@ -4,8 +4,8 @@ from unittest import TestCase
 from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
-from gramex.services.emailer import message, recipients
-from nose.tools import eq_
+from gramex.services.emailer import message, recipients, SMTPMailer
+from nose.tools import eq_, assert_raises
 
 folder = os.path.dirname(os.path.abspath(__file__))
 
@@ -69,3 +69,15 @@ class TestEmailer(TestCase):
             img_part.add_header('Content-ID', '<logo>')
             msg.attach(img_part)
         self.eq(message(html=html, images={'logo': img}), msg)
+
+    def test_smtpmailer(self):
+        with assert_raises(ValueError):
+            SMTPMailer(type='any', email='', password='')
+        with assert_raises(ValueError):
+            SMTPMailer(type='smtp', email='', password='')
+        # These do not raise an error
+        SMTPMailer(type='gmail', email='', password='')
+        SMTPMailer(type='yahoo', email='', password='')
+        SMTPMailer(type='live', email='', password='')
+        SMTPMailer(type='mandrill', email='', password='')
+        SMTPMailer(type='smtp', email='', password='', host='hostname')

@@ -477,12 +477,8 @@ def eventlog(conf):
 
 def email(conf):
     '''Set up email service'''
-
     for name, config in conf.items():
-        if config['type'] in ('gmail', 'hotmail', 'yahoo', 'ses', 'mandrill'):
-            info.email[name] = SMTPMailer(**config)
-        else:
-            raise NotImplementedError
+        info.email[name] = SMTPMailer(**config)
 
 
 def test(conf):
