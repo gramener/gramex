@@ -82,8 +82,10 @@ It accepts the following arguments:
 - `?width=`: screen width. Default: 1200. For PNG/GIF/JPG
 - `?height=`: screen height. Default: 768. For PNG/GIF/JPG
 - `?scale=`: zooms the screen by a factor. For PNG/GIF/JPG
-- `?debug=`: displays request / response log requests on the console. `?debug=1`
-  logs all responses and HTTP codes. `?debug=2` logs all requests and responses
+- `?debug=`: displays request / response log requests on the console.
+    - `?debug=1` logs all responses and HTTP codes. It also logs browser
+      console.log messages on the Gramex console
+    - `?debug=2` additionally logs all requests
 
 Here are some examples of usage:
 

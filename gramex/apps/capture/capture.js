@@ -107,8 +107,10 @@ function render(q, callback) {
   var debug = +q.debug
   if (debug >= 2)
     page.onResourceRequested = function(r) { console.log('REQ:', r.url) }
-  if (debug >= 1)
+  if (debug >= 1) {
     page.onResourceReceived = function(r) { console.log('GOT:', r.status, r.statusText, r.url) }
+    page.onConsoleMessage = function(msg) { console.log('console.log:' + msg) }
+  }
 
   // Open the page
   console.log('Opening', q.url)

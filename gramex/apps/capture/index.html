@@ -75,6 +75,14 @@
     <p><label for="selector">Selector</label><input name="selector" placeholder="CSS selector, e.g. #id, .class"></p>
   </div>
   <p><label for="delay">Delay</label><input name="delay" type="number" min="0" max="10000" value="0"> milliseconds</p>
+  <p>
+    <label for="debug">Debug</label>
+    <select name="debug">
+      <option value="">None</option>
+      <option value="1">Minimal</option>
+      <option value="2">Verbose</option>
+    </select>
+  </p>
   <p><label for="js">Javascript</label><textarea name="js" rows="3" placeholder="Paste JavaScript code or URL here"></textarea></p>
   <p><label></label><button type="submit">Get screenshot</button></p>
 </form>
