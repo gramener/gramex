@@ -8,7 +8,7 @@ _mime = 'application/vnd.openxmlformats-officedocument.presentationml.presentati
 class PPTXHandler(BaseHandler):
     def get(self):
         target = io.BytesIO()
-        pptgen.pptgen(target=target, **self.kwargs)
+        pptgen.pptgen(target=target, handler=self, **self.kwargs)
 
         # Set up headers
         headers = self.kwargs.get('headers', {})
