@@ -459,6 +459,35 @@ Here is a more complete example:
 [forgot-template]: http://code.gramener.com/s.anand/gramex/blob/master/gramex/handlers/forgot.template.html
 
 
+# IntegratedAuth
+
+This is an experimental feature. IntegratedAuth allows Windows domain users to
+log into Gramex automatically if they've logged into Windows.
+
+To set this up, run Gramex on a Windows domain server.
+[Create one if required](https://www.youtube.com/watch?v=o6I77cz4EE4).
+Then use this configuration:
+
+    :::yaml
+    auth/integrated:
+        pattern: /$YAMLURL/integrated
+        handler: IntegratedAuth
+
+The user must first trust this server by enabling
+[SSO on IE/Chrome](http://docs.aws.amazon.com/directoryservice/latest/admin-guide/ie_sso.html)
+or [on Firefox](https://wiki.shibboleth.net/confluence/display/SHIB2/Single+sign-on+Browser+configuration).
+Then visiting `/integrated` will automatically log the user in. The user object
+looks like this:
+
+    :::js
+    {
+        "id": "EC2-175-41-170-\\Administrator", // same as domain\username
+        "domain": "EC2-175-41-170-",            // Windows domain name
+        "username": "Administrator",            // Windows user name
+        "realm": "WIN-8S90I248M00"              // Windows hostname
+    }
+
+
 ## Log out
 
 This configuration creates a [logout page](logout?next=.):

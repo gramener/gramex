@@ -4,16 +4,20 @@ import csv
 import six
 import time
 import uuid
+import base64
 import logging
 import functools
 import tornado.web
 import tornado.gen
+from socket import gethostname
+from cachetools import TTLCache
 from tornado.auth import (GoogleOAuth2Mixin, FacebookGraphMixin, TwitterMixin,
                           urllib_parse, _auth_return_future)
 from collections import Counter
 from orderedattrdict import AttrDict
 import gramex
 import gramex.cache
+from gramex.http import UNAUTHORIZED
 from gramex.config import check_old_certs, app_log, objectpath, str_utf8
 from gramex.transforms import build_transform
 from .basehandler import BaseHandler
@@ -117,14 +121,20 @@ class AuthHandler(BaseHandler):
 
     @tornado.gen.coroutine
     def fail_user(self, user, id):
-        '''Not a user login failure. Delay response on multiple failures. Returns # failures'''
+        '''
+        When user login fails, delay response. Delay = self.delay[# of failures].
+        Or use the last value in the self.delay[] array.
+        Return # failures
+        '''
         failures = self.failed_logins[user[id]] = self.failed_logins[user[id]] + 1
         index = failures - 1
         delay = self.delay[index] if index < len(self.delay) else self.delay[-1]
         yield tornado.gen.sleep(delay)
 
     def render_template(self, path, **kwargs):
-        '''Like self.render(), but reloads updated templates'''
+        '''
+        Like self.render(), but reloads updated templates.
+        '''
         template = gramex.cache.open(path, 'template')
         namespace = self.get_template_namespace()
         namespace.update(kwargs)
@@ -177,7 +187,7 @@ class GoogleAuth(AuthHandler, GoogleOAuth2Mixin):
 
     @_auth_return_future
     def get_authenticated_user(self, redirect_uri, code, callback):
-        '''Override this method to use self.kwargs instead of self.settings'''
+        '''This Tornado method is overridden to use self.kwargs, not self.settings'''
         http = self.get_auth_http_client()
         body = urllib_parse.urlencode({
             'redirect_uri': redirect_uri,
@@ -253,7 +263,7 @@ class LDAPAuth(AuthHandler):
     def report_error(self, code, exc_info=False):
         error = self.errors[code].format(host=self.kwargs.host, args=self.args)
         app_log.error('LDAP: ' + error, exc_info=exc_info)
-        self.set_status(status_code=401)
+        self.set_status(UNAUTHORIZED)
         self.set_header('Auth-Error', code)
         self.render_template(self.template, error={'code': code, 'error': error})
         raise tornado.gen.Return()
@@ -386,7 +396,7 @@ class SimpleAuth(AuthHandler):
             self.redirect_next()
         else:
             yield self.fail_user({'user': user}, id='user')
-            self.set_status(status_code=401)
+            self.set_status(UNAUTHORIZED)
             self.render_template(self.template, error={'code': 'auth', 'error': 'Cannot log in'})
 
 
@@ -507,7 +517,7 @@ class DBAuth(SimpleAuth):
             self.redirect_next()
         else:
             yield self.fail_user({'user': user}, 'user')
-            self.set_status(status_code=401)
+            self.set_status(UNAUTHORIZED)
             self.render_template(self.template, error={'code': 'auth', 'error': 'Cannot log in'})
 
     def forgot_password(self):
@@ -554,7 +564,7 @@ class DBAuth(SimpleAuth):
                 error = {}                          # Render at the end with no errors
             # If no user matches the user ID or email ID
             else:
-                self.set_status(status_code=401)
+                self.set_status(UNAUTHORIZED)
                 if user is None:
                     error['error'] = 'No user matching %s found' % (forgot_user or forgot_email)
                 elif not user[email_column]:
@@ -586,10 +596,10 @@ class DBAuth(SimpleAuth):
                         self.recover['table'].delete(where))
                     error = {}
                 else:
-                    self.set_status(status_code=401)
+                    self.set_status(UNAUTHORIZED)
                     error['error'] = 'Token expired'
             else:
-                self.set_status(status_code=401)
+                self.set_status(UNAUTHORIZED)
                 error['error'] = 'Invalid Token'
         self.render_template(template, error=error)
 
@@ -607,3 +617,89 @@ class DBAuth(SimpleAuth):
         meta = MetaData(bind=engine)
         user_table = Table('users', meta, autoload=True, autoload_with=engine)
         return {'engine': engine, 'table': user_table}
+
+
+class IntegratedAuth(AuthHandler):
+    @classmethod
+    def setup(cls, realm=None, maxsize=1000, ttl=300, **kwargs):
+        super(IntegratedAuth, cls).setup(**kwargs)
+        cls.realm = realm if realm is not None else gethostname()
+        # Security contexts are stored in a dict with the session ID as keys.
+        # Only retain the latest contexts, and limit the duration
+        cls.csas = TTLCache(maxsize, ttl)
+
+    def negotiate(self, msg=None):
+        self.set_status(UNAUTHORIZED)
+        self.add_header('WWW-Authenticate',
+                        'Negotiate' if msg is None else 'Negotiate ' + msg)
+
+    def unauthorized(self):
+        self.set_status(UNAUTHORIZED)
+        self.csas.pop(self.session['id'], None)
+        self.write('Unauthorized')
+
+    @tornado.gen.coroutine
+    def get(self):
+        try:
+            import sspi
+            import sspicon
+        except ImportError:
+            app_log.exception('%s: requires Windows, sspi package', self.name)
+            raise
+        self.save_redirect_page()
+
+        # Spec: https://tools.ietf.org/html/rfc4559
+        challenge = self.request.headers.get('Authorization')
+        if not challenge:
+            self.negotiate()
+            raise tornado.gen.Return()
+
+        scheme, auth_data = challenge.split(None, 2)
+        if scheme != 'Negotiate':
+            app_log.error('%s: unsupported Authorization: %s', self.name, challenge)
+            self.unauthorized()
+            raise tornado.gen.Return()
+
+        # Get the security context
+        session_id = self.session['id']
+        if session_id not in self.csas:
+            realm = self.realm
+            spn = 'http/%s' % realm
+            self.csas[session_id] = yield gramex.service.threadpool.submit(
+                sspi.ServerAuth, "Negotiate", spn=spn)
+        csa = self.csas[session_id]
+
+        try:
+            err, sec_buffer = yield gramex.service.threadpool.submit(
+                csa.authorize, base64.b64decode(auth_data))
+        except Exception:
+            # The token may be invalid, password may be wrong, or server unavailable
+            app_log.exception('%s: authorize() failed on: %s', self.name, auth_data)
+            self.unauthorized()
+            raise tornado.gen.Return()
+
+        # If SEC_I_CONTINUE_NEEDED, send challenge again
+        # If err is anything other than zero, we don't know what it is
+        if err == sspicon.SEC_I_CONTINUE_NEEDED:
+            self.negotiate(base64.b64encode(sec_buffer[0].Buffer))
+            raise tornado.gen.Return()
+        elif err != 0:
+            app_log.error('%s: authorize() unknown response: %s', self.name, err)
+            self.unauthorized()
+            raise tornado.gen.Return()
+
+        # The security context contains the user ID. Retrieve it.
+        # Split the DOMAIN\username into its parts. Add to the user object
+        user_id = yield gramex.service.threadpool.submit(
+            csa.ctxt.QueryContextAttributes, sspicon.SECPKG_ATTR_NAMES)
+        parts = user_id.split('\\', 2)
+        user = {
+            'id': user_id,
+            'domain': parts[0] if len(parts) > 1 else '',
+            'username': parts[-1],
+            'realm': self.realm,
+        }
+        self.csas.pop(session_id, None)
+
+        self.set_user(user, 'id')
+        self.redirect_next()
