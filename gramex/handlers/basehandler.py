@@ -25,6 +25,7 @@ from gramex.http import UNAUTHORIZED, FORBIDDEN, BAD_REQUEST
 
 server_header = 'Gramex/%s' % __version__
 session_store_cache = {}
+_reported = {}
 
 
 class BaseMixin(object):
@@ -118,7 +119,9 @@ class BaseMixin(object):
         if 'private_key' in session_conf:
             keyfile = session_conf['private_key']
             if not os.path.exists(keyfile):
-                app_log.error('app.session.private_key: %s missing', keyfile)
+                if not _reported.get(('private_key', keyfile)):
+                    app_log.warn('%s: no SSH private key at %s', cls.name, keyfile)
+                    _reported['private_key', keyfile] = True
                 return
             with open(keyfile, 'rb') as handle:
                 keytext = handle.read()
