@@ -164,7 +164,7 @@ class GoogleAuth(AuthHandler, GoogleOAuth2Mixin):
             user = yield self.oauth2_request(
                 'https://www.googleapis.com/oauth2/v1/userinfo',
                 access_token=access['access_token'])
-            self.set_user(user, id='id')
+            self.set_user(user, id='email')
             self.session['google_access_token'] = access['access_token']
             self.redirect_next()
         else:
