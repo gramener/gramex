@@ -713,4 +713,30 @@ This is how you re-use error page definitions:
             ...
             error: *DASHBOARD_ERROR       # Reuse DASHBOARD_ERROR reference
 
+You can also re-use parts of a configuration. Place any configuration you want in
+the `variables:` section. Then use `<<: *reference` to copy-paste it where you
+need.
+
+For example, if you need to re-use common headers, do this:
+
+    :::yaml
+    variables:
+        # Define any YAML configuration in the variables: section
+        headers: &commonheaders
+            Server: False
+            X-XSS-Protection: '1'
+            X-Frame-Options: SAMEORIGIN
+            ...
+
+    url:
+        pattern: ...
+        handler: ...
+            kwargs:
+                ...
+                headers:
+                    Content-Type: text/plain
+                    <<: *commonheaders          # Copy-paste this reference
+
+You can use `<<: *commonheaders` in multiple URL patterns
+
 [anchors]: http://camel.readthedocs.io/en/latest/yamlref.html#anchors
