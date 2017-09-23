@@ -1255,6 +1255,16 @@ url:
         query: 'SELECT * FROM sales WHERE sales > 100'
         function: data.sort_values('growth')
 
+  formhandler/default:
+    pattern: /formhandler/default
+    handler: FormHandler
+    kwargs:
+      url: sales.xlsx
+      default:
+        'sales>': 50
+        _limit: 2
+        _format: csv
+
   capture:
     pattern: /capture
     handler: CaptureHandler

@@ -119,6 +119,14 @@ class TestFormHandler(TestGramex):
         finally:
             dbutils.postgres_drop_db(variables.POSTGRES_SERVER, 'test_formhandler')
 
+
+    def test_default(self):
+        out = self.get('/formhandler/default').content
+        actual = pd.read_csv(BytesIO(out), encoding='utf-8')
+        expected = self.sales[self.sales['sales'] > 50].head(2)
+        expected.index = range(len(expected))
+        assert_frame_equal(actual, expected, check_column_type=six.PY3)
+
     def test_download(self):
         # Modelled on testlib.test_data.TestDownload
         big = self.sales[self.sales['sales'] > 100]

@@ -87,11 +87,10 @@ class FormHandler(BaseHandler):
                 key: val if isinstance(val, list) else [val]
                 for key, val in filter_kwargs.pop('default', {}).items()
             }
+            args = merge(namespaced_args(self.args, key), defaults, mode='setdefault')
             # Run query in a separate thread
             futures[key] = gramex.service.threadpool.submit(
-                gramex.data.filter,
-                args=merge(namespaced_args(self.args, key), defaults, mode='setdefault'),
-                meta=meta[key], **filter_kwargs)
+                gramex.data.filter, args=args, meta=meta[key], **filter_kwargs)
         result = AttrDict()
         for key, val in futures.items():
             try:
@@ -101,7 +100,7 @@ class FormHandler(BaseHandler):
 
         # Identify format to render in. The default format, json, is defined in
         # the base gramex.yaml under handlers.FormHandler.formats
-        fmt = self.args.pop('_format', ['json'])[0]
+        fmt = args.get('_format', ['json'])[0]
         if fmt in self.formats:
             fmt = dict(self.formats[fmt])
         else:
