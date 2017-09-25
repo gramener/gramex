@@ -25,6 +25,13 @@ url:
         url: $YAMLPATH/flags.csv
         modify: data.sum(numeric_only=True).to_frame().T
 
+    formhandler-replace:
+        pattern: /$YAMLURL/replace
+        handler: FormHandler
+        kwargs:
+          url: $YAMLPATH/flags.csv
+          prepare: args.update(Cross=args.pop('c', []))
+
     formhandler-query:
       pattern: /$YAMLURL/query
       handler: FormHandler

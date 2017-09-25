@@ -1274,6 +1274,13 @@ url:
       default:
         _format: csv
 
+  formhandler/prepare:
+    pattern: /formhandler/prepare
+    handler: FormHandler
+    kwargs:
+      url: sales.xlsx
+      prepare: args.update(_format=['csv'], product=['Biscuit'])
+
   capture:
     pattern: /capture
     handler: CaptureHandler

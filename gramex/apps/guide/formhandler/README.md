@@ -142,7 +142,7 @@ Add `function: ...` to transform the data before filtering. Try this
           url: $YAMLPATH/flags.csv
           function: data.groupby('Continent').sum().reset_index()
           # Another example:
-          # function: my_module.calc(data)
+          # function: my_module.calc(data, handler)
 
 This runs the following steps:
 
@@ -155,7 +155,7 @@ That this transforms the data *before filtering*.
 e.g. [filtering for c1 > 1000](continent?c1>=1000) filters on the totals, not individual rows.
 To transform the data after filtering, use [modify](#formhandler-modify).
 
-`function:` also works with [database queries](#formhandler-queries), but loads
+`function:` also works with [database queries](#formhandler-query), but loads
 the **entire** table before transforming, so ensure that you have enough memory.
 
 ## FormHandler modify
@@ -172,7 +172,7 @@ this [example](totals):
           url: $YAMLPATH/flags.csv
           modify: data.sum(numeric_only=True).to_frame().T
           # Another example:
-          # modify: my_module.calc(data)
+          # modify: my_module.calc(data, handler)
 
 This runs the following steps:
 
@@ -185,9 +185,9 @@ This transforms the data *after filtering*.
 e.g. the [Asia result](totals?Continent=Asia) shows totals only for Asia.
 To transform the data before filtering, use [function](#formhandler-functions).
 
-`modify:` also works with [database queries](#formhandler-queries).
+`modify:` also works with [database queries](#formhandler-query).
 
-## FormHandler queries
+## FormHandler query
 
 You may also use a `query:` to select data from an SQLAlchemy databases. For example:
 
@@ -213,6 +213,20 @@ The query string is string-formatted using the arguments. For example:
 
 will group by whatever is passed as `?group=`. For example, `?group=city` returns
 `SELECT city, COUNT(*) FROM table GROUP BY city`.
+
+This uses [gramex.cache.query](../cache/#query-caching) behind the scenes. You
+can cache the query based on a smaller query or table name by specifying a
+`table:` parameter. For example:
+
+    :::yaml
+          table: 'SELECT MAX(date) FROM source'
+          query: 'SELECT city, SUM(sales) FROM source GROUP BY city'
+
+... will run `query:` only if the result of running `table:` changes. You can
+also specify `table: source`. This attempts to automatically check if the table
+has changed.
+
+The `table:` parameter also supports query substitutions like `query:`.
 
 **WARNING**:
 
@@ -242,6 +256,39 @@ To specify default values for arguments, use the `default:` key.
           default:
             _limit: 10                  # By default, limit to 10 rows, i.e. ?_limit=10
             Continent: [Europe, Asia]   # Same as ?Continent=Europe&Continent=Asia
+
+## FormHandler prepare
+
+To modify the arguments before executing the query, use `prepare:`.
+
+    :::yaml
+    url:
+      replace:
+        pattern: /$YAMLURL/replace
+        handler: FormHandler
+        kwargs:
+          url: $YAMLPATH/flags.csv
+          prepare: args.update(Stripes=args.pop('c', []))
+          # Another example:
+          # modify: my_module.calc(args, handler)
+
+This `prepare:` method replaces the `?c=` with `?Cross=`. So
+[replace?c=Yes](replace?c=Yes&_format=html) is actually the same as
+[flags?Cross=Yes](flags?Cross=Yes&_format=html).
+
+`prepare:` is a Python expression that modifies `args`. `args` is a dict
+containing the URL query parameters as lists of strings. `?x=1&y=2` becomes is
+`{'x': ['1'], 'y': ['2']}`. `args` has [default values](#formhandler-defaults)
+merged in. You can modify `args` in-place and return None, or return a value that
+replaces `args`.
+
+Some sample uses:
+
+- Add/modify/delete arguments based on the user. You can access the user ID via
+  `handler.current_user` inside the `prepare:` expression
+- Add/modify/delete arguments based on external data. 
+- Replace argument values. 
+
 
 ## FormHandler multiple datasets
 

@@ -65,7 +65,7 @@ class FormHandler(BaseHandler):
             elif 'url' not in dataset:
                 app_log.error('%s: %s: does not have a url: key' % (cls.name, key))
                 del cls.datasets[key]
-            # Convert function: into a transform function
+            # Convert function: into a data = transform(data) function
             conf = {
                 'function': dataset.pop('function', None),
                 'args': dataset.pop('args', None),
@@ -75,12 +75,20 @@ class FormHandler(BaseHandler):
                 fn_name = '%s.%s.transform' % (cls.name, key)
                 dataset['transform'] = build_transform(
                     conf, vars={'data': None}, filename=fn_name, iter=False)
-            # Convert modify: into a transform function
+            # Convert modify: into a data = modify(data) function
             if 'modify' in dataset:
                 fn_name = '%s.%s.modify' % (cls.name, key)
                 dataset['modify'] = build_transform(
                     conf={'function': dataset['modify']},
-                    vars={'data': None}, filename=fn_name, iter=False)
+                    vars={'data': None, 'key': None, 'handler': None},
+                    filename=fn_name, iter=False)
+            # Convert modify: into a args = prepare(self.args) function
+            if 'prepare' in dataset:
+                fn_name = '%s.%s.prepare' % (cls.name, key)
+                dataset['prepare'] = build_transform(
+                    conf={'function': dataset['prepare']},
+                    vars={'args': None, 'key': None, 'handler': None},
+                    filename=fn_name, iter=False)
 
     @tornado.gen.coroutine
     def get(self):
@@ -89,12 +97,16 @@ class FormHandler(BaseHandler):
             meta[key] = AttrDict()
             filter_kwargs = AttrDict(dataset)
             filter_kwargs.pop('modify', None)
-            # Get default values to update args with
+            prepare = filter_kwargs.pop('prepare', None)
             defaults = {
                 key: val if isinstance(val, list) else [val]
                 for key, val in filter_kwargs.pop('default', {}).items()
             }
             args = merge(namespaced_args(self.args, key), defaults, mode='setdefault')
+            if callable(prepare):
+                result = prepare(args=args, key=key, handler=self)
+                if result is not None:
+                    args = result
             # Run query in a separate thread
             futures[key] = gramex.service.threadpool.submit(
                 gramex.data.filter, args=args, meta=meta[key], **filter_kwargs)
@@ -106,7 +118,7 @@ class FormHandler(BaseHandler):
                 raise HTTPError(BAD_REQUEST, reason=e.args[0])
             modify = self.datasets[key].get('modify', None)
             if callable(modify):
-                result[key] = modify(result[key])
+                result[key] = modify(data=result[key], key=key, handler=self)
 
         # Identify format to render in. The default format, json, is defined in
         # the base gramex.yaml under handlers.FormHandler.formats

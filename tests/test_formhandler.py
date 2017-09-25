@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 
 import os
 import six
-import dbutils
 import pandas as pd
 import gramex.cache
 from io import BytesIO
@@ -11,7 +10,7 @@ from nose.tools import eq_, ok_
 from gramex.http import BAD_REQUEST
 from gramex.config import variables
 from pandas.util.testing import assert_frame_equal
-from . import folder, TestGramex
+from . import folder, TestGramex, dbutils
 
 
 class TestFormHandler(TestGramex):
@@ -131,6 +130,9 @@ class TestFormHandler(TestGramex):
 
     def test_modify(self):
         self.eq('/formhandler/modify', self.sales.sum(numeric_only=True).to_frame().T)
+
+    def test_prepare(self):
+        self.eq('/formhandler/prepare', self.sales[self.sales['product'] == 'Biscuit'])
 
     def test_download(self):
         # Modelled on testlib.test_data.TestDownload
