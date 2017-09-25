@@ -39,8 +39,7 @@ class BaseMixin(object):
         cls._on_init_methods = []
         cls._on_finish_methods = []
 
-        # handler.kwargs returns kwargs with BaseHandler kwargs removed
-        cls.kwargs = AttrDict(kwargs)
+        cls.kwargs = cls.conf.get('kwargs', AttrDict())
         cls.setup_default_kwargs()
 
         cls.setup_transform(transform)
@@ -65,7 +64,6 @@ class BaseMixin(object):
         '''Use configs under handlers.<ClassName>.* as the default for kwargs'''
         update = objectpath(conf, 'handlers.' + cls.conf.handler, {})
         merge(cls.conf.setdefault('kwargs', {}), update, mode='setdefault')
-        merge(cls.kwargs, update, mode='setdefault')
 
     @classmethod
     def setup_transform(cls, transform):

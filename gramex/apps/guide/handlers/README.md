@@ -72,8 +72,8 @@ The following attributes are available to `BaseHandler` instances:
 - `handler.conf` (AttrDict): the full configuration used to create the handler,
   parsed from YAML. For example, `handler.conf.pattern` has the `pattern:`
   section. `handler.conf.kwargs` has the handler kwargs.
-- `handler.kwargs` (AttrDict): same as `handler.conf.kwargs`, ignoring what
-  BaseHandler already handles (e.g. `xsrf_cookies`, `log`, etc)
+- `handler.kwargs` (AttrDict): Same as `handler.conf.kwargs`. Retained for
+  backward compatibility and convenience.
 - `handler.args` (dict): a unicode dictonary of URL query parameters. Values are
   lists. For example, `?x=1` is passed as `handler.args = {'x': ['1']}`
 - `handler.session` (AttrDict): a unique object associated with each [session](../auth/)
