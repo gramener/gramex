@@ -151,8 +151,9 @@ This runs the following steps:
    input data is a DataFrame called `data`.
 3. Filter the data using the URL query parameters
 
-That this transforms the data *before filtering*. To transform the data after
-filtering, use [modify](#formhandler-modify).
+That this transforms the data *before filtering*.
+e.g. [filtering for c1 > 1000](continent?c1>=1000) filters on the totals, not individual rows.
+To transform the data after filtering, use [modify](#formhandler-modify).
 
 `function:` also works with [database queries](#formhandler-queries), but loads
 the **entire** table before transforming, so ensure that you have enough memory.
@@ -180,8 +181,9 @@ This runs the following steps:
 3. Run `function`, which must be an expression that returns a DataFrame. The
    filtered data is a DataFrame called `data`.
 
-That this transforms the data *after filtering*. To transform the data before
-filtering, use [function](#formhandler-functions).
+This transforms the data *after filtering*.
+e.g. the [Asia result](totals?Continent=Asia) shows totals only for Asia.
+To transform the data before filtering, use [function](#formhandler-functions).
 
 `modify:` also works with [database queries](#formhandler-queries).
 
