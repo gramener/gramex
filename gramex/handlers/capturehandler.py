@@ -116,10 +116,14 @@ class Capture(object):
     def close(self):
         '''Stop capture.js if it has been started by this object'''
         if hasattr(self, 'proc'):
-            process = psutil.Process(self.proc.pid)
-            for proc in process.children(recursive=True):
-                proc.kill()
-            process.kill()
+            try:
+                process = psutil.Process(self.proc.pid)
+                for proc in process.children(recursive=True):
+                    proc.kill()
+                process.kill()
+            except psutil.NoSuchProcess:
+                app_log.info('capture.js PID %d already killed', self.proc.pid)
+                pass
             delattr(self, 'proc')
 
     def _validate_server(self, response):
