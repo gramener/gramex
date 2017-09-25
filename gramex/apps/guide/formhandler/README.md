@@ -128,9 +128,10 @@ FormHandler is designed to work without JavaScript. For example:
 This form filters without using any JavaScript code. It applies the URL query
 parameters directly.
 
-## FormHandler transforms
+## FormHandler functions
 
-Add `function: ...` to transform the data before filtering. For example:
+Add `function: ...` to transform the data before filtering. Try this
+[example](continent):
 
     :::yaml
     url:
@@ -140,13 +141,49 @@ Add `function: ...` to transform the data before filtering. For example:
         kwargs:
           url: $YAMLPATH/flags.csv
           function: data.groupby('Continent').sum().reset_index()
+          # Another example:
+          # function: my_module.calc(data)
 
-This loads `flags.csv` and runs the expression `function` with the data passed as
-a parameter `data`. You may call any function, e.g. `mymodule.calc(data, ...)`.
-The return value must be a DataFrame. This will be used for calculations.
+This runs the following steps:
 
-`function:` also works with SQLAlchemy databases. It loads the **entire** table
-before transforming, so ensure that you have enough memory.
+1. Load `flags.csv`
+2. Run `function`, which must be an expression that returns a DataFrame. The
+   input data is a DataFrame called `data`.
+3. Filter the data using the URL query parameters
+
+That this transforms the data *before filtering*. To transform the data after
+filtering, use [modify](#formhandler-modify).
+
+`function:` also works with [database queries](#formhandler-queries), but loads
+the **entire** table before transforming, so ensure that you have enough memory.
+
+## FormHandler modify
+
+You can modify the data returned after filtering using the `modify:` key. Try
+this [example](totals):
+
+    :::yaml
+    url:
+      totals:
+        pattern: /$YAMLURL/totals
+        handler: FormHandler
+        kwargs:
+          url: $YAMLPATH/flags.csv
+          modify: data.sum(numeric_only=True).to_frame().T
+          # Another example:
+          # modify: my_module.calc(data)
+
+This runs the following steps:
+
+1. Load `flags.csv`
+2. Filter the data using the URL query parameters
+3. Run `function`, which must be an expression that returns a DataFrame. The
+   filtered data is a DataFrame called `data`.
+
+That this transforms the data *after filtering*. To transform the data before
+filtering, use [function](#formhandler-functions).
+
+`modify:` also works with [database queries](#formhandler-queries).
 
 ## FormHandler queries
 

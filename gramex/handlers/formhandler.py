@@ -75,6 +75,12 @@ class FormHandler(BaseHandler):
                 fn_name = '%s.%s.transform' % (cls.name, key)
                 dataset['transform'] = build_transform(
                     conf, vars={'data': None}, filename=fn_name, iter=False)
+            # Convert modify: into a transform function
+            if 'modify' in dataset:
+                fn_name = '%s.%s.modify' % (cls.name, key)
+                dataset['modify'] = build_transform(
+                    conf={'function': dataset['modify']},
+                    vars={'data': None}, filename=fn_name, iter=False)
 
     @tornado.gen.coroutine
     def get(self):
@@ -82,6 +88,7 @@ class FormHandler(BaseHandler):
         for key, dataset in self.datasets.items():
             meta[key] = AttrDict()
             filter_kwargs = AttrDict(dataset)
+            filter_kwargs.pop('modify', None)
             # Get default values to update args with
             defaults = {
                 key: val if isinstance(val, list) else [val]
@@ -97,6 +104,9 @@ class FormHandler(BaseHandler):
                 result[key] = yield val
             except ValueError as e:
                 raise HTTPError(BAD_REQUEST, reason=e.args[0])
+            modify = self.datasets[key].get('modify', None)
+            if callable(modify):
+                result[key] = modify(result[key])
 
         # Identify format to render in. The default format, json, is defined in
         # the base gramex.yaml under handlers.FormHandler.formats

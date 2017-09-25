@@ -18,6 +18,13 @@ url:
         url: $YAMLPATH/flags.csv
         function: data.groupby('Continent').sum().reset_index()
 
+    formhandler-totals:
+      pattern: /$YAMLURL/totals
+      handler: FormHandler
+      kwargs:
+        url: $YAMLPATH/flags.csv
+        modify: data.sum(numeric_only=True).to_frame().T
+
     formhandler-query:
       pattern: /$YAMLURL/query
       handler: FormHandler

@@ -82,6 +82,12 @@ class TestFormHandler(TestGramex):
         eq_(self.get(url, params={'_limit': ['abc']}).status_code, BAD_REQUEST)
         eq_(self.get(url, params={'_offset': ['abc']}).status_code, BAD_REQUEST)
 
+    def eq(self, url, expected):
+        out = self.get(url).content
+        actual = pd.read_csv(BytesIO(out), encoding='utf-8')
+        expected.index = range(len(expected))
+        assert_frame_equal(actual, expected, check_column_type=six.PY3)
+
     def test_file(self):
         self.check_filter('/formhandler/file', na_position='last')
         self.check_filter('/formhandler/file-multi', na_position='last', key='big',
@@ -119,13 +125,12 @@ class TestFormHandler(TestGramex):
         finally:
             dbutils.postgres_drop_db(variables.POSTGRES_SERVER, 'test_formhandler')
 
-
     def test_default(self):
-        out = self.get('/formhandler/default').content
-        actual = pd.read_csv(BytesIO(out), encoding='utf-8')
-        expected = self.sales[self.sales['sales'] > 50].head(2)
-        expected.index = range(len(expected))
-        assert_frame_equal(actual, expected, check_column_type=six.PY3)
+        cutoff, limit = 50, 2
+        self.eq('/formhandler/default', self.sales[self.sales['sales'] > cutoff].head(limit))
+
+    def test_modify(self):
+        self.eq('/formhandler/modify', self.sales.sum(numeric_only=True).to_frame().T)
 
     def test_download(self):
         # Modelled on testlib.test_data.TestDownload

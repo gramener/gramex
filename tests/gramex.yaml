@@ -1265,6 +1265,15 @@ url:
         _limit: 2
         _format: csv
 
+  formhandler/modify:
+    pattern: /formhandler/modify
+    handler: FormHandler
+    kwargs:
+      url: sales.xlsx
+      modify: data.sum(numeric_only=True).to_frame().T
+      default:
+        _format: csv
+
   capture:
     pattern: /capture
     handler: CaptureHandler
