@@ -3,6 +3,53 @@
 History
 -------
 
+1.22 (2017-09-28)
+~~~~~~~~~~~~~~~~~
+This release adds Windows `IntegratedAuth`_. This allows Windows domain users to
+log into Gramex automatically without entering and ID or password.
+
+`FormHandler`_ has improved - you won't need FunctionHandler to process data.
+
+- `FormHandler defaults`_ set up default URL query parameters that the user can override
+- `FormHandler prepare`_ lets you add / modify / delete the URL query parameters dynamically
+- `FormHandler query`_ can be dynamically filled with URL query parameters
+- `FormHandler query`_ has a ``table:`` key. If you specify a simple query here, the results will be cached based on that query
+- `FormHandler modify`_ lets you change the returned dataset before rendering
+
+`CaptureHandler`_ supports a ``?debug=1`` URL query parameter that logs HTTP
+responses and PhantomJS messages to the console. ``?debug=2`` also logs HTTP
+requests made. The Guide also features a live example. CaptureHandler's
+``selector`` parameter is improved and captures portions of a page better.
+
+The default error pages shown for HTTP 500 (Internal Server Error), 404 (Not
+Found) and 403 (Forbidden) are a little more informattive and better designed.
+
+All auth handlers support a custom `session expiry`_ duration. You can increase /
+decrease the cookie's expiry duration.
+
+This release also features an undocumented ``PPTXHandler`` that generates
+PowerPoint presentations. But the API will change. This handler not meant for
+general use yet. A future release will define and document the specs.
+
+There are some enhancements to the API:
+
+- :py:func:`gramex.cache.Subprocess` returns the stdout and stderr values if no
+  streams are specified
+- :py:class:`gramex.transforms.twitterstream.TwitterStream` supports a ``flush=``
+  option that saves the stream data periodically
+- :py:func:`gramex.cache.query` does not cache queries by default. It caches only
+  if a ``state=`` is specified. (This may change.)
+- :py:func:`gramex.data.filter` ignores empty query parameters, which is the
+  expected behaviour
+
+There are some changes to Gramex behaviour that may impact your application:
+
+- `UploadHandler`_ backup file naming has changed from ``name.ext.<time>`` to ``name.<time>.ext``
+- The `deploy yaml`_ configuration hides the ``Server:`` HTTP header for security
+- `Google Auth`_ stores the email ID of the user as the user ID, not the Google provided ID
+- All handlers have a ``handler.kwargs`` attribute that has the ``kwargs:`` configuration passed to the handler
+
+
 1.21 (2017-08-29)
 ~~~~~~~~~~~~~~~~~
 This is a major release with new functionality. There are two new handlers.
@@ -143,7 +190,7 @@ This is a minor enhancement release with
   `DBAuth login template`_.
 - `Reloading`_ of configurations, modules and files is seamless. You don't need
   to restart Gramex when your Python code or templates change.
-- `Query caching`_ via ``gramex.cache.query()`` caches SQL query results
+- `Query caching`_ via :py:func:`gramex.cache.query` caches SQL query results
 - `DataHandler templates`_ and `QueryHandler templates`_ let you customize the
   output of these handlers arbitrarily
 - :py:func:`gramex.cache.open` supports new formats: ``md`` for Markdown, ``xls`` or
@@ -555,10 +602,16 @@ There are two changes that may disrupt your code:
 .. _DBAuth: https://learn.gramener.com/guide/auth/#database-auth
 .. _SimpleAuth: https://learn.gramener.com/guide/auth/#simple-auth
 .. _TwitterAuth: https://learn.gramener.com/guide/auth/#twitter-auth
+.. _IntegratedAuth: https://learn.gramener.com/guide/auth/#integrated-auth
+.. _session expiry: https://learn.gramener.com/guide/auth/#session-expiry
 .. _TwitterStream: https://learn.gramener.com/guide/twitterresthandler/#twitter-streaming
 .. _UploadHandler: https://learn.gramener.com/guide/uploadhandler/
 .. _CaptureHandler: https://learn.gramener.com/guide/capturehandler/
 .. _FormHandler: https://learn.gramener.com/guide/formhandler/
+.. _FormHandler defaults: https://learn.gramener.com/guide/formhandler/#formhandler-defaults
+.. _FormHandler prepare: https://learn.gramener.com/guide/formhandler/#formhandler-prepare
+.. _FormHandler query: https://learn.gramener.com/guide/formhandler/#formhandler-query
+.. _FormHandler modify: https://learn.gramener.com/guide/formhandler/#formhandler-modify
 .. _caching: https://learn.gramener.com/guide/cache/
 .. _scheduler: https://learn.gramener.com/guide/scheduler/
 .. _log: https://learn.gramener.com/guide/config/#logging

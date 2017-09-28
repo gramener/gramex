@@ -459,10 +459,10 @@ Here is a more complete example:
 [forgot-template]: http://code.gramener.com/s.anand/gramex/blob/master/gramex/handlers/forgot.template.html
 
 
-# IntegratedAuth
+# Integrated auth
 
-This is an experimental feature. IntegratedAuth allows Windows domain users to
-log into Gramex automatically if they've logged into Windows.
+IntegratedAuth allows Windows domain users to log into Gramex automatically if
+they've logged into Windows.
 
 To set this up, run Gramex on a Windows domain server.
 [Create one if required](https://www.youtube.com/watch?v=o6I77cz4EE4).

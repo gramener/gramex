@@ -270,7 +270,7 @@ To modify the arguments before executing the query, use `prepare:`.
           url: $YAMLPATH/flags.csv
           prepare: args.update(Stripes=args.pop('c', []))
           # Another example:
-          # modify: my_module.calc(args, handler)
+          # prepare: my_module.calc(args, handler)
 
 This `prepare:` method replaces the `?c=` with `?Cross=`. So
 [replace?c=Yes](replace?c=Yes&_format=html) is actually the same as

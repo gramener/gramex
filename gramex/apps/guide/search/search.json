@@ -67,6 +67,9 @@
     "google-auth": {
       "Google auth": -1
     },
+    "integrated-auth": {
+      "Integrated auth": -1
+    },
     "ldap-auth": {
       "LDAP auth": -1
     },
@@ -93,6 +96,9 @@
     },
     "session-data": {
       "Session data": -1
+    },
+    "session-expiry": {
+      "Session expiry": -1
     },
     "sessions": {
       "Sessions": -1
@@ -149,6 +155,9 @@
     },
     "server-caching": {
       "Server caching": -1
+    },
+    "subprocess-streaming": {
+      "Subprocess streaming": -1
     },
     "using-cache-stores": {
       "Using cache stores": -1
@@ -346,6 +355,9 @@
     "": {
       "Send email": -1
     },
+    "automated-email-alerts": {
+      "Automated email alerts": -1
+    },
     "command-line-emails": {
       "Command-line emails": -1
     },
@@ -421,15 +433,28 @@
     "formhandler-formats": {
       "FormHandler formats": -1
     },
+    "formhandler-forms": {
+      "FormHandler forms": -1
+    },
+    "formhandler-functions": {
+      "FormHandler functions": -1
+    },
+    "formhandler-modify": {
+      "FormHandler modify": -1
+    },
     "formhandler-multiple-datasets": {
       "FormHandler multiple datasets": -1
+    },
+    "formhandler-prepare": {
+      "FormHandler prepare": -1
+    },
+    "formhandler-query": {
+      "FormHandler query": -1
     },
     "formhandler-templates": {
       "FormHandler templates": -1
     },
-    "formhandler-transforms": {
-      "FormHandler transforms": -1
-    }
+    "formhandler-transforms": {}
   },
   "functionhandler": {
     "": {
@@ -547,6 +572,11 @@
       "Gramex 0.x changes": -1
     }
   },
+  "test": {
+    "": {
+      "Automate tests": -1
+    }
+  },
   "twitterresthandler": {
     "": {
       "Gramex accesses Twitter data": -1
@@ -608,6 +638,9 @@
   "watch": {
     "": {
       "Gramex watches files": -1
+    },
+    "inotify-limit": {
+      "inotify limit": -1
     },
     "watching-files": {
       "Watching files": -1
