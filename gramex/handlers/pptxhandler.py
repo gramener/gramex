@@ -1,5 +1,4 @@
 import io
-import pptgen
 from gramex.handlers import BaseHandler
 
 _mime = 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
@@ -7,6 +6,9 @@ _mime = 'application/vnd.openxmlformats-officedocument.presentationml.presentati
 
 class PPTXHandler(BaseHandler):
     def get(self):
+        # pptgen is not required unless PPTXHandler is used
+        import pptgen                   # noqa
+
         target = io.BytesIO()
         pptgen.pptgen(target=target, handler=self, **self.kwargs)
 
