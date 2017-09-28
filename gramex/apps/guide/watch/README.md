@@ -56,3 +56,17 @@ called with a [watchdog event][event].
     unwatch(name='unique-name')
 
 [event]: http://pythonhosted.org/watchdog/api.html#module-watchdog.events
+
+## inotify limit
+
+On Linux, Gramex creates a new inotify instance for each folder observed. The
+default system limits may not be enough for this.
+
+If you see an "inotify watch limit reached" or "inotify instance limit reached"
+error, run these commands to increase the limit:
+
+    printf "fs.inotify.max_user_instances=512\n" | sudo tee -a /etc/sysctl.conf
+    printf "fs.inotify.max_user_watches=524288\n" | sudo tee -a /etc/sysctl.conf
+    sudo sysctl --system
+
+To debug, see [issue #126](https://code.gramener.com/s.anand/gramex/issues/126)

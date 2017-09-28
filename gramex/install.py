@@ -412,8 +412,9 @@ def run(cmd, args):
                 run_config[key] = app_config.pop(key)
         save_user_config(appname, app_config)
         # Tell the user what configs are used
-        app_log.info('Gramex %s | %s %s loading...', gramex.__version__, appname, ' '.join(
-            ['--%s=%s' % arg for arg in flatten_config(app_config.get('run', {}))]))
+        cline = ' '.join(['--%s=%s' % arg for arg in flatten_config(app_config.get('run', {}))])
+        app_log.info('Gramex %s | %s %s | %s | Python %s', gramex.__version__, appname, cline,
+                     os.getcwd(), sys.version.replace('\n', ' '))
         gramex.init(cmd=AttrDict(app=app_config['run']))
     elif appname in apps_config['user']:
         # The user configuration has a wrong path. Inform user
