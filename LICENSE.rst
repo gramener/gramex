@@ -113,7 +113,7 @@ Here are the licenses of other dependencies:
 .. _requirements: https://code.gramener.com/s.anand/gramex/tree/master/requirements.txt
 
 Applications built on Gramex may use other libraries. Here are some common
-applications and their licenses.
+libraries and their licenses.
 
 - `PhantomJS`_: `BSD`_ license
 - `nodejs`_: `MIT`_ license
@@ -123,6 +123,7 @@ applications and their licenses.
 - `underscore`_: `MIT`_ license
 - `d3`_: `BSD`_ license
 - `bootstrap`_: `MIT`_ license
+- `nginx`_: `BSD`_ license
 
 .. _PhantomJS: https://github.com/ariya/phantomjs/
 .. _nodejs: https://github.com/nodejs/node/
@@ -132,6 +133,7 @@ applications and their licenses.
 .. _underscore: https://www.npmjs.com/package/underscore
 .. _d3: https://www.npmjs.com/package/d3
 .. _bootstrap: https://www.npmjs.com/package/bootstrap
+.. _nginx: https://nginx.org/
 
 .. _MIT: https://opensource.org/licenses/MIT
 .. _BSD: https://opensource.org/licenses/BSD-3-Clause
