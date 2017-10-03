@@ -18,6 +18,7 @@ Gramex: Gramener's Visualization Server
    Contributing to Gramex <contributing>
    Authors <authors>
    Changelog <history>
+   license
 
 Indices and tables
 ==================

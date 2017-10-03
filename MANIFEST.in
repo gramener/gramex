@@ -15,7 +15,7 @@ include requirements.txt
 include AUTHORS.rst
 include CONTRIBUTING.rst
 include HISTORY.rst
-include LICENSE
+include LICENSE.rst
 include README.rst
 
 # Include test cases

@@ -1,5 +1,6 @@
 # Libraries required for Gramex
 # -----------------------------
+# Keep this in sync with LICENSE.rst
 
 # For setup
 setuptools >= 16.0        # 16.0 has good error message support
