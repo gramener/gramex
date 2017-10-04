@@ -254,12 +254,12 @@ This configuration creates a [direct LDAP login page](ldap):
         pattern: /$YAMLURL/ldap                 # Map this URL
         handler: LDAPAuth                       # to the LDAP auth handler
         kwargs:
+            template: $YAMLPATH/ldap.html       # Optional login template
             host: ipa.demo1.freeipa.org         # Server to connect to
             use_ssl: true                       # Whether to use SSL or not
             port: 636                           # Optional. Usually 389 for LDAP, 636 for LDAPS
             user: 'uid={user},cn=users,cn=accounts,dc=demo1,dc=freeipa,dc=org'
             password: '{password}'
-            template: $YAMLPATH/ldap.html       # Optional login template
 
 You should create a [HTML login form](ldap) that requests a username and
 password. The form should have an [xsrf][xsrf] field -- or this LDAP handler
@@ -269,6 +269,18 @@ The `user:` and `password:` configuration in `gramex.yaml` maps form fields to
 the user ID and password. Strings inside `{braces}` are replaced by form fields
 -- so if the user enters `admin` in the `user` field, `uid={user},cn=...` becomes
 `uid=admin,cn=...`.
+
+To fetch additional attributes about the user, add a `search:` section. Below is
+an example based on a real-life configuration:
+
+    template: $YAMLPATH/ldap.html
+    host: 10.20.30.40                       # Provided by client IT team
+    use_ssl: true
+    user: 'ICICIBANKLTD\{user}'             # Provided by client IT team
+    password: '{password}'
+    search:                                 # Look up user attributes by searching
+        base: 'dc=ICICIBANKLTD,dc=com'      # Provided by client IT team
+        filter: '(SAMAccountName={user})'   # Provided by client IT team
 
 ### Bind LDAP login
 
@@ -297,7 +309,6 @@ This is similar to [direct LDAP login](#direct-ldap-login), but the sequence fol
    `search.base` for `search.filter` -- which becomes
    `(mail={whatever-username-was-entered})`.
 3. Finally, Gramex checks if the first returned user matches the password.
-
 
 [xsrf]: ../filehandler/#xsrf
 

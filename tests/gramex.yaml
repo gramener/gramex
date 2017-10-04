@@ -1590,15 +1590,32 @@ url:
         header: NEXT
         url: /dir/index/
 
+  # https://www.freeipa.org/page/Demo
   auth/ldap:
     pattern: /auth/ldap
     handler: LDAPAuth
     kwargs:
-      template: $YAMLPATH/auth.html       # This has the login form
-      host: ipa.demo1.freeipa.org         # Server to connect to
-      use_ssl: true                       # Whether to use SSL or not
+      template: $YAMLPATH/auth.html     # This has the login form
+      host: ipa.demo1.freeipa.org       # Server to connect to
+      use_ssl: true                     # Whether to use SSL or not
       user: 'uid={user},cn=users,cn=accounts,dc=demo1,dc=freeipa,dc=org'
       password: '{password}'
+      xsrf_cookies: false
+
+  # http://www.forumsys.com/tutorials/integration-how-to/ldap/online-ldap-test-server/
+  auth/ldap2-search:
+    pattern: /auth/ldap2-search
+    handler: LDAPAuth
+    kwargs:
+      template: $YAMLPATH/auth.html
+      host: ldap.forumsys.com
+      use_ssl: false                    # ldap.forumsys.com does not accept SSL
+      user: 'uid={user},dc=example,dc=com'
+      password: '{password}'
+      search:
+        base: 'dc=example,dc=com'                   # Search in this domain
+        filter: '(mail={user}@ldap.forumsys.com)'   # Using a mail ID filter
+      redirect: {url: /auth/session}
       xsrf_cookies: false
 
   auth/ldap2-bind:                          # Test the "bind" mode of LDAP auth

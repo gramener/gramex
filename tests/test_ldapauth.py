@@ -8,8 +8,10 @@ from . import server
 
 
 class TestLDAPAuth(TestGramex):
+    session = requests.Session()
+
     def login(self, user, password, url):
-        r = requests.get(url)
+        r = self.session.get(url)
         self.assertEqual(r.status_code, OK)
         tree = lxml.html.fromstring(r.text)
 
@@ -19,9 +21,9 @@ class TestLDAPAuth(TestGramex):
         data['_xsrf'] = tree.xpath('.//input[@name="_xsrf"]')[0].get('value')
 
         # Submitting the correct password redirects
-        return requests.post(url, timeout=10, data=data)
+        return self.session.post(url, timeout=10, data=data)
 
-    def check(self, user, password, url, status_code, headers={}):
+    def check(self, user, password, url, status_code, headers={}, redirect='/'):
         self.url = server.base_url + url
         try:
             r = self.login(user, password, self.url)
@@ -32,11 +34,12 @@ class TestLDAPAuth(TestGramex):
         self.assertEqual(r.status_code, status_code)
         # If the response is an OK response, go to home page. Else stay on login page
         if status_code == OK:
-            self.assertEqual(r.url, server.base_url + '/')
+            self.assertEqual(r.url, server.base_url + redirect)
         else:
             self.assertEqual(r.url, self.url)
         for key, value in headers.items():
             self.assertEqual(r.headers.get(key, None), value)
+        return r
 
     def test_ldap(self):
         # This runs tests on a public server.
@@ -50,6 +53,13 @@ class TestLDAPAuth(TestGramex):
     def test_ldap_wrong_password(self):
         self.check('admin', 'wrong-password', url='/auth/ldap', status_code=UNAUTHORIZED,
                    headers={'Auth-Error': 'auth'})
+
+    def test_ldap_search(self):
+        r = self.check('euler', 'password', url='/auth/ldap2-search', status_code=OK,
+                       redirect='/auth/session')
+        result = r.json()
+        self.assertEqual(result['user']['attributes']['mail'], ['euler@ldap.forumsys.com'])
+        self.check('euler', 'wrong-password', url='/auth/ldap2-search', status_code=UNAUTHORIZED)
 
     def test_ldap_bind(self):
         self.check('gauss@ldap.forumsys.com', 'password', url='/auth/ldap2-bind',

@@ -289,14 +289,16 @@ class LDAPAuth(AuthHandler):
         # First, bind the server with the provided user ID and password.
         q = {key: vals[0] for key, vals in self.args.items()}
         server = ldap3.Server(kwargs.host, kwargs.get('port'), kwargs.get('use_ssl', True))
-        if 'bind' in kwargs and 'search' in kwargs:
-            user, password, error = kwargs.bind.user, kwargs.bind.password, 'bind'
-            search_base, search_filter = kwargs.search.base, kwargs.search.filter.format(**q)
+        cred = kwargs.bind if 'bind' in kwargs else kwargs
+        user, password = cred.user.format(**q), cred.password.format(**q)
+        if 'search' in kwargs:
+            search_base = kwargs.search.base.format(**q)
+            search_filter = kwargs.search.filter.format(**q)
         else:
-            user, password, error = kwargs.user.format(**q), kwargs.password.format(**q), 'auth'
             search_base, search_filter = user, '(objectClass=*)'
 
-        conn = yield self.bind(server, user, password, error)
+        error_code = 'bind' if 'bind' in kwargs else 'auth'
+        conn = yield self.bind(server, user, password, error_code)
         if not conn:
             return
 
