@@ -109,13 +109,17 @@ _CALLBACKS = dict(
 )
 
 
-def open(path, callback, transform=None, rel=False, **kwargs):
+def open(path, callback=None, transform=None, rel=False, **kwargs):
     '''
     Reads a file, processes it via a callback, caches the result and returns it.
     When called again, returns the cached result unless the file has updated.
 
-    The callback can be a function that accepts the filename and any other
-    arguments, or a predefined string that can be one of
+    By default, it determine the file type using the extension. For example::
+
+        open('data.yaml')           # Loads a YAML file
+        open('data.csv')            # Loads a CSV file
+
+    The 2nd parameter (callback) a predefined string that can be one of
 
     - ``text`` or ``txt``: reads files using io.open
     - ``yaml``: reads files using yaml.load via io.open
@@ -138,11 +142,16 @@ def open(path, callback, transform=None, rel=False, **kwargs):
         # Load data.csv as CSV into a Pandas DataFrame
         open('data.csv', 'csv', encoding='cp1252')
 
+    It can also be a function that accepts the filename and any other arguments::
+
         # Load data using a custom callback
         open('data.fmt', my_format_reader_function, arg='value')
 
-    ``transform=`` can be a function that processes the data returned by the
-    callback. For example::
+    This is called as ``my_format_reader_function('data.fmt', arg='value')`` and
+    cached. Future calls do not re-load and re-calculate this data.
+
+    ``transform=`` is an optioanl function that processes the data returned by
+    the callback. For example::
 
         # Returns the count of the CSV file, updating it only when changed
         open('data.csv', 'csv', transform=lambda data: len(data))
@@ -172,8 +181,11 @@ def open(path, callback, transform=None, rel=False, **kwargs):
         folder = os.path.dirname(os.path.abspath(stack[1][1]))
         path = os.path.join(folder, path)
 
+    original_callback = callback
+    if callback is None:
+        callback = os.path.splitext(path)[-1][1:]
     callback_is_str = isinstance(callback, six.string_types)
-    key = (path, callback if callback_is_str else id(callback), id(transform))
+    key = (path, original_callback if callback_is_str else id(callback), id(transform))
     cached = _cache.get(key, None)
     fstat = stat(path)
     if cached is None or fstat != cached.get('stat'):
@@ -184,6 +196,8 @@ def open(path, callback, transform=None, rel=False, **kwargs):
             method = _CALLBACKS.get(callback)
             if method is not None:
                 data = method(path, **kwargs)
+            elif original_callback is None:
+                raise TypeError('gramex.cache.open: path "%s" has unknown extension' % path)
             else:
                 raise TypeError('gramex.cache.open(callback="%s") is not a known type' % callback)
         else:

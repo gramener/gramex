@@ -160,6 +160,7 @@ class TestOpen(unittest.TestCase):
             assert_frame_equal(result, expected)
 
         self.check_file_cache(path, check)
+        assert_frame_equal(gramex.cache.open(path), gramex.cache.open(path, 'csv'))
 
     def test_open_json(self):
         path = os.path.join(folder, 'data.json')
@@ -174,6 +175,7 @@ class TestOpen(unittest.TestCase):
             eq_(result, expected)
 
         self.check_file_cache(path, check)
+        eq_(gramex.cache.open(path), gramex.cache.open(path, 'json'))
 
     def test_open_yaml(self):
         path = os.path.join(folder, 'data.yaml')
@@ -188,6 +190,7 @@ class TestOpen(unittest.TestCase):
             eq_(result, expected)
 
         self.check_file_cache(path, check)
+        eq_(gramex.cache.open(path), gramex.cache.open(path, 'yaml'))
 
     def test_open_template(self):
         path = os.path.join(folder, 'template.txt')
@@ -225,6 +228,7 @@ class TestOpen(unittest.TestCase):
             eq_(result, expected)
 
         self.check_file_cache(path, check)
+        eq_(gramex.cache.open(path), gramex.cache.open(path, 'md'))
 
     def test_custom_cache(self):
         path = os.path.join(folder, 'data.csv')
@@ -262,7 +266,7 @@ class TestOpen(unittest.TestCase):
         with assert_raises(TypeError):
             gramex.cache.open(path, 1)
         with assert_raises(TypeError):
-            gramex.cache.open(path, None)
+            gramex.cache.open('invalid.ext')
 
     def test_stat(self):
         path = os.path.join(folder, 'multiformat.csv')

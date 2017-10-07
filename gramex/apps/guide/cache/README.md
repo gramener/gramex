@@ -247,13 +247,18 @@ use this to load any type of file. For example:
 
     :::python
     import gramex.cache
-    data = gramex.cache.open('data.csv', 'csv', encoding='utf-8')
+    data = gramex.cache.open('data.csv', encoding='utf-8')
 
 This loads `data.csv`  using `pd.read_csv('data.csv', encoding='utf-8')`. The
 next time this is called, if `data.csv` in unchanged, the cached results are
 returned.
 
-The 2nd parameter can be pre-defined string with the following values:
+You can also specify that the file is a CSV file by explicitly passing a 2nd parameter as `'csv'`. For example:
+
+    :::python
+    data = gramex.cache.open('data.csv', 'csv', encoding='utf-8')
+
+The 2nd parameter can take the following values:
 
 - `gramex.cache.open(path, 'text', ...)` loads text files using `io.open`. You can use `txt` instead of `text`
 - `gramex.cache.open(path, 'json', ...)` loads JSON files using `json.load`
