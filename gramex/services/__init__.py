@@ -483,4 +483,6 @@ def email(conf):
 
 def test(conf):
     '''Set up test service'''
-    pass
+    # Remove auth: section when running gramex.
+    # If there are passwords here, they will not be loaded in memory
+    conf.pop('auth', None)
