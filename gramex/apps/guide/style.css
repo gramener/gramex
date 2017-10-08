@@ -25,7 +25,6 @@ pre, iframe {
     padding: 0.5rem 1rem;
     margin: 0 -1rem;
     overflow: auto;
-    width: 50em;
 }
 
 code {
@@ -43,6 +42,7 @@ pre code {
 iframe {
     height: 10rem;
     background-color: #eee;
+    width: 50em;
 }
 
 /* Provide enough space on top of all headings */

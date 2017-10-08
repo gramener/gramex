@@ -30,6 +30,10 @@ classes: toc
 - [Try out some exercises](exercises/)
 - [Read the Python code reference](https://learn.gramener.com/gramex/gramex.html)
 
+## Tutorials
+
+- [Tips & Tricks](tips/)
+
 ## Additional links
 
 - [Gramex roadmap](https://docs.google.com/spreadsheets/d/1D2xScjMWl29JtuuVP7PlsLM3OPJuMBr0VNvzzoR4HwQ/edit#gid=885343597)
