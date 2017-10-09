@@ -25,6 +25,7 @@ import six
 import sys
 import yaml
 import string
+import socket
 import logging
 import datetime
 import dateutil.tz
@@ -41,6 +42,7 @@ from yaml.constructor import ConstructorError
 from orderedattrdict import AttrDict, DefaultAttrDict
 
 # gramex.config.app_log is the default logger used by all of gramex
+# If it's not there, create one.
 app_log = logging.getLogger('gramex')
 
 # sqlalchemy.create_engine requires an encoding= that must be an str across
@@ -153,6 +155,8 @@ def _setup_variables():
     variables.update(os.environ)
     # GRAMEXPATH is the Gramex root directory
     variables['GRAMEXPATH'] = _gramex_path
+    # GRAMEXHOST is the hostname
+    variables['GRAMEXHOST'] = socket.gethostname()
     # GRAMEXDATA varies based on OS
     if 'GRAMEXDATA' not in variables:
         if sys.platform.startswith('linux') or sys.platform == 'cygwin':
@@ -256,7 +260,8 @@ class ConfigYAMLLoader(Loader):
 
 def _yaml_open(path, default=AttrDict()):
     '''
-    Load a YAML path.Path as AttrDict. Replace {VAR} with variables
+    Load a YAML path.Path as AttrDict. Replace ${VAR} or $VAR with variables.
+    If key has " if " then include it only if the condition is true.
     '''
     path = path.absolute()
     if not path.exists():
@@ -298,6 +303,27 @@ def _yaml_open(path, default=AttrDict()):
             else:
                 variables[key] = _calc_value(val, key)
         del result['variables']
+
+    # Evaluate conditionals. "x if cond: y" becomes "x: y" if cond evals to True
+    remove, replace = [], []
+    frozen_vars = dict(variables)
+    for key, value, node in walk(result):
+        if isinstance(key, string_types) and ' if ' in key:
+            # Evaluate conditional
+            base, expr = key.split(' if ', 2)
+            try:
+                condition = eval(expr, globals(), frozen_vars)
+            except Exception as e:
+                condition = False
+                app_log.exception('Failed condition evaluation: %s', key)
+            if condition:
+                replace.append((node, key, base))
+            else:
+                remove.append((node, key))
+    for node, key in remove:
+        del node[key]
+    for node, key, base in replace:
+        node[base] = node.pop(key)
 
     # Substitute variables
     for key, value, node in walk(result):

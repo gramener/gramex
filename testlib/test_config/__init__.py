@@ -1,6 +1,7 @@
 import os
 import six
 import yaml
+import socket
 import inspect
 import unittest
 import gramex
@@ -75,6 +76,7 @@ class TestPathConfig(unittest.TestCase):
         )
         self.conf1 = info.home / Path('conf1.test')
         self.conf2 = info.home / Path('conf2.test')
+        self.condition = info.home / 'config.condition.yaml'
 
     def tearDown(self):
         unlink(self.conf1)
@@ -216,6 +218,8 @@ class TestPathConfig(unittest.TestCase):
             eq_(conf['%s_YAMLURL_VAR' % key], conf['%s_YAMLURL_VAR_EXPECTED' % key])
             # $GRAMEXPATH is the gramex path
             eq_(conf['%s_GRAMEXPATH' % key], os.path.dirname(inspect.getfile(gramex)))
+            # $GRAMEXHOST is the socket.gethostname
+            eq_(conf['%s_GRAMEXHOST' % key], socket.gethostname())
         # Imports do not override, but do setdefault
         eq_(conf['path'], str(self.chain['base'].parent))
         eq_(conf['subpath'], str(self.chain['subdir'].parent))
@@ -236,6 +240,11 @@ class TestPathConfig(unittest.TestCase):
         # Check condition variables
         for key, val in conf['conditions'].items():
             eq_('is-' + key, val)
+
+    def test_if(self):
+        conf = PathConfig(self.condition)
+        for key, val in conf.items():
+            eq_(val['expected'], val['actual'])
 
 
 class TestConfig(unittest.TestCase):
@@ -345,3 +354,4 @@ class TestConfig(unittest.TestCase):
         eq_(yaml.load(dup_keys), {'a': {'b': 2}})
         with self.assertRaises(ConstructorError):
             yaml.load(dup_keys, Loader=ConfigYAMLLoader)
+

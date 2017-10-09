@@ -1,0 +1,83 @@
+scalars are evaluated as-is:
+  actual:
+    a if 1: 1
+    b if 0: 0
+    c if True: 1
+    d if False: 0
+    e if "abc": 1
+    f if "": 0
+  expected:
+    a: 1
+    c: 1
+    e: 1
+
+operators work:
+  actual:
+    a if 0 + 1: 1
+  expected:
+    a: 1
+
+variables work:
+  actual:
+    a if GRAMEXPATH: $GRAMEXPATH
+    b if UNKNOWN: 0
+  expected:
+    a: $GRAMEXPATH
+
+sub-structures are copied:
+  actual:
+    auth if 1:
+      x: 1
+      y: [2, 3]
+    auth if 0:
+      a: 0
+      b: {}
+  expected:
+    auth:
+      x: 1
+      y: [2, 3]
+
+keys applied inside a structure:
+  actual:
+    a if 1:
+      b if 0: 0
+      c if 1:
+        d if 0: 0
+        e if 1: 1
+  expected:
+    a:
+      c:
+        e: 1
+
+variables over-ridden in order:
+  actual:
+    a if 1: 1
+    a if error: null
+    a if 2: 2
+    a if 0: 3
+    a if 4: 4
+    a if False: 5
+  expected:
+    a: 4
+
+errors remove the line:
+  actual:
+    a if synt@x.err()r: 0
+    b if 1/0: 0
+  expected: {}
+
+modules are available:
+  actual:
+    a if isinstance("x", six.string_types): 1
+    b if sys.platform: 1
+    c if datetime.MINYEAR: 1
+    d if socket.gethostname(): 1
+    e if re.IGNORECASE: 1
+    f if os.name: 1
+  expected:
+    a: 1
+    b: 1
+    c: 1
+    d: 1
+    e: 1
+    f: 1

@@ -488,7 +488,6 @@ This replaces the keys under `url:`, `schedule:`, and `cache:` with a unique
 prefix, ensuring that these sections are merged without conflict.
 
 
-
 ## YAML variables
 
 Templates can use variables. Variables are written as `$VARIABLE` or
@@ -540,6 +539,7 @@ available in every YAML file. (The examples assume you are processing
 - `$YAMLPATH`: absolute directory of the current YAML file, e.g. `D:/app/config/`
 - `$YAMLURL`: is the relative URL path to the directory of the current YAML file (without leading / trailing slashes) from the current working directory. e.g. `base/dir/gramex.yaml` has a `$YAMLURL` of `base/dir`, and `gramex.yaml` has a `$YAMLURL` of `.`.
 - `$GRAMEXPATH`: absolute path to the Gramex directory
+- `$GRAMEXHOST`: hostname of the system where Gramex is running
 - `$GRAMEXDATA` is the directory where local Gramex data is stored. This is at:
     - `%LOCALAPPDATA%\Gramex Data\` on Windows
     - `~/.config/gramexdata/` on Linux
@@ -604,7 +604,34 @@ You can set variables based on a conditional expression. For example, this sets
     :::yaml
     variables:
         PORT:
-          function: 4444 if 'windows' if "$OS".lower() else 8888
+          function: 4444 if "$OS".lower() is 'windows' else 8888
+
+## Conditions
+
+Any YAML dictionary like `key if condition: val` is replaced with `key: val` if
+`condition` is True, and removed otherwise.
+
+For example, this sets up different authentications on Windows vs non-Windows:
+
+    :::yaml
+    auth if 'win' in sys.platform:
+        pattern: /login
+        handler: IntegratedAuth
+    auth if 'win' not in sys.platform:
+        pattern: /login
+        handler: LDAPAuth
+
+If ` if ` is present in any key, the portion after `if` is evaluated as a Python
+expression. All [YAML variables](#yaml-variables) are available as Python
+variables. For example, you can check the Gramex path using `GRAMEXPATH`:
+
+    :::yaml
+    log:
+        root:
+            # If GRAMEX is running from C:, set log level to debug
+            level if 'C:' in GRAMEXPATH: debug
+            # If GRAMEX is running from D:, set log level to warn
+            level if 'D:' in GRAMEXPATH: warn
 
 ## YAML inheritence
 
