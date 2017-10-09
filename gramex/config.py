@@ -313,7 +313,7 @@ def _yaml_open(path, default=AttrDict()):
             base, expr = key.split(' if ', 2)
             try:
                 condition = eval(expr, globals(), frozen_vars)
-            except Exception as e:
+            except Exception:
                 condition = False
                 app_log.exception('Failed condition evaluation: %s', key)
             if condition:
