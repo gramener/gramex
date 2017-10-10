@@ -104,7 +104,8 @@ There are a number of bugfixes on this release. The most important are:
 - If the ``log:`` configuration has an error, Gramex does not stop working
 
 There is one deprecation this release. ``handler.kwargs`` is now
-``handler.conf.kwargs``. (This is a largely unused feature of Gramex.)
+``handler.conf.kwargs``. (This is a largely unused feature of Gramex.) UPDATE:
+this was re-introduced in 1.22.
 
 
 1.20 (2017-07-31)
