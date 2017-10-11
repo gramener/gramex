@@ -1,4 +1,4 @@
-'''
+r'''
 # This docstring is in YAML, and is used by the usage variable.
 # It documents the help for the Gramex command line commands supported.
 
@@ -71,6 +71,33 @@ uninstall: |
 
     Installed apps:
     {apps}
+
+service: |
+    usage: gramex service <cmd> [--options]
+
+    Install a Gramex application as a Windows service:
+
+        gramex service install
+            --name "Application Name"
+            --desc "Application long description"
+            --dir  "C:/path/to/application/"
+            --user "DOMAIN\USER"                # Optional user to run as
+            --password "user-password"          # Required if user is specified
+            --startup manual|auto|disabled
+
+    Update:
+
+        gramex service update <same parameters as install>
+
+    Remove:
+
+        gramex service remove       # or gramex service uninstall
+
+    Start / stop commands
+
+        gramex service start
+        gramex service stop
+        gramex service restart
 '''
 
 import os
@@ -271,8 +298,8 @@ if not app_dir.exists():
 # Get app configuration by chaining apps.yaml in gramex + app_dir + command line
 apps_config = ChainConfig()
 apps_config['base'] = PathConfig(gramex.paths['source'] / 'apps.yaml')
-user_config_file = app_dir / 'apps.yaml'
-apps_config['user'] = PathConfig(user_config_file)
+user_conf_file = app_dir / 'apps.yaml'
+apps_config['user'] = PathConfig(user_conf_file) if user_conf_file.exists() else AttrDict()
 
 app_keys = {
     'url': 'URL / filename of a ZIP file to install',
@@ -287,8 +314,8 @@ app_keys = {
 
 def save_user_config(appname, value):
     user_config = AttrDict()
-    if user_config_file.exists():
-        with user_config_file.open(encoding='utf-8') as handle:
+    if user_conf_file.exists():
+        with user_conf_file.open(encoding='utf-8') as handle:
             user_config = yaml.load(handle)
     if value is None:
         if appname in user_config:
@@ -297,7 +324,7 @@ def save_user_config(appname, value):
         app_config = user_config.setdefault(appname, AttrDict())
         app_config.update({key: value[key] for key in app_keys if key in value})
 
-    with user_config_file.open(mode='w', encoding='utf-8') as handle:
+    with user_conf_file.open(mode='w', encoding='utf-8') as handle:
         yaml.safe_dump(user_config, handle, indent=4, default_flow_style=False)
 
 
@@ -422,3 +449,15 @@ def run(cmd, args):
         app_log.error('Run "gramex uninstall %s" and try again.', appname)
     else:
         app_log.error('%s: no directory %s', appname, app_config.target)
+
+
+def service(cmd, args):
+    try:
+        import gramex.winservice
+    except ImportError:
+        app_log.error('Unable to load winservice. Is this Windows?')
+        raise
+    if len(cmd) < 1:
+        app_log.error(show_usage('service'))
+        return
+    gramex.winservice.setup(cmd[0], cmd[1:], **args)

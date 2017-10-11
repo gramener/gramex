@@ -142,7 +142,7 @@ def app(conf):
             # When Ctrl-C is pressed, signal_handler() sets _exit to [True].
             # check_exit() periodically watches and calls shutdown().
             # But signal handlers can only be set in the main thread.
-            # So ignore if we're not in the main thread (e.g. for nosetests.)
+            # So ignore if we're not in the main thread (e.g. for nosetests, Windows service)
             #
             # Note: The PeriodicCallback takes up a small amount of CPU time.
             # Note: getch() doesn't handle keyboard buffer queue.
@@ -166,8 +166,15 @@ def app(conf):
                 def signal_handler(signum, frame):
                     exit[0] = True
 
-                signal.signal(signal.SIGINT, signal_handler)
-                tornado.ioloop.PeriodicCallback(check_exit, callback_time=500).start()
+                try:
+                    signal.signal(signal.SIGINT, signal_handler)
+                except ValueError:
+                    # When running as a Windows Service (winservice.py), python
+                    # itself is on a thread, I think. So ignore the
+                    # ValueError: signal only works in main thread.
+                    pass
+                else:
+                    tornado.ioloop.PeriodicCallback(check_exit, callback_time=500).start()
 
             ioloop.start()
 

@@ -4,6 +4,58 @@ Development and deployment are usually on different machines with different
 configurations, file paths, database locations, etc. All of these can be
 configured in `gramex.yaml` using pre-defined variables.
 
+## Windows Installation
+
+To install a Gramex application as a service on a Windows Server:
+
+- [Install Anaconda and Gramex](../install/)
+    - Download and install [Anaconda][anaconda] 4.4.0 or later
+    - Run `pip install https://code.gramener.com/s.anand/gramex/repository/archive.tar.bz2?ref=master`.
+      (Replace ``master`` with ``dev`` for the development version).
+- Install your application in any folder - via `git clone` or by copying files
+- Run PowerShell or the Command Prompt **as administrator**
+- From your application folder, run `gramex service install --name "App name" --desc "App description"`
+
+Here are additional install options:
+
+    gramex service install
+        --name "Application Name"
+        --desc "Long description"
+        --dir  "C:/path/to/application/"    # Run Gramex in this directory
+        --user "DOMAIN\USER"                # Optional user to run as
+        --password "user-password"          # Required if user is specified
+        --startup manual|auto|disabled      # Default is manual
+
+The user domain and name are stored as environment variables `USERDOMAIN` and
+`USERNAME`. Run `echo %USERDOMAIN% %USERNAME%` on the Command Prompt to see them.
+
+You can update these parameters any time via:
+
+    gramex service update --...             # Same parameters as install
+
+To uninstall the service, run:
+
+    gramex service remove
+
+To start / stop / restart the application, go to Control Panel > Administrative
+Tools > View Local Services and update your service. You can also do this from
+the command prompt **as administrator**:
+
+    gramex service start
+    gramex service stop
+    gramex service restart
+
+Once started, the application is live at the port specified in your
+`gramex.yaml`. The default port is 9988, so visit <http://localhost:9988/>. If no
+`gramex.yaml` is found in the current directory, Gramex shows the Gramex Guide
+(this application.)
+
+Service logs can be viewed using the Windows Event Viewer. Gramex logs are at
+`%LOCALAPPDATA%\Gramex Data\logs\` unless over-ridden by `gramex.yaml`.
+
+[anaconda]: http://continuum.io/downloads
+
+
 ## Security
 
 Some common security options are pre-configured in `$GRAMEXPATH/deploy.yaml`. To enable these options, add this line to your `gramex.yaml`:

@@ -107,7 +107,8 @@ def callback_commandline(commands):
     # Set logging config at startup. (Services may override this.)
     log_config = (+PathConfig(paths['source'] / 'gramex.yaml')).get('log', AttrDict())
     log_config.root.level = logging.INFO
-    logging.config.dictConfig(log_config)
+    from . import services
+    services.log(log_config)
 
     # args has all optional command line args as a dict of values / lists.
     # cmd has all positional arguments as a list.
@@ -136,6 +137,9 @@ def callback_commandline(commands):
         elif base_command == 'run':
             from gramex.install import run
             return run, kwargs
+        elif base_command == 'service':
+            from gramex.install import service
+            return service, kwargs
         raise NotImplementedError('Unknown gramex command: %s' % base_command)
 
     # Use current dir as base (where gramex is run from) if there's a gramex.yaml.
@@ -151,7 +155,12 @@ def callback_commandline(commands):
 
 
 def commandline():
-    '''Run Gramex from the command line. Called via setup.py console_scripts'''
+    '''
+    Run Gramex from the command line. Called via:
+
+    - setup.py console_scripts when running gramex
+    - __main__.py when running python -m gramex
+    '''
     callback, kwargs = callback_commandline(sys.argv[1:])
     callback(**kwargs)
 
@@ -253,7 +262,7 @@ def init(force_reload=False, **kwargs):
     # Add config file folders to sys.path
     sys.path[:] = _sys_path + [str(path.absolute().parent) for path in config_files]
 
-    from . import services      # noqa -- deferred import for optimisation
+    from . import services
     globals()['service'] = services.info    # gramex.service = gramex.services.info
 
     # Set up a watch on config files (including imported files)
