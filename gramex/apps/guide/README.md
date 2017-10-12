@@ -28,6 +28,7 @@ classes: toc
 - [Deployment patterns](deploy/)
 - [Gramex runs apps](apps/)
 - [Try out some exercises](exercises/)
+- [Gramex Tips](tips/)
 - [Read the Python code reference](https://learn.gramener.com/gramex/gramex.html)
 
 ## Tutorials
