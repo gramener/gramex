@@ -334,7 +334,7 @@ def get_app_config(appname, args):
     ``.target`` defaults to $GRAMEXDATA/apps/<appname>.
     '''
     apps_config['cmd'] = {appname: args}
-    app_config = (+apps_config).get(appname, {})
+    app_config = AttrDict((+apps_config).get(appname, {}))
     app_config.setdefault('target', str(app_dir / app_config.get('target', appname)))
     app_config.target = os.path.abspath(app_config.target)
     return app_config
