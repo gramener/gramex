@@ -608,6 +608,7 @@ You can set variables based on a conditional expression. For example, this sets
 
 ## Conditions
 
+**v1.23**.
 Any YAML dictionary like `key if condition: val` is replaced with `key: val` if
 `condition` is True, and removed otherwise.
 

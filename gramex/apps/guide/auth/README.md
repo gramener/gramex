@@ -270,8 +270,8 @@ the user ID and password. Strings inside `{braces}` are replaced by form fields
 -- so if the user enters `admin` in the `user` field, `uid={user},cn=...` becomes
 `uid=admin,cn=...`.
 
-To fetch additional attributes about the user, add a `search:` section. Below is
-an example based on a real-life configuration:
+**v1.23**. To fetch additional attributes about the user, add a `search:`
+section. Below is an example based on a real-life configuration:
 
     template: $YAMLPATH/ldap.html
     host: 10.20.30.40                       # Provided by client IT team

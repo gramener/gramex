@@ -253,10 +253,13 @@ This loads `data.csv`  using `pd.read_csv('data.csv', encoding='utf-8')`. The
 next time this is called, if `data.csv` in unchanged, the cached results are
 returned.
 
-You can also specify that the file is a CSV file by explicitly passing a 2nd parameter as `'csv'`. For example:
+You can also specify that the file is a CSV file by explicitly passing a 2nd
+parameter as `'csv'`. For example:
 
     :::python
     data = gramex.cache.open('data.csv', 'csv', encoding='utf-8')
+
+(**v1.23** made the 2nd parameter optional. It was mandatory before then.)
 
 The 2nd parameter can take the following values:
 

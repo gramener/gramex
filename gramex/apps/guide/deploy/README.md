@@ -6,6 +6,7 @@ configured in `gramex.yaml` using pre-defined variables.
 
 ## Windows Installation
 
+**v1.23**.
 To install a Gramex application as a service on a Windows Server:
 
 - [Install Anaconda and Gramex](../install/)
@@ -16,12 +17,16 @@ To install a Gramex application as a service on a Windows Server:
 - Run PowerShell or the Command Prompt **as administrator**
 - From your application folder, run `gramex service install --name "App name" --desc "App description"`
 
+This will start Gramex from the directory where you ran `gramex service install`
+from. The next time the Gramex service starts, it will change to the directory
+you are in. (Change this using `--cwd`)
+
 Here are additional install options:
 
     gramex service install
         --name "Application Name"
         --desc "Long description"
-        --dir  "C:/path/to/application/"    # Run Gramex in this directory
+        --cwd  "C:/path/to/application/"    # Run Gramex in this directory
         --user "DOMAIN\USER"                # Optional user to run as
         --password "user-password"          # Required if user is specified
         --startup manual|auto|disabled      # Default is manual
