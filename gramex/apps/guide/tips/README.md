@@ -13,6 +13,6 @@ Duplicated Python code is a common problem. Here are suggestions to reduce that.
 
 Below is the list of tips for Gramex use that have been shared via email as well
 
-1. [Automatically fixing Python build errors](tip-fixing-python-build-errors.md)
-1. [Using YAMLURL and YAMLPATH](tip-using-yamlurl-yamlpath.md)
-1. [Finding Slow Code](tip-finding-slow-code.md)
+1. [Automatically fixing Python build errors](fixing-python-build-errors.md)
+1. [Using YAMLURL and YAMLPATH](using-yamlurl-yamlpath.md)
+1. [Finding slow code](finding-slow-code.md)
