@@ -8,6 +8,8 @@ import win32service
 import win32event
 import servicemanager
 import socket
+import pywintypes
+import winerror
 
 
 class GramexService(win32serviceutil.ServiceFramework):
@@ -86,23 +88,28 @@ def setup(command, args, user=None, password=None, startup='manual',
         win32serviceutil.SetServiceCustomOption(service_name, 'cwd', cwd)
         app_log.info('Updated service. %s will run from %s' % (name, cwd))
     elif command in {'remove', 'uninstall'}:
-        win32serviceutil.RemoveService(name)
-        app_log.info('Removed service %s' % name)
+        try:
+            win32serviceutil.StopService(service_name)
+        except pywintypes.error as e:
+            if e.args[0] != winerror.ERROR_SERVICE_NOT_ACTIVE:
+                raise
+        win32serviceutil.RemoveService(service_name)
+        app_log.info('Removed service %s' % service_name)
     elif command == 'start':
-        win32serviceutil.StartService(name, args)
+        win32serviceutil.StartService(service_name, args)
         if wait:
-            win32serviceutil.WaitForServiceStatus(name, running, wait)
-        app_log.info('Started service %s' % name)
+            win32serviceutil.WaitForServiceStatus(service_name, running, wait)
+        app_log.info('Started service %s' % service_name)
     elif command == 'restart':
-        win32serviceutil.StartService(name, args)
+        win32serviceutil.StartService(service_name, args)
         if wait:
-            win32serviceutil.WaitForServiceStatus(name, running, wait)
-        app_log.info('Restarted service %s' % name)
+            win32serviceutil.WaitForServiceStatus(service_name, running, wait)
+        app_log.info('Restarted service %s' % service_name)
     elif command == 'stop':
         if wait:
-            win32serviceutil.StopServiceWithDeps(name, waitSecs=wait)
+            win32serviceutil.StopServiceWithDeps(service_name, waitSecs=wait)
         else:
-            win32serviceutil.StopService(name)
-        app_log.info('Stopped service %s' % name)
+            win32serviceutil.StopService(service_name)
+        app_log.info('Stopped service %s' % service_name)
     elif command:
         app_log.error('Unknown command: %s' % command)
