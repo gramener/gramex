@@ -1615,6 +1615,7 @@ url:
       search:
         base: 'dc=example,dc=com'                   # Search in this domain
         filter: '(mail={user}@ldap.forumsys.com)'   # Using a mail ID filter
+        user: 'email:{mail}'                        # Replace with this user ID
       redirect: {url: /auth/session}
       xsrf_cookies: false
 

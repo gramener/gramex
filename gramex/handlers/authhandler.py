@@ -291,36 +291,36 @@ class LDAPAuth(AuthHandler):
         server = ldap3.Server(kwargs.host, kwargs.get('port'), kwargs.get('use_ssl', True))
         cred = kwargs.bind if 'bind' in kwargs else kwargs
         user, password = cred.user.format(**q), cred.password.format(**q)
-        if 'search' in kwargs:
-            search_base = kwargs.search.base.format(**q)
-            search_filter = kwargs.search.filter.format(**q)
-        else:
-            search_base, search_filter = user, '(objectClass=*)'
 
         error_code = 'bind' if 'bind' in kwargs else 'auth'
         conn = yield self.bind(server, user, password, error_code)
         if not conn:
             return
 
-        # SEARCH: for user specified by the POST query parameters
-        try:
-            result = conn.search(search_base, search_filter, attributes=ldap3.ALL_ATTRIBUTES)
-            if not result or not len(conn.entries):
-                self.report_error('search', exc_info=False)
-                return
-            else:
+        # search: for user attributes if specified
+        if 'search' in kwargs:
+            search_base = kwargs.search.base.format(**q)
+            search_filter = kwargs.search.filter.format(**q)
+            search_user = kwargs.search.get('user', '{dn}')
+            try:
+                result = conn.search(search_base, search_filter, attributes=ldap3.ALL_ATTRIBUTES)
+                if not result or not len(conn.entries):
+                    self.report_error('search', exc_info=False)
                 user = json.loads(conn.entries[0].entry_to_json())
-        except ldap3.core.exceptions.LDAPException:
-            self.report_error('conn', exc_info=True)
+                user['user'] = search_user.format(**user.get('attributes', {}))
+            except ldap3.core.exceptions.LDAPException:
+                self.report_error('conn', exc_info=True)
 
-        if 'bind' in kwargs and 'search' in kwargs:
-            # REBIND: ensure that the password matches
-            validate_user = yield self.bind(
-                server, user['dn'], kwargs.search.password.format(**q), 'auth')
-            if not validate_user:
-                return
+            if 'bind' in kwargs:
+                # REBIND: ensure that the password matches
+                validate_user = yield self.bind(
+                    server, user['dn'], kwargs.search.password.format(**q), 'auth')
+                if not validate_user:
+                    return
+        else:
+            user = {'user': user}
 
-        self.set_user(user, id='dn')
+        self.set_user(user, id='user')
         self.redirect_next()
 
 

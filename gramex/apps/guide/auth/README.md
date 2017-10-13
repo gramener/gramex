@@ -251,28 +251,39 @@ This configuration creates a [direct LDAP login page](ldap):
 
     :::yaml
     auth/ldap:
-        pattern: /$YAMLURL/ldap                 # Map this URL
-        handler: LDAPAuth                       # to the LDAP auth handler
+        pattern: /$YAMLURL/ldap             # Map this URL
+        handler: LDAPAuth                   # to the LDAP auth handler
         kwargs:
-            template: $YAMLPATH/ldap.html       # Optional login template
-            host: ipa.demo1.freeipa.org         # Server to connect to
-            use_ssl: true                       # Whether to use SSL or not
-            port: 636                           # Optional. Usually 389 for LDAP, 636 for LDAPS
-            user: 'uid={user},cn=users,cn=accounts,dc=demo1,dc=freeipa,dc=org'
+            template: $YAMLPATH/ldap.html   # Optional login template
+            host: 10.20.30.40               # Server to connect to
+            use_ssl: true                   # Whether to use SSL (LDAPS) or not
+            user: 'DOMAIN\{user}'           # Check LDAP domain name with client IT team
             password: '{password}'
-
-You should create a [HTML login form](ldap) that requests a username and
-password. The form should have an [xsrf][xsrf] field -- or this LDAP handler
-should have `xsrf_cookies: false`.
 
 The `user:` and `password:` configuration in `gramex.yaml` maps form fields to
 the user ID and password. Strings inside `{braces}` are replaced by form fields
--- so if the user enters `admin` in the `user` field, `uid={user},cn=...` becomes
-`uid=admin,cn=...`.
+-- so if the user enters `admin` in the `user` field, `GRAMENER\{user}` becomes
+`GRAMENER\admin`.
 
-**v1.23**. To fetch additional attributes about the user, add a `search:`
-section. Below is an example based on a real-life configuration:
+The optional `template:` should be a [HTML login form](ldap) that requests a
+username and password. (The form should have an [xsrf][xsrf] field).
 
+LDAP runs on port 389 and and LDAPS runs on port 636. If you have a non-standard
+port, specify it like `port: 100`.
+
+### LDAP attributes
+
+**v1.23**. You can fetch additional
+[additional LDAP attributes](http://www.computerperformance.co.uk/Logon/active_directory_attributes.htm)
+like:
+
+- `sAMAccountName`: user's login ID
+- `CN` (common name) is the same as `name`, which is first name + last name
+- `company`, `department`, etc.
+
+To fetch these, add a `search:` section. Below is a real-life example:
+
+    :::yaml
     template: $YAMLPATH/ldap.html
     host: 10.20.30.40                       # Provided by client IT team
     use_ssl: true
@@ -280,7 +291,14 @@ section. Below is an example based on a real-life configuration:
     password: '{password}'
     search:                                 # Look up user attributes by searching
         base: 'dc=ICICIBANKLTD,dc=com'      # Provided by client IT team
-        filter: '(SAMAccountName={user})'   # Provided by client IT team
+        filter: '(sAMAccountName={user})'   # Provided by client IT team
+        user: 'ICICIBANKLTD\{sAMAccountName}'   # How the username is displayed
+
+- `base:` where to search. Typically `dc=DOMAIN,dc=com` for ActiveDirectory
+- `filter:` what to search for. Typically `(sAMAccountName={user})` for ActiveDirectory
+- `user:` what to replace the user ID with. This is a string template. If you
+  want `handler.current_user['id']` to be like `DOMAIN\username`, use
+  `DOMAIN\{sAMAccountName}`.
 
 ### Bind LDAP login
 

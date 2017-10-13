@@ -59,6 +59,8 @@ class TestLDAPAuth(TestGramex):
                        redirect='/auth/session')
         result = r.json()
         self.assertEqual(result['user']['attributes']['mail'], ['euler@ldap.forumsys.com'])
+        self.assertIn('email:', result['user']['id'])
+        self.assertIn('euler@ldap.forumsys.com', result['user']['id'])
         self.check('euler', 'wrong-password', url='/auth/ldap2-search', status_code=UNAUTHORIZED)
 
     def test_ldap_bind(self):
