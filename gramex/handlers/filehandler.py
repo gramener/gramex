@@ -22,7 +22,7 @@ _default_index_template = Path(__file__).absolute().parent / 'filehandler.templa
 
 def read_template(path):
     if not path.exists():
-        app_log.warn('Missing directory template "%s". Using "%s"' %
+        app_log.warning('Missing directory template "%s". Using "%s"' %
                      (path, _default_index_template))
         path = _default_index_template
     with path.open(encoding='utf-8') as handle:
@@ -149,9 +149,9 @@ class FileHandler(BaseHandler):
         result = set(value) if isinstance(value, (list, tuple, set)) else set([value])
         for pattern in result:
             if not pattern:
-                app_log.warn('%s: Ignoring empty pattern "%r"', cls.name, pattern)
+                app_log.warning('%s: Ignoring empty pattern "%r"', cls.name, pattern)
             elif not isinstance(pattern, string_types):
-                app_log.warn('%s: pattern "%r" is not a string. Ignoring.', cls.name, pattern)
+                app_log.warning('%s: pattern "%r" is not a string. Ignoring.', cls.name, pattern)
             result.add(pattern)
         return result
 
@@ -241,7 +241,7 @@ class FileHandler(BaseHandler):
                         name=path + name_suffix,
                     ))
                 except UnicodeDecodeError:
-                    app_log.warn("FileHandler can't show unicode file {!r:s}".format(path))
+                    app_log.warning("FileHandler can't show unicode file {!r:s}".format(path))
             content.append(u'</ul>')
             self.content = self.index_template.substitute(path=self.path, body=''.join(content))
 

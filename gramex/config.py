@@ -103,7 +103,7 @@ def merge(old, new, mode='overwrite', warn=None, _path=''):
             if warn is not None:
                 for pattern in warn:
                     if fnmatch(_path, pattern):
-                        app_log.warn('Duplicate key: %s', _path)
+                        app_log.warning('Duplicate key: %s', _path)
                         break
             _path += ('.' if _path else '') + six.text_type(key)
             merge(old=old[key], new=new[key], mode=mode, warn=warn, _path=_path)
@@ -168,7 +168,7 @@ def _setup_variables():
                 '~/Library/Application Support/Gramex Data')
         else:
             variables['GRAMEXDATA'] = os.path.abspath('.')
-            app_log.warn('$GRAMEXDATA set to %s for OS %s', variables['GRAMEXDATA'], sys.platform)
+            app_log.warning('$GRAMEXDATA set to %s for OS %s', variables['GRAMEXDATA'], sys.platform)
 
     return variables
 
@@ -627,7 +627,7 @@ def check_old_certs():
             try:
                 import certifi      # noqa: late import to minimise dependencies
                 AsyncHTTPClient.configure(None, defaults=dict(ca_certs=certifi.old_where()))
-                app_log.warn('Using old SSL certificates for compatibility')
+                app_log.warning('Using old SSL certificates for compatibility')
             except ImportError:
                 pass
             try:
@@ -636,7 +636,7 @@ def check_old_certs():
                 app_log.error('Gramex cannot connect to HTTPS sites. Auth may fail')
         except Exception:
             # Ignore any other kind of exception
-            app_log.warn('Gramex has no direct Internet connection')
+            app_log.warning('Gramex has no direct Internet connection')
         _client.close()
 
 

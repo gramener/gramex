@@ -37,7 +37,7 @@ def get_cachefile(store):
     elif isinstance(store, DiskCache):
         return DiskCacheFile
     else:
-        app_log.warn('cache: ignoring unknown store %s', store)
+        app_log.warning('cache: ignoring unknown store %s', store)
         return CacheFile
 
 

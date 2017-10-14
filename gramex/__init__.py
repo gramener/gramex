@@ -211,7 +211,7 @@ def gramex_update(url):
             app_log.error('Gramex %s is available. See https://learn.gramener.com/guide/',
                           update['version'])
         elif update.get('version') < __version__:
-            app_log.warn('Gramex update: your version %s is ahead of the stable %s',
+            app_log.warning('Gramex update: your version %s is ahead of the stable %s',
                          __version__, update['version'])
         else:
             app_log.debug('Gramex version %s is up to date', __version__)

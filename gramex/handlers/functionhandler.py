@@ -60,7 +60,7 @@ class FunctionHandler(BaseHandler):
                 if multipart:
                     self.flush()
             else:
-                app_log.warn('url:%s: FunctionHandler can write strings/dict, not %s',
+                app_log.warning('url:%s: FunctionHandler can write strings/dict, not %s',
                              self.name, repr(item))
 
         if self.redirects:

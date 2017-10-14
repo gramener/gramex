@@ -341,14 +341,14 @@ def reload_module(*modules):
         name = getattr(module, '__name__', None)
         path = getattr(module, '__file__', None)
         if name is None or path is None or not os.path.exists(path):
-            app_log.warn('Path for module %s is %s: not found', name, path)
+            app_log.warning('Path for module %s is %s: not found', name, path)
             continue
         # On Python 3, __file__ points to the .py file. In Python 2, it's the .pyc file
         # https://www.python.org/dev/peps/pep-3147/#file
         if path.lower().endswith('.pyc'):
             path = path[:-1]
             if not os.path.exists(path):
-                app_log.warn('Path for module %s is %s: not found', name, path)
+                app_log.warning('Path for module %s is %s: not found', name, path)
                 continue
         # The first time, don't reload it. Thereafter, if it's older or resized, reload it
         fstat = stat(path)

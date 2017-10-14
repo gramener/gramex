@@ -163,7 +163,7 @@ def safe_rmtree(target):
         shutil.rmtree(target, onerror=_ensure_remove)
         return True
     else:
-        app_log.warn('Not removing directory %s (outside $GRAMEXDATA)', target)
+        app_log.warning('Not removing directory %s (outside $GRAMEXDATA)', target)
         return False
 
 

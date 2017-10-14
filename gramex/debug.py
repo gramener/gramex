@@ -56,7 +56,7 @@ class Timer(object):
 
 if line_profiler is None:
     def lineprofile(func):
-        app_log.warn('@lineprofile requires line_profiler module')
+        app_log.warning('@lineprofile requires line_profiler module')
         return func
 else:
     def lineprofile(func):

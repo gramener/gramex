@@ -55,7 +55,7 @@ class JSONHandler(BaseHandler):
                             _jsonstores[path] = json.load(handle)
                             _loaded[path] = time.time()
                         except ValueError:
-                            app_log.warn('Invalid JSON in %s', path)
+                            app_log.warning('Invalid JSON in %s', path)
                             self.changed = True
             else:
                 self.changed = True

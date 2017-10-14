@@ -79,7 +79,7 @@ class AuthHandler(BaseHandler):
         default_delay = [1, 1, 5]
         cls.delay = delay
         if isinstance(cls.delay, list) and not all(isinstance(n, (int, float)) for n in cls.delay):
-            app_log.warn('%s: Ignoring invalid delay: %r', cls.name, cls.delay)
+            app_log.warning('%s: Ignoring invalid delay: %r', cls.name, cls.delay)
             cls.delay = default_delay
         elif isinstance(cls.delay, (int, float)) or cls.delay is None:
             cls.delay = default_delay

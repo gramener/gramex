@@ -252,7 +252,7 @@ def _get_cache_key(conf, name):
     for key in keys:
         parts = key.split('.', 2)
         if len(parts) < 2:
-            app_log.warn('url %s: ignoring invalid cache key %s', name, key)
+            app_log.warning('url %s: ignoring invalid cache key %s', name, key)
             continue
         # convert second part into a Python string representation
         val = repr(parts[1])
@@ -269,7 +269,7 @@ def _get_cache_key(conf, name):
         elif parts[0].startswith('arg'):
             key_getters.append('argsep.join(handler.args.get(%s, [missing]))' % val)
         else:
-            app_log.warn('url %s: ignoring invalid cache key %s', name, key)
+            app_log.warning('url %s: ignoring invalid cache key %s', name, key)
     # If none of the keys are valid, use the default request key
     if not len(key_getters):
         key_getters = [default_key]
@@ -328,7 +328,7 @@ def _cache_generator(conf, name):
     default_store = list(info.cache.keys())[0] if len(info.cache) > 0 else None
     store_name = conf.get('store', default_store)
     if store_name not in info.cache:
-        app_log.warn('url %s: %s store missing', name, store_name)
+        app_log.warning('url %s: %s store missing', name, store_name)
     store = info.cache.get(store_name)
 
     cache_key = _get_cache_key(conf, name)
@@ -432,7 +432,7 @@ def cache(conf):
     for name, config in conf.items():
         cache_type = config.type.lower()
         if cache_type not in cache_types:
-            app_log.warn('cache: %s has unknown type %s', name, config.type)
+            app_log.warning('cache: %s has unknown type %s', name, config.type)
             continue
 
         cache_params = cache_types[cache_type]

@@ -118,7 +118,7 @@ class BaseMixin(object):
             keyfile = session_conf['private_key']
             if not os.path.exists(keyfile):
                 if not _reported.get(('private_key', keyfile)):
-                    app_log.warn('%s: no SSH private key at %s', cls.name, keyfile)
+                    app_log.warning('%s: no SSH private key at %s', cls.name, keyfile)
                     _reported['private_key', keyfile] = True
                 return
             with open(keyfile, 'rb') as handle:
