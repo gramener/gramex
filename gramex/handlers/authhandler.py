@@ -307,7 +307,9 @@ class LDAPAuth(AuthHandler):
                 if not result or not len(conn.entries):
                     self.report_error('search', exc_info=False)
                 user = json.loads(conn.entries[0].entry_to_json())
-                user['user'] = search_user.format(**user.get('attributes', {}))
+                attrs = user.get('attributes', {})
+                attrs['dn'] = user.get('dn', '')
+                user['user'] = search_user.format(**attrs)
             except ldap3.core.exceptions.LDAPException:
                 self.report_error('conn', exc_info=True)
 
