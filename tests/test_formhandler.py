@@ -104,6 +104,10 @@ class TestFormHandler(TestGramex):
                               df=self.sales.sort_values('growth'))
             self.check_filter('/formhandler/sqlite-multi', na_position='last', key='big-by-growth',
                               df=self.sales[self.sales['sales'] > 100].sort_values('growth'))
+            self.check_filter('/formhandler/sqlite-queryfunction', na_position='last')
+            self.check_filter('/formhandler/sqlite-queryfunction?ct=Hyderabad&ct=Coimbatore',
+                              na_position='last',
+                              df=self.sales[self.sales['city'].isin(['Hyderabad', 'Coimbatore'])])
         finally:
             try:
                 dbutils.sqlite_drop_db('formhandler.db')

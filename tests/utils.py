@@ -316,6 +316,16 @@ def write_stream():
         sys.stdout.write('GRAMEX: ' + os.environ['GRAMEX'])
 
 
+def sales_query(args):
+    '''Used by formhandler/sqlite-queryfilter and testlib.test_data.py'''
+    cities = args.get('ct', [])
+    if len(cities) > 0:
+        vals = ', '.join("'%s'" % v for v in cities)
+        return 'SELECT * FROM sales WHERE city IN (%s)' % vals
+    else:
+        return 'SELECT * FROM sales'
+
+
 if __name__ == '__main__':
     # Call the method mentioned in the command line
     method_name = sys.argv[1]

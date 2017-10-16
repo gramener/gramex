@@ -13,8 +13,15 @@ from orderedattrdict import AttrDict
 from nose.plugins.skip import SkipTest
 from nose.tools import eq_, ok_, assert_raises
 from pandas.util.testing import assert_frame_equal as afe
+import utils
 import dbutils
 from . import folder, sales_file
+
+
+def eqframe(actual, expected):
+    '''Same as assert_frame_equal or afe, but does not compare index'''
+    expected.index = actual.index
+    afe(actual, expected)
 
 
 class TestFilter(unittest.TestCase):
@@ -34,8 +41,7 @@ class TestFilter(unittest.TestCase):
         def eq(args, expected):
             meta = {}
             actual = gramex.data.filter(meta=meta, args=args, **kwargs)
-            expected.index = actual.index
-            afe(actual, expected)
+            eqframe(actual, expected)
             return meta
 
         sales = self.sales if df is None else df
@@ -185,12 +191,25 @@ class TestFilter(unittest.TestCase):
         # Check both parameter substitutions -- {} formatting and : substitution
         afe(gramex.data.filter(url=url, table='{x}', args={'x': ['sales']}), self.sales)
         actual = gramex.data.filter(
-            url=url, table='{兴}', args={'兴': ['sales'], 'col': ['growth'], 'val': [0]},
-            query='SELECT * FROM {兴} WHERE {col} > :val'
+            url=url, table='{兴}', args={
+                '兴': ['sales'],
+                'col': ['growth'],
+                'val': [0],
+                'city': ['South Plainfield'],
+            },
+            query='SELECT * FROM {兴} WHERE {col} > :val AND city = :city',
         )
-        expected = self.sales[self.sales['growth'] > 0]
-        expected.index = actual.index
-        afe(actual, expected)
+        expected = self.sales[(self.sales['growth'] > 0) &
+                              (self.sales['city'] == 'South Plainfield')]
+        eqframe(actual, expected)
+
+        actual = gramex.data.filter(url=url, queryfunction=utils.sales_query, args={
+            'ct': ['South Plainfield', 'Singapore'],
+        })
+        expected = self.sales[self.sales['city'].isin(['South Plainfield', 'Singapore'])]
+        eqframe(actual, expected)
+        actual = gramex.data.filter(url=url, queryfunction=utils.sales_query, args={})
+        afe(actual, self.sales)
 
         # Test invalid parameters
         with assert_raises(ValueError):

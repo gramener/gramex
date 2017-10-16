@@ -36,6 +36,13 @@ class FormHandler(BaseHandler):
     #   default: which is interpreted as argument defaults
     #   keys: defintes the primary key columns
     '''
+    # FormHandler function kwargs and the parameters they accept:
+    function_vars = {
+        'modify': {'data': None, 'key': None, 'handler': None},
+        'prepare': {'args': None, 'key': None, 'handler': None},
+        'queryfunction': {'args': None},
+    }
+
     @classmethod
     def setup(cls, **kwargs):
         super(FormHandler, cls).setup(**kwargs)
@@ -75,20 +82,13 @@ class FormHandler(BaseHandler):
                 fn_name = '%s.%s.transform' % (cls.name, key)
                 dataset['transform'] = build_transform(
                     conf, vars={'data': None}, filename=fn_name, iter=False)
-            # Convert modify: into a data = modify(data) function
-            if 'modify' in dataset:
-                fn_name = '%s.%s.modify' % (cls.name, key)
-                dataset['modify'] = build_transform(
-                    conf={'function': dataset['modify']},
-                    vars={'data': None, 'key': None, 'handler': None},
-                    filename=fn_name, iter=False)
-            # Convert modify: into a args = prepare(self.args) function
-            if 'prepare' in dataset:
-                fn_name = '%s.%s.prepare' % (cls.name, key)
-                dataset['prepare'] = build_transform(
-                    conf={'function': dataset['prepare']},
-                    vars={'args': None, 'key': None, 'handler': None},
-                    filename=fn_name, iter=False)
+            # Convert modify: and prepare: into a data = modify(data) function
+            for fn, fn_vars in cls.function_vars.items():
+                if fn in dataset:
+                    dataset[fn] = build_transform(
+                        conf={'function': dataset[fn]},
+                        vars=fn_vars,
+                        filename='%s.%s.%s' % (cls.name, key, fn), iter=False)
 
     @tornado.gen.coroutine
     def get(self):

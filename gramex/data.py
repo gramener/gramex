@@ -18,7 +18,7 @@ _METADATA_CACHE = {}
 
 
 def filter(url, args={}, meta={}, engine=None, table=None, ext=None,
-           query=None, transform=None, **kwargs):
+           query=None, queryfunction=None, transform=None, **kwargs):
     '''
     Filters data using URL query parameters. Typical usage::
 
@@ -37,6 +37,8 @@ def filter(url, args={}, meta={}, engine=None, table=None, ext=None,
     :arg string query: optional SQL query to execute (if url is a database),
         ``.format``-ed using ``args`` and supports SQLAlchemy SQL parameters.
         Loads entire result in memory before filtering.
+    :arg function queryfunction: optional function that takes ``args`` as a
+        parameter and returns a string that is used *exactly* like the ``query``.
     :arg function transform: optional in-memory transform. Takes a DataFrame and
         returns a DataFrame. Applied to both file and SQLAlchemy urls.
     :arg dict kwargs: Additional parameters are passed to
@@ -172,6 +174,8 @@ def filter(url, args={}, meta={}, engine=None, table=None, ext=None,
     elif engine == 'sqlalchemy':
         engine = sqlalchemy.create_engine(url, **kwargs)
         params = {k: v[0] for k, v in args.items() if len(v) > 0 and _sql_safe(v[0])}
+        if queryfunction:
+            query = queryfunction(args)
         if query:
             query, state = query.format(**params), None
             if isinstance(table, six.string_types):
@@ -182,7 +186,8 @@ def filter(url, args={}, meta={}, engine=None, table=None, ext=None,
                 state = None
             else:
                 raise ValueError('table: must be string or list of strings, not %r' % table)
-            data = gramex.cache.query(text(query), engine, state, params=params)
+            all_params = {k: v[0] for k, v in args.items() if len(v) > 0}
+            data = gramex.cache.query(text(query), engine, state, params=all_params)
             if callable(transform):
                 data = transform(data)
             return _filter_frame(data, meta=meta, controls=controls, args=args)

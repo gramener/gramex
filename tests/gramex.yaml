@@ -1255,6 +1255,13 @@ url:
         query: 'SELECT * FROM sales WHERE sales > 100'
         function: data.sort_values('growth')
 
+  formhandler/sqlite-queryfunction:
+    pattern: /formhandler/sqlite-queryfunction
+    handler: FormHandler
+    kwargs:
+      url: sqlite:///formhandler.db
+      queryfunction: utils.sales_query
+
   formhandler/default:
     pattern: /formhandler/default
     handler: FormHandler

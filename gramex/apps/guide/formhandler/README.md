@@ -247,6 +247,33 @@ The `table:` parameter also supports query substitutions like `query:`.
 4. Use the correct SQL flavour. E.g. SQL Server, uses `SELECT TOP 10 FROM table`
    instead of `SELECT * FROM table LIMIT 10`.
 
+## FormHandler queryfunction
+
+To construct very complex queries that depend on the URL query parameters, use
+`queryfunction:` instead of `query:`. This can be any function that accepts
+`args` as a dict of lists, and returns a query string. The query string is
+processed like a [query:](#formhandler-query) statement. For example:
+
+    :::yaml
+          queryfunction: mymodule.sales_query(args)
+
+... can use a function like this:
+
+    :::python
+    def sales_query(args):
+        cities = args.get('ct', [])
+        if len(cities) > 0:
+            vals = ', '.join("'%s'" % v for v in cities)
+            return 'SELECT * FROM sales WHERE city IN (%s)' % vals
+        else:
+            return 'SELECT * FROM sales'
+
+- `?ct=Paris&ct=Delhi` returns `SELECT * FROM sales WHERE city in ('Paris','Delhi')`.
+- `?` returns `SELECT * FROM sales`
+
+The resulting query is treated *exactly* like the `query:` statement. So
+further formatting and argument subsitition still happens.
+
 ## FormHandler defaults
 
 To specify default values for arguments, use the `default:` key.
