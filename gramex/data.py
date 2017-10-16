@@ -10,6 +10,7 @@ import six
 import sqlalchemy
 import pandas as pd
 import gramex.cache
+from six.moves.urllib_parse import urlparse, parse_qs, urlencode
 from tornado.escape import json_encode
 from gramex.config import merge
 
@@ -114,10 +115,12 @@ def filter(url, args={}, meta={}, engine=None, table=None, ext=None,
     The ``meta`` variable is populated with the following keys:
 
     - ``filters``: Applied filters as ``[(col, op, val), ...]``
-    - ``ignored``: Ignored filters as ``[(col, vals), ('_sort', vals), ...]``
+    - ``ignored``: Ignored filters as ``[(col, vals), ('_sort', cols), ...]``
+    - ``excluded``: Excluded columns as ``[col, ...]``
     - ``sort``: Sorted columns as ``[(col, True), ...]``. The second parameter is ``ascending=``
     - ``offset``: Offset as integer. Defaults to 0
     - ``limit``: Limit as integer - ``None`` if limit is not applied
+    - ``count``: Total number of rows, if available
 
     These variables may be useful to show additional information about the
     filtered data.
@@ -228,7 +231,7 @@ def _filter_sort_columns(sort_filter, cols):
     return sorts, ignored_sorts
 
 
-def _filter_select_columns(col_filter, cols):
+def _filter_select_columns(col_filter, cols, meta):
     '''
     Checks ?c=col&c=-col for filter(). Takes values of ?c= as col_filter and data
     column names as cols. Returns 2 lists: show_cols as columns to show.
@@ -246,6 +249,7 @@ def _filter_select_columns(col_filter, cols):
     if len(excluded_cols) > 0 and len(selected_cols) == 0:
         selected_cols = cols
     show_cols = [col for col in selected_cols if col not in excluded_cols]
+    meta['excluded'] = excluded_cols
     return show_cols, ignored_cols
 
 
@@ -288,6 +292,7 @@ def _filter_frame(data, meta, controls, args):
         elif op == '~':
             data = data[data[col].str.contains('|'.join(vals))]
         filters.append((col, op, vals))
+    meta['count'] = len(data)
 
     # Apply controls
     if '_sort' in controls:
@@ -298,7 +303,7 @@ def _filter_frame(data, meta, controls, args):
         if len(ignored_sorts) > 0:
             meta['ignored'].append(('_sort', ignored_sorts))
     if '_c' in controls:
-        show_cols, ignored_cols = _filter_select_columns(controls['_c'], data.columns)
+        show_cols, ignored_cols = _filter_select_columns(controls['_c'], data.columns, meta)
         data = data[show_cols]
         if len(ignored_cols) > 0:
             meta['ignored'].append(('_c', ignored_cols))
@@ -369,7 +374,7 @@ def _filter_db(engine, table, meta, controls, args):
         if len(ignored_sorts) > 0:
             meta['ignored'].append(('_sort', ignored_sorts))
     if '_c' in controls:
-        show_cols, ignored_cols = _filter_select_columns(controls['_c'], list(cols.keys()))
+        show_cols, ignored_cols = _filter_select_columns(controls['_c'], list(cols.keys()), meta)
         query = query.with_only_columns([cols[col] for col in show_cols])
         if len(ignored_cols) > 0:
             meta['ignored'].append(('_c', ignored_cols))
