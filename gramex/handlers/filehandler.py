@@ -23,7 +23,7 @@ _default_index_template = Path(__file__).absolute().parent / 'filehandler.templa
 def read_template(path):
     if not path.exists():
         app_log.warning('Missing directory template "%s". Using "%s"' %
-                     (path, _default_index_template))
+                        (path, _default_index_template))
         path = _default_index_template
     with path.open(encoding='utf-8') as handle:
         return string.Template(handle.read())

@@ -61,7 +61,7 @@ class FunctionHandler(BaseHandler):
                     self.flush()
             else:
                 app_log.warning('url:%s: FunctionHandler can write strings/dict, not %s',
-                             self.name, repr(item))
+                                self.name, repr(item))
 
         if self.redirects:
             self.redirect_next()

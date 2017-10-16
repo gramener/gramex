@@ -168,7 +168,8 @@ def _setup_variables():
                 '~/Library/Application Support/Gramex Data')
         else:
             variables['GRAMEXDATA'] = os.path.abspath('.')
-            app_log.warning('$GRAMEXDATA set to %s for OS %s', variables['GRAMEXDATA'], sys.platform)
+            app_log.warning('$GRAMEXDATA set to %s for OS %s', variables['GRAMEXDATA'],
+                            sys.platform)
 
     return variables
 

@@ -212,7 +212,7 @@ def gramex_update(url):
                           update['version'])
         elif update.get('version') < __version__:
             app_log.warning('Gramex update: your version %s is ahead of the stable %s',
-                         __version__, update['version'])
+                            __version__, update['version'])
         else:
             app_log.debug('Gramex version %s is up to date', __version__)
 
