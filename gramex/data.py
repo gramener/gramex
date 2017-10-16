@@ -10,7 +10,6 @@ import six
 import sqlalchemy
 import pandas as pd
 import gramex.cache
-from six.moves.urllib_parse import urlparse, parse_qs, urlencode
 from tornado.escape import json_encode
 from sqlalchemy.sql import text
 from gramex.config import merge
@@ -36,8 +35,8 @@ def filter(url, args={}, meta={}, engine=None, table=None, ext=None,
         using ``args``.
     :arg string ext: file extension (if url is a file). Defaults to url extension
     :arg string query: optional SQL query to execute (if url is a database),
-        ``.format``-ed using ``args``. Loads entire result in memory before
-        filtering.
+        ``.format``-ed using ``args`` and supports SQLAlchemy SQL parameters.
+        Loads entire result in memory before filtering.
     :arg function transform: optional in-memory transform. Takes a DataFrame and
         returns a DataFrame. Applied to both file and SQLAlchemy urls.
     :arg dict kwargs: Additional parameters are passed to
