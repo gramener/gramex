@@ -12,6 +12,7 @@ import pandas as pd
 import gramex.cache
 from six.moves.urllib_parse import urlparse, parse_qs, urlencode
 from tornado.escape import json_encode
+from sqlalchemy.sql import text
 from gramex.config import merge
 
 _METADATA_CACHE = {}
@@ -182,7 +183,7 @@ def filter(url, args={}, meta={}, engine=None, table=None, ext=None,
                 state = None
             else:
                 raise ValueError('table: must be string or list of strings, not %r' % table)
-            data = gramex.cache.query(query, engine, state)
+            data = gramex.cache.query(text(query), engine, state, params=params)
             if callable(transform):
                 data = transform(data)
             return _filter_frame(data, meta=meta, controls=controls, args=args)

@@ -182,10 +182,11 @@ class TestFilter(unittest.TestCase):
                           query='SELECT * FROM sales WHERE sales > 100',
                           transform=lambda d: d[d['growth'] < 0.5],
                           df=df[df['growth'] < 0.5])
+        # Check both parameter substitutions -- {} formatting and : substitution
         afe(gramex.data.filter(url=url, table='{x}', args={'x': ['sales']}), self.sales)
         actual = gramex.data.filter(
             url=url, table='{兴}', args={'兴': ['sales'], 'col': ['growth'], 'val': [0]},
-            query='SELECT * FROM {兴} WHERE {col} > {val}'
+            query='SELECT * FROM {兴} WHERE {col} > :val'
         )
         expected = self.sales[self.sales['growth'] > 0]
         expected.index = actual.index

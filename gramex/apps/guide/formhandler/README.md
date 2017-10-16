@@ -206,13 +206,19 @@ on top of this query. For example:
 - [query](query?_format=html) returns data grouped by Continent
 - [query?num>=20](query?num>=20&_format=html) ► continents where number of countries > 20
 
-The query string is string-formatted using the arguments. For example:
+The query string is formatted using the arguments using `{arg}` and `:arg`. For
+example:
 
     :::yaml
-          query: 'SELECT {group}, COUNT(*) FROM table GROUP BY {group}'
+          query: 'SELECT {group}, COUNT(*) FROM table GROUP BY {group} WHERE state=:state'
 
-will group by whatever is passed as `?group=`. For example, `?group=city` returns
-`SELECT city, COUNT(*) FROM table GROUP BY city`.
+will group by whatever is passed as `?group=` and where the state is `?state=`.
+For example, `?group=city&state=AR` returns `SELECT city, COUNT(*) FROM table
+GROUP BY city WHERE state="AR"`.
+
+`:arg` can only be used as values, not column names or in any other place. This
+will be safely formatted by SQL and can contain any value. Use `{arg}` for column
+names. This cannot contain spaces.
 
 This uses [gramex.cache.query](../cache/#query-caching) behind the scenes. You
 can cache the query based on a smaller query or table name by specifying a
