@@ -1,5 +1,4 @@
-A [PhantomJS](http://phantomjs.org/) library to download web pages as PDF or
-images.
+A [PhantomJS](http://phantomjs.org/) library to download web pages as PDF or image.
 
 This requires [PhantomJS 2.1.1](https://bitbucket.org/ariya/phantomjs/downloads/).
 
@@ -28,10 +27,10 @@ web server.
 
 - `url=`: required -- the URL to be downloaded as a PDF or an image
 - `file=`: sets the base name of the download file. Defaults to screenshot
-- `ext=`: sets the extension. Supported extensions: .pdf (default), .png, .jpg, .gif
+- `ext=`: sets the extension. Supported extensions: .pdf (default), .png, .jpg
 - `delay=`: milliseconds to wait before screenshot (for dynamic javascript)
-- `cookie=`: optional cookie to pass to `url`. You may also use the Cookie: HTTP
-  header
+- `cookie=`: optional `cookie` to pass to `url`. The `Cookie: ` HTTP header can also be used
+- `scale=`: 2 doubles the resolution, .5 halves it
 - PDF options:
     - `format=`: `A3`, `A4` (default), `A5`, `Legal`, `Letter`, `Tabloid`
     - `orientation=`: `landscape` for landscape, `portrait` is default
@@ -39,7 +38,6 @@ web server.
 - Raster (PNG/JPG/GIF) options:
     - `width=`: viewport width in pixels. (Default: 1200px)
     - `height=`: optional height to clip output to. Leave it blank for full page height
-    - `scale=`: 2 doubles the resolution, .5 halves it
     - `selector=`: CSS selector to take a screenshot of
 
 ## Deployment

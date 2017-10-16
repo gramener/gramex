@@ -26,6 +26,7 @@ clean-build:
 	rm -fr build/
 	rm -fr dist/
 	rm -fr .eggs/
+	rm -rf tests/uploads/
 	find . -name '*.egg-info' -exec rm -fr {} +
 	find . -name '*.egg' -exec rm -f {} +
 
@@ -77,9 +78,7 @@ release: clean
 	$(PYTHON) setup.py sdist
 	$(PYTHON) setup.py bdist_wheel
 
-dist: clean
-	$(PYTHON) setup.py sdist
-	$(PYTHON) setup.py bdist_wheel
+dist: clean release
 	ls -l dist
 
 install: clean

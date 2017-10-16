@@ -2,6 +2,7 @@
 /* eslint-disable no-console, no-unused-vars */
 
 var version = '1.0.0'
+var server_version = 'Capture/' + version
 
 // If you want to specify a header or footer, return an object with two keys:
 // height and contents. A typical height setting is '2.54cm' -- one inch.
@@ -87,10 +88,14 @@ function render(q, callback) {
     page.viewportSize = {width: width, height: height}
   }
 
-  var headers = {}
-  if (q.cookie)
-    headers.Cookie = q.cookie
-  page.customHeaders = headers
+  page.clearCookies()
+  if (q.cookie) {
+    var url = parseUri(q.url)
+    var cookies = parseCookie(q.cookie)
+    for (var name in cookies) {
+      page.addCookie({name: name, value: cookies[name], domain: url.host, path: url.path})
+    }
+  }
 
   function save() {
     console.log('Saving', q.url, 'to', q.file)
@@ -161,8 +166,6 @@ var homepage = (function(script) {
 })(system.args[0])
 
 function webapp(request, response) {
-  var server_version = 'Capture/' + version
-
   // http://phantomjs.org/api/webserver/method/listen.html is wrong.
   // PhantomJS 1.9.7 on Windows has a request.postRaw string and request.post object
   // PhantomJS 1.9.8 on Linux has a request.post string and no request.postRaw
@@ -212,33 +215,37 @@ function webapp(request, response) {
   })
 }
 
-var q = {}
-system.args.forEach(function(arg) {
-  var match = arg.match(/^--(.*?)=(.*)/i)
-  if (match)
-    q[match[1]] = match[2]
-})
-
-// Render the server if a port is specified
-// If no arguments are specified, start the server on a default port
-// Otherwise, treat it as a command line execution
-if (q.port || system.args.length <= 1) {
-  var port = parseInt(q.port || 8080)
-  var listening = server.listen(port, webapp)
-  if (!listening) {
-    console.log('Could not bind to port', port)
-    phantom.exit(1)
-  } else
-    console.log(
-      'PhantomJS:', phantom_version,
-      'capture.js:', version,
-      'port:', port)
-} else {
-  render(q, function() {
-    phantom.exit()
+function main() {
+  var args = {}
+  system.args.forEach(function(arg) {
+    var match = arg.match(/^--(.*?)=(.*)/i)
+    if (match)
+      args[match[1]] = match[2]
   })
+
+  // Render the server if a port is specified
+  // If no arguments are specified, start the server on a default port
+  // Otherwise, treat it as a command line execution
+  if (args.port || system.args.length <= 1) {
+    var port = parseInt(args.port || 8080)
+    var listening = server.listen(port, webapp)
+    if (listening) {
+      console.log(
+        'PhantomJS:', phantom_version,
+        'capture.js:', version,
+        'port:', port)
+    } else {
+      console.log('Could not bind to port', port)
+      phantom.exit(1)
+    }
+  } else {
+    render(args, function() {
+      phantom.exit()
+    })
+  }
 }
 
+main()
 
 function mime(file) {
   return (
@@ -272,7 +279,7 @@ function parseUri(str) {
 parseUri.options = {
   strictMode: false,
   key: ["source","protocol","authority","userInfo","user","password","host","port","relative","path","directory","file","query","anchor"],
-  q:   {
+  q: {
     name:   "queryKey",
     parser: /(?:^|&)([^&=]*)=?([^&]*)/g
   },
@@ -280,4 +287,14 @@ parseUri.options = {
     strict: /^(?:([^:\/?#]+):)?(?:\/\/((?:(([^:@]*)(?::([^:@]*))?)?@)?([^:\/?#]*)(?::(\d*))?))?((((?:[^?#\/]*\/)*)([^?#]*))(?:\?([^#]*))?(?:#(.*))?)/,
     loose:  /^(?:(?![^:@]+:[^:@\/]*@)([^:\/?#.]+):)?(?:\/\/)?((?:(([^:@]*)(?::([^:@]*))?)?@)?([^:\/?#]*)(?::(\d*))?)(((\/(?:[^?#](?![^?#\/]*\.[^?#\/.]+(?:[?#]|$)))*\/?)?([^?#\/]*))(?:\?([^#]*))?(?:#(.*))?)/
   }
+}
+
+// https://www.quirksmode.org/js/cookies.html
+
+function parseCookie(str) {
+  for(var result={}, parts=str.split(';'), i=0; i < parts.length; i++) {
+    var frags = parts[i].trim().split('=')
+    result[frags[0]] = frags.slice(1).join('=')
+  }
+  return result
 }

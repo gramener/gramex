@@ -1,3 +1,5 @@
+# Used for source distribtions (python setup.py sdist)
+# https://docs.python.org/2/distutils/sourcedist.html
 # Include package specific files
 include gramex/gramex.yaml
 include gramex/deploy.yaml
@@ -6,7 +8,8 @@ include gramex/release.json
 include gramex/handlers/*.html
 
 # Include Gramex apps
-recursive-include gramex/apps *
+graft gramex/apps
+recursive-exclude gramex/apps/capture/node_modules *
 
 # Include requirement dependencies
 include requirements.txt
@@ -19,12 +22,13 @@ include LICENSE.rst
 include README.rst
 
 # Include test cases
-recursive-include tests *
+graft tests
+graft testlib
 
 # Include documentation
 recursive-include docs *.rst conf.py Makefile make.bat
 
-# Exclude Python build files and binary databases
-recursive-exclude * __pycache__
-recursive-exclude * *.py[cod]
-recursive-exclude * *.sqlite3
+# Exclude Python build files, binary databases
+global-exclude __pycache__
+global-exclude *.py[cod]
+global-exclude *.sqlite3

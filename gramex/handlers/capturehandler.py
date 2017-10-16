@@ -1,10 +1,13 @@
 from __future__ import unicode_literals
 
+import re
 import os
 import time
+import atexit
 import psutil
 import requests
 import tornado.gen
+from orderedattrdict import AttrDict
 from threading import Thread, Lock
 from subprocess import Popen, PIPE, STDOUT
 from six.moves.urllib.parse import urlencode, urljoin
@@ -18,6 +21,23 @@ from .basehandler import BaseHandler
 class Capture(object):
     default_port = 9900         # Default port to run CaptureJS at
     check_interval = 0.05       # Frequency (seconds) to check if self.started
+    # Set engine configurations for PhantomJS and Puppeteer
+    engines = AttrDict(
+        phantomjs=AttrDict(
+            cmd='phantomjs --ssl-protocol=any',
+            script='capture.js',
+            first_line=b'PhantomJS.*capture\\.js',
+            name='Capture',
+            version='1.0'
+        ),
+        chrome=AttrDict(
+            cmd='node',
+            script='chromecapture.js',
+            first_line=b'node\\.js.*chromecapture\\.js',
+            name='ChromeCapture',
+            version='1.0'
+        ),
+    )
 
     '''
     Create a proxy for capture.js. Typical usage::
@@ -43,13 +63,15 @@ class Capture(object):
     '''
     def __init__(self, port=None, url=None, cmd=None, timeout=10):
         # Set default values for port, url and cmd
+        self.engine = self.engines['chrome']
         port = self.default_port if port is None else port
         if url is None:
             url = 'http://localhost:%d/' % port
             if cmd is None:
-                cmd = 'phantomjs --ssl-protocol=any %s --port=%d' % (
-                    os.path.join(variables.GRAMEXPATH, 'apps', 'capture', 'capture.js'), port)
+                script = os.path.join(variables.GRAMEXPATH, 'apps', 'capture', self.engine.script)
+                cmd = '%s "%s" --port=%d' % (self.engine.cmd, script, port)
         self.url = url
+        self.first_line_re = re.compile(self.engine.first_line)
         self.cmd = cmd
         self.timeout = timeout
         self.browser = AsyncHTTPClient()
@@ -59,7 +81,7 @@ class Capture(object):
 
     def start(self):
         '''
-        Starts a thread and check if PhantomJS is already running at ``url``. If
+        Starts a thread and check if capture is already running at ``url``. If
         not, start ``cmd`` and check again. Print logs from ``cmd``.
 
         This method is thread-safe. It may be called as often as required.
@@ -72,7 +94,7 @@ class Capture(object):
 
     def _start(self):
         '''
-        Check if PhantomJS is already running at ``url``. If not, start ``cmd``
+        Check if capture is already running at ``url``. If not, start ``cmd``
         and check again. Print logs from ``cmd``.
         '''
         self.started = False
@@ -91,19 +113,20 @@ class Capture(object):
             self.close()
             self.proc = Popen(self.cmd, shell=True, stdout=PIPE, stderr=STDOUT)
             self.proc.poll()
+            atexit.register(self.close)
             # TODO: what if readline() does not return quickly?
             line = self.proc.stdout.readline().strip()
-            if b'PhantomJS' not in line or b'capture.js' not in line:
+            if not self.first_line_re.search(line):
                 return app_log.error('cmd: %s invalid. Returned "%s"', self.cmd, line)
             app_log.info('Pinging capture.js at %s', self.url)
             try:
                 r = requests.get(self.url, timeout=self.timeout)
                 self._validate_server(r)
                 pid = self.proc.pid
-                app_log.info('capture.js live at %s (pid=%d)', self.url, pid)
+                app_log.info(line.decode('utf-8') + ' live (pid=%s)', pid)
                 self.started = True
-                # Keep logging capture.js output until proc ends
-                while True:
+                # Keep logging capture.js output until proc is killed by another thread
+                while hasattr(self, 'proc'):
                     line = self.proc.stdout.readline().strip()
                     if len(line) == 0:
                         app_log.info('capture.js terminated: pid=%d', pid)
@@ -127,9 +150,10 @@ class Capture(object):
             delattr(self, 'proc')
 
     def _validate_server(self, response):
-        # Make sure that the response we got is from capture.js
+        # Make sure that the response we got is from the right version of capture.js
         server = response.headers.get('Server', '')
-        if not server.startswith('Capture/') or server < 'Capture/1.':
+        parts = server.split('/', 2)
+        if not len(parts) == 2 or parts[0] != self.engine.name or parts[1] < self.engine.version:
             raise RuntimeError('Server: %s at %s is not capture.js' % (server, self.url))
 
     @tornado.gen.coroutine
@@ -245,6 +269,7 @@ class CaptureHandler(BaseHandler):
             ext={'choices': self.ext, 'default': 'pdf'},
             file={'default': 'screenshot'},
             selector={},
+            cookie={},
             delay={'type': int},
             width={'type': int},
             height={'type': int},

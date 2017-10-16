@@ -6,8 +6,10 @@ import re
 import time
 import logging
 from PIL import Image
-from unittest import SkipTest
 from nose.tools import eq_, ok_
+from pdfminer.pdfparser import PDFParser
+from pdfminer.pdfdocument import PDFDocument
+from pdfminer.pdfpage import PDFPage
 from pdfminer.high_level import extract_text_to_fp
 from gramex.handlers import Capture
 from . import TestGramex, server
@@ -29,8 +31,8 @@ def get_capture(name, **kwargs):
     return capture
 
 
-def get_text(pdf):
-    infile, outfile = io.BytesIO(pdf), io.BytesIO()
+def get_text(content):
+    infile, outfile = io.BytesIO(content), io.BytesIO()
     extract_text_to_fp(infile, outfile)
     return outfile.getvalue().decode('utf-8')
 
@@ -45,55 +47,109 @@ def normalize(s):
 
 
 class TestCaptureHandler(TestGramex):
+    size = (1200, 768)
+    max_colors = 65536
+    url = '/dir/capture'
+
     @classmethod
     def setupClass(cls):
-        cls.capture = get_capture('default')
+        cls.capture = get_capture('default', port=9402)
         cls.folder = os.path.dirname(os.path.abspath(__file__))
 
     def test_capture_init(self):
         ok_(self.capture.started)
 
-    def check_pdf_contents(self, result):
-        # Ensure that each line in dir/index.html is in the text
+    def fetch(self, url, code=200, **kwargs):
+        r = self.get(url, **kwargs)
+        eq_(r.status_code, code)
+        return r
+
+    def check_filename(self, result, name):
+        disp = result.headers.get('Content-Disposition', '')
+        eq_(disp, 'attachment; filename="%s"' % name)
+
+    def check_pdf(self, content):
+        # Ensure that each line in dir/capture.html is in the text
         # On Linux, spaces seem to appear as tabs. Normalize that
-        text = normalize(get_text(result))
-        for line in io.open(os.path.join(self.folder, 'dir', 'index.html'), 'r', encoding='utf-8'):
+        text = normalize(get_text(content))
+        source = os.path.join(self.folder, 'dir', 'capture.html')
+        for line in io.open(source, 'r', encoding='utf-8'):
             frag = normalize(line.strip())
             # Only compare non-HTML non-empty lines
             if len(frag) > 0 and '<' not in line:
                 self.assertIn(frag, text)
 
     def test_capture_pdf(self):
-        # Test capture library
-        result = self.capture.pdf(url=server.base_url + '/dir/')
-        self.check_pdf_contents(result)
-        # Test service: relative and absolute URLs
-        for url in (server.base_url + '/dir/', '../dir/', '/dir/'):
-            result2 = self.get('/capture', params={'url': url})
-            self.check_pdf_contents(result2.content)
+        # Test capture library API
+        content = self.capture.pdf(url=server.base_url + self.url)
+        self.check_pdf(content)
 
-    def check_img_contents(self, result, colors=True):
-        img = Image.open(io.BytesIO(result)).convert(mode='RGBA')
-        size, max_colors = (1200, 768), 65536
-        eq_(img.size, size)
+        # Test service: relative and absolute URLs
+        for url in (server.base_url + self.url, '../' + self.url, self.url):
+            result = self.fetch('/capture', params={'url': url})
+            self.check_filename(result, 'screenshot.pdf')
+            self.check_pdf(result.content)
+
+        # delay=. After 500ms, page changes text and color to blue
+        # file=.  Changes filename
+        result = self.fetch('/capture', params={'url': self.url, 'delay': 600, 'file': 'delay'})
+        self.check_filename(result, 'delay.pdf')
+        self.assertIn('Blueblock', normalize(get_text(result.content)))
+
+        # --format and --orientation
+        result = self.fetch('/capture', params={'url': self.url, 'format': 'A3',
+                                                'orientation': 'landscape'})
+        parser = PDFParser(io.BytesIO(result.content))
+        page = next(PDFPage.create_pages(PDFDocument(parser)))
+        self.assertIn(page.attrs['MediaBox'], (
+            [0, 0, 1188, 842],      # noqa: Chrome uses 1188 x 842 for A3
+            [0, 0, 1191, 842],      # noqa: PhantomJS uses 1191 x 842 for A3
+        ))
+
+        # cookie=. The Cookie is printed on the screen via JS
+        result = self.fetch('/capture', params={'url': self.url + '?show-cookie',
+                                                'cookie': 'a=x'})
+        self.assertIn('a=x', normalize(get_text(result.content)))
+        # Cookie: header is the same as ?cookie=.
+        # Old request cookies vanish. Only new ones remain
+        result = self.fetch('/capture', params={'url': self.url + '?show-cookie'},
+                            headers={'Cookie': 'b=z'})
+        result_text = normalize(get_text(result.content))
+        self.assertIn('js:cookie=b=z', result_text)
+        self.assertIn('server:cookie=b=z', result_text)
+
+    def check_img(self, content, color=None, min=100, size=None):
+        img = Image.open(io.BytesIO(content)).convert(mode='RGBA')
+        if size:
+            eq_(img.size, size)
         # dir/index.html has a style="color:red" block in it. So check that there's enough red
-        if colors:
-            colors = {color: freq for freq, color in img.getcolors(max_colors)}
-            red = (255, 0, 0, 255)
-            self.assertGreater(colors.get(red, 0), 100)
+        if color:
+            # Ensure that the color is present at least in min pixels in the image
+            colors = {clr: freq for freq, clr in img.getcolors(self.max_colors)}
+            self.assertGreater(colors.get(color, 0), min)
 
     def test_capture_png(self):
-        result = self.capture.png(url=server.base_url + '/dir/')
-        self.check_img_contents(result)
-        result = self.get('/capture', params={'url': '/dir/', 'ext': 'png'})
-        self.check_img_contents(result.content)
+        content = self.capture.png(url=server.base_url + self.url)
+        self.check_img(content, color=(255, 0, 0, 255), min=100, size=self.size)
+
+        # Check file=, ext=, width=, height=
+        result = self.fetch('/capture', params={
+            'url': self.url, 'width': 600, 'height': 1200, 'file': 'capture', 'ext': 'png'})
+        self.check_filename(result, 'capture.png')
+        self.check_img(result.content, size=(600, 1200))
+
+        # selector=. has a 100x100 green patch
+        result = self.fetch('/capture', params={
+            'url': self.url, 'selector': '.subset', 'ext': 'png'})
+        self.check_img(result.content, color=(0, 128, 0, 255), min=9000, size=(100, 100))
 
     def test_capture_jpg(self):
         # TODO: check colors
-        result = self.capture.jpg(url=server.base_url + '/dir/')
-        self.check_img_contents(result, colors=False)
-        result = self.get('/capture', params={'url': '/dir/', 'ext': 'jpg'})
-        self.check_img_contents(result.content, colors=False)
+        content = self.capture.jpg(url=server.base_url + self.url)
+        self.check_img(content)
 
-    def test_capture_gif(self):
-        raise SkipTest('Not supported on Linux? TBD')
+        # Check file=, ext=, width=, height=
+        result = self.fetch('/capture', params={
+            'url': self.url, 'width': 800, 'height': 1000, 'file': 'capture', 'ext': 'jpg'})
+        self.check_filename(result, 'capture.jpg')
+        self.check_img(result.content, size=(800, 1000))

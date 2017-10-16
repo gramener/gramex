@@ -1284,6 +1284,16 @@ url:
   capture:
     pattern: /capture
     handler: CaptureHandler
+    kwargs:
+      port: 9401
+  dir/capture:
+    pattern: /dir/capture
+    handler: FileHandler
+    kwargs:
+      path: dir/capture.html
+      template: true
+      headers:
+        Cache-Control: no-store
 
   process/args:
     pattern: /process/args

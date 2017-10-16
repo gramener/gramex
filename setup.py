@@ -1,11 +1,14 @@
 #!/usr/bin/env python
 
 # Require setuptools -- distutils does not support install_requires
+from setuptools.command.develop import develop
+from setuptools.command.install import install
 from setuptools import setup, find_packages
 from pip.req import parse_requirements
 from pip.download import PipSession
 from fnmatch import fnmatch
 from io import open
+import subprocess
 import json
 import os
 
@@ -20,6 +23,27 @@ def read_gitignore(path):
 
 
 ignore_patterns = list(read_gitignore('.gitignore'))
+
+
+def install_apps(warn):
+    for path in ['capture', ]:
+        ret = subprocess.call('npm install', shell=True, cwd='gramex/apps/%s/' % path)
+        if ret != 0:
+            warn('Failed to install app: %s' % path)
+
+
+class PostDevelopCommand(develop):
+    """Post-installation for development mode."""
+    def run(self):
+        install_apps(self.warn)
+        develop.run(self)
+
+
+class PostInstallCommand(install):
+    """Post-installation for installation mode."""
+    def run(self):
+        install_apps(self.warn)
+        install.run(self)
 
 
 def recursive_include(root, path, ignores=[], allows=[]):
@@ -103,5 +127,9 @@ setup(
         'websocket-client',         # For websocket testing
         'pdfminer.six',             # For CaptureHandler testing
     ],
+    cmdclass={
+        'develop': PostDevelopCommand,
+        'install': PostInstallCommand,
+    },
     **release_args
 )

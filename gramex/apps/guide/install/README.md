@@ -3,8 +3,9 @@ title: Install Gramex
 - Download and install [Anaconda][anaconda] 4.4.0 or later. [Update Anaconda][update] if required.
 - On a Mac, download and install [Xcode][xcode].
 - Uninstall gramex if you have installed it before: `pip uninstall gramex`.
-- Run `pip install https://code.gramener.com/s.anand/gramex/repository/archive.tar.bz2?ref=master`.
-  (Replace ``master`` with ``dev`` for the development version).
+- Run `pip install --verbose https://code.gramener.com/s.anand/gramex/repository/archive.tar.bz2?ref=master`.
+    - Replace ``master`` with ``dev`` for the latest development version.
+    - **v1.23** onwards, we install node modules, which take time. `--verbose` shows the installation progress.
 - Run `gramex` to start Gramex
 - Press `Ctrl+C` to terminate Gramex.
 
@@ -12,11 +13,13 @@ Gramex runs at `http://127.0.0.1:9988/` and shows the Gramex Guide by default.
 You may also run Gramex via `python -m gramex`.
 
 If you are behind a HTTP proxy, use `pip install --proxy=http://{proxy-host}:{port} ...`.
+You can use [conda with a proxy][conda-proxy] too.
 
 [anaconda]: http://continuum.io/downloads
 [update]: http://docs.continuum.io/anaconda/install#updating-from-older-anaconda-versions
 [xcode]: https://developer.apple.com/xcode/download/
 [gramex]: https://code.gramener.com/s.anand/gramex/repository/archive.tar.bz2?ref=master
+[conda-proxy]: https://conda.io/docs/user-guide/configuration/use-winxp-with-proxy.html
 
 Note: `pip install --ignore-installed` was removed because of an
 [Anaconda bug](https://github.com/pypa/pip/issues/2751#issuecomment-165390180) -

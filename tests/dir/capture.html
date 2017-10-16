@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+</head>
+<body>
+
+<!-- Only the lines that don't have a "<" will be checked automatically in the PDF -->
+<pre>
+capture.html with “special characters”
+
+The word "Happy" translates to:
+
+- Arabic as سعيد
+- Chinese as 高兴
+- Hindi as खुश
+- Russian as счастливый
+- Tamil as சந்தோஷமாக
+</pre>
+
+<!-- Ensure that there's a red block of at least 100 pixels -->
+<p style="color:red"><em>Red block</em>: ████</p>
+
+<!-- Show cookie value via JS -->
+<div class="cookie"></div>
+<div class="server-cookie">{{ 'server:cookie=' + handler.request.headers.get('Cookie', '') }}</div>
+
+<!-- For selector -->
+<div class="subset" style="width:100px;height:100px;background-color:green">Subset</div>
+
+<script src="capture.js"></script>
+</body>
+</html>
