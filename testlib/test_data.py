@@ -13,7 +13,6 @@ from orderedattrdict import AttrDict
 from nose.plugins.skip import SkipTest
 from nose.tools import eq_, ok_, assert_raises
 from pandas.util.testing import assert_frame_equal as afe
-import utils
 import dbutils
 from . import folder, sales_file
 

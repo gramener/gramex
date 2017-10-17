@@ -98,7 +98,7 @@ class FormHandler(BaseHandler):
             filter_kwargs = AttrDict(dataset)
             filter_kwargs.pop('modify', None)
             prepare = filter_kwargs.pop('prepare', None)
-            queryfunction = filter_kwargs.pop('prepare', None)
+            queryfunction = filter_kwargs.pop('queryfunction', None)
             defaults = {
                 key: val if isinstance(val, list) else [val]
                 for key, val in filter_kwargs.pop('default', {}).items()
