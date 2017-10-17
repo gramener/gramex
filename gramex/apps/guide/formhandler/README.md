@@ -250,7 +250,7 @@ The `table:` parameter also supports query substitutions like `query:`.
 ## FormHandler queryfunction
 
 To construct very complex queries that depend on the URL query parameters, use
-`queryfunction:` instead of `query:`. This can be any function that accepts
+`queryfunction:` instead of `query:`. This can be any expression that accepts
 `args` as a dict of lists, and returns a query string. The query string is
 processed like a [query:](#formhandler-query) statement. For example:
 
@@ -263,7 +263,7 @@ processed like a [query:](#formhandler-query) statement. For example:
     def sales_query(args):
         cities = args.get('ct', [])
         if len(cities) > 0:
-            vals = ', '.join("'%s'" % v for v in cities)
+            vals = ', '.join("'%s'" % pymysql.escape_string(v) for v in cities)
             return 'SELECT * FROM sales WHERE city IN (%s)' % vals
         else:
             return 'SELECT * FROM sales'
@@ -273,6 +273,45 @@ processed like a [query:](#formhandler-query) statement. For example:
 
 The resulting query is treated *exactly* like the `query:` statement. So
 further formatting and argument subsitition still happens.
+
+In addition to `args`, queryfunction can also use `handler`.
+
+### Preventing SQL injection
+
+`queryfunction:` lets you create custom database queries based on user input.
+Gramex cannot ensure that the returned query is safe to execute. To avoid this:
+
+Use a database account with **read-only access**, and only to only the
+data that it needs.
+
+Use SQL **parameter substitution** for values wherever possible. For example:
+
+    :::python
+    def bad_query_function(args):
+        return `'SELECT * FROM table WHERE col={val}'.format(val=args['v'])`
+
+    def good_query_function(args):
+        return `'SELECT * FROM table WHERE col=:v'
+        # FormHandler will replace the :v with args['v'] if it is a value
+
+If you *must* use args as values, sanitize them. For example, `pymysql.escape_string(var)`:
+
+    :::python
+    def safe_query_function(args):
+        vals = ', '.join("'%s'" % pymysql.escape_string(v) for v in args['city'])
+        return 'SELECT * FROM sales WHERE city IN (%s)' % vals
+
+**Never use args outside quotes**, e.g. when referring to column names. Ensure
+that the column names are always specified by you. For example:
+
+    :::python
+    def bad_query_function(args):
+        return 'SELECT {col} FROM table'.format(args['col'][0])
+
+    def good_query_function(args):
+        # Ensure that only these 2 columns we specify can be included.
+        columns = {'sales': 'sales', 'growth': 'growth'}
+        return 'SELECT {col} FROM table'.format(columns[args['col'][0]])
 
 ## FormHandler defaults
 
