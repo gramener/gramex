@@ -203,14 +203,6 @@ class TestFilter(unittest.TestCase):
                               (self.sales['city'] == 'South Plainfield')]
         eqframe(actual, expected)
 
-        actual = gramex.data.filter(url=url, queryfunction=utils.sales_query, args={
-            'ct': ['South Plainfield', 'Singapore'],
-        })
-        expected = self.sales[self.sales['city'].isin(['South Plainfield', 'Singapore'])]
-        eqframe(actual, expected)
-        actual = gramex.data.filter(url=url, queryfunction=utils.sales_query, args={})
-        afe(actual, self.sales)
-
         # Test invalid parameters
         with assert_raises(ValueError):
             gramex.data.filter(url=url, table=1, query='SELECT * FROM sales WHERE sales > 100')

@@ -316,8 +316,9 @@ def write_stream():
         sys.stdout.write('GRAMEX: ' + os.environ['GRAMEX'])
 
 
-def sales_query(args):
+def sales_query(args, handler):
     '''Used by formhandler/sqlite-queryfilter and testlib.test_data.py'''
+    handler.request.headers             # Check that we can access headers
     cities = args.get('ct', [])
     if len(cities) > 0:
         vals = ', '.join("'%s'" % v for v in cities)

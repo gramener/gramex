@@ -40,7 +40,7 @@ class FormHandler(BaseHandler):
     function_vars = {
         'modify': {'data': None, 'key': None, 'handler': None},
         'prepare': {'args': None, 'key': None, 'handler': None},
-        'queryfunction': {'args': None},
+        'queryfunction': {'args': None, 'key': None, 'handler': None},
     }
 
     @classmethod
@@ -98,6 +98,7 @@ class FormHandler(BaseHandler):
             filter_kwargs = AttrDict(dataset)
             filter_kwargs.pop('modify', None)
             prepare = filter_kwargs.pop('prepare', None)
+            queryfunction = filter_kwargs.pop('prepare', None)
             defaults = {
                 key: val if isinstance(val, list) else [val]
                 for key, val in filter_kwargs.pop('default', {}).items()
@@ -107,6 +108,8 @@ class FormHandler(BaseHandler):
                 result = prepare(args=args, key=key, handler=self)
                 if result is not None:
                     args = result
+            if callable(queryfunction):
+                filter_kwargs['query'] = queryfunction(args=args, key=key, handler=self)
             # Run query in a separate thread
             futures[key] = gramex.service.threadpool.submit(
                 gramex.data.filter, args=args, meta=meta[key], **filter_kwargs)
