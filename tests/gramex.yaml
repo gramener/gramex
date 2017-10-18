@@ -1260,7 +1260,7 @@ url:
     handler: FormHandler
     kwargs:
       url: sqlite:///formhandler.db
-      queryfunction: utils.sales_query
+      queryfunction: utils.sales_query(args, handler)
 
   formhandler/default:
     pattern: /formhandler/default

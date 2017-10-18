@@ -119,10 +119,13 @@ from orderedattrdict.yamlutils import from_yaml         # noqa
 import gramex
 from gramex.config import ChainConfig, PathConfig, variables, app_log
 
+usage = yaml.load(__doc__)
+
 
 class TryAgainError(Exception):
     '''If shutil.rmtree fails, and we've fixed the problem, raise this to try again'''
     pass
+
 
 try:
     WindowsError
@@ -173,11 +176,10 @@ def safe_rmtree(target):
     elif target.lower().startswith(variables['GRAMEXDATA'].lower()):
         # Try multiple times to recover from errors, since we have no way of
         # auto-resuming rmtree: https://bugs.python.org/issue8523
-        for count in range(50):
+        for count in range(100):
             try:
                 shutil.rmtree(target, onerror=_ensure_remove)
             except TryAgainError:
-                print('Trying again')
                 pass
             else:
                 break
@@ -369,8 +371,6 @@ def flatten_config(config, base=None):
                 yield sub
         else:
             yield keystr, value
-
-usage = yaml.load(__doc__)
 
 
 def show_usage(command):
