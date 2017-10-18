@@ -119,39 +119,50 @@ from orderedattrdict.yamlutils import from_yaml         # noqa
 import gramex
 from gramex.config import ChainConfig, PathConfig, variables, app_log
 
-usage = yaml.load(__doc__)
 
+class TryAgainError(Exception):
+    '''If shutil.rmtree fails, and we've fixed the problem, raise this to try again'''
+    pass
 
-def _ensure_remove(remove, path, exc_info):
-    '''onerror callback for rmtree that tries hard to delete files'''
-    if issubclass(exc_info[0], WindowsError):
-        import winerror
-        # Delete read-only files on Windows
-        # https://bugs.python.org/issue19643
-        # https://bugs.python.org/msg218021
-        if exc_info[1].winerror == winerror.ERROR_ACCESS_DENIED:
-            os.chmod(path, stat.S_IWRITE)
-            return remove(path)
-        # Delay delete a bit if directory is used by another process.
-        # Typically happens on uninstall immediately after bower / npm / git
-        # (e.g. during testing.)
-        if exc_info[1].winerror == winerror.ERROR_SHARING_VIOLATION:
-            import time
-            delays = [0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1.0]
-            for delay in delays:
-                time.sleep(delay)
-                try:
-                    return remove(path)
-                except WindowsError:
-                    pass
-    raise exc_info[1]
-
-
-# On non-Windows systems, _ensure_remove just raises the exception
 try:
     WindowsError
 except NameError:
+    # On non-Windows systems, _ensure_remove just raises the exception
     def _ensure_remove(remove, path, exc_info):     # noqa -- redefine function
+        raise exc_info[1]
+else:
+    # On Windows systems, try harder
+    def _ensure_remove(function, path, exc_info):
+        '''onerror callback for rmtree that tries hard to delete files'''
+        if issubclass(exc_info[0], WindowsError):
+            import winerror
+            # Delete read-only files
+            # https://bugs.python.org/issue19643
+            # https://bugs.python.org/msg218021
+            if exc_info[1].winerror == winerror.ERROR_ACCESS_DENIED:
+                os.chmod(path, stat.S_IWRITE)
+                return os.remove(path)
+            # Delay delete a bit if directory is used by another process.
+            # Typically happens on uninstall immediately after bower / npm / git
+            # (e.g. during testing.)
+            elif exc_info[1].winerror == winerror.ERROR_SHARING_VIOLATION:
+                import time
+                delays = [0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1.0]
+                for delay in delays:
+                    time.sleep(delay)
+                    try:
+                        return os.remove(path)
+                    except WindowsError:
+                        pass
+            # npm creates windows shortcuts that shutil.rmtree cannot delete.
+            # os.listdir failes with a PATH_NOT_FOUND. Delete these and try again
+            elif function == os.listdir and exc_info[1].winerror == winerror.ERROR_PATH_NOT_FOUND:
+                app_log.error('Cannot delete %s', path)
+                from win32com.shell import shell, shellcon
+                options = shellcon.FOF_NOCONFIRMATION | shellcon.FOF_NOERRORUI
+                code, err = shell.SHFileOperation((0, shellcon.FO_DELETE, path, None, options))
+                if code == 0:
+                    raise TryAgainError()
         raise exc_info[1]
 
 
@@ -160,7 +171,16 @@ def safe_rmtree(target):
         return True
     # TODO: check case insensitive in Windows, but case sensitive on other OS
     elif target.lower().startswith(variables['GRAMEXDATA'].lower()):
-        shutil.rmtree(target, onerror=_ensure_remove)
+        # Try multiple times to recover from errors, since we have no way of
+        # auto-resuming rmtree: https://bugs.python.org/issue8523
+        for count in range(50):
+            try:
+                shutil.rmtree(target, onerror=_ensure_remove)
+            except TryAgainError:
+                print('Trying again')
+                pass
+            else:
+                break
         return True
     else:
         app_log.warning('Not removing directory %s (outside $GRAMEXDATA)', target)
@@ -349,6 +369,8 @@ def flatten_config(config, base=None):
                 yield sub
         else:
             yield keystr, value
+
+usage = yaml.load(__doc__)
 
 
 def show_usage(command):

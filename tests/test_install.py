@@ -176,8 +176,8 @@ class TestInstall(unittest.TestCase):
         if which('python'):
             result.add('python-setup.txt')
         if which('npm'):
+            result.add('package-lock.json')
             result.add('node_modules/gramex-npm-package/package.json')
-            result.add('node_modules/gramex-npm-package/package-lock.json')
             result.add('node_modules/gramex-npm-package/npm-setup.js')
         if which('bower'):
             result.add('bower_components/gramex-bower-package/bower.json')
