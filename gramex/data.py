@@ -126,18 +126,8 @@ def filter(url, args={}, meta={}, engine=None, table=None, ext=None,
     filtered data.
     '''
     # Auto-detect engine.
-    # If it's a DataFrame, use frame
-    # If it's a sqlalchemy parseable URL, use sqlalchemy
-    # Else, use 'file'
     if engine is None:
-        if isinstance(url, pd.DataFrame):
-            engine = 'dataframe'
-        else:
-            try:
-                sqlalchemy.engine.url.make_url(url)
-                engine = 'sqlalchemy'
-            except sqlalchemy.exc.ArgumentError:
-                engine = 'file'
+        engine = get_engine(url)
 
     # Pass the meta= argument from kwargs (if any)
     meta.update({
@@ -147,12 +137,7 @@ def filter(url, args={}, meta={}, engine=None, table=None, ext=None,
         'offset': 0,        # Offset as integer
         'limit': None,      # Limit as integer - None if not applied
     })
-    # Filter out controls like sort, limit, etc from args
-    controls = {
-        key: args.pop(key)
-        for key in ('_sort', '_limit', '_offset', '_c')
-        if key in args
-    }
+    controls = _pop_controls(args)
 
     # Use the appropriate filter function based on the engine
     if engine == 'dataframe':
@@ -161,11 +146,6 @@ def filter(url, args={}, meta={}, engine=None, table=None, ext=None,
     elif engine == 'file':
         if not os.path.exists(url):
             raise OSError('url: %s not found' % url)
-        if ext is None:
-            ext = os.path.splitext(url)[-1][1:]
-        # Only allow methods used by gramex.cache.open that return a DataFrame
-        if ext not in {'csv', 'xls', 'xlsx', 'hdf', 'sas', 'stata', 'table'}:
-            raise ValueError('ext: %s invalid. Can be csv|xls|xlsx|...' % ext)
         # Get the full dataset. Then filter it
         data = gramex.cache.open(url, ext, transform=transform, **kwargs)
         return _filter_frame(data, meta=meta, controls=controls, args=args)
@@ -200,6 +180,175 @@ def filter(url, args={}, meta={}, engine=None, table=None, ext=None,
         raise ValueError('engine: %s invalid. Can be sqlalchemy|file|dataframe' % engine)
 
 
+def delete(url, meta={}, args=None, engine=None, table=None, ext=None, id=None,
+           query=None, transform=None, **kwargs):
+    '''
+    Deletes data using URL query parameters. Typical usage::
+
+        count = gramex.data.delete(dataframe, args=handler.args, id=['id'])
+        count = gramex.data.delete('file.csv', args=handler.args, id=['id'])
+        count = gramex.data.delete('mysql://server/db', table='table', args=handler.args, id='id')
+
+    ``id`` is a column name or a list of column names defining the primary key.
+    Calling this in a handler with ``?id=1&id=2`` deletes rows with id is 1 or 2.
+
+    It accepts the same parameters as :py:func:`filter`, and returns the number of deleted rows.
+    '''
+    if engine is None:
+        engine = get_engine(url)
+    meta.update({'filters': [], 'ignored': []})
+    controls = _pop_controls(args)
+    if engine == 'dataframe':
+        data_filtered = _filter_frame(url, meta=meta, controls=controls,
+                                      args=args, source='delete', id=id)
+        url.drop(data_filtered.index, inplace=True)
+        return len(data_filtered)
+    elif engine == 'file':
+        data = gramex.cache.open(url, ext, transform=transform, **kwargs)
+        data_filtered = _filter_frame(data, meta=meta, controls=controls,
+                                      args=args, source='delete', id=id)
+        data.drop(data_filtered.index, inplace=True)
+        gramex.cache.save(data, url, ext, index=False, **kwargs)
+        return len(data_filtered)
+    elif engine == 'sqlalchemy':
+        if table is None:
+            raise ValueError('No table: specified')
+        engine = sqlalchemy.create_engine(url, **kwargs)
+        return _filter_db(engine, table, meta=meta, controls=controls, args=args,
+                          source='delete', id=id)
+    else:
+        raise ValueError('engine: %s invalid. Can be sqlalchemy|file|dataframe' % engine)
+    return 0
+
+
+def update(url, meta={}, args=None, engine=None, table=None, ext=None, id=None,
+           query=None, transform=None, **kwargs):
+    '''
+    Update data using URL query parameters. Typical usage::
+
+        count = gramex.data.update(dataframe, args=handler.args, id=['id'])
+        count = gramex.data.update('file.csv', args=handler.args, id=['id'])
+        count = gramex.data.update('mysql://server/db', table='table', args=handler.args, id='id')
+
+    ``id`` is a column name or a list of column names defining the primary key.
+    Calling this in a handler with ``?id=1&x=2`` updates x=2 where id=1.
+
+    It accepts the same parameters as :py:func:`filter`, and returns the number of updated rows.
+    '''
+    if engine is None:
+        engine = get_engine(url)
+    meta.update({'filters': [], 'ignored': []})
+    controls = _pop_controls(args)
+    if engine == 'dataframe':
+        data_updated = _filter_frame(
+            url, meta=meta, controls=controls, args=args, source='update', id=id)
+        url.loc[data_updated.index] = data_updated
+        return len(data_updated)
+    elif engine == 'file':
+        data = gramex.cache.open(url, ext, transform=transform, **kwargs)
+        data_updated = _filter_frame(
+            data, meta=meta, controls=controls, args=args, source='update', id=id)
+        data.loc[data_updated.index] = data_updated
+        gramex.cache.save(data, url, ext, index=False, **kwargs)
+        return len(data_updated)
+    elif engine == 'sqlalchemy':
+        if table is None:
+            raise ValueError('No table: specified')
+        engine = sqlalchemy.create_engine(url, **kwargs)
+        return _filter_db(engine, table, meta=meta, controls=controls, args=args,
+                          source='update', id=id)
+    else:
+        raise ValueError('engine: %s invalid. Can be sqlalchemy|file|dataframe' % engine)
+    return 0
+
+
+def insert(url, meta={}, args=None, engine=None, table=None, ext=None, id=None,
+           query=None, transform=None, **kwargs):
+    '''
+    Insert data using URL query parameters. Typical usage::
+
+        count = gramex.data.insert(dataframe, args=handler.args, id=['id'])
+        count = gramex.data.insert('file.csv', args=handler.args, id=['id'])
+        count = gramex.data.insert('mysql://server/db', table='table', args=handler.args, id='id')
+
+    ``id`` is a column name or a list of column names defining the primary key.
+    Calling this in a handler with ``?id=3&x=2`` inserts a new record with id=3 and x=2.
+
+    It accepts the same parameters as :py:func:`filter`, and returns the number of updated rows.
+    '''
+    if engine is None:
+        engine = get_engine(url)
+    _pop_controls(args)
+    meta.update({'filters': [], 'ignored': []})
+    # TODO: if values do not have equal number of elements, pad them and warn
+    rows = pd.DataFrame.from_dict(args)
+    if engine == 'dataframe':
+        rows = _pop_columns(rows, url.columns, meta['ignored'])
+        url = url.append(rows)
+        return len(rows)
+    elif engine == 'file':
+        data = gramex.cache.open(url, ext, transform=None, **kwargs)
+        rows = _pop_columns(rows, data.columns, meta['ignored'])
+        data = data.append(rows)
+        gramex.cache.save(data, url, ext, index=False, **kwargs)
+        return len(rows)
+    elif engine == 'sqlalchemy':
+        if table is None:
+            raise ValueError('No table: specified')
+        engine = sqlalchemy.create_engine(url, **kwargs)
+        cols = get_table(engine, table).columns
+        rows = _pop_columns(rows, [col.name for col in cols], meta['ignored'])
+        rows.to_sql(table, engine, if_exists='append', index=False, **kwargs)
+        return len(rows)
+    else:
+        raise ValueError('engine: %s invalid. Can be sqlalchemy|file|dataframe' % engine)
+    return 0
+
+
+def get_engine(url):
+    '''
+    Used to detect type of url passed. Returns:
+
+    - ``'dataframe'`` if url is a Pandas DataFrame
+    - ``'sqlalchemy'`` if url is a sqlalchemy compatibly URL
+    - ``'file'`` if none of the above
+    '''
+    if isinstance(url, pd.DataFrame):
+        return 'dataframe'
+    else:
+        try:
+            sqlalchemy.engine.url.make_url(url).get_driver_name()
+            return 'sqlalchemy'
+        except (sqlalchemy.exc.ArgumentError, sqlalchemy.exc.NoSuchModuleError):
+            return 'file'
+
+
+def get_table(engine, table):
+    '''Return the sqlalchemy table from the engine and table name'''
+    if engine not in _METADATA_CACHE:
+        _METADATA_CACHE[engine] = sqlalchemy.MetaData()
+    metadata = _METADATA_CACHE[engine]
+    return sqlalchemy.Table(table, metadata, autoload=True, autoload_with=engine)
+
+
+def _pop_controls(args):
+    '''Filter out data controls: sort, limit, offset and column (_c) from args'''
+    return {
+        key: args.pop(key)
+        for key in ('_sort', '_limit', '_offset', '_c')
+        if key in args
+    }
+
+
+def _pop_columns(data, cols, ignored):
+    '''Remove columns not in cols'''
+    cols = set(cols)
+    for col in data.columns:
+        if col not in cols:
+            ignored.append([col, data[col].tolist()])
+    return data[[col for col in cols if col in data.columns]]
+
+
 def _sql_safe(val):
     '''Return True if val is safe for insertion in an SQL query'''
     if isinstance(val, six.string_types):
@@ -221,15 +370,15 @@ def _filter_col(col, cols):
 
 
 def _filter_sort_columns(sort_filter, cols):
-    sorts, ignored_sorts = [], []
+    sorts, ignore_sorts = [], []
     for col in sort_filter:
         if col in cols:
             sorts.append((col, True))
         elif col.startswith('-') and col[1:] in cols:
             sorts.append((col[1:], False))
         else:
-            ignored_sorts.append(col)
-    return sorts, ignored_sorts
+            ignore_sorts.append(col)
+    return sorts, ignore_sorts
 
 
 def _filter_select_columns(col_filter, cols, meta):
@@ -254,148 +403,208 @@ def _filter_select_columns(col_filter, cols, meta):
     return show_cols, ignored_cols
 
 
-def _filter_frame(data, meta, controls, args):
+def _filter_frame(data, meta, controls, args, source='select', id=[]):
     '''
     Returns a DataFrame in which the source DataFrame ``data`` is filtered using
     args. Additional controls like _sort, etc are in ``controls``. Metadata is
     stored in ``meta``.
+
+    :arg data: dataframe
+    :arg meta: dictionary of `filters`, `ignored`, `sort`, `offset`, `limit` params from kwargs
+    :arg args: user arguments to filter the data
+    :arg source: accepted values - `update`, `delete` for PUT, DELETE methods in FormHandler
+    :arg id: list of id specific to data using which values can be updated
     '''
     filters = meta['filters']
+    cols_for_update = {}
     for key, vals in args.items():
-        # Parse column names
-        col, op = _filter_col(key, data.columns)
-        if col is None:
-            meta['ignored'].append((key, vals))
-            continue
+        if (source in ('update', 'delete') and key in id) or (source == 'select'):
+            # Parse column names
+            col, op = _filter_col(key, data.columns)
+            if col is None:
+                meta['ignored'].append((key, vals))
+                continue
 
-        # Apply type conversion for values
-        conv = data[col].dtype.type
-        vals = tuple(conv(val) for val in vals if val)
-        if len(vals) == 0:
-            meta['ignored'].append((key, vals))
-            continue
+            # Apply type conversion for values
+            conv = data[col].dtype.type
+            vals = tuple(conv(val) for val in vals if val)
+            if len(vals) == 0:
+                meta['ignored'].append((key, vals))
+                continue
 
-        # Apply filters
-        if op == '':
-            data = data[data[col].isin(vals)]
-        elif op == '!':
-            data = data[~data[col].isin(vals)]
-        elif op == '>':
-            data = data[data[col] > min(vals)]
-        elif op == '>~':
-            data = data[data[col] >= min(vals)]
-        elif op == '<':
-            data = data[data[col] < max(vals)]
-        elif op == '<~':
-            data = data[data[col] <= max(vals)]
-        elif op == '!~':
-            data = data[~data[col].str.contains('|'.join(vals))]
-        elif op == '~':
-            data = data[data[col].str.contains('|'.join(vals))]
-        filters.append((col, op, vals))
+            # Apply filters
+            if op == '':
+                data = data[data[col].isin(vals)]
+            elif op == '!':
+                data = data[~data[col].isin(vals)]
+            elif op == '>':
+                data = data[data[col] > min(vals)]
+            elif op == '>~':
+                data = data[data[col] >= min(vals)]
+            elif op == '<':
+                data = data[data[col] < max(vals)]
+            elif op == '<~':
+                data = data[data[col] <= max(vals)]
+            elif op == '!~':
+                data = data[~data[col].str.contains('|'.join(vals))]
+            elif op == '~':
+                data = data[data[col].str.contains('|'.join(vals))]
+            filters.append((col, op, vals))
+        elif source == 'update':
+            # Update values should only contain 1 value. 2nd onwards are ignored
+            if key not in data.columns or len(vals) == 0:
+                meta['ignored'].append((key, vals))
+            else:
+                cols_for_update[key] = vals[0]
+                if len(vals) > 1:
+                    meta['ignored'].append((key, vals[1:]))
+        else:
+            meta['ignored'].append((key, vals))
     meta['count'] = len(data)
 
-    # Apply controls
-    if '_sort' in controls:
-        meta['sort'], ignored_sorts = _filter_sort_columns(controls['_sort'], data.columns)
-        if len(meta['sort']) > 0:
-            data = data.sort_values(by=[c[0] for c in meta['sort']],
-                                    ascending=[c[1] for c in meta['sort']])
-        if len(ignored_sorts) > 0:
-            meta['ignored'].append(('_sort', ignored_sorts))
-    if '_c' in controls:
-        show_cols, ignored_cols = _filter_select_columns(controls['_c'], data.columns, meta)
-        data = data[show_cols]
-        if len(ignored_cols) > 0:
-            meta['ignored'].append(('_c', ignored_cols))
-    if '_offset' in controls:
-        try:
-            offset = min(int(v) for v in controls['_offset'])
-        except ValueError:
-            raise ValueError('_offset not integer: %r' % controls['_offset'])
-        data = data.iloc[offset:]
-        meta['offset'] = offset
-    if '_limit' in controls:
-        try:
-            limit = min(int(v) for v in controls['_limit'])
-        except ValueError:
-            raise ValueError('_limit not integer: %r' % controls['_limit'])
-        data = data.iloc[:limit]
-        meta['limit'] = limit
-    return data
+    if source == 'delete':
+        return data
+    elif source == 'update':
+        for key, val in cols_for_update.items():
+            data[key] = val
+        return data
+    else:
+        # Apply controls
+        if '_sort' in controls:
+            meta['sort'], ignore_sorts = _filter_sort_columns(controls['_sort'], data.columns)
+            if len(meta['sort']) > 0:
+                data = data.sort_values(by=[c[0] for c in meta['sort']],
+                                        ascending=[c[1] for c in meta['sort']])
+            if len(ignore_sorts) > 0:
+                meta['ignored'].append(('_sort', ignore_sorts))
+        if '_c' in controls:
+            show_cols, hide_cols = _filter_select_columns(controls['_c'], data.columns, meta)
+            data = data[show_cols]
+            if len(hide_cols) > 0:
+                meta['ignored'].append(('_c', hide_cols))
+        if '_offset' in controls:
+            try:
+                offset = min(int(v) for v in controls['_offset'])
+            except ValueError:
+                raise ValueError('_offset not integer: %r' % controls['_offset'])
+            data = data.iloc[offset:]
+            meta['offset'] = offset
+        if '_limit' in controls:
+            try:
+                limit = min(int(v) for v in controls['_limit'])
+            except ValueError:
+                raise ValueError('_limit not integer: %r' % controls['_limit'])
+            data = data.iloc[:limit]
+            meta['limit'] = limit
+        return data
 
 
-def _filter_db(engine, table, meta, controls, args):
-    if engine not in _METADATA_CACHE:
-        _METADATA_CACHE[engine] = sqlalchemy.MetaData()
-    metadata = _METADATA_CACHE[engine]
-    table = sqlalchemy.Table(table, metadata, autoload=True, autoload_with=engine)
+def _filter_db(engine, table, meta, controls, args, source='select', id=[]):
+    '''
+
+    It accepts the following parameters
+
+    :arg sqlalchemy engine engine: constructed sqlalchemy string
+    :arg database table table: table name in the mentioned database
+    :arg controls: dictionary of `_sort`, `_c`, `_offset`, `_limit` params
+    :arg meta: dictionary of `filters`, `ignored`, `sort`, `offset`, `limit` params from kwargs
+    :arg args: dictionary of user arguments to filter the data
+    :arg source: accepted values - `update`, `delete` for PUT, DELETE methods in FormHandler
+    :arg id: list of keys specific to data using which values can be updated
+    '''
+    table = get_table(engine, table)
     cols = table.columns
 
     filters = meta['filters']
-    query = sqlalchemy.select([table])
+    if source == 'delete':
+        query = sqlalchemy.delete(table)
+    elif source == 'update':
+        query = sqlalchemy.update(table)
+    else:
+        query = sqlalchemy.select([table])
+    cols_for_update = {}
     for key, vals in args.items():
-        # Parse column names
-        col, op = _filter_col(key, cols)
-        if col is None:
+        # id (combination of cols) - check ONLY when data is updated
+        if (source in ('update', 'delete') and key in id) or (source == 'select'):
+            # Parse column names
+            col, op = _filter_col(key, cols)
+            if col is None:
+                meta['ignored'].append((key, vals))
+                continue
+
+            # Apply type conversion for values
+            column = cols[col]
+            conv = column.type.python_type
+            # In PY2, .python_type returns str. We want unicode
+            if conv == six.binary_type:
+                conv = six.text_type
+            vals = tuple(conv(val) for val in vals)
+
+            # Apply filters
+            if op == '':
+                query = query.where(column.in_(vals))
+            elif op == '!':
+                query = query.where(column.notin_(vals))
+            elif op == '>':
+                query = query.where(column > min(vals))
+            elif op == '>~':
+                query = query.where(column >= min(vals))
+            elif op == '<':
+                query = query.where(column < max(vals))
+            elif op == '<~':
+                query = query.where(column <= max(vals))
+            elif op == '!~':
+                query = query.where(column.notlike('%' + '%'.join(vals) + '%'))
+            elif op == '~':
+                query = query.where(column.like('%' + '%'.join(vals) + '%'))
+            filters.append((col, op, vals))
+        elif source == 'update':
+            # Update values should only contain 1 value. 2nd onwards are ignored
+            if key not in cols or len(vals) == 0:
+                meta['ignored'].append((key, vals))
+            else:
+                cols_for_update[key] = vals[0]
+                if len(vals) > 1:
+                    meta['ignored'].append((key, vals[1:]))
+        else:
             meta['ignored'].append((key, vals))
-            continue
-
-        # Apply type conversion for values
-        column = cols[col]
-        conv = column.type.python_type
-        # In PY2, .python_type returns str. We want unicode
-        if conv == six.binary_type:
-            conv = six.text_type
-        vals = tuple(conv(val) for val in vals)
-
-        # Apply filters
-        if op == '':
-            query = query.where(column.in_(vals))
-        elif op == '!':
-            query = query.where(column.notin_(vals))
-        elif op == '>':
-            query = query.where(column > min(vals))
-        elif op == '>~':
-            query = query.where(column >= min(vals))
-        elif op == '<':
-            query = query.where(column < max(vals))
-        elif op == '<~':
-            query = query.where(column <= max(vals))
-        elif op == '!~':
-            query = query.where(column.notlike('%' + '%'.join(vals) + '%'))
-        elif op == '~':
-            query = query.where(column.like('%' + '%'.join(vals) + '%'))
-        filters.append((col, op, vals))
-    # Apply controls
-    if '_sort' in controls:
-        meta['sort'], ignored_sorts = _filter_sort_columns(controls['_sort'], list(cols.keys()))
-        for col, asc in meta['sort']:
-            query = query.order_by(cols[col] if asc else cols[col].desc())
-        if len(ignored_sorts) > 0:
-            meta['ignored'].append(('_sort', ignored_sorts))
-    if '_c' in controls:
-        show_cols, ignored_cols = _filter_select_columns(controls['_c'], list(cols.keys()), meta)
-        query = query.with_only_columns([cols[col] for col in show_cols])
-        if len(ignored_cols) > 0:
-            meta['ignored'].append(('_c', ignored_cols))
-        if len(show_cols) == 0:
-            return pd.DataFrame()
-    if '_offset' in controls:
-        try:
-            offset = min(int(v) for v in controls['_offset'])
-        except ValueError:
-            raise ValueError('_offset not integer: %r' % controls['_offset'])
-        query = query.offset(offset)
-        meta['offset'] = offset
-    if '_limit' in controls:
-        try:
-            limit = min(int(v) for v in controls['_limit'])
-        except ValueError:
-            raise ValueError('_limit not integer: %r' % controls['_limit'])
-        query = query.limit(limit)
-        meta['limit'] = limit
-    return pd.read_sql(query, engine)
+    if source == 'delete':
+        res = engine.execute(query)
+        return res.rowcount
+    elif source == 'update':
+        query = query.values(cols_for_update)
+        res = engine.execute(query)
+        return res.rowcount
+    else:
+        # Apply controls for select
+        if '_sort' in controls:
+            meta['sort'], ignore_sorts = _filter_sort_columns(controls['_sort'], list(cols.keys()))
+            for col, asc in meta['sort']:
+                query = query.order_by(cols[col] if asc else cols[col].desc())
+            if len(ignore_sorts) > 0:
+                meta['ignored'].append(('_sort', ignore_sorts))
+        if '_c' in controls:
+            show_cols, hide_cols = _filter_select_columns(controls['_c'], list(cols.keys()), meta)
+            query = query.with_only_columns([cols[col] for col in show_cols])
+            if len(hide_cols) > 0:
+                meta['ignored'].append(('_c', hide_cols))
+            if len(show_cols) == 0:
+                return pd.DataFrame()
+        if '_offset' in controls:
+            try:
+                offset = min(int(v) for v in controls['_offset'])
+            except ValueError:
+                raise ValueError('_offset not integer: %r' % controls['_offset'])
+            query = query.offset(offset)
+            meta['offset'] = offset
+        if '_limit' in controls:
+            try:
+                limit = min(int(v) for v in controls['_limit'])
+            except ValueError:
+                raise ValueError('_limit not integer: %r' % controls['_limit'])
+            query = query.limit(limit)
+            meta['limit'] = limit
+        return pd.read_sql(query, engine)
 
 
 def download(data, format='json', template=None, **kwargs):
@@ -506,7 +715,7 @@ def download(data, format='json', template=None, **kwargs):
     elif format in {'xlsx', 'xls'}:
         out = io.BytesIO()
         kw(index=False)
-        # TODO: Create and use a FrameWriter
+        # TODO: Create and use a FrameWriter for formatting
         with pd.ExcelWriter(out, engine='xlsxwriter') as writer:
             for key, val in data.items():
                 val.to_excel(writer, sheet_name=key, **kwargs)

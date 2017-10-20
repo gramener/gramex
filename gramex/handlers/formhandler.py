@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+import json
 import tornado.gen
 import gramex.cache
 import gramex.data
@@ -46,20 +47,23 @@ class FormHandler(BaseHandler):
     @classmethod
     def setup(cls, **kwargs):
         super(FormHandler, cls).setup(**kwargs)
-        merge(cls.conf.kwargs,
-              objectpath(gramex_conf, 'handlers.FormHandler', {}),
-              mode='setdefault')
+        conf_kwargs = merge(AttrDict(cls.conf.kwargs),
+                            objectpath(gramex_conf, 'handlers.FormHandler', {}),
+                            'setdefault')
         # Top level formats: key is special. Don't treat it as data
-        cls.formats = cls.conf.kwargs.pop('formats', {})
+        cls.formats = conf_kwargs.pop('formats', {})
+        default_config = conf_kwargs.pop('default', None)
+        # Remove other known special keys from dataset configuration
+        for special_key in ['xsrf_cookies', 'headers', 'redirect']:
+            conf_kwargs.pop(special_key, None)
         # If top level has url: then data spec is at top level. Else it's a set of sub-keys
-        if 'url' in cls.conf.kwargs:
-            cls.datasets = {'data': cls.conf.kwargs}
+        if 'url' in conf_kwargs:
+            cls.datasets = {'data': conf_kwargs}
             cls.single = True
         else:
-            cls.datasets = cls.conf.kwargs
+            cls.datasets = conf_kwargs
             cls.single = False
-        # Ignore special keys. default: updates the args, and cannot be a dataset key
-        default_config = cls.datasets.pop('default', None)
+        # Apply defaults to each key
         if isinstance(default_config, dict):
             for key in cls.datasets:
                 config = cls.datasets[key].get('default', {})
@@ -72,6 +76,9 @@ class FormHandler(BaseHandler):
             elif 'url' not in dataset:
                 app_log.error('%s: %s: does not have a url: key' % (cls.name, key))
                 del cls.datasets[key]
+            # Ensure that id: is a list -- if it exists
+            if 'id' in dataset and not isinstance(dataset['id'], list):
+                dataset['id'] = [dataset['id']]
             # Convert function: into a data = transform(data) function
             conf = {
                 'function': dataset.pop('function', None),
@@ -90,26 +97,33 @@ class FormHandler(BaseHandler):
                         vars=fn_vars,
                         filename='%s.%s.%s' % (cls.name, key, fn), iter=False)
 
+    def process_kwargs(self, dataset, this_args, key):
+        """For each dataset, prepare the arguments."""
+        filter_kwargs = AttrDict(dataset)
+        filter_kwargs.pop('modify', None)
+        prepare = filter_kwargs.pop('prepare', None)
+        queryfunction = filter_kwargs.pop('queryfunction', None)
+        defaults = {
+            key: val if isinstance(val, list) else [val]
+            for key, val in filter_kwargs.pop('default', {}).items()
+        }
+        args = merge(namespaced_args(this_args, key), defaults, mode='setdefault')
+        if callable(prepare):
+            result = prepare(args=args, key=key, handler=self)
+            if result is not None:
+                args = result
+        if callable(queryfunction):
+            filter_kwargs['query'] = queryfunction(args=args, key=key, handler=self)
+        return args, filter_kwargs
+
     @tornado.gen.coroutine
     def get(self):
         meta, futures = AttrDict(), AttrDict()
         for key, dataset in self.datasets.items():
             meta[key] = AttrDict()
-            filter_kwargs = AttrDict(dataset)
-            filter_kwargs.pop('modify', None)
-            prepare = filter_kwargs.pop('prepare', None)
-            queryfunction = filter_kwargs.pop('queryfunction', None)
-            defaults = {
-                key: val if isinstance(val, list) else [val]
-                for key, val in filter_kwargs.pop('default', {}).items()
-            }
-            args = merge(namespaced_args(self.args, key), defaults, mode='setdefault')
-            if callable(prepare):
-                result = prepare(args=args, key=key, handler=self)
-                if result is not None:
-                    args = result
-            if callable(queryfunction):
-                filter_kwargs['query'] = queryfunction(args=args, key=key, handler=self)
+            args, filter_kwargs = self.process_kwargs(dataset, self.args, key)
+            fmt = args.pop('_format', ['json'])[0]
+            filter_kwargs.pop('id', None)
             # Run query in a separate thread
             futures[key] = gramex.service.threadpool.submit(
                 gramex.data.filter, args=args, meta=meta[key], **filter_kwargs)
@@ -123,9 +137,52 @@ class FormHandler(BaseHandler):
             if callable(modify):
                 result[key] = modify(data=result[key], key=key, handler=self)
 
+        fmt = self.set_format(fmt, meta)
+        self.write(gramex.data.download(result['data'] if self.single else result, **fmt))
+
+    @tornado.gen.coroutine
+    def update(self, method):
+        if self.redirects:
+            self.save_redirect_page()
+        meta, count = AttrDict(), AttrDict()
+        # For each dataset
+        for key, dataset in self.datasets.items():
+            meta[key] = AttrDict()
+            args, filter_kwargs = self.process_kwargs(dataset, self.args, key)
+            if 'id' not in filter_kwargs:
+                raise HTTPError(BAD_REQUEST, '%s: %s requires id: <col> in gramex.yaml' % (
+                    self.name, self.request.method))
+            missing_args = [col for col in filter_kwargs['id'] if col not in args]
+            if len(missing_args) > 0:
+                raise HTTPError(BAD_REQUEST, '%s: columns %s missing in URL query' % (
+                    self.name, ', '.join(missing_args)))
+            fmt = args.pop('_format', ['json'])[0]
+            # Execute the query
+            count[key] = method(meta=meta[key], args=args, **filter_kwargs)
+        for key, val in count.items():
+            self.set_header('Count-%s' % key, val)
+        if self.redirects:
+            self.redirect_next()
+        else:
+            fmt = self.set_format(fmt, meta)
+            self.set_header('Cache-Control', 'no-cache, no-store')
+            self.write(json.dumps(meta, indent=2))
+
+    @tornado.gen.coroutine
+    def delete(self):
+        yield self.update(gramex.data.delete)
+
+    @tornado.gen.coroutine
+    def post(self):
+        yield self.update(gramex.data.insert)
+
+    @tornado.gen.coroutine
+    def put(self):
+        yield self.update(gramex.data.update)
+
+    def set_format(self, fmt, meta):
         # Identify format to render in. The default format, json, is defined in
         # the base gramex.yaml under handlers.FormHandler.formats
-        fmt = args.get('_format', ['json'])[0]
         if fmt in self.formats:
             fmt = dict(self.formats[fmt])
         else:
@@ -141,4 +198,4 @@ class FormHandler(BaseHandler):
             fmt['handler'] = self
             fmt['meta'] = meta['data'] if self.single else meta
 
-        self.write(gramex.data.download(result['data'] if self.single else result, **fmt))
+        return fmt

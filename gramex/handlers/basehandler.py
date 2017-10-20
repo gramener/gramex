@@ -532,9 +532,9 @@ class BaseHandler(RequestHandler, BaseMixin):
         # Set the method to the ?x-http-method-overrride argument or the
         # X-HTTP-Method-Override header if they exist
         if 'x-http-method-override' in self.args:
-            self.request.method = self.args.pop('x-http-method-override')[0]
+            self.request.method = self.args.pop('x-http-method-override')[0].upper()
         elif 'X-HTTP-Method-Override' in self.request.headers:
-            self.request.method = self.request.headers['X-HTTP-Method-Override']
+            self.request.method = self.request.headers['X-HTTP-Method-Override'].upper()
 
     def prepare(self):
         for method in self._on_init_methods:

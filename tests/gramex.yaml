@@ -1203,6 +1203,7 @@ url:
     handler: FormHandler
     kwargs:
       url: sales.xlsx
+      xsrf_cookies: false     # We're testing PUT/PUST/DELETE to see if they fail
 
   formhandler/mysql:
     pattern: /formhandler/mysql
@@ -1287,6 +1288,67 @@ url:
     kwargs:
       url: sales.xlsx
       prepare: args.update(_format=['csv'], product=['Biscuit'])
+
+  formhandler/edits-xlsx-singlekey:
+    pattern: /formhandler/edits-xlsx-singlekey
+    handler: FormHandler
+    kwargs:
+      url: sales-edits.xlsx
+      id: [sales]
+      xsrf_cookies: false
+      default: {x: 1}
+
+  formhandler/edits-xlsx-multikey:
+    pattern: /formhandler/edits-xlsx-multikey
+    handler: FormHandler
+    kwargs:
+      url: sales-edits.xlsx
+      id: [city, product]
+      xsrf_cookies: false
+      default: {x: 1}
+
+  formhandler/edits-sqlite-singlekey:
+    pattern: /formhandler/edits-sqlite-singlekey
+    handler: FormHandler
+    kwargs:
+      url: sqlite:///formhandler-edits.db
+      table: sales
+      id: [sales]
+      xsrf_cookies: false
+      default: {x: 1}
+
+  formhandler/edits-sqlite-multikey:
+    pattern: /formhandler/edits-sqlite-multikey
+    handler: FormHandler
+    kwargs:
+      url: sqlite:///formhandler-edits.db
+      table: sales
+      id: [city, product]
+      xsrf_cookies: false
+      default: {x: 1}
+
+  formhandler/edits-xlsx-redirect:
+    pattern: /formhandler/edits-xlsx-redirect
+    handler: FormHandler
+    kwargs:
+      url: sales-edits.xlsx
+      id: [city, product]
+      xsrf_cookies: false
+      redirect: {url: /redirected}
+
+  formhandler/edits-multidata:
+    pattern: /formhandler/edits-multidata
+    handler: FormHandler
+    kwargs:
+      csv:
+        url: sales-edits.csv
+        encoding: utf-8
+        id: [city, product]
+      sql:
+        url: mysql+pymysql://root@$MYSQL_SERVER/test_formhandler?charset=utf8
+        table: sales
+        id: [city, product]
+      xsrf_cookies: false
 
   capture:
     pattern: /capture

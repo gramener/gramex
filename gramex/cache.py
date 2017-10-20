@@ -13,7 +13,7 @@ import pandas as pd
 from threading import Thread
 from tornado.concurrent import Future
 from tornado.template import Template
-from gramex.config import app_log, PathConfig
+from gramex.config import app_log, PathConfig, merge
 
 
 _opener_defaults = dict(mode='r', buffering=-1, encoding='utf-8', errors='strict',
@@ -28,7 +28,7 @@ _markdown_defaults = dict(output_format='html5', extensions=[
 ])
 
 
-def opener(callback, read=False):
+def opener(callback, read=False, **open_kwargs):
     '''
     Converts any function that accepts a string or handle as its parameter into
     a function that takes the first parameter from a file path.
@@ -53,16 +53,17 @@ def opener(callback, read=False):
     '''
     if not callable(callback):
         raise ValueError('opener requires a function as first parameter, not %s', repr(callback))
+    merge(open_kwargs, _opener_defaults, 'setdefault')
     if read:
         # Pass contents to callback
         def method(path, **kwargs):
-            open_args = {key: kwargs.pop(key, val) for key, val in _opener_defaults.items()}
+            open_args = {key: kwargs.pop(key, val) for key, val in open_kwargs.items()}
             with io.open(path, **open_args) as handle:
                 return callback(handle.read(), **kwargs)
     else:
         # Pass handle to callback
         def method(path, **kwargs):
-            open_args = {key: kwargs.pop(key, val) for key, val in _opener_defaults.items()}
+            open_args = {key: kwargs.pop(key, val) for key, val in open_kwargs.items()}
             with io.open(path, **open_args) as handle:
                 return callback(handle, **kwargs)
     return method
@@ -87,8 +88,7 @@ def stat(path):
 # gramex.cache.open() stores its cache here.
 # {(path, callback): {data: ..., stat: ...}}
 _OPEN_CACHE = {}
-# List of callback string methods
-_CALLBACKS = dict(
+_OPEN_CALLBACKS = dict(
     txt=opener(six.text_type, read=True),
     text=opener(six.text_type, read=True),
     yaml=opener(yaml.load),
@@ -167,7 +167,7 @@ def open(path, callback=None, transform=None, rel=False, **kwargs):
 
     Any other keyword arguments are passed directly to the callback. If the
     callback is a predefined string and uses io.open, all argument applicable to
-    io.open are passsed to io.open and the rest are passed to the callback.
+    io.open are passed to io.open and the rest are passed to the callback.
     '''
     # Pass _reload_status = True for testing purposes. This returns a tuple:
     # (result, reloaded) instead of just the result.
@@ -193,7 +193,7 @@ def open(path, callback=None, transform=None, rel=False, **kwargs):
         if callable(callback):
             data = callback(path, **kwargs)
         elif callback_is_str:
-            method = _CALLBACKS.get(callback)
+            method = _OPEN_CALLBACKS.get(callback)
             if method is not None:
                 data = method(path, **kwargs)
             elif original_callback is None:
@@ -208,6 +208,52 @@ def open(path, callback=None, transform=None, rel=False, **kwargs):
 
     result = _cache[key]['data']
     return (result, reloaded) if _reload_status else result
+
+
+_SAVE_CALLBACKS = dict(
+    json='to_json',
+    csv='to_csv',
+    xlsx='to_excel',
+    hdf='to_hdf',
+    html='to_html',
+    stata='to_stata',
+    # yaml not supported
+    # txt not supported
+    # text not supported
+    # table not supported
+    # xls not supported
+    # excel not supported
+    # sas not supported
+    # template not yet supported
+    # md not supported
+    # markdown not supported
+    # config not supported
+)
+
+
+def save(data, url, callback=None, **kwargs):
+    '''
+    Saves a DataFrame into file at url. It does not cache.
+
+    ``callback`` is almost the same as for :py:func:`gramex.cache.open`. It can
+    be ``json``, ``csv``, ``xlsx``, ``hdf``, ``html``, ``stata`` or
+    a function that accepts the filename and any other arguments.
+
+    Other keyword arguments are passed directly to the callback.
+    '''
+    if callback is None:
+        callback = os.path.splitext(url)[-1][1:]
+    if callable(callback):
+        return callback(data, url, **kwargs)
+    elif callback in _SAVE_CALLBACKS:
+        method = getattr(data, _SAVE_CALLBACKS[callback])
+        argspec = inspect.getargspec(method)
+        # Remove arguments
+        if argspec.keywords is None:
+            kwargs = {key: val for key, val in kwargs.items() if key in argspec.args}
+        return method(url, **kwargs)
+    else:
+        raise TypeError('gramex.cache.save(callback="%s") is unknown' % callback)
 
 
 # gramex.cache.query() stores its cache here

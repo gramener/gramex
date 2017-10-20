@@ -288,10 +288,10 @@ Use SQL **parameter substitution** for values wherever possible. For example:
 
     :::python
     def bad_query_function(args):
-        return `'SELECT * FROM table WHERE col={val}'.format(val=args['v'])`
+        return 'SELECT * FROM table WHERE col={val}'.format(val=args['v'])
 
     def good_query_function(args):
-        return `'SELECT * FROM table WHERE col=:v'
+        return 'SELECT * FROM table WHERE col=:v'
         # FormHandler will replace the :v with args['v'] if it is a value
 
 If you *must* use args as values, sanitize them. For example, `pymysql.escape_string(var)`:
@@ -395,6 +395,11 @@ restrict filters to a single dataset by prefixing it with a `<key>:`. For exampl
 FormHandler runs database filters as co-routines. These queries do not block
 other requests, and run across datasets in parallel.
 
+Note:
+
+- If `format:` is specified against multiple datasets, the return value could be
+  in any format (unspecified).
+
 ## FormHandler templates
 
 The output of FormHandler can be rendered as a custom template using the
@@ -428,3 +433,178 @@ template using the following variables:
     - `offset`: Offset as integer. Defaults to 0
     - `limit`: Limit as integer - `None` if limit is not applied
 - `handler`: the FormHandler instance
+
+## FormHandler edits
+
+From **v1.23**, FormHandler allows users to add, edit or delete data using the
+POST, PUT and GET HTTP operators. For example:
+
+    POST ?id=10&x=1&y=2         # Inserts a new record {id: 10, x: 1, y: 2}
+    PUT ?id=10&x=3              # Update x to 3 in the record with id=10
+    DELETE ?id=10               # Delete the record with id=10
+
+This requires primary keys to be defined in the FormHandler as follows:
+
+    :::yaml
+    url:
+      flags:
+        pattern: /$YAMLURL/flags
+        handler: FormHandler
+        kwargs:
+          url: /path/to/flags.csv
+          id: ID                  # Primary key column is "ID"
+
+You may specify multiple primary keys using a list. For example:
+
+    :::yaml
+          id: [state, city]     # "state" + "city" is the primary key
+
+If the `id` columns do not exist in the data, or are not passed in the URL,
+it raises 400 Bad Request HTTP Error.
+
+A POST, PUT or DELETE operation immediately writes back to the underlying `url`.
+For example, this writes back to an Excel file:
+
+    :::yaml
+          # Saves data to Sheet1 of file.xlsx with plant & machine id as keys
+          url: /path/to/file.xlsx
+          sheetname: Sheet1
+          id: [plant, machine id]
+
+This writes back to an Oracle Database:
+
+    :::yaml
+          # Saves to "sales" table of Oracle DB with month, product & city as keys
+          # Typically, the primary keys of "sales" should be the same as `id` here
+          url: 'oracle://$USER:$PASS@server/db'           # Reads from Oracle
+          table: sales
+          id: [month, product, city]
+
+To add or delete multiple values, repeat the keys. For example:
+
+    POST ?id=10&x=1&y=2 & id=11&x=3&y=4   # Inserts {id:10, x:1, y:2} & {id:11, x:3, y:4}
+    DELETE ?id=10 & id=11                 # Delete id=10 & id=11
+
+Note: PUT currently works with single values. In the future, it may update
+multiple rows based on multiple ID selections.
+
+If you are using [multiple datasets](#formhandler-multiple-datasets), add an
+`id:` list to each dataset. For example:
+
+    :::yaml
+      excel:
+          url: /path/to/file.xlsx
+          sheetname: Sheet1
+          id: [plant, machine id]
+      oracle:
+          url: 'oracle://$USER:$PASS@server/db'
+          table: sales
+          id: [month, product, city]
+
+In the URL query, prefix by the relevant dataset name. For example this updates
+only the `continents:` dataset:
+
+    POST ?continents:country=India&continents:population=123123232
+    PUT ?continents:country=India&continents:population=123123232
+    DELETE ?continents:country=India
+
+All operators set a a `Count-<datasetname>` HTTP header that indicates the number
+of rows matched by the query:
+
+    Count-Data: <n>     # Number of rows matched for data: dataset
+
+If [redirect:](../config/#redirection) is specified, the browser is redirected to
+that URL (only for POST, PUT or DELETE, not GET requests). If no redirect is
+specified, these methods return a JSON dict with 2 keys:
+
+- `ignored`: Ignored columns as `[(col, vals), ]`
+- `filters`: Applied filters as `[(col, op, val), ...]` (this is always an empty list for POST)
+
+### FormHandler POST
+
+This form adds a row to the data.
+
+    :::html
+    <!-- flags.csv has ID, Name, Text and many other fields -->
+    <form action="flags-add" method="POST" enctype="multipart/form-data">
+      <label for="ID">ID</label>     <input type="text" name="ID" value="XXX">
+      <label for="Name">Name</label> <input type="text" name="Name" value="New country">
+      <label for="Text">Text</label> <input type="text" name="Text" value="New text">
+      <input type="hidden" name="_xsrf" value="{{ handler.xsrf_token }}">
+      <button type="submit" class="btn btn-submit">Submit</button>
+    </form>
+
+We need to specify a primary key. This YAML config specifies `ID` as the primary key.
+
+    :::yaml
+          id: ID        # Make ID the primary key
+
+When the HTML `form` is submitted, field names map to column names in the data.
+For example, `ID`, `Name` and `Text` are columns in the flags table.
+
+You can insert multiple rows. The number of rows inserted is returned in the
+`Count-<dataset>` header.
+
+The form can also be submitted via AJAX. See [FormHandler PUT](#formhandler-put)
+for an AJAX example.
+
+### FormHandler PUT
+
+This PUT request updates an existing row in the data.
+
+    :::js
+    // flags.csv has ID, Name, Text and many other fields
+    $.ajax('flags-edit', {
+      method: 'PUT',
+      headers: xsrf_token,      // See documentation on XSRF tokens
+      data: {ID: 'XXX', Name: 'Country 1', Text: 'Text ' + Math.random()}
+    })
+
+We need to specify a primary key. This YAML config specifies `ID` as the primary key.
+
+    :::yaml
+          id: ID        # Make ID the primary key
+
+When the HTML `form` is submitted, existing rows with ID `XXX` will be updated.
+
+The number of rows changed is returned in the `Count-<dataset>` header.
+
+If the key is missing, PUT currently returns a `Count-<dataset>: 0` and does not
+insert a row. This behaviour may be configurable in future releases.
+
+When the HTML `form` is submitted, field names map to column names in the data.
+For example, `ID`, `Name` and `Text` are columns in the flags table.
+
+The form can also be submitted directly via a HTML form.
+See [FormHandler POST](#formhandler-post) for a HTML example.
+The `?x-http-method-override=PUT` overrides the method to use PUT. You can
+also use the HTTP header `X-HTTP-Method-Override: PUT`.
+
+### FormHandler DELETE
+
+This DELETE request deletes existing rows in the data.
+
+    :::html
+    <!-- flags.csv has Name as a column -->
+    <form action="flags-delete" method="POST" enctype="multipart/form-data">
+      <input type="hidden" name="x-http-method-override" value="DELETE">
+      <label for="Name">Name</label> <input type="checkbox" name="Name" value="Country 1" checked>
+      <label for="Name">Name</label> <input type="checkbox" name="Name" value="Country 2">
+      <button type="submit" class="btn btn-submit">Submit</button>
+    </form>
+
+When the HTML `form` is submitted, existing rows with Name `Country 1` will be
+deleted. This is because only `Country 1` is checked by default. The user can
+uncheck it and check `Country 2`. On submission, only `Country 2` is deleted.
+
+The number of rows deleted is returned in the `Count-<dataset>` header.
+
+The form can also be submitted via AJAX. See [FormHandler PUT](#formhandler-put)
+for an AJAX example.
+
+Note:
+
+- The keys specified act like a filter or a `where` clause, deleting all rows that match
+- If the filters do not match any rows, it does not throw any error.
+- `?x-http-method-override=DELETE` overrides the method to use DELETE. You can
+  also use the HTTP header `X-HTTP-Method-Override: DELETE`.

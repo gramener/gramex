@@ -164,7 +164,7 @@ class TestFilter(unittest.TestCase):
             gramex.data.filter(url='', engine='nonexistent')
         with assert_raises(OSError):
             gramex.data.filter(url='nonexistent')
-        with assert_raises(ValueError):
+        with assert_raises(TypeError):
             gramex.data.filter(url=os.path.join(folder, 'test_cache_module.py'))
 
     def check_filter_db(self, dbname, url, na_position):

@@ -230,6 +230,30 @@ class TestOpen(unittest.TestCase):
         self.check_file_cache(path, check)
         eq_(gramex.cache.open(path), gramex.cache.open(path, 'md'))
 
+    def test_save(self):
+        path = os.path.join(folder, 'data.csv')
+        data = pd.read_csv(path, encoding='utf-8')
+        config = {
+            'csv': dict(index=False, ignore=1),
+            'xlsx': dict(index=False, sheet_name='Sheet1', ignore=1),
+            'html': dict(index=False, escape=False, ignore=1),
+            'hdf': dict(index=False, key='data', format='fixed'),
+            'json': dict(index=False, ignore=1)
+            # 'stata': dict(index=False),   # cannot test since it doesn't support unicode
+        }
+        for ext, kwargs in config.items():
+            target = os.path.join(folder, 'killme.' + ext)
+            gramex.cache.save(data, target, **kwargs)
+            try:
+                result = gramex.cache.open(target)
+                if ext == 'html':
+                    result = result[0]
+                elif ext == 'json':
+                    result = pd.DataFrame(data)
+                assert_frame_equal(result, data)
+            finally:
+                os.remove(target)
+
     def test_custom_cache(self):
         path = os.path.join(folder, 'data.csv')
         cache = {}
