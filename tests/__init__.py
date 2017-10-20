@@ -1,4 +1,5 @@
 import os
+import shutil
 import requests
 import unittest
 from orderedattrdict import AttrDict
@@ -12,6 +13,10 @@ folder = os.path.dirname(os.path.abspath(__file__))
 
 
 def setUp():
+    # Remove uploads folder before Gramex locks .meta.h5
+    upload_path = os.path.join(folder, 'uploads')
+    if os.path.exists(upload_path):
+        shutil.rmtree(upload_path)
     server.start_gramex()
 
 

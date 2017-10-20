@@ -137,4 +137,8 @@ class TestUploadHandler(TestGramex):
     def tearDownClass(cls):
         FileUpload(cls.path).store.close()
         if os.path.exists(cls.path):
-            shutil.rmtree(cls.path, onerror=_ensure_remove)
+            try:
+                shutil.rmtree(cls.path, onerror=_ensure_remove)
+            except OSError:
+                # .meta.h5 may be in use. Ignore it.
+                pass

@@ -85,7 +85,7 @@ class TestCaptureHandler(TestGramex):
         self.check_pdf(content)
 
         # Test service: relative and absolute URLs
-        for url in (server.base_url + self.url, '../' + self.url, self.url):
+        for url in (server.base_url + self.url, '..' + self.url, self.url):
             result = self.fetch('/capture', params={'url': url})
             self.check_filename(result, 'screenshot.pdf')
             self.check_pdf(result.content)

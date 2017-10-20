@@ -42,9 +42,13 @@ class TestLDAPAuth(TestGramex):
         return r
 
     def test_ldap(self):
-        # This runs tests on a public server.
-        # If someone changes this server's credentials, this may fail until reset
-        self.check('manager', 'Secret123', url='/auth/ldap', status_code=OK)    # May fail with 401
+        try:
+            r = self.check('manager', 'Secret123', url='/auth/ldap', status_code=OK)
+        except AssertionError:
+            # This runs tests on a public server.
+            # If someone changes this server's credentials, this may fail until reset
+            if r.status_code == UNAUTHORIZED:
+                raise SkipTest('Password may have changed on LDAP server')
 
     def test_ldap_wrong_user(self):
         self.check('wrong-user', 'password', url='/auth/ldap', status_code=UNAUTHORIZED,
