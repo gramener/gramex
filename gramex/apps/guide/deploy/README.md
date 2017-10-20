@@ -63,12 +63,20 @@ Service logs can be viewed using the Windows Event Viewer. Gramex logs are at
 
 ## Security
 
-Some common security options are pre-configured in `$GRAMEXPATH/deploy.yaml`. To enable these options, add this line to your `gramex.yaml`:
+To check for application vulnerabilities, run the [OWASP Zed Attack Proxy][zap].
+It detects common vulnerabilities in web applications like cross-site scripting,
+insecure cookies, etc.
+
+Some common security options are pre-configured in `$GRAMEXPATH/deploy.yaml`. To
+enable these options, add this line to your `gramex.yaml`:
 
     :::yaml
     import: $GRAMEXPATH/deploy.yaml
 
-See [deploy.yaml](https://code.gramener.com/s.anand/gramex/blob/master/gramex/deploy.yaml) to understand the configurations.
+See [deploy.yaml][deploy-yaml] to understand the configurations.
+
+[zap]: https://www.owasp.org/index.php/OWASP_Zed_Attack_Proxy_Project
+[deploy-yaml]: https://code.gramener.com/s.anand/gramex/blob/master/gramex/deploy.yaml
 
 ## Relative URL mapping
 

@@ -768,3 +768,19 @@ For example, if you need to re-use common headers, do this:
 You can use `<<: *commonheaders` in multiple URL patterns
 
 [anchors]: http://camel.readthedocs.io/en/latest/yamlref.html#anchors
+
+## YAML styling
+
+YAML supports multi-line strings. You can wrap text like this:
+
+    :::yaml
+    query: >
+        SELECT group, SUM(*) FROM table
+        WHERE column > value
+        GROUP BY group
+        ORDER BY group DESC
+
+This is more readable than:
+
+    :::yaml
+    query: SELECT group, SUM(*) FROM table WHERE column > value GROUP BY group ORDER BY group DESC
