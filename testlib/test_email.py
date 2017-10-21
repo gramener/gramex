@@ -72,12 +72,15 @@ class TestEmailer(TestCase):
 
     def test_smtpmailer(self):
         with assert_raises(ValueError):
-            SMTPMailer(type='any', email='', password='')
+            SMTPMailer(type='any')          # unknown type
         with assert_raises(ValueError):
-            SMTPMailer(type='smtp', email='', password='')
+            SMTPMailer(type='smtp')         # no host
+        with assert_raises(ValueError):
+            SMTPMailer(type='smtps')        # no host
         # These do not raise an error
         SMTPMailer(type='gmail', email='', password='')
         SMTPMailer(type='yahoo', email='', password='')
         SMTPMailer(type='live', email='', password='')
         SMTPMailer(type='mandrill', email='', password='')
-        SMTPMailer(type='smtp', email='', password='', host='hostname')
+        SMTPMailer(type='smtp', host='hostname')
+        SMTPMailer(type='smtps', host='hostname')

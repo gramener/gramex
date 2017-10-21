@@ -426,6 +426,7 @@ class DBAuth(SimpleAuth):
             minutes_to_expiry: 15           # Minutes after which the link will expire
             email_column: user              # Database table column with email ID
             email_from: email-service       # Name of the email service to use for sending emails
+            email_as: email-id              # Name of the person sending email (optional)
             email_text: 'This email is for {user}, {email}'
 
     The login flow is as follows:
@@ -460,6 +461,7 @@ class DBAuth(SimpleAuth):
             cls.forgot.setdefault('email_column', 'email')
             cls.forgot.setdefault('minutes_to_expiry', default_minutes_to_expiry)
             cls.forgot.setdefault('email_subject', 'Password reset')
+            cls.forgot.setdefault('email_as', None)
             cls.forgot.setdefault(
                 'email_text', 'Visit {reset_url} to reset password for user {user} ({email})')
             cls.recover = cls.setup_recover_db()
@@ -560,11 +562,14 @@ class DBAuth(SimpleAuth):
                 reset_url = self.request.protocol + '://' + self.request.host + self.request.path
                 reset_url += '?' + urllib_parse.urlencode({self.forgot.key: token})
                 # TODO: after the email is sent, if there's an exception, log the exception
-                gramex.service.threadpool.submit(
-                    mailer.mail,
-                    to=user[email_column],
-                    subject=self.forgot.email_subject.format(reset_url=reset_url, **user),
-                    body=self.forgot.email_text.format(reset_url=reset_url, **user))
+                kwargs = {
+                    'to': user[email_column],
+                    'subject': self.forgot.email_subject.format(reset_url=reset_url, **user),
+                    'body': self.forgot.email_text.format(reset_url=reset_url, **user),
+                }
+                if self.forgot.email_as:
+                    kwargs['from'] = self.forgot.email_as
+                gramex.service.threadpool.submit(mailer.mail, **kwargs)
                 error = {}                          # Render at the end with no errors
             # If no user matches the user ID or email ID
             else:

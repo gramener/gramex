@@ -20,14 +20,24 @@ class SMTPMailer(object):
         'gmail': {'host': 'smtp.gmail.com'},
         'yahoo': {'host': 'smtp.mail.yahoo.com'},
         'live': {'host': 'smtp.live.com'},
-        'mandrill': {'host': 'smtp.mandrillapp.com'}
+        'mandrill': {'host': 'smtp.mandrillapp.com'},
+        'smtp': {'tls': False},
+        'smtps': {},
+    }
+    # SMTP port, depending on whether TLS is True or False
+    ports = {
+        True: 587,
+        False: 25
     }
 
-    def __init__(self, type, email, password, **kwargs):
+    def __init__(self, type, email=None, password=None, **kwargs):
+        # kwargs: host, port, tls
         self.type = type
         self.email = email
         self.password = password
-        self.client = self.clients.get(type, {})
+        if type not in self.clients:
+            raise ValueError('Unknown type: %s' % type)
+        self.client = self.clients[type]
         self.client.update(kwargs)
         if 'host' not in self.client:
             raise ValueError('Missing SMTP host')
@@ -39,10 +49,12 @@ class SMTPMailer(object):
         sender = kwargs.get('sender', self.email)
         to = recipients(**kwargs)
         msg = message(**kwargs)
-        default_port = 587
-        server = smtplib.SMTP(self.client['host'], self.client.get('port', default_port))
-        server.starttls()
-        server.login(self.email, self.password)
+        tls = self.client.get('tls', True)
+        server = smtplib.SMTP(self.client['host'], self.client.get('port', self.ports[tls]))
+        if tls:
+            server.starttls()
+        if self.email is not None and self.password is not None:
+            server.login(self.email, self.password)
         server.sendmail(sender, to, msg.as_string())
         server.quit()
         app_log.info('Email sent via %s to %s', self.email, to)

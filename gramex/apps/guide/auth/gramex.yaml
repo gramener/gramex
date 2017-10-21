@@ -170,6 +170,18 @@ url:
                 column: $USER_DATABASE_PASSWORDCOLUMN
                 arg: password
                 function: passlib.hash.sha256_crypt.encrypt(content, salt="$USER_DATABASE_SALT")
+            forgot:
+                email_from: gramex-guide-auth     # Name of the email service to use for sending emails
+                key: forgot                       # ?forgot= is used as the forgot password parameter
+                arg: email                        # ?email= is used to submit the email ID of the user
+                minutes_to_expiry: 15             # Minutes after which the link will expire
+                email_column: email               # The database column that contains the email ID
+                email_subject: Gramex forgot password       # Subject of the email
+                email_as: "S Anand <root.node@gmail.com>"   # Emails will be sent as if from this ID
+                email_text: |
+                    This is an email from Gramex guide.
+                    You clicked on the forgot password like for user {user}.
+                    Visit this link to reset the password: {reset_url}
             redirect:
                 query: next
                 url: /$YAMLURL
@@ -274,3 +286,9 @@ schedule:
         startup: true
 
 import: '*/gramex.yaml'
+
+email:
+    gramex-guide-auth:
+        type: gmail
+        email: gramex.guide@gmail.com       # Generic email ID used to test e-mails
+        password: tlpmupxnhucitpte          # App-specific password created for Gramex guide

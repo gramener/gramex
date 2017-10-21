@@ -449,6 +449,9 @@ The `forgot:` section takes the following parameters (default values are shown):
 - `email_from: ...`. This is mandatory. Create an [email service](../email/) and
   mention the name of the service here. Forgot password emails will be sent via
   that service. (The sender name will be the same as that service.)
+- `email_as: null`. If the From: email ID is different from the user in the
+  `email_as:` service, use `email_as: user@example.org`. When using GMail, you
+  should [allow sending email from a different address][send-as]
 - `minutes_to_expiry: 15`. The number of minutes after which the token expires.
 - `template: forgot.template.html`. The name of the template file used to render
   the forgot password page. Copy [forgot.template.html][forgot-template] and
@@ -472,20 +475,20 @@ Here is a more complete example:
 
     :::yaml
     forgot:
-        email_from: gramex-guide-gmail    # Name of the email service to use for sending emails
-        minutes_to_expiry: 15             # Minutes after which the link will expire
-        template: $YAMLPATH/forgot.html   # Forgot password template
+        email_from: gramex-guide-auth     # Name of the email service to use for sending emails
+        key: forgot                       # ?forgot= is used as the forgot password parameter
         arg: email                        # ?email= is used to submit the email ID of the user
+        minutes_to_expiry: 15             # Minutes after which the link will expire
         email_column: email               # The database column that contains the email ID
-        email_subject: Password reset     # Subject of the email
+        email_subject: Gramex forgot password       # Subject of the email
+        email_as: "S Anand <root.node@gmail.com>"   # Emails will be sent as if from this ID
         email_text: |
             This is an email from Gramex guide.
             You clicked on the forgot password like for user {user}.
             Visit this link to reset the password: {reset_url}
-        key: forgot                       # ?forgot= is used as the forgot password parameter
-
 
 [forgot-template]: http://code.gramener.com/s.anand/gramex/blob/master/gramex/handlers/forgot.template.html
+[send-as]: https://support.google.com/mail/answer/22370?hl=en
 
 
 # Integrated auth

@@ -19,7 +19,20 @@ In the `type:` section of `gramex.yaml` email configuration, the following types
 - `yahoo`: Yahoo Mail
 - `live`: Microsoft live mail
 - `mandrill`: [Mandrill](https://mandrill.zendesk.com/) email
-- `smtp`: Any SMTP mailer. Specify the SMTP host and port via `host:` and `port:`
+
+You can also connect to *any* SMTP mail server using `type: smtp`. For example:
+
+    email:
+        client-email:
+            type: smtp
+            host: 10.20.30.40       # Host name or IP address of the SMTP server
+            # Optional parameters
+            email: user@domain.com  # Username or email to log into SMTP server
+            password: ****          # Password for SMTP server
+            tls: false              # false=Don't use SSL. Default: true (SMTPS)
+            port: 587               # For non-standard SMTP port. Default: SMTPS=587, SMTP=25
+
+## Send email
 
 This creates an `SMTPMailer` instance that can be used as follows:
 
@@ -72,7 +85,7 @@ text content.
 The `html=` argument provides the HTML content. The `body=` argument provides the
 text content.
 
-Writing HTML for email is **quote different** than for browsers. Here are some
+Writing HTML for email is **quite different** than for browsers. Here are some
 guides to read:
 
 - [ActiveCampaign: HTML Email Design Guide](http://www.activecampaign.com/email-design-guide/)
@@ -110,6 +123,8 @@ sample Python application:
         html='<strong>This is bold text</strong> and <em>this is in italics</em>.'
         body='This plain text is shown if the client cannot render HTML',
         attachments=['1.pdf', '2.txt'])
+
+The same parameters used in the `gramex.yaml` file may be used here.
 
 ## Automated email alerts
 

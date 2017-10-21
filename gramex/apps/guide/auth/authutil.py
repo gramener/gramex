@@ -21,23 +21,28 @@ def create_user_database(url, table, user, password, salt):
         os.makedirs(folder)
 
     # This method re-creates the user table each time. So drop it and create it.
-    # Usually, you'd just use 'CREATE TABLE IF NOT EXISTS' or its equivalent.
+    # We avoid 'CREATE TABLE IF NOT EXISTS' to allow table structure changes.
     # The table must have:
     #   a column for the username (typically called user)
     #   a column for the password (typically called password)
     #   and any other optional columns (here, we're adding a string called role)
     engine.execute('DROP TABLE IF EXISTS %s' % table)
-    engine.execute('CREATE TABLE %s (%s text, %s text, role)' %
+    engine.execute('CREATE TABLE %s (%s text, %s text, email, role)' %
                    (table, user, password))
 
     # Add all the users, encrypted passwords, and a role string.
     # We're using sha256_crypt as the password hash.
     # See the passlib documentation for details.
-    engine.execute('INSERT INTO %s VALUES (?, ?, ?)' % table, [
-        ['alpha', sha256_crypt.encrypt('alpha', salt=salt), 'admin manager'],
-        ['beta', sha256_crypt.encrypt('beta', salt=salt), 'manager employee'],
-        ['gamma', sha256_crypt.encrypt('gamma', salt=salt), 'employee'],
-        ['delta', sha256_crypt.encrypt('delta', salt=salt), None],
+    # Email IDs used are
+    #   gramex.guide+alpha@gmail.com
+    #   gramex.guide+beta@gmail.com
+    #   etc
+    email = 'gramex.guide+%s@gmail.com'
+    engine.execute('INSERT INTO %s VALUES (?, ?, ?, ?)' % table, [
+        ['alpha', sha256_crypt.encrypt('alpha', salt=salt), email % 'alpha', 'admin manager'],
+        ['beta', sha256_crypt.encrypt('beta', salt=salt), email % 'beta', 'manager employee'],
+        ['gamma', sha256_crypt.encrypt('gamma', salt=salt), email % 'gamma', 'employee'],
+        ['delta', sha256_crypt.encrypt('delta', salt=salt), email % 'delta', None],
     ])
 
 
