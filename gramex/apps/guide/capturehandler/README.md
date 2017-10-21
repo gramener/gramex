@@ -16,14 +16,14 @@ your PATH. Then add this to `gramex.yaml`:
             pattern: /$YAMLURL/capture
             handler: CaptureHandler
 
-**v1.23**. To use the (recommended) Chrome engine, install
-[Node 8.x](https://nodejs.org/en/) -- earlier versions won't work.
-Ensure that `node` is in your PATH.
+**Chrome is the recommended engine from v1.23**.
 
-Then uninstall and [re-install Gramex](../install/). (Or run `npm install` from
-`apps/capture/` under where Gramex is installed.)
+- Install [Node 8.x](https://nodejs.org/en/) -- earlier versions won't work.
+  Ensure that `node` is in your PATH.
+- Uninstall and [re-install Gramex](../install/). (Or run `npm install` from
+  `apps/capture/` under where Gramex is installed.)
 
-Finally add this to `gramex.yaml`:
+Add this to `gramex.yaml`:
 
     :::yaml
     url:

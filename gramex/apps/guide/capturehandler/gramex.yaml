@@ -3,4 +3,5 @@ url:
     pattern: /$YAMLURL/capture
     handler: CaptureHandler
     kwargs:
+      engine: chrome
       port: 9901
