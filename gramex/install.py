@@ -292,7 +292,7 @@ setup_paths = AttrDict((
     ('pip', {'file': 'requirements.txt', 'cmd': '"$EXE" install --upgrade -r "$FILE"'}),
     ('python', {'file': 'setup.py', 'cmd': '"$EXE" "$FILE"'}),
     ('npm', {'file': 'package.json', 'cmd': '"$EXE" install'}),
-    ('bower', {'file': 'bower.json', 'cmd': '"$EXE" install'}),
+    ('bower', {'file': 'bower.json', 'cmd': '"$EXE" --allow-root install'}),
 ))
 
 
