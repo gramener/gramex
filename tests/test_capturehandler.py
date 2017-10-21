@@ -50,6 +50,7 @@ class TestCaptureHandler(TestGramex):
     size = (1200, 768)
     max_colors = 65536
     url = '/dir/capture'
+    src = '/capture'
 
     @classmethod
     def setupClass(cls):
@@ -86,19 +87,19 @@ class TestCaptureHandler(TestGramex):
 
         # Test service: relative and absolute URLs
         for url in (server.base_url + self.url, '..' + self.url, self.url):
-            result = self.fetch('/capture', params={'url': url})
+            result = self.fetch(self.src, params={'url': url})
             self.check_filename(result, 'screenshot.pdf')
             self.check_pdf(result.content)
 
         # delay=. After 500ms, page changes text and color to blue
         # file=.  Changes filename
-        result = self.fetch('/capture', params={'url': self.url, 'delay': 600, 'file': 'delay'})
+        result = self.fetch(self.src, params={'url': self.url, 'delay': 600, 'file': 'delay'})
         self.check_filename(result, 'delay.pdf')
         self.assertIn('Blueblock', normalize(get_text(result.content)))
 
         # --format and --orientation
-        result = self.fetch('/capture', params={'url': self.url, 'format': 'A3',
-                                                'orientation': 'landscape'})
+        result = self.fetch(self.src, params={
+            'url': self.url, 'format': 'A3', 'orientation': 'landscape'})
         parser = PDFParser(io.BytesIO(result.content))
         page = next(PDFPage.create_pages(PDFDocument(parser)))
         self.assertIn(page.attrs['MediaBox'], (
@@ -107,12 +108,11 @@ class TestCaptureHandler(TestGramex):
         ))
 
         # cookie=. The Cookie is printed on the screen via JS
-        result = self.fetch('/capture', params={'url': self.url + '?show-cookie',
-                                                'cookie': 'a=x'})
+        result = self.fetch(self.src, params={'url': self.url + '?show-cookie', 'cookie': 'a=x'})
         self.assertIn('a=x', normalize(get_text(result.content)))
         # Cookie: header is the same as ?cookie=.
         # Old request cookies vanish. Only new ones remain
-        result = self.fetch('/capture', params={'url': self.url + '?show-cookie'},
+        result = self.fetch(self.src, params={'url': self.url + '?show-cookie'},
                             headers={'Cookie': 'b=z'})
         result_text = normalize(get_text(result.content))
         self.assertIn('js:cookie=b=z', result_text)
@@ -133,13 +133,13 @@ class TestCaptureHandler(TestGramex):
         self.check_img(content, color=(255, 0, 0, 255), min=100, size=self.size)
 
         # Check file=, ext=, width=, height=
-        result = self.fetch('/capture', params={
+        result = self.fetch(self.src, params={
             'url': self.url, 'width': 600, 'height': 1200, 'file': 'capture', 'ext': 'png'})
         self.check_filename(result, 'capture.png')
         self.check_img(result.content, size=(600, 1200))
 
         # selector=. has a 100x100 green patch
-        result = self.fetch('/capture', params={
+        result = self.fetch(self.src, params={
             'url': self.url, 'selector': '.subset', 'ext': 'png'})
         self.check_img(result.content, color=(0, 128, 0, 255), min=9000, size=(100, 100))
 
@@ -149,7 +149,16 @@ class TestCaptureHandler(TestGramex):
         self.check_img(content)
 
         # Check file=, ext=, width=, height=
-        result = self.fetch('/capture', params={
+        result = self.fetch(self.src, params={
             'url': self.url, 'width': 800, 'height': 1000, 'file': 'capture', 'ext': 'jpg'})
         self.check_filename(result, 'capture.jpg')
         self.check_img(result.content, size=(800, 1000))
+
+
+class TestCaptureHandlerChrome(TestCaptureHandler):
+    src = '/capturechrome'
+
+    @classmethod
+    def setupClass(cls):
+        cls.capture = get_capture('default', port=9412, engine='chrome')
+        cls.folder = os.path.dirname(os.path.abspath(__file__))

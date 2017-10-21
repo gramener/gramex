@@ -26,6 +26,7 @@ async function render(q) {
   console.log('Opening', q.url)
 
   ext = q.ext || 'pdf'
+  media = q.media || 'screen'
   file = (q.file || 'screenshot') + '.' + ext
   target = path.join(render_dir, file)
   if (fs.exists(target))
@@ -51,12 +52,15 @@ async function render(q) {
   await delay(q.delay || 0)
   if (ext == 'pdf') {
     // TODO: header / footer
+    if (media != 'print')
+      await page.emulateMedia(media)
     await page.pdf({
       path: target,
       format: q.format || 'A4',
       landscape: q.orientation == 'landscape',
       scale: q.scale || 1,
-      margin: {top: '1cm', right: '1cm', bottom: '1cm', left: '1cm'}
+      margin: {top: '1cm', right: '1cm', bottom: '1cm', left: '1cm'},
+      printBackground: true
     })
   } else {
     await page.setViewport({

@@ -1,9 +1,14 @@
 title: Gramex takes screenshots
 
-The [CaptureHandler](capturehandler) takes screenshots of pages using PhantomJS.
+[CaptureHandler](capturehandler) takes screenshots of pages using either
+[Chrome][puppeteer] or
+[PhantomJS](http://phantomjs.org/).
 
-First, install [PhantomJS](http://phantomjs.org/) and it to your PATH. Then add
-this to `gramex.yaml`:
+[puppeteer]: https://github.com/GoogleChrome/puppeteer/
+
+[PhantomJS](http://phantomjs.org/) is the default for backward compatibility, but
+it is out-dated. To use it, install [PhantomJS](http://phantomjs.org/) and it to
+your PATH. Then add this to `gramex.yaml`:
 
     :::yaml
     url:
@@ -11,8 +16,25 @@ this to `gramex.yaml`:
             pattern: /$YAMLURL/capture
             handler: CaptureHandler
 
-When Gramex runs, it starts `phantomjs capture.js --port 9900` running a
-PhantomJS based web application (capture.js) at port 9900.
+**v1.23**. To use the (recommended) Chrome engine, install
+[Node 8.x](https://nodejs.org/en/) -- earlier versions won't work.
+Ensure that `node` is in your PATH.
+
+Then uninstall and [re-install Gramex](../install/). (Or run `npm install` from
+`apps/capture/` under where Gramex is installed.)
+
+Finally add this to `gramex.yaml`:
+
+    :::yaml
+    url:
+        capture:
+            pattern: /$YAMLURL/capture
+            handler: CaptureHandler
+            kwargs:
+                engine: chrome
+
+When Gramex runs, it starts `node chromecapture.js --port 9900` running a
+node.js based web application (chromecapture.js) at port 9900.
 
 To change the port, use:
 
@@ -20,25 +42,28 @@ To change the port, use:
             pattern: /$YAMLURL/capture
             handler: CaptureHandler
             kwargs:
+                engine: chrome
                 port: 9901              # Use a different port
 
-To use an existing instance of capture.js running on a different port, use:
+To use an existing instance of chromecapture.js running on a different port, use:
 
     :::yaml
             pattern: /$YAMLURL/capture
             handler: CaptureHandler
             kwargs:
-                url: http://server:port/capture/    # Use capture.js from this URL
+                engine: chrome
+                url: http://server:port/capture/    # Use chromecapture.js from this URL
 
-The default capture.js is under `$GRAMEXPATH/apps/capture/capture.js`. To use
-your own capture.js, run it using `cmd:` on any port and point `url:` to that
-port:
+The default chromecapture.js is at `$GRAMEXPATH/apps/capture/chromecapture.js`.
+To use your own chromecapture.js, run it using `cmd:` on any port and point
+`url:` to that port:
 
     :::yaml
             pattern: /$YAMLURL/capture
             handler: CaptureHandler
             kwargs:
-                cmd: phantomjs --ssl-protocol=any /path/to/capture.js --port=9902
+                engine: chrome
+                cmd: node /path/to/chromecapture.js --port=9902
                 url: http://localhost:9902/
 
 By default, requests timeout within 10 seconds. To change this, use `timeout:`.
@@ -56,32 +81,32 @@ You can add a link from any page to the `capture` page to take a screenshot.
     :::html
     <a href="capture?ext=pdf">PDF screenshot</a>
     <a href="capture?ext=png">PNG screenshot</a>
-    <a href="capture?ext=jpg">GIF screenshot</a>
-    <a href="capture?ext=gif">GIF screenshot</a>
+    <a href="capture?ext=jpg">JPG screenshot</a>
 
 Try it here:
 
 - [PDF screenshot](capture?ext=pdf)
 - [PNG screenshot](capture?ext=png)
 - [JPEG screenshot](capture?ext=jpg)
-- [GIF screenshot](capture?ext=gif)
 
 It accepts the following arguments:
 
 - `?url=`: URL to take a screenshot of. This defaults to `Referer` header. So if
   you link to a `capture` page, the source page is generally used.
 - `?file=`: screenshot file name. Defaults to `screenshot`
-- `?ext=`: format of output. Can be pdf, png, gif or jpg
-- `?selector=`: Restrict screenshot to (optional) CSS selector in URL
+- `?ext=`: format of output. Can be pdf, png or jpg
 - `?delay=`: milliseconds to wait for before taking a screenshot. This value must
   be less than the `timeout:` set in the `kwargs:` section
-- `?format=`: A3, A4, A5, Legal, Letter or Tabloid. Defaults to A4. For PDF
-- `?orientation=`: portrait or landscape. Defaults to portrait. For PDF
-- `?header=`: header for the page. For PDF
-- `?footer=`: footer for the page. For PDF
-- `?width=`: screen width. Default: 1200. For PNG/GIF/JPG
-- `?height=`: screen height. Default: 768. For PNG/GIF/JPG
-- `?scale=`: zooms the screen by a factor. For PNG/GIF/JPG
+- `?scale=`: zooms the screen by a factor
+- For PDF:
+    - `?format=`: A3, A4, A5, Legal, Letter or Tabloid. Defaults to A4
+    - `?orientation=`: portrait or landscape. Defaults to portrait
+    - `?title=`: footer for the page
+    - `media=`: `print` or `screen`. Defaults to `screen`. Only for Chrome.
+- For images (PNG/JPG):
+    - `?width=`: screen width. Default: 1200
+    - `?height=`: screen height. Default: 768
+    - `?selector=`: Restrict screenshot to (optional) CSS selector in URL
 - `?debug=`: displays request / response log requests on the console.
     - `?debug=1` logs all responses and HTTP codes. It also logs browser
       console.log messages on the Gramex console
@@ -140,7 +165,7 @@ You can take screenshots from any Python program, using Gramex as a library.
     import logging                              # Optional: Enable logging...
     logging.basicConfig(level=logging.INFO)     # ... to see messages from Capture
     from gramex.handlers import Capture         # Import the capture library
-    capture = Capture()                         # This runs capture.js at port 9900
+    capture = Capture(engine='chrome')          # This runs chromecapture.js at port 9900
     url = 'https://gramener.com/demo/'          # Page to take a screenshot of
     with open('screenshot.pdf', 'wb') as f:
         f.write(capture.pdf(url, orientation='landscape'))
@@ -148,7 +173,7 @@ You can take screenshots from any Python program, using Gramex as a library.
         f.write(capture.png(url, width=1200, height=600, scale=0.8))
 
 The [Capture](capture) class has convenience methods called `.pdf()`, `.png()`,
-`.jpg()` and `.gif()` that accept the same parameters as the
+`.jpg()` that accept the same parameters as the
 [handler](screenshot-service).
 
 

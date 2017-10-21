@@ -1355,6 +1355,12 @@ url:
     handler: CaptureHandler
     kwargs:
       port: 9401
+  capturechrome:
+    pattern: /capturechrome
+    handler: CaptureHandler
+    kwargs:
+      engine: chrome
+      port: 9411
   dir/capture:
     pattern: /dir/capture
     handler: FileHandler

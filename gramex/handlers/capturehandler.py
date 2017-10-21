@@ -61,9 +61,9 @@ class Capture(object):
     capture.js is running at ``url``. If not, it runs ``cmd`` and checks again.
     Until capture.js is detected, all capture methods will fail.
     '''
-    def __init__(self, port=None, url=None, cmd=None, timeout=10):
+    def __init__(self, port=None, url=None, engine=None, cmd=None, timeout=10):
         # Set default values for port, url and cmd
-        self.engine = self.engines['chrome']
+        self.engine = self.engines['phantomjs' if engine is None else engine]
         port = self.default_port if port is None else port
         if url is None:
             url = 'http://localhost:%d/' % port
@@ -98,9 +98,10 @@ class Capture(object):
         and check again. Print logs from ``cmd``.
         '''
         self.started = False
+        script = self.engine.script
         try:
             # Check if capture.js is at the url specified
-            app_log.info('Pinging capture.js at %s', self.url)
+            app_log.info('Pinging %s at %s', script, self.url)
             r = requests.get(self.url, timeout=self.timeout)
             self._validate_server(r)
             self.started = True
@@ -109,7 +110,7 @@ class Capture(object):
             app_log.error('url: %s timed out', self.url)
         except requests.ConnectionError:
             # Try starting the process again
-            app_log.info('Starting capture.js via %s', self.cmd)
+            app_log.info('Starting %s via %s', script, self.cmd)
             self.close()
             self.proc = Popen(self.cmd, shell=True, stdout=PIPE, stderr=STDOUT)
             self.proc.poll()
@@ -118,7 +119,7 @@ class Capture(object):
             line = self.proc.stdout.readline().strip()
             if not self.first_line_re.search(line):
                 return app_log.error('cmd: %s invalid. Returned "%s"', self.cmd, line)
-            app_log.info('Pinging capture.js at %s', self.url)
+            app_log.info('Pinging %s at %s', script, self.url)
             try:
                 r = requests.get(self.url, timeout=self.timeout)
                 self._validate_server(r)
@@ -129,12 +130,12 @@ class Capture(object):
                 while hasattr(self, 'proc'):
                     line = self.proc.stdout.readline().strip()
                     if len(line) == 0:
-                        app_log.info('capture.js terminated: pid=%d', pid)
+                        app_log.info('%s terminated: pid=%d', script, pid)
                         self.started = False
                         break
                     app_log.info(line.decode('utf-8'))
             except Exception:
-                app_log.exception('Ran %s. But capture.js not at %s', self.cmd, self.url)
+                app_log.exception('Ran %s. But %s not at %s', self.cmd, script, self.url)
 
     def close(self):
         '''Stop capture.js if it has been started by this object'''
@@ -145,7 +146,7 @@ class Capture(object):
                     proc.kill()
                 process.kill()
             except psutil.NoSuchProcess:
-                app_log.info('capture.js PID %d already killed', self.proc.pid)
+                app_log.info('%s PID %d already killed', self.engine.script, self.proc.pid)
                 pass
             delattr(self, 'proc')
 
@@ -153,8 +154,9 @@ class Capture(object):
         # Make sure that the response we got is from the right version of capture.js
         server = response.headers.get('Server', '')
         parts = server.split('/', 2)
+        script = self.engine.script
         if not len(parts) == 2 or parts[0] != self.engine.name or parts[1] < self.engine.version:
-            raise RuntimeError('Server: %s at %s is not capture.js' % (server, self.url))
+            raise RuntimeError('Server: %s at %s is not %s' % (server, self.url, script))
 
     @tornado.gen.coroutine
     def capture_async(self, **kwargs):
@@ -169,7 +171,7 @@ class Capture(object):
             while not self.started and time.time() < end_time:
                 yield tornado.gen.sleep(self.check_interval)
         if not self.started:
-            raise RuntimeError('capture.js not started. See logs')
+            raise RuntimeError('%s not started. See logs' % self.engine.script)
         r = yield self.browser.fetch(
             self.url, method='POST', body=urlencode(kwargs), raise_error=False,
             connect_timeout=self.timeout, request_timeout=self.timeout)
@@ -203,14 +205,14 @@ class Capture(object):
             while not self.started and time.time() < end_time:
                 time.sleep(self.check_interval)
             if not self.started:
-                raise RuntimeError('capture.js not started. See logs')
+                raise RuntimeError('%s not started. See logs' % self.engine.script)
         kwargs['url'] = url
         r = requests.post(self.url, data=kwargs, timeout=self.timeout)
         if r.status_code == OK:
             self._validate_server(r)
             return r.content
         else:
-            raise RuntimeError('capture.js error: %s' % r.content)
+            raise RuntimeError('%s error: %s' % (self.engine.script, r.content))
 
     def pdf(self, url, **kwargs):
         '''An alias for :meth:`Capture.capture` with ``ext='pdf'``.'''
@@ -244,7 +246,7 @@ class CaptureHandler(BaseHandler):
     captures = {}
 
     @classmethod
-    def setup(cls, port=None, url=None, cmd=None, **kwargs):
+    def setup(cls, port=None, url=None, engine=None, cmd=None, **kwargs):
         super(CaptureHandler, cls).setup(**kwargs)
         if cls.name in cls.captures:
             cls.captures[cls.name].close()
@@ -252,7 +254,7 @@ class CaptureHandler(BaseHandler):
         for kwarg in ('timeout', ):
             if kwarg in kwargs:
                 capture_kwargs[kwarg] = kwargs.pop(kwarg)
-        cls.capture = Capture(port=port, url=url, cmd=cmd, **capture_kwargs)
+        cls.capture = Capture(engine=engine, port=port, url=url, cmd=cmd, **capture_kwargs)
         cls.captures[cls.name] = cls.capture
         cls.ext = {
             'pdf': dict(mime='application/pdf'),
@@ -302,10 +304,10 @@ class CaptureHandler(BaseHandler):
                             'attachment; filename="{file}.{ext}"'.format(**args))
             self.write(response.body)
         elif response.code == CLIENT_TIMEOUT:
-            self.set_status(GATEWAY_TIMEOUT, reason='capture.js is busy')
+            self.set_status(GATEWAY_TIMEOUT, reason='Capture is busy')
             self.set_header('Content-Type', 'application/json')
             self.write({'status': 'fail', 'msg': [
-                'capture.js did not respond within timeout: %ds' % self.capture.timeout]})
+                'Capture did not respond within timeout: %ds' % self.capture.timeout]})
         else:
             self.set_status(response.code, reason='capture.js error')
             self.set_header('Content-Type', 'application/json')
