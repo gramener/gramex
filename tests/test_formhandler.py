@@ -226,14 +226,6 @@ class TestFormHandler(TestGramex):
         elif method == 'put':
             eq_(len(result), len(self.sales))
 
-    def test_invalid_edit(self):
-        for method in ['delete', 'post', 'put']:
-            # Editing with no ID columns defined raises an error
-            self.check('/formhandler/file?city=A&product=B', method=method, code=400)
-            # Edit record without ID columns in args raises an error
-            self.check('/formhandler/edits-xlsx-multikey', method=method, code=400)
-            self.check('/formhandler/edits-xlsx-singlekey', method=method, code=400)
-
     def test_edit_singlekey(self):
         # Operations with a single key works
         self.check_edit('post', 'singlekey', {

@@ -152,10 +152,6 @@ class FormHandler(BaseHandler):
             if 'id' not in filter_kwargs:
                 raise HTTPError(BAD_REQUEST, '%s: %s requires id: <col> in gramex.yaml' % (
                     self.name, self.request.method))
-            missing_args = [col for col in filter_kwargs['id'] if col not in args]
-            if len(missing_args) > 0:
-                raise HTTPError(BAD_REQUEST, '%s: columns %s missing in URL query' % (
-                    self.name, ', '.join(missing_args)))
             fmt = args.pop('_format', ['json'])[0]
             # Execute the query
             count[key] = method(meta=meta[key], args=args, **filter_kwargs)
