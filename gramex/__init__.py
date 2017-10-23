@@ -154,14 +154,14 @@ def callback_commandline(commands):
     return init, {'cmd': AttrDict(app=args)}
 
 
-def commandline():
+def commandline(args=None):
     '''
     Run Gramex from the command line. Called via:
 
     - setup.py console_scripts when running gramex
     - __main__.py when running python -m gramex
     '''
-    callback, kwargs = callback_commandline(sys.argv[1:])
+    callback, kwargs = callback_commandline(sys.argv[1:] if args is None else args)
     callback(**kwargs)
 
 

@@ -58,6 +58,30 @@ Once started, the application is live at the port specified in your
 Service logs can be viewed using the Windows Event Viewer. Gramex logs are at
 `%LOCALAPPDATA%\Gramex Data\logs\` unless over-ridden by `gramex.yaml`.
 
+To create multiple services running at different directories or ports, you can
+create one or more custom service classes in `yourproject_service.py`:
+
+    :::python
+    import gramex.winservice
+
+    class YourProjectGramexService(gramex.winservice.GramexService):
+        _svc_name_ = 'YourServiceID'
+        _svc_display_name_ = 'Your Service Display Name'
+        _svc_description_ = 'Description of your service'
+        _svg_port_ = 8123               # optional custom port
+
+    if __name__ == '__main__':
+        import sys
+        import logging
+        logging.basicConfig(level=logging.INFO)
+        YourProjectGramexService.setup(sys.argv[1:])
+
+You can now run:
+
+    python yourproject_service.py install --cwd=...     # install the service
+    python yourproject_service.py remove                # uninstall the service
+    ... etc ...
+
 [anaconda]: http://continuum.io/downloads
 
 

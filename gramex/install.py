@@ -80,7 +80,7 @@ service: |
         gramex service install
             --name "Application Name"
             --desc "Application long description"
-            --dir  "C:/path/to/application/"
+            --cwd  "C:/path/to/application/"
             --user "DOMAIN\USER"                # Optional user to run as
             --password "user-password"          # Required if user is specified
             --startup manual|auto|disabled
@@ -482,4 +482,4 @@ def service(cmd, args):
     if len(cmd) < 1:
         app_log.error(show_usage('service'))
         return
-    gramex.winservice.setup(cmd[0], cmd[1:], **args)
+    gramex.winservice.GramexService.setup(cmd, **args)
