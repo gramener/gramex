@@ -126,101 +126,57 @@ headers. For example:
 
 ## Logging
 
-The `log:` section defines Gramex's logging behaviour. It uses the same
-structure as the [Python logging schema][logging-schema]. The default
-configuration shows all information messages on the console:
+The `log:` section defines Gramex's logging behaviour.
+
+To only log WARNING messages to the console, use:
+
+    :::yaml
+    log:
+        root:
+            level: WARNING      # Default: DEBUG. Can be INFO, WARNING, ERROR
+
+To save all gramex logs to a file, use:
 
     :::yaml
     log:
         root:
             handlers:
-                - console
+                - console       # This is default: logging to the console
+                - logfile       # Save console logs to a file
 
-You can edit the logging level to only displays warning messages on the console,
-for example:
+By default, the `logfile` handler saves to `logs/gramex.log` under
+[$GRAMEXDATA](#predefined-variables). To change that, use:
 
     :::yaml
     log:
         root:
-            level: WARN           # Ignore anything less severe than warnings
             handlers:
-                - console         # Write the output to the console
-                - warn-log        # In addition, write warnings to warn.csv
-
-Visit any non-existent page (e.g. `/nonexistent`) to see the warning. The
-warnings are stored in `$GRAMEXDATA/logs/warn.csv`. `$GRAMEXDATA`'s location
-varies based on the OS. See [predefined variables](#predefined-variables).
-
-Gramex offers the following pre-defined handlers:
-
-- `none`: disables logging
-- `console`: writes information logs to the console in colour
-- `text`: writes information logs to the console without colours (suitable for nohup, redirecting to a file, etc)
-- `access-log` writes information logs to a CSV file `$GRAMEXDATA/logs/access.csv`
-- `warn-log` writes warnings to a CSV file `$GRAMEXDATA/logs/warn.csv`
-
-To override the file names in `access-log` or `warn-log`, override the `filename:`:
-
-    :::yaml
-    log:
+                - console       # This is default: logging to the console
+                - logfile       # Save console logs to a file
         handlers:
-            access-log:
-                filename: $YAMLPATH/access.csv    # Place it in the same directory as gramex.yaml
-            warn-log:
-                filename: D:/temp/warn.csv        # Place it at an absolute path
+            logfile:
+                filename: $GRAMEXDATA/your-app/gramex.log       # Change file location
 
-You can define your own handlers under the `log:` section. Here is a handler
-that writes information logs into `info.log`, backing it up daily:
+The log file is backed up weekly by default. You can change these [parameters][trfh]:
 
-    :::yaml
-    log:
-        handlers:
-            info:
-                class: logging.handlers.TimedRotatingFileHandler
-                level: INFO
-                formatter: file         # save it as a CSV file
-                filename: info.log      # file name to save as
-                encoding: utf-8         # encoded as UTF-8
-                when: D                 # rotate the log file day-wise
-                interval: 1             # every single day
-                utc: False              # using local time zone, not UTC
-                backupCount: 30         # keep only last 30 backups
-                delay: true             # do not create file until called
+- `filename`: defaults to `$GRAMEXDATAT/logs/gramex.log` 
+- `when`: can be `s`, `m`, `h`, `d`, `w0` to `w6` or `midnight`. See [TimedRotatingFileHandler][trfh]. Defaults to `w0`, i.e. Monday
+- `interval`: for example, if this is 6 and `when: h`, the log file is rotated every 6 hours.  Defaults to 1, i.e. every Monday
+- `backupCount`: number of backups to retain. Defaults to 52, i.e. 52 weeks of backup
+- `encoding`: defaults to `utf-8`
+- `utc`: set to `true` to use UTC. Defaults to `false` (i.e. local time)
 
-This handler wrings warnings into `warn.log`, letting it grow up to 10 MB, then
-archiving it into `warn.log.1`, etc.
-
-    :::yaml
-    log:
-        handlers:
-            warnings:
-                class: logging.handlers.RotatingFileHandler
-                level: WARN
-                formatter: file         # save it as a CSV file
-                filename: warn.log      # file name to save as
-                encoding: utf-8         # encoded as UTF-8
-                maxBytes: 10485760      # limit the file to up to 10MB
-                backupCount: 3          # keep the last 3 backups
-                delay: true             # do not create file until called
-
-The `file` formatter is defined in Gramex, and saves the output as a CSV file.
-Here is its definition:
-
-    :::yaml
-    log:
-        formatters:
-            file:
-                format: '%(levelname)1.1s,%(asctime)s,%(module)s,%(lineno)d,"%(message)s"'
-                datefmt: '%Y-%m-%d %H:%M:%S'
-
-You can create your own formatters in a similar way.
+The [default configuration][gramex-yaml] uses the [Python logging schema][logging-schema].
+You can create your additional formatters by extending this.
 
 [logging-schema]: https://docs.python.org/3/library/logging.config.html#dictionary-schema-details
+[trfh]: https://docs.python.org/3/library/logging.handlers.html#logging.handlers.TimedRotatingFileHandler
+[gramex-yaml]: https://code.gramener.com/s.anand/gramex/blob/master/gramex/gramex.yaml
 
-## Handler logging
+## Request logging
 
-Gramex logs all requests to a CSV file at [$GRAMEXDATA](#predefined-variables)/logs/requests.csv.
-It has the following columns:
+Gramex logs all HTTP requests to `logs/requests.csv` under [$GRAMEXDATA](#predefined-variables).
+It has these columns:
 
 - `time`: Time of the request in milliseconds since epoch
 - `ip`: The IP address of the client requesting the page
@@ -228,41 +184,52 @@ It has the following columns:
 - `status`: The HTTP status code of the response (e.g. 200, 500)
 - `duration`: Time taken to serve the request in milliseconds
 - `method`: The HTTP method requested (e.g. GET or POST)
-- `uri`: The full URL requested
+- `uri`: The full URL requested (after the host name)
 - `error`: Any error raised while processing the request
 
-You can read from this file via:
-
-    :::python
-    log_file = os.path.join(gramex.config.variables.GRAMEXDATA, 'logs', 'requests.csv')
-    logs = gramex.cache.open(log_file, 'csv')
-
-To change the location or keys to be logged for the entire application, use:
+To change the location of this file, use `log.handlers.requests.filename`:
 
     :::yaml
-    handlers:
-        BaseHandler:
-            log:
-                format: csv
-                path: /path/to/your/csv
-                keys: [time, your_keys, ...]
+    log:
+        handlers:
+            requests:
+                filename: $GRAMEXDATA/your-app/requests.csv      # The path can point ANYWHERE
 
-Apart from the keys mentioned earlier, you can also use:
+To change the columns that are logged, use `log.handlers.requests.keys:`
 
+    :::yaml
+    log:
+        handlers:
+            requests:
+                keys: [time, ip, user.email, status, uri]
+
+You can use any of the following as keys for loggiing:
+
+- `time`: Time of the request in milliseconds since epoch
+- `ip`: The IP address of the client requesting the page
+- `user`: The unique ID of the user requesting the page (same as `user.id`)
+- `status`: The HTTP status code of the response (e.g. 200, 500)
+- `duration`: Time taken to serve the request in milliseconds
+- `method`: The HTTP method requested (e.g. GET or POST)
+- `uri`: The full URL requested (after the host name)
+- `error`: Any error raised while processing the request
+- `session`: The unique session ID object
 - `args.<key>`: A specific argument. E.g. `args.x` returns the value of `?x=...`
 - `headers.<key>`: A request HTTP header. E.g. `headers.User-Agent` is the browser's user agent
 - `session.<key>`: A HTTP session key. E.g. `session.user` is the user object
 - `cookies.<key>`: Logs a specific cookie. E.g. `cookie.sid` is the session ID cookie
 - `env.<key>`: Logs an environment variable. E.g. `env.HOME` logs the user's home directory
 
-If any of these keys are not available, the logger logs an empty string.
+## Handler logging
 
-**Note**: Up to Gramex 1.20, the default mechanism was to the console or the
-default [access-log](#logging) using:
+Up to Gramex **v1.22** the `log:` section of each handler allowed custom logging
+for that handler. This is useless sophistication. It has not been used in any
+Gramener project. So it was removed in **v1.23**.
 
-    :::yaml
-    log:
-        format: '%(status)d %(method)s %(uri)s (%(ip)s) %(duration).1fms %(user.id)s'
+Instead, use [request logging](#request-logging) to set up access logs.
+
+Logging to `$GRAMEXDATA/logs/access.csv` has also been disabled since no project
+uses it by default.
 
 ## Error handlers
 

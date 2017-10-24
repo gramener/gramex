@@ -76,7 +76,6 @@ class GramexApp(tornado.web.Application):
     def log_request(self, handler):
         if hasattr(handler, 'log_request'):
             handler.log_request()
-            return
         super(GramexApp, self).log_request(handler)
 
     def clear_handlers(self):

@@ -1,8 +1,10 @@
 import os
+import csv
 import six
 import yaml
 import socket
 import inspect
+import logging
 import unittest
 import gramex
 from pathlib import Path
@@ -354,3 +356,65 @@ class TestConfig(unittest.TestCase):
         eq_(yaml.load(dup_keys), {'a': {'b': 2}})
         with self.assertRaises(ConstructorError):
             yaml.load(dup_keys, Loader=ConfigYAMLLoader)
+
+
+class TestTimedRotatingCSVHandler(unittest.TestCase):
+    csv1 = info.home / 'file1.csv'
+    csv2 = info.home / 'file2.csv'
+
+    def test_handler(self):
+        logging.config.dictConfig({
+            'version': 1,
+            'loggers': {
+                'test1': {
+                    'level': 'INFO',
+                    'handlers': ['csv1']
+                },
+                'test2': {
+                    'level': 'WARNING',
+                    'handlers': ['csv1', 'csv2']
+                },
+            },
+            'handlers': {
+                'csv1': {
+                    'class': 'gramex.config.TimedRotatingCSVHandler',
+                    'filename': str(self.csv1),
+                    'keys': ['a', 'b', 'c'],
+                    'encoding': 'utf-8'
+                },
+                'csv2': {
+                    'class': 'gramex.config.TimedRotatingCSVHandler',
+                    'filename': str(self.csv2),
+                    'keys': ['a', 'b', 'c'],
+                    'encoding': 'utf-8'
+                },
+            }
+        })
+        test1 = logging.getLogger('test1')
+        test2 = logging.getLogger('test2')
+        # Do not test unicode. Python 2.7 csv writer does not support it
+        test1.info({'a': 'a', 'b': 1, 'c': -0.1})
+        test2.info({'a': 'na', 'b': 'na', 'c': 'na'})
+        test1.warn({'a': True, 'b': False, 'c': None})
+        test2.warn({'b': '\n\na,bt\n'})
+
+        with self.csv1.open() as handle:
+            eq_(list(csv.reader(handle)), [
+                ['a', '1', '-0.1'],
+                ['True', 'False', ''],
+                ['', '\n\na,bt\n', ''],
+            ])
+        with self.csv2.open() as handle:
+            eq_(list(csv.reader(handle)), [
+                ['', '\n\na,bt\n', ''],
+            ])
+
+    @classmethod
+    def tearDown(cls):
+        for name in ['test1', 'test2']:
+            logger = logging.getLogger(name)
+            for handler in logger.handlers:
+                handler.close()
+        for path in [cls.csv1, cls.csv2]:
+            if path.exists():
+                path.unlink()

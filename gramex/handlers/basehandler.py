@@ -2,20 +2,18 @@ from __future__ import unicode_literals
 
 import io
 import os
-import csv
 import six
 import json
 import time
 import atexit
+import logging
 import mimetypes
 import traceback
 import tornado.gen
 import gramex.cache
-from textwrap import dedent
 from binascii import b2a_base64, hexlify
-from orderedattrdict import AttrDict, DefaultAttrDict
+from orderedattrdict import AttrDict
 from six.moves.urllib_parse import urlparse, urlsplit, urljoin, urlencode
-from tornado.log import access_log
 from tornado.web import RequestHandler, HTTPError
 from tornado.websocket import WebSocketHandler
 from gramex import conf, __version__
@@ -48,9 +46,9 @@ class BaseMixin(object):
         # override_user is run before authorize
         cls.setup_session(conf.app.get('session'))
         cls.setup_auth(auth)
-        # Update defaults from BaseHandler. Only log and error (for now).
+        # Update defaults from BaseHandler. Only error (for now).
         # Use objectpath instead of a direct reference - in case handler.BaseHandler is undefined
-        cls.setup_log(log or objectpath(conf, 'handlers.BaseHandler.log', {}))
+        cls.setup_log()
         cls.setup_error(error or objectpath(conf, 'handlers.BaseHandler.error', {}))
         cls.setup_xsrf(xsrf_cookies)
         cls._set_xsrf = set_xsrf
@@ -226,11 +224,14 @@ class BaseMixin(object):
                 cls.permissions.append(check_membership(memberships))
 
     @classmethod
-    def setup_log(cls, log):
-        try:
-            cls.log_request = log_method(log)
-        except (ValueError, OSError):
-            app_log.exception('url:%s: cannot set up log: %r', cls.name, log)
+    def setup_log(cls):
+        '''
+        Logs access requests to gramex.requests as a CSV file.
+        '''
+        logger = logging.getLogger('gramex.requests')
+        keys = objectpath(conf, 'log.handlers.requests.keys', [])
+        log_info = build_log_info(keys)
+        cls.log_request = lambda handler: logger.info(log_info(handler))
 
     @classmethod
     def setup_error(cls, error):
@@ -993,29 +994,7 @@ def _handle(path):
     return handle_cache[path]
 
 
-def log_method(log):
-    '''
-    Returns a log_request method that can be called as log_request(handler).
-    The method logs handler request information.
-
-    ``log`` is a dict that determines how request logs are saved. For example::
-
-        format: csv
-        path: $GRAMEXDATA/logs/request.csv
-        keys: [time, method, uri, ip, status, duration, user, ...]
-
-    This saves the logs at path as a CSV file with the columns being the keys specified
-
-    An alternate format is::
-
-        format: '%(status)d %(method)s %(uri)s (%(ip)s) %(duration).1fms %(user.id)s'
-
-    This writes the result to the logger (defaults to tornado.log.access_log).
-    '''
-    if log is None:
-        return
-    if not isinstance(log, dict) or 'format' not in log:
-        raise ValueError('log: is not a dict with a format key')
+def build_log_info(keys):
     # Define direct keys. These can be used as-is
     direct_vars = {
         'time': 'round(time.time() * 1000, 0)',
@@ -1026,7 +1005,7 @@ def log_method(log):
         'duration': 'round(handler.request.request_time() * 1000, 0)',
         # TODO: get_content_size() is not available in RequestHandler
         # 'size': 'handler.get_content_size()',
-        'user': 'json.dumps(handler.current_user)',
+        'user': 'handler.current_user.get("id", "")',
         'session': 'handler.session.get("id", "")',
         'error': 'getattr(handler, "_exception", "")',
     }
@@ -1040,64 +1019,18 @@ def log_method(log):
         'user': '(handler.current_user or {{}}).get("{val}", "")',
         'env': 'os.environ.get("{val}", "")',
     }
-    context = {'os': os, 'time': time, 'json': json}
-    # Generate the code
-    if log.get('format') == 'csv':
-        try:
-            keys = log['keys']
-        except KeyError:
-            raise ValueError('log.keys missing')
-        if 'path' not in log:
-            raise ValueError('log.path missing')
-        log_path = os.path.abspath(log['path'])
-        path_dir = os.path.dirname(log_path)
-        try:
-            if not os.path.exists(path_dir):
-                os.makedirs(path_dir)
-            handle = _handle(log_path)
-            writer = csv.writer(handle)
-        except OSError:
-            raise OSError('Cannot open log.path: %s as CSV' % log_path)
-        assign = '        {value},'
-        code = dedent('''
-            def log_request(handler, writer=writer, handle=handle):
-                writer.writerow([
-            %s
-                ])
-                handle.flush()
-        ''')
-        context.update(writer=writer, handle=handle)
-    else:
-        keys = DefaultAttrDict(int)
-        try:
-            log['format'] % keys
-        except (TypeError, ValueError):
-            raise ValueError('log.format invalid: %s' % log['format'])
-        assign = '    obj["{key}"] = {value}'
-        code = dedent('''
-            def log_request(handler, logger=logger):
-                obj = {}
-                status = obj['status'] = handler.get_status()
-            %s
-                if status < 400:
-                    logger.info(log_format %% obj)
-                elif status < 500:
-                    logger.warning(log_format %% obj)
-                else:
-                    logger.error(log_format %% obj)
-        ''')
-        context.update(log_format=log['format'], logger=access_log)
-    obj = []
+    vals = []
     for key in keys:
         if key in direct_vars:
-            obj.append(assign.format(key=key, value=direct_vars[key]))
+            vals.append('"{}": {},'.format(key, direct_vars[key]))
             continue
         if '.' in key:
             prefix, value = key.split('.', 2)
             if prefix in object_vars:
-                obj.append(assign.format(key=key, value=object_vars[prefix].format(val=value)))
+                vals.append('"{}": {},'.format(key, object_vars[prefix].format(val=value)))
                 continue
-        app_log.error('Skipping unknown key %s in log.format: %s', key, log['format'])
-    code = compile(code % '\n'.join(obj), filename='log_method', mode='exec')
+        app_log.error('Skipping unknown key %s', key)
+    code = compile('def fn(handler):\n\treturn {%s}' % ' '.join(vals), filename='log', mode='exec')
+    context = {'os': os, 'time': time, 'AttrDict': AttrDict}
     exec(code, context)
-    return context['log_request']
+    return context['fn']

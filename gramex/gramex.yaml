@@ -29,11 +29,6 @@ cache:
 # BaseHandler.setup_default_kwargs() adds these as defaults for each handler.
 handlers:
     BaseHandler:
-        log:
-            format: csv
-            path: $GRAMEXDATA/logs/requests.csv
-            keys: [time, ip, user.id, status, duration, method, uri, error]
-            # format: '%(status)d %(method)s %(uri)s (%(ip)s) %(duration).1fms %(user.id)s'
         error:
             403: {path: $YAMLPATH/handlers/403.html}
             404: {path: $YAMLPATH/handlers/404.html}
@@ -79,7 +74,6 @@ log:
         level: DEBUG
         handlers:
             - console
-            - access-log
     loggers:
         gramex: {}
         user:
@@ -87,6 +81,11 @@ log:
             propagate: false            # Do not propagate to root handler
             handlers:
                 - user
+        gramex.requests:
+            level: INFO
+            propagate: false
+            handlers:
+                - requests
         # Disable tornado loggers. Let them propagate to root
         tornado.access: {}
         tornado.application: {}
@@ -100,22 +99,11 @@ log:
         text:
             class: logging.StreamHandler
             formatter: text
-        access-log:
-            class: logging.handlers.TimedRotatingFileHandler
+        requests:
+            class: gramex.config.TimedRotatingCSVHandler
+            filename: $GRAMEXDATA/logs/requests.csv
+            keys: [time, ip, user.id, status, duration, method, uri, error]
             level: INFO
-            formatter: file         # save it as a CSV file
-            filename: $GRAMEXDATA/logs/access.csv    # file name to save as
-            encoding: utf-8         # encoded as UTF-8
-            when: W0                # rotate the log file weekly
-            interval: 1             # every single week
-            utc: False              # using local time zone, not UTC
-            backupCount: 52         # keep only last 52 backups
-            delay: true             # do not create file until called
-        warn-log:
-            class: logging.handlers.TimedRotatingFileHandler
-            level: WARN
-            formatter: file         # save it as a CSV file
-            filename: $GRAMEXDATA/logs/warn.csv      # file name to save as
             encoding: utf-8         # encoded as UTF-8
             when: W0                # rotate the log file weekly
             interval: 1             # every single week

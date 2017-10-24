@@ -21,6 +21,7 @@ merges the YAMLs.
 
 import os
 import re
+import csv
 import six
 import sys
 import yaml
@@ -656,3 +657,36 @@ def objectpath(node, keypath, default=None):
         if node is None:
             return default
     return node
+
+
+class TimedRotatingCSVHandler(logging.handlers.TimedRotatingFileHandler):
+    '''
+    Same as logging.handlers.TimedRotatingFileHandler, but writes to a CSV.
+    The constructor accepts an additional ``keys`` list as input that has
+    column keys. When ``.emit()`` is called, it expects an object with the
+    same keys as ``keys``.
+    '''
+    def __init__(self, *args, **kwargs):
+        self.keys = kwargs.pop('keys')
+        super(TimedRotatingCSVHandler, self).__init__(*args, **kwargs)
+
+    def _open(self):
+        stream = super(TimedRotatingCSVHandler, self)._open()
+        self.writer = csv.DictWriter(stream, fieldnames=self.keys, lineterminator='\n')
+        return stream
+
+    def emit(self, record):
+        try:
+            # From logging.handlers.BaseRotatingHandler
+            if self.shouldRollover(record):
+                self.doRollover()
+            # From logging.handlers.StreamHandler
+            if self.stream is None:
+                self.stream = self._open()
+            # Write the CSV record instead of the formatted record
+            self.writer.writerow(record.msg)
+            self.stream.flush()
+        except (KeyboardInterrupt, SystemExit):
+            raise
+        except:         # noqa: blind except blessed by logging.handlers
+            self.handleError(record)

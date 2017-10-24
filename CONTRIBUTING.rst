@@ -100,6 +100,7 @@ When releasing a new version of Gramex:
 2. Update the following and commit to ``dev`` branch:
 
     - ``HISTORY.rst`` -- add release notes
+    - ``HISTORY.rst`` -- add test coverage statistics
     - ``gramex/release.json`` -- update the version number
     - Run ``gramex/apps/guide/search/search.py`` using Python 3
 
