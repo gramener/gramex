@@ -1,6 +1,6 @@
 title: Debugging Gramex
 
-This page documents ways of debugging a Gramex application.
+[TOC]
 
 ## Browser on startup
 

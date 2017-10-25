@@ -1,5 +1,7 @@
 title: WebSocketHandler
 
+[TOC]
+
 [WebSocketHandler][websockethandler] is used for persistant connections and
 server-side push.
 

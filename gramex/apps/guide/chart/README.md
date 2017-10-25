@@ -1,5 +1,7 @@
 title: Gramex Charts
 
+[TOC]
+
 Gramex is agnostic to client-side charting libraries. Here are a set of
 recommended libraries.
 

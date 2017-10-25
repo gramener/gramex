@@ -2,6 +2,8 @@ title: Gramex Apps
 
 Gramex lets you install, manage and run applications.
 
+[TOC]
+
 ## Installing apps
 
 An app is any collection of files. You can install an app from a folder, a ZIP file, a git repository, or any other location. For example:

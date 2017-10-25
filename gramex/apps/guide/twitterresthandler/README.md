@@ -1,5 +1,7 @@
 title: Gramex accesses Twitter data
 
+[TOC]
+
 `TwitterRESTHandler` offers a proxy for the [Twitter 1.1 REST API](https://dev.twitter.com/rest/public). Here is an example:
 
     :::yaml

@@ -1,5 +1,7 @@
 title: Gramex watches files
 
+[TOC]
+
 The `watch:` section in [gramex.yaml](../gramex.yaml) triggers events when files are modified. For example:
 
     :::yaml

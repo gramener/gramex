@@ -1,5 +1,9 @@
 title: Gramex connects to data
 
+From **v1.23** DataHandler is deprecated. Use [FormHandler](../formhandler/).
+
+[TOC]
+
 `DataHandler` let's you fetch data from files and databases, and returns the
 result as CSV, JSON, XLSX or HTML tables. Here is a sample configuration that
 browses [gorilla genes](genome?format=html&limit=10):

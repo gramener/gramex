@@ -1,5 +1,7 @@
 title: Gramex Authentication
 
+[TOC]
+
 ## Sessions
 
 Gramex identifies sessions through a cookie named `sid`, and stores information

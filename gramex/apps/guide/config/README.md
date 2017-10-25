@@ -1,5 +1,7 @@
 title: Configurations control Gramex
 
+[TOC]
+
 All features of Gramex are controlled by `gramex.yaml`. Here's a simple
 `gramex.yaml` that serves the file `html.html` as the home page.
 
@@ -22,8 +24,6 @@ Run `gramex` from that directory. You should see "Hello Gramex" on your browser.
 (You may need to press `Ctrl+F5` or `Ctrl+R` to refresh the cache.
 
 Here is a full [reference of gramex.yaml configurations](../root.gramex.yaml).
-
-# Configuration syntax
 
 This section is meant more as a **reference**. Skim through it, and return later
 for additional information.

@@ -1,10 +1,6 @@
 title: Caching requests
 
-Responses can be cached at various places:
-
-- [Cache the entire page on the browser](#browser-caching)
-- [Cache the entire page on the server](#server-caching)
-- [Cache data on the server](#data-caching)
+[TOC]
 
 # Browser caching
 

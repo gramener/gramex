@@ -18,9 +18,9 @@
       <li><a href="/$GUIDE_ROOT/config/">Configurations</a></li>
       <li><a href="/$GUIDE_ROOT/functionhandler/">FunctionHandler</a></li>
       <li><a href="/$GUIDE_ROOT/filehandler/">FileHandler</a></li>
-      <li><a href="/$GUIDE_ROOT/datahandler/">DataHandler</a></li>
-      <li><a href="/$GUIDE_ROOT/queryhandler/">QueryHandler</a></li>
+      <li><a href="/$GUIDE_ROOT/formhandler/">FormHandler</a></li>
       <li><a href="/$GUIDE_ROOT/jsonhandler/">JSONHandler</a></li>
+      <li><a href="/$GUIDE_ROOT/capturehandler/">CaptureHandler</a></li>
       <li><a href="/$GUIDE_ROOT/auth/">Auth handlers</a></li>
       <li><a href="/$GUIDE_ROOT/uploadhandler/">UploadHandler</a></li>
       <li><a href="/$GUIDE_ROOT/processhandler/">ProcessHandler</a></li>

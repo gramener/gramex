@@ -9,9 +9,9 @@ classes: toc
 - [Configurations control Gramex](config/)
 - [Gramex runs Python functions](functionhandler/)
 - [Gramex renders files](filehandler/)
-- [Gramex connects to data](formhandler/)
-- [Gramex runs SQL queries](queryhandler/)
-- [Gramex writes data](jsonhandler/)
+- [Gramex connects to databases & files](formhandler/)
+- [Gramex connects to JSON data](jsonhandler/)
+- [Gramex exports to PDF and images](capturehandler/)
 - [Gramex authentication](auth/)
 - [Gramex uploads files](uploadhandler/)
 - [Gramex runs processes](processhandler/)
@@ -30,6 +30,11 @@ classes: toc
 - [Try out some exercises](exercises/)
 - [Gramex Tips](tips/)
 - [Read the Python code reference](https://learn.gramener.com/gramex/gramex.html)
+
+### Deprecated
+
+- [DataHandler](datahandler/)
+- [QueryHandler](queryhandler/)
 
 ## Tutorials
 

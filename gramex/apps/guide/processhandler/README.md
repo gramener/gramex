@@ -1,5 +1,7 @@
 title: Gramex runs processes
 
+[TOC]
+
 `ProcessHandler` runs processes and streams their output/errors. For example, to
 see the results of an `nslookup www.google.com`, add this to `gramex.yaml`:
 

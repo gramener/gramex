@@ -1,5 +1,7 @@
 title: Gramex renders files
 
+[TOC]
+
 [gramex.yaml](../gramex.yaml) uses the [FileHandler][filehandler]
 to display files. This folder uses the following configuration:
 

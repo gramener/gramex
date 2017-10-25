@@ -1,5 +1,9 @@
 title: Gramex is a web server
 
+[TOC]
+
+## Creating Gramex apps
+
 When you run Gramex using `gramex` or `python -m gramex`, it starts a web server
 at port 9988. This opens a welcome screen with a link to this guide.
 

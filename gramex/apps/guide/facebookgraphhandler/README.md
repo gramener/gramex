@@ -1,5 +1,7 @@
 title: Gramex accesses Facebook data
 
+[TOC]
+
 `FacebookGraphHandler` offers a proxy for the [Facebook Graph API](https://developers.facebook.com/docs/graph-api/). Here is an example:
 
     :::yaml

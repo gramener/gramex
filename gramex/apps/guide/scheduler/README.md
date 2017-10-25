@@ -1,5 +1,7 @@
 title: Schedule tasks
 
+[TOC]
+
 The `schedule:` section in [gramex.yaml](gramex.yaml) lets you run tasks on
 startup or at specific times. Here are some sample uses:
 

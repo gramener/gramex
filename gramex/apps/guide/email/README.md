@@ -1,5 +1,7 @@
 title: Send email
 
+[TOC]
+
 The `email` service creates a service that can send email via SMTP. Here is a
 sample configuration for GMail:
 

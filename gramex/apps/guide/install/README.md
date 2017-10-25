@@ -1,5 +1,9 @@
 title: Install Gramex
 
+[TOC]
+
+## Installation
+
 - Download and install [Anaconda][anaconda] 4.4.0 or later. [Update Anaconda][update] if required.
 - On a Mac, download and install [Xcode][xcode].
 - Uninstall gramex if you have installed it before: `pip uninstall gramex`.
@@ -25,7 +29,7 @@ Note: `pip install --ignore-installed` was removed because of an
 [Anaconda bug](https://github.com/pypa/pip/issues/2751#issuecomment-165390180) -
 re-installing scandir fails on Windows.
 
-# Troubleshooting
+## Troubleshooting
 
 If Gramex is does not run:
 
@@ -38,11 +42,11 @@ If Gramex is does not run:
 - Tru uninstalling and re-installing Gramex. Stop Gramex and all other Python
   applications when re-installing.
 
-# Uninstall Gramex
+## Uninstall Gramex
 
 To remove Gramex, run `pip uninstall gramex`
 
-# Offline install
+## Offline install
 
 First, do the following on a system **with an Internet connection**:
 

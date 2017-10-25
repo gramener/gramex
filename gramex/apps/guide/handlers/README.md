@@ -1,5 +1,7 @@
 title: Writing handlers
 
+[TOC]
+
 Gramex handlers must inherit from `gramex.handlers.BaseHandler`. Here's a simple custom handler saved in [handlerutil.py](handlerutil.py):
 
     :::python

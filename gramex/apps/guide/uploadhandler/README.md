@@ -1,5 +1,7 @@
 title: Gramex handles file uploads
 
+[TOC]
+
 `UploadHandler` lets you upload files and manage them. Here is a sample configuration:
 
     :::yaml

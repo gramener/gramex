@@ -6,17 +6,11 @@ title: Gramex takes screenshots
 
 [puppeteer]: https://github.com/GoogleChrome/puppeteer/
 
-[PhantomJS](http://phantomjs.org/) is the default for backward compatibility, but
-it is out-dated. To use it, install [PhantomJS](http://phantomjs.org/) and it to
-your PATH. Then add this to `gramex.yaml`:
+[TOC]
 
-    :::yaml
-    url:
-        capture:
-            pattern: /$YAMLURL/capture
-            handler: CaptureHandler
+## Chrome
 
-**Chrome is the recommended engine from v1.23**.
+**Chrome is the recommended engine from v1.23**. To set it up:
 
 - Install [Node 8.x](https://nodejs.org/en/) -- earlier versions won't work.
   Ensure that `node` is in your PATH.
@@ -54,6 +48,14 @@ To use an existing instance of chromecapture.js running on a different port, use
                 engine: chrome
                 url: http://server:port/capture/    # Use chromecapture.js from this URL
 
+By default, requests timeout within 10 seconds. To change this, use `timeout:`.
+
+    :::yaml
+            pattern: /$YAMLURL/capture
+            handler: CaptureHandler
+            kwargs:
+                timeout: 20     # Wait for max 20 seconds for server to respond
+
 The default chromecapture.js is at `$GRAMEXPATH/apps/capture/chromecapture.js`.
 To use your own chromecapture.js, run it using `cmd:` on any port and point
 `url:` to that port:
@@ -66,15 +68,21 @@ To use your own chromecapture.js, run it using `cmd:` on any port and point
                 cmd: node /path/to/chromecapture.js --port=9902
                 url: http://localhost:9902/
 
-By default, requests timeout within 10 seconds. To change this, use `timeout:`.
+## PhantomJS
+
+[PhantomJS](http://phantomjs.org/) is **out-dated** but is the default for
+backward compatibility. To use it, install [PhantomJS](http://phantomjs.org/) and
+it to your PATH. Then add this to `gramex.yaml`:
 
     :::yaml
+    url:
+        capture:
             pattern: /$YAMLURL/capture
             handler: CaptureHandler
-            kwargs:
-                timeout: 20     # Wait for max 20 seconds for server to respond
 
-# Screenshot service
+Note that the `engine: phantomjs` is not required.
+
+## Screenshot service
 
 You can add a link from any page to the `capture` page to take a screenshot.
 
@@ -157,7 +165,7 @@ If `capture.js` was not started, or it terminated, you can restart it by adding
 `?start` to the URL. It is safe to add `?start` even if the server is running. It
 restarts `capture.js` only if required.
 
-# Screenshot library
+## Screenshot library
 
 You can take screenshots from any Python program, using Gramex as a library.
 

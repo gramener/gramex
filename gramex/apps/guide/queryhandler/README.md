@@ -1,5 +1,9 @@
 title: Gramex runs SQL queries
 
+From **v1.23** QueryHandler is deprecated. Use [FormHandler](../formhandler/).
+
+[TOC]
+
 `QueryHandler` fetches data from SQL databases and returns the results as CSV,
 JSON, or HTML tables. Here is a sample configuration that browses [gorilla genes](genome?format=html&limit=10):
 
