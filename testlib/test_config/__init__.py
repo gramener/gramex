@@ -364,12 +364,12 @@ class TestTimedRotatingCSVHandler(unittest.TestCase):
     csv2 = info.home / 'file2.csv'
 
     def test_handler(self):
-        csv1 = gramex.config.TimedRotatingCSVHandler(
+        csv1 = TimedRotatingCSVHandler(
             filename=str(self.csv1),
             keys=['a', 'b', 'c'],
             encoding='utf-8'
         )
-        csv2 = gramex.config.TimedRotatingCSVHandler(
+        csv2 = TimedRotatingCSVHandler(
             filename=str(self.csv2),
             keys=['a', 'b', 'c'],
             encoding='utf-8'
