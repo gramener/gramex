@@ -611,19 +611,21 @@ You can configure a logging action for when the user logs in or logs out via the
                   - request.remote_ip           #   handler.request.remote_ip
                   - request.headers.User-Agent  #   handler.request.headers['User-Agent']
 
-This will log the result into the `user` logger, which saves the data as a CSV file in `$GRAMEXDATA/logs/user.csv`. (See [predefined variables](../config/#predefined-variables) to locate `$GRAMEXDATA`.)
+This will log the result into a CSV file at `$GRAMEXDATA/logs/user.csv`. (See
+[predefined variables](../config/#predefined-variables) to locate `$GRAMEXDATA`.)
 
-You can define your own logging handler for the `user` logger in the [log section](../config/#logging). Here's a sample definition:
+You can change the user logging path in the [log section](../config/#logging).
+Here's a sample definition:
 
     :::yaml
     log:
         handlers:
             user:
-                class: logging.handlers.FileHandler     # Save it as a file
                 filename: $GRAMEXDATA/logs/user.csv     # under the Gramex data directory as logs/user.csv
-                formatter: csv-message                  # Format message as-is. (Don't change this line)
+                when: W0                # rotate the log file weekly
+                interval: 1             # every single week
+                backupCount: 52         # keep only last 52 backups
 
-You can also use more sophisticated loggers such as [TimedRotatingFileHandler](https://docs.python.org/3/library/logging.handlers.html#logging.handlers.TimedRotatingFileHandler).
 
 ## Session expiry
 

@@ -74,11 +74,12 @@ log:
         level: DEBUG
         handlers:
             - console
+            - logfile
     loggers:
         gramex: {}
         user:
             level: INFO
-            propagate: false            # Do not propagate to root handler
+            propagate: false
             handlers:
                 - user
         gramex.requests:
@@ -96,9 +97,16 @@ log:
         console:
             class: logging.StreamHandler
             formatter: console
-        text:
-            class: logging.StreamHandler
+        logfile:
+            class: logging.handlers.TimedRotatingFileHandler
             formatter: text
+            filename: $GRAMEXDATA/logs/gramex.log    # file name to save as
+            encoding: utf-8         # encoded as UTF-8
+            when: W0                # rotate the log file weekly
+            interval: 1             # every single week
+            utc: False              # using local time zone, not UTC
+            backupCount: 52         # keep only last 52 backups
+            delay: true             # do not create file until called
         requests:
             class: gramex.config.TimedRotatingCSVHandler
             filename: $GRAMEXDATA/logs/requests.csv
@@ -139,8 +147,8 @@ log:
             format: '%(message)s'
             datefmt: '%Y-%m-%d %H:%M:%S'
 
-# Application event logs are captured in this database. The logs are stored in a
-# table called "events".
+# Application start stop event logs are captured in this database. The logs are
+# stored in a table called "events".
 eventlog:
     path: $GRAMEXDATA/logs/events.db          # Location of application event logs.
 
