@@ -78,6 +78,8 @@ The URL supports operators for filtering rows. The operators can be combined.
 - [?Continent!=Europe](flags?Continent!=Europe&_format=html) ► Continent is NOT Europe
 - [?Continent!=Europe&Continent!=Asia](flags?Continent!=Europe&Continent!=Asia&_format=html)
   ► Continent is NEITHER Europe NOR Asia
+- [?Shapes](flags?Shapes&_format=html) ► Shapes is not NULL
+- [?Shapes!](flags?Shapes!&_format=html) ► Shapes is NULL
 - [?c1>=10](flags?c1>=10&_format=html) ► c1 > 10 (not >= 10)
 - [?c1>~=10](flags?c1>~=10&_format=html) ► c1 >= 10. The `~` acts like an `=`
 - [?c1<=10](flags?c1<=10&_format=html) ► c1 < 10 (not <= 10)

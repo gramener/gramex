@@ -70,6 +70,8 @@ def filter(url, args={}, meta={}, engine=None, table=None, ext=None,
 
     The URL supports operators filter like this:
 
+    - ``?x`` selects x is not null
+    - ``?x!`` selects x is null
     - ``?x=val`` selects x == val
     - ``?x!=val`` selects x != val
     - ``?x>=val`` selects x > val
@@ -428,15 +430,15 @@ def _filter_frame(data, meta, controls, args, source='select', id=[]):
             # Apply type conversion for values
             conv = data[col].dtype.type
             vals = tuple(conv(val) for val in vals if val)
-            if len(vals) == 0:
+            if op not in {'', '!'} and len(vals) == 0:
                 meta['ignored'].append((key, vals))
                 continue
 
             # Apply filters
             if op == '':
-                data = data[data[col].isin(vals)]
+                data = data[data[col].isin(vals)] if len(vals) else data[pd.notnull(data[col])]
             elif op == '!':
-                data = data[~data[col].isin(vals)]
+                data = data[~data[col].isin(vals)] if len(vals) else data[pd.isnull(data[col])]
             elif op == '>':
                 data = data[data[col] > min(vals)]
             elif op == '>~':
@@ -539,12 +541,17 @@ def _filter_db(engine, table, meta, controls, args, source='select', id=[]):
             if conv == six.binary_type:
                 conv = six.text_type
             vals = tuple(conv(val) for val in vals)
+            if op not in {'', '!'} and len(vals) == 0:
+                meta['ignored'].append((key, vals))
+                continue
 
             # Apply filters
             if op == '':
-                query = query.where(column.in_(vals))
+                # Test if column is not NULL. != None is NOT the same as is not None
+                query = query.where(column.in_(vals) if len(vals) else column != None)      # noqa
             elif op == '!':
-                query = query.where(column.notin_(vals))
+                # Test if column is NULL. == None is NOT the same as is None
+                query = query.where(column.notin_(vals) if len(vals) else column == None)   # noqa
             elif op == '>':
                 query = query.where(column > min(vals))
             elif op == '>~':

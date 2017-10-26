@@ -17,10 +17,10 @@ import dbutils
 from . import folder, sales_file
 
 
-def eqframe(actual, expected):
+def eqframe(actual, expected, **kwargs):
     '''Same as assert_frame_equal or afe, but does not compare index'''
     expected.index = actual.index
-    afe(actual, expected)
+    afe(actual, expected, **kwargs)
 
 
 class TestFilter(unittest.TestCase):
@@ -37,10 +37,10 @@ class TestFilter(unittest.TestCase):
         an "args" dict as argument. This is used to test filter with frame, file
         and sqlalchemy URLs
         '''
-        def eq(args, expected):
+        def eq(args, expected, **eqkwargs):
             meta = {}
             actual = gramex.data.filter(meta=meta, args=args, **kwargs)
-            eqframe(actual, expected)
+            eqframe(actual, expected, **eqkwargs)
             return meta
 
         sales = self.sales if df is None else df
@@ -59,6 +59,13 @@ class TestFilter(unittest.TestCase):
         m = eq({'city': ['Hyderabad', 'Coimbatore']},
                sales[sales['city'].isin(['Hyderabad', 'Coimbatore'])])
         eq_(m['filters'], [('city', '', ('Hyderabad', 'Coimbatore'))])
+
+        m = eq({'sales': []}, sales[pd.notnull(sales['sales'])])
+        eq_(m['filters'], [('sales', '', ())])
+
+        # Don't check dtype. Database may return NULL as an object, not float
+        m = eq({'sales!': []}, sales[pd.isnull(sales['sales'])], check_dtype=False)
+        eq_(m['filters'], [('sales', '!', ())])
 
         m = eq({'product!': ['Biscuit', 'Crème']},
                sales[~sales['product'].isin(['Biscuit', 'Crème'])])
