@@ -176,7 +176,7 @@ You can create your additional formatters by extending this.
 ## Request logging
 
 Gramex logs all HTTP requests to `logs/requests.csv` under [$GRAMEXDATA](#predefined-variables).
-It has these columns:
+It logs:
 
 - `time`: Time of the request in milliseconds since epoch
 - `ip`: The IP address of the client requesting the page

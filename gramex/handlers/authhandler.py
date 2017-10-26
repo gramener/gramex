@@ -20,7 +20,7 @@ import gramex.cache
 from gramex.http import UNAUTHORIZED
 from gramex.config import check_old_certs, app_log, objectpath, str_utf8
 from gramex.transforms import build_transform
-from .basehandler import BaseHandler
+from .basehandler import BaseHandler, build_log_info
 
 _auth_template = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                               'auth.template.html')
@@ -56,7 +56,7 @@ def csv_encode(values, *args, **kwargs):
 class AuthHandler(BaseHandler):
     '''The parent handler for all Auth handlers.'''
     @classmethod
-    def setup(cls, log={}, action=None, delay=None, session_expiry=None, **kwargs):
+    def setup(cls, action=None, delay=None, session_expiry=None, **kwargs):
         # Switch SSL certificates if required to access Google, etc
         gramex.service.threadpool.submit(check_old_certs)
 
@@ -66,12 +66,10 @@ class AuthHandler(BaseHandler):
         super(AuthHandler, cls).setup(**kwargs)
 
         # Set up logging for login/logout events
-        if log and hasattr(log, '__getitem__') and log.get('fields'):
-            cls.log_fields = log['fields']
-            cls.logger = logging.getLogger(log.get('logger', 'user'))
-        else:
-            cls.log_user_event = cls.noop
-        cls.actions = []
+        logger = logging.getLogger('gramex.user')
+        keys = objectpath(gramex.conf, 'log.handlers.user.keys', [])
+        log_info = build_log_info(keys, 'event')
+        cls.log_user_event = lambda handler, event: logger.info(log_info(handler, event))
 
         # Count failed logins
         cls.failed_logins = Counter()
@@ -88,6 +86,7 @@ class AuthHandler(BaseHandler):
         cls.session_expiry = session_expiry
 
         # Set up post-login actions
+        cls.actions = []
         if action is not None:
             if not isinstance(action, list):
                 action = [action]
@@ -95,13 +94,6 @@ class AuthHandler(BaseHandler):
                 cls.actions.append(build_transform(
                     conf, vars=AttrDict(handler=None),
                     filename='url:%s:%s' % (cls.name, conf.function)))
-
-    def log_user_event(self, event, **kwargs):
-        self.logger.info(csv_encode(
-            [event] + [objectpath(self, f, '') for f in self.log_fields]))
-
-    def noop(self, *args, **kwargs):
-        pass
 
     def set_user(self, user, id):
         # Find session expiry time
@@ -157,8 +149,8 @@ class LogoutHandler(AuthHandler):
             self.save_redirect_page()
         for callback in self.actions:
             callback(self)
-        self.session.pop('user', None)
         self.log_user_event(event='logout')
+        self.session.pop('user', None)
         if self.redirects:
             self.redirect_next()
 
@@ -273,6 +265,7 @@ class LDAPAuth(AuthHandler):
     def report_error(self, code, exc_info=False):
         error = self.errors[code].format(host=self.kwargs.host, args=self.args)
         app_log.error('LDAP: ' + error, exc_info=exc_info)
+        self.log_user_event(event='fail')
         self.set_status(UNAUTHORIZED)
         self.set_header('Auth-Error', code)
         self.render_template(self.template, error={'code': code, 'error': error})
@@ -410,6 +403,7 @@ class SimpleAuth(AuthHandler):
             self.redirect_next()
         else:
             yield self.fail_user({'user': user}, id='user')
+            self.log_user_event(event='fail')
             self.set_status(UNAUTHORIZED)
             self.render_template(self.template, error={'code': 'auth', 'error': 'Cannot log in'})
 
@@ -533,6 +527,7 @@ class DBAuth(SimpleAuth):
             self.redirect_next()
         else:
             yield self.fail_user({'user': user}, 'user')
+            self.log_user_event(event='fail')
             self.set_status(UNAUTHORIZED)
             self.render_template(self.template, error={'code': 'auth', 'error': 'Cannot log in'})
 
@@ -554,7 +549,7 @@ class DBAuth(SimpleAuth):
             user = result.fetchone()
             email_column = self.forgot.get('email_column', 'email')
 
-            # If a mathing user exists in the database
+            # If a matching user exists in the database
             if user is not None and user[email_column]:
                 # generate token and set expiry
                 token = uuid.uuid4().hex
@@ -583,6 +578,7 @@ class DBAuth(SimpleAuth):
                 error = {}                          # Render at the end with no errors
             # If no user matches the user ID or email ID
             else:
+                self.log_user_event(event='forgot-nouser')
                 self.set_status(UNAUTHORIZED)
                 if user is None:
                     error['error'] = 'No user matching %s found' % (forgot_user or forgot_email)
@@ -615,9 +611,11 @@ class DBAuth(SimpleAuth):
                         self.recover['table'].delete(where))
                     error = {}
                 else:
+                    self.log_user_event(event='forgot-token-expired')
                     self.set_status(UNAUTHORIZED)
                     error['error'] = 'Token expired'
             else:
+                self.log_user_event(event='forgot-token-invalid')
                 self.set_status(UNAUTHORIZED)
                 error['error'] = 'Invalid Token'
         self.render_template(template, error=error)
@@ -653,6 +651,7 @@ class IntegratedAuth(AuthHandler):
                         'Negotiate' if msg is None else 'Negotiate ' + msg)
 
     def unauthorized(self):
+        self.log_user_event(event='fail')
         self.set_status(UNAUTHORIZED)
         self.csas.pop(self.session['id'], None)
         self.write('Unauthorized')

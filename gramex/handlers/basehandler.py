@@ -995,13 +995,18 @@ def _handle(path):
     return handle_cache[path]
 
 
-def build_log_info(keys):
+def build_log_info(keys, *vars):
+    '''
+    Creates a ``handler.method(vars)`` that returns a dictionary of computed
+    values. ``keys`` defines what keys are returned in the dictionary. The values
+    are computed using the formulas in the code.
+    '''
     # Define direct keys. These can be used as-is
     direct_vars = {
         'name': 'handler.name',
         'class': 'handler.__class__.__name__',
         'time': 'round(time.time() * 1000, 0)',
-        'datetime': 'datetime.datetime.utcnow().strftime("%Y-%m-%s %H:%M:%SZ")',
+        'datetime': 'datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%SZ")',
         'method': 'handler.request.method',
         'uri': 'handler.request.uri',
         'ip': 'handler.request.remote_ip',
@@ -1010,7 +1015,7 @@ def build_log_info(keys):
         'port': 'conf.app.listen.port',
         # TODO: get_content_size() is not available in RequestHandler
         # 'size': 'handler.get_content_size()',
-        'user': 'handler.current_user.get("id", "")',
+        'user': '(handler.current_user or {}).get("id", "")',
         'session': 'handler.session.get("id", "")',
         'error': 'getattr(handler, "_exception", "")',
     }
@@ -1026,6 +1031,9 @@ def build_log_info(keys):
     }
     vals = []
     for key in keys:
+        if key in vars:
+            vals.append('"{}": {},'.format(key, key))
+            continue
         if key in direct_vars:
             vals.append('"{}": {},'.format(key, direct_vars[key]))
             continue
@@ -1035,7 +1043,8 @@ def build_log_info(keys):
                 vals.append('"{}": {},'.format(key, object_vars[prefix].format(val=value)))
                 continue
         app_log.error('Skipping unknown key %s', key)
-    code = compile('def fn(handler):\n\treturn {%s}' % ' '.join(vals), filename='log', mode='exec')
-    context = {'os': os, 'time': time, 'datetime': datetime, 'conf': conf,  'AttrDict': AttrDict}
+    code = compile('def fn(handler, %s):\n\treturn {%s}' % (', '.join(vars), ' '.join(vals)),
+                   filename='log', mode='exec')
+    context = {'os': os, 'time': time, 'datetime': datetime, 'conf': conf, 'AttrDict': AttrDict}
     exec(code, context)
     return context['fn']

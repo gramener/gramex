@@ -595,16 +595,44 @@ to this information via `handler.current_user` by default.
 
 ## Logging logins
 
-You can configure a logging action for when the user logs in or logs out via the
-`log:` configuration. For example:
+Gramex logs all login and logout actions to `logs/user.csv` under
+[$GRAMEXDATA](../config/#predefined-variables). It logs:
+
+- `datetime`: Time in UTC as YYYY-MM-DD HH:MM:SSZ
+- `event`: "login" or "logout"
+- `session`: session ID that the user was logged into
+- `user`: The ID of the user
+- `ip`: The IP address of the client requesting the page
+- `headers.User-Agent`: The User-Agent (browser) that accessed the page
+
+To change the location of this file, use `log.handlers.user.filename`:
 
     :::yaml
-    auth/twitter:
-        pattern: /$YAMLURL/twitter
-        handler: TwitterAuth
+    log:
+        handlers:
+            user:
+                filename: $GRAMEXDATA/your-app/user.csv     # The path can point ANYWHERE
+
+To change the columns that are logged, use `log.handlers.user.keys:`
+
+    :::yaml
+    log:
+        handlers:
+            user:
+                keys: [time, ip, user, status, uri, error]
+
+For the list of valid keys, see [request logging](../config/#request-logging).
+
+--------
+
+Until **v1.22**, the `log:` section of auth handlers  could be configured to
+log events like this:
+
+    :::yaml
+    auth:
+        pattern: /$YAMLURL/auth
+        handler: SimpleAuth
         kwargs:
-            key: XkCVNZD5sfWECxHGAGnlHGQFa
-            secret: yU00bx5dHYMbge9IyO5H1KeC5uFnWndntG7u6CH6O4HDZHQg0p
             log:                                # Log this when a user logs in via this handler
                 fields:                         # List of fields:
                   - session.id                  #   handler.session['id']
@@ -612,21 +640,8 @@ You can configure a logging action for when the user logs in or logs out via the
                   - request.remote_ip           #   handler.request.remote_ip
                   - request.headers.User-Agent  #   handler.request.headers['User-Agent']
 
-This will log the result into a CSV file at `$GRAMEXDATA/logs/user.csv`. (See
-[predefined variables](../config/#predefined-variables) to locate `$GRAMEXDATA`.)
-
-You can change the user logging path in the [log section](../config/#logging).
-Here's a sample definition:
-
-    :::yaml
-    log:
-        handlers:
-            user:
-                filename: $GRAMEXDATA/logs/user.csv     # under the Gramex data directory as logs/user.csv
-                when: W0                # rotate the log file weekly
-                interval: 1             # every single week
-                backupCount: 52         # keep only last 52 backups
-
+The `log:` key has been **removed since v1.23**. But the location and structure
+of the user log file remains the same.
 
 ## Session expiry
 
