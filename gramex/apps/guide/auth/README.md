@@ -2,7 +2,7 @@ title: Gramex Authentication
 
 [TOC]
 
-## Sessions
+# Sessions
 
 Gramex identifies sessions through a cookie named `sid`, and stores information
 against each session as a persistent key-value store. This is available as
@@ -493,7 +493,7 @@ Here is a more complete example:
 [send-as]: https://support.google.com/mail/answer/22370?hl=en
 
 
-# Integrated auth
+## Integrated auth
 
 IntegratedAuth allows Windows domain users to log into Gramex automatically if
 they've logged into Windows.
@@ -521,7 +521,6 @@ looks like this:
         "realm": "WIN-8S90I248M00"              // Windows hostname
     }
 
-
 ## Log out
 
 This configuration creates a [logout page](logout?next=.):
@@ -534,6 +533,8 @@ This configuration creates a [logout page](logout?next=.):
 After logging in, users are re-directed to the `?next=` URL. You can change this
 using the [redirection configuration](../config/#redirection).
 
+
+# Authentication features
 
 ## Login templates
 
@@ -651,6 +652,27 @@ date when the user logs in with that handler. For example:
 
 This can be used to configure sessions that have a long expiry (e.g. for mobile
 applications) or short expiry (e.g. for secure data applications.)
+
+To allow users to choose how long to stay logged in, use:
+
+    :::yaml
+    url:
+        auth/customexpiry:
+            pattern: /$YAMLURL/customexpiry
+            handler: SimpleAuth
+            kwargs:
+                session_expiry:
+                    default: 4      # the default session expiry is set to 4 days
+                    key: remember   # When ?remember= is submitted on login
+                    values:         # if ?remember=...
+                        day: 1          # ...day, it expires in 1 day
+                        week: 7         # ...week, it expires in 7 days
+                        month: 31       # ...month, it expires in 31 days
+
+<div class="example">
+  <a class="example-demo" href="customexpiry">Remember me example</a>
+  <a class="example-src" href="http://code.gramener.com/s.anand/gramex/tree/master/gramex/apps/guide/auth/gramex.yaml">Source</a>
+</div>
 
 
 # Automated logins

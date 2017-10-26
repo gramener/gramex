@@ -82,8 +82,9 @@ class AuthBase(TestGramex):
             headers['Referer'] = referer
         return {'params': params, 'headers': headers}
 
-    def login(self, user, password, query_next=None, header_next=None, referer=None, headers={}):
-        params = self.redirect_kwargs(query_next, header_next, referer)
+    def login(self, user, password, query_next=None, header_next=None, referer=None,
+              headers={}, post_args={}):
+        params = self.redirect_kwargs(query_next, header_next, referer=referer)
         r = self.session.get(self.url, **params)
         tree = lxml.html.fromstring(r.text)
         self.assertEqual(tree.xpath('.//h1')[0].text, 'Auth')
@@ -91,6 +92,7 @@ class AuthBase(TestGramex):
         # Create form submission data
         data = {'user': user, 'password': password}
         data['_xsrf'] = tree.xpath('.//input[@name="_xsrf"]')[0].get('value')
+        data.update(post_args)
 
         # Submitting the correct password redirects
         if headers is not None:
@@ -275,15 +277,36 @@ class TestExpiry(AuthBase):
         AuthBase.setUpClass()
         cls.url = server.base_url + '/auth/expiry'
 
-    # Run additional tests for session and login features
-    def test_expiry(self, headers=None):
-        self.login('alpha', 'alpha')
-        expires = {c.name: c.expires for c in self.session.cookies}.get('sid', 0)
-        days = gramex.conf.url['auth/expiry'].kwargs.session_expiry
+    def check_expiry(self, days):
         to_expire = time.time() + days * 24 * 60 * 60
+        expires = {c.name: c.expires for c in self.session.cookies}.get('sid', 0)
         self.assertLess(abs(to_expire - expires), 2)
-        session = self.session.get(server.base_url + '/auth/session', headers=headers).json()
+        session = self.session.get(server.base_url + '/auth/session').json()
         self.assertLess(abs(to_expire - session.get('_t', 0)), 2)
+
+    # Run additional tests for session and login features
+    def test_expiry(self):
+        self.login('alpha', 'alpha')
+        self.check_expiry(gramex.conf.url['auth/expiry'].kwargs.session_expiry)
+
+
+class TestCustomExpiry(TestExpiry):
+    # Just apply LoginMixin tests to AuthBase
+    @classmethod
+    def setUpClass(cls):
+        AuthBase.setUpClass()
+        cls.url = server.base_url + '/auth/customexpiry'
+
+    def test_custom_expiry(self):
+        expiry_conf = gramex.conf.url['auth/customexpiry'].kwargs.session_expiry
+        self.login('alpha', 'alpha')
+        self.check_expiry(expiry_conf.default)
+        self.login('alpha', 'alpha', post_args={'remember': 'day'})
+        self.check_expiry(expiry_conf['values'].day)
+        self.login('alpha', 'alpha', post_args={'remember': 'week'})
+        self.check_expiry(expiry_conf['values'].week)
+        self.login('alpha', 'alpha', post_args={'remember': 'na'})
+        self.check_expiry(expiry_conf.default)
 
 
 class TestAuthRedirect(AuthBase):

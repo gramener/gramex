@@ -104,9 +104,19 @@ class AuthHandler(BaseHandler):
         pass
 
     def set_user(self, user, id):
+        # Find session expiry time
+        expires_days = self.session_expiry
+        if isinstance(self.session_expiry, dict):
+            default = self.session_expiry.get('default', None)
+            key = self.session_expiry.get('key', None)
+            val = self.args.get(key, [None])[0]
+            lookup = self.session_expiry.get('values', {})
+            expires_days = lookup.get(val, default)
+
         # When user logs in, change session ID and invalidate old session
         # https://www.owasp.org/index.php/Session_fixation
-        self.get_session(expires_days=self.session_expiry, new=True)
+        self.get_session(expires_days=expires_days, new=True)
+
         # The unique ID for a user varies across logins. For example, Google and
         # Facebook provide an "id", but for Twitter, it's "username". For LDAP,
         # it's "dn". Allow auth handlers to decide their own ID attribute and

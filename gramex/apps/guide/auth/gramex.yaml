@@ -255,6 +255,24 @@ url:
             template: $YAMLPATH/expiry.html # Use this login template for the demo
             redirect: /$YAMLURL/expiry
 
+    auth/customexpiry:
+        pattern: /$YAMLURL/customexpiry
+        handler: SimpleAuth
+        kwargs:
+            session_expiry:
+              default: 1          # the default session expiry is set to 1 day
+              key: remember       # When ?remember= is submitted on login
+              values:             # if ?remember=...
+                  sec: 0.000115   # 10 seconds
+                  min: 0.0007     # 60.48 seconds
+                  day: 1          # ...day, it expires in 1 day
+                  week: 7         # ...week, it expires in 7 days
+                  month: 31       # ...month, it expires in 31 days
+                  "on": 31        # If ?remember=on, expire after 31 days (checkbox)
+            credentials: {alpha: alpha, beta: beta}
+            template: $YAMLPATH/customexpiry.html   # Use this login template for the demo
+            redirect: /$YAMLURL/customexpiry
+
     auth/otp:
         pattern: /$YAMLURL/otp
         handler: FileHandler

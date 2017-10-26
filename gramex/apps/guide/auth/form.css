@@ -5,10 +5,16 @@ label {
   font-size: 75%;
   letter-spacing: 0.1em;
 }
-input, button, .alert {
+input, button, select, .alert {
   display: block;
   margin: 4px -8px;
   padding: 4px 8px;
+}
+label.checkbox { display: inline-block; }
+input[type="checkbox"] {
+  display: inline;
+  vertical-align: baseline;
+  margin-right: 0.5em;
 }
 button {
   margin-top: 1.5em;

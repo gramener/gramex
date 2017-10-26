@@ -1784,6 +1784,24 @@ url:
         header: NEXT
         url: /dir/index/
 
+  auth/customexpiry:
+    pattern: /auth/customexpiry
+    handler: SimpleAuth
+    kwargs:
+      session_expiry:
+        default: 0.001
+        key: remember
+        values:
+          day: 1
+          week: 7
+      template: $YAMLPATH/auth.html
+      credentials:
+        alpha: alpha
+      redirect:
+        query: next
+        header: NEXT
+        url: /dir/index/
+
   auth/template:
     pattern: /auth/template
     handler: SimpleAuth
