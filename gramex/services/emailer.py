@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+import os
 import smtplib
 from six import string_types
 from email import encoders
@@ -146,7 +147,7 @@ def message(body=None, html=None, attachments=[], images={}, **kwargs):
             msg.set_payload(content)
             encoders.encode_base64(msg)
             msg.add_header('Content-Disposition', 'attachment',
-                           filename=filename)
+                           filename=os.path.basename(filename))
             msg_addon.attach(msg)
         msg = msg_addon
 

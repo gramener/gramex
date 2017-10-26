@@ -58,6 +58,8 @@ class TestEmailer(TestCase):
         msg = message(body='text', attachments=[img])
         img_part = list(msg.walk())[-1]
         eq_(img_part.get_content_type(), 'image/jpeg')
+        if 'filename' in img:
+            eq_(img_part.get_filename(), os.path.basename(img['filename']))
 
     def test_images(self):
         html = '<img src="cid:logo">'
