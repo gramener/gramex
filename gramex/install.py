@@ -78,8 +78,6 @@ service: |
     Install a Gramex application as a Windows service:
 
         gramex service install
-            --name "Application Name"
-            --desc "Application long description"
             --cwd  "C:/path/to/application/"
             --user "DOMAIN\USER"                # Optional user to run as
             --password "user-password"          # Required if user is specified
