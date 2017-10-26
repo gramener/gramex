@@ -39,17 +39,18 @@ class TestJSONStore(unittest.TestCase):
         eq_(data, {})
 
     def test_store(self):
-        self.store.dump('►', 'α')
+        expiry = time.time() + 1000
+        self.store.dump('►', {'_t': expiry, 'α': True})
         self.store.flush()
         with open(self.path, 'r') as handle:    # noqa: no encoding for json
             data = json.load(handle)
-        eq_(data, {'►': 'α'})
+        eq_(data, {'►': {'_t': expiry, 'α': True}})
 
-        self.store.dump('λ', {'α': 1, 'β': None})
+        self.store.dump('λ', {'α': 1, 'β': None, '_t': expiry})
         self.store.flush()
         with open(self.path, 'r') as handle:    # noqa: no encoding for json
             data = json.load(handle)
-        eq_(data, {'►': 'α', 'λ': {'α': 1, 'β': None}})
+        eq_(data, {'►': {'_t': expiry, 'α': True}, 'λ': {'α': 1, 'β': None, '_t': expiry}})
 
     @classmethod
     def teardownClass(cls):
