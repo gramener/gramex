@@ -54,7 +54,9 @@ class FormHandler(BaseHandler):
         cls.formats = conf_kwargs.pop('formats', {})
         default_config = conf_kwargs.pop('default', None)
         # Remove other known special keys from dataset configuration
-        for special_key in ['xsrf_cookies', 'headers', 'redirect']:
+        # TODO: make this more robust
+        for special_key in ['transform', 'redirect', 'auth', 'log', 'set_xsrf',
+                            'error', 'xsrf_cookies', 'headers']:
             conf_kwargs.pop(special_key, None)
         # If top level has url: then data spec is at top level. Else it's a set of sub-keys
         if 'url' in conf_kwargs:
