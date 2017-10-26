@@ -1,6 +1,8 @@
 import os
 import time
+import datetime
 import unittest
+from gramex import conf
 from gramex.handlers.basehandler import build_log_info
 from .test_transforms import eqfn
 
@@ -9,12 +11,16 @@ class TestLog(unittest.TestCase):
     def test_log_info(self):
         def log_info(handler):
             return {
+                'name': handler.name,
+                'class': handler.__class__.__name__,
                 'time': round(time.time() * 1000, 0),
+                'datetime': datetime.datetime.utcnow().strftime('%Y-%m-%s %H:%M:%SZ'),
                 'method': handler.request.method,
                 'uri': handler.request.uri,
                 'ip': handler.request.remote_ip,
                 'status': handler.get_status(),
                 'duration': round(handler.request.request_time() * 1000, 0),
+                'port': conf.app.listen.port,
                 'user': handler.current_user.get("id", ""),
                 'error': getattr(handler, "_exception", ""),
                 'args.x': handler.get_argument("x", ""),
@@ -26,6 +32,7 @@ class TestLog(unittest.TestCase):
                 'env.HOME': os.environ.get("HOME", ""),
             }
         result = build_log_info(keys=[
-            'time', 'method', 'uri', 'ip', 'status', 'duration', 'user', 'error', 'args.x',
-            'request.scheme', 'headers.X-Gramex-Key', 'cookies.sid', 'user.email', 'env.HOME'])
+            'name', 'class', 'time', 'datetime', 'method', 'uri', 'ip', 'status', 'duration',
+            'port', 'user', 'error', 'args.x', 'request.scheme',
+            'headers.X-Gramex-Key', 'cookies.sid', 'user.email', 'env.HOME'])
         eqfn(actual=result, expected=log_info)

@@ -260,7 +260,7 @@ This configuration creates a [direct LDAP login page](ldap):
             host: 10.20.30.40               # Server to connect to
             use_ssl: true                   # Whether to use SSL (LDAPS) or not
             user: 'DOMAIN\{user}'           # Check LDAP domain name with client IT team
-            password: '{password}'
+            password: '{password}'          # This is the field name, NOT the actual password
 
 The `user:` and `password:` configuration in `gramex.yaml` maps form fields to
 the user ID and password. Strings inside `{braces}` are replaced by form fields
@@ -290,7 +290,7 @@ To fetch these, add a `search:` section. Below is a real-life example:
     host: 10.20.30.40                       # Provided by client IT team
     use_ssl: true
     user: 'ICICIBANKLTD\{user}'             # Provided by client IT team
-    password: '{password}'
+    password: '{password}'                  # This is the field name, not the actual passsword
     search:                                 # Look up user attributes by searching
         base: 'dc=ICICIBANKLTD,dc=com'      # Provided by client IT team
         filter: '(sAMAccountName={user})'   # Provided by client IT team
@@ -316,7 +316,7 @@ This configuration creates a [bind LDAP login page](ldap-bind):
             use_ssl: true                       # Whether to use SSL or not
             bind:                               # Bind to the server with this ID/password
                 user: 'uid=admin,cn=users,cn=accounts,dc=demo1,dc=freeipa,dc=org'
-                password: 'Secret123'
+                password: $LDAP_PASSWORD        # Stored in a Gramex / environment variable
             search:
                 base: 'dc=demo1,dc=freeipa,dc=org'  # Search within this domain
                 filter: '(mail={user})'             # by email ID, rather than uid
@@ -348,7 +348,7 @@ This is the minimal configuration that lets you log in from a [database table](d
             user:
                 column: user                  # The user column in users table has the user ID
             password:
-                column: password              # The password column in the users table has the password
+                column: password              # The users.password column has the password
 
 Now create an `auth.db` with a table called `users` as follows:
 
@@ -608,7 +608,7 @@ You can configure a logging action for when the user logs in or logs out via the
             log:                                # Log this when a user logs in via this handler
                 fields:                         # List of fields:
                   - session.id                  #   handler.session['id']
-                  - current_user.username       #   handler.current_user['username']
+                  - current_user.id             #   handler.current_user['id']
                   - request.remote_ip           #   handler.request.remote_ip
                   - request.headers.User-Agent  #   handler.request.headers['User-Agent']
 

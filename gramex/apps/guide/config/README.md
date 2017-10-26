@@ -206,10 +206,14 @@ To change the columns that are logged, use `log.handlers.requests.keys:`
 You can use any of the following as keys for loggiing:
 
 - `time`: Time of the request in milliseconds since epoch
+- `datetime`: Time in UTC as YYYY-MM-DD HH:MM:SSZ
+- `name`: Handler name (the key in gramex.yaml)
+- `class`: Handler class (e.g. FormHandler)
 - `ip`: The IP address of the client requesting the page
 - `user`: The unique ID of the user requesting the page (same as `user.id`)
 - `status`: The HTTP status code of the response (e.g. 200, 500)
 - `duration`: Time taken to serve the request in milliseconds
+- `port`: HTTP port on which Gramex is running
 - `method`: The HTTP method requested (e.g. GET or POST)
 - `uri`: The full URL requested (after the host name)
 - `error`: Any error raised while processing the request

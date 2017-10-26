@@ -7,6 +7,7 @@ import json
 import time
 import atexit
 import logging
+import datetime
 import mimetypes
 import traceback
 import tornado.gen
@@ -997,12 +998,16 @@ def _handle(path):
 def build_log_info(keys):
     # Define direct keys. These can be used as-is
     direct_vars = {
+        'name': 'handler.name',
+        'class': 'handler.__class__.__name__',
         'time': 'round(time.time() * 1000, 0)',
+        'datetime': 'datetime.datetime.utcnow().strftime("%Y-%m-%s %H:%M:%SZ")',
         'method': 'handler.request.method',
         'uri': 'handler.request.uri',
         'ip': 'handler.request.remote_ip',
         'status': 'handler.get_status()',
         'duration': 'round(handler.request.request_time() * 1000, 0)',
+        'port': 'conf.app.listen.port',
         # TODO: get_content_size() is not available in RequestHandler
         # 'size': 'handler.get_content_size()',
         'user': 'handler.current_user.get("id", "")',
@@ -1031,6 +1036,6 @@ def build_log_info(keys):
                 continue
         app_log.error('Skipping unknown key %s', key)
     code = compile('def fn(handler):\n\treturn {%s}' % ' '.join(vals), filename='log', mode='exec')
-    context = {'os': os, 'time': time, 'AttrDict': AttrDict}
+    context = {'os': os, 'time': time, 'datetime': datetime, 'conf': conf,  'AttrDict': AttrDict}
     exec(code, context)
     return context['fn']
