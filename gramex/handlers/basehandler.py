@@ -81,12 +81,12 @@ class BaseMixin(object):
         Clear any expired session keys based on _t.
         setup_session makes the session store call this purge method.
         Until v1.20 (31 Jul 2017) no _t keys were set.
-        TODO: In a release after 30 Sep 2017, clear sessions that lack an _t
+        From v1.23 (31 Oct 2017) these are cleared.
         '''
         now = time.time()
         for key in list(data.keys()):
             val = data[key]
-            if val is None or (isinstance(val, dict) and val.get('_t', 9999999999) < now):
+            if val is None or (isinstance(val, dict) and val.get('_t', 0) < now):
                 del data[key]
 
     @classmethod
@@ -414,20 +414,20 @@ class BaseMixin(object):
 
     def get_session(self, expires_days=None, new=False):
         '''
-        Return the session object for the cookie "sid" value. If no "sid" cookie
-        exists, set up a new one. If no session object exists for the sid,
-        create it. By default, the session object contains a "id" holding the
-        "sid" value.
+        Return the session object for the cookie "sid" value.
+        If no "sid" cookie exists, set up a new one.
+        If no session object exists for the sid, create it.
+        By default, the session object contains a "id" holding the "sid" value.
 
         The session is a dict. You must ensure that it is JSON serializable.
 
         ``new=`` creates a new session to avoid session fixation.
         https://www.owasp.org/index.php/Session_fixation.
         :py:func:`gramex.handlers.authhandler.AuthHandler.set_user` uses it.
-        When the user logs in. If no old session exists, it returns a new session
-        object. If an old session exists, it creates a new session "sid" and new
-        session object, copying all old contents, but updates the "id" and expiry
-        (_t).
+        When the user logs in:
+        - If no old session exists, it returns a new session object.
+        - If an old session exists, it creates a new "sid" and new session
+          object, copying all old contents, but updates the "id" and expiry (_t).
         '''
         if expires_days is None:
             expires_days = self._session_days
