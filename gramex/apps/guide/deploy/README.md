@@ -26,8 +26,6 @@ you are in. (Change this using `--cwd`)
 Here are additional install options:
 
     gramex service install
-        --name "Application Name"
-        --desc "Long description"
         --cwd  "C:/path/to/application/"    # Run Gramex in this directory
         --user "DOMAIN\USER"                # Optional user to run as
         --password "user-password"          # Required if user is specified
@@ -44,13 +42,12 @@ To uninstall the service, run:
 
     gramex service remove
 
-To start / stop / restart the application, go to Control Panel > Administrative
-Tools > View Local Services and update your service. You can also do this from
-the command prompt **as administrator**:
+To start / stop the application, go to Control Panel > Administrative Tools >
+View Local Services and update your service. You can also do this from the
+command prompt **as administrator**:
 
     gramex service start
     gramex service stop
-    gramex service restart
 
 Once started, the application is live at the port specified in your
 `gramex.yaml`. The default port is 9988, so visit <http://localhost:9988/>. If no
@@ -70,7 +67,7 @@ create one or more custom service classes in `yourproject_service.py`:
         _svc_name_ = 'YourServiceID'
         _svc_display_name_ = 'Your Service Display Name'
         _svc_description_ = 'Description of your service'
-        _svg_port_ = 8123               # optional custom port
+        _svc_port_ = 8123               # optional custom port
 
     if __name__ == '__main__':
         import sys

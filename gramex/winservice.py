@@ -71,8 +71,10 @@ class GramexService(win32serviceutil.ServiceFramework):
     def setup(cls, cmd, user=None, password=None, startup='manual', cwd=None, wait=0):
         from gramex.config import app_log
         name, service_name = cls._svc_display_name_, cls._svc_name_
+        port = getattr(cls, '_svc_port_', None)
         if cwd is None:
             cwd = os.getcwd()
+        info = (name, cwd, 'port %s' % port if port is not None else '')
         service_class = win32serviceutil.GetServiceClassString(cls)
         startup = cls.startup_map[startup]
         running = win32service.SERVICE_RUNNING
@@ -81,13 +83,13 @@ class GramexService(win32serviceutil.ServiceFramework):
                 service_class, service_name, displayName=name, description=cls._svc_description_,
                 startType=startup, userName=user, password=password)
             win32serviceutil.SetServiceCustomOption(cls._svc_name_, 'cwd', cwd)
-            app_log.info('Installed service. %s will run from %s' % (name, cwd))
-        elif cmd[0] == 'update':
+            app_log.info('Installed service. %s will run from %s %s' % info)
+        elif cmd[0] in {'update', 'change'}:
             win32serviceutil.ChangeServiceConfig(
                 service_class, service_name, displayName=name, description=cls._svc_description_,
                 startType=startup, userName=user, password=password)
             win32serviceutil.SetServiceCustomOption(cls._svc_name_, 'cwd', cwd)
-            app_log.info('Updated service. %s will run from %s' % (name, cwd))
+            app_log.info('Updated service. %s will run from %s %s' % info)
         elif cmd[0] in {'remove', 'uninstall'}:
             try:
                 win32serviceutil.StopService(service_name)
@@ -95,22 +97,17 @@ class GramexService(win32serviceutil.ServiceFramework):
                 if e.args[0] != winerror.ERROR_SERVICE_NOT_ACTIVE:
                     raise
             win32serviceutil.RemoveService(service_name)
-            app_log.info('Removed service %s' % service_name)
+            app_log.info('Removed service. %s ran from %s %s' % info)
         elif cmd[0] == 'start':
             win32serviceutil.StartService(service_name, cmd[1:])
             if wait:
                 win32serviceutil.WaitForServiceStatus(service_name, running, wait)
-            app_log.info('Started service %s' % service_name)
-        elif cmd[0] == 'restart':
-            win32serviceutil.StartService(service_name, cmd[1:])
-            if wait:
-                win32serviceutil.WaitForServiceStatus(service_name, running, wait)
-            app_log.info('Restarted service %s' % service_name)
+            app_log.info('Started service %s at %s %s' % info)
         elif cmd[0] == 'stop':
             if wait:
                 win32serviceutil.StopServiceWithDeps(service_name, waitSecs=wait)
             else:
                 win32serviceutil.StopService(service_name)
-            app_log.info('Stopped service %s' % service_name)
+            app_log.info('Stopped service %s at %s %s' % info)
         elif cmd[0]:
             app_log.error('Unknown command: %s' % cmd[0])

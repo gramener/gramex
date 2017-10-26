@@ -95,7 +95,6 @@ service: |
 
         gramex service start
         gramex service stop
-        gramex service restart
 '''
 
 import os
