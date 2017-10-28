@@ -21,7 +21,7 @@ class TestLog(unittest.TestCase):
                 'status': handler.get_status(),
                 'duration': round(handler.request.request_time() * 1000, 0),
                 'port': conf.app.listen.port,
-                'user': handler.current_user.get("id", ""),
+                'user': (handler.current_user or {}).get("id", ""),
                 'error': getattr(handler, "_exception", ""),
                 'args.x': handler.get_argument("x", ""),
                 'request.scheme': getattr(handler.request, "scheme", ""),
