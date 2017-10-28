@@ -99,7 +99,7 @@ class FormHandler(BaseHandler):
                         vars=fn_vars,
                         filename='%s.%s.%s' % (cls.name, key, fn), iter=False)
 
-    def process_kwargs(self, dataset, this_args, key):
+    def process_kwargs(self, dataset, args, key):
         """For each dataset, prepare the arguments."""
         filter_kwargs = AttrDict(dataset)
         filter_kwargs.pop('modify', None)
@@ -109,22 +109,23 @@ class FormHandler(BaseHandler):
             key: val if isinstance(val, list) else [val]
             for key, val in filter_kwargs.pop('default', {}).items()
         }
-        args = merge(namespaced_args(this_args, key), defaults, mode='setdefault')
+        args = merge(namespaced_args(args, key), defaults, mode='setdefault')
         if callable(prepare):
             result = prepare(args=args, key=key, handler=self)
             if result is not None:
                 args = result
         if callable(queryfunction):
             filter_kwargs['query'] = queryfunction(args=args, key=key, handler=self)
-        return args, filter_kwargs
+        fmt = args.pop('_format', ['json'])[0]
+        download = args.pop('_download', [''])[0]
+        return fmt, download, args, filter_kwargs
 
     @tornado.gen.coroutine
     def get(self):
         meta, futures = AttrDict(), AttrDict()
         for key, dataset in self.datasets.items():
             meta[key] = AttrDict()
-            args, filter_kwargs = self.process_kwargs(dataset, self.args, key)
-            fmt = args.pop('_format', ['json'])[0]
+            fmt, download, args, filter_kwargs = self.process_kwargs(dataset, self.args, key)
             filter_kwargs.pop('id', None)
             # Run query in a separate thread
             futures[key] = gramex.service.threadpool.submit(
@@ -140,6 +141,8 @@ class FormHandler(BaseHandler):
                 result[key] = modify(data=result[key], key=key, handler=self)
 
         fmt = self.set_format(fmt, meta)
+        if download:
+            self.set_header('Content-Disposition', 'attachment;filename=%s' % download)
         self.write(gramex.data.download(result['data'] if self.single else result, **fmt))
 
     @tornado.gen.coroutine
@@ -150,7 +153,7 @@ class FormHandler(BaseHandler):
         # For each dataset
         for key, dataset in self.datasets.items():
             meta[key] = AttrDict()
-            args, filter_kwargs = self.process_kwargs(dataset, self.args, key)
+            fmt, download, args, filter_kwargs = self.process_kwargs(dataset, self.args, key)
             if 'id' not in filter_kwargs:
                 raise HTTPError(BAD_REQUEST, '%s: %s requires id: <col> in gramex.yaml' % (
                     self.name, self.request.method))
@@ -158,7 +161,6 @@ class FormHandler(BaseHandler):
             if method != gramex.data.insert and len(missing_args) > 0:
                 raise HTTPError(BAD_REQUEST, '%s: columns %s missing in URL query' % (
                     self.name, ', '.join(missing_args)))
-            fmt = args.pop('_format', ['json'])[0]
             # Execute the query
             count[key] = method(meta=meta[key], args=args, **filter_kwargs)
         for key, val in count.items():

@@ -68,6 +68,16 @@ By default, FormHandler renders data as JSON. Use `?_format=` to change that.
 - JSON: [flags?_format=json](flags?_format=json)
 - XLSX: [flags?_format=xlsx](flags?_format=xlsx)
 
+## FormHandler downloads
+
+CSV and XLSX formats are downloaded as `data.csv` and `data.xlsx` by default.
+You can specify `?_download=` to download any format as any filename.
+
+- Default is data.xlsx: [flags?_format=xlsx](flags?_format=xlsx)
+- Download as filename.xlsx: [flags?_format=xlsx&_download=filename.xlsx](flags?_format=xlsx&_download=filename.xlsx)
+- Download JSON as filename.json: [flags?_download=filename.json](flags?_download=filename.json)
+- Download HTML as filename.html: [flags?_format=html&_download=filename.html](flags?_format=html&_download=filename.html)
+
 ## FormHandler filters
 
 The URL supports operators for filtering rows. The operators can be combined.

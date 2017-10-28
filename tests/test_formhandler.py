@@ -14,6 +14,8 @@ from gramex.config import variables, objectpath, merge
 from pandas.util.testing import assert_frame_equal as afe
 from . import folder, TestGramex, dbutils, tempfiles
 
+xlsx_mime_type = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+
 
 class TestFormHandler(TestGramex):
     sales = gramex.cache.open(os.path.join(folder, 'sales.xlsx'), 'xlsx')
@@ -147,36 +149,54 @@ class TestFormHandler(TestGramex):
         big.index = range(len(big))
         by_growth.index = range(len(by_growth))
 
-        out = self.get('/formhandler/file?_format=html').content
+        out = self.get('/formhandler/file?_format=html')
         # Note: In Python 2, pd.read_html returns .columns.inferred_type=mixed
         # instead of unicde. So check column type only in PY3 not PY2
-        afe(pd.read_html(out, encoding='utf-8')[0], self.sales, check_column_type=six.PY3)
+        afe(pd.read_html(out.content, encoding='utf-8')[0], self.sales, check_column_type=six.PY3)
+        eq_(out.headers['Content-Type'], 'text/html;charset=UTF-8')
+        eq_(out.headers.get('Content-Disposition'), None)
 
-        out = self.get('/formhandler/file-multi?_format=html').content
-        result = pd.read_html(BytesIO(out), encoding='utf-8')
+        out = self.get('/formhandler/file-multi?_format=html')
+        result = pd.read_html(BytesIO(out.content), encoding='utf-8')
         afe(result[0], big, check_column_type=six.PY3)
         afe(result[1], by_growth, check_column_type=six.PY3)
+        eq_(out.headers['Content-Type'], 'text/html;charset=UTF-8')
+        eq_(out.headers.get('Content-Disposition'), None)
 
-        out = self.get('/formhandler/file?_format=xlsx').content
-        afe(pd.read_excel(BytesIO(out)), self.sales)
+        out = self.get('/formhandler/file?_format=xlsx')
+        afe(pd.read_excel(BytesIO(out.content)), self.sales)
+        eq_(out.headers['Content-Type'], xlsx_mime_type)
+        eq_(out.headers['Content-Disposition'], 'attachment;filename=data.xlsx')
 
-        out = self.get('/formhandler/file-multi?_format=xlsx').content
-        result = pd.read_excel(BytesIO(out), sheetname=None)
+        out = self.get('/formhandler/file-multi?_format=xlsx')
+        result = pd.read_excel(BytesIO(out.content), sheetname=None)
         afe(result['big'], big)
         afe(result['by-growth'], by_growth)
+        eq_(out.headers['Content-Type'], xlsx_mime_type)
+        eq_(out.headers['Content-Disposition'], 'attachment;filename=data.xlsx')
 
-        out = self.get('/formhandler/file?_format=csv').content
-        ok_(out.startswith(''.encode('utf-8-sig')))
-        afe(pd.read_csv(BytesIO(out), encoding='utf-8'), self.sales)
+        out = self.get('/formhandler/file?_format=csv')
+        ok_(out.content.startswith(''.encode('utf-8-sig')))
+        afe(pd.read_csv(BytesIO(out.content), encoding='utf-8'), self.sales)
+        eq_(out.headers['Content-Type'], 'text/csv;charset=UTF-8')
+        eq_(out.headers['Content-Disposition'], 'attachment;filename=data.csv')
 
-        out = self.get('/formhandler/file-multi?_format=csv').content
-        lines = out.splitlines(True)
+        out = self.get('/formhandler/file-multi?_format=csv')
+        lines = out.content.splitlines(True)
         eq_(lines[0], 'big\n'.encode('utf-8-sig'))
         actual = pd.read_csv(BytesIO(b''.join(lines[1:len(big) + 2])), encoding='utf-8')
         afe(actual, big)
         eq_(lines[len(big) + 3], 'by-growth\n'.encode('utf-8'))
         actual = pd.read_csv(BytesIO(b''.join(lines[len(big) + 4:])), encoding='utf-8')
         afe(actual, by_growth)
+        eq_(out.headers['Content-Type'], 'text/csv;charset=UTF-8')
+        eq_(out.headers['Content-Disposition'], 'attachment;filename=data.csv')
+
+        for fmt in ['csv', 'html', 'json', 'xlsx']:
+            out = self.get('/formhandler/file?_format=%s&_download=test.%s' % (fmt, fmt))
+            eq_(out.headers['Content-Disposition'], 'attachment;filename=test.%s' % fmt)
+            out = self.get('/formhandler/file-multi?_format=%s&_download=test.%s' % (fmt, fmt))
+            eq_(out.headers['Content-Disposition'], 'attachment;filename=test.%s' % fmt)
 
     @staticmethod
     def copy_file(source, target):

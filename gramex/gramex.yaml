@@ -50,12 +50,12 @@ handlers:
             csv:
                 format: csv
                 headers:
-                    Content-Type: text/csv
+                    Content-Type: text/csv;charset=UTF-8
                     Content-Disposition: attachment;filename=data.csv
             html:
                 format: html
                 headers:
-                    Content-Type: text/html; charset=UTF-8
+                    Content-Type: text/html;charset=UTF-8
             xlsx:
                 format: xlsx
                 headers:
