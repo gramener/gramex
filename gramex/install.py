@@ -294,13 +294,15 @@ setup_paths = AttrDict((
 ))
 
 
-def run_setup(config):
+def run_setup(target):
     '''
     Install any setup file in target directory. Target directory can be:
 
     - An absolute path
     - A relative path to current directory
     - A relative path to the Gramex apps/ folder
+
+    Returns the absolute path of the final target path.
 
     This supports:
 
@@ -312,14 +314,12 @@ def run_setup(config):
     - ``npm install``
     - ``bower --allow-root install``
     '''
-    if 'target' not in config:
-        raise ValueError('No target in config %s' % repr(config))
-    if not os.path.exists(config.target):
-        app_target = os.path.join(variables['GRAMEXPATH'], 'apps', config.target)
+    if not os.path.exists(target):
+        app_target = os.path.join(variables['GRAMEXPATH'], 'apps', target)
         if not os.path.exists(app_target):
             raise OSError('No directory %s' % target)
-        config.target = app_target
-    target = os.path.abspath(config.target)
+        target = app_target
+    target = os.path.abspath(target)
     for exe, setup in setup_paths.items():
         setup_file = os.path.join(target, setup['file'])
         if not os.path.exists(setup_file):
@@ -333,6 +333,7 @@ def run_setup(config):
         proc = Popen(shlex.split(cmd), cwd=target, bufsize=-1,
                      stdout=sys.stdout, stderr=sys.stderr, universal_newlines=True)
         proc.communicate()
+    return target
 
 
 app_dir = Path(variables.get('GRAMEXDATA')) / 'apps'
@@ -427,7 +428,7 @@ def install(cmd, args):
         return
 
     # Post-installation
-    run_setup(app_config)
+    app_config.target = run_setup(app_config.target)
     app_config['installed'] = {'time': datetime.datetime.utcnow()}
     save_user_config(appname, app_config)
     app_log.info('Installed. Run `gramex run %s`', appname)
@@ -440,7 +441,7 @@ def setup(cmd, args):
     elif 'target' not in app_config:
         app_log.error(show_usage('setup'))
         return
-    run_setup(app_config)
+    app_config.target = run_setup(app_config.target)
 
 
 def uninstall(cmd, args):

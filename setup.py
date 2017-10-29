@@ -6,30 +6,35 @@ from setuptools.command.install import install
 from setuptools import setup, find_packages
 from pip.req import parse_requirements
 from pip.download import PipSession
+from distutils import log
 from fnmatch import fnmatch
 from io import open
-import subprocess
 import json
 import os
 
 
-def read_gitignore(path):
-    '''Read .gitignore paths as an iterable of patterns'''
+def read_gitignore(path, exclude=set()):
+    '''
+    Read .gitignore paths as an iterable of patterns, unless it is in the exclude set
+    '''
     with open(path, encoding='utf-8') as handle:
         for line in handle.readlines():
             line = line.strip()
-            if line and not line.startswith('#'):
+            if line and not line.startswith('#') and line not in exclude:
                 yield line
 
 
-ignore_patterns = list(read_gitignore('.gitignore'))
+ignore_patterns = list(read_gitignore('.gitignore', exclude={'node_modules'}))
 
 
 def install_apps(warn):
-    for path in ['capture', ]:
-        ret = subprocess.call('npm install', shell=True, cwd='gramex/apps/%s/' % path)
-        if ret != 0:
-            warn('Failed to install app: %s' % path)
+    import gramex.install
+    root = 'gramex/apps/'
+    for filename in os.listdir(root):
+        target = os.path.join(root, filename)
+        if os.path.isdir(target):
+            log.info('Installing %s', filename)
+            gramex.install.run_setup(target)
 
 
 class PostDevelopCommand(develop):

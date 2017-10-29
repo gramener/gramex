@@ -9,7 +9,11 @@ include gramex/handlers/*.html
 
 # Include Gramex apps
 graft gramex/apps
-recursive-exclude gramex/apps/capture/node_modules *
+
+# Earlier, we excluded node_modules via the line below.
+# recursive-exclude gramex/apps/capture/node_modules *
+# But on Linux, when running pip install from the tarball, we must allow
+# puppeteer and other apps node_modules. So disabling the above line.
 
 # Include requirement dependencies
 include requirements.txt
