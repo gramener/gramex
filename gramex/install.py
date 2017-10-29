@@ -26,9 +26,10 @@ install: |
     {apps}
 
 setup: |
-    usage: gramex setup [--target=DIR]
+    usage: gramex setup <target>
 
-    target is the directory to set up (defaults to current directory.)
+    target is the directory to set up (required). This can be an absolute path,
+    relative path, or a directory name under $GRAMEXPATH/apps/.
 
     Run the following commands at that directory in sequence, if possible:
         - make
@@ -203,7 +204,7 @@ def zip_prefix_filter(members, prefix):
     return result
 
 
-def download_zip(config):
+def run_install(config):
     '''
     Download config.url into config.target.
     If config.url is a directory, copy it.
@@ -286,7 +287,7 @@ setup_paths = AttrDict((
     ('make', {'file': 'Makefile', 'cmd': '"$EXE"'}),
     ('powershell', {'file': 'setup.ps1', 'cmd': '"$EXE" -File "$FILE"'}),
     ('bash', {'file': 'setup.sh', 'cmd': '"$EXE" "$FILE"'}),
-    ('pip', {'file': 'requirements.txt', 'cmd': '"$EXE" install --upgrade -r "$FILE"'}),
+    ('pip', {'file': 'requirements.txt', 'cmd': '"$EXE" install -r "$FILE"'}),
     ('python', {'file': 'setup.py', 'cmd': '"$EXE" "$FILE"'}),
     ('npm', {'file': 'package.json', 'cmd': '"$EXE" install'}),
     ('bower', {'file': 'bower.json', 'cmd': '"$EXE" --allow-root install'}),
@@ -294,14 +295,38 @@ setup_paths = AttrDict((
 
 
 def run_setup(config):
-    target = config.target
+    '''
+    Install any setup file in target directory. Target directory can be:
+
+    - An absolute path
+    - A relative path to current directory
+    - A relative path to the Gramex apps/ folder
+
+    This supports:
+
+    - ``make`` (if Makefile exists)
+    - ``powershell -File setup.ps1``
+    - ``bash setup.sh``
+    - ``pip install -r requirements.txt``
+    - ``python setup.py``
+    - ``npm install``
+    - ``bower --allow-root install``
+    '''
+    if 'target' not in config:
+        raise ValueError('No target in config %s' % repr(config))
+    if not os.path.exists(config.target):
+        app_target = os.path.join(variables['GRAMEXPATH'], 'apps', config.target)
+        if not os.path.exists(app_target):
+            raise OSError('No directory %s' % target)
+        config.target = app_target
+    target = os.path.abspath(config.target)
     for exe, setup in setup_paths.items():
         setup_file = os.path.join(target, setup['file'])
         if not os.path.exists(setup_file):
             continue
         exe_path = which(exe)
         if exe_path is None:
-            app_log.info('Skipping %s. No %s found', setup_file, exe)
+            app_log.warning('Skipping %s. No %s found', setup_file, exe)
             continue
         cmd = string.Template(setup['cmd']).substitute(FILE=setup_file, EXE=exe_path)
         app_log.info('Running %s', cmd)
@@ -389,9 +414,9 @@ def install(cmd, args):
     app_config = get_app_config(appname, args)
     if len(cmd) == 2:
         app_config.url = cmd[1]
-        download_zip(app_config)
+        run_install(app_config)
     elif 'url' in app_config:
-        download_zip(app_config)
+        run_install(app_config)
     elif 'cmd' in app_config:
         returncode = run_command(app_config)
         if returncode != 0:
@@ -410,8 +435,11 @@ def install(cmd, args):
 
 def setup(cmd, args):
     app_config = AttrDict(args)
-    app_config.setdefault('target', os.getcwd())
-    app_config.target = os.path.abspath(app_config.target)
+    if len(cmd) > 0:
+        app_config.setdefault('target', cmd[0])
+    elif 'target' not in app_config:
+        app_log.error(show_usage('setup'))
+        return
     run_setup(app_config)
 
 
