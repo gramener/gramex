@@ -23,7 +23,7 @@ class TestLDAPAuth(TestGramex):
         # Submitting the correct password redirects
         return self.session.post(url, timeout=10, data=data)
 
-    def check(self, user, password, url, status_code, headers={}, redirect='/'):
+    def check(self, user, password, url, status_code=None, headers={}, redirect='/'):
         self.url = server.base_url + url
         try:
             r = self.login(user, password, self.url)
@@ -31,9 +31,10 @@ class TestLDAPAuth(TestGramex):
             raise SkipTest('Timeout connecting to LDAP server')
         if r.headers.get('Auth-Error', None) == 'conn':
             raise SkipTest('Unable to connect to LDAP server')
-        self.assertEqual(r.status_code, status_code)
+        if status_code is not None:
+            self.assertEqual(r.status_code, status_code)
         # If the response is an OK response, go to home page. Else stay on login page
-        if status_code == OK:
+        if r.status_code == OK:
             self.assertEqual(r.url, server.base_url + redirect)
         else:
             self.assertEqual(r.url, self.url)
@@ -42,13 +43,13 @@ class TestLDAPAuth(TestGramex):
         return r
 
     def test_ldap(self):
-        try:
-            r = self.check('manager', 'Secret123', url='/auth/ldap', status_code=OK)
-        except AssertionError:
-            # This runs tests on a public server.
-            # If someone changes this server's credentials, this may fail until reset
-            if r.status_code == UNAUTHORIZED:
-                raise SkipTest('Password may have changed on LDAP server')
+        r = self.check('manager', 'Secret123', url='/auth/ldap')
+        # This runs tests on a public server.
+        # If someone changes this server's credentials, this may fail until reset
+        if r.status_code == UNAUTHORIZED:
+            raise SkipTest('Password may have changed on LDAP server')
+        else:
+            self.assertEqual(r.status_code, OK)
 
     def test_ldap_wrong_user(self):
         self.check('wrong-user', 'password', url='/auth/ldap', status_code=UNAUTHORIZED,
