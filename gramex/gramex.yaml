@@ -61,6 +61,12 @@ handlers:
                 headers:
                     Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
                     Content-Disposition: attachment;filename=data.xlsx
+            pptx:
+                format: pptx
+                headers:
+                    Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+                    Content-Disposition: attachment;filename=download.pptx
+
         default:
           _limit: 10000      # Limit entries by default
 

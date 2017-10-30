@@ -198,8 +198,9 @@ class FormHandler(BaseHandler):
         for key, val in headers.items():
             self.set_header(key, val)
 
-        if fmt['format'] == 'template':
+        if fmt['format'] in {'template', 'pptx'}:
             fmt['handler'] = self
+        if fmt['format'] in {'template'}:
             fmt['meta'] = meta['data'] if self.single else meta
 
         return fmt
