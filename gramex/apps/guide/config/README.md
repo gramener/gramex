@@ -417,6 +417,11 @@ The keys `app1`, `app2`, etc. are just identifiers, not used for anything.
 The values must be YAML files. These are loaded in order. After loading, the
 `import:` section is removed.
 
+The above can also be written as a list, like this:
+
+    :::yaml
+    import: ['another.yaml', 'd:/temp/gramex.yaml', '*/gramex.yaml', '**/gramex.yaml']
+
 **Note**: using `$YAMLPATH` for import: is optional. By default, imports are relative
 to the YAML file.
 
@@ -431,9 +436,31 @@ You can use imports within sections. For example:
 
     :::yaml
     url:
-      app1: 'app1/gramex.yaml'      # Imports app1/gramex.yaml into the url: section
+      import: app1/gramex.yaml  # Imports app1/gramex.yaml into the url: section
 
-The imported configuration cannot change existing configuration. For example,
+The `$YAMLURL` and `$YAMLPATH` [variables](#yaml-variables) work as expected. But
+you may change `$YAMLURL` to mount an import at a different URL. Consider this
+`dir/app.yaml`:
+
+    :::yaml
+    url:
+        myroot:
+            pattern: /$YAMLURL/
+            ...
+
+When imported using `import: dir/app.yaml`, the pattern becomes `/dir/`. But you
+may want to mount applications in different locations, so you can change the
+imported file's $YAMLURL as follows:
+
+    :::
+    import:
+        path: dir/app.yaml          # pattern becomes /dir/ by default
+        YAMLURL: /newappdir/        # pattern is /newappdir/ instead
+        # Here are some other options
+        # YAMLURL: $YAMLURL         # pattern is $YAMLURL, as if dir/app.yaml were copy-pasted here
+        # YAMLURL: /app/dir/        # pattern is /app/dir/
+
+The imported configuration **cannot change** existing configuration. For example,
 `new.yaml` has:
 
     :::yaml
@@ -445,7 +472,7 @@ Then, this configuration:
     x: 1
     import: new.yaml
 
-... will set x to 1. `new.yaml` will not update an existing configuration.
+... will set x to 1. `new.yaml` **will not update** an existing configuration.
 
 When importing files, duplicated keys are dropped. For example, two `url:`
 sections may re-use the same `home:` or `login:` key. To ensure that all keys are
@@ -508,7 +535,10 @@ available in every YAML file. (The examples assume you are processing
 
 - `$YAMLFILE`: absolute path to the current YAML file, e.g. `D:/app/config/gramex.yaml`
 - `$YAMLPATH`: absolute directory of the current YAML file, e.g. `D:/app/config/`
-- `$YAMLURL`: is the relative URL path to the directory of the current YAML file (without leading / trailing slashes) from the current working directory. e.g. `base/dir/gramex.yaml` has a `$YAMLURL` of `base/dir`, and `gramex.yaml` has a `$YAMLURL` of `.`.
+- `$YAMLURL`: is the relative URL path to the directory of the current YAML file
+  (without leading / trailing slashes) from the current working directory. e.g.
+  `base/dir/gramex.yaml` has a `$YAMLURL` of `base/dir`, and `gramex.yaml` has a
+  `$YAMLURL` of `.`.
 - `$GRAMEXPATH`: absolute path to the Gramex directory
 - `$GRAMEXHOST`: hostname of the system where Gramex is running
 - `$GRAMEXDATA` is the directory where local Gramex data is stored. This is at:

@@ -70,6 +70,7 @@ class TestPathConfig(unittest.TestCase):
         self.temp = info.home / 'config.temp.yaml'
         self.imp = info.home / 'config.import.yaml'
         self.imp2 = info.home / 'config.import2.yaml'
+        self.multiimport = info.home / 'config.multiimport.yaml'
         self.ns = info.home / 'config.namespace.yaml'
         self.final = info.home / 'config.final.yaml'
         self.chain = AttrDict(
@@ -158,6 +159,10 @@ class TestPathConfig(unittest.TestCase):
 
         conf_imp = ChainConfig(conf=PathConfig(self.imp2))
         eq_(+conf_imp, +conf_b)
+
+        conf_multiimp = ChainConfig(conf=PathConfig(self.multiimport))
+        for val in (+conf_multiimp).values():
+            eq_(val, +conf_b)
 
     def test_add_ns(self):
         # Test _add_ns functionality

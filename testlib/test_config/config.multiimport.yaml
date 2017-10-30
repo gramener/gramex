@@ -1,0 +1,8 @@
+# Test different ways of importing the same URL
+eq1: {import: config.b.yaml}                          # import: path
+eq2: {import: [config.b.yaml, na.yaml]}               # import: [list of paths]
+eq3: {import: {app1: config.b.yaml, app2: na.yaml}}   # import: {dict of paths}
+# path can also be a dict containing path
+eq4: {import: {path: config.b.yaml}}
+eq5: {import: [{path: config.b.yaml}]}
+eq6: {import: {app1: {path: config.b.yaml}}}

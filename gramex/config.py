@@ -260,10 +260,15 @@ class ConfigYAMLLoader(Loader):
         self.add_constructor(u'tag:yaml.org,2002:omap', _from_yaml)
 
 
-def _yaml_open(path, default=AttrDict()):
+def _yaml_open(path, default=AttrDict(), yamlurl=None):
     '''
     Load a YAML path.Path as AttrDict. Replace ${VAR} or $VAR with variables.
-    If key has " if " then include it only if the condition is true.
+    Defines special variables $YAMLPATH as the absolute path of the YAML file,
+    and $YAMLURL as the path relative to current directory (or takes yamlurl=
+    parameter if passed.)
+
+    If key has " if ", include it only if the condition (eval-ed in Python) is
+    true.
     '''
     path = path.absolute()
     if not path.exists():
@@ -284,13 +289,16 @@ def _yaml_open(path, default=AttrDict()):
         'YAMLPATH': yaml_path,          # Path to YAML folder
         'YAMLFILE': str(path),          # Path to YAML file
     }
-    try:
-        # Relative URL from cwd to YAML folder. However, if the YAML is in a
-        # different drive than the current directory, this will fail. In that
-        # case ignore it.
-        yaml_vars['YAMLURL'] = os.path.relpath(yaml_path).replace(os.path.sep, '/')
-    except ValueError:
-        pass
+    # $YAMLURL defaults to the relative URL from cwd to YAML folder.
+    if yamlurl is None:
+        try:
+            yamlurl = os.path.relpath(yaml_path)
+        except ValueError:
+            # If YAML is in a different drive, this fails.
+            # Then using YAMLURL should raise an error saying it's undefined.
+            pass
+    # Typically, we use /$YAMLURL/url - so strip the slashes. Replace backslashes
+    yaml_vars['YAMLURL'] = yamlurl.replace('\\', '/').strip('/')
     variables.update(yaml_vars)
 
     # Update context with the variables section.
@@ -446,16 +454,22 @@ def load_imports(config, source, warn=None):
     root = source.absolute().parent
     for key, value, node in list(walk(config)):
         if key == 'import':
-            # Allow "import: path" as a structure
+            # Convert "import: path" to "import: {app: path}"
             if isinstance(value, six.string_types):
                 value = {'apps': value}
+            # Allow "import: [path, path]" to "import: {app0: path, app1: path}"
+            elif isinstance(value, list):
+                value = {'app%d' % i: conf for i, conf in enumerate(value)}
+            # By now, import: should be a dict
+            elif not isinstance(value, dict):
+                raise ValueError('import: must be string/list/dict, not %s' % repr(value))
             for name, conf in value.items():
                 if not isinstance(conf, dict):
                     conf = AttrDict(path=conf)
                 paths = root.glob(conf.path) if '*' in conf.path else [Path(conf.path)]
                 for path in paths:
                     abspath = root.joinpath(path)
-                    new_conf = _yaml_open(abspath)
+                    new_conf = _yaml_open(abspath, yamlurl=conf.get('YAMLURL', None))
                     if 'namespace' in conf:
                         prefix = Path(path).as_posix()
                         new_conf = _add_ns(new_conf, conf['namespace'], prefix)
