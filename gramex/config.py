@@ -463,6 +463,9 @@ def load_imports(config, source, warn=None):
             # By now, import: should be a dict
             elif not isinstance(value, dict):
                 raise ValueError('import: must be string/list/dict, not %s' % repr(value))
+            # If already a dict with a single import via 'path', convert to dict of apps
+            if 'path' in value:
+                value = {'app': value}
             for name, conf in value.items():
                 if not isinstance(conf, dict):
                     conf = AttrDict(path=conf)
