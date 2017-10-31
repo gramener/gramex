@@ -1,5 +1,7 @@
 title: Gramex connects to data
 
+[TOC]
+
 `FormHandler` lets you read & write data from files and databases.
 
 Here is a sample configuration to read data from a CSV file:

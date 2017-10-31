@@ -6,7 +6,7 @@ Development and deployment are usually on different machines with different
 configurations, file paths, database locations, etc. All of these can be
 configured in `gramex.yaml` using pre-defined variables.
 
-## Windows Installation
+## Windows Service
 
 **v1.23**.
 To install a Gramex application as a service on a Windows Server:

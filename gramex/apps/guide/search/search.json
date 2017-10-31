@@ -3,9 +3,7 @@
     "": {
       "About Gramex": -1
     },
-    "gramex-projects": {
-      "Gramex Projects": -1
-    }
+    "gramex-projects": {}
   },
   "apps": {
     "": {
@@ -40,6 +38,9 @@
     "authentication": {
       "Authentication": -1
     },
+    "authentication-features": {
+      "Authentication features": -1
+    },
     "authorization": {
       "Authorization": -1
     },
@@ -69,6 +70,9 @@
     },
     "integrated-auth": {
       "Integrated auth": -1
+    },
+    "ldap-attributes": {
+      "LDAP attributes": -1
     },
     "ldap-auth": {
       "LDAP auth": -1
@@ -167,6 +171,12 @@
     "": {
       "Gramex takes screenshots": -1
     },
+    "chrome": {
+      "Chrome": -1
+    },
+    "phantomjs": {
+      "PhantomJS": -1
+    },
     "screenshot-library": {
       "Screenshot library": -1
     },
@@ -204,12 +214,13 @@
     "conditional-variables": {
       "Conditional variables": -1
     },
+    "conditions": {
+      "Conditions": -1
+    },
     "configuration-access": {
       "Configuration access": -1
     },
-    "configuration-syntax": {
-      "Configuration syntax": -1
-    },
+    "configuration-syntax": {},
     "custom-http-headers": {
       "Custom HTTP Headers": -1
     },
@@ -231,6 +242,9 @@
     "redirection": {
       "Redirection": -1
     },
+    "request-logging": {
+      "Request logging": -1
+    },
     "reusing-configurations": {
       "Reusing configurations": -1
     },
@@ -240,11 +254,17 @@
     "url-mapping": {
       "URL mapping": -1
     },
+    "user-logging": {
+      "User logging": -1
+    },
     "yaml-imports": {
       "YAML imports": -1
     },
     "yaml-inheritence": {
       "YAML inheritence": -1
+    },
+    "yaml-styling": {
+      "YAML styling": -1
     },
     "yaml-variables": {
       "YAML variables": -1
@@ -349,6 +369,9 @@
     },
     "using-yamlpath": {
       "Using YAMLPATH": -1
+    },
+    "windows-service": {
+      "Windows Service": -1
     }
   },
   "email": {
@@ -366,6 +389,9 @@
     },
     "html-email": {
       "HTML email": -1
+    },
+    "send-email": {
+      "Send email": -1
     }
   },
   "exercises": {
@@ -427,6 +453,15 @@
     "formhandler-defaults": {
       "FormHandler defaults": -1
     },
+    "formhandler-delete": {
+      "FormHandler DELETE": -1
+    },
+    "formhandler-downloads": {
+      "FormHandler downloads": -1
+    },
+    "formhandler-edits": {
+      "FormHandler edits": -1
+    },
     "formhandler-filters": {
       "FormHandler filters": -1
     },
@@ -445,16 +480,28 @@
     "formhandler-multiple-datasets": {
       "FormHandler multiple datasets": -1
     },
+    "formhandler-post": {
+      "FormHandler POST": -1
+    },
     "formhandler-prepare": {
       "FormHandler prepare": -1
+    },
+    "formhandler-put": {
+      "FormHandler PUT": -1
     },
     "formhandler-query": {
       "FormHandler query": -1
     },
+    "formhandler-queryfunction": {
+      "FormHandler queryfunction": -1
+    },
     "formhandler-templates": {
       "FormHandler templates": -1
     },
-    "formhandler-transforms": {}
+    "formhandler-transforms": {},
+    "preventing-sql-injection": {
+      "Preventing SQL injection": -1
+    }
   },
   "functionhandler": {
     "": {
@@ -494,6 +541,9 @@
     "": {
       "Install Gramex": -1
     },
+    "installation": {
+      "Installation": -1
+    },
     "offline-install": {
       "Offline install": -1
     },
@@ -525,6 +575,11 @@
     },
     "put-write-data": {
       "PUT - write data": -1
+    }
+  },
+  "pptxhandler": {
+    "": {
+      "PPTXHandler": -1
     }
   },
   "privacy": {
@@ -568,6 +623,9 @@
     "": {
       "Gramex is a web server": -1
     },
+    "creating-gramex-apps": {
+      "Creating Gramex apps": -1
+    },
     "gramex-0x-changes": {
       "Gramex 0.x changes": -1
     }
@@ -575,6 +633,17 @@
   "test": {
     "": {
       "Automate tests": -1
+    }
+  },
+  "tips": {
+    "": {
+      "Tips": -1
+    },
+    "gramex-tips": {
+      "Gramex Tips": -1
+    },
+    "reuse-code": {
+      "Reuse code": -1
     }
   },
   "twitterresthandler": {

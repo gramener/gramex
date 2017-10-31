@@ -3,6 +3,78 @@
 History
 -------
 
+1.23 (2017-10-31)
+~~~~~~~~~~~~~~~~~
+This release adds Gramex as a `Windows service`_, making it easier for Windows
+administrators to auto-start and manage Gramex. Run ``gramex service install``
+from the app directory to create a service.
+
+`FormHandler`_ has improved -- you won't need FunctionHandler even to edit data.
+
+- `FormHandler edits`_ data in databases and files. This makes it possible to
+  create editable tables or settings pages.
+- `FormHandler filters`_ support NULL and NOT NULL operators
+- `FormHandler query`_ supports URL query parameters as values, just like filters
+- `FormHandler formats`_ supports two new formats:
+    - ``table`` format that is an Excel-like viewer for any data. (Future releases will allow embedding this component into templates.)
+    - ``pptx`` format to download as a PPTX
+- `FormHandler downloads`_ let you change the downloaded filename via ``?download=filename``
+- `FormHandler queryfunction`_ lets you generate your own custom query using
+  Python. Typically used for dynamically generated queries
+
+`CaptureHandler`_ supports Chrome as a backend engine. This allows screenshots
+that are far more accurate than PhantomJS.
+
+Running ``gramex setup <directory>`` lets you `set up apps`_ by running ``npm``,
+``bower``, ``pip install`` and any other relevant installations in the target
+directory. This can also set up pre-installed apps like ``formhandler`` or
+``capture``.
+
+Logging is standardized. All logs are logged to ``$GRAMEXDATA/logs``. There are 3
+types of logs, out-of-box:
+
+1. `Gramex logging`_ saves all Gramex log messages on the console to ``logs/gramex.log``
+2. `Request logging`_ saves all HTTP requests to ``logs/requests.csv``
+3. `User logging`_ saves all login and logout actions to ``logs/user.csv``
+
+All logs are auto-rotated weekly by default, and the location and fields can be
+configured. All logging is now through the standard Python logging mechanism.
+
+Auth handlers can now implement a "Remember me" option when users log in, and
+set up different `session expiry`_ values based on the user's choice.
+
+`LDAPAuth`_ fetches `LDAP attributes`_ with direct LDAP login. (Earlier, this was
+possible only through bind LDAP login.)
+
+`DBAuth`_ has an ``email_as`` key that sends forgot password emails from a
+specific email ID.
+
+Gramex configurations support `conditions`_. Sections will be included only in
+specific environments.
+
+`YAML imports`_ allow overriding the $YAMLURL value. This lets you mount
+applications from any place into any URL. Imports also support lists.
+
+There are several API improvements. The most important are:
+
+- :py:func:`gramex.cache.open` guesses file type from its extension. So
+  ``gramex.cache.open('data.csv')`` now works -- you don't need to specify
+  ``csv`` as the second parameter.
+- :py:func:`gramex.data.filter` updates the ``meta`` object to add 2 attribute:
+  ``count`` which reports the number of records matched / updated, and
+  ``excluded`` which reports excluded columns
+- :py:class:`gramex.services.SMTPMailer` supports open email servers without
+  passwords.
+
+For security purposes, Gramex deletes all old session keys without an expiry
+value. (These originate from Gramex versions prior to Gramex 1.20.)
+
+There are several bug fixes, documentation enhancements and test cases added.
+
+- Code base: 15,924 lines (gramex: 10,028, tests: 5,896)
+- Test coverage: 79%
+
+
 1.22 (2017-09-28)
 ~~~~~~~~~~~~~~~~~
 This release adds Windows `IntegratedAuth`_. This allows Windows domain users to
@@ -599,6 +671,7 @@ There are two changes that may disrupt your code:
 .. _LogoutHandler: https://learn.gramener.com/guide/auth/#log-out
 .. _WebSocketHandler: https://learn.gramener.com/guide/websockethandler/
 .. _LDAPAuth: https://learn.gramener.com/guide/auth/#ldap
+.. _LDAP atttributes: https://learn.gramener.com/guide/auth/#ldap-attributes
 .. _Google Auth: https://learn.gramener.com/guide/auth/#google-auth
 .. _DBAuth: https://learn.gramener.com/guide/auth/#database-auth
 .. _SimpleAuth: https://learn.gramener.com/guide/auth/#simple-auth
@@ -609,14 +682,24 @@ There are two changes that may disrupt your code:
 .. _UploadHandler: https://learn.gramener.com/guide/uploadhandler/
 .. _CaptureHandler: https://learn.gramener.com/guide/capturehandler/
 .. _FormHandler: https://learn.gramener.com/guide/formhandler/
+.. _FormHandler filters: https://learn.gramener.com/guide/formhandler/#formhandler-filters
+.. _FormHandler downloads: https://learn.gramener.com/guide/formhandler/#formhandler-downloads
 .. _FormHandler defaults: https://learn.gramener.com/guide/formhandler/#formhandler-defaults
 .. _FormHandler prepare: https://learn.gramener.com/guide/formhandler/#formhandler-prepare
 .. _FormHandler query: https://learn.gramener.com/guide/formhandler/#formhandler-query
+.. _FormHandler queryfunction: https://learn.gramener.com/guide/formhandler/#formhandler-queryfunction
 .. _FormHandler modify: https://learn.gramener.com/guide/formhandler/#formhandler-modify
+.. _FormHandler formats: https://learn.gramener.com/guide/formhandler/#formhandler-formats
+.. _FormHandler edits: https://learn.gramener.com/guide/formhandler/#formhandler-edits
 .. _caching: https://learn.gramener.com/guide/cache/
 .. _scheduler: https://learn.gramener.com/guide/scheduler/
 .. _log: https://learn.gramener.com/guide/config/#logging
+.. _Gramex logging: https://learn.gramener.com/guide/config/#logging
+.. _Request logging: https://learn.gramener.com/guide/config/#request-logging
+.. _User logging: https://learn.gramener.com/guide/config/#user-logging
+.. _conditions: https://learn.gramener.com/guide/config/#conditions
 .. _apps: https://learn.gramener.com/guide/apps/
+.. _set up apps: https://learn.gramener.com/guide/apps/#setting-up-apps
 .. _debug: https://learn.gramener.com/guide/debug/
 .. _sessions: https://learn.gramener.com/guide/auth/#sessions
 .. _login actions: https://learn.gramener.com/guide/auth/#login-actions
@@ -662,3 +745,4 @@ There are two changes that may disrupt your code:
 .. _command line emails: https://learn.gramener.com/guide/email/#command-line-emails
 .. _predefined variables: https://learn.gramener.com/guide/config/#predefined-variables
 .. _nginx reverse proxy: https://learn.gramener.com/guide/deploy/#nginx-reverse-proxy
+.. _Windows service: https://learn.gramener.com/guide/deploy/#windows-service

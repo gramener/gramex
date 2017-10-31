@@ -62,7 +62,12 @@ After installing an app, Gramex automatically runs setup scripts from that direc
 - If `package.json` is present, run `npm install` if npm is available
 - If `bower.json` is present, run `bower install` if bower is available
 
-You can also set up an app "in-place" by running `gramex setup` from that directory, or by running `gramex setup --target=DIR` from any other directory.
+You can also set up an app "in-place" by running `gramex setup .` from that
+directory, or by running `gramex setup <target-dir>` from any other directory.
+
+Gramex comes with pre-defined apps located at `$GRAMEXPATH/apps/`. Running
+`gramex setup <appname>` (where `<appname>` is a directory under
+`$GRAMEXPATH/apps/`) runs the setup from `$GRAMEX/apps/<appname>`.
 
 ## Running apps
 
