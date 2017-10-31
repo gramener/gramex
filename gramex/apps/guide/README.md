@@ -12,6 +12,7 @@ classes: toc
 - [Gramex connects to databases & files](formhandler/)
 - [Gramex connects to JSON data](jsonhandler/)
 - [Gramex exports to PDF and images](capturehandler/)
+- [Gramex can create PPTX](pptxhandler/)
 - [Gramex authentication](auth/)
 - [Gramex uploads files](uploadhandler/)
 - [Gramex runs processes](processhandler/)
