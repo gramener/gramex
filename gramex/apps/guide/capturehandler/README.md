@@ -14,8 +14,7 @@ title: Gramex takes screenshots
 
 - Install [Node 8.x](https://nodejs.org/en/) -- earlier versions won't work.
   Ensure that `node` is in your PATH.
-- Uninstall and [re-install Gramex](../install/). (Or run `npm install` from
-  `apps/capture/` under where Gramex is installed.)
+- Uninstall and [re-install Gramex](../install/) (or run `gramex install capture` instead.)
 
 Add this to `gramex.yaml`:
 

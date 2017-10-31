@@ -44,6 +44,7 @@ from orderedattrdict import AttrDict, DefaultAttrDict
 
 # gramex.config.app_log is the default logger used by all of gramex
 # If it's not there, create one.
+logging.basicConfig()
 app_log = logging.getLogger('gramex')
 
 # sqlalchemy.create_engine requires an encoding= that must be an str across

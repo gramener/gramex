@@ -595,53 +595,7 @@ to this information via `handler.current_user` by default.
 
 ## Logging logins
 
-Gramex logs all login and logout actions to `logs/user.csv` under
-[$GRAMEXDATA](../config/#predefined-variables). It logs:
-
-- `datetime`: Time in UTC as YYYY-MM-DD HH:MM:SSZ
-- `event`: "login" or "logout"
-- `session`: session ID that the user was logged into
-- `user`: The ID of the user
-- `ip`: The IP address of the client requesting the page
-- `headers.User-Agent`: The User-Agent (browser) that accessed the page
-
-To change the location of this file, use `log.handlers.user.filename`:
-
-    :::yaml
-    log:
-        handlers:
-            user:
-                filename: $GRAMEXDATA/your-app/user.csv     # The path can point ANYWHERE
-
-To change the columns that are logged, use `log.handlers.user.keys:`
-
-    :::yaml
-    log:
-        handlers:
-            user:
-                keys: [time, ip, user, status, uri, error]
-
-For the list of valid keys, see [request logging](../config/#request-logging).
-
---------
-
-Until **v1.22**, the `log:` section of auth handlers  could be configured to
-log events like this:
-
-    :::yaml
-    auth:
-        pattern: /$YAMLURL/auth
-        handler: SimpleAuth
-        kwargs:
-            log:                                # Log this when a user logs in via this handler
-                fields:                         # List of fields:
-                  - session.id                  #   handler.session['id']
-                  - current_user.id             #   handler.current_user['id']
-                  - request.remote_ip           #   handler.request.remote_ip
-                  - request.headers.User-Agent  #   handler.request.headers['User-Agent']
-
-The `log:` key has been **removed since v1.23**. But the location and structure
-of the user log file remains the same.
+See [user logging](../config/#user-logging).
 
 ## Session expiry
 

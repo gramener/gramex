@@ -126,7 +126,8 @@ headers. For example:
 
 ## Logging
 
-The `log:` section defines Gramex's logging behaviour.
+The `log:` section defines Gramex's logging behaviour. See
+[gramex.yaml][gramex-yaml] for the default configuration.
 
 To only log WARNING messages to the console, use:
 
@@ -135,24 +136,11 @@ To only log WARNING messages to the console, use:
         root:
             level: WARNING      # Default: DEBUG. Can be INFO, WARNING, ERROR
 
-To save all gramex logs to a file, use:
+From **v1.23**, Gramex also saves all console logs to `logs/gramex.log` under
+[$GRAMEXDATA](#predefined-variables). To change the path, use:
 
     :::yaml
     log:
-        root:
-            handlers:
-                - console       # This is default: logging to the console
-                - logfile       # Save console logs to a file
-
-By default, the `logfile` handler saves to `logs/gramex.log` under
-[$GRAMEXDATA](#predefined-variables). To change that, use:
-
-    :::yaml
-    log:
-        root:
-            handlers:
-                - console       # This is default: logging to the console
-                - logfile       # Save console logs to a file
         handlers:
             logfile:
                 filename: $GRAMEXDATA/your-app/gramex.log       # Change file location
@@ -173,7 +161,7 @@ You can create your additional formatters by extending this.
 [trfh]: https://docs.python.org/3/library/logging.handlers.html#logging.handlers.TimedRotatingFileHandler
 [gramex-yaml]: https://code.gramener.com/s.anand/gramex/blob/master/gramex/gramex.yaml
 
-## Request logging
+### Request logging
 
 Gramex logs all HTTP requests to `logs/requests.csv` under [$GRAMEXDATA](#predefined-variables).
 It logs:
@@ -224,7 +212,57 @@ You can use any of the following as keys for loggiing:
 - `cookies.<key>`: Logs a specific cookie. E.g. `cookie.sid` is the session ID cookie
 - `env.<key>`: Logs an environment variable. E.g. `env.HOME` logs the user's home directory
 
-## Handler logging
+### User logging
+
+Gramex's [auth handlers](../auth/) log all login and logout events to
+`logs/user.csv` under [$GRAMEXDATA](../config/#predefined-variables). It logs:
+
+- `datetime`: Time in UTC as YYYY-MM-DD HH:MM:SSZ
+- `event`: "login" or "logout"
+- `session`: session ID that the user was logged into
+- `user`: The ID of the user
+- `ip`: The IP address of the client requesting the page
+- `headers.User-Agent`: The User-Agent (browser) that accessed the page
+
+To change the location of this file, use `log.handlers.user.filename`:
+
+    :::yaml
+    log:
+        handlers:
+            user:
+                filename: $GRAMEXDATA/your-app/user.csv     # The path can point ANYWHERE
+
+To change the columns that are logged, use `log.handlers.user.keys:`
+
+    :::yaml
+    log:
+        handlers:
+            user:
+                keys: [time, ip, user, status, uri, error]
+
+For the list of valid keys, see [request logging](#request-logging).
+
+--------
+
+Until **v1.22**, the `log:` section of auth handlers  could be configured to
+log events like this:
+
+    :::yaml
+    auth:
+        pattern: /$YAMLURL/auth
+        handler: SimpleAuth
+        kwargs:
+            log:                                # Log this when a user logs in via this handler
+                fields:                         # List of fields:
+                  - session.id                  #   handler.session['id']
+                  - current_user.id             #   handler.current_user['id']
+                  - request.remote_ip           #   handler.request.remote_ip
+                  - request.headers.User-Agent  #   handler.request.headers['User-Agent']
+
+The `log:` key has been **removed since v1.23**.
+
+
+### Handler logging
 
 Up to Gramex **v1.22** the `log:` section of each handler allowed custom logging
 for that handler. This is useless sophistication. It has not been used in any
@@ -234,6 +272,7 @@ Instead, use [request logging](#request-logging) to set up access logs.
 
 Logging to `$GRAMEXDATA/logs/access.csv` has also been disabled since no project
 uses it by default.
+
 
 ## Error handlers
 

@@ -9,7 +9,8 @@ title: Install Gramex
 - Uninstall gramex if you have installed it before: `pip uninstall gramex`.
 - Run `pip install --verbose https://code.gramener.com/s.anand/gramex/repository/archive.tar.bz2?ref=master`.
     - Replace ``master`` with ``dev`` for the latest development version.
-    - **v1.23** onwards, we install node modules, which take time. `--verbose` shows the installation progress.
+    - **v1.23** onwards, we install node modules, which take time. `--verbose`
+      lets you monitor progress.
 - Run `gramex` to start Gramex
 - Press `Ctrl+C` to terminate Gramex.
 
@@ -31,16 +32,15 @@ re-installing scandir fails on Windows.
 
 ## Troubleshooting
 
-If Gramex is does not run:
+If Gramex does not run:
 
+- Tru uninstalling and re-installing Gramex. Stop Gramex and all other Python
+  applications when re-installing.
 - Make sure Gramex 0.x (or any other module named `gramex`) is **NOT** in your
   `PYTHONPATH`. Run `python -c "import gramex;print gramex.__file__"` and confirm
   that this is where the latest Gramex was installed.
 - Make sure that typing `gramex` runs the Gramex executable, and is not aliased
   to a different command.
-- Try `python -m gramex` instead of `gramex`
-- Tru uninstalling and re-installing Gramex. Stop Gramex and all other Python
-  applications when re-installing.
 
 ## Uninstall Gramex
 
