@@ -12,6 +12,13 @@ url:
             template: $YAMLPATH/text-template.txt
             headers:
               Content-Type: text/plain
+          pptx-table:
+            format: pptx
+            source: $YAMLPATH/input.pptx
+            change-table:
+              Table:
+                table:
+                  data: data['data']
 
     formhandler-continent:
       pattern: /$YAMLURL/continent

@@ -1,7 +1,27 @@
-r'''
-# This docstring is in YAML, and is used by the usage variable.
-# It documents the help for the Gramex command line commands supported.
+'''
+Defines command line services to install, setup and run apps.
+'''
 
+import os
+import six
+import sys
+import yaml
+import stat
+import shlex
+import shutil
+import string
+import datetime
+import requests
+from shutilwhich import which
+from pathlib import Path
+from subprocess import Popen, check_output
+from orderedattrdict import AttrDict
+from zipfile import ZipFile
+from orderedattrdict.yamlutils import from_yaml         # noqa
+import gramex
+from gramex.config import ChainConfig, PathConfig, variables, app_log
+
+usage = yaml.load(r'''
 install: |
     usage:
         gramex install <app> <url> [--target=DIR]
@@ -96,28 +116,7 @@ service: |
 
         gramex service start
         gramex service stop
-'''
-
-import os
-import six
-import sys
-import yaml
-import stat
-import shlex
-import shutil
-import string
-import datetime
-import requests
-from shutilwhich import which
-from pathlib import Path
-from subprocess import Popen, check_output
-from orderedattrdict import AttrDict
-from zipfile import ZipFile
-from orderedattrdict.yamlutils import from_yaml         # noqa
-import gramex
-from gramex.config import ChainConfig, PathConfig, variables, app_log
-
-usage = yaml.load(__doc__)
+''')
 
 
 class TryAgainError(Exception):

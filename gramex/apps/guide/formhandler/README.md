@@ -76,6 +76,27 @@ To include the table format, you must include this in your gramex.yaml:
     :::yaml
     import: $GRAMEXPATH/apps/formhandler/gramex.yaml
 
+You can also create custom PPTX downloads using FormHandler. For example, this
+configuration adds a custom PPTX format called `pptx-table`:
+
+    :::yaml
+    formhandler-flags:
+      pattern: /$YAMLURL/flags
+      handler: FormHandler
+      kwargs:
+        url: $YAMLPATH/flags.csv
+        formats:
+          pptx-table:                       # Define a format called pptx-table
+            format: pptx                    # It generates a PPTX output
+            source: $YAMLPATH/input.pptx    # ... based on input.pptx
+            change-table:                   # The first rule to apply...
+              Table:                        # ... takes all shapes named Table
+                table:                      # ... runs a "table" command (to update tables)
+                  data: data['data']        # ... using flags data (default name is 'data)
+
+- Download the output at [flags?_format=pptx-table](flags?_format=pptx-table&_limit=10&_c=ID&_c=Name&_c=Continent&_c=Stripes).
+- Download the [input.pptx](input.pptx) used as a template
+
 ## FormHandler downloads
 
 CSV and XLSX formats are downloaded as `data.csv` and `data.xlsx` by default.

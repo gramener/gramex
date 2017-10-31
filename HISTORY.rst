@@ -121,6 +121,9 @@ There are some changes to Gramex behaviour that may impact your application:
 - `Google Auth`_ stores the email ID of the user as the user ID, not the Google provided ID
 - All handlers have a ``handler.kwargs`` attribute that has the ``kwargs:`` configuration passed to the handler
 
+- Code base: 14,765 lines (gramex: 9,278, tests: 5,487)
+- Test coverage: 79%
+
 
 1.21 (2017-08-29)
 ~~~~~~~~~~~~~~~~~
@@ -671,7 +674,7 @@ There are two changes that may disrupt your code:
 .. _LogoutHandler: https://learn.gramener.com/guide/auth/#log-out
 .. _WebSocketHandler: https://learn.gramener.com/guide/websockethandler/
 .. _LDAPAuth: https://learn.gramener.com/guide/auth/#ldap
-.. _LDAP atttributes: https://learn.gramener.com/guide/auth/#ldap-attributes
+.. _LDAP attributes: https://learn.gramener.com/guide/auth/#ldap-attributes
 .. _Google Auth: https://learn.gramener.com/guide/auth/#google-auth
 .. _DBAuth: https://learn.gramener.com/guide/auth/#database-auth
 .. _SimpleAuth: https://learn.gramener.com/guide/auth/#simple-auth

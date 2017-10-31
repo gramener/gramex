@@ -426,6 +426,7 @@ class BaseMixin(object):
         https://www.owasp.org/index.php/Session_fixation.
         :py:func:`gramex.handlers.authhandler.AuthHandler.set_user` uses it.
         When the user logs in:
+
         - If no old session exists, it returns a new session object.
         - If an old session exists, it creates a new "sid" and new session
           object, copying all old contents, but updates the "id" and expiry (_t).
