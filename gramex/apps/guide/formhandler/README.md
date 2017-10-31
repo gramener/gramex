@@ -67,6 +67,12 @@ By default, FormHandler renders data as JSON. Use `?_format=` to change that.
 - CSV: [flags?_format=csv](flags?_format=csv)
 - JSON: [flags?_format=json](flags?_format=json)
 - XLSX: [flags?_format=xlsx](flags?_format=xlsx)
+- Table: [flags?_format=table](flags?_format=table) from **v1.23** - an interactive table viewer
+
+To include the table format, you must include this in your gramex.yaml:
+
+    :::yaml
+    import: $GRAMEXPATH/apps/formhandler/gramex.yaml
 
 ## FormHandler downloads
 

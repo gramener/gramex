@@ -28,6 +28,7 @@ url:
         handler: FileHandler
         kwargs:
             path: $YAMLPATH
+            priority: -0.5          # Lower than new handlers (0), higher than default (-1)
             default_filename: README.md
             index: true
             transform:
@@ -67,7 +68,6 @@ url:
     # Static files are cached on the browser
     static:
         pattern: /$YAMLURL/(.*.css|.*.js)
-        priority: 1                                     # Override markdown: handler
         handler: FileHandler
         cache: {duration: 300}
         kwargs:
@@ -77,7 +77,6 @@ url:
 
     # /path.source shows the raw file as plain text
     source:
-        priority: +1
         pattern: /$YAMLURL/(.*)\.source
         handler: FileHandler
         kwargs:

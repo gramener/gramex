@@ -1,0 +1,21 @@
+{
+  "name": "formhandler",
+  "version": "1.0.0",
+  "description": "FormHandler utilities",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://code.gramener.com/s.anand/gramex/"
+  },
+  "author": "S Anand <s.anand@gramener.com>",
+  "license": "ISC",
+  "dependencies": {
+    "bootstrap": "^4.0.0-beta.2",
+    "jquery": "^3.2.1",
+    "popper.js": "^1.12.3",
+    "url-search-params": "^0.10.0"
+  }
+}

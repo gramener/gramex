@@ -298,7 +298,8 @@ def _yaml_open(path, default=AttrDict(), yamlurl=None):
             # Then using YAMLURL should raise an error saying it's undefined.
             pass
     # Typically, we use /$YAMLURL/url - so strip the slashes. Replace backslashes
-    yaml_vars['YAMLURL'] = yamlurl.replace('\\', '/').strip('/')
+    if isinstance(yamlurl, string_types):
+        yaml_vars['YAMLURL'] = yamlurl.replace('\\', '/').strip('/')
     variables.update(yaml_vars)
 
     # Update context with the variables section.

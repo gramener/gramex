@@ -1,0 +1,19 @@
+handlers:
+  FormHandler:
+    formats:
+      table:
+        format: template
+        template: $YAMLPATH/formhandler.table.html
+        heading: True
+        filters: True
+        pagination: True
+        YAMLURL: $YAMLURL
+
+url:
+  formhandler-static:
+    pattern: /$YAMLURL/formhandler-static/(.*)
+    handler: FileHandler
+    kwargs:
+      path: $YAMLPATH
+      headers:
+        Cache-Control: public, max-age=86400
