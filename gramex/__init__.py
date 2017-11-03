@@ -140,6 +140,10 @@ def callback_commandline(commands):
         elif base_command == 'service':
             from gramex.install import service
             return service, kwargs
+        elif base_command == 'init':
+            # import as install_init to prevent conflict with local init
+            from gramex.install import init as install_init
+            return install_init, kwargs
         raise NotImplementedError('Unknown gramex command: %s' % base_command)
 
     # Use current dir as base (where gramex is run from) if there's a gramex.yaml.

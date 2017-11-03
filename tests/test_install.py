@@ -186,6 +186,6 @@ class TestInstall(unittest.TestCase):
         self.check_files('setup', result)
         self.check_uninstall('setup')
 
-
-def tearDown():
-    pip.main(['uninstall', '-y', '-r', os.path.join(TestInstall.install_path, 'requirements.txt')])
+    @classmethod
+    def tearDown(cls):
+        pip.main(['uninstall', '-y', '-r', os.path.join(cls.install_path, 'requirements.txt')])

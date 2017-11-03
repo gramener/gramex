@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <title>{{ appname }}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="node_modules/font-awesome/css/font-awesome.min.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <nav class="navbar navbar-default">
+    <div class="container-fluid">
+      <div class="navbar-header">
+        <a class="navbar-brand" href="."><i class="fa fa-home"></i></a>
+      </div>
+
+      <ul class="nav navbar-nav navbar-left">
+        <li class="navbar-brand">{{ appname }}</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li><a href="login" class="username" title="Log in again" data-placement="bottom"></a></li>
+        <li><a href="logout" title="Log out" data-placement="bottom"><span class="fa fa-sign-out"></span></a></li>
+      </ul>
+    </div>
+  </nav>
+  <div class="container-fluid">
+    <h1>{{ appname }}</h1>
+    <p>Welcome to the Gramex 1.0 boilerplate</p>
+  </div>
+</body>
+<script src="node_modules/jquery/dist/jquery.min.js"></script>
+<script src="node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
+<script src="js/script.js"></script>
+</html>

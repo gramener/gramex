@@ -1,7 +1,9 @@
 '''
 Defines command line services to install, setup and run apps.
 '''
+from __future__ import unicode_literals
 
+import io
 import os
 import six
 import sys
@@ -14,14 +16,15 @@ import datetime
 import requests
 from shutilwhich import which
 from pathlib import Path
-from subprocess import Popen, check_output
+from subprocess import Popen, check_output, CalledProcessError
 from orderedattrdict import AttrDict
 from zipfile import ZipFile
+from tornado.template import Template
 from orderedattrdict.yamlutils import from_yaml         # noqa
 import gramex
 from gramex.config import ChainConfig, PathConfig, variables, app_log
 
-usage = yaml.load(r'''
+usage = yaml.load('''
 install: |
     usage:
         gramex install <app> <url> [--target=DIR]
@@ -100,7 +103,7 @@ service: |
 
         gramex service install
             --cwd  "C:/path/to/application/"
-            --user "DOMAIN\USER"                # Optional user to run as
+            --user "DOMAIN\\USER"                # Optional user to run as
             --password "user-password"          # Required if user is specified
             --startup manual|auto|disabled
 
@@ -116,6 +119,14 @@ service: |
 
         gramex service start
         gramex service stop
+
+init: |
+    usage: gramex init [--target=DIR]
+
+    Initializes a Gramex project at the current or target dir. Specifically, it:
+    - Sets up a git repo
+    - Install supporting files for a gramex project
+    - Runs gramex setup (which runs npm install and other dependencies)
 ''')
 
 
@@ -329,9 +340,7 @@ def run_setup(target):
             continue
         cmd = string.Template(setup['cmd']).substitute(FILE=setup_file, EXE=exe_path)
         app_log.info('Running %s', cmd)
-        proc = Popen(shlex.split(cmd), cwd=target, bufsize=-1,
-                     stdout=sys.stdout, stderr=sys.stderr, universal_newlines=True)
-        proc.communicate()
+        _run_console(cmd, cwd=target)
     return target
 
 
@@ -508,3 +517,48 @@ def service(cmd, args):
         app_log.error(show_usage('service'))
         return
     gramex.winservice.GramexService.setup(cmd, **args)
+
+
+def _check_output(cmd, default=b'', **kwargs):
+    '''Run cmd and return output. Return default in case the command fails'''
+    try:
+        return check_output(shlex.split(cmd), **kwargs).strip()
+    except CalledProcessError:
+        return default
+
+
+def _run_console(cmd, **kwargs):
+    '''Run cmd and  pipe output to console (sys.stdout / sys.stderr)'''
+    proc = Popen(shlex.split(cmd), bufsize=-1, stdout=sys.stdout, stderr=sys.stderr,
+                 universal_newlines=True, **kwargs)
+    proc.communicate()
+
+
+def init(cmd, args):
+    '''Create Gramex scaffolding files.'''
+    if len(cmd) > 1:
+        app_log.error(show_usage('init'))
+        return
+    args.setdefault('target', os.getcwd())
+    app_log.info('Initializing Gramex project at %s', args.target)
+    data = {
+        'appname': os.path.basename(args.target),
+        'author': _check_output('git config user.name', default='Author'),
+        'email': _check_output('git config user.email', default='user@example.org'),
+        'date': datetime.datetime.today().strftime('%Y-%m-%d')
+    }
+    # Create a git repo if required
+    if not os.path.exists(os.path.join(args.target, '.git')):
+        _run_console('git init')
+    # Copy all files as templates
+    source_dir = os.path.join(variables['GRAMEXPATH'], 'apps', 'init')
+    for path in os.listdir(source_dir):
+        target = os.path.join(args.target, path)
+        if os.path.exists(target):
+            app_log.warning('Skipping existing %s', path)
+            continue
+        with io.open(os.path.join(source_dir, path), 'rb') as handle:
+            result = Template(handle.read()).generate(**data)
+        with io.open(target, 'wb') as handle:
+            handle.write(result)
+    run_setup(args.target)

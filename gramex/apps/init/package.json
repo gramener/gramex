@@ -1,0 +1,15 @@
+{
+  "name": "{{ appname }}",
+  "version": "0.1.0",
+  "main": "",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "{{ author }} <{{ email }}>",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "font-awesome": "*",
+    "bootstrap": "~3",
+    "jquery": "~3"
+  }
+}
