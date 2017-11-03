@@ -6,6 +6,7 @@ import mimetypes
 import tornado.web
 import tornado.gen
 from pathlib import Path
+from fnmatch import fnmatch
 from six import string_types
 from tornado.escape import utf8
 from tornado.web import HTTPError
@@ -18,6 +19,16 @@ from gramex.http import FORBIDDEN, NOT_FOUND
 
 # Directory indices are served using this template by default
 _default_index_template = Path(__file__).absolute().parent / 'filehandler.template.html'
+
+
+def _match(path, pat):
+    '''
+    pathlib.match() does not accept ** -- it splits by path.
+    Use fnmatch if ** is present in the pattern.
+    '''
+    if '**' in pat:
+        return fnmatch(str(path), '*/' + pat)
+    return path.match(pat)
 
 
 def read_template(path):
@@ -131,7 +142,7 @@ class FileHandler(BaseHandler):
         cls.allow = cls.set(cls.kwargs.allow)
         cls.index_template = read_template(
             Path(index_template) if index_template is not None else _default_index_template)
-        cls.headers = dict(objectpath(gramex_conf, 'handlers.FileHandler.headers', {}))
+        cls.headers = AttrDict(objectpath(gramex_conf, 'handlers.FileHandler.headers', {}))
         cls.headers.update(headers)
         # Set supported methods
         if not isinstance(methods, (tuple, list)):
@@ -183,11 +194,11 @@ class FileHandler(BaseHandler):
         Override this method for a custom implementation.
         '''
         for ignore in self.ignore:
-            if path.match(ignore):
+            if _match(path, ignore):
                 # Check allows only if an ignore: is matched.
                 # If any allow: is matched, allow it
                 for allow in self.allow:
-                    if path.match(allow):
+                    if _match(path, allow):
                         return True
                 app_log.debug('%s: Disallow "%s". It matches "%s"', self.name, path, ignore)
                 return False
@@ -256,11 +267,16 @@ class FileHandler(BaseHandler):
                 self.set_header('Content-Type', mime_type)
 
             for header_name, header_value in self.headers.items():
-                self.set_header(header_name, header_value)
+                if isinstance(header_value, dict):
+                    if _match(self.file, header_name):
+                        for header_name, header_value in header_value.items():
+                            self.set_header(header_name, header_value)
+                else:
+                    self.set_header(header_name, header_value)
 
             transform = {}
             for pattern, trans in self.transform.items():
-                if self.file.match(pattern):
+                if _match(self.file, pattern):
                     transform = trans
                     break
 

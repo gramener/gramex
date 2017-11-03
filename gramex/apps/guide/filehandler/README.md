@@ -161,7 +161,6 @@ the handler. For example:
 In the above configuration, `secret.txt` will not be accessible, but
 `gramex.yaml` will be.
 
-
 ## MIME types
 
 The URL will be served with the MIME type of the file. CSV files have a MIME
@@ -179,7 +178,6 @@ can override these headers:
 
 To convert a file type into an attachment, use:
 
-
     :::yaml
     pattern: /filehandler/data
     handler: FileHandler
@@ -188,6 +186,20 @@ To convert a file type into an attachment, use:
         headers:
             Content-Type: text/plain
             Content-Disposition: attachment; filename=data.txt    # Save as data.txt
+
+To serve different files with different MIME types, use file patterns:
+
+    :::yaml
+    pattern: /$YAMLURL/(.*)
+    handler: FileHandler
+    kwargs:
+        path: $YAMLPATH
+        headers:
+            Content-Type: text/plain            # Default header
+            "*.json":                           # Override headers on .json files
+                Content-Type: application/json
+            "json/**"                           # Override headers on json/ directory
+                Content-Type: application/json
 
 ## Templates
 

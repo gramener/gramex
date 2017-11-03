@@ -356,6 +356,25 @@ url:
       headers:
         X-FileHandler-Header: updated
         X-FileHandler: updated
+  dir/headersdict:
+    pattern: /headerdict/(.*)
+    handler: FileHandler
+    kwargs:
+      path: dir/
+      headers:
+        Root: x
+        'alpha.txt':
+          Root: a
+          Sub: a
+        'beta.html':
+          Root: b
+          Sub: b
+        '*':
+          All: x
+        '*/install/**':
+          Sub: x
+        'gramex-bower-package/**':
+          Sub: y
 
   dir/data:
     pattern: /dir/data                # Check that a pattern without brackets works

@@ -268,3 +268,7 @@ url:
             index: true                     #   display the index
             headers:
                 Cache-Control: max-age=60   # By default, cache for a minute
+                'node_modules/**':
+                  Cache-Control: public, max-age=315360000  # Cache for 10 years
+                'bower_components/**':
+                  Cache-Control: public, max-age=315360000  # Cache for 10 years

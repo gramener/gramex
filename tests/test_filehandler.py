@@ -218,3 +218,10 @@ class TestFileHandler(TestGramex):
             'X-FileHandler': 'updated',
             'X-FileHandler-Base': 'base',
         })
+        self.check('/headerdict/alpha.txt', headers={'Root': 'a', 'Sub': 'a', 'All': 'x'})
+        self.check('/headerdict/beta.html', headers={'Root': 'b', 'Sub': 'b', 'All': 'x'})
+        self.check('/headerdict/data.csv', headers={'Root': 'x', 'All': 'x'})
+        self.check('/headerdict/install/gramex-npm-package/package.json', headers={
+            'Root': 'x', 'Sub': 'x'})
+        self.check('/headerdict/install/gramex-bower-package/bower.json', headers={
+            'Root': 'x', 'Sub': 'y'})

@@ -39,13 +39,6 @@ app:
 
 
 url:
-    default:                            # Override the default handler with a more secure version
-        priority: -1                    # Apply this pattern with low than normal priority
-        pattern: /(.*)                  # All URLs beginning with /
-        handler: FileHandler                # Handler used
-        kwargs:                             # Options to the handler
-            path: .                         #   path is current dir
-            default_filename: index.html    # Explicitly prevent
-            index: false                    # Disable listing of files for higher security
-            headers:
-                Cache-Control: private, max-age=60  # Cache all files privately for a minute
+    default:                  # Override the default handler with a more secure version
+        kwargs:               # Options to the handler
+            index: false      # Disable listing of files for higher security
