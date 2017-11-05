@@ -185,7 +185,12 @@ def open(path, callback=None, transform=None, rel=False, **kwargs):
     if callback is None:
         callback = os.path.splitext(path)[-1][1:]
     callback_is_str = isinstance(callback, six.string_types)
-    key = (path, original_callback if callback_is_str else id(callback), id(transform))
+    key = (
+        path,
+        original_callback if callback_is_str else id(callback),
+        id(transform),
+        frozenset(kwargs.items()),
+    )
     cached = _cache.get(key, None)
     fstat = stat(path)
     if cached is None or fstat != cached.get('stat'):

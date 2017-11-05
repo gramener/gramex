@@ -257,21 +257,36 @@ class TestOpen(unittest.TestCase):
     def test_custom_cache(self):
         path = os.path.join(folder, 'data.csv')
         cache = {}
-        result, reloaded = gramex.cache.open(path, 'csv', _reload_status=True, _cache=cache)
-        # Cache key is (path, format, id(transform))
-        ok_((path, 'csv', id(None)) in cache)
+        kwargs = {'_reload_status': True, '_cache': cache}
+        result, reloaded = gramex.cache.open(path, 'csv', **kwargs)
+        cache_key = (path, 'csv', id(None), frozenset())
+        ok_(cache_key in cache)
 
         # Initially, the file is loaded
         eq_(reloaded, True)
 
         # Next time, it's loaded from the cache
-        result, reloaded = gramex.cache.open(path, 'csv', _reload_status=True, _cache=cache)
+        result, reloaded = gramex.cache.open(path, 'csv', **kwargs)
         eq_(reloaded, False)
 
         # If the cache is deleted, it reloads
-        del cache[path, 'csv', id(None)]
-        result, reloaded = gramex.cache.open(path, 'csv', _reload_status=True, _cache=cache)
+        del cache[cache_key]
+        result, reloaded = gramex.cache.open(path, 'csv', **kwargs)
         eq_(reloaded, True)
+
+        # Additional kwargs are part of the cache key
+        result, reloaded = gramex.cache.open(path, encoding='utf-8', **kwargs)
+        cache_key = (path, None, id(None), frozenset([('encoding', 'utf-8')]))
+        ok_(cache_key in cache)
+        eq_(reloaded, True)
+        result, reloaded = gramex.cache.open(path, encoding='utf-8', **kwargs)
+        eq_(reloaded, False)
+
+        # Changing the kwargs reloads the data
+        result, reloaded = gramex.cache.open(path, encoding='cp1252', **kwargs)
+        eq_(reloaded, True)
+        result, reloaded = gramex.cache.open(path, encoding='cp1252', **kwargs)
+        eq_(reloaded, False)
 
     def test_multiple_loaders(self):
         # Loading the same file via different callbacks should return different results

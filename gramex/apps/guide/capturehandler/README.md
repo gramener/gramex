@@ -148,6 +148,7 @@ In JavaScript:
 
 Or:
 
+    :::js
     $('.some-button').on('click', function() {
         location.href = 'capture?ext=png&url=' + encodeURIComponent(url)
     })
@@ -184,7 +185,7 @@ You can take screenshots from any Python program, using Gramex as a library.
 
 The [Capture](capture) class has convenience methods called `.pdf()`, `.png()`,
 `.jpg()` that accept the same parameters as the
-[handler](screenshot-service).
+[handler](#screenshot-service).
 
 
 [capturehandler]: https://learn.gramener.com/gramex/gramex.handlers.html#gramex.handlers.CaptureHandler
