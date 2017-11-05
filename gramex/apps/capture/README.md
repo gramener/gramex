@@ -9,7 +9,7 @@ On Linux, run this **as root**:
     # Install node.js 8.x or above -- this is required
     curl -sL https://deb.nodesource.com/setup_8.x | bash -
     apt-get install -y nodejs
-    # ONLY FOR Docker: install dependencies
+    # Install dependencies. Some may already exist. No harm re-installing
     apt-get install -y libpangocairo-1.0-0 libx11-xcb1 libxcomposite1 libxdamage1 libxi6 libxtst6 \
             libnss3 libcups2 libxss1 libxrandr2 libgconf2-4 libasound2 libatk1.0-0 libgtk-3-0
     # Install puppeteer
@@ -60,7 +60,7 @@ This saves <https://gramener.com/> as `gramener.pdf`
 All parameters below are applicable both for the command line as well as the
 web server.
 
-- `url=`: required -- the URL to be downloaded as a PDF or an image
+- `url=`: required -- the URL to be downloaded as a PDF or an image.
 - `file=`: sets the base name of the download file. Defaults to screenshot
 - `ext=`: sets the extension. Supported extensions: .pdf (default), .png, .jpg
 - `delay=`: milliseconds to wait before screenshot (for dynamic javascript)

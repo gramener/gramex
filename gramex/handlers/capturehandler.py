@@ -133,9 +133,13 @@ class Capture(object):
                         app_log.info('%s terminated: pid=%d', script, pid)
                         self.started = False
                         break
-                    app_log.info(line.decode('utf-8'))
+                    # Capture won't print anything, unless there's a problem, or if debug is on.
+                    # So log it at warning level not info.
+                    app_log.warning(line.decode('utf-8'))
             except Exception:
                 app_log.exception('Ran %s. But %s not at %s', self.cmd, script, self.url)
+        except Exception:
+            app_log.exception('Cannot start Capture')
 
     def close(self):
         '''Stop capture.js if it has been started by this object'''

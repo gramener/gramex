@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Timer</title>
+</head>
+<body>
+  <h1>Time</h1>
+  <script>
+    var h1 = document.querySelector('h1')
+    function show_time(timestamp) {
+        h1.innerHTML = Math.round(timestamp) + ' ms'
+        window.requestAnimationFrame(show_time)
+    }
+    show_time(0)
+  </script>
+</body>
+</html>

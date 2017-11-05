@@ -100,34 +100,37 @@ It accepts the following arguments:
 
 - `?url=`: URL to take a screenshot of. This defaults to `Referer` header. So if
   you link to a `capture` page, the source page is generally used.
-- `?file=`: screenshot file name. Defaults to `screenshot`
-- `?ext=`: format of output. Can be pdf, png or jpg
+  <br>**Example**: [?url=https://example.org/](capture?url=https://example.org/)
+- `?file=`: screenshot file name. Defaults to `screenshot`.
+  <br>**Example**: [?file=newfile](capture?file=newfile)
+- `?ext=`: format of output. Can be pdf, png or jpg. Defaults to `pdf`.
+  <br>**Example**: [?ext=png](capture?ext=png)
 - `?delay=`: milliseconds to wait for before taking a screenshot. This value must
-  be less than the `timeout:` set in the `kwargs:` section
-- `?scale=`: zooms the screen by a factor
+  be less than the `timeout:` set in the `kwargs:` section.
+  <br>**Example**: [?delay=1000](capture?url=timer.html&delay=1000)
+  captures this [timer page](timer.html) with a ~1000 ms delay
 - For PDF:
-    - `?format=`: A3, A4, A5, Legal, Letter or Tabloid. Defaults to A4
-    - `?orientation=`: portrait or landscape. Defaults to portrait
-    - `?title=`: footer for the page
+    - `?format=`: A3, A4, A5, Legal, Letter or Tabloid. Defaults to A4.
+      <br>**Example**: [?format=Tabloid](capture?format=Tabloid)
+    - `?orientation=`: portrait or landscape. Defaults to portrait.
+      <br>**Example**: [?orientation=landscape](capture?orientation=landscape)
+    - `?title=`: footer for the page. To be implemented
     - `media=`: `print` or `screen`. Defaults to `screen`. Only for Chrome.
+      <br>**Example**: [?media=print](capture?media=print)
 - For images (PNG/JPG):
-    - `?width=`: screen width. Default: 1200
-    - `?height=`: screen height. Default: 768
+    - `?width=`: image output width. Default: 1200
+      <br>**Example**: [?width=600](capture?width=600&ext=png)
+    - `?height=`: image output height. Default: auto (full page)
+      <br>**Example**: [?height=600](capture?height=600&ext=png)
     - `?selector=`: Restrict screenshot to (optional) CSS selector in URL
+      <br>**Example**: [?selector=.content](capture?selector=.content&ext=png) excludes the sidebar
+    - `?scale=`: zooms the screen by a factor. Defaults to 1.
+      <br>**Example**: [?scale=0.2](capture?scale=0.2&ext=pdf) compared with
+      [?scale=1](capture?scale=1&ext=pdf)
 - `?debug=`: displays request / response log requests on the console.
     - `?debug=1` logs all responses and HTTP codes. It also logs browser
       console.log messages on the Gramex console
     - `?debug=2` additionally logs all requests
-
-Here are some examples of usage:
-
-    ?url=https://gramener.com/demo/                         # Capture gramener.com/demo/
-    ?url=https://gramener.com/demo/&file=demo&ext=png       # Save as demo.png
-    ?url=https://gramener.com/demo/&selector=.case-studies  # Capture only class="case-studies"
-    ?url=...&delay=2000                                     # Capture after 2 seconds
-    ?url=...&format=A4&orientation=landscape                # Capture as A4 landscape
-    ?url=...&header=Header text&footer=Footer text          # Add header and footer text
-    ?url=...&ext=png&width=1600&height=900&scale=0.9        # 1600x900 PNG, zoomed out to 90%
 
 When constructing the `?url=`, `?header=`, `?footer=` or any other parameter,
 ensure that the URL is encoded. For example, when using a Python template:

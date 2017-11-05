@@ -73,9 +73,17 @@ button, input, select, textarea {
 }
 
 /* Style the menu */
-.menu {
-    background-color: #44546a;
-    color: #fff;
+@media screen {
+  .menu {
+      background-color: #44546a;
+      color: #fff;
+  }
+  .menu a:hover, .menu a:active, .menu a:focus {
+    background-color: #28323F;
+  }
+  .menu a:visited {
+      color: #DFE1E3;
+  }
 }
 .menu h1 {
     padding: 0;
@@ -103,12 +111,8 @@ button, input, select, textarea {
     border-top: 2px ridge #4F627D;
     border-bottom: none;
 }
-.menu a:visited {
-    color: #DFE1E3;
-}
 .menu a:hover, .menu a:active, .menu a:focus {
     outline: none;
-    background-color: #28323F;
     transform: translate(1px, 1px);
     transition: all 0.2s;
 }
