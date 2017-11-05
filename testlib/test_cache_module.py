@@ -260,7 +260,7 @@ class TestOpen(unittest.TestCase):
         kwargs = {'_reload_status': True, '_cache': cache}
         result, reloaded = gramex.cache.open(path, 'csv', **kwargs)
         cache_key = (path, 'csv', id(None), frozenset())
-        ok_(cache_key in cache)
+        self.assertIn(cache_key, cache)
 
         # Initially, the file is loaded
         eq_(reloaded, True)
@@ -277,7 +277,7 @@ class TestOpen(unittest.TestCase):
         # Additional kwargs are part of the cache key
         result, reloaded = gramex.cache.open(path, encoding='utf-8', **kwargs)
         cache_key = (path, None, id(None), frozenset([('encoding', 'utf-8')]))
-        ok_(cache_key in cache)
+        self.assertIn(cache_key, cache)
         eq_(reloaded, True)
         result, reloaded = gramex.cache.open(path, encoding='utf-8', **kwargs)
         eq_(reloaded, False)
@@ -320,19 +320,22 @@ class TestOpen(unittest.TestCase):
 
         data = gramex.cache.open(path, 'csv', transform=len, _cache=cache)
         eq_(data, len(pd.read_csv(path)))                   # noqa - ignore encoding
-        self.assertIn((path, 'csv', id(len)), cache)
+        cache_key = (path, 'csv', id(len), frozenset([]))
+        self.assertIn(cache_key, cache)
 
         def transform2(d):
             return d['a'].sum()
 
         data = gramex.cache.open(path, 'csv', transform=transform2, _cache=cache)
         eq_(data, pd.read_csv(path)['a'].sum())             # noqa - ignore encoding
-        self.assertIn((path, 'csv', id(transform2)), cache)
+        cache_key = (path, 'csv', id(transform2), frozenset([]))
+        self.assertIn(cache_key, cache)
 
         # Check that non-callable transforms are ignored but used as cache key
         data = gramex.cache.open(path, 'csv', transform='ignore', _cache=cache)
         assert_frame_equal(data, pd.read_csv(path))         # noqa - ignore encoding
-        self.assertIn((path, 'csv', id('ignore')), cache)
+        cache_key = (path, 'csv', id('ignore'), frozenset([]))
+        self.assertIn(cache_key, cache)
 
 
 class TestSqliteCacheQuery(unittest.TestCase):
