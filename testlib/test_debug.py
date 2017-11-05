@@ -1,8 +1,46 @@
 import os
+import inspect
 import unittest
-from gramex.debug import timer, Timer
+from io import StringIO
+from gramex.debug import timer, Timer, print
 from testfixtures import LogCapture
 from nose.tools import eq_
+
+
+def line_no():
+    '''Returns current line number in file where it is called'''
+    parent = inspect.getouterframes(inspect.currentframe())[1]
+    return parent[2]
+
+
+class TestPrint(unittest.TestCase):
+    def test_single(self):
+        stream = StringIO()
+        print('x', stream=stream)
+        line = line_no() - 1
+        val = stream.getvalue()
+        eq_(val, __file__ + '(%d).test_single: x\n' % line)
+
+    def test_kwarg(self):
+        stream = StringIO()
+        print(val=[10, 20, 30], stream=stream)
+        line = line_no() - 1
+        val = stream.getvalue()
+        eq_(val, '\n' + __file__ + '(%d).test_kwarg:\n .. val = [10, 20, 30]\n\n' % line)
+
+    def test_multi(self):
+        stream = StringIO()
+        print(a=True, b=1, lst=[1, 2], string='abc', stream=stream)
+        line = line_no() - 1
+        val = stream.getvalue()
+        eq_(val, '''
+{}({:d}).test_multi:
+ .. a = True
+ .. b = 1
+ .. lst = [1, 2]
+ .. string = 'abc'
+
+'''.format(__file__, line))
 
 
 class TestDebug(unittest.TestCase):

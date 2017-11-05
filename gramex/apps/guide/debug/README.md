@@ -130,18 +130,59 @@ Useful commands you can use on the debugger:
 
 ## Print statements
 
-You can add print statements to your code to show whether a line is reached, and
-what a variable's value is.
+`gramex.debug.print()` is an improved `print` function for debugging. For example:
 
-A few suggestions:
+    :::python
+    from gramex.debug import print
 
-1. Always print the variable name, e.g. `print("var", var)` instead of just
-   `print(var)`. This makes it easier to understand what is being printed
-2. Use `pprint.pprint` to print complex variables
-3. Prefix multi-line prints with 2 newline. For example,
-   `print('\n\n'); print("longvar", longvar)`
-4. Remove all print statements before committing your code into the `master` or
-   `dev` branch.
+    def run():
+        print('we are here')
+
+... will print:
+
+    d:/path/to/module.py(7).run: we are here
+
+It's better to use keyword arguments -- this also prints variable names:
+
+    >>> val = [10, 20]
+    >>> print(val=val)
+
+    <stdin>(1).<module>:
+     .. val = [10, 20]
+
+It pretty-prints complex variables. For example:
+
+    >>> print(val=['This is a long sentence, repeated thrice. '] * 3)
+
+    <stdin>(1).<module>:
+     .. val = [   'This is a long sentence, repeated thrice. ',
+     ..           'This is a long sentence, repeated thrice. ',
+     ..           'This is a long sentence, repeated thrice. ']
+
+Remember to remove all print statements before committing your code.
+
+
+## Tracing
+
+Add the `@gramex.debug.trace()` decorator before any function to print every line
+it executes. For example:
+
+    from gramex.debug import trace
+
+    @trace()
+    def run():
+        x = 1
+        y = 2
+        return x + y
+
+... will print:
+
+     --- modulename: module, funcname: run
+    module.py(5):     x = 1
+    module.py(6):     y = 2
+    module.py(7):     return x + y
+
+Remember to remove all trace statements before committing your code.
 
 
 ## Profiling

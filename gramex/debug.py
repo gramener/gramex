@@ -3,9 +3,14 @@ Debugging and profiling tools for Gramex
 '''
 import os
 import gc
+import six
+import sys
+import pprint
 import timeit
 import inspect
+import textwrap
 import functools
+from trace import Trace
 try:
     import line_profiler
 except ImportError:
@@ -35,10 +40,6 @@ def _make_timer():
     return timer
 
 
-# Create a single global instance of timer
-timer = _make_timer()
-
-
 class Timer(object):
     def __init__(self, msg):
         self.msg = msg
@@ -52,6 +53,61 @@ class Timer(object):
         if self.gc_old:
             gc.enable()
         app_log.info('%0.3fs %s %s', end - self.start, self.msg, _caller())
+
+
+def _write(obj, prefix=None, stream=sys.stdout):
+    text = pprint.pformat(obj, indent=4)
+    if prefix is None:
+        stream.write(textwrap.indent(text, ' .. '))
+    else:
+        text = textwrap.indent(text, ' .. ' + ' ' * len(prefix) + '   ')
+        stream.write(' .. ' + prefix + ' = ' + text[7 + len(prefix):])
+    stream.write('\n')
+
+
+def print(*args, **kwargs):
+    '''
+    Logs the (file, function, line, msg) wherever it is called
+    '''
+    stream = kwargs.pop('stream', sys.stdout)
+    parent = inspect.getouterframes(inspect.currentframe())[1]
+    file, line, function = parent[1:4]
+    if len(args) == 1 and not kwargs:
+        stream.write('{}({}).{}: {}\n'.format(file, line, function, args[0]))
+    else:
+        stream.write('\n{}({}).{}:\n'.format(file, line, function))
+        for val in args:
+            _write(val, stream=stream)
+        for key, val in kwargs.items():
+            _write(val, key, stream=stream)
+        stream.write('\n')
+
+
+def trace(trace=True, exclude=None, **kwargs):
+    '''
+    Decorator to trace line execution. Usage::
+
+        @trace()
+        def method(...):
+            ...
+
+    When ``method()`` is called, every line of execution is traced.
+    '''
+    if exclude is None:
+        ignoredirs = (sys.prefix, )
+    elif isinstance(exclude, six.string_types):
+        ignoredirs = (sys.prefix, os.path.abspath(exclude))
+    elif isinstance(exclude, (list, tuple)):
+        ignoredirs = [sys.prefix] + [os.path.abspath(path) for path in exclude]
+    tracer = Trace(trace=trace, ignoredirs=ignoredirs, **kwargs)
+
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            return tracer.runfunc(func, *args, **kwargs)
+        return wrapper
+
+    return decorator
 
 
 if line_profiler is None:
@@ -120,3 +176,7 @@ else:
     else:
         def getch():
             return None
+
+
+# Create a single global instance of timer
+timer = _make_timer()
