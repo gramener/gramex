@@ -943,18 +943,17 @@ class JSONStore(KeyStore):
             self.changed = True
 
     def _run_purge(self):
-        for key in self.purge(self.store):
-            del self.store[key]
-            self.update.pop(key, None)
-            self.changed = True
+        # Purging happens as part of flush(). Do nothing here
+        pass
 
     def flush(self):
-        # Purge entries from
         super(JSONStore, self).flush()
         if self.changed:
             app_log.debug('Flushing %s', self.path)
             store = self._read_json()
             store.update(self.update)
+            for key in self.purge(store):
+                del store[key]
             self._write_json(store)
             self.store = store
             self.update = {}
