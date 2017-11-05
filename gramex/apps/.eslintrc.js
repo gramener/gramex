@@ -1,7 +1,4 @@
 module.exports = {
-  "parserOptions": {
-      "ecmaVersion": 8              // We're using node 8.x for async-await
-  },
   "extends": "eslint:recommended",
   "rules": {
     /* Override default rules */

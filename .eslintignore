@@ -1,1 +1,6 @@
 **/node_modules/*
+
+# Our Gitlab runner uses eslint@2.6.0 to allow eslint-template.
+# chromecapture.js requires ecmaVersion 8 which eslint@2.6.0 does not support
+# So let's not eslint that
+gramex/apps/capture/chromecapture.js
