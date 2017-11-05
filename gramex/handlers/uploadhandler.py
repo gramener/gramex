@@ -118,11 +118,11 @@ class FileUpload(object):
         for delete_key in self.keys.get('delete', []):
             for key in handler.args.get(delete_key, []):
                 stat = {'success': False, 'key': key}
-                if key in self.store.store:
+                if key in self.store.keys():
                     path = os.path.join(self.path, key)
                     if os.path.exists(path):
                         os.remove(path)
-                        del self.store.store[key]
+                        self.store.dump(key, None)
                         stat['success'] = True
                 status.append(stat)
         return status

@@ -79,7 +79,8 @@ class BaseMixin(object):
     @staticmethod
     def _purge(data):
         '''
-        Clear any expired session keys based on _t.
+        Returns iterator of keys to be deleted. These are either None values or
+        those with expired keys based on _t.
         setup_session makes the session store call this purge method.
         Until v1.20 (31 Jul 2017) no _t keys were set.
         From v1.23 (31 Oct 2017) these are cleared.
@@ -88,7 +89,7 @@ class BaseMixin(object):
         for key in list(data.keys()):
             val = data[key]
             if val is None or (isinstance(val, dict) and val.get('_t', 0) < now):
-                del data[key]
+                yield key
 
     @classmethod
     def setup_session(cls, session_conf):
@@ -788,9 +789,8 @@ class KeyStore(object):
     You can initialize a KeyStore with a ``flush=`` parameter. The store is
     flushed to disk via ``store.flush()`` every ``flush`` seconds.
 
-    If a ``purge=`` function is provided, it is called with with the data. The
-    function can change the data in-place, for example, removing any expired
-    entries. The return value is ignored.
+    If a ``purge=`` function is provided, it is called with the store data before
+    flushing. It shoulld return an iterator of keys to delete if any.
 
     When the program exits, ``.close()`` is automatically called.
     '''
@@ -808,9 +808,9 @@ class KeyStore(object):
         if callable(purge):
             self.purge = purge
         elif purge is None:
-            self.purge = lambda data: None
+            self.purge = self._default_purge
         else:
-            app_log.error('KeyStore: purge=%r invalid. Must be callable', purge)
+            app_log.error('KeyStore: purge=%r invalid. Must be function(dict)', purge)
         # Call close() when Python gracefully exits
         atexit.register(self.close)
 
@@ -826,9 +826,17 @@ class KeyStore(object):
         '''Same as store[key] = value'''
         self.store[key] = value
 
+    @staticmethod
+    def _default_purge(data):
+        return [key for key, val in data.items() if val is None]
+
+    def _run_purge(self):
+        for key in self.purge(self.store):
+            del self.store[key]
+
     def flush(self):
         '''Write to disk'''
-        self.purge(self.store)
+        self._run_purge()
 
     def close(self):
         '''Flush and close all open handles'''
@@ -910,34 +918,54 @@ class JSONStore(KeyStore):
     '''
     def __init__(self, path, *args, **kwargs):
         super(JSONStore, self).__init__(path, *args, **kwargs)
-        try:
-            self.handle = open(self.path, 'r+')     # noqa: no encoding for json
-            self.store = json.load(self.handle, cls=CustomJSONDecoder)
-        except (IOError, ValueError):
-            self.handle = open(self.path, 'w')      # noqa: no encoding for json
-            self.store = {}
+        self.store = self._read_json()
         self.changed = False
+        self.update = {}        # key-values added since flush
+
+    def _read_json(self):
+        try:
+            with open(self.path) as handle:         # noqa: no encoding for json
+                return json.load(handle, cls=CustomJSONDecoder)
+        except (IOError, ValueError):
+            return {}
+
+    def _write_json(self, data):
+        json_value = json.dumps(data, ensure_ascii=True, separators=(',', ':'),
+                                cls=CustomJSONEncoder)
+        with open(self.path, 'w') as handle:    # noqa: no encoding for json
+            handle.write(json_value)
 
     def dump(self, key, value):
         '''Same as store[key] = value'''
         if self.store.get(key) != value:
             self.store[key] = value
+            self.update[key] = value
+            self.changed = True
+
+    def _run_purge(self):
+        for key in self.purge(self.store):
+            del self.store[key]
+            self.update.pop(key, None)
             self.changed = True
 
     def flush(self):
+        # Purge entries from
         super(JSONStore, self).flush()
         if self.changed:
             app_log.debug('Flushing %s', self.path)
-            json_value = json.dumps(self.store, ensure_ascii=True, separators=(',', ':'),
-                                    cls=CustomJSONEncoder)
-            self.handle.seek(0)
-            self.handle.write(json_value)
-            self.handle.flush()
+            store = self._read_json()
+            store.update(self.update)
+            self._write_json(store)
+            self.store = store
+            self.update = {}
             self.changed = False
 
     def close(self):
-        self.flush()
-        self.handle.close()
+        try:
+            self.flush()
+        # This is presumably if the directory has been deleted. Log & ignore.
+        except OSError:
+            app_log.error('Cannot flush %s', self.path)
 
 
 def check_membership(memberships):
