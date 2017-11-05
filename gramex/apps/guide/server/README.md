@@ -8,7 +8,7 @@ When you run Gramex using `gramex` or `python -m gramex`, it starts a web server
 at port 9988. This opens a welcome screen with a link to this guide.
 
 Gramex's behaviour is controlled by a [YAML](http://yaml.org/spec/1.2/spec.html)
-file called `gramex.yaml`. Here is the [full configuration](/final-config) for
+file called `gramex.yaml`. Here is the [full configuration](../final-config) for
 this guide.
 
 To start off, create a `gramex.yaml` with the lines shown below and run

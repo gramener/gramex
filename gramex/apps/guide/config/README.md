@@ -734,7 +734,7 @@ computed value of applications port:
 
 `gramex.conf` is meant for reading. Do not change its value.
 
-You can see this applications `gramex.conf` at [/final-config](../final-config)
+You can see this applications `gramex.conf` at [../final-config](../final-config)
 
 If the underlying YAML files change, then `gramex.init()` is automatically
 reloaded and all services are re-initialized.
