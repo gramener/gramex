@@ -21,5 +21,6 @@ variables:
 validate:
   script:
     - flake8
+    - eslint gramex/apps
     - pip install -q -e .
     - python setup.py nosetests

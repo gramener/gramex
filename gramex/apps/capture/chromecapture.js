@@ -1,10 +1,12 @@
+/* eslint-env es6, node */
+/* eslint-disable no-console */
+
 const puppeteer = require('puppeteer')
 const bodyParser = require('body-parser')
 const minimist = require('minimist')
 const express = require('express')
 const cookie = require('cookie')
 const path = require('path')
-const url = require('url')
 const tmp = require('tmp')
 const fs = require('fs')
 
@@ -25,10 +27,10 @@ function delay(ms) {
 async function render(q) {
   console.log('Opening', q.url)
 
-  ext = q.ext || 'pdf'
-  media = q.media || 'screen'
-  file = (q.file || 'screenshot') + '.' + ext
-  target = path.join(render_dir, file)
+  let ext = q.ext || 'pdf'
+  let media = q.media || 'screen'
+  let file = (q.file || 'screenshot') + '.' + ext
+  let target = path.join(render_dir, file)
   if (fs.exists(target))
     fs.unlinkSync(target)
 
@@ -82,7 +84,7 @@ async function render(q) {
         },
         q.selector)
       if (!rect)
-        throw new Error("No selector " + q.selector)
+        throw new Error('No selector ' + q.selector)
       options.clip = rect
     }
     await page.screenshot(options)
@@ -95,19 +97,20 @@ function webapp(req, res) {
   if (!q.url)
     return res.sendFile(homepage)
   q.cookie = q.cookie || req.headers.cookie
-  render(q).then((info) => {
-    res.setHeader('Content-Disposition', 'attachment; filename=' + info.file)
-    res.sendFile(info.path, (err) => {
-      if (err)
-        console.error('Error sending file', err)
-      fs.unlinkSync(info.path)
+  render(q)
+    .then((info) => {
+      res.setHeader('Content-Disposition', 'attachment; filename=' + info.file)
+      res.sendFile(info.path, (err) => {
+        if (err)
+          console.error('Error sending file', err)
+        fs.unlinkSync(info.path)
+      })
     })
-  })
-  .catch((e) => {
-    res.setHeader('Content-Type', 'text/plain')
-    res.send(e.toString())
-    console.error(e)
-  })
+    .catch((e) => {
+      res.setHeader('Content-Type', 'text/plain')
+      res.send(e.toString())
+      console.error(e)
+    })
 }
 
 function main() {

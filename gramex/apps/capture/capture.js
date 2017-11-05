@@ -33,10 +33,10 @@ function footer(args) {
 }
 function margin(args) {
   return {
-  'top': '1cm',
-  'right': '1cm',
-  'bottom': '1cm',
-  'left': '1cm'
+    'top': '1cm',
+    'right': '1cm',
+    'bottom': '1cm',
+    'left': '1cm'
   }
 }
 
@@ -73,8 +73,8 @@ function render(q, callback) {
     }
   } else {
     var scale = parseFloat(q.scale || '1'),
-      width = parseFloat(q.width || '1200'),
-      height = 768
+        width = parseFloat(q.width || '1200'),
+        height = 768
     if (q.height) {
       height = parseFloat(q.height || '768')
       page.clipRect = {
@@ -171,11 +171,13 @@ function webapp(request, response) {
   // PhantomJS 1.9.8 on Linux has a request.post string and no request.postRaw
   // PhantomJS 2.0.1 onwards encodes URIs. https://github.com/ariya/phantomjs/pull/12233
   // We handle all scenarios here
+  /* eslint-disable indent */
   var q = parseUri(
     request.postRaw ? '/?' + request.postRaw :
     request.post    ? '/?' + request.post :
     phantom_version >= '2.0.1' ? decodeURIComponent(request.url) : request.url
   ).queryKey
+  /* eslint-enable indent */
   if (!q.url) {
     response.statusCode = 200
     response.headers = {
@@ -248,12 +250,14 @@ function main() {
 main()
 
 function mime(file) {
+  /* eslint-disable indent */
   return (
     file.match(/\.pdf$/i) ? 'application/pdf' :
     file.match(/\.png$/i) ? 'image/png' :
     file.match(/\.gif$/i) ? 'image/gif' :
     file.match(/\.jpg$/i) ? 'image/jpeg' :
                             'application/octet-stream')
+  /* eslint-enable indent */
 }
 
 // parseUri 1.2.2
@@ -262,11 +266,11 @@ function mime(file) {
 
 function parseUri(str) {
   var o   = parseUri.options,
-    m   = o.parser[o.strictMode ? "strict" : "loose"].exec(str),
-    uri = {},
-    i   = 14
+      m   = o.parser[o.strictMode ? 'strict' : 'loose'].exec(str),
+      uri = {},
+      i   = 14
 
-  while (i--) uri[o.key[i]] = m[i] || ""
+  while (i--) uri[o.key[i]] = m[i] || ''
 
   uri[o.q.name] = {}
   uri[o.key[12]].replace(o.q.parser, function ($0, $1, $2) {
@@ -278,13 +282,15 @@ function parseUri(str) {
 
 parseUri.options = {
   strictMode: false,
-  key: ["source","protocol","authority","userInfo","user","password","host","port","relative","path","directory","file","query","anchor"],
+  key: ['source','protocol','authority','userInfo','user','password','host','port','relative','path','directory','file','query','anchor'],
   q: {
-    name:   "queryKey",
+    name:   'queryKey',
     parser: /(?:^|&)([^&=]*)=?([^&]*)/g
   },
   parser: {
+    // eslint-disable-next-line no-useless-escape
     strict: /^(?:([^:\/?#]+):)?(?:\/\/((?:(([^:@]*)(?::([^:@]*))?)?@)?([^:\/?#]*)(?::(\d*))?))?((((?:[^?#\/]*\/)*)([^?#]*))(?:\?([^#]*))?(?:#(.*))?)/,
+    // eslint-disable-next-line no-useless-escape
     loose:  /^(?:(?![^:@]+:[^:@\/]*@)([^:\/?#.]+):)?(?:\/\/)?((?:(([^:@]*)(?::([^:@]*))?)?@)?([^:\/?#]*)(?::(\d*))?)(((\/(?:[^?#](?![^?#\/]*\.[^?#\/.]+(?:[?#]|$)))*\/?)?([^?#\/]*))(?:\?([^#]*))?(?:#(.*))?)/
   }
 }

@@ -15,4 +15,4 @@ $.ajax('search.json')
     terms.forEach(function(row) {
       $index.append('<a href="../' + row[1] + '">' + row[0] + '</a>')
     })
-})
+  })

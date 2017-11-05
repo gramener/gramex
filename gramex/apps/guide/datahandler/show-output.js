@@ -1,3 +1,6 @@
+/* globals cookie */
+/* exported xsrf, pre */
+
 var xsrf = {'X-Xsrftoken': cookie.get('_xsrf')}
 var pre = [].slice.call(document.querySelectorAll('pre'))
 
