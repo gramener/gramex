@@ -5,7 +5,7 @@ import json
 import time
 import shutil
 import unittest
-from nose.tools import eq_, ok_
+from nose.tools import eq_
 from gramex.handlers.basehandler import JSONStore, BaseMixin
 
 folder = os.path.dirname(os.path.abspath(__file__))
