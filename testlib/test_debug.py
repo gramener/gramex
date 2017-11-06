@@ -5,7 +5,8 @@ import inspect
 import unittest
 from io import StringIO
 from textwrap import dedent
-from gramex.debug import timer, Timer, print        # noqa
+import gramex.debug
+from gramex.debug import timer, Timer
 from testfixtures import LogCapture
 from nose.tools import eq_
 
@@ -17,7 +18,7 @@ def line_no():
 
 
 def p(*args, **kwargs):
-    return print(*args, **kwargs)                   # noqa
+    return gramex.debug.print(*args, **kwargs)      # noqa
 
 
 class TestPrint(unittest.TestCase):
