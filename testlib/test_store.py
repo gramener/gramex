@@ -67,6 +67,8 @@ class TestJSONStore(unittest.TestCase):
         self.plainstore.dump('y', None)
         self.store.flush()
         self.plainstore.flush()
+        original.pop('x')
+        original.pop('y')
         eq_(self.load(), original)
 
     def test_store(self):

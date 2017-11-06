@@ -1,7 +1,7 @@
 '''
 Debugging and profiling tools for Gramex
 '''
-from __future__ import print_function
+from __future__ import print_function, unicode_literals
 
 import os
 import gc
@@ -10,7 +10,6 @@ import sys
 import pprint
 import timeit
 import inspect
-import textwrap
 import functools
 from trace import Trace
 try:
@@ -18,6 +17,18 @@ try:
 except ImportError:
     line_profiler = None
 from gramex.config import app_log
+
+
+def _indent(text, prefix, predicate=None):
+    '''Backport of textwrap.indent for Python 2.7'''
+    if predicate is None:
+        def predicate(line):
+            return line.strip()
+
+    def prefixed_lines():
+        for line in text.splitlines(True):
+            yield (prefix + line if predicate(line) else line)
+    return ''.join(prefixed_lines())
 
 
 def _caller():
@@ -60,14 +71,14 @@ class Timer(object):
 def _write(obj, prefix=None, stream=sys.stdout):
     text = pprint.pformat(obj, indent=4)
     if prefix is None:
-        stream.write(textwrap.indent(text, ' .. '))
+        stream.write(_indent(text, ' .. '))
     else:
-        text = textwrap.indent(text, ' .. ' + ' ' * len(prefix) + '   ')
+        text = _indent(text, ' .. ' + ' ' * len(prefix) + '   ')
         stream.write(' .. ' + prefix + ' = ' + text[7 + len(prefix):])
     stream.write('\n')
 
 
-def print(*args, **kwargs):
+def print(*args, **kwargs):             # noqa
     '''
     Logs the (file, function, line, msg) wherever it is called
     '''
