@@ -85,6 +85,17 @@ def stat(path):
     return (None, None)
 
 
+def hashed(val):
+    '''Return the hashed value of val. If not possible, return None'''
+    try:
+        hash(val)
+        return val
+    except TypeError:
+        try:
+            return json.dumps(val, sort_keys=True, separators=(',', ':'))
+        except Exception:
+            return None
+
 # gramex.cache.open() stores its cache here.
 # {(path, callback): {data: ..., stat: ...}}
 _OPEN_CACHE = {}
@@ -189,7 +200,7 @@ def open(path, callback=None, transform=None, rel=False, **kwargs):
         path,
         original_callback if callback_is_str else id(callback),
         id(transform),
-        frozenset(kwargs.items()),
+        frozenset(((k, hashed(v)) for k, v in kwargs.items())),
     )
     cached = _cache.get(key, None)
     fstat = stat(path)

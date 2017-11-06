@@ -288,6 +288,20 @@ class TestOpen(unittest.TestCase):
         result, reloaded = gramex.cache.open(path, encoding='cp1252', **kwargs)
         eq_(reloaded, False)
 
+        # Cache is not fazed by non-hashable inputs.
+        result, reloaded = gramex.cache.open(
+            path,
+            header=0,
+            parse_dates={'date': [0, 1, 2]},
+            dtype={'a': int, 'b': float, 'c': int},
+            **kwargs)
+        cache_key = (path, None, id(None), frozenset([
+            ('header', 0),                              # hashable values hashed as-is
+            ('parse_dates', '{"date":[0,1,2]}'),        # converts to compact json if possible
+            ('dtype', None),                            # gives up with None otherwise
+        ]))
+        self.assertIn(cache_key, cache)
+
     def test_multiple_loaders(self):
         # Loading the same file via different callbacks should return different results
         path = os.path.join(folder, 'multiformat.csv')
