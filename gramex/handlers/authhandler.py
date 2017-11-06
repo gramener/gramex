@@ -56,7 +56,7 @@ def csv_encode(values, *args, **kwargs):
 class AuthHandler(BaseHandler):
     '''The parent handler for all Auth handlers.'''
     @classmethod
-    def setup(cls, action=None, delay=None, session_expiry=None, **kwargs):
+    def setup(cls, prepare=None, action=None, delay=None, session_expiry=None, **kwargs):
         # Switch SSL certificates if required to access Google, etc
         gramex.service.threadpool.submit(check_old_certs)
 
@@ -85,6 +85,15 @@ class AuthHandler(BaseHandler):
         # Set up session expiry
         cls.session_expiry = session_expiry
 
+        # Set up prepare
+        cls.auth_methods = {}
+        if prepare is not None:
+            cls.auth_methods['prepare'] = build_transform(
+                conf={'function': prepare},
+                vars={'args': None, 'handler': None},
+                filename='url:%s:prepare' % cls.name,
+                iter=False)
+
         # Set up post-login actions
         cls.actions = []
         if action is not None:
@@ -94,6 +103,13 @@ class AuthHandler(BaseHandler):
                 cls.actions.append(build_transform(
                     conf, vars=AttrDict(handler=None),
                     filename='url:%s:%s' % (cls.name, conf.function)))
+
+    def prepare(self):
+        super(AuthHandler, self).prepare()
+        if 'prepare' in self.auth_methods:
+            result = self.auth_methods['prepare'](args=self.args, handler=self)
+            if result is not None:
+                self.args = result
 
     def set_user(self, user, id):
         # Find session expiry time
@@ -159,10 +175,11 @@ class GoogleAuth(AuthHandler, GoogleOAuth2Mixin):
     @tornado.gen.coroutine
     def get(self):
         redirect_uri = '{0.protocol:s}://{0.host:s}{0.path:s}'.format(self.request)
-        if self.get_argument('code', False):
+        code = self.args.get('code', [''])[0]
+        if code:
             access = yield self.get_authenticated_user(
                 redirect_uri=redirect_uri,
-                code=self.get_argument('code'))
+                code=code)
             user = yield self.oauth2_request(
                 'https://www.googleapis.com/oauth2/v1/userinfo',
                 access_token=access['access_token'])
@@ -208,12 +225,13 @@ class FacebookAuth(AuthHandler, FacebookGraphMixin):
     @tornado.gen.coroutine
     def get(self):
         redirect_uri = '{0.protocol:s}://{0.host:s}{0.path:s}'.format(self.request)
-        if self.get_argument('code', False):
+        code = self.args.get('code', [''])[0]
+        if code:
             user = yield self.get_authenticated_user(
                 redirect_uri=redirect_uri,
                 client_id=self.kwargs['key'],
                 client_secret=self.kwargs['secret'],
-                code=self.get_argument('code'))
+                code=code)
             self.set_user(user, id='id')
             self.redirect_next()
         else:
@@ -232,7 +250,8 @@ class FacebookAuth(AuthHandler, FacebookGraphMixin):
 class TwitterAuth(AuthHandler, TwitterMixin):
     @tornado.gen.coroutine
     def get(self):
-        if self.get_argument('oauth_token', None):
+        oauth_token = self.args.get('oauth_token', [''])[0]
+        if oauth_token:
             user = yield self.get_authenticated_user()
             self.set_user(user, id='username')
             self.redirect_next()
@@ -391,8 +410,8 @@ class SimpleAuth(AuthHandler):
 
     @tornado.gen.coroutine
     def post(self):
-        user = self.get_argument(self.user.arg)
-        password = self.get_argument(self.password.arg)
+        user = self.args.get(self.user.arg, [None])[0]
+        password = self.args.get(self.password.arg, [None])[0]
         info = self.credentials.get(user)
         if info == password:
             self.set_user({'user': user}, id='user')
@@ -415,6 +434,7 @@ class DBAuth(SimpleAuth):
         template: $YAMLPATH/auth.template.html  # Render the login form template
         url: sqlite:///$YAMLPATH/auth.db    # Pick up list of users from this sqlalchemy URL
         table: users                        # ... and this table
+        prepare: some_function(args)
         user:
             column: user                    # The users.user column is matched with
             arg: user                       # ... the ?user= argument from the form
@@ -505,8 +525,8 @@ class DBAuth(SimpleAuth):
 
     @tornado.gen.coroutine
     def login(self):
-        user = self.get_argument(self.user.arg)
-        password = self.get_argument(self.password.arg)
+        user = self.args.get(self.user.arg, [None])[0]
+        password = self.args.get(self.password.arg, [None])[0]
         for encrypt in self.encrypt:
             for result in encrypt(handler=self, content=password):
                 password = result
@@ -534,13 +554,13 @@ class DBAuth(SimpleAuth):
     def forgot_password(self):
         template = self.forgot.template
         error = {'code': 'auth'}
-        forgot_key = self.get_argument(self.forgot.key)
+        forgot_key = self.args.get(self.forgot.key, [None])[0]
 
         # Step 1: user submits their user ID / email via POST ?forgot&user=...
         if not forgot_key:
             # Get the user based on the user ID or email ID (in that priority)
-            forgot_user = self.get_argument(self.user.arg, None)
-            forgot_email = self.get_argument(self.forgot.arg, None)
+            forgot_user = self.args.get(self.user.arg, [None])[0]
+            forgot_email = self.args.get(self.forgot.arg, [None])[0]
             if forgot_user:
                 query = self.table.c[self.user.column] == forgot_user
             else:
@@ -595,7 +615,7 @@ class DBAuth(SimpleAuth):
             if row is not None:
                 # if token is not expired
                 if row['expire'] > time.time():
-                    password = self.get_argument(self.password.arg)
+                    password = self.args.get(self.password.arg, [None])[0]
                     for encrypt in self.encrypt:
                         for result in encrypt(handler=self, content=password):
                             password = result

@@ -327,6 +327,11 @@ def sales_query(args, handler):
         return 'SELECT * FROM sales'
 
 
+def auth_prepare(args, handler):
+    if 'password' in args:
+        args['password'][0] += '1'
+
+
 if __name__ == '__main__':
     # Call the method mentioned in the command line
     method_name = sys.argv[1]

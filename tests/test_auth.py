@@ -337,6 +337,19 @@ class TestAuthTemplate(TestGramex):
         self.check('/auth/template', text='<h1>Auth 2</h1>')
 
 
+class TestAuthPrepare(AuthBase):
+    @classmethod
+    def setUpClass(cls):
+        AuthBase.setUpClass()
+        cls.url = server.base_url + '/auth/prepare'
+
+    def test_prepare(self):
+        r = self.login('alpha', 'alpha1')
+        self.assertEqual(r.status_code, UNAUTHORIZED)
+        self.login_ok('alpha', 'alpha', check_next='/')
+        self.login_ok('beta', 'beta', check_next='/')
+
+
 class DBAuthBase(AuthBase, LoginFailureMixin):
     @staticmethod
     def create_database():

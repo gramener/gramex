@@ -1959,6 +1959,18 @@ url:
           user: beta
         template: 403-template.html
 
+  auth/prepare:
+    pattern: /auth/prepare
+    handler: SimpleAuth
+    kwargs:
+      template: $YAMLPATH/auth.html
+      user: {arg: user}
+      password: {arg: password}
+      prepare: utils.auth_prepare(args, handler)
+      credentials:
+        alpha: alpha1
+        beta: beta1
+
   pptx/source:
     pattern: /pptx/source
     handler: PPTXHandler

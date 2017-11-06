@@ -643,6 +643,38 @@ To allow users to choose how long to stay logged in, use:
   <a class="example-src" href="http://code.gramener.com/s.anand/gramex/tree/master/gramex/apps/guide/auth/gramex.yaml">Source</a>
 </div>
 
+## Change inputs
+
+All auth handlers support a `prepare:` function. You can use this to modify the
+inputs passed by the user. For example:
+
+- If the username is encrypted and you want to decrypt it
+- To add the domain name before the user, e.g. user types USERNAME, you change it to DOMAIN\USERNAME
+- To restrict the login to specific IP addresses
+
+The YAML configuration is:
+
+    :::yaml
+    url:
+        auth/login:
+            pattern: /$YAMLURL/login/
+            handler: ...                # Any auth handler can be used
+            kwargs:
+                ...                     # Add parameters for the auth handler
+                prepare: module.function(args, handler)
+
+You can create a `module.py` with a `function(args, handler)` that modifies the
+arguments as required. For example:
+
+    :::python
+    def function(args, handler):
+        if handler.request.method == 'POST':
+            args['user'][0] = 'DOMAIN\\' + args['user'][0]
+            args['password'][0] = decrypt(args['password'][0])
+            # ... etc
+
+The changes to the arguments will be saved in `handler.args`, which all auth
+handlers use. (NOTE: These changes need not affect `handler.get_argument()`.)
 
 # Automated logins
 
