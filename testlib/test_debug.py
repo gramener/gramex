@@ -1,7 +1,11 @@
+# noqa: T003
+from __future__ import print_function
+
 import os
 import inspect
 import unittest
 from io import StringIO
+from textwrap import dedent
 from gramex.debug import timer, Timer, print
 from testfixtures import LogCapture
 from nose.tools import eq_
@@ -33,14 +37,14 @@ class TestPrint(unittest.TestCase):
         print(a=True, b=1, lst=[1, 2], string='abc', stream=stream)
         line = line_no() - 1
         val = stream.getvalue()
-        eq_(val, '''
-{}({:d}).test_multi:
- .. a = True
- .. b = 1
- .. lst = [1, 2]
- .. string = 'abc'
+        eq_(val, dedent('''
+            {}({:d}).test_multi:
+             .. a = True
+             .. b = 1
+             .. lst = [1, 2]
+             .. string = 'abc'
 
-'''.format(__file__, line))
+            ''').format(__file__, line))
 
 
 class TestDebug(unittest.TestCase):
