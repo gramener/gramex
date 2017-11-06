@@ -96,6 +96,7 @@ def hashed(val):
         except Exception:
             return None
 
+
 # gramex.cache.open() stores its cache here.
 # {(path, callback): {data: ..., stat: ...}}
 _OPEN_CACHE = {}
