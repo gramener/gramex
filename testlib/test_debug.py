@@ -1,4 +1,3 @@
-# noqa: T003
 from __future__ import print_function
 
 import os
@@ -6,7 +5,7 @@ import inspect
 import unittest
 from io import StringIO
 from textwrap import dedent
-from gramex.debug import timer, Timer, print
+from gramex.debug import timer, Timer, print        # noqa
 from testfixtures import LogCapture
 from nose.tools import eq_
 
@@ -17,24 +16,28 @@ def line_no():
     return parent[2]
 
 
+def p(*args, **kwargs):
+    return print(*args, **kwargs)                   # noqa
+
+
 class TestPrint(unittest.TestCase):
     def test_single(self):
         stream = StringIO()
-        print('x', stream=stream)
+        p('x', stream=stream)
         line = line_no() - 1
         val = stream.getvalue()
         eq_(val, __file__ + '(%d).test_single: x\n' % line)
 
     def test_kwarg(self):
         stream = StringIO()
-        print(val=[10, 20, 30], stream=stream)
+        p(val=[10, 20, 30], stream=stream)
         line = line_no() - 1
         val = stream.getvalue()
         eq_(val, '\n' + __file__ + '(%d).test_kwarg:\n .. val = [10, 20, 30]\n\n' % line)
 
     def test_multi(self):
         stream = StringIO()
-        print(a=True, b=1, lst=[1, 2], string='abc', stream=stream)
+        p(a=True, b=1, lst=[1, 2], string='abc', stream=stream)
         line = line_no() - 1
         val = stream.getvalue()
         eq_(val, dedent('''
