@@ -96,7 +96,11 @@ def watch(name, paths, **events):
         if folder in watches:
             observer.add_handler_for_watch(handler, watches[folder])
         elif os.path.exists(folder):
-            watches[folder] = observer.schedule(handler, folder, recursive=True)
+            try:
+                watches[folder] = observer.schedule(handler, folder, recursive=True)
+            except PermissionError:
+                app_log.warning('No permission to watch changes on %s', folder)
+                continue
         else:
             app_log.warning('watch directory %s does not exist', folder)
             continue
