@@ -37,7 +37,7 @@ A structure such as this:
 ## Data in YAML
 
 YAML is be more intuitive less error-prone. There are no trailing commas or
-braces to get wrong. It also supports data re-use.
+braces to get wrong. It also supports data re-use via [anchors][anchors].
 
     :::yaml
     l1:
@@ -55,3 +55,5 @@ You can read these via:
     :::python
     import yaml
     lookup = yaml.load(open('config.yaml'))
+
+[anchors]: http://camel.readthedocs.io/en/latest/yamlref.html#anchors

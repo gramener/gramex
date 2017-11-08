@@ -46,7 +46,6 @@ When the same code is repeated *across different functions* like this:
         data, insertion_time = load_data(filepath)
         # ... more code
 
-
 ## But operations are still different
 
 For `PSU_Personnel.csv`, we want to sort the records. Not for the others.
@@ -59,6 +58,7 @@ In that case, this is a **BAD** thing do do.
 
 A better thing to do is:
 
+    :::python
     lookup = {                             # Define a transformation for each file
         'l1': dict(file='PSU_l1.csv',        transform=lambda x: x),
         'l2': dict(file='PSU_l2.csv',        transform=lambda x: x),

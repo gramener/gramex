@@ -17,8 +17,7 @@ best to use pattern: `/$YAMLURL/` instead. `$YAMLURL` the relative URL to the
 current `gramex.yaml` location. In your local machine, this becomes `/`. On the
 server, this becomes `/app/`.
 
-You also need to use these when specifying
-[redirection URLs](https://learn.gramener.com/guide/config/#redirection).
+You also need to use these when specifying [redirection URLs](../config/#redirection).
 See this example:
 
     :::yaml

@@ -6,7 +6,7 @@ Gramex 1.x has two functions that help with this.
 
 ## timer
 
-The first is [gramex.debug.timer()](https://learn.gramener.com/guide/debug/#timer).
+The first is [gramex.debug.timer()](../guide/debug/#timer).
 It prints the time since its last call. You can introduce it between any two
 lines to see how fast it runs. Here is a simple example:
 
@@ -25,11 +25,11 @@ This prints the following message on the log:
 
 ## lineprofile
 
-The second is [gramex.debug.lineprofile](https://learn.gramener.com/guide/debug/#line-profile)
-- a decorator that prints the time taken for each line of a function every time it is called.
+The second is [gramex.debug.lineprofile](../debug/#line-profile) - a decorator
+that prints the time taken for each line of a function every time it is called.
 
 For example:
-    
+
     :::python
     import pandas as pd
     from gramex.debug import lineprofile
@@ -43,6 +43,7 @@ For example:
 
 When we run `calc()`, it prints the timing of each line:
 
+    :::python
     Timer unit: 3.52616e-07 s
 
     Total time: 0.00198735 s
@@ -57,7 +58,6 @@ When we run `calc()`, it prints the timing of each line:
          7         1          613    613.0     10.9      diff = data.diff()
          8         1         1998   1998.0     35.5      acf = data.autocorr()
          9         1            2      2.0      0.0      return acf
-
 
 ## Remember
 
