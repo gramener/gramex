@@ -70,7 +70,7 @@ Here are the licenses of other dependencies:
 - `diskcache`_: `Apache`_ software license
 - `futures`_: `PSF`_ license
 - `oauthlib`_: `BSD`_ license
-- `pptgen`_: Gramener license
+- `python pptx`_: MIT license
 - `markdown`_: `BSD`_ license
 - `pymysql`_: `MIT`_ license
 - `ipdb`_: `BSD`_ license
@@ -110,6 +110,7 @@ Here are the licenses of other dependencies:
 .. _ldap3: https://pypi.python.org/pypi/ldap3
 .. _argh: https://pypi.python.org/pypi/argh
 .. _pathtools: https://pypi.python.org/pypi/pathtools
+.. _python pptx: https://github.com/scanny/python-pptx/blob/master/LICENSE
 .. _requirements: https://code.gramener.com/s.anand/gramex/tree/master/requirements.txt
 
 Applications built on Gramex may use other libraries. Here are some common

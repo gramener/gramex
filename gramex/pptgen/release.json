@@ -1,0 +1,24 @@
+{
+    "name": "pptgen",
+    "description": "Make PowerPoint presentations from data",
+    "url": "http://code.gramener.com/sanjay.yadav/pptgen",
+    "author": "Sanjay Yadav",
+    "author_email": "sanjay.yadav@gramener.com",
+    "version": "0.2.1",
+    "license": "Gramener",
+    "keywords": [
+      "powerpoint", "ppt", "pptx", "office", "open xml"
+    ],
+    "classifiers": [
+        "Development Status :: 3 - Alpha",
+        "Environment :: Console",
+        "Intended Audience :: Developers",
+        "Operating System :: OS Independent",
+        "Programming Language :: Python :: 2",
+        "Programming Language :: Python :: 2.7",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.5",
+        "Topic :: Office/Business :: Office Suites",
+        "Topic :: Software Development :: Libraries"
+    ]
+}

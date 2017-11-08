@@ -7,10 +7,10 @@ _mime = 'application/vnd.openxmlformats-officedocument.presentationml.presentati
 class PPTXHandler(BaseHandler):
     def get(self):
         # pptgen is not required unless PPTXHandler is used
-        import pptgen                   # noqa
+        from gramex.pptgen import pptgen        # noqa
 
         target = io.BytesIO()
-        pptgen.pptgen(target=target, handler=self, **self.kwargs)
+        pptgen(target=target, handler=self, **self.kwargs)
 
         # Set up headers
         headers = self.kwargs.get('headers', {})

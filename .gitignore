@@ -33,7 +33,9 @@ tests/**/gen.*
 !gramex/apps/**/*.csv
 
 *.ppt*
+
 !tests/template.pptx
+!gramex/apps/guide/pptxhandler/examples-input.pptx
 
 # Don't commit databases created by test cases
 tests/*.db

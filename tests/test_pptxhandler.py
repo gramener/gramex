@@ -4,7 +4,6 @@ from __future__ import unicode_literals
 import io
 import pptx
 from nose.tools import eq_
-from nose.plugins.skip import SkipTest
 from . import TestGramex
 
 
@@ -30,7 +29,6 @@ class TestPPTXHandler(TestGramex):
         })
 
     def test_change_text(self):
-        raise SkipTest('Unicode handling TBD')
         prs, text = self.get_pptx('/pptx/change-text')
         eq_(text, {
             'Text1': 'New Text1',

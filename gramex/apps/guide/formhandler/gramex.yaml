@@ -21,6 +21,8 @@ url:
               Table:
                 table:
                   data: data['data']
+            headers:
+              Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
 
     formhandler-continent:
       pattern: /$YAMLURL/continent

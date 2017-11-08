@@ -728,9 +728,9 @@ def download(data, format='json', template=None, **kwargs):
                 val.to_excel(writer, sheet_name=key, **kwargs)
         return out.getvalue()
     elif format in {'pptx', 'ppt'}:
-        import pptgen           # noqa
+        from gramex.pptgen import pptgen    # noqa
         out = io.BytesIO()
-        pptgen.pptgen(target=out, data=data, is_formhandler=True, **kwargs)
+        pptgen(target=out, data=data, is_formhandler=True, **kwargs)
         return out.getvalue()
     else:
         out = io.BytesIO()
