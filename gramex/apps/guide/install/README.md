@@ -6,8 +6,8 @@ title: Install Gramex
 
 - Download and install [Anaconda][anaconda] 4.4.0 or later. [Update Anaconda][update] if required.
 - On a Mac, download and install [Xcode][xcode].
-- Uninstall gramex if you have installed it before: `pip uninstall gramex`.
-- Run `pip install --verbose https://code.gramener.com/s.anand/gramex/repository/archive.tar.bz2?ref=master`.
+- Uninstall gramex if you have installed it before: `pip uninstall gramex`
+- Run `pip install --verbose https://code.gramener.com/s.anand/gramex/repository/archive.tar.bz2?ref=master`
     - Replace ``master`` with ``dev`` for the latest development version.
     - **v1.23** onwards, we install node modules, which take time. `--verbose`
       lets you monitor progress.

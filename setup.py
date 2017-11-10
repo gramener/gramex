@@ -33,7 +33,7 @@ def install_apps(warn):
     for filename in os.listdir(root):
         target = os.path.join(root, filename)
         if os.path.isdir(target):
-            log.info('Installing %s', filename)
+            log.info('Installing %s. This may take time...', filename)
             gramex.install.run_setup(target)
 
 
