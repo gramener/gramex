@@ -501,7 +501,12 @@ class DBAuth(SimpleAuth):
         if not hasattr(cls, 'table'):
             from sqlalchemy import MetaData, Table
             meta = MetaData(bind=cls.engine)
-            cls.table = Table(cls.tablename, meta, autoload=True, autoload_with=cls.engine)
+            if '.' in cls.tablename:
+                schema, table = cls.tablename.rsplit('.', 1)
+                cls.table = Table(table, meta, autoload=True, autoload_with=cls.engine,
+                                  schema=schema)
+            else:
+                cls.table = Table(cls.tablename, meta, autoload=True, autoload_with=cls.engine)
 
     def get(self):
         self.save_redirect_page()

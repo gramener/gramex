@@ -1837,9 +1837,28 @@ url:
     handler: DBAuth
     kwargs:
       template: $YAMLPATH/auth.html
-      # This is created by schedule.create-user-database
       url: 'mysql+pymysql://root@${MYSQL_SERVER}/test_auth'
       table: users
+      user:
+          column: user
+          arg: user
+      password:
+          column: password
+          arg: password
+          function: utils.encrypt(handler, content)
+      delay: [0.2, 0.4]
+      redirect:
+          query: next
+          header: NEXT
+          url: /dir/index/
+
+  auth/dbschema:
+    pattern: /auth/dbschema
+    handler: DBAuth
+    kwargs:
+      template: $YAMLPATH/auth.html
+      url: 'postgresql://postgres@$POSTGRES_SERVER/test_auth'
+      table: auth.users         # Test that schemas work
       user:
           column: user
           arg: user

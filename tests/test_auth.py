@@ -350,32 +350,38 @@ class TestAuthPrepare(AuthBase):
         self.login_ok('beta', 'beta', check_next='/')
 
 
-class DBAuthBase(AuthBase, LoginFailureMixin):
+class DBAuthBase(AuthBase):
     @staticmethod
-    def create_database():
+    def create_database(url, table):
         data = pd.read_csv(os.path.join(folder, 'userdata.csv'), encoding='cp1252')
         data['password'] = data['password'] + data['salt']
-        dburl = 'mysql+pymysql://root@%s/' % gramex.config.variables.MYSQL_SERVER
+        dburl, dbname = url.rsplit('/', 1)
         # sqlalchemy needs encoding to be a `str` in both Python 2.x and 3.x
         encoding = str('utf-8')
-        engine = sa.create_engine(dburl, encoding=encoding)
+        engine = sa.create_engine(dburl, encoding=encoding, isolation_level='AUTOCOMMIT')
         try:
-            engine.execute('DROP DATABASE IF EXISTS test_auth')
-            engine.execute('CREATE DATABASE test_auth')
+            engine.execute('DROP DATABASE IF EXISTS %s' % dbname)
+            engine.execute('CREATE DATABASE %s' % dbname)
             engine.dispose()
-            engine = sa.create_engine(dburl + 'test_auth', encoding=encoding)
-            data.to_sql('users', con=engine, index=False)
+            engine = sa.create_engine(dburl + '/' + dbname, encoding=encoding)
+            if '.' in table:
+                schema, tbl = table.rsplit('.', 1)
+                engine.execute('CREATE SCHEMA %s' % schema)
+                data.to_sql(tbl, con=engine, schema=schema, index=False)
+            else:
+                data.to_sql(table, con=engine, index=False)
         except sa.exc.OperationalError:
             raise SkipTest('Unable to connect to %s' % dburl)
 
     @classmethod
     def setUpClass(cls):
         super(DBAuthBase, cls).setUpClass()
-        cls.create_database()
+        config = gramex.conf.url['auth/db'].kwargs
+        cls.create_database(config.url, config.table)
         cls.url = server.base_url + '/auth/db'
 
 
-class TestDBAuth(DBAuthBase, LoginMixin):
+class TestDBAuth(DBAuthBase, LoginMixin, LoginFailureMixin):
     # Just apply LoginMixin tests to DBAuthBase
     def test_salt(self):
         self.unauthorized('epsilon', 'epsilon')
@@ -384,7 +390,16 @@ class TestDBAuth(DBAuthBase, LoginMixin):
         self.login_ok('alpha', 'alpha', headers={'salt': '123'}, check_next='/dir/index/')
 
 
-class TestAuthorize(DBAuthBase):
+class TestDBAuthSchema(DBAuthBase, LoginMixin):
+    @classmethod
+    def setUpClass(cls):
+        super(DBAuthBase, cls).setUpClass()
+        config = gramex.conf.url['auth/dbschema'].kwargs
+        cls.create_database(config.url, config.table)
+        cls.url = server.base_url + '/auth/dbschema'
+
+
+class TestAuthorize(DBAuthBase, LoginFailureMixin):
     def initialize(self, url, user='alpha', login_url='/login/'):
         self.session = requests.Session()
         r = self.session.get(server.base_url + url)
