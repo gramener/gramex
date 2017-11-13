@@ -9,7 +9,8 @@
   "license": "UNLICENSED",
   "dependencies": {
     "font-awesome": "*",
-    "bootstrap": "~3",
+    "bootstrap": "^4.0.0-beta.2",
+    "popper.js": "^1.12",
     "jquery": "~3"
   }
 }

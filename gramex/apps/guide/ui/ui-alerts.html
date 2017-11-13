@@ -1,0 +1,43 @@
+<h2>Alerts</h2>
+<div class="alert-alert"></div>
+<table class="table table-sm table-inverse table-hover">
+  <thead>
+    <tr>
+      <th>Bootstrap 4</th>
+      <th>Noty</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="alert-lib" data-alerttype="bs"><a href="#">Bootstrap alert</a></td>
+      <td>
+        <span class="alert-lib" data-alerttype="noty"><a href="#">Default</a></span>.
+        <span class="alert-lib" data-alerttype="noty-cont"><a href="#">Custom container</a></span>.
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<script>
+  $('body').on('click', '.alert-lib', function() {
+    if($(this).data('alerttype') === 'bs') {
+      alertMessage('success', "Here's a bootstrap 4", ' Alert', '.alert-alert')
+    } else if($(this).data('alerttype') === 'noty-cont') {
+      new Noty({
+        type: 'success',
+        container: '.alert-alert',
+        text: "Here is a Noty alert in a custom container",
+        theme: 'metroui',
+        timeout: 1000
+      }).show()
+    } else if ($(this).data('alerttype') === 'noty') {
+      new Noty({
+        type: 'success',
+        layout: 'topRight',
+        text: "Here is a Noty alert",
+        theme: 'relax',
+        timeout: 1000
+      }).show()
+    }
+  })
+</script>

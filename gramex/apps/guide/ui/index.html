@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <title>UI Components</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>document.write('<link rel="stylesheet" href="bootstrap-theme' + location.search + '">')</script>
+  <link rel="stylesheet" href="../node_modules/font-awesome/css/font-awesome.min.css">
+  <link rel="stylesheet" href="../node_modules/noty/lib/noty.css">
+  <link rel="stylesheet" href="../node_modules/daterangepicker/daterangepicker.css">
+  <link rel="stylesheet" href="../node_modules/bootstrap-slider/dist/css/bootstrap-slider.min.css">
+  <style>
+  .component-list > section h2 {
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 0.5rem;
+    margin-top: 3rem;
+  }
+  </style>
+</head>
+<body>
+  <nav class="navbar navbar-dark bg-dark">
+    <a class="navbar-brand" href=".">UI Components</a>
+    <form class="form-inline">
+      <button class="btn btn-sm btn-light" type="button" data-toggle="collapse" data-target="#theme-picker" aria-expanded="false" aria-controls="theme-picker">
+        Change theme
+      </button>
+    </form>
+  </nav>
+  <div id="theme-picker" class="theme bg-dark text-light collapse.show">
+    <form class="container-fluid pt-4 pb-4">
+      <div class="theme-contents d-flex align-self-start">
+        <div class="column mr-4">
+          <div><input id="primary" name="primary" type="color">     <label for="primary">Primary</label>     </div>
+          <div><input id="secondary" name="secondary" type="color"> <label for="secondary">Secondary</label> </div>
+          <div><input id="success" name="success" type="color">     <label for="success">Success</label>     </div>
+          <div><input id="danger" name="danger" type="color">       <label for="danger">Danger</label>       </div>
+          <div><input id="warning" name="warning" type="color">     <label for="warning">Warning</label>     </div>
+          <div><input id="info" name="info" type="color">           <label for="info">Info</label>           </div>
+          <div><input id="light" name="light" type="color">         <label for="light">Light</label>         </div>
+          <div><input id="dark" name="dark" type="color">           <label for="dark">Dark</label>           </div>
+        </div>
+        <div class="column mr-4">
+          <div>
+            <label for="enable-rounded"><input id="enable-rounded" name="enable-rounded" type="checkbox"> Rounded</label>
+          </div>
+          <div>
+            <label for="enable-shadows"><input id="enable-shadows" name="enable-shadows" type="checkbox"> Shadows</label>
+          </div>
+          <div>
+            <label for="enable-gradients"><input id="enable-gradients" name="enable-gradients" type="checkbox"> Gradients</label>
+          </div>
+          <div>
+            <label for="enable-transitions"><input id="enable-transitions" name="enable-transitions" type="checkbox"> Transitions</label>
+          </div>
+          <div>
+            <label for="enable-print-styles"><input id="enable-print-styles" name="enable-print-styles" type="checkbox"> Print styles</label>
+          </div>
+        </div>
+        <div class="column mr-4">
+          <div>
+            <label for="font-family-base">Body font</label>
+            <select class="form-control form-control-sm" name="font-family-base"></select>
+          </div>
+          <div>
+            <label for="headings-font-family">Heading font</label>
+            <select class="form-control form-control-sm" name="headings-font-family"></select>
+          </div>
+        </div>
+      </div>
+      <button type="reset" class="btn btn-default">Reset</button>
+      <button type="submit" class="btn btn-primary">Apply theme</button>
+    </form>
+  </div>
+
+  <div class="d-flex mt-3 pl-3">
+    <div class="toc"></div>
+    <div class="container-fluid component-list">
+      <input type="search" class="form-control" placeholder="Type component to filter" id="search-components">
+      <section data-ui="ui-alerts.html"></section>
+      <section data-ui="ui-buttons.html"></section>
+      <section data-ui="ui-breadcrumbs.html"></section>
+      <section data-ui="ui-button-groups.html"></section>
+      <section data-ui="ui-dropdown-filters.html"></section>
+      <section data-ui="ui-date-picker.html"></section>
+      <section data-ui="ui-input-groups.html"></section>
+      <section data-ui="ui-loading-icons.html"></section>
+      <section data-ui="ui-panels.html"></section>
+      <section data-ui="ui-pagination.html"></section>
+      <section data-ui="ui-slider.html"></section>
+      <section data-ui="ui-search-bar.html"></section>
+      <section data-ui="ui-tables.html"></section>
+      <section data-ui="ui-tooltips.html"></section>
+    </div><!-- .container-fluid -->
+  </div><!-- .d-flex -->
+
+  <!-- Modal -->
+  <div class="modal fade" id="sourceCodeModal" tabindex="-1" role="dialog" aria-labelledby="sourceCodeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="sourceCodeModalLabel">Component source code</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          ...
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../node_modules/jquery/dist/jquery.min.js"></script>
+  <script src="../node_modules/popper.js/dist/umd/popper.min.js"></script>
+  <script src="../node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
+  <script src="../node_modules/noty/lib/noty.min.js"></script>
+  <script src="../node_modules/moment/min/moment-with-locales.min.js"></script>
+  <script src="../node_modules/daterangepicker/daterangepicker.js"></script>
+  <script src="../node_modules/bootstrap-slider/dist/bootstrap-slider.min.js"></script>
+  <script src="../node_modules/url-search-params/build/url-search-params.js"></script>
+  <script>
+    var defaults = {
+      primary: '#007bff',
+      secondary: '#868e96',
+      success: '#28a745',
+      info: '#17a2b8',
+      warning: '#ffc107',
+      danger: '#dc3545',
+      light: '#f8f9fa',
+      dark: '#343a40',
+    }
+    var default_enabled = {
+        'enable-rounded': 'on',
+        'enable-transitions': 'on',
+        'enable-print-styles': 'on'
+    }
+    function set_input(key, value) {
+      var $el = $('input[name="' + key + '"]')
+        if ($el.is('[type="checkbox"]'))
+          $el.prop('checked', Boolean(value))
+        else
+          $el.val(value)
+    }
+    function reset() {
+      for (var key in defaults)
+        set_input(key, defaults[key])
+      var q = new URLSearchParams(location.search)
+      var keys = Array.from(q.keys())
+      if (keys.length)
+        $('input[name^=enable-]').prop('checked', false)
+      else
+        for (var key in default_enabled)
+          set_input(key, 'on')
+      keys.forEach(function(key) {
+        set_input(key, q.get(key))
+      })
+    }
+    reset()
+    $('#theme-picker [type="reset"]').on('click', function(e) {
+      e.preventDefault()
+      reset()
+    })
+
+    var $toc = $('.toc')
+    $('[data-ui]').each(function() {
+      var $toc_entry = $('<div><a></a></div>').appendTo($toc).find('a')
+      var $this = $(this)
+      $this
+        .load($this.data('ui'), function() {
+          var heading = $this.find('h2').text()
+          var id = slug(heading)
+          $this.attr('id', id)
+          $toc_entry.text(heading).attr('href', '#' + id)
+          $this.find('h2').after('<div class="text-right"><span class="font-weight-light src">(Source)</span></div>')
+        })
+      $('<div class="text-right"><span class="font-weight-light src">(Source)</span></div>').appendTo($this)
+    })
+
+    var fonts = ['Calibri', 'Century Gothic', 'Franklin Gothic Medium', 'Futura', 'Geneva', 'Gill Sans', 'Helvetica', 'Optima', 'Segoe UI', 'Tahoma', 'Trebuchet MS', 'Verdana', 'Baskerville', 'Cambria', 'Georgia', 'Palatino', 'Times New Roman', 'Consolas']
+    var markup = ""
+    fonts.forEach(function(item) {
+      markup += "<option style='font-family:" + item + ";' value='" + item + "'>" + item + "</option>"
+    })
+    $('select[name="font-family-base"]').append(markup)
+    $('select[name="headings-font-family"]').append(markup)
+
+    $('body').on('input', '#search-components', function() {
+      var $user_val = $(this).val()
+      $('section').hide()
+      $('section').filter(function(ind, item) {
+        return $(item).find('h2').text().toLowerCase().indexOf($user_val) > -1
+      }).show()
+    })
+    .on('click', '.src', function() {
+      $('#sourceCodeModal').modal()
+      $('#sourceCodeModal').find('.modal-body').html(
+        '<xmp>' + $(this).parents().closest('section').html() + '</xmp>')
+    })
+
+    function slug(text) {
+      return text
+        .toLowerCase()
+        .replace(/[^a-z0-9_]+/g, '-')   // Replace non-alpha with -
+        .replace(/^\-+/, '')            // Remove leading -
+        .replace(/\-+$/, '')            // Remove trailing -
+    }
+  </script>
+</body>
+</html>
