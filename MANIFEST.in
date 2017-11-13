@@ -1,4 +1,4 @@
-# Used for source distribtions (python setup.py sdist)
+# Used for source distributions (python setup.py sdist)
 # https://docs.python.org/2/distutils/sourcedist.html
 # Include package specific files
 include gramex/gramex.yaml
@@ -6,6 +6,7 @@ include gramex/deploy.yaml
 include gramex/apps.yaml
 include gramex/release.json
 include gramex/handlers/*.html
+include gramex/pptgen/*.json
 
 # Include Gramex apps
 graft gramex/apps

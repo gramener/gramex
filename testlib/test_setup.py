@@ -26,6 +26,11 @@ class TestSetup(unittest.TestCase):
         self.exists('handlers/datahandler.template.html')
         self.exists('handlers/queryhandler.template.html')
 
+        # Ensure that all JSON files in pptgen/ are included
+        self.exists('pptgen/fonts.json')
+        self.exists('pptgen/colors.json')
+        self.exists('pptgen/release.json')
+
         # Ensure that the Gramex guide is installed by checking for a few files
         self.exists('apps/guide/index.html')
         self.exists('apps/guide/gramex.yaml')
