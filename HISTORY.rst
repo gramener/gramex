@@ -3,6 +3,45 @@
 History
 -------
 
+1.23.1 (2017-11-13)
+~~~~~~~~~~~~~~~~~~~
+This is an interim release with minor features and major bugfixes.
+
+- `PPTXHandler`_ is formally released as part of Gramex, with extensive examples
+  and documentation.
+- `CaptureHandler`_ also supports a PPTX download option that downloads image
+  screenshots and pastes them into slides.
+- ``gramex init`` is the new way of initializing Gramex repos. It just copies
+  the minimal files required to get started, but will soon include boilerplates.
+- `FileHandler`_ headers can be different for different file patterns. So within
+  the same directory, you can serve different files with different content types
+  and expiry using the same FileHandler. `Issue 176`_
+- `AuthHandler`_ lets you change user inputs using a ``prepare:`` function. You
+  can decrypt browser-encrypted passwords, prefix a ``DOMAIN\`` to the username,
+  or restrict access by IP. `Issue 180`_
+- `Print statements`_ can be replaced by :py:func:`gramex.debug.print` - is a
+  smarter replacement for ``print``. It also prints the file and line where you
+  inserted the print statement, making it easier to trace flow.
+- `Tracing`_ line by line execution is with the :py:func:`gramex.debug.trace()`
+  decorator makes it very easy to see which lines in a function were executed.
+
+The bugfixes are:
+
+- Multiple Gramex instances running on the same system no longer over-write
+  sessions. (This led to logouts.) `Issue 147`_
+- :py:func:`gramex.cache.open` used to cache based on the file and its type, not
+  arguments. So ``gramex.cache.open('data.csv', encoding='cp1252')`` and
+  ``gramex.cache.open('data.csv', encoding='utf-8')`` would return the same
+  cached result. This is fixed. `Issue 171`_
+- `FormHandler`_ and `DBAuth`_ support tables with schemas (i.e. table names with
+  dots in them, like ``schema.table``.) `Issue 185`_ and `Issue 186`_
+- A bug in `watch`_ led to file permission errors on Mac systems. This is
+  resolved. `Issue 183`_
+
+- Code base: 18,908 lines (gramex: 12,807, tests: 6,101)
+- Test coverage: 65% (pptgen coverage is a gap)
+
+
 1.23 (2017-10-31)
 ~~~~~~~~~~~~~~~~~
 This release adds Gramex as a `Windows service`_, making it easier for Windows
@@ -99,7 +138,7 @@ Found) and 403 (Forbidden) are a little more informattive and better designed.
 All auth handlers support a custom `session expiry`_ duration. You can increase /
 decrease the cookie's expiry duration.
 
-This release also features an undocumented ``PPTXHandler`` that generates
+This release also features an undocumented `PPTXHandler`_ that generates
 PowerPoint presentations. But the API will change. This handler not meant for
 general use yet. A future release will define and document the specs.
 
@@ -684,6 +723,7 @@ There are two changes that may disrupt your code:
 .. _TwitterStream: https://learn.gramener.com/guide/twitterresthandler/#twitter-streaming
 .. _UploadHandler: https://learn.gramener.com/guide/uploadhandler/
 .. _CaptureHandler: https://learn.gramener.com/guide/capturehandler/
+.. _PPTXHandler: https://learn.gramener.com/guide/pptxhandler/
 .. _FormHandler: https://learn.gramener.com/guide/formhandler/
 .. _FormHandler filters: https://learn.gramener.com/guide/formhandler/#formhandler-filters
 .. _FormHandler downloads: https://learn.gramener.com/guide/formhandler/#formhandler-downloads
@@ -749,3 +789,13 @@ There are two changes that may disrupt your code:
 .. _predefined variables: https://learn.gramener.com/guide/config/#predefined-variables
 .. _nginx reverse proxy: https://learn.gramener.com/guide/deploy/#nginx-reverse-proxy
 .. _Windows service: https://learn.gramener.com/guide/deploy/#windows-service
+.. _Print statements: https://learn.gramener.com/guide/debug/#print-statements
+.. _Tracing: https://learn.gramener.com/guide/debug/#tracing
+.. _change inputs: https://learn.gramener.com/guide/auth/#change-inputs
+.. _Issue 147: https://code.gramener.com/s.anand/gramex/issues/147
+.. _Issue 171: https://code.gramener.com/s.anand/gramex/issues/171
+.. _Issue 176: https://code.gramener.com/s.anand/gramex/issues/176
+.. _Issue 180: https://code.gramener.com/s.anand/gramex/issues/180
+.. _Issue 183: https://code.gramener.com/s.anand/gramex/issues/183
+.. _Issue 185: https://code.gramener.com/s.anand/gramex/issues/185
+.. _Issue 186: https://code.gramener.com/s.anand/gramex/issues/186

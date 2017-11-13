@@ -10,6 +10,7 @@ import sys
 import pprint
 import timeit
 import inspect
+import logging
 import functools
 from trace import Trace
 try:
@@ -37,25 +38,18 @@ def _caller():
     return '[%s:%s:%d]' % (parent[1], parent[3], parent[2])
 
 
-def _make_timer():
-    '''
-    This is used to create ``timer``. ``timer("msg")`` prints the time elapsed
-    since the last timer call.
-    '''
-    class Context:
-        start = timeit.default_timer()
-
-    def timer(msg):
-        end = timeit.default_timer()
-        app_log.info('%0.3fs %s %s', end - Context.start, msg, _caller())
-        Context.start = end
-
-    return timer
-
-
 class Timer(object):
-    def __init__(self, msg):
+    '''
+    Find how long a code blocks takes to execute. Wrap any code block like this::
+
+        >>> from gramex.debug import Timer
+        >>> with Timer('optional message'):
+        >>>     slow_running_code()
+        WARNING:gramex:1.000s optional message [<file>:<func>:line]
+    '''
+    def __init__(self, msg='', level=logging.WARNING):
         self.msg = msg
+        self.level = logging.WARNING
 
     def __enter__(self):
         self.start = timeit.default_timer()
@@ -65,7 +59,7 @@ class Timer(object):
         end = timeit.default_timer()
         if self.gc_old:
             gc.enable()
-        app_log.info('%0.3fs %s %s', end - self.start, self.msg, _caller())
+        app_log.log(self.level, '%0.3fs %s %s', end - self.start, self.msg, _caller())
 
 
 def _write(obj, prefix=None, stream=sys.stdout):
@@ -80,7 +74,19 @@ def _write(obj, prefix=None, stream=sys.stdout):
 
 def print(*args, **kwargs):             # noqa
     '''
-    Logs the (file, function, line, msg) wherever it is called
+    A replacement for the ``print`` function that also logs the (file, function,
+    line, msg) from where it is called. For example::
+
+        >>> from __future__ import print_function       # required for Python 2.x
+        >>> from gramex.debug import print              # import print function
+        >>> print('hello world')                        # It works like the print function
+        <file>(line).<function>: hello world
+        >>> print(x=1, y=2)                             # Use kwargs to print variable names
+        <file>(line).<function>:
+         .. x = 1
+         .. y = 2
+
+    It automatically pretty-prints complex variables.
     '''
     stream = kwargs.pop('stream', sys.stdout)
     parent = inspect.getouterframes(inspect.currentframe())[1]
@@ -129,6 +135,15 @@ if line_profiler is None:
         return func
 else:
     def lineprofile(func):
+        '''
+        A decorator that prints the time taken for each line of a function every
+        time it is called. This example prints each line's performance::
+
+            >>> from gramex.debug import lineprofile
+            >>> @lineprofile
+            >>> def calc():
+            >>>     ...
+        '''
         profile = line_profiler.LineProfiler(func)
 
         @functools.wraps(func)
@@ -150,8 +165,9 @@ if os.name == 'nt':
     def getch():
         '''
         Return character if something was typed on the console, else None.
-        TODO: flush the buffer
+        Used internally by Gramex on the command line.
         '''
+        # TODO: flush the buffer
         return msvcrt.getch() if msvcrt.kbhit() else None
 
 # Posix (Linux, OS X)
@@ -191,5 +207,26 @@ else:
             return None
 
 
-# Create a single global instance of timer
+def _make_timer():
+    '''
+    ``timer("msg")`` prints the time elapsed since the last timer call::
+
+        >>> from gramex.debug import timer
+        >>> gramex.debug.timer('abc')
+        WARNING:gramex:7.583s abc [<file>:<function>:1]     # Time since Gramex start
+        >>> gramex.debug.timer('def')
+        WARNING:gramex:3.707s def [<file>:<function>:1]     # Time since last call
+    '''
+    class Context:
+        start = timeit.default_timer()
+
+    def timer(msg, level=logging.WARNING):
+        end = timeit.default_timer()
+        app_log.log(level, '%0.3fs %s %s', end - Context.start, msg, _caller())
+        Context.start = end
+
+    timer.__doc__ = _make_timer.__doc__
+    return timer
+
+
 timer = _make_timer()

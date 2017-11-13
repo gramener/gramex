@@ -207,25 +207,18 @@ def scale(series, lo=None, hi=None):
     The lowest value becomes 0, the highest value becomes 1, and all other
     values are proportionally multiplied and have a range between 0 and 1.
 
-    Parameters
-    ----------
-    series : Pandas Series, numpy array, list or iterable
-        Data to scale
-    lo : float
-        Value that becomes 0. Values lower than ``lo`` in ``series``
+    :arg Series series: Data to scale. Pandas Series, numpy array, list or iterable
+    :arg float lo: Value that becomes 0. Values lower than ``lo`` in ``series``
         will be mapped to negative numbers.
-    hi : float
-        Value that becomes 1. Values higher than ``hi`` in ``series``
+    :arg float hi: Value that becomes 1. Values higher than ``hi`` in ``series``
         will be mapped to numbers greater than 1.
 
-    Examples
-    --------
-    Typical usage::
+    Examples::
 
-        stats.scale([1, 2, 3, 4, 5])
+        >>> stats.scale([1, 2, 3, 4, 5])
         # array([ 0.  ,  0.25,  0.5 ,  0.75,  1.  ])
 
-        stats.scale([1, 2, 3, 4, 5], lo=2, hi=4)
+        >>> stats.scale([1, 2, 3, 4, 5], lo=2, hi=4)
         # array([-0.5,  0. ,  0.5,  1. ,  1.5])
     '''
     series = np.array(series, dtype=float)
@@ -239,32 +232,22 @@ def decimals(series):
     Given a ``series`` of numbers, returns the number of decimals
     *just enough* to differentiate between most numbers.
 
-    Parameters
-    ----------
-    series : Pandas Series, numpy array, list or iterable
+    :arg Series series: Pandas Series, numpy array, list or iterable.
         Data to find the required decimal precision for
+    :return: The minimum number of decimals required to differentiate between
+        most numbers
 
-    Returns
-    -------
-    decimals : int
-        The minimum number of decimals required to differentiate
-        between most numbers
-
-    Examples
-    --------
-    Typical usage::
+    Examples::
 
         stats.decimals([1, 2, 3])       # 0: All integers. No decimals needed
         stats.decimals([.1, .2, .3])    # 1: 1 decimal is required
         stats.decimals([.01, .02, .3])  # 2: 2 decimals are required
         stats.decimals(.01)             # 2: Only 1 no. of 2 decimal precision
 
-    Notes
-    -----
-    This function first calculates the smallest difference between any pair of
-    numbers (ignoring floating-point errors). It then finds the log10 of that
-    difference, which represents the minimum decimals required to
-    differentiate between these numbers.
+    Note: This function first calculates the smallest difference between any pair
+    of numbers (ignoring floating-point errors). It then finds the log10 of that
+    difference, which represents the minimum decimals required to differentiate
+    between these numbers.
     '''
     series = np.ma.masked_array(series, mask=np.isnan(series)).astype(float)
     series = series.reshape((series.size,))
@@ -469,16 +452,14 @@ def draw_sankey(data, spec):
 
 def squarified(x, y, w, h, data):
     """
-
     Draw a squarified treemap.
 
     See <http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.36.6685>
     Returns a numpy array with (x, y, w, h) for each item in data.
 
-    Examples
-    --------
-    The result is a 2x2 numpy array::
+    Examples::
 
+        # The result is a 2x2 numpy array::
         >>> squarified(x=0, y=0, w=6, h=4, data=[6, 6, 4, 3, 2, 2, 1])
         array([[ 0.        ,  0.        ,  3.        ,  2.        ],
                [ 0.        ,  2.        ,  3.        ,  2.        ],

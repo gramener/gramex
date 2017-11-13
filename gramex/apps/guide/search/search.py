@@ -39,9 +39,10 @@ class IndexerExtension(Extension):
 def readme_files(folder):
     os.chdir(folder)
     for root, dirs, files in os.walk('.'):
-        for file in files:
-            if file.lower() == 'readme.md':
-                yield root, file
+        if '__pycache__' not in root and 'node_modules' not in root:
+            for file in files:
+                if file.lower() == 'readme.md':
+                    yield root, file
 
 
 def markdown_index(folder):

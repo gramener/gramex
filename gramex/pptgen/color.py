@@ -139,20 +139,15 @@ def gradient(value, grad, opacity=1, sort=True):
     """
     Converts a number or list ``x`` into a color using a gradient.
 
-    Parameters
-    ----------
-    value : int, float, list, numpy array or any iterable.
+
+    :arg number value: int, float, list, numpy array or any iterable.
         If an iterable is passed, a list of colors is returned.
-    grad : tuple/list of ``(value, color)`` tuples
+    :arg list grad: tuple/list of ``(value, color)`` tuples
         For example, ``((0, 'red'), (.5, 'yellow'), (1, 'green'))``.
         Values will be sorted automatically
-    opacity : float, optional
-        alpha to be added to the returned color
-    sort : boolean, optional
-        If ``grad`` is already sorted, set ``sort=False``
+    :arg float opacity: optional alpha to be added to the returned color
+    :arg bool sort: optional. If ``grad`` is already sorted, set ``sort=False``
 
-    Notes
-    -----
     These gradients are available:
 
     **divergent gradients** : on a ``[-1, 1]`` scale
@@ -179,30 +174,24 @@ def gradient(value, grad, opacity=1, sort=True):
     - ``RYG_1`` maps ``[-1, -1]`` to Red-Yellow-Green
     - ``RWG_1`` maps ``[-1, -1]`` to Red-White-Green
 
-    Examples
-    --------
+    Examples::
 
-    Get a value that is 40% blue and 60% white, use:
+        # Get a value that is 40% blue and 60% white, use:
+        >>> gradient(0.4, ((0, 'blue'), (1, 'white')))
+        '#66f'
 
-    >>> gradient(0.4, ((0, 'blue'), (1, 'white')))
-    '#66f'
+        # A list (or any iterable) input returns a list of colors
+        >>> gradient([0.2, 0.6, 0.8], ((0, 'blue'), (1, 'white')))
+        ['#33f', '#99f', '#ccf']
 
-    A list (or any iterable) input returns a list of colors
+        # Values out of range are truncated.
+        >>> gradient([-10, +10], ((0, 'blue'), (1, 'white')))
+        ['blue', 'white']
 
-    >>> gradient([0.2, 0.6, 0.8], ((0, 'blue'), (1, 'white')))
-    ['#33f', '#99f', '#ccf']
-
-    Values out of range are truncated.
-
-    >>> gradient([-10, +10], ((0, 'blue'), (1, 'white')))
-    ['blue', 'white']
-
-    Use a pre-defined gradient to classify a value between -1 to 1 on a
-    Red-Yellow-Green scale. (Returns a value between Yellow and Green).
-
-    >>> gradient(0.5, RdYlGn)
-    '#8ccb87'
-
+        # Use a pre-defined gradient to classify a value between -1 to 1 on a
+        # Red-Yellow-Green scale. (Returns a value between Yellow and Green).
+        >>> gradient(0.5, RdYlGn)
+        '#8ccb87'
     """
     if sort:
         grad = sorted(grad, key=operator.itemgetter(BASE_0))
@@ -254,18 +243,15 @@ def distinct(count):
     """
     Generates a list of ``count`` distinct colors, for up to 20 colors.
 
-    Parameters
-    ----------
-    count : int
-        number of colors to return
+    :arg int count: number of colors to return
 
-    Examples
-    --------
-    >>> distinct(4)
-    ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728']
+    Examples::
 
-    Notes
-    -----
+        >>> distinct(4)
+        ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728']
+
+    Notes:
+
     - Colour conversion between RGB and HCL are available on
       `color.py <http://2sn.org/python/color.py>`_ and
       `python-colormath <http://python-colormath.readthedocs.org/>`_
@@ -298,25 +284,21 @@ def contrast(color, white='#ffffff', black='#000000'):
     Returns the colour (white or black) that contrasts best with a given
     color.
 
-    Parameters
-    ----------
-    color : color string recognied by :func:`rgba`
+    :arg color color: color string recognied by :func:`rgba`.
         If this color is dark, returns white. Else, black
-    white : color string, optional
+    :arg color white: color string, optional.
         Replace this with any light colour you want to use instead of white
-    black : color string, optional
+    :arg color black: color string, optional.
         Replace this with any dark colour you want to use instead of black
 
-    Examples
-    --------
-    >>> contrast('blue')
-    '#fff'
-    >>> contrast('lime')
-    '#000'
+    Examples::
 
-    Notes
-    -----
-    `Decolorize <http://www.eyemaginary.com/Rendering/TurnColorsGray.pdf>`_
+        >>> contrast('blue')
+        '#fff'
+        >>> contrast('lime')
+        '#000'
+
+    Note: `Decolorize <http://www.eyemaginary.com/Rendering/TurnColorsGray.pdf>`_
     algorithm used. Appears to be the most preferred
     (`ref <http://dcgi.felk.cvut.cz/home/cadikm/color_to_gray_evaluation/>`_).
     """
@@ -336,27 +318,23 @@ def brighten(color, percent):
     Brighten or darken a color by percentage. If ``percent`` is positive,
     brighten the color. Else darken the color.
 
-    Parameters
-    ----------
-    color : color string recognied by :func:`rgba`
-        If this color is dark, returns white. Else, black
-    percent : float between -1 and +1
-        -1 indicates black, +1 indicates white. Other values are interpolated.
+    :arg str color: color string recognied by :func:`rgba`
+    :arg float percent: -1 indicates black, +1 indicates white. Rest are interpolated.
 
-    Examples
-    --------
-    >>> brighten('lime', -1)    # 100% darker, i.e. black
-    '#000'
-    >>> brighten('lime', -0.5)  # 50% darker
-    '#007f00'
-    >>> brighten('lime', 0)     # Returns the color as-is
-    '#0f0'
-    >>> brighten('lime', 0.5)   # 50% brighter
-    '#7fff7f'
-    >>> brighten('lime', 1)     # 100% brighter, i.e. white
-    '#fff'
-    >>> brighten('lime', 2)     # Values beyond +1 or -1 are truncated
-    '#fff'
+    Examples::
+
+        >>> brighten('lime', -1)    # 100% darker, i.e. black
+        '#000'
+        >>> brighten('lime', -0.5)  # 50% darker
+        '#007f00'
+        >>> brighten('lime', 0)     # Returns the color as-is
+        '#0f0'
+        >>> brighten('lime', 0.5)   # 50% brighter
+        '#7fff7f'
+        >>> brighten('lime', 1)     # 100% brighter, i.e. white
+        '#fff'
+        >>> brighten('lime', 2)     # Values beyond +1 or -1 are truncated
+        '#fff'
     """
     _min = -1
     _mid = 0
@@ -373,27 +351,22 @@ def msrgb(value, grad=None):
     corresponding to a given a color. This is used for Microsoft office
     output (e.g. Excel, PowerPoint, etc.)
 
-    Parameters
-    ----------
-    value : color or int/float
-        If ``grad`` is not specified, this should be a color that will get
-        converted into a Microsoft RGB value.
+    :arg color value: color or int/float. If ``grad`` is not specified, this
+        should be a color that will get converted into a Microsoft RGB value. If
+        ``grad`` is specified, this should be a number. It will be converted into
+        a color using the gradient, and then into a Microsoft RGB value.
+    :arg tuple grad: tuple/list of ``(value, color)`` tuples For example, ``((0,
+        'red'), (.5, 'yellow'), (1, 'green'))``. This is passed as an input to
+        :func:`gradient`
 
-        If ``grad`` is specified, this should be a number. It will be
-        converted into a color using the gradient, and then into a Microsoft
-        RGB value.
-    grad : tuple/list of ``(value, color)`` tuples
-        For example, ``((0, 'red'), (.5, 'yellow'), (1, 'green'))``.
-        This is passed as an input to :func:`gradient`
+    Examples::
 
-    Examples
-    --------
-    >>> msrgb('#fff')
-    16777215
-    >>> msrgb('red')
-    255
-    >>> msrgb(0.5, RYG) # == msrgb(gradient(0.5, RYG))
-    65535
+        >>> msrgb('#fff')
+        16777215
+        >>> msrgb('red')
+        255
+        >>> msrgb(0.5, RYG) # == msrgb(gradient(0.5, RYG))
+        65535
     """
     idx = 3
     red, green, blue = rgba(gradient(value, grad) if grad else value)[:idx]
@@ -405,19 +378,19 @@ def msrgbt(value, grad=None):
     Returns the Microsoft RGB value (same as :func:`msrgbt`) and transparency
     as a tuple.
 
-    For example:
+    For example::
 
         color, transparency = msrgbt('rgba(255, 0, 0, .5)')
         shp.Fill.ForeColor.RGB, shp.Fill.Transparency = color, transparency
 
     See :func:`msrgbt`. The parameters are identical.
 
-    Examples
-    --------
-    >>> msrgbt('rgba(255,0,0,.5)')
-    (255, 0.5)
-    >>> msrgbt('red')
-    (255, 0.0)
+    Examples::
+
+        >>> msrgbt('rgba(255,0,0,.5)')
+        (255, 0.5)
+        >>> msrgbt('red')
+        (255, 0.0)
     """
     _alpha = 1
     red, green, blue, alpha = rgba(gradient(value, grad) if grad else value)
@@ -430,44 +403,42 @@ def rgba(color):
     """
     Returns red, green, blue and alpha values (as a 0-1 float) of a color.
 
-    Parameters
-    ----------
-    color : a string representing the color
+    :arg color color: a string representing the color.
         Most color formats defined in
         `CSS3 <http://dev.w3.org/csswg/css3-color/>`_ are allowed.
 
-    Examples
-    --------
-    >>> rgba('#f00')
-    (1.0, 0.0, 0.0, 1.0)
-    >>> rgba('#f003')
-    (1.0, 0.0, 0.0, 0.2)
-    >>> rgba('#ff0000')
-    (1.0, 0.0, 0.0, 1.0)
-    >>> rgba('#ff000033')
-    (1.0, 0.0, 0.0, 0.2)
-    >>> rgba('rgb(255,0,0)')
-    (1.0, 0.0, 0.0, 1.0)
-    >>> rgba('rgba(255,0,0,.2)')
-    (1.0, 0.0, 0.0, 0.2)
-    >>> rgba('red')
-    (1.0, 0.0, 0.0, 1.0)
-    >>> rgba('white')
-    (1.0, 1.0, 1.0, 1.0)
-    >>> rgba('hsl(0,1,1)')
-    (1.0, 0.0, 0.0, 1.0)
-    >>> rgba('hsla(0,1,1,.2)')
-    (1.0, 0.0, 0.0, 0.2)
-    >>> rgba('hsl(0, 100%, 50%)')
-    (0.5, 0.0, 0.0, 1.0)
-    >>> rgba('hsla(0, 100%, 100%, .9)')
-    (1.0, 0.0, 0.0, 0.9)
-    >>> rgba('hsla(360, 100%, 100%, 1.9)')
-    (1.0, 0.0, 0.0, 1.0)
-    >>> rgba('hsla(360, 0%, 50%, .5)')
-    (0.5, 0.5, 0.5, 0.5)
-    >>> rgba('hsla(0, 0%, 50%, .5)')
-    (0.5, 0.5, 0.5, 0.5)
+    Examples::
+
+        >>> rgba('#f00')
+        (1.0, 0.0, 0.0, 1.0)
+        >>> rgba('#f003')
+        (1.0, 0.0, 0.0, 0.2)
+        >>> rgba('#ff0000')
+        (1.0, 0.0, 0.0, 1.0)
+        >>> rgba('#ff000033')
+        (1.0, 0.0, 0.0, 0.2)
+        >>> rgba('rgb(255,0,0)')
+        (1.0, 0.0, 0.0, 1.0)
+        >>> rgba('rgba(255,0,0,.2)')
+        (1.0, 0.0, 0.0, 0.2)
+        >>> rgba('red')
+        (1.0, 0.0, 0.0, 1.0)
+        >>> rgba('white')
+        (1.0, 1.0, 1.0, 1.0)
+        >>> rgba('hsl(0,1,1)')
+        (1.0, 0.0, 0.0, 1.0)
+        >>> rgba('hsla(0,1,1,.2)')
+        (1.0, 0.0, 0.0, 0.2)
+        >>> rgba('hsl(0, 100%, 50%)')
+        (0.5, 0.0, 0.0, 1.0)
+        >>> rgba('hsla(0, 100%, 100%, .9)')
+        (1.0, 0.0, 0.0, 0.9)
+        >>> rgba('hsla(360, 100%, 100%, 1.9)')
+        (1.0, 0.0, 0.0, 1.0)
+        >>> rgba('hsla(360, 0%, 50%, .5)')
+        (0.5, 0.5, 0.5, 0.5)
+        >>> rgba('hsla(0, 0%, 50%, .5)')
+        (0.5, 0.5, 0.5, 0.5)
     """
     result = []
     if color.startswith('#'):
@@ -534,32 +505,30 @@ def hsla(color):
     Returns hue, saturation, luminosity and alpha values (as a 0-1 float) for
     a color.
 
-    Parameters
-    ----------
-    color : a string representing the color
+    :arg color color: a string representing the color.
         Most color formats defined in
         `CSS3 <http://dev.w3.org/csswg/css3-color/>`_ are allowed.
 
-    Examples
-    --------
-    >>> hsla('#f00')
-    (0.0, 1.0, 1.0, 1.0)
-    >>> hsla('#f003')
-    (0.0, 1.0, 1.0, 0.2)
-    >>> hsla('#ff0000')
-    (0.0, 1.0, 1.0, 1.0)
-    >>> hsla('#ff000033')
-    (0.0, 1.0, 1.0, 0.2)
-    >>> hsla('rgb(255,0,0)')
-    (0.0, 1.0, 1.0, 1.0)
-    >>> hsla('rgba(255,0,0,.2)')
-    (0.0, 1.0, 1.0, 0.2)
-    >>> hsla('red')
-    (0.0, 1.0, 1.0, 1.0)
-    >>> hsla('hsl(0,1,1)')
-    (0.0, 1.0, 1.0, 1.0)
-    >>> hsla('hsla(0,1,1,.2)')
-    (0.0, 1.0, 1.0, 0.2)
+    Examples::
+
+        >>> hsla('#f00')
+        (0.0, 1.0, 1.0, 1.0)
+        >>> hsla('#f003')
+        (0.0, 1.0, 1.0, 0.2)
+        >>> hsla('#ff0000')
+        (0.0, 1.0, 1.0, 1.0)
+        >>> hsla('#ff000033')
+        (0.0, 1.0, 1.0, 0.2)
+        >>> hsla('rgb(255,0,0)')
+        (0.0, 1.0, 1.0, 1.0)
+        >>> hsla('rgba(255,0,0,.2)')
+        (0.0, 1.0, 1.0, 0.2)
+        >>> hsla('red')
+        (0.0, 1.0, 1.0, 1.0)
+        >>> hsla('hsl(0,1,1)')
+        (0.0, 1.0, 1.0, 1.0)
+        >>> hsla('hsla(0,1,1,.2)')
+        (0.0, 1.0, 1.0, 0.2)
     """
     result = rgba(color)
     return colorsys.rgb_to_hsv(
@@ -570,26 +539,23 @@ def name(red, green, blue, alpha=1):
     """
     Returns a short color string
 
-
-    Parameters
-    ----------
-    red, blue, green : float
-        color value between 0-1
-    alpha : float, optional
-        transparency value between 0-1.
+    :arg float red: red color value (0-1)
+    :arg float green: green color value (0-1)
+    :arg float blue: blue color value (0-1)
+    :arg float alpha: float, optional transparency value between 0-1.
         ``alpha=1`` produces color strings like ``#abc``
         Lower values produce ``rgba(...)```.
 
-    Examples
-    --------
-    >>> name(1, 0, 0)       # Short color versions preferred
-    '#f00'
-    >>> name(1, 0, 0, .2)   # Alpha creates rgba() with 2 decimals
-    'rgba(255,0,0,0.20)'
-    >>> name(.5, .25, .75)  # Multiply by 255 and round to nearest
-    '#8040bf'
-    >>> name(-1, 2, 0)      # Values are truncated to 0-1
-    '#0f0'
+    Examples::
+
+        >>> name(1, 0, 0)       # Short color versions preferred
+        '#f00'
+        >>> name(1, 0, 0, .2)   # Alpha creates rgba() with 2 decimals
+        'rgba(255,0,0,0.20)'
+        >>> name(.5, .25, .75)  # Multiply by 255 and round to nearest
+        '#8040bf'
+        >>> name(-1, 2, 0)      # Values are truncated to 0-1
+        '#0f0'
     """
     red = int(round(
         BASE_255 * (BASE_0 if red < BASE_0 else BASE_1 if red > BASE_1 else red),

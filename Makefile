@@ -19,6 +19,7 @@ help:
 	@echo "release - package and upload a release"
 	@echo "dist - package"
 	@echo "install - install the package to the active Python's site-packages"
+	@echo "stats - show code stats"
 
 clean: clean-build clean-pyc clean-test
 
@@ -89,3 +90,11 @@ deploy-on-ec2: docs
 	rm -rf ../v1/guide ../v1/gramex-update
 	cp -R gramex/apps/guide ../v1/
 	cp -R gramex/apps/update ../v1/gramex-update
+
+stats:
+	@echo gramex
+	@find gramex -path '*node_modules/*' -prune -o -name '*.py' | grep '\.py$$' | xargs wc -l | tail -1
+	@echo gramex config
+	@wc -l docs/conf.py setup.py | tail -1
+	@echo tests
+	@find tests testlib -path '*node_modules/*' -prune -o -name '*.py' | grep '\.py$$' | xargs wc -l | tail -1

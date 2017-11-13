@@ -50,6 +50,9 @@
     "bind-ldap-login": {
       "Bind LDAP login": -1
     },
+    "change-inputs": {
+      "Change inputs": -1
+    },
     "database-auth": {
       "Database auth": -1
     },
@@ -340,6 +343,9 @@
     },
     "timer": {
       "Timer": -1
+    },
+    "tracing": {
+      "Tracing": -1
     }
   },
   "deploy": {
@@ -580,6 +586,93 @@
   "pptxhandler": {
     "": {
       "PPTXHandler": -1
+    },
+    "bullet": {
+      "Bullet": -1
+    },
+    "calendarmap": {
+      "Calendarmap": -1
+    },
+    "chart": {
+      "Chart": -1
+    },
+    "commands": {
+      "Commands": -1
+    },
+    "css": {
+      "CSS": -1
+    },
+    "custom-charts": {
+      "Custom charts": -1
+    },
+    "data": {
+      "Data": -1
+    },
+    "deprecated-commands": {
+      "Deprecated commands": -1
+    },
+    "expressions": {
+      "Expressions": -1
+    },
+    "groups": {
+      "Groups": -1
+    },
+    "heatgrid": {
+      "Heatgrid": -1
+    },
+    "image": {
+      "Image": -1
+    },
+    "native-charts": {
+      "Native charts": -1
+    },
+    "pptgen": {
+      "PPTGen": -1
+    },
+    "pptgen-command-line": {
+      "PPTGen Command Line": -1
+    },
+    "pptgen-configuration": {
+      "PPTGen Configuration": -1
+    },
+    "pptgen-library": {
+      "PPTGen Library": -1
+    },
+    "register-register-a-new-command-to-pptgen": {
+      "Register: Register a new command to PPTGen": -1
+    },
+    "replace": {
+      "Replace": -1
+    },
+    "replicate": {
+      "Replicate": -1
+    },
+    "rules": {
+      "Rules": -1
+    },
+    "sankey": {
+      "Sankey": -1
+    },
+    "shapes": {
+      "Shapes": -1
+    },
+    "slides": {
+      "Slides": -1
+    },
+    "stack": {
+      "Stack": -1
+    },
+    "table": {
+      "Table": -1
+    },
+    "templates": {
+      "Templates": -1
+    },
+    "text": {
+      "Text": -1
+    },
+    "treemap": {
+      "Treemap": -1
     }
   },
   "privacy": {

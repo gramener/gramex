@@ -187,7 +187,7 @@ To convert a file type into an attachment, use:
             Content-Type: text/plain
             Content-Disposition: attachment; filename=data.txt    # Save as data.txt
 
-To serve different files with different MIME types, use file patterns:
+From **v1.23.1**, to serve different files with different MIME types, use file patterns:
 
     :::yaml
     pattern: /$YAMLURL/(.*)
