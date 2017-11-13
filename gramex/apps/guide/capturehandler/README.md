@@ -89,12 +89,14 @@ You can add a link from any page to the `capture` page to take a screenshot.
     <a href="capture?ext=pdf">PDF screenshot</a>
     <a href="capture?ext=png">PNG screenshot</a>
     <a href="capture?ext=jpg">JPG screenshot</a>
+    <a href="capture?ext=pptx">PPTX screenshot</a>
 
 Try it here:
 
 - [PDF screenshot](capture?ext=pdf)
 - [PNG screenshot](capture?ext=png)
 - [JPEG screenshot](capture?ext=jpg)
+- [PPTX screenshot](capture?ext=pptx)
 
 It accepts the following arguments:
 
@@ -103,8 +105,9 @@ It accepts the following arguments:
   <br>**Example**: [?url=https://example.org/](capture?url=https://example.org/)
 - `?file=`: screenshot file name. Defaults to `screenshot`.
   <br>**Example**: [?file=newfile](capture?file=newfile)
-- `?ext=`: format of output. Can be pdf, png or jpg. Defaults to `pdf`.
-  <br>**Example**: [?ext=png](capture?ext=png)
+- `?ext=`: format of output. Can be pdf, png, jpg or pptx. Defaults to `pdf`.
+  <br>**Example**: [?ext=png](capture?ext=png). `pptx` is available only in
+  Chrome, from **v1.23.1**
 - `?delay=`: milliseconds to wait for before taking a screenshot. This value must
   be less than the `timeout:` set in the `kwargs:` section.
   <br>**Example**: [?delay=1000](capture?url=timer.html&delay=1000)
@@ -127,6 +130,25 @@ It accepts the following arguments:
     - `?scale=`: zooms the screen by a factor. Defaults to 1.
       <br>**Example**: [?scale=0.2](capture?scale=0.2&ext=pdf) compared with
       [?scale=1](capture?scale=1&ext=pdf)
+- For PPTX (Only in `engine: chrome` from **v1.23.1**):
+    - `?layout=`: PPTX format. `A3`, `A4`, `Letter`, `16x9`, `16x10`, `4x3`. Default: `4x3`
+      <br>**Example**: [?layout=16x9](capture?layout=16x9&ext=pptx&width=1200&height=600)
+    - `?dpi=`: optional image resolution (dots per inch). Default: 96
+      <br>**Example**: [?dpi=192](capture?dpi=192&ext=pptx&width=1200&height=900)
+    - `?width=`: optional viewport width in pixels. (Default: 1200px)
+      <br>**Example**: [?width=600&height=400](capture?width=600&height=400&ext=pptx)
+    - `?height=`: optional height to clip output to. Leave it blank for full page height
+      <br>**Example**: [?width=1200&height=900](capture?width=1200&height=900&ext=pptx)
+    - `?selector=`: CSS selector to take a screenshot of
+      <br>**Example**: [?selector=.codehilite](capture?selector=.codehilite&ext=pptx)
+    - `?title=`: optional slide title
+      <br>**Example**: [?title=First+example&selector=.codehilite](capture?title=First+example&selector=.codehilite&ext=pptx)
+    - `?x=`: optional x-position (left margin) in px. Centers by default
+      <br>**Example**: [?x=10&selector=.codehilite](capture?x=10&selector=.codehilite&ext=pptx)
+    - `?y=`: optional y-position (leftop margin) in px. Centers by default
+      <br>**Example**: [?y=200&selector=.codehilite](capture?y=200&selector=.codehilite&ext=pptx)
+    - Multiple slides can be created by repeating the `?selector=` parameter.
+      <br>**Example**: [?selector=.toc&title=TOC&selector=.codehilite&title=Example](capture?selector=.toc&title=TOC&selector=.codehilite&title=Example&ext=pptx)
 - `?debug=`: displays request / response log requests on the console.
     - `?debug=1` logs all responses and HTTP codes. It also logs browser
       console.log messages on the Gramex console

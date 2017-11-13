@@ -69,9 +69,26 @@ web server.
 - PDF options:
     - `format=`: `A3`, `A4` (default), `A5`, `Legal`, `Letter`, `Tabloid`
     - `orientation=`: `landscape` for landscape, `portrait` is default
-    - `title=`: Footer title. Headers and footers can be modified in `margin.js`
     - `media=`: `print` or `screen`. Defaults to `screen`. Only for Chrome.
+- PPTX options (only on Chrome):
+    - `format=`: `A3`, `A4`, `Letter`, `16x9`, `16x10`, `4x3` (default)
+    - `dpi=`: optional image resolution (dots per inch). Defaults to 96 px per inch
+    - `width=`: viewport width in pixels. (Default: 1200px)
+    - `height=`: optional height to clip output to. Leave it blank for full page height
+    - `selector=`: CSS selector to take a screenshot of
+    - `title=`: optional slide title
+    - `x=`: optional x-position (left margin) in px. Centers by default
+    - `y=`: optional y-position (top margin) in px. Centers by default
 - Raster (PNG/JPG/GIF) options:
     - `width=`: viewport width in pixels. (Default: 1200px)
     - `height=`: optional height to clip output to. Leave it blank for full page height
     - `selector=`: CSS selector to take a screenshot of
+
+When generating PPTX, we capture images as PNG. Multiple slides can be generated
+by repeating `title`, `selector`, `x`, `y`.
+
+For example, this URL captures 3 slides, each with a different chart:
+
+    ?selector=.chart1&title=Chart:1&x=100&y=100&
+     selector=.chart2&title=Chart:2&x=200&y=100&
+     selector=.chart3&title=Chart:3&x=100&y=200

@@ -17,6 +17,8 @@ from gramex.config import app_log, variables
 from gramex.http import OK, GATEWAY_TIMEOUT, BAD_GATEWAY, CLIENT_TIMEOUT
 from .basehandler import BaseHandler
 
+_PPTX_MIME = 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+
 
 class Capture(object):
     default_port = 9900         # Default port to run CaptureJS at
@@ -177,7 +179,7 @@ class Capture(object):
         if not self.started:
             raise RuntimeError('%s not started. See logs' % self.engine.script)
         r = yield self.browser.fetch(
-            self.url, method='POST', body=urlencode(kwargs), raise_error=False,
+            self.url, method='POST', body=urlencode(kwargs, True), raise_error=False,
             connect_timeout=self.timeout, request_timeout=self.timeout)
         if r.code == OK:
             self._validate_server(r)
@@ -192,12 +194,15 @@ class Capture(object):
         :arg str selector: Restrict screenshot to (optional) CSS selector in URL
         :arg int delay: milliseconds to wait for before taking a screenshot
         :arg str format: A3, A4, A5, Legal, Letter or Tabloid. Defaults to A4. For PDF
+        :arg str layout: A3, A4, A5, Legal, 16x9, 16x10, 4x3. Defaults to 4x3. For PPTX
         :arg str orientation: portrait or landscape. Defaults to portrait. For PDF
         :arg str header: header for the page. For PDF
         :arg str footer: footer for the page. For PDF
         :arg int width: screen width. Default: 1200. For PNG/GIF/JPG
         :arg int height: screen height. Default: 768. For PNG/GIF/JPG
         :arg float scale: zooms the screen by a factor. For PNG/GIF/JPG
+        :arg int dpi: dots (pixels) per inch. For PPTX
+        :arg str title: slide title. For PPTX
         :arg int debug: sets log level for HTTP requests (2) and responses (1)
         :return: a bytestring with the binary contents of the screenshot
         :rtype: bytes
@@ -226,6 +231,11 @@ class Capture(object):
     def png(self, url, **kwargs):
         '''An alias for :meth:`Capture.capture` with ``ext='png'``.'''
         kwargs['ext'] = 'png'
+        return self.capture(url, **kwargs)
+
+    def pptx(self, url, **kwargs):
+        '''An alias for :meth:`Capture.capture` with ``ext='pptx'``.'''
+        kwargs['ext'] = 'pptx'
         return self.capture(url, **kwargs)
 
     def jpg(self, url, **kwargs):
@@ -266,6 +276,7 @@ class CaptureHandler(BaseHandler):
             'jpg': dict(mime='image/jpeg'),
             'jpeg': dict(mime='image/jpeg'),
             'gif': dict(mime='image/gif'),
+            'pptx': dict(mime=_PPTX_MIME),
         }
 
     @tornado.gen.coroutine
@@ -274,16 +285,21 @@ class CaptureHandler(BaseHandler):
             url={'default': self.request.headers.get('Referer', None)},
             ext={'choices': self.ext, 'default': 'pdf'},
             file={'default': 'screenshot'},
-            selector={},
+            selector={'nargs': '*'},
             cookie={},
             delay={'type': int},
             width={'type': int},
             height={'type': int},
+            x={'type': int},
+            y={'type': int},
             scale={'type': float},
+            dpi={'type': int},
             format={'choices': ['A3', 'A4', 'A5', 'Legal', 'Letter', 'Tabloid'], 'default': 'A4'},
+            layout={'choices': ['A3', 'A4', 'Letter', '16x9', '16x10', '4x3'], 'default': '4x3'},
             orientation={'choices': ['portrait', 'landscape'], 'default': 'portrait'},
-            start={},
-            debug={},
+            title={'nargs': '*'},
+            start={'nargs': '*'},
+            debug={'nargs': '*'},
         )
         if args['url'] is None:
             self.write('Missing ?url=')
