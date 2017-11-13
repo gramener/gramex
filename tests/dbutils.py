@@ -50,7 +50,12 @@ def postgres_create_db(server, db, **tables):
     conn.close()
     engine = sa.create_engine(url + db, encoding=str_utf8)
     for table_name, data in tables.items():
-        data.to_sql(table_name, con=engine, index=False)
+        if '.' in table_name:
+            schema, table_name = table_name.rsplit('.', 1)
+            engine.execute('CREATE SCHEMA %s' % schema)
+            data.to_sql(table_name, con=engine, schema=schema, index=False)
+        else:
+            data.to_sql(table_name, con=engine, index=False)
     return url + db
 
 

@@ -385,6 +385,10 @@ class TestSqliteCacheQuery(unittest.TestCase):
         with assert_raises(TypeError):
             gramex.cache.query('SELECT * FROM t1', engine, state=1)
 
+    def test_query_value(self):
+        engine = sa.create_engine(self.url, encoding=str_utf8)
+        assert_frame_equal(gramex.cache.query('SELECT * FROM t2', engine=engine), self.data)
+
     def test_query_states(self):
         # Check for 3 combinations
         # 1. state is a list of table names. (Currently, this only works with sqlite)
@@ -434,7 +438,11 @@ class TestPostgresCacheQuery(TestSqliteCacheQuery):
     @classmethod
     def setUpClass(cls):
         cls.url = dbutils.postgres_create_db(variables.POSTGRES_SERVER, 'test_cache',
-                                             t1=cls.data, t2=cls.data)
+                                             **{'t1': cls.data, 't2': cls.data, 'sc.t3': cls.data})
+
+    def test_schema(self):
+        engine = sa.create_engine(self.url, encoding=str_utf8)
+        assert_frame_equal(gramex.cache.query('SELECT * FROM sc.t3', engine=engine), self.data)
 
     @classmethod
     def tearDownClass(cls):

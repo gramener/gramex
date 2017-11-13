@@ -12,7 +12,7 @@ from six.moves.urllib_parse import urlencode
 import gramex
 import gramex.config
 from gramex.http import OK, UNAUTHORIZED, FORBIDDEN, BAD_REQUEST
-from . import TestGramex, server, tempfiles
+from . import TestGramex, server, tempfiles, dbutils
 
 folder = os.path.dirname(os.path.abspath(__file__))
 
@@ -355,23 +355,13 @@ class DBAuthBase(AuthBase):
     def create_database(url, table):
         data = pd.read_csv(os.path.join(folder, 'userdata.csv'), encoding='cp1252')
         data['password'] = data['password'] + data['salt']
-        dburl, dbname = url.rsplit('/', 1)
-        # sqlalchemy needs encoding to be a `str` in both Python 2.x and 3.x
-        encoding = str('utf-8')
-        engine = sa.create_engine(dburl, encoding=encoding, isolation_level='AUTOCOMMIT')
-        try:
-            engine.execute('DROP DATABASE IF EXISTS %s' % dbname)
-            engine.execute('CREATE DATABASE %s' % dbname)
-            engine.dispose()
-            engine = sa.create_engine(dburl + '/' + dbname, encoding=encoding)
-            if '.' in table:
-                schema, tbl = table.rsplit('.', 1)
-                engine.execute('CREATE SCHEMA %s' % schema)
-                data.to_sql(tbl, con=engine, schema=schema, index=False)
-            else:
-                data.to_sql(table, con=engine, index=False)
-        except sa.exc.OperationalError:
-            raise SkipTest('Unable to connect to %s' % dburl)
+        dburl = sa.create_engine(url).url
+        if dburl.drivername == 'postgresql':
+            dbutils.postgres_create_db(dburl.host, dburl.database, **{table: data})
+        elif dburl.drivername == 'mysql':
+            dbutils.mysql_create_db(dburl.host, dburl.database, **{table: data})
+        else:
+            raise SkipTest('Unknown engine in ' + url)
 
     @classmethod
     def setUpClass(cls):

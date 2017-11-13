@@ -344,7 +344,7 @@ This is the minimal configuration that lets you log in from a [database table](d
         handler: DBAuth                       # to the DBAuth handler
         kwargs:
             url: sqlite:///$YAMLPATH/auth.db  # Pick up list of users from this sqlalchemy URL
-            table: users                      # ... and this table
+            table: users                      # ... and this table (may be prefixed as schema.users)
             user:
                 column: user                  # The user column in users table has the user ID
             password:
@@ -385,7 +385,7 @@ You can configure several aspects of this flow. Below is a full configuration --
         handler: DBAuth                       # to the DBAuth handler
         kwargs:
             url: sqlite:///$YAMLPATH/auth.db  # Pick up list of users from this sqlalchemy URL
-            table: users                      # ... and this table
+            table: users                      # ... and this table (may be prefixed as schema.users)
             template: $YAMLPATH/dbauth.html   # Optional login template
             user:
                 column: user                  # The users.user column is matched with
