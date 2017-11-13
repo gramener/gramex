@@ -300,6 +300,8 @@ def insert(url, meta={}, args=None, engine=None, table=None, ext=None, id=None,
         engine = sqlalchemy.create_engine(url, **kwargs)
         cols = get_table(engine, table).columns
         rows = _pop_columns(rows, [col.name for col in cols], meta['ignored'])
+        if '.' in table:
+            kwargs['schema'], table = table.rsplit('.', 1)
         rows.to_sql(table, engine, if_exists='append', index=False, **kwargs)
         return len(rows)
     else:
