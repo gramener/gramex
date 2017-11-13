@@ -330,7 +330,11 @@ def get_table(engine, table):
     if engine not in _METADATA_CACHE:
         _METADATA_CACHE[engine] = sqlalchemy.MetaData()
     metadata = _METADATA_CACHE[engine]
-    return sqlalchemy.Table(table, metadata, autoload=True, autoload_with=engine)
+    if '.' in table:
+        schema, tbl = table.rsplit('.', 1)
+        return sqlalchemy.Table(tbl, metadata, autoload=True, autoload_with=engine, schema=schema)
+    else:
+        return sqlalchemy.Table(table, metadata, autoload=True, autoload_with=engine)
 
 
 def _pop_controls(args):

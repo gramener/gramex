@@ -227,8 +227,10 @@ class TestFilter(unittest.TestCase):
         self.check_filter_db('mysql', url, na_position='first')
 
     def test_postgres(self):
-        url = dbutils.postgres_create_db(self.server.postgres, 'test_filter', sales=self.sales)
+        url = dbutils.postgres_create_db(self.server.postgres, 'test_filter', **{
+            'sales': self.sales, 'filter.sales': self.sales})
         self.check_filter_db('postgres', url, na_position='last')
+        self.check_filter(url=url, table='filter.sales', na_position='last')
 
     def test_sqlite(self):
         url = dbutils.sqlite_create_db('test_filter.db', sales=self.sales)
