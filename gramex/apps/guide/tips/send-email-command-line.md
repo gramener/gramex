@@ -2,7 +2,7 @@ title: Send Emails from the command line
 
 Gramex can be used to write standalone applications that send emails. You don't need to run Gramex. Just use it as a library.
 
-Here's a code snippet that you can run to test sending emails (just change the to= email ID to your ID).
+Here's a code snippet that you can run to test sending emails (just change the `to=` email ID to your ID).
 
     :::python
     from gramex.services import SMTPMailer

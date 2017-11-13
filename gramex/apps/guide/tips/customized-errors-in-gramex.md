@@ -2,9 +2,9 @@ title: Customized errors in Gramex
 
 You can define your own custom error handlers in Gramex.
 
-There are 2 kinds of errors we often find. FunctionHandlers raise a HTTP 500 (Internal Server Error) and FileHandlers raise a HTTP 404 (File Not Found Error)
+There are 2 kinds of errors we often find. FunctionHandlers raise a `HTTP 500 (Internal Server Error)` and FileHandlers raise a `HTTP 404 (File Not Found Error)`
 
-You can design an error page consistent with your project's design. Just create a HTML file and in your gramex.yaml handler, include:
+You can design an error page consistent with your project's design. Just create a 1HTML` file and in your `gramex.yaml` handler, include:
 
     :::yaml
     url:

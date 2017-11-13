@@ -28,7 +28,7 @@ gramex.yaml:
           query: next
           url: /$YAMLURL/
 
-This will save the file as uploads/your_preferred_name.csv
+This will save the file as `uploads/your_preferred_name.csv`.
 
 If you want to process the file post upload, add transform attribute to the kwargs section:
 
@@ -36,9 +36,11 @@ If you want to process the file post upload, add transform attribute to the kwar
     transform:
       function: app.process_file(content, handler)
 
-then use process_file(content, handler) in app.py
+then use `process_file(content, handler)` in `app.py`.
 
 More
+====
+
 - UploadHandler supports custom filename from early August - [dev](https://code.gramener.com/s.anand/gramex/tree/dev) version.
 - supports handling existing files - [overwriting uploads](../uploadhandler/#overwriting-uploads) section 
 - [delete files](../uploadhandler/#upload-deletion)

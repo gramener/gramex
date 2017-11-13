@@ -9,7 +9,7 @@ Suppose you create a gramex.yaml like this:
         handler: ...
 
 This works fine locally. But when you deploy it on
-[uat.gramener.com/app/](uat.gramener.com/app/), it won't work. That's because
+[https://uat.gramener.com/app/](uat.gramener.com/app/), it won't work. That's because
 you've mapped the URL `/`, not `/app/`.
 
 Since you don't know beforehand which directory you'll be deploying the app, it's
@@ -68,5 +68,5 @@ relative to where the `gramex.yaml` file is, use:
 
 - `$YAMLPATH/` will never have a `/` before it, but generally have a `/` after it
 - `path:` must always start with a $YAMLPATH/
-- `url:` for DataHandler or QueryHandler can use it for SQLite or Blaze objects.
+- `url:` for `DataHandler` or `QueryHandler` can use it for `SQLite` or `Blaze` objects.
   For example, `url: sqlite:///$YAMLPATH/sql.db`

@@ -19,7 +19,7 @@ service.
         email: 'user@example.org'         # with a login ID
         password: $PASSWORD             # password stored in an environment variable
 
-The app.email_alert() method can use this service to check if there are any
+The 1app.email_alert()` method can use this service to check if there are any
 unusual events, and send a templatized email if so. Here is a sample workflow for
 this:
 

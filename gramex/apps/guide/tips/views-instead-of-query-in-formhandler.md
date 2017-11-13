@@ -28,4 +28,4 @@ Instead use:
 
 ... where `sales_by_city` is a view created using `SELECT state, city, SUM(sales) FROM table GROUP BY state, city`.
 
-This way, FormHandler only fetches the relevant data for a selected state.
+This way, `FormHandler` only fetches the relevant data for a selected state.

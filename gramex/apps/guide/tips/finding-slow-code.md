@@ -6,7 +6,7 @@ Gramex 1.x has two functions that help with this.
 
 ## timer
 
-The first is [gramex.debug.timer()](../guide/debug/#timer).
+The first is [gramex.debug.timer()](../debug/#timer).
 It prints the time since its last call. You can introduce it between any two
 lines to see how fast it runs. Here is a simple example:
 
@@ -62,4 +62,4 @@ When we run `calc()`, it prints the timing of each line:
 ## Remember
 
 These functions work even when you're not running a Gramex server. You can use
-them in ANY Python program or IPython script.
+them in ANY `Python` program or `IPython` script.

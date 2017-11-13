@@ -1,10 +1,10 @@
 title: Windows IntegratedAuth
 
-Gramex 1.22 has a new authentication mechanism called
+[Gramex 1.22](https://learn.gramener.com/gramex/history.html#id2) has a new authentication mechanism called
 [IntegratedAuth](../auth/#integrated-auth). This lets Windows users automatically
 log in without having to type their ID or password.
 
-This can be set up instead of LDAPAuth. Wherever you use LDAPAuth (e.g. Axis,
+This can be set up instead of `LDAPAuth`. Wherever you use `LDAPAuth` (e.g. Axis,
 ICICI) or where the the system is running on Windows (e.g. Star, Times, maybe
 GroupM and Novartis), we can use this.
 
@@ -15,7 +15,7 @@ The setup is very simple:
         pattern: /$YAMLURL/login
         handler: IntegratedAuth
 
-When the user visits /login, it will automatically log the user in. The handler.current_user object looks like this:
+When the user visits `/login`, it will automatically log the user in. The `handler.current_user` object looks like this:
 
     :::js
     {

@@ -2,7 +2,7 @@ title: Automatically fixing Python build errors
 
 You can use [autopep8](https://pypi.python.org/pypi/autopep8) to fix the most common Python build errors quickly. This is documented on the [wiki](https://learn.gramener.com/wiki/dev.html#fixing-build-errors).
 
-The steps are simple: install autopep8 and run it on your Python file.
+The steps are simple: install `autopep8` and run it on your Python file.
 
     :::shell
     pip install autopep8

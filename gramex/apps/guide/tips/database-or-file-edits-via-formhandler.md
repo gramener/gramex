@@ -1,6 +1,6 @@
 title: Database or file edits via FormHandler
 
-It is now easy to update or modify data sources via FormHandler. FormHandler now supports PUT, POST and DELETE methods in addition to GET. These can be done via HTML forms or AJAX requests.
+It is now easy to update or modify data sources via FormHandler. FormHandler now supports `PUT`, `POST` and `DELETE` methods in addition to `GET`. These can be done via `HTML` forms or `AJAX` requests.
 
 **POST** - [Insert records](../formhandler/#formhandler-post)
 
@@ -32,7 +32,7 @@ Delete works similarly.
 
 ## Required YAML configuration
 
-In the kwargs section, mention the primary key on which you would like to perform the edit. It can also be a list of values.
+In the `kwargs` section, mention the primary key on which you would like to perform the edit. It can also be a list of values.
 
     :::yaml
     id: ID        # Make ID the primary key
@@ -45,11 +45,11 @@ You can also use these methods via
 - `gramex.data.update`
 - `gramex.data.delete`
 
-This works similar to gramex.data.download or gramex.data.filter. Check out data.py source code below for minimal params.
+This works similar to `gramex.data.download` or `gramex.data.filter`. Check out `data.py` source code below for minimal params.
 
 - **Current usage**: [EY admin RPA](https://code.gramener.com/ey/ey-admin/blob/master/rpa/ey_admin_rpa.yaml#L13)
 - **Documentation**: This is well documented on the [guide for FormHandler](../formhandler/#formhandler-edits)
 - **Source code**: Head to the [source code](https://code.gramener.com/s.anand/gramex/blob/dev/gramex/data.py)
-  (insert/delete/update methods in data.py) and how FormHandler
+  (`insert`/`delete`/`update` methods in `data.py`) and how `FormHandler`
   [renders](https://code.gramener.com/s.anand/gramex/blob/dev/gramex/handlers/formhandler.py#L143) it,
   if you are interested.
