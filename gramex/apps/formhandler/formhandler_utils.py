@@ -1,4 +1,6 @@
+import six
 from collections import OrderedDict
+from gramex.config import recursive_encode
 from six.moves.urllib_parse import urlparse, parse_qsl, urlencode
 
 
@@ -54,5 +56,7 @@ class URLUpdate(object):
                             args[key].append(val)
                     else:
                         args[key] = [val]
+            if six.PY2:
+                recursive_encode(args)
             self.cache[_key] = urlencode(args, doseq=True)
         return self.cache[_key]

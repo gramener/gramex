@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+
 import os
 import csv
 import six
@@ -12,7 +15,7 @@ from nose.tools import eq_, ok_
 from orderedattrdict import AttrDict
 from yaml.constructor import ConstructorError
 from gramex.config import ChainConfig, PathConfig, walk, merge, ConfigYAMLLoader, _add_ns
-from gramex.config import TimedRotatingCSVHandler
+from gramex.config import recursive_encode, TimedRotatingCSVHandler
 
 info = AttrDict(
     home=Path(__file__).absolute().parent,
@@ -362,6 +365,14 @@ class TestConfig(unittest.TestCase):
         eq_(yaml.load(dup_keys), {'a': {'b': 2}})
         with self.assertRaises(ConstructorError):
             yaml.load(dup_keys, Loader=ConfigYAMLLoader)
+
+    def test_recursive_encode(self):
+        ua, ub = 'α', 'β'
+        ba, bb = ua.encode('utf-8'), ub.encode('utf-8')
+        src = {ua: ub, True: [1, ub], None: {ua: ub, '': {ua: 1, ub: 0.1}}}
+        out = {ba: bb, True: [1, bb], None: {ba: bb, b'': {ba: 1, bb: 0.1}}}
+        recursive_encode(src)
+        eq_(src, out)
 
 
 class TestTimedRotatingCSVHandler(unittest.TestCase):

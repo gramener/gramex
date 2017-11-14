@@ -74,7 +74,7 @@ def walk(node):
         RuntimeError: maximum recursion depth exceeded
     '''
     if hasattr(node, 'items'):
-        for key, value in node.items():
+        for key, value in list(node.items()):
             for item in walk(value):
                 yield item
             yield key, value, node
@@ -683,6 +683,10 @@ def recursive_encode(data, encoding='utf-8'):
     Convert all Unicode values into UTF-8 encoded byte strings in-place
     '''
     for key, value, node in walk(data):
+        if isinstance(key, six.text_type):
+            newkey = key.encode(encoding)
+            node[newkey] = node.pop(key)
+            key = newkey
         if isinstance(value, six.text_type):
             node[key] = value.encode(encoding)
 
