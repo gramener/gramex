@@ -85,12 +85,6 @@ dist: clean release
 install: clean
 	$(PYTHON) setup.py install
 
-# Copy the Gramex guide from /mnt/gramener/apps/gramex/gramex/guide to /mnt/gramener/apps/v1/guide
-deploy-on-ec2: docs
-	rm -rf ../v1/guide ../v1/gramex-update
-	cp -R gramex/apps/guide ../v1/
-	cp -R gramex/apps/update ../v1/gramex-update
-
 stats:
 	@echo gramex
 	@find gramex -path '*node_modules/*' -prune -o -name '*.py' | grep '\.py$$' | xargs wc -l | tail -1

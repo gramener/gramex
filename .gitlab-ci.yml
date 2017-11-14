@@ -19,8 +19,23 @@ variables:
   MYSQL_SERVER: mysql
 
 validate:
+  except: [deploy]
   script:
     - flake8
     - eslint gramex/apps
     - pip install -q -e .
     - python setup.py nosetests
+
+deploy:
+  only: [dev, master, deploy]
+  script:
+    # Setup script for gramener.com
+    - 'ssh -t ubuntu@gramener.com "
+        cd /mnt/gramener/apps/gramex;
+        git checkout -- .;
+        git pull;
+        rm -rf /mnt/gramener/apps/v1/guide /mnt/gramener/apps/v1/gramex-update;
+        cp -R /mnt/gramener/apps/gramex/gramex/apps/guide /mnt/gramener/apps/v1/;
+        cp -R /mnt/gramener/apps/gramex/gramex/apps/update /mnt/gramener/apps/v1/gramex-update;
+        /mnt/gramener/anaconda/bin/gramex setup /mnt/gramener/apps/v1/guide;
+      "'
