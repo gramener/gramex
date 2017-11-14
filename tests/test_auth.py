@@ -169,18 +169,18 @@ class LoginFailureMixin(object):
         return t
 
     def test_slow_down_attacks(self):
-        # gramex.yaml configures the delays as [0.2, 0.4]. Test this
+        # gramex.yaml configures the delays as [0.4, 0.8]. Test this
         self.login_ok('alpha', 'alpha', check_next='/dir/index/')
         t0 = time.time()
         # First failure: delay of at least 0.2 seconds
         self.unauthorized('alpha', 'wrong')
-        t1 = self.check_delay(t0, min=0.2)
+        t1 = self.check_delay(t0, min=0.4)
         # Second failure: delay of at least 0.4 seconds
         self.unauthorized('alpha', 'wrong')
-        t2 = self.check_delay(t1, min=0.4)
+        t2 = self.check_delay(t1, min=0.8)
         # Successful login is instantaneous
         self.login_ok('alpha', 'alpha', check_next='/dir/index/')
-        self.check_delay(t2, max=0.2)
+        self.check_delay(t2, max=0.4)
 
 
 class TestSimpleAuth(AuthBase, LoginMixin, LoginFailureMixin):

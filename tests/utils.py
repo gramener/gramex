@@ -273,7 +273,7 @@ def subprocess(handler):
         kwargs['buffer_size'] = int(buf) if buf.isdigit() else buf
     if handler.args.get('env'):
         kwargs['env'] = dict(os.environ)
-        kwargs['env']['GRAMEX'] = 'test'
+        kwargs['env'][str('GRAMEX')] = str('test')      # env keys & values can only by str()
     handler.write('stream: ')
     proc = Subprocess(handler.args['args'], universal_newlines=True, **kwargs)
     stdout, stderr = yield proc.wait_for_exit()

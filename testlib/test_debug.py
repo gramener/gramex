@@ -10,6 +10,8 @@ from gramex.debug import timer, Timer
 from testfixtures import LogCapture
 from nose.tools import eq_, ok_
 
+testfile = __file__.replace('.pyc', '.py')
+
 
 def line_no():
     '''Returns current line number in file where it is called'''
@@ -22,25 +24,25 @@ class TestPrint(unittest.TestCase):
         stream = StringIO()
         gramex.debug.print('x', stream=stream)      # noqa
         line = line_no() - 1
-        val = stream.getvalue()
-        eq_(val, __file__ + '(%d).test_single: x\n' % line)
+        val = stream.getvalue().replace('.pyc', '.py')
+        eq_(val, testfile + '(%d).test_single: x\n' % line)
 
     def test_kwarg(self):
         stream = StringIO()
         gramex.debug.print(val=[10, 20, 30], stream=stream)     # noqa
         line = line_no() - 1
-        val = stream.getvalue()
-        eq_(val, '\n' + __file__ + '(%d).test_kwarg:\n .. val = [10, 20, 30]\n\n' % line)
+        val = stream.getvalue().replace('.pyc', '.py')
+        eq_(val, '\n' + testfile + '(%d).test_kwarg:\n .. val = [10, 20, 30]\n\n' % line)
 
     def test_multi(self):
         stream = StringIO()
         gramex.debug.print(a=True, b=1, lst=[1, 2], string='abc', stream=stream)    # noqa
         line = line_no() - 1
-        val = stream.getvalue()
+        val = stream.getvalue().replace('.pyc', '.py')
         ok_(val.startswith('\n'))
         ok_(val.endswith('\n'))
         lines = {line for line in stream.getvalue().splitlines()}
-        self.assertIn('{}({:d}).test_multi:'.format(__file__, line), lines)
+        self.assertIn('{}({:d}).test_multi:'.format(testfile, line), lines)
         self.assertIn(" .. a = True", lines)
         self.assertIn(" .. b = 1", lines)
         self.assertIn(" .. lst = [1, 2]", lines)

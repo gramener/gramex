@@ -19,7 +19,9 @@ help:
 	@echo "release - package and upload a release"
 	@echo "dist - package"
 	@echo "install - install the package to the active Python's site-packages"
+	@echo "release-test - all tests required for release (lint, docs, coverage)"
 	@echo "stats - show code stats"
+	@echo "push-coverage - upload coverage stats"
 
 clean: clean-build clean-pyc clean-test
 
@@ -92,3 +94,6 @@ stats:
 	@wc -l docs/conf.py setup.py | tail -1
 	@echo tests
 	@find tests testlib -path '*node_modules/*' -prune -o -name '*.py' | grep '\.py$$' | xargs wc -l | tail -1
+
+push-coverage:
+	rsync -avzP tests/htmlcov/ ubuntu@gramener.com:/mnt/gramener/demo.gramener.com/gramextestcoverage/

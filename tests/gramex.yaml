@@ -1768,7 +1768,7 @@ url:
         gamma:
           password: gamma
           role: user
-      delay: [0.2, 0.4]
+      delay: [0.4, 0.8]
       redirect:
         query: next
         header: NEXT
