@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 '''Test case utilities'''
+from __future__ import unicode_literals
 
 import os
 import csv
@@ -276,7 +277,7 @@ def subprocess(handler):
     handler.write('stream: ')
     proc = Subprocess(handler.args['args'], universal_newlines=True, **kwargs)
     stdout, stderr = yield proc.wait_for_exit()
-    raise gen.Return('return: ' + stdout + stderr)
+    raise gen.Return(b'return: ' + stdout + stderr)
 
 
 def argparse(handler):

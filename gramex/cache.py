@@ -477,6 +477,8 @@ class Subprocess(object):
                 while True:
                     content = stream.readline()
                     if len(content) > 0:
+                        if isinstance(content, six.text_type):
+                            content = content.encode('utf-8')
                         for callback in callbacks:
                             callback(content)
                     else:
@@ -494,6 +496,8 @@ class Subprocess(object):
                     content = stream.read(buffer_size)
                     size = len(content)
                     if size > 0:
+                        if isinstance(content, six.text_type):
+                            content = content.encode('utf-8')
                         for callback in callbacks:
                             # This may raise a ValueError: write to closed file.
                             # TODO: decide how to handle it.

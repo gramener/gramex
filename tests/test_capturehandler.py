@@ -163,7 +163,7 @@ class TestCaptureHandlerChrome(TestCaptureHandler):
 
     @classmethod
     def setupClass(cls):
-        cls.capture = get_capture('default', port=9412, engine='chrome')
+        cls.capture = get_capture('chrome', port=9412, engine='chrome', timeout=20)
         cls.folder = os.path.dirname(os.path.abspath(__file__))
 
     def test_capture_pptx(self):

@@ -16,7 +16,7 @@ This is an interim release with minor features and major bugfixes.
 - `FileHandler`_ headers can be different for different file patterns. So within
   the same directory, you can serve different files with different content types
   and expiry using the same FileHandler. `Issue 176`_
-- `AuthHandler`_ lets you change user inputs using a ``prepare:`` function. You
+- All auth handlers lets you `change inputs`_ using a ``prepare:`` function. You
   can decrypt browser-encrypted passwords, prefix a ``DOMAIN\`` to the username,
   or restrict access by IP. `Issue 180`_
 - `Print statements`_ can be replaced by :py:func:`gramex.debug.print` - is a
@@ -38,7 +38,7 @@ The bugfixes are:
 - A bug in `watch`_ led to file permission errors on Mac systems. This is
   resolved. `Issue 183`_
 
-- Code base: 18,908 lines (gramex: 12,807, tests: 6,101)
+- Code base: 19,005 lines (gramex: 12,874, tests: 6,131)
 - Test coverage: 65% (pptgen coverage is a gap)
 
 
@@ -751,6 +751,7 @@ There are two changes that may disrupt your code:
 .. _Gramex update page: https://gramener.com/gramex-update/
 .. _ignore files: https://learn.gramener.com/guide/filehandler/#ignore-files
 .. _auth redirection: https://learn.gramener.com/guide/config/#redirection
+.. _change inputs: https://learn.gramener.com/guide/auth/#change-inputs
 .. _email: https://learn.gramener.com/guide/email/
 .. _conditional variables: https://learn.gramener.com/guide/config/#conditional-variables
 .. _error handlers: https://learn.gramener.com/guide/config/#error-handlers
