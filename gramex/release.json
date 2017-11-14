@@ -4,11 +4,11 @@
     "url": "http://code.gramener.com/s.anand/gramex",
     "author": "Gramener",
     "author_email": "s.anand@gramener.com",
-    "version": "1.23.0",
+    "version": "1.23.1",
     "license": "Other/Proprietary License",
     "keywords": "gramex",
     "classifiers": [
-        "Development Status :: 4 - Beta",
+        "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",
         "License :: Other/Proprietary License",
         "Natural Language :: English",

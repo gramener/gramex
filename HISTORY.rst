@@ -38,7 +38,7 @@ The bugfixes are:
 - A bug in `watch`_ led to file permission errors on Mac systems. This is
   resolved. `Issue 183`_
 
-- Code base: 19,005 lines (gramex: 12,874, tests: 6,131)
+- Code base: 19,026 lines (gramex: 12,890, tests: 6,136)
 - Test coverage: 65% (pptgen coverage is a gap)
 
 
