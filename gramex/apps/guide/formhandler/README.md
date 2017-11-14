@@ -74,7 +74,9 @@ By default, FormHandler renders data as JSON. Use `?_format=` to change that.
 To include the table format, you must include this in your gramex.yaml:
 
     :::yaml
-    import: $GRAMEXPATH/apps/formhandler/gramex.yaml
+    import:
+      path: $GRAMEXPATH/apps/formhandler/gramex.yaml
+      YAMLURL: $YAMLURL         # Mount this app at the current folder
 
 You can also create custom PPTX downloads using FormHandler. For example, this
 configuration adds a custom PPTX format called `pptx-table`:
