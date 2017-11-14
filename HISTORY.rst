@@ -9,7 +9,7 @@ This is an interim release with minor features and major bugfixes.
 
 - `PPTXHandler`_ is formally released as part of Gramex, with extensive examples
   and documentation.
-- `CaptureHandler`_ also supports a PPTX download option that downloads image
+- `CaptureHandler`_ supports a PPTX download option that downloads image
   screenshots and pastes them into slides.
 - ``gramex init`` is the new way of initializing Gramex repos. It just copies
   the minimal files required to get started, but will soon include boilerplates.

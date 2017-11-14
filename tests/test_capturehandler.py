@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
 import io
@@ -6,6 +7,7 @@ import re
 import time
 import logging
 from PIL import Image
+from pptx import Presentation
 from nose.tools import eq_, ok_
 from pdfminer.pdfparser import PDFParser
 from pdfminer.pdfdocument import PDFDocument
@@ -47,6 +49,7 @@ def normalize(s):
 
 
 class TestCaptureHandler(TestGramex):
+    # Note: This only tests PhantomJS. See TestCaptureHandlerChrome for Chrome
     size = (1200, 768)
     max_colors = 65536
     url = '/dir/capture'
@@ -162,3 +165,30 @@ class TestCaptureHandlerChrome(TestCaptureHandler):
     def setupClass(cls):
         cls.capture = get_capture('default', port=9412, engine='chrome')
         cls.folder = os.path.dirname(os.path.abspath(__file__))
+
+    def test_capture_pptx(self):
+        content = self.capture.pptx(url=server.base_url + self.url)
+        prs = Presentation(io.BytesIO(content))
+        eq_(len(prs.slides), 1)
+        self.check_img(prs.slides[0].shapes[0].image.blob)
+
+        # selector=. has a 100x100 green patch
+        title = '高=σ'
+        result = self.fetch(self.src, params={
+            'url': self.url, 'title': title, 'selector': '.subset', 'ext': 'pptx'})
+        prs = Presentation(io.BytesIO(result.content))
+        eq_(len(prs.slides), 1)
+        self.check_img(prs.slides[0].shapes[0].image.blob,
+                       color=(0, 128, 0, 255), min=9000, size=(100, 100))
+        eq_(prs.slides[0].shapes[1].text, title)
+
+        # Check multi-slide generation
+        result = self.fetch(self.src, params={
+            'url': self.url, 'title': ['高', 'σ'], 'selector': ['.subset', 'p'], 'ext': 'pptx'})
+        prs = Presentation(io.BytesIO(result.content))
+        eq_(len(prs.slides), 2)
+        self.check_img(prs.slides[0].shapes[0].image.blob,
+                       color=(0, 128, 0, 255), min=9000, size=(100, 100))
+        self.check_img(prs.slides[1].shapes[0].image.blob)
+        eq_(prs.slides[0].shapes[1].text, '高')
+        eq_(prs.slides[1].shapes[1].text, 'σ')

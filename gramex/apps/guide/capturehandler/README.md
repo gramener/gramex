@@ -103,9 +103,9 @@ It accepts the following arguments:
 - `?url=`: URL to take a screenshot of. This defaults to `Referer` header. So if
   you link to a `capture` page, the source page is generally used.
   <br>**Example**: [?url=https://example.org/](capture?url=https://example.org/)
-- `?file=`: screenshot file name. Defaults to `screenshot`.
+- `?file=`: screenshot file name. Default: `screenshot`.
   <br>**Example**: [?file=newfile](capture?file=newfile)
-- `?ext=`: format of output. Can be pdf, png, jpg or pptx. Defaults to `pdf`.
+- `?ext=`: format of output. Can be pdf, png, jpg or pptx. Default: `pdf`.
   <br>**Example**: [?ext=png](capture?ext=png). `pptx` is available only in
   Chrome, from **v1.23.1**
 - `?delay=`: milliseconds to wait for before taking a screenshot. This value must
@@ -113,12 +113,12 @@ It accepts the following arguments:
   <br>**Example**: [?delay=1000](capture?url=timer.html&delay=1000)
   captures this [timer page](timer.html) with a ~1000 ms delay
 - For PDF:
-    - `?format=`: A3, A4, A5, Legal, Letter or Tabloid. Defaults to A4.
+    - `?format=`: A3, A4, A5, Legal, Letter or Tabloid. Default: A4.
       <br>**Example**: [?format=Tabloid](capture?format=Tabloid)
-    - `?orientation=`: portrait or landscape. Defaults to portrait.
+    - `?orientation=`: portrait or landscape. Default: portrait.
       <br>**Example**: [?orientation=landscape](capture?orientation=landscape)
     - `?title=`: footer for the page. To be implemented
-    - `media=`: `print` or `screen`. Defaults to `screen`. Only for Chrome.
+    - `media=`: `print` or `screen`. Default: `screen`. Only for Chrome.
       <br>**Example**: [?media=print](capture?media=print)
 - For images (PNG/JPG):
     - `?width=`: image output width. Default: 1200
@@ -127,11 +127,11 @@ It accepts the following arguments:
       <br>**Example**: [?height=600](capture?height=600&ext=png)
     - `?selector=`: Restrict screenshot to (optional) CSS selector in URL
       <br>**Example**: [?selector=.content](capture?selector=.content&ext=png) excludes the sidebar
-    - `?scale=`: zooms the screen by a factor. Defaults to 1.
+    - `?scale=`: zooms the screen by a factor. Default: 1.
       <br>**Example**: [?scale=0.2](capture?scale=0.2&ext=pdf) compared with
       [?scale=1](capture?scale=1&ext=pdf)
 - For PPTX (Only in `engine: chrome` from **v1.23.1**):
-    - `?layout=`: PPTX format. `A3`, `A4`, `Letter`, `16x9`, `16x10`, `4x3`. Default: `4x3`
+    - `?layout=`: A3, A4, Letter, 16x9, 16x10, 4x3. Default: `4x3`
       <br>**Example**: [?layout=16x9](capture?layout=16x9&ext=pptx&width=1200&height=600)
     - `?dpi=`: optional image resolution (dots per inch). Default: 96
       <br>**Example**: [?dpi=192](capture?dpi=192&ext=pptx&width=1200&height=900)
@@ -147,7 +147,7 @@ It accepts the following arguments:
       <br>**Example**: [?x=10&selector=.codehilite](capture?x=10&selector=.codehilite&ext=pptx)
     - `?y=`: optional y-position (leftop margin) in px. Centers by default
       <br>**Example**: [?y=200&selector=.codehilite](capture?y=200&selector=.codehilite&ext=pptx)
-    - Multiple slides can be created by repeating the `?selector=` parameter.
+    - For multiple slides, repeating `?selector=`, optionally with `?title=`, `?x=`, `?y=`.
       <br>**Example**: [?selector=.toc&title=TOC&selector=.codehilite&title=Example](capture?selector=.toc&title=TOC&selector=.codehilite&title=Example&ext=pptx)
 - `?debug=`: displays request / response log requests on the console.
     - `?debug=1` logs all responses and HTTP codes. It also logs browser

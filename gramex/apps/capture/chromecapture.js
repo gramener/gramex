@@ -14,7 +14,7 @@ const fs = require('fs')
 const _ = require('lodash')
 
 const default_port = 8090
-const version = '1.0.0'
+const version = '1.1.0'
 const server_version = 'ChromeCapture/' + version
 const folder = path.dirname(path.resolve(process.argv[1]))
 const homepage = path.join(folder, 'index.html')

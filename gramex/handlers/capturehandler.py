@@ -37,7 +37,7 @@ class Capture(object):
             script='chromecapture.js',
             first_line=b'node\\.js.*chromecapture\\.js',
             name='ChromeCapture',
-            version='1.0'
+            version='1.1'
         ),
     )
 
