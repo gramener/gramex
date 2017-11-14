@@ -55,7 +55,7 @@ str_utf8 = str('utf-8')             # noqa
 def walk(node):
     '''
     Bottom-up recursive walk through a data structure yielding a (key, value,
-    node) tuple for every entry.
+    node) tuple for every entry. ``node[key] == value`` is true in every entry.
 
     For example::
 
@@ -676,6 +676,15 @@ def objectpath(node, keypath, default=None):
         if node is None:
             return default
     return node
+
+
+def recursive_encode(data, encoding='utf-8'):
+    '''
+    Convert all Unicode values into UTF-8 encoded byte strings in-place
+    '''
+    for key, value, node in walk(data):
+        if isinstance(value, six.text_type):
+            node[key] = value.encode(encoding)
 
 
 class TimedRotatingCSVHandler(logging.handlers.TimedRotatingFileHandler):

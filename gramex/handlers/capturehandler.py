@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 
 import re
 import os
+import six
 import time
 import atexit
 import psutil
@@ -13,7 +14,7 @@ from subprocess import Popen, PIPE, STDOUT
 from six.moves.urllib.parse import urlencode, urljoin
 from tornado.web import HTTPError
 from tornado.httpclient import AsyncHTTPClient
-from gramex.config import app_log, variables
+from gramex.config import app_log, variables, recursive_encode
 from gramex.http import OK, GATEWAY_TIMEOUT, BAD_GATEWAY, CLIENT_TIMEOUT
 from .basehandler import BaseHandler
 
@@ -178,8 +179,10 @@ class Capture(object):
                 yield tornado.gen.sleep(self.check_interval)
         if not self.started:
             raise RuntimeError('%s not started. See logs' % self.engine.script)
+        if six.PY2:
+            recursive_encode(kwargs)
         r = yield self.browser.fetch(
-            self.url, method='POST', body=urlencode(kwargs, True), raise_error=False,
+            self.url, method='POST', body=urlencode(kwargs, doseq=True), raise_error=False,
             connect_timeout=self.timeout, request_timeout=self.timeout)
         if r.code == OK:
             self._validate_server(r)

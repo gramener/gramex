@@ -14,6 +14,8 @@ folder = os.path.dirname(os.path.abspath(__file__))
 
 def setUp():
     # Remove uploads folder before Gramex locks .meta.h5
+    # This may fail on Python 2.7 on Windows due to unicode characters.
+    # Delete tests/uploads/ manually in that case
     upload_path = os.path.join(folder, 'uploads')
     if os.path.exists(upload_path):
         shutil.rmtree(upload_path)
