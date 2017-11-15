@@ -1,5 +1,9 @@
 """Utility file."""
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+
 import re
+import ast
 import six
 import copy
 import platform
@@ -103,6 +107,19 @@ def stack_shapes(collection, change, data, handler):
             data_len = len(build_transform(info['data'], vars=_vars)(**args)[0])
 
         stack_elements(data_len, shape, stack=info.get('stack'), margin=info.get('margin'))
+
+
+def delete_paragraph(paragraph):
+    """Delete a paragraph."""
+    p = paragraph._p
+    parent_element = p.getparent()
+    parent_element.remove(p)
+
+
+def delete_run(run):
+    """Delete a run from paragraph."""
+    r = run._r
+    r.getparent().remove(r)
 
 
 def generate_slide(prs, source):
@@ -281,11 +298,14 @@ def apply_text_css(run, paragraph, **kwargs):
     if kwargs.get('font-family'):
         run.font.name = kwargs['font-family']
     if kwargs.get('font-size'):
-        run.font.size = pixcel_to_inch * kwargs['font-size']
+        run.font.size = pixcel_to_inch * float(kwargs['font-size'])
     if kwargs.get('text-align'):
         paragraph.alignment = getattr(PP_ALIGN, kwargs['text-align'].upper())
     for prop in {'bold', 'italic', 'underline'}:
-        setattr(run.font, prop, kwargs.get(prop))
+        update_prop = kwargs.get(prop)
+        if update_prop and not isinstance(update_prop, bool):
+            update_prop = ast.literal_eval(update_prop)
+        setattr(run.font, prop, update_prop)
 
 
 def make_element():
@@ -437,7 +457,8 @@ def draw_sankey(data, spec):
     })
     frame['width'] = frame['size'] / float(frame['size'].sum()) * width
     frame['fill'] = call(fill_color, g, group, default_color)
-    frame['text'] = call(text, g, group, '')
+    result = call(text, g, group, '')
+    frame['text'] = result
     # Add all attrs to the frame as well
     for key, val in iteritems(attrs):
         frame[key] = call(val, g, group, None)
@@ -602,8 +623,7 @@ class SubTreemap(object):
 
         # Find the positions of each box at this level
         key = self.args['keys'][level]
-        rows = (summary.to_records() if hasattr(summary, 'to_records') else
-                summary)
+        rows = (summary.to_records() if hasattr(summary, 'to_records') else summary)
 
         rects = squarified(x, y * aspect, width, height * aspect, self.args['size'](rows))
         for i2, (x2, y2, w2, h2) in enumerate(rects):

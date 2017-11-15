@@ -79,10 +79,9 @@ Here is another example that changes a bar chart based on data:
 
 The configuration accepts the following top-level keys:
 
-- `source`: optional. Path to input Presentation to be used as the source.
-  Defaults to a blank presentation with 1 slide.
-- `target`: required for the command line, and is where the output PPTX is saved.
-  It is optional for the API. If None, `pptgen` returns the Presentation object.
+- `source`: required. Path to input / source PPTX.
+- `target`: optional. Path where output / target PPTX is saved.
+  If None, `pptgen` returns the Presentation object.
 - `data`: optional dataset or a dictionary. This is described below.
 - `only`: Accepts slide number or list of slide numbers starting from 1. If defined, in output presentation only selected slides will be available. Suppose there are 10 slides in a presentation but user has defined `1` under `only` section then only slide number 1 will be available in output, similarilly slide number 1 and 2 will be available in output presentation if `only: [1, 2]`.
 - `register`: Optional to register any new custom commands to pptgen. It accepts a function which accepts three parameter `shape`, `spec`, and `data`. Available `immutable` commands in pptgen are `css`, `text`, `image`, `chart`, `table`, `sankey`, `bullet`, `replace`, `treemap`, `heatgrid` and `calendarmap`.
@@ -310,11 +309,27 @@ To change the title on the input slide to "New title", use this configuration:
 
     :::yaml
       Title 1:                # Take the shape named "Title 1"
+        style:                # CSS like properties only for text
+          color: '#ff00000'   # Text color will be red
+          font-size: 12       # Settiing font-size
+          .......
         text: New Title       # Replace its text with "New Title"
 
 [Run example](rules-example)
 
-`text:` values support [templates](#templates).
+`text:` values support [templates](#templates). Also supports `style` css like properties for text under `shapename.style` section. All style `sub-elements` accepts `python functions` also.
+`text:` supports `xml` objects in input text(which suppose to get replaced with) to have a `css` properties for a word in a sentence or phrase. `e.g.-`
+
+    :::yaml
+      Title 1:                # Take the shape named "Title 1"
+        style:                # CSS like properties only for text
+          color: '#ff00000'   # Text color will be red
+          font-size: 12       # Settiing font-size
+        text: "New Title <text color="#00ff00" bold="True"> Colored Bold Text </text>"
+
+[Run example](text-xml-style)
+
+In above example shape with name `Title 1` will get replaced by `New Title` in `green` color and  `Colored Bold Text` will be `bold` in `red` color. It accepts only `text` tag in xml input. Input xml template can have multiple `text` tag.
 
 ### Replace
 
@@ -322,6 +337,11 @@ To *substitute* text instead of [replacing the full text](#text), use:
 
     :::yaml
       Title 1:                        # Take the shape named "Title 1"
+        style:
+          color: '#ff0000'            # All new replaced text will have red color
+          font-size: 12               # All new replaced text will have font-size 12
+          Old:
+            color: '#00ff00'          # Overwriting common css for text `Old` that is being replaced with `New`
         replace:                      # Replace these keywords
           "Old": "New"                #   Old -> New
           "Title": "Heading"          #   Title -> Heading
@@ -330,7 +350,7 @@ To *substitute* text instead of [replacing the full text](#text), use:
 
 Replacement only works for words that have the same formatting. For example, in
 some<u>where</u>, "where" is underlined. You cannot replace "somewhere". But you can
-replace "some" and "where" independently.
+replace "some" and "where" independently. It also supports `css` like properties under `shapename.style`. All style elemets accepts `python functions` as well.
 
 `replace:` values support [templates](#templates).
 
@@ -510,14 +530,22 @@ Note:- All attributes also accepts python expresion or custom function. Such as:
     chart:
       color:
         function: module.color_function
+      # --------- If chart type is not a PIE or DONUT -----------------
       # In this case you will not have row level access. `color_function` must return a dictionary with keys of series name along with color code value.
+      # --------- If chart type is PIE or DONUT -----------------
+      # `color_function` must return a dictionary with keys `x-axis` columns unique value along with color code value.
 
     # Case 2
     chart:
       color:
         function: "lambda x: module.color_function"
       # In this case you will have row level data access. `color_function` will have 3 input parameters
+
+      # --------- If chart type is not a PIE or DONUT -----------------
       # `handler`, `name`, `value`. `name` will be the series name `value` is the value of a row for the `name` series.
+      # --------- If chart type is not a PIE or DONUT -----------------
+      # `handler`, `name`, `value`. `name` will be the series name `value` is the value of a row for the `name` will be the `x-axis` value.
+
       # In this case `color_function` function must return a hex color code, not a dictionary.
 
 `stroke`: Same configuration like `color`.
@@ -646,13 +674,25 @@ Here are examples for various charts:
         chart:
           data: data['sales'][['Category', 'Sales']]
           x: Category
+        color:                  # Define colors
+          FMCG: '#64A73B'
+          Media: '#71685C'
+          Banking: '#EB5605'
+          Government: '#B9CA1A'
+          Pharmaceutical: '#CCDDEA'
 
 [Run example](donut-chart-example)
 
       Pie Chart Name:
         chart:
-          data: data['sales'][['Category', 'Sales', 'Profit', 'Growth']]
+          data: data['sales'][['Category', 'Sales']]
           x: Category
+          color:                  # Define colors
+            FMCG: '#64A73B'
+            Media: '#71685C'
+            Banking: '#EB5605'
+            Government: '#B9CA1A'
+            Pharmaceutical: '#CCDDEA'
 
 [Run example](pie-chart-example)
 
@@ -763,6 +803,8 @@ The following keys can also be specified as an [expression](#expressions) and py
 - `data`: A DataFrame.
 - `row`: Columns name from data which will be get treated as `row` in heatgrid.
 - `column`: Columns name from data which will be get treated as `column` in heatgrid.
+- `column-order`: optional, list of unique values(from heatgrid column from data). In the same order columns will get created in heatmap. Accepts `function: python expresion under` as well.
+- `row-order`: optional, same like `column-order` but for rows.
 - `value`: Columns name from data to show for each cell heatgrid.
 - `text`: Default `False` if defined text inside cell will be formated.
 - `left-margin`: In percentage(0-1) of total width of shape. Left margin from the shape from where heatgrid will start populating.
@@ -771,6 +813,11 @@ The following keys can also be specified as an [expression](#expressions) and py
 - `na-text`: Treat `NA` values text representation.
 - `na-color`: Cell color for `NA` values.
 - `style`: optional `dict`, to apply css properties.
+- `style.padding`: Dict like object or int. Default 5px(left, right, top, bottom).
+  If `style: {padding: 10}` will set the padding (left, right, top, bottom) as 10px.
+  `style: {padding: {left: .., right: .., top: .., bottom: ..}}`
+  accept raw `int` value in pixels or a `function: python expression`.
+  This expression can use `handler`, `row`, `column` and `value` parameters.
 
 Example:
 
@@ -791,6 +838,17 @@ Example:
           na-text: NA
           na-color: '#cccccc'
           style:
+            # padding: 10        # Setting padding 10px(left, right, top, bottom)
+            # ------ OR --------
+            # padding:
+            #    left:           # Setting left padding from a function
+            #      function: module.function(handler, row, column, value)
+            # ------ OR --------
+            # padding:
+            #    left:           # Setting left padding from a function
+            #      function: module.function(handler, row, column, value)
+            #    right: 10       # Defining right padding 10px
+
             gradient: RdYlGn
             font-size: 14
             margin: 10

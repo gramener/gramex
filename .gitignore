@@ -33,7 +33,7 @@ tests/**/gen.*
 !gramex/apps/**/*.csv
 
 *.ppt*
-
+!testlib/input.pptx
 !tests/template.pptx
 !gramex/apps/guide/pptxhandler/examples-input.pptx
 

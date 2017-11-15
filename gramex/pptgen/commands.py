@@ -1,4 +1,7 @@
 """Python-PPTX customized module."""
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+
 import os
 import six
 import copy
@@ -12,6 +15,7 @@ import numpy as np
 from . import utils
 import pandas as pd
 import matplotlib.cm
+from lxml import etree
 from . import fontwidth
 import matplotlib.colors
 from . import color as _color
@@ -45,13 +49,40 @@ def text(shape, spec, data):
         return
     if not isinstance(data, (dict,)):
         data = {'data': data}
-    run_flag = True
-    style = spec.get('style', {})
-    for paragraph in shape.text_frame.paragraphs:
-        for run in paragraph.runs:
-            run.text = template(spec['text'], data) if run_flag else ''
-            run_flag = False
-            utils.apply_text_css(run, paragraph, **style)
+    handler = data.pop('handler', None)
+
+    style = copy.deepcopy(spec.get('style', {}))
+    style = generate_style(style, data, handler)
+    # Get paragraph
+    paragraph = shape.text_frame.paragraphs[0]
+    # Removing the extra paragraphs if more than one present
+    for para in shape.text_frame.paragraphs[1:]:
+        utils.delete_paragraph(para)
+    # Removing the extra run in paragraph if more than one present
+    for _run in paragraph.runs[1:]:
+        utils.delete_run(_run)
+
+    update_text = etree.fromstring('<root>{}</root>'.format(template(spec['text'], data)))
+    if update_text.text:
+        paragraph.runs[0].text = update_text.text
+        utils.apply_text_css(paragraph.runs[0], paragraph, **style)
+    tail_idx = 2
+    for index, child in enumerate(update_text.getchildren()):
+        if not child.tag == 'text':
+            raise ValueError('XML elemet must contain only "text" tag.')
+        common_css = copy.deepcopy(style)
+        # Adding runs for each text item
+        for item in [len(paragraph.runs) < (index + tail_idx), child.tail is not None]:
+            paragraph.add_run() if item else None
+        # Adding text to run
+        paragraph.runs[index + 1].text = child.text
+        # Updating the text css
+        common_css.update(dict(child.items()))
+        utils.apply_text_css(paragraph.runs[index + 1], paragraph, **common_css)
+        # Adding tail(text nect to the tag)
+        if child.tail:
+            paragraph.runs[index + tail_idx].text = child.tail
+            utils.apply_text_css(paragraph.runs[index + tail_idx], paragraph, **style)
 
 
 def replace(shape, spec, data):
@@ -63,10 +94,26 @@ def replace(shape, spec, data):
         return
     if not isinstance(data, (dict,)):
         data = {'data': data}
+
+    handler = spec.get('handler', None)
+    style = {}
+    common_css = spec.get('style', {})
+
+    for old, new in spec['replace'].items():
+        _style = common_css.pop(old, {})
+        style[old] = generate_style(_style, {'val': template(new, data), 'data': data}, handler)
+
+    common_css = generate_style(common_css, data, handler)
+    for key, val in style.items():
+        css = copy.deepcopy(common_css)
+        css.update(val)
+        style[key] = css
+
     for paragraph in shape.text_frame.paragraphs:
         for run in paragraph.runs:
             for old, new in spec['replace'].items():
                 run.text = run.text.replace(old, template(new, data))
+                utils.apply_text_css(run, paragraph, **style)
 
 
 def image(shape, spec, data):
@@ -86,6 +133,15 @@ def image(shape, spec, data):
     old_rid = shape._pic.blip_rId
     shape._pic.blipFill.blip.rEmbed = new_rid
     shape.part.related_parts[old_rid].blob = new_img_part.blob
+
+
+def generate_style(style, data, handler):
+    """Function to conpile style section from kwargs."""
+    for key, value in style.items():
+        if isinstance(value, (dict,)) and 'function' in value:
+            result = compile_function(style, key, data, handler)
+            style[key] = result(data) if callable(result) else result
+    return style
 
 
 def rect_css(shape, **kwargs):
@@ -170,7 +226,7 @@ def chart_css(fill, style, color):
 
 def compile_function(spec, key, data, handler):
     """A function to compile configuration."""
-    if not spec.get(key):
+    if key not in spec:
         return None
     _vars = {'_color': None, 'data': None, 'handler': None}
     if not isinstance(spec[key], (dict,)):
@@ -262,6 +318,7 @@ def chart(shape, spec, data):
             info['size']['function'] = '{}'.format(info['size'])
         info['size'] = compile_function(info, 'size', data, handler)
     data = compile_function(info, 'data', data, handler)
+    data = data.reset_index(drop=True)
     series_cols = [x for x in data.columns if x != info['x']]
     chart_name = None
     # If chart type is stacked bar or line.
@@ -302,28 +359,34 @@ def chart(shape, spec, data):
         style['color'] = dict(zip(series_names, _color.distinct(len(series_names))))
 
     if style.get('color'):
+        is_area = {'AREA', 'AREA_STACKED', 'AREA_STACKED_100'}
+        pie_or_donut = {'PIE', 'PIE_EXPLODED', 'PIE_OF_PIE', 'DOUGHNUT', 'DOUGHNUT_EXPLODED'}
         for series in shape.chart.series:
             values, name = series.values, series.name
             for index, point in enumerate(series.points):
                 point_css = {}
+                # Chart color if it is a `PIE` or `DONUT` chart
+                args = {'handler': handler, 'value': values[index]}
+                args['name'] = data.ix[index][info['x']] if chart_type in pie_or_donut else name
                 for key in {'opacity', 'color', 'stroke'}:
                     if style.get(key):
                         if callable(style[key]):
                             point_css[key] = style[key](index)
                             if callable(point_css[key]):
-                                args = {'handler': handler, 'name': name, 'value': values[index]}
                                 point_css[key] = point_css[key](**args)
                         else:
                             if isinstance(style[key], (dict)):
-                                point_css[key] = style[key].get(series.name, '#cccccc')
+                                point_css[key] = style[key].get(args['name'], '#cccccc')
                             else:
                                 point_css[key] = style[key]
                         if key != 'opacity':
                             point_css[key] = utils.conver_color_code(point_css[key])
+
                 if chart_name == 'scatter':
                     fill = point.marker.format.fill
                     line_fill = point.marker.format.line.fill
-                elif chart_type in {'AREA', 'AREA_STACKED', 'AREA_STACKED_100'}:
+                # Chart color if it is a `AREA` chart
+                elif chart_type in is_area:
                     fill = series.format.fill
                     line_fill = series.format.line.fill
                 else:
@@ -499,7 +562,7 @@ def calendarmap(shape, spec, data):
     spec = copy.deepcopy(spec['calendarmap'])
     handler = data.get('handler')
     # Load data
-    data = compile_function(spec, 'data', data, handler)
+    data = compile_function(spec, 'data', data, handler).fillna(0)
     startdate = compile_function(spec, 'startdate', data, handler)
 
     pixel_inch = 10000
@@ -520,11 +583,8 @@ def calendarmap(shape, spec, data):
     default_color = '#ffffff'
     default_line_color = '#787C74'
     default_txt_color = '#000000'
-
-    style = spec.get('style', {})
-    for key, value in style.items():
-        if isinstance(value, (dict,)) and 'function' in value:
-            style[key] = compile_function(style, key, data, handler)
+    style = copy.deepcopy(spec.get('style', {}))
+    style = generate_style(style, data, handler)
 
     font_size = style.get('font-size', 12)
     stroke = style.get('stroke', '#ffffff')
@@ -556,12 +616,11 @@ def calendarmap(shape, spec, data):
     # should be an absolute scale)
     sizes = width * utils.scale(
         [v ** .5 for v in size], lo=0) if size is not None else [width] * len(scaledata)
-
     for i, val in enumerate(data):
         nx = (i + startweekday) // 7
         ny = (i + startweekday) % 7
         d = startdate + datetime.timedelta(days=i)
-        fill = '#ffffff'
+        fill = '#cccccc'
         if not pd.isnull(val):
             fill = color(val) if callable(color) else color
 
@@ -613,33 +672,33 @@ def calendarmap(shape, spec, data):
     if label_top:
         lo_weekly = spec.get('lo', weekly_mean.min())
         range_weekly = spec.get('hi', weekly_mean.max()) - lo_weekly
-        for nx, val in enumerate(weekly_mean):
-            if not pd.isnull(val):
-                w = label_top * ((val - lo_weekly) / range_weekly)
-                px = x0 + (width * nx)
-                top_bar = shapes.add_shape(
-                    MSO_SHAPE.RECTANGLE, px, shape_top - w, width, w)
-                rectstyle = {"fill": fill_rect(val) if callable(fill_rect) else fill_rect,
-                             'stroke': stroke(val) if callable(stroke) else stroke}
-                rect_css(top_bar, **rectstyle)
-                top_txt = shapes.add_textbox(px, shape_top - width, width, width)
-                text_style['color'] = text_color(val) if callable(text_color) else text_color
-                add_text_to_shape(top_txt, weekly_format.format(weekly_mean[nx]), **text_style)
+        for nx, val in enumerate(weekly_mean.fillna(0)):
+            w = label_top * ((val - lo_weekly) / range_weekly)
+            px = x0 + (width * nx)
+            top_bar = shapes.add_shape(
+                MSO_SHAPE.RECTANGLE, px, shape_top - w, width, w)
+            top_bar.name = 'top bar chart rect'
+            rectstyle = {"fill": fill_rect(val) if callable(fill_rect) else fill_rect,
+                         'stroke': stroke(val) if callable(stroke) else stroke}
+            rect_css(top_bar, **rectstyle)
+            top_txt = shapes.add_textbox(px, shape_top - width, width, width)
+            text_style['color'] = text_color(val) if callable(text_color) else text_color
+            add_text_to_shape(top_txt, weekly_format.format(weekly_mean[nx]), **text_style)
 
     if label_left:
         lo_weekday = spec.get('lo', weekday_mean.min())
         range_weekday = spec.get('hi', weekday_mean.max()) - lo_weekday
-        for ny, val in enumerate(weekday_mean):
-            if not pd.isnull(val):
-                w = label_left * ((val - lo_weekday) / range_weekday)
-                bar = shapes.add_shape(
-                    MSO_SHAPE.RECTANGLE, shape_left - w, y0 + (width * ny), w, width)
-                rectstyle = {"fill": fill_rect(val) if callable(fill_rect) else fill_rect,
-                             'stroke': stroke(val) if callable(stroke) else stroke}
-                rect_css(bar, **rectstyle)
-                left_txt = shapes.add_textbox(shape_left - width, y0 + (width * ny), w, width)
-                text_style['color'] = text_color(val) if callable(text_color) else text_color
-                add_text_to_shape(left_txt, weekday_format.format(weekday_mean[ny]), **text_style)
+        for ny, val in enumerate(weekday_mean.fillna(0)):
+            w = label_left * ((val - lo_weekday) / range_weekday)
+            bar = shapes.add_shape(
+                MSO_SHAPE.RECTANGLE, shape_left - w, y0 + (width * ny), w, width)
+            rectstyle = {"fill": fill_rect(val) if callable(fill_rect) else fill_rect,
+                         'stroke': stroke(val) if callable(stroke) else stroke}
+            bar.name = 'left bar chart rect'
+            rect_css(bar, **rectstyle)
+            left_txt = shapes.add_textbox(shape_left - width, y0 + (width * ny), w, width)
+            text_style['color'] = text_color(val) if callable(text_color) else text_color
+            add_text_to_shape(left_txt, weekday_format.format(weekday_mean[ny]), **text_style)
 
 
 def bullet(shape, spec, data):
@@ -791,18 +850,22 @@ def heatgrid(shape, spec, data):
 
     # Loading config
     handler = data.pop('handler') if 'handler' in data else None
-    for key in ['row', 'column', 'value']:
+    for key in ['row', 'column', 'value', 'column-order', 'row-order']:
+        if key not in spec:
+            continue
         if isinstance(spec[key], (dict,)) and 'function' in spec[key]:
             spec[key] = compile_function(spec, key, data, handler)
     # Loading data
     data = compile_function(spec, 'data', data, handler)
     data = data.sort_values(by=[spec['column']])
-    rows = data[spec['row']].unique().tolist()
-    columns = sorted(data[spec['column']].unique().tolist())
+    rows = spec.get('row-order', sorted(data[spec['row']].unique().tolist()))
+    columns = spec.get('column-order', sorted(data[spec['column']].unique().tolist()))
 
     left_margin = (width * spec.get('left-margin', 0.15))
-    padding = spec.get('style', {}).get('padding', 10)
-    padding = padding * pixel_inch
+    padding = spec.get('style', {}).get('padding', 5)
+    if not isinstance(padding, (dict,)):
+        padding = {'left': padding, 'right': padding,
+                   'top': padding, 'bottom': padding}
 
     styles = copy.deepcopy(spec.get('style', {}))
 
@@ -819,23 +882,39 @@ def heatgrid(shape, spec, data):
     # Adding Columns to the HeatGrid.
     for idx, column in enumerate(columns):
         txt = parent.add_textbox(
-            left + _width * idx + left_margin, top - height - padding, _width, height)
+            left + _width * idx + left_margin, top - height, _width, height)
         add_text_to_shape(txt, '{}'.format(column), **styles)
 
     # Cell width
     for index, row in enumerate(rows):
         _data = data[data[spec['row']] == row].dropna()
-        if len(_data) < len(columns):
-            _data = pd.merge(
-                _data, pd.DataFrame({spec['column']: list(columns)}),
-                left_on=spec['column'], right_on=spec['column'], how='outer')
-        _data = _data.sort_values(by=[spec['column']]).reset_index(drop=True)
+        _data = pd.merge(
+            pd.DataFrame({spec['column']: list(columns)}), _data,
+            left_on=spec['column'], right_on=spec['column'], how='left').reset_index(drop=True)
+
         for _idx, _row in _data.iterrows():
             style = copy.deepcopy(styles)
+            # Setting callable padding args
+            _vars = {'handler': None, 'row': None,
+                     'column': None, 'value': None}
+            args = {'handler': handler, 'row': row,
+                    'column': _row[spec['column']],
+                    'value': _row[spec['value']]}
+            # Setting padding if callable.
+            _pad = copy.deepcopy(padding)
+            for key, val in _pad.items():
+                if isinstance(val, (dict,)) and 'function' in val:
+                    _pad[key] = build_transform(val, vars=_vars)(**args)[0]
+            top_pad = _pad.get('top', 5) * pixel_inch
+            left_pad = _pad.get('left', 5) * pixel_inch
+            right_pad = _pad.get('right', 5) * pixel_inch
+            bottom_pad = _pad.get('bottom', 5) * pixel_inch
+
             # Adding cells
-            xaxis = left + (_width * _idx) + left_margin
-            yaxis = top + (height * index) + padding * index
-            _rect = rect(parent, xaxis, yaxis, _width - padding, height)
+            xaxis = left + (_width * _idx) + left_margin + left_pad
+            yaxis = top + (height * index) + (top_pad) * index
+            _rect = rect(parent, xaxis, yaxis, _width - left_pad - right_pad,
+                         height - top_pad)
             # Adding color gradient to cell if gradient is True
             if style.get('gradient'):
                 grad_txt = scale_data(_row[spec['value']], _min, _max)
@@ -851,7 +930,9 @@ def heatgrid(shape, spec, data):
             # Adding text to cells if required.
             if spec.get('text'):
                 spec['text'] = compile_function(spec, 'text', data, handler)
-                _txt = parent.add_textbox(xaxis, yaxis, _width - padding, height)
+                _txt = parent.add_textbox(
+                    xaxis, yaxis, _width - left_pad - right_pad,
+                    height - top_pad - bottom_pad)
                 cell_txt = '{}'.format(_row[spec['value']])
                 if callable(spec['text']):
                     cell_txt = spec['text'](_row)
@@ -860,7 +941,7 @@ def heatgrid(shape, spec, data):
                 add_text_to_shape(_txt, cell_txt, **style)
         # Adding row's text in left side
         txt = parent.add_textbox(
-            left, top + (height * index) + padding * index,
+            left, top + (height * index) + top_pad * index,
             _width + left_margin, height)
         add_text_to_shape(txt, row, **styles)
 

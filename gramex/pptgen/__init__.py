@@ -1,4 +1,7 @@
 """PPTGen module."""
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+
 import io
 import os
 import six
@@ -74,14 +77,20 @@ def load_data(data_config, handler=None):
     '''
     Loads data using gramex cache.
     '''
+    if not isinstance(data_config, (dict, AttrDict,)):
+        raise ValueError('Data argument must be a dict like object.')
+
     data = {}
     for key, conf in data_config.items():
-        if 'function' in conf:
-            data[key] = build_transform(conf, vars={'handler': None})(handler=handler)[0]
-        elif conf.get('ext') in {'yaml', 'yml', 'json'}:
-            data[key] = gramex.cache.open(conf.pop('url'), conf.pop('ext'), **dict(conf))
+        if isinstance(conf, (dict, AttrDict,)):
+            if 'function' in conf:
+                data[key] = build_transform(conf, vars={'handler': None})(handler=handler)[0]
+            elif conf.get('ext') in {'yaml', 'yml', 'json'}:
+                data[key] = gramex.cache.open(conf.pop('url'), conf.pop('ext'), **dict(conf))
+            elif 'url' in conf:
+                data[key] = gramex.data.filter(conf.pop('url'), **dict(conf))
         else:
-            data[key] = gramex.data.filter(conf.pop('url'), **dict(conf))
+            data[key] = conf
     return data
 
 
@@ -114,7 +123,7 @@ def register(config):
             COMMANDS_LIST[command_name] = build_transform(command_function, vars=_vars)
 
 
-def pptgen(source, target, **config):
+def pptgen(source, target=None, **config):
     '''
     Process a configuration. This loads a Presentation from source, applies the
     (optional) configuration changes and saves it into target.
@@ -191,7 +200,10 @@ def pptgen(source, target, **config):
         for slide_num in manage_slide_order:
             manage_slide_order[slide_num] = [(i - 1) for i in manage_slide_order[slide_num]]
         removed_status += 1
-    prs.save(target)
+    if target is None:
+        return prs
+    else:
+        prs.save(target)
 
 
 def change_shapes(collection, change, data, handler, **kwargs):

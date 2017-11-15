@@ -59,6 +59,22 @@ url:
             color: '#00ff00'
             bold: True
 
+  pptxhandler/text-xml-style:
+    pattern: /$YAMLURL/text-xml-style
+    handler: PPTXHandler
+    kwargs:
+      headers:
+        Content-Disposition: attachment; filename=examples-text-xml-style.pptx
+      only: 5
+      source: $YAMLPATH/examples-input.pptx  # Common example file
+      rule-1:
+        Title 1:                # Take the shape named "Title 1"
+          style:                # CSS like properties only for text
+            color: '#ff00000'   # Text color will be red
+            font-size: 12       # Settiing font-size
+          text: "New Title <text color='#00ff00' bold='True'> Green Bold Text </text>"
+
+
   pptxhandler/group-example:
     pattern: /$YAMLURL/group-example
     handler: PPTXHandler
@@ -533,6 +549,12 @@ url:
           chart:
             data: data['sales'][['Category', 'Sales']]
             x: Category
+            color:                  # Define colors
+              FMCG: '#64A73B'
+              Media: '#71685C'
+              Banking: '#EB5605'
+              Government: '#B9CA1A'
+              Pharmaceutical: '#CCDDEA'
 
   pptxhandler/pie-chart-example:
     pattern: /$YAMLURL/pie-chart-example
@@ -549,3 +571,9 @@ url:
           chart:
             data: data['sales'][['Category', 'Sales']]
             x: Category
+            color:                  # Define colors
+              FMCG: '#64A73B'
+              Media: '#71685C'
+              Banking: '#EB5605'
+              Government: '#B9CA1A'
+              Pharmaceutical: '#CCDDEA'
