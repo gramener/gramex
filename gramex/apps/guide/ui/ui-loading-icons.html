@@ -10,12 +10,12 @@
   </thead>
   <tbody>
     <tr>
-      <td><i class="fa fa-spinner fa-pulse fa-3x fa-fw"></td>
+      <td data-url="default">Click for action</td>
       <td class="ajax-request-success" data-url="data">
-        <i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i>
+        Successful request
       </td>
       <td class="ajax-request-failure" data-url="gramener">
-        <i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i>
+        Bad request
       </td>
     </tr>
   </tbody>
@@ -33,19 +33,17 @@
     $.ajax(url, {
       method: 'GET',
       data: {'data': 'test data'},
-      success: function(response) {
-        alertMessage('success', 'Successfully processed request', 'AJAX', '.page-alert')
-      },
-      complete: function() {
-        $('.' + container).html('Completed AJAX request')
-      },
-      error: function() {
-        alertMessage('danger', 'Error processing request', 'AJAX', '.page-alert')
-      }
+      beforeSend: function() { $('.' + container).html('<i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i>') },
+      success: function(response) { alertMessage('success', 'Successfully processed request', 'AJAX', '.page-alert') },
+      complete: function() { $('.' + container).html('Completed AJAX request') },
+      error: function() { alertMessage('danger', 'Error processing request', 'AJAX', '.page-alert') }
     })
   }
 
-  $('body').on('click', 'td[class*="ajax-request"]', function() {
-    sendRequest($(this).data('url'), $(this).attr('class'))
+  $('body').on('click', 'td', function() {
+    if($(this).data('url') !== 'default')
+      sendRequest($(this).data('url'), $(this).attr('class'))
+    else
+      $(this).html('<i class="fa fa-spinner fa-pulse fa-3x fa-fw">')
   })
 </script>

@@ -1,43 +1,31 @@
 <h2>Alerts</h2>
-<div class="alert-alert"></div>
-<table class="table table-sm table-inverse table-hover">
-  <thead>
-    <tr>
-      <th>Bootstrap 4</th>
-      <th>Noty</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td class="alert-lib" data-alerttype="bs"><a href="#">Bootstrap alert</a></td>
-      <td>
-        <span class="alert-lib" data-alerttype="noty"><a href="#">Default</a></span>.
-        <span class="alert-lib" data-alerttype="noty-cont"><a href="#">Custom container</a></span>.
-      </td>
-    </tr>
-  </tbody>
-</table>
+
+<p><button class="btn btn-primary" data-toggle="collapse" data-target=".alert">Click to toggle Bootstrap alert</button></p>
+
+<div class="alert alert-danger collapse" role="alert">
+  <strong>Danger alert</strong> with an <a class="alert-link" href="#">alert link</a>.
+  <button type="button" class="close" data-toggle="collapse" data-target=".alert" aria-label="Close">
+    <span aria-hidden="true">&times;</span>
+  </button>
+</div>
+<div class="alert alert-warning collapse" role="alert">
+  <strong>Warning alert</strong> with an <a class="alert-link" href="#">alert link</a>.
+  <button type="button" class="close" data-toggle="collapse" data-target=".alert" aria-label="Close">
+    <span aria-hidden="true">&times;</span>
+  </button>
+</div>
+<div class="alert alert-success collapse" role="alert">
+  <strong>Success alert</strong> with an <a class="alert-link" href="#">alert link</a>.
+  <button type="button" class="close" data-toggle="collapse" data-target=".alert" aria-label="Close">
+    <span aria-hidden="true">&times;</span>
+  </button>
+</div>
+
+<p>Use the <a href="https://ned.im/noty/">Noty library</a> for notifications.</p>
+<p><button class="btn btn-primary noty-alert">Show Noty alert</button></a></p>
 
 <script>
-  $('body').on('click', '.alert-lib', function() {
-    if($(this).data('alerttype') === 'bs') {
-      alertMessage('success', "Here's a bootstrap 4", ' Alert', '.alert-alert')
-    } else if($(this).data('alerttype') === 'noty-cont') {
-      new Noty({
-        type: 'success',
-        container: '.alert-alert',
-        text: "Here is a Noty alert in a custom container",
-        theme: 'metroui',
-        timeout: 1000
-      }).show()
-    } else if ($(this).data('alerttype') === 'noty') {
-      new Noty({
-        type: 'success',
-        layout: 'topRight',
-        text: "Here is a Noty alert",
-        theme: 'relax',
-        timeout: 1000
-      }).show()
-    }
+  $('body').on('click', '.noty-alert', function() {
+    new Noty({type: 'error', text: "Here is a Noty alert"}).show()
   })
 </script>

@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="../node_modules/noty/lib/noty.css">
   <link rel="stylesheet" href="../node_modules/daterangepicker/daterangepicker.css">
   <link rel="stylesheet" href="../node_modules/bootstrap-slider/dist/css/bootstrap-slider.min.css">
+  <link rel="stylesheet" href="../node_modules/prismjs/themes/prism-okaidia.css">
   <style>
   .component-list > section h2 {
     border-bottom: 1px solid #ccc;
@@ -27,56 +28,47 @@
       </button>
     </form>
   </nav>
-  <div id="theme-picker" class="theme bg-dark text-light collapse.show">
+  <div id="theme-picker" class="theme bg-dark text-light collapse">
     <form class="container-fluid pt-4 pb-4">
       <div class="theme-contents d-flex align-self-start">
-        <div class="column mr-4">
-          <div><input id="primary" name="primary" type="color">     <label for="primary">Primary</label>     </div>
-          <div><input id="secondary" name="secondary" type="color"> <label for="secondary">Secondary</label> </div>
-          <div><input id="success" name="success" type="color">     <label for="success">Success</label>     </div>
-          <div><input id="danger" name="danger" type="color">       <label for="danger">Danger</label>       </div>
-          <div><input id="warning" name="warning" type="color">     <label for="warning">Warning</label>     </div>
-          <div><input id="info" name="info" type="color">           <label for="info">Info</label>           </div>
-          <div><input id="light" name="light" type="color">         <label for="light">Light</label>         </div>
-          <div><input id="dark" name="dark" type="color">           <label for="dark">Dark</label>           </div>
-        </div>
-        <div class="column mr-4">
-          <div>
-            <label for="enable-rounded"><input id="enable-rounded" name="enable-rounded" type="checkbox"> Rounded</label>
+        <div class="column mr-4 theme-colors">
+          <div v-for="(info, name) in color">
+            <input v-bind:id="name" v-bind:name="name" type="color" v-bind:value="info.value">
+            <label for="primary">{{ info.title }}</label>
           </div>
-          <div>
-            <label for="enable-shadows"><input id="enable-shadows" name="enable-shadows" type="checkbox"> Shadows</label>
+        </div><!-- .theme-colors -->
+        <div class="column mr-4 theme-toggles">
+          <div v-for="(info, name) in toggle">
+            <label>
+              <input v-bind:name="name" type="checkbox" v-model="info.value">
+              {{ info.title }}
+            </label>
           </div>
-          <div>
-            <label for="enable-gradients"><input id="enable-gradients" name="enable-gradients" type="checkbox"> Gradients</label>
+        </div><!-- .theme-toggles -->
+        <div class="column mr-4 theme-selects">
+          <div v-for="(info, name) in font" class="mb-4">
+            <label v-bind:for="name">{{ info.title }}</label>
+            <select class="form-control form-control-sm" v-bind:name="name" v-model="info.value">
+              <option v-for="(fontinfo, fontname) in info.options" v-bind:value="fontname">
+                {{ fontinfo.title }}
+              </option>
+            </select>
           </div>
-          <div>
-            <label for="enable-transitions"><input id="enable-transitions" name="enable-transitions" type="checkbox"> Transitions</label>
-          </div>
-          <div>
-            <label for="enable-print-styles"><input id="enable-print-styles" name="enable-print-styles" type="checkbox"> Print styles</label>
-          </div>
-        </div>
-        <div class="column mr-4">
-          <div>
-            <label for="font-family-base">Body font</label>
-            <select class="form-control form-control-sm" name="font-family-base"></select>
-          </div>
-          <div>
-            <label for="headings-font-family">Heading font</label>
-            <select class="form-control form-control-sm" name="headings-font-family"></select>
-          </div>
-        </div>
-      </div>
-      <button type="reset" class="btn btn-default">Reset</button>
+        </div><!-- .theme-selects -->
+        <div class="column mr-4 theme-predefined">
+        </div><!-- .theme-predefined -->
+      </div><!-- .theme-contents -->
       <button type="submit" class="btn btn-primary">Apply theme</button>
     </form>
-  </div>
+  </div><!-- #theme-picker -->
 
   <div class="d-flex mt-3 pl-3">
-    <div class="toc"></div>
+    <div class="toc">
+      <a class="btn btn-sm btn-dark" target="_blank" href="bootstrap-theme" + location.search>Download CSS</a>
+    </div>
     <div class="container-fluid component-list">
       <input type="search" class="form-control" placeholder="Type component to filter" id="search-components">
+      <section data-ui="ui-about.html"></section>
       <section data-ui="ui-alerts.html"></section>
       <section data-ui="ui-buttons.html"></section>
       <section data-ui="ui-breadcrumbs.html"></section>
@@ -95,17 +87,17 @@
   </div><!-- .d-flex -->
 
   <!-- Modal -->
-  <div class="modal fade" id="sourceCodeModal" tabindex="-1" role="dialog" aria-labelledby="sourceCodeModalLabel" aria-hidden="true">
+  <div class="modal fade" id="source-modal" tabindex="-1" role="dialog" aria-labelledby="source-modal-label" aria-hidden="true">
     <div class="modal-dialog modal-lg" role="document">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title" id="sourceCodeModalLabel">Component source code</h5>
+          <h5 class="modal-title" id="source-modal-label">Component source code</h5>
           <button type="button" class="close" data-dismiss="modal" aria-label="Close">
             <span aria-hidden="true">&times;</span>
           </button>
         </div>
         <div class="modal-body">
-          ...
+          <pre><code class="language-html source-content"></code></pre>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
@@ -122,49 +114,21 @@
   <script src="../node_modules/daterangepicker/daterangepicker.js"></script>
   <script src="../node_modules/bootstrap-slider/dist/bootstrap-slider.min.js"></script>
   <script src="../node_modules/url-search-params/build/url-search-params.js"></script>
+  <script src="../node_modules/prismjs/prism.js"></script>
+  <script src="../node_modules/vue/dist/vue.min.js"></script>
+  <script src="../node_modules/lodash/lodash.min.js"></script>
   <script>
-    var defaults = {
-      primary: '#007bff',
-      secondary: '#868e96',
-      success: '#28a745',
-      info: '#17a2b8',
-      warning: '#ffc107',
-      danger: '#dc3545',
-      light: '#f8f9fa',
-      dark: '#343a40',
-    }
-    var default_enabled = {
-        'enable-rounded': 'on',
-        'enable-transitions': 'on',
-        'enable-print-styles': 'on'
-    }
-    function set_input(key, value) {
-      var $el = $('input[name="' + key + '"]')
-        if ($el.is('[type="checkbox"]'))
-          $el.prop('checked', Boolean(value))
-        else
-          $el.val(value)
-    }
-    function reset() {
-      for (var key in defaults)
-        set_input(key, defaults[key])
-      var q = new URLSearchParams(location.search)
-      var keys = Array.from(q.keys())
-      if (keys.length)
-        $('input[name^=enable-]').prop('checked', false)
-      else
-        for (var key in default_enabled)
-          set_input(key, 'on')
-      keys.forEach(function(key) {
-        set_input(key, q.get(key))
-      })
-    }
-    reset()
-    $('#theme-picker [type="reset"]').on('click', function(e) {
-      e.preventDefault()
-      reset()
+    var q = _.fromPairs(Array.from((new URLSearchParams(location.search)).entries()))
+    var has_query = Object.keys(q).length > 0
+    $.getJSON('config', function(config) {
+      // Set values based on inputs
+      _.each(config.color, function(info, name) { info.value = q[name] || info.default })
+      _.each(config.font, function(info, name) { info.value = q[name] || info.default })
+      _.each(config.toggle, function(info, name) { info.value = has_query ? (q[name] || '') : info.default })
+      var app = new Vue({el: '#theme-picker', data: config})
     })
 
+    // Table of contents
     var $toc = $('.toc')
     $('[data-ui]').each(function() {
       var $toc_entry = $('<div><a></a></div>').appendTo($toc).find('a')
@@ -172,22 +136,17 @@
       $this
         .load($this.data('ui'), function() {
           var heading = $this.find('h2').text()
-          var id = slug(heading)
+          var id = heading
+            .toLowerCase()
+            .replace(/[^a-z0-9_]+/g, '-')   // Replace non-alpha with -
+            .replace(/^\-+/, '')            // Remove leading -
+            .replace(/\-+$/, '')            // Remove trailing -
           $this.attr('id', id)
           $toc_entry.text(heading).attr('href', '#' + id)
-          $this.find('h2').after('<div class="text-right"><span class="font-weight-light src">(Source)</span></div>')
+          $this.find('h2').append('<button class="btn btn-sm btn-light pull-right src">Source</button>')
         })
-      $('<div class="text-right"><span class="font-weight-light src">(Source)</span></div>').appendTo($this)
     })
-
-    var fonts = ['Calibri', 'Century Gothic', 'Franklin Gothic Medium', 'Futura', 'Geneva', 'Gill Sans', 'Helvetica', 'Optima', 'Segoe UI', 'Tahoma', 'Trebuchet MS', 'Verdana', 'Baskerville', 'Cambria', 'Georgia', 'Palatino', 'Times New Roman', 'Consolas']
-    var markup = ""
-    fonts.forEach(function(item) {
-      markup += "<option style='font-family:" + item + ";' value='" + item + "'>" + item + "</option>"
-    })
-    $('select[name="font-family-base"]').append(markup)
-    $('select[name="headings-font-family"]').append(markup)
-
+    // Event handlers
     $('body').on('input', '#search-components', function() {
       var $user_val = $(this).val()
       $('section').hide()
@@ -196,18 +155,10 @@
       }).show()
     })
     .on('click', '.src', function() {
-      $('#sourceCodeModal').modal()
-      $('#sourceCodeModal').find('.modal-body').html(
-        '<xmp>' + $(this).parents().closest('section').html() + '</xmp>')
+      var html = Prism.highlight($(this).parents().closest('section').html(), Prism.languages.html)
+      $('.source-content').html(html)
+      $('#source-modal').modal()
     })
-
-    function slug(text) {
-      return text
-        .toLowerCase()
-        .replace(/[^a-z0-9_]+/g, '-')   // Replace non-alpha with -
-        .replace(/^\-+/, '')            // Remove leading -
-        .replace(/\-+$/, '')            // Remove trailing -
-    }
   </script>
 </body>
 </html>

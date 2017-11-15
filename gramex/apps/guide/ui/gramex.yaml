@@ -6,6 +6,14 @@ url:
     kwargs:
       path: $YAMLPATH/index.html
 
+  guide/ui/config:
+    pattern: /$YAMLURL/config
+    handler: FunctionHandler
+    kwargs:
+      function: uiapp.get_config
+      headers:
+        Content-Type: application/json
+
   guide/ui/ajax:
     pattern: /$YAMLURL/data
     handler: FunctionHandler

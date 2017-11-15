@@ -1,0 +1,111 @@
+# Theme configurations
+# --------------------
+
+# Color variables.
+# parameter: {title: display-name, default: default-color}
+color:
+    primary:    {title: Primary,         default: '#007bff'}
+    secondary:  {title: Secondary,       default: '#868e96'}
+    success:    {title: Success,         default: '#28a745'}
+    info:       {title: Info,            default: '#17a2b8'}
+    warning:    {title: Warning,         default: '#ffc107'}
+    danger:     {title: Danger,          default: '#dc3545'}
+    light:      {title: Light,           default: '#f8f9fa'}
+    dark:       {title: Dark,            default: '#343a40'}
+    body-bg:    {title: Body background, default: '#ffffff'}
+    body-color: {title: Body color,      default: '#212529'}
+
+# Other varibles:
+# font-size-base
+# font-size-lg
+# font-size-sm
+
+# parameter: {title: display-name, default: enabled-or-not, options: sass-variables}
+toggle:
+    enable-rounded:
+      title: Rounded
+      default: 'on'
+      options:
+        'on': {enable-rounded: "true"}
+        '': {enable-rounded: "false"}
+    enable-circular:
+      title: Circular
+      default: ''
+      options:
+        'on':
+          border-radius: "10rem"
+          border-radius-lg: "10rem"
+          border-radius-sm: "10rem"
+        '': {}
+    enable-shadows:
+      title: Shadows
+      default: ''
+      options:
+        'on': {enable-shadows: "true"}
+        '': {enable-shadows: "false"}
+    enable-gradients:
+      title: Gradients
+      default: ''
+      options:
+        'on': {enable-gradients: "true"}
+        '': {enable-gradients: "false"}
+    enable-transitions:
+      title: Transitions
+      default: 'on'
+      options:
+        'on': {enable-transitions: "true"}
+        '': {enable-transitions: "false"}
+    enable-print:
+      title: Print styles
+      default: 'on'
+      options:
+        'on': {enable-print-styles: "true"}
+        '': {enable-print-styles: "false"}
+
+font:
+  font-family-base:
+    title: Body font
+    default: default
+    options: &FONT_LIST
+      default:      {title: 'Default',   stack: null,                       google: false}
+      calibri:      {title: 'Calibri',   stack: 'Calibri, sans-serif',      google: false}
+      helvetica:    {title: 'Helvetica', stack: 'Helvetica, sans-serif',    google: false}
+      cambria:      {title: 'Cambria',   stack: 'Cambria, serif',           google: false}
+      open-sans:    {title: 'Open Sans', stack: '"Open Sans", sans-serif',  google: Open+Sans}
+      roboto:       {title: 'Roboto',    stack: 'Roboto, sans-serif',       google: Roboto}
+  headings-font-family:
+    title: Heading font
+    default: default
+    options: *FONT_LIST
+
+theme:
+  flat:
+    enable-transitions: on
+    enable-print-styles: on
+
+  round:
+    enable-rounded: on
+    enable-circular: on
+    enable-transitions: on
+    enable-print-styles: on
+
+  go-green:
+    enable-transitions: on
+    enable-print-styles: on
+    font-family-base: lato
+    headings-font-family: calibri
+    primary: '#18816f'
+    secondary: '#868e96'
+    success: '#a3b561'
+    danger: '#ff6c65'
+    warning: '#e7c846'
+    dark: '#343a40'
+    light: '#f8f9fa'
+    info: '#83c2c2'
+
+  shiny-red:
+    enable-gradients: on
+    enable-transitions: on
+    enable-print-styles: on
+    primary: '#f94d42'
+    danger: '#1a1110'
