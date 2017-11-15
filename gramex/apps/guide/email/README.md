@@ -22,16 +22,16 @@ In the `type:` section of `gramex.yaml` email configuration, the following types
 - `live`: Microsoft live mail
 - `mandrill`: [Mandrill](https://mandrill.zendesk.com/) email
 
-You can also connect to *any* SMTP mail server using `type: smtp`. For example:
+You can also connect to *any* SMTP or SMTPS mail server using `type: smtp` or
+`type: smtps`. For example:
 
     email:
         client-email:
-            type: smtp
+            type: smtp              # Use type: smtps for SMTPS servers
             host: 10.20.30.40       # Host name or IP address of the SMTP server
             # Optional parameters
             email: user@domain.com  # Username or email to log into SMTP server
             password: ****          # Password for SMTP server
-            tls: false              # false=Don't use SSL. Default: true (SMTPS)
             port: 587               # For non-standard SMTP port. Default: SMTPS=587, SMTP=25
 
 ## Send email
