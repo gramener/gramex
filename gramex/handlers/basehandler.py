@@ -15,7 +15,7 @@ import gramex.cache
 from binascii import b2a_base64, hexlify
 from orderedattrdict import AttrDict
 from six.moves.urllib_parse import urlparse, urlsplit, urljoin, urlencode
-from tornado.web import RequestHandler, HTTPError
+from tornado.web import RequestHandler, HTTPError, MissingArgumentError
 from tornado.websocket import WebSocketHandler
 from gramex import conf, __version__
 from gramex.config import merge, objectpath, app_log, CustomJSONDecoder, CustomJSONEncoder
@@ -539,6 +539,25 @@ class BaseHandler(RequestHandler, BaseMixin):
             self.request.method = self.args.pop('x-http-method-override')[0].upper()
         elif 'X-HTTP-Method-Override' in self.request.headers:
             self.request.method = self.request.headers['X-HTTP-Method-Override'].upper()
+
+    def get_arg(self, name, default=RequestHandler._ARG_DEFAULT, first=False):
+        '''
+        Returns the value of the argument with the given name. Similar to
+        ``.get_argument`` but uses ``self.args`` instead.
+
+        If default is not provided, the argument is considered to be
+        required, and we raise a `MissingArgumentError` if it is missing.
+
+        If the argument is repeated, we return the last value. If ``first=True``
+        is passed, we return the first value.
+
+        ``self.args`` is always UTF-8 decoded unicode. Whitespaces are stripped.
+        '''
+        if name not in self.args:
+            if default is RequestHandler._ARG_DEFAULT:
+                raise MissingArgumentError(name)
+            return default
+        return self.args[name][0 if first else -1]
 
     def prepare(self):
         for method in self._on_init_methods:

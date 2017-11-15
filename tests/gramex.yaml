@@ -87,6 +87,12 @@ url:
       args: [0, 1]
       kwargs: {a: a, b: b}
 
+  func/get_arg:
+    pattern: /func/get_arg
+    handler: FunctionHandler
+    kwargs:
+      function: utils.get_arg
+
   func/handler:
     pattern: /func/handler
     handler: FunctionHandler

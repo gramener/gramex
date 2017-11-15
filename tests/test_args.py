@@ -21,6 +21,12 @@ class TestArgs(TestGramex):
         f('?=&高=λ&兴=σ&兴=█', {'高': ['λ'], '兴': ['σ', '█'], '': ['']})
         f('?देश=भारत', {'देश': ['भारत']})
 
+    def test_get_args(self):
+        r = self.get('/func/get_arg?x=a&x=b&val=x&first=x&default=x')
+        self.assertEqual(r.json(), {'val': 'b', 'first': 'a', 'default': 'b'})
+        r = self.get('/func/get_arg?default=na&missing=na')
+        self.assertEqual(r.json(), {'default': 'ok', 'missing': 'ok'})
+
     def check_argparse(self, query, result, *args, **kwargs):
         params = {'_q': json.dumps({'args': args, 'kwargs': kwargs})}
         r = self.get('/func/argparse' + query, params=params)

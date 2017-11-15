@@ -13,7 +13,7 @@ import pandas as pd
 from collections import Counter
 from orderedattrdict import AttrDict
 from tornado import gen
-from tornado.web import RequestHandler
+from tornado.web import RequestHandler, MissingArgumentError
 from tornado.httpclient import AsyncHTTPClient
 from concurrent.futures import ThreadPoolExecutor
 from gramex.cache import Subprocess
@@ -293,6 +293,31 @@ def argparse(handler):
         if 'type' in val:
             val['type'] = eval(val['type'])
     return json.dumps(handler.argparse(*args, **kwargs))
+
+
+def get_arg(handler):
+    result = {}
+    # ?val=x&x=a&x=b returns {val: b}
+    val = handler.get_arg('val', None)
+    if val is not None:
+        result['val'] = handler.get_arg(val)
+    # ?first=x&x=a&x=b returns {val: a}
+    first = handler.get_arg('first', None)
+    if first is not None:
+        result['first'] = handler.get_arg(first, first=True)
+    # ?default=x&x=a&x=b returns {default: b}
+    # ?default=na returns {default: ok}
+    default = handler.get_argument('default', None)
+    if default is not None:
+        result['default'] = handler.get_arg(default, 'ok')
+    # ?missing=na returns {missing: ok}
+    missing = handler.get_argument('missing', None)
+    if missing is not None:
+        try:
+            handler.get_arg(missing)
+        except MissingArgumentError:
+            result['missing'] = 'ok'
+    return json.dumps(result)
 
 
 def upload_transform(content):

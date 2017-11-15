@@ -115,9 +115,11 @@ class AuthHandler(BaseHandler):
         # Find session expiry time
         expires_days = self.session_expiry
         if isinstance(self.session_expiry, dict):
+            # If session_expiry (se) is a dict, use se.values[args[se.key]]
+            # Or else, default to se.default - or None
             default = self.session_expiry.get('default', None)
             key = self.session_expiry.get('key', None)
-            val = self.args.get(key, [None])[0]
+            val = self.get_arg(key, None)
             lookup = self.session_expiry.get('values', {})
             expires_days = lookup.get(val, default)
 
@@ -175,7 +177,7 @@ class GoogleAuth(AuthHandler, GoogleOAuth2Mixin):
     @tornado.gen.coroutine
     def get(self):
         redirect_uri = '{0.protocol:s}://{0.host:s}{0.path:s}'.format(self.request)
-        code = self.args.get('code', [''])[0]
+        code = self.get_arg('code', '')
         if code:
             access = yield self.get_authenticated_user(
                 redirect_uri=redirect_uri,
@@ -225,7 +227,7 @@ class FacebookAuth(AuthHandler, FacebookGraphMixin):
     @tornado.gen.coroutine
     def get(self):
         redirect_uri = '{0.protocol:s}://{0.host:s}{0.path:s}'.format(self.request)
-        code = self.args.get('code', [''])[0]
+        code = self.get_arg('code', '')
         if code:
             user = yield self.get_authenticated_user(
                 redirect_uri=redirect_uri,
@@ -250,7 +252,7 @@ class FacebookAuth(AuthHandler, FacebookGraphMixin):
 class TwitterAuth(AuthHandler, TwitterMixin):
     @tornado.gen.coroutine
     def get(self):
-        oauth_token = self.args.get('oauth_token', [''])[0]
+        oauth_token = self.get_arg('oauth_token', '')
         if oauth_token:
             user = yield self.get_authenticated_user()
             self.set_user(user, id='username')
@@ -410,8 +412,8 @@ class SimpleAuth(AuthHandler):
 
     @tornado.gen.coroutine
     def post(self):
-        user = self.args.get(self.user.arg, [None])[0]
-        password = self.args.get(self.password.arg, [None])[0]
+        user = self.get_arg(self.user.arg, None)
+        password = self.get_arg(self.password.arg, None)
         info = self.credentials.get(user)
         if info == password:
             self.set_user({'user': user}, id='user')
@@ -530,8 +532,8 @@ class DBAuth(SimpleAuth):
 
     @tornado.gen.coroutine
     def login(self):
-        user = self.args.get(self.user.arg, [None])[0]
-        password = self.args.get(self.password.arg, [None])[0]
+        user = self.get_arg(self.user.arg, None)
+        password = self.get_arg(self.password.arg, None)
         for encrypt in self.encrypt:
             for result in encrypt(handler=self, content=password):
                 password = result
@@ -559,13 +561,13 @@ class DBAuth(SimpleAuth):
     def forgot_password(self):
         template = self.forgot.template
         error = {'code': 'auth'}
-        forgot_key = self.args.get(self.forgot.key, [None])[0]
+        forgot_key = self.get_arg(self.forgot.key, None)
 
         # Step 1: user submits their user ID / email via POST ?forgot&user=...
         if not forgot_key:
             # Get the user based on the user ID or email ID (in that priority)
-            forgot_user = self.args.get(self.user.arg, [None])[0]
-            forgot_email = self.args.get(self.forgot.arg, [None])[0]
+            forgot_user = self.get_arg(self.user.arg, None)
+            forgot_email = self.get_arg(self.forgot.arg, None)
             if forgot_user:
                 query = self.table.c[self.user.column] == forgot_user
             else:
@@ -620,7 +622,7 @@ class DBAuth(SimpleAuth):
             if row is not None:
                 # if token is not expired
                 if row['expire'] > time.time():
-                    password = self.args.get(self.password.arg, [None])[0]
+                    password = self.get_arg(self.password.arg, None)
                     for encrypt in self.encrypt:
                         for result in encrypt(handler=self, content=password):
                             password = result

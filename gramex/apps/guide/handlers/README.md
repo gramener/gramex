@@ -78,6 +78,10 @@ The following attributes are available to `BaseHandler` instances:
   backward compatibility and convenience.
 - `handler.args` (dict): a unicode dictonary of URL query parameters. Values are
   lists. For example, `?x=1` is passed as `handler.args = {'x': ['1']}`
+- `handler.get_arg(key, default)` returns the last value of `handler.args[key]`
+  if it exists - else returns default. If no default is specified, it raises a
+  `tornado.web.MissingArgumentException`. Passing `first=True` returns the
+  first value instead of the last.
 - `handler.session` (AttrDict): a unique object associated with each [session](../auth/)
 
 Apart from these, there are 4 other variables that may be created based on the
