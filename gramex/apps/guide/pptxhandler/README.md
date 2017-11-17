@@ -542,9 +542,9 @@ Note:- All attributes also accepts python expresion or custom function. Such as:
       # In this case you will have row level data access. `color_function` will have 3 input parameters
 
       # --------- If chart type is not a PIE or DONUT -----------------
-      # `handler`, `name`, `value`. `name` will be the series name `value` is the value of a row for the `name` series.
+      # `handler`, `name`, `x`, `y`, `xseries` and `yseries`. `name`(series name), `values`(tuple of series values), `x`(xaxis value), `y`(y-axis value), `xseries`(series of x-axis) and `yseries`(series of y-axis). `x` and `name` will be same.
       # --------- If chart type is not a PIE or DONUT -----------------
-      # `handler`, `name`, `value`. `name` will be the series name `value` is the value of a row for the `name` will be the `x-axis` value.
+      # `handler`, `name`, `values`, `x`, `y`, `xseries` and `yseries`. `name`(series name), `values`(tuple of series values), `x`(xaxis value), `y`(y-axis value), `xseries`(series of x-axis) and `yseries`(series of y-axis).
 
       # In this case `color_function` function must return a hex color code, not a dictionary.
 

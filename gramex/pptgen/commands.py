@@ -30,6 +30,7 @@ from pptx.chart.data import BubbleChartData
 from six.moves.urllib_parse import urlparse
 from gramex.transforms import build_transform
 
+
 _template_cache = {}
 
 
@@ -53,6 +54,7 @@ def text(shape, spec, data):
 
     style = copy.deepcopy(spec.get('style', {}))
     style = generate_style(style, data, handler)
+    pixel_inch = 10000
     # Get paragraph
     paragraph = shape.text_frame.paragraphs[0]
     # Removing the extra paragraphs if more than one present
@@ -62,27 +64,45 @@ def text(shape, spec, data):
     for _run in paragraph.runs[1:]:
         utils.delete_run(_run)
 
+    theme, brightness, default_css = None, None, {}
+    # Calculatiing default style
+    clrtype = paragraph.runs[0].font.color.type
+    if clrtype and 'rgb' in '{}'.format(clrtype).lower().split():
+        default_css['color'] = '{}'.format(paragraph.runs[0].font.color.rgb)
+    elif clrtype and 'scheme' in '{}'.format(clrtype).lower().split():
+        theme = paragraph.runs[0].font.color.theme_color
+        brightness = paragraph.runs[0].font.color.brightness
+    for prop in {'bold', 'italic', 'underline'}:
+        default_css[prop] = getattr(paragraph.runs[0].font, prop)
+    if paragraph.runs[0].font.size:
+        default_css['font-size'] = paragraph.runs[0].font.size / pixel_inch
+    default_css['text-align'] = paragraph.alignment
+    default_css['font-family'] = paragraph.runs[0].font.name
+    # Updating default css with css from config.
+    default_css.update(style)
+
     update_text = etree.fromstring('<root>{}</root>'.format(template(spec['text'], data)))
-    if update_text.text:
-        paragraph.runs[0].text = update_text.text
-        utils.apply_text_css(paragraph.runs[0], paragraph, **style)
-    tail_idx = 2
-    for index, child in enumerate(update_text.getchildren()):
+    paragraph.runs[0].text = update_text.text if update_text.text else ''
+    utils.apply_text_css(shape, paragraph.runs[0], paragraph, **default_css)
+    index = 1
+    for child in update_text.getchildren():
         if not child.tag == 'text':
             raise ValueError('XML elemet must contain only "text" tag.')
-        common_css = copy.deepcopy(style)
         # Adding runs for each text item
-        for item in [len(paragraph.runs) < (index + tail_idx), child.tail is not None]:
-            paragraph.add_run() if item else None
-        # Adding text to run
-        paragraph.runs[index + 1].text = child.text
-        # Updating the text css
-        common_css.update(dict(child.items()))
-        utils.apply_text_css(paragraph.runs[index + 1], paragraph, **common_css)
-        # Adding tail(text nect to the tag)
-        if child.tail:
-            paragraph.runs[index + tail_idx].text = child.tail
-            utils.apply_text_css(paragraph.runs[index + tail_idx], paragraph, **style)
+        for idx, new_txt in enumerate([child.text, child.tail]):
+            if new_txt:
+                common_css = copy.deepcopy(default_css)
+                paragraph.add_run()
+                # Adding text to run
+                paragraph.runs[index].text = new_txt
+                # Updating the text css
+                common_css.update(dict(child.items())) if not idx else None
+                if theme:
+                    paragraph.runs[index].font.color.theme_color = theme
+                if brightness:
+                    paragraph.runs[index].font.color.brightness = brightness
+                utils.apply_text_css(shape, paragraph.runs[index], paragraph, **common_css)
+            index += 1
 
 
 def replace(shape, spec, data):
@@ -113,7 +133,7 @@ def replace(shape, spec, data):
         for run in paragraph.runs:
             for old, new in spec['replace'].items():
                 run.text = run.text.replace(old, template(new, data))
-                utils.apply_text_css(run, paragraph, **style)
+                utils.apply_text_css(shape, run, paragraph, **style)
 
 
 def image(shape, spec, data):
@@ -130,9 +150,9 @@ def image(shape, spec, data):
         os.unlink(handle.name)
     else:
         new_img_part, new_rid = shape.part.get_or_add_image_part(image)
-    old_rid = shape._pic.blip_rId
+    # old_rid = shape._pic.blip_rId
     shape._pic.blipFill.blip.rEmbed = new_rid
-    shape.part.related_parts[old_rid].blob = new_img_part.blob
+    shape.part.related_parts[new_rid].blob = new_img_part.blob
 
 
 def generate_style(style, data, handler):
@@ -167,7 +187,7 @@ def add_text_to_shape(shape, textval, **kwargs):
             shape_txt = run.font
             shape_txt = run.font.fill
             shape_txt.solid()
-            utils.apply_text_css(run, paragraph, **kwargs)
+            utils.apply_text_css(shape, run, paragraph, **kwargs)
 
 
 def scale_data(data, lo, hi, factor=None):
@@ -188,6 +208,7 @@ def _update_chart(info, data, chart_data, series_columns, chart='line'):
         columns.remove(info['x'])
 
     if chart == 'line':
+        chart_data.categories = data[info['x']].dropna().unique().tolist()
         for series in series_columns:
             if np.issubdtype(data[series].dtype, np.number):
                 chart_data.add_series(series, tuple(data[series].fillna(0).tolist()))
@@ -216,7 +237,7 @@ def chart_css(fill, style, color):
     """Function to add opacity to charts."""
     fill.solid()
     pix_to_inch = 100000
-    fill.fore_color.rgb = RGBColor.from_string(color)
+    fill.fore_color.rgb = RGBColor.from_string(utils.conver_color_code(color))
     solid_fill = fill.fore_color._xFill
     alpha = OxmlElement('a:alpha')
     alpha.set('val', '%d' % (pix_to_inch * style.get('opacity', 1.0)))
@@ -239,8 +260,11 @@ def compile_function(spec, key, data, handler):
 
 def table(shape, spec, data):
     """Update an existing Table shape with data."""
+    if not shape.has_table:
+        raise AttributeError('Shape must be a table object.')
     if not spec.get('table', {}).get('data'):
         return
+
     spec = copy.deepcopy(spec['table'])
     handler = data.pop('handler') if 'handler' in data else None
     data = compile_function(spec, 'data', data, handler)
@@ -284,6 +308,9 @@ def table(shape, spec, data):
 
 def chart(shape, spec, data):
     """Replacing chart Data."""
+    if not shape.has_chart:
+        raise AttributeError('Shape must be a chart object.')
+
     chart_type = None
     if hasattr(shape.chart, 'chart_type'):
         chart_type = '{}'.format(shape.chart.chart_type).split()[0]
@@ -317,83 +344,72 @@ def chart(shape, spec, data):
         if 'function' not in info['size']:
             info['size']['function'] = '{}'.format(info['size'])
         info['size'] = compile_function(info, 'size', data, handler)
-    data = compile_function(info, 'data', data, handler)
-    data = data.reset_index(drop=True)
-    series_cols = [x for x in data.columns if x != info['x']]
-    chart_name = None
-    # If chart type is stacked bar or line.
-    if chart_type in stacked_or_line:
-        # Initializing chart data
-        chart_name = 'line'
-        chart_data = ChartData()
-        chart_data.categories = data[info['x']].dropna().unique().tolist()
-        chart_data = _update_chart(info, data, chart_data, series_cols)
 
-    # If chart type is scatter plot.
-    elif chart_type in xy_charts:
-        # Initializing chart data
-        chart_name = 'scatter'
-        chart_data = XyChartData()
-        chart_data = _update_chart(info, data, chart_data, series_cols, chart='scatter')
-
-    # If chart type is bubble chart.
-    elif chart_type in bubble_charts:
-        # Initializing chart data
-        chart_name = 'bubble'
-        chart_data = BubbleChartData()
-        chart_data = _update_chart(info, data, chart_data, series_cols, chart='bubble')
-    else:
-        raise NotImplementedError()
-
-    shape.chart.replace_data(chart_data)
     style = {'color': info.pop('color', None), 'opacity': info.pop('opacity', None),
              'stroke': info.pop('stroke', None)}
+
     for key in {'color', 'stroke', 'opacity'}:
         if key in style and isinstance(style[key], (dict,)):
             if 'function' not in style[key]:
                 style[key]['function'] = '{}'.format(style[key])
             style[key] = compile_function(style, key, data, handler)
 
+    data = compile_function(info, 'data', data, handler)
+    data = data.reset_index(drop=True)
+    series_cols = [x for x in data.columns if x != info['x']]
+
+    chart_name = None
+    if chart_type in stacked_or_line:
+        chart_name = 'line'
+    elif chart_type in xy_charts:
+        chart_name = 'scatter'
+    elif chart_type in bubble_charts:
+        chart_name = 'bubble'
+
+    if not chart_name:
+        raise NotImplementedError('Input Chart Type {} is not supported'.format(chart_type))
+
+    chart_map = {'line': ChartData(), 'scatter': XyChartData(), 'bubble': BubbleChartData()}
+    chart_data = _update_chart(info, data, chart_map[chart_name], series_cols, chart=chart_name)
+
+    shape.chart.replace_data(chart_data)
     if chart_name == 'scatter' and not style.get('color'):
         series_names = [series.name for series in shape.chart.series]
         style['color'] = dict(zip(series_names, _color.distinct(len(series_names))))
 
     if style.get('color'):
+        xseries = data[info['x']].dropna().unique().tolist()
+        color_mapping = {'scatter': 'point.marker.format', 'line': 'point.format',
+                         'bubble': 'point.format', 'area': 'series.format'}
         is_area = {'AREA', 'AREA_STACKED', 'AREA_STACKED_100'}
+        chart_name = 'area' if chart_type in is_area else chart_name
         pie_or_donut = {'PIE', 'PIE_EXPLODED', 'PIE_OF_PIE', 'DOUGHNUT', 'DOUGHNUT_EXPLODED'}
         for series in shape.chart.series:
             values, name = series.values, series.name
             for index, point in enumerate(series.points):
                 point_css = {}
-                # Chart color if it is a `PIE` or `DONUT` chart
-                args = {'handler': handler, 'value': values[index]}
-                args['name'] = data.ix[index][info['x']] if chart_type in pie_or_donut else name
+                args = {
+                    'xseries': xseries,
+                    'yseries': values,
+                    'y': values[index],
+                    'handler': handler,
+                    'x': data.ix[index][info['x']],
+                    'name': data.ix[index][info['x']] if chart_type in pie_or_donut else name
+                }
                 for key in {'opacity', 'color', 'stroke'}:
-                    if style.get(key):
-                        if callable(style[key]):
-                            point_css[key] = style[key](index)
-                            if callable(point_css[key]):
-                                point_css[key] = point_css[key](**args)
-                        else:
-                            if isinstance(style[key], (dict)):
-                                point_css[key] = style[key].get(args['name'], '#cccccc')
-                            else:
-                                point_css[key] = style[key]
-                        if key != 'opacity':
-                            point_css[key] = utils.conver_color_code(point_css[key])
-
-                if chart_name == 'scatter':
-                    fill = point.marker.format.fill
-                    line_fill = point.marker.format.line.fill
-                # Chart color if it is a `AREA` chart
-                elif chart_type in is_area:
-                    fill = series.format.fill
-                    line_fill = series.format.line.fill
-                else:
-                    fill = point.format.fill
-                    line_fill = point.format.line.fill
-                chart_css(fill, point_css, point_css['color'])
-                chart_css(line_fill, point_css, point_css.get('stroke', point_css['color']))
+                    if style.get(key) is None:
+                        continue
+                    point_css[key] = style[key]
+                    if callable(style[key]):
+                        prop = style[key](index)
+                        point_css[key] = prop(**args) if callable(prop) else prop
+                    elif isinstance(style[key], (dict)):
+                        point_css[key] = style[key].get(args['name'], '#cccccc')
+                # Evaluatinig line and shape color format
+                chart_css(eval(color_mapping[chart_name]).fill, point_css, point_css['color'])
+                # Will apply on outer line of chart shape line(like stroke in html)
+                _stroke = point_css.get('stroke', point_css['color'])
+                chart_css(eval(color_mapping[chart_name]).line.fill, point_css, _stroke)
 
 # Custom Charts Functions below(Sankey, Treemap, Calendarmap).
 
@@ -837,6 +853,9 @@ def bullet(shape, spec, data):
 
 def heatgrid(shape, spec, data):
     """Create a heat grid."""
+    if shape.auto_shape_type != MSO_SHAPE.RECTANGLE:
+            raise NotImplementedError()
+
     spec = copy.deepcopy(spec['heatgrid'])
 
     top = shape.top
@@ -858,8 +877,8 @@ def heatgrid(shape, spec, data):
     # Loading data
     data = compile_function(spec, 'data', data, handler)
     data = data.sort_values(by=[spec['column']])
-    rows = spec.get('row-order', sorted(data[spec['row']].unique().tolist()))
-    columns = spec.get('column-order', sorted(data[spec['column']].unique().tolist()))
+    rows = spec.get('row-order') or sorted(data[spec['row']].unique().tolist())
+    columns = spec.get('column-order') or sorted(data[spec['column']].unique().tolist())
 
     left_margin = (width * spec.get('left-margin', 0.15))
     padding = spec.get('style', {}).get('padding', 5)
@@ -874,8 +893,8 @@ def heatgrid(shape, spec, data):
     # Compiling style elements if required
     for key in ['gradient', 'color', 'fill', 'font-size', 'font-family', 'stroke']:
         if isinstance(styles.get(key), (dict,)) and 'function' in styles[key]:
-            styles[key] = compile_function(styles, key, data, handler)
-
+            prop = compile_function(styles, key, data, handler)
+            styles[key] = prop(**{'data': data, 'handler': handler}) if callable(prop) else prop
     # Calculating cell's width based on config
     _width = (width - left_margin) / float(len(columns)) / pixel_inch
     _width = spec.get('cell-width', _width) * pixel_inch
@@ -884,7 +903,8 @@ def heatgrid(shape, spec, data):
         txt = parent.add_textbox(
             left + _width * idx + left_margin, top - height, _width, height)
         add_text_to_shape(txt, '{}'.format(column), **styles)
-
+    if 'text' in spec:
+        spec['text'] = compile_function(spec, 'text', data, handler)
     # Cell width
     for index, row in enumerate(rows):
         _data = data[data[spec['row']] == row].dropna()
@@ -918,7 +938,7 @@ def heatgrid(shape, spec, data):
             # Adding color gradient to cell if gradient is True
             if style.get('gradient'):
                 grad_txt = scale_data(_row[spec['value']], _min, _max)
-                gradient = matplotlib.cm.get_cmap(spec['style']['gradient'])
+                gradient = matplotlib.cm.get_cmap(style['gradient'])
                 style['fill'] = matplotlib.colors.to_hex(gradient(grad_txt))
                 style['color'] = _color.contrast(style['fill'])
             if np.isnan(_row[spec['value']]) and spec.get('na-color'):
@@ -929,7 +949,6 @@ def heatgrid(shape, spec, data):
             rect_css(_rect, **style)
             # Adding text to cells if required.
             if spec.get('text'):
-                spec['text'] = compile_function(spec, 'text', data, handler)
                 _txt = parent.add_textbox(
                     xaxis, yaxis, _width - left_pad - right_pad,
                     height - top_pad - bottom_pad)

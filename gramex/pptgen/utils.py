@@ -13,9 +13,10 @@ from six import iteritems
 from lxml import objectify
 from pptx.util import Inches
 from pptx.dml.color import RGBColor
-from pptx.enum.text import PP_ALIGN
+from pptx.enum.base import EnumValue
 from lxml.builder import ElementMaker
 from gramex.transforms import build_transform
+from pptx.enum.text import PP_ALIGN, MSO_ANCHOR
 
 
 def is_slide_allowed(change, slide, number):
@@ -70,7 +71,7 @@ def stack_elements(replica, shape, stack=False, margin=None):
         # Adding a 15% default margin between original and new object.
         default_margin = 0.15
         margin = default_margin if not margin else margin
-        for index in range(replica - 1):
+        for index in range(replica):
             # Adding a cloned object to shape
             extend_shape = copy.deepcopy(grp_sp)
             # Getting attributes and axis values from config based on stack.
@@ -80,12 +81,14 @@ def stack_elements(replica, shape, stack=False, margin=None):
             metric_val = getattr(shape, attr)
             axis_val = getattr(extend_shape, axis)
             # Setting margin accordingly either vertically or horizontally.
-            axis_pos = metric_val * (index + 1)
+            axis_pos = metric_val * index
             set_attr = axis_val + axis_pos + (axis_pos * margin)
             # Setting graphic position of newly created object to slide.
             setattr(extend_shape, axis, int(set_attr))
             # Adding newly created object to slide.
-            grp_sp.addnext(extend_shape)
+            # grp_sp.addnext(extend_shape)
+            grp_sp.addprevious(extend_shape)
+        shape.element.delete()
 
 
 def stack_shapes(collection, change, data, handler):
@@ -288,7 +291,7 @@ def conver_color_code(colorcode):
 # Custom Charts Functions below(Sankey, Treemap, Calendarmap).
 
 
-def apply_text_css(run, paragraph, **kwargs):
+def apply_text_css(shape, run, paragraph, **kwargs):
     """Apply css."""
     pixcel_to_inch = 10000
     if kwargs.get('color'):
@@ -300,12 +303,18 @@ def apply_text_css(run, paragraph, **kwargs):
     if kwargs.get('font-size'):
         run.font.size = pixcel_to_inch * float(kwargs['font-size'])
     if kwargs.get('text-align'):
-        paragraph.alignment = getattr(PP_ALIGN, kwargs['text-align'].upper())
+        if isinstance(kwargs['text-align'], EnumValue) or None:
+            paragraph.alignment = kwargs['text-align']
+        else:
+            paragraph.alignment = getattr(PP_ALIGN, kwargs['text-align'].upper())
     for prop in {'bold', 'italic', 'underline'}:
         update_prop = kwargs.get(prop)
         if update_prop and not isinstance(update_prop, bool):
             update_prop = ast.literal_eval(update_prop)
         setattr(run.font, prop, update_prop)
+
+    if kwargs.get('text-anchor'):
+        shape.vertical_anchor = getattr(MSO_ANCHOR, shape['text-anchor'].upper())
 
 
 def make_element():
@@ -717,4 +726,4 @@ class TableProperties():
             cell_fill = cell.fill
             cell_fill.solid()
             cell_fill.fore_color.rgb = RGBColor.from_string(conver_color_code(info['fill']))
-        apply_text_css(run, paragraph, **info)
+        apply_text_css(cell, run, paragraph, **info)
