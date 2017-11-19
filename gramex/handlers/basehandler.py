@@ -86,10 +86,21 @@ class BaseMixin(object):
         From v1.23 (31 Oct 2017) these are cleared.
         '''
         now = time.time()
+        week = 7 * 24 * 60 * 60
         for key in list(data.keys()):
             val = data[key]
-            if val is None or (isinstance(val, dict) and val.get('_t', 0) < now):
+            # Purge already cleared / removed sessions
+            if val is None:
                 yield key
+            elif isinstance(val, dict):
+                # If the session has expired, purge it
+                if val.get('_t', 0) < now:
+                    yield key
+                # If the session is inactive, purge it after a week.
+                # If we purge immediately, then we may lose WIP sessions.
+                # For example, people who opened a login page where _next_url was set
+                elif '_i' in val and '_l' in val and val['_i'] + val['_l'] < now - week:
+                    yield key
 
     @classmethod
     def setup_session(cls, session_conf):

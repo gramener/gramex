@@ -1809,6 +1809,17 @@ url:
         header: NEXT
         url: /dir/index/
 
+  auth/inactive:
+    pattern: /auth/inactive
+    handler: SimpleAuth
+    kwargs:
+      session_inactive: 0.000011574     # 1 second in days
+      template: $YAMLPATH/auth.html
+      credentials:
+        alpha: alpha
+      redirect:
+        url: /dir/index/
+
   auth/customexpiry:
     pattern: /auth/customexpiry
     handler: SimpleAuth

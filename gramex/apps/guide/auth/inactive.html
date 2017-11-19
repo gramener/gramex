@@ -34,8 +34,6 @@
       <p>You are not logged in.</p>
     {% end %}
 
-    <div class="codehilite"><pre>{{ json.dumps(handler.session, indent=4) }}</code></pre>
-
     {% if '_i' in handler.session %}
       <p>You must visit this page again in {{ '{:,.0f}'.format(handler.session['_i'] + handler.session['_l'] - time.time()) }} seconds</p>
     {% else %}

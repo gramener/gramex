@@ -290,6 +290,37 @@ class TestExpiry(AuthBase):
         self.check_expiry(gramex.conf.url['auth/expiry'].kwargs.session_expiry)
 
 
+class TestInactive(AuthBase):
+    @classmethod
+    def setUpClass(cls):
+        AuthBase.setUpClass()
+        cls.url = server.base_url + '/auth/inactive'
+
+    def test_inactive(self):
+        self.login('alpha', 'alpha')
+        # Get an initial session. Then visit quickly. After a second, get the last
+        init_session = self.session.get(server.base_url + '/auth/session').json()
+        visit_session = self.session.get(server.base_url + '/auth/session').json()
+        time.sleep(1)
+        last_session = self.session.get(server.base_url + '/auth/session').json()
+
+        # init_session has the required keys
+        inactive_days = gramex.conf.url['auth/inactive'].kwargs.session_inactive
+        self.assertEqual(init_session['user']['user'], 'alpha')
+        self.assertEqual(init_session['_i'], inactive_days * 24 * 60 * 60)
+        self.assertIn('_l', init_session)
+
+        # visit_session has not expired. But _l is updated
+        self.assertGreater(visit_session['_l'], init_session['_l'])
+        for key in ['_i', 'user', 'id']:
+            self.assertEqual(init_session[key], visit_session[key])
+
+        # last_session (after 1 second) has expired.
+        for key in ['_i', '_l', 'user']:
+            self.assertNotIn(key, last_session)
+        self.assertNotEqual(init_session['id'], last_session['id'])
+
+
 class TestCustomExpiry(TestExpiry):
     # Just apply LoginMixin tests to AuthBase
     @classmethod
