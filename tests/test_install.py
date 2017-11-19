@@ -175,7 +175,11 @@ class TestInstall(unittest.TestCase):
             result.add('bash-setup.txt')
         if which('python'):
             result.add('python-setup.txt')
-        if which('npm'):
+        if which('yarn'):
+            result.add('yarn.lock')
+            result.add('node_modules/.yarn-integrity')
+        elif which('npm'):
+            # package-lock.json needs node 8.x -- which is required for CaptureHandler anyway
             result.add('package-lock.json')
         if which('bower'):
             result.add('bower_components/gramex-bower-package/bower.json')

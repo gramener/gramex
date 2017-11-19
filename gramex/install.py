@@ -293,16 +293,29 @@ def run_command(config):
     return proc.returncode
 
 
-setup_paths = AttrDict((
-    ('make', {'file': 'Makefile', 'cmd': '"$EXE"'}),
-    ('powershell', {'file': 'setup.ps1', 'cmd': '"$EXE" -File "$FILE"'}),
-    ('bash', {'file': 'setup.sh', 'cmd': '"$EXE" "$FILE"'}),
-    ('pip', {'file': 'requirements.txt', 'cmd': '"$EXE" install -r "$FILE"'}),
-    ('python', {'file': 'setup.py', 'cmd': '"$EXE" "$FILE"'}),
-    ('npm', {'file': 'package.json', 'cmd': '"$EXE" install'}),
-    ('bower', {'file': 'bower.json', 'cmd': '"$EXE" --allow-root install'}),
-))
-
+# Setup file configurations.
+# Structure: {File: {exe: cmd}}
+# If File exists, then if exe exists, run cmd.
+# For example, if package.json exists:
+#   then if yarn exists, run yarn install
+#   else if npm exists, run npm install
+setup_paths = yaml.load('''
+Makefile:
+    make: '"{EXE}"'
+setup.ps1:
+    powershell: '"{EXE}" -File "{FILE}"'
+setup.sh:
+    bash: '"{EXE}" "{FILE}"'
+requirements.txt:
+    pip: '"{EXE}" install -r "{FILE}"'
+setup.py:
+    python: '"{EXE}" "{FILE}"'
+package.json:
+    yarn: '"{EXE}" install'
+    npm: '"{EXE}" install'
+bower.json:
+    bower: '"{EXE}" --allow-root install'
+''')
 
 def run_setup(target):
     '''
@@ -330,18 +343,19 @@ def run_setup(target):
             raise OSError('No directory %s' % target)
         target = app_target
     target = os.path.abspath(target)
-    for exe, setup in setup_paths.items():
-        setup_file = os.path.join(target, setup['file'])
+    for file, runners in setup_paths.items():
+        setup_file = os.path.join(target, file)
         if not os.path.exists(setup_file):
             continue
-        exe_path = which(exe)
-        if exe_path is None:
+        for exe, cmd in runners.items():
+            exe_path = which(exe)
+            if exe_path is not None:
+                cmd = cmd.format(FILE=setup_file, EXE=exe_path)
+                app_log.info('Running %s', cmd)
+                _run_console(cmd, cwd=target)
+                break
+        else:
             app_log.warning('Skipping %s. No %s found', setup_file, exe)
-            continue
-        cmd = string.Template(setup['cmd']).substitute(FILE=setup_file, EXE=exe_path)
-        app_log.info('Running %s', cmd)
-        _run_console(cmd, cwd=target)
-    return target
 
 
 app_dir = Path(variables.get('GRAMEXDATA')) / 'apps'
