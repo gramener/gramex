@@ -643,6 +643,30 @@ To allow users to choose how long to stay logged in, use:
   <a class="example-src" href="http://code.gramener.com/s.anand/gramex/tree/master/gramex/apps/guide/auth/gramex.yaml">Source</a>
 </div>
 
+## Inactive expiry
+
+Gramex sessions expire if the user is inactive, i.e. has not accessed Gramex, for
+a number of days.
+
+By default, this is not enabled. You can add `session_inactive: <days>` to
+any Auth handler. When the user logs in with that handler, their session will
+expire unless they visit again within `<days>` days. For example:
+
+    :::yaml
+    url:
+        auth/expiry:
+            pattern: /$YAMLURL/expiry
+            handler: SimpleAuth
+            kwargs:
+                session_inactive: 0.0003         # Must visit every 26 seconds
+                credentials: {alpha: alpha}
+
+<div class="example">
+  <a class="example-demo" href="inactive">Inactive expiry example</a>
+  <a class="example-src" href="http://code.gramener.com/s.anand/gramex/tree/master/gramex/apps/guide/auth/gramex.yaml">Source</a>
+</div>
+
+
 ## Change inputs
 
 All auth handlers support a `prepare:` function. You can use this to modify the

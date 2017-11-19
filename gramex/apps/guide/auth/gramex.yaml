@@ -255,6 +255,15 @@ url:
             template: $YAMLPATH/expiry.html # Use this login template for the demo
             redirect: /$YAMLURL/expiry
 
+    auth/inactive:
+        pattern: /$YAMLURL/inactive
+        handler: SimpleAuth
+        kwargs:
+            session_inactive: 0.00003         # Must visit every 2.6 seconds
+            credentials: {alpha: alpha}
+            template: $YAMLPATH/inactive.html # Use this login template for the demo
+            redirect: /$YAMLURL/inactive
+
     auth/customexpiry:
         pattern: /$YAMLURL/customexpiry
         handler: SimpleAuth

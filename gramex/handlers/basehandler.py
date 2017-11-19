@@ -110,9 +110,10 @@ class BaseMixin(object):
             raise NotImplementedError('Session type: %s not implemented' % store_type)
         cls._session_store = session_store_cache[key]
         cls.session = property(cls.get_session)
-        cls._session_days = session_conf.get('expiry')
+        cls._session_expiry = session_conf.get('expiry')
         cls._on_finish_methods.append(cls.save_session)
         cls._on_init_methods.append(cls.override_user)
+        cls._on_finish_methods.append(cls.set_last_visited)
 
         if 'private_key' in session_conf:
             keyfile = session_conf['private_key']
@@ -423,6 +424,14 @@ class BaseMixin(object):
 
         The session is a dict. You must ensure that it is JSON serializable.
 
+        Sessions use these pre-defined timing keys (values are timestamps):
+
+        - ``_t`` is the expiry time of the session
+        - ``_l`` is the last time the user accessed a page. Updated by
+          :py:func:`BaseHandler.set_last_visited`
+        - ``_i`` is the inactive expiry duration in seconds, i.e. if ``now > _l +
+          _i``, the session has expired.
+
         ``new=`` creates a new session to avoid session fixation.
         https://www.owasp.org/index.php/Session_fixation.
         :py:func:`gramex.handlers.authhandler.AuthHandler.set_user` uses it.
@@ -433,7 +442,7 @@ class BaseMixin(object):
           object, copying all old contents, but updates the "id" and expiry (_t).
         '''
         if expires_days is None:
-            expires_days = self._session_days
+            expires_days = self._session_expiry
         created_new_sid = False
         if getattr(self, '_session', None) is None:
             # Populate self._session based on the sid. If there's no sid cookie,
@@ -451,16 +460,20 @@ class BaseMixin(object):
             # Overwrite id to the session ID even if a handler has changed it
             self._session['id'] = session_id
         # At this point, the "sid" cookie and self._session exist and are synced
-
+        s = self._session
+        old_sid = s['id']
+        # If session has expiry keys _i and _l defined, check for expiry. Not otherwise
+        if '_i' in s and '_l' in s and time.time() > s['_l'] + s['_i']:
+            new = True
+            s.clear()
         if new and not created_new_sid:
-            old_sid = self._session['id']
             new_sid = self._set_new_session_id(expires_days).decode('ascii')
             # Update expiry and new SID on session
-            self._session.update(id=new_sid, _t=time.time() + expires_days * 24 * 60 * 60)
+            s.update(id=new_sid, _t=time.time() + expires_days * 24 * 60 * 60)
             # Delete old contents. No _t also means expired
             self._session_store.dump(old_sid, {})
 
-        return self._session
+        return s
 
     def save_session(self):
         '''Persist the session object as a JSON'''
@@ -509,6 +522,19 @@ class BaseMixin(object):
                 raise HTTPError(BAD_REQUEST, log_message)
             self._session_store.dump('otp:' + otp, None)
             self.session['user'] = otp_data['user']
+
+    def set_last_visited(self):
+        '''
+        This method is called by :py:func:`BaseHandler.prepare` when any user
+        accesses a page. It updates the last visited time in the ``_l`` session
+        key. It does this only if the ``_i`` key exists.
+        '''
+        # For efficiency reasons, don't call get_session every time. Check
+        # session only if there's a valid sid cookie (with possibly long expiry)
+        if self.get_secure_cookie('sid', max_age_days=9999999):
+            session = self.get_session()
+            if '_i' in session:
+                session['_l'] = time.time()
 
 
 class BaseHandler(RequestHandler, BaseMixin):

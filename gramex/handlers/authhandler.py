@@ -56,7 +56,8 @@ def csv_encode(values, *args, **kwargs):
 class AuthHandler(BaseHandler):
     '''The parent handler for all Auth handlers.'''
     @classmethod
-    def setup(cls, prepare=None, action=None, delay=None, session_expiry=None, **kwargs):
+    def setup(cls, prepare=None, action=None, delay=None, session_expiry=None,
+              session_inactive=None, **kwargs):
         # Switch SSL certificates if required to access Google, etc
         gramex.service.threadpool.submit(check_old_certs)
 
@@ -82,8 +83,9 @@ class AuthHandler(BaseHandler):
         elif isinstance(cls.delay, (int, float)) or cls.delay is None:
             cls.delay = default_delay
 
-        # Set up session expiry
+        # Set up session and inactive expiry
         cls.session_expiry = session_expiry
+        cls.session_inactive = session_inactive
 
         # Set up prepare
         cls.auth_methods = {}
@@ -134,6 +136,11 @@ class AuthHandler(BaseHandler):
         user['id'] = user[id]
         self.session['user'] = user
         self.failed_logins[user[id]] = 0
+
+        # If session_inactive: is specified, set expiry date on the session
+        if self.session_inactive is not None:
+            self.session['_i'] = self.session_inactive * 24 * 60 * 60
+
         # Run post-login events (e.g. ensure_single_session) specified in config
         for callback in self.actions:
             callback(self)
