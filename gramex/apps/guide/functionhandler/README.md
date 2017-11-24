@@ -16,8 +16,8 @@ FunctionHandler:
                 headers:
                     Content-Type: application/json      # Display as JSON
 
-It runs `calculations.total()` with the arguments `100, 200, 300` and returns
-the result as `application/json`. [calculations.py](calculations.py) defines
+It runs `calculations.total()` with the arguments `100, 200` and returns
+result `300` as `application/json`. [calculations.py](calculations.py) defines
 `total` as below:
 
     :::python
@@ -59,7 +59,7 @@ To set this up, [gramex.yaml](gramex.yaml) used the following configuration:
                 function: calculations.add              # add() from calculations.py
                 headers:
                     Content-Type: application/json      # Display as JSON
-  
+
 [calculations.add(handler)](calculations.py) is called with the Tornado
 [RequestHandler][requesthandler]. It accesses the URL query parameters to add up
 all `x` arguments.
