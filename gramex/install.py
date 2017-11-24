@@ -11,7 +11,6 @@ import yaml
 import stat
 import shlex
 import shutil
-import string
 import datetime
 import requests
 from shutilwhich import which
@@ -316,6 +315,7 @@ package.json:
 bower.json:
     bower: '"{EXE}" --allow-root install'
 ''')
+
 
 def run_setup(target):
     '''
