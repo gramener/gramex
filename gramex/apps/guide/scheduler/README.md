@@ -15,7 +15,7 @@ Here is a sample configuration:
 
 Each named schedule section has the following keys:
 
-- `function`: the function to run (<strong>required</strong>)
+- `function`: the function or expression to run (<strong>required</strong>)
 - `args` and `kwargs`: the positional and keyword arguments to pass to the
   function. The function will be called as `function(*args, **kwargs)`. These
   are optional -- the function will by default be called as `function()`.
@@ -42,7 +42,7 @@ For example, this configuration runs at on the 15th and 45th minute every 4 hour
 
     :::yaml
     run-when-i-say:
-        function: schedule_utils.log_time
+        function: schedule_utils.log_time()
         minutes: '15, 45'           # Every 15th & 45th minute
         hours: '*/4'                # Every 4 hours
         dates: '1, L'               # On the first and last days of the month
@@ -54,13 +54,13 @@ This configuration runs only on startup:
 
     :::yaml
     run-on-startup:
-        function: schedule_utils.log_time
+        function: schedule_utils.log_time()
         startup: true
 
 This configuration runs every hour on a separate thread:
 
     :::yaml
     run-every-hour:
-        function: schedule_utils.log_time
+        function: schedule_utils.log_time()
         hours: '*'
         thread: true
