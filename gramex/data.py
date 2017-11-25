@@ -18,7 +18,7 @@ _METADATA_CACHE = {}
 
 
 def filter(url, args={}, meta={}, engine=None, table=None, ext=None,
-           query=None, transform=None, **kwargs):
+           query=None, queryfile=None, transform=None, **kwargs):
     '''
     Filters data using URL query parameters. Typical usage::
 
@@ -37,6 +37,8 @@ def filter(url, args={}, meta={}, engine=None, table=None, ext=None,
     :arg string query: optional SQL query to execute (if url is a database),
         ``.format``-ed using ``args`` and supports SQLAlchemy SQL parameters.
         Loads entire result in memory before filtering.
+    :arg string queryfile: optional SQL query file to execute (if url is a database).
+        Same as specifying the ``query:`` in a file. Overrides ``query:``
     :arg function transform: optional in-memory transform. Takes a DataFrame and
         returns a DataFrame. Applied to both file and SQLAlchemy urls.
     :arg dict kwargs: Additional parameters are passed to
@@ -154,7 +156,9 @@ def filter(url, args={}, meta={}, engine=None, table=None, ext=None,
     elif engine == 'sqlalchemy':
         engine = sqlalchemy.create_engine(url, **kwargs)
         params = {k: v[0] for k, v in args.items() if len(v) > 0 and _sql_safe(v[0])}
-        if query:
+        if query or queryfile:
+            if queryfile:
+                query = gramex.cache.open(queryfile, 'text')
             query, state = query.format(**params), None
             if isinstance(table, six.string_types):
                 state = [table.format(**params)]
@@ -183,7 +187,7 @@ def filter(url, args={}, meta={}, engine=None, table=None, ext=None,
 
 
 def delete(url, meta={}, args=None, engine=None, table=None, ext=None, id=None,
-           query=None, transform=None, **kwargs):
+           query=None, queryfile=None, transform=None, **kwargs):
     '''
     Deletes data using URL query parameters. Typical usage::
 
@@ -194,7 +198,8 @@ def delete(url, meta={}, args=None, engine=None, table=None, ext=None, id=None,
     ``id`` is a column name or a list of column names defining the primary key.
     Calling this in a handler with ``?id=1&id=2`` deletes rows with id is 1 or 2.
 
-    It accepts the same parameters as :py:func:`filter`, and returns the number of deleted rows.
+    It accepts the same parameters as :py:func:`filter`, and returns the number
+    of deleted rows.
     '''
     if engine is None:
         engine = get_engine(url)
@@ -224,7 +229,7 @@ def delete(url, meta={}, args=None, engine=None, table=None, ext=None, id=None,
 
 
 def update(url, meta={}, args=None, engine=None, table=None, ext=None, id=None,
-           query=None, transform=None, **kwargs):
+           query=None, queryfile=None, transform=None, **kwargs):
     '''
     Update data using URL query parameters. Typical usage::
 
@@ -265,7 +270,7 @@ def update(url, meta={}, args=None, engine=None, table=None, ext=None, id=None,
 
 
 def insert(url, meta={}, args=None, engine=None, table=None, ext=None, id=None,
-           query=None, transform=None, **kwargs):
+           query=None, queryfile=None, transform=None, **kwargs):
     '''
     Insert data using URL query parameters. Typical usage::
 

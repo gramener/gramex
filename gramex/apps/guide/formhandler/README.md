@@ -292,6 +292,31 @@ The `table:` parameter also supports query substitutions like `query:`.
 4. Use the correct SQL flavour. E.g. SQL Server, uses `SELECT TOP 10 FROM table`
    instead of `SELECT * FROM table LIMIT 10`.
 
+## FormHandler queryfile
+
+Instead of entering a `query:` directly, you can point to an SQL file using
+``queryfile:``
+
+    :::yaml
+    url:
+      query:
+        pattern: /$YAMLURL/query
+        handler: FormHandler
+        kwargs:
+          url: sqlite:///$YAMLPATH/database.sqlite3
+          queryfile: $YAMLPATH/query.sql
+
+For example:
+
+- [queryfile](queryfile?_format=html) returns data grouped by Continent
+- [queryfile?num>=20](queryfile?num>=20&_format=html) ► continents where number of countries > 20
+
+This is **exactly the same as [FormHandler queries](#formhandler-query)** with
+the contents of `query.sql` inserted as a `query:` statement. This is best for
+long queries that need to be formatted clearly for readability.
+
+If both `query:` and `queryfile:` are present, `queryfile:` takes priority.
+
 ## FormHandler queryfunction
 
 To construct very complex queries that depend on the URL query parameters, use

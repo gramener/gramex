@@ -53,6 +53,14 @@ url:
         table: flags
         query: 'SELECT Continent, COUNT(*) AS num, SUM(c1) FROM flags GROUP BY Continent'
 
+    formhandler-queryfile:
+      pattern: /$YAMLURL/queryfile
+      handler: FormHandler
+      kwargs:
+        url: sqlite:///$YAMLPATH/../datahandler/database.sqlite3
+        table: flags
+        queryfile: $YAMLPATH/continents.sql
+
     formhandler-multidata:
       pattern: /$YAMLURL/multidata
       handler: FormHandler

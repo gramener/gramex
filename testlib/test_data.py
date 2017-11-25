@@ -182,6 +182,9 @@ class TestFilter(unittest.TestCase):
                           transform=lambda d: d[d['sales'] > 100], df=df)
         self.check_filter(url=url, table='sales', na_position=na_position,
                           query='SELECT * FROM sales WHERE sales > 100', df=df)
+        self.check_filter(url=url, table='sales', na_position=na_position,
+                          query='SELECT * FROM sales WHERE sales > 999999',
+                          queryfile=os.path.join(folder, 'sales-query.sql'), df=df)
         self.check_filter(url=url, table=['sales', 'sales'], na_position=na_position,
                           query='SELECT * FROM sales WHERE sales > 100',
                           transform=lambda d: d[d['growth'] < 0.5],
