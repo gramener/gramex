@@ -6,14 +6,12 @@ import os
 import six
 import sys
 import json
-import yaml
 import inspect
 import subprocess
 import pandas as pd
 from threading import Thread
 from tornado.concurrent import Future
-from tornado.template import Template
-from gramex.config import app_log, PathConfig, merge
+from gramex.config import app_log, merge
 
 
 _opener_defaults = dict(mode='r', buffering=-1, encoding='utf-8', errors='strict',
@@ -103,8 +101,6 @@ _OPEN_CACHE = {}
 _OPEN_CALLBACKS = dict(
     txt=opener(six.text_type, read=True),
     text=opener(six.text_type, read=True),
-    yaml=opener(yaml.load),
-    json=opener(json.load),
     csv=pd.read_csv,
     excel=pd.read_excel,
     xls=pd.read_excel,
@@ -114,10 +110,8 @@ _OPEN_CALLBACKS = dict(
     sas=pd.read_sas,
     stata=pd.read_stata,
     table=pd.read_table,
-    template=opener(Template, read=True),
     md=_markdown,
     markdown=_markdown,
-    config=PathConfig,
 )
 
 
@@ -142,6 +136,7 @@ def open(path, callback=None, transform=None, rel=False, **kwargs):
     - ``markdown`` or ``md``: reads files using markdown.markdown via io.open
     - ``csv``, ``excel``, ``xls``, `xlsx``, ``hdf``, ``html``, ``sas``,
       ``stata``, ``table``: reads using Pandas
+    - ``xml``, ``svg``, ``rss``, ``atom``: reads using lxml.etree
 
     For example::
 
@@ -210,7 +205,25 @@ def open(path, callback=None, transform=None, rel=False, **kwargs):
         if callable(callback):
             data = callback(path, **kwargs)
         elif callback_is_str:
-            method = _OPEN_CALLBACKS.get(callback)
+            method = None
+            if callback in _OPEN_CALLBACKS:
+                method = _OPEN_CALLBACKS[callback]
+            elif callback in {'yml', 'yaml'}:
+                import yaml
+                method = opener(yaml.load)
+            elif callback in {'json'}:
+                import json
+                method = opener(json.load)
+            elif callback in {'template', 'tmpl'}:
+                from tornado.template import Template
+                method = opener(Template, read=True)
+            elif callback in {'config'}:
+                from gramex.config import PathConfig
+                method = PathConfig
+            elif callback in {'xml', 'svg', 'rss', 'atom'}:
+                from lxml import etree
+                method = etree.parse
+
             if method is not None:
                 data = method(path, **kwargs)
             elif original_callback is None:
@@ -234,17 +247,7 @@ _SAVE_CALLBACKS = dict(
     hdf='to_hdf',
     html='to_html',
     stata='to_stata',
-    # yaml not supported
-    # txt not supported
-    # text not supported
-    # table not supported
-    # xls not supported
-    # excel not supported
-    # sas not supported
-    # template not yet supported
-    # md not supported
-    # markdown not supported
-    # config not supported
+    # Other configurations not supported
 )
 
 
