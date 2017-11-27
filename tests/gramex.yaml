@@ -1863,7 +1863,7 @@ url:
           column: password
           arg: password
           function: utils.encrypt(handler, content)
-      delay: [0.2, 0.4]
+      delay: [0.4, 0.8]
       redirect:
           query: next
           header: NEXT
@@ -1883,7 +1883,7 @@ url:
           column: password
           arg: password
           function: utils.encrypt(handler, content)
-      delay: [0.2, 0.4]
+      delay: [0.4, 0.8]
       redirect:
           query: next
           header: NEXT

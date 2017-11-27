@@ -416,10 +416,9 @@ class DBAuthBase(AuthBase):
         data = pd.read_csv(os.path.join(folder, 'userdata.csv'), encoding='cp1252')
         data['password'] = data['password'] + data['salt']
         dburl = sa.create_engine(url).url
-        if dburl.drivername == 'postgresql':
+        if dburl.drivername.startswith('postgresql'):
             dbutils.postgres_create_db(dburl.host, dburl.database, **{table: data})
-        # TODO: handle mysql+pymysql
-        elif dburl.drivername == 'mysql':
+        elif dburl.drivername.startswith('mysql'):
             dbutils.mysql_create_db(dburl.host, dburl.database, **{table: data})
         else:
             raise SkipTest('Unknown engine in ' + url)
