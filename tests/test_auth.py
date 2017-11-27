@@ -123,6 +123,17 @@ class AuthBase(TestGramex):
         self.assertRegexpMatches(r.text, 'error code')
         self.assertEqual(r.url, self.url)
 
+    def check_direct_post_redirect(self, *mapping):
+        # If we call the POST method WITHOUT calling the GET, the redirect still works
+        for kwargs, url in mapping:
+            session = requests.Session()
+            r = session.get(server.base_url + '/xsrf')
+            data = {'user': 'alpha', 'password': 'alpha', '_xsrf': r.cookies['_xsrf']}
+            if 'data' in kwargs:
+                data.update(kwargs.pop('data'))
+            r = session.post(self.url, data=data, allow_redirects=False, **kwargs)
+            self.assertEqual(r.headers['Location'], url)
+
 
 class LoginMixin(object):
     def test_login(self):
@@ -157,6 +168,15 @@ class LoginMixin(object):
             for method in [self.login_ok, self.logout_ok]:
                 method('alpha', 'alpha', query_next=external, check_next='/dir/index/')
                 method('alpha', 'alpha', header_next=external, check_next='/dir/index/')
+
+    def test_post_redirect(self):
+        # If we call the POST method WITHOUT calling the GET, all auth handlers
+        # use ?next= and the NEXT header for redirection
+        self.check_direct_post_redirect(
+            ({}, '/dir/index/'),
+            ({'headers': {'NEXT': '/header'}}, '/header'),
+            ({'data': {'next': '/query'}}, '/query'),
+            ({'headers': {'NEXT': '/header'}, 'data': {'next': '/query'}}, '/query'))
 
 
 class LoginFailureMixin(object):
@@ -358,6 +378,15 @@ class TestAuthRedirect(AuthBase):
         # If neither is specified, use /
         self.login_ok('alpha', 'alpha', check_next='/')
 
+    def test_post_redirect(self):
+        # If we call the POST method WITHOUT calling the GET, it still redirects using
+        # query: next and header: Referer
+        self.check_direct_post_redirect(
+            ({}, '/'),
+            ({'headers': {'Referer': '/header'}}, '/header'),
+            ({'data': {'next': '/query'}}, '/query'),
+            ({'headers': {'Referer': '/header'}, 'data': {'next': '/query'}}, '/query'))
+
 
 class TestAuthTemplate(TestGramex):
     def test_change_template(self):
@@ -389,6 +418,7 @@ class DBAuthBase(AuthBase):
         dburl = sa.create_engine(url).url
         if dburl.drivername == 'postgresql':
             dbutils.postgres_create_db(dburl.host, dburl.database, **{table: data})
+        # TODO: handle mysql+pymysql
         elif dburl.drivername == 'mysql':
             dbutils.mysql_create_db(dburl.host, dburl.database, **{table: data})
         else:

@@ -346,10 +346,12 @@ class BaseMixin(object):
     def redirect_next(self):
         '''
         Redirect the user ``session['_next_url']``. If it does not exist,
-        redirect to the home page ``/``.
+        set it up first. Then redirect.
 
         See :py:func:`setup_redirect`
         '''
+        if '_next_url' not in self.session:
+            self.save_redirect_page()
         self.redirect(self.session.pop('_next_url', '/'))
 
     @tornado.gen.coroutine

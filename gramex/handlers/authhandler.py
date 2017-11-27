@@ -170,8 +170,7 @@ class AuthHandler(BaseHandler):
 
 class LogoutHandler(AuthHandler):
     def get(self):
-        if self.redirects:
-            self.save_redirect_page()
+        self.save_redirect_page()
         for callback in self.actions:
             callback(self)
         self.log_user_event(event='logout')
