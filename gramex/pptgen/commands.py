@@ -80,7 +80,7 @@ def text(shape, spec, data):
     default_css['font-family'] = paragraph.runs[0].font.name
     # Updating default css with css from config.
     default_css.update(style)
-
+    default_css['color'] = default_css.get('color', '#0000000')
     update_text = etree.fromstring('<root>{}</root>'.format(template(spec['text'], data)))
     paragraph.runs[0].text = update_text.text if update_text.text else ''
     utils.apply_text_css(shape, paragraph.runs[0], paragraph, **default_css)
@@ -91,7 +91,7 @@ def text(shape, spec, data):
         # Adding runs for each text item
         for idx, new_txt in enumerate([child.text, child.tail]):
             if new_txt:
-                common_css = copy.deepcopy(default_css)
+                common_css = {key: val for key, val in default_css.items()}
                 paragraph.add_run()
                 # Adding text to run
                 paragraph.runs[index].text = new_txt
@@ -102,7 +102,7 @@ def text(shape, spec, data):
                 if brightness:
                     paragraph.runs[index].font.color.brightness = brightness
                 utils.apply_text_css(shape, paragraph.runs[index], paragraph, **common_css)
-            index += 1
+                index += 1
 
 
 def replace(shape, spec, data):
@@ -335,15 +335,11 @@ def chart(shape, spec, data):
     info = copy.deepcopy(spec['chart'])
     # Load data
     handler = data.pop('handler') if 'handler' in data else None
-    if isinstance(info['x'], (dict,)):
-        if 'function' not in info['x']:
-            info['x']['function'] = '{}'.format(info['x'])
-        info['x'] = compile_function(info, 'x', data, handler)
-
-    if 'size' in info and isinstance(info['size'], (dict,)):
-        if 'function' not in info['size']:
-            info['size']['function'] = '{}'.format(info['size'])
-        info['size'] = compile_function(info, 'size', data, handler)
+    for prop in {'x', 'size', 'usecols'}:
+        if prop in info and isinstance(info[prop], (dict,)):
+            if 'function' not in info[prop]:
+                info[prop]['function'] = '{}'.format(info[prop])
+            info[prop] = compile_function(info, prop, data, handler)
 
     style = {'color': info.pop('color', None), 'opacity': info.pop('opacity', None),
              'stroke': info.pop('stroke', None)}
@@ -355,8 +351,9 @@ def chart(shape, spec, data):
             style[key] = compile_function(style, key, data, handler)
 
     data = compile_function(info, 'data', data, handler)
-    data = data.reset_index(drop=True)
-    series_cols = [x for x in data.columns if x != info['x']]
+    # Getting subset of data if `usecols` is defined.
+    change_data = data.reset_index(drop=True)[info.get('usecols', list(data.columns))]
+    series_cols = [x for x in change_data.columns if x != info['x']]
 
     chart_name = None
     if chart_type in stacked_or_line:
@@ -370,7 +367,8 @@ def chart(shape, spec, data):
         raise NotImplementedError('Input Chart Type {} is not supported'.format(chart_type))
 
     chart_map = {'line': ChartData(), 'scatter': XyChartData(), 'bubble': BubbleChartData()}
-    chart_data = _update_chart(info, data, chart_map[chart_name], series_cols, chart=chart_name)
+    chart_data = _update_chart(
+        info, change_data, chart_map[chart_name], series_cols, chart=chart_name)
 
     shape.chart.replace_data(chart_data)
     if chart_name == 'scatter' and not style.get('color'):
@@ -378,22 +376,18 @@ def chart(shape, spec, data):
         style['color'] = dict(zip(series_names, _color.distinct(len(series_names))))
 
     if style.get('color'):
-        xseries = data[info['x']].dropna().unique().tolist()
         color_mapping = {'scatter': 'point.marker.format', 'line': 'point.format',
                          'bubble': 'point.format', 'area': 'series.format'}
         is_area = {'AREA', 'AREA_STACKED', 'AREA_STACKED_100'}
         chart_name = 'area' if chart_type in is_area else chart_name
         pie_or_donut = {'PIE', 'PIE_EXPLODED', 'PIE_OF_PIE', 'DOUGHNUT', 'DOUGHNUT_EXPLODED'}
         for series in shape.chart.series:
-            values, name = series.values, series.name
+            name = series.name
             for index, point in enumerate(series.points):
                 point_css = {}
                 args = {
-                    'xseries': xseries,
-                    'yseries': values,
-                    'y': values[index],
                     'handler': handler,
-                    'x': data.ix[index][info['x']],
+                    'row': data.ix[index].to_dict(),
                     'name': data.ix[index][info['x']] if chart_type in pie_or_donut else name
                 }
                 for key in {'opacity', 'color', 'stroke'}:
@@ -406,10 +400,14 @@ def chart(shape, spec, data):
                     elif isinstance(style[key], (dict)):
                         point_css[key] = style[key].get(args['name'], '#cccccc')
                 # Evaluatinig line and shape color format
-                chart_css(eval(color_mapping[chart_name]).fill, point_css, point_css['color'])
-                # Will apply on outer line of chart shape line(like stroke in html)
-                _stroke = point_css.get('stroke', point_css['color'])
-                chart_css(eval(color_mapping[chart_name]).line.fill, point_css, _stroke)
+                for series_point in {'point', 'series'}:
+                    # Replacing point with series to change color in legend
+                    fillpoint = color_mapping[chart_name].replace('point', series_point)
+                    chart_css(eval(fillpoint).fill, point_css, point_css['color'])
+                    # Will apply on outer line of chart shape line(like stroke in html)
+                    _stroke = point_css.get('stroke', point_css['color'])
+                    chart_css(eval(fillpoint).line.fill, point_css, _stroke)
+
 
 # Custom Charts Functions below(Sankey, Treemap, Calendarmap).
 
