@@ -13,4 +13,4 @@ You can run specific tests. For example, this only runs `test_auth.py` and `test
 
 This only runs the class `TestLDAPAuth` in `test_auth.py`:
 
-    nosetests tests.test_auth -m TestLDAPAuth
+    nosetests tests.test_auth:TestLDAPAuth

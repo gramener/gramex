@@ -72,3 +72,9 @@ def contacts(handler):
     except Exception as e:
         data = {'error': repr(e)}
     raise tornado.gen.Return(json.dumps(data, indent=4))
+
+
+def signup_validate(handler, args):
+    # TODO Nikhil: Provide Sample validation
+    # What if user return dict/list/tuple?
+    return False

@@ -4,7 +4,9 @@ import csv
 import six
 import time
 import uuid
+import random
 import base64
+import string
 import logging
 import functools
 import tornado.web
@@ -17,7 +19,7 @@ from collections import Counter
 from orderedattrdict import AttrDict
 import gramex
 import gramex.cache
-from gramex.http import UNAUTHORIZED
+from gramex.http import UNAUTHORIZED, BAD_REQUEST
 from gramex.config import check_old_certs, app_log, objectpath, str_utf8
 from gramex.transforms import build_transform
 from .basehandler import BaseHandler, build_log_info
@@ -26,6 +28,8 @@ _auth_template = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                               'auth.template.html')
 _forgot_template = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                 'forgot.template.html')
+_signup_template = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                'signup.template.html')
 
 # Python 3 csv.writer.writerow writes as str(), which is unicode in Py3.
 # Python 2 csv.writer.writerow writes as str(), which is bytes in Py2.
@@ -460,6 +464,16 @@ class DBAuth(SimpleAuth):
             email_from: email-service       # Name of the email service to use for sending emails
             email_as: email-id              # Name of the person sending email (optional)
             email_text: 'This email is for {user}, {email}'
+        # signup: true                      # Enables signup using ?signup
+        signup:
+            key: signup                     # ?signup= is used as the signup parameter
+            template: $YAMLPATH/signup.html # Signup template
+            columns:                        # Mapping of URL query parameters to database columns
+                name: user_name             # ?name= is saved in the user_name column
+                gender: user_gender         # ?gender= is saved in the user_gender column
+                                            # Other than email, all other columns are ignored
+            validate: app.validate(args)    # Optional validation method is passed handler.args
+                                            # This may raise an Exception or return False to stop.
 
     The login flow is as follows:
 
@@ -470,22 +484,38 @@ class DBAuth(SimpleAuth):
 
     The forgot password flow is as follows:
 
-    1. User visits ``?forgot`` => shows forgot password template (with the user name)
-    2. User enters user name and submits. Browser redirects to ``POST ?forgot&user=...``
+    1. User visits ``GET ?forgot`` => shows forgot password template (with the user name)
+    2. User submits user name. Browser redirects to ``POST ?forgot&user=...``
     3. Application generates a new password link (valid for ``minutes_to_expiry`` minutes).
     4. Application emails new password link to the email ID associated with user
     5. User is sent to ``?forgot=<token>`` => shows forgot password template (with password)
-    6. User enters new password (twice) and submits => ``POST ?forgot=<token>&password=...``
+    6. User submits new password (entered twice) => ``POST ?forgot=<token>&password=...``
     7. Application checks if token is valid. If yes, sets associated user's password and redirects
     8. On any error, shows forgot password template (with error)
+
+    The signup password flow is as follows:
+
+    1. User visits ``GET ?signup`` => show signup template
+    2. User submits email and other information. Browser redirects to ``POST ?signup&...``
+    3. Application checks if email exists => suggest password recovery
+    4. Application validates fields using validation function if it exists
+    5. Else, Application adds the following fields to the database:
+        - fields mentioned in ``signup.columns:``
+        - email from ``forgot.arg:`` into ``forgot.email_column:``
+        - random password using into ``password.column`` - no encryption
+    6. Application says "I've sent an email to reset password" (and does so)
     '''
+    # Number of characters in password
+    PASSWORD_LENGTH = 20
+    PASSWORD_CHARS = string.digits + string.ascii_letters
+
     @classmethod
-    def setup(cls, url, table, user, password, forgot=None, **kwargs):
+    def setup(cls, url, table, user, password, forgot=None, signup=None, **kwargs):
         super(DBAuth, cls).setup(user=user, password=password, **kwargs)
         from sqlalchemy import create_engine
-        cls.tablename, cls.forgot = table, forgot
+        cls.tablename, cls.forgot, cls.signup = table, forgot, signup
         cls.engine = create_engine(url, **kwargs.get('parameters', {}))
-        if cls.forgot:
+        if isinstance(cls.forgot, AttrDict):
             default_minutes_to_expiry = 15
             cls.forgot.setdefault('template', _forgot_template)
             cls.forgot.setdefault('key', 'forgot')
@@ -498,6 +528,21 @@ class DBAuth(SimpleAuth):
                 'email_text', 'Visit {reset_url} to reset password for user {user} ({email})')
             cls.recover = cls.setup_recover_db()
             # TODO: default email_from to the first available email service
+        if cls.signup is True:
+            cls.signup = AttrDict()
+        if isinstance(cls.signup, AttrDict):
+            if not cls.forgot:
+                app_log.error('url:%s.signup requires .forgot.email_column', cls.name)
+            cls.signup.setdefault('template', _signup_template)
+            cls.signup.setdefault('key', 'signup')
+            cls.signup.setdefault('columns', {})
+            if 'validate' in cls.signup:
+                validate = cls.signup.validate
+                if isinstance(validate, six.string_types):
+                    validate = {'function': validate}
+                cls.signup.validate = build_transform(
+                    validate, vars=AttrDict(handler=None, args=None),
+                    filename='url:%s:signup.validate' % cls.name, iter=False)
         cls.encrypt = []
         if 'function' in password:
             cls.encrypt.append(build_transform(
@@ -516,11 +561,31 @@ class DBAuth(SimpleAuth):
             else:
                 cls.table = Table(cls.tablename, meta, autoload=True, autoload_with=cls.engine)
 
+    def _exec_query(self, query, engine):
+        result = engine.execute(query)
+        if result.returns_rows:
+            return result.fetchone()
+
+    def run_query(self, query, engine=None):
+        if engine is None:
+            engine = self.engine
+        return gramex.service.threadpool.submit(self._exec_query, query, engine)
+
+    def report_error(self, status, event, error, data=None):
+        '''
+        Set the HTTP status. Log user event. Return an error object.
+        '''
+        self.set_status(status, reason=error)
+        self.log_user_event(event='fail')
+        return {'code': 'auth', 'error': data or error}
+
     def get(self):
         self.save_redirect_page()
         template = self.template
         if self.forgot and self.forgot.key in self.args:
             template = self.forgot.template
+        elif self.signup and self.signup.key in self.args:
+            template = self.signup.template
         self.render_template(template, error=None)
 
     @tornado.gen.coroutine
@@ -532,7 +597,9 @@ class DBAuth(SimpleAuth):
         # TODO: if this bind does not work, report an error on connection
 
         if self.forgot and self.forgot.key in self.args:
-            self.forgot_password()
+            yield self.forgot_password()
+        elif self.signup and self.signup.key in self.args:
+            yield self.signup_user()
         else:
             yield self.login()
 
@@ -545,12 +612,10 @@ class DBAuth(SimpleAuth):
                 password = result
 
         from sqlalchemy import and_
-        query = self.table.select().where(and_(
+        user_obj = yield self.run_query(self.table.select().where(and_(
             self.table.c[self.user.column] == user,
             self.table.c[self.password.column] == password,
-        ))
-        result = self.engine.execute(query)
-        user_obj = result.fetchone()
+        )))
 
         if user_obj is not None:
             # Delete password from user object before storing it in the session
@@ -560,13 +625,13 @@ class DBAuth(SimpleAuth):
             self.redirect_next()
         else:
             yield self.fail_user({'user': user}, 'user')
-            self.log_user_event(event='fail')
-            self.set_status(UNAUTHORIZED)
-            self.render_template(self.template, error={'code': 'auth', 'error': 'Cannot log in'})
+            self.render_template(self.template, error=self.report_error(
+                UNAUTHORIZED, 'fail', 'Cannot log in'))
 
+    @tornado.gen.coroutine
     def forgot_password(self):
         template = self.forgot.template
-        error = {'code': 'auth'}
+        error = {}
         forgot_key = self.get_arg(self.forgot.key, None)
 
         # Step 1: user submits their user ID / email via POST ?forgot&user=...
@@ -578,8 +643,7 @@ class DBAuth(SimpleAuth):
                 query = self.table.c[self.user.column] == forgot_user
             else:
                 query = self.table.c[self.forgot.email_column] == forgot_email
-            result = self.engine.execute(self.table.select().where(query))
-            user = result.fetchone()
+            user = yield self.run_query(self.table.select().where(query))
             email_column = self.forgot.get('email_column', 'email')
 
             # If a matching user exists in the database
@@ -593,13 +657,12 @@ class DBAuth(SimpleAuth):
                     'email': user[email_column],
                     'token': token,
                     'expire': expire}
-                self.recover['engine'].execute(
-                    self.recover['table'].insert(), values)
+                yield self.run_query(self.recover['table'].insert().values(values),
+                                     self.recover['engine'])
                 # send password reset mail to user
                 mailer = gramex.service.email[self.forgot.email_from]
                 reset_url = self.request.protocol + '://' + self.request.host + self.request.path
                 reset_url += '?' + urllib_parse.urlencode({self.forgot.key: token})
-                # TODO: after the email is sent, if there's an exception, log the exception
                 kwargs = {
                     'to': user[email_column],
                     'subject': self.forgot.email_subject.format(reset_url=reset_url, **user),
@@ -607,23 +670,20 @@ class DBAuth(SimpleAuth):
                 }
                 if self.forgot.email_as:
                     kwargs['from'] = self.forgot.email_as
-                gramex.service.threadpool.submit(mailer.mail, **kwargs)
-                error = {}                          # Render at the end with no errors
+                yield gramex.service.threadpool.submit(mailer.mail, **kwargs)
             # If no user matches the user ID or email ID
             else:
-                self.log_user_event(event='forgot-nouser')
-                self.set_status(UNAUTHORIZED)
                 if user is None:
-                    error['error'] = 'No user matching %s found' % (forgot_user or forgot_email)
+                    msg = 'No user matching %s found' % (forgot_user or forgot_email)
                 elif not user[email_column]:
-                    error['error'] = 'No email matching %s found' % (forgot_user or forgot_email)
+                    msg = 'No email matching %s found' % (forgot_user or forgot_email)
+                error = self.report_error(UNAUTHORIZED, 'forgot-nouser', msg)
 
         # Step 2: User clicks on email, submits new password via POST ?forgot=<token>&password=...
         else:
             where = self.recover['table'].c['token'] == forgot_key
-            result = self.recover['engine'].execute(
-                self.recover['table'].select().where(where))
-            row = result.fetchone()
+            row = yield self.run_query(self.recover['table'].select().where(where),
+                                       self.recover['engine'])
             # if system generated token in database
             if row is not None:
                 # if token is not expired
@@ -635,23 +695,56 @@ class DBAuth(SimpleAuth):
                     # update password in database
                     values = {
                         self.user.column: row['user'],
-                        self.password.column: password}
-                    query = self.table.update().where(
+                        self.password.column: password
+                    }
+                    yield self.run_query(self.table.update().where(
                         self.table.c[self.user.column] == row['user']
-                    ).values(values)
-                    self.engine.execute(query)
-                    self.recover['engine'].execute(
-                        self.recover['table'].delete(where))
-                    error = {}
+                    ).values(values))
+                    yield self.run_query(self.recover['table'].delete(where),
+                                         self.recover['engine'])
                 else:
-                    self.log_user_event(event='forgot-token-expired')
-                    self.set_status(UNAUTHORIZED)
-                    error['error'] = 'Token expired'
+                    error = self.report_error(
+                        UNAUTHORIZED, 'forgot-token-expired', 'Token expired')
             else:
-                self.log_user_event(event='forgot-token-invalid')
-                self.set_status(UNAUTHORIZED)
-                error['error'] = 'Invalid Token'
+                error = self.report_error(UNAUTHORIZED, 'forgot-token-invalid', 'Invalid Token')
         self.render_template(template, error=error)
+
+    @tornado.gen.coroutine
+    def signup_user(self):
+        # Checks if email exists => suggest password recovery
+        signup_user = self.get_arg(self.user.arg, None)
+        query = self.table.c[self.user.column] == signup_user
+        row = yield self.run_query(self.table.select().where(query))
+        if row is not None:
+            self.render_template(self.signup.template, error=self.report_error(
+                BAD_REQUEST, 'signup-exists', 'User exists'))
+            raise tornado.gen.Return()
+
+        # Validates fields using validation function if they exists
+        if 'validate' in self.signup:
+            validate_error = self.signup.validate(handler=self, args=self.args)
+            if validate_error:
+                self.render_template(self.signup.template, error=self.report_error(
+                    BAD_REQUEST, 'signup-invalid', 'Validation failed', validate_error))
+                raise tornado.gen.Return()
+
+        # Else, add the following fields to the database:
+        #  - fields mentioned in ``signup.columns:``
+        #  - email from ``forgot.arg:`` into ``forgot.email_column:``
+        #  - password using random 20 char password into ``password.column`` - no encryption
+        values = {
+            self.user.column: signup_user,
+            # TODO: allow admins (maybe users) to enter their own passwords in case of no email
+            self.password.column: ''.join(random.choice(self.PASSWORD_CHARS)
+                                          for c in range(self.PASSWORD_LENGTH)),
+        }
+        for field, column in self.signup.columns.items():
+            values[field] = self.get_arg(column, None)
+        if self.forgot and self.forgot.arg in self.args:
+            values[self.forgot.email_column] = self.get_arg(self.forgot.arg)
+        yield self.run_query(self.table.insert().values(values))
+        # Send a password reset link
+        yield self.forgot_password()
 
     @classmethod
     def setup_recover_db(cls):

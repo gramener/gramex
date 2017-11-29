@@ -182,6 +182,9 @@ url:
                     This is an email from Gramex guide.
                     You clicked on the forgot password like for user {user}.
                     Visit this link to reset the password: {reset_url}
+            signup: true
+                # key: signup
+                # validate: authutil.signup_validate(handler, args)
             redirect:
                 query: next
                 url: /$YAMLURL

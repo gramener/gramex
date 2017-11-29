@@ -31,11 +31,12 @@ class SMTPMailer(object):
         False: 25
     }
 
-    def __init__(self, type, email=None, password=None, **kwargs):
+    def __init__(self, type, email=None, password=None, stub=False, **kwargs):
         # kwargs: host, port, tls
         self.type = type
         self.email = email
         self.password = password
+        self.stub = stub
         if type not in self.clients:
             raise ValueError('Unknown type: %s' % type)
         self.client = self.clients[type]
@@ -51,14 +52,18 @@ class SMTPMailer(object):
         to = recipients(**kwargs)
         msg = message(**kwargs)
         tls = self.client.get('tls', True)
-        server = smtplib.SMTP(self.client['host'], self.client.get('port', self.ports[tls]))
+        # Test cases specify stub: true. This uses a stub that logs emails
+        if self.stub:
+            server = SMTPStub(self.client['host'], self.client.get('port', self.ports[tls]))
+        else:
+            server = smtplib.SMTP(self.client['host'], self.client.get('port', self.ports[tls]))
         if tls:
             server.starttls()
         if self.email is not None and self.password is not None:
             server.login(self.email, self.password)
         server.sendmail(sender, to, msg.as_string())
         server.quit()
-        app_log.info('Email sent via %s to %s', self.email, to)
+        app_log.info('Email sent via %s to %s', self.email, ', '.join(to))
 
 
 def recipients(**kwargs):
@@ -165,3 +170,26 @@ def message(body=None, html=None, attachments=[], images={}, **kwargs):
 
 def _merge(value):
     return ', '.join(value) if isinstance(value, list) else value
+
+
+class SMTPStub(object):
+    '''A minimal test stub for smtplib.SMTP with features used in this module'''
+    stubs = []
+
+    def __init__(self, host, port):
+        # Maintain a list of all stub info so far
+        self.info = {}
+        self.stubs.append(self.info)
+        self.info.update(host=host, port=port)
+
+    def starttls(self):
+        self.info.update(starttls=True)
+
+    def login(self, email, password):
+        self.info.update(email=email, password=password)
+
+    def sendmail(self, from_addr, to_addrs, msg):
+        self.info.update(from_addr=from_addr, to_addrs=to_addrs, msg=msg)
+
+    def quit(self):
+        self.info.update(quit=True)

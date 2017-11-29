@@ -86,3 +86,8 @@ class TestEmailer(TestCase):
         SMTPMailer(type='mandrill', email='', password='')
         SMTPMailer(type='smtp', host='hostname')
         SMTPMailer(type='smtps', host='hostname')
+
+        # TODO: using stubs, test that:
+        # - the email is sent to the correct host, port, email, password in above cases
+        # - test SMTP with and without password as well
+        # - test SMTPS, custom ports

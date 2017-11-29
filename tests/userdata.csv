@@ -1,6 +1,6 @@
-user,password,roles,salt
-alpha,alpha,employee manager,123
-beta,beta,manager admin,123
-gamma,gamma,employee,123
-delta,delta,,123
-epsilon,epsilon,,abc
+user,password,roles,salt,email
+alpha,alpha,employee manager,123,gramex.guide+alpha@gmail.com
+beta,beta,manager admin,123,gramex.guide+beta@gmail.com
+gamma,gamma,employee,123,gramex.guide+gamma@gmail.com
+delta,delta,,123,gramex.guide+delta@gmail.com
+epsilon,epsilon,,abc,gramex.guide+epsilon@gmail.com

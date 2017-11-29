@@ -489,8 +489,69 @@ Here is a more complete example:
             You clicked on the forgot password like for user {user}.
             Visit this link to reset the password: {reset_url}
 
+<div class="example">
+  <a class="example-demo" href="db">Forgot password example</a>
+  <a class="example-src" href="http://code.gramener.com/s.anand/gramex/tree/master/gramex/apps/guide/auth/gramex.yaml">Source</a>
+</div>
+
 [forgot-template]: http://code.gramener.com/s.anand/gramex/blob/master/gramex/handlers/forgot.template.html
 [send-as]: https://support.google.com/mail/answer/22370?hl=en
+
+### Sign up
+
+`DBAuth` has a new user self-service sign-up feature. It lets users enter their
+user ID, email and other attributes. It generates a random password and mails
+their user ID (using the [forgot password](#forgot-password) feature).
+
+Here is a minimal configuration. Just add a `signup: true` section to enable signup.
+
+    :::yaml
+    url:
+      auth/db:
+        pattern: /db
+        handler: DBAuth
+        kwargs:
+            url: sqlite:///$YAMLPATH/auth.db
+            table: users
+            user:
+                column: user
+            password:
+                column: password
+            forgot:
+                email_from: gramex-guide-gmail
+            signup: true            # Enable signup
+
+<div class="example">
+  <a class="example-demo" href="db?signup">Sign-up example</a>
+  <a class="example-src" href="http://code.gramener.com/s.anand/gramex/tree/master/gramex/apps/guide/auth/gramex.yaml">Source</a>
+</div>
+
+You can pass additional configurations to sign-up. For example:
+
+    :::yaml
+    signup:
+        key: signup                     # ?signup= is used as the signup parameter
+        template: $YAMLPATH/signup.html # Use this signup template
+        columns:                        # Mapping of URL query parameters to database columns
+            name: user_name             # ?name= is saved in the user_name column
+            gender: user_gender         # ?gender= is saved in the user_gender column
+                                        # Other than email, all other columns are ignored
+        validate: app.validate(args)    # Optional validation method is passed handler.args
+                                        # This may raise an Exception or return False to stop.
+
+- `key: signup` shows the signup form when the URL has a `?signup`. `key: signup`
+  is the default.
+- `template: signup.template.html`. The name of the template file used to render
+  the signup page. Copy [signup.template.html][signup-template] and
+  modify it as required. Specify the path to your template in `template:`
+- `columns: {}`. The URL query parameters that should be added as columns the
+  auth DB. E.g., `columns: {age: user_age}` will save the `<input name="age">`
+  value in the column `user_age`.
+- `validate: expression(handler, args)`. Runs any expression using `handler`
+  and/or `args` as pre-defined variables. If the result is false-y, raises a HTTP
+  400: Bad Request. The result is passed to the template as an `error` variable.
+
+[signup-template]: http://code.gramener.com/s.anand/gramex/blob/master/gramex/handlers/signup.template.html
 
 
 ## Integrated auth

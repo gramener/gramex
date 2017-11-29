@@ -38,8 +38,11 @@
       <button type="submit">Log in</button>
     </form>
 
-    {% if handler.kwargs.get('forgot') %}
-      <p><a href="?{{ handler.kwargs.forgot.key }}">Forgot your password?</a></p>
+    {% if handler.forgot %}
+      <p><a href="?{{ handler.forgot.key }}">Forgot your password?</a></p>
+    {% end %}
+    {% if handler.signup %}
+      <p><a href="?{{ handler.signup.key }}">Sign up as new user</a></p>
     {% end %}
   <section>
 

@@ -18,6 +18,7 @@ from tornado.httpclient import AsyncHTTPClient
 from concurrent.futures import ThreadPoolExecutor
 from gramex.cache import Subprocess
 from gramex.services import info
+from gramex.services.emailer import SMTPStub
 
 watch_info = []
 ws_info = []
@@ -356,6 +357,10 @@ def sales_query(args, handler):
 def auth_prepare(args, handler):
     if 'password' in args:
         args['password'][0] += '1'
+
+
+def email_stubs(handler):
+    return json.dumps(SMTPStub.stubs)
 
 
 if __name__ == '__main__':
