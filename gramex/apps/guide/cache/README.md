@@ -414,6 +414,7 @@ Basic usage:
         proc = gramex.cache.Subprocess(['python', '-V'])
         out, err = yield proc.wait_for_exit()
         # out contains stdout result. err contains stderr result
+        # proc.proc.returncode contains the return code
         raise tornado.gen.Return('Python version is ' + err.decode('utf-8'))
 
 `out` and `err` contain the stdout and stderr from running `python -V` as bytes.

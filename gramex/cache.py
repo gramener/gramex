@@ -6,6 +6,7 @@ import os
 import six
 import sys
 import json
+import time
 import inspect
 import subprocess
 import pandas as pd
@@ -14,6 +15,7 @@ from tornado.concurrent import Future
 from gramex.config import app_log, merge
 
 
+MILLISECOND = 0.001         # in seconds
 _opener_defaults = dict(mode='r', buffering=-1, encoding='utf-8', errors='strict',
                         newline=None, closefd=True)
 _markdown_defaults = dict(output_format='html5', extensions=[
@@ -442,6 +444,8 @@ class Subprocess(object):
             **kwargs
         )
         stdout, stderr = yield proc.wait_for_exit()
+        if proc.proc.returncode:
+            raise Exception('Process failed with return code %d', proc.proc.returncode)
 
     :arg list args: command line arguments passed as a list to Subprocess
     :arg methodlist stream_stdout: optional list of write methods - called when stdout has data
@@ -472,6 +476,10 @@ class Subprocess(object):
         # http://stackoverflow.com/a/4896288/100904
         kwargs['close_fds'] = 'posix' in sys.builtin_module_names
 
+        self.proc = subprocess.Popen(args, **kwargs)
+        self.thread = {}        # Has the running threads
+        self.future = {}        # Stores the futures indicating stream close
+
         # Buffering has 2 modes. buffer_size='line' reads and writes line by line
         # buffer_size=<number> reads in byte chunks. Define the appropriate method
         if hasattr(buffer_size, 'lower') and 'line' in buffer_size.lower():
@@ -486,8 +494,10 @@ class Subprocess(object):
                             callback(content)
                     else:
                         stream.close()
-                        future.set_result(retval())
                         break
+                while self.proc.poll() is None:
+                    time.sleep(MILLISECOND)
+                future.set_result(retval())
         else:
             # If the buffer size is 0 or negative, use the default buffer size to read
             if buffer_size <= 0:
@@ -507,12 +517,10 @@ class Subprocess(object):
                             callback(content)
                     if size < buffer_size:
                         stream.close()
-                        future.set_result(retval())
                         break
-
-        self.proc = subprocess.Popen(args, **kwargs)
-        self.thread = {}        # Has the running threads
-        self.future = {}        # Stores the futures indicating stream close
+                while self.proc.poll() is None:
+                    time.sleep(MILLISECOND)
+                future.set_result(retval())
 
         callbacks_lookup = {'stdout': stream_stdout, 'stderr': stream_stderr}
         for stream in ('stdout', 'stderr'):
