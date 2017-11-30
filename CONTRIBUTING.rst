@@ -116,3 +116,7 @@ When releasing a new version of Gramex:
     git tag -a v1.x.x           # Annotate with a one-line summary of features
     git push --follow-tags
     git checkout dev            # Switch back to dev
+
+5. Push stats to gramener.com using::
+
+    make push-docs push-coverage
