@@ -74,6 +74,7 @@ class TestPathConfig(unittest.TestCase):
         self.imp = info.home / 'config.import.yaml'
         self.imp2 = info.home / 'config.import2.yaml'
         self.multiimport = info.home / 'config.multiimport.yaml'
+        self.importvars = info.home / 'config.importvars.yaml'
         self.ns = info.home / 'config.namespace.yaml'
         self.final = info.home / 'config.final.yaml'
         self.chain = AttrDict(
@@ -167,6 +168,12 @@ class TestPathConfig(unittest.TestCase):
         for val in (+conf_multiimp).values():
             eq_(val, +conf_b)
 
+        conf_importvars = ChainConfig(conf=PathConfig(self.importvars))
+        result = +conf_importvars
+        eq_(result.base_YAMLPATH, 'custom-yamlpath')
+        eq_(result.base_YAMLURL, 'custom-yamlurl')
+        eq_(result.custom, {'x': 1, 'y': True})
+
     def test_add_ns(self):
         # Test _add_ns functionality
         eq_(_add_ns({'x': 1}, '*', 'a'), {'a:x': 1})
@@ -228,7 +235,10 @@ class TestPathConfig(unittest.TestCase):
             # $URLROOT is the frozen to base $YAMLURL
             eq_(conf['%s_YAMLURL_VAR' % key], conf['%s_YAMLURL_VAR_EXPECTED' % key])
             # $GRAMEXPATH is the gramex path
-            eq_(conf['%s_GRAMEXPATH' % key], os.path.dirname(inspect.getfile(gramex)))
+            gramex_path = os.path.dirname(inspect.getfile(gramex))
+            eq_(conf['%s_GRAMEXPATH' % key], gramex_path)
+            # $GRAMEXAPPS is the gramex apps path
+            eq_(conf['%s_GRAMEXAPPS' % key], os.path.join(gramex_path, 'apps'))
             # $GRAMEXHOST is the socket.gethostname
             eq_(conf['%s_GRAMEXHOST' % key], socket.gethostname())
         # Imports do not override, but do setdefault

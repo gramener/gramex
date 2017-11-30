@@ -477,6 +477,15 @@ You can use imports within sections. For example:
     url:
       import: app1/gramex.yaml  # Imports app1/gramex.yaml into the url: section
 
+Any additional keywords get defined as variables. For example:
+
+    :::yaml
+    url:
+      import: app1/gramex.yaml
+      var1: value               # $var1 will be replaced with "value"
+      var2:                     # $var2 will be replaced with {"key": "value"}
+        key: value
+
 The `$YAMLURL` and `$YAMLPATH` [variables](#yaml-variables) work as expected. But
 you may change `$YAMLURL` to mount an import at a different URL. Consider this
 `dir/app.yaml`:
@@ -579,6 +588,7 @@ available in every YAML file. (The examples assume you are processing
   `base/dir/gramex.yaml` has a `$YAMLURL` of `base/dir`, and `gramex.yaml` has a
   `$YAMLURL` of `.`.
 - `$GRAMEXPATH`: absolute path to the Gramex directory
+- `$GRAMEXAPPS`: absolute path to the Gramex apps directory
 - `$GRAMEXHOST`: hostname of the system where Gramex is running
 - `$GRAMEXDATA` is the directory where local Gramex data is stored. This is at:
     - `%LOCALAPPDATA%\Gramex Data\` on Windows

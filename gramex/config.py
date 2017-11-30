@@ -150,13 +150,15 @@ _warned_paths = set()
 _gramex_path = os.path.dirname(os.path.abspath(__file__))
 
 
-def _setup_variables():
+def setup_variables():
     '''Initialise variables'''
     variables = DefaultAttrDict(str)
     # Load all environment variables
     variables.update(os.environ)
     # GRAMEXPATH is the Gramex root directory
     variables['GRAMEXPATH'] = _gramex_path
+    # GRAMEXAPPS is the Gramex apps directory
+    variables['GRAMEXAPPS'] = os.path.join(_gramex_path, 'apps')
     # GRAMEXHOST is the hostname
     variables['GRAMEXHOST'] = socket.gethostname()
     # GRAMEXDATA varies based on OS
@@ -176,7 +178,7 @@ def _setup_variables():
     return variables
 
 
-variables = _setup_variables()
+variables = setup_variables()
 
 
 def _substitute_variable(val):
@@ -261,12 +263,12 @@ class ConfigYAMLLoader(Loader):
         self.add_constructor(u'tag:yaml.org,2002:omap', _from_yaml)
 
 
-def _yaml_open(path, default=AttrDict(), yamlurl=None):
+def _yaml_open(path, default=AttrDict(), **kwargs):
     '''
     Load a YAML path.Path as AttrDict. Replace ${VAR} or $VAR with variables.
     Defines special variables $YAMLPATH as the absolute path of the YAML file,
-    and $YAMLURL as the path relative to current directory (or takes yamlurl=
-    parameter if passed.)
+    and $YAMLURL as the path relative to current directory. These can be
+    overridden via keyward arguments (e.g. ``YAMLURL=...``)
 
     If key has " if ", include it only if the condition (eval-ed in Python) is
     true.
@@ -286,22 +288,21 @@ def _yaml_open(path, default=AttrDict(), yamlurl=None):
 
     # Variables based on YAML file location
     yaml_path = str(path.parent)
-    yaml_vars = {
-        'YAMLPATH': yaml_path,          # Path to YAML folder
-        'YAMLFILE': str(path),          # Path to YAML file
-    }
+    kwargs.setdefault('YAMLPATH', yaml_path)    # Path to YAML folder
+    kwargs.setdefault('YAMLFILE', str(path))    # Path to YAML file
     # $YAMLURL defaults to the relative URL from cwd to YAML folder.
-    if yamlurl is None:
-        try:
-            yamlurl = os.path.relpath(yaml_path)
-        except ValueError:
-            # If YAML is in a different drive, this fails.
-            # Then using YAMLURL should raise an error saying it's undefined.
-            pass
+    try:
+        yamlurl = os.path.relpath(yaml_path)
+    except ValueError:
+        # If YAML is in a different drive, this fails. So don't set YAMLURL.
+        # Impact: $YAMLURL is undefined for imports from a different drive.
+        pass
+    else:
+        kwargs.setdefault('YAMLURL', yamlurl)
     # Typically, we use /$YAMLURL/url - so strip the slashes. Replace backslashes
-    if isinstance(yamlurl, string_types):
-        yaml_vars['YAMLURL'] = yamlurl.replace('\\', '/').strip('/')
-    variables.update(yaml_vars)
+    if isinstance(kwargs.get('YAMLURL'), string_types):
+        kwargs['YAMLURL'] = kwargs['YAMLURL'].replace('\\', '/').strip('/')
+    variables.update(kwargs)
 
     # Update context with the variables section.
     # key: value                     sets key = value
@@ -471,13 +472,15 @@ def load_imports(config, source, warn=None):
             for name, conf in value.items():
                 if not isinstance(conf, dict):
                     conf = AttrDict(path=conf)
-                paths = root.glob(conf.path) if '*' in conf.path else [Path(conf.path)]
+                paths = conf.pop('path')
+                paths = root.glob(paths) if '*' in paths else [Path(paths)]
                 for path in paths:
                     abspath = root.joinpath(path)
-                    new_conf = _yaml_open(abspath, yamlurl=conf.get('YAMLURL', None))
-                    if 'namespace' in conf:
+                    ns = conf.pop('namespace', None)
+                    new_conf = _yaml_open(abspath, **conf)
+                    if ns is not None:
                         prefix = Path(path).as_posix()
-                        new_conf = _add_ns(new_conf, conf['namespace'], prefix)
+                        new_conf = _add_ns(new_conf, ns, prefix)
                     imported_paths += load_imports(new_conf, source=abspath)
                     merge(old=node, new=new_conf, mode='setdefault', warn=warn)
             # Delete the import key

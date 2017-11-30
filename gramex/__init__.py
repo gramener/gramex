@@ -29,7 +29,7 @@ import tornado.ioloop
 from pathlib import Path
 from copy import deepcopy
 from orderedattrdict import AttrDict
-from gramex.config import ChainConfig, PathConfig, app_log, variables
+from gramex.config import ChainConfig, PathConfig, app_log, variables, setup_variables
 
 paths = AttrDict()              # Paths where configurations are stored
 conf = AttrDict()               # Final merged configurations
@@ -247,6 +247,10 @@ def init(force_reload=False, **kwargs):
     # List of URLs to warn about
     warns = ['url.*', 'cache.*', 'schedule.*', 'watch.*',
              'log.loggers.*', 'log.handlers.*', 'log.formatters.*']
+
+    # Reset variables
+    variables.clear()
+    variables.update(setup_variables())
 
     # Initialise configuration layers with provided configurations
     paths.update(kwargs)

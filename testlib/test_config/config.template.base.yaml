@@ -82,6 +82,7 @@ base_DERIVED: $DERIVED
 base_YAMLURL_VAR: $YAMLURL_VAR
 base_YAMLURL_VAR_EXPECTED: test_config
 base_GRAMEXPATH: $GRAMEXPATH
+base_GRAMEXAPPS: $GRAMEXAPPS
 base_GRAMEXHOST: $GRAMEXHOST
 
 path: $YAMLPATH
@@ -107,3 +108,6 @@ conditions:
     condition6: is-$CONDITION6
     condition7: is-$CONDITION7
     condition8: is-$CONDITION8
+
+# Defined by config.importvars.yaml
+custom: $CUSTOM

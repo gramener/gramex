@@ -27,6 +27,7 @@ subdir_DERIVED: $DERIVED
 subdir_YAMLURL_VAR: $YAMLURL_VAR
 subdir_YAMLURL_VAR_EXPECTED: test_config/dir
 subdir_GRAMEXPATH: $GRAMEXPATH
+subdir_GRAMEXAPPS: $GRAMEXAPPS
 subdir_GRAMEXHOST: $GRAMEXHOST
 
 path: $YAMLPATH     # import must not over-ride path in config.template.base.yaml
