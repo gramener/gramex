@@ -25,7 +25,9 @@
 <p><button class="btn btn-primary noty-alert">Show Noty alert</button></a></p>
 
 <script>
-  $('body').on('click', '.noty-alert', function() {
-    new Noty({type: 'error', text: "Here is a Noty alert"}).show()
-  })
+  $('body')
+    .off('.noty-alert')
+    .on('click.noty-alert', '.noty-alert', function() {
+      new Noty({type: 'error', text: "Here is a Noty alert"}).show()
+    })
 </script>

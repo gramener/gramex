@@ -14,7 +14,11 @@ app:
     xsrf_cookie_kwargs:
         httponly: false                 # Allow JavaScript access to cookies
 
-import: '*/gramex.yaml'                 # Import gramex.yaml from immediate subdirs
+import:
+  subdirs: '*/gramex.yaml'              # Import gramex.yaml from immediate subdirs
+  ui:
+    path: $GRAMEXAPPS/ui/gramex.yaml    # Import UI app
+    YAMLURL: $YAMLURL/ui/
 
 handlers:
     FileHandler:

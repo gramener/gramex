@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Sample dashboard - One</title>
+  <link rel="stylesheet" href="../../node_modules/bootstrap/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="../../node_modules/noty/lib/noty.css">
+</head>
+<body>
+  {% import json %}
+  {% import process_data %}
+  {% set config = json.loads(process_data.quiz_config()) %}
+  {% set colors = {'Politics': 'info', 'Movies': 'warning', 'Programming': 'danger', 'Business': 'dark', 'Sports': 'success'} %}
+  <div class="container">
+    <div class="display-3 text-center">Test your knowledge</div>
+    <form method="POST">
+      {% for questions in config %}
+        {% for each_set in config[questions] %}
+          {% for option in each_set %}
+            <div class="mb-2">
+              <div class="card text-white">
+                <div class="card-header bg-{{ colors[config[questions][each_set]['category']] }}"> {{ config[questions][each_set]['category'] }} </div>
+                <div class="card-body text-dark">
+                  <div class="card-title"> {{ config[questions][each_set]['question'] }} </div>
+                  {% if 'images' not in config[questions][each_set] %}
+                    {% for cb in config[questions][each_set]['options'] %}
+                      <div class="form-check">
+                        <label class="form-check-label">
+                          <input class="form-check-input" type="{{'radio' if 'multiple' not in config[questions][each_set] else 'checkbox'}}" name="option-{{ option }}" value="{{ cb }}" /> {{ cb }}
+                        </label>
+                      </div>
+                    {% end %}
+                  {% else %}
+                    <div class="card-deck">
+                      {% for cb_ind, cb in enumerate(config[questions][each_set]['images']) %}
+                        <div class="card col-3">
+                          <div class="card-body">
+                            <img class="rounded" src="{{ cb }}" alt="logo">
+                          </div>
+                          <div class="card-footer">
+                            <div class="form-check">
+                              <label class="form-check-label">
+                                <input class="form-check-input" type="radio" name="option-{{ option }}" value="{{ cb_ind }}"> {{ cb_ind + 1 }}
+                              </label>
+                            </div>
+                          </div>
+                        </div>
+                      {% end %}
+                    </div>
+                  {% end %}
+                </div>
+              </div>
+            </div>
+          {% end %}
+        {% end %}
+      {% end %}
+      <input type="hidden" name="_xsrf" value="{{ handler.xsrf_token }}">
+      <button class="btn btn-success" type="button">Submit</button>
+    </form>
+  </div>
+  <script src="../../node_modules/jquery/dist/jquery.min.js"></script>
+  <script src="../../node_modules/popper.js/dist/umd/popper.min.js"></script>
+  <script src="../../node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
+  <script src="../../node_modules/noty/lib/noty.min.js"></script>
+  <script>
+    $('body').on('click', 'button.btn-success', function() {
+      var xsrf = {'X-XSRFTOKEN': $('input[name="_xsrf"]').val()}
+      var data = $('form').serializeArray()
+      $.ajax('results', {
+        method: 'POST',
+        headers: xsrf,
+        data: data,
+        success: function(response) {
+          new Noty({type: 'success', text: "You scored " + response.score}).show()
+        }
+      })
+    })
+  </script>
+</body>
+</html>

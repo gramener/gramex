@@ -1,0 +1,25 @@
+<h2>Loading</h2>
+<div class="page-alert"></div>
+
+<p>
+  <button class="btn btn-primary" data-class="ajax-request-success" data-url="index.html">
+    Successful request
+  </button>
+  <button class="btn btn-danger" data-class="ajax-request-failure" data-url="nonexistent">
+    Bad request
+  </button>
+</p>
+
+<script>
+  $('body').on('click', '[data-url]', function() {
+    var container = $(this).attr('class')
+    var $icon = $('<i class="fa fa-spinner fa-2x fa-fw align-middle"></i>').appendTo(this)
+    $.ajax($(this).data('url'), {
+      data: {'data': 'test data'},
+      beforeSend: function() {  },
+      success: function() { new Noty({type: 'success', text: "Loaded AJAX request"}).show() },
+      error: function() { new Noty({type: 'error', text: "Failed to load AJAX request"}).show() },
+      complete: function() { $icon.fadeOut() }
+    })
+  })
+</script>

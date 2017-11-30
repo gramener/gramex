@@ -1,0 +1,102 @@
+<h2>Inputs</h2>
+
+<p><input class="form-control input-underline" placeholder="Underlined input"></p>
+<p>
+  <label class="custom-control custom-checkbox">
+    <input type="checkbox" class="custom-control-input">
+    <span class="custom-control-indicator"></span>
+    <span class="custom-control-description">Custom checkbox</span>
+  </label>
+</p>
+
+<p>
+  <label class="custom-control custom-radio">
+    <input id="radio1" name="radio" type="radio" class="custom-control-input">
+    <span class="custom-control-indicator"></span>
+    <span class="custom-control-description">Custom Radio 1</span>
+  </label>
+  <label class="custom-control custom-radio">
+    <input id="radio2" name="radio" type="radio" class="custom-control-input">
+    <span class="custom-control-indicator"></span>
+    <span class="custom-control-description">Custom Radio 2</span>
+  </label>
+</p>
+
+<h3>Sliders</h3>
+<div class="row mt-3 mb-3">
+  <div class="col"><input type="range" class="form-control custom-range" min="0" max="100" step="10" value="10"></div>
+  <div class="col"><input type="range" class="form-control custom-range shadow" min="0" max="100" step="10" value="20"></div>
+  <div class="col"><input type="range" class="form-control custom-range round" min="0" max="100" step="10" value="30"></div>
+</div>
+
+<!-- TODO: add custom file -->
+
+<h2>Input Groups</h2>
+
+<p>
+  <div class="input-group mb-2 mb-sm-0">
+    <div class="input-group-addon bg-white">@</div>
+    <input type="text" class="form-control border-left-0" id="inlineFormInputGroup" placeholder="Username">
+  </div>
+</p>
+
+<div class="row">
+  <div class="col-3">
+    <ul class="list-group">
+      <li class="list-group-item"><input type="checkbox" name="radio"> CASA TD</li>
+      <li class="list-group-item"><input type="checkbox" name="radio"> IPG</li>
+      <li class="list-group-item"><input type="checkbox" name="radio"> OPS</li>
+      <li class="list-group-item"><input type="checkbox" name="radio"> Hooks</li>
+      <li class="list-group-item"><input type="checkbox" name="radio"> Contactability</li>
+    </ul>
+  </div>
+  <div class="col-2">
+    <ul class="list-group">
+      <li class="list-group-item list-group-item-dark">Priority</li>
+      <li class="list-group-item">Non-Priority</li>
+      <li class="list-group-item">Both</li>
+    </ul>
+  </div>
+  <div class="col-4">
+    <button type="button" class="btn btn-secondary">Zones</button>
+    <button type="button" class="btn btn-danger">States</button>
+    <button type="button" class="btn btn-secondary">Branches</button>
+  </div>
+  <div class="col-3">
+    <div class="input-group">
+      <span class="input-group-addon" id="basic-addon1">@</span>
+      <input type="text" class="form-control" placeholder="Amount" aria-label="Amount" aria-describedby="basic-addon1">
+      <span class="input-group-addon" id="basic-addon1">.00</span>
+    </div>
+  </div>
+</div>
+
+<h2>Search</h2>
+<div class="row">
+  <div class="col">
+    <div class="input-group">
+      <input type="text" class="form-control">
+      <span class="input-group-btn">
+        <button class="btn btn-secondary" type="submit">Search</button>
+      </span>
+    </div>
+  </div>
+  <div class="col">
+    <div class="input-group">
+      <input type="text" class="form-control" placeholder="Search">
+      <span class="input-group-addon"><i class="fa fa-search"></i></span>
+    </div>
+  </div>
+  <div class="col">
+    <div class="input-group">
+      <input type="text" class="form-control" placeholder="Search" title="Needs custom CSS">
+      <span><i class="fa fa-search" aria-hidden="true"></i></span>
+    </div>
+  </div>
+  <div class="col">
+    <div class="input-group">
+      <span class="input-group-addon"><i class="fa fa-search"></i></span>
+      <input type="text" class="form-control" placeholder="Search brand">
+    </div>
+  </div>
+</div>

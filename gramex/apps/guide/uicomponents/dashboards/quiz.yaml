@@ -1,0 +1,47 @@
+questions:
+  1:
+    question: When was Mahatma Gandhi born?
+    options: [1879, 1899, 1869, 1900]
+    answer: '1869'
+    category: Politics
+  2:
+    question: Which movie is this from? - Are you watching closely?
+    options: [Kill Bill, Spiderman Homecoming, Prestige, Inception]
+    answer: Prestige
+    category: Movies
+  3:
+    question: Which of these are immutable?
+    options: [list, dict, tuple]
+    answer: tuple
+    category: Programming
+  4:
+    question: Which movie is this from? - Sara shehar mujhe lion ke naam se jaanta hai
+    options: [Kalicharan, Damini, Shenshah, Mr. India]
+    answer: Kalicharan
+    category: Movies
+  5:
+    question: Which of the banks has the highest NPA (non performing assets) currently?
+    options: [SBI, Bank of Baroda, HDFC, ICICI]
+    answer: SBI
+    category: Business
+  6:
+    question: Which of the file download formats are not supported in Gramex FormHandler?
+    options: [csv, pptx, pdf, json]
+    answer: pdf
+    category: Programming
+  7:
+    question: Which of the following is an odd one out?
+    options: [Shahid Afridi, Sachin Tendulkar, Curtly Ambrose, Shoaib Mallik]
+    answer: Shoaib Mallik
+    category: Sports
+  8:
+    question: Which movie is this from? - I am just stupid common man
+    options: [New York, Sarfarosh, Black Friday, A Wednesday]
+    answer: A Wednesday
+    category: Movies
+  9:
+    question: What's the logo of python programming language?
+    options: ['one', 'two', 'three', 'four']
+    images: ['http://www.unixstickers.com/image/cache/data/stickers/python/python.sh-180x180.png', 'https://www.unixstickers.com/image/cache/data/stickers/ruby/xruby.sh-180x180.png.pagespeed.ic.3J8ufd5aTh.png', 'https://www.unixstickers.com/image/cache/data/stickers/scala/Scala-logo.sh-180x180.png', 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d5/Rust_programming_language_black_logo.svg/144px-Rust_programming_language_black_logo.svg.png']
+    answer: '0'
+    category: Programming

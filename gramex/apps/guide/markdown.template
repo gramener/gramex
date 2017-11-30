@@ -28,8 +28,9 @@
       <li><a href="/$GUIDE_ROOT/websockethandler/">WebSocketHandler</a></li>
       <li><a href="/$GUIDE_ROOT/twitterresthandler/">TwitterRESTHandler</a></li>
       <li><a href="/$GUIDE_ROOT/facebookgraphhandler/">FacebookGraphHandler</a></li>
-      <li><a href="/$GUIDE_ROOT/cache/">Cache requests</a></li>
+      <li><a href="/$GUIDE_ROOT/uicomponents/">UI Components</a></li>
       <li><a href="/$GUIDE_ROOT/chart/">Charts</a></li>
+      <li><a href="/$GUIDE_ROOT/cache/">Cache requests</a></li>
       <li><a href="/$GUIDE_ROOT/email/">Send email</a></li>
       <li><a href="/$GUIDE_ROOT/scheduler/">Schedule tasks</a></li>
       <li><a href="/$GUIDE_ROOT/watch/">Watch files</a></li>

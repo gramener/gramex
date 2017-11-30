@@ -1,0 +1,20 @@
+# UI app configuration
+
+url:
+  apps/ui/static:
+    pattern: /$YAMLURL/(.*)
+    handler: FileHandler
+    kwargs:
+      path: $YAMLPATH/node_modules/
+      index: true
+      headers:
+        Cache-Control: public, max-age=86400
+
+  apps/ui/bootstrap4:
+    pattern: /$YAMLURL/bootstraptheme.css
+    handler: FunctionHandler
+    kwargs:
+      function: uiapp.bootstraptheme(handler, $bootstrap4)
+      headers:
+        Cache-Control: public, max-age=0
+        Content-Type: text/css

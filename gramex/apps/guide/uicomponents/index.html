@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <title>Gramex UI Components</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>document.write('<link rel="stylesheet" href="../ui/bootstraptheme.css' + location.search + '">')</script>
+  <link rel="stylesheet" href="../ui/font-awesome/css/font-awesome.min.css">
+  <link rel="stylesheet" href="../ui/noty/lib/noty.css">
+  <link rel="stylesheet" href="../ui/daterangepicker/daterangepicker.css">
+  <link rel="stylesheet" href="../node_modules/prismjs/themes/prism-okaidia.css">
+  <style>
+  .component h2:nth-child(n+2) { margin-top: 3rem; }
+  </style>
+</head>
+<body>
+  <nav class="navbar navbar-dark bg-dark">
+    <a class="navbar-brand" href=".">Gramex UI Components</a>
+    <form class="form-inline">
+      <button class="btn btn-sm btn-light" type="button" data-toggle="collapse" data-target="#theme-picker" aria-expanded="false" aria-controls="theme-picker">
+        Change theme
+      </button>
+    </form>
+  </nav>
+  <div id="theme-picker" class="theme bg-dark text-light collapse">
+    <form class="container-fluid pt-4 pb-4">
+      <div class="theme-contents d-flex align-self-start">
+        <div class="column mr-4 theme-colors">
+          <div v-for="(info, name) in color">
+            <input v-bind:id="name" v-bind:name="name" type="color" v-bind:value="info.value">
+            <label for="primary">{{ info.title }}</label>
+          </div>
+        </div><!-- .theme-colors -->
+        <div class="column mr-4 theme-toggles">
+          <div v-for="(info, name) in toggle">
+            <label>
+              <input v-bind:name="name" type="checkbox" v-model="info.value">
+              {{ info.title }}
+            </label>
+          </div>
+        </div><!-- .theme-toggles -->
+        <div class="column mr-4 theme-selects">
+          <div v-for="(info, name) in font" class="mb-4">
+            <label v-bind:for="name">{{ info.title }}</label>
+            <select class="form-control form-control-sm" v-bind:name="name" v-model="info.value">
+              <option v-for="(fontinfo, fontname) in info.options" v-bind:value="fontname">
+                {{ fontinfo.title }}
+              </option>
+            </select>
+          </div>
+        </div><!-- .theme-selects -->
+        <div class="column mr-4 theme-predefined">
+          <p>Pre-defined themes</p>
+          <div v-for="(info, name) in theme">
+            <a v-bind:href="info.href" class="text-light">{{ name }}</a>
+          </div>
+        </div><!-- .theme-predefined -->
+      </div><!-- .theme-contents -->
+      <p>
+        <button type="submit" class="btn btn-primary">Apply theme</button>
+        <a v-bind:href="cssurl" class="btn btn-light">Link to CSS</a>
+      </p>
+    </form>
+  </div><!-- #theme-picker -->
+
+  <div class="d-flex mt-3">
+    <ul class="toc nav flex-column">
+      <li class="nav-item"><a class="nav-link pt-0 pb-1" data-load=".component" data-hash="about"         href="ui-about.html"           >About</a></li>
+      <li class="nav-item"><a class="nav-link pt-0 pb-1" data-load=".component" data-hash="alert"         href="ui-alert.html"           >Alert</a></li>
+      <li class="nav-item"><a class="nav-link pt-0 pb-1" data-load=".component" data-hash="arrow"         href="ui-arrow.html"           >Arrow</a></li>
+      <li class="nav-item"><a class="nav-link pt-0 pb-1" data-load=".component" data-hash="button"        href="ui-button.html"          >Button</a></li>
+      <li class="nav-item"><a class="nav-link pt-0 pb-1" data-load=".component" data-hash="cards"         href="ui-card.html"            >Card</a></li>
+      <li class="nav-item"><a class="nav-link pt-0 pb-1" data-load=".component" data-hash="date-picker"   href="ui-date-picker.html"     >Date</a></li>
+      <li class="nav-item"><a class="nav-link pt-0 pb-1" data-load=".component" data-hash="dropdown"      href="ui-dropdown.html"        >Dropdown</a></li>
+      <li class="nav-item"><a class="nav-link pt-0 pb-1" data-load=".component" data-hash="forms"         href="ui-forms.html"           >Forms</a></li>
+      <li class="nav-item"><a class="nav-link pt-0 pb-1" data-load=".component" data-hash="input"         href="ui-input.html"           >Input</a></li>
+      <li class="nav-item"><a class="nav-link pt-0 pb-1" data-load=".component" data-hash="loading"       href="ui-loading.html"         >Loading</a></li>
+      <li class="nav-item"><a class="nav-link pt-0 pb-1" data-load=".component" data-hash="panel"         href="ui-panel.html"           >Panel</a></li>
+      <li class="nav-item"><a class="nav-link pt-0 pb-1" data-load=".component" data-hash="round"         href="ui-round.html"           >Round</a></li>
+      <li class="nav-item"><a class="nav-link pt-0 pb-1" data-load=".component" data-hash="shadow"        href="ui-shadow.html"          >Shadow</a></li>
+      <li class="nav-item"><a class="nav-link pt-0 pb-1" data-load=".component" data-hash="tables"        href="ui-table.html"           >Table</a></li>
+      <li class="nav-item"><a class="nav-link pt-0 pb-1" data-load=".component" data-hash="tooltip"       href="ui-tooltip.html"         >Tooltip</a></li>
+      <li class="nav-item"><a class="nav-link pt-0 pb-1" data-load=".component" data-hash="login"         href="ui-login.html"           >Login</a></li>
+    </ul><!-- .toc -->
+    <div class="container-fluid component">
+    </div><!-- .container-fluid -->
+  </div><!-- .d-flex -->
+
+  <!-- Modal -->
+  <div class="modal fade" id="source-modal" tabindex="-1" role="dialog" aria-labelledby="source-modal-label" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="source-modal-label">Component source code</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <pre><code class="language-html source-content"></code></pre>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../ui/jquery/dist/jquery.min.js"></script>
+  <script src="../ui/popper.js/dist/umd/popper.min.js"></script>
+  <script src="../ui/bootstrap/dist/js/bootstrap.min.js"></script>
+  <script src="../ui/noty/lib/noty.min.js"></script>
+  <script src="../ui/moment/min/moment-with-locales.min.js"></script>
+  <script src="../ui/daterangepicker/daterangepicker.js"></script>
+  <script src="../ui/url-search-params/build/url-search-params.js"></script>
+  <script src="../ui/lodash/lodash.min.js"></script>
+  <script src="../node_modules/prismjs/prism.js"></script>
+  <script src="../node_modules/vue/dist/vue.min.js"></script>
+  <script>
+    var q = _.fromPairs(Array.from((new URLSearchParams(location.search)).entries()))
+    var has_query = Object.keys(q).length > 0
+    $.getJSON('config', function(config) {
+      // Set values based on inputs
+      _.each(config.color, function(info, name) { info.value = q[name] || info.default })
+      _.each(config.font, function(info, name) { info.value = q[name] || info.default })
+      _.each(config.toggle, function(info, name) { info.value = has_query ? (q[name] || '') : info.default })
+      _.each(config.theme, function(info, name) { info.href = '?' + $.param(info) })
+      config.cssurl = '../ui/bootstraptheme.css' + location.search
+      var app = new Vue({el: '#theme-picker', data: config})
+    })
+
+    // Event handlers
+    $('body')
+      .on('click', '[data-load]', function(e) {
+        e.preventDefault()
+        var $target = $($(this).data('load'))
+          .html('<i class="fa fa-spinner fa-5x fa-spin"></i>')
+        var url = $(this).data('href') || $(this).attr('href')
+        location.hash = $(this).data('hash') || url
+        $.ajax(url)
+          .done(function(data) {
+            $target.html(data)
+            Prism.highlightAll()
+          })
+          .fail(function(xhr, status, error) {
+            $target.html('<div class="alert alert-danger">' + xhr.status + ': ' + error + '</div>')
+          })
+      })
+      .on('click', '.src', function() {
+        var html = Prism.highlight($(this).parents().closest('section').html(), Prism.languages.html)
+        $('.source-content').html(html)
+        $('#source-modal').modal()
+      })
+
+    // Initialize page
+    function hashchange() {
+      var hash = location.hash.replace(/^#/, '')
+      var selector = '[data-load][data-hash="' + hash + '"], [data-load][href="' + hash + '"]'
+      if (!$(selector).eq(0).trigger('click').length)
+        $('[data-load]').eq(0).trigger('click')
+    }
+    $(window).on('hashchange', hashchange)
+    hashchange()
+  </script>
+</body>
+</html>

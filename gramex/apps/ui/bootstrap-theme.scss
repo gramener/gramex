@@ -1,0 +1,126 @@
+// Import Google fonts
+{% for font in google_fonts %}
+  @import url("https://fonts.googleapis.com/css?family={{ font }}");
+{% end %}
+
+// Apply variables
+{% for key, val in variables.items() %}
+  ${{ key }}: {{ val }};
+{% end %}
+
+// Import bootstrap
+@import "{{ bootstrap_path }}";
+
+// .round: full-round border utility
+// --------------------------------------------------------
+$round-radius: 99rem !default;    // Large enough a value for most components
+.round,
+.nav-link.round {
+  border-radius: $round-radius;
+}
+
+// .shadow: shadow utility
+// --------------------------------------------------------
+$shadow: 0 .25rem .5rem rgba($black,.2) !default;
+.shadow {
+  box-shadow: $shadow;
+}
+// After testing, consider adding larger and smaller shadows
+// .shadow-lg {}
+// .shadow-sm {}
+
+// .input-underline: underlined inputs
+// --------------------------------------------------------
+.input-underline {
+  border-left: 0;
+  border-right: 0;
+  border-top: 0;
+}
+
+// .arrow-*: arrow components
+// --------------------------------------------------------
+@each $color, $value in $theme-colors {
+  @each $size, $height in (null, 3rem), (-lg, 4rem), (-sm, 2rem) {
+    .arrow-#{$color}#{$size} {
+      color: color-yiq($value);
+      background-color: $value;
+      position: relative;
+      height: $height;
+      line-height: ($height - 0.25rem);
+      padding-left: $grid-gutter-width / 2;
+      left: $grid-gutter-width / -2;
+    }
+    .arrow-#{$color}#{$size}:before {
+      content: "";
+      border-top: ($height / 2) solid transparent;
+      border-bottom: ($height / 2) solid transparent;
+      border-left: ($height / 2) solid $value;
+      position: absolute;
+      top: 0;
+      right: $height / -2;
+    }
+    .arrow-#{$color}#{$size}.text-center {
+      padding-left: 0;
+    }
+  }
+}
+
+// .custom-range: input slider
+// --------------------------------------------------------
+// Polyfill: <input type="range" class="custom-range">
+// https://github.com/twbs/bootstrap/issues/17916
+// When we move to Bootstrap 4.1, this can be removed.
+// Currently works only on Chrome
+.custom-range {
+  -webkit-appearance: none;     // Required for any custom styling
+  background: transparent;      // Chrome has a non-transparent background
+  border: none;                 // Override default
+  box-shadow: none;             // Override .form-control
+  cursor: pointer;
+  padding-left: 0;
+  padding-right: 0;
+
+  $track-height: 0.4rem;
+
+  &::-webkit-slider-runnable-track {
+    height: $track-height;
+    @include border-radius($input-border-radius);
+    @include button-variant($gray-300, $gray-300);
+    @if $enable-shadows {
+      box-shadow: $btn-active-box-shadow;
+    }
+  }
+  &::-ms-track {
+    height: $track-height;
+    @include border-radius($input-border-radius);
+    @include button-variant($gray-300, $gray-300);
+    @if $enable-shadows {
+      box-shadow: $btn-active-box-shadow;
+    }
+  }
+  &::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    @include button-variant($primary, $primary);
+    @include border-radius($input-border-radius);
+    margin-top: ($custom-control-indicator-size - $track-height) / -2;
+    height: $custom-control-indicator-size;
+    width: $custom-control-indicator-size;
+  }
+  &::-ms-thumb {
+    @include button-variant($primary, $primary);
+    @include border-radius($input-border-radius);
+    margin-top: ($custom-control-indicator-size - $track-height) / -2;
+    height: $custom-control-indicator-size;
+    width: $custom-control-indicator-size;
+  }
+
+  // Enable shadows on thumb, not main control
+  &.shadow { box-shadow: none; }
+  &.shadow::-webkit-slider-thumb { box-shadow: $shadow; }
+  &.shadow::-webkit-slider-runnable-track { box-shadow: $btn-active-box-shadow; }
+
+  // Enable round on elements, not main control
+  &.round { border-radius: 3px; }
+  &.round::-webkit-slider-thumb { border-radius: $round-radius; }
+  &.round::-webkit-slider-runnable-track { border-radius: $round-radius; }
+}
