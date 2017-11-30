@@ -310,7 +310,7 @@ requirements.txt:
 setup.py:
     python: '"{EXE}" "{FILE}"'
 package.json:
-    yarn: '"{EXE}" install'
+    yarn: '"{EXE}" install --prefer-offline'
     npm: '"{EXE}" install'
 bower.json:
     bower: '"{EXE}" --allow-root install'

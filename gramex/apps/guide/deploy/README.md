@@ -17,7 +17,7 @@ To install a Gramex application as a service on a Windows Server:
       (Replace ``master`` with ``dev`` for the development version).
 - Install your application in any folder - via `git clone` or by copying files
 - Run PowerShell or the Command Prompt **as administrator**
-- From your application folder, run `gramex service install --name "App name" --desc "App description"`
+- From your application folder, run `gramex service install`
 
 This will start Gramex from the directory where you ran `gramex service install`
 from. The next time the Gramex service starts, it will change to the directory
