@@ -71,6 +71,9 @@
     "google-auth": {
       "Google auth": -1
     },
+    "inactive-expiry": {
+      "Inactive expiry": -1
+    },
     "integrated-auth": {
       "Integrated auth": -1
     },
@@ -109,6 +112,9 @@
     },
     "sessions": {
       "Sessions": -1
+    },
+    "sign-up": {
+      "Sign up": -1
     },
     "simple-auth": {
       "Simple auth": -1
@@ -497,6 +503,9 @@
     },
     "formhandler-query": {
       "FormHandler query": -1
+    },
+    "formhandler-queryfile": {
+      "FormHandler queryfile": -1
     },
     "formhandler-queryfunction": {
       "FormHandler queryfunction": -1

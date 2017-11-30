@@ -3,6 +3,50 @@
 History
 -------
 
+1.24 (2017-11-30)
+~~~~~~~~~~~~~~~~~
+**Note**: Before installing this release, you install `node`_ 8.x or above, and
+also run ``npm install -g yarn``. Also run ``pip install`` with a ``--verbose``
+option. Gramex installs several UI libraries and the installation is slow. Yarn
+speeds up the installation. ``--verbose`` lets you see progress.
+
+This release adds a `UI component library`_ that includes a series of standard
+front-end libraries and a Gramex-customized version of Bootstrap 4. By @bhanu.kamapantula
+
+All auth handlers support a `inactive expiry`_ feature that closes a session if
+no requests were made for a certain period.
+
+`DBAuth`_ supports a `Sign up`_ feature that lets users create their own
+accounts. By @nikhil.kabbin
+
+`DBAuth`_ used to ignore the ``redirect:`` key when directly POSTing via AJAX.
+So the response would always redirect to ``/``. If ``/`` is not a valid URL,
+it would return an error. This is now fixed -- `DBAuth`_ always uses ``redirect:``.
+
+`PPTXHandler`_ pptgen supports text styles, heatgrid order, pie/donut colors,
+and a number of other features. By @sanjay.yadav
+
+`FormHandler`_ and :py:func:`gramex.data.filter` accept a ``queryfile:``
+parameter that lets you specify queries in a separate SQL file. This makes
+indentation and syntax highlighting easier, making it easier to debug queries.
+
+``gramex init`` and all Gramex installations use Yarn in offline mode if possible
+- prefering Yarn over npm. This is to optimize installations.
+
+A few developer enhancements and bugfixes:
+
+- :py:func:`gramex.cache.open` can open XML, RSS and Atom files using lxml. It
+  returns an etree object.
+- All handlers support a ``handler.get_arg(key)`` method that is exactly like
+  Tornado's ``handler.get_argument(key)``, but supports Unicode
+- :py:func:`gramex.cache.Subprocess` waits for return code and then exits
+
+Stats:
+
+- Code base: 20,514 lines (gramex: 13,305, tests: 7,209)
+- Test coverage: 81%
+
+
 1.23.1 (2017-11-13)
 ~~~~~~~~~~~~~~~~~~~
 This is an interim release with minor features and major bugfixes.
@@ -37,6 +81,8 @@ The bugfixes are:
   dots in them, like ``schema.table``.) `Issue 185`_ and `Issue 186`_
 - A bug in `watch`_ led to file permission errors on Mac systems. This is
   resolved. `Issue 183`_
+
+Stats:
 
 - Code base: 19,026 lines (gramex: 12,890, tests: 6,136)
 - Test coverage: 65% (pptgen coverage is a gap)
@@ -159,6 +205,8 @@ There are some changes to Gramex behaviour that may impact your application:
 - The `deploy yaml`_ configuration hides the ``Server:`` HTTP header for security
 - `Google Auth`_ stores the email ID of the user as the user ID, not the Google provided ID
 - All handlers have a ``handler.kwargs`` attribute that has the ``kwargs:`` configuration passed to the handler
+
+Stats:
 
 - Code base: 14,765 lines (gramex: 9,278, tests: 5,487)
 - Test coverage: 79%
@@ -800,3 +848,6 @@ There are two changes that may disrupt your code:
 .. _Issue 183: https://code.gramener.com/s.anand/gramex/issues/183
 .. _Issue 185: https://code.gramener.com/s.anand/gramex/issues/185
 .. _Issue 186: https://code.gramener.com/s.anand/gramex/issues/186
+.. _UI component library: https://learn.gramener.com/guide/uicomponents/
+.. _inactive expiry: https://learn.gramener.com/guide/auth/#inactive-expiry
+.. _Sign up: https://learn.gramener.com/guide/auth/#sign-up

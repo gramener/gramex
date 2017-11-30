@@ -544,8 +544,8 @@ def treemap(shape, spec, data):
     font_aspect = 14.5
     pixel_inch = 10000
     default_rect_color = '#cccccc'
-    for x, y, w, h, (l, v) in treemap_data.draw(width, height):
-        if l == 0:
+    for x, y, w, h, (level, v) in treemap_data.draw(width, height):
+        if level == 0:
             shp = shapes.add_shape(
                 MSO_SHAPE.RECTANGLE, x + x0, y + y0, w, h)
             rect_color = default_rect_color

@@ -5,6 +5,7 @@ title: Install Gramex
 ## Installation
 
 - Download and install [Anaconda][anaconda] 4.4.0 or later. [Update Anaconda][update] if required.
+- Download and install [node.js][nodejs] 8 or later. Then run `npm install -g yarn`. This step is optional but strongly recommended.
 - On a Mac, download and install [Xcode][xcode].
 - Uninstall gramex if you have installed it before: `pip uninstall gramex`
 - Run `pip install --verbose https://code.gramener.com/s.anand/gramex/repository/archive.tar.bz2?ref=master`
@@ -25,6 +26,7 @@ You can use [conda with a proxy][conda-proxy] too.
 [xcode]: https://developer.apple.com/xcode/download/
 [gramex]: https://code.gramener.com/s.anand/gramex/repository/archive.tar.bz2?ref=master
 [conda-proxy]: https://conda.io/docs/user-guide/configuration/use-winxp-with-proxy.html
+[nodejs]: https://nodejs.org/en/
 
 Note: `pip install --ignore-installed` was removed because of an
 [Anaconda bug](https://github.com/pypa/pip/issues/2751#issuecomment-165390180) -
