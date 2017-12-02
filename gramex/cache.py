@@ -381,6 +381,8 @@ def query(sql, engine, state=None, **kwargs):
             'data': pd.read_sql(sql, engine, **kwargs),
             'status': status,
         }
+        app_log.debug('gramex.cache.query: %s. engine: %s. state: %s. kwargs: %s', sql, engine,
+                      state, kwargs)
         reloaded = True
 
     result = _cache[key]['data']
