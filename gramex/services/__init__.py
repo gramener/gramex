@@ -62,11 +62,14 @@ def log(conf):
         active_handlers |= set(logger.get('handlers', []))
     for handler, handler_conf in conf.get('handlers', {}).items():
         if handler in active_handlers:
-            filename = handler_conf.get('filename')
-            if filename:
+            filename = handler_conf.get('filename', None)
+            if filename is not None:
                 folder = os.path.dirname(os.path.abspath(handler_conf.filename))
                 if not os.path.exists(folder):
-                    os.makedirs(folder)
+                    try:
+                        os.makedirs(folder)
+                    except OSError:
+                        app_log.exception('log: %s: cannot create folder %s', handler, folder)
     try:
         logging.config.dictConfig(conf)
     except (ValueError, TypeError, AttributeError, ImportError):
@@ -81,17 +84,16 @@ class GramexApp(tornado.web.Application):
         # Also log the request on the default access log. This is the same as
         # tornado.web.Application.log_request but adds handler name at the end.
         status = handler.get_status()
-        if status < 400:
+        if status < 400:                    # noqa: < 400 is any successful request
             log_method = access_log.info
-        elif status < 500:
+        elif status < 500:                  # noqa: 400-499 is a user error
             log_method = access_log.warning
-        else:
+        else:                               # 500+ is a server error
             log_method = access_log.error
         request_time = 1000.0 * handler.request.request_time()
         handler_name = getattr(handler, 'name', handler.__class__.__name__)
         log_method("%d %s %.2fms %s", handler.get_status(),
                    handler._request_summary(), request_time, handler_name)
-
 
     def clear_handlers(self):
         '''
@@ -367,11 +369,14 @@ def url(conf):
     # Sort the handlers in descending order of priority
     specs = sorted(conf.items(), key=_sort_url_patterns, reverse=True)
     for name, spec in specs:
-        app_log.debug('Initializing url: %s', name)
+        if 'handler' not in spec:
+            app_log.error('url: %s: no handler specified')
+            continue
+        app_log.debug('url: %s (%s) %s', name, spec.handler, spec.get('priority', ''))
         urlspec = AttrDict(spec)
         handler = locate(spec.handler, modules=['gramex.handlers'])
         if handler is None:
-            app_log.error('url %s: ignoring missing handler %s', name, spec.handler)
+            app_log.error('url: %s: ignoring missing handler %s', name, spec.handler)
             continue
 
         # Create a subclass of the handler with additional attributes.
