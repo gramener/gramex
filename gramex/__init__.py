@@ -8,7 +8,7 @@ Options
   --listen.port=9090            Starts Gramex at port 9090
   --browser                     Open the browser after startup
   --settings.debug              Enable serving tracebacks and autoreload
-  --settings.xsrf_cookies=F     Disable XSRF cookies (only for testing)
+  --settings.xsrf_cookies=false Disable XSRF cookies (only for testing)
   --settings.cookie_secret=...  Change cookie encryption key
 
 Installation commands. Run to see help
@@ -277,9 +277,15 @@ def init(force_reload=False, **kwargs):
     from services import watcher
     watcher.watch('gramex-reconfig', paths=config_files, on_modified=lambda event: init())
 
+    # Override final configurations
+    final_config = +config_layers
+    # --settings.debug => log.root.level = True
+    if final_config.app.get('settings', {}).get('debug', False):
+        final_config.log.root.level = logging.DEBUG
+
     # Run all valid services. (The "+" before config_chain merges the chain)
     # Services may return callbacks to be run at the end
-    for key, val in (+config_layers).items():
+    for key, val in final_config.items():
         if key not in conf or conf[key] != val or force_reload:
             if hasattr(services, key):
                 app_log.debug('Loading service: %s', key)
