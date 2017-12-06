@@ -9,7 +9,9 @@ title: Install Gramex
 - On a Mac, download and install [Xcode][xcode].
 - Uninstall gramex if you have installed it before: `pip uninstall gramex`
 - Run `pip install --verbose https://code.gramener.com/s.anand/gramex/repository/archive.tar.bz2?ref=master`
-    - Replace ``master`` with ``dev`` for the latest development version.
+    - Replace ``?ref=master`` with `?ref=dev` for the latest development version.
+    - Replace ``?ref=master`` with `?ref=1.24` for version 1.24
+      (or pick [any other version](https://code.gramener.com/s.anand/gramex/tags))
     - **v1.23** onwards, we install node modules, which take time. `--verbose`
       lets you monitor progress.
 - Run `gramex` to start Gramex
