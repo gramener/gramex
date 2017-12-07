@@ -322,7 +322,8 @@ class TestInactive(AuthBase):
         # Get an initial session. Then visit quickly. After a second, get the last
         init_session = self.session.get(server.base_url + '/auth/session').json()
         visit_session = self.session.get(server.base_url + '/auth/session').json()
-        time.sleep(1.1)
+        session_expiry_delay = 1.1
+        time.sleep(session_expiry_delay)
         last_session = self.session.get(server.base_url + '/auth/session').json()
 
         # init_session has the required keys
