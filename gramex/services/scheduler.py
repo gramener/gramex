@@ -7,7 +7,7 @@ from gramex.config import app_log
 
 
 class Task(object):
-    'Run a task. Then schedule it at the next occurrance.'
+    '''Run a task. Then schedule it at the next occurrance.'''
 
     def __init__(self, name, schedule, threadpool, ioloop=None):
         '''
@@ -49,7 +49,7 @@ class Task(object):
             self.function()
 
     def run(self):
-        'Run task. Then set up next callback.'
+        '''Run task. Then set up next callback.'''
         app_log.info('Running %s', self.name)
         try:
             self.result = self.function()
@@ -59,21 +59,21 @@ class Task(object):
                 self._schedule()
 
     def stop(self):
-        'Suspend task, clearing any pending callbacks'
+        '''Suspend task, clearing any pending callbacks'''
         if self.callback is not None:
             app_log.debug('Stopping %s', self.name)
             self.ioloop.remove_timeout(self.callback)
             self.callback = None
 
     def _schedule(self):
-        'Schedule next run. Do NOT call twice: creates two callbacks'
-        delay = self.cron.next()
+        '''Schedule next run. Do NOT call twice: creates two callbacks'''
+        delay = self.cron.next(default_utc=False)
         app_log.debug('Scheduling %s after %.0fs', self.name, delay)
         self.callback = self.ioloop.call_later(delay, self.run)
 
 
 def setup(schedule, tasks, threadpool, ioloop=None):
-    'Create tasks running on ioloop for the given schedule, store it in tasks'
+    '''Create tasks running on ioloop for the given schedule, store it in tasks'''
     for name, task in tasks.items():
         task.stop()
     tasks.clear()

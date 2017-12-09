@@ -18,7 +18,7 @@ shutilwhich >= 1.1.0      # shutil.which backport
 passlib >= 1.6.5          # password storage (e.g. in handlers.DBAuth)
 
 # Handler / service specific
-crontab >= 0.20           # services.schedule to parse crontab entries
+crontab >= 0.21           # services.schedule to parse crontab entries
 xmljson >= 0.1.5          # transforms.badgerfish to convert objects to/from XML
 cachetools >= 1.1.6       # services.cache for memory cache
 diskcache >= 2.8.3        # services.cache for disk cache

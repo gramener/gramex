@@ -38,7 +38,8 @@ In addition, the schedule is specified via the `minutes`, `hours`, `dates`, `wee
   abbreviated to first three letters ("Jan,Feb,...,Dec" or "Mon,Tue,...,Sun")
   instead of their numeric values. Case does not matter.
 
-For example, this configuration runs at on the 15th and 45th minute every 4 hours on the first and last day of the month (if it's a weekday) in 2016-17.
+For example, this configuration runs at on the 15th and 45th minute every 4 hours
+on the first and last day of the month (if it's a weekday) in 2016-17.
 
     :::yaml
     run-when-i-say:
@@ -64,3 +65,5 @@ This configuration runs every hour on a separate thread:
         function: schedule_utils.log_time()
         hours: '*'
         thread: true
+
+The scheduler's time zone is the time zone of the server Gramex runs on, not UTC.
