@@ -484,6 +484,7 @@ class TestDBAuthSignup(DBAuthBase):
         eq_(r.status_code, OK)
         stubs = requests.get(server.base_url + '/email/stubs').json()
         ok_(len(stubs) > 0)
+        mail = stubs[-1]
         self.assertDictContainsSubset({
             'host': gramex.conf.email.smtps_stub.host,
             'email': gramex.conf.email.smtps_stub.email,
@@ -492,9 +493,9 @@ class TestDBAuthSignup(DBAuthBase):
             'starttls': True,
             'to_addrs': ['any@example.org'],
             'quit': True,
-        }, stubs[0])
-        ok_('auth/dbsignup?forgot=' in stubs[0]['msg'])
-        token = stubs[0]['msg'].split('auth/dbsignup?forgot=')[1].split()[0]
+        }, mail)
+        ok_('auth/dbsignup?forgot=' in mail['msg'])
+        token = mail['msg'].split('auth/dbsignup?forgot=')[1].split()[0]
 
         # Check that the user has been added to the users database
         user_engine = sa.create_engine(self.config.url)

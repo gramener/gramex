@@ -22,6 +22,8 @@ Each named schedule section has the following keys:
 - `startup`: set this to true to run the function once at startup.
 - `thread`: set this to true to run in a separate thread (if available.)
 
+## Schedule timing
+
 In addition, the schedule is specified via the `minutes`, `hours`, `dates`, `weekdays`, `months` and `years` keys.
 
 - Any of these 6 fields may be an asterisk (*). This would mean the entire range
@@ -37,6 +39,8 @@ In addition, the schedule is specified via the `minutes`, `hours`, `dates`, `wee
 - In `months:` and `weekdays:`, you can use names of months or days of weeks
   abbreviated to first three letters ("Jan,Feb,...,Dec" or "Mon,Tue,...,Sun")
   instead of their numeric values. Case does not matter.
+
+## Schedule examples
 
 For example, this configuration runs at on the 15th and 45th minute every 4 hours
 on the first and last day of the month (if it's a weekday) in 2016-17.

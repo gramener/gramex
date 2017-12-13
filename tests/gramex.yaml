@@ -2186,5 +2186,82 @@ email:
     email: user@example.org
     password: userpassword
 
+alert:
+    alert-no-service:
+      subject: Hello world
+      to: admin@example.org
+    alert-startup:
+      service: smtps_stub
+      startup: true
+      to: admin@example.org
+      subject: Gramex started
+    alert-schedule:
+      service: smtps_stub
+      days: '*'
+      hours: '*'
+      minutes: '0'
+      to: admin@example.org
+      subject: Scheduled alert
+    alert-template:
+      service: smtps_stub
+      to: "{{ 'user@example.org' }}"
+      cc: "{{ 'cc@example.org' }}"
+      bcc: "{{ 'bcc@example.org' }}"
+      subject: "{{ 'subject' }}"
+      body: "{{ 'body' }}"
+      html: "{{ 'html' }}"
+      bodyfile: $YAMLPATH/{{ 'template-alert.txt' }}    # These are ignored.
+      htmlfile: $YAMLPATH/{{ 'template-alert.txt' }}    # body & html take precendence
+    alert-templatefile:
+      service: smtps_stub
+      to: 'user@example.org'
+      bodyfile: $YAMLPATH/{{ 'template-alert.txt' }}
+      htmlfile: $YAMLPATH/{{ 'template-alert.txt' }}
+    alert-attachments:
+      service: smtps_stub
+      to: user@example.org
+      subject: Gramex started
+      html: '<img src="cid:img">'
+      attachments:
+        - $YAMLPATH/install-test.zip
+      images:
+        img: sample.png
+    alert-data:
+      service: smtps_stub
+      data: actors.csv
+      to: user@example.org
+      subject: '{{ len(data) }} actors'
+      body: '{{ data["votes"].sum() }} votes'
+    alert-condition-df:
+      service: smtps_stub
+      data: actors.csv
+      to: user@example.org
+      condition: data[data['votes'] > 100]
+      subject: '{{ len(data) }} actors'
+      body: '{{ data["votes"].sum() }} votes'
+    alert-condition-false:
+      service: smtps_stub
+      to: user@example.org
+      condition: 'False'
+    alert-condition-0:
+      service: smtps_stub
+      to: user@example.org
+      condition: '0'
+    alert-condition-dict:
+      service: smtps_stub
+      data:
+        actors: $YAMLPATH/actors.csv
+      condition: '{"to": "user@example.org", "val": "hello"}'
+      to: '{{ to }}, admin@example.org'
+      subject: '{{ len(actors) }} actors'
+      body: 'val is {{ val }}'
+    alert-each:
+      service: smtps_stub
+      data: $YAMLPATH/actors.csv
+      condition: data[data['votes'] > 100]
+      each: data
+      to: "{{ row['name'].replace(' ', '_') + '@example.org' }}"
+      subject: "Congrats #{{ index }}! You got {{ row['votes'] }} votes"
+
 # Import from all subdirectories
 import: {subdir: '*/gramex.yaml'}

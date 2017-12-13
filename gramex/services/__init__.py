@@ -22,13 +22,16 @@ import mimetypes
 import threading
 import webbrowser
 import tornado.web
+import gramex.cache
 import logging.config
 import concurrent.futures
 import six.moves.urllib.parse as urlparse
-from six import text_type
+from six import text_type, string_types
 from tornado.log import access_log
+from tornado.template import Template
 from orderedattrdict import AttrDict
 from gramex import debug, shutdown, __version__
+from gramex.transforms import build_transform
 from gramex.config import locate, app_log
 from gramex.http import OK, NOT_MODIFIED
 from . import urlcache
@@ -39,6 +42,7 @@ from .emailer import SMTPMailer
 info = AttrDict(
     app=None,
     schedule=AttrDict(),
+    alert=AttrDict(),
     cache=AttrDict(),
     # Initialise with a single worker by default. threadpool.workers overrides this
     threadpool=concurrent.futures.ThreadPoolExecutor(1),
@@ -197,10 +201,167 @@ def app(conf):
         return callback
 
 
+def _stop_all_tasks(tasks):
+    for name, task in tasks.items():
+        task.stop()
+    tasks.clear()
+
+
 def schedule(conf):
     '''Set up the Gramex PeriodicCallback scheduler'''
+    # Create tasks running on ioloop for the given schedule, store it in info.schedule
     from . import scheduler
-    scheduler.setup(schedule=conf, tasks=info.schedule, threadpool=info.threadpool)
+    _stop_all_tasks(info.schedule)
+    for name, sched in conf.items():
+        try:
+            app_log.info('Initialising schedule:%s', name)
+            info.schedule[name] = scheduler.Task(name, sched, info.threadpool, ioloop=None)
+        except Exception as e:
+            app_log.exception(e)
+
+
+def _create_alert(name, alert):
+    '''Generate the function to be run by alert() using the alert configuration'''
+
+    # Configure email service
+    if alert.get('service', None) is None:
+        app_log.error('alert: %s: missing service:', name)
+        return
+    service = alert['service']
+    mailer = info.email.get(service, None)
+    if mailer is None:
+        app_log.error('alert: %s: undefined email service: %s', name, service)
+        return
+
+    # - Warn if to, cc, bcc exists and is not a string or list of strings. Ignore incorrect
+    #    - if to: [1, 'user@example.org'], then
+    #    - log a warning about the 1. Drop the 1. to: becomes ['user@example.org']
+
+    # Error if to, cc, bcc are all missing, return None
+    if not any(key in alert for key in ['to', 'cc', 'bcc']):
+        app_log.error('alert: %s: missing to/cc/bcc', name)
+        return
+
+    # Warn if subject is missing
+    if 'subject' not in alert:
+        app_log.warn('alert: %s: missing subject', name)
+
+    # Warn if body, html, bodyfile, htmlfile keys are missing
+    if not any(key in alert for key in ['body', 'html', 'bodyfile', 'htmlfile']):
+        app_log.warn('alert: %s: missing body/html/bodyfile/htmlfile', name)
+
+    # Precompile templates
+    templates = {}
+    for key in ['to', 'cc', 'bcc', 'from', 'subject', 'body', 'html', 'bodyfile', 'htmlfile']:
+        if key in alert:
+            templates[key] = Template(alert[key])
+    if 'images' in alert:
+        images = alert['images']
+        if isinstance(images, dict):
+            templates['images'] = {cid: Template(path) for cid, path in images.items()}
+        else:
+            app_log.warning('alert: %s images: %r is not a dict', name, images)
+    if 'attachments' in alert:
+        attachments = alert['attachments']
+        if isinstance(attachments, list):
+            templates['attachments'] = [Template(path) for path in attachments]
+
+    # Pre-compile data. Ensure that dataset: is a dict of key: {url: ...}
+    # data: file.csv
+    # data: {sales: sales.csv}
+    # data: {sales: {url: sales.csv}}
+    datasets = {}
+    if 'data' in alert:
+        if isinstance(alert['data'], string_types):
+            datasets = {'data': {'url': alert['data']}}
+        elif isinstance(alert['data'], dict):
+            for key, dataset in alert['data'].items():
+                if isinstance(dataset, string_types):
+                    datasets[key] = {'url': dataset}
+                elif 'url' in dataset:
+                    datasets[key] = dataset
+                else:
+                    app_log.warning('alert: %s data: %s is missing url:', name, key)
+        else:
+            app_log.warning('alert: %s data: must be a data file or dict. Not %s',
+                            name, repr(alert['data']))
+
+    if 'each' in alert and alert['each'] not in datasets:
+        app_log.error('alert: %s each: %s is not in data:', name, alert['each'])
+        return
+
+    condition = build_transform(
+        {'function': alert.get('condition', 'True')},
+        filename='alert: %s' % name,
+        vars={key: None for key in datasets},
+        iter=False)
+
+    def run_alert():
+        app_log.info('alert: %s', name)
+        data = {}
+        for key, dataset in datasets.items():
+            data[key] = gramex.data.filter(**dataset)
+
+        result = condition(**data)
+        if type(result).__name__ == 'DataFrame':
+            data['data'] = result
+        elif isinstance(result, dict):
+            data.update(result)
+        elif not result:
+            app_log.debug('alert: %s stopped. condition = %s', name, result)
+            return
+
+        each = [(None, None)]
+        if 'each' in alert:
+            each_data = data[alert['each']]
+            if isinstance(each_data, dict):
+                each = list(each_data.items())
+            elif isinstance(each_data, list):
+                each = list(enumerate(each_data))
+            elif hasattr(each_data, 'iterrows'):
+                each = list(each_data.iterrows())
+            else:
+                app_log.error('alert: %s: each: requires data.%s to be a dict/list/DataFrame',
+                              name, alert['each'])
+                return
+
+        for index, row in each:
+            data['index'], data['row'] = index, row
+            # Generate email content
+            kwargs = {}
+            for key in ['bodyfile', 'htmlfile']:
+                target = key.replace('file', '')
+                if key in templates and target not in templates:
+                    path = templates[key].generate(**data).decode('utf-8')
+                    tmpl = gramex.cache.open(path, 'template')
+                    kwargs[target] = tmpl.generate(**data).decode('utf-8')
+            for key in ['to', 'cc', 'bcc', 'from', 'subject', 'body', 'html']:
+                if key in templates:
+                    kwargs[key] = templates[key].generate(**data).decode('utf-8')
+            if 'images' in templates:
+                kwargs['images'] = {cid: val.generate(**data).decode('utf-8')
+                                    for cid, val in templates['images'].items()}
+            if 'attachments' in templates:
+                kwargs['attachments'] = [attachment.generate(**data).decode('utf-8')
+                                         for attachment in templates['attachments']]
+            # Email recipient
+            # TODO: run this in a queue. Log what's been sent (Anand)
+            mailer.mail(**kwargs)
+
+    return run_alert
+
+
+def alert(conf):
+    from . import scheduler
+    _stop_all_tasks(info.alert)
+    schedule_keys = 'minutes hours dates months weekdays years thread startup'.split()
+
+    for name, alert in conf.items():
+        app_log.info('Initialising alert: %s', name)
+        schedule = {key: alert[key] for key in schedule_keys if key in alert}
+        schedule['function'] = _create_alert(name, alert)
+        if schedule['function'] is not None:
+            info.alert[name] = scheduler.Task(name, schedule, info.threadpool, ioloop=None)
 
 
 def threadpool(conf):
@@ -222,6 +383,10 @@ def handlers(conf):
 
 
 def _sort_url_patterns(entry):
+    '''
+    Sort URL patterns based on their specificity. This allows patterns to
+    over-ride each other in a CSS-like way.
+    '''
     name, spec = entry
     pattern = spec.pattern
     # URLs are resolved in this order:
