@@ -5,6 +5,9 @@ import pandas as pd
 import gramex.data
 import gramex.cache
 
+LIMIT = 10000
+
+
 @coroutine
 def get_data(handler):
     log_file = conf.log.handlers.requests.filename
@@ -16,5 +19,5 @@ def get_data(handler):
     ])
     data = gramex.data.filter(data, args=handler.args)
     # TODO: optimize. What if the logs are huge?
-    data = data.sort_values('time', ascending=False).head(10000)
+    data = data.sort_values('time', ascending=False).head(LIMIT)
     return gramex.data.download(data, format='csv')
