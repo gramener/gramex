@@ -1,4 +1,4 @@
-<h2>Dropdowns</h2>
+<h2 class="toc">Dropdowns</h2>
 <table class="table table-hover" data-item="Dropdowns">
   <thead>
     <tr>
@@ -6,8 +6,6 @@
       <th>All India (divider)</th>
       <th>Sales (split)</th>
       <th>Kandivalli (Dark blue)</th>
-      <th>Print sequence</th>
-      <th>Rajan</th>
     </tr>
   </thead>
   <tbody>
@@ -66,6 +64,17 @@
           </div>
         </div>
       </td>
+    </tr>
+  </tbody>
+</table>
+{% apply view_source %}
+<table class="table table-hover" data-item="Dropdowns">
+  <thead>
+    <th>Print sequence</th>
+    <th>Rajan</th>
+  </thead>
+  <tbody>
+    <tr>
       <td>
         <div class="dropdown">
           <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -94,3 +103,4 @@
     </tr>
   </tbody>
 </table>
+{% end %}

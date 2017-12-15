@@ -1,5 +1,6 @@
-<h2>Round corners</h2>
+<h2 class="toc">Round</h2>
 <p>Add the <code>.round</code> class to round the corners of an element.</p>
+{% apply view_source %}
 <p>
   <button type="button" class="btn btn-primary round">
     <i class="fa fa-plus"></i>
@@ -13,6 +14,9 @@
   <span class="badge badge-pill badge-primary round">Round pill</span>
   <a href="#" class="badge badge-primary round">Round pill link</a>
 </p>
+{% end %}
+
+{% apply view_source %}
 <p class="alert alert-warning round" role="alert">
   <strong>Round alert</strong> with an <a class="alert-link" href="#">alert link</a>.
 </p>
@@ -24,9 +28,12 @@
 </p>
 <form>
   <div class="form-group">
-    <input type="search" class="form-control round" id="email" placeholder="Round form-control">
+    <input type="search" class="form-control round" placeholder="Round form-control">
   </div>
 </form>
+{% end %}
+
+{% apply view_source %}
 <ul class="nav nav-pills mb-3">
   <li class="nav-item">
     <a class="nav-link round active" href="#">Round</a>
@@ -41,6 +48,10 @@
 <div class="progress round mb-3">
   <div class="progress-bar" role="progressbar" style="width: 25%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"></div>
 </div>
+{% end %}
+
+{% apply view_source %}
 <div class="mb-3">
   <img class="img w-25 bg-primary round" src="hdinsight.png">
 </div>
+{% end %}

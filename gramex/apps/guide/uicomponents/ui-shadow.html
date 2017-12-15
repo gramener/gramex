@@ -1,5 +1,7 @@
-<h2>Shadows</h2>
+<h2 class="toc">Shadows</h2>
 <p>Add the <code>.shadow</code> class to add a shadow to an element.</p>
+<p>Add the <code>.shadow-none</code> class to remove a shadow from an element.</p>
+{% apply view_source %}
 <div class="mb-3">
   <button type="button" class="btn btn-primary shadow">
     <i class="fa fa-plus"></i>
@@ -23,6 +25,9 @@
   <span class="badge badge-pill badge-primary shadow">Shadow pill</span>
   <a href="#" class="badge badge-primary shadow">Shadow pill link</a>
 </div>
+{% end %}
+
+{% apply view_source %}
 <p class="alert alert-warning shadow" role="alert">
   <strong>Shadow alert</strong> with an <a class="alert-link" href="#">alert link</a>.
 </p>
@@ -32,9 +37,12 @@
     <li class="breadcrumb-item active" aria-current="page">Breadcrumb</li>
   </ol>
 </p>
+{% end %}
+
+{% apply view_source %}
 <form>
   <div class="form-group">
-    <input type="search" class="form-control shadow" id="email" placeholder="Shadow form-control">
+    <input type="search" class="form-control shadow" placeholder="Shadow form-control">
   </div>
   <div class="btn-group" data-toggle="buttons">
     <label class="btn btn-secondary shadow active">
@@ -56,9 +64,12 @@
     <a class="nav-link shadow" href="#">Pills</a>
   </li>
 </ul>
+{% end %}
+{% apply view_source %}
 <p class="navbar navbar-dark bg-dark shadow">
   <a class="navbar-brand" href="#">Shadow navbar</a>
 </p>
+{% end %}
 <div class="row mb-3">
   <div class="col">
     <div class="card shadow">
@@ -78,9 +89,14 @@
     </div>
   </div>
 </div>
+{% apply view_source %}
 <div class="progress shadow mb-3">
   <div class="progress-bar" role="progressbar" style="width: 25%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"></div>
 </div>
+{% end %}
+
+{% apply view_source %}
 <div class="mb-3">
   <img class="img w-25 shadow" src="hdinsight.png">
 </div>
+{% end %}

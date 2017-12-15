@@ -1,6 +1,7 @@
-<h2>Loading</h2>
+<h2 class="toc">Loading</h2>
 <div class="page-alert"></div>
 
+{% apply view_source %}
 <p>
   <button class="btn btn-primary" data-class="ajax-request-success" data-url="index.html">
     Successful request
@@ -25,3 +26,4 @@
       })
     })
 </script>
+{% end %}

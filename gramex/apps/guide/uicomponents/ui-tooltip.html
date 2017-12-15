@@ -8,42 +8,26 @@
   font-weight: 200;
 }
 </style>
-<h2>Tooltips</h2>
+<h2 class="toc">Tooltips</h2>
+{% apply view_source %}
 <table class="table table-striped table-inverse table-hover" data-item="Tooltips">
-  <thead>
-    <tr>
-      <th>Default</th>
-      <th>With HTML</th>
-      <th>With Chart</th>
-      <th>Custom positions</th>
-    </tr>
-  </thead>
+  <thead><tr><th>Default</th><th>With HTML</th><th>With Chart</th><th>Custom positions</th></tr></thead>
   <tbody>
     <tr>
-      <td><a href="#" id="just-tooltip" data-toggle="tooltip" title="Tooltip title">
-        Here</a> is a BS Tooltip
-      </td>
-      <td><a href="#" id="tooltip-html" data-toggle="tooltip">
-        Table in a BS Tooltip</a>
-      </td>
-      <td><a href="#" id="tooltip-chart" data-toggle="tooltip">
-        Chart in a BS Tooltip</a>
-      </td>
+      <td><a href="#" id="just-tooltip" data-toggle="tooltip" title="Tooltip title">Here</a> is a BS Tooltip</td>
+      <td><a href="#" id="tooltip-html" data-toggle="tooltip">Table in a BS Tooltip</a></td>
+      <td><a href="#" id="tooltip-chart" data-toggle="tooltip">Chart in a BS Tooltip</a></td>
       <td>
-        <span>
-          <a href="#" id="custom-right" data-toggle="tooltip">
-          Table right</a>
-        </span>.
-        <span>
-          <a href="#" id="custom-household" data-toggle="tooltip">
-          Household</a>
-        </span>
+        <span><a href="#" id="custom-right" data-toggle="tooltip">Table right</a></span>.
+        <span><a href="#" id="custom-household" data-toggle="tooltip">Household</a></span>
       </td>
     </tr>
   </tbody>
 </table>
+{% end %}
 
 <script>
+$(function() {
   // initialize tooltips
   $("#just-tooltip").tooltip()
   $("#tooltip-html").tooltip({
@@ -70,4 +54,5 @@
     placement: 'right',
     html: true
   })
+})
 </script>

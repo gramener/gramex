@@ -72,6 +72,12 @@ font:
 theme:
   Default Bootstrap: {}
 
+  Deepak:
+    success: '#1A9850'
+    danger: '#D9534F'
+    warning: '#FDE51C'
+    dark: '#2E3D49'
+
   Flat:
     enable-transitions: 'on'
     enable-print-styles: 'on'

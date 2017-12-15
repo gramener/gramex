@@ -1,4 +1,4 @@
-<h2>Tables</h2>
+<h2 class="toc">Tables</h2>
 <div class="row">
   <div class="col-6">
     <table class="table table-striped table-bordered">
@@ -228,6 +228,7 @@
   </div>
 </div>
 
+{% apply view_source %}
 <div class="row mt-3">
   <div class="card col-8">
     <div class="card-header">
@@ -246,45 +247,19 @@
     <div class="card-body">
       <table class="table table-striped">
         <thead>
-          <tr>
-            <th scope="col">Products</th>
-            <th scope="col">2016, C1</th>
-            <th scope="col">2016, C2</th>
-            <th scope="col">2017, C1</th>
-            <th scope="col">2017, C2</th>
-            <th scope="col">Trend</th>
+          <tr><th scope="col">Products</th><th scope="col">2016, C1</th><th scope="col">2016, C2</th><th scope="col">2017, C1</th><th scope="col">2017, C2</th><th scope="col">Trend</th>
           </tr>
         </thead>
         <tbody>
-          <tr>
-            <th scope="row">Product 1</th>
-            <td>10%</td>
-            <td>11%</td>
-            <td>20%</td>
-            <td>13%</td>
-            <td>...</td>
-          </tr>
-          <tr>
-            <th scope="row">Product 2</th>
-            <td>10%</td>
-            <td>11%</td>
-            <td>20%</td>
-            <td>13%</td>
-            <td>...</td>
-          </tr>
-          <tr>
-            <th scope="row">Product 3</th>
-            <td>10%</td>
-            <td>11%</td>
-            <td>20%</td>
-            <td>13%</td>
-            <td>...</td>
-          </tr>
+          <tr><th scope="row">Product 1</th><td>10%</td><td>11%</td><td>20%</td><td>13%</td><td>...</td></tr>
+          <tr><th scope="row">Product 2</th><td>10%</td><td>11%</td><td>20%</td><td>13%</td><td>...</td></tr>
+          <tr><th scope="row">Product 3</th><td>10%</td><td>11%</td><td>20%</td><td>13%</td><td>...</td></tr>
         </tbody>
       </table>
     </div>
   </div>
 </div>
+{% end %}
 
 <div class="row mt-3">
   <div class="card col-12">

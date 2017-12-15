@@ -1,4 +1,5 @@
-<h2>Forms</h2>
+<h2 class="toc">Forms</h2>
+{% apply view_source %}
 <p class="text-muted">by <code class="highlighter-rouge">.form-control-sm(lg)</code> classes</p>
 <div class="row">
   <div class="col"><input class="form-control" type="text" placeholder="input default"></div>
@@ -11,7 +12,10 @@
   <div class="col-3"><input class="form-control" type="text" placeholder="input .col-3"></div>
   <div class="col-5"><input class="form-control" type="text" placeholder="input .col-5"></div>
 </div>
+{% end %}
+
 <h4>Forms - Helper text</h4>
+{% apply view_source %}
 <div class="row">
   <div class="col">
     <input type="text" class="form-control is-valid">
@@ -26,8 +30,10 @@
     </div>
   </div>
 </div>
+{% end %}
 
 <h4>Email/password sign-in</h4>
+{% apply view_source %}
 <form class="form-inline">
   <div class="form-row align-items-center">
     <div class="col-auto">
@@ -46,3 +52,4 @@
     </div>
   </div>
 </form>
+{% end %}

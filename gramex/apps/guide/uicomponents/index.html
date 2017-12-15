@@ -11,8 +11,12 @@
   <link rel="stylesheet" href="../ui/daterangepicker/daterangepicker.css">
   <link rel="stylesheet" href="../node_modules/prismjs/themes/prism-okaidia.css">
   <style>
-  .component h2:nth-child(n+2) { margin-top: 3rem; }
+  .blob { width: 250px; height: 250px; }
+  .toc { margin-top: 1em; }
+  #toc-nav .l2 { margin-left: 0.5rem; font-size: 80%; white-space: nowrap; }
+  main { overflow-x: auto; }
   </style>
+  <script src="../ui/jquery/dist/jquery.min.js"></script>
 </head>
 <body>
   <nav class="navbar navbar-dark bg-dark">
@@ -29,23 +33,23 @@
         <div class="column mr-4 theme-colors">
           <div v-for="(info, name) in color">
             <input v-bind:id="name" v-bind:name="name" type="color" v-bind:value="info.value">
-            <label for="primary">{{ info.title }}</label>
+            <label for="primary">${ info.title }</label>
           </div>
         </div><!-- .theme-colors -->
         <div class="column mr-4 theme-toggles">
           <div v-for="(info, name) in toggle">
             <label>
               <input v-bind:name="name" type="checkbox" v-model="info.value">
-              {{ info.title }}
+              ${ info.title }
             </label>
           </div>
         </div><!-- .theme-toggles -->
         <div class="column mr-4 theme-selects">
           <div v-for="(info, name) in font" class="mb-4">
-            <label v-bind:for="name">{{ info.title }}</label>
+            <label v-bind:for="name">${ info.title }</label>
             <select class="form-control form-control-sm" v-bind:name="name" v-model="info.value">
               <option v-for="(fontinfo, fontname) in info.options" v-bind:value="fontname">
-                {{ fontinfo.title }}
+                ${ fontinfo.title }
               </option>
             </select>
           </div>
@@ -53,7 +57,7 @@
         <div class="column mr-4 theme-predefined">
           <p>Pre-defined themes</p>
           <div v-for="(info, name) in theme">
-            <a v-bind:href="info.href" class="text-light">{{ name }}</a>
+            <a v-bind:href="info.href" class="text-light">${ name }</a>
           </div>
         </div><!-- .theme-predefined -->
       </div><!-- .theme-contents -->
@@ -64,28 +68,57 @@
     </form>
   </div><!-- #theme-picker -->
 
-  <div class="d-flex mt-3">
-    <ul class="toc nav flex-column">
-      <li class="nav-item"><a class="nav-link pt-0 pb-1" data-load=".component" data-hash="about"         href="ui-about.html"           >About</a></li>
-      <li class="nav-item"><a class="nav-link pt-0 pb-1" data-load=".component" data-hash="alert"         href="ui-alert.html"           >Alert</a></li>
-      <li class="nav-item"><a class="nav-link pt-0 pb-1" data-load=".component" data-hash="arrow"         href="ui-arrow.html"           >Arrow</a></li>
-      <li class="nav-item"><a class="nav-link pt-0 pb-1" data-load=".component" data-hash="button"        href="ui-button.html"          >Button</a></li>
-      <li class="nav-item"><a class="nav-link pt-0 pb-1" data-load=".component" data-hash="cards"         href="ui-card.html"            >Card</a></li>
-      <li class="nav-item"><a class="nav-link pt-0 pb-1" data-load=".component" data-hash="date-picker"   href="ui-date-picker.html"     >Date</a></li>
-      <li class="nav-item"><a class="nav-link pt-0 pb-1" data-load=".component" data-hash="dropdown"      href="ui-dropdown.html"        >Dropdown</a></li>
-      <li class="nav-item"><a class="nav-link pt-0 pb-1" data-load=".component" data-hash="forms"         href="ui-forms.html"           >Forms</a></li>
-      <li class="nav-item"><a class="nav-link pt-0 pb-1" data-load=".component" data-hash="input"         href="ui-input.html"           >Input</a></li>
-      <li class="nav-item"><a class="nav-link pt-0 pb-1" data-load=".component" data-hash="loading"       href="ui-loading.html"         >Loading</a></li>
-      <li class="nav-item"><a class="nav-link pt-0 pb-1" data-load=".component" data-hash="panel"         href="ui-panel.html"           >Panel</a></li>
-      <li class="nav-item"><a class="nav-link pt-0 pb-1" data-load=".component" data-hash="round"         href="ui-round.html"           >Round</a></li>
-      <li class="nav-item"><a class="nav-link pt-0 pb-1" data-load=".component" data-hash="shadow"        href="ui-shadow.html"          >Shadow</a></li>
-      <li class="nav-item"><a class="nav-link pt-0 pb-1" data-load=".component" data-hash="tables"        href="ui-table.html"           >Table</a></li>
-      <li class="nav-item"><a class="nav-link pt-0 pb-1" data-load=".component" data-hash="tooltip"       href="ui-tooltip.html"         >Tooltip</a></li>
-      <li class="nav-item"><a class="nav-link pt-0 pb-1" data-load=".component" data-hash="login"         href="ui-login.html"           >Login</a></li>
-    </ul><!-- .toc -->
-    <div class="container-fluid component">
-    </div><!-- .container-fluid -->
-  </div><!-- .d-flex -->
+  <div class="container-fluid component d-flex">
+    <nav class="mt-3" id="toc-nav">
+      <div v-for="entry in toc">
+        <a v-bind:class="entry.level" v-bind:href="entry.href">${ entry.name }</a>
+      </div>
+    </nav>
+    <main role="main" class="ml-3" data-spy="scroll" data-target="#toc-nav" data-offset="0">
+      <h1 class="toc">Introduction</h1>
+      <p>The Gramex UI component library is a set of UI components that extend
+         <a href="https://getbootstrap.com/" target="_blank">Bootstrap 4</a>.
+         These are to be used in all Gramex projects.
+      </p>
+      {% from guide_ui_app import load_page %}
+      {% raw load_page('ui-about.html') %}
+
+      <h1 class="toc">Utilities</h1>
+      {% raw load_page('ui-hover.html') %}
+      {% raw load_page('ui-round.html') %}
+      {% raw load_page('ui-shadow.html') %}
+      {% raw load_page('ui-text.html') %}
+      {% raw load_page('ui-underline.html') %}
+
+      <h1 class="toc">Positioning</h1>
+      {% raw load_page('ui-overlay.html') %}
+      {% raw load_page('ui-position.html') %}
+
+      <h1 class="toc">Components</h1>
+      {% raw load_page('ui-arrow.html') %}
+      {% raw load_page('ui-divider.html') %}
+      {% raw load_page('ui-tail.html') %}
+
+      <h1 class="toc">Inputs</h1>
+      {% raw load_page('ui-slider.html') %}
+      {% raw load_page('ui-switch.html') %}
+
+      <h1 class="toc">Bootstrap</h1>
+      {% raw load_page('ui-alert.html') %}
+      {% raw load_page('ui-button.html') %}
+      {% raw load_page('ui-card.html') %}
+      {% raw load_page('ui-dashboards.html') %}
+      {% raw load_page('ui-date-picker.html') %}
+      {% raw load_page('ui-dropdown.html') %}
+      {% raw load_page('ui-forms.html') %}
+      {% raw load_page('ui-input.html') %}
+      {% raw load_page('ui-loading.html') %}
+      {% raw load_page('ui-login.html') %}
+      {% raw load_page('ui-panel.html') %}
+      {% raw load_page('ui-table.html') %}
+      {% raw load_page('ui-tooltip.html') %}
+    </main>
+  </div><!-- .container-fluid -->
 
   <!-- Modal -->
   <div class="modal fade" id="source-modal" tabindex="-1" role="dialog" aria-labelledby="source-modal-label" aria-hidden="true">
@@ -107,7 +140,6 @@
     </div>
   </div>
 
-  <script src="../ui/jquery/dist/jquery.min.js"></script>
   <script src="../ui/popper.js/dist/umd/popper.min.js"></script>
   <script src="../ui/bootstrap/dist/js/bootstrap.min.js"></script>
   <script src="../ui/noty/lib/noty.min.js"></script>
@@ -115,10 +147,17 @@
   <script src="../ui/daterangepicker/daterangepicker.js"></script>
   <script src="../ui/url-search-params/build/url-search-params.js"></script>
   <script src="../ui/lodash/lodash.min.js"></script>
+  <script src="../node_modules/clipboard/dist/clipboard.min.js"></script>
   <script src="../node_modules/prismjs/prism.js"></script>
   <script src="../node_modules/vue/dist/vue.min.js"></script>
   <script>
-    var q = _.fromPairs(Array.from((new URLSearchParams(location.search)).entries()))
+    var q = {},
+        _q = (new URLSearchParams(location.search)).entries()
+    while (true) {
+      var _entry = _q.next()
+      if (_entry.done) break
+      q[_entry.value[0]] = q[_entry.value[1]]
+    }
     var has_query = Object.keys(q).length > 0
     $.getJSON('config', function(config) {
       // Set values based on inputs
@@ -127,41 +166,55 @@
       _.each(config.toggle, function(info, name) { info.value = has_query ? (q[name] || '') : info.default })
       _.each(config.theme, function(info, name) { info.href = '?' + $.param(info) })
       config.cssurl = '../ui/bootstraptheme.css' + location.search
-      var app = new Vue({el: '#theme-picker', data: config})
+      var app = new Vue({el: '#theme-picker', data: config, delimiters: ['${', '}']})
     })
 
-    // Event handlers
-    $('body')
-      .on('click', '[data-load]', function(e) {
-        e.preventDefault()
-        var $target = $($(this).data('load'))
-          .html('<i class="fa fa-spinner fa-5x fa-spin"></i>')
-        var url = $(this).data('href') || $(this).attr('href')
-        location.hash = $(this).data('hash') || url
-        $.ajax(url)
-          .done(function(data) {
-            $target.html(data)
-            Prism.highlightAll()
-          })
-          .fail(function(xhr, status, error) {
-            $target.html('<div class="alert alert-danger">' + xhr.status + ': ' + error + '</div>')
-          })
-      })
-      .on('click', '.src', function() {
-        var html = Prism.highlight($(this).parents().closest('section').html(), Prism.languages.html)
-        $('.source-content').html(html)
-        $('#source-modal').modal()
-      })
-
-    // Initialize page
-    function hashchange() {
-      var hash = location.hash.replace(/^#/, '')
-      var selector = '[data-load][data-hash="' + hash + '"], [data-load][href="' + hash + '"]'
-      if (!$(selector).eq(0).trigger('click').length)
-        $('[data-load]').eq(0).trigger('click')
-    }
-    $(window).on('hashchange', hashchange)
-    hashchange()
+    // copy code block
+    var clipboard = new Clipboard('.copy-button', {
+      text: function() {
+        return document.querySelector('.upload-container').innerHTML
+      }
+    })
+    clipboard.on('success', function(e) {
+      new Noty({type: 'success', text: "Copied!"}).show()
+    })
+    var toctree = $('.toc').map(function() {
+      var text = $(this).text()
+      var slug = text.trim().toLowerCase().replace(/[^a-z0-9_]+/gi, '-')
+      $(this).attr('id', slug)
+      return {level: 'l' + this.tagName[1], name: text, href: '#' + slug}
+    })
+    var toc = new Vue({el: '#toc-nav', data: {toc: toctree}, delimiters: ['${', '}']})
+  </script>
+  <script>
+    /* Prism copy to clipboard for all pre with viewsource class */
+    // ref: https://stackoverflow.com/a/34198183
+    $('pre.viewsource').each(function () {
+      $this = $(this);
+      $button = $('<button class="btn-sm">Copy</button>');
+      $this.wrap('<div/>').removeClass('viewsource');
+      $wrapper = $this.parent();
+      $wrapper.addClass('viewsource-wrapper').css({position: 'relative'})
+      $button.css({position: 'absolute', top: 10, right: 10}).appendTo($wrapper).addClass('viewsource btn btn-default');
+      var copyCode = new Clipboard('button.viewsource', {
+        target: function (trigger) {
+          return trigger.previousElementSibling;
+        }
+      });
+      copyCode.on('success', function (event) {
+        event.clearSelection();
+        event.trigger.textContent = 'Copied';
+        window.setTimeout(function () {
+          event.trigger.textContent = 'Copy';
+        }, 2000);
+      });
+      copyCode.on('error', function (event) {
+        event.trigger.textContent = 'Press "Ctrl + C" to copy';
+        window.setTimeout(function () {
+          event.trigger.textContent = 'Copy';
+        }, 2000);
+      });
+    });
   </script>
 </body>
 </html>

@@ -12,66 +12,378 @@
 @import "{{ bootstrap_path }}";
 
 // .round: full-round border utility
-// --------------------------------------------------------
+// --------------------------------------------------------------------------
 $round-radius: 99rem !default;    // Large enough a value for most components
 .round,
 .nav-link.round {
   border-radius: $round-radius;
 }
+// .switch: switch button utility
+// --------------------------------------------------------------------------
+$switch-padding: 4rem !default;
+$switch-width: 50px !default;
+$switch-margin-right: 6px !default;
+$switch-control-color: $light !default;
+$switch-control-width: 15px !default;
+$switch-border-radius: 25px !default;
+$switch-colors: (
+  success: $success,
+  warning: $warning,
+  danger: $danger,
+  primary: $primary,
+  info: $info,
+  dark: $dark,
+  secondary: $secondary,
+);
+@each $class, $val in $switch-colors {
+  .switch-#{$class} {
+    padding-left: $switch-padding;
+    position: relative;
+    display: inline-block;
+    vertical-align: middle;
+  }
+  .switch-#{$class}>input {
+    position: absolute;
+    overflow: hidden;
+    width: 0;
+  }
+  .switch-#{$class}>input:checked+label:before {
+    background: $val;
+    content: '';
+  }
+  .switch-#{$class}>input:checked+label:after {
+    left: -($switch-width/2);
+  }
+  .switch-#{$class}>label {
+    cursor: pointer;
+    margin-bottom: 0;
+    position: relative;
+  }
+  .switch-#{$class}>label:before {
+    background: $val;
+    border-radius: $switch-border-radius;
+    content: '';
+    display: inline-block;
+    height: 20px;
+    margin-left: -($switch-width + $switch-margin-right);
+    margin-right: $switch-margin-right;
+    transition: .2s background-color ease-out;
+    width: $switch-width;
+  }
+  .switch-#{$class}>label:after {
+    background: $switch-control-color;
+    mix-blend-mode: hard-light;
+    border-radius: $switch-border-radius;
+    content: '';
+    height: $switch-control-width;
+    left: -$switch-width;
+    position: absolute;
+    top: 2px;
+    transition: .2s left ease-out;
+    width: $switch-control-width;
+  }
+}
 
-// .shadow: shadow utility
-// --------------------------------------------------------
-$shadow: 0 .25rem .5rem rgba($black,.2) !default;
+// .shadow: shadow utilities
+// --------------------------------------------------------------------------
+$shadow-y: 0.25rem;
+$shadow-blur: 0.5rem;
+$shadow: 0 $shadow-y $shadow-blur rgba($black, .2) !default;
 .shadow {
   box-shadow: $shadow;
+}
+.shadow-none {
+  box-shadow: none;
 }
 // After testing, consider adding larger and smaller shadows
 // .shadow-lg {}
 // .shadow-sm {}
 
-// .input-underline: underlined inputs
-// --------------------------------------------------------
-.input-underline {
+// .text-shadow adds a standarized text shadow consistent with .shadow
+// --------------------------------------------------------------------------
+.text-shadow {
+  text-shadow: $shadow;
+}
+.text-shadow-none {
+  text-shadow: none;
+}
+
+
+// .underline: underlined inputs
+// --------------------------------------------------------------------------
+.underline {
+  border-radius: 0;
+  border-bottom: $hr-border-width solid $hr-border-color;
   border-left: 0;
   border-right: 0;
   border-top: 0;
 }
+.form-control.underline:focus {
+  box-shadow: none;
+  border-bottom-width: $hr-border-width * 2;
+}
 
-// .arrow-*: arrow components
-// --------------------------------------------------------
-@each $color, $value in $theme-colors {
-  @each $size, $height in (null, 3rem), (-lg, 4rem), (-sm, 2rem) {
-    .arrow-#{$color}#{$size} {
-      color: color-yiq($value);
-      background-color: $value;
-      position: relative;
-      height: $height;
-      line-height: ($height - 0.25rem);
-      padding-left: $grid-gutter-width / 2;
-      left: $grid-gutter-width / -2;
-    }
-    .arrow-#{$color}#{$size}:before {
-      content: "";
-      border-top: ($height / 2) solid transparent;
-      border-bottom: ($height / 2) solid transparent;
-      border-left: ($height / 2) solid $value;
-      position: absolute;
-      top: 0;
-      right: $height / -2;
-    }
-    .arrow-#{$color}#{$size}.text-center {
-      padding-left: 0;
-    }
+// Small fonts
+// --------------------------------------------------------------------------
+$small-font-sizes: (
+  sm1: 80%,
+  sm2: 66.66666667%,
+  sm3: 50%,
+  sm4: 33.33333333%,
+  sm5: 25%,
+  sm6: 16.66666667%,
+);
+@each $class, $size in $small-font-sizes {
+  .#{$class} {
+    font-size: $size !important;
   }
 }
 
-// .custom-range: input slider
-// --------------------------------------------------------
-// Polyfill: <input type="range" class="custom-range">
+// hover / focus / ... state colors
+// hover-bg-primary
+// --------------------------------------------------------------------------
+@each $state in (hover, focus, active) {
+  @each $color, $value in $theme-colors {
+    .#{$state}-bg-#{$color}:#{$state} { background-color: $value; }
+    .#{$state}-fg-#{$color}:#{$state} { color: $value; }
+  }
+}
+
+
+// .pos-* absolute positioning utilities
+// --------------------------------------------------------------------------
+.pos-tl, .pos-tr, .pos-bl, .pos-br { position: absolute; }
+.pos-tl { top: 0; left: 0; }
+.pos-tr { top: 0; right: 0; }
+.pos-bl { bottom: 0; left: 0; }
+.pos-br { bottom: 0; right: 0; }
+
+.pos-tc { top: 0; left: 50%; transform: translateX(-50%); }
+.pos-bc { bottom: 0; left: 50%; transform: translateX(-50%); }
+.pos-tc, .pos-bc, .pos-cc {
+  position: absolute;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+.pos-cl { top: 50%; left: 0; transform: translateY(-50%); }
+.pos-cc { top: 50%; left: 50%; transform: translate(-50%,-50%); }
+.pos-cr { top: 50%; right: 0; transform: translateY(-50%); }
+.pos-cl, .pos-cc, .pos-cr, .pos-c {
+  position: absolute;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+.pos-t, .pos-r, .pos-b, .pos-l, .pos-c, .pos { position: absolute; }
+.pos-t { top: 0; left: 0; right: 0; }
+.pos-r { top: 0; bottom: 0; right: 0; }
+.pos-b { bottom: 0; left: 0; right: 0; }
+.pos-l { top: 0; bottom: 0; left: 0; }
+.pos-c { left: 0; right: 0; top: 50%; transform: translateY(-50%); }
+.pos { position: absolute; left: 0; right: 0; top: 0; bottom: 0; }
+
+
+// .text-middle vertically centers text in a block element
+// --------------------------------------------------------------------------
+.text-middle { display: flex; flex-direction: column; justify-content: space-between; }
+.text-middle:before { content: ''; }
+.text-middle:after { content: ''; }
+
+// .overlay-* sets a theme background with transparency of 20%
+// --------------------------------------------------------------------------
+.overlay-black { background-color: rgba(0, 0, 0, 0.5); }
+.overlay-white { background-color: rgba(255, 255, 255, 0.75); }
+
+
+
+// .divider
+// --------------------------------------------------------------------------
+.divider {
+  display: flex;
+  white-space: nowrap;
+  align-items: center;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+.divider:empty {
+  border-top: $hr-border-width solid $hr-border-color;
+}
+.divider:not(:empty):before,
+.divider:not(:empty):after {
+  content: '';
+  width: 100%;
+  height: 0;
+  border-top: $hr-border-width solid $hr-border-color;
+}
+.divider:before { margin-right: 1rem; }
+.divider:after { margin-left: 1rem; }
+@each $color, $value in $theme-colors {
+  .border-#{$color}.divider:empty {
+    border-top: $hr-border-width solid $value;
+  }
+  .border-#{$color}.divider.border-#{$color}:before,
+  .border-#{$color}.divider.border-#{$color}:after {
+    border-top: $hr-border-width solid $value;
+  }
+}
+
+// .tail
+// --------------------------------------------------------------------------
+$tail-size: 15px !default;
+[class^='tail-'], [class*=' tail-'] {
+  position: relative;
+}
+[class^='tail-']:after, [class*=' tail-']:after,
+[class^='tail-']:before, [class*=' tail-']:before {
+  position: absolute;
+  border: solid transparent;
+  content: ' ';
+  height: 0;
+  width: 0;
+  border-color: transparent;
+}
+// Tail fill
+[class^='tail-']:after, [class*=' tail-']:after {
+  border-width: $tail-size;
+}
+// Tail border: 1px thickness
+[class^='tail-']:before, [class*=' tail-']:before {
+  border-width: $tail-size + 1px;
+}
+@each $color, $value in map_merge($theme-colors, (white: white)) {
+  .bg-#{$color}.tail-bl:after,
+  .bg-#{$color}.tail-bc:after,
+  .bg-#{$color}.tail-br:after,
+  .border-#{$color}.tail-bl:before,
+  .border-#{$color}.tail-bc:before,
+  .border-#{$color}.tail-br:before  { border-top-color: $value; }
+  .bg-#{$color}.tail-tl:after,
+  .bg-#{$color}.tail-tc:after,
+  .bg-#{$color}.tail-tr:after,
+  .border-#{$color}.tail-tl:before,
+  .border-#{$color}.tail-tc:before,
+  .border-#{$color}.tail-tr:before  { border-bottom-color: $value; }
+  .bg-#{$color}.tail-lt:after,
+  .bg-#{$color}.tail-lc:after,
+  .bg-#{$color}.tail-lb:after       { border-right-color: $value; }
+  .border-#{$color}.tail-lt:before,
+  .border-#{$color}.tail-lc:before,
+  .border-#{$color}.tail-lb:before  { border-left-color: $value; }
+  .bg-#{$color}.tail-rt:after,
+  .bg-#{$color}.tail-rc:after,
+  .bg-#{$color}.tail-rb:after       { border-left-color: $value; }
+  .border-#{$color}.tail-rt:before,
+  .border-#{$color}.tail-rc:before,
+  .border-#{$color}.tail-rb:before  { border-right-color: $value; }
+}
+.tail-bl:before, .tail-bl:after,
+.tail-tl:before, .tail-tl:after { left: $tail-size; }
+.tail-bc:before, .tail-bc:after,
+.tail-tc:before, .tail-tc:after { left: 50%; margin-left: -$tail-size; }
+.tail-br:before, .tail-br:after,
+.tail-tr:before, .tail-tr:after { right: $tail-size; }
+.tail-bl:before, .tail-bl:after,
+.tail-bc:before, .tail-bc:after,
+.tail-br:before, .tail-br:after { top: 100%; }
+.tail-tl:before, .tail-tl:after,
+.tail-tc:before, .tail-tc:after,
+.tail-tr:before, .tail-tr:after { bottom: 100%; }
+.tail-lt:before, .tail-lt:after,
+.tail-lc:before, .tail-lc:after,
+.tail-lb:before, .tail-lb:after { left: -$tail-size * 2; }
+.tail-rt:before, .tail-rt:after,
+.tail-rc:before, .tail-rc:after,
+.tail-rb:before, .tail-rb:after { left: 100%; }
+.tail-lt:before, .tail-lt:after,
+.tail-rt:before, .tail-rt:after { top: $tail-size; }
+.tail-lc:before, .tail-lc:after,
+.tail-rc:before, .tail-rc:after { top: 50%; margin-top: -$tail-size; }
+.tail-lb:before, .tail-lb:after,
+.tail-rb:before, .tail-rb:after { bottom: $tail-size; }
+
+// .arrow-{color}: arrow components
+// --------------------------------------------------------------------------
+// .font-size-h*: font-sizes
+$font-sizes: (
+  h1: $h1-font-size,
+  h2: $h2-font-size,
+  h3: $h3-font-size,
+  h4: $h4-font-size,
+  h5: $h5-font-size,
+  h6: $h6-font-size
+);
+$display-sizes: (
+  display-1: $display1-size,
+  display-2: $display2-size,
+  display-3: $display3-size,
+  display-4: $display4-size
+);
+
+$arrow-padding-y: 1rem !default;
+@each $color, $value in map_merge($theme-colors, (transparent: transparent)) {
+  $arrow-height: $font-size-base + $arrow-padding-y;
+  .arrow-#{$color} {
+    color: color-yiq($value);
+    background-color: $value;
+    position: relative;
+    height: $arrow-height;
+    line-height: $arrow-height;
+    // Offset left grid gutter width
+    padding-left: $grid-gutter-width;
+    left: $grid-gutter-width / -1;
+  }
+  .arrow-#{$color}:before {
+    content: "";
+    position: absolute;
+    top: 0;
+    border-top: ($arrow-height / 2) solid transparent;
+    border-bottom: ($arrow-height / 2) solid transparent;
+    border-left: ($arrow-height / 2) solid $value;
+    right: $arrow-height / -2;
+  }
+  // When centering, do not offset it. It should look centered WITHIN the component
+  .arrow-#{$color}.text-center {
+    padding-left: 0;
+  }
+  @each $size, $height in $font-sizes {
+    $arrow-height: $height + $arrow-padding-y;
+    #{$size}.arrow-#{$color}, .#{$size}.arrow-#{$color} {
+      height: $arrow-height;
+      line-height: $arrow-height;
+    }
+    #{$size}.arrow-#{$color}:before, .#{$size}.arrow-#{$color}:before {
+      border-top: ($arrow-height / 2) solid transparent;
+      border-bottom: ($arrow-height / 2) solid transparent;
+      border-left: ($arrow-height / 2) solid $value;
+      right: $arrow-height / -2;
+    }
+  }
+  @each $size, $height in $display-sizes {
+    $arrow-height: $height + $arrow-padding-y;
+    .#{$size}.arrow-#{$color} {
+      height: $arrow-height;
+      line-height: $arrow-height * 0.8;     // To vertically center lower-case letters
+    }
+    .#{$size}.arrow-#{$color}.text-uppercase {
+      line-height: $arrow-height * 0.9;     // To vertically center upper-case letters
+    }
+    .#{$size}.arrow-#{$color}:before {
+      border-top: ($arrow-height / 2) solid transparent;
+      border-bottom: ($arrow-height / 2) solid transparent;
+      border-left: ($arrow-height / 2) solid $value;
+      right: $arrow-height / -2;
+    }
+  }
+}
+.arrow-transparent {
+  color: inherit;
+}
+
+// .slider: input slider
+// --------------------------------------------------------------------------
+// Note: Bootstrap 4.1 will have custom-range:
 // https://github.com/twbs/bootstrap/issues/17916
-// When we move to Bootstrap 4.1, this can be removed.
-// Currently works only on Chrome
-.custom-range {
+$track-height: 0.4rem;
+.slider {
   -webkit-appearance: none;     // Required for any custom styling
   background: transparent;      // Chrome has a non-transparent background
   border: none;                 // Override default
@@ -79,8 +391,6 @@ $shadow: 0 .25rem .5rem rgba($black,.2) !default;
   cursor: pointer;
   padding-left: 0;
   padding-right: 0;
-
-  $track-height: 0.4rem;
 
   &::-webkit-slider-runnable-track {
     height: $track-height;
@@ -90,7 +400,22 @@ $shadow: 0 .25rem .5rem rgba($black,.2) !default;
       box-shadow: $btn-active-box-shadow;
     }
   }
+  &::-moz-range-track {
+    height: $track-height;
+    @include border-radius($input-border-radius);
+    @include button-variant($gray-300, $gray-300);
+    @if $enable-shadows {
+      box-shadow: $btn-active-box-shadow;
+    }
+  }
   &::-ms-track {
+    height: $custom-control-indicator-size;
+    background-color: transparent;
+    border-color: transparent;
+    color: transparent;
+  }
+  &::-ms-fill-upper, &::-ms-fill-lower {
+    box-sizing: border-box;
     height: $track-height;
     @include border-radius($input-border-radius);
     @include button-variant($gray-300, $gray-300);
@@ -106,10 +431,18 @@ $shadow: 0 .25rem .5rem rgba($black,.2) !default;
     height: $custom-control-indicator-size;
     width: $custom-control-indicator-size;
   }
-  &::-ms-thumb {
+  &::-moz-range-thumb {
     @include button-variant($primary, $primary);
     @include border-radius($input-border-radius);
     margin-top: ($custom-control-indicator-size - $track-height) / -2;
+    height: $custom-control-indicator-size;
+    width: $custom-control-indicator-size;
+  }
+  &::-ms-thumb {
+    box-sizing: border-box; // IE11 sizing
+    margin-top: 0; // Edge vertical alignment
+    @include button-variant($primary, $primary);
+    @include border-radius($input-border-radius);
     height: $custom-control-indicator-size;
     width: $custom-control-indicator-size;
   }
@@ -117,10 +450,19 @@ $shadow: 0 .25rem .5rem rgba($black,.2) !default;
   // Enable shadows on thumb, not main control
   &.shadow { box-shadow: none; }
   &.shadow::-webkit-slider-thumb { box-shadow: $shadow; }
+  &.shadow::-moz-range-thumb { box-shadow: $shadow; }
+  &.shadow::-ms-thumb { box-shadow: $shadow; }
   &.shadow::-webkit-slider-runnable-track { box-shadow: $btn-active-box-shadow; }
+  &.shadow::-moz-range-track { box-shadow: $btn-active-box-shadow; }
+  &.shadow::-ms-track { margin-bottom: $shadow-y + $shadow-blur; }
+  &.shadow::-ms-fill-upper, &.shadow::-ms-fill-lower { box-shadow: $btn-active-box-shadow; }
 
   // Enable round on elements, not main control
   &.round { border-radius: 3px; }
   &.round::-webkit-slider-thumb { border-radius: $round-radius; }
+  &.round::-moz-range-thumb { border-radius: $round-radius; }
+  &.round::-ms-thumb { border-radius: $round-radius; }
   &.round::-webkit-slider-runnable-track { border-radius: $round-radius; }
+  &.round::-moz-range-track { border-radius: $round-radius; }
+  &.round::-ms-track { border-radius: $round-radius; }
 }

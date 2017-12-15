@@ -1,4 +1,4 @@
-<h2>Panels</h2>
+<h2 class="toc">Panels</h2>
 <p>All examples are overwritten using css.</p>
 <div class="row">
   <div class="col-3">
@@ -25,6 +25,7 @@
   </div>
 </div><!-- /.row -->
 
+{% apply view_source %}
 <div class="row mt-3">
   <div class="col-8">
     <div i" class="card">
@@ -42,7 +43,6 @@
             </div>
           </div>
         </div>
-
         <div class="pull-right">
           <div class="row mt-2">
             <div class="nav-item dropdown">
@@ -57,17 +57,14 @@
               </div>
             </div>
           </div>
-          <div class="row mt-2">
-            color scale
-          </div>
-        </div>
+          <div class="row mt-2">color scale</div>
+        </div> <!-- .pull-right -->
       </div>
-      <div class="card-body">
-        <img src="heatgrid.png" />
-      </div>
+      <div class="card-body"><img src="heatgrid.png" /></div>
     </div>
   </div>
 </div>
+{% end %}
 
 <div class="row mt-3">
   <div class="col-12">

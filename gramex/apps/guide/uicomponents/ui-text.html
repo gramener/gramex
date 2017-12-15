@@ -1,0 +1,69 @@
+<h2 class="toc">Text size</h2>
+<p><code>.h1</code>, <code>.h2</code>, etc. make fonts larger and bold. They have the same styles as <code>h1</code>, <code>h2</code>, etc.</p>
+<p><code>.sm1</code>, <code>.sm2</code>, etc. make fonts smaller. These are utility classes that can be combined with other classes.</p>
+
+{% apply view_source %}
+<div class="h1">.h1 &raquo;
+  <span class="sm1">.sm1</span> <span class="sm2">.sm2</span>  <span class="sm3">.sm3</span>
+  <span class="sm4">.sm4</span> <span class="sm5">.sm5</span>  <span class="sm6">.sm6</span>
+</div>
+{% end %}
+{% apply view_source %}
+<div class="h2">.h2 &raquo;
+  <span class="sm1">.sm1</span> <span class="sm2">.sm2</span>  <span class="sm3">.sm3</span>
+  <span class="sm4">.sm4</span> <span class="sm5">.sm5</span>  <span class="sm6">.sm6</span>
+</div>
+{% end %}
+{% apply view_source %}
+<div class="h3">.h3 &raquo;
+  <span class="sm1">.sm1</span> <span class="sm2">.sm2</span>  <span class="sm3">.sm3</span>
+  <span class="sm4">.sm4</span> <span class="sm5">.sm5</span>  <span class="sm6">.sm6</span>
+</div>
+{% end %}
+{% apply view_source %}
+<div class="h4">.h4 &raquo;
+  <span class="sm1">.sm1</span> <span class="sm2">.sm2</span>  <span class="sm3">.sm3</span>
+  <span class="sm4">.sm4</span> <span class="sm5">.sm5</span>  <span class="sm6">.sm6</span>
+</div>
+{% end %}
+{% apply view_source %}
+<div class="h5">.h5 &raquo;
+  <span class="sm1">.sm1</span> <span class="sm2">.sm2</span>  <span class="sm3">.sm3</span>
+  <span class="sm4">.sm4</span> <span class="sm5">.sm5</span>  <span class="sm6">.sm6</span>
+</div>
+{% end %}
+{% apply view_source %}
+<div class="h6">.h6 &raquo;
+  <span class="sm1">.sm1</span> <span class="sm2">.sm2</span>  <span class="sm3">.sm3</span>
+  <span class="sm4">.sm4</span> <span class="sm5">.sm5</span>  <span class="sm6">.sm6</span>
+</div>
+{% end %}
+{% apply view_source %}
+<div>Normal
+  <span class="sm1">.sm1</span>
+  <span class="sm2">.sm2</span>
+  <span class="sm3">.sm3</span>
+  <span class="sm4">.sm4</span>
+  <span class="sm5">.sm5</span>
+  <span class="sm6">.sm6</span>
+</div>
+{% end %}
+
+<h2>Text alignment</h2>
+<p><code>.text-middle</code> vertically centers text in a block.</p>
+{% apply view_source %}
+<div class="d-flex">
+  <div class="text-middle h1 mr-2 p-2 bg-warning">H1 text<br>centered</div>
+  <div class="text-middle h2 mr-2 p-2 bg-warning">H2 text<br>centered</div>
+  <div class="text-middle h3 mr-2 p-2 bg-warning">H3 text<br>centered</div>
+  <div class="text-middle h4 mr-2 p-2 bg-warning">H4 text<br>centered</div>
+  <div class="text-middle h5 mr-2 p-2 bg-warning">H5 text<br>centered</div>
+  <div class="text-middle h6 mr-2 p-2 bg-warning">H6 text<br>centered</div>
+</div>
+{% end %}
+
+<h2>Text shadow</h2>
+<p><code>.text-shadow</code> adds a text shadow to inline text.</p>
+{% apply view_source %}
+<h3 class="text-shadow">.text-shadow <small class="text-shadow-none">.text-shadow-none</small></h3>
+{% end %}

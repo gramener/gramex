@@ -1,5 +1,6 @@
-<h2>Alerts</h2>
+<h2 class="toc">Alerts</h2>
 
+{% apply view_source %}
 <p><button class="btn btn-primary" data-toggle="collapse" data-target=".alert">Click to toggle Bootstrap alert</button></p>
 
 <div class="alert alert-danger collapse" role="alert">
@@ -20,7 +21,9 @@
     <span aria-hidden="true">&times;</span>
   </button>
 </div>
+{% end %}
 
+{% apply view_source %}
 <p>Use the <a href="https://ned.im/noty/">Noty library</a> for notifications.</p>
 <p><button class="btn btn-primary noty-alert">Show Noty alert</button></a></p>
 
@@ -31,3 +34,4 @@
       new Noty({type: 'error', text: "Here is a Noty alert"}).show()
     })
 </script>
+{% end %}

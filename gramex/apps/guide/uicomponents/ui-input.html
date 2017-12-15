@@ -1,6 +1,4 @@
-<h2>Inputs</h2>
-
-<p><input class="form-control input-underline" placeholder="Underlined input"></p>
+{% apply view_source %}
 <p>
   <label class="custom-control custom-checkbox">
     <input type="checkbox" class="custom-control-input">
@@ -8,7 +6,9 @@
     <span class="custom-control-description">Custom checkbox</span>
   </label>
 </p>
+{% end %}
 
+{% apply view_source %}
 <p>
   <label class="custom-control custom-radio">
     <input id="radio1" name="radio" type="radio" class="custom-control-input">
@@ -21,25 +21,19 @@
     <span class="custom-control-description">Custom Radio 2</span>
   </label>
 </p>
+{% end %}
 
-<h3>Sliders</h3>
-<div class="row mt-3 mb-3">
-  <div class="col"><input type="range" class="form-control custom-range" min="0" max="100" step="10" value="10"></div>
-  <div class="col"><input type="range" class="form-control custom-range shadow" min="0" max="100" step="10" value="20"></div>
-  <div class="col"><input type="range" class="form-control custom-range round" min="0" max="100" step="10" value="30"></div>
-</div>
-
-<!-- TODO: add custom file -->
-
-<h2>Input Groups</h2>
-
+<h2 class="toc">Input Groups</h2>
+{% apply view_source %}
 <p>
   <div class="input-group mb-2 mb-sm-0">
     <div class="input-group-addon bg-white">@</div>
     <input type="text" class="form-control border-left-0" id="inlineFormInputGroup" placeholder="Username">
   </div>
 </p>
+{% end %}
 
+{% apply view_source %}
 <div class="row">
   <div class="col-3">
     <ul class="list-group">
@@ -70,8 +64,10 @@
     </div>
   </div>
 </div>
+{% end %}
 
-<h2>Search</h2>
+<h2 class="toc">Search</h2>
+{% apply view_source %}
 <div class="row">
   <div class="col">
     <div class="input-group">
@@ -89,14 +85,9 @@
   </div>
   <div class="col">
     <div class="input-group">
-      <input type="text" class="form-control" placeholder="Search" title="Needs custom CSS">
-      <span><i class="fa fa-search" aria-hidden="true"></i></span>
-    </div>
-  </div>
-  <div class="col">
-    <div class="input-group">
       <span class="input-group-addon"><i class="fa fa-search"></i></span>
       <input type="text" class="form-control" placeholder="Search brand">
     </div>
   </div>
 </div>
+{% end %}

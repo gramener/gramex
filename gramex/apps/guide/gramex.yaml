@@ -30,9 +30,9 @@ url:
     markdown:
         pattern: /$YAMLURL/(.*)
         handler: FileHandler
+        priority: -0.5          # Lower than new handlers (0), higher than default (-1)
         kwargs:
             path: $YAMLPATH
-            priority: -0.5          # Lower than new handlers (0), higher than default (-1)
             default_filename: README.md
             index: true
             transform:

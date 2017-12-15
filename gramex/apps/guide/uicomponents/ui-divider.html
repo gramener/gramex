@@ -1,0 +1,26 @@
+<h2 class="toc">Divider</h2>
+
+{% apply view_source %}
+<p>Content before divider</p>
+<div class="divider"></div>
+<p>Content after divider</p>
+{% end %}
+
+<h3>Divider colors</h3>
+{% apply view_source %}
+<div class="divider border-primary"></div>
+<div class="divider border-secondary"></div>
+<div class="divider border-success"></div>
+<div class="divider border-info"></div>
+<div class="divider border-warning"></div>
+<div class="divider border-danger"></div>
+<div class="divider border-dark"></div>
+<div class="divider border-light"></div>
+{% end %}
+
+{% apply view_source %}
+<h3>Divider with content</h3>
+<div class="divider">Text</div>
+<div class="divider border-dark"><i class="fa fa-2x fa-twitter mr-2"></i> Icons</div>
+<div class="divider border-primary"><div class="btn btn-primary round">Buttons</div></div>
+{% end %}
