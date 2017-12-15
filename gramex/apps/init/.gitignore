@@ -65,3 +65,6 @@ $RECYCLE.BIN/
 
 # R history files
 .RHistory
+
+# For Linux FUSE file system
+.fuse_hidden*

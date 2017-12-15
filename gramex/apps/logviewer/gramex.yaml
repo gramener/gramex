@@ -1,0 +1,27 @@
+variables:
+  LOGVIEWER_CACHE_SECONDS:
+    default: 300
+  LOGVIEWER_DAYS:
+    default: 60
+
+url:
+  apps/logviewer:
+    pattern: /$YAMLURL/
+    handler: FileHandler
+    kwargs:
+      path: $YAMLPATH/index.html
+
+  apps/logviewer/data:
+    pattern: /$YAMLURL/data.csv
+    handler: FunctionHandler
+    kwargs:
+      function: logviewer.get_data(handler)
+      headers:
+        Content-Type: text/csv
+    cache:
+      duration: 60      # Cache for 60 seconds
+
+import:
+  apps/logviewer/ui:
+    path: $GRAMEXAPPS/ui/gramex.yaml
+    YAMLURL: $YAMLURL/ui/

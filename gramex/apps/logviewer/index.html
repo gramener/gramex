@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Log viewer</title>
+  <link rel="stylesheet" href="ui/bootstraptheme.css">
+  <link rel="stylesheet" href="ui/font-awesome/css/font-awesome.min.css">
+</head>
+<body>
+
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <a class="text-warning text-uppercase" href=".">Log Viewer</a>
+    <div class="collapse navbar-collapse justify-content-between" id="navbarTogglerDemo01">
+      <div></div>
+      <div class="d-flex flex-column flex-lg-row">
+        <!-- TODO: add filters
+        <a class="btn round text-uppercase btn-warning" href="#">Filter</a>
+        <a class="btn round text-uppercase text-light" href="#">Filter</a>
+        <a class="btn round text-uppercase text-light" href="#">Filter</a>
+         -->
+      </div>
+      <div class="d-flex justify-content-center">
+        <a class="btn round text-light" href="data.csv"><i class="fa fa-file-excel-o"></i></a>
+      </div>
+    </div><!-- .navbar-collapse -->
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarTogglerDemo01" aria-controls="navbarTogglerDemo01" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+  </nav>
+
+  <div class="container-fluid">
+    <script id="bars" type="text/html" class="groups row my-3">
+      <% var bars = [
+           {title: 'Top Users', col: 'users'},
+           {title: 'Top IP', col: 'ip'},
+           {title: 'Top Status', col: 'status'},
+           {title: 'Top URL', col: 'uri'},
+         ]
+         bars.forEach(function(conf) { %>
+          <div class="col">
+            <h6 class="bg-light"><%= conf.title %></h2>
+            <% var freq = _.countBy(data, function(row) { return row[conf.col] }) %>
+            <% var top = _.chain(freq).toPairs().sortBy(function(row) { return -row[1] }).slice(0, 10).value() %>
+            <% var max = _.maxBy(top, function(row) { return row[1] })[1] %>
+            <% top.forEach(function(row) { %>
+                <div class="bg-warning border border-light text-nowrap d-flex" style="width:<%= row[1] / max * 100 %>%">
+                  <div class=""><%= numformat(row[1]) %></div>
+                  <a class="ml-2" href="#?<%= conf.col %>=<%= row[0] %>"><%= row[0] %></a>
+                </div>
+            <% }) %>
+          </div>
+      <% }) %>
+    </script>
+
+    <script id="table" type="text/html">
+      <table class="table table-sm">
+        <thead>
+          <tr><th>Date</th><th>IP</th><th>GET</th><th>URL</th><th>Status</th><th>User</th><th>Time</th><th>Error</th></tr>
+        </thead>
+        <tbody>
+          <% var offset = +args._offset || 0 %>
+          <% _.each(data.slice(offset, offset + 100), function(row) {
+            var duration_color = row.duration < 1000 ? 'none' :
+                                 row.duration < 5000 ? '#ffc' : '#ed7d31'
+                method_color = {4: 'orange', 5: 'red'};
+            %>
+            <tr>
+              <td><%= dateformat(row.time) %></td>
+              <td><%= row.ip %></td>
+              <td><%= row.method %></td>
+              <td><%= row.uri %></td>
+              <td style="background-color:<%= method_color[row.status[0]] || 'white' %>; text-align: right">
+                <%= row.status %></td>
+              <td><%= row.user %></td>
+              <td style='background-color: <%= duration_color %>; text-align:right'>
+                <%= Math.round(row.duration / 10) / 100 %></td>
+              <td><%= row.error %></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </script>
+    <!-- TODO
+      - [fibins: seems to be already done] add pagination by changing #?_offset=
+    -->
+  </div>
+
+  <script src="ui/jquery/dist/jquery.min.js"></script>
+  <script src="ui/popper.js/dist/umd/popper.min.js"></script>
+  <script src="ui/bootstrap/dist/js/bootstrap.min.js"></script>
+  <script src="ui/lodash/lodash.min.js"></script>
+  <script src="ui/d3/build/d3.min.js"></script>
+  <script src="ui/url-search-params/build/url-search-params.js"></script>
+  <script>
+    var dateformat = d3.utcFormat('%a %d-%b-%Y %H:%M')
+    var numformat = d3.format(',')
+    // Pre-compile templates
+    var templates = {}
+    $('script[type="text/html"]').each(function() {
+      var $this = $(this)
+      var $target = $('<div></div>').insertAfter($this)
+      var id = $this.attr('id')
+      var cls = $this.attr('class')
+      templates[id] = {
+        el: $target,
+        tmpl: _.template($this.html())
+      }
+      $this.remove()
+      $target.attr('id', id).attr('class', cls)
+    })
+
+    var data
+    function render() {
+      // apply filters
+      var args = _.fromPairs(Array.from((new URLSearchParams(location.hash.replace(/^#/, ''))).entries()))
+      var result = apply_filters(args)
+
+      // render template
+      _.each(templates, function(template, id) {
+        template.el.html(template.tmpl({data: result, args: args}))
+      })
+    }
+
+    function apply_filters(args) {
+      if (!data.length)
+        return data
+      var first_row = data[0]
+      var result = data
+      for (var key in args) {
+        if (!(key in first_row))
+          continue
+        result = _.filter(result, function(row) {
+          return row[key] == args[key]
+        })
+      }
+      return result
+    }
+
+    d3.csv('data.csv', function(result) {
+      // Pre-process the data
+      _.each(result, function(row) {
+        row.time = new Date(+row.time)
+      })
+      data = result
+      render()
+    })
+    $(window).on('hashchange', render)
+  </script>
+</body>
+</html>

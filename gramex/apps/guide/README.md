@@ -29,6 +29,7 @@ classes: toc
 - [Send emails](email/)
 - [Schedule tasks](scheduler/)
 - [Watches files](watch/)
+- [View logs](logviewer/)
 - [Run apps](apps/)
 - [Create custom handlers](handlers/)
 - [Debug Gramex](debug/)

@@ -1,0 +1,4 @@
+import:
+  logviewer:
+    path: $GRAMEXAPPS/logviewer/gramex.yaml   # Source of the app
+    YAMLURL: $YAMLURL/log/                    # Location to mount at

@@ -6,6 +6,7 @@
   "dependencies": {
     "bootstrap": "^4.0.0-beta.2",
     "bootstrap-select": "^1.12.4",
+    "d3": "^4.12.0",
     "daterangepicker": "^2.1.25",
     "font-awesome": "*",
     "jquery": "~3",
