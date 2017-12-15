@@ -3,6 +3,49 @@
 History
 -------
 
+1.25 (2017-12-15)
+~~~~~~~~~~~~~~~~~
+This release features `Smart Alerts`_ - a rule-based email alert service. This
+can be used to:
+
+- Send customized reports on a schedule
+- Send alerts only if specific events happen
+- Mail different groups different reports based on their roles, only if required
+
+The `UI component library`_ has been extended with several custom components:
+
+- Hover, focus and active styles
+- Text size classes
+- Underline classes
+- Absolute positioning classes
+- Overlay classes
+- Divider component
+- Tail (callout) component
+- Switches (styled checkboxes)
+
+Also, D3 4.0 is now part of the UI components library.
+
+A basic `Log viewer`_ app is part of Gramex. It shows the history of all pages
+accessed on Gramex.
+
+Gramex console logs are more informative. Each request prints the name of the
+handler used to process it. This tells you whether the correct handler processed
+the URL or not. Also, when starting up, the list of all handler classes and
+priorities and shown.
+
+To enable debug mode from the command prompt, run ``gramex --settings.debug``.
+
+Credits:
+
+- `Smart Alerts`_ by @mukul.taneja
+- `UI component library`_ by @bhanu.kamapantula
+- `Log viewer`_ by @fibinse
+
+Stats:
+
+- Code base: 20,832 lines (gramex: 13,500, tests: 7,332)
+- Test coverage: 81%
+
 1.24 (2017-11-30)
 ~~~~~~~~~~~~~~~~~
 **Note**: Before installing this release, you install `node`_ 8.x or above, and
@@ -852,3 +895,5 @@ There are two changes that may disrupt your code:
 .. _inactive expiry: https://learn.gramener.com/guide/auth/#inactive-expiry
 .. _Sign up: https://learn.gramener.com/guide/auth/#sign-up
 .. _node: https://nodejs.org/
+.. _Smart Alerts: https://learn.gramener.com/guide/alert/
+.. _Log viewer: https://learn.gramener.com/guide/logviewer/

@@ -5,6 +5,14 @@
     },
     "gramex-projects": {}
   },
+  "alert": {
+    "": {
+      "Smart alerts": -1
+    },
+    "scheduler-examples": {
+      "Scheduler examples": -1
+    }
+  },
   "apps": {
     "": {
       "Gramex Apps": -1
@@ -592,6 +600,11 @@
       "PUT - write data": -1
     }
   },
+  "logviewer": {
+    "": {
+      "Log viewer": -1
+    }
+  },
   "pptxhandler": {
     "": {
       "PPTXHandler": -1
@@ -714,6 +727,12 @@
   "scheduler": {
     "": {
       "Schedule tasks": -1
+    },
+    "schedule-examples": {
+      "Schedule examples": -1
+    },
+    "schedule-timing": {
+      "Schedule timing": -1
     }
   },
   "search": {

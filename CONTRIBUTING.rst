@@ -92,17 +92,17 @@ Release
 When releasing a new version of Gramex:
 
 1. Check `build errors <http://code.gramener.com/s.anand/gramex/builds>`__.
-   Test the ``dev`` branch on Python 2.7 and 3.5::
+   Test the ``dev`` branch on Python 2.7 and 3.6::
 
     PYTHON=/path/to/python2.7 make release-test
-    PYTHON=/path/to/python3.5 make release-test
+    PYTHON=/path/to/python3.6 make release-test
 
 2. Update the following and commit to ``dev`` branch:
 
     - ``HISTORY.rst``
       - add release notes
-      - add code base using (make stats)
-      - add test coverage %
+      - add test coverage % (``make coverage push-coverage``)
+      - add code base using (``make stats``)
     - ``gramex/release.json`` -- update the version number
     - Run ``gramex/apps/guide/search/search.py`` using Python 3
 
