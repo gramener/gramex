@@ -480,7 +480,7 @@ def load_imports(config, source, warn=None):
                     new_conf = _yaml_open(abspath, **conf)
                     if ns is not None:
                         prefix = Path(path).as_posix()
-                        new_conf = _add_ns(new_conf, ns, prefix)
+                        new_conf = _add_ns(new_conf, ns, name + ':' + prefix)
                     imported_paths += load_imports(new_conf, source=abspath)
                     merge(old=node, new=new_conf, mode='setdefault', warn=warn)
             # Delete the import key

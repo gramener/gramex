@@ -71,10 +71,8 @@ class TestPathConfig(unittest.TestCase):
         self.a = info.home / 'config.a.yaml'
         self.b = info.home / 'config.b.yaml'
         self.temp = info.home / 'config.temp.yaml'
+        self.imports = info.home / 'config.imports.yaml'
         self.imp = info.home / 'config.import.yaml'
-        self.imp2 = info.home / 'config.import2.yaml'
-        self.multiimport = info.home / 'config.multiimport.yaml'
-        self.importvars = info.home / 'config.importvars.yaml'
         self.ns = info.home / 'config.namespace.yaml'
         self.final = info.home / 'config.final.yaml'
         self.chain = AttrDict(
@@ -161,44 +159,12 @@ class TestPathConfig(unittest.TestCase):
         unlink(self.temp)
         eq_(+conf_imp, +conf_b)
 
-        conf_imp = ChainConfig(conf=PathConfig(self.imp2))
-        eq_(+conf_imp, +conf_b)
-
-        conf_multiimp = ChainConfig(conf=PathConfig(self.multiimport))
-        for val in (+conf_multiimp).values():
-            eq_(val, +conf_b)
-
-        conf_importvars = ChainConfig(conf=PathConfig(self.importvars))
-        result = +conf_importvars
-        eq_(result.base_YAMLPATH, 'custom-yamlpath')
-        eq_(result.base_YAMLURL, 'custom-yamlurl')
-        eq_(result.custom, {'x': 1, 'y': True})
-
     def test_add_ns(self):
         # Test _add_ns functionality
         eq_(_add_ns({'x': 1}, '*', 'a'), {'a:x': 1})
         eq_(_add_ns({'x': {'y': 1}}, 'x', 'a'), {'x': {'a:y': 1}})
         eq_(_add_ns({'x': {'y': 1}}, ['*', 'x'], 'a'), {'a:x': {'a:y': 1}})
         eq_(_add_ns({'x': {'y': 1}}, ['x', '*'], 'a'), {'a:x': {'a:y': 1}})
-
-    def test_namespace(self):
-        # Test namespace functionality in import
-        conf_ns = +ChainConfig(conf=PathConfig(self.ns))
-        eq_(conf_ns.ns_star, {
-            'config.b.yaml:b': 2,
-            'config.b.yaml:c': {'xx': 3, 'yy': 4}
-        })
-        eq_(conf_ns.ns_c, {
-            'b': 2,
-            'c': {'config.b.yaml:xx': 3, 'config.b.yaml:yy': 4}
-        })
-        eq_(conf_ns.ns_star_c, {
-            'config.b.yaml:b': 2,
-            'config.b.yaml:c': {'config.b.yaml:xx': 3, 'config.b.yaml:yy': 4}
-        })
-        eq_(conf_ns.ns_import, {
-            'url': {'config.urlimport.yaml:handler': {'pattern': 'x', 'a': 1, 'b': 200, 'd': 'x'}}
-        })
 
     def test_variables(self):
         # Templates interpolate string variables

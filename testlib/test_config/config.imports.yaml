@@ -1,0 +1,129 @@
+import-file:
+  source:
+    import: config.b.yaml
+  target:
+    b: 2
+    c:
+        xx: 3
+        yy: 4
+    d: null
+
+import-list:
+  source:
+    import: [config.a.yaml, config.b.yaml]
+  target:
+    a: 1
+    b: 200
+    d: x
+    c:
+      xx: 3
+      yy: 4
+
+import-wildcard:
+  source:
+    import: 'dir1/config.*.yaml'
+  target:
+    import: [dir1/config.a.yaml, dir1/config.b.yaml]
+
+import-glob:
+  source:
+    import: 'dir1/**/config.*.yaml'
+  target:
+    import: [dir1/config.a.yaml, dir1/config.b.yaml, dir1/subdir/config.c.yaml]
+
+import-missing-file:
+  source:
+    import: [config.b.yaml, config.missing.yaml]
+  target:
+    import: config.b.yaml
+
+import-dict-with-path:
+  source:
+    import:
+      path: config.a.yaml
+  target:
+    import: config.a.yaml
+
+import-list-of-dict-with-path:
+  source:
+    import: [{path: config.a.yaml}, {path: config.b.yaml}]
+  target:
+    import: [config.a.yaml, config.b.yaml]
+
+import-dict-of-dict-with-path:
+  source:
+    import:
+      a: {path: config.a.yaml}
+      b: {path: config.b.yaml}
+  target:
+    import: [config.a.yaml, config.b.yaml]
+
+import-in-import:
+  source:
+    import: config.subimport.yaml
+  target:
+    import: config.b.yaml
+
+import-without-vars:
+  source:
+    import:
+      path: config.importvars.yaml
+  target:
+    YAMLPATH: $YAMLPATH
+    YAMLURL: $YAMLURL
+    CUSTOM: ''
+
+import-vars:
+  source:
+    import:
+      path: config.importvars.yaml
+      YAMLPATH: custom-yamlpath
+      YAMLURL: custom-yamlurl
+      CUSTOM: {x: 1, y: true}
+  target:
+    YAMLPATH: custom-yamlpath
+    YAMLURL: custom-yamlurl
+    CUSTOM: {x: 1, y: true}
+
+
+import-namespace-star:
+  source:
+    import: {sub: {path: config.b.yaml, namespace: '*'}}
+  target:
+    'sub:config.b.yaml:b': 2
+    'sub:config.b.yaml:c': {'xx': 3, 'yy': 4}
+    'sub:config.b.yaml:d': null
+
+import-namespace-c:
+  source:
+    import: {sub: {path: config.b.yaml, namespace: 'c'}}
+  target:
+    b: 2
+    c: {'sub:config.b.yaml:xx': 3, 'sub:config.b.yaml:yy': 4}
+    d: null
+
+import-namespace-star_c:
+  source:
+    import:  {sub: {path: config.b.yaml, namespace: ['*', 'c']}}
+  target:
+    'sub:config.b.yaml:b': 2
+    'sub:config.b.yaml:c': {'sub:config.b.yaml:xx': 3, 'sub:config.b.yaml:yy': 4}
+    'sub:config.b.yaml:d': null
+
+import-namespace-vars:
+  source:
+    import:
+      app1:
+        path: config.urlimport.yaml
+        YAMLURL: url1
+        namespace: [url]
+      app2:
+        path: config.urlimport.yaml
+        YAMLURL: url2
+        namespace: [url]
+  target:
+    url:
+      app1:config.urlimport.yaml:pattern:
+        handler: url1
+      app2:config.urlimport.yaml:pattern:
+        handler: url2

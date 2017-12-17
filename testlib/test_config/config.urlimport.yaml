@@ -1,5 +1,3 @@
 url:
-  handler:
-    pattern: x
-    import:
-      subdir: config.a.yaml
+  pattern:
+    handler: $YAMLURL
