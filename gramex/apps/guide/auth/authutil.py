@@ -37,7 +37,7 @@ def create_user_database(url, table, user, password, salt, excel):
         ['delta', sha256_crypt.encrypt('delta', salt=salt), email % 'delta', None],
     ], columns=[user, password, 'email', 'role'])
     data.to_sql(table, engine, index=False, if_exists='replace')
-    data.to_excel(excel, index=False)
+    data.to_excel(excel, index=False)   # noqa - encoding not required
 
 
 def store_value(handler):

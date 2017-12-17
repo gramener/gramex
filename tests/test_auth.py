@@ -447,7 +447,7 @@ class TestDBCSVAuth(DBAuthBase, LoginMixin, LoginFailureMixin):
     def create_database(url):
         data = pd.read_csv(os.path.join(folder, 'userdata.csv'), encoding='cp1252')
         data['password'] = data['password'] + data['salt']
-        data.to_csv(url, index=False)
+        data.to_csv(url, encoding='utf-8', index=False)
         tempfiles['dbcsv'] = url
 
     @classmethod
@@ -463,7 +463,7 @@ class TestDBExcelAuth(DBAuthBase, LoginMixin, LoginFailureMixin):
     def create_database(url):
         data = pd.read_csv(os.path.join(folder, 'userdata.csv'), encoding='cp1252')
         data['password'] = data['password'] + data['salt']
-        data.to_excel(url, index=False)
+        data.to_excel(url, index=False)         # noqa - encoding not required
         tempfiles['dbexcel'] = url
 
     @classmethod
