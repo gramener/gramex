@@ -17,6 +17,7 @@ from shutilwhich import which
 from pathlib import Path
 from subprocess import Popen, check_output, CalledProcessError
 from orderedattrdict import AttrDict
+from orderedattrdict.yamlutils import AttrDictYAMLLoader
 from zipfile import ZipFile
 from tornado.template import Template
 from orderedattrdict.yamlutils import from_yaml         # noqa
@@ -42,7 +43,7 @@ install: |
     replaced by the target directory.
 
     After installation, runs "gramex setup" which runs the Makefile, setup.ps1,
-    setup.sh, requirements.txt, setup.py, npm install and bower install.
+    setup.sh, requirements.txt, setup.py, yarn/npm install and bower install.
 
     Installed apps:
     {apps}
@@ -59,7 +60,7 @@ setup: |
         - bash setup.sh
         - pip install --upgrade -r requirements.txt
         - python setup.py
-        - npm install
+        - yarn/npm install
         - bower install
 
 run: |
@@ -125,8 +126,8 @@ init: |
     Initializes a Gramex project at the current or target dir. Specifically, it:
     - Sets up a git repo
     - Install supporting files for a gramex project
-    - Runs gramex setup (which runs npm install and other dependencies)
-''')
+    - Runs gramex setup (which runs yarn/npm install and other dependencies)
+''', Loader=AttrDictYAMLLoader)
 
 
 class TryAgainError(Exception):
@@ -314,7 +315,7 @@ package.json:
     npm: '"{EXE}" install'
 bower.json:
     bower: '"{EXE}" --allow-root install'
-''')
+''', Loader=AttrDictYAMLLoader)
 
 
 def run_setup(target):
@@ -334,7 +335,7 @@ def run_setup(target):
     - ``bash setup.sh``
     - ``pip install -r requirements.txt``
     - ``python setup.py``
-    - ``npm install``
+    - ``yarn install`` else ``npm install``
     - ``bower --allow-root install``
     '''
     if not os.path.exists(target):

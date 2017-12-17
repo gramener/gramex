@@ -38,4 +38,5 @@ deploy:
         cp -R /mnt/gramener/apps/gramex/gramex/apps/guide /mnt/gramener/apps/v1/;
         cp -R /mnt/gramener/apps/gramex/gramex/apps/update /mnt/gramener/apps/v1/gramex-update;
         /mnt/gramener/anaconda/bin/gramex setup /mnt/gramener/apps/v1/guide;
+        /mnt/gramener/anaconda/bin/gramex setup ui;
       "'
