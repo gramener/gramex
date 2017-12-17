@@ -247,9 +247,7 @@ app:
 schedule:
     # Every day and on startup, check if Gramex needs to be updated
     gramex_update:
-        function: gramex.gramex_update
-        kwargs:
-            url: https://gramener.com/gramex-update/
+        function: gramex.gramex_update(url='https://gramener.com/gramex-update/')
         startup: true
         minutes: 0
         hours: 0

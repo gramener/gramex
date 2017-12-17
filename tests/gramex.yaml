@@ -2301,3 +2301,6 @@ alert:
 
 # Import from all subdirectories
 import: {subdir: '*/gramex.yaml'}
+
+# Invalid services should be ignored
+invalid-service: true
