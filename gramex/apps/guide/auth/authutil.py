@@ -4,46 +4,40 @@ import random
 import tornado
 import datetime
 import sqlalchemy
+import pandas as pd
 from gramex.config import str_utf8
 from passlib.hash import sha256_crypt
 from six.moves.urllib.parse import urlencode
 
 
-def create_user_database(url, table, user, password, salt):
+def create_user_database(url, table, user, password, salt, excel):
     # Connect to the SQLAlchemy engine specified at url.
     # For example, this could be sqlite:///auth.db
     engine = sqlalchemy.create_engine(url, encoding=str_utf8)
 
-    # In the Gramex guide, we're using an sqlite3 database which is a file.
+    # In the Gramex guide, we're using an sqlite3 database and Excel file.
     # If the target folder doesn't exist, make sure we create it.
-    folder = os.path.dirname(os.path.abspath(engine.url.database))
-    if not os.path.exists(folder):
-        os.makedirs(folder)
+    for path in (engine.url.database, excel):
+        folder = os.path.dirname(os.path.abspath(path))
+        if not os.path.exists(folder):
+            os.makedirs(folder)
 
-    # This method re-creates the user table each time. So drop it and create it.
-    # We avoid 'CREATE TABLE IF NOT EXISTS' to allow table structure changes.
+    # This method re-creates the user table each time.
     # The table must have:
     #   a column for the username (typically called user)
     #   a column for the password (typically called password)
-    #   and any other optional columns (here, we're adding a string called role)
-    engine.execute('DROP TABLE IF EXISTS %s' % table)
-    engine.execute('CREATE TABLE %s (%s text, %s text, email, role)' %
-                   (table, user, password))
-
-    # Add all the users, encrypted passwords, and a role string.
+    #   and any other optional columns (here, we're adding email and role)
     # We're using sha256_crypt as the password hash.
-    # See the passlib documentation for details.
-    # Email IDs used are
-    #   gramex.guide+alpha@gmail.com
-    #   gramex.guide+beta@gmail.com
-    #   etc
+    # Email IDs used are gramex.guide+alpha@gmail.com, gramex.guide+beta@gmail.com, etc
     email = 'gramex.guide+%s@gmail.com'
-    engine.execute('INSERT INTO %s VALUES (?, ?, ?, ?)' % table, [
+    data = pd.DataFrame([
         ['alpha', sha256_crypt.encrypt('alpha', salt=salt), email % 'alpha', 'admin manager'],
         ['beta', sha256_crypt.encrypt('beta', salt=salt), email % 'beta', 'manager employee'],
         ['gamma', sha256_crypt.encrypt('gamma', salt=salt), email % 'gamma', 'employee'],
         ['delta', sha256_crypt.encrypt('delta', salt=salt), email % 'delta', None],
-    ])
+    ], columns=[user, password, 'email', 'role'])
+    data.to_sql(table, engine, index=False, if_exists='replace')
+    data.to_excel(excel, index=False)
 
 
 def store_value(handler):

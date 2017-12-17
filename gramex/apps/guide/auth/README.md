@@ -1,5 +1,8 @@
 title: Gramex Authentication
 
+Your session data is:
+<iframe frameborder="0" src="session"></iframe>
+
 [TOC]
 
 # Sessions
@@ -335,7 +338,7 @@ This is similar to [direct LDAP login](#direct-ldap-login), but the sequence fol
 
 ## Database auth
 
-This is the minimal configuration that lets you log in from a [database table](dbsimple):
+This is the minimal configuration that lets you log in from an Excel file:
 
     :::yaml
     url:
@@ -343,14 +346,17 @@ This is the minimal configuration that lets you log in from a [database table](d
         pattern: /db                          # Map this URL
         handler: DBAuth                       # to the DBAuth handler
         kwargs:
-            url: sqlite:///$YAMLPATH/auth.db  # Pick up list of users from this sqlalchemy URL
-            table: users                      # ... and this table (may be prefixed as schema.users)
+            url: $YAMLPATH/auth.xlsx          # Pick up list of users from this XLSX (or CSV) file
             user:
                 column: user                  # The user column in users table has the user ID
             password:
                 column: password              # The users.password column has the password
+            redirect:                         # After logging in, redirect the user to:
+                query: next                   #      the ?next= URL
+                header: Referer               # else the Referer: header (i.e. page before login)
+                url: /$YAMLURL/               # else the home page of current directory
 
-Now create an `auth.db` with a table called `users` as follows:
+Now create an `auth.xlsx` with the first sheet like this:
 
     user      password
     -----     --------
@@ -358,25 +364,25 @@ Now create an `auth.db` with a table called `users` as follows:
     beta      beta
     ...       ...
 
-The code that creates this database is:
-
-    :::python
-    engine = sqlalchemy.create_engine('sqlite:///auth.db', encoding='utf-8')
-    engine.execute('CREATE TABLE users (user text, password text)')
-    engine.execute('INSERT INTO users VALUES (?, ?)', [
-        ['alpha', 'alpha'],
-        ['beta', 'beta'],
-        # ...
-    ])
-
 With this, you can log into `/db` as `alpha` and `alpha`, etc. It displays a
 [minimal HTML template][auth-template] that asks for an ID and password, and
-matches it with the `auth.db` sqlite3 database. 
+matches it with the `auth.xlsx` database. 
+
+<div class="example">
+  <a class="example-demo" href="dbsimple">DBAuth example</a>
+  <a class="example-src" href="http://code.gramener.com/s.anand/gramex/tree/master/gramex/apps/guide/auth/gramex.yaml">Source</a>
+</div>
 
 [auth-template]: http://code.gramener.com/s.anand/gramex/blob/master/gramex/handlers/auth.template.html
 
-You can configure several aspects of this flow. Below is a full configuration --
-[click here to try it out](db):
+You can configure several aspects of this flow. You can (and *should*) use:
+
+- `template:` to customize the appearance of the login page
+- `url:` to a SQLAlchemy database (with `table:`) instead of using CSV / Excel files
+- `password.function:` to encrypt the password
+- `delay:` to specify the login failure delay
+
+Here is a more complete example:
 
     :::yaml
     url:
@@ -399,6 +405,11 @@ You can configure several aspects of this flow. Below is a full configuration --
                 # Remember to change secret-key to something unique
                 function: passlib.hash.sha256_crypt.encrypt(content, salt="secret-key")
 
+<div class="example">
+  <a class="example-demo" href="db">DBAuth example</a>
+  <a class="example-src" href="http://code.gramener.com/s.anand/gramex/tree/master/gramex/apps/guide/auth/gramex.yaml">Source</a>
+</div>
+
 You should create a [HTML login form](db) that requests a username and password
 (with an [xsrf][xsrf] field). See [login templates](#login-templates) to learn
 how to create one.
@@ -406,9 +417,20 @@ how to create one.
 In the `gramex.yaml` configuration above, the usernames and passwords are stored
 in the `users` table of the SQLite `auth.db` file. The `user` and `password`
 columns of the table map to the `user` and `password` query arguments.
+Here is sample code to populate it:
+
+    :::python
+    engine = sqlalchemy.create_engine('sqlite:///auth.db', encoding='utf-8')
+    engine.execute('CREATE TABLE users (user text, password text)')
+    engine.execute('INSERT INTO users VALUES (?, ?)', [
+        ['alpha', 'alpha'],
+        ['beta', 'beta'],
+        # ...
+    ])
 
 The password supports optional encryption. Before the password is compared with
-the database, it is transformed via the `function:` provided. This function has access to 2 pre-defined variables:
+the database, it is transformed via the `function:` provided. This function has
+access to 2 pre-defined variables:
 
 1. `handler`: the Handler object
 1. `content`: the user-provided password

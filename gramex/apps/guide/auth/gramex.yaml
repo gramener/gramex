@@ -1,4 +1,5 @@
 variables:
+    USER_DATABASE_EXCEL: $GRAMEXDATA/apps/guide/auth.xlsx
     USER_DATABASE_URL: sqlite:///$GRAMEXDATA/apps/guide/auth.db
     USER_DATABASE_TABLE: users
     USER_DATABASE_USERCOLUMN: user
@@ -144,8 +145,7 @@ url:
         pattern: /$YAMLURL/dbsimple           # Map this URL
         handler: DBAuth                       # to the DBAuth handler
         kwargs:
-            url: $USER_DATABASE_URL
-            table: $USER_DATABASE_TABLE
+            url: $USER_DATABASE_EXCEL
             user:
                 column: $USER_DATABASE_USERCOLUMN
             password:
@@ -153,7 +153,8 @@ url:
                 function: passlib.hash.sha256_crypt.encrypt(content, salt="$USER_DATABASE_SALT")
             redirect:
                 query: next
-                url: /$YAMLURL
+                header: Referer
+                url: /$YAMLURL/
 
     auth/db:
         pattern: /$YAMLURL/db
@@ -313,6 +314,7 @@ schedule:
             user: $USER_DATABASE_USERCOLUMN
             password: $USER_DATABASE_PASSWORDCOLUMN
             salt: $USER_DATABASE_SALT
+            excel: $USER_DATABASE_EXCEL
         startup: true
 
 import: '*/gramex.yaml'

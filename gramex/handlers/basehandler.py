@@ -59,6 +59,19 @@ class BaseMixin(object):
             cls.log_exception = cls.debug_exception
 
     @classmethod
+    def clear_special_keys(cls, kwargs, *args):
+        '''
+        Remove keys handled by BaseHandler that may interfere with setup().
+        This should be called explicitly in setup() where required.
+        '''
+        # TODO: make this more robust / cleaner
+        for special_key in ['transform', 'redirect', 'auth', 'log', 'set_xsrf',
+                            'error', 'xsrf_cookies', 'headers']:
+            kwargs.pop(special_key, None)
+        for special_key in args:
+            kwargs.pop(special_key, None)
+
+    @classmethod
     def setup_default_kwargs(cls):
         '''Use configs under handlers.<ClassName>.* as the default for kwargs'''
         update = objectpath(conf, 'handlers.' + cls.conf.handler, {})

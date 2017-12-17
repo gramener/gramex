@@ -442,6 +442,38 @@ class TestDBAuth(DBAuthBase, LoginMixin, LoginFailureMixin):
         self.login_ok('alpha', 'alpha', headers={'salt': '123'}, check_next='/dir/index/')
 
 
+class TestDBCSVAuth(DBAuthBase, LoginMixin, LoginFailureMixin):
+    @staticmethod
+    def create_database(url):
+        data = pd.read_csv(os.path.join(folder, 'userdata.csv'), encoding='cp1252')
+        data['password'] = data['password'] + data['salt']
+        data.to_csv(url, index=False)
+        tempfiles['dbcsv'] = url
+
+    @classmethod
+    def setUpClass(cls):
+        super(DBAuthBase, cls).setUpClass()
+        config = gramex.conf.url['auth/dbcsv'].kwargs
+        cls.create_database(config.url)
+        cls.url = server.base_url + '/auth/dbcsv'
+
+
+class TestDBExcelAuth(DBAuthBase, LoginMixin, LoginFailureMixin):
+    @staticmethod
+    def create_database(url):
+        data = pd.read_csv(os.path.join(folder, 'userdata.csv'), encoding='cp1252')
+        data['password'] = data['password'] + data['salt']
+        data.to_excel(url, index=False)
+        tempfiles['dbexcel'] = url
+
+    @classmethod
+    def setUpClass(cls):
+        super(DBAuthBase, cls).setUpClass()
+        config = gramex.conf.url['auth/dbexcel'].kwargs
+        cls.create_database(config.url)
+        cls.url = server.base_url + '/auth/dbexcel'
+
+
 class TestDBAuthSchema(DBAuthBase, LoginMixin):
     @classmethod
     def setUpClass(cls):

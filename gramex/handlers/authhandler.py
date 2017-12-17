@@ -444,8 +444,8 @@ class DBAuth(SimpleAuth):
     The configuration (``kwargs``) for DBAuth looks like this::
 
         template: $YAMLPATH/auth.template.html  # Render the login form template
-        url: sqlite:///$YAMLPATH/auth.db    # Pick up list of users from this sqlalchemy URL
-        table: users                        # ... and this table
+        url: sqlite:///$YAMLPATH/auth.db    # List of users is in this sqlalchemy URL or file
+        table: users                        # ... and this table (if url is a database)
         prepare: some_function(args)
         user:
             column: user                    # The users.user column is matched with
@@ -510,11 +510,12 @@ class DBAuth(SimpleAuth):
     PASSWORD_CHARS = string.digits + string.ascii_letters
 
     @classmethod
-    def setup(cls, url, table, user, password, forgot=None, signup=None, **kwargs):
+    def setup(cls, url, user, password, table=None, forgot=None, signup=None, **kwargs):
         super(DBAuth, cls).setup(user=user, password=password, **kwargs)
-        from sqlalchemy import create_engine
-        cls.tablename, cls.forgot, cls.signup = table, forgot, signup
-        cls.engine = create_engine(url, **kwargs.get('parameters', {}))
+        cls.clear_special_keys(kwargs, 'template', 'delay', 'prepare', 'action', 'session_expiry', 'session_inactive')
+        cls.forgot, cls.signup = forgot, signup
+        cls.query_kwargs = {'url': url, 'table': table}
+        cls.query_kwargs.update(kwargs)
         if isinstance(cls.forgot, AttrDict):
             default_minutes_to_expiry = 15
             cls.forgot.setdefault('template', _forgot_template)
@@ -549,27 +550,14 @@ class DBAuth(SimpleAuth):
                 password, vars=AttrDict(handler=None, content=None),
                 filename='url:%s:encrypt' % (cls.name)))
 
-    @classmethod
-    def bind_to_db(cls):
-        if not hasattr(cls, 'table'):
-            from sqlalchemy import MetaData, Table
-            meta = MetaData(bind=cls.engine)
-            if '.' in cls.tablename:
-                schema, table = cls.tablename.rsplit('.', 1)
-                cls.table = Table(table, meta, autoload=True, autoload_with=cls.engine,
-                                  schema=schema)
-            else:
-                cls.table = Table(cls.tablename, meta, autoload=True, autoload_with=cls.engine)
-
     def _exec_query(self, query, engine):
         result = engine.execute(query)
         if result.returns_rows:
             return result.fetchone()
 
-    def run_query(self, query, engine=None):
-        if engine is None:
-            engine = self.engine
-        return gramex.service.threadpool.submit(self._exec_query, query, engine)
+    def _recovery(self, query):
+        # Run a query on the recovery engine
+        return gramex.service.threadpool.submit(self._exec_query, query, self.recover['engine'])
 
     def report_error(self, status, event, error, data=None):
         '''
@@ -590,12 +578,6 @@ class DBAuth(SimpleAuth):
 
     @tornado.gen.coroutine
     def post(self):
-        # To access the table, we need to connect to the database. Doing that in
-        # setup() is too early -- schedule or other methods may not have created
-        # the table by then. So try here, and retry every request.
-        self.bind_to_db()
-        # TODO: if this bind does not work, report an error on connection
-
         if self.forgot and self.forgot.key in self.args:
             yield self.forgot_password()
         elif self.signup and self.signup.key in self.args:
@@ -611,17 +593,14 @@ class DBAuth(SimpleAuth):
             for result in encrypt(handler=self, content=password):
                 password = result
 
-        from sqlalchemy import and_
-        user_obj = yield self.run_query(self.table.select().where(and_(
-            self.table.c[self.user.column] == user,
-            self.table.c[self.password.column] == password,
-        )))
-
-        if user_obj is not None:
+        users = yield gramex.service.threadpool.submit(gramex.data.filter, args={
+            self.user.column: [user],
+            self.password.column: [password],
+        }, **self.query_kwargs)
+        if len(users) > 0:
             # Delete password from user object before storing it in the session
-            user_obj = dict(user_obj)
-            user_obj.pop(self.password.column, None)
-            self.set_user(user_obj, id=self.user.column)
+            del users[self.password.column]
+            self.set_user(users.iloc[0].to_dict(), id=self.user.column)
             self.redirect_next()
         else:
             yield self.fail_user({'user': user}, 'user')
@@ -640,10 +619,12 @@ class DBAuth(SimpleAuth):
             forgot_user = self.get_arg(self.user.arg, None)
             forgot_email = self.get_arg(self.forgot.arg, None)
             if forgot_user:
-                query = self.table.c[self.user.column] == forgot_user
+                query = {self.user.column: [forgot_user]}
             else:
-                query = self.table.c[self.forgot.email_column] == forgot_email
-            user = yield self.run_query(self.table.select().where(query))
+                query = {self.forgot.email_column: [forgot_email]}
+            users = yield gramex.service.threadpool.submit(
+                gramex.data.filter, args=query, **self.query_kwargs)
+            user = None if len(users) == 0 else users.iloc[0].to_dict()
             email_column = self.forgot.get('email_column', 'email')
 
             # If a matching user exists in the database
@@ -657,8 +638,7 @@ class DBAuth(SimpleAuth):
                     'email': user[email_column],
                     'token': token,
                     'expire': expire}
-                yield self.run_query(self.recover['table'].insert().values(values),
-                                     self.recover['engine'])
+                yield self._recovery(self.recover['table'].insert().values(values))
                 # send password reset mail to user
                 mailer = gramex.service.email[self.forgot.email_from]
                 reset_url = self.request.protocol + '://' + self.request.host + self.request.path
@@ -682,8 +662,7 @@ class DBAuth(SimpleAuth):
         # Step 2: User clicks on email, submits new password via POST ?forgot=<token>&password=...
         else:
             where = self.recover['table'].c['token'] == forgot_key
-            row = yield self.run_query(self.recover['table'].select().where(where),
-                                       self.recover['engine'])
+            row = yield self._recovery(self.recover['table'].select().where(where))
             # if system generated token in database
             if row is not None:
                 # if token is not expired
@@ -692,16 +671,14 @@ class DBAuth(SimpleAuth):
                     for encrypt in self.encrypt:
                         for result in encrypt(handler=self, content=password):
                             password = result
-                    # update password in database
-                    values = {
-                        self.user.column: row['user'],
-                        self.password.column: password
-                    }
-                    yield self.run_query(self.table.update().where(
-                        self.table.c[self.user.column] == row['user']
-                    ).values(values))
-                    yield self.run_query(self.recover['table'].delete(where),
-                                         self.recover['engine'])
+                    # Update password in database
+                    yield gramex.service.threadpool.submit(
+                        gramex.data.update, id=[self.user.column], args={
+                            self.user.column: [row['user']],
+                            self.password.column: [password]
+                        }, **self.query_kwargs)
+                    # Remove recovery token
+                    yield self._recovery(self.recover['table'].delete(where))
                 else:
                     error = self.report_error(
                         UNAUTHORIZED, 'forgot-token-expired', 'Token expired')
@@ -713,9 +690,9 @@ class DBAuth(SimpleAuth):
     def signup_user(self):
         # Checks if email exists => suggest password recovery
         signup_user = self.get_arg(self.user.arg, None)
-        query = self.table.c[self.user.column] == signup_user
-        row = yield self.run_query(self.table.select().where(query))
-        if row is not None:
+        users = yield gramex.service.threadpool.submit(
+            gramex.data.filter, args={self.user.column: [signup_user]}, **self.query_kwargs)
+        if len(users) > 0:
             self.render_template(self.signup.template, error=self.report_error(
                 BAD_REQUEST, 'signup-exists', 'User exists'))
             raise tornado.gen.Return()
@@ -733,16 +710,18 @@ class DBAuth(SimpleAuth):
         #  - email from ``forgot.arg:`` into ``forgot.email_column:``
         #  - password using random 20 char password into ``password.column`` - no encryption
         values = {
-            self.user.column: signup_user,
+            self.user.column: [signup_user],
             # TODO: allow admins (maybe users) to enter their own passwords in case of no email
-            self.password.column: ''.join(random.choice(self.PASSWORD_CHARS)
-                                          for c in range(self.PASSWORD_LENGTH)),
+            self.password.column: [''.join(random.choice(self.PASSWORD_CHARS)
+                                           for c in range(self.PASSWORD_LENGTH))],
         }
         for field, column in self.signup.columns.items():
-            values[field] = self.get_arg(column, None)
+            values[field] = self.args.get(column, [])
         if self.forgot and self.forgot.arg in self.args:
-            values[self.forgot.email_column] = self.get_arg(self.forgot.arg)
-        yield self.run_query(self.table.insert().values(values))
+            values[self.forgot.email_column] = self.args.get(self.forgot.arg, [])
+        yield gramex.service.threadpool.submit(
+            gramex.data.insert, id=[self.user.column], args=values, **self.query_kwargs)
+
         # Send a password reset link
         yield self.forgot_password()
 

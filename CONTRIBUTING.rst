@@ -101,7 +101,7 @@ When releasing a new version of Gramex:
 
     - ``HISTORY.rst``
       - add release notes
-      - add test coverage % (``make coverage push-coverage``)
+      - add test coverage % (``make coverage``)
       - add code base using (``make stats``)
     - ``gramex/release.json`` -- update the version number
     - Run ``gramex/apps/guide/search/search.py`` using Python 3

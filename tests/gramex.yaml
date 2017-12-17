@@ -1910,6 +1910,42 @@ url:
           query: next
           header: NEXT
           url: /dir/index/
+  auth/dbcsv:
+    pattern: /auth/dbcsv
+    handler: DBAuth
+    kwargs:
+      template: $YAMLPATH/auth.html
+      url: $YAMLPATH/login.csv
+      user:
+          column: user
+          arg: user
+      password:
+          column: password
+          arg: password
+          function: utils.encrypt(handler, content)
+      delay: [0.4, 0.8]
+      redirect:
+          query: next
+          header: NEXT
+          url: /dir/index/
+  auth/dbexcel:
+    pattern: /auth/dbexcel
+    handler: DBAuth
+    kwargs:
+      template: $YAMLPATH/auth.html
+      url: $YAMLPATH/login.xlsx
+      user:
+          column: user
+          arg: user
+      password:
+          column: password
+          arg: password
+          function: utils.encrypt(handler, content)
+      delay: [0.4, 0.8]
+      redirect:
+          query: next
+          header: NEXT
+          url: /dir/index/
 
   auth/functionhandler:
     pattern: /auth/functionhandler
