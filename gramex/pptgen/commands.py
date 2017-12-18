@@ -901,8 +901,6 @@ def heatgrid(shape, spec, data):
         txt = parent.add_textbox(
             left + _width * idx + left_margin, top - height, _width, height)
         add_text_to_shape(txt, '{}'.format(column), **styles)
-    if 'text' in spec:
-        spec['text'] = compile_function(spec, 'text', data, handler)
     # Cell width
     for index, row in enumerate(rows):
         _data = data[data[spec['row']] == row].dropna()
@@ -950,10 +948,11 @@ def heatgrid(shape, spec, data):
                 _txt = parent.add_textbox(
                     xaxis, yaxis, _width - left_pad - right_pad,
                     height - top_pad - bottom_pad)
-                cell_txt = '{}'.format(_row[spec['value']])
-                if callable(spec['text']):
-                    cell_txt = spec['text'](_row)
-                if np.isnan(_row[spec['value']]) and spec.get('na-text'):
+                if isinstance(spec['text'], dict) and 'function' in spec['text']:
+                    cell_txt = compile_function(spec, 'text', _row, handler)
+                else:
+                    cell_txt = '{}'.format(_row[spec['value']])
+                if pd.isnull(cell_txt) and spec.get('na-text'):
                     cell_txt = spec.get('na-text')
                 add_text_to_shape(_txt, cell_txt, **style)
         # Adding row's text in left side

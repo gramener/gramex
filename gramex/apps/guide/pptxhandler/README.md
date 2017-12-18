@@ -807,7 +807,12 @@ The following keys can also be specified as an [expression](#expressions) and py
 - `column-order`: optional, list of unique values(from heatgrid column from data). In the same order columns will get created in heatmap. Accepts `function: python expresion under` as well.
 - `row-order`: optional, same like `column-order` but for rows.
 - `value`: Columns name from data to show for each cell heatgrid.
-- `text`: Default `False` if defined text inside cell will be formated.
+- `text`:
+    - `false` is the default. It does not show any text
+    - `true`, shows the `value` column
+    - `{function: data['label']}` shows custom text from the `label` column
+    - `{function: module.method(data, handler)}` can be any function/expression using `data` which is the row, and `handler`
+  `data` (which is the row) and `handler`.
 - `left-margin`: In percentage(0-1) of total width of shape. Left margin from the shape from where heatgrid will start populating.
 - `cell-width`: Width of each cell. Default based on columns width of shape will defined.
 - `cell-height`: Height of each cell. Default based on number of rows height of shape will defined.

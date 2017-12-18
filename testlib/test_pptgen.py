@@ -7,6 +7,7 @@ import requests
 import tempfile
 import numpy as np
 import pandas as pd
+from collections import Counter
 from gramex import pptgen
 from pptx import Presentation
 from unittest import TestCase
@@ -654,7 +655,7 @@ class TestPPTGen(TestCase):
                         'column': 'city',
                         'value': 'sales',
                         'text': {
-                            'function': "lambda x: '{}'.format(x['sales'])"
+                            'function': "'{}'.format(data['city'])"
                         },
                         'left-margin': leftmargin,
                         'cell-width': cell_width,
@@ -676,9 +677,12 @@ class TestPPTGen(TestCase):
                 }
             })
         eq_(len(target.slides), 1)
-        total_rects = len(data['देश'].unique()) * len(data['city'].unique())
-        total_txt = total_rects + len(data['देश'].unique()) + len(data['city'].unique())
-        rects_count, textboxes = 0, 0
+        n_countries, n_cities = len(data['देश'].unique()), len(data['city'].unique())
+        total_rects = n_countries * n_cities
+        total_txt = total_rects + n_countries + n_cities
+        total_texts = Counter({key: 1 for key in data['देश'].unique()})
+        total_texts.update({key: 1 + n_countries for key in data['city'].unique()})
+        rects_count, textboxes, texts = 0, 0, Counter()
         for shape in target.slides[0].shapes:
             if shape.name != 'Title 1':
                 if shape.shape_type == MSO_SHAPE_TYPE.TEXT_BOX:
@@ -687,12 +691,14 @@ class TestPPTGen(TestCase):
                     font_size = int(shape.text_frame.paragraphs[0].runs[0].font.size / pix_to_inch)
                     eq_(font_size, font - 1)
                     ok_(shape.text_frame.paragraphs[0].alignment == PP_ALIGN.CENTER)
+                    texts[shape.text_frame.paragraphs[0].runs[0].text] += 1
                 elif shape.shape_type == MSO_SHAPE.RECTANGLE:
                     rects_count += 1
                     eq_(shape.width, (cell_width - default_margin - default_margin) * pix_to_inch)
                     eq_(shape.height, (cell_height - default_margin) * pix_to_inch)
         eq_(total_rects, rects_count)
         eq_(total_txt, textboxes)
+        eq_(texts, total_texts)
 
     def test_sankey(self):
         # Test case for sankey
