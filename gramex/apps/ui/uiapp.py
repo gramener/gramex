@@ -51,7 +51,8 @@ def bootstraptheme(handler):
             )
             handle.write(result)
         # Run sass to generate the output
-        proc = gramex.cache.Subprocess(['node', sass_path, scss_path, cache_path])
+        options = ['--output-style', 'compressed']
+        proc = gramex.cache.Subprocess(['node', sass_path, scss_path, cache_path] + options)
         out, err = yield proc.wait_for_exit()
         if proc.proc.returncode:
             app_log.error('node-sass error: %s', err)
