@@ -117,6 +117,8 @@ When releasing a new version of Gramex:
     git push --follow-tags
     git checkout dev            # Switch back to dev
 
-5. Push stats to gramener.com using::
+5. Deploy on gramener.com::
 
+    # Push states
     make push-docs push-coverage
+    # Restart Gramex at port 9988 on gramener.com
