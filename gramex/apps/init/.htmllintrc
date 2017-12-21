@@ -46,6 +46,7 @@
         // "i",                             // Font-awesome icons use <i>
         "s",                                // avoid strike tag, deprecated
         "br",                               // avoid break tag, bad practice, use margin/padding instead
+        "style",                            // Put styles into CSS files
         "u",
         "strike",
         "font",
@@ -55,7 +56,5 @@
     "tag-name-match": true,
     "tag-self-close": false,
     "title-max-len": false,                 // we sometimes have tables inside the title=""
-    "title-no-dup": true,
-    // Ignore anything inside <!-- htmllint off --> ... <!-- htmllint on -->
-    "raw-ignore-regex": "/\<\!-- +htmllint +off +--\>[^]*?\<\!-- +htmllint +off +--\>/",
+    "title-no-dup": true
 }
