@@ -28,12 +28,13 @@
     </form>
   </nav>
   <div id="theme-picker" class="theme bg-dark text-light collapse">
+    <!-- htmllint label-req-for="false" -->
     <form class="container-fluid pt-4 pb-4">
       <div class="theme-contents d-flex align-self-start">
         <div class="column mr-4 theme-colors">
           <div v-for="(info, name) in color">
             <input v-bind:id="name" v-bind:name="name" type="color" v-bind:value="info.value">
-            <label for="primary">${ info.title }</label>
+            <label v-bind:for="name">${ info.title }</label>
           </div>
         </div><!-- .theme-colors -->
         <div class="column mr-4 theme-toggles">
@@ -66,6 +67,7 @@
         <a v-bind:href="cssurl" class="btn btn-light">Link to CSS</a>
       </p>
     </form>
+    <!-- htmllint label-req-for="true" -->
   </div><!-- #theme-picker -->
 
   <div class="container-fluid component d-flex">
@@ -77,8 +79,8 @@
     <main role="main" class="ml-3" data-spy="scroll" data-target="#toc-nav" data-offset="0">
       <h1 class="toc">Introduction</h1>
       <p>The Gramex UI component library is a set of UI components that extend
-         <a href="https://getbootstrap.com/" target="_blank">Bootstrap 4</a>.
-         These are to be used in all Gramex projects.
+        <a href="https://getbootstrap.com/" target="_blank">Bootstrap 4</a>.
+        These are to be used in all Gramex projects.
       </p>
       {% from guide_ui_app import load_page %}
       {% raw load_page('ui-about.html') %}
@@ -102,6 +104,7 @@
       <h1 class="toc">Inputs</h1>
       {% raw load_page('ui-slider.html') %}
       {% raw load_page('ui-switch.html') %}
+      {% raw load_page('ui-upload.html') %}
 
       <h1 class="toc">Bootstrap</h1>
       {% raw load_page('ui-alert.html') %}

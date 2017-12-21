@@ -466,3 +466,21 @@ $track-height: 0.4rem;
   &.round::-moz-range-track { border-radius: $round-radius; }
   &.round::-ms-track { border-radius: $round-radius; }
 }
+
+
+// .upload: file upload
+// --------------------------------------------------------------------------
+.upload {
+  cursor: pointer;      // Show that label is clickable on hover
+}
+.upload button {
+  // Disable click on all child elements. e.g. button. Clicking on these just
+  // triggers the label action
+  pointer-events: none;
+}
+// Conditions to be met:
+// - I should be able to press TAB to get to this component and press Enter. That
+//   should trigger the file input
+// - When active and when focused, the component should be styled consistently
+// - When hovered, the component should be styled consistently
+// - It should work on a touch device as well

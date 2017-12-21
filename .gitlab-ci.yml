@@ -25,6 +25,9 @@ validate:
     - eslint gramex/apps
     - pip install -q -e .
     - python setup.py nosetests
+    # Lint the apps that contain HTML
+    - htmllint gramex/apps/guide/uicomponents/**/*.html
+
 
 deploy:
   only: [dev, master, deploy]
