@@ -17,6 +17,7 @@
     "node-sass": "~4",
     "noty": "~3",
     "popper.js": "~1",
+    "topojson": "^3.0.2",
     "url-search-params": "^0.10"
   }
 }
