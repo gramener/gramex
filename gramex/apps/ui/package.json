@@ -10,6 +10,7 @@
     "daterangepicker": "^2.1.25",
     "font-awesome": "*",
     "jquery": "~3",
+    "leaflet": "^1.2.0",
     "lodash": "~4",
     "moment": "~2",
     "node-sass": "~4",
