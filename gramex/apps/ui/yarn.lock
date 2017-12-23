@@ -108,13 +108,13 @@ boom@5.x.x:
   dependencies:
     hoek "4.x.x"
 
-bootstrap-select@^1.12.4:
+bootstrap-select@1:
   version "1.12.4"
   resolved "https://registry.yarnpkg.com/bootstrap-select/-/bootstrap-select-1.12.4.tgz#7f15d3c0ce978868d9c09c70f96624f55fa02ee1"
   dependencies:
     jquery ">=1.8"
 
-bootstrap@^4.0.0-beta.2:
+bootstrap@4.0.0-beta.2:
   version "4.0.0-beta.2"
   resolved "https://registry.yarnpkg.com/bootstrap/-/bootstrap-4.0.0-beta.2.tgz#4d67d2aa2219f062cd90bc1247e6747b9e8fd051"
 
@@ -400,7 +400,7 @@ d3-zoom@1.7.1:
     d3-selection "1"
     d3-transition "1"
 
-d3@^4.12.0:
+d3@4:
   version "4.12.0"
   resolved "https://registry.yarnpkg.com/d3/-/d3-4.12.0.tgz#75eccb39ea40f6018de8cfa2752905bee7daa46f"
   dependencies:
@@ -441,9 +441,9 @@ dashdash@^1.12.0:
   dependencies:
     assert-plus "^1.0.0"
 
-daterangepicker@^2.1.25:
-  version "2.1.25"
-  resolved "https://registry.yarnpkg.com/daterangepicker/-/daterangepicker-2.1.25.tgz#f2926e9791b11e8117e893a0edfbff3cfe3e2f28"
+daterangepicker@2:
+  version "2.1.27"
+  resolved "https://registry.yarnpkg.com/daterangepicker/-/daterangepicker-2.1.27.tgz#e2b6481ac7a5291c86d9c806d09ad79dc01c2c9d"
   dependencies:
     jquery ">=1.10"
     moment "^2.9.0"
@@ -536,9 +536,9 @@ fstream@^1.0.0, fstream@^1.0.2:
     mkdirp ">=0.5 0"
     rimraf "2"
 
-g1@^0.1.0:
-  version "0.1.0"
-  resolved "https://registry.yarnpkg.com/g1/-/g1-0.1.0.tgz#61c21d91826fa4fbbc7540fd1ba7737dbcda485b"
+g1@0.2:
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/g1/-/g1-0.2.0.tgz#04dd495c595048375a3c8951406405033085c54e"
 
 gauge@~2.7.3:
   version "2.7.4"
@@ -819,7 +819,7 @@ lcid@^1.0.0:
   dependencies:
     invert-kv "^1.0.0"
 
-leaflet@^1.2.0:
+leaflet@1.2:
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/leaflet/-/leaflet-1.2.0.tgz#fd5d93d9cb00091f5f8a69206d0d6744c1c82697"
 
@@ -845,7 +845,7 @@ lodash.mergewith@^4.6.0:
   version "4.6.0"
   resolved "https://registry.yarnpkg.com/lodash.mergewith/-/lodash.mergewith-4.6.0.tgz#150cf0a16791f5903b8891eab154609274bdea55"
 
-lodash@^4.0.0, lodash@~4, lodash@~4.17.4:
+lodash@4, lodash@^4.0.0, lodash@~4.17.4:
   version "4.17.4"
   resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.4.tgz#78203a4d1c328ae1d86dca6460e369b57f4055ae"
 
@@ -912,7 +912,11 @@ minimist@^1.1.3:
   dependencies:
     minimist "0.0.8"
 
-moment@^2.9.0, moment@~2:
+moment@2:
+  version "2.20.1"
+  resolved "https://registry.yarnpkg.com/moment/-/moment-2.20.1.tgz#d6eb1a46cbcc14a2b2f9434112c1ff8907f313fd"
+
+moment@^2.9.0:
   version "2.19.3"
   resolved "https://registry.yarnpkg.com/moment/-/moment-2.19.3.tgz#bdb99d270d6d7fda78cc0fbace855e27fe7da69f"
 
@@ -938,7 +942,7 @@ node-gyp@^3.3.1:
     tar "^2.0.0"
     which "1"
 
-node-sass@~4:
+node-sass@4:
   version "4.7.2"
   resolved "https://registry.yarnpkg.com/node-sass/-/node-sass-4.7.2.tgz#9366778ba1469eb01438a9e8592f4262bcb6794e"
   dependencies:
@@ -977,9 +981,9 @@ normalize-package-data@^2.3.2, normalize-package-data@^2.3.4:
     semver "2 || 3 || 4 || 5"
     validate-npm-package-license "^3.0.1"
 
-noty@~3:
-  version "3.1.3"
-  resolved "https://registry.yarnpkg.com/noty/-/noty-3.1.3.tgz#4fbc8068b9b6b29386f73c902a9ff84ad612ab14"
+noty@3:
+  version "3.1.4"
+  resolved "https://registry.yarnpkg.com/noty/-/noty-3.1.4.tgz#f9eaac9df7883921b270ec6f2869e9aeedd8071b"
 
 "npmlog@0 || 1 || 2 || 3 || 4", npmlog@^4.0.0:
   version "4.1.2"
@@ -1071,7 +1075,7 @@ pinkie@^2.0.0:
   version "2.0.4"
   resolved "https://registry.yarnpkg.com/pinkie/-/pinkie-2.0.4.tgz#72556b80cfa0d48a974e80e77248e80ed4f7f870"
 
-popper.js@~1:
+popper.js@1:
   version "1.12.9"
   resolved "https://registry.yarnpkg.com/popper.js/-/popper.js-1.12.9.tgz#0dfbc2dff96c451bb332edcfcfaaf566d331d5b3"
 
@@ -1360,7 +1364,7 @@ topojson-simplify@3.0.2:
     commander "2"
     topojson-client "3"
 
-topojson@^3.0.2:
+topojson@3:
   version "3.0.2"
   resolved "https://registry.yarnpkg.com/topojson/-/topojson-3.0.2.tgz#fcb927306c3e0fa76656fa58deed4555d2346fb4"
   dependencies:
@@ -1398,7 +1402,7 @@ tweetnacl@^0.14.3, tweetnacl@~0.14.0:
   version "0.14.5"
   resolved "https://registry.yarnpkg.com/tweetnacl/-/tweetnacl-0.14.5.tgz#5ae68177f192d4456269d108afa93ff8743f4f64"
 
-url-search-params@^0.10:
+url-search-params@0.10:
   version "0.10.0"
   resolved "https://registry.yarnpkg.com/url-search-params/-/url-search-params-0.10.0.tgz#d428c1fa9d78d5c5a3feb634147873890f4adcf0"
 
