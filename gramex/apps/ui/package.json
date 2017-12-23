@@ -9,6 +9,7 @@
     "d3": "^4.12.0",
     "daterangepicker": "^2.1.25",
     "font-awesome": "*",
+    "g1": "^0.1.0",
     "jquery": "~3",
     "leaflet": "^1.2.0",
     "lodash": "~4",
