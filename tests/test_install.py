@@ -178,6 +178,8 @@ class TestInstall(unittest.TestCase):
         if which('yarn'):
             result.add('yarn.lock')
             result.add('node_modules/.yarn-integrity')
+            result.add('node_modules/gramex-npm-package/package.json')
+            result.add('node_modules/gramex-npm-package/npm-setup.js')
         elif which('npm'):
             # package-lock.json needs node 8.x -- which is required for CaptureHandler anyway
             result.add('package-lock.json')
@@ -188,7 +190,11 @@ class TestInstall(unittest.TestCase):
         if which('pip'):
             import dicttoxml            # noqa
         self.check_files('setup', result)
-        self.check_uninstall('setup')
+        try:
+            self.check_uninstall('setup')
+        except PermissionError:
+            # On Windows machines, the setup directory may be used by other processes. Ignore that
+            pass
 
     @classmethod
     def tearDown(cls):

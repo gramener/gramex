@@ -178,6 +178,10 @@ else:
 
 
 def safe_rmtree(target):
+    '''
+    A replacement for shutil.rmtree that removes directories within $GRAMEXDATA.
+    It tries to remove the target multiple times, recovering from errors.
+    '''
     if not os.path.exists(target):
         return True
     # TODO: check case insensitive in Windows, but case sensitive on other OS
