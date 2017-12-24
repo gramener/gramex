@@ -901,13 +901,10 @@ class KeyStore(object):
     def _default_purge(data):
         return [key for key, val in data.items() if val is None]
 
-    def _run_purge(self):
-        for key in self.purge(self.store):
-            del self.store[key]
-
     def flush(self):
         '''Write to disk'''
-        self._run_purge()
+        for key in self.purge(self.store):
+            del self.store[key]
 
     def close(self):
         '''Flush and close all open handles'''
@@ -1012,10 +1009,6 @@ class JSONStore(KeyStore):
             self.store[key] = value
             self.update[key] = value
             self.changed = True
-
-    def _run_purge(self):
-        # Purging happens as part of flush(). Do nothing here
-        pass
 
     def flush(self):
         super(JSONStore, self).flush()
