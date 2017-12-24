@@ -190,11 +190,7 @@ class TestInstall(unittest.TestCase):
         if which('pip'):
             import dicttoxml            # noqa
         self.check_files('setup', result)
-        try:
-            self.check_uninstall('setup')
-        except PermissionError:
-            # On Windows machines, the setup directory may be used by other processes. Ignore that
-            pass
+        self.check_uninstall('setup')
 
     @classmethod
     def tearDown(cls):
