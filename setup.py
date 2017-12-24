@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # Require setuptools -- distutils does not support install_requires
 from setuptools.command.develop import develop
 from setuptools.command.install import install

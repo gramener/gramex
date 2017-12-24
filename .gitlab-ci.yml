@@ -23,10 +23,9 @@ validate:
   script:
     - flake8
     - eslint gramex/apps
+    - htmllint gramex/apps/guide/uicomponents/**/*.html
     - pip install -q -e .
     - python setup.py nosetests
-    # Lint the apps that contain HTML
-    - htmllint gramex/apps/guide/uicomponents/**/*.html
 
 
 deploy:
