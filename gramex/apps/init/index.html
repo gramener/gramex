@@ -5,8 +5,8 @@
   <meta http-equiv="x-ua-compatible" content="ie=edge">
   <title>{{ appname }}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.min.css">
-  <link rel="stylesheet" href="node_modules/font-awesome/css/font-awesome.min.css">
+  <link rel="stylesheet" href="ui/bootstraptheme.css">
+  <link rel="stylesheet" href="ui/font-awesome/css/font-awesome.min.css">
 </head>
 <body>
   <nav class="navbar navbar-expand-lg navbar-light bg-light">
@@ -14,11 +14,10 @@
       <div class="navbar-header">
         <a class="navbar-brand" href="."><i class="fa fa-home"></i></a>
       </div>
-
-      <ul class="nav navbar-nav navbar-left">
+      <ul class="nav navbar-nav">
         <li class="navbar-brand">{{ appname }}</li>
       </ul>
-      <ul class="nav navbar-nav navbar-right">
+      <ul class="nav navbar-nav">
         <li><a href="login" class="username" title="Log in again" data-placement="bottom"></a></li>
         <li><a href="logout" title="Log out" data-placement="bottom"><span class="fa fa-sign-out"></span></a></li>
       </ul>
@@ -29,6 +28,17 @@
     <p>Welcome to the Gramex 1.0 boilerplate</p>
   </div>
 </body>
-<script src="node_modules/jquery/dist/jquery.min.js"></script>
-<script src="node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
+<script src="ui/jquery/dist/jquery.min.js"></script>
+<script src="ui/popper.js/dist/umd/popper.min.js"></script>
+<script src="ui/bootstrap/dist/js/bootstrap.min.js"></script>
+<!--
+  D3: ui/d3/build/d3.min.js
+  Lodash: ui/lodash/lodash.min.js
+  Moment: ui/moment/min/moment-with-locales.min.js
+  Noty: ui/noty/lib/noty.min.js
+  Daterangepicker: ui/daterangepicker/daterangepicker.js
+  Leaflet: ui/leaflet/dist/leaflet.js
+  TopoJSON: ui/topojson/dist/topojson.min.js
+  g1: ui/g1/dist/g1.min.js
+-->
 </html>
