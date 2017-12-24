@@ -31,10 +31,6 @@ const pptx_size = {
   '4x3':    [10,    7.5  ]
 }
 
-function delay(ms) {
-  return new Promise(res => setTimeout(res, ms))
-}
-
 
 async function screenshot(page, options, selector) {
   // If a previous clip was set, remove it
@@ -85,7 +81,12 @@ async function render(q) {
     await page.setCookie(...cookieList)
   }
   await page.goto(q.url)
-  await delay(q.delay || 0)
+
+  if (q.delay == 'renderComplete')
+    await page.waitForFunction('window.renderComplete')
+  else if (!isNaN(+q.delay))
+    await new Promise(res => setTimeout(res, +q.delay))
+
   if (ext == 'pdf') {
     // TODO: header / footer
     if (media != 'print')

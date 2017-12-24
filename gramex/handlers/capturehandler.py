@@ -195,7 +195,7 @@ class Capture(object):
         :arg str url: URL to take a screenshot of
         :arg str ext: format of output. Can be pdf, png, gif or jpg
         :arg str selector: Restrict screenshot to (optional) CSS selector in URL
-        :arg int delay: milliseconds to wait for before taking a screenshot
+        :arg int delay: milliseconds (or expression) to wait for before taking a screenshot
         :arg str format: A3, A4, A5, Legal, Letter or Tabloid. Defaults to A4. For PDF
         :arg str layout: A3, A4, A5, Legal, 16x9, 16x10, 4x3. Defaults to 4x3. For PPTX
         :arg str orientation: portrait or landscape. Defaults to portrait. For PDF
@@ -290,7 +290,7 @@ class CaptureHandler(BaseHandler):
             file={'default': 'screenshot'},
             selector={'nargs': '*'},
             cookie={},
-            delay={'type': int},
+            delay={},
             width={'type': int},
             height={'type': int},
             x={'type': int},

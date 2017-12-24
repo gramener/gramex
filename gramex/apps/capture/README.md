@@ -63,7 +63,8 @@ web server.
 - `url=`: required -- the URL to be downloaded as a PDF or an image.
 - `file=`: sets the base name of the download file. Defaults to screenshot
 - `ext=`: sets the extension. Supported extensions: .pdf (default), .png, .jpg
-- `delay=`: milliseconds to wait before screenshot (for dynamic javascript)
+- `delay=`: milliseconds to wait before screenshot (for dynamic javascript).
+  If `?delay=renderComplete`, waits for `renderComplete=true`
 - `cookie=`: optional `cookie` to pass to `url`. The `Cookie: ` HTTP header can also be used
 - `scale=`: 2 doubles the resolution, .5 halves it
 - PDF options:

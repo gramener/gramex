@@ -107,11 +107,15 @@ It accepts the following arguments:
   <br>**Example**: [?file=newfile](capture?file=newfile)
 - `?ext=`: format of output. Can be pdf, png, jpg or pptx. Default: `pdf`.
   <br>**Example**: [?ext=png](capture?ext=png). `pptx` is available only in
-  Chrome, from **v1.23.1**
-- `?delay=`: milliseconds to wait for before taking a screenshot. This value must
-  be less than the `timeout:` set in the `kwargs:` section.
-  <br>**Example**: [?delay=1000](capture?url=timer.html&delay=1000)
-  captures this [timer page](timer.html) with a ~1000 ms delay
+  Chrome, from **v1.23.1**.
+- `?delay=`: wait for before taking a screenshot.
+  - If this is a number, waits for this many milliseconds.
+    <br>**Example**: [?delay=1000](capture?url=timer.html&delay=1000)
+    captures this [timer page](timer.html) with a ~1000 ms delay
+  - If `?delay=renderComplete`, waits until the JavaScript variable
+    `window.renderComplete` is set to true.
+  - If the delay is more than the `timeout:` in the `kwargs:` section, the page
+    will time out.
 - For PDF:
     - `?format=`: A3, A4, A5, Legal, Letter or Tabloid. Default: A4.
       <br>**Example**: [?format=Tabloid](capture?format=Tabloid)

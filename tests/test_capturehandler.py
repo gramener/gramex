@@ -100,6 +100,12 @@ class TestCaptureHandler(TestGramex):
         self.check_filename(result, 'delay.pdf')
         self.assertIn('Blueblock', normalize(get_text(result.content)))
 
+        # delay=. After 1 second, renderComplete is set. Page changes text and color to green
+        result = self.fetch(self.src, params={'url': self.url, 'delay': 'renderComplete',
+                                              'file': 'delay-str'})
+        self.check_filename(result, 'delay-str.pdf')
+        self.assertIn('Greenblock', normalize(get_text(result.content)))
+
         # --format and --orientation
         result = self.fetch(self.src, params={
             'url': self.url, 'format': 'A3', 'orientation': 'landscape'})
