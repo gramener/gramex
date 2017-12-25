@@ -24,7 +24,7 @@ def get_capture(name, **kwargs):
     if name in _captures:
         return _captures[name]
     capture = _captures[name] = Capture(**kwargs)
-    end_time, delay = time.time() + 5, 0.05
+    end_time, delay = time.time() + 10, 0.05
     logging.info('Waiting for capture.js...')
     while not capture.started:
         if time.time() > end_time:
@@ -99,12 +99,6 @@ class TestCaptureHandler(TestGramex):
         result = self.fetch(self.src, params={'url': self.url, 'delay': 600, 'file': 'delay'})
         self.check_filename(result, 'delay.pdf')
         self.assertIn('Blueblock', normalize(get_text(result.content)))
-
-        # delay=. After 1 second, renderComplete is set. Page changes text and color to green
-        result = self.fetch(self.src, params={'url': self.url, 'delay': 'renderComplete',
-                                              'file': 'delay-str'})
-        self.check_filename(result, 'delay-str.pdf')
-        self.assertIn('Greenblock', normalize(get_text(result.content)))
 
         # --format and --orientation
         result = self.fetch(self.src, params={
@@ -198,3 +192,10 @@ class TestCaptureHandlerChrome(TestCaptureHandler):
         self.check_img(prs.slides[1].shapes[0].image.blob)
         eq_(prs.slides[0].shapes[1].text, '高')
         eq_(prs.slides[1].shapes[1].text, 'σ')
+
+    def test_capture_delay_render(self):
+        # delay=. After 1 second, renderComplete is set. Page changes text and color to green
+        result = self.fetch(self.src, params={'url': self.url, 'delay': 'renderComplete',
+                                              'file': 'delay-str'})
+        self.check_filename(result, 'delay-str.pdf')
+        self.assertIn('Greenblock', normalize(get_text(result.content)))
