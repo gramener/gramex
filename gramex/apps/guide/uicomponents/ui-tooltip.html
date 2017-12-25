@@ -1,13 +1,3 @@
-<style scoped>
-.tooltip-background {
-  background: #fff;
-  color: #222;
-}
-.tooltip-household {
-  text-align: left;
-  font-weight: 200;
-}
-</style>
 <h2 class="toc">Tooltips</h2>
 {% apply view_source %}
 <table class="table table-striped table-inverse table-hover" data-item="Tooltips">
@@ -41,13 +31,13 @@ $(function() {
     html: true
   })
   $("#custom-right").tooltip({
-    title: '<p class="tooltip-background"><b>Zee Network</b><br> <tr><td>Spend: </td>\
+    title: '<p><b>Zee Network</b><br> <tr><td>Spend: </td>\
             <td>7 Cr</td></tr></p>Changing background color will be custom implementation',
     placement: 'right',
     html: true
   })
   $("#custom-household").tooltip({
-    title: '<p class="tooltip-household">Total number of Household: 100 <br/>\
+    title: '<p>Total number of Household: 100 <br/>\
             Number of Electrified Households: 20<br>\
             Proportion of Electrified Households: 20%</p>\
             Changing background color will be custom implementation',

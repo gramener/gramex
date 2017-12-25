@@ -1,0 +1,19 @@
+/* Minimal styling required for uicomponents guide */
+
+/* Table of contents
+   This can be added via a margin-top, but manually adding it to every file is not elegant.
+*/
+.toc { margin-top: 1em; }
+/* Second-level sidebar navigation entries should be smaller and indented. */
+#toc-nav .l2 {
+  margin-left: 0.5rem;
+  font-size: 80%;
+  white-space: nowrap;
+}
+
+/* The main contents section may go beyond the page. Don't extend page width for this. */
+main { overflow-x: auto; }
+
+/* Define standard placeholders */
+.blob { width: 250px; height: 250px; }
+.blob-sm { height: 100px;}
