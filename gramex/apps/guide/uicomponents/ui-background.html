@@ -1,0 +1,52 @@
+<h2 class="toc">Background</h2>
+
+<p><code>.bg-no-repeat</code>, <code>.bg-space</code> and <code>.bg-round</code> define the <code>background-repeat</code> behavior.</p>
+
+{% apply view_source %}
+<div class="             blob blob-sm bg-img-sm border border-dark my-1"></div>
+<div class="bg-no-repeat blob blob-sm bg-img-sm border border-dark my-1"></div>
+<div class="bg-space     blob blob-sm bg-img-sm border border-dark my-1"></div>
+<div class="bg-round     blob blob-sm bg-img-sm border border-dark my-1"></div>
+{% end %}
+
+<p><code>.bg-cover</code> and <code>.bg-contain</code> set the background size.</p>
+{% apply view_source %}
+<div class="bg-cover     blob blob-sm bg-img"></div>
+<div class="bg-contain   blob blob-sm bg-img"></div>
+{% end %}
+
+<p><code>.bg-fixed</code> controls the scrolling behaviour.</p>
+{% apply view_source %}
+<div class="bg-fixed     blob blob-sm bg-img bg-contain"></div>
+<div class="bg-local     blob blob-sm bg-img bg-contain"></div>
+{% end %}
+
+<p><code>.bg-center</code> centers the background. Other background positioning classes are available.</p>
+{% apply view_source %}
+<div>
+  <div class="bg-tl  blob blob-sm bg-img-sm bg-no-repeat border border-dark m-1 d-inline-block"></div>
+  <div class="bg-tc  blob blob-sm bg-img-sm bg-no-repeat border border-dark m-1 d-inline-block"></div>
+  <div class="bg-tr  blob blob-sm bg-img-sm bg-no-repeat border border-dark m-1 d-inline-block"></div>
+</div>
+<div>
+  <div class="bg-cl  blob blob-sm bg-img-sm bg-no-repeat border border-dark m-1 d-inline-block"></div>
+  <div class="bg-cc  blob blob-sm bg-img-sm bg-no-repeat border border-dark m-1 d-inline-block"></div>
+  <!-- .bg-center is an alias for .bg-cc -->
+  <div class="bg-cr  blob blob-sm bg-img-sm bg-no-repeat border border-dark m-1 d-inline-block"></div>
+</div>
+<div>
+  <div class="bg-bl  blob blob-sm bg-img-sm bg-no-repeat border border-dark m-1 d-inline-block"></div>
+  <div class="bg-bc  blob blob-sm bg-img-sm bg-no-repeat border border-dark m-1 d-inline-block"></div>
+  <div class="bg-br  blob blob-sm bg-img-sm bg-no-repeat border border-dark m-1 d-inline-block"></div>
+</div>{% end %}
+
+
+<p><code>.bg-parellax</code> keeps the background fixed while the content scrolls. It is the same as
+  <code>.bg-center .bg-no-repeat .bg-fixed .bg-cover</code></p>
+
+{% apply view_source %}
+<div class="bg-img bg-parellax text-secondary">
+  <h1 class="mx-5">Parellax effect</h1>
+  <p class="mx-5">Scroll the page to view it</p>
+</div>
+{% end %}

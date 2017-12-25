@@ -1,0 +1,54 @@
+<h2 class="toc">Gradient</h2>
+
+<p>The <code>.gradient-*</code> classes creates darkening gradients in a specified direction.</p>
+
+{% apply view_source %}
+<div class="row">
+  <div class="gradient-tl col blob-sm m-1 bg-primary"></div>
+  <div class="gradient-tc col blob-sm m-1 bg-primary"></div>
+  <div class="gradient-tr col blob-sm m-1 bg-primary"></div>
+</div>
+<div class="row">
+  <div class="gradient-cl col blob-sm m-1 bg-primary"></div>
+  <div class="            col blob-sm m-1 bg-primary"></div>
+  <div class="gradient-cr col blob-sm m-1 bg-primary"></div>
+</div>
+<div class="row">
+  <div class="gradient-bl col blob-sm m-1 bg-primary"></div>
+  <div class="gradient-bc col blob-sm m-1 bg-primary"></div>
+  <div class="gradient-br col blob-sm m-1 bg-primary"></div>
+</div>
+{% end %}
+
+<p>These gradients can be applied over any background color.</p>
+
+{% apply view_source %}
+<div class="row">
+  <div class="gradient-bc col blob-sm m-1 bg-primary"></div>
+  <div class="gradient-bc col blob-sm m-1 bg-success"></div>
+  <div class="gradient-bc col blob-sm m-1 bg-warning"></div>
+  <div class="gradient-bc col blob-sm m-1 bg-danger"></div>
+  <div class="gradient-bc col blob-sm m-1 bg-light"></div>
+  <div class="gradient-bc col blob-sm m-1 bg-dark"></div>
+</div>
+{% end %}
+
+<p>The <code>.gradient-light</code> modifier creates lightening gradients instead of darkening ones.</p>
+
+{% apply view_source %}
+<div class="row">
+  <div class="gradient-tl gradient-light col blob-sm m-1 bg-primary"></div>
+  <div class="gradient-tc gradient-light col blob-sm m-1 bg-primary"></div>
+  <div class="gradient-tr gradient-light col blob-sm m-1 bg-primary"></div>
+</div>
+<div class="row">
+  <div class="gradient-cl gradient-light col blob-sm m-1 bg-primary"></div>
+  <div class="            gradient-light col blob-sm m-1 bg-primary"></div>
+  <div class="gradient-cr gradient-light col blob-sm m-1 bg-primary"></div>
+</div>
+<div class="row">
+  <div class="gradient-bl gradient-light col blob-sm m-1 bg-primary"></div>
+  <div class="gradient-bc gradient-light col blob-sm m-1 bg-primary"></div>
+  <div class="gradient-br gradient-light col blob-sm m-1 bg-primary"></div>
+</div>
+{% end %}

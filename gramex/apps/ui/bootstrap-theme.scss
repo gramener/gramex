@@ -467,6 +467,63 @@ $track-height: 0.4rem;
   &.round::-ms-track { border-radius: $round-radius; }
 }
 
+// .bg-*: background utilities
+// --------------------------------------------------------------------------
+// Set up cover and contain utilities
+// DEFAULT: indicates default behaviour, which does not require a utility class
+// USELESS: indicates an infrequently used behaviour
+.bg-cover { background-size: cover !important; }
+.bg-contain { background-size: contain !important; }
+// Typically these are centered. But you can override them.
+.bg-cover, .bg-contain { background-position: center center; }
+
+// DEFAULT: .bg-repeat { background-repeat: repeat !important; }
+.bg-no-repeat { background-repeat: no-repeat !important; }
+.bg-space { background-repeat: space !important; }
+.bg-round { background-repeat: round !important; }
+// DEFAULT: .bg-scroll { background-attachment: scroll !important; }
+.bg-fixed { background-attachment: fixed !important; }
+// USELESS: .bg-local { background-attachment: local !important; }
+
+.bg-tl { background-position: top left !important; }
+.bg-tr { background-position: top right !important; }
+.bg-bl { background-position: bottom left !important; }
+.bg-br { background-position: bottom right !important; }
+.bg-tc { background-position: top !important; }
+.bg-cc .bg-center { background-position: center center !important; }
+.bg-cl { background-position: left !important; }
+.bg-bc { background-position: bottom !important; }
+.bg-cr { background-position: right !important; }
+
+.bg-parellax {
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-size: cover;
+}
+
+// .gradient-*: gradient utilities
+// --------------------------------------------------------------------------
+$gradient-opacity: 0.5;
+.gradient-tl { background-image: linear-gradient(to top left,     rgba(0,0,0,0), rgba(0,0,0,$gradient-opacity)); }
+.gradient-tc { background-image: linear-gradient(to top,          rgba(0,0,0,0), rgba(0,0,0,$gradient-opacity)); }
+.gradient-tr { background-image: linear-gradient(to top right,    rgba(0,0,0,0), rgba(0,0,0,$gradient-opacity)); }
+.gradient-cl { background-image: linear-gradient(to left,         rgba(0,0,0,0), rgba(0,0,0,$gradient-opacity)); }
+.gradient-cr { background-image: linear-gradient(to right,        rgba(0,0,0,0), rgba(0,0,0,$gradient-opacity)); }
+.gradient-bl { background-image: linear-gradient(to bottom left,  rgba(0,0,0,0), rgba(0,0,0,$gradient-opacity)); }
+.gradient-bc { background-image: linear-gradient(to bottom,       rgba(0,0,0,0), rgba(0,0,0,$gradient-opacity)); }
+.gradient-br { background-image: linear-gradient(to bottom right, rgba(0,0,0,0), rgba(0,0,0,$gradient-opacity)); }
+
+.gradient-tl.gradient-light { background-image: linear-gradient(to top left,     rgba(0,0,0,0), rgba(255,255,255,$gradient-opacity)); }
+.gradient-tc.gradient-light { background-image: linear-gradient(to top,          rgba(0,0,0,0), rgba(255,255,255,$gradient-opacity)); }
+.gradient-tr.gradient-light { background-image: linear-gradient(to top right,    rgba(0,0,0,0), rgba(255,255,255,$gradient-opacity)); }
+.gradient-cl.gradient-light { background-image: linear-gradient(to left,         rgba(0,0,0,0), rgba(255,255,255,$gradient-opacity)); }
+.gradient-cr.gradient-light { background-image: linear-gradient(to right,        rgba(0,0,0,0), rgba(255,255,255,$gradient-opacity)); }
+.gradient-bl.gradient-light { background-image: linear-gradient(to bottom left,  rgba(0,0,0,0), rgba(255,255,255,$gradient-opacity)); }
+.gradient-bc.gradient-light { background-image: linear-gradient(to bottom,       rgba(0,0,0,0), rgba(255,255,255,$gradient-opacity)); }
+.gradient-br.gradient-light { background-image: linear-gradient(to bottom right, rgba(0,0,0,0), rgba(255,255,255,$gradient-opacity)); }
+
+
 // .ripple: material design style ripple
 // --------------------------------------------------------------------------
 // Based on https://github.com/mladenplavsic/css-ripple-effect (MIT license)

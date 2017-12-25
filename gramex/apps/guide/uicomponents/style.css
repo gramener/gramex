@@ -17,3 +17,7 @@ main { overflow-x: auto; }
 /* Define standard placeholders */
 .blob { width: 250px; height: 250px; }
 .blob-sm { height: 100px;}
+
+/* Predefined background URL image */
+.bg-img { background-image: url('bg.png'); %}
+.bg-img-sm { background-image: url('bg-small.png'); %}
