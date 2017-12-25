@@ -6,23 +6,25 @@ The [FunctionHandler][functionhandler] runs a function and displays the output.
 For example, this configuration maps the URL [total](total) to a
 FunctionHandler:
 
-    :::yaml
-    url:
-        total:
-            pattern: total                              # The "total" URL
-            handler: FunctionHandler                    # runs a function
-            kwargs:
-                function: calculations.total(100, 200)  # total() from calculations.py
-                headers:
-                    Content-Type: application/json      # Display as JSON
+```yaml
+url:
+    total:
+        pattern: total                              # The "total" URL
+        handler: FunctionHandler                    # runs a function
+        kwargs:
+            function: calculations.total(100, 200)  # total() from calculations.py
+            headers:
+                Content-Type: application/json      # Display as JSON
+```
 
 It runs `calculations.total()` with the arguments `100, 200` and returns
 result `300` as `application/json`. [calculations.py](calculations.py) defines
 `total` as below:
 
-    :::python
-    def total(*items):
-        return json.dumps(sum(float(item) for item in items))
+```python
+def total(*items):
+    return json.dumps(sum(float(item) for item in items))
+```
 
 You can see all configurations used in this page in [gramex.yaml](gramex.yaml):
 
@@ -50,15 +52,16 @@ Try it below:
 
 To set this up, [gramex.yaml](gramex.yaml) used the following configuration:
 
-    :::yaml
-    url:
-        add:
-            pattern: add                                # The "add" URL
-            handler: FunctionHandler                    # runs a function
-            kwargs:
-                function: calculations.add              # add() from calculations.py
-                headers:
-                    Content-Type: application/json      # Display as JSON
+```yaml
+url:
+    add:
+        pattern: add                                # The "add" URL
+        handler: FunctionHandler                    # runs a function
+        kwargs:
+            function: calculations.add              # add() from calculations.py
+            headers:
+                Content-Type: application/json      # Display as JSON
+```
 
 [calculations.add(handler)](calculations.py) is called with the Tornado
 [RequestHandler][requesthandler]. It accesses the URL query parameters to add up
@@ -66,49 +69,55 @@ all `x` arguments.
 
 You can specify wildcards in the URL pattern. For example:
 
-    :::yaml
-    url:
-      lookup:
-        pattern: /name/([a-z]+)/age/([0-9]+)        # e.g. /name/john/age/21
-        handler: FunctionHandler                    # Runs a function
-        kwargs:
-            function: calculations.name_age         # Run this function
+```yaml
+url:
+    lookup:
+    pattern: /name/([a-z]+)/age/([0-9]+)        # e.g. /name/john/age/21
+    handler: FunctionHandler                    # Runs a function
+    kwargs:
+        function: calculations.name_age         # Run this function
+```
 
 When you access `/name/john/age/21`, `john` and `21` can be accessed
 via `handler.path_args` as follows:
 
-    :::python
-    def name_age(handler):
-        name = handler.path_args[0]
-        age = handler.path_args[1]
+```python
+def name_age(handler):
+    name = handler.path_args[0]
+    age = handler.path_args[1]
+```
 
 You can pass any options you want to functions. For example, to call
 `calculations.method(handler, 10, h=handler, val=0)`, you can use:
 
-    :::yaml
-    url:
-      method:
-        pattern: /method          # The URL /method
-        handler: FunctionHandler  # Runs a function
-        kwargs:
-          function: calculations.method(handler, 10, h=handler, val=0)
+```yaml
+url:
+  method:
+    pattern: /method          # The URL /method
+    handler: FunctionHandler  # Runs a function
+    kwargs:
+        function: calculations.method(handler, 10, h=handler, val=0)
+```
 
 To send the output as a download (e.g. as a PDF), use:
 
-    :::yaml
-    url:    ...
-            kwargs:
-                headers:
-                    Content-Type: application/pdf       # MIME type of download
-                    Content-Disposition: attachment; filename=download.pdf
+```yaml
+url:
+    ...
+        kwargs:
+            headers:
+                Content-Type: application/pdf       # MIME type of download
+                Content-Disposition: attachment; filename=download.pdf
+```
 
 You can also specify this in your function:
 
-    :::python
-    def method(handler):
-        handler.set_header('Content-Type', 'application/pdf')
-        handler.set_header('Content-Disposition', 'attachment; filename=download.pdf')
-        return open('download.pdf', 'rb').read()
+```python
+def method(handler):
+    handler.set_header('Content-Type', 'application/pdf')
+    handler.set_header('Content-Disposition', 'attachment; filename=download.pdf')
+    return open('download.pdf', 'rb').read()
+```
 
 
 ## Parse URL arguments
@@ -128,11 +137,12 @@ function. This returns the URL query parameters as an attribute dictionary.
 
 For example:
 
-    :::python
-    def method(handler):
-        args = handler.argparse()
-        args.x      # This is the same as the last value of ?x
-        args.y      # This is the same as the last value of ?y
+```python
+def method(handler):
+    args = handler.argparse()
+    args.x      # This is the same as the last value of ?x
+    args.y      # This is the same as the last value of ?y
+```
 
 When you pass `?x=a&y=b`, `args.x` is `a` and `args.y` is `b`. With multiple
 values, e.g. `?x=a&x=b`, `args.x` is takes the last value, `b`.
@@ -141,50 +151,56 @@ A missing `?x=` or `?y=` raises a HTTP 400 error mentioning the missing key.
 
 For optional arguments, use:
 
-    :::python
-    args = handler.argparse(z={'default': ''})
-    args.z          # returns '' if ?z= is missing
+```python
+args = handler.argparse(z={'default': ''})
+args.z          # returns '' if ?z= is missing
+```
 
 You can convert the value to a type:
 
-    :::python
-    args = handler.argparse(limit={'type': int, 'default': 100})
-    args.limit      # returns ?limit= as an integer
+```python
+args = handler.argparse(limit={'type': int, 'default': 100})
+args.limit      # returns ?limit= as an integer
+```
 
 You can restrict the choice of values. If the query parameter is not in
 choices, we raise a HTTP 400 error mentioning the invalid key & value:
 
-    :::python
-    args = handler.argparse(gender={'choices': ['M', 'F']})
-    args.gender      # returns ?gender= which will be 'M' or 'F'
+```python
+args = handler.argparse(gender={'choices': ['M', 'F']})
+args.gender      # returns ?gender= which will be 'M' or 'F'
+```
 
 You can retrieve multiple values as a list::
 
-    :::python
-    args = handler.argparse(cols={'nargs': '*', 'default': []})
-    args.cols       # returns an array with all ?col= values
+```python
+args = handler.argparse(cols={'nargs': '*', 'default': []})
+args.cols       # returns an array with all ?col= values
+```
 
 `type:` conversion and `choices:` apply to each value in the list.
 
 To return all arguments as a list, pass `list` as the first parameter::
 
-    :::python
-    args = handler.argparse(list, 'x', 'y')
-    args.x          # ?x=1 sets args.x to ['1'], not '1'
-    args.y          # Similarly for ?y=1
+```python
+args = handler.argparse(list, 'x', 'y')
+args.x          # ?x=1 sets args.x to ['1'], not '1'
+args.y          # Similarly for ?y=1
+```
 
 You can combine all these options. For example:
 
-    :::python
-    args = handler.argparse(
-        'name',                         # Raise error if ?name= is missing
-        department={'name': 'dept'},    # ?dept= is mapped to args.department
-        org={'default': 'Gramener'},    # If ?org= is missing, defaults to Gramener
-        age={'type': int},              # Convert ?age= to an integer
-        married={'type': bool},         # Convert ?married to a boolean
-        alias={'nargs': '*'},           # Convert all ?alias= to a list
-        gender={'choices': ['M', 'F']}, # Raise error if gender is not M or F
-    )
+```python
+args = handler.argparse(
+    'name',                         # Raise error if ?name= is missing
+    department={'name': 'dept'},    # ?dept= is mapped to args.department
+    org={'default': 'Gramener'},    # If ?org= is missing, defaults to Gramener
+    age={'type': int},              # Convert ?age= to an integer
+    married={'type': bool},         # Convert ?married to a boolean
+    alias={'nargs': '*'},           # Convert all ?alias= to a list
+    gender={'choices': ['M', 'F']}, # Raise error if gender is not M or F
+)
+```
 
 ## Streaming output
 
@@ -193,11 +209,12 @@ the browser, use `yield`. For example, [slow?x=1&x=2&x=3](slow?x=1&x=2&x=3) uses
 the function below to print the values 1, 2, 3 as soon as they are "calculated".
 (You won't see the effect on learn.gramener.com. Try it on your machine.)
 
-    :::python
-    def slow_print(handler):
-        for value in handler.args.get('x', []):
-            time.sleep(1)
-            yield 'Calculated: %s\n' % value
+```python
+def slow_print(handler):
+    for value in handler.args.get('x', []):
+        time.sleep(1)
+        yield 'Calculated: %s\n' % value
+```
 
 When a function yields a string value, it will be displayed immediately. The
 function can also yield a Future, which will be displayed as soon as it is
@@ -212,28 +229,30 @@ runs in parallel while Gramex continues. When the function ends, the code
 resumes. Use [coroutines][coroutines] to achieve this. For example, this fetches
 a URL's body without blocking:
 
-    :::python
-    async_http_client = tornado.httpclient.AsyncHTTPClient()
+```python
+async_http_client = tornado.httpclient.AsyncHTTPClient()
 
-    @tornado.gen.coroutine
-    def fetch_body(url):
-        'A co-routine that fetches the URL and returns the URL body'
-        result = yield async_http_client.fetch(url)
-        raise tornado.gen.Return(result.body)
+@tornado.gen.coroutine
+def fetch_body(url):
+    'A co-routine that fetches the URL and returns the URL body'
+    result = yield async_http_client.fetch(url)
+    raise tornado.gen.Return(result.body)
+```
 
 You can combine this with the `yield` statement to fetch
 mutiple URLs asynchronously, and display them as soon as the results are
 available, in order:
 
-    :::python
-    def urls(handler):
+```python
+def urls(handler):
     # Initiate the requests
-        args = handler.argparse(x={'nargs': '*'})
-        # Initiate the requests
-        futures = [fetch_body('https://httpbin.org/delay/%s' % x) for x in args.x]
-        # Yield the futures one by one
-        for future in futures:
-            yield future
+    args = handler.argparse(x={'nargs': '*'})
+    # Initiate the requests
+    futures = [fetch_body('https://httpbin.org/delay/%s' % x) for x in args.x]
+    # Yield the futures one by one
+    for future in futures:
+        yield future
+```
 
 See the output at [fetch?x=0&x=1&x=2](fetch?x=0&x=1&x=2).
 
@@ -243,24 +262,25 @@ The simplest way to call *any blocking function* asynchronously is to use a
 blocking Gramex. Gramex provides a global threadpool that you can use. It's at
 `gramex.service.threadpool`.
 
-    :::python
-    result = yield gramex.service.threadpool.submit(slow_calculation, *args, **kwargs)
+```python
+result = yield gramex.service.threadpool.submit(slow_calculation, *args, **kwargs)
+```
 
 [ThreadPoolExecutor]: https://docs.python.org/3/library/concurrent.futures.html#concurrent.futures.ThreadPoolExecutor
 
 You can run execute multiple steps in parallel and consolidate their result as
 well. For example:
 
-    :::python
-    @tornado.gen.coroutine
-    def calculate(data1, data2):
-        group1, group2 = yield [
-            gramex.service.threadpool.submit(data1.groupby, ['category']),
-            gramex.service.threadpool.submit(data2.groupby, ['category']),
-        ]
-        result = gramex.service.threadpool.submit(pd.concat, [group1, group2])
-        raise tornado.gen.Return(result)
-
+```python
+@tornado.gen.coroutine
+def calculate(data1, data2):
+    group1, group2 = yield [
+        gramex.service.threadpool.submit(data1.groupby, ['category']),
+        gramex.service.threadpool.submit(data2.groupby, ['category']),
+    ]
+    result = gramex.service.threadpool.submit(pd.concat, [group1, group2])
+    raise tornado.gen.Return(result)
+```
 
 [requesthandler]: https://tornado.readthedocs.org/en/stable/web.html#request-handlers
 [asynchttpclient]: https://tornado.readthedocs.org/en/latest/httpclient.html#tornado.httpclient.AsyncHTTPClient

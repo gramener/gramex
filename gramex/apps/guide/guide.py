@@ -18,6 +18,7 @@ md = markdown.Markdown(extensions=[
     'markdown.extensions.codehilite',
     'markdown.extensions.smarty',
     'markdown.extensions.sane_lists',
+    'markdown.extensions.fenced_code',
     'markdown.extensions.toc',
 ], output_format='html5')
 stringtemplate = gramex.cache.opener(string.Template, read=True)

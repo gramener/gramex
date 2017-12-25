@@ -5,16 +5,17 @@ title: Smart alerts
 The `alert` service sends reports via email based on conditions. Here is a
 sample configuration to send an email:
 
-    :::yaml
-    alert:
-        simple-alert:
-            days: '*'                         # Run every day
-            hours: 8, 16                      # at 8am and 4pm
-            minutes: 0
-            service: gramex-email-guide       # Send an email via this email-service
-            to: 'user@example.com'            # to this list of users
-            subject: Smart Alert Sample       # with the specified subject
-            template: Hello from Smart Alert  # and content
+```yaml
+alert:
+    simple-alert:
+        days: '*'                         # Run every day
+        hours: 8, 16                      # at 8am and 4pm
+        minutes: 0
+        service: gramex-email-guide       # Send an email via this email-service
+        to: 'user@example.com'            # to this list of users
+        subject: Smart Alert Sample       # with the specified subject
+        template: Hello from Smart Alert  # and content
+```
 
 The alert service takes four kinds of parameters:
 
@@ -67,97 +68,105 @@ The alert service takes four kinds of parameters:
 
 Send an email when Gramex starts up
 
-    :::yaml
-    alert-startup:
-      startup: true
-      service: email-service
-      to: admin@example.org
-      subject: Gramex started
+```yaml
+alert-startup:
+  startup: true
+  service: email-service
+  to: admin@example.org
+  subject: Gramex started
+```
 
 Send an email every day at 6am and 12noon
 
-    :::yaml
-    alert-schedule:
-      days: '*'
-      hours: '6, 12'
-      minutes: 0
-      service: email-service
-      to: admin@example.org
-      subject: Scheduled alert
+```yaml
+alert-schedule:
+  days: '*'
+  hours: '6, 12'
+  minutes: 0
+  service: email-service
+  to: admin@example.org
+  subject: Scheduled alert
+```
 
 Send an email to multiple people
 
-    :::yaml
-    alert-email:
-      startup: true
-      service: email-service
-      to: admin@example.org, admin2@example.org
-      cc: cc@example.org, cc2@example.org
-      bcc: cc@example.org, cc2@example.org
-      subject: Gramex started
+```yaml
+alert-email:
+  startup: true
+  service: email-service
+  to: admin@example.org, admin2@example.org
+  cc: cc@example.org, cc2@example.org
+  bcc: cc@example.org, cc2@example.org
+  subject: Gramex started
+```
 
 Send a HTML + text email using templates:
 
-    :::yaml
-    alert-content:
-      startup: true
-      service: email-service
-      to: admin@example.org
-      subject: Gramex started
-      body: This is a template running on {{ sys.platform }}
-      html: This is a <strong>template</strong> on <em>{{ sys.platform }}</em>
+```yaml
+alert-content:
+  startup: true
+  service: email-service
+  to: admin@example.org
+  subject: Gramex started
+  body: This is a template running on {{ sys.platform }}
+  html: This is a <strong>template</strong> on <em>{{ sys.platform }}</em>
+```
 
 Send a HTML + text email using template files:
 
-    :::yaml
-    alert-content-file:
-      startup: true
-      service: email-service
-      to: admin@example.org
-      subject: Gramex started
-      bodyfile: $YAMLPATH/{{ 'email' + '.txt' }}    # Contents are treated as templates too
-      htmlfile: $YAMLPATH/{{ 'email' + '.html' }}   # Contents are treated as templates too
+```yaml
+alert-content-file:
+  startup: true
+  service: email-service
+  to: admin@example.org
+  subject: Gramex started
+  bodyfile: $YAMLPATH/{{ 'email' + '.txt' }}    # Contents are treated as templates too
+  htmlfile: $YAMLPATH/{{ 'email' + '.html' }}   # Contents are treated as templates too
+```
 
 Send HTML email with inline image and attachments
 
-    :::yaml
-    alert-attachments:
-      startup: true
-      service: email-service
-      to: admin@example.org
-      subject: From {{ sys.platform }}
-      html: <p>Hello user</p><p><img src="cid:img1"></p><p><img src="cid:img2"></p>
-      images:
-         img1: $YAMLPATH/img1.jpg
-         img2: $YAMLPATH/{{ 'img2' + '.jpg' }}
-      attachments:
-         - $YAMLPATH/doc1.docx
-         - $YAMLPATH/{{ 'ppt1' + '.pptx' }}
+```yaml
+alert-attachments:
+  startup: true
+  service: email-service
+  to: admin@example.org
+  subject: From {{ sys.platform }}
+  html: <p>Hello user</p><p><img src="cid:img1"></p><p><img src="cid:img2"></p>
+  images:
+      img1: $YAMLPATH/img1.jpg
+      img2: $YAMLPATH/{{ 'img2' + '.jpg' }}
+  attachments:
+      - $YAMLPATH/doc1.docx
+      - $YAMLPATH/{{ 'ppt1' + '.pptx' }}
+```
 
 Send birthday alert emails every day
 
-    :::yaml
-    alert-birthday:
-      data: $YAMLPATH/birthday.csv
-      condition: data[data['date'] == datetime.datetime.today()]
-      each: data
-      service: email-service
-      to: {{ row['email'] }}
-      subject: Happy birthday {{ row['name'] }}
+```yaml
+alert-birthday:
+  data: $YAMLPATH/birthday.csv
+  condition: data[data['date'] == datetime.datetime.today()]
+  each: data
+  service: email-service
+  to: {{ row['email'] }}
+  subject: Happy birthday {{ row['name'] }}
+```
 
 Send monthly alert if sales is below target
 
-    :::yaml
-    alert-sales-target:
-      months: '*'
-      data:
-        sales:
-          url: mysql+pymysql://user:password@server/database
-          query: 'SELECT * FROM sales'
-      condition: sales[sales['target'] < sales['value']]
-      each: sales
-      service: email-service
-      to: {{ row['email'] }}
-      cc: salesmanager@example.org
-      subject: Sales target deficit of {{ row['target'] - row['value'] }}
-      html: $YAMLPATH/salestarget.html
+```yaml
+alert-sales-target:
+  months: '*'
+  data:
+    sales:
+      url: mysql+pymysql://user:password@server/database
+      query: 'SELECT * FROM sales'
+  condition: sales[sales['target'] < sales['value']]
+  each: sales
+  service: email-service
+  to: {{ row['email'] }}
+  cc: salesmanager@example.org
+  subject: Sales target deficit of {{ row['target'] - row['value'] }}
+  html: $YAMLPATH/salestarget.html
+```
