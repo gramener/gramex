@@ -38,8 +38,9 @@ indicative. Change them based on your needs.
   <br>`Cache-Control: private, max-age=3600`
 
 To [reload ignoring the cache](http://stackoverflow.com/a/385491/100904), press
-Ctrl-F5 on the browser.
+Ctrl-F5 on the browser. Below is a useful reference for `cache-control` checks ([Google Dev Docs](https://developers.google.com/web/fundamentals/performance/optimizing-content-efficiency/images/http-cache-decision-tree.png)):
 
+![HTTP Cache Control](http-cache-decision-tree.png "HTTP Cache Control")
 
 # Server caching
 
