@@ -1,0 +1,28 @@
+<h2 class="toc">Select</h2>
+
+{% apply view_source %}
+<select class="select-multiple w-100" name="states[]" multiple="multiple">
+  <option value="AP" selected>Andhra Pradesh</option>
+  <option value="ML">Meghalaya</option>
+  <option value="TS">Telangana</option>
+</select>
+
+<select class="select-multiple-groups w-100" name="states[]" multiple="multiple">
+  <optgroup label="South">
+    <option value="AP">Andhra Pradesh</option>
+    <option value="TS">Telangana</option>
+  </optgroup>
+  <optgroup label="North East">
+    <option value="ML" selected>Meghalaya</option>
+    <option value="NL">Nagaland</option>
+    <option value="MN">Manipur</option>
+  </optgroup>
+</select>
+
+<script>
+$(function() {
+  $('.select-multiple').select2()
+  $('.select-multiple-groups').select2()
+})
+</script>
+{% end %}

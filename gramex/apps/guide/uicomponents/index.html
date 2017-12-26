@@ -9,9 +9,14 @@
   <link rel="stylesheet" href="../ui/font-awesome/css/font-awesome.min.css">
   <link rel="stylesheet" href="../ui/noty/lib/noty.css">
   <link rel="stylesheet" href="../ui/daterangepicker/daterangepicker.css">
+  <link rel="stylesheet" href="../ui/select2/dist/css/select2.min.css">
+  <link rel="stylesheet" href="../ui/tether-shepherd/dist/css/shepherd-theme-arrows.css">
+  <link rel="stylesheet" href="../ui/tether-shepherd/dist/css/shepherd-theme-dark.css">
   <link rel="stylesheet" href="../node_modules/prismjs/themes/prism-okaidia.css">
   <link rel="stylesheet" href="style.css">
   <script src="../ui/jquery/dist/jquery.min.js"></script>
+  <script src="../ui/tether-shepherd/dist/js/tether.js"></script>
+  <script src="../ui/tether-shepherd/dist/js/shepherd.min.js"></script>
 </head>
 <body>
   <nav class="navbar navbar-dark bg-dark">
@@ -86,6 +91,7 @@
       {% raw load_page('ui-shadow.html') %}
       {% raw load_page('ui-ripple.html') %}
       {% raw load_page('ui-text.html') %}
+      {% raw load_page('ui-tours.html') %}
       {% raw load_page('ui-underline.html') %}
 
       <h1 class="toc">Backgrounds</h1>
@@ -102,6 +108,7 @@
       {% raw load_page('ui-tail.html') %}
 
       <h1 class="toc">Inputs</h1>
+      {% raw load_page('ui-select.html') %}
       {% raw load_page('ui-slider.html') %}
       {% raw load_page('ui-switch.html') %}
       {% raw load_page('ui-upload.html') %}
@@ -150,6 +157,7 @@
   <script src="../ui/daterangepicker/daterangepicker.js"></script>
   <script src="../ui/url-search-params/build/url-search-params.js"></script>
   <script src="../ui/lodash/lodash.min.js"></script>
+  <script src="../ui/select2/dist/js/select2.min.js"></script>
   <script src="../node_modules/clipboard/dist/clipboard.min.js"></script>
   <script src="../node_modules/prismjs/prism.js"></script>
   <script src="../node_modules/vue/dist/vue.min.js"></script>
