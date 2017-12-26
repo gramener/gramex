@@ -553,6 +553,15 @@ class TestPPTGen(TestCase):
                 'shapename': 'Bullet Rectangle Vertical',
                 'orient': 'vertical',
                 'slidenumber': 21
+            },
+            {
+                'text': False,
+                'poor': 0,
+                'hi': 10,
+                'lo': 10,
+                'shapename': 'Bullet Rectangle Vertical',
+                'orient': 'vertical',
+                'slidenumber': 21
             }
         ]
 
@@ -568,7 +577,8 @@ class TestPPTGen(TestCase):
             # width, height = _shp.width, _shp.height
             height = _shp.height if orient == 'horizontal' else _shp.width
             width = _shp.width if orient == 'horizontal' else _shp.height
-            lo, hi = 0, self.data["sales"].max()
+            lo = update_data.get('lo', 0)
+            hi = update_data.get('hi', self.data["sales"].max())
             good = 100
             target = pptgen.pptgen(
                 source=self.input, only=slidenumber,
@@ -580,6 +590,8 @@ class TestPPTGen(TestCase):
                             'max-width': 1,
                             'poor': update_data['poor'],
                             'good': good,
+                            'lo': lo,
+                            'hi': hi,
                             'target': 'data["data"]["sales"].max()',
                             'average': 'data["data"]["sales"].mean()',
                             'orient': orient,
@@ -594,10 +606,11 @@ class TestPPTGen(TestCase):
             _average = self.data["sales"].mean()
             _data = self.data["sales"].ix[0]
             for rectdata in [good, _average, update_data['poor'], _data]:
-                if rectdata:
-                    shp_width = int(((rectdata - lo) / (hi - lo)) * width)
-                    rects_width.append(shp_width if orient == 'horizontal' else height)
-                    rects_height.append(height if orient == 'horizontal' else shp_width)
+                if not rectdata:
+                    continue
+                shp_width = ((rectdata - lo) / ((hi - lo) or np.nan)) * width
+                rects_width.append(shp_width if orient == 'horizontal' else height)
+                rects_height.append(height if orient == 'horizontal' else shp_width)
 
             # Removing and updatiing actual data point's height
             if orient == 'horizontal':
@@ -624,11 +637,13 @@ class TestPPTGen(TestCase):
             eq_(textboxes, total_text_boxes)
             # Comapring number of rectangle shapes
             total_rects = 5 if update_data['poor'] else 4
+            if hi == lo:
+                total_rects, rects_width, rects_height = 0, [], []
             eq_(rectangles, total_rects)
             # Comparing rectangle's height
-            eq_(rects_height_from_output, rects_height)
+            eq_(rects_height_from_output, map(int, rects_height))
             # Comparing rectangle's width
-            eq_(rects_width_from_output, rects_width)
+            eq_(rects_width_from_output, map(int, rects_width))
 
     def test_heatgrid(self):
         # Test case for heatgrid

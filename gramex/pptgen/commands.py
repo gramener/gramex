@@ -192,7 +192,7 @@ def add_text_to_shape(shape, textval, **kwargs):
 
 def scale_data(data, lo, hi, factor=None):
     """Function to scale data."""
-    return ((data - lo) / (hi - lo)) * factor if factor else (data - lo) / (hi - lo)
+    return ((data - lo) / ((hi - lo) or np.nan)) * (factor or 1.)
 
 
 def rect(shape, x, y, width, height):
@@ -718,11 +718,12 @@ def calendarmap(shape, spec, data):
 def bullet(shape, spec, data):
     """Function to plot bullet chart."""
     if shape.auto_shape_type != MSO_SHAPE.RECTANGLE:
-            raise NotImplementedError()
+        raise NotImplementedError()
     spec = copy.deepcopy(spec['bullet'])
+
     orient = spec.get('orient', 'horizontal')
     if orient not in {'horizontal', 'vertical'}:
-            raise NotImplementedError()
+        raise NotImplementedError()
 
     font_aspect = 5
     pixel_inch = 10000
@@ -748,7 +749,6 @@ def bullet(shape, spec, data):
                                   spec['average'], spec['good']]))
     style = {}
     common_style = copy.deepcopy(spec.get('style', {}))
-
     data_text = common_style.get('data', {}).pop('text', spec.get('text', True))
     target_text = common_style.get('target', {}).pop('text', spec.get('text', True))
     if data_text:
@@ -771,8 +771,8 @@ def bullet(shape, spec, data):
     gradient = matplotlib.cm.get_cmap(gradient)
     percentage = {'good': 0.125, 'average': 0.25, 'poor': 0.50, 'data': 1.0, 'target': 1.0}
     for index, metric in enumerate(['good', 'average', 'poor']):
-        if not np.isnan(spec[metric]):
-            scaled = scale_data(spec.get(metric, np.nan), lo, hi, factor=width)
+        scaled = scale_data(spec.get(metric, np.nan), lo, hi, factor=width)
+        if not np.isnan(scaled):
             _width = scaled if orient == 'horizontal' else height
             _hight = height if orient == 'horizontal' else scaled
             yaxis = y if orient == 'horizontal' else y + (width - scaled)
@@ -786,17 +786,18 @@ def bullet(shape, spec, data):
     max_data_val = percentage[max(getmax.items(), key=operator.itemgetter(1))[0]]
 
     scaled = scale_data(spec['data'], lo, hi, factor=width)
-    _width = scaled if orient == 'horizontal' else height / 2.0
-    yaxis = y + height / 4.0 if orient == 'horizontal' else y + (width - scaled)
-    xaxis = x if orient == 'horizontal' else x + height / 4.0
-    _hight = height / 2.0 if orient == 'horizontal' else scaled
-    data_rect = rect(shapes, xaxis, yaxis, _width, _hight)
-    fill = style.get('data', {})
-    stroke = fill.get('stroke')
-    fill = fill.get('fill', matplotlib.colors.to_hex(gradient(1.0)))
-    rect_css(data_rect, **{'fill': fill, 'stroke': stroke or fill})
+    if not np.isnan(scaled):
+        _width = scaled if orient == 'horizontal' else height / 2.0
+        yaxis = y + height / 4.0 if orient == 'horizontal' else y + (width - scaled)
+        xaxis = x if orient == 'horizontal' else x + height / 4.0
+        _hight = height / 2.0 if orient == 'horizontal' else scaled
+        data_rect = rect(shapes, xaxis, yaxis, _width, _hight)
+        fill = style.get('data', {})
+        stroke = fill.get('stroke')
+        fill = fill.get('fill', matplotlib.colors.to_hex(gradient(1.0)))
+        rect_css(data_rect, **{'fill': fill, 'stroke': stroke or fill})
 
-    if data_text:
+    if data_text and not np.isnan(scaled):
         if callable(data_text):
             _data_text = '{}'.format(data_text(spec['data']))
         else:
@@ -816,9 +817,9 @@ def bullet(shape, spec, data):
         data_txt_style['font-size'] = data_txt_style.get('font-size', font_size)
         add_text_to_shape(parent, _data_text, **data_txt_style)
 
-    if not np.isnan(spec['target']):
+    scaled = scale_data(spec['target'], lo, hi, factor=width)
+    if not np.isnan(scaled):
         line_hight = 10000
-        scaled = scale_data(spec['target'], lo, hi, factor=width)
         _width = line_hight if orient == 'horizontal' else height
         _hight = height if orient == 'horizontal' else line_hight
         yaxis = y if orient == 'horizontal' else (width - scaled) + y
