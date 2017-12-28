@@ -769,6 +769,11 @@ url:
         kwargs:
             session_inactive: 0.0003         # Must visit every 26 seconds
             credentials: {alpha: alpha}
+    other/pages:
+        ...
+        kwargs:                              # Ensure that other authenticated pages
+            headers:                         # also expire every 26 seconds
+                Cache-Control: private, max-age=26
 ```
 
 <div class="example">
