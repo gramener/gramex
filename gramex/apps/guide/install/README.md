@@ -64,5 +64,5 @@ If you are behind a HTTP proxy, use `pip download --proxy=http://{proxy-host}:{p
 Copy the `offline` folder to the target machine (which need not have an Internet
 connection). Then:
 
-1. Install the [Anaconda][anaconda] executable
-2. From the `offline` folder, run `pip install --no-index --find-links . gramex.tar.bz2`
+1. Install the [Anaconda][anaconda] executable. When prompted, say "Install for all users", not "Just me"
+2. Open the Command Prompt or terminal **as administrator**. From the `offline` folder, run `pip install --no-index --find-links . gramex.tar.bz2`
