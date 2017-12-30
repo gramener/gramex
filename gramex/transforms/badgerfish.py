@@ -15,7 +15,7 @@ def badgerfish(content, handler=None, mapping={}, doctype='<!DOCTYPE html>'):
 
     The specs for this function are in progress.
     '''
-    data = yaml.load(content, Loader=AttrDictYAMLLoader)
+    data = yaml.safe_load(content, Loader=AttrDictYAMLLoader)
     if handler is not None and hasattr(handler, 'file'):
         load_imports(data, handler.file)
     maps = {tag: build_transform(trans, vars={'val': None}, filename='badgerfish')

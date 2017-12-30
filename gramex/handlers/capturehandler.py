@@ -115,7 +115,8 @@ class Capture(object):
             # Try starting the process again
             app_log.info('Starting %s via %s', script, self.cmd)
             self.close()
-            self.proc = Popen(self.cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+            # self.cmd is taken from the YAML configuration. Safe to run
+            self.proc = Popen(self.cmd, shell=True, stdout=PIPE, stderr=STDOUT)     # nosec
             self.proc.poll()
             atexit.register(self.close)
             # TODO: what if readline() does not return quickly?

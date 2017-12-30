@@ -71,7 +71,7 @@ def parse_command_line(commands):
         else:
             value = arg
 
-        value = yaml.load(value)
+        value = yaml.safe_load(value)
         base = args
         keys = group.split('.')
         for key in keys[:-1]:
@@ -190,9 +190,11 @@ def gramex_update(url):
         'dir': variables.get('GRAMEXDATA'),
         'uname': platform.uname(),
     }
-    query = ('SELECT * FROM events' if update is None else
-             'SELECT * FROM events WHERE time > %s ORDER BY time' % update['time'])
-    logs = [dict(log, **meta) for log in conn.execute(query)]
+    if update is None:
+        events = conn.execute('SELECT * FROM events')
+    else:
+        events = conn.execute('SELECT * FROM events WHERE time > ? ORDER BY time', update['time'])
+    logs = [dict(log, **meta) for log in events]
 
     def check_version(future):
         exception = future.exception()

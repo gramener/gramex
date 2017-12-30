@@ -130,6 +130,7 @@ setup(
         'sphinx_rtd_theme',         # For documentation
         'websocket-client',         # For websocket testing
         'pdfminer.six',             # For CaptureHandler testing
+        'bandit',                   # For security testing
     ],
     cmdclass={
         'develop': PostDevelopCommand,
