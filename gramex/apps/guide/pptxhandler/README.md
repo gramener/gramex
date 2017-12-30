@@ -188,7 +188,7 @@ change.
 In PowerPoint, all shapes have names. To see shape names, select Home tab >
 Drawing group > Arrange drop-down > Selection pane. Or press ALT + F10.
 
-![Selection pane](help/selection-pane.png)
+![Selection pane](selection-pane.png)
 
 To change the shape names, double-click on the name in the selection pane.
 

@@ -7,7 +7,8 @@ import requests
 import tempfile
 import numpy as np
 import pandas as pd
-from collections import Counter
+import matplotlib.cm
+import matplotlib.colors
 from gramex import pptgen
 from pptx import Presentation
 from unittest import TestCase
@@ -655,10 +656,10 @@ class TestPPTGen(TestCase):
                 drawheatgrid={'Invalid Input': {'heatgrid': {'data': 'data'}}})
 
         pix_to_inch = 10000
+        white = '#cccccc'
         default_margin, cell_width, cell_height, leftmargin, font = 5, 60, 50, 0.20, 14
-        data = self.data.groupby(
-            ['देश', 'city'], as_index=False).agg({'sales': 'sum'})
-
+        row, column, value, color = 'देश', 'city', 'sales', 'RdYlGn'
+        data = self.data.groupby([row, column], as_index=False).agg({value: 'sum'})
         target = pptgen.pptgen(
             source=self.input, only=22,
             data={'data': data},
@@ -666,20 +667,20 @@ class TestPPTGen(TestCase):
                 'Heatgrid Rectangle': {
                     'heatgrid': {
                         'data': 'data["data"]',
-                        'row': 'देश',
-                        'column': 'city',
-                        'value': 'sales',
+                        'row': row,
+                        'column': column,
+                        'value': value,
                         'text': {
-                            'function': "'{}'.format(data['city'])"
+                            'function': "'{}'.format(data['" + column + "'])"
                         },
                         'left-margin': leftmargin,
                         'cell-width': cell_width,
                         'cell-height': cell_height,
                         'na-text': 'NA',
-                        'na-color': '#cccccc',
+                        'na-color': white,
                         'style': {
                             'gradient': {
-                                'function': "lambda data, handler: 'RdYlGn'"
+                                'function': "lambda data, handler: '{}'".format(color)
                             },
                             'font-size': font,
                             'text-align': 'center',
@@ -692,28 +693,34 @@ class TestPPTGen(TestCase):
                 }
             })
         eq_(len(target.slides), 1)
-        n_countries, n_cities = len(data['देश'].unique()), len(data['city'].unique())
-        total_rects = n_countries * n_cities
-        total_txt = total_rects + n_countries + n_cities
-        total_texts = Counter({key: 1 for key in data['देश'].unique()})
-        total_texts.update({key: 1 + n_countries for key in data['city'].unique()})
-        rects_count, textboxes, texts = 0, 0, Counter()
+        gradient = matplotlib.cm.get_cmap(color)
+        cross = pptgen.utils.scale(data.pivot(row, column, value))
+        colors_ex = [white if np.isnan(x) else matplotlib.colors.to_hex(gradient(x))
+                     for x in cross.flatten()]
+        label_rows = np.sort(data[row].unique())
+        label_cols = np.sort(data[column].unique())
+        labels = label_cols
+        for r in label_rows:
+            labels = np.hstack((labels, label_cols, r))
+        labels_ex = labels.tolist()
+        rect_shape_width = (cell_width - 2 * default_margin) * pix_to_inch
+        rect_shape_height = (cell_height - default_margin) * pix_to_inch
+        labels_ppt, colors_ppt = [], []
         for shape in target.slides[0].shapes:
-            if shape.name != 'Title 1':
-                if shape.shape_type == MSO_SHAPE_TYPE.TEXT_BOX:
-                    textboxes += 1
-                    ok_(shape.has_text_frame)
-                    font_size = int(shape.text_frame.paragraphs[0].runs[0].font.size / pix_to_inch)
-                    eq_(font_size, font - 1)
-                    ok_(shape.text_frame.paragraphs[0].alignment == PP_ALIGN.CENTER)
-                    texts[shape.text_frame.paragraphs[0].runs[0].text] += 1
-                elif shape.shape_type == MSO_SHAPE.RECTANGLE:
-                    rects_count += 1
-                    eq_(shape.width, (cell_width - default_margin - default_margin) * pix_to_inch)
-                    eq_(shape.height, (cell_height - default_margin) * pix_to_inch)
-        eq_(total_rects, rects_count)
-        eq_(total_txt, textboxes)
-        eq_(texts, total_texts)
+            if shape.name == 'Title 1':
+                continue
+            if shape.shape_type == MSO_SHAPE_TYPE.TEXT_BOX:
+                ok_(shape.has_text_frame)
+                p = shape.text_frame.paragraphs[0]
+                eq_(int(p.runs[0].font.size / pix_to_inch), font - 1)
+                ok_(p.alignment == PP_ALIGN.CENTER)
+                labels_ppt.append(p.runs[0].text)
+            elif shape.shape_type == MSO_SHAPE.RECTANGLE:
+                eq_(shape.width, rect_shape_width)
+                eq_(shape.height, rect_shape_height)
+                colors_ppt.append('#{}'.format(shape.fill.fore_color.rgb).lower())
+        eq_(labels_ex, labels_ppt)
+        eq_(colors_ex, colors_ppt)
 
     def test_sankey(self):
         # Test case for sankey

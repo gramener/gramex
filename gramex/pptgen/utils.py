@@ -283,7 +283,7 @@ def decimals(series):
     return int(max(0, np.floor(min_float - np.log10(smallest))))
 
 
-def conver_color_code(colorcode):
+def convert_color_code(colorcode):
     """Convert color code to valid PPTX color code."""
     colorcode = colorcode.rsplit('#')[-1].lower()
     return colorcode + ('0' * (6 - len(colorcode)))
@@ -297,7 +297,7 @@ def apply_text_css(shape, run, paragraph, **kwargs):
     if kwargs.get('color'):
         rows_text = run.font.fill
         rows_text.solid()
-        run.font.color.rgb = RGBColor.from_string(conver_color_code(kwargs['color']))
+        run.font.color.rgb = RGBColor.from_string(convert_color_code(kwargs['color']))
     if kwargs.get('font-family'):
         run.font.name = kwargs['font-family']
     if kwargs.get('font-size'):
@@ -725,5 +725,5 @@ class TableProperties():
         if info.get('fill'):
             cell_fill = cell.fill
             cell_fill.solid()
-            cell_fill.fore_color.rgb = RGBColor.from_string(conver_color_code(info['fill']))
+            cell_fill.fore_color.rgb = RGBColor.from_string(convert_color_code(info['fill']))
         apply_text_css(cell, run, paragraph, **info)

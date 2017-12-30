@@ -192,6 +192,7 @@ def add_text_to_shape(shape, textval, **kwargs):
 
 def scale_data(data, lo, hi, factor=None):
     """Function to scale data."""
+    data = np.array(data, dtype=float)
     return ((data - lo) / ((hi - lo) or np.nan)) * (factor or 1.)
 
 
@@ -237,7 +238,7 @@ def chart_css(fill, style, color):
     """Function to add opacity to charts."""
     fill.solid()
     pix_to_inch = 100000
-    fill.fore_color.rgb = RGBColor.from_string(utils.conver_color_code(color))
+    fill.fore_color.rgb = RGBColor.from_string(utils.convert_color_code(color))
     solid_fill = fill.fore_color._xFill
     alpha = OxmlElement('a:alpha')
     alpha.set('val', '%d' % (pix_to_inch * style.get('opacity', 1.0)))
@@ -459,7 +460,7 @@ def sankey(shape, spec, data):
         for key, row in df.iterrows():
             shp = shapes.add_shape(
                 MSO_SHAPE.RECTANGLE, row['x'], y, row['width'], thickness)
-            rectstyle = {"fill": row['fill'], 'stroke': stroke}
+            rectstyle = {'fill': row['fill'], 'stroke': stroke}
             rect_css(shp, **rectstyle)
             text_style = {}
             text_style['color'] = _color.contrast(row['fill'])
@@ -556,7 +557,7 @@ def treemap(shape, spec, data):
                 text = spec['text'](v) if callable(spec['text']) else spec['text']
             else:
                 text = '{}'.format(v[1])
-            rectstyle = {"fill": rect_color, 'stroke': stroke}
+            rectstyle = {'fill': rect_color, 'stroke': stroke}
             rect_css(shp, **rectstyle)
             font_size = min(h, w * font_aspect / fontwidth.fontwidth('{}'.format(text)), pd.np.Inf)
             text_style = {}
@@ -643,7 +644,7 @@ def calendarmap(shape, spec, data):
             x0 + (width * nx) + (width - sizes[i]) / 2,
             y0 + (width * ny) + (width - sizes[i]) / 2,
             sizes[i], sizes[i])
-        rectstyle = {"fill": fill, 'stroke': stroke(val) if callable(stroke) else stroke}
+        rectstyle = {'fill': fill, 'stroke': stroke(val) if callable(stroke) else stroke}
         rect_css(shp, **rectstyle)
         text_style = {}
         text_style['color'] = style.get('color')(val) if callable(
@@ -659,14 +660,14 @@ def calendarmap(shape, spec, data):
         if i >= 7 and d.day == 1 and ny > 0:
             vertical_line = shapes.add_shape(
                 MSO_SHAPE.RECTANGLE, x0 + width * nx, y0 + (width * ny), width, 2 * pixel_inch)
-            rectstyle = {"fill": default_line_color, 'stroke': default_line_color}
+            rectstyle = {'fill': default_line_color, 'stroke': default_line_color}
             rect_css(vertical_line, **rectstyle)
 
         if i >= 7 and d.day <= 7 and nx > 0:
             horizontal_line = shapes.add_shape(
                 MSO_SHAPE.RECTANGLE,
                 x0 + (width * nx), y0 + (width * ny), 2 * pixel_inch, width)
-            rectstyle = {"fill": default_line_color, 'stroke': default_line_color}
+            rectstyle = {'fill': default_line_color, 'stroke': default_line_color}
             rect_css(horizontal_line, **rectstyle)
 
         # Adding weekdays text to the chart (left side)
@@ -692,7 +693,7 @@ def calendarmap(shape, spec, data):
             top_bar = shapes.add_shape(
                 MSO_SHAPE.RECTANGLE, px, shape_top - w, width, w)
             top_bar.name = 'top bar chart rect'
-            rectstyle = {"fill": fill_rect(val) if callable(fill_rect) else fill_rect,
+            rectstyle = {'fill': fill_rect(val) if callable(fill_rect) else fill_rect,
                          'stroke': stroke(val) if callable(stroke) else stroke}
             rect_css(top_bar, **rectstyle)
             top_txt = shapes.add_textbox(px, shape_top - width, width, width)
@@ -706,7 +707,7 @@ def calendarmap(shape, spec, data):
             w = label_left * ((val - lo_weekday) / range_weekday)
             bar = shapes.add_shape(
                 MSO_SHAPE.RECTANGLE, shape_left - w, y0 + (width * ny), w, width)
-            rectstyle = {"fill": fill_rect(val) if callable(fill_rect) else fill_rect,
+            rectstyle = {'fill': fill_rect(val) if callable(fill_rect) else fill_rect,
                          'stroke': stroke(val) if callable(stroke) else stroke}
             bar.name = 'left bar chart rect'
             rect_css(bar, **rectstyle)
@@ -853,7 +854,7 @@ def bullet(shape, spec, data):
 def heatgrid(shape, spec, data):
     """Create a heat grid."""
     if shape.auto_shape_type != MSO_SHAPE.RECTANGLE:
-            raise NotImplementedError()
+        raise NotImplementedError()
 
     spec = copy.deepcopy(spec['heatgrid'])
 
