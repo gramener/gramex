@@ -81,30 +81,18 @@ class TestPPTGen(TestCase):
             # Checking color of chart
             for index, point in enumerate(_series.points):
                 if chart_name == 'Scatter Chart':
-                    self.check_opacity(opacity, point.marker.format.fill.fore_color)
-                    point_color = point.marker.format.fill.fore_color.rgb
-                    point_stroke = point.marker.format.line.fill.fore_color.rgb
-                    eq_('{}'.format(point_color), chart_colors[_series.name].replace('#', ''))
-                    eq_('{}'.format(point_stroke), chart_colors[_series.name].replace('#', ''))
+                    marker, keyname = point.marker, _series.name
                 elif chart_name == 'Area Chart':
-                    self.check_opacity(opacity, _series.format.fill.fore_color)
-                    area_color = _series.format.fill.fore_color.rgb
-                    area_stroke = _series.format.line.fill.fore_color.rgb
-                    eq_('{}'.format(area_color), chart_colors[_series.name].replace('#', ''))
-                    eq_('{}'.format(area_stroke), chart_colors[_series.name].replace('#', ''))
+                    marker, keyname = _series, _series.name
                 elif chart_name in ['Pie Chart', 'Donut Chart']:
-                    self.check_opacity(opacity, point.format.fill.fore_color)
-                    fill_color = point.format.fill.fore_color.rgb
-                    fill_stroke = point.format.line.fill.fore_color.rgb
-                    color_key = data.ix[index][xaxis]
-                    eq_('{}'.format(fill_color), chart_colors[color_key].replace('#', ''))
-                    eq_('{}'.format(fill_stroke), chart_colors[color_key].replace('#', ''))
+                    marker, keyname = point, data.ix[index][xaxis]
                 else:
-                    self.check_opacity(opacity, point.format.fill.fore_color)
-                    fill_color = point.format.fill.fore_color.rgb
-                    fill_stroke = point.format.line.fill.fore_color.rgb
-                    eq_('{}'.format(fill_color), chart_colors[_series.name].replace('#', ''))
-                    eq_('{}'.format(fill_stroke), chart_colors[_series.name].replace('#', ''))
+                    marker, keyname = point, _series.name
+                color = marker.format.fill.fore_color
+                stroke = marker.format.line.fill.fore_color
+                self.check_opacity(opacity, color)
+                eq_('#{}'.format(color.rgb), chart_colors[keyname])
+                eq_('#{}'.format(stroke.rgb), chart_colors[keyname])
 
     def test_register(self):
         # Test case for register in pptgen
@@ -138,9 +126,8 @@ class TestPPTGen(TestCase):
         # Testing data section. Data argument must be a `dict` like object
         with assert_raises(ValueError):
             pptgen.pptgen(source=self.input, only=1, data=[1, 2])
-        pptgen.pptgen(source=self.input, only=1, data={})
-        pptgen.pptgen(source=self.input, only=1, data={'function': "{}"})
-        pptgen.pptgen(source=self.input, only=1, data={'data': [1, 2, 3]})
+        for case in [{}, {'function': '{}'}, {'data': [1, 2, 3]}]:
+            pptgen.pptgen(source=self.input, only=1, data=case)
 
     def test_source_without_target(self):
         # Test case to compare no change.
@@ -161,7 +148,7 @@ class TestPPTGen(TestCase):
         target = pptgen.pptgen(
             source=self.input, only=1,
             change={                  # Configurations are same as when loading from the YAML file
-                'Title 1': {            # Take the shape named "Title 1"
+                'Title 1': {            # Take the shape named 'Title 1'
                     'text': text          # Replace its text with new text
                 }
             })
@@ -169,7 +156,7 @@ class TestPPTGen(TestCase):
 
     def test_text_xml(self):
         # Test case for text xml object
-        text = "New Title<text color='#00ff00' bold='True' font-size='14'> Green Bold Text</text>"
+        text = 'New Title<text color="#00ff00" bold="True" font-size="14"> Green Bold Text</text>'
         font_size, text_color, pix_to_inch = 12, '#ff0000', 10000
         target = pptgen.pptgen(
             source=self.input, only=1,
@@ -205,24 +192,25 @@ class TestPPTGen(TestCase):
     def test_replicate_slide(self):
         # Test slide replication.
         data = self.data.groupby('city')
-        tmpl = "Region: {{ city }} has Sales: {{ sales }} with Growth: {{ growth }}"
+        tmpl = 'Region: {{ city }} has Sales: {{ sales }} with Growth: {{ growth }}'
         target = pptgen.pptgen(
             source=self.input,
             only=3,
             data={'data': data},
             replicate_slide={
                 'replicate': True,
-                'data': "data['data']",
+                'data': 'data["data"]',
                 'sales-text': {
-                    'data': "data[0]",
+                    'data': 'data[0]',
                     'text': tmpl
                 }
             })
-        eq_(len(data.groups), len(target.slides))
-        slds = target.slides
-        tmpl_data = [self.template(tmpl, grp[1].to_dict(orient='records')[0]) for grp in data]
-        slide_data = [shp.text for sld in slds for shp in sld.shapes if shp.name == 'sales-text']
-        eq_(slide_data, tmpl_data)
+        eq_(data.ngroups, len(target.slides))
+        contents_ex = [self.template(tmpl, grp.iloc[0]) for _, grp in data]
+        contents_ppt = [shape.text for slide in target.slides
+                        for shape in slide.shapes
+                        if shape.name == 'sales-text']
+        eq_(contents_ex, contents_ppt)
 
     def test_text_style(self):
         # Test case for testing text styles.
@@ -231,13 +219,13 @@ class TestPPTGen(TestCase):
             only=4,
             replicate_slide={
                 'Title 1': {
-                    'text': "New title",
+                    'text': 'New title',
                     'style': {
                         'color': '#ff0000'
                     }
                 },
                 'Text 1': {
-                    'text': "New text",
+                    'text': 'New text',
                     'style': {
                         'color': '#00ff00',
                         'bold': True
@@ -249,11 +237,12 @@ class TestPPTGen(TestCase):
         name_map = {'Title 1': {'color': 'FF0000', 'text': 'Title 1'},
                     'Text 1': {'color': '00FF00', 'text': 'Text 1'}}
         for shape in slides[0].shapes:
-            if shape.name not in ['Title 1', 'Text 1']:
-                eq_(shape.text, name_map[shape.name]['text'])
-                for paragraph in shape.text_frame.paragraphs:
-                    for run in paragraph.runs:
-                        eq_('{}'.format(run.font.color.rgb), name_map[shape.name]['color'])
+            if shape.name in ['Title 1', 'Text 1']:
+                continue
+            eq_(shape.text, name_map[shape.name]['text'])
+            for paragraph in shape.text_frame.paragraphs:
+                for run in paragraph.runs:
+                    eq_('{}'.format(run.font.color.rgb), name_map[shape.name]['color'])
 
     def test_group_and_image(self):
         # Test case for group objects.
@@ -265,7 +254,7 @@ class TestPPTGen(TestCase):
                     'slide-title': 'Group Test',
                     'Group 1': {
                         'Caption': {
-                            'text': "New caption"
+                            'text': 'New caption'
                         },
                         'Picture': {
                             'image': img
@@ -284,18 +273,17 @@ class TestPPTGen(TestCase):
                             handle.write(r.content)
                         with open(handle.name, 'rb') as f:
                             blob = f.read()
-                        eq_(shape.image.blob, blob)
                         os.unlink(handle.name)
                     else:
                         with open(img, 'rb') as f:
                             blob = f.read()
-                        eq_(shape.image.blob, blob)
+                    eq_(shape.image.blob, blob)
 
     def test_stack(self):
         # Test case for stack elements.
         data = self.data.groupby('city', as_index=False)['sales', 'growth'].sum()
         data = data.to_dict(orient='records')
-        tmpl = "Region: {{ city }} has Sales: {{ sales }} with Growth: {{ growth }}"
+        tmpl = 'Region: {{ city }} has Sales: {{ sales }} with Growth: {{ growth }}'
         target = pptgen.pptgen(
             source=self.input,
             only=6,
@@ -303,18 +291,16 @@ class TestPPTGen(TestCase):
             stack_shapes={
                 'slide-number': 1,
                 'TextBox 1': {
-                    'data': "data['data']",
+                    'data': 'data["data"]',
                     'stack': 'vertical',
                     'margin': 0.10,
                     'text': tmpl
                 }
             })
-        stacked_shapes = self.get_shape(target, 'TextBox 1')
         eq_(len(target.slides), 1)
-        eq_(len(stacked_shapes), len(data))
-        contents = [shape.text for shape in stacked_shapes]
-        template_data = [self.template(tmpl, item) for item in data]
-        eq_(contents, template_data)
+        contents_ex = [self.template(tmpl, item) for item in data]
+        contents_ppt = [shape.text for shape in self.get_shape(target, 'TextBox 1')]
+        eq_(contents_ex, contents_ppt)
 
     def test_replace(self):
         # Test case for replace command.
@@ -324,8 +310,8 @@ class TestPPTGen(TestCase):
                 'slide-number': [1],
                 'TextBox 1': {
                     'replace': {
-                        "Old": "New",
-                        "Title": "Heading"
+                        'Old': 'New',
+                        'Title': 'Heading'
                     }
                 }
             })
@@ -394,7 +380,7 @@ class TestPPTGen(TestCase):
             })
         eq_(len(target.slides), 1)
         shape = self.get_shape(target, 'Table 1')[0]
-        eq_(len(shape.table.rows), len(self.data) + 1)
+        eq_(len(shape.table.rows), len(self.data.index) + 1)
         eq_(len(shape.table.columns), len(self.data.columns))
         columns = []
         table_data = {}
@@ -403,11 +389,11 @@ class TestPPTGen(TestCase):
                 txt = cell.text_frame.text
                 if row_num == 0:
                     columns.append(txt)
-                else:
-                    if columns[col_num] not in table_data:
-                        table_data[columns[col_num]] = []
-                    txt = np.nan if txt == 'nan' else txt
-                    table_data[columns[col_num]].append(txt)
+                    continue
+                if columns[col_num] not in table_data:
+                    table_data[columns[col_num]] = []
+                txt = np.nan if txt == 'nan' else txt
+                table_data[columns[col_num]].append(txt)
 
         columns = sorted(columns)
         eq_(sorted(list(self.data.columns)), columns)
@@ -435,10 +421,11 @@ class TestPPTGen(TestCase):
                     }
                 })
 
-        slidenumbers = AttrDict(Bar_Chart=2, Column_Chart=10, Line_Chart=11, Area_Chart=12,
-                                Scatter_Chart=13, Bubble_Chart=14, Bubble_Chart_3D=15,
-                                Radar_Chart=16, Donut_Chart=17, Pie_Chart=18)
         xaxis, opacity = 'city', 0.5
+        slidenumbers = AttrDict(
+            Bar_Chart=2, Column_Chart=10, Line_Chart=11, Area_Chart=12,
+            Scatter_Chart=13, Bubble_Chart=14, Bubble_Chart_3D=15,
+            Radar_Chart=16, Donut_Chart=17, Pie_Chart=18)
         for chart_name, slidenumber in slidenumbers.items():
             # Replacing `_` with a white space. Because chart names in input slides contains
             # spaces not `_`.
@@ -454,7 +441,6 @@ class TestPPTGen(TestCase):
                     'Newport Beach': '#918485',
                     'South Plainfield': '#855D5D'
                 }
-
             else:
                 data = self.data.groupby(xaxis, as_index=False)['sales', 'growth'].sum()
                 series = ['growth', 'sales']
@@ -462,11 +448,10 @@ class TestPPTGen(TestCase):
                     'sales': '#D34817',
                     'growth': '#9B2D1F',
                 }
-
             rule = {
                 chart_name: {
                     'chart': {
-                        'data': "data['data']",
+                        'data': 'data["data"]',
                         'x': xaxis,
                         'color': chart_colors,
                         'opacity': opacity
@@ -494,7 +479,7 @@ class TestPPTGen(TestCase):
                     'treemap': {
                         'data': 'data["data"]',
                         'keys': ['city'],
-                        'values': "{'sales': 'sum', 'growth': 'sum'}",
+                        'values': '{"sales": "sum", "growth": "sum"}',
                         'size': {'function': 'lambda v: v["sales"]'},
                         'sort': {
                             'function': 'lambda v: v.sort_values(by=["sales"], ascending=False)'
@@ -503,7 +488,7 @@ class TestPPTGen(TestCase):
                             'function': 'lambda v: _color.gradient(v["growth"]/100, _color.RdYlGn)'
                         },
                         'text': {
-                            'function': "lambda v: '{}'.format(v['city'])"
+                            'function': 'lambda v: "{}".format(v["city"])'
                         }
                     }
                 }
@@ -515,12 +500,9 @@ class TestPPTGen(TestCase):
         data = data.reset_index(drop=True)
         # Only one slide should be there
         eq_(len(target.slides), 1)
-        rects = 0
         text, width = [], []
         for shape in target.slides[0].shapes:
             if shape.shape_type == MSO_SHAPE.RECTANGLE:
-                # Counting the number of available rectangles in treemap chart
-                rects += 1
                 # Gettiing text as per treemap draw logic
                 text.append(shape.text)
                 # Getting rectangles with
@@ -542,7 +524,7 @@ class TestPPTGen(TestCase):
         default_size = 10000
         change_data = [
             {
-                'text': {'function': "lambda v: '%.1f' % v"},
+                'text': {'function': 'lambda v: "%.1f" % v'},
                 'poor': 20,
                 'slidenumber': 20,
                 'shapename': 'Bullet Rectangle Horizontal',
@@ -579,7 +561,7 @@ class TestPPTGen(TestCase):
             height = _shp.height if orient == 'horizontal' else _shp.width
             width = _shp.width if orient == 'horizontal' else _shp.height
             lo = update_data.get('lo', 0)
-            hi = update_data.get('hi', self.data["sales"].max())
+            hi = update_data.get('hi', self.data['sales'].max())
             good = 100
             target = pptgen.pptgen(
                 source=self.input, only=slidenumber,
@@ -604,8 +586,8 @@ class TestPPTGen(TestCase):
             eq_(len(target.slides), 1)
             textboxes, rectangles = 0, 0
             rects_width, rects_height = [], []
-            _average = self.data["sales"].mean()
-            _data = self.data["sales"].ix[0]
+            _average = self.data['sales'].mean()
+            _data = self.data['sales'].ix[0]
             for rectdata in [good, _average, update_data['poor'], _data]:
                 if not rectdata:
                     continue
@@ -626,13 +608,14 @@ class TestPPTGen(TestCase):
 
             rects_width_from_output, rects_height_from_output = [], []
             for shape in target.slides[0].shapes:
-                if shape.name != 'Title 1':
-                    if shape.shape_type == MSO_SHAPE_TYPE.TEXT_BOX:
-                        textboxes += 1
-                    elif shape.shape_type == MSO_SHAPE.RECTANGLE:
-                        rectangles += 1
-                        rects_width_from_output.append(shape.width)
-                        rects_height_from_output.append(shape.height)
+                if shape.name == 'Title 1':
+                    continue
+                if shape.shape_type == MSO_SHAPE_TYPE.TEXT_BOX:
+                    textboxes += 1
+                elif shape.shape_type == MSO_SHAPE.RECTANGLE:
+                    rectangles += 1
+                    rects_width_from_output.append(shape.width)
+                    rects_height_from_output.append(shape.height)
             # Comapring number of text boxes to be shown
             total_text_boxes = 2 if update_data['text'] else 0
             eq_(textboxes, total_text_boxes)
@@ -671,7 +654,7 @@ class TestPPTGen(TestCase):
                         'column': column,
                         'value': value,
                         'text': {
-                            'function': "'{}'.format(data['" + column + "'])"
+                            'function': '"{}".format(data["' + column + '"])'
                         },
                         'left-margin': leftmargin,
                         'cell-width': cell_width,
@@ -680,7 +663,7 @@ class TestPPTGen(TestCase):
                         'na-color': white,
                         'style': {
                             'gradient': {
-                                'function': "lambda data, handler: '{}'".format(color)
+                                'function': 'lambda data, handler: "{}"'.format(color)
                             },
                             'font-size': font,
                             'text-align': 'center',
@@ -736,9 +719,9 @@ class TestPPTGen(TestCase):
         input_shapes = Presentation(self.input).slides[slidenumber - 1].shapes
         width = [shape for shape in input_shapes if shape.name == shpname][0].width
         groups = ['देश', 'city', 'product']
-        order = {'function': "lambda g: g['sales'].sum()"}
-        text = {'function': "lambda g: g.apply(lambda x: x.name)"}
-        color = {'function': "lambda g: _color.gradient(g['growth'].sum(), _color.RdYlGn)"}
+        order = {'function': 'lambda g: g["sales"].sum()'}
+        text = {'function': 'lambda g: g.apply(lambda x: x.name)'}
+        color = {'function': 'lambda g: _color.gradient(g["growth"].sum(), _color.RdYlGn)'}
         data = self.data.fillna(0)
         target = pptgen.pptgen(
             source=self.input, only=slidenumber,
@@ -758,7 +741,7 @@ class TestPPTGen(TestCase):
         eq_(len(target.slides), 1)
 
         total_cust_shapes, get_rect_order, get_rect_width = 0, [], []
-        grp_order = "lambda g: g['sales'].sum()"
+        grp_order = 'lambda g: g["sales"].sum()'
 
         for index, grp in enumerate(groups):
             grpobj = data.groupby(grp)
@@ -771,19 +754,17 @@ class TestPPTGen(TestCase):
                 grpby = [groups[index], groups[index + 1]]
                 total_cust_shapes += len(data.groupby(grpby, as_index=False)['sales'].sum())
 
-        rects_count, cust_shape_count, rect_order, rect_width = 0, 0, [], []
+        cust_shape_count, rect_order, rect_width = 0, [], []
         for shape in target.slides[0].shapes:
-            if shape.name != 'Title 1':
-                # Custom shapes count
-                if len(shape.element.xpath('.//a:custGeom')):
-                    cust_shape_count += 1
-                # Rectangles count
-                elif shape.shape_type == MSO_SHAPE.RECTANGLE:
-                    rects_count += 1
-                    rect_order.append(shape.text)
-                    rect_width.append(shape.width)
-        # Comparing number of rectangles
-        eq_(len(get_rect_order), rects_count)
+            if shape.name == 'Title 1':
+                continue
+            # Custom shapes count
+            if len(shape.element.xpath('.//a:custGeom')):
+                cust_shape_count += 1
+            # Rectangles count
+            elif shape.shape_type == MSO_SHAPE.RECTANGLE:
+                rect_order.append(shape.text)
+                rect_width.append(shape.width)
         # Comparing rectangle's plot order
         eq_(get_rect_order, rect_order)
         # Comparing rectangle's width
@@ -828,12 +809,7 @@ class TestPPTGen(TestCase):
                     }
                 })
             eq_(len(target.slides), 1)
-            cell_count = 0
-            compare_text = []
-            texts = ['%02d' % (txt.day) for txt in data.index]
-            leftpx, toppx = left * pix_to_inch, top * pix_to_inch
-            leftrect, toprect = 0, 0
-
+            texts_ex = data.index.strftime('%d').tolist()
             scaledata = pd.Series(data['column']).replace([pd.np.inf, -pd.np.inf], pd.np.nan)
             week = 7
             weekly_mean, weekday_mean = pd.Series(), pd.Series()
@@ -843,23 +819,25 @@ class TestPPTGen(TestCase):
             if left:
                 _rng = [scaledata[(x - weekstart) % week::week].mean() for x in range(week)]
                 weekday_mean = pd.Series(_rng)
+
+            leftrect, toprect = 0, 0
+            texts_ppt = []
             for shape in target.slides[0].shapes:
-                if shape.name != 'Title 1':
-                    if shape.shape_type == MSO_SHAPE.RECTANGLE:
-                        cell = shape.width == shape.height == width * pix_to_inch
-                        if cell and shape.left > shp.left + leftpx and shape.top > shp.top + toppx:
-                            cell_count += 1
-                            compare_text.append(shape.text)
-                        # Counting top bar chart rectangles
-                        elif shape.name == 'top bar chart rect':
-                            toprect += 1
-                        # Counting left bar chart rectangles
-                        elif shape.name == 'left bar chart rect':
-                            leftrect += 1
-            # Comparing number of cells in calendarmap
-            eq_(cell_count, len(data))
+                if shape.name == 'Title 1' or shape.shape_type != MSO_SHAPE.RECTANGLE:
+                    continue
+                cell = shape.width == shape.height == width * pix_to_inch
+                if (cell and
+                        shape.left > shp.left + (left * pix_to_inch) and
+                        shape.top > shp.top + (top * pix_to_inch)):
+                    texts_ppt.append(shape.text)
+                # Counting top bar chart rectangles
+                elif shape.name == 'top bar chart rect':
+                    toprect += 1
+                # Counting left bar chart rectangles
+                elif shape.name == 'left bar chart rect':
+                    leftrect += 1
             # Comparing text's order(which is day)
-            eq_(texts, compare_text)
+            eq_(texts_ex, texts_ppt)
             # Comparing left bar chart's rectangle count, if left padding is defined
             eq_(toprect, len(weekly_mean.dropna()))
             # Comparing top bar chart's rectangle count, if top padding is defined
