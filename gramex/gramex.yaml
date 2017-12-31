@@ -252,6 +252,7 @@ schedule:
         minutes: 0
         hours: 0
         dates: '*'
+        thread: true
 
 # http://tornado.readthedocs.org/en/stable/web.html#tornado.web.URLSpec
 # Define this section at the end, to allow it to use previous services.

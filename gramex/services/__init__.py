@@ -644,7 +644,7 @@ def eventlog(conf):
     folder = os.path.dirname(os.path.abspath(conf.path))
     if not os.path.exists(folder):
         os.makedirs(folder)
-    info.eventlog.conn = conn = sqlite3.connect(conf.path, check_same_thread=False)
+    conn = info.eventlog.conn = sqlite3.connect(conf.path, check_same_thread=False)
     conn.row_factory = sqlite3.Row
     conn.execute('CREATE TABLE IF NOT EXISTS events (time REAL, event TEXT, data TEXT)')
     conn.commit()
@@ -652,13 +652,14 @@ def eventlog(conf):
     def add(event_name, data):
         '''Write a message into the application event log'''
         data = json.dumps(data, ensure_ascii=True, separators=(',', ':'))
-        info.eventlog.conn.execute('INSERT INTO events VALUES (?, ?, ?)',
-                                   [time.time(), event_name, data])
+        conn.execute('INSERT INTO events VALUES (?, ?, ?)', [time.time(), event_name, data])
         conn.commit()
 
     def shutdown():
         add('shutdown', {'version': __version__, 'pid': os.getpid()})
-        info.eventlog.conn.close()
+        # Don't close the connection here. gramex.gramex_update() runs in a thread. If we start and
+        # stop gramex quickly, allow gramex_update to add too this entry
+        # conn.close()
 
     info.eventlog.add = add
     add('startup', {'version': __version__, 'pid': os.getpid(),

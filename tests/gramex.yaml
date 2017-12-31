@@ -2299,8 +2299,15 @@ alert:
       to: "{{ row['name'].replace(' ', '_') + '@example.org' }}"
       subject: "Congrats #{{ index }}! You got {{ row['votes'] }} votes"
 
-# Import from all subdirectories
-import: {subdir: '*/gramex.yaml'}
+import:
+  # Import from all subdirectories
+  subdir: '*/gramex.yaml'
+  gramex-update:
+    path: $GRAMEXAPPS/update/gramex.yaml
+    YAMLURL: /update/
 
 # Invalid services should be ignored
 invalid-service: true
+
+eventlog:
+  path: $YAMLPATH/events.db

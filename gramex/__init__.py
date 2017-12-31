@@ -172,19 +172,18 @@ def commandline(args=None):
 def gramex_update(url):
     '''If a newer version of gramex is available, logs a warning'''
     import time
+    import requests
     import platform
     from . import services
 
     if not services.info.eventlog:
-        app_log.error('eventlog: service is not running. So Gramex update is disabled')
-
+        return app_log.error('eventlog: service is not running. So Gramex update is disabled')
     conn = services.info.eventlog.conn
     query = 'SELECT * FROM events WHERE event="update" ORDER BY time DESC LIMIT 1'
     update = conn.execute(query).fetchone()
     delay = 24 * 60 * 60            # Wait for one day before updates
     if update is not None and time.time() < update['time'] + delay:
-        app_log.debug('Gramex update ran recently. Deferring check.')
-        return
+        return app_log.debug('Gramex update ran recently. Deferring check.')
 
     meta = {
         'dir': variables.get('GRAMEXDATA'),
@@ -193,39 +192,23 @@ def gramex_update(url):
     if update is None:
         events = conn.execute('SELECT * FROM events')
     else:
-        events = conn.execute('SELECT * FROM events WHERE time > ? ORDER BY time', update['time'])
+        events = conn.execute('SELECT * FROM events WHERE time > ? ORDER BY time',
+                              (update['time'], ))
     logs = [dict(log, **meta) for log in events]
 
-    def check_version(future):
-        exception = future.exception()
-        if exception:
-            app_log.error('Gramex update error: %s (%s)', exception, url)
-            return
-
-        result = future.result()
-        body = result.body.decode('utf-8')
-        try:
-            update = json.loads(body)
-        except ValueError:
-            app_log.error('Gramex update: JSON invalid: %s', body)
-            return
-        if not isinstance(update, dict) or 'version' not in update:
-            app_log.error('Gramex update: response invalid: %s', body)
-            return
-        services.info.eventlog.add('update', body)
-        if update.get('version') > __version__:
-            app_log.error('Gramex %s is available. See https://learn.gramener.com/guide/',
-                          update['version'])
-        elif update.get('version') < __version__:
-            app_log.warning('Gramex update: your version %s is ahead of the stable %s',
-                            __version__, update['version'])
-        else:
-            app_log.debug('Gramex version %s is up to date', __version__)
-
-    import tornado.httpclient
-    http_client = tornado.httpclient.AsyncHTTPClient()
-    future = http_client.fetch(url, method='POST', body=json.dumps(logs))
-    future.add_done_callback(check_version)
+    r = requests.post(url, data=json.dumps(logs))
+    r.raise_for_status()
+    update = r.json()
+    version = update['version']
+    if version > __version__:
+        app_log.error('Gramex %s is available. See https://learn.gramener.com/guide/', version)
+    elif version < __version__:
+        app_log.warning('Gramex update: your version %s is ahead of the stable %s',
+                        __version__, version)
+    else:
+        app_log.debug('Gramex version %s is up to date', __version__)
+    services.info.eventlog.add('update', update)
+    return {'logs': logs, 'response': update}
 
 
 def console(msg):

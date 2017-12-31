@@ -7,7 +7,7 @@ app:
         autoreload: False
 
 url:
-    update:
+    gramexupdate:
         pattern: /$YAMLURL/
         handler: gramexupdate.GramexUpdateHandler
         kwargs:
