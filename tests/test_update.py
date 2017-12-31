@@ -37,7 +37,6 @@ class TestUpdate(TestGramex):
 
     def test_update_method(self):
         conn = gramex.services.info.eventlog.conn
-        add = gramex.services.info.eventlog.add
         # Truncate the events database to ensure that the update check is ALWAYS performed
         conn.execute('DELETE FROM events')
         with assert_raises(requests.HTTPError):
