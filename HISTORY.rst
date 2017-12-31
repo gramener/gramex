@@ -3,6 +3,43 @@
 History
 -------
 
+1.26 (2017-12-31)
+~~~~~~~~~~~~~~~~~
+This release features an upgrade to the `UI component library`_:
+
+- `g1`_ is the new Gramex interaction library. It is bundled with Gramex and
+  currently features URL manipulation, templating and a few utilities.
+- `Leaflet`_, `topojson`_, `shepherd`_ and `select2`_ are built into Gramex.
+- `Ripples`_ are available as a CSS utility class
+- `Background`_ and `Gradient`_ utilities are available
+- The Bootstrap theme at ``/ui/bootstraptheme.css`` is minified by default
+
+`CaptureHandler`_ for Chrome supports a ``window.renderComplete`` option. Set
+``?delay=renderComplete``. This waits until ``window.renderComplete`` is true
+and then captures the page.
+
+`DBAuth`_ can use a CSV file as its database.
+
+`PPTXHandler`_ handles edge cases better:
+
+- Custom text is allowed in heatgrid by @abhilash.maddireddy
+- BulletChart handles NaNs / identical values - and other bugfixes by @pratap.vardhan
+
+This release also adds better debugging features:
+
+- ``gramex --settings.debug`` sets the console log level to DEBUG. This makes it
+  easier to start Gramex in debug mode.
+- `FormHandler`_ and :py:func:`gramex.debug.cache` print the executed query in debug mode
+- The console logs now print the handler name that rendered the URL
+
+Gramex now uses `bandit`_ to test for internal vulnerabilities like SQL injection.
+
+Stats:
+
+- Code base: 20,825 lines (gramex: 13,480, tests: 7,345)
+- Test coverage: 80%
+
+
 1.25 (2017-12-15)
 ~~~~~~~~~~~~~~~~~
 This release features `Smart Alerts`_ - a rule-based email alert service. This
@@ -897,3 +934,12 @@ There are two changes that may disrupt your code:
 .. _node: https://nodejs.org/
 .. _Smart Alerts: https://learn.gramener.com/guide/alert/
 .. _Log viewer: https://learn.gramener.com/guide/logviewer/
+.. _Leaflet: http://leafletjs.com/
+.. _topojson: https://github.com/topojson/topojson
+.. _shepherd: http://github.hubspot.com/shepherd/docs/welcome/
+.. _select2: https://select2.org/
+.. _g1: https://www.npmjs.com/package/g1
+.. _Ripples: https://learn.gramener.com/guide/uicomponents/#ripples
+.. _Background: https://learn.gramener.com/guide/uicomponents/#background
+.. _Gradient: https://learn.gramener.com/guide/uicomponents/#gradient
+.. _bandit: https://github.com/openstack/bandit/
