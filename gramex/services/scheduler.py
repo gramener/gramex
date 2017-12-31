@@ -72,7 +72,7 @@ class Task(object):
 
     def _schedule(self):
         '''Schedule next run. Do NOT call twice: creates two callbacks'''
-        delay = self.cron.next()
+        delay = self.cron.next(default_utc=False)
         if delay is not None:
             app_log.debug('Scheduling %s after %.0fs', self.name, delay)
             self.callback = self.ioloop.call_later(delay, self.run)
