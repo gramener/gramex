@@ -439,12 +439,10 @@ def sankey(shape, spec, data):
     frames = {}
     # Sankey Rectangles and texts.
     sankey_conf = {}
+    for k in ['size', 'order', 'text', 'color']:
+        sankey_conf[k] = compile_function(spec, k, data, handler)
     sankey_conf['x0'] = x0
-    sankey_conf['size'] = compile_function(spec, 'size', data, handler)
     sankey_conf['width'] = width
-    sankey_conf['order'] = compile_function(spec, 'order', data, handler)
-    sankey_conf['text'] = compile_function(spec, 'text', data, handler)
-    sankey_conf['color'] = compile_function(spec, 'color', data, handler)
     sankey_conf['attrs'] = spec.get('attrs', {})
     sankey_conf['sort'] = spec.get('sort')
     stroke = spec.get('stroke', '#ffffff')
@@ -532,12 +530,8 @@ def treemap(shape, spec, data):
     # Load data
     handler = data.pop('handler') if 'handler' in data else None
     spec['keys'] = compile_function(spec, 'keys', data, handler)
-    spec['values'] = compile_function(spec, 'values', data, handler)
-    spec['size'] = compile_function(spec, 'size', data, handler)
-    spec['sort'] = compile_function(spec, 'sort', data, handler)
-    spec['color'] = compile_function(spec, 'color', data, handler)
-    spec['text'] = compile_function(spec, 'text', data, handler)
-    spec['data'] = compile_function(spec, 'data', data, handler)
+    for k in ['values', 'size', 'sort', 'color', 'text', 'data']:
+        spec[k] = compile_function(spec, k, data, handler)
     # Getting rectangle's width and height using `squarified` algorithm.
     treemap_data = utils.SubTreemap(**spec)
     # Delete rectangle after geting width, height, x-position and y-position

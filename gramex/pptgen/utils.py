@@ -36,7 +36,7 @@ def is_slide_allowed(change, slide, number):
     If none of these are specified, return True.
     '''
     match = True
-    # Restrict to specific slide titles, if specified
+    # Restrict to specific slide number(s), if specified
     if 'slide-number' in change:
         slide_number = change['slide-number']
         if isinstance(slide_number, (list, dict)):
@@ -44,13 +44,11 @@ def is_slide_allowed(change, slide, number):
         elif isinstance(slide_number, six.integer_types):
             match = match and number == slide_number
 
-    # Restrict to specific slide titles, if specified
+    # Restrict to specific slide title(s), if specified
     if 'slide-title' in change:
         slide_title = change['slide-title']
-        try:
-            title = slide.shapes.title.text
-        except AttributeError:
-            title = ''
+        title = slide.shapes.title
+        title = title.text if title is not None else ''
         if isinstance(slide_title, (list, dict)):
             match = match and any(
                 re.search(expr, title, re.IGNORECASE) for expr in slide_title)
@@ -108,7 +106,6 @@ def stack_shapes(collection, change, data, handler):
                 info['data'] = {'function': '{}'.format(info['data'])}
             args = {'data': data, 'handler': handler}
             data_len = len(build_transform(info['data'], vars=_vars)(**args)[0])
-
         stack_elements(data_len, shape, stack=info.get('stack'), margin=info.get('margin'))
 
 
@@ -140,21 +137,24 @@ def copy_slide_elem(shape, dest):
     '''
     Function to copy slide elements into a newly created slide.
     '''
-    if dest:
-        el = shape.element
-        new_elem = copy.deepcopy(el)
-        dest.shapes._spTree.insert_element_before(new_elem, 'p:extLst')
+    if dest is None:
+        return
+    el = shape.element
+    new_elem = copy.deepcopy(el)
+    dest.shapes._spTree.insert_element_before(new_elem, 'p:extLst')
 
 
 def add_new_slide(dest, source_slide):
     '''
     Function to add a new slide to presentation.
     '''
-    if dest:
-        for key, value in six.iteritems(source_slide.part.rels):
-            # Make sure we don't copy a notesSlide relation as that won't exist
-            if "notesSlide" not in value.reltype:
-                dest.part.rels.add_relationship(value.reltype, value._target, value.rId)
+    if dest is None:
+        return
+    for key, value in six.iteritems(source_slide.part.rels):
+        # Make sure we don't copy a notesSlide relation as that won't exist
+        if "notesSlide" in value.reltype:
+            continue
+        dest.part.rels.add_relationship(value.reltype, value._target, value.rId)
 
 
 def move_slide(presentation, old_index, new_index):
