@@ -4,21 +4,21 @@ from __future__ import unicode_literals
 
 import io
 import os
-import six
 import sys
 import copy
 import json
 import collections
-import gramex.data
-import pandas as pd
-import gramex.cache
-from . import commands
+import six
 from pptx import Presentation
-from gramex.config import merge
-from orderedattrdict import AttrDict
-from gramex import parse_command_line
 from pptx.shapes.shapetree import SlideShapes
+from orderedattrdict import AttrDict
+import pandas as pd
+import gramex.data
+import gramex.cache
+from gramex.config import merge
+from gramex import parse_command_line
 from gramex.transforms import build_transform
+from . import commands
 from .utils import stack_shapes, delete_slide, generate_slide, manage_slides
 from .utils import is_slide_allowed, is_group, add_new_slide, copy_slide_elem
 

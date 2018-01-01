@@ -2,27 +2,25 @@
 from __future__ import unicode_literals
 
 import os
-import random
-import requests
 import tempfile
+from six.moves.urllib_parse import urlparse
+import requests
 import numpy as np
 import pandas as pd
 import matplotlib.cm
 import matplotlib.colors
-from gramex import pptgen
-from pptx import Presentation
-from unittest import TestCase
-from nose.tools import eq_, ok_
-from . import folder, sales_file
-from pptx.enum.text import PP_ALIGN
-from nose.tools import assert_raises
 from orderedattrdict import AttrDict
 from tornado.template import Template
 from tornado.escape import to_unicode
-from six.moves.urllib_parse import urlparse
+from pptx import Presentation
+from pptx.enum.text import PP_ALIGN
 from pptx.shapes.shapetree import SlideShapes
-from pandas.util.testing import assert_frame_equal
 from pptx.enum.shapes import MSO_SHAPE, MSO_SHAPE_TYPE
+from unittest import TestCase
+from nose.tools import eq_, ok_, assert_raises
+from pandas.util.testing import assert_frame_equal
+from gramex import pptgen
+from . import folder, sales_file
 
 
 class TestPPTGen(TestCase):
@@ -31,6 +29,7 @@ class TestPPTGen(TestCase):
     @classmethod
     def setUp(cls):
         # Setup class method to initialize common variables.
+        np.random.seed(0)
         cls.input = os.path.join(folder, 'input.pptx')
         cls.output = os.path.join(folder, 'output.pptx')
         cls.image = os.path.join(folder, 'small-image.jpg')
@@ -85,7 +84,7 @@ class TestPPTGen(TestCase):
                 elif chart_name == 'Area Chart':
                     marker, keyname = _series, _series.name
                 elif chart_name in ['Pie Chart', 'Donut Chart']:
-                    marker, keyname = point, data.ix[index][xaxis]
+                    marker, keyname = point, data.loc[index][xaxis]
                 else:
                     marker, keyname = point, _series.name
                 color = marker.format.fill.fore_color
@@ -569,7 +568,7 @@ class TestPPTGen(TestCase):
                 draw_bullet={
                     shpname: {
                         'bullet': {
-                            'data': 'data["data"]["sales"].ix[0]',
+                            'data': 'data["data"]["sales"].loc[0]',
                             'max-width': 1,
                             'poor': update_data['poor'],
                             'good': good,
@@ -587,7 +586,7 @@ class TestPPTGen(TestCase):
             textboxes, rectangles = 0, 0
             rects_width, rects_height = [], []
             _average = self.data['sales'].mean()
-            _data = self.data['sales'].ix[0]
+            _data = self.data['sales'].loc[0]
             for rectdata in [good, _average, update_data['poor'], _data]:
                 if not rectdata:
                     continue
@@ -781,17 +780,14 @@ class TestPPTGen(TestCase):
                 data={'data': {}},
                 drawcalendarmap={'Invalid Input': {'calendarmap': {'data': 'data'}}})
 
-        periods, slidenumber, label = 150, 24, 40
-        shapes = Presentation(self.input).slides[slidenumber - 1].shapes
-        shp = [shape for shape in shapes if shape.name == 'Calendar Rectangle'][0]
-        labels = [[0, label, 0], [0, label, label]]
-        pix_to_inch, weekstart, width, maxrange = 10000, 6, 34, 100.0
+        width, slidenumber, periods, weekstart = 34, 24, 150, 2
         data = pd.DataFrame({'date': pd.date_range('1/1/2017', periods=periods, freq='D')})
-        data['column'] = data['date'].apply(lambda x: random.uniform(1.0, maxrange))
+        data['column'] = 100. * np.random.rand(len(data))
         data = data.sort_values(by=['date']).set_index('date')
-
-        for i in range(len(labels[0])):
-            left, top = labels[0][i], labels[1][i]
+        label = 40
+        labels = [[0, 0], [0, label], [label, 0], [label, label]]
+        for case in labels:
+            left, top = case
             target = pptgen.pptgen(
                 source=self.input, only=slidenumber,
                 data={'data': data},
@@ -808,40 +804,43 @@ class TestPPTGen(TestCase):
                         }
                     }
                 })
+            startweekday = (data.index[0].weekday() - weekstart) % 7
             eq_(len(target.slides), 1)
             texts_ex = data.index.strftime('%d').tolist()
-            scaledata = pd.Series(data['column']).replace([pd.np.inf, -pd.np.inf], pd.np.nan)
-            week = 7
-            weekly_mean, weekday_mean = pd.Series(), pd.Series()
+            weekly_mean, weekday_mean = [], []
             if top:
-                rng = range(-weekstart, len(scaledata) + week, week)
-                weekly_mean = pd.Series([scaledata[max(0, x):x + week].mean() for x in rng])
+                weekly_mean = pd.Series([data['column'][max(0, x):x + 7].mean()
+                                        for x in range(-startweekday, len(data['column']), 7)])
+                frmt = pptgen.utils.decimals(weekly_mean.values)
+                weekly_mean = weekly_mean.map(('{:,.%df}' % frmt).format).tolist()
             if left:
-                _rng = [scaledata[(x - weekstart) % week::week].mean() for x in range(week)]
-                weekday_mean = pd.Series(_rng)
-
-            leftrect, toprect = 0, 0
-            texts_ppt = []
+                weekday_mean = pd.Series([data['column'][(x - startweekday) % 7::7].mean()
+                                         for x in range(7)])
+                frmt = pptgen.utils.decimals(weekday_mean.values)
+                weekday_mean = weekday_mean.map(('{:,.%df}' % frmt).format).tolist()
+            gradient = matplotlib.cm.get_cmap('RdYlGn')
+            colors_ex = [matplotlib.colors.to_hex(gradient(x))
+                         for x in pptgen.utils.scale(data['column'])]
+            texts_ppt, colors_ppt, toplabels_ppt, leftlabels_ppt = [], [], [], []
             for shape in target.slides[0].shapes:
-                if shape.name == 'Title 1' or shape.shape_type != MSO_SHAPE.RECTANGLE:
-                    continue
-                cell = shape.width == shape.height == width * pix_to_inch
-                if (cell and
-                        shape.left > shp.left + (left * pix_to_inch) and
-                        shape.top > shp.top + (top * pix_to_inch)):
+                # Rect cells text and color
+                if shape.name.startswith('Rectangle'):
                     texts_ppt.append(shape.text)
-                # Counting top bar chart rectangles
-                elif shape.name == 'top bar chart rect':
-                    toprect += 1
-                # Counting left bar chart rectangles
-                elif shape.name == 'left bar chart rect':
-                    leftrect += 1
+                    colors_ppt.append('#{}'.format(shape.fill.fore_color.rgb).lower())
+                # Top bar labels
+                elif shape.name == 'summary.top.label':
+                    toplabels_ppt.append(shape.text)
+                # Left bar labels
+                elif shape.name == 'summary.left.label':
+                    leftlabels_ppt.append(shape.text)
             # Comparing text's order(which is day)
             eq_(texts_ex, texts_ppt)
-            # Comparing left bar chart's rectangle count, if left padding is defined
-            eq_(toprect, len(weekly_mean.dropna()))
-            # Comparing top bar chart's rectangle count, if top padding is defined
-            eq_(leftrect, len(weekday_mean.dropna()))
+            # Caparing rect colors
+            eq_(colors_ex, colors_ppt)
+            # Comparing top bar chart's labels
+            eq_(weekly_mean, toplabels_ppt)
+            # Comparing left bar chart's labels
+            eq_(weekday_mean, leftlabels_ppt)
 
     @classmethod
     def tearDown(cls):

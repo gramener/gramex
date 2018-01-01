@@ -1,4 +1,4 @@
-"""Python-PPTX customized module."""
+'''Python-PPTX customized module.'''
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
@@ -7,21 +7,17 @@ import six
 import copy
 import logging
 import requests
-import datetime
 import tempfile
 import operator
 import collections
 import numpy as np
-from . import utils
 import pandas as pd
 import matplotlib.cm
 from lxml import etree
-from . import fontwidth
 import matplotlib.colors
-from . import color as _color
-from pptx.dml.color import RGBColor
 from tornado.template import Template
 from tornado.escape import to_unicode
+from pptx.dml.color import RGBColor
 from pptx.chart.data import ChartData
 from pptx.enum.shapes import MSO_SHAPE
 from pptx.chart.data import XyChartData
@@ -29,22 +25,23 @@ from pptx.oxml.xmlchemy import OxmlElement
 from pptx.chart.data import BubbleChartData
 from six.moves.urllib_parse import urlparse
 from gramex.transforms import build_transform
+from . import utils
+from . import fontwidth
+from . import color as _color
 
 
 _template_cache = {}
 
 
 def template(tmpl, data):
-    """Execute tornado template."""
+    '''Execute tornado template'''
     if tmpl not in _template_cache:
         _template_cache[tmpl] = Template(tmpl, autoescape=None)
     return to_unicode(_template_cache[tmpl].generate(**data))
 
 
 def text(shape, spec, data):
-    '''
-    Replace entire text of shape with spec['text'].
-    '''
+    '''Replace entire text of shape with spec['text']'''
     if not shape.has_text_frame:
         logging.error('"%s" is not a TextShape to apply text:', shape.name)
         return
@@ -106,9 +103,7 @@ def text(shape, spec, data):
 
 
 def replace(shape, spec, data):
-    '''
-    Replace keywords in shape using the dictionary at spec['replace'].
-    '''
+    '''Replace keywords in shape using the dictionary at spec['replace']'''
     if not shape.has_text_frame:
         logging.error('"%s" is not a TextShape to apply text:', shape.name)
         return
@@ -137,9 +132,7 @@ def replace(shape, spec, data):
 
 
 def image(shape, spec, data):
-    '''
-    Replace image with a different file specified in spec['image']
-    '''
+    '''Replace image with a different file specified in spec['image']'''
     image = template(spec['image'], data)
     # If it's a URL, use the requests library's raw stream as a file-like object
     if urlparse(image).netloc:
@@ -156,7 +149,7 @@ def image(shape, spec, data):
 
 
 def generate_style(style, data, handler):
-    """Function to conpile style section from kwargs."""
+    '''Function to conpile style section from kwargs.'''
     for key, value in style.items():
         if isinstance(value, (dict,)) and 'function' in value:
             result = compile_function(style, key, data, handler)
@@ -165,7 +158,7 @@ def generate_style(style, data, handler):
 
 
 def rect_css(shape, **kwargs):
-    """Function to add text to shape."""
+    '''Function to add text to shape.'''
     for key in {'fill', 'stroke'}:
         if kwargs.get(key):
             fill = shape.fill if key == 'fill' else shape.line.fill
@@ -175,7 +168,7 @@ def rect_css(shape, **kwargs):
 
 
 def add_text_to_shape(shape, textval, **kwargs):
-    """Function to add text to shape."""
+    '''Function to add text to shape.'''
     min_inc = 13000
     pixel_inch = 10000
     # kwargs['font-size'] = max(kwargs.get('font-size', 16), min_inc)
@@ -191,18 +184,18 @@ def add_text_to_shape(shape, textval, **kwargs):
 
 
 def scale_data(data, lo, hi, factor=None):
-    """Function to scale data."""
+    '''Function to scale data.'''
     data = np.array(data, dtype=float)
     return ((data - lo) / ((hi - lo) or np.nan)) * (factor or 1.)
 
 
 def rect(shape, x, y, width, height):
-    """Add rectangle to slide."""
+    '''Add rectangle to slide.'''
     return shape.add_shape(MSO_SHAPE.RECTANGLE, x, y, width, height)
 
 
 def _update_chart(info, data, chart_data, series_columns, chart='line'):
-    """Updating Chart data."""
+    '''Updating Chart data.'''
     series_dict = {}
     columns = list(data.columns)
     if info['x'] in columns:
@@ -235,7 +228,7 @@ def _update_chart(info, data, chart_data, series_columns, chart='line'):
 
 
 def chart_css(fill, style, color):
-    """Function to add opacity to charts."""
+    '''Function to add opacity to charts.'''
     fill.solid()
     pix_to_inch = 100000
     fill.fore_color.rgb = RGBColor.from_string(utils.convert_color_code(color))
@@ -247,7 +240,7 @@ def chart_css(fill, style, color):
 
 
 def compile_function(spec, key, data, handler):
-    """A function to compile configuration."""
+    '''A function to compile configuration.'''
     if key not in spec:
         return None
     _vars = {'_color': None, 'data': None, 'handler': None}
@@ -260,7 +253,7 @@ def compile_function(spec, key, data, handler):
 
 
 def table(shape, spec, data):
-    """Update an existing Table shape with data."""
+    '''Update an existing Table shape with data.'''
     if not shape.has_table:
         raise AttributeError('Shape must be a table object.')
     if not spec.get('table', {}).get('data'):
@@ -308,7 +301,7 @@ def table(shape, spec, data):
 
 
 def chart(shape, spec, data):
-    """Replacing chart Data."""
+    '''Replacing chart Data.'''
     if not shape.has_chart:
         raise AttributeError('Shape must be a chart object.')
 
@@ -388,8 +381,8 @@ def chart(shape, spec, data):
                 point_css = {}
                 args = {
                     'handler': handler,
-                    'row': data.ix[index].to_dict(),
-                    'name': data.ix[index][info['x']] if chart_type in pie_or_donut else name
+                    'row': data.loc[index].to_dict(),
+                    'name': data.loc[index][info['x']] if chart_type in pie_or_donut else name
                 }
                 for key in {'opacity', 'color', 'stroke'}:
                     if style.get(key) is None:
@@ -414,7 +407,7 @@ def chart(shape, spec, data):
 
 
 def sankey(shape, spec, data):
-    """Draw sankey in PPT."""
+    '''Draw sankey in PPT.'''
     # Shape must be a rectangle.
     if shape.auto_shape_type != MSO_SHAPE.RECTANGLE:
         raise NotImplementedError()
@@ -474,7 +467,7 @@ def sankey(shape, spec, data):
         for key1, row1 in frames[group1].iterrows():
             for key2, row2 in frames[group2].iterrows():
                 if (key1, key2) in df.index:
-                    row = df.ix[(key1, key2)]
+                    row = df.loc[(key1, key2)]
                     y1, y2 = y0 + h * ibar + thickness, y0 + h * (ibar + 1)
                     ym = (y1 + y2) / 2
                     x1 = row1['x'] + pos[0, key1]
@@ -516,7 +509,7 @@ def sankey(shape, spec, data):
 
 
 def treemap(shape, spec, data):
-    """Function to download data as ppt."""
+    '''Function to download data as ppt.'''
     # Shape must be a rectangle.
     if shape.auto_shape_type != MSO_SHAPE.RECTANGLE:
         raise NotImplementedError()
@@ -529,8 +522,7 @@ def treemap(shape, spec, data):
     stroke = spec.get('stroke', '#ffffff')
     # Load data
     handler = data.pop('handler') if 'handler' in data else None
-    spec['keys'] = compile_function(spec, 'keys', data, handler)
-    for k in ['values', 'size', 'sort', 'color', 'text', 'data']:
+    for k in ['keys', 'values', 'size', 'sort', 'color', 'text', 'data']:
         spec[k] = compile_function(spec, k, data, handler)
     # Getting rectangle's width and height using `squarified` algorithm.
     treemap_data = utils.SubTreemap(**spec)
@@ -563,7 +555,7 @@ def treemap(shape, spec, data):
 
 
 def calendarmap(shape, spec, data):
-    """Draw calendar map in PPT."""
+    '''Draw calendar map in PPT.'''
     if shape.auto_shape_type != MSO_SHAPE.RECTANGLE:
         raise NotImplementedError()
 
@@ -618,9 +610,8 @@ def calendarmap(shape, spec, data):
     weekday_format = spec.get('format', '{:,.%df}' % utils.decimals(weekday_mean.values))
     # Weekly Mean and format
     weekly_mean = pd.Series([scaledata[max(0, x):x + 7].mean()
-                             for x in range(-startweekday, len(scaledata) + 7, 7)])
+                             for x in range(-startweekday, len(scaledata), 7)])
     weekly_format = spec.get('format', '{:,.%df}' % utils.decimals(weekly_mean.values))
-
     # Scale sizes as square roots from 0 to max (not lowest to max -- these
     # should be an absolute scale)
     sizes = width * utils.scale(
@@ -628,7 +619,7 @@ def calendarmap(shape, spec, data):
     for i, val in enumerate(data):
         nx = (i + startweekday) // 7
         ny = (i + startweekday) % 7
-        d = startdate + datetime.timedelta(days=i)
+        d = startdate + pd.DateOffset(days=i)
         fill = '#cccccc'
         if not pd.isnull(val):
             fill = color(val) if callable(color) else color
@@ -644,56 +635,53 @@ def calendarmap(shape, spec, data):
         text_style['color'] = style.get('color')(val) if callable(
             style.get('color')) else spec.get('color', _color.contrast(fill))
         text_style['font-size'] = font_size(val) if callable(font_size) else font_size
-        text_style['bold'] = style.get('bold')
-        text_style['italic'] = style.get('italic')
-        text_style['underline'] = style.get('underline')
-        text_style['font-family'] = style.get('font-family')
+        for k in ['bold', 'italic', 'underline', 'font-family']:
+            text_style[k] = style.get(k)
         add_text_to_shape(shp, '%02d' % d.day, **text_style)
 
         # Draw the boundary lines between months
         if i >= 7 and d.day == 1 and ny > 0:
-            vertical_line = shapes.add_shape(
-                MSO_SHAPE.RECTANGLE, x0 + width * nx, y0 + (width * ny), width, 2 * pixel_inch)
+            border = shapes.add_shape(
+                MSO_SHAPE.RECTANGLE,
+                x0 + width * nx, y0 + (width * ny), width, 2 * pixel_inch)
+            border.name = 'border'
             rectstyle = {'fill': default_line_color, 'stroke': default_line_color}
-            rect_css(vertical_line, **rectstyle)
-
+            rect_css(border, **rectstyle)
         if i >= 7 and d.day <= 7 and nx > 0:
-            horizontal_line = shapes.add_shape(
+            border = shapes.add_shape(
                 MSO_SHAPE.RECTANGLE,
                 x0 + (width * nx), y0 + (width * ny), 2 * pixel_inch, width)
+            border.name = 'border'
             rectstyle = {'fill': default_line_color, 'stroke': default_line_color}
-            rect_css(horizontal_line, **rectstyle)
-
+            rect_css(border, **rectstyle)
         # Adding weekdays text to the chart (left side)
         if i < 7:
             txt = shapes.add_textbox(
                 x0 - (width / 2), y0 + (width * ny) + (width / 2), width, width)
             text_style['color'] = default_txt_color
             add_text_to_shape(txt, d.strftime('%a')[0], **text_style)
-
         # Adding months text to the chart (top)
         if d.day <= 7 and ny == 0:
             txt = shapes.add_textbox(
                 x0 + (width * nx), y0 - (width / 2), width, width)
             text_style['color'] = default_txt_color
             add_text_to_shape(txt, d.strftime('%b %Y'), **text_style)
-
     if label_top:
         lo_weekly = spec.get('lo', weekly_mean.min())
         range_weekly = spec.get('hi', weekly_mean.max()) - lo_weekly
         for nx, val in enumerate(weekly_mean.fillna(0)):
             w = label_top * ((val - lo_weekly) / range_weekly)
             px = x0 + (width * nx)
-            top_bar = shapes.add_shape(
+            bar = shapes.add_shape(
                 MSO_SHAPE.RECTANGLE, px, shape_top - w, width, w)
-            top_bar.name = 'top bar chart rect'
+            bar.name = 'summary.top.bar'
             rectstyle = {'fill': fill_rect(val) if callable(fill_rect) else fill_rect,
                          'stroke': stroke(val) if callable(stroke) else stroke}
-            rect_css(top_bar, **rectstyle)
-            top_txt = shapes.add_textbox(px, shape_top - width, width, width)
+            rect_css(bar, **rectstyle)
+            label = shapes.add_textbox(px, shape_top - width, width, width)
+            label.name = 'summary.top.label'
             text_style['color'] = text_color(val) if callable(text_color) else text_color
-            add_text_to_shape(top_txt, weekly_format.format(weekly_mean[nx]), **text_style)
-
+            add_text_to_shape(label, weekly_format.format(weekly_mean[nx]), **text_style)
     if label_left:
         lo_weekday = spec.get('lo', weekday_mean.min())
         range_weekday = spec.get('hi', weekday_mean.max()) - lo_weekday
@@ -701,17 +689,18 @@ def calendarmap(shape, spec, data):
             w = label_left * ((val - lo_weekday) / range_weekday)
             bar = shapes.add_shape(
                 MSO_SHAPE.RECTANGLE, shape_left - w, y0 + (width * ny), w, width)
+            bar.name = 'summary.left.bar'
             rectstyle = {'fill': fill_rect(val) if callable(fill_rect) else fill_rect,
                          'stroke': stroke(val) if callable(stroke) else stroke}
-            bar.name = 'left bar chart rect'
             rect_css(bar, **rectstyle)
-            left_txt = shapes.add_textbox(shape_left - width, y0 + (width * ny), w, width)
+            label = shapes.add_textbox(shape_left - width, y0 + (width * ny), w, width)
+            label.name = 'summary.left.label'
             text_style['color'] = text_color(val) if callable(text_color) else text_color
-            add_text_to_shape(left_txt, weekday_format.format(weekday_mean[ny]), **text_style)
+            add_text_to_shape(label, weekday_format.format(weekday_mean[ny]), **text_style)
 
 
 def bullet(shape, spec, data):
-    """Function to plot bullet chart."""
+    '''Function to plot bullet chart.'''
     if shape.auto_shape_type != MSO_SHAPE.RECTANGLE:
         raise NotImplementedError()
     spec = copy.deepcopy(spec['bullet'])
@@ -846,7 +835,7 @@ def bullet(shape, spec, data):
 
 
 def heatgrid(shape, spec, data):
-    """Create a heat grid."""
+    '''Create a heat grid.'''
     if shape.auto_shape_type != MSO_SHAPE.RECTANGLE:
         raise NotImplementedError()
 
@@ -959,7 +948,7 @@ def heatgrid(shape, spec, data):
 
 
 def css(shape, spec, data):
-    """Function to modify a rectangle's property in PPT."""
+    '''Function to modify a rectangle's property in PPT.'''
     pxl_to_inch = 10000
     handler = data.pop('handler') if 'handler' in data else None
     spec = copy.deepcopy(spec['css'])
