@@ -297,11 +297,12 @@ class CaptureHandler(BaseHandler):
             x={'type': int},
             y={'type': int},
             scale={'type': float},
-            dpi={'type': int},
+            dpi={'type': int, 'nargs': '*'},
             format={'choices': ['A3', 'A4', 'A5', 'Legal', 'Letter', 'Tabloid'], 'default': 'A4'},
             layout={'choices': ['A3', 'A4', 'Letter', '16x9', '16x10', '4x3'], 'default': '4x3'},
             orientation={'choices': ['portrait', 'landscape'], 'default': 'portrait'},
             title={'nargs': '*'},
+            title_size={'type': int, 'nargs': '*'},
             start={'nargs': '*'},
             debug={'nargs': '*'},
         )

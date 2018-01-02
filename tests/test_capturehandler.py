@@ -8,6 +8,7 @@ import time
 import logging
 from PIL import Image
 from pptx import Presentation
+from pptx.util import Pt
 from nose.tools import eq_, ok_
 from pdfminer.pdfparser import PDFParser
 from pdfminer.pdfdocument import PDFDocument
@@ -130,6 +131,7 @@ class TestCaptureHandler(TestGramex):
             # Ensure that the color is present at least in min pixels in the image
             colors = {clr: freq for freq, clr in img.getcolors(self.max_colors)}
             self.assertGreater(colors.get(color, 0), min)
+        return img
 
     def test_capture_png(self):
         content = self.capture.png(url=server.base_url + self.url)
@@ -172,7 +174,7 @@ class TestCaptureHandlerChrome(TestCaptureHandler):
         eq_(len(prs.slides), 1)
         self.check_img(prs.slides[0].shapes[0].image.blob)
 
-        # selector=. has a 100x100 green patch
+        # Check selector=.subset has a 100x100 green patch
         title = '高=σ'
         result = self.fetch(self.src, params={
             'url': self.url, 'title': title, 'selector': '.subset', 'ext': 'pptx'})
@@ -181,17 +183,40 @@ class TestCaptureHandlerChrome(TestCaptureHandler):
         self.check_img(prs.slides[0].shapes[0].image.blob,
                        color=(0, 128, 0, 255), min=9000, size=(100, 100))
         eq_(prs.slides[0].shapes[1].text, title)
+        eq_(prs.slides[0].shapes[1].text_frame.paragraphs[0].runs[0].font.size, Pt(18))
 
-        # Check multi-slide generation
+        # Check title_size
         result = self.fetch(self.src, params={
-            'url': self.url, 'title': ['高', 'σ'], 'selector': ['.subset', 'p'], 'ext': 'pptx'})
+            'url': self.url, 'title': title, 'selector': '.subset', 'ext': 'pptx',
+            'title_size': 24})
+        prs = Presentation(io.BytesIO(result.content))
+        eq_(prs.slides[0].shapes[1].text, title)
+        eq_(prs.slides[0].shapes[1].text_frame.paragraphs[0].runs[0].font.size, Pt(24))
+
+        # Check multi-slide generation with multi-title and multi-selector
+        result = self.fetch(self.src, params={
+            'url': self.url, 'ext': 'pptx', 'title': ['高', 'σ'], 'selector': ['.subset', 'p']})
         prs = Presentation(io.BytesIO(result.content))
         eq_(len(prs.slides), 2)
         self.check_img(prs.slides[0].shapes[0].image.blob,
                        color=(0, 128, 0, 255), min=9000, size=(100, 100))
-        self.check_img(prs.slides[1].shapes[0].image.blob)
+        para_img = self.check_img(prs.slides[1].shapes[0].image.blob)
+        para_size = (prs.slides[1].shapes[0].width, prs.slides[1].shapes[0].height)
         eq_(prs.slides[0].shapes[1].text, '高')
         eq_(prs.slides[1].shapes[1].text, 'σ')
+        # Check multi-dpi generation and default dpi as 96
+        result = self.fetch(self.src, params={
+            'url': self.url, 'ext': 'pptx',
+            'selector': ['.subset', 'p'],
+            'dpi': ['96', '192'],               # 2nd image has half the original size
+        })
+        prs = Presentation(io.BytesIO(result.content))
+        eq_(len(prs.slides), 2)
+        self.check_img(prs.slides[0].shapes[0].image.blob,
+                       color=(0, 128, 0, 255), min=9000, size=(100, 100))
+        self.check_img(prs.slides[1].shapes[0].image.blob, size=para_img.size)
+        eq_((prs.slides[1].shapes[0].width, prs.slides[1].shapes[0].height),
+            (para_size[0] // 2, para_size[1] // 2))
 
     def test_capture_delay_render(self):
         # delay=. After 1 second, renderComplete is set. Page changes text and color to green

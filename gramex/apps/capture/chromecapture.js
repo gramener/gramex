@@ -113,28 +113,38 @@ async function render(q) {
     if (ext == 'pptx') {
       const officegen = require('officegen')
       const pptx = officegen('pptx')
+      const repeat_cols = ['selector', 'title', 'title_size', 'x', 'y', 'dpi']
       // Convert to arrays
-      for (let key of ['selector', 'title', 'x', 'y'])
+      for (let key of repeat_cols)
         if (!Array.isArray(q[key]))
           q[key] = [q[key]]
+      // find length of largest array
+      const max_length = _.max(_.map(repeat_cols, col => q[col].length))
+      // forward fill everything with the last value to ensure equal length
+      repeat_cols.forEach(col => {
+        let last_val = q[col][q[col].length - 1]
+        for (let i=q[col].length; i<max_length; i++)
+          q[col].push(last_val)
+      })
       const image_files = []
-      for (const [index, [selector, title, x, y]] of _.zip(q.selector, q.title, q.x, q.y).entries()) {
+      for (const [index, [selector, title, title_size, x, y, dpi]] of
+           _.zip(q.selector, q.title, q.title_size, q.x, q.y, q.dpi).entries()) {
         options.path = target.replace(/\.pptx$/, '.' + index + '.png')
         image_files.push(options.path)
         await screenshot(page, options, selector)
         const fmt = pptx_size[q.layout in pptx_size ? q.layout : '4x3']
         pptx.setSlideSize(fmt[0] * 72, fmt[1] * 72)
         const slide = pptx.makeNewSlide()
-        const dpi = +(q.dpi || 96)
         const size = image_size(options.path)
+        const scale = (dpi || 96) * 72
         slide.addImage(options.path, {
-          x: typeof x == 'undefined' ? 'c' : x / dpi * 72,
-          y: typeof y == 'undefined' ? 'c' : y / dpi * 72,
-          cx: size.width / dpi * 72,
-          cy: size.height / dpi * 72
+          x: typeof x == 'undefined' ? 'c' : x / scale,
+          y: typeof y == 'undefined' ? 'c' : y / scale,
+          cx: size.width / scale,
+          cy: size.height / scale
         })
         if (typeof title != 'undefined')
-          slide.addText(title, 0, 0, '100%', 36)
+          slide.addText(title, {x: 0, y: 0, cx: '100%', font_size: +title_size || 18})
       }
       await new Promise(res => {
         const out = fs.createWriteStream(target)

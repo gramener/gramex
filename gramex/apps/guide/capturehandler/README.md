@@ -130,7 +130,7 @@ It accepts the following arguments:
     - `?height=`: image output height. Default: auto (full page)
       <br>**Example**: [?height=600](capture?height=600&ext=png)
     - `?selector=`: Restrict screenshot to (optional) CSS selector in URL
-      <br>**Example**: [?selector=.content](capture?selector=.content&ext=png) excludes the sidebar
+      <br>**Example**: [?selector=.content](capture?selector=.content&ext=png) excludes the sidebar.
     - `?scale=`: zooms the screen by a factor. Default: 1.
       <br>**Example**: [?scale=0.2](capture?scale=0.2&ext=pdf) compared with
       [?scale=1](capture?scale=1&ext=pdf)
@@ -147,34 +147,36 @@ It accepts the following arguments:
       <br>**Example**: [?selector=.codehilite](capture?selector=.codehilite&ext=pptx)
     - `?title=`: optional slide title
       <br>**Example**: [?title=First+example&selector=.codehilite](capture?title=First+example&selector=.codehilite&ext=pptx)
+    - `?title_size=`: optional title font size in points. Defaults to 18pt
+      <br>**Example**: [?title=First+example&title_size=24&selector=.codehilite](capture?title=First+example&title_size=24&selector=.codehilite&ext=pptx)
     - `?x=`: optional x-position (left margin) in px. Centers by default
       <br>**Example**: [?x=10&selector=.codehilite](capture?x=10&selector=.codehilite&ext=pptx)
     - `?y=`: optional y-position (leftop margin) in px. Centers by default
       <br>**Example**: [?y=200&selector=.codehilite](capture?y=200&selector=.codehilite&ext=pptx)
-    - For multiple slides, repeating `?selector=`, optionally with `?title=`, `?x=`, `?y=`.
+    - For multiple slides, repeat `?selector=`, optionally with `?title=`, `?title_size=`, `?x=`, `?y=`, `?dpi=`.
       <br>**Example**: [?selector=.toc&title=TOC&selector=.codehilite&title=Example](capture?selector=.toc&title=TOC&selector=.codehilite&title=Example&ext=pptx)
 - `?debug=`: displays request / response log requests on the console.
     - `?debug=1` logs all responses and HTTP codes. It also logs browser
       console.log messages on the Gramex console
     - `?debug=2` additionally logs all requests
 
-When constructing the `?url=`, `?header=`, `?footer=` or any other parameter,
-ensure that the URL is encoded. For example, when using a Python template:
+When constructing the `?url=`, `?selector=`, `?title=` or any other parameter,
+ensure that the URL is encoded. So a selector `#item` does not become
+`?id=#item` -- which makes it a URL hash -- and instead becomes `?id=%23item`.
+
+To encode URLs using a Python template:
 
     :::html
     {% from six.moves.urllib_parse import urlencode %}
     <a href="capture?{{ urlencode(url='...', header='header text') }}
 
-In JavaScript:
+To encode URLs using JavaScript:
 
     :::js
     $('.screenshot').attr('href', 'capture' +
         '?url=' + encodeURIComponent(url) +
         '&header=' + encodeURIComponent(header))
-
-Or:
-
-    :::js
+    // Or use this:
     $('.some-button').on('click', function() {
         location.href = 'capture?ext=png&url=' + encodeURIComponent(url)
     })
