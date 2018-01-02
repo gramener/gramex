@@ -168,6 +168,13 @@ class TestCaptureHandlerChrome(TestCaptureHandler):
         cls.capture = get_capture('chrome', port=9412, engine='chrome', timeout=20)
         cls.folder = os.path.dirname(os.path.abspath(__file__))
 
+    @staticmethod
+    def check_text(shape, text=None, font_size=None):
+        if text is not None:
+            eq_(shape.text, text)
+        if font_size is not None:
+            eq_(shape.text_frame.paragraphs[0].runs[0].font.size, Pt(font_size))
+
     def test_capture_pptx(self):
         content = self.capture.pptx(url=server.base_url + self.url)
         prs = Presentation(io.BytesIO(content))
@@ -182,16 +189,14 @@ class TestCaptureHandlerChrome(TestCaptureHandler):
         eq_(len(prs.slides), 1)
         self.check_img(prs.slides[0].shapes[0].image.blob,
                        color=(0, 128, 0, 255), min=9000, size=(100, 100))
-        eq_(prs.slides[0].shapes[1].text, title)
-        eq_(prs.slides[0].shapes[1].text_frame.paragraphs[0].runs[0].font.size, Pt(18))
+        self.check_text(prs.slides[0].shapes[1], text=title, font_size=18)
 
         # Check title_size
         result = self.fetch(self.src, params={
             'url': self.url, 'title': title, 'selector': '.subset', 'ext': 'pptx',
             'title_size': 24})
         prs = Presentation(io.BytesIO(result.content))
-        eq_(prs.slides[0].shapes[1].text, title)
-        eq_(prs.slides[0].shapes[1].text_frame.paragraphs[0].runs[0].font.size, Pt(24))
+        self.check_text(prs.slides[0].shapes[1], text=title, font_size=24)
 
         # Check multi-slide generation with multi-title and multi-selector
         result = self.fetch(self.src, params={
