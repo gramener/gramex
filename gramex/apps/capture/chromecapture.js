@@ -133,15 +133,16 @@ async function render(q) {
         image_files.push(options.path)
         await screenshot(page, options, selector)
         const fmt = pptx_size[q.layout in pptx_size ? q.layout : '4x3']
+        // 72 points = 1 inch
         pptx.setSlideSize(fmt[0] * 72, fmt[1] * 72)
+        const scale = 72 / (+dpi || 96)
         const slide = pptx.makeNewSlide()
         const size = image_size(options.path)
-        const scale = (dpi || 96) * 72
         slide.addImage(options.path, {
-          x: typeof x == 'undefined' ? 'c' : x / scale,
-          y: typeof y == 'undefined' ? 'c' : y / scale,
-          cx: size.width / scale,
-          cy: size.height / scale
+          x: typeof x == 'undefined' ? 'c' : x * scale,
+          y: typeof y == 'undefined' ? 'c' : y * scale,
+          cx: size.width * scale,
+          cy: size.height * scale
         })
         if (typeof title != 'undefined')
           slide.addText(title, {x: 0, y: 0, cx: '100%', font_size: +title_size || 18})
