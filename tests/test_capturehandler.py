@@ -220,8 +220,9 @@ class TestCaptureHandlerChrome(TestCaptureHandler):
         self.check_img(prs.slides[0].shapes[0].image.blob,
                        color=(0, 128, 0, 255), min=9000, size=(100, 100))
         self.check_img(prs.slides[1].shapes[0].image.blob, size=para_img.size)
-        eq_((prs.slides[1].shapes[0].width, prs.slides[1].shapes[0].height),
-            (para_size[0] // 2, para_size[1] // 2))
+        # 2nd image with twice the dpi is half the size
+        self.assertAlmostEqual(prs.slides[1].shapes[0].width * 2, para_size[0], delta=1)
+        self.assertAlmostEqual(prs.slides[1].shapes[0].height * 2, para_size[1], delta=1)
 
     def test_capture_delay_render(self):
         # delay=. After 1 second, renderComplete is set. Page changes text and color to green
