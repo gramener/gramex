@@ -391,9 +391,10 @@ class TestPPTGen(TestCase):
                 txt = cell.text_frame.text
                 if columns[cno] not in table_data:
                     table_data[columns[cno]] = []
-                txt = np.nan if txt == 'nan' else txt
                 table_data[columns[cno]].append(txt)
-        table_data = pd.DataFrame(table_data).astype(self.data.dtypes)[columns]
+        table_data = pd.DataFrame(table_data)[columns].replace('nan', np.nan)
+        for c in table_data:
+            table_data[c] = table_data[c].astype(self.data[c].dtype)
         # Comparinig `dataframe` from table with original `dataframe`
         assert_frame_equal(table_data, self.data, check_names=True)
 
