@@ -17,12 +17,10 @@ from lxml import etree
 import matplotlib.colors
 from tornado.template import Template
 from tornado.escape import to_unicode
+from pptx.chart import data as pptxcd
 from pptx.dml.color import RGBColor
-from pptx.chart.data import ChartData
 from pptx.enum.shapes import MSO_SHAPE
-from pptx.chart.data import XyChartData
 from pptx.oxml.xmlchemy import OxmlElement
-from pptx.chart.data import BubbleChartData
 from six.moves.urllib_parse import urlparse
 from gramex.transforms import build_transform
 from . import utils
@@ -87,19 +85,20 @@ def text(shape, spec, data):
             raise ValueError('XML elemet must contain only "text" tag.')
         # Adding runs for each text item
         for idx, new_txt in enumerate([child.text, child.tail]):
-            if new_txt:
-                common_css = {key: val for key, val in default_css.items()}
-                paragraph.add_run()
-                # Adding text to run
-                paragraph.runs[index].text = new_txt
-                # Updating the text css
-                common_css.update(dict(child.items())) if not idx else None
-                if theme:
-                    paragraph.runs[index].font.color.theme_color = theme
-                if brightness:
-                    paragraph.runs[index].font.color.brightness = brightness
-                utils.apply_text_css(shape, paragraph.runs[index], paragraph, **common_css)
-                index += 1
+            if not new_txt:
+                continue
+            common_css = {key: val for key, val in default_css.items()}
+            paragraph.add_run()
+            # Adding text to run
+            paragraph.runs[index].text = new_txt
+            # Updating the text css
+            common_css.update(dict(child.items())) if not idx else None
+            if theme:
+                paragraph.runs[index].font.color.theme_color = theme
+            if brightness:
+                paragraph.runs[index].font.color.brightness = brightness
+            utils.apply_text_css(shape, paragraph.runs[index], paragraph, **common_css)
+            index += 1
 
 
 def replace(shape, spec, data):
@@ -111,9 +110,8 @@ def replace(shape, spec, data):
         data = {'data': data}
 
     handler = spec.get('handler', None)
-    style = {}
     common_css = spec.get('style', {})
-
+    style = {}
     for old, new in spec['replace'].items():
         _style = common_css.pop(old, {})
         style[old] = generate_style(_style, {'val': template(new, data), 'data': data}, handler)
@@ -172,15 +170,15 @@ def add_text_to_shape(shape, textval, **kwargs):
     min_inc = 13000
     pixel_inch = 10000
     # kwargs['font-size'] = max(kwargs.get('font-size', 16), min_inc)
-    if (kwargs.get('font-size', 14) * pixel_inch) > min_inc:
-        paragraph = shape.text_frame.paragraphs[0]
-        paragraph.add_run()
-        for run in paragraph.runs:
-            run.text = textval
-            shape_txt = run.font
-            shape_txt = run.font.fill
-            shape_txt.solid()
-            utils.apply_text_css(shape, run, paragraph, **kwargs)
+    if (kwargs.get('font-size', 14) * pixel_inch) < min_inc:
+        return
+    paragraph = shape.text_frame.paragraphs[0]
+    paragraph.add_run()
+    for run in paragraph.runs:
+        run.text = textval
+        shape_txt = run.font.fill
+        shape_txt.solid()
+        utils.apply_text_css(shape, run, paragraph, **kwargs)
 
 
 def scale_data(data, lo, hi, factor=None):
@@ -194,36 +192,32 @@ def rect(shape, x, y, width, height):
     return shape.add_shape(MSO_SHAPE.RECTANGLE, x, y, width, height)
 
 
-def _update_chart(info, data, chart_data, series_columns, chart='line'):
+def _update_chart(info, data, chart_data, series_columns, chart='ChartData'):
     '''Updating Chart data.'''
-    series_dict = {}
-    columns = list(data.columns)
-    if info['x'] in columns:
-        columns.remove(info['x'])
-
-    if chart == 'line':
+    if chart == 'ChartData':
         chart_data.categories = data[info['x']].dropna().unique().tolist()
         for series in series_columns:
             if np.issubdtype(data[series].dtype, np.number):
-                chart_data.add_series(series, tuple(data[series].fillna(0).tolist()))
+                chart_data.add_series(series, tuple(data[series].fillna(0).values.tolist()))
         return chart_data
-
+    series_dict = {}
+    columns = data.columns.difference([info['x']])
+    is_numeric_x = np.issubdtype(data[info['x']].dtype, np.number)
+    xindex = data[info['x']].astype(float) if is_numeric_x else pd.Series(data.index + 1)
     for index, row in data.fillna(0).iterrows():
+        x = xindex.loc[index]
         for col in series_columns:
-            if col in columns and np.issubdtype(data[col].dtype, np.number):
-                serieslist = [series.name for series in chart_data._series]
-                if col not in serieslist:
-                    series_dict[col] = chart_data.add_series(col)
-                try:
-                    x = float(row[info['x']])
-                except Exception:
-                    x = index + 1
-                if chart == 'scatter':
-                    series_dict[col].add_data_point(x, row[col])
-                elif chart == 'bubble':
-                    bubble_size = row[info['size']] if info.get('size') else 1
-                    if col != info.get('size'):
-                        series_dict[col].add_data_point(x, row[col], bubble_size)
+            if col not in columns or not np.issubdtype(data[col].dtype, np.number):
+                continue
+            serieslist = [series.name for series in chart_data._series]
+            if col not in serieslist:
+                series_dict[col] = chart_data.add_series(col)
+            if chart == 'XyChartData':
+                series_dict[col].add_data_point(x, row[col])
+            elif chart == 'BubbleChartData':
+                bubble_size = row[info['size']] if info.get('size') else 1
+                if col != info.get('size'):
+                    series_dict[col].add_data_point(x, row[col], bubble_size)
     return chart_data
 
 
@@ -258,14 +252,12 @@ def table(shape, spec, data):
         raise AttributeError('Shape must be a table object.')
     if not spec.get('table', {}).get('data'):
         return
-
     spec = copy.deepcopy(spec['table'])
     handler = data.pop('handler') if 'handler' in data else None
     data = compile_function(spec, 'data', data, handler)
     if not len(data):
         return
-    data_cols = list(data.columns)
-    data_cols = list(set(spec.get('columns', {}).keys() or data_cols).intersection(data_cols))
+    data_cols = data.columns.intersection(spec.get('columns', {}).keys() or data.columns)
     table_properties = utils.TableProperties()
     # Extending table if required.
     table_properties.extend_table(shape, data, len(data) + 1, len(data_cols))
@@ -309,20 +301,21 @@ def chart(shape, spec, data):
     if hasattr(shape.chart, 'chart_type'):
         chart_type = '{}'.format(shape.chart.chart_type).split()[0]
 
-    stacked_or_line = {
-        'AREA', 'AREA_STACKED', 'AREA_STACKED_100', 'BAR_CLUSTERED',
-        'BAR_OF_PIE', 'BAR_STACKED', 'BAR_STACKED_100', 'COLUMN_CLUSTERED',
-        'COLUMN_STACKED', 'COLUMN_STACKED_100', 'LINE',
-        'LINE_MARKERS', 'LINE_MARKERS_STACKED', 'LINE_MARKERS_STACKED_100',
-        'LINE_STACKED', 'LINE_STACKED_100', 'RADAR_MARKERS',
-        'RADAR', 'RADAR_FILLED', 'PIE', 'PIE_EXPLODED', 'PIE_OF_PIE',
-        'DOUGHNUT', 'DOUGHNUT_EXPLODED'}
+    chart_types = {
+        'ChartData': {
+            'AREA', 'AREA_STACKED', 'AREA_STACKED_100', 'BAR_CLUSTERED',
+            'BAR_OF_PIE', 'BAR_STACKED', 'BAR_STACKED_100', 'COLUMN_CLUSTERED',
+            'COLUMN_STACKED', 'COLUMN_STACKED_100', 'LINE',
+            'LINE_MARKERS', 'LINE_MARKERS_STACKED', 'LINE_MARKERS_STACKED_100',
+            'LINE_STACKED', 'LINE_STACKED_100', 'RADAR_MARKERS',
+            'RADAR', 'RADAR_FILLED', 'PIE', 'PIE_EXPLODED', 'PIE_OF_PIE',
+            'DOUGHNUT', 'DOUGHNUT_EXPLODED'},
+        'XyChartData': {
+            'XY_SCATTER', 'XY_SCATTER_LINES', 'XY_SCATTER_LINES_NO_MARKERS',
+            'XY_SCATTER_SMOOTH', 'XY_SCATTER_SMOOTH_NO_MARKERS'},
+        'BubbleChartData': {'BUBBLE', 'BUBBLE_THREE_D_EFFECT'}
+    }
 
-    xy_charts = {
-        'XY_SCATTER', 'XY_SCATTER_LINES', 'XY_SCATTER_LINES_NO_MARKERS',
-        'XY_SCATTER_SMOOTH', 'XY_SCATTER_SMOOTH_NO_MARKERS'}
-
-    bubble_charts = {'BUBBLE', 'BUBBLE_THREE_D_EFFECT'}
     if not chart_type:
         raise NotImplementedError()
 
@@ -346,23 +339,15 @@ def chart(shape, spec, data):
 
     data = compile_function(info, 'data', data, handler)
     # Getting subset of data if `usecols` is defined.
-    change_data = data.reset_index(drop=True)[info.get('usecols', list(data.columns))]
-    series_cols = [x for x in change_data.columns if x != info['x']]
-
-    chart_name = None
-    if chart_type in stacked_or_line:
-        chart_name = 'line'
-    elif chart_type in xy_charts:
-        chart_name = 'scatter'
-    elif chart_type in bubble_charts:
-        chart_name = 'bubble'
+    change_data = data.reset_index(drop=True)[info.get('usecols', data.columns)]
+    series_cols = change_data.columns.difference([info['x']])
+    chart_name = next((k for k in chart_types if chart_type in chart_types[k]), None)
 
     if not chart_name:
         raise NotImplementedError('Input Chart Type {} is not supported'.format(chart_type))
 
-    chart_map = {'line': ChartData(), 'scatter': XyChartData(), 'bubble': BubbleChartData()}
     chart_data = _update_chart(
-        info, change_data, chart_map[chart_name], series_cols, chart=chart_name)
+        info, change_data, getattr(pptxcd, chart_name)(), series_cols, chart=chart_name)
 
     shape.chart.replace_data(chart_data)
     if chart_name == 'scatter' and not style.get('color'):
@@ -370,20 +355,20 @@ def chart(shape, spec, data):
         style['color'] = dict(zip(series_names, _color.distinct(len(series_names))))
 
     if style.get('color'):
-        color_mapping = {'scatter': 'point.marker.format', 'line': 'point.format',
-                         'bubble': 'point.format', 'area': 'series.format'}
+        color_mapping = {'XyChartData': 'point.marker.format', 'ChartData': 'point.format',
+                         'BubbleChartData': 'point.format', 'area': 'series.format'}
         is_area = {'AREA', 'AREA_STACKED', 'AREA_STACKED_100'}
         chart_name = 'area' if chart_type in is_area else chart_name
-        pie_or_donut = {'PIE', 'PIE_EXPLODED', 'PIE_OF_PIE', 'DOUGHNUT', 'DOUGHNUT_EXPLODED'}
+        is_donut = {'PIE', 'PIE_EXPLODED', 'PIE_OF_PIE', 'DOUGHNUT', 'DOUGHNUT_EXPLODED'}
         for series in shape.chart.series:
-            name = series.name
             for index, point in enumerate(series.points):
-                point_css = {}
+                row = data.loc[index]
                 args = {
                     'handler': handler,
-                    'row': data.loc[index].to_dict(),
-                    'name': data.loc[index][info['x']] if chart_type in pie_or_donut else name
+                    'row': row.to_dict(),
+                    'name': row[info['x']] if chart_type in is_donut else series.name
                 }
+                point_css = {}
                 for key in {'opacity', 'color', 'stroke'}:
                     if style.get(key) is None:
                         continue
@@ -415,19 +400,16 @@ def sankey(shape, spec, data):
     pxl_to_inch = 10000
     default_thickness = 40
     spec = copy.deepcopy(spec['sankey'])
-
     handler = data.pop('handler') if 'handler' in data else None
-    shapes = shape._parent
     y0 = shape.top
     x0 = shape.left
-
     width = shape.width
-    shape_ids = {'shape': 0}
     height = shape.height
+    shapes = shape._parent
+    shape_ids = {'shape': 0}
 
     groups = compile_function(spec, 'groups', data, handler)
     thickness = spec.get('thickness', default_thickness) * pxl_to_inch
-
     h = (height - (thickness * len(groups))) / (len(groups) - 1) + thickness
     frames = {}
     # Sankey Rectangles and texts.
@@ -453,8 +435,7 @@ def sankey(shape, spec, data):
                 MSO_SHAPE.RECTANGLE, row['x'], y, row['width'], thickness)
             rectstyle = {'fill': row['fill'], 'stroke': stroke}
             rect_css(shp, **rectstyle)
-            text_style = {}
-            text_style['color'] = _color.contrast(row['fill'])
+            text_style = {'color': _color.contrast(row['fill'])}
             text_style.update(spec.get('style', {}))
             add_text_to_shape(shp, row['text'], **text_style)
 
@@ -538,7 +519,6 @@ def treemap(shape, spec, data):
             rect_color = default_rect_color
             if spec.get('color'):
                 rect_color = spec['color'](v) if callable(spec['color']) else spec['color']
-
             if spec.get('text'):
                 text = spec['text'](v) if callable(spec['text']) else spec['text']
             else:

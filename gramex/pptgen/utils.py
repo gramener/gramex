@@ -1,22 +1,22 @@
-"""Utility file."""
+'''Utility file.'''
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
 import re
 import ast
-import six
 import copy
 import platform
+import six
+from six import iteritems
 import numpy as np
 import pandas as pd
-from six import iteritems
 from lxml import objectify
+from lxml.builder import ElementMaker
 from pptx.util import Inches
 from pptx.dml.color import RGBColor
 from pptx.enum.base import EnumValue
-from lxml.builder import ElementMaker
-from gramex.transforms import build_transform
 from pptx.enum.text import PP_ALIGN, MSO_ANCHOR
+from gramex.transforms import build_transform
 
 
 def is_slide_allowed(change, slide, number):
@@ -54,39 +54,37 @@ def is_slide_allowed(change, slide, number):
                 re.search(expr, title, re.IGNORECASE) for expr in slide_title)
         elif isinstance(slide_title, six.string_types):
             match = match and re.search(slide_title, title, re.IGNORECASE)
-
     return match
 
 
 def stack_elements(replica, shape, stack=False, margin=None):
-    '''
-    Function to extend elements horizontally or vertically.
-    '''
+    '''Function to extend elements horizontally or vertically.'''
+    if not stack:
+        return
     config = {'vertical': {'axis': 'y', 'attr': 'height'},
               'horizontal': {'axis': 'x', 'attr': 'width'}}
-    if stack is not None:
-        grp_sp = shape.element
-        # Adding a 15% default margin between original and new object.
-        default_margin = 0.15
-        margin = default_margin if not margin else margin
-        for index in range(replica):
-            # Adding a cloned object to shape
-            extend_shape = copy.deepcopy(grp_sp)
-            # Getting attributes and axis values from config based on stack.
-            attr = config.get(stack, {}).get('attr', 0)
-            axis = config.get(stack, {}).get('axis', 0)
-            # Taking width or height based on stack value and setting a margin.
-            metric_val = getattr(shape, attr)
-            axis_val = getattr(extend_shape, axis)
-            # Setting margin accordingly either vertically or horizontally.
-            axis_pos = metric_val * index
-            set_attr = axis_val + axis_pos + (axis_pos * margin)
-            # Setting graphic position of newly created object to slide.
-            setattr(extend_shape, axis, int(set_attr))
-            # Adding newly created object to slide.
-            # grp_sp.addnext(extend_shape)
-            grp_sp.addprevious(extend_shape)
-        shape.element.delete()
+    grp_sp = shape.element
+    # Adding a 15% default margin between original and new object.
+    default_margin = 0.15
+    margin = default_margin if not margin else margin
+    for index in range(replica):
+        # Adding a cloned object to shape
+        extend_shape = copy.deepcopy(grp_sp)
+        # Getting attributes and axis values from config based on stack.
+        attr = config.get(stack, {}).get('attr', 0)
+        axis = config.get(stack, {}).get('axis', 0)
+        # Taking width or height based on stack value and setting a margin.
+        metric_val = getattr(shape, attr)
+        axis_val = getattr(extend_shape, axis)
+        # Setting margin accordingly either vertically or horizontally.
+        axis_pos = metric_val * index
+        set_attr = axis_val + axis_pos + (axis_pos * margin)
+        # Setting graphic position of newly created object to slide.
+        setattr(extend_shape, axis, int(set_attr))
+        # Adding newly created object to slide.
+        # grp_sp.addnext(extend_shape)
+        grp_sp.addprevious(extend_shape)
+    shape.element.delete()
 
 
 def stack_shapes(collection, change, data, handler):
@@ -110,22 +108,20 @@ def stack_shapes(collection, change, data, handler):
 
 
 def delete_paragraph(paragraph):
-    """Delete a paragraph."""
+    '''Delete a paragraph.'''
     p = paragraph._p
     parent_element = p.getparent()
     parent_element.remove(p)
 
 
 def delete_run(run):
-    """Delete a run from paragraph."""
+    '''Delete a run from paragraph.'''
     r = run._r
     r.getparent().remove(r)
 
 
 def generate_slide(prs, source):
-    '''
-    Create a slide layout.
-    '''
+    '''Create a slide layout.'''
     layout_items_count = [
         len(layout.placeholders) for layout in prs.slide_layouts]
     min_items = min(layout_items_count)
@@ -139,15 +135,12 @@ def copy_slide_elem(shape, dest):
     '''
     if dest is None:
         return
-    el = shape.element
-    new_elem = copy.deepcopy(el)
+    new_elem = copy.deepcopy(shape.element)
     dest.shapes._spTree.insert_element_before(new_elem, 'p:extLst')
 
 
 def add_new_slide(dest, source_slide):
-    '''
-    Function to add a new slide to presentation.
-    '''
+    '''Function to add a new slide to presentation.'''
     if dest is None:
         return
     for key, value in six.iteritems(source_slide.part.rels):
@@ -158,9 +151,7 @@ def add_new_slide(dest, source_slide):
 
 
 def move_slide(presentation, old_index, new_index):
-    '''
-    Move a slide's index number.
-    '''
+    '''Move a slide's index number.'''
     xml_slides = presentation.slides._sldIdLst
     slides = list(xml_slides)
     xml_slides.remove(slides[old_index])
@@ -168,29 +159,25 @@ def move_slide(presentation, old_index, new_index):
 
 
 def delete_slide(presentation, index):
-    '''
-    Delete a slide from Presentation.
-    '''
+    '''Delete a slide from Presentation.'''
     # xml_slides = presentation.slides._sldIdLst
     # slides = list(xml_slides)
     # del presentation.slides[index]
     # xml_slides.remove(slides[index])
-
     rid = presentation.slides._sldIdLst[index].rId
     presentation.part.drop_rel(rid)
     del presentation.slides._sldIdLst[index]
 
 
 def manage_slides(prs, config):
-    """
+    '''
     Delete not required slides from presentation.
 
     if `config.only` is present then remove the other slides apart from `config.only`
     slides from the presentation.
     `config.only` accepts a slide number or list of slide numbers starting from 1.
-    """
+    '''
     slide_numbers = config.pop('only', None)
-    slides = set(range(len(prs.slides)))
     if slide_numbers:
         if isinstance(slide_numbers, six.integer_types):
             slide_numbers = set([int(slide_numbers) - 1])
@@ -198,6 +185,7 @@ def manage_slides(prs, config):
             slide_numbers = set([int(i) - 1 for i in slide_numbers])
         else:
             raise ValueError('Slide numbers must be a list of integers or a single slide number.')
+        slides = set(range(len(prs.slides)))
         remove_status = 0
         for slide_num in sorted(slides - slide_numbers):
             delete_slide(prs, slide_num - remove_status)
@@ -211,7 +199,7 @@ def is_group(shape):
 
 
 def pixel_to_inch(pixel):
-    """Function to convert Pixel to Inches based on OS."""
+    '''Function to convert Pixel to Inches based on OS.'''
     linux_width = 72.0
     windows_width = 96.0
     os_name = platform.system().lower().strip()
@@ -284,7 +272,7 @@ def decimals(series):
 
 
 def convert_color_code(colorcode):
-    """Convert color code to valid PPTX color code."""
+    '''Convert color code to valid PPTX color code.'''
     colorcode = colorcode.rsplit('#')[-1].lower()
     return colorcode + ('0' * (6 - len(colorcode)))
 
@@ -292,7 +280,7 @@ def convert_color_code(colorcode):
 
 
 def apply_text_css(shape, run, paragraph, **kwargs):
-    """Apply css."""
+    '''Apply css.'''
     pixcel_to_inch = 10000
     if kwargs.get('color'):
         rows_text = run.font.fill
@@ -312,13 +300,12 @@ def apply_text_css(shape, run, paragraph, **kwargs):
         if update_prop and not isinstance(update_prop, bool):
             update_prop = ast.literal_eval(update_prop)
         setattr(run.font, prop, update_prop)
-
     if kwargs.get('text-anchor'):
         shape.vertical_anchor = getattr(MSO_ANCHOR, shape['text-anchor'].upper())
 
 
 def make_element():
-    """Function to create element structure."""
+    '''Function to create element structure.'''
     nsmap = {
         'p': 'http://schemas.openxmlformats.org/presentationml/2006/main',
         'a': 'http://schemas.openxmlformats.org/drawingml/2006/main',
@@ -331,7 +318,7 @@ def make_element():
 
 
 def fill_color(**kwargs):
-    """
+    '''
     Return a new color object.
 
     You may use any one of the following ways of specifying colour:
@@ -376,7 +363,7 @@ def fill_color(**kwargs):
 
     Refer
     <http://msdn.microsoft.com/en-in/library/documentformat.openxml.drawing(v=office.14).aspx>
-    """
+    '''
     hslclr = kwargs.get('hslclr')
     sysclr = kwargs.get('sysclr')
     srgbclr = kwargs.get('srgbclr')
@@ -406,22 +393,22 @@ def fill_color(**kwargs):
 
 
 def xmlns(*prefixes):
-    """XML ns."""
+    '''XML ns.'''
     elem_schema = make_element()
     return ' '.join('xmlns:%s="%s"' % (pre, elem_schema['nsmap'][pre]) for pre in prefixes)
 
 
 def call(val, g, group, default):
-    """Callback."""
+    '''Callback.'''
     if callable(val):
         return val(g)
     return default
 
 
 def cust_shape(x, y, w, h, _id):
-    """Custom shapes."""
+    '''Custom shapes.'''
     _cstmshape = '<p:sp ' + xmlns('p', 'a') + '>'
-    _cstmshape = _cstmshape + """<p:nvSpPr>
+    _cstmshape = _cstmshape + '''<p:nvSpPr>
             <p:cNvPr id='%s' name='%s'/>
             <p:cNvSpPr/>
             <p:nvPr/>
@@ -439,13 +426,13 @@ def cust_shape(x, y, w, h, _id):
               <a:rect l='0' t='0' r='0' b='0'/>
             </a:custGeom>
           </p:spPr>
-        </p:sp>"""
+        </p:sp>'''
     shp = _cstmshape % (_id, 'Freeform %d' % _id, x, y, w, h)
     return objectify.fromstring(shp)
 
 
 def draw_sankey(data, spec):
-    """Create sankey data logic."""
+    '''Create sankey data logic.'''
     x0 = spec['x0']
     size = spec['size']
     group = spec['group']
@@ -481,7 +468,7 @@ def draw_sankey(data, spec):
 
 
 def squarified(x, y, w, h, data):
-    """
+    '''
     Draw a squarified treemap.
 
     See <http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.36.6685>
@@ -504,7 +491,7 @@ def squarified(x, y, w, h, data):
                [ 0.        ,  0.        ,  0.        ,  0.        ],
                [ 0.        ,  0.        ,  0.33333333,  1.        ],
                [ 0.33333333,  0.        ,  0.66666667,  1.        ]])
-    """
+    '''
     w, h = float(w), float(h)
     size = np.nan_to_num(np.array(data).astype(float))
     start, end = 0, len(size)
@@ -579,7 +566,7 @@ def squarified(x, y, w, h, data):
 
 
 class SubTreemap(object):
-    """
+    '''
     Yield a hierarchical treemap at multiple levels.
 
     Usage:
@@ -594,14 +581,14 @@ class SubTreemap(object):
 
     yields:
         x, y, w, h, (level, data)
-    """
+    '''
 
     def __init__(self, **args):
-        """Default Constructor."""
+        '''Default Constructor.'''
         self.args = args
 
     def draw(self, width, height, x=0, y=0, filter={}, level=0):
-        """Function to draw rectanfles."""
+        '''Function to draw rectanfles.'''
         # We recursively into each column in `keys` and stop there
         if level >= len(self.args['keys']):
             return
@@ -658,10 +645,10 @@ class SubTreemap(object):
 
 
 class TableProperties():
-    """Get/Set Table's properties."""
+    '''Get/Set Table's properties.'''
 
     def extend_table(self, shape, data, total_rows, total_columns):
-        """Function to extend table rows and columns if required."""
+        '''Function to extend table rows and columns if required.'''
         avail_rows = len(shape.table.rows)
         avail_cols = len(shape.table.columns)
 
@@ -677,7 +664,7 @@ class TableProperties():
             avail_cols += 1
 
     def get_default_css(self, shape):
-        """Function to get Table style for rows and columns."""
+        '''Function to get Table style for rows and columns.'''
         pixel_inch = 10000
         tbl_style = {}
         mapping = {0: 'header', 1: 'row'}
@@ -708,7 +695,7 @@ class TableProperties():
         return tbl_style
 
     def get_css(self, info, column_list, data):
-        """Get Table CSS from config."""
+        '''Get Table CSS from config.'''
         columns = info.get('columns', {})
         table_css = {}
         for col in column_list:
@@ -721,7 +708,7 @@ class TableProperties():
         return table_css
 
     def apply_table_css(self, cell, paragraph, run, info):
-        """Apply Table style."""
+        '''Apply Table style.'''
         if info.get('fill'):
             cell_fill = cell.fill
             cell_fill.solid()

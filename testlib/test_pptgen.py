@@ -322,8 +322,8 @@ class TestPPTGen(TestCase):
     def test_css(self):
         # Test case for `css` command.
         pix_to_inch = 10000
-        opacity_constant = 100000
-        width, height, top, left, opacity_val = 200, 200, 100, 50, 0.1
+        spec = {'width': 200, 'height': 200, 'top': 100, 'left': 50}
+        opacity_val, opacity_constant = 0.1, 100000
         target = pptgen.pptgen(
             source=self.input, only=8,
             change={
@@ -334,10 +334,10 @@ class TestPPTGen(TestCase):
                             'color': '#ff0000',
                             'fill': '#ffff00',
                             'stroke': '#00ff00',
-                            'width': width,
-                            'height': height,
-                            'left': left,
-                            'top': top
+                            'width': spec['width'],
+                            'height': spec['height'],
+                            'left': spec['left'],
+                            'top': spec['top']
                         }
                     }
                 }
@@ -345,10 +345,8 @@ class TestPPTGen(TestCase):
         eq_(len(target.slides), 1)
         shape = self.get_shape(target, 'Rectangle 1')[0]
         opacity = shape.fill.fore_color._xFill.srgbClr.xpath('./a:alpha')[0].values()[0]
-        eq_(shape.top, top * pix_to_inch)
-        eq_(shape.left, left * pix_to_inch)
-        eq_(shape.width, width * pix_to_inch)
-        eq_(shape.height, height * pix_to_inch)
+        for k in spec:
+            eq_(getattr(shape, k), spec[k] * pix_to_inch)
         eq_(opacity_val, float(opacity) / opacity_constant)
         eq_('{}'.format(shape.fill.fore_color.rgb), 'FFFF00')
         eq_('{}'.format(shape.line.fill.fore_color.rgb), '00FF00')
@@ -373,7 +371,10 @@ class TestPPTGen(TestCase):
             change={
                 'Table 1': {
                     'table': {
-                        'data': 'data["data"]'
+                        'data': 'data["data"]',
+                        'style': {
+                            'fill': '#cccccc'
+                        }
                     }
                 }
             })
@@ -381,30 +382,20 @@ class TestPPTGen(TestCase):
         shape = self.get_shape(target, 'Table 1')[0]
         eq_(len(shape.table.rows), len(self.data.index) + 1)
         eq_(len(shape.table.columns), len(self.data.columns))
-        columns = []
-        table_data = {}
-        for row_num, row in enumerate(shape.table.rows):
-            for col_num, cell in enumerate(row.cells):
+        table_data, columns = {}, []
+        for rno, row in enumerate(shape.table.rows):
+            if rno == 0:
+                columns = [c.text_frame.text for c in row.cells]
+                continue
+            for cno, cell in enumerate(row.cells):
                 txt = cell.text_frame.text
-                if row_num == 0:
-                    columns.append(txt)
-                    continue
-                if columns[col_num] not in table_data:
-                    table_data[columns[col_num]] = []
+                if columns[cno] not in table_data:
+                    table_data[columns[cno]] = []
                 txt = np.nan if txt == 'nan' else txt
-                table_data[columns[col_num]].append(txt)
-
-        columns = sorted(columns)
-        eq_(sorted(list(self.data.columns)), columns)
-        original_data = self.data[columns].sort_values(by=columns).reset_index(drop=True)
-        table_data = pd.DataFrame(table_data)[columns]
-        eq_(len(self.data), len(table_data))
-        # Converting data types of table data. All columns will have `object` datatype.
-        for col in columns:
-            table_data[col] = table_data[col].astype(original_data[col].dtype.name)
-        table_data = table_data.sort_values(by=columns).reset_index(drop=True)
+                table_data[columns[cno]].append(txt)
+        table_data = pd.DataFrame(table_data).astype(self.data.dtypes)[columns]
         # Comparinig `dataframe` from table with original `dataframe`
-        assert_frame_equal(table_data, original_data, check_names=True)
+        assert_frame_equal(table_data, self.data, check_names=True)
 
     def test_change_chart(self):
         # Test case for all native charts charts.
@@ -430,7 +421,6 @@ class TestPPTGen(TestCase):
             # spaces not `_`.
             chart_name = chart_name.replace('_', ' ')
             if chart_name in ['Pie Chart', 'Donut Chart']:
-                data = self.data.groupby(xaxis, as_index=False)['sales'].sum()
                 series = ['sales']
                 chart_colors = {
                     'Singapore': '#D34817',
@@ -441,12 +431,12 @@ class TestPPTGen(TestCase):
                     'South Plainfield': '#855D5D'
                 }
             else:
-                data = self.data.groupby(xaxis, as_index=False)['sales', 'growth'].sum()
                 series = ['growth', 'sales']
                 chart_colors = {
                     'sales': '#D34817',
                     'growth': '#9B2D1F',
                 }
+            data = self.data.groupby(xaxis, as_index=False)[series].sum()
             rule = {
                 chart_name: {
                     'chart': {
@@ -738,7 +728,6 @@ class TestPPTGen(TestCase):
                 }
             })
         eq_(len(target.slides), 1)
-
         total_cust_shapes, get_rect_order, get_rect_width = 0, [], []
         grp_order = 'lambda g: g["sales"].sum()'
 
