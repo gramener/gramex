@@ -8,7 +8,7 @@ import sys
 import json
 import time
 import inspect
-import subprocess
+import subprocess       # nosec
 import pandas as pd
 from threading import Thread
 from tornado.concurrent import Future
@@ -478,7 +478,7 @@ class Subprocess(object):
         # http://stackoverflow.com/a/4896288/100904
         kwargs['close_fds'] = 'posix' in sys.builtin_module_names
 
-        self.proc = subprocess.Popen(args, **kwargs)
+        self.proc = subprocess.Popen(args, **kwargs)        # nosec
         self.thread = {}        # Has the running threads
         self.future = {}        # Stores the futures indicating stream close
 

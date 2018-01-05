@@ -4,13 +4,14 @@ import re
 import os
 import six
 import time
+import shlex
 import atexit
 import psutil
 import requests
 import tornado.gen
 from orderedattrdict import AttrDict
 from threading import Thread, Lock
-from subprocess import Popen, PIPE, STDOUT
+from subprocess import Popen, PIPE, STDOUT      # nosec
 from six.moves.urllib.parse import urlencode, urljoin
 from tornado.web import HTTPError
 from tornado.httpclient import AsyncHTTPClient
@@ -116,7 +117,7 @@ class Capture(object):
             app_log.info('Starting %s via %s', script, self.cmd)
             self.close()
             # self.cmd is taken from the YAML configuration. Safe to run
-            self.proc = Popen(self.cmd, shell=True, stdout=PIPE, stderr=STDOUT)     # nosec
+            self.proc = Popen(shlex.split(self.cmd), stdout=PIPE, stderr=STDOUT)    # nosec
             self.proc.poll()
             atexit.register(self.close)
             # TODO: what if readline() does not return quickly?

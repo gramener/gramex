@@ -15,7 +15,7 @@ import datetime
 import requests
 from shutilwhich import which
 from pathlib import Path
-from subprocess import Popen, check_output, CalledProcessError
+from subprocess import Popen, check_output, CalledProcessError      # nosec
 from orderedattrdict import AttrDict
 from orderedattrdict.yamlutils import AttrDictYAMLLoader
 from zipfile import ZipFile
@@ -279,10 +279,10 @@ def run_command(config):
     target = config.target
     cygcheck, cygpath, kwargs = which('cygcheck'), which('cygpath'), {'universal_newlines': True}
     if cygcheck is not None and cygpath is not None:
-        app_path = check_output([cygpath, '-au', which(appcmd[0])], **kwargs).strip()
-        is_cygwin_app = check_output([cygcheck, '-f', app_path], **kwargs).strip()
+        app_path = check_output([cygpath, '-au', which(appcmd[0])], **kwargs).strip()   # nosec
+        is_cygwin_app = check_output([cygcheck, '-f', app_path], **kwargs).strip()      # nosec
         if is_cygwin_app:
-            target = check_output([cygpath, '-au', target], **kwargs).strip()
+            target = check_output([cygpath, '-au', target], **kwargs).strip()           # n osec
     # Replace TARGET with the actual target
     if 'TARGET' in appcmd:
         appcmd = [target if arg == 'TARGET' else arg for arg in appcmd]
@@ -292,7 +292,7 @@ def run_command(config):
     if not safe_rmtree(config.target):
         app_log.error('Cannot delete target %s. Aborting installation', config.target)
         return
-    proc = Popen(appcmd, bufsize=-1, stdout=sys.stdout, stderr=sys.stderr, **kwargs)
+    proc = Popen(appcmd, bufsize=-1, stdout=sys.stdout, stderr=sys.stderr, **kwargs)    # nosec
     proc.communicate()
     return proc.returncode
 
@@ -541,7 +541,7 @@ def service(cmd, args):
 def _check_output(cmd, default=b'', **kwargs):
     '''Run cmd and return output. Return default in case the command fails'''
     try:
-        return check_output(shlex.split(cmd), **kwargs).strip()
+        return check_output(shlex.split(cmd), **kwargs).strip()     # nosec
     except CalledProcessError:
         return default
 
