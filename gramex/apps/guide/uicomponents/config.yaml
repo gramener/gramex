@@ -64,41 +64,39 @@ font:
       cambria:      {title: 'Cambria',   stack: 'Cambria, serif',           google: false}
       open-sans:    {title: 'Open Sans', stack: '"Open Sans", sans-serif',  google: Open+Sans}
       roboto:       {title: 'Roboto',    stack: 'Roboto, sans-serif',       google: Roboto}
+      # TODO: add fonts
+      # font-family-base: segoe-ui
+      # headings-font-family: century-gothic
   headings-font-family:
     title: Heading font
     default: ''
     options: *FONT_LIST
 
 theme:
-  Default Bootstrap: {}
+  Bootstrap: {}
 
-  Deepak:
-    success: '#1A9850'
-    danger: '#D9534F'
-    warning: '#FDE51C'
-    dark: '#2E3D49'
+  Brand Book:
+    primary: '#20186F'
+    secondary: '#784894'
+    success: '#8AB545'
+    warning: '#D06027'
+    danger: '#83153E'
+    info: '#1599C4'
+    dark: '#000000'
+    light: '#A7A9AB'
 
-  Flat:
-    enable-transitions: 'on'
-    enable-print-styles: 'on'
+  Material:
+    primary: '#2196F3'
+    secondary: '#9E9E9E'
+    success: '#4CAF50'
+    warning: '#FFEB3B'
+    danger: '#F44336'
+    info: '#00BCD4'
 
-  Go Green:
-    enable-transitions: 'on'
-    enable-print-styles: 'on'
-    font-family-base: open-sans
-    headings-font-family: roboto
-    primary: '#18816f'
-    secondary: '#868e96'
-    success: '#a3b561'
-    danger: '#ff6c65'
-    warning: '#e7c846'
-    dark: '#343a40'
-    light: '#f8f9fa'
-    info: '#83c2c2'
-
-  Shiny Red:
-    enable-gradients: 'on'
-    enable-transitions: 'on'
-    enable-print-styles: 'on'
-    primary: '#f94d42'
-    danger: '#1a1110'
+  Metro:
+    primary: '#0050ef'
+    secondary: '#647687'
+    success: '#60a917'
+    warning: '#f0a30a'
+    danger: '#e51400'
+    info: '#aa00ff'

@@ -24,5 +24,15 @@ def view_source(html):
             '</code></pre></div>')
 
 
+def only_source(html):
+    '''Return only the escaped view source block'''
+    s = html.decode('utf-8')
+    return ('<pre class="viewsource"><code class="language-html">' + xhtml_escape(s.strip()) +
+            '</code></pre>')
+
+
 def load_page(page):
-    return gramex.cache.open(page, 'template', rel=True).generate(view_source=view_source)
+    return gramex.cache.open(page, 'template', rel=True).generate(
+        view_source=view_source,
+        only_source=only_source
+    )

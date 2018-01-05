@@ -66,6 +66,8 @@
         <button type="submit" class="btn btn-primary">Apply theme</button>
         <a v-bind:href="cssurl" class="btn btn-light">Link to CSS</a>
       </p>
+      <p>To use this theme, copy this code to your page.</p>
+      <pre class="viewsource"><code class="language-html">&lt;link rel="stylesheet" href="${ cssurl }"></span>"&gt;</code></pre>
     </form>
     <!-- htmllint label-req-for="true" -->
   </div><!-- #theme-picker -->
@@ -84,6 +86,7 @@
       </p>
       {% from guide_ui_app import load_page %}
       {% raw load_page('ui-about.html') %}
+      {% raw load_page('ui-libraries.html') %}
 
       <h1 class="toc">Utilities</h1>
       {% raw load_page('ui-hover.html') %}
@@ -202,7 +205,7 @@
     // ref: https://stackoverflow.com/a/34198183
     $('pre.viewsource').each(function () {
       $this = $(this);
-      $button = $('<button class="btn-sm">Copy</button>');
+      $button = $('<button class="btn-sm" type="button">Copy</button>');
       $this.wrap('<div/>').removeClass('viewsource');
       $wrapper = $this.parent();
       $wrapper.addClass('viewsource-wrapper').css({position: 'relative'})

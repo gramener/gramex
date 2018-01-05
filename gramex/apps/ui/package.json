@@ -6,6 +6,7 @@
   "dependencies": {
     "bootstrap": "4.0.0-beta.3",
     "bootstrap-select": "1",
+    "cookie": "^0.3.1",
     "d3": "4",
     "daterangepicker": "2",
     "font-awesome": "*",
