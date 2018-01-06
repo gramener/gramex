@@ -26,6 +26,13 @@ url:
                 query: next
                 url: /$YAMLURL
 
+    auth/ajax:
+        pattern: /$YAMLURL/ajax
+        handler: FileHandler
+        kwargs:
+            path: $YAMLPATH/ajax.html
+            template: true
+
     auth/google:
         pattern: /$YAMLURL/google
         handler: GoogleAuth

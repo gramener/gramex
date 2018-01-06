@@ -380,7 +380,7 @@ Now create an `auth.xlsx` with the first sheet like this:
 
 With this, you can log into `/db` as `alpha` and `alpha`, etc. It displays a
 [minimal HTML template][auth-template] that asks for an ID and password, and
-matches it with the `auth.xlsx` database. 
+matches it with the `auth.xlsx` database.
 
 <div class="example">
   <a class="example-demo" href="dbsimple">DBAuth example</a>
@@ -664,6 +664,30 @@ Otherwise, we have 3 input fields:
 - `password`: the password. The name of this field can also be configured
 - `_xsrf`: the [XSRF][xsrf] token for this request.
 
+## AJAX login
+
+To using an AJAX request to log in, use this approach:
+
+```js
+$('form').on('submit', function(e) {
+  e.preventDefault()
+  $('#message').append('<div>Submitting form</div>')
+  $.ajax('simple', {
+    method: 'POST',
+    data: $('form').serialize()
+  }).done(function () {
+    $('#message').append('<div>Successful login</div>')
+  }).fail(function (xhr, status, message) {
+    $('#message').append('<div>Failed login: ' + message + '</div>')
+  })
+})
+```
+
+<div class="example">
+  <a class="example-demo" href="ajax.html">AJAX auth example</a>
+  <a class="example-src" href="http://code.gramener.com/s.anand/gramex/tree/master/gramex/apps/guide/auth/gramex.yaml">Source</a>
+</div>
+
 
 ## Login actions
 
@@ -916,7 +940,7 @@ You can specify multiple memberships that can be combined with AND or OR. This e
         membership:
             -                           # First rule
                 gender: female                # Allow all women
-                hd: [ibm.com, pwc.com]        # AND from ibm.com or pwc.com 
+                hd: [ibm.com, pwc.com]        # AND from ibm.com or pwc.com
             -                           # OR Second rule
                 gender: male                  # Allow all men
                 locale: [en, es]              # with user.locale as "en" or "es"
