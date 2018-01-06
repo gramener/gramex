@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 import os
+import six
 import json
 import time
 import shutil
@@ -107,9 +108,11 @@ class TestSQLiteStore(TestJSONStore):
     store_class = SQLiteStore
     store_file = 'data.db'
 
-    @staticmethod
-    def store_eq(a, b):
-        eq_(dict(a), dict(b))
+    def get_store(self):
+        return {
+            (key.decode('utf-8') if isinstance(key, six.binary_type) else key): val
+            for key, val in self.store.store.items()
+        }
 
     def test_conflict(self):
         expiry = time.time() + 1000
@@ -119,7 +122,7 @@ class TestSQLiteStore(TestJSONStore):
         for key, store in keystores:
             store.dump(key, {'v': 1, '_t': expiry})
             store.flush()
-        data = dict(self.store.store)
+        data = self.get_store()
         for key, store in keystores:
             eq_(data.get(key), {'v': 1, '_t': expiry})
 
@@ -128,7 +131,7 @@ class TestSQLiteStore(TestJSONStore):
             store.dump(key, {'v': 2, '_t': expiry})
         for key, store in keystores:
             store.flush()
-        data = dict(self.store.store)
+        data = self.get_store()
         for key, store in keystores:
             eq_(data.get(key), {'v': 2, '_t': expiry})
 
@@ -151,17 +154,17 @@ class TestSQLiteStore(TestJSONStore):
 
     def test_store(self):
         self.store.flush()
-        data = dict(self.store.store)
+        data = self.get_store()
         expiry = time.time() + 1000
         self.store.dump('►', {'_t': expiry, 'α': True})
         self.store.flush()
         data.update({'►': {'_t': expiry, 'α': True}})
-        eq_(dict(self.store.store), data)
+        eq_(self.get_store(), data)
 
         self.store.dump('λ', {'α': 1, 'β': None, '_t': expiry})
         self.store.flush()
         data.update({'λ': {'α': 1, 'β': None, '_t': expiry}})
-        eq_(dict(self.store.store), data)
+        eq_(self.get_store(), data)
 
     @classmethod
     def teardownClass(cls):
