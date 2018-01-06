@@ -140,9 +140,9 @@ class TestSQLiteStore(TestJSONStore):
         self.store.dump('λ', {'_t': time.time() - 1})
         self.store.dump('x', None)
         self.store.flush()
-        ok_('►' not in self.plainstore.store)
-        ok_('λ' not in self.plainstore.store)
-        ok_('x' not in self.plainstore.store)
+        ok_('►' not in self.store.store)
+        ok_('λ' not in self.store.store)
+        ok_('x' not in self.store.store)
 
         self.plainstore.dump('►', {'_t': 0})
         self.plainstore.dump('λ', {'_t': time.time() - 1})
