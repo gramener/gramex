@@ -5,26 +5,36 @@ import json
 import time
 import shutil
 import unittest
-from nose.tools import eq_
-from gramex.handlers.basehandler import JSONStore, BaseMixin
+from nose.tools import eq_, ok_
+from gramex.handlers.basehandler import JSONStore, SQLiteStore, BaseMixin
 
 folder = os.path.dirname(os.path.abspath(__file__))
 folder = os.path.join(folder, 'store')
 
 
+def setUp():
+    # Delete the directory to check if the directory is auto-created.
+    # Ignore errors, because this is not critical.
+    if os.path.exists(folder):
+        shutil.rmtree(folder, ignore_errors=True)
+
+
+def tearDown():
+    if os.path.exists(folder):
+        shutil.rmtree(folder)
+
+
 class TestJSONStore(unittest.TestCase):
+    store_class = JSONStore
+    store_file = 'data.json'
 
     @classmethod
     def setupClass(cls):
-        # Delete the directory to check if the directory is auto-created.
-        # Ignore errors, because this is not critical.
-        if os.path.exists(folder):
-            shutil.rmtree(folder, ignore_errors=True)
         # Do not set up a scheduled flush - IOLoop is not available here
-        cls.path = os.path.join(folder, 'data.json')
-        cls.plainstore = JSONStore(cls.path, flush=None)
-        cls.store = JSONStore(cls.path, flush=None, purge=BaseMixin._purge)
-        cls.store2 = JSONStore(cls.path, flush=None, purge=BaseMixin._purge)
+        cls.path = os.path.join(folder, cls.store_file)
+        cls.plainstore = cls.store_class(cls.path, flush=None)
+        cls.store = cls.store_class(cls.path, flush=None, purge=BaseMixin._purge)
+        cls.store2 = cls.store_class(cls.path, flush=None, purge=BaseMixin._purge)
 
     def load(self):
         if os.path.exists(self.path):
@@ -88,8 +98,74 @@ class TestJSONStore(unittest.TestCase):
     @classmethod
     def teardownClass(cls):
         # Close the store and ensure that the handle is closed
+        cls.plainstore.close()
         cls.store.close()
+        cls.store2.close()
 
-        # Delete folder to cleanup
-        if os.path.exists(folder):
-            shutil.rmtree(folder, ignore_errors=True)
+
+class TestSQLiteStore(TestJSONStore):
+    store_class = SQLiteStore
+    store_file = 'data.db'
+
+    @staticmethod
+    def store_eq(a, b):
+        eq_(dict(a), dict(b))
+
+    def test_conflict(self):
+        expiry = time.time() + 1000
+        keystores = (('x', self.store), ('y', self.store2), ('z', self.plainstore))
+
+        # Test writing and flushing each store one after another
+        for key, store in keystores:
+            store.dump(key, {'v': 1, '_t': expiry})
+            store.flush()
+        data = dict(self.store.store)
+        for key, store in keystores:
+            eq_(data.get(key), {'v': 1, '_t': expiry})
+
+        # Test writing all and then flushing
+        for key, store in keystores:
+            store.dump(key, {'v': 2, '_t': expiry})
+        for key, store in keystores:
+            store.flush()
+        data = dict(self.store.store)
+        for key, store in keystores:
+            eq_(data.get(key), {'v': 2, '_t': expiry})
+
+    def test_expiry(self):
+        self.store.dump('►', {'_t': 0})
+        self.store.dump('λ', {'_t': time.time() - 1})
+        self.store.dump('x', None)
+        self.store.flush()
+        ok_('►' not in self.plainstore.store)
+        ok_('λ' not in self.plainstore.store)
+        ok_('x' not in self.plainstore.store)
+
+        self.plainstore.dump('►', {'_t': 0})
+        self.plainstore.dump('λ', {'_t': time.time() - 1})
+        self.plainstore.dump('x', None)
+        self.plainstore.flush()
+        ok_('►' in self.plainstore.store)
+        ok_('λ' in self.plainstore.store)
+        ok_('x' not in self.plainstore.store)
+
+    def test_store(self):
+        self.store.flush()
+        data = dict(self.store.store)
+        expiry = time.time() + 1000
+        self.store.dump('►', {'_t': expiry, 'α': True})
+        self.store.flush()
+        data.update({'►': {'_t': expiry, 'α': True}})
+        eq_(dict(self.store.store), data)
+
+        self.store.dump('λ', {'α': 1, 'β': None, '_t': expiry})
+        self.store.flush()
+        data.update({'λ': {'α': 1, 'β': None, '_t': expiry}})
+        eq_(dict(self.store.store), data)
+
+    @classmethod
+    def teardownClass(cls):
+        # Close the store and ensure that the handle is closed
+        cls.plainstore.close()
+        cls.store.close()
+        cls.store2.close()

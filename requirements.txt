@@ -25,6 +25,7 @@ diskcache >= 2.8.3        # services.cache for disk cache
 futures >= 3.0.5 ; python_version < '3'   # handlers.datahandler uses futures (backport for 2.7)
 oauthlib >= 1.1.2         # OAuth request-signing
 python-pptx >= 0.6.6      # pptgen
+sqlitedict >= 1.5.0       # SQLiteStore
 
 # Optional dependencies (batteries included principle)
 markdown                  # For Markdown transfroms

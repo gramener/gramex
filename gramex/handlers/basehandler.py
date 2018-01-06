@@ -92,7 +92,7 @@ class BaseMixin(object):
     @staticmethod
     def _purge(data):
         '''
-        Returns iterator of keys to be deleted. These are either None values or
+        Returns keys to be deleted. These are either None values or
         those with expired keys based on _t.
         setup_session makes the session store call this purge method.
         Until v1.20 (31 Jul 2017) no _t keys were set.
@@ -100,20 +100,22 @@ class BaseMixin(object):
         '''
         now = time.time()
         week = 7 * 24 * 60 * 60
+        keys = []
         for key in list(data.keys()):
             val = data[key]
             # Purge already cleared / removed sessions
             if val is None:
-                yield key
+                keys.append(key)
             elif isinstance(val, dict):
                 # If the session has expired, purge it
                 if val.get('_t', 0) < now:
-                    yield key
+                    keys.append(key)
                 # If the session is inactive, purge it after a week.
                 # If we purge immediately, then we may lose WIP sessions.
                 # For example, people who opened a login page where _next_url was set
                 elif '_i' in val and '_l' in val and val['_i'] + val['_l'] < now - week:
-                    yield key
+                    keys.append(key)
+        return keys
 
     @classmethod
     def setup_session(cls, session_conf):
@@ -126,6 +128,8 @@ class BaseMixin(object):
             pass
         elif store_type == 'memory':
             session_store_cache[key] = KeyStore(store_path, flush=flush, purge=cls._purge)
+        elif store_type == 'sqlite':
+            session_store_cache[key] = SQLiteStore(store_path, flush=flush, purge=cls._purge)
         elif store_type == 'json':
             session_store_cache[key] = JSONStore(store_path, flush=flush, purge=cls._purge)
         elif store_type == 'hdf5':
@@ -861,7 +865,7 @@ class KeyStore(object):
     flushed to disk via ``store.flush()`` every ``flush`` seconds.
 
     If a ``purge=`` function is provided, it is called with the store data before
-    flushing. It shoulld return an iterator of keys to delete if any.
+    flushing. It should return an iterator of keys to delete if any.
 
     When the program exits, ``.close()`` is automatically called.
     '''
@@ -909,6 +913,31 @@ class KeyStore(object):
     def close(self):
         '''Flush and close all open handles'''
         raise NotImplementedError()
+
+
+class SQLiteStore(KeyStore):
+    '''
+    A KeyStore that stores data in a SQLite file. Typical usage::
+
+        >>> store = SQLiteStore('file.db')
+        >>> value = store.load(key)
+        >>> store.dump(key, value)
+
+    Values are encoded as JSON using gramex.config.CustomJSONEncoder (thus
+    handling datetime.) Keys are JSON encoded.
+    '''
+    def __init__(self, path, table='store', *args, **kwargs):
+        super(SQLiteStore, self).__init__(path, *args, **kwargs)
+        from sqlitedict import SqliteDict
+        self.store = SqliteDict(
+            self.path, tablename=table, autocommit=True,
+            encode=lambda v: json.dumps(v, separators=(',', ':'), ensure_ascii=True,
+                                        cls=CustomJSONEncoder),
+            decode=lambda v: json.loads(v, object_pairs_hook=AttrDict, cls=CustomJSONDecoder),
+        )
+
+    def close(self):
+        self.store.close()
 
 
 class HDF5Store(KeyStore):

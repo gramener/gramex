@@ -60,15 +60,29 @@ Session data is stored in a session store that is configured as follows:
 ```yaml
 app:
     session:
-        type: json                      # Type of store to use: hdf5, json or memory
-        path: $GRAMEXDATA/session.json  # Path to the store (ignored for memory)
+        type: json                      # Type of store to use: json, sqlite, memory or hdf5
+        path: $GRAMEXDATA/session.json  # Path to the store (ignored for type: memory)
         expiry: 31                      # Session cookies expiry in days
-        flush: 60000                    # Write store to disk periodically (in milliseconds)
+        flush: 5                        # Write store to disk periodically (in seconds)
 ```
 
-Sessions can be stored in memory (`type: memory`) but these will not be saved
-across sessions. Persistent sessions are stored as `type: json`. (Currently,
-`type: hdf5` is 100x slower for any volume.)
+Sessions can be stored in:
+
+- `type: memory`: fast, but will not be saved if Gramex restarts
+- `type: json`: persistent, but not shared across Gramex sessions (default)
+- `type: sqlite`: slower, but shared across Gramex sessions
+- `type: hdf5`: very slow, and not shared across Gramex sessions. Avoid this
+
+Here is an example of a session store that works across multiple Gramex instances.
+
+```yaml
+app:
+    session:
+        type: sqlite                    # Persistent multi-instance data store
+        path: $GRAMEXDATA/session.db    # Path to the sqlite store
+        expiry: 31                      # Session cookies expiry in days
+        flush: 5                        # Clear expired sessions periodically (in seconds)
+```
 
 You can access the session data directly from the session store file, or via
 Gramex as follows:
@@ -87,6 +101,8 @@ You can also access session data from inside a handler via:
 for session_id in handler._session_store.store:
     print('Found session ID', session_id)
 ```
+
+
 
 # Authentication
 
