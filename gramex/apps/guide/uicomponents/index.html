@@ -49,8 +49,8 @@
           <div v-for="(info, name) in font" class="mb-4">
             <label v-bind:for="name">${ info.title }</label>
             <select class="form-control form-control-sm" v-bind:name="name" v-model="info.value">
-              <option v-for="(fontinfo, fontname) in info.options" v-bind:value="fontname">
-                ${ fontinfo.title }
+              <option v-for="(fonttitle, fontname) in info.options" v-bind:value="fontname">
+                ${ fonttitle }
               </option>
             </select>
           </div>
@@ -67,7 +67,7 @@
         <a v-bind:href="cssurl" class="btn btn-light">Link to CSS</a>
       </p>
       <p>To use this theme, copy this code to your page.</p>
-      <pre class="viewsource"><code class="language-html">&lt;link rel="stylesheet" href="${ cssurl }"></span>"&gt;</code></pre>
+      <pre class="viewsource"><code class="language-html">&lt;link rel="stylesheet" href="${ cssurl }"&gt;</code></pre>
     </form>
     <!-- htmllint label-req-for="true" -->
   </div><!-- #theme-picker -->
@@ -170,7 +170,7 @@
     while (true) {
       var _entry = _q.next()
       if (_entry.done) break
-      q[_entry.value[0]] = q[_entry.value[1]]
+      q[_entry.value[0]] = _entry.value[1]
     }
     var has_query = Object.keys(q).length > 0
     $.getJSON('config', function(config) {

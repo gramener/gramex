@@ -36,6 +36,16 @@ def bootstraptheme(handler):
     cache_key = json.dumps(args, sort_keys=True, ensure_ascii=True).encode('utf-8')
     cache_key = md5(cache_key).hexdigest()[:5]
 
+    # Replace fonts from config file, if available
+    config = gramex.cache.open(config_file)
+    google_fonts = set()
+    for key in ('font-family-base', 'headings-font-family'):
+        if key in args and args[key] in config['fonts']:
+            fontinfo = config['fonts'][args[key]]
+            args[key] = fontinfo['stack']
+            if 'google' in fontinfo:
+                google_fonts.add(fontinfo['google'])
+
     # Cache based on the dict and config
     cache_path = os.path.join(cache_dir, 'bootstrap-theme.%s.css' % cache_key)
     if (not os.path.exists(cache_path) or
@@ -46,8 +56,7 @@ def bootstraptheme(handler):
             result = gramex.cache.open(template_file, 'template').generate(
                 variables=args,
                 bootstrap_path=bootstrap_path.replace('\\', '/'),
-                # TODO: implement Google Fonts detection
-                google_fonts=[],
+                google_fonts=google_fonts,
             )
             handle.write(result)
         # Run sass to generate the output

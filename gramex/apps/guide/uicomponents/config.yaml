@@ -57,20 +57,27 @@ font:
   font-family-base:
     title: Body font
     default: ''
-    options: &FONT_LIST
-      '':           {title: 'Default',   stack: null,                       google: false}
-      calibri:      {title: 'Calibri',   stack: 'Calibri, sans-serif',      google: false}
-      helvetica:    {title: 'Helvetica', stack: 'Helvetica, sans-serif',    google: false}
-      cambria:      {title: 'Cambria',   stack: 'Cambria, serif',           google: false}
-      open-sans:    {title: 'Open Sans', stack: '"Open Sans", sans-serif',  google: Open+Sans}
-      roboto:       {title: 'Roboto',    stack: 'Roboto, sans-serif',       google: Roboto}
-      # TODO: add fonts
-      # font-family-base: segoe-ui
-      # headings-font-family: century-gothic
+    options:
+      '': Default
+      calibri: Calibri
+      helvetica: Helvetica
+      open-sans: Open Sans
+      roboto: Roboto
+      segoe-ui: Segoe UI
   headings-font-family:
     title: Heading font
     default: ''
-    options: *FONT_LIST
+    options:
+      '': Default
+      calibri: Calibri
+      helvetica: Helvetica
+      open-sans: Open Sans
+      roboto: Roboto
+      segoe-ui: Segoe UI
+      century-gothic: Century Gothic
+      roboto-condensed: Roboto Condensed
+      open-sans-condensed: Open Sans Condensed
+
 
 theme:
   Bootstrap: {}

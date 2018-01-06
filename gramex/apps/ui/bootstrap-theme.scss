@@ -5,7 +5,7 @@
 
 // Apply variables
 {% for key, val in variables.items() %}
-  ${{ key }}: {{ val }};
+  ${{ key }}: {% raw val %};
 {% end %}
 
 // Import bootstrap
