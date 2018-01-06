@@ -699,6 +699,10 @@ $('form').on('submit', function(e) {
 })
 ```
 
+**Note**: when using AJAX, `redirect:` does not change the main page. The
+`.done()` method will get the contents of the redirected page as a HTML string.
+To redirect on success, change `window.location` in `.done()`.
+
 <div class="example">
   <a class="example-demo" href="ajax.html">AJAX auth example</a>
   <a class="example-src" href="http://code.gramener.com/s.anand/gramex/tree/master/gramex/apps/guide/auth/gramex.yaml">Source</a>
