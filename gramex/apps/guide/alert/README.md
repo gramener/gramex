@@ -53,14 +53,14 @@ The alert service takes four kinds of parameters:
     used, the key name defaults to `data`. Optional
   - `each`: dataset name. Optional. It sends an email for each element of the
     dataset. This adds 2 variables: `index` and `row`. If the dataset is a:
-        - dict: `index` and `row` are the key and value
-        - list: `index` and `row` are the index and value
-        - DataFrame: `index` and `row` are the row index and DataFrame row
+    -  dict: `index` and `row` are the key and value
+    -  list: `index` and `row` are the index and value
+    -  DataFrame: `index` and `row` are the row index and DataFrame row
   - `condition`: an optional Python expression that determines whether to run the
-    alert. All `data:` keys are available to the expression. Returning a
-        - False-y value or empty DataFrame prevents running the alert
-        - dict updates the loaded `data:` variables
-        - DataFrame replaces the variable named `data`
+    alert. All `data:` keys are available to the expression. Returning a:
+    - False-y value or empty DataFrame prevents running the alert
+    - dict updates the loaded `data:` variables
+    - DataFrame replaces the variable named `data`
 - subscriptions configuration allows users to subscribe to and unsubscribe from
   these alerts, and specify how often they should get emails (TODO)
 
