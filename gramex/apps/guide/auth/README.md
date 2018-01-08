@@ -936,6 +936,17 @@ url:
                 login_url: /$YAMLURL/login  # Redirect users to this login page
 ```
 
+For AJAX requests (that send an [X-Requested-With header](https://en.wikipedia.org/wiki/List_of_HTTP_header_fields#Common_non-standard_request_fields))
+redirection is disabled - since AJAX cannot redirect the parent page. So:
+
+```js
+$.ajax('protected-page')
+  .done(function() { ... })     // called if protected page returns valid data
+  .fail(function() { ... })     // called if auth failed.
+```
+
+To manually disable redirection, set `login_url: false`.
+
 ## Roles
 
 `auth:` can check for membership. For example, you can access [en-male](en-male)

@@ -624,7 +624,24 @@ class TestAuthorize(DBAuthBase, LoginFailureMixin):
         self.check('/auth/condition', code=FORBIDDEN, session=self.session)
 
     def test_auth_login_url(self):
-        self.initialize('/auth/login-url', login_url='/auth/simple')
+        url = '/auth/login-url'
+        self.initialize(url, login_url='/auth/simple')
+        # When requested as AJAX, no redirection happens
+        xhr = {'X-Requested-With': 'XMLHttpRequest'}
+        self.session = requests.Session()
+        r = self.session.get(server.base_url + url, headers=xhr)
+        eq_(r.status_code, UNAUTHORIZED)
+        eq_(r.url, server.base_url + url)
+        # But a successful AJAX auth DOES redirect
+        self.login_ok('alpha', 'alpha', check_next='/dir/index/', headers=xhr)
+
+        # login_url: false does not redirect if no user
+        url = '/auth/login-url-false'
+        self.session = requests.Session()
+        r = self.session.get(server.base_url + url)
+        eq_(r.status_code, UNAUTHORIZED)
+        eq_(r.url, server.base_url + url)
+        self.login_ok('alpha', 'alpha', check_next='/dir/index/')
 
     def test_auth_template(self):
         self.initialize('/auth/unauthorized-template', user='alpha')

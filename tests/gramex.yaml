@@ -2042,6 +2042,14 @@ url:
         login_url: /auth/simple
       path: dir/alpha.txt
       xsrf_cookies: false
+  auth/login-url-false:
+    pattern: /auth/login-url-false
+    handler: FileHandler
+    kwargs:
+      auth:
+        login_url: false
+      path: dir/alpha.txt
+      xsrf_cookies: false
   auth/unauthorized-template:
     pattern: /auth/unauthorized-template
     handler: FileHandler

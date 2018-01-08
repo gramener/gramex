@@ -239,7 +239,7 @@ class BaseMixin(object):
             auth = AttrDict()
         # If auth is False or None, ignore it. Otherwise, process the auth
         if auth is not None and auth is not False:
-            cls._login_url = auth.get('login_url')
+            cls._login_url = auth.get('login_url', None)
             cls._on_init_methods.append(cls.authorize)
             cls.permissions = []
             # Add check for condition
@@ -645,19 +645,23 @@ class BaseHandler(RequestHandler, BaseMixin):
         self._exception = traceback.format_exception_only(typ, value)[0].strip()
 
     def authorize(self):
-        # If the user isn't logged in, redirect to login URL or send a 401
         if not self.current_user:
-            if self.request.method in ('GET', 'HEAD'):
-                url = self._login_url or self.get_login_url()
-                if '?' not in url:
-                    if urlsplit(url).scheme:
-                        # if login url is absolute, make next absolute too
-                        next_url = self.request.full_url()
-                    else:
-                        next_url = self.request.uri
-                    url += '?' + urlencode(dict(next=next_url))
-                self.redirect(url)
-                return
+            # Redirect non-AJAX requests GET/HEAD to login URL (if it's a string)
+            ajax = self.request.headers.get('X-Requested-With')
+            if self.request.method in ('GET', 'HEAD') and not ajax:
+                url = self.get_login_url() if self._login_url is None else self._login_url
+                # If login_url is a string, redirect
+                if isinstance(url, six.string_types):
+                    if '?' not in url:
+                        if urlsplit(url).scheme:
+                            # if login url is absolute, make next absolute too
+                            next_url = self.request.full_url()
+                        else:
+                            next_url = self.request.uri
+                        url += '?' + urlencode(dict(next=next_url))
+                    self.redirect(url)
+                    return
+            # Else, send a 401 header
             raise HTTPError(UNAUTHORIZED)
 
         # If the user doesn't have permissions, show 403 (with template)
