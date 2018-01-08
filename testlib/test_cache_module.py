@@ -253,7 +253,7 @@ class TestOpen(unittest.TestCase):
             'xlsx': dict(index=False, sheet_name='Sheet1', ignore=1),
             'html': dict(index=False, escape=False, ignore=1),
             'hdf': dict(index=False, key='data', format='fixed'),
-            'json': dict(index=False, ignore=1)
+            'json': dict(index=False, ignore=1, orient='records'),
             # 'stata': dict(index=False),   # cannot test since it doesn't support unicode
         }
         for ext, kwargs in config.items():
