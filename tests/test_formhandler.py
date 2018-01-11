@@ -332,6 +332,7 @@ class TestFormHandler(TestGramex):
     def test_edit_multidata(self):
         csv_path = os.path.join(folder, 'sales-edits.csv')
         self.sales.to_csv(csv_path, index=False, encoding='utf-8')
+        tempfiles[csv_path] = csv_path
         dbutils.mysql_create_db(variables.MYSQL_SERVER, 'test_formhandler', sales=self.sales)
         try:
             row = {'देश': 'भारत', 'city': 'X', 'product': 'Q', 'growth': None}
@@ -386,4 +387,3 @@ class TestFormHandler(TestGramex):
 
         finally:
             dbutils.mysql_drop_db(variables.MYSQL_SERVER, 'test_formhandler')
-            os.remove(csv_path)
