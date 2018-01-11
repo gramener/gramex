@@ -410,7 +410,7 @@ To modify the arguments before executing the query, use `prepare:`.
         handler: FormHandler
         kwargs:
           url: $YAMLPATH/flags.csv
-          prepare: args.update(Stripes=args.pop('c', []))
+          prepare: args.update(Cross=args.pop('c', []))
           # Another example:
           # prepare: my_module.calc(args, handler)
 

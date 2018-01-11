@@ -147,7 +147,7 @@ From **v1.23**, Gramex also saves all console logs to `logs/gramex.log` under
 
 The log file is backed up weekly by default. You can change these [parameters][trfh]:
 
-- `filename`: defaults to `$GRAMEXDATAT/logs/gramex.log` 
+- `filename`: defaults to `$GRAMEXDATA/logs/gramex.log` 
 - `when`: can be `s`, `m`, `h`, `d`, `w0` to `w6` or `midnight`. See [TimedRotatingFileHandler][trfh]. Defaults to `w0`, i.e. Monday
 - `interval`: for example, if this is 6 and `when: h`, the log file is rotated every 6 hours.  Defaults to 1, i.e. every Monday
 - `backupCount`: number of backups to retain. Defaults to 52, i.e. 52 weeks of backup
