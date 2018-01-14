@@ -83,6 +83,15 @@ You can now run:
 
 [anaconda]: http://continuum.io/downloads
 
+### Windows administration
+
+Here are some common Windows administration actions when deploying on Windows server:
+
+- [Create a separate domain user to run Gramex](https://msdn.microsoft.com/en-in/library/aa545262(v=cs.70).aspx).
+  Note: Domain users are different from [local users](https://msdn.microsoft.com/en-us/library/aa545420(v=cs.70).aspx)
+- [Allow the domain user to log in via remote desktop](https://serverfault.com/a/483656/293853)
+- [Give the user permission to run a service](https://support.microsoft.com/en-in/help/288129/how-to-grant-users-rights-to-manage-services-in-windows-2000)
+  using [subinacl](http://go.microsoft.com/fwlink/?LinkId=23418).
 
 ## Security
 
