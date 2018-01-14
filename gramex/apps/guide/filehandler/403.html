@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Forbidden</title>
+  <link rel="stylesheet" href="../style.css">
+  <style>
+    pre { color: #000; }
+  </style>
+</head>
+<body class="container">
+
+  <nav class="menu">
+    <h1><a href=".">Back to FileHandler</a></h1>
+  </nav>
+
+  <section class="content">
+    <h1>No XSRF</h1>
+    <p>You submitted a form that did not provide an XSRF token.</p>
+    {% import yaml %}
+    <pre><code>{{ yaml.dump(handler.args) }}</code></pre>
+  </section>
+
+</body>
+</html>

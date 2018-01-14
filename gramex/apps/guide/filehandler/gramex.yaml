@@ -1,4 +1,17 @@
 url:
+  filehandler-xsrf:
+    pattern: /$YAMLURL/xsrf
+    handler: FunctionHandler
+    kwargs:
+      function: handler.xsrf_token.decode('utf-8')  # Return the XSRF token
+  filehandler-form:
+    pattern: /$YAMLURL/form.html
+    handler: FileHandler
+    kwargs:
+      path: $YAMLPATH/form.html
+      template: true
+      error:
+        403: {path: $YAMLPATH/403.html}
   yaml-badgerfish:
     pattern: /$YAMLURL/page.yaml                # Any URL starting with /filehandler/
     handler: FileHandler                        # uses this handler

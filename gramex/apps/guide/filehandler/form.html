@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>XSRF Form</title>
+  <link rel="stylesheet" href="../style.css">
+  <link rel="stylesheet" href="../form.css">
+</head>
+
+<body class="container">
+
+  <nav class="menu">
+    <h1>
+      <a href=".">Back to FileHandler</a>
+    </h1>
+  </nav>
+
+  <section class="content">
+    {% if 'key' in handler.args %}
+      <h1>Success</h1>
+      <p>Your key <code>{{ handler.get_arg('key') }}</code> has been submitted.</p>
+    {% else %}
+      <h1>XSRF template</h1>
+      <p>The XSRF key here is inserted via Tornado templating.</p>
+      <form method="POST">
+        <p>
+          <label for="_xsrf">XSRF token from template</label>
+          <input name="_xsrf" value="{{ handler.xsrf_token }}">
+        </p>
+        <p>
+          <label for="key">Key</label>
+          <input name="key" placeholder="Enter a value">
+        </p>
+        <button type="submit">Submit template form</button>
+      </form>
+
+      <h1>XSRF AJAX</h1>
+      <p>The XSRF key here is inserted via AJAX.</p>
+      <form method="POST" class="ajax">
+        <p>
+          <label for="key">Key</label>
+          <input name="key" placeholder="Enter a value">
+        </p>
+        <button type="submit">Submit AJAX form</button>
+      </form>
+      <script src="../ui/jquery/dist/jquery.min.js"></script>
+      <script>
+        // Disallow form submission until XSRF is enabled
+        var $forms = $('.ajax')
+          .on('submit.no-xsrf', function (e) { e.preventDefault() })
+        $.get('xsrf', function (token) {           // Get the XSRF token via AJX
+          var $xsrf = $('<input>').attr({         // Create a form input field
+            // type: 'hidden',
+            name: '_xsrf',                        // called _xsrf
+            value: token                          // and add the XSRF token value.
+          })
+          $forms.prepend($xsrf)                   // Add the input field to all forms
+            .off('submit.no-xsrf')                // and re-enable submission
+        })
+      </script>
+    {% end %}
+  <section>
+</body>
+</html>
