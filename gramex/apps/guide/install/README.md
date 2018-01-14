@@ -9,11 +9,10 @@ title: Install Gramex
 - On a Mac, download and install [Xcode][xcode].
 - Uninstall gramex if you have installed it before: `pip uninstall gramex`
 - Run `pip install --verbose https://code.gramener.com/s.anand/gramex/repository/archive.tar.bz2?ref=master`
+    - ``--verbose`` is useful. We install node modules, which take time. `--verbose` lets you monitor progress.
     - Replace ``?ref=master`` with `?ref=dev` for the latest development version.
     - Replace ``?ref=master`` with `?ref=1.24` for version 1.24
       (or pick [any other version](https://code.gramener.com/s.anand/gramex/tags))
-    - **v1.23** onwards, we install node modules, which take time. `--verbose`
-      lets you monitor progress.
 - Run `gramex` to start Gramex
 - Press `Ctrl+C` to terminate Gramex.
 
@@ -50,9 +49,23 @@ If Gramex does not run:
 
 To remove Gramex, run `pip uninstall gramex`
 
+## Docker install
+
+Gramex is available as a docker instance. To run it:
+
+```shell
+docker pull gramener/gramex     # or docker pull gramener/gramex:1.27.0
+
+# Run Gramex on port 9988
+docker run -p 9988:9988 gramener/gramex
+
+# Run bash inside the container
+docker run -i -t -p 9988:9988 gramener/gramex /bin/bash
+```
+
 ## Offline install
 
-First, do the following on a system **with an Internet connection**:
+On a system **with an Internet connection** and the **same platform** (Windows/Linux) as the target system:
 
 1. Create a folder called `offline`
 2. Download [Anaconda][anaconda] into `offline`
