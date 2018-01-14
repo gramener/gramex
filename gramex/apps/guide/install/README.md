@@ -69,13 +69,16 @@ On a system **with an Internet connection** and the **same platform** (Windows/L
 
 1. Create a folder called `offline`
 2. Download [Anaconda][anaconda] into `offline`
-3. Download [Gramex][gramex] into `offline` as `gramex.tar.bz2`
-4. In the `offline` folder, run `pip download gramex.tar.bz2`
+3. In the `offline` folder, run `pip download https://code.gramener.com/s.anand/gramex/repository/master/archive.tar.bz2`
 
 If you are behind a HTTP proxy, use `pip download --proxy=http://{proxy-host}:{port} ...`.
 
-Copy the `offline` folder to the target machine (which need not have an Internet
-connection). Then:
+Copy the `offline` folder to the target machine (which need not have an Internet connection). Then:
 
 1. Install the [Anaconda][anaconda] executable. When prompted, say "Install for all users", not "Just me"
-2. Open the Command Prompt or terminal **as administrator**. From the `offline` folder, run `pip install --no-index --find-links . gramex.tar.bz2`
+2. Open the Command Prompt or terminal **as administrator**. From the `offline` folder,
+   run `pip install --verbose --no-index --find-links . archive.tar.bz2`
+
+**Note**: This does not set up dependencies for
+[CaptureHandler](../capturehandler/) such as node.js, Chrome / PhantomJS. That
+requires an Internet-enabled machine for now.
