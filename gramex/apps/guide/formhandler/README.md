@@ -138,8 +138,24 @@ To control the output, you can use these control arguments:
 - Sort order: [?_sort=-Continent&_sort=-ID](flags?_sort=-Continent&_sort=-ID&_format=html) ► sort first by Continent (descending) then ID (descending)
 - Specific columns: [?_c=Continent&_c=Name](flags?_c=Continent&_c=Name&_format=html) ► show only the Continent and Names columns
 - Exclude columns: [?_c=-Continent&_c=-Name](flags?_c=-Continent&_c=-Name&_format=html) ► show all columns except the Continent and Names columns
+- Add metadata: [?_meta=y](flags?_c=-Continent&_offset=10&_limit=10&_format=html) ► return all available metadata as HTTP headers
 
 Note: You can use `FormHandler` to render specific columns in navbar filters using `?_c=`.
+
+## FormHandler metadata
+
+When `?meta=y` is specified, the HTTP headers have additional metadata about the
+request and the response. These headers are available:
+
+- `Fh-Data-Count: <number>`: Number of rows in the dataset. Will not be set for databases, only files.
+- `Fh-Data-Offset: <number>`: Start row (specified by `?_offset=`). Defaults to 0
+- `Fh-Data-Limit: <number>`: Max rows limit (specified by `?_limit=`). Defaults to 0
+- `Fh-Data-Filters: <list>`: Applied filters as `[(col, op, val), ...]`. Defaults to `[]`
+- `Fh-Data-Ignored: <list>`: Ignored filters as `[(col, vals), ('_sort', cols), ...]`. Defaults to `[]`
+- `Fh-Data-Sort: <list>`: Sorted columns as `[(col, True), ...]`. The second parameter is `ascending=`. Defaults to `[]`
+- `Fh-Data-Excluded: <list>`: Excluded columns as `[col, ...]`. (TODO: test this)
+
+All values are all JSON encoded.
 
 ## FormHandler forms
 
@@ -428,8 +444,8 @@ Some sample uses:
 
 - Add/modify/delete arguments based on the user. You can access the user ID via
   `handler.current_user` inside the `prepare:` expression
-- Add/modify/delete arguments based on external data. 
-- Replace argument values. 
+- Add/modify/delete arguments based on external data.
+- Replace argument values.
 
 
 ## FormHandler multiple datasets

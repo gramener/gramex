@@ -3,14 +3,17 @@ from __future__ import unicode_literals
 
 import os
 import six
+import json
 import shutil
 import sqlite3
 import pandas as pd
 import gramex.cache
 from io import BytesIO
 from nose.tools import eq_, ok_
+from gramex import conf
 from gramex.http import BAD_REQUEST, FOUND
 from gramex.config import variables, objectpath, merge
+from orderedattrdict import AttrDict, DefaultAttrDict
 from pandas.util.testing import assert_frame_equal as afe
 from . import folder, TestGramex, dbutils, tempfiles
 
@@ -84,6 +87,46 @@ class TestFormHandler(TestGramex):
         # Invalid limit or offset raise an error
         eq_(self.get(url, params={'_limit': ['abc']}).status_code, BAD_REQUEST)
         eq_(self.get(url, params={'_offset': ['abc']}).status_code, BAD_REQUEST)
+
+        # Check if metadata is returned properly
+        def meta_headers(url, params):
+            r = self.get(url, params=params)
+            result = DefaultAttrDict(AttrDict)
+            for header_name, value in r.headers.items():
+                name = header_name.lower()
+                if name.startswith('fh-'):
+                    parts = name.split('-')
+                    dataset_name, key = '-'.join(parts[1:-1]), parts[-1]
+                    result[dataset_name][key] = json.loads(value)
+            return result
+
+        header_key = 'data' if key is None else key
+        headers = meta_headers(url, {'_meta': 'y'})[header_key]
+        eq_(headers.offset, 0)
+        eq_(headers.limit, conf.handlers.FormHandler.default._limit)
+        # There may be some default items pass as ignored or sort or filter.
+        # Just check that this is a list
+        ok_(isinstance(headers.filters, list))
+        ok_(isinstance(headers.ignored, list))
+        ok_(isinstance(headers.sort, list))
+        if 'count' in headers:
+            eq_(headers.count, len(sales))
+
+        headers = meta_headers(url, {
+            '_meta': 'y',
+            'देश': 'USA',
+            'c': ['city', 'product', 'sales'],
+            '_sort': '-sales',
+            '_limit': 10,
+            '_offset': 3
+        })[header_key]
+        ok_(['देश', '', ['USA']] in headers.filters)
+        ok_(['c', ['city', 'product', 'sales']] in headers.ignored)
+        ok_(['sales', False] in headers.sort)
+        ok_(headers.offset, 3)
+        ok_(headers.limit, 10)
+        if 'count' in headers:
+            eq_(headers.count, (sales['देश'] == 'USA').sum())
 
     def eq(self, url, expected):
         out = self.get(url).content

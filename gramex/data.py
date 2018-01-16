@@ -39,8 +39,9 @@ def filter(url, args={}, meta={}, engine=None, table=None, ext=None,
         Loads entire result in memory before filtering.
     :arg string queryfile: optional SQL query file to execute (if url is a database).
         Same as specifying the ``query:`` in a file. Overrides ``query:``
-    :arg function transform: optional in-memory transform. Takes a DataFrame and
-        returns a DataFrame. Applied to both file and SQLAlchemy urls.
+    :arg function transform: optional in-memory transform of source data. Takes
+        the result of gramex.cache.open or gramex.cache.query. Must return a
+        DataFrame. Applied to both file and SQLAlchemy urls.
     :arg dict kwargs: Additional parameters are passed to
         :py:func:`gramex.cache.open` or ``sqlalchemy.create_engine``
     :return: a filtered DataFrame

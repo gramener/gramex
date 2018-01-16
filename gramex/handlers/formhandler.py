@@ -9,7 +9,7 @@ from tornado.web import HTTPError
 from gramex import conf as gramex_conf
 from gramex.http import BAD_REQUEST
 from gramex.transforms import build_transform
-from gramex.config import merge, app_log, objectpath
+from gramex.config import merge, app_log, objectpath, CustomJSONEncoder
 from .basehandler import BaseHandler
 
 
@@ -96,7 +96,7 @@ class FormHandler(BaseHandler):
                         vars=fn_vars,
                         filename='%s.%s.%s' % (cls.name, key, fn), iter=False)
 
-    def process_kwargs(self, dataset, args, key):
+    def _options(self, dataset, args, key):
         """For each dataset, prepare the arguments."""
         filter_kwargs = AttrDict(dataset)
         filter_kwargs.pop('modify', None)
@@ -113,20 +113,24 @@ class FormHandler(BaseHandler):
                 args = result
         if callable(queryfunction):
             filter_kwargs['query'] = queryfunction(args=args, key=key, handler=self)
-        fmt = args.pop('_format', ['json'])[0]
-        download = args.pop('_download', [''])[0]
-        return fmt, download, args, filter_kwargs
+        return AttrDict(
+            fmt=args.pop('_format', ['json'])[0],
+            download=args.pop('_download', [''])[0],
+            args=args,
+            meta_header=args.pop('_meta', [''])[0],
+            filter_kwargs=filter_kwargs,
+        )
 
     @tornado.gen.coroutine
     def get(self):
         meta, futures = AttrDict(), AttrDict()
         for key, dataset in self.datasets.items():
             meta[key] = AttrDict()
-            fmt, download, args, filter_kwargs = self.process_kwargs(dataset, self.args, key)
-            filter_kwargs.pop('id', None)
-            # Run query in a separate thread
+            opt = self._options(dataset, self.args, key)
+            opt.filter_kwargs.pop('id', None)
+            # Run query in a separate threadthread
             futures[key] = gramex.service.threadpool.submit(
-                gramex.data.filter, args=args, meta=meta[key], **filter_kwargs)
+                gramex.data.filter, args=opt.args, meta=meta[key], **opt.filter_kwargs)
         result = AttrDict()
         for key, val in futures.items():
             try:
@@ -137,10 +141,13 @@ class FormHandler(BaseHandler):
             if callable(modify):
                 result[key] = modify(data=result[key], key=key, handler=self)
 
-        fmt = self.set_format(fmt, meta)
-        if download:
-            self.set_header('Content-Disposition', 'attachment;filename=%s' % download)
-        self.write(gramex.data.download(result['data'] if self.single else result, **fmt))
+        format_options = self.set_format(opt.fmt, meta)
+        if opt.download:
+            self.set_header('Content-Disposition', 'attachment;filename=%s' % opt.download)
+        if opt.meta_header:
+            self.set_meta_headers(meta)
+        self.write(gramex.data.download(result['data'] if self.single else result,
+                                        **format_options))
 
     @tornado.gen.coroutine
     def update(self, method):
@@ -150,22 +157,24 @@ class FormHandler(BaseHandler):
         # For each dataset
         for key, dataset in self.datasets.items():
             meta[key] = AttrDict()
-            fmt, download, args, filter_kwargs = self.process_kwargs(dataset, self.args, key)
-            if 'id' not in filter_kwargs:
+            opt = self._options(dataset, self.args, key)
+            if 'id' not in opt.filter_kwargs:
                 raise HTTPError(BAD_REQUEST, '%s: %s requires id: <col> in gramex.yaml' % (
                     self.name, self.request.method))
-            missing_args = [col for col in filter_kwargs['id'] if col not in args]
+            missing_args = [col for col in opt.filter_kwargs['id'] if col not in opt.args]
             if method != gramex.data.insert and len(missing_args) > 0:
                 raise HTTPError(BAD_REQUEST, '%s: columns %s missing in URL query' % (
                     self.name, ', '.join(missing_args)))
             # Execute the query
-            count[key] = method(meta=meta[key], args=args, **filter_kwargs)
+            count[key] = method(meta=meta[key], args=opt.args, **opt.filter_kwargs)
         for key, val in count.items():
             self.set_header('Count-%s' % key, val)
+        if opt.meta_header:
+            self.set_meta_headers(meta)
         if self.redirects:
             self.redirect_next()
         else:
-            fmt = self.set_format(fmt, meta)
+            self.set_format(opt.fmt, meta)
             self.set_header('Cache-Control', 'no-cache, no-store')
             self.write(json.dumps(meta, indent=2))
 
@@ -201,3 +210,12 @@ class FormHandler(BaseHandler):
             fmt['meta'] = meta['data'] if self.single else meta
 
         return fmt
+
+    def set_meta_headers(self, meta):
+        '''Add FH-<dataset>-<key>: JSON(value) for each key: value in meta'''
+        prefix = 'FH-{}-{}'
+        for dataset, metadata in meta.items():
+            for key, value in metadata.items():
+                string_value = json.dumps(value, separators=(',', ':'),
+                                          ensure_ascii=True, cls=CustomJSONEncoder)
+                self.set_header(prefix.format(dataset, key), string_value)
