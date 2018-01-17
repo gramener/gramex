@@ -14,7 +14,7 @@ alert:
         service: gramex-email-guide       # Send an email via this email-service
         to: 'user@example.com'            # to this list of users
         subject: Smart Alert Sample       # with the specified subject
-        body: Hello {{ config['to] }}     # and content
+        body: Hello {{ config['to'] }}    # and content
 ```
 
 The alert service takes four kinds of parameters:
