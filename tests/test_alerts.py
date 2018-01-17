@@ -90,7 +90,7 @@ class TestAlerts(TestGramex):
         mail = run_alert('alert-data')
         eq_(mail['to_addrs'], ['user@example.org'])
         data = gramex.cache.open(os.path.join(folder, 'actors.csv'))
-        ok_('Subject: %d actors\n' % len(data) in mail['msg'])
+        ok_('Subject: %d actors from smtps_stub\n' % len(data) in mail['msg'])
         ok_('%d votes' % data['votes'].sum() in mail['msg'])
 
     def test_condition(self):

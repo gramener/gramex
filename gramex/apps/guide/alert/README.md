@@ -14,7 +14,7 @@ alert:
         service: gramex-email-guide       # Send an email via this email-service
         to: 'user@example.com'            # to this list of users
         subject: Smart Alert Sample       # with the specified subject
-        template: Hello from Smart Alert  # and content
+        body: Hello {{ config['to] }}     # and content
 ```
 
 The alert service takes four kinds of parameters:
@@ -36,7 +36,7 @@ The alert service takes four kinds of parameters:
   - `cc`: like `to:` but specifies the cc: addresses. Optional
   - `bcc`: like `to:` but specifies the bcc: addresses. Optional
   - `from`: email ID of sender. This overrides the `service:` from ID if possible. Optional
-- content configuration determines what to send. All values are strings interpolated as Tornado templates.
+- content configuration determines what to send. All values are strings interpolated as Tornado templates
   - `subject`: subject template for the email. Optional
   - `body`: string for email text template. Optional
   - `html`: string for email html template. Optional
@@ -46,6 +46,11 @@ The alert service takes four kinds of parameters:
   - `images`: inline image attachments as a dictionary of key:path. These
     can be linked from HTML emails using `<img src="cid:key">`. Optional
   - `capture`: screenshot attachments (TODO)
+  - For all the above, the variables available in the Tornado templates are:
+    - All dataset keys loaded from the `data:` section are available as variables.
+      If `data:` directly specifies a variable, it is stored in a `data` variable
+    - `config` holds the alert configuration -- e.g. `config.to` is the recipient
+    - `row` and `index` contain the row values and index if `each:` is used
 - data configuration uses data to drive the content and triggers.
   - `data`: data file or dict of datasets. A dataset can be `key: {url: file}` or
     as `key: {url: sqlalchemy-url, table: table}`. All keys are available as
@@ -57,10 +62,10 @@ The alert service takes four kinds of parameters:
     -  list: `index` and `row` are the index and value
     -  DataFrame: `index` and `row` are the row index and DataFrame row
   - `condition`: an optional Python expression that determines whether to run the
-    alert. All `data:` keys are available to the expression. Returning a:
-    - False-y value or empty DataFrame prevents running the alert
-    - dict updates the loaded `data:` variables
-    - DataFrame replaces the variable named `data`
+    alert. All `data:` keys are available to the expression. This may return a:
+    - False-y value or empty DataFrame: to prevent running the alert
+    - dict: to update the loaded `data:` variables
+    - new DataFrame: to replace `data['data']`
 - subscriptions configuration allows users to subscribe to and unsubscribe from
   these alerts, and specify how often they should get emails (TODO)
 
@@ -141,7 +146,7 @@ alert-attachments:
       - $YAMLPATH/{{ 'ppt1' + '.pptx' }}
 ```
 
-Send birthday alert emails every day
+Send birthday alert emails every day -- using a new configuration key.
 
 ```yaml
 alert-birthday:
@@ -150,7 +155,8 @@ alert-birthday:
   each: data
   service: email-service
   to: {{ row['email'] }}
-  subject: Happy birthday {{ row['name'] }}
+  subject: {{ config.salutation }} {{ row['name'] }}
+  salutation: Happy birthday
 ```
 
 Send monthly alert if sales is below target

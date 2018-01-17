@@ -260,7 +260,7 @@ def _create_alert(name, alert):
         if isinstance(images, dict):
             templates['images'] = {cid: Template(path) for cid, path in images.items()}
         else:
-            app_log.warning('alert: %s images: %r is not a dict', name, images)
+            app_log.error('alert: %s images: %r is not a dict', name, images)
     if 'attachments' in alert:
         attachments = alert['attachments']
         if isinstance(attachments, list):
@@ -281,10 +281,10 @@ def _create_alert(name, alert):
                 elif 'url' in dataset:
                     datasets[key] = dataset
                 else:
-                    app_log.warning('alert: %s data: %s is missing url:', name, key)
+                    app_log.error('alert: %s data: %s is missing url:', name, key)
         else:
-            app_log.warning('alert: %s data: must be a data file or dict. Not %s',
-                            name, repr(alert['data']))
+            app_log.error('alert: %s data: must be a data file or dict. Not %s',
+                          name, repr(alert['data']))
 
     if 'each' in alert and alert['each'] not in datasets:
         app_log.error('alert: %s each: %s is not in data:', name, alert['each'])
@@ -326,7 +326,8 @@ def _create_alert(name, alert):
                 return
 
         for index, row in each:
-            data['index'], data['row'] = index, row
+            data['index'], data['row'], data['config'] = index, row, alert
+
             # Generate email content
             kwargs = {}
             for key in ['bodyfile', 'htmlfile']:

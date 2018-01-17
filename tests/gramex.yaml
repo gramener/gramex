@@ -2274,7 +2274,7 @@ alert:
       service: smtps_stub
       data: actors.csv
       to: user@example.org
-      subject: '{{ len(data) }} actors'
+      subject: '{{ len(data) }} actors from {{ config.service }}'
       body: '{{ data["votes"].sum() }} votes'
     alert-condition-df:
       service: smtps_stub
@@ -2305,7 +2305,9 @@ alert:
       condition: data[data['votes'] > 100]
       each: data
       to: "{{ row['name'].replace(' ', '_') + '@example.org' }}"
-      subject: "Congrats #{{ index }}! You got {{ row['votes'] }} votes"
+      subject: "{{ config.salutation }} #{{ index }}! {{ config['prefix'] }} {{ row['votes'] }} votes"
+      salutation: "Congrats"
+      prefix: "You got"
 
 import:
   # Import from all subdirectories
