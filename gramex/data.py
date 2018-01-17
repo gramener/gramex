@@ -413,7 +413,7 @@ def _filter_select_columns(col_filter, cols, meta):
     if len(excluded_cols) > 0 and len(selected_cols) == 0:
         selected_cols = cols
     show_cols = [col for col in selected_cols if col not in excluded_cols]
-    meta['excluded'] = excluded_cols
+    meta['excluded'] = list(excluded_cols)
     return show_cols, ignored_cols
 
 
