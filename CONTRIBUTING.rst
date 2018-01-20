@@ -126,7 +126,7 @@ When releasing a new version of Gramex:
 6. Deploy docker instances::
 
     export VERSION=1.x.x        # Replace with Gramex version
-    docker build https://code.gramener.com/s.anand/gramex.git -t gramener/gramex:$VERSION
+    docker build https://code.gramener.com/s.anand/gramex.git#master:pkg/docker-py3 -t gramener/gramex:$VERSION
     docker tag gramener/gramex:$VERSION gramener/gramex:latest
     docker login                # log in as sanand0
     docker push gramener/gramex
