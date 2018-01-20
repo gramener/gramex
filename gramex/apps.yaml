@@ -2,6 +2,8 @@ guide:
     target: $GRAMEXPATH/apps/guide/
 gramex-update:
     target: $GRAMEXPATH/apps/update/
+logviewer:
+    target: $GRAMEXPATH/apps/logviewer/
 wrangler:
     cmd: git clone https://code.gramener.com/s.anand/wrangler.git
 databrowse:

@@ -178,6 +178,11 @@ If you prefer HTTP access, use this. It will prompt the user for a username and 
 gramex install <appname> --cmd="git clone http://code.gramener.com/<user>/<repo>.git"
 ```
 
+To add a pre-defined app as part of Gramex:
+
+- Create the app under `gramex/apps/<appname>/`
+- Update `gramex/apps.yaml` to add a line: `<appname>: {target: $GRAMEXPATH/apps/guide/}`
+
 ### Deploying app data
 
 - Public data: public .zip file hosted on demo.gramener.com / share.gramener.com / anywhere
