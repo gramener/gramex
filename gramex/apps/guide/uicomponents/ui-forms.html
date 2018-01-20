@@ -1,4 +1,5 @@
 <h2 class="toc">Forms</h2>
+<h3>Inputs</h3>
 {% apply view_source %}
 <p class="text-muted">by <code class="highlighter-rouge">.form-control-sm(lg)</code> classes</p>
 <div class="row">
@@ -11,6 +12,17 @@
   <div class="col"><input class="form-control" type="text" placeholder="input default"></div>
   <div class="col-3"><input class="form-control" type="text" placeholder="input .col-3"></div>
   <div class="col-5"><input class="form-control" type="text" placeholder="input .col-5"></div>
+</div>
+{% end %}
+
+<h3>Inputs - minimalistic</h3>
+{% apply view_source %}
+<div class="d-flex">
+  <input class="form-control mx-1 underline" placeholder=".underline">
+  <input class="form-control mx-1 underline border-primary" placeholder=".underline.border-primary">
+  <input class="form-control mx-1 underline border-success" placeholder=".underline.border-success">
+  <input class="form-control mx-1 underline border-danger" placeholder=".underline.border-warning">
+  <input class="form-control mx-1 underline border-warning" placeholder=".underline.border-warning">
 </div>
 {% end %}
 

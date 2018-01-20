@@ -1,4 +1,4 @@
-<h2 class="toc">Tooltips</h2>
+<h2 class="toc">Tooltip</h2>
 {% apply view_source %}
 <table class="table table-striped table-inverse table-hover" data-item="Tooltips">
   <thead><tr><th>Default</th><th>With HTML</th><th>With Chart</th><th>Custom positions</th></tr></thead>
@@ -16,8 +16,29 @@
 </table>
 {% end %}
 
+<h2 class="toc">Popover</h2>
+{% apply view_source %}
+<button type="button" class="btn btn-secondary" data-container="body" data-toggle="popover" data-placement="top" data-content="I am a nice popover on the top. Toggle to dismiss.">
+  Popover on top
+</button>
+
+<button type="button" class="btn btn-secondary" data-container="body" data-toggle="popover" data-placement="right" data-content="I am a nice popover to the right. Toggle to dismiss.">
+  Popover on right
+</button>
+
+<button type="button" class="btn btn-secondary" data-container="body" data-toggle="popover" data-placement="bottom" data-content="I am a nice popover on the bottom. Toggle to dismiss.">
+  Popover on bottom
+</button>
+
+<button type="button" class="btn btn-secondary" data-container="body" data-toggle="popover" data-placement="left" data-content="I am a nice popover to the left. Toggle to dismiss.">
+  Popover on left
+</button>
+{% end %}
+
 <script>
 $(function() {
+  // initialize popovers
+  $('.btn-secondary').popover()
   // initialize tooltips
   $("#just-tooltip").tooltip()
   $("#tooltip-html").tooltip({

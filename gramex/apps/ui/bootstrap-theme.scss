@@ -11,6 +11,52 @@
 // Import bootstrap
 @import "{{ bootstrap_path }}";
 
+// .cursor-pointer - cursor as pointer
+// --------------------------------------------------------------------------
+.cursor-pointer {
+  cursor: pointer;
+}
+
+// .font-size-h*: font-sizes
+$font-sizes: (
+  h1: $h1-font-size,
+  h2: $h2-font-size,
+  h3: $h3-font-size,
+  h4: $h4-font-size,
+  h5: $h5-font-size,
+  h6: $h6-font-size
+);
+
+// .btn-xs: extra small button
+// BS4 supports .btn-lg, .btn-sm
+// --------------------------------------------------------------------------
+$input-btn-padding-y-xs:      .125rem !default;
+$input-btn-padding-x-xs:      .25rem !default;
+$input-btn-line-height-xs:    $line-height-sm !default;
+$font-size-xs:                ($font-size-base * .75) !default;
+$btn-border-radius-xs:        0.2rem !default;
+.btn-xs {
+  @include button-size($input-btn-padding-y-xs, $input-btn-padding-x-xs, $font-size-xs, $input-btn-line-height-xs, $btn-border-radius-xs);
+}
+
+// Border radius utilities
+// --------------------------------------------------------------------------
+// These don't correspond to the BS4 $border-radius-sm, $border-radius-lg sizes
+// because those variations are too small.
+// TODO: add variables for these.
+.no-border-radius, .no-round { border-radius: 0; }
+.border-radius-sm { border-radius: .25rem; }
+.border-radius    { border-radius: .50rem; }
+.border-radius-lg { border-radius: .75rem; }
+.border-radius-xl { border-radius: 1rem; }
+
+// .modal-xl: full screen modal
+// --------------------------------------------------------------------------
+$modal-xl: 95% !default;
+.modal-xl {
+  max-width: $modal-xl;
+}
+
 // .round: full-round border utility
 // --------------------------------------------------------------------------
 $round-radius: 99rem !default;    // Large enough a value for most components
@@ -20,12 +66,10 @@ $round-radius: 99rem !default;    // Large enough a value for most components
 }
 // .switch: switch button utility
 // --------------------------------------------------------------------------
-$switch-padding: 4rem !default;
-$switch-width: 50px !default;
-$switch-margin-right: 6px !default;
+$switch-width: 32px !default;
+$switch-height: $font-size-base !default;
+$switch-control-size: $switch-width/3 !default;
 $switch-control-color: $light !default;
-$switch-control-width: 15px !default;
-$switch-border-radius: 25px !default;
 $switch-colors: (
   success: $success,
   warning: $warning,
@@ -37,50 +81,45 @@ $switch-colors: (
 );
 @each $class, $val in $switch-colors {
   .switch-#{$class} {
-    padding-left: $switch-padding;
-    position: relative;
     display: inline-block;
     vertical-align: middle;
+    width: $switch-width;
+    height: $switch-height;
   }
   .switch-#{$class}>input {
     position: absolute;
     overflow: hidden;
     width: 0;
   }
-  .switch-#{$class}>input:checked+label:before {
-    background: $val;
-    content: '';
-  }
-  .switch-#{$class}>input:checked+label:after {
-    left: -($switch-width/2);
-  }
   .switch-#{$class}>label {
     cursor: pointer;
-    margin-bottom: 0;
     position: relative;
+    display: block;
+    margin: 0;
+    border-radius: inherit;
+    height: 100%;
   }
   .switch-#{$class}>label:before {
     background: $val;
-    border-radius: $switch-border-radius;
+    border-radius: inherit;
     content: '';
-    display: inline-block;
-    height: 20px;
-    margin-left: -($switch-width + $switch-margin-right);
-    margin-right: $switch-margin-right;
-    transition: .2s background-color ease-out;
-    width: $switch-width;
+    display: block;
+    height: 100%;
   }
   .switch-#{$class}>label:after {
     background: $switch-control-color;
     mix-blend-mode: hard-light;
-    border-radius: $switch-border-radius;
+    border-radius: 99rem;
     content: '';
-    height: $switch-control-width;
-    left: -$switch-width;
+    height: $switch-control-size;
+    width: $switch-control-size;
     position: absolute;
-    top: 2px;
-    transition: .2s left ease-out;
-    width: $switch-control-width;
+    top: calc(#{$switch-height / 2} - #{$switch-control-size / 2});   // Vertically center control
+    left: calc(#{$switch-height / 2} - #{$switch-control-size / 2});
+    transition: .1s left ease-out;
+  }
+  .switch-#{$class}>input:checked+label:after {
+    left: calc(100% - #{$switch-height / 2} - #{$switch-control-size / 2});   // Move switch to right
   }
 }
 
@@ -302,15 +341,6 @@ $tail-size: 15px !default;
 
 // .arrow-{color}: arrow components
 // --------------------------------------------------------------------------
-// .font-size-h*: font-sizes
-$font-sizes: (
-  h1: $h1-font-size,
-  h2: $h2-font-size,
-  h3: $h3-font-size,
-  h4: $h4-font-size,
-  h5: $h5-font-size,
-  h6: $h6-font-size
-);
 $display-sizes: (
   display-1: $display1-size,
   display-2: $display2-size,
@@ -319,8 +349,8 @@ $display-sizes: (
 );
 
 $arrow-padding-y: 1rem !default;
+$arrow-height: $font-size-base + $arrow-padding-y;
 @each $color, $value in map_merge($theme-colors, (transparent: transparent)) {
-  $arrow-height: $font-size-base + $arrow-padding-y;
   .arrow-#{$color} {
     color: color-yiq($value);
     background-color: $value;
@@ -372,6 +402,22 @@ $arrow-padding-y: 1rem !default;
       border-left: ($arrow-height / 2) solid $value;
       right: $arrow-height / -2;
     }
+  }
+}
+// TODO: define arrow-tail if size is not specified
+@each $size, $height in $font-sizes {
+  $arrow-height: $height + $arrow-padding-y;
+  #{$size}.arrow-tail {
+    padding-right: $arrow-height / 4;
+  }
+  #{$size}.arrow-tail:after, .#{$size}.arrow-tail:after {
+    border-top: ($arrow-height / 2) solid transparent;
+    border-bottom: ($arrow-height / 2) solid transparent;
+    border-left: ($arrow-height / 2) solid #fff;
+    position: absolute;
+    left: 0;
+    top: 0;
+    content: "";
   }
 }
 .arrow-transparent {
@@ -490,7 +536,7 @@ $track-height: 0.4rem;
 .bg-bl { background-position: bottom left !important; }
 .bg-br { background-position: bottom right !important; }
 .bg-tc { background-position: top !important; }
-.bg-cc .bg-center { background-position: center center !important; }
+.bg-cc, .bg-center { background-position: center center !important; }
 .bg-cl { background-position: left !important; }
 .bg-bc { background-position: bottom !important; }
 .bg-cr { background-position: right !important; }
@@ -559,16 +605,21 @@ $ripple-opacity: .2;
 // .upload: file upload
 // --------------------------------------------------------------------------
 .upload {
-  cursor: pointer;      // Show that label is clickable on hover
+  // Hide the input without removing it from display
+  opacity: 0;
+  overflow: hidden;
+  position: absolute;
+  z-index: -1;
 }
-.upload button {
-  // Disable click on all child elements. e.g. button. Clicking on these just
-  // triggers the label action
-  pointer-events: none;
+.upload + label {
+  cursor: pointer;        // Show that label is clickable on hover
 }
-// Conditions to be met:
-// - I should be able to press TAB to get to this component and press Enter. That
-//   should trigger the file input
-// - When active and when focused, the component should be styled consistently
-// - When hovered, the component should be styled consistently
-// - It should work on a touch device as well
+// - When hovered, active and when focused, the component should be styled consistently
+.upload:focus + label,
+.upload:hover + label,
+.upload:active + label {
+  box-shadow: 0 0 0 0.2rem $primary;
+}
+.upload + label * {
+  pointer-events: none;   // Cchildren (e.g. buttons) should not handle their own events
+}

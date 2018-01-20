@@ -65,6 +65,8 @@ class FileHandler(BaseHandler):
         these, the files will not be served.
     :arg list allow: List of glob patterns to allow. This overrides the ignore
         patterns, so use with care.
+    :arg list methods: List of HTTP methods to allow. Defaults to
+        `['GET', 'HEAD', 'POST']`.
     :arg string index_template: The file to be used as the template for
         displaying the index. If this file is missing, it defaults to Gramex's
         default ``filehandler.template.html``. It can use these string

@@ -13,72 +13,69 @@
   <link rel="stylesheet" href="../ui/tether-shepherd/dist/css/shepherd-theme-arrows.css">
   <link rel="stylesheet" href="../ui/tether-shepherd/dist/css/shepherd-theme-dark.css">
   <link rel="stylesheet" href="../node_modules/prismjs/themes/prism-okaidia.css">
-  <link rel="stylesheet" href="style.css?v=2">
+  <link rel="stylesheet" href="style.css?v=3.19">
   <script src="../ui/jquery/dist/jquery.min.js"></script>
   <script src="../ui/tether-shepherd/dist/js/tether.js"></script>
   <script src="../ui/tether-shepherd/dist/js/shepherd.min.js"></script>
 </head>
-<body>
-  <nav class="navbar navbar-dark bg-dark">
-    <a class="navbar-brand" href=".">Gramex UI Components</a>
+<body class="show-source" data-spy="scroll" data-target="#toc-nav" data-offset="80">
+  <nav class="navbar navbar-dark bg-dark position-fixed w-100 top-nav">
+    <h1 class="h5 m-0 text-light" href=".">Gramex UI Components</h1>
     <form class="form-inline">
-      <button class="btn btn-sm btn-light" type="button" data-toggle="collapse" data-target="#theme-picker" aria-expanded="false" aria-controls="theme-picker">
-        Change theme
-      </button>
+      <button class="btn btn-sm btn-light ml-2 toggle-source" type="button">Toggle source</button>
+      <button class="btn btn-sm btn-light ml-2" type="button" data-toggle="collapse" data-target="#theme-picker" aria-expanded="false" aria-controls="theme-picker">Change theme</button>
     </form>
+    <div id="theme-picker" class="theme bg-dark text-light collapse">
+      <!-- htmllint label-req-for="false" -->
+      <form class="container-fluid pt-4 pb-4">
+        <div class="theme-contents d-flex align-self-start">
+          <div class="column mr-4 theme-colors">
+            <div v-for="(info, name) in color">
+              <input v-bind:id="name" v-bind:name="name" type="color" v-bind:value="info.value">
+              <label v-bind:for="name">${ info.title }</label>
+            </div>
+          </div><!-- .theme-colors -->
+          <div class="column mr-4 theme-toggles">
+            <div v-for="(info, name) in toggle">
+              <label>
+                <input v-bind:name="name" type="checkbox" v-model="info.value"> ${ info.title }
+              </label>
+            </div>
+          </div><!-- .theme-toggles -->
+          <div class="column mr-4 theme-selects">
+            <div v-for="(info, name) in font" class="mb-4">
+              <label v-bind:for="name">${ info.title }</label>
+              <select class="form-control form-control-sm" v-bind:name="name" v-model="info.value">
+                <option v-for="(fontinfo, fontname) in info.options" v-bind:value="fontname">
+                  ${ fontinfo.title }
+                </option>
+              </select>
+            </div>
+          </div><!-- .theme-selects -->
+          <div class="column mr-4 theme-predefined">
+            <p>Pre-defined themes</p>
+            <div v-for="(info, name) in theme">
+              <a v-bind:href="info.href" class="text-light">${ name }</a>
+            </div>
+          </div><!-- .theme-predefined -->
+        </div><!-- .theme-contents -->
+        <p>
+          <button type="submit" class="btn btn-primary">Apply theme</button>
+          <a v-bind:href="cssurl" class="btn btn-light">Link to CSS</a>
+        </p>
+      </form>
+      <!-- htmllint label-req-for="true" -->
+    </div><!-- #theme-picker -->
   </nav>
-  <div id="theme-picker" class="theme bg-dark text-light collapse">
-    <!-- htmllint label-req-for="false" -->
-    <form class="container-fluid pt-4 pb-4">
-      <div class="theme-contents d-flex align-self-start">
-        <div class="column mr-4 theme-colors">
-          <div v-for="(info, name) in color">
-            <input v-bind:id="name" v-bind:name="name" type="color" v-bind:value="info.value">
-            <label v-bind:for="name">${ info.title }</label>
-          </div>
-        </div><!-- .theme-colors -->
-        <div class="column mr-4 theme-toggles">
-          <div v-for="(info, name) in toggle">
-            <label>
-              <input v-bind:name="name" type="checkbox" v-model="info.value">
-              ${ info.title }
-            </label>
-          </div>
-        </div><!-- .theme-toggles -->
-        <div class="column mr-4 theme-selects">
-          <div v-for="(info, name) in font" class="mb-4">
-            <label v-bind:for="name">${ info.title }</label>
-            <select class="form-control form-control-sm" v-bind:name="name" v-model="info.value">
-              <option v-for="(fonttitle, fontname) in info.options" v-bind:value="fontname">
-                ${ fonttitle }
-              </option>
-            </select>
-          </div>
-        </div><!-- .theme-selects -->
-        <div class="column mr-4 theme-predefined">
-          <p>Pre-defined themes</p>
-          <div v-for="(info, name) in theme">
-            <a v-bind:href="info.href" class="text-light">${ name }</a>
-          </div>
-        </div><!-- .theme-predefined -->
-      </div><!-- .theme-contents -->
-      <p>
-        <button type="submit" class="btn btn-primary">Apply theme</button>
-        <a v-bind:href="cssurl" class="btn btn-light">Link to CSS</a>
-      </p>
-      <p>To use this theme, copy this code to your page.</p>
-      <pre class="viewsource"><code class="language-html">&lt;link rel="stylesheet" href="${ cssurl }"&gt;</code></pre>
-    </form>
-    <!-- htmllint label-req-for="true" -->
-  </div><!-- #theme-picker -->
-
+  <div class="pt-2">&nbsp;</div>
   <div class="container-fluid component d-flex">
-    <nav class="mt-3" id="toc-nav">
-      <div v-for="entry in toc">
-        <a v-bind:class="entry.level" v-bind:href="entry.href">${ entry.name }</a>
-      </div>
+    <nav class="mt-3 nav" id="toc-nav">
+      <a v-for="entry in toc"
+        class="nav-link"
+        v-bind:data-level="entry.level"
+        v-bind:href="entry.href">${ entry.name }</a>
     </nav>
-    <main role="main" class="ml-3" data-spy="scroll" data-target="#toc-nav" data-offset="0">
+    <main role="main" class="ml-3">
       <h1 class="toc">Introduction</h1>
       <p>The Gramex UI component library is a set of UI components that extend
         <a href="https://getbootstrap.com/" target="_blank">Bootstrap 4</a>.
@@ -90,9 +87,10 @@
 
       <h1 class="toc">Utilities</h1>
       {% raw load_page('ui-hover.html') %}
+      {% raw load_page('ui-cursor.html') %}
       {% raw load_page('ui-round.html') %}
-      {% raw load_page('ui-shadow.html') %}
       {% raw load_page('ui-ripple.html') %}
+      {% raw load_page('ui-shadow.html') %}
       {% raw load_page('ui-text.html') %}
       {% raw load_page('ui-tours.html') %}
       {% raw load_page('ui-underline.html') %}
@@ -127,6 +125,7 @@
       {% raw load_page('ui-input.html') %}
       {% raw load_page('ui-loading.html') %}
       {% raw load_page('ui-login.html') %}
+      {% raw load_page('ui-modal.html') %}
       {% raw load_page('ui-panel.html') %}
       {% raw load_page('ui-table.html') %}
       {% raw load_page('ui-tooltip.html') %}
@@ -181,6 +180,12 @@
       _.each(config.theme, function(info, name) { info.href = '?' + $.param(info) })
       config.cssurl = '../ui/bootstraptheme.css' + location.search
       var app = new Vue({el: '#theme-picker', data: config, delimiters: ['${', '}']})
+      $('[data-spy="scroll"]').scrollspy('refresh')
+    })
+
+    // Toggle view source
+    $('body').on('click', '.toggle-source', function() {
+      $('body').toggleClass('show-source')
     })
 
     // copy code block

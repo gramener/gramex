@@ -55,3 +55,18 @@
   <img class="img w-25 bg-primary round" src="hdinsight.png" alt="Sample image">
 </div>
 {% end %}
+
+<h3>Border radius sizes</h3>
+
+{% apply view_source %}
+<div class="row">
+  <div class="col">
+    <button type="button" class="btn btn-secondary round">.round</button>
+    <button type="button" class="btn btn-secondary border-radius-xl">.border-radius-xl</button>
+    <button type="button" class="btn btn-secondary border-radius-lg">.border-radius-lg</button>
+    <button type="button" class="btn btn-secondary border-radius   ">.border-radius</button>
+    <button type="button" class="btn btn-secondary border-radius-sm">.border-radius-sm</button>
+    <button type="button" class="btn btn-secondary no-border-radius">.no-border-radius</button>
+  </div>
+</div>
+{% end %}

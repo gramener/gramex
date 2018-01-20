@@ -1,10 +1,9 @@
 <h2 class="toc">Upload</h2>
 
 {% apply view_source %}
-<label tabindex="0" class="upload border border-primary bg-warning p-4">
-  <input class="d-none" type="file">
-  <button class="btn btn-primary">Upload</button>
-  Hello
-  <img src="hdinsight.png" alt="Sample image">
+<input type="file" class="upload" id="file-input">
+<label for="file-input" class="bg-warning p-3">
+  <h3>Upload your file</h3>
+  <p><button tabindex="-1" class="btn btn-primary w-100">Click anywhere</button></p>
 </label>
 {% end %}

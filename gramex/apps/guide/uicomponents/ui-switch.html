@@ -1,16 +1,37 @@
 <h2 class="toc">Switch</h2>
 
 {% apply view_source %}
-<div class="switch-primary">
+<label for="sw1">On</label>
+<div class="switch-primary round">
   <input type="checkbox" id="sw1" name="sw1">
   <label for="sw1"></label>
 </div>
+<label for="sw1">Off</label>
 {% end %}
 
+<h3>Switch colors</h3>
+
 {% apply view_source %}
-<div class="switch-success"  ><input type="checkbox" id="sw2" name="sw2"><label for="sw2"></label></div>
-<div class="switch-danger"   ><input type="checkbox" id="sw3" name="sw3"><label for="sw3"></label></div>
-<div class="switch-warning"  ><input type="checkbox" id="sw4" name="sw4"><label for="sw4"></label></div>
-<div class="switch-info"     ><input type="checkbox" id="sw5" name="sw5"><label for="sw5"></label></div>
-<div class="switch-secondary"><input type="checkbox" id="sw6" name="sw6"><label for="sw6"></label></div>
+<div class="round switch-success"  ><input type="checkbox" id="sw2"><label for="sw2"></label></div>
+<div class="round switch-danger"   ><input type="checkbox" id="sw3"><label for="sw3"></label></div>
+<div class="round switch-warning"  ><input type="checkbox" id="sw4"><label for="sw4"></label></div>
+<div class="round switch-info"     ><input type="checkbox" id="sw5"><label for="sw5"></label></div>
+<div class="round switch-secondary"><input type="checkbox" id="sw6"><label for="sw6"></label></div>
+{% end %}
+
+<h3>Switch border radius</h3>
+
+{% apply view_source %}
+<div class="switch-primary                 "><input type="checkbox" id="sw7"><label for="sw7"></label></div>
+<div class="switch-primary border-radius-sm"><input type="checkbox" id="sw8"><label for="sw8"></label></div>
+<div class="switch-primary border-radius   "><input type="checkbox" id="sw9"><label for="sw9"></label></div>
+<div class="switch-primary border-radius-lg"><input type="checkbox" id="swa"><label for="swa"></label></div>
+<div class="switch-primary border-radius-xl"><input type="checkbox" id="swb"><label for="swb"></label></div>
+<div class="switch-primary round           "><input type="checkbox" id="swc"><label for="swc"></label></div>
+{% end %}
+
+<h3>Switch size</h3>
+
+{% apply view_source %}
+<div class="switch-primary w-25"><input type="checkbox" id="swd"><label for="swd"></label></div>
 {% end %}
