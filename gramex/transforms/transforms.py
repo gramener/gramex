@@ -239,6 +239,8 @@ def build_transform(conf, vars=None, filename='transform', cache=False, iter=Tru
 
 def condition(*args):
     '''
+    DEPRECATED. Use the ``if`` construct in config keys instead.
+
     Variables can also be computed based on conditions::
 
         variables:
