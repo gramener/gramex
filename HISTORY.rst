@@ -3,6 +3,53 @@
 History
 -------
 
+1.27 (2018-01-20)
+~~~~~~~~~~~~~~~~~
+`g1`_ is upgraded to v0.3 which features a ``$().formhandler()`` component.
+This renders FormHandlers as Excel-like tables (sortable, filterable).
+
+`FormHandler`_ supports a ``?meta=y`` query parameter that returns metadata
+about the query. This includes the number of rows, offset, limit, sort options,
+columns excluded, etc.
+
+The `UI component library`_ now uses `Bootstrap 4 Beta 3`_. New components are:
+
+- ``.arrow-tail`` which adds a tail to arrows
+- ``.border-radius-sm``, ``.border-radius-lg``, etc which create rounded corners of different sizes
+- ``.btn-xs`` for extra-small buttons
+- ``.modal-xl`` for extra-large modals
+- ``.cursor-pointer`` as a utility class for ``cursor: pointer``
+- Improvements to ``.switch`` and ``.upload``
+
+The `UI component library`_ page itself is more usable:
+
+- Theme fonts now include a few (carefully picked) Google Fonts
+- The sidebar is sticky.
+- The "Toggle source" button at the top lets you view / hide source code
+- The list of libraries are better documented
+
+`CaptureHandler`_ supports repeated ``?dpi=`` arguments for PPTX that allow
+creating multiple slides with differently sized images  (@pragnya.reddy).
+``?title_size=`` sets the title font size for pptx.
+
+Using auth handlers for `AJAX login`_ is now well documented.
+
+A new `session data`_ store type called ``type: sqlite`` is available. This
+is a bit slower, but allows multiple Gramex instances to share session data.
+
+`Smart Alerts`_ templates can now access the Gramex config. This lets you re-use
+templates across different alerts, changing static content in the YAML
+configuration (@mukul.taneja).
+
+Gramex supports a `docker install`_ option. The documentation also features
+common `Windows administration`_ options used when deploying Gramex.
+
+Stats:
+
+- Code base: 21,062 lines (gramex: 13,496, tests: 7,566)
+- Test coverage: 81%
+
+
 1.26 (2017-12-31)
 ~~~~~~~~~~~~~~~~~
 This release features an upgrade to the `UI component library`_:
@@ -943,3 +990,8 @@ There are two changes that may disrupt your code:
 .. _Background: https://learn.gramener.com/guide/uicomponents/#background
 .. _Gradient: https://learn.gramener.com/guide/uicomponents/#gradient
 .. _bandit: https://github.com/openstack/bandit/
+.. _Bootstrap 4 Beta 3: https://blog.getbootstrap.com/2017/12/28/bootstrap-4-beta-3/
+.. _session data: https://learn.gramener.com/guide/auth/#session-data
+.. _docker install: https://learn.gramener.com/guide/install/#docker-install
+.. _Windows administration: https://learn.gramener.com/guide/deploy/#windows-administration
+.. _AJAX login: https://learn.gramener.com/guide/auth/#ajax-login

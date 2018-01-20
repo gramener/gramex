@@ -43,6 +43,9 @@
     "": {
       "Gramex Authentication": -1
     },
+    "ajax-login": {
+      "AJAX login": -1
+    },
     "authentication": {
       "Authentication": -1
     },
@@ -393,6 +396,9 @@
     "using-yamlpath": {
       "Using YAMLPATH": -1
     },
+    "windows-administration": {
+      "Windows administration": -1
+    },
     "windows-service": {
       "Windows Service": -1
     }
@@ -497,6 +503,9 @@
     "formhandler-functions": {
       "FormHandler functions": -1
     },
+    "formhandler-metadata": {
+      "FormHandler metadata": -1
+    },
     "formhandler-modify": {
       "FormHandler modify": -1
     },
@@ -567,11 +576,20 @@
     "": {
       "Install Gramex": -1
     },
+    "docker-install": {
+      "Docker install": -1
+    },
     "installation": {
       "Installation": -1
     },
     "offline-install": {
       "Offline install": -1
+    },
+    "run-bash-inside-the-container": {
+      "Run bash inside the container": -1
+    },
+    "run-gramex-on-port-9988": {
+      "Run Gramex on port 9988": -1
     },
     "troubleshooting": {
       "Troubleshooting": -1
@@ -736,6 +754,9 @@
     },
     "schedule-timing": {
       "Schedule timing": -1
+    },
+    "scheduler-api": {
+      "Scheduler API": -1
     }
   },
   "search": {
