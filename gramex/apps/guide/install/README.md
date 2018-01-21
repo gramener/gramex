@@ -57,10 +57,17 @@ Gramex is available as a docker instance. To run it:
 docker pull gramener/gramex     # or docker pull gramener/gramex:1.27.0
 
 # Run Gramex on port 9988
-docker run -p 9988:9988 gramener/gramex
+docker run --name gramex-instance -p 9988:9988 gramener/gramex
 
 # Run bash inside the container
-docker run -i -t -p 9988:9988 gramener/gramex /bin/bash
+docker run --name gramex-instance -i -t -p 9988:9988 gramener/gramex /bin/bash
+
+# To re-connect to the instance:
+docker start -i -a gramex-instance
+
+# Other useful commands
+docker container ls           # list instances
+docker rm gramex-instance     # delete instance
 ```
 
 ## Offline install

@@ -3,7 +3,7 @@ title: Configurations control Gramex
 [TOC]
 
 All features of Gramex are controlled by `gramex.yaml`. Here's a simple
-`gramex.yaml` that serves the file `html.html` as the home page.
+`gramex.yaml` that serves the file `home.html` as the home page.
 
     :::yaml
     url:                            # URL configuration section
