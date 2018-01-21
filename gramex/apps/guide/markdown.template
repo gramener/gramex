@@ -14,6 +14,7 @@
       <li><a href="/$GUIDE_ROOT/search/">Index of topics</a></li>
       <li><a href="/$GUIDE_ROOT/about/">About Gramex</a></li>
       <li><a href="/$GUIDE_ROOT/install/">Install Gramex</a></li>
+      <li><a href="/$GUIDE_ROOT/init/">Gramex init</a></li>
       <li><a href="/$GUIDE_ROOT/server/">Web server</a></li>
       <li><a href="/$GUIDE_ROOT/config/">Configurations</a></li>
       <li><a href="/$GUIDE_ROOT/functionhandler/">FunctionHandler</a></li>

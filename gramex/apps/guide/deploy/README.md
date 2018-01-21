@@ -105,6 +105,14 @@ enable these options, add this line to your `gramex.yaml`:
     :::yaml
     import: $GRAMEXPATH/deploy.yaml
 
+Here, by default:
+
+- images (`gif, jpg, jpeg, pdf, png, svg`), fonts (`eot, ttf`) are not allowed apart from `css, html, js, txt`.
+- enables `XSS` protection. Read more at [Mozilla Developer Docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-XSS-Protection).
+- enables protection against browsers performing MIME-type sniffing. [Read more](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Content-Type-Options).
+- enables protection against running apps within an iframe. [Read more](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options).
+- blocks server information. [Read more](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Server).
+
 See [deploy.yaml][deploy-yaml] to understand the configurations.
 
 [zap]: https://www.owasp.org/index.php/OWASP_Zed_Attack_Proxy_Project

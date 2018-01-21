@@ -79,12 +79,12 @@ Here is another example that changes a bar chart based on data:
 
 The configuration accepts the following top-level keys:
 
-- `source`: required. Path to input / source PPTX.
-- `target`: optional. Path where output / target PPTX is saved.
+- `source:` required. Path to input / source PPTX.
+- `target:` optional. Path where output / target PPTX is saved.
   If None, `pptgen` returns the Presentation object.
-- `data`: optional dataset or a dictionary. This is described below.
-- `only`: Accepts slide number or list of slide numbers starting from 1. If defined, in output presentation only selected slides will be available. Suppose there are 10 slides in a presentation but user has defined `1` under `only` section then only slide number 1 will be available in output, similarilly slide number 1 and 2 will be available in output presentation if `only: [1, 2]`.
-- `register`: Optional to register any new custom commands to pptgen. It accepts a function which accepts three parameter `shape`, `spec`, and `data`. Available `immutable` commands in pptgen are `css`, `text`, `image`, `chart`, `table`, `sankey`, `bullet`, `replace`, `treemap`, `heatgrid` and `calendarmap`.
+- `data:` optional dataset or a dictionary. This is described below.
+- `only:` Accepts slide number or list of slide numbers starting from 1. If defined, in output presentation only selected slides will be available. Suppose there are 10 slides in a presentation but user has defined `1` under `only` section then only slide number 1 will be available in output, similarilly slide number 1 and 2 will be available in output presentation if `only: [1, 2]`.
+- `register:` Optional to register any new custom commands to pptgen. It accepts a function which accepts three parameter `shape`, `spec`, and `data`. Available `immutable` commands in pptgen are `css`, `text`, `image`, `chart`, `table`, `sankey`, `bullet`, `replace`, `treemap`, `heatgrid` and `calendarmap`.
 - All other keys are treated as rules that are described below.
 
 ## Data
@@ -94,10 +94,10 @@ PPTGen can change presentations with data from various sources. It uses
 
 - `url:` Pandas DataFrame, sqlalchemy URL or file name
 - `ext:` file extension (if url is a file). Defaults to url extension
-- `args`: optional filters to apply to dataset. Passed as a dict of lists
-- `table:`: table name (if url is an SQLAlchemy URL)
+- `args:` optional filters to apply to dataset. Passed as a dict of lists
+- `table:` table name (if url is an SQLAlchemy URL)
 - `query:` optional SQL query to execute (if url is a database)
-- `transform:`: optional in-memory transform. Takes a DataFrame and returns a DataFrame.
+- `transform:` optional in-memory transform. Takes a DataFrame and returns a DataFrame.
 - Any additional keys are passed to `gramex.cache.open` or `sqlalchemy.create_engine`.
 
 Example:-
@@ -373,13 +373,13 @@ Modifies existing tables. It accepts these keys:
 - `data:` optional data [expression](#expressions) to render as the table. The
   table expands on shrinks to accommodate the rows and columns in the data.
 - `style:` optional common css for all columns. E.g.- color, fill, font-size etc. These properties can be ovewrite inside a column. If not then property will be common for all columns.
-    - `bold`: True or False, if True text will be show in bold.
-    - `fill`: Color of the cells.
-    - `color`: Text color.
-    - `italic`: To set text's itallic style.
-    - `underline`: To set text's underline style.
-    - `font-size`: Font size of text.
-    - `font-family`: Text's font family.
+    - `bold:` True or False, if True text will be show in bold.
+    - `fill:` Color of the cells.
+    - `color:` Text color.
+    - `italic:` To set text's itallic style.
+    - `underline:` To set text's underline style.
+    - `font-size:` Font size of text.
+    - `font-family:` Text's font family.
     - `gradient:` optional gradient name (binary, Blues, BuGn, BuPu, gist_yarg, GnBu, Greens, Greys, Oranges, OrRd, PuBu, PuBuGn, PuRd, Purples, RdPu, Reds, YlGn, YlGnBu, YlOrBr, YlOrRd, BrBG, bwr, coolwarm, PiYG, PRGn, PuOr, RdBu, RdGy, RdYlBu, RdYlGn, seismic).
     - `min:` optional minimum. Defaults to the column's min value
     - `max:` optional maximum. Defaults to the column's max value
@@ -501,8 +501,8 @@ in the context of data. For example:
 
 ### Deprecated commands
 
-- `rectangle`: use [CSS](#css) commands instead
-- `oval`: use [CSS](#css) commands instead
+- `rectangle:` use [CSS](#css) commands instead
+- `oval:` use [CSS](#css) commands instead
 
 ## Chart
 
@@ -518,15 +518,15 @@ Note:- All attributes also accepts python expresion or custom function. Such as:
         function: module.functionname
       ....
 
-`data`: Pass data to chart.
+`data:` Pass data to chart.
 
-`usecols`: `list` type. If defined, only the columns mentioned in the list will pass through as data to the charts .Accepts `function: python expresions` or a list of column names.
+`usecols:` `list` type. If defined, only the columns mentioned in the list will pass through as data to the charts .Accepts `function: python expresions` or a list of column names.
 
-`x`: Define `x-axis` column name from data.
+`x:` Define `x-axis` column name from data.
 
-`size`: This is applicable only for `Bubble Charts`. Column name from data for bubble size.
+`size:` This is applicable only for `Bubble Charts`. Column name from data for bubble size.
 
-`color`: Accepts a dictionary (or raw value as well in this case same color code will be get apply for all series) for the series that are being added to the charts. Also provide row level data access to the series using `lambda` function. E.g.:-
+`color:` Accepts a dictionary (or raw value as well in this case same color code will be get apply for all series) for the series that are being added to the charts. Also provide row level data access to the series using `lambda` function. E.g.:-
 
     :::yaml
     chart:
@@ -549,24 +549,24 @@ Note:- All attributes also accepts python expresion or custom function. Such as:
       # `handler`, `name` and `row`. `name`(series name), `row` dictionaty of row for that point includes all the columns as key, value pair.
       # In this case `color_function` function must return a hex color code, not a dictionary.
 
-`stroke`: Same configuration like `color`.
+`stroke:` Same configuration like `color`.
 
-`opacity`: Same configuration like `color`.
+`opacity:` Same configuration like `color`.
 
 ## Native charts
 
 To modify the data and attributes for an existing native chart, use `chart:`.
 This supports the following chart types:
 
-- Bar charts: Clustered Bar, Stacked Bar, 100% Stacked Bar
-- Column charts: Clustered Column, Stacked Column, 100% Stacked Column
-- Line charts: Line, Stacked Line, 100% Stacked Line, Line with Markers, Stacked Line with Markers, 100% Stacked Line with Markers
-- Area charts: Area, Stacked Area, 100% Stacked Area (3D area not supported)
-- Scatter charts: Scatter, Scatter with Straight Lines, Scatter with Smooth Lines, Scatter with Straight Lines and Markers, Scatter with Smooth Lines and Markers
-- Bubble charts: Bubble, 3-D Bubble
-- Radar charts: Radar, Radar with Markers, Filled Radar
-- Donut charts: Doughnut, Doughnut Exploded
-- Pie charts: Pie, Pie Exploded, Bar of Pie (3D pie not supported)
+- `Bar charts:` Clustered Bar, Stacked Bar, 100% Stacked Bar
+- `Column charts:` Clustered Column, Stacked Column, 100% Stacked Column
+- `Line charts:` Line, Stacked Line, 100% Stacked Line, Line with Markers, Stacked Line with Markers, 100% Stacked Line with Markers
+- `Area charts:` Area, Stacked Area, 100% Stacked Area (3D area not supported)
+- `Scatter charts:` Scatter, Scatter with Straight Lines, Scatter with Smooth Lines, Scatter with Straight Lines and Markers, Scatter with Smooth Lines and Markers
+- `Bubble charts:` Bubble, 3-D Bubble
+- `Radar charts:` Radar, Radar with Markers, Filled Radar
+- `Donut charts:` Doughnut, Doughnut Exploded
+- `Pie charts:` Pie, Pie Exploded, Bar of Pie (3D pie not supported)
 
 Here are examples that assume the following configuration:
 
@@ -723,14 +723,14 @@ the chart.
 
 ### Bullet
 
-- `data`: Actual value.
-- `poor`: Poor value.
-- `good`: Good value.
-- `target`: Target value.
-- `max-width`: Sets maximum width of rectangle. Accepts `function` or raw value(between 0-1).
-- `gradient`: Optional. Default `RdYlGn`.
-- `text`: Default `True`. Optional, if present text will be shown as per format. Text can be overwrite inside `style.data.text` or `style.target.text` section if defined there.
-- `style`: Optional `dict`, accepts css properties `e.g:- font-color, fill, opacity etc.`
+- `data:` Actual value.
+- `poor:` Poor value.
+- `good:` Good value.
+- `target:` Target value.
+- `max-width:` Sets maximum width of rectangle. Accepts `function` or raw value(between 0-1).
+- `gradient:` Optional. Default `RdYlGn`.
+- `text:` Default `True`. Optional, if present text will be shown as per format. Text can be overwrite inside `style.data.text` or `style.target.text` section if defined there.
+- `style:` Optional `dict`, accepts css properties `e.g:- font-color, fill, opacity etc.`
 
 Example:
 
@@ -767,15 +767,15 @@ The following keys can also be specified as an [expression](#expressions) and py
 
 ### Calendarmap
 
-- `width`: Width and height of each cell(in pixel) in calendarmap.
-- `weekstart`: Weekstart value `date`.
-- `gradient`: Optional, default `RdYlGn`.
-- `format`: Number format to be shown in top/left bar if `label_top/lebel_left` defined.
-- `lo`: Min value for color scale `default min from data`.
-- `hi`: High value for color scale `default max from data`.
-- `label_top`: Top margin for the calendermap `default 0`.
-- `label_left`: Left margin for the calendermap `default 0`.
-- `style`: A `dict`, accepts `CSS` properties e.g-`color, fill, opacity, font-size, etc.`
+- `width:` Width and height of each cell(in pixel) in calendarmap.
+- `weekstart:` Weekstart value `date`.
+- `gradient:` Optional, default `RdYlGn`.
+- `format:` Number format to be shown in top/left bar if `label_top/lebel_left` defined.
+- `lo:` Min value for color scale `default min from data`.
+- `hi:` High value for color scale `default max from data`.
+- `label_top:` Top margin for the calendermap `default 0`.
+- `label_left:` Left margin for the calendermap `default 0`.
+- `style:` A `dict`, accepts `CSS` properties e.g-`color, fill, opacity, font-size, etc.`
 
 Example:
 
@@ -801,25 +801,25 @@ The following keys can also be specified as an [expression](#expressions) and py
 
 ### Heatgrid
 
-- `data`: A DataFrame.
-- `row`: Columns name from data which will be get treated as `row` in heatgrid.
-- `column`: Columns name from data which will be get treated as `column` in heatgrid.
-- `column-order`: optional, list of unique values(from heatgrid column from data). In the same order columns will get created in heatmap. Accepts `function: python expresion under` as well.
-- `row-order`: optional, same like `column-order` but for rows.
-- `value`: Columns name from data to show for each cell heatgrid.
-- `text`:
+- `data:` A DataFrame.
+- `row:` Columns name from data which will be get treated as `row` in heatgrid.
+- `column:` Columns name from data which will be get treated as `column` in heatgrid.
+- `column-order:` optional, list of unique values(from heatgrid column from data). In the same order columns will get created in heatmap. Accepts `function: python expresion under` as well.
+- `row-order:` optional, same like `column-order` but for rows.
+- `value:` Columns name from data to show for each cell heatgrid.
+- `text:`
     - `false` is the default. It does not show any text
     - `true`, shows the `value` column
     - `{function: data['label']}` shows custom text from the `label` column
     - `{function: module.method(data, handler)}` can be any function/expression using `data` which is the row, and `handler`
   `data` (which is the row) and `handler`.
-- `left-margin`: In percentage(0-1) of total width of shape. Left margin from the shape from where heatgrid will start populating.
-- `cell-width`: Width of each cell. Default based on columns width of shape will defined.
-- `cell-height`: Height of each cell. Default based on number of rows height of shape will defined.
-- `na-text`: Treat `NA` values text representation.
-- `na-color`: Cell color for `NA` values.
-- `style`: optional `dict`, to apply css properties.
-- `style.padding`: Dict like object or int. Default 5px(left, right, top, bottom).
+- `left-margin:` In percentage(0-1) of total width of shape. Left margin from the shape from where heatgrid will start populating.
+- `cell-width:` Width of each cell. Default based on columns width of shape will defined.
+- `cell-height:` Height of each cell. Default based on number of rows height of shape will defined.
+- `na-text:` Treat `NA` values text representation.
+- `na-color:` Cell color for `NA` values.
+- `style:` optional `dict`, to apply css properties.
+- `style.padding:` Dict like object or int. Default 5px(left, right, top, bottom).
   If `style: {padding: 10}` will set the padding (left, right, top, bottom) as 10px.
   `style: {padding: {left: .., right: .., top: .., bottom: ..}}`
   accept raw `int` value in pixels or a `function: python expression`.
@@ -868,12 +868,12 @@ The following keys can also be specified as an [expression](#expressions) and py
 
 ### Sankey
 
-- `data`: A DataFrame.
-- `sort`: `True` or `False` if true data will get sorted while drawing sankey.
-- `text`: Function to show text in sankey.
-- `order`: Groups order.
-- `color`: Color function based on which
-- `groups`: Group column names from data.
+- `data:` A DataFrame.
+- `sort:` `True` or `False` if true data will get sorted while drawing sankey.
+- `text:` Function to show text in sankey.
+- `order:` Groups order.
+- `color:` Color function based on which
+- `groups:` Group column names from data.
 
 Example:
 
@@ -900,13 +900,13 @@ The following keys can also be specified as an [expression](#expressions) and py
 
 ### Treemap
 
-- `data`: A DataFrame.
-- `keys`: Group column names as `list`.
-- `values`: Aggregate function to apply on each group.
-- `size`: Treemap's box size function.
-- `sort`: Function to sort treemap's rectangles based on `sort` function.
-- `color`: A DataFrame.
-- `text`: Function to show text in treemap.
+- `data:` A DataFrame.
+- `keys:` Group column names as `list`.
+- `values:` Aggregate function to apply on each group.
+- `size:` Treemap's box size function.
+- `sort:` Function to sort treemap's rectangles based on `sort` function.
+- `color:` A DataFrame.
+- `text:` Function to show text in treemap.
 
 Example:
 
