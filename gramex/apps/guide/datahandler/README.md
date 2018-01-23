@@ -176,7 +176,7 @@ You can specify a custom template using the `template:` key. See the example bel
 The data and handler are passed to the template in variables called ``data`` and
 ``handler``. You can render these variables in any format.
 
-If the tempate is not HTML, set [custom HTTP headers](../config/#custom-http-headers)
+If the template is not HTML, set [custom HTTP headers](../config/#custom-http-headers)
 to specify the correct `Content-Type`.
 
 ## Database edits

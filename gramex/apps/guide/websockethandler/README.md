@@ -2,7 +2,7 @@ title: WebSocketHandler
 
 [TOC]
 
-[WebSocketHandler][websockethandler] is used for persistant connections and
+[WebSocketHandler][websockethandler] is used for persistent connections and
 server-side push.
 
 [See this chatbot demo](chat.html). The chatbot has a single connection to the

@@ -83,7 +83,7 @@ The configuration accepts the following top-level keys:
 - `target:` optional. Path where output / target PPTX is saved.
   If None, `pptgen` returns the Presentation object.
 - `data:` optional dataset or a dictionary. This is described below.
-- `only:` Accepts slide number or list of slide numbers starting from 1. If defined, in output presentation only selected slides will be available. Suppose there are 10 slides in a presentation but user has defined `1` under `only` section then only slide number 1 will be available in output, similarilly slide number 1 and 2 will be available in output presentation if `only: [1, 2]`.
+- `only:` Accepts slide number or list of slide numbers starting from 1. If defined, in output presentation only selected slides will be available. Suppose there are 10 slides in a presentation but user has defined `1` under `only` section then only slide number 1 will be available in output, similarly slide number 1 and 2 will be available in output presentation if `only: [1, 2]`.
 - `register:` Optional to register any new custom commands to pptgen. It accepts a function which accepts three parameter `shape`, `spec`, and `data`. Available `immutable` commands in pptgen are `css`, `text`, `image`, `chart`, `table`, `sankey`, `bullet`, `replace`, `treemap`, `heatgrid` and `calendarmap`.
 - All other keys are treated as rules that are described below.
 
@@ -311,7 +311,7 @@ To change the title on the input slide to "New title", use this configuration:
       Title 1:                # Take the shape named "Title 1"
         style:                # CSS like properties only for text
           color: '#ff00000'   # Text color will be red
-          font-size: 12       # Settiing font-size
+          font-size: 12       # Setting font-size
           .......
         text: New Title       # Replace its text with "New Title"
 
@@ -324,7 +324,7 @@ To change the title on the input slide to "New title", use this configuration:
       Title 1:                # Take the shape named "Title 1"
         style:                # CSS like properties only for text
           color: '#ff00000'   # Text color will be red
-          font-size: 12       # Settiing font-size
+          font-size: 12       # Setting font-size
         text: "New Title <text color="#00ff00" bold="True"> Colored Bold Text </text>"
 
 [Run example](text-xml-style)
@@ -350,7 +350,7 @@ To *substitute* text instead of [replacing the full text](#text), use:
 
 Replacement only works for words that have the same formatting. For example, in
 some<u>where</u>, "where" is underlined. You cannot replace "somewhere". But you can
-replace "some" and "where" independently. It also supports `css` like properties under `shapename.style`. All style elemets accepts `python functions` as well.
+replace "some" and "where" independently. It also supports `css` like properties under `shapename.style`. All style elements accepts `python functions` as well.
 
 `replace:` values support [templates](#templates).
 
@@ -372,7 +372,7 @@ Modifies existing tables. It accepts these keys:
 
 - `data:` optional data [expression](#expressions) to render as the table. The
   table expands on shrinks to accommodate the rows and columns in the data.
-- `style:` optional common css for all columns. E.g.- color, fill, font-size etc. These properties can be ovewrite inside a column. If not then property will be common for all columns.
+- `style:` optional common css for all columns. E.g.- color, fill, font-size etc. These properties can be overwrite inside a column. If not then property will be common for all columns.
     - `bold:` True or False, if True text will be show in bold.
     - `fill:` Color of the cells.
     - `color:` Text color.
@@ -508,7 +508,7 @@ in the context of data. For example:
 
 Edits the data inside native pptx charts. `combo` pptx charts are not supported. `chart` accepts following attributes:-
 
-Note:- All attributes also accepts python expresion or custom function. Such as:-
+Note:- All attributes also accepts python expression or custom function. Such as:-
 
     :::yaml
     chart:
@@ -520,7 +520,7 @@ Note:- All attributes also accepts python expresion or custom function. Such as:
 
 `data:` Pass data to chart.
 
-`usecols:` `list` type. If defined, only the columns mentioned in the list will pass through as data to the charts .Accepts `function: python expresions` or a list of column names.
+`usecols:` `list` type. If defined, only the columns mentioned in the list will pass through as data to the charts .Accepts `function: python expressions` or a list of column names.
 
 `x:` Define `x-axis` column name from data.
 
@@ -544,9 +544,9 @@ Note:- All attributes also accepts python expresion or custom function. Such as:
       # In this case you will have row level data access. `color_function` will have 3 input parameters
 
       # --------- If chart type is not a PIE or DONUT -----------------
-      # `handler`, `name` and `row`. `name`(series name - x axis value name for that point), `row` dictionaty of row for that point includes all the columns as key, value pair.
+      # `handler`, `name` and `row`. `name`(series name - x axis value name for that point), `row` dictionary of row for that point includes all the columns as key, value pair.
       # --------- If chart type is not a PIE or DONUT -----------------
-      # `handler`, `name` and `row`. `name`(series name), `row` dictionaty of row for that point includes all the columns as key, value pair.
+      # `handler`, `name` and `row`. `name`(series name), `row` dictionary of row for that point includes all the columns as key, value pair.
       # In this case `color_function` function must return a hex color code, not a dictionary.
 
 `stroke:` Same configuration like `color`.
@@ -804,7 +804,7 @@ The following keys can also be specified as an [expression](#expressions) and py
 - `data:` A DataFrame.
 - `row:` Columns name from data which will be get treated as `row` in heatgrid.
 - `column:` Columns name from data which will be get treated as `column` in heatgrid.
-- `column-order:` optional, list of unique values(from heatgrid column from data). In the same order columns will get created in heatmap. Accepts `function: python expresion under` as well.
+- `column-order:` optional, list of unique values(from heatgrid column from data). In the same order columns will get created in heatmap. Accepts `function: python expression under` as well.
 - `row-order:` optional, same like `column-order` but for rows.
 - `value:` Columns name from data to show for each cell heatgrid.
 - `text:`

@@ -37,7 +37,7 @@ Below is the list of tips for Gramex use that have been shared via email as well
 1. 2017/09/20 - [Debugging CaptureHandler for screenshots](debugging-capturehandler-for-screenshots.md)
 1. 2017/09/21 - [FormHandler: views instead of query](views-instead-of-query-in-formhandler.md)
 1. 2017/10/09 - [Conditions in Gramex](conditions-in-gramex-yaml.md)
-1. 2017/10/09 - [Windows IntegratedAuth - Kerboros authentication](windows-integratedauth.md)
+1. 2017/10/09 - [Windows IntegratedAuth - Kerberos authentication](windows-integratedauth.md)
 1. 2017/10/10 - [FormHandler: enhancements](formhandler-enhancements.md)
 1. 2017/10/17 - [Conditional configurations in Gramex](conditional-configurations-in-gramex.md)
 1. 2017/10/19 - [YAML supports multi-line strings](yaml-supports-multi-line-strings.md)

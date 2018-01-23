@@ -358,7 +358,7 @@ processed like a [query:](#formhandler-query) statement. For example:
 - `?` returns `SELECT * FROM sales`
 
 The resulting query is treated *exactly* like the `query:` statement. So
-further formatting and argument subsitition still happens.
+further formatting and argument substitution still happens.
 
 In addition to `args`, queryfunction can also use `handler`.
 

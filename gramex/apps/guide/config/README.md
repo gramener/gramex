@@ -191,7 +191,7 @@ To change the columns that are logged, use `log.handlers.requests.keys:`
             requests:
                 keys: [time, ip, user.email, status, uri]
 
-You can use any of the following as keys for loggiing:
+You can use any of the following as keys for logging:
 
 - `time`: Time of the request in milliseconds since epoch
 - `datetime`: Time in UTC as YYYY-MM-DD HH:MM:SSZ
@@ -450,7 +450,7 @@ You can import multiple files as a list, like this:
       - another.yaml            # Relative paths are OK. Import is relative to this YAML file
       - d:/temp/gramex.yaml     # Absoslute paths are OK
       - '*/gramex.yaml'         # Any gramex.yaml file under an immediate sub-directory
-      - '**/gramex.yaml'        # Any gramex.yaml file under ANY sub-directotry
+      - '**/gramex.yaml'        # Any gramex.yaml file under ANY sub-directory
 
 The following two imports mean the same thing:
 

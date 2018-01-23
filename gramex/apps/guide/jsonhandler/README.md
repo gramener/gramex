@@ -148,7 +148,7 @@ The result is:
 
 ## Method override
 
-You can use the `X-HTTP-Method-Override` header to overide the method. For
+You can use the `X-HTTP-Method-Override` header to override the method. For
 example, this is the same as a PUT request:
 
     :::js

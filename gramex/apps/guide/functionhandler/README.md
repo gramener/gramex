@@ -240,7 +240,7 @@ def fetch_body(url):
 ```
 
 You can combine this with the `yield` statement to fetch
-mutiple URLs asynchronously, and display them as soon as the results are
+multiple URLs asynchronously, and display them as soon as the results are
 available, in order:
 
 ```python
@@ -257,7 +257,7 @@ def urls(handler):
 See the output at [fetch?x=0&x=1&x=2](fetch?x=0&x=1&x=2).
 
 The simplest way to call *any blocking function* asynchronously is to use a
-[ThreadPoolExecutor][ThreadPoolExecutor]. For example, usng this code in a
+[ThreadPoolExecutor][ThreadPoolExecutor]. For example, using this code in a
 `FunctionHandler` will run `slow_calculation` in a separate thread without
 blocking Gramex. Gramex provides a global threadpool that you can use. It's at
 `gramex.service.threadpool`.

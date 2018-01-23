@@ -46,7 +46,7 @@ You can specify the default `limit:` (number of rows) in the response.
 
 The `format:` key can be `html`, `csv`, `xlsx`, `json` or `template` -- see
 [DataHandler formats](../datahandler/#datahandler-formats). You can specify the
-output as a downloable file with a filename, e.g. `test.csv` in the example here:
+output as a downloadable file with a filename, e.g. `test.csv` in the example here:
 
     :::yaml
         kwargs:                         # Add this entry under the handler kwargs:

@@ -80,7 +80,7 @@ This is a work-in-progress list of features on the Gramex 1.0 roadmap.
 - Kerberos authentication
 - Role and metadata synchronisation
 - User management (add / change / delete users, assign roles, expiry, etc)
-- Password management (2FA, forgot password, reset password, expiry, force signle session, etc)
+- Password management (2FA, forgot password, reset password, expiry, force single session, etc)
 - Login tracking (IP, history, device)
 - XSRF, XSS, etc
 
