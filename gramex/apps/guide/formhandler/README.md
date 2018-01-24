@@ -203,7 +203,7 @@ Add `function: ...` to transform the data before filtering. Try this
           url: $YAMLPATH/flags.csv
           function: data.groupby('Continent').sum().reset_index()
           # Another example:
-          # function: my_module.calc(data, handler)
+          # function: my_module.calc(data)
 
 This runs the following steps:
 
@@ -233,7 +233,7 @@ this [example](totals):
           url: $YAMLPATH/flags.csv
           modify: data.sum(numeric_only=True).to_frame().T
           # Another example:
-          # modify: my_module.calc(data, handler)
+          # modify: my_module.calc(data)
 
 This runs the following steps:
 
