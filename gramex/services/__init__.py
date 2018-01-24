@@ -368,7 +368,7 @@ def create_alert(name, alert):
                         for subtmpl in tmpl:
                             try:
                                 tmpl_val = subtmpl.generate(**data).decode('utf-8')
-                            except Exception as e:
+                            except Exception:
                                 app_log.exception('alert: %s.%s: Template exception', name, key)
                                 return
                             else:
