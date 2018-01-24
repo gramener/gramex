@@ -1,6 +1,6 @@
 import yaml
-from tornado.gen import coroutine
 from tornado.web import HTTPError
+from tornado.gen import coroutine, Return
 from gramex.http import INTERNAL_SERVER_ERROR
 from gramex.services import create_alert, info
 from orderedattrdict.yamlutils import AttrDictYAMLLoader
@@ -20,4 +20,4 @@ def sendmail(handler):
     if kwargs is None:
         raise HTTPError(INTERNAL_SERVER_ERROR, reason='Could not run this config')
     kwargs.pop('data', None)
-    return kwargs
+    raise Return(kwargs)

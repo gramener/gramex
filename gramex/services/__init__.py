@@ -376,7 +376,7 @@ def create_alert(name, alert):
                     else:
                         try:
                             kwargs[key] = tmpl.generate(**data).decode('utf-8')
-                        except Exception as e:
+                        except Exception:
                             app_log.exception('alert: %s.%s: Template exception', name, key)
                             return
             if 'images' in templates:
