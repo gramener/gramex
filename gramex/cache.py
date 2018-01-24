@@ -7,12 +7,17 @@ import six
 import sys
 import json
 import time
+import atexit
 import inspect
+import requests
+import tempfile
+import mimetypes
 import subprocess       # nosec
 import pandas as pd
 from threading import Thread
 from tornado.concurrent import Future
 from gramex.config import app_log, merge
+from six.moves.urllib_parse import urlparse
 
 
 MILLISECOND = 0.001         # in seconds
@@ -26,6 +31,17 @@ _markdown_defaults = dict(output_format='html5', extensions=[
     'markdown.extensions.sane_lists',
     'markdown.extensions.smarty',
 ])
+# A set of temporary files to delete on program exit
+_TEMP_FILES = set()
+
+
+def _delete_temp_files():
+    for path in _TEMP_FILES:
+        if os.path.exists(path):
+            os.remove(path)
+
+
+atexit.register(_delete_temp_files)
 
 
 def opener(callback, read=False, **open_kwargs):
@@ -426,6 +442,31 @@ def reload_module(*modules):
             app_log.info('Reloading module %s', name)
             six.moves.reload_module(module)
         _MODULE_CACHE[name] = fstat
+
+
+def urlfetch(path, **kwargs):
+    '''
+    If path is a file path, return the path as-is.
+    If path is a URL, download the file, return the saved filename.
+    The filename extension is based on the URL's Content-Type HTTP header.
+    Any other keyword arguments are passed to requests.get.
+    Automatically delete the files on exit of the application.
+    This is a synchronous function, i.e. it waits until the file is downloaded.
+    '''
+    url = urlparse(path)
+    if url.scheme not in {'http', 'https'}:
+        return path
+    r = requests.get(path, **kwargs)
+    if 'Content-Type' in r.headers:
+        content_type = r.headers['Content-Type'].split(';')[0]
+        ext = mimetypes.guess_extension(content_type, strict=False)
+    else:
+        ext = os.path.splitext(url.path)[1]
+    with tempfile.NamedTemporaryFile(suffix=ext, delete=False) as handle:
+        for chunk in r.iter_content(chunk_size=16384):
+            handle.write(chunk)
+    _TEMP_FILES.add(handle.name)
+    return handle.name
 
 
 class Subprocess(object):

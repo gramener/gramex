@@ -1,0 +1,18 @@
+email:
+    alert-gmail:
+        type: gmail
+        email: gramex.guide@gmail.com       # Generic email ID used to test e-mails
+        password: tlpmupxnhucitpte          # App-specific password created for Gramex guide
+
+url:
+    alert/sendmail:
+        pattern: /$YAMLURL/sendmail
+        handler: FunctionHandler
+        kwargs:
+            function: alertapp.sendmail
+    alert/alert:
+        pattern: /$YAMLURL/alert
+        handler: FileHandler
+        kwargs:
+            path: $YAMLPATH/alert.html
+            template: true

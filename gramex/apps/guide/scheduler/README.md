@@ -20,6 +20,7 @@ Each named schedule section has the following keys:
   function. The function will be called as `function(*args, **kwargs)`. These
   are optional -- the function will by default be called as `function()`.
 - `startup`: set this to true to run the function once at startup.
+  Set this to `'*'` to run the function every time the config changes.
 - `thread`: set this to true to run in a separate thread (if available.)
 
 ## Schedule timing
@@ -61,6 +62,13 @@ This configuration runs only on startup:
     run-on-startup:
         function: schedule_utils.log_time()
         startup: true
+
+This configuration runs on startup, and re-runs every time the YAML file changes:
+
+    :::yaml
+    run-on-startup:
+        function: schedule_utils.log_time()
+        startup: '*'
 
 This configuration runs every hour on a separate thread:
 

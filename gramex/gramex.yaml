@@ -87,6 +87,10 @@ log:
             level: INFO
             propagate: false
             handlers: [user]
+        gramex.alert:
+            level: INFO
+            propagate: false
+            handlers: [alert]
         gramex.requests:
             level: INFO
             propagate: false
@@ -134,6 +138,18 @@ log:
             class: gramex.config.TimedRotatingCSVHandler
             filename: $GRAMEXDATA/logs/user.csv
             keys: [datetime, event, session, user, ip, headers.User-Agent]
+            level: INFO
+            encoding: utf-8         # encoded as UTF-8
+            when: W0                # rotate the log file weekly
+            interval: 1             # every single week
+            utc: False              # using local time zone, not UTC
+            backupCount: 52         # keep only last 52 backups
+            delay: true             # do not create file until called
+        # Used by alerts to log alerts sent a CSV file
+        alert:
+            class: gramex.config.TimedRotatingCSVHandler
+            filename: $GRAMEXDATA/logs/alert.csv
+            keys: [datetime, alert, service, from, to, cc, bcc, subject, attachments]
             level: INFO
             encoding: utf-8         # encoded as UTF-8
             when: W0                # rotate the log file weekly

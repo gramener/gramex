@@ -2308,6 +2308,15 @@ alert:
       subject: "{{ config.salutation }} #{{ index }}! {{ config['prefix'] }} {{ row['votes'] }} votes"
       salutation: "Congrats"
       prefix: "You got"
+    alert-data-inplace:
+      service: smtps_stub
+      data:
+        - to: x@example.org
+        - to: y@example.org
+      each: data
+      to: '{{ row.to }}'
+      subject: '{{ row.to }}'
+      body: 'Body is {{ row.to }}'
 
 import:
   # Import from all subdirectories

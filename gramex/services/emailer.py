@@ -10,12 +10,26 @@ from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
 from email.mime.image import MIMEImage
 from email.utils import formataddr, getaddresses
+from gramex import console
 from gramex.config import app_log
 
 
 class SMTPMailer(object):
     '''
-    Creates an object capable of sending HTML emails.
+    Creates an object capable of sending HTML emails. Usage::
+
+        >>> mailer = SMTPMailer(type='gmail', email='gramex.guide@gmail.com', password='...')
+        >>> mailer.mail(
+        ... to='person@example.com',
+        ... subject='Subject',
+        ... html='<strong>Bold text</strong>. <img src="cid:logo">'
+        ... body='This plain text is shown if the client cannot render HTML',
+        ... attachments=['1.pdf', '2.txt'],
+        ... images={'logo': '/path/to/logo.png'})
+
+    To test emails without sending them, add a ``stub=True`` option. This queues
+    email info into the ``SMTPStub.stubs`` list without sending it. To print the
+    email contents after sending it, use `stub='log'`.
     '''
     clients = {
         'gmail': {'host': 'smtp.gmail.com'},
@@ -54,7 +68,8 @@ class SMTPMailer(object):
         tls = self.client.get('tls', True)
         # Test cases specify stub: true. This uses a stub that logs emails
         if self.stub:
-            server = SMTPStub(self.client['host'], self.client.get('port', self.ports[tls]))
+            server = SMTPStub(self.client['host'], self.client.get('port', self.ports[tls]),
+                              self.stub)
         else:
             server = smtplib.SMTP(self.client['host'], self.client.get('port', self.ports[tls]))
         if tls:
@@ -63,7 +78,8 @@ class SMTPMailer(object):
             server.login(self.email, self.password)
         server.sendmail(sender, to, msg.as_string())
         server.quit()
-        app_log.info('Email sent via %s to %s', self.email, ', '.join(to))
+        app_log.info('Email sent via %s (%s) to %s', self.client['host'], self.email,
+                     ', '.join(to))
 
 
 def recipients(**kwargs):
@@ -176,8 +192,9 @@ class SMTPStub(object):
     '''A minimal test stub for smtplib.SMTP with features used in this module'''
     stubs = []
 
-    def __init__(self, host, port):
+    def __init__(self, host, port, options):
         # Maintain a list of all stub info so far
+        self.options = options
         self.info = {}
         self.stubs.append(self.info)
         self.info.update(host=host, port=port)
@@ -193,3 +210,7 @@ class SMTPStub(object):
 
     def quit(self):
         self.info.update(quit=True)
+        if self.options == 'log':
+            console('From: %s' % self.info['from_addr'])
+            console('To: %s' % self.info['to_addrs'])
+            console(self.info['msg'])

@@ -17,6 +17,8 @@ import sys
 import atexit
 import signal
 import socket
+import logging
+import datetime
 import posixpath
 import mimetypes
 import threading
@@ -30,9 +32,10 @@ from six import text_type, string_types
 from tornado.log import access_log
 from tornado.template import Template
 from orderedattrdict import AttrDict
-from gramex import debug, shutdown, __version__
+from gramex import paths, debug, shutdown, __version__
 from gramex.transforms import build_transform
 from gramex.config import locate, app_log
+from gramex.cache import urlfetch
 from gramex.http import OK, NOT_MODIFIED
 from . import urlcache
 from .ttlcache import MAXTTL
@@ -220,13 +223,17 @@ def schedule(conf):
             app_log.exception(e)
 
 
-def _create_alert(name, alert):
+def create_alert(name, alert):
     '''Generate the function to be run by alert() using the alert configuration'''
 
     # Configure email service
     if alert.get('service', None) is None:
-        app_log.error('alert: %s: missing service:', name)
-        return
+        if len(info.email) > 0:
+            alert['service'] = list(info.email.keys())[0]
+            app_log.warning('alert: %s: using first email service: %s', name, alert['service'])
+        else:
+            app_log.error('alert: %s: define an email: service to use', name)
+            return
     service = alert['service']
     mailer = info.email.get(service, None)
     if mailer is None:
@@ -254,7 +261,15 @@ def _create_alert(name, alert):
     templates = {}
     for key in ['to', 'cc', 'bcc', 'from', 'subject', 'body', 'html', 'bodyfile', 'htmlfile']:
         if key in alert:
-            templates[key] = Template(alert[key])
+            tmpl = alert[key]
+            if isinstance(tmpl, string_types):
+                templates[key] = Template(tmpl)
+            elif isinstance(tmpl, list):
+                templates[key] = [Template(subtmpl) for subtmpl in tmpl]
+            else:
+                app_log.error('alert: %s: %s: %r must be a list or str', name, key, tmpl)
+                return
+
     if 'images' in alert:
         images = alert['images']
         if isinstance(images, dict):
@@ -266,19 +281,24 @@ def _create_alert(name, alert):
         if isinstance(attachments, list):
             templates['attachments'] = [Template(path) for path in attachments]
 
-    # Pre-compile data. Ensure that dataset: is a dict of key: {url: ...}
-    # data: file.csv
-    # data: {sales: sales.csv}
-    # data: {sales: {url: sales.csv}}
+    # Pre-compile data.
+    #   - `data: {key: [...]}` -- loads data in-place
+    #   - `data: {key: {url: file}}` -- loads from a file
+    #   - `data: {key: {url: sqlalchemy-url, table: table}}` -- loads from a database
+    #   - `data: file` -- same as `data: {data: {url: file}}`
+    #   - `data: {key: file}` -- same as `data: {key: {url: file}}`
+    #   - `data: [...]` -- same as `data: {data: [...]}`
     datasets = {}
     if 'data' in alert:
         if isinstance(alert['data'], string_types):
             datasets = {'data': {'url': alert['data']}}
+        elif isinstance(alert['data'], list):
+            datasets = {'data': alert['data']}
         elif isinstance(alert['data'], dict):
             for key, dataset in alert['data'].items():
                 if isinstance(dataset, string_types):
                     datasets[key] = {'url': dataset}
-                elif 'url' in dataset:
+                elif isinstance(dataset, list) or 'url' in dataset:
                     datasets[key] = dataset
                 else:
                     app_log.error('alert: %s data: %s is missing url:', name, key)
@@ -290,19 +310,23 @@ def _create_alert(name, alert):
         app_log.error('alert: %s each: %s is not in data:', name, alert['each'])
         return
 
+    vars = {key: None for key in datasets}
+    vars['config'] = None
     condition = build_transform(
         {'function': alert.get('condition', 'True')},
-        filename='alert: %s' % name,
-        vars={key: None for key in datasets},
-        iter=False)
+        filename='alert: %s' % name, vars=vars, iter=False)
+
+    alert_logger = logging.getLogger('gramex.alert')
 
     def run_alert():
-        app_log.info('alert: %s', name)
-        data = {}
+        app_log.info('alert: %s running', name)
+        data = {'config': alert}
         for key, dataset in datasets.items():
-            data[key] = gramex.data.filter(**dataset)
+            # Allow raw data in lists as-is. Treat dicts as {url: ...}
+            data[key] = dataset if isinstance(dataset, list) else gramex.data.filter(**dataset)
 
         result = condition(**data)
+        # Avoiding isinstance(result, pd.DataFrame) to avoid importing pandas
         if type(result).__name__ == 'DataFrame':
             data['data'] = result
         elif isinstance(result, dict):
@@ -338,16 +362,39 @@ def _create_alert(name, alert):
                     kwargs[target] = tmpl.generate(**data).decode('utf-8')
             for key in ['to', 'cc', 'bcc', 'from', 'subject', 'body', 'html']:
                 if key in templates:
-                    kwargs[key] = templates[key].generate(**data).decode('utf-8')
+                    tmpl = templates[key]
+                    if isinstance(tmpl, list):
+                        kwargs[key] = []
+                        for subtmpl in tmpl:
+                            try:
+                                tmpl_val = subtmpl.generate(**data).decode('utf-8')
+                            except Exception as e:
+                                app_log.exception('alert: %s.%s: Template exception', name, key)
+                                return
+                            else:
+                                kwargs[key].append(tmpl_val)
+                    else:
+                        try:
+                            kwargs[key] = tmpl.generate(**data).decode('utf-8')
+                        except Exception as e:
+                            app_log.exception('alert: %s.%s: Template exception', name, key)
+                            return
             if 'images' in templates:
-                kwargs['images'] = {cid: val.generate(**data).decode('utf-8')
+                kwargs['images'] = {cid: urlfetch(val.generate(**data).decode('utf-8'))
                                     for cid, val in templates['images'].items()}
             if 'attachments' in templates:
-                kwargs['attachments'] = [attachment.generate(**data).decode('utf-8')
+                kwargs['attachments'] = [urlfetch(attachment.generate(**data).decode('utf-8'))
                                          for attachment in templates['attachments']]
-            # Email recipient
-            # TODO: run this in a queue. Log what's been sent (Anand)
+            # Email recipient. TODO: run this in a queue. (Anand)
             mailer.mail(**kwargs)
+            # Log the event
+            event = {'alert': name, 'service': service, 'from': mailer.email or '',
+                     'to': '', 'cc': '', 'bcc': '', 'subject': '',
+                     'datetime': datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%SZ")}
+            event.update({k: v for k, v in kwargs.items() if k in event})
+            event['attachments'] = ', '.join(kwargs.get('attachments', []))
+            alert_logger.info(event)
+            return kwargs
 
     return run_alert
 
@@ -355,14 +402,23 @@ def _create_alert(name, alert):
 def alert(conf):
     from . import scheduler
     _stop_all_tasks(info.alert)
-    schedule_keys = 'minutes hours dates months weekdays years thread startup'.split()
+    schedule_keys = 'minutes hours dates months weekdays years startup'.split()
 
     for name, alert in conf.items():
         app_log.info('Initialising alert: %s', name)
         schedule = {key: alert[key] for key in schedule_keys if key in alert}
-        schedule['function'] = _create_alert(name, alert)
+        if not schedule:
+            schedule = {'startup': '*'}
+            alert = AttrDict(alert)
+            alert.setdefault('condition', 'once(r"%s", r"%s")' % (paths['base'].resolve(), name))
+        if 'thread' in alert:
+            schedule['thread'] = alert['thread']
+        schedule['function'] = create_alert(name, alert)
         if schedule['function'] is not None:
-            info.alert[name] = scheduler.Task(name, schedule, info.threadpool, ioloop=None)
+            try:
+                info.alert[name] = scheduler.Task(name, schedule, info.threadpool, ioloop=None)
+            except Exception:
+                app_log.exception('Failed to initialize alert: %s', name)
 
 
 def threadpool(conf):

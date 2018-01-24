@@ -11,6 +11,7 @@ from nose.tools import eq_, ok_
 
 
 def run_alert(name, count=1):
+    '''Run named alert and return count mail results. If count is not 1, returns a list'''
     del utils.SMTPStub.stubs[:]
     utils.info.alert[name].run()
     eq_(len(utils.SMTPStub.stubs), count)
@@ -22,7 +23,11 @@ def run_alert(name, count=1):
 
 class TestAlerts(TestGramex):
     def test_errors(self):
-        ok_('alert-no-service' not in utils.info.alert)
+        # If there's an email service, service: should default to the first one
+        if len(utils.info.email.keys()) > 0:
+            ok_('alert-no-service' in utils.info.alert)
+        else:
+            ok_('alert-no-service' not in utils.info.alert)
 
     def test_simple(self):
         mail = run_alert('alert-startup')
@@ -119,3 +124,10 @@ class TestAlerts(TestGramex):
         for (index, row), mail in zip(subset.iterrows(), mails):
             eq_(mail['to_addrs'], [row['name'].replace(' ', '_') + '@example.org'])
             ok_('Subject: Congrats #%d! You got %d votes\n' % (index, row['votes']) in mail['msg'])
+
+        mails = run_alert('alert-data-inplace', count=2)
+        fields = ['x@example.org', 'y@example.org']
+        for field, mail in zip(fields, mails):
+            eq_(mail['to_addrs'], [field])
+            ok_('Subject: %s\n' % field in mail['msg'])
+            ok_('Body is %s' % field in mail['msg'])

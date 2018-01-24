@@ -2,20 +2,278 @@ title: Smart alerts
 
 [TOC]
 
-The `alert` service sends reports via email based on conditions. Here is a
-sample configuration to send an email:
+## Alert setup
+
+The `alert` service sends reports via email based on conditions.
+
+First, set up an [email service](../email/). Here is a sample:
+
+```yaml
+email:
+  gramex-guide-gmail:
+    type: gmail                     # Type of email used is GMail
+    email: gramex.guide@gmail.com   # Generic email ID used to test e-mails
+    password: tlpmupxnhucitpte      # App-specific password created for Gramex guide
+```
+
+## Alert examples
+
+### Send an email once
+
+An alert has at least the `to:`, `subject:` and `body:` fields.
 
 ```yaml
 alert:
-    simple-alert:
-        days: '*'                         # Run every day
-        hours: 8, 16                      # at 8am and 4pm
-        minutes: 0
-        service: gramex-email-guide       # Send an email via this email-service
-        to: 'user@example.com'            # to this list of users
-        subject: Smart Alert Sample       # with the specified subject
-        body: Hello {{ config['to'] }}    # and content
+  alert-once:
+    to: admin@example.org
+    subject: Alert from Gramex
+    body: |
+      This email will be sent once when Gramex starts. It won't be sent again
+      unless you change the key (alert-once) to something else, or run
+      Gramex from a different directory.
 ```
+
+### Send as a different user
+
+`from:` lets you choose a different user to send as. **Note:** this won't work
+on GMail unless you enable
+[Send emails from a different address or alias](https://support.google.com/mail/answer/22370?hl=en)
+
+```yaml
+alert:
+  alert-once:
+    to: admin@example.org
+    from: sender@example.org
+    subject: Alert from Gramex
+    body: This email is sent as if from sender@example.org
+```
+
+### Email multiple people
+
+The `to:`, `cc:` and `bcc:` fields accept a list or comma-seperated email IDs.
+
+```yaml
+alert:
+  alert-email:
+    service: email-service
+    to:
+      - Admin <admin@example.org>
+      - "Admin 2 <admin2@example.org>"
+    cc: cc@example.org, cc2@example.org
+    bcc: cc@example.org, cc2@example.org
+    subject: Gramex started
+    body: |
+      This email is sent to multiple people. The to:, cc:, bcc: fields
+      accept a list or a comma-separated string of email IDs.
+```
+
+### Send HTML email
+
+`html:` specifies the HTML content to be sent. `body:` can be used along with
+HTML. Email clients choose which content to render based on their capability.
+
+```yaml
+alert:
+  alert-content:
+    to: admin@example.org
+    subject: HTML email
+    body: This content will only be displayed on devices that cannot render HTML email. That's rare.
+    html: <p>This content will be shown in <em>HTML</em> on <strong>supported devices</strong>.
+```
+
+### Place body and HTML in a file
+
+`bodyfile:` and `htmlfile:` load content from files instead of directly typing
+into the `body` and `html` keys.
+
+```yaml
+alert:
+  alert-content-file:
+    to: admin@example.org
+    subject: HTML email from file
+    bodyfile: $YAMLPATH/email.txt       # Use email.txt in current directory
+    htmlfile: $YAMLPATH/email.html      # Use email.html in current directoy
+```
+
+### Send inline images
+
+`images:` specifies one or more `<key>: <url>` entries. Each `<key>` can be
+embedded into the email as an image using `<img src="cid:<key>">`. The `<url>`
+can be a file path or a URL.
+
+```yaml
+alert:
+  alert-images:
+    to: admin@example.org
+    subject: Inline images
+    html: <p>This email has 2 inline images.</p><p><img src="cid:img1"></p><p><img src="cid:img2"></p>
+    images:
+        img1: $YAMLPATH/img1.jpg
+        img2: https://en.wikipedia.org/static/images/wikimedia-button.png
+```
+
+### Send attachments
+
+`attachments:` specifies one or more `<key>: <url>` entries. Each entry is added
+to the email as an attachment. The `<url>` can be a file path or a URL.
+
+```yaml
+alert:
+  alert-images:
+    to: admin@example.org
+    subject: Email with attachments
+    html: This email contains attachments.
+    attachments:
+        - $YAMLPATH/doc1.docx
+        - https://example.org/sample.pptx
+```
+
+### Use templates
+
+The `to`, `cc`, `bcc`, `from`, `subject`, `body`, `html`, `bodyfile`, `htmlfile`
+fields can all use Tornado templates to dynamically generate values.
+
+```yaml
+alert:
+  alert-templates:
+    to: '{{ "admin@example.org" }}'
+    subject: 'Template email. Platform is {{ sys.platform }}'
+    body: This email was sent from {{ sys.platform }}.
+    html:  <p>This email was sent from {{ sys.platform }}.</p><p><img src="cid:img"></p>
+    images:
+      img: '{{ os.path.join(r"$YAMLPATH", "img1.jpg") }}'
+    attachments:
+        - '{{ os.path.join(r"$YAMLPATH", "doc1.docx") }}'
+```
+
+### Dynamic emails from data
+
+`data:` specifies one or more datasets. You can use these in templates to create
+dynamic content based on data.
+
+```yaml
+alert:
+  alert-templates:
+    data:
+      - {month: Jan, sales: 100}
+      - {month: Feb, sales: 110}
+      - {month: Mar, sales:  90}
+    to: admin@example.org
+    subject: 'Email generated from data'
+    html: 'Total sales was {{ data["revenue"].sum() }}'
+```
+
+Data can also be a dict containing different keys. There are many ways of
+fetching the data as well:
+
+```yaml
+alert:
+  data:
+    sales: $YAMLPATH/sales.xlsx
+    employees:
+      url: mysql://root@localhost/hr
+      table: employee
+```
+
+Each of the `data:` variables -- like `sales` and `employee` are available to
+the template as variables.
+
+### Send a scheduled email
+
+Email scheduling uses the same keys as [scheduler](../scheduler/): `minutes`,
+`hours`, `dates`, `weekdays`, `months` and `years`.
+
+```yaml
+alert:
+  alert-schedule:
+    days: '*'                     # Send email every day
+    hours: '6, 12'                # at 6am and 12noon local time
+    minutes: 0                    # at the 0th minute, i.e. 6:00am and 12:00pm
+    to: admin@example.org
+    subject: Scheduled alert
+    body: This email will be scheduled and sent as long as Gramex is running.
+```
+
+### Mail merge: change content by user
+
+`each:` specifies a dataset to iterate over. Each row becomes a separate email.
+
+`condition:` is a Python expression that filters the data and returns the final
+rows to send as email.
+
+Here is an example of a birthday alert email sent every day.
+
+```yaml
+alert:
+  alert-birthday:
+    data: $YAMLPATH/birthday.csv
+    condition: data[data['birthday'] == datetime.datetime.today()]
+    each: data          # Loop through each row, i.e. person whose birthday is today
+    to: {{ row['email'] }}                      # Use the "email" column for the person's email ID
+    subject: Happy birthday {{ row['name'] }}   # Use the "name" column for the person's name
+    days: '*'           # Schedule birthday mail every day
+    hours: 6            # at 6:00am local time
+    minutes: 0
+```
+
+### Send alerts on condition
+
+Send an alert to each sales person, but only if they did not meet the target.
+
+```yaml
+alert:
+  alert-sales-target:
+    data:
+      sales:
+        url: mysql+pymysql://user:password@server/database
+        query: 'SELECT * FROM sales'
+    condition: sales[sales['target'] < sales['value']]
+    each: sales
+    to: {{ row['email'] }}
+    cc: salesmanager@example.org
+    subject: Sales target deficit of {{ row['target'] - row['value'] }}
+```
+
+### Avoid re-sending emails
+
+`condition: once(..)` ensures that an alert campaign is sent out only once.
+For example:
+
+```yaml
+alert:
+  alert-condition-once:
+    condition: once(r'$YAMLPATH', 'unique-key')
+    ...
+```
+
+... will send out the email only once, unless the `'unique-key'` is changed.
+
+### Use multiple datasets
+
+TODO
+
+### Use multiple services
+
+If you have more than one `email:` service set up, you can specific which email
+service to use using `service: name-of-email-service`.
+
+## Alert logs
+
+All emails sent via alerts are logged at `$GRAMEXDATA/logs/alert.csv` and is
+archived weekly by default. It stores these columns:
+
+- datetime: when the email was sent, as `YYYY-mm-dd %H:%M:%SZ`
+- alert: name of the alert that triggered the email
+- service: name of the service used to send the email
+- from: sender email ID
+- to: comma-separated list
+- cc: comma-separated list
+- bcc: comma-separated list
+- subject: email subject
+- attachments (comma-separated list of filenames)
+
+
+## Alert configuration
 
 The alert service takes four kinds of parameters:
 
@@ -28,10 +286,12 @@ The alert service takes four kinds of parameters:
   - `dates`: which date(s) to run on, e.g. "10, 20, 30". Default: `*`
   - `hours`: which hour(s) to run at, e.g. "*/3" for every 3rd hour. Default: `*`
   - `minutes`: which minute(s) to run at, e.g. "*" for every minute. Default: `*`
-  - `startup`: set this to `true` to run the alert at startup. Default: `false`
+  - `startup`: set this to `true` to run the alert at startup. Set to `*` to run
+    on startup *and* every time the configuration changes. Default: `false`
   - `thread`: set this to `true` to run in a separate thread. Default: `false`
 - email configuration determines whom to send the alert to.
-  - `service`: name of the [email service](../email/) to use for sending emails. Required
+  - `service`: name of the [email service](../email/) to use for sending emails.
+    Required, but if only one [email service](../email/) is defined, it is used.
   - `to`: a string with comma-separated emails. Optional
   - `cc`: like `to:` but specifies the cc: addresses. Optional
   - `bcc`: like `to:` but specifies the bcc: addresses. Optional
@@ -45,17 +305,20 @@ The alert service takes four kinds of parameters:
   - `attachments`: attachments as a list of files. Optional
   - `images`: inline image attachments as a dictionary of key:path. These
     can be linked from HTML emails using `<img src="cid:key">`. Optional
-  - `capture`: screenshot attachments (TODO)
   - For all the above, the variables available in the Tornado templates are:
     - All dataset keys loaded from the `data:` section are available as variables.
       If `data:` directly specifies a variable, it is stored in a `data` variable
     - `config` holds the alert configuration -- e.g. `config.to` is the recipient
     - `row` and `index` contain the row values and index if `each:` is used
 - data configuration uses data to drive the content and triggers.
-  - `data`: data file or dict of datasets. A dataset can be `key: {url: file}` or
-    as `key: {url: sqlalchemy-url, table: table}`. All keys are available as
-    variables in the content templates and to `condition`. If `data: file` is
-    used, the key name defaults to `data`. Optional
+  - `data`: Optional data file or dict of datasets. All keys are available as
+    variables in the content templates and to `condition`. Optional. Examples:
+      - `data: {key: [...]}` -- loads data in-place
+      - `data: {key: {url: file}}` -- loads from a file
+      - `data: {key: {url: sqlalchemy-url, table: table}}` -- loads from a database
+      - `data: file` -- same as `data: {data: {url: file}}`
+      - `data: {key: file}` -- same as `data: {key: {url: file}}`
+      - `data: [...]` -- same as `data: {data: [...]}`
   - `each`: dataset name. Optional. It sends an email for each element of the
     dataset. This adds 2 variables: `index` and `row`. If the dataset is a:
     -  dict: `index` and `row` are the key and value
@@ -63,116 +326,31 @@ The alert service takes four kinds of parameters:
     -  DataFrame: `index` and `row` are the row index and DataFrame row
   - `condition`: an optional Python expression that determines whether to run the
     alert. All `data:` keys are available to the expression. This may return a:
-    - False-y value or empty DataFrame: to prevent running the alert
+    - False-y value or empty DataFrame: to prevent running the alert. For example,
+      the `once()` transform can be used. e.g. `once('unique-key')` runs the alert
+      only once for every unique value of the arguments.
     - dict: to update the loaded `data:` variables
     - new DataFrame: to replace `data['data']`
 - subscriptions configuration allows users to subscribe to and unsubscribe from
   these alerts, and specify how often they should get emails (TODO)
 
-## Scheduler examples
+## Alert API
 
-Send an email when Gramex starts up
+To send a mail programmatically use `gramex.services.create_alert(config)`.
+This returns a function that sends an alert based on the configuration.
 
-```yaml
-alert-startup:
-  startup: true
-  service: email-service
-  to: admin@example.org
-  subject: Gramex started
+```python
+import yaml
+import gramex.services
+
+conf = {
+  'to': 'admin@example.org',
+  'subject': 'Alert from Gramex',
+  'body': 'This was sent from an API',
+}
+
+alert = gramex.services.create_alert('api-alert', conf)
+kwargs = alert()
 ```
 
-Send an email every day at 6am and 12noon
-
-```yaml
-alert-schedule:
-  days: '*'
-  hours: '6, 12'
-  minutes: 0
-  service: email-service
-  to: admin@example.org
-  subject: Scheduled alert
-```
-
-Send an email to multiple people
-
-```yaml
-alert-email:
-  startup: true
-  service: email-service
-  to: admin@example.org, admin2@example.org
-  cc: cc@example.org, cc2@example.org
-  bcc: cc@example.org, cc2@example.org
-  subject: Gramex started
-```
-
-Send a HTML + text email using templates:
-
-```yaml
-alert-content:
-  startup: true
-  service: email-service
-  to: admin@example.org
-  subject: Gramex started
-  body: This is a template running on {{ sys.platform }}
-  html: This is a <strong>template</strong> on <em>{{ sys.platform }}</em>
-```
-
-Send a HTML + text email using template files:
-
-```yaml
-alert-content-file:
-  startup: true
-  service: email-service
-  to: admin@example.org
-  subject: Gramex started
-  bodyfile: $YAMLPATH/{{ 'email' + '.txt' }}    # Contents are treated as templates too
-  htmlfile: $YAMLPATH/{{ 'email' + '.html' }}   # Contents are treated as templates too
-```
-
-Send HTML email with inline image and attachments
-
-```yaml
-alert-attachments:
-  startup: true
-  service: email-service
-  to: admin@example.org
-  subject: From {{ sys.platform }}
-  html: <p>Hello user</p><p><img src="cid:img1"></p><p><img src="cid:img2"></p>
-  images:
-      img1: $YAMLPATH/img1.jpg
-      img2: $YAMLPATH/{{ 'img2' + '.jpg' }}
-  attachments:
-      - $YAMLPATH/doc1.docx
-      - $YAMLPATH/{{ 'ppt1' + '.pptx' }}
-```
-
-Send birthday alert emails every day -- using a new configuration key.
-
-```yaml
-alert-birthday:
-  data: $YAMLPATH/birthday.csv
-  condition: data[data['date'] == datetime.datetime.today()]
-  each: data
-  service: email-service
-  to: {{ row['email'] }}
-  subject: {{ config.salutation }} {{ row['name'] }}
-  salutation: Happy birthday
-```
-
-Send monthly alert if sales is below target
-
-```yaml
-alert-sales-target:
-  months: '*'
-  data:
-    sales:
-      url: mysql+pymysql://user:password@server/database
-      query: 'SELECT * FROM sales'
-  condition: sales[sales['target'] < sales['value']]
-  each: sales
-  service: email-service
-  to: {{ row['email'] }}
-  cc: salesmanager@example.org
-  subject: Sales target deficit of {{ row['target'] - row['value'] }}
-  html: $YAMLPATH/salestarget.html
-```
+The returned `kwargs` are the computed email contents.

@@ -15,7 +15,7 @@ class Task(object):
 
         The schedule configuration accepts:
 
-        - startup: True to run at startup
+        - startup: True to run at startup, '*' to run on every config change
         - minutes, hours, dates, months, weekdays, years: cron schedule
         - thread: True to run in a separate thread
         '''
@@ -50,7 +50,8 @@ class Task(object):
             app_log.warning('schedule:%s has no schedule nor startup', name)
 
         # Run now if the task is to be run on startup. Don't re-run if the config was reloaded
-        if schedule.get('startup') and not self.ioloop._running:
+        startup = schedule.get('startup')
+        if startup == '*' or (startup is True and not self.ioloop._running):
             self.function()
 
     def run(self):

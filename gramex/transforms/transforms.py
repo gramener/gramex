@@ -1,12 +1,13 @@
 import ast
 import six
+import json
 import importlib
 import tornado.gen
 import gramex.transforms
 from types import GeneratorType
 from orderedattrdict import AttrDict
 from gramex.cache import reload_module
-from gramex.config import app_log, locate, variables
+from gramex.config import app_log, locate, variables, CustomJSONEncoder
 
 
 def _arg_repr(arg):
@@ -336,3 +337,28 @@ def flattener(fields, default=None, filename='flatten'):
     context = {'AttrDict': AttrDict, 'default': default}
     eval(code, context)
     return context[filename]
+
+
+_once_info = {}
+
+
+def once(*args, **kwargs):
+    '''
+    Returns False if once() has been called before with these arguments. Else True.
+    Data is stored in a persistent SQLite dict.
+    '''
+    if 'db' not in _once_info:
+        import os
+        from sqlitedict import SqliteDict
+        dbpath = os.path.join(variables['GRAMEXDATA'], 'once.db')
+        _once_info['db'] = SqliteDict(dbpath, tablename='once', autocommit=True)
+    db = _once_info['db']
+    key = json.dumps(args, separators=(',', ':'), cls=CustomJSONEncoder)
+    if kwargs.get('_clear', False):
+        if key in db:
+            del db[key]
+        return None
+    if key in db:
+        return False
+    db[key] = True
+    return True

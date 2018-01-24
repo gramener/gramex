@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from __future__ import print_function, unicode_literals
 import io
 import os
@@ -10,7 +11,7 @@ from types import GeneratorType
 from tornado.gen import coroutine, Task
 from orderedattrdict import AttrDict
 from orderedattrdict.yamlutils import AttrDictYAMLLoader
-from gramex.transforms import build_transform, flattener, badgerfish, template
+from gramex.transforms import build_transform, flattener, badgerfish, template, once
 from gramex.cache import reload_module
 from nose.tools import eq_, assert_raises
 
@@ -433,3 +434,12 @@ class Flattener(unittest.TestCase):
         flat = flattener(fieldmap, default=default)
         out = flat({'z': {}, 'y': []})
         eq_(out, {key: default for key in fieldmap})
+
+
+class TestOnce(unittest.TestCase):
+    def test_once(self):
+        for key in ['►', 'λ', '►', 'λ']:
+            eq_(once(key, _clear=True), None)
+            eq_(once(key), True)
+            eq_(once(key), False)
+            eq_(once(key), False)
