@@ -1,6 +1,6 @@
 title: Gramex writes data
 
-`JSONHandler` offers a persistent key-value store with an API inspired by
+[JSONHandler][jsonhandler] offers a persistent key-value store with an API inspired by
 [Firebase](https://www.firebase.com/docs/rest/api/). For example:
 
     url:
@@ -22,6 +22,7 @@ libraries.
 
 [jquery-ajax]: http://api.jquery.com/jquery.ajax/
 [cookie.js]: https://github.com/florian/cookie.js
+[jsonhandler]: https://learn.gramener.com/gramex/gramex.handlers.html#gramex.handlers.JSONHandler
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cookie.js/1.2.0/cookie.min.js"></script>
 

@@ -2,7 +2,7 @@ title: Writing handlers
 
 [TOC]
 
-Gramex handlers must inherit from `gramex.handlers.BaseHandler`. Here's a simple custom handler saved in [handlerutil.py](handlerutil.py):
+Gramex handlers must inherit from [gramex.handlers.BaseHandler][basehandler]. Here's a simple custom handler saved in [handlerutil.py](handlerutil.py):
 
     :::python
     from gramex.handlers import BaseHandler
@@ -91,3 +91,5 @@ configuration. These are not yet intended for general use:
 - `handler.redirects`
 - `handler.permissions`
 - `handler.cache`
+
+[basehandler]: https://learn.gramener.com/gramex/gramex.handlers.html#gramex.handlers.BaseHandler

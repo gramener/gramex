@@ -2,7 +2,7 @@ title: Gramex connects to data
 
 [TOC]
 
-`FormHandler` lets you read & write data from files and databases.
+[FormHandler][formhandler] lets you read & write data from files and databases.
 
 Here is a sample configuration to read data from a CSV file:
 
@@ -694,3 +694,5 @@ Note:
 - If the filters do not match any rows, it does not throw any error.
 - `?x-http-method-override=DELETE` overrides the method to use DELETE. You can
   also use the HTTP header `X-HTTP-Method-Override: DELETE`.
+
+[formhandler]: https://learn.gramener.com/gramex/gramex.handlers.html#gramex.handlers.FormHandler

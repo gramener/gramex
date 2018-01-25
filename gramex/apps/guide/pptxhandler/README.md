@@ -1,6 +1,6 @@
 title: PPTXHandler
 
-New in **v1.23**. PPTXHandler creates PPTX files using a configuration and an
+New in **v1.23**. [PPTXHandler][pptxhandler] creates PPTX files using a configuration and an
 existing PPTX as a template. The result is a new PPTX that the user can download.
 
 Here is an example of a simple text substitution:
@@ -38,7 +38,7 @@ It forms the basis of PPTXHandler.
 
 ## PPTGen Library
 
-The PPTGen library accepts a configuration as its argument. For example:
+The [PPTGen][pptgen] library accepts a configuration as its argument. For example:
 
     :::python
     from gramex.pptgen import pptgen
@@ -957,3 +957,6 @@ This can be run as:
 You can override parameters from the command line like this:
 
     pptgen config.yaml --target new.pptx "--change.Title 1.text" "Updated title"
+
+[pptxhandler]: https://learn.gramener.com/gramex/gramex.handlers.html#gramex.handlers.PPTXHandler
+[pptgen]: https://learn.gramener.com/gramex/gramex.pptgen.html

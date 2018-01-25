@@ -2,7 +2,7 @@ title: Gramex accesses Twitter data
 
 [TOC]
 
-`TwitterRESTHandler` offers a proxy for the [Twitter 1.1 REST API](https://dev.twitter.com/rest/public). Here is an example:
+[TwitterRESTHandler][twitterresthandler] offers a proxy for the [Twitter 1.1 REST API](https://dev.twitter.com/rest/public). Here is an example:
 
     :::yaml
     url:
@@ -325,3 +325,5 @@ function next() {
 }
 next()
 </script>
+
+[twitterresthandler]: https://learn.gramener.com/gramex/gramex.handlers.html#gramex.handlers.TwitterRESTHandler
