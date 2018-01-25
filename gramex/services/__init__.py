@@ -349,36 +349,33 @@ def create_alert(name, alert):
                               name, alert['each'])
                 return
 
+        kwargslist = []
         for index, row in each:
             data['index'], data['row'], data['config'] = index, row, alert
 
             # Generate email content
             kwargs = {}
+            kwargslist.append(kwargs)
             for key in ['bodyfile', 'htmlfile']:
                 target = key.replace('file', '')
                 if key in templates and target not in templates:
                     path = templates[key].generate(**data).decode('utf-8')
                     tmpl = gramex.cache.open(path, 'template')
                     kwargs[target] = tmpl.generate(**data).decode('utf-8')
-            for key in ['to', 'cc', 'bcc', 'from', 'subject', 'body', 'html']:
-                if key in templates:
-                    tmpl = templates[key]
-                    if isinstance(tmpl, list):
-                        kwargs[key] = []
-                        for subtmpl in tmpl:
-                            try:
-                                tmpl_val = subtmpl.generate(**data).decode('utf-8')
-                            except Exception:
-                                app_log.exception('alert: %s.%s: Template exception', name, key)
-                                return
-                            else:
-                                kwargs[key].append(tmpl_val)
-                    else:
-                        try:
+            try:
+                for key in ['to', 'cc', 'bcc', 'from', 'subject', 'body', 'html']:
+                    if key in templates:
+                        tmpl = templates[key]
+                        if isinstance(tmpl, list):
+                            kwargs[key] = []
+                            for subtmpl in tmpl:
+                                kwargs[key].append(subtmpl.generate(**data).decode('utf-8'))
+                        else:
                             kwargs[key] = tmpl.generate(**data).decode('utf-8')
-                        except Exception:
-                            app_log.exception('alert: %s.%s: Template exception', name, key)
-                            return
+            except Exception:
+                # If any template raises an exception, log it and continue with next email
+                app_log.exception('alert: %s(#%s).%s: Template exception', name, index, key)
+                continue
             if 'images' in templates:
                 kwargs['images'] = {cid: urlfetch(val.generate(**data).decode('utf-8'))
                                     for cid, val in templates['images'].items()}
@@ -394,7 +391,7 @@ def create_alert(name, alert):
             event.update({k: v for k, v in kwargs.items() if k in event})
             event['attachments'] = ', '.join(kwargs.get('attachments', []))
             alert_logger.info(event)
-            return kwargs
+        return kwargslist
 
     return run_alert
 

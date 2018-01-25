@@ -13,7 +13,7 @@ configured in `gramex.yaml` using pre-defined variables.
       Desktop copy/paste and transfer the codebase.
     - If not, check with IT team about code transfer mechanism.
 - Set up Gramex.
-    - If you don't have permission to install Gramex not, request permissions from the IT team.
+    - If you don't have permission to install Gramex, request permissions from the IT team.
     - If Internet access is enabled, use the [default installation](https://learn.gramener.com/guide/install/)
     - If not, use the [offline install](https://learn.gramener.com/guide/install/#offline-install)
     - Run `gramex` (or) `python -m gramex`. This should load the Gramex documentation page.

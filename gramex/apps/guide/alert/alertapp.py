@@ -1,3 +1,4 @@
+import json
 import yaml
 from tornado.web import HTTPError
 from tornado.gen import coroutine, Return
@@ -19,5 +20,4 @@ def sendmail(handler):
     kwargs = yield info.threadpool.submit(alert)
     if kwargs is None:
         raise HTTPError(INTERNAL_SERVER_ERROR, reason='Could not run this config')
-    kwargs.pop('data', None)
-    raise Return(kwargs)
+    raise Return(json.dumps(kwargs, indent=2))

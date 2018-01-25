@@ -5,12 +5,11 @@
   <meta charset="utf8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Email page</title>
+  <link rel="stylesheet" href="../ui/font-awesome/css/font-awesome.min.css">
   <link rel="stylesheet" href="../style.css">
   <style>
     .code { font: 14px/1.5 Consolas, monospace; background-color: #444; color: #fff; }
-    .alert { font: 14px/1.5 Consolas, monospace; }
-    .alert.bad { background-color: #fee; }
-    .alert.good { background-color: #efe; }
+    .alert { font: 14px/1.5 Consolas, monospace; background-color: #eee; }
     .hidden { display: none; }
     .run { display: flex; justify-content: space-between; align-items: center; }
     .run:after {
@@ -55,18 +54,22 @@ html: This email will be sent to {{! config.to }} using the
 
 <script src="../ui/jquery/dist/jquery.min.js"></script>
 <script>
+  var $submit_button = $('button[type="submit"]')
   $('.alert').hide()
   $('form').on('submit', function(e) {
     e.preventDefault()
+    $submit_button.prop('disabled', true).append('<i class="fa fa-spinner fa-spin"></i>')
     $('.alert').hide()
     $.ajax({
       url: 'sendmail',
       method: 'POST',
       data: $(this).serialize()
     }).done(function(data) {
-      console.log(data)
+      $('.alert').text(data).show()
     }).fail(function(xhr, status, reason) {
       $('.alert').text(reason).show()
+    }).always(function() {
+      $submit_button.prop('disabled', false).find('i').remove()
     })
   })
 
