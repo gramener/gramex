@@ -2,7 +2,7 @@ title: Gramex handles file uploads
 
 [TOC]
 
-`UploadHandler` lets you upload files and manage them. Here is a sample configuration:
+[UploadHandler][uploadhandler] lets you upload files and manage them. Here is a sample configuration:
 
     :::yaml
     url:
@@ -184,3 +184,5 @@ If `module.func()` returns a value, it replaces `file_metadata`. This allows you
 to add / modify delete keys in the [Upload listing](#upload-listing).
 
 If no `args` or `kwargs` are specified, the transform function is called with `(content, handler)` as the keyword arguments.
+
+[uploadhandler]: https://learn.gramener.com/gramex/gramex.handlers.html#gramex.handlers.UploadHandler

@@ -2,7 +2,7 @@ title: Gramex accesses Facebook data
 
 [TOC]
 
-`FacebookGraphHandler` offers a proxy for the [Facebook Graph API](https://developers.facebook.com/docs/graph-api/). Here is an example:
+[FacebookGraphHandler][facebookgraphhandler] offers a proxy for the [Facebook Graph API](https://developers.facebook.com/docs/graph-api/). Here is an example:
 
     :::yaml
     url:
@@ -82,7 +82,7 @@ in. Thereafter, your access_token will be stored and used for future requests
 until it expires, or a user logs in again at [/persist/](persist/).
 
 [source]: https://code.gramener.com/s.anand/gramex/tree/dev/gramex/apps/guide/facebookgraphhandler
-
+[facebookgraphhandler]: https://learn.gramener.com/gramex/gramex.handlers.html#gramex.handlers.FacebookGraphHandler
 
 <script>
 function replace(e, regex, text) {

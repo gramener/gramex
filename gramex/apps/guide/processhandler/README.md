@@ -2,7 +2,7 @@ title: Gramex runs processes
 
 [TOC]
 
-`ProcessHandler` runs processes and streams their output/errors. For example, to
+[ProcessHandler][processhandler] runs processes and streams their output/errors. For example, to
 see the results of an `nslookup www.google.com`, add this to `gramex.yaml`:
 
     :::yaml
@@ -55,3 +55,5 @@ You can redirect `stdout` and `stderr` from the process. For example, this URL
                 stderr: false               # Hide the stderr output
                 headers:
                     Content-Type: text/x-plain
+
+[processhandler]: https://learn.gramener.com/gramex/gramex.handlers.html#gramex.handlers.ProcessHandler

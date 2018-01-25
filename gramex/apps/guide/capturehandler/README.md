@@ -1,6 +1,6 @@
 title: Gramex takes screenshots
 
-[CaptureHandler](capturehandler) takes screenshots of pages using either
+[CaptureHandler][capturehandler] takes screenshots of pages using either
 [Chrome][puppeteer] or
 [PhantomJS](http://phantomjs.org/).
 
