@@ -113,7 +113,8 @@ It accepts the following arguments:
     <br>**Example**: [?delay=1000](capture?url=timer.html&delay=1000)
     captures this [timer page](timer.html) with a ~1000 ms delay
   - If `?delay=renderComplete`, waits until the JavaScript variable
-    `window.renderComplete` is set to true.
+    `window.renderComplete` is set to true - or
+    [30 seconds](https://github.com/GoogleChrome/puppeteer/blob/master/docs/api.md#pagewaitforfunctionpagefunction-options-args).
   - If the delay is more than the `timeout:` in the `kwargs:` section, the page
     will time out.
 - For PDF:

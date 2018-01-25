@@ -6,6 +6,44 @@ Development and deployment are usually on different machines with different
 configurations, file paths, database locations, etc. All of these can be
 configured in `gramex.yaml` using pre-defined variables.
 
+## Deployment checklist
+
+- Check how to copy files to the server.
+    - If copying into the server is allowed, use scp/rsync or Windows Remote
+      Desktop copy/paste and transfer the codebase.
+    - If not, check with IT team about code transfer mechanism.
+- Set up Gramex.
+    - If you don't have permission to install Gramex not, request permissions from the IT team.
+    - If Internet access is enabled, use the [default installation](https://learn.gramener.com/guide/install/)
+    - If not, use the [offline install](https://learn.gramener.com/guide/install/#offline-install)
+    - Run `gramex` (or) `python -m gramex`. This should load the Gramex documentation page.
+- Set up the project.
+    - Copy your project files.
+    - Run Gramex from the project folder. This should load your project home page on the browser.
+- Open required ports.
+    - Access this application from a different system (e.g. `http://<serverip>:9988`).
+      If it is not accessible, request the IT team to make the port accessible,
+      or deploy on an accessible port.
+    - If the application sends email, open the SMTP (25) / SMTPS (465/587) ports.
+    - If the application uses LDAP, open the LDAP (389) / LDAPS (636) ports.
+    - If the application uses HTTP to external sites, open the HTTP (80) / HTTPS (443) ports.
+- Set up the domain.
+    - Decide whether the app will be hosted on:
+        - a new domain (e.g. `projectname.com`)
+        - a new subdomain (e.g. `projectname.clientname.com`)
+        - a new path (e.g. `clientname.com/projectname/`)
+    - If a new domain / subdomain is required
+        - If the client will manage this, raise a request with their IT team.
+        - If Gramener will manage this, request <it@gramener.com>.
+        - The domain name should point to the IP address of the server Gramex is deployed on.
+    - If a new path is required, ask the client IT team to reverse proxy the
+      path to the Gramex port. Read the [proxy servers](#proxy-servers) setup.
+- Set up HTTPS.
+    - If HTTPS is required, ensure that port `443` is open. Else raise a request with their IT team.
+    - If the client will manage the SSL certificate, raise a request with their IT team.
+      If Gramener will manage this, request <it@gramener.com> or get your own
+      free certificate using [certbot](https://certbot.eff.org/).
+
 ## Windows Service
 
 **v1.23**.
@@ -303,6 +341,9 @@ both in PEM format. Use the following settings in `gramex.yaml`:
                 keyfile: "path/to/privatekey.pem"
 
 You can then connect to `https://your-gramex-server/`.
+
+To generate a free HTTPS certificate for a domain, visit
+[Certbot](https://certbot.eff.org/)
 
 To generate a self-signed HTTPS certificate for testing, run:
 
