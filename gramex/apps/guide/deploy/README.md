@@ -98,26 +98,29 @@ Service logs can be viewed using the Windows Event Viewer. Gramex logs are at
 To create multiple services running at different directories or ports, you can
 create one or more custom service classes in `yourproject_service.py`:
 
-    :::python
-    import gramex.winservice
+```python
+import gramex.winservice
 
-    class YourProjectGramexService(gramex.winservice.GramexService):
-        _svc_name_ = 'YourServiceID'
-        _svc_display_name_ = 'Your Service Display Name'
-        _svc_description_ = 'Description of your service'
-        _svc_port_ = 8123               # optional custom port
+class YourProjectGramexService(gramex.winservice.GramexService):
+    _svc_name_ = 'YourServiceID'
+    _svc_display_name_ = 'Your Service Display Name'
+    _svc_description_ = 'Description of your service'
+    _svc_port_ = 8123               # optional custom port
 
-    if __name__ == '__main__':
-        import sys
-        import logging
-        logging.basicConfig(level=logging.INFO)
-        YourProjectGramexService.setup(sys.argv[1:])
+if __name__ == '__main__':
+    import sys
+    import logging
+    logging.basicConfig(level=logging.INFO)
+    YourProjectGramexService.setup(sys.argv[1:])
+```
 
 You can now run:
 
-    python yourproject_service.py install --cwd=...     # install the service
-    python yourproject_service.py remove                # uninstall the service
-    ... etc ...
+```bash
+python yourproject_service.py install --cwd=...     # install the service
+python yourproject_service.py remove                # uninstall the service
+... etc ...
+```
 
 [anaconda]: http://continuum.io/downloads
 
@@ -131,6 +134,41 @@ Here are some common Windows administration actions when deploying on Windows se
 - [Give the user permission to run a service](https://support.microsoft.com/en-in/help/288129/how-to-grant-users-rights-to-manage-services-in-windows-2000)
   using [subinacl](http://go.microsoft.com/fwlink/?LinkId=23418).
 
+### Windows scheduled tasks
+
+To run a scheduled task on Windows, use PowerShell v3 ([ref](https://stackoverflow.com/a/8257779/100904)):
+
+```bash
+$dir = "D:\app-dir"
+$name = "Scheduled-Task-Name"
+
+Unregister-ScheduledTask -TaskName $name -TaskPath $dir -Confirm:$false -ErrorAction:SilentlyContinue
+$action = New-ScheduledTaskAction –Execute "D:\anaconda\bin\python.exe" -Argument "$dir\script.py" -WorkingDirectory $dir
+$trigger = New-ScheduledTaskTrigger -Daily -At "5:00am"
+Register-ScheduledTask –TaskName $name -TaskPath $dir -Action $action –Trigger $trigger –User 'someuser' -Password 'somepassword'
+```
+
+An alternative for older versions of Windows / PowerShell is
+[schtasks.exe](https://msdn.microsoft.com/en-us/library/windows/desktop/bb736357%28v=vs.85%29.aspx):
+
+```bash
+schtasks /create /tn your-task-name /sc HOURLY /tr "gramex"                # To run as current user
+schtasks /create /tn your-task-name /sc HOURLY /tr "gramex" /ru SYSTEM     # To run as system user
+```
+
+## Linux service
+
+There are 3 startup systems for Linux: System V (or sysvinit), Upstart and
+systemd. Read this
+[tutorial](https://www.digitalocean.com/community/tutorials/how-to-configure-a-linux-service-to-start-automatically-after-a-crash-or-reboot-part-1-practical-examples)
+to set one up based on which is available in your system.
+
+### Linux scheduled tasks
+
+To run a scheduled task on Linux, use
+[crontab](https://www.geeksforgeeks.org/crontab-in-linux-with-examples/)
+
+
 ## Security
 
 To check for application vulnerabilities, run the [OWASP Zed Attack Proxy][zap].
@@ -140,8 +178,9 @@ insecure cookies, etc.
 Some common security options are pre-configured in `$GRAMEXPATH/deploy.yaml`. To
 enable these options, add this line to your `gramex.yaml`:
 
-    :::yaml
-    import: $GRAMEXPATH/deploy.yaml
+```yaml
+import: $GRAMEXPATH/deploy.yaml
+```
 
 Here, by default:
 
@@ -164,18 +203,20 @@ allow the application to work in both places.
 
 Suppose `/gramex.yaml` imports all sub-directories:
 
-    :::yaml
-    import: */gramex.yaml   # Import all gramex.yaml from 1st-level sub-directories
+```yaml
+import: */gramex.yaml   # Import all gramex.yaml from 1st-level sub-directories
+```
 
 ... and `/app/gramex.yaml` has:
 
-    :::yaml
-    url:
-        page-name:
-            pattern: /$YAMLURL/page         # Note the /$YAMLURL prefix
-            handler: FileHandler
-            kwargs:
-                path: $YAMLPATH/page.html   # Note the $YAMLPATH prefix
+```yaml
+url:
+    page-name:
+        pattern: /$YAMLURL/page         # Note the /$YAMLURL prefix
+        handler: FileHandler
+        kwargs:
+            path: $YAMLPATH/page.html   # Note the $YAMLPATH prefix
+```
 
 When you run Gramex from `/app/`, the pattern becomes `/page` (`$YAMLURL` is `.`)
 
@@ -187,8 +228,9 @@ The correct file (`/app/page.html`) is rendered in both cases because
 You can modify the app name using `../new-app-name`. For example, this pattern
 directs the URL `/new-app-name/page` to `/app/page.html`.
 
-    :::yaml
-            pattern: /$YAMLURL/../new-app-name/page
+```yaml
+    pattern: /$YAMLURL/../new-app-name/page
+```
 
 You also need this in [redirection URLs](https://learn.gramener.com/guide/config/#redirection).
 See this example:
@@ -226,26 +268,28 @@ helpful. This requires server-side templating.
 You can use a [Tornado template like this](template.html.source) that using a
 pre-defined variable, e.g. `APP_ROOT`.
 
-    :::html
-    <link rel="stylesheet" href="/{{ APP_ROOT }}/style.css">
+```html
+<link rel="stylesheet" href="/{{ APP_ROOT }}/style.css">
+```
 
 In `gramex.yaml`, we pass `APP_ROOT` to the that's set to `$YAMLURL`. For example:
 
-    :::yaml
-    variables:
-        APP_ROOT: $YAMLURL       # Pre-define APP_ROOT as the absolute URL to gramex.yaml's directory
+```yaml
+variables:
+    APP_ROOT: $YAMLURL       # Pre-define APP_ROOT as the absolute URL to gramex.yaml's directory
 
-    url:
-        deploy-url:
-            pattern: /$YAMLURL/url/(.*)               # Any URL under this directory
-            handler: FileHandler                      # is rendered as a FileHandler
-            kwargs:
-                path: $YAMLPATH/template.html         # Using this template
-                transform:
-                    "template.html":
-                        # Convert to a Tornado template
-                        # Pass the template the APP_ROOT variable
-                        function: template(content, APP_ROOT="$APP_ROOT")
+url:
+    deploy-url:
+        pattern: /$YAMLURL/url/(.*)               # Any URL under this directory
+        handler: FileHandler                      # is rendered as a FileHandler
+        kwargs:
+            path: $YAMLPATH/template.html         # Using this template
+            transform:
+                "template.html":
+                    # Convert to a Tornado template
+                    # Pass the template the APP_ROOT variable
+                    function: template(content, APP_ROOT="$APP_ROOT")
+```
 
 To test this, open the following URLs:
 
@@ -302,27 +346,29 @@ url:
 
 Inside `/app/component/gramex.yaml`, here's what the variables mean:
 
-    :::yaml
-    url:
-        relative-url:
-            # This pattern: translates to /app/component/index.html
-            # Note: leading slash (/) before $YAMLURL is REQUIRED
-            pattern: /$YAMLURL/index.html
-            handler: FileHandler
-            kwargs:
-                path: $YAMLPATH/        # This translates to /app/component/
+```yaml
+url:
+    relative-url:
+        # This pattern: translates to /app/component/index.html
+        # Note: leading slash (/) before $YAMLURL is REQUIRED
+        pattern: /$YAMLURL/index.html
+        handler: FileHandler
+        kwargs:
+            path: $YAMLPATH/        # This translates to /app/component/
+```
 
 If you want to refer to a file in the Gramex source directory, use
 `$GRAMEXPATH`. For example, this maps [config](config) to Gramex's root
 `gramex.yaml`.
 
-    :::yaml
-    url:
-        gramex-config-file:
-            pattern: /$YAMLURL/config           # Map config under current URL
-            handler: FileHandler
-            kwargs:
-                path: $GRAMEXPATH/gramex.yaml   # to the core Gramex config file
+```yaml
+url:
+    gramex-config-file:
+        pattern: /$YAMLURL/config           # Map config under current URL
+        handler: FileHandler
+        kwargs:
+            path: $GRAMEXPATH/gramex.yaml   # to the core Gramex config file
+```
 
 Typically, applications store data in `$GRAMEXDATA/data/<appname>/`. Create and use this directory for your data storage needs.
 
@@ -332,13 +378,14 @@ Typically, applications store data in `$GRAMEXDATA/data/<appname>/`. Create and 
 To set up Gramex as a HTTPS server, you need a certificate file and a key file,
 both in PEM format. Use the following settings in `gramex.yaml`:
 
-    :::yaml
-    app:
-        listen:
-            port: 443
-            ssl_options:
-                certfile: "path/to/certificate.pem"
-                keyfile: "path/to/privatekey.pem"
+```yaml
+app:
+    listen:
+        port: 443
+        ssl_options:
+            certfile: "path/to/certificate.pem"
+            keyfile: "path/to/privatekey.pem"
+```
 
 You can then connect to `https://your-gramex-server/`.
 
@@ -347,10 +394,11 @@ To generate a free HTTPS certificate for a domain, visit
 
 To generate a self-signed HTTPS certificate for testing, run:
 
-    :::bash
-    openssl genrsa -out privatekey.pem 1024
-    openssl req -new -key privatekey.pem -out certrequest.csr
-    openssl x509 -req -in certrequest.csr -signkey privatekey.pem -out certificate.pem
+```bash
+openssl genrsa -out privatekey.pem 1024
+openssl req -new -key privatekey.pem -out certrequest.csr
+openssl x509 -req -in certrequest.csr -signkey privatekey.pem -out certificate.pem
+```
 
 Or you can use these pre-created [privatekey.pem](privatekey.pem) and
 [certificate.pem](certificate.pem) for localhost. (This was created with subject
