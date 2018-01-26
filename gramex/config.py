@@ -586,6 +586,8 @@ class CustomJSONEncoder(JSONEncoder):
     Encodes object to JSON, additionally converting datetime into ISO 8601 format
     '''
     def default(self, obj):
+        import numpy as np
+
         if hasattr(obj, 'to_dict'):
             # Slow but reliable. Handles conversion of numpy objects, mixed types, etc.
             return loads(obj.to_json(orient='records', date_format='iso'),
@@ -595,6 +597,12 @@ class CustomJSONEncoder(JSONEncoder):
             if obj.tzinfo is None:
                 obj = obj.replace(tzinfo=dateutil.tz.tzlocal())
             return obj.isoformat()
+        if isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
         return super(CustomJSONEncoder, self).default(obj)
 
 

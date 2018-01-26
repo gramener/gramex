@@ -38,6 +38,13 @@ class TestJSON(unittest.TestCase):
             json.dumps({'x': pd.DataFrame(df1)}, cls=CustomJSONEncoder, sort_keys=True),
             json.dumps(result, sort_keys=True))
 
+        # numpy types are converted to python standard types
+        data = {'x': pd.np.arange(1), 'y': pd.np.int64(1), 'z': pd.np.float32(1)}
+        result = {'x': [0], 'y': 1, 'z': 1.0}
+        eq_(
+            json.dumps(data, cls=CustomJSONEncoder, sort_keys=True),
+            json.dumps(result, sort_keys=True))
+
     def test_decoder(self):
         date = datetime.datetime(year=2001, month=2, day=3, hour=4, minute=5, second=6,
                                  microsecond=0, tzinfo=dateutil.tz.tzutc())
