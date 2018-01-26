@@ -12,6 +12,8 @@ from nose.plugins.skip import SkipTest
 from six.moves.urllib_parse import urlencode
 import gramex
 import gramex.config
+from gramex.handlers.authhandler import _user_info_path
+from gramex.handlers.basehandler import SQLiteStore
 from gramex.http import OK, UNAUTHORIZED, FORBIDDEN, BAD_REQUEST
 from . import TestGramex, server, tempfiles, dbutils
 
@@ -410,6 +412,27 @@ class TestAuthPrepare(AuthBase):
         eq_(r.status_code, UNAUTHORIZED)
         self.login_ok('alpha', 'alpha', check_next='/')
         self.login_ok('beta', 'beta', check_next='/')
+
+
+class TestAuthActive(AuthBase):
+    @classmethod
+    def setUpClass(cls):
+        AuthBase.setUpClass()
+        cls.url = server.base_url + '/auth/active'
+
+    def test_active_status(self):
+        # Check that a non-logged-in-user has not record or no active status
+        store = SQLiteStore(_user_info_path, table='user')
+
+        # Log in. Then the user should have an active status
+        self.login_ok('activeuser', 'activeuser1', check_next='/')
+        activeuser_info = store.load('activeuser')
+        eq_(activeuser_info['active'], 'y')
+
+        # Log out. Then the user should not have an active status
+        self.logout_ok(check_next='/dir/index/')
+        activeuser_info = store.load('activeuser')
+        eq_(activeuser_info['active'], '')
 
 
 class DBAuthBase(AuthBase):

@@ -22,7 +22,7 @@ import gramex.cache
 from gramex.http import UNAUTHORIZED, BAD_REQUEST
 from gramex.config import check_old_certs, app_log, objectpath, str_utf8
 from gramex.transforms import build_transform
-from .basehandler import BaseHandler, build_log_info
+from .basehandler import BaseHandler, build_log_info, SQLiteStore
 
 _auth_template = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                               'auth.template.html')
@@ -30,6 +30,8 @@ _forgot_template = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                 'forgot.template.html')
 _signup_template = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                 'signup.template.html')
+_user_info_path = os.path.join(gramex.variables.GRAMEXDATA, 'auth.user.db')
+_user_info = SQLiteStore(_user_info_path, table='user')
 
 # Python 3 csv.writer.writerow writes as str(), which is unicode in Py3.
 # Python 2 csv.writer.writerow writes as str(), which is bytes in Py2.
@@ -117,6 +119,12 @@ class AuthHandler(BaseHandler):
             if result is not None:
                 self.args = result
 
+    def update_user(self, user_id, **kwargs):
+        '''Update user login/logout event.'''
+        info = _user_info.load(user_id)
+        info.update(kwargs)
+        _user_info.dump(user_id, info)
+
     def set_user(self, user, id):
         # Find session expiry time
         expires_days = self.session_expiry
@@ -140,6 +148,8 @@ class AuthHandler(BaseHandler):
         user['id'] = user[id]
         self.session['user'] = user
         self.failed_logins[user[id]] = 0
+
+        self.update_user(user[id], active='y', **user)
 
         # If session_inactive: is specified, set expiry date on the session
         if self.session_inactive is not None:
@@ -178,6 +188,9 @@ class LogoutHandler(AuthHandler):
         for callback in self.actions:
             callback(self)
         self.log_user_event(event='logout')
+        user = self.session.get('user', {})
+        if 'id' in user:
+            self.update_user(user['id'], active='')
         self.session.pop('user', None)
         if self.redirects:
             self.redirect_next()

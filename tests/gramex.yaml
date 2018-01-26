@@ -2073,6 +2073,16 @@ url:
         alpha: alpha1
         beta: beta1
 
+  auth/active:
+    pattern: /auth/active
+    handler: SimpleAuth
+    kwargs:
+      template: $YAMLPATH/auth.html
+      user: {arg: user}
+      password: {arg: password}
+      credentials:
+        activeuser: activeuser1
+
   pptx/source:
     pattern: /pptx/source
     handler: PPTXHandler
