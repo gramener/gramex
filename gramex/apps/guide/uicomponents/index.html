@@ -47,7 +47,7 @@
               <label v-bind:for="name">${ info.title }</label>
               <select class="form-control form-control-sm" v-bind:name="name" v-model="info.value">
                 <option v-for="(fontinfo, fontname) in info.options" v-bind:value="fontname">
-                  ${ fontinfo.title }
+                  ${ fontinfo }
                 </option>
               </select>
             </div>

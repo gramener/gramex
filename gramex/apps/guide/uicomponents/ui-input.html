@@ -4,7 +4,7 @@
 <p>
   <label class="custom-control custom-checkbox">
     <input type="checkbox" class="custom-control-input">
-    <span class="custom-control-indicator"></span>
+    <span class="custom-control-label"></span>
     <span class="custom-control-description">Custom checkbox</span>
   </label>
 </p>
@@ -14,12 +14,12 @@
 <p>
   <label class="custom-control custom-radio">
     <input id="radio1" name="radio" type="radio" class="custom-control-input">
-    <span class="custom-control-indicator"></span>
+    <span class="custom-control-label"></span>
     <span class="custom-control-description">Custom Radio 1</span>
   </label>
   <label class="custom-control custom-radio">
     <input id="radio2" name="radio" type="radio" class="custom-control-input">
-    <span class="custom-control-indicator"></span>
+    <span class="custom-control-label"></span>
     <span class="custom-control-description">Custom Radio 2</span>
   </label>
 </p>
@@ -29,7 +29,9 @@
 {% apply view_source %}
 <p>
   <div class="input-group mb-2 mb-sm-0">
-    <div class="input-group-addon bg-white">@</div>
+    <div class="input-group-prepend">
+      <span class="input-group-text">@</span>
+    </div>
     <input type="text" class="form-control border-left-0" id="inlineFormInputGroup" placeholder="Username">
   </div>
 </p>
@@ -59,10 +61,14 @@
     <button type="button" class="btn btn-secondary">Branches</button>
   </div>
   <div class="col-3">
-    <div class="input-group">
-      <span class="input-group-addon" id="basic-addon1">@</span>
-      <input type="text" class="form-control" placeholder="Amount" aria-label="Amount" aria-describedby="basic-addon1">
-      <span class="input-group-addon" id="basic-addon1">.00</span>
+    <div class="input-group mb-3">
+      <div class="input-group-prepend">
+        <span class="input-group-text">$</span>
+      </div>
+      <input type="text" class="form-control" aria-label="Amount">
+      <div class="input-group-append">
+        <span class="input-group-text">.00</span>
+      </div>
     </div>
   </div>
 </div>
@@ -82,13 +88,9 @@
   <div class="col">
     <div class="input-group">
       <input type="text" class="form-control" placeholder="Search">
-      <span class="input-group-addon"><i class="fa fa-search"></i></span>
-    </div>
-  </div>
-  <div class="col">
-    <div class="input-group">
-      <span class="input-group-addon"><i class="fa fa-search"></i></span>
-      <input type="text" class="form-control" placeholder="Search brand">
+      <div class="input-group-append">
+        <span class="input-group-text"><i class="fa fa-search"></i></span>
+      </div>
     </div>
   </div>
   <div class="col">

@@ -11,6 +11,25 @@
 // Import bootstrap
 @import "{{ bootstrap_path }}";
 
+// .modal-left - modal as overlay panel, left and right
+// --------------------------------------------------------------------------
+.modal-left .modal-dialog, .modal-right .modal-dialog {
+  position: fixed;
+  margin: auto;
+  height: 100%;
+}
+.modal-left .modal-dialog {
+  left: 0;
+}
+.modal-right .modal-dialog {
+  right: 0;
+}
+.modal-left .modal-content, .modal-right .modal-content {
+  height: 100%;
+  overflow-y: auto;
+  border: none;
+}
+
 // .cursor-pointer - cursor as pointer
 // --------------------------------------------------------------------------
 .cursor-pointer {
