@@ -35,6 +35,9 @@ class TestFunctionHandler(TestGramex):
         self.check('/func/async/calc',
                    text='[[250,250,250],[250,250,250],[250,250,250],[250,250,250]]', **etag)
 
+    def test_json(self):
+        self.check('/func/numpytypes')
+
     def test_iterator(self):
         no_etag = {'headers': {'Etag': False}}
         self.check('/func/iterator?x=1&x=2&x=3', text='123', **no_etag)

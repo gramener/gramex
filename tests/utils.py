@@ -363,6 +363,16 @@ def email_stubs(handler):
     return json.dumps(SMTPStub.stubs)
 
 
+def numpytypes(handler):
+    supported_types = {
+        'int8', 'int16', 'int32', 'int64',
+        'uint8', 'uint16', 'uint32', 'uint64',
+        'float16', 'float32', 'float64',
+        'bool_', 'object_', 'string_', 'unicode_'}
+    result = {t: getattr(pd.np, t)(1) for t in supported_types}
+    return result
+
+
 if __name__ == '__main__':
     # Call the method mentioned in the command line
     method_name = sys.argv[1]

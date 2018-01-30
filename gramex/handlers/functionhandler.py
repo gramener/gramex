@@ -1,8 +1,9 @@
+import json
 import tornado.web
 import tornado.gen
 from types import GeneratorType
-from gramex.config import app_log
 from gramex.transforms import build_transform
+from gramex.config import app_log, CustomJSONEncoder
 from .basehandler import BaseHandler
 from tornado.util import unicode_type
 
@@ -56,7 +57,8 @@ class FunctionHandler(BaseHandler):
             if tornado.concurrent.is_future(item):
                 item = yield item
             if isinstance(item, (bytes, unicode_type, dict)):
-                self.write(item)
+                self.write(json.dumps(item, separators=(',', ':'), ensure_ascii=True,
+                                      cls=CustomJSONEncoder) if isinstance(item, dict) else item)
                 if multipart:
                     self.flush()
             else:

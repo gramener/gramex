@@ -603,6 +603,8 @@ class CustomJSONEncoder(JSONEncoder):
             return float(obj)
         elif isinstance(obj, np.ndarray):
             return obj.tolist()
+        elif isinstance(obj, np.bool_):
+            return bool(obj)
         return super(CustomJSONEncoder, self).default(obj)
 
 

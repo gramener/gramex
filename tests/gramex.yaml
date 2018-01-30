@@ -194,6 +194,12 @@ url:
     kwargs:
       function: utils.argparse
 
+  func/numpytypes:
+    pattern: /func/numpytypes
+    handler: FunctionHandler
+    kwargs:
+      function: utils.numpytypes
+
   # TestFileHandler
   dir/noindex:
     pattern: /dir/noindex/(.*)
