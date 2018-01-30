@@ -1,22 +1,65 @@
 <h2 class="toc">Cards</h2>
-<div class="row">
-  <div class="col">
-    <div class="card">
-      <div class="card-body">
-        <h4 class="card-title">Card</h4>
-        <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
-      </div><!-- .card-body -->
-    </div><!-- .card -->
-  </div><!-- .col -->
-  <div class="col">
-    <div class="card shadow">
-      <div class="card-body">
-        <h4 class="card-title">Card shadow</h4>
-        <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
-      </div><!-- .card-body -->
-    </div><!-- .card -->
-  </div><!-- .col -->
-</div><!-- .row -->
+{% apply view_source %}
+<div class="card shadow">
+  <div class="card-body">
+    <h4 class="card-title">Card</h4>
+    <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
+  </div><!-- .card-body -->
+  <div class="card-footer">
+    <small class="text-muted">Last updated 3 mins ago</small>
+  </div><!-- .card-footer -->
+</div><!-- .card -->
+{% end %}
+
+<h3>Card groups</h2>
+{% apply view_source %}
+<div class="card-group">
+  <div class="card">
+    <div class="card-body">
+      <h4 class="card-title">Sub card group</h4>
+      <p class="card-text">This is a wider card with supporting text below as a natural lead-in to additional content. This content is a little
+        bit longer.</p>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-body">
+      <h4 class="card-title">Sub card group</h4>
+      <p class="card-text">This card has supporting text below as a natural lead-in to additional content.</p>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-body">
+      <h4 class="card-title">Sub card group</h4>
+      <p class="card-text">Short card text.</p>
+    </div>
+  </div>
+</div>
+{% end %}
+
+<h3>Card group spacing</h3>
+<p>To add spacing between card groups, use `.ml-* border-left` on the second card group item onwards.</p>
+{% apply view_source %}
+<div class="card-group">
+  <div class="card">
+    <div class="card-body border-left">
+      <h4 class="card-title">Sub card group</h4>
+      <p class="card-text">Short card text</p>
+    </div>
+  </div>
+  <div class="card ml-2 border-left">
+    <div class="card-body">
+      <h4 class="card-title">Sub card group</h4>
+      <p class="card-text">Short card text</p>
+    </div>
+  </div>
+  <div class="card ml-2 border-left">
+    <div class="card-body">
+      <h4 class="card-title">Sub card group</h4>
+      <p class="card-text">Shot card text</p>
+    </div>
+  </div>
+</div>
+{% end %}
 
 {% apply view_source %}
 <div class="card shadow mt-3">
@@ -25,7 +68,7 @@
       <div class="card-group">
         <div class="card">
           <div class="card-body">
-            <h4 class="card-title">Sub Card group</h4>
+            <h4 class="card-title">Sub card group</h4>
             <p class="card-text">This is a wider card with supporting text below as a natural lead-in to additional content. This content is a little bit longer.</p>
           </div>
           <div class="card-footer">
@@ -34,8 +77,17 @@
         </div>
         <div class="card">
           <div class="card-body">
-            <h4 class="card-title">Sub Card group</h4>
+            <h4 class="card-title">Sub card group</h4>
             <p class="card-text">This card has supporting text below as a natural lead-in to additional content.</p>
+          </div>
+          <div class="card-footer">
+            <small class="text-muted">Last updated 3 mins ago</small>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <h4 class="card-title">Sub card group</h4>
+            <p class="card-text">Short card text.</p>
           </div>
           <div class="card-footer">
             <small class="text-muted">Last updated 3 mins ago</small>
