@@ -104,13 +104,14 @@ When releasing a new version of Gramex:
       - add test coverage % (``make coverage``)
       - add code base using (``make stats``)
     - ``gramex/release.json`` -- update the version number
+    - ``pkg/docker-py3/Dockerfile`` -- update the version number
     - Run ``gramex/apps/guide/search/search.py`` using Python 3
 
-3. Push the ``dev`` branch to the server and ensure that there are no build
-   errors.
+3. Commit and push the ``dev`` branch to the server. Merge with master, create
+   an annotated tag and push the master branch::
 
-4. Merge with master, create an annotated tag and push the code::
-
+    git commit -m"DOC: Add v1.x.x release notes [skip ci]"
+    git push                    # Push the dev branch
     git checkout master
     git merge dev
     git tag -a v1.x.x           # Annotate with a one-line summary of features
