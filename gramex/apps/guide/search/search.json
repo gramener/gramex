@@ -1,4 +1,9 @@
 {
+  "1.27.0": {
+    "": {
+      "Gramex 1.27.0": -1
+    }
+  },
   "about": {
     "": {
       "About Gramex": -1
@@ -9,8 +14,66 @@
     "": {
       "Smart alerts": -1
     },
-    "scheduler-examples": {
-      "Scheduler examples": -1
+    "alert-api": {
+      "Alert API": -1
+    },
+    "alert-configuration": {
+      "Alert configuration": -1
+    },
+    "alert-examples": {
+      "Alert examples": -1
+    },
+    "alert-logs": {
+      "Alert logs": -1
+    },
+    "alert-setup": {
+      "Alert setup": -1
+    },
+    "avoid-re-sending-emails": {
+      "Avoid re-sending emails": -1
+    },
+    "dynamic-emails-from-data": {
+      "Dynamic emails from data": -1
+    },
+    "email-multiple-people": {
+      "Email multiple people": -1
+    },
+    "mail-merge-change-content-by-user": {
+      "Mail merge: change content by user": -1
+    },
+    "place-body-and-html-in-a-file": {
+      "Place body and HTML in a file": -1
+    },
+    "scheduler-examples": {},
+    "send-a-scheduled-email": {
+      "Send a scheduled email": -1
+    },
+    "send-alerts-on-condition": {
+      "Send alerts on condition": -1
+    },
+    "send-an-email-once": {
+      "Send an email once": -1
+    },
+    "send-as-a-different-user": {
+      "Send as a different user": -1
+    },
+    "send-attachments": {
+      "Send attachments": -1
+    },
+    "send-html-email": {
+      "Send HTML email": -1
+    },
+    "send-inline-images": {
+      "Send inline images": -1
+    },
+    "use-multiple-datasets": {
+      "Use multiple datasets": -1
+    },
+    "use-multiple-services": {
+      "Use multiple services": -1
+    },
+    "use-templates": {
+      "Use templates": -1
     }
   },
   "apps": {
@@ -372,11 +435,20 @@
     "": {
       "Deployment patterns": -1
     },
+    "deployment-checklist": {
+      "Deployment checklist": -1
+    },
     "deployment-variables": {
       "Deployment variables": -1
     },
     "https-server": {
       "HTTPS Server": -1
+    },
+    "linux-scheduled-tasks": {
+      "Linux scheduled tasks": -1
+    },
+    "linux-service": {
+      "Linux service": -1
     },
     "nginx-reverse-proxy": {
       "nginx reverse proxy": -1
@@ -398,6 +470,9 @@
     },
     "windows-administration": {
       "Windows administration": -1
+    },
+    "windows-scheduled-tasks": {
+      "Windows scheduled tasks": -1
     },
     "windows-service": {
       "Windows Service": -1
@@ -479,6 +554,12 @@
     "": {
       "Gramex connects to data": -1
     },
+    "categorical-plots": {
+      "Categorical plots": -1
+    },
+    "formhandler-charts": {
+      "FormHandler charts": -1
+    },
     "formhandler-defaults": {
       "FormHandler defaults": -1
     },
@@ -536,6 +617,9 @@
     "formhandler-transforms": {},
     "preventing-sql-injection": {
       "Preventing SQL injection": -1
+    },
+    "regression-plots": {
+      "Regression plots": -1
     }
   },
   "functionhandler": {
@@ -572,6 +656,17 @@
     "internationalisation": {},
     "server": {}
   },
+  "init": {
+    "": {
+      "Gramex init": -1
+    },
+    "gramex-init-tracker": {
+      "Gramex init tracker": -1
+    },
+    "gramex-init-usage": {
+      "Gramex init usage": -1
+    }
+  },
   "install": {
     "": {
       "Install Gramex": -1
@@ -585,11 +680,17 @@
     "offline-install": {
       "Offline install": -1
     },
+    "other-useful-commands": {
+      "Other useful commands": -1
+    },
     "run-bash-inside-the-container": {
       "Run bash inside the container": -1
     },
     "run-gramex-on-port-9988": {
       "Run Gramex on port 9988": -1
+    },
+    "to-re-connect-to-the-instance": {
+      "To re-connect to the instance:": -1
     },
     "troubleshooting": {
       "Troubleshooting": -1
@@ -681,6 +782,9 @@
     "pptgen-library": {
       "PPTGen Library": -1
     },
+    "pptx-url-arguments": {
+      "PPTX URL arguments": -1
+    },
     "register-register-a-new-command-to-pptgen": {
       "Register: Register a new command to PPTGen": -1
     },
@@ -743,6 +847,11 @@
     },
     "queryhandler-templates": {
       "QueryHandler templates": -1
+    }
+  },
+  "release": {
+    "": {
+      "Gramex releases": -1
     }
   },
   "scheduler": {

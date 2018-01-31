@@ -3,6 +3,52 @@
 History
 -------
 
+1.28 (2018-01-31)
+~~~~~~~~~~~~~~~~~
+
+`FormHandler`_ has two major upgrades. `FormHandler charts`_ use the `Seaborn`_
+library to generate static charts on the server as SVG or PNG (PDF too.) Setting
+``?meta=y`` returns metadata as HTTP headers.
+
+The `UI component library`_ now uses `Bootstrap 4`_ stable version. New components are:
+
+- ``.modal-left`` and ``.modal-right`` overlays
+- `numeral.js`_ library
+- `g1`_ is upgraded to v0.4 which features an improved ``$().formhandler()``
+  component. This lets you render FormHandler data as an interactive Excel-like
+  table component. (@tejesh.papineni)
+
+`Smart alerts`_ can now:
+
+- fetch images and attachments from URLs. This lets you attach dashboards as
+  PDFs or images in conjunction with `CaptureHandler`_
+- specify an option to run the alert only once, based on any condition. This
+  lets you stop repeated emails of the same kind
+- define data in-place in the YAML, rather than using a file or a database
+- log all alerts sent in a log file
+- use the first ``email:`` service defined by default (you don't need to specify a ``service:`` every time)
+
+`PPTXHandler`_ exposes URL query parameters in the configuration. This lets you
+generate presentations whose content can be updated by the URL. For example, you
+can create a certificate template, and set ``?name=`` to update the recipient's
+name. (@ranjan.balappa).
+
+`FunctionHandler`_ can now return NumPy objects as well -- not just Python objects. (@tejesh.papineni)
+
+Thanks to the recent Docuthon, documentation has improved. Key changes:
+
+- The `deploy`_ section features a checklist (@vinay.ranjan) and how to set up Gramex as a service
+- The `UI component library`_ documents how to create equal height layouts (@mohmad.jakeer)
+- Steps to create pre-defined Gramex `apps`_ are documented
+
+Note: the ``condition()`` transform is deprecated. No known repository uses it.
+
+Stats:
+
+- Code base: 21,478 lines (gramex: 13,822, tests: 7,656)
+- Test coverage: 79% (reduced due to new features with less test coverage)
+
+
 1.27 (2018-01-20)
 ~~~~~~~~~~~~~~~~~
 `g1`_ is upgraded to v0.3 which features a ``$().formhandler()`` component.
@@ -901,6 +947,7 @@ There are two changes that may disrupt your code:
 .. _PPTXHandler: https://learn.gramener.com/guide/pptxhandler/
 .. _FormHandler: https://learn.gramener.com/guide/formhandler/
 .. _FormHandler filters: https://learn.gramener.com/guide/formhandler/#formhandler-filters
+.. _FormHandler charts: https://learn.gramener.com/guide/formhandler/#formhandler-charts
 .. _FormHandler downloads: https://learn.gramener.com/guide/formhandler/#formhandler-downloads
 .. _FormHandler defaults: https://learn.gramener.com/guide/formhandler/#formhandler-defaults
 .. _FormHandler prepare: https://learn.gramener.com/guide/formhandler/#formhandler-prepare
@@ -991,7 +1038,11 @@ There are two changes that may disrupt your code:
 .. _Gradient: https://learn.gramener.com/guide/uicomponents/#gradient
 .. _bandit: https://github.com/openstack/bandit/
 .. _Bootstrap 4 Beta 3: https://blog.getbootstrap.com/2017/12/28/bootstrap-4-beta-3/
+.. _Bootstrap 4: https://blog.getbootstrap.com/2018/01/18/bootstrap-4/
 .. _session data: https://learn.gramener.com/guide/auth/#session-data
 .. _docker install: https://learn.gramener.com/guide/install/#docker-install
 .. _Windows administration: https://learn.gramener.com/guide/deploy/#windows-administration
 .. _AJAX login: https://learn.gramener.com/guide/auth/#ajax-login
+.. _Seaborn: https://seaborn.pydata.org/
+.. _numeral.js: http://numeraljs.com/
+.. _deploy: https://learn.gramener.com/guide/deploy
