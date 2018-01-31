@@ -124,9 +124,9 @@ To render FormHandler data as charts, use:
             headers:
               Content-Type: image/png     # Render as a PNG image
 
-The URL [chart?_format=barchart](chart?_format=barchart) renders the chart image.
+The URL [chart?_format=barchart][barchart] renders the chart image.
 
-![Bar plot](chart?_format=barchart)
+[![Bar plot][barchart]][barchart]
 
 To insert an SVG via AJAX, set `ext: svg` and load it via AJAX.
 
@@ -151,7 +151,7 @@ example:
 
 The URL `?xcol=Continent&ycol=c3` draws c3 vs Continents:
 
-![c3 by Continent](chart?_format=barchart-custom&xcol=Continent&ycol=c3)
+[![c3 by Continent][barplot-Continent-c3]][barplot-Continent-c3]
 
 Image dimensions can be controlled via URL arguments. For example:
 
@@ -159,27 +159,41 @@ Image dimensions can be controlled via URL arguments. For example:
           width: '{width}'  # The width of barplot comes from ?width=
           height: 200       # The height of barplot is fixed
 
-![c2 by Continent 200px wide](chart?_format=barchart-custom-size&xcol=Continent&ycol=c2&width=200)
-![c2 by Continent 300px wide](chart?_format=barchart-custom-size&xcol=Continent&ycol=c2&width=300)
+[![c2 by Continent 200px wide][barplot-200]][barplot-200]
+[![c2 by Continent 300px wide][barplot-300]][barplot-300]
 
 More chart types can be created. See the [Seaborn API](https://seaborn.pydata.org/examples/api.html) for examples.
 
 ### Categorical plots
 
-![barplot](categorical?chart=barplot&xcol=Continent&ycol=c1&width=350&height=200)
-![stripplot](categorical?chart=stripplot&xcol=Continent&ycol=c1&width=350&height=200)
-![swarmplot](categorical?chart=swarmplot&xcol=Continent&ycol=c1&width=350&height=200)
-![boxplot](categorical?chart=boxplot&xcol=Continent&ycol=c1&width=350&height=200)
-![violinplot](categorical?chart=violinplot&xcol=Continent&ycol=c1&width=350&height=200)
-![lvplot](categorical?chart=lvplot&xcol=Continent&ycol=c1&width=350&height=200)
-![pointplot](categorical?chart=pointplot&xcol=Continent&ycol=c1&width=350&height=200)
+[![barplot][barplot]][barplot]
+[![stripplot][stripplot]][stripplot]
+[![swarmplot][swarmplot]][swarmplot]
+[![boxplot][boxplot]][boxplot]
+[![violinplot][violinplot]][violinplot]
+[![lvplot][lvplot]][lvplot]
+[![pointplot][pointplot]][pointplot]
 
 ### Regression plots
 
-![regplot](categorical?chart=regplot&xcol=c2&ycol=c1&width=500&height=200)
-![residplot](categorical?chart=residplot&xcol=c2&ycol=c1&width=500&height=200)
+[![regplot][regplot]][regplot]
+[![residplot][residplot]][residplot]
 
 More examples to be added.
+
+[barchart]: chart?_format=barchart
+[barplot-Continent-c3]: chart?_format=barchart-custom&xcol=Continent&ycol=c3
+[barplot-200]: chart?_format=barchart-custom-size&xcol=Continent&ycol=c2&width=200
+[barplot-300]: chart?_format=barchart-custom-size&xcol=Continent&ycol=c2&width=300
+[barplot]: categorical?chart=barplot&xcol=Continent&ycol=c1&width=350&height=200
+[stripplot]: categorical?chart=stripplot&xcol=Continent&ycol=c1&width=350&height=200
+[swarmplot]: categorical?chart=swarmplot&xcol=Continent&ycol=c1&width=350&height=200
+[boxplot]: categorical?chart=boxplot&xcol=Continent&ycol=c1&width=350&height=200
+[violinplot]: categorical?chart=violinplot&xcol=Continent&ycol=c1&width=350&height=200
+[lvplot]: categorical?chart=lvplot&xcol=Continent&ycol=c1&width=350&height=200
+[pointplot]: categorical?chart=pointplot&xcol=Continent&ycol=c1&width=350&height=200
+[regplot]: categorical?chart=regplot&xcol=c2&ycol=c1&width=500&height=200
+[residplot]: categorical?chart=residplot&xcol=c2&ycol=c1&width=500&height=200
 
 ## FormHandler downloads
 
