@@ -544,9 +544,9 @@ fstream@^1.0.0, fstream@^1.0.2:
     mkdirp ">=0.5 0"
     rimraf "2"
 
-g1@0.2:
-  version "0.2.2"
-  resolved "https://registry.yarnpkg.com/g1/-/g1-0.2.2.tgz#d732422b7364c129e16b63d461ab907010bc1897"
+g1@0.4:
+  version "0.4.0"
+  resolved "https://registry.yarnpkg.com/g1/-/g1-0.4.0.tgz#2c49e3c85dc3e08d060cd203406c9357bddb1e17"
 
 gauge@~2.7.3:
   version "2.7.4"
@@ -1005,6 +1005,10 @@ noty@3:
 number-is-nan@^1.0.0:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/number-is-nan/-/number-is-nan-1.0.1.tgz#097b602b53422a522c1afb8790318336941a011d"
+
+numeral@2:
+  version "2.0.6"
+  resolved "https://registry.yarnpkg.com/numeral/-/numeral-2.0.6.tgz#4ad080936d443c2561aed9f2197efffe25f4e506"
 
 oauth-sign@~0.8.1, oauth-sign@~0.8.2:
   version "0.8.2"
