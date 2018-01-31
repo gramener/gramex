@@ -9,6 +9,7 @@ import sqlite3
 import pandas as pd
 import gramex.cache
 from io import BytesIO
+from lxml import etree
 from nose.tools import eq_, ok_
 from gramex import conf
 from gramex.http import BAD_REQUEST, FOUND
@@ -430,3 +431,17 @@ class TestFormHandler(TestGramex):
 
         finally:
             dbutils.mysql_drop_db(variables.MYSQL_SERVER, 'test_formhandler')
+
+    def test_chart(self):
+        r = self.get('/formhandler/chart', data={
+            '_format': 'svg',
+            'chart': 'barplot',
+            'x': 'देश',
+            'y': 'sales',
+            'dpi': 72,
+            'width': 500,
+            'height': 300,
+        })
+        tree = etree.fromstring(r.content)
+        eq_(tree.get('viewBox'), '0 0 500 300')
+        # TODO: expand on test cases

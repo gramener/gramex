@@ -71,3 +71,77 @@ url:
         stripes:
           url: $YAMLPATH/flags.csv
           function: data.groupby('Stripes').sum().reset_index()
+
+    formhandler-chart:
+      pattern: /$YAMLURL/chart
+      handler: FormHandler
+      kwargs:
+        url: $YAMLPATH/flags.csv
+        function: data.groupby('Continent').sum().reset_index()
+        formats:
+          barchart:
+            format: sns
+            chart: barplot
+            ext: png
+            dpi: 48
+            width: 400
+            height: 300
+            x: Continent
+            y: c1
+            headers:
+              Content-Type: image/png
+          barchart-svg:
+            format: sns
+            chart: barplot
+            ext: svg
+            width: 400
+            height: 300
+            x: Continent
+            y: c1
+            headers:
+              Content-Type: image/svg
+          barchart-custom:
+            format: sns
+            chart: barplot
+            ext: png
+            dpi: 48
+            width: 300
+            height: 200
+            x: '{xcol}'
+            y: '{ycol}'
+            headers:
+              Content-Type: image/png
+          barchart-custom-size:
+            format: sns
+            chart: barplot
+            ext: png
+            x: '{xcol}'
+            y: '{ycol}'
+            width: '{width}'
+            height: 200
+            headers:
+              Content-Type: image/png
+      cache:
+        expiry: {duration: 3600}
+
+    formhandler-categorical:
+      pattern: /$YAMLURL/categorical
+      handler: FormHandler
+      kwargs:
+        url: $YAMLPATH/flags.csv
+        default:
+          _format: custom
+        formats:
+          custom:
+            format: sns
+            chart: '{chart}'
+            ext: png
+            x: '{xcol}'
+            y: '{ycol}'
+            dpi: 72
+            width: '{width}'
+            height: '{height}'
+            headers:
+              Content-Type: image/png
+      cache:
+        expiry: {duration: 3600}

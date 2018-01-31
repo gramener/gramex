@@ -13,6 +13,7 @@ import gramex.cache
 from tornado.escape import json_encode
 from sqlalchemy.sql import text
 from gramex.config import merge
+from orderedattrdict import AttrDict
 
 _METADATA_CACHE = {}
 
@@ -743,6 +744,24 @@ def download(data, format='json', template=None, **kwargs):
         from gramex.pptgen import pptgen    # noqa
         out = io.BytesIO()
         pptgen(target=out, data=data, is_formhandler=True, **kwargs)
+        return out.getvalue()
+    elif format in {'seaborn', 'sns'}:
+        kw = AttrDict()
+        defaults = {'chart': 'barplot', 'ext': 'png', 'data': 'data', 'dpi': 96,
+                    'width': 640, 'height': 480}
+        for key, default in defaults.items():
+            kw[key] = kwargs.pop(key, default)
+        import matplotlib
+        matplotlib.use('Agg')       # Before importing seaborn, set a headless backend
+        import seaborn as sns
+        plot = getattr(sns, kw.chart)(data=data.get(kw.data), **kwargs)
+        out = io.BytesIO()
+        fig = plot.get_figure()
+        for k in ['dpi', 'width', 'height']:
+            kw[k] = float(kw[k])
+        fig.set_size_inches(kw.width / kw.dpi, kw.height / kw.dpi)
+        fig.savefig(out, format=kw.ext, dpi=kw.dpi)
+        plot.clear()
         return out.getvalue()
     else:
         out = io.BytesIO()

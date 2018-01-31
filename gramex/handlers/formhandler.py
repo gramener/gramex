@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+import six
 import json
 import tornado.gen
 import gramex.cache
@@ -142,6 +143,10 @@ class FormHandler(BaseHandler):
                 result[key] = modify(data=result[key], key=key, handler=self)
 
         format_options = self.set_format(opt.fmt, meta)
+        params = {k: v[0] for k, v in self.args.items() if len(v) > 0}
+        for key, val in format_options.items():
+            if isinstance(val, six.string_types):
+                format_options[key] = val.format(**params)
         if opt.download:
             self.set_header('Content-Disposition', 'attachment;filename=%s' % opt.download)
         if opt.meta_header:

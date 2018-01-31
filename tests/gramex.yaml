@@ -1381,6 +1381,31 @@ url:
         id: [city, product]
       xsrf_cookies: false
 
+  formhandler/chart:
+    pattern: /formhandler/chart
+    handler: FormHandler
+    kwargs:
+      url: sales.xlsx
+      formats:
+        common: &FORMHANDLER_CHART
+          format: sns
+          chart: '{chart}'
+          x: '{x}'
+          y: '{y}'
+          dpi: '{dpi}'
+          width: '{width}'
+          height: '{height}'
+        svg:
+          ext: svg
+          headers:
+            Content-Type: image/svg
+          <<: *FORMHANDLER_CHART
+        png:
+          ext: png
+          headers:
+            Content-Type: image/png
+          <<: *FORMHANDLER_CHART
+
   capture:
     pattern: /capture
     handler: CaptureHandler

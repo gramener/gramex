@@ -99,6 +99,88 @@ configuration adds a custom PPTX format called `pptx-table`:
 - Download the output at [flags?_format=pptx-table](flags?_format=pptx-table&_limit=10&_c=ID&_c=Name&_c=Continent&_c=Stripes).
 - Download the [input.pptx](input.pptx) used as a template
 
+## FormHandler charts
+
+**v1.28**. FormHandler supports [seaborn](https://seaborn.pydata.org/) charts.
+To render FormHandler data as charts, use:
+
+    :::yaml
+    formhandler-chart:
+      pattern: /$YAMLURL/chart
+      handler: FormHandler
+      kwargs:
+        url: $YAMLPATH/flags.csv
+        function: data.groupby('Continent').sum().reset_index()
+        formats:
+          barchart:                       # Define a format called barchart
+            format: seaborn               # This uses seaborn as the format
+            chart: barplot                # Chart can be any standard seaborn chart
+            ext: png                      # Use a matplot backend (svg, pdf, png)
+            width: 400                    # Image width in pixels. Default: 640px
+            height: 300                   # Image height in pixels. Default: 480px
+            dpi: 48                       # Image resolution (dots per inch). Default: 96
+            x: Continent                  # additional parameters are passed to barplot()
+            y: c1
+            headers:
+              Content-Type: image/png     # Render as a PNG image
+
+The URL [chart?_format=barchart](chart?_format=barchart) renders the chart image.
+
+![Bar plot](chart?_format=barchart)
+
+To insert an SVG via AJAX, set `ext: svg` and load it via AJAX.
+
+```html
+<div id="barchart-svg"></div>
+<script>
+$('#barchart-svg').load('chart?_format=barchart-svg')
+</script>
+```
+
+<div id="barchart-svg"></div>
+<script>
+$('#barchart-svg').load('chart?_format=barchart-svg')
+</script>
+
+The format options are formatted using the URL arguments via `{arg}`. For
+example:
+
+    :::yaml
+          x: '{xcol}'   # The X axis for barplot comes from ?xcol=
+          y: '{ycol}'   # The Y axis for barplot comes from ?ycol=
+
+The URL `?xcol=Continent&ycol=c3` draws c3 vs Continents:
+
+![c3 by Continent](chart?_format=barchart-custom&xcol=Continent&ycol=c3)
+
+Image dimensions can be controlled via URL arguments. For example:
+
+    :::yaml
+          width: '{width}'  # The width of barplot comes from ?width=
+          height: 200       # The height of barplot is fixed
+
+![c2 by Continent 200px wide](chart?_format=barchart-custom-size&xcol=Continent&ycol=c2&width=200)
+![c2 by Continent 300px wide](chart?_format=barchart-custom-size&xcol=Continent&ycol=c2&width=300)
+
+More chart types can be created. See the [Seaborn API](https://seaborn.pydata.org/examples/api.html) for examples.
+
+### Categorical plots
+
+![barplot](categorical?chart=barplot&xcol=Continent&ycol=c1&width=350&height=200)
+![stripplot](categorical?chart=stripplot&xcol=Continent&ycol=c1&width=350&height=200)
+![swarmplot](categorical?chart=swarmplot&xcol=Continent&ycol=c1&width=350&height=200)
+![boxplot](categorical?chart=boxplot&xcol=Continent&ycol=c1&width=350&height=200)
+![violinplot](categorical?chart=violinplot&xcol=Continent&ycol=c1&width=350&height=200)
+![lvplot](categorical?chart=lvplot&xcol=Continent&ycol=c1&width=350&height=200)
+![pointplot](categorical?chart=pointplot&xcol=Continent&ycol=c1&width=350&height=200)
+
+### Regression plots
+
+![regplot](categorical?chart=regplot&xcol=c2&ycol=c1&width=500&height=200)
+![residplot](categorical?chart=residplot&xcol=c2&ycol=c1&width=500&height=200)
+
+More examples to be added.
+
 ## FormHandler downloads
 
 CSV and XLSX formats are downloaded as `data.csv` and `data.xlsx` by default.
