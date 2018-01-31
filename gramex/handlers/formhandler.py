@@ -145,8 +145,11 @@ class FormHandler(BaseHandler):
         format_options = self.set_format(opt.fmt, meta)
         params = {k: v[0] for k, v in self.args.items() if len(v) > 0}
         for key, val in format_options.items():
-            if isinstance(val, six.string_types):
+            if isinstance(val, six.text_type):
                 format_options[key] = val.format(**params)
+            # In PY2, the values are binary. TODO: ensure that format values are in Unicode
+            elif isinstance(val, six.binary_type):
+                format_options[key] = val.decode('utf-8').format(**params)
         if opt.download:
             self.set_header('Content-Disposition', 'attachment;filename=%s' % opt.download)
         if opt.meta_header:

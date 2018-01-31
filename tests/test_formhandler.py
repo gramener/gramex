@@ -442,6 +442,6 @@ class TestFormHandler(TestGramex):
             'width': 500,
             'height': 300,
         })
-        tree = etree.fromstring(r.content)
+        tree = etree.fromstring(r.text.encode('utf-8'))
         eq_(tree.get('viewBox'), '0 0 500 300')
         # TODO: expand on test cases
