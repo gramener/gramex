@@ -230,6 +230,27 @@ this `config-group.yaml` replaces those:
 
 [Run example](group-example)
 
+
+## PPTX URL arguments
+
+URL arguments can be used as variables in templates.
+
+In the example below, [group-args-example?text=My-Text](group-args-example?text=My-Text),
+will replace text with `My-Text`
+
+    :::yaml
+        Caption:                      # Find the shape named "Caption" inside it
+          text: "{{ args['text'] }}"  #   Change its text to ?text=
+        Picture:                      # Find the shape named "Picture" inside it
+          image: $YAMLPATH/{{ args.get('image', 'sample') }}.png # Replace image with ?image= or sample.png
+
+[Run example](group-args-example?text=My-Text)
+
+## Commands
+
+Shapes can be changed using 1 or more commands. These commands can change the
+shape's style and content, or add new content (like charts).
+
 ### Register: Register a new command to PPTGen
 
 Register let you create a custom command. It accepts a function which will accepts three parameters, `shape`, `spec`(configuration for a shape, config under the shape name), `data` in same order. It will not accept any other parameter except these 3. Any existing command can not be overwrite. Return an immutable command list.
@@ -255,12 +276,6 @@ Register let you create a custom command. It accepts a function which will accep
       Shape Name 3:
         custom_command3:
           ....    Configuration
-
-
-## Commands
-
-Shapes can be changed using 1 or more commands. These commands can change the
-shape's style and content, or add new content (like charts).
 
 ### CSS
 

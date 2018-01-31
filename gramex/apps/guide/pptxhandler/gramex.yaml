@@ -74,7 +74,6 @@ url:
             font-size: 12       # Settiing font-size
           text: "New Title <text color='#00ff00' bold='True'> Green Bold Text </text>"
 
-
   pptxhandler/group-example:
     pattern: /$YAMLURL/group-example
     handler: PPTXHandler
@@ -89,6 +88,21 @@ url:
             text: New caption           #   Change its text to "New caption"
           Picture:                      # Find the shape named "Picture" inside it
             image: $YAMLPATH/sample.png #   Replace the image with sample.png
+
+  pptxhandler/group-args-example:
+    pattern: /$YAMLURL/group-args-example
+    handler: PPTXHandler
+    kwargs:
+      headers:
+        Content-Disposition: attachment; filename=group-example.pptx
+      only: 6
+      source: $YAMLPATH/examples-input.pptx  # Common example file
+      rule-1:
+        Group 1:                        # Take the shape named "Group 1"
+          Caption:                      # Find the shape named "Caption" inside it
+            text: "{{ args['text'] }}"  #   Change its text to ?text=
+          Picture:                      # Find the shape named "Picture" inside it
+            image: $YAMLPATH/{{ args.get('image', 'sample') }}.png # Replace image with ?image=
 
   pptxhandler/css-example:
     pattern: /$YAMLURL/css-example

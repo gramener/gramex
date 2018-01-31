@@ -37,3 +37,13 @@ class TestPPTXHandler(TestGramex):
             'Hindi': 'खुश',
             'Russian': 'счастливый',
         })
+
+    def test_change_text_args(self):
+        prs, text = self.get_pptx('/pptx/change-text-args?text=Text')
+        eq_(text, {
+            'Text1': 'Text',
+            'Arabic': 'سعيد',
+            'Chinese': '高兴',
+            'Hindi': 'खुश',
+            'Russian': 'счастливый',
+        })

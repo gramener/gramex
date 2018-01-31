@@ -250,6 +250,10 @@ def change_shapes(collection, change, data, handler, **kwargs):
         if is_group(shape):
             sub_shapes = SlideShapes(shape.element, collection)
             change_shapes(sub_shapes, spec, shape_data, handler)
+        # Add args to shape_data
+        if hasattr(handler, 'args'):
+            args = {k: v[0] for k, v in handler.args.items() if len(v) > 0}
+            shape_data['args'] = args
         # Run commands in the spec
         for cmd, method in COMMANDS_LIST.items():
             if cmd in spec:

@@ -2131,6 +2131,18 @@ url:
         Chinese: {text: 高兴}
         Hindi: {text: खुश}
         Russian: {text: счастливый}
+  pptx/change-text-args:
+    pattern: /pptx/change-text-args
+    handler: PPTXHandler
+    kwargs:
+      source: template.pptx
+      change-text:
+        slide-number: 1
+        Text1: {text: "{{ args['text'] }}"}
+        Arabic: {text: سعيد}
+        Chinese: {text: 高兴}
+        Hindi: {text: खुश}
+        Russian: {text: счастливый}
 
   xsrf:
     pattern: /xsrf
