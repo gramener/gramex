@@ -23,6 +23,11 @@ url:
                   data: data['data']
             headers:
               Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+          cors-json:
+            format: json
+            headers:
+              Content-Type: application/json
+              Access-Control-Allow-Origin: '*'
 
     formhandler-continent:
       pattern: /$YAMLURL/continent
