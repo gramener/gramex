@@ -3,7 +3,7 @@
 History
 -------
 
-1.28 (2018-01-31)
+v1.28.0 (2018-01-31)
 ~~~~~~~~~~~~~~~~~
 
 `FormHandler`_ has two major upgrades. `FormHandler charts`_ use the `Seaborn`_
@@ -49,7 +49,7 @@ Stats:
 - Test coverage: 79% (reduced due to new features with less test coverage)
 
 
-1.27 (2018-01-20)
+v1.27.0 (2018-01-20)
 ~~~~~~~~~~~~~~~~~
 `g1`_ is upgraded to v0.3 which features a ``$().formhandler()`` component.
 This renders FormHandlers as Excel-like tables (sortable, filterable).
@@ -96,7 +96,7 @@ Stats:
 - Test coverage: 81%
 
 
-1.26 (2017-12-31)
+v1.26.0 (2017-12-31)
 ~~~~~~~~~~~~~~~~~
 This release features an upgrade to the `UI component library`_:
 
@@ -133,7 +133,7 @@ Stats:
 - Test coverage: 80%
 
 
-1.25 (2017-12-15)
+v1.25.0 (2017-12-15)
 ~~~~~~~~~~~~~~~~~
 This release features `Smart Alerts`_ - a rule-based email alert service. This
 can be used to:
@@ -176,7 +176,7 @@ Stats:
 - Code base: 20,832 lines (gramex: 13,500, tests: 7,332)
 - Test coverage: 81%
 
-1.24 (2017-11-30)
+v1.24.0 (2017-11-30)
 ~~~~~~~~~~~~~~~~~
 **Note**: Before installing this release, you install `node`_ 8.x or above, and
 also run ``npm install -g yarn``. Also run ``pip install`` with a ``--verbose``
@@ -220,7 +220,7 @@ Stats:
 - Test coverage: 81%
 
 
-1.23.1 (2017-11-13)
+v1.23.1 (2017-11-13)
 ~~~~~~~~~~~~~~~~~~~
 This is an interim release with minor features and major bugfixes.
 
@@ -261,7 +261,7 @@ Stats:
 - Test coverage: 65% (pptgen coverage is a gap)
 
 
-1.23 (2017-10-31)
+v1.23.0 (2017-10-31)
 ~~~~~~~~~~~~~~~~~
 This release adds Gramex as a `Windows service`_, making it easier for Windows
 administrators to auto-start and manage Gramex. Run ``gramex service install``
@@ -333,7 +333,7 @@ There are several bug fixes, documentation enhancements and test cases added.
 - Test coverage: 79%
 
 
-1.22 (2017-09-28)
+v1.22.0 (2017-09-28)
 ~~~~~~~~~~~~~~~~~
 This release adds Windows `IntegratedAuth`_. This allows Windows domain users to
 log into Gramex automatically without entering and ID or password.
@@ -385,7 +385,7 @@ Stats:
 - Test coverage: 79%
 
 
-1.21 (2017-08-29)
+v1.21.0 (2017-08-29)
 ~~~~~~~~~~~~~~~~~
 This is a major release with new functionality. There are two new handlers.
 
@@ -443,7 +443,7 @@ There is one deprecation this release. ``handler.kwargs`` is now
 this was re-introduced in 1.22.
 
 
-1.20 (2017-07-31)
+v1.20.0 (2017-07-31)
 ~~~~~~~~~~~~~~~~~
 This is a major release with some critical enhancements and fixes.
 
@@ -513,7 +513,7 @@ Finally, there are a few documentation updates.
 - All `exercises`_ have been consolidated into a single page.
 
 
-1.19 (2017-07-09)
+v1.19.0 (2017-07-09)
 ~~~~~~~~~~~~~~~~~
 This is a minor enhancement release with
 
@@ -542,7 +542,7 @@ This is a minor enhancement release with
   `#76 <https://code.gramener.com/s.anand/gramex/issues/76>`_
 
 
-1.18 (2017-06-29)
+v1.18.0 (2017-06-29)
 ~~~~~~~~~~~~~~~~~
 This is a minor enhancement release with several critical bugfixes.
 
@@ -579,7 +579,7 @@ This is a minor enhancement release with several critical bugfixes.
   `Static file caching`_.
 
 
-1.17.1 (2017-04-23)
+v1.17.1 (2017-04-23)
 ~~~~~~~~~~~~~~~~~~~
 This is a maintenance release with a few minor enhancements:
 
@@ -598,7 +598,7 @@ A series of important bugfixes are addressed:
   as the original response
 
 
-1.17 (2017-01-29)
+v1.17 (2017-01-29)
 ~~~~~~~~~~~~~~~~~
 
 This version has a breaking change. The default login URL is ``/login/`` instead
@@ -620,7 +620,7 @@ gramex.yaml ``app:`` section, add ``login_url: /login`` to revert the change.
 - Some bugs related to JSONStore (used for session storage) are fixed
 
 
-1.16 (2016-10-16)
+v1.16 (2016-10-16)
 ~~~~~~~~~~~~~~~~~
 
 - Add a `deploy yaml`_ configuration that makes your deployment automatically more secure
@@ -632,7 +632,7 @@ gramex.yaml ``app:`` section, add ``login_url: /login`` to revert the change.
 - Fixed bugs to improve security, reduce the CPU usage, better JSON handling for binary data, HDF5store corruption, multiple email recipients, caching 304 responses,
 
 
-1.15 (2016-08-21)
+v1.15 (2016-08-21)
 ~~~~~~~~~~~~~~~~~
 
 - `DataHandler`_ supports a ``?q=`` parameter that searches all text columns
@@ -648,7 +648,7 @@ gramex.yaml ``app:`` section, add ``login_url: /login`` to revert the change.
 - :py:func:`gramex.init` supports a ``force_reload=True`` that reloads services.
   To support this, :py:func:`gramex.transforms.build_transform` is no longer cached.
 
-1.14 (2016-08-11)
+v1.14 (2016-08-11)
 ~~~~~~~~~~~~~~~~~
 
 - `TwitterStream`_ is a scheduler function that provides Twitter Streaming API
@@ -663,7 +663,7 @@ gramex.yaml ``app:`` section, add ``login_url: /login`` to revert the change.
   as Tornado templates. ``template: true`` renders all files as templates.
 
 
-1.13 (2016-08-01)
+v1.13 (2016-08-01)
 ~~~~~~~~~~~~~~~~~
 
 - All handlers support custom `error handlers`_. You can show custom 404, 500
@@ -676,7 +676,7 @@ gramex.yaml ``app:`` section, add ``login_url: /login`` to revert the change.
 - Variables can be assigned different values in different environments via a
   simple `conditional variables`_ syntax.
 
-1.12 (2016-07-21)
+v1.12 (2016-07-21)
 ~~~~~~~~~~~~~~~~~
 
 * `DBAuth`_ features a forgot password feature.
@@ -687,7 +687,7 @@ gramex.yaml ``app:`` section, add ``login_url: /login`` to revert the change.
 * Gramex loads a bit faster by importing slow modules (e.g. Pandas) only if
   required.
 
-1.11 (2016-07-15)
+v1.11 (2016-07-15)
 ~~~~~~~~~~~~~~~~~
 
 * A data browser app is ready. Run ``gramex install databrowser`` and then
@@ -710,7 +710,7 @@ gramex.yaml ``app:`` section, add ``login_url: /login`` to revert the change.
 * Gramex's log no longer shows the user name on the console by default. This was
   making the request logs quite long.
 
-1.10 (2016-07-01)
+v1.10 (2016-07-01)
 ~~~~~~~~~~~~~~~~~
 
 * `DataHandler`_ can now write back into relational databases. This lets you
@@ -731,7 +731,7 @@ gramex.yaml ``app:`` section, add ``login_url: /login`` to revert the change.
   be overridden to use any other format.
 
 
-1.0.9 (2016-06-15)
+v1.0.9 (2016-06-15)
 ~~~~~~~~~~~~~~~~~~
 
 * Gramex supports `sessions`_. Whether a user is logged in or not,
@@ -758,7 +758,7 @@ gramex.yaml ``app:`` section, add ``login_url: /login`` to revert the change.
 * Press ``Ctrl+B`` on the console to start the browser (in case you forgot
   ``--browser``.)
 
-1.0.8 (2016-06-01)
+v1.0.8 (2016-06-01)
 ~~~~~~~~~~~~~~~~~~
 
 * Gramex supports installation of `apps`_. You can run ``gramex install <app>
@@ -794,7 +794,7 @@ There are two changes that may disrupt your code:
   change this behaviour.
 
 
-1.0.7 (2016-05-15)
+v1.0.7 (2016-05-15)
 ~~~~~~~~~~~~~~~~~~
 
 * We have a new `JSONHandler`_ that implements a JSON store. It is similar to
@@ -819,7 +819,7 @@ There are two changes that may disrupt your code:
   systems.
 
 
-1.0.6 (2016-05-01)
+v1.0.6 (2016-05-01)
 ~~~~~~~~~~~~~~~~~~
 
 * In the ``app:`` section, the ``browser:`` key accepts either ``true`` or any
@@ -845,7 +845,7 @@ There are two changes that may disrupt your code:
 * Gramex guide is a part of Gramex. There's no need to install it separately.
 
 
-1.0.5 (2016-04-15)
+v1.0.5 (2016-04-15)
 ~~~~~~~~~~~~~~~~~~
 
 * Gramex config YAML files support custom variables. You can define a variable
@@ -877,7 +877,7 @@ There are two changes that may disrupt your code:
   files are changed.
 
 
-1.0.4 (2016-03-30)
+v1.0.4 (2016-03-30)
 ~~~~~~~~~~~~~~~~~~
 
 * `FunctionHandler`_ supports co-routines and works asynchronously
@@ -886,7 +886,7 @@ There are two changes that may disrupt your code:
 * Simpler installation steps
 
 
-1.0.3 (2016-01-18)
+v1.0.3 (2016-01-18)
 ~~~~~~~~~~~~~~~~~~
 
 * Implement `DataHandler`_ that displays data from databases (via
@@ -896,7 +896,7 @@ There are two changes that may disrupt your code:
     - takes both content as well as the handler as input
 * gramex.yaml URL priority can be specified explicitly using ``priority:``
 
-1.0.2 (2015-10-11)
+v1.0.2 (2015-10-11)
 ~~~~~~~~~~~~~~~~~~
 
 * Implement `FunctionHandler`_ that renders any function
@@ -907,7 +907,7 @@ There are two changes that may disrupt your code:
 * Document Gramex at https://learn.gramener.com/gramex/
 * Add test cases for handlers
 
-1.0.1 (2015-09-09)
+v1.0.1 (2015-09-09)
 ~~~~~~~~~~~~~~~~~~
 
 * Is a directory-browsing webserver (``gramex.handlers.DirectoryHandler``)
@@ -916,7 +916,7 @@ There are two changes that may disrupt your code:
   ``gramex.confutil``
 * Logs display friendly dates, and absolute paths instead of relative paths
 
-1.0.0 (2015-09-08)
+v1.0.0 (2015-09-08)
 ~~~~~~~~~~~~~~~~~~
 
 * First release of core server

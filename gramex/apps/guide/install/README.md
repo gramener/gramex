@@ -11,7 +11,7 @@ title: Install Gramex
 - Run `pip install --verbose https://code.gramener.com/s.anand/gramex/repository/archive.tar.bz2?ref=master`
     - ``--verbose`` is useful. We install node modules, which take time. `--verbose` lets you monitor progress.
     - Replace ``?ref=master`` with `?ref=dev` for the latest development version.
-    - Replace ``?ref=master`` with `?ref=1.24` for version 1.24
+    - Replace ``?ref=master`` with `?ref=v1.28.0` for version 1.28.0
       (or pick [any other version](https://code.gramener.com/s.anand/gramex/tags))
 - Run `gramex` to start Gramex
 - Press `Ctrl+C` to terminate Gramex.
