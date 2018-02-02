@@ -1,3 +1,5 @@
+capture:
+    target: $GRAMEXPATH/apps/capture/
 guide:
     target: $GRAMEXPATH/apps/guide/
 gramex-update:
