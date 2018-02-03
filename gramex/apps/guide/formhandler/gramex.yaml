@@ -148,5 +148,36 @@ url:
             height: '{height}'
             headers:
               Content-Type: image/png
+          facet:
+            format: sns
+            chart: '{chart}'
+            ext: png
+            x: '{xcol}'
+            y: '{ycol}'
+            hue: '{hue}'
+            dpi: 72
+            width: '{width}'
+            height: '{height}'
+            headers:
+              Content-Type: image/png
+      cache:
+        expiry: {duration: 3600}
+
+    formhandler-numerical:
+      pattern: /$YAMLURL/numerical
+      handler: FormHandler
+      kwargs:
+        url: $YAMLPATH/flags.csv
+        function: data.select_dtypes(include=numpy.number)
+        formats:
+          matrix:
+            format: sns
+            chart: '{chart}'
+            ext: png
+            dpi: 72
+            width: '{width}'
+            height: '{height}'
+            headers:
+              Content-Type: image/png
       cache:
         expiry: {duration: 3600}

@@ -756,12 +756,12 @@ def download(data, format='json', template=None, **kwargs):
         import seaborn as sns
         plot = getattr(sns, kw.chart)(data=data.get(kw.data), **kwargs)
         out = io.BytesIO()
-        fig = plot.get_figure()
+        fig = plot.figure if hasattr(plot, 'figure') else plot.fig
         for k in ['dpi', 'width', 'height']:
             kw[k] = float(kw[k])
         fig.set_size_inches(kw.width / kw.dpi, kw.height / kw.dpi)
         fig.savefig(out, format=kw.ext, dpi=kw.dpi)
-        plot.clear()
+        fig.clear()
         return out.getvalue()
     else:
         out = io.BytesIO()

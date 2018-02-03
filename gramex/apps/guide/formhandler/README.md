@@ -162,7 +162,7 @@ Image dimensions can be controlled via URL arguments. For example:
 [![c2 by Continent 200px wide][barplot-200]][barplot-200]
 [![c2 by Continent 300px wide][barplot-300]][barplot-300]
 
-More chart types can be created. See the [Seaborn API](https://seaborn.pydata.org/examples/api.html) for examples.
+More chart types can be created. See the [Seaborn API](https://seaborn.pydata.org/api.html) for examples.
 
 ### Categorical plots
 
@@ -179,6 +179,17 @@ More chart types can be created. See the [Seaborn API](https://seaborn.pydata.or
 [![regplot][regplot]][regplot]
 [![residplot][residplot]][residplot]
 
+### Grid plots
+
+[![jointplot][jointplot]][jointplot]
+[![factorplot][factorplot]][factorplot]
+[![lmplot][lmplot]][lmplot]
+
+### Matrix plots
+
+[![heatmap][heatmap]][heatmap]
+[![clustermap][clustermap]][clustermap]
+
 More examples to be added.
 
 [barchart]: chart?_format=barchart
@@ -192,8 +203,13 @@ More examples to be added.
 [violinplot]: categorical?chart=violinplot&xcol=Continent&ycol=c1&width=350&height=200
 [lvplot]: categorical?chart=lvplot&xcol=Continent&ycol=c1&width=350&height=200
 [pointplot]: categorical?chart=pointplot&xcol=Continent&ycol=c1&width=350&height=200
-[regplot]: categorical?chart=regplot&xcol=c2&ycol=c1&width=500&height=200
-[residplot]: categorical?chart=residplot&xcol=c2&ycol=c1&width=500&height=200
+[regplot]: categorical?chart=regplot&xcol=c2&ycol=c1&width=350&height=200
+[residplot]: categorical?chart=residplot&xcol=c2&ycol=c1&width=350&height=200
+[jointplot]: categorical?chart=jointplot&xcol=c1&ycol=c3&width=350&height=200
+[factorplot]: categorical?_format=facet&chart=factorplot&xcol=c2&ycol=c5&hue=Stripes&width=350&height=200
+[lmplot]: categorical?_format=facet&chart=lmplot&xcol=c1&ycol=c3&hue=Stripes&width=350&height=200
+[heatmap]: numerical?_format=matrix&chart=heatmap&width=350&height=200
+[clustermap]: numerical?_format=matrix&chart=clustermap&width=350&height=200
 
 ## FormHandler downloads
 
