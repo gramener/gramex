@@ -168,7 +168,7 @@ url:
       handler: FormHandler
       kwargs:
         url: $YAMLPATH/flags.csv
-        function: data.select_dtypes(include=numpy.number)
+        function: data.select_dtypes(include=[numpy.number])
         formats:
           matrix:
             format: sns
