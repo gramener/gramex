@@ -338,6 +338,17 @@ app:
 
 For debugging without XSRF, start Gramex with a `--settings.xsrf_cookies=false` from the command line.
 
+### How XSRF works
+
+Tornado's XSRF:
+
+- Sets a random non-expiring `_xsrf` cookie when
+  `tornado.web.RequestHandler.xsrf_token()` is called. It is `httponly` by
+  default in Gramex because of the default `xsrf_cookie_kwargs` setting, but not
+  set to `secure` to allow HTTP sites to access it
+- Checks if the `_xsrf` GET/POST argument (or the `X-Xsrftoken` or `C-Xsrftoken`
+  headers) is a valid XSRF token, and checks that it matches the cookie value
+
 ## FileHandler HTTP methods
 
 By default FileHandler supports `GET`, `HEAD` and `POST` methods. You can map
