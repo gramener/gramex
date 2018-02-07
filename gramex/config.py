@@ -592,12 +592,12 @@ class CustomJSONEncoder(JSONEncoder):
             # Slow but reliable. Handles conversion of numpy objects, mixed types, etc.
             return loads(obj.to_json(orient='records', date_format='iso'),
                          object_pairs_hook=OrderedDict)
-        if isinstance(obj, datetime.datetime):
+        elif isinstance(obj, datetime.datetime):
             # Use local timezone if no timezone is specified
             if obj.tzinfo is None:
                 obj = obj.replace(tzinfo=dateutil.tz.tzlocal())
             return obj.isoformat()
-        if isinstance(obj, np.integer):
+        elif isinstance(obj, np.integer):
             return int(obj)
         elif isinstance(obj, np.floating):
             return float(obj)
@@ -605,6 +605,8 @@ class CustomJSONEncoder(JSONEncoder):
             return obj.tolist()
         elif isinstance(obj, np.bool_):
             return bool(obj)
+        elif isinstance(obj, np.bytes_):
+            return obj.decode('utf-8')
         return super(CustomJSONEncoder, self).default(obj)
 
 
