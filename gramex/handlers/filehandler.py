@@ -147,9 +147,7 @@ class FileHandler(BaseHandler):
         cls.headers = AttrDict(objectpath(gramex_conf, 'handlers.FileHandler.headers', {}))
         cls.headers.update(headers)
         # Set supported methods
-        if not isinstance(methods, (tuple, list)):
-            methods = [methods]
-        for method in methods:
+        for method in (methods if isinstance(methods, (tuple, list)) else [methods]):
             method = method.lower()
             setattr(cls, method, cls._head if method == 'head' else cls._get)
 

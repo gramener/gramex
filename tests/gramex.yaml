@@ -200,6 +200,14 @@ url:
     kwargs:
       function: utils.numpytypes
 
+  func/methods:
+    pattern: /func/methods
+    handler: FunctionHandler
+    kwargs:
+      function: utils.params_as_json
+      methods: [PUT, POST]
+      xsrf_cookies: false
+
   # TestFileHandler
   dir/noindex:
     pattern: /dir/noindex/(.*)

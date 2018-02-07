@@ -59,3 +59,9 @@ class TestFunctionHandler(TestGramex):
         r = self.get('/func/redirect?next=/def', headers={'NEXT': '/abc'}, allow_redirects=False)
         self.assertEqual(r.headers.get('Location'), '/def')
         self.assertEqual(r.headers.get('Increment'), '4')
+
+    def test_methods(self):
+        self.check('/func/methods', method='get', code=405)
+        self.check('/func/methods', method='delete', code=405)
+        self.check('/func/methods', method='post')
+        self.check('/func/methods', method='put')

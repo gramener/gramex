@@ -30,12 +30,24 @@ You can see all configurations used in this page in [gramex.yaml](gramex.yaml):
 
 <iframe frameborder="0" src="gramex.yaml"></iframe>
 
-FunctionHandler handles `GET` *and* `POST` requests by default. That is, the
-same function is called irrespective of whether the method is `GET` or `POST`.
-
 After the function executes, users can be redirected via the `redirect:` config
 documented the [redirection configuration](../config/#redirection).
 
+## Function methods
+
+FunctionHandler handles `GET` *and* `POST` requests by default. That is, the
+same function is called irrespective of whether the method is `GET` or `POST`.
+
+To change this, add a `methods:` key. For example:
+
+```yaml
+url:
+    total:
+        pattern: total
+        handler: FunctionHandler
+        kwargs:
+            function: calculations.total(100, 200)
+            methods: [POST, PUT, DELETE]            # Allow only these 3 HTTP methods
 
 ## Function arguments
 

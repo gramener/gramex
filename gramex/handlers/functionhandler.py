@@ -23,21 +23,24 @@ class FunctionHandler(BaseHandler):
     :arg list args: positional arguments to be passed to the function.
     :arg dict kwargs: keyword arguments to be passed to the function.
     :arg dict headers: HTTP headers to set on the response.
+    :arg list methods: List of HTTP methods to allow. Defaults to
+        `['GET', 'POST']`.
     :arg string redirect: URL to redirect to when the result is done. Used to
         trigger calculations without displaying any output.
     '''
     @classmethod
-    def setup(cls, headers={}, **kwargs):
+    def setup(cls, headers={}, methods=['GET', 'POST'], **kwargs):
         super(FunctionHandler, cls).setup(**kwargs)
         # Don't use cls.info.function = build_transform(...) -- Python treats it as a method
         cls.info = {}
         cls.info['function'] = build_transform(kwargs, vars={'handler': None},
                                                filename='url:%s' % cls.name)
         cls.headers = headers
-        cls.post = cls.get
+        for method in (methods if isinstance(methods, (tuple, list)) else [methods]):
+            setattr(cls, method.lower(), cls._get)
 
     @tornado.gen.coroutine
-    def get(self, *path_args):
+    def _get(self, *path_args):
         if self.redirects:
             self.save_redirect_page()
 
