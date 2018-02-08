@@ -75,10 +75,10 @@ class TestProxyHandler(TestGramex):
         # URL pattern wildcards
         result = self.check('/proxy/httpbinprefix/suffix', session=session).json()
         self.assertEquals({
-            'pre': ['prefix'],  # path_args from the url requested
-            'post': ['suffix'], # path_args from the url requested
-            'y': ['1', '2'],    # from default:
-            'x': ['1', '2'],    # from url:
-            'z': ['1'],         # from url:
-            'b': ['1'],         # from prepare:
+            'pre': ['prefix'],      # path_args from the url requested
+            'post': ['suffix'],     # path_args from the url requested
+            'y': ['1', '2'],        # from default:
+            'x': ['1', '2'],        # from url:
+            'z': ['1'],             # from url:
+            'b': ['1'],             # from prepare:
         }, result['args'])

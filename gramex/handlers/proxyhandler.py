@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 import six
 import tornado.web
 import tornado.gen
-from six.moves.urllib_parse import urlsplit, urlunsplit, parse_qs, urlencode, urljoin
+from six.moves.urllib_parse import urlsplit, urlunsplit, parse_qs, urlencode
 from tornado.httputil import HTTPHeaders
 from tornado.httpclient import AsyncHTTPClient, HTTPRequest
 from gramex.transforms import build_transform
