@@ -1506,6 +1506,7 @@ url:
     handler: FunctionHandler
     kwargs:
       function: utils.httpbin
+      methods: [GET, PUT, POST, DELETE]
   cache/randomchar-nocache:
     pattern: /cache/randomchar-nocache
     handler: FunctionHandler
@@ -2151,6 +2152,28 @@ url:
         Chinese: {text: 高兴}
         Hindi: {text: खुश}
         Russian: {text: счастливый}
+
+  proxy/httpbin/:
+    pattern: /proxy/httpbin(.*?)/(.*)
+    handler: ProxyHandler
+    kwargs:
+      url: http://127.0.0.1:9999/httpbin?x=1&x=2&z=1&pre={0}&post={1}
+      request_headers:
+        User-Agent: true
+        X-Xsrftoken: true
+        X-Csrftoken: true
+        Cookie: true
+        X-From: ProxyHandler
+        Session: 'Session {handler.session[id]}'
+      default:
+        y: [1, 2]
+        z: 3
+      # httpbin exposes GET, POST, PUT, DELETE. Make this a bit different
+      methods: [GET, POST, PUT, PATCH]
+      prepare: utils.proxy_prepare(request, handler)
+      modify: utils.proxy_modify(request, response, handler)
+      headers:
+        X-Proxy-Custom: custom-header
 
   xsrf:
     pattern: /xsrf

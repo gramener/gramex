@@ -1,0 +1,26 @@
+url:
+    proxyhandler/github/search/users:
+        pattern: /$YAMLURL/github/(.*)
+        handler: ProxyHandler
+        kwargs:
+            url: https://api.github.com/{0}
+            request_headers:
+                User-Agent: true
+
+    proxyhandler/google:
+        pattern: /$YAMLURL/google/(.*)
+        handler: ProxyHandler
+        kwargs:
+            url: https://www.googleapis.com/{0}
+            request_headers:
+                User-Agent: true
+                Authorization: 'Bearer {handler.session[google_access_token]}'
+
+    proxyhandler/gramener.com:
+        pattern: /$YAMLURL/(demo|uistatic|node_modules|bowerlib)/(.*)
+        handler: ProxyHandler
+        kwargs:
+            url: https://gramener.com/{0}/{1}
+            auth: true
+        cache:
+            expiry: {duration: 300}

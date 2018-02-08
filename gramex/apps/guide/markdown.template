@@ -24,6 +24,7 @@
       <li><a href="/$GUIDE_ROOT/capturehandler/">CaptureHandler</a></li>
       <li><a href="/$GUIDE_ROOT/pptxhandler/">PPTXHandler</a></li>
       <li><a href="/$GUIDE_ROOT/auth/">Auth handlers</a></li>
+      <li><a href="/$GUIDE_ROOT/proxyhandler/">ProxyHandler</a></li>
       <li><a href="/$GUIDE_ROOT/uploadhandler/">UploadHandler</a></li>
       <li><a href="/$GUIDE_ROOT/processhandler/">ProcessHandler</a></li>
       <li><a href="/$GUIDE_ROOT/websockethandler/">WebSocketHandler</a></li>

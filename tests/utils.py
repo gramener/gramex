@@ -373,6 +373,17 @@ def numpytypes(handler):
     return result
 
 
+def proxy_prepare(request, handler):
+    request.headers['X-Prepare'] = handler.request.method
+    # Add a ?b=1 if other arguments already exist
+    if '?' in request.url:
+        request.url = request.url + '&b=1'
+
+
+def proxy_modify(request, response, handler):
+    response.headers['X-Modify'] = handler.request.method
+
+
 if __name__ == '__main__':
     # Call the method mentioned in the command line
     method_name = sys.argv[1]

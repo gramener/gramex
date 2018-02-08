@@ -17,6 +17,7 @@ classes: toc
 - [Export PDF and images](capturehandler/)
 - [Create PPTX](pptxhandler/)
 - [Authentication](auth/)
+- [Proxy API requests](proxyhandler/)
 - [Upload files](uploadhandler/)
 - [Run programs](processhandler/) (processes)
 - [Handle WebSockets](websockethandler/)

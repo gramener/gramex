@@ -38,8 +38,30 @@ class TestGramex(unittest.TestCase):
         return getattr(req, method)(server.base_url + url, timeout=timeout, **kwargs)
 
     def check(self, url, data=None, path=None, code=200, text=None, no_text=None,
-              headers=None, session=None, method='get', timeout=10):
-        r = self.get(url, session=session, data=data, method=method, timeout=timeout)
+              request_headers=None, headers=None, session=None, method='get', timeout=10):
+        '''
+        check(url) checks if the url returns the correct response. Parameters:
+
+        :arg string url: Relative URL from test server base
+        :arg dict data: optional data= to pass to requests.get/post
+        :arg dict request_headers: options headers= to pass to requests.get/post
+        :arg string method: HTTP method (default: 'get', may be 'post', etc.)
+        :arg Session session: requests.Session object to use (default: ``requests``)
+        :arg int timeout: seconds to wait (default: 10)
+
+        :arg int code: returned status code must match this (default: 200)
+        :arg string text: returned body must contain this text
+        :arg string no_text: returned body must NOT contain this text
+        :arg string path: returned body must equal the contents of the file at this path
+        :arg dict headers: returned headers must contain these items. Value can be:
+            - None/False: the header SHOULD NOT exist
+            - True: the header SHOULD exist
+            - string: the header must equal this string
+
+        If any of the checks do not match, raises an assertion error.
+        '''
+        r = self.get(url, session=session, data=data, method=method, timeout=timeout,
+                     headers=request_headers)
         self.assertEqual(r.status_code, code, '%s: code %d != %d' % (url, r.status_code, code))
         if text is not None:
             self.assertIn(text, r.text, '%s: %s not in %s' % (url, text, r.text))

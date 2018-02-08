@@ -16,6 +16,7 @@ from .uploadhandler import UploadHandler
 from .capturehandler import CaptureHandler, Capture
 from .formhandler import FormHandler
 from .pptxhandler import PPTXHandler
+from .proxyhandler import ProxyHandler
 
 DirectoryHandler = FileHandler
 
@@ -30,4 +31,5 @@ __all__ = [
     'CaptureHandler', 'Capture',
     'FormHandler',
     'PPTXHandler',
+    'ProxyHandler',
 ]

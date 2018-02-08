@@ -199,6 +199,7 @@ url:
         kwargs:
             key: YOURKEY            # Set your app key
             secret: YOURSECRET      # Set your app secret
+            # Scope list: https://developers.google.com/identity/protocols/googlescopes
             scope:
                 - https://www.googleapis.com/auth/contacts.readonly
                 - https://www.googleapis.com/auth/gmail.readonly

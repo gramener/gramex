@@ -42,13 +42,19 @@ url:
             # callback: /auth/google on localhost:9988/, localhost:9999/, learn.gramener.com/guide/
             key: 817932882244-gdr59t3mpqh5554d1bgdjuh38g6a7ahh.apps.googleusercontent.com
             secret: lwArXkw21KCqDPuJrel-WeQO
+            # Scope list: https://developers.google.com/identity/protocols/googlescopes
             scope:
                 - https://www.googleapis.com/auth/contacts.readonly
                 - https://www.googleapis.com/auth/gmail.readonly
+                - https://www.googleapis.com/auth/calendar.readonly
+                - https://www.googleapis.com/auth/drive.readonly
+                - https://www.googleapis.com/auth/spreadsheets.readonly
+                - https://www.googleapis.com/auth/cloud-translation
             log:
                 fields: [session.id, current_user.email, request.remote_ip, request.headers.User-Agent]
             redirect:
                 query: next
+                header: Referer
                 url: /$YAMLURL
 
     auth/contacts:

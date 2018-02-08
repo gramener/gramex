@@ -24,10 +24,14 @@ Extending `BaseHandler` automatically provides these features:
 - **Method overriding**. The `X-HTTP-Method-Override: PUT` HTTP header changes
   the request to a `PUT` request. If the URL has `?x-http-method-override=PUT`,
   it becomes a `PUT` request. Similarly for `GET`, `POST` or `DELETE`.
+- [Authentication and authorization](../auth/) via the `auth:` settings
+- [Error handling](../config/#error-handlers) via the `error:` settings
+- [XSRF cookie flag](../filehandler/#xsrf) via the `xsrf_cookies:` and `set_xsrf:` settings
 - [Caching](../cache/) via the `cache:` settings
 - [Sessions](../auth/) via the `session:` settings
-- [Authentication and authorization](../auth/) via the `auth:` settings
-- Transforms that are used by [ProcessHandler](../processhandler/) and [FileHandler](../filehandler/)
+- Headers via the `headers:` settings for some handlers
+- Transforms via the `transform:` settings for some handlers like
+  [ProcessHandler](../processhandler/) and [FileHandler](../filehandler/)
 
 **Note**: when naming your Python script, avoid namespaces such as `services.` or
 `handlers.` -- these are already used by Gramex, and will not reflect your custom
@@ -43,7 +47,7 @@ Any arguments passed to the handler are passed to the `setup()` and
     :::python
     class SetupHandler(BaseHandler):
         @classmethod
-        def setup(cls, **kwargs):                           # setup() is called 
+        def setup(cls, **kwargs):                           # setup() is called
             super(SetupHandler, cls).setup(**kwargs)        # You MUST call the BaseHandler setup
             cls.name = kwargs.get('name', 'NA')             # Perform any one-time setup here
             cls.count = Counter()
