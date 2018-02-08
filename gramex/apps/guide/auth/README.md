@@ -66,12 +66,20 @@ app:
         flush: 5                        # Write store to disk periodically (in seconds)
 ```
 
-Sessions can be stored in:
+Sessions can be stored in one of these `type:`
 
-- `type: memory`: fast, but will not be saved if Gramex restarts
-- `type: json`: persistent, but not shared across Gramex sessions (default)
-- `type: sqlite`: slower, but shared across Gramex sessions
-- `type: hdf5`: very slow, and not shared across Gramex sessions. Avoid this
+| `type`    | Speed     | Persistent | Distributed |
+|:---------:|:---------:|:----------:|:-----------:|
+| `memory`  | faster    | no         | no          |
+| `json`    | fast      | yes        | no          |
+| `sqlite`  | slow      | yes        | yes         |
+| `hdf5`    | very slow | yes        | no          |
+
+- Persistent means that it will be saved if Gramex restarts
+- Distributed means multiple Gramex instances can use it at the same time.
+
+The default is `type: json`. Stick to this. But if you have multiple Gramex
+instances, use `type: sqlite` and change the `path:` to an SQLite file.
 
 Here is an example of a session store that works across multiple Gramex instances.
 
