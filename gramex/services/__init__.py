@@ -50,7 +50,8 @@ info = AttrDict(
     # Initialise with a single worker by default. threadpool.workers overrides this
     threadpool=concurrent.futures.ThreadPoolExecutor(1),
     eventlog=AttrDict(),
-    email=AttrDict()
+    email=AttrDict(),
+    _md=None,
 )
 atexit.register(info.threadpool.shutdown)
 
@@ -223,6 +224,25 @@ def schedule(conf):
             app_log.exception(e)
 
 
+def _markdown_convert(content):
+    '''
+    Convert content into Markdown with extensions.
+    '''
+    # Cache the markdown converter
+    if '_markdown' not in info:
+        import markdown
+        info['_markdown'] = markdown.Markdown(extensions=[
+            'markdown.extensions.extra',
+            'markdown.extensions.meta',
+            'markdown.extensions.codehilite',
+            'markdown.extensions.smarty',
+            'markdown.extensions.sane_lists',
+            'markdown.extensions.fenced_code',
+            'markdown.extensions.toc',
+        ], output_format='html5')
+    return info['_markdown'].convert(content)
+
+
 def create_alert(name, alert):
     '''Generate the function to be run by alert() using the alert configuration'''
 
@@ -254,12 +274,13 @@ def create_alert(name, alert):
         app_log.warn('alert: %s: missing subject', name)
 
     # Warn if body, html, bodyfile, htmlfile keys are missing
-    if not any(key in alert for key in ['body', 'html', 'bodyfile', 'htmlfile']):
-        app_log.warn('alert: %s: missing body/html/bodyfile/htmlfile', name)
+    contentfields = ['body', 'html', 'bodyfile', 'htmlfile', 'markdown', 'markdownfile']
+    if not any(key in alert for key in contentfields):
+        app_log.warn('alert: %s: missing body/html/bodyfile/htmlfile/...', name)
 
     # Precompile templates
     templates = {}
-    for key in ['to', 'cc', 'bcc', 'from', 'subject', 'body', 'html', 'bodyfile', 'htmlfile']:
+    for key in ['to', 'cc', 'bcc', 'from', 'subject'] + contentfields:
         if key in alert:
             tmpl = alert[key]
             if isinstance(tmpl, string_types):
@@ -356,14 +377,14 @@ def create_alert(name, alert):
             # Generate email content
             kwargs = {}
             kwargslist.append(kwargs)
-            for key in ['bodyfile', 'htmlfile']:
+            for key in ['bodyfile', 'htmlfile', 'markdownfile']:
                 target = key.replace('file', '')
                 if key in templates and target not in templates:
                     path = templates[key].generate(**data).decode('utf-8')
                     tmpl = gramex.cache.open(path, 'template')
                     kwargs[target] = tmpl.generate(**data).decode('utf-8')
             try:
-                for key in ['to', 'cc', 'bcc', 'from', 'subject', 'body', 'html']:
+                for key in ['to', 'cc', 'bcc', 'from', 'subject', 'body', 'html', 'markdown']:
                     if key in templates:
                         tmpl = templates[key]
                         if isinstance(tmpl, list):
@@ -376,6 +397,8 @@ def create_alert(name, alert):
                 # If any template raises an exception, log it and continue with next email
                 app_log.exception('alert: %s(#%s).%s: Template exception', name, index, key)
                 continue
+            if 'markdown' in kwargs:
+                kwargs['html'] = _markdown_convert(kwargs.pop('markdown'))
             if 'images' in templates:
                 kwargs['images'] = {cid: urlfetch(val.generate(**data).decode('utf-8'))
                                     for cid, val in templates['images'].items()}

@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 
 import os
 import email
+import lxml.html
 import gramex
 import gramex.cache
 from binascii import a2b_base64
@@ -69,6 +70,21 @@ class TestAlerts(TestGramex):
         eq_(html.get_payload(), 'template-alert\n')
         eq_(body['Content-Type'].split(';')[0], 'text/plain')
         eq_(html['Content-Type'].split(';')[0], 'text/html')
+
+    def test_markdown(self):
+        mail = run_alert('alert-markdown')
+        obj = email.message_from_string(mail['msg'])
+        body, html = obj.get_payload()
+        tree = lxml.html.fromstring(html.get_payload())
+        eq_(tree.tag, 'h1')
+        eq_(tree.text, 'markdown')
+
+        mail = run_alert('alert-markdown-template')
+        obj = email.message_from_string(mail['msg'])
+        body, html = obj.get_payload()
+        tree = lxml.html.fromstring(html.get_payload())
+        eq_(tree.tag, 'h1')
+        eq_(tree.text, 'template-alert')
 
     def test_attachments(self):
         mail = run_alert('alert-attachments')

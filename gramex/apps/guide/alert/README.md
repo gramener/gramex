@@ -81,10 +81,24 @@ alert:
     html: <p>This content will be shown in <em>HTML</em> on <strong>supported devices</strong>.
 ```
 
+`markdown:` can be used to specify the HTML content as Markdown instead of
+`html` (and overrides it):
+
+```yaml
+alert:
+  alert-content:
+    to: admin@example.org
+    subject: HTML email
+    body: This content will only be displayed on devices that cannot render HTML email. That's rare.
+    markdown: |
+      This is Markdown content.
+      Markup like *emphasis* and **strong** are supported.
+```
+
 ### Place body and HTML in a file
 
-`bodyfile:` and `htmlfile:` load content from files instead of directly typing
-into the `body` and `html` keys.
+`bodyfile:`, `htmlfile:` and `markdownfile:` load content from files instead of
+directly typing into the `body`, `html` or `markdown:` keys.
 
 ```yaml
 alert:
@@ -92,7 +106,8 @@ alert:
     to: admin@example.org
     subject: HTML email from file
     bodyfile: $YAMLPATH/email.txt       # Use email.txt in current directory
-    htmlfile: $YAMLPATH/email.html      # Use email.html in current directoy
+    htmlfile: $YAMLPATH/email.html      # Use email.html in current directory
+    markdownfile: $YAMLPATH/email.md    # Use email.md in current directory
 ```
 
 ### Send inline images
@@ -106,7 +121,10 @@ alert:
   alert-images:
     to: admin@example.org
     subject: Inline images
-    html: <p>This email has 2 inline images.</p><p><img src="cid:img1"></p><p><img src="cid:img2"></p>
+    markdown: |
+      <p>This email has 2 inline images.</p>
+      <p><img src="cid:img1"></p>
+      <p><img src="cid:img2"></p>
     images:
         img1: $YAMLPATH/img1.jpg
         img2: https://en.wikipedia.org/static/images/wikimedia-button.png
@@ -139,11 +157,13 @@ alert:
     to: '{{ "admin@example.org" }}'
     subject: 'Template email. Platform is {{ sys.platform }}'
     body: This email was sent from {{ sys.platform }}.
-    html:  <p>This email was sent from {{ sys.platform }}.</p><p><img src="cid:img"></p>
+    html: |
+      <p>This email was sent from {{ sys.platform }}.</p>
+      <p><img src="cid:img"></p>
     images:
       img: '{{ os.path.join(r"$YAMLPATH", "img1.jpg") }}'
     attachments:
-        - '{{ os.path.join(r"$YAMLPATH", "doc1.docx") }}'
+      - '{{ os.path.join(r"$YAMLPATH", "doc1.docx") }}'
 ```
 
 ### Dynamic emails from data
@@ -354,3 +374,40 @@ kwargs = alert()
 ```
 
 The returned `kwargs` are the computed email contents.
+
+
+## Alert command line
+
+Alerts can be used from the command line by running `gramex mail`.
+
+- `gramex mail` displays help about usage
+- `gramex mail <key>` sends mail named `<key>`
+- `gramex mail --list` lists all keys in config file
+- `gramex mail --init` initializes config file
+
+To set it up:
+
+1. Run `gramex mail --init`. This prints the location of the config file
+2. Edit the config file and set up the [email section](../email/):
+3. Set `type:` to the email service type (e.g. `gmail`, `smtp`, etc.)
+4. `email:`: is `$GRAMEXMAILUSER` and `password:` is `$GRAMEXMAILPASSWORD`.
+   Set the environment variables `GRAMEXMAILUSER` and `GRAMEXMAILPASSWORD`
+   and these will be used.
+5. Note: If you're using two-factor authentication on Google, create an
+   [app-specific password](https://security.google.com/settings/security/apppasswords)
+
+To create an email, edit the config file and [add an alert](#alert-examples)
+like in a `gramex.yaml` file.
+
+To send the email, run `gramex mail <key>` where `<key>` is the alert key.
+For example, with this configuration:
+
+```yaml
+alert:
+  birthday-greeting:
+    to: john@example.org
+    subject: Happy birthday
+    body: Happy birthday John!
+```
+
+... the command `gramex mail birthday-greeting` will send the email.

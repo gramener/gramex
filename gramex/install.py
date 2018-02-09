@@ -127,6 +127,17 @@ init: |
     - Sets up a git repo
     - Install supporting files for a gramex project
     - Runs gramex setup (which runs yarn/npm install and other dependencies)
+
+mail: |
+    gramex mail <key>               # Send mail named <key>
+    gramex mail --list              # Lists all keys in config file
+    gramex mail --init              # Initializes config file
+
+    The config is a gramex.yaml file. It must have email: and alert: sections.
+    $GRAMEXDATA/mail/gramexmail.yaml is the default config file.
+
+    Options:
+      --conf <path>                 # Specify a different conf file location
 ''', Loader=AttrDictYAMLLoader)
 
 
@@ -581,3 +592,72 @@ def init(cmd, args):
         with io.open(target, 'wb') as handle:
             handle.write(result)
     run_setup(args.target)
+
+
+default_mail_config = r'''# Gramex mail configuration at
+# List keys with "gramex mail --list --conf={confpath}"
+
+# See https://learn.gramener.com/guide/email/ for help
+email:
+  default-email:
+    type: gmail
+    email: $GRAMEXMAILUSER
+    password: $GRAMEXMAILPASSWORD
+    # Uncomment the next line to test the application without sending mails
+    # stub: log
+
+# See https://learn.gramener.com/guide/alert/
+alert:
+  hello-world:
+    to: admin@example.org
+    subject: Alert from Gramex
+    body: |
+      This is a test email
+'''
+
+
+def mail(cmd, args):
+    # Get config file location
+    default_dir = os.path.join(variables['GRAMEXDATA'], 'mail')
+    if not os.path.exists(default_dir):
+        os.makedirs(default_dir)
+    confpath = args.get('conf', os.path.join(default_dir, 'gramexmail.yaml'))
+
+    if not os.path.exists(confpath):
+        if 'init' in args:
+            with io.open(confpath, 'w', encoding='utf-8') as handle:
+                handle.write(default_mail_config.format(confpath=confpath))
+            app_log.info('Initialized %s', confpath)
+        elif not cmd and not args:
+            app_log.error(show_usage('mail'))
+        else:
+            app_log.error('Missing config %s. Use --init to generate skeleton', confpath)
+        return
+
+    conf = PathConfig(confpath)
+    if 'list' in args:
+        for key, alert in conf.get('alert', {}).items():
+            to = alert.get('to', '')
+            if isinstance(to, list):
+                to = ', '.join(to)
+            gramex.console('{:15}\t"{}" to {}'.format(key, alert.get('subject'), to))
+        return
+
+    if 'init' in args:
+        app_log.error('Config already exists at %s', confpath)
+        return
+
+    if len(cmd) < 1:
+        app_log.error(show_usage('mail'))
+        return
+
+    from gramex.services import email as setup_email, create_alert
+    alert_conf = conf.get('alert', {})
+    email_conf = conf.get('email', {})
+    setup_email(email_conf)
+    for key in cmd:
+        if key not in alert_conf:
+            app_log.error('Missing key %s', key)
+            continue
+        alert = create_alert(key, alert_conf[key])
+        alert()

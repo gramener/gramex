@@ -11,7 +11,12 @@ Options
   --settings.xsrf_cookies=false Disable XSRF cookies (only for testing)
   --settings.cookie_secret=...  Change cookie encryption key
 
-Installation commands. Run to see help
+Helper applications
+  gramex init                   Add Gramex project scaffolding to current dir
+  gramex service                Windows service setup
+  gramex mail                   Send email from command line
+
+Installation commands. Run without arguments to see help
   gramex install                Install an app
   gramex update                 Update an app
   gramex setup                  Run make, npm install, bower install etc on app
@@ -125,25 +130,10 @@ def callback_commandline(commands):
     if len(cmd) > 0:
         kwargs = {'cmd': cmd, 'args': args}
         base_command = cmd.pop(0).lower()
-        if base_command in ('install', 'update'):
-            from gramex.install import install
-            return install, kwargs
-        elif base_command == 'uninstall':
-            from gramex.install import uninstall
-            return uninstall, kwargs
-        elif base_command == 'setup':
-            from gramex.install import setup
-            return setup, kwargs
-        elif base_command == 'run':
-            from gramex.install import run
-            return run, kwargs
-        elif base_command == 'service':
-            from gramex.install import service
-            return service, kwargs
-        elif base_command == 'init':
-            # import as install_init to prevent conflict with local init
-            from gramex.install import init as install_init
-            return install_init, kwargs
+        method = 'install' if base_command == 'update' else base_command
+        if method in {'install', 'uninstall', 'setup', 'run', 'service', 'init', 'mail'}:
+            import gramex.install
+            return getattr(gramex.install, method), kwargs
         raise NotImplementedError('Unknown gramex command: %s' % base_command)
 
     # Use current dir as base (where gramex is run from) if there's a gramex.yaml.

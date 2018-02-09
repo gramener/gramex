@@ -2348,6 +2348,21 @@ alert:
       to: 'user@example.org'
       bodyfile: $YAMLPATH/{{ 'template-alert.txt' }}
       htmlfile: $YAMLPATH/{{ 'template-alert.txt' }}
+    alert-markdown:
+      years: 2000   # Only run this programmatically
+      service: smtps_stub
+      to: 'user@example.org'
+      body: 'markdown'
+      html: '<p>HTML content will be overwritten by markdown</p>'
+      markdown: '{{ "# markdown" }}'
+      markdownfile: $YAMLPATH/{{ 'template-alert.md' }}   # Ignored. markdown takes precedence
+    alert-markdown-template:
+      years: 2000   # Only run this programmatically
+      service: smtps_stub
+      to: 'user@example.org'
+      body: 'markdown'
+      html: '<p>HTML content will be overwritten by markdown</p>'
+      markdownfile: $YAMLPATH/{{ 'template-alert.md' }}
     alert-attachments:
       years: 2000   # Only run this programmatically
       service: smtps_stub
