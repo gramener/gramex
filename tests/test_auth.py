@@ -658,6 +658,14 @@ class TestAuthorize(DBAuthBase, LoginFailureMixin):
         # But a successful AJAX auth DOES redirect
         self.login_ok('alpha', 'alpha', check_next='/dir/index/', headers=xhr)
 
+        # X-Requested-With can be set to application-id by Android WebView
+        # Redirect such requests to login URL
+        xhr = {'X-Requested-With': 'Gramex.Android.WebView'}
+        self.session = requests.Session()
+        r = self.session.get(server.base_url + url, headers=xhr)
+        eq_(r.status_code, OK)
+        self.login_ok('alpha', 'alpha', check_next='/dir/index/')
+
         # login_url: false does not redirect if no user
         url = '/auth/login-url-false'
         self.session = requests.Session()
