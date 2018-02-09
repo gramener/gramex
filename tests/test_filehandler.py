@@ -22,9 +22,15 @@ def setUpModule():
         out.write(six.text_type(tempfiles.unicode_file))
 
     # Create a symlink to test if these are displayed in a directory listing without errors
-    if hasattr(os, 'symlink'):
-        tempfiles.symlink = os.path.join(folder, 'dir', 'subdir', 'symlink.txt')
-        os.symlink(os.path.join(folder, 'gramex.yaml'), tempfiles.symlink)
+    # If os.symlink does not exist (Linux), raises an AttributeError
+    # If os.symlink does not have permission (Windows 10), raises an OSError
+    # In either case, ignore it
+    try:
+        symlink = os.path.join(folder, 'dir', 'subdir', 'symlink.txt')
+        os.symlink(os.path.join(folder, 'gramex.yaml'), symlink)
+        tempfiles.symlink = symlink
+    except (OSError, AttributeError):
+        pass
 
 
 class TestFileHandler(TestGramex):
@@ -187,10 +193,12 @@ class TestFileHandler(TestGramex):
         self.check('/dir/ignore-file/ignore-file.txt', code=FORBIDDEN)
         self.check('/dir/index/ignore-list.txt')
         self.check('/dir/ignore-list/ignore-list.txt', code=FORBIDDEN)
+        self.check('/dir/ignore-list/ignore-list.ext1', code=FORBIDDEN)
+        self.check('/dir/ignore-list/ignore-list.EXT2', code=FORBIDDEN)
         self.check('/dir/allow-file/gramex.yaml')
         self.check('/dir/allow-ignore/ignore-file.txt')
         self.check('/server.py', code=FORBIDDEN)     # Ignore .py files by default
-        self.check('/dir/index/.allow')        # But .allow is allowed
+        self.check('/dir/index/.allow')              # But .allow is allowed
         # Paths are resolved before ignoring
         self.check('/dir/ignore-all-except/', path='dir/index.html')
 

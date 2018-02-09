@@ -437,6 +437,7 @@ url:
       path: dir/
       ignore:
         - ignore-list.txt
+        - '*.Ext*'
 
   # Allow overrides global handler ignores
   dir/allow-file:

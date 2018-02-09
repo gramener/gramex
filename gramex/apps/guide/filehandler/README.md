@@ -162,13 +162,16 @@ url:
     kwargs:
       path: .
       ignore:
-        - secret.txt        # Also ignore secret.txt
+        - '*.yaml'          # Ignore all YAML files
       allow:
-        - gramex.yaml       # But allow gramex.yaml to be shown
+        - public.yaml       # But allow public.yaml to be shown
 ```
 
-In the above configuration, `secret.txt` will not be accessible, but
-`gramex.yaml` will be.
+Now `public.yaml` is accessible. But `gramex.yaml` will raise a HTTP 403 error.
+The log reports `Disallow: "gramex.yaml". It matches "*.yaml"`.
+
+If you import [deploy.yaml](../deploy/#security), FileHandler blocks all files
+except specific white-listed exceptions.
 
 ## MIME types
 

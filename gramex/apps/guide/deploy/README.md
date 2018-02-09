@@ -182,9 +182,19 @@ enable these options, add this line to your `gramex.yaml`:
 import: $GRAMEXPATH/deploy.yaml
 ```
 
-Here, by default:
+This:
 
-- images (`gif, jpg, jpeg, pdf, png, svg`), fonts (`eot, ttf`) are not allowed apart from `css, html, js, txt`.
+- **Disallows all files**, including code, config and data files like:
+    - Code formats: `.py`, `.pyc`, `.php`, `.sh`, `.rb`, `.ipynb`, `.bat`, `.cmd`, `.bat`
+    - Config formats: `.yml`, `.yaml`, `.ini`
+    - Data formats: `.jsonl`, `.csv`, `.xlsx`, `.db`, `.xls`, `.h5`, `.xml`, `.shp`, `.shx`, `.dbf`, `.prj`, `.idx`, `.zip`, `.7z`
+- Only allows content and front-end files, specifically:
+    - Document formats: `.md`, `.markdown`, `.html`, `.txt`, `.pdf`,  `.rst`, `.pptx`, `.docx` (no `.doc`, `.ppt`, nor Excel files)
+    - Image formats: `png`, `.svg`, `.jp*g`, `.gif`, `.ico`
+    - Media formats: `.mp3`, `.mp4`, `.avi`, `.flv`, .`mkv`
+    - Font formats: `.ttf`, `.woff*`, `.eot`, `.otf`
+    - Front-end formats: `.js`, `.map`, `.vue`, `.less`, `.css` (not back-end formats like `.coffee`, `.scss`)
+    - Front-end data format: `.json`
 - enables `XSS` protection. Read more at [Mozilla Developer Docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-XSS-Protection).
 - enables protection against browsers performing MIME-type sniffing. [Read more](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Content-Type-Options).
 - enables protection against running apps within an iframe. [Read more](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options).
