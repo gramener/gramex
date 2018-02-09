@@ -16,6 +16,16 @@ url:
                 User-Agent: true
                 Authorization: 'Bearer {handler.session[google_access_token]}'
 
+    proxyhandler/googletranslate:
+        pattern: /$YAMLURL/googletranslate
+        handler: ProxyHandler
+        kwargs:
+            url: https://translation.googleapis.com/language/translate/v2
+            auth: true
+            default:
+              # https://cloud.google.com/translate/docs/quickstart
+              key: AIzaSyBsSkZb3hxciFp0ZB3KLqO1-aQW-K-hqSw
+
     proxyhandler/gramener.com:
         pattern: /$YAMLURL/(demo|uistatic|node_modules|bowerlib)/(.*)
         handler: ProxyHandler

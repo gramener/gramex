@@ -117,7 +117,25 @@ Once logged in, you can:
       [google/drive/v3/files](google/drive/v3/files)
     - [List teamdrives](https://developers.google.com/drive/v3/reference/teamdrives/list):
       [google/drive/v3/files](google/drive/v3/teamdrives)
-- etc.
+
+You can also set up a secret key and access the
+[Google Translate API](https://cloud.google.com/translate/docs/quickstart):
+
+```yaml
+    proxyhandler/googletranslate:
+        pattern: /$YAMLURL/googletranslate
+        handler: ProxyHandler
+        kwargs:
+            url: https://translation.googleapis.com/language/translate/v2
+            default:
+              # Get key from https://cloud.google.com/translate/docs/quickstart
+              key: ...
+```
+
+Now you can translate across [languages](https://cloud.google.com/translate/docs/languages):
+
+- [How are you in German](googletranslate?q=How+are+you&target=de)
+- [How are you from German to Hindi](googletranslate?q=Wie+geht+es+Ihnen&target=hi)
 
 
 ## Reverse ProxyHandler
