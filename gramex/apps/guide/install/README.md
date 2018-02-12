@@ -53,7 +53,7 @@ To remove Gramex, run `pip uninstall gramex`
 
 Gramex is available as a docker instance. To run it:
 
-```shell
+```bash
 docker pull gramener/gramex     # or docker pull gramener/gramex:1.27.0
 
 # Run Gramex on port 9988

@@ -1,0 +1,112 @@
+import:
+  ui:
+    path: $GRAMEXAPPS/ui/gramex.yaml    # Import the UI components
+    YAMLURL: $YAMLURL/ui/               # ... at this URL
+    namespace: [url]                    # Avoid URL namespace clashes
+  formhandler-table:
+    path: $GRAMEXPATH/apps/formhandler/gramex.yaml
+    YAMLURL: $YAMLURL         # Mount this app at the current folder
+    namespace: [url]
+
+url:
+  datasets/list:
+    pattern: /$YAMLURL/
+    handler: FileHandler
+    kwargs:
+      path: $YAMLPATH/index.html
+      template: true
+      datasets:
+        -
+          name: census-pca-2011.db
+          url: https://drive.google.com/uc?id=1DyfLTT-iMmgJ1_1wONpKR0PZHbcDfDKV&export=download
+          title: India Village Census (2011)
+          tables:
+            census_2011: Primary Census Abstract
+        -
+          name: daksh-voter-survey-2014.db
+          url: https://drive.google.com/uc?id=1fqHnD1LaCMHpYq_qprYp0I1d-RN0Y0qU&export=download
+          title: Daksh voter survey (2014)
+          tables:
+            survey: Survey results
+        -
+          name: ipl-may-2016.db
+          url: https://drive.google.com/uc?id=1uZ4ZreRg8OoLKKyZFCy3mpsov-qSO9fo&export=download
+          title: IPL match results (May 2016)
+          tables:
+            matches: Matches
+            deliveries: Deliveries
+        -
+          name: nas-class-8-2014.db
+          url: https://drive.google.com/uc?id=184L4qVoV6EVG2sjYmG5ZLnyWPKkI5M0E&export=download
+          title: National Achievement Survey (2014)
+          tables:
+            class8: Class 8 Results
+            columns: Column names
+            labels: Labels
+
+  datasets/census-pca-2011:
+    pattern: /$YAMLURL/census-pca-2011/census_2011
+    handler: FormHandler
+    kwargs:
+      url: sqlite:///$GRAMEXDATA/apps/datasets/census-pca-2011.db
+      table: census_2011
+      default:
+        _limit: 100
+        _format: table
+
+  datasets/ipl-may-2016/matches:
+    pattern: /$YAMLURL/ipl-may-2016/matches
+    handler: FormHandler
+    kwargs:
+      url: sqlite:///$GRAMEXDATA/apps/datasets/ipl-may-2016.db
+      table: matches
+      default:
+        _limit: 100
+        _format: table
+  datasets/ipl-may-2016/deliveries:
+    pattern: /$YAMLURL/ipl-may-2016/deliveries
+    handler: FormHandler
+    kwargs:
+      url: sqlite:///$GRAMEXDATA/apps/datasets/ipl-may-2016.db
+      table: deliveries
+      default:
+        _limit: 100
+        _format: table
+
+  datasets/daksh-voter-survey-2014:
+    pattern: /$YAMLURL/daksh-voter-survey-2014/survey
+    handler: FormHandler
+    kwargs:
+      url: sqlite:///$GRAMEXDATA/apps/datasets/daksh-voter-survey-2014.db
+      table: survey
+      default:
+        _limit: 100
+        _format: table
+
+  datasets/nas-class-8-2014/class8:
+    pattern: /$YAMLURL/nas-class-8-2014/class8
+    handler: FormHandler
+    kwargs:
+      url: sqlite:///$GRAMEXDATA/apps/datasets/nas-class-8-2014.db
+      table: class8
+      default:
+        _limit: 100
+        _format: table
+  datasets/nas-class-8-2014/columns:
+    pattern: /$YAMLURL/nas-class-8-2014/columns
+    handler: FormHandler
+    kwargs:
+      url: sqlite:///$GRAMEXDATA/apps/datasets/nas-class-8-2014.db
+      table: columns
+      default:
+        _limit: 100
+        _format: table
+  datasets/nas-class-8-2014/labels:
+    pattern: /$YAMLURL/nas-class-8-2014/labels
+    handler: FormHandler
+    kwargs:
+      url: sqlite:///$GRAMEXDATA/apps/datasets/nas-class-8-2014.db
+      table: labels
+      default:
+        _limit: 100
+        _format: table

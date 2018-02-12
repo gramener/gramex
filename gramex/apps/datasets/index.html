@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Datasets</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="ui/bootstraptheme.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>Datasets</h1>
+    <p class="alert alert-warning">A better version of this page is in progress.</p>
+    {% from gramex import conf %}
+    <ul>
+      {% for dataset in conf.url['datasets/list'].kwargs.datasets %}
+        <li>{{ dataset['title'] }}
+          <ul>
+            {% for table, table_title in dataset['tables'].items() %}
+              <li><a href="{{ dataset['name'].rsplit('.', 2)[0] }}/{{ table }}">{{ table_title }}</a></li>
+            {% end %}
+          </ul>
+        </li>
+      {% end %}
+    </ul>
+  </div>
+</body>
+</html>
