@@ -650,6 +650,59 @@ looks like this:
 }
 ```
 
+## SAML Auth
+
+**v1.29**. SAML auth uses a [SAML](https://en.wikipedia.org/wiki/Security_Assertion_Markup_Language)
+auth provided to log in. For example ADFS (Active Directory Federation Services)
+is a SAML auth provider. Caveats:
+
+- This needs the [onelogin SAML module](https://github.com/onelogin/python3-saml),
+  which *is **not** installed* as part of Gramex.
+- It only works on Python 3.x.
+- It is **experimental** and not fully tested.
+
+```bash
+# Replace the below line with the relevant version for your system
+pip install https://ci.appveyor.com/api/buildjobs/gt2betq01a5xogo7/artifacts/xmlsec-1.3.48.dev0-cp36-cp36m-win_amd64.whl
+pip install python3-saml
+```
+
+This configuration enables SAML authentication.
+
+```yaml
+auth/saml:
+    pattern: /$YAMLURL/login
+    handler: SAMLAuth
+        kwargs:
+          xsrf_cookies: false                   # Disable XSRF. SAML cannot be hacked via XSRF
+          sp_domain: 'app.client.com'           # Public domain name of the gramex application
+          https: true                           # true if app.client.com is on https
+          custom_base_path: $YAMLPATH/saml/     # Path to settings.json and certs/
+          lowercase_encoding: True              # True for ADFS driven SAML auth
+```
+
+`custom_base_path` points to a directory with these files:
+
+- `settings.json`: Provides details of the Identity Provider (IDP, i.e. the
+  server that logs in users) and Service Provider (your app). For ADFS, this can
+  be extracted using the ADFS's `metadata.xml`. Here is a minimal
+  [settings.json](saml/settings.json)
+- `advanced_settings.json`: Contains security params and oraganisation details.
+  Here is a sample [advanced_settings.json](saml/advanced_settings.json).
+  `contactPerson` and `organization` are optional.
+- `certs/` directory that has the certificates required for encryption.
+    - `metadata.crt`: Certificate to sign the metadata of the SP
+    - `metadata.key`: Key for the above certificate
+
+Once configured, visit the auth handler with `?metadata` added to view the
+service provider metadata. In the above example, this would be
+`https://app.client.com/login?metadata`.
+
+**Note:** Provide the SP metadata URL to the client for relay configuration
+along with required claims (i.e. fields to be returned, such as `email_id`,
+`username`, etc.)
+
+
 ## Log out
 
 This configuration creates a [logout page](logout?next=.):

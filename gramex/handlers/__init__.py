@@ -8,7 +8,7 @@ from .websockethandler import WebSocketHandler
 from .filehandler import FileHandler
 from .datahandler import DataHandler, QueryHandler
 from .authhandler import (GoogleAuth, FacebookAuth, TwitterAuth, LDAPAuth, SimpleAuth, DBAuth,
-                          IntegratedAuth, LogoutHandler)
+                          IntegratedAuth, LogoutHandler, SAMLAuth)
 from .processhandler import ProcessHandler
 from .jsonhandler import JSONHandler
 from .socialhandler import TwitterRESTHandler, FacebookGraphHandler
@@ -31,5 +31,5 @@ __all__ = [
     'CaptureHandler', 'Capture',
     'FormHandler',
     'PPTXHandler',
-    'ProxyHandler',
+    'ProxyHandler', 'SAMLAuth',
 ]

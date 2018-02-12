@@ -19,8 +19,8 @@ from collections import Counter
 from orderedattrdict import AttrDict
 import gramex
 import gramex.cache
-from gramex.http import UNAUTHORIZED, BAD_REQUEST
-from gramex.config import check_old_certs, app_log, objectpath, str_utf8
+from gramex.http import UNAUTHORIZED, BAD_REQUEST, INTERNAL_SERVER_ERROR
+from gramex.config import check_old_certs, app_log, objectpath, str_utf8, merge
 from gramex.transforms import build_transform
 from .basehandler import BaseHandler, build_log_info, SQLiteStore
 
@@ -287,6 +287,87 @@ class TwitterAuth(AuthHandler, TwitterMixin):
 
     def _oauth_consumer_token(self):
         return dict(key=self.kwargs['key'], secret=self.kwargs['secret'])
+
+
+class SAMLAuth(AuthHandler):
+    '''
+    SAML Authentication.
+
+    Reference: https://github.com/onelogin/python3-saml
+
+    Sample configuration::
+
+        kwargs:
+          sp_domain: myapp.gramener.com         # Domain where your app is hosted
+          request_uri: ...                      # Path to your app
+          https: true                           # Use HTTPS scheme for your app
+          custom_base_path: $YAMLPATH/.saml/    # Path to settings.json & certs/
+          lowercase_encoding: True              # True for ADFS
+    '''
+    @classmethod
+    def setup(cls, sp_domain, custom_base_path, https, lowercase_encoding=True,
+              request_uri='', **kwargs):
+        super(SAMLAuth, cls).setup(**kwargs)
+        cls.sp_domain = sp_domain
+        cls.custom_base_path = custom_base_path
+        cls.https = 'on' if https is True else 'off'
+        cls.default_params = {
+            'lowercase_urlencoding': lowercase_encoding,
+            'request_uri': request_uri,
+        }
+
+    @tornado.gen.coroutine
+    def get(self):
+        '''Process sso request and metadata request.'''
+        auth = self.initiate_saml_login()
+        # SAML server requests metadata at https://<sp_domain>/<request_uri>?metadata
+        if 'metadata' in self.args:
+            settings = auth.get_settings()
+            metadata = settings.get_sp_metadata()
+            errors = settings.validate_metadata(metadata)
+            if errors:
+                app_log.error('%s: SAML metadata errors: %s', self.name, errors)
+                raise tornado.web.HTTPError(INTERNAL_SERVER_ERROR, reason='Errors in metadata')
+            self.set_header('Content-Type', 'text/xml')
+            self.write(metadata)
+        # Logout
+        elif 'sls' in self.args:
+            raise NotImplementedError()
+        # Login redirect
+        else:
+            self.save_redirect_page()
+            self.redirect(auth.login())
+
+    @tornado.gen.coroutine
+    def post(self):
+        '''Validate and authenticate user based upon SAML response.'''
+        auth = self.initiate_saml_login()
+
+        # Process IDP response, and create session.
+        if 'acs' in self.args:
+            auth.process_response()
+            errors = auth.get_errors()
+            if errors:
+                app_log.error('%s: SAML ACS error: %s', self.name, errors)
+                raise tornado.gen.Return()
+            self.set_user({
+                'samlUserdata': auth.get_attributes(),
+                'samlNameId': auth.get_nameid(),
+                'samlSessionIndex': auth.get_session_index(),
+            }, id='samlNameId')
+            self.redirect_next()
+
+    def initiate_saml_login(self):
+        # TODO: onelogin is not part of requirements.txt. Add it
+        from onelogin.saml2.auth import OneLogin_Saml2_Auth
+        req = merge({
+            'http_host': self.sp_domain,
+            'https': self.https,
+            'script_name': self.request.path,
+            'get_data': self.request.query_arguments,
+            'post_data': {k: v[0] for k, v in self.args.items()}
+        }, self.default_params, mode='setdefault')
+        return OneLogin_Saml2_Auth(req, custom_base_path=self.custom_base_path)
 
 
 class LDAPAuth(AuthHandler):
