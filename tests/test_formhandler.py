@@ -445,3 +445,8 @@ class TestFormHandler(TestGramex):
         tree = etree.fromstring(r.text.encode('utf-8'))
         eq_(tree.get('viewBox'), '0 0 500 300')
         # TODO: expand on test cases
+
+    def test_headers(self):
+        self.check('/formhandler/headers', headers={
+            'X-JSON': 'ok', 'X-Base': 'ok', 'X-Root': 'ok'
+        })

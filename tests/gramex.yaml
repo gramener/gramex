@@ -1414,6 +1414,20 @@ url:
           headers:
             Content-Type: image/png
           <<: *FORMHANDLER_CHART
+  formhandler/headers:
+    pattern: /formhandler/headers
+    handler: FormHandler
+    kwargs:
+      url: sales.xlsx
+      xsrf_cookies: false     # We're testing PUT/PUST/DELETE to see if they fail
+      formats:
+        json:
+          headers:
+            X-JSON: ok
+            X-Base: ok        # Overrides base headers
+      headers:
+        X-Base: not ok
+        X-Root: ok
 
   capture:
     pattern: /capture

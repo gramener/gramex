@@ -51,6 +51,7 @@ class FormHandler(BaseHandler):
         conf_kwargs = merge(AttrDict(cls.conf.kwargs),
                             objectpath(gramex_conf, 'handlers.FormHandler', {}),
                             'setdefault')
+        cls.headers = conf_kwargs.pop('headers', {})
         # Top level formats: key is special. Don't treat it as data
         cls.formats = conf_kwargs.pop('formats', {})
         default_config = conf_kwargs.pop('default', None)
@@ -207,9 +208,10 @@ class FormHandler(BaseHandler):
             app_log.error('%s: _format=%s unknown. Using _format=json' % (self.name, fmt))
             fmt = dict(self.formats['json'])
 
-        # Set up headers for the format
-        headers = fmt.pop('headers', {})
-        for key, val in headers.items():
+        # Set up defaul headers, and over-ride with headers for the format
+        for key, val in self.headers.items():
+            self.set_header(key, val)
+        for key, val in fmt.pop('headers', {}).items():
             self.set_header(key, val)
 
         if fmt['format'] in {'template', 'pptx'}:

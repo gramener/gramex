@@ -809,22 +809,25 @@ Note:
 
 ### Custom HTTP Headers
 
-The `kwargs:` section of `url:` or `formats:` accepts a `headers:` key that sets
-custom HTTP headers. For example, to access a
+The `url.<url>.kwargs` section accepts a `headers:` key. So does `url.kwargs.formats.<format>`.
+This sets custom HTTP headers. For example, to access a
 [FormHandler JSON response](flags?_format=cors-json) via AJAX from a different
 server, add the CORS `Access-Control-Allow-Origin` headers.
 
-    :::yaml
-    pattern: /$YAMLURL/flags
-    handler: FormHandler
-    kwargs:
-        ...
-      formats:
-        ...
-        cors-json:
-          format: json
-          headers:
-            Content-Type: application/json    # Display as json
-            Access-Control-Allow-Origin: '*'  # Allow CORS (all servers can access via AJAX)
+```yaml
+pattern: /$YAMLURL/flags
+handler: FormHandler
+kwargs:
+    ...
+  formats:
+    ...
+    cors-json:
+      format: json
+      headers:
+        Content-Type: application/json    # Display as json
+        Access-Control-Allow-Origin: '*'  # Allow CORS (all servers can access via AJAX)
+  headers:
+    Cache-Control: public, max-age=3600   # All formats are cached for 1 hour
+```
 
 [formhandler]: https://learn.gramener.com/gramex/gramex.handlers.html#gramex.handlers.FormHandler
