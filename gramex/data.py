@@ -16,6 +16,7 @@ from gramex.config import merge
 from orderedattrdict import AttrDict
 
 _METADATA_CACHE = {}
+_path_safe_root = os.path.realpath('/root/dir')
 
 
 def filter(url, args={}, meta={}, engine=None, table=None, ext=None,
@@ -151,7 +152,7 @@ def filter(url, args={}, meta={}, engine=None, table=None, ext=None,
         data = transform(url) if callable(transform) else url
         return _filter_frame(data, meta=meta, controls=controls, args=args)
     elif engine == 'file':
-        params = {k: v[0] for k, v in args.items() if len(v) > 0 and _sql_safe(v[0])}
+        params = {k: v[0] for k, v in args.items() if len(v) > 0 and _path_safe(v[0])}
         url = url.format(**params)
         if not os.path.exists(url):
             raise OSError('url: %s not found' % url)
@@ -375,6 +376,11 @@ def _sql_safe(val):
     elif isinstance(val, six.integer_types) or isinstance(val, (float, bool)):
         return True
     return False
+
+
+def _path_safe(path):
+    '''Returns True if path does not try to escape outside a given directory using .. or / etc'''
+    return os.path.realpath(os.path.join(_path_safe_root, path)).startswith(_path_safe_root)
 
 
 def _filter_col(col, cols):

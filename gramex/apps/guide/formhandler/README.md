@@ -394,7 +394,13 @@ passed as `?group=` and where the state is `?state=`. For example,
 `:arg` is the SQLAlchemy placeholder. It can only be used as values, not column
 names or in any other place. This will be safely formatted by SQL and can
 contain any value. On the other hand, use `{arg}` for column names, filenames,
-etc. But note: this cannot contain spaces.
+etc.
+
+For security, there are 2 constraints:
+
+- The arguments for file URLs should not go outside the specified directory
+  (e.g. using `..` or `/`). Sub-directories are fine
+- The arguments for SQLAlchemy URLs and queries cannot contain spaces
 
 This uses [gramex.cache.query](../cache/#query-caching) behind the scenes. You
 can cache the query based on a smaller query or table name by specifying a

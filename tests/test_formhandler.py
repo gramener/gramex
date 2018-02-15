@@ -464,6 +464,10 @@ class TestFormHandler(TestGramex):
             url = '/formhandler/arg-query?db=formhandler&col=देश&val=भारत'
             expected = self.sales[self.sales['देश'] == 'भारत']
             afe(pd.DataFrame(self.get(url).json()), expected, check_like=True)
+
+            # Files with ../ etc should be skipped
+            self.check('/formhandler/arg-url?path=../sales',
+                       code=500, text='KeyError')
             # Test that the ?skip= parameter is used to find the table.
             self.check('/formhandler/arg-table?db=formhandler&table=sales&skip=ab',
                        code=500, text='NoSuchTableError')
