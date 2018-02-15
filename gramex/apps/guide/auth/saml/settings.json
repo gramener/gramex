@@ -1,0 +1,30 @@
+{
+    "strict": true,
+    "debug": true,
+    "sp": {
+        "entityId": "https://<SP domain>/<saml-url-pattern>?metadata",
+        "assertionConsumerService": {
+            "url": "https://<SP domain>/?acs",
+            "binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST"
+        },
+        "singleLogoutService": {
+            "url": "https://<SP domain>/?sls",
+            "binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect"
+        },
+        "x509cert": "",
+        "privateKey": ""
+    },
+    "idp": {
+        "entityId": "http://adfs.startv.com/adfs/services/trust",
+        "singleSignOnService": {
+            "url": "https://<ADFS singleSignOnService endpoint (URL)>",
+            "binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect"
+        },
+        "singleLogoutService": {
+            "url": "https://<ADFS singleLogoutService endpoint (URL)>",
+            "binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect"
+        },
+        "x509cert": "",
+        "privateKey": ""
+    }
+}
