@@ -1428,6 +1428,27 @@ url:
       headers:
         X-Base: not ok
         X-Root: ok
+  formhandler/arg-url:
+    pattern: /formhandler/arg-url
+    handler: FormHandler
+    kwargs:
+      url: '{path}.xlsx'
+  formhandler/arg-table:
+    pattern: /formhandler/arg-table
+    handler: FormHandler
+    kwargs:
+      url: sqlite:///{db}.db
+      table: '{table}{skip}'
+      default:
+        skip: ''
+  formhandler/arg-query:
+    pattern: /formhandler/arg-query
+    handler: FormHandler
+    kwargs:
+      url: sqlite:///{db}.db
+      query: 'SELECT * FROM {table} WHERE {col}=:val'
+      default:
+        table: sales
 
   capture:
     pattern: /capture

@@ -142,7 +142,7 @@ $('#barchart-svg').load('chart?_format=barchart-svg')
 $('#barchart-svg').load('chart?_format=barchart-svg')
 </script>
 
-The format options are formatted using the URL arguments via `{arg}`. For
+The format options are formatted using the URL arguments via `{arg}`
 example:
 
     :::yaml
@@ -379,19 +379,22 @@ on top of this query. For example:
 - [query](query?_format=html) returns data grouped by Continent
 - [query?num>=20](query?num>=20&_format=html) ► continents where number of countries > 20
 
-The query string is formatted using the arguments using `{arg}` and `:arg`. For
-example:
+The URL and query string is formatted using the arguments using `{arg}` and
+`:arg`. For example:
 
     :::yaml
+          url: 'sqlite:///$YAMLPATH/{db}.sqlite3'
           query: 'SELECT {group}, COUNT(*) FROM table GROUP BY {group} WHERE state=:state'
 
-will group by whatever is passed as `?group=` and where the state is `?state=`.
-For example, `?group=city&state=AR` returns `SELECT city, COUNT(*) FROM table
-GROUP BY city WHERE state="AR"`.
+will load from whatever database is specified in `?db=` and group by whatever is
+passed as `?group=` and where the state is `?state=`. For example,
+`?db=sales&group=city&state=AR` loads `sales.sqlite3` and returns
+`SELECT city, COUNT(*) FROM table GROUP BY city WHERE state="AR"`.
 
-`:arg` can only be used as values, not column names or in any other place. This
-will be safely formatted by SQL and can contain any value. Use `{arg}` for column
-names. This cannot contain spaces.
+`:arg` is the SQLAlchemy placeholder. It can only be used as values, not column
+names or in any other place. This will be safely formatted by SQL and can
+contain any value. On the other hand, use `{arg}` for column names, filenames,
+etc. But note: this cannot contain spaces.
 
 This uses [gramex.cache.query](../cache/#query-caching) behind the scenes. You
 can cache the query based on a smaller query or table name by specifying a

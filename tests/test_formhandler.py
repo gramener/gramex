@@ -450,3 +450,28 @@ class TestFormHandler(TestGramex):
         self.check('/formhandler/headers', headers={
             'X-JSON': 'ok', 'X-Base': 'ok', 'X-Root': 'ok'
         })
+
+    def test_args(self):
+        dbutils.sqlite_create_db('formhandler.db', sales=self.sales)
+        try:
+            # url: accepts query formatting for files
+            url = '/formhandler/arg-url?path=sales'
+            afe(pd.DataFrame(self.get(url).json()), self.sales, check_like=True)
+            # url: and table: accept query formatting for SQLAlchemy
+            url = '/formhandler/arg-table?db=formhandler&table=sales'
+            afe(pd.DataFrame(self.get(url).json()), self.sales, check_like=True)
+            # url: and table: accept query formatting for SQLAlchemy
+            url = '/formhandler/arg-query?db=formhandler&col=देश&val=भारत'
+            expected = self.sales[self.sales['देश'] == 'भारत']
+            afe(pd.DataFrame(self.get(url).json()), expected, check_like=True)
+            # Test that the ?skip= parameter is used to find the table.
+            self.check('/formhandler/arg-table?db=formhandler&table=sales&skip=ab',
+                       code=500, text='NoSuchTableError')
+            # Spaces are ignored in SQLAlchemy query. So ?skip= will be a missing key
+            self.check('/formhandler/arg-table?db=formhandler&table=sales&skip=a b',
+                       code=500, text='KeyError')
+        finally:
+            try:
+                dbutils.sqlite_drop_db('formhandler.db')
+            except OSError:
+                pass

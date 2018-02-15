@@ -29,7 +29,8 @@ def filter(url, args={}, meta={}, engine=None, table=None, ext=None,
 
     It accepts the following parameters:
 
-    :arg source url: Pandas DataFrame, sqlalchemy URL or file name
+    :arg source url: Pandas DataFrame, sqlalchemy URL or file name,
+        `.format``-ed using ``args``.
     :arg dict args: URL query parameters as a dict of lists. Pass handler.args or parse_qs results
     :arg dict meta: this dict is updated with metadata during the course of filtering
     :arg string table: table name (if url is an SQLAlchemy URL), ``.format``-ed
@@ -150,14 +151,17 @@ def filter(url, args={}, meta={}, engine=None, table=None, ext=None,
         data = transform(url) if callable(transform) else url
         return _filter_frame(data, meta=meta, controls=controls, args=args)
     elif engine == 'file':
+        params = {k: v[0] for k, v in args.items() if len(v) > 0 and _sql_safe(v[0])}
+        url = url.format(**params)
         if not os.path.exists(url):
             raise OSError('url: %s not found' % url)
         # Get the full dataset. Then filter it
         data = gramex.cache.open(url, ext, transform=transform, **kwargs)
         return _filter_frame(data, meta=meta, controls=controls, args=args)
     elif engine == 'sqlalchemy':
-        engine = sqlalchemy.create_engine(url, **kwargs)
         params = {k: v[0] for k, v in args.items() if len(v) > 0 and _sql_safe(v[0])}
+        url = url.format(**params)
+        engine = sqlalchemy.create_engine(url, **kwargs)
         if query or queryfile:
             if queryfile:
                 query = gramex.cache.open(queryfile, 'text')
