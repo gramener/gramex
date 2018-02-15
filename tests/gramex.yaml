@@ -1469,6 +1469,12 @@ url:
         FROM {table}
         WHERE {col}=:val
         GROUP BY {group}
+  formhandler/dates:
+    pattern: /formhandler/dates
+    handler: FormHandler
+    kwargs:
+      url: sales.xlsx
+      sheetname: dates
 
   capture:
     pattern: /capture

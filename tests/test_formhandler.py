@@ -156,15 +156,15 @@ class TestFormHandler(TestGramex):
     def test_sqlite(self):
         self.check_filter('/formhandler/sqlite', na_position='first')
         self.check_filter('/formhandler/sqlite-multi', na_position='last', key='big',
-                            df=self.sales[self.sales['sales'] > 100])
+                          df=self.sales[self.sales['sales'] > 100])
         self.check_filter('/formhandler/sqlite-multi', na_position='last', key='by-growth',
-                            df=self.sales.sort_values('growth'))
+                          df=self.sales.sort_values('growth'))
         self.check_filter('/formhandler/sqlite-multi', na_position='last', key='big-by-growth',
-                            df=self.sales[self.sales['sales'] > 100].sort_values('growth'))
+                          df=self.sales[self.sales['sales'] > 100].sort_values('growth'))
         self.check_filter('/formhandler/sqlite-queryfunction', na_position='last')
         self.check_filter('/formhandler/sqlite-queryfunction?ct=Hyderabad&ct=Coimbatore',
-                            na_position='last',
-                            df=self.sales[self.sales['city'].isin(['Hyderabad', 'Coimbatore'])])
+                          na_position='last',
+                          df=self.sales[self.sales['city'].isin(['Hyderabad', 'Coimbatore'])])
 
     def test_mysql(self):
         dbutils.mysql_create_db(variables.MYSQL_SERVER, 'test_formhandler', sales=self.sales)
@@ -488,4 +488,13 @@ class TestFormHandler(TestGramex):
             actual = pd.DataFrame(self.get(url % sub_url).json())
             expected = self.sales[self.sales['city'] == 'Bangalore'].groupby('product')
             expected = expected['sales'].sum().reset_index()
+            afe(actual, expected, check_like=True)
+
+    def test_date_comparison(self):
+        data = gramex.cache.open(os.path.join(folder, 'sales.xlsx'), 'xlsx', sheetname='dates')
+        for dt in ('2018-01-10', '2018-01-20T15:34Z'):
+            url = '/formhandler/dates?date>=%s&_format=xlsx' % dt
+            actual = pd.read_excel(BytesIO(self.get(url).content))
+            expected = data[data['date'] > pd.to_datetime(dt)]
+            expected.index = actual.index
             afe(actual, expected, check_like=True)
