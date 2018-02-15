@@ -110,7 +110,7 @@ When releasing a new version of Gramex:
 3. Commit and push the ``dev`` branch to the server. Merge with master, create
    an annotated tag and push the master branch::
 
-    git commit -m"DOC: Add v1.x.x release notes [skip ci]"
+    git commit -m"DOC: Add v1.x.x release notes"
     git push                    # Push the dev branch
     git checkout master
     git merge dev

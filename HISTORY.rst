@@ -6,6 +6,48 @@ History
 v1.28.0 (2018-01-31)
 ~~~~~~~~~~~~~~~~~
 
+`SAMLAuth`_ is now a part of Gramex. Most enterprise Single-Sign-On (SSO)
+implementations are now SAML-enabled, including Microsoft ActiveDirectory.
+Gramex can integrate with all of these apps now. (@vinay.ranjan)
+
+`ProxyHandler`_ is a new handler that lets you:
+
+1. Access data from server-side APIs directly from the browser
+   (e.g. Gmail API, Google Translate, SalesForce API, etc)
+2. Expose non-Gramex applications within a Gramex app -- using Gramex Auth.
+
+`FormHandler`_ has several enhancements:
+
+- `FormHandler tables`_ are a client-side component that quickly render FormHandler data as tables
+- Using `FormHandler parameters`_ you can allow users to choose the file,
+  database or table. This is using URL query parameters like ``?table=...`` as
+  well as path arguments like ``/database/table``.
+- You can specify HTTP headers for all formats using the ``headers:`` kwarg.
+- `FormHandler headers`_ now has an example of CORS - accessing FormHandler data
+  from other servers via HTTP (@pratap.vardhan)
+- Examples of matrix and grid charts for `FormHandler charts`_ are available (@pratap.vardhan)
+
+`Alerts command line`_ usage gives you access to `Smart alerts`_ give you access
+to alert emails from command line. You can use this as a local mail merge app.
+
+`FunctionHandler`_ supports the ``method:`` kwarg. You can decide which HTTP
+methods to support - including ``PUT``, ``DELETE``, etc.
+
+A few common queries are documented:
+
+- `session data`_ features a guide on how to pick a session store --
+  specifically, how to handle sessions with multiple Gramex instances (@pratam.vardhan)
+- `How XSRF works`_ explains the underlying workings of XSRF
+
+Stats:
+
+- Code base: 21,636 lines (gramex: 13,772 - a reduction, tests: 7,864)
+- Test coverage: 79%
+
+
+v1.28.0 (2018-01-31)
+~~~~~~~~~~~~~~~~~
+
 `FormHandler`_ has two major upgrades. `FormHandler charts`_ use the `Seaborn`_
 library to generate static charts on the server as SVG or PNG (PDF too.) Setting
 ``?meta=y`` returns metadata as HTTP headers.
@@ -940,6 +982,7 @@ v1.0.0 (2015-09-08)
 .. _SimpleAuth: https://learn.gramener.com/guide/auth/#simple-auth
 .. _TwitterAuth: https://learn.gramener.com/guide/auth/#twitter-auth
 .. _IntegratedAuth: https://learn.gramener.com/guide/auth/#integrated-auth
+.. _SAMLAuth: https://learn.gramener.com/guide/auth/#SAML-auth
 .. _session expiry: https://learn.gramener.com/guide/auth/#session-expiry
 .. _TwitterStream: https://learn.gramener.com/guide/twitterresthandler/#twitter-streaming
 .. _UploadHandler: https://learn.gramener.com/guide/uploadhandler/
@@ -947,6 +990,7 @@ v1.0.0 (2015-09-08)
 .. _PPTXHandler: https://learn.gramener.com/guide/pptxhandler/
 .. _FormHandler: https://learn.gramener.com/guide/formhandler/
 .. _FormHandler filters: https://learn.gramener.com/guide/formhandler/#formhandler-filters
+.. _FormHandler tables: https://learn.gramener.com/guide/formhandler/#formhandler-tables
 .. _FormHandler charts: https://learn.gramener.com/guide/formhandler/#formhandler-charts
 .. _FormHandler downloads: https://learn.gramener.com/guide/formhandler/#formhandler-downloads
 .. _FormHandler defaults: https://learn.gramener.com/guide/formhandler/#formhandler-defaults
@@ -956,6 +1000,8 @@ v1.0.0 (2015-09-08)
 .. _FormHandler modify: https://learn.gramener.com/guide/formhandler/#formhandler-modify
 .. _FormHandler formats: https://learn.gramener.com/guide/formhandler/#formhandler-formats
 .. _FormHandler edits: https://learn.gramener.com/guide/formhandler/#formhandler-edits
+.. _FormHandler parameters: https://learn.gramener.com/guide/formhandler/#formhandler-parameters
+.. _FormHandler headers: https://learn.gramener.com/guide/formhandler/#custom-http-headers
 .. _caching: https://learn.gramener.com/guide/cache/
 .. _scheduler: https://learn.gramener.com/guide/scheduler/
 .. _log: https://learn.gramener.com/guide/config/#logging
@@ -1027,6 +1073,7 @@ v1.0.0 (2015-09-08)
 .. _Sign up: https://learn.gramener.com/guide/auth/#sign-up
 .. _node: https://nodejs.org/
 .. _Smart Alerts: https://learn.gramener.com/guide/alert/
+.. _Alerts command line: https://learn.gramener.com/guide/alert/#alert-command-line
 .. _Log viewer: https://learn.gramener.com/guide/logviewer/
 .. _Leaflet: http://leafletjs.com/
 .. _topojson: https://github.com/topojson/topojson
@@ -1046,3 +1093,5 @@ v1.0.0 (2015-09-08)
 .. _Seaborn: https://seaborn.pydata.org/
 .. _numeral.js: http://numeraljs.com/
 .. _deploy: https://learn.gramener.com/guide/deploy
+.. _ProxyHandler: https://learn.gramener.com/guide/proxyhandler/
+.. _How XSRF works: https://learn.gramener.com/guide/filehandler/#how-xsrf-works

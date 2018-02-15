@@ -1,8 +1,6 @@
 {
   "1.27.0": {
-    "": {
-      "Gramex 1.27.0": -1
-    }
+    "": {}
   },
   "about": {
     "": {
@@ -16,6 +14,9 @@
     },
     "alert-api": {
       "Alert API": -1
+    },
+    "alert-command-line": {
+      "Alert command line": -1
     },
     "alert-configuration": {
       "Alert configuration": -1
@@ -178,8 +179,14 @@
     "otp": {
       "OTP": -1
     },
+    "replace-the-below-line-with-the-relevant-version-for-your-system": {
+      "Replace the below line with the relevant version for your system": -1
+    },
     "roles": {
       "Roles": -1
+    },
+    "saml-auth": {
+      "SAML Auth": -1
     },
     "session-data": {
       "Session data": -1
@@ -531,6 +538,9 @@
     "filehandler-http-methods": {
       "FileHandler HTTP methods": -1
     },
+    "how-xsrf-works": {
+      "How XSRF works": -1
+    },
     "ignore-files": {
       "Ignore files": -1
     },
@@ -556,6 +566,9 @@
     },
     "categorical-plots": {
       "Categorical plots": -1
+    },
+    "custom-http-headers": {
+      "Custom HTTP Headers": -1
     },
     "formhandler-charts": {
       "FormHandler charts": -1
@@ -593,6 +606,9 @@
     "formhandler-multiple-datasets": {
       "FormHandler multiple datasets": -1
     },
+    "formhandler-parameters": {
+      "FormHandler parameters": -1
+    },
     "formhandler-post": {
       "FormHandler POST": -1
     },
@@ -611,10 +627,19 @@
     "formhandler-queryfunction": {
       "FormHandler queryfunction": -1
     },
+    "formhandler-tables": {
+      "FormHandler tables": -1
+    },
     "formhandler-templates": {
       "FormHandler templates": -1
     },
     "formhandler-transforms": {},
+    "grid-plots": {
+      "Grid plots": -1
+    },
+    "matrix-plots": {
+      "Matrix plots": -1
+    },
     "preventing-sql-injection": {
       "Preventing SQL injection": -1
     },
@@ -631,6 +656,9 @@
     },
     "function-arguments": {
       "Function arguments": -1
+    },
+    "function-methods": {
+      "Function methods": -1
     },
     "parse-url-arguments": {
       "Parse URL arguments": -1
@@ -835,6 +863,20 @@
       "ProcessHandler redirection": -1
     }
   },
+  "proxyhandler": {
+    "": {
+      "Gramex proxies HTTP requests": -1
+    },
+    "google-proxyhandler": {
+      "Google ProxyHandler": -1
+    },
+    "proxyhandler-configuration": {
+      "ProxyHandler Configuration": -1
+    },
+    "reverse-proxyhandler": {
+      "Reverse ProxyHandler": -1
+    }
+  },
   "queryhandler": {
     "": {
       "Gramex runs SQL queries": -1
@@ -850,9 +892,7 @@
     }
   },
   "release": {
-    "": {
-      "Gramex releases": -1
-    }
+    "": {}
   },
   "scheduler": {
     "": {
