@@ -380,6 +380,9 @@ def _sql_safe(val):
 
 def _path_safe(path):
     '''Returns True if path does not try to escape outside a given directory using .. or / etc'''
+    # Ignore non-strings. These are generally not meant for paths
+    if not isinstance(path, six.string_types):
+        return True
     return os.path.realpath(os.path.join(_path_safe_root, path)).startswith(_path_safe_root)
 
 

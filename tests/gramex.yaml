@@ -1449,6 +1449,26 @@ url:
       query: 'SELECT * FROM {table} WHERE {col}=:val'
       default:
         table: sales
+  formhandler/path_arg:
+    pattern: /formhandler/path_arg/(\w+)/(\w+)
+    handler: FormHandler
+    kwargs:
+      url: sqlite:///$YAMLPATH/{_0}.db
+      query:
+        SELECT {group}, SUM(sales) AS sales
+        FROM {_1}
+        WHERE {col}=:val
+        GROUP BY {group}
+  formhandler/path_kwarg:
+    pattern: /formhandler/path_kwarg/(?P<db>\w+)/(?P<table>\w+)
+    handler: FormHandler
+    kwargs:
+      url: sqlite:///$YAMLPATH/{db}.db
+      query:
+        SELECT {group}, SUM(sales) AS sales
+        FROM {table}
+        WHERE {col}=:val
+        GROUP BY {group}
 
   capture:
     pattern: /capture

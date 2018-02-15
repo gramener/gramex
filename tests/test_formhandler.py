@@ -24,6 +24,17 @@ xlsx_mime_type = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sh
 class TestFormHandler(TestGramex):
     sales = gramex.cache.open(os.path.join(folder, 'sales.xlsx'), 'xlsx')
 
+    @classmethod
+    def setUpClass(cls):
+        dbutils.sqlite_create_db('formhandler.db', sales=cls.sales)
+
+    @classmethod
+    def tearDownClass(cls):
+        try:
+            dbutils.sqlite_drop_db('formhandler.db')
+        except OSError:
+            pass
+
     def check_filter(self, url, df=None, na_position='last', key=None):
         # Modelled on testlib.test_data.TestFilter.check_filter
 
@@ -143,24 +154,17 @@ class TestFormHandler(TestGramex):
                           df=self.sales.sort_values('growth'))
 
     def test_sqlite(self):
-        dbutils.sqlite_create_db('formhandler.db', sales=self.sales)
-        try:
-            self.check_filter('/formhandler/sqlite', na_position='first')
-            self.check_filter('/formhandler/sqlite-multi', na_position='last', key='big',
-                              df=self.sales[self.sales['sales'] > 100])
-            self.check_filter('/formhandler/sqlite-multi', na_position='last', key='by-growth',
-                              df=self.sales.sort_values('growth'))
-            self.check_filter('/formhandler/sqlite-multi', na_position='last', key='big-by-growth',
-                              df=self.sales[self.sales['sales'] > 100].sort_values('growth'))
-            self.check_filter('/formhandler/sqlite-queryfunction', na_position='last')
-            self.check_filter('/formhandler/sqlite-queryfunction?ct=Hyderabad&ct=Coimbatore',
-                              na_position='last',
-                              df=self.sales[self.sales['city'].isin(['Hyderabad', 'Coimbatore'])])
-        finally:
-            try:
-                dbutils.sqlite_drop_db('formhandler.db')
-            except OSError:
-                pass
+        self.check_filter('/formhandler/sqlite', na_position='first')
+        self.check_filter('/formhandler/sqlite-multi', na_position='last', key='big',
+                            df=self.sales[self.sales['sales'] > 100])
+        self.check_filter('/formhandler/sqlite-multi', na_position='last', key='by-growth',
+                            df=self.sales.sort_values('growth'))
+        self.check_filter('/formhandler/sqlite-multi', na_position='last', key='big-by-growth',
+                            df=self.sales[self.sales['sales'] > 100].sort_values('growth'))
+        self.check_filter('/formhandler/sqlite-queryfunction', na_position='last')
+        self.check_filter('/formhandler/sqlite-queryfunction?ct=Hyderabad&ct=Coimbatore',
+                            na_position='last',
+                            df=self.sales[self.sales['city'].isin(['Hyderabad', 'Coimbatore'])])
 
     def test_mysql(self):
         dbutils.mysql_create_db(variables.MYSQL_SERVER, 'test_formhandler', sales=self.sales)
@@ -452,30 +456,36 @@ class TestFormHandler(TestGramex):
         })
 
     def test_args(self):
-        dbutils.sqlite_create_db('formhandler.db', sales=self.sales)
-        try:
-            # url: accepts query formatting for files
-            url = '/formhandler/arg-url?path=sales'
-            afe(pd.DataFrame(self.get(url).json()), self.sales, check_like=True)
-            # url: and table: accept query formatting for SQLAlchemy
-            url = '/formhandler/arg-table?db=formhandler&table=sales'
-            afe(pd.DataFrame(self.get(url).json()), self.sales, check_like=True)
-            # url: and table: accept query formatting for SQLAlchemy
-            url = '/formhandler/arg-query?db=formhandler&col=देश&val=भारत'
-            expected = self.sales[self.sales['देश'] == 'भारत']
-            afe(pd.DataFrame(self.get(url).json()), expected, check_like=True)
+        # url: accepts query formatting for files
+        url = '/formhandler/arg-url?path=sales'
+        afe(pd.DataFrame(self.get(url).json()), self.sales, check_like=True)
+        # url: and table: accept query formatting for SQLAlchemy
+        url = '/formhandler/arg-table?db=formhandler&table=sales'
+        afe(pd.DataFrame(self.get(url).json()), self.sales, check_like=True)
 
-            # Files with ../ etc should be skipped
-            self.check('/formhandler/arg-url?path=../sales',
-                       code=500, text='KeyError')
-            # Test that the ?skip= parameter is used to find the table.
-            self.check('/formhandler/arg-table?db=formhandler&table=sales&skip=ab',
-                       code=500, text='NoSuchTableError')
-            # Spaces are ignored in SQLAlchemy query. So ?skip= will be a missing key
-            self.check('/formhandler/arg-table?db=formhandler&table=sales&skip=a b',
-                       code=500, text='KeyError')
-        finally:
-            try:
-                dbutils.sqlite_drop_db('formhandler.db')
-            except OSError:
-                pass
+        # url: and table: accept query formatting for SQLAlchemy
+        # TODO: In Python 2, unicode keys don't work well on Tornado. So use safe keys
+        key, val = ('product', '芯片') if six.PY2 else ('देश', 'भारत')
+        url = '/formhandler/arg-query?db=formhandler&col=%s&val=%s' % (key, val)
+        actual = pd.DataFrame(self.get(url).json())
+        expected = self.sales[self.sales[key] == val]
+        expected.index = actual.index
+        afe(actual, expected, check_like=True)
+
+        # Files with ../ etc should be skipped
+        self.check('/formhandler/arg-url?path=../sales',
+                   code=500, text='KeyError')
+        # Test that the ?skip= parameter is used to find the table.
+        self.check('/formhandler/arg-table?db=formhandler&table=sales&skip=ab',
+                   code=500, text='NoSuchTableError')
+        # Spaces are ignored in SQLAlchemy query. So ?skip= will be a missing key
+        self.check('/formhandler/arg-table?db=formhandler&table=sales&skip=a b',
+                   code=500, text='KeyError')
+
+    def test_path_arg(self):
+        url = '/formhandler/%s/formhandler/sales?group=product&col=city&val=Bangalore'
+        for sub_url in ['path_arg', 'path_kwarg']:
+            actual = pd.DataFrame(self.get(url % sub_url).json())
+            expected = self.sales[self.sales['city'] == 'Bangalore'].groupby('product')
+            expected = expected['sales'].sum().reset_index()
+            afe(actual, expected, check_like=True)

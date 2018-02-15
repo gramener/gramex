@@ -379,29 +379,6 @@ on top of this query. For example:
 - [query](query?_format=html) returns data grouped by Continent
 - [query?num>=20](query?num>=20&_format=html) ► continents where number of countries > 20
 
-The URL and query string is formatted using the arguments using `{arg}` and
-`:arg`. For example:
-
-    :::yaml
-          url: 'sqlite:///$YAMLPATH/{db}.sqlite3'
-          query: 'SELECT {group}, COUNT(*) FROM table GROUP BY {group} WHERE state=:state'
-
-will load from whatever database is specified in `?db=` and group by whatever is
-passed as `?group=` and where the state is `?state=`. For example,
-`?db=sales&group=city&state=AR` loads `sales.sqlite3` and returns
-`SELECT city, COUNT(*) FROM table GROUP BY city WHERE state="AR"`.
-
-`:arg` is the SQLAlchemy placeholder. It can only be used as values, not column
-names or in any other place. This will be safely formatted by SQL and can
-contain any value. On the other hand, use `{arg}` for column names, filenames,
-etc.
-
-For security, there are 2 constraints:
-
-- The arguments for file URLs should not go outside the specified directory
-  (e.g. using `..` or `/`). Sub-directories are fine
-- The arguments for SQLAlchemy URLs and queries cannot contain spaces
-
 This uses [gramex.cache.query](../cache/#query-caching) behind the scenes. You
 can cache the query based on a smaller query or table name by specifying a
 `table:` parameter. For example:
@@ -520,21 +497,58 @@ that the column names are always specified by you. For example:
         columns = {'sales': 'sales', 'growth': 'growth'}
         return 'SELECT {col} FROM table'.format(columns[args['col'][0]])
 
+## FormHandler parameters
+
+The `url:`, `table:` and `query:` parameters are formatted using the path
+arguments and URL query parameters. This allows users to control where and how
+FormHandler picks up data. For example, take this structure:
+
+```yaml
+url:
+  parameters:
+    pattern: /$YAMLURL/(\w+)/(\w+)      # Maps /db/table to {_0:db, _1:table}
+    handler: FormHandler
+    kwargs:
+      url: sqlite:///$YAMLPATH/{_0}.db  # Use _0 as the DB file name
+      query:
+        SELECT {group}, COUNT(*)        # ?group= specifies column to group by
+        FROM {_1}                       # _1 comes from the path arguments
+        WHERE {col}=:val                # ?col= as column, ?val= as val
+        GROUP BY {group}
+```
+
+The URL `/data/sales?group=org&col=city&val=London` returns the results of
+`SELECT org, COUNT(*) FROM sales GROUP BY org WHERE city=London` running on
+`data.db`.
+
+`:arg` is the SQLAlchemy placeholder. It can only be used as values, not column
+names or in any other place. This will be safely formatted by SQL and can
+contain any value. On the other hand, use `{arg}` for column names, filenames,
+etc.
+
+For security, there are 2 constraints:
+
+- The arguments for file URLs should not go outside the specified directory
+  (e.g. using `..` or `/`). Sub-directories are fine
+- The arguments for SQLAlchemy URLs and queries cannot contain spaces
+
 ## FormHandler defaults
 
 To specify default values for arguments, use the `default:` key.
 
-    :::yaml
-    url:
-      continent:
-        pattern: /$YAMLURL/continent
-        handler: FormHandler
-        kwargs:
-          url: $YAMLPATH/flags.csv
-          function: data.groupby('Continent').sum().reset_index()
-          default:
-            _limit: 10                  # By default, limit to 10 rows, i.e. ?_limit=10
-            Continent: [Europe, Asia]   # Same as ?Continent=Europe&Continent=Asia
+```yaml
+url:
+  continent:
+    pattern: /$YAMLURL/continent
+    handler: FormHandler
+    kwargs:
+      url: $YAMLPATH/flags.csv
+      function: data.groupby('Continent').sum().reset_index()
+      default:
+        _limit: 10                  # By default, limit to 10 rows, i.e. ?_limit=10
+        Continent: [Europe, Asia]   # Same as ?Continent=Europe&Continent=Asia
+```
+
 
 ## FormHandler prepare
 

@@ -98,16 +98,21 @@ class FormHandler(BaseHandler):
                         vars=fn_vars,
                         filename='%s.%s.%s' % (cls.name, key, fn), iter=False)
 
-    def _options(self, dataset, args, key):
+    def _options(self, dataset, args, path_args, path_kwargs, key):
         """For each dataset, prepare the arguments."""
         filter_kwargs = AttrDict(dataset)
         filter_kwargs.pop('modify', None)
         prepare = filter_kwargs.pop('prepare', None)
         queryfunction = filter_kwargs.pop('queryfunction', None)
+        # Use default arguments
         defaults = {
-            key: val if isinstance(val, list) else [val]
-            for key, val in filter_kwargs.pop('default', {}).items()
+            k: v if isinstance(v, list) else [v]
+            for k, v in filter_kwargs.pop('default', {}).items()
         }
+        # /(.*)/(.*) become 2 path arguments _0 and _1
+        defaults.update({'_%d' % k: [v] for k, v in enumerate(path_args)})
+        # /(?P<x>\d+)/(?P<y>\d+) become 2 keyword arguments x and y
+        defaults.update({k: [v] for k, v in path_kwargs.items()})
         args = merge(namespaced_args(args, key), defaults, mode='setdefault')
         if callable(prepare):
             result = prepare(args=args, key=key, handler=self)
@@ -124,11 +129,11 @@ class FormHandler(BaseHandler):
         )
 
     @tornado.gen.coroutine
-    def get(self):
+    def get(self, *path_args, **path_kwargs):
         meta, futures = AttrDict(), AttrDict()
         for key, dataset in self.datasets.items():
             meta[key] = AttrDict()
-            opt = self._options(dataset, self.args, key)
+            opt = self._options(dataset, self.args, path_args, path_kwargs, key)
             opt.filter_kwargs.pop('id', None)
             # Run query in a separate threadthread
             futures[key] = gramex.service.threadpool.submit(
@@ -159,14 +164,14 @@ class FormHandler(BaseHandler):
                                         **format_options))
 
     @tornado.gen.coroutine
-    def update(self, method):
+    def update(self, method, *path_args, **path_kwargs):
         if self.redirects:
             self.save_redirect_page()
         meta, count = AttrDict(), AttrDict()
         # For each dataset
         for key, dataset in self.datasets.items():
             meta[key] = AttrDict()
-            opt = self._options(dataset, self.args, key)
+            opt = self._options(dataset, self.args, path_args, path_kwargs, key)
             if 'id' not in opt.filter_kwargs:
                 raise HTTPError(BAD_REQUEST, '%s: %s requires id: <col> in gramex.yaml' % (
                     self.name, self.request.method))
@@ -188,16 +193,16 @@ class FormHandler(BaseHandler):
             self.write(json.dumps(meta, indent=2))
 
     @tornado.gen.coroutine
-    def delete(self):
-        yield self.update(gramex.data.delete)
+    def delete(self, *path_args, **path_kwargs):
+        yield self.update(gramex.data.delete, *path_args, **path_kwargs)
 
     @tornado.gen.coroutine
-    def post(self):
-        yield self.update(gramex.data.insert)
+    def post(self, *path_args, **path_kwargs):
+        yield self.update(gramex.data.insert, *path_args, **path_kwargs)
 
     @tornado.gen.coroutine
-    def put(self):
-        yield self.update(gramex.data.update)
+    def put(self, *path_args, **path_kwargs):
+        yield self.update(gramex.data.update, *path_args, **path_kwargs)
 
     def set_format(self, fmt, meta):
         # Identify format to render in. The default format, json, is defined in
