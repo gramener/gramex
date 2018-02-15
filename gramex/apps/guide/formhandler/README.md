@@ -99,6 +99,52 @@ configuration adds a custom PPTX format called `pptx-table`:
 - Download the output at [flags?_format=pptx-table](flags?_format=pptx-table&_limit=10&_c=ID&_c=Name&_c=Continent&_c=Stripes).
 - Download the [input.pptx](input.pptx) used as a template
 
+## FormHandler tables
+
+**v1.28**. Gramex includes the [g1][g1] library that includes a FormHandler
+table component. To use it, add the following code:
+
+```html
+<link rel="stylesheet" href="ui/bootstraptheme.css"/>     <!-- Add bootstrap -->
+<div class="formhandler" data-src="flags"></div>          <!-- Insert component here -->
+<!-- Include JS dependencies  -->
+<script src="ui/lodash/lodash.min.js"></script>
+<script src="ui/jquery/dist/jquery.min.js"></script>
+<script src="ui/popper.js/dist/umd/popper.min.js"></script>
+<script src="ui/bootstrap/dist/js/bootstrap.min.js"></script>
+<script src="ui/g1/dist/g1.min.js"></script>
+<script>
+  // Render the FormHandler table
+  $('.formhandler').formhandler()
+</script>
+```
+
+This requires the [UI components library](../uicomponents/) mounted at `ui/`.
+
+<div class="example">
+  <a class="example-demo" href="table.html">FormHandler table example</a>
+  <a class="example-src" href="http://code.gramener.com/s.anand/gramex/tree/master/gramex/apps/guide/formhandler/table.html">Source</a>
+</div>
+
+You can configure the data attributes:
+
+- `data-src`: FormHandler URL endpoint
+- `data-columns="col1,col2,col3"`: comma-separated column names to display
+- `data-table=""`: hides the table
+- `data-count=""`: hides the row count
+- `data-page=""`: hides the page control
+- `data-page-size="10"`: sets the page size to 10 (default: 100)
+- `data-size=""`: hides the page size control
+- `data-size-values="10,50,100"`: defines page size values (default: `10,20,50,100,500,1000`)
+- `data-export=""`: hides the export control
+- `data-filters=""`: hides the applied filters control
+
+More options can be provided to `$().formhandler()` via JavaScript. See the
+[API documentation][g1-formhandler] for details.
+
+[g1]: https://code.gramener.com/s.anand/g1/
+[g1-formhandler]: https://code.gramener.com/s.anand/g1/#formhandler
+
 ## FormHandler charts
 
 **v1.28**. FormHandler supports [seaborn](https://seaborn.pydata.org/) charts.
