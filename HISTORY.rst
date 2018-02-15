@@ -3,8 +3,8 @@
 History
 -------
 
-v1.28.0 (2018-01-31)
-~~~~~~~~~~~~~~~~~
+v1.29.0 (2018-02-15)
+~~~~~~~~~~~~~~~~~~~~
 
 `SAMLAuth`_ is now a part of Gramex. Most enterprise Single-Sign-On (SSO)
 implementations are now SAML-enabled, including Microsoft ActiveDirectory.
