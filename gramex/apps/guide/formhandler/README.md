@@ -6,33 +6,35 @@ title: Gramex connects to data
 
 Here is a sample configuration to read data from a CSV file:
 
-    :::yaml
-    url:
-      flags:
-        pattern: /$YAMLURL/flags
-        handler: FormHandler
-        kwargs:
-          url: $YAMLPATH/flags.csv
+```yaml
+url:
+  flags:
+    pattern: /$YAMLURL/flags
+    handler: FormHandler
+    kwargs:
+      url: $YAMLPATH/flags.csv
+```
 
 You can read from multiple file formats as well as databases. The URL may be a
 [gramex.cache.open](../cache/#data-caching) path. For example:
 
-    :::yaml
-        url: /path/to/file.csv      # Reads the CSV file
+```yaml
+    url: /path/to/file.csv      # Reads the CSV file
 
-        url: /path/to/file.xlsx     # Reads first sheet from file.xlsx
+    url: /path/to/file.xlsx     # Reads first sheet from file.xlsx
 
-        url: /path/to/file.csv      # Any additional parameters are passed to
-        delimiter: '|'              # gramex.cache.open, which uses pd.read_csv
+    url: /path/to/file.csv      # Any additional parameters are passed to
+    delimiter: '|'              # gramex.cache.open, which uses pd.read_csv
 
-        ext: xlsx                   # Passes ext=xlsx to gramex.cache.open
-        url: /path/to/filename      # which treats this file as an Excel file
+    ext: xlsx                   # Passes ext=xlsx to gramex.cache.open
+    url: /path/to/filename      # which treats this file as an Excel file
 
-        url: /path/to/file.xlsx     # Reads the sheet named sales
-        sheetname: sales
+    url: /path/to/file.xlsx     # Reads the sheet named sales
+    sheetname: sales
 
-        url: /path/to/file.hdf      # Reads the dataframe at key named 'sales'
-        key: sales
+    url: /path/to/file.hdf      # Reads the dataframe at key named 'sales'
+    key: sales
+```
 
 Additional parameters like `delimiter:`, `ext:`, etc are passed to
 [gramex.cache.open](../cache/#data-caching), which uses the Pandas ``read_*``
@@ -40,21 +42,22 @@ methods.
 
 `url:` can also be an SQLAlchemy URL. For example:
 
-    :::yaml
-        url: 'mysql+pymysql://$USER:$PASS@server/db'    # Reads from MySQL
-        table: sales
+```yaml
+    url: 'mysql+pymysql://$USER:$PASS@server/db'    # Reads from MySQL
+    table: sales
 
-        url: 'postgresql://$USER:$PASS@server/db'       # Reads from PostgreSQL
-        table: sales
+    url: 'postgresql://$USER:$PASS@server/db'       # Reads from PostgreSQL
+    table: sales
 
-        url: 'oracle://$USER:$PASS@server/db'           # Reads from Oracle
-        table: sales
+    url: 'oracle://$USER:$PASS@server/db'           # Reads from Oracle
+    table: sales
 
-        url: 'mssql+pyodbc://$USER:$PASS@dsn'           # Reads from MS SQL
-        table: sales
+    url: 'mssql+pyodbc://$USER:$PASS@dsn'           # Reads from MS SQL
+    table: sales
 
-        url: 'sqlite:///D:/path/to/file.db'             # Reads from SQLite
-        table: sales
+    url: 'sqlite:///D:/path/to/file.db'             # Reads from SQLite
+    table: sales
+```
 
 Additional parameters like `table:`, `encoding:`, etc are passed to
 [gramex.cache.query](../cache/#query-caching), which uses
@@ -73,28 +76,30 @@ By default, FormHandler renders data as JSON. Use `?_format=` to change that.
 
 To include the table format, you must include this in your gramex.yaml:
 
-    :::yaml
-    import:
-      path: $GRAMEXPATH/apps/formhandler/gramex.yaml
-      YAMLURL: $YAMLURL         # Mount this app at the current folder
+```yaml
+import:
+  path: $GRAMEXPATH/apps/formhandler/gramex.yaml
+  YAMLURL: $YAMLURL         # Mount this app at the current folder
+```
 
 You can also create custom PPTX downloads using FormHandler. For example, this
 configuration adds a custom PPTX format called `pptx-table`:
 
-    :::yaml
-    formhandler-flags:
-      pattern: /$YAMLURL/flags
-      handler: FormHandler
-      kwargs:
-        url: $YAMLPATH/flags.csv
-        formats:
-          pptx-table:                       # Define a format called pptx-table
-            format: pptx                    # It generates a PPTX output
-            source: $YAMLPATH/input.pptx    # ... based on input.pptx
-            change-table:                   # The first rule to apply...
-              Table:                        # ... takes all shapes named Table
-                table:                      # ... runs a "table" command (to update tables)
-                  data: data['data']        # ... using flags data (default name is 'data)
+```yaml
+formhandler-flags:
+  pattern: /$YAMLURL/flags
+  handler: FormHandler
+  kwargs:
+    url: $YAMLPATH/flags.csv
+    formats:
+      pptx-table:                       # Define a format called pptx-table
+        format: pptx                    # It generates a PPTX output
+        source: $YAMLPATH/input.pptx    # ... based on input.pptx
+        change-table:                   # The first rule to apply...
+          Table:                        # ... takes all shapes named Table
+            table:                      # ... runs a "table" command (to update tables)
+              data: data['data']        # ... using flags data (default name is 'data)
+```
 
 - Download the output at [flags?_format=pptx-table](flags?_format=pptx-table&_limit=10&_c=ID&_c=Name&_c=Continent&_c=Stripes).
 - Download the [input.pptx](input.pptx) used as a template
@@ -150,25 +155,26 @@ More options can be provided to `$().formhandler()` via JavaScript. See the
 **v1.28**. FormHandler supports [seaborn](https://seaborn.pydata.org/) charts.
 To render FormHandler data as charts, use:
 
-    :::yaml
-    formhandler-chart:
-      pattern: /$YAMLURL/chart
-      handler: FormHandler
-      kwargs:
-        url: $YAMLPATH/flags.csv
-        function: data.groupby('Continent').sum().reset_index()
-        formats:
-          barchart:                       # Define a format called barchart
-            format: seaborn               # This uses seaborn as the format
-            chart: barplot                # Chart can be any standard seaborn chart
-            ext: png                      # Use a matplot backend (svg, pdf, png)
-            width: 400                    # Image width in pixels. Default: 640px
-            height: 300                   # Image height in pixels. Default: 480px
-            dpi: 48                       # Image resolution (dots per inch). Default: 96
-            x: Continent                  # additional parameters are passed to barplot()
-            y: c1
-            headers:
-              Content-Type: image/png     # Render as a PNG image
+```yaml
+formhandler-chart:
+  pattern: /$YAMLURL/chart
+  handler: FormHandler
+  kwargs:
+    url: $YAMLPATH/flags.csv
+    function: data.groupby('Continent').sum().reset_index()
+    formats:
+      barchart:                       # Define a format called barchart
+        format: seaborn               # This uses seaborn as the format
+        chart: barplot                # Chart can be any standard seaborn chart
+        ext: png                      # Use a matplot backend (svg, pdf, png)
+        width: 400                    # Image width in pixels. Default: 640px
+        height: 300                   # Image height in pixels. Default: 480px
+        dpi: 48                       # Image resolution (dots per inch). Default: 96
+        x: Continent                  # additional parameters are passed to barplot()
+        y: c1
+        headers:
+          Content-Type: image/png     # Render as a PNG image
+```
 
 The URL [chart?_format=barchart][barchart] renders the chart image.
 
@@ -191,9 +197,10 @@ $('#barchart-svg').load('chart?_format=barchart-svg')
 The format options are formatted using the URL arguments via `{arg}`
 example:
 
-    :::yaml
-          x: '{xcol}'   # The X axis for barplot comes from ?xcol=
-          y: '{ycol}'   # The Y axis for barplot comes from ?ycol=
+```yaml
+      x: '{xcol}'   # The X axis for barplot comes from ?xcol=
+      y: '{ycol}'   # The Y axis for barplot comes from ?ycol=
+```
 
 The URL `?xcol=Continent&ycol=c3` draws c3 vs Continents:
 
@@ -201,9 +208,10 @@ The URL `?xcol=Continent&ycol=c3` draws c3 vs Continents:
 
 Image dimensions can be controlled via URL arguments. For example:
 
-    :::yaml
-          width: '{width}'  # The width of barplot comes from ?width=
-          height: 200       # The height of barplot is fixed
+```yaml
+      width: '{width}'  # The width of barplot comes from ?width=
+      height: 200       # The height of barplot is fixed
+```
 
 [![c2 by Continent 200px wide][barplot-200]][barplot-200]
 [![c2 by Continent 300px wide][barplot-300]][barplot-300]
@@ -319,18 +327,19 @@ All values are all JSON encoded.
 
 FormHandler is designed to work without JavaScript. For example:
 
-    :::html
-    <form action="flags">
-      <p><label><input name="Name~"> Search for country name</label></p>
-      <p><label><input name="c1>~" type="number" min="0" max="100"> Min c1 value</label></p>
-      <p><label><input name="c1<~" type="number" min="0" max="100"> Max c1 value</label></p>
-      <p><select name="_sort">
-        <option value="c1">Sort by c1 ascending</option>
-        <option value="-c2">Sort by c1 descending</option>
-      </select></p>
-      <input type="hidden" name="_format" value="html">
-      <button type="submit">Filter</button>
-    </form>
+```html
+<form action="flags">
+  <p><label><input name="Name~"> Search for country name</label></p>
+  <p><label><input name="c1>~" type="number" min="0" max="100"> Min c1 value</label></p>
+  <p><label><input name="c1<~" type="number" min="0" max="100"> Max c1 value</label></p>
+  <p><select name="_sort">
+    <option value="c1">Sort by c1 ascending</option>
+    <option value="-c2">Sort by c1 descending</option>
+  </select></p>
+  <input type="hidden" name="_format" value="html">
+  <button type="submit">Filter</button>
+</form>
+```
 
 <form action="flags">
   <p><label><input name="Name~" value="stan"> Country search</label></p>
@@ -352,16 +361,17 @@ parameters directly.
 Add `function: ...` to transform the data before filtering. Try this
 [example](continent):
 
-    :::yaml
-    url:
-      continent:
-        pattern: /$YAMLURL/continent
-        handler: FormHandler
-        kwargs:
-          url: $YAMLPATH/flags.csv
-          function: data.groupby('Continent').sum().reset_index()
-          # Another example:
-          # function: my_module.calc(data)
+```yaml
+url:
+  continent:
+    pattern: /$YAMLURL/continent
+    handler: FormHandler
+    kwargs:
+      url: $YAMLPATH/flags.csv
+      function: data.groupby('Continent').sum().reset_index()
+      # Another example:
+      # function: my_module.calc(data)
+```
 
 This runs the following steps:
 
@@ -382,16 +392,17 @@ the **entire** table before transforming, so ensure that you have enough memory.
 You can modify the data returned after filtering using the `modify:` key. Try
 this [example](totals):
 
-    :::yaml
-    url:
-      totals:
-        pattern: /$YAMLURL/totals
-        handler: FormHandler
-        kwargs:
-          url: $YAMLPATH/flags.csv
-          modify: data.sum(numeric_only=True).to_frame().T
-          # Another example:
-          # modify: my_module.calc(data)
+```yaml
+url:
+  totals:
+    pattern: /$YAMLURL/totals
+    handler: FormHandler
+    kwargs:
+      url: $YAMLPATH/flags.csv
+      modify: data.sum(numeric_only=True).to_frame().T
+      # Another example:
+      # modify: my_module.calc(data)
+```
 
 This runs the following steps:
 
@@ -410,14 +421,15 @@ To transform the data before filtering, use [function](#formhandler-functions).
 
 You may also use a `query:` to select data from an SQLAlchemy databases. For example:
 
-    :::yaml
-    url:
-      query:
-        pattern: /$YAMLURL/query
-        handler: FormHandler
-        kwargs:
-          url: sqlite:///$YAMLPATH/database.sqlite3
-          query: 'SELECT Continent, COUNT(*) AS num, SUM(c1) FROM flags GROUP BY Continent'
+```yaml
+url:
+  query:
+    pattern: /$YAMLURL/query
+    handler: FormHandler
+    kwargs:
+      url: sqlite:///$YAMLPATH/database.sqlite3
+      query: 'SELECT Continent, COUNT(*) AS num, SUM(c1) FROM flags GROUP BY Continent'
+```
 
 ... returns the query result. [FormHandler filters](#formhandler-filters) apply
 on top of this query. For example:
@@ -429,9 +441,10 @@ This uses [gramex.cache.query](../cache/#query-caching) behind the scenes. You
 can cache the query based on a smaller query or table name by specifying a
 `table:` parameter. For example:
 
-    :::yaml
-          table: 'SELECT MAX(date) FROM source'
-          query: 'SELECT city, SUM(sales) FROM source GROUP BY city'
+```yaml
+      table: 'SELECT MAX(date) FROM source'
+      query: 'SELECT city, SUM(sales) FROM source GROUP BY city'
+```
 
 ... will run `query:` only if the result of running `table:` changes. You can
 also specify `table: source`. This attempts to automatically check if the table
@@ -457,14 +470,15 @@ The `table:` parameter also supports query substitutions like `query:`.
 Instead of entering a `query:` directly, you can point to an SQL file using
 ``queryfile:``
 
-    :::yaml
-    url:
-      query:
-        pattern: /$YAMLURL/query
-        handler: FormHandler
-        kwargs:
-          url: sqlite:///$YAMLPATH/database.sqlite3
-          queryfile: $YAMLPATH/query.sql
+```yaml
+url:
+  query:
+    pattern: /$YAMLURL/query
+    handler: FormHandler
+    kwargs:
+      url: sqlite:///$YAMLPATH/database.sqlite3
+      queryfile: $YAMLPATH/query.sql
+```
 
 For example:
 
@@ -484,19 +498,21 @@ To construct very complex queries that depend on the URL query parameters, use
 `args` as a dict of lists, and returns a query string. The query string is
 processed like a [query:](#formhandler-query) statement. For example:
 
-    :::yaml
-          queryfunction: mymodule.sales_query(args)
+```yaml
+      queryfunction: mymodule.sales_query(args)
+```
 
 ... can use a function like this:
 
-    :::python
-    def sales_query(args):
-        cities = args.get('ct', [])
-        if len(cities) > 0:
-            vals = ', '.join("'%s'" % pymysql.escape_string(v) for v in cities)
-            return 'SELECT * FROM sales WHERE city IN (%s)' % vals
-        else:
-            return 'SELECT * FROM sales'
+```python
+def sales_query(args):
+    cities = args.get('ct', [])
+    if len(cities) > 0:
+        vals = ', '.join("'%s'" % pymysql.escape_string(v) for v in cities)
+        return 'SELECT * FROM sales WHERE city IN (%s)' % vals
+    else:
+        return 'SELECT * FROM sales'
+```
 
 - `?ct=Paris&ct=Delhi` returns `SELECT * FROM sales WHERE city in ('Paris','Delhi')`.
 - `?` returns `SELECT * FROM sales`
@@ -516,32 +532,35 @@ data that it needs.
 
 Use SQL **parameter substitution** for values wherever possible. For example:
 
-    :::python
-    def bad_query_function(args):
-        return 'SELECT * FROM table WHERE col={val}'.format(val=args['v'])
+```python
+def bad_query_function(args):
+    return 'SELECT * FROM table WHERE col={val}'.format(val=args['v'])
 
-    def good_query_function(args):
-        return 'SELECT * FROM table WHERE col=:v'
-        # FormHandler will replace the :v with args['v'] if it is a value
+def good_query_function(args):
+    return 'SELECT * FROM table WHERE col=:v'
+    # FormHandler will replace the :v with args['v'] if it is a value
+```
 
 If you *must* use args as values, sanitize them. For example, `pymysql.escape_string(var)`:
 
-    :::python
-    def safe_query_function(args):
-        vals = ', '.join("'%s'" % pymysql.escape_string(v) for v in args['city'])
-        return 'SELECT * FROM sales WHERE city IN (%s)' % vals
+```python
+def safe_query_function(args):
+    vals = ', '.join("'%s'" % pymysql.escape_string(v) for v in args['city'])
+    return 'SELECT * FROM sales WHERE city IN (%s)' % vals
+```
 
 **Never use args outside quotes**, e.g. when referring to column names. Ensure
 that the column names are always specified by you. For example:
 
-    :::python
-    def bad_query_function(args):
-        return 'SELECT {col} FROM table'.format(args['col'][0])
+```python
+def bad_query_function(args):
+    return 'SELECT {col} FROM table'.format(args['col'][0])
 
-    def good_query_function(args):
-        # Ensure that only these 2 columns we specify can be included.
-        columns = {'sales': 'sales', 'growth': 'growth'}
-        return 'SELECT {col} FROM table'.format(columns[args['col'][0]])
+def good_query_function(args):
+    # Ensure that only these 2 columns we specify can be included.
+    columns = {'sales': 'sales', 'growth': 'growth'}
+    return 'SELECT {col} FROM table'.format(columns[args['col'][0]])
+```
 
 ## FormHandler parameters
 
@@ -600,16 +619,17 @@ url:
 
 To modify the arguments before executing the query, use `prepare:`.
 
-    :::yaml
-    url:
-      replace:
-        pattern: /$YAMLURL/replace
-        handler: FormHandler
-        kwargs:
-          url: $YAMLPATH/flags.csv
-          prepare: args.update(Cross=args.pop('c', []))
-          # Another example:
-          # prepare: my_module.calc(args, handler)
+```yaml
+url:
+  replace:
+    pattern: /$YAMLURL/replace
+    handler: FormHandler
+    kwargs:
+      url: $YAMLPATH/flags.csv
+      prepare: args.update(Cross=args.pop('c', []))
+      # Another example:
+      # prepare: my_module.calc(args, handler)
+```
 
 This `prepare:` method replaces the `?c=` with `?Cross=`. So
 [replace?c=Yes](replace?c=Yes&_format=html) is actually the same as
@@ -633,18 +653,19 @@ Some sample uses:
 
 You can return any number of datasets from any number of sources. For example:
 
-    :::yaml
-    url:
-      multidata:
-        pattern: /$YAMLURL/multidata
-        handler: FormHandler
-        kwargs:
-          continents:
-            url: $YAMLPATH/flags.csv
-            function: data.groupby('Continent').sum().reset_index()
-          stripes:
-            url: $YAMLPATH/flags.csv
-            function: data.groupby('Stripes').sum().reset_index()
+```yaml
+url:
+  multidata:
+    pattern: /$YAMLURL/multidata
+    handler: FormHandler
+    kwargs:
+      continents:
+        url: $YAMLPATH/flags.csv
+        function: data.groupby('Continent').sum().reset_index()
+      stripes:
+        url: $YAMLPATH/flags.csv
+        function: data.groupby('Stripes').sum().reset_index()
+```
 
 Multiple datasets as formatted as below:
 
@@ -672,18 +693,19 @@ Note:
 The output of FormHandler can be rendered as a custom template using the
 `template` format. For example, this creates a ``text`` format:
 
-    :::yaml
-    url:
-      pattern: text
-      handler: FormHandler
-      kwargs:
-        url: $YAMLPATH/flags.csv
-        formats:
-          text:
-            format: template
-            template: $YAMLPATH/text-template.txt
-            headers:
-                Content-Type: text/plain
+```yaml
+url:
+  pattern: text
+  handler: FormHandler
+  kwargs:
+    url: $YAMLPATH/flags.csv
+    formats:
+      text:
+        format: template
+        template: $YAMLPATH/text-template.txt
+        headers:
+            Content-Type: text/plain
+```
 
 Here is the output of [?_format=text&_limit=10](flags?_format=text&_limit=10).
 
@@ -712,19 +734,21 @@ POST, PUT and GET HTTP operators. For example:
 
 This requires primary keys to be defined in the FormHandler as follows:
 
-    :::yaml
-    url:
-      flags:
-        pattern: /$YAMLURL/flags
-        handler: FormHandler
-        kwargs:
-          url: /path/to/flags.csv
-          id: ID                  # Primary key column is "ID"
+```yaml
+url:
+  flags:
+    pattern: /$YAMLURL/flags
+    handler: FormHandler
+    kwargs:
+      url: /path/to/flags.csv
+      id: ID                  # Primary key column is "ID"
+```
 
 You may specify multiple primary keys using a list. For example:
 
-    :::yaml
-          id: [state, city]     # "state" + "city" is the primary key
+```yaml
+      id: [state, city]     # "state" + "city" is the primary key
+```
 
 If the `id` columns do not exist in the data, or are not passed in the URL,
 it raises 400 Bad Request HTTP Error.
@@ -732,20 +756,22 @@ it raises 400 Bad Request HTTP Error.
 A POST, PUT or DELETE operation immediately writes back to the underlying `url`.
 For example, this writes back to an Excel file:
 
-    :::yaml
-          # Saves data to Sheet1 of file.xlsx with plant & machine id as keys
-          url: /path/to/file.xlsx
-          sheetname: Sheet1
-          id: [plant, machine id]
+```yaml
+      # Saves data to Sheet1 of file.xlsx with plant & machine id as keys
+      url: /path/to/file.xlsx
+      sheetname: Sheet1
+      id: [plant, machine id]
+```
 
 This writes back to an Oracle Database:
 
-    :::yaml
-          # Saves to "sales" table of Oracle DB with month, product & city as keys
-          # Typically, the primary keys of "sales" should be the same as `id` here
-          url: 'oracle://$USER:$PASS@server/db'           # Reads from Oracle
-          table: sales
-          id: [month, product, city]
+```yaml
+      # Saves to "sales" table of Oracle DB with month, product & city as keys
+      # Typically, the primary keys of "sales" should be the same as `id` here
+      url: 'oracle://$USER:$PASS@server/db'           # Reads from Oracle
+      table: sales
+      id: [month, product, city]
+```
 
 To add or delete multiple values, repeat the keys. For example:
 
@@ -758,15 +784,16 @@ multiple rows based on multiple ID selections.
 If you are using [multiple datasets](#formhandler-multiple-datasets), add an
 `id:` list to each dataset. For example:
 
-    :::yaml
-      excel:
-          url: /path/to/file.xlsx
-          sheetname: Sheet1
-          id: [plant, machine id]
-      oracle:
-          url: 'oracle://$USER:$PASS@server/db'
-          table: sales
-          id: [month, product, city]
+```yaml
+  excel:
+      url: /path/to/file.xlsx
+      sheetname: Sheet1
+      id: [plant, machine id]
+  oracle:
+      url: 'oracle://$USER:$PASS@server/db'
+      table: sales
+      id: [month, product, city]
+```
 
 In the URL query, prefix by the relevant dataset name. For example this updates
 only the `continents:` dataset:
@@ -791,20 +818,22 @@ specified, these methods return a JSON dict with 2 keys:
 
 This form adds a row to the data.
 
-    :::html
-    <!-- flags.csv has ID, Name, Text and many other fields -->
-    <form action="flags-add" method="POST" enctype="multipart/form-data">
-      <label for="ID">ID</label>     <input type="text" name="ID" value="XXX">
-      <label for="Name">Name</label> <input type="text" name="Name" value="New country">
-      <label for="Text">Text</label> <input type="text" name="Text" value="New text">
-      <input type="hidden" name="_xsrf" value="{{ handler.xsrf_token }}">
-      <button type="submit" class="btn btn-submit">Submit</button>
-    </form>
+```html
+<!-- flags.csv has ID, Name, Text and many other fields -->
+<form action="flags-add" method="POST" enctype="multipart/form-data">
+  <label for="ID">ID</label>     <input type="text" name="ID" value="XXX">
+  <label for="Name">Name</label> <input type="text" name="Name" value="New country">
+  <label for="Text">Text</label> <input type="text" name="Text" value="New text">
+  <input type="hidden" name="_xsrf" value="{{ handler.xsrf_token }}">
+  <button type="submit" class="btn btn-submit">Submit</button>
+</form>
+```
 
 We need to specify a primary key. This YAML config specifies `ID` as the primary key.
 
-    :::yaml
-          id: ID        # Make ID the primary key
+```yaml
+      id: ID        # Make ID the primary key
+```
 
 When the HTML `form` is submitted, field names map to column names in the data.
 For example, `ID`, `Name` and `Text` are columns in the flags table.
@@ -819,18 +848,20 @@ for an AJAX example.
 
 This PUT request updates an existing row in the data.
 
-    :::js
-    // flags.csv has ID, Name, Text and many other fields
-    $.ajax('flags-edit', {
-      method: 'PUT',
-      headers: xsrf_token,      // See documentation on XSRF tokens
-      data: {ID: 'XXX', Name: 'Country 1', Text: 'Text ' + Math.random()}
-    })
+```js
+// flags.csv has ID, Name, Text and many other fields
+$.ajax('flags-edit', {
+  method: 'PUT',
+  headers: xsrf_token,      // See documentation on XSRF tokens
+  data: {ID: 'XXX', Name: 'Country 1', Text: 'Text ' + Math.random()}
+})
+```
 
 We need to specify a primary key. This YAML config specifies `ID` as the primary key.
 
-    :::yaml
-          id: ID        # Make ID the primary key
+```yaml
+      id: ID        # Make ID the primary key
+```
 
 When the HTML `form` is submitted, existing rows with ID `XXX` will be updated.
 
@@ -851,14 +882,15 @@ also use the HTTP header `X-HTTP-Method-Override: PUT`.
 
 This DELETE request deletes existing rows in the data.
 
-    :::html
-    <!-- flags.csv has Name as a column -->
-    <form action="flags-delete" method="POST" enctype="multipart/form-data">
-      <input type="hidden" name="x-http-method-override" value="DELETE">
-      <label for="Name">Name</label> <input type="checkbox" name="Name" value="Country 1" checked>
-      <label for="Name">Name</label> <input type="checkbox" name="Name" value="Country 2">
-      <button type="submit" class="btn btn-submit">Submit</button>
-    </form>
+```html
+<!-- flags.csv has Name as a column -->
+<form action="flags-delete" method="POST" enctype="multipart/form-data">
+  <input type="hidden" name="x-http-method-override" value="DELETE">
+  <label for="Name">Name</label> <input type="checkbox" name="Name" value="Country 1" checked>
+  <label for="Name">Name</label> <input type="checkbox" name="Name" value="Country 2">
+  <button type="submit" class="btn btn-submit">Submit</button>
+</form>
+```
 
 When the HTML `form` is submitted, existing rows with Name `Country 1` will be
 deleted. This is because only `Country 1` is checked by default. The user can
