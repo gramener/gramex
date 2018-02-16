@@ -12,13 +12,18 @@ from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 from gramex.config import app_log
 
+# Terminology:
+#   observer    - a single instance class that has all scheduler related behavior
+#   watch       - an instance that watches a single *folder*
+#   handler     - an instance that handles events - associated with a single *name*
+
 # There's only one observer. Start it at the beginning and schedule stuff later
 observer = Observer()
 observer.start()
 atexit.register(observer.stop)
 
-handlers = AttrDict()       # handler[name] = FileEventHandler
-watches = AttrDict()        # watches[directory] = ObservedWatch
+handlers = {}               # (handler, watch) -> (folder, name)
+watches = AttrDict()        # watches[folder] = ObservedWatch
 
 if six.PY2:
     PermissionError = RuntimeError
@@ -73,14 +78,8 @@ def watch(name, paths, **events):
     :arg function on_moved(event): Called when any path is moved.
     :arg function on_any_event(event): Called on any of the above events.
     '''
-    # if name in handlers:
-    #     handlers[name].unschedule()
-    # handlers[name] = FileEventHandler(paths, **events)
-
     # Create a series of schedules and handlers
-    if name in handlers:
-        unwatch(name)
-    handlers[name] = []
+    unwatch(name)
 
     patterns = set()        # List of absolute path patterns
     folders = set()         # List of folders matching these paths
@@ -97,24 +96,62 @@ def watch(name, paths, **events):
     handler = FileEventHandler(patterns, **events)
 
     for folder in folders:
-        if folder in watches:
-            observer.add_handler_for_watch(handler, watches[folder])
+        _folder, watch = get_watch(folder, watches)
+        # If a watch for this folder (or a parent) exists, use that folder's watch instead
+        if watch is not None:
+            observer.add_handler_for_watch(handler, watch)
+            folder = _folder
+        # If it's a new folder, create a new watch for it
         elif os.path.exists(folder):
             try:
-                watches[folder] = observer.schedule(handler, folder, recursive=True)
+                watch = watches[folder] = observer.schedule(handler, folder, recursive=True)
             except PermissionError:
                 app_log.warning('No permission to watch changes on %s', folder)
                 continue
         else:
             app_log.warning('watch directory %s does not exist', folder)
             continue
-        handlers[name].append(AttrDict(name=name, handler=handler, watch=watches[folder],
-                                       folder=folder))
+        # If EXISTING sub-folders of folder have watches, consolidate into this watch
+        consolidate_watches(folder, watch)
+        # Keep track of all handler-watch associations
+        handlers[handler, watch] = (folder, name)
+    release_unscheduled_watches()
 
 
 def unwatch(name):
     '''
-    Removes a named watch.
+    Removes all handler-watch associations for a watch name
     '''
-    for info in handlers.pop(name, []):
-        observer.remove_handler_for_watch(info.handler, info.watch)
+    for (_handler, _watch), (_folder, _name) in list(handlers.items()):
+        if _name == name:
+            del handlers[_handler, _watch]
+            observer.remove_handler_for_watch(_handler, _watch)
+
+
+def get_watch(folder, watches):
+    '''
+    Check if a folder already has a scheduled watch. If so, return it.
+    Else return None.
+    '''
+    for watched_folder, watch in watches.items():
+        if folder.startswith(watched_folder):
+            return watched_folder, watch
+    return None, None
+
+
+def consolidate_watches(folder, watch):
+    '''If folder is a parent of watched folders, migrate those handlers to this watch'''
+    for (_handler, _watch), (_folder, _name) in list(handlers.items()):
+        if _folder.startswith(folder) and _folder != folder:
+            del handlers[_handler, _watch]
+            observer.remove_handler_for_watch(_handler, _watch)
+            handlers[_handler, watch] = (folder, _name)
+            observer.add_handler_for_watch(_handler, watch)
+
+
+def release_unscheduled_watches():
+    watched_folders = {folder for folder, name in handlers.values()}
+    for folder, watch in list(watches.items()):
+        if folder not in watched_folders:
+            observer.unschedule(watch)
+            del watches[folder]

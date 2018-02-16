@@ -211,13 +211,12 @@ def init(force_reload=False, **kwargs):
     Update Gramex configurations and start / restart the instance.
 
     ``gramex.init()`` can be called any time to refresh configuration files.
+    ``gramex.init(key=val)`` adds ``val`` as a configuration layer named
+    ``key``. If ``val`` is a Path, it is converted into a PathConfig. (If it is
+    Path directory, use ``gramex.yaml``.)
+
     Services are re-initialised if their configurations have changed. Service
     callbacks are always re-run (even if the configuration hasn't changed.)
-
-    ``gramex.init(key=val)`` adds ``val`` as a configuration layer named
-    ``key``. The next time ``gramex.init(key=...)`` is called, the key is
-    ignored. But every time ``gramex.init(...)`` is called subsequently, the
-    ``val`` is re-evaluated and stored in ``gramex.conf``.
     '''
     # List of URLs to warn about
     warns = ['url.*', 'cache.*', 'schedule.*', 'watch.*',
@@ -228,11 +227,14 @@ def init(force_reload=False, **kwargs):
     variables.update(setup_variables())
 
     # Initialise configuration layers with provided configurations
+    # AttrDicts are updated as-is. Paths are converted to PathConfig
     paths.update(kwargs)
     for key, val in paths.items():
-        if key not in config_layers:
-            config_layers[key] = (PathConfig(val / 'gramex.yaml', warn=warns)
-                                  if isinstance(val, Path) else val)
+        if isinstance(val, Path):
+            if val.is_dir():
+                val = val / 'gramex.yaml'
+            val = PathConfig(val, warn=warns)
+        config_layers[key] = val
 
     # Locate all config files
     config_files = set()

@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 import re
 import os
 import six
+import json
 import time
 import shlex
 import atexit
@@ -262,19 +263,24 @@ class CaptureHandler(BaseHandler):
     The page is called with the same args as :meth:`Capture.capture`. It also
     accepts a ``?start`` parameter that restarts capture.js if required.
     '''
+    # Each config maps to a Capture() object. cls.captures[config] = Capture()
     captures = {}
 
     @classmethod
     def setup(cls, port=None, url=None, engine=None, cmd=None, **kwargs):
         super(CaptureHandler, cls).setup(**kwargs)
-        if cls.name in cls.captures:
-            cls.captures[cls.name].close()
         capture_kwargs = {}
         for kwarg in ('timeout', ):
             if kwarg in kwargs:
                 capture_kwargs[kwarg] = kwargs.pop(kwarg)
-        cls.capture = Capture(engine=engine, port=port, url=url, cmd=cmd, **capture_kwargs)
-        cls.captures[cls.name] = cls.capture
+        # Create a new Capture only if the config has changed
+        config = dict(engine=engine, port=port, url=url, cmd=cmd, **capture_kwargs)
+        config_str = json.dumps(config, separators=[',', ':'], sort_keys=True)
+        if config_str not in cls.captures:
+            cls.captures[config_str] = cls.capture = Capture(**config)
+        else:
+            cls.capture = cls.captures[config_str]
+        # TODO: if the old config is no longer used, close it
         cls.ext = {
             'pdf': dict(mime='application/pdf'),
             'png': dict(mime='image/png'),
