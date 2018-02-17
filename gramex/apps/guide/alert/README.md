@@ -160,11 +160,15 @@ alert:
     html: |
       <p>This email was sent from {{ sys.platform }}.</p>
       <p><img src="cid:img"></p>
+      <p>{% raw open('footer.html').read() %}</p>
     images:
       img: '{{ os.path.join(r"$YAMLPATH", "img1.jpg") }}'
     attachments:
       - '{{ os.path.join(r"$YAMLPATH", "doc1.docx") }}'
 ```
+
+Tornado templates escape all HTML content. To pass the HTML content raw,
+use `{% raw expression %}` instead of `{{ expression }}`.
 
 ### Dynamic emails from data
 

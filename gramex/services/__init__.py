@@ -24,6 +24,7 @@ import mimetypes
 import threading
 import webbrowser
 import tornado.web
+import gramex.data
 import gramex.cache
 import logging.config
 import concurrent.futures
