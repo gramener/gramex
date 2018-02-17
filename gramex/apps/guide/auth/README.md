@@ -1,4 +1,7 @@
-title: Gramex Authentication
+---
+title: Auth handlers log in users
+prefix: Auth
+...
 
 Your session data is:
 <iframe frameborder="0" src="session"></iframe>

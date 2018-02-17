@@ -1,4 +1,7 @@
+---
 title: Function reloading
+prefix: Tip
+...
 
 Gramex 1.19 has a number of powerful new features. The most useful of these, perhaps, is reloading.
 

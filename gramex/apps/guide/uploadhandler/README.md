@@ -1,4 +1,7 @@
-title: Gramex handles file uploads
+---
+title: UploadHandler uploads files
+prefix: UploadHandler
+...
 
 [TOC]
 

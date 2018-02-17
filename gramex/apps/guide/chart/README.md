@@ -1,4 +1,7 @@
+---
 title: Gramex Charts
+prefix: Charts
+...
 
 [TOC]
 

@@ -1,4 +1,7 @@
+---
 title: Serving multiple files under a single URL
+prefix: Tip
+...
 
 `FileHandler` can serve multiple files under a single URL.
 

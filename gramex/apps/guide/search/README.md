@@ -1,11 +1,15 @@
+---
 title: Index of topics
+prefix: Search
+...
 
 <style>
 #index {
-  columns: 4;
+  columns: 3;
 }
 #index a {
   display: block;
+  border-bottom: 1px solid transparent;
 }
 #index a:hover {
   background-color: #eef5ff;
@@ -13,5 +17,9 @@ title: Index of topics
 }
 </style>
 
+<div><input type="search" id="search" placeholder="Search full text"></div>
+<div id="searchresults"></div>
+<hr>
 <div id="index"></div>
-<script src="search.js"></script>
+<script src="../node_modules/lunr/lunr.js"></script>
+<script src="search.js?v=2"></script>

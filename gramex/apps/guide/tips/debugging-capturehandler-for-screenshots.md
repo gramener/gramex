@@ -1,6 +1,9 @@
+---
 title: Debugging CaptureHandler for screenshots
+prefix: Tip
+...
 
-CaptureHandler has an option to debug at PhantomJS level. This is documented in the [guide for CaptureHandler](../capturehandler/#screenshot-service). 
+CaptureHandler has an option to debug at PhantomJS level. This is documented in the [guide for CaptureHandler](../capturehandler/#screenshot-service).
 
 While sending the request, you can mention a debug flag as below
 

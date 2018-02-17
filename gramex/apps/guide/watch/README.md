@@ -1,4 +1,7 @@
-title: Gramex watches files
+---
+title: Watch files
+prefix: Watch
+...
 
 [TOC]
 

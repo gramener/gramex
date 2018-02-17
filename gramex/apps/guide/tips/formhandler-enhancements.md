@@ -1,4 +1,7 @@
-title: FormHandler enhancements 
+---
+title: FormHandler enhancements
+prefix: Tip
+...
 
 FormHandler has two significant enhancements in Gramex 1.22.
 

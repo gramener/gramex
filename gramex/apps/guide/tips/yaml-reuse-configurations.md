@@ -1,4 +1,7 @@
+---
 title: Reuse YAML configurations via anchors
+prefix: Tip
+...
 
 `YAML` has a feature called ANCHORS that lets you re-use sections without copy-pasting.
 

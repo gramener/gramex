@@ -1,4 +1,7 @@
+---
 title: Automated email alerts in Gramex
+prefix: Tip
+...
 
 Gramex's email and schedule capabilities can be combined to schedule automated email alerts.
 
@@ -35,4 +38,3 @@ this:
                 html=tmpl.generate(data=data, analysis=analysis),     #   and render the template.
                 attachments=[data_file],                              #   Maybe attach the data
         )
-

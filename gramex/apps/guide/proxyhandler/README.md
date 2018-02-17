@@ -1,4 +1,7 @@
-title: Gramex proxies HTTP requests
+---
+title: ProxyHandler proxies APIs
+prefix: ProxyHandler
+...
 
 [TOC]
 

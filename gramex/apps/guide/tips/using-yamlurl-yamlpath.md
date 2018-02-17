@@ -1,4 +1,7 @@
+---
 title: Using YAMLURL and YAMLPATH
+prefix: Tip
+...
 
 Suppose you create a gramex.yaml like this:
 

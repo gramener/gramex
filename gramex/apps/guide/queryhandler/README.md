@@ -1,4 +1,7 @@
-title: Gramex runs SQL queries
+---
+title: QueryHandler runs SQL queries
+prefix: QueryHandler
+...
 
 From **v1.23** QueryHandler is deprecated. Use [FormHandler](../formhandler/).
 

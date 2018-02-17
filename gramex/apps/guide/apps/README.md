@@ -1,4 +1,7 @@
+---
 title: Gramex Apps
+prefix: Apps
+...
 
 Gramex lets you install, manage and run applications.
 

@@ -1,4 +1,7 @@
+---
 title: Deployment patterns
+prefix: Deploy
+...
 
 [TOC]
 

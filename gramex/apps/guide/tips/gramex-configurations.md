@@ -1,4 +1,7 @@
+---
 title: Different configurations for different machines
+prefix: Tip
+...
 
 Gramex 1.23 lets you set up [different configurations](https://learn.gramener.com/guide/config/#conditions) for different machines.
 

@@ -105,7 +105,7 @@
   },
   "auth": {
     "": {
-      "Gramex Authentication": -1
+      "Auth handlers log in users": -1
     },
     "ajax-login": {
       "AJAX login": -1
@@ -262,7 +262,7 @@
   },
   "capturehandler": {
     "": {
-      "Gramex takes screenshots": -1
+      "CaptureHandler takes screenshots": -1
     },
     "chrome": {
       "Chrome": -1
@@ -320,6 +320,9 @@
     "custom-mime-types": {
       "Custom MIME types": -1
     },
+    "dynamic-configuration": {
+      "Dynamic configuration": -1
+    },
     "error-handlers": {
       "Error handlers": -1
     },
@@ -370,7 +373,7 @@
   },
   "datahandler": {
     "": {
-      "Gramex connects to data": -1
+      "DataHandler connects to data": -1
     },
     "database-edits": {
       "Database edits": -1
@@ -408,7 +411,7 @@
   },
   "debug": {
     "": {
-      "Debugging Gramex": -1
+      "Debug Gramex": -1
     },
     "browser-on-startup": {
       "Browser on startup": -1
@@ -512,7 +515,7 @@
   },
   "facebookgraphhandler": {
     "": {
-      "Gramex accesses Facebook data": -1
+      "FacebookGraphHandler": -1
     },
     "facebook-oauth": {},
     "facebook-persist": {
@@ -521,7 +524,7 @@
   },
   "filehandler": {
     "": {
-      "Gramex renders files": -1
+      "FileHandler renders files": -1
     },
     "caching": {
       "Caching": -1
@@ -562,7 +565,7 @@
   },
   "formhandler": {
     "": {
-      "Gramex connects to data": -1
+      "FormHandler connects to data": -1
     },
     "categorical-plots": {
       "Categorical plots": -1
@@ -649,7 +652,7 @@
   },
   "functionhandler": {
     "": {
-      "Gramex runs Python functions": -1
+      "FunctionHandler runs Python code": -1
     },
     "asynchronous-functions": {
       "Asynchronous functions": -1
@@ -729,7 +732,7 @@
   },
   "jsonhandler": {
     "": {
-      "Gramex writes data": -1
+      "JSONHandler writes JSON data": -1
     },
     "delete-remove-data": {
       "DELETE - remove data": -1
@@ -757,7 +760,7 @@
   },
   "pptxhandler": {
     "": {
-      "PPTXHandler": -1
+      "PPTXHandler generates PPTX": -1
     },
     "bullet": {
       "Bullet": -1
@@ -857,7 +860,7 @@
   },
   "processhandler": {
     "": {
-      "Gramex runs processes": -1
+      "ProcessHandler runs programs": -1
     },
     "processhandler-redirection": {
       "ProcessHandler redirection": -1
@@ -865,7 +868,7 @@
   },
   "proxyhandler": {
     "": {
-      "Gramex proxies HTTP requests": -1
+      "ProxyHandler proxies APIs": -1
     },
     "google-proxyhandler": {
       "Google ProxyHandler": -1
@@ -879,7 +882,7 @@
   },
   "queryhandler": {
     "": {
-      "Gramex runs SQL queries": -1
+      "QueryHandler runs SQL queries": -1
     },
     "multiple-sql-queries": {
       "Multiple SQL queries": -1
@@ -931,7 +934,7 @@
   },
   "tips": {
     "": {
-      "Tips": -1
+      "Tips & Tricks": -1
     },
     "gramex-tips": {
       "Gramex Tips": -1
@@ -942,7 +945,7 @@
   },
   "twitterresthandler": {
     "": {
-      "Gramex accesses Twitter data": -1
+      "TwitterRESTHandler": -1
     },
     "parallel-ajax-requests": {
       "Parallel AJAX requests": -1
@@ -977,7 +980,7 @@
   },
   "uploadhandler": {
     "": {
-      "Gramex handles file uploads": -1
+      "UploadHandler uploads files": -1
     },
     "overwriting-uploads": {
       "Overwriting uploads": -1
@@ -1000,7 +1003,7 @@
   },
   "watch": {
     "": {
-      "Gramex watches files": -1
+      "Watch files": -1
     },
     "inotify-limit": {
       "inotify limit": -1

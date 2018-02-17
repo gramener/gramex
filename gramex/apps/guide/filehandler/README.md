@@ -1,4 +1,7 @@
-title: Gramex renders files
+---
+title: FileHandler renders files
+prefix: FileHandler
+...
 
 [TOC]
 

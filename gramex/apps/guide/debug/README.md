@@ -1,4 +1,7 @@
-title: Debugging Gramex
+---
+title: Debug Gramex
+prefix: Debug
+...
 
 [TOC]
 

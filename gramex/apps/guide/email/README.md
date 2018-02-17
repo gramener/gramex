@@ -1,4 +1,7 @@
+---
 title: Send email
+prefix: Email
+...
 
 [TOC]
 

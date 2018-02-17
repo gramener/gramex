@@ -1,4 +1,7 @@
+---
 title: Initializing Gramex Projects
+prefix: Tip
+...
 
 Currently we can initialize projects using `yo gramex`. This needs additional `yeoman` installation and a supporting package.
 

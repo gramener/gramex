@@ -1,4 +1,7 @@
+---
 title: Send Emails from the command line
+prefix: Tip
+...
 
 Gramex can be used to write standalone applications that send emails. You don't need to run Gramex. Just use it as a library.
 

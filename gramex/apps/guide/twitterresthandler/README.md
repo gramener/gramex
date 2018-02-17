@@ -1,4 +1,7 @@
-title: Gramex accesses Twitter data
+---
+title: TwitterRESTHandler
+prefix: TwitterRESTHandler
+...
 
 [TOC]
 
@@ -65,7 +68,7 @@ To hard-code a specific REST API, use the `path:` parameter. For example:
             pattern: /twitter/search          # Maps this URL
             handler: TwitterRESTHandler
             kwargs:
-                path: search/tweets.json      # specifically to the API 
+                path: search/tweets.json      # specifically to the API
                 ...
 
 ... maps `/twitter/search` to `https://api.twitter.com/1.1/search/tweets.json`
@@ -295,7 +298,7 @@ function condense(result) {
 
 
 function replace(e, regex, text) {
-    e.innerHTML = e.innerHTML.replace(regex, 
+    e.innerHTML = e.innerHTML.replace(regex,
       '<p style="color: #ccc">// OUTPUT</p><p>' + text + '</p>')
 }
 

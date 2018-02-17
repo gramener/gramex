@@ -1,4 +1,7 @@
+---
 title: Schedule tasks
+prefix: Scheduler
+...
 
 [TOC]
 

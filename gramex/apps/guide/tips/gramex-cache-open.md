@@ -1,4 +1,7 @@
+---
 title:  Cache and open files
+prefix: Tip
+...
 
 The feature I use most often in Gramex 0.18 is `gramex.cache.open`. It's a simple replacement for reading CSV, XSLX files, etc. But it also caches.
 

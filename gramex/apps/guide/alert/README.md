@@ -1,4 +1,7 @@
+---
 title: Smart alerts
+prefix: Alerts
+...
 
 [TOC]
 

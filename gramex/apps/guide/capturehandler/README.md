@@ -1,4 +1,7 @@
-title: Gramex takes screenshots
+---
+title: CaptureHandler takes screenshots
+prefix: CaptureHandler
+...
 
 [CaptureHandler][capturehandler] takes screenshots of pages using either
 [Chrome][puppeteer] or

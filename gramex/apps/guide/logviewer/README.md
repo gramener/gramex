@@ -1,4 +1,7 @@
+---
 title: Log viewer
+prefix: Log viewer
+...
 
 [TOC]
 

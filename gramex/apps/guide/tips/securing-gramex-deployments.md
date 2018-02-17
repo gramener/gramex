@@ -1,4 +1,7 @@
+---
 title: Securing Gramex Deployments
+prefix: Tip
+...
 
 There are many common security vulnerabilities that we need to protect Gramex instances against.
 

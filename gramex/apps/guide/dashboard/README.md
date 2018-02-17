@@ -1,4 +1,7 @@
+---
 title: Templatize visualization dashboard creation
+prefix: DashboardHandler
+...
 
 [TOC]
 

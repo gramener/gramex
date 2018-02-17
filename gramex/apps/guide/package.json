@@ -8,8 +8,14 @@
   "author": "Bhanu K <bhanu.kamapantula@gramener.com>",
   "license": "UNLICENSED",
   "dependencies": {
-    "clipboard": "^1.7.1",
-    "prismjs": "^1.8.4",
-    "vue": "^2.5.3"
+    "clipboard": "1",
+    "prismjs": "1",
+    "vue": "2"
+  },
+  "devDependencies": {
+    "front-matter": "2",
+    "glob": "7",
+    "lunr": "^2",
+    "marked": "0.3"
   }
 }

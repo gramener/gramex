@@ -1,4 +1,7 @@
+---
 title: Gramex Offline Install
+prefix: Tip
+...
 
 You can install Gramex on a Windows, Linux or Mac system without Internet access.
 

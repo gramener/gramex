@@ -1,4 +1,7 @@
+---
 title: Configurations control Gramex
+prefix: Config
+...
 
 [TOC]
 

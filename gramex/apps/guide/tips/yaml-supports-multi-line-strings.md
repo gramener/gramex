@@ -1,4 +1,7 @@
+---
 title: YAML supports multi-line strings
+prefix: Tip
+...
 
 YAML supports multi-line strings. You can wrap text like this:
 
