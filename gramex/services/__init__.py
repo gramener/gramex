@@ -628,7 +628,8 @@ def url(conf):
             class_vars['cache'] = _cache_generator(urlspec['cache'], name=name)
         else:
             class_vars['cache'] = None
-        urlspec.handler = type(spec.handler, (handler, ), class_vars)
+        # PY27 type() requires the class name to be a string, not unicode
+        urlspec.handler = type(str(spec.handler), (handler, ), class_vars)
 
         # If there's a setup method, call it to initialize the class
         kwargs = urlspec.get('kwargs', {})
