@@ -5,7 +5,6 @@ import sys
 import time
 from pydoc import locate
 from contextlib import contextmanager
-from gramex.services import watcher
 from . import TestGramex
 
 _folder = os.path.dirname(os.path.abspath(__file__))
