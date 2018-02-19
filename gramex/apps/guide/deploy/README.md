@@ -514,6 +514,18 @@ and [deployment tips](https://learn.gramener.com/wiki/dev.html#deployment-tips).
 This is a shared deployment, where multiple apps deployed on one Gramex
 instance. Here are common deployment errors in shared environments:
 
+### Works locally but not on server
+
+If your app is at `D:/app/`, don't run gramex from `D:/app/`. Run it from `D:/`
+with this `D:/gramex.yaml`:
+
+```yaml
+import: app/gramex.yaml
+```
+
+This tests the application in a shared deployment setup. The application may
+run from `D:/app/` but fail from `D:/` - giving you a chance to find out why.
+
 ### 403 Forbidden
 
 `$GRAMEXPATH/deploy.yaml` disables all non-standard files for
