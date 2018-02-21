@@ -155,7 +155,7 @@ url:
         kwargs:
             url: https://graph.facebook.com/{0}
             default:
-                access_token: 'handler.session["user"]["access_token"]'
+                access_token: '{handler.session[user][access_token]}'
 ```
 
 To access the Facebook APIs, set up a [Facebook Auth handler](../auth/#facebook-auth).
