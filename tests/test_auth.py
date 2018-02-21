@@ -435,6 +435,33 @@ class TestAuthActive(AuthBase):
         eq_(activeuser_info['active'], '')
 
 
+class TestUserKey(AuthBase):
+    @classmethod
+    def setUpClass(cls):
+        AuthBase.setUpClass()
+        cls.url = server.base_url + '/auth/userkey'
+
+    def test_user_key(self):
+        # /auth/userkey stores user info in session.userkey
+        self.login_ok('alpha', 'alpha', check_next='/')
+        session = self.session.get(server.base_url + '/auth/session').json()
+        eq_(session.get('userkey'), {'user': 'alpha', 'id': 'alpha'})
+        eq_(session.get('user'), None)
+
+        # This lets us have multiple logins
+        self.url = server.base_url + '/auth/simple'
+        self.login_ok('beta', 'beta', check_next='/dir/index/')
+        session = self.session.get(server.base_url + '/auth/session').json()
+        eq_(session.get('userkey'), {'user': 'alpha', 'id': 'alpha'})
+        eq_(session.get('user'), {'user': 'beta', 'id': 'beta'})
+
+        # ... and log out from just a single login
+        self.session.get(server.base_url + '/auth/userkey_logout')
+        session = self.session.get(server.base_url + '/auth/session').json()
+        eq_(session.get('userkey'), None)
+        eq_(session.get('user'), {'user': 'beta', 'id': 'beta'})
+
+
 class DBAuthBase(AuthBase):
     @staticmethod
     def create_database(url, table):

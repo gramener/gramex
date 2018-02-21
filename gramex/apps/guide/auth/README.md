@@ -209,9 +209,12 @@ url:
 ```
 
 The bearer token is available in the session key `google_access_token`. You can
-pass this to any Google API with a `Authorization: Bearer <google_access_token>`
-HTTP header, or with a `?access_token=<google_access_token>` query parameter. For
-example, this code [fetches Google contacts](googleapi.html):
+use this with [ProxyHandler to access Google APIs](../proxyhandler/#google-proxyhandler) .
+
+Programmatically, you can pass this to any Google API with a
+`Authorization: Bearer <google_access_token>` HTTP header, or with a
+`?access_token=<google_access_token>` query parameter. For example, this code
+[fetches Google contacts](googleapi.html):
 
 ```python
 @tornado.gen.coroutine
@@ -808,6 +811,31 @@ auth handlers and the `LogoutHandler`.
 All handlers store the information retrieved about the user in
 `handler.session['user']`, typically as a dictionary. All handlers have access
 to this information via `handler.current_user` by default.
+
+Typically, users log into only one AuthHandler, like DBAuth or GoogleAuth.
+Sometimes you want to log into both -- for example, to access the Google APIs.
+For this, you can specify a `user_key: something`. This stores the user object
+in `handler.session['something']` instead of `handler.session['user']`. This
+applies to all Auth handlers including [LogoutHandler](#logouthandler). For
+example:
+
+```yaml
+url:
+  googleauth:
+    pattern: /google
+    handler: GoogleAuth
+    kwargs:
+      user_key: google_user    # Store user info in session.google_user not session.user
+      # ...
+
+  twitterauth:
+    pattern: /twitter
+    handler: TwitterAuth
+    kwargs:
+      user_key: twitter_user   # Store user info in session.twitter_user
+      # ...
+```
+
 
 ## Logging logins
 

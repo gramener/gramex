@@ -63,7 +63,7 @@ class AuthHandler(BaseHandler):
     '''The parent handler for all Auth handlers.'''
     @classmethod
     def setup(cls, prepare=None, action=None, delay=None, session_expiry=None,
-              session_inactive=None, **kwargs):
+              session_inactive=None, user_key='user', **kwargs):
         # Switch SSL certificates if required to access Google, etc
         gramex.service.threadpool.submit(check_old_certs)
 
@@ -89,7 +89,8 @@ class AuthHandler(BaseHandler):
         elif isinstance(cls.delay, (int, float)) or cls.delay is None:
             cls.delay = default_delay
 
-        # Set up session and inactive expiry
+        # Set up session user key, session expiry and inactive expiry
+        cls.session_user_key = user_key
         cls.session_expiry = session_expiry
         cls.session_inactive = session_inactive
 
@@ -146,7 +147,7 @@ class AuthHandler(BaseHandler):
         # it's "dn". Allow auth handlers to decide their own ID attribute and
         # store it as "id" for consistency. Logging depends on this, for example.
         user['id'] = user[id]
-        self.session['user'] = user
+        self.session[self.session_user_key] = user
         self.failed_logins[user[id]] = 0
 
         self.update_user(user[id], active='y', **user)
@@ -188,10 +189,10 @@ class LogoutHandler(AuthHandler):
         for callback in self.actions:
             callback(self)
         self.log_user_event(event='logout')
-        user = self.session.get('user', {})
+        user = self.session.get(self.session_user_key, {})
         if 'id' in user:
             self.update_user(user['id'], active='')
-        self.session.pop('user', None)
+        self.session.pop(self.session_user_key, None)
         if self.redirects:
             self.redirect_next()
 
