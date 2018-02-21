@@ -272,6 +272,9 @@ def _yaml_open(path, default=AttrDict(), **kwargs):
 
     If key has " if ", include it only if the condition (eval-ed in Python) is
     true.
+
+    If the path is missing, or YAML has a parse error, or the YAML is not a
+    dict, returns the default value.
     '''
     path = path.absolute()
     if not path.exists():
@@ -281,9 +284,13 @@ def _yaml_open(path, default=AttrDict(), **kwargs):
         return default
     app_log.debug('Loading config: %s', path)
     with path.open(encoding='utf-8') as handle:
-        result = yaml.load(handle, Loader=ConfigYAMLLoader)
-    if result is None:
-        app_log.warning('Empty config: %s', path)
+        try:
+            result = yaml.load(handle, Loader=ConfigYAMLLoader)
+        except Exception:
+            app_log.exception('Config error: %s', path)
+            return default
+    if not isinstance(result, AttrDict):
+        app_log.warning('Config is not a dict: %s', path)
         return default
 
     # Variables based on YAML file location

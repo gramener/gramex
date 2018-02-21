@@ -84,6 +84,11 @@ class TestPathConfig(unittest.TestCase):
         self.conf2 = info.home / Path('conf2.test')
         self.condition = info.home / 'config.condition.yaml'
 
+        self.error = info.home / 'config.error.yaml'
+        self.missing = info.home / 'config.missing.yaml'
+        self.empty = info.home / 'config.empty.yaml'
+        self.string = info.home / 'config.string.yaml'
+
     def tearDown(self):
         unlink(self.conf1)
         unlink(self.conf2)
@@ -95,6 +100,16 @@ class TestPathConfig(unittest.TestCase):
             ('a', PathConfig(self.a)),
             ('b', PathConfig(self.b))])
         eq_(+conf, PathConfig(self.final))
+
+    def test_default(self):
+        # Missing, empty or malformed config files return an empty AttrDict
+        conf = ChainConfig([
+            ('missing', PathConfig(self.missing)),
+            ('error', PathConfig(self.error)),
+            ('empty', PathConfig(self.empty)),
+            ('string', PathConfig(self.string)),
+        ])
+        eq_(+conf, AttrDict())
 
     def test_update(self):
         # Config files are updated on change

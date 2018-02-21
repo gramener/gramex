@@ -1,0 +1,4 @@
+kwargs:
+    path: $YAMLPATH/*
+    headers
+        Cache-Control: public, max-age=300
