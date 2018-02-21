@@ -16,6 +16,16 @@ url:
                 User-Agent: true
                 Authorization: 'Bearer {handler.session[google_access_token]}'
 
+    proxyhandler/googlecontacts:
+        pattern: /$YAMLURL/googlecontacts/(.*)
+        handler: ProxyHandler
+        kwargs:
+            url: https://www.google.com/m8/feeds/contacts/{0}
+            default:
+              alt: json
+            request_headers:
+                Authorization: 'Bearer {handler.session[google_access_token]}'
+
     proxyhandler/googletranslate:
         pattern: /$YAMLURL/googletranslate
         handler: ProxyHandler
@@ -34,3 +44,11 @@ url:
             auth: true
         cache:
             expiry: {duration: 300}
+
+    proxyhandler/facebook:
+        pattern: /$YAMLURL/facebook/(.*)
+        handler: ProxyHandler
+        kwargs:
+            url: https://graph.facebook.com/{0}
+            default:
+                access_token: '{handler.session.user.access_token}'
