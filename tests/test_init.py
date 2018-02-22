@@ -36,3 +36,21 @@ class TestInit(TestGramex):
             )
         )
         self.check('/init/new', text='{"key": "val2"}')
+
+    def test_reload(self):
+        def re_init():
+            gramex.init(
+                app=AttrDict(
+                    url=AttrDict(
+                        init_reload=AttrDict(
+                            pattern='/init/reload',
+                            handler='utils.CounterHandler'
+                        )
+                    )
+                )
+            )
+
+        re_init()
+        self.check('/init/reload', text='1')
+        re_init()
+        self.check('/init/reload', text='1')

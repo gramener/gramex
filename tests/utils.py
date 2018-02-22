@@ -19,6 +19,7 @@ from concurrent.futures import ThreadPoolExecutor
 from gramex.cache import Subprocess
 from gramex.services import info
 from gramex.services.emailer import SMTPStub
+from gramex.handlers import BaseHandler
 
 watch_info = []
 ws_info = []
@@ -382,6 +383,16 @@ def proxy_prepare(request, handler):
 
 def proxy_modify(request, response, handler):
     response.headers['X-Modify'] = handler.request.method
+
+
+class CounterHandler(BaseHandler):
+    @classmethod
+    def setup(cls, **kwargs):
+        super(CounterHandler, cls).setup(**kwargs)
+        counters['counterhandler'] += 1
+
+    def get(self):
+        self.write('%d' % counters['counterhandler'])
 
 
 if __name__ == '__main__':
