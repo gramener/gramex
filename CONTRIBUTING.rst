@@ -106,7 +106,7 @@ When releasing a new version of Gramex:
     - ``gramex/release.json`` -- update the version number
     - ``pkg/docker-py3/Dockerfile`` -- update the version number
     - Run ``python gramex/apps/guide/search/search.py`` using Python 3
-    - Run ``node gramex/apps/guide/search/searchindex.json``
+    - Run ``node gramex/apps/guide/search/searchindex.js``
 
 3. Commit and push the ``dev`` branch to the server. Merge with master, create
    an annotated tag and push the master branch::

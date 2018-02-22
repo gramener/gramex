@@ -176,6 +176,9 @@
     "loop-through-each-session-store-there-may-be-multiple-stores": {
       "Loop through each session store -- there may be multiple stores": -1
     },
+    "oauth2": {
+      "OAuth2": -1
+    },
     "otp": {
       "OTP": -1
     },
@@ -445,14 +448,26 @@
     "": {
       "Deployment patterns": -1
     },
+    "403-forbidden": {
+      "403 Forbidden": -1
+    },
+    "404-not-found": {
+      "404 Not Found": -1
+    },
     "deployment-checklist": {
       "Deployment checklist": -1
     },
     "deployment-variables": {
       "Deployment variables": -1
     },
+    "handler-name-conflict": {
+      "Handler name conflict": -1
+    },
     "https-server": {
       "HTTPS Server": -1
+    },
+    "import-conflict": {
+      "Import conflict": -1
     },
     "linux-scheduled-tasks": {
       "Linux scheduled tasks": -1
@@ -460,17 +475,26 @@
     "linux-service": {
       "Linux service": -1
     },
+    "missing-dependency": {
+      "Missing dependency": -1
+    },
     "nginx-reverse-proxy": {
       "nginx reverse proxy": -1
     },
     "proxy-servers": {
       "Proxy servers": -1
     },
+    "python-file-conflict": {
+      "Python file conflict": -1
+    },
     "relative-url-mapping": {
       "Relative URL mapping": -1
     },
     "security": {
       "Security": -1
+    },
+    "shared-deployment": {
+      "Shared deployment": -1
     },
     "using-relative-urls": {
       "Using relative URLs": -1
@@ -486,6 +510,9 @@
     },
     "windows-service": {
       "Windows Service": -1
+    },
+    "works-locally-but-not-on-server": {
+      "Works locally but not on server": -1
     }
   },
   "email": {
@@ -869,6 +896,9 @@
   "proxyhandler": {
     "": {
       "ProxyHandler proxies APIs": -1
+    },
+    "facebook-proxyhandler": {
+      "Facebook ProxyHandler": -1
     },
     "google-proxyhandler": {
       "Google ProxyHandler": -1
