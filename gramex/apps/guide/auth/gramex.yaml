@@ -318,6 +318,66 @@ url:
                     donkey: king                # This condition will usually be false
                 template: $YAMLPATH/403-template.html   # Render template for forbidden users
 
+    auth/gitlab:
+        pattern: /$YAMLURL/gitlab
+        handler: OAuth2
+        kwargs:
+          client_id: 'cc177f42cf432a7e961c317bd9e784b08d2bc27a2028b0487ee53732ea3a4ddf'
+          client_secret: '00186a6c4c8bb77b3f961b158fb5e4b49738b7efdfbe61b8d19285d66149f8b9'
+          authorize:
+            url: 'https://code.gramener.com/oauth/authorize'
+          access_token:
+            url: 'https://code.gramener.com/oauth/token'
+            body:
+              grant_type: 'authorization_code'
+          user_info:
+            url: 'https://code.gramener.com/api/v4/user'
+            headers:
+              Authorization: 'Bearer {access_token}'
+          redirect:
+              query: next
+              url: /$YAMLURL
+
+    auth/github:
+      pattern: /$YAMLURL/github
+      handler: OAuth2
+      kwargs:
+        client_id: a4ffb7fd2c4b05e04457
+        client_secret: 198a4ec063bac3dfe01136368184930f8aa93a4a
+        authorize:
+          url: https://github.com/login/oauth/authorize
+          scope: [repo, gist, user]
+        access_token:
+          url: https://github.com/login/oauth/access_token
+        user_info:
+          url: https://api.github.com/user
+          headers:
+            Authorization: 'token {access_token}'
+          redirect:
+              query: next
+              url: /$YAMLURL
+
+      auth/googleoauth2:
+        pattern: /$YAMLPATH/googleoauth2
+        handler: OAuth2
+        kwargs:
+          client_id: 817932882244-gdr59t3mpqh5554d1bgdjuh38g6a7ahh.apps.googleusercontent.com
+          client_secret: lwArXkw21KCqDPuJrel-WeQO
+          authorize:
+            url: https://accounts.google.com/o/oauth2/auth
+            scope:
+              - profile
+              - email
+          access_token:
+            url: https://accounts.google.com/o/oauth2/token
+            body:
+              grant_type: authorization_code
+          user_info:
+            url: https://www.googleapis.com/oauth2/v1/userinfo
+            headers:
+              Authorization: 'Bearer {access_token}'
+
+
 schedule:
     create-user-database:
         function: authutil.create_user_database     # Run this function
