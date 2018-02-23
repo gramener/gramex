@@ -112,9 +112,9 @@ boom@5.x.x:
   dependencies:
     hoek "4.x.x"
 
-bootstrap-select@1:
-  version "1.12.4"
-  resolved "https://registry.yarnpkg.com/bootstrap-select/-/bootstrap-select-1.12.4.tgz#7f15d3c0ce978868d9c09c70f96624f55fa02ee1"
+bootstrap-select@^1.13.0-beta:
+  version "1.13.0-beta"
+  resolved "https://registry.yarnpkg.com/bootstrap-select/-/bootstrap-select-1.13.0-beta.tgz#70b01c2f31a929febe55ba82597411bfaaa983a2"
   dependencies:
     jquery ">=1.8"
 
