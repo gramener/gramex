@@ -8,12 +8,13 @@ prefix: Email
 The `email` service creates a service that can send email via SMTP. Here is a
 sample configuration for GMail:
 
-    :::yaml
-    email:
-        gramex-guide-gmail:
-            type: gmail                     # Type of email used is GMail
-            email: gramex.guide@gmail.com   # Generic email ID used to test e-mails
-            password: tlpmupxnhucitpte      # App-specific password created for Gramex guide
+```yaml
+email:
+    gramex-guide-gmail:
+        type: gmail                     # Type of email used is GMail
+        email: gramex.guide@gmail.com   # Generic email ID used to test e-mails
+        password: tlpmupxnhucitpte      # App-specific password created for Gramex guide
+```
 
 In the `type:` section of `gramex.yaml` email configuration, the following types are supported:
 
@@ -28,32 +29,35 @@ In the `type:` section of `gramex.yaml` email configuration, the following types
 You can also connect to *any* SMTP or SMTPS mail server using `type: smtp` or
 `type: smtps`. For example:
 
-    email:
-        client-email:
-            type: smtp              # Use type: smtps for SMTPS servers
-            host: 10.20.30.40       # Host name or IP address of the SMTP server
-            # Optional parameters
-            email: user@domain.com  # Username or email to log into SMTP server
-            password: ****          # Password for SMTP server
-            port: 587               # For non-standard SMTP port. Default: SMTPS=587, SMTP=25
+```yaml
+email:
+    client-email:
+        type: smtp              # Use type: smtps for SMTPS servers
+        host: 10.20.30.40       # Host name or IP address of the SMTP server
+        # Optional parameters
+        email: user@domain.com  # Username or email to log into SMTP server
+        password: ****          # Password for SMTP server
+        port: 587               # For non-standard SMTP port. Default: SMTPS=587, SMTP=25
+```
 
 ## Send email
 
 This creates an `SMTPMailer` instance that can be used as follows:
 
-    :::python
-    import gramex
-    mailer = gramex.service.email['gramex-guide-gmail']
-    # Or, to construct the SMTPMailer when using Gramex as a library, use:
-    # from gramex.services import SMTPMailer
-    # mailer = SMTPMailer(type='gmail', email='gramex.guide@gmail.com', password='...')
-    mailer.mail(
-        to='person@example.com',
-        subject='Subject',
-        html='<strong>Bold text</strong>. <img src="cid:logo">'
-        body='This plain text is shown if the client cannot render HTML',
-        attachments=['1.pdf', '2.txt'],
-        images={'logo': '/path/to/logo.png'})
+```python
+import gramex
+mailer = gramex.service.email['gramex-guide-gmail']
+# Or, to construct the SMTPMailer when using Gramex as a library, use:
+# from gramex.services import SMTPMailer
+# mailer = SMTPMailer(type='gmail', email='gramex.guide@gmail.com', password='...')
+mailer.mail(
+    to='person@example.com',
+    subject='Subject',
+    html='<strong>Bold text</strong>. <img src="cid:logo">'
+    body='This plain text is shown if the client cannot render HTML',
+    attachments=['1.pdf', '2.txt'],
+    images={'logo': '/path/to/logo.png'})
+```
 
 The `mail()` method accepts the following arguments:
 
@@ -102,9 +106,11 @@ guides to read:
 Attachments can be specified as filenames or as a dictionary with the `body` and
 `content_type` or `filename` keys. For example:
 
+```python
       attachments=['file.pdf']
       attachments=[{'filename': 'file.pdf', 'body': open('file.pdf', 'rb').read()}]
       attachments=[{'content_type': 'application/pdf', 'body': open('file.pdf', 'rb').read()}]
+```
 
 The attachment `dict` format is consistent with the `handler.request.files`
 structure that holds uploaded files.
@@ -114,20 +120,21 @@ structure that holds uploaded files.
 Gramex can be used as a standalone library to send emails as well. Here is a
 sample Python application:
 
-    :::python
-    from gramex.services import SMTPMailer
+```python
+from gramex.services import SMTPMailer
 
-    mailer = SMTPMailer(
-      type='gmail',
-      email='gramex.guide@gmail.com',       # Replace with your email ID
-      password='tlpmupxnhucitpte',          # Replace with your passsword
-    )
-    mailer.mail(
-        to='person@example.com',
-        subject='Subject',
-        html='<strong>This is bold text</strong> and <em>this is in italics</em>.'
-        body='This plain text is shown if the client cannot render HTML',
-        attachments=['1.pdf', '2.txt'])
+mailer = SMTPMailer(
+    type='gmail',
+    email='gramex.guide@gmail.com',       # Replace with your email ID
+    password='tlpmupxnhucitpte',          # Replace with your passsword
+)
+mailer.mail(
+    to='person@example.com',
+    subject='Subject',
+    html='<strong>This is bold text</strong> and <em>this is in italics</em>.'
+    body='This plain text is shown if the client cannot render HTML',
+    attachments=['1.pdf', '2.txt'])
+```
 
 The same parameters used in the `gramex.yaml` file may be used here.
 
@@ -137,33 +144,35 @@ Combined with [schedule](../scheduler/), you can automate email alerts. For
 example, this configuration sets up a schedule every weekday at 8am, and an email
 service.
 
-    :::yaml
-    schedule:
-      email-alert:
-        function: project.email_alert()     # Run this function
-        hours: 8                            # at 8am on the system
-        weekdays: mon,tue,wed,thu,fri       # every weekday
+```yaml
+schedule:
+  email-alert:
+    function: project.email_alert()     # Run this function
+    hours: 8                            # at 8am on the system
+    weekdays: mon,tue,wed,thu,fri       # every weekday
 
-    email:
-      email-alert:                          # Define the email service to use
-        type: smtp                          # Connect via SMTP
-        host: mailserver.example.org        # to the mail server
-        email: user@example.org             # with a login ID
-        password: $MAIL_PASSWORD            # password stored in environment variable MAIL_PASSWORD
+email:
+  email-alert:                          # Define the email service to use
+    type: smtp                          # Connect via SMTP
+    host: mailserver.example.org        # to the mail server
+    email: user@example.org             # with a login ID
+    password: $MAIL_PASSWORD            # password stored in environment variable MAIL_PASSWORD
+```
 
 The `project.email_alert()` method can use this service to check if there are any
 unusual events, and send a templatized email if so. Here is a sample workflow for
 this:
 
-    :::python
-    def email_alert():
-        data = gramex.cache.open(data_file, 'xlsx')                   # Open the data source
-        analysis = find_unusual_events(data)                          # Apply some analysis
-        if 'unusual' in analysis:                                     # If something is unusual
-            tmpl = gramex.cache.open(template_file, 'template')       #   open a template
-            gramex.service.email['email-alert'].mail(                 #   and send the email
-                to='recipients@example.org',                          #   to the recipients
-                subject='Alert: {unusual}'.format(**analysis),        #   with a clear subject
-                html=tmpl.generate(data=data, analysis=analysis),     #   and render the template.
-                attachments=[data_file],                              #   Maybe attach the data
-            )
+```python
+def email_alert():
+    data = gramex.cache.open(data_file, 'xlsx')                   # Open the data source
+    analysis = find_unusual_events(data)                          # Apply some analysis
+    if 'unusual' in analysis:                                     # If something is unusual
+        tmpl = gramex.cache.open(template_file, 'template')       #   open a template
+        gramex.service.email['email-alert'].mail(                 #   and send the email
+            to='recipients@example.org',                          #   to the recipients
+            subject='Alert: {unusual}'.format(**analysis),        #   with a clear subject
+            html=tmpl.generate(data=data, analysis=analysis),     #   and render the template.
+            attachments=[data_file],                              #   Maybe attach the data
+        )
+```

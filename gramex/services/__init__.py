@@ -42,6 +42,7 @@ from gramex.http import OK, NOT_MODIFIED
 from . import urlcache
 from .ttlcache import MAXTTL
 from .emailer import SMTPMailer
+from .sms import AmazonSNS, Twilio
 
 # Service information, available as gramex.service after gramex.init() is called
 info = AttrDict(
@@ -53,6 +54,7 @@ info = AttrDict(
     threadpool=concurrent.futures.ThreadPoolExecutor(1),
     eventlog=AttrDict(),
     email=AttrDict(),
+    sms=AttrDict(),
     _md=None,
 )
 _cache = AttrDict()
@@ -771,11 +773,30 @@ def eventlog(conf):
 def email(conf):
     '''Set up email service'''
     for name, config in conf.items():
-        _key = _cache_key('watch', name, config)
+        _key = _cache_key('email', name, config)
         if _key in _cache:
             info.email[name] = _cache[_key]
             continue
         info.email[name] = _cache[_key] = SMTPMailer(**config)
+
+
+sms_notifiers = {
+    'amazonsns': AmazonSNS,
+    'twilio': Twilio,
+}
+
+
+def sms(conf):
+    '''Set up SMS service'''
+    for name, config in conf.items():
+        _key = _cache_key('sms', name, config)
+        if _key in _cache:
+            info.sms[name] = _cache[_key]
+            continue
+        notifier_type = config.pop('type')
+        if notifier_type not in sms_notifiers:
+            raise ValueError('sms: %s: Unknown type: %s' % (name, notifier_type))
+        info.sms[name] = _cache[_key] = sms_notifiers[notifier_type](**config)
 
 
 def test(conf):

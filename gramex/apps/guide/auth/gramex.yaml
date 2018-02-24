@@ -322,6 +322,7 @@ url:
         pattern: /$YAMLURL/gitlab
         handler: OAuth2
         kwargs:
+          # https://code.gramener.com/admin/applications/3
           client_id: 'cc177f42cf432a7e961c317bd9e784b08d2bc27a2028b0487ee53732ea3a4ddf'
           client_secret: '00186a6c4c8bb77b3f961b158fb5e4b49738b7efdfbe61b8d19285d66149f8b9'
           authorize:
@@ -342,6 +343,7 @@ url:
       pattern: /$YAMLURL/github
       handler: OAuth2
       kwargs:
+        # https://github.com/settings/connections/applications/a4ffb7fd2c4b05e04457
         client_id: a4ffb7fd2c4b05e04457
         client_secret: 198a4ec063bac3dfe01136368184930f8aa93a4a
         authorize:

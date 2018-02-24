@@ -52,7 +52,7 @@ class SMTPMailer(object):
         self.password = password
         self.stub = stub
         if type not in self.clients:
-            raise ValueError('Unknown type: %s' % type)
+            raise ValueError('Unknown email type: %s' % type)
         self.client = self.clients[type]
         self.client.update(kwargs)
         if 'host' not in self.client:
@@ -117,12 +117,11 @@ def message(body=None, html=None, attachments=[], images={}, **kwargs):
       ``<img src="cid:key">``
 
     In addition, any keyword arguments passed are treated as message headers.
-    Some common message header keys are ``from``, ``to``, ``cc``, ``bcc``,
-    ``subject``, ``reply_to``, and ``on_behalf_of``. The values must be strings.
+    Some common message header keys are ``to``, ``cc``, ``bcc``, ``subject``,
+    ``reply_to``, and ``on_behalf_of``. The values must be strings.
 
     Here are some examples::
 
-        >>> message(from='a@example.org', to='b@example.org', subject=sub, body=text)
         >>> message(to='b@example.org', subject=sub, body=text, html=html)
         >>> message(to='b@example.org', subject=sub, body=text, attachments=['file.pdf'])
         >>> message(to='b@example.org', subject=sub, body=text, attachments=[
