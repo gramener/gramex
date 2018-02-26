@@ -958,9 +958,12 @@ class HDF5Store(KeyStore):
     '''
     def __init__(self, path, *args, **kwargs):
         super(HDF5Store, self).__init__(path, *args, **kwargs)
-        import h5py
-        self.store = h5py.File(self.path, 'a')
         self.changed = False
+        import h5py
+        # h5py.File fails with OSError: Unable to create file (unable to open file: name =
+        # '.meta.h5', errno = 17, error message = 'File exists', flags = 15, o_flags = 502)
+        # TODO: identify why this happens and resolve it.
+        self.store = h5py.File(self.path, 'a')
 
     def load(self, key, default=None):
         # Keys cannot contain / in HDF5 store. Escape it
