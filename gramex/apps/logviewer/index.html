@@ -1,151 +1,257 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title>Log viewer</title>
-  <link rel="stylesheet" href="ui/bootstraptheme.css">
+	<meta charset="utf-8">
+	<title>Log viewer</title>
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon">
+	<link rel="stylesheet" href="ui/bootstraptheme.css?primary=%2320186F&secondary=%23483FA4&success=%233E6182&info=%23E4E4E4&warning=%23F57E1A&danger=%23F9F9F9&light=%234A4A4A&dark=%23362D8B&body-bg=%23F2F2F2&body-color=%23696969&enable-transitions=on&font-family-base=roboto&headings-font-family=roboto#background">
   <link rel="stylesheet" href="ui/font-awesome/css/font-awesome.min.css">
+  <link rel="stylesheet" href="ui/daterangepicker/daterangepicker.css">
+  <link rel="stylesheet" href="node_modules/vega-tooltip/build/vega-tooltip.min.css">
 </head>
 <body>
-
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-    <a class="text-warning text-uppercase" href=".">Log Viewer</a>
-    <div class="collapse navbar-collapse justify-content-between" id="navbarTogglerDemo01">
-      <div></div>
-      <div class="d-flex flex-column flex-lg-row">
-        <!-- TODO: add filters
-        <a class="btn round text-uppercase btn-warning" href="#">Filter</a>
-        <a class="btn round text-uppercase text-light" href="#">Filter</a>
-        <a class="btn round text-uppercase text-light" href="#">Filter</a>
-         -->
-      </div>
-      <div class="d-flex justify-content-center">
-        <a class="btn round text-light" href="data.csv"><i class="fa fa-file-excel-o"></i></a>
-      </div>
-    </div><!-- .navbar-collapse -->
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarTogglerDemo01" aria-controls="navbarTogglerDemo01" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-  </nav>
-
-  <div class="container-fluid">
-    <script id="bars" type="text/html" class="groups row my-3">
-      <% var bars = [
-           {title: 'Top Users', col: 'users'},
-           {title: 'Top IP', col: 'ip'},
-           {title: 'Top Status', col: 'status'},
-           {title: 'Top URL', col: 'uri'},
-         ]
-         bars.forEach(function(conf) { %>
-          <div class="col">
-            <h6 class="bg-light"><%= conf.title %></h2>
-            <% var freq = _.countBy(data, function(row) { return row[conf.col] }) %>
-            <% var top = _.chain(freq).toPairs().sortBy(function(row) { return -row[1] }).slice(0, 10).value() %>
-            <% var max = _.maxBy(top, function(row) { return row[1] })[1] %>
-            <% top.forEach(function(row) { %>
-                <div class="bg-warning border border-light text-nowrap d-flex" style="width:<%= row[1] / max * 100 %>%">
-                  <div class=""><%= numformat(row[1]) %></div>
-                  <a class="ml-2" href="#?<%= conf.col %>=<%= row[0] %>"><%= row[0] %></a>
-                </div>
-            <% }) %>
+	<nav class="navbar navbar-dark navbar-expand-xl bg-primary px-3 py-1 px-xl-0 py-xl-0">
+		<div class="container-fluid">
+			<a class="navbar-brand d-flex align-items-center py-0 pr-1 text-uppercase text-white" href=".">
+				<img src="https://gramener.com/uistatic/gramener.png" width="150" height="45.25" alt="Logo">
+				<h1 class="d-none d-sm-block h5 my-0 ml-5">LOGVIEWER</h1>
+			</a>
+		</div>
+	</nav>
+	<section class="filters bg-white shadow pt-2 pb-2">
+		<div class="container-fluid px-0">
+			<div class="d-md-flex flex-md-wrap justify-content-sm-between">
+        <div class="filter-time col col-md-3 w-100 mb-2 mb-md-0">
+          <div class="input-group input-group-sm border border-top-0 border-right-0 border-left-0 border-light d-flex justify-content-between">
+            <input type="text" class="col form-control border-0 no-border-radius px-0" placeholder="daterange">
+            <div class="input-group-append">
+              <span class="col input-group-text bg-white border-0 px-0">
+                <i class="fa fa-calendar text-light"></i>
+              </span>
+            </div>
           </div>
-      <% }) %>
-    </script>
-
-    <script id="table" type="text/html">
-      <table class="table table-sm">
-        <thead>
-          <tr><th>Date</th><th>IP</th><th>GET</th><th>URL</th><th>Status</th><th>User</th><th>Time</th><th>Error</th></tr>
-        </thead>
-        <tbody>
-          <% var offset = +args._offset || 0 %>
-          <% _.each(data.slice(offset, offset + 100), function(row) {
-            var duration_color = row.duration < 1000 ? 'none' :
-                                 row.duration < 5000 ? '#ffc' : '#ed7d31'
-                method_color = {4: 'orange', 5: 'red'};
-            %>
-            <tr>
-              <td><%= dateformat(row.time) %></td>
-              <td><%= row.ip %></td>
-              <td><%= row.method %></td>
-              <td><%= row.uri %></td>
-              <td style="background-color:<%= method_color[row.status[0]] || 'white' %>; text-align: right">
-                <%= row.status %></td>
-              <td><%= row.user %></td>
-              <td style='background-color: <%= duration_color %>; text-align:right'>
-                <%= Math.round(row.duration / 10) / 100 %></td>
-              <td><%= row.error %></td>
-            </tr>
-          <% }) %>
-        </tbody>
-      </table>
-    </script>
-    <!-- TODO
-      - [fibins: seems to be already done] add pagination by changing #?_offset=
-    -->
+        </div>
+        <div class="filter-status col w-100 mb-2 mb-md-0">
+					<select name="status" class="form-control form-control-sm border-top-0 border-right-0 border-left-0 border-light p-0 no-border-radius">
+            <option value="">Status</option>
+					</select>
+				</div>
+				<div class="filter-users col w-100 mb-2 mb-md-0">
+					<select name="user.id" class="form-control form-control-sm border-top-0 border-right-0 border-left-0 border-light p-0 no-border-radius">
+						<option value="">User Name</option>
+					</select>
+				</div>
+				<div class="filter-uri col w-100 mb-2 mb-md-0">
+					<select name="uri" class="form-control form-control-sm border-top-0 border-right-0 border-left-0 border-light p-0 no-border-radius">
+						<option value="">Page Name</option>
+					</select>
+				</div>
+				<div class="filter-ip col w-100 mb-2 mb-md-0">
+					<select name="ip" class="form-control form-control-sm border-top-0 border-right-0 border-left-0 border-light p-0 no-border-radius">
+						<option value="">IP</option>
+					</select>
+				</div>
+				<div class="col w-100 mb-2 mb-md-0">
+					<button class="filter-submit btn btn-sm w-100 btn-warning text-white text-uppercase">Submit</button>
+				</div>
+			</div>
+		</div>
+	</section>
+	<section class="d-flex flex-wrap my-4">
+		<div class="col-12 col-sm-6 col-md-4 col-lg-3 col-xl-2 text-center mb-4 mb-xl-0">
+			<div class="col-12 bg-white mr-3 pt-3 pb-3 rounded border border-info">
+				<h3 class="text-success"><strong class="kpi-pageviews">--</strong></h5>
+        <h5 class="text-light">Page Views</h5>
+			</div>
+		</div>
+		<div class="col-12 col-sm-6 col-md-4 col-lg-3 col-xl-2 text-center mb-4 mb-xl-0">
+			<div class="col-12 bg-white mr-3 pt-3 pb-3 rounded border border-info">
+				<h3 class="text-success"><strong class="kpi-sessions">--</strong></h5>
+        <h5 class="text-light">Sessions</h5>
+			</div>
+		</div>
+		<div class="col-12 col-sm-6 col-md-4 col-lg-3 col-xl-2 text-center mb-4 mb-xl-0">
+			<div class="col-12 bg-white mr-3 pt-3 pb-3 rounded border border-info">
+				<h3 class="text-success"><strong class="kpi-users">--</strong></h5>
+        <h5 class="text-light">Users</h5>
+			</div>
+		</div>
+		<div class="col-12 col-sm-6 col-md-4 col-lg-3 col-xl-2 text-center mb-4 mb-xl-0">
+			<div class="col-12 bg-white mr-3 pt-3 pb-3 rounded border border-info">
+				<h3 class="text-success"><strong class="kpi-avgtimespent">--</strong></h5>
+				<h5 class="text-light">Avg.Time Spent</h5>
+			</div>
+		</div>
+		<div class="col-12 col-sm-6 col-md-4 col-lg-3 col-xl-2 text-center mb-4 mb-xl-0">
+			<div class="col-12 bg-white mr-3 pt-3 pb-3 rounded border border-info">
+				<h3 class="text-success"><strong class="kpi-urls">--</strong></h5>
+				<h5 class="text-light">URLs</h5>
+			</div>
+		</div>
+		<div class="col-12 col-sm-6 col-md-4 col-lg-3 col-xl-2 text-center mb-4 mb-xl-0">
+			<div class="col-12 bg-white mr-3 pt-3 pb-3 rounded border border-info">
+				<h3 class="text-success"><strong class="kpi-avgloadtime">--</strong></h5>
+				<h5 class="text-light">Avg.Load Time</h5>
+			</div>
+		</div>
+  </section>
+  <div class="container-fluid">
+    <h4 class="text-success font-weight-bold mb-3">Traffic Trend</h4>
   </div>
-
+	<section>
+		<div class="container-fluid pr-lg-0">
+			<div class="card-deck flex-column flex-lg-row mr-0 mr-sm-3 mr-lg-0">
+				<div class="card text-center border col-md-12 col-lg-6 mb-4 px-0 border border-info">
+					<div class="card-header d-sm-flex justify-content-between bg-white border-0">
+						<h5 class="text-success m-0 align-self-center font-weight-bold text-left">Page Views</h5>
+					</div>
+					<div class="card-body">
+            <div class="vegam-pageviewstrend"></div>
+					</div>
+				</div>
+				<div class="card text-center border col-md-12 col-lg-6 mb-4 px-0 border border-info">
+					<div class="card-header d-sm-flex justify-content-between bg-white border-0">
+						<h5 class="text-success m-0 align-self-center font-weight-bold text-left">Sessions</h5>
+					</div>
+					<div class="card-body">
+            <div class="vegam-sessionstrend"></div>
+						<div class="border-0 d-sm-flex justify-content-between pt-1">
+					</div>
+				</div>
+      </div>
+		</div>
+	</section>
+  <div class="container-fluid">
+    <h4 class="text-success font-weight-bold mb-3">Top Metrics</h4>
+  </div>
+  <section>
+    <div class="container-fluid pr-lg-0">
+      <div class="card-deck flex-column flex-lg-row mr-0 mr-sm-3 mr-lg-0">
+        <div class="card text-center border col-md-12 col-lg-6 mb-4 px-0">
+          <div class="card-header d-flex justify-content-between bg-white border-0">
+            <h5 class="text-success m-0 align-self-center font-weight-bold">Top URLs</h5>
+          </div>
+          <div class="card-body">
+            <div class="vegam-toptenuri"></div>
+          </div>
+        </div>
+        <div class="card text-center border col-md-12 col-lg-6 mb-4 px-0">
+          <div class="card-header d-flex justify-content-between bg-white border-0">
+            <h5 class="text-success m-0 align-self-center font-weight-bold">Top Users</h5>
+          </div>
+          <div class="card-body">
+            <div class="vegam-toptenusers"></div>
+          </div>
+        </div>
+      </div>
+      <div class="card-deck flex-column flex-lg-row mr-0 mr-sm-3 mr-lg-0">
+        <div class="card text-center border col-md-12 col-lg-6 mb-4 px-0">
+          <div class="card-header d-flex justify-content-between bg-white border-0">
+            <h5 class="text-success m-0 align-self-center font-weight-bold">Top Status</h5>
+          </div>
+          <div class="card-body">
+            <div class="vegam-toptenstatus"></div>
+          </div>
+        </div>
+        <div class="card text-center border col-md-12 col-lg-6 mb-4 px-0">
+          <div class="card-header d-flex justify-content-between bg-white border-0">
+            <h5 class="text-success m-0 align-self-center font-weight-bold">Top IPs</h5>
+          </div>
+          <div class="card-body">
+            <div class="vegam-toptenip"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <div class="container-fluid">
+    <h4 class="text-success font-weight-bold mb-3">Server Load</h4>
+  </div>
+  <section>
+		<div class="container-fluid pr-lg-0">
+			<div class="card-deck flex-column flex-lg-row mr-0 mr-sm-3 mr-lg-0">
+				<div class="card text-center border col-md-12 col-lg-6 mb-4 px-0">
+				  <div class="card-header d-flex justify-content-between bg-white border-0">
+				    <h5 class="text-success m-0 align-self-center font-weight-bold">Server Response Time</h5>
+				  </div>
+				  <div class="card-body">
+            <div class="vegam-loadtimetrend"></div>
+				  </div>
+				</div>
+				<div class="card text-center border col-md-12 col-lg-6 mb-4 px-0">
+				  <div class="card-header d-flex justify-content-between bg-white border-0">
+				    <h5 class="text-success m-0 align-self-center font-weight-bold">Response Time and Views</h5>
+				  </div>
+				  <div class="card-body">
+            <div class="vegam-loadtimeviewstrend"></div>
+				  </div>
+				</div>
+			</div>
+		</div>
+	</section>
+  <div class="container-fluid pr-lg-0">
+		<script type="text/html" src="template/horizontal_graphs.html" id="horizontal_bars"></script>
+	</div>
+  <footer class="footer bg-info py-2 text-right">
+		<div class="container-fluid">
+			<img src="https://gramener.com/uistatic/gramener.png" width="107" height="40" alt="footer-logo">
+		</div>
+	</footer>
   <script src="ui/jquery/dist/jquery.min.js"></script>
-  <script src="ui/popper.js/dist/umd/popper.min.js"></script>
-  <script src="ui/bootstrap/dist/js/bootstrap.min.js"></script>
-  <script src="ui/lodash/lodash.min.js"></script>
+	<script src="ui/popper.js/dist/umd/popper.min.js"></script>
+	<script src="ui/bootstrap/dist/js/bootstrap.min.js"></script>
+  <script src="ui/moment/min/moment-with-locales.min.js"></script>
+  <script src="ui/daterangepicker/daterangepicker.js"></script>
+  <script src="ui/g1/dist/urlfilter.min.js"></script>
   <script src="ui/d3/build/d3.min.js"></script>
-  <script src="ui/url-search-params/build/url-search-params.js"></script>
+  <script src="node_modules/vega/build/vega-core.min.js"></script>
+  <script src="node_modules/vega-lite/build/vega-lite.min.js"></script>
+  <script src="node_modules/vega-embed/build/vega-embed.min.js"></script>
+  <script src="node_modules/vega-tooltip/build/vega-tooltip.min.js"></script>
+  <script src="node_modules/vegam/dist/vegam.min.js"></script>
+  <script src="script.js"></script>
   <script>
-    var dateformat = d3.utcFormat('%a %d-%b-%Y %H:%M')
-    var numformat = d3.format(',')
-    // Pre-compile templates
-    var templates = {}
-    $('script[type="text/html"]').each(function() {
-      var $this = $(this)
-      var $target = $('<div></div>').insertAfter($this)
-      var id = $this.attr('id')
-      var cls = $this.attr('class')
-      templates[id] = {
-        el: $target,
-        tmpl: _.template($this.html())
-      }
-      $this.remove()
-      $target.attr('id', id).attr('class', cls)
-    })
-
-    var data
-    function render() {
-      // apply filters
-      var args = _.fromPairs(Array.from((new URLSearchParams(location.hash.replace(/^#/, ''))).entries()))
-      var result = apply_filters(args)
-
-      // render template
-      _.each(templates, function(template, id) {
-        template.el.html(template.tmpl({data: result, args: args}))
-      })
+  // TODO: config driven app
+  // TODO: switch between aggD, aggW, addM based on date range selection
+  var config = {
+    filters: [
+      {'column': 'status', 'type': 'select', 'el': '.filter-status select', 'url': 'query/aggD/toptenstatus/'},
+      {'column': 'user.id', 'type': 'select', 'el': '.filter-users select', 'url': 'query/aggD/toptenusers/'},
+      {'column': 'uri', 'type': 'select', 'el': '.filter-uri select', 'url': 'query/aggD/toptenuri/'},
+      {'column': 'ip', 'type': 'select', 'el': '.filter-ip select', 'url': 'query/aggD/toptenip/'},
+      {'column': 'time', 'type': 'daterange', 'el': '.filter-time input', 'url': ''}
+    ]
+  }
+  var dtfmt = 'YYYY-MM-DD-00-00-00'
+  var params = g1.url.parse(location.search)
+  // default update
+  if (!params.searchKey.hasOwnProperty('time>~')  && !params.searchKey.hasOwnProperty('time<~')) {
+    var start = moment().subtract(29, 'days').format(dtfmt)
+    var end = moment().format(dtfmt)
+    params.update({'time>~': start, 'time<~': end})
+  }
+  // setup filters
+  drawFilters(params)
+  // draw views on params
+  drawViz(params)
+  $('body')
+  .on('click', '.filter-submit', function(e) {
+    var dt = $('.filter-time input').data('daterangepicker')
+    var ranges = ('?time>~=' + moment(dt.startDate._d).format(dtfmt)
+            + '&time<~=' + moment(dt.endDate._d).format(dtfmt))
+    var select = $('.filters select')
+      .filter(function(){ return this.value !== ''})
+      .serialize()
+    if (select) {
+      ranges = ranges + '&' + select
     }
-
-    function apply_filters(args) {
-      if (!data.length)
-        return data
-      var first_row = data[0]
-      var result = data
-      for (var key in args) {
-        if (!(key in first_row))
-          continue
-        result = _.filter(result, function(row) {
-          return row[key] == args[key]
-        })
-      }
-      return result
-    }
-
-    d3.csv('data.csv', function(result) {
-      // Pre-process the data
-      _.each(result, function(row) {
-        row.time = new Date(+row.time)
-      })
-      data = result
-      render()
-    })
-    $(window).on('hashchange', render)
+    // location.search = ranges
+    history.pushState({}, '', ranges)
+    updateView()
+  })
+  $(window).on('popstate', updateView)
   </script>
 </body>
 </html>

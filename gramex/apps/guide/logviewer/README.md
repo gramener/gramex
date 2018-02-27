@@ -13,6 +13,9 @@ app at [log/](log/):
       logviewer:
         path: $GRAMEXAPPS/logviewer/gramex.yaml   # Source of the app
         YAMLURL: $YAMLURL/log/                    # Location to mount at
+        namespace: [url, schedule]                # Avoid name space conflicts
 
-Currently, the [log viewer](log/) is rudimentary. It will evolve with Gramex.
-v1.26 will feature a more functional version.
+<div class="example">
+  <a class="example-demo" href="log/">Log Viewer</a>
+  <a class="example-src" href="http://code.gramener.com/s.anand/gramex/tree/master/gramex/apps/guide/logviewer/gramex.yaml">Source</a>
+</div>
