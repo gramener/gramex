@@ -60,6 +60,10 @@ def opener(callback, read=False, **open_kwargs):
         template('abc.txt').substitute(x=val)
         gramex.cache.open('abc.txt', template).substitute(x=val)
 
+        # If read=True, callback may be None. The result of .read() is passed as-is
+        text = opener(None, read=True)
+        gramex.cache.open('abc.txt', text)
+
     Keyword arguments applicable for ``io.open`` are passed to ``io.open``. These
     default to ``io.open(mode='r', buffering=-1, encoding='utf-8',
     errors='strict', newline=None, closefd=True)``. All other arguments and
@@ -67,16 +71,18 @@ def opener(callback, read=False, **open_kwargs):
 
     When reading binary files, pass ``mode='rb', encoding=None, errors=None``.
     '''
-    if not callable(callback):
-        raise ValueError('opener requires a function as first parameter, not %s', repr(callback))
     merge(open_kwargs, _opener_defaults, 'setdefault')
     if read:
         # Pass contents to callback
         def method(path, **kwargs):
             open_args = {key: kwargs.pop(key, val) for key, val in open_kwargs.items()}
             with io.open(path, **open_args) as handle:
-                return callback(handle.read(), **kwargs)
+                result = handle.read()
+                return callback(result, **kwargs) if callable(callback) else result
     else:
+        if not callable(callback):
+            raise ValueError('opener callback %s not a function', repr(callback))
+
         # Pass handle to callback
         def method(path, **kwargs):
             open_args = {key: kwargs.pop(key, val) for key, val in open_kwargs.items()}
@@ -117,8 +123,9 @@ def hashed(val):
 # {(path, callback): {data: ..., stat: ...}}
 _OPEN_CACHE = {}
 _OPEN_CALLBACKS = dict(
-    txt=opener(six.text_type, read=True),
-    text=opener(six.text_type, read=True),
+    bin=opener(None, read=True, mode='rb', encoding=None, errors=None),
+    txt=opener(None, read=True),
+    text=opener(None, read=True),
     csv=pd.read_csv,
     excel=pd.read_excel,
     xls=pd.read_excel,
@@ -145,7 +152,8 @@ def open(path, callback=None, transform=None, rel=False, **kwargs):
 
     The 2nd parameter (callback) a predefined string that can be one of
 
-    - ``text`` or ``txt``: reads files using io.open
+    - ``bin``: reads binary files using io.open
+    - ``text`` or ``txt``: reads text files using io.open
     - ``yaml``: reads files using yaml.load via io.open
     - ``config``: reads files using using :py:class:`gramex.config.PathConfig`.
       Same as ``yaml``, but allows ``import:`` and variable substitution.
