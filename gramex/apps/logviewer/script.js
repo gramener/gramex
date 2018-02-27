@@ -124,8 +124,8 @@ function setFilters(params) {
 }
 
 function setDatefilter(spec, query) {
-  var start = query.searchKey[spec.column + '>']
-  var end = query.searchKey[spec.column + '<']
+  var start = query.searchKey[spec.column + '>~'].substring(0, 10)
+  var end = query.searchKey[spec.column + '<~'].substring(0, 10)
   start = start || moment().subtract(29, 'days')
   end = end || moment()
   filterTime(start, end, spec.el)
