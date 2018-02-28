@@ -2,6 +2,44 @@
   "1.27.0": {
     "": {}
   },
+  "1.30": {
+    "": {
+      "Gramex 1.30 Release Notes": -1
+    },
+    "bugs": {
+      "Bugs": -1
+    },
+    "config-reload": {
+      "Config reload": -1
+    },
+    "documentation": {
+      "Documentation": -1
+    },
+    "log-viewer": {
+      "Log viewer": -1
+    },
+    "multiple-logins": {
+      "Multiple logins": -1
+    },
+    "oauth2-login": {
+      "OAuth2 login": -1
+    },
+    "others": {
+      "Others": -1
+    },
+    "proxy-apis": {
+      "Proxy APIs": -1
+    },
+    "sms-notification": {
+      "SMS notification": -1
+    },
+    "stats": {
+      "Stats": -1
+    },
+    "upgrade": {
+      "Upgrade": -1
+    }
+  },
   "about": {
     "": {
       "About Gramex": -1
@@ -528,8 +566,17 @@
     "email-attachments": {
       "Email attachments": -1
     },
+    "from-gramexservices-import-smtpmailer": {
+      "from gramex.services import SMTPMailer": -1
+    },
     "html-email": {
       "HTML email": -1
+    },
+    "mailer-smtpmailertypegmail-emailgramexguidegmailcom-password": {
+      "mailer = SMTPMailer(type='gmail', email='gramex.guide@gmail.com', password='...')": -1
+    },
+    "or-to-construct-the-smtpmailer-when-using-gramex-as-a-library-use": {
+      "Or, to construct the SMTPMailer when using Gramex as a library, use:": -1
     },
     "send-email": {
       "Send email": -1
@@ -925,7 +972,9 @@
     }
   },
   "release": {
-    "": {}
+    "": {
+      "Gramex release notes": -1
+    }
   },
   "scheduler": {
     "": {
@@ -955,6 +1004,23 @@
     },
     "gramex-0x-changes": {
       "Gramex 0.x changes": -1
+    }
+  },
+  "sms": {
+    "": {
+      "Send SMS": -1
+    },
+    "from-gramexservices-import-amazonsns": {
+      "from gramex.services import AmazonSNS": -1
+    },
+    "notifier-amazonsnsaws_access_key_id-aws_access_secret_key-region_name": {
+      "notifier = AmazonSNS(aws_access_key_id, aws_access_secret_key, region_name)": -1
+    },
+    "or-to-construct-the-notifier-when-using-gramex-as-a-library-use": {
+      "Or, to construct the Notifier when using Gramex as a library, use:": -1
+    },
+    "send-sms": {
+      "Send SMS": -1
     }
   },
   "test": {

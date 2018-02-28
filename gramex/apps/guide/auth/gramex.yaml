@@ -24,6 +24,7 @@ url:
                 beta: beta                      # Similarly for beta
             redirect:
                 query: next
+                header: Referer
                 url: /$YAMLURL
 
     auth/ajax:
@@ -80,6 +81,7 @@ url:
                 fields: [session.id, current_user.name, request.remote_ip, request.headers.User-Agent]
             redirect:
                 query: next
+                header: Referer
                 url: /$YAMLURL
 
     auth/twitter:
@@ -97,6 +99,7 @@ url:
                 fields: [session.id, current_user.username, request.remote_ip, request.headers.User-Agent]
             redirect:
                 query: next
+                header: Referer
                 url: /$YAMLURL
 
     auth/ldap:
@@ -114,6 +117,7 @@ url:
                 function: ensure_single_session
             redirect:
                 query: next
+                header: Referer
                 url: /$YAMLURL
                 external: true
 
@@ -137,6 +141,7 @@ url:
                 function: ensure_single_session
             redirect:
                 query: next
+                header: Referer
                 url: /$YAMLURL
                 external: true
 
@@ -151,6 +156,7 @@ url:
             password: '{password}'
             redirect:
                 query: next
+                header: Referer
                 url: /$YAMLURL
                 external: true
 
@@ -201,6 +207,7 @@ url:
                 # validate: authutil.signup_validate(handler, args)
             redirect:
                 query: next
+                header: Referer
                 url: /$YAMLURL
 
     auth/user:
@@ -337,6 +344,7 @@ url:
               Authorization: 'Bearer {access_token}'
           redirect:
               query: next
+              header: Referer
               url: /$YAMLURL
 
     auth/github:
@@ -357,6 +365,7 @@ url:
             Authorization: 'token {access_token}'
           redirect:
               query: next
+              header: Referer
               url: /$YAMLURL
 
       auth/googleoauth2:

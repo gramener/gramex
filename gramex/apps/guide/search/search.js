@@ -23,17 +23,20 @@ $.ajax('searchindex.json')
     var idx = lunr.Index.load(index.index)
     var docs = index.docs
     var $results = $('#searchresults')
-    $('#search').on('input', function() {
-      var text = $(this).val().replace(/^\s+/, '').replace(/\s+$/, '')
-      if (text) {
-        var results = idx.search(text)
-        if (results.length)
-          $results.html(results.slice(0, 20).map(function(result) {
-            var d = docs[result.ref]
-            return '<div><a href="../' + d.link + '">' + d.prefix + ' &raquo; ' + d.title + '</a></div>'
-          }))
-      } else {
-        $results.html('')
-      }
-    }).trigger('input')
+    $('#search')
+      .val(location.hash.replace(/^#/, ''))
+      .on('input', function() {
+        var text = $(this).val().replace(/^\s+/, '').replace(/\s+$/, '')
+        if (text) {
+          var results = idx.search(text)
+          if (results.length)
+            $results.html(results.slice(0, 20).map(function(result) {
+              var d = docs[result.ref]
+              return '<div><a href="../' + d.link + '">' + d.prefix + ' &raquo; ' + d.title + '</a></div>'
+            }))
+        } else {
+          $results.html('')
+        }
+      })
+      .trigger('input')
   })

@@ -39,6 +39,7 @@ prefix: Guide
 - [Run apps](apps/)
 - [Writing handlers](handlers/)
 - [Debug Gramex](debug/)
+- [Release Notes](release/)
 - [Python API reference](https://learn.gramener.com/gramex/gramex.html)
 
 ## Guides

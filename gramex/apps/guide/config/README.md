@@ -919,14 +919,15 @@ You can write a Python function to extend or modify this configuration by callin
 ```python
 gramex.init(
     app1=pathlib.Path('/app1/gramex.yaml'),
-    app2={
-        'url': {
-            'capture': {
-                'pattern': '/capture',
-                'handler': 'CaptureHandler',
-            }
-        }
-    }
+    app2=AttrDict(
+        url=AttrDict(
+            app2=AttrDict(
+                pattern='/app2',
+                handler='FileHandler',
+                kwargs=AttrDict(path='/home/app2/index.html'),
+            )
+        )
+    )
 )
 ```
 

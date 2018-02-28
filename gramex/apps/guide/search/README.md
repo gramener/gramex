@@ -34,4 +34,4 @@ prefix: Search
 <div id="searchresults"></div>
 <div id="index"></div>
 <script src="../node_modules/lunr/lunr.js"></script>
-<script src="search.js?v=2"></script>
+<script src="search.js?v=3"></script>

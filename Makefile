@@ -88,10 +88,12 @@ install: clean
 	$(PYTHON) setup.py install
 
 stats:
-	@echo gramex
+	@echo python
 	@find gramex -path '*node_modules/*' -prune -o -name '*.py' | grep '\.py$$' | xargs wc -l | tail -1
-	@echo gramex config
+	@echo python setup
 	@wc -l docs/conf.py setup.py | tail -1
+	@echo javascript
+	@find gramex -path '*node_modules/*' -prune -o -name '*.js' | grep '\.js$$' | grep -v node_modules | xargs wc -l | tail -1
 	@echo tests
 	@find tests testlib -path '*node_modules/*' -prune -o -name '*.py' | grep '\.py$$' | xargs wc -l | tail -1
 
