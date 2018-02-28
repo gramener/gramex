@@ -1,4 +1,7 @@
-title: Gramex Authentication
+---
+title: Auth handlers log in users
+prefix: Auth
+...
 
 Your session data is:
 <iframe frameborder="0" src="session"></iframe>
@@ -206,9 +209,12 @@ url:
 ```
 
 The bearer token is available in the session key `google_access_token`. You can
-pass this to any Google API with a `Authorization: Bearer <google_access_token>`
-HTTP header, or with a `?access_token=<google_access_token>` query parameter. For
-example, this code [fetches Google contacts](googleapi.html):
+use this with [ProxyHandler to access Google APIs](../proxyhandler/#google-proxyhandler) .
+
+Programmatically, you can pass this to any Google API with a
+`Authorization: Bearer <google_access_token>` HTTP header, or with a
+`?access_token=<google_access_token>` query parameter. For example, this code
+[fetches Google contacts](googleapi.html):
 
 ```python
 @tornado.gen.coroutine
@@ -703,6 +709,79 @@ along with required claims (i.e. fields to be returned, such as `email_id`,
 `username`, etc.)
 
 
+## OAuth2
+
+**v1.30**. Gramex lets you log in via any OAuth2 providers. This includes:
+
+- [Facebook](https://developers.facebook.com/docs/facebook-login)
+- [Github](https://developer.github.com/apps/building-oauth-apps/)
+- [Gitlab](https://docs.gitlab.com/ce/api/oauth2.html)
+- [Google](https://developers.google.com/identity/protocols/OAuth2)
+- [Instagram](https://www.instagram.com/developer/authentication/)
+- [LinkedIn](https://developer.linkedin.com/docs/oauth2)
+- [SalesForce](https://goo.gl/hVzQYL)
+- [StackOverflow](https://api.stackexchange.com/docs/authentication)
+
+Here is a sample configuration for Gitlab:
+
+```yaml
+url:
+  auth/gitlab:
+    pattern: /$YAMLURL/gitlab
+    handler: OAuth2
+    kwargs:
+      # Create app at https://code.gramener.com/admin/applications/
+      client_id: 'YOUR_APP_CLIENT_ID'
+      client_secret: 'YOUR_APP_SECRET_ID'
+      authorize:
+        url: 'https://code.gramener.com/oauth/authorize'
+      access_token:
+        url: 'https://code.gramener.com/oauth/token'
+        body:
+          grant_type: 'authorization_code'
+      user_info:
+        url: 'https://code.gramener.com/api/v4/user'
+        headers:
+          Authorization: 'Bearer {access_token}'
+```
+
+<div class="example">
+  <a class="example-demo" href="gitlab">Gitlab OAuth2 example</a>
+  <a class="example-src" href="http://code.gramener.com/s.anand/gramex/tree/master/gramex/apps/guide/auth/gramex.yaml">Source</a>
+</div>
+
+It accepts the following configuration:
+
+- `client_id`: Create an app with the OAuth2 provider to get this ID
+- `client_secret`: Create an app with the OAuth2 provider to get this ID
+- `authorize`: Authorization endpoint configuration:
+    - `url`: Authorization endpoint URL
+    - `scope`: an optional a list of string scopes that determine what you can access
+    - `extra_params`: an optional dict of URL query params passed
+- `access_token`: Access token endpoint configuration
+    - `url`: Access token endpoint URL
+    - `session_key`: optional key in session to store access token information. default: `access_token`
+    - `headers`: optional dict containing HTTP headers to pass to access token URL. By default, sets `User-Agent` to `Gramex/<version>`.
+    - `body`: optional dict containing arguments to pass to access token URL (e.g. `{grant_type: authorization_code}`)
+- `user_info`: Optional user information API endpoint
+    - `url`: API endpoint to fetch URL
+    - `headers`: optional dict containing HTTP headers to pass to user info URL. e.g. `Authorization: 'Bearer {access_token}'`. Default: `{User-Agent: Gramex/<version>}`
+    - `method`: HTTP method to use. default: `GET`
+    - `body`: optional dict containing POST arguments to pass to user info URL
+    - `user_id`: Attribute in the returned user object that holds the user ID. This is used to identify the user uniquely. default: `id`
+- `user_key`: optional key in session to store user information. default: `user`
+
+<div class="example">
+  <a class="example-demo" href="github">Github OAuth2 example</a>
+  <a class="example-src" href="http://code.gramener.com/s.anand/gramex/tree/master/gramex/apps/guide/auth/gramex.yaml">Source</a>
+</div>
+
+<div class="example">
+  <a class="example-demo" href="googleoauth2">Google OAuth2 example</a>
+  <a class="example-src" href="http://code.gramener.com/s.anand/gramex/tree/master/gramex/apps/guide/auth/gramex.yaml">Source</a>
+</div>
+
+
 ## Log out
 
 This configuration creates a [logout page](logout?next=.):
@@ -805,6 +884,31 @@ auth handlers and the `LogoutHandler`.
 All handlers store the information retrieved about the user in
 `handler.session['user']`, typically as a dictionary. All handlers have access
 to this information via `handler.current_user` by default.
+
+Typically, users log into only one AuthHandler, like DBAuth or GoogleAuth.
+Sometimes you want to log into both -- for example, to access the Google APIs.
+For this, you can specify a `user_key: something`. This stores the user object
+in `handler.session['something']` instead of `handler.session['user']`. This
+applies to all Auth handlers including [LogoutHandler](#logouthandler). For
+example:
+
+```yaml
+url:
+  googleauth:
+    pattern: /google
+    handler: GoogleAuth
+    kwargs:
+      user_key: google_user    # Store user info in session.google_user not session.user
+      # ...
+
+  twitterauth:
+    pattern: /twitter
+    handler: TwitterAuth
+    kwargs:
+      user_key: twitter_user   # Store user info in session.twitter_user
+      # ...
+```
+
 
 ## Logging logins
 

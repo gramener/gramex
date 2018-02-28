@@ -1,4 +1,7 @@
-title: Gramex writes data
+---
+title: JSONHandler writes JSON data
+prefix: JSONHandler
+...
 
 [JSONHandler][jsonhandler] offers a persistent key-value store with an API inspired by
 [Firebase](https://www.firebase.com/docs/rest/api/). For example:
@@ -77,7 +80,7 @@ Incorrect values raise an error:
     :::js
     $.ajax('data/invalid', {
       headers: xsrf,          // Set XSRF token
-      method: 'PUT',      
+      method: 'PUT',
       data: 'xxx'             // Invalid JSON
     })                        // OUTPUT
 

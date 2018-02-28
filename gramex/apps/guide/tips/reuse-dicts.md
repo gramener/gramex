@@ -1,4 +1,7 @@
+---
 title: Look up values in a dict to handle variations
+prefix: Tip
+...
 
 This code reads 3 datasets:
 

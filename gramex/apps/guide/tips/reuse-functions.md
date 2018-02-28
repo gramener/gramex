@@ -1,4 +1,7 @@
+---
 title: Group common code into functions
+prefix: Tip
+...
 
 When the same code is repeated *across different functions* like this:
 

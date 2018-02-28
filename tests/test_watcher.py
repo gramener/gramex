@@ -46,3 +46,10 @@ class TestWatcher(TestGramex):
 
             with self.wait_for('deleted', url='/' + name, code=404):
                 os.unlink(path)
+
+    def test_watcher_api(self):
+        # TODO: When an event happens, check that the event is captured
+        # watcher.watch('name1', paths, on_modified=init)
+        # TODO: Sub folders don't lead to multiple triggers
+        # TODO: Refreshing doesn't lead to multiple triggers
+        pass

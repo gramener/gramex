@@ -1,4 +1,7 @@
+---
 title: Conditional Configurations in Gramex 1.x
+prefix: Tip
+...
 
 The dev branch supports [conditional YAML variables](../config/#conditions).
 

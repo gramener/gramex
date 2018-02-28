@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 import os
 import csv
 import six
+import json
 import time
 import uuid
 import random
@@ -11,10 +12,12 @@ import logging
 import functools
 import tornado.web
 import tornado.gen
+import tornado.escape
+import tornado.httpclient
 from socket import gethostname
 from cachetools import TTLCache
 from tornado.auth import (GoogleOAuth2Mixin, FacebookGraphMixin, TwitterMixin,
-                          urllib_parse, _auth_return_future)
+                          OAuth2Mixin, urllib_parse, _auth_return_future)
 from collections import Counter
 from orderedattrdict import AttrDict
 import gramex
@@ -63,7 +66,7 @@ class AuthHandler(BaseHandler):
     '''The parent handler for all Auth handlers.'''
     @classmethod
     def setup(cls, prepare=None, action=None, delay=None, session_expiry=None,
-              session_inactive=None, **kwargs):
+              session_inactive=None, user_key='user', **kwargs):
         # Switch SSL certificates if required to access Google, etc
         gramex.service.threadpool.submit(check_old_certs)
 
@@ -89,7 +92,8 @@ class AuthHandler(BaseHandler):
         elif isinstance(cls.delay, (int, float)) or cls.delay is None:
             cls.delay = default_delay
 
-        # Set up session and inactive expiry
+        # Set up session user key, session expiry and inactive expiry
+        cls.session_user_key = user_key
         cls.session_expiry = session_expiry
         cls.session_inactive = session_inactive
 
@@ -146,7 +150,7 @@ class AuthHandler(BaseHandler):
         # it's "dn". Allow auth handlers to decide their own ID attribute and
         # store it as "id" for consistency. Logging depends on this, for example.
         user['id'] = user[id]
-        self.session['user'] = user
+        self.session[self.session_user_key] = user
         self.failed_logins[user[id]] = 0
 
         self.update_user(user[id], active='y', **user)
@@ -188,12 +192,182 @@ class LogoutHandler(AuthHandler):
         for callback in self.actions:
             callback(self)
         self.log_user_event(event='logout')
-        user = self.session.get('user', {})
+        user = self.session.get(self.session_user_key, {})
         if 'id' in user:
             self.update_user(user['id'], active='')
-        self.session.pop('user', None)
+        self.session.pop(self.session_user_key, None)
         if self.redirects:
             self.redirect_next()
+
+
+class OAuth2(AuthHandler, OAuth2Mixin):
+    '''
+    The OAuth2 handler lets users log into any OAuth2 service. It accepts this
+    configuration:
+
+    :arg str client_id: Create an app with the OAuth2 provider to get this ID
+    :arg str client_secret: Create an app with the OAuth2 provider to get this ID
+    :arg dict authorize: Authorization endpoint configuration:
+        - url: Authorization endpoint URL
+        - scope: an optional a list of string scopes
+        - extra_params: an optional dict of URL query params passed
+    :arg dict access_token: Access token endpoint configuration
+        - url: Access token endpoint URL
+        - session_key: optional key in session to store access token information.
+          default: `access_token`
+        - headers: optional dict containing HTTP headers to pass to access token URL.
+          By default, sets `User-Agent` to `Gramex/<version>`.
+        - body: optional dict containing arguments to pass to access token URL
+          (e.g. `{grant_type: authorization_code}`)
+    :arg dict user_info: Optional user information API endpoint
+        - url: API endpoint to fetch URL
+        - headers: optional dict containing HTTP headers to pass to user info URL.
+          e.g. `Authorization: 'Bearer {access_token}'`. Default: `{User-Agent: Gramex/<version>}`
+        - method: HTTP method to use (default: `GET`)
+        - body: optional dict containing POST arguments to pass to user info URL
+        - user_id: Attribute in the returned user object that holds the user ID.
+          This is used to identify the user uniquely. default: `id`
+    :arg str user_key: optional key in session to store user information.
+        default: `user`
+    '''
+    AUTHORIZE_DEFAULTS = {
+        'scope': [],
+        'extra_params': {},
+        'response_type': 'code',
+    }
+    ACCESS_TOKEN_DEFAULTS = {
+        'headers': {
+            'User-Agent': 'Gramex/' + gramex.__version__
+        },
+        'body': {
+            'redirect_uri': '{redirect_uri}',
+            'code': '{code}',
+            'client_id': '{client_id}',
+            'client_secret': '{client_secret}',
+        },
+        'session_key': 'access_token'
+    }
+    USER_INFO_DEFAULTS = {
+        'headers': {
+            'User-Agent': 'Gramex/' + gramex.__version__
+        },
+        'user_id': 'id'
+    }
+
+    @classmethod
+    def setup(cls, client_id, client_secret, authorize, access_token,
+              user_info=None, **kwargs):
+        super(OAuth2, cls).setup(**kwargs)
+        cls.client_id = client_id
+        cls.client_secret = client_secret
+
+        cls._OAUTH_AUTHORIZE_URL = authorize.url
+        cls._OAUTH_ACCESS_TOKEN_URL = access_token.url
+        cls.authorize = merge(authorize, cls.AUTHORIZE_DEFAULTS, mode='setdefault')
+        cls.access_token = merge(access_token, cls.ACCESS_TOKEN_DEFAULTS, mode='setdefault')
+        cls.user_info = merge({} if user_info is None else user_info,
+                              cls.USER_INFO_DEFAULTS, mode='setdefault')
+
+    @tornado.gen.coroutine
+    def get(self):
+        redirect_uri = '{0.protocol:s}://{0.host:s}{0.path:s}'.format(self.request)
+        code = self.get_arg('code', '')
+        # Step 1: user visits this page and is redirected to the OAuth provider
+        if not code:
+            self.save_redirect_page()
+            yield self.authorize_redirect(
+                redirect_uri=redirect_uri,
+                client_id=self.client_id,
+                client_secret=self.client_secret,
+                extra_params=self.authorize.extra_params,
+                scope=self.authorize.scope,
+                response_type=self.authorize.response_type,
+            )
+        # Step 2: after logging in, user is redirected back here to continue
+        else:
+            # Step 2a: Exchange code for access token
+            http = self.get_auth_http_client()
+            params = {
+                'name': self.name,
+                "redirect_uri": redirect_uri,
+                "code": code,
+                "client_id": self.client_id,
+                "client_secret": self.client_secret,
+            }
+            response = yield http.fetch(
+                self._OAUTH_ACCESS_TOKEN_URL, method='POST', raise_error=False,
+                **self._request_conf(self.access_token, params))
+            self.validate(response)
+            # Parse the response based on the HTTP Content Type
+            body = tornado.escape.native_str(response.body)
+            mime_type = response.headers['Content-Type']
+            if mime_type.startswith('application/x-www-form-urlencoded'):
+                args = six.moves.urllib_parse.parse_qs(body)
+                args = {key: value[-1] for key, value in args.items()}
+            elif mime_type.startswith('application/json'):
+                args = json.loads(body)
+            else:
+                self.validate(AttrDict(
+                    error=True, code=BAD_REQUEST, reason='Invalid access token',
+                    body=('Access token response not form-encoded nor JSON:\n\n' +
+                          'Content-Type: %s\n\n%s') % (mime_type, body),
+                    headers={}))
+                raise tornado.gen.Return()
+            # Save the returned session info in a config-specified session key.
+            # This defaults to 'access_token'
+            params.update(args)
+            session_key = self.access_token['session_key']
+            self.session[session_key] = args
+
+            # Step 2b: Use access token to fetch the user info
+            if 'url' in self.user_info:
+                response = yield http.fetch(
+                    self.user_info['url'].format(**params),
+                    raise_error=False,
+                    **self._request_conf(self.user_info, params))
+                self.validate(response)
+                try:
+                    user = json.loads(response.body)
+                except Exception:
+                    self.validate(AttrDict(
+                        error=True, code=BAD_REQUEST, reason='Invalid user JSON',
+                        body='User info not JSON:\n\n%s' % response.body,
+                        headers={}))
+                else:
+                    user_id = self.user_info['user_id']
+                    self.set_user(user, id=user_id)
+            self.redirect_next()
+
+    def _request_conf(self, conf, params):
+        result = {}
+        if 'method' in conf:
+            result['method'] = conf['method']
+        if 'headers' in conf:
+            result['headers'] = {
+                key: val.format(**params) for key, val in conf['headers'].items()
+            }
+        if 'body' in conf:
+            result['body'] = six.moves.urllib_parse.urlencode({
+                key: val.format(**params) for key, val in conf['body'].items()
+            })
+        return result
+
+    def get_auth_http_client(self):
+        """Returns the `.AsyncHTTPClient` instance to be used for auth requests.
+
+        May be overridden by subclasses to use an HTTP client other than
+        the default.
+        """
+        return tornado.httpclient.AsyncHTTPClient()
+
+    def validate(self, response):
+        if response.error:
+            app_log.error(response.body)
+            self.set_status(response.code, reason=response.reason)
+            mime_type = response.headers.get('Content-Type', 'text/plain')
+            self.set_header('Content-Type', mime_type)
+            self.write(response.body)
+            raise tornado.gen.Return()
 
 
 class GoogleAuth(AuthHandler, GoogleOAuth2Mixin):
@@ -412,7 +586,6 @@ class LDAPAuth(AuthHandler):
     @tornado.gen.coroutine
     def post(self):
         import ldap3
-        import json
         kwargs = self.kwargs
         # First, bind the server with the provided user ID and password.
         q = {key: vals[0] for key, vals in self.args.items()}

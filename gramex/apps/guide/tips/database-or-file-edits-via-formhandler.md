@@ -1,4 +1,7 @@
+---
 title: Database or file edits via FormHandler
+prefix: Tip
+...
 
 It is now easy to update or modify data sources via FormHandler. FormHandler now supports `PUT`, `POST` and `DELETE` methods in addition to `GET`. These can be done via `HTML` forms or `AJAX` requests.
 
@@ -39,7 +42,7 @@ In the `kwargs` section, mention the primary key on which you would like to perf
 
 ## Editing DataFrames
 
-You can also use these methods via 
+You can also use these methods via
 
 - `gramex.data.insert`
 - `gramex.data.update`

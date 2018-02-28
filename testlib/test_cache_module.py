@@ -150,6 +150,30 @@ class TestOpen(unittest.TestCase):
         result = gramex.cache.open(path, 'txt', rel=True)
         eq_(result, expected)
 
+    def test_open_text(self):
+        path = os.path.join(folder, 'template.txt')
+        expected = io.open(path, encoding='utf-8', errors='ignore').read()
+
+        def check(reload):
+            result, reloaded = gramex.cache.open(path, 'text', _reload_status=True)
+            eq_(reloaded, reload)
+            eq_(result, expected)
+
+        self.check_file_cache(path, check)
+        eq_(gramex.cache.open(path), gramex.cache.open(path, 'text'))
+        eq_(gramex.cache.open(path), gramex.cache.open(path, 'txt'))
+
+    def test_open_bin(self):
+        path = os.path.join(folder, 'data.bin')
+        expected = io.open(path, mode='rb').read()
+
+        def check(reload):
+            result, reloaded = gramex.cache.open(path, 'bin', _reload_status=True)
+            eq_(reloaded, reload)
+            eq_(result, expected)
+
+        self.check_file_cache(path, check)
+
     def test_open_csv(self):
         path = os.path.join(folder, 'data.csv')
         expected = pd.read_csv(path, encoding='utf-8')

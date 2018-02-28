@@ -1,4 +1,7 @@
+---
 title: Writing handlers
+prefix: BaseHandler
+...
 
 [TOC]
 

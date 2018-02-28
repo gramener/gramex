@@ -1,5 +1,10 @@
+---
 title: Gramex Guide
 classes: toc
+prefix: Guide
+...
+
+- [Search the guide](search/)
 
 ## Table of contents
 
@@ -10,30 +15,31 @@ classes: toc
 
 ## Reference
 
-- [Runs Python functions](functionhandler/)
-- [Show files](filehandler/)
-- [Query and update databases & files](formhandler/)
-- [Query and update JSON data](jsonhandler/)
-- [Export PDF and images](capturehandler/)
-- [Create PPTX](pptxhandler/)
-- [Authentication](auth/)
-- [Proxy API requests](proxyhandler/)
-- [Upload files](uploadhandler/)
-- [Run programs](processhandler/) (processes)
-- [Handle WebSockets](websockethandler/)
-- [Access Twitter data](twitterresthandler/)
-- [Access Facebook data](facebookgraphhandler/)
+- [FunctionHandler runs Python code](functionhandler/)
+- [FileHandler renders files](filehandler/)
+- [FormHandler connects to data](formhandler/)
+- [JSONHandler writes JSON data](jsonhandler/)
+- [CaptureHandler takes screenshots](capturehandler/)
+- [PPTXHandler generates PPTX](pptxhandler/)
+- [Auth handlers log in users](auth/)
+- [ProxyHandler proxies APIs](proxyhandler/)
+- [UploadHandler uploads files](uploadhandler/)
+- [ProcessHandler runs programs](processhandler/)
+- [WebSocketHandler](websockethandler/)
+- [TwitterRESTHandler](twitterresthandler/)
+- [FacebookGraphHandler](facebookgraphhandler/)
 - [Use UI components](uicomponents/)
 - [Use charts](chart/)
-- [Cache requests](cache/)
-- [Send smart alerts](alert/)
+- [Caching requests](cache/)
 - [Send emails](email/)
+- [Smart alerts](alert/)
 - [Schedule tasks](scheduler/)
-- [Watches files](watch/)
+- [Watch files](watch/)
 - [View logs](logviewer/)
 - [Run apps](apps/)
-- [Create custom handlers](handlers/)
+- [Writing handlers](handlers/)
 - [Debug Gramex](debug/)
+- [Release Notes](release/)
 - [Python API reference](https://learn.gramener.com/gramex/gramex.html)
 
 ## Guides
@@ -44,8 +50,8 @@ classes: toc
 
 ### Deprecated
 
-- [DataHandler](datahandler/)
-- [QueryHandler](queryhandler/)
+- [DataHandler connects to data](datahandler/) - use [FormHandler](formhandler/)
+- [QueryHandler runs SQL queryies](queryhandler/) - use [FormHandler](formhandler/)
 
 ## Additional links
 

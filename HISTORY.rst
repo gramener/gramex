@@ -3,8 +3,14 @@
 History
 -------
 
-v1.28.0 (2018-01-31)
-~~~~~~~~~~~~~~~~~
+v1.30.0 (2018-02-28)
+~~~~~~~~~~~~~~~~~~~~
+
+See `v1.30 release notes`_
+
+
+v1.29.0 (2018-02-15)
+~~~~~~~~~~~~~~~~~~~~
 
 `SAMLAuth`_ is now a part of Gramex. Most enterprise Single-Sign-On (SSO)
 implementations are now SAML-enabled, including Microsoft ActiveDirectory.
@@ -1095,3 +1101,4 @@ v1.0.0 (2015-09-08)
 .. _deploy: https://learn.gramener.com/guide/deploy
 .. _ProxyHandler: https://learn.gramener.com/guide/proxyhandler/
 .. _How XSRF works: https://learn.gramener.com/guide/filehandler/#how-xsrf-works
+.. _v1.30 release notes: https://learn.gramener.com/guide/release/1.30/

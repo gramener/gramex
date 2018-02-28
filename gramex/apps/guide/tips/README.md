@@ -1,4 +1,7 @@
-title: Tips
+---
+title: Tips & Tricks
+prefix: Tip
+...
 
 ## Reuse code
 
@@ -24,7 +27,7 @@ Below is the list of tips for Gramex use that have been shared via email as well
 1. 2017/08/08 - [Testing build errors locally](testing-build-errors-locally.md)
 1. 2017/08/09 - [Schedule tasks at periodic internal](schedule-tasks.md)
 1. 2017/08/28 - [File upload and processing](file-upload-processing.md)
-1. 2017/08/31 - [FormHandler: filtering data](formhandler-filtering-data-with-ease.md)
+1. 2017/08/31 - [FormHandler: filtering data](formhandler-filtering-data.md)
 1. 2017/09/01 - [Gramex offline install](gramex-offline-install.md)
 1. 2017/09/05 - [Filter data using url](filter-data-using-url.md)
 1. 2017/09/06 - [File download](file-download.md)

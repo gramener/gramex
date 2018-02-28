@@ -1,4 +1,7 @@
-title: Gramex accesses Facebook data
+---
+title: FacebookGraphHandler
+prefix: FacebookGraphHandler
+...
 
 [TOC]
 
@@ -86,7 +89,7 @@ until it expires, or a user logs in again at [/persist/](persist/).
 
 <script>
 function replace(e, regex, text) {
-    e.innerHTML = e.innerHTML.replace(regex, 
+    e.innerHTML = e.innerHTML.replace(regex,
       '<p style="color: #ccc">// OUTPUT</p><p>' + text + '</p>')
 }
 

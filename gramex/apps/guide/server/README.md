@@ -1,4 +1,7 @@
+---
 title: Gramex is a web server
+prefix: Server
+...
 
 [TOC]
 

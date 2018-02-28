@@ -1,4 +1,7 @@
+---
 title: Gramex exercises
+prefix: Exercises
+...
 
 Complete below exercises to get an overview of the Gramex features.
 

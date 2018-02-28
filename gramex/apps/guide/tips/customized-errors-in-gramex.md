@@ -1,4 +1,7 @@
+---
 title: Customized errors in Gramex
+prefix: Tip
+...
 
 You can define your own custom error handlers in Gramex.
 

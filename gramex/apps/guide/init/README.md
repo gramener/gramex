@@ -1,4 +1,7 @@
+---
 title: Gramex init
+prefix: Init
+...
 
 Starting `Gramex v1.26`, all projects are required to use `gramex init`. This will setup the necessary project linting files and default files.
 

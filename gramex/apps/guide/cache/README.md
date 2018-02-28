@@ -1,4 +1,7 @@
+---
 title: Caching requests
+prefix: Cache
+...
 
 [TOC]
 
@@ -73,7 +76,7 @@ the URL. But you can change this using the `cache.key` argument.
 
 For example,
 [cache-full-url?x=1](cache-full-url?x=1) and
-[cache-full-url?x=2](cache-full-url?x=2) return different values because they 
+[cache-full-url?x=2](cache-full-url?x=2) return different values because they
 cache the full URL. But
 [cache-only-path?x=1](cache-only-path?x=1) and
 [cache-only-path?x=2](cache-only-path?x=2) return the same value because they

@@ -1,4 +1,7 @@
-title: Gramex connects to data
+---
+title: DataHandler connects to data
+prefix: DataHandler
+...
 
 From **v1.23** DataHandler is deprecated. Use [FormHandler](../formhandler/).
 

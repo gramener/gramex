@@ -1,4 +1,7 @@
+---
 title: Deployment patterns
+prefix: Deploy
+...
 
 [TOC]
 
@@ -500,3 +503,125 @@ Additional notes:
 - To pass the Gramex server version in the Server: HTTP header, use
   "[proxy_pass_header](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_pass_header) Server;"
 - To enable HTTPS, read the Gramener wiki section on [SSL](https://learn.gramener.com/wiki/ssl.html)
+
+
+## Shared deployment
+
+To deploy on Gramener's [UAT server](https://uat.gramener.com/monitor/apps), see
+the [UAT deployment](https://learn.gramener.com/wiki/dev.html#deploying) section
+and [deployment tips](https://learn.gramener.com/wiki/dev.html#deployment-tips).
+
+This is a shared deployment, where multiple apps deployed on one Gramex
+instance. Here are common deployment errors in shared environments:
+
+### Works locally but not on server
+
+If your app is at `D:/app/`, don't run gramex from `D:/app/`. Run it from `D:/`
+with this `D:/gramex.yaml`:
+
+```yaml
+import: app/gramex.yaml
+```
+
+This tests the application in a shared deployment setup. The application may
+run from `D:/app/` but fail from `D:/` - giving you a chance to find out why.
+
+### 403 Forbidden
+
+`$GRAMEXPATH/deploy.yaml` disables all non-standard files for
+[security](#security). If another app imports `deploy.yaml`, your application
+may not be able to access a file - e.g. `data.csv`. Create a FileHandler to
+explicitly allow your file.
+
+```yaml
+url:
+  myapp/allow-files:                        # Create/modify a handler to allow files
+    pattern: /$YAMLURL/data/(.*)
+    handler: FileHandler
+    kwargs:
+      path: $YAMLPATH/data/
+      allow: ['data.csv', '*.xlsx']         # Explicitly allow required file types
+```
+
+**Do not use a custom `deploy.yaml`** in your project. Import from `$GRAMEXPATH`
+instead. [Reference](#security). In case of a blanket disallow of files, refer
+to 403 forbidden error above and resolve.
+
+### 404 Not Found
+
+Most often, this is due to relative paths. When running locally, the app
+requests `/style.css`. But on the server, it is deployed at `/app/`. So the URL
+must be `/app/style.css`. To avoid this, always use relative URLs - e.g.
+`style.css`, `../style.css`, etc -- avoid the leading slash.
+
+Another reason is incorrect [handler name conflicts](#handler-name-conflict).
+
+### Handler name conflict
+
+If your app and another app both use a URL handler called `data`, only one of
+these will be loaded.
+
+```yaml
+url:            # THIS IS WRONG!
+    data:       # This is defined by app1 -- only this config is loaded
+        ...
+    data:       # This is defined by app2 -- this is ignored with a warning in the log
+        ...
+```
+
+Ensure that each project's URL handler is pre-fixed with a unique ID:
+
+```yaml
+url:            # THIS IS RIGHT
+    app1/data:  # This is defined by app1
+        ...
+    app2/data:  # This is defined by app2 -- does not conflict with app1/data
+        ...
+```
+
+### Import conflict
+
+If your app and another app both `import:` the same YAML script, the namespaces
+inside those will obviously collide:
+
+```yaml
+import:                                     # THIS IS WRONG!
+    app1/ui:                                # app1
+        path: $GRAMEXAPPS/ui/gramex.yaml    # imports UI components
+        YAMLURL: $YAMLURL/app1/ui/          # at /app1/ui/
+    app2/ui:                                # app2
+        path: $GRAMEXAPPS/ui/gramex.yaml    # imports UI components
+        YAMLURL: $YAMLURL/app2/ui/          # at /app2/ui/
+```
+
+Add the [namespace](#../config/#imports) key to avoid collision in specified
+sections. A safe use is `namespace: [url, cache, schedule, watch]`
+
+```yaml
+import:                                     # THIS IS RIGHT
+    app1/ui:                                # app1
+        namespace: [url]                    # ensures that url: section names are unique
+        path: $GRAMEXAPPS/ui/gramex.yaml
+        YAMLURL: $YAMLURL/app1/ui/
+    app2/ui:                                # app2
+        namespace: [url]                    # ensures that url: section names are unique
+        path: $GRAMEXAPPS/ui/gramex.yaml
+        YAMLURL: $YAMLURL/app2/ui/
+```
+
+### Python file conflict
+
+If your app and another app both use a Python file called `common.py`, only one
+of these is imported. Prefix the Python files with a unique name, e.g.
+`app1_common.py`.
+
+### Missing dependency
+
+Your app may depend on an external library -- e.g. a Python module, node module
+or R library. Ensure that this is installed on the server. The preferred method
+is to use the [gramex install](../install/) method. Specifically:
+
+- Add Python modules to `requirements.txt`
+- Add Node modules to `package.json`
+- Add R libraries to `setup.sh` -- and ensure that the correct R is used
+- Add any other custom code to `setup.sh`

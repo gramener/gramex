@@ -1,4 +1,7 @@
+---
 title: Privacy policy
+prefix: Privacy
+...
 
 This website logs information about who visited which page, and when.
 
@@ -13,7 +16,7 @@ This information is not used for any purpose other than to debug our application
 For any questions, please email `contact@gramener.com` or write to:
 
 Gramener Technologies Pvt Ltd
-<br>Plot 9/2, 2nd Floor 
+<br>Plot 9/2, 2nd Floor
 <br>Survey 64, HUDA Techno Enclave
 <br>Phase 2, Madhapur
 <br>Hyderabad 500081, India

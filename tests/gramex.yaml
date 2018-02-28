@@ -2185,6 +2185,21 @@ url:
       credentials:
         activeuser: activeuser1
 
+  auth/userkey:
+    pattern: /auth/userkey
+    handler: SimpleAuth
+    kwargs:
+      template: $YAMLPATH/auth.html
+      user_key: userkey
+      credentials:
+        alpha: alpha
+
+  auth/userkey_logout:
+    pattern: /auth/userkey_logout
+    handler: LogoutHandler
+    kwargs:
+      user_key: userkey
+
   pptx/source:
     pattern: /pptx/source
     handler: PPTXHandler

@@ -14,6 +14,7 @@ from __future__ import unicode_literals
 
 import os
 import sys
+import json
 import atexit
 import signal
 import socket
@@ -24,6 +25,7 @@ import mimetypes
 import threading
 import webbrowser
 import tornado.web
+import gramex.data
 import gramex.cache
 import logging.config
 import concurrent.futures
@@ -40,6 +42,7 @@ from gramex.http import OK, NOT_MODIFIED
 from . import urlcache
 from .ttlcache import MAXTTL
 from .emailer import SMTPMailer
+from .sms import AmazonSNS, Twilio
 
 # Service information, available as gramex.service after gramex.init() is called
 info = AttrDict(
@@ -51,8 +54,10 @@ info = AttrDict(
     threadpool=concurrent.futures.ThreadPoolExecutor(1),
     eventlog=AttrDict(),
     email=AttrDict(),
+    sms=AttrDict(),
     _md=None,
 )
+_cache = AttrDict()
 atexit.register(info.threadpool.shutdown)
 
 
@@ -217,9 +222,14 @@ def schedule(conf):
     from . import scheduler
     _stop_all_tasks(info.schedule)
     for name, sched in conf.items():
+        _key = _cache_key('schedule', name, sched)
+        if _key in _cache:
+            info.schedule[name] = _cache[_key]
+            continue
         try:
             app_log.info('Initialising schedule:%s', name)
-            info.schedule[name] = scheduler.Task(name, sched, info.threadpool, ioloop=None)
+            _cache[_key] = scheduler.Task(name, sched, info.threadpool, ioloop=None)
+            info.schedule[name] = _cache[_key]
         except Exception as e:
             app_log.exception(e)
 
@@ -425,6 +435,10 @@ def alert(conf):
     schedule_keys = 'minutes hours dates months weekdays years startup'.split()
 
     for name, alert in conf.items():
+        _key = _cache_key('alert', name, alert)
+        if _key in _cache:
+            info.alert[name] = _cache[_key]
+            continue
         app_log.info('Initialising alert: %s', name)
         schedule = {key: alert[key] for key in schedule_keys if key in alert}
         if not schedule:
@@ -436,7 +450,8 @@ def alert(conf):
         schedule['function'] = create_alert(name, alert)
         if schedule['function'] is not None:
             try:
-                info.alert[name] = scheduler.Task(name, schedule, info.threadpool, ioloop=None)
+                _cache[_key] = scheduler.Task(name, schedule, info.threadpool, ioloop=None)
+                info.alert[name] = _cache[_key]
             except Exception:
                 app_log.exception('Failed to initialize alert: %s', name)
 
@@ -611,6 +626,10 @@ def url(conf):
     # Sort the handlers in descending order of priority
     specs = sorted(conf.items(), key=_sort_url_patterns, reverse=True)
     for name, spec in specs:
+        cache_key = _cache_key('url', name, spec)
+        if cache_key in _cache:
+            handlers.append(_cache[cache_key])
+            continue
         if 'handler' not in spec:
             app_log.error('url: %s: no handler specified')
             continue
@@ -628,7 +647,8 @@ def url(conf):
             class_vars['cache'] = _cache_generator(urlspec['cache'], name=name)
         else:
             class_vars['cache'] = None
-        urlspec.handler = type(spec.handler, (handler, ), class_vars)
+        # PY27 type() requires the class name to be a string, not unicode
+        urlspec.handler = type(str(spec.handler), (handler, ), class_vars)
 
         # If there's a setup method, call it to initialize the class
         kwargs = urlspec.get('kwargs', {})
@@ -638,12 +658,14 @@ def url(conf):
             except Exception:
                 app_log.exception('url %s: setup exception in handler %s', name, spec.handler)
 
-        handlers.append(tornado.web.URLSpec(
+        handler_entry = tornado.web.URLSpec(
             name=name,
             pattern=_url_normalize(urlspec.pattern),
             handler=urlspec.handler,
             kwargs=kwargs,
-        ))
+        )
+        _cache[cache_key] = handler_entry
+        handlers.append(handler_entry)
 
     info.app.clear_handlers()
     info.app.add_handlers('.*$', handlers)
@@ -661,6 +683,10 @@ def watch(conf):
 
     events = {'on_modified', 'on_created', 'on_deleted', 'on_moved', 'on_any_event'}
     for name, config in conf.items():
+        _key = _cache_key('watch', name, config)
+        if _key in _cache:
+            watcher.watch(name, **_cache[_key])
+            continue
         if 'paths' not in config:
             app_log.error('watch:%s has no "paths"', name)
             continue
@@ -676,7 +702,8 @@ def watch(conf):
                     if not callable(config[event]):
                         app_log.error('watch:%s.%s is not callable', name, event)
                         config[event] = lambda event: None
-        watcher.watch(name, **config)
+        _cache[_key] = config
+        watcher.watch(name, **_cache[_key])
 
 
 def cache(conf):
@@ -714,7 +741,6 @@ def eventlog(conf):
     if not conf.path:
         return
 
-    import json
     import time
     import sqlite3
 
@@ -747,7 +773,30 @@ def eventlog(conf):
 def email(conf):
     '''Set up email service'''
     for name, config in conf.items():
-        info.email[name] = SMTPMailer(**config)
+        _key = _cache_key('email', name, config)
+        if _key in _cache:
+            info.email[name] = _cache[_key]
+            continue
+        info.email[name] = _cache[_key] = SMTPMailer(**config)
+
+
+sms_notifiers = {
+    'amazonsns': AmazonSNS,
+    'twilio': Twilio,
+}
+
+
+def sms(conf):
+    '''Set up SMS service'''
+    for name, config in conf.items():
+        _key = _cache_key('sms', name, config)
+        if _key in _cache:
+            info.sms[name] = _cache[_key]
+            continue
+        notifier_type = config.pop('type')
+        if notifier_type not in sms_notifiers:
+            raise ValueError('sms: %s: Unknown type: %s' % (name, notifier_type))
+        info.sms[name] = _cache[_key] = sms_notifiers[notifier_type](**config)
 
 
 def test(conf):
@@ -755,3 +804,7 @@ def test(conf):
     # Remove auth: section when running gramex.
     # If there are passwords here, they will not be loaded in memory
     conf.pop('auth', None)
+
+
+def _cache_key(*args):
+    return json.dumps(args, sort_keys=True, separators=(',', ':'))

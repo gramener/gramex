@@ -1,10 +1,13 @@
+---
 title: Form Handler Filtering data with ease
+prefix: Tip
+...
 
 Gramex 1.21 has a powerful handler called [FormHandler](../formhandler/). This makes it easy to render data. You can stop writing FunctionHandler to do this.
 
 ## Read data from files
 
-You can just point to a CSV, XLSX or HDF file. 
+You can just point to a CSV, XLSX or HDF file.
 
     :::yaml
     handler: FormHandler

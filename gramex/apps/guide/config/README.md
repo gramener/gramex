@@ -1,24 +1,29 @@
+---
 title: Configurations control Gramex
+prefix: Config
+...
 
 [TOC]
 
 All features of Gramex are controlled by `gramex.yaml`. Here's a simple
 `gramex.yaml` that serves the file `home.html` as the home page.
 
-    :::yaml
-    url:                            # URL configuration section
-        root:                       # Add a configuration called "root"
-            pattern: /              # It maps the URL / (the home page)...
-            handler: FileHandler    # ... to a Gramex FileHandler
-            kwargs:                 # ... and passes it these arguments:
-                path: home.html     # Use home.html as the path to serve
-    app:
-        browser: /                  # Open the home page when the app loads
+```yaml
+url:                            # URL configuration section
+    root:                       # Add a configuration called "root"
+        pattern: /              # It maps the URL / (the home page)...
+        handler: FileHandler    # ... to a Gramex FileHandler
+        kwargs:                 # ... and passes it these arguments:
+            path: home.html     # Use home.html as the path to serve
+app:
+    browser: /                  # Open the home page when the app loads
+```
 
 Create this `home.html` in the same directory:
 
-    :::html
-    <h1>Hello Gramex</h1>
+```html
+<h1>Hello Gramex</h1>
+```
 
 Run `gramex` from that directory. You should see "Hello Gramex" on your browser.
 (You may need to press `Ctrl+F5` or `Ctrl+R` to refresh the cache.
@@ -46,28 +51,40 @@ The `app:` section controls Gramex's startup. It has these sub-sections.
 The app section alone can be over-ridden from the command line. (Other sections
 cannot.) For example:
 
-    :::shell
-    gramex --listen.port=8888 --browser=/
+```bash
+gramex --listen.port=8888 --settings.debug=True --browser=/
+```
 
 ... will override the `gramex.yaml` parameters for the `port` and `browser`.
+This is the same as specifying:
+
+```yaml
+app:
+    listen:
+        port: 8888
+    settings:
+        debug: True
+    browser: '/'
+```
 
 ## URL mapping
 
 The `url:` section maps URLs to content. Here is an example:
 
-    :::yaml
-    url:
-        homepage:                           # "homepage" can be replaced with any unique name
-            pattern: /                      # Map the URL /
-            handler: FileHandler            # using a built-in FileHandler
-            kwargs:                         # Pass these options to FileHandler
-                path: $YAMLPATH/index.html  # Show the index.html in the same directory as this YAML file
+```yaml
+url:
+    homepage:                           # "homepage" can be replaced with any unique name
+        pattern: /                      # Map the URL /
+        handler: FileHandler            # using a built-in FileHandler
+        kwargs:                         # Pass these options to FileHandler
+            path: $YAMLPATH/index.html  # Show the index.html in the same directory as this YAML file
 
-        hello:                              # A unique name for this mapping
-            pattern: /hello                 # Map the URL /hello
-            handler: FunctionHandler        # using the build-in FunctionHandler
-            kwargs:                         # Pass these options to FunctionHandler
-                function: str("Hello")      # Run the str() function with the argument "Hello"
+    hello:                              # A unique name for this mapping
+        pattern: /hello                 # Map the URL /hello
+        handler: FunctionHandler        # using the build-in FunctionHandler
+        kwargs:                         # Pass these options to FunctionHandler
+            function: str("Hello")      # Run the str() function with the argument "Hello"
+```
 
 The `url:` section is a name - mapping dictionary. The names are just unique
 identifiers. The mappings have these keys:
@@ -88,20 +105,22 @@ identifiers. The mappings have these keys:
 You an write your own handler by extending [BaseHandler](../handlers/). For
 example, create a file called `hello.py` with the following content:
 
-    :::python
-    from gramex.handlers import BaseHandler
+```python
+from gramex.handlers import BaseHandler
 
-    class Hello(BaseHandler):
-        def get(self):
-            self.write('hello world')
+class Hello(BaseHandler):
+    def get(self):
+        self.write('hello world')
+```
 
 Now, you can add this configuration to your `url:` section:
 
-    :::yaml
-    url:                # Do not include this line if you already have it
-        hello:                        # a name you want to give to the handler
-            pattern: /hello           # URL pattern
-            handler: hello.Hello      # class that implements the handler
+```yaml
+url:                # Do not include this line if you already have it
+    hello:                        # a name you want to give to the handler
+        pattern: /hello           # URL pattern
+        handler: hello.Hello      # class that implements the handler
+```
 
 This renders "hello world" at the URL [/hello](hello).
 
@@ -112,14 +131,15 @@ This renders "hello world" at the URL [/hello](hello).
 The `kwargs:` section of `url:` accepts a `headers:` key that sets custom HTTP
 headers. For example:
 
-    :::yaml
-    pattern: /custom-header
-    handler: ...
-    kwargs:
-        ...
-        headers:
-            Content-Type: text/plain          # Display as plain text
-            Access-Control-Allow-Origin: '*'  # Allow CORS (all servers can access via AJAX)
+```yaml
+pattern: /custom-header
+handler: ...
+kwargs:
+    ...
+    headers:
+        Content-Type: text/plain          # Display as plain text
+        Access-Control-Allow-Origin: '*'  # Allow CORS (all servers can access via AJAX)
+```
 
 ... adds the Content-Type and CORS settings to the response headers.
 
@@ -131,23 +151,25 @@ The `log:` section defines Gramex's logging behaviour. See
 
 To only log WARNING messages to the console, use:
 
-    :::yaml
-    log:
-        root:
-            level: WARNING      # Default: DEBUG. Can be INFO, WARNING, ERROR
+```yaml
+log:
+    root:
+        level: WARNING      # Default: DEBUG. Can be INFO, WARNING, ERROR
+```
 
 From **v1.23**, Gramex also saves all console logs to `logs/gramex.log` under
 [$GRAMEXDATA](#predefined-variables). To change the path, use:
 
-    :::yaml
-    log:
-        handlers:
-            logfile:
-                filename: $GRAMEXDATA/your-app/gramex.log       # Change file location
+```yaml
+log:
+    handlers:
+        logfile:
+            filename: $GRAMEXDATA/your-app/gramex.log       # Change file location
+```
 
 The log file is backed up weekly by default. You can change these [parameters][trfh]:
 
-- `filename`: defaults to `$GRAMEXDATA/logs/gramex.log` 
+- `filename`: defaults to `$GRAMEXDATA/logs/gramex.log`
 - `when`: can be `s`, `m`, `h`, `d`, `w0` to `w6` or `midnight`. See [TimedRotatingFileHandler][trfh]. Defaults to `w0`, i.e. Monday
 - `interval`: for example, if this is 6 and `when: h`, the log file is rotated every 6 hours.  Defaults to 1, i.e. every Monday
 - `backupCount`: number of backups to retain. Defaults to 52, i.e. 52 weeks of backup
@@ -177,19 +199,21 @@ It logs:
 
 To change the location of this file, use `log.handlers.requests.filename`:
 
-    :::yaml
-    log:
-        handlers:
-            requests:
-                filename: $GRAMEXDATA/your-app/requests.csv      # The path can point ANYWHERE
+```yaml
+log:
+    handlers:
+        requests:
+            filename: $GRAMEXDATA/your-app/requests.csv      # The path can point ANYWHERE
+```
 
 To change the columns that are logged, use `log.handlers.requests.keys:`
 
-    :::yaml
-    log:
-        handlers:
-            requests:
-                keys: [time, ip, user.email, status, uri]
+```yaml
+log:
+    handlers:
+        requests:
+            keys: [time, ip, user.email, status, uri]
+```
 
 You can use any of the following as keys for logging:
 
@@ -226,19 +250,21 @@ Gramex's [auth handlers](../auth/) log all login and logout events to
 
 To change the location of this file, use `log.handlers.user.filename`:
 
-    :::yaml
-    log:
-        handlers:
-            user:
-                filename: $GRAMEXDATA/your-app/user.csv     # The path can point ANYWHERE
+```yaml
+log:
+    handlers:
+        user:
+            filename: $GRAMEXDATA/your-app/user.csv     # The path can point ANYWHERE
+```
 
 To change the columns that are logged, use `log.handlers.user.keys:`
 
-    :::yaml
-    log:
-        handlers:
-            user:
-                keys: [time, ip, user, status, uri, error]
+```yaml
+log:
+    handlers:
+        user:
+            keys: [time, ip, user, status, uri, error]
+```
 
 For the list of valid keys, see [request logging](#request-logging).
 
@@ -247,17 +273,18 @@ For the list of valid keys, see [request logging](#request-logging).
 Until **v1.22**, the `log:` section of auth handlers  could be configured to
 log events like this:
 
-    :::yaml
-    auth:
-        pattern: /$YAMLURL/auth
-        handler: SimpleAuth
-        kwargs:
-            log:                                # Log this when a user logs in via this handler
-                fields:                         # List of fields:
-                  - session.id                  #   handler.session['id']
-                  - current_user.id             #   handler.current_user['id']
-                  - request.remote_ip           #   handler.request.remote_ip
-                  - request.headers.User-Agent  #   handler.request.headers['User-Agent']
+```yaml
+auth:
+    pattern: /$YAMLURL/auth
+    handler: SimpleAuth
+    kwargs:
+        log:                                # Log this when a user logs in via this handler
+            fields:                         # List of fields:
+                - session.id                  #   handler.session['id']
+                - current_user.id             #   handler.current_user['id']
+                - request.remote_ip           #   handler.request.remote_ip
+                - request.headers.User-Agent  #   handler.request.headers['User-Agent']
+```
 
 The `log:` key has been **removed since v1.23**.
 
@@ -278,15 +305,16 @@ uses it by default.
 
 URL handlers allow custom logging of errors. For example, to show a custom 404 page, use:
 
-    :::yaml
-    url:
-        pattern: ...
-        handler: ...
-        kwargs:
-            ...
-            error:
-                404:
-                  path: $YAMLPATH/error-page.html
+```yaml
+url:
+    pattern: ...
+    handler: ...
+    kwargs:
+        ...
+        error:
+            404:
+                path: $YAMLPATH/error-page.html
+```
 
 Here is an example of an [error-page](error-page). The error page is rendered as
 a Tornado template with 3 keyword arguments:
@@ -298,15 +326,16 @@ a Tornado template with 3 keyword arguments:
 
 The error page can also be a function. For example:
 
-    :::yaml
-    url:
-        pattern: ...
-        handler: ...
-        kwargs:
-            ...
-            error:
-                500:
-                  function: config_error_page.show_error
+```yaml
+url:
+    pattern: ...
+    handler: ...
+    kwargs:
+        ...
+        error:
+            500:
+                function: config_error_page.show_error
+```
 
 The function is passed the same 3 keyword arguments mentioned above. Its return
 value is rendered as a string.
@@ -316,25 +345,25 @@ To repeat error pages across multiple handlers, see [Reusing Configurations](#re
 Both methods support some customisations. Here is a full example showing the
 customisations:
 
-    :::yaml
-    url:
-        pattern: ...
-        handler: ...
-        kwargs:
-            ...
-            error:
-                404:
-                  path: $YAMLPATH/error-page.json   # Content-Type is set to application/json based on extension
-                  autoescape: false         # To avoid converting quotes to &quot; etc
-                  whitespace: oneline       # Remove all whitespace. 'single' preserves newlines. 'all' preserves all whitespace
-                  headers:                  # Override HTTP headers
-                      Content-Type: text/plain
-                500:
-                  # Call your function errors.show with the predefined parameters available
-                  function: errors.show(status_code, kwargs, handler)
-                  headers:                                  # Override HTTP headers
-                      Cache-Control: no-cache
-
+```yaml
+url:
+    pattern: ...
+    handler: ...
+    kwargs:
+        ...
+        error:
+            404:
+                path: $YAMLPATH/error-page.json   # Content-Type is set to application/json based on extension
+                autoescape: false         # To avoid converting quotes to &quot; etc
+                whitespace: oneline       # Remove all whitespace. 'single' preserves newlines. 'all' preserves all whitespace
+                headers:                  # Override HTTP headers
+                    Content-Type: text/plain
+            500:
+                # Call your function errors.show with the predefined parameters available
+                function: errors.show(status_code, kwargs, handler)
+                headers:                                  # Override HTTP headers
+                    Cache-Control: no-cache
+```
 
 ## Redirection
 
@@ -344,18 +373,19 @@ user after completing the action. For example, after a
 [logging in](../auth/) or after an
 [UploadHandler](../uploadhandler/) is done. Here is the syntax:
 
-    :::yaml
-    url:
-        pattern: ...
-        handler: ...
-        kwargs:
-            ...
-            # Redirect the browser to this path after execution
-            redirect: /$YAMLURL/path-to-redirect
-            # You can also specify an absolute path, e.g.
-            # redirect: /home
-            # ... or a relative path, e.g.
-            # redirect: ../css/style.css
+```yaml
+url:
+    pattern: ...
+    handler: ...
+    kwargs:
+        ...
+        # Redirect the browser to this path after execution
+        redirect: /$YAMLURL/path-to-redirect
+        # You can also specify an absolute path, e.g.
+        # redirect: /home
+        # ... or a relative path, e.g.
+        # redirect: ../css/style.css
+```
 
 **NOTE**: You can only redirect pages that don't return any content. If the
 handler renders content or triggers a download, redirection will fail.
@@ -369,13 +399,14 @@ Redirection can also be customised based on:
 These can be specified in any order, and are all optional. (If none of these is
 specified, the user is redirected to the home page `/`.) For example:
 
-    :::yaml
-        kwargs:
-          ...
-          redirect:             # Redirect options are applied in order
-            query: next         # If ?next= is specified, use it
-            header: Referer     # Else use the HTTP header Referer if it exists
-            url: /$YAMLURL/     # Else redirect to the directory where this gramex.yaml is present
+```yaml
+    kwargs:
+        ...
+        redirect:             # Redirect options are applied in order
+        query: next         # If ?next= is specified, use it
+        header: Referer     # Else use the HTTP header Referer if it exists
+        url: /$YAMLURL/     # Else redirect to the directory where this gramex.yaml is present
+```
 
 With this configuration, `?next=../config/` will take you to the `../config/`
 page.
@@ -424,9 +455,10 @@ See the [scheduler](../scheduler/) documentation for examples.
 
 The `mime:` section lets you add custom MIME types for extensions. For example:
 
-    :::yaml
-    mime:
-        .yml: text/yaml
+```yaml
+mime:
+    .yml: text/yaml
+```
 
 ... maps the `.yml` extension to the `text/yaml` MIME type. This is used by
 [FileHandler](../filehandler/) and other services to set the `Content-Type`
@@ -437,94 +469,105 @@ header.
 
 One config file can import another. For example:
 
-    :::yaml
-    import: another.yaml        # import this YAML file relative to current file path
+```yaml
+import: another.yaml        # import this YAML file relative to current file path
+```
 
 This "copy-pastes" the contents of `another.yaml` from the same directory as this
 file.
 
 You can import multiple files as a list, like this:
 
-    :::yaml
-    import: 
-      - another.yaml            # Relative paths are OK. Import is relative to this YAML file
-      - d:/temp/gramex.yaml     # Absoslute paths are OK
-      - '*/gramex.yaml'         # Any gramex.yaml file under an immediate sub-directory
-      - '**/gramex.yaml'        # Any gramex.yaml file under ANY sub-directory
+```yaml
+import:
+    - another.yaml            # Relative paths are OK. Import is relative to this YAML file
+    - d:/temp/gramex.yaml     # Absoslute paths are OK
+    - '*/gramex.yaml'         # Any gramex.yaml file under an immediate sub-directory
+    - '**/gramex.yaml'        # Any gramex.yaml file under ANY sub-directory
+```
 
 The following two imports mean the same thing:
 
-    :::yaml
-    import: app.yaml        # imports app.yaml
-    import:
-        path: app.yaml      # imports app.yaml - same as the previous syntax
+```yaml
+import: app.yaml        # imports app.yaml
+import:
+    path: app.yaml      # imports app.yaml - same as the previous syntax
+```
 
 The second syntax lets you define new variables when importing the file. For example:
 
-    :::yaml
-    import:
-        path: app1/gramex.yaml
-        var1: value               # $var1 will be replaced with "value"
-        var2: {key: value}        # $var2 will be replaced with {"key": "value"}
+```yaml
+import:
+    path: app1/gramex.yaml
+    var1: value               # $var1 will be replaced with "value"
+    var2: {key: value}        # $var2 will be replaced with {"key": "value"}
+```
 
 The `$YAMLURL` and `$YAMLPATH` [variables](#yaml-variables) work as expected. But
 you may change `$YAMLURL` to mount an import at a different URL. Consider this
 `dir/app.yaml`:
 
-    :::yaml
-    url:
-        myroot:
-            pattern: /$YAMLURL/
-            ...
+```yaml
+url:
+    myroot:
+        pattern: /$YAMLURL/
+        ...
+```
 
 When imported using `import: dir/app.yaml`, the pattern becomes `/dir/`. But you
 may want to mount applications in different locations, so you can change the
 imported file's $YAMLURL as follows:
 
-    :::
-    import:
-        path: dir/app.yaml          # pattern becomes /dir/ by default
-        YAMLURL: /newappdir/        # pattern is /newappdir/ instead
-        # Here are some other options
-        # YAMLURL: $YAMLURL         # pattern is $YAMLURL, as if dir/app.yaml were copy-pasted here
-        # YAMLURL: /app/dir/        # pattern is /app/dir/
+```yaml
+import:
+    path: dir/app.yaml          # pattern becomes /dir/ by default
+    YAMLURL: /newappdir/        # pattern is /newappdir/ instead
+    # Here are some other options
+    # YAMLURL: $YAMLURL         # pattern is $YAMLURL, as if dir/app.yaml were copy-pasted here
+    # YAMLURL: /app/dir/        # pattern is /app/dir/
+```
 
 To specify different variables for multiple imports, use sections like this:
 
-    :::yaml
-    import:
-        app1:
-            path: app1.yaml
-            YAMLURL: /app1/
-        app2:
-            path: app2.yaml
-            YAMLURL: /app2/
+```yaml
+import:
+    app1:
+        path: app1.yaml
+        YAMLURL: /app1/
+    app2:
+        path: app2.yaml
+        YAMLURL: /app2/
+```
 
 The keys `app1`, `app2`, etc. are just identifiers, not used for anything.
 
 The imported configuration **cannot change** existing configuration. For example:
 
-    :::yaml
-    import:
-        path: '*/gramex.yaml'
+```yaml
+import:
+    path: '*/gramex.yaml'
+```
 
 ... will import all `gramex.yaml` files from subdirectories. If they each have a
 `url:` section, **only the first will be used**. The rest will be ignored.
 
 To avoid duplicate keys getting dropped, use namespaces like this:
 
-    import:
-        path: '*/gramex.yaml'
-        namespace: [url, schedule, cache]
+```yaml
+import:
+    path: '*/gramex.yaml'
+    namespace: [url, schedule, cache]
+```
 
 This replaces the keys under `url:`, `schedule:`, and `cache:` with a unique
 prefix, ensuring that these sections are merged without conflict.
 
 You can also use imports within sections. For example:
 
-    :::yaml
-    url:
-      import: app1/gramex.yaml  # Imports app1/gramex.yaml into the url: section
+```yaml
+url:
+    import: app1/gramex.yaml  # Imports app1/gramex.yaml into the url: section
+```
 
 **Notes**
 
@@ -542,16 +585,18 @@ Templates can use variables. Variables are written as `$VARIABLE` or
 `${VARIABLE}`. All environment variables are available as variables by default.
 For example:
 
-    :::yaml
-    import: $HOME/gramex.yaml       # imports gramex.yaml from your home directory
+```yaml
+import: $HOME/gramex.yaml       # imports gramex.yaml from your home directory
+```
 
 You can define or override variables using the `variables:` section like this:
 
-    :::yaml
-    variables:
-      URLROOT: "/site"                  # Define $URLROOT
-      HOME: {default: "/home"}          # Define $HOME if not defined earlier
-      PATH: $URLROOT/path               # Define $PATH based on $URLROOT
+```yaml
+variables:
+    URLROOT: "/site"                  # Define $URLROOT
+    HOME: {default: "/home"}          # Define $HOME if not defined earlier
+    PATH: $URLROOT/path               # Define $PATH based on $URLROOT
+```
 
 `$URLROOT` is set to `/site`. If the variable was defined earlier in another
 YAML file or the environment, that value is lost.
@@ -564,18 +609,20 @@ home, but does not override a previous value.
 
 Variables can be of any type. For example:
 
-    :::yaml
-    variables:
-      NUMBER: 10
-      BOOLEAN: false
+```yaml
+variables:
+    NUMBER: 10
+    BOOLEAN: false
+```
 
 They are substituted as-is if the variable is used directly. If it's part of a
 string substitution, then it is converted into a string. For example:
 
-    :::yaml
-    number: $NUMBER             # This is the int 10
-    number: /$NUMBER            # This is the string "/10"
-    mix: a-${BOOLEAN}-b         # This is the string "a-False-b"
+```yaml
+number: $NUMBER             # This is the int 10
+number: /$NUMBER            # This is the string "/10"
+mix: a-${BOOLEAN}-b         # This is the string "a-False-b"
+```
 
 ### Predefined variables
 
@@ -599,47 +646,52 @@ available in every YAML file. (The examples assume you are processing
 
 You can also access these from Python modules:
 
-    :::python
-    from gramex.config import variables
-    variables['GRAMEXPATH']     # Same as $GRAMEXPATH
-    variables['GRAMEXDATA']     # Same as $GRAMEXDATA
+```python
+from gramex.config import variables
+variables['GRAMEXPATH']     # Same as $GRAMEXPATH
+variables['GRAMEXDATA']     # Same as $GRAMEXDATA
+```
 
 ### Computed variables
 
 Variables can also be computed. For example, this runs `utils.get_root` to
 assign `$URLROOT`:
 
-    :::yaml
-    variables:
-      URLROOT:
-        function: utils.get_root
+```yaml
+variables:
+    URLROOT:
+    function: utils.get_root
+```
 
 By default, the function is called with the variable name as key, i.e.
 `utils.get_root(key='URLROOT')`. But you can specify any arguments. For example,
 this calls `utils.get_root('URLROOT', 'test', x=1)`:
 
-    :::yaml
-    variables:
-      URLROOT:
-        function: utils.get_root(key, 'test', x=1)
+```yaml
+variables:
+    URLROOT:
+    function: utils.get_root(key, 'test', x=1)
+```
 
 This is another way of doing the same thing:
 
-    :::yaml
-    variables:
-      URLROOT:
-        function: utils.get_root
-        args: [=key, 'test']
-        kwargs: {x: 1}
+```yaml
+variables:
+    URLROOT:
+    function: utils.get_root
+    args: [=key, 'test']
+    kwargs: {x: 1}
+```
 
 Computed variables can also use defaults. For example, this assigns `get_home()`
 to `$HOME` only if it's not already defined.
 
-    :::yaml
-    variables:
-      HOME:
-        default:
-            function: utils.get_home()
+```yaml
+variables:
+    HOME:
+    default:
+        function: utils.get_home()
+```
 
 (Note: The function arguments cannot be variables as of now.)
 
@@ -653,10 +705,11 @@ practice, read [deployment patterns](../deploy/).
 You can set variables based on a conditional expression. For example, this sets
 `$PORT` based on `$OS`:
 
-    :::yaml
-    variables:
-        PORT:
-          function: 4444 if "$OS".lower() is 'windows' else 8888
+```yaml
+variables:
+    PORT:
+        function: 4444 if "$OS".lower() is 'windows' else 8888
+```
 
 ## Conditions
 
@@ -666,49 +719,54 @@ Any YAML dictionary like `key if condition: val` is replaced with `key: val` if
 
 For example, this sets up different authentications on Windows vs non-Windows:
 
-    :::yaml
-    auth if 'win' in sys.platform:
-        pattern: /login
-        handler: IntegratedAuth
-    auth if 'win' not in sys.platform:
-        pattern: /login
-        handler: LDAPAuth
+```yaml
+auth if 'win' in sys.platform:
+    pattern: /login
+    handler: IntegratedAuth
+auth if 'win' not in sys.platform:
+    pattern: /login
+    handler: LDAPAuth
+```
 
 If ` if ` is present in any key, the portion after `if` is evaluated as a Python
 expression. All [YAML variables](#yaml-variables) are available as Python
 variables. For example, you can check the Gramex path using `GRAMEXPATH`:
 
-    :::yaml
-    log:
-        root:
-            # If GRAMEX is running from C:, set log level to debug
-            level if 'C:' in GRAMEXPATH: debug
-            # If GRAMEX is running from D:, set log level to warn
-            level if 'D:' in GRAMEXPATH: warn
+```yaml
+log:
+    root:
+        # If GRAMEX is running from C:, set log level to debug
+        level if 'C:' in GRAMEXPATH: debug
+        # If GRAMEX is running from D:, set log level to warn
+        level if 'D:' in GRAMEXPATH: warn
+```
 
 ## YAML inheritence
 
 Configurations can be overwritten. For example:
 
-    :::yaml
-    a: 1          # This is defined first
-    a: 2          # ... but this overrides it
+```yaml
+a: 1          # This is defined first
+a: 2          # ... but this overrides it
+```
 
 will only use the second line.
 
 Imports over-write the entire key. For example, if `a.yaml` has:
 
-    :::yaml
-    key:
-      x: 1
-      y: 2
-    import: b.yaml
+```yaml
+key:
+    x: 1
+    y: 2
+import: b.yaml
+```
 
 ... and `b.yaml` has:
 
-    :::yaml
-    key:
-      z: 3
+```yaml
+key:
+    z: 3
+```
 
 ... the final `key` will only have `z: 3`.
 
@@ -717,19 +775,21 @@ Gramex uses 3 different configuration files. The first is Gramex's own
 These *update* keys, rather than overwriting them. For example, Gramex's
 `gramex.yaml` has the following `url:` section:
 
-    :::yaml
-    url:
-        default:
-            pattern: /(.*)
-            ...
+```yaml
+url:
+    default:
+        pattern: /(.*)
+        ...
+```
 
 When your `gramex.yaml` uses a `url:` section like this:
 
-    :::yaml
-    url:
-        homepage:
-            pattern: /
-            ...
+```yaml
+url:
+    homepage:
+        pattern: /
+        ...
+```
 
 ... the final URL section will have both the `default` and the `homepage` keys.
 If the application uses the same key as Gramex's `gramex.yaml`, the latter will
@@ -740,9 +800,10 @@ be overwritten.
 Configurations are available in `gramex.conf`. For example, this will print the
 computed value of applications port:
 
-    :::python
-    import gramex
-    print(gramex.conf.app.listen.port)
+```python
+import gramex
+print(gramex.conf.app.listen.port)
+```
 
 `gramex.conf` is meant for reading. Do not change its value.
 
@@ -757,41 +818,43 @@ Sometimes, you need to re-use the same configurations multiple times. YAML's
 [anchors][anchors] support this. For example, this is how you re-use
 authentication:
 
-    :::yaml
-    url1:
-        pattern: ...
-        handler: ...
-        kwargs: ...
-          auth: &GRAMENER_AUTH          # Define a variable called GRAMENER_AUTH
-              membership:               # Whatever is under auth: is copied into GRAMENER_AUTH
-                  hd: [gramener.com]
-    url2:
-        pattern: ...
-        handler: ...
-        kwargs: ...
-          auth: *GRAMENER_AUTH          # Use the variable GRAMENER_AUTH
-          # This is the same as copy-pasting the earlier auth: section here
-          # auth:
-          #     membership:
-          #         hd: [gramener.com]
+```yaml
+url1:
+    pattern: ...
+    handler: ...
+    kwargs: ...
+        auth: &GRAMENER_AUTH          # Define a variable called GRAMENER_AUTH
+            membership:               # Whatever is under auth: is copied into GRAMENER_AUTH
+                hd: [gramener.com]
+url2:
+    pattern: ...
+    handler: ...
+    kwargs: ...
+        auth: *GRAMENER_AUTH          # Use the variable GRAMENER_AUTH
+        # This is the same as copy-pasting the earlier auth: section here
+        # auth:
+        #     membership:
+        #         hd: [gramener.com]
+```
 
 This is how you re-use error page definitions:
 
-    :::yaml
-    url1:
-        pattern: ...
-        handler: ...
-        kwargs:
-            ...
-            error: &DASHBOARD_ERROR      # Define a reference called DASHBOARD_ERROR
-                404: {path: $YAMLPATH/error-page.html}
-                500: {function: config_error_page.show_error}
-    url2:
-        pattern: ...
-        handler: ...
-        kwargs:
-            ...
-            error: *DASHBOARD_ERROR       # Reuse DASHBOARD_ERROR reference
+```yaml
+url1:
+    pattern: ...
+    handler: ...
+    kwargs:
+        ...
+        error: &DASHBOARD_ERROR      # Define a reference called DASHBOARD_ERROR
+            404: {path: $YAMLPATH/error-page.html}
+            500: {function: config_error_page.show_error}
+url2:
+    pattern: ...
+    handler: ...
+    kwargs:
+        ...
+        error: *DASHBOARD_ERROR       # Reuse DASHBOARD_ERROR reference
+```
 
 You can also re-use parts of a configuration. Place any configuration you want in
 the `variables:` section. Then use `<<: *reference` to copy-paste it where you
@@ -799,23 +862,24 @@ need.
 
 For example, if you need to re-use common headers, do this:
 
-    :::yaml
-    variables:
-        # Define any YAML configuration in the variables: section
-        headers: &commonheaders
-            Server: False
-            X-XSS-Protection: '1'
-            X-Frame-Options: SAMEORIGIN
-            ...
+```yaml
+variables:
+    # Define any YAML configuration in the variables: section
+    headers: &commonheaders
+        Server: False
+        X-XSS-Protection: '1'
+        X-Frame-Options: SAMEORIGIN
+        ...
 
-    url:
-        pattern: ...
-        handler: ...
-            kwargs:
-                ...
-                headers:
-                    Content-Type: text/plain
-                    <<: *commonheaders          # Copy-paste this reference
+url:
+    pattern: ...
+    handler: ...
+        kwargs:
+            ...
+            headers:
+                Content-Type: text/plain
+                <<: *commonheaders          # Copy-paste this reference
+```
 
 You can use `<<: *commonheaders` in multiple URL patterns
 
@@ -825,14 +889,52 @@ You can use `<<: *commonheaders` in multiple URL patterns
 
 YAML supports multi-line strings. You can wrap text like this:
 
-    :::yaml
-    query: >
-        SELECT group, SUM(*) FROM table
-        WHERE column > value
-        GROUP BY group
-        ORDER BY group DESC
+```yaml
+query: >
+    SELECT group, SUM(*) FROM table
+    WHERE column > value
+    GROUP BY group
+    ORDER BY group DESC
+```
 
 This is more readable than:
 
-    :::yaml
-    query: SELECT group, SUM(*) FROM table WHERE column > value GROUP BY group ORDER BY group DESC
+```yaml
+query: SELECT group, SUM(*) FROM table WHERE column > value GROUP BY group ORDER BY group DESC
+```
+
+## Dynamic configuration
+
+Gramex can re-configure itself dynamically from a YAML file or from a data structure.
+
+Gramex loads configurations from 3 sources by default:
+
+1. `source`: `gramex.yaml` from `$GRAMEXPATH` - the default Gramex configuration
+2. `base`: `gramex.yaml` from the current directory
+3. `cmd`: [Command line arguments](#command-line-args)
+
+You can write a Python function to extend or modify this configuration by calling
+`gramex.init()`. For example:
+
+```python
+gramex.init(
+    app1=pathlib.Path('/app1/gramex.yaml'),
+    app2=AttrDict(
+        url=AttrDict(
+            app2=AttrDict(
+                pattern='/app2',
+                handler='FileHandler',
+                kwargs=AttrDict(path='/home/app2/index.html'),
+            )
+        )
+    )
+)
+```
+
+This adds 2 apps:
+
+- `app1` loads the configuration from `app1/gramex.yaml` and is refreshed
+  whenever the file changes.
+- `app2` loads the configuration provided. It is refreshed when `gramex.init()`
+  is called again with `app2=` as a parameter. Calls without an `app2=`
+  parameter do not affect the `app2` configuration.

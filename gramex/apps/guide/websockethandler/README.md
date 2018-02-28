@@ -1,4 +1,7 @@
+---
 title: WebSocketHandler
+prefix: WebSocketHandler
+...
 
 [TOC]
 

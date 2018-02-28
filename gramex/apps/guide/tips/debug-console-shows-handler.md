@@ -1,4 +1,7 @@
+---
 title: Gramex console shows handler name
+prefix: Tip
+...
 
 The Gramex console now shows the name of the URL handler that handles a request.
 For example:

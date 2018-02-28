@@ -1,7 +1,7 @@
 module.exports = {
   "env": {
     "browser": true,    // Include browser globals
-    "jquery": true,     // Include jQuery and $
+    "jquery": true      // Include jQuery and $
   },
   "globals": {
     "_": true,          // underscore.js

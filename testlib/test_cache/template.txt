@@ -4,3 +4,9 @@ Do not change the first line above. That is used in the code.
 The rest of this file can be changed.
 
 Unicode: ±©®
+
+- Arabic as سعيد
+- Chinese as 高兴
+- Hindi as खुश
+- Russian as счастливый
+- Tamil as சந்தோஷமாக

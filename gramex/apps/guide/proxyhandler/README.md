@@ -1,4 +1,7 @@
-title: Gramex proxies HTTP requests
+---
+title: ProxyHandler proxies APIs
+prefix: ProxyHandler
+...
 
 [TOC]
 
@@ -71,7 +74,7 @@ All [standard handler kwargs](../handler/) like `auth:`, `cache:`,
 
 ## Google ProxyHandler
 
-This configuration proxies the Google at `googleapis.com`:
+This configuration proxies the Google APIs at `googleapis.com`:
 
 ```yaml
 url:
@@ -117,6 +120,9 @@ Once logged in, you can:
       [google/drive/v3/files](google/drive/v3/files)
     - [List teamdrives](https://developers.google.com/drive/v3/reference/teamdrives/list):
       [google/drive/v3/files](google/drive/v3/teamdrives)
+- Access the [Contacts API](https://developers.google.com/google-apps/contacts/v3/)
+  using `https://www.google.com/m8/feeds/contacts/` as the endpoint
+    - [Contacts updated since 2018](googlecontacts/default/full?updated-min=2018-01-01T00:00:00)
 
 You can also set up a secret key and access the
 [Google Translate API](https://cloud.google.com/translate/docs/quickstart):
@@ -136,6 +142,35 @@ Now you can translate across [languages](https://cloud.google.com/translate/docs
 
 - [How are you in German](googletranslate?q=How+are+you&target=de)
 - [How are you from German to Hindi](googletranslate?q=Wie+geht+es+Ihnen&target=hi)
+
+## Facebook ProxyHandler
+
+This configuration proxies the Facebook Graph API at `graph.facebook.com`:
+
+```yaml
+url:
+    proxyhandler/facebook:
+        pattern: /$YAMLURL/facebook/(.*)
+        handler: ProxyHandler
+        kwargs:
+            url: https://graph.facebook.com/{0}
+            default:
+                access_token: '{handler.session[user][access_token]}'
+```
+
+To access the Facebook APIs, set up a [Facebook Auth handler](../auth/#facebook-auth).
+
+<div class="example">
+  <a class="example-demo" href="../auth/facebook">Log into Facebook</a>
+  <a class="example-src" href="http://code.gramener.com/s.anand/gramex/tree/master/gramex/apps/guide/auth/">Source</a>
+</div>
+
+Once logged in, you can:
+
+- [Access your profile](facebook/me)
+- [Access your feed](facebook/me/feed)
+- [Access your friends](facebook/me/friends)
+- [Access your photos](facebook/me/photos)
 
 
 ## Reverse ProxyHandler

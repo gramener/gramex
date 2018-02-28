@@ -1,4 +1,7 @@
+---
 title: Testing build errors locally
+prefix: Tip
+...
 
 To test build errors locally, set it up using:
 

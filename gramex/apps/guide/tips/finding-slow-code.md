@@ -1,4 +1,7 @@
+---
 title: Finding slow code
+prefix: Tip
+...
 
 The first step to optimising code is finding slow code.
 
@@ -19,7 +22,7 @@ lines to see how fast it runs. Here is a simple example:
         timer('ran some_code()')
 
 This prints the following message on the log:
- 
+
     I 05-May 08:16:38 debug:54 0.102s start [module.function:56]
     I 05-May 08:16:38 debug:54 0.012s ran some_code() [module.function:58]
 

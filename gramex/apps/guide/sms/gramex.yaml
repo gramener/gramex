@@ -1,0 +1,25 @@
+sms:
+  amazonsns:
+    type: amazonsns
+    # Credentials for the gramex.guide IAM role on services@gramener.com AWS account
+    # To create a user, visit https://console.aws.amazon.com/iam/home
+    # These are credentials for the gramex.guide IAM with full SNS access
+    aws_access_key_id: AKIAJWQUPK6W7QDPK6YQ
+    aws_secret_access_key: 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
+    region_name: ap-southeast-1
+    smstype: Transactional
+
+url:
+  sms/send:
+    pattern: /$YAMLURL/send
+    handler: FunctionHandler
+    kwargs:
+      function: gramex.service.sms['amazonsns'].send(
+              to=handler.get_arg('to'),
+              subject=handler.get_arg('subject'),
+              sender=handler.get_arg('sender', 'Gramex'),
+          )
+      # POST method should not require XSRF
+      xsrf_cookies: false
+      headers:
+        Content-Type: application/json

@@ -1,8 +1,11 @@
+---
 title: Logins for apps on UAT
+prefix: Tip
+...
 
 The majority of our projects are now hosted on <https://uat.gramener.com/monitor/apps>
 
-From now on, the page also displays the login IDs and passwords for these apps. 
+From now on, the page also displays the login IDs and passwords for these apps.
 
 To add this to your project, add a **test:** section to your **gramex.yaml**.
 

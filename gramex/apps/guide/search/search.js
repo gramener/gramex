@@ -1,3 +1,4 @@
+/* globals lunr */
 $.ajax('search.json')
   .done(function(data) {
     var terms = [],
@@ -15,4 +16,27 @@ $.ajax('search.json')
     terms.forEach(function(row) {
       $index.append('<a href="../' + row[1] + '">' + row[0] + '</a>')
     })
+  })
+
+$.ajax('searchindex.json')
+  .done(function(index) {
+    var idx = lunr.Index.load(index.index)
+    var docs = index.docs
+    var $results = $('#searchresults')
+    $('#search')
+      .val(location.hash.replace(/^#/, ''))
+      .on('input', function() {
+        var text = $(this).val().replace(/^\s+/, '').replace(/\s+$/, '')
+        if (text) {
+          var results = idx.search(text)
+          if (results.length)
+            $results.html(results.slice(0, 20).map(function(result) {
+              var d = docs[result.ref]
+              return '<div><a href="../' + d.link + '">' + d.prefix + ' &raquo; ' + d.title + '</a></div>'
+            }))
+        } else {
+          $results.html('')
+        }
+      })
+      .trigger('input')
   })

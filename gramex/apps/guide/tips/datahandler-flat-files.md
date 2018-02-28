@@ -1,4 +1,7 @@
+---
 title: DataHandler for flat files and databases
+prefix: Tip
+...
 
 You can use `DataHandler` to fetch data from CSV and remote databases using the driver argument as below:
 

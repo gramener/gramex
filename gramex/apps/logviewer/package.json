@@ -1,0 +1,10 @@
+{
+  "name": "logviewer",
+  "version": "0.0.1",
+  "description": "logviewer application",
+  "main": "index.js",
+  "license": "ISC",
+  "dependencies": {
+    "vegam": "^0.0.0"
+  }
+}

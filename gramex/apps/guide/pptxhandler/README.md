@@ -1,4 +1,7 @@
-title: PPTXHandler
+---
+title: PPTXHandler generates PPTX
+prefix: PPTXHandler
+...
 
 New in **v1.23**. [PPTXHandler][pptxhandler] creates PPTX files using a configuration and an
 existing PPTX as a template. The result is a new PPTX that the user can download.

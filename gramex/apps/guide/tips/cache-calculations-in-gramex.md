@@ -1,4 +1,7 @@
+---
 title: Cache calculations in Gramex
+prefix: Tip
+...
 
 It's a bad idea to run calculations after loading cached data.
 

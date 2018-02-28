@@ -19,10 +19,32 @@
   </optgroup>
 </select>
 
+<h4>Select via bootstrap-select</h4>
+<p>Single, multiple, color variants</p>
+<select class="selectpicker" data-style="btn-primary">
+  <option value="1">Option 1</option>
+  <option value="2">Option 2</option>
+  <option value="3">Option 3</option>
+</select>
+<select class="selectpicker" multiple data-style="btn-warning">
+  <option value="opt1">Option 1</option>
+  <option value="opt2">Option 2</option>
+  <option value="opt3">Option 3</option>
+</select>
+<select class="selectpicker" data-style="btn-success">
+  <option value="o1">Option 1</option>
+  <option value="o2">Option 2</option>
+  <option value="o3">Option 3</option>
+</select>
+
 <script>
 $(function() {
   $('.select-multiple').select2()
   $('.select-multiple-groups').select2()
+
+  $('.selectpicker').selectpicker()
+  // hack - bootstrap-select 1.13.0-beta doesn't address the text contrast
+  $('.selectpicker + button').addClass('text-light')
 })
 </script>
 {% end %}

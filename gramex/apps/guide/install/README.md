@@ -1,4 +1,7 @@
+---
 title: Install Gramex
+prefix: Install
+...
 
 [TOC]
 

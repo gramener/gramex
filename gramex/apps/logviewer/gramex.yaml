@@ -1,28 +1,33 @@
-variables:
-  LOGVIEWER_CACHE_SECONDS:
-    default: 300
-  LOGVIEWER_DAYS:
-    default: 60
-
-url:
-  apps/logviewer:
-    pattern: /$YAMLURL/
-    handler: FileHandler
-    kwargs:
-      path: $YAMLPATH/index.html
-
-  apps/logviewer/data:
-    pattern: /$YAMLURL/data.csv
-    handler: FunctionHandler
-    kwargs:
-      function: logviewer.get_data(handler)
-      headers:
-        Content-Type: text/csv
-    cache:
-      duration: 60      # Cache for 60 seconds
-
 import:
   apps/logviewer/ui:
     path: $GRAMEXAPPS/ui/gramex.yaml
     YAMLURL: $YAMLURL/ui/
     namespace: [url]
+
+url:
+  apps/logviewer:
+    pattern: /$YAMLURL/(.*)
+    handler: FileHandler
+    kwargs:
+      path: $YAMLPATH
+      default_filename: index.html
+
+  apps/logviewer/query:
+    pattern: /$YAMLURL/query/(?P<table>\w+)/(?P<query>[\w-]+)/
+    handler: FormHandler
+    kwargs:
+      url: sqlite:///$GRAMEXDATA/logs/logviewer.db
+      execution_options:
+        sqlite_raw_colnames: True
+      queryfunction: logviewer.query(handler, args)
+
+schedule:
+  apps/logviewer:
+    function: logviewer.summarize()
+    startup: true
+    # Run at 6pm local time. In India, this is a bit after 0:00 UTC,
+    # which means log file rotation would've been done even if it's UTC based
+    minutes: 0
+    hours: 6
+    # When running in production
+    # thread: true

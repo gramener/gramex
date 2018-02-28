@@ -42,11 +42,12 @@
       <li><a href="/$GUIDE_ROOT/apps/">Applications</a></li>
       <li><a href="/$GUIDE_ROOT/exercises/">Exercises</a></li>
       <li><a href="/$GUIDE_ROOT/tips/">Tips</a></li>
+      <li><a href="/$GUIDE_ROOT/release/">Release notes</a></li>
       <li><a target="_blank" href="https://learn.gramener.com/gramex/gramex.html">Python Reference</a></li>
     </ul>
   </nav>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.0.0/jquery.min.js"></script>
+  <script src="/$GUIDE_ROOT/ui/jquery/dist/jquery.min.js"></script>
   <section class="content">
     <h1>$title</h1>
 

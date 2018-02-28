@@ -1,4 +1,7 @@
+---
 title: Filter Data Using URL
+prefix: Tip
+...
 
 All dashboards should be URL-driven. That is, if you copy-paste the URL into another page, the result should be EXACTLY the same.
 

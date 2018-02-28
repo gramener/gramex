@@ -1,4 +1,7 @@
+---
 title: Websockets in Gramex
+prefix: Tip
+...
 
 We can use websockets to persist bidirectional connections with server. [WebSocketHandler docs](https://learn.gramener.com/guide/websockethandler/).
 

@@ -276,7 +276,7 @@ class TestSubprocess(TestGramex):
         # Test that buffer_size is obeyed. We pick buf=6 because it will cover 2 rows - 'o0\no1\n'
         self.check(proc(cmd, out=1, err=1, buf=6), text='stream: o0\no1\ne0\ne1\n')
         # Test that kwargs is passed to subprocess.Popen()
-        self.check(proc(cmd, env=1), text='GRAMEX: test')
+        self.check(proc(cmd, env=1), text='GRAMEXTESTENV: test')
 
         # Test that streams accepts multiple fuctions that accept a bytestring
         self.check(proc(cmd, out=[1, 2], buf='line'), text='stream: o0\no0\no1\no1\no2\no2\n')

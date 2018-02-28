@@ -1,4 +1,7 @@
+---
 title: Conditions in gramex.yaml
+prefix: Tip
+...
 
 Gramex dev branch supports if-conditions in YAML.
 

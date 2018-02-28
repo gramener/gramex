@@ -1,4 +1,7 @@
+---
 title: Store data in data files, not Python files
+prefix: Tip
+...
 
 Store data in data files, not Python files.
 

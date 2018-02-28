@@ -1,4 +1,7 @@
+---
 title: Iterate repeated code blocks with data
+prefix: Tip
+...
 
 This is a fragment of code we deployed at a large bank to calculate year-on-year
 growth of balance:
