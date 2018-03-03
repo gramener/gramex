@@ -33,6 +33,11 @@ cache:
   # We could test more disk caches, but they're slow
 
 url:
+  invalid-pattern:
+    pattern: invalid\gpattern
+    handler: FileHandler
+    kwargs:
+        path: $YAMLPATH
   invalid-handler:
     pattern: /invalid-handler
     handler: NonExistent

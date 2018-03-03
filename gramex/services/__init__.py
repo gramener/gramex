@@ -12,6 +12,7 @@ exists, a warning is raised.
 '''
 from __future__ import unicode_literals
 
+import re
 import os
 import sys
 import json
@@ -525,7 +526,7 @@ def _get_cache_key(conf, name):
     for key in keys:
         parts = key.split('.', 2)
         if len(parts) < 2:
-            app_log.warning('url %s: ignoring invalid cache key %s', name, key)
+            app_log.warning('url: %s: ignoring invalid cache key %s', name, key)
             continue
         # convert second part into a Python string representation
         val = repr(parts[1])
@@ -542,7 +543,7 @@ def _get_cache_key(conf, name):
         elif parts[0].startswith('arg'):
             key_getters.append('argsep.join(handler.args.get(%s, [missing]))' % val)
         else:
-            app_log.warning('url %s: ignoring invalid cache key %s', name, key)
+            app_log.warning('url: %s: ignoring invalid cache key %s', name, key)
     # If none of the keys are valid, use the default request key
     if not len(key_getters):
         key_getters = [default_key]
@@ -601,7 +602,7 @@ def _cache_generator(conf, name):
     default_store = list(info.cache.keys())[0] if len(info.cache) > 0 else None
     store_name = conf.get('store', default_store)
     if store_name not in info.cache:
-        app_log.warning('url %s: %s store missing', name, store_name)
+        app_log.warning('url: %s: store %s missing', name, store_name)
     store = info.cache.get(store_name)
 
     cache_key = _get_cache_key(conf, name)
@@ -656,14 +657,19 @@ def url(conf):
             try:
                 urlspec.handler.setup(**kwargs)
             except Exception:
-                app_log.exception('url %s: setup exception in handler %s', name, spec.handler)
+                app_log.exception('url: %s: setup exception in handler %s', name, spec.handler)
 
-        handler_entry = tornado.web.URLSpec(
-            name=name,
-            pattern=_url_normalize(urlspec.pattern),
-            handler=urlspec.handler,
-            kwargs=kwargs,
-        )
+        try:
+            handler_entry = tornado.web.URLSpec(
+                name=name,
+                pattern=_url_normalize(urlspec.pattern),
+                handler=urlspec.handler,
+                kwargs=kwargs,
+            )
+        except re.error:
+            app_log.error('url: %s: pattern: %s is invalid', name, urlspec.pattern)
+        except Exception:
+            app_log.exception('url: %s: invalid', name)
         _cache[cache_key] = handler_entry
         handlers.append(handler_entry)
 

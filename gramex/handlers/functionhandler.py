@@ -34,7 +34,7 @@ class FunctionHandler(BaseHandler):
         # Don't use cls.info.function = build_transform(...) -- Python treats it as a method
         cls.info = {}
         cls.info['function'] = build_transform(kwargs, vars={'handler': None},
-                                               filename='url:%s' % cls.name)
+                                               filename='url: %s' % cls.name)
         cls.headers = headers
         for method in (methods if isinstance(methods, (tuple, list)) else [methods]):
             setattr(cls, method.lower(), cls._get)
