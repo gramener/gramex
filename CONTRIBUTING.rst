@@ -123,7 +123,7 @@ When releasing a new version of Gramex:
 
     # Push states
     make push-docs push-coverage
-    # Restart Gramex at port 9988 on gramener.com
+    # On Gramener.com, run "pip install --verbose -e ." and restart gramex on port 9988
 
 6. Deploy docker instances::
 
