@@ -625,3 +625,15 @@ is to use the [gramex install](../install/) method. Specifically:
 - Add Node modules to `package.json`
 - Add R libraries to `setup.sh` -- and ensure that the correct R is used
 - Add any other custom code to `setup.sh`
+
+### Log file order
+
+Different instances of Gramex may flush their logs at different times. Do not
+expect log files to be in order. For example, in this [request log](../config/#request-logging),
+the 2nd entry has a timestamp greater than the third:
+
+```
+1519100063656,220.227.50.9,user1@masked.com,304,1,GET,/images/bookmark.png,
+1519100063680,106.209.240.105,user2@masked.com,304,55,GET,/bookmark_settings?mode=display,
+1519100063678,220.227.50.9,user3@masked.com,304,1,GET,/images/filters-toggler.png,
+```
