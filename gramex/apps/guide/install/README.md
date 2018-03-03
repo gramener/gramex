@@ -7,14 +7,14 @@ prefix: Install
 
 ## Installation
 
-- Download and install [Anaconda][anaconda] 4.4.0 or later. [Update Anaconda][update] if required.
-- Download and install [node.js][nodejs] 8 or later. Then run `npm install -g yarn`. This step is optional but strongly recommended.
-- On a Mac, download and install [Xcode][xcode].
-- Uninstall gramex if you have installed it before: `pip uninstall gramex`
-- Run `pip install --verbose https://code.gramener.com/s.anand/gramex/repository/archive.tar.bz2?ref=master`
-    - ``--verbose`` is useful. We install node modules, which take time. `--verbose` lets you monitor progress.
-    - Replace ``?ref=master`` with `?ref=dev` for the latest development version.
-    - Replace ``?ref=master`` with `?ref=v1.28.0` for version 1.28.0
+- Install [Anaconda][anaconda] 4.4.0 or later. [Update Anaconda][update] if required.
+- Install [node.js][nodejs] 8 or later. Then run `npm install -g yarn`. This step is optional but strongly recommended.
+- On a Mac, install [Xcode][xcode].
+- Run `pip install --verbose gramex`
+    - `--verbose` is useful. We install node modules, which take time. `--verbose` lets you monitor progress.
+    - Replace `gramex` with `gramex==1.30.0` for version 1.30.0
+    - Replace `gramex` with `https://code.gramener.com/s.anand/gramex/repository/archive.tar.bz2?ref=dev` for the dev branch
+    - Replace `?ref=dev` with `?ref=v1.28.0` for version 1.28.0
       (or pick [any other version](https://code.gramener.com/s.anand/gramex/tags))
 - Run `gramex` to start Gramex
 - Press `Ctrl+C` to terminate Gramex.

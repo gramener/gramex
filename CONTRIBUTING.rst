@@ -108,8 +108,9 @@ When releasing a new version of Gramex:
     - Run ``python gramex/apps/guide/search/search.py`` using Python 3
     - Run ``node gramex/apps/guide/search/searchindex.js``
 
-3. Commit and push the ``dev`` branch to the server. Merge with master, create
-   an annotated tag and push the master branch::
+3. Commit and push the ``dev`` branch to the server. **Ensure pipeline passes.**
+
+4. Merge with master, create an annotated tag and push the master branch::
 
     git commit -m"DOC: Add v1.x.x release notes"
     git push                    # Push the dev branch
@@ -119,10 +120,12 @@ When releasing a new version of Gramex:
     git push --follow-tags
     git checkout dev            # Switch back to dev
 
-5. Deploy on gramener.com::
+5. Deploy on gramener.com and pypi::
 
-    # Push states
+    # Push docs and coverage tests
     make push-docs push-coverage
+    # Push to pypi
+    make push-pypi
     # On Gramener.com, run "pip install --verbose -e ." and restart gramex on port 9988
 
 6. Deploy docker instances::

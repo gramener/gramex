@@ -18,6 +18,7 @@ graft gramex/apps
 
 # Include requirement dependencies
 include requirements.txt
+include .gitignore
 
 # Include core docs
 include AUTHORS.rst
@@ -37,3 +38,6 @@ recursive-include docs *.rst conf.py Makefile make.bat
 global-exclude __pycache__
 global-exclude *.py[cod]
 global-exclude *.sqlite3
+
+# Exclude node_modules from gramex/apps/
+prune gramex/apps/*/node_modules
