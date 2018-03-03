@@ -94,7 +94,7 @@ lists the permissions you need. Here is the
 
 <div class="example">
   <a class="example-demo" href="../auth/google">Log into Google</a>
-  <a class="example-src" href="http://code.gramener.com/s.anand/gramex/tree/master/gramex/apps/guide/auth/">Source</a>
+  <a class="example-src" href="http://code.gramener.com/cto/gramex/tree/master/gramex/apps/guide/auth/">Source</a>
 </div>
 
 Once logged in, you can:
@@ -162,7 +162,7 @@ To access the Facebook APIs, set up a [Facebook Auth handler](../auth/#facebook-
 
 <div class="example">
   <a class="example-demo" href="../auth/facebook">Log into Facebook</a>
-  <a class="example-src" href="http://code.gramener.com/s.anand/gramex/tree/master/gramex/apps/guide/auth/">Source</a>
+  <a class="example-src" href="http://code.gramener.com/cto/gramex/tree/master/gramex/apps/guide/auth/">Source</a>
 </div>
 
 Once logged in, you can:

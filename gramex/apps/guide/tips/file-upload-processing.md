@@ -44,6 +44,6 @@ then use `process_file(content, handler)` in `app.py`.
 More
 ====
 
-- UploadHandler supports custom filename from early August - [dev](https://code.gramener.com/s.anand/gramex/tree/dev) version.
+- UploadHandler supports custom filename from early August - [dev](https://code.gramener.com/cto/gramex/tree/dev) version.
 - supports handling existing files - [overwriting uploads](../uploadhandler/#overwriting-uploads) section
 - [delete files](../uploadhandler/#upload-deletion)

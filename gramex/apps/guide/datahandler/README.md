@@ -173,7 +173,7 @@ You can specify a custom template using the `template:` key. See the example bel
 
 <div class="example">
   <a class="example-demo" href="template/">DataHandler Template example</a>
-  <a class="example-src" href="http://code.gramener.com/s.anand/gramex/tree/master/gramex/apps/guide/datahandler/template/">Source</a>
+  <a class="example-src" href="http://code.gramener.com/cto/gramex/tree/master/gramex/apps/guide/datahandler/template/">Source</a>
 </div>
 
 The data and handler are passed to the template in variables called ``data`` and

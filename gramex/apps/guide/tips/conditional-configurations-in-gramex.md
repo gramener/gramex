@@ -18,4 +18,4 @@ If you want to have a different auth in [uat.gramener.com](https://uat.gramener.
 
 The "... if ..." syntax is just a Python expression. On Windows, it will use the first paragraph as "auth". Non-Windows will use the second.
 
-This will be available from 1.23, but you can start using it with the [dev branch](https://code.gramener.com/s.anand/gramex/tree/dev/) right away.
+This will be available from 1.23, but you can start using it with the [dev branch](https://code.gramener.com/cto/gramex/tree/dev/) right away.

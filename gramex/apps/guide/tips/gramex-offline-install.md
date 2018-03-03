@@ -8,7 +8,7 @@ You can install Gramex on a Windows, Linux or Mac system without Internet access
 First, on a computer with Internet access, create a directory called `offline` and:
 
 1. Download [Anaconda](https://www.anaconda.com/download/) into the directory
-2. Download [Gramex](https://code.gramener.com/s.anand/gramex) into the directory and rename it to gramex.tar.bz2
+2. Download [Gramex](https://code.gramener.com/cto/gramex) into the directory and rename it to gramex.tar.bz2
 3. Run `pip download gramex.tar.bz2` to download all required libraries
 
 Copy this `offline` directory into the target machine. Then, from that directory:

@@ -19,5 +19,5 @@ import:
 
 <div class="example">
   <a class="example-demo" href="log/">Log Viewer</a>
-  <a class="example-src" href="http://code.gramener.com/s.anand/gramex/tree/master/gramex/apps/guide/logviewer/gramex.yaml">Source</a>
+  <a class="example-src" href="http://code.gramener.com/cto/gramex/tree/master/gramex/apps/guide/logviewer/gramex.yaml">Source</a>
 </div>

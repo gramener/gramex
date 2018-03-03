@@ -131,7 +131,7 @@ This requires the [UI components library](../uicomponents/) mounted at `ui/`.
 
 <div class="example">
   <a class="example-demo" href="table.html">FormHandler table example</a>
-  <a class="example-src" href="http://code.gramener.com/s.anand/gramex/tree/master/gramex/apps/guide/formhandler/table.html">Source</a>
+  <a class="example-src" href="http://code.gramener.com/cto/gramex/tree/master/gramex/apps/guide/formhandler/table.html">Source</a>
 </div>
 
 You can configure the data attributes:
@@ -150,8 +150,8 @@ You can configure the data attributes:
 More options can be provided to `$().formhandler()` via JavaScript. See the
 [API documentation][g1-formhandler] for details.
 
-[g1]: https://code.gramener.com/s.anand/g1/
-[g1-formhandler]: https://code.gramener.com/s.anand/g1/#formhandler
+[g1]: https://code.gramener.com/cto/g1/
+[g1-formhandler]: https://code.gramener.com/cto/g1/#formhandler
 
 ## FormHandler charts
 
