@@ -92,6 +92,8 @@ To get permission from the user for specific apps, add a `scopes:` section that
 lists the permissions you need. Here is the
 [full list of scopes](https://developers.google.com/identity/protocols/googlescopes).
 
+### Google Services
+
 <div class="example">
   <a class="example-demo" href="../auth/google">Log into Google</a>
   <a class="example-src" href="http://code.gramener.com/cto/gramex/tree/master/gramex/apps/guide/auth/">Source</a>
@@ -124,7 +126,10 @@ Once logged in, you can:
   using `https://www.google.com/m8/feeds/contacts/` as the endpoint
     - [Contacts updated since 2018](googlecontacts/default/full?updated-min=2018-01-01T00:00:00)
 
-You can also set up a secret key and access the
+
+### Google Translate
+
+You can set up a secret key to access the
 [Google Translate API](https://cloud.google.com/translate/docs/quickstart):
 
 ```yaml
@@ -142,6 +147,33 @@ Now you can translate across [languages](https://cloud.google.com/translate/docs
 
 - [How are you in German](googletranslate?q=How+are+you&target=de)
 - [How are you from German to Hindi](googletranslate?q=Wie+geht+es+Ihnen&target=hi)
+
+### Google Search
+
+To access the
+[Google Custom Search API](https://developers.google.com/custom-search/json-api/v1/overview)
+set up a custom search engine that [searches the entire web](https://stackoverflow.com/a/11206266/100904).
+Then with an API key,
+use the [REST API](https://developers.google.com/custom-search/json-api/v1/using_rest)
+and [reference](https://developers.google.com/custom-search/json-api/v1/reference/cse/list),
+fetch search results.
+
+```yaml
+    proxyhandler/googlesearch:
+        pattern: /$YAMLURL/googlesearch
+        handler: ProxyHandler
+        kwargs:
+          url: https://www.googleapis.com/customsearch/v1
+          default:
+            key: ...        # Your API key
+            cx: ...         # Your custom search engine ID
+```
+
+Here are some examples of searches:
+
+- [Gramener mentions last week when searching from the US](googlesearch?q=gramener&dateRestrict=1w&gl=us)
+- [Pages related to gramener.com](googlesearch?relatedSite=gramener.com&q=)
+
 
 ## Facebook ProxyHandler
 

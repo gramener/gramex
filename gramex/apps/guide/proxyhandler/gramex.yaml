@@ -1,3 +1,9 @@
+variables:
+  # Created by root.node@gmail.com
+  # https://console.developers.google.com/apis/api/customsearch.googleapis.com/overview?project=big-query-1009
+  # This key is also used by https://code.gramener.com/s.anand/exceltranslate
+  GOOGLE_API_KEY: AIzaSyBsSkZb3hxciFp0ZB3KLqO1-aQW-K-hqSw
+
 url:
     proxyhandler/github/search/users:
         pattern: /$YAMLURL/github/(.*)
@@ -34,7 +40,19 @@ url:
             auth: true
             default:
               # https://cloud.google.com/translate/docs/quickstart
-              key: AIzaSyBsSkZb3hxciFp0ZB3KLqO1-aQW-K-hqSw
+              key: $GOOGLE_API_KEY
+
+    proxyhandler/googlesearch:
+        pattern: /$YAMLURL/googlesearch
+        handler: ProxyHandler
+        kwargs:
+            url: https://www.googleapis.com/customsearch/v1
+            auth: true
+            default:
+              key: $GOOGLE_API_KEY
+              # CSE created by s.anand@gramener.com
+              # https://cse.google.com/cse/setup/basic?cx=010282404438907579631%3Aedrnyb3axxi
+              cx: '010282404438907579631:edrnyb3axxi'
 
     proxyhandler/gramener.com:
         pattern: /$YAMLURL/(demo|uistatic|node_modules|bowerlib)/(.*)
