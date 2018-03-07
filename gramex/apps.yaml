@@ -8,6 +8,8 @@ gramex-update:
     target: $GRAMEXPATH/apps/update/
 logviewer:
     target: $GRAMEXPATH/apps/logviewer/
+mail:
+    target: $GRAMEXPATH/apps/mail/
 smartalerts:
     target: $GRAMEXPATH/apps/smartalerts/
 wrangler:

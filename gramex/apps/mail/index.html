@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <title>Alerts preview</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="ui/bootstraptheme.css">
+  <link rel="stylesheet" href="ui/font-awesome/css/font-awesome.min.css">
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+      <div class="navbar-header">
+        <a class="navbar-brand" href="."><i class="fa fa-home"></i></a>
+      </div>
+      <ul class="nav navbar-nav">
+        <li class="navbar-brand">Alerts preview</li>
+      </ul>
+      <ul class="nav navbar-nav">
+      </ul>
+    </div>
+  </nav>
+  {% import os %}
+  {% import mailapp %}
+  {% from gramex.cache import reload_module %}
+  {% set reload_module(mailapp) %}
+  {% from gramex.services import info %}
+  {% set selected = handler.get_arg('alert', None) %}
+  <div class="d-flex">
+    <div class="alert-list list-group list-group-flush mr-3">
+      {% for name, alert in info.alert.items() %}
+        <a class="list-group-item {{ 'active' if selected == alert else '' }}" href="?alert={{ name }}">{{ name }}</a>
+      {% end %}
+    </div>
+    <div class="preview p-3 w-100">
+      {% if selected is None %}
+        <p>Previewing command line emails from ...</p>
+        <p>Select an email to preview.</p>
+      {% elif selected not in info.alert %}
+        <div class="alert alert-danger">
+          Cannot find alert named <code>{{ selected }}</code>
+        </div>
+      {% else %}
+        {% set results = [] %}
+        {% set info.alert[selected].function(callback=lambda **msg: results.append(msg)) %}
+        {% for result in results %}
+          <table class="table table-sm">
+            <tbody>
+              {% for key, val in result.items() %}
+                {% if key not in {'html', 'body', 'images', 'attachments'} %}
+                  <tr>
+                    <th>{{ key }}</th>
+                    <td>{{ result[key] }}</td>
+                  </tr>
+                {% end %}
+              {% end %}
+              {% set mailapp.cidmap.update(result.get('images', {})) %}
+              {% if 'attachments' in result %}
+                <tr>
+                  <th>attachments</th>
+                  <td>
+                    {% for attachment in result['attachments'] %}
+                      <li>{{ os.path.split(attachment)[-1] }}</li>
+                    {% end %}
+                  </td>
+                </tr>
+              {% end %}
+            </tbody>
+          </table>
+          {% if 'html' in result %}{% raw result['html'].replace('cid:', 'cid/') %}{% end %}
+          {% if 'body' in result and 'html' in result %}<hr>{% end %}
+          {% if 'body' in result %}<pre>{% raw result['body'] %}</pre>{% end %}
+        {% end %}
+      {% end %}
+    </div>
+  </div>
+</body>
+<script src="ui/jquery/dist/jquery.min.js"></script>
+<script src="ui/popper.js/dist/umd/popper.min.js"></script>
+<script src="ui/bootstrap/dist/js/bootstrap.min.js"></script>
+</html>

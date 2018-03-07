@@ -350,7 +350,11 @@ def create_alert(name, alert):
 
     alert_logger = logging.getLogger('gramex.alert')
 
-    def run_alert():
+    def run_alert(callback=None):
+        '''
+        Runs the configured alert. If a callback is specified, calls the
+        callback with all email arguments. Else sends the email.
+        '''
         app_log.info('alert: %s running', name)
         data = {'config': alert}
         for key, dataset in datasets.items():
@@ -416,6 +420,8 @@ def create_alert(name, alert):
             if 'attachments' in templates:
                 kwargs['attachments'] = [urlfetch(attachment.generate(**data).decode('utf-8'))
                                          for attachment in templates['attachments']]
+            if callable(callback):
+                return callback(**kwargs)
             # Email recipient. TODO: run this in a queue. (Anand)
             mailer.mail(**kwargs)
             # Log the event
