@@ -11,7 +11,7 @@ Building Gramex
 - All other branches are temporary feature branches
 
 
-Gramex can be developed on Python 2.7, 3.4 and 3.5 on Windows or Linux.
+Gramex can be developed on Python 2.7 and 3.6 on Windows or Linux.
 To set up the development environment:
 
 1. Download and install `Anaconda`_ 4.0.0 or later -- `update Anaconda`_ if required
@@ -58,32 +58,7 @@ Contributing to Gramex
     - Write unit tests
     - Document the feature in docstrings
     - Explain how to use the feature in ``docs/``
-    - Test on Python 2.7, 3.4 and 3.5
-
-
-Gramex documentation
---------------------
-
-Gramex documentation is hosted at https://learn.gramener.com/gramex/. To set
-this up:
-
-1. Add the ``ec2@gramener.com`` SSH key as a
-   `deploy key <http://code.gramener.com/s.anand/gramex/deploy_keys>`_
-2. Add ``https://gramener.com/hook/`` as a
-   `web hook <http://code.gramener.com/s.anand/gramex/hooks>`_
-3. In https://gramener.com/hook/ go to Paths and add a hook:
-   - url: ``git@code.gramener.com:s.anand/gramex.git``
-   - folder: ``/mnt/gramener/apps/gramex/``
-   - command: ``make docs``
-4. ``ssh learn.gramener.com`` and run::
-
-    cd /mnt/gramener/apps/gramex      # Go to the Gramex folder
-    git checkout dev                  # Check out the dev branch
-    pip install -r requirements.txt   # install dependencies
-
-    # Link the docs under https://learn.gramener.com/gramex/
-    cd /mnt/gramener/learn.gramener.com
-    ln -s /mnt/gramener/apps/gramex/docs/_build/html
+    - Test on Python 2.7 and 3.6
 
 
 Release
