@@ -138,7 +138,7 @@ class TestInstall(unittest.TestCase):
         # git commit -m"Add test files to this branch -- used by Gramex test cases"
         # git push -u origin test-apps-do-not-delete
         git_files = ['dir1/file.txt', 'dir1/file-dir1.txt', 'dir2/file.txt', 'dir2/file-dir2.txt']
-        git_url, branch = 'http://code.gramener.com/s.anand/gramex.git', 'test-apps-do-not-delete'
+        git_url, branch = 'http://code.gramener.com/cto/gramex.git', 'test-apps-do-not-delete'
         try:
             requests.get(git_url)
         except requests.RequestException:
