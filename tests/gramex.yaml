@@ -78,6 +78,14 @@ url:
     kwargs:
       function: utils.params_as_json("$STRING", $NUMBER, a="$STRING", b=$NUMBER)
 
+  func/path_args:
+    pattern: /func/path_args/(.*?)/(.*?)
+    handler: FunctionHandler
+    kwargs:
+      function: json.dumps(handler.path_args)
+      headers:
+        Content-Type: application/json
+
   func/async/args:
     pattern: /func/async/args
     handler: FunctionHandler
