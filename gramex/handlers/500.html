@@ -15,7 +15,11 @@
 <body>
   <h1>Application error</h1>
   <p>This application made a mistake.</p>
-  <pre>{{ repr(kwargs['exc_info'][1]) }}</pre>
+  {% set exception = kwargs['exc_info'][1] %}
+  {% if hasattr(exception, 'reason') %}
+    <p><strong>Reason:</strong> {{ exception.reason }}</p>
+  {% end %}
+  <pre>{{ repr(exception) }}</pre>
   <p>Details are on the server log.</p>
   <pre>HTTP 500: Internal Server error</pre>
 </body>
