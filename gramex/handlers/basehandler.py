@@ -535,8 +535,8 @@ class BaseMixin(object):
             try:
                 user = self._session_decrypt(cipher)
             except Exception:
-                log_message = '%s: invalid X-Gramex-User: %s' % (self.name, cipher)
-                raise HTTPError(BAD_REQUEST, log_message)
+                reason = '%s: invalid X-Gramex-User: %s' % (self.name, cipher)
+                raise HTTPError(BAD_REQUEST, reason=reason)
             else:
                 app_log.debug('%s: Overriding user to %r', self.name, user)
                 self.session['user'] = user
@@ -545,11 +545,11 @@ class BaseMixin(object):
         if otp:
             otp_data = self._session_store.load('otp:' + otp, None)
             if not isinstance(otp_data, dict) or '_t' not in otp_data or 'user' not in otp_data:
-                log_message = '%s: invalid X-Gramex-OTP: %s' % (self.name, otp)
-                raise HTTPError(BAD_REQUEST, log_message)
+                reason = '%s: invalid X-Gramex-OTP: %s' % (self.name, otp)
+                raise HTTPError(BAD_REQUEST, reason=reason)
             elif otp_data['_t'] < time.time():
-                log_message = '%s: expired X-Gramex-OTP: %s' % (self.name, otp)
-                raise HTTPError(BAD_REQUEST, log_message)
+                reason = '%s: expired X-Gramex-OTP: %s' % (self.name, otp)
+                raise HTTPError(BAD_REQUEST, reason=reason)
             self._session_store.dump('otp:' + otp, None)
             self.session['user'] = otp_data['user']
 
