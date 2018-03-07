@@ -2400,10 +2400,14 @@ alert:
     alert-no-service:
       subject: Hello world
       to: admin@example.org
+    alert-no-startup:
+      service: smtps_stub
+      to: nostartup@example.org
+      subject: No startup
     alert-startup:
       service: smtps_stub
       startup: true
-      to: admin@example.org
+      to: startup@example.org
       subject: Gramex started
     alert-schedule:
       service: smtps_stub

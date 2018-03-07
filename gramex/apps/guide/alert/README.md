@@ -21,21 +21,6 @@ email:
 
 ## Alert examples
 
-### Send an email once
-
-An alert has at least the `to:`, `subject:` and `body:` fields.
-
-```yaml
-alert:
-  alert-once:
-    to: admin@example.org
-    subject: Alert from Gramex
-    body: |
-      This email will be sent once when Gramex starts. It won't be sent again
-      unless you change the key (alert-once) to something else, or run
-      Gramex from a different directory.
-```
-
 ### Send as a different user
 
 `from:` lets you choose a different user to send as. **Note:** this won't work
@@ -44,7 +29,7 @@ on GMail unless you enable
 
 ```yaml
 alert:
-  alert-once:
+  alert-as-user:
     to: admin@example.org
     from: sender@example.org
     subject: Alert from Gramex
@@ -220,6 +205,12 @@ alert:
     subject: Scheduled alert
     body: This email will be scheduled and sent as long as Gramex is running.
 ```
+
+### Send an email once
+
+Before Gramex 1.31, emails without a schedule were sent out once automatically.
+This led to work-in-progress messages being emailed. From Gramex 1.31, all mails
+require a `startup:` or a [schedule](#send-a-scheduled-email).
 
 ### Mail merge: change content by user
 

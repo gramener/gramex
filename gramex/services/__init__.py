@@ -35,7 +35,7 @@ from six import text_type, string_types
 from tornado.log import access_log
 from tornado.template import Template
 from orderedattrdict import AttrDict
-from gramex import paths, debug, shutdown, __version__
+from gramex import debug, shutdown, __version__
 from gramex.transforms import build_transform
 from gramex.config import locate, app_log
 from gramex.cache import urlfetch
@@ -442,10 +442,6 @@ def alert(conf):
             continue
         app_log.info('Initialising alert: %s', name)
         schedule = {key: alert[key] for key in schedule_keys if key in alert}
-        if not schedule:
-            schedule = {'startup': '*'}
-            alert = AttrDict(alert)
-            alert.setdefault('condition', 'once(r"%s", r"%s")' % (paths['base'].resolve(), name))
         if 'thread' in alert:
             schedule['thread'] = alert['thread']
         schedule['function'] = create_alert(name, alert)

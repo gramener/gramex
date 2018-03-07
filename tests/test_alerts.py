@@ -22,18 +22,24 @@ def run_alert(name, count=1):
         return utils.SMTPStub.stubs
 
 
-class TestAlerts(TestGramex):
+class TestAlerts1(TestGramex):
+    def test_startup(self):
+        # Startup mails run without needing a trigger.
+        # We have only 1 startup mail. There's a no-startup that SHOULD NOT run
+        eq_(len(utils.SMTPStub.stubs), 1)
+        # Check that the one startup mail is the right one
+        mail = utils.SMTPStub.stubs[0]
+        eq_(mail['to_addrs'], ['startup@example.org'])
+        ok_('Subject: Gramex started\n' in mail['msg'])
+
+
+class TestAlerts2(TestGramex):
     def test_errors(self):
         # If there's an email service, service: should default to the first one
         if len(utils.info.email.keys()) > 0:
             ok_('alert-no-service' in utils.info.alert)
         else:
             ok_('alert-no-service' not in utils.info.alert)
-
-    def test_simple(self):
-        mail = run_alert('alert-startup')
-        eq_(mail['to_addrs'], ['admin@example.org'])
-        ok_('Subject: Gramex started\n' in mail['msg'])
 
     def test_schedule(self):
         mail = run_alert('alert-schedule')
