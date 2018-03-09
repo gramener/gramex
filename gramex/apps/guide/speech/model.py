@@ -26,7 +26,7 @@ def reload(handler):
         with io.open(file_path, 'wb') as f:
             f.write(r.content)
         handler.redirect('.?refreshed')
-    except IOError as e:
+    except IOError:
         raise HTTPError("Couldn't open or write to file (%s)." % file_path)
 
 
