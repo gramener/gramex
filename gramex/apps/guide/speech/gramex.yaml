@@ -16,7 +16,7 @@ url:
     pattern: /$YAMLURL/get_answer
     handler: FunctionHandler
     kwargs:
-      function: model.get_answer
+      function: speechmodel.get_answer
       headers:
         Content-Type: application/json
 
@@ -24,12 +24,12 @@ url:
     pattern: /$YAMLURL/reload
     handler: FunctionHandler
     kwargs:
-      function: model.reload
+      function: speechmodel.reload
 
   speech/suggestion:
     pattern: /$YAMLURL/suggestion
     handler: FunctionHandler
     kwargs:
-      function: model.suggestion
+      function: speechmodel.suggestion
       headers:
         Content-Type: application/json
