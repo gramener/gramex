@@ -62,7 +62,6 @@ function main(recognition) {
         $('.did-you-mean').hide()
         $('.guess-question').html(result.question)
         $('.default-answer').html(result.answer)
-        console.log(result.similarity)
         if (result.similarity < 0.5)
           $('.default-answer').html('I did not understand')
         else if (result.similarity < 0.75)
