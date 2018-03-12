@@ -125,6 +125,8 @@ Once logged in, you can:
 - Access the [Contacts API](https://developers.google.com/google-apps/contacts/v3/)
   using `https://www.google.com/m8/feeds/contacts/` as the endpoint
     - [Contacts updated since 2018](googlecontacts/default/full?updated-min=2018-01-01T00:00:00)
+- Access the [Natural Language API](https://cloud.google.com/natural-language/docs/)
+    - [v1 API discovery](googlelanguage/$discovery/rest?version=v1)
 
 
 ### Google Translate
@@ -173,6 +175,73 @@ Here are some examples of searches:
 
 - [Gramener mentions last week when searching from the US](googlesearch?q=gramener&dateRestrict=1w&gl=us)
 - [Pages related to gramener.com](googlesearch?relatedSite=gramener.com&q=)
+[Google Translate API](https://cloud.google.com/translate/docs/quickstart):
+
+### Google Cloud NLP
+
+You can also analyze text using [NLP](https://cloud.google.com/natural-language/docs/):
+
+```yaml
+    proxyhandler/googlelanguage:
+        pattern: /$YAMLURL/googlelanguage/(.*)
+        handler: ProxyHandler
+        kwargs:
+            url: https://language.googleapis.com/{0}
+            method: POST
+            request_headers:
+              "*": true
+            default:
+              key: ...
+```
+
+Sending a POST request to `googlelanguage/v1/documents:analyzeEntities` with
+this JSON content analyzes the entities:
+
+```js
+{
+    "document": {
+        "type": "PLAIN_TEXT",
+        "language": "en",
+        "content": "The Taj Mahal is in Agra"
+    },
+    "encodingType": "UTF8"
+}
+```
+
+<button class="post-button" data-href="googlelanguage/v1/documents:analyzeEntities" data-target="#entity-result" data-body='{
+    "document": {
+        "type": "PLAIN_TEXT",
+        "language": "en",
+        "content": "The Taj Mahal is in Agra"
+    },
+    "encodingType": "UTF8"}'>Analyze the entities</button>
+
+<div class="codehilite"><pre><code id="entity-result">Click the button above to see the result</code></pre></div>
+
+
+To analyze the sentiment of text, send a POST request to
+`googlelanguage/v1/documents:analyzeSentiment` with this JSON content:
+
+```javascript
+{
+    "document": {
+        "type": "PLAIN_TEXT",
+        "language": "en",
+        "content": "Disliking watercraft is not really my thing"
+    },
+    "encodingType": "UTF8"
+}
+```
+
+<button class="post-button" data-href="googlelanguage/v1/documents:analyzeSentiment" data-target="#sentiment-result" data-body='{
+    "document": {
+        "type": "PLAIN_TEXT",
+        "language": "en",
+        "content": "Disliking watercraft is not really my thing"
+    },
+    "encodingType": "UTF8"}'>Analyze the sentiment</button>
+
+<div class="codehilite"><pre><code id="sentiment-result">Click the button above to see the result</code></pre></div>
 
 
 ## Facebook ProxyHandler
@@ -229,6 +298,8 @@ internal applications to users who are logged in via Gramex.
 Further, it caches the response for 300s (5 min) -- making this an authenticated
 caching reverse proxy.
 
+
+<script src="proxyhandler.js?v=16"></script>
 
 [proxyhandler]: https://learn.gramener.com/gramex/gramex.handlers.html#gramex.handlers.ProxyHandler
 [xsrf]: ../filehandler/#xsrf

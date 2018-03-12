@@ -54,6 +54,18 @@ url:
               # https://cse.google.com/cse/setup/basic?cx=010282404438907579631%3Aedrnyb3axxi
               cx: '010282404438907579631:edrnyb3axxi'
 
+    proxyhandler/googlelanguage:
+        pattern: /$YAMLURL/googlelanguage/(.*)
+        handler: ProxyHandler
+        kwargs:
+            url: https://language.googleapis.com/{0}
+            method: POST
+            xsrf_cookies: false           # Only for testing
+            request_headers:
+              Content-Type: application/json
+            default:
+              key: $GOOGLE_API_KEY
+
     proxyhandler/gramener.com:
         pattern: /$YAMLURL/(demo|uistatic|node_modules|bowerlib)/(.*)
         handler: ProxyHandler
