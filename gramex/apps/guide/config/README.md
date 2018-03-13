@@ -556,11 +556,11 @@ To avoid duplicate keys getting dropped, use namespaces like this:
 ```yaml
 import:
     path: '*/gramex.yaml'
-    namespace: [url, schedule, cache]
+    namespace: [url, schedule, cache, import]
 ```
 
-This replaces the keys under `url:`, `schedule:`, and `cache:` with a unique
-prefix, ensuring that these sections are merged without conflict.
+This replaces the keys under `url:`, `schedule:`, `cache:` and `import:` with a
+unique prefix, ensuring that these sections are merged without conflict.
 
 You can also use imports within sections. For example:
 
