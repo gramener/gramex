@@ -1,17 +1,14 @@
 variables:
     LOGFILE: $GRAMEXDATA/data/update/log.jsonl  # Location where log file is stored
 
-app:
-    settings:
-        debug: False
-        autoreload: False
-
 url:
     gramexupdate:
         pattern: /$YAMLURL/
-        handler: gramexupdate.GramexUpdateHandler
+        handler: FunctionHandler
         kwargs:
-            path: $LOGFILE
+            function: gramexupdate.gramexupdate
+            # Enable POST from any Gramex instance
+            xsrf_cookies: false
 
 log:
     loggers:

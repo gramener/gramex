@@ -2,41 +2,26 @@ import os
 import json
 import logging
 import gramex
-from gramex.handlers.basehandler import BaseHandler
+from tornado.web import HTTPError
+from gramex.http import BAD_REQUEST
 
-BAD_REQUEST = 400
+folder = os.path.dirname(os.path.abspath(__file__))
+template = os.path.join(folder, 'index.html')
 
 
-class GramexUpdateHandler(BaseHandler):
-    @classmethod
-    def setup(cls, **kwargs):
-        super(GramexUpdateHandler, cls).setup(**kwargs)
-        cls.log = logging.getLogger('gramexupdate')
-        cls.json_kwargs = {'ensure_ascii': True, 'separators': (',', ':')}
-        folder = os.path.dirname(os.path.abspath(__file__))
-        cls.template = os.path.join(folder, 'index.html')
-
-    def get(self):
-        # When a user casually visits the page, render friendly output
-        self.render(self.template, version=gramex.__version__)
-
-    def post(self):
-        # Log all messages
-        try:
-            logs = json.loads(self.request.body, encoding='utf-8')
-            assert isinstance(logs, list)
-        except (ValueError, AssertionError):
-            self.set_status(BAD_REQUEST)
-            self.finish('Invalid POST data. Expecting JSON array')
-            return
-        for log in logs:
-            log['ip'] = self.request.remote_ip
-            self.log.info(json.dumps(log, **self.json_kwargs))
-        # Return the latest Gramex version
-        self.write(json.dumps({
-            'version': gramex.__version__
-        }, **self.json_kwargs))
-
-    def check_xsrf_cookie(self):
-        # Anyone with Gramex can post to this app. Ignore the xsrf token
-        pass
+def gramexupdate(handler):
+    # When a user casually visits the page, render friendly output
+    if handler.request.method == 'GET':
+        return gramex.cache.open(template, 'template').generate(version=gramex.__version__)
+    # Log all messages
+    try:
+        logs = json.loads(handler.request.body, encoding='utf-8')
+        assert isinstance(logs, list)
+    except (ValueError, AssertionError):
+        raise HTTPError(BAD_REQUEST, reason='Invalid POST data. Expecting JSON array')
+    logger = logging.getLogger('gramexupdate')
+    for log in logs:
+        log['ip'] = handler.request.remote_ip
+        logger.info(json.dumps(log, ensure_ascii=True, separators=(',', ':')))
+    # Return the latest Gramex version
+    return {'version': gramex.__version__}
