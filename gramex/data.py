@@ -326,17 +326,21 @@ def get_engine(url):
     Used to detect type of url passed. Returns:
 
     - ``'dataframe'`` if url is a Pandas DataFrame
-    - ``'sqlalchemy'`` if url is a sqlalchemy compatibly URL
-    - ``'file'`` if none of the above
+    - ``'sqlalchemy'`` if url is a sqlalchemy compatible URL
+    - ``protocol`` if url is of the form `protocol://...`
+    - ``'file'`` if it is not a URL
     '''
     if isinstance(url, pd.DataFrame):
         return 'dataframe'
-    else:
-        try:
-            sqlalchemy.engine.url.make_url(url).get_driver_name()
-            return 'sqlalchemy'
-        except (sqlalchemy.exc.ArgumentError, sqlalchemy.exc.NoSuchModuleError):
-            return 'file'
+    try:
+        url = sqlalchemy.engine.url.make_url(url)
+    except sqlalchemy.exc.ArgumentError:
+        return 'file'
+    try:
+        url.get_driver_name()
+        return 'sqlalchemy'
+    except sqlalchemy.exc.NoSuchModuleError:
+        return url.drivername
 
 
 def get_table(engine, table):

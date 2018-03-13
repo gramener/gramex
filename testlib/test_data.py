@@ -31,6 +31,25 @@ class TestFilter(unittest.TestCase):
         postgres=os.environ.get('POSTGRES_SERVER', 'localhost'),
     )
 
+    def test_get_engine(self):
+        check = gramex.data.get_engine
+        eq_(check(pd.DataFrame()), 'dataframe')
+        eq_(check('dir:///d:/temp/data.txt'), 'dir')
+        eq_(check('dir:////root/path'), 'dir')
+        eq_(check('file:///d:/temp/data.txt'), 'file')
+        eq_(check('file:////root/path'), 'file')
+        sqlalchemy_urls = [
+            'postgresql://scott:tiger@localhost:5432/mydatabase',
+            'mysql://scott:tiger@localhost/foo',
+            'oracle://scott:tiger@127.0.0.1:1521/sidname',
+            'sqlite:///foo.db',
+        ]
+        for url in sqlalchemy_urls:
+            eq_(check(url), 'sqlalchemy')
+        eq_(check('d:/temp/data.txt'), 'file')
+        eq_(check('/root/path'), 'file')
+        eq_(check('./path/data.txt'), 'file')
+
     def check_filter(self, df=None, na_position='last', **kwargs):
         '''
         Tests a filter method. The filter method filters the sales dataset using
