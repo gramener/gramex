@@ -46,9 +46,18 @@ class TestFilter(unittest.TestCase):
         ]
         for url in sqlalchemy_urls:
             eq_(check(url), 'sqlalchemy')
-        eq_(check('d:/temp/data.txt'), 'file')
-        eq_(check('/root/path'), 'file')
-        eq_(check('./path/data.txt'), 'file')
+        eq_(check(folder), 'dir')
+        eq_(check(os.path.join(folder, 'test_data.py')), 'file')
+        eq_(check('/root/nonexistent/'), 'file')
+        eq_(check('/root/nonexistent.txt'), 'file')
+
+    def test_dirstat(self):
+        for name in ('test_cache', 'test_config', '.'):
+            path = os.path.join(folder, name)
+            files = sum((dirs + files for root, dirs, files in os.walk(path)), [])
+            result = gramex.data.dirstat(path)
+            eq_(len(files), len(result))
+            ok_({'path', 'name', 'dir', 'type', 'size', 'mtime'} <= set(result.columns))
 
     def check_filter(self, df=None, na_position='last', **kwargs):
         '''

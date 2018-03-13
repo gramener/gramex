@@ -1488,6 +1488,13 @@ url:
     kwargs:
       url: sales.xlsx
       sheetname: dates
+  formhandler/dir:
+    pattern: /formhandler/dir
+    handler: FormHandler
+    kwargs:
+      url: dir:///$YAMLPATH/{root}
+      default:
+        root: '.'
 
   capture:
     pattern: /capture

@@ -691,23 +691,52 @@ Note:
 - If `format:` is specified against multiple datasets, the return value could be
   in any format (unspecified).
 
+## FormHandler directory listing
+
+FormHandler allows listing files in a directory. To set this up, use a `dir://`
+URL like this: `url: dir:///path/to/directory`:
+
+```yaml
+      pattern: /$YAMLURL/dir
+      handler: FormHandler
+      kwargs:
+        url: dir:///$YAMLPATH          # Point to any directory
+```
+
+Here is a sample output:
+
+- [All files in this directory](dir?_format=table&_c=dir&_c=name&_c=size&_c=type)
+- [Largest files in this directory](dir?_format=table&_c=dir&_c=name&_c=size&_c=type&_sort=-size)
+
+This URL is interpolatable using arguments as well for example:
+
+```yaml
+      pattern: /$YAMLURL/dir/(.*)
+      handler: FormHandler
+      kwargs:
+        url: dir:///$YAMLPATH/{_0}    # /dir/abc points to abc/ under this directory
+      # url: dir:///$YAMLPATH/{root}  # /dir/?root=abc points to abc/ under this directory
+```
+
+The arguments are escaped and cannot contain `../` and other mechanisms to go
+beyond the root directory specified.
+
 ## FormHandler templates
 
 The output of FormHandler can be rendered as a custom template using the
 `template` format. For example, this creates a ``text`` format:
 
 ```yaml
-url:
-  pattern: text
-  handler: FormHandler
-  kwargs:
-    url: $YAMLPATH/flags.csv
-    formats:
-      text:
-        format: template
-        template: $YAMLPATH/text-template.txt
-        headers:
-            Content-Type: text/plain
+    pattern: text
+    handler: FormHandler
+    kwargs:
+      url: $YAMLPATH/flags.csv
+      formats:
+        text:
+          format: template
+          template: $YAMLPATH/text-template.txt
+          headers:
+              Content-Type: text/plain
 ```
 
 Here is the output of [?_format=text&_limit=10](flags?_format=text&_limit=10).
@@ -738,8 +767,6 @@ POST, PUT and GET HTTP operators. For example:
 This requires primary keys to be defined in the FormHandler as follows:
 
 ```yaml
-url:
-  flags:
     pattern: /$YAMLURL/flags
     handler: FormHandler
     kwargs:

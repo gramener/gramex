@@ -181,3 +181,9 @@ url:
               Content-Type: image/png
       cache:
         expiry: {duration: 3600}
+
+    formhandler-dir:
+      pattern: /$YAMLURL/dir
+      handler: FormHandler
+      kwargs:
+        url: $YAMLPATH/

@@ -7,12 +7,13 @@ import io
 import os
 import re
 import six
+import time
 import sqlalchemy
 import pandas as pd
 import gramex.cache
 from tornado.escape import json_encode
 from sqlalchemy.sql import text
-from gramex.config import merge
+from gramex.config import merge, app_log
 from orderedattrdict import AttrDict
 
 _METADATA_CACHE = {}
@@ -30,7 +31,7 @@ def filter(url, args={}, meta={}, engine=None, table=None, ext=None,
 
     It accepts the following parameters:
 
-    :arg source url: Pandas DataFrame, sqlalchemy URL or file name,
+    :arg source url: Pandas DataFrame, sqlalchemy URL, directory or file name,
         `.format``-ed using ``args``.
     :arg dict args: URL query parameters as a dict of lists. Pass handler.args or parse_qs results
     :arg dict meta: this dict is updated with metadata during the course of filtering
@@ -150,6 +151,13 @@ def filter(url, args={}, meta={}, engine=None, table=None, ext=None,
     # Use the appropriate filter function based on the engine
     if engine == 'dataframe':
         data = transform(url) if callable(transform) else url
+        return _filter_frame(data, meta=meta, controls=controls, args=args)
+    elif engine == 'dir':
+        params = {k: v[0] for k, v in args.items() if len(v) > 0 and _path_safe(v[0])}
+        url = url.format(**params)
+        data = dirstat(url, **args)
+        if callable(transform):
+            data = transform(data)
         return _filter_frame(data, meta=meta, controls=controls, args=args)
     elif engine == 'file':
         params = {k: v[0] for k, v in args.items() if len(v) > 0 and _path_safe(v[0])}
@@ -328,14 +336,17 @@ def get_engine(url):
     - ``'dataframe'`` if url is a Pandas DataFrame
     - ``'sqlalchemy'`` if url is a sqlalchemy compatible URL
     - ``protocol`` if url is of the form `protocol://...`
-    - ``'file'`` if it is not a URL
+    - ``'dir'`` if it is not a URL but a valid directory
+    - ``'file'`` if it is not a URL but a valid file
+
+    Else it raises an Exception
     '''
     if isinstance(url, pd.DataFrame):
         return 'dataframe'
     try:
         url = sqlalchemy.engine.url.make_url(url)
     except sqlalchemy.exc.ArgumentError:
-        return 'file'
+        return 'dir' if os.path.isdir(url) else 'file'
     try:
         url.get_driver_name()
         return 'sqlalchemy'
@@ -795,3 +806,63 @@ def download(data, format='json', template=None, **kwargs):
         else:
             out.write(data['data'].to_json(**kwargs).encode('utf-8'))
         return out.getvalue()
+
+
+def dirstat(url, timeout=10, **kwargs):
+    '''
+    Return a DataFrame with the list of all files & directories under the url.
+    The url can be a .
+
+    It accepts the following parameters:
+
+    :arg str url: path to a directory, or a URL like ``dir:///c:/path/``,
+        ``dir:////root/dir/``. Raises ``OSError`` if url points to a missing
+        location or is not a directory.
+    :arg int timeout: max seconds to wait. ``None`` to wait forever. (default: 10)
+    :return: a DataFrame with columns:
+        - ``type``: extension with a ``.`` prefix -- or ``dir``
+        - ``path``: full path to file / dir
+        - ``dir``: directory path to the file
+        - ``name``: file name (including extension)
+        - ``size``: file size
+        - ``mtime``: last modified time
+
+    TODO: max depth, filters, etc
+    '''
+    try:
+        url = sqlalchemy.engine.url.make_url(url)
+        target = url.database
+    except sqlalchemy.exc.ArgumentError:
+        target = url
+    if not os.path.isdir(target):
+        raise OSError('dirstat: %s is not a directory' % target)
+    target = os.path.normpath(target)
+    result = []
+    start_time = time.time()
+    for dirpath, dirnames, filenames in os.walk(target):
+        if timeout and time.time() - start_time > timeout:
+            app_log.debug('dirstat: %s timeout (%.1fs)', url, timeout)
+            break
+        for name in dirnames:
+            path = os.path.join(dirpath, name)
+            stat = os.stat(path)
+            result.append({
+                'path': path,
+                'dir': dirpath,
+                'name': name,
+                'type': 'dir',
+                'size': stat.st_size,
+                'mtime': stat.st_mtime,
+            })
+        for name in filenames:
+            path = os.path.join(dirpath, name)
+            stat = os.stat(path)
+            result.append({
+                'path': path,
+                'dir': dirpath,
+                'name': name,
+                'type': os.path.splitext(name)[-1],
+                'size': stat.st_size,
+                'mtime': stat.st_mtime,
+            })
+    return pd.DataFrame(result)
