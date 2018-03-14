@@ -33,7 +33,7 @@ import dateutil.tz
 import dateutil.parser
 from pathlib import Path
 from copy import deepcopy
-from random import choices
+from random import choice
 from fnmatch import fnmatch
 from six import string_types
 from collections import OrderedDict
@@ -231,7 +231,7 @@ _valid_key_chars = string.ascii_letters + string.digits
 
 def random_string(size, chars=_valid_key_chars):
     '''Return random string of length size using chars (which defaults to alphanumeric)'''
-    return ''.join(choices(chars, k=5))
+    return ''.join(choice(chars) for index in range(size))
 
 
 RANDOM_KEY = r'$*'
