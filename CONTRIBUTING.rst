@@ -101,7 +101,8 @@ When releasing a new version of Gramex:
     make push-docs push-coverage
     # Push to pypi
     make push-pypi
-    # On Gramener.com, run "pip install --verbose -e ." and restart gramex on port 9988
+    # On gramener.com, run "pip install --verbose -e ." and restart gramex on port 9988
+    # Update gramex on uat.gramener.com and demo.gramener.com
 
 6. Deploy docker instances::
 
