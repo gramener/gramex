@@ -2,7 +2,7 @@ import:
   apps/logviewer/ui:
     path: $GRAMEXAPPS/ui/gramex.yaml
     YAMLURL: $YAMLURL/ui/
-    namespace: [url]
+    namespace: [url, schedule, cache, import]
 
 url:
   apps/logviewer:

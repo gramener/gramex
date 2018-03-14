@@ -20,4 +20,5 @@ url:
           duration: 3600
 
 import:
-  project: '*/dashboard.yaml'
+  path: '*/dashboard.yaml'
+  namespace: [url, schedule, cache, import]

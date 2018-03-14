@@ -472,13 +472,16 @@ def load_imports(config, source, warn=None):
                 value = {'app%d' % i: conf for i, conf in enumerate(value)}
             # By now, import: should be a dict
             elif not isinstance(value, dict):
-                raise ValueError('import: must be string/list/dict, not %s' % repr(value))
+                raise ValueError('import: must be string/list/dict, not %s at %s' % (
+                    repr(value), source))
             # If already a dict with a single import via 'path', convert to dict of apps
             if 'path' in value:
                 value = {'app': value}
             for name, conf in value.items():
                 if not isinstance(conf, dict):
                     conf = AttrDict(path=conf)
+                if 'path' not in conf:
+                    raise ValueError('import: has no conf at %s' % source)
                 paths = conf.pop('path')
                 paths = root.glob(paths) if '*' in paths else [Path(paths)]
                 for path in paths:
@@ -530,8 +533,12 @@ class PathConfig(AttrDict):
             The ``os.stat()`` information about this file (or ``None`` if the
             file is missing.)
     '''
+    duplicate_warn = None
+
     def __init__(self, path, warn=None):
         super(PathConfig, self).__init__()
+        if warn is None:
+            warn = self.duplicate_warn
         self.__info__ = AttrDict(path=Path(path), imports=[], warn=warn)
         self.__pos__()
 

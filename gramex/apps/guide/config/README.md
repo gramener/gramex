@@ -473,32 +473,42 @@ One config file can import another. For example:
 import: another.yaml        # import this YAML file relative to current file path
 ```
 
-This "copy-pastes" the contents of `another.yaml` from the same directory as this
-file.
+These "copy-paste" the contents of `another.yaml` from the same directory as
+this file, ignoring any duplicates.
 
-You can import multiple files as a list, like this:
+Sometimes, you want to include duplicate keys. For example, when importing the
+`url:` section from other applications. In that case, use namespaces:
 
 ```yaml
 import:
-    - another.yaml            # Relative paths are OK. Import is relative to this YAML file
-    - d:/temp/gramex.yaml     # Absoslute paths are OK
-    - '*/gramex.yaml'         # Any gramex.yaml file under an immediate sub-directory
-    - '**/gramex.yaml'        # Any gramex.yaml file under ANY sub-directory
+  app:                          # Some unique name for the app
+    path: another.yaml          # Relative paths are relative to this YAML file
+    namespace: [url, schedule, cache, import]
 ```
 
-The following two imports mean the same thing:
+The `namespace:` replaces the keys under `url:`, `schedule:`, `cache:` and
+`import:` with a unique prefix, ensuring that these sections are merged without
+conflict.
+
+To import multiple files, path can be a list or a wildcard.
 
 ```yaml
-import: app.yaml        # imports app.yaml
 import:
-    path: app.yaml      # imports app.yaml - same as the previous syntax
+  app:
+    path:
+        - another.yaml          # Relative paths are relative to this YAML file
+        - D:/temp/gramex.yaml   # Absolute paths are OK too
+        - '*/gramex.yaml'       # Any gramex.yaml file under an immediate sub-directory
+        - '**/gramex.yaml'      # Any gramex.yaml file under ANY sub-directory
+    namespace: [url, schedule, cache, import]
 ```
 
-The second syntax lets you define new variables when importing the file. For example:
+You can pass variables to the imported file using this syntax:
 
 ```yaml
 import:
-    path: app1/gramex.yaml
+  app:
+    path: another.yaml
     var1: value               # $var1 will be replaced with "value"
     var2: {key: value}        # $var2 will be replaced with {"key": "value"}
 ```
@@ -514,53 +524,24 @@ url:
         ...
 ```
 
-When imported using `import: dir/app.yaml`, the pattern becomes `/dir/`. But you
+When imported using `import: dir/app.yaml`, `$YAMLURL` becomes `/dir/`. But you
 may want to mount applications in different locations, so you can change the
-imported file's $YAMLURL as follows:
-
-```yaml
-import:
-    path: dir/app.yaml          # pattern becomes /dir/ by default
-    YAMLURL: /newappdir/        # pattern is /newappdir/ instead
-    # Here are some other options
-    # YAMLURL: $YAMLURL         # pattern is $YAMLURL, as if dir/app.yaml were copy-pasted here
-    # YAMLURL: /app/dir/        # pattern is /app/dir/
-```
-
-To specify different variables for multiple imports, use sections like this:
+imported file's `$YAMLURL` as follows:
 
 ```yaml
 import:
     app1:
-        path: app1.yaml
-        YAMLURL: /app1/
+        path: dir/app.yaml          # YAMLURL is /dir/ by default
+        YAMLURL: /app1/             # YAMLURL is not set to /app1/ instead
+        # Here are some other options
+        # YAMLURL: $YAMLURL         # pattern is $YAMLURL, as if dir/app.yaml were copy-pasted here
+        # YAMLURL: /app/dir/        # pattern is /app/dir/
     app2:
-        path: app2.yaml
-        YAMLURL: /app2/
+        path: dir/app2.yaml         # Another application
+        YAMLURL: /app2/             # is mounted at /app2/
 ```
 
 The keys `app1`, `app2`, etc. are just identifiers, not used for anything.
-
-The imported configuration **cannot change** existing configuration. For example:
-
-```yaml
-import:
-    path: '*/gramex.yaml'
-```
-
-... will import all `gramex.yaml` files from subdirectories. If they each have a
-`url:` section, **only the first will be used**. The rest will be ignored.
-
-To avoid duplicate keys getting dropped, use namespaces like this:
-
-```yaml
-import:
-    path: '*/gramex.yaml'
-    namespace: [url, schedule, cache, import]
-```
-
-This replaces the keys under `url:`, `schedule:`, `cache:` and `import:` with a
-unique prefix, ensuring that these sections are merged without conflict.
 
 You can also use imports within sections. For example:
 
@@ -577,7 +558,33 @@ url:
 - UNIX shell style wildcards work. `*` matches anything, and `**` matches all
   subdirectories.
 - Imports work recursively. You can have imports within imports.
+- Avoid direct import of multiple files without namespaces. Examples are below.
 
+```yaml
+# BAD
+import: '*/gramex.yaml'
+# GOOD
+import:
+  app:
+    path: '*/gramex.yaml'
+    namespace: [url, schedule, cache, import]
+```
+
+Similarly:
+
+```yaml
+# BAD
+import:
+    - app1.yaml
+    - app2.yaml
+# GOOD
+import:
+  app:
+    path:
+        - app1.yaml
+        - app2.yaml
+    namespace: [url, schedule, cache, import]
+```
 
 ## YAML variables
 

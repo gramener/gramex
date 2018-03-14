@@ -1,6 +1,8 @@
 import:
-  path: $GRAMEXPATH/apps/formhandler/gramex.yaml
-  YAMLURL: $YAMLURL
+  formhandler/apps:
+    path: $GRAMEXPATH/apps/formhandler/gramex.yaml
+    YAMLURL: $YAMLURL
+    namespace: [url, schedule, cache, import]
 
 url:
     formhandler-flags:

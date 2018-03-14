@@ -36,4 +36,7 @@ schedule:
         function: dbsetup.points
         startup: true
 
-import: '*/gramex.yaml'
+import:
+  datahandler/apps:
+    path: '*/gramex.yaml'
+    namespace: [url, schedule, cache, import]
