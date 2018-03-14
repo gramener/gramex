@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 import os
+import re
 import csv
 import six
 import yaml
@@ -88,10 +89,18 @@ class TestPathConfig(unittest.TestCase):
         self.missing = info.home / 'config.missing.yaml'
         self.empty = info.home / 'config.empty.yaml'
         self.string = info.home / 'config.string.yaml'
+        self.random = info.home / 'config.random.yaml'
 
     def tearDown(self):
         unlink(self.conf1)
         unlink(self.conf2)
+
+    def test_random(self):
+        # * in keys is replaced with a random 5-char alphanumeric
+        conf = PathConfig(self.random)
+        for key, val in conf.random.items():
+            regex = re.compile(val.replace('*', '[A-Za-z0-9]{5}'))
+            ok_(regex.match(key))
 
     def test_merge(self):
         # Config files are loaded and merged

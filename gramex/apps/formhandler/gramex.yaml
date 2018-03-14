@@ -10,7 +10,7 @@ handlers:
         YAMLURL: $YAMLURL
 
 url:
-  formhandler-static:
+  formhandler-static-$*:
     pattern: /$YAMLURL/formhandler-static/(.*)
     handler: FileHandler
     kwargs:

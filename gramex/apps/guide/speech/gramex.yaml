@@ -3,7 +3,6 @@ import:
   speech/ui:
     path: $GRAMEXAPPS/ui/gramex.yaml    # Import the UI components
     YAMLURL: $YAMLURL/ui/               # ... at this URL
-    namespace: [url, schedule, cache, import]
 
 url:
   speech/home:

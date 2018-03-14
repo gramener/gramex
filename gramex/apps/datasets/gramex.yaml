@@ -2,11 +2,9 @@ import:
   ui:
     path: $GRAMEXAPPS/ui/gramex.yaml    # Import the UI components
     YAMLURL: $YAMLURL/ui/               # ... at this URL
-    namespace: [url, import]
   formhandler-table:
     path: $GRAMEXPATH/apps/formhandler/gramex.yaml
     YAMLURL: $YAMLURL         # Mount this app at the current folder
-    namespace: [url, import]
 
 url:
   datasets/list:

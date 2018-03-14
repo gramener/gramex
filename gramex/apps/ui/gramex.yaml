@@ -1,7 +1,7 @@
 # UI app configuration
 
 url:
-  apps/ui/static:
+  apps/ui/static-$*:
     pattern: /$YAMLURL/(.*)
     handler: FileHandler
     kwargs:
@@ -10,7 +10,7 @@ url:
       headers:
         Cache-Control: public, max-age=86400
 
-  apps/ui/bootstrap4:
+  apps/ui/bootstrap4-$*:
     pattern: /$YAMLURL/bootstraptheme.css
     handler: FunctionHandler
     kwargs:

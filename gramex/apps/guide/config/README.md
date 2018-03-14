@@ -476,20 +476,6 @@ import: another.yaml        # import this YAML file relative to current file pat
 These "copy-paste" the contents of `another.yaml` from the same directory as
 this file, ignoring any duplicates.
 
-Sometimes, you want to include duplicate keys. For example, when importing the
-`url:` section from other applications. In that case, use namespaces:
-
-```yaml
-import:
-  app:                          # Some unique name for the app
-    path: another.yaml          # Relative paths are relative to this YAML file
-    namespace: [url, schedule, cache, import]
-```
-
-The `namespace:` replaces the keys under `url:`, `schedule:`, `cache:` and
-`import:` with a unique prefix, ensuring that these sections are merged without
-conflict.
-
 To import multiple files, path can be a list or a wildcard.
 
 ```yaml
@@ -570,21 +556,41 @@ import:
     namespace: [url, schedule, cache, import]
 ```
 
-Similarly:
+## YAML duplicate keys
+
+Sometimes, you want to use the same keys. For example, you may want to import
+the same YAML file multiple times, but with different variables.
+
+There are 2 ways of doing this: namespaces and wildcard keys.
+
+### YAML namespaces
+
+When importing another application, use namespaces like this:
 
 ```yaml
-# BAD
 import:
-    - app1.yaml
-    - app2.yaml
-# GOOD
-import:
-  app:
-    path:
-        - app1.yaml
-        - app2.yaml
+  app:                          # Some unique name for the app
+    path: another.yaml          # Relative paths are relative to this YAML file
     namespace: [url, schedule, cache, import]
 ```
+
+The `namespace:` replaces the keys under `url:`, `schedule:`, `cache:` and
+`import:` with a unique prefix, ensuring that these sections are merged without
+conflict.
+
+### YAML wildcard keys
+
+When building an application for re-use, use wildcard keys like this:
+
+```yaml
+url:
+    my-app-$*:                  # Note the '$*' in the key
+        pattern: ...
+```
+
+Every `'$*'` in a key is replaced with a random string every time the file is
+loaded -- ensuring that it is unique.
+
 
 ## YAML variables
 

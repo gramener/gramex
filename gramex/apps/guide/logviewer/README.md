@@ -13,7 +13,6 @@ import:
   logviewer:
     path: $GRAMEXAPPS/logviewer/gramex.yaml   # Source of the app
     YAMLURL: $YAMLURL/log/                    # Location to mount at
-    namespace: [url, schedule]                # Avoid name space conflicts
     auth: ...                                 # Restrict access as required
 ```
 

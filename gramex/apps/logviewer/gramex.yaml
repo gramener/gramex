@@ -2,17 +2,16 @@ import:
   apps/logviewer/ui:
     path: $GRAMEXAPPS/ui/gramex.yaml
     YAMLURL: $YAMLURL/ui/
-    namespace: [url, schedule, cache, import]
 
 url:
-  apps/logviewer:
+  apps/logviewer-$*:
     pattern: /$YAMLURL/(.*)
     handler: FileHandler
     kwargs:
       path: $YAMLPATH
       default_filename: index.html
 
-  apps/logviewer/query:
+  apps/logviewer/query-$*:
     pattern: /$YAMLURL/query/(?P<table>\w+)/(?P<query>[\w-]+)/
     handler: FormHandler
     kwargs:
@@ -22,7 +21,7 @@ url:
       queryfunction: logviewer.query(handler, args)
 
 schedule:
-  apps/logviewer:
+  apps/logviewer-$*:
     function: logviewer.summarize()
     startup: true
     # Run at 6pm local time. In India, this is a bit after 0:00 UTC,

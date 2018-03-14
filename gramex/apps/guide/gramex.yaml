@@ -21,7 +21,6 @@ import:
   ui:
     path: $GRAMEXAPPS/ui/gramex.yaml    # Import UI app
     YAMLURL: $YAMLURL/ui/
-    namespace: [url, schedule, cache, import]
 
 handlers:
     FileHandler:
