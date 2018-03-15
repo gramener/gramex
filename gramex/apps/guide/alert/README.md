@@ -21,21 +21,6 @@ email:
 
 ## Alert examples
 
-### Send an email once
-
-An alert has at least the `to:`, `subject:` and `body:` fields.
-
-```yaml
-alert:
-  alert-once:
-    to: admin@example.org
-    subject: Alert from Gramex
-    body: |
-      This email will be sent once when Gramex starts. It won't be sent again
-      unless you change the key (alert-once) to something else, or run
-      Gramex from a different directory.
-```
-
 ### Send as a different user
 
 `from:` lets you choose a different user to send as. **Note:** this won't work
@@ -44,7 +29,7 @@ on GMail unless you enable
 
 ```yaml
 alert:
-  alert-once:
+  alert-as-user:
     to: admin@example.org
     from: sender@example.org
     subject: Alert from Gramex
@@ -53,7 +38,8 @@ alert:
 
 ### Email multiple people
 
-The `to:`, `cc:` and `bcc:` fields accept a list or comma-seperated email IDs.
+The `to:`, `cc:` and `bcc:` fields accept a list or comma-separated email IDs.
+[Preview](preview/?alert=alert-email).
 
 ```yaml
 alert:
@@ -74,10 +60,11 @@ alert:
 
 `html:` specifies the HTML content to be sent. `body:` can be used along with
 HTML. Email clients choose which content to render based on their capability.
+[Preview](preview/?alert=alert-html).
 
 ```yaml
 alert:
-  alert-content:
+  alert-html:
     to: admin@example.org
     subject: HTML email
     body: This content will only be displayed on devices that cannot render HTML email. That's rare.
@@ -85,13 +72,13 @@ alert:
 ```
 
 `markdown:` can be used to specify the HTML content as Markdown instead of
-`html` (and overrides it):
+`html` (and overrides it). [Preview](preview/?alert=alert-markdown).
 
 ```yaml
 alert:
-  alert-content:
+  alert-markdown:
     to: admin@example.org
-    subject: HTML email
+    subject: Markdown email
     body: This content will only be displayed on devices that cannot render HTML email. That's rare.
     markdown: |
       This is Markdown content.
@@ -102,6 +89,7 @@ alert:
 
 `bodyfile:`, `htmlfile:` and `markdownfile:` load content from files instead of
 directly typing into the `body`, `html` or `markdown:` keys.
+[Preview](preview/?alert=alert-content-file).
 
 ```yaml
 alert:
@@ -117,7 +105,7 @@ alert:
 
 `images:` specifies one or more `<key>: <url>` entries. Each `<key>` can be
 embedded into the email as an image using `<img src="cid:<key>">`. The `<url>`
-can be a file path or a URL.
+can be a file path or a URL. [Preview](preview/?alert=alert-images).
 
 ```yaml
 alert:
@@ -129,18 +117,19 @@ alert:
       <p><img src="cid:img1"></p>
       <p><img src="cid:img2"></p>
     images:
-        img1: $YAMLPATH/img1.jpg
-        img2: https://en.wikipedia.org/static/images/wikimedia-button.png
+      img1: $YAMLPATH/../uicomponents/bg-small.png
+      img2: https://en.wikipedia.org/static/images/wikimedia-button.png
 ```
 
 ### Send attachments
 
 `attachments:` specifies one or more `<key>: <url>` entries. Each entry is added
 to the email as an attachment. The `<url>` can be a file path or a URL.
+[Preview](preview/?alert=alert-attachments).
 
 ```yaml
 alert:
-  alert-images:
+  alert-attachments:
     to: admin@example.org
     subject: Email with attachments
     html: This email contains attachments.
@@ -158,16 +147,16 @@ fields can all use Tornado templates to dynamically generate values.
 alert:
   alert-templates:
     to: '{{ "admin@example.org" }}'
-    subject: 'Template email. Platform is {{ sys.platform }}'
-    body: This email was sent from {{ sys.platform }}.
+    subject: Template email
     html: |
+      {% import sys %}
       <p>This email was sent from {{ sys.platform }}.</p>
       <p><img src="cid:img"></p>
-      <p>{% raw open('footer.html').read() %}</p>
+      <p>{% raw open(r'$YAMLPATH/email.html').read() %}</p>
     images:
-      img: '{{ os.path.join(r"$YAMLPATH", "img1.jpg") }}'
+      img: '{% import os %}{{ os.path.join(r"$YAMLPATH", "../uicomponents/bg-small.png") }}'
     attachments:
-      - '{{ os.path.join(r"$YAMLPATH", "doc1.docx") }}'
+      - '{% import os %}{{ os.path.join(r"$YAMLPATH", "doc1.docx") }}'
 ```
 
 Tornado templates escape all HTML content. To pass the HTML content raw,
@@ -220,6 +209,12 @@ alert:
     subject: Scheduled alert
     body: This email will be scheduled and sent as long as Gramex is running.
 ```
+
+### Send an email once
+
+Before Gramex 1.31, emails without a schedule were sent out once automatically.
+This led to work-in-progress messages being emailed. From Gramex 1.31, all mails
+require a `startup:` or a [schedule](#send-a-scheduled-email).
 
 ### Mail merge: change content by user
 
@@ -283,6 +278,28 @@ TODO
 
 If you have more than one `email:` service set up, you can specific which email
 service to use using `service: name-of-email-service`.
+
+## Alert preview
+
+You can preview emails using the mail preview app. You can run this using:
+
+```bash
+gramex run mail
+```
+
+... or include it in your application:
+
+```yaml
+import:
+  alert-preview:
+    path: $GRAMEXAPPS/mail/gramex.yaml
+    YAMLURL: /$YAMLURL/preview/
+```
+
+<div class="example">
+  <a class="example-demo" href="preview/">Preview emails</a>
+  <a class="example-src" href="http://code.gramener.com/cto/gramex/tree/master/gramex/apps/guide/alert/gramex.yaml">Source</a>
+</div>
 
 ## Alert logs
 

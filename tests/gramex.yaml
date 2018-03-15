@@ -33,6 +33,11 @@ cache:
   # We could test more disk caches, but they're slow
 
 url:
+  invalid-pattern:
+    pattern: invalid\gpattern
+    handler: FileHandler
+    kwargs:
+        path: $YAMLPATH
   invalid-handler:
     pattern: /invalid-handler
     handler: NonExistent
@@ -72,6 +77,14 @@ url:
     handler: FunctionHandler
     kwargs:
       function: utils.params_as_json("$STRING", $NUMBER, a="$STRING", b=$NUMBER)
+
+  func/path_args:
+    pattern: /func/path_args/(.*?)/(.*?)
+    handler: FunctionHandler
+    kwargs:
+      function: json.dumps(handler.path_args)
+      headers:
+        Content-Type: application/json
 
   func/async/args:
     pattern: /func/async/args
@@ -1475,6 +1488,13 @@ url:
     kwargs:
       url: sales.xlsx
       sheetname: dates
+  formhandler/dir:
+    pattern: /formhandler/dir
+    handler: FormHandler
+    kwargs:
+      url: dir:///$YAMLPATH/{root}
+      default:
+        root: '.'
 
   capture:
     pattern: /capture
@@ -2395,10 +2415,14 @@ alert:
     alert-no-service:
       subject: Hello world
       to: admin@example.org
+    alert-no-startup:
+      service: smtps_stub
+      to: nostartup@example.org
+      subject: No startup
     alert-startup:
       service: smtps_stub
       startup: true
-      to: admin@example.org
+      to: startup@example.org
       subject: Gramex started
     alert-schedule:
       service: smtps_stub

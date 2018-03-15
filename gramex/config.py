@@ -33,6 +33,7 @@ import dateutil.tz
 import dateutil.parser
 from pathlib import Path
 from copy import deepcopy
+from random import choice
 from fnmatch import fnmatch
 from six import string_types
 from collections import OrderedDict
@@ -91,6 +92,8 @@ def merge(old, new, mode='overwrite', warn=None, _path=''):
 
         >>> merge({'a': {'x': 1}}, {'a': {'y': 2}})
         {'a': {'x': 1, 'y': 2}}
+
+    If ``new`` is a list, convert into a dict with random keys.
 
     If ``mode='overwrite'``, the old dict is overwritten (default).
     If ``mode='setdefault'``, the old dict values are updated only if missing.
@@ -223,6 +226,17 @@ def _calc_value(val, key):
         return _substitute_variable(val)
 
 
+_valid_key_chars = string.ascii_letters + string.digits
+
+
+def random_string(size, chars=_valid_key_chars):
+    '''Return random string of length size using chars (which defaults to alphanumeric)'''
+    return ''.join(choice(chars) for index in range(size))
+
+
+RANDOM_KEY = r'$*'
+
+
 def _from_yaml(loader, node):
     '''
     Load mapping as AttrDict, preserving order. Raise error on duplicate keys
@@ -236,6 +250,10 @@ def _from_yaml(loader, node):
     loader.flatten_mapping(node)
     for key_node, value_node in node.value:
         key = loader.construct_object(key_node, deep=False)
+        if isinstance(key, six.string_types) and RANDOM_KEY in key:
+            # With k=5 there's a <0.1% chance of collision even for 1mn uses.
+            # (1 - decimal.Decimal(62 ** -5)) ** 1000000 ~ 0.999
+            key = key.replace(RANDOM_KEY, random_string(5))
         try:
             hash(key)
         except TypeError as exc:
@@ -472,13 +490,16 @@ def load_imports(config, source, warn=None):
                 value = {'app%d' % i: conf for i, conf in enumerate(value)}
             # By now, import: should be a dict
             elif not isinstance(value, dict):
-                raise ValueError('import: must be string/list/dict, not %s' % repr(value))
+                raise ValueError('import: must be string/list/dict, not %s at %s' % (
+                    repr(value), source))
             # If already a dict with a single import via 'path', convert to dict of apps
             if 'path' in value:
                 value = {'app': value}
             for name, conf in value.items():
                 if not isinstance(conf, dict):
                     conf = AttrDict(path=conf)
+                if 'path' not in conf:
+                    raise ValueError('import: has no conf at %s' % source)
                 paths = conf.pop('path')
                 paths = root.glob(paths) if '*' in paths else [Path(paths)]
                 for path in paths:
@@ -530,8 +551,12 @@ class PathConfig(AttrDict):
             The ``os.stat()`` information about this file (or ``None`` if the
             file is missing.)
     '''
+    duplicate_warn = None
+
     def __init__(self, path, warn=None):
         super(PathConfig, self).__init__()
+        if warn is None:
+            warn = self.duplicate_warn
         self.__info__ = AttrDict(path=Path(path), imports=[], warn=warn)
         self.__pos__()
 

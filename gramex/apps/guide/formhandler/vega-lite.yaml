@@ -1,0 +1,24 @@
+url:
+  formhandler-vega-lite:
+    pattern: /$YAMLURL/vega-lite
+    handler: FormHandler
+    kwargs:
+      url: $YAMLPATH/flags.csv
+      function: data.groupby('Continent').sum().reset_index()
+      default:
+        col: c1
+      formats:
+        barchart:
+          format: vega-lite
+          spec:
+            "$schema": "https://vega.github.io/schema/vega-lite/v2.json"
+            width: 200
+            height: 200
+            mark: bar
+            encoding:
+              x: {from: data, field: Continent, type: ordinal}
+              y: {from: data, field: c1, type: quantitative}
+          headers:
+            Content-Type: application/javascript
+    cache:
+      expiry: {duration: 3600}

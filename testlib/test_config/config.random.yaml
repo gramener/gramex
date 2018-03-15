@@ -1,0 +1,10 @@
+random:
+  a-$*: 'a-*'
+  '$*': '*'
+  '$*-c': '*-c'
+  '$*': '*'
+
+# Ensure that non-string keys are allowed
+non-random:
+  null: ''
+  1: ''

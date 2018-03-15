@@ -15,7 +15,9 @@ app:
         httponly: false                 # Allow JavaScript access to cookies
 
 import:
-  subdirs: '*/gramex.yaml'              # Import gramex.yaml from immediate subdirs
+  subdirs:
+    path: '*/gramex.yaml'              # Import gramex.yaml from immediate subdirs
+    namespace: [url, schedule, cache, import]
   ui:
     path: $GRAMEXAPPS/ui/gramex.yaml    # Import UI app
     YAMLURL: $YAMLURL/ui/

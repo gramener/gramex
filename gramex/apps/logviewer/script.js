@@ -96,6 +96,7 @@ function drawFilters(params) {
       .done(function(data) {
         var el = filterSelect(data, spec.column, spec.el)
         el.promise().done(function(){
+          el.selectpicker({style: 'btn-info btn-sm'})
           if (query.searchKey[spec.column]) {
             setSelectFilter(el, query.searchKey[spec.column])
           }
@@ -132,7 +133,7 @@ function setDatefilter(spec, query) {
 }
 
 function setSelectFilter(el, value) {
-  el.find('option[value="' + value + '"]').prop('selected', true)
+  el.selectpicker('val', value)
 }
 
 function drawViz(params) {
@@ -162,72 +163,75 @@ function drawViz(params) {
     unitDraw(data, '.kpi-avgloadtime', (function(v){ return d3.format(',.1f')(v) + ' ms' }))
   })
   // visuals
+  // TODO: set the x_axis_format based on the date range / duration
+  var x_axis_format = '%d %b %Y'
+  var dt_axis_tickcount = {interval: 'day', 'step': 1}
   $.getJSON('query/aggD/pageviewstrend/' + updateParams(params))
-    .done(function(data) {
-      var vm = vegam.vegam(data, {types: {time:'date'}})
-        .area({x:'time', y:'pageviews', props: {fill:'#c5e5f8'}})
-        .line({x:'time', y:'pageviews', props: {stroke:'#186de5'}})
-        .scatter({x:'time', y:'pageviews', mark:'circle', props: {fill:'#186de5', size:50}})
-        .style({x_axis_format:'%d %b'})
+    .done(function (data) {
+      var vm = vegam.vegam(data, { types: { time: 'date' } })
+        .area({ x: 'time', y: 'pageviews', props: { fill: '#c5e5f8' } })
+        .line({ x: 'time', y: 'pageviews', props: { stroke: '#186de5' } })
+        .scatter({ x: 'time', y: 'pageviews', mark: 'circle', props: { fill: '#186de5', size: 50 } })
+        .style({ x_axis_format: x_axis_format, x_axis_tickCount: dt_axis_tickcount })
       vegamDraw(vm, '.vegam-pageviewstrend')
     })
   $.getJSON('query/aggD/sessionstrend/' + updateParams(params, ['user.id', 'time']))
-    .done(function(data) {
-      var vm = vegam.vegam(data, {types: {time:'date'}})
-        .area({x:'time', y:'sessions', props: {fill:'#cc95ff'}})
-        .line({x:'time', y:'sessions', props: {stroke:'#8f65b5'}})
-        .scatter({x:'time', y:'sessions', mark:'circle', props: {fill:'#8f65b5', size:50}})
-        .style({x_axis_format:'%d %b'})
+    .done(function (data) {
+      var vm = vegam.vegam(data, { types: { time: 'date' } })
+        .area({ x: 'time', y: 'sessions', props: { fill: '#cc95ff' } })
+        .line({ x: 'time', y: 'sessions', props: { stroke: '#8f65b5' } })
+        .scatter({ x: 'time', y: 'sessions', mark: 'circle', props: { fill: '#8f65b5', size: 50 } })
+        .style({ x_axis_format: x_axis_format, x_axis_tickCount: dt_axis_tickcount })
       vegamDraw(vm, '.vegam-sessionstrend')
     })
   $.getJSON('query/aggD/toptenuri/' + updateParams(params))
-    .done(function(data) {
+    .done(function (data) {
       var vm = vegam.vegam(data)
-        .bar({y:'uri', x:'views', order: 'views', props: {fill:'#77b7f1'}})
-        .style({y_sort_op:'sum', y_sort_field:'views', y_sort_order:'descending'})
+        .bar({ y: 'uri', x: 'views', order: 'views', props: { fill: '#77b7f1' } })
+        .style({ y_sort_op: 'sum', y_sort_field: 'views', y_sort_order: 'descending' })
       vegamDraw(vm, '.vegam-toptenuri')
     })
   $.getJSON('query/aggD/toptenusers/' + updateParams(params))
-    .done(function(data) {
+    .done(function (data) {
       var vm = vegam.vegam(data)
-        .bar({y:'[user.id]', x:'views', order: 'views', props: {fill:'#8f65b5'}})
-        .style({y_sort_op:'sum', y_sort_field:'views', y_sort_order:'descending'})
+        .bar({ y: '[user.id]', x: 'views', order: 'views', props: { fill: '#8f65b5' } })
+        .style({ y_sort_op: 'sum', y_sort_field: 'views', y_sort_order: 'descending' })
       vegamDraw(vm, '.vegam-toptenusers')
     })
   $.getJSON('query/aggD/toptenstatus/' + updateParams(params))
-    .done(function(data) {
-      var vm = vegam.vegam(data, {types: {status:'string'}})
-        .bar({y:'status', x:'views', order: 'views', props: {fill:'#77b7f1'}})
-        .style({y_sort_op:'sum', y_sort_field:'views', y_sort_order:'descending'})
+    .done(function (data) {
+      var vm = vegam.vegam(data, { types: { status: 'string' } })
+        .bar({ y: 'status', x: 'views', order: 'views', props: { fill: '#77b7f1' } })
+        .style({ y_sort_op: 'sum', y_sort_field: 'views', y_sort_order: 'descending' })
       vegamDraw(vm, '.vegam-toptenstatus')
     })
   $.getJSON('query/aggD/toptenip/' + updateParams(params))
-    .done(function(data) {
+    .done(function (data) {
       var vm = vegam.vegam(data)
-        .bar({y:'ip', x:'views', order: 'views', props: {fill:'#8f65b5'}})
-        .style({y_sort_op:'sum', y_sort_field:'views', y_sort_order:'descending'})
+        .bar({ y: 'ip', x: 'views', order: 'views', props: { fill: '#8f65b5' } })
+        .style({ y_sort_op: 'sum', y_sort_field: 'views', y_sort_order: 'descending' })
       vegamDraw(vm, '.vegam-toptenip')
     })
   $.getJSON('query/aggD/loadtimetrend/' + updateParams(params))
-    .done(function(data) {
-      var vm = vegam.vegam(data, {types: {time:'date'}})
-        .line({x:'time', y:'loadtime', props: {stroke:'#ff8101'}})
-        .scatter({x:'time', y:'loadtime', mark:'circle', props: {fill:'#ff8101', size:50}})
-        .style({x_axis_format:'%d %b'})
+    .done(function (data) {
+      var vm = vegam.vegam(data, { types: { time: 'date' } })
+        .line({ x: 'time', y: 'loadtime', props: { stroke: '#ff8101' } })
+        .scatter({ x: 'time', y: 'loadtime', mark: 'circle', props: { fill: '#ff8101', size: 50 } })
+        .style({ x_axis_format: x_axis_format, x_axis_tickCount: dt_axis_tickcount })
       vegamDraw(vm, '.vegam-loadtimetrend')
     })
   $.getJSON('query/aggD/loadtimeviewstrend/' + updateParams(params))
-    .done(function(data) {
-      var vm = vegam.vegam(data, {types: {time:'date'}})
-        .area({x:'time', y:'views', props: {fill:'#cc95ff'}})
-        .style({y_axis_grid:false}, -1)
-        .line({x:'time', y:'views', props: {stroke:'#8f65b5'}})
-        .scatter({x:'time', y:'views', mark:'circle', props: {fill:'#8f65b5', size:20}})
-        .style({y_axis:null}, -2)
-        .line({x:'time', y:'loadtime', props: {stroke:'#ff8101'}})
-        .scatter({x:'time', y:'loadtime', mark:'circle', props: {fill:'#ff8101', size:50}})
-        .style({y_axis_grid:false}, -2)
-        .resolve({scale_y:'independent'})
+    .done(function (data) {
+      var vm = vegam.vegam(data, { types: { time: 'date' } })
+        .area({ x: 'time', y: 'views', props: { fill: '#cc95ff' } })
+        .style({ x_axis: null, y_axis_grid: false }, -1)
+        .line({ x: 'time', y: 'views', props: { stroke: '#8f65b5' } })
+        .scatter({ x: 'time', y: 'views', mark: 'circle', props: { fill: '#8f65b5', size: 20 } })
+        .style({ x_axis: null, y_axis: null }, -2)
+        .line({ x: 'time', y: 'loadtime', props: { stroke: '#ff8101' } })
+        .scatter({ x: 'time', y: 'loadtime', mark: 'circle', props: { fill: '#ff8101', size: 50 } })
+        .style({ x_axis_format: x_axis_format, x_axis_tickCount: dt_axis_tickcount, y_axis_grid: false }, -2)
+        .resolve({ scale_y: 'independent' })
       vegamDraw(vm, '.vegam-loadtimeviewstrend')
     })
 }

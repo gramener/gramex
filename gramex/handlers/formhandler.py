@@ -213,13 +213,13 @@ class FormHandler(BaseHandler):
             app_log.error('%s: _format=%s unknown. Using _format=json' % (self.name, fmt))
             fmt = dict(self.formats['json'])
 
-        # Set up defaul headers, and over-ride with headers for the format
+        # Set up default headers, and over-ride with headers for the format
         for key, val in self.headers.items():
             self.set_header(key, val)
         for key, val in fmt.pop('headers', {}).items():
             self.set_header(key, val)
 
-        if fmt['format'] in {'template', 'pptx'}:
+        if fmt['format'] in {'template', 'pptx', 'vega', 'vega-lite', 'vegam'}:
             fmt['handler'] = self
         if fmt['format'] in {'template'}:
             fmt['meta'] = meta['data'] if self.single else meta

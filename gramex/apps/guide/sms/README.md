@@ -66,3 +66,7 @@ Here is a sample form to send messages:
   <p><input required type="text" name="sender" placeholder="Sender"></p>
   <p><button type="submit">Send SMS</button></p>
 </form>
+
+**Note**: Depending on the geography, the "Sender" field may not be sent. In
+India, it is not. The sender is replaced with "HP-Notice" or similar messages.
+In Singapore, the Sender field is used as-is.

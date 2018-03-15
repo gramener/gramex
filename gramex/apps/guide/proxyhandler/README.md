@@ -92,9 +92,11 @@ To get permission from the user for specific apps, add a `scopes:` section that
 lists the permissions you need. Here is the
 [full list of scopes](https://developers.google.com/identity/protocols/googlescopes).
 
+### Google Services
+
 <div class="example">
   <a class="example-demo" href="../auth/google">Log into Google</a>
-  <a class="example-src" href="http://code.gramener.com/s.anand/gramex/tree/master/gramex/apps/guide/auth/">Source</a>
+  <a class="example-src" href="http://code.gramener.com/cto/gramex/tree/master/gramex/apps/guide/auth/">Source</a>
 </div>
 
 Once logged in, you can:
@@ -123,8 +125,13 @@ Once logged in, you can:
 - Access the [Contacts API](https://developers.google.com/google-apps/contacts/v3/)
   using `https://www.google.com/m8/feeds/contacts/` as the endpoint
     - [Contacts updated since 2018](googlecontacts/default/full?updated-min=2018-01-01T00:00:00)
+- Access the [Natural Language API](https://cloud.google.com/natural-language/docs/)
+    - [v1 API discovery](googlelanguage/$discovery/rest?version=v1)
 
-You can also set up a secret key and access the
+
+### Google Translate
+
+You can set up a secret key to access the
 [Google Translate API](https://cloud.google.com/translate/docs/quickstart):
 
 ```yaml
@@ -142,6 +149,100 @@ Now you can translate across [languages](https://cloud.google.com/translate/docs
 
 - [How are you in German](googletranslate?q=How+are+you&target=de)
 - [How are you from German to Hindi](googletranslate?q=Wie+geht+es+Ihnen&target=hi)
+
+### Google Search
+
+To access the
+[Google Custom Search API](https://developers.google.com/custom-search/json-api/v1/overview)
+set up a custom search engine that [searches the entire web](https://stackoverflow.com/a/11206266/100904).
+Then with an API key,
+use the [REST API](https://developers.google.com/custom-search/json-api/v1/using_rest)
+and [reference](https://developers.google.com/custom-search/json-api/v1/reference/cse/list),
+fetch search results.
+
+```yaml
+    proxyhandler/googlesearch:
+        pattern: /$YAMLURL/googlesearch
+        handler: ProxyHandler
+        kwargs:
+          url: https://www.googleapis.com/customsearch/v1
+          default:
+            key: ...        # Your API key
+            cx: ...         # Your custom search engine ID
+```
+
+Here are some examples of searches:
+
+- [Gramener mentions last week when searching from the US](googlesearch?q=gramener&dateRestrict=1w&gl=us)
+- [Pages related to gramener.com](googlesearch?relatedSite=gramener.com&q=)
+[Google Translate API](https://cloud.google.com/translate/docs/quickstart):
+
+### Google Cloud NLP
+
+You can also analyze text using [NLP](https://cloud.google.com/natural-language/docs/):
+
+```yaml
+    proxyhandler/googlelanguage:
+        pattern: /$YAMLURL/googlelanguage/(.*)
+        handler: ProxyHandler
+        kwargs:
+            url: https://language.googleapis.com/{0}
+            method: POST
+            request_headers:
+              "*": true
+            default:
+              key: ...
+```
+
+Sending a POST request to `googlelanguage/v1/documents:analyzeEntities` with
+this JSON content analyzes the entities:
+
+```js
+{
+    "document": {
+        "type": "PLAIN_TEXT",
+        "language": "en",
+        "content": "The Taj Mahal is in Agra"
+    },
+    "encodingType": "UTF8"
+}
+```
+
+<button class="post-button" data-href="googlelanguage/v1/documents:analyzeEntities" data-target="#entity-result" data-body='{
+    "document": {
+        "type": "PLAIN_TEXT",
+        "language": "en",
+        "content": "The Taj Mahal is in Agra"
+    },
+    "encodingType": "UTF8"}'>Analyze the entities</button>
+
+<div class="codehilite"><pre><code id="entity-result">Click the button above to see the result</code></pre></div>
+
+
+To analyze the sentiment of text, send a POST request to
+`googlelanguage/v1/documents:analyzeSentiment` with this JSON content:
+
+```javascript
+{
+    "document": {
+        "type": "PLAIN_TEXT",
+        "language": "en",
+        "content": "Disliking watercraft is not really my thing"
+    },
+    "encodingType": "UTF8"
+}
+```
+
+<button class="post-button" data-href="googlelanguage/v1/documents:analyzeSentiment" data-target="#sentiment-result" data-body='{
+    "document": {
+        "type": "PLAIN_TEXT",
+        "language": "en",
+        "content": "Disliking watercraft is not really my thing"
+    },
+    "encodingType": "UTF8"}'>Analyze the sentiment</button>
+
+<div class="codehilite"><pre><code id="sentiment-result">Click the button above to see the result</code></pre></div>
+
 
 ## Facebook ProxyHandler
 
@@ -162,7 +263,7 @@ To access the Facebook APIs, set up a [Facebook Auth handler](../auth/#facebook-
 
 <div class="example">
   <a class="example-demo" href="../auth/facebook">Log into Facebook</a>
-  <a class="example-src" href="http://code.gramener.com/s.anand/gramex/tree/master/gramex/apps/guide/auth/">Source</a>
+  <a class="example-src" href="http://code.gramener.com/cto/gramex/tree/master/gramex/apps/guide/auth/">Source</a>
 </div>
 
 Once logged in, you can:
@@ -197,6 +298,8 @@ internal applications to users who are logged in via Gramex.
 Further, it caches the response for 300s (5 min) -- making this an authenticated
 caching reverse proxy.
 
+
+<script src="proxyhandler.js?v=16"></script>
 
 [proxyhandler]: https://learn.gramener.com/gramex/gramex.handlers.html#gramex.handlers.ProxyHandler
 [xsrf]: ../filehandler/#xsrf

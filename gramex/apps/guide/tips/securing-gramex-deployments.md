@@ -10,7 +10,7 @@ To check if your project is vulnerable, download and run the
 This runs a penetration test on your application and shares a report.
 
 To protect against common vulnerabilities, the quickest way is to [import deploy.yaml](../deploy/#security).
-This [deploy.yaml](https://code.gramener.com/s.anand/gramex/blob/master/gramex/deploy.yaml)
+This [deploy.yaml](https://code.gramener.com/cto/gramex/blob/master/gramex/deploy.yaml)
 has commonly used security configurations and is bundled as part of Gramex.
 
 For example, it:

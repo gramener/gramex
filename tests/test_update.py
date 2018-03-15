@@ -27,7 +27,7 @@ class TestUpdate(TestGramex):
 
         # post to /update/ with JSON list of keys. Updates url.gramexupdate.kwargs.path
         data = [{'x': 0, 'y': 1}, {'x': 2, 'y': 3}]
-        with json_changes(gramex.conf.url.gramexupdate.kwargs.path) as changes:
+        with json_changes(gramex.conf.log.handlers['gramex-update-log'].filename) as changes:
             r = self.get('/update/', method='post', data=json.dumps(data))
         for output, source in zip(changes, data):
             self.assertDictContainsSubset(source, output)
@@ -40,7 +40,7 @@ class TestUpdate(TestGramex):
         # Truncate the events database to ensure that the update check is ALWAYS performed
         conn.execute('DELETE FROM events')
         with assert_raises(requests.HTTPError):
-            gramex.gramex_update(server.base_url)
+            gramex.gramex_update(server.base_url + '/nonexistent/')
 
         # Only push latest events since last update
         conn.execute('DELETE FROM events')

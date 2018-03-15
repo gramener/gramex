@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 from . import TestGramex
 
 
@@ -59,6 +61,9 @@ class TestFunctionHandler(TestGramex):
         r = self.get('/func/redirect?next=/def', headers={'NEXT': '/abc'}, allow_redirects=False)
         self.assertEqual(r.headers.get('Location'), '/def')
         self.assertEqual(r.headers.get('Increment'), '4')
+
+    def test_path_args(self):
+        self.check('/func/path_args/高/兴', text='["\\u9ad8", "\\u5174"]')
 
     def test_methods(self):
         self.check('/func/methods', method='get', code=405)

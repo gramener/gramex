@@ -498,3 +498,15 @@ class TestFormHandler(TestGramex):
             expected = data[data['date'] > pd.to_datetime(dt)]
             expected.index = actual.index
             afe(actual, expected, check_like=True)
+
+    def test_dir(self):
+        def check(expected, **params):
+            actual = pd.DataFrame(self.get('/formhandler/dir', params=params).json())
+            expected.index = actual.index
+            afe(actual, expected, check_like=True)
+
+        for path in ('dir/subdir', 'dir/', 'subapp'):
+            df = gramex.data.dirstat(os.path.join(folder, path))
+            check(df, root=path)
+            check(df.sort_values('size'), root=path, _sort='size')
+            check(df.sort_values('name', ascending=False), root=path, _sort='-name')

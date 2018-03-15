@@ -401,7 +401,10 @@ schedule:
             excel: $USER_DATABASE_EXCEL
         startup: true
 
-import: '*/gramex.yaml'
+import:
+  auth/apps:
+    path: '*/gramex.yaml'
+    namespace: [url, schedule, cache, import]
 
 email:
     gramex-guide-auth:

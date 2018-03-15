@@ -56,7 +56,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Gramex'
-copyright = u'2015-2016, Gramener'
+copyright = u'2015-2018, Gramener'
 
 # The version info for the project you're documenting, acts as replacement
 # for |version| and |release|, also used in various other places throughout

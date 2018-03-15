@@ -1,13 +1,13 @@
 capture:
     target: $GRAMEXPATH/apps/capture/
-datasets:
-    target: $GRAMEXPATH/apps/datasets/
 guide:
     target: $GRAMEXPATH/apps/guide/
 gramex-update:
     target: $GRAMEXPATH/apps/update/
 logviewer:
     target: $GRAMEXPATH/apps/logviewer/
+mail:
+    target: $GRAMEXPATH/apps/mail/
 smartalerts:
     target: $GRAMEXPATH/apps/smartalerts/
 wrangler:

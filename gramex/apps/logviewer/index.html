@@ -9,6 +9,7 @@
 	<link rel="stylesheet" href="ui/bootstraptheme.css?primary=%2320186F&secondary=%23483FA4&success=%233E6182&info=%23E4E4E4&warning=%23F57E1A&danger=%23F9F9F9&light=%234A4A4A&dark=%23362D8B&body-bg=%23F2F2F2&body-color=%23696969&enable-transitions=on&font-family-base=roboto&headings-font-family=roboto#background">
   <link rel="stylesheet" href="ui/font-awesome/css/font-awesome.min.css">
   <link rel="stylesheet" href="ui/daterangepicker/daterangepicker.css">
+  <link rel="stylesheet" href="ui/bootstrap-select/dist/css/bootstrap-select.min.css">
   <link rel="stylesheet" href="node_modules/vega-tooltip/build/vega-tooltip.min.css">
 </head>
 <body>
@@ -34,22 +35,22 @@
           </div>
         </div>
         <div class="filter-status col w-100 mb-2 mb-md-0">
-					<select name="status" class="form-control form-control-sm border-top-0 border-right-0 border-left-0 border-light p-0 no-border-radius">
+					<select name="status" data-live-search="true" class="form-control form-control-sm border-top-0 border-right-0 border-left-0 border-light p-0 no-border-radius">
             <option value="">Status</option>
 					</select>
 				</div>
 				<div class="filter-users col w-100 mb-2 mb-md-0">
-					<select name="user.id" class="form-control form-control-sm border-top-0 border-right-0 border-left-0 border-light p-0 no-border-radius">
+					<select name="user.id" data-live-search="true" class="form-control form-control-sm border-top-0 border-right-0 border-left-0 border-light p-0 no-border-radius">
 						<option value="">User Name</option>
 					</select>
 				</div>
 				<div class="filter-uri col w-100 mb-2 mb-md-0">
-					<select name="uri" class="form-control form-control-sm border-top-0 border-right-0 border-left-0 border-light p-0 no-border-radius">
+					<select name="uri" data-live-search="true" class="form-control form-control-sm border-top-0 border-right-0 border-left-0 border-light p-0 no-border-radius">
 						<option value="">Page Name</option>
 					</select>
 				</div>
 				<div class="filter-ip col w-100 mb-2 mb-md-0">
-					<select name="ip" class="form-control form-control-sm border-top-0 border-right-0 border-left-0 border-light p-0 no-border-radius">
+					<select name="ip" data-live-search="true" class="form-control form-control-sm border-top-0 border-right-0 border-left-0 border-light p-0 no-border-radius">
 						<option value="">IP</option>
 					</select>
 				</div>
@@ -204,6 +205,7 @@
 	<script src="ui/bootstrap/dist/js/bootstrap.min.js"></script>
   <script src="ui/moment/min/moment-with-locales.min.js"></script>
   <script src="ui/daterangepicker/daterangepicker.js"></script>
+  <script src="ui/bootstrap-select/dist/js/bootstrap-select.min.js"></script>
   <script src="ui/g1/dist/urlfilter.min.js"></script>
   <script src="ui/d3/build/d3.min.js"></script>
   <script src="node_modules/vega/build/vega-core.min.js"></script>
@@ -217,14 +219,14 @@
   // TODO: switch between aggD, aggW, addM based on date range selection
   var config = {
     filters: [
-      {'column': 'status', 'type': 'select', 'el': '.filter-status select', 'url': 'query/aggD/toptenstatus/'},
-      {'column': 'user.id', 'type': 'select', 'el': '.filter-users select', 'url': 'query/aggD/toptenusers/'},
-      {'column': 'uri', 'type': 'select', 'el': '.filter-uri select', 'url': 'query/aggD/toptenuri/'},
-      {'column': 'ip', 'type': 'select', 'el': '.filter-ip select', 'url': 'query/aggD/toptenip/'},
+      {'column': 'status', 'type': 'select', 'el': '.filter-status select', 'url': 'query/aggD/filterstatus/'},
+      {'column': 'user.id', 'type': 'select', 'el': '.filter-users select', 'url': 'query/aggD/filterusers/'},
+      {'column': 'uri', 'type': 'select', 'el': '.filter-uri select', 'url': 'query/aggD/filteruri/'},
+      {'column': 'ip', 'type': 'select', 'el': '.filter-ip select', 'url': 'query/aggD/filterip/'},
       {'column': 'time', 'type': 'daterange', 'el': '.filter-time input', 'url': ''}
     ]
   }
-  var dtfmt = 'YYYY-MM-DD-00-00-00'
+  var dtfmt = 'YYYY-MM-DD 00:00:00'
   var params = g1.url.parse(location.search)
   // default update
   if (!params.searchKey.hasOwnProperty('time>~')  && !params.searchKey.hasOwnProperty('time<~')) {

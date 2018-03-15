@@ -27,7 +27,8 @@ glob('*/*.md', { cwd: root }, function (err, files) {
         body.push(token.text)
       }
     })
-    add_doc(title, prefix, body, file)
+    if (title)
+      add_doc(title, prefix, body, file)
   })
   var idx = lunr(function () {
     this.field('title')

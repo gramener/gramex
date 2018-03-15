@@ -1,6 +1,9 @@
 import:
-  path: $GRAMEXPATH/apps/formhandler/gramex.yaml
-  YAMLURL: $YAMLURL
+  -
+    path: $GRAMEXPATH/apps/formhandler/gramex.yaml
+    YAMLURL: $YAMLURL
+  - vega.yaml
+  - vega-lite.yaml
 
 url:
     formhandler-flags:
@@ -181,3 +184,9 @@ url:
               Content-Type: image/png
       cache:
         expiry: {duration: 3600}
+
+    formhandler-dir:
+      pattern: /$YAMLURL/dir
+      handler: FormHandler
+      kwargs:
+        url: $YAMLPATH/

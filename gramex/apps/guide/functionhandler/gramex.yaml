@@ -30,3 +30,11 @@ url:
             function: calculations.fetch            # Fetch URLs one after another
             headers:
                 Content-Type: application/json
+
+    addpath:
+        pattern: /$YAMLURL/addpath/(.*?)/(.*?)
+        handler: FunctionHandler
+        kwargs:
+            function: json.dumps(int(handler.path_args[0]) + int(handler.path_args[1]))
+            headers:
+                Content-Type: application/json      # Display as JSON

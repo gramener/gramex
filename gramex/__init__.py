@@ -53,6 +53,19 @@ with (paths['source'] / 'release.json').open() as _release_file:
 _sys_path = list(sys.path)      # Preserve original sys.path
 
 
+# List of URLs to warn about in case of duplicates
+PathConfig.duplicate_warn = [
+    'url.*',
+    'cache.*',
+    'schedule.*',
+    'watch.*',
+    'email.*',
+    'alert.*',
+    'sms.*',
+    'log.loggers.*', 'log.handlers.*', 'log.formatters.*',
+]
+
+
 def parse_command_line(commands):
     '''
     Parse command line arguments. For example:
@@ -218,10 +231,6 @@ def init(force_reload=False, **kwargs):
     Services are re-initialised if their configurations have changed. Service
     callbacks are always re-run (even if the configuration hasn't changed.)
     '''
-    # List of URLs to warn about
-    warns = ['url.*', 'cache.*', 'schedule.*', 'watch.*',
-             'log.loggers.*', 'log.handlers.*', 'log.formatters.*']
-
     # Reset variables
     variables.clear()
     variables.update(setup_variables())
@@ -233,7 +242,7 @@ def init(force_reload=False, **kwargs):
         if isinstance(val, Path):
             if val.is_dir():
                 val = val / 'gramex.yaml'
-            val = PathConfig(val, warn=warns)
+            val = PathConfig(val)
         config_layers[key] = val
 
     # Locate all config files

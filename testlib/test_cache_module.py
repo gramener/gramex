@@ -26,6 +26,7 @@ from . import folder
 
 folder = os.path.join(folder, 'test_cache')
 state_file = os.path.join(folder, '.state')
+small_delay = 0.01
 
 
 def touch(path, times=None, data=None):
@@ -118,12 +119,6 @@ class TestOpener(unittest.TestCase):
         eq_(result.args, (text, ))
         eq_(result.kwargs, {})
 
-        with io.open(path, encoding='cp1252') as handle:
-            text = handle.read()
-        result = o(path, encoding='cp1252')
-        eq_(result.args, (text, ))
-        eq_(result.kwargs, {})
-
         with io.open(path, mode='rb') as handle:
             text = handle.read()
         result = o(path, mode='rb', encoding=None, errors=None)
@@ -140,6 +135,7 @@ class TestOpen(unittest.TestCase):
         check(reload=True)
         check(reload=False)
         touch(path)
+        time.sleep(small_delay)
         check(reload=True)
 
     def test_rel(self):

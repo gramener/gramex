@@ -84,7 +84,7 @@ The first time, you get an access_token error. Visit [/persist/](persist/) to lo
 in. Thereafter, your access_token will be stored and used for future requests
 until it expires, or a user logs in again at [/persist/](persist/).
 
-[source]: https://code.gramener.com/s.anand/gramex/tree/dev/gramex/apps/guide/facebookgraphhandler
+[source]: https://code.gramener.com/cto/gramex/tree/dev/gramex/apps/guide/facebookgraphhandler
 [facebookgraphhandler]: https://learn.gramener.com/gramex/gramex.handlers.html#gramex.handlers.FacebookGraphHandler
 
 <script>

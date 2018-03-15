@@ -217,6 +217,26 @@ args = handler.argparse(
 )
 ```
 
+## Path arguments
+
+If your URL pattern has wild cards, these are available as `handler.path_args`.
+For example:
+
+```yaml
+url:
+    addpath:
+        pattern: /addpath/(.*?)/(.*?)
+        handler: FunctionHandler
+        kwargs:
+            function: json.dumps(int(handler.path_args[0]) + int(handler.path_args[1]))
+```
+Sample output:
+
+- [addpath/10/35](addpath/10/35) shows 45
+- [addpath/-30/90](addpath/-30/90) shows 60
+
+`path_args` is available to [all handlers](../handler/#basehandler-attributes).
+
 ## Streaming output
 
 If you perform slow calculations and want to flush interim calculations out to

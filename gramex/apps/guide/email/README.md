@@ -82,7 +82,7 @@ See the source in the example below to understand how to use it.
 
 <div class="example">
   <a class="example-demo" href="mail">Try a sample email</a>
-  <a class="example-src" href="http://code.gramener.com/s.anand/gramex/tree/master/gramex/apps/guide/email/emailapp.py">Source</a>
+  <a class="example-src" href="http://code.gramener.com/cto/gramex/tree/master/gramex/apps/guide/email/emailapp.py">Source</a>
 </div>
 
 ## HTML email
@@ -176,3 +176,20 @@ def email_alert():
             attachments=[data_file],                              #   Maybe attach the data
         )
 ```
+
+## Test email service
+
+To test an email service without sending an email, add `stub: log` to the
+configuration. For example:
+
+```yaml
+email:
+    email-test:
+        type: gmail
+        email: gramex.guide@gmail.com
+        password: tlpmupxnhucitpte
+        stub: log           # Don't send emails. Just print them to the console
+```
+
+When an email is sent via the `email-test` service above, it will not actually
+be sent. The email contents will be printed on the console.

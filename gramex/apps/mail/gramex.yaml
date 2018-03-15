@@ -1,0 +1,18 @@
+import:
+  alertmail: $GRAMEXDATA/mail/gramexmail.yaml
+  ui:
+    path: $GRAMEXAPPS/ui/gramex.yaml    # Import the UI components
+    YAMLURL: $YAMLURL/ui/               # ... at this URL
+
+url:
+  mail/home-$*:
+    pattern: /$YAMLURL/
+    handler: FileHandler
+    kwargs:
+      path: $YAMLPATH/index.html
+      template: true
+  mail/cid-$*:
+    pattern: /$YAMLURL/cid/(.*)
+    handler: FunctionHandler
+    kwargs:
+      function: mailapp.cid(handler)

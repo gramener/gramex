@@ -48,6 +48,10 @@ prefix: Guide
 - [Deployment patterns](deploy/)
 - [Try out some exercises](exercises/)
 
+## Demos
+
+- [Speech recognition demo](speech/)
+
 ### Deprecated
 
 - [DataHandler connects to data](datahandler/) - use [FormHandler](formhandler/)

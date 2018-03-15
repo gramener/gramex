@@ -26,10 +26,11 @@ help:
 clean: clean-build clean-pyc clean-test
 
 clean-build:
-	rm -fr build/
-	rm -fr dist/
-	rm -fr .eggs/
+	rm -rf build/
+	rm -rf dist/
+	rm -rf .eggs/
 	rm -rf tests/uploads/
+	rm -rf gramex-1.*
 	find . -name '*.egg-info' -exec rm -fr {} +
 	find . -name '*.egg' -exec rm -f {} +
 
@@ -102,3 +103,7 @@ push-coverage:
 
 push-docs: docs
 	rsync -avzP docs/_build/html/ ubuntu@gramener.com:/mnt/gramener/learn.gramener.com/gramex/
+
+push-pypi: clean
+	python setup.py sdist
+	twine upload dist/*

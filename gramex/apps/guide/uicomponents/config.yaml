@@ -64,6 +64,7 @@ font:
       open-sans: Open Sans
       roboto: Roboto
       segoe-ui: Segoe UI
+      lato: Lato
   headings-font-family:
     title: Heading font
     default: ''
@@ -77,6 +78,7 @@ font:
       century-gothic: Century Gothic
       roboto-condensed: Roboto Condensed
       open-sans-condensed: Open Sans Condensed
+      lato: Lato
 
 
 theme:

@@ -30,6 +30,7 @@ cache:
 handlers:
     BaseHandler:
         error:
+            400: {path: $YAMLPATH/handlers/400.html}
             403: {path: $YAMLPATH/handlers/403.html}
             404: {path: $YAMLPATH/handlers/404.html}
             500: {path: $YAMLPATH/handlers/500.html}

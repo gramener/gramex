@@ -74,4 +74,4 @@ error, run these commands to increase the limit:
     printf "fs.inotify.max_user_watches=524288\n" | sudo tee -a /etc/sysctl.conf
     sudo sysctl --system
 
-To debug, see [issue #126](https://code.gramener.com/s.anand/gramex/issues/126)
+To debug, see [issue #126](https://code.gramener.com/cto/gramex/issues/126)

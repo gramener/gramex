@@ -11,7 +11,7 @@ Building Gramex
 - All other branches are temporary feature branches
 
 
-Gramex can be developed on Python 2.7, 3.4 and 3.5 on Windows or Linux.
+Gramex can be developed on Python 2.7 and 3.6 on Windows or Linux.
 To set up the development environment:
 
 1. Download and install `Anaconda`_ 4.0.0 or later -- `update Anaconda`_ if required
@@ -58,32 +58,7 @@ Contributing to Gramex
     - Write unit tests
     - Document the feature in docstrings
     - Explain how to use the feature in ``docs/``
-    - Test on Python 2.7, 3.4 and 3.5
-
-
-Gramex documentation
---------------------
-
-Gramex documentation is hosted at https://learn.gramener.com/gramex/. To set
-this up:
-
-1. Add the ``ec2@gramener.com`` SSH key as a
-   `deploy key <http://code.gramener.com/s.anand/gramex/deploy_keys>`_
-2. Add ``https://gramener.com/hook/`` as a
-   `web hook <http://code.gramener.com/s.anand/gramex/hooks>`_
-3. In https://gramener.com/hook/ go to Paths and add a hook:
-   - url: ``git@code.gramener.com:s.anand/gramex.git``
-   - folder: ``/mnt/gramener/apps/gramex/``
-   - command: ``make docs``
-4. ``ssh learn.gramener.com`` and run::
-
-    cd /mnt/gramener/apps/gramex      # Go to the Gramex folder
-    git checkout dev                  # Check out the dev branch
-    pip install -r requirements.txt   # install dependencies
-
-    # Link the docs under https://learn.gramener.com/gramex/
-    cd /mnt/gramener/learn.gramener.com
-    ln -s /mnt/gramener/apps/gramex/docs/_build/html
+    - Test on Python 2.7 and 3.6
 
 
 Release
@@ -108,22 +83,27 @@ When releasing a new version of Gramex:
     - Run ``python gramex/apps/guide/search/search.py`` using Python 3
     - Run ``node gramex/apps/guide/search/searchindex.js``
 
-3. Commit and push the ``dev`` branch to the server. Merge with master, create
-   an annotated tag and push the master branch::
+3. Commit and push the ``dev`` branch to the server. **Ensure pipeline passes.**::
 
     git commit -m"DOC: Add v1.x.x release notes"
     git push                    # Push the dev branch
+
+4. Merge with master, create an annotated tag and push the master branch::
+
     git checkout master
     git merge dev
     git tag -a v1.x.x           # Annotate with a one-line summary of features
     git push --follow-tags
     git checkout dev            # Switch back to dev
 
-5. Deploy on gramener.com::
+5. Deploy on gramener.com and pypi::
 
-    # Push states
+    # Push docs and coverage tests
     make push-docs push-coverage
-    # Restart Gramex at port 9988 on gramener.com
+    # Push to pypi
+    make push-pypi
+    # On gramener.com, run "pip install --verbose -e ." and restart gramex on port 9988
+    # Update gramex on uat.gramener.com and demo.gramener.com
 
 6. Deploy docker instances::
 

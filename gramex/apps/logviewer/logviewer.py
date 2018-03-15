@@ -64,7 +64,7 @@ def add_session(df, duration=30):
     return df
 
 
-def summarize(drop=False):
+def summarize(transforms=[], run=True):
     '''summarize'''
     levels = DB_CONFIG['levels']
     table = DB_CONFIG['table'].format
@@ -75,14 +75,15 @@ def summarize(drop=False):
     folder = os.path.dirname(log_file)
     conn = sqlite3.connect(os.path.join(folder, 'logviewer.db'))
     # drop agg tables from database
-    if drop:
+    if run in ['drop', 'reload']:
         droptable = 'DROP TABLE IF EXISTS {}'.format
         for freq in levels:
             conn.execute(droptable(table(freq)))
         conn.commit()
         conn.execute('VACUUM')
-        conn.close()
-        return
+        if run == 'drop':
+            conn.close()
+            return
     # all log files sorted by modified time
     log_files = sorted(glob(log_file + '*'), key=os.path.getmtime)
     dt = None
@@ -105,9 +106,10 @@ def summarize(drop=False):
     ], ignore_index=True)
     data['time'] = pd.to_datetime(data['time'], unit='ms', errors='coerce')
     data = data[data['time'].notnull()]
-    if not np.issubdtype(data['duration'].dtype, np.number):
-        data['duration'] = pd.to_numeric(data['duration'], errors='coerce')
-        data = data[data['duration'].notnull()]
+    for column in ['duration', 'status']:
+        if not np.issubdtype(data[column].dtype, np.number):
+            data[column] = pd.to_numeric(data[column], errors='coerce')
+            data = data[data[column].notnull()]
     # logging via threads may not maintain order
     data = data.sort_values(by='time')
     # add new_session
@@ -129,13 +131,23 @@ def summarize(drop=False):
         groups[0]['freq'] = freq
         # get summary view
         dff = pdagg(data, groups, aggfuncs)
+        # TODO: apply transforms here
+        for spec in transforms:
+            apply_transform(dff, spec)
         # insert new records
-        dff.to_sql(table(freq), conn, if_exists='append', index=False)
+        try:
+            dff.to_sql(table(freq), conn, if_exists='append', index=False)
+        # dff columns should match with table columns
+        # if not, call summarize run='reload' to
+        # drop all the tables and rerun the job
+        except sqlite3.OperationalError:
+            summarize(transforms=transforms, run='reload')
+            return
     conn.close()
     return
 
 
-def prepare_where(args, columns):
+def prepare_where(query, args, columns):
     '''prepare where clause'''
     wheres = []
     for key, vals in args.items():
@@ -161,69 +173,34 @@ def prepare_where(args, columns):
             q = ' OR '.join('"{}" NOT LIKE "%{}%"'.format(col, x) for x in vals)
             wheres.append('({})'.format(q))
     wheres = ' AND '.join(wheres)
-    wheres = 'WHERE ' + wheres if wheres else wheres
+    if not wheres:
+        return wheres
+    prepend = 'WHERE ' if ' WHERE ' not in query else 'AND '
+    wheres = prepend + wheres
     return wheres
 
 
 def query(handler, args):
     '''queries for logviewer'''
-    queries = {
-        'kpi-pageviews': (
-            'SELECT SUM(duration_count) AS value FROM {table} {where}'
-        ),
-        'kpi-sessions': (
-            'SELECT SUM(new_session_sum) AS value FROM {table} {where}'
-        ),
-        'kpi-users': (
-            'SELECT COUNT(DISTINCT "user.id") AS value FROM {table} {where}'
-        ),
-        'kpi-avgtimespent': (
-            'SELECT SUM(session_time_sum)/SUM(new_session_sum) AS value'
-            ' FROM {table} {where}'
-        ),
-        'kpi-urls': (
-            'SELECT COUNT(DISTINCT uri) AS value FROM {table} {where}'
-        ),
-        'kpi-avgloadtime': (
-            'SELECT SUM(duration_sum)/SUM(duration_count) AS value'
-            ' FROM {table} {where}'
-        ),
-        'toptenusers': (
-            'SELECT "user.id", SUM(duration_count) AS views'
-            ' FROM {table} {where} GROUP BY "user.id" ORDER BY views DESC LIMIT 10'
-        ),
-        'toptenip': (
-            'SELECT ip, SUM(duration_count) AS views'
-            ' FROM {table} {where} GROUP BY ip ORDER BY views DESC LIMIT 10'
-        ),
-        'toptenstatus': (
-            'SELECT status, SUM(duration_count) AS views'
-            ' FROM {table} {where} GROUP BY status ORDER BY views DESC LIMIT 10'
-        ),
-        'toptenuri': (
-            'SELECT uri, SUM(duration_count) AS views'
-            ' FROM {table} {where} GROUP BY uri ORDER BY views DESC LIMIT 10'
-        ),
-        'pageviewstrend': (
-            'SELECT time, SUM(duration_count) AS pageviews'
-            ' FROM {table} {where} GROUP BY time'
-        ),
-        'sessionstrend': (
-            'SELECT time, SUM(new_session_sum) AS sessions'
-            ' FROM {table} {where} GROUP BY time'
-        ),
-        'loadtimetrend': (
-            'SELECT time, SUM(duration_sum)/SUM(duration_count) AS loadtime'
-            ' FROM {table} {where} GROUP BY time'
-        ),
-        'loadtimeviewstrend': (
-            'SELECT time, SUM(duration_sum)/SUM(duration_count) AS loadtime,'
-            'SUM(duration_count) AS views'
-            ' FROM {table} {where} GROUP BY time'
-        )
-    }
+    queries = handler.kwargs.kwargs.queries
     table = handler.path_kwargs.get('table')
     case = handler.path_kwargs.get('query')
-    wheres = prepare_where(args, DB_CONFIG['table_columns'])
-    stmt = queries.get(case).format(table=table, where=wheres)
+    query = queries.get(case)
+    wheres = prepare_where(query, args, DB_CONFIG['table_columns'])
+    stmt = query.format(table=table, where=wheres)
     return stmt
+
+
+def apply_transform(data, spec):
+    '''apply transform on dataframe'''
+    ops = {
+        'REPLACE': pd.Series.replace,
+        'MAP': pd.Series.map,
+        'IN': pd.Series.isin,
+        'NOTIN': lambda s, v: ~s.isin(v),
+        'CONTAINS': lambda s, v: s.str.contains(v, case=False),
+        'NOTCONTAINS': lambda s, v: ~s.str.contains(v, case=False)
+    }
+    expr = spec['expr']
+    data[spec['as']] = ops[expr['op']](data[expr['col']], expr['value'])
+    return data

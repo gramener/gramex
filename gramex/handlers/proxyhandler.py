@@ -128,7 +128,8 @@ class ProxyHandler(BaseHandler):
             if header_name not in {'Connection', 'Transfer-Encoding', 'Content-Length'}:
                 self.set_header(header_name, header_value)
         # Proxies may send the wrong Content-Length. Correct it, else Tornado raises an error
-        self.set_header('Content-Length', len(response.body))
+        if response.body is not None:
+            self.set_header('Content-Length', len(response.body))
         for header_name, header_value in self.headers.items():
             self.set_header(header_name, header_value)
         # Pass on HTTP status code and response body as-is

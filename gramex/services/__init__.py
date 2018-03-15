@@ -12,6 +12,7 @@ exists, a warning is raised.
 '''
 from __future__ import unicode_literals
 
+import re
 import os
 import sys
 import json
@@ -34,7 +35,7 @@ from six import text_type, string_types
 from tornado.log import access_log
 from tornado.template import Template
 from orderedattrdict import AttrDict
-from gramex import paths, debug, shutdown, __version__
+from gramex import debug, shutdown, __version__
 from gramex.transforms import build_transform
 from gramex.config import locate, app_log
 from gramex.cache import urlfetch
@@ -349,7 +350,11 @@ def create_alert(name, alert):
 
     alert_logger = logging.getLogger('gramex.alert')
 
-    def run_alert():
+    def run_alert(callback=None):
+        '''
+        Runs the configured alert. If a callback is specified, calls the
+        callback with all email arguments. Else sends the email.
+        '''
         app_log.info('alert: %s running', name)
         data = {'config': alert}
         for key, dataset in datasets.items():
@@ -415,6 +420,8 @@ def create_alert(name, alert):
             if 'attachments' in templates:
                 kwargs['attachments'] = [urlfetch(attachment.generate(**data).decode('utf-8'))
                                          for attachment in templates['attachments']]
+            if callable(callback):
+                return callback(**kwargs)
             # Email recipient. TODO: run this in a queue. (Anand)
             mailer.mail(**kwargs)
             # Log the event
@@ -441,10 +448,6 @@ def alert(conf):
             continue
         app_log.info('Initialising alert: %s', name)
         schedule = {key: alert[key] for key in schedule_keys if key in alert}
-        if not schedule:
-            schedule = {'startup': '*'}
-            alert = AttrDict(alert)
-            alert.setdefault('condition', 'once(r"%s", r"%s")' % (paths['base'].resolve(), name))
         if 'thread' in alert:
             schedule['thread'] = alert['thread']
         schedule['function'] = create_alert(name, alert)
@@ -525,7 +528,7 @@ def _get_cache_key(conf, name):
     for key in keys:
         parts = key.split('.', 2)
         if len(parts) < 2:
-            app_log.warning('url %s: ignoring invalid cache key %s', name, key)
+            app_log.warning('url: %s: ignoring invalid cache key %s', name, key)
             continue
         # convert second part into a Python string representation
         val = repr(parts[1])
@@ -542,7 +545,7 @@ def _get_cache_key(conf, name):
         elif parts[0].startswith('arg'):
             key_getters.append('argsep.join(handler.args.get(%s, [missing]))' % val)
         else:
-            app_log.warning('url %s: ignoring invalid cache key %s', name, key)
+            app_log.warning('url: %s: ignoring invalid cache key %s', name, key)
     # If none of the keys are valid, use the default request key
     if not len(key_getters):
         key_getters = [default_key]
@@ -601,7 +604,7 @@ def _cache_generator(conf, name):
     default_store = list(info.cache.keys())[0] if len(info.cache) > 0 else None
     store_name = conf.get('store', default_store)
     if store_name not in info.cache:
-        app_log.warning('url %s: %s store missing', name, store_name)
+        app_log.warning('url: %s: store %s missing', name, store_name)
     store = info.cache.get(store_name)
 
     cache_key = _get_cache_key(conf, name)
@@ -656,14 +659,19 @@ def url(conf):
             try:
                 urlspec.handler.setup(**kwargs)
             except Exception:
-                app_log.exception('url %s: setup exception in handler %s', name, spec.handler)
+                app_log.exception('url: %s: setup exception in handler %s', name, spec.handler)
 
-        handler_entry = tornado.web.URLSpec(
-            name=name,
-            pattern=_url_normalize(urlspec.pattern),
-            handler=urlspec.handler,
-            kwargs=kwargs,
-        )
+        try:
+            handler_entry = tornado.web.URLSpec(
+                name=name,
+                pattern=_url_normalize(urlspec.pattern),
+                handler=urlspec.handler,
+                kwargs=kwargs,
+            )
+        except re.error:
+            app_log.error('url: %s: pattern: %s is invalid', name, urlspec.pattern)
+        except Exception:
+            app_log.exception('url: %s: invalid', name)
         _cache[cache_key] = handler_entry
         handlers.append(handler_entry)
 

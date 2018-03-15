@@ -7,15 +7,15 @@ prefix: Install
 
 ## Installation
 
-- Download and install [Anaconda][anaconda] 4.4.0 or later. [Update Anaconda][update] if required.
-- Download and install [node.js][nodejs] 8 or later. Then run `npm install -g yarn`. This step is optional but strongly recommended.
-- On a Mac, download and install [Xcode][xcode].
-- Uninstall gramex if you have installed it before: `pip uninstall gramex`
-- Run `pip install --verbose https://code.gramener.com/s.anand/gramex/repository/archive.tar.bz2?ref=master`
-    - ``--verbose`` is useful. We install node modules, which take time. `--verbose` lets you monitor progress.
-    - Replace ``?ref=master`` with `?ref=dev` for the latest development version.
-    - Replace ``?ref=master`` with `?ref=v1.28.0` for version 1.28.0
-      (or pick [any other version](https://code.gramener.com/s.anand/gramex/tags))
+- Install [Anaconda][anaconda] 4.4.0 or later. [Update Anaconda][update] if required.
+- Install [node.js][nodejs] 8 or later. Then run `npm install -g yarn`. This step is required for UI components and built-in apps.
+- On a Mac, install [Xcode][xcode].
+- Run `pip install --verbose gramex`
+    - `--verbose` is useful. We install node modules, which take time. `--verbose` lets you monitor progress.
+    - Replace `gramex` with `gramex==1.30.0` for version 1.30.0 or later version
+    - Replace `gramex` with `https://code.gramener.com/cto/gramex/repository/archive.tar.bz2?ref=dev` for the dev branch
+    - Replace `?ref=dev` with `?ref=v1.28.0` for version 1.28.0
+      (or pick [any other version](https://code.gramener.com/cto/gramex/tags))
 - Run `gramex` to start Gramex
 - Press `Ctrl+C` to terminate Gramex.
 
@@ -28,11 +28,11 @@ You can use [conda with a proxy][conda-proxy] too.
 [anaconda]: http://continuum.io/downloads
 [update]: http://docs.continuum.io/anaconda/install#updating-from-older-anaconda-versions
 [xcode]: https://developer.apple.com/xcode/download/
-[gramex]: https://code.gramener.com/s.anand/gramex/repository/archive.tar.bz2?ref=master
+[gramex]: https://code.gramener.com/cto/gramex/repository/archive.tar.bz2?ref=master
 [conda-proxy]: https://conda.io/docs/user-guide/configuration/use-winxp-with-proxy.html
 [nodejs]: https://nodejs.org/en/
 
-Note: `pip install --ignore-installed` was removed because of an
+[comment]: `pip install --ignore-installed` was removed because of an
 [Anaconda bug](https://github.com/pypa/pip/issues/2751#issuecomment-165390180) -
 re-installing scandir fails on Windows.
 
@@ -42,11 +42,10 @@ If Gramex does not run:
 
 - Tru uninstalling and re-installing Gramex. Stop Gramex and all other Python
   applications when re-installing.
-- Make sure Gramex 0.x (or any other module named `gramex`) is **NOT** in your
-  `PYTHONPATH`. Run `python -c "import gramex;print gramex.__file__"` and confirm
-  that this is where the latest Gramex was installed.
 - Make sure that typing `gramex` runs the Gramex executable, and is not aliased
   to a different command.
+- If UI components are not working, install [node.js][nodejs], ensure that it's
+  on your PATH, and run `gramex setup --all` to set up all apps again.
 
 ## Uninstall Gramex
 
@@ -79,7 +78,7 @@ On a system **with an Internet connection** and the **same platform** (Windows/L
 
 1. Create a folder called `offline`
 2. Download [Anaconda][anaconda] into `offline`
-3. In the `offline` folder, run `pip download https://code.gramener.com/s.anand/gramex/repository/master/archive.tar.bz2`
+3. In the `offline` folder, run `pip download https://code.gramener.com/cto/gramex/repository/master/archive.tar.bz2`
 
 If you are behind a HTTP proxy, use `pip download --proxy=http://{proxy-host}:{port} ...`.
 

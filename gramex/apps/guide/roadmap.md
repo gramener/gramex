@@ -8,7 +8,7 @@ See the [release notes](https://learn.gramener.com/gramex/history.html) for
 information about past releases.
 
 Features for the next 2 releases are below. Bugs to be fixed are at the
-[issue tracker](http://code.gramener.com/s.anand/gramex/issues).
+[issue tracker](http://code.gramener.com/cto/gramex/issues).
 
 
 # Features

@@ -1,0 +1,47 @@
+url:
+  formhandler-vega:
+    pattern: /$YAMLURL/vega
+    handler: FormHandler
+    kwargs:
+      url: $YAMLPATH/flags.csv
+      function: data.groupby('Continent').sum().reset_index()
+      default:
+        col: c1
+      formats:
+        barchart:
+          format: vega
+          spec:
+            "$schema": "https://vega.github.io/schema/vega/v3.json"
+            width: 400
+            height: 200
+            padding: 5
+            scales:
+              -
+                name: xscale
+                type: band
+                domain: {data: data, field: Continent}
+                range: width
+                padding: 0.05
+                round: true
+              -
+                name: yscale
+                domain: {data: data, field: 'c1'}
+                nice: true
+                range: height
+            axes:
+              - {orient: bottom, scale: xscale}
+              - {orient: left, scale: yscale}
+            marks:
+              -
+                type: rect
+                from: {data: data}
+                encode:
+                  enter:
+                    x: {scale: xscale, field: Continent}
+                    width: {scale: xscale, band: 1}
+                    y: {scale: yscale, field: 'c1'}
+                    y2: {scale: yscale, value: 0}
+          headers:
+            Content-Type: application/javascript
+    cache:
+      expiry: {duration: 3600}

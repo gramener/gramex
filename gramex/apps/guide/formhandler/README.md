@@ -131,7 +131,7 @@ This requires the [UI components library](../uicomponents/) mounted at `ui/`.
 
 <div class="example">
   <a class="example-demo" href="table.html">FormHandler table example</a>
-  <a class="example-src" href="http://code.gramener.com/s.anand/gramex/tree/master/gramex/apps/guide/formhandler/table.html">Source</a>
+  <a class="example-src" href="http://code.gramener.com/cto/gramex/tree/master/gramex/apps/guide/formhandler/table.html">Source</a>
 </div>
 
 You can configure the data attributes:
@@ -150,8 +150,8 @@ You can configure the data attributes:
 More options can be provided to `$().formhandler()` via JavaScript. See the
 [API documentation][g1-formhandler] for details.
 
-[g1]: https://code.gramener.com/s.anand/g1/
-[g1-formhandler]: https://code.gramener.com/s.anand/g1/#formhandler
+[g1]: https://code.gramener.com/cto/g1/
+[g1-formhandler]: https://code.gramener.com/cto/g1/#formhandler
 
 ## FormHandler charts
 
@@ -267,6 +267,52 @@ More examples to be added.
 [lmplot]: categorical?_format=facet&chart=lmplot&xcol=c1&ycol=c3&hue=Stripes&width=350&height=200
 [heatmap]: numerical?_format=matrix&chart=heatmap&width=350&height=200
 [clustermap]: numerical?_format=matrix&chart=clustermap&width=350&height=200
+
+## FormHandler Vega charts
+
+**v1.31**. FormHandler supports [Vega](https://vega.github.io/) charts. To use it, define a [format](#formhandler-formats) using `format: vega`. For example:
+
+```yaml
+url:
+  formhandler-vega:
+    pattern: /$YAMLURL/vega
+    handler: FormHandler
+    kwargs:
+      url: $YAMLPATH/flags.csv
+      formats:
+        barchart:           # Allows ?_format=barchart
+          format: vega
+          spec:
+            "$schema": "https://vega.github.io/schema/vega/v3.json"
+            ...   # The rest of the Vega spec comes here
+```
+
+When you visit [vega?_format=barchart](vega?_format=barchart) it renders JavaScript that creates the chart. To include it on your page, just add `<script src="vega?_format=barchart"></script>` where you want to include the chart, like below:
+
+```html
+<script src="vega?_format=barchart"></script>
+... rest of the page ...
+<script src="https://cdn.jsdelivr.net/npm/vega@3.2.1/build/vega.min.js"></script>
+```
+
+<div class="example">
+  <a class="example-demo" href="vega.html">FormHandler Vega Chart example</a>
+  <a class="example-src" href="http://code.gramener.com/s.anand/gramex/tree/master/gramex/apps/guide/formhandler/vega.yaml">Source</a>
+</div>
+
+Similarly, [Vega-Lite](https://vega.github.io/vega-lite/) charts are also supported. Use `format: vega-lite` instead of `format: vega`. To include it on your page, just add `<script src="...?_format=barchart"></script>` where you want to include the chart, like below:
+
+```html
+<script src="vega-lite?_format=barchart"></script>
+... rest of the page ...
+<script src="https://cdn.jsdelivr.net/npm/vega@3.2.1/build/vega.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-lite@2.3.1/build/vega-lite.min.js"></script>
+```
+
+<div class="example">
+  <a class="example-demo" href="vega-lite.html">FormHandler Vega-Lite Chart example</a>
+  <a class="example-src" href="http://code.gramener.com/s.anand/gramex/tree/master/gramex/apps/guide/formhandler/vega-lite.yaml">Source</a>
+</div>
 
 ## FormHandler downloads
 
@@ -691,23 +737,52 @@ Note:
 - If `format:` is specified against multiple datasets, the return value could be
   in any format (unspecified).
 
+## FormHandler directory listing
+
+FormHandler allows listing files in a directory. To set this up, use a `dir://`
+URL like this: `url: dir:///path/to/directory`:
+
+```yaml
+      pattern: /$YAMLURL/dir
+      handler: FormHandler
+      kwargs:
+        url: dir:///$YAMLPATH          # Point to any directory
+```
+
+Here is a sample output:
+
+- [All files in this directory](dir?_format=table&_c=dir&_c=name&_c=size&_c=type)
+- [Largest files in this directory](dir?_format=table&_c=dir&_c=name&_c=size&_c=type&_sort=-size)
+
+This URL is interpolatable using arguments as well for example:
+
+```yaml
+      pattern: /$YAMLURL/dir/(.*)
+      handler: FormHandler
+      kwargs:
+        url: dir:///$YAMLPATH/{_0}    # /dir/abc points to abc/ under this directory
+      # url: dir:///$YAMLPATH/{root}  # /dir/?root=abc points to abc/ under this directory
+```
+
+The arguments are escaped and cannot contain `../` and other mechanisms to go
+beyond the root directory specified.
+
 ## FormHandler templates
 
 The output of FormHandler can be rendered as a custom template using the
 `template` format. For example, this creates a ``text`` format:
 
 ```yaml
-url:
-  pattern: text
-  handler: FormHandler
-  kwargs:
-    url: $YAMLPATH/flags.csv
-    formats:
-      text:
-        format: template
-        template: $YAMLPATH/text-template.txt
-        headers:
-            Content-Type: text/plain
+    pattern: text
+    handler: FormHandler
+    kwargs:
+      url: $YAMLPATH/flags.csv
+      formats:
+        text:
+          format: template
+          template: $YAMLPATH/text-template.txt
+          headers:
+              Content-Type: text/plain
 ```
 
 Here is the output of [?_format=text&_limit=10](flags?_format=text&_limit=10).
@@ -738,8 +813,6 @@ POST, PUT and GET HTTP operators. For example:
 This requires primary keys to be defined in the FormHandler as follows:
 
 ```yaml
-url:
-  flags:
     pattern: /$YAMLURL/flags
     handler: FormHandler
     kwargs:

@@ -6,6 +6,12 @@ History
 v1.30.0 (2018-02-28)
 ~~~~~~~~~~~~~~~~~~~~
 
+See `v1.31 release notes`_
+
+
+v1.30.0 (2018-02-28)
+~~~~~~~~~~~~~~~~~~~~
+
 See `v1.30 release notes`_
 
 
@@ -52,7 +58,7 @@ Stats:
 
 
 v1.28.0 (2018-01-31)
-~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~---
 
 `FormHandler`_ has two major upgrades. `FormHandler charts`_ use the `Seaborn`_
 library to generate static charts on the server as SVG or PNG (PDF too.) Setting
@@ -98,7 +104,7 @@ Stats:
 
 
 v1.27.0 (2018-01-20)
-~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~
 `g1`_ is upgraded to v0.3 which features a ``$().formhandler()`` component.
 This renders FormHandlers as Excel-like tables (sortable, filterable).
 
@@ -145,7 +151,7 @@ Stats:
 
 
 v1.26.0 (2017-12-31)
-~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~
 This release features an upgrade to the `UI component library`_:
 
 - `g1`_ is the new Gramex interaction library. It is bundled with Gramex and
@@ -182,7 +188,7 @@ Stats:
 
 
 v1.25.0 (2017-12-15)
-~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~
 This release features `Smart Alerts`_ - a rule-based email alert service. This
 can be used to:
 
@@ -225,7 +231,7 @@ Stats:
 - Test coverage: 81%
 
 v1.24.0 (2017-11-30)
-~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~
 **Note**: Before installing this release, you install `node`_ 8.x or above, and
 also run ``npm install -g yarn``. Also run ``pip install`` with a ``--verbose``
 option. Gramex installs several UI libraries and the installation is slow. Yarn
@@ -269,7 +275,7 @@ Stats:
 
 
 v1.23.1 (2017-11-13)
-~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~
 This is an interim release with minor features and major bugfixes.
 
 - `PPTXHandler`_ is formally released as part of Gramex, with extensive examples
@@ -310,7 +316,7 @@ Stats:
 
 
 v1.23.0 (2017-10-31)
-~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~
 This release adds Gramex as a `Windows service`_, making it easier for Windows
 administrators to auto-start and manage Gramex. Run ``gramex service install``
 from the app directory to create a service.
@@ -382,7 +388,7 @@ There are several bug fixes, documentation enhancements and test cases added.
 
 
 v1.22.0 (2017-09-28)
-~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~
 This release adds Windows `IntegratedAuth`_. This allows Windows domain users to
 log into Gramex automatically without entering and ID or password.
 
@@ -434,7 +440,7 @@ Stats:
 
 
 v1.21.0 (2017-08-29)
-~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~
 This is a major release with new functionality. There are two new handlers.
 
 - `CaptureHandler`_ takes image screenshots and PDF downloads from Gramex. It
@@ -492,7 +498,7 @@ this was re-introduced in 1.22.
 
 
 v1.20.0 (2017-07-31)
-~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~
 This is a major release with some critical enhancements and fixes.
 
 (NOTE: This release supports Python 2, not Python 3 due to a temporary bug.)
@@ -562,7 +568,7 @@ Finally, there are a few documentation updates.
 
 
 v1.19.0 (2017-07-09)
-~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~
 This is a minor enhancement release with
 
 - There was a bug where sessions were not being flushed, forcing users to log in
@@ -591,7 +597,7 @@ This is a minor enhancement release with
 
 
 v1.18.0 (2017-06-29)
-~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~
 This is a minor enhancement release with several critical bugfixes.
 
 - This version requires Anaconda 4.4.0. It also requires recent ldap3 and
@@ -628,7 +634,7 @@ This is a minor enhancement release with several critical bugfixes.
 
 
 v1.17.1 (2017-04-23)
-~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~
 This is a maintenance release with a few minor enhancements:
 
 - `TwitterRESTHandler`_ and `FacebookGraphHandler`_ use GET request by default.
@@ -647,7 +653,7 @@ A series of important bugfixes are addressed:
 
 
 v1.17 (2017-01-29)
-~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~
 
 This version has a breaking change. The default login URL is ``/login/`` instead
 of ``/login``. This makes it easier to create custom login pages using
@@ -669,7 +675,7 @@ gramex.yaml ``app:`` section, add ``login_url: /login`` to revert the change.
 
 
 v1.16 (2016-10-16)
-~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~
 
 - Add a `deploy yaml`_ configuration that makes your deployment automatically more secure
 - `QueryHandler`_ supports INSERT/UPDATE/DELETE statements as well via POST requests.
@@ -681,7 +687,7 @@ v1.16 (2016-10-16)
 
 
 v1.15 (2016-08-21)
-~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~
 
 - `DataHandler`_ supports a ``?q=`` parameter that searches all text columns
 - `QueryHandler`_ supports multiple SQL queries in a single request
@@ -697,7 +703,7 @@ v1.15 (2016-08-21)
   To support this, :py:func:`gramex.transforms.build_transform` is no longer cached.
 
 v1.14 (2016-08-11)
-~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~
 
 - `TwitterStream`_ is a scheduler function that provides Twitter Streaming API
   support.
@@ -712,7 +718,7 @@ v1.14 (2016-08-11)
 
 
 v1.13 (2016-08-01)
-~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~
 
 - All handlers support custom `error handlers`_. You can show custom 404, 500
   pages.
@@ -725,7 +731,7 @@ v1.13 (2016-08-01)
   simple `conditional variables`_ syntax.
 
 v1.12 (2016-07-21)
-~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~
 
 * `DBAuth`_ features a forgot password feature.
 * `FileHandler`_ supports ``POST`` and other HTTP methods via the ``methods:``
@@ -736,7 +742,7 @@ v1.12 (2016-07-21)
   required.
 
 v1.11 (2016-07-15)
-~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~
 
 * A data browser app is ready. Run ``gramex install databrowser`` and then
   ``gramex run databrowser`` to run it at any time.
@@ -759,7 +765,7 @@ v1.11 (2016-07-15)
   making the request logs quite long.
 
 v1.10 (2016-07-01)
-~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~
 
 * `DataHandler`_ can now write back into relational databases. This lets you
   create form-based applications easily.
@@ -780,7 +786,7 @@ v1.10 (2016-07-01)
 
 
 v1.0.9 (2016-06-15)
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~
 
 * Gramex supports `sessions`_. Whether a user is logged in or not,
   ``handler.session`` is a persistent dictionary that you can use to store
@@ -807,7 +813,7 @@ v1.0.9 (2016-06-15)
   ``--browser``.)
 
 v1.0.8 (2016-06-01)
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~
 
 * Gramex supports installation of `apps`_. You can run ``gramex install <app>
   <url>`` to install an app from a folder, git repo, URL, etc. Apps can define
@@ -843,7 +849,7 @@ There are two changes that may disrupt your code:
 
 
 v1.0.7 (2016-05-15)
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~
 
 * We have a new `JSONHandler`_ that implements a JSON store. It is similar to
   the `Firebase API`_. It lets you save, modify and retrieve any JSON structure.
@@ -868,7 +874,7 @@ v1.0.7 (2016-05-15)
 
 
 v1.0.6 (2016-05-01)
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~
 
 * In the ``app:`` section, the ``browser:`` key accepts either ``true`` or any
   URL. If a URL is provided, it opens the browser at that URL on startup. If
@@ -894,7 +900,7 @@ v1.0.6 (2016-05-01)
 
 
 v1.0.5 (2016-04-15)
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~
 
 * Gramex config YAML files support custom variables. You can define a variable
   in the ``variables:`` section and use it as ``$VARIABLE`` anywhere in the YAML
@@ -926,7 +932,7 @@ v1.0.5 (2016-04-15)
 
 
 v1.0.4 (2016-03-30)
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~
 
 * `FunctionHandler`_ supports co-routines and works asynchronously
 * `FileHandler`_ is the new name for ``DirectoryHandler`` (both will work)
@@ -935,7 +941,7 @@ v1.0.4 (2016-03-30)
 
 
 v1.0.3 (2016-01-18)
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~
 
 * Implement `DataHandler`_ that displays data from databases (via
   `SQLAlchemy <http://www.sqlalchemy.org/>`__ and `Blaze <http://blaze.pydata.org/>`__)
@@ -945,7 +951,7 @@ v1.0.3 (2016-01-18)
 * gramex.yaml URL priority can be specified explicitly using ``priority:``
 
 v1.0.2 (2015-10-11)
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~
 
 * Implement `FunctionHandler`_ that renders any function
 * ``DirectoryHandler`` transforms files (e.g. converting Markdown or YAML to
@@ -956,7 +962,7 @@ v1.0.2 (2015-10-11)
 * Add test cases for handlers
 
 v1.0.1 (2015-09-09)
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~
 
 * Is a directory-browsing webserver (``gramex.handlers.DirectoryHandler``)
 * Works with Python 3 in addition to Python 2
@@ -965,7 +971,7 @@ v1.0.1 (2015-09-09)
 * Logs display friendly dates, and absolute paths instead of relative paths
 
 v1.0.0 (2015-09-08)
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~
 
 * First release of core server
 
@@ -1102,3 +1108,4 @@ v1.0.0 (2015-09-08)
 .. _ProxyHandler: https://learn.gramener.com/guide/proxyhandler/
 .. _How XSRF works: https://learn.gramener.com/guide/filehandler/#how-xsrf-works
 .. _v1.30 release notes: https://learn.gramener.com/guide/release/1.30/
+.. _v1.31 release notes: https://learn.gramener.com/guide/release/1.31/

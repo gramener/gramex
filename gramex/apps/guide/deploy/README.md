@@ -54,7 +54,7 @@ To install a Gramex application as a service on a Windows Server:
 
 - [Install Anaconda and Gramex](../install/)
     - Download and install [Anaconda][anaconda] 4.4.0 or later
-    - Run `pip install https://code.gramener.com/s.anand/gramex/repository/archive.tar.bz2?ref=master`.
+    - Run `pip install https://code.gramener.com/cto/gramex/repository/archive.tar.bz2?ref=master`.
       (Replace ``master`` with ``dev`` for the development version).
 - Install your application in any folder - via `git clone` or by copying files
 - Run PowerShell or the Command Prompt **as administrator**
@@ -206,7 +206,7 @@ This:
 See [deploy.yaml][deploy-yaml] to understand the configurations.
 
 [zap]: https://www.owasp.org/index.php/OWASP_Zed_Attack_Proxy_Project
-[deploy-yaml]: https://code.gramener.com/s.anand/gramex/blob/master/gramex/deploy.yaml
+[deploy-yaml]: https://code.gramener.com/cto/gramex/blob/master/gramex/deploy.yaml
 
 ## Relative URL mapping
 
@@ -625,3 +625,15 @@ is to use the [gramex install](../install/) method. Specifically:
 - Add Node modules to `package.json`
 - Add R libraries to `setup.sh` -- and ensure that the correct R is used
 - Add any other custom code to `setup.sh`
+
+### Log file order
+
+Different instances of Gramex may flush their logs at different times. Do not
+expect log files to be in order. For example, in this [request log](../config/#request-logging),
+the 2nd entry has a timestamp greater than the third:
+
+```
+1519100063656,220.227.50.9,user1@masked.com,304,1,GET,/images/bookmark.png,
+1519100063680,106.209.240.105,user2@masked.com,304,55,GET,/bookmark_settings?mode=display,
+1519100063678,220.227.50.9,user3@masked.com,304,1,GET,/images/filters-toggler.png,
+```

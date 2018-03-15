@@ -213,19 +213,20 @@ class OAuth2(AuthHandler, OAuth2Mixin):
         - extra_params: an optional dict of URL query params passed
     :arg dict access_token: Access token endpoint configuration
         - url: Access token endpoint URL
-        - session_key: optional key in session to store access token information.
-          default: `access_token`
-        - headers: optional dict containing HTTP headers to pass to access token URL.
-          By default, sets `User-Agent` to `Gramex/<version>`.
-        - body: optional dict containing arguments to pass to access token URL
-          (e.g. `{grant_type: authorization_code}`)
+        - session_key: optional key in session to store access token information. \
+            default: `access_token`
+        - headers: optional dict containing HTTP headers to pass to access token URL. \
+            By default, sets `User-Agent` to `Gramex/<version>`.
+        - body: optional dict containing arguments to pass to access token URL \
+            (e.g. `{grant_type: authorization_code}`)
     :arg dict user_info: Optional user information API endpoint
         - url: API endpoint to fetch URL
-        - headers: optional dict containing HTTP headers to pass to user info URL.
-          e.g. `Authorization: 'Bearer {access_token}'`. Default: `{User-Agent: Gramex/<version>}`
+        - headers: optional dict containing HTTP headers to pass to user info URL. \
+            e.g. `Authorization: 'Bearer {access_token}'`. \
+            Default: `{User-Agent: Gramex/<version>}`
         - method: HTTP method to use (default: `GET`)
         - body: optional dict containing POST arguments to pass to user info URL
-        - user_id: Attribute in the returned user object that holds the user ID.
+        - user_id: Attribute in the returned user object that holds the user ID. \
           This is used to identify the user uniquely. default: `id`
     :arg str user_key: optional key in session to store user information.
         default: `user`
