@@ -49,10 +49,12 @@ install: |
     {apps}
 
 setup: |
-    usage: gramex setup <target>
+    usage: gramex setup <target> [<target> ...] [--all]
 
     target is the directory to set up (required). This can be an absolute path,
     relative path, or a directory name under $GRAMEXPATH/apps/.
+
+    gramex setup --all sets up all apps under $GRAMEXPATH/apps/
 
     Run the following commands at that directory in sequence, if possible:
         - make
@@ -359,6 +361,7 @@ def run_setup(target):
             raise OSError('No directory %s' % target)
         target = app_target
     target = os.path.abspath(target)
+    app_log.info('Setting up %s', target)
     for file, runners in setup_paths.items():
         setup_file = os.path.join(target, file)
         if not os.path.exists(setup_file):
@@ -473,13 +476,18 @@ def install(cmd, args):
 
 
 def setup(cmd, args):
-    app_config = AttrDict(args)
-    if len(cmd) > 0:
-        app_config.setdefault('target', cmd[0])
-    elif 'target' not in app_config:
-        app_log.error(show_usage('setup'))
+    for target in cmd:
+        run_setup(target)
         return
-    app_config.target = run_setup(app_config.target)
+    if 'all' in args:
+        root = os.path.join(variables['GRAMEXPATH'], 'apps')
+        for filename in os.listdir(root):
+            target = os.path.join(root, filename)
+            # Only run setup on directories. Ignore __pycache__, etc
+            if os.path.isdir(target) and not filename.startswith('_'):
+                run_setup(target)
+        return
+    app_log.error(show_usage('setup'))
 
 
 def uninstall(cmd, args):
