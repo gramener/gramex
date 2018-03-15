@@ -679,11 +679,11 @@ def download(data, format='json', template=None, **kwargs):
 
     It takes the following arguments:
 
-    :arg dataset data: A DataFrame or a dict of DataFrames :arg string format:
-    Output format. Can be ``csv|json|html|xlsx|template`` :arg file template:
-    Path to template file for ``template`` format :arg dict kwargs: Additional
-    parameters that are passed to the relevant renderer :return: a byte-string
-    with the download file contents
+    :arg dataset data: A DataFrame or a dict of DataFrames
+    :arg string format: Output format. Can be ``csv|json|html|xlsx|template``
+    :arg file template: Path to template file for ``template`` format
+    :arg dict kwargs: Additional parameters that are passed to the relevant renderer
+    :return: a byte-string with the download file contents
 
     When ``data`` is a DataFrame, this is what different ``format=`` parameters
     return:

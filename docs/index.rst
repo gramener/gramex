@@ -12,7 +12,6 @@ Gramex: Gramener's Visualization Server
    :titlesonly:
 
    About <readme>
-   components
    design
    API <gramex>
    Contributing to Gramex <contributing>

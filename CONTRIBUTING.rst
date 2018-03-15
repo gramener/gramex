@@ -83,12 +83,13 @@ When releasing a new version of Gramex:
     - Run ``python gramex/apps/guide/search/search.py`` using Python 3
     - Run ``node gramex/apps/guide/search/searchindex.js``
 
-3. Commit and push the ``dev`` branch to the server. **Ensure pipeline passes.**
-
-4. Merge with master, create an annotated tag and push the master branch::
+3. Commit and push the ``dev`` branch to the server. **Ensure pipeline passes.**::
 
     git commit -m"DOC: Add v1.x.x release notes"
     git push                    # Push the dev branch
+
+4. Merge with master, create an annotated tag and push the master branch::
+
     git checkout master
     git merge dev
     git tag -a v1.x.x           # Annotate with a one-line summary of features
