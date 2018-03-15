@@ -5,13 +5,13 @@ import:
     YAMLURL: $YAMLURL/ui/               # ... at this URL
 
 url:
-  mail/home:
+  mail/home-$*:
     pattern: /$YAMLURL/
     handler: FileHandler
     kwargs:
       path: $YAMLPATH/index.html
       template: true
-  mail/cid:
+  mail/cid-$*:
     pattern: /$YAMLURL/cid/(.*)
     handler: FunctionHandler
     kwargs:

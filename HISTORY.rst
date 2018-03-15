@@ -6,6 +6,12 @@ History
 v1.30.0 (2018-02-28)
 ~~~~~~~~~~~~~~~~~~~~
 
+See `v1.31 release notes`_
+
+
+v1.30.0 (2018-02-28)
+~~~~~~~~~~~~~~~~~~~~
+
 See `v1.30 release notes`_
 
 
@@ -1102,3 +1108,4 @@ v1.0.0 (2015-09-08)
 .. _ProxyHandler: https://learn.gramener.com/guide/proxyhandler/
 .. _How XSRF works: https://learn.gramener.com/guide/filehandler/#how-xsrf-works
 .. _v1.30 release notes: https://learn.gramener.com/guide/release/1.30/
+.. _v1.31 release notes: https://learn.gramener.com/guide/release/1.31/

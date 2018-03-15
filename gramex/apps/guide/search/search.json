@@ -40,6 +40,53 @@
       "Upgrade": -1
     }
   },
+  "1.31": {
+    "": {
+      "Gramex 1.31 Release Notes": -1
+    },
+    "alert-preview": {
+      "Alert preview": -1
+    },
+    "api-integration": {
+      "API integration": -1
+    },
+    "charts": {
+      "Charts": -1
+    },
+    "developer-updates": {
+      "Developer updates": -1
+    },
+    "formhandler-directory-browsing": {
+      "FormHandler directory browsing": -1
+    },
+    "http-error-reporting": {
+      "HTTP error reporting": -1
+    },
+    "installation": {
+      "Installation": -1
+    },
+    "lato-font": {
+      "Lato font": -1
+    },
+    "log-viewer": {
+      "Log viewer": -1
+    },
+    "path-arguments": {
+      "Path arguments": -1
+    },
+    "prevent-url-conflicts": {
+      "Prevent URL conflicts": -1
+    },
+    "repository-moved": {
+      "Repository moved": -1
+    },
+    "stats": {
+      "Stats": -1
+    },
+    "upgrade": {
+      "Upgrade": -1
+    }
+  },
   "about": {
     "": {
       "About Gramex": -1
@@ -64,6 +111,9 @@
     },
     "alert-logs": {
       "Alert logs": -1
+    },
+    "alert-preview": {
+      "Alert preview": -1
     },
     "alert-setup": {
       "Alert setup": -1
@@ -339,6 +389,9 @@
     "app-configuration": {
       "App configuration": -1
     },
+    "bad": {
+      "BAD": -1
+    },
     "command-line-args": {
       "Command line args": -1
     },
@@ -367,6 +420,9 @@
     "error-handlers": {
       "Error handlers": -1
     },
+    "good": {
+      "GOOD": -1
+    },
     "handler-logging": {
       "Handler logging": -1
     },
@@ -394,17 +450,26 @@
     "user-logging": {
       "User logging": -1
     },
+    "yaml-duplicate-keys": {
+      "YAML duplicate keys": -1
+    },
     "yaml-imports": {
       "YAML imports": -1
     },
     "yaml-inheritence": {
       "YAML inheritence": -1
     },
+    "yaml-namespaces": {
+      "YAML namespaces": -1
+    },
     "yaml-styling": {
       "YAML styling": -1
     },
     "yaml-variables": {
       "YAML variables": -1
+    },
+    "yaml-wildcard-keys": {
+      "YAML wildcard keys": -1
     }
   },
   "dashboard": {
@@ -513,6 +578,9 @@
     "linux-service": {
       "Linux service": -1
     },
+    "log-file-order": {
+      "Log file order": -1
+    },
     "missing-dependency": {
       "Missing dependency": -1
     },
@@ -580,6 +648,9 @@
     },
     "send-email": {
       "Send email": -1
+    },
+    "test-email-service": {
+      "Test email service": -1
     }
   },
   "exercises": {
@@ -656,6 +727,9 @@
     "formhandler-delete": {
       "FormHandler DELETE": -1
     },
+    "formhandler-directory-listing": {
+      "FormHandler directory listing": -1
+    },
     "formhandler-downloads": {
       "FormHandler downloads": -1
     },
@@ -711,6 +785,9 @@
       "FormHandler templates": -1
     },
     "formhandler-transforms": {},
+    "formhandler-vega-charts": {
+      "FormHandler Vega charts": -1
+    },
     "grid-plots": {
       "Grid plots": -1
     },
@@ -740,6 +817,9 @@
     "parse-url-arguments": {
       "Parse URL arguments": -1
     },
+    "path-arguments": {
+      "Path arguments": -1
+    },
     "streaming-output": {
       "Streaming output": -1
     }
@@ -753,6 +833,9 @@
     },
     "initialisation": {
       "Initialisation": -1
+    },
+    "tornado-handler-attributes": {
+      "Tornado handler attributes": -1
     }
   },
   "i18n": {
@@ -947,8 +1030,20 @@
     "facebook-proxyhandler": {
       "Facebook ProxyHandler": -1
     },
+    "google-cloud-nlp": {
+      "Google Cloud NLP": -1
+    },
     "google-proxyhandler": {
       "Google ProxyHandler": -1
+    },
+    "google-search": {
+      "Google Search": -1
+    },
+    "google-services": {
+      "Google Services": -1
+    },
+    "google-translate": {
+      "Google Translate": -1
     },
     "proxyhandler-configuration": {
       "ProxyHandler Configuration": -1

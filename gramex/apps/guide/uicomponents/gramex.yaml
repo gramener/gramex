@@ -18,7 +18,3 @@ url:
       cache:
         expiry:
           duration: 3600
-
-import:
-  path: '*/dashboard.yaml'
-  namespace: [url, schedule, cache, import]

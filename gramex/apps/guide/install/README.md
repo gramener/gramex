@@ -12,7 +12,7 @@ prefix: Install
 - On a Mac, install [Xcode][xcode].
 - Run `pip install --verbose gramex`
     - `--verbose` is useful. We install node modules, which take time. `--verbose` lets you monitor progress.
-    - Replace `gramex` with `gramex==1.30.0` for version 1.30.0
+    - Replace `gramex` with `gramex==1.30.0` for version 1.30.0 or later version
     - Replace `gramex` with `https://code.gramener.com/cto/gramex/repository/archive.tar.bz2?ref=dev` for the dev branch
     - Replace `?ref=dev` with `?ref=v1.28.0` for version 1.28.0
       (or pick [any other version](https://code.gramener.com/cto/gramex/tags))
@@ -32,7 +32,7 @@ You can use [conda with a proxy][conda-proxy] too.
 [conda-proxy]: https://conda.io/docs/user-guide/configuration/use-winxp-with-proxy.html
 [nodejs]: https://nodejs.org/en/
 
-Note: `pip install --ignore-installed` was removed because of an
+[comment]: `pip install --ignore-installed` was removed because of an
 [Anaconda bug](https://github.com/pypa/pip/issues/2751#issuecomment-165390180) -
 re-installing scandir fails on Windows.
 
@@ -42,11 +42,10 @@ If Gramex does not run:
 
 - Tru uninstalling and re-installing Gramex. Stop Gramex and all other Python
   applications when re-installing.
-- Make sure Gramex 0.x (or any other module named `gramex`) is **NOT** in your
-  `PYTHONPATH`. Run `python -c "import gramex;print gramex.__file__"` and confirm
-  that this is where the latest Gramex was installed.
 - Make sure that typing `gramex` runs the Gramex executable, and is not aliased
   to a different command.
+- If UI components are not working, install [node.js][nodejs], ensure that it's
+  on your PATH, and run `gramex setup --all` to set up all apps again.
 
 ## Uninstall Gramex
 
