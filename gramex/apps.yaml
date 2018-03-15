@@ -1,7 +1,5 @@
 capture:
     target: $GRAMEXPATH/apps/capture/
-datasets:
-    target: $GRAMEXPATH/apps/datasets/
 guide:
     target: $GRAMEXPATH/apps/guide/
 gramex-update:
