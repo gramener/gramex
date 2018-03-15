@@ -268,6 +268,52 @@ More examples to be added.
 [heatmap]: numerical?_format=matrix&chart=heatmap&width=350&height=200
 [clustermap]: numerical?_format=matrix&chart=clustermap&width=350&height=200
 
+## FormHandler Vega charts
+
+**v1.31**. FormHandler supports [Vega](https://vega.github.io/) charts. To use it, define a [format](#formhandler-formats) using `format: vega`. For example:
+
+```yaml
+url:
+  formhandler-vega:
+    pattern: /$YAMLURL/vega
+    handler: FormHandler
+    kwargs:
+      url: $YAMLPATH/flags.csv
+      formats:
+        barchart:           # Allows ?_format=barchart
+          format: vega
+          spec:
+            "$schema": "https://vega.github.io/schema/vega/v3.json"
+            ...   # The rest of the Vega spec comes here
+```
+
+When you visit [vega?_format=barchart](vega?_format=barchart) it renders JavaScript that creates the chart. To include it on your page, just add `<script src="vega?_format=barchart"></script>` where you want to include the chart, like below:
+
+```html
+<script src="vega?_format=barchart"></script>
+... rest of the page ...
+<script src="https://cdn.jsdelivr.net/npm/vega@3.2.1/build/vega.min.js"></script>
+```
+
+<div class="example">
+  <a class="example-demo" href="vega.html">FormHandler Vega Chart example</a>
+  <a class="example-src" href="http://code.gramener.com/s.anand/gramex/tree/master/gramex/apps/guide/formhandler/vega.yaml">Source</a>
+</div>
+
+Similarly, [Vega-Lite](https://vega.github.io/vega-lite/) charts are also supported. Use `format: vega-lite` instead of `format: vega`. To include it on your page, just add `<script src="...?_format=barchart"></script>` where you want to include the chart, like below:
+
+```html
+<script src="vega-lite?_format=barchart"></script>
+... rest of the page ...
+<script src="https://cdn.jsdelivr.net/npm/vega@3.2.1/build/vega.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-lite@2.3.1/build/vega-lite.min.js"></script>
+```
+
+<div class="example">
+  <a class="example-demo" href="vega-lite.html">FormHandler Vega-Lite Chart example</a>
+  <a class="example-src" href="http://code.gramener.com/s.anand/gramex/tree/master/gramex/apps/guide/formhandler/vega-lite.yaml">Source</a>
+</div>
+
 ## FormHandler downloads
 
 CSV and XLSX formats are downloaded as `data.csv` and `data.xlsx` by default.
