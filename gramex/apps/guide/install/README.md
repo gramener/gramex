@@ -8,7 +8,7 @@ prefix: Install
 ## Installation
 
 - Install [Anaconda][anaconda] 4.4.0 or later. [Update Anaconda][update] if required.
-- Install [node.js][nodejs] 8 or later. Then run `npm install -g yarn`. This step is optional but strongly recommended.
+- Install [node.js][nodejs] 8 or later. Then run `npm install -g yarn`. This step is required for UI components and built-in apps.
 - On a Mac, install [Xcode][xcode].
 - Run `pip install --verbose gramex`
     - `--verbose` is useful. We install node modules, which take time. `--verbose` lets you monitor progress.
