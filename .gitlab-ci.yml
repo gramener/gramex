@@ -19,7 +19,6 @@ variables:
   MYSQL_SERVER: mysql
 
 validate:
-  except: [deploy]
   script:
     - flake8
     - eslint gramex/apps
@@ -28,8 +27,8 @@ validate:
     - pip install -q -e .
     - python setup.py nosetests
 
-deploy:
-  only: [dev, master, deploy]
+deploy-dev:
+  only: [dev]
   script:
     # Setup script for gramener.com
     - 'ssh -t ubuntu@gramener.com "
@@ -41,4 +40,32 @@ deploy:
         cp -R /mnt/gramener/apps/gramex/gramex/apps/update /mnt/gramener/apps/v1/gramex-update;
         /mnt/gramener/anaconda/bin/gramex setup /mnt/gramener/apps/v1/guide;
         /mnt/gramener/anaconda/bin/gramex setup ui;
+      "'
+
+deploy-master:
+  only: [master]
+  script:
+    # Setup script for gramener.com
+    - 'ssh -t ubuntu@gramener.com "
+        cd /mnt/gramener/apps/gramex;
+        git checkout -- .;
+        git pull;
+        pip install --verbose -e .;
+        rm -rf /mnt/gramener/apps/v1/guide /mnt/gramener/apps/v1/gramex-update;
+        cp -R /mnt/gramener/apps/gramex/gramex/apps/guide /mnt/gramener/apps/v1/;
+        cp -R /mnt/gramener/apps/gramex/gramex/apps/update /mnt/gramener/apps/v1/gramex-update;
+        /mnt/gramener/anaconda/bin/gramex setup /mnt/gramener/apps/v1/guide;
+        /mnt/gramener/anaconda/bin/gramex setup ui;
+      "'
+    - 'ssh -t ubuntu@uat.gramener.com "
+        cd ~/gramex;
+        git checkout -- .;
+        git pull;
+        pip install --verbose -e .;
+      "'
+    - 'ssh -t ubuntu@demo.gramener.com "
+        cd /mnt/data/apps/gramex/gramex/;
+        git checkout -- .;
+        git pull;
+        pip install --verbose -e .;
       "'
