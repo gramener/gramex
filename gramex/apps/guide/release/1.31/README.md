@@ -38,6 +38,11 @@ Here's an example:
 <script src="../../formhandler/vega?_format=barchart"></script>
 <script src="https://cdn.jsdelivr.net/npm/vega@3.2.1/build/vega.min.js"></script>
 
+```
+<script src="../../formhandler/vega?_format=barchart"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega@3.2.1/build/vega.min.js"></script>
+```
+
 ## FormHandler directory browsing
 
 FormHandler can go beyond files and databases. Our plan it to integrate with

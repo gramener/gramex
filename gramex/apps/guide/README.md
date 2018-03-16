@@ -28,9 +28,9 @@ prefix: Guide
 - [WebSocketHandler](websockethandler/)
 - [TwitterRESTHandler](twitterresthandler/)
 - [FacebookGraphHandler](facebookgraphhandler/)
-- [Use UI components](uicomponents/)
-- [Use charts](chart/)
-- [Caching requests](cache/)
+- [UI components](uicomponents/)
+- [Charts](chart/)
+- [Cache requests](cache/)
 - [Send emails](email/)
 - [Smart alerts](alert/)
 - [Schedule tasks](scheduler/)
@@ -47,6 +47,7 @@ prefix: Guide
 - [Tips & Tricks](tips/)
 - [Deployment patterns](deploy/)
 - [Try out some exercises](exercises/)
+- [Contributing to Gramex](contributing/)
 
 ## Demos
 

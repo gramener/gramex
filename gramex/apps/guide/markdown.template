@@ -34,14 +34,19 @@
       <li><a href="/$GUIDE_ROOT/chart/">Charts</a></li>
       <li><a href="/$GUIDE_ROOT/cache/">Cache requests</a></li>
       <li><a href="/$GUIDE_ROOT/email/">Send email</a></li>
+      <li><a href="/$GUIDE_ROOT/alert/">Smart alerts</a></li>
       <li><a href="/$GUIDE_ROOT/scheduler/">Schedule tasks</a></li>
       <li><a href="/$GUIDE_ROOT/watch/">Watch files</a></li>
+      <li><a href="/$GUIDE_ROOT/apps/">Run apps</a></li>
+      <li><a href="/$GUIDE_ROOT/logviewer/">View logs</a></li>
       <li><a href="/$GUIDE_ROOT/handlers/">Write handlers</a></li>
       <li><a href="/$GUIDE_ROOT/debug/">Debugging Gramex</a></li>
-      <li><a href="/$GUIDE_ROOT/deploy/">Deployment patterns</a></li>
-      <li><a href="/$GUIDE_ROOT/apps/">Applications</a></li>
-      <li><a href="/$GUIDE_ROOT/exercises/">Exercises</a></li>
+
       <li><a href="/$GUIDE_ROOT/tips/">Tips</a></li>
+      <li><a href="/$GUIDE_ROOT/deploy/">Deployment patterns</a></li>
+      <li><a href="/$GUIDE_ROOT/exercises/">Exercises</a></li>
+      <li><a href="/$GUIDE_ROOT/contributing/">Contributing</a></li>
+
       <li><a href="/$GUIDE_ROOT/release/">Release notes</a></li>
       <li><a target="_blank" href="https://learn.gramener.com/gramex/gramex.html">Python Reference</a></li>
     </ul>
