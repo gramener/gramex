@@ -308,7 +308,8 @@ def _yaml_open(path, default=AttrDict(), **kwargs):
             app_log.exception('Config error: %s', path)
             return default
     if not isinstance(result, AttrDict):
-        app_log.warning('Config is not a dict: %s', path)
+        if result is not None:
+            app_log.warning('Config is not a dict: %s', path)
         return default
 
     # Variables based on YAML file location
