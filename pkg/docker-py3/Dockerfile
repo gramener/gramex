@@ -1,4 +1,4 @@
-FROM continuumio/anaconda3
+FROM continuumio/anaconda3:latest
 
 LABEL description="Gramener data visualization server"
 LABEL version="1.31"
