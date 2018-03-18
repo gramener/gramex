@@ -93,15 +93,15 @@ function drawFilters(params) {
   $.each(config_filter, function(k, spec) {
     if (spec.type == 'select') {
       $.getJSON(spec.url)
-      .done(function(data) {
-        var el = filterSelect(data, spec.column, spec.el)
-        el.promise().done(function(){
-          el.selectpicker({style: 'btn-info btn-sm'})
-          if (query.searchKey[spec.column]) {
-            setSelectFilter(el, query.searchKey[spec.column])
-          }
+        .done(function(data) {
+          var el = filterSelect(data, spec.column, spec.el)
+          el.promise().done(function(){
+            el.selectpicker({style: 'btn-info btn-sm'})
+            if (query.searchKey[spec.column]) {
+              setSelectFilter(el, query.searchKey[spec.column])
+            }
+          })
         })
-      })
     } else if (spec.type == 'daterange') {
       setDatefilter(spec, query)
     } else {
@@ -139,29 +139,29 @@ function setSelectFilter(el, value) {
 function drawViz(params) {
   // KPIS
   $.getJSON('query/aggD/kpi-pageviews/' + updateParams(params))
-  .done(function(data) {
-    unitDraw(data, '.kpi-pageviews', d3.format(',.2d'))
-  })
+    .done(function(data) {
+      unitDraw(data, '.kpi-pageviews', d3.format(',.2d'))
+    })
   $.getJSON('query/aggD/kpi-sessions/' + updateParams(params, ['user.id', 'time']))
-  .done(function(data) {
-    unitDraw(data, '.kpi-sessions', d3.format(',.2d'))
-  })
+    .done(function(data) {
+      unitDraw(data, '.kpi-sessions', d3.format(',.2d'))
+    })
   $.getJSON('query/aggD/kpi-users/' + updateParams(params))
-  .done(function(data) {
-    unitDraw(data, '.kpi-users', d3.format(',.2d'))
-  })
+    .done(function(data) {
+      unitDraw(data, '.kpi-users', d3.format(',.2d'))
+    })
   $.getJSON('query/aggD/kpi-avgtimespent/' + updateParams(params, ['user.id', 'time']))
-  .done(function(data) {
-    unitDraw(data, '.kpi-avgtimespent', (function(v){ return d3.format(',.1f')(v/60) + ' min' }))
-  })
+    .done(function(data) {
+      unitDraw(data, '.kpi-avgtimespent', (function(v){ return d3.format(',.1f')(v/60) + ' min' }))
+    })
   $.getJSON('query/aggD/kpi-urls/' + updateParams(params))
-  .done(function(data) {
-    unitDraw(data, '.kpi-urls', d3.format(',.2d'))
-  })
+    .done(function(data) {
+      unitDraw(data, '.kpi-urls', d3.format(',.2d'))
+    })
   $.getJSON('query/aggD/kpi-avgloadtime/' + updateParams(params))
-  .done(function(data) {
-    unitDraw(data, '.kpi-avgloadtime', (function(v){ return d3.format(',.1f')(v) + ' ms' }))
-  })
+    .done(function(data) {
+      unitDraw(data, '.kpi-avgloadtime', (function(v){ return d3.format(',.1f')(v) + ' ms' }))
+    })
   // visuals
   // TODO: set the x_axis_format based on the date range / duration
   var x_axis_format = '%d %b %Y'
