@@ -37,7 +37,7 @@ from tornado.template import Template
 from orderedattrdict import AttrDict
 from gramex import debug, shutdown, __version__
 from gramex.transforms import build_transform
-from gramex.config import locate, app_log
+from gramex.config import locate, app_log, ioloop_running
 from gramex.cache import urlfetch
 from gramex.http import OK, NOT_MODIFIED
 from . import urlcache
@@ -130,7 +130,8 @@ def app(conf):
     import tornado.ioloop
 
     ioloop = tornado.ioloop.IOLoop.current()
-    if ioloop._running:
+    is_running = ioloop_running(ioloop)
+    if is_running:
         app_log.warning('Ignoring app config change when running')
     else:
         info.app = GramexApp(**conf.settings)
@@ -147,7 +148,7 @@ def app(conf):
 
         def callback():
             '''Called after all services are started. Opens browser if required'''
-            if ioloop._running:
+            if is_running:
                 return
 
             app_log.info('Listening on port %d', conf.listen.port)

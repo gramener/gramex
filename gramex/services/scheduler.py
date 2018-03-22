@@ -3,7 +3,7 @@
 import tornado.ioloop
 from crontab import CronTab
 from gramex.transforms import build_transform
-from gramex.config import app_log
+from gramex.config import app_log, ioloop_running
 
 
 class Task(object):
@@ -51,7 +51,7 @@ class Task(object):
 
         # Run now if the task is to be run on startup. Don't re-run if the config was reloaded
         startup = schedule.get('startup')
-        if startup == '*' or (startup is True and not self.ioloop._running):
+        if startup == '*' or (startup is True and not ioloop_running(self.ioloop)):
             self.function()
 
     def run(self):
