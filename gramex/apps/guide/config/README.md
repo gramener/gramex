@@ -742,17 +742,31 @@ auth if 'win' not in sys.platform:
 ```
 
 If ` if ` is present in any key, the portion after `if` is evaluated as a Python
-expression. All [YAML variables](#yaml-variables) are available as Python
-variables. For example, you can check the Gramex path using `GRAMEXPATH`:
+expression. All [YAML variables](#yaml-variables) and common modules (`re`,
+`os`, `sys`, `datetime`, `socket`, `six`) are available to the expression.
+
+Here are useful examples of conditions:
 
 ```yaml
-log:
-    root:
-        # If GRAMEX is running from C:, set log level to debug
-        level if 'C:' in GRAMEXPATH: debug
-        # If GRAMEX is running from D:, set log level to warn
-        level if 'D:' in GRAMEXPATH: warn
+# If Gramex is installed in a certain location, e.g. C:
+key if 'C:' in GRAMEXPATH`: value
+
+# If Gramex is running on a certain platform, e.g. win32, linux, cygwin, darwin
+key if 'win' in sys.platform: value
+
+# If Gramex is running on a specific server, e.g. uat.gramener.com:
+key if 'uat' in socket.gethostname(): value
+
+# If Gramex was started with a specific command line, e.g. --listen.port=8001
+key if '--listen.port=8001' in ''.join(sys.argv[1:]): value
+
+# If Gramex is running from a specific location, e.g. /tmp/
+key if '/tmp/' in os.getcwd(): value
+
+# If Gramex was started at a specific time, e.g. on Sunday (7)
+key if datetime.date.today().weekday() == 7: value
 ```
+
 
 ## YAML inheritence
 
