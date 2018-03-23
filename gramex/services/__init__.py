@@ -130,8 +130,7 @@ def app(conf):
     import tornado.ioloop
 
     ioloop = tornado.ioloop.IOLoop.current()
-    is_running = ioloop_running(ioloop)
-    if is_running:
+    if ioloop_running(ioloop):
         app_log.warning('Ignoring app config change when running')
     else:
         info.app = GramexApp(**conf.settings)
@@ -148,7 +147,7 @@ def app(conf):
 
         def callback():
             '''Called after all services are started. Opens browser if required'''
-            if is_running:
+            if ioloop_running(ioloop):
                 return
 
             app_log.info('Listening on port %d', conf.listen.port)

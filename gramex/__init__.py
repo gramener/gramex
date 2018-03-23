@@ -35,6 +35,7 @@ from pathlib import Path
 from copy import deepcopy
 from orderedattrdict import AttrDict
 from gramex.config import ChainConfig, PathConfig, app_log, variables, setup_variables
+from gramex.config import ioloop_running
 
 paths = AttrDict()              # Paths where configurations are stored
 conf = AttrDict()               # Final merged configurations
@@ -292,6 +293,6 @@ def init(force_reload=False, **kwargs):
 def shutdown():
     '''Shut down this instance'''
     ioloop = tornado.ioloop.IOLoop.current()
-    if ioloop._running:
+    if ioloop_running(ioloop):
         app_log.info('Shutting down Gramex...')
         ioloop.stop()
