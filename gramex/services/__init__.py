@@ -223,7 +223,7 @@ def schedule(conf):
     from . import scheduler
     _stop_all_tasks(info.schedule)
     for name, sched in conf.items():
-        _key = _cache_key('schedule', name, sched)
+        _key = _cache_key('schedule', sched)
         if _key in _cache:
             info.schedule[name] = _cache[_key]
             continue
@@ -442,7 +442,7 @@ def alert(conf):
     schedule_keys = 'minutes hours dates months weekdays years startup'.split()
 
     for name, alert in conf.items():
-        _key = _cache_key('alert', name, alert)
+        _key = _cache_key('alert', alert)
         if _key in _cache:
             info.alert[name] = _cache[_key]
             continue
@@ -629,7 +629,7 @@ def url(conf):
     # Sort the handlers in descending order of priority
     specs = sorted(conf.items(), key=_sort_url_patterns, reverse=True)
     for name, spec in specs:
-        cache_key = _cache_key('url', name, spec)
+        cache_key = _cache_key('url', spec)
         if cache_key in _cache:
             handlers.append(_cache[cache_key])
             continue
@@ -691,7 +691,7 @@ def watch(conf):
 
     events = {'on_modified', 'on_created', 'on_deleted', 'on_moved', 'on_any_event'}
     for name, config in conf.items():
-        _key = _cache_key('watch', name, config)
+        _key = _cache_key('watch', config)
         if _key in _cache:
             watcher.watch(name, **_cache[_key])
             continue
@@ -781,7 +781,7 @@ def eventlog(conf):
 def email(conf):
     '''Set up email service'''
     for name, config in conf.items():
-        _key = _cache_key('email', name, config)
+        _key = _cache_key('email', config)
         if _key in _cache:
             info.email[name] = _cache[_key]
             continue
@@ -797,7 +797,7 @@ sms_notifiers = {
 def sms(conf):
     '''Set up SMS service'''
     for name, config in conf.items():
-        _key = _cache_key('sms', name, config)
+        _key = _cache_key('sms', config)
         if _key in _cache:
             info.sms[name] = _cache[_key]
             continue
