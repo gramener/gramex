@@ -296,6 +296,8 @@ class BaseMixin(object):
                 continue
             if not isinstance(error_config, dict):
                 return app_log.error('url:%s.error.%d is not a dict', cls.name, error_code)
+            # Make a copy of the original. When we add headers, etc, it shouldn't affect original
+            error_config = AttrDict(error_config)
             if 'path' in error_config:
                 encoding = error_config.get('encoding', 'utf-8')
                 template_kwargs = {}
