@@ -84,6 +84,7 @@ class TestPathConfig(unittest.TestCase):
         self.conf1 = info.home / Path('conf1.test')
         self.conf2 = info.home / Path('conf2.test')
         self.condition = info.home / 'config.condition.yaml'
+        self.importmerge = info.home / 'config.importmerge.yaml'
 
         self.error = info.home / 'config.error.yaml'
         self.missing = info.home / 'config.missing.yaml'
@@ -254,6 +255,11 @@ class TestPathConfig(unittest.TestCase):
 
     def test_if(self):
         conf = PathConfig(self.condition)
+        for key, val in conf.items():
+            eq_(val['expected'], val['actual'])
+
+    def test_import_merge(self):
+        conf = PathConfig(self.importmerge)
         for key, val in conf.items():
             eq_(val['expected'], val['actual'])
 

@@ -482,7 +482,17 @@ def load_imports(config, source, warn=None):
     imported_paths = [_pathstat(source)]
     root = source.absolute().parent
     for key, value, node in list(walk(config)):
-        if key == 'import':
+        if isinstance(key, six.string_types) and key.startswith('import.merge'):
+            # Strip the top level key(s) from import.merge values
+            if isinstance(value, dict):
+                for name, conf in value.items():
+                    node[name] = conf
+            elif value:
+                raise ValueError('import.merge: must be dict, not %s at %s' % (
+                    repr(value), source))
+            # Delete the import key
+            del node[key]
+        elif key == 'import':
             # Convert "import: path" to "import: {app: path}"
             if isinstance(value, six.string_types):
                 value = {'apps': value}

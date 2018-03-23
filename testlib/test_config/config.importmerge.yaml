@@ -1,0 +1,57 @@
+variables:
+  root:
+    a: 1
+    b: 2
+    c: {d: [3, 4]}
+  defaulted:
+    default:
+      key: value
+
+# import.merge on a variable just merges the variable in-place
+test-var:
+  actual:
+    a: 0
+    z: 9
+    import.merge: $root
+  expected:
+    a: 1
+    z: 9
+    b: 2
+    c: {d: [3, 4]}
+
+# import.merge handled variable default values
+test-default:
+  actual:
+    import.merge: $defaulted
+  expected:
+    key: value
+
+# import.merge works within an import
+test-import:
+  actual:
+    import:
+      myapp:
+        # Import this app
+        # Pass it a variable: $query
+        # The imported value should be the contents of $query
+        path: $YAMLPATH/config.importedapp.yaml
+        query:
+          VAR1: string
+          VAR2:
+            key1: val
+            key2: {subkey: val}
+  expected:
+    VAR1: string
+    VAR2:
+      key1: val
+      key2: {subkey: val}
+
+# any key beginning with import.merge works, and empty values are ignored
+test-empty:
+  actual:
+    import.merge:dict:
+      key: value
+    import.merge-null: null
+    import.merge-str: ''
+  expected:
+    key: value

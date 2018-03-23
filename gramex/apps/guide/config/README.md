@@ -724,6 +724,55 @@ variables:
         function: 4444 if "$OS".lower() is 'windows' else 8888
 ```
 
+### Merging variables
+
+To use scalar variables, just use `$VARIABLE`. But if you want merge a mapping,
+use `import.merge: $VARIABLE`.
+
+Here's how it works. In the code below, the `first:` and `second:` are identical.
+
+```yaml
+variables:
+    var:                    # Defines $var
+        key: value
+first:
+    key: default-value      # If no $var is defined, use this key
+    import.merge: $var      # If it's defined, just merge the $var here, overriding key:
+second:                     # The result of first: is the same as second:
+    key: value
+```
+
+A practical use is when write apps. If you write a FormHandler that will be
+imported by a project:
+
+```yaml
+url:
+    app-data-$*:                    # FYI: $* avoids namespace clash when importing
+        pattern: /$YAMLURL/data
+        handler: FormHandler
+        kwargs:
+            ...
+            query:
+                # By default, these are the queries available
+                sales: SELECT * FROM sales
+                cost: SELECT * FROM cost
+                # But you can allow the importing app to over-ride these queries
+                import.merge: $queries
+```
+
+... then the project can import your app and override the queries like this:
+
+```yaml
+import:
+    app:
+        path: /path/to/app/gramex.yaml
+        # The section below is passed to the app as $queries
+        # It replaces the sales: and cost: in the app
+        queries:
+            sales: SELECT * FROM sales WHERE product='Laptop'
+            cost: SELECT * FROM cost WHERE product='Laptop'
+```
+
 ## Conditions
 
 **v1.23**.
