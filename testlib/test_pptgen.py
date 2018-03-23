@@ -615,9 +615,9 @@ class TestPPTGen(TestCase):
                 total_rects, rects_width, rects_height = 0, [], []
             eq_(rectangles, total_rects)
             # Comparing rectangle's height
-            eq_(rects_height_from_output, map(int, rects_height))
+            eq_(rects_height_from_output, list(map(int, rects_height)))
             # Comparing rectangle's width
-            eq_(rects_width_from_output, map(int, rects_width))
+            eq_(rects_width_from_output, list(map(int, rects_width)))
 
     def test_heatgrid(self):
         # Test case for heatgrid
