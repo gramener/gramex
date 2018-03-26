@@ -11,6 +11,8 @@ variables:
         default:
             function: six.text_type
             args: ['base']
+    FUNCTION_VAR:
+        function: gramex.config.variables['ROOT'] + gramex.config.variables['THIS']
     DERIVED: $THIS/derived
     NUMERIC: 1
     BOOLEAN: true
@@ -78,6 +80,7 @@ base_THIS: $THIS
 base_DEFAULT: $BASE_DEFAULT
 base_FUNCTION: $FUNCTION
 base_DEFAULT_FUNCTION: $DEFAULT_FUNCTION
+base_FUNCTION_VAR: $FUNCTION_VAR
 base_DERIVED: $DERIVED
 base_YAMLURL_VAR: $YAMLURL_VAR
 base_YAMLURL_VAR_EXPECTED: test_config

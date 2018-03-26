@@ -706,7 +706,8 @@ variables:
         function: utils.get_home()
 ```
 
-(Note: The function arguments cannot be variables as of now.)
+Note: As of now, the `function:` cannot use variables like `$HOME`, but can use
+`gramex.config.variables['HOME']` instead.
 
 Once the variables are assigned, the `variables` section is removed.
 

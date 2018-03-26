@@ -10,6 +10,8 @@ variables:
         default:
             function: six.text_type
             args: ['child']
+    FUNCTION_VAR:
+        function: gramex.config.variables['ROOT'] + gramex.config.variables['THIS']
     DERIVED: $THIS/derived
 
 child_DOT: "{.}"
@@ -23,6 +25,7 @@ child_THIS: $THIS
 child_DEFAULT: $CHILD_DEFAULT
 child_FUNCTION: $FUNCTION
 child_DEFAULT_FUNCTION: $DEFAULT_FUNCTION
+child_FUNCTION_VAR: $FUNCTION_VAR
 child_DERIVED: $DERIVED
 child_URLROOT: $URLROOT
 child_YAMLURL_VAR: $YAMLURL_VAR

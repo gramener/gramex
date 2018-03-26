@@ -221,6 +221,8 @@ class TestPathConfig(unittest.TestCase):
             eq_(conf['%s_FUNCTION' % key], key)
             # Default functions "underride" values
             eq_(conf['%s_DEFAULT_FUNCTION' % key], 'base')
+            # Functions can use variables using gramex.config.variables
+            eq_(conf['%s_FUNCTION_VAR' % key], conf.base_ROOT + key)
             # Derived variables
             eq_(conf['%s_DERIVED' % key], '%s/derived' % key)
             # $URLROOT is the frozen to base $YAMLURL
