@@ -8,7 +8,6 @@ const minimist = require('minimist')
 const express = require('express')
 const cookie = require('cookie')
 const path = require('path')
-const url = require('url')
 const tmp = require('tmp')
 const fs = require('fs')
 const _ = require('lodash')
@@ -64,8 +63,17 @@ async function render(q) {
   if (fs.exists(target))
     fs.unlinkSync(target)
 
+  let args = [
+    '--no-sandbox',
+    '--disable-setuid-sandbox',
+  ]
+  // If a proxy environment variable is defined, use it
+  let proxy = process.env.HTTPS_PROXY || process.env.HTTP_PROXY || process.env.ALL_PROXY
+  if (proxy)
+    args.push('--proxy-server=' + proxy)
+
   if (typeof browser == 'undefined')
-    browser = await puppeteer.launch({args: ['--no-sandbox', '--disable-setuid-sandbox']})
+    browser = await puppeteer.launch({args: args})
   if (typeof page == 'undefined')
     page = await browser.newPage()
   // Clear past cookies
@@ -127,8 +135,8 @@ async function render(q) {
           q[col].push(last_val)
       })
       const image_files = []
-      for (const [index, [selector, title, title_size, x, y, dpi]] of
-           _.zip(q.selector, q.title, q.title_size, q.x, q.y, q.dpi).entries()) {
+      let pages = _.zip(q.selector, q.title, q.title_size, q.x, q.y, q.dpi).entries()
+      for (const [index, [selector, title, title_size, x, y, dpi]] of pages) {
         options.path = target.replace(/\.pptx$/, '.' + index + '.png')
         image_files.push(options.path)
         await screenshot(page, options, selector)

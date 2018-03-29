@@ -70,6 +70,12 @@ To use your own chromecapture.js, run it using `cmd:` on any port and point
                 cmd: node /path/to/chromecapture.js --port=9902
                 url: http://localhost:9902/
 
+To use a HTTP proxy, set the `ALL_PROXY` environment variable. If your proxy IP
+is `10.20.30.40` on port `8000`, then set `ALL_PROXY` to `10.20.30.40:8000`. See
+[how to set environment variables](https://superuser.com/a/284351). (You can
+also use the `HTTPS_PROXY` or `HTTP_PROXY` environment variables. These
+supercede `ALL_PROXY`.)
+
 ## PhantomJS
 
 [PhantomJS](http://phantomjs.org/) is **out-dated** but is the default for
