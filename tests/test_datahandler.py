@@ -5,6 +5,7 @@ import re
 import requests
 import pandas as pd
 from pathlib import Path
+from nose.tools import nottest
 import pandas.util.testing as pdt
 from . import server, TestGramex, dbutils
 from gramex.config import variables
@@ -226,6 +227,9 @@ class TestPostgresDataHandler(TestGramex, DataHandlerTestMixin):
         dbutils.postgres_drop_db(variables.POSTGRES_SERVER, 'test_datahandler')
 
 
+# odo tests fails on Anaconda 5.0. DataHandler is deprecated anyway
+# https://code.gramener.com/cto/gramex/-/jobs/53708
+@nottest
 class TestBlazeDataHandler(SqliteHandler):
     # Test DataHandler for SQLite database via blaze driver
     database = 'blazesqlite'
@@ -235,6 +239,7 @@ class TestBlazeDataHandler(SqliteHandler):
         pass
 
 
+@nottest
 class TestBlazeMysqlDataHandler(TestMysqlDataHandler, TestBlazeDataHandler):
     database = 'blazemysql'
 
@@ -243,6 +248,7 @@ class TestBlazeMysqlDataHandler(TestMysqlDataHandler, TestBlazeDataHandler):
         pass
 
 
+@nottest
 class TestDataHandlerConfig(SqliteHandler):
     database = 'sqliteconfig'
 
