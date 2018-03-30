@@ -1,29 +1,29 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-	<meta charset="utf-8">
-	<title>Log viewer</title>
-	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-	<link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon">
-	<link rel="stylesheet" href="ui/bootstraptheme.css?primary=%2320186F&secondary=%23483FA4&success=%233E6182&info=%23E4E4E4&warning=%23F57E1A&danger=%23F9F9F9&light=%234A4A4A&dark=%23362D8B&body-bg=%23F2F2F2&body-color=%23696969&enable-transitions=on&font-family-base=roboto&headings-font-family=roboto#background">
+  <meta charset="utf-8">
+  <title>Log viewer</title>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon">
+  <link rel="stylesheet" href="ui/bootstraptheme.css?primary=%2320186F&secondary=%23483FA4&success=%233E6182&info=%23E4E4E4&warning=%23F57E1A&danger=%23F9F9F9&light=%234A4A4A&dark=%23362D8B&body-bg=%23F2F2F2&body-color=%23696969&enable-transitions=on&font-family-base=roboto&headings-font-family=roboto#background">
   <link rel="stylesheet" href="ui/font-awesome/css/font-awesome.min.css">
   <link rel="stylesheet" href="ui/daterangepicker/daterangepicker.css">
   <link rel="stylesheet" href="ui/bootstrap-select/dist/css/bootstrap-select.min.css">
   <link rel="stylesheet" href="node_modules/vega-tooltip/build/vega-tooltip.min.css">
 </head>
 <body>
-	<nav class="navbar navbar-dark navbar-expand-xl bg-primary px-3 py-1 px-xl-0 py-xl-0">
-		<div class="container-fluid">
-			<a class="navbar-brand d-flex align-items-center py-0 pr-1 text-uppercase text-white" href=".">
-				<img src="https://gramener.com/uistatic/gramener.png" width="150" height="45.25" alt="Logo">
-				<h1 class="d-none d-sm-block h5 my-0 ml-5">LOGVIEWER</h1>
-			</a>
-		</div>
-	</nav>
-	<section class="filters bg-white shadow pt-2 pb-2">
-		<div class="container-fluid px-0">
-			<div class="d-md-flex flex-md-wrap justify-content-sm-between">
+  <nav class="navbar navbar-dark navbar-expand-xl bg-primary px-3 py-1 px-xl-0 py-xl-0">
+    <div class="container-fluid">
+      <a class="navbar-brand d-flex align-items-center py-0 pr-1 text-uppercase text-white" href=".">
+        <img src="https://gramener.com/uistatic/gramener.png" width="150" height="45.25" alt="Logo">
+        <h1 class="d-none d-sm-block h5 my-0 ml-5">LOGVIEWER</h1>
+      </a>
+    </div>
+  </nav>
+  <section class="filters bg-white shadow pt-2 pb-2">
+    <div class="container-fluid px-0">
+      <div class="d-md-flex flex-md-wrap justify-content-sm-between">
         <div class="filter-time col col-md-3 w-100 mb-2 mb-md-0">
           <div class="input-group input-group-sm border border-top-0 border-right-0 border-left-0 border-light d-flex justify-content-between">
             <input type="text" class="col form-control border-0 no-border-radius px-0" placeholder="daterange">
@@ -35,95 +35,95 @@
           </div>
         </div>
         <div class="filter-status col w-100 mb-2 mb-md-0">
-					<select name="status" data-live-search="true" class="form-control form-control-sm border-top-0 border-right-0 border-left-0 border-light p-0 no-border-radius">
+          <select name="status" data-live-search="true" class="form-control form-control-sm border-top-0 border-right-0 border-left-0 border-light p-0 no-border-radius">
             <option value="">Status</option>
-					</select>
-				</div>
-				<div class="filter-users col w-100 mb-2 mb-md-0">
-					<select name="user.id" data-live-search="true" class="form-control form-control-sm border-top-0 border-right-0 border-left-0 border-light p-0 no-border-radius">
-						<option value="">User Name</option>
-					</select>
-				</div>
-				<div class="filter-uri col w-100 mb-2 mb-md-0">
-					<select name="uri" data-live-search="true" class="form-control form-control-sm border-top-0 border-right-0 border-left-0 border-light p-0 no-border-radius">
-						<option value="">Page Name</option>
-					</select>
-				</div>
-				<div class="filter-ip col w-100 mb-2 mb-md-0">
-					<select name="ip" data-live-search="true" class="form-control form-control-sm border-top-0 border-right-0 border-left-0 border-light p-0 no-border-radius">
-						<option value="">IP</option>
-					</select>
-				</div>
-				<div class="col w-100 mb-2 mb-md-0">
-					<button class="filter-submit btn btn-sm w-100 btn-warning text-white text-uppercase">Submit</button>
-				</div>
-			</div>
-		</div>
-	</section>
-	<section class="d-flex flex-wrap my-4">
-		<div class="col-12 col-sm-6 col-md-4 col-lg-3 col-xl-2 text-center mb-4 mb-xl-0">
-			<div class="col-12 bg-white mr-3 pt-3 pb-3 rounded border border-info">
-				<h3 class="text-success"><strong class="kpi-pageviews">--</strong></h5>
+          </select>
+        </div>
+        <div class="filter-users col w-100 mb-2 mb-md-0">
+          <select name="user.id" data-live-search="true" class="form-control form-control-sm border-top-0 border-right-0 border-left-0 border-light p-0 no-border-radius">
+            <option value="">User Name</option>
+          </select>
+        </div>
+        <div class="filter-uri col w-100 mb-2 mb-md-0">
+          <select name="uri" data-live-search="true" class="form-control form-control-sm border-top-0 border-right-0 border-left-0 border-light p-0 no-border-radius">
+            <option value="">Page Name</option>
+          </select>
+        </div>
+        <div class="filter-ip col w-100 mb-2 mb-md-0">
+          <select name="ip" data-live-search="true" class="form-control form-control-sm border-top-0 border-right-0 border-left-0 border-light p-0 no-border-radius">
+            <option value="">IP</option>
+          </select>
+        </div>
+        <div class="col w-100 mb-2 mb-md-0">
+          <button class="filter-submit btn btn-sm w-100 btn-warning text-white text-uppercase">Submit</button>
+        </div>
+      </div>
+    </div>
+  </section>
+  <section class="d-flex flex-wrap my-4">
+    <div class="col-12 col-sm-6 col-md-4 col-lg-3 col-xl-2 text-center mb-4 mb-xl-0">
+      <div class="col-12 bg-white mr-3 pt-3 pb-3 rounded border border-info">
+        <h3 class="text-success"><strong class="kpi-pageviews">--</strong></h3>
         <h5 class="text-light">Page Views</h5>
-			</div>
-		</div>
-		<div class="col-12 col-sm-6 col-md-4 col-lg-3 col-xl-2 text-center mb-4 mb-xl-0">
-			<div class="col-12 bg-white mr-3 pt-3 pb-3 rounded border border-info">
-				<h3 class="text-success"><strong class="kpi-sessions">--</strong></h5>
+      </div>
+    </div>
+    <div class="col-12 col-sm-6 col-md-4 col-lg-3 col-xl-2 text-center mb-4 mb-xl-0">
+      <div class="col-12 bg-white mr-3 pt-3 pb-3 rounded border border-info">
+        <h3 class="text-success"><strong class="kpi-sessions">--</strong></h3>
         <h5 class="text-light">Sessions</h5>
-			</div>
-		</div>
-		<div class="col-12 col-sm-6 col-md-4 col-lg-3 col-xl-2 text-center mb-4 mb-xl-0">
-			<div class="col-12 bg-white mr-3 pt-3 pb-3 rounded border border-info">
-				<h3 class="text-success"><strong class="kpi-users">--</strong></h5>
+      </div>
+    </div>
+    <div class="col-12 col-sm-6 col-md-4 col-lg-3 col-xl-2 text-center mb-4 mb-xl-0">
+      <div class="col-12 bg-white mr-3 pt-3 pb-3 rounded border border-info">
+        <h3 class="text-success"><strong class="kpi-users">--</strong></h3>
         <h5 class="text-light">Users</h5>
-			</div>
-		</div>
-		<div class="col-12 col-sm-6 col-md-4 col-lg-3 col-xl-2 text-center mb-4 mb-xl-0">
-			<div class="col-12 bg-white mr-3 pt-3 pb-3 rounded border border-info">
-				<h3 class="text-success"><strong class="kpi-avgtimespent">--</strong></h5>
-				<h5 class="text-light">Avg.Time Spent</h5>
-			</div>
-		</div>
-		<div class="col-12 col-sm-6 col-md-4 col-lg-3 col-xl-2 text-center mb-4 mb-xl-0">
-			<div class="col-12 bg-white mr-3 pt-3 pb-3 rounded border border-info">
-				<h3 class="text-success"><strong class="kpi-urls">--</strong></h5>
-				<h5 class="text-light">URLs</h5>
-			</div>
-		</div>
-		<div class="col-12 col-sm-6 col-md-4 col-lg-3 col-xl-2 text-center mb-4 mb-xl-0">
-			<div class="col-12 bg-white mr-3 pt-3 pb-3 rounded border border-info">
-				<h3 class="text-success"><strong class="kpi-avgloadtime">--</strong></h5>
-				<h5 class="text-light">Avg.Load Time</h5>
-			</div>
-		</div>
+      </div>
+    </div>
+    <div class="col-12 col-sm-6 col-md-4 col-lg-3 col-xl-2 text-center mb-4 mb-xl-0">
+      <div class="col-12 bg-white mr-3 pt-3 pb-3 rounded border border-info">
+        <h3 class="text-success"><strong class="kpi-avgtimespent">--</strong></h3>
+        <h5 class="text-light">Avg.Time Spent</h5>
+      </div>
+    </div>
+    <div class="col-12 col-sm-6 col-md-4 col-lg-3 col-xl-2 text-center mb-4 mb-xl-0">
+      <div class="col-12 bg-white mr-3 pt-3 pb-3 rounded border border-info">
+        <h3 class="text-success"><strong class="kpi-urls">--</strong></h3>
+        <h5 class="text-light">URLs</h5>
+      </div>
+    </div>
+    <div class="col-12 col-sm-6 col-md-4 col-lg-3 col-xl-2 text-center mb-4 mb-xl-0">
+      <div class="col-12 bg-white mr-3 pt-3 pb-3 rounded border border-info">
+        <h3 class="text-success"><strong class="kpi-avgloadtime">--</strong></h3>
+        <h5 class="text-light">Avg.Load Time</h5>
+      </div>
+    </div>
   </section>
   <div class="container-fluid">
     <h4 class="text-success font-weight-bold mb-3">Traffic Trend</h4>
   </div>
-	<section>
-		<div class="container-fluid pr-lg-0">
-			<div class="card-deck flex-column flex-lg-row mr-0 mr-sm-3 mr-lg-0">
-				<div class="card text-center border col-md-12 col-lg-6 mb-4 px-0 border border-info">
-					<div class="card-header d-sm-flex justify-content-between bg-white border-0">
-						<h5 class="text-success m-0 align-self-center font-weight-bold text-left">Page Views</h5>
-					</div>
-					<div class="card-body">
+  <section>
+    <div class="container-fluid pr-lg-0">
+      <div class="card-deck flex-column flex-lg-row mr-0 mr-sm-3 mr-lg-0">
+        <div class="card text-center border col-md-12 col-lg-6 mb-4 px-0 border border-info">
+          <div class="card-header d-sm-flex justify-content-between bg-white border-0">
+            <h5 class="text-success m-0 align-self-center font-weight-bold text-left">Page Views</h5>
+          </div>
+          <div class="card-body">
             <div class="vegam-pageviewstrend"></div>
-					</div>
-				</div>
-				<div class="card text-center border col-md-12 col-lg-6 mb-4 px-0 border border-info">
-					<div class="card-header d-sm-flex justify-content-between bg-white border-0">
-						<h5 class="text-success m-0 align-self-center font-weight-bold text-left">Sessions</h5>
-					</div>
-					<div class="card-body">
+          </div>
+        </div>
+        <div class="card text-center border col-md-12 col-lg-6 mb-4 px-0 border border-info">
+          <div class="card-header d-sm-flex justify-content-between bg-white border-0">
+            <h5 class="text-success m-0 align-self-center font-weight-bold text-left">Sessions</h5>
+          </div>
+          <div class="card-body">
             <div class="vegam-sessionstrend"></div>
-						<div class="border-0 d-sm-flex justify-content-between pt-1">
-					</div>
-				</div>
+            <div class="border-0 d-sm-flex justify-content-between pt-1"></div>
+          </div>
+        </div>
       </div>
-		</div>
-	</section>
+    </div>
+  </section>
   <div class="container-fluid">
     <h4 class="text-success font-weight-bold mb-3">Top Metrics</h4>
   </div>
@@ -171,38 +171,38 @@
     <h4 class="text-success font-weight-bold mb-3">Server Load</h4>
   </div>
   <section>
-		<div class="container-fluid pr-lg-0">
-			<div class="card-deck flex-column flex-lg-row mr-0 mr-sm-3 mr-lg-0">
-				<div class="card text-center border col-md-12 col-lg-6 mb-4 px-0">
-				  <div class="card-header d-flex justify-content-between bg-white border-0">
-				    <h5 class="text-success m-0 align-self-center font-weight-bold">Server Response Time</h5>
-				  </div>
-				  <div class="card-body">
+    <div class="container-fluid pr-lg-0">
+      <div class="card-deck flex-column flex-lg-row mr-0 mr-sm-3 mr-lg-0">
+        <div class="card text-center border col-md-12 col-lg-6 mb-4 px-0">
+          <div class="card-header d-flex justify-content-between bg-white border-0">
+            <h5 class="text-success m-0 align-self-center font-weight-bold">Server Response Time</h5>
+          </div>
+          <div class="card-body">
             <div class="vegam-loadtimetrend"></div>
-				  </div>
-				</div>
-				<div class="card text-center border col-md-12 col-lg-6 mb-4 px-0">
-				  <div class="card-header d-flex justify-content-between bg-white border-0">
-				    <h5 class="text-success m-0 align-self-center font-weight-bold">Response Time and Views</h5>
-				  </div>
-				  <div class="card-body">
+          </div>
+        </div>
+        <div class="card text-center border col-md-12 col-lg-6 mb-4 px-0">
+          <div class="card-header d-flex justify-content-between bg-white border-0">
+            <h5 class="text-success m-0 align-self-center font-weight-bold">Response Time and Views</h5>
+          </div>
+          <div class="card-body">
             <div class="vegam-loadtimeviewstrend"></div>
-				  </div>
-				</div>
-			</div>
-		</div>
-	</section>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
   <div class="container-fluid pr-lg-0">
-		<script type="text/html" src="template/horizontal_graphs.html" id="horizontal_bars"></script>
-	</div>
+    <script type="text/html" src="template/horizontal_graphs.html" id="horizontal_bars"></script>
+  </div>
   <footer class="footer bg-info py-2 text-right">
-		<div class="container-fluid">
-			<img src="https://gramener.com/uistatic/gramener.png" width="107" height="40" alt="footer-logo">
-		</div>
-	</footer>
+    <div class="container-fluid">
+      <img src="https://gramener.com/uistatic/gramener.png" width="107" height="40" alt="footer-logo">
+    </div>
+  </footer>
   <script src="ui/jquery/dist/jquery.min.js"></script>
-	<script src="ui/popper.js/dist/umd/popper.min.js"></script>
-	<script src="ui/bootstrap/dist/js/bootstrap.min.js"></script>
+  <script src="ui/popper.js/dist/umd/popper.min.js"></script>
+  <script src="ui/bootstrap/dist/js/bootstrap.min.js"></script>
   <script src="ui/moment/min/moment-with-locales.min.js"></script>
   <script src="ui/daterangepicker/daterangepicker.js"></script>
   <script src="ui/bootstrap-select/dist/js/bootstrap-select.min.js"></script>

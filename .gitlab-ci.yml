@@ -22,7 +22,7 @@ validate:
   script:
     - flake8
     - eslint gramex/apps
-    - htmllint gramex/apps/guide/uicomponents/**/*.html
+    - htmllint
     - bandit gramex --recursive --format csv || true
     - pip install -q -e .
     - python setup.py nosetests

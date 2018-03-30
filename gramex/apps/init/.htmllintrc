@@ -1,4 +1,4 @@
-// Gramex .htmllintrc v1.1
+// Gramex .htmllintrc v1.2
 {
     "plugins": [],
 
@@ -37,8 +37,9 @@
     "img-req-src": false,
     "indent-style": "spaces",
     "indent-width": 2,
-    "label-req-for": true,
+    "label-req-for": false,                 // cannot use if multiple forms with same key
     "line-end-style": false,                // raises too many errors
+    "raw-ignore-regex": "<%.*?%>\\s*|{[%#{].*?[%#}]}\\s*",  // ignore templates
     "spec-char-escape": false,              // using > or < is not that big a deal
     "table-req-caption": false,
     "tag-bans": [

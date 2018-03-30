@@ -32,8 +32,8 @@
         <h2>Test OTP</h2>
         <p>Your OTP is <code>{{ otp }}</code>. This will expire in 1 minute.</p>
         <p>Open this link <code><a href="{{ url }}">{{ url }}</a></code>
-           in a new browser or private window within 1 minute. You will be logged in
-           as the same user.</p>
+          in a new browser or private window within 1 minute. You will be logged in
+          as the same user.</p>
         <p>When making server-side or AJAX requests, a better way is to use the <code>X-Gramex-OTP: {{ otp }}</code> HTTP header.</p>
       {% elif handler.get_argument('gramex-otp', None) %}
         <h2>User set using OTP</h2>

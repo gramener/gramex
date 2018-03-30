@@ -121,8 +121,8 @@
                   ]) if dtype == 'object' else ('Number', [
                     ('Equals', ''),
                     ('Does not equal', '!'),
-                    ('Greater than', '>'),
-                    ('Less than', '<'),
+                    ('Greater than', '&gt;'),
+                    ('Less than', '&lt;'),
                   ]) if 'int' in dtype or 'float' in dtype else ('Date', [
                     # TBD
                   ]) if 'datetime' in dtype else ('Other', [
@@ -150,10 +150,11 @@
                     {% for filter_name, filter_op in filters %}
                       {% set vals = _filters.get((col, filter_op), None) %}
                       {% set active = vals is not None and len(vals) %}
-                      <a class="dropdown-item{{ ' active' if active else '' }}" href="#" data-toggle="modal"
-                         data-target="#formhandler-table-modal-id"
-                         data-op="{{ filter_op }}"
-                         data-url="?{{ u(SET, col + filter_op, '\t') }}"
+                      <a class="dropdown-item{{ ' active' if active else '' }}" href="#"
+                        data-toggle="modal"
+                        data-target="#formhandler-table-modal-id"
+                        data-op="{{ filter_op }}"
+                        data-url="?{{ u(SET, col + filter_op, '\t') }}"
                       >{{ filter_name }} {{ '...' if not active or len(vals) > 1 else six.text_type(vals[0]) }}</a>
                     {% end %}
                     <a class="dropdown-item{{ ' active' if len(_filters.get((col, ''), 'xx')) == 0 else '' }}" href="?{{ u(XOR, col, '') }}">Not empty</a>
