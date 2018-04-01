@@ -25,6 +25,7 @@ from gramex.http import UNAUTHORIZED, FORBIDDEN, BAD_REQUEST
 server_header = 'Gramex/%s' % __version__
 session_store_cache = {}
 _reported = {}
+_missing = object()
 
 
 class BaseMixin(object):
@@ -101,7 +102,12 @@ class BaseMixin(object):
         now = time.time()
         week = 7 * 24 * 60 * 60
         keys = []
-        for key in list(data.keys()):
+        # When using sqlitedict, fetching keys may fail if DB is locked. Try later
+        try:
+            all_keys = list(data.keys())
+        except Exception:
+            return
+        for key in all_keys:
             val = data[key]
             # Purge already cleared / removed sessions
             if val is None:
@@ -914,7 +920,11 @@ class KeyStore(object):
     def flush(self):
         '''Write to disk'''
         for key in self.purge(self.store):
-            del self.store[key]
+            try:
+                del self.store[key]
+            except KeyError:
+                # If the key was already removed from store, ignore
+                pass
 
     def close(self):
         '''Flush and close all open handles'''
@@ -1055,7 +1065,11 @@ class JSONStore(KeyStore):
             store = self._read_json()
             store.update(self.update)
             for key in self.purge(store):
-                del store[key]
+                try:
+                    del store[key]
+                except KeyError:
+                    # If the key was already removed from store, ignore
+                    pass
             self._write_json(store)
             self.store = store
             self.update = {}
