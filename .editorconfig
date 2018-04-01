@@ -27,3 +27,8 @@ indent_size = 4
 # http://robandlauren.com/2013/11/21/configuring-sublime-text-markdown/
 [*.md]
 trim_trailing_whitespace = false
+
+[testlib/test_config/config.empty.yaml]
+insert_final_newline = false
+[tests/dir/gramex.yaml]
+insert_final_newline = false

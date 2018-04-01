@@ -20,6 +20,7 @@ variables:
 
 validate:
   script:
+    - eclint check '**/*.html' '**/*.js' '**/*.css' '**/*.yaml' '**/*.md'
     - flake8
     - eslint gramex/apps
     - htmllint

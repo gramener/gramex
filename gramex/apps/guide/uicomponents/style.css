@@ -4,9 +4,7 @@
   z-index: 1;
 }
 
-/* Table of contents
-   This can be added via a margin-top, but manually adding it to every file is not elegant.
-*/
+/* Table of contents. (Manually adding it to every file is not elegant.) */
 .toc { margin-top: 1em; }
 /* Sidebar is sticky */
 #toc-nav {
