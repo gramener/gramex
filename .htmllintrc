@@ -33,7 +33,7 @@
     "id-class-no-ad": false,
     "id-class-style": false,                // no styles enforced for now
     "id-no-dup": false,                     // template replacement IDs { } cause duplication
-    "img-req-alt": true,                    // <img alt=""> is necessary
+    "img-req-alt": "allownull",             // <img alt=""> for dynamic image content
     "img-req-src": false,
     "indent-style": "spaces",
     "indent-width": 2,
