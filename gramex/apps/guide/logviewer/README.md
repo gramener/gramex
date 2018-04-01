@@ -29,8 +29,8 @@ This configuration mounts the app at [log/](log/):
 Use `LOGVIEWER_*` variables to configure your app.
 
 - `LOGVIEWER_PATH_UI`: path to customized layout config. Use sample default `$GRAMEXAPPS/logviewer/config.yaml` layout
-- `LOGVIEWER_PATH_RENDER`: path to customized renderer config. Use sample default `$GRAMEXAPPS/logviewer/renfer.js` js file
-- `LOGVIEWER_FORMHANDLER_KWARGS`: to update url>name>kwargs section
+- `LOGVIEWER_PATH_RENDER`: path to customized renderer config. Use sample default `$GRAMEXAPPS/logviewer/render.js` js file
+- `LOGVIEWER_FORMHANDLER_KWARGS`: to update `url.name.kwargs` section
 - `LOGVIEWER_FORMHANDLER_QUERIES`: to update or add to `queries` section  of `/$YAMLURL/query/` formhandler
 - `LOGVIEWER_CAPTURE_KWARGS`: to pass additional kwargs to capture handler
 - `LOGVIEWER_SCHEDULER_PORT`: when running multiple instances of gramex, you can control to run scheduler only once from certain port

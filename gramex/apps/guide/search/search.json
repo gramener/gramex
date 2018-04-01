@@ -87,6 +87,35 @@
       "Upgrade": -1
     }
   },
+  "1.32": {
+    "": {
+      "Gramex 1.32 Release Notes": -1
+    },
+    "capturehandler-proxy": {
+      "CaptureHandler Proxy": -1
+    },
+    "gramex-init": {
+      "Gramex init": -1
+    },
+    "internal-bugfixes": {
+      "Internal bugfixes": -1
+    },
+    "logviewer-configuration": {
+      "Logviewer configuration": -1
+    },
+    "stats": {
+      "Stats": -1
+    },
+    "tornado-50": {
+      "Tornado 5.0": -1
+    },
+    "upgrade": {
+      "Upgrade": -1
+    },
+    "yaml-merge-variables": {
+      "YAML merge variables": -1
+    }
+  },
   "about": {
     "": {
       "About Gramex": -1
@@ -426,8 +455,29 @@
     "handler-logging": {
       "Handler logging": -1
     },
+    "if-gramex-is-installed-in-a-certain-location-eg-c": {
+      "If Gramex is installed in a certain location, e.g. C:": -1
+    },
+    "if-gramex-is-running-from-a-specific-location-eg-tmp": {
+      "If Gramex is running from a specific location, e.g. /tmp/": -1
+    },
+    "if-gramex-is-running-on-a-certain-platform-eg-win32-linux-cygwin-darwin": {
+      "If Gramex is running on a certain platform, e.g. win32, linux, cygwin, darwin": -1
+    },
+    "if-gramex-is-running-on-a-specific-server-eg-uatgramenercom": {
+      "If Gramex is running on a specific server, e.g. uat.gramener.com:": -1
+    },
+    "if-gramex-was-started-at-a-specific-time-eg-on-sunday-7": {
+      "If Gramex was started at a specific time, e.g. on Sunday (7)": -1
+    },
+    "if-gramex-was-started-with-a-specific-command-line-eg-listenport8001": {
+      "If Gramex was started with a specific command line, e.g. --listen.port=8001": -1
+    },
     "logging": {
       "Logging": -1
+    },
+    "merging-variables": {
+      "Merging variables": -1
     },
     "predefined-variables": {
       "Predefined variables": -1
@@ -470,6 +520,26 @@
     },
     "yaml-wildcard-keys": {
       "YAML wildcard keys": -1
+    }
+  },
+  "contributing": {
+    "": {
+      "Contributing to Gramex": -1
+    },
+    "push-docs-and-coverage-tests": {
+      "Push docs and coverage tests": -1
+    },
+    "push-to-pypi": {
+      "Push to pypi": -1
+    },
+    "releasing-gramex": {
+      "Releasing Gramex": -1
+    },
+    "set-up-gramex": {
+      "Set up Gramex": -1
+    },
+    "update-gramex": {
+      "Update Gramex": -1
     }
   },
   "dashboard": {
@@ -913,6 +983,18 @@
   "logviewer": {
     "": {
       "Log viewer": -1
+    },
+    "add-3rd-party-data": {
+      "Add 3rd-party data": -1
+    },
+    "add-custom-visuals": {
+      "Add custom visuals": -1
+    },
+    "logviewer-usage": {
+      "Logviewer usage": -1
+    },
+    "using-variables": {
+      "Using Variables": -1
     }
   },
   "pptxhandler": {
