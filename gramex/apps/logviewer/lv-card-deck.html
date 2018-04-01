@@ -1,0 +1,6 @@
+{% from logviewer import load_component %}
+<div class="card-deck flex-column flex-lg-row mr-0 mr-sm-3 mr-lg-0">
+{% for card in values %}
+  {% raw load_component('lv-card.html', values=card) %}
+{% end %}
+</div>

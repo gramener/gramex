@@ -8,13 +8,19 @@ custom metrics
     new_session
     new_login :todo
 '''
+import sys
 import os.path
 import sqlite3
 from glob import glob
+from lxml import etree as et
 import numpy as np
 import pandas as pd
 import gramex.data
+import gramex.cache
 from gramex import conf
+
+if sys.version_info.major == 3:
+    unicode = str
 
 DB_CONFIG = {
     'table': 'agg{}',
@@ -33,6 +39,10 @@ DB_CONFIG['table_columns'] = [
     for x in v] + [
         x['key'] if isinstance(x, dict) else x
         for x in DB_CONFIG['dimensions']]
+
+
+FOLDER = os.path.dirname(os.path.abspath(__file__))
+CONFIG_FILE = os.path.join(FOLDER, 'config.yaml')
 
 
 def pdagg(df, groups, aggfuncs):
@@ -193,14 +203,83 @@ def query(handler, args):
 
 def apply_transform(data, spec):
     '''apply transform on dataframe'''
-    ops = {
+    pandas_transforms = {
         'REPLACE': pd.Series.replace,
         'MAP': pd.Series.map,
         'IN': pd.Series.isin,
         'NOTIN': lambda s, v: ~s.isin(v),
-        'CONTAINS': lambda s, v: s.str.contains(v, case=False),
-        'NOTCONTAINS': lambda s, v: ~s.str.contains(v, case=False)
+        'CONTAINS': {
+            'function': lambda s, v, **ops: s.str.contains(v, **ops),
+            'defaults': {'case': False}
+        },
+        'NOTCONTAINS': {
+            'function': lambda s, v, **ops: ~s.str.contains(v, **ops),
+            'defaults': {'case': False}
+        }
     }
     expr = spec['expr']
-    data[spec['as']] = ops[expr['op']](data[expr['col']], expr['value'])
+    func = pandas_transforms[expr['op']]
+    kwargs = expr.get('kwargs', {})
+    if isinstance(func, dict):
+        # collect default kwargs if not present
+        for key, val in func.get('defaults', {}).items():
+            if key not in kwargs:
+                kwargs[key] = val
+        func = func['function']
+    data[spec['as']] = func(data[expr['col']], expr['value'], **kwargs)
     return data
+
+
+def get_config(handler=None):
+    '''return config as dict'''
+    file_path = handler.kwargs.get('path_ui', CONFIG_FILE)
+    return gramex.cache.open(file_path, 'config')
+
+
+def load_component(page, **kwargs):
+    '''return generateed template'''
+    return gramex.cache.open(page, 'template', rel=True).generate(**kwargs)
+
+
+def load_layout(config):
+    '''return generated layout'''
+    return et.tostring(eltree(config, root=et.Element('root')), method='html')[6:-7]
+
+
+def eltree(data, root=None):
+    '''Convert dict to etree.Element(s)'''
+    attr_prefix = '@'
+    text_key = '$'
+    tpl_key = '_$'
+    result = [] if root is None else root
+    if isinstance(data, dict):
+        for key, value in data.items():
+            if root is not None:
+                # attribute prefixes
+                if key.startswith(attr_prefix):
+                    key = key.lstrip(attr_prefix)
+                    result.set(key, unicode(value))
+                    continue
+                # text content
+                if key == text_key:
+                    result.text = unicode(value)
+                    continue
+                # template hooks
+                if key == tpl_key:
+                    for tpl in value if isinstance(value, list) else [value]:
+                        template = '{}.html'.format(tpl['tpl'])
+                        raw_node = load_component(template, values=tpl.get('values', tpl))
+                        result.append(et.fromstring(raw_node))
+                    continue
+            # add other keys as children
+            values = value if isinstance(value, list) else [value]
+            for value in values:
+                elem = et.Element(key)
+                result.append(elem)
+                # scalars to text
+                if not isinstance(value, (dict, list)):
+                    value = {text_key: value}
+                eltree(value, root=elem)
+    else:
+        result.append(et.Element(unicode(data)))
+    return result

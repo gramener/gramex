@@ -1,0 +1,47 @@
+settings:
+  # ... TODO: configure head, navbar, footer, script, style sections
+render: $LOGVIEWER_PATH_RENDER
+layout:
+  section:
+    # filters
+    - '@class': filters bg-white shadow pt-2 pb-2
+      div:
+        - '@class': container-fluid px-0
+          _$: {'tpl': 'lv-filters', 'values': [
+                {'on': 'filter-time', 'type': 'daterange'},
+                {'on': 'filter-status', 'type': 'select', 'name': 'status', 'value': 'Status'},
+                {'on': 'filter-users', 'type': 'select', 'name': 'user.id', 'value': 'User Name'},
+                {'on': 'filter-uri', 'type': 'select', 'name': 'uri', 'value': 'Page Name'},
+                {'on': 'filter-ip', 'type': 'select', 'name': 'ip', 'value': 'IP'}]}
+    # KPIs
+    - '@class': d-flex flex-wrap my-4
+      _$: [
+          {'tpl': 'lv-kpi', 'on': 'kpi-pageviews', 'title': 'Page Views'},
+          {'tpl': 'lv-kpi', 'on': 'kpi-sessions', 'title': 'Sessions'},
+          {'tpl': 'lv-kpi', 'on': 'kpi-users', 'title': 'Users'},
+          {'tpl': 'lv-kpi', 'on': 'kpi-avgtimespent', 'title': 'Avg.Time Spent'},
+          {'tpl': 'lv-kpi', 'on': 'kpi-urls', 'title': 'URLs'},
+          {'tpl': 'lv-kpi', 'on': 'kpi-avgloadtime', 'title': 'Avg.Load Time'}]
+    # Heading
+    - _$: {'tpl': 'lv-header', 'values': {'title': 'Traffic Trend'}}
+    - div:
+        '@class': container-fluid pr-lg-0
+        _$: {'tpl': 'lv-card-deck', 'values': [
+              {'on': 'vegam-pageviewstrend', 'title': 'Page Views'},
+              {'on': 'vegam-sessionstrend', 'title': 'Sessions'}]}
+    - _$: {'tpl': 'lv-header', 'values': {'title': 'Top Metrics'}}
+    - div:
+        '@class': container-fluid pr-lg-0
+        _$:
+        - {'tpl': 'lv-card-deck', 'values': [
+            {'on': 'vegam-toptenuri', 'title': 'Top URLs'},
+            {'on': 'vegam-toptenusers', 'title': 'Top Users'}]}
+        - {'tpl': 'lv-card-deck', 'values': [
+            {'on': 'vegam-toptenstatus', 'title': 'Top Status'},
+            {'on': 'vegam-toptenip', 'title': 'Top IPs'}]}
+    - _$: {'tpl': 'lv-header', 'values': {'title': 'Server Load'}}
+    - div:
+        '@class': container-fluid pr-lg-0
+        _$: {'tpl': 'lv-card-deck', 'values': [
+              {'on': 'vegam-loadtimetrend', 'title': 'Server Response Time'},
+              {'on': 'vegam-loadtimeviewstrend', 'title': 'Response Time and Views'}]}

@@ -1,3 +1,7 @@
+{% from logviewer import load_component, load_layout, get_config %}
+{% set config = get_config(handler) %}
+{% set layout = load_layout(config['layout']) %}
+{% set render = load_component(config['render']) %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -19,182 +23,28 @@
         <img src="https://gramener.com/uistatic/gramener.png" width="150" height="45.25" alt="Logo">
         <h1 class="d-none d-sm-block h5 my-0 ml-5">LOGVIEWER</h1>
       </a>
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#download-dropdown">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="download-dropdown">
+        <ul class="navbar-nav ml-auto">
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle text-white" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+              <i class="fa fa-download"></i>
+              <span class="caret"></span>
+            </a>
+            <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdownMenuLink">
+              <a class="dropdown-item" href="?ext=png">Visual as png</a>
+              <a class="dropdown-item" href="?ext=pdf">Visual as pdf</a>
+            </div>
+          </li>
+        </ul>
+      </div>
     </div>
   </nav>
-  <section class="filters bg-white shadow pt-2 pb-2">
-    <div class="container-fluid px-0">
-      <div class="d-md-flex flex-md-wrap justify-content-sm-between">
-        <div class="filter-time col col-md-3 w-100 mb-2 mb-md-0">
-          <div class="input-group input-group-sm border border-top-0 border-right-0 border-left-0 border-light d-flex justify-content-between">
-            <input type="text" class="col form-control border-0 no-border-radius px-0" placeholder="daterange">
-            <div class="input-group-append">
-              <span class="col input-group-text bg-white border-0 px-0">
-                <i class="fa fa-calendar text-light"></i>
-              </span>
-            </div>
-          </div>
-        </div>
-        <div class="filter-status col w-100 mb-2 mb-md-0">
-          <select name="status" data-live-search="true" class="form-control form-control-sm border-top-0 border-right-0 border-left-0 border-light p-0 no-border-radius">
-            <option value="">Status</option>
-          </select>
-        </div>
-        <div class="filter-users col w-100 mb-2 mb-md-0">
-          <select name="user.id" data-live-search="true" class="form-control form-control-sm border-top-0 border-right-0 border-left-0 border-light p-0 no-border-radius">
-            <option value="">User Name</option>
-          </select>
-        </div>
-        <div class="filter-uri col w-100 mb-2 mb-md-0">
-          <select name="uri" data-live-search="true" class="form-control form-control-sm border-top-0 border-right-0 border-left-0 border-light p-0 no-border-radius">
-            <option value="">Page Name</option>
-          </select>
-        </div>
-        <div class="filter-ip col w-100 mb-2 mb-md-0">
-          <select name="ip" data-live-search="true" class="form-control form-control-sm border-top-0 border-right-0 border-left-0 border-light p-0 no-border-radius">
-            <option value="">IP</option>
-          </select>
-        </div>
-        <div class="col w-100 mb-2 mb-md-0">
-          <button class="filter-submit btn btn-sm w-100 btn-warning text-white text-uppercase">Submit</button>
-        </div>
-      </div>
-    </div>
-  </section>
-  <section class="d-flex flex-wrap my-4">
-    <div class="col-12 col-sm-6 col-md-4 col-lg-3 col-xl-2 text-center mb-4 mb-xl-0">
-      <div class="col-12 bg-white mr-3 pt-3 pb-3 rounded border border-info">
-        <h3 class="text-success"><strong class="kpi-pageviews">--</strong></h3>
-        <h5 class="text-light">Page Views</h5>
-      </div>
-    </div>
-    <div class="col-12 col-sm-6 col-md-4 col-lg-3 col-xl-2 text-center mb-4 mb-xl-0">
-      <div class="col-12 bg-white mr-3 pt-3 pb-3 rounded border border-info">
-        <h3 class="text-success"><strong class="kpi-sessions">--</strong></h3>
-        <h5 class="text-light">Sessions</h5>
-      </div>
-    </div>
-    <div class="col-12 col-sm-6 col-md-4 col-lg-3 col-xl-2 text-center mb-4 mb-xl-0">
-      <div class="col-12 bg-white mr-3 pt-3 pb-3 rounded border border-info">
-        <h3 class="text-success"><strong class="kpi-users">--</strong></h3>
-        <h5 class="text-light">Users</h5>
-      </div>
-    </div>
-    <div class="col-12 col-sm-6 col-md-4 col-lg-3 col-xl-2 text-center mb-4 mb-xl-0">
-      <div class="col-12 bg-white mr-3 pt-3 pb-3 rounded border border-info">
-        <h3 class="text-success"><strong class="kpi-avgtimespent">--</strong></h3>
-        <h5 class="text-light">Avg.Time Spent</h5>
-      </div>
-    </div>
-    <div class="col-12 col-sm-6 col-md-4 col-lg-3 col-xl-2 text-center mb-4 mb-xl-0">
-      <div class="col-12 bg-white mr-3 pt-3 pb-3 rounded border border-info">
-        <h3 class="text-success"><strong class="kpi-urls">--</strong></h3>
-        <h5 class="text-light">URLs</h5>
-      </div>
-    </div>
-    <div class="col-12 col-sm-6 col-md-4 col-lg-3 col-xl-2 text-center mb-4 mb-xl-0">
-      <div class="col-12 bg-white mr-3 pt-3 pb-3 rounded border border-info">
-        <h3 class="text-success"><strong class="kpi-avgloadtime">--</strong></h3>
-        <h5 class="text-light">Avg.Load Time</h5>
-      </div>
-    </div>
-  </section>
-  <div class="container-fluid">
-    <h4 class="text-success font-weight-bold mb-3">Traffic Trend</h4>
-  </div>
-  <section>
-    <div class="container-fluid pr-lg-0">
-      <div class="card-deck flex-column flex-lg-row mr-0 mr-sm-3 mr-lg-0">
-        <div class="card text-center border col-md-12 col-lg-6 mb-4 px-0 border border-info">
-          <div class="card-header d-sm-flex justify-content-between bg-white border-0">
-            <h5 class="text-success m-0 align-self-center font-weight-bold text-left">Page Views</h5>
-          </div>
-          <div class="card-body">
-            <div class="vegam-pageviewstrend"></div>
-          </div>
-        </div>
-        <div class="card text-center border col-md-12 col-lg-6 mb-4 px-0 border border-info">
-          <div class="card-header d-sm-flex justify-content-between bg-white border-0">
-            <h5 class="text-success m-0 align-self-center font-weight-bold text-left">Sessions</h5>
-          </div>
-          <div class="card-body">
-            <div class="vegam-sessionstrend"></div>
-            <div class="border-0 d-sm-flex justify-content-between pt-1"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-  <div class="container-fluid">
-    <h4 class="text-success font-weight-bold mb-3">Top Metrics</h4>
-  </div>
-  <section>
-    <div class="container-fluid pr-lg-0">
-      <div class="card-deck flex-column flex-lg-row mr-0 mr-sm-3 mr-lg-0">
-        <div class="card text-center border col-md-12 col-lg-6 mb-4 px-0">
-          <div class="card-header d-flex justify-content-between bg-white border-0">
-            <h5 class="text-success m-0 align-self-center font-weight-bold">Top URLs</h5>
-          </div>
-          <div class="card-body">
-            <div class="vegam-toptenuri"></div>
-          </div>
-        </div>
-        <div class="card text-center border col-md-12 col-lg-6 mb-4 px-0">
-          <div class="card-header d-flex justify-content-between bg-white border-0">
-            <h5 class="text-success m-0 align-self-center font-weight-bold">Top Users</h5>
-          </div>
-          <div class="card-body">
-            <div class="vegam-toptenusers"></div>
-          </div>
-        </div>
-      </div>
-      <div class="card-deck flex-column flex-lg-row mr-0 mr-sm-3 mr-lg-0">
-        <div class="card text-center border col-md-12 col-lg-6 mb-4 px-0">
-          <div class="card-header d-flex justify-content-between bg-white border-0">
-            <h5 class="text-success m-0 align-self-center font-weight-bold">Top Status</h5>
-          </div>
-          <div class="card-body">
-            <div class="vegam-toptenstatus"></div>
-          </div>
-        </div>
-        <div class="card text-center border col-md-12 col-lg-6 mb-4 px-0">
-          <div class="card-header d-flex justify-content-between bg-white border-0">
-            <h5 class="text-success m-0 align-self-center font-weight-bold">Top IPs</h5>
-          </div>
-          <div class="card-body">
-            <div class="vegam-toptenip"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-  <div class="container-fluid">
-    <h4 class="text-success font-weight-bold mb-3">Server Load</h4>
-  </div>
-  <section>
-    <div class="container-fluid pr-lg-0">
-      <div class="card-deck flex-column flex-lg-row mr-0 mr-sm-3 mr-lg-0">
-        <div class="card text-center border col-md-12 col-lg-6 mb-4 px-0">
-          <div class="card-header d-flex justify-content-between bg-white border-0">
-            <h5 class="text-success m-0 align-self-center font-weight-bold">Server Response Time</h5>
-          </div>
-          <div class="card-body">
-            <div class="vegam-loadtimetrend"></div>
-          </div>
-        </div>
-        <div class="card text-center border col-md-12 col-lg-6 mb-4 px-0">
-          <div class="card-header d-flex justify-content-between bg-white border-0">
-            <h5 class="text-success m-0 align-self-center font-weight-bold">Response Time and Views</h5>
-          </div>
-          <div class="card-body">
-            <div class="vegam-loadtimeviewstrend"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-  <div class="container-fluid pr-lg-0">
-    <script type="text/html" src="template/horizontal_graphs.html" id="horizontal_bars"></script>
-  </div>
+
+  {% raw layout %}
+
   <footer class="footer bg-info py-2 text-right">
     <div class="container-fluid">
       <img src="https://gramener.com/uistatic/gramener.png" width="107" height="40" alt="footer-logo">
@@ -210,24 +60,16 @@
   <script src="ui/d3/build/d3.min.js"></script>
   <script src="node_modules/vega/build/vega-core.min.js"></script>
   <script src="node_modules/vega-lite/build/vega-lite.min.js"></script>
-  <script src="node_modules/vega-embed/build/vega-embed.min.js"></script>
   <script src="node_modules/vega-tooltip/build/vega-tooltip.min.js"></script>
   <script src="node_modules/vegam/dist/vegam.min.js"></script>
   <script src="script.js"></script>
   <script>
   // TODO: config driven app
   // TODO: switch between aggD, aggW, addM based on date range selection
-  var config = {
-    filters: [
-      {'column': 'status', 'type': 'select', 'el': '.filter-status select', 'url': 'query/aggD/filterstatus/'},
-      {'column': 'user.id', 'type': 'select', 'el': '.filter-users select', 'url': 'query/aggD/filterusers/'},
-      {'column': 'uri', 'type': 'select', 'el': '.filter-uri select', 'url': 'query/aggD/filteruri/'},
-      {'column': 'ip', 'type': 'select', 'el': '.filter-ip select', 'url': 'query/aggD/filterip/'},
-      {'column': 'time', 'type': 'daterange', 'el': '.filter-time input', 'url': ''}
-    ]
-  }
-  var dtfmt = 'YYYY-MM-DD 00:00:00'
+  {% raw render %}
+
   var params = g1.url.parse(location.search)
+  var dtfmt = 'YYYY-MM-DD 00:00:00'
   // default update
   if (!params.searchKey.hasOwnProperty('time>~')  && !params.searchKey.hasOwnProperty('time<~')) {
     var start = moment().subtract(29, 'days').format(dtfmt)
@@ -253,7 +95,17 @@
     history.pushState({}, '', ranges)
     updateView()
   })
+  .on('click', '#download-dropdown .dropdown-item', function(e) {
+    e.preventDefault()
+    var options = g1.url.parse(this.href).search
+    var url = ('capture?' + options +
+      '&delay=renderComplete&url=' + encodeURIComponent(location.href))
+    location.href = url
+  })
   $(window).on('popstate', updateView)
+  $(document).ajaxStop(function(){
+    window.renderComplete = true
+  })
   </script>
 </body>
 </html>

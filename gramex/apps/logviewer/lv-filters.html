@@ -1,0 +1,10 @@
+{% from logviewer import load_component %}
+{% set templates = {'daterange': 'lv-datepicker.html', 'select': 'lv-dropdown.html'} %}
+<div class="d-md-flex flex-md-wrap justify-content-sm-between">
+  {% for filter in values %}
+  {% raw load_component(templates[filter['type']], values=filter) %}
+  {% end %}
+  <div class="col w-100 mb-2 mb-md-0">
+    <button class="filter-submit btn btn-sm w-100 btn-warning text-white text-uppercase">Submit</button>
+  </div>
+</div>

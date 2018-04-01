@@ -1,10 +1,37 @@
+# Configurable variables
+# LOGVIEWER_PATH_UI
+# LOGVIEWER_PATH_RENDER
+# $LOGVIEWER_FORMHANDLER_KWARGS
+# $LOGVIEWER_FORMHANDLER_QUERIES
+# $LOGVIEWER_CAPTURE_KWARGS
+# $LOGVIEWER_SCHEDULER_PORT
+# $LOGVIEWER_SCHEDULER_SETUP
+# $LOGVIEWER_SCHEDULER_KWARGS
+
+variables:
+  LOGVIEWER_SCHEDULER_PORT:
+    default: ''
+  LOGVIEWER_PATH_UI:
+    default: $YAMLPATH/config.yaml
+  LOGVIEWER_PATH_RENDER:
+    default: $YAMLPATH/render.js
+
 import:
   apps/logviewer/ui:
     path: $GRAMEXAPPS/ui/gramex.yaml
     YAMLURL: $YAMLURL/ui/
 
 url:
-  apps/logviewer-$*:
+  apps/logviewer/layout-$*:
+    pattern: /$YAMLURL/
+    handler: FileHandler
+    kwargs:
+        path: $YAMLPATH/index.html
+        template: true
+        path_ui: $LOGVIEWER_PATH_UI
+        path_render: $LOGVIEWER_PATH_RENDER
+
+  apps/logviewer/static-$*:
     pattern: /$YAMLURL/(.*)
     handler: FileHandler
     kwargs:
@@ -19,6 +46,7 @@ url:
       execution_options:
         sqlite_raw_colnames: True
       queryfunction: logviewer.query(handler, args)
+      import.merge: $LOGVIEWER_FORMHANDLER_KWARGS
       kwargs:
         queries:
           filterstatus:
@@ -47,7 +75,8 @@ url:
             FROM {table} {where}
           kpi-users:
             SELECT COUNT(DISTINCT "user.id") AS value
-            FROM {table} {where}
+            FROM {table}
+            WHERE "user.id_1" == 1 {where}
           kpi-avgtimespent:
             SELECT SUM(session_time_sum)/SUM(new_session_sum) AS value
             FROM {table} {where}
@@ -79,7 +108,8 @@ url:
             GROUP BY uri ORDER BY views DESC LIMIT 10
           pageviewstrend:
             SELECT time, SUM(duration_count) AS pageviews
-            FROM {table} {where}
+            FROM {table}
+            WHERE uri_1 == 1 {where}
             GROUP BY time
           sessionstrend:
             SELECT time, SUM(new_session_sum) AS sessions
@@ -94,9 +124,18 @@ url:
             SUM(duration_count) AS views
             FROM {table} {where}
             GROUP BY time
+          import.merge: $LOGVIEWER_FORMHANDLER_QUERIES
+
+  apps/logviewer/capture-$*:
+    pattern: /$YAMLURL/capture
+    handler: CaptureHandler
+    kwargs:
+      engine: chrome
+      timeout: 60
+      import.merge: $LOGVIEWER_CAPTURE_KWARGS
 
 schedule:
-  apps/logviewer-$*:
+  apps/logviewer-$* if '--listen.port=' + LOGVIEWER_SCHEDULER_PORT in ''.join(sys.argv[1:]) or not LOGVIEWER_SCHEDULER_PORT:
     function: logviewer.summarize
     kwargs:
       transforms:
@@ -133,6 +172,7 @@ schedule:
             504: 504 Gateway Timeout
             599: 599 Network Timeout
         as: status
+      import.merge: $LOGVIEWER_SCHEDULER_KWARGS
     startup: true
     # Run at 6pm local time. In India, this is a bit after 0:00 UTC,
     # which means log file rotation would've been done even if it's UTC based
@@ -140,3 +180,4 @@ schedule:
     hours: 6
     # When running in production
     # thread: true
+    import.merge: $LOGVIEWER_SCHEDULER_SETUP

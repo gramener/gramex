@@ -1366,9 +1366,9 @@ vega@^3.0.0, vega@^3.0.10:
     canvas "^1.6"
     canvas-prebuilt "^1.6"
 
-vegam@^0.0.0:
-  version "0.0.0"
-  resolved "https://registry.yarnpkg.com/vegam/-/vegam-0.0.0.tgz#d4a248b4486d782e729887284d17dc2e79097f98"
+vegam@^0.0.1:
+  version "0.0.1"
+  resolved "https://registry.yarnpkg.com/vegam/-/vegam-0.0.1.tgz#086ace9f84619e513411f73e978dcb88429694eb"
   dependencies:
     vega "^3.0.10"
     vega-embed "^3.0.0"
