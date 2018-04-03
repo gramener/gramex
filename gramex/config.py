@@ -42,6 +42,7 @@ from yaml import Loader, MappingNode
 from json import loads, JSONEncoder, JSONDecoder
 from yaml.constructor import ConstructorError
 from orderedattrdict import AttrDict, DefaultAttrDict
+from errno import EACCES, EPERM
 
 ERROR_SHARING_VIOLATION = 32        # from winerror.ERROR_SHARING_VIOLATION
 
@@ -779,16 +780,17 @@ class TimedRotatingCSVHandler(logging.handlers.TimedRotatingFileHandler):
             # From logging.handlers.StreamHandler
             if self.stream is None:
                 self.stream = self._open()
-        except PermissionError as e:
+        except (KeyboardInterrupt, SystemExit):
+            raise
+        except Exception as e:
             # On Windows, multiple processes cannot rotate the same file.
             # Ignore this, and just re-open the stream.
             # On Linux, this needs to be tested.
-            if getattr(e, 'winerror', None) == ERROR_SHARING_VIOLATION:
-                self.stream = self._open()
-        except (KeyboardInterrupt, SystemExit):
-            raise
-        except Exception:
-            return self.handleError(record)
+            if e.errno == EPERM or e.errno == EACCES:
+                if getattr(e, 'winerror', None) == ERROR_SHARING_VIOLATION:
+                    self.stream = self._open()
+            else:
+                return self.handleError(record)
         try:
             # Write the CSV record instead of the formatted record
             self.writer.writerow(record.msg)
