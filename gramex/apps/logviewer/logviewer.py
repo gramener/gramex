@@ -12,7 +12,8 @@ import sys
 import os.path
 import sqlite3
 from glob import glob
-from lxml import etree as et
+from lxml.etree import Element
+from lxml.html import fromstring, tostring
 import numpy as np
 import pandas as pd
 import gramex.data
@@ -243,7 +244,7 @@ def load_component(page, **kwargs):
 
 def load_layout(config):
     '''return generated layout'''
-    return et.tostring(eltree(config, root=et.Element('root')), method='html')[6:-7]
+    return tostring(eltree(config, root=Element('root')))[6:-7]
 
 
 def eltree(data, root=None):
@@ -269,17 +270,17 @@ def eltree(data, root=None):
                     for tpl in value if isinstance(value, list) else [value]:
                         template = '{}.html'.format(tpl['tpl'])
                         raw_node = load_component(template, values=tpl.get('values', tpl))
-                        result.append(et.fromstring(raw_node))
+                        result.append(fromstring(raw_node))
                     continue
             # add other keys as children
             values = value if isinstance(value, list) else [value]
             for value in values:
-                elem = et.Element(key)
+                elem = Element(key)
                 result.append(elem)
                 # scalars to text
                 if not isinstance(value, (dict, list)):
                     value = {text_key: value}
                 eltree(value, root=elem)
     else:
-        result.append(et.Element(unicode(data)))
+        result.append(Element(unicode(data)))
     return result

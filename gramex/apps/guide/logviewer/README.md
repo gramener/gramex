@@ -53,7 +53,7 @@ import:
     YAMLURL: $YAMLURL/log/
     LOGVIEWER_FORMHANDLER_KWARGS:
       headers:
-        Cache-Control: public, max-age=3600   # All formats are cached for 1 hour
+        Cache-Control: public, max-age=3600   # cached for 1 hour
     LOGVIEWER_FORMHANDLER_QUERIES:
       kpi-pageviews:  # overwrites existing query
         SELECT SUM(duration_count) AS value
@@ -67,9 +67,9 @@ import:
     LOGVIEWER_CAPTURE_KWARGS:
       timeout: 30  # Change timeout to 30
     LOGVIEWER_SCHEDULER_SETUP:
-      minutes: 45 # Change miinute to 45
+      minutes: 45 # Change minute to 45
     LOGVIEWER_SCHEDULER_KWARGS:
-      transforms: # Add custom transforms, default transoforms will be replaced.
+      transforms: # Add custom transforms, default transforms will be replaced
       - type: derive
         expr:
           col: user.id
