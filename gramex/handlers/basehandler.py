@@ -104,11 +104,10 @@ class BaseMixin(object):
         keys = []
         # When using sqlitedict, fetching keys may fail if DB is locked. Try later
         try:
-            all_keys = list(data.keys())
+            items = list(data.items())
         except Exception:
-            return
-        for key in all_keys:
-            val = data[key]
+            items = []
+        for key, val in items:
             # Purge already cleared / removed sessions
             if val is None:
                 keys.append(key)
