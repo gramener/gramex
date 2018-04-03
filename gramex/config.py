@@ -50,6 +50,10 @@ ERROR_SHARING_VIOLATION = 32        # from winerror.ERROR_SHARING_VIOLATION
 logging.basicConfig()
 app_log = logging.getLogger('gramex')
 
+# app_log_extra has additional parameters that may be used by the logger
+app_log_extra = {'port': 'PORT'}
+app_log = logging.LoggerAdapter(app_log, app_log_extra)
+
 # sqlalchemy.create_engine requires an encoding= that must be an str across
 # Python 2 and Python 3. Expose this for other modules to use
 str_utf8 = str('utf-8')             # noqa

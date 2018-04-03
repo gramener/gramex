@@ -37,7 +37,7 @@ from tornado.template import Template
 from orderedattrdict import AttrDict
 from gramex import debug, shutdown, __version__
 from gramex.transforms import build_transform
-from gramex.config import locate, app_log, ioloop_running
+from gramex.config import locate, app_log, ioloop_running, app_log_extra
 from gramex.cache import urlfetch
 from gramex.http import OK, NOT_MODIFIED
 from . import urlcache
@@ -151,6 +151,7 @@ def app(conf):
                 return
 
             app_log.info('Listening on port %d', conf.listen.port)
+            app_log_extra['port'] = conf.listen.port
 
             # browser: True opens the application home page on localhost.
             # browser: url opens the application to a specific URL
