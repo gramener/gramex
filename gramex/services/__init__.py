@@ -283,12 +283,12 @@ def create_alert(name, alert):
 
     # Warn if subject is missing
     if 'subject' not in alert:
-        app_log.warn('alert: %s: missing subject', name)
+        app_log.warning('alert: %s: missing subject', name)
 
     # Warn if body, html, bodyfile, htmlfile keys are missing
     contentfields = ['body', 'html', 'bodyfile', 'htmlfile', 'markdown', 'markdownfile']
     if not any(key in alert for key in contentfields):
-        app_log.warn('alert: %s: missing body/html/bodyfile/htmlfile/...', name)
+        app_log.warning('alert: %s: missing body/html/bodyfile/htmlfile/...', name)
 
     # Precompile templates
     templates = {}
