@@ -43,6 +43,8 @@ from json import loads, JSONEncoder, JSONDecoder
 from yaml.constructor import ConstructorError
 from orderedattrdict import AttrDict, DefaultAttrDict
 
+ERROR_SHARING_VIOLATION = 32        # from winerror.ERROR_SHARING_VIOLATION
+
 # gramex.config.app_log is the default logger used by all of gramex
 # If it's not there, create one.
 logging.basicConfig()
@@ -773,12 +775,21 @@ class TimedRotatingCSVHandler(logging.handlers.TimedRotatingFileHandler):
             # From logging.handlers.StreamHandler
             if self.stream is None:
                 self.stream = self._open()
+        except PermissionError as e:
+            # On Windows, multiple processes cannot rotate the same file.
+            # Ignore this, and just re-open the stream.
+            # On Linux, this needs to be tested.
+            if getattr(e, 'winerror', None) == ERROR_SHARING_VIOLATION:
+                self.stream = self._open()
+        except (KeyboardInterrupt, SystemExit):
+            raise
+        except Exception:
+            return self.handleError(record)
+        try:
             # Write the CSV record instead of the formatted record
             self.writer.writerow(record.msg)
             self.stream.flush()
-        except (KeyboardInterrupt, SystemExit):
-            raise
-        except:         # noqa: blind except blessed by logging.handlers
+        except Exception:
             self.handleError(record)
 
 
