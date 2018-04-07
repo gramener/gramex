@@ -462,6 +462,22 @@ class TestUserKey(AuthBase):
         eq_(session.get('user'), {'user': 'beta', 'id': 'beta'})
 
 
+class TestLookup(AuthBase):
+    @classmethod
+    def setUpClass(cls):
+        AuthBase.setUpClass()
+        cls.url = server.base_url + '/auth/lookup'
+
+    def test_lookup(self):
+        self.login_ok('alpha', 'alpha', check_next='/')
+        session = self.session.get(server.base_url + '/auth/session').json()
+        eq_(session['user']['gender'], 'male')
+
+        self.login_ok('beta', 'beta', check_next='/')
+        session = self.session.get(server.base_url + '/auth/session').json()
+        eq_(session['user']['gender'], 'female')
+
+
 class DBAuthBase(AuthBase):
     @staticmethod
     def create_database(url, table):

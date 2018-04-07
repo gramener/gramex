@@ -66,7 +66,7 @@ class AuthHandler(BaseHandler):
     '''The parent handler for all Auth handlers.'''
     @classmethod
     def setup(cls, prepare=None, action=None, delay=None, session_expiry=None,
-              session_inactive=None, user_key='user', **kwargs):
+              session_inactive=None, user_key='user', lookup=None, **kwargs):
         # Switch SSL certificates if required to access Google, etc
         gramex.service.threadpool.submit(check_old_certs)
 
@@ -96,6 +96,14 @@ class AuthHandler(BaseHandler):
         cls.session_user_key = user_key
         cls.session_expiry = session_expiry
         cls.session_inactive = session_inactive
+
+        cls.lookup = lookup
+        if cls.lookup is not None:
+            if isinstance(lookup, dict):
+                cls.lookup_id = cls.lookup.pop('id', 'user')
+            else:
+                app_log.error('%s: lookup must be a dict, not %s', cls.name, cls.lookup)
+                cls.lookup = None
 
         # Set up prepare
         cls.auth_methods = {}
@@ -129,6 +137,7 @@ class AuthHandler(BaseHandler):
         info.update(kwargs)
         _user_info.dump(user_id, info)
 
+    @tornado.gen.coroutine
     def set_user(self, user, id):
         # Find session expiry time
         expires_days = self.session_expiry
@@ -152,6 +161,18 @@ class AuthHandler(BaseHandler):
         user['id'] = user[id]
         self.session[self.session_user_key] = user
         self.failed_logins[user[id]] = 0
+
+        # Extend user attributes looking up the user ID in a lookup table
+        if self.lookup is not None:
+            # Look up the user ID in the lookup table and fetch all matching rows
+            users = yield gramex.service.threadpool.submit(
+                gramex.data.filter, args={self.lookup_id: [user['id']]}, **self.lookup)
+            if len(users) > 0 and self.lookup_id in users.columns:
+                # Update the user attributes with the non-null items in the looked up row
+                user.update({
+                    key: val for key, val in users.iloc[0].iteritems()
+                    if not gramex.data.pd.isnull(val)
+                })
 
         self.update_user(user[id], active='y', **user)
 
@@ -336,7 +357,7 @@ class OAuth2(AuthHandler, OAuth2Mixin):
                         headers={}))
                 else:
                     user_id = self.user_info['user_id']
-                    self.set_user(user, id=user_id)
+                    yield self.set_user(user, id=user_id)
             self.redirect_next()
 
     def _request_conf(self, conf, params):
@@ -383,7 +404,7 @@ class GoogleAuth(AuthHandler, GoogleOAuth2Mixin):
             user = yield self.oauth2_request(
                 'https://www.googleapis.com/oauth2/v1/userinfo',
                 access_token=access['access_token'])
-            self.set_user(user, id='email')
+            yield self.set_user(user, id='email')
             self.session['google_access_token'] = access['access_token']
             self.redirect_next()
         else:
@@ -432,7 +453,7 @@ class FacebookAuth(AuthHandler, FacebookGraphMixin):
                 client_id=self.kwargs['key'],
                 client_secret=self.kwargs['secret'],
                 code=code)
-            self.set_user(user, id='id')
+            yield self.set_user(user, id='id')
             self.redirect_next()
         else:
             self.save_redirect_page()
@@ -453,7 +474,7 @@ class TwitterAuth(AuthHandler, TwitterMixin):
         oauth_token = self.get_arg('oauth_token', '')
         if oauth_token:
             user = yield self.get_authenticated_user()
-            self.set_user(user, id='username')
+            yield self.set_user(user, id='username')
             self.redirect_next()
         else:
             self.save_redirect_page()
@@ -525,7 +546,7 @@ class SAMLAuth(AuthHandler):
             if errors:
                 app_log.error('%s: SAML ACS error: %s', self.name, errors)
                 raise tornado.gen.Return()
-            self.set_user({
+            yield self.set_user({
                 'samlUserdata': auth.get_attributes(),
                 'samlNameId': auth.get_nameid(),
                 'samlSessionIndex': auth.get_session_index(),
@@ -624,7 +645,7 @@ class LDAPAuth(AuthHandler):
         else:
             user = {'user': user}
 
-        self.set_user(user, id='user')
+        yield self.set_user(user, id='user')
         self.redirect_next()
 
 
@@ -694,11 +715,11 @@ class SimpleAuth(AuthHandler):
         password = self.get_arg(self.password.arg, None)
         info = self.credentials.get(user)
         if info == password:
-            self.set_user({'user': user}, id='user')
+            yield self.set_user({'user': user}, id='user')
             self.redirect_next()
         elif hasattr(info, 'get') and info.get('password', None) == password:
             info.setdefault('user', user)
-            self.set_user(info, id='user')
+            yield self.set_user(dict(info), id='user')
             self.redirect_next()
         else:
             yield self.fail_user({'user': user}, id='user')
@@ -869,7 +890,7 @@ class DBAuth(SimpleAuth):
         if len(users) > 0:
             # Delete password from user object before storing it in the session
             del users[self.password.column]
-            self.set_user(users.iloc[0].to_dict(), id=self.user.column)
+            yield self.set_user(users.iloc[0].to_dict(), id=self.user.column)
             self.redirect_next()
         else:
             yield self.fail_user({'user': user}, 'user')
@@ -1093,5 +1114,5 @@ class IntegratedAuth(AuthHandler):
         }
         self.csas.pop(session_id, None)
 
-        self.set_user(user, 'id')
+        yield self.set_user(user, 'id')
         self.redirect_next()

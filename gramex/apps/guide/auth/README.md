@@ -1027,6 +1027,70 @@ def function(args, handler):
 The changes to the arguments will be saved in `handler.args`, which all auth
 handlers use. (NOTE: These changes need not affect `handler.get_argument()`.)
 
+## Lookup attributes
+
+Each auth handler creates a `handler.session['user']` object. The keys in this
+object can be extended from any data source. For example, create a `lookup.xlsx`
+file with this data:
+
+| user  | gender |
+|-------|--------|
+| alpha | male   |
+| beta  | female |
+
+Add a `lookup` section to any auth handler and specify a `url: lookup.xlsx`. For
+example:
+
+```yaml
+url:
+    auth/lookup-attributes:
+        pattern: /$YAMLURL/lookup-attributes
+        handler: SimpleAuth
+        kwargs:
+            credentials:
+                alpha: alpha
+                beta: beta
+            lookup:
+                url: $YAMLPATH/lookup.xlsx      # Add attributes from Excel file
+                id: user                        # by lookup up the 'id' in the 'user' column
+```
+
+<div class="example">
+  <a class="example-demo" href="lookup-attributes">Lookup attributes example</a>
+  <a class="example-src" href="http://code.gramener.com/cto/gramex/tree/master/gramex/apps/guide/auth/gramex.yaml">Source</a>
+</div>
+
+Click on the link above and see the new session object on this page. If you
+logged in as `alpha` or `beta`, you will see a `gender` of `male` or `female`
+respectively. This is picked up from the Excel file.
+
+This looks up the user's `id` in the `user` column of Excel. You can change the
+column name by changing `lookup.id` as in the example above.
+
+All columns in the Excel sheet are added as attributes. But if a value is NULL
+(not an empty string), it is ignored. In Excel, deleting a cell makes it NULL.
+
+By default, this looks up the first sheet. You can specify an alternate sheet
+using `sheetname: ...`. For example:
+
+```yaml
+        lookup:
+            url: $YAMLPATH/lookup.xlsx
+            sheetname: userinfo             # Specify an alternate sheet name
+            id: user
+```
+
+Instead of Excel files, you can use databases by specifying:
+
+```yaml
+        lookup:
+            url: sqlite:///$YAMLPATH/database.sqlite3
+            table: lookup
+```
+
+The kwargs for lookup are the same as for [FormHandler](../formhandler/).
+
+
 # Automated logins
 
 Gramex has two mechanisms to automate logins: [one-time passwords](#otp) and [encrypted users](#encrypted-user).

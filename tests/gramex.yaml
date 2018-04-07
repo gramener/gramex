@@ -2220,6 +2220,19 @@ url:
     kwargs:
       user_key: userkey
 
+  auth/lookup:
+    pattern: /auth/lookup
+    handler: SimpleAuth
+    kwargs:
+      template: $YAMLPATH/auth.html
+      credentials:
+        alpha: alpha
+        beta: beta
+      lookup:
+        url: lookup.xlsx
+        sheetname: userinfo
+        id: userid
+
   pptx/source:
     pattern: /pptx/source
     handler: PPTXHandler

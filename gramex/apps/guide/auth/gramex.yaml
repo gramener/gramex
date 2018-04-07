@@ -388,6 +388,21 @@ url:
             headers:
               Authorization: 'Bearer {access_token}'
 
+    auth/lookup-attributes:
+        pattern: /$YAMLURL/lookup-attributes
+        handler: SimpleAuth
+        kwargs:
+            template: $YAMLPATH/simple.html
+            credentials:
+                alpha: alpha
+                beta: beta
+            lookup:
+                url: $YAMLPATH/lookup.xlsx      # Add attributes from Excel file
+                id: user                        # by lookup up the 'id' in the 'user' column
+            redirect:
+                query: next
+                header: Referer
+                url: /$YAMLURL
 
 schedule:
     create-user-database:

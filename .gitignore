@@ -28,9 +28,11 @@ tests/**/gen.*
 *.csv
 *.xls*
 !tests/**/*.csv
+!tests/*.xlsx
 !testlib/**/*.csv
 !testlib/*.xlsx
 !gramex/apps/**/*.csv
+!gramex/apps/guide/**/.xlsx
 
 *.ppt*
 !testlib/input.pptx
