@@ -32,7 +32,6 @@ import logging.config
 import concurrent.futures
 import six.moves.urllib.parse as urlparse
 from six import text_type, string_types
-from tornado.log import access_log
 from tornado.template import Template
 from orderedattrdict import AttrDict
 from gramex import debug, shutdown, __version__
@@ -95,15 +94,14 @@ class GramexApp(tornado.web.Application):
         # BaseHandler defines a a custom log format. If that's present, use it.
         if hasattr(handler, 'log_request'):
             handler.log_request()
-        # Also log the request on the default access log. This is the same as
-        # tornado.web.Application.log_request but adds handler name at the end.
+        # Log the request with the handler name at the end.
         status = handler.get_status()
         if status < 400:                    # noqa: < 400 is any successful request
-            log_method = access_log.info
+            log_method = gramex.cache.app_log.info
         elif status < 500:                  # noqa: 400-499 is a user error
-            log_method = access_log.warning
+            log_method = gramex.cache.app_log.warning
         else:                               # 500+ is a server error
-            log_method = access_log.error
+            log_method = gramex.cache.app_log.error
         request_time = 1000.0 * handler.request.request_time()
         handler_name = getattr(handler, 'name', handler.__class__.__name__)
         log_method("%d %s %.2fms %s", handler.get_status(),
