@@ -412,14 +412,26 @@ def create_alert(name, alert):
                 # If any template raises an exception, log it and continue with next email
                 app_log.exception('alert: %s(#%s).%s: Template exception', name, index, key)
                 continue
+            headers = {}
+            # user: {id: ...} creates an X-Gramex-User header to mimic the user
+            if 'user' in alert:
+                if 'encrypt' not in info['encrypt']:
+                    app_log.error('alert: %s: no encrypt: section. ignoring user: %s',
+                                  name, repr(alert['user']))
+                else:
+                    headers['X-Gramex-User'] = info['encrypt'].encrypt(alert['user'])
             if 'markdown' in kwargs:
                 kwargs['html'] = _markdown_convert(kwargs.pop('markdown'))
             if 'images' in templates:
-                kwargs['images'] = {cid: urlfetch(val.generate(**data).decode('utf-8'))
-                                    for cid, val in templates['images'].items()}
+                kwargs['images'] = {
+                    cid: urlfetch(val.generate(**data).decode('utf-8'), headers=headers)
+                    for cid, val in templates['images'].items()
+                }
             if 'attachments' in templates:
-                kwargs['attachments'] = [urlfetch(attachment.generate(**data).decode('utf-8'))
-                                         for attachment in templates['attachments']]
+                kwargs['attachments'] = [
+                    urlfetch(attachment.generate(**data).decode('utf-8'), headers=headers)
+                    for attachment in templates['attachments']
+                ]
             if callable(callback):
                 return callback(**kwargs)
             # Email recipient. TODO: run this in a queue. (Anand)

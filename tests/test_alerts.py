@@ -8,6 +8,7 @@ import gramex.cache
 from binascii import a2b_base64
 from datetime import datetime, timedelta
 from . import folder, utils, TestGramex
+from .test_capturehandler import get_text
 from nose.tools import eq_, ok_
 
 
@@ -153,3 +154,12 @@ class TestAlerts2(TestGramex):
             eq_(mail['to_addrs'], [field])
             ok_('Subject: %s\n' % field in mail['msg'])
             ok_('Body is %s' % field in mail['msg'])
+
+    def test_capture(self):
+        # alert-capture should run as user {id: login@example.org, role: manager}
+        mail = run_alert('alert-capture')
+        obj = email.message_from_string(mail['msg'])
+        main, attachment = obj.get_payload()
+        text = get_text(a2b_base64(attachment.get_payload()))
+        ok_('login@example.org' in text)
+        ok_('manager' in text)

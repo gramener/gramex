@@ -138,6 +138,40 @@ alert:
         - https://example.org/sample.pptx
 ```
 
+### Email dashboards
+
+To send a dashboard as an inline-image or an attachment, set up a
+CaptureHandler, then use its URL as the image and/or attachment.
+
+```yaml
+alert:
+  alert-capture:
+    to: admin@example.org
+    subject: Dashboard attachment
+    html:
+      <h1>Sample dashboard</p>
+      <p><img src="cid:img"></p>
+    images:
+      img: http://server/capturehandler/?url=http://server/dashboard&ext=png
+    attachments:
+      - http://server/capturehandler/?url=http://server/dashboard&ext=pdf
+    # Optional: to capture the dashboard as a specific user, add this user section
+    # user:
+    #   id: user@example.org
+    #   role: manager
+```
+
+**Note**: The server that sends the alert must be different from the server that
+runs the CaptureHandler.
+[BUG #391](https://code.gramener.com/cto/gramex/issues/391):
+alerts fetch requests synchronously.
+
+The `user:` section sends an [X-Gramex-User](../auth/#encrypted-user) header to
+take a screenshot of a dashboard as the user would have seen it. Specify the
+entire `user` object here. Also set up [encrypt:](../auth/#encrypted-user) in
+`gramex.yaml` -- with the same keys across all servers.
+
+
 ### Use templates
 
 The `to`, `cc`, `bcc`, `from`, `subject`, `body`, `html`, `bodyfile`, `htmlfile`

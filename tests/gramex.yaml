@@ -2445,7 +2445,6 @@ alert:
       to: admin@example.org
       subject: Scheduled alert
     alert-template:
-      years: 2000   # Only run this programmatically
       service: smtps_stub
       to: "{{ 'user@example.org' }}"
       cc: "{{ 'cc@example.org' }}"
@@ -2456,13 +2455,11 @@ alert:
       bodyfile: $YAMLPATH/{{ 'template-alert.txt' }}    # These are ignored.
       htmlfile: $YAMLPATH/{{ 'template-alert.txt' }}    # body & html take precendence
     alert-templatefile:
-      years: 2000   # Only run this programmatically
       service: smtps_stub
       to: 'user@example.org'
       bodyfile: $YAMLPATH/{{ 'template-alert.txt' }}
       htmlfile: $YAMLPATH/{{ 'template-alert.txt' }}
     alert-markdown:
-      years: 2000   # Only run this programmatically
       service: smtps_stub
       to: 'user@example.org'
       body: 'markdown'
@@ -2470,31 +2467,27 @@ alert:
       markdown: '{{ "# markdown" }}'
       markdownfile: $YAMLPATH/{{ 'template-alert.md' }}   # Ignored. markdown takes precedence
     alert-markdown-template:
-      years: 2000   # Only run this programmatically
       service: smtps_stub
       to: 'user@example.org'
       body: 'markdown'
       html: '<p>HTML content will be overwritten by markdown</p>'
       markdownfile: $YAMLPATH/{{ 'template-alert.md' }}
     alert-attachments:
-      years: 2000   # Only run this programmatically
       service: smtps_stub
       to: user@example.org
-      subject: Gramex started
+      subject: Gramex attachments
       html: '<img src="cid:img">'
       attachments:
         - $YAMLPATH/install-test.zip
       images:
         img: sample.png
     alert-data:
-      years: 2000   # Only run this programmatically
       service: smtps_stub
       data: actors.csv
       to: user@example.org
       subject: '{{ len(data) }} actors from {{ config.service }}'
       body: '{{ data["votes"].sum() }} votes'
     alert-condition-df:
-      years: 2000   # Only run this programmatically
       service: smtps_stub
       data: actors.csv
       to: user@example.org
@@ -2502,17 +2495,14 @@ alert:
       subject: '{{ len(data) }} actors'
       body: '{{ data["votes"].sum() }} votes'
     alert-condition-false:
-      years: 2000   # Only run this programmatically
       service: smtps_stub
       to: user@example.org
       condition: 'False'
     alert-condition-0:
-      years: 2000   # Only run this programmatically
       service: smtps_stub
       to: user@example.org
       condition: '0'
     alert-condition-dict:
-      years: 2000   # Only run this programmatically
       service: smtps_stub
       data:
         actors: $YAMLPATH/actors.csv
@@ -2521,7 +2511,6 @@ alert:
       subject: '{{ len(actors) }} actors'
       body: 'val is {{ val }}'
     alert-each:
-      years: 2000   # Only run this programmatically
       service: smtps_stub
       data: $YAMLPATH/actors.csv
       condition: data[data['votes'] > 100]
@@ -2531,7 +2520,6 @@ alert:
       salutation: "Congrats"
       prefix: "You got"
     alert-data-inplace:
-      years: 2000   # Only run this programmatically
       service: smtps_stub
       data:
         - to: x@example.org
@@ -2540,6 +2528,16 @@ alert:
       to: '{{ row.to }}'
       subject: '{{ row.to }}'
       body: 'Body is {{ row.to }}'
+    alert-capture:
+      service: smtps_stub
+      to: user@example.org
+      subject: CaptureHandler attachments with auth
+      html: The attachment should show the user name and role below
+      user:
+        id: login@example.org
+        role: manager
+      attachments:
+        - http://localhost:9999/capturechrome?url=http://localhost:9999/auth/session&ext=pdf
 
 import:
   # Import from all subdirectories

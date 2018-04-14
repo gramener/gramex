@@ -86,3 +86,22 @@ alert:
       img: '{% import os %}{{ os.path.join(r"$YAMLPATH", "../uicomponents/bg-small.png") }}'
     attachments:
       - '{% import os %}{{ os.path.join(r"$YAMLPATH", "doc1.docx") }}'
+
+  alert-capture:
+    to: admin@example.org
+    subject: Dashboard attachment
+    html:
+      <h1>Sample dashboard</p>
+      <p><img src="cid:img"></p>
+    images:
+      # TODO: avoid hard-coding the port
+      img: 'http://localhost:9999/capture?url=http://localhost:9999/&ext=png'
+    attachments:
+      - 'http://localhost:9999/capture?url=http://localhost:9999/&ext=pdf'
+    user:
+      id: 'sample@example.org'
+      role: 'custom-role'
+
+encrypt:
+  public_key: D:/Anand/Main/.ssh/id_rsa.pub
+  private_key: D:/Anand/Main/.ssh/id_rsa
