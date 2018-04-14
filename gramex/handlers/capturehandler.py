@@ -21,6 +21,15 @@ from gramex.http import OK, GATEWAY_TIMEOUT, BAD_GATEWAY, CLIENT_TIMEOUT
 from .basehandler import BaseHandler
 
 _PPTX_MIME = 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+# HTTP headers not to forward to chromecapture.js.
+# Keep this sync-ed with the same list in chromecapture.js
+_IGNORE_HEADERS = {
+    'host',             # The URL will determine the host
+    'connection',       # Let Tornado manage the connection
+    'upgrade',          # .. and the upgrades
+    'content-length',   # The new request will have a different content - length
+    'content-md5',      # ... and different content - md5
+}
 
 
 class Capture(object):
@@ -169,7 +178,7 @@ class Capture(object):
             raise RuntimeError('Server: %s at %s is not %s' % (server, self.url, script))
 
     @tornado.gen.coroutine
-    def capture_async(self, **kwargs):
+    def capture_async(self, headers=None, **kwargs):
         '''
         Returns a screenshot of the URL. Runs asynchronously in Gramex. Arguments
         are same as :py:func:`capture`
@@ -186,7 +195,7 @@ class Capture(object):
             recursive_encode(kwargs)
         r = yield self.browser.fetch(
             self.url, method='POST', body=urlencode(kwargs, doseq=True), raise_error=False,
-            connect_timeout=self.timeout, request_timeout=self.timeout)
+            connect_timeout=self.timeout, request_timeout=self.timeout, headers=headers)
         if r.code == OK:
             self._validate_server(r)
         raise tornado.gen.Return(r)
@@ -319,10 +328,15 @@ class CaptureHandler(BaseHandler):
 
         # If the URL is a relative URL, treat it relative to the called path
         args['url'] = urljoin(self.request.full_url(), args['url'])
-
-        cookie = self.request.headers.get('Cookie', None)
-        if cookie is not None:
-            args['cookie'] = cookie
+        # Copy all relevant HTTP headers as-is
+        args['headers'] = {
+            key: val for key, val in self.request.headers.items()
+            if key not in _IGNORE_HEADERS
+        }
+        if 'cookie' not in args:
+            cookie = self.request.headers.get('Cookie', None)
+            if cookie is not None:
+                args['cookie'] = cookie
         info = self.ext[args.ext]
         try:
             response = yield self.capture.capture_async(**args)

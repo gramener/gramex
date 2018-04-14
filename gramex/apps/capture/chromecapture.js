@@ -30,6 +30,17 @@ const pptx_size = {
   '4x3':    [10,    7.5  ]
 }
 
+// HTTP headers to chromecapture are forwarded to the URL -- except for these.
+// Keep this sync-ed with the same list in capturehandler.py
+// See https://en.wikipedia.org/wiki/List_of_HTTP_header_fields
+const ignore_headers = [
+  'host',               // The URL will determine the host
+  'connection',         // Let puppeteer manage the connection
+  'upgrade',            // .. and the upgrades
+  'content-length',     // The new request will have a different content-length
+  'content-md5',        // ... and different content-md5
+]
+
 
 async function screenshot(page, options, selector) {
   // If a previous clip was set, remove it
@@ -59,6 +70,7 @@ async function render(q) {
   let ext = q.ext || 'pdf'
   let media = q.media || 'screen'
   let file = (q.file || 'screenshot') + '.' + ext
+  let headers = q.headers || {}
   let target = path.join(render_dir, file)
   if (fs.exists(target))
     fs.unlinkSync(target)
@@ -76,18 +88,25 @@ async function render(q) {
     browser = await puppeteer.launch({args: args})
   if (typeof page == 'undefined')
     page = await browser.newPage()
+
   // Clear past cookies
   let cookies = await page.cookies(q.url)
   await page.deleteCookie(...cookies)
   // Parse cookies and set them on the page, so that they'll be sent on any
-  // requests to this URL
+  // requests to this URL. (This overrides the request HTTP header "Cookie")
   if (q.cookie) {
     let cookieList = []
     let cookieObj = cookie.parse(q.cookie)
     for (let key in cookieObj)
       cookieList.push({name: key, value: cookieObj[key], url: q.url})
     await page.setCookie(...cookieList)
+    delete headers.cookie
   }
+
+  // Set additional HTTP headers
+  ignore_headers.forEach(function (header) { delete headers[header] })
+  await page.setExtraHTTPHeaders(headers)
+
   await page.goto(q.url)
 
   if (q.delay == 'renderComplete')
@@ -173,6 +192,7 @@ function webapp(req, res) {
   if (!q.url)
     return res.sendFile(homepage)
   q.cookie = q.cookie || req.headers.cookie
+  q.headers = req.headers
   render(q)
     .then((info) => {
       if (fs.existsSync(info.path)) {

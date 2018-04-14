@@ -202,6 +202,9 @@ To try this, [log in](../auth/simple?next=../capturehandler/) and then
 
 You can override the user by explicitly passing a cookie string using `?cookie=`.
 
+**All HTTP headers are passed through** by default. CaptureHandler sends them to
+Chrome (not PhantomJS), which passes it on to the target URL.
+
 If `capture.js` was not started, or it terminated, you can restart it by adding
 `?start` to the URL. It is safe to add `?start` even if the server is running. It
 restarts `capture.js` only if required.

@@ -84,6 +84,8 @@ web server.
     - `width=`: viewport width in pixels. (Default: 1200px)
     - `height=`: optional height to clip output to. Leave it blank for full page height
     - `selector=`: CSS selector to take a screenshot of
+- HTTP headers from the request are passed to the `url` directly (only on Chrome) --
+  except request-specific headers like `Content-Length`, `Content-MD5`, `Host`.
 
 When generating PPTX, we capture images as PNG. Multiple slides can be generated
 by repeating `title`, `selector`, `x`, `y`.
