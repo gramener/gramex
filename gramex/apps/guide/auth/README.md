@@ -1109,9 +1109,50 @@ that session is automatically linked to the same user.
 
 ## Encrypted user
 
-You can pass a user object to Gramex via the `X-Gramex-User` HTTP header,
-encrypted using an SSH key. This is work in progress. See
-[#96](https://code.gramener.com/cto/gramex/issues/96).
+You can mimic a user by passing a `X-Gramex-User` HTTP header. This must be
+encrypted via an OpenSSH RSA key. To set this up:
+
+1. Run `ssh-keygen -t rsa -N "" -f .id_rsa`. This creates a private key
+   `.id_rsa` and a public key `id_rsa.pub`. Keep both secure. Do not distribute
+   either. (You can use an existing key pair too.)
+2. Add a top level `encrypt:` section to your `gramex.yaml`:
+
+```yaml
+encrypt:
+    public_key: $YAMLPATH/.id_rsa.pub   # Path to the public key
+    private_key: $YAMLPATH/.id_rsa      # Path to the private key
+```
+
+To get the encrypted for a user, run this from a command line:
+
+```python
+from gramex.services import encrypt
+encrypter = encrypt({
+    'public_key': '/path/to/.id_rsa.pub',
+    'private_key': '/path/to/.id_rsa',
+})
+# This is the user object we want to mimic
+user = {'id': 'user@example.org', 'role': 'manager'}
+# Get the encrypted user key as a long string, e.g. rx5/NQV1lXaA0QI...
+user_key = encrypter.encrypt(user)
+# Decrypt the user key. The decrypted user will be the same as user
+decrypted_user = encrypter.decrypt(user_key)
+```
+
+To mimic this user, send the encrypted user key with the HTTP header
+`X-Gramex-User:`. For example:
+
+```python
+r = requests.get('http://127.0.0.1/my-gramex-url', headers={
+    'X-Gramex-User': encrypter.encrypt({'id': 'user@example.org', 'role': 'manager'})
+})
+```
+
+This fetches the URL as if the `user@example.org` user with `manager` role was
+logged in.
+
+This mechanism is internally used in [Smart Alerts](../alert/) and
+[CaptureHandler](../capturehandler/) to take a screenshot as a specific user. (WIP)
 
 
 # Authorization

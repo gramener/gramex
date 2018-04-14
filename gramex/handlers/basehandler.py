@@ -18,13 +18,13 @@ from six.moves.urllib_parse import urlparse, urlsplit, urljoin, urlencode
 from tornado.web import RequestHandler, HTTPError, MissingArgumentError
 from tornado.websocket import WebSocketHandler
 from gramex import conf, __version__
+from gramex.services import info
 from gramex.config import merge, objectpath, app_log, CustomJSONDecoder, CustomJSONEncoder
 from gramex.transforms import build_transform
 from gramex.http import UNAUTHORIZED, FORBIDDEN, BAD_REQUEST
 
 server_header = 'Gramex/%s' % __version__
 session_store_cache = {}
-_reported = {}
 _missing = object()
 
 
@@ -147,27 +147,6 @@ class BaseMixin(object):
         cls._on_finish_methods.append(cls.save_session)
         cls._on_init_methods.append(cls.override_user)
         cls._on_finish_methods.append(cls.set_last_visited)
-
-        if 'private_key' in session_conf:
-            keyfile = session_conf['private_key']
-            if not os.path.exists(keyfile):
-                if not _reported.get(('private_key', keyfile)):
-                    app_log.warning('%s: no SSH private key at %s', cls.name, keyfile)
-                    _reported['private_key', keyfile] = True
-                return
-            with open(keyfile, 'rb') as handle:
-                keytext = handle.read()
-            from cryptography.hazmat.primitives import hashes, serialization
-            from cryptography.hazmat.backends import default_backend
-            from cryptography.hazmat.primitives.asymmetric import padding
-            from base64 import b64decode
-            key = serialization.load_pem_private_key(
-                keytext, password=None, backend=default_backend())
-            pad = padding.OAEP(
-                mgf=padding.MGF1(algorithm=hashes.SHA256()),
-                algorithm=hashes.SHA256(),
-                label=None)
-            cls._session_decrypt = lambda cls, s: json.loads(key.decrypt(b64decode(s), pad))
 
     @classmethod
     def setup_redirect(cls, redirect):
@@ -540,7 +519,7 @@ class BaseMixin(object):
         cipher = headers.get('X-Gramex-User')
         if cipher:
             try:
-                user = self._session_decrypt(cipher)
+                user = info['encrypt'].decrypt(cipher)
             except Exception:
                 reason = '%s: invalid X-Gramex-User: %s' % (self.name, cipher)
                 raise HTTPError(BAD_REQUEST, reason=reason)

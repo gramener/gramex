@@ -249,21 +249,9 @@ class TestSimpleAuth(AuthBase, LoginMixin, LoginFailureMixin):
     def test_override(self):
         self.login_ok('alpha', 'alpha', check_next='/dir/index/')
         eq_({'user': 'alpha', 'id': 'alpha'}, self.get_session()['user'])
-
-        from cryptography.hazmat.primitives import serialization
-        from cryptography.hazmat.primitives import hashes
-        from cryptography.hazmat.backends import default_backend
-        from cryptography.hazmat.primitives.asymmetric import padding
-        from base64 import b64encode
-        public_key_text = open(os.path.join(folder, 'id_rsa.pub.pem'), 'rb').read()
-        public_key = serialization.load_pem_public_key(public_key_text, backend=default_backend())
         result = {'user': 'override', 'role': 'admin'}
-        pad = padding.OAEP(
-            mgf=padding.MGF1(algorithm=hashes.SHA256()),
-            algorithm=hashes.SHA256(),
-            label=None)
-        message = public_key.encrypt(json.dumps(result).encode('utf-8'), pad)
-        session_data = self.get_session(headers={'X-Gramex-User': b64encode(message)})
+        message = gramex.services.info['encrypt'].encrypt(result)
+        session_data = self.get_session(headers={'X-Gramex-User': message})
         eq_(result, session_data['user'])
 
     def test_otp(self):

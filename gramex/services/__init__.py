@@ -55,6 +55,7 @@ info = AttrDict(
     eventlog=AttrDict(),
     email=AttrDict(),
     sms=AttrDict(),
+    encrypt=AttrDict(),
     _md=None,
 )
 _cache = AttrDict()
@@ -804,6 +805,41 @@ def sms(conf):
         if notifier_type not in sms_notifiers:
             raise ValueError('sms: %s: Unknown type: %s' % (name, notifier_type))
         info.sms[name] = _cache[_key] = sms_notifiers[notifier_type](**config)
+
+
+def _get_key_text(path):
+    if not os.path.exists(path):
+        app_log.error('encrypt: missing file %s', path)
+    else:
+        with open(path, 'rb') as handle:
+            return handle.read()
+
+
+def encrypt(conf):
+    from cryptography.hazmat.primitives import hashes, serialization
+    from cryptography.hazmat.backends import default_backend
+    from cryptography.hazmat.primitives.asymmetric import padding
+    from base64 import b64decode, b64encode
+
+    backend = default_backend()
+    pad = padding.OAEP(
+        mgf=padding.MGF1(algorithm=hashes.SHA256()),
+        algorithm=hashes.SHA256(),
+        label=None)
+
+    enc = info['encrypt']
+    if 'private_key' in conf:
+        data = _get_key_text(conf['private_key'])
+        if data:
+            prv = serialization.load_pem_private_key(data, password=None, backend=backend)
+            enc.decrypt = lambda s: json.loads(prv.decrypt(b64decode(s), pad))
+    if 'public_key' in conf:
+        data = _get_key_text(conf['public_key'])
+        if data:
+            pub = serialization.load_ssh_public_key(data, backend=backend)
+            enc.encrypt = lambda r: b64encode(pub.encrypt(json.dumps(r).encode('utf-8'), pad))
+    # Services don't need to return a result, but this is a conveniece for unit tests
+    return enc
 
 
 def test(conf):
