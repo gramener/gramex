@@ -10,6 +10,7 @@ prefix: Guide
 
 - [About Gramex](about/)
 - [Install Gramex](install/)
+- [Quickstart](quickstart/)
 - [Gramex is a web server](server/)
 - [Configurations control Gramex](config/)
 
