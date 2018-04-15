@@ -140,15 +140,17 @@ url:
               x: {field: Continent, type: nominal}
               y: {field: Stripes, type: nominal}
             layer:
-              - {mark: rect,
-                 encoding: {
-                  color: {field: c1, type: quantitative}
+              - {
+                  mark: rect,
+                  encoding: {
+                    color: {field: c1, type: quantitative}
                   }
                 }
-              - {mark: text,
-                 encoding: {
-                  text: {field: c1, type: quantitative, format: .1f},
-                  color: {value: white}
+              - {
+                  mark: text,
+                  encoding: {
+                    text: {field: c1, type: quantitative, format: .1f},
+                    color: {value: white}
                   }
                 }
         bubbleheatmap:

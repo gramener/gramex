@@ -1,4 +1,4 @@
-/* global config_id, active_users */
+/* global $, config_id, active_users */
 
 // TODO: REVIEW: when users in auth.user.db are more than the number in lookup datasource, inform user
 $('.formhandler').formhandler({
