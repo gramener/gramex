@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import re
 import os
 import six
 import json
@@ -449,6 +450,23 @@ class TestFormHandler(TestGramex):
         tree = etree.fromstring(r.text.encode('utf-8'))
         eq_(tree.get('viewBox'), '0 0 500 300')
         # TODO: expand on test cases
+        # Check spec, data for vega, vega-lite, vegam formats
+        base = '/formhandler/chart?_format={}'
+        data = pd.DataFrame(self.get(base.format('json')).json())
+        for fmt in {'vega', 'vega-lite', 'vegam'}:
+            r = self.get(base.format(fmt))
+            var = json.loads(re.findall('}\)\((.*?)}\)', r.content)[-1] + '}')
+            var = var['spec']
+            if 'fromjson' in var:
+                df = var['fromjson'][0]['data']
+                var['fromjson'][0]['data'] = '__DATA__'
+            else:
+                df = var.pop('data')
+                df = (df[0] if isinstance(df, list) else df)['values']
+            yaml_path = os.path.join(folder, '{}.yaml'.format(fmt))
+            spec = gramex.cache.open(yaml_path, 'yaml')
+            afe(pd.DataFrame(df), data)
+            self.assertDictEqual(var, spec)
 
     def test_headers(self):
         self.check('/formhandler/headers', headers={

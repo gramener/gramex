@@ -1,6 +1,6 @@
 url:
-  formhandler-vega-lite:
-    pattern: /$YAMLURL/vega-lite
+  formhandler-vega-lite-1:
+    pattern: /$YAMLURL/vega-lite-1
     handler: FormHandler
     kwargs:
       url: $YAMLPATH/flags.csv
@@ -12,13 +12,260 @@ url:
           format: vega-lite
           spec:
             "$schema": "https://vega.github.io/schema/vega-lite/v2.json"
-            width: 200
+            width: 400
+            height: 200
+            autosize:
+              type: fit
+              contains: padding
+            mark: bar
+            encoding:
+              x: {field: Continent, type: ordinal}
+              y: {field: c1, type: quantitative}
+        linechart:
+          format: vega-lite
+          spec:
+            "$schema": "https://vega.github.io/schema/vega-lite/v2.json"
+            autosize:
+              type: fit
+              contains: padding
+            mark: line
+            encoding:
+              x: {field: Continent, type: ordinal}
+              y: {field: c1, type: quantitative}
+        horizontalbarchart:
+          format: vega-lite
+          spec:
+            "$schema": "https://vega.github.io/schema/vega-lite/v2.json"
+            width: 400
+            height: 200
+            autosize:
+              type: fit
+              contains: padding
+            mark: bar
+            encoding:
+              y: {field: Continent, type: ordinal}
+              x: {field: c1, type: quantitative}
+        scatterplot:
+          format: vega-lite
+          spec:
+            "$schema": "https://vega.github.io/schema/vega-lite/v2.json"
+            width: 300
+            height: 200
+            autosize:
+              type: fit
+              contains: padding
+            mark: point
+            encoding:
+              x: {field: c1, type: quantitative}
+              y: {field: c2, type: quantitative}
+        coloredscatterplot:
+          format: vega-lite
+          spec:
+            "$schema": "https://vega.github.io/schema/vega-lite/v2.json"
+            width: 250
+            height: 250
+            autosize:
+              type: fit
+              contains: padding
+            mark: point
+            encoding:
+              x: {field: c1, type: quantitative}
+              y: {field: c2, type: quantitative}
+              color: {field: Continent, type: nominal}
+              shape: {field: Continent, type: nominal}
+        bubbleplot:
+          format: vega-lite
+          spec:
+            "$schema": "https://vega.github.io/schema/vega-lite/v2.json"
+            width: 250
+            height: 250
+            autosize:
+              type: fit
+              contains: padding
+            mark: circle
+            encoding:
+              x: {field: c1, type: quantitative}
+              y: {field: c2, type: quantitative}
+              size: {field: c3, type: quantitative}
+              color: {field: Continent, type: nominal}
+      headers:
+        Content-Type: application/javascript
+    cache:
+      expiry: {duration: 3600}
+  formhandler-vega-lite-2:
+    pattern: /$YAMLURL/vega-lite-2
+    handler: FormHandler
+    kwargs:
+      url: $YAMLPATH/flags.csv
+      function: data.groupby(['Continent', 'Stripes']).mean().reset_index()
+      formats:
+        multilinechart:
+          format: vega-lite
+          spec:
+            "$schema": "https://vega.github.io/schema/vega-lite/v2.json"
+            autosize:
+              type: fit
+              contains: padding
+            width: 400
+            height: 250
+            mark: line
+            encoding:
+              x: {field: Continent, type: nominal}
+              y: {field: c1, type: quantitative}
+              color: {field: Stripes, type: nominal}
+        heatmap:
+          format: vega-lite
+          spec:
+            "$schema": "https://vega.github.io/schema/vega-lite/v2.json"
+            autosize:
+              type: fit
+              contains: padding
+            width: 400
+            height: 250
+            mark: rect
+            encoding:
+              x: {field: Continent, type: nominal}
+              y: {field: Stripes, type: nominal}
+              color: {field: c1, type: quantitative}
+        heatmaplabels:
+          format: vega-lite
+          spec:
+            "$schema": "https://vega.github.io/schema/vega-lite/v2.json"
+            autosize:
+              type: fit
+              contains: padding
+            width: 400
+            height: 250
+            encoding:
+              x: {field: Continent, type: nominal}
+              y: {field: Stripes, type: nominal}
+            layer:
+              - {mark: rect,
+                 encoding: {
+                  color: {field: c1, type: quantitative}
+                  }
+                }
+              - {mark: text,
+                 encoding: {
+                  text: {field: c1, type: quantitative, format: .1f},
+                  color: {value: white}
+                  }
+                }
+        bubbleheatmap:
+          format: vega-lite
+          spec:
+            "$schema": "https://vega.github.io/schema/vega-lite/v2.json"
+            autosize:
+              type: fit
+              contains: padding
+            width: 400
+            height: 250
+            mark: circle
+            encoding:
+              x: {field: Continent, type: nominal}
+              y: {field: Stripes, type: nominal}
+              color: {field: c1, type: quantitative}
+              size: {field: c2, type: quantitative}
+        stackbar:
+          format: vega-lite
+          spec:
+            "$schema": "https://vega.github.io/schema/vega-lite/v2.json"
+            autosize:
+              type: fit
+              contains: padding
+            width: 400
+            height: 250
+            mark: bar
+            encoding:
+              x: {field: Continent, type: nominal}
+              y: {field: c1, type: quantitative}
+              color: {field: Stripes, type: nominal}
+        normalizedstackbar:
+          format: vega-lite
+          spec:
+            "$schema": "https://vega.github.io/schema/vega-lite/v2.json"
+            autosize:
+              type: fit
+              contains: padding
+            width: 400
+            height: 250
+            mark: bar
+            encoding:
+              x: {field: Continent, type: nominal}
+              y: {field: c1, type: quantitative, stack: normalize}
+              color: {field: Stripes, type: nominal}
+        groupbarchart:
+          format: vega-lite
+          spec:
+            "$schema": "https://vega.github.io/schema/vega-lite/v2.json"
+            config:
+              view: {stroke: transparent}
+              axis: {domainWidth: 1}
+            width: 50
             height: 200
             mark: bar
             encoding:
-              x: {from: data, field: Continent, type: ordinal}
-              y: {from: data, field: c1, type: quantitative}
-          headers:
-            Content-Type: application/javascript
+              column: {field: Continent, type: ordinal}
+              x: {field: Stripes, type: nominal, axis: {title: ''}}
+              y: {field: c1, type: quantitative,
+                  axis: {title: c1, grid: false}}
+              color: {field: Stripes, type: nominal}
+      headers:
+        Content-Type: application/javascript
+    cache:
+      expiry: {duration: 3600}
+  formhandler-vega-lite-3:
+    pattern: /$YAMLURL/vega-lite-3
+    handler: FormHandler
+    kwargs:
+      url: $YAMLPATH/flags.csv
+      formats:
+        bintable:
+          format: vega-lite
+          spec:
+            "$schema": "https://vega.github.io/schema/vega-lite/v2.json"
+            autosize:
+              type: fit
+              contains: padding
+            width: 400
+            height: 250
+            mark: rect
+            encoding:
+              x: {field: c1, type: quantitative, bin: {maxbins: 10}}
+              y: {field: c8, type: quantitative, bin: {maxbins: 10}}
+              color: {aggregate: count, type: quantitative}
+        binbubble:
+          format: vega-lite
+          spec:
+            "$schema": "https://vega.github.io/schema/vega-lite/v2.json"
+            autosize:
+              type: fit
+              contains: padding
+            width: 400
+            height: 250
+            mark: circle
+            encoding:
+              x: {field: c1, type: quantitative, bin: {maxbins: 10}}
+              y: {field: c8, type: quantitative, bin: {maxbins: 10}}
+              size: {field: c5, type: quantitative, aggregate: mean}
+              color: {field: c6, type: quantitative, aggregate: mean}
+        scattertrellis:
+          format: vega-lite
+          spec:
+            "$schema": "https://vega.github.io/schema/vega-lite/v2.json"
+            autosize:
+              type: fit
+              contains: padding
+            width: 50
+            height: 250
+            mark: circle
+            encoding:
+              column: {field: Continent, type: nominal}
+              x: {field: c1, type: quantitative}
+              y: {field: c8, type: quantitative}
+              size: {field: c5, type: quantitative}
+              color: {field: Stripes, type: nominal}
+      headers:
+        Content-Type: application/javascript
     cache:
       expiry: {duration: 3600}

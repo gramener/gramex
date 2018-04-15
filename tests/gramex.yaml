@@ -1427,6 +1427,18 @@ url:
           headers:
             Content-Type: image/png
           <<: *FORMHANDLER_CHART
+        vega:
+          format: vega
+          spec:
+            import: vega.yaml
+        vega-lite:
+          format: vega-lite
+          spec:
+            import: vega-lite.yaml
+        vegam:
+          format: vegam
+          spec:
+            import: vegam.yaml
   formhandler/headers:
     pattern: /formhandler/headers
     handler: FormHandler

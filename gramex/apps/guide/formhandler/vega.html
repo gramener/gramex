@@ -1,13 +1,53 @@
+{% import gramex %}
+{% set examples = gramex.cache.open('formhandler/examples.yaml', 'yaml') %}
+{% set flavor = handler.path_args[0] %}
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8" />
-  <title>FormHandler Vega chart</title>
+  <title>FormHandler {{ flavor }} Examples</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="../ui/bootstraptheme.css">
   <link rel="stylesheet" href="../ui/font-awesome/css/font-awesome.min.css">
 </head>
 <body>
-  <script src="vega?_format=barchart"></script>
+  <h1>{{ flavor }}: flags example</h1>
+  <div id="data" class="sm1" data-src="flags" data-page-size="4"></div>
+  <div class="align-items-end d-flex flex-column sm2 pr-5">
+    <span>YAML - View Formhandler configuration</span>
+    <span>JS - View generated JavaScript</span>
+  </div>
+  {% for item in examples %}
+    {% if flavor in item %}
+    <div class="row d-flex border-top m-1 p-1">
+      <div class="col-md-4 text-center">
+        <span class="h6">{{ item['title'] }}</span>
+        <span class="d-block sm1">
+          <a href="{{ flavor }}.yaml" target="_blank">YAML</a> |
+          <a href="{{ item[flavor] }}" target="_blank">JS</a>
+        </span>
+      </div>
+      <div class="col-md-8 d-table">
+        {% set attrs = ' '.join('{}={}'.format(k, v) for k, v in item.get('attrs', {}).items()) %}
+        <script src="{{ item[flavor] }}" {{ attrs }}></script>
+      </div>
+    </div>
+    {% end %}
+  {% end %}
+  <script src="../ui/jquery/dist/jquery.min.js"></script>
+  <script src="../ui/popper.js/dist/umd/popper.min.js"></script>
+  <script src="../ui/bootstrap/dist/js/bootstrap.min.js"></script>
+  <script src="../ui/lodash/lodash.min.js"></script>
+  <script src="../ui/g1/dist/g1.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/vega@3.2.1/build/vega.min.js"></script>
+  {% if flavor in ['vega-lite', 'vegam'] %}
+  <script src="https://cdn.jsdelivr.net/npm/vega-lite@2.3.1/build/vega-lite.min.js"></script>
+  {% end %}
+  {% if flavor in ['vegam'] %}
+  <script src="https://cdn.jsdelivr.net/npm/vegam@0.0.1/dist/vegam.min.js"></script>
+  {% end %}
+  <script>
+  $('#data').formhandler()
+  </script>
 </body>
 </html>

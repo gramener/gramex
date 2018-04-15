@@ -1,0 +1,7 @@
+"$schema": "https://vega.github.io/schema/vega-lite/v2.json"
+width: 200
+height: 200
+mark: bar
+encoding:
+  x: {field: देश, type: ordinal}
+  y: {field: sales, type: quantitative}

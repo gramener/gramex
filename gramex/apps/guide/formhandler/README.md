@@ -274,8 +274,8 @@ More examples to be added.
 
 ```yaml
 url:
-  formhandler-vega:
-    pattern: /$YAMLURL/vega
+  formhandler-vega-1:
+    pattern: /$YAMLURL/vega-1
     handler: FormHandler
     kwargs:
       url: $YAMLPATH/flags.csv
@@ -287,31 +287,69 @@ url:
             ...   # The rest of the Vega spec comes here
 ```
 
-When you visit [vega?_format=barchart](vega?_format=barchart) it renders JavaScript that creates the chart. To include it on your page, just add `<script src="vega?_format=barchart"></script>` where you want to include the chart, like below:
+When you visit [vega-1?_format=barchart](vega-1?_format=barchart) it renders JavaScript that creates the chart. To include it on your page, just add `<script src="vega-1?_format=barchart" data-id="chart1"></script>` where you want to include the chart, like below:
 
 ```html
-<script src="vega?_format=barchart"></script>
+<script src="vega-1?_format=barchart" data-id="chart1"></script>
 ... rest of the page ...
 <script src="https://cdn.jsdelivr.net/npm/vega@3.2.1/build/vega.min.js"></script>
 ```
 
+This script draws a barchart from [`/vega-1`](http://code.gramener.com/cto/gramex/tree/master/gramex/apps/guide/formhandler/vega.yaml) formhandler data within `<div id="chart1"></div>`. If `data-id` is missing, random ID is created.
+
+To manipulate the `Vega` object, use this:
+
+```js
+//  Returns the vega object
+var view = document.querySelector('#chart1').vega
+```
+
+To redraw the chart with new data (e.g. `vega-1?_format=barchart&Continent!=Africa`)
+
+```js
+var url = 'vega-1?_format=json&Continent!=Africa'
+$.getJSON(url)
+  .done(function(new_data) {
+    var view = document.querySelector('#chart1').vega
+    // Remove old data from namespace `data`
+    view.remove('data', function(d) {return true}).run()
+    // Insert new values into namespace `data`
+    view.insert('data', new_data).run()
+  })
+```
+
 <div class="example">
-  <a class="example-demo" href="vega.html">FormHandler Vega Chart example</a>
-  <a class="example-src" href="http://code.gramener.com/s.anand/gramex/tree/master/gramex/apps/guide/formhandler/vega.yaml">Source</a>
+  <a class="example-demo" href="vega-examples">FormHandler Vega Chart examples</a>
+  <a class="example-src" href="vega.yaml">Source</a>
 </div>
 
 Similarly, [Vega-Lite](https://vega.github.io/vega-lite/) charts are also supported. Use `format: vega-lite` instead of `format: vega`. To include it on your page, just add `<script src="...?_format=barchart"></script>` where you want to include the chart, like below:
 
 ```html
-<script src="vega-lite?_format=barchart"></script>
+<script src="vega-lite-1?_format=barchart"></script>
 ... rest of the page ...
 <script src="https://cdn.jsdelivr.net/npm/vega@3.2.1/build/vega.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/vega-lite@2.3.1/build/vega-lite.min.js"></script>
 ```
 
 <div class="example">
-  <a class="example-demo" href="vega-lite.html">FormHandler Vega-Lite Chart example</a>
-  <a class="example-src" href="http://code.gramener.com/s.anand/gramex/tree/master/gramex/apps/guide/formhandler/vega-lite.yaml">Source</a>
+  <a class="example-demo" href="vega-lite-examples">FormHandler Vega-Lite Chart examples</a>
+  <a class="example-src" href="vega-lite.yaml">Source</a>
+</div>
+
+Similarly, Use `format: vegam` for [Vegam](https://www.npmjs.com/package/vegam) charts.
+
+```html
+<script src="vegam-1?_format=barchart"></script>
+... rest of the page ...
+<script src="https://cdn.jsdelivr.net/npm/vega@3.2.1/build/vega.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-lite@2.3.1/build/vega-lite.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vegam@0.0.1/dist/vegam.min.js"></script>
+```
+
+<div class="example">
+  <a class="example-demo" href="vegam-examples">FormHandler Vegam Chart examples</a>
+  <a class="example-src" href="vegam.yaml">Source</a>
 </div>
 
 ## FormHandler downloads

@@ -658,10 +658,7 @@ def _filter_db(engine, table, meta, controls, args, source='select', id=[]):
         return pd.read_sql(query, engine)
 
 
-_VEGA_SCRIPTS = {
-    'vega': os.path.join(_FOLDER, 'download.vega.js'),
-    'vega-lite': os.path.join(_FOLDER, 'download.vega-lite.js'),
-}
+_VEGA_SCRIPT = os.path.join(_FOLDER, 'download.vega.js')
 
 
 def download(data, format='json', template=None, **kwargs):
@@ -801,26 +798,32 @@ def download(data, format='json', template=None, **kwargs):
         fig.savefig(out, format=kw.ext, dpi=kw.dpi)
         fig.clear()
         return out.getvalue()
-    elif format in _VEGA_SCRIPTS:
+    elif format in {'vega', 'vega-lite', 'vegam'}:
         kwargs = kw(orient='records', force_ascii=True)
         spec = kwargs.pop('spec', {})
         kwargs.pop('handler', None)
         out = io.BytesIO()
-        for index, (key, val) in enumerate(data.items()):
-            out.write(b',{"name":' if index > 0 else b'{"name":')
-            out.write(json_encode(key).encode('utf-8'))
-            out.write(b',"values":')
-            out.write(val.to_json(**kwargs).encode('utf-8'))
-            out.write(b'}')
-        out = out.getvalue()
-        if format == 'vega':
-            out = b'[' + out + b']'
         # conf = {..., spec: {..., data: __DATA__}}
-        spec.setdefault('data', '__DATA__')
+        if 'data' in spec or 'fromjson' in spec:
+            # support only one dataset
+            values = list(data.values())
+            out.write(values[0].to_json(**kwargs).encode('utf-8'))
+            out = out.getvalue()
+        else:
+            spec['data'] = '__DATA__'
+            for index, (key, val) in enumerate(data.items()):
+                out.write(b',{"name":' if index > 0 else b'{"name":')
+                out.write(json_encode(key).encode('utf-8'))
+                out.write(b',"values":')
+                out.write(val.to_json(**kwargs).encode('utf-8'))
+                out.write(b'}')
+            out = out.getvalue()
+            if format == 'vega':
+                out = b'[' + out + b']'
         kwargs['spec'] = spec
         conf = json.dumps(kwargs, ensure_ascii=True, separators=(',', ':'), indent=None)
         conf = conf.encode('utf-8').replace(b'"__DATA__"', out)
-        script = gramex.cache.open(_VEGA_SCRIPTS[format], 'bin')
+        script = gramex.cache.open(_VEGA_SCRIPT, 'bin')
         return script.replace(b'/*{conf}*/', conf)
     else:
         out = io.BytesIO()

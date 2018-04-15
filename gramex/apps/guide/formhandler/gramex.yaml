@@ -4,6 +4,7 @@ import:
     YAMLURL: $YAMLURL
   - vega.yaml
   - vega-lite.yaml
+  - vegam.yaml
 
 url:
     formhandler-flags:

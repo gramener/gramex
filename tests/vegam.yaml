@@ -1,0 +1,3 @@
+fromjson:
+  - {data: __DATA__}
+  - {apply: bar, x: देश, y: sales}

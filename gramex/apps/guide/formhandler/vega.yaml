@@ -1,6 +1,12 @@
 url:
-  formhandler-vega:
-    pattern: /$YAMLURL/vega
+  formhandler-vega-examples:
+    pattern: /$YAMLURL/(vega|vega-lite|vegam)-examples
+    handler: FileHandler
+    kwargs:
+        path: $YAMLPATH/vega.html
+        template: true
+  formhandler-vega-1:
+    pattern: /$YAMLURL/vega-1
     handler: FormHandler
     kwargs:
       url: $YAMLPATH/flags.csv
@@ -14,6 +20,7 @@ url:
             "$schema": "https://vega.github.io/schema/vega/v3.json"
             width: 400
             height: 200
+            autosize: {type: fit, contains: padding}
             padding: 5
             scales:
               -
@@ -25,7 +32,7 @@ url:
                 round: true
               -
                 name: yscale
-                domain: {data: data, field: 'c1'}
+                domain: {data: data, field: c1}
                 nice: true
                 range: height
             axes:
@@ -39,9 +46,210 @@ url:
                   enter:
                     x: {scale: xscale, field: Continent}
                     width: {scale: xscale, band: 1}
-                    y: {scale: yscale, field: 'c1'}
+                    y: {scale: yscale, field: c1}
                     y2: {scale: yscale, value: 0}
-          headers:
-            Content-Type: application/javascript
+        linechart:
+          format: vega
+          spec:
+            "$schema": "https://vega.github.io/schema/vega/v3.json"
+            width: 400
+            height: 200
+            autosize: {type: fit, contains: padding}
+            padding: 5
+            scales:
+              -
+                name: xscale
+                type: point
+                domain: {data: data, field: Continent}
+                range: width
+                padding: 0.5
+                round: true
+              -
+                name: yscale
+                domain: {data: data, field: c1}
+                nice: true
+                range: height
+            axes:
+              - {orient: bottom, scale: xscale}
+              - {orient: left, scale: yscale}
+            marks:
+              -
+                type: line
+                from: {data: data}
+                encode:
+                  enter:
+                    x: {scale: xscale, field: Continent}
+                    y: {scale: yscale, field: c1}
+        horizontalbarchart:
+          format: vega
+          spec:
+            "$schema": "https://vega.github.io/schema/vega/v3.json"
+            width: 400
+            height: 200
+            autosize: {type: fit, contains: padding}
+            padding: 5
+            scales:
+              -
+                name: yscale
+                type: band
+                domain: {data: data, field: Continent}
+                range: height
+                padding: 0.05
+                round: true
+              -
+                name: xscale
+                domain: {data: data, field: c1}
+                nice: true
+                range: width
+            axes:
+              - {orient: bottom, scale: xscale}
+              - {orient: left, scale: yscale}
+            marks:
+              -
+                type: rect
+                from: {data: data}
+                encode:
+                  enter:
+                    y: {scale: yscale, field: Continent}
+                    height: {scale: yscale, band: 1}
+                    x: {scale: xscale, field: c1}
+                    x2: {scale: xscale, value: 0}
+        scatterplot:
+          format: vega
+          spec:
+            $schema: 'https://vega.github.io/schema/vega/v3.json'
+            width: 300
+            height: 200
+            autosize: {type: fit, contains: padding}
+            padding: 5
+            scales:
+              - {name: x, type: linear, round: true, nice: true, zero: true, domain: {data: data, field: c1}, range: width}
+              - {name: y, type: linear, round: true, nice: true, zero: true, domain: {data: data, field: c2}, range: height}
+            axes:
+              - {scale: x, grid: true, domain: false, orient: bottom, tickCount: 5, title: c1}
+              - {scale: y, grid: true, domain: false, orient: left, titlePadding: 5, title: c1}
+            marks:
+              -
+                type: symbol
+                from: {data: data}
+                encode:
+                  enter:
+                    x: {scale: x, field: c1}
+                    y: {scale: y, field: c2}
+                    strokeWidth: {value: 2}
+                    stroke: {value: '#4682b4'}
+        coloredscatterplot:
+          format: vega
+          spec:
+            $schema: 'https://vega.github.io/schema/vega/v3.json'
+            width: 300
+            height: 200
+            autosize: {type: fit, contains: padding}
+            padding: 5
+            scales:
+              - {name: x, type: linear, round: true, nice: true, zero: true, domain: {data: data, field: c1}, range: width}
+              - {name: y, type: linear, round: true, nice: true, zero: true, domain: {data: data, field: c2}, range: height}
+              - {name: color, type: ordinal, domain: {data: data, field: Continent}, range: category}
+              - {name: shape, type: ordinal, domain: {data: data, field: Continent}, range: symbol}
+            axes:
+              - {scale: x, grid: true, domain: false, orient: bottom, tickCount: 5, title: c1}
+              - {scale: y, grid: true, domain: false, orient: left, titlePadding: 5, title: c1}
+            legends:
+              - {stroke: color, title: Continent, shape: shape}
+            marks:
+              -
+                type: symbol
+                from: {data: data}
+                encode:
+                  enter:
+                    x: {scale: x, field: c1}
+                    y: {scale: y, field: c2}
+                    strokeWidth: {value: 2}
+                    stroke: {scale: color, field: Continent}
+                    shape: {scale: shape, field: Continent}
+        bubbleplot:
+          format: vega
+          spec:
+            $schema: 'https://vega.github.io/schema/vega/v3.json'
+            width: 300
+            height: 200
+            autosize: {type: fit, contains: padding}
+            padding: 5
+            scales:
+              - {name: x, type: linear, round: true, nice: true, zero: true, domain: {data: data, field: c1}, range: width}
+              - {name: y, type: linear, round: true, nice: true, zero: true, domain: {data: data, field: c2}, range: height}
+              - {name: color, type: ordinal, domain: {data: data, field: Continent}, range: category}
+              - {name: size, type: linear, domain: {data: data, field: c3}, range: [0, 400]}
+            axes:
+              - {scale: x, grid: true, domain: false, orient: bottom, tickCount: 5, title: c1}
+              - {scale: y, grid: true, domain: false, orient: left, titlePadding: 5, title: c1}
+            legends:
+              - {title: Continent, stroke: color}
+              - {title: c3, size: size}
+            marks:
+              -
+                type: symbol
+                style: circle
+                from: {data: data}
+                encode:
+                  enter:
+                    x: {scale: x, field: c1}
+                    y: {scale: y, field: c2}
+                    fill: {scale: color, field: Continent}
+                    size: {scale: size, field: c3}
+                    shape: {value: circle}
+      headers:
+        Content-Type: application/javascript
+    cache:
+      expiry: {duration: 3600}
+  formhandler-vega-2:
+    pattern: /$YAMLURL/vega-2
+    handler: FormHandler
+    kwargs:
+      url: $YAMLPATH/flags.csv
+      function: data.groupby(['Continent', 'Stripes']).mean().reset_index()
+      formats:
+        multilinechart:
+          format: vega
+          spec:
+            $schema: 'https://vega.github.io/schema/vega/v3.json'
+            width: 500
+            height: 200
+            autosize: {type: fit, contains: padding}
+            padding: 5
+            scales:
+              - {name: x, type: point, range: width, padding: 0.5, domain: {data: data, field: Continent}}
+              - {name: y, type: linear, range: height, nice: true, zero: true, domain: {data: data, field: c1}}
+              - {name: color, type: ordinal, range: category, domain: {data: data, field: Stripes}}
+            axes:
+              - {orient: bottom, scale: x}
+              - {orient: left, scale: y}
+            legends:
+              - {stroke: color, title: Stripes}
+            marks:
+              -
+                type: group
+                from:
+                  facet: {name: series, data: data, groupby: Stripes}
+                marks:
+                  -
+                    type: line
+                    from: {data: series}
+                    encode:
+                      enter:
+                        x: {scale: x, field: Continent}
+                        y: {scale: y, field: c1}
+                        stroke: {scale: color, field: Stripes}
+      headers:
+        Content-Type: application/javascript
+    cache:
+      expiry: {duration: 3600}
+  formhandler-vega-3:
+    pattern: /$YAMLURL/vega-3
+    handler: FormHandler
+    kwargs:
+      url: $YAMLPATH/flags.csv
+      headers:
+        Content-Type: application/javascript
     cache:
       expiry: {duration: 3600}

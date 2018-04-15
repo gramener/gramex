@@ -1,20 +1,29 @@
 (function (conf) {
-  var id = conf.id || String(Math.random())
+  var script = document.currentScript
+  var id = script.getAttribute('data-id') || conf.id || String(Math.random())
   var loading = conf.loading || '<h3>Loading...</h3><i class="fa fa-spin fa-spinner fa-2x"></i>'
   var renderer = conf.renderer || 'svg'
   var spec = conf.spec || {}
-  var width = spec.width || 400
-  var height = spec.height || 200
+  var width = +script.getAttribute('data-width') || spec.width || 400
+  var height = +script.getAttribute('data-height') || spec.height || 200
   document.write('<div id="' + id + '" style="text-align:center;width:' + width + 'px;height:' + height + 'px">' + loading + '</div>')
   document.addEventListener('DOMContentLoaded', function () {
     var container = document.getElementById(id)
     try {
-      // TODO: expose this to the user. (Can't use container.dataset which only allows strings)
-      new vega.View(vega.parse(spec))
+      if ('fromjson' in spec) {
+        spec = vegam.vegam([]).fromjson(spec.fromjson).spec
+      }
+      spec.width = width
+      spec.height = height
+      if (spec['$schema'].endsWith('vega-lite/v2.json')) {
+        spec = vl.compile(spec).spec
+      }
+      var view = new vega.View(vega.parse(spec))
         .renderer(renderer)
         .initialize(container)
         .hover()
         .run()
+      container.vega = view
     } catch (error) {
       container.innerHTML = error
     }
