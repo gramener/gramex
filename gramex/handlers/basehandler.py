@@ -38,6 +38,7 @@ class BaseMixin(object):
         '''
         cls._on_init_methods = []
         cls._on_finish_methods = []
+        cls._set_xsrf = set_xsrf
 
         cls.kwargs = cls.conf.get('kwargs', AttrDict())
         cls.setup_default_kwargs()
@@ -53,7 +54,6 @@ class BaseMixin(object):
         cls.setup_log()
         cls.setup_error(error or objectpath(conf, 'handlers.BaseHandler.error', {}))
         cls.setup_xsrf(xsrf_cookies)
-        cls._set_xsrf = set_xsrf
 
         # app.settings.debug enables debugging exceptions using pdb
         if conf.app.settings.get('debug', False):
