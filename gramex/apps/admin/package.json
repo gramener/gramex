@@ -1,0 +1,11 @@
+{
+  "name": "controlpanel",
+  "version": "1.0.0",
+  "description": "controlpanel application",
+  "main": "index.js",
+  "scripts": {
+    "test": "npm run test"
+  },
+  "author": "",
+  "license": "ISC"
+}

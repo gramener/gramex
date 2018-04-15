@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title>Control Panel</title>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon">
+  <link rel="stylesheet" href="ui/bootstraptheme.css?primary=%2320186F&secondary=%23483FA4&success=%233E6182&info=%23E4E4E4&warning=%23F57E1A&danger=%23F9F9F9&light=%234A4A4A&dark=%23362D8B&body-bg=%23F2F2F2&body-color=%23494949&enable-transitions=on&font-family-base=roboto&headings-font-family=roboto#background">
+  <link rel="stylesheet" href="ui/font-awesome/css/font-awesome.min.css">
+  <link rel="stylesheet" href="ui/bootstrap-select/dist/css/bootstrap-select.min.css">
+</head>
+
+<body>
+  <!-- only admin can add or modify users -->
+  <!-- otherwise show the same form without edit options -->
+  {% import controlpanel as app %}
+  {% from collections import Counter %}
+  {% set last_login = app.last_login() %}
+  <nav class="navbar navbar-dark navbar-expand-xl bg-primary px-3 py-1 px-xl-0 py-xl-0">
+    <div class="container-fluid">
+      <a class="navbar-brand d-flex align-items-center py-0 pr-1 text-uppercase text-white" href=".">
+        <img src="https://gramener.com/uistatic/gramener.png" width="150" height="45.25" alt="Logo">
+        <h1 class="d-sm-block h5 my-0 ml-5">CONTROL PANEL</h1>
+      </a>
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#download-dropdown">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="download-dropdown">
+        <ul class="navbar-nav ml-auto">
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle text-white" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+              <i class="fa fa-circle"></i>
+              <span class="caret"></span>
+            </a>
+            <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdownMenuLink">
+              <a class="dropdown-item" href="/logout">Logout</a>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+  <div class="container-fluid">
+      {% if last_login != '' %}
+        <div class="row">
+          <div class="col-1">Last login:</div>
+          <div class="col-3">
+            <strong>{{ last_login }}</strong>
+          </div>
+        </div>
+      {% end %}
+    <div class="page-alert"></div>
+    <div class="formhandler" data-src="users/"></div>
+  </div>
+
+  <script src="ui/jquery/dist/jquery.min.js"></script>
+  <script src="ui/popper.js/dist/umd/popper.min.js"></script>
+  <script src="ui/bootstrap/dist/js/bootstrap.min.js"></script>
+  <script src="ui/moment/min/moment-with-locales.min.js"></script>
+  <script src="ui/daterangepicker/daterangepicker.js"></script>
+  <script src="ui/bootstrap-select/dist/js/bootstrap-select.min.js"></script>
+  <script src="ui/lodash/lodash.min.js"></script>
+  <script src="ui/g1/dist/g1.js"></script>
+  <script src="ui/d3/build/d3.min.js"></script>
+  <script>
+    /* exported config_id, active_users */
+    var config_id = {% raw app.get_config_id(handler) %}
+    var active_users = {% raw app.active_users() %}
+  </script>
+
+  <script src="script.js"></script>
+</body>
+
+</html>

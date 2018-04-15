@@ -38,6 +38,7 @@
       <li><a href="/$GUIDE_ROOT/scheduler/">Schedule tasks</a></li>
       <li><a href="/$GUIDE_ROOT/watch/">Watch files</a></li>
       <li><a href="/$GUIDE_ROOT/apps/">Run apps</a></li>
+      <li><a href="/$GUIDE_ROOT/admin/">Admin page</a></li>
       <li><a href="/$GUIDE_ROOT/logviewer/">View logs</a></li>
       <li><a href="/$GUIDE_ROOT/handlers/">Write handlers</a></li>
       <li><a href="/$GUIDE_ROOT/debug/">Debugging Gramex</a></li>

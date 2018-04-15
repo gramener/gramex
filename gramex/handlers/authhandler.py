@@ -131,7 +131,8 @@ class AuthHandler(BaseHandler):
             if result is not None:
                 self.args = result
 
-    def update_user(self, user_id, **kwargs):
+    @staticmethod
+    def update_user(user_id, **kwargs):
         '''Update user login/logout event.'''
         info = _user_info.load(user_id)
         info.update(kwargs)

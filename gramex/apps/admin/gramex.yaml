@@ -1,0 +1,68 @@
+# Configurable variables
+# ADMIN_USER
+# ADMIN_LOOKUP
+# ADMIN_ROLE
+
+import:
+  apps/controlpanel/ui:
+    path: $GRAMEXAPPS/ui/gramex.yaml
+    YAMLURL: $YAMLURL/ui/
+
+url:
+  apps/controlpanel/home-$*:
+    pattern: /$YAMLURL/
+    handler: FileHandler
+    kwargs:
+      path: $YAMLPATH/index.html
+      template: true
+      variables: $ADMIN_LOOKUP
+      auth:
+        condition:
+          function: controlpanel.is_admin
+          kwargs:
+            admin_user: $ADMIN_USER
+            admin_role: $ADMIN_ROLE
+
+  apps/controlpanel/default-$*:
+    pattern: /$YAMLURL/(.*)
+    handler: FileHandler
+    kwargs:
+      path: $YAMLPATH
+      headers:
+          Cache-Control: max-age=60
+          'node_modules/**':
+            Cache-Control: public, max-age=315360000
+          'bower_components/**':
+            Cache-Control: public, max-age=315360000
+
+  apps/controlpanel/query-$*:
+    pattern: /$YAMLURL/users/
+    handler: FormHandler
+    kwargs: $ADMIN_LOOKUP
+
+  apps/controlpanel/user-status-$*: # To use this to update User Active: Status
+    pattern: /$YAMLURL/user-status
+    handler: FunctionHandler
+    kwargs:
+      function: controlpanel.get_users
+
+  apps/controlpanel/login-$*:
+    pattern: /$YAMLURL/login/
+    handler: SimpleAuth
+    kwargs:
+      credentials:
+        alpha: alpha
+        beta: beta
+
+  apps/controlpanel/logout-$*:
+    pattern: /$YAMLURL/logout   # Map this URL
+    handler: LogoutHandler      # to the logout handler
+    kwargs:
+      redirect:                 # Redirect options are applied in order
+        url: /$YAMLURL/         # Else redirect to the directory where this gramex.yaml is present
+      log:
+        fields:
+          - session.id
+          - current_user
+          - request.remote_ip
+          - request.headers.User-Agent

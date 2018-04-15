@@ -35,6 +35,7 @@ prefix: Guide
 - [Smart alerts](alert/)
 - [Schedule tasks](scheduler/)
 - [Watch files](watch/)
+- [Admin page](admin/)
 - [View logs](logviewer/)
 - [Run apps](apps/)
 - [Writing handlers](handlers/)
