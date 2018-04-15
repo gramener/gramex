@@ -385,6 +385,14 @@ def proxy_modify(request, response, handler):
     response.headers['X-Modify'] = handler.request.method
 
 
+def sms_info(handler):
+    result = {}
+    for key, obj in info.get('sms', {}).items():
+        result[key] = {'cls': type(obj).__name__}
+        result[key].update({k: str(v) for k, v in vars(obj).items()})
+    return result
+
+
 class CounterHandler(BaseHandler):
     @classmethod
     def setup(cls, **kwargs):

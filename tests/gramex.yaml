@@ -2367,6 +2367,22 @@ url:
       headers:
         Content-Type: application/json
 
+  sms/info:
+    pattern: /sms/info
+    handler: FunctionHandler
+    kwargs:
+      function: utils.sms_info
+      headers:
+        Content-Type: application/json
+
+sms:
+  amazonsns:
+    type: amazonsns
+    aws_access_key_id: invalid-aws-key
+    aws_secret_access_key: invalid-aws-secret
+    region_name: ap-southeast-1
+    smstype: Transactional
+
 # Display Gramex logs on console with indentation
 log:
     version: 1
