@@ -35,7 +35,7 @@ The Guide features more demos of how to use external APIs.
 You can use the full power of Vega and Vega-Lite charts with just configuration.
 Here's an example:
 
-<script src="../../formhandler/vega?_format=barchart"></script>
+<script src="../../formhandler/vega-1?_format=barchart"></script>
 <script src="https://cdn.jsdelivr.net/npm/vega@3.2.1/build/vega.min.js"></script>
 
 ```
