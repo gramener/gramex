@@ -1120,3 +1120,4 @@ v1.0.0 (2015-09-08)
 .. _v1.30 release notes: https://learn.gramener.com/guide/release/1.30/
 .. _v1.31 release notes: https://learn.gramener.com/guide/release/1.31/
 .. _v1.32 release notes: https://learn.gramener.com/guide/release/1.32/
+.. _v1.33 release notes: https://learn.gramener.com/guide/release/1.33/
