@@ -55,15 +55,19 @@
   -
     title: 'Table Binned: bin(c1) vs bin(c8) by Count of records'
     vega-lite: 'vega-lite-3?_format=bintable'
+    vegam: 'vegam-3?_format=bintable'
   -
     title: 'Bubble Binned: bin(c1) vs bin(c8) - Size by Mean(c5) - Color by Mean(c6)'
     vega-lite: 'vega-lite-3?_format=binbubble'
   -
     title: 'Labels Heatmap: Continent vs Stripes, Color by Mean(c1)'
     vega-lite: 'vega-lite-2?_format=heatmaplabels'
+    vegam: 'vegam-2?_format=heatmaplabels'
   -
     title: 'Trellis/Multiple Bar Chart: c1 vs c8 - Size by c5 - Color by Stripes, over Continents'
     vega-lite: 'vega-lite-3?_format=scattertrellis'
+    vegam: 'vegam-3?_format=scattertrellis'
   -
     title: 'Grouped Bar Chart: Mean(c1) of Continent, grouped by Stripes'
     vega-lite: 'vega-lite-2?_format=groupbarchart'
+    vegam: 'vegam-2?_format=groupbarchart'
