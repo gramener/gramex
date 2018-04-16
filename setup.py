@@ -69,7 +69,7 @@ class PostInstallCommand(install):
 
 
 def recursive_include(root, path, ignores=[], allows=[]):
-    '''Go to root dir and yield all files under path that'''
+    '''Go to root dir and yield all files under path that are in allows, not in ignores'''
     # Change to root directory
     cwd = os.getcwd()
     os.chdir(root)
@@ -113,7 +113,9 @@ gramex_files = [
     'deploy.yaml',
     'apps.yaml',
     'release.json',
+    'gramex/download.vega.js',
 ]
+gramex_files += list(recursive_include('gramex', 'handlers', ignore_patterns, ['*.html']))
 gramex_files += list(recursive_include('gramex', 'handlers', ignore_patterns, ['*.html']))
 gramex_files += list(recursive_include('gramex', 'pptgen', ignore_patterns, ['*.json']))
 gramex_files += list(recursive_include('gramex', 'apps', ignore_patterns))
