@@ -75,6 +75,21 @@ def add_session(df, duration=30):
     return df
 
 
+def prepare_logs(df):
+    '''prepare gramex logs'''
+    df['time'] = pd.to_datetime(df['time'], unit='ms', errors='coerce')
+    df = df[df['time'].notnull()]
+    for col in ['duration', 'status']:
+        if not np.issubdtype(df[col].dtype, np.number):
+            df[col] = pd.to_numeric(df[col], errors='coerce')
+            df = df[df[col].notnull()]
+    # logging via threads may not maintain order
+    df = df.sort_values(by='time')
+    # add new_session
+    df = add_session(df, duration=15)
+    return df
+
+
 def summarize(transforms=[], run=True):
     '''summarize'''
     levels = DB_CONFIG['levels']
@@ -115,16 +130,7 @@ def summarize(transforms=[], run=True):
         gramex.cache.open(f, 'csv', names=columns).fillna('-')
         for f in log_files
     ], ignore_index=True)
-    data['time'] = pd.to_datetime(data['time'], unit='ms', errors='coerce')
-    data = data[data['time'].notnull()]
-    for column in ['duration', 'status']:
-        if not np.issubdtype(data[column].dtype, np.number):
-            data[column] = pd.to_numeric(data[column], errors='coerce')
-            data = data[data[column].notnull()]
-    # logging via threads may not maintain order
-    data = data.sort_values(by='time')
-    # add new_session
-    data = add_session(data, duration=15)
+    data = prepare_logs(data)
     delete = 'DELETE FROM {} WHERE time >= "{}"'.format
     # levels should go from M > W > D
     for freq in levels:

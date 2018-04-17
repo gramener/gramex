@@ -2573,6 +2573,9 @@ import:
   gramex-update:
     path: $GRAMEXAPPS/update/gramex.yaml
     YAMLURL: /update/
+  gramex-logviewer:
+    path: $GRAMEXAPPS/logviewer/gramex.yaml
+    YAMLURL: /logviewer/
 
 # Invalid services should be ignored
 invalid-service: true
