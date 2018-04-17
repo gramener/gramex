@@ -35,15 +35,13 @@ url:
           spec:
             fromjson:
               - {data: __DATA__}
-              - {apply: scatter, x: c1, y: c2,
-                 color: Continent, shape: Continent}
+              - {apply: scatter, x: c1, y: c2, color: Continent, shape: Continent}
         bubbleplot:
           format: vegam
           spec:
             fromjson:
               - {data: __DATA__}
-              - {apply: scatter, x: c1, y: c2,
-                 color: Continent, size: c3}
+              - {apply: scatter, x: c1, y: c2, color: Continent, size: c3}
       headers:
         Content-Type: application/javascript
     cache:
@@ -72,15 +70,13 @@ url:
           spec:
             fromjson:
               - {data: __DATA__}
-              - {apply: bar, x: Continent, y: c1, color: Stripes,
-                 stack: normalize}
+              - {apply: bar, x: Continent, y: c1, color: Stripes, stack: normalize}
         groupbarchart:
           format: vegam
           spec:
             fromjson:
               - {data: __DATA__}
-              - {apply: bar, x: Stripes, y: c1, color: Stripes,
-                 column: Continent}
+              - {apply: bar, x: Stripes, y: c1, color: Stripes, column: Continent}
         heatmap:
           format: vegam
           spec:
@@ -100,8 +96,7 @@ url:
           spec:
             fromjson:
               - {data: __DATA__}
-              - {apply: scatter, x: Continent, y: Stripes,
-                 color: c1, size: c2}
+              - {apply: scatter, x: Continent, y: Stripes, color: c1, size: c2}
       headers:
         Content-Type: application/javascript
     cache:
@@ -124,8 +119,7 @@ url:
             width: 20
             fromjson:
               - {data: __DATA__}
-              - {apply: scatter, x: c1, y: c8, size: c5,
-                 color: Stripes, column: Continent}
+              - {apply: scatter, x: c1, y: c8, size: c5, color: Stripes, column: Continent}
       headers:
         Content-Type: application/javascript
     cache:
