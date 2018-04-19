@@ -269,11 +269,11 @@ class TestOpen(unittest.TestCase):
         path = os.path.join(folder, 'data.csv')
         data = pd.read_csv(path, encoding='utf-8')
         config = {
-            'csv': dict(index=False, ignore=1),
-            'xlsx': dict(index=False, sheet_name='Sheet1', ignore=1),
-            'html': dict(index=False, escape=False, ignore=1),
-            'hdf': dict(index=False, key='data', format='fixed'),
-            'json': dict(index=False, ignore=1, orient='records'),
+            'csv': dict(index=False, ignore_keyword=1),
+            'xlsx': dict(index=False, sheet_name='Sheet1', ignore_keyword=1),
+            'html': dict(index=False, escape=False, ignore_keyword=1),
+            'hdf': dict(index=False, key='data', format='fixed', ignore_keyword=1),
+            'json': dict(orient='records', ignore_keyword=1),
             # 'stata': dict(index=False),   # cannot test since it doesn't support unicode
         }
         for ext, kwargs in config.items():
