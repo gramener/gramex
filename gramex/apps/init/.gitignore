@@ -47,6 +47,7 @@ bower_components/
 
 # Sublime-text workspaces, etc
 *.sublime-*
+.vscode/
 
 # IPython Notebook checkpoints
 .ipynb_checkpoints
