@@ -91,11 +91,11 @@ class BaseMixin(object):
             }
 
     @staticmethod
-    def _purge(data):
+    def _purge_keys(data):
         '''
         Returns keys to be deleted. These are either None values or
         those with expired keys based on _t.
-        setup_session makes the session store call this purge method.
+        setup_session makes the session store call this method.
         Until v1.20 (31 Jul 2017) no _t keys were set.
         From v1.23 (31 Oct 2017) these are cleared.
         '''
@@ -112,11 +112,11 @@ class BaseMixin(object):
             if val is None:
                 keys.append(key)
             elif isinstance(val, dict):
-                # If the session has expired, purge it
+                # If the session has expired, remove it
                 if val.get('_t', 0) < now:
                     keys.append(key)
-                # If the session is inactive, purge it after a week.
-                # If we purge immediately, then we may lose WIP sessions.
+                # If the session is inactive, remove it after a week.
+                # If we remove immediately, then we may lose WIP sessions.
                 # For example, people who opened a login page where _next_url was set
                 elif '_i' in val and '_l' in val and val['_i'] + val['_l'] < now - week:
                     keys.append(key)
@@ -128,17 +128,22 @@ class BaseMixin(object):
         if session_conf is None:
             return
         key = store_type, store_path = session_conf.get('type'), session_conf.get('path')
-        flush = session_conf.get('flush')
+        kwargs = dict(
+            path=store_path,
+            flush=session_conf.get('flush'),
+            purge=session_conf.get('purge'),
+            purge_keys=cls._purge_keys
+        )
         if key in session_store_cache:
             pass
         elif store_type == 'memory':
-            session_store_cache[key] = KeyStore(store_path, flush=flush, purge=cls._purge)
+            session_store_cache[key] = KeyStore(**kwargs)
         elif store_type == 'sqlite':
-            session_store_cache[key] = SQLiteStore(store_path, flush=flush, purge=cls._purge)
+            session_store_cache[key] = SQLiteStore(**kwargs)
         elif store_type == 'json':
-            session_store_cache[key] = JSONStore(store_path, flush=flush, purge=cls._purge)
+            session_store_cache[key] = JSONStore(**kwargs)
         elif store_type == 'hdf5':
-            session_store_cache[key] = HDF5Store(store_path, flush=flush, purge=cls._purge)
+            session_store_cache[key] = HDF5Store(**kwargs)
         else:
             raise NotImplementedError('Session type: %s not implemented' % store_type)
         cls._session_store = session_store_cache[key]
@@ -854,12 +859,13 @@ class KeyStore(object):
     You can initialize a KeyStore with a ``flush=`` parameter. The store is
     flushed to disk via ``store.flush()`` every ``flush`` seconds.
 
-    If a ``purge=`` function is provided, it is called with the store data before
-    flushing. It should return an iterator of keys to delete if any.
+    If a ``purge=`` is provided, the data is purged of missing values every
+    ``purge`` seconds. You can provide a custom ``purge_keys=`` function that
+    returns an iterator of keys to delete if any.
 
     When the program exits, ``.close()`` is automatically called.
     '''
-    def __init__(self, path, flush=None, purge=None):
+    def __init__(self, path, flush=None, purge=None, purge_keys=None):
         '''Initialise the KeyStore at path'''
         # Ensure that path directory exists
         self.path = os.path.abspath(path)
@@ -867,15 +873,15 @@ class KeyStore(object):
         if not os.path.exists(folder):
             os.makedirs(folder)
         self.store = {}
-        # Periodically flush buffers
+        if callable(purge_keys):
+            self.purge_keys = purge_keys
+        elif purge_keys is not None:
+            app_log.error('KeyStore: purge_keys=%r invalid. Must be function(dict)', purge_keys)
+        # Periodically flush and purge buffers
         if flush is not None:
             tornado.ioloop.PeriodicCallback(self.flush, callback_time=flush * 1000).start()
-        if callable(purge):
-            self.purge = purge
-        elif purge is None:
-            self.purge = self._default_purge
-        else:
-            app_log.error('KeyStore: purge=%r invalid. Must be function(dict)', purge)
+        if purge is not None:
+            tornado.ioloop.PeriodicCallback(self.purge, callback_time=purge * 1000).start()
         # Call close() when Python gracefully exits
         atexit.register(self.close)
 
@@ -892,17 +898,22 @@ class KeyStore(object):
         self.store[key] = value
 
     @staticmethod
-    def _default_purge(data):
+    def purge_keys(data):
         return [key for key, val in data.items() if val is None]
 
     def flush(self):
         '''Write to disk'''
-        for key in self.purge(self.store):
+        pass
+
+    def purge(self):
+        '''Delete empty keys and flush'''
+        for key in self.purge_keys(self.store):
             try:
                 del self.store[key]
             except KeyError:
                 # If the key was already removed from store, ignore
                 pass
+        self.flush()
 
     def close(self):
         '''Flush and close all open handles'''
@@ -932,6 +943,14 @@ class SQLiteStore(KeyStore):
 
     def close(self):
         self.store.close()
+
+    def flush(self):
+        super(SQLiteStore, self).flush()
+        self.store.commit()
+
+    def purge(self):
+        app_log.debug('Purging %s', self.path)
+        super(SQLiteStore, self).purge()
 
 
 class HDF5Store(KeyStore):
@@ -989,6 +1008,21 @@ class HDF5Store(KeyStore):
             self.store.flush()
             self.changed = False
 
+    def purge(self):
+        '''
+        Load all keys into self.store. Delete what's required. Save.
+        '''
+        self.flush()
+        changed = False
+        items = {key: json.loads(val.value, object_pairs_hook=AttrDict, cls=CustomJSONDecoder)
+                 for key, val in self.store.items()}
+        for key in self.purge_keys(items):
+            del self.store[key]
+            changed = True
+        if changed:
+            app_log.debug('Purging %s', self.path)
+            self.store.flush()
+
     def close(self):
         try:
             self.store.close()
@@ -1042,21 +1076,28 @@ class JSONStore(KeyStore):
             app_log.debug('Flushing %s', self.path)
             store = self._read_json()
             store.update(self.update)
-            for key in self.purge(store):
-                try:
-                    del store[key]
-                except KeyError:
-                    # If the key was already removed from store, ignore
-                    pass
             self._write_json(store)
             self.store = store
             self.update = {}
             self.changed = False
 
+    def purge(self):
+        '''
+        Load all keys into self.store. Delete what's required. Save.
+        '''
+        self.flush()
+        changed = False
+        for key in self.purge_keys(self.store):
+            del self.store[key]
+            changed = True
+        if changed:
+            app_log.debug('Purging %s', self.path)
+            self._write_json(self.store)
+
     def close(self):
         try:
             self.flush()
-        # This is presumably if the directory has been deleted. Log & ignore.
+        # This has happened when the directory was deleted. Log & ignore.
         except OSError:
             app_log.error('Cannot flush %s', self.path)
 
