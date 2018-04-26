@@ -444,6 +444,7 @@ Here is a minimal HTTP reverse proxy configuration:
 
         location /project/ {                    # example.com/project/* maps to
             proxy_pass http://127.0.0.1:9988/;  # 127.0.0.1:9988/
+            proxy_redirect ~^/ /project/;       # Redirects are sent back to /project/
         }
     }
 
@@ -465,9 +466,18 @@ your config file will be like:
 But if your have a single app running at `/` in each Gramex instance root, your
 config file will be like:
 
-    location /app1/ { proxy_pass http://127.0.0.1:8001/; }
-    location /app2/ { proxy_pass http://127.0.0.1:8002/; }
-    location /app3/ { proxy_pass http://127.0.0.1:8003/; }
+    location /app1/ {
+        proxy_pass http://127.0.0.1:8001/;
+        proxy_redirect ~^/ /app1/;
+    }
+    location /app2/ {
+        proxy_pass http://127.0.0.1:8002/;
+        proxy_redirect ~^/ /app2/;
+    }
+    location /app3/ {
+        proxy_pass http://127.0.0.1:8003/;
+        proxy_redirect ~^/ /app3/;
+    }
 
 To let nginx cache responses, use:
 
