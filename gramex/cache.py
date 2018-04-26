@@ -44,6 +44,11 @@ def _delete_temp_files():
 atexit.register(_delete_temp_files)
 
 
+def cache_key(*args):
+    '''Converts arguments into a string suitable for use as a cache key'''
+    return json.dumps(args, sort_keys=True, separators=(',', ':'))
+
+
 def opener(callback, read=False, **open_kwargs):
     '''
     Converts any function that accepts a string or handle as its parameter into

@@ -37,7 +37,7 @@ from orderedattrdict import AttrDict
 from gramex import debug, shutdown, __version__
 from gramex.transforms import build_transform
 from gramex.config import locate, app_log, ioloop_running, app_log_extra
-from gramex.cache import urlfetch
+from gramex.cache import urlfetch, cache_key
 from gramex.http import OK, NOT_MODIFIED
 from . import urlcache
 from .ttlcache import MAXTTL
@@ -223,7 +223,7 @@ def schedule(conf):
     from . import scheduler
     _stop_all_tasks(info.schedule)
     for name, sched in conf.items():
-        _key = _cache_key('schedule', sched)
+        _key = cache_key('schedule', sched)
         if _key in _cache:
             info.schedule[name] = _cache[_key]
             continue
@@ -454,7 +454,7 @@ def alert(conf):
     schedule_keys = 'minutes hours dates months weekdays years startup'.split()
 
     for name, alert in conf.items():
-        _key = _cache_key('alert', alert)
+        _key = cache_key('alert', alert)
         if _key in _cache:
             info.alert[name] = _cache[_key]
             continue
@@ -619,7 +619,7 @@ def _cache_generator(conf, name):
         app_log.warning('url: %s: store %s missing', name, store_name)
     store = info.cache.get(store_name)
 
-    cache_key = _get_cache_key(conf, name)
+    url_cache_key = _get_cache_key(conf, name)
     cachefile_class = urlcache.get_cachefile(store)
     cache_expiry = conf.get('expiry', {})
     cache_statuses = conf.get('status', [OK, NOT_MODIFIED])
@@ -628,7 +628,7 @@ def _cache_generator(conf, name):
     # This method will be added to the handler class as "cache", and called as
     # self.cache()
     def get_cachefile(handler):
-        return cachefile_class(key=cache_key(handler), store=store,
+        return cachefile_class(key=url_cache_key(handler), store=store,
                                handler=handler, expire=cache_expiry_duration,
                                statuses=set(cache_statuses))
 
@@ -641,9 +641,9 @@ def url(conf):
     # Sort the handlers in descending order of priority
     specs = sorted(conf.items(), key=_sort_url_patterns, reverse=True)
     for name, spec in specs:
-        cache_key = _cache_key('url', spec)
-        if cache_key in _cache:
-            handlers.append(_cache[cache_key])
+        _key = cache_key('url', spec)
+        if _key in _cache:
+            handlers.append(_cache[_key])
             continue
         if 'handler' not in spec:
             app_log.error('url: %s: no handler specified')
@@ -684,7 +684,7 @@ def url(conf):
             app_log.error('url: %s: pattern: %s is invalid', name, urlspec.pattern)
         except Exception:
             app_log.exception('url: %s: invalid', name)
-        _cache[cache_key] = handler_entry
+        _cache[_key] = handler_entry
         handlers.append(handler_entry)
 
     info.app.clear_handlers()
@@ -703,7 +703,7 @@ def watch(conf):
 
     events = {'on_modified', 'on_created', 'on_deleted', 'on_moved', 'on_any_event'}
     for name, config in conf.items():
-        _key = _cache_key('watch', config)
+        _key = cache_key('watch', config)
         if _key in _cache:
             watcher.watch(name, **_cache[_key])
             continue
@@ -793,7 +793,7 @@ def eventlog(conf):
 def email(conf):
     '''Set up email service'''
     for name, config in conf.items():
-        _key = _cache_key('email', config)
+        _key = cache_key('email', config)
         if _key in _cache:
             info.email[name] = _cache[_key]
             continue
@@ -809,7 +809,7 @@ sms_notifiers = {
 def sms(conf):
     '''Set up SMS service'''
     for name, config in conf.items():
-        _key = _cache_key('sms', config)
+        _key = cache_key('sms', config)
         if _key in _cache:
             info.sms[name] = _cache[_key]
             continue
@@ -859,7 +859,3 @@ def test(conf):
     # Remove auth: section when running gramex.
     # If there are passwords here, they will not be loaded in memory
     conf.pop('auth', None)
-
-
-def _cache_key(*args):
-    return json.dumps(args, sort_keys=True, separators=(',', ':'))
