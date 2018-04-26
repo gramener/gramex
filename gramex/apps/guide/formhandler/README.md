@@ -1022,6 +1022,49 @@ Note:
 - `?x-http-method-override=DELETE` overrides the method to use DELETE. You can
   also use the HTTP header `X-HTTP-Method-Override: DELETE`.
 
+## FormHandler JSON body
+
+**v1.34**. Arguments to the
+[POST](#formhandler-post),
+[PUT](#formhandler-put), and
+[DELETE](#formhandler-delete) methods
+can send a `Content-Type: application/json`.
+This allows passing JSON data as arguments. The values must be sent as arrays.
+
+For example, `?x=1&y=2` must be sent as `{"x": ["1"], "y": ["2"]}`.
+
+These two approaches are the same:
+
+```js
+// Send using `application/www-url-form-encoded` or `multipart/form-data`
+$.ajax('flags-edit', {
+  method: 'PUT',
+  headers: xsrf_token,      // See documentation on XSRF tokens
+  data: {ID: 'XXX', Name: 'Country 1'}
+})
+
+// Send using `application/json`
+$.ajax('flags-edit', {
+  method: 'PUT',
+  contentType: 'application/json',
+  dataType: 'json',
+  headers: xsrf_token,      // See documentation on XSRF tokens
+  data: JSON.stringify({ID: ['XXX'], Name: ['Country 1']})    // Note: values are arrays
+})
+```
+
+When using jQuery, the former is easier. But when using
+[fetch](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch)
+or other AJAX / server-side libraries, `application/json` may be easier.
+
+```js
+fetch('flags-edit', {
+  method: 'POST',
+  headers: {'content-type': 'application/json'},
+  body: JSON.stringify({ID: ['XXX'], Name: ['Country 1']})    // Note: values are arrays
+})
+```
+
 ### Custom HTTP Headers
 
 The `url.<url>.kwargs` section accepts a `headers:` key. So does `url.kwargs.formats.<format>`.

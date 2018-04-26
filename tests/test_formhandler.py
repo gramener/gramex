@@ -437,6 +437,48 @@ class TestFormHandler(TestGramex):
         finally:
             dbutils.mysql_drop_db(variables.MYSQL_SERVER, 'test_formhandler')
 
+    def test_edit_json(self):
+        target = self.copy_file('sales.xlsx', 'sales-edits.xlsx')
+        target = os.path.join(folder, 'formhandler-edits.db')
+        dbutils.sqlite_create_db(target, sales=self.sales)
+        tempfiles[target] = target
+        for fmt in ('xlsx', 'sqlite'):
+            kwargs = {
+                'url': '/formhandler/edits-%s-multikey' % fmt,
+                'request_headers': {'Content-Type': 'application/json'},
+            }
+            # POST 2 records. Check that 2 records where added
+            self.check(method='post', data=json.dumps({
+                'देश': ['भारत', 'USA'],
+                'city': ['HYD', 'NJ'],
+                'product': ['खुश', 'खुश'],
+                'sales': [100, 200],
+            }), headers={'Count-Data': '2'}, **kwargs)
+            eq_(self.get(kwargs['url'], params={'product': 'खुश'}).json(), [
+                {'देश': 'भारत', 'city': 'HYD', 'product': 'खुश', 'sales': 100.0, 'growth': None},
+                {'देश': 'USA', 'city': 'NJ', 'product': 'खुश', 'sales': 200.0, 'growth': None},
+            ])
+            # PUT a record. Check that the record was changed
+            self.check(method='put', data=json.dumps({
+                'city': ['HYD'],
+                'product': ['खुश'],
+                'sales': [300],
+                'growth': [0.3],
+            }), headers={'Count-Data': '1'}, **kwargs)
+            eq_(self.get(kwargs['url'], params={'city': 'HYD', 'product': 'खुश'}).json(), [
+                {'देश': 'भारत', 'city': 'HYD', 'product': 'खुश', 'sales': 300.0, 'growth': 0.3},
+            ])
+            # DELETE 2 records one by one. Check that 2 records were deleted
+            self.check(method='delete', data=json.dumps({
+                'city': ['HYD'],
+                'product': ['खुश'],
+            }), headers={'Count-Data': '1'}, **kwargs)
+            self.check(method='delete', data=json.dumps({
+                'city': ['NJ'],
+                'product': ['खुश'],
+            }), headers={'Count-Data': '1'}, **kwargs)
+            eq_(self.get(kwargs['url'], params={'product': 'खुश'}).json(), [])
+
     def test_chart(self):
         r = self.get('/formhandler/chart', data={
             '_format': 'svg',

@@ -305,7 +305,14 @@ def insert(url, meta={}, args=None, engine=None, table=None, ext=None, id=None,
         engine = get_engine(url)
     _pop_controls(args)
     meta.update({'filters': [], 'ignored': []})
-    # TODO: if values do not have equal number of elements, pad them and warn
+    # If values do not have equal number of elements, pad them and warn
+    rowcount = max(len(val) for val in args.values())
+    for key, val in args.items():
+        rows = len(val)
+        if 0 < rows < rowcount:
+            val += [val[-1]] * (rowcount - rows)
+            app_log.warning('data.insert: column %s has %d rows not %d. Extended last value %s',
+                            key, rows, rowcount, val[-1])
     rows = pd.DataFrame.from_dict(args)
     if engine == 'dataframe':
         rows = _pop_columns(rows, url.columns, meta['ignored'])
