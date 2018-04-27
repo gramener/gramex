@@ -232,7 +232,7 @@ app:
         # autoreload: False               # Reload Gramex when imported Python file changes
         # compiled_template_cache: True   # Cache template files across requests
         # static_hash_cache: True         # Cache static files across requests
-        # serve_traceback: True           # Show traceback on browser if there's an error
+        serve_traceback: True             # Show traceback on browser if there's an error
 
         # Cookie parameters
         xsrf_cookies: True              # Reject POST/PUT/DELETE unless _xsrf header / form input is present

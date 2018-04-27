@@ -33,6 +33,8 @@ app:
         # Currently, it defaults to $HOSTNAME.
         # You should change this to an environment variable via $VARIABLE
         cookie_secret: gramex-$HOSTNAME
+        # In production, do not show traceback by default
+        serve_traceback: False
 
 # Encrypt info (e.g. Gramex-User header) by this public & private key (generated
 # by SSH) to override the user object in a session
