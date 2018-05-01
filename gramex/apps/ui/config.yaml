@@ -3,6 +3,7 @@ fonts:
     helvetica:           {stack: '"Helvetica Neue", Helvetica, Arial, sans-serif'}
     open-sans:           {stack: '"Open Sans", sans-serif', google: Open+Sans}
     lato:                {stack: 'Lato, sans-serif', google: Lato}
+    anton:               {stack: 'Anton, sans-serif', google: Anton}
     roboto:              {stack: 'Roboto, sans-serif', google: Roboto}
     segoe-ui:            {stack: '"Segoe UI", "Open Sans", sans-serif', google: Open+Sans}
     century-gothic:      {stack: '"Century Gothic", CenturyGothic, AppleGothic, sans-serif'}

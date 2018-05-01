@@ -65,6 +65,7 @@ font:
       roboto: Roboto
       segoe-ui: Segoe UI
       lato: Lato
+      anton: Anton
   headings-font-family:
     title: Heading font
     default: ''
@@ -79,7 +80,7 @@ font:
       roboto-condensed: Roboto Condensed
       open-sans-condensed: Open Sans Condensed
       lato: Lato
-
+      anton: Anton
 
 theme:
   Bootstrap: {}
