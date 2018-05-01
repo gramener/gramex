@@ -26,10 +26,6 @@ function updateParams(params, keeponly, remove) {
 }
 
 function vegamDraw(s, on) {
-  s.spec.autosize = {
-    type: 'fit',
-    contains: 'padding'
-  }
   s.spec.width = $(on).width()
   s.spec.height = 250
   // need vega spec to alter

@@ -10,14 +10,18 @@
   document.addEventListener('DOMContentLoaded', function () {
     var container = document.getElementById(id)
     try {
+      container.spec = {}
       if ('fromjson' in spec) {
+        container.spec.vegam = spec.fromjson
         spec = vegam.vegam([]).fromjson(spec.fromjson).spec
       }
       spec.width = width
       spec.height = height
       if (spec['$schema'].endsWith('vega-lite/v2.json')) {
+        container.spec.vegalite = spec
         spec = vl.compile(spec).spec
       }
+      container.spec.vega = spec
       var view = new vega.View(vega.parse(spec))
         .renderer(renderer)
         .initialize(container)

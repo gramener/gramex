@@ -344,7 +344,7 @@ Similarly, Use `format: vegam` for [Vegam](https://www.npmjs.com/package/vegam) 
 ... rest of the page ...
 <script src="https://cdn.jsdelivr.net/npm/vega@3.2.1/build/vega.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/vega-lite@2.3.1/build/vega-lite.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/vegam@0.0.1/dist/vegam.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vegam@0.0.2/dist/vegam.min.js"></script>
 ```
 
 <div class="example">

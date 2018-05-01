@@ -1,5 +1,4 @@
-{% import gramex %}
-{% set examples = gramex.cache.open('formhandler/examples.yaml', 'yaml') %}
+{% from vegaconfig import examples %}
 {% set flavor = handler.path_args[0] %}
 <!DOCTYPE html>
 <html>
@@ -44,7 +43,7 @@
   <script src="https://cdn.jsdelivr.net/npm/vega-lite@2.3.1/build/vega-lite.min.js"></script>
   {% end %}
   {% if flavor in ['vegam'] %}
-  <script src="https://cdn.jsdelivr.net/npm/vegam@0.0.1/dist/vegam.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vegam@0.0.2/dist/vegam.min.js"></script>
   {% end %}
   <script>
   $('#data').formhandler()
