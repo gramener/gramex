@@ -1,0 +1,30 @@
+import:
+  ui:
+    path: $GRAMEXAPPS/ui/gramex.yaml
+    YAMLURL: $YAMLURL/ui/
+
+url:
+  configeditor-static-$*:
+    pattern: /$YAMLURL/(.*)
+    handler: FileHandler
+    kwargs:
+      path: $YAMLPATH
+      default_filename: index.html
+      headers:
+        Cache-Control: public, max-age=86400
+
+  configeditor-conf-$*:
+    pattern: /$YAMLURL/conf/
+    handler: FunctionHandler
+    kwargs:
+      function: gramex.conf
+      headers:
+        Content-Type: application/json
+
+  configeditor-config-$*:
+    pattern: /$YAMLURL/config/(|post|init)
+    handler: FunctionHandler
+    kwargs:
+      function: configeditor.crud
+      headers:
+        Content-Type: application/json

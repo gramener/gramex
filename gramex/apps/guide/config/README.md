@@ -1015,3 +1015,58 @@ This adds 2 apps:
 - `app2` loads the configuration provided. It is refreshed when `gramex.init()`
   is called again with `app2=` as a parameter. Calls without an `app2=`
   parameter do not affect the `app2` configuration.
+
+## Config Viewer
+
+[`configview/`](configview/) shows `gramex` configuration as an explorable UI
+
+To use it, add this to your gramex.yaml:
+
+```yaml
+import:
+  configviewer:
+    path: $GRAMEXAPPS/configeditor/gramex.yaml
+    YAMLURL: /$YAMLURL/configview/
+```
+
+Now [`configview/`](configview/) has a configuration viewer.
+
+To embed the viewer in a page, include this in your HTML:
+
+```html
+<link rel="stylesheet" href="configview/node_modules/jsoneditor/dist/jsoneditor.min.css">
+<script src="configview/ui/jquery/dist/jquery.min.js"></script>
+<script src="configview/node_modules/jsoneditor/dist/jsoneditor.min.js"></script>
+
+<script src="configview/app.js"
+    data-id="myeditor"
+    data-url="configview/config/"
+    data-style="height:600px;"></script>
+```
+
+This script adds JSON editor UI from `configview/config/` URL to `<div id="myeditor"></div>`.
+ If `data-id` is missing, `editor` ID is created. Use `data-style` to set in-line styles.
+
+<link rel="stylesheet" href="configview/node_modules/jsoneditor/dist/jsoneditor.min.css">
+<script src="configview/ui/jquery/dist/jquery.min.js"></script>
+<script src="configview/node_modules/jsoneditor/dist/jsoneditor.min.js"></script>
+<script src="configview/app.js"
+    data-id="myeditor"
+    data-url="configview/config/"
+    data-style="height:600px;"></script>
+
+To `get` the modified configuration from UI.
+
+```javascript
+var editor = document.getElementById('myeditor').editor
+var conf = editor.get()
+```
+
+TODO: Re-configure gramex config via UI.
+<!---
+var conf = document.getElementById('myeditor').editor.get()
+$.ajax('configview/config/post?_xsrf='+_xsrf, {
+  method: 'POST',
+  data: {'data': JSON.stringify(conf)}
+})
+--->
