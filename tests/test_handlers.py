@@ -53,12 +53,20 @@ class TestXSRF(TestGramex):
     def test_xsrf_false(self):
         # When xsrf_cookies is set to False, POST works
         r = requests.post(server.base_url + '/xsrf/no')
-        self.assertEqual(OK, r.status_code)
+        self.assertEqual(r.status_code, OK)
 
     def test_xsrf_true(self):
         # When xsrf_cookies is set to True, POST fails without _xsrf
         r = requests.post(server.base_url + '/xsrf/yes')
         self.assertEqual(r.status_code, FORBIDDEN)
+
+    def test_ajax(self):
+        # Requests sent with X-Requested-With should not need an XSRF cookie
+        r = requests.post(server.base_url + '/xsrf/yes', headers={
+            # Mangle case below to ensure Gramex handles it case-insensitively
+            'X-Requested-With': 'xMlHtTpReQuESt',
+        })
+        self.assertEqual(r.status_code, OK)
 
 
 class TestErrorHandling(TestGramex):

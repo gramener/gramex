@@ -115,19 +115,10 @@ You can write INSERT / UPDATE / DELETE queries. For example:
 You need to use the `POST` HTTP when running these queries. (`GET` may run the
 SQL query but will return an error.)
 
-You also need to use [XSRF cookies](../filehandler/#xsrf). Otherwise, you'll see
-this error:
-
-    :::js
-    $.post('update?y=12&x=9')       // This will report an error because XSRF is not set.
-    // OUTPUT
-
 A successful query returns a HTTP 200 with empty results.
 
     :::js
-    var xsrf = {'X-Xsrftoken': cookie.get('_xsrf')}
     $.ajax('update', {
-      headers: xsrf,
       method: 'POST',               // Run the update query
       traditional: true,            // Required when using $.ajax
       data: {x: 9, y: 12}           // Where x >= 9, set y values to 12

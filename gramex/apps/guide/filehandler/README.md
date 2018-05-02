@@ -249,8 +249,10 @@ files are treated as templates.
 ## XSRF
 
 If you're submitting forms using the POST method, you need to submit an
-[_xsrf][xsrf] field that has the value of the `_xsrf` cookie. You can either
-include it in the template using handlers' built-in `xsrf_token` property:
+[_xsrf][xsrf] field that has the value of the `_xsrf` cookie.
+
+**When using HTML forms**, you can include it in the template using handlers'
+built-in `xsrf_token` property:
 
 ```html
 <form method="POST">
@@ -270,7 +272,13 @@ url:
       template: true                # Render as a template
 ```
 
-You can extract it dynamically using AJAX by providing this configuration:
+[xsrf]: http://www.tornadoweb.org/en/stable/guide/security.html#cross-site-request-forgery-protection
+
+**When using AJAX**, no XSRF token is required (for modern browsers that send an
+`X-Requested-With: XMLHttpRequest` header for AJAX.)
+
+**When submitting from a server**, you need to retrieve an XSRF token first --
+for example, by requesting it from a URL like `/xsrf` below:
 
 ```yaml
 url:
@@ -281,46 +289,10 @@ url:
       function: handler.xsrf_token.decode('utf-8')  # Return the XSRF token
 ```
 
-Now the URL [xsrf](xsrf) can be used to retrieve an XSRF token and submit a form:
-
-```html
-<script src="ui/jquery/dist/jquery.min.js"></script>
-<script>
-  // Disallow form submission until XSRF is enabled
-  var $forms = $('form[method="POST"]')
-    .on('submit.no-xsrf', function(e) { e.preventDefault() })
-  $.get('xsrf', function(token) {           // Get the XSRF token via AJX
-    var $xsrf = $('<input>').attr({         // Create a form input field
-      type: 'hidden',
-      name: '_xsrf',                        // called _xsrf
-      value: token                          // and add the XSRF token value.
-    })
-    $forms.prepend($xsrf)                   // Add the input field to all forms
-      .off('submit.no-xsrf')                // and re-enable submission
-  })
-</script>
-```
-
-[xsrf]: http://www.tornadoweb.org/en/stable/guide/security.html#cross-site-request-forgery-protection
-
-If you use AJAX or any other HTTP method to submit the form, you can submit XSRF tokens in 2 ways:
+Then you can send the XSRF token:
 
 1. As the `_xsrf` argument of the method (either in the URL or the body)
 2. As the `X-Xsrftoken` or `X-Csrftoken` HTTP header
-
-The XSRF cookie is automatically set when a FileHandler [template](#templates)
-accesses `handler.xsrf_token`. You can also set it explicitly, by adding a
-`set_xsrf: true` configuration to `kwargs` like this:
-
-```yaml
-url:
-  name:
-    pattern: ...              # When this page is visited,
-    handler: ...              # no matter what the handler is,
-    kwargs:
-      ...
-      set_xsrf: true        # set the xsrf cookie
-```
 
 You can disable XSRF for a specific handler like this:
 
@@ -343,6 +315,20 @@ app:
 ```
 
 For debugging without XSRF, start Gramex with a `--settings.xsrf_cookies=false` from the command line.
+
+The XSRF cookie is automatically set when a FileHandler [template](#templates)
+accesses `handler.xsrf_token`. You can also set it explicitly, by adding a
+`set_xsrf: true` configuration to `kwargs` like this:
+
+```yaml
+url:
+  name:
+    pattern: ...              # When this page is visited,
+    handler: ...              # no matter what the handler is,
+    kwargs:
+      ...
+      set_xsrf: true        # set the xsrf cookie
+```
 
 ### How XSRF works
 

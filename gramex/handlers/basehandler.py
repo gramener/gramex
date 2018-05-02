@@ -330,8 +330,16 @@ class BaseMixin(object):
             xsrf_cookies: false         # Disables xsrf_cookies
             xsrf_cookies: true          # or anything other than false keeps it enabled
         '''
-        if xsrf_cookies is False:
-            cls.check_xsrf_cookie = cls.noop
+        cls.check_xsrf_cookie = cls.noop if xsrf_cookies is False else cls.xsrf_ajax
+
+    def xsrf_ajax(self):
+        '''
+        TODO: explain things clearly.
+        Same as Tornado's check_xsrf_cookie() -- but is ignored for AJAX requests
+        '''
+        ajax = self.request.headers.get('X-Requested-With', '').lower() == 'xmlhttprequest'
+        if not ajax:
+            return super(BaseHandler, self).check_xsrf_cookie()
 
     def noop(self):
         '''Does nothing. Used when overriding functions or providing a dummy operation'''

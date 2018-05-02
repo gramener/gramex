@@ -66,19 +66,10 @@ $.ajax('data/z/0')  // OUTPUT
 
 ## PUT - write data
 
-You can write JSON data via a PUT request. This requires an [XSRF token](../filehandler/#xsrf).
-
-```js
-var xsrf                    // RUN
-$.ajax('../filehandler/xsrf')
-  .done(function(data) { xsrf = data; })
-```
-
-Now you can write data back:
+You can write JSON data via a PUT request.
 
 ```js
 $.ajax('data/new', {
-  headers: {'X-Xsrftoken': xsrf},
   method: 'PUT',
   data: '{"x": 1}'
 })  // OUTPUT
@@ -94,7 +85,6 @@ Incorrect values raise an error:
 
 ```js
 $.ajax('data/invalid', {
-  headers: {'X-Xsrftoken': xsrf},
   method: 'PUT',
   data: 'xxx'             // Invalid JSON
 })  // OUTPUT
@@ -102,19 +92,16 @@ $.ajax('data/invalid', {
 
 ## POST - add data
 
-You can add new records via a POST request. This requires an [XSRF token](../filehandler/#xsrf). First, let's start with an empty object.
+You can add new records via a POST request. First, let's start with an empty object.
 
 ```js
-$.ajax('data/list', {
-  headers: {'X-Xsrftoken': xsrf},
-  method: 'DELETE'})    // OUTPUT
+$.ajax('data/list', {method: 'DELETE'})    // OUTPUT
 ```
 
 ... and POST a record to it.
 
 ```js
 $.ajax('data/list', {
-  headers: {'X-Xsrftoken': xsrf},
   method: 'POST',
   data: '{"x": 1}'
 })                      // OUTPUT
@@ -139,7 +126,6 @@ $.ajax('data/y')        // OUTPUT
 
 ```js
 $.ajax('data/y', {
-  headers: {'X-Xsrftoken': xsrf},
   method: 'PATCH',
   data: '{"c":3}'
 })                      // OUTPUT
@@ -163,7 +149,6 @@ $.ajax('data/y')        // OUTPUT
 
 ```js
 $.ajax('data/y/a', {
-  headers: {'X-Xsrftoken': xsrf},
   method: 'DELETE'
 })                      // OUTPUT
 ```
@@ -184,7 +169,6 @@ $.ajax('data/new', {
     method: 'POST',
     headers: {
       'X-HTTP-Method-Override': 'PUT',
-      'X-Xsrftoken': xsrf
     },
     data: '1'
 })  // OUTPUT
@@ -194,7 +178,6 @@ You an also use the `?x-http-method-override=` query parameter:
 
 ```js
 $.ajax('data/new?x-http-method-override=PUT', {
-    headers: {'X-Xsrftoken': xsrf},
     method: 'POST',
     data: '1'
 })  // OUTPUT

@@ -121,7 +121,6 @@ key. Here is a sample AJAX request:
 
     :::js
     $.ajax('upload', {
-      headers: xsrf,          // Set XSRF token
       method: 'POST',
       data: '{"delete": filename}'
     })

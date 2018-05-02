@@ -185,8 +185,7 @@ to specify the correct `Content-Type`.
 ## Database edits
 
 You can use the `POST`, `PUT` and `DELETE` methods to add, update or delete rows
-in a database using DataHandler. Use [XSRF cookies](../filehandler/#xsrf) when
-using these methods.
+in a database using DataHandler.
 
 (The examples below use [jQuery.ajax][jquery-ajax] and the [cookie.js][cookie.js] libraries.)
 
@@ -202,9 +201,7 @@ using these methods.
 column as `United Asian Kingdom` and `ID` of `UAK`:
 
     :::js
-    var xsrf = {'X-Xsrftoken': cookie.get('_xsrf')}
     $.ajax('flags', {
-      headers: xsrf,
       method: 'POST',                     // Add a new rows
       traditional: true,                  // Required when using $.ajax
       data: {
@@ -225,7 +222,6 @@ columns:
 
     :::js
     $.ajax('flags', {
-      headers: xsrf,
       method: 'PUT',                      // Update one or more rows
       traditional: true,                  // Required when using $.ajax
       data: {
@@ -241,7 +237,6 @@ Here is the output of the updated row:
 
     :::js
     $.ajax('flags', {
-      headers: xsrf,
       method: 'GET',
       data: {where: 'ID=UAK', format: 'json'}
     })
@@ -254,7 +249,6 @@ deleted. For example, this deletes all rows where the `ID` is `UAK`:
 
     :::js
     $.ajax('flags', {
-      headers: xsrf,
       method: 'DELETE',               // Delete all rows
       data: {
         where: 'ID=UAK',              // where the ID column is UAK
