@@ -1,7 +1,7 @@
 FROM continuumio/anaconda3:latest
 
 LABEL description="Gramener data visualization server"
-LABEL version="1.33"
+LABEL version="1.34"
 LABEL maintainer="s.anand@gramener.com"
 
 # Install nodejs and node libraries
@@ -14,7 +14,7 @@ RUN (curl -sL https://deb.nodesource.com/setup_8.x | bash -) && \
             libxi6 libxtst6 libnss3 libcups2 libxss1 libxrandr2 libgconf2-4 \
             libasound2 libatk1.0-0 libgtk-3-0 && \
 # Install gramex
-    pip install https://code.gramener.com/s.anand/gramex/repository/archive.tar.bz2?ref=master
+    pip install https://code.gramener.com/cto/gramex/repository/archive.tar.bz2?ref=master
 
 # Export port 9988
 EXPOSE 9988

@@ -151,6 +151,47 @@
       "Upgrade": -1
     }
   },
+  "1.34": {
+    "": {
+      "Gramex 1.34 Release Notes": -1
+    },
+    "ajax-xsrf": {
+      "AJAX XSRF": -1
+    },
+    "anton-font": {
+      "Anton font": -1
+    },
+    "config-viewer": {
+      "Config Viewer": -1
+    },
+    "deprecations": {
+      "Deprecations": -1
+    },
+    "developer-updates": {
+      "Developer updates": -1
+    },
+    "formhandler-json": {
+      "FormHandler JSON": -1
+    },
+    "internal-bugfixes": {
+      "Internal bugfixes": -1
+    },
+    "others": {
+      "Others": -1
+    },
+    "server-traceback": {
+      "Server Traceback": -1
+    },
+    "stats": {
+      "Stats": -1
+    },
+    "upgrade": {
+      "Upgrade": -1
+    },
+    "vega-examples": {
+      "Vega Examples": -1
+    }
+  },
   "about": {
     "": {
       "About Gramex": -1
@@ -487,6 +528,9 @@
     },
     "conditions": {
       "Conditions": -1
+    },
+    "config-viewer": {
+      "Config Viewer": -1
     },
     "configuration-access": {
       "Configuration access": -1
@@ -872,6 +916,9 @@
     },
     "formhandler-functions": {
       "FormHandler functions": -1
+    },
+    "formhandler-json-body": {
+      "FormHandler JSON body": -1
     },
     "formhandler-metadata": {
       "FormHandler metadata": -1
