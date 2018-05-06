@@ -397,7 +397,7 @@ class BaseMixin(object):
 
     def debug_exception(self, typ, value, tb):
         super(BaseHandler, self).log_exception(typ, value, tb)
-        import ipdb as pdb
+        import ipdb as pdb              # noqa
         pdb.post_mortem(tb)
 
     def _write_custom_error(self, status_code, **kwargs):

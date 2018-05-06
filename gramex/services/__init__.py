@@ -186,8 +186,8 @@ def app(conf):
                     # If Ctrl-D is pressed, run the Python debugger
                     char = debug.getch()
                     if char == b'\x04':
-                        import ipdb as pdb
-                        pdb.set_trace()
+                        import ipdb as pdb      # noqa
+                        pdb.set_trace()         # noqa
                     # If Ctrl-B is pressed, start the browser
                     if char == b'\x02':
                         browser = webbrowser.get()
