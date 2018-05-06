@@ -16,7 +16,8 @@ def gramexupdate(handler):
     # Log all messages
     try:
         logs = json.loads(handler.request.body, encoding='utf-8')
-        assert isinstance(logs, list)
+        if not isinstance(logs, list):
+            raise ValueError()
     except (ValueError, AssertionError):
         raise HTTPError(BAD_REQUEST, reason='Invalid POST data. Expecting JSON array')
     logger = logging.getLogger('gramexupdate')

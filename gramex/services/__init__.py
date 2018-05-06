@@ -570,7 +570,8 @@ def _get_cache_key(conf, name):
         'argsep': ', ',         # join args using comma
         'u': text_type          # convert to unicode
     }
-    exec(method, context)
+    # The code is constructed entirely by this function. Using exec is safe
+    exec(method, context)       # nosec
     return context['cache_key']
 
 

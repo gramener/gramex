@@ -5,7 +5,6 @@ import six
 import json
 import time
 import uuid
-import random
 import base64
 import string
 import logging
@@ -14,6 +13,7 @@ import tornado.web
 import tornado.gen
 import tornado.escape
 import tornado.httpclient
+from random import choice
 from socket import gethostname
 from cachetools import TTLCache
 from tornado.auth import (GoogleOAuth2Mixin, FacebookGraphMixin, TwitterMixin,
@@ -1000,11 +1000,11 @@ class DBAuth(SimpleAuth):
         #  - fields mentioned in ``signup.columns:``
         #  - email from ``forgot.arg:`` into ``forgot.email_column:``
         #  - password using random 20 char password into ``password.column`` - no encryption
+        pwd = ''.join(choice(self.PASSWORD_CHARS) for c in range(self.PASSWORD_LENGTH))   # nosec
         values = {
             self.user.column: [signup_user],
             # TODO: allow admins (maybe users) to enter their own passwords in case of no email
-            self.password.column: [''.join(random.choice(self.PASSWORD_CHARS)
-                                           for c in range(self.PASSWORD_LENGTH))],
+            self.password.column: [pwd],
         }
         for field, column in self.signup.columns.items():
             values[field] = self.args.get(column, [])

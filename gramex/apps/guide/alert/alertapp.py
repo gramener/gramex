@@ -10,7 +10,7 @@ from orderedattrdict.yamlutils import AttrDictYAMLLoader
 @coroutine
 def sendmail(handler):
     # Create a key: value configuration from the arguments
-    conf = yaml.load(handler.get_arg('conf'), Loader=AttrDictYAMLLoader)
+    conf = yaml.load(handler.get_arg('conf'), Loader=AttrDictYAMLLoader)    # nosec
     if not isinstance(conf, dict):
         raise HTTPError(INTERNAL_SERVER_ERROR, reason='Config should be a dict')
     conf.setdefault('service', 'alert-gmail')

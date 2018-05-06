@@ -382,10 +382,10 @@ def chart(shape, spec, data):
                 for series_point in {'point', 'series'}:
                     # Replacing point with series to change color in legend
                     fillpoint = color_mapping[chart_name].replace('point', series_point)
-                    chart_css(eval(fillpoint).fill, point_css, point_css['color'])
+                    chart_css(eval(fillpoint).fill, point_css, point_css['color'])      # nosec
                     # Will apply on outer line of chart shape line(like stroke in html)
                     _stroke = point_css.get('stroke', point_css['color'])
-                    chart_css(eval(fillpoint).line.fill, point_css, _stroke)
+                    chart_css(eval(fillpoint).line.fill, point_css, _stroke)            # nosec
 
 
 # Custom Charts Functions below(Sankey, Treemap, Calendarmap).

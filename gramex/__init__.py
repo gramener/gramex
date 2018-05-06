@@ -90,7 +90,7 @@ def parse_command_line(commands):
         else:
             value = arg
 
-        value = yaml.load(value)
+        value = yaml.safe_load(value)
         base = args
         keys = group.split('.')
         for key in keys[:-1]:

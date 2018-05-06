@@ -24,7 +24,7 @@ from orderedattrdict.yamlutils import from_yaml         # noqa
 import gramex
 from gramex.config import ChainConfig, PathConfig, variables, app_log
 
-usage = yaml.load('''
+usage = '''
 install: |
     usage:
         gramex install <app> <url> [--target=DIR]
@@ -140,7 +140,8 @@ mail: |
 
     Options:
       --conf <path>                 # Specify a different conf file location
-''', Loader=AttrDictYAMLLoader)
+'''
+usage = yaml.load(usage, Loader=AttrDictYAMLLoader)     # nosec
 
 
 class TryAgainError(Exception):
@@ -316,7 +317,7 @@ def run_command(config):
 # For example, if package.json exists:
 #   then if yarn exists, run yarn install
 #   else if npm exists, run npm install
-setup_paths = yaml.load('''
+setup_paths = '''
 Makefile:
     make: '"{EXE}"'
 setup.ps1:
@@ -332,7 +333,8 @@ package.json:
     npm: '"{EXE}" install'
 bower.json:
     bower: '"{EXE}" --allow-root install'
-''', Loader=AttrDictYAMLLoader)
+'''
+setup_paths = yaml.load(setup_paths, Loader=AttrDictYAMLLoader)     # nosec
 
 
 def run_setup(target):
@@ -402,7 +404,7 @@ def save_user_config(appname, value):
     user_config = AttrDict()
     if user_conf_file.exists():
         with user_conf_file.open(encoding='utf-8') as handle:
-            user_config = yaml.load(handle)
+            user_config = yaml.safe_load(handle)
     if value is None:
         if appname in user_config:
             del user_config[appname]

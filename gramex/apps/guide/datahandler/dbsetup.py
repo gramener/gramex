@@ -13,18 +13,16 @@ def flags():
     """
     fetch flags data into database.sqlite3/flags
     """
-    url = os.path.join(folder, 'flags.csv')
     try:
         flags = pd.read_sql_table('flags', engine)
-        assert len(flags) > 1
-        app_log.info('database.sqlite3 has flags table with data')
-        return
+        if len(flags) >= 1:
+            return
     except DatabaseError:
-        app_log.info('database.sqlite3 corrupted. Removing it')
-        os.unlink(filepath)
-    except Exception:
         pass
-
+    if os.path.exists(filepath):
+        app_log.warning('database.sqlite3 corrupted. Removing it')
+        os.unlink(filepath)
+    url = os.path.join(folder, 'flags.csv')
     flags = pd.read_csv(url, encoding='cp1252')
     flags.to_sql('flags', engine, index=False)
     app_log.info('database.sqlite3 created with flags table')

@@ -278,8 +278,9 @@ class BaseMixin(object):
         for error_code, error_config in error.items():
             try:
                 error_code = int(error_code)
-                assert 100 <= error_code <= 1000
-            except (ValueError, AssertionError):
+                if error_code < 100 or error_code > 1000:
+                    raise ValueError()
+            except ValueError:
                 app_log.error('url.%s.error code %s is not a number (100 - 1000)',
                               cls.name, error_code)
                 continue
@@ -1217,5 +1218,6 @@ def build_log_info(keys, *vars):
     code = compile('def fn(handler, %s):\n\treturn {%s}' % (', '.join(vars), ' '.join(vals)),
                    filename='log', mode='exec')
     context = {'os': os, 'time': time, 'datetime': datetime, 'conf': conf, 'AttrDict': AttrDict}
-    exec(code, context)
+    # The code is constructed entirely by this function. Using exec is safe
+    exec(code, context)         # nosec
     return context['fn']

@@ -238,7 +238,7 @@ _valid_key_chars = string.ascii_letters + string.digits
 
 def random_string(size, chars=_valid_key_chars):
     '''Return random string of length size using chars (which defaults to alphanumeric)'''
-    return ''.join(choice(chars) for index in range(size))
+    return ''.join(choice(chars) for index in range(size))   # nosec - ok for non-cryptographic use
 
 
 RANDOM_KEY = r'$*'
@@ -310,7 +310,7 @@ def _yaml_open(path, default=AttrDict(), **kwargs):
     app_log.debug('Loading config: %s', path)
     with path.open(encoding='utf-8') as handle:
         try:
-            result = yaml.load(handle, Loader=ConfigYAMLLoader)
+            result = yaml.load(handle, Loader=ConfigYAMLLoader)     # nosec
         except Exception:
             app_log.exception('Config error: %s', path)
             return default
@@ -358,7 +358,7 @@ def _yaml_open(path, default=AttrDict(), **kwargs):
             # Evaluate conditional
             base, expr = key.split(' if ', 2)
             try:
-                condition = eval(expr, globals(), frozen_vars)
+                condition = eval(expr, globals(), frozen_vars)  # nosec - any Python expr is OK
             except Exception:
                 condition = False
                 app_log.exception('Failed condition evaluation: %s', key)

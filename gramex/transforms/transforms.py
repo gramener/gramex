@@ -228,7 +228,7 @@ def build_transform(conf, vars=None, filename='transform', cache=False, iter=Tru
         **{key: getattr(gramex.transforms, key) for key in gramex.transforms.__all__}
     )
     code = compile(''.join(body), filename=filename, mode='exec')
-    exec(code, context)
+    exec(code, context)         # nosec - OK to run arbitrary Python code in YAML
 
     # Return the transformed function
     function = context['transform']
@@ -267,7 +267,7 @@ def condition(*args):
         pairs = zip(args[0::2], args[1::2])
     for cond, val in pairs:
         if isinstance(cond, six.string_types):
-            if eval(Template(cond).substitute(var_defaults)):
+            if eval(Template(cond).substitute(var_defaults)):    # nosec - any Python expr is OK
                 return val
         elif bool(cond):
             return val
@@ -335,7 +335,7 @@ def flattener(fields, default=None, filename='flatten'):
     body.append('\treturn r')
     code = compile(''.join(body), filename='flattener:%s' % filename, mode='exec')
     context = {'AttrDict': AttrDict, 'default': default}
-    eval(code, context)
+    eval(code, context)     # nosec - code constructed entirely in this function
     return context[filename]
 
 
