@@ -17,8 +17,7 @@ graft gramex/apps
 # But on Linux, when running pip install from the tarball, we must allow
 # puppeteer and other apps node_modules. So disabling the above line.
 
-# Include requirement dependencies
-include requirements.txt
+# Include dependencies
 include .gitignore
 
 # Include core docs

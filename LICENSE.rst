@@ -111,7 +111,7 @@ Here are the licenses of other dependencies:
 .. _argh: https://pypi.python.org/pypi/argh
 .. _pathtools: https://pypi.python.org/pypi/pathtools
 .. _python pptx: https://github.com/scanny/python-pptx/blob/master/LICENSE
-.. _requirements: https://code.gramener.com/s.anand/gramex/tree/master/requirements.txt
+.. _requirements: https://code.gramener.com/s.anand/gramex/tree/master/setup.py
 
 Applications built on Gramex may use other libraries. Here are some common
 libraries and their licenses.
