@@ -25,6 +25,7 @@ mime:
     .py:        text/plain
     .h5:        application/x-hdf5
     .hdf5:      application/x-hdf5
+    .pkl:       application/octet-stream
 
 # Configure the thread pool that's shared across Gramex to run parallel threads.
 threadpool:

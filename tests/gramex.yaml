@@ -2387,6 +2387,12 @@ url:
       headers:
         Content-Type: application/json
 
+  model/iris:
+    pattern: /model/iris
+    handler: ModelHandler
+    kwargs:
+      path: $YAMLPATH/gen.iris.pkl
+
 sms:
   amazonsns:
     type: amazonsns
