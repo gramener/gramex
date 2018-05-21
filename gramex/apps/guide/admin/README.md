@@ -29,9 +29,12 @@ Use `ADMIN_*` variables to configure your app.
 - `ADMIN_LOOKUP`: See [lookup attributes]../auth/#lookup-attributes):
   - `url`: the DB or file that has user data
   - `id`: column that has the user ID
-  - `role`: optional column that holds the role information
+- `ADMIN_KWARGS`: 
+  - `hide`: columns in data source to exclude (like password and other sensitive data)
 - `ADMIN_USER`: optional `string` or `list` of user IDs that can view this admin page
 - `ADMIN_ROLE`: optional `string` or `list` of roles. If the user's `role` column is in this list, the user can view this admin page
+- `LOGIN_URL`: Login url for admin page. Incase of DBAuth, this will be same as pattern for DBAuth handler
+- `LOGOUT_URL`: The url pattern provided for `LogoutHandler`
 
 Sample use of `role`:
 
@@ -42,10 +45,11 @@ import:
     YAMLURL: $YAMLURL/admin/
     ADMIN_LOOKUP:
       url: $YAMLURL/lookup.xlsx
-      id: user                # user column in Excel sheet has the user name
-      role: role              # role column in Excel sheet has the user role
-    ADMIN_USER: ['alpha']     # Always allow user `alpha`
-    ADMIN_ROLE: ['admin']     # Also allow anyone with role as admin
+      id: user                   # user column in Excel sheet has the user name
+    ADMIN_USER: ['alpha']        # Always allow user `alpha`
+    ADMIN_ROLE: ['admin']        # Also allow anyone with role as admin
+    LOGIN_URL: /admin            # Url to show login page for admin page 
+    LOGOUT_URL: /logout          # Url to logout
 ```
 
 By default, admin site can be accessed by any user when using `127.0.0.1`.

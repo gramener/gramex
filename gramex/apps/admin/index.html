@@ -16,6 +16,7 @@
   <!-- only admin can add or modify users -->
   <!-- otherwise show the same form without edit options -->
   {% import controlpanel as app %}
+  {% from gramex import variables %}
   {% from collections import Counter %}
   {% set last_login = app.last_login() %}
   <nav class="navbar navbar-dark navbar-expand-xl bg-primary px-3 py-1 px-xl-0 py-xl-0">
@@ -35,7 +36,7 @@
               <span class="caret"></span>
             </a>
             <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdownMenuLink">
-              <a class="dropdown-item" href="/logout">Logout</a>
+              <a class="dropdown-item" href="{{ variables.LOGOUT_URL }}">Logout</a>
             </div>
           </li>
         </ul>
@@ -43,30 +44,27 @@
     </div>
   </nav>
   <div class="container-fluid">
-      {% if last_login != '' %}
-        <div class="row">
-          <div class="col-1">Last login:</div>
-          <div class="col-3">
-            <strong>{{ last_login }}</strong>
-          </div>
-        </div>
-      {% end %}
     <div class="page-alert"></div>
-    <div class="formhandler" data-src="users/"></div>
+
+    <div class="formhandler mt-2"></div>
+    {% if last_login != '' %}
+      <div class="row">
+        <div class="col-1">Last login:</div>
+        <div class="col-3">
+          <strong>{{ last_login }}</strong>
+        </div>
+      </div>
+    {% end %}
   </div>
 
-  <script src="ui/jquery/dist/jquery.min.js"></script>
-  <script src="ui/popper.js/dist/umd/popper.min.js"></script>
-  <script src="ui/bootstrap/dist/js/bootstrap.min.js"></script>
-  <script src="ui/moment/min/moment-with-locales.min.js"></script>
-  <script src="ui/daterangepicker/daterangepicker.js"></script>
-  <script src="ui/bootstrap-select/dist/js/bootstrap-select.min.js"></script>
-  <script src="ui/lodash/lodash.min.js"></script>
-  <script src="ui/g1/dist/g1.js"></script>
-  <script src="ui/d3/build/d3.min.js"></script>
+  <script src="/ui/jquery/dist/jquery.min.js"></script>
+  <script src="/ui/popper.js/dist/umd/popper.min.js"></script>
+  <script src="/ui/bootstrap/dist/js/bootstrap.min.js"></script>
+  <script src="/ui/lodash/lodash.min.js"></script>
+  <script src="/ui/g1/dist/g1.js"></script>
   <script>
-    /* exported config_id, active_users */
-    var config_id = {% raw app.get_config_id(handler) %}
+    /* exported config, active_users */
+    var config = {% raw app.get_config_id(handler) %}
     var active_users = {% raw app.active_users() %}
   </script>
 

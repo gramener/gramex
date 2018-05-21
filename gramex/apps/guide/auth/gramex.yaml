@@ -197,7 +197,7 @@ url:
                 minutes_to_expiry: 15             # Minutes after which the link will expire
                 email_column: email               # The database column that contains the email ID
                 email_subject: Gramex forgot password       # Subject of the email
-                email_as: "S Anand <root.node@gmail.com>"   # Emails will be sent as if from this ID
+                email_as: "Gramex Guide <gramex.guide@gmail.com>"   # Emails will be sent as if from this ID
                 email_text: |
                     This is an email from Gramex guide.
                     You clicked on the forgot password like for user {user}.

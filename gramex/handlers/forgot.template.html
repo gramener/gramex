@@ -61,7 +61,7 @@
       {% if not error %}
         <p>We sent a reset password email to <code>{{ handler.get_arg(handler.forgot.arg, None) or handler.get_arg(handler.user.arg, None) }}</code></p>
       {% else %}
-        <p>Back to the <a href="?{{ kwargs.forgot.key }}">forgot password page</a>.</p>
+        <p>Back to the <a href="?{{ handler.kwargs.forgot.key }}">forgot password page</a>.</p>
       {% end %}
     {% end %}
 
