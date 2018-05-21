@@ -3,7 +3,7 @@
 Gramex license
 ==============
 
-Copyright (c) 2015, Gramener. All rights reserved.
+Copyright (c) 2018, Gramener. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
@@ -27,6 +27,15 @@ OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
 THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
 IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+Gramex is not free for commercial use.
+To discuss commercial use of Gramex, reach out to contact@gramener.com.
+
+Gramex is offered under a non-commercial license for
+
+- Educational & research institutions
+- Students
+- Individuals using for personal use, testing and demonstration
 
 Dependencies
 ------------
@@ -79,6 +88,32 @@ Here are the licenses of other dependencies:
 - `ldap3`_: `LGPL`_ license
 - `argh`_: `LGPL`_ license
 - `pathtools`_: `MIT`_ license
+- `body-parser`_: `MIT`_ license
+- `boto3`_: `Apache`_ license
+- `cookie`_: `MIT`_ license
+- `clipboard`_: `MIT`_ license
+- `datarangepicker`_: `MIT`_ license
+- `express`_: `MIT`_ license
+- `fast-image-size`_: `MIT`_ license
+- `font-awesome`_: `MIT`_ license
+- `g1`_: `Unlicensed`_ license
+- `leaflet`_: `BSD`_ license
+- `minimist`_: `MIT`_ license
+- `moment`_: `MIT`_ license
+- `node-sass`_: `MIT`_ license
+- `noty`_: `MIT`_ license
+- `numeral`_: `MIT`_ license
+- `officegen`_: `MIT`_ license
+- `popper`_: `MIT`_ license
+- `prismjs`_: `MIT`_ license
+- `puppeteer`_: `Apache`_ license
+- `select2`_: `MIT`_ license
+- `sqlitedict`_: `Apache`_ license
+- `tether-sheperd`_: `MIT`_ license
+- `tmp`_: `MIT`_ license
+- `topojson`_: `BSD`_ license
+- `url-search-params`_: `MIT`_ license
+- `vue`_: `MIT`_ license
 
 .. _Python: https://www.python.org/
 .. _Anaconda: https://docs.anaconda.com/anaconda/
@@ -112,6 +147,33 @@ Here are the licenses of other dependencies:
 .. _pathtools: https://pypi.python.org/pypi/pathtools
 .. _python pptx: https://github.com/scanny/python-pptx/blob/master/LICENSE
 .. _requirements: https://code.gramener.com/s.anand/gramex/tree/master/setup.py
+.. _body-parser: https://www.npmjs.com/package/body-parser
+.. _boto3: https://pypi.org/project/boto3/
+.. _cookie: https://www.npmjs.com/package/cookie
+.. _clipboard: https://www.npmjs.com/package/clipboard
+.. _datarangepicker: https://www.npmjs.com/package/daterangepicker
+.. _express: https://www.npmjs.com/package/express
+.. _fast-image-size: https://www.npmjs.com/package/fast-image-size
+.. _font-awesome: https://www.npmjs.com/package/font-awesome
+.. _g1: https://www.npmjs.com/package/g1
+.. _leaflet: https://www.npmjs.com/package/leaflet
+.. _minimist: https://www.npmjs.com/package/minimist
+.. _moment: https://www.npmjs.com/package/moment
+.. _node-sass: https://www.npmjs.com/package/node-sass
+.. _noty: https://www.npmjs.com/package/noty
+.. _numeral: https://www.npmjs.com/package/numeral
+.. _officegen: https://www.npmjs.com/package/officegen
+.. _popper: https://www.npmjs.com/package/popper.js
+.. _prismjs: https://www.npmjs.com/package/prismjs
+.. _puppeteer: https://www.npmjs.com/package/puppeteer
+.. _select2: https://www.npmjs.com/package/select2
+.. _sqlitedict: https://pypi.org/project/sqlitedict/
+.. _tether-sheperd: https://www.npmjs.com/package/tether-shepherd
+.. _tmp: https://www.npmjs.com/package/tmp
+.. _topojson: https://www.npmjs.com/package/topojson
+.. _url-search-params: https://www.npmjs.com/package/url-search-params
+.. _vue: https://www.npmjs.com/package/vue
+
 
 Applications built on Gramex may use other libraries. Here are some common
 libraries and their licenses.
