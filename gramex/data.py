@@ -226,13 +226,11 @@ def delete(url, meta={}, args=None, engine=None, table=None, ext=None, id=None,
     if engine == 'dataframe':
         data_filtered = _filter_frame(url, meta=meta, controls=controls,
                                       args=args, source='delete', id=id)
-        url.drop(data_filtered.index, inplace=True)
         return len(data_filtered)
     elif engine == 'file':
         data = gramex.cache.open(url, ext, transform=transform, **kwargs)
         data_filtered = _filter_frame(data, meta=meta, controls=controls,
                                       args=args, source='delete', id=id)
-        data.drop(data_filtered.index, inplace=True)
         gramex.cache.save(data, url, ext, index=False, **kwargs)
         return len(data_filtered)
     elif engine == 'sqlalchemy':
@@ -267,13 +265,11 @@ def update(url, meta={}, args=None, engine=None, table=None, ext=None, id=None,
     if engine == 'dataframe':
         data_updated = _filter_frame(
             url, meta=meta, controls=controls, args=args, source='update', id=id)
-        url.loc[data_updated.index] = data_updated
         return len(data_updated)
     elif engine == 'file':
         data = gramex.cache.open(url, ext, transform=transform, **kwargs)
         data_updated = _filter_frame(
             data, meta=meta, controls=controls, args=args, source='update', id=id)
-        data.loc[data_updated.index] = data_updated
         gramex.cache.save(data, url, ext, index=False, **kwargs)
         return len(data_updated)
     elif engine == 'sqlalchemy':
@@ -458,9 +454,16 @@ def _filter_select_columns(col_filter, cols, meta):
 
 def _filter_frame(data, meta, controls, args, source='select', id=[]):
     '''
-    Returns a DataFrame in which the source DataFrame ``data`` is filtered using
-    args. Additional controls like _sort, etc are in ``controls``. Metadata is
-    stored in ``meta``.
+    If ``source`` is ``'select'``, returns a DataFrame in which the DataFrame
+    ``data`` is filtered using ``args``. Additional controls like _sort, etc are
+    in ``controls``. Metadata is stored in ``meta``.
+
+    If ``source`` is ``'update'``, filters using ``args`` but only for columns
+    mentioned in ``id``. Resulting DataFrame is updated with remaining ``args``.
+    Returns the updated rows.
+
+    If ``source`` is ``'delete'``, filters using ``args`` but only for columns
+    mentioned in ``id``. Deletes these rows. Returns the deleted rows.
 
     :arg data: dataframe
     :arg meta: dictionary of `filters`, `ignored`, `sort`, `offset`, `limit` params from kwargs
@@ -468,6 +471,7 @@ def _filter_frame(data, meta, controls, args, source='select', id=[]):
     :arg source: accepted values - `update`, `delete` for PUT, DELETE methods in FormHandler
     :arg id: list of id specific to data using which values can be updated
     '''
+    original_data = data
     filters = meta['filters']
     cols_for_update = {}
     for key, vals in args.items():
@@ -516,10 +520,11 @@ def _filter_frame(data, meta, controls, args, source='select', id=[]):
     meta['count'] = len(data)
 
     if source == 'delete':
+        original_data.drop(data.index, inplace=True)
         return data
     elif source == 'update':
         for key, val in cols_for_update.items():
-            data[key] = val
+            original_data.loc[data.index, key] = val
         return data
     else:
         # Apply controls

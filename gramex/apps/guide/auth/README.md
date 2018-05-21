@@ -387,7 +387,7 @@ This is the minimal configuration that lets you log in from an Excel file:
 
 ```yaml
 url:
-    auth/db:
+  auth/db:
     pattern: /db                          # Map this URL
     handler: DBAuth                       # to the DBAuth handler
     kwargs:

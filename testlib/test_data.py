@@ -277,6 +277,18 @@ class TestFilter(unittest.TestCase):
             dbutils.sqlite_drop_db('test_filter.db')
 
 
+class TestUpdate(unittest.TestCase):
+    pass
+
+
+class TestDelete(unittest.TestCase):
+    pass
+
+
+class TestInsert(unittest.TestCase):
+    pass
+
+
 class TestDownload(unittest.TestCase):
     @classmethod
     def setupClass(cls):
