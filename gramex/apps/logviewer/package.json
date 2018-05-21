@@ -5,6 +5,6 @@
   "main": "index.js",
   "license": "ISC",
   "dependencies": {
-    "vegam": "^0.0.2"
+    "vegam": "^0.0.3"
   }
 }
