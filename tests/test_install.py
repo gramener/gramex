@@ -1,7 +1,8 @@
 import os
-import pip
+import sys
 import requests
 import unittest
+import subprocess
 from pathlib import Path
 from shutilwhich import which
 from orderedattrdict import AttrDict
@@ -34,6 +35,7 @@ class TestInstall(unittest.TestCase):
     zip_url = urljoin(server.base_url, 'install-test.zip')
     zip_file = os.path.join(folder, 'install-test.zip')
     install_path = os.path.join(folder, 'dir', 'install')
+    req_path = os.path.join(install_path, 'requirements.txt')
 
     @staticmethod
     def appdir(appname):
@@ -156,7 +158,7 @@ class TestInstall(unittest.TestCase):
         self.check_uninstall('git-url')
 
     def test_setup(self):
-        pip.main(['uninstall', '-y', '-r', os.path.join(self.install_path, 'requirements.txt')])
+        subprocess.call([sys.executable, '-m', 'pip', 'uninstall', '-y', '-r', self.req_path])
         install(['setup'], AttrDict(url=self.install_path))
 
         result = set()
@@ -194,4 +196,4 @@ class TestInstall(unittest.TestCase):
 
     @classmethod
     def tearDown(cls):
-        pip.main(['uninstall', '-y', '-r', os.path.join(cls.install_path, 'requirements.txt')])
+        subprocess.call([sys.executable, '-m', 'pip', 'uninstall', '-y', '-r', cls.req_path])
