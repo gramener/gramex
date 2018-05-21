@@ -5,7 +5,7 @@ from nose.tools import eq_, ok_
 from . import folder, TestGramex
 
 
-class TestFileHandler(TestGramex):
+class TestModelHandler(TestGramex):
     @classmethod
     def setUpClass(cls):
         data = pd.read_csv(os.path.join(folder, '..', 'testlib', 'iris.csv'), encoding='utf-8')
