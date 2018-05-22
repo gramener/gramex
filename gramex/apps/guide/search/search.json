@@ -192,6 +192,35 @@
       "Vega Examples": -1
     }
   },
+  "1.35": {
+    "": {
+      "Gramex 1.35 Release Notes": -1
+    },
+    "admin-module": {
+      "Admin module": -1
+    },
+    "formhandler-tutorial": {
+      "FormHandler tutorial": -1
+    },
+    "modelhandler": {
+      "ModelHandler": -1
+    },
+    "other-enhancements": {
+      "Other enhancements": -1
+    },
+    "others": {
+      "Others": -1
+    },
+    "pip10": {
+      "pip10": -1
+    },
+    "stats": {
+      "Stats": -1
+    },
+    "upgrade": {
+      "Upgrade": -1
+    }
+  },
   "about": {
     "": {
       "About Gramex": -1
@@ -1099,6 +1128,32 @@
       "Using Variables": -1
     }
   },
+  "modelhandler": {
+    "": {
+      "ModelHandler provides ML APIs": -1
+    },
+    "classifier": {
+      "Classifier": -1
+    },
+    "construct-the-model": {
+      "Construct the model": -1
+    },
+    "expose-model": {
+      "Expose model": -1
+    },
+    "once-the-model-is-trained-save-it": {
+      "Once the model is trained, save it": -1
+    },
+    "read-the-data-into-a-pandas-dataframe": {
+      "Read the data into a Pandas DataFrame": -1
+    },
+    "result-should-be-setosa": {
+      "result should be ['setosa']": -1
+    },
+    "train-model": {
+      "Train model": -1
+    }
+  },
   "pptxhandler": {
     "": {
       "PPTXHandler generates PPTX": -1
@@ -1396,6 +1451,35 @@
     },
     "reuse-code": {
       "Reuse code": -1
+    }
+  },
+  "tutorials": {
+    "": {
+      "FormHandler tutorial": -1
+    },
+    "from-file": {
+      "From file": -1
+    },
+    "modify-the-result": {
+      "Modify the result": -1
+    },
+    "query-option": {
+      "Query option": -1
+    },
+    "queryfile-option": {
+      "Queryfile option": -1
+    },
+    "read-data-from-different-sources": {
+      "Read data from different Sources": -1
+    },
+    "reading-from-databases": {
+      "Reading from Databases": -1
+    },
+    "safe-practices-with-databases": {
+      "Safe practices with Databases": -1
+    },
+    "usecase-retail-sales-tracker": {
+      "Usecase: Retail sales tracker": -1
     }
   },
   "twitterresthandler": {

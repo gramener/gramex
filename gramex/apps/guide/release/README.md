@@ -5,6 +5,7 @@ prefix: Release
 
 Gramex is released *twice a month* -- on the 15<sup>th</sup> and the last day.
 
+- [v1.35.0](1.35/): 21 May 2018
 - [v1.34.0](1.34/): 02 May 2018
 - [v1.33.0](1.33/): 15 Apr 2018
 - [v1.32.0](1.32/): 01 Apr 2018

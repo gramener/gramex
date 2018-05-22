@@ -1,7 +1,7 @@
 FROM continuumio/anaconda3:latest
 
 LABEL description="Gramener data visualization server"
-LABEL version="1.34"
+LABEL version="1.35"
 LABEL maintainer="s.anand@gramener.com"
 
 # Install nodejs and node libraries
