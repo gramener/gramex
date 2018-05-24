@@ -32,27 +32,27 @@ class Classifier(object):
 
         # If model does not exist, create model
         if not hasattr(self, 'model'):
-            # Split it into input (X) and output (y)
-            X, y = data[self.input], data[self.output]
+            # Split it into input (x) and output (y)
+            x, y = data[self.input], data[self.output]
 
             # Transform the data
             self.scaler = StandardScaler()
-            self.scaler.fit(X)
+            self.scaler.fit(x)
 
             # Train the classifier. Partially, if possible
             clf = locate(model_class)(**model_kwargs)
             if labels is not None and hasattr(clf, 'partial_fit'):
-                clf.partial_fit(self.scaler.transform(X), y, classes=labels)
+                clf.partial_fit(self.scaler.transform(x), y, classes=labels)
             else:
-                clf.fit(self.scaler.transform(X), y)
+                clf.fit(self.scaler.transform(x), y)
             self.model = clf
 
         # Extend the model
         else:
-            X, y = data[self.input], data[self.output]
+            x, y = data[self.input], data[self.output]
             classes = set(self.model.classes_)
             classes |= set(y)
-            self.model.partial_fit(self.scaler.transform(X), y)
+            self.model.partial_fit(self.scaler.transform(x), y)
 
     def predict(self, data):
         '''
