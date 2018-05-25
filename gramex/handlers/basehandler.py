@@ -302,7 +302,8 @@ class BaseMixin(object):
 
                 def get_error_fn(error_config):
                     def error(*args, **kwargs):
-                        tmpl = gramex.cache.open(error_config['path'], 'template', autoescape=None)
+                        tmpl = gramex.cache.open(error_config['path'], 'template',
+                                                 **template_kwargs)
                         return tmpl.generate(*args, **kwargs)
                     return error
 

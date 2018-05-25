@@ -1,7 +1,11 @@
+from __future__ import unicode_literals
 import os
 import requests
 from . import server
 from . import TestGramex
+from nose.tools import eq_, ok_
+from six.moves.urllib_request import urlopen
+from six.moves.urllib_error import HTTPError
 from gramex.http import OK, NOT_FOUND, INTERNAL_SERVER_ERROR, FORBIDDEN
 
 
@@ -38,27 +42,27 @@ class TestXSRF(TestGramex):
 
     def test_xsrf(self):
         r = self.check('/path/norm')
-        self.assertFalse('Set-Cookie' in r.headers)
+        ok_('Set-Cookie' not in r.headers)
 
         # First request sets xsrf cookie
         session = requests.Session()
         r = session.get(server.base_url + '/xsrf', timeout=10)
-        self.assertTrue('Set-Cookie' in r.headers)
-        self.assertTrue('_xsrf' in r.headers['Set-Cookie'])
+        ok_('Set-Cookie' in r.headers)
+        ok_('_xsrf' in r.headers['Set-Cookie'])
 
         # Next request does not set xsrf cookie, because it already exists
         r = session.get(server.base_url + '/xsrf', timeout=10)
-        self.assertFalse('Set-Cookie' in r.headers)
+        ok_('Set-Cookie' not in r.headers)
 
     def test_xsrf_false(self):
         # When xsrf_cookies is set to False, POST works
         r = requests.post(server.base_url + '/xsrf/no')
-        self.assertEqual(r.status_code, OK)
+        eq_(r.status_code, OK)
 
     def test_xsrf_true(self):
         # When xsrf_cookies is set to True, POST fails without _xsrf
         r = requests.post(server.base_url + '/xsrf/yes')
-        self.assertEqual(r.status_code, FORBIDDEN)
+        eq_(r.status_code, FORBIDDEN)
 
     def test_ajax(self):
         # Requests sent with X-Requested-With should not need an XSRF cookie
@@ -66,19 +70,43 @@ class TestXSRF(TestGramex):
             # Mangle case below to ensure Gramex handles it case-insensitively
             'X-Requested-With': 'xMlHtTpReQuESt',
         })
-        self.assertEqual(r.status_code, OK)
+        eq_(r.status_code, OK)
 
 
 class TestErrorHandling(TestGramex):
     # Test BaseHandler error: setting
-    def test_error(self):
-        for code, url in ((NOT_FOUND, '/error/404-template-na'),
-                          (INTERNAL_SERVER_ERROR, '/error/500-function')):
-            r = self.check(url, code=code)
-            self.assertEqual(r.headers['Content-Type'], 'application/json')
-            result = r.json()
-            self.assertEqual(result['status_code'], code)
-            self.assertTrue(result['handler.request.uri'].endswith(url))
+    def test_404_escaped(self):
+        # Check that templates are HTML escaped by default
+        try:
+            # Requests converts <script> into %3Cscript%3E before sending URL.
+            # So use urlopen instead of requests.get
+            urlopen(server.base_url + '/error/404-escaped-<script>')
+        except HTTPError as err:
+            eq_(err.code, NOT_FOUND)
+            text = err.read().decode('utf-8')
+            ok_(' &quot;/error/404-escaped-&lt;script&gt;&quot;' in text)
+            ok_('\n' in text)   # error-404.json template has newlines
+        else:
+            ok_(False, '/error/404-escaped-<script> should raise a 404')
+
+    def test_404_unescaped(self):
+        # autoescape can be over-ridden
+        try:
+            urlopen(server.base_url + '/error/404-template-<script>')
+        except HTTPError as err:
+            eq_(err.code, NOT_FOUND)
+            text = err.read().decode('utf-8')
+            ok_(' "/error/404-template-<script>' in text)
+            ok_('\n' not in text)   # since whitespace=oneline
+        else:
+            ok_(False, '/error/404-template-<script> should raise a 404')
+
+    def test_500(self):
+        r = self.check('/error/500-function', code=INTERNAL_SERVER_ERROR)
+        eq_(r.headers['Content-Type'], 'application/json')
+        result = r.json()
+        eq_(result['status_code'], INTERNAL_SERVER_ERROR)
+        ok_(result['handler.request.uri'].endswith('/error/500-function'))
 
 
 class TestMime(TestGramex):
@@ -105,7 +133,7 @@ class TestMime(TestGramex):
     def test_mime(self):
         for ext, mime in self.mime_map.items():
             r = self.check('/dir/gen' + ext)
-            self.assertEqual(r.headers['Content-Type'], mime)
+            eq_(r.headers['Content-Type'], mime)
 
     def tearDown(self):
         for file in self.files:

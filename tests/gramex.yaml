@@ -2326,7 +2326,15 @@ url:
         404:
           path: $YAMLPATH/error-404.json
           autoescape: false
-          whitespace: single
+          whitespace: oneline
+  error/404-escaped:
+    pattern: /error/404-escaped(.*)
+    handler: FileHandler
+    kwargs:
+      path: $YAMLPATH/dir/
+      error:
+        404:
+          path: $YAMLPATH/error-404.json
   error/500-function:
     pattern: /error/500-function
     handler: FunctionHandler

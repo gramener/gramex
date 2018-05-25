@@ -1,2 +1,3 @@
 {% import utils %}
+
 {{ utils.handle_error(status_code, kwargs, handler) }}
