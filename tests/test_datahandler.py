@@ -38,10 +38,12 @@ class DataHandlerTestMixin(object):
         def eq(a, b):
             return pdt.assert_frame_equal(a.reset_index(drop=True), b)
 
-        def eqdt(a, b):
-            return pdt.assert_frame_equal(a.reset_index(drop=True).sort_index(axis=1),
-                                          b.sort_index(axis=1),
-                                          check_dtype=False)
+        def eqdt(a, b, sort_col='category'):
+            return pdt.assert_frame_equal(
+                a.sort_values(sort_col).reset_index(drop=True),
+                b.sort_values(sort_col).reset_index(drop=True),
+                check_dtype=False,  # dtype can be different
+            )
 
         # select, where, sort, offset, limit
         base = server.base_url + '/datastore/' + self.database + '/'
