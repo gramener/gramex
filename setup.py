@@ -16,39 +16,40 @@ install_requires = [
     'setuptools >= 16.0',       # 16.0 has good error message support
 
     # General utilities
-    'six',                       # Python 3 compatibility
-    'pathlib',                   # Manipulate paths. Part of Python 3.3+
-    'orderedattrdict >= 1.4.3',  # OrderedDict with attr access for configs
-    'watchdog >= 0.8',           # Monitor file changes
-    'tornado >= 4.3',            # Web server
-    'pyyaml >= 3.10',            # Parse YAML files for config
+    'six',                          # Python 3 compatibility
+    'pathlib',                      # Manipulate paths. Part of Python 3.3+
+    'orderedattrdict >= 1.4.3',     # OrderedDict with attr access for configs
+    'watchdog >= 0.8',              # Monitor file changes
+    'tornado >= 4.3',               # Web server
+    'pyyaml >= 3.10',               # Parse YAML files for config
     # Used by colorlog. Anaconda has colorama, but 0.3.7 fixes an exit-reset-code bug
     'colorama >= 0.3.7',
-    'colorlog >= 2.7.0',         # Coloured log files
-    'shutilwhich >= 1.1.0',      # shutil.which backport
-    'passlib >= 1.6.5',          # password storage (e.g. in handlers.DBAuth)
+    'colorlog >= 2.7.0',            # Coloured log files
+    'shutilwhich >= 1.1.0',         # shutil.which backport
+    'passlib >= 1.6.5',             # password storage (e.g. in handlers.DBAuth)
 
     # Handler / service specific
-    'crontab >= 0.21',           # services.schedule to parse crontab entries
-    'xmljson >= 0.1.5',          # transforms.badgerfish to convert objects to/from XML
-    'cachetools >= 1.1.6',       # services.cache for memory cache
-    'diskcache >= 2.8.3',        # services.cache for disk cache
-    'oauthlib >= 1.1.2',         # OAuth request-signing
-    'python-pptx >= 0.6.6',      # pptgen
-    'sqlitedict >= 1.5.0',       # SQLiteStore
-    'boto3 >= 1.5',              # Amazon services
+    'crontab >= 0.21',              # services.schedule to parse crontab entries
+    'xmljson >= 0.1.5',             # transforms.badgerfish to convert objects to/from XML
+    'cachetools >= 1.1.6',          # services.cache for memory cache
+    'diskcache >= 2.8.3',           # services.cache for disk cache
+    'oauthlib >= 1.1.2',            # OAuth request-signing
+    'python-pptx >= 0.6.6',         # pptgen
+    'sqlitedict >= 1.5.0',          # SQLiteStore
+    'redis >= 2.10.0',              # RedisStore
+    'boto3 >= 1.5',                 # Amazon services
 
     # Optional dependencies (batteries included principle)
-    'markdown',                  # For Markdown transfroms
-    'pymysql',                   # For MySQL connections
-    'ipdb',                      # For debugging
-    'textblob',                  # For Gramex Guide TwitterRESTHandler example
-    'psycopg2 >= 2.7.1',         # For PostgreSQL connections
-    'ldap3 >= 2.2.4',            # For LDAP connections
+    'markdown',                     # For Markdown transfroms
+    'pymysql',                      # For MySQL connections
+    'ipdb',                         # For debugging
+    'textblob',                     # For Gramex Guide TwitterRESTHandler example
+    'psycopg2 >= 2.7.1',            # For PostgreSQL connections
+    'ldap3 >= 2.2.4',               # For LDAP connections
 
     # Derived dependencies (not used by Gramex directly)
-    'argh >= 0.24.1',            # Required by watchdog
-    'pathtools >= 0.1.1',        # Required by watchdog
+    'argh >= 0.24.1',               # Required by watchdog
+    'pathtools >= 0.1.1',           # Required by watchdog
 ]
 
 if sys.version_info[0] < 3:

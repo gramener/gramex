@@ -1,6 +1,7 @@
 variables:
   MYSQL_SERVER: {default: localhost}
   POSTGRES_SERVER: {default: localhost}
+  REDIS_SERVER: {default: localhost}
   STRING: abc
   NUMBER: 1
   LIST: [1, 2, 3]

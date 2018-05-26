@@ -7,7 +7,11 @@ import time
 import shutil
 import unittest
 from nose.tools import eq_, ok_
-from gramex.handlers.basehandler import JSONStore, SQLiteStore, HDF5Store, BaseMixin
+from nose.plugins.skip import SkipTest
+import gramex.cache
+from gramex.config import variables
+from gramex.handlers.basehandler import JSONStore, SQLiteStore, HDF5Store, RedisStore, BaseMixin
+from . import tests_dir
 
 folder = os.path.dirname(os.path.abspath(__file__))
 folder = os.path.join(folder, 'store')
@@ -38,6 +42,7 @@ class TestJSONStore(unittest.TestCase):
         cls.store2 = cls.store_class(cls.path, flush=None, purge_keys=BaseMixin._purge_keys)
 
     def load(self):
+        '''Load all data in the store and return it'''
         if os.path.exists(self.path):
             with open(self.path, 'r') as handle:    # noqa: no encoding for json
                 data = json.load(handle)
@@ -79,8 +84,8 @@ class TestJSONStore(unittest.TestCase):
         self.plainstore.dump('y', None)
         self.store.purge()
         self.plainstore.purge()
-        original.pop('x')
-        original.pop('y')
+        original.pop('x', None)
+        original.pop('y', None)
         eq_(self.load(), original)
 
         # plainstore doesn't remove _t items
@@ -123,7 +128,7 @@ class TestSQLiteStore(TestJSONStore):
         }
 
 
-class TestHDF5Store(TestSQLiteStore):
+class TestHDF5Store(TestJSONStore):
     store_class = HDF5Store
     store_file = 'data.h5'
 
@@ -131,4 +136,30 @@ class TestHDF5Store(TestSQLiteStore):
         return {
             json.loads('"%s"' % key).replace('\t', '/'): json.loads(val.value)
             for key, val in self.store.store.items()
+        }
+
+
+class TestRedisStore(TestJSONStore):
+    @classmethod
+    def setupClass(cls):
+        gramex.cache.open(os.path.join(tests_dir, 'gramex.yaml'), 'config')
+        host = variables['REDIS_SERVER']
+
+        import redis
+        cls.redis = redis.StrictRedis(host=host, decode_responses=True, encoding='utf-8')
+        try:
+            # Re-initialize the database by clearing it
+            cls.redis.flushdb()
+        except redis.exceptions.ConnectionError:
+            raise SkipTest('No redis server at %s' % host)
+
+        cls.plainstore = RedisStore(host=host, flush=None)
+        cls.store = RedisStore(host=host, flush=None, purge_keys=BaseMixin._purge_keys)
+        cls.store2 = RedisStore(host=host, flush=None, purge_keys=BaseMixin._purge_keys)
+
+    def load(self):
+        '''Load all data in the store and return it'''
+        return {
+            key: json.loads(self.redis.get(key))
+            for key in self.redis.keys()
         }

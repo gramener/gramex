@@ -72,33 +72,39 @@ app:
 
 Sessions can be stored in one of these `type:`
 
-| `type`    | Speed     | Persistent | Distributed |
-|:---------:|:---------:|:----------:|:-----------:|
-| `memory`  | faster    | no         | no          |
-| `json`    | fast      | yes        | no          |
-| `sqlite`  | slow      | yes        | yes         |
+| `type`    | Speed     | Persistent | Distributed | Version     |
+|:---------:|:---------:|:----------:|:-----------:|:-----------:|
+| `memory`  | faster    | no         | no          | all         |
+| `json`    | fast      | yes        | no          | all         |
+| `sqlite`  | slow      | yes        | yes         | 1.27        |
+| `redis`   | fast      | yes        | yes         | 1.36        |
+
+Note: `type: hdf5` is deprecated from **v1.34**. It is very slow and not distributed.
 
 - Persistent means that it will be saved if Gramex restarts
 - Distributed means multiple Gramex instances can use it at the same time.
 
-The default is `type: json`. Stick to this. But if you have multiple Gramex
-instances, use `type: sqlite` and change the `path:` to an SQLite file.
-
-Here is an example of a session store that works across multiple Gramex instances.
+The default is `type: json`. Use this for single instances. For multiple Gramex
+instances, use `type: redis`. Here is a sample configuration:
 
 ```yaml
 app:
     session:
-        type: sqlite                    # Persistent multi-instance data store
-        path: $GRAMEXDATA/session.db    # Path to the sqlite store
-        expiry: 31                      # Session cookies expiry in days
-        flush: 5                        # Clear expired sessions periodically (in seconds)
-        purge: 3600                     # Delete old sessions periodically (in seconds)
+        type: redis         # Persistent multi-instance data store
+        host: localhost     # Redis server (default: localhost)
+        port: 6379          # Redis port (default: 6379)
+        db: 0               # Redis database number (default: 0)
+        expiry: 31          # Session cookies expiry in days
+        flush: 5            # Not relevant for redis stores these are live
+        purge: 86400        # Delete old sessions periodically (in seconds)
 ```
 
-Note: `type: hdf5` is deprecated from **v1.34**. It is very slow and not distributed.
+Before running this, you need to run the [Redis](https://redis.io/) database.
 
-You can access the session data directly from the session store file, or via
+- On Windows, [download Redis](https://redis.io/download), unzip it and run `redis-server`
+- On Ubuntu, run `sudo apt-get install redis-server` and run `redis-server`
+
+You can access the session data directly from the session store, or via
 Gramex as follows:
 
 ```python

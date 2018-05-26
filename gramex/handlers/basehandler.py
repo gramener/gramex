@@ -120,6 +120,8 @@ class BaseMixin(object):
                 # For example, people who opened a login page where _next_url was set
                 elif '_i' in val and '_l' in val and val['_i'] + val['_l'] < now - week:
                     keys.append(key)
+            else:
+                app_log.warning('Store key: %s has value type %s (not dict)', key, type(val))
         return keys
 
     @classmethod
@@ -142,6 +144,8 @@ class BaseMixin(object):
             session_store_cache[key] = SQLiteStore(**kwargs)
         elif store_type == 'json':
             session_store_cache[key] = JSONStore(**kwargs)
+        elif store_type == 'redis':
+            session_store_cache[key] = RedisStore(**kwargs)
         elif store_type == 'hdf5':
             session_store_cache[key] = HDF5Store(**kwargs)
         else:
@@ -860,7 +864,7 @@ class KeyStore(object):
     '''
     Base class for persistent dictionaries. (But KeyStore is not persistent.)
 
-        >>> store = KeyStore(path)
+        >>> store = KeyStore()
         >>> value = store.load(key, None)   # Load a value. It's like dict.get()
         >>> store.dump(key, value)          # Save a value. It's like dict.set(), but doesn't flush
         >>> store.flush()                   # Saves to disk
@@ -875,13 +879,8 @@ class KeyStore(object):
 
     When the program exits, ``.close()`` is automatically called.
     '''
-    def __init__(self, path, flush=None, purge=None, purge_keys=None):
+    def __init__(self, flush=None, purge=None, purge_keys=None, **kwargs):
         '''Initialise the KeyStore at path'''
-        # Ensure that path directory exists
-        self.path = os.path.abspath(path)
-        folder = os.path.dirname(self.path)
-        if not os.path.exists(folder):
-            os.makedirs(folder)
         self.store = {}
         if callable(purge_keys):
             self.purge_keys = purge_keys
@@ -930,11 +929,59 @@ class KeyStore(object):
         raise NotImplementedError()
 
 
+class RedisStore(KeyStore):
+    '''
+    A KeyStore that stores data in a Redis database. Typical usage::
+
+        >>> store = RedisStore('localhost', port=6379, db=1)
+        >>> value = store.load(key)
+        >>> store.dump(key, value)
+
+    Values are encoded as JSON using gramex.config.CustomJSONEncoder (thus
+    handling datetime.) Keys are JSON encoded.
+    '''
+
+    def __init__(self, host='localhost', port=6379, db=0, *args, **kwargs):
+        super(RedisStore, self).__init__(*args, **kwargs)
+        from redis import StrictRedis
+        self.store = StrictRedis(host=host, port=port, db=db,
+                                 decode_responses=True, encoding='utf-8')
+
+    def load(self, key, default=None):
+        result = self.store.get(key)
+        if result is None:
+            return default
+        try:
+            return json.loads(result, object_pairs_hook=AttrDict, cls=CustomJSONDecoder)
+        except ValueError:
+            app_log.error('RedisStore("%s").load("%s") is not JSON ("%r..."")',
+                          self.store, key, result)
+            return default
+
+    def dump(self, key, value):
+        if value is None:
+            self.store.delete(key)
+        else:
+            value = json.dumps(value, ensure_ascii=True, separators=(',', ':'),
+                               cls=CustomJSONEncoder)
+            self.store.set(key, value)
+
+    def close(self):
+        pass
+
+    def purge(self):
+        app_log.debug('Purging %s', self.store)
+        # TODO: optimize item retrieval
+        items = {key: self.load(key, None) for key in self.store.keys()}
+        for key in self.purge_keys(items):
+            self.store.delete(key)
+
+
 class SQLiteStore(KeyStore):
     '''
     A KeyStore that stores data in a SQLite file. Typical usage::
 
-        >>> store = SQLiteStore('file.db')
+        >>> store = SQLiteStore('file.db', table='store')
         >>> value = store.load(key)
         >>> store.dump(key, value)
 
@@ -942,7 +989,8 @@ class SQLiteStore(KeyStore):
     handling datetime.) Keys are JSON encoded.
     '''
     def __init__(self, path, table='store', *args, **kwargs):
-        super(SQLiteStore, self).__init__(path, *args, **kwargs)
+        super(SQLiteStore, self).__init__(*args, **kwargs)
+        self.path = _create_path(path)
         from sqlitedict import SqliteDict
         self.store = SqliteDict(
             self.path, tablename=table, autocommit=True,
@@ -976,7 +1024,8 @@ class HDF5Store(KeyStore):
     encoded, and '/' is escaped as well (since HDF5 groups treat / as subgroups.)
     '''
     def __init__(self, path, *args, **kwargs):
-        super(HDF5Store, self).__init__(path, *args, **kwargs)
+        super(HDF5Store, self).__init__(*args, **kwargs)
+        self.path = _create_path(path)
         self.changed = False
         import h5py
         # h5py.File fails with OSError: Unable to create file (unable to open file: name =
@@ -1055,7 +1104,8 @@ class JSONStore(KeyStore):
     is permitted per file.
     '''
     def __init__(self, path, *args, **kwargs):
-        super(JSONStore, self).__init__(path, *args, **kwargs)
+        super(JSONStore, self).__init__(*args, **kwargs)
+        self.path = _create_path(path)
         self.store = self._read_json()
         self.changed = False
         self.update = {}        # key-values added since flush
@@ -1110,6 +1160,15 @@ class JSONStore(KeyStore):
         # This has happened when the directory was deleted. Log & ignore.
         except OSError:
             app_log.error('Cannot flush %s', self.path)
+
+
+def _create_path(path):
+    # Ensure that path directory exists
+    path = os.path.abspath(path)
+    folder = os.path.dirname(path)
+    if not os.path.exists(folder):
+        os.makedirs(folder)
+    return path
 
 
 def check_membership(memberships):

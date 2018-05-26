@@ -4,6 +4,7 @@
 services:
   - postgres:latest
   - mysql:latest
+  - redis:latest
 
 variables:
   POSTGRES_DB: postgres
@@ -17,6 +18,7 @@ variables:
   # See http://doc.gitlab.com/ee/ci/docker/using_docker_images.html
   POSTGRES_SERVER: postgres
   MYSQL_SERVER: mysql
+  REDIS_SERVER: redis
 
 # Perform these checks on every commit
 validate:
