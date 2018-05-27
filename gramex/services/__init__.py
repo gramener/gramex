@@ -42,7 +42,7 @@ from gramex.http import OK, NOT_MODIFIED
 from . import urlcache
 from .ttlcache import MAXTTL
 from .emailer import SMTPMailer
-from .sms import AmazonSNS, Twilio
+from .sms import AmazonSNS, Exotel, Twilio
 
 # Service information, available as gramex.service after gramex.init() is called
 info = AttrDict(
@@ -803,6 +803,7 @@ def email(conf):
 
 sms_notifiers = {
     'amazonsns': AmazonSNS,
+    'exotel': Exotel,
     'twilio': Twilio,
 }
 
