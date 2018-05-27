@@ -8,9 +8,18 @@ from gramex.config import app_log
 
 class Notifier(object):
     def send(self, to, subject, sender):
+        '''
+        Send an SMS to the ``to`` mobile with ``subject`` as the contents. ``sender`` optional.
+
+        Return API-specific response object.
+        Raise Exception if API access fails. (This does not guarantee SMS delivery.)
+        '''
         raise NotImplementedError()
 
     def status(self, result):
+        '''
+        Returns the delivery status of the SMS. The ``result`` is the output from ``.send()``.
+        '''
         raise NotImplementedError()
 
 
@@ -80,7 +89,7 @@ class Exotel(Notifier):
         self.stat_url = 'https://{}:{}@api.exotel.com/v1/Accounts/{}/SMS/Messages/%s.json'.format(
             self.sid, self.token, self.sid)
 
-    def handle_response(self, r):
+    def _handle_response(self, r):
         if r.status_code != OK:
             raise RuntimeError('Exotel API failed: %s' % r.text)
         result = r.json()
@@ -93,11 +102,11 @@ class Exotel(Notifier):
             'Body': subject,
             'Priority': self.priority,
         })
-        return self.handle_response(r)
+        return self._handle_response(r)
 
     def status(self, result):
         r = requests.get(self.stat_url % result['Sid'])
-        return self.handle_response(r)
+        return self._handle_response(r)
 
 
 class Twilio(Notifier):

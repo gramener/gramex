@@ -17,6 +17,7 @@ from sqlalchemy.sql import text
 from gramex.config import merge, app_log
 from orderedattrdict import AttrDict
 
+_ENGINE_CACHE = {}
 _METADATA_CACHE = {}
 _FOLDER = os.path.dirname(os.path.abspath(__file__))
 # Dummy path used by _path_safe to detect sub-directories
@@ -369,9 +370,9 @@ def create_engine(url, **kwargs):
     database connection for every engine object, and not dispose it. So we
     re-use the engine objects within this module.
     '''
-    if url not in _METADATA_CACHE:
-        _METADATA_CACHE[url] = sqlalchemy.create_engine(url, **kwargs)
-    return _METADATA_CACHE[url]
+    if url not in _ENGINE_CACHE:
+        _ENGINE_CACHE[url] = sqlalchemy.create_engine(url, **kwargs)
+    return _ENGINE_CACHE[url]
 
 
 def get_table(engine, table):
