@@ -1019,16 +1019,14 @@ class DBAuth(SimpleAuth):
     @classmethod
     def setup_recover_db(cls):
         '''Set up the database that stores password recovery tokens'''
-        from sqlalchemy import create_engine, MetaData, Table
         # create database at GRAMEXDATA locastion
         path = os.path.join(gramex.variables.GRAMEXDATA, 'auth.recover.db')
         url = 'sqlite:///{}'.format(path)
-        engine = create_engine(url, encoding=str_utf8)
+        engine = gramex.data.create_engine(url, encoding=str_utf8)
         conn = engine.connect()
         conn.execute('CREATE TABLE IF NOT EXISTS users '
                      '(user TEXT, email TEXT, token TEXT, expire REAL)')
-        meta = MetaData(bind=engine)
-        user_table = Table('users', meta, autoload=True, autoload_with=engine)
+        user_table = gramex.data.get_table(engine, 'users')
         return {'engine': engine, 'table': user_table}
 
 

@@ -6,6 +6,7 @@ import json
 import time
 import datetime
 import tornado.httpclient
+import gramex
 from oauthlib import oauth1
 from tornado.ioloop import IOLoop, PeriodicCallback
 from tornado.httputil import HTTPHeaders, parse_response_start_line
@@ -56,10 +57,8 @@ class TwitterStream(object):
             self.process_json = build_transform(
                 kwargs, vars={'message': {}}, filename='TwitterStream:function')
         elif kwargs.get('driver') == 'sqlalchemy':
-            import sqlalchemy as sa
-            meta = sa.MetaData()
-            engine = sa.create_engine(kwargs['url'], **kwargs.get('parameters', {}))
-            table = sa.Table(kwargs['table'], meta, autoload=True, autoload_with=engine)
+            engine = gramex.data.create_engine(kwargs['url'], **kwargs.get('parameters', {}))
+            table = gramex.data.get_table(kwargs['table'])
             fields = kwargs['fields']
             for field in list(fields.keys()):
                 if field not in table.columns:

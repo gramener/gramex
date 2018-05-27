@@ -277,16 +277,15 @@ class TestFilter(unittest.TestCase):
             dbutils.sqlite_drop_db('test_filter.db')
 
 
-class TestUpdate(unittest.TestCase):
-    pass
+class TestEdit(unittest.TestCase):
+    def test_update(self):
+        raise SkipTest('TODO: write update test cases')
 
+    def test_delete(self):
+        raise SkipTest('TODO: write delete test cases')
 
-class TestDelete(unittest.TestCase):
-    pass
-
-
-class TestInsert(unittest.TestCase):
-    pass
+    def test_insert(self):
+        raise SkipTest('TODO: write insert test cases')
 
 
 class TestDownload(unittest.TestCase):

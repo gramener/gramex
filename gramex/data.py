@@ -173,7 +173,7 @@ def filter(url, args={}, meta={}, engine=None, table=None, ext=None,
     elif engine == 'sqlalchemy':
         params = {k: v[0] for k, v in args.items() if len(v) > 0 and _sql_safe(v[0])}
         url = url.format(**params)
-        engine = sqlalchemy.create_engine(url, **kwargs)
+        engine = create_engine(url, **kwargs)
         if query or queryfile:
             if queryfile:
                 query = gramex.cache.open(queryfile, 'text')
@@ -236,7 +236,7 @@ def delete(url, meta={}, args=None, engine=None, table=None, ext=None, id=None,
     elif engine == 'sqlalchemy':
         if table is None:
             raise ValueError('No table: specified')
-        engine = sqlalchemy.create_engine(url, **kwargs)
+        engine = create_engine(url, **kwargs)
         return _filter_db(engine, table, meta=meta, controls=controls, args=args,
                           source='delete', id=id)
     else:
@@ -275,7 +275,7 @@ def update(url, meta={}, args=None, engine=None, table=None, ext=None, id=None,
     elif engine == 'sqlalchemy':
         if table is None:
             raise ValueError('No table: specified')
-        engine = sqlalchemy.create_engine(url, **kwargs)
+        engine = create_engine(url, **kwargs)
         return _filter_db(engine, table, meta=meta, controls=controls, args=args,
                           source='update', id=id)
     else:
@@ -323,7 +323,7 @@ def insert(url, meta={}, args=None, engine=None, table=None, ext=None, id=None,
     elif engine == 'sqlalchemy':
         if table is None:
             raise ValueError('No table: specified')
-        engine = sqlalchemy.create_engine(url, **kwargs)
+        engine = create_engine(url, **kwargs)
         cols = get_table(engine, table).columns
         rows = _pop_columns(rows, [col.name for col in cols], meta['ignored'])
         if '.' in table:
@@ -358,6 +358,20 @@ def get_engine(url):
         return 'sqlalchemy'
     except sqlalchemy.exc.NoSuchModuleError:
         return url.drivername
+
+
+def create_engine(url, **kwargs):
+    '''
+    Cached version of sqlalchemy.create_engine.
+
+    Normally, this is not required. But :py:func:`get_table` caches the engine
+    *and* metadata *and* uses autoload=True. This makes sqlalchemy create a new
+    database connection for every engine object, and not dispose it. So we
+    re-use the engine objects within this module.
+    '''
+    if url not in _METADATA_CACHE:
+        _METADATA_CACHE[url] = sqlalchemy.create_engine(url, **kwargs)
+    return _METADATA_CACHE[url]
 
 
 def get_table(engine, table):
