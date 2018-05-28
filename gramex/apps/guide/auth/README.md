@@ -789,6 +789,71 @@ It accepts the following configuration:
 </div>
 
 
+## SMSAuth
+
+**v1.36**. SMSAuth sends a one-time password (OTP) via SMS for users to log in.
+There is no permanent password mechanism.
+
+This requires a working [SMS service](../sms/). Here is a sample configuration:
+
+```yaml
+sms:
+  exotel-sms:               # Create an SMS service
+    type: exotel            # using Exotel
+    sid: ...                # Enter your Exotel SID
+    token: ...              # and your Exotel Token
+
+url:
+  login:
+    pattern: /$YAMLURL/login
+    handler: SMSAuth            # Use SMS based authentication
+    kwargs:
+      # Required configuration
+      service: exotel-sms       # Send messages using this provider
+      # Send this string with the %s replaced with the OTP.
+      # The string should only contain one %s
+      message: 'Your OTP is %s. Visit https://bit.ly/sms2auth'
+      redirect:                 # After logging in, redirect the user to:
+          query: next           #      the ?next= URL
+          header: Referer       # else the Referer: header (i.e. page before login)
+          url: /$YAMLURL/       # else the home page of current directory
+
+      # Optional configuration. The values shown below are the defaults
+      minutes_to_expiry: 15     # Minutes after which the OTP will expire
+      size: 6                   # Number of characters in the OTP
+      sender: gramex            # Sender ID. Works in some countries
+      template: $YAMLPATH/auth.sms.template.html    # Login template
+      user:
+          column: user          # ?user= contains the mobile number
+      password:
+          column: password      # ?password= contains the OTP
+```
+
+The login flow is:
+
+1. User visits `/login`. App shows a template asking for phone (`user` field)
+2. User submits phone number. Browser posts `?user=<phone>` to `/login`
+3. App generates a new OTP (valid for `minutes_to_expiry` minutes)
+4. App SMSs the OTP to the user phone number. On fail, ask for phone again
+5. App shows form template with blank OTP (``password``) field
+6. User submits OTP. Browser posts `?user=<phone>&password=<otp>` to `/login`
+7. App checks if OTP is valid. If yes, logs user in and redirects
+8. If OTP is invalid, shows form template with error
+
+The `template:` is a Tornado template. [Here is an example][sms-auth-template].
+When you write your own login template form, you can use these Python variables:
+
+- `handler`: the handler. `handler.kwargs` has the configuration above
+- `phone`: the phone number provided by the user
+- `error`: `None` if there is no error. Else:
+    - `'not-sent'` if the OTP could not be sent. `msg` has the Exception
+    - `'wrong-pw'` if the OTP is wrong. `msg` has a string error
+- `msg`: sent only if `error` is not `None`. See `error`
+
+
+[sms-auth-template]: https://code.gramener.com/cto/gramex/blob/master/gramex/handlers/auth.sms.template.html
+
+
 ## Log out
 
 This configuration creates a [logout page](logout?next=.):

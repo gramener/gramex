@@ -27,12 +27,10 @@ from gramex.config import check_old_certs, app_log, objectpath, str_utf8, merge
 from gramex.transforms import build_transform
 from .basehandler import BaseHandler, build_log_info, SQLiteStore
 
-_auth_template = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                              'auth.template.html')
-_forgot_template = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                'forgot.template.html')
-_signup_template = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                'signup.template.html')
+_folder = os.path.dirname(os.path.abspath(__file__))
+_auth_template = os.path.join(_folder, 'auth.template.html')
+_forgot_template = os.path.join(_folder, 'forgot.template.html')
+_signup_template = os.path.join(_folder, 'signup.template.html')
 _user_info_path = os.path.join(gramex.variables.GRAMEXDATA, 'auth.user.db')
 _user_info = SQLiteStore(_user_info_path, table='user')
 
@@ -46,20 +44,6 @@ try:
 except ImportError:
     import io
     StringIOClass = io.StringIO
-
-
-def csv_encode(values, *args, **kwargs):
-    '''
-    Encode an array of unicode values into a comma-separated string. All
-    csv.writer parameters are valid.
-    '''
-    buf = StringIOClass()
-    writer = csv.writer(buf, *args, **kwargs)
-    writer.writerow([
-        v if isinstance(v, six.text_type) else
-        v.decode('utf-8') if isinstance(v, six.binary_type) else repr(v)
-        for v in values])
-    return buf.getvalue().strip()
 
 
 class AuthHandler(BaseHandler):
@@ -818,7 +802,7 @@ class DBAuth(SimpleAuth):
             cls.forgot.setdefault('email_as', None)
             cls.forgot.setdefault(
                 'email_text', 'Visit {reset_url} to reset password for user {user} ({email})')
-            cls.recover = cls.setup_recover_db()
+            cls.recover = OTP()
             # TODO: default email_from to the first available email service
         if cls.signup is True:
             cls.signup = AttrDict()
@@ -840,15 +824,6 @@ class DBAuth(SimpleAuth):
             cls.encrypt.append(build_transform(
                 password, vars=AttrDict(handler=None, content=None),
                 filename='url:%s:encrypt' % (cls.name)))
-
-    def _exec_query(self, query, engine):
-        result = engine.execute(query)
-        if result.returns_rows:
-            return result.fetchone()
-
-    def _recovery(self, query):
-        # Run a query on the recovery engine
-        return gramex.service.threadpool.submit(self._exec_query, query, self.recover['engine'])
 
     def report_error(self, status, event, error, data=None):
         '''
@@ -921,15 +896,12 @@ class DBAuth(SimpleAuth):
             # If a matching user exists in the database
             if user is not None and user[email_column]:
                 # generate token and set expiry
-                token = uuid.uuid4().hex
-                expire = time.time() + (self.forgot.minutes_to_expiry * 60)
-                # store values into database
-                values = {
-                    'user': user[self.user.column],
-                    'email': user[email_column],
-                    'token': token,
-                    'expire': expire}
-                yield self._recovery(self.recover['table'].insert().values(values))
+                token = yield gramex.service.threadpool.submit(
+                    self.recover.token,
+                    user=user[self.user.column],
+                    email=user[email_column],
+                    expire=time.time() + self.forgot.minutes_to_expiry * 60,
+                )
                 # send password reset mail to user
                 mailer = gramex.service.email[self.forgot.email_from]
                 reset_url = self.request.protocol + '://' + self.request.host + self.request.path
@@ -952,27 +924,19 @@ class DBAuth(SimpleAuth):
 
         # Step 2: User clicks on email, submits new password via POST ?forgot=<token>&password=...
         else:
-            where = self.recover['table'].c['token'] == forgot_key
-            row = yield self._recovery(self.recover['table'].select().where(where))
+            row = yield gramex.service.threadpool.submit(self.recover.pop, forgot_key)
             # if system generated token in database
             if row is not None:
-                # if token is not expired
-                if row['expire'] > time.time():
-                    password = self.get_arg(self.password.arg, None)
-                    for encrypt in self.encrypt:
-                        for result in encrypt(handler=self, content=password):
-                            password = result
-                    # Update password in database
-                    yield gramex.service.threadpool.submit(
-                        gramex.data.update, id=[self.user.column], args={
-                            self.user.column: [row['user']],
-                            self.password.column: [password]
-                        }, **self.query_kwargs)
-                    # Remove recovery token
-                    yield self._recovery(self.recover['table'].delete(where))
-                else:
-                    error = self.report_error(
-                        UNAUTHORIZED, 'forgot-token-expired', 'Token expired')
+                password = self.get_arg(self.password.arg, None)
+                for encrypt in self.encrypt:
+                    for result in encrypt(handler=self, content=password):
+                        password = result
+                # Update password in database
+                yield gramex.service.threadpool.submit(
+                    gramex.data.update, id=[self.user.column], args={
+                        self.user.column: [row['user']],
+                        self.password.column: [password]
+                    }, **self.query_kwargs)
             else:
                 error = self.report_error(UNAUTHORIZED, 'forgot-token-invalid', 'Invalid Token')
         self.render_template(template, error=error)
@@ -1015,19 +979,6 @@ class DBAuth(SimpleAuth):
 
         # Send a password reset link
         yield self.forgot_password()
-
-    @classmethod
-    def setup_recover_db(cls):
-        '''Set up the database that stores password recovery tokens'''
-        # create database at GRAMEXDATA locastion
-        path = os.path.join(gramex.variables.GRAMEXDATA, 'auth.recover.db')
-        url = 'sqlite:///{}'.format(path)
-        engine = gramex.data.create_engine(url, encoding=str_utf8)
-        conn = engine.connect()
-        conn.execute('CREATE TABLE IF NOT EXISTS users '
-                     '(user TEXT, email TEXT, token TEXT, expire REAL)')
-        user_table = gramex.data.get_table(engine, 'users')
-        return {'engine': engine, 'table': user_table}
 
 
 class IntegratedAuth(AuthHandler):
@@ -1115,3 +1066,133 @@ class IntegratedAuth(AuthHandler):
 
         yield self.set_user(user, 'id')
         self.redirect_next()
+
+
+class SMSAuth(SimpleAuth):
+    '''
+    The configuration (kwargs) for SMSAuth looks like this::
+
+        # Required configuration
+        service: exotel-sms       # Send messages using this provider
+        # Send this string with the %s replaced with the OTP.
+        # The string should only contain one %s
+        message: 'Your OTP is %s. Visit https://bit.ly/sms2auth'
+
+        # Optional configuration. The values shown below are the defaults
+        minutes_to_expiry: 15     # Minutes after which the OTP will expire
+        size: 6                   # Number of characters in the OTP
+        sender: gramex            # Sender ID. Works in some countries
+        template: $YAMLPATH/auth.sms.template.html    # Login template
+        user:
+            column: user          # ?user= contains the mobile number
+        password:
+            column: password      # ?password= contains the OTP
+
+    The SMSAuth flow is as follows:
+
+    1. User visits ``GET /``. App shows form template asking for phone (``user`` field)
+    2. User submits phone number. Browser redirects to ``POST /?user=<phone>``
+    3. App generates a new OTP (valid for ``minutes_to_expiry`` minutes).
+    4. App SMSs the OTP to the user phone number. On fail, ask for phone again
+    5. App shows form template with blank OTP (``password``) field
+    6. User submits OTP => ``POST /?user=<phone>&password=<otp>``
+    7. App checks if OTP is valid. If yes, logs user in and redirects
+    8. On any error, shows form template with error
+    '''
+    @classmethod
+    def setup(cls, service, message, sender='Gramex', size=6, minutes_to_expiry=15, **kwargs):
+        super(SMSAuth, cls).setup(**kwargs)
+        cls.template = kwargs.get('template', os.path.join(_folder, 'auth.sms.template.html'))
+        cls.expire = minutes_to_expiry * 60
+        cls.service = service
+        cls.message = message
+        cls.sender = sender
+        cls.recover = OTP(size=size)
+
+    def get(self):
+        self.save_redirect_page()
+        self.render_template(self.template, phone=None, error=None)
+
+    @tornado.gen.coroutine
+    def post(self):
+        user = self.get_arg(self.user.arg, None)
+        password = self.get_arg(self.password.arg, None)
+        if password is None:
+            expire = time.time() + self.expire
+            token = yield gramex.service.threadpool.submit(
+                self.recover.token, user=user, email=user, expire=expire)
+            notifier = gramex.service.sms[self.service]
+            try:
+                yield gramex.service.threadpool.submit(
+                    notifier.send, to=user, subject=self.message % token, sender=self.sender)
+            except Exception as e:
+                app_log.exception('%s: cannot send SMS OTP', self.name)
+                self.render_template(self.template, phone=user, error='not-sent', msg=e)
+            else:
+                app_log.debug('%s: sent OTP to %s', self.name, user)
+                self.render_template(self.template, phone=user, error=None)
+        else:
+            row = yield gramex.service.threadpool.submit(self.recover.pop, password)
+            if row is not None:
+                yield self.set_user({'user': user}, id='user')
+                self.redirect_next()
+            else:
+                self.render_template(self.template, phone=user, error='wrong-pw',
+                                     msg='Invalid password')
+
+
+class OTP(object):
+    '''
+    OTP: One-time password. Also used for password recovery
+    '''
+    def __init__(self, size=None):
+        '''
+        Set up the database that stores password recovery tokens.
+        ``size`` is the length of the OTP in characters. Defaults to the
+        full hashing string
+        '''
+        self.size = size
+        # create database at GRAMEXDATA
+        path = os.path.join(gramex.variables.GRAMEXDATA, 'auth.recover.db')
+        url = 'sqlite:///{}'.format(path)
+        self.engine = gramex.data.create_engine(url, encoding=str_utf8)
+        conn = self.engine.connect()
+        conn.execute('CREATE TABLE IF NOT EXISTS users '
+                     '(user TEXT, email TEXT, token TEXT, expire REAL)')
+        self.table = gramex.data.get_table(self.engine, 'users')
+
+    def token(self, user, email, expire):
+        '''Generate a one-tie token, store it in the recovery database, and return it'''
+        token = uuid.uuid4().hex[:self.size]
+        query = self.table.insert().values({
+            'user': user, 'email': email, 'token': token, 'expire': expire,
+        })
+        self.engine.execute(query)
+        return token
+
+    def pop(self, token):
+        '''Return the row matching the token, and deletes it from the list'''
+        where = self.table.c['token'] == token
+        query = self.table.select().where(where)
+        result = self.engine.execute(query)
+        if result.returns_rows:
+            row = result.fetchone()
+            if row is not None:
+                self.engine.execute(self.table.delete(where))
+                if row['expire'] >= time.time():
+                    return row
+        return None
+
+
+def csv_encode(values, *args, **kwargs):
+    '''
+    Encode an array of unicode values into a comma-separated string. All
+    csv.writer parameters are valid.
+    '''
+    buf = StringIOClass()
+    writer = csv.writer(buf, *args, **kwargs)
+    writer.writerow([
+        v if isinstance(v, six.text_type) else
+        v.decode('utf-8') if isinstance(v, six.binary_type) else repr(v)
+        for v in values])
+    return buf.getvalue().strip()

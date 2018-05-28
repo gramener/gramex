@@ -79,7 +79,7 @@
     {# Step 4: User submits a new password #}
     {% else %}
       {% if not error %}
-        <p>Your password has been reset. Please <a href="{{ handler.request.path }}">log in</a> with your new password.</p>
+        <p>Your password has been reset. Please <a href="{{ handler.request.path }}?next=.">log in</a> with your new password.</p>
       {% else %}
         {# We've already displayed the error message on top. Optionally, add any other message for errors. #}
       {% end %}
