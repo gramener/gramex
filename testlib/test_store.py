@@ -153,9 +153,11 @@ class TestRedisStore(TestJSONStore):
         except redis.exceptions.ConnectionError:
             raise SkipTest('No redis server at %s' % host)
 
-        cls.plainstore = RedisStore(host=host, flush=None)
-        cls.store = RedisStore(host=host, flush=None, purge_keys=BaseMixin._purge_keys)
-        cls.store2 = RedisStore(host=host, flush=None, purge_keys=BaseMixin._purge_keys)
+        cls.plainstore = RedisStore(path=host, flush=None)
+        cls.store = RedisStore(path='%s:6379' % host, flush=None,
+                               purge_keys=BaseMixin._purge_keys)
+        cls.store2 = RedisStore(path='%s:6379:0' % host, flush=None,
+                                purge_keys=BaseMixin._purge_keys)
 
     def load(self):
         '''Load all data in the store and return it'''

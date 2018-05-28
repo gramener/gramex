@@ -134,7 +134,7 @@ class BaseMixin(object):
             path=store_path,
             flush=session_conf.get('flush'),
             purge=session_conf.get('purge'),
-            purge_keys=cls._purge_keys
+            purge_keys=cls._purge_keys,
         )
         if key in session_store_cache:
             pass
@@ -933,7 +933,7 @@ class RedisStore(KeyStore):
     '''
     A KeyStore that stores data in a Redis database. Typical usage::
 
-        >>> store = RedisStore('localhost', port=6379, db=1)
+        >>> store = RedisStore('localhost:6379:1')      # host:port:db
         >>> value = store.load(key)
         >>> store.dump(key, value)
 
@@ -941,9 +941,18 @@ class RedisStore(KeyStore):
     handling datetime.) Keys are JSON encoded.
     '''
 
-    def __init__(self, host='localhost', port=6379, db=0, *args, **kwargs):
+    def __init__(self, path=None, *args, **kwargs):
         super(RedisStore, self).__init__(*args, **kwargs)
         from redis import StrictRedis
+        host, port, db = 'localhost', 6379, 0
+        if isinstance(path, six.string_types):
+            parts = path.split(':')
+            if len(parts):
+                host = parts.pop(0)
+            if len(parts):
+                port = int(parts.pop(0))
+            if len(parts):
+                db = int(parts.pop(0))
         self.store = StrictRedis(host=host, port=port, db=db,
                                  decode_responses=True, encoding='utf-8')
 

@@ -91,9 +91,7 @@ instances, use `type: redis`. Here is a sample configuration:
 app:
     session:
         type: redis         # Persistent multi-instance data store
-        host: localhost     # Redis server (default: localhost)
-        port: 6379          # Redis port (default: 6379)
-        db: 0               # Redis database number (default: 0)
+        path: localhost:6379:0  # Redis server:port:db (default: localhost:6379:0)
         expiry: 31          # Session cookies expiry in days
         flush: 5            # Not relevant for redis stores these are live
         purge: 86400        # Delete old sessions periodically (in seconds)
