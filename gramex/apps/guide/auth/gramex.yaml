@@ -404,6 +404,17 @@ url:
                 header: Referer
                 url: /$YAMLURL
 
+    auth/sms:
+        pattern: /$YAMLURL/sms
+        handler: SMSAuth
+        kwargs:
+          service: exotel
+          message: 'This is a test message being sent using Exotel with a (%s) and (00000). If this is being abused, report to 08088919888'
+          redirect:
+              query: next
+              header: Referer
+              url: /$YAMLURL
+
 schedule:
     create-user-database:
         function: authutil.create_user_database     # Run this function
@@ -426,3 +437,10 @@ email:
         type: gmail
         email: gramex.guide@gmail.com       # Generic email ID used to test e-mails
         password: tlpmupxnhucitpte          # App-specific password created for Gramex guide
+
+sms:
+  exotel:
+    # See https://my.exotel.com/gramener2/settings/site#api-settings
+    type: exotel
+    sid: gramener2
+    token: 13f359bf07b9882cea149547960a11536e2a3ad6

@@ -789,7 +789,7 @@ It accepts the following configuration:
 </div>
 
 
-## SMSAuth
+## SMS Auth
 
 **v1.36**. SMSAuth sends a one-time password (OTP) via SMS for users to log in.
 There is no permanent password mechanism.
@@ -828,6 +828,14 @@ url:
       password:
           column: password      # ?password= contains the OTP
 ```
+
+<div class="example">
+  <a class="example-demo" href="sms">SMS auth example</a>
+  <a class="example-src" href="http://code.gramener.com/cto/gramex/tree/master/gramex/apps/guide/auth/gramex.yaml">Source</a>
+</div>
+
+**Note**: the example above relies on free credits available from Exotel. These
+may have run out.
 
 The login flow is:
 
