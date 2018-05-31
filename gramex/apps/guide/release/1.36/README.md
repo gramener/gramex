@@ -32,6 +32,18 @@ Specifically, nginx need not use
 Users behind a proxy who have the same IP address can still be distributed
 across instances.
 
+## Mapviewer
+
+[g1.mapviewer](https://code.gramener.com/cto/g1#g1-mapviewer) lets you create
+interactive maps. Mapviewer is an abstraction over `Leaflet` that can
+create common GIS applications using configurations.
+
+Mapviewer requires `npm install leaflet d3 d3-scale-chromatic g1`.
+
+![SMS Auth flow](mapviewer.gif)
+
+[Read Documenation](https://code.gramener.com/cto/g1#g1mapviewer)
+
 ## Bug fixes
 
 FormHandler used to create a new database connection for certain kinds of new
@@ -46,7 +58,8 @@ report a HTTP 404 with the script injected into the page. This is fixed.
 ## Python 3 tests
 
 Gramex test cases automatically run on Python 3, thanks to the new Python 3
-build environment in code.gramener.com. [.gitlab-ci.yml](https://code.gramener.com/cto/gramex/blob/dev/.gitlab-ci.yml) has:
+build environment in code.gramener.com.
+[.gitlab-ci.yml](https://code.gramener.com/cto/gramex/blob/dev/.gitlab-ci.yml) has:
 
 ```yaml
 validate-py3:
@@ -56,10 +69,19 @@ validate-py3:
     - python setup.py nosetests
 ```
 
+## Other enhancements
+
+g1 [$.formhandler](https://code.gramener.com/cto/g1#formhandler) table cell
+format is more flexible. It can be a function that accepts an object with the
+column name, cell value, row data, and full dataset
+
+logviewer now exposes `pd.Series.str` methods to transform data. For example,
+you may want lowercase `user.id`
+
 ## Stats
 
-- Code base: xx,xxx lines (python: xx,xxx, javascript: x,xxx, tests: x,xxx)
-- Test coverage: xx%
+- Code base: 25,673 lines (python: 15,602, javascript: 1,518, tests: 8,553)
+- Test coverage: 80%
 
 ## Upgrade
 

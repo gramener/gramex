@@ -221,6 +221,38 @@
       "Upgrade": -1
     }
   },
+  "1.36": {
+    "": {
+      "Gramex 1.36 Release Notes": -1
+    },
+    "bug-fixes": {
+      "Bug fixes": -1
+    },
+    "exotel-sms-service": {
+      "Exotel SMS service": -1
+    },
+    "mapviewer": {
+      "Mapviewer": -1
+    },
+    "other-enhancements": {
+      "Other enhancements": -1
+    },
+    "python-3-tests": {
+      "Python 3 tests": -1
+    },
+    "redis-store": {
+      "Redis Store": -1
+    },
+    "sms-auth": {
+      "SMS Auth": -1
+    },
+    "stats": {
+      "Stats": -1
+    },
+    "upgrade": {
+      "Upgrade": -1
+    }
+  },
   "about": {
     "": {
       "About Gramex": -1
@@ -444,6 +476,9 @@
     },
     "simple-auth": {
       "Simple auth": -1
+    },
+    "sms-auth": {
+      "SMS Auth": -1
     },
     "ssl-certificate-error": {
       "SSL certificate error": -1
@@ -1424,6 +1459,12 @@
     "": {
       "Send SMS": -1
     },
+    "amazon-sns": {
+      "Amazon SNS": -1
+    },
+    "exotel": {
+      "Exotel": -1
+    },
     "from-gramexservices-import-amazonsns": {
       "from gramex.services import AmazonSNS": -1
     },
@@ -1435,6 +1476,9 @@
     },
     "send-sms": {
       "Send SMS": -1
+    },
+    "twilio": {
+      "Twilio": -1
     }
   },
   "test": {
