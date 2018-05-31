@@ -222,18 +222,24 @@ def apply_transform(data, spec):
         'NOTCONTAINS': {
             'function': lambda s, v, **ops: ~s.str.contains(v, **ops),
             'defaults': {'case': False}
-        }
+        },
+        'LEN': lambda s, _: s.str.len(),
+        'LOWER': lambda s, _: s.str.lower(),
+        'UPPER': lambda s, _: s.str.upper(),
+        'PROPER': lambda s, _: s.str.capitalize(),
+        'STARTSWITH': lambda s, v: s.str.startswith(v),
+        'ENDSWITH': lambda s, v: s.str.endswith(v)
     }
     expr = spec['expr']
     func = pandas_transforms[expr['op']]
     kwargs = expr.get('kwargs', {})
     if isinstance(func, dict):
-        # collect default kwargs if not present
+        # use defaults' kwargs if not present in expr.get
         for key, val in func.get('defaults', {}).items():
             if key not in kwargs:
                 kwargs[key] = val
         func = func['function']
-    data[spec['as']] = func(data[expr['col']], expr['value'], **kwargs)
+    data[spec['as']] = func(data[expr['col']], expr.get('value'), **kwargs)
     return data
 
 
