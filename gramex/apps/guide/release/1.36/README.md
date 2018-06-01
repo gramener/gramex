@@ -5,7 +5,7 @@ prefix: 1.36
 
 [TOC]
 
-# SMS Auth
+## SMS Auth
 
 Users can log into Gramex just using a mobile phone with a one time password
 sent via SMS using [SMSAuth](../auth/#sms-auth). No password or configuration required.
