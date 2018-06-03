@@ -23,6 +23,7 @@ mime:
     .json:      application/json
     .svg:       image/svg+xml
     .py:        text/plain
+    .R:         text/plain
     .h5:        application/x-hdf5
     .hdf5:      application/x-hdf5
     .pkl:       application/octet-stream
