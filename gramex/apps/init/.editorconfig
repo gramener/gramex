@@ -22,8 +22,3 @@ indent_size = 4
 [Makefile]
 indent_style = tab
 indent_size = 4
-
-# Markdown files require trailing whitespace
-# http://robandlauren.com/2013/11/21/configuring-sublime-text-markdown/
-[*.md]
-trim_trailing_whitespace = false

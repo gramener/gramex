@@ -5,7 +5,7 @@
 
 root = true
 
-# Apply common styles for most standard text files.
+# Apply common styles for most standard code files.
 # Do not apply to * - that covers binary files as well
 [*.{js,html,php,py,css,svg,json,less,yaml,yml,scss,xml,sh,java,bat,R}]
 end_of_line = lf
@@ -22,11 +22,6 @@ indent_size = 4
 [Makefile]
 indent_style = tab
 indent_size = 4
-
-# Markdown files require trailing whitespace
-# http://robandlauren.com/2013/11/21/configuring-sublime-text-markdown/
-[*.md]
-trim_trailing_whitespace = false
 
 [testlib/test_config/config.empty.yaml]
 insert_final_newline = false
