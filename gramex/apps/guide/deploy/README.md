@@ -647,3 +647,83 @@ the 2nd entry has a timestamp greater than the third:
 1519100063680,106.209.240.105,user2@masked.com,304,55,GET,/bookmark_settings?mode=display,
 1519100063678,220.227.50.9,user3@masked.com,304,1,GET,/images/filters-toggler.png,
 ```
+
+## Common errors
+
+Here are common errors from the Gramex logs:
+
+### Port 8001 is busy
+
+For example:
+
+```
+ERROR 21-May 11:41:45 __init__ Port 8001 is busy. Use --listen.port= for a different port
+```
+
+You are running Gramex on a port that is already running Gramex or another application.
+
+On Linux, run `lsof -i :8001` to find processes running on port 8001 and use `kill` to kill the process. Or start Gramex on a different port using `gramex --listen.port=<new-port>`
+
+### Cannot start Capture
+
+Here is a typical traceback:
+
+```
+Traceback (most recent call last):
+  File "/home/ubuntu/gramex/gramex/handlers/capturehandler.py", line 111, in _start
+    self._validate_server(r)
+  File "/home/ubuntu/gramex/gramex/handlers/capturehandler.py", line 169, in _validate_server
+    raise RuntimeError('Server: %s at %s is not %s' % (server, self.url, script))
+RuntimeError: Server: Capture/1.0.0 at http://localhost:9900/ is not chromecapture.js
+```
+
+This indicates that the web application running at port 9900 is not ChromeCapture but something else. You can either:
+
+1. Change the CaptureHandler port to a free one (e.g. from 9900 to 9910), OR
+2. Stop what's running at the CaptureHandler port using `lsof -i 9900` and `kill`, and then restart Gramex.
+
+### Cannot load function
+
+Here is an example:
+
+```
+ERROR 12-May 10:38:24 transforms url:box_data: Cannot load function views.get_box_data
+```
+
+This indicates that `views.py` does not have a `get_box_data()` function. You
+can locate this under the `box_data:` under `url:`. This can happen for 3 reasons:
+
+1. Gramex loaded a different `views.py` (e.g. from another project) before your
+   `views.py`, and your `views.py` is being ignored. **Solution**: rename your
+   file like `<your_project>_views.py` to make it unique.
+2. Gramex loaded `views.py` earlier and is not reloading it. This happens on
+   rare occasions. **Solution**: restart Gramex.
+3. `views.py` does not have a `get_box_data()` function. Check the spelling.
+
+### Duplicate key
+
+Here is an example:
+
+```
+WARNING 03-Oct 17:17:44 config Duplicate key: url.login/google
+```
+
+This indicates that `login/google:` key under `url:` has been repeated across
+different `gramex.yaml` files -- which have been `import:`ed under the main
+`gramex.yaml`. The first `login/google:` is used. The rest are ignored.
+
+Ensure that no keys duplicated across `gramex.yaml` files and restart gramex.
+
+### Other common errors
+
+- `Exception when importing`: Gramex failed to import a module. Typically a
+  syntax error. Try importing the module from
+- `setup exception in handler FunctionHandler`: Gramex failed to import the
+  module that has the function in FunctionHandler. Typically a syntax error
+- `Failed to initialize alert`: Gramex could not set up the alert. See the exception for details
+- `No service named xxx`: Your `gramex.yaml` has an extra top-level key called
+  `xxx` which is not valid. It should probably be indented under some other
+  section.
+- `cannot set up log`:  The `log:` section has an error. It may not be a dict,
+  or refer to a file / folder that cannot be accessed, etc.
+- `Gramex 1.xx.x is available`: A newer version of Gramex is available. Upgrade
