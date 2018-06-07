@@ -17,7 +17,7 @@ from six.moves.urllib.parse import urlencode, urljoin
 from tornado.web import HTTPError
 from tornado.httpclient import AsyncHTTPClient
 from gramex.config import app_log, variables, recursive_encode
-from gramex.http import OK, GATEWAY_TIMEOUT, BAD_GATEWAY, CLIENT_TIMEOUT
+from gramex.http import OK, BAD_REQUEST, GATEWAY_TIMEOUT, BAD_GATEWAY, CLIENT_TIMEOUT
 from .basehandler import BaseHandler
 
 _PPTX_MIME = 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
@@ -323,8 +323,7 @@ class CaptureHandler(BaseHandler):
             debug={'nargs': '*'},
         )
         if args['url'] is None:
-            self.write('Missing ?url=')
-            raise tornado.gen.Return()
+            raise HTTPError(BAD_REQUEST, reason='%s: CaptureHandler needs ?url=' % self.name)
 
         # If the URL is a relative URL, treat it relative to the called path
         args['url'] = urljoin(self.request.full_url(), args['url'])
