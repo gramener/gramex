@@ -831,7 +831,7 @@ def download(data, format='json', template=None, **kwargs):
         kwargs.pop('handler', None)
         out = io.BytesIO()
         # conf = {..., spec: {..., data: __DATA__}}
-        if 'data' in spec or 'fromjson' in spec:
+        if isinstance(spec.get('data'), (dict, list)) or 'fromjson' in spec:
             # support only one dataset
             values = list(data.values())
             out.write(values[0].to_json(**kwargs).encode('utf-8'))
