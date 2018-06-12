@@ -456,15 +456,15 @@ The use of the trailing slash makes a big difference in nginx.
 The first maps `example.com/project/*` to `http://127.0.0.1:9988/*`.
 The second maps it to `http://127.0.0.1:9988/project/*`.
 
-If you have Gramex running multiple applications under `/app1`, `/app2`, etc,
-your config file will be like:
+If you have one Gramex running multiple applications under `/app1`, `/app2`,
+etc, your config file will be like:
 
     location /app1/ { proxy_pass http://127.0.0.1:8001; }
     location /app2/ { proxy_pass http://127.0.0.1:8001; }
     location /app3/ { proxy_pass http://127.0.0.1:8001; }
 
-But if your have a single app running at `/` in each Gramex instance root, your
-config file will be like:
+But if your have multiple Gramex instances at port 8001, 8002, etc, each running
+an app under their `/`, your config file will be like:
 
     location /app1/ {
         proxy_pass http://127.0.0.1:8001/;
@@ -514,6 +514,62 @@ Additional notes:
   "[proxy_pass_header](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_pass_header) Server;"
 - To enable HTTPS, read the Gramener wiki section on [SSL](https://learn.gramener.com/wiki/ssl.html)
 
+
+### Apache reverse proxy
+
+First, enable thee relevant proxy modules. On Linux, run:
+
+```
+# Required modules
+sudo a2enmod proxy proxy_http rewrite headers
+```
+
+On Windows, ensure that the Apache `httpd.conf` has the following lines:
+
+```
+LoadModule proxy_module          modules/mod_proxy.so
+LoadModule proxy_http_module     modules/mod_proxy_http.so
+LoadModule rewrite_module        modules/mod_rewrite.so
+LoadModule headers_module        modules/mod_headers.so
+```
+
+Here is a minimal HTTP reverse proxy configuration:
+
+```
+# Make sure you have a "Listen 80" in your configuration.
+<VirtualHost *:80>
+    ServerName example.com
+    ProxyPass        /project/ http://127.0.0.1:9988/
+    ProxyPassReverse /project/ http://127.0.0.1:9988/
+    # Let Gramex know what the original URL was so that it can redirect properly (see rebase_uri)
+    ProxyPreserveHost On
+    RequestHeader set X-Real-IP "%{REMOTE_ADDR}s"
+    RequestHeader set X-Scheme "%{REQUEST_SCHEME}s"
+    RequestHeader set X-Request-URI %{REQUEST_URI}s
+</VirtualHost>
+```
+
+If you have one Gramex on port 8001 running multiple applications under `/app1`,
+`/app2`, etc, your config file will be like:
+
+```
+ProxyPass        /app1/ http://127.0.0.1:8001/app1/
+ProxyPassReverse /app1/ http://127.0.0.1:8001/app1/
+
+ProxyPass        /app2/ http://127.0.0.1:8001/app2/
+ProxyPassReverse /app2/ http://127.0.0.1:8001/app2/
+```
+
+But if your have multiple Gramex instances at port 8001, 8002, etc, each running
+an app under their `/`, your config file will be like:
+
+```
+ProxyPass        /app1/ http://127.0.0.1:8001/
+ProxyPassReverse /app1/ http://127.0.0.1:8001/
+
+ProxyPass        /app2/ http://127.0.0.1:8002/
+ProxyPassReverse /app2/ http://127.0.0.1:8002/
+```
 
 ## Shared deployment
 
