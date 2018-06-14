@@ -486,6 +486,19 @@ class DBAuthBase(AuthBase):
         cls.create_database(config.url, config.table)
         cls.url = server.base_url + '/auth/db'
 
+    def test_empty(self):
+        # issue: 399 DBAuth shouldn't accept empty username or password
+        falsy = ['', None, 'abc']
+        for (user, password) in [(x, y) for x in falsy for y in falsy]:
+            r = self.login(user, password)
+            # for valid but non-existent username, password
+            if user and password:
+                eq_(r.status_code, UNAUTHORIZED)
+                eq_(r.reason, 'Cannot log in')
+                continue
+            eq_(r.status_code, BAD_REQUEST)
+            eq_(r.reason, 'User name or password is empty')
+
 
 class TestDBAuth(DBAuthBase, LoginMixin, LoginFailureMixin):
     # Just apply LoginMixin tests to DBAuthBase
@@ -551,6 +564,15 @@ class TestDBAuthSignup(DBAuthBase):
         r = session.get(self.url + '?signup')
         tree = lxml.html.fromstring(r.text)
         eq_(tree.xpath('.//h1')[0].text, 'Signup')
+
+        # POST an empty username. Raises HTTP 400: User invalid
+        r = session.post(self.url + '?signup', data={
+            self.config.user.arg: '',
+            self.config.forgot.get('arg', 'email'): 'any@example.org',
+            '_xsrf': tree.xpath('.//input[@name="_xsrf"]')[0].get('value'),
+        })
+        eq_(r.status_code, BAD_REQUEST)
+        eq_(r.reason, 'User cannot be empty')
 
         # POST an existing username. Raises HTTP 400: User exists
         r = session.post(self.url + '?signup', data={

@@ -855,6 +855,14 @@ class DBAuth(SimpleAuth):
     def login(self):
         user = self.get_arg(self.user.arg, None)
         password = self.get_arg(self.password.arg, None)
+
+        if not user or not password:
+            # Note: all users who log in without a password will be treated as the same
+            yield self.fail_user({'user': user}, 'user')
+            self.render_template(self.template, error=self.report_error(
+                BAD_REQUEST, 'fail', 'User name or password is empty'))
+            raise tornado.gen.Return()
+
         for encrypt in self.encrypt:
             for result in encrypt(handler=self, content=password):
                 password = result
@@ -886,8 +894,12 @@ class DBAuth(SimpleAuth):
             forgot_email = self.get_arg(self.forgot.arg, None)
             if forgot_user:
                 query = {self.user.column: [forgot_user]}
-            else:
+            elif forgot_email:
                 query = {self.forgot.email_column: [forgot_email]}
+            else:
+                self.render_template(template, error=self.report_error(
+                    BAD_REQUEST, 'forgot-invalid-user', 'user/email cannot be empty'))
+                raise tornado.gen.Return()
             users = yield gramex.service.threadpool.submit(
                 gramex.data.filter, args=query, **self.query_kwargs)
             user = None if len(users) == 0 else users.iloc[0].to_dict()
@@ -928,6 +940,10 @@ class DBAuth(SimpleAuth):
             # if system generated token in database
             if row is not None:
                 password = self.get_arg(self.password.arg, None)
+                if not password:
+                    self.render_template(template, error=self.report_error(
+                        BAD_REQUEST, 'forgot-invalid-password', 'password cannot be empty'))
+                    raise tornado.gen.Return()
                 for encrypt in self.encrypt:
                     for result in encrypt(handler=self, content=password):
                         password = result
@@ -945,6 +961,11 @@ class DBAuth(SimpleAuth):
     def signup_user(self):
         # Checks if email exists => suggest password recovery
         signup_user = self.get_arg(self.user.arg, None)
+        if not signup_user:
+            self.render_template(self.signup.template, error=self.report_error(
+                BAD_REQUEST, 'signup-invalid-user', 'User cannot be empty'))
+            raise tornado.gen.Return()
+
         users = yield gramex.service.threadpool.submit(
             gramex.data.filter, args={self.user.column: [signup_user]}, **self.query_kwargs)
         if len(users) > 0:

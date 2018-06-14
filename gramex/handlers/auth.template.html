@@ -47,11 +47,11 @@
     <input type="hidden" name="_xsrf" value="{{ handler.xsrf_token }}">
     <p class="row">
       <label for="{{ user }}">Login</label>
-      <input name="{{ user }}" autofocus>
+      <input name="{{ user }}" autofocus required>
     </p>
     <p class="row">
       <label for="{{ password }}">Password</label>
-      <input name="{{ password }}" type="password">
+      <input name="{{ password }}" type="password" required>
     </p>
     <button type="submit">Log in</button>
     {% if kwargs.get('forgot') %}
