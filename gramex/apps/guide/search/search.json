@@ -253,6 +253,32 @@
       "Upgrade": -1
     }
   },
+  "1.37": {
+    "": {
+      "Gramex 1.37 Release Notes": -1
+    },
+    "apache-reverse-proxy": {
+      "Apache reverse proxy": -1
+    },
+    "bug-fixes": {
+      "Bug fixes": -1
+    },
+    "capturehandler-tutorial": {
+      "CaptureHandler tutorial": -1
+    },
+    "developer-updates": {
+      "Developer Updates": -1
+    },
+    "r-interface": {
+      "R interface": -1
+    },
+    "stats": {
+      "Stats": -1
+    },
+    "upgrade": {
+      "Upgrade": -1
+    }
+  },
   "about": {
     "": {
       "About Gramex": -1
@@ -790,11 +816,29 @@
     "404-not-found": {
       "404 Not Found": -1
     },
+    "apache-reverse-proxy": {
+      "Apache reverse proxy": -1
+    },
+    "cannot-load-function": {
+      "Cannot load function": -1
+    },
+    "cannot-start-capture": {
+      "Cannot start Capture": -1
+    },
+    "common-errors": {
+      "Common errors": -1
+    },
     "deployment-checklist": {
       "Deployment checklist": -1
     },
     "deployment-variables": {
       "Deployment variables": -1
+    },
+    "duplicate-key": {
+      "Duplicate key": -1
+    },
+    "goaccess-output": {
+      "GoAccess Output": -1
     },
     "handler-name-conflict": {
       "Handler name conflict": -1
@@ -814,11 +858,26 @@
     "log-file-order": {
       "Log file order": -1
     },
+    "make-sure-you-have-a-listen-80-in-your-configuration": {
+      "Make sure you have a \"Listen 80\" in your configuration.": -1
+    },
     "missing-dependency": {
       "Missing dependency": -1
     },
+    "nginx-log-analyzer": {
+      "nginx log analyzer": -1
+    },
     "nginx-reverse-proxy": {
       "nginx reverse proxy": -1
+    },
+    "nginxconf": {
+      "nginx.conf": -1
+    },
+    "other-common-errors": {
+      "Other common errors": -1
+    },
+    "port-8001-is-busy": {
+      "Port 8001 is busy": -1
     },
     "proxy-servers": {
       "Proxy servers": -1
@@ -828,6 +887,9 @@
     },
     "relative-url-mapping": {
       "Relative URL mapping": -1
+    },
+    "required-modules": {
+      "Required modules": -1
     },
     "security": {
       "Security": -1
@@ -1420,6 +1482,38 @@
       "Style 3:": -1
     }
   },
+  "r": {
+    "": {
+      "R": -1
+    },
+    "etc": {
+      "... etc": -1
+    },
+    "loads-datacsv-from-same-directory-as-the-r-script": {
+      "Loads data.csv from same directory as the R script": -1
+    },
+    "r-arguments": {
+      "R arguments": -1
+    },
+    "r-async": {
+      "R async": -1
+    },
+    "r-commands": {
+      "R commands": -1
+    },
+    "r-packages": {
+      "R packages": -1
+    },
+    "r-plots": {
+      "R plots": -1
+    },
+    "r-scripts": {
+      "R scripts": -1
+    },
+    "rest-of-your-script-can-use-the-packages-above": {
+      "Rest of your script can use the packages above.": -1
+    }
+  },
   "release": {
     "": {
       "Gramex release notes": -1
@@ -1499,32 +1593,16 @@
   },
   "tutorials": {
     "": {
-      "FormHandler tutorial": -1
+      "Tutorials": -1
     },
-    "from-file": {
-      "From file": -1
-    },
-    "modify-the-result": {
-      "Modify the result": -1
-    },
-    "query-option": {
-      "Query option": -1
-    },
-    "queryfile-option": {
-      "Queryfile option": -1
-    },
-    "read-data-from-different-sources": {
-      "Read data from different Sources": -1
-    },
-    "reading-from-databases": {
-      "Reading from Databases": -1
-    },
-    "safe-practices-with-databases": {
-      "Safe practices with Databases": -1
-    },
-    "usecase-retail-sales-tracker": {
-      "Usecase: Retail sales tracker": -1
-    }
+    "from-file": {},
+    "modify-the-result": {},
+    "query-option": {},
+    "queryfile-option": {},
+    "read-data-from-different-sources": {},
+    "reading-from-databases": {},
+    "safe-practices-with-databases": {},
+    "usecase-retail-sales-tracker": {}
   },
   "twitterresthandler": {
     "": {
