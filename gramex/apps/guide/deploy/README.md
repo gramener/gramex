@@ -704,6 +704,69 @@ the 2nd entry has a timestamp greater than the third:
 1519100063678,220.227.50.9,user3@masked.com,304,1,GET,/images/filters-toggler.png,
 ```
 
+## nginx log analyzer
+
+[Goaccess](https://goaccess.io/) is useful for server monitoring.
+It can be configured for Apache or nginx. Follow below steps to enable monitoring:
+
+1) Install [Goaccess](https://goaccess.io/download)
+
+2) Enable monitoring via terminal, pointing to `access.log` to generate `report.html`
+
+```bash
+goaccess /var/log/nginx/access.log -o report.html --log-format=COMBINED
+```
+
+This can be run as a cronjob at periodic intervals to monitor server health.
+
+Real-time monitoring can be enabled and exposed via websockets via `--real-time-html`
+
+```bash
+goaccess /var/log/nginx/access.log -o report.html --log-format=COMBINED --real-time-html --ws-url=ws://*****IP*****:7890 --ignore-crawlers --daemonize -
+```
+
+Updated log is pushed via websockets on port 7890.
+`--daemonize` runs the task as a daemon and `--ignore-crawlers` ignores web crawlers.
+
+If `report.html` should be accessed on an endpoint, ensure it is configured in nginx or other-related routes.
+To serve it in a specific project, 
+
+```yaml
+url:
+  project_report:
+    pattern: /$YAMLURL/report
+    handler: FileHandler
+    kwargs:
+      path: $YAMLPATH/report.html   # report.html is generated from goaccess
+```
+
+Supporting configuration in `nginx` would be as below:
+
+```bash
+# nginx.conf
+server {
+    # here, the report is hosted on a Gramex app running on 9920 port
+    location /report/  { proxy_pass http://127.0.0.1:9920/report; }
+}
+```
+
+This report can be access at: `yourapp.gramener.com/report/`
+
+### GoAccess Output
+
+Following attributes are reported in graphical and textual formats:
+
+- Total requests, valid requests, failed requests
+- Visitors per day, hits, bandwidth utilized
+- Distribution of traffic for your application endpoints 
+
+![goaccess dashboard](https://goaccess.io/images/goaccess-dark-gray.png)
+
+- Static requests
+- Visitor statistics: hostnames and IP addresses
+- Operating systems and browsers traffic distribution
+- Traffic distribution by time
+
 ## Common errors
 
 Here are common errors from the Gramex logs:
