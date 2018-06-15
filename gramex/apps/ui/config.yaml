@@ -6,6 +6,7 @@ fonts:
     anton:               {stack: 'Anton, sans-serif', google: Anton}
     roboto:              {stack: 'Roboto, sans-serif', google: Roboto}
     segoe-ui:            {stack: '"Segoe UI", "Open Sans", sans-serif', google: Open+Sans}
+    montserrat:          {stack: 'Montserrat, sans-serif', google: Montserrat}
     century-gothic:      {stack: '"Century Gothic", CenturyGothic, AppleGothic, sans-serif'}
     roboto-condensed:    {stack: '"Roboto Condensed", sans-serif', google: Roboto+Condensed}
     open-sans-condensed: {stack: '"Open Sans Condensed", sans-serif', google: 'Open+Sans+Condensed:300'}

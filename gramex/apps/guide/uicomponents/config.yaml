@@ -66,6 +66,7 @@ font:
       segoe-ui: Segoe UI
       lato: Lato
       anton: Anton
+      montserrat: Montserrat
   headings-font-family:
     title: Heading font
     default: ''
@@ -81,6 +82,7 @@ font:
       open-sans-condensed: Open Sans Condensed
       lato: Lato
       anton: Anton
+      montserrat: Montserrat
 
 theme:
   Bootstrap: {}
