@@ -1212,7 +1212,9 @@ class EmailAuth(SimpleAuth):
         else:
             row = yield gramex.service.threadpool.submit(self.recover.pop, password)
             if row is not None:
-                yield self.set_user({'user': row['user'], 'email': row['email']}, id='user')
+                email = row['email']
+                hd = email.rsplit('@', 2)[-1]       # host domain
+                yield self.set_user({'email': email, 'hd': hd}, id='email')
                 self.redirect_next()
             else:
                 self.render_template(self.template, email=None, error='wrong-pw',

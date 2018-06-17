@@ -159,9 +159,25 @@ url:
 This setup is useful only for testing. It stores passwords in plain text.
 **DO NOT USE IT IN PRODUCTION.**
 
-You can access user information via `handler.get_session()`. For user `alpha`,
-this would return `{'user': 'alpha', 'id': 'alpha'}`. For user `gamma`, this
-mapping would also have attributes `'role': 'user'` and `'password': 'pwd'`.
+The user object `handler.current_user` looks like this:
+
+```js
+{
+    "user": "alpha",
+    "id": "alpha"
+}
+```
+
+For user `gamma`, it would have the additional attribute `role` specified above
+in the `gramex.yaml`:
+
+```js
+{
+    "user": "gamma",
+    "role": "user",
+    "id": "gamma"
+}
+```
 
 The `template:` key is optional, but you should generally associate it with a
 [HTML login form file](simple) that requests a username and password (with an
@@ -193,7 +209,7 @@ To get the application key and secret:
 - Copy the "Client secret" and "Client ID" to the application settings
 
 <div class="example">
-  <a class="example-demo" href="gmail/">Google Auth example</a>
+  <a class="example-demo" href="gmail">Google Auth example</a>
   <a class="example-src" href="http://code.gramener.com/cto/gramex/tree/master/gramex/apps/guide/auth/gmail/">Source</a>
 </div>
 
@@ -231,6 +247,24 @@ def contacts(handler):
     raise tornado.gen.Return(result)
 ```
 
+The user object `handler.current_user` looks like this:
+
+```js
+{
+    "family_name": "S",
+    "name": "Anand S",
+    "picture": "https://lh6.googleusercontent.com/-g6rN5UZlBjI/AAAAAAAAAAI/AAAAAAAAAfk/H5t_W1k90GQ/photo.jpg",
+    "locale": "en",
+    "gender": "male",
+    "email": "s.anand@gramener.com",
+    "link": "https://plus.google.com/105156369599800182273",
+    "given_name": "Anand",
+    "id": "s.anand@gramener.com",
+    "hd": "gramener.com",
+    "verified_email": true
+}
+```
+
 ### SSL certificate error
 
 Google auth and connections to HTTPS sites may fail with a
@@ -262,6 +296,28 @@ url:
 - Copy the Application ID and App secret to the application settings
 - If you need an `access_token` for [FacebookGraphHandler](../facebookgraphhandler/), go to Settings > Advanced and copy the Client Token
 
+The user object `handler.current_user` looks like this:
+
+```js
+{
+    "last_name": "Subramanian",
+    "link": "https://www.facebook.com/app_scoped_user_id/.../",
+    "id": "10154519601793455",
+    "name": "Anand Subramanian",
+    "locale": "en_GB",
+    "picture": {
+        "data": {
+            "height": 50,
+            "is_silhouette": false,
+            "url": "https://platform-lookaside.fbsbx.com/platform/profilepic/?asid=...",
+            "width": 50
+        }
+    },
+    "first_name": "Anand",
+    "access_token": "...",
+    "session_expires": "5183999"
+}
+```
 
 ## Twitter auth
 
@@ -284,6 +340,58 @@ url:
 - Go to the Keys section of the app
 - Copy the Consumer Key (API Key) and Consumer Secret (API Secret) to the application settings
 
+The user object `handler.current_user` looks like this:
+
+```js
+{
+    "username": "sanand0",
+    "follow_request_sent": false,
+    "has_extended_profile": false,
+    "profile_use_background_image": true,
+    "default_profile_image": false,
+    "suspended": false,
+    "id": "sanand0",
+    "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme14/bg.gif",
+    "verified": false,
+    "translator_type": "none",
+    "profile_text_color": "333333",
+    "profile_image_url_https": "https://pbs.twimg.com/profile_images/64530696/Anand2_normal.png",
+    "profile_sidebar_fill_color": "EFEFEF",
+    "entities": {...},
+    "followers_count": 2395,
+    "profile_sidebar_border_color": "EEEEEE",
+    "id_str": "15265603",
+    "profile_background_color": "131516",
+    "needs_phone_verification": false,
+    "listed_count": 100,
+    "status": {...},
+    "is_translation_enabled": false,
+    "utc_offset": null,
+    "statuses_count": 1149,
+    "description": "Chief Data Scientist at Gramener",
+    "friends_count": 89,
+    "location": "Bangalore",
+    "profile_link_color": "009999",
+    "profile_image_url": "http://pbs.twimg.com/profile_images/64530696/Anand2_normal.png",
+    "following": false,
+    "geo_enabled": true,
+    "profile_background_image_url": "http://abs.twimg.com/images/themes/theme14/bg.gif",
+    "screen_name": "sanand0",
+    "lang": "en",
+    "profile_background_tile": true,
+    "favourites_count": 10,
+    "name": "S Anand",
+    "notifications": false,
+    "url": "http://t.co/da5ntSjMc4",
+    "created_at": "Sat Jun 28 20:11:06 +0000 2008",
+    "contributors_enabled": false,
+    "time_zone": null,
+    "access_token": {...},
+    "protected": false,
+    "default_profile": false,
+    "is_translator": false
+}
+```
 
 ## LDAP auth
 
@@ -322,6 +430,15 @@ username and password. (The form should have an [xsrf][xsrf] field).
 
 LDAP runs on port 389 and and LDAPS runs on port 636. If you have a non-standard
 port, specify it like `port: 100`.
+
+The user object `handler.current_user` looks like this:
+
+```js
+{
+    "user": "uid=employee,cn=users,cn=accounts,dc=demo1,dc=freeipa,dc=org",
+    "id": "uid=employee,cn=users,cn=accounts,dc=demo1,dc=freeipa,dc=org"
+},
+```
 
 ### LDAP attributes
 
@@ -381,6 +498,42 @@ This is similar to [direct LDAP login](#direct-ldap-login), but the sequence fol
    `search.base` for `search.filter` -- which becomes
    `(mail={whatever-username-was-entered})`.
 3. Finally, Gramex checks if the first returned user matches the password.
+
+The user object `handler.current_user` looks like this:
+
+```js
+{
+    "user": "uid=employee,cn=users,cn=accounts,dc=demo1,dc=freeipa,dc=org",
+    "id": "uid=employee,cn=users,cn=accounts,dc=demo1,dc=freeipa,dc=org"
+    "dn": "uid=employee,cn=users,cn=accounts,dc=demo1,dc=freeipa,dc=org",
+    "attributes": {
+        "cn": ["Test Employee"],
+        "objectClass": [
+            "top",
+            "person",
+            "organizationalperson",
+            "inetorgperson",
+        ],
+        "uidNumber": [1198600004],
+        "manager": ["uid=manager,cn=users,cn=accounts,dc=demo1,dc=freeipa,dc=org"],
+        "krbLoginFailedCount": [0],
+        "krbLastPwdChange": ["2017-06-18 11:13:37+00:00"],
+        "uid": ["employee"],
+        "mail": ["employee@demo1.freeipa.org"],
+        "dn": "uid=employee,cn=users,cn=accounts,dc=demo1,dc=freeipa,dc=org",
+        "loginShell": ["/bin/sh"],
+        "homeDirectory": ["/home/employee"],
+        "displayName": ["Test Employee"],
+        "memberOf": [
+            "cn=ipausers,cn=groups,cn=accounts,dc=demo1,dc=freeipa,dc=org",
+            "cn=employees,cn=groups,cn=accounts,dc=demo1,dc=freeipa,dc=org"
+        ],
+        "givenName": ["Test"],
+        "initials": ["TE"],
+        ...
+    }
+},
+```
 
 [xsrf]: ../filehandler/#xsrf
 
@@ -497,6 +650,17 @@ default. This means:
 - Delay for 1 second on the first failure
 - Delay for 1 second on the second failure
 - Delay for 5 seconds on any failure thereafter.
+
+ The user object `handler.current_user` looks like this:
+
+```js
+{
+    "id": "alpha",
+    "role": "admin manager",
+    "user": "alpha",
+    "email": "gramex.guide+alpha@gmail.com"
+}
+```
 
 ### Forgot password
 
@@ -649,8 +813,9 @@ auth/integrated:
 The user must first trust this server by enabling
 [SSO on IE/Chrome](http://docs.aws.amazon.com/directoryservice/latest/admin-guide/ie_sso.html)
 or [on Firefox](https://wiki.shibboleth.net/confluence/display/SHIB2/Single+sign-on+Browser+configuration).
-Then visiting `/integrated` will automatically log the user in. The user object
-looks like this:
+Then visiting `/integrated` will automatically log the user in.
+
+The user object `handler.current_user` looks like this:
 
 ```js
 {
@@ -789,8 +954,13 @@ It accepts the following configuration:
 
 ## Email Auth
 
-**v1.38**. EmailAuth sends a one-time password (OTP) via email for users to log
-in. It does not store any password permanently.
+**v1.38**. [EmailAuth](#emailauth) allows any user with a valid email ID to log
+in. This is a convenient alternative to [DBAuth](#dbauth). Users do not need to
+sign-up. Administrators don't need to provision accounts. Gramex can [restrict
+access](#authorization) just based on just their email ID or domain.
+
+EmailAuth sends a one-time password (OTP) via email for users to log in. It does
+not store any password permanently.
 
 This requires an [email service](../e,ail/). Here is a sample configuration:
 
@@ -804,7 +974,7 @@ email:
 url:
   login:
     pattern: /$YAMLURL/login
-    handler: EmailAuth                # Use SMS based authentication
+    handler: EmailAuth                # Use email based authentication
     kwargs:
       # Required configuration
       service: gramex-guide-gmail     # Send messages using this provider
@@ -832,6 +1002,30 @@ url:
   <a class="example-src" href="http://code.gramener.com/cto/gramex/tree/master/gramex/apps/guide/auth/gramex.yaml">Source</a>
 </div>
 
+The user object `handler.current_user` looks like this:
+
+```js
+{
+    'email': 's.anand@gramener.com',
+    'hd': 'gramener.com',
+    'id': 's.anand@gramener.com'
+}
+```
+
+To authorize only specific users, use [roles](#roles). For example, this allows
+all users from @ibm.com and @pwc.com, as well as `admin@example.org`.
+
+```yaml
+url:
+  dashboard:
+    ...
+    kwargs:
+      auth:
+        membership:
+          - {hd: [ibm.com, pwc.com]}
+          - {email: [admin@example.org]}
+```
+
 The login flow is:
 
 1. User visits `/`. App shows form template asking for email (`user` field)
@@ -852,7 +1046,6 @@ When you write your own login template form, you can use these Python variables:
     - `'not-sent'` if the OTP could not be sent. `msg` has the Exception
     - `'wrong-pw'` if the OTP is wrong. `msg` has a string error
 - `msg`: sent only if `error` is not `None`. See `error`
-
 
 [email-auth-template]: https://code.gramener.com/cto/gramex/blob/master/gramex/handlers/auth.email.template.html
 
@@ -904,6 +1097,15 @@ url:
 
 **Note**: the example above relies on free credits available from Exotel. These
 may have run out.
+
+The user object `handler.current_user` is looks like this:
+
+```js
+{
+    'user': '+919741552552',
+    'id': '+919741552552'
+}
+```
 
 The login flow is:
 
