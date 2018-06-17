@@ -8,7 +8,7 @@ from .websockethandler import WebSocketHandler
 from .filehandler import FileHandler
 from .datahandler import DataHandler, QueryHandler
 from .authhandler import (GoogleAuth, FacebookAuth, TwitterAuth, LDAPAuth, SimpleAuth, DBAuth,
-                          IntegratedAuth, LogoutHandler, SAMLAuth, OAuth2, SMSAuth)
+                          IntegratedAuth, LogoutHandler, SAMLAuth, OAuth2, SMSAuth, EmailAuth)
 from .processhandler import ProcessHandler
 from .jsonhandler import JSONHandler
 from .socialhandler import TwitterRESTHandler, FacebookGraphHandler
@@ -25,7 +25,7 @@ __all__ = [
     'BaseHandler', 'FunctionHandler', 'FileHandler', 'DirectoryHandler',
     'DataHandler', 'QueryHandler', 'JSONHandler', 'GoogleAuth',
     'FacebookAuth', 'TwitterAuth', 'LDAPAuth', 'SimpleAuth', 'DBAuth', 'OAuth2',
-    'IntegratedAuth', 'SAMLAuth', 'SMSAuth',
+    'IntegratedAuth', 'SAMLAuth', 'SMSAuth', 'EmailAuth',
     'LogoutHandler', 'ProcessHandler', 'TwitterRESTHandler',
     'FacebookGraphHandler', 'UploadHandler',
     'BaseWebSocketHandler', 'WebSocketHandler',

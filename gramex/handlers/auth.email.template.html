@@ -44,22 +44,14 @@
   {% try %}{% set password = kwargs.password.arg %}{% except %}{% set password = 'password' %}{% end %}
   <form method="POST">
     <input type="hidden" name="_xsrf" value="{{ handler.xsrf_token }}">
-    {% if phone is None or error == 'not-sent' %}
+    {% if email is None or error %}
       <p class="row">
-        <label for="{{ user }}">Mobile</label>
-        <input type="tel" name="{{ user }}" value="{{ phone or '' }}" autofocus>
+        <label for="{{ user }}">E-mail</label>
+        <input type="email" name="{{ user }}" value="{{ email or '' }}" autofocus>
       </p>
-      <button type="submit">Send Password via SMS</button>
+      <button type="submit">Send Password via E-mail</button>
     {% else %}
-      <p class="row">
-        <label for="{{ user }}">Mobile</label>
-        <input type="tel" name="{{ user }}" value="{{ phone }}" readonly>
-      </p>
-      <p class="row">
-        <label for="{{ password }}">Password</label>
-        <input name="{{ password }}" type="password" autofocus>
-      </p>
-      <button type="submit">Log in</button>
+      <p>We sent an email to <code>{{ email }}</code> with a link to log in.</p>
     {% end %}
   </form>
 </body>

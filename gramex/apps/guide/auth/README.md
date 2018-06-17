@@ -787,6 +787,76 @@ It accepts the following configuration:
 </div>
 
 
+## Email Auth
+
+**v1.38**. EmailAuth sends a one-time password (OTP) via email for users to log
+in. It does not store any password permanently.
+
+This requires an [email service](../e,ail/). Here is a sample configuration:
+
+```yaml
+email:
+  gramex-guide-gmail:
+      type: gmail                     # Type of email used is GMail
+      email: gramex.guide@gmail.com   # Generic email ID used to test e-mails
+      password: tlpmupxnhucitpte      # App-specific password created for Gramex guide
+
+url:
+  login:
+    pattern: /$YAMLURL/login
+    handler: EmailAuth                # Use SMS based authentication
+    kwargs:
+      # Required configuration
+      service: gramex-guide-gmail     # Send messages using this provider
+      # Send the strings below as subject and body. You can use variables
+      # user=email ID, password=OTP, link=one-time login link
+      subject: 'OTP for Gramex'
+      body: 'The OTP for {user} is {password}. Visit {link}'
+      redirect:                 # After logging in, redirect the user to:
+          query: next           #      the ?next= URL
+          header: Referer       # else the Referer: header (i.e. page before login)
+          url: /$YAMLURL/       # else the home page of current directory
+
+      # Optional configuration. The values shown below are the defaults
+      minutes_to_expiry: 15     # Minutes after which the OTP will expire
+      size: 6                   # Number of characters in the OTP
+      template: auth.email.template.html    # Login template
+      user:
+          arg: user             # ?user= contains the user email
+      password:
+          arg: password         # ?password= contains the OTP
+```
+
+<div class="example">
+  <a class="example-demo" href="email">Email auth example</a>
+  <a class="example-src" href="http://code.gramener.com/cto/gramex/tree/master/gramex/apps/guide/auth/gramex.yaml">Source</a>
+</div>
+
+The login flow is:
+
+1. User visits `/`. App shows form template asking for email (`user` field)
+2. User submits email. Browser redirects to `POST /?user=<email>`
+3. App generates a new OTP (valid for `minutes_to_expiry` minutes).
+4. App emails the OTP link to the user's email. On fail, ask for email again
+5. If email was sent, app shows a message asking user to check email
+6. User clicks on email and visits link with OTP (`GET /?password=<otp>`)
+7. App checks if OTP is valid. If yes, logs user in and redirects
+8. On any error, shows form template with error
+
+The `template:` is a Tornado template. [Here is an example][email-auth-template].
+When you write your own login template form, you can use these Python variables:
+
+- `handler`: the handler. `handler.kwargs` has the configuration above
+- `email`: the phone number provided by the user
+- `error`: `None` if there is no error. Else:
+    - `'not-sent'` if the OTP could not be sent. `msg` has the Exception
+    - `'wrong-pw'` if the OTP is wrong. `msg` has a string error
+- `msg`: sent only if `error` is not `None`. See `error`
+
+
+[email-auth-template]: https://code.gramener.com/cto/gramex/blob/master/gramex/handlers/auth.email.template.html
+
+
 ## SMS Auth
 
 **v1.36**. SMSAuth sends a one-time password (OTP) via SMS for users to log in.
@@ -822,9 +892,9 @@ url:
       sender: gramex            # Sender ID. Works in some countries
       template: $YAMLPATH/auth.sms.template.html    # Login template
       user:
-          column: user          # ?user= contains the mobile number
+          arg: user             # ?user= contains the mobile number
       password:
-          column: password      # ?password= contains the OTP
+          arg: password         # ?password= contains the OTP
 ```
 
 <div class="example">

@@ -1105,9 +1105,9 @@ class SMSAuth(SimpleAuth):
         sender: gramex            # Sender ID. Works in some countries
         template: $YAMLPATH/auth.sms.template.html    # Login template
         user:
-            column: user          # ?user= contains the mobile number
+            arg: user             # ?user= contains the mobile number
         password:
-            column: password      # ?password= contains the OTP
+            arg: password         # ?password= contains the OTP
 
     The SMSAuth flow is as follows:
 
@@ -1160,6 +1160,86 @@ class SMSAuth(SimpleAuth):
             else:
                 self.render_template(self.template, phone=user, error='wrong-pw',
                                      msg='Invalid password')
+
+
+class EmailAuth(SimpleAuth):
+    '''
+    The configuration (kwargs) for EmailAuth looks like this::
+
+        # Required configuration
+        service: gramex-guide-gmail     # Send messages using this provider
+        # Send the strings below as subject and body. You can use variables
+        # user=email ID, password=OTP, link=one-time login link
+        subject: 'OTP for Gramex'
+        body: 'The OTP for {user} is {password}. Visit {link}'
+
+        # Optional configuration. The values shown below are the defaults
+        minutes_to_expiry: 15     # Minutes after which the OTP will expire
+        size: 6                   # Number of characters in the OTP
+        template: auth.email.template.html    # Login template
+        user:
+            arg: user             # ?user= contains the user email
+        password:
+            arg: password         # ?password= contains the OTP
+
+    The EmailAuth flow is as follows:
+
+    1. User visits ``/``. App shows form template asking for email (``user`` field)
+    2. User submits email. Browser redirects to ``POST /?user=<email>``
+    3. App generates a new OTP (valid for ``minutes_to_expiry`` minutes).
+    4. App emails the OTP link to the user's email. On fail, ask for email again
+    5. If email was sent, app shows a message asking user to check email
+    6. User clicks on email and visits link with OTP (``GET /?password=<otp>``)
+    7. App checks if OTP is valid. If yes, logs user in and redirects
+    8. On any error, shows form template with error
+    '''
+    @classmethod
+    def setup(cls, service, subject, body, size=6, minutes_to_expiry=15, **kwargs):
+        super(EmailAuth, cls).setup(**kwargs)
+        cls.template = kwargs.get('template', os.path.join(_folder, 'auth.email.template.html'))
+        cls.expire = minutes_to_expiry * 60
+        cls.service = service
+        cls.subject = subject
+        cls.body = body
+        cls.recover = OTP(size=size)
+
+    @tornado.gen.coroutine
+    def get(self):
+        self.save_redirect_page()
+        password = self.get_arg(self.password.arg, None)
+        if password is None:
+            self.render_template(self.template, email=None, error=None)
+        else:
+            row = yield gramex.service.threadpool.submit(self.recover.pop, password)
+            if row is not None:
+                yield self.set_user({'user': row['user'], 'email': row['email']}, id='user')
+                self.redirect_next()
+            else:
+                self.render_template(self.template, email=None, error='wrong-pw',
+                                     msg='Invalid token')
+
+    @tornado.gen.coroutine
+    def post(self):
+        user = self.get_arg(self.user.arg, None)
+        token = yield gramex.service.threadpool.submit(
+            self.recover.token, user=user, email=user, expire=time.time() + self.expire)
+        emailer = gramex.service.email[self.service]
+        link = self.request.protocol + "://" + self.request.host + self.request.path
+        info = {
+            'user': user,
+            'password': token,
+            'link': link + '?' + six.moves.urllib_parse.urlencode({self.password.arg: token}),
+        }
+        try:
+            yield gramex.service.threadpool.submit(
+                emailer.mail, to=user, subject=self.subject.format(**info),
+                body=self.body.format(**info))
+        except Exception as e:
+            app_log.exception('%s: cannot send email OTP', self.name)
+            self.render_template(self.template, email=user, error='not-sent', msg=e)
+        else:
+            app_log.debug('%s: sent email OTP to %s', self.name, user)
+            self.render_template(self.template, email=user, error=None)
 
 
 class OTP(object):

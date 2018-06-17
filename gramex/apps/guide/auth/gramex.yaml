@@ -415,6 +415,18 @@ url:
               header: Referer
               url: /$YAMLURL
 
+    auth/email:
+        pattern: /$YAMLURL/email
+        handler: EmailAuth
+        kwargs:
+          service: gramex-guide-auth
+          subject: 'OTP for Gramex Guide'
+          body: 'The OTP for {user} is {password}. Visit {link}'
+          redirect:
+              query: next
+              header: Referer
+              url: /$YAMLURL
+
 schedule:
     create-user-database:
         function: authutil.create_user_database     # Run this function
