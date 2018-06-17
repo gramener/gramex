@@ -3,9 +3,7 @@ from __future__ import unicode_literals
 import io
 import os
 import six
-import json
 import time
-import atexit
 import logging
 import datetime
 import mimetypes
@@ -19,9 +17,12 @@ from tornado.web import RequestHandler, HTTPError, MissingArgumentError
 from tornado.websocket import WebSocketHandler
 from gramex import conf, __version__
 from gramex.services import info
-from gramex.config import merge, objectpath, app_log, CustomJSONDecoder, CustomJSONEncoder
+from gramex.config import merge, objectpath, app_log
 from gramex.transforms import build_transform
 from gramex.http import UNAUTHORIZED, FORBIDDEN, BAD_REQUEST
+from gramex.cache import get_store
+# We don't use these, but these stores used to be defined here. Programs may import these
+from gramex.cache import KeyStore, JSONStore, HDF5Store, SQLiteStore, RedisStore    # noqa
 
 server_header = 'Gramex/%s' % __version__
 session_store_cache = {}
@@ -130,26 +131,14 @@ class BaseMixin(object):
         if session_conf is None:
             return
         key = store_type, store_path = session_conf.get('type'), session_conf.get('path')
-        kwargs = dict(
-            path=store_path,
-            flush=session_conf.get('flush'),
-            purge=session_conf.get('purge'),
-            purge_keys=cls._purge_keys,
-        )
-        if key in session_store_cache:
-            pass
-        elif store_type == 'memory':
-            session_store_cache[key] = KeyStore(**kwargs)
-        elif store_type == 'sqlite':
-            session_store_cache[key] = SQLiteStore(**kwargs)
-        elif store_type == 'json':
-            session_store_cache[key] = JSONStore(**kwargs)
-        elif store_type == 'redis':
-            session_store_cache[key] = RedisStore(**kwargs)
-        elif store_type == 'hdf5':
-            session_store_cache[key] = HDF5Store(**kwargs)
-        else:
-            raise NotImplementedError('Session type: %s not implemented' % store_type)
+        if key not in session_store_cache:
+            session_store_cache[key] = get_store(
+                type=store_type,
+                path=store_path,
+                flush=session_conf.get('flush'),
+                purge=session_conf.get('purge'),
+                purge_keys=cls._purge_keys
+            )
         cls._session_store = session_store_cache[key]
         cls.session = property(cls.get_session)
         cls._session_expiry = session_conf.get('expiry')
@@ -858,326 +847,6 @@ class BaseWebSocketHandler(WebSocketHandler, BaseMixin):
             for result in permit_generator(self):
                 if not result:
                     raise HTTPError(FORBIDDEN)
-
-
-class KeyStore(object):
-    '''
-    Base class for persistent dictionaries. (But KeyStore is not persistent.)
-
-        >>> store = KeyStore()
-        >>> value = store.load(key, None)   # Load a value. It's like dict.get()
-        >>> store.dump(key, value)          # Save a value. It's like dict.set(), but doesn't flush
-        >>> store.flush()                   # Saves to disk
-        >>> store.close()                   # Close the store
-
-    You can initialize a KeyStore with a ``flush=`` parameter. The store is
-    flushed to disk via ``store.flush()`` every ``flush`` seconds.
-
-    If a ``purge=`` is provided, the data is purged of missing values every
-    ``purge`` seconds. You can provide a custom ``purge_keys=`` function that
-    returns an iterator of keys to delete if any.
-
-    When the program exits, ``.close()`` is automatically called.
-    '''
-    def __init__(self, flush=None, purge=None, purge_keys=None, **kwargs):
-        '''Initialise the KeyStore at path'''
-        self.store = {}
-        if callable(purge_keys):
-            self.purge_keys = purge_keys
-        elif purge_keys is not None:
-            app_log.error('KeyStore: purge_keys=%r invalid. Must be function(dict)', purge_keys)
-        # Periodically flush and purge buffers
-        if flush is not None:
-            tornado.ioloop.PeriodicCallback(self.flush, callback_time=flush * 1000).start()
-        if purge is not None:
-            tornado.ioloop.PeriodicCallback(self.purge, callback_time=purge * 1000).start()
-        # Call close() when Python gracefully exits
-        atexit.register(self.close)
-
-    def keys(self):
-        '''Return all keys in the store'''
-        return self.store.keys()
-
-    def load(self, key, default=None):
-        '''Same as store.get(), but called "load" to indicate persistence'''
-        return self.store.get(key, {} if default is None else default)
-
-    def dump(self, key, value):
-        '''Same as store[key] = value'''
-        self.store[key] = value
-
-    @staticmethod
-    def purge_keys(data):
-        return [key for key, val in data.items() if val is None]
-
-    def flush(self):
-        '''Write to disk'''
-        pass
-
-    def purge(self):
-        '''Delete empty keys and flush'''
-        for key in self.purge_keys(self.store):
-            try:
-                del self.store[key]
-            except KeyError:
-                # If the key was already removed from store, ignore
-                pass
-        self.flush()
-
-    def close(self):
-        '''Flush and close all open handles'''
-        raise NotImplementedError()
-
-
-class RedisStore(KeyStore):
-    '''
-    A KeyStore that stores data in a Redis database. Typical usage::
-
-        >>> store = RedisStore('localhost:6379:1')      # host:port:db
-        >>> value = store.load(key)
-        >>> store.dump(key, value)
-
-    Values are encoded as JSON using gramex.config.CustomJSONEncoder (thus
-    handling datetime.) Keys are JSON encoded.
-    '''
-
-    def __init__(self, path=None, *args, **kwargs):
-        super(RedisStore, self).__init__(*args, **kwargs)
-        from redis import StrictRedis
-        host, port, db = 'localhost', 6379, 0
-        if isinstance(path, six.string_types):
-            parts = path.split(':')
-            if len(parts):
-                host = parts.pop(0)
-            if len(parts):
-                port = int(parts.pop(0))
-            if len(parts):
-                db = int(parts.pop(0))
-        self.store = StrictRedis(host=host, port=port, db=db,
-                                 decode_responses=True, encoding='utf-8')
-
-    def load(self, key, default=None):
-        result = self.store.get(key)
-        if result is None:
-            return default
-        try:
-            return json.loads(result, object_pairs_hook=AttrDict, cls=CustomJSONDecoder)
-        except ValueError:
-            app_log.error('RedisStore("%s").load("%s") is not JSON ("%r..."")',
-                          self.store, key, result)
-            return default
-
-    def dump(self, key, value):
-        if value is None:
-            self.store.delete(key)
-        else:
-            value = json.dumps(value, ensure_ascii=True, separators=(',', ':'),
-                               cls=CustomJSONEncoder)
-            self.store.set(key, value)
-
-    def close(self):
-        pass
-
-    def purge(self):
-        app_log.debug('Purging %s', self.store)
-        # TODO: optimize item retrieval
-        items = {key: self.load(key, None) for key in self.store.keys()}
-        for key in self.purge_keys(items):
-            self.store.delete(key)
-
-
-class SQLiteStore(KeyStore):
-    '''
-    A KeyStore that stores data in a SQLite file. Typical usage::
-
-        >>> store = SQLiteStore('file.db', table='store')
-        >>> value = store.load(key)
-        >>> store.dump(key, value)
-
-    Values are encoded as JSON using gramex.config.CustomJSONEncoder (thus
-    handling datetime.) Keys are JSON encoded.
-    '''
-    def __init__(self, path, table='store', *args, **kwargs):
-        super(SQLiteStore, self).__init__(*args, **kwargs)
-        self.path = _create_path(path)
-        from sqlitedict import SqliteDict
-        self.store = SqliteDict(
-            self.path, tablename=table, autocommit=True,
-            encode=lambda v: json.dumps(v, separators=(',', ':'), ensure_ascii=True,
-                                        cls=CustomJSONEncoder),
-            decode=lambda v: json.loads(v, object_pairs_hook=AttrDict, cls=CustomJSONDecoder),
-        )
-
-    def close(self):
-        self.store.close()
-
-    def flush(self):
-        super(SQLiteStore, self).flush()
-        self.store.commit()
-
-    def purge(self):
-        app_log.debug('Purging %s', self.path)
-        super(SQLiteStore, self).purge()
-
-
-class HDF5Store(KeyStore):
-    '''
-    A KeyStore that stores data in a HDF5 file. Typical usage::
-
-        >>> store = HDF5Store('file.h5', flush=15)
-        >>> value = store.load(key)
-        >>> store.dump(key, value)
-
-    Internally, it uses HDF5 groups to store data. Values are encoded as JSON
-    using gramex.config.CustomJSONEncoder (thus handling datetime.) Keys are JSON
-    encoded, and '/' is escaped as well (since HDF5 groups treat / as subgroups.)
-    '''
-    def __init__(self, path, *args, **kwargs):
-        super(HDF5Store, self).__init__(*args, **kwargs)
-        self.path = _create_path(path)
-        self.changed = False
-        import h5py
-        # h5py.File fails with OSError: Unable to create file (unable to open file: name =
-        # '.meta.h5', errno = 17, error message = 'File exists', flags = 15, o_flags = 502)
-        # TODO: identify why this happens and resolve it.
-        self.store = h5py.File(self.path, 'a')
-
-    def load(self, key, default=None):
-        # Keys cannot contain / in HDF5 store. Escape it
-        key = json.dumps(key, ensure_ascii=True)[1:-1].replace('/', '\t')
-        result = self.store.get(key, None)
-        if result is None:
-            return default
-        try:
-            return json.loads(result.value, object_pairs_hook=AttrDict, cls=CustomJSONDecoder)
-        except ValueError:
-            app_log.error('HDF5Store("%s").load("%s") is not JSON ("%r..."")',
-                          self.path, key, result.value)
-            return default
-
-    def dump(self, key, value):
-        # Keys cannot contain / in HDF5 store. Escape it
-        key = json.dumps(key, ensure_ascii=True)[1:-1].replace('/', '\t')
-        if self.store.get(key) != value:
-            if key in self.store:
-                del self.store[key]
-            self.store[key] = json.dumps(value, ensure_ascii=True, separators=(',', ':'),
-                                         cls=CustomJSONEncoder)
-            self.changed = True
-
-    def keys(self):
-        # Keys cannot contain / in HDF5 store. Unescape it
-        return [json.loads('"%s"' % key.replace('\t', '/')) for key in self.store.keys()]
-
-    def flush(self):
-        super(HDF5Store, self).flush()
-        if self.changed:
-            app_log.debug('Flushing %s', self.path)
-            self.store.flush()
-            self.changed = False
-
-    def purge(self):
-        '''
-        Load all keys into self.store. Delete what's required. Save.
-        '''
-        self.flush()
-        changed = False
-        items = {key: json.loads(val.value, object_pairs_hook=AttrDict, cls=CustomJSONDecoder)
-                 for key, val in self.store.items()}
-        for key in self.purge_keys(items):
-            del self.store[key]
-            changed = True
-        if changed:
-            app_log.debug('Purging %s', self.path)
-            self.store.flush()
-
-    def close(self):
-        try:
-            self.store.close()
-        # h5py.h5f.get_obj_ids often raises a ValueError: Not a file id.
-        # This is presumably if the file handle has been closed. Log & ignore.
-        except ValueError:
-            app_log.debug('HDF5Store("%s").close() error ignored', self.path)
-
-
-class JSONStore(KeyStore):
-    '''
-    A KeyStore that stores data in a JSON file. Typical usage::
-
-        >>> store = JSONStore('file.json', flush=15)
-        >>> value = store.load(key)
-        >>> store.dump(key, value)
-
-    This is less efficient than HDF5Store for large data, but is human-readable.
-    They also cannot support multiple instances. Only one JSONStore instance
-    is permitted per file.
-    '''
-    def __init__(self, path, *args, **kwargs):
-        super(JSONStore, self).__init__(*args, **kwargs)
-        self.path = _create_path(path)
-        self.store = self._read_json()
-        self.changed = False
-        self.update = {}        # key-values added since flush
-
-    def _read_json(self):
-        try:
-            with open(self.path) as handle:         # noqa: no encoding for json
-                return json.load(handle, cls=CustomJSONDecoder)
-        except (IOError, ValueError):
-            return {}
-
-    def _write_json(self, data):
-        json_value = json.dumps(data, ensure_ascii=True, separators=(',', ':'),
-                                cls=CustomJSONEncoder)
-        with open(self.path, 'w') as handle:    # noqa: no encoding for json
-            handle.write(json_value)
-
-    def dump(self, key, value):
-        '''Same as store[key] = value'''
-        if self.store.get(key) != value:
-            self.store[key] = value
-            self.update[key] = value
-            self.changed = True
-
-    def flush(self):
-        super(JSONStore, self).flush()
-        if self.changed:
-            app_log.debug('Flushing %s', self.path)
-            store = self._read_json()
-            store.update(self.update)
-            self._write_json(store)
-            self.store = store
-            self.update = {}
-            self.changed = False
-
-    def purge(self):
-        '''
-        Load all keys into self.store. Delete what's required. Save.
-        '''
-        self.flush()
-        changed = False
-        for key in self.purge_keys(self.store):
-            del self.store[key]
-            changed = True
-        if changed:
-            app_log.debug('Purging %s', self.path)
-            self._write_json(self.store)
-
-    def close(self):
-        try:
-            self.flush()
-        # This has happened when the directory was deleted. Log & ignore.
-        except OSError:
-            app_log.error('Cannot flush %s', self.path)
-
-
-def _create_path(path):
-    # Ensure that path directory exists
-    path = os.path.abspath(path)
-    folder = os.path.dirname(path)
-    if not os.path.exists(folder):
-        os.makedirs(folder)
-    return path
 
 
 def check_membership(memberships):

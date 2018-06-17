@@ -12,9 +12,10 @@ from six.moves import zip_longest
 from orderedattrdict import AttrDict
 from tornado.web import HTTPError
 from gramex.config import app_log
+from gramex.cache import HDF5Store
 from gramex.transforms import build_transform
 from gramex.http import FORBIDDEN, INTERNAL_SERVER_ERROR
-from .basehandler import BaseHandler, HDF5Store
+from .basehandler import BaseHandler
 
 MILLISECONDS = 1000
 

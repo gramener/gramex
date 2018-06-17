@@ -4,7 +4,7 @@ import json
 import datetime
 import gramex
 from gramex import variables
-from gramex.handlers.basehandler import SQLiteStore
+from gramex.cache import SQLiteStore
 
 path = os.path.join(variables.GRAMEXDATA, 'auth.user.db')
 user_info = SQLiteStore(path, table='user')

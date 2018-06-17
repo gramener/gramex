@@ -9,8 +9,11 @@ import unittest
 from nose.tools import eq_, ok_
 from nose.plugins.skip import SkipTest
 import gramex.cache
+from gramex.cache import JSONStore, SQLiteStore, HDF5Store, RedisStore
+# It must be possible to import from basehandler for backward-compatibility
+from gramex.handlers.basehandler import JSONStore, SQLiteStore, HDF5Store, RedisStore  # noqa
+from gramex.handlers.basehandler import BaseMixin
 from gramex.config import variables
-from gramex.handlers.basehandler import JSONStore, SQLiteStore, HDF5Store, RedisStore, BaseMixin
 from . import tests_dir
 
 folder = os.path.dirname(os.path.abspath(__file__))

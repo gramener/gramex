@@ -317,7 +317,7 @@ class TestDownload(unittest.TestCase):
 
     def test_download_json(self):
         out = gramex.data.download(self.dummy, format='json')
-        afe(pd.read_json(io.BytesIO(out)), self.dummy)
+        afe(pd.read_json(io.BytesIO(out)), self.dummy, check_like=True)
 
         out = gramex.data.download({'dummy': self.dummy, 'sales': self.sales}, format='json')
         result = json.loads(out, object_pairs_hook=AttrDict)

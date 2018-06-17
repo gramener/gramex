@@ -25,14 +25,14 @@ import gramex.cache
 from gramex.http import UNAUTHORIZED, BAD_REQUEST, INTERNAL_SERVER_ERROR
 from gramex.config import check_old_certs, app_log, objectpath, str_utf8, merge
 from gramex.transforms import build_transform
-from .basehandler import BaseHandler, build_log_info, SQLiteStore
+from .basehandler import BaseHandler, build_log_info
 
 _folder = os.path.dirname(os.path.abspath(__file__))
 _auth_template = os.path.join(_folder, 'auth.template.html')
 _forgot_template = os.path.join(_folder, 'forgot.template.html')
 _signup_template = os.path.join(_folder, 'signup.template.html')
 _user_info_path = os.path.join(gramex.variables.GRAMEXDATA, 'auth.user.db')
-_user_info = SQLiteStore(_user_info_path, table='user')
+_user_info = gramex.cache.SQLiteStore(_user_info_path, table='user')
 
 # Python 3 csv.writer.writerow writes as str(), which is unicode in Py3.
 # Python 2 csv.writer.writerow writes as str(), which is bytes in Py2.

@@ -12,8 +12,8 @@ from nose.plugins.skip import SkipTest
 from six.moves.urllib_parse import urlencode
 import gramex
 import gramex.config
+from gramex.cache import SQLiteStore
 from gramex.handlers.authhandler import _user_info_path
-from gramex.handlers.basehandler import SQLiteStore
 from gramex.http import OK, UNAUTHORIZED, FORBIDDEN, BAD_REQUEST
 from . import TestGramex, server, tempfiles, dbutils
 
