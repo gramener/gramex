@@ -962,7 +962,7 @@ access](#authorization) just based on just their email ID or domain.
 EmailAuth sends a one-time password (OTP) via email for users to log in. It does
 not store any password permanently.
 
-This requires an [email service](../e,ail/). Here is a sample configuration:
+This requires an [email service](../email/). Here is a sample configuration:
 
 ```yaml
 email:
