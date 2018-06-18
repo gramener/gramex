@@ -88,11 +88,17 @@ class TestFilter(unittest.TestCase):
                sales[sales['city'].isin(['Hyderabad', 'Coimbatore'])])
         eq_(m['filters'], [('city', '', ('Hyderabad', 'Coimbatore'))])
 
+        # ?col= is treated as non-null col values
         m = eq({'sales': []}, sales[pd.notnull(sales['sales'])])
         eq_(m['filters'], [('sales', '', ())])
+        m = eq({'sales': ['']}, sales[pd.notnull(sales['sales'])])
+        eq_(m['filters'], [('sales', '', ())])
 
+        # ?col!= is treated as null col values
         # Don't check dtype. Database may return NULL as an object, not float
         m = eq({'sales!': []}, sales[pd.isnull(sales['sales'])], check_dtype=False)
+        eq_(m['filters'], [('sales', '!', ())])
+        m = eq({'sales!': ['']}, sales[pd.isnull(sales['sales'])], check_dtype=False)
         eq_(m['filters'], [('sales', '!', ())])
 
         m = eq({'product!': ['Biscuit', 'Crème']},

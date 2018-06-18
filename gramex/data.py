@@ -611,7 +611,7 @@ def _filter_db(engine, table, meta, controls, args, source='select', id=[]):
             # In PY2, .python_type returns str. We want unicode
             if conv == six.binary_type:
                 conv = six.text_type
-            vals = tuple(conv(val) for val in vals)
+            vals = tuple(conv(val) for val in vals if val)
             if op not in {'', '!'} and len(vals) == 0:
                 meta['ignored'].append((key, vals))
                 continue
