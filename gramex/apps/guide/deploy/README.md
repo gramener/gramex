@@ -350,7 +350,8 @@ url:
 
 ### Deployment variables
 
-[Predefined variables](../config/#predefined-variables) are useful in deployment. For example, say you have the following directory structure:
+[Predefined variables](../config/#predefined-variables) are useful in deployment.
+For example, say you have the following directory structure:
 
     /app              # Gramex is run from here. It is the current directory
       /component      # Inside a sub-directory, we have a component
@@ -383,8 +384,8 @@ url:
             path: $GRAMEXPATH/gramex.yaml   # to the core Gramex config file
 ```
 
-Typically, applications store data in `$GRAMEXDATA/data/<appname>/`. Create and use this directory for your data storage needs.
-
+Typically, applications store data in `$GRAMEXDATA/data/<appname>/`.
+Create and use this directory for your data storage needs.
 
 ## HTTPS Server
 
@@ -571,6 +572,48 @@ ProxyPass        /app2/ http://127.0.0.1:8002/
 ProxyPassReverse /app2/ http://127.0.0.1:8002/
 ```
 
+### Apache Load Balancing
+
+To distribute load you can run multiple Gramex instances on different ports on a single server or
+on multiple servers. You could configure Apache server to serve requests from multiple instances.
+
+Here is a minimal configuration to use the Apache server for proxy load balancing:
+
+```
+LoadModule proxy_module                modules/mod_proxy.so
+LoadModule headers_module              modules/mod_headers.so
+LoadModule proxy_http_module           modules/mod_proxy_http.so
+LoadModule authz_core_module           modules/mod_authz_core.so
+LoadModule slotmem_shm_module          modules/mod_slotmem_shm.so
+LoadModule proxy_balancer_module       modules/mod_proxy_balancer.so
+LoadModule lbmethod_byrequests_module  modules/mod_lbmethod_byrequests.so
+
+Listen 80
+
+<VirtualHost *:80>
+    # If the server name matches one of the following, apply the configuration
+    ServerName domain.server.com
+    ServerAlias localhost 127.0.0.1 otherdomain.server.com
+
+    # Load balancer set up. Give the balancer a unique name
+    <Proxy "balancer://balancer-name">
+        # Add multiple instances to balance load across
+        BalancerMember "http://127.0.0.1:9988" route=1
+        BalancerMember "http://127.0.0.1:9989" route=2
+        # The ROUTEID cookie ensures that the same session goes to the same backend
+        ProxySet stickysession=ROUTEID
+    </Proxy>
+
+    ProxyPass "/" "balancer://balancer-name/"
+    ProxyPassReverse "/" "balancer://balancer-name/"
+    # Let Gramex know what the original URL was so that it can redirect properly (see rebase_uri)
+    ProxyPreserveHost On
+    RequestHeader set X-Real-IP "%{REMOTE_ADDR}s"
+    RequestHeader set X-Scheme "%{REQUEST_SCHEME}s"
+    RequestHeader set X-Request-URI %{REQUEST_URI}s
+</VirtualHost>
+```
+
 ## Shared deployment
 
 To deploy on Gramener's [UAT server](https://uat.gramener.com/monitor/apps), see
@@ -722,7 +765,7 @@ This can be run as a cronjob at periodic intervals to monitor server health.
 Real-time monitoring can be enabled and exposed via websockets via `--real-time-html`
 
 ```bash
-goaccess /var/log/nginx/access.log -o report.html --log-format=COMBINED --real-time-html --ws-url=ws://*****IP*****:7890 --ignore-crawlers --daemonize -
+goaccess /var/log/nginx/access.log -o report.html --log-format=COMBINED --real-time-html --ws-url=ws://*****IP*****:7890 --ignore-crawlers --daemonize
 ```
 
 Updated log is pushed via websockets on port 7890.
@@ -781,7 +824,8 @@ ERROR 21-May 11:41:45 __init__ Port 8001 is busy. Use --listen.port= for a diffe
 
 You are running Gramex on a port that is already running Gramex or another application.
 
-On Linux, run `lsof -i :8001` to find processes running on port 8001 and use `kill` to kill the process. Or start Gramex on a different port using `gramex --listen.port=<new-port>`
+On Linux, run `lsof -i :8001` to find processes running on port 8001 and use `kill` to kill the process.
+Or start Gramex on a different port using `gramex --listen.port=<new-port>`
 
 ### Cannot start Capture
 
