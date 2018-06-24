@@ -35,7 +35,9 @@ threadpool:
 # Define system caches.
 cache:
     memory:
-        type: memory                    # A default in-memory cache
+        type: memory            # An in-memory cache
+        size: 20000000          # that stores up to 20MB of data
+        default: true           # Use as the default cache for gramex.cache.open
 
 # Intiailise handlers kwargs.
 # BaseHandler.setup_default_kwargs() adds these as defaults for each handler.

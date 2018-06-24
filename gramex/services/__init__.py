@@ -36,7 +36,7 @@ from tornado.template import Template
 from orderedattrdict import AttrDict
 from gramex import debug, shutdown, __version__
 from gramex.transforms import build_transform
-from gramex.config import locate, app_log, ioloop_running, app_log_extra
+from gramex.config import locate, app_log, ioloop_running, app_log_extra, merge
 from gramex.cache import urlfetch, cache_key
 from gramex.http import OK, NOT_MODIFIED
 from . import urlcache
@@ -727,34 +727,34 @@ def watch(conf):
         watcher.watch(name, **_cache[_key])
 
 
+_cache_defaults = {
+    'memory': {
+        'size': 20000000,       # 20MiB
+    },
+    'disk': {
+        'size': 1000000000,     # 1GiB
+    }
+}
+
+
 def cache(conf):
     '''Set up caches'''
-    cache_types = {
-        'memory': {
-            'size': 20000000,       # 20MiB
-        },
-        'disk': {
-            'size': 1000000000,     # 1GiB
-        }
-    }
-
     for name, config in conf.items():
-        cache_type = config.type.lower()
-        if cache_type not in cache_types:
+        cache_type = config['type']
+        if cache_type not in _cache_defaults:
             app_log.warning('cache: %s has unknown type %s', name, config.type)
             continue
-
-        cache_params = cache_types[cache_type]
-        size = config.get('size', cache_params['size'])
-
+        config = merge(dict(config), _cache_defaults[cache_type], mode='setdefault')
         if cache_type == 'memory':
-            info.cache[name] = urlcache.MemoryCache(maxsize=size, getsizeof=len)
-
+            info.cache[name] = urlcache.MemoryCache(maxsize=config['size'], getsizeof=len)
         elif cache_type == 'disk':
             path = config.get('path', '.cache-' + name)
             info.cache[name] = urlcache.DiskCache(
-                path, size_limit=size, eviction_policy='least-recently-stored')
+                path, size_limit=config['size'], eviction_policy='least-recently-stored')
             atexit.register(info.cache[name].close)
+        # if default: true, make this the default cache for gramex.cache.open
+        if config.get('default'):
+            gramex.cache.open_cache(info.cache[name])
 
 
 def eventlog(conf):

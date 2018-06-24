@@ -25,6 +25,7 @@ app:
 cache:
   memory:
     type: memory
+    default: true
   memory-20:
     type: memory
     size: 20

@@ -337,6 +337,35 @@ class TestOpen(unittest.TestCase):
         ]))
         self.assertIn(cache_key, cache)
 
+    def test_change_cache(self):
+        # gramex.cache.open_cache() changes the default cache
+        path = os.path.join(folder, 'data.csv')
+        new_cache = {}
+        old_cache = gramex.cache._OPEN_CACHE
+        cache_key = (path, 'csv', id(None), frozenset())
+
+        # Ensure that the path is cached
+        gramex.cache.open(path, 'csv')
+        self.assertIn(cache_key, old_cache)
+        old_cache_data = dict(old_cache)
+
+        # Updating the cache copies data and empties from the old one
+        gramex.cache.open_cache(new_cache)
+        eq_(new_cache, old_cache_data)
+        eq_(old_cache, {})
+
+        # New requests are cached in the new cache
+        result, reloaded = gramex.cache.open(path, 'csv', _reload_status=True)
+        eq_(reloaded, False)
+        self.assertIn(cache_key, new_cache)
+        del new_cache[cache_key]
+        old_cache.pop(cache_key, None)
+        self.assertNotIn(cache_key, new_cache)
+        result, reloaded = gramex.cache.open(path, 'csv', _reload_status=True)
+        eq_(reloaded, True)
+        self.assertIn(cache_key, new_cache)
+        self.assertNotIn(cache_key, old_cache)
+
     def test_multiple_loaders(self):
         # Loading the same file via different callbacks should return different results
         path = os.path.join(folder, 'multiformat.csv')

@@ -6,6 +6,7 @@ import shlex
 import pathlib
 import requests
 import unittest
+import gramex.cache
 import gramex.config
 import gramex.services
 from six.moves.urllib.parse import urlencode
@@ -31,21 +32,33 @@ class TestCacheConstructor(unittest.TestCase):
     def check_cache_expiry(self, cache):
         cache.set('persistent', 'value', 10)
         cache.set('transient', 'value', -1)
-        self.assertEqual(cache.get('persistent'), 'value')
-        self.assertEqual(cache.get('transient'), None)
+        eq_(cache.get('persistent'), 'value')
+        eq_(cache.get('transient'), None)
 
     def test_memory_cache(self):
         cache = gramex.services.info.cache
         self.assertIsInstance(cache['memory'], MemoryCache)
         cache_size = 20
-        self.assertEqual(cache['memory-20'].maxsize, cache_size)
+        eq_(cache['memory-20'].maxsize, cache_size)
         self.check_cache_expiry(cache['memory-20'])
 
     def test_disk_cache(self):
         cache = gramex.services.info.cache
         self.assertIsInstance(cache['disk'], DiskCache)
-        self.assertEqual(cache['disk']._directory, info.folder + '/.cache-url')
+        eq_(cache['disk']._directory, info.folder + '/.cache-url')
         self.check_cache_expiry(cache['disk'])
+
+    def test_default_cache(self):
+        # The memory: cache is set as the default cache.
+        # Confirm that this is used by gramex.cache.open
+        cache = gramex.services.info.cache['memory']
+        path = os.path.join(info.folder, 'gramex.yaml')
+        # When a file is opened with a clear cache, ...
+        cache.clear()
+        gramex.cache.open(path)
+        keys = cache.keys()
+        eq_(len(keys), 1)           # it has only 1 key
+        eq_(keys[0][0], path)       # with the file we just opened
 
 
 class TestCacheKey(unittest.TestCase):
@@ -120,7 +133,7 @@ class TestCacheFunctionHandler(TestGramex):
     def eq(self, r1, r2):
         self.assertTrue(r1.status_code == r2.status_code == OK)
         self.assertDictEqual(self.headers(r1), self.headers(r2))
-        self.assertEqual(r1.text, r2.text)
+        eq_(r1.text, r2.text)
 
     def ne(self, r1, r2):
         self.assertTrue(r1.status_code == r2.status_code == OK)
@@ -169,13 +182,13 @@ class TestCacheFunctionHandler(TestGramex):
         incr = gramex.services.info.increment
         # Call a NEW URL with the Etag. It should return a 304 after recomputing.
         r2 = self.get('/cache/increment2', headers={'If-None-Match': r1.headers['Etag']})
-        self.assertEqual(r2.status_code, NOT_MODIFIED)
+        eq_(r2.status_code, NOT_MODIFIED)
         incr += 1
-        self.assertEqual(incr, gramex.services.info.increment)
+        eq_(incr, gramex.services.info.increment)
         # Call the same URL. The result should've been cached by now. Variable shouldn't increment.
         r3 = self.get('/cache/increment2', headers={'If-None-Match': r1.headers['Etag']})
-        self.assertEqual(r3.status_code, NOT_MODIFIED)
-        self.assertEqual(incr, gramex.services.info.increment)
+        eq_(r3.status_code, NOT_MODIFIED)
+        eq_(incr, gramex.services.info.increment)
 
     def test_multi_browser(self):
         # When a 304 is served as the first response, ensure original headers are not lost.
@@ -186,14 +199,14 @@ class TestCacheFunctionHandler(TestGramex):
         # So now it requests the page again.
         r2 = self.get('/cache/increment-headers', session=session1,
                       headers={'If-None-Match': r1.headers['Etag']})
-        self.assertEqual(r2.status_code, NOT_MODIFIED)
+        eq_(r2.status_code, NOT_MODIFIED)
         # Now, the server has re-cached the response. Since the response was a
         # 304 without headers, check that the server actually cached the original
         # headers, and not the empty headers returned by a 304 response.
         session2 = requests.Session()
         r3 = self.get('/cache/increment-headers', session=session2)
-        self.assertEqual(r3.status_code, OK)
-        self.assertEqual(r3.headers['Content-Type'], 'text/plain')
+        eq_(r3.status_code, OK)
+        eq_(r3.headers['Content-Type'], 'text/plain')
 
 
 class TestCacheFileHandler(TestGramex):
@@ -211,14 +224,14 @@ class TestCacheFileHandler(TestGramex):
 
         def check_value(content):
             r = self.get('/cache/filehandler/%s' % self.filename)
-            self.assertEqual(r.status_code, OK)
-            self.assertEqual(r.content, content)
+            eq_(r.status_code, OK)
+            eq_(r.content, content)
 
         # # Delete the file. The initial response should be a 404
         if os.path.exists(self.cache_file):
             os.unlink(self.cache_file)
         r = self.get('/cache/filehandler/%s' % self.filename)
-        self.assertEqual(r.status_code, NOT_FOUND)
+        eq_(r.status_code, NOT_FOUND)
 
         # Create the file. The response should be what we write
         with open(self.cache_file, 'wb') as handle:
@@ -240,13 +253,13 @@ class TestCacheFileHandler(TestGramex):
         if os.path.exists(self.cache_file):
             os.unlink(self.cache_file)
         r = self.get('/cache/filehandler-error/%s' % self.filename)
-        self.assertEqual(r.status_code, NOT_FOUND)
+        eq_(r.status_code, NOT_FOUND)
 
         # Create the file. The response should be cached as 404
         with open(self.cache_file, 'wb') as handle:
             handle.write(self.content.encode('utf-8'))
         r = self.get('/cache/filehandler-error/%s' % self.filename)
-        self.assertEqual(r.status_code, NOT_FOUND)
+        eq_(r.status_code, NOT_FOUND)
 
     def test_binary_cache(self):
         self.check('/cache/filehandler/binary.bin')

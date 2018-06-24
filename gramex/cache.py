@@ -272,6 +272,20 @@ def open(path, callback=None, transform=None, rel=False, **kwargs):
     return (result, reloaded) if _reload_status else result
 
 
+def open_cache(cache):
+    '''
+    Use ``cache`` as the new cache for all open requests.
+    Copies keys from old cache, and deletes them from the old cache.
+    '''
+    global _OPEN_CACHE
+    # Copy keys from old cache to new cache. Delete from
+    keys = list(_OPEN_CACHE.keys())
+    for key in keys:
+        cache[key] = _OPEN_CACHE[key]
+        del _OPEN_CACHE[key]
+    _OPEN_CACHE = cache
+
+
 _SAVE_CALLBACKS = dict(
     json='to_json',
     csv='to_csv',
