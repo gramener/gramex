@@ -74,7 +74,7 @@ You can also pass any standard email header. Use small letters, replacing `-`
 with `_`. Here are some commonly used ones:
 
 - `cc`, `bcc`: a string with comma-separated emails, or a list of strings with emails
-- `from`: email id of sender. Defaults to the email ID of the account you've logged into
+- `sender`: email id of sender. Defaults to the email ID of the account you've logged into
 - `reply_to`: email ID that appears when the recipient replies
 - `on_behalf_of`: email ID on behalf of whom you are sending this email
 
