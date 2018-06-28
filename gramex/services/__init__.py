@@ -746,11 +746,13 @@ def cache(conf):
             continue
         config = merge(dict(config), _cache_defaults[cache_type], mode='setdefault')
         if cache_type == 'memory':
-            info.cache[name] = urlcache.MemoryCache(maxsize=config['size'], getsizeof=len)
+            info.cache[name] = urlcache.MemoryCache(
+                maxsize=config['size'], getsizeof=sys.getsizeof)
         elif cache_type == 'disk':
             path = config.get('path', '.cache-' + name)
             info.cache[name] = urlcache.DiskCache(
-                path, size_limit=config['size'], eviction_policy='least-recently-stored')
+                path, size_limit=config['size'], eviction_policy='least-recently-stored',
+                getsizeof=sys.getsizeof)
             atexit.register(info.cache[name].close)
         # if default: true, make this the default cache for gramex.cache.open
         if config.get('default'):
