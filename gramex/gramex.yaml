@@ -36,7 +36,7 @@ threadpool:
 cache:
     memory:
         type: memory            # An in-memory cache
-        size: 20000000          # that stores up to 20MB of data
+        size: 500000000         # that stores up to 500 MB of data
         default: true           # Use as the default cache for gramex.cache.open
 
 # Intiailise handlers kwargs.
