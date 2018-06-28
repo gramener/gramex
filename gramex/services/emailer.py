@@ -63,6 +63,9 @@ class SMTPMailer(object):
         Sends an email. It accepts any email parameter in RFC 2822
         '''
         sender = kwargs.get('sender', self.email)
+        # SES allows restricting the From: address. https://amzn.to/2Kqwh2y
+        # Mailgun suggests From: be the same as Sender: http://bit.ly/2tGS5wt
+        kwargs.setdefault('from', sender)
         to = recipients(**kwargs)
         msg = message(**kwargs)
         tls = self.client.get('tls', True)
