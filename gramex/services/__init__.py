@@ -729,10 +729,10 @@ def watch(conf):
 
 _cache_defaults = {
     'memory': {
-        'size': 20000000,       # 20MiB
+        'size': 500000000,      # 500 MiB
     },
     'disk': {
-        'size': 1000000000,     # 1GiB
+        'size': 10000000000,    # 10 GiB
     }
 }
 

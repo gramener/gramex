@@ -187,7 +187,7 @@ Disk caches are based on the
 [diskcache](http://www.grantjenks.com/docs/diskcache/) library. When the size
 limit is reached, the oldest items are discarded.
 
-By default, Gramex provides a cache called `memory` that has a 20MB in-memory
+By default, Gramex provides a cache called `memory` that has a 500 MB in-memory
 cache based on [cachetools](http://pythonhosted.org/cachetools/). When the size
 limit is reached, the least recently used items are discarded. This cache is
 used by [gramex.cache.open](#data-caching). To change its size, use:
@@ -196,7 +196,7 @@ used by [gramex.cache.open](#data-caching). To change its size, use:
 cache:
     memory:                 # This is the name of the pre-defined Gramex cache
         type: memory        # This is an in-memory cache
-        size: 5000000       # Just allow 5MB of data in the cache instead of 20MB (default)
+        size: 5000000       # Just allow 5MB of data in the cache instead of 500 MB (default)
 ```
 
 If you want to use a different cache by default, specify a `default: true`
