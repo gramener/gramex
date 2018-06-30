@@ -751,8 +751,7 @@ def cache(conf):
         elif cache_type == 'disk':
             path = config.get('path', '.cache-' + name)
             info.cache[name] = urlcache.DiskCache(
-                path, size_limit=config['size'], eviction_policy='least-recently-stored',
-                getsizeof=sys.getsizeof)
+                path, size_limit=config['size'], eviction_policy='least-recently-stored')
             atexit.register(info.cache[name].close)
         # if default: true, make this the default cache for gramex.cache.open
         if config.get('default'):

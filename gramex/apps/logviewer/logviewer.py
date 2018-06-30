@@ -168,7 +168,7 @@ def prepare_where(query, args, columns):
     '''prepare where clause'''
     wheres = []
     for key, vals in args.items():
-        col, op = gramex.data._filter_col(key, columns)
+        col, agg, op = gramex.data._filter_col(key, columns)
         if col not in columns:
             continue
         if op == '':

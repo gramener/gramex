@@ -38,9 +38,9 @@ class TestCacheConstructor(unittest.TestCase):
     def test_memory_cache(self):
         cache = gramex.services.info.cache
         self.assertIsInstance(cache['memory'], MemoryCache)
-        cache_size = 20
-        eq_(cache['memory-20'].maxsize, cache_size)
-        self.check_cache_expiry(cache['memory-20'])
+        cache_size = 1000
+        eq_(cache['memory-small'].maxsize, cache_size)
+        self.check_cache_expiry(cache['memory-small'])
 
     def test_disk_cache(self):
         cache = gramex.services.info.cache

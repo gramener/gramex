@@ -26,9 +26,9 @@ cache:
   memory:
     type: memory
     default: true
-  memory-20:
+  memory-small:
     type: memory
-    size: 20
+    size: 1000
   disk:
     type: disk
     path: $YAMLPATH/.cache-url
