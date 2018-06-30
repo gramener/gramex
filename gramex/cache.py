@@ -682,11 +682,19 @@ class KeyStore(object):
 
     def load(self, key, default=None):
         '''Same as store.get(), but called "load" to indicate persistence'''
+        key = self._escape(key)
         return self.store.get(key, {} if default is None else default)
 
     def dump(self, key, value):
         '''Same as store[key] = value'''
+        key = self._escape(key)
         self.store[key] = value
+
+    def _escape(self, key):
+        '''Converts key into a unicode string (interpreting byte-string keys as UTF-8)'''
+        if isinstance(key, six.binary_type):
+            return six.text_type(key, encoding='utf-8')
+        return six.text_type(key)
 
     @staticmethod
     def purge_keys(data):
@@ -806,6 +814,10 @@ class SQLiteStore(KeyStore):
         super(SQLiteStore, self).flush()
         self.store.commit()
 
+    def keys(self):
+        # Keys need to be escaped
+        return (self._escape(key) for key in self.store.keys())
+
     def purge(self):
         app_log.debug('Purging %s', self.path)
         super(SQLiteStore, self).purge()
@@ -836,7 +848,7 @@ class HDF5Store(KeyStore):
 
     def load(self, key, default=None):
         # Keys cannot contain / in HDF5 store. Escape it
-        key = json.dumps(key, ensure_ascii=True)[1:-1].replace('/', '\t')
+        key = self._escape(key).replace('/', '\t')
         result = self.store.get(key, None)
         if result is None:
             return default
@@ -851,8 +863,7 @@ class HDF5Store(KeyStore):
             return default
 
     def dump(self, key, value):
-        # Keys cannot contain / in HDF5 store. Escape it
-        key = json.dumps(key, ensure_ascii=True)[1:-1].replace('/', '\t')
+        key = self._escape(key)
         if self.store.get(key) != value:
             if key in self.store:
                 del self.store[key]
@@ -863,12 +874,20 @@ class HDF5Store(KeyStore):
                 cls=CustomJSONEncoder)
             self.changed = True
 
+    def _escape(self, key):
+        '''
+        Converts key into a unicode string (interpreting byte-string keys as UTF-8).
+        HDF5 does not accept / in key names. Replace those with tabs.
+        '''
+        if isinstance(key, six.binary_type):
+            key = six.text_type(key, encoding='utf-8')
+        else:
+            key = six.text_type(key)
+        return key.replace('/', '\t')
+
     def keys(self):
         # Keys cannot contain / in HDF5 store. Unescape it
-        return [
-            json.loads('"%s"' % key.replace('\t', '/'))
-            for key in self.store.keys()
-        ]
+        return (key.replace('\t', '/') for key in self.store.keys())
 
     def flush(self):
         super(HDF5Store, self).flush()
@@ -942,6 +961,7 @@ class JSONStore(KeyStore):
 
     def dump(self, key, value):
         '''Same as store[key] = value'''
+        key = self._escape(key)
         if self.store.get(key) != value:
             self.store[key] = value
             self.update[key] = value

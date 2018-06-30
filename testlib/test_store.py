@@ -106,11 +106,22 @@ class TestJSONStore(unittest.TestCase):
         self.store.flush()
         data.update({'►': {'_t': expiry, 'α': True}})
         eq_(self.load(), data)
+        ok_('►' in self.store.keys())
 
         self.store.dump('λ', {'α': 1, 'β': None, '_t': expiry})
         self.store.purge()
         data.update({'λ': {'α': 1, 'β': None, '_t': expiry}})
         eq_(self.load(), data)
+        ok_('λ' in self.store.keys())
+
+        # Keys must be converted to strings
+        for key in (1, 0.0):
+            str_key = six.text_type(key)
+            self.store.dump(key, 1)
+            self.store.flush()
+            data.update({str_key: 1})
+            eq_(self.load(), data)
+            ok_(str_key in self.store.keys())
 
     @classmethod
     def teardownClass(cls):
@@ -126,7 +137,7 @@ class TestSQLiteStore(TestJSONStore):
 
     def load(self):
         return {
-            (key.decode('utf-8') if isinstance(key, six.binary_type) else key): val
+            self.store._escape(key): val
             for key, val in self.store.store.items()
         }
 
@@ -137,7 +148,7 @@ class TestHDF5Store(TestJSONStore):
 
     def load(self):
         return {
-            json.loads('"%s"' % key).replace('\t', '/'): json.loads(val.value)
+            key.replace('\t', '/'): json.loads(val.value)
             for key, val in self.store.store.items()
         }
 
