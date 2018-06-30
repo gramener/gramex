@@ -9,7 +9,7 @@
     "d3": "4",
     "daterangepicker": "2",
     "font-awesome": "*",
-    "g1": "0.8",
+    "g1": "0.8.2",
     "jquery": "~3",
     "leaflet": "1.2",
     "lodash": "4",

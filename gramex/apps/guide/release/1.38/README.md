@@ -47,6 +47,15 @@ columns and custom aggregations. For example:
 
 This should eliminate the need to write custom queries for most simple scenarios.
 
+## Developer Updates
+
+g1 is upgraded to `0.8.2`
+
+- g1 [$.urlfilter](https://code.gramener.com/cto/g1#urlfilter) works on forms,
+inputs & sliders (not just links)
+- g1 [$.formhandler()](https://code.gramener.com/cto/g1#formhandler) accepts
+JavaScript data objects (instead of just a URL) as source
+
 ## Bug fixes
 
 

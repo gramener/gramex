@@ -1348,9 +1348,9 @@ vega@^3.0.10:
     canvas "^1.6"
     canvas-prebuilt "^1.6"
 
-vegam@^0.0.2:
-  version "0.0.2"
-  resolved "https://registry.yarnpkg.com/vegam/-/vegam-0.0.2.tgz#e3c69025ee80ec30455a746132e22534d75f2f4a"
+vegam@^0.0.3:
+  version "0.0.3"
+  resolved "https://registry.yarnpkg.com/vegam/-/vegam-0.0.3.tgz#4a36730e10e1090d85511560dda2ffda102a091d"
   dependencies:
     vega "^3.0.10"
     vega-lite "^2.1.2"
