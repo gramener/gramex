@@ -206,10 +206,10 @@ class TestFilter(unittest.TestCase):
         for by in [['देश'], ['देश', 'city', 'product']]:
             # _by= groups by column(s) and sums all numeric columns
             # and ignores non-existing columns
-            expected = sales.groupby(by).agg({
-                'sales': 'sum',
-                'growth': 'sum'
-            })
+            expected = sales.groupby(by).agg(AttrDict([
+                ['sales', 'sum'],
+                ['growth', 'sum'],
+            ]))
             update(expected, by, 'sales|sum', 'growth|sum')
             m = eq({'_by': by + ['na'], '_sort': by}, expected)
             eq_(m['by'], by)
@@ -222,12 +222,12 @@ class TestFilter(unittest.TestCase):
                 'sales|count', 'sales|SUM',
                 'growth|sum', 'growth|AvG',
             ]
-            agg_pd = {
-                'city': 'count',
-                'product': ['max', 'min'],
-                'sales': ['count', 'sum'],
-                'growth': ['sum', 'mean'],
-            }
+            agg_pd = AttrDict([
+                ['city', 'count'],
+                ['product', ['max', 'min']],
+                ['sales', ['count', 'sum']],
+                ['growth', ['sum', 'mean']],
+            ])
             expected = sales.groupby(by).agg(agg_pd)
             update(expected, by, *aggs)
             eq({'_by': by, '_sort': by, '_c': aggs}, expected)

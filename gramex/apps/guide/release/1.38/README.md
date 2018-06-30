@@ -33,6 +33,19 @@ url:
           - {email: [admin@example.org]}
 ```
 
+## FormHandler Group By
+
+[FormHandler](../../formhandler/#formhandler-groupby) supports grouping by
+columns and custom aggregations. For example:
+[?_by=Continent&_c=Name|count&_c=c1|min&_c=c1|avg&_c=c1|max](../../formhandler/flags?_by=Continent&_c=Name|count&_c=c1|min&_c=c1|avg&_c=c1|max&_format=table) does:
+
+- `_by=Continent`: group by "Continent"
+- `_c=Name|count`: count values in "Name"
+- `_c=c1|min`: min value of "c1" in each continent
+- `_c=c1|avg`: mean value of "c1" in each continent
+- `_c=c1|max`: max value of "c1" in each continent
+
+This should eliminate the need to write custom queries for most simple scenarios.
 
 ## Bug fixes
 

@@ -793,8 +793,8 @@ def _filter_db(engine, table, meta, controls, args, source='select', id=[]):
                 if col_list is None:
                     col_list = [col + _agg_sep + 'sum' for col, column in cols.items()  # noqa
                                 if column.type.python_type.__name__ in _numeric_types]
-                agg_cols = {col: cols[col] for col in by}   # {label: ColumnElement}
-                typ = {}                                    # {label: python type}
+                agg_cols = AttrDict([(col, cols[col]) for col in by])   # {label: ColumnElement}
+                typ = {}                                                # {label: python type}
                 for key in col_list:
                     col, agg, val = _filter_col(key, cols.keys())
                     if agg is not None:
