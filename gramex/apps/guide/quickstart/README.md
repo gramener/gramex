@@ -7,25 +7,36 @@ prefix: tutorial
 
 ## Introduction
 
-This tutorial is meant to guide developers along the process of creating a basic dashboard in gramex and is aimed primarily at new hires.
-Complete code examples for any of the sections can be found under appropriate directories in this [repository](https://code.gramener.com/karmanya.aggarwal/quickstart/)
+This Quickstart guide is intended to familiarize first time users with the Gramex Platform.
+The Quickstart guide follows a concise step based approach of creation a Visual story board from raw data.
+
+The Quickstart guide focuses on the most common features, often accompanying such features with easy-to-understand code examples.
+Complete code examples for any of the sections can be found under appropriate directories in this [repository](https://code.gramener.com/cto/quickstart/).
+
+Alternatively, each section can be copy pasted into appropriate files and viewed by running gramex.
 
 ## Business Case
 
-This tutorial follows a hypothetical company `X-MEDIA` which attempts to extract pertinent news and perform sentiment analysis on articles that could impact their customers' reputation.
+[Kiva](https://www.kiva.org/) is an international non-profit with a mission to connect people through lending to alleviate poverty.
+The business case used in this Quickstart guide has been adapted from Kaggle Competition,Data Science for Good.
+More details [here](https://www.kaggle.com/kiva/data-science-for-good-kiva-crowdfunding).
 
-### Problem Definition
-- Develop a Data Visualization solution for a given X-Media dataset using gramex based on customer needs.
+The dataset provided has the following features
+
+- Loan Information - Loan ID, Loan Theme ID, Loan amounts, Loan term, Region, Use
+- Region information - Region, Country, Currency, MPI, Lat, Lon
 
 ## Installing Gramex
 
 - Install [Anaconda](https://www.anaconda.com/download/) 5.1 or higher on the machine
-- Install [node.js](https://nodejs.org/en/) 8 or later. Then run `npm install -g yarn`. This step is required for UI components and built-in apps.
+- Install [node.js](https://nodejs.org/en/) 8 or later. Then run `npm install -g yarn`.
+This step is required for UI components and built-in apps.
 - `PATH setup` Anaconda by default asks to add PATH in environment variables.
 
 ![picture](img/path1.png)
 
-- While installing `NodeJS`, be sure to keep track of the directory in which its installed; typically `C:/Program Files/nodejs/node` and ensure to add it to the system path. 
+- On Windows, While installing `nodejs`, be sure to keep track of the directory in which its installed;
+typically `C:/Program Files/nodejs/node` and ensure to add it to the system path. 
 
 ![picture](img/envi.png)
 
@@ -80,8 +91,6 @@ INFO    15-Apr 13:40:38 __init__ Initialising schedule:run-every-hour
 INFO    15-Apr 13:40:39 sqlitedict opening Sqlite table u'user' in C:\Users\Gramener\AppData\Local\Gramex Data\auth.user.db
 INFO    15-Apr 13:40:39 capturehandler Pinging chromecapture.js at http://localhost:9900/
 INFO    15-Apr 13:40:39 capturehandler Pinging chromecapture.js at http://localhost:9900/
-d:\anaconda\envs\gramex\lib\site-packages\h5py\__init__.py:36: FutureWarning: Conversion of the second argument of issubdtype from `float` to `np.floating` is deprecated. In future, it will be treated as `np.float64 == np.dtype(float).type`.
-  from ._conv import register_converters as _register_converters
 INFO    15-Apr 13:40:40 __init__ Initialising alert: alert-email
 WARNING 15-Apr 13:40:40 __init__ alert: alert-email: using first email service: alert-gmail
 WARNING 15-Apr 13:40:40 scheduler schedule:alert-email has no schedule nor startup
@@ -115,18 +124,22 @@ INFO    15-Apr 13:40:42 capturehandler Pinging chromecapture.js at http://localh
 INFO    15-Apr 13:40:42 capturehandler node.js: v8.9.4 chromecapture.js: 1.1.0 port: 9900 pid: 3884 live (pid=3884)
 ```
 
-- `Step 4`: You will see a blue screen with text `Welcome to Gramex` as output. Now you have gramex installed on your local machine.
+- `Step 4`: You will see a blue screen with text `Welcome to Gramex` as output.
+Now you have gramex installed on your local machine.
 
 ![picture](img/output.png)
 
-- `Step 5`: In case you get 404 errors for `localhost:9988/welcome` or the page doesn't render properly, run `gramex setup --all` to ensure all the nodejs modules are installed. 
+- `Step 5`: In case you get 404 errors for `localhost:9988/welcome` or the page doesn't render properly,
+run `gramex setup --all` to ensure all the nodejs modules are installed.
+
 ## Folder Structure of a Simple Gramex Dashboard
 
 ### Gramex Init
 
 - `Step 1` Create a new folder with `project_name` on your local machine.
 - `Step 2` Run `gramex init` on your preferred terminal (command prompt/cmder/terminal/GitBash etc.)
-- It is the initial stage of your Data Visualization project. `gramex init`  will setup the necessary project linting files and default files.
+- It is the initial stage of your Data Visualization project.
+`gramex init` will setup the necessary project linting files and default files.
 
 List of files generated are below.
 
@@ -136,6 +149,8 @@ List of files generated are below.
 - [`.gitlab-ci.yml`](#gitlab-ciyml)
 - [`.gitignore`](#gitignore)
 
+![folderstructureimage](img/folderstructure.png)
+
 In addition, it generates a simple boilerplate for
 
 - [`gramex.yaml`](#gramexyaml)
@@ -144,40 +159,10 @@ In addition, it generates a simple boilerplate for
 
 ### .editorconfig
 
-It helps developers define and maintain consistent coding styles between different editors and IDEs. The EditorConfig project consists of a file format for defining coding styles and a collection of text editor plugins that enable editors to read the file format and adhere to defined styles. EditorConfig files are easily readable and they work nicely with version control systems.
-
-```
-# Style 1:
-if (hours < 24 && minutes < 60 && seconds < 60) {
-    return true;
-} else {
-    return false;
-}
---------------------------------------------------------------------------------------------
-# Style 2:
-if (hours < 24 && minutes < 60 && seconds < 60)
-{
-    return true;
-}
-else
-{
-    return false;
-}
---------------------------------------------------------------------------------------------
-# Style 3:
-if  ( hours   < 24
-   && minutes < 60
-   && seconds < 60
-)
-{return    true
-;}         else
-{return   false
-;}
-
-
-```
-
-- When we look into the style1 and style2 code is easy to understand because They used consistent style in writing the code. Similarly `gramex` also has its own programming style which will be defined in `.editorconfig`
+It helps developers define and maintain consistent coding styles between different editors and IDEs.
+The EditorConfig project consists of a file format for defining coding styles and a collection of
+text editor plugins that enable editors to read the file format and adhere to defined styles.
+EditorConfig files are easily readable and they work nicely with version control systems. 
 
 The supported Properties for `.editorconfig` are:
 
@@ -188,8 +173,8 @@ The supported Properties for `.editorconfig` are:
 - Insert final newline.
 
 ### .eslintrc.js
-
-It is completely configurable for javascript, meaning you can turn off every rule and run only with basic syntax validation, or mix and match the bundled rules and your custom rules which makes your project perfect.
+It is completely configurable for javascript, meaning you can turn off every rule and run only with
+basic syntax validation, or mix and match the bundled rules and your custom rules which makes your project perfect.
 
 There are several pieces of information that can be configured:
 
@@ -207,7 +192,7 @@ There are several pieces of information that can be configured:
 
 ### .gitignore
 - This helps the gramex user to ignore files that should not be committed.
-- spcify the files that you would like to ignore.
+- specify the files that you would like to ignore.
 - `example` file containing  Passwords, Private information.
 
 ### .htmllintrc
@@ -217,7 +202,7 @@ There are several pieces of information that can be configured:
 - Gramex’s behaviour is controlled by a [`YAML`](http://yaml.org/spec/1.2/spec.html) file called gramex.yaml
 - `gramex init` creates a `gramex.yaml` file which contains the below code as default
 
-```
+```yaml
 import:
   ui:
     path: $GRAMEXAPPS/ui/gramex.yaml    # Import the UI components
@@ -231,15 +216,19 @@ import:
 ### README.md
 - User can document the project workflow in this `markdown` file
 
-## Configuration
+## Configuration and Handlers
 
 Gramex is primarily configuration driven, and supports server configuration via YAML files.
 
-Through a YAML file, developers define handlers, which trigger actions on receiving requests to the server at developer defined endpoints.
-Handlers can be used to manipulate data and render files, draw charts/visualisations, allow for server side caching, configure the gramex web server, etc.
+Through a YAML file, developers define handlers, which trigger actions on receiving requests to the
+server at developer defined endpoints.
+Handlers can be used to manipulate data and render files, draw charts/visualizations,
+allow for server side caching, configure the gramex web server, etc.
 
 The `gramex.yaml` file serves as a base for all server configurations in a gramex app or dashboard.
-for example -
+
+For example:
+
 ```yaml
 import:
   ui:
@@ -252,58 +241,73 @@ url:
     kwargs:                             # Additional Parameters
       path: $YAMLPATH/index.html        # Which file to return.
 ```
+
 This yaml configuration defines a single FileHandler endpoint.
-FileHandler is used to render files or templates to the end user. In this case, on receiving a request to the homepage, gramex will return index.html.
+
+FileHandler is used to render files or templates to the end user. In this case, on receiving a request to the homepage,
+gramex will return index.html.
+
 `$YAMLURL` and `$YAMLPATH` are environment variables which store the url and path of the current yaml file respectively.
 
-For the purpose of this tutorial, three endpoints are defined - a FileHandler to render the html page and a FormHandler to load and manipulate data.
-the formhandler endpoint can be defined as follows -
+For the purpose of this tutorial, 2 endpoints are defined, a FileHandler to serve the `index.html` file and a FormHandler to load and manipulate the data.
+
+Thus the formhandler can be added to our current configuration as follows
+
+The import key is used to import other gramex apps/yaml files.
+In this case, it's being used to import the uicomponents library that is a key part of the styling in gramex apps. 
 
 ```yaml
 url:
+  quickstart/home:
+    pattern: /$YAMLURL/
+    handler: FileHandler
+    kwargs:
+      path: $YAMLPATH/index.html
+
   quickstart/formhandler:
-      pattern: /$YAMLURL/alldata                                                 # The endpoint
-      handler: FormHandler
-      kwargs:
-        url: 'mysql://root:root@localhost:3306/quickstart?charset=utf8'           # DB connect string
-        query: select * from test_table where Dated >= '{start}' and Dated <='{end}' # DB Query
-        table: select count(*) from test_table                   #(optional) Cache update condition
-        modify: quickstart.catchall(data,handler)                # Function call
+    pattern: /$YAMLURL/data
+    handler: FormHandler
+    kwargs:
+      url: $YAMLPATH/kiva_loans.csv
 ```
-On receiving a request to the `/alldata` endpoint, Gramex, reads data via the SQL query, loads it into memory and calls the catchall function defined in `quickstart.py` passing it the loaded dataframe (data) and the tornado requesthandler (handler).
-The curly braces in  `'{start}` and `'{end}'` imply that those values shall be picked up from the URL parameters.
 
-Passing the requesthandler is important as it will allow the frontend to send additional data to the backend.
+On receiving a request to the `/data` endpoint, Gramex, reads data from the CSV file and returns in
+one of a few formats back to the front end.
+By default, data is returned as a JSON, however it can also be returned as a simple html table,
+an interactive table, a downloadable csv etc.
 
-the `table` key is used to cache the data retrieved by the query on the server, in this case, it will update the cached data every time the number of rows in the test table changes. This ensures that the dashboard will be relatively responsive for the client. The reason this example uses only a single formhandler endpoint instead of multiple, is that the gramex will cache the data retrieved by formhandler on the server side, for a more responsive dashboard.
+The import section of this yaml file allows developers to import configuration files from any other gramex project or app and mount them at a particular url. In this case, import is being used to mount the UI Components Library (to serve bootstrap and some JS Libraries)as well as an interactive table that can be viewed by visiting visiting [this link](http://localhost:9988/data?_format=table) with gramex running. 
 
-Having saved this configuration to gramex.yaml in the folder, visiting [this link](http://localhost:9988/alldata?start=2018-03-07&end=2018-03-07&_format=table) will render the retreived data as an interactive table. Alternatively, Formhandler can return data in multiple formats.
 ![Formhandler Table Screenshot](img/fts.png)
-
 Click [here](../config/) for more information about yaml configurations
 and [here](../formhandler/) for more information about FormHandler.
 
-Click [here](https://code.gramener.com/karmanya.aggarwal/quickstart/tree/master/config) to download a working example of the app.
+Click [here](https://code.gramener.com/karmanya.aggarwal/quickstart/) to download a working example of the app.
 
 Click [here](../) to see a list of all the custom handlers that gramex offers
 
 ## Scaffolding
 
-The next step is to create a scaffolding of the dashboard, typically with inputs from the design team and front end engineers. The scaffolding is intended to display the rough structure of the webpage before charts and tables are added.
+The next step is to create a scaffolding of the dashboard, typically with inputs from the design team and front end engineers.
+The scaffolding is intended to display the rough structure of the webpage before charts and tables are added.
 
 This is done simply in HTML and bootstrap, using as little custom css as possible.
-Often templates are used to reduce the amount of front end code required - the G1 library (a JS library developed in-house) provides support for lodash templates, though gramex also supports Tornado Templates.
+Often templates are used to reduce the amount of front end code required - the G1 library (a JS library developed in-house)
+provides support for lodash templates, though gramex also supports Tornado Templates.
 
 The UI component exposes a set of commonly used libraries (bootstrap, jquery, d3 etc) which allows
 for developers to include these libraries without using a CDN, yarn/npm/bower etc.
-Using it, requires a small modification to the gramex.yaml file to mount the ui component at a particular url.
+Using it, requires importing the UI Components app using the import section of `gramex.yaml`
+
 ```yaml
 import:
   ui:
     path: $GRAMEXAPPS/ui/gramex.yaml    # Import the UI components
     YAMLURL: $YAMLURL/ui/               # ... at this URL
 ```
+
 After which, libraries can be included as follows
+
 ```html
 <link rel="stylesheet" href="ui/bootstraptheme.css">
 <script src="ui/jquery/dist/jquery.min.js"></script>
@@ -311,157 +315,207 @@ After which, libraries can be included as follows
 <script src="ui/bootstrap/dist/js/bootstrap.min.js"></script>
 ```
 
+This tutorial in particular doesn't have much in the way of a scaffolding, however,
+the simple layout can be seen by exploring `index.html`
+
 Click [here](../uicomponents/#libraries) for a list of all libraries included in UI Components
+
 Click [here](https://code.gramener.com/cto/g1/blob/master/README.md) to see documentation for G1
-Click [here](https://code.gramener.com/karmanya.aggarwal/quickstart/tree/master/scaffolding) to see a working example of the dashboard at this stage
 
-## Data Validation/configuration driven charts
+## Charting
 
-Once the scaffolding has been created, the data and scaffolding can be quickly validated via [formhandler tables](../formhandler/#formhandler-tables) or a configuration driven [charting library](../formhandler/#formhandler-charts) (Vega, Vega-lite, Seaborn and Vegam).
+Once the scaffolding has been created, the data and scaffolding can be quickly validated via [formhandler tables](../formhandler/#formhandler-tables)
+or a configuration driven [charting library](../formhandler/#formhandler-charts) (Vega, Vega-lite, Seaborn and Vegam).
 
-The advantage of populating the data with static/configuration driven charts is that it adds visualization capabilities to the dashboard without requiring any custom Javascript.
-The only caveat is that the these charts/tables are currently not responsive.
+For the purpose of this quickstart, we'll be using vega/vega-lite and vegam charts.
+For this, we add a few more endpoints to the `gramex.yaml` file and specify the configurations for the charts that we've chosen. 
 
-For the purpose of this quickstart, first a vega-lite stacked bar chart will be created.
-This requires a small modification to the ```gramex.yaml```
+Vega/Vega-lite/Vegam all work well with the default json output orientation that FormHandler offers,
+which makes adding charts almost seamless.
+
 ```yaml
-quickstart/dataurl:
-    pattern: /$YAMLURL/alldata
+url:
+  data-u1:
+    pattern: /$YAMLURL/data-u1
     handler: FormHandler
     kwargs:
-      url: 'mysql://root:root@localhost:3306/quickstart?charset=utf8'
-      query: select * from test_table where Dated >= '{start}' and Dated <='{end}'
-      table: select count(*) from test_table
-      modify: quickstart.catchall(data,handler)
+      url: $YAMLPATH/data/kiva_loans.csv
+      default:
+        _limit: 1000
+      function: data.dropna()
+      modify: data.groupby(['region', 'country']).mean().reset_index()
       formats:
-        stackbar:
-          format: vega-lite  # Use Seaborn/Vega/Vega-lite/vegam
-          spec:              # Defines the configurations for the vega-charts
-            $schema: 'https://vega.github.io/schema/vega-lite/v2.json' # Constant for all vega-lite charts
-            mark: bar
-            width: 315       # Dimensions of the rendered svg
-            height: 180
-            encoding:        # which data
-                x: {from: data, aggregate: count, field: Overall_Tonality, type: quantitative}
-                y: {from: data, field: TagValue, type: nominal}
-                color: {from: data, field: Overall_Tonality, type: nominal}
+        barchart:        # Create a format named barchart
+          format: vegam  # use Vegam for a charting library.
+          spec:          # configuration for the vegam chart
+            fromjson:
+              - {data: __DATA__} # Get the data returned by the formhandler
+              # Bar chart
+              - {apply: bar, x: region, y: loan_amount, color: country, order: loan_amount}
+              # Apply styles
+              - {apply: style, x_sort_op: sum, x_sort_field: loan_amount, x_sort_order: descending}
+      headers:
+        Content-Type: application/javascript
+    cache:
+      expiry: {duration: 3600}
 ```
-Here a format called stackbar is created for the FormHandler endpoint defined earlier. This particular spec defines a stacked bar chart which accepts the data loaded from the FormHandler (implicitly named `data`) and plots TagValue versus Overall_Tonality.
 
+Here a new endpoint is added to our `gramex.yaml` named  `data-u1`, `data-u1` uses a FormHandler to
+load the first 1000 rows of data, drop the nulls, group by region and country and return it as a json string.
+
+It also defines a new custom format called barchart which is essentially a vegam chart that plots 
+`region vs loan_amount` from our data and colors the bars by country.
 Now, the charts can be inserted in any html page/template via a simple `<script>` tag
+
 ```html
 <div>
-  <script src="alldata?start=2017-11-01&end=2017-11-21&chart=people&_format=stackbar"></script>
+  <script src="data-u1?_format=barchart"></script>
 </div>
 ```
-thus, the script will make a request to the alldata endpoint, passing a start date, end date and chart type to server via URL Parameters which can be accessed in the backend through the handler object. `_format=stackbar` tells gramex that the output needs to be rendered as a stacked bar chart, via the spec defined in the yaml.
-Finally, in order to use vega charts, a js file needs to be included.
+
+Thus, the script will make a request to the `alldata` endpoint, passing a start date, end date and
+chart type to server via URL Parameters which can be accessed in the backend through the
+request handler as in `somefunction(data,handler)`. 
+
+`_format=barchart` tells gramex that the output needs to be rendered as the format named barchart,
+via the spec defined in the yaml.
+
+Finally, in order to use vega charts, an appropriate js file needs to be included.
+
 ```html
+<script src="https://cdn.jsdelivr.net/npm/vega@3.2.1/build/vega.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/vega-lite@2.3.1/build/vega-lite.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vegam@0.0.2/dist/vegam.min.js"></script>
 ```
+![Vega Barchart Screenshot](img/vega-barchart.png)
 
-In a similar vein, modifications are required to render the data using formhandler tables - the formhandler table app needs to be imported and mounted in the YAML
-```yaml
-import:
-  table:
-    path: $GRAMEXPATH/apps/formhandler/gramex.yaml
-    YAMLURL: $YAMLURL
-```
-The G1 Library needs to be included
-```html
-<script type="text/javascript" src="ui/g1/dist/g1.min.js"></script>
-```
+For the formhandler table, 
+The G1 Library needs to be included (preferably, under the body tag in the html), a div needs to be
+included to contain the table and the table is rendered by calling the formhandler() function on that div. 
 
-finally, the html needs to be updated to render the actual table.
 ```html
-<!-- first the element is inserted in place -->
-<div class="formhandler" data-src="alldata?start=2017-11-01&end=2017-11-21"></div>
-<!-- then the table is rendered -->
-<script>
-  ('.formhandler').formhandler()
+<html>
+  <body>
+    <div class="formhandler" data-src="data"></div>
+    <!-- first the element is inserted in place -->
+  </body>
+  <script src="ui/jquery/dist/jquery.min.js"></script>
+  <script type="text/javascript" src="ui/g1/dist/g1.min.js"></script>
+  <script>
+  // then the table is rendered
+  $('.formhandler').formhandler()
 </script>
 ```
-Notice how the endpoint referenced by the formhandler table is very similar to the one passed to vega-lite, this is due to the fact that both should load the same data, just in different formats.
+
 Additional parameters can be passed to the formhandler function - see a list in the [API documentation](https://code.gramener.com/cto/g1/#formhandler)
 
-A working example of the dashboard at this stage can be found [here](https://code.gramener.com/karmanya.aggarwal/quickstart/tree/master/static-data)
-
-Some backend modifications are also required to ensure that the data returned from Formhandler is in the format that each of the charts/tables expect.
+Some backend modifications are also required to ensure that the data returned from Formhandler is in
+the format that each of the charts/tables expect.
 
 ## Backend Data Transformation
 All the data visualization projects use python and its stack to filter data in the backend.
 
-YAML files support python/pandas functions intended to transform the data as required, however for involved transformations, it's good practise to include a python file defining required functions and calling appropriate functions from the YAML.
+YAML files support python/pandas functions intended to transform the data  looking at the configuration we've defined
 
-for example, the catchall function that was first mentioned in the configuration sections is defined as follows -
+```yaml
+url:
+  data-u1:
+    pattern: /$YAMLURL/data-u1
+    handler: FormHandler
+    kwargs:
+      url: $YAMLPATH/data/kiva_loans.csv
+      default:
+        _limit: 1000
+      function: data.dropna() # loaded data is accessed through a dataframe `data`
+                              # dropna() is a pandas function that drops null rows
+      modify: data.groupby(['region', 'country']).mean().reset_index()
+      # modify again is called on the dataframe. 
+```
+
+it's also possible to reference functions inside python files as referenced below - 
+
+```yaml
+url:
+  data-u1:
+    pattern: /$YAMLURL/data-u1
+    handler: FormHandler
+    kwargs:
+      url: $YAMLPATH/data/kiva_loans.csv
+      default:
+        _limit: 1000
+      function: somefile.somefunc(data) # somefile.py contains `somefunc` function
+      modify: data.groupby(['region', 'country']).mean().reset_index()
+```
+
+and `somefile` contains
 
 ```python
-def catchall(data, handler):
-    ''' Calls the appropriate function to return a particular data format'''
-    if handler.get_arguments('chart'):
-        chart = handler.get_arguments('chart')[0]
-        data = prep_df(data)
-        if chart == "sent":
-            return sentiment_data(data, handler)
-        elif chart== "people":
-            return people_in_news(data,handler)
-        elif chart == "category":
-            return category_data(data,handler)
-        elif chart == "issues":
-            return issues_data(data,handler)
-        elif chart == "publications":
-            return publication_data(data,handler)
-        elif chart == "authors":
-            return author_data(data,handler)
-    else:
-        return data
+def somefunc(data): #functions should return a dataframe.
+  return data.dropna()
 ```
-Thus this function looks for a type of chart sent via the URL parameters, and if present calls the appropriate transformation function or just returns the loaded data if no type of chart is present.
 
-`handler` is a tornado request handler object, which is used to access URL query parameters.
+by default formhandler returns data as a json with the following structure
 
-The data loaded by the Formhandler endpoint can also be implicitly passed to the function, as a pandas dataframe called 'data'.
+```json
+[{"col 1":"a","col 2":"b"}, {"col 1":"c","col 2":"d"}]
+```
 
-for an example of the complete quickstart.py file click [here](https://code.gramener.com/karmanya.aggarwal/quickstart/blob/master/static-data/quickstart.py)
-or look at the quickstart.py file in the interaction section of this tutorial, as the data format required for Vega-lite and the custom interactive charts is slightly different.
+for more features of formhandler, and the difference between function and modify click [here](../formhandler/)
 
 ## Interactivity/Drilldowns and Filtering
 
-In order to facilitate interactive charts or charts which require a large amount of customization, often d3.js is used. In this process, developers are heavily encouraged to follow the principles of component reuse - such that if a chart is created for one project, it should be written in such a way that it can be reused across multiple projects without much extra work.
+In order to facilitate filtering and drilldowns, the G1 library provides a urlfilter function which
+updates url parameters in place - combined with formhandler, this allows for complicated filterign
+with very little custom code written.
 
-As previously mentioned, the UI components library includes d3.js so the first step is to include it  inside the html and then javascript can be used to load data and pass it to various chart components.
+To use url filter, you first tag elements in html with the urlfilter class, then call urlfilter on the containing div. 
+
+for example,
+
 ```html
-<script src="ui/d3/build/d3.min.js"></script>
-<!-- after which we can use JS to load data from the endpoint using AJAX calls and pass it to various charts -->
+<button id="et" class="btn btn-secondary btn-danger urlfilter"
+  href="?city=somevalue" data-target="pushState">
+  Errors and Tracebacks
+</button>
 <script>
-$.getJSON(
-      "alldata?chart=people" +
-        "&start=" +
-        start +
-        "&end=" +
-        end +
-        "&array_tonality=" +
-        JSON.stringify(array_tonality) +
-        "&lang_array=" +
-        JSON.stringify(language_sel) +
-        "&cat_array=" +
-        JSON.stringify(categories) +
-        "&auth_array=" +
-        JSON.stringify(authors) +
-        "&pub_array=" +
-        JSON.stringify(publishers) +
-        "&people_in_news=" +
-        JSON.stringify(people_in_news) +
-        "&issues=" +
-        JSON.stringify(issues),function(data){
-          chart(data)
-        }
+  $('body').urlfilter() //calls urlfilter on all elements in the body tag
 </script>
 ```
-In order to facilitate filtering and drilldowns, the G1 library provides a urlfilter function which updates url parameters in place - combined with formhandler, this allows for complicated filterign with very little custom code written. (Note - this is WIP, @karmanya.aggarwal is working on incorporating urlfilter and rewriting the JS to reduce duplication)
 
-For an example of the dashboard in it's current state click [here](https://code.gramener.com/karmanya.aggarwal/quickstart/tree/master/complete)
+On clicking the referenced button, the page's url will be updated to include `city=somevalue`,
+which can then be picked up by multiple components on the same page. 
 
+Thus, can be used to very easily filter views and data across multiple components
+From the quickstart example, look at the following function from fdd.js 
+
+```js
+function vega_update() {
+  var url = g1.url.parse(location.hash.substr(1))
+  $('svg.marks').each(function(){_vegaUpdate(this, url)})
+}
+```
+
+here, `url.parse` is used to pick up filter information from the url and pass it to the vega charts
+in order to update multiple charts at the same time. 
+
+Vega/Vegam/Vega-lite support limited interaction - tooltips and basic brushing is supported, however,
+for highly customized charts or svg interaction, d3.js can be used.
+
+While Gramener has some d3 charts already built and componentized, very often these are required to 
+be custom built for a usecase or project.
+In order to do that, the UI Components library includes d3.js so it can be included in the html and used as follows
+
+```html
+<script src='ui/d3/build/d3.min.js'></script>
+<!-- load data from the endpoint using AJAX calls and pass it to various charts -->
+<script>
+$.getJSON('data', function(data){
+  chart(data)  // Chart is the function that draws the d3.js chart.
+})
+</script>
+```
+
+d3 is a large library and is outside the scope of this guide. 
 
 ## Screenshots via CaptureHandler
 
@@ -474,41 +528,144 @@ Gramex has a feature to export your visuals in the following formats
 
 Follow the steps below to capture the dashboard
 
-- Configure the YAML file so that with required parameters
-- `engine` browser that used to run the application `chrome` is the recommended
-engine.
-- `port` use port other than gramex port
-- `timeout` maximum time required to receive server response.
+- Configure the YAML file as follows - 
 
-```
+```yaml
 url:
-    capture:
-        pattern: /$YAMLURL/capture
-        handler: CaptureHandler
-        kwargs:
-            engine: chrome
-            port: 9901
-            timeout: 20
+  capture:
+    pattern: /$YAMLURL/capture
+    handler: CaptureHandler
+    kwargs:
+      engine: chrome  # The engine used to capture the visual
+      port: 9901      # The port on which capturehandler will run
+      timeout: 20     # The time for which the server response is awaited
 ```
 
-- Every screenshot is exported using a click action element for CaptureHandler.
-- Add a `Button` element that match with the export format.
+Post this, navigating to the capture endpoint will cause the server to take the capture and return the appropriate format.
+Preferred output format, delay, orientation and url to capture can be passed via url query parameters 
 
-```
-<button class = "btn dropdown-toggle" type="button" data-toggle="dropdown">
-<img src="ppt.svg"></button>
-<ul class="dropdown-menu dropdown-right"
-<a href="capture?ext=pdf?orientation=landscape?delay=1000">PDF screenshot</a>
-<a href="capture?ext=png?orientation=landscape?delay=1000">PNG screenshot</a>
-<a href="capture?ext=jpg?orientation=landscape?delay=1000">JPG screenshot</a>
-<a href="capture?ext=pptx?orientation=landscape?delay=1000">PPTX screenshot</a>
+```html
+<ul class="dropdown-menu dropdown-right">
+  <li><a href="capture?ext=pdf?orientation=landscape?delay=1000">PDF screenshot</a></li>
+  <li><a href="capture?ext=png?orientation=landscape?delay=1000">PNG screenshot</a></li>
+  <li><a href="capture?ext=jpg?orientation=landscape?delay=1000">JPG screenshot</a></li>
+  <li><a href="capture?ext=pptx?orientation=landscape?delay=1000">PPTX screenshot</a></li>
 </ul>
 ```
 
-- Encode URLs in javascript to take screenshot in any drilldown.
+From html, even if no url is passed, the referrer url will be the target.
+However, if the capture is triggered from javascript url must be passed.
 
 ```js
-	$('.screenshot').attr('href', 'capture' +
-    '?url=' + encodeURIComponent(url) +
-    '&header=' + encodeURIComponent(header))
+  $('.screenshot').attr('href', 'capture' +
+    '?url=' + encodeURIComponent(url) + '&header=' + encodeURIComponent(header))
 ```
+
+for more information about capturehandler check out the [guide](../capturehandler/)
+
+## Authentication
+
+Gramex offers multiple methods to enforce access control and authentication.
+The simplest of these, conveniently named `SimpleAuth` has user login details stored in the yaml file itself.
+Obviously, this is primarily intended for testing purposes and **isn't recommend** for production/deployment scenarios.
+
+This requires creating two new endpoints in our yaml
+
+```yaml
+url:
+  simpleauth:
+    pattern: /$YAMLURL/login  # Map this URL
+    handler: SimpleAuth       # to the SimpleAuth handler
+    kwargs:
+      credentials:            # Specify the user IDs and passwords
+        gamma:                # The user gamma is defined as a mapping
+          password: pwd       # One of the keys MUST be "password"
+          role: user          # Additional keys can be defined
+        alpha: alpha          # This declares a user called alpha with password alpha
+      template: $YAMLPATH/simple.html   # Optional login template
+      redirect: /$YAMLURL/
+  logout:
+    pattern: /$YAMLURL/logout # Map this URL
+    handler: LogoutHandler
+    kwargs:
+      redirect: /$YAMLURL/login
+```
+
+The addition of these two handlers will load a tornado template called `simple.html` (which contains a login form),
+upon the user logging in, the redirect key will redirect the page to the homepage or `index.html` and
+visiting the logout url will remove the logged in user's details fom the session and redirect back to the login page.
+
+Note, the login handler in this snippet adds two users, the first, with user name 'gamma' and password 'pwd',
+and the second with username 'alpha' and password 'alpha'
+
+## G1 Mapviewer
+
+The G1 library also includes a module that allows for easy map based visuals. 
+in order to create the choropleth used in the example, the following modifications were required in the html. 
+
+```html
+<!-- stylesheets and js files need to be included, using ui components links-->
+<link rel="stylesheet" href="ui/leaflet/dist/leaflet.css">
+<script src="ui/leaflet/dist/leaflet.js"></script>
+<script src="ui/d3/build/d3.js"></script>
+<script src="node_modules/d3-scale-chromatic/dist/d3-scale-chromatic.js"></script>
+<script src="ui/g1/dist/g1.min.js"></script>
+<script src="ui/g1/dist/mapviewer.min.js"></script>
+```
+
+Post including the requisite files, a div needs to be created to contain the map - this div needs to have a definite height.
+
+Finally, the configuration for the map needs to passed as a dictionary to the g1.mapviewer function
+
+```html
+<div id='geojson-map' style="height:600px">
+<script>
+  var map = g1.mapviewer({
+    id: 'geojson-map',        // select the div to contain the map
+    layers: {
+      worldMap: {             // worldMap acts as our basemap layer
+        type: 'tile',
+        url: 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
+      },
+      indiaGeojson: {         // a geojson layer that draws polygons
+        type: 'geojson',
+        url: '/static/worldmapgeo.json',
+        link: {
+          url: '/data-u2',    // The formhandler endpoint,url to get data from
+          dataKey: 'country', // Join this column from the URL (data)
+          mapKey: 'NAME_EN'   // with this property in the GeoJSON
+        },
+        options:{             // default attributes for the geoJson layer
+          style: {
+            fillColor: '#eee',
+            fillOpacity: 0.2,
+            weight: 0.5
+          }
+        },
+        attrs: {               // attributes for the merged properties
+          fillColor: {         // Fill the regions
+            metric: 'loan_amount',  // with the "score" column from state_score.json
+            scheme: 'Viridis',
+          },
+          fillOpacity: 0.8,
+          tooltip: function(prop) {
+            // On hover, show this HTML tooltip
+            return prop.country + ': ' + prop.loan_amount
+          }
+        }
+      }
+    }
+  })
+</script>
+```
+
+In this example, we have a geojson file, that contains polygons demarking countries in the world map.
+Each polygon has associated labels, we're interested in the `NAME_EN` property which contains the name
+of the country that the polygon represents in English.
+
+Similarly, our dataset contains the columns `country` and `loan_amount` - thus this configuration 
+performs a join on the data from our csv file based on `country` and `NAME_EN` and assigns colours
+by the value of `loan_amount` on the map according to the colorscheme Viridis.
+
+The output should look similar to this 
+![world map choropleth](img/choropleth.png)
