@@ -7,13 +7,34 @@ prefix: UploadHandler
 
 [UploadHandler][uploadhandler] lets you upload files and manage them. Here is a sample configuration:
 
-    :::yaml
+```yaml
     url:
         uploadhandler:
             pattern: /$YAMLURL/upload
             handler: UploadHandler
             kwargs:
                 path: $GRAMEXDATA/apps/guide/upload/    # ... save files here
+```
+
+By default, `.meta.db` keystore is created in `kwargs:path` directory to store uploaded files' metadata.
+You can configure `store` as follows:
+
+```yaml
+    url:
+        uploadhandler:
+            pattern: /$YAMLURL/upload
+            handler: UploadHandler
+            kwargs:
+                path: $GRAMEXDATA/apps/guide/upload/
+                store:
+                    type: sqlite
+                    path: $GRAMEXDATA/apps/guide/upload/.fileinfo.db
+                    flush: 5
+```
+
+The `type:` can define any valid store type as seen in [session data](../auth/#session-data).
+
+Note: Till **1.37**  `type: hdf5` was the default. From **1.38** onwards `type:sqlite` is defaulted.
 
 Any file posted with a name of `file` is uploaded. Here is a sample HTML form:
 

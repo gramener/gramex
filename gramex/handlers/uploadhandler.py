@@ -12,7 +12,7 @@ from six.moves import zip_longest
 from orderedattrdict import AttrDict
 from tornado.web import HTTPError
 from gramex.config import app_log
-from gramex.cache import HDF5Store
+from gramex.cache import HDF5Store, get_store
 from gramex.transforms import build_transform
 from gramex.http import FORBIDDEN, INTERNAL_SERVER_ERROR
 from .basehandler import BaseHandler
@@ -37,13 +37,38 @@ class FileUpload(object):
         self.path = os.path.abspath(path)
         if not os.path.exists(self.path):
             os.makedirs(self.path)
+
+        # store default: sqlite .meta.db
+        store_kwargs = kwargs.get('store', {
+            'type': 'sqlite',
+            'path': os.path.join(self.path, '.meta.db')
+        })
         if self.path not in self.stores:
-            # TODO: allow other stores. #62
-            self.stores[self.path] = HDF5Store(os.path.join(self.path, '.meta.h5'), flush=5)
+            self.stores[self.path] = get_store(**store_kwargs)
         self.store = self.stores[self.path]
+        old_store_path = os.path.abspath(os.path.join(self.path, '.meta.h5'))
+        store_path = os.path.abspath(getattr(self.store, 'path', None))
+        # migration: if type is not hdf5 but .meta.h5 exists, update store and remove
+        if (os.path.exists(old_store_path) and store_path != old_store_path):
+            self._migrate_h5(old_store_path)
+
         if 'file' not in keys:
             keys['file'] = ['file']
         self.keys['file'] = keys['file'] if isinstance(keys['file'], list) else [keys['file']]
+
+    def _migrate_h5(self, old_store_path):
+        try:
+            old_store = HDF5Store(old_store_path, flush=5)
+            old_info = [(key, old_store.load(key)) for key in old_store.keys()]
+            for key, val in old_info:
+                self.store.dump(key, val)
+            self.store.flush()
+            old_store.close()
+            os.remove(old_store_path)
+        except Exception:
+            import sys
+            app_log.exception('FATAL: Cannot migrate: {}'.format(old_store_path))
+            sys.exit(1)
 
     def info(self):
         store = self.store
@@ -135,6 +160,9 @@ class UploadHandler(BaseHandler):
 
         path: /$GRAMEXDATA/apps/appname/    # Save files here
         keys: [upload, file]                # <input name=""> can be upload / file
+        store:
+            type: sqlite                    # Store metadata in a SQLite store
+            path: ...                       #   ... at the specified path
         redirect:                           # After uploading the file,
             query: next                     #   ... redirect to ?next=
             url: /$YAMLURL/                 #   ... else to this directory
@@ -143,7 +171,8 @@ class UploadHandler(BaseHandler):
     def setup(cls, path, keys=None, if_exists='unique', transform=None, methods=[], **kwargs):
         super(UploadHandler, cls).setup(**kwargs)
         cls.if_exists = if_exists
-        cls.uploader = FileUpload(path, keys=keys)
+        # FileUpload uses the store= from **kwargs and ignores the rest
+        cls.uploader = FileUpload(path, keys=keys, **kwargs)
 
         # methods=['get'] will show all file into as JSON on GET
         if not isinstance(methods, list):

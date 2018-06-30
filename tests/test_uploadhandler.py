@@ -48,7 +48,7 @@ class TestUploadHandler(TestGramex):
 
     def test_upload(self):
         url = server.base_url + conf.url['upload'].pattern
-        ok_(os.path.isfile(os.path.join(self.path, '.meta.h5')))
+        ok_(os.path.isfile(os.path.join(self.path, '.meta.db')))
         eq_(requests.get(url).status_code, METHOD_NOT_ALLOWED)
         data = {'x': '1', 'y': 1}
         up = lambda **kwargs: self.check_upload(url, **kwargs)      # noqa
@@ -140,5 +140,5 @@ class TestUploadHandler(TestGramex):
             try:
                 shutil.rmtree(cls.path, onerror=_ensure_remove)
             except OSError:
-                # .meta.h5 may be in use. Ignore it.
+                # .meta.db may be in use. Ignore it.
                 pass
