@@ -11,12 +11,12 @@ to display files. This folder uses the following configuration:
 ```yaml
 url:
   markdown:
-  pattern: /$YAMLURL/(.*)               # Any URL under the current gramex.yaml folder
-  handler: FileHandler                  # uses this handler
-  kwargs:
-    path: $YAMLPATH                     # Serve files from this YAML file's directory
-    default_filename: README.md         # using README.md as default
-    index: true                         # List files if README.md is missing
+    pattern: /$YAMLURL/(.*)               # Any URL under the current gramex.yaml folder
+    handler: FileHandler                  # uses this handler
+    kwargs:
+      path: $YAMLPATH                     # Serve files from this YAML file's directory
+      default_filename: README.md         # using README.md as default
+      index: true                         # List files if README.md is missing
 ```
 
 Any file under the current folder is shown as is. If a directory has a
@@ -135,7 +135,7 @@ url:
   kwargs:
     path: $YAMLPATH/                          # Base is the current directory
     headers:
-    Cache-Control: public, max-age=86400    # Cache publicly for 1 day
+      Cache-Control: public, max-age=86400    # Cache publicly for 1 day
 ```
 
 ## Ignore files
@@ -310,7 +310,7 @@ You can disable XSRF for *all handlers* like this (but this is **not recommended
 
 ```yaml
 app:
-    settings:
+  settings:
     xsrf_cookies: false
 ```
 
@@ -362,6 +362,7 @@ url:
 You can concatenate multiple files and serve them as a single file. For example:
 
 ```yaml
+    ...
     pattern: /libraries.js
     handler: FileHandler
     kwargs:

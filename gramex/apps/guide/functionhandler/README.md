@@ -51,6 +51,7 @@ url:
         kwargs:
             function: calculations.total(100, 200)
             methods: [POST, PUT, DELETE]            # Allow only these 3 HTTP methods
+```
 
 ## Function arguments
 
@@ -59,11 +60,13 @@ You can define what parameters to pass to the function. By default, the Tornado
 handler and sums up numbers you specify. [add?x=1&x=2](add?x=1&x=2) shows 3.0.
 Try it below:
 
+```html
 <form action="add">
   <div><input name="x" value="10"></div>
   <div><input name="x" value="20"></div>
   <button type="submit">Add</button>
 </form>
+```
 
 To set this up, [gramex.yaml](gramex.yaml) used the following configuration:
 
@@ -154,7 +157,7 @@ For example:
 
 ```python
 def method(handler):
-    args = handler.argparse()
+    args = handler.argparse('x', 'y')  # x and y will be loaded as strings by default
     args.x      # This is the same as the last value of ?x
     args.y      # This is the same as the last value of ?y
 ```

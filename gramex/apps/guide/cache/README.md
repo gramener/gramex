@@ -12,13 +12,15 @@ Modern browsers support Cache-Control. This is all we need.
 
 Here is an example of how to use `Cache-Control:`:
 
-    url:
-        pattern: /$YAMLURL/path       # Pick any pattern
-        handler: FileHandler          # and handler
-        kwargs:
-          path: $YAMLPATH/path        # Pass it any arguments
-          headers:                    # Define HTTP headers
+```yaml
+url:
+    pattern: /$YAMLURL/path       # Pick any pattern
+    handler: FileHandler          # and handler
+    kwargs:
+        path: $YAMLPATH/path              # Pass it any arguments
+        headers:                          # Define HTTP headers
             Cache-Control: max-age=3600   # Keep page in browser cache for 1 hour (3600 seconds)
+```
 
 The cache is used by browsers as well as proxies. You can also specify these
 additional options:
