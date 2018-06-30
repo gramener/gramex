@@ -54,6 +54,13 @@ url:
           url: $YAMLPATH/flags.csv
           prepare: args.update(Cross=args.pop('c', []))
 
+    formhandler-db:
+      pattern: /$YAMLURL/db
+      handler: FormHandler
+      kwargs:
+        url: sqlite:///$YAMLPATH/../datahandler/database.sqlite3
+        table: flags
+
     formhandler-query:
       pattern: /$YAMLURL/query
       handler: FormHandler

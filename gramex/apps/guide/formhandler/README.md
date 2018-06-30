@@ -395,6 +395,41 @@ To control the output, you can use these control arguments:
 
 Note: You can use `FormHandler` to render specific columns in navbar filters using `?_c=`.
 
+
+## FormHandler groupby
+
+**v1.38**. The URL supports grouping by columns using `?_by=col`. For example:
+
+- [?_by=Continent](flags?_by=Continent&_format=table): group by Continent, and sum all numeric columns.
+  ([Test on SQLite](db?_by=Continent&_format=table))
+- [?_by=Text](flags?_by=Text&_format=table): group by Text, and sum all numeric columns.
+  ([Test on SQLite](db?_by=Text&_format=table))
+- [?_by=Text&_by=Symbols](flags?_by=Text&_by=Symbols&_format=table): group by Text *and* by Symbols.
+  ([Test on SQLite](db?_by=Text&_by=Symbols&_format=table))
+
+You can specify custom aggregations using `?_c=col|aggregation`. For example:
+
+- [?_by=Continent&_c=Name|count](flags?_by=Continent&_c=Name|count&_format=table): group by Continent, count names of countries
+- [?_by=Continent&_c=Name|count&_c=c1|min&_c=c1|avg&_c=c1|max](flags?_by=Continent&_c=Name|count&_c=c1|min&_c=c1|avg&_c=c1|max&_format=table)
+    - `_by=Continent`: group by "Continent"
+    - `_c=Name|count`: count values in "Name"
+    - `_c=c1|min`: min value of "c1" in each continent
+    - `_c=c1|avg`: mean value of "c1" in each continent
+    - `_c=c1|max`: max value of "c1" in each continent
+
+Filters on columns apply BEFORE the grouping. For example:
+
+- [?c1>=80&_by=Continent&_c=Name|count](flags?c1>=80&_by=Continent&_c=Name|count&_format=table): count of countries by continent where c1 > 80
+
+You can also filter AFTER the grouping by filtering with the derived column names. For example:
+
+- [?_by=Continent&_c=Name|count&Name|count>=30](flags?_by=Continent&_c=Name|count&Name|count>=30&_format=table): count of countries by continent where count of countries is > 30
+
+Sorting (`?_sort=`) and pagination (`?_limit=` and `?_offset=`) apply *after* the group by.
+
+- [?_by=Continent&_sort=Continent&_offset=2&_limit=2](flags?_by=Continent&_sort=Continent&_offset=10&_limit=10&_format=table): count of countries by continent sorted by Continent, 2 per page
+
+
 ## FormHandler metadata
 
 When `?meta=y` is specified, the HTTP headers have additional metadata about the
@@ -404,9 +439,10 @@ request and the response. These headers are available:
 - `Fh-Data-Offset: <number>`: Start row (specified by `?_offset=`). Defaults to 0
 - `Fh-Data-Limit: <number>`: Max rows limit (specified by `?_limit=`). Defaults to 0
 - `Fh-Data-Filters: <list>`: Applied filters as `[(col, op, val), ...]`. Defaults to `[]`
-- `Fh-Data-Ignored: <list>`: Ignored filters as `[(col, vals), ('_sort', cols), ...]`. Defaults to `[]`
+- `Fh-Data-Ignored: <list>`: Ignored filters as `[(col, vals), ('_sort', col), ('_by': col), ...]`. Defaults to `[]`
 - `Fh-Data-Sort: <list>`: Sorted columns as `[(col, True), ...]`. The second parameter is `ascending=`. Defaults to `[]`
 - `Fh-Data-Excluded: <list>`: Excluded columns as `[col, ...]`. (TODO: test this)
+- `Fh-Data-By`: Group by columns as `[col, ...]`
 
 All values are all JSON encoded.
 

@@ -51,6 +51,14 @@ class TestFilter(unittest.TestCase):
         eq_(check('/root/nonexistent/'), 'file')
         eq_(check('/root/nonexistent.txt'), 'file')
 
+    def test_filter_col(self):
+        cols = ['sales', 'growth', 'special ~!@#$%^&*()_+[]\\{}|;\':",./<>?高']
+        for col in cols:
+            for op in [''] + gramex.data.operators:
+                eq_(gramex.data._filter_col(col + op, cols), (col, None, op))
+                for agg in ['SUM', 'min', 'Max', 'AVG', 'AnYthiNG']:
+                    eq_(gramex.data._filter_col(col + '|' + agg + op, cols), (col, agg, op))
+
     def test_dirstat(self):
         for name in ('test_cache', 'test_config', '.'):
             path = os.path.join(folder, name)
@@ -59,11 +67,16 @@ class TestFilter(unittest.TestCase):
             eq_(len(files), len(result))
             ok_({'path', 'name', 'dir', 'type', 'size', 'mtime'} <= set(result.columns))
 
-    def check_filter(self, df=None, na_position='last', **kwargs):
+    def check_filter(self, df=None, na_position='last', sum_na=False, **kwargs):
         '''
         Tests a filter method. The filter method filters the sales dataset using
         an "args" dict as argument. This is used to test filter with frame, file
         and sqlalchemy URLs
+
+        - ``na_position`` indicates whether NA are moved to the end or not. Can
+          be 'first' or 'last'
+        - ``sum_na`` indicates whether SUM() over zero elements results in NA
+          (instead of 0)
         '''
         def eq(args, expected, **eqkwargs):
             meta = {}
@@ -181,6 +194,74 @@ class TestFilter(unittest.TestCase):
         m = eq({'_c': ['nonexistent', 'sales']}, sales[['sales']])
         eq_(m['ignored'], [('_c', ['nonexistent'])])
 
+        def update(expected, by, *columns):
+            expected.columns = columns
+            expected.reset_index(inplace=True)
+            if sum_na:
+                for col in columns:
+                    if col.lower().endswith('|sum'):
+                        expected[col].replace({0.0: pd.np.nan}, inplace=True)
+            expected.sort_values(by, inplace=True)
+
+        for by in [['देश'], ['देश', 'city', 'product']]:
+            # _by= groups by column(s) and sums all numeric columns
+            # and ignores non-existing columns
+            expected = sales.groupby(by).agg({
+                'sales': 'sum',
+                'growth': 'sum'
+            })
+            update(expected, by, 'sales|sum', 'growth|sum')
+            m = eq({'_by': by + ['na'], '_sort': by}, expected)
+            eq_(m['by'], by)
+            eq_(m['ignored'], [('_by', 'na')])
+
+            # _by allows custom aggregation
+            aggs = [
+                'city|count',
+                'product|MAX', 'product|MIN',
+                'sales|count', 'sales|SUM',
+                'growth|sum', 'growth|AvG',
+            ]
+            agg_pd = {
+                'city': 'count',
+                'product': ['max', 'min'],
+                'sales': ['count', 'sum'],
+                'growth': ['sum', 'mean'],
+            }
+            expected = sales.groupby(by).agg(agg_pd)
+            update(expected, by, *aggs)
+            eq({'_by': by, '_sort': by, '_c': aggs}, expected)
+
+            # _by with HAVING as well as WHERE filters
+            filters = [
+                (None, (None, None)),
+                ('city == "Singapore"', ('city', 'Singapore')),
+                ('sales > 100', ('sales>', '100')),
+            ]
+            for query, (key, val) in filters:
+                # Filter by city. Then group by product and aggregate by sales & growth
+                filtered = sales if query is None else sales.query(query)
+                expected = filtered.groupby(by).agg(agg_pd)
+                update(expected, by, *aggs)
+                # Make sure there's enough data. Sometimes, I goof up above above
+                # and pick a scenario that return no data in the first place.
+                ok_(len(expected) > 0)
+                for having in aggs:
+                    # Apply HAVING at the mid-point of aggregated data.
+                    # Cannot use .median() since data may not be numeric.
+                    midpoint = expected[having].sort_values().iloc[len(expected) // 2]
+                    # Floating point bugs surface unless we round it off
+                    if isinstance(midpoint, float):
+                        midpoint = round(midpoint, 2)
+                    subset = expected[expected[having] > midpoint]
+                    args = {'_by': by, '_sort': by, '_c': aggs,
+                            having + '>': [six.text_type(midpoint)]}
+                    if query is not None:
+                        args[key] = [val]
+                    # When subset is empty, the SQL returned types may not match.
+                    # Don't check_dtype in that case.
+                    eq(args, subset, check_dtype=len(subset) > 0)
+
         # Invalid values raise errors
         with assert_raises(ValueError):
             eq({'_limit': ['abc']}, sales)
@@ -193,8 +274,8 @@ class TestFilter(unittest.TestCase):
     def test_file(self):
         self.check_filter(url=sales_file)
         afe(
-            gramex.data.filter(url=sales_file, transform='2.1', sheetname='dummy'),
-            gramex.cache.open(sales_file, 'excel', transform='2.2', sheetname='dummy'),
+            gramex.data.filter(url=sales_file, transform='2.1', sheet_name='dummy'),
+            gramex.cache.open(sales_file, 'excel', transform='2.2', sheet_name='dummy'),
         )
         self.check_filter(
             url=sales_file,
@@ -208,29 +289,30 @@ class TestFilter(unittest.TestCase):
         with assert_raises(TypeError):
             gramex.data.filter(url=os.path.join(folder, 'test_cache_module.py'))
 
-    def check_filter_db(self, dbname, url, na_position):
+    def check_filter_db(self, dbname, url, na_position, sum_na=True):
         self.db.add(dbname)
         df = self.sales[self.sales['sales'] > 100]
-        self.check_filter(url=url, table='sales', na_position=na_position)
-        self.check_filter(url=url, table='sales', na_position=na_position,
-                          transform=lambda d: d[d['sales'] > 100], df=df)
-        self.check_filter(url=url, table='sales', na_position=na_position,
-                          query='SELECT * FROM sales WHERE sales > 100', df=df)
-        self.check_filter(url=url, table='sales', na_position=na_position,
+        kwargs = {'na_position': na_position, 'sum_na': sum_na}
+        self.check_filter(url=url, table='sales', **kwargs)
+        self.check_filter(url=url, table='sales',
+                          transform=lambda d: d[d['sales'] > 100], df=df, **kwargs)
+        self.check_filter(url=url, table='sales',
+                          query='SELECT * FROM sales WHERE sales > 100', df=df, **kwargs)
+        self.check_filter(url=url, table='sales',
                           query='SELECT * FROM sales WHERE sales > 999999',
-                          queryfile=os.path.join(folder, 'sales-query.sql'), df=df)
-        self.check_filter(url=url, table=['sales', 'sales'], na_position=na_position,
+                          queryfile=os.path.join(folder, 'sales-query.sql'), df=df, **kwargs)
+        self.check_filter(url=url, table=['sales', 'sales'],
                           query='SELECT * FROM sales WHERE sales > 100',
                           transform=lambda d: d[d['growth'] < 0.5],
-                          df=df[df['growth'] < 0.5])
-        self.check_filter(url=url, na_position=na_position,
+                          df=df[df['growth'] < 0.5], **kwargs)
+        self.check_filter(url=url,
                           query='SELECT * FROM sales WHERE sales > 100',
                           transform=lambda d: d[d['growth'] < 0.5],
-                          df=df[df['growth'] < 0.5])
-        self.check_filter(url=url, table='sales', na_position=na_position,
+                          df=df[df['growth'] < 0.5], **kwargs)
+        self.check_filter(url=url, table='sales',
                           query='SELECT * FROM sales WHERE sales > 100',
                           transform=lambda d: d[d['growth'] < 0.5],
-                          df=df[df['growth'] < 0.5])
+                          df=df[df['growth'] < 0.5], **kwargs)
         # Check both parameter substitutions -- {} formatting and : substitution
         afe(gramex.data.filter(url=url, table='{x}', args={'x': ['sales']}), self.sales)
         actual = gramex.data.filter(
@@ -267,7 +349,7 @@ class TestFilter(unittest.TestCase):
         url = dbutils.postgres_create_db(self.server.postgres, 'test_filter', **{
             'sales': self.sales, 'filter.sales': self.sales})
         self.check_filter_db('postgres', url, na_position='last')
-        self.check_filter(url=url, table='filter.sales', na_position='last')
+        self.check_filter(url=url, table='filter.sales', na_position='last', sum_na=True)
 
     def test_sqlite(self):
         url = dbutils.sqlite_create_db('test_filter.db', sales=self.sales)
@@ -343,7 +425,7 @@ class TestDownload(unittest.TestCase):
         afe(pd.read_excel(io.BytesIO(out)), self.dummy)
 
         out = gramex.data.download({'dummy': self.dummy, 'sales': self.sales}, format='xlsx')
-        result = pd.read_excel(io.BytesIO(out), sheetname=None)
+        result = pd.read_excel(io.BytesIO(out), sheet_name=None)
         afe(result['dummy'], self.dummy)
         afe(result['sales'], self.sales)
 

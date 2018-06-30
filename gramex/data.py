@@ -22,6 +22,29 @@ _METADATA_CACHE = {}
 _FOLDER = os.path.dirname(os.path.abspath(__file__))
 # Dummy path used by _path_safe to detect sub-directories
 _path_safe_root = os.path.realpath('/root/dir')
+# Aggregator separator. ?col|SUM treats SUM as an aggregate function
+_agg_sep = '|'
+# List of aggregated types returned by operators (if different from column type)
+# Note: For aggregation functions, see:
+# SQLite: https://www.sqlite.org/lang_aggfunc.html
+# MySQL: https://dev.mysql.com/doc/refman/8.0/en/group-by-functions.html
+# PostgreSQL: https://www.postgresql.org/docs/9.5/static/functions-aggregate.html
+# SQL Server: http://bit.ly/2MYPgQi
+# DB2: https://ibm.co/2Kfbnjw
+# Oracle: https://docs.oracle.com/database/121/SQLRF/functions003.htm
+_agg_type = {
+    'sum': float,
+    'count': int,
+    'avg': float,
+    'stdev': float,         # MS SQL version of stddev
+    'stddev': float,
+    'rank': int,
+    'percent_rank': float,
+    # The following types are the same as the columns
+    # first, last, min, max, median
+}
+# List of Python types returned by SQLAlchemy
+_numeric_types = {'int', 'long', 'float', 'Decimal'}
 
 
 def filter(url, args={}, meta={}, engine=None, table=None, ext=None,
@@ -128,12 +151,13 @@ def filter(url, args={}, meta={}, engine=None, table=None, ext=None,
     The ``meta`` variable is populated with the following keys:
 
     - ``filters``: Applied filters as ``[(col, op, val), ...]``
-    - ``ignored``: Ignored filters as ``[(col, vals), ('_sort', cols), ...]``
+    - ``ignored``: Ignored filters as ``[(col, vals), ('_sort', col), ('_by', col), ...]``
     - ``excluded``: Excluded columns as ``[col, ...]``
     - ``sort``: Sorted columns as ``[(col, True), ...]``. The second parameter is ``ascending=``
     - ``offset``: Offset as integer. Defaults to 0
     - ``limit``: Limit as integer - ``None`` if limit is not applied
     - ``count``: Total number of rows, if available
+    - ``by``: Group by columns as ``[col, ...]``
 
     These variables may be useful to show additional information about the
     filtered data.
@@ -149,6 +173,7 @@ def filter(url, args={}, meta={}, engine=None, table=None, ext=None,
         'sort': [],         # Sorted columns as [(col, asc), ...]
         'offset': 0,        # Offset as integer
         'limit': None,      # Limit as integer - None if not applied
+        'by': [],           # Group by columns as [col, ...]
     })
     controls = _pop_controls(args)
 
@@ -391,7 +416,7 @@ def _pop_controls(args):
     '''Filter out data controls: sort, limit, offset and column (_c) from args'''
     return {
         key: args.pop(key)
-        for key in ('_sort', '_limit', '_offset', '_c')
+        for key in ('_sort', '_limit', '_offset', '_c', '_by')
         if key in args
     }
 
@@ -422,15 +447,105 @@ def _path_safe(path):
     return os.path.realpath(os.path.join(_path_safe_root, path)).startswith(_path_safe_root)
 
 
+# The order of operators is important. ~ is at the end. Otherwise, !~
+# or >~ will also be mapped to ~ as an operator
+operators = ['!', '>', '>~', '<', '<~', '!~', '~']
+
+
 def _filter_col(col, cols):
-    if col in cols:
-        return col, ''
-    # The order of operators is important. ~ is at the end. Otherwise, !~
-    # or >~ will also be mapped to ~ as an operator
-    for op in ['', '!', '>', '>~', '<', '<~', '!~', '~']:
-        if col.endswith(op) and col[:-len(op)] in cols:
-            return col[:-len(op)], op
-    return None, None
+    '''
+    Parses a column name from a list of columns and returns a (col, agg, op)
+    tuple.
+
+    - ``col`` is the name of the column in cols.
+    - ``agg`` is the aggregation operation (SUM, MIN, MAX, etc), else None
+    - ``op`` is the operator ('', !, >, <, etc)
+
+    If the column is invalid, then ``col`` and ``op`` are None
+    '''
+    colset = set(cols)
+    # ?col= is returned quickly
+    if col in colset:
+        return col, None, ''
+    # Check if it matches a non-empty operator, like ?col>~=
+    for op in operators:
+        if col.endswith(op):
+            name = col[:-len(op)]
+            if name in colset:
+                return name, None, op
+            # If there's an aggregator, split it out, like ?col|SUM>~=
+            elif _agg_sep in name:
+                name, agg = name.rsplit(_agg_sep, 1)
+                if name in colset:
+                    return name, agg, op
+    # If no operators match, it might be a pure aggregation, like ?col|SUM=
+    if _agg_sep in col:
+        name, agg = col.rsplit(_agg_sep, 1)
+        if name in colset:
+            return name, agg, ''
+    # Otherwise we don't know what it is
+    return None, None, None
+
+
+def _filter_frame_col(data, key, col, op, vals, meta):
+    # Apply type conversion for values
+    conv = data[col].dtype.type
+    vals = tuple(conv(val) for val in vals if val)
+    if op not in {'', '!'} and len(vals) == 0:
+        meta['ignored'].append((key, vals))
+    elif op == '':
+        data = data[data[col].isin(vals)] if len(vals) else data[pd.notnull(data[col])]
+    elif op == '!':
+        data = data[~data[col].isin(vals)] if len(vals) else data[pd.isnull(data[col])]
+    elif op == '>':
+        data = data[data[col] > min(vals)]
+    elif op == '>~':
+        data = data[data[col] >= min(vals)]
+    elif op == '<':
+        data = data[data[col] < max(vals)]
+    elif op == '<~':
+        data = data[data[col] <= max(vals)]
+    elif op == '!~':
+        data = data[~data[col].str.contains('|'.join(vals))]
+    elif op == '~':
+        data = data[data[col].str.contains('|'.join(vals))]
+    meta['filters'].append((col, op, vals))
+    return data
+
+
+def _filter_db_col(query, method, key, col, op, vals, column, conv, meta):
+    '''
+    - Updates ``query`` with a method (WHERE/HAVING) that sets '<key> <op> <vals>'
+    - ``column`` is the underlying ColumnElement
+    - ``conv`` is a type conversion function that converts ``vals`` to the correct type
+    - Updates ``meta`` with the fields used for filtering (or ignored)
+    '''
+    # In PY2, .python_type returns str. We want unicode
+    if conv == six.binary_type:
+        conv = six.text_type
+    vals = tuple(conv(val) for val in vals if val)
+    if op not in {'', '!'} and len(vals) == 0:
+        meta['ignored'].append((key, vals))
+    elif op == '':
+        # Test if column is not NULL. != None is NOT the same as is not None
+        query = method(column.in_(vals) if len(vals) else column != None)      # noqa
+    elif op == '!':
+        # Test if column is NULL. == None is NOT the same as is None
+        query = method(column.notin_(vals) if len(vals) else column == None)   # noqa
+    elif op == '>':
+        query = method(column > min(vals))
+    elif op == '>~':
+        query = method(column >= min(vals))
+    elif op == '<':
+        query = method(column < max(vals))
+    elif op == '<~':
+        query = method(column <= max(vals))
+    elif op == '!~':
+        query = method(column.notlike('%' + '%'.join(vals) + '%'))
+    elif op == '~':
+        query = method(column.like('%' + '%'.join(vals) + '%'))
+    meta['filters'].append((col, op, vals))
+    return query
 
 
 def _filter_sort_columns(sort_filter, cols):
@@ -447,9 +562,9 @@ def _filter_sort_columns(sort_filter, cols):
 
 def _filter_select_columns(col_filter, cols, meta):
     '''
-    Checks ?c=col&c=-col for filter(). Takes values of ?c= as col_filter and data
-    column names as cols. Returns 2 lists: show_cols as columns to show.
-    ignored_cols has column names not in the list, i.e. the ?c= parameters that
+    Checks ?_c=col&_c=-col for filter(). Takes values of ?_c= as col_filter and
+    data column names as cols. Returns 2 lists: show_cols as columns to show.
+    ignored_cols has column names not in the list, i.e. the ?_c= parameters that
     are ignored.
     '''
     selected_cols, excluded_cols, ignored_cols = [], set(), []
@@ -465,6 +580,33 @@ def _filter_select_columns(col_filter, cols, meta):
     show_cols = [col for col in selected_cols if col not in excluded_cols]
     meta['excluded'] = list(excluded_cols)
     return show_cols, ignored_cols
+
+
+def _filter_groupby_columns(by, cols, meta):
+    '''
+    Checks ?_by=col&_by=col for filter().
+
+    - ``by``: list of column names to group by
+    - ``cols``: list of valid column names
+    - ``meta``: meta['by'] and meta['ignored'] are updated
+
+    Returns a list of columns to group by
+    '''
+    colset = set(cols)
+    for col in by:
+        if col in colset:
+            meta['by'].append(col)
+        else:
+            meta['ignored'].append(('_by', col))
+    return meta['by']
+
+
+# If ?by=col|avg is provided, this works in SQL but not in Pandas DataFrames.
+# Convert into a DataFrame friendly function
+_frame_functions = {
+    'avg': 'mean',
+    'average': 'mean',
+}
 
 
 def _filter_frame(data, meta, controls, args, source='select', id=[]):
@@ -487,41 +629,23 @@ def _filter_frame(data, meta, controls, args, source='select', id=[]):
     :arg id: list of id specific to data using which values can be updated
     '''
     original_data = data
-    filters = meta['filters']
     cols_for_update = {}
+    cols_having = []
     for key, vals in args.items():
+        # check if `key`` is in the `id` list -- ONLY when data is updated
         if (source in ('update', 'delete') and key in id) or (source == 'select'):
-            # Parse column names
-            col, op = _filter_col(key, data.columns)
+            # Parse column names, ignoring missing / unmatched columns
+            col, agg, op = _filter_col(key, data.columns)
             if col is None:
                 meta['ignored'].append((key, vals))
                 continue
-
-            # Apply type conversion for values
-            conv = data[col].dtype.type
-            vals = tuple(conv(val) for val in vals if val)
-            if op not in {'', '!'} and len(vals) == 0:
-                meta['ignored'].append((key, vals))
+            # Process aggregated columns AFTER filtering, not before (like HAVING clause)
+            # e.g. ?sales|SUM=<val> should be applied only after the column is created
+            if agg is not None:
+                cols_having.append((key, col + _agg_sep + agg, op, vals))
                 continue
-
             # Apply filters
-            if op == '':
-                data = data[data[col].isin(vals)] if len(vals) else data[pd.notnull(data[col])]
-            elif op == '!':
-                data = data[~data[col].isin(vals)] if len(vals) else data[pd.isnull(data[col])]
-            elif op == '>':
-                data = data[data[col] > min(vals)]
-            elif op == '>~':
-                data = data[data[col] >= min(vals)]
-            elif op == '<':
-                data = data[data[col] < max(vals)]
-            elif op == '<~':
-                data = data[data[col] <= max(vals)]
-            elif op == '!~':
-                data = data[~data[col].str.contains('|'.join(vals))]
-            elif op == '~':
-                data = data[data[col].str.contains('|'.join(vals))]
-            filters.append((col, op, vals))
+            data = _filter_frame_col(data, key, col, op, vals, meta)
         elif source == 'update':
             # Update values should only contain 1 value. 2nd onwards are ignored
             if key not in data.columns or len(vals) == 0:
@@ -533,7 +657,6 @@ def _filter_frame(data, meta, controls, args, source='select', id=[]):
         else:
             meta['ignored'].append((key, vals))
     meta['count'] = len(data)
-
     if source == 'delete':
         original_data.drop(data.index, inplace=True)
         return data
@@ -543,6 +666,40 @@ def _filter_frame(data, meta, controls, args, source='select', id=[]):
         return data
     else:
         # Apply controls
+        if '_by' in controls:
+            by = _filter_groupby_columns(controls['_by'], data.columns, meta)
+            if len(by) > 0:
+                groups = data.groupby(by)
+                # If ?_c is not specified, use 'col|sum' for all numeric columns
+                # TODO: This does not support ?_c=-<col> to hide a column
+                col_list = controls.get('_c', None)
+                if col_list is None:
+                    col_list = [col + _agg_sep + 'sum' for col in data.columns      # noqa
+                                if pd.api.types.is_numeric_dtype(data[col])]
+                agg_cols = []
+                agg_dict = AttrDict()
+                for key in col_list:
+                    col, agg, val = _filter_col(key, data.columns)
+                    if agg is not None:
+                        # Convert aggregation into a Pandas GroupBy agg function
+                        agg = agg.lower()
+                        agg = _frame_functions.get(agg, agg)
+                        agg_cols.append(key)
+                        if col in agg_dict:
+                            agg_dict[col].append(agg)
+                        else:
+                            agg_dict[col] = [agg]
+                data = groups.agg(agg_dict)
+                data.columns = agg_cols
+                data = data.reset_index()
+                # Apply HAVING operators
+                for key, col, op, vals in cols_having:
+                    data = _filter_frame_col(data, key, col, op, vals, meta)
+        elif '_c' in controls:
+            show_cols, hide_cols = _filter_select_columns(controls['_c'], data.columns, meta)
+            data = data[show_cols]
+            if len(hide_cols) > 0:
+                meta['ignored'].append(('_c', hide_cols))
         if '_sort' in controls:
             meta['sort'], ignore_sorts = _filter_sort_columns(controls['_sort'], data.columns)
             if len(meta['sort']) > 0:
@@ -550,11 +707,6 @@ def _filter_frame(data, meta, controls, args, source='select', id=[]):
                                         ascending=[c[1] for c in meta['sort']])
             if len(ignore_sorts) > 0:
                 meta['ignored'].append(('_sort', ignore_sorts))
-        if '_c' in controls:
-            show_cols, hide_cols = _filter_select_columns(controls['_c'], data.columns, meta)
-            data = data[show_cols]
-            if len(hide_cols) > 0:
-                meta['ignored'].append(('_c', hide_cols))
         if '_offset' in controls:
             try:
                 offset = min(int(v) for v in controls['_offset'])
@@ -588,7 +740,6 @@ def _filter_db(engine, table, meta, controls, args, source='select', id=[]):
     table = get_table(engine, table)
     cols = table.columns
 
-    filters = meta['filters']
     if source == 'delete':
         query = sqlalchemy.delete(table)
     elif source == 'update':
@@ -596,46 +747,23 @@ def _filter_db(engine, table, meta, controls, args, source='select', id=[]):
     else:
         query = sqlalchemy.select([table])
     cols_for_update = {}
+    cols_having = []
     for key, vals in args.items():
-        # id (combination of cols) - check ONLY when data is updated
+        # check if `key`` is in the `id` list -- ONLY when data is updated
         if (source in ('update', 'delete') and key in id) or (source == 'select'):
-            # Parse column names
-            col, op = _filter_col(key, cols)
+            # Parse column names, ignoring missing / unmatched columns
+            col, agg, op = _filter_col(key, cols.keys())
             if col is None:
                 meta['ignored'].append((key, vals))
                 continue
-
-            # Apply type conversion for values
-            column = cols[col]
-            conv = column.type.python_type
-            # In PY2, .python_type returns str. We want unicode
-            if conv == six.binary_type:
-                conv = six.text_type
-            vals = tuple(conv(val) for val in vals if val)
-            if op not in {'', '!'} and len(vals) == 0:
-                meta['ignored'].append((key, vals))
+            # Process aggregated columns AFTER filtering, not before (like HAVING clause)
+            # e.g. ?sales|SUM=<val> should be applied only after the column is created
+            if agg is not None:
+                cols_having.append((key, col + _agg_sep + agg, op, vals))
                 continue
-
             # Apply filters
-            if op == '':
-                # Test if column is not NULL. != None is NOT the same as is not None
-                query = query.where(column.in_(vals) if len(vals) else column != None)      # noqa
-            elif op == '!':
-                # Test if column is NULL. == None is NOT the same as is None
-                query = query.where(column.notin_(vals) if len(vals) else column == None)   # noqa
-            elif op == '>':
-                query = query.where(column > min(vals))
-            elif op == '>~':
-                query = query.where(column >= min(vals))
-            elif op == '<':
-                query = query.where(column < max(vals))
-            elif op == '<~':
-                query = query.where(column <= max(vals))
-            elif op == '!~':
-                query = query.where(column.notlike('%' + '%'.join(vals) + '%'))
-            elif op == '~':
-                query = query.where(column.like('%' + '%'.join(vals) + '%'))
-            filters.append((col, op, vals))
+            query = _filter_db_col(query, query.where, key, col, op, vals,
+                                   cols[col], cols[col].type.python_type, meta)
         elif source == 'update':
             # Update values should only contain 1 value. 2nd onwards are ignored
             if key not in cols or len(vals) == 0:
@@ -654,20 +782,45 @@ def _filter_db(engine, table, meta, controls, args, source='select', id=[]):
         res = engine.execute(query)
         return res.rowcount
     else:
-        # Apply controls for select
-        if '_sort' in controls:
-            meta['sort'], ignore_sorts = _filter_sort_columns(controls['_sort'], list(cols.keys()))
-            for col, asc in meta['sort']:
-                query = query.order_by(cols[col] if asc else cols[col].desc())
-            if len(ignore_sorts) > 0:
-                meta['ignored'].append(('_sort', ignore_sorts))
-        if '_c' in controls:
+        # Apply controls
+        if '_by' in controls:
+            by = _filter_groupby_columns(controls['_by'], cols.keys(), meta)
+            if len(by) > 0:
+                query = query.group_by(*by)
+                # If ?_c is not specified, use 'col|sum' for all numeric columns
+                # TODO: This does not support ?_c=-<col> to hide a column
+                col_list = controls.get('_c', None)
+                if col_list is None:
+                    col_list = [col + _agg_sep + 'sum' for col, column in cols.items()  # noqa
+                                if column.type.python_type.__name__ in _numeric_types]
+                agg_cols = {col: cols[col] for col in by}   # {label: ColumnElement}
+                typ = {}                                    # {label: python type}
+                for key in col_list:
+                    col, agg, val = _filter_col(key, cols.keys())
+                    if agg is not None:
+                        # Convert aggregation into SQLAlchemy query
+                        agg = agg.lower()
+                        typ[key] = _agg_type.get(agg, cols[col].type.python_type)
+                        agg_func = getattr(sqlalchemy.sql.expression.func, agg)
+                        agg_cols[key] = agg_func(cols[col]).label(key)
+                query = query.with_only_columns(agg_cols.values())
+                # Apply HAVING operators
+                for key, col, op, vals in cols_having:
+                    query = _filter_db_col(query, query.having, key, col, op, vals,
+                                           agg_cols[col], typ[col], meta)
+        elif '_c' in controls:
             show_cols, hide_cols = _filter_select_columns(controls['_c'], list(cols.keys()), meta)
             query = query.with_only_columns([cols[col] for col in show_cols])
             if len(hide_cols) > 0:
                 meta['ignored'].append(('_c', hide_cols))
             if len(show_cols) == 0:
                 return pd.DataFrame()
+        if '_sort' in controls:
+            meta['sort'], ignore_sorts = _filter_sort_columns(controls['_sort'], list(cols.keys()))
+            for col, asc in meta['sort']:
+                query = query.order_by(cols[col] if asc else cols[col].desc())
+            if len(ignore_sorts) > 0:
+                meta['ignored'].append(('_sort', ignore_sorts))
         if '_offset' in controls:
             try:
                 offset = min(int(v) for v in controls['_offset'])

@@ -21,6 +21,7 @@ testlib/**/gen.*
 
 # Cache folders used for testing
 .cache-*
+.pytest_cache
 
 # Ignore log files
 *.log*

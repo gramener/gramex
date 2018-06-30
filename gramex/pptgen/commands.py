@@ -13,8 +13,8 @@ import collections
 import numpy as np
 import pandas as pd
 import matplotlib.cm
-from lxml import etree
 import matplotlib.colors
+from lxml import etree
 from tornado.template import Template
 from tornado.escape import to_unicode
 from pptx.chart import data as pptxcd

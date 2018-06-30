@@ -147,6 +147,7 @@ class FormHandler(BaseHandler):
             try:
                 result[key] = yield val
             except ValueError as e:
+                app_log.exception('%s: filter failed' % self.name)
                 raise HTTPError(BAD_REQUEST, reason=e.args[0])
             modify = self.datasets[key].get('modify', None)
             if callable(modify):
