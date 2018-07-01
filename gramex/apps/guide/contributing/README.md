@@ -92,6 +92,7 @@ Update the following and commit to `dev` branch:
 - `pkg/docker-py3/Dockerfile` -- update the version number
 - `python gramex/apps/guide/search/search.py` to update search index
 - `node gramex/apps/guide/search/searchindex.js` to update search index
+- `gramex/apps/guide/release/README.md` -- add release entry
 
 Commit and push the `dev` branch to the server. **Ensure pipeline passes.**:
 

@@ -279,6 +279,41 @@
       "Upgrade": -1
     }
   },
+  "1.38": {
+    "": {
+      "Gramex 1.38 Release Notes": -1
+    },
+    "apache-load-balancing": {
+      "Apache Load Balancing": -1
+    },
+    "bug-fixes": {
+      "Bug fixes": -1
+    },
+    "developer-updates": {
+      "Developer Updates": -1
+    },
+    "emailauth": {
+      "EmailAuth": -1
+    },
+    "formhandler-group-by": {
+      "FormHandler Group By": -1
+    },
+    "g1": {
+      "g1": -1
+    },
+    "quickstart": {
+      "Quickstart": -1
+    },
+    "stats": {
+      "Stats": -1
+    },
+    "upgrade": {
+      "Upgrade": -1
+    },
+    "uploadhandler": {
+      "UploadHandler": -1
+    }
+  },
   "about": {
     "": {
       "About Gramex": -1
@@ -424,6 +459,9 @@
     },
     "direct-ldap-login": {
       "Direct LDAP login": -1
+    },
+    "email-auth": {
+      "Email Auth": -1
     },
     "encrypted-user": {
       "Encrypted user": -1
@@ -816,6 +854,9 @@
     "404-not-found": {
       "404 Not Found": -1
     },
+    "apache-load-balancing": {
+      "Apache Load Balancing": -1
+    },
     "apache-reverse-proxy": {
       "Apache reverse proxy": -1
     },
@@ -1042,6 +1083,9 @@
     },
     "formhandler-functions": {
       "FormHandler functions": -1
+    },
+    "formhandler-groupby": {
+      "FormHandler groupby": -1
     },
     "formhandler-json-body": {
       "FormHandler JSON body": -1
@@ -1406,18 +1450,23 @@
     "": {
       "Quickstart Guide": -1
     },
+    "authentication": {
+      "Authentication": -1
+    },
     "backend-data-transformation": {
       "Backend Data Transformation": -1
     },
     "business-case": {
       "Business Case": -1
     },
-    "configuration": {
-      "Configuration": -1
+    "charting": {
+      "Charting": -1
     },
-    "data-validationconfiguration-driven-charts": {
-      "Data Validation/configuration driven charts": -1
+    "configuration": {},
+    "configuration-and-handlers": {
+      "Configuration and Handlers": -1
     },
+    "data-validationconfiguration-driven-charts": {},
     "editorconfig": {
       ".editorconfig": -1
     },
@@ -1429,6 +1478,9 @@
     },
     "folder-structure-of-a-simple-gramex-dashboard": {
       "Folder Structure of a Simple Gramex Dashboard": -1
+    },
+    "g1-mapviewer": {
+      "G1 Mapviewer": -1
     },
     "gitignore": {
       ".gitignore": -1
@@ -1460,9 +1512,7 @@
     "introduction": {
       "Introduction": -1
     },
-    "problem-definition": {
-      "Problem Definition": -1
-    },
+    "problem-definition": {},
     "readmemd": {
       "README.md": -1
     },
@@ -1472,15 +1522,9 @@
     "screenshots-via-capturehandler": {
       "Screenshots via CaptureHandler": -1
     },
-    "style-1": {
-      "Style 1:": -1
-    },
-    "style-2": {
-      "Style 2:": -1
-    },
-    "style-3": {
-      "Style 3:": -1
-    }
+    "style-1": {},
+    "style-2": {},
+    "style-3": {}
   },
   "r": {
     "": {
