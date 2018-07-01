@@ -103,5 +103,5 @@ alert:
       role: 'custom-role'
 
 encrypt:
-  public_key: D:/Anand/Main/.ssh/id_rsa.pub
-  private_key: D:/Anand/Main/.ssh/id_rsa
+  public_key: $HOME/.ssh/id_rsa.pub
+  private_key: $HOME/.ssh/id_rsa
