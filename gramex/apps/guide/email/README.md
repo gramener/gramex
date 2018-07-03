@@ -16,7 +16,8 @@ email:
         password: tlpmupxnhucitpte      # App-specific password created for Gramex guide
 ```
 
-In the `type:` section of `gramex.yaml` email configuration, the following types are supported:
+In the `type:` section of `gramex.yaml` email configuration, the following types
+are supported. You need to add your `email:` and `password:`.
 
 - `gmail`: Google Mail. To securely send apps, enable
   [2-step verification](https://support.google.com/accounts/answer/185839) and use
@@ -25,18 +26,34 @@ In the `type:` section of `gramex.yaml` email configuration, the following types
 - `yahoo`: Yahoo Mail
 - `live`: Microsoft live mail
 - `mandrill`: [Mandrill](https://mandrill.zendesk.com/) email
+- `office365`: [Office 365](https://support.office.com/en-us/article/how-to-set-up-a-multifunction-device-or-application-to-send-email-using-office-365-69f58e99-c550-4274-ad18-c805d654b4c4)
+- `outlook`: [Outlook.com](https://support.office.com/en-us/article/pop-imap-and-smtp-settings-for-outlook-com-d088b986-291d-42b8-9564-9c414e2aa040)
+- `icloud`: [iCloud.com](https://support.apple.com/en-us/ht202304)
 
 You can also connect to *any* SMTP or SMTPS mail server using `type: smtp` or
-`type: smtps`. For example:
+`type: smtps`. This includes:
+
+- [Amazon SES via SMTP](https://docs.aws.amazon.com/ses/latest/DeveloperGuide/send-email-smtp.html).
+  This is not provided as a default type since there are
+  [multiple endpoints](https://docs.aws.amazon.com/ses/latest/DeveloperGuide/smtp-connect.html).
+- [Microsoft Exchange](https://docs.microsoft.com/en-us/exchange/clients/pop3-and-imap4/configure-authenticated-smtp).
+  The settings for this are based on the server
+
+For example:
 
 ```yaml
 email:
+    amazon-ses:
+        type: smtps
+        host: email-smtp.eu-west-1.amazonaws.com    # AWS SES SMTP server for your region
+        email: '***'                                # IAM access ID
+        password: '***'                             # IAM password
     client-email:
         type: smtp              # Use type: smtps for SMTPS servers
         host: 10.20.30.40       # Host name or IP address of the SMTP server
         # Optional parameters
         email: user@domain.com  # Username or email to log into SMTP server
-        password: ****          # Password for SMTP server
+        password: '***'         # Password for SMTP server
         port: 587               # For non-standard SMTP port. Default: SMTPS=587, SMTP=25
 ```
 

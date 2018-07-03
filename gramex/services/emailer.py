@@ -36,6 +36,10 @@ class SMTPMailer(object):
         'yahoo': {'host': 'smtp.mail.yahoo.com'},
         'live': {'host': 'smtp.live.com'},
         'mandrill': {'host': 'smtp.mandrillapp.com'},
+        'office365': {'host': 'smtp.office365.com'},
+        'outlook': {'host': 'smtp-mail.outlook.com'},
+        'icloud': {'host': 'smtp.mail.me.com'},
+        'mail.com': {'host': 'smtp.mail.com'},
         'smtp': {'tls': False},
         'smtps': {},
     }
