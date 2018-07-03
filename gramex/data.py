@@ -739,6 +739,7 @@ def _filter_db(engine, table, meta, controls, args, source='select', id=[]):
     '''
     table = get_table(engine, table)
     cols = table.columns
+    colslist = cols.keys()
 
     if source == 'delete':
         query = sqlalchemy.delete(table)
@@ -752,7 +753,7 @@ def _filter_db(engine, table, meta, controls, args, source='select', id=[]):
         # check if `key`` is in the `id` list -- ONLY when data is updated
         if (source in ('update', 'delete') and key in id) or (source == 'select'):
             # Parse column names, ignoring missing / unmatched columns
-            col, agg, op = _filter_col(key, cols.keys())
+            col, agg, op = _filter_col(key, colslist)
             if col is None:
                 meta['ignored'].append((key, vals))
                 continue
@@ -784,7 +785,7 @@ def _filter_db(engine, table, meta, controls, args, source='select', id=[]):
     else:
         # Apply controls
         if '_by' in controls:
-            by = _filter_groupby_columns(controls['_by'], cols.keys(), meta)
+            by = _filter_groupby_columns(controls['_by'], colslist, meta)
             if len(by) > 0:
                 query = query.group_by(*by)
                 # If ?_c is not specified, use 'col|sum' for all numeric columns
@@ -796,7 +797,7 @@ def _filter_db(engine, table, meta, controls, args, source='select', id=[]):
                 agg_cols = AttrDict([(col, cols[col]) for col in by])   # {label: ColumnElement}
                 typ = {}                                                # {label: python type}
                 for key in col_list:
-                    col, agg, val = _filter_col(key, cols.keys())
+                    col, agg, val = _filter_col(key, colslist)
                     if agg is not None:
                         # Convert aggregation into SQLAlchemy query
                         agg = agg.lower()
@@ -809,16 +810,18 @@ def _filter_db(engine, table, meta, controls, args, source='select', id=[]):
                     query = _filter_db_col(query, query.having, key, col, op, vals,
                                            agg_cols[col], typ[col], meta)
         elif '_c' in controls:
-            show_cols, hide_cols = _filter_select_columns(controls['_c'], list(cols.keys()), meta)
+            show_cols, hide_cols = _filter_select_columns(controls['_c'], colslist, meta)
             query = query.with_only_columns([cols[col] for col in show_cols])
             if len(hide_cols) > 0:
                 meta['ignored'].append(('_c', hide_cols))
             if len(show_cols) == 0:
                 return pd.DataFrame()
         if '_sort' in controls:
-            meta['sort'], ignore_sorts = _filter_sort_columns(controls['_sort'], list(cols.keys()))
+            meta['sort'], ignore_sorts = _filter_sort_columns(
+                controls['_sort'], colslist + query.columns.keys())
             for col, asc in meta['sort']:
-                query = query.order_by(cols[col] if asc else cols[col].desc())
+                orderby = sqlalchemy.asc if asc else sqlalchemy.desc
+                query = query.order_by(orderby(col))
             if len(ignore_sorts) > 0:
                 meta['ignored'].append(('_sort', ignore_sorts))
         if '_offset' in controls:

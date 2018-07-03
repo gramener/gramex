@@ -67,6 +67,15 @@ class TestFilter(unittest.TestCase):
             eq_(len(files), len(result))
             ok_({'path', 'name', 'dir', 'type', 'size', 'mtime'} <= set(result.columns))
 
+    def flatten_sort(self, expected, by, sum_na, *columns):
+        expected.columns = columns
+        expected.reset_index(inplace=True)
+        if sum_na:
+            for col in columns:
+                if col.lower().endswith('|sum'):
+                    expected[col].replace({0.0: pd.np.nan}, inplace=True)
+        expected.sort_values(by, inplace=True)
+
     def check_filter(self, df=None, na_position='last', sum_na=False, **kwargs):
         '''
         Tests a filter method. The filter method filters the sales dataset using
@@ -194,15 +203,6 @@ class TestFilter(unittest.TestCase):
         m = eq({'_c': ['nonexistent', 'sales']}, sales[['sales']])
         eq_(m['ignored'], [('_c', ['nonexistent'])])
 
-        def update(expected, by, *columns):
-            expected.columns = columns
-            expected.reset_index(inplace=True)
-            if sum_na:
-                for col in columns:
-                    if col.lower().endswith('|sum'):
-                        expected[col].replace({0.0: pd.np.nan}, inplace=True)
-            expected.sort_values(by, inplace=True)
-
         for by in [['देश'], ['देश', 'city', 'product']]:
             # _by= groups by column(s) and sums all numeric columns
             # and ignores non-existing columns
@@ -210,7 +210,7 @@ class TestFilter(unittest.TestCase):
                 ['sales', 'sum'],
                 ['growth', 'sum'],
             ]))
-            update(expected, by, 'sales|sum', 'growth|sum')
+            self.flatten_sort(expected, by, sum_na, 'sales|sum', 'growth|sum')
             m = eq({'_by': by + ['na'], '_sort': by}, expected)
             eq_(m['by'], by)
             eq_(m['ignored'], [('_by', 'na')])
@@ -229,7 +229,7 @@ class TestFilter(unittest.TestCase):
                 ['growth', ['sum', 'mean']],
             ])
             expected = sales.groupby(by).agg(agg_pd)
-            update(expected, by, *aggs)
+            self.flatten_sort(expected, by, sum_na, *aggs)
             eq({'_by': by, '_sort': by, '_c': aggs}, expected)
 
             # _by with HAVING as well as WHERE filters
@@ -242,7 +242,7 @@ class TestFilter(unittest.TestCase):
                 # Filter by city. Then group by product and aggregate by sales & growth
                 filtered = sales if query is None else sales.query(query)
                 expected = filtered.groupby(by).agg(agg_pd)
-                update(expected, by, *aggs)
+                self.flatten_sort(expected, by, sum_na, *aggs)
                 # Make sure there's enough data. Sometimes, I goof up above above
                 # and pick a scenario that return no data in the first place.
                 ok_(len(expected) > 0)
@@ -326,6 +326,16 @@ class TestFilter(unittest.TestCase):
         )
         expected = self.sales[(self.sales['growth'] > 0) &
                               (self.sales['city'] == 'South Plainfield')]
+        eqframe(actual, expected)
+
+        # _by= _sort= _c=agg(s)
+        by = ['product']
+        aggs = ['growth|sum', 'sales|sum']
+        sort = ['sales|sum']
+        expected = df.groupby(by).agg(AttrDict([agg.split('|') for agg in aggs]))
+        self.flatten_sort(expected, sort, sum_na, *aggs)
+        params = {'_by': by, '_c': aggs, '_sort': sort, 'sales>': [100]}
+        actual = gramex.data.filter(url, table='sales', args=params)
         eqframe(actual, expected)
 
         # Test invalid parameters
