@@ -1163,4 +1163,3 @@ def sizeof(obj):
     elif isinstance(obj, (set, list)):
         return sys.getsizeof(obj) + sum(sizeof(v) for v in obj)
     return sys.getsizeof(obj)
-

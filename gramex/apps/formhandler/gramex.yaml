@@ -3,7 +3,7 @@ handlers:
     formats:
       table:
         format: template
-        template: $YAMLPATH/formhandler.table.html
+        template: $YAMLPATH/formhandler.table.tpl
         heading: True
         filters: True
         pagination: True
