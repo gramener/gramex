@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 import os
+import sys
 import shlex
 import pathlib
 import requests
@@ -10,7 +11,7 @@ import gramex.cache
 import gramex.config
 import gramex.services
 from six.moves.urllib.parse import urlencode
-from nose.tools import eq_
+from nose.tools import eq_, ok_
 from orderedattrdict import AttrDict
 from . import TestGramex, tempfiles, folder
 from gramex.http import OK, NOT_FOUND, NOT_MODIFIED
@@ -41,6 +42,15 @@ class TestCacheConstructor(unittest.TestCase):
         cache_size = 1000
         eq_(cache['memory-small'].maxsize, cache_size)
         self.check_cache_expiry(cache['memory-small'])
+
+    def test_memory_cache_size(self):
+        memcache = gramex.services.info.cache['memory']
+        old_keys = set(memcache.keys())
+        data = gramex.cache.open(os.path.join(folder, 'sales.xlsx'))
+        new_keys = set(memcache.keys()) - old_keys
+        eq_(len(new_keys), 1)           # only 1 new key should have been added
+        value = memcache[list(new_keys)[0]]
+        ok_(gramex.cache.sizeof(value) > sys.getsizeof(data))
 
     def test_disk_cache(self):
         cache = gramex.services.info.cache

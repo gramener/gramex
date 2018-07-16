@@ -747,7 +747,7 @@ def cache(conf):
         config = merge(dict(config), _cache_defaults[cache_type], mode='setdefault')
         if cache_type == 'memory':
             info.cache[name] = urlcache.MemoryCache(
-                maxsize=config['size'], getsizeof=sys.getsizeof)
+                maxsize=config['size'], getsizeof=gramex.cache.sizeof)
         elif cache_type == 'disk':
             path = config.get('path', '.cache-' + name)
             info.cache[name] = urlcache.DiskCache(

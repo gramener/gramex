@@ -1006,3 +1006,12 @@ def _create_path(path):
     if not os.path.exists(folder):
         os.makedirs(folder)
     return path
+
+
+def sizeof(obj):
+    if isinstance(obj, dict):
+        return sys.getsizeof(obj) + sum(sizeof(k) + sizeof(v) for k, v in obj.items())
+    elif isinstance(obj, (set, list)):
+        return sys.getsizeof(obj) + sum(sizeof(v) for v in obj)
+    return sys.getsizeof(obj)
+
