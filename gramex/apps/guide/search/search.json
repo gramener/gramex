@@ -314,6 +314,38 @@
       "UploadHandler": -1
     }
   },
+  "1.39": {
+    "": {
+      "Gramex 1.39 Release Notes": -1
+    },
+    "bug-fixes": {
+      "Bug fixes": -1
+    },
+    "developer-updates": {
+      "Developer Updates": -1
+    },
+    "formhandler": {
+      "FormHandler": -1
+    },
+    "logviewer": {
+      "Logviewer": -1
+    },
+    "mapviewer": {
+      "MapViewer": -1
+    },
+    "pynode": {
+      "PyNode": -1
+    },
+    "stats": {
+      "Stats": -1
+    },
+    "ui-components": {
+      "UI Components": -1
+    },
+    "upgrade": {
+      "Upgrade": -1
+    }
+  },
   "about": {
     "": {
       "About Gramex": -1
@@ -1265,6 +1297,12 @@
     "logviewer-usage": {
       "Logviewer usage": -1
     },
+    "logviewerdb": {
+      "logviewer.db": -1
+    },
+    "session-calculations": {
+      "Session Calculations": -1
+    },
     "using-variables": {
       "Using Variables": -1
     }
@@ -1293,6 +1331,17 @@
     },
     "train-model": {
       "Train model": -1
+    }
+  },
+  "node": {
+    "": {
+      "Run JavaScript": -1
+    },
+    "javascript-conversion": {
+      "JavaScript conversion": -1
+    },
+    "run-javascript": {
+      "Run JavaScript": -1
     }
   },
   "pptxhandler": {
