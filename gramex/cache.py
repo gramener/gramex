@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 import io
 import os
+import re
 import six
 import sys
 import json
@@ -15,6 +16,7 @@ import mimetypes
 import subprocess       # nosec
 import pandas as pd
 from threading import Thread
+from six.moves.queue import Queue
 from orderedattrdict import AttrDict
 from tornado.concurrent import Future
 from gramex.config import app_log, merge, CustomJSONDecoder, CustomJSONEncoder
@@ -505,36 +507,72 @@ class Subprocess(object):
     This is a threaded alternative based on
     http://stackoverflow.com/a/4896288/100904
 
-    Usage::
+    Run a program async and wait for it to execute. Then get its output::
+
+        stdout, stderr = yield Subprocess(['ls', '-la']).wait_for_exit()
+
+    Run a program async and send each line to the handler as it writes::
+
+        yield Subprocess(
+            ['ls', '-la'],                  # Run 'ls -la'
+            buffer_size='line',             # Buffer output line by line
+            stream_stdout=handler.write,    # Send output to handler.write(line)
+            stream_stderr=handler.write,    # Send errors to handler.write(line)
+        )
+
+    Run a program async and appends output into a list::
+
+        proc = Subprocess(
+            ['ls', '-la'],
+            buffer_size='line',
+            stream_stdout='list_out',       # Append output to self.list_out
+            stream_stderr='list_err',       # Append errors to self.list_err
+        )
+        output = proc.list_out[-10:]        # Return last 10 lines of output
+        yield proc.wait_for_exit()          # Wait until application is done
+
+    Run a program async and appends output into a queue::
+
+        proc = Subprocess(
+            ['ls', '-la'],                  # Run 'ls -la'
+            buffer_size='line',             # Buffer output line by line
+            stream_stdout='queue_out',      # Save output in proc.out queue
+            stream_stderr='queue_err',      # Save errors in proc.err queue
+        )
+        output = proc.queue_out.get_nowait()    # Returns first line of output
+        yield proc.wait_for_exit()              # Wait until application is done
+
+    To write to multiple streams, pass a list::
 
         proc = Subprocess(
             args,
-            stream_stdout=[self.write],     # List of write methods to stream stdout to
-            stream_stderr=[self.write],     # List of write methods to stream stderr to
-            buffer_size='line',             # Write line by line. Can also be a number of bytes
+            buffer_size='line',
+            stream_stdout=[handler.write, 'list_out', 'queue_out', my_callback],
+            stream_stderr=[handler.write, 'list_err', 'queue_err', my_callback],
             **kwargs
         )
-        stdout, stderr = yield proc.wait_for_exit()
+        yield proc.wait_for_exit()
+
+    To check the process return code, use ``.proc`` which has the ``Popen``
+    object::
+
         if proc.proc.returncode:
             raise Exception('Process failed with return code %d', proc.proc.returncode)
 
-    :arg list args: command line arguments passed as a list to Subprocess
-    :arg methodlist stream_stdout: optional list of write methods - called when stdout has data
-    :arg methodlist stream_stderr: optional list of write methods - called when stderr has data
-    :arg str_or_int buffer_size: 'line' to write line by line. number for chunk size
-    :arg dict kwargs: additional kwargs passed to subprocess.Popen
+    :arg list args: command line arguments passed as a list to Subprocess :arg
+    methodlist stream_stdout: optional list of write methods - called when
+    stdout has data :arg methodlist stream_stderr: optional list of write
+    methods - called when stderr has data :arg str_or_int buffer_size: 'line' to
+    write line by line. number for chunk size :arg dict kwargs: additional
+    kwargs passed to subprocess.Popen
 
-    stream_stdout and stream_stderr can be a list of functions that accept a byte
-    string and process it.
+    stream_stdout and stream_stderr can be:
 
-    If stream_stdout is empty or missing, the returned ``stdout`` value contains
-    the stdout contents as bytes. Otherwise, it is passed to all stream_stdout
-    methods and the returned ``stdout`` is empty. (Same for ``stderr``)
-
-    Examples::
-
-        stdout, stderr = yield Subprocess(['ls', '-la']).wait_for_exit()
-        _, stderr = yield Subprocess(['git', 'log'], stream_stdout=[handler.write]).wait_for_exit()
+    - a function that accept a byte string. Called as stdout/stderr are buffered
+    - OR a string starting with ``list_`` or ``queue_``. Appends buffered output
+    - OR a list of any of the above
+    - OR an empty list. In this case, ``.wait_for_exit()`` returns a tuple with
+      ``stdout`` and ``stderr`` as a tuple of byte strings.
     '''
     def __init__(self, args, stream_stdout=[], stream_stderr=[], buffer_size=0, **kwargs):
         self.args = args
@@ -604,6 +642,27 @@ class Subprocess(object):
                 retval = ret_stream.getvalue
             else:
                 retval = lambda: b''        # noqa
+            # If stream_stdout or stream_stderr has 'out' or 'err', create these
+            # as queue attributes (self.out, self.err)
+            callbacks = list(callbacks) if isinstance(callbacks, list) else [callbacks]
+            for index, method in enumerate(callbacks):
+                if isinstance(method, six.string_types):
+                    if method.startswith('list_'):
+                        if hasattr(self, method):
+                            callbacks[index] = getattr(self, method).append
+                        else:
+                            log = []
+                            setattr(self, method, log)
+                            callbacks[index] = log.append
+                    elif method.startswith('queue_'):
+                        if hasattr(self, method):
+                            callbacks[index] = getattr(self, method).put
+                        else:
+                            log = Queue()
+                            setattr(self, method, log)
+                            callbacks[index] = log.put
+                    else:
+                        raise ValueError('Invalid stream_%s: %s', stream, method)
             self.future[stream] = future = Future()
             # Thread writes from self.proc.stdout / stderr to appropriate callbacks
             self.thread[stream] = t = Thread(
@@ -619,6 +678,96 @@ class Subprocess(object):
             stdout, stderr = yield proc.wait_for_exit()
         '''
         return [self.future['stdout'], self.future['stderr']]
+
+
+_daemons = {}
+_regex_type = type(re.compile(''))
+# Python 3 needs sys.stderr.buffer.write for writing binary strings
+_stderr_write = sys.stderr.buffer.write if hasattr(sys.stderr, 'buffer') else sys.stderr.write
+
+
+def daemon(args, restart=1, first_line=None, stream=True, timeout=5, buffer_size='line', **kwargs):
+    '''
+    This is the same as :py:class:`Subprocess`, but has a few additional checks.
+
+    1. If we have already called :py:class:`Subprocess` with the same arguments,
+       re-use the same instance.
+    2. Send the process STDOUT and STDERR to this application's STDERR. This
+       makes it easy to see what errors the application reports.
+    3. Supports retry attempts.
+    4. Checks if the first line of output is a matches a string / re -- ensuring
+       that the application started properly.
+    '''
+    arg_str = args if isinstance(args, six.string_types) else ' '.join(args)
+    try:
+        key = cache_key(arg_str, kwargs)
+    except (TypeError, ValueError):
+        app_log.error('daemon args must be JSON serializable')
+        raise
+    # Send the stdout and stderr to (a) stderr AND to (b) a local queue we read
+    queue = Queue(maxsize=10)
+    for channel in ('stream_stdout', 'stream_stderr'):
+        if channel not in kwargs:
+            kwargs[channel] = []
+        elif not isinstance(kwargs[channel], list):
+            kwargs[channel] = [kwargs[channel]]
+        if first_line:
+            kwargs[channel].append(queue.put)
+        if stream is True:
+            kwargs[channel].append(_stderr_write)
+        elif callable(stream):
+            kwargs[channel].append(stream)
+    # Buffer by line by default. This is required for the first_line check, not otherwise.
+    kwargs['buffer_size'] = buffer_size
+    # started is set if we actually call Subprocess as part of this function
+    started = False
+
+    # If process was never started, start it
+    if key not in _daemons:
+        started = _daemons[key] = Subprocess(args, **kwargs)
+
+    # Ensure that process is running. Restart if required
+    proc = _daemons[key]
+    restart = int(restart)
+    while proc.proc.returncode is not None and restart > 0:
+        restart -= 1
+        proc = started = _daemons[key] = Subprocess(args, **kwargs)
+    if proc.proc.returncode is not None:
+        raise RuntimeError('Error %d starting %s' % (proc.proc.returncode, arg_str))
+    if started:
+        app_log.info('Started: %s', arg_str)
+
+    future = Future()
+    # If process was started, wait until it has initialized. Else just return the proc
+    if first_line and started:
+        if isinstance(first_line, six.string_types):
+            def check(proc):
+                actual = queue.get(timeout=timeout).decode('utf-8')
+                if first_line not in actual:
+                    raise AssertionError('%s: wrong first line: %s (no "%s")' %
+                                         (arg_str, actual, first_line))
+        elif isinstance(first_line, _regex_type):
+            def check(proc):
+                actual = queue.get(timeout=timeout).decode('utf-8')
+                if not first_line.search(actual):
+                    raise AssertionError('%s: wrong first line: %s' % (arg_str, actual))
+        elif callable(first_line):
+            check = first_line
+
+        def checker(proc):
+            try:
+                check(proc)
+            except Exception as e:
+                future.set_exception(e)
+            else:
+                future.set_result(proc)
+
+        proc._check_thread = t = Thread(target=checker, args=(proc, ))
+        t.daemon = True     # Thread dies with the program
+        t.start()
+    else:
+        future.set_result(proc)
+    return future
 
 
 def get_store(type, **kwargs):

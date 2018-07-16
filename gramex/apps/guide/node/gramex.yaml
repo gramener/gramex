@@ -1,0 +1,14 @@
+url:
+  node/total:
+        pattern: /$YAMLURL/total
+        handler: FunctionHandler
+        kwargs:
+            function: nodeapp.total
+            headers:
+                Content-Type: application/json
+
+  node/inline_styles:
+        pattern: /$YAMLURL/inline_styles
+        handler: FunctionHandler
+        kwargs:
+            function: nodeapp.inline_styles

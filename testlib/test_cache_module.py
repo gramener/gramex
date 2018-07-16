@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 import io
 import os
+import re
 import six
 import json
 import time
@@ -24,8 +25,8 @@ from nose.tools import eq_, ok_, assert_raises
 import dbutils
 from . import folder
 
-folder = os.path.join(folder, 'test_cache')
-state_file = os.path.join(folder, '.state')
+cache_folder = os.path.join(folder, 'test_cache')
+state_file = os.path.join(cache_folder, '.state')
 small_delay = 0.01
 
 
@@ -89,7 +90,7 @@ class TestOpener(unittest.TestCase):
 
     def test_opener(self):
         o = gramex.cache.opener(self.check_args)
-        path = os.path.join(folder, 'template.txt')
+        path = os.path.join(cache_folder, 'template.txt')
 
         result = o(path)
         eq_(type(result.args[0]), io.TextIOWrapper)
@@ -111,7 +112,7 @@ class TestOpener(unittest.TestCase):
 
     def test_reader(self):
         o = gramex.cache.opener(self.check_args, read=True)
-        path = os.path.join(folder, 'template.txt')
+        path = os.path.join(cache_folder, 'template.txt')
 
         with io.open(path, encoding='utf-8') as handle:
             text = handle.read()
@@ -141,13 +142,13 @@ class TestOpen(unittest.TestCase):
     def test_rel(self):
         # Passing rel=True picks up the file from the current directory
         path = 'test_cache/template.txt'
-        with io.open(os.path.join(folder, 'template.txt'), encoding='utf-8') as handle:
+        with io.open(os.path.join(cache_folder, 'template.txt'), encoding='utf-8') as handle:
             expected = handle.read()
         result = gramex.cache.open(path, 'txt', rel=True)
         eq_(result, expected)
 
     def test_open_text(self):
-        path = os.path.join(folder, 'template.txt')
+        path = os.path.join(cache_folder, 'template.txt')
         expected = io.open(path, encoding='utf-8', errors='ignore').read()
 
         def check(reload):
@@ -160,7 +161,7 @@ class TestOpen(unittest.TestCase):
         eq_(gramex.cache.open(path), gramex.cache.open(path, 'txt'))
 
     def test_open_bin(self):
-        path = os.path.join(folder, 'data.bin')
+        path = os.path.join(cache_folder, 'data.bin')
         expected = io.open(path, mode='rb').read()
 
         def check(reload):
@@ -171,7 +172,7 @@ class TestOpen(unittest.TestCase):
         self.check_file_cache(path, check)
 
     def test_open_csv(self):
-        path = os.path.join(folder, 'data.csv')
+        path = os.path.join(cache_folder, 'data.csv')
         expected = pd.read_csv(path, encoding='utf-8')
 
         def check(reload):
@@ -184,7 +185,7 @@ class TestOpen(unittest.TestCase):
         assert_frame_equal(gramex.cache.open(path), gramex.cache.open(path, 'csv'))
 
     def test_open_json(self):
-        path = os.path.join(folder, 'data.json')
+        path = os.path.join(cache_folder, 'data.json')
         with io.open(path, encoding='utf-8') as handle:
             expected = json.load(handle, object_pairs_hook=OrderedDict)
 
@@ -199,7 +200,7 @@ class TestOpen(unittest.TestCase):
         eq_(gramex.cache.open(path), gramex.cache.open(path, 'json'))
 
     def test_open_yaml(self):
-        path = os.path.join(folder, 'data.yaml')
+        path = os.path.join(cache_folder, 'data.yaml')
         with io.open(path, encoding='utf-8') as handle:
             expected = yaml.load(handle, Loader=AttrDictYAMLLoader)
 
@@ -214,7 +215,7 @@ class TestOpen(unittest.TestCase):
         eq_(gramex.cache.open(path), gramex.cache.open(path, 'yaml'))
 
     def test_open_template(self):
-        path = os.path.join(folder, 'template.txt')
+        path = os.path.join(cache_folder, 'template.txt')
         with io.open(path, encoding='utf-8') as handle:
             expected = Template(handle.read(), autoescape=None)
 
@@ -230,7 +231,7 @@ class TestOpen(unittest.TestCase):
         self.check_file_cache(path, check)
 
     def test_open_markdown(self):
-        path = os.path.join(folder, 'markdown.md')
+        path = os.path.join(cache_folder, 'markdown.md')
         extensions = [
             'markdown.extensions.codehilite',
             'markdown.extensions.extra',
@@ -252,7 +253,7 @@ class TestOpen(unittest.TestCase):
         eq_(gramex.cache.open(path), gramex.cache.open(path, 'md'))
 
     def test_open_xml(self):
-        path = os.path.join(folder, 'data.svg')
+        path = os.path.join(cache_folder, 'data.svg')
         expected = etree.parse(path)
 
         def check(reload):
@@ -266,7 +267,7 @@ class TestOpen(unittest.TestCase):
                 etree.tostring(gramex.cache.open(path, ext)))
 
     def test_save(self):
-        path = os.path.join(folder, 'data.csv')
+        path = os.path.join(cache_folder, 'data.csv')
         data = pd.read_csv(path, encoding='utf-8')
         config = {
             'csv': dict(index=False, ignore_keyword=1),
@@ -277,7 +278,7 @@ class TestOpen(unittest.TestCase):
             # 'stata': dict(index=False),   # cannot test since it doesn't support unicode
         }
         for ext, kwargs in config.items():
-            target = os.path.join(folder, 'killme.' + ext)
+            target = os.path.join(cache_folder, 'killme.' + ext)
             gramex.cache.save(data, target, **kwargs)
             try:
                 result = gramex.cache.open(target)
@@ -290,7 +291,7 @@ class TestOpen(unittest.TestCase):
                 os.remove(target)
 
     def test_custom_cache(self):
-        path = os.path.join(folder, 'data.csv')
+        path = os.path.join(cache_folder, 'data.csv')
         cache = {}
         kwargs = {'_reload_status': True, '_cache': cache}
         result, reloaded = gramex.cache.open(path, 'csv', **kwargs)
@@ -339,7 +340,7 @@ class TestOpen(unittest.TestCase):
 
     def test_change_cache(self):
         # gramex.cache.open_cache() changes the default cache
-        path = os.path.join(folder, 'data.csv')
+        path = os.path.join(cache_folder, 'data.csv')
         new_cache = {}
         old_cache = gramex.cache._OPEN_CACHE
         cache_key = (path, 'csv', id(None), frozenset())
@@ -368,7 +369,7 @@ class TestOpen(unittest.TestCase):
 
     def test_multiple_loaders(self):
         # Loading the same file via different callbacks should return different results
-        path = os.path.join(folder, 'multiformat.csv')
+        path = os.path.join(cache_folder, 'multiformat.csv')
         data = gramex.cache.open(path, 'csv')
         ok_(isinstance(data, pd.DataFrame))
         text = gramex.cache.open(path, 'text')
@@ -377,7 +378,7 @@ class TestOpen(unittest.TestCase):
         ok_(none is None)
 
     def test_invalid_callbacks(self):
-        path = os.path.join(folder, 'multiformat.csv')
+        path = os.path.join(cache_folder, 'multiformat.csv')
         with assert_raises(TypeError):
             gramex.cache.open(path, 'nonexistent')
         with assert_raises(TypeError):
@@ -386,7 +387,7 @@ class TestOpen(unittest.TestCase):
             gramex.cache.open('invalid.ext')
 
     def test_stat(self):
-        path = os.path.join(folder, 'multiformat.csv')
+        path = os.path.join(cache_folder, 'multiformat.csv')
         stat = os.stat(path)
         eq_(gramex.cache.stat(path), (stat.st_mtime, stat.st_size))
         eq_(gramex.cache.stat('nonexistent'), (None, None))
@@ -394,7 +395,7 @@ class TestOpen(unittest.TestCase):
     def test_transform(self):
         # Check that transform function is applied and used as a cache key
         cache = {}
-        path = os.path.join(folder, 'data.csv')
+        path = os.path.join(cache_folder, 'data.csv')
 
         data = gramex.cache.open(path, 'csv', transform=len, _cache=cache)
         eq_(data, len(pd.read_csv(path)))                   # noqa - ignore encoding
@@ -417,7 +418,7 @@ class TestOpen(unittest.TestCase):
 
 
 class TestSqliteCacheQuery(unittest.TestCase):
-    data = pd.read_csv(os.path.join(folder, 'data.csv'), encoding='utf-8')
+    data = pd.read_csv(os.path.join(cache_folder, 'data.csv'), encoding='utf-8')
     states = [['t1'], 'SELECT COUNT(*) FROM t1', lambda: gramex.cache.stat(state_file)]
 
     @classmethod
@@ -511,6 +512,125 @@ class TestPostgresCacheQuery(TestSqliteCacheQuery):
     @classmethod
     def tearDownClass(cls):
         dbutils.postgres_drop_db(variables.POSTGRES_SERVER, 'test_cache')
+
+
+def wait(future):
+    wait_till(future.done)
+    return future.result()
+
+
+def wait_till(condition):
+    while not condition():
+        time.sleep(small_delay)
+
+
+class TestSubprocess(unittest.TestCase):
+    args = ['python', os.path.join(folder, 'subprocess_check.py')]          # Instant result
+    args1 = ['python', os.path.join(folder, 'subprocess_check.py'), '1']    # Result after delay
+    hello = ['python', '-c', 'print("hello")']
+
+    @staticmethod
+    def msg(s):
+        '''Returns the string + newline as UTF-8 bytestring'''
+        return (s + os.linesep).encode('utf-8')
+
+    def test_stream_none(self):
+        proc = gramex.cache.Subprocess(self.args)
+        stdout, stderr = [wait(future) for future in proc.wait_for_exit()]
+        eq_(stdout, self.msg('OUT:0'))
+        eq_(stderr, self.msg('ERR:0'))
+
+        proc = gramex.cache.Subprocess(self.args1)
+        stdout, stderr = [wait(future) for future in proc.wait_for_exit()]
+        eq_(stdout, self.msg('OUT:0') + self.msg('OUT:1'))
+        eq_(stderr, self.msg('ERR:0') + self.msg('ERR:1'))
+
+    def test_stream_list(self):
+        proc = gramex.cache.Subprocess(
+            self.args, stream_stdout='list_out', stream_stderr='list_err', buffer_size='line')
+        [wait(future) for future in proc.wait_for_exit()]
+        eq_(proc.list_out, [self.msg('OUT:0')])
+        eq_(proc.list_err, [self.msg('ERR:0')])
+
+        proc = gramex.cache.Subprocess(
+            self.args1, stream_stdout='list_out', stream_stderr='list_err', buffer_size='line')
+        wait_till(lambda: len(proc.list_out) > 0)
+        wait_till(lambda: len(proc.list_err) > 0)
+        eq_(proc.list_out, [self.msg('OUT:0')])
+        eq_(proc.list_err, [self.msg('ERR:0')])
+        wait_till(lambda: len(proc.list_out) > 1)
+        wait_till(lambda: len(proc.list_err) > 1)
+        eq_(proc.list_out, [self.msg('OUT:0'), self.msg('OUT:1')])
+        eq_(proc.list_err, [self.msg('ERR:0'), self.msg('ERR:1')])
+        [wait(future) for future in proc.wait_for_exit()]
+        eq_(proc.list_out, [self.msg('OUT:0'), self.msg('OUT:1')])
+        eq_(proc.list_err, [self.msg('ERR:0'), self.msg('ERR:1')])
+
+    def test_stream_queue(self):
+        proc = gramex.cache.Subprocess(
+            self.args, stream_stdout='queue_out', stream_stderr='queue_err')
+        [wait(future) for future in proc.wait_for_exit()]
+        eq_(proc.queue_out.get(), self.msg('OUT:0'))
+        eq_(proc.queue_err.get(), self.msg('ERR:0'))
+
+        proc = gramex.cache.Subprocess(
+            self.args1, stream_stdout='queue_out', stream_stderr='queue_err', buffer_size='line')
+        eq_(proc.queue_out.get(), self.msg('OUT:0'))
+        eq_(proc.queue_err.get(), self.msg('ERR:0'))
+        eq_(proc.queue_out.get(), self.msg('OUT:1'))
+        eq_(proc.queue_err.get(), self.msg('ERR:1'))
+        [wait(future) for future in proc.wait_for_exit()]
+        eq_(proc.queue_out.qsize(), 0)
+        eq_(proc.queue_err.qsize(), 0)
+
+    def test_stream_blend(self):
+        proc = gramex.cache.Subprocess(
+            self.args1, stream_stdout='list_out', stream_stderr='list_out', buffer_size='line')
+        [wait(future) for future in proc.wait_for_exit()]
+        eq_(set(proc.list_out), {self.msg(s) for s in ('OUT:0', 'OUT:1', 'ERR:0', 'ERR:1')})
+
+        proc = gramex.cache.Subprocess(
+            self.args1, stream_stdout='queue_out', stream_stderr='queue_out', buffer_size='line')
+        [wait(future) for future in proc.wait_for_exit()]
+        items = set()
+        for index in range(proc.queue_out.qsize()):
+            items.add(proc.queue_out.get_nowait())
+        eq_(items, {self.msg(s) for s in ('OUT:0', 'OUT:1', 'ERR:0', 'ERR:1')})
+
+    def test_daemon_reuse(self):
+        procs = [
+            wait(gramex.cache.daemon(self.args)),
+            wait(gramex.cache.daemon(self.args)),
+            wait(gramex.cache.daemon(self.args1)),
+        ]
+        eq_(procs[0].proc.pid, procs[1].proc.pid)
+        ok_(procs[0].proc.pid != procs[2].proc.pid)
+        for proc in procs:
+            [wait(future) for future in proc.wait_for_exit()]
+
+    def test_daemon_stream(self):
+        out = []
+        proc = wait(gramex.cache.daemon(self.args, stream=out.append))
+        [wait(future) for future in proc.wait_for_exit()]
+        eq_(set(out), {self.msg('OUT:0'), self.msg('ERR:0')})
+
+    def test_daemon_first_line(self):
+        # Streaming output is still possible
+        out = []
+        proc = wait(gramex.cache.daemon(self.hello, first_line='hello', stream=out.append))
+        [wait(future) for future in proc.wait_for_exit()]
+        eq_(set(out), {self.msg('hello')})
+
+        # Incorrect first line raises an error
+        with assert_raises(AssertionError):
+            proc = wait(gramex.cache.daemon(self.args, first_line='NOTHING'))
+        [wait(future) for future in proc.wait_for_exit()]
+
+        # Correct first line can be a string or regex
+        proc = wait(gramex.cache.daemon(self.hello, first_line='hello'))
+        [wait(future) for future in proc.wait_for_exit()]
+        proc = wait(gramex.cache.daemon(self.args, first_line=re.compile(r'(OUT|ERR):\d\s*')))
+        [wait(future) for future in proc.wait_for_exit()]
 
 
 def tearDownModule():
