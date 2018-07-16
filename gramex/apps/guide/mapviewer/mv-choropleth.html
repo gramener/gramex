@@ -1,6 +1,12 @@
 <h2 class="toc">Choropleth</h2>
 {% apply view_source %}
-<div id="choropleth-map" style="height:500px; width: 60%"></div>
+<style scoped>
+  #choropleth-map {
+    height: 500px;
+    width: 60%;
+  }
+</style>
+<div id="choropleth-map"></div>
 <script>
 var choropleth_map = g1.mapviewer({
   id: 'choropleth-map',

@@ -1,7 +1,13 @@
 <h2 class="toc">Drilldown</h2>
 
 {% apply view_source %}
-<div id="drilldown-map" style="height:500px; width: 60%"></div>
+<style scoped>
+  #drilldown-map {
+    height: 500px;
+    width: 60%;
+  }
+</style>
+<div id="drilldown-map"></div>
 <script>
   var drilldown_map = g1.mapviewer({
     id: 'drilldown-map',

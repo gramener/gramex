@@ -1,6 +1,11 @@
 <h2 class="toc">Markers</h2>
 {% apply view_source %}
-<div id="markers-map" style="height:500px; width: 100%"></div>
+<style scoped>
+  #markers-map {
+    height: 500px;
+  }
+</style>
+<div id="markers-map"></div>
 <script>
   var map = g1.mapviewer({
     id: 'markers-map',

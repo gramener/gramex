@@ -6,17 +6,23 @@
   }
 </style>
 {% apply view_source %}
-<div class="container">
-  <div id="basemap0" style="height:300px; width: 40%"></div>
-  <div id="basemap1" style="height:300px; width: 40%"></div>
-  <div id="basemap2" style="height:300px; width: 40%"></div>
-  <div id="basemap3" style="height:300px; width: 40%"></div>
-  <div id="basemap4" style="height:300px; width: 40%"></div>
-  <div id="basemap5" style="height:300px; width: 40%"></div>
-  <div id="basemap6" style="height:300px; width: 40%"></div>
-  <div id="basemap7" style="height:300px; width: 40%"></div>
-  <div id="basemap8" style="height:300px; width: 40%"></div>
-  <div id="basemap9" style="height:300px; width: 40%"></div>
+<style scoped>
+  div.basemaps>div {
+    height: 300px;
+    width: 40%;
+  }
+</style>
+<div class="container basemaps">
+  <div id="basemap0"></div>
+  <div id="basemap1"></div>
+  <div id="basemap2"></div>
+  <div id="basemap3"></div>
+  <div id="basemap4"></div>
+  <div id="basemap5"></div>
+  <div id="basemap6"></div>
+  <div id="basemap7"></div>
+  <div id="basemap8"></div>
+  <div id="basemap9"></div>
 </div>
 <script>
   var tiles = [

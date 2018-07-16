@@ -1,8 +1,12 @@
-
 <h2 class="toc">Getting started</h2>
 This creates a simple base map
 {% apply only_source %}
-<div id="base-map" style="height:300px"></div>
+<style scoped>
+  #base-map {
+    height: 300px;
+  }
+</style>
+<div id="base-map"></div>
 <script>
   var map = g1.mapviewer({
     id: 'base-map',
