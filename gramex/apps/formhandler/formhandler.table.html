@@ -100,7 +100,7 @@
               </a>
             {% end %}
             {% if len(filter_cols) or len(exclude_cols) %}
-              <a href="{{ handler.request.path }}" class="badge badge-pill badge-danger formhandler-table-filter" title="Clear all filters">&times;</a>
+              <a href="{{ handler.request.path }}?_format=table" class="badge badge-pill badge-danger formhandler-table-filter" title="Clear all filters">&times;</a>
             {% end %}
           </span>
         {% end %}
@@ -111,7 +111,7 @@
             {% set _sort, _c = u.args.get('_sort', []), u.args.get('_c', []) %}
             {% set _filters = {(col, op): val for col, op, val in meta['filters']} %}
             {% set coltype = {} %}
-            {% for col in dataset.columns %}
+            {% for colid, col in enumerate(dataset.columns) %}
               {% set dtype = dataset[col].dtype.name %}
               {% set filtername, filters = ('Text', [
                     ('Equals', ''),
@@ -121,8 +121,8 @@
                   ]) if dtype == 'object' else ('Number', [
                     ('Equals', ''),
                     ('Does not equal', '!'),
-                    ('Greater than', '&gt;'),
-                    ('Less than', '&lt;'),
+                    ('Greater than', '>'),
+                    ('Less than', '<'),
                   ]) if 'int' in dtype or 'float' in dtype else ('Date', [
                     # TBD
                   ]) if 'datetime' in dtype else ('Other', [
@@ -131,19 +131,19 @@
               {% set coltype[col] = filtername.lower() %}
               <th class="{{ 'table-primary' if col in _sort else 'table-active' if '-' + col in _sort else '' }} col-{{ coltype[col] }}">
                 <div class="dropdown">
-                  <a href="#" class="dropdown-toggle text-nowrap" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                  <a href="#" class="dropdown-toggle text-nowrap" id="fh-dd-{{ colid }}" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     {{ col }}
                   </a>
                   <div class="dropdown-menu" data-col="{{ col }}" aria-labelledby="dropdownMenuButton">
                     {% if col in _sort %}
-                      <a class="dropdown-item active" href="?{{ u(POP, '_sort') }}">Sort ascending</a>
-                      <a class="dropdown-item" href="?{{ u(SET, '_sort', '-' + col) }}">Sort descending</a>
+                      <a class="dropdown-item active" href="?{{ u(POP, '_sort', col) }}">Sort ascending</a>
+                      <a class="dropdown-item" href="?{{ u(POP, '_sort', col, ADD, '_sort', '-' + col) }}">Sort descending</a>
                     {% elif '-' + col in _sort %}
-                      <a class="dropdown-item" href="?{{ u(SET, '_sort', col) }}">Sort ascending</a>
-                      <a class="dropdown-item active" href="?{{ u(POP, '_sort') }}">Sort descending</a>
+                      <a class="dropdown-item" href="?{{ u( POP, '_sort', '-' + col, ADD, '_sort', col) }}">Sort ascending</a>
+                      <a class="dropdown-item active" href="?{{ u(POP, '_sort', '-' + col) }}">Sort descending</a>
                     {% else %}
-                      <a class="dropdown-item" href="?{{ u(SET, '_sort', col) }}">Sort ascending</a>
-                      <a class="dropdown-item" href="?{{ u(SET, '_sort', '-' + col) }}">Sort descending</a>
+                      <a class="dropdown-item" href="?{{ u(ADD, '_sort', col) }}">Sort ascending</a>
+                      <a class="dropdown-item" href="?{{ u(ADD, '_sort', '-' + col) }}">Sort descending</a>
                     {% end %}
                     <div class="dropdown-divider"></div>
                     <a class="dropdown-header disabled">{{ filtername }} Filters</a>
