@@ -1,6 +1,6 @@
 ---
 title: Quickstart Guide
-prefix: tutorial
+prefix: Quickstart
 ...
 
 [TOC]

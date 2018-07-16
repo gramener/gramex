@@ -42,6 +42,7 @@
       <li><a href="/$GUIDE_ROOT/logviewer/">View logs</a></li>
       <li><a href="/$GUIDE_ROOT/handlers/">Write handlers</a></li>
       <li><a href="/$GUIDE_ROOT/debug/">Debugging Gramex</a></li>
+      <li><a href="/$GUIDE_ROOT/mapviewer/">Mapviewer</a></li>
 
       <li><a href="/$GUIDE_ROOT/tips/">Tips</a></li>
       <li><a href="/$GUIDE_ROOT/deploy/">Deployment patterns</a></li>

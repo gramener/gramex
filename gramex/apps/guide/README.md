@@ -41,8 +41,10 @@ prefix: Guide
 - [Run apps](apps/)
 - [Writing handlers](handlers/)
 - [Debug Gramex](debug/)
+- [Mapviewer](mapviewer/)
 - [Release Notes](release/)
 - [Python API reference](https://learn.gramener.com/gramex/gramex.html)
+- [Tutorials](tutorials/)
 
 ## Guides
 

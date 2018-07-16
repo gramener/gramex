@@ -1,0 +1,24 @@
+<h2 class="toc">Circle Markers</h2>
+{% apply view_source %}
+<div id="circlemarker-map" style="height:500px; width: 60%"></div>
+<script>
+var map = g1.mapviewer({
+  id: 'circlemarker-map',
+  layers: {
+    worldMap: { type: 'tile', url: 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png' },
+    cityMarkers: {
+      type: 'circleMarker',
+      url: 'cities.json',
+      latitude: 'lat',
+      longitude: 'long',
+      attrs: {
+        fillColor: {
+          metric: 'pollution',
+          scheme: 'RdYlGn'
+        }
+      }
+    }
+  }
+})
+</script>
+{% end %}

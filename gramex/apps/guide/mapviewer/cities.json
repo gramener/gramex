@@ -1,0 +1,37 @@
+[
+    {
+      "lat": 29.238478434343,
+      "long": 76.431885,
+      "name": "Haryana",
+      "crimes": 30,
+      "pollution": 134
+    },
+    {
+      "lat": 19.601194,
+      "long": 75.552979,
+      "name": "Maharashtra",
+      "crimes": 10,
+      "pollution": 70
+    },
+    {
+      "lat": 10.850516,
+      "long": 76.271080,
+      "name": "Kerala",
+      "crimes": 553,
+      "pollution": 346
+    },
+    {
+      "lat": 11.127123,
+      "long": 78.656891,
+      "name": "Tamil Nadu",
+      "crimes": 431,
+      "pollution": 341
+    },
+    {
+      "lat": 20.940920,
+      "long": 84.803467,
+      "name": "Odisha",
+      "crimes": 240,
+      "pollution": 34
+    }
+  ]

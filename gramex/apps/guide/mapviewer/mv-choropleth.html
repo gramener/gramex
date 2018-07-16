@@ -1,0 +1,36 @@
+<h2 class="toc">Choropleth</h2>
+{% apply view_source %}
+<div id="choropleth-map" style="height:500px; width: 60%"></div>
+<script>
+var choropleth_map = g1.mapviewer({
+  id: 'choropleth-map',
+  layers: {
+    worldMap: { type: 'tile', url: 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png' },
+    indiaGeojson: {
+      type: 'geojson',
+      url: 'india-states.geojson',
+      link: {
+        url: 'state_score.json',    // Load data from this file
+        dataKey: 'name',            // Join this column from the URL (data)
+        mapKey: 'ST_NM'             // with this property in the GeoJSON
+      },
+      options: {
+        style: {
+          fillColor: '#a00',
+          fillOpacity: 1
+        }
+      },
+      attrs: {
+        fillColor: {                // Fill the regions
+          metric: 'score',          // with the 'score' column from state_score.json
+          scheme: 'RdYlGn'          // using a RdYlGn gradient
+        },
+        tooltip: function(prop) {   // On hover, show this HTML tooltip
+          return prop.ST_NM + ': ' + prop.TOT_P
+        }
+      }
+    }
+  }
+})
+</script>
+{% end %}
