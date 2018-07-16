@@ -34,7 +34,7 @@ Use `LOGVIEWER_*` variables to configure your app.
 - `LOGVIEWER_FORMHANDLER_QUERIES`: to update or add to `queries` section  of `/$YAMLURL/query/` formhandler
 - `LOGVIEWER_CAPTURE_KWARGS`: to pass additional kwargs to capture handler
 - `LOGVIEWER_SCHEDULER_PORT`: when running multiple instances of gramex, you can control to run scheduler only once from certain port
-- `LOGVIEWER_SCHEDULER_SETUP`: to control when to run
+- `LOGVIEWER_SCHEDULER_SETUP`: to control frequency when to run the scheduler. Default: daily.
 - `LOGVIEWER_SCHEDULER_KWARGS`: to change `transforms`
 
 All variables are optional.
@@ -77,6 +77,82 @@ import:
           value: ['-', 'dev']
         as: user.id_1
 ```
+
+## logviewer.db
+
+Gramex logs all HTTP requests to `logs/requests.csv` under `$GRAMEXDATA`.
+
+It logs:
+
+- `time`: Time of the request in milliseconds since epoch
+- `ip`: The IP address of the client requesting the page
+- `user.id`: The unique ID of the user requesting the page
+- `status`: The HTTP status code of the response (e.g. 200, 500)
+- `duration`: Time taken to serve the request in milliseconds
+- `method`: The HTTP method requested (e.g. GET or POST)
+- `uri`: The full URL requested (after the host name)
+- `error`: Any error raised while processing the request
+
+Typical `requests.csv` looks like
+
+```
+1530008663609.0,::1,,200,2708.0,GET,/,
+1530008665319.0,::1,,200,948.0,GET,/ui/jquery/dist/jquery.min.js,
+1530008665404.0,::1,,200,81.0,GET,/script.js,
+1530008665410.0,::1,,200,1.0,GET,/style.css,
+1530008667319.0,::1,,404,678.0,GET,/favicon.ico,HTTPError: HTTP 404: Not Found
+1530012727106.0,::1,user1,200,210.0,GET,/,
+1530012729481.0,::1,,200,74.0,GET,/ui/jquery/dist/jquery.min.js,
+1530012729538.0,::1,user2,200,1.0,GET,/script.js,
+1530012729594.0,::1,,200,2.0,GET,/style.css,
+```
+
+By default, `requests.csv` are backed up on a weekly basis with date prefix. 
+For eg: `requests.csv.2017-11-21`.
+
+Logviewer application uses data from `logviewer.db` for the front-end visuals.
+`logviewer.db` stores the aggregated data (day (aggD), week (aggW), month (aggM)) tables of `requests.csv*`.
+
+Data is grouped for every combination of (`time` (daily), `user.id`, `ip`, `status`, `uri`) and
+aggregrated on (`duration`, `new_session`, `session_time`) metrics with (`_count`, `_sum`, `_mean`) suffix.
+
+- `duration_count` - Count of requests for given row combination
+- `duration_sum` - Sum of the requests's time taken to serve the request in ms
+- `duration_mean` - Average of the requests's time taken to serve the request in ms
+
+### Session Calculations
+
+Every time a user logs into a gramex app, a `new_session` is flagged.
+`session_time` duration is the length of time someone spends on the app.
+
+For example, let's take `user1`
+
+- `user1` logs in at `10:00AM` on page `/page1`
+- Does nothing for next few minutes
+- Hits `/page2` at `10:05AM` -- right now `user1`'s session_time is `5mint `and counting. 
+- By default, a `15mint` threshold is considered to flag `new_session`.
+- Now the `user1` comes back again at `11:30AM`
+- This request is flagged for `new_session` and `session_time` is reset for this session.
+
+Let's take another scenario:
+
+- `user2` hits `/page1` at `02:00PM`
+- `user2` hits `/page2` at `02:10PM`
+- `user2` hits `/page3` at `02:18PM`
+- Total sessions by `user2` is `1` and `session_time` is `18mint`
+
+Session related metrics include:
+
+- `new_session_sum` - Total number of sessions
+- `session_time_sum` - Total time spent by the user on given `uri` `user.id` `ip` `time:freq` combination
+
+Note: You'd want to ignore test users, non-logged-in users [`-`, `dev`] for session related calulations.
+As they tend to skew the session duration.
+
+Currently, logviewer application having `session` related visuals, is based on following
+
+- `kpi-avgtimespent`: `SUM(session_time_sum)/SUM(new_session_sum)`
+- `kpi-sessions`: `SUM(new_session_sum)`
 
 ## Add custom visuals
 
