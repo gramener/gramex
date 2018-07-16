@@ -95,7 +95,7 @@ It logs:
 
 Typical `requests.csv` looks like
 
-```
+```js
 1530008663609.0,::1,,200,2708.0,GET,/,
 1530008665319.0,::1,,200,948.0,GET,/ui/jquery/dist/jquery.min.js,
 1530008665404.0,::1,,200,81.0,GET,/script.js,
@@ -123,7 +123,7 @@ aggregrated on (`duration`, `new_session`, `session_time`) metrics with (`_count
 ### Session Calculations
 
 Every time a user logs into a gramex app, a `new_session` is flagged.
-`session_time` duration is the length of time someone spends on the app.
+`session_time` duration (in seconds) is the length of time someone spends on the app.
 
 For example, let's take `user1`
 
@@ -151,8 +151,24 @@ As they tend to skew the session duration.
 
 Currently, logviewer application having `session` related visuals, is based on following
 
-- `kpi-avgtimespent`: `SUM(session_time_sum)/SUM(new_session_sum)`
-- `kpi-sessions`: `SUM(new_session_sum)`
+- [`kpi-avgtimespent`](https://code.gramener.com/cto/gramex/blob/master/gramex/apps/logviewer/gramex.yaml): performs `SUM(session_time_sum)/SUM(new_session_sum)`
+- `kpi-sessions`: performs `SUM(new_session_sum)`
+
+You can customize `kpi-avgtimespent` to consider only logged-in users
+
+```yaml
+import:
+  logviewer:
+    path: $GRAMEXAPPS/logviewer/gramex.yaml
+    YAMLURL: $YAMLURL/log/
+    LOGVIEWER_FORMHANDLER_QUERIES:
+      kpi-avgtimespent:
+        SELECT SUM(session_time_sum)/SUM(new_session_sum) AS value
+        FROM {table}
+        WHERE "user.id_1" == 1 {where}
+```
+
+[`user.id_1`](https://code.gramener.com/cto/gramex/blob/master/gramex/apps/logviewer/gramex.yaml) by default ignores `['-', 'dev']` users.
 
 ## Add custom visuals
 

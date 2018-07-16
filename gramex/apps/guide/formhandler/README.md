@@ -427,12 +427,12 @@ You can also filter AFTER the grouping by filtering with the derived column name
 
 Sorting (`?_sort=`) and pagination (`?_limit=` and `?_offset=`) apply *after* the group by.
 
-- [?_by=Continent&_sort=Continent&_offset=2&_limit=2](flags?_by=Continent&_sort=Continent&_offset=10&_limit=10&_format=table): count of countries by continent sorted by Continent, 2 per page
+- [?_by=Continent&_sort=Continent&_offset=2&_limit=2](flags?_by=Continent&_sort=Continent&_offset=2&_limit=2&_format=table): count of countries by continent sorted by Continent, 2 per page
 
 
 ## FormHandler metadata
 
-When `?meta=y` is specified, the HTTP headers have additional metadata about the
+When `?_meta=y` is specified, the HTTP headers have additional metadata about the
 request and the response. These headers are available:
 
 - `Fh-Data-Count: <number>`: Number of rows in the dataset. Will not be set for databases, only files.
