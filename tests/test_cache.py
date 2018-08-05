@@ -66,7 +66,7 @@ class TestCacheConstructor(unittest.TestCase):
         # When a file is opened with a clear cache, ...
         cache.clear()
         gramex.cache.open(path)
-        keys = cache.keys()
+        keys = list(cache.keys())
         eq_(len(keys), 1)           # it has only 1 key
         eq_(keys[0][0], path)       # with the file we just opened
 
