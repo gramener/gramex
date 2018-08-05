@@ -88,6 +88,20 @@ url:
           url: $YAMLPATH/flags.csv
           function: data.groupby('Stripes').sum().reset_index()
 
+    formhandler-modify-multi:
+      pattern: /$YAMLURL/modify-multi
+      handler: FormHandler
+      kwargs:
+        symbols:
+          url: sqlite:///$YAMLPATH/../datahandler/database.sqlite3
+          table: flags
+          query: 'SELECT Continent, COUNT(DISTINCT Symbols) AS dsymbols FROM flags GROUP BY Continent'
+          modify: data.assign(rank=data['dsymbols'].rank())
+        colors:
+          url: $YAMLPATH/flags.csv
+          function: data.groupby('Continent').sum().reset_index()
+        modify: data['colors'].merge(data['symbols'], on='Continent')
+
     formhandler-chart:
       pattern: /$YAMLURL/chart
       handler: FormHandler

@@ -1337,6 +1337,22 @@ url:
       default:
         _format: csv
 
+  formhandler/modify-multi:
+    pattern: /formhandler/modify-multi
+    handler: FormHandler
+    kwargs:
+      city:
+        url: sqlite:///formhandler.db
+        table: sales
+        query: 'SELECT city, SUM(sales) as sales FROM sales GROUP BY city'
+        modify: data.assign(rank=data['sales'].rank())
+      big:
+        url: sales.xlsx
+        function: data[data['sales'] > 100]
+      modify: data['big'].merge(data['city'], on='city')
+      default:
+        _format: csv
+
   formhandler/prepare:
     pattern: /formhandler/prepare
     handler: FormHandler

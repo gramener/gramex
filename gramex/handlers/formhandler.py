@@ -62,6 +62,11 @@ class FormHandler(BaseHandler):
             cls.datasets = {'data': conf_kwargs}
             cls.single = True
         else:
+            if 'modify' in conf_kwargs:
+                cls.modify_all = staticmethod(build_transform(
+                    conf={'function': conf_kwargs.pop('modify', None)},
+                    vars=cls.function_vars['modify'],
+                    filename='%s.%s' % (cls.name, 'modify'), iter=False))
             cls.datasets = conf_kwargs
             cls.single = False
         # Apply defaults to each key
@@ -152,6 +157,10 @@ class FormHandler(BaseHandler):
             modify = self.datasets[key].get('modify', None)
             if callable(modify):
                 result[key] = modify(data=result[key], key=key, handler=self)
+
+        # modify the result for multiple datasets
+        if hasattr(self, 'modify_all'):
+            result = self.modify_all(data=result, key=None, handler=self)
 
         format_options = self.set_format(opt.fmt, meta)
         params = {k: v[0] for k, v in self.args.items() if len(v) > 0}

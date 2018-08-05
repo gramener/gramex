@@ -510,36 +510,6 @@ To transform the data after filtering, use [modify](#formhandler-modify).
 `function:` also works with [database queries](#formhandler-query), but loads
 the **entire** table before transforming, so ensure that you have enough memory.
 
-## FormHandler modify
-
-You can modify the data returned after filtering using the `modify:` key. Try
-this [example](totals):
-
-```yaml
-url:
-  totals:
-    pattern: /$YAMLURL/totals
-    handler: FormHandler
-    kwargs:
-      url: $YAMLPATH/flags.csv
-      modify: data.sum(numeric_only=True).to_frame().T
-      # Another example:
-      # modify: my_module.calc(data)
-```
-
-This runs the following steps:
-
-1. Load `flags.csv`
-2. Filter the data using the URL query parameters
-3. Run `function`, which must be an expression that returns a DataFrame. The
-   filtered data is a DataFrame called `data`.
-
-This transforms the data *after filtering*.
-e.g. the [Asia result](totals?Continent=Asia) shows totals only for Asia.
-To transform the data before filtering, use [function](#formhandler-functions).
-
-`modify:` also works with [database queries](#formhandler-query).
-
 ## FormHandler query
 
 You may also use a `query:` to select data from an SQLAlchemy databases. For example:
@@ -810,6 +780,63 @@ Note:
 
 - If `format:` is specified against multiple datasets, the return value could be
   in any format (unspecified).
+
+## FormHandler modify
+
+You can modify the data returned after filtering using the `modify:` key. Try
+this [example](totals):
+
+```yaml
+url:
+  totals:
+    pattern: /$YAMLURL/totals
+    handler: FormHandler
+    kwargs:
+      url: $YAMLPATH/flags.csv
+      modify: data.sum(numeric_only=True).to_frame().T
+```
+
+This runs the following steps:
+
+1. Load `flags.csv`
+2. Filter the data using the URL query parameters
+3. Evaluate the `modify:` expression. It can use a DataFrame `data`. The result
+   of the expression must be a DataFrame (or dict of DataFrames.)
+
+This transforms the data *after filtering*.
+e.g. the [Asia result](totals?Continent=Asia) shows totals only for Asia.
+To transform the data before filtering, use [function](#formhandler-functions).
+
+`modify:` also works with [database queries](#formhandler-query).
+
+If you have [multiple datasets](#formhandler-multiple-datasets), `modify:` can
+modify all of these datasets -- and join them if required.
+
+[This example](modify-multi?_format=html) has two `modify:` -- the first for a
+single query, the second applies on both datasets.
+
+```yaml
+url:
+  formhandler-modify-multi:
+    pattern: /$YAMLURL/modify-multi
+    handler: FormHandler
+    kwargs:
+      symbols:
+        url: sqlite:///$YAMLPATH/../datahandler/database.sqlite3
+        table: flags
+        query: 'SELECT Continent, COUNT(DISTINCT Symbols) AS dsymbols FROM flags GROUP BY Continent'
+        # Modify ONLY this query. Adds rank column to symbols dataset
+        modify: data.assign(rank=data['dsymbols'].rank())
+      colors:
+        url: $YAMLPATH/flags.csv
+        function: data.groupby('Continent').sum().reset_index()
+      # Modify BOTH datasets. data is a dict of DataFrames.
+      modify: data['colors'].merge(data['symbols'], on='Continent')
+```
+
+`modify:` can be any expression that uses `data`, which is a dict of DataFrames
+`{'colors': DataFrame(...), 'symbols': DataFrame(...)`. It can return a single
+DataFrame or any dict of DataFrames.
 
 ## FormHandler directory listing
 

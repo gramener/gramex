@@ -188,6 +188,12 @@ class TestFormHandler(TestGramex):
     def test_modify(self):
         self.eq('/formhandler/modify', self.sales.sum(numeric_only=True).to_frame().T)
 
+    def test_modify_multi(self):
+        city = self.sales.groupby('city')['sales'].sum().reset_index()
+        city['rank'] = city['sales'].rank()
+        big = self.sales[self.sales['sales'] > 100]
+        self.eq('/formhandler/modify-multi', big.merge(city, on='city'))
+
     def test_prepare(self):
         self.eq('/formhandler/prepare', self.sales[self.sales['product'] == 'Biscuit'])
 
