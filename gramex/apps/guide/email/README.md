@@ -5,6 +5,8 @@ prefix: Email
 
 [TOC]
 
+<iframe width="560" height="315" src="https://www.youtube.com/embed/GRTCgLsGVGE" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+
 The `email` service creates a service that can send email via SMTP. Here is a
 sample configuration for GMail:
 

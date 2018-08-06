@@ -3,6 +3,8 @@ title: Smart alerts
 prefix: Alerts
 ...
 
+<iframe width="560" height="315" src="https://www.youtube.com/embed/RA5bxvsm8a0" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+
 [TOC]
 
 ## Alert setup
@@ -20,6 +22,46 @@ email:
 ```
 
 ## Alert examples
+
+### Send a scheduled email
+
+Email scheduling uses the same keys as [scheduler](../scheduler/): `minutes`,
+`hours`, `dates`, `weekdays`, `months` and `years`.
+
+```yaml
+alert:
+  alert-schedule:
+    days: '*'                     # Send email every day
+    hours: '6, 12'                # at 6am and 12noon local time
+    minutes: 0                    # at the 0th minute, i.e. 6:00am and 12:00pm
+    to: admin@example.org
+    subject: Scheduled alert
+    body: This email will be scheduled and sent as long as Gramex is running.
+```
+
+To send an email on startup, use `startup:` instead of `days:`, `hours:`, etc.
+This sends an email every time Gramex starts.
+
+You can use `startup:` **and** the schedule (`days:`, `hours:`, etc) together.
+This will send an email on startup and at the specified schedule.
+
+(Before Gramex 1.31, emails without a schedule were sent out once automatically.
+This led to work-in-progress messages being emailed. From Gramex 1.31, all mails
+require a `startup:` or a [schedule](#send-a-scheduled-email).)
+
+### Avoid re-sending emails
+
+`condition: once(..)` ensures that an alert campaign is sent out only once.
+For example:
+
+```yaml
+alert:
+  alert-condition-once:
+    condition: once(r'$YAMLPATH', 'unique-key')
+    ...
+```
+
+... will send out the email only once, unless the `'unique-key'` is changed.
 
 ### Send as a different user
 
@@ -138,6 +180,30 @@ alert:
         - https://example.org/sample.pptx
 ```
 
+### Use templates
+
+The `to`, `cc`, `bcc`, `from`, `subject`, `body`, `html`, `bodyfile`, `htmlfile`
+fields can all use Tornado templates to dynamically generate values.
+
+```yaml
+alert:
+  alert-templates:
+    to: '{{ "admin@example.org" }}'
+    subject: Template email
+    html: |
+      {% import sys %}
+      <p>This email was sent from {{ sys.platform }}.</p>
+      <p><img src="cid:img"></p>
+      <p>{% raw open(r'$YAMLPATH/email.html').read() %}</p>
+    images:
+      img: '{% import os %}{{ os.path.join(r"$YAMLPATH", "../uicomponents/bg-small.png") }}'
+    attachments:
+      - '{% import os %}{{ os.path.join(r"$YAMLPATH", "doc1.docx") }}'
+```
+
+Tornado templates escape all HTML content. To pass the HTML content raw,
+use `{% raw expression %}` instead of `{{ expression }}`.
+
 ### Email dashboards
 
 To send a dashboard as an inline-image or an attachment, set up a
@@ -172,30 +238,6 @@ entire `user` object here. Also set up [encrypt:](../auth/#encrypted-user) in
 `gramex.yaml` -- with the same keys across all servers.
 
 
-### Use templates
-
-The `to`, `cc`, `bcc`, `from`, `subject`, `body`, `html`, `bodyfile`, `htmlfile`
-fields can all use Tornado templates to dynamically generate values.
-
-```yaml
-alert:
-  alert-templates:
-    to: '{{ "admin@example.org" }}'
-    subject: Template email
-    html: |
-      {% import sys %}
-      <p>This email was sent from {{ sys.platform }}.</p>
-      <p><img src="cid:img"></p>
-      <p>{% raw open(r'$YAMLPATH/email.html').read() %}</p>
-    images:
-      img: '{% import os %}{{ os.path.join(r"$YAMLPATH", "../uicomponents/bg-small.png") }}'
-    attachments:
-      - '{% import os %}{{ os.path.join(r"$YAMLPATH", "doc1.docx") }}'
-```
-
-Tornado templates escape all HTML content. To pass the HTML content raw,
-use `{% raw expression %}` instead of `{{ expression }}`.
-
 ### Dynamic emails from data
 
 `data:` specifies one or more datasets. You can use these in templates to create
@@ -227,28 +269,6 @@ alert:
 
 Each of the `data:` variables -- like `sales` and `employee` are available to
 the template as variables.
-
-### Send a scheduled email
-
-Email scheduling uses the same keys as [scheduler](../scheduler/): `minutes`,
-`hours`, `dates`, `weekdays`, `months` and `years`.
-
-```yaml
-alert:
-  alert-schedule:
-    days: '*'                     # Send email every day
-    hours: '6, 12'                # at 6am and 12noon local time
-    minutes: 0                    # at the 0th minute, i.e. 6:00am and 12:00pm
-    to: admin@example.org
-    subject: Scheduled alert
-    body: This email will be scheduled and sent as long as Gramex is running.
-```
-
-### Send an email once
-
-Before Gramex 1.31, emails without a schedule were sent out once automatically.
-This led to work-in-progress messages being emailed. From Gramex 1.31, all mails
-require a `startup:` or a [schedule](#send-a-scheduled-email).
 
 ### Mail merge: change content by user
 
@@ -289,20 +309,6 @@ alert:
     cc: salesmanager@example.org
     subject: Sales target deficit of {{ row['target'] - row['value'] }}
 ```
-
-### Avoid re-sending emails
-
-`condition: once(..)` ensures that an alert campaign is sent out only once.
-For example:
-
-```yaml
-alert:
-  alert-condition-once:
-    condition: once(r'$YAMLPATH', 'unique-key')
-    ...
-```
-
-... will send out the email only once, unless the `'unique-key'` is changed.
 
 ### Use multiple datasets
 
