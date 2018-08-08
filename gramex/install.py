@@ -563,14 +563,21 @@ def _check_output(cmd, default=b'', **kwargs):
     '''Run cmd and return output. Return default in case the command fails'''
     try:
         return check_output(shlex.split(cmd), **kwargs).strip()     # nosec
-    except CalledProcessError:
+    # OSError is raised if the cmd is not found.
+    # CalledProcessError is raised if the cmd returns an error.
+    except (OSError, CalledProcessError):
         return default
 
 
 def _run_console(cmd, **kwargs):
     '''Run cmd and  pipe output to console (sys.stdout / sys.stderr)'''
-    proc = Popen(shlex.split(cmd), bufsize=-1, stdout=sys.stdout, stderr=sys.stderr,
-                 universal_newlines=True, **kwargs)
+    cmd = shlex.split(cmd)
+    try:
+        proc = Popen(cmd, bufsize=-1, stdout=sys.stdout, stderr=sys.stderr,
+                     universal_newlines=True, **kwargs)
+    except OSError:
+        app_log.error('Cannot find command: %s', cmd[0])
+        raise
     proc.communicate()
 
 
