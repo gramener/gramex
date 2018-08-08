@@ -241,7 +241,13 @@ entire `user` object here. Also set up [encrypt:](../auth/#encrypted-user) in
 ### Dynamic emails from data
 
 `data:` specifies one or more datasets. You can use these in templates to create
-dynamic content based on data.
+dynamic content based on data. The `data:` can either be:
+
+- `data: [... list of objects ...]` defines data as a list of objects in the YAML file
+- `data: file.xlsx` loads data from a CSV or Excel file as a DataFrame
+- `data: {url: ..., table: ...}` loads data from a SQLAlchemy URL and table
+
+The data is available to templates in a variable called `data`.
 
 ```yaml
 alert:
@@ -252,23 +258,27 @@ alert:
       - {month: Mar, sales:  90}
     to: admin@example.org
     subject: 'Email generated from data'
-    html: 'Total sales was {{ data["revenue"].sum() }}'
+    html: 'Total sales was {{ sum(row["sales"] for row in data) }}'
 ```
 
-Data can also be a dict containing different keys. There are many ways of
-fetching the data as well:
+Multiple datasets can be defined as a dict containing different keys. Here is an
+example that covers all variations:
 
 ```yaml
 alert:
   data:
+    plainlist:
+      - {month: Jan, sales: 100}
+      - {month: Feb, sales: 110}
+      - {month: Mar, sales:  90}
     sales: $YAMLPATH/sales.xlsx
     employees:
       url: mysql://root@localhost/hr
       table: employee
 ```
 
-Each of the `data:` variables -- like `sales` and `employee` are available to
-the template as variables.
+This data can be used directly in templates as variables named `plainlist`,
+`sales` and `employee`.
 
 ### Mail merge: change content by user
 
