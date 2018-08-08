@@ -400,12 +400,14 @@ def query(sql, engine, state=None, **kwargs):
     2. A function. This is called to determine the state of the database.
     3. A list of tables. This list of ["db.table"] names specifies which tables
        to watch for. This is currently experimental.
+    4. ``None``: the default. The query is always re-run and not cached.
     '''
     # Pass _reload_status = True for testing purposes. This returns a tuple:
     # (result, reloaded) instead of just the result.
     _reload_status = kwargs.pop('_reload_status', False)
     reloaded = False
     _cache = kwargs.pop('_cache', _QUERY_CACHE)
+    store_cache = True
 
     key = (sql, engine.url)
     current_status = _cache.get(key, {}).get('status', None)
@@ -418,20 +420,24 @@ def query(sql, engine, state=None, **kwargs):
     elif state is None:
         # Create a new status every time, so that the query is always re-run
         status = object()
+        store_cache = False
     else:
         raise TypeError('gramex.cache.query(state=) must be a table list, query or fn, not %s',
                         repr(state))
 
-    if status != current_status:
-        _cache[key] = {
-            'data': pd.read_sql(sql, engine, **kwargs),
-            'status': status,
-        }
+    if status == current_status:
+        result = _cache[key]['data']
+    else:
         app_log.debug('gramex.cache.query: %s. engine: %s. state: %s. kwargs: %s', sql, engine,
                       state, kwargs)
+        result = pd.read_sql(sql, engine, **kwargs)
+        if store_cache:
+            _cache[key] = {
+                'data': result,
+                'status': status,
+            }
         reloaded = True
 
-    result = _cache[key]['data']
     return (result, reloaded) if _reload_status else result
 
 
