@@ -44,8 +44,9 @@ class TestLogViewer(TestGramex):
         ], ignore_index=True)
         cls.df = logviewer.prepare_logs(df)
         spec = cls.get_keywith(conf.schedule, 'apps/logviewer-')
-        for transform in spec.kwargs.transforms:
-            logviewer.apply_transform(cls.df, transform)
+        for transform_type in ['transforms', 'post_transforms']:
+            for transform in spec.kwargs.get(transform_type, []):
+                logviewer.apply_transform(cls.df, transform)
 
     def test_setup(self):
         # check if db exists
@@ -61,6 +62,8 @@ class TestLogViewer(TestGramex):
         spec = self.get_keywith(conf.url, 'apps/logviewer/query-')
         base = '/logviewer/query/aggD'
         df = self.df
+        df_user1 = df['user.id_1'].eq(1)
+        df_uri1 = df['uri_1'].eq(1)
         # check filters
         for col in ['status', 'ip']:
             eq_(self.get('{}/filter{}/'.format(base, col)).json(),
@@ -68,10 +71,10 @@ class TestLogViewer(TestGramex):
                 )
         eq_(self.get('{}/filter{}/'.format(base, 'users')).json(),
             [{'user.id': x} for x in
-             sorted(df[df['user.id_1'].eq(1)]['user.id'].unique())]
+             sorted(df[df_user1]['user.id'].unique())]
             )
         eq_(self.get('{}/filter{}/'.format(base, 'uri')).json(),
-            (df[df['uri_1'].eq(1)]['uri'].value_counts()
+            (df[df_uri1]['uri'].value_counts()
              .astype(int)
              .rename_axis('uri').reset_index(name='views')
              .sort_values(by=['views', 'uri'], ascending=[False, True])[:100]
@@ -79,61 +82,57 @@ class TestLogViewer(TestGramex):
             )
         # check KPIs
         eq_(self.get('{}/kpi-{}/'.format(base, 'pageviews')).json(),
-            [{'value': len(df.index)}]
+            [{'value': len(df[df_uri1].index)}]
             )
         eq_(self.get('{}/kpi-{}/'.format(base, 'sessions')).json(),
-            [{'value': df['new_session'].sum()}]
+            [{'value': df[df_user1]['new_session'].sum()}]
             )
         eq_(self.get('{}/kpi-{}/'.format(base, 'users')).json(),
-            [{'value': df[df['user.id_1'].eq(1)]['user.id'].nunique()}]
+            [{'value': df[df_user1]['user.id'].nunique()}]
             )
         eq_(self.get('{}/kpi-{}/'.format(base, 'urls')).json(),
-            [{'value': df[df['uri_1'].eq(1)]['uri'].nunique()}]
+            [{'value': df[df_uri1]['uri'].nunique()}]
             )
         r = self.get('{}/kpi-{}/'.format(base, 'avgtimespent')).json()
         aae(r[0]['value'],
-            df['session_time'].sum() / df['new_session'].sum(),
+            df[df_user1]['session_time'].sum() / df[df_user1]['new_session'].sum(),
             4)
         r = self.get('{}/kpi-{}/'.format(base, 'avgloadtime')).json()
         aae(r[0]['value'], df['duration'].mean(), 4)
         # check top10
-        topten = [{'col': 'user.id', 'url': 'users', 'flag': True},
-                  {'col': 'ip', 'url': 'ip'},
-                  {'col': 'status', 'url': 'status'},
-                  {'col': 'uri', 'url': 'uri', 'flag': True}]
+        topten = [{'col': 'user.id', 'url': 'users', 'values': 'views', 'flag': True},
+                  {'col': 'ip', 'url': 'ip', 'values': 'requests'},
+                  {'col': 'status', 'url': 'status', 'values': 'requests'},
+                  {'col': 'uri', 'url': 'uri', 'values': 'views', 'flag': True}]
         for top in topten:
             cond = (df[top['col'] + '_1'].eq(1)
                     if top.get('flag') else slice(None))
             eq_(self.get('{}/topten{}/'.format(base, top['url'])).json(),
                 (df[cond][top['col']].value_counts()
                 .astype(int)
-                .rename_axis(top['col']).reset_index(name='views')
-                .sort_values(by=['views', top['col']],
+                .rename_axis(top['col']).reset_index(name=top['values'])
+                .sort_values(by=[top['values'], top['col']],
                              ascending=[False, True])[:10]
                 .to_dict('r'))
                 )
         # check trend
+        dff = logviewer.pdagg(df[df_uri1],
+                              [{'key': 'time', 'freq': 'D'}],
+                              {'duration': ['count']})
+        dff['time'] = dff['time'].dt.strftime('%Y-%m-%d 00:00:00')
+        dff['pageviews'] = dff['duration_count'].astype(int)
+        dff = dff[dff['pageviews'].ne(0)]
         eq_(self.get('{}/{}/'.format(base, 'pageviewstrend')).json(),
-            (logviewer.pdagg(
-                df[df['uri_1'].eq(1)],
-                [{'key': 'time', 'freq': 'D'}],
-                {'duration': ['count']})
-            .assign(time=lambda x: x.time.dt.strftime('%Y-%m-%d 00:00:00'),
-                    pageviews=lambda x: x.duration_count.astype(int))
-            .drop('duration_count', 1)
-            .query('pageviews != 0')
-            .to_dict('r'))
+            dff.drop('duration_count', 1).to_dict('r')
             )
+        dff = logviewer.pdagg(df[df_user1],
+                              [{'key': 'time', 'freq': 'D'}],
+                              {'new_session': ['sum']})
+        dff['time'] = dff['time'].dt.strftime('%Y-%m-%d 00:00:00')
+        dff['sessions'] = dff['new_session_sum'].astype(int)
+        dff = dff[dff['sessions'].ne(0)]
         eq_(self.get('{}/{}/'.format(base, 'sessionstrend')).json(),
-            (logviewer.pdagg(
-                df,
-                [{'key': 'time', 'freq': 'D'}],
-                {'new_session': ['sum']})
-            .assign(time=lambda x: x.time.dt.strftime('%Y-%m-%d 00:00:00'),
-                    sessions=lambda x: x.new_session_sum.astype(int))
-            .drop('new_session_sum', 1)
-            .query('sessions != 0')
-            .to_dict('r'))
+            dff.drop('new_session_sum', 1).query('sessions != 0').to_dict('r')
             )
         # TODO trend queries
         for q in spec.kwargs.kwargs.queries.keys():

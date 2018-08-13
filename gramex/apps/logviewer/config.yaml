@@ -19,7 +19,7 @@ layout:
           {'tpl': 'lv-kpi', 'on': 'kpi-pageviews', 'title': 'Page Views'},
           {'tpl': 'lv-kpi', 'on': 'kpi-sessions', 'title': 'Sessions'},
           {'tpl': 'lv-kpi', 'on': 'kpi-users', 'title': 'Users'},
-          {'tpl': 'lv-kpi', 'on': 'kpi-avgtimespent', 'title': 'Avg.Time Spent'},
+          {'tpl': 'lv-kpi', 'on': 'kpi-avgtimespent', 'title': 'Avg.Session Time'},
           {'tpl': 'lv-kpi', 'on': 'kpi-urls', 'title': 'URLs'},
           {'tpl': 'lv-kpi', 'on': 'kpi-avgloadtime', 'title': 'Avg.Load Time'}]
     # Heading
@@ -44,4 +44,4 @@ layout:
         '@class': container-fluid pr-lg-0
         _$: {'tpl': 'lv-card-deck', 'values': [
               {'on': 'vegam-loadtimetrend', 'title': 'Server Response Time'},
-              {'on': 'vegam-loadtimeviewstrend', 'title': 'Response Time and Views'}]}
+              {'on': 'vegam-loadtimerequeststrend', 'title': 'Response Time and Requests'}]}

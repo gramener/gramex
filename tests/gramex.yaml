@@ -2608,6 +2608,8 @@ import:
   gramex-logviewer:
     path: $GRAMEXAPPS/logviewer/gramex.yaml
     YAMLURL: /logviewer/
+    LOGVIEWER_SCHEDULER_SETUP:
+      thread: false
 
 # Invalid services should be ignored
 invalid-service: true

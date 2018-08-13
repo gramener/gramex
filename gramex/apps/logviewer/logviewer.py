@@ -8,6 +8,7 @@ custom metrics
     new_session
     new_login :todo
 '''
+import re
 import sys
 import os.path
 import sqlite3
@@ -19,6 +20,7 @@ import pandas as pd
 import gramex.data
 import gramex.cache
 from gramex import conf
+from gramex.config import app_log
 
 if sys.version_info.major == 3:
     unicode = str
@@ -29,9 +31,9 @@ DB_CONFIG = {
     'dimensions': [{'key': 'time', 'freq': '?level'},
                    'user.id', 'ip', 'status', 'uri'],
     'metrics': {
-        'duration': ['count', 'sum', 'mean'],
+        'duration': ['count', 'sum'],
         'new_session': ['sum'],
-        'session_time': ['sum', 'mean']
+        'session_time': ['sum']
     }
 }
 DB_CONFIG['table_columns'] = [
@@ -67,7 +69,7 @@ def table_exists(table, conn):
 
 
 def add_session(df, duration=30):
-    '''add new_session'''
+    '''add new_session based on `duration` threshold'''
     s = df.groupby('user.id')['time'].diff().dt.total_seconds()
     flag = s.isnull() | s.ge(duration * 60)
     df['new_session'] = flag.astype(int)
@@ -75,10 +77,15 @@ def add_session(df, duration=30):
     return df
 
 
-def prepare_logs(df):
-    '''prepare gramex logs'''
+def prepare_logs(df, session_threshold=15):
+    '''
+    - removes rows with errors in time, duration, status
+    - sort by time
+    - adds session metrics (new_session, session_time)
+    '''
     df['time'] = pd.to_datetime(df['time'], unit='ms', errors='coerce')
-    df = df[df['time'].notnull()]
+    # Ignore pre-2000 year and null/NaT rows
+    df = df[df['time'] > '2000-01-01']
     for col in ['duration', 'status']:
         if not np.issubdtype(df[col].dtype, np.number):
             df[col] = pd.to_numeric(df[col], errors='coerce')
@@ -86,24 +93,28 @@ def prepare_logs(df):
     # logging via threads may not maintain order
     df = df.sort_values(by='time')
     # add new_session
-    df = add_session(df, duration=15)
+    df = add_session(df, duration=session_threshold)
     return df
 
 
-def summarize(transforms=[], run=True):
+def summarize(transforms=[], post_transforms=[], run=True, session_threshold=15):
     '''summarize'''
+    app_log.info('logviewer: Summarize started')
     levels = DB_CONFIG['levels']
     table = DB_CONFIG['table'].format
     # dimensions and metrics to summarize
     groups = DB_CONFIG['dimensions']
     aggfuncs = DB_CONFIG['metrics']
     log_file = conf.log.handlers.requests.filename
+    # Handle for multiple instances requests.csv$LISTENPORT
+    log_file = '{0}{1}'.format(*log_file.partition('.csv'))
     folder = os.path.dirname(log_file)
     conn = sqlite3.connect(os.path.join(folder, 'logviewer.db'))
     # drop agg tables from database
     if run in ['drop', 'reload']:
         droptable = 'DROP TABLE IF EXISTS {}'.format
         for freq in levels:
+            app_log.info('logviewer: Dropping {} table'.format(table(freq)))
             conn.execute(droptable(table(freq)))
         conn.commit()
         conn.execute('VACUUM')
@@ -112,44 +123,64 @@ def summarize(transforms=[], run=True):
             return
     # all log files sorted by modified time
     log_files = sorted(glob(log_file + '*'), key=os.path.getmtime)
-    dt = None
+    max_date = None
+
+    def filesince(filename, date):
+        match = re.search(r'(\d{4}-\d{2}-\d{2})$', filename)
+        backupdate = match.group() if match else ''
+        return backupdate >= date or backupdate is ''
+
     # get this month log files if db is already created
     if table_exists(table(levels[-1]), conn):
-        dt = pd.read_sql(
+        max_date = pd.read_sql(
             'SELECT MAX(time) FROM {}'.format(
                 table(levels[-1])), conn).iloc[0, 0]
-        log_limit = '{}.{}'.format(log_files[-1], dt[:8] + '01')
-        log_files = [f for f in log_files if f > log_limit] + [log_files[-1]]
-        dt = pd.to_datetime(dt)
+        app_log.info('logviewer: last processed till %s', max_date)
+        this_month = max_date[:8] + '01'
+        log_files = [f for f in log_files if filesince(f, this_month)]
+        max_date = pd.to_datetime(max_date)
+
     if not log_files:
+        app_log.info('logviewer: no log files to process')
         return
     # Create dataframe from log files
     columns = conf.log.handlers.requests['keys']
-    # TODO: aviod concat?
+    # TODO: avoid concat?
+    app_log.info('logviewer: files to process %s', log_files)
     data = pd.concat([
-        gramex.cache.open(f, 'csv', names=columns).fillna('-')
+        pd.read_csv(f, names=columns, encoding='utf-8').fillna('-')
         for f in log_files
     ], ignore_index=True)
-    data = prepare_logs(data)
+    app_log.info(
+        'logviewer: prepare_logs {} rows with {} mint session_threshold'.format(
+            len(data.index), session_threshold))
+    data = prepare_logs(df=data, session_threshold=session_threshold)
+    app_log.info('logviewer: processed and returned {} rows'.format(len(data.index)))
+    # apply transforms on raw data
+    app_log.info('logviewer: applying transforms')
+    for spec in transforms:
+        apply_transform(data, spec)
     delete = 'DELETE FROM {} WHERE time >= "{}"'.format
     # levels should go from M > W > D
     for freq in levels:
-        # filter dataframe for dt.level
-        if dt:
-            dtt = dt
+        # filter dataframe for max_date.level
+        if max_date:
+            date_from = max_date
             if freq == 'W':
-                dtt -= pd.offsets.Day(dt.weekday())
+                date_from -= pd.offsets.Day(max_date.weekday())
             if freq == 'M':
-                dtt -= pd.offsets.MonthBegin(1)
-            data = data[data.time.ge(dtt)]
+                date_from -= pd.offsets.MonthBegin(1)
+            data = data[data.time.ge(date_from)]
             # delete old records
-            conn.execute(delete(table(freq), dtt))
+            conn.execute(delete(table(freq), date_from))
             conn.commit()
         groups[0]['freq'] = freq
         # get summary view
+        app_log.info('logviewer: pdagg for {}'.format(table(freq)))
         dff = pdagg(data, groups, aggfuncs)
-        # TODO: apply transforms here
-        for spec in transforms:
+        # apply post_transforms here
+        app_log.info('logviewer: applying post_transforms')
+        for spec in post_transforms:
             apply_transform(dff, spec)
         # insert new records
         try:
@@ -158,9 +189,11 @@ def summarize(transforms=[], run=True):
         # if not, call summarize run='reload' to
         # drop all the tables and rerun the job
         except sqlite3.OperationalError:
+            app_log.info('logviewer: OperationalError: run: reload')
             summarize(transforms=transforms, run='reload')
             return
     conn.close()
+    app_log.info('logviewer: Summarize completed')
     return
 
 
@@ -230,6 +263,7 @@ def apply_transform(data, spec):
         'STARTSWITH': lambda s, v: s.str.startswith(v),
         'ENDSWITH': lambda s, v: s.str.endswith(v)
     }
+    # TODO: STRREPLACE
     expr = spec['expr']
     func = pandas_transforms[expr['op']]
     kwargs = expr.get('kwargs', {})

@@ -51,6 +51,9 @@ import:
   logviewer:
     path: $GRAMEXAPPS/logviewer/gramex.yaml
     YAMLURL: $YAMLURL/log/
+    LOGVIEWER_LAYOUT_KWARGS:
+      auth:                                  # Add auth to layout page
+        login_url: /$YAMLURL/login
     LOGVIEWER_FORMHANDLER_KWARGS:
       headers:
         Cache-Control: public, max-age=3600   # cached for 1 hour
@@ -61,13 +64,13 @@ import:
       kpi-custom-metric:  # adds new query
         SELECT AVG(duration_count) AS value
         FROM {table} {where}
-    LOGVIEWER_SCHEDULER_PORT: '9006'  # run scheduler on --listen.port=9006
+    LOGVIEWER_SCHEDULER_PORT: '9006'  # run scheduler only on --listen.port=9006
     LOGVIEWER_PATH_UI: $YAMLPATH/logviewer-config.yaml    # local .yaml file
     LOGVIEWER_PATH_RENDER: $YAMLPATH/logviewer-render.js  # local js file
     LOGVIEWER_CAPTURE_KWARGS:
-      timeout: 30  # Change timeout to 30
+      timeout: 30              # Change timeout to 30
     LOGVIEWER_SCHEDULER_SETUP:
-      minutes: 45 # Change minute to 45
+      minutes: 45              # Change minute to 45
     LOGVIEWER_SCHEDULER_KWARGS:
       transforms: # Add custom transforms, default transforms will be replaced
       - type: derive
@@ -114,11 +117,10 @@ Logviewer application uses data from `logviewer.db` for the front-end visuals.
 `logviewer.db` stores the aggregated data (day (aggD), week (aggW), month (aggM)) tables of `requests.csv*`.
 
 Data is grouped for every combination of (`time` (daily), `user.id`, `ip`, `status`, `uri`) and
-aggregrated on (`duration`, `new_session`, `session_time`) metrics with (`_count`, `_sum`, `_mean`) suffix.
+aggregrated on (`duration`, `new_session`, `session_time`) metrics with (`_count`, `_sum`) suffix.
 
 - `duration_count` - Count of requests for given row combination
 - `duration_sum` - Sum of the requests's time taken to serve the request in ms
-- `duration_mean` - Average of the requests's time taken to serve the request in ms
 
 ### Session Calculations
 

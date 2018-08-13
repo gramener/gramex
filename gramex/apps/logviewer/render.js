@@ -16,7 +16,8 @@ var config = {
       formatter: d3.format(',.2d')
     },
     {
-      type: 'kpi', url: 'query/aggD/kpi-sessions/', on: '.kpi-sessions', keep: ['user.id', 'time'],
+      type: 'kpi', url: 'query/aggD/kpi-sessions/', on: '.kpi-sessions',
+      keep: ['user.id', 'time'],
       formatter: d3.format(',.2d')
     },
     {
@@ -24,7 +25,8 @@ var config = {
       formatter: d3.format(',.2d')
     },
     {
-      type: 'kpi', url: 'query/aggD/kpi-avgtimespent/', on: '.kpi-avgtimespent', keep: ['user.id', 'time'],
+      type: 'kpi', url: 'query/aggD/kpi-avgtimespent/', on: '.kpi-avgtimespent',
+      keep: ['user.id', 'time'],
       formatter: (function(v){ return d3.format(',.1f')(v/60) + ' min' })
     },
     {
@@ -76,16 +78,16 @@ var config = {
       type: 'viz', url: 'query/aggD/toptenstatus/', on: '.vegam-toptenstatus',
       viz: [
         {data: null},
-        {apply: 'bar', y: 'status', x: 'views', order: 'views', props: {fill: '#77b7f1'}},
-        {apply: 'style', y_sort_op: 'sum', y_sort_field: 'views', y_sort_order: 'descending'}
+        {apply: 'bar', y: 'status', x: 'requests', order: 'requests', props: {fill: '#77b7f1'}},
+        {apply: 'style', y_sort_op: 'sum', y_sort_field: 'requests', y_sort_order: 'descending'}
       ]
     },
     {
       type: 'viz', url: 'query/aggD/toptenip/', on: '.vegam-toptenip',
       viz: [
         {data: null},
-        {apply: 'bar', y: 'ip', x: 'views', order: 'views', props: {fill: '#8f65b5'}},
-        {apply: 'style', y_sort_op: 'sum', y_sort_field: 'views', y_sort_order: 'descending'}
+        {apply: 'bar', y: 'ip', x: 'requests', order: 'requests', props: {fill: '#8f65b5'}},
+        {apply: 'style', y_sort_op: 'sum', y_sort_field: 'requests', y_sort_order: 'descending'}
       ]
     },
     {
@@ -98,13 +100,13 @@ var config = {
       ]
     },
     {
-      type: 'viz', url: 'query/aggD/loadtimeviewstrend/', on: '.vegam-loadtimeviewstrend',
+      type: 'viz', url: 'query/aggD/loadtimerequeststrend/', on: '.vegam-loadtimerequeststrend',
       viz: [
         {data: null, options: {types: {time: 'date'}}},
-        {apply: 'area', x: 'time', y: 'views', props: {fill:'#cc95ff'}},
+        {apply: 'area', x: 'time', y: 'requests', props: {fill:'#cc95ff'}},
         {apply: 'style', x_axis: null, y_axis_grid: false, n: -1},
-        {apply: 'line', x: 'time', y: 'views', props: {stroke:'#8f65b5'}},
-        {apply: 'scatter', x: 'time', y: 'views', mark: 'circle', props: {fill: '#8f65b5', size: 20}},
+        {apply: 'line', x: 'time', y: 'requests', props: {stroke:'#8f65b5'}},
+        {apply: 'scatter', x: 'time', y: 'requests', mark: 'circle', props: {fill: '#8f65b5', size: 20}},
         {apply: 'style', x_axis: null, y_axis: null, n: -2},
         {apply: 'line', x: 'time', y: 'loadtime', props: {stroke:'#ff8101'}},
         {apply: 'scatter', x: 'time', y: 'loadtime', mark: 'circle', props: {fill: '#ff8101', size: 20}},
