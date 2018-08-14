@@ -729,6 +729,7 @@ class DBAuth(SimpleAuth):
             arg: password                   # ... the ?password= argument from the form
                                             # Optional encryption for password
             function: passlib.hash.sha256_crypt.encrypt(content, salt='secret-key')
+            hash: true                      # hash password on browser in template
         forgot:
             key: forgot                     # ?forgot= is used as the forgot password parameter
             arg: email                      # ?email= is used as the email parameter

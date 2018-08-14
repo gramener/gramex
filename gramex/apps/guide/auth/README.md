@@ -584,6 +584,8 @@ You can configure several aspects of this flow. You can (and *should*) use:
 - `url:` to a SQLAlchemy database (with `table:`) instead of using CSV / Excel files
 - `password.function:` to encrypt the password
 - `delay:` to specify the login failure delay
+- `password.hash:` to enable client side encryption of password.
+Set this to `true` when required. This will block any MITM attacks.
 
 Here is a more complete example:
 
@@ -607,6 +609,7 @@ url:
             # The function below specifies the encryption method.
             # Remember to change secret-key to something unique
             function: passlib.hash.sha256_crypt.encrypt(content, salt="secret-key")
+            # hash: true                  # Client side encryption
 ```
 
 <div class="example">
