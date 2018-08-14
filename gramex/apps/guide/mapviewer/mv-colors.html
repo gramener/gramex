@@ -1,0 +1,54 @@
+
+<h2 class="toc">Map region colors</h2>
+<p class="text-muted">
+  Different scales are supported in <code>Mapviewer</code>.
+  <code>linear</code> or <code>quantile</code> or <code>threshold</code> scales can be defined based on the data.
+  <code>Mapviewer</code> is agnostic to the scale -- that is, data needs to be precalculated as
+  (in case of <code>quantile</code> scale) quantiles and colors need to be defined for each
+  <code>quantile</code> range.
+</p>
+
+<code>linear</code> scale definition would be as follows.
+<pre class="preserve language-javascript"><code>// map_value - district specific values
+domain_values.push(d3.min(map_value))
+domain_values.push(d3.mean(map_value))
+domain_values.push(d3.max(map_value))
+// sets the domain_values from minimum to maximum values with a mid value
+</code></pre>
+
+<code>quantile</code> scale definition would be as follows.
+<pre class="preserve language-javascript"><code>// consider below quantile calculation where 38 districts are uniformly categorized
+var unique_districts = ['Araria', 'Arwal', ....] // 38 districts in Bihar
+var category_length = Math.floor((unique_districts.length - 1) * 0.25)
+var domain_values = []
+for (var i = 0; i < 5; i++) {
+  // map_value - district specific values
+  domain_values.push(map_value[i * category_length])
+}
+</code></pre>
+
+<code>threshold</code> scale definition would be as follows.
+<pre class="preserve language-javascript"><code>domain_values = [0.34, 0.66, 1] // custom values can be defined here
+</code></pre>
+
+{% apply only_source %}
+<div id="map-controls"></div>
+<script>
+var map = g1.mapviewer({
+  id: 'map-controls',
+  map: {
+  },
+  attrs: {
+    fillColor: {
+      // Fill the regions
+      metric: function(d) {
+        return d[composite_index]    // composite_index refers to an attribute
+      },
+      scale: scale,
+      domain: domain_values,
+      range: range                   // range is an array of colors
+    }
+  }
+})
+</script>
+{% end %}

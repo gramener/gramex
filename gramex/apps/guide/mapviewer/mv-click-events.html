@@ -1,0 +1,45 @@
+<h2 class="toc">Click events</h2>
+<p class="text-muted">
+  Click events can be written for each of the map layers once the parent layer
+  (in below example, it is <code>biharGeojson</code>) is rendered.
+  Consider the example below.
+</p>
+
+{% apply only_source %}
+<div id="map-clickevent"></div>
+<script>
+// load bihar-districts geojson and render the map
+var map = g1.mapviewer({
+  id: 'map-clickevent',
+  layers: {
+    biharGeojson: {
+      type: 'geojson',
+      url: 'static/data/bihar-districts.json',
+    }
+  }
+  ..
+})
+
+// once the layer is loaded, we can write functionality within 'biharGeojsonLoaded' event
+map.on('biharGeojsonloaded', function() {
+  // iterate through each sublayer
+  map.gLayers['biharGeojson'].eachLayer(function(sublayer) {
+    // define the click event
+    sublayer.on('click', function() {
+      // whenever a layer (here, a district) is clicked, we update the URL params and reload the page
+      // this refresh the data on the entire page (contains several card components, map, bar chart)
+      map._choropleth('biharGeojson', map.options.layers.biharGeojson, function(props){
+        if (props['DISTRICT'] === sublayer.feature.properties.DISTRICT){
+          url.update({'district': toCamelCase(props['DISTRICT'])})
+          history.pushState({}, '', url.toString())
+          window.location.href = url
+        }
+        return (props['DISTRICT'] === sublayer.feature.properties.DISTRICT)
+      })
+    })
+  })
+})
+</script>
+{% end %}
+
+Notice that the above functionality is from <code>Leaflet</code>.

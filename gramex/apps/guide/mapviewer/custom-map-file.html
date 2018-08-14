@@ -1,0 +1,35 @@
+
+<h4>Part A - Use QGIS tool to add DIVISION property</h4>
+
+<ol>
+  <li class="p-2">Load districts shapefile (<code>.shp</code>) in QGIS tool</li>
+  <li class="p-2">Click Layer on toolbar on top and select <code>Attribute Table</code></li>
+  <li class="p-2">Toggle editing mode (top left-most)
+    <img alt="qgis toggle edit mode" class="d-block" src="img/qgis-toggle-edit-mode.png">
+  </li>
+  <li class="p-2">Click New Field option (4th from the right on the toolbar)
+    <img alt="qgis add new field" class="d-block" src="img/qgis-new-field.png">
+  </li>
+  <li class="p-2">Name your new field
+    <img alt="qgis name new field" class="d-block" src="img/qgis-new-prop.png">
+  </li>
+  <li class="p-2">View and edit the new field by clicking on specific cells
+    <img alt="qgis toggle edit mode" class="d-block" src="img/qgis-toggle-edit-mode.png">
+  </li>
+  <li class="p-2">Save and Export. On the bottom left of QGIS, in Layers Panel click <code>Save As</code>, choose a format of your choice.</li>
+</ol>
+
+<h4>Part B - Join layers using DIVISION property - <a href="http://mapshaper.org">mapshaper.org</a></h4>
+<ol>
+  <li>Load the <code>GeoJSON</code> file from above in <a href="http://mapshaper.org">mapshaper.org</a></li>
+  <li>Enable information view (i icon on the right panel)</li>
+  <li>Enable console mode (click console on top right)</li>
+  <li>(Optional based on the <code>GeoJSON</code>) Filter specific fields - run this in console
+    <code>filter-fields Id,State,ST_Name,DT_CODE,DT_NAME,DIVISION</code>
+  </li>
+  <li>Merge district layers based on DIVISION name
+    <code>dissolve2 fields=DIVISION copy-fields=Id,State,ST_Name</code>
+  </li>
+</ol>
+
+Export this new file as <code>TopoJSON</code> and use.

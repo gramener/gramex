@@ -1,0 +1,27 @@
+
+<h2 class="toc">Control map</h2>
+<p class="text-muted">
+  <code>Mapviewer</code> extends <code>Leaflet</code> attributes to control zoom and other options.
+</p>
+{% apply only_source %}
+<div id="map-controls"></div>
+<script>
+var map = g1.mapviewer({
+  id: 'map-controls',
+  map: {
+    // disable leaflet attribution
+    attributionControl: false,
+    zoomSnap: 0.1,
+    // disable zoom by double clicking the map area
+    doubleClickZoom: false,
+    // disable zoom by mouse scroll
+    scrollWheelZoom: false,
+    // disable map dragging
+    dragging: false,
+    // disable keyboard controls
+    keyboard: false
+  },
+  ...
+})
+</script>
+{% end %}

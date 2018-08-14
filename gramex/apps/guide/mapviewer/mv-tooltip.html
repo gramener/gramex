@@ -1,0 +1,36 @@
+<h2 class="toc">Custom tooltip content</h2>
+<p class="text-muted">
+  Custom content for tooltip at each <code>Layer</code> cannot be rendered until parent layer
+  (in below example, it is <code>biharGeojson</code>) is not rendered.
+  Consider the example below.
+</p>
+
+{% apply only_source %}
+<div id="map-tooltip"></div>
+<script>
+var map = g1.mapviewer({
+  id: 'map-tooltip',
+  layers: {
+    biharGeojson: {
+      type: 'geojson',
+      url: 'static/data/bihar-districts.json',
+    }
+  }
+})
+
+// once the layer is loaded, we can write functionality within 'biharGeojsonLoaded' event
+map.on('biharGeojsonloaded', function() {
+  // iterate through each sublayer
+  map.gLayers['biharGeojson'].eachLayer(function(sublayer) {
+    var tooltip_cont = `<div class="card" id="map-tooltip">
+      <div class="card-header custom-bg-1 rounded-0 border-0 py-2">
+        <p class="mb-0">` + (sublayer.feature.properties.DISTRICT) + `</p>
+      </div></div>`
+    // set the tooltip content per sublayer, its direction and position
+    sublayer._tooltip._content = tooltip_cont
+    sublayer._tooltip.options.direction = "auto"
+    sublayer._tooltip.options.offset = [60, 10]
+  })
+})
+</script>
+{% end %}

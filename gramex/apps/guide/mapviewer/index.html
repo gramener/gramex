@@ -47,6 +47,57 @@
       {% raw load_page('mv-choropleth.html') %}
       {% raw load_page('mv-drilldown.html') %}
       {% raw load_page('mv-basetiles.html') %}
+
+      <h1 class="toc">How-to</h1>
+      {% raw load_page('mv-controls.html') %}
+      {% raw load_page('mv-colors.html') %}
+      {% raw load_page('mv-click-events.html') %}
+      {% raw load_page('mv-tooltip.html') %}
+
+      <h1 class="toc">Resources and Tutorials</h1>
+      <h2 class="toc">Resources</h2>
+
+      <h3>Mapshaper</h3>
+      Use <a href="http://mapshaper.org">mapshaper</a> to view, edit, compress, export map files.
+      It accepts multiple file types and exports to <code>GeoJSON</code>, <code>TopoJSON</code>.
+      It also has an excellent command-line utility support.
+
+      <h3>QGIS</h3>
+      <a href="https://www.qgis.org/en/site/">QGIS</a> is a powerful cross platform software allows viewing,
+      editing of shapefiles with layer-level control.
+      It has support to export the shapefiles to GeoJSON in custom coordinates.
+
+      <h3>Leaflet</h3>
+      leafletjs is a JavaScript library to render maps on web interfaces.
+
+      <h1 class="toc">Tutorials</h1>
+      <h2>Video introduction</h2>
+      <p class="my-2">Here's a detailed introduction to Mapviewer, its background and possibilities.</p>
+
+      <iframe width="560" height="315" src="https://youtube.com/embed/W32Ts_E7qps"></iframe>
+
+      <p class="my-2">Shapefiles can get large in size due to different reasons:
+        original <code>GeoJSON</code> could be of high quality, <code>GeoJSON</code> layer could have
+        several attributes which might not be used in your application.</p>
+
+      <h3 class="mt-3">How to optimize your mapfile with mapshaper</h3>
+      <p class="my-2">Often your application might not need a detailed view of the map.
+        Simplifying the boundaries of the map will still retain geographic boundaries without distortion.
+        Mapshaper allows us to simplify maps to great extent using different algorithms.</p>
+      {% raw load_page('reduce-mapfile-size.html') %}
+
+      <h3 class="mt-3">Filter attributes in map file in mapshaper</h3>
+      <p class="my-2">Depending on the source of your <code>GeoJSON</code> or <code>TopoJSON</code> file,
+        it can contain several data attributes. Your application might not need all attributes.
+        Mapshaper gives the ability to do this on the browser but via commands.</p>
+      {% raw load_page('filter-mapfile.html') %}
+
+      <h3 class="mt-3">Create a custom region map file in QGIS</h3>
+      <p class="my-2">India map at state level, district level, block level are commonly used.
+        If you were to use a custom region map, say division level.
+        How would one go about creating such map? At an abstract level, state contains divisions,
+        each division contains districts, each district contains blocks and each block contains villages.</p>
+      {% raw load_page('custom-map-file.html') %}
     </main>
   </div><!-- .container-fluid -->
 
