@@ -139,10 +139,10 @@ def message(body=None, html=None, attachments=[], images={}, **kwargs):
     '''
     if html:
         if not images:
-            msg = html_part = MIMEText(html, 'html')
+            msg = html_part = MIMEText(html.encode('utf-8'), 'html', 'utf-8')
         else:
             msg = html_part = MIMEMultipart('related')
-            html_part.attach(MIMEText(html, 'html'))
+            html_part.attach(MIMEText(html.encode('utf-8'), 'html', 'utf-8'))
             for name, path in images.items():
                 with open(path, 'rb') as handle:
                     img = MIMEImage(handle.read())
@@ -150,10 +150,10 @@ def message(body=None, html=None, attachments=[], images={}, **kwargs):
                     html_part.attach(img)
     if body and html:
         msg = MIMEMultipart('alternative')
-        msg.attach(MIMEText(body, 'plain'))
+        msg.attach(MIMEText(body.encode('utf-8'), 'plain', 'utf-8'))
         msg.attach(html_part)
     elif not html:
-        msg = MIMEText(body or '', 'plain')
+        msg = MIMEText((body or '').encode('utf-8'), 'plain', 'utf-8')
 
     if attachments:
         msg_addon = MIMEMultipart()

@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 import os
 import json
 import time
+import email
 import shutil
 import requests
 import lxml.html
@@ -602,8 +603,10 @@ class TestDBAuthSignup(DBAuthBase):
             'to_addrs': ['any@example.org'],
             'quit': True,
         }, mail)
-        ok_('auth/dbsignup?forgot=' in mail['msg'])
-        token = mail['msg'].split('auth/dbsignup?forgot=')[1].split()[0]
+        obj = email.message_from_string(mail['msg'])
+        msg = obj.get_payload(decode=True).decode('utf-8')
+        ok_('auth/dbsignup?forgot=' in msg)
+        token = msg.split('auth/dbsignup?forgot=')[1].split()[0]
 
         # Check that the user has been added to the users database
         user_engine = sa.create_engine(self.config.url)

@@ -63,8 +63,8 @@ class TestAlerts2(TestGramex):
         eq_(obj['Bcc'], 'bcc@example.org')
         eq_(obj['Subject'], 'subject')
         body, html = obj.get_payload()
-        eq_(body.get_payload(), 'body')
-        eq_(html.get_payload(), 'html')
+        eq_(body.get_payload(decode=True).decode('utf-8'), 'body')
+        eq_(html.get_payload(decode=True).decode('utf-8'), 'html')
         eq_(body['Content-Type'].split(';')[0], 'text/plain')
         eq_(html['Content-Type'].split(';')[0], 'text/html')
 
@@ -73,8 +73,8 @@ class TestAlerts2(TestGramex):
         obj = email.message_from_string(mail['msg'])
         eq_(obj['To'], 'user@example.org')
         body, html = obj.get_payload()
-        eq_(body.get_payload(), 'template-alert\n')
-        eq_(html.get_payload(), 'template-alert\n')
+        eq_(body.get_payload(decode=True).decode('utf-8'), 'template-alert\n')
+        eq_(html.get_payload(decode=True).decode('utf-8'), 'template-alert\n')
         eq_(body['Content-Type'].split(';')[0], 'text/plain')
         eq_(html['Content-Type'].split(';')[0], 'text/html')
 
@@ -82,14 +82,14 @@ class TestAlerts2(TestGramex):
         mail = run_alert('alert-markdown')
         obj = email.message_from_string(mail['msg'])
         body, html = obj.get_payload()
-        tree = lxml.html.fromstring(html.get_payload())
+        tree = lxml.html.fromstring(html.get_payload(decode=True).decode('utf-8'))
         eq_(tree.tag, 'h1')
         eq_(tree.text, 'markdown')
 
         mail = run_alert('alert-markdown-template')
         obj = email.message_from_string(mail['msg'])
         body, html = obj.get_payload()
-        tree = lxml.html.fromstring(html.get_payload())
+        tree = lxml.html.fromstring(html.get_payload(decode=True).decode('utf-8'))
         eq_(tree.tag, 'h1')
         eq_(tree.text, 'template-alert')
 
@@ -101,7 +101,7 @@ class TestAlerts2(TestGramex):
         main, attachment = obj.get_payload()
         eq_(main['Content-Type'].split(';')[0], 'multipart/related')
         html, img = main.get_payload()
-        eq_(html.get_payload(), '<img src="cid:img">')
+        eq_(html.get_payload(decode=True).decode('utf-8'), '<img src="cid:img">')
         eq_(img['Content-ID'], '<img>')
         with open(os.path.join(folder, 'sample.png'), 'rb') as handle:
             img_file = handle.read()
@@ -116,27 +116,31 @@ class TestAlerts2(TestGramex):
 
     def test_data(self):
         mail = run_alert('alert-data')
-        eq_(mail['to_addrs'], ['user@example.org'])
+        obj = email.message_from_string(mail['msg'])
+        eq_(obj['To'], 'user@example.org')
+
         data = gramex.cache.open(os.path.join(folder, 'actors.csv'))
-        ok_('Subject: %d actors from smtps_stub\n' % len(data) in mail['msg'])
-        ok_('%d votes' % data['votes'].sum() in mail['msg'])
+        eq_(obj['Subject'], '%d actors from smtps_stub' % len(data))
+        eq_(obj.get_payload(decode=True).decode('utf-8'), '%d votes' % data['votes'].sum())
 
     def test_condition(self):
         data = gramex.cache.open(os.path.join(folder, 'actors.csv'))
         subset = data[data['votes'] > 100]
 
         mail = run_alert('alert-condition-df')
-        eq_(mail['to_addrs'], ['user@example.org'])
-        ok_('Subject: %d actors\n' % len(subset) in mail['msg'])
-        ok_('%d votes' % subset['votes'].sum() in mail['msg'])
+        obj = email.message_from_string(mail['msg'])
+        eq_(obj['To'], 'user@example.org')
+        eq_(obj['Subject'], '%d actors' % len(subset))
+        ok_(obj.get_payload(decode=True).decode('utf-8'), '%d votes' % subset['votes'].sum())
 
         run_alert('alert-condition-0', count=0)
         run_alert('alert-condition-false', count=0)
 
         mail = run_alert('alert-condition-dict')
-        eq_(mail['to_addrs'], ['user@example.org', 'admin@example.org'])
-        ok_('Subject: %d actors\n' % len(data) in mail['msg'])
-        ok_('val is hello' in mail['msg'])
+        obj = email.message_from_string(mail['msg'])
+        eq_(obj['To'], 'user@example.org, admin@example.org')
+        eq_(obj['Subject'], '%d actors' % len(data))
+        ok_(obj.get_payload(decode=True).decode('utf-8'), 'val is hello')
 
     def test_each(self):
         data = gramex.cache.open(os.path.join(folder, 'actors.csv'))
@@ -145,15 +149,17 @@ class TestAlerts2(TestGramex):
 
         mails = run_alert('alert-each', count=len(subset))
         for (index, row), mail in zip(subset.iterrows(), mails):
-            eq_(mail['to_addrs'], [row['name'].replace(' ', '_') + '@example.org'])
-            ok_('Subject: Congrats #%d! You got %d votes\n' % (index, row['votes']) in mail['msg'])
+            obj = email.message_from_string(mail['msg'])
+            eq_(obj['To'], row['name'].replace(' ', '_') + '@example.org')
+            eq_(obj['Subject'], 'Congrats #%d! You got %d votes' % (index, row['votes']))
 
         mails = run_alert('alert-data-inplace', count=2)
         fields = ['x@example.org', 'y@example.org']
         for field, mail in zip(fields, mails):
-            eq_(mail['to_addrs'], [field])
-            ok_('Subject: %s\n' % field in mail['msg'])
-            ok_('Body is %s' % field in mail['msg'])
+            obj = email.message_from_string(mail['msg'])
+            eq_(obj['To'], field)
+            eq_(obj['Subject'], field)
+            eq_(obj.get_payload(decode=True).decode('utf-8'), 'Body is %s' % field)
 
     def test_capture(self):
         # alert-capture should run as user {id: login@example.org, role: manager}

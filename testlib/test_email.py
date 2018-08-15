@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+
 import os
 import random
 from unittest import TestCase
@@ -34,15 +37,15 @@ class TestEmailer(TestCase):
         msg_eq(recipients(TO='a@z', CC='b@z', BCC='c@z'), ['a@z', 'b@z', 'c@z'])
 
     def test_message(self):
-        text = 'This is some text'
-        html = '<h1>Heading</h1>\n<p>This is a paragraph</p>'
+        text = 'This is some text: 高兴'
+        html = '<h1>Heading</h1>\n<p>This is a paragraph: 高兴</p>'
         msg = message(body=text)
-        self.eq(message(body=text), MIMEText(text, 'plain'))
-        self.eq(message(html=html), MIMEText(html, 'html'))
+        self.eq(message(body=text), MIMEText(text.encode('utf-8'), 'plain', 'utf-8'))
+        self.eq(message(html=html), MIMEText(html.encode('utf-8'), 'html', 'utf-8'))
 
         msg = MIMEMultipart('alternative')
-        msg.attach(MIMEText(text, 'plain'))
-        msg.attach(MIMEText(html, 'html'))
+        msg.attach(MIMEText(text.encode('utf-8'), 'plain', 'utf-8'))
+        msg.attach(MIMEText(html.encode('utf-8'), 'html', 'utf-8'))
         self.eq(message(body=text, html=html), msg)
 
     def test_attachment(self):
@@ -62,10 +65,10 @@ class TestEmailer(TestCase):
             eq_(img_part.get_filename(), os.path.basename(img['filename']))
 
     def test_images(self):
-        html = '<img src="cid:logo">'
+        html = '高兴: <img src="cid:logo">'
         img = os.path.join(folder, 'small-image.jpg')
         msg = MIMEMultipart('related')
-        msg.attach(MIMEText(html, 'html'))
+        msg.attach(MIMEText(html.encode('utf-8'), 'html', 'utf-8'))
         with open(img, 'rb') as handle:
             img_part = MIMEImage(handle.read())
             img_part.add_header('Content-ID', '<logo>')
