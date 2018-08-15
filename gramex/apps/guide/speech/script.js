@@ -1,10 +1,9 @@
 /* globals g1, webkitSpeechRecognition */
 
 $(function () {
-  var speechRecognition = webkitSpeechRecognition
-  var synth = window.speechSynthesis
   try {
-    var recognition = new speechRecognition()
+    var recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)()
+    var synth = window.speechSynthesis
     main(recognition, synth)
   }
   catch (err) {
