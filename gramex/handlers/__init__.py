@@ -18,6 +18,7 @@ from .formhandler import FormHandler
 from .pptxhandler import PPTXHandler
 from .proxyhandler import ProxyHandler
 from .modelhandler import ModelHandler
+from .filterhandler import FilterHandler
 
 DirectoryHandler = FileHandler
 
@@ -34,4 +35,5 @@ __all__ = [
     'PPTXHandler',
     'ProxyHandler',
     'ModelHandler',
+    'FilterHandler',
 ]

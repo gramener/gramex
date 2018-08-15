@@ -44,6 +44,7 @@ class FormHandler(BaseHandler):
         'prepare': {'args': None, 'key': None, 'handler': None},
         'queryfunction': {'args': None, 'key': None, 'handler': None},
     }
+    data_filter_method = staticmethod(gramex.data.filter)
 
     @classmethod
     def setup(cls, **kwargs):
@@ -146,7 +147,7 @@ class FormHandler(BaseHandler):
             opt.filter_kwargs.pop('id', None)
             # Run query in a separate threadthread
             futures[key] = gramex.service.threadpool.submit(
-                gramex.data.filter, args=opt.args, meta=meta[key], **opt.filter_kwargs)
+                self.data_filter_method, args=opt.args, meta=meta[key], **opt.filter_kwargs)
         result = AttrDict()
         for key, val in futures.items():
             try:

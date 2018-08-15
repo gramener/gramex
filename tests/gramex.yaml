@@ -2419,6 +2419,18 @@ url:
     kwargs:
       path: $YAMLPATH/gen.iris.pkl
 
+  filters/sales:
+    pattern: /filters/sales
+    handler: FilterHandler
+    kwargs:
+      url: sales.xlsx
+
+  filters/census:
+    pattern: /filters/census
+    handler: FilterHandler
+    kwargs:
+      url: sales.xlsx
+      sheetname: census
 sms:
   amazonsns:
     type: amazonsns

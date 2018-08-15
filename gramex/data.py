@@ -1083,3 +1083,111 @@ def dirstat(url, timeout=10, **kwargs):
                 'mtime': stat.st_mtime,
             })
     return pd.DataFrame(result)
+
+
+def filtercols(url, args={}, meta={}, engine=None, table=None, ext=None,
+               query=None, queryfile=None, transform=None, **kwargs):
+    '''
+    Filter data and extract unique values of each column using URL query parameters.
+    Typical usage::
+
+        filtered = gramex.data.filtercols(dataframe, args=handler.args)
+        filtered = gramex.data.filtercols('file.csv', args=handler.args)
+        filtered = gramex.data.filtercols('mysql://server/db', table='table', args=handler.args)
+
+    It accepts the following parameters:
+
+    :arg source url: Pandas DataFrame, sqlalchemy URL, directory or file name,
+        `.format``-ed using ``args``.
+    :arg dict args: URL query parameters as a dict of lists. Pass handler.args or parse_qs results
+    :arg dict meta: this dict is updated with metadata during the course of filtering
+    :arg string table: table name (if url is an SQLAlchemy URL), ``.format``-ed
+        using ``args``.
+    :arg string ext: file extension (if url is a file). Defaults to url extension
+    :arg string query: optional SQL query to execute (if url is a database),
+        ``.format``-ed using ``args`` and supports SQLAlchemy SQL parameters.
+        Loads entire result in memory before filtering.
+    :arg string queryfile: optional SQL query file to execute (if url is a database).
+        Same as specifying the ``query:`` in a file. Overrides ``query:``
+    :arg function transform: optional in-memory transform of source data. Takes
+        the result of gramex.cache.open or gramex.cache.query. Must return a
+        DataFrame. Applied to both file and SQLAlchemy urls.
+    :arg dict kwargs: Additional parameters are passed to
+        :py:func:`gramex.cache.open` or ``sqlalchemy.create_engine``
+    :return: a filtered DataFrame
+
+    Remaining kwargs are passed to :py:func:`gramex.cache.open` if ``url`` is a file, or
+    ``sqlalchemy.create_engine`` if ``url`` is a SQLAlchemy URL.
+
+    If this is used in a handler as::
+
+        filtered = gramex.data.filtercols(dataframe, args=handler.args)
+
+    ... then calling the handler with ``?_c=state&_c=district`` returns all unique values
+     in columns of ``dataframe`` where columns are state and district.
+
+    Column filter supports like this:
+
+    - ``?_c=y&x`` returns df with unique values of y where x is not null
+    - ``?_c=y&x=val`` returns df with unique values of y where x == val
+    - ``?_c=y&y=val`` returns df with unique values of y, ignores filter y == val
+    - ``?_c=y&x>=val`` returns df with unique values of y where x > val
+    - ``?_c=x&_c=y&x=val`` returns df with unique values of x ignoring filter x == val
+      and returns unique values of y where x == val
+
+    Arguments are converted to the type of the column before comparing. If this
+    fails, it raises a ValueError.
+
+    These URL query parameters control the output:
+
+    - ``?_sort=col`` sorts column col in ascending order. ``?_sort=-col`` sorts
+      in descending order.
+    - ``?_limit=100`` limits the result to 100 rows
+    - ``?_offset=100`` starts showing the result from row 100. Default: 0
+    - ``?_c=x&_c=y`` returns only columns ``[x, y]``. ``?_c=-col`` drops col.
+
+    If a column name matches one of the above, you cannot filter by that column.
+    Avoid column names beginning with _.
+
+    To get additional information about the filtering, use::
+
+        meta = {}      # Create a variable which will be filled with more info
+        filtered = gramex.data.filter(data, meta=meta, **handler.args)
+
+    The ``meta`` variable is populated with the following keys:
+
+    - ``filters``: Applied filters as ``[(col, op, val), ...]``
+    - ``ignored``: Ignored filters as ``[(col, vals), ('_sort', cols), ...]``
+    - ``excluded``: Excluded columns as ``[col, ...]``
+    - ``sort``: Sorted columns as ``[(col, True), ...]``. The second parameter is ``ascending=``
+    - ``offset``: Offset as integer. Defaults to 0
+    - ``limit``: Limit as integer - ``100`` if limit is not applied
+    - ``count``: Total number of rows, if available
+
+    These variables may be useful to show additional information about the
+    filtered data.
+    '''
+    # Auto-detect engine.
+    if engine is None:
+        engine = get_engine(url)
+    result = {}
+    limit = args.get('_limit', [100])
+    try:
+        limit = min(int(v) for v in limit)
+    except ValueError:
+        raise ValueError('_limit not integer: %r' % limit)
+    for col in args.get('_c', []):
+        # col_args takes _sort, _c and all filters from args
+        col_args = {}
+        for key, value in args.items():
+            if key in {'_sort', '_c'}:
+                col_args[key] = value
+            # Ignore any filters on the column we are currently processing
+            if not key.startswith('_') and key != col:
+                col_args[key] = value
+        if engine == 'sqlalchemy':
+            col_args['_by'] = col_args['_c']
+            col_args['_c'] = []
+        filtered = gramex.data.filter(url, table=table, args=col_args, **kwargs)
+        result[col] = filtered[[col]].drop_duplicates().head(limit)
+    return result

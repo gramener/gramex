@@ -20,6 +20,7 @@
       <li><a href="/$GUIDE_ROOT/functionhandler/">FunctionHandler</a></li>
       <li><a href="/$GUIDE_ROOT/filehandler/">FileHandler</a></li>
       <li><a href="/$GUIDE_ROOT/formhandler/">FormHandler</a></li>
+      <li><a href="/$GUIDE_ROOT/filterhandler/">FilterHandler</a></li>
       <li><a href="/$GUIDE_ROOT/jsonhandler/">JSONHandler</a></li>
       <li><a href="/$GUIDE_ROOT/capturehandler/">CaptureHandler</a></li>
       <li><a href="/$GUIDE_ROOT/pptxhandler/">PPTXHandler</a></li>

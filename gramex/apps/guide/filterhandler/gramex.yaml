@@ -1,0 +1,6 @@
+url:
+    filterhandler-flags:
+        pattern: /$YAMLURL/flags
+        handler: FilterHandler
+        kwargs:
+          url: $YAMLPATH/../formhandler/flags.csv

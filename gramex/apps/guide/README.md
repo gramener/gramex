@@ -19,6 +19,7 @@ prefix: Guide
 - [FunctionHandler runs Python code](functionhandler/)
 - [FileHandler renders files](filehandler/)
 - [FormHandler connects to data](formhandler/)
+- [FilterHandler filters columns](filterhandler/)
 - [JSONHandler writes JSON data](jsonhandler/)
 - [CaptureHandler takes screenshots](capturehandler/)
 - [PPTXHandler generates PPTX](pptxhandler/)

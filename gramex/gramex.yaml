@@ -57,7 +57,7 @@ handlers:
         allow: '.allow'                 # Allow special dotfile
 
     FormHandler:
-        formats:
+        formats: &FORMATS
             json:
                 format: json
                 headers:
@@ -81,6 +81,12 @@ handlers:
                 headers:
                     Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
                     Content-Disposition: attachment;filename=download.pptx
+
+        default:
+          _limit: 10000      # Limit entries by default
+
+    FilterHandler:
+        formats: *FORMATS
 
         default:
           _limit: 10000      # Limit entries by default

@@ -1,4 +1,4 @@
-/* globals g1, webkitSpeechRecognition */
+/* globals g1 */
 
 $(function () {
   try {
