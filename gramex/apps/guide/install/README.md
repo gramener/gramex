@@ -12,9 +12,9 @@ prefix: Install
 - On a Mac, install [Xcode][xcode].
 - Run `pip install --verbose gramex`
     - `--verbose` is useful. We install node modules, which take time. `--verbose` lets you monitor progress.
-    - Replace `gramex` with `gramex==1.30.0` for version 1.30.0 or later version
+    - Replace `gramex` with `gramex==1.40.0` for version 1.40.0 or later version
     - Replace `gramex` with `https://code.gramener.com/cto/gramex/repository/archive.tar.bz2?ref=dev` for the dev branch
-    - Replace `?ref=dev` with `?ref=v1.28.0` for version 1.28.0
+    - Replace `?ref=dev` with `?ref=v1.40.0` for version 1.40.0
       (or pick [any other version](https://code.gramener.com/cto/gramex/tags))
 - Run `gramex` to start Gramex
 - Press `Ctrl+C` to terminate Gramex.

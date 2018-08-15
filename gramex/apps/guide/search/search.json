@@ -346,6 +346,53 @@
       "Upgrade": -1
     }
   },
+  "1.40": {
+    "": {
+      "Gramex 1.40 Release Notes": -1
+    },
+    "bug-fixes": {
+      "Bug fixes": -1
+    },
+    "developer-updates": {
+      "Developer Updates": -1
+    },
+    "dropdown-events": {
+      "$.dropdown events": -1
+    },
+    "filterhandler": {
+      "FilterHandler": -1
+    },
+    "formhandler-modify": {
+      "FormHandler modify": -1
+    },
+    "g1": {
+      "g1": -1
+    },
+    "g1-dropdown": {
+      "g1 dropdown": -1
+    },
+    "logviewer": {
+      "Logviewer": -1
+    },
+    "mapviewer": {
+      "MapViewer": -1
+    },
+    "password-encryption": {
+      "Password Encryption": -1
+    },
+    "smart-alerts": {
+      "Smart Alerts": -1
+    },
+    "speech-demo": {
+      "Speech Demo": -1
+    },
+    "stats": {
+      "Stats": -1
+    },
+    "upgrade": {
+      "Upgrade": -1
+    }
+  },
   "about": {
     "": {
       "About Gramex": -1
@@ -407,9 +454,7 @@
     "send-alerts-on-condition": {
       "Send alerts on condition": -1
     },
-    "send-an-email-once": {
-      "Send an email once": -1
-    },
+    "send-an-email-once": {},
     "send-as-a-different-user": {
       "Send as a different user": -1
     },
@@ -1074,6 +1119,17 @@
     },
     "xsrf": {
       "XSRF": -1
+    }
+  },
+  "filterhandler": {
+    "": {
+      "FilterHandler": -1
+    },
+    "examples": {
+      "Examples": -1
+    },
+    "filterhandler-formats": {
+      "FilterHandler Formats": -1
     }
   },
   "formhandler": {

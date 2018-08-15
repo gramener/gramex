@@ -210,8 +210,8 @@ Fixes [#476](https://code.gramener.com/cto/gramex/issues/476)
 
 ## Stats
 
-- Code base: 27,085 lines (python: 16,451, javascript: 1,658, tests: 8,976)
-- Test coverage: xx%
+- Code base: 27,492 lines (python: 16,570, javascript: 1,658, tests: 9,264)
+- Test coverage: 79%
 
 ## Upgrade
 
