@@ -2,16 +2,17 @@
 
 $(function () {
   var speechRecognition = webkitSpeechRecognition
+  var synth = window.speechSynthesis
   try {
     var recognition = new speechRecognition()
-    main(recognition)
+    main(recognition, synth)
   }
   catch (err) {
     $('.no-speech-api').removeClass('d-none')
   }
 })
 
-function main(recognition) {
+function main(recognition, synth) {
   var listening = false
   recognition.lang = 'en-US'
   recognition.continuous = true
@@ -66,6 +67,8 @@ function main(recognition) {
           $('.default-answer').html('I did not understand')
         else if (result.similarity < 0.75)
           $('.did-you-mean').show()
+        if (synth)
+          synth.speak(new SpeechSynthesisUtterance($('.default-answer').html()))
       })
   }
 
