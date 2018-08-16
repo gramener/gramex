@@ -58,7 +58,7 @@
       <p><a href="?{{ kwargs.forgot.key }}">Forgot password</a></p>
     {% end %}
   </form>
-  {% if 'hash' in kwargs.password %}
+  {% if 'hash' in kwargs.get('password', {}) %}
     <script>
       /**
         * [js-sha256]{@link https://github.com/emn178/js-sha256}
