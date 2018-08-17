@@ -4,8 +4,8 @@
   "author": "Bhanu K <bhanu.kamapantula@gramener.com>",
   "license": "UNLICENSED",
   "dependencies": {
-    "bootstrap": "4",
-    "bootstrap-select": "^1.13.0-beta",
+    "bootstrap": "4.1",
+    "bootstrap-select": "1.13",
     "d3": "4",
     "d3-scale-chromatic": "*",
     "daterangepicker": "2",
