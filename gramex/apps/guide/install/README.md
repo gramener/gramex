@@ -7,36 +7,30 @@ prefix: Install
 
 ## Installation
 
+Install pre-requisites:
+
 - Install [Anaconda][anaconda] 4.4.0 or later. [Update Anaconda][update] if required.
-- Install [node.js][nodejs] 8 or later. Then run `npm install -g yarn`. This step is required for UI components and built-in apps.
+- Install [node.js][nodejs] 8 or later.
 - On a Mac, install [Xcode][xcode].
-- Run `pip install --verbose gramex`
-    - `--verbose` is useful. We install node modules, which take time. `--verbose` lets you monitor progress.
-    - Replace `gramex` with `gramex==1.40.0` for version 1.40.0 or later version
-    - Replace `gramex` with `https://code.gramener.com/cto/gramex/repository/archive.tar.bz2?ref=dev` for the dev branch
-    - Replace `?ref=dev` with `?ref=v1.40.0` for version 1.40.0
-      (or pick [any other version](https://code.gramener.com/cto/gramex/tags))
-- Run `gramex` to start Gramex
-- Press `Ctrl+C` to terminate Gramex.
+
+Run:
+
+```shell
+npm install -g yarn             # Required for UI components and built-in apps
+pip install --verbose gramex    # --verbose shows progress when installing node modules
+gramex setup --all              # Set up UI components and built-in apps
+gramex                          # Start gramex. Press Ctrl-C to stop Gramex
+```
 
 Gramex runs at `http://127.0.0.1:9988/` and shows the Gramex Guide by default.
 You may also run Gramex via `python -m gramex`.
 
-If you are behind a HTTP proxy, use `pip install --proxy=http://{proxy-host}:{port} ...`.
-You can use [conda with a proxy][conda-proxy] too.
-
-[anaconda]: http://continuum.io/downloads
-[update]: http://docs.continuum.io/anaconda/install#updating-from-older-anaconda-versions
-[xcode]: https://developer.apple.com/xcode/download/
-[gramex]: https://code.gramener.com/cto/gramex/repository/archive.tar.bz2?ref=master
-[conda-proxy]: https://conda.io/docs/user-guide/configuration/use-winxp-with-proxy.html
-[nodejs]: https://nodejs.org/en/
-
-[comment]: `pip install --ignore-installed` was removed because of an
-[Anaconda bug](https://github.com/pypa/pip/issues/2751#issuecomment-165390180) -
-re-installing scandir fails on Windows.
-
 ## Troubleshooting
+
+If Gramex does not install:
+
+- If you are behind a HTTP proxy, use `pip install --proxy=http://{proxy-host}:{port} ...`.
+  You can use [conda with a proxy][conda-proxy] too.
 
 If Gramex does not run:
 
@@ -50,6 +44,34 @@ If Gramex does not run:
 ## Uninstall Gramex
 
 To remove Gramex, run `pip uninstall gramex`
+
+## Alternate installations
+
+```shell
+# Install a specific version of Gramex
+pip install --verbose gramex==1.40.0
+
+# Install a specific branch or tag from the Gramex source code
+pip install --verbose https://code.gramener.com/cto/gramex/repository/archive.tar.bz2?ref=dev
+pip install --verbose https://code.gramener.com/cto/gramex/repository/archive.tar.bz2?ref=v1.40.0
+
+# Install a local version for Gramex development
+git clone https://code.gramener.com/cto/gramex.git
+pip install --verbose -e gramex
+```
+
+[anaconda]: http://continuum.io/downloads
+[update]: http://docs.continuum.io/anaconda/install#updating-from-older-anaconda-versions
+[xcode]: https://developer.apple.com/xcode/download/
+[gramex]: https://code.gramener.com/cto/gramex/repository/archive.tar.bz2?ref=master
+[conda-proxy]: https://conda.io/docs/user-guide/configuration/use-winxp-with-proxy.html
+[nodejs]: https://nodejs.org/en/
+
+<!--
+`pip install --ignore-installed` was removed because of an
+[Anaconda bug](https://github.com/pypa/pip/issues/2751#issuecomment-165390180) -
+re-installing scandir fails on Windows.
+-->
 
 ## Docker install
 
