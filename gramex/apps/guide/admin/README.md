@@ -13,9 +13,9 @@ To use it, add this to your `gramex.yaml`:
 import:
   admin:
     path: $GRAMEXAPPS/admin/gramex.yaml   # Source of the app
-    YAMLURL: $YAMLURL/admin/              # Location to mount at
+    YAMLURL: /$YAMLURL/admin/             # Location to mount at
     ADMIN_LOOKUP:
-      url: $YAMLURL/lookup.xlsx           # DB / file with user information
+      url: $YAMLPATH/lookup.xlsx          # DB / file with user information
       id: user                            # Column name that has the user ID
 ```
 
@@ -29,7 +29,7 @@ Use `ADMIN_*` variables to configure your app.
 - `ADMIN_LOOKUP`: See [lookup attributes]../auth/#lookup-attributes):
   - `url`: the DB or file that has user data
   - `id`: column that has the user ID
-- `ADMIN_KWARGS`: 
+- `ADMIN_KWARGS`:
   - `hide`: columns in data source to exclude (like password and other sensitive data)
 - `ADMIN_USER`: optional `string` or `list` of user IDs that can view this admin page
 - `ADMIN_ROLE`: optional `string` or `list` of roles. If the user's `role` column is in this list, the user can view this admin page
@@ -42,13 +42,13 @@ Sample use of `role`:
 import:
   admin:
     path: $GRAMEXAPPS/admin/gramex.yaml
-    YAMLURL: $YAMLURL/admin/
+    YAMLURL: /$YAMLURL/admin/
     ADMIN_LOOKUP:
-      url: $YAMLURL/lookup.xlsx
+      url: $YAMLPATH/lookup.xlsx
       id: user                   # user column in Excel sheet has the user name
     ADMIN_USER: ['alpha']        # Always allow user `alpha`
     ADMIN_ROLE: ['admin']        # Also allow anyone with role as admin
-    LOGIN_URL: /admin            # Url to show login page for admin page 
+    LOGIN_URL: /admin            # Url to show login page for admin page
     LOGOUT_URL: /logout          # Url to logout
 ```
 
