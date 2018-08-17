@@ -287,13 +287,15 @@ This data can be used directly in templates as variables named `plainlist`,
 `condition:` is a Python expression that filters the data and returns the final
 rows to send as email.
 
-Here is an example of a birthday alert email sent every day.
+Here is an example of a birthday alert email sent every day. (This assumes that
+`birthday.csv` has a column called `birthday` which has a format like
+`10-Aug-2018`.)
 
 ```yaml
 alert:
   alert-birthday:
     data: $YAMLPATH/birthday.csv
-    condition: data[data['birthday'] == datetime.datetime.today()]
+    condition: data[data['birthday'] == datetime.datetime.today().strftime('%d-%b-%Y')]
     each: data          # Loop through each row, i.e. person whose birthday is today
     to: {{ row['email'] }}                      # Use the "email" column for the person's email ID
     subject: Happy birthday {{ row['name'] }}   # Use the "name" column for the person's name
