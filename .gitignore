@@ -34,11 +34,12 @@ testlib/**/gen.*
 !testlib/**/*.csv
 !testlib/*.xlsx
 !gramex/apps/**/*.csv
-!gramex/apps/guide/**/.xlsx
+!gramex/apps/guide/**/*.xlsx
 
 *.ppt*
 !testlib/input.pptx
 !tests/template.pptx
+!gramex/apps/guide/formhandler/input.pptx
 !gramex/apps/guide/pptxhandler/examples-input.pptx
 
 # Don't commit databases created by test cases
