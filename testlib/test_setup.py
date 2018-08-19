@@ -17,6 +17,7 @@ class TestSetup(unittest.TestCase):
         self.exists('gramex.yaml')
         self.exists('deploy.yaml')
         self.exists('apps.yaml')
+        self.exists('favicon.ico')
         self.exists('release.json')
 
         # Ensure that handler HTML files are there by checking for all files

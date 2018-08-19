@@ -143,3 +143,19 @@ class TestMime(TestGramex):
 class TestBaseHandler(TestGramex):
     def test_headers(self):
         self.check('/', headers={'X-BaseHandler': 'base'})
+
+
+class TestDefaultGramexYAML(TestGramex):
+    def test_default_files(self):
+        # Default gramex.yaml FileHandler exposes files in the current directory
+        self.check('/README.md', path='README.md', headers={
+            'Cache-Control': 'max-age=60'
+        })
+        self.check('/sample.png', path='sample.png', headers={
+            'Cache-Control': 'max-age=60'
+        })
+
+    def test_favicon(self):
+        self.check('/favicon.ico', path='../gramex/favicon.ico', headers={
+            'Cache-Control': 'public, max-age=86400'
+        })

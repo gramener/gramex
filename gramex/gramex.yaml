@@ -299,3 +299,17 @@ url:
                   Cache-Control: public, max-age=315360000  # Cache for 10 years
                 'bower_components/**':
                   Cache-Control: public, max-age=315360000  # Cache for 10 years
+
+    # Provide a default favicon.ico from the Gramex/ directory.
+    # Reduces the number of HTTP 404 errors, and bandwidth.
+    # Keep priority lower than default priority.
+    # If the startup path has a favicon.ico, that will take priority.
+    favicon:
+        priority: -2
+        pattern: /favicon.ico
+        handler: FileHandler
+        kwargs:
+            path: $GRAMEXPATH/favicon.ico
+            headers:
+                # Keep header expiry at 1 day. Allows changing favicon
+                Cache-Control: public, max-age=86400

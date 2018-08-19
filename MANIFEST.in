@@ -4,6 +4,7 @@
 include gramex/gramex.yaml
 include gramex/deploy.yaml
 include gramex/apps.yaml
+include gramex/favicon.ico
 include gramex/release.json
 include gramex/download.vega.js
 include gramex/handlers/*.html

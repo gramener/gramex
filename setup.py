@@ -158,8 +158,9 @@ gramex_files = [
     'gramex.yaml',
     'deploy.yaml',
     'apps.yaml',
+    'favicon.ico',
     'release.json',
-    'gramex/download.vega.js',
+    'download.vega.js',
 ]
 gramex_files += list(recursive_include('gramex', 'handlers', ignore_patterns, ['*.html']))
 gramex_files += list(recursive_include('gramex', 'handlers', ignore_patterns, ['*.html']))
