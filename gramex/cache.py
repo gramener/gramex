@@ -565,12 +565,11 @@ class Subprocess(object):
         if proc.proc.returncode:
             raise Exception('Process failed with return code %d', proc.proc.returncode)
 
-    :arg list args: command line arguments passed as a list to Subprocess :arg
-    methodlist stream_stdout: optional list of write methods - called when
-    stdout has data :arg methodlist stream_stderr: optional list of write
-    methods - called when stderr has data :arg str_or_int buffer_size: 'line' to
-    write line by line. number for chunk size :arg dict kwargs: additional
-    kwargs passed to subprocess.Popen
+    :arg list args: command line arguments passed as a list to Subprocess
+    :arg methodlist stream_stdout: optional list of write methods - called when stdout has data
+    :arg methodlist stream_stderr: optional list of write methods - called when stderr has data
+    :arg str_or_int buffer_size: 'line' to write line by line, any int for chunk size
+    :arg dict kwargs: additional kwargs passed to subprocess.Popen
 
     stream_stdout and stream_stderr can be:
 
