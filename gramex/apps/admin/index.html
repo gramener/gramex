@@ -7,7 +7,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
   <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon">
-  <link rel="stylesheet" href="ui/bootstraptheme.css?primary=%2320186F&secondary=%23483FA4&success=%233E6182&info=%23E4E4E4&warning=%23F57E1A&danger=%23F9F9F9&light=%234A4A4A&dark=%23362D8B&body-bg=%23F2F2F2&body-color=%23494949&enable-transitions=on&font-family-base=roboto&headings-font-family=roboto#background">
+  <link rel="stylesheet" href="ui/bootstraptheme.css?primary=%2320186F&secondary=%23483FA4&success=%233E6182&info=%23E4E4E4&warning=%23F57E1A&danger=%23F9F9F9&light=%23dce5ff&dark=%23362D8B&body-bg=%23F2F2F2&body-color=%23494949&enable-transitions=on&font-family-base=roboto&headings-font-family=roboto#background">
   <link rel="stylesheet" href="ui/font-awesome/css/font-awesome.min.css">
   <link rel="stylesheet" href="ui/bootstrap-select/dist/css/bootstrap-select.min.css">
 </head>
@@ -57,6 +57,8 @@
     {% end %}
   </div>
 
+  <div class="container-fluid webshell"></div>
+
   <script src="ui/jquery/dist/jquery.min.js"></script>
   <script src="ui/popper.js/dist/umd/popper.min.js"></script>
   <script src="ui/bootstrap/dist/js/bootstrap.min.js"></script>
@@ -69,6 +71,17 @@
   </script>
 
   <script src="script.js"></script>
+
+  <script src="webshell.js"></script>
+  <script>$('.webshell').webshell({
+    url: 'webshell',
+    prompt: '>>> ',
+    welcome: [
+      'This is a Python console embedded in Gramex.',
+      'Click on the input box below. Type a Python expression. Press ENTER to evaluate.',
+      '>>> '
+    ]
+  })</script>
 </body>
 
 </html>

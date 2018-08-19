@@ -33,13 +33,11 @@ config.hide.map(function (col_name) {
 columns.push({
   name: 'Actions',
   template: function () {
-    return '<td>\
-    <i class="fa fa-power-off fa-lg mr-2 cursor-pointer" title="logout user" data-action="logout"></i>\
-    <a href="#">\
-      <img src="reset_password.svg" width="25" title="reset password" data-action="reset_password" />\
-    </a>\
-    <i class="fa fa-trash fa-lg ml-2 cursor-pointer" title = "delete user" data-action="delete" ></i>\
-    </td>'
+    return '<td>' +
+    '<i class="fa fa-power-off fa-lg mr-2 cursor-pointer" title="Log out user" data-action="logout"></i>' +
+    '<a href="#"><img src="reset_password.svg" width="25" title="Reset password" data-action="reset_password"></a>' +
+    '<i class="fa fa-trash fa-lg ml-2 cursor-pointer" title = "Delete user" data-action="delete" ></i>' +
+    '</td>'
   }
 })
 

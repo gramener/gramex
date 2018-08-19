@@ -1,13 +1,17 @@
 """Auth module role settings."""
 import os
+import sys
 import json
 import datetime
+from cachetools import TTLCache
+from six.moves import StringIO
 import gramex
 from gramex import variables
 from gramex.cache import SQLiteStore
 
 path = os.path.join(variables.GRAMEXDATA, 'auth.user.db')
 user_info = SQLiteStore(path, table='user')
+contexts = TTLCache(maxsize=100, ttl=1800)
 
 
 def get_config_id(handler):
@@ -88,3 +92,43 @@ def last_login():
             data.tail(1)['time'].values[0], "%Y-%m-%d %H:%M:%SZ")
         return dt
     return ''
+
+
+def evaluate(handler, code):
+    """Evaluates Python code in a WebSocketHandler, like a REPL"""
+    retval = None
+    # Check if code is an expression (eval) or statement (exec)
+    try:
+        co, mode = compile(code, '<input>', 'eval'), 'eval'
+    except SyntaxError:
+        try:
+            co, mode = compile(code, '<input>', 'exec'), 'exec'
+        except Exception as e:
+            retval = e
+    except Exception as e:
+        retval = e
+    if retval is not None:
+        handler.write_message(repr(retval))
+        return
+
+    # Capture stdout
+    old_stdout, out = sys.stdout, StringIO()
+    sys.stdout = out
+    # Run code and get the result. (Result is None for exec)
+    try:
+        context = contexts.setdefault(handler.session['id'], {})
+        if mode == 'eval':
+            result = eval(co, context)
+        else:
+            exec(co, context)
+            result = None
+    except Exception as e:
+        result = e
+    finally:
+        sys.stdout = old_stdout
+
+    # Write the stdout (if any), then the returned value (if any)
+    retval = out.getvalue()
+    if result is not None:
+        retval += repr(result)
+    handler.write_message(retval)

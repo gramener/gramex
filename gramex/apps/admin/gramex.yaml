@@ -6,9 +6,9 @@
 
 variables:
   LOGIN_URL:
-    default: /login
+    default: /login/
   LOGOUT_URL:
-    default: /logout
+    default: /logout/
 
 import:
   apps/controlpanel/ui:
@@ -24,7 +24,7 @@ url:
       template: true
       variables: $ADMIN_LOOKUP
       admin_kwargs: $ADMIN_KWARGS
-      auth:
+      auth: &ALLOW_ONLY_ADMINS
         login_url: $LOGIN_URL
         condition:
           function: controlpanel.is_admin
@@ -54,6 +54,15 @@ url:
     handler: FunctionHandler      # to the logout handler
     kwargs:
       function: controlpanel.pop_user
+
+  apps/controlpanel/webshell-$*:
+    pattern: /$YAMLURL/webshell
+    handler: WebSocketHandler
+    kwargs:
+      on_message:
+        function: controlpanel.evaluate(handler, message)
+      auth:
+        <<: *ALLOW_ONLY_ADMINS
 
 email:
     gramex-guide-gmail:
