@@ -1,4 +1,4 @@
-/* globals $ */
+/* globals $, WebSocket */
 // TODO: detailed docs
 
 $.fn.webshell = function(options) {
@@ -56,7 +56,7 @@ $.fn.webshell = function(options) {
         write('Websocket closed. Try reloading. Or press F12 and check the JavaScript error log.')
         return
       }
-      cmd = $prompt.val()
+      var cmd = $prompt.val()
       try {
         ws.send(cmd)
       } catch (e) {

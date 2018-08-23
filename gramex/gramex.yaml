@@ -302,10 +302,9 @@ url:
 
     # Provide a default favicon.ico from the Gramex/ directory.
     # Reduces the number of HTTP 404 errors, and bandwidth.
-    # Keep priority lower than default priority.
-    # If the startup path has a favicon.ico, that will take priority.
+    # Keep priority same as default priority. Otherwise it will never get executed.
     favicon:
-        priority: -2
+        priority: -1
         pattern: /favicon.ico
         handler: FileHandler
         kwargs:
