@@ -55,6 +55,24 @@ Any file posted with a name of `file` is uploaded. Here is a sample HTML form:
 After the file is uploaded, users can be redirected via the `redirect:` config
 documented the [redirection configuration](../config/#redirection).
 
+## AJAX uploads
+
+[DropZone](https://www.dropzonejs.com/) provides drag-and-drop AJAX uploads with
+progress bars. For example:
+
+```html
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.5.1/min/dropzone.min.css">
+<form action="upload" class="dropzone"></form>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.5.1/min/dropzone.min.js"></script>
+```
+
+creates this box:
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.5.1/min/dropzone.min.css">
+<form action="upload" class="dropzone"></form>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.5.1/min/dropzone.min.js"></script>
+
+
 ## Saving uploads
 
 By default, the file is saved in the `path:` specified by `gramex.yaml`, with the
@@ -191,21 +209,22 @@ To prevent users from changing or setting the filename, use:
             kwargs:
                 path: ...
                 transform:
-                    function: module.func(content, handler)
+                    function: module.func(meta, handler)
 
-This calls `module.func(file_metadata, handler)` where `file_metadata` is an
-AttrDict with the keys mentioned in [Upload listing](#upload-listing). For
-example, this function will save CSV files as `data.json`:
+This calls `module.func(meta, handler)` where `meta` is an AttrDict with the
+keys mentioned in [Upload listing](#upload-listing). For example, this function
+will save CSV files as `data.json`:
 
     :::python
-    def func(metadata, handler):
-        if metadata.mime == 'text/csv':
-            path = os.path.join('... upload path ...', metadata.file)
+    def func(meta, handler):
+        if meta.mime == 'text/csv':
+            path = os.path.join('... upload path ...', meta.file)
             pd.read_csv(path).to_json('data.json')
 
-If `module.func()` returns a value, it replaces `file_metadata`. This allows you
-to add / modify delete keys in the [Upload listing](#upload-listing).
+If `module.func()` returns a value, it replaces the file metadata. This allows
+you to add / modify delete keys in the [Upload listing](#upload-listing).
 
-If no `args` or `kwargs` are specified, the transform function is called with `(content, handler)` as the keyword arguments.
+If no `args` or `kwargs` are specified, the transform function is called with
+`(meta, handler)` as the keyword arguments.
 
 [uploadhandler]: https://learn.gramener.com/gramex/gramex.handlers.html#gramex.handlers.UploadHandler
