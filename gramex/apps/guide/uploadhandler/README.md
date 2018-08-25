@@ -161,12 +161,8 @@ key. Here is a sample AJAX request:
     :::js
     $.ajax('upload', {
       method: 'POST',
-      data: '{"delete": filename}'
+      data: {'delete': file}        // Use the 'file' attribute in uploader.info()
     })
-
-The `filename` must be the name of the uploaded file, or relative path to the
-upload `path:`.
-
 
 ## Upload arguments
 

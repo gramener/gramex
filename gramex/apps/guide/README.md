@@ -4,7 +4,13 @@ classes: toc
 prefix: Guide
 ...
 
-- [Search the guide](search/)
+<link rel="stylesheet" href="search/search.css?v=1">
+
+<input type="search" id="search" placeholder="Search topics" data-url="search/searchindex.json">
+[Index of topics](search/)
+<script src="../node_modules/lunr/lunr.js"></script>
+<script src="search/search.js?v=7"></script>
+
 
 ## Table of contents
 
@@ -44,8 +50,8 @@ prefix: Guide
 - [Debug Gramex](debug/)
 - [Mapviewer](mapviewer/)
 - [Release Notes](release/)
-- [Python API reference](https://learn.gramener.com/gramex/gramex.html)
 - [Tutorials](tutorials/)
+- [Python API reference](https://learn.gramener.com/gramex/gramex.html)
 
 ## Guides
 
