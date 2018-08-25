@@ -66,9 +66,10 @@ prefix: Guide
 
 ### Deprecated
 
-- [DataHandler connects to data](datahandler/) - use [FormHandler](formhandler/)
-- [QueryHandler runs SQL queryies](queryhandler/) - use [FormHandler](formhandler/)
+- [DataHandler](datahandler/) - use [FormHandler](formhandler/) instead
+- [QueryHandler](queryhandler/) - use [FormHandler](formhandler/) instead
 
 ## Additional links
 
+- [Link check](linkcheck/) tests if all links on the Gramex Guide are working
 - [Gramex roadmap](https://docs.google.com/spreadsheets/d/1D2xScjMWl29JtuuVP7PlsLM3OPJuMBr0VNvzzoR4HwQ/edit#gid=885343597)
