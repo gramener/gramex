@@ -1,5 +1,11 @@
 variables:
     LOGFILE: $GRAMEXDATA/data/update/log.jsonl  # Location where log file is stored
+    LOGDB: $GRAMEXDATA/data/update/log.db       # Location where the log DB is stored
+
+import:
+  gramexupdate/ui:
+    path: $GRAMEXAPPS/ui/gramex.yaml    # Import the UI components
+    YAMLURL: $YAMLURL/ui/               # ... at this URL
 
 url:
     gramexupdate:
@@ -9,6 +15,19 @@ url:
             function: gramexupdate.gramexupdate
             # Enable POST from any Gramex instance
             xsrf_cookies: false
+    gramexupdate/consolidate:
+        pattern: /$YAMLURL/consolidate
+        handler: FunctionHandler
+        kwargs:
+            function: gramexupdate.consolidate()
+    gramexupdate/data:
+        pattern: /$YAMLURL/data
+        handler: FormHandler
+        kwargs:
+            url: "sqlite:///$LOGDB"
+            table: logs
+            auth:
+              hd: [gramener.com]
 
 log:
     loggers:
@@ -28,3 +47,12 @@ log:
             interval: 1             # every single day
             utc: true               # using UTC -- the server may be located anywhere
             delay: true             # do not create file until called
+
+schedule:
+    update/consolidate:
+        function: gramexupdate.consolidate()
+        thread: true
+        # Run at 0:00 and 12:00 UTC every day
+        minutes: 0
+        hours: 0,12
+        days: '*'

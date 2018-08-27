@@ -11,3 +11,5 @@ this (for example):
 
 This indicates that the latest semantic version is "1.2.3" and that clients
 with a lower version should upgrade.
+
+Every day, it extracts data from the latest logs and updates log.sqlite3.

@@ -2,30 +2,55 @@
 <html>
 <head>
   <title>Gramex Update</title>
-  <style>
-  h1 {
-    font-family: Roboto, "Segoe UI", sans-serif;
-    color: #5b9bd5;
-  }
-  body {
-    font-family: Cambria, Georgia, serif;
-    margin: 0 auto;
-    font-size: 18px;
-    max-width: 40em;
-    line-height: 1.5;
-    background-color: #fff;
-    color: #444;
-  }
-  </style>
+  <link rel="stylesheet" href="ui/bootstraptheme.css">
 </head>
 <body>
+  <div class="container">
+    <h1 class="mt-4">Gramex Update</h1>
+    <p>Welcome to the Gramex update page.</p>
+    <p>The latest version is {{ version }}. You can install it by following
+      <a href="https://learn.gramener.com/guide/install/">these instructions</a>.</p>
+    <p>Examples of visualisations created by Gramex are at <a href="https://gramener.com/">gramener.com</a>.</p>
 
-  <h1>Gramex Update</h1>
-  <p>Welcome to the Gramex update page.</p>
-  <p>The latest version is {{ version }}. You can install it by following
-    <a href="https://learn.gramener.com/guide/install/">these instructions</a>.</p>
-  <p>If you don't have access, email <code>license@gramener.com</code></p>
-  <p>Examples of visualisations created by Gramex are at <a href="https://gramener.com/">gramener.com</a>.</p>
-
+    <h2 class="auth d-none">Usage: <span id="user-count"></span> machines / day</h2>
+    <div id="users-by-month"></div>
+    <h2 class="auth d-none">Browse logs</h2>
+    <div class="data"></div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/vega@4.2.0/build/vega.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega-lite@3.0.0-rc4/build/vega-lite.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega-embed@3.18.2/build/vega-embed.js"></script>
+  <script src="ui/jquery/dist/jquery.min.js"></script>
+  <script src="ui/popper.js/dist/umd/popper.min.js"></script>
+  <script src="ui/bootstrap/dist/js/bootstrap.min.js"></script>
+  <script src="ui/g1/dist/g1.min.js"></script>
+  <script src="ui/moment/min/moment.min.js"></script>
+  <script src="ui/lodash/lodash.min.js"></script>
+  <script>
+    var vlSpec = {
+      "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
+      "mark": "bar",
+      "encoding": {
+        "x": { "field": "date", "type": "nominal", "axis": {"title": ""} },
+        "y": { "field": "users", "type": "quantitative", "axis": {"title": ""} }
+      }
+    }
+    var from = moment().subtract(1, 'month').format('YYYY-MM-DD')
+    var url = 'data?date>~=' + from + '&_by=date&_by=node&_sort=-date&_c=event|count'
+    $.getJSON(url)
+      .done(function(data) {
+        $('.auth.d-none').removeClass('d-none')
+        var usage = _.map(_.groupBy(data, 'date'), function (v, date) {
+          return { date: date, users: v.length }
+        })
+        var mean = _.meanBy(usage, function(row) { return row.users })
+        $('#user-count').html(Math.round(mean))
+        vlSpec.data = {values: usage}
+        vegaEmbed("#users-by-month", vlSpec, {actions: false})
+        $('.data').formhandler({
+          src: 'data?date>~=' + from
+        })
+      })
+  </script>
 </body>
 </html>
