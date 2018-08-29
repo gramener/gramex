@@ -83,6 +83,7 @@ def consolidate():
         result = pd.DataFrame(result)
         ns = 1E9        # nanosecond conversion
         result['date'] = pd.to_datetime(result['time'] * ns).dt.strftime('%Y-%m-%d')
+        result['time'] = result['time'].astype(int)
 
         # Replace rows for file currently processed
         engine.execute('DELETE FROM logs WHERE src=?', src)
