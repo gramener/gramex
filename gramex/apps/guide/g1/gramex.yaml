@@ -1,0 +1,16 @@
+import:
+  ui:
+    path: $GRAMEXAPPS/ui/gramex.yaml    # Import the UI components
+    YAMLURL: $YAMLURL/ui/               # ... at this URL
+url:
+  g1/practice:
+    pattern: /$YAMLURL/
+    handler: FileHandler
+    kwargs:
+      path: $YAMLPATH/index.html
+      template: true
+  g1/actors:
+    pattern: /$YAMLURL/actors
+    handler: FormHandler
+    kwargs:
+      url: $YAMLPATH/actors.csv

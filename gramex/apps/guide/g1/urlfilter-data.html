@@ -1,0 +1,22 @@
+<h2><code>urlfilter</code> data example</h2>
+
+Below is a table rendered via <code>FormHandler</code>.
+
+{% apply view_source %}
+<div class="formhandler" data-src="actors" data-page-size="10"></div>
+<script>
+
+$('.formhandler').formhandler({
+  pageSize: 20
+})
+</script>
+
+<p class="p-2">
+  Filter by:
+  <ul>
+    <li><a class="urlfilter" href="?category=Actors" data-target="#">Actors</a></li>
+    <li><a class="urlfilter" href="?category=Actresses" data-target="#">Actresses</a></li>
+    <li>or <a class="urlfilter" href="?category=" data-remove data-target="#">Reset</a></li>
+  </ul>
+</p>
+{% end %}

@@ -1,0 +1,26 @@
+<h2><code>urlfilter</code> data examples</h2>
+<p class="m-2 text-muted">
+  Interact with the examples below, observe the change in URL. View relevant source code.
+</p>
+{% apply view_source %}
+  <div class="p-2"><a class="urlfilter" href="?name=John">Name is John</a></div>
+{% end %}
+{% apply view_source %}
+  <div class="p-2"><a class="urlfilter" href="?city=NY">Change ?city= to NY</a></div>
+{% end %}
+{% apply view_source %}
+  <div class="p-2"><a class="urlfilter" href="?city=NY" data-mode="add">Add ?city= to NY</a></div>
+{% end %}
+{% apply view_source %}
+  <div class="p-2"><a class="urlfilter" href="?city=NY" data-mode="del">Remove NY from ?city=</a></div>
+{% end %}
+
+{% apply view_source %}
+<div class="p-2"><a class="urlfilter" href="?city=NY" data-mode="toggle">Toggle NY in ?city=</a></div>
+{% end %}
+{% apply view_source %}
+<div class="p-2"><a class="urlfilter" href="?city=NY" data-target="pushState">Change ?city= to NY using pushState</a></div>
+{% end %}
+{% apply view_source %}
+<div class="p-2"><a class="urlfilter" href="?city=NY" data-target="#">        Change location.hash, i.e. #?city= to NY</a></div>
+{% end %}

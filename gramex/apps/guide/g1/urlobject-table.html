@@ -1,0 +1,13 @@
+<h4><code>urlfilter</code> url object attributes</h4>
+<table class="table table-bordered">
+  <tr>
+    <th>Attribute</th>
+    <th>Value</th>
+  </tr>
+  <% items.forEach(function(item) { %>
+    <tr>
+      <td><code>location.<%- item['attribute']%></code></td>
+      <td><code><%- item['value']%></code></td>
+    </tr>
+  <% }) %>
+</table>

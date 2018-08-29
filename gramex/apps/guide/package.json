@@ -9,10 +9,13 @@
   "license": "UNLICENSED",
   "dependencies": {
     "clipboard": "1",
+    "g1": "^0.9.0",
     "prismjs": "1",
     "vue": "2"
   },
   "devDependencies": {
+    "bootstrap-select": "^1.13.1",
+    "bootstrap-select-dropdown": "^0.13.14",
     "front-matter": "2",
     "glob": "7",
     "lunr": "^2",

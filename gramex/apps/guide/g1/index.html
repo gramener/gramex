@@ -1,0 +1,61 @@
+<html>
+  <head>
+    <title>g1 interactive docs</title>
+    <link rel="stylesheet" href="ui/bootstraptheme.css">
+    <link rel="stylesheet" href="../node_modules/prismjs/themes/prism-okaidia.css">
+    <link rel="stylesheet" href="ui/bootstrap-select/dist/css/bootstrap-select.min.css">
+    <script src="ui/jquery/dist/jquery.min.js"></script>
+    <script src="ui/popper.js/dist/umd/popper.min.js"></script>
+    <script src="ui/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="ui/bootstrap-select/dist/js/bootstrap-select.min.js"></script>
+    <script src="ui/lodash/lodash.min.js"></script>
+    <script src="ui/g1/dist/g1.min.js"></script>
+    {% from g1_app import load_page %}
+  </head>
+  <body>
+    <div class="container">
+      <h1>Interactive g1 documentation</h1>
+      <h2>All <code>g1</code> options</h2>
+      <p class="py-2">Visit <a href="https://code.gramener.com/cto/g1">g1 repository</a> for all options.</p>
+
+      <h2>How to enable <code>urlfilter</code></h2>
+      <pre class="preserve language-javascript"><code>$('body').urlfilter()</code></pre>
+
+      <section class="pb-3 pt-3 border-bottom">{% raw load_page('urlfilter-data.html') %}</section>
+      <section class="pb-3 pt-3 border-bottom">{% raw load_page('urlfilter-examples.html') %}</section>
+      <section class="pb-3 pt-3 border-bottom">{% raw load_page('urlfilter-svg.html') %}</section>
+      <section class="pb-3 pt-3 border-bottom">{% raw load_page('urlfilter-dropdown.html') %}</section>
+      <section class="pb-3 pt-3 border-bottom">{% raw load_page('urlfilter-parse.html') %}</section>
+    </div>
+  </body>
+  <script src="../node_modules/prismjs/prism.js"></script>
+  <script>
+    $('body').urlfilter()
+
+    $(".update").change(function(){
+      updateUrlValues()
+    })
+
+    function updateUrlValues(){
+      var url=location.href
+      var parsedurl=g1.url.parse(url)
+      var items=[]
+      items.push({"attribute":"search", "value": JSON.stringify(parsedurl.search)}),
+      items.push({"attribute":"hash", "value": JSON.stringify(parsedurl.hash)}),
+      items.push({"attribute":"searchKey", "value": JSON.stringify(parsedurl.searchKey)}),
+      items.push({"attribute":"searchList", "value": JSON.stringify(parsedurl.searchList)})
+      items.push({"attribute":"href", "value": JSON.stringify(location.href)})
+      items.push({"attribute":"origin", "value": JSON.stringify(location.origin)})
+      items.push({"attribute":"pathname", "value": JSON.stringify(location.pathname)})
+      items.push({"attribute":"protocol", "value": JSON.stringify(location.protocol)})
+      items.push({"attribute":"port", "value": JSON.stringify(location.port)})
+      $(".urlquery").template({items: items.slice(0,5)})
+      $(".urlobject").template({items: items})
+    }
+
+    $(function(){
+      updateUrlValues()
+    })
+
+  </script>
+</html>

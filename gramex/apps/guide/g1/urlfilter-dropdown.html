@@ -1,0 +1,49 @@
+<h2><code>urlfilter</code> Dropdown example</h2>
+{% apply view_source %}
+<div class="dropdown-container d-flex">
+  <div class="normal update" ></div>
+  <div class="livesearch update" data-style="btn-success"></div>
+  <div class="multiple update"></div>
+</div>
+<script>
+  $('.normal').dropdown({
+    key: 'colors',
+    data: ['Red', 'Green', 'Blue'],
+    target: 'pushState',
+    options: {
+      style: 'btn btn-warning'
+    }
+  })
+
+  $('.livesearch').dropdown({
+    key: 'fruits',
+    data: ["Açaí", "Apple", "Akee", "Apricot", "Avocado", "Banana", "Bilberry", "Blackberry", "Blackcurrant", "Black",
+      "Blueberry", "Boysenberry", "Crab apples", "Currant", "Cherry", "Cherimoya", "Chico fruit", "Cloudberry",
+      "Damson", "Date", "Durian", "Elderberry"],
+    target: 'pushState',
+    options: {
+      title: 'Select Fruit',
+      style: 'btn btn-primary text-light',
+      liveSearch: true,
+      size: 3
+    }
+  })
+
+  $('.multiple').dropdown({
+    key: 'movies',
+    multiple: true,
+    data: ["The Shawshank Redemption", "The Godfather", "The Godfather: Part II", "The Dark Knight", "12 Angry Men",
+      "Schindler's List", "The Lord of the Rings: The Return of the King"],
+    target: 'pushState',
+    options: {
+      title: 'Select Fav. Movies',
+      style: 'btn btn-info text-light',
+      liveSearch: true,
+      width: 'auto',
+      size: 3,
+      actionsBox: true
+    }
+  })
+</script>
+{% end %}
+For more <code>bootstrap-select</code> options, <a href="https://developer.snapappointments.com/bootstrap-select/options/">visit options</a>.
