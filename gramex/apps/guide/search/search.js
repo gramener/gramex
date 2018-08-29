@@ -1,6 +1,7 @@
 /* globals lunr */
 $('#index').each(function() {
   var $index = $(this)
+  var prefix = $index.data('prefix') || ''
   $.ajax($index.data('url'))
     .done(function(data) {
       var terms = []
@@ -15,7 +16,7 @@ $('#index').each(function() {
         return x < y ? -1 : x > y ? +1 : 0
       })
       terms.forEach(function(row) {
-        $index.append('<a href="../' + row[1] + '">' + row[0] + '</a>')
+        $index.append('<a href="' + prefix + row[1] + '">' + row[0] + '</a>')
       })
     })
 })
