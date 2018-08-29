@@ -23,6 +23,7 @@ $('#index').each(function() {
 
 $('#search').each(function() {
   var $search = $(this)
+  var prefix = $search.data('prefix') || ''
   var $results = $('<div></div>').attr('id', 'searchresults').insertAfter(this)
   $.ajax($search.data('url'))
     .done(function(index) {
@@ -37,7 +38,7 @@ $('#search').each(function() {
             if (results.length)
               $results.html(results.slice(0, 20).map(function(result) {
                 var d = docs[result.ref]
-                return '<div><a href="../' + d.link + '">' + d.prefix + ' &raquo; ' + d.title + '</a></div>'
+                return '<div><a href="' + prefix + d.link + '">' + d.prefix + ' &raquo; ' + d.title + '</a></div>'
               }))
           } else {
             $results.html('')

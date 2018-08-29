@@ -9,7 +9,7 @@ prefix: Guide
 <input type="search" id="search" placeholder="Search topics" data-url="search/searchindex.json">
 [Index of topics](search/)
 <script src="node_modules/lunr/lunr.js"></script>
-<script src="search/search.js?v=8"></script>
+<script src="search/search.js?v=a"></script>
 
 
 ## Table of contents
