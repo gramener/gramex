@@ -31,7 +31,6 @@ Checks if the Gramex guide links are OK. Click "Check" to start checking.
 <script>
   $('form').on('submit', function(e) {
     e.preventDefault()
-    console.log($('#url').val(), +$('#depth').val())
     $('.linkcheck').linkcheck($('#url').val(), +$('#depth').val())
   })
 </script>
