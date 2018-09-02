@@ -343,7 +343,7 @@ def insert(url, meta={}, args=None, engine=None, table=None, ext=None, id=None,
     elif engine == 'file':
         data = gramex.cache.open(url, ext, transform=None, **kwargs)
         rows = _pop_columns(rows, data.columns, meta['ignored'])
-        data = data.append(rows)
+        data = data.append(rows, sort=False)
         gramex.cache.save(data, url, ext, index=False, **kwargs)
         return len(rows)
     elif engine == 'sqlalchemy':

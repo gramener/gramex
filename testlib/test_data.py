@@ -5,6 +5,7 @@ import io
 import os
 import six
 import json
+import shutil
 import unittest
 import gramex.data
 import gramex.cache
@@ -375,15 +376,56 @@ class TestFilter(unittest.TestCase):
             dbutils.sqlite_drop_db('test_filter.db')
 
 
+class TestInsert(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.insert_file = sales_file + '.insert.xlsx'
+        shutil.copy(sales_file, cls.insert_file)
+
+    def test_insert_frame(self):
+        raise SkipTest('TODO: write insert test cases for DataFrame')
+
+    def test_insert_file(self):
+        data = gramex.cache.open(self.insert_file, 'xlsx')
+        insert_rows = {
+            'देश': ['भारत', None],
+            'city': [None, 'Paris'],
+            'product': ['芯片', 'Crème'],
+            'sales': ['0', -100],
+            # Do not add growth column
+        }
+        gramex.data.insert(url=self.insert_file, args=insert_rows)
+        new_data = gramex.cache.open(self.insert_file, 'xlsx')
+        # Check original data is identical
+        afe(data, new_data.head(len(data)))
+        # Check if added rows are correct
+        added_rows = pd.DataFrame(insert_rows)
+        added_rows['sales'] = added_rows['sales'].astype(float)
+        added_rows['growth'] = pd.np.nan
+        added_rows.index = new_data.tail(2).index
+        afe(new_data.tail(2), added_rows, check_like=True)
+
+    def test_insert_mysql(self):
+        raise SkipTest('TODO: write insert test cases for MySQL')
+
+    def test_insert_postgres(self):
+        raise SkipTest('TODO: write insert test cases for PostgreSQL')
+
+    def test_insert_sqlite(self):
+        raise SkipTest('TODO: write insert test cases for SQLite')
+
+    @classmethod
+    def tearDownClass(cls):
+        if os.path.exists(cls.insert_file):
+            os.remove(cls.insert_file)
+
+
 class TestEdit(unittest.TestCase):
     def test_update(self):
         raise SkipTest('TODO: write update test cases')
 
     def test_delete(self):
         raise SkipTest('TODO: write delete test cases')
-
-    def test_insert(self):
-        raise SkipTest('TODO: write insert test cases')
 
 
 class TestDownload(unittest.TestCase):
