@@ -676,7 +676,7 @@ def url(conf):
                 # Since we can't set up the handler, all requests must report the error instead
                 class_vars['exc_info'] = sys.exc_info()
                 error_handler = locate('SetupFailedHandler', modules=['gramex.handlers'])
-                urlspec.handler = type('SetupFailedHandler', (error_handler, ), class_vars)
+                urlspec.handler = type(str(spec.handler), (error_handler, ), class_vars)
                 urlspec.handler.setup(**kwargs)
 
         try:
