@@ -48,8 +48,8 @@ import:
       id: user                   # user column in Excel sheet has the user name
     ADMIN_USER: ['alpha']        # Always allow user `alpha`
     ADMIN_ROLE: ['admin']        # Also allow anyone with role as admin
-    LOGIN_URL: /admin            # Url to show login page for admin page
-    LOGOUT_URL: /logout          # Url to logout
+    LOGIN_URL: /admin/           # URL to show login page for admin page
+    LOGOUT_URL: /logout/         # URL to logout
 ```
 
 By default, admin site can be accessed by any user when using `127.0.0.1`.
