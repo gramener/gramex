@@ -68,16 +68,18 @@ def table_exists(table, conn):
     return not pd.read_sql(query, conn).empty
 
 
-def add_session(df, duration=30):
-    '''add new_session based on `duration` threshold'''
+def add_session(df, duration=30, cutoff_buffer=0):
+    '''add new_session based on `duration` threshold
+       add cutoff_buffer in minutes for first and last session requests
+    '''
     s = df.groupby('user.id')['time'].diff().dt.total_seconds()
     flag = s.isnull() | s.ge(duration * 60)
     df['new_session'] = flag.astype(int)
-    df['session_time'] = np.where(flag, 0, s)
+    df['session_time'] = np.where(flag, cutoff_buffer * 60, s)
     return df
 
 
-def prepare_logs(df, session_threshold=15):
+def prepare_logs(df, session_threshold=15, cutoff_buffer=0):
     '''
     - removes rows with errors in time, duration, status
     - sort by time
@@ -93,11 +95,12 @@ def prepare_logs(df, session_threshold=15):
     # logging via threads may not maintain order
     df = df.sort_values(by='time')
     # add new_session
-    df = add_session(df, duration=session_threshold)
+    df = add_session(df, duration=session_threshold, cutoff_buffer=cutoff_buffer)
     return df
 
 
-def summarize(transforms=[], post_transforms=[], run=True, session_threshold=15):
+def summarize(transforms=[], post_transforms=[], run=True,
+              session_threshold=15, cutoff_buffer=0):
     '''summarize'''
     app_log.info('logviewer: Summarize started')
     levels = DB_CONFIG['levels']
@@ -154,7 +157,9 @@ def summarize(transforms=[], post_transforms=[], run=True, session_threshold=15)
     app_log.info(
         'logviewer: prepare_logs {} rows with {} mint session_threshold'.format(
             len(data.index), session_threshold))
-    data = prepare_logs(df=data, session_threshold=session_threshold)
+    data = prepare_logs(df=data,
+                        session_threshold=session_threshold,
+                        cutoff_buffer=cutoff_buffer)
     app_log.info('logviewer: processed and returned {} rows'.format(len(data.index)))
     # apply transforms on raw data
     app_log.info('logviewer: applying transforms')
