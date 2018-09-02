@@ -393,6 +393,62 @@
       "Upgrade": -1
     }
   },
+  "1.41": {
+    "": {
+      "Gramex 1.41 Release Notes": -1
+    },
+    "40x-reporting": {
+      "40X reporting": -1
+    },
+    "ajax-uploads": {
+      "AJAX Uploads": -1
+    },
+    "bug-fixes": {
+      "Bug fixes": -1
+    },
+    "developer-updates": {
+      "Developer Updates": -1
+    },
+    "error-reporting": {
+      "Error Reporting": -1
+    },
+    "favicon": {
+      "Favicon": -1
+    },
+    "g1": {
+      "g1": -1
+    },
+    "g1-urlfilter": {
+      "g1 urlfilter": -1
+    },
+    "gramex-update": {
+      "Gramex Update": -1
+    },
+    "guide-link-checker": {
+      "Guide Link Checker": -1
+    },
+    "guide-search": {
+      "Guide Search": -1
+    },
+    "install": {
+      "Install": -1
+    },
+    "logviewer": {
+      "Logviewer": -1
+    },
+    "python-console": {
+      "Python console": -1
+    },
+    "stats": {
+      "Stats": -1
+    },
+    "ui-componenets": {
+      "UI Componenets": -1
+    },
+    "upgrade": {
+      "Upgrade": -1
+    }
+  },
   "about": {
     "": {
       "About Gramex": -1
@@ -1289,8 +1345,20 @@
     "": {
       "Install Gramex": -1
     },
+    "alternate-installations": {
+      "Alternate installations": -1
+    },
     "docker-install": {
       "Docker install": -1
+    },
+    "install-a-local-version-for-gramex-development": {
+      "Install a local version for Gramex development": -1
+    },
+    "install-a-specific-branch-or-tag-from-the-gramex-source-code": {
+      "Install a specific branch or tag from the Gramex source code": -1
+    },
+    "install-a-specific-version-of-gramex": {
+      "Install a specific version of Gramex": -1
     },
     "installation": {
       "Installation": -1
@@ -1338,6 +1406,11 @@
     },
     "put-write-data": {
       "PUT - write data": -1
+    }
+  },
+  "linkcheck": {
+    "": {
+      "Guide self test": -1
     }
   },
   "logviewer": {
@@ -1791,6 +1864,9 @@
   "uploadhandler": {
     "": {
       "UploadHandler uploads files": -1
+    },
+    "ajax-uploads": {
+      "AJAX uploads": -1
     },
     "overwriting-uploads": {
       "Overwriting uploads": -1
