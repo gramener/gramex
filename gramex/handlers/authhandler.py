@@ -802,7 +802,9 @@ class DBAuth(SimpleAuth):
             cls.forgot.setdefault('email_subject', 'Password reset')
             cls.forgot.setdefault('email_as', None)
             cls.forgot.setdefault(
-                'email_text', 'Visit {reset_url} to reset password for user {user} ({email})')
+                'email_text', 'Visit {reset_url} to reset password for user {%s} ({%s})' % (
+                    cls.user.get('column', 'user'), cls.forgot['email_column']
+                ))
             cls.recover = OTP()
             # TODO: default email_from to the first available email service
         if cls.signup is True:
