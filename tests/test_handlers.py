@@ -73,6 +73,18 @@ class TestXSRF(TestGramex):
         eq_(r.status_code, OK)
 
 
+class TestSetupErrors(TestGramex):
+    def test_invalid_handler(self):
+        self.check('/invalid-handler', code=NOT_FOUND)
+
+    def test_invalid_setup(self):
+        self.check('/invalid-setup', code=INTERNAL_SERVER_ERROR,
+                   text='url: invalid-setup: No function in conf {}')
+
+    def test_invalid_function(self):
+        self.check('/invalid-function', code=INTERNAL_SERVER_ERROR, text='nonexistent')
+
+
 class TestErrorHandling(TestGramex):
     # Test BaseHandler error: setting
     def test_404_escaped(self):

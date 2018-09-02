@@ -43,6 +43,9 @@ url:
   invalid-handler:
     pattern: /invalid-handler
     handler: NonExistent
+  invalid-setup:
+    pattern: /invalid-setup
+    handler: FunctionHandler
   invalid-function:
     pattern: /invalid-function
     handler: FunctionHandler

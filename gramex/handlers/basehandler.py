@@ -849,6 +849,17 @@ class BaseWebSocketHandler(WebSocketHandler, BaseMixin):
                     raise HTTPError(FORBIDDEN)
 
 
+class SetupFailedHandler(RequestHandler, BaseMixin):
+    '''
+    Reports that the setup() operation has failed.
+
+    Used by gramex.services.init() when setting up URLs. If it's not able to set
+    up a handler, it replaces it with this handler.
+    '''
+    def get(self):
+        six.reraise(*self.exc_info)
+
+
 def check_membership(memberships):
     '''
     Return a generator that checks all memberships for a user, and yields True if

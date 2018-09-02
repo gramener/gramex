@@ -673,6 +673,11 @@ def url(conf):
                 urlspec.handler.setup(**kwargs)
             except Exception:
                 app_log.exception('url: %s: setup exception in handler %s', name, spec.handler)
+                # Since we can't set up the handler, all requests must report the error instead
+                class_vars['exc_info'] = sys.exc_info()
+                error_handler = locate('SetupFailedHandler', modules=['gramex.handlers'])
+                urlspec.handler = type('SetupFailedHandler', (error_handler, ), class_vars)
+                urlspec.handler.setup(**kwargs)
 
         try:
             handler_entry = tornado.web.URLSpec(
@@ -683,8 +688,10 @@ def url(conf):
             )
         except re.error:
             app_log.error('url: %s: pattern: %s is invalid', name, urlspec.pattern)
+            continue
         except Exception:
             app_log.exception('url: %s: invalid', name)
+            continue
         _cache[_key] = handler_entry
         handlers.append(handler_entry)
 
