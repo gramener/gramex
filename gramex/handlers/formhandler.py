@@ -8,7 +8,7 @@ import gramex.data
 from orderedattrdict import AttrDict
 from tornado.web import HTTPError
 from gramex import conf as gramex_conf
-from gramex.http import BAD_REQUEST
+from gramex.http import BAD_REQUEST, INTERNAL_SERVER_ERROR
 from gramex.transforms import build_transform
 from gramex.config import merge, app_log, objectpath, CustomJSONEncoder
 from .basehandler import BaseHandler
@@ -155,6 +155,9 @@ class FormHandler(BaseHandler):
             except ValueError as e:
                 app_log.exception('%s: filter failed' % self.name)
                 raise HTTPError(BAD_REQUEST, reason=e.args[0])
+            except Exception as e:
+                app_log.exception('%s: filter failed' % self.name)
+                raise HTTPError(INTERNAL_SERVER_ERROR, reason=six.text_type(e))
             modify = self.datasets[key].get('modify', None)
             if callable(modify):
                 result[key] = modify(data=result[key], key=key, handler=self)
