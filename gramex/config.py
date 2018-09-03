@@ -112,13 +112,13 @@ def merge(old, new, mode='overwrite', warn=None, _path=''):
     '''
     for key in new:
         if key in old and hasattr(old[key], 'items') and hasattr(new[key], 'items'):
+            path_key = _path + ('.' if _path else '') + six.text_type(key)
             if warn is not None:
                 for pattern in warn:
-                    if fnmatch(_path, pattern):
-                        app_log.warning('Duplicate key: %s', _path)
+                    if fnmatch(path_key, pattern):
+                        app_log.warning('Duplicate key: %s', path_key)
                         break
-            _path += ('.' if _path else '') + six.text_type(key)
-            merge(old=old[key], new=new[key], mode=mode, warn=warn, _path=_path)
+            merge(old=old[key], new=new[key], mode=mode, warn=warn, _path=path_key)
         elif mode == 'overwrite' or key not in old:
             old[key] = deepcopy(new[key])
     return old
