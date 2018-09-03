@@ -81,7 +81,9 @@ class AuthHandler(BaseHandler):
         cls.session_expiry = session_expiry
         cls.session_inactive = session_inactive
 
-        cls.lookup = lookup
+        # Set up lookup. Split a copy into self.lookup_id which has the ID, and
+        # self.lookup which has gramex.data keywords.
+        cls.lookup = lookup.copy()
         if cls.lookup is not None:
             if isinstance(lookup, dict):
                 cls.lookup_id = cls.lookup.pop('id', 'user')
