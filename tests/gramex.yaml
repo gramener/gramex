@@ -1311,7 +1311,7 @@ url:
     kwargs:
       big:
         url: sales.xlsx
-        sheetname: sales
+        sheet_name: sales
         function: data[data['sales'] > 100]
       by-growth:
         url: sales.xlsx
@@ -1557,7 +1557,7 @@ url:
     handler: FormHandler
     kwargs:
       url: sales.xlsx
-      sheetname: dates
+      sheet_name: dates
   formhandler/dir:
     pattern: /formhandler/dir
     handler: FormHandler
@@ -2126,6 +2126,7 @@ url:
     kwargs:
       template: $YAMLPATH/auth.html
       url: $YAMLPATH/login.xlsx
+      sheet_name: auth
       user:
           column: user
           arg: user
@@ -2300,7 +2301,7 @@ url:
         beta: beta
       lookup:
         url: lookup.xlsx
-        sheetname: userinfo
+        sheet_name: userinfo
         id: userid
 
   pptx/source:
@@ -2471,7 +2472,7 @@ url:
     handler: FilterHandler
     kwargs:
       url: $YAMLPATH/sales.xlsx
-      sheetname: census
+      sheet_name: census
 
   ui/sass:
     pattern: /ui/sass

@@ -528,9 +528,13 @@ class TestDBCSVAuth(DBAuthBase, LoginMixin, LoginFailureMixin):
 class TestDBExcelAuth(DBAuthBase, LoginMixin, LoginFailureMixin):
     @staticmethod
     def create_database(url):
+        writer = pd.ExcelWriter(url)
+        dummy = pd.DataFrame({'x': [1, 2], 'y': [3, 4]})
+        dummy.to_excel(writer, 'Sheet1', index=False)       # noqa - encoding not required
         data = pd.read_csv(os.path.join(folder, 'userdata.csv'), encoding='cp1252')
         data['password'] = data['password'] + data['salt']
-        data.to_excel(url, index=False)         # noqa - encoding not required
+        data.to_excel(writer, 'auth', index=False)          # noqa - encoding not required
+        writer.save()
         tempfiles['dbexcel'] = url
 
     @classmethod

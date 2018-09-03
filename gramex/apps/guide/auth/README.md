@@ -1448,6 +1448,16 @@ The keys under `lookup:` are:
 All columns in the Excel sheet are added as attributes. But if a value is NULL
 (not an empty string), it is ignored. In Excel, deleting a cell makes it NULL.
 
+By default, this looks up the first sheet. You can specify an alternate sheet
+using `sheet_name: ...`. For example:
+
+```yaml
+        lookup:
+            url: $YAMLPATH/lookup.xlsx
+            sheet_name: userinfo            # Specify an alternate sheet name
+            id: user
+```
+
 Instead of Excel files, you can use databases by specifying a SQLAlchemy URL
 just like for [FormHandler](../formhandler/).
 
