@@ -1578,6 +1578,7 @@ only if your gender is `male` and your locale is `en` or `es`. (To test it,
 [logout](logout?next=.) and [log in via Google](google).)
 
 ```yaml
+    # Add this under the kwargs: of ALL pages you want to restrict access to
     auth:
         membership:           # The following user object keys must match
             gender: male      # user.gender must be male
@@ -1591,6 +1592,7 @@ example, `attributes.cn` refers to `handlers.current_user.attributes.cn`.
 You can specify multiple memberships that can be combined with AND or OR. This example allows (Females from @gramener.com) OR (Males with locale=en) OR (beta@example.org):
 
 ```yaml
+    # Add this under the kwargs: of ALL pages you want to restrict access to
     auth:
         membership:
             -                           # First rule
