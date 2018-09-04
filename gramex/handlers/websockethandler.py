@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from six import string_types
 from six.moves.urllib_parse import urlparse
 from gramex.transforms import build_transform
@@ -22,17 +23,18 @@ class WebSocketHandler(BaseWebSocketHandler):
     def setup(cls, **kwargs):
         super(WebSocketHandler, cls).setup(**kwargs)
         override_methods = {
-            'open': {'handler': None},
-            'on_message': {'handler': None, 'message': None},
-            'on_close': {'handler': None},
-            'on_pong': {'handler': None, 'data': None},
-            'select_subprotocol': {'handler': None, 'subprotocols': None},
-            'get_compression_options': {'handler': None},
+            'open': ['handler'],
+            'on_message': ['handler', 'message'],
+            'on_close': ['handler'],
+            'on_pong': ['handler', 'data'],
+            'select_subprotocol': ['handler', 'subprotocols'],
+            'get_compression_options': ['handler'],
         }
         for method in override_methods:
             if method in kwargs:
                 setattr(cls, method, build_transform(
-                    kwargs[method], vars=override_methods[method],
+                    kwargs[method],
+                    vars=OrderedDict((arg, None) for arg in override_methods[method]),
                     filename='url:%s.%s' % (cls.name, method)))
 
     def check_origin(self, origin):
