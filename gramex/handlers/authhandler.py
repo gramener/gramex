@@ -83,13 +83,13 @@ class AuthHandler(BaseHandler):
 
         # Set up lookup. Split a copy into self.lookup_id which has the ID, and
         # self.lookup which has gramex.data keywords.
-        cls.lookup = lookup.copy()
-        if cls.lookup is not None:
+        cls.lookup = None
+        if lookup is not None:
+            cls.lookup = lookup.copy()
             if isinstance(lookup, dict):
                 cls.lookup_id = cls.lookup.pop('id', 'user')
             else:
                 app_log.error('%s: lookup must be a dict, not %s', cls.name, cls.lookup)
-                cls.lookup = None
 
         # Set up prepare
         cls.auth_methods = {}
