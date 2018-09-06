@@ -9,7 +9,7 @@ prefix: Install
 
 Install pre-requisites:
 
-- Install [Anaconda][anaconda] 4.4.0 or later. [Update Anaconda][update] if required.
+- Install [Anaconda][anaconda] 5.2.0 or later. [Update Anaconda][update] if required.
 - Install [node.js][nodejs] 8 or later.
 - On a Mac, install [Xcode][xcode].
 

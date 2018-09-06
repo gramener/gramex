@@ -102,6 +102,8 @@ This is noe fixed [#463](https://code.gramener.com/cto/gramex/issues/482)
 
 ## Upgrade
 
+Note: `gramex >= 1.41` requires `Anaconda >= 5.2.0`
+
 To upgrade Gramex, run:
 
 ```bash
