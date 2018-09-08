@@ -1,6 +1,6 @@
 variables:
-    LOGFILE: $GRAMEXDATA/data/update/log.jsonl  # Location where log file is stored
-    LOGDB: $GRAMEXDATA/data/update/log.db       # Location where the log DB is stored
+  LOGFILE: $GRAMEXDATA/data/update/log.jsonl  # Location where log file is stored
+  LOGDB: $GRAMEXDATA/data/update/log.db       # Location where the log DB is stored
 
 import:
   gramexupdate/ui:
@@ -8,51 +8,65 @@ import:
     YAMLURL: $YAMLURL/ui/               # ... at this URL
 
 url:
-    gramexupdate:
-        pattern: /$YAMLURL/
-        handler: FunctionHandler
-        kwargs:
-            function: gramexupdate.gramexupdate
-            # Enable POST from any Gramex instance
-            xsrf_cookies: false
-    gramexupdate/consolidate:
-        pattern: /$YAMLURL/consolidate
-        handler: FunctionHandler
-        kwargs:
-            function: gramexupdate.consolidate()
-    gramexupdate/data:
-        pattern: /$YAMLURL/data
-        handler: FormHandler
-        kwargs:
-            url: "sqlite:///$LOGDB"
-            table: logs
-            auth:
-              hd: [gramener.com]
+  gramexupdate:
+    pattern: /$YAMLURL/
+    handler: FunctionHandler
+    kwargs:
+      function: gramexupdate.gramexupdate
+      # Enable POST from any Gramex instance
+      xsrf_cookies: false
+  gramexupdate/login:
+    pattern: /$YAMLURL/login/
+    handler: GoogleAuth
+    kwargs:
+      # Credentials for s.anand/gramex-guide
+      # https://console.developers.google.com/apis/credentials/oauthclient/817932882244-gdr59t3mpqh5554d1bgdjuh38g6a7ahh.apps.googleusercontent.com?project=gramex-guide
+      # callback: /auth/google on localhost:9988/, localhost:9999/, learn.gramener.com/guide/
+      key: 817932882244-gdr59t3mpqh5554d1bgdjuh38g6a7ahh.apps.googleusercontent.com
+      secret: lwArXkw21KCqDPuJrel-WeQO
+      redirect:
+        query: next
+        header: Referer
+        url: /$YAMLURL/
+
+  gramexupdate/consolidate:
+    pattern: /$YAMLURL/consolidate
+    handler: FunctionHandler
+    kwargs:
+      function: gramexupdate.consolidate()
+  gramexupdate/data:
+    pattern: /$YAMLURL/data
+    handler: FormHandler
+    kwargs:
+      url: "sqlite:///$LOGDB"
+      table: logs
+      auth:
+        hd: [gramener.com]
 
 log:
-    loggers:
-        gramexupdate:
-            level: INFO
-            propagate: false    # Do not propagate to root handler
-            handlers:
-                - gramex-update-log
-    handlers:
-        gramex-update-log:
-            class: logging.handlers.TimedRotatingFileHandler
-            level: INFO
-            formatter: message      # save the message as-is
-            filename: $LOGFILE      # into a JSON-line file
-            encoding: utf-8         # encoded as UTF-8
-            when: midnight          # rotate the log file at midnight
-            interval: 1             # every single day
-            utc: true               # using UTC -- the server may be located anywhere
-            delay: true             # do not create file until called
+  loggers:
+    gramexupdate:
+      level: INFO
+      propagate: false    # Do not propagate to root handler
+      handlers:
+        - gramex-update-log
+  handlers:
+    gramex-update-log:
+      class: logging.handlers.TimedRotatingFileHandler
+      level: INFO
+      formatter: message      # save the message as-is
+      filename: $LOGFILE      # into a JSON-line file
+      encoding: utf-8         # encoded as UTF-8
+      when: midnight          # rotate the log file at midnight
+      interval: 1             # every single day
+      utc: true               # using UTC -- the server may be located anywhere
+      delay: true             # do not create file until called
 
 schedule:
-    gramexupdate/consolidate:
-        function: gramexupdate.consolidate()
-        thread: true
-        # Run at 0:00 and 12:00 UTC every day
-        minutes: 0
-        hours: 0,12
-        days: '*'
+  gramexupdate/consolidate:
+    function: gramexupdate.consolidate()
+    thread: true
+    # Run at 0:00 and 12:00 UTC every day
+    minutes: 0
+    hours: 0,12
+    days: '*'

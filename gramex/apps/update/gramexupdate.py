@@ -19,7 +19,8 @@ template = os.path.join(folder, 'index.html')
 def gramexupdate(handler):
     # When a user casually visits the page, render friendly output
     if handler.request.method == 'GET':
-        return gramex.cache.open(template, 'template').generate(version=gramex.__version__)
+        return gramex.cache.open(template, 'template').generate(
+            version=gramex.__version__, handler=handler)
     # Log all messages
     try:
         logs = json.loads(handler.request.body, encoding='utf-8')

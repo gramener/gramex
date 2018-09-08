@@ -17,6 +17,16 @@
     <h2 class="auth d-none">Browse logs</h2>
     <div class="data"></div>
   </div>
+  <div class="small fixed-bottom bg-light border-top py-1">
+    <div class="container">
+      {% if handler.current_user %}
+      You are logged in as <a href="login/">{{ handler.current_user.id }}</a>
+      {% else %}
+      You are <a href="login/">not logged in</a>.
+      {% end %}
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/vega@4.2.0/build/vega.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/vega-lite@3.0.0-rc4/build/vega-lite.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/vega-embed@3.18.2/build/vega-embed.js"></script>
