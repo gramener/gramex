@@ -18,7 +18,7 @@ const server_version = 'ChromeCapture/' + version
 const folder = path.dirname(path.resolve(process.argv[1]))
 const homepage = path.join(folder, 'index.html')
 
-let browser, page, app, server
+let browser, app, server
 let render_dir = folder             // Used by render() to save the file
 
 const pptx_size = {
@@ -71,9 +71,7 @@ async function render(q) {
   let media = q.media || 'screen'
   let file = (q.file || 'screenshot') + '.' + ext
   let headers = q.headers || {}
-  let target = path.join(render_dir, file)
-  if (fs.exists(target))
-    fs.unlinkSync(target)
+  let target = tmp.tmpNameSync({dir: render_dir, postfix: file})
 
   let args = [
     '--no-sandbox',
@@ -86,8 +84,7 @@ async function render(q) {
 
   if (typeof browser == 'undefined')
     browser = await puppeteer.launch({args: args})
-  if (typeof page == 'undefined')
-    page = await browser.newPage()
+  let page = await browser.newPage()
 
   // Clear past cookies
   let cookies = await page.cookies(q.url)
@@ -184,6 +181,7 @@ async function render(q) {
       await screenshot(page, options, q.selector)
     }
   }
+  await page.close()
   return {path: target, file: file}
 }
 
