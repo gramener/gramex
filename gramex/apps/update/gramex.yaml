@@ -42,6 +42,7 @@ url:
       table: logs
       auth:
         hd: [gramener.com]
+      login_url: /$YAMLURL/login/
 
 log:
   loggers:

@@ -157,7 +157,7 @@ class FormHandler(BaseHandler):
                 raise HTTPError(BAD_REQUEST, reason=e.args[0])
             except Exception as e:
                 app_log.exception('%s: filter failed' % self.name)
-                raise HTTPError(INTERNAL_SERVER_ERROR, reason=six.text_type(e))
+                raise HTTPError(INTERNAL_SERVER_ERROR, reason=repr(e))
             modify = self.datasets[key].get('modify', None)
             if callable(modify):
                 result[key] = modify(data=result[key], key=key, handler=self)
