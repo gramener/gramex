@@ -14,6 +14,7 @@ $.fn.webshell = function(options) {
   if (!Array.isArray(opt.welcome))
     opt.welcome = [opt.welcome]
   opt.url = opt.url || 'webshell'
+  var history = {states: [], index: -1, current: ''}
   // opt.url can be a relative URL. Make it absolute relative to the page.
   // Ensure that we use ws:// or wss:// based on the current location
   var ws_url = $('<a>').attr('href', opt.url).get(0).href.replace(/^http/, 'ws')
@@ -32,28 +33,28 @@ $.fn.webshell = function(options) {
     $(this).append('<form><input></form>')
     var $prompt = $('input', this).addClass(opt.prompt_class)
 
-    function write(msg) {
-      $('<div>').text(msg).appendTo($terminal)
+    function write(msg, html) {
+      $('<div>')[html ? 'html' : 'text'](msg).appendTo($terminal)
       $terminal.scrollTop(terminal.scrollHeight)
     }
 
-    opt.welcome.forEach(write)
-
-    var ws = new WebSocket(ws_url)
-    // On command response, clear the prompt, write to terminal
-    ws.onmessage = function (msg) {
-      $prompt.val('').focus()
-      write(msg.data)
+    function connect() {
+      ws = new WebSocket(ws_url)
+      opt.welcome.forEach(write)
+      // On command response, clear the prompt, write to terminal
+      ws.onmessage = function (msg) {
+        $prompt.val('').focus()
+        write(msg.data)
+      }
     }
-    // When clicking on the terminal, focus on the input
-    $terminal.on('click', function() {
-      $prompt.focus()
-    })
+    $terminal.on('click', '.reload', connect)
+    connect()
+
     // When user submits a command, send it to the websocket, or write a helpful error.
     $('form', this).on('submit', function (e) {
       e.preventDefault()
       if (ws.readyState != 1) {
-        write('Websocket closed. Try reloading. Or press F12 and check the JavaScript error log.')
+        write('Connection closed. <span class="reload btn btn-primary">Reconnect</span> or press F12 and check the JavaScript error log.', true)
         return
       }
       var cmd = $prompt.val()
@@ -63,7 +64,28 @@ $.fn.webshell = function(options) {
         write(e)
       }
       write(opt.prompt + cmd)
+      if (history.states[history.states.length - 1] != cmd)
+        history.states.push(cmd)
+      history.index = -1
+      history.current = ''
       $prompt.val('')
+    })
+
+    $('form', this).on('keydown', function (e) {
+      var index = history.index,
+          last = history.states.length - 1
+      if (e.key == 'ArrowUp') {
+        e.preventDefault()                // Don't move cursor to start of text
+        if (index < last) index++         // Go up to the earliest history index
+      } else if (e.key == 'ArrowDown') {
+        if (index >= 0) index--           // Go up to -1 (indicates blank line)
+      } else if (history.index == -1) {   // For other chars, if last entry is changed
+        history.current = $prompt.val()   // store it
+      }
+      if (history.index != index) {
+        $prompt.val(history.states[last - index] || history.current)
+        history.index = index
+      }
     })
 
     if (opt.focus)
