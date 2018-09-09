@@ -38,6 +38,7 @@ $.fn.webshell = function(options) {
       $terminal.scrollTop(terminal.scrollHeight)
     }
 
+    var ws
     function connect() {
       ws = new WebSocket(ws_url)
       opt.welcome.forEach(write)
