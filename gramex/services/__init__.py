@@ -225,7 +225,8 @@ def schedule(conf):
     for name, sched in conf.items():
         _key = cache_key('schedule', sched)
         if _key in _cache:
-            info.schedule[name] = _cache[_key]
+            task = info.schedule[name] = _cache[_key]
+            task.call_later()
             continue
         try:
             app_log.info('Initialising schedule:%s', name)

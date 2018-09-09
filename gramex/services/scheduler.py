@@ -45,7 +45,7 @@ class Task(object):
             # Convert all valid values into strings (e.g. 30 => '30'), and ignore any spaces
             cron = (str(schedule.get(key, '*')).replace(' ', '') for key in periods)
             self.cron = CronTab(' '.join(cron))
-            self._schedule()
+            self.call_later()
         elif not schedule.get('startup'):
             app_log.warning('schedule:%s has no schedule nor startup', name)
 
@@ -62,7 +62,7 @@ class Task(object):
         finally:
             # Do not schedule if stopped (e.g. via self.stop())
             if self.callback is not None:
-                self._schedule()
+                self.call_later()
 
     def stop(self):
         '''Suspend task, clearing any pending callbacks'''
@@ -71,7 +71,7 @@ class Task(object):
             self.ioloop.remove_timeout(self.callback)
             self.callback = None
 
-    def _schedule(self):
+    def call_later(self):
         '''Schedule next run. Do NOT call twice: creates two callbacks'''
         delay = self.cron.next(default_utc=False)
         if delay is not None:
