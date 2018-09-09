@@ -58,7 +58,8 @@
         vlSpec.data = {values: usage}
         vegaEmbed("#users-by-month", vlSpec, {actions: false})
         $('.data').formhandler({
-          src: 'data?date>~=' + from
+          src: 'data?date>~=' + from,
+          columns: 'date,event,ip,system,node,cwd,args'
         })
       })
   </script>
