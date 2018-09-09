@@ -195,7 +195,7 @@ class FormHandler(BaseHandler):
                     self.name, self.request.method))
             missing_args = [col for col in opt.filter_kwargs['id'] if col not in opt.args]
             if method != gramex.data.insert and len(missing_args) > 0:
-                raise HTTPError(BAD_REQUEST, '%s: columns %s missing in URL query' % (
+                raise HTTPError(BAD_REQUEST, '%s: missing column(s) in URL query: %s' % (
                     self.name, ', '.join(missing_args)))
             # Execute the query
             count[key] = method(meta=meta[key], args=opt.args, **opt.filter_kwargs)
