@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  {% set kwargs = handler.kwargs %}
+  {% set admin_kwargs = kwargs.get('admin_kwargs', '') or {} %}
+  {% set title = admin_kwargs.get('title', 'Admin') %}
+  {% set tab_list = admin_kwargs.get('components', []) or list(kwargs.components.keys()) %}
+  {% set tab_list = [tab for tab in tab_list if tab in kwargs.components] %}
+  <title>{{ title }}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="ui/bootstraptheme.css{{ admin_kwargs.get('theme', '') }}">
+  <link rel="stylesheet" href="ui/font-awesome/css/font-awesome.min.css">
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+  {% import gramexadmin %}
+  {% try %}{% set authhandler, auth_conf, data_conf = gramexadmin.get_auth_conf(admin_kwargs) %}
+  {% except ValueError %}{% set authhandler, auth_conf, data_conf = None, {}, {} %}{% end %}
+
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-3">
+    <a class="navbar-brand py-0 d-flex" href=".">
+      {% if admin_kwargs.get('logo') %}
+        <img class="pr-2" src="{{ admin_kwargs['logo'] }}" alt="">
+      {% end %}
+      <div class="text-middle d-flex-inline">{{ title }}</div>
+    </a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    {% set current_tab = handler.get_argument('tab', '') %}
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav mr-auto">
+        {% for tab_id in tab_list %}
+          {% set tab = kwargs.components[tab_id] %}
+          <li class="nav-item{% if current_tab == tab_id %} active{% end %}">
+            <a class="nav-link" href="{{ '?tab=' + tab_id }}">
+              {{ tab.title }}
+              {% if current_tab == tab_id %}<span class="sr-only">(current)</span>{% end %}
+            </a>
+          </li>
+        {% end %}
+      </ul>
+      {% if authhandler %}
+        <ul class="navbar-nav">
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="user-dropdown" title="User Account"
+              role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+              <i class="fa fa-user text-light"></i>
+            </a>
+            <div class="dropdown-menu dropdown-menu-right" aria-labelledby="user-dropdown">
+              <h6 class="dropdown-header">{{ handler.current_user.get('id', None) if handler.current_user else 'Not logged in' }}</h6>
+              <a class="dropdown-item" href="{{ auth_conf.get('pattern', '') }}">Log in</a>
+            </div>
+          </li>
+        </ul>
+      {% end %}
+    </div>
+  </nav>
+
+  <script src="ui/jquery/dist/jquery.min.js"></script>
+  <script src="ui/popper.js/dist/umd/popper.min.js"></script>
+  <script src="ui/bootstrap/dist/js/bootstrap.min.js"></script>
+
+  <div class="container-fluid">
+    {% if not current_tab %}
+      <div class="d-flex flex-wrap">
+        {% for tab_id in tab_list %}
+          {% set tab = kwargs.components[tab_id] %}
+          <a class="home-action btn btn-light border-radius-lg mr-3 mb-3 py-3 d-inline-block text-center" href="?tab={{ tab_id }}">
+            <div><i class="text-{{ tab.color }} fa fa-4x {{ tab.icon }}"></i></div>
+            <h3 class="pt-3">{{ tab.title }}</h3>
+            <div class="home-action-desc">{{ tab.desc }}</div>
+          </a>
+        {% end %}
+      </div>
+
+    {% elif current_tab == 'users' %}
+      <script src="ui/lodash/lodash.min.js"></script>
+      <script src="ui/g1/dist/g1.min.js"></script>
+      <script id="action-template" type="text/html">
+        <td>
+          <i class="fa fa-lg mr-2 cursor-pointer fa-ban"   title="Reset password" data-action="reset"></i>
+          <i class="fa fa-lg mr-2 cursor-pointer fa-trash" title="Delete user"    data-action="delete"></i>
+        </td>
+      </script>
+      {% if authhandler %}
+        <div class="users" data-src="users"></div>
+      {% else %}
+        <div class="alert alert-danger">
+          <h4 class="alert-heading">User management is not enabled</h4>
+          <ul class="mb-0">
+            <li>To enable it, use the <code>authhandler:</code> key.</li>
+            <li>To disable this component, use the <code>components:</code> key.</li>
+            <li>For help in setting this up, see the <a href="https://learn.gramener.com/guide/admin/">Admin page</a> docs.</li>
+          </ul>
+        </div>
+      {% end %}
+      {% import json %}
+      <script>var auth_conf = {% raw json.dumps(auth_conf) %}</script>
+      <script>
+        var kwargs = auth_conf.kwargs || {}
+        var forgot_key = (kwargs.forget || {}).key || 'forgot'
+        var user_key = (kwargs.user || {}).arg || 'user'
+        var user_column = (kwargs.user || {}).column || 'user'
+        var password_column = (kwargs.password || {}).column || 'password'
+        $('.users').formhandler({
+          edit: true,
+          add: true,
+          columns: [
+            { name: '*' },
+            { name: password_column, hide: true },
+            { name: 'actions', template: $('#action-template').html() }
+          ],
+          actions: {
+            'reset': function(obj) {
+              var data = {}
+              data[user_key] = obj.row[user_column]
+              return $.ajax(auth_conf.pattern + '?' + forgot_key, {method: 'POST', data: data})
+                .done(function() { obj.notify('Email sent') })
+            }
+          }
+        })
+      </script>
+
+    {% elif current_tab == 'shell' %}
+      <div class="webshell"></div>
+      <script src="webshell.js"></script>
+      <script>
+        $('.webshell').webshell({
+          url: 'webshell',
+          prompt: '>>> ',
+          welcome: [
+            'This is a Python console embedded in Gramex.',
+            'Click on the input box below. Type a Python expression. Press ENTER to evaluate.',
+            '>>> '
+          ]
+        })
+      </script>
+
+    {% elif current_tab == 'info' %}
+      <div class="h1 text-danger">Work in progress</div>
+
+    {% elif current_tab == 'config' %}
+      <div class="h1 text-danger">Work in progress</div>
+
+    {% elif current_tab == 'logs' %}
+      <div class="h1 text-danger">Work in progress</div>
+
+    {% else %}
+      <div class="h1 text-danger">Unknown feature</div>
+      <p>This feature may be disabled or missing. Please go to the <a href=".">admin home page</a>.</p>
+
+    {% end %}
+  </div>
+
+</body>
+</html>

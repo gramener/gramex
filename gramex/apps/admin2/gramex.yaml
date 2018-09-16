@@ -1,0 +1,67 @@
+import:
+  apps/admin2/ui:
+    path: $GRAMEXAPPS/ui/gramex.yaml
+    YAMLURL: $YAMLURL/ui/
+
+url:
+  # webshell.js is in ../admin/ and used by old admin app. Point it it
+  apps/admin2/webshell-static-$*:
+    pattern: /$YAMLURL/(webshell\..*)
+    handler: FileHandler
+    kwargs:
+      path: $YAMLPATH/../admin/
+
+  apps/admin2/home-static-$*:
+    pattern: /$YAMLURL/(.*)
+    handler: FileHandler
+    kwargs:
+      path: $YAMLPATH/
+
+  apps/admin2/home-$*:
+    pattern: /$YAMLURL/
+    handler: FileHandler
+    kwargs:
+      path: $YAMLPATH/index.html
+      template: true
+      admin_kwargs: $ADMIN_KWARGS
+      # Admin panel configuration
+      components:
+        'users':
+          title: Users
+          desc: Add, rename, and manage users and roles
+          color: primary
+          icon: fa-user
+        'shell':
+          title: Shell
+          desc: Run Python commands within Gramex
+          color: danger
+          icon: fa-terminal
+        'info':
+          title: Info
+          desc: Server OS and environment information
+          color: info
+          icon: fa-info
+        'config':
+          title: Config
+          desc: View Gramex configuration (gramex.yaml)
+          color: secondary
+          icon: fa-wrench
+        'logs':
+          title: Logs
+          desc: Track usage and errors in Gramex
+          color: success
+          icon: fa-align-left
+
+  apps/admin2/users-$*:
+    pattern: /$YAMLURL/users
+    handler: gramexadmin.AdminFormHandler
+    kwargs:
+      admin_kwargs: $ADMIN_KWARGS
+
+  apps/admin2/webshell-$*:
+    pattern: /$YAMLURL/webshell
+    handler: WebSocketHandler
+    kwargs:
+      on_message:
+        function: gramexadmin.evaluate(handler, message)
+      # auth: $ADMIN_KWARGS

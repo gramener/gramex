@@ -1,0 +1,14 @@
+/* Ensure logo fits into normal navbar height */
+.navbar-brand img {
+  max-height: 2em;
+}
+
+.home-action-desc {
+  white-space: normal;  /* Allow wrapping inside buttons */
+}
+
+/* Responsive button widths */
+.home-action { width: 15rem; }
+@media (max-width: 576px) {
+  .home-action { width: 10rem; }
+}

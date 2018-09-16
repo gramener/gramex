@@ -5,7 +5,7 @@ import tornado
 import datetime
 import sqlalchemy
 import pandas as pd
-from gramex.config import str_utf8
+from gramex.config import str_utf8, CustomJSONEncoder
 from passlib.hash import sha256_crypt
 from six.moves.urllib.parse import urlencode
 
@@ -42,7 +42,7 @@ def create_user_database(url, table, user, password, salt, excel):
 
 def store_value(handler):
     handler.session.setdefault('randkey', random.randint(0, 1000))
-    return json.dumps(handler.session, indent=4)
+    return json.dumps(handler.session, indent=4, cls=CustomJSONEncoder)
 
 
 async_http_client = tornado.httpclient.AsyncHTTPClient()

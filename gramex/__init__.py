@@ -1,5 +1,5 @@
 '''
-Gramex {__version__} Copyright (C) 2017 by Gramener
+Gramex {__version__} Copyright (c) 2017 by Gramener
 
 Start the Gramex server on port 9988 at the current directory.
 If no gramex.yaml exists, show the guide (https://learn.gramener.com/guide/)

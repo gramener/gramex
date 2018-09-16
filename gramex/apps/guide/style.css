@@ -58,6 +58,9 @@ button, input, select, textarea {
   box-sizing: border-box;
 }
 
+/* Tables should have borders */
+table thead th { border-bottom: 1px solid black; text-align: left; }
+table tbody td { border-bottom: 1px solid #eee; }
 
 /* Lay out the page */
 

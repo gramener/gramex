@@ -39,8 +39,8 @@ configuration in `gramex.yaml`. Here is the default configuration:
 
 ```yaml
 app:
-    session:
-        expiry: 31                      # Session cookies expiry in days
+  session:
+    expiry: 31                      # Session cookies expiry in days
 ```
 
 You can override session expiry duration with a `session_expiry: <days>` kwarg
@@ -52,8 +52,8 @@ or in you `gramex.yaml`:
 
 ```yaml
 app:
-    settings:
-        cookie_secret: ...
+  settings:
+    cookie_secret: ...
 ```
 
 ## Session data
@@ -62,12 +62,12 @@ Session data is stored in a session store that is configured as follows:
 
 ```yaml
 app:
-    session:
-        type: json                      # Type of store to use: json, sqlite, memory
-        path: $GRAMEXDATA/session.json  # Path to the store (ignored for type: memory)
-        expiry: 31                      # Session cookies expiry in days
-        flush: 5                        # Write store to disk periodically (in seconds)
-        purge: 3600                     # Delete old sessions periodically (in seconds)
+  session:
+    type: json                      # Type of store to use: json, sqlite, memory
+    path: $GRAMEXDATA/session.json  # Path to the store (ignored for type: memory)
+    expiry: 31                      # Session cookies expiry in days
+    flush: 5                        # Write store to disk periodically (in seconds)
+    purge: 3600                     # Delete old sessions periodically (in seconds)
 ```
 
 Sessions can be stored in one of these `type:`
@@ -89,12 +89,12 @@ instances, use `type: redis`. Here is a sample configuration:
 
 ```yaml
 app:
-    session:
-        type: redis         # Persistent multi-instance data store
-        path: localhost:6379:0  # Redis server:port:db (default: localhost:6379:0)
-        expiry: 31          # Session cookies expiry in days
-        flush: 5            # Not relevant for redis stores these are live
-        purge: 86400        # Delete old sessions periodically (in seconds)
+  session:
+    type: redis         # Persistent multi-instance data store
+    path: localhost:6379:0  # Redis server:port:db (default: localhost:6379:0)
+    expiry: 31          # Session cookies expiry in days
+    flush: 5            # Not relevant for redis stores these are live
+    purge: 86400        # Delete old sessions periodically (in seconds)
 ```
 
 Before running this, you need to run the [Redis](https://redis.io/) database.
@@ -143,17 +143,17 @@ This configuration creates a [simple auth page](simple):
 
 ```yaml
 url:
-    login/simple:
-        pattern: /$YAMLURL/simple   # Map this URL
-        handler: SimpleAuth         # to the SimpleAuth handler
-        kwargs:
-            credentials:            # Specify the user IDs and passwords
-                alpha: alpha        # User: alpha has password: alpha
-                beta: beta          # Similarly for beta
-                gamma:              # The user gamma is defined as a mapping
-                    password: pwd   # One of the keys MUST be "password"
-                    role: user      # Additional keys can be defined
-            template: $YAMLPATH/simple.html   # Optional login template
+  login/simple:
+    pattern: /$YAMLURL/simple   # Map this URL
+    handler: SimpleAuth         # to the SimpleAuth handler
+    kwargs:
+      credentials:              # Specify the user IDs and passwords
+        alpha: alpha            # User: alpha has password: alpha
+        beta: beta              # Similarly for beta
+        gamma:                  # The user gamma is defined as a mapping
+          password: pwd         # One of the keys MUST be "password"
+          role: user            # Additional keys can be defined
+      template: $YAMLPATH/simple.html   # Optional login template
 ```
 
 This setup is useful only for testing. It stores passwords in plain text.
@@ -191,12 +191,12 @@ This configuration creates a [Google login page](google):
 
 ```yaml
 url:
-    login/google:
-        pattern: /$YAMLURL/google   # Map this URL
-        handler: GoogleAuth         # to the GoogleAuth handler
-        kwargs:
-            key: YOURKEY            # Set your app key
-            secret: YOURSECRET      # Set your app secret
+  login/google:
+    pattern: /$YAMLURL/google   # Map this URL
+    handler: GoogleAuth         # to the GoogleAuth handler
+    kwargs:
+      key: YOURKEY            # Set your app key
+      secret: YOURSECRET      # Set your app secret
 ```
 
 To get the application key and secret:
@@ -217,16 +217,16 @@ You can get access to Google APIs by specifying a scope. For example, this [acce
 
 ```yaml
 url:
-    login/google:
-        pattern: /$YAMLURL/google   # Map this URL
-        handler: GoogleAuth         # to the GoogleAuth handler
-        kwargs:
-            key: YOURKEY            # Set your app key
-            secret: YOURSECRET      # Set your app secret
-            # Scope list: https://developers.google.com/identity/protocols/googlescopes
-            scope:
-                - https://www.googleapis.com/auth/contacts.readonly
-                - https://www.googleapis.com/auth/gmail.readonly
+  login/google:
+    pattern: /$YAMLURL/google   # Map this URL
+    handler: GoogleAuth         # to the GoogleAuth handler
+    kwargs:
+      key: YOURKEY            # Set your app key
+      secret: YOURSECRET      # Set your app secret
+      # Scope list: https://developers.google.com/identity/protocols/googlescopes
+      scope:
+        - https://www.googleapis.com/auth/contacts.readonly
+        - https://www.googleapis.com/auth/gmail.readonly
 ```
 
 The bearer token is available in the session key `google_access_token`. You can
@@ -280,12 +280,12 @@ This configuration creates a [Facebook login page](facebook):
 
 ```yaml
 url:
-    login/facebook:
-        pattern: /$YAMLURL/facebook # Map this URL
-        handler: FacebookAuth       # to the FacebookAuth handler
-        kwargs:
-            key: YOURKEY            # Set your app key
-            secret: YOURSECRET      # Set your app secret
+  login/facebook:
+    pattern: /$YAMLURL/facebook # Map this URL
+    handler: FacebookAuth       # to the FacebookAuth handler
+    kwargs:
+      key: YOURKEY            # Set your app key
+      secret: YOURSECRET      # Set your app secret
 ```
 
 - Go to the [Facebook apps page](https://developers.facebook.com/apps/)
@@ -325,12 +325,12 @@ This configuration creates a [Twitter login page](twitter):
 
 ```yaml
 url:
-    login/twitter:
-        pattern: /$YAMLURL/twitter  # Map this URL
-        handler: TwitterAuth        # to the TwitterAuth handler
-        kwargs:
-            key: YOURKEY            # Set your app key
-            secret: YOURSECRET      # Set your app secret
+  login/twitter:
+    pattern: /$YAMLURL/twitter  # Map this URL
+    handler: TwitterAuth        # to the TwitterAuth handler
+    kwargs:
+      key: YOURKEY            # Set your app key
+      secret: YOURSECRET      # Set your app secret
 ```
 
 - Go to the [Twitter app page](https://apps.twitter.com/)
@@ -410,14 +410,14 @@ This configuration creates a [direct LDAP login page](ldap):
 
 ```yaml
 auth/ldap:
-    pattern: /$YAMLURL/ldap             # Map this URL
-    handler: LDAPAuth                   # to the LDAP auth handler
-    kwargs:
-        template: $YAMLPATH/ldap.html   # Optional login template
-        host: 10.20.30.40               # Server to connect to
-        use_ssl: true                   # Whether to use SSL (LDAPS) or not
-        user: 'DOMAIN\{user}'           # Check LDAP domain name with client IT team
-        password: '{password}'          # This is the field name, NOT the actual password
+  pattern: /$YAMLURL/ldap             # Map this URL
+  handler: LDAPAuth                   # to the LDAP auth handler
+  kwargs:
+    template: $YAMLPATH/ldap.html   # Optional login template
+    host: 10.20.30.40               # Server to connect to
+    use_ssl: true                   # Whether to use SSL (LDAPS) or not
+    user: 'DOMAIN\{user}'           # Check LDAP domain name with client IT team
+    password: '{password}'          # This is the field name, NOT the actual password
 ```
 
 The `user:` and `password:` configuration in `gramex.yaml` maps form fields to
@@ -453,15 +453,16 @@ like:
 To fetch these, add a `search:` section. Below is a real-life example:
 
 ```yaml
-template: $YAMLPATH/ldap.html
-host: 10.20.30.40                       # Provided by client IT team
-use_ssl: true
-user: 'ICICIBANKLTD\{user}'             # Provided by client IT team
-password: '{password}'                  # This is the field name, not the actual passsword
-search:                                 # Look up user attributes by searching
-    base: 'dc=ICICIBANKLTD,dc=com'      # Provided by client IT team
-    filter: '(sAMAccountName={user})'   # Provided by client IT team
-    user: 'ICICIBANKLTD\{sAMAccountName}'   # How the username is displayed
+  kwargs:
+    template: $YAMLPATH/ldap.html
+    host: 10.20.30.40                       # Provided by client IT team
+    use_ssl: true
+    user: 'ICICIBANKLTD\{user}'             # Provided by client IT team
+    password: '{password}'                  # This is the field name, not the actual passsword
+    search:                                 # Look up user attributes by searching
+        base: 'dc=ICICIBANKLTD,dc=com'      # Provided by client IT team
+        filter: '(sAMAccountName={user})'   # Provided by client IT team
+        user: 'ICICIBANKLTD\{sAMAccountName}'   # How the username is displayed
 ```
 
 - `base:` where to search. Typically `dc=DOMAIN,dc=com` for ActiveDirectory
@@ -476,19 +477,19 @@ This configuration creates a [bind LDAP login page](ldap-bind):
 
 ```yaml
 auth/ldap-bind:
-    pattern: /$YAMLURL/ldap-bind            # Map this URL
-    handler: LDAPAuth                       # to the LDAP auth handler
-    kwargs:
-        template: $YAMLPATH/ldap.html       # This has the login form
-        host: ipa.demo1.freeipa.org         # Server to connect to
-        use_ssl: true                       # Whether to use SSL or not
-        bind:                               # Bind to the server with this ID/password
-            user: 'uid=admin,cn=users,cn=accounts,dc=demo1,dc=freeipa,dc=org'
-            password: $LDAP_PASSWORD        # Stored in a Gramex / environment variable
-        search:
-            base: 'dc=demo1,dc=freeipa,dc=org'  # Search within this domain
-            filter: '(mail={user})'             # by email ID, rather than uid
-            password: '{password}'              # Use the password field as password
+  pattern: /$YAMLURL/ldap-bind            # Map this URL
+  handler: LDAPAuth                       # to the LDAP auth handler
+  kwargs:
+    template: $YAMLPATH/ldap.html       # This has the login form
+    host: ipa.demo1.freeipa.org         # Server to connect to
+    use_ssl: true                       # Whether to use SSL or not
+    bind:                               # Bind to the server with this ID/password
+      user: 'uid=admin,cn=users,cn=accounts,dc=demo1,dc=freeipa,dc=org'
+      password: $LDAP_PASSWORD        # Stored in a Gramex / environment variable
+    search:
+      base: 'dc=demo1,dc=freeipa,dc=org'  # Search within this domain
+      filter: '(mail={user})'             # by email ID, rather than uid
+      password: '{password}'              # Use the password field as password
 ```
 
 This is similar to [direct LDAP login](#direct-ldap-login), but the sequence followed is:
@@ -548,15 +549,15 @@ url:
     pattern: /db                          # Map this URL
     handler: DBAuth                       # to the DBAuth handler
     kwargs:
-        url: $YAMLPATH/auth.xlsx          # Pick up list of users from this XLSX (or CSV) file
-        user:
-            column: user                  # The user column in users table has the user ID
-        password:
-            column: password              # The users.password column has the password
-        redirect:                         # After logging in, redirect the user to:
-            query: next                   #      the ?next= URL
-            header: Referer               # else the Referer: header (i.e. page before login)
-            url: /$YAMLURL/               # else the home page of current directory
+      url: $YAMLPATH/auth.xlsx          # Pick up list of users from this XLSX (or CSV) file
+      user:
+        column: user                  # The user column in users table has the user ID
+      password:
+        column: password              # The users.password column has the password
+      redirect:                         # After logging in, redirect the user to:
+        query: next                   #      the ?next= URL
+        header: Referer               # else the Referer: header (i.e. page before login)
+        url: /$YAMLURL/               # else the home page of current directory
 ```
 
 Now create an `auth.xlsx` with the first sheet like this:
@@ -591,25 +592,25 @@ Here is a more complete example:
 
 ```yaml
 url:
-    auth/db:
-    pattern: /$YAMLURL/db                 # Map this URL
-    handler: DBAuth                       # to the DBAuth handler
-    kwargs:
-        url: sqlite:///$YAMLPATH/auth.db  # Pick up list of users from this sqlalchemy URL
-        table: users                      # ... and this table (may be prefixed as schema.users)
-        template: $YAMLPATH/dbauth.html   # Optional login template
-        user:
-            column: user                  # The users.user column is matched with
-            arg: user                     # ... the ?user= argument from the form
-        delay: [1, 2, 5, 10]              # Delay for failed logins
-        password:
-            column: password              # The users.password column is matched with
-            arg: password                 # ... the ?password= argument from the form
-            # You should encrypt passwords when storing them.
-            # The function below specifies the encryption method.
-            # Remember to change secret-key to something unique
-            function: passlib.hash.sha256_crypt.encrypt(content, salt="secret-key")
-            # hash: true                  # Client side encryption
+  auth/db:
+  pattern: /$YAMLURL/db                 # Map this URL
+  handler: DBAuth                       # to the DBAuth handler
+  kwargs:
+    url: sqlite:///$YAMLPATH/auth.db  # Pick up list of users from this sqlalchemy URL
+    table: users                      # ... and this table (may be prefixed as schema.users)
+    template: $YAMLPATH/dbauth.html   # Optional login template
+    user:
+      column: user                  # The users.user column is matched with
+      arg: user                     # ... the ?user= argument from the form
+    delay: [1, 2, 5, 10]              # Delay for failed logins
+    password:
+      column: password              # The users.password column is matched with
+      arg: password                 # ... the ?password= argument from the form
+      # You should encrypt passwords when storing them.
+      # The function below specifies the encryption method.
+      # Remember to change secret-key to something unique
+      function: passlib.hash.sha256_crypt.encrypt(content, salt="secret-key")
+      # hash: true                  # Client side encryption
 ```
 
 <div class="example">
@@ -717,7 +718,8 @@ The `forgot:` section takes the following parameters (default values are shown):
 Here is a more complete example:
 
 ```yaml
-forgot:
+kwargs:
+  forgot:
     email_from: gramex-guide-auth     # Name of the email service to use for sending emails
     key: forgot                       # ?forgot= is used as the forgot password parameter
     arg: email                        # ?email= is used to submit the email ID of the user
@@ -749,19 +751,19 @@ Here is a minimal configuration. Just add a `signup: true` section to enable sig
 
 ```yaml
 url:
-    auth/db:
+  auth/db:
     pattern: /db
     handler: DBAuth
     kwargs:
-        url: sqlite:///$YAMLPATH/auth.db
-        table: users
-        user:
-            column: user
-        password:
-            column: password
-        forgot:
-            email_from: gramex-guide-gmail
-        signup: true            # Enable signup
+      url: sqlite:///$YAMLPATH/auth.db
+      table: users
+      user:
+        column: user
+      password:
+        column: password
+      forgot:
+        email_from: gramex-guide-gmail
+      signup: true            # Enable signup
 ```
 
 <div class="example">
@@ -773,14 +775,14 @@ You can pass additional configurations to sign-up. For example:
 
 ```yaml
 signup:
-    key: signup                     # ?signup= is used as the signup parameter
-    template: $YAMLPATH/signup.html # Use this signup template
-    columns:                        # Mapping of URL query parameters to database columns
-        name: user_name             # ?name= is saved in the user_name column
-        gender: user_gender         # ?gender= is saved in the user_gender column
-                                    # Other than email, all other columns are ignored
-    validate: app.validate(args)    # Optional validation method is passed handler.args
-                                    # This may raise an Exception or return False to stop.
+  key: signup                     # ?signup= is used as the signup parameter
+  template: $YAMLPATH/signup.html # Use this signup template
+  columns:                        # Mapping of URL query parameters to database columns
+    name: user_name               # ?name= is saved in the user_name column
+    gender: user_gender           # ?gender= is saved in the user_gender column
+                                  # Other than email, all other columns are ignored
+  validate: app.validate(args)    # Optional validation method is passed handler.args
+                                  # This may raise an Exception or return False to stop.
 ```
 
 - `key: signup` shows the signup form when the URL has a `?signup`. `key: signup`
@@ -850,14 +852,14 @@ This configuration enables SAML authentication.
 
 ```yaml
 auth/saml:
-    pattern: /$YAMLURL/login
-    handler: SAMLAuth
-        kwargs:
-          xsrf_cookies: false                   # Disable XSRF. SAML cannot be hacked via XSRF
-          sp_domain: 'app.client.com'           # Public domain name of the gramex application
-          https: true                           # true if app.client.com is on https
-          custom_base_path: $YAMLPATH/saml/     # Path to settings.json and certs/
-          lowercase_encoding: True              # True for ADFS driven SAML auth
+  pattern: /$YAMLURL/login
+  handler: SAMLAuth
+    kwargs:
+      xsrf_cookies: false                   # Disable XSRF. SAML cannot be hacked via XSRF
+      sp_domain: 'app.client.com'           # Public domain name of the gramex application
+      https: true                           # true if app.client.com is on https
+      custom_base_path: $YAMLPATH/saml/     # Path to settings.json and certs/
+      lowercase_encoding: True              # True for ADFS driven SAML auth
 ```
 
 `custom_base_path` points to a directory with these files:
@@ -970,9 +972,9 @@ This requires an [email service](../email/). Here is a sample configuration:
 ```yaml
 email:
   gramex-guide-gmail:
-      type: gmail                     # Type of email used is GMail
-      email: gramex.guide@gmail.com   # Generic email ID used to test e-mails
-      password: tlpmupxnhucitpte      # App-specific password created for Gramex guide
+    type: gmail                     # Type of email used is GMail
+    email: gramex.guide@gmail.com   # Generic email ID used to test e-mails
+    password: tlpmupxnhucitpte      # App-specific password created for Gramex guide
 
 url:
   login:
@@ -1141,8 +1143,8 @@ This configuration creates a [logout page](logout?next=.):
 
 ```yaml
 auth/logout
-    pattern: /$YAMLURL/logout   # Map this URL
-    handler: LogoutHandler      # to the logout handler
+  pattern: /$YAMLURL/logout   # Map this URL
+  handler: LogoutHandler      # to the logout handler
 ```
 
 After logging in, users are re-directed to the `?next=` URL. You can change this
@@ -1209,17 +1211,15 @@ When a user logs in or logs out, you can register actions as follows:
 
 ```yaml
 url:
-    login/google:
+  login/google:
     pattern: /$YAMLURL/google
     handler: GoogleAuth
     kwargs:
-        key: YOURKEY
-        secret: YOURSECRET
-        action:                                     # Run multiple function on Google auth
-        -
-            function: ensure_single_session         # Logs user out of all other sessions
-        -
-            function: sys.stderr.write('Logged in via Google')      # Write to console
+      key: YOURKEY
+      secret: YOURSECRET
+      action:                                     # Run multiple function on Google auth
+        - function: ensure_single_session         # Logs user out of all other sessions
+        - function: sys.stderr.write('Logged in via Google')      # Write to console
 ```
 
 For example, the [ldap login](ldap) page is set with `ensure_single_session`.
@@ -1262,7 +1262,6 @@ url:
       # ...
 ```
 
-
 ## Logging logins
 
 See [user logging](../config/#user-logging).
@@ -1277,12 +1276,12 @@ date when the user logs in with that handler. For example:
 
 ```yaml
 url:
-    auth/expiry:
-        pattern: /$YAMLURL/expiry
-        handler: SimpleAuth
-        kwargs:
-            session_expiry: 0.0003          # Session expires in 26 seconds
-            credentials: {alpha: alpha}
+  auth/expiry:
+    pattern: /$YAMLURL/expiry
+    handler: SimpleAuth
+    kwargs:
+      session_expiry: 0.0003          # Session expires in 26 seconds
+      credentials: {alpha: alpha}
 ```
 
 <div class="example">
@@ -1297,17 +1296,17 @@ To allow users to choose how long to stay logged in, use:
 
 ```yaml
 url:
-    auth/customexpiry:
-        pattern: /$YAMLURL/customexpiry
-        handler: SimpleAuth
-        kwargs:
-            session_expiry:
-                default: 4      # the default session expiry is set to 4 days
-                key: remember   # When ?remember= is submitted on login
-                values:         # if ?remember=...
-                    day: 1          # ...day, it expires in 1 day
-                    week: 7         # ...week, it expires in 7 days
-                    month: 31       # ...month, it expires in 31 days
+  auth/customexpiry:
+    pattern: /$YAMLURL/customexpiry
+    handler: SimpleAuth
+    kwargs:
+      session_expiry:
+        default: 4      # the default session expiry is set to 4 days
+        key: remember   # When ?remember= is submitted on login
+        values:         # if ?remember=...
+          day: 1          # ...day, it expires in 1 day
+          week: 7         # ...week, it expires in 7 days
+          month: 31       # ...month, it expires in 31 days
 ```
 
 <div class="example">
@@ -1326,17 +1325,17 @@ expire unless they visit again within `<days>` days. For example:
 
 ```yaml
 url:
-    auth/expiry:
-        pattern: /$YAMLURL/expiry
-        handler: SimpleAuth
-        kwargs:
-            session_inactive: 0.0003         # Must visit every 26 seconds
-            credentials: {alpha: alpha}
-    other/pages:
-        ...
-        kwargs:                              # Ensure that other authenticated pages
-            headers:                         # also expire every 26 seconds
-                Cache-Control: private, max-age=26
+  auth/expiry:
+    pattern: /$YAMLURL/expiry
+    handler: SimpleAuth
+    kwargs:
+      session_inactive: 0.0003         # Must visit every 26 seconds
+      credentials: {alpha: alpha}
+  other/pages:
+    ...
+    kwargs:                              # Ensure that other authenticated pages
+      headers:                         # also expire every 26 seconds
+        Cache-Control: private, max-age=26
 ```
 
 <div class="example">
@@ -1358,12 +1357,12 @@ The YAML configuration is:
 
 ```yaml
 url:
-    auth/login:
-        pattern: /$YAMLURL/login/
-        handler: ...                # Any auth handler can be used
-        kwargs:
-            ...                     # Add parameters for the auth handler
-            prepare: module.function(args, handler)
+  auth/login:
+    pattern: /$YAMLURL/login/
+    handler: ...                # Any auth handler can be used
+    kwargs:
+      ...                     # Add parameters for the auth handler
+      prepare: module.function(args, handler)
 ```
 
 You can create a `module.py` with a `function(args, handler)` that modifies the
@@ -1386,62 +1385,65 @@ Each auth handler creates a `handler.session['user']` object. The keys in this
 object can be extended from any data source. For example, create a `lookup.xlsx`
 file with this data:
 
-| user  | gender |
-|-------|--------|
-| alpha | male   |
-| beta  | female |
+| user  | gender | role     |
+|-------|--------|----------|
+| alpha | male   | manager  |
+| beta  | female | employee |
 
 Add a `lookup` section to any auth handler and specify a `url: lookup.xlsx`. For
 example:
 
 ```yaml
 url:
-    auth/lookup-attributes:
-        pattern: /$YAMLURL/lookup-attributes
-        handler: SimpleAuth
-        kwargs:
-            credentials:
-                alpha: alpha
-                beta: beta
-            lookup:
-                url: $YAMLPATH/lookup.xlsx      # Add attributes from Excel file
-                id: user                        # by lookup up the 'id' in the 'user' column
+  auth/lookup-attributes:
+    pattern: /$YAMLURL/lookup-attributes
+    handler: SimpleAuth
+    kwargs:
+      credentials:
+        alpha: alpha
+        beta: beta
+      lookup:
+        url: $YAMLPATH/lookup.xlsx      # Look for the attribute in this file
+        sheetname: Sheet1               # under this sheet
+        id: user                        # under this column
+```
+
+Now, when the user logs in as `alpha`, the `handler.current_user` object has the `gender` and `role` attributes:
+
+```js
+{
+    "id": "alpha",
+    "gender": "male",
+    "role": "employee",
+    // any other attributes that are already defined
+}
+```
+
+The keys under `lookup:` are:
+
+- `url`: Specifies the table that has the custom attributes for each user. This
+  can be a file path or database URL, just like [FormHandler](../formhandler/).
+  You can specify parameters like `delimiter:` for CSV files, `sheetname:` for
+  Excel files, `table:` for database URLs, etc.
+- `id`: Gramex will search for the user ID `handler.current_user['id']` in this
+  column (within the table specified by `url`)
+
+All columns in the Excel sheet are added as attributes. But if a value is NULL
+(not an empty string), it is ignored. In Excel, deleting a cell makes it NULL.
+
+Instead of Excel files, you can use databases by specifying a SQLAlchemy URL
+just like for [FormHandler](../formhandler/).
+
+```yaml
+    lookup:
+        url: sqlite:///$YAMLPATH/database.sqlite3
+        table: lookup
 ```
 
 <div class="example">
   <a class="example-demo" href="lookup-attributes">Lookup attributes example</a>
   <a class="example-src" href="http://code.gramener.com/cto/gramex/tree/master/gramex/apps/guide/auth/gramex.yaml">Source</a>
 </div>
-
-Click on the link above and see the new session object on this page. If you
-logged in as `alpha` or `beta`, you will see a `gender` of `male` or `female`
-respectively. This is picked up from the Excel file.
-
-This looks up the user's `id` in the `user` column of Excel. You can change the
-column name by changing `lookup.id` as in the example above.
-
-All columns in the Excel sheet are added as attributes. But if a value is NULL
-(not an empty string), it is ignored. In Excel, deleting a cell makes it NULL.
-
-By default, this looks up the first sheet. You can specify an alternate sheet
-using `sheetname: ...`. For example:
-
-```yaml
-        lookup:
-            url: $YAMLPATH/lookup.xlsx
-            sheetname: userinfo             # Specify an alternate sheet name
-            id: user
-```
-
-Instead of Excel files, you can use databases by specifying:
-
-```yaml
-        lookup:
-            url: sqlite:///$YAMLPATH/database.sqlite3
-            table: lookup
-```
-
-The kwargs for lookup are the same as for [FormHandler](../formhandler/).
 
 
 # Automated logins
@@ -1471,7 +1473,7 @@ encrypted via an OpenSSH RSA key. To set this up:
 2. Add a top level `encrypt:` section to your `gramex.yaml`:
 
 ```yaml
-encrypt:
+  encrypt:
     public_key: $YAMLPATH/.id_rsa.pub   # Path to the public key
     private_key: $YAMLPATH/.id_rsa      # Path to the private key
 ```
@@ -1522,12 +1524,12 @@ accessible to all.
 
 ```yaml
 url:
-    auth/must-login:
-        pattern: /$YAMLURL/must-login
-        handler: FileHandler
-        kwargs:
-            path: $YAMLPATH/secret.html
-            auth: true
+  auth/must-login:
+    pattern: /$YAMLURL/must-login
+    handler: FileHandler
+    kwargs:
+      path: $YAMLPATH/secret.html
+      auth: true
 ```
 
 You can restrict who can log in using [roles](#roles) or any other condition.
@@ -1538,8 +1540,8 @@ By default, this will redirect users to `/login/`. This is configured in the `ap
 
 ```yaml
 app:
-    settings:
-        login_url: /$YAMLURL/login/   # This is the default login URL
+  settings:
+    login_url: /$YAMLURL/login/   # This is the default login URL
 ```
 
 You need to either map `/login/` to an auth handler, or change the `login_url`
@@ -1551,13 +1553,13 @@ taken to `auth/simple` even though `app.settings.login_url` is `/login/`:
 
 ```yaml
 url:
-    auth/protected-page:
-        pattern: /$YAMLURL/protected-page
-        handler: FileHandler
-        kwargs:
-            path: $YAMLPATH/protected-page.html
-            auth:
-                login_url: /$YAMLURL/login  # Redirect users to this login page
+  auth/protected-page:
+    pattern: /$YAMLURL/protected-page
+    handler: FileHandler
+    kwargs:
+      path: $YAMLPATH/protected-page.html
+      auth:
+        login_url: /$YAMLURL/login  # Redirect users to this login page
 ```
 
 For AJAX requests (that send an [X-Requested-With header](https://en.wikipedia.org/wiki/List_of_HTTP_header_fields#Common_non-standard_request_fields))
@@ -1580,10 +1582,10 @@ only if your gender is `male` and your locale is `en` or `es`. (To test it,
 ```yaml
     # Add this under the kwargs: of ALL pages you want to restrict access to
     auth:
-        membership:           # The following user object keys must match
-            gender: male      # user.gender must be male
-            locale: [en, es]  # user.locale must be en or es
-            email: [..., ...] # user.email must be in in this list
+      membership:           # The following user object keys must match
+        gender: male      # user.gender must be male
+        locale: [en, es]  # user.locale must be en or es
+        email: [..., ...] # user.email must be in in this list
 ```
 
 If the `user` object has nested attributes, you can access them via `.`. For
@@ -1594,15 +1596,15 @@ You can specify multiple memberships that can be combined with AND or OR. This e
 ```yaml
     # Add this under the kwargs: of ALL pages you want to restrict access to
     auth:
-        membership:
-            -                           # First rule
-                gender: female                # Allow all women
-                hd: [ibm.com, pwc.com]        # AND from ibm.com or pwc.com
-            -                           # OR Second rule
-                gender: male                  # Allow all men
-                locale: [en, es]              # with user.locale as "en" or "es"
-            -                           # OR Third rule
-                email: beta@example.org       # Allow this user
+      membership:
+        -                           # First rule
+          gender: female                # Allow all women
+          hd: [ibm.com, pwc.com]        # AND from ibm.com or pwc.com
+        -                           # OR Second rule
+          gender: male                  # Allow all men
+          locale: [en, es]              # with user.locale as "en" or "es"
+        -                           # OR Third rule
+          email: beta@example.org       # Allow this user
 ```
 
 `auth:` lets you define conditions. For example, you can access [dotcom](dotcom)
@@ -1611,22 +1613,22 @@ email ends with `.org`.
 
 ```yaml
 url:
-    auth/dotcom:
-        pattern: /$YAMLURL/dotcom
-        handler: FileHandler
-        kwargs:
-            path: $YAMLPATH/secret.html
-            auth:
-                condition:                          # Allow only if condition is true
-                    function: handler.current_user.email.endswith('.com')
-    auth/dotorg:
-        pattern: /$YAMLURL/dotorg
-        handler: FileHandler
-        kwargs:
-            path: $YAMLPATH/secret.html
-            auth:
-                condition:                          # Allow only if condition is true
-                    function: handler.current_user.email.endswith('.org')
+  auth/dotcom:
+    pattern: /$YAMLURL/dotcom
+    handler: FileHandler
+    kwargs:
+      path: $YAMLPATH/secret.html
+      auth:
+        condition:                          # Allow only if condition is true
+          function: handler.current_user.email.endswith('.com')
+  auth/dotorg:
+    pattern: /$YAMLURL/dotorg
+    handler: FileHandler
+    kwargs:
+      path: $YAMLPATH/secret.html
+      auth:
+        condition:                          # Allow only if condition is true
+          function: handler.current_user.email.endswith('.org')
 ```
 
 You can specify any function of your choice. The function must return (or yield)
@@ -1644,13 +1646,13 @@ example. You will see the contents of `403-template.html` rendered.
 
 ```yaml
 url:
-    auth/unauthorized-template:
-        pattern: /$YAMLURL/unauthorized-template
-        handler: FileHandler
-        kwargs:
-            path: $YAMLPATH/secret.html
-            auth:
-                membership:                     # Pick an unlikely condition to test template
-                    donkey: king                # This condition will usually be false
-                template: $YAMLPATH/403-template.html   # Render template for forbidden users
+  auth/unauthorized-template:
+    pattern: /$YAMLURL/unauthorized-template
+    handler: FileHandler
+    kwargs:
+      path: $YAMLPATH/secret.html
+      auth:
+        membership:                             # Pick an unlikely condition to test template
+          donkey: king                          # This condition will usually be false
+        template: $YAMLPATH/403-template.html   # Render template for forbidden users
 ```

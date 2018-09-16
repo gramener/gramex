@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Web shell</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="../ui/bootstraptheme.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Web shell page</h1>
+    <p>This is a custom page in which we have embedded the web shell component.</p>
+    <div class="webshell"></div>
+    <script src="../ui/jquery/dist/jquery.min.js"></script>
+    <script src="admin/webshell.js"></script>
+    <script>
+      $('.webshell').webshell({           // Embed the web shell here
+        url: 'admin/webshell',            // Assuming the admin page is at admin/
+        prompt: '>>> ',                   // Prompt to display at the start of each page
+        welcome: [                        // Welcome message as a list of lines.
+          'Welcome to the Gramex shell',
+          '>>> '
+        ]
+      })
+    </script>
+  </div>
+
+</body>
+</html>
