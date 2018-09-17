@@ -112,4 +112,20 @@ Copy the `offline` folder to the target machine (which need not have an Internet
 
 **Note**: This does not set up dependencies for
 [CaptureHandler](../capturehandler/) such as node.js, Chrome / PhantomJS. That
-requires an Internet-enabled machine for now.
+requires an Internet-enabled machine or Docker. 
+
+### Offline Docker Install
+
+On a system **with an Internet connection** and the **same platform** (Windows/Linux) as the target system:
+
+1. Install Docker (Docker CE/Docker Toolbox will both work - though CE is easier to use)
+2. In a Docker shell (Windows) or any shell(Linux) run the command `docker pull gramener/gramex`
+3. Run `docker images` to verify that the image has been downloaded to the machine. 
+4. Run `docker save gramener/gramex > gramex-latest.tar`
+5. (Optional) Split the saved image into smaller files for easier transfer using `split -b 100M gramex-latest.tar "gramex-latest.part*"`
+6. Install docker on the target machine using [binaries](https://docs.docker.com/install/linux/docker-ce/binaries/#next-steps)
+7. Transfer the tar file/parts of the tar file to the destination machine
+8. (Optional, if files were split) recombine split files using the command `cat gramex-latest.part* > gramex-latest.tar`
+9. run `docker load < gramex-latest.tar`
+10. run `docker images` on the destination machine to verify that the image is loaded.
+11. Post this, you can create custom dockerfiles/use docker run to use the gramex.
