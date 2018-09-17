@@ -1017,15 +1017,32 @@ The user object `handler.current_user` looks like this:
 }
 ```
 
-To authorize only specific users, use [roles](#roles). For example, this allows
-all users from @ibm.com and @pwc.com, as well as `admin@example.org`.
+Specific users can also be authorized. For example, this allows
+all users from `@ibm.com` and `@pwc.com`, as well as `admin@example.org`.
+
+**Note** membership roles are added to  **other** consuming endpoints in `gramex.yaml`,
+and **not** the `EmailAuth` endpoint. For more information see [roles](#roles)
 
 ```yaml
 url:
-  dashboard:
-    ...
+  login:
+    pattern: /$YAMLURL/login
+    handler: EmailAuth                # Use email based authentication
     kwargs:
-      auth:
+      service: gramex-guide-gmail     # Send messages using this provider
+      subject: 'OTP for Gramex'
+      body: 'The OTP for {user} is {password}. Visit {link}'
+      redirect:               # After logging in, redirect the user to:
+        query: next           # the ?next= URL
+        header: Referer       # else the Referer: header (i.e. page before login)
+        url: /$YAMLURL/       # else the home page of current directory
+
+  dashboard:
+    pattern: ...
+    handler: FileHandler     # Any valid Handler
+    kwargs:
+      ...
+      auth:  # This defines membership roles for a particular endpoint
         membership:
           - {hd: [ibm.com, pwc.com]}
           - {email: [admin@example.org]}
