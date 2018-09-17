@@ -3,6 +3,11 @@
 History
 -------
 
+v1.42.0 (2018-09-17)
+~~~~~~~~~~~~~~~~~~~~
+
+See `v1.42 release notes`_
+
 v1.41.0 (2018-09-01)
 ~~~~~~~~~~~~~~~~~~~~
 
@@ -1169,3 +1174,4 @@ v1.0.0 (2015-09-08)
 .. _v1.39 release notes: https://learn.gramener.com/guide/release/1.39/
 .. _v1.40 release notes: https://learn.gramener.com/guide/release/1.40/
 .. _v1.41 release notes: https://learn.gramener.com/guide/release/1.41/
+.. _v1.42 release notes: https://learn.gramener.com/guide/release/1.42/

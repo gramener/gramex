@@ -449,6 +449,32 @@
       "Upgrade": -1
     }
   },
+  "1.42": {
+    "": {
+      "Gramex 1.42 Release Notes": -1
+    },
+    "admin-module": {
+      "Admin Module": -1
+    },
+    "bug-fixes": {
+      "Bug fixes": -1
+    },
+    "developer-updates": {
+      "Developer Updates": -1
+    },
+    "offline-docker-install": {
+      "Offline Docker Install": -1
+    },
+    "stats": {
+      "Stats": -1
+    },
+    "upgrade": {
+      "Upgrade": -1
+    },
+    "webshell": {
+      "Webshell": -1
+    }
+  },
   "about": {
     "": {
       "About Gramex": -1
@@ -458,6 +484,30 @@
   "admin": {
     "": {
       "Admin page": -1
+    },
+    "admin-access": {
+      "Admin access": -1
+    },
+    "admin-config": {
+      "Admin: Config": -1
+    },
+    "admin-info": {
+      "Admin: Info": -1
+    },
+    "admin-logs": {
+      "Admin: Logs": -1
+    },
+    "admin-page": {
+      "Admin page": -1
+    },
+    "admin-page-old": {
+      "Admin page (old)": -1
+    },
+    "admin-shell": {
+      "Admin: Shell": -1
+    },
+    "admin-user-management": {
+      "Admin: User management": -1
     }
   },
   "alert": {
@@ -1362,6 +1412,9 @@
     },
     "installation": {
       "Installation": -1
+    },
+    "offline-docker-install": {
+      "Offline Docker Install": -1
     },
     "offline-install": {
       "Offline install": -1
