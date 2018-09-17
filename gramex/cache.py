@@ -480,18 +480,27 @@ def reload_module(*modules):
         _MODULE_CACHE[name] = fstat
 
 
-def urlfetch(path, **kwargs):
+def urlfetch(path, info=False, **kwargs):
     '''
-    If path is a file path, return the path as-is.
+    If path is a file path, return as is.
+    If path is a file path and info is true, return a dict with name (filepath),
+    ext (extension), and content_type as well as r, url set to None.
     If path is a URL, download the file, return the saved filename.
     The filename extension is based on the URL's Content-Type HTTP header.
+    If info is true, returns a dict with name (filename), r (request)
+    url, ext (extension), content_type.
     Any other keyword arguments are passed to requests.get.
     Automatically delete the files on exit of the application.
     This is a synchronous function, i.e. it waits until the file is downloaded.
     '''
     url = urlparse(path)
-    if url.scheme not in {'http', 'https'}:
-        return path
+    if url.scheme not in {'http', 'https'}:  # path is a filepath
+        if info:
+            ext = os.path.splitext(path)[1]
+            content_type = mimetypes.guess_type(path, strict=True)[0]
+            return {'name': path, 'r': None, 'url': None, 'ext': ext, 'content_type': content_type}
+        else:
+            return path
     r = requests.get(path, **kwargs)
     if 'Content-Type' in r.headers:
         content_type = r.headers['Content-Type'].split(';')[0]
@@ -502,7 +511,10 @@ def urlfetch(path, **kwargs):
         for chunk in r.iter_content(chunk_size=16384):
             handle.write(chunk)
     _TEMP_FILES.add(handle.name)
-    return handle.name
+    if info:
+        return {'name': handle.name, 'r': r, 'url': url, 'ext': ext, 'content_type': content_type}
+    else:
+        return handle.name
 
 
 class Subprocess(object):
@@ -579,6 +591,7 @@ class Subprocess(object):
     - OR an empty list. In this case, ``.wait_for_exit()`` returns a tuple with
       ``stdout`` and ``stderr`` as a tuple of byte strings.
     '''
+
     def __init__(self, args, stream_stdout=[], stream_stderr=[], buffer_size=0, **kwargs):
         self.args = args
 

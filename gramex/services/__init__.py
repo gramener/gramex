@@ -12,6 +12,7 @@ exists, a warning is raised.
 '''
 from __future__ import unicode_literals
 
+import io
 import re
 import os
 import sys
@@ -424,10 +425,19 @@ def create_alert(name, alert):
             if 'markdown' in kwargs:
                 kwargs['html'] = _markdown_convert(kwargs.pop('markdown'))
             if 'images' in templates:
-                kwargs['images'] = {
-                    cid: urlfetch(val.generate(**data).decode('utf-8'), headers=headers)
-                    for cid, val in templates['images'].items()
-                }
+                kwargs['images'] = {}
+                for cid, val in templates['images'].items():
+                    urlpath = val.generate(**data).decode('utf-8')
+                    urldata = urlfetch(urlpath, info=True, headers=headers)
+                    if urldata['content_type'].startswith('image/'):
+                        kwargs['images'][cid] = urldata['name']
+                    else:
+                        with io.open(urldata['name'], 'rb') as temp_file:
+                            bytestoread = 80
+                            first_line = temp_file.read(bytestoread)
+                        app_log.error('alert: %s: %s: %d (%s) not an image: %s\n%r', name,
+                                      cid, urldata['r'].status_code, urldata['content_type'],
+                                      urlpath, first_line)
             if 'attachments' in templates:
                 kwargs['attachments'] = [
                     urlfetch(attachment.generate(**data).decode('utf-8'), headers=headers)
