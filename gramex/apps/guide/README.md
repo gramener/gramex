@@ -52,6 +52,7 @@ prefix: Guide
 - [Release Notes](release/)
 - [Tutorials](tutorials/)
 - [Python API reference](https://learn.gramener.com/gramex/gramex.html)
+- [Gramex License](license/)
 
 ## Guides
 

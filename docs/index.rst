@@ -14,9 +14,6 @@ Gramex: Gramener's Visualization Server
    About <readme>
    design
    API <gramex>
-   Authors <authors>
-   Changelog <history>
-   license
 
 Indices and tables
 ==================

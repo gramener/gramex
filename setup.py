@@ -10,7 +10,7 @@ import sys
 import os
 
 # Libraries required for Gramex
-# Keep this in sync with LICENSE.rst
+# Keep this in sync with guide/license/thirdparty.md
 install_requires = [
     # For setup
     'setuptools >= 16.0',       # 16.0 has good error message support
