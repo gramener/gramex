@@ -8,6 +8,7 @@ from tornado.httputil import HTTPHeaders
 from tornado.httpclient import AsyncHTTPClient, HTTPRequest
 from gramex.transforms import build_transform
 from gramex.config import app_log
+from gramex.http import MOVED_PERMANENTLY, FOUND
 from .basehandler import BaseHandler
 
 
@@ -118,6 +119,14 @@ class ProxyHandler(BaseHandler):
 
         app_log.debug('%s: proxying %s', self.name, url)
         response = yield self.browser.fetch(request, raise_error=False)
+
+        if response.code in (MOVED_PERMANENTLY, FOUND):
+            location = response.headers.get('Location', '')
+            # TODO; check if Location: header MATCHES the url, not startswith
+            # url: example.org/?x should match Location: example.org/?a=1&x
+            # even though location does not start with url.
+            if location.startswith(url):
+                response.headers['Location'] = location.replace('url', self.conf.pattern)
 
         if 'modify' in self.info:
             self.info['modify'](handler=self, request=request, response=response)
