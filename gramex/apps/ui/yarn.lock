@@ -549,9 +549,9 @@ fstream@^1.0.0, fstream@^1.0.2:
     mkdirp ">=0.5 0"
     rimraf "2"
 
-g1@0.9.0:
-  version "0.9.0"
-  resolved "https://registry.yarnpkg.com/g1/-/g1-0.9.0.tgz#dea7d5852176780dc335971ec3e5a02c4a897546"
+g1@0.9.1:
+  version "0.9.1"
+  resolved "https://registry.yarnpkg.com/g1/-/g1-0.9.1.tgz#d4b2afe08772018724eed7022c81c9c60f160a60"
   dependencies:
     bootstrap "^4.1.3"
     bootstrap-select "^1.13.1"
