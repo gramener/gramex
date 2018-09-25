@@ -1,9 +1,0 @@
-{
-  "name": "admin",
-  "scripts": {
-    "install": "uglifyjs webshell.js > webshell.min.js"
-  },
-  "devDependencies": {
-    "uglify-js": "3"
-  }
-}
