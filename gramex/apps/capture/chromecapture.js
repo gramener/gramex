@@ -100,6 +100,12 @@ async function render(q) {
     delete headers.cookie
   }
 
+  await page.setViewport({
+    width: +q.width || 1200,
+    height: +q.height || 768,
+    deviceScaleFactor: +q.scale || 1    // Apply for PDF?
+  })
+
   // Set additional HTTP headers
   ignore_headers.forEach(function (header) { delete headers[header] })
   await page.setExtraHTTPHeaders(headers)
@@ -124,12 +130,6 @@ async function render(q) {
       printBackground: true
     })
   } else {
-    const viewport = {
-      width: +q.width || 1200,
-      height: +q.height || 768,
-      deviceScaleFactor: +q.scale || 1
-    }
-    await page.setViewport(viewport)
     const options = {
       path: target,
       fullPage: !q.height && !q.selector  // If height and selector not specified, use full height

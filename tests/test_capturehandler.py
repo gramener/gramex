@@ -107,7 +107,7 @@ class TestCaptureHandler(TestGramex):
             'url': self.url, 'format': 'A3', 'orientation': 'landscape'})
         parser = PDFParser(io.BytesIO(result.content))
         page = next(PDFPage.create_pages(PDFDocument(parser)))
-        self.assertIn(page.attrs['MediaBox'], (
+        self.assertIn([round(x) for x in page.attrs['MediaBox']], (
             [0, 0, 1188, 842],      # noqa: Chrome uses 1188 x 842 for A3
             [0, 0, 1191, 842],      # noqa: PhantomJS uses 1191 x 842 for A3
         ))

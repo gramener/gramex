@@ -70,7 +70,9 @@ web server.
 - PDF options:
     - `format=`: `A3`, `A4` (default), `A5`, `Legal`, `Letter`, `Tabloid`
     - `orientation=`: `landscape` for landscape, `portrait` is default
-    - `media=`: `print` or `screen`. Defaults to `screen`. Only for Chrome.
+    - `width=`: viewport width in pixels. (Default: 1200px). Only for Chrome
+    - `height=`: viewport height in pixels. (Default: 768px). Only for Chrome
+    - `media=`: `print` or `screen`. Defaults to `screen`. Only for Chrome
 - PPTX options (only on Chrome):
     - `format=`: `A3`, `A4`, `Letter`, `16x9`, `16x10`, `4x3` (default)
     - `dpi=`: optional image resolution (dots per inch). Defaults to 96 px per inch
