@@ -789,8 +789,9 @@ class DBAuth(SimpleAuth):
     @classmethod
     def setup(cls, url, user, password, table=None, forgot=None, signup=None, **kwargs):
         super(DBAuth, cls).setup(user=user, password=password, **kwargs)
-        cls.special_keys += ['template', 'delay', 'prepare', 'action', 'session_expiry',
-                             'session_inactive']
+        # Create a private copy, without overridding parent's special_keys
+        cls.special_keys = list(cls.special_keys) + [
+            'template', 'delay', 'prepare', 'action', 'session_expiry', 'session_inactive']
         cls.clear_special_keys(kwargs)
         cls.forgot, cls.signup = forgot, signup
         cls.query_kwargs = {'url': url, 'table': table}
