@@ -36,7 +36,7 @@ class FormHandler(BaseHandler):
     # Data spec is (url, engine, table, ext, ...) which goes directly to filter
     # It also has
     #   default: which is interpreted as argument defaults
-    #   keys: defintes the primary key columns
+    #   keys: defines the primary key columns
     '''
     # FormHandler function kwargs and the parameters they accept:
     function_vars = {
@@ -185,7 +185,7 @@ class FormHandler(BaseHandler):
     def update(self, method, *path_args, **path_kwargs):
         if self.redirects:
             self.save_redirect_page()
-        meta, count = AttrDict(), AttrDict()
+        meta, result = AttrDict(), AttrDict()
         # For each dataset
         for key, dataset in self.datasets.items():
             meta[key] = AttrDict()
@@ -197,10 +197,16 @@ class FormHandler(BaseHandler):
             if method != gramex.data.insert and len(missing_args) > 0:
                 raise HTTPError(BAD_REQUEST, '%s: missing column(s) in URL query: %s' % (
                     self.name, ', '.join(missing_args)))
-            # Execute the query
-            count[key] = method(meta=meta[key], args=opt.args, **opt.filter_kwargs)
-        for key, val in count.items():
+            # Execute the query. This returns the count of records updated
+            result[key] = method(meta=meta[key], args=opt.args, **opt.filter_kwargs)
+        for key, val in result.items():
+            modify = self.datasets[key].get('modify', None)
+            if callable(modify):
+                meta[key]['modify'] = modify(data=result[key], key=key, handler=self)
             self.set_header('Count-%s' % key, val)
+        # modify the result for multiple datasets
+        if hasattr(self, 'modify_all'):
+            meta['modify'] = self.modify_all(data=result, key=None, handler=self)
         if opt.meta_header:
             self.set_meta_headers(meta)
         if self.redirects:

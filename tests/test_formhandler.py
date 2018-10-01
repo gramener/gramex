@@ -224,7 +224,7 @@ class TestFormHandler(TestGramex):
         eq_(out.headers['Content-Disposition'], 'attachment;filename=data.xlsx')
 
         out = self.get('/formhandler/file-multi?_format=xlsx')
-        result = pd.read_excel(BytesIO(out.content), sheetname=None)
+        result = pd.read_excel(BytesIO(out.content), sheet_name=None)
         afe(result['big'], big)
         afe(result['by-growth'], by_growth)
         eq_(out.headers['Content-Type'], xlsx_mime_type)
@@ -443,6 +443,38 @@ class TestFormHandler(TestGramex):
         finally:
             dbutils.mysql_drop_db(variables.MYSQL_SERVER, 'test_formhandler')
 
+    def test_edit_multidata_modify(self):
+        csv_path = os.path.join(folder, 'sales-edits.csv')
+        self.sales.to_csv(csv_path, index=False, encoding='utf-8')
+        tempfiles[csv_path] = csv_path
+        dbutils.mysql_create_db(variables.MYSQL_SERVER, 'test_formhandler', sales=self.sales)
+        try:
+            row = {'देश': 'भारत', 'city': 'X', 'product': 'Q', 'growth': None}
+            result = self.check('/formhandler/edits-multidata-modify', method='post', data={
+                'csv:देश': ['भारत'],
+                'csv:city': ['X'],
+                'csv:product': ['Q'],
+                'csv:sales': ['10'],
+                'sql:देश': ['भारत'],
+                'sql:city': ['X'],
+                'sql:product': ['Q'],
+                'sql:sales': ['20'],
+            }, headers={
+                'count-csv': '1',
+                'count-sql': '1',
+            }).json()
+            eq_(result['csv']['modify'], 8)
+            eq_(result['modify'], 8)
+
+            data = self.check('/formhandler/edits-multidata').json()
+            eq_(data['csv'][-1], merge(row, {'sales': 10}))
+            eq_(data['sql'][-1], merge(row, {'sales': 20}))
+            eq_(len(data['csv']), len(self.sales) + 1)
+            eq_(len(data['sql']), len(self.sales) + 1)
+
+        finally:
+            dbutils.mysql_drop_db(variables.MYSQL_SERVER, 'test_formhandler')
+
     def test_edit_json(self):
         target = self.copy_file('sales.xlsx', 'sales-edits.xlsx')
         target = os.path.join(folder, 'formhandler-edits.db')
@@ -557,7 +589,7 @@ class TestFormHandler(TestGramex):
             afe(actual, expected, check_like=True)
 
     def test_date_comparison(self):
-        data = gramex.cache.open(os.path.join(folder, 'sales.xlsx'), 'xlsx', sheetname='dates')
+        data = gramex.cache.open(os.path.join(folder, 'sales.xlsx'), 'xlsx', sheet_name='dates')
         for dt in ('2018-01-10', '2018-01-20T15:34Z'):
             url = '/formhandler/dates?date>=%s&_format=xlsx' % dt
             actual = pd.read_excel(BytesIO(self.get(url).content))

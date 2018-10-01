@@ -1424,6 +1424,22 @@ url:
         id: [city, product]
       xsrf_cookies: false
 
+  formhandler/edits-multidata-modify:
+    pattern: /formhandler/edits-multidata-modify
+    handler: FormHandler
+    kwargs:
+      csv:
+        url: sales-edits.csv
+        encoding: utf-8
+        id: [city, product]
+        modify: len(handler.args.keys())
+      sql:
+        url: mysql+pymysql://root@$MYSQL_SERVER/test_formhandler?charset=utf8
+        table: sales
+        id: [city, product]
+      modify: len(handler.args.keys())
+      xsrf_cookies: false
+
   formhandler/chart:
     pattern: /formhandler/chart
     handler: FormHandler

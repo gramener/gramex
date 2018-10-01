@@ -838,16 +838,40 @@ url:
 `{'colors': DataFrame(...), 'symbols': DataFrame(...)`. It can return a single
 DataFrame or any dict of DataFrames.
 
+`modify:` can be applied to [FormHandler edit](#formhandler-edits) methods
+
+Below configuration has two `modify:` -- which are called after edit operations.
+
+```yaml
+  formhandler-edits-multidata-modify:
+    pattern: /$YAMLURL/edits-multidata-modify
+    handler: FormHandler
+    kwargs:
+      csv:
+        url: $YAMLPATH/sales-edits.csv
+        encoding: utf-8
+        id: [city, product]
+        modify: len(handler.args.keys())
+      sql:
+        url: mysql+pymysql://root@$MYSQL_SERVER/DB?charset=utf8
+        table: sales
+        id: [city, product]
+      modify: len(handler.args.keys())
+```
+
+`modify:` can be any expression/function that uses `data` -- count of records edited and `handler` --
+`handler.args` contains [data submitted]((#formhandler-edits)) by the user.
+
 ## FormHandler directory listing
 
 FormHandler allows listing files in a directory. To set this up, use a `dir://`
 URL like this: `url: dir:///path/to/directory`:
 
 ```yaml
-      pattern: /$YAMLURL/dir
-      handler: FormHandler
-      kwargs:
-        url: dir:///$YAMLPATH          # Point to any directory
+    pattern: /$YAMLURL/dir
+    handler: FormHandler
+    kwargs:
+      url: dir:///$YAMLPATH          # Point to any directory
 ```
 
 Here is a sample output:
@@ -858,11 +882,11 @@ Here is a sample output:
 This URL is interpolatable using arguments as well for example:
 
 ```yaml
-      pattern: /$YAMLURL/dir/(.*)
-      handler: FormHandler
-      kwargs:
-        url: dir:///$YAMLPATH/{_0}    # /dir/abc points to abc/ under this directory
-      # url: dir:///$YAMLPATH/{root}  # /dir/?root=abc points to abc/ under this directory
+    pattern: /$YAMLURL/dir/(.*)
+    handler: FormHandler
+    kwargs:
+      url: dir:///$YAMLPATH/{_0}    # /dir/abc points to abc/ under this directory
+    # url: dir:///$YAMLPATH/{root}  # /dir/?root=abc points to abc/ under this directory
 ```
 
 The arguments are escaped and cannot contain `../` and other mechanisms to go
