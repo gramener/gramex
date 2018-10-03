@@ -505,7 +505,7 @@ def load_imports(config, source, warn=None):
                 value = {'apps': value}
             # Allow "import: [path, path]" to "import: {app0: path, app1: path}"
             elif isinstance(value, list):
-                value = {'app%d' % i: conf for i, conf in enumerate(value)}
+                value = OrderedDict((('app%d' % i, conf) for i, conf in enumerate(value)))
             # By now, import: should be a dict
             elif not isinstance(value, dict):
                 raise ValueError('import: must be string/list/dict, not %s at %s' % (
@@ -519,10 +519,13 @@ def load_imports(config, source, warn=None):
                 if 'path' not in conf:
                     raise ValueError('import: has no conf at %s' % source)
                 paths = conf.pop('path')
-                paths = root.glob(paths) if '*' in paths else [Path(paths)]
+                paths = paths if isinstance(paths, list) else [paths]
+                globbed_paths = []
                 for path in paths:
+                    globbed_paths += sorted(root.glob(path)) if '*' in path else [Path(path)]
+                ns = conf.pop('namespace', None)
+                for path in globbed_paths:
                     abspath = root.joinpath(path)
-                    ns = conf.pop('namespace', None)
                     new_conf = _yaml_open(abspath, **conf)
                     if ns is not None:
                         prefix = Path(path).as_posix()

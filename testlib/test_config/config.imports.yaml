@@ -23,6 +23,7 @@ import-wildcard:
   source:
     import: 'dir1/config.*.yaml'
   target:
+    # Ensure that the result is sorted by path, for stability.
     import: [dir1/config.a.yaml, dir1/config.b.yaml]
 
 import-glob:
@@ -101,6 +102,22 @@ import-namespace-c:
     b: 2
     c: {'sub:config.b.yaml:xx': 3, 'sub:config.b.yaml:yy': 4}
     d: null
+
+import-namespace-c-list:
+  source:
+    import:
+      sub:
+        path:
+          - config.a.yaml
+          - config.b.yaml
+        namespace: [c]
+  target:
+    a: 1
+    b: 200
+    d: x
+    c:
+        'sub:config.b.yaml:xx': 3
+        'sub:config.b.yaml:yy': 4
 
 import-namespace-star_c:
   source:

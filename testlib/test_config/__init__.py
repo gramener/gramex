@@ -184,6 +184,13 @@ class TestPathConfig(unittest.TestCase):
         unlink(self.temp)
         eq_(+conf_imp, +conf_b)
 
+    def test_imports(self):
+        conf = PathConfig(self.imports)
+        ok_(conf)
+        for key, result in conf.items():
+            eq_(result.source, result.target,
+                key + ': %r != %r' % (result.source, result.target))
+
     def test_add_ns(self):
         # Test _add_ns functionality
         eq_(_add_ns({'x': 1}, '*', 'a'), {'a:x': 1})

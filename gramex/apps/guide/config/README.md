@@ -476,7 +476,7 @@ import: another.yaml        # import this YAML file relative to current file pat
 These "copy-paste" the contents of `another.yaml` from the same directory as
 this file, ignoring any duplicates.
 
-To import multiple files, path can be a list or a wildcard.
+To import multiple files, path can be a list or a wildcard. For example:
 
 ```yaml
 import:
