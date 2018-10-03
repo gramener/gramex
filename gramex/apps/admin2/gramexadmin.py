@@ -21,9 +21,12 @@ def get_auth_conf(kwargs):
     if 'authhandler' not in kwargs:
         raise ValueError('Missing authhandler')
     authhandler = kwargs['authhandler']
-    if authhandler not in gramex.conf.get('url', {}):
+    # The authhandler key may be prefixed with a namespace. Find the *first* matching key
+    for key, auth_conf in gramex.conf.get('url', {}).items():
+        if key == authhandler or key.endswith(':' + authhandler):
+            break
+    else:
         raise ValueError('Missing url.%s (cannot find authhandler)' % authhandler)
-    auth_conf = gramex.conf.url[authhandler]
     auth_kwargs = auth_conf.get('kwargs', {})
     if 'lookup' in auth_kwargs:
         data_conf = auth_kwargs['lookup'].copy()
