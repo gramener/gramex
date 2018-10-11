@@ -1,0 +1,250 @@
+{
+  "$schema": "https://vega.github.io/schema/vega/v4.json",
+  "width": 600,
+  "height": 345,
+  "padding": {"bottom": 10, "top": 5},
+  "autosize": "fix",
+  "signals": [
+    {
+      "name": "width",
+      "value": 600
+    },
+    {
+      "name": "height",
+      "value": 345
+    },
+    {
+      "name": "startAngle",
+      "value": 0
+    },
+    {
+      "name": "arcPadding",
+      "value": 4
+    },
+    {
+      "name": "minDimension",
+      "update": "width > height ? height : width"
+    },
+    {
+      "name": "clickLabel",
+      "value": 0,
+      "on": [
+        {
+          "events": "@chartLabel:click",
+          "update": "{value: 1}",
+          "force": true
+        }
+      ]
+    }
+  ],
+  "data": [
+    {
+      "name": "table",
+      "url": "<%= absolute_url %>data/radial.json",
+      "transform": [
+        {
+          "type": "collect",
+          "sort": {
+            "field": "value"
+          }
+        },
+        {
+          "type": "identifier",
+          "as": "order"
+        },
+        {
+          "type": "extent",
+          "field": "order",
+          "signal": "extent"
+        }
+      ]
+    }
+  ],
+  "scales": [
+    {
+      "name": "end_scale",
+      "type": "linear",
+      "domain": {
+        "data": "table",
+        "field": "value"
+      },
+      "range": [
+        0,
+        5.46637121724624
+      ]
+    },
+    {
+      "name": "inner_radius_scale",
+      "type": "linear",
+      "domain": {
+        "signal": "extent"
+      },
+      "range": [
+        {
+          "signal": "minDimension / 4"
+        },
+        {
+          "signal": "minDimension / 2"
+        }
+      ]
+    },
+    {
+      "name": "outer_radius_scale",
+      "type": "linear",
+      "domain": {
+        "signal": "extent"
+      },
+      "range": [
+        {
+          "signal": "(minDimension / 4) - arcPadding"
+        },
+        {
+          "signal": "(minDimension / 2) - arcPadding"
+        }
+      ]
+    }
+  ],
+  "marks": [
+    {
+      "type": "group",
+      "from": {
+        "facet": {
+          "data": "table",
+          "name": "facet",
+          "groupby": "key"
+        }
+      },
+      "marks": [
+        {
+          "type": "arc",
+          "from": {
+            "data": "facet"
+          },
+          "encode": {
+            "enter": {
+              "x": {
+                "signal": "width / 2"
+              },
+              "y": {
+                "signal": "height / 2"
+              },
+              "fill": {
+                "value": "#F5A623"
+              },
+              "startAngle": {
+                "signal": "startAngle"
+              },
+              "endAngle": {
+                "scale": "end_scale",
+                "field": "value"
+              },
+              "innerRadius": {
+                "scale": "inner_radius_scale",
+                "field": "order"
+              },
+              "outerRadius": {
+                "scale": "outer_radius_scale",
+                "field": "order"
+              }
+            }
+          }
+        },
+        {
+          "type": "symbol",
+          "from": {
+            "data": "facet"
+          },
+          "encode": {
+            "enter": {
+              "fill": {
+                "value": "#fff"
+              },
+              "stroke": {
+                "value": "#e3e3e3"
+              },
+              "x": {
+                "signal": "(width / 2) + (sin(scale('end_scale',  datum.value)) * (scale('inner_radius_scale', datum.order) + scale('outer_radius_scale', datum.order))/2)"
+              },
+              "y": {
+                "signal": "(height / 2) + (-cos(scale('end_scale',  datum.value)) * (scale('inner_radius_scale', datum.order) + scale('outer_radius_scale', datum.order))/2)"
+              },
+              "size": {
+                "value": 300
+              },
+              "shape": {
+                "value": "circle"
+              },
+              "opacity": {
+                "value": 1
+              },
+              "strokeWidth": {
+                "value": 1
+              }
+            }
+          }
+        },
+        {
+          "type": "text",
+          "from": {
+            "data": "facet"
+          },
+          "encode": {
+            "enter": {
+              "name": "chartLabel",
+              "interactive": true,
+              "x": {
+                "signal": "(width / 2) - 10"
+              },
+              "y": {
+                "signal": "(height / 2) + (-scale('inner_radius_scale', datum.order) + arcPadding / 2)"
+              },
+              "fill": {
+                "value": "black"
+              },
+              "text": {
+                "field": "key"
+              },
+              "baseline": {
+                "value": "middle"
+              },
+              "align": {
+                "value": "right"
+              }
+            }
+          }
+        },
+        {
+          "type": "text",
+          "from": {
+            "data": "facet"
+          },
+          "encode": {
+            "enter": {
+              "x": {
+                "signal": "(width / 2) + (sin(scale('end_scale',  datum.value)) * (scale('inner_radius_scale', datum.order) + scale('outer_radius_scale', datum.order)) / 2)"
+              },
+              "y": {
+                "signal": "(height / 2) + (-cos(scale('end_scale',  datum.value)) * (scale('inner_radius_scale', datum.order) + scale('outer_radius_scale', datum.order)) / 2)"
+              },
+              "fill": {
+                "value": "black"
+              },
+              "text": {
+                "field": "value"
+              },
+              "baseline": {
+                "value": "middle"
+              },
+              "align": {
+                "value": "center"
+              },
+              "fontSize": {
+                "value": 10
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

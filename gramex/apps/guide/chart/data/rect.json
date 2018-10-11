@@ -1,0 +1,22 @@
+[
+  {
+    "Rect1": 0,
+    "Rect1-x": 0,
+    "Rect2": 0,
+    "Rect2-x": 8,
+    "Rect3": 25,
+    "Rect3-x": 0,
+    "Rect4": 25,
+    "Rect4-x": 8
+  },
+  {
+    "Rect1": 25,
+    "Rect1-x": 8,
+    "Rect2": 25,
+    "Rect2-x": 16,
+    "Rect3": 50,
+    "Rect3-x": 8,
+    "Rect4": 50,
+    "Rect4-x": 16
+  }
+]

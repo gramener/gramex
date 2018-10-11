@@ -1,0 +1,14 @@
+<xmp>
+  <div id="chart"></div>
+  <!-- See https://learn.gramener.com/guide/uicomponents/ on importing Vega -->
+  <script src="ui/vega/build/vega.min.js"></script>
+  <script src="ui/vega-lite/build/vega-lite.min.js"></script>
+
+  <script>
+  var vl_spec = <%= spec %>
+  var view = new vega.View(vega.parse(vl.compile(vl_spec).spec))
+    .renderer('svg')
+    .initialize('#chart')
+    .run()
+  </script>
+</xmp>

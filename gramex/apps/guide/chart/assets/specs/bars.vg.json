@@ -1,0 +1,109 @@
+{
+  "$schema": "https://vega.github.io/schema/vega/v4.json",
+  "width": 600,
+  "height": 360,
+  "autosize": "fit",
+  "data": [
+    {
+      "name": "table",
+      "url": "<%= absolute_url %>data/bars.json"
+    }
+  ],
+  "scales": [
+    {
+      "name": "xscale",
+      "type": "band",
+      "domain": {
+        "data": "table",
+        "field": "category"
+      },
+      "range": "width",
+      "padding": 0.3,
+      "round": true
+    },
+    {
+      "name": "yscale",
+      "domain": {
+        "data": "table",
+        "field": "amount"
+      },
+      "nice": true,
+      "range": "height"
+    }
+  ],
+  "axes": [
+    {
+      "orient": "bottom",
+      "scale": "xscale",
+      "ticks": false,
+      "labelPadding": 10
+    }
+  ],
+  "marks": [
+    {
+      "name": "bars",
+      "type": "rect",
+      "from": {
+        "data": "table"
+      },
+      "encode": {
+        "enter": {
+          "x": {
+            "scale": "xscale",
+            "field": "category"
+          },
+          "width": {
+            "scale": "xscale",
+            "band": 1
+          },
+          "y": {
+            "scale": "yscale",
+            "field": "amount"
+          },
+          "y2": {
+            "scale": "yscale",
+            "value": 0
+          }
+        },
+        "update": {
+          "fill": {
+            "value": "#FEC44F"
+          }
+        }
+      }
+    },
+    {
+      "type": "text",
+      "from": {
+        "data": "bars"
+      },
+      "encode": {
+        "enter": {
+          "x": {
+            "field": "x",
+            "offset": 29
+          },
+          "y": {
+            "field": "y",
+            "offset": {
+              "field": "height",
+              "mult": -0.03
+            }
+          },
+          "fill": {
+            "value": "black"
+          },
+          "align": {
+            "value": "right"
+          },
+          "baseline": {
+            "value": "middle"
+          },
+          "text": {
+            "field": "datum.amount"
+          }
+        }
+      }
+    }
+  ]
+}

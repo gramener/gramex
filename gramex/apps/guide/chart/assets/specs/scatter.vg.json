@@ -1,0 +1,188 @@
+{
+  "width": 590,
+  "height": 350,
+  "autosize": "fit",
+  "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
+  "layer": [
+    {
+      "title": {
+        "text": "TAT vs Productivity login",
+        "anchor": "middle"
+      },
+      "data": {
+        "url": "<%= absolute_url %>data/rect.json"
+      },
+      "mark": {
+        "type": "rect"
+      },
+      "encoding": {
+        "y": {
+          "aggregate": "min",
+          "field": "Rect1",
+          "type": "quantitative",
+          "axis": "null"
+        },
+        "y2": {
+          "aggregate": "max",
+          "field": "Rect1",
+          "type": "quantitative",
+          "axis": "null"
+        },
+        "x": {
+          "aggregate": "min",
+          "field": "Rect1-x",
+          "type": "quantitative",
+          "axis": "null"
+        },
+        "x2": {
+          "aggregate": "max",
+          "field": "Rect1-x",
+          "type": "quantitative",
+          "axis": "null"
+        },
+        "color": {
+          "value": "#AFD7EC"
+        }
+      }
+    },
+    {
+      "data": {
+        "url": "<%= absolute_url %>data/rect.json"
+      },
+      "mark": "rect",
+      "encoding": {
+        "y": {
+          "aggregate": "max",
+          "field": "Rect2",
+          "type": "quantitative",
+          "axis": "null"
+        },
+        "y2": {
+          "aggregate": "min",
+          "field": "Rect2",
+          "type": "quantitative",
+          "axis": "null"
+        },
+        "x": {
+          "aggregate": "max",
+          "field": "Rect2-x",
+          "type": "quantitative",
+          "axis": "null"
+        },
+        "x2": {
+          "aggregate": "min",
+          "field": "Rect2-x",
+          "type": "quantitative",
+          "axis": "null"
+        },
+        "color": {
+          "value": "#F5543B"
+        }
+      }
+    },
+    {
+      "data": {
+        "url": "<%= absolute_url %>data/rect.json"
+      },
+      "mark": "rect",
+      "encoding": {
+        "y": {
+          "aggregate": "max",
+          "field": "Rect3",
+          "type": "quantitative"
+        },
+        "y2": {
+          "aggregate": "min",
+          "field": "Rect3",
+          "type": "quantitative"
+        },
+        "x": {
+          "aggregate": "max",
+          "field": "Rect3-x",
+          "type": "quantitative"
+        },
+        "x2": {
+          "aggregate": "min",
+          "field": "Rect3-x",
+          "type": "quantitative"
+        },
+        "color": {
+          "value": "#0055A0"
+        }
+      }
+    },
+    {
+      "data": {
+        "url": "<%= absolute_url %>data/rect.json"
+      },
+      "mark": "rect",
+      "encoding": {
+        "y": {
+          "aggregate": "max",
+          "field": "Rect4",
+          "type": "quantitative"
+        },
+        "y2": {
+          "aggregate": "min",
+          "field": "Rect4",
+          "type": "quantitative"
+        },
+        "x": {
+          "aggregate": "max",
+          "field": "Rect4-x",
+          "type": "quantitative"
+        },
+        "x2": {
+          "aggregate": "min",
+          "field": "Rect4-x",
+          "type": "quantitative"
+        },
+        "color": {
+          "value": "#AFD7EC"
+        }
+      }
+    },
+    {
+      "data": {
+        "url": "<%= absolute_url %>data/scatter.json"
+      },
+      "mark": {
+        "type": "circle",
+        "opacity": 0.5,
+        "fill": "white",
+        "stroke": "white"
+      },
+      "encoding": {
+        "x": {
+          "field": "Avg TAT (days)",
+          "type": "quantitative",
+          "axis": {
+            "grid": false,
+            "ticks": false,
+            "title": "Avg TAT (days)"
+          }
+        },
+        "y": {
+          "field": "Productivity",
+          "type": "quantitative",
+          "axis": {
+            "grid": false,
+            "ticks": false,
+            "title": "Productivity"
+          }
+        },
+        "size": {
+          "field": "Total Applicants",
+          "type": "quantitative",
+          "legend": null,
+          "scale": {
+            "domain": [
+              0,
+              1
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

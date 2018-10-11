@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Vega chart gallery</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" type="text/css" media="screen" href="../ui/bootstraptheme.css" />
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-light bg-light d-flex mb-3">
+    <a class="navbar-brand" href="gallery.html">Vega Gallery</a>
+  </nav>
+  <div class="container">
+    <h1></h1>
+    <div id="chart"></div>
+    <p class="text-center mt-3">
+      <button class="btn-sm btn btn-dark copy" data-toggle="tooltip" data-placement="top" title="Copied" type="button">
+        Copy code
+      </button>
+    </p>
+    <div class="code border-left">
+      <pre class="bg-light px-3"></pre>
+    </div>
+  </div>
+  <script src="https://vega.github.io/vega/assets/promise.min.js"></script>
+  <script src="https://vega.github.io/vega/assets/symbol.min.js"></script>
+  <script src="https://vega.github.io/vega/assets/fetch.min.js"></script>
+  <script src="ui/jquery/dist/jquery.min.js"></script>
+  <script src="ui/popper.js/dist/umd/popper.min.js"></script>
+  <script src="ui/bootstrap/dist/js/bootstrap.min.js"></script>
+  <script src="ui/lodash/lodash.min.js"></script>
+  <script src="ui/vega/build/vega.min.js"></script>
+  <script src="ui/vega-lite/build/vega-lite.min.js"></script>
+
+  <script>
+    var specName = window.location.href.split('chart=')[1]
+    $('h1').html(specName.split('-').join(' '))
+
+    vega.loader().load('assets/specs/' + specName + '.vg.json')
+      .then(function(spec) {
+        // modify relative to absolute urls
+        spec = _.template(spec)({absolute_url: location.href.split('example.html')[0]})
+
+        var parsed_spec = JSON.parse(spec)
+        var copy_code_file,
+          compiled_spec,
+          compiled_spec = parsed_spec,
+          schema_type = parsed_spec.$schema.split('/')[4]
+
+        if (schema_type == 'vega-lite') {
+          compiled_spec = vl.compile(parsed_spec).spec
+          copy_code_file = 'copy_example_vl.html'
+        } else if (schema_type == 'vega') {
+          copy_code_file = 'copy_example_vg.html'
+        }
+
+        fetch(copy_code_file)
+          .then(function (res) { return res.text() })
+          .then(function (res) {
+            $('.code pre').html(_.template(res)({ spec: spec }))
+          })
+
+        var view = new vega.View(vega.parse(compiled_spec))
+          .logLevel(vega.Warn)
+          .initialize($('#chart').get(0))
+          .renderer('svg')
+          .hover()
+          .run()
+
+        view.runAfter(function() {
+          setTimeout(function() {
+            window.renderComplete = true
+          }, 20000);
+        })
+      })
+
+    $('.copy')
+      .tooltip({ trigger: 'click' })
+      .on('click', function(e) {
+        var $textarea = $('<textarea></textarea>')
+          .val($('.code pre').text())
+          .appendTo(document.body)
+          .select()
+        document.execCommand('copy')
+        $textarea.remove()
+        // After some time, hide the tooltip
+        setTimeout(function () {
+          $('.copy').tooltip('hide')
+        }, 1000)
+      })
+
+  </script>
+</body>
+</html>

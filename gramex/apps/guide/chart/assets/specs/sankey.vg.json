@@ -1,0 +1,460 @@
+{
+  "$schema": "https://vega.github.io/schema/vega/v4.0.json",
+  "width": 575,
+  "height": 360,
+  "padding": {"left": 5, "right": 20},
+  "autosize": "fit",
+  "data": [
+    {
+      "name": "rawData",
+      "values": {
+        "aggregations": {
+          "table": {
+            "buckets": [
+              {
+                "key": {
+                  "my_source": "Delhi",
+                  "my_dest": "Rejected"
+                },
+                "doc_count": 7
+              },
+              {
+                "key": {
+                  "my_source": "Delhi",
+                  "my_dest": "Sanction"
+                },
+                "doc_count": 4
+              },
+              {
+                "key": {
+                  "my_source": "Mumbai",
+                  "my_dest": "Pending"
+                },
+                "doc_count": 2
+              },
+              {
+                "key": {
+                  "my_source": "Mumbai",
+                  "my_dest": "Sanction"
+                },
+                "doc_count": 6
+              },
+              {
+                "key": {
+                  "my_source": "Mumbai",
+                  "my_dest": "Pending"
+                },
+                "doc_count": 3
+              },
+              {
+                "key": {
+                  "my_source": "South",
+                  "my_dest": "Rejected"
+                },
+                "doc_count": 9
+              }
+            ]
+          }
+        }
+      },
+      "format": {
+        "property": "aggregations.table.buckets"
+      },
+      "transform": [
+        {
+          "type": "formula",
+          "expr": "datum.key.my_source",
+          "as": "my_source"
+        },
+        {
+          "type": "formula",
+          "expr": "datum.key.my_dest",
+          "as": "my_dest"
+        },
+        {
+          "type": "formula",
+          "expr": "datum.doc_count",
+          "as": "size"
+        }
+      ]
+    },
+    {
+      "name": "nodes",
+      "source": "rawData",
+      "transform": [
+        {
+          "type": "filter",
+          "expr": "!groupSelector || groupSelector.my_source == datum.my_source || groupSelector.my_dest == datum.my_dest"
+        },
+        {
+          "type": "formula",
+          "expr": "datum.my_source+datum.my_dest",
+          "as": "key"
+        },
+        {
+          "type": "fold",
+          "fields": [
+            "my_source",
+            "my_dest"
+          ],
+          "as": [
+            "stack",
+            "grpId"
+          ]
+        },
+        {
+          "type": "formula",
+          "expr": "datum.stack == 'my_source' ? datum.my_source+datum.my_dest : datum.my_dest+datum.my_source",
+          "as": "sortField"
+        },
+        {
+          "type": "stack",
+          "groupby": [
+            "stack"
+          ],
+          "sort": {
+            "field": "sortField",
+            "order": "descending"
+          },
+          "field": "size"
+        },
+        {
+          "type": "formula",
+          "expr": "(datum.y0+datum.y1)/2",
+          "as": "yc"
+        }
+      ]
+    },
+    {
+      "name": "groups",
+      "source": "nodes",
+      "transform": [
+        {
+          "type": "aggregate",
+          "groupby": [
+            "stack",
+            "grpId"
+          ],
+          "fields": [
+            "size"
+          ],
+          "ops": [
+            "sum"
+          ],
+          "as": [
+            "total"
+          ]
+        },
+        {
+          "type": "stack",
+          "groupby": [
+            "stack"
+          ],
+          "sort": {
+            "field": "grpId",
+            "order": "descending"
+          },
+          "field": "total"
+        },
+        {
+          "type": "formula",
+          "expr": "scale('y', datum.y0)",
+          "as": "scaledY0"
+        },
+        {
+          "type": "formula",
+          "expr": "scale('y', datum.y1)",
+          "as": "scaledY1"
+        },
+        {
+          "type": "formula",
+          "expr": "datum.stack == 'my_source'",
+          "as": "rightLabel"
+        },
+        {
+          "type": "formula",
+          "expr": "datum.total/domain('y')[1]",
+          "as": "percentage"
+        }
+      ]
+    },
+    {
+      "name": "targetimageNodes",
+      "source": "nodes",
+      "transform": [
+        {
+          "type": "filter",
+          "expr": "datum.stack == 'my_dest'"
+        }
+      ]
+    },
+    {
+      "name": "edges",
+      "source": "nodes",
+      "transform": [
+        {
+          "type": "filter",
+          "expr": "datum.stack == 'my_source'"
+        },
+        {
+          "type": "lookup",
+          "from": "targetimageNodes",
+          "key": "key",
+          "fields": [
+            "key"
+          ],
+          "as": [
+            "target"
+          ]
+        },
+        {
+          "type": "linkpath",
+          "orient": "horizontal",
+          "shape": "diagonal",
+          "sourceY": {
+            "expr": "scale('y', datum.yc)"
+          },
+          "sourceX": {
+            "expr": "scale('x', 'my_source') + bandwidth('x')*2"
+          },
+          "targetY": {
+            "expr": "scale('y', datum.target.yc)"
+          },
+          "targetX": {
+            "expr": "scale('x', 'my_dest')"
+          }
+        },
+        {
+          "type": "formula",
+          "expr": "range('y')[0]-scale('y', datum.size)",
+          "as": "strokeWidth"
+        },
+        {
+          "type": "formula",
+          "expr": "datum.size/domain('y')[1]",
+          "as": "percentage"
+        }
+      ]
+    }
+  ],
+  "scales": [
+    {
+      "name": "x",
+      "type": "band",
+      "range": "width",
+      "domain": [
+        "my_source",
+        "my_dest"
+      ],
+      "paddingOuter": 0.05,
+      "paddingInner": 0.95
+    },
+    {
+      "name": "y",
+      "type": "linear",
+      "range": "height",
+      "domain": {
+        "data": "nodes",
+        "field": "y1"
+      }
+    },
+    {
+      "name": "color",
+      "type": "linear",
+      "range": [
+        "#B9D6EB",
+        "#0153A1"
+      ],
+      "domain": {
+        "data": "groups",
+        "field": "percentage"
+      }
+    },
+    {
+      "name": "stackNames",
+      "type": "ordinal",
+      "range": [
+        "Source Image",
+        "Target Image"
+      ],
+      "domain": [
+        "my_source",
+        "my_dest"
+      ]
+    }
+  ],
+  "marks": [
+    {
+      "type": "path",
+      "name": "edgeMark",
+      "from": {
+        "data": "edges"
+      },
+      "clip": true,
+      "encode": {
+        "update": {
+          "stroke": [
+            {
+              "test": "groupSelector && groupSelector.stack=='my_source'",
+              "scale": "color",
+              "field": "my_dest"
+            },
+            {
+              "scale": "color",
+              "field": "percentage"
+            }
+          ],
+          "strokeWidth": {
+            "field": "strokeWidth"
+          },
+          "path": {
+            "field": "path"
+          },
+          "strokeOpacity": {
+            "signal": "!groupSelector && (groupHover.my_source == datum.my_source || groupHover.my_dest == datum.my_dest) ? 1 : 0.1"
+          },
+          "zindex": {
+            "signal": "!groupSelector && (groupHover.my_source == datum.my_source || groupHover.my_dest == datum.my_dest) ? 1 : 0"
+          },
+          "tooltip": {
+            "signal": "datum.my_source + ' → ' + datum.my_dest + '    ' + format(datum.size, ',.0f') + '   (' + format(datum.percentage, '.1%') + ')'"
+          }
+        },
+        "hover": {
+          "strokeOpacity": {
+            "value": 1
+          }
+        }
+      }
+    },
+    {
+      "type": "rect",
+      "name": "groupMark",
+      "from": {
+        "data": "groups"
+      },
+      "encode": {
+        "enter": {
+          "fill": {
+            "scale": "color",
+            "field": "percentage"
+          },
+          "width": {
+            "scale": "x",
+            "band": 2
+          }
+        },
+        "update": {
+          "x": {
+            "scale": "x",
+            "field": "stack"
+          },
+          "y": {
+            "field": "scaledY0"
+          },
+          "y2": {
+            "field": "scaledY1"
+          },
+          "fillOpacity": {
+            "value": 0.7
+          },
+          "stroke": {
+            "value": "#fff"
+          },
+          "strokeWidth": {
+            "value": 2
+          },
+          "tooltip": {
+            "signal": "datum.grpId + '   ' + format(datum.total, ',.0f') + '   (' + format(datum.percentage, '.1%') + ')'"
+          }
+        },
+        "hover": {
+          "fillOpacity": {
+            "value": 1
+          }
+        }
+      }
+    },
+    {
+      "type": "text",
+      "from": {
+        "data": "groups"
+      },
+      "interactive": false,
+      "encode": {
+        "update": {
+          "x": {
+            "signal": "scale('x', datum.stack) + bandwidth('x')"
+          },
+          "yc": {
+            "signal": "(datum.scaledY0 + datum.scaledY1)/2"
+          },
+          "align": {
+            "value": "center"
+          },
+          "baseline": {
+            "value": "middle"
+          },
+          "fontWeight": {
+            "value": "bold"
+          },
+          "text": {
+            "signal": "abs(datum.scaledY0-datum.scaledY1) > 13 ? datum.total : ''"
+          }
+        }
+      }
+    },
+    {
+      "type": "text",
+      "from": {
+        "data": "groups"
+      },
+      "interactive": false,
+      "encode": {
+        "update": {
+          "x": {
+            "signal": "scale('x', datum.stack) + (datum.rightLabel ? bandwidth('x') - 50 : 80)"
+          },
+          "yc": {
+            "signal": "(datum.scaledY0 + datum.scaledY1)/2"
+          },
+          "dir": {
+            "value": "rtl"
+          },
+          "align": {
+            "value": "center"
+          },
+          "baseline": {
+            "value": "middle"
+          },
+          "fontWeight": {
+            "value": "bold"
+          },
+          "text": {
+            "signal": "abs(datum.scaledY0-datum.scaledY1) > 13 ? datum.grpId : ''"
+          }
+        }
+      }
+    }
+  ],
+  "signals": [
+    {
+      "name": "groupHover",
+      "value": {},
+      "on": [
+        {
+          "events": "@groupMark:click",
+          "update": "{my_source:datum.stack=='my_source' && datum.grpId, my_dest:datum.stack=='my_dest' && datum.grpId}"
+        },
+        {
+          "events": "dblclick",
+          "update": "{}"
+        }
+      ]
+    },
+    {
+      "name": "groupSelector",
+      "value": false
+    }
+  ]
+}

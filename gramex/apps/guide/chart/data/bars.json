@@ -1,0 +1,38 @@
+[
+  {
+    "category": "item1",
+    "amount": 50
+  },
+  {
+    "category": "item2",
+    "amount": 47
+  },
+  {
+    "category": "item3",
+    "amount": 44
+  },
+  {
+    "category": "item4",
+    "amount": 41
+  },
+  {
+    "category": "item5",
+    "amount": 38
+  },
+  {
+    "category": "item6",
+    "amount": 35
+  },
+  {
+    "category": "item7",
+    "amount": 32
+  },
+  {
+    "category": "item8",
+    "amount": 30
+  },
+  {
+    "category": "item9",
+    "amount": 27
+  }
+]

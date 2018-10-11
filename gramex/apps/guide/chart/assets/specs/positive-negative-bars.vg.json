@@ -1,0 +1,104 @@
+{
+  "$schema": "https://vega.github.io/schema/vega/v4.json",
+  "width": 600,
+  "height": 360,
+  "autosize": "fit",
+  "data": [
+    {
+      "name": "table",
+      "url": "<%= absolute_url %>data/pos-neg-items.json"
+    }
+  ],
+  "scales": [
+    {
+      "name": "xscale",
+      "type": "band",
+      "domain": {
+        "data": "table",
+        "field": "category"
+      },
+      "range": "width",
+      "padding": 0.05,
+      "round": true,
+      "nice": true
+    },
+    {
+      "name": "yscale",
+      "domain": {
+        "data": "table",
+        "field": "amount"
+      },
+      "nice": true,
+      "range": "height"
+    }
+  ],
+  "marks": [
+    {
+      "name": "bars",
+      "type": "rect",
+      "from": {
+        "data": "table"
+      },
+      "encode": {
+        "enter": {
+          "x": {
+            "scale": "xscale",
+            "field": "category"
+          },
+          "width": {
+            "scale": "xscale",
+            "band": 1
+          },
+          "y": {
+            "scale": "yscale",
+            "field": "amount"
+          },
+          "y2": {
+            "scale": "yscale",
+            "value": 0
+          },
+          "fill": {
+            "signal": "datum.amount > 0 ? 'red' : 'green'"
+          }
+        }
+      }
+    },
+    {
+      "name": "item_name",
+      "type": "text",
+      "from": {
+        "data": "table"
+      },
+      "encode": {
+        "enter": {
+          "x": {
+            "scale": "xscale",
+            "field": "category"
+          },
+          "y": {
+            "scale": "yscale",
+            "field": "amount"
+          },
+          "dy": {
+            "signal": "datum.amount > 0 ? -4 : 14"
+          },
+          "dx": {
+            "signal": "bandwidth('xscale')/2"
+          },
+          "align": {
+            "value": "center"
+          },
+          "fill": {
+            "value": "black"
+          },
+          "text": {
+            "field": "category"
+          },
+          "fontSize": {
+            "value": 12
+          }
+        }
+      }
+    }
+  ]
+}

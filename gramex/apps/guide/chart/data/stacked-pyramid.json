@@ -1,0 +1,127 @@
+[
+  {
+    "Ranks": "PPEDs",
+    "name": "Traditional",
+    "value": 50
+  },
+  {
+    "Ranks": "PPEDs",
+    "name": "GDS",
+    "value": 5
+  },
+  {
+    "Ranks": "PPEDs",
+    "name": "Managed Services",
+    "value": 0
+  },
+  {
+    "Ranks": "PPEDs",
+    "name": "Contingent",
+    "value": 0
+  },
+  {
+    "Ranks": "PPEDs",
+    "name": "Digital",
+    "value": 0
+  },
+  {
+    "Ranks": "Senior Managers",
+    "name": "Traditional",
+    "value": 120
+  },
+  {
+    "Ranks": "Senior Managers",
+    "name": "GDS",
+    "value": 5
+  },
+  {
+    "Ranks": "Senior Managers",
+    "name": "Managed Services",
+    "value": 0
+  },
+  {
+    "Ranks": "Senior Managers",
+    "name": "Contingent",
+    "value": 0
+  },
+  {
+    "Ranks": "Senior Managers",
+    "name": "Digital",
+    "value": 2.5
+  },
+  {
+    "Ranks": "Managed Managers",
+    "name": "Traditional",
+    "value": 100
+  },
+  {
+    "Ranks": "Managed Managers",
+    "name": "GDS",
+    "value": 30
+  },
+  {
+    "Ranks": "Managed Managers",
+    "name": "Managed Services",
+    "value": 15
+  },
+  {
+    "Ranks": "Managed Managers",
+    "name": "Contingent",
+    "value": 2
+  },
+  {
+    "Ranks": "Managed Managers",
+    "name": "Digital",
+    "value": 32.5
+  },
+  {
+    "Ranks": "Seniors",
+    "name": "Traditional",
+    "value": 200
+  },
+  {
+    "Ranks": "Seniors",
+    "name": "GDS",
+    "value": 30
+  },
+  {
+    "Ranks": "Seniors",
+    "name": "Managed Services",
+    "value": 5
+  },
+  {
+    "Ranks": "Seniors",
+    "name": "Contingent",
+    "value": 28
+  },
+  {
+    "Ranks": "Seniors",
+    "name": "Digital",
+    "value": 5
+  },
+  {
+    "Ranks": "Staff",
+    "name": "Traditional",
+    "value": 240
+  },
+  {
+    "Ranks": "Staff",
+    "name": "GDS",
+    "value": 60
+  },
+  {
+    "Ranks": "Staff",
+    "name": "Managed Services",
+    "value": 72
+  },
+  {
+    "Ranks": "Staff",
+    "name": "Contingent",
+    "value": 0
+  },
+  {
+    "Ranks": "Staff",
+    "name": "Digital",
+    "value": 132
+  }
+]

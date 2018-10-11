@@ -95,6 +95,8 @@ Gramex applications may use other libraries based on need.
 - [url-search-params](https://www.npmjs.com/package/url-search-params): [MIT license](MIT)
 - [vegam](https://www.npmjs.com/package/vegam): [MIT license](MIT)
 - [vue](https://www.npmjs.com/package/vue): [MIT license](MIT)
+- [vega](https://www.npmjs.com/package/vega): [BSD license](BSD)
+- [vega-lite](https://www.npmjs.com/package/vega-lite): [BSD license](BSD)
 - [which](https://www.npmjs.com/package/which): [ISC license](ISC)
 - [ws](https://www.npmjs.com/package/ws): [MIT license](MIT)
 

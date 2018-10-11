@@ -1,0 +1,68 @@
+[
+  {
+    "Productivity": 20,
+    "Avg TAT (days)": 2,
+    "Total Applicants": 4,
+    "Type": "High Productivity Low TAT"
+  },
+  {
+    "Productivity": 10,
+    "Avg TAT (days)": 5,
+    "Total Applicants": 1,
+    "Type": "High Productivity Low TAT"
+  },
+  {
+    "Productivity": 45,
+    "Avg TAT (days)": 5,
+    "Total Applicants": 4,
+    "Type": "High Productivity Low TAT"
+  },
+  {
+    "Productivity": 20,
+    "Avg TAT (days)": 6,
+    "Total Applicants": 2,
+    "Type": "High Productivity Low TAT"
+  },
+  {
+    "Productivity": 30,
+    "Avg TAT (days)": 6,
+    "Total Applicants": 3,
+    "Type": "High Productivity Low TAT"
+  },
+  {
+    "Productivity": 43,
+    "Avg TAT (days)": 9,
+    "Total Applicants": 2,
+    "Type": "Low Productivity Low TAT"
+  },
+  {
+    "Productivity": 18,
+    "Avg TAT (days)": 10,
+    "Total Applicants": 4,
+    "Type": "Low Productivity Low TAT"
+  },
+  {
+    "Productivity": 28,
+    "Avg TAT (days)": 11,
+    "Total Applicants": 2,
+    "Type": "Low Productivity Low TAT"
+  },
+  {
+    "Productivity": 38,
+    "Avg TAT (days)": 12,
+    "Total Applicants": 4,
+    "Type": "Low Productivity Low TAT"
+  },
+  {
+    "Productivity": 50,
+    "Avg TAT (days)": "",
+    "Total Applicants": "",
+    "Type": "Low Productivity Low TAT"
+  },
+  {
+    "Productivity": "",
+    "Avg TAT (days)": 15,
+    "Total Applicants": "",
+    "Type": "Low Productivity Low TAT"
+  }
+]

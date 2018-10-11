@@ -1,0 +1,76 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
+  "width": 590,
+  "height": 350,
+  "autosize": "fit",
+  "data": {
+    "url": "<%= absolute_url %>data/bars.json"
+  },
+  "mark": "bar",
+  "encoding": {
+    "tooltip": {
+      "value": false
+    },
+    "y": {
+      "field": "category",
+      "type": "ordinal",
+      "title": null,
+      "scale": {
+        "paddingOuter": 0.2,
+        "paddingInner": 0.35
+      },
+      "axis": {
+        "ticks": false,
+        "title": null,
+        "domainColor": "white",
+        "labelAlign": "left",
+        "labelPadding": -9,
+        "position": -18
+      }
+    },
+    "x": {
+      "aggregate": "mean",
+      "field": "amount",
+      "type": "quantitative",
+      "axis": null
+    },
+    "color": {
+      "value": "#FEC44F"
+    }
+  },
+  "config": {
+    "axisY": {
+      "minExtent": 30
+    },
+    "style": {
+      "cell": {
+        "stroke": "transparent"
+      }
+    }
+  },
+  "layer": [
+    {
+      "mark": "bar"
+    },
+    {
+      "mark": {
+        "type": "text",
+        "align": "left",
+        "baseline": "middle",
+        "dx": 3
+      },
+      "encoding": {
+        "text": {
+          "field": "amount",
+          "type": "quantitative"
+        },
+        "color": {
+          "value": "black"
+        },
+        "size": {
+          "value": 12
+        }
+      }
+    }
+  ]
+}

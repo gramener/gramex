@@ -1,0 +1,234 @@
+{
+  "$schema": "https://vega.github.io/schema/vega/v4.json",
+  "width": 480,
+  "height": 250,
+  "autosize": "fit",
+  "padding": {
+    "left": 60,
+    "right": 60,
+    "top": 110
+  },
+  "signals": [
+    {
+      "name": "_width",
+      "value": 480
+    },
+    {
+      "name": "_height",
+      "value": 250
+    },
+    {
+      "name": "startAngle",
+      "value": -1.57079632
+    },
+    {
+      "name": "endAngle",
+      "value": 1.57079632
+    },
+    {
+      "name": "minDimension",
+      "update": "_width > _height ? _height : _width"
+    }
+  ],
+  "data": [
+    {
+      "name": "future_dataset",
+      "url": "<%= absolute_url %>data/half-donut.json",
+      "transform": [
+        {
+          "type": "pie",
+          "field": "count",
+          "sort": false,
+          "startAngle": {
+            "signal": "startAngle"
+          },
+          "endAngle": {
+            "signal": "endAngle"
+          }
+        },
+        {
+          "type": "joinaggregate",
+          "fields": [
+            "count"
+          ],
+          "ops": [
+            "sum"
+          ],
+          "as": [
+            "total"
+          ]
+        }
+      ]
+    }
+  ],
+  "scales": [
+    {
+      "name": "color",
+      "type": "ordinal",
+      "domain": {
+        "data": "future_dataset",
+        "field": "label"
+      },
+      "range": {
+        "scheme": "category20"
+      }
+    }
+  ],
+  "marks": [
+    {
+      "name": "future_pie",
+      "type": "arc",
+      "from": {
+        "data": "future_dataset"
+      },
+      "encode": {
+        "enter": {
+          "x": {
+            "signal": "width/2"
+          },
+          "y": {
+            "signal": "height"
+          },
+          "stroke": {
+            "value": "white"
+          },
+          "strokeWidth": {
+            "value": 2
+          },
+          "fill": {
+            "scale": "color",
+            "field": "label"
+          },
+          "startAngle": {
+            "field": "startAngle"
+          },
+          "endAngle": {
+            "field": "endAngle"
+          },
+          "innerRadius": {
+            "signal": "minDimension/1.2"
+          },
+          "outerRadius": {
+            "signal": "minDimension"
+          }
+        }
+      }
+    },
+    {
+      "name": "future_labels_rect",
+      "type": "rect",
+      "from": {
+        "data": "future_dataset"
+      },
+      "encode": {
+        "enter": {
+          "fill": {
+            "scale": "color",
+            "field": "label"
+          },
+          "xc": {
+            "signal": "(width/2) + (minDimension * 1.1) * cos(-PI/2 + (datum.startAngle + datum.endAngle)/2)"
+          },
+          "yc": {
+            "signal": "(height) + (minDimension * 1.1) * sin(-PI/2 + (datum.startAngle + datum.endAngle)/2)"
+          },
+          "width": {
+            "value": 45
+          },
+          "height": {
+            "value": 25
+          }
+        }
+      }
+    },
+    {
+      "name": "future_labels",
+      "type": "text",
+      "from": {
+        "data": "future_dataset"
+      },
+      "encode": {
+        "enter": {
+          "fontWeight": {
+            "value": "600"
+          },
+          "font": {
+            "value": "Roboto"
+          },
+          "fontSize": {
+            "value": 16
+          },
+          "x": {
+            "signal": "width/2"
+          },
+          "y": {
+            "signal": "height"
+          },
+          "radius": {
+            "signal": "minDimension * 1.1"
+          },
+          "theta": {
+            "signal": "(datum.startAngle + datum.endAngle)/2"
+          },
+          "text": {
+            "signal": "(datum.count/datum.total) * 100 + '%'"
+          },
+          "baseline": {
+            "value": "middle"
+          },
+          "fill": {
+            "value": "white"
+          },
+          "align": {
+            "value": "center"
+          }
+        }
+      }
+    },
+    {
+      "name": "future_labels_text",
+      "type": "text",
+      "from": {
+        "data": "future_dataset"
+      },
+      "encode": {
+        "enter": {
+          "fontWeight": {
+            "value": "600"
+          },
+          "font": {
+            "value": "Roboto"
+          },
+          "fill": {
+            "scale": "color",
+            "field": "label"
+          },
+          "fontSize": {
+            "value": 12
+          },
+          "x": {
+            "signal": "width/2"
+          },
+          "y": {
+            "signal": "height"
+          },
+          "radius": {
+            "signal": "minDimension * 1.2"
+          },
+          "theta": {
+            "signal": "(datum.startAngle + datum.endAngle)/2.05"
+          },
+          "text": {
+            "signal": "datum.label"
+          },
+          "baseline": {
+            "value": "bottom"
+          },
+          "align": {
+            "value":"center"
+          }
+        }
+      }
+    }
+  ]
+}

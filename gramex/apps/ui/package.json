@@ -22,6 +22,8 @@
     "select2": "^4.0.6-rc.1",
     "tether-shepherd": "1",
     "topojson": "3",
-    "url-search-params": "0.10"
+    "url-search-params": "0.10",
+    "vega": "4",
+    "vega-lite": "3"
   }
 }
