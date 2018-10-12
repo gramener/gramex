@@ -594,9 +594,13 @@ def init(cmd, args):
         'email': _check_output('git config user.email', default='user@example.org'),
         'date': datetime.datetime.today().strftime('%Y-%m-%d')
     }
-    # Create a git repo if required
+    # Create a git repo if required.
+    # But if git is not installed, do not stop. Continue with the rest.
     if not os.path.exists(os.path.join(args.target, '.git')):
-        _run_console('git init')
+        try:
+            _run_console('git init')
+        except OSError:
+            pass
     # Copy all files as templates
     source_dir = os.path.join(variables['GRAMEXPATH'], 'apps', 'init')
     for path in os.listdir(source_dir):
