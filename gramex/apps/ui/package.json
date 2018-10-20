@@ -10,7 +10,7 @@
     "d3-scale-chromatic": "*",
     "daterangepicker": "2",
     "font-awesome": "*",
-    "g1": "0.9.1",
+    "g1": "0.10",
     "jquery": "~3",
     "leaflet": "1.2",
     "lodash": "4",
@@ -24,6 +24,6 @@
     "topojson": "3",
     "url-search-params": "0.10",
     "vega": "4",
-    "vega-lite": "3"
+    "vega-lite": "3.0.0-rc6"
   }
 }
