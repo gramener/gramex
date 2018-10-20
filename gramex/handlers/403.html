@@ -25,7 +25,20 @@
   {% else %}
     <p>You <strong>are not</strong> logged in.</p>
   {% end %}
-  <p>Contact the app owner.</p>
+  {% set login_url = None %}
+  {% try %}
+    {% set login_url = handler.kwargs.auth.login_url %}
+  {% except %}
+    {% try %}
+      {% import gramex %}
+      {% set login_url = gramex.conf.app.settings.login_url %}
+    {% except %}
+    {% end %}
+  {% end %}
+  {% if login_url %}
+  <p><a href="{{ login_url }}">Try logging in again</a>.</p>
+  {% end %}
+  <p>Contact the app owner for more information.</p>
   <pre>HTTP 403: Forbidden</pre>
 </body>
 </html>
