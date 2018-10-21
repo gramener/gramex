@@ -12,6 +12,26 @@ import os
 # Libraries required for Gramex
 # Keep this in sync with guide/license/thirdparty.md
 install_requires = [
+    # Requires conda install
+    # 'rpy2',                         # For gramex.ml.r()
+    # 'line_profiler',                # For gramex.debug
+
+    # These are pre-packaged in conda
+    'colorama',                     # For gramex.init()
+    'pandas',                       # For gramex.data.filter()
+    'matplotlib',                   # For gramex.data.download()
+    'seaborn',                      # For gramex.data.download()
+    'sqlalchemy',                   # For gramex.data.filter()
+    'datashape',                    # For gramex.handlers.datahandler
+    'blaze',                        # For gramex.handlers.datahandler
+    'ldap3',                        # For gramex.handlers.authhandler.LDAPAuth
+    'cachetools',                   # For gramex.services.ttlcache
+    'redis',                        # For gramex.cache.RedisStore
+    'h5py',                         # For gramex.cache.HDF5Store
+    'ipdb',                         # For gramex.debug
+    'lxml',                         # For gramex.pptgen
+    'markdown',                     # For gramex.services.create_alert()
+
     # For setup
     'setuptools >= 16.0',       # 16.0 has good error message support
 
