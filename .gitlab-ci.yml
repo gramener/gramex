@@ -28,6 +28,7 @@ validate:
     - eslint gramex/apps
     - htmllint
     - pip install -q -e .
+    - gramex license accept
     - python setup.py nosetests
 
 # Test the dev and master branches on Python 3 as well
@@ -37,6 +38,7 @@ validate-py3:
   script:
     - flake8                                            # Check flake8 errors for Python 3
     - pip install -q -e .
+    - gramex license accept
     - python setup.py nosetests
     - bandit gramex --recursive --format csv || true    # Just run bandit at the end, as a warning
 
@@ -64,10 +66,12 @@ deploy-uat-demo:
         git checkout -- .;
         git pull;
         pip install --verbose -e .;
+        gramex license accept;
       "'
     - 'ssh -t ubuntu@demo.gramener.com "
         cd /mnt/data/apps/gramex/gramex/;
         git checkout -- .;
         git pull;
         pip install --verbose -e .;
+        gramex license accept;
       "'

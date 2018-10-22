@@ -29,6 +29,7 @@ import webbrowser
 import tornado.web
 import gramex.data
 import gramex.cache
+import gramex.license
 import logging.config
 import concurrent.futures
 import six.moves.urllib.parse as urlparse
@@ -149,6 +150,8 @@ def app(conf):
             '''Called after all services are started. Opens browser if required'''
             if ioloop_running(ioloop):
                 return
+
+            gramex.license.accept()
 
             app_log.info('Listening on port %d', conf.listen.port)
             app_log_extra['port'] = conf.listen.port

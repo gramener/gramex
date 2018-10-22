@@ -22,6 +22,7 @@ from zipfile import ZipFile
 from tornado.template import Template
 from orderedattrdict.yamlutils import from_yaml         # noqa
 import gramex
+import gramex.license
 from gramex.config import ChainConfig, PathConfig, variables, app_log
 
 usage = '''
@@ -140,6 +141,11 @@ mail: |
 
     Options:
       --conf <path>                 # Specify a different conf file location
+
+license: |
+    gramex license                  # Show Gramex license
+    gramex license accept           # Accept Gramex license
+    gramex license reject           # Reject Gramex license
 '''
 usage = yaml.load(usage, Loader=AttrDictYAMLLoader)     # nosec
 
@@ -682,3 +688,18 @@ def mail(cmd, args):
             continue
         alert = create_alert(key, alert_conf[key])
         alert()
+
+
+def license(cmd, args):
+    if len(cmd) == 0:
+        gramex.console(gramex.license.EULA)
+        if gramex.license.is_accepted():
+            gramex.console('License already ACCEPTED. Run "gramex license reject" to reject')
+        else:
+            gramex.console('License NOT YET accepted. Run "gramex license accept" to accept')
+    elif cmd[0] == 'accept':
+        gramex.license.accept(force=True)
+    elif cmd[0] == 'reject':
+        gramex.license.reject()
+    else:
+        app_log.error('Invalid command license %s', cmd[0])

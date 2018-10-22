@@ -15,6 +15,7 @@ Helper applications
   gramex init                   Add Gramex project scaffolding to current dir
   gramex service                Windows service setup
   gramex mail                   Send email from command line
+  gramex license                See Gramex license, accept or reject it
 
 Installation commands. Run without arguments to see help
   gramex install                Install an app
@@ -145,7 +146,10 @@ def callback_commandline(commands):
         kwargs = {'cmd': cmd, 'args': args}
         base_command = cmd.pop(0).lower()
         method = 'install' if base_command == 'update' else base_command
-        if method in {'install', 'uninstall', 'setup', 'run', 'service', 'init', 'mail'}:
+        if method in {
+            'install', 'uninstall', 'setup', 'run', 'service', 'init',
+            'mail', 'license',
+        }:
             import gramex.install
             return getattr(gramex.install, method), kwargs
         raise NotImplementedError('Unknown gramex command: %s' % base_command)
