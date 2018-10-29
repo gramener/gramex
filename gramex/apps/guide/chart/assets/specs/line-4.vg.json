@@ -3,6 +3,9 @@
   "width": 600,
   "height": 360,
   "autosize": "fit",
+  "padding": {
+    "top": 30
+  },
   "signals": [
     {
       "name": "interpolate",
@@ -41,13 +44,10 @@
     {
       "name": "color",
       "type": "ordinal",
-      "domain": [
-        "Kerala",
-        "Punjab",
-        "Goa",
-        "Hyderabad",
-        "chennai"
-      ],
+      "domain": {
+        "data": "table",
+        "field": "c"
+      },
       "range": [
         "#9C27B0",
         "#109618",
@@ -80,7 +80,8 @@
     {
       "orient": "right",
       "scale": "y",
-      "ticks": false,
+      "ticks": true,
+      "tickColor": "white",
       "zindex": 1,
       "labels": false
     },
@@ -105,6 +106,28 @@
         2,
         3
       ]
+    }
+  ],
+  "legends": [
+    {
+      "orient": "none",
+      "encode": {
+        "legend": {
+          "update": {
+            "x": {
+              "signal": "width*0.4"
+            },
+            "y": {
+              "value": -20
+            }
+          }
+        }
+      },
+      "fill": "color",
+      "zindex": 0,
+      "direction": "horizontal",
+      "symbolType": "square",
+      "labelFontSize": 12
     }
   ],
   "marks": [

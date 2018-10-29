@@ -1,0 +1,138 @@
+{
+  "$schema": "https://vega.github.io/schema/vega/v4.json",
+  "width": 600,
+  "height": 360,
+  "autosize": "fit",
+  "data": [
+    {
+      "name": "table",
+      "url": "<%= absolute_url %>data/pos-neg-items.json"
+        
+    }
+  ],
+  "scales": [
+    {
+      "name": "yscale",
+      "type": "band",
+      "domain": {
+        "data": "table",
+        "field": "category"
+      },
+      "range": "height",
+      "padding": 0.4,
+      "round": true,
+      "nice": true
+    },
+    {
+      "name": "xscale",
+      "domain": {
+        "data": "table",
+        "field": "amount"
+      },
+      "nice": true,
+      "range": "width"
+    }
+  ],
+  "marks": [
+    {
+      "name": "bars",
+      "type": "rect",
+      "from": {
+        "data": "table"
+      },
+      "encode": {
+        "enter": {
+          "x": {
+            "scale": "xscale",
+            "field": "amount"
+          },
+          "height": {
+            "scale": "yscale",
+            "band": 1
+          },
+          "y": {
+            "scale": "yscale",
+            "field": "category"
+          },
+          "x2": {
+            "scale": "xscale",
+            "value": 0
+          },
+          "fill": {
+            "signal": "datum.amount > 0 ? 'green' : 'red'"
+          }
+        }
+      }
+    },
+    {
+      "name": "item_score",
+      "type": "text",
+      "from": {
+        "data": "table"
+      },
+      "encode": {
+        "enter": {
+          "x": {
+            "scale": "xscale",
+            "field": "amount"
+          },
+          "y": {
+            "scale": "yscale",
+            "field": "category"
+          },
+          "dx": {
+            "signal": "datum.amount > 0 ? 10 : -10"
+          },
+          "dy": {
+            "signal": "bandwidth('yscale')/1.5"
+          },
+          "align": {
+            "value": "center"
+          },
+          "fill": {
+            "value": "black"
+          },
+          "text": {
+            "field": "amount"
+          },
+          "fontSize": {
+            "value": 12
+          }
+        }
+      }
+    },
+    {
+      "name": "item_name",
+      "type": "text",
+      "from": {
+        "data": "table"
+      },
+      "encode": {
+        "enter": {
+          "y": {
+            "scale": "yscale",
+            "field": "category"
+          },
+          "dy": {
+            "signal": "bandwidth('yscale')/1.5"
+          },
+          "dx": {
+            "signal": "datum.amount > 0 ? width/2-20 : width/2+20"
+          },
+          "align": {
+            "value": "center"
+          },
+          "fill": {
+            "value": "black"
+          },
+          "text": {
+            "field": "category"
+          },
+          "fontSize": {
+            "value": 12
+          }
+        }
+      }
+    }
+  ]
+}

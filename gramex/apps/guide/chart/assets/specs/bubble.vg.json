@@ -1,0 +1,184 @@
+{
+  "$schema": "https://vega.github.io/schema/vega/v4.json",
+  "description": "https://gramener.invisionapp.com/d/main/#/console/7709561/326727774/preview",
+  "width": 495,
+  "height": 320,
+  "autosize": "fit",
+  "padding": {
+    "left": 5,
+    "top": 25,
+    "right": 100,
+    "bottom": 15
+  },
+  "title": {
+    "text": "BUBBLE CHART",
+    "anchor": "start",
+    "fontSize": 13,
+    "font": "roboto",
+    "fontWeight": 900,
+    "color": "#485465"
+  },
+  "data": [
+    {
+      "name": "table",
+      "url": "<%= absolute_url %>data/bubble.json"
+    }
+  ],
+  "scales": [
+    {
+      "name": "x",
+      "type": "linear",
+      "round": true,
+      "nice": true,
+      "padding": 0.1,
+      "zero": true,
+      "domain": {
+        "data": "table",
+        "field": "V1"
+      },
+      "range": "width"
+    },
+    {
+      "name": "y",
+      "round": true,
+      "nice": true,
+      "zero": true,
+      "domain": {
+        "data": "table",
+        "field": "V2"
+      },
+      "range": "height"
+    },
+    {
+      "name": "size",
+      "type": "linear",
+      "round": true,
+      "nice": false,
+      "zero": true,
+      "domain": {
+        "data": "table",
+        "field": "Depth"
+      },
+      "range": [
+        25,
+        8000
+      ]
+    },
+    {
+      "name": "label",
+      "type": "ordinal",
+      "domain": {
+        "data": "table",
+        "field": "Label"
+      },
+      "range": [
+        "#ED1E77",
+        "#F7931F",
+        "#FCEE22"
+      ]
+    }
+  ],
+  "axes": [
+    {
+      "scale": "x",
+      "grid": true,
+      "gridOpacity": 0.9,
+      "gridColor": "#F0F2F4",
+      "domain": true,
+      "orient": "bottom",
+      "ticks": false,
+      "title": "Variable 1",
+      "titleFont": "roboto",
+      "titleColor": "#485465",
+      "titleFontSize": 12,
+      "titleFontWeight": 500,
+      "titlePadding": 16,
+      "labelColor": "#485465",
+      "labelFlush": true,
+      "labelFlushOffset": 15,
+      "labelFontSize": 10,
+      "labelPadding": 10,
+      "labelFontWeight": 500
+    },
+    {
+      "scale": "y",
+      "grid": true,
+      "gridOpacity": 0.9,
+      "gridColor": "#F0F2F4",
+      "domain": true,
+      "orient": "left",
+      "ticks": false,
+      "tickCount": 5,
+      "title": "Variable 2",
+      "titleFont": "roboto",
+      "titleColor": "#485465",
+      "titleFontSize": 12,
+      "titleFontWeight": 500,
+      "titlePadding": 16,
+      "labelColor": "#485465",
+      "labelFlush": true,
+      "labelFlushOffset": 20,
+      "labelFontSize": 10,
+      "labelFontWeight": 500,
+      "labelPadding": 10,
+      "labelFont": "roboto"
+    }
+  ],
+  "marks": [
+    {
+      "name": "circles",
+      "type": "symbol",
+      "from": {
+        "data": "table"
+      },
+      "encode": {
+        "enter": {
+          "x": {
+            "scale": "x",
+            "field": "V1"
+          },
+          "y": {
+            "scale": "y",
+            "field": "V2"
+          },
+          "size": {
+            "scale": "size",
+            "field": "Depth"
+          },
+          "shape": {
+            "value": "circle"
+          },
+          "fill": {
+            "scale": "label",
+            "field": "Label"
+          }
+        }
+      }
+    }
+  ],
+  "legends": [
+    {
+      "orient": "none",
+      "encode": {
+        "legend": {
+          "update": {
+            "x": {
+              "signal": "width + 30"
+            },
+            "y": {
+              "value": 140
+            }
+          }
+        }
+      },
+      "direction": "vertical",
+      "fill": "label",
+      "rowPadding": 10,
+      "symbolType": "circle",
+      "labelFontSize": 11,
+      "labelFont": "roboto",
+      "labelFontWeight": "500",
+      "labelColor": "#485465"
+    }
+  ]
+}

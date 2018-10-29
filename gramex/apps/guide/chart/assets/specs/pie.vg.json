@@ -1,0 +1,138 @@
+  {
+    "$schema": "https://vega.github.io/schema/vega/v4.json",
+    "width": 600,
+    "height": 360,
+    "autosize": "fit",
+    "signals": [
+      {
+        "name": "startAngle",
+        "value": 0
+      },
+      {
+        "name": "endAngle",
+        "value": 6.29
+      }
+    ],
+    "data": [
+      {
+        "name": "table",
+        "url": "<%= absolute_url %>data/half-donut.json",
+        "transform": [
+          {
+            "type": "pie",
+            "field": "count",
+            "startAngle": {
+              "signal": "startAngle"
+            },
+            "endAngle": {
+              "signal": "endAngle"
+            }
+          },
+          {
+            "type": "joinaggregate",
+            "fields": [
+              "count"
+            ],
+            "ops": [
+              "sum"
+            ],
+            "as": [
+              "total"
+            ]
+          }
+        ]
+      }
+    ],
+    "scales": [
+      {
+        "name": "color",
+        "type": "ordinal",
+        "domain": {
+          "data": "table",
+          "field": "label"
+        },
+        "range": [
+          "#3366CC",
+          "#DC3912",
+          "#FF9900",
+          "#109618",
+          "rgb(156, 39, 176)"
+        ]
+      }
+    ],
+    "marks": [
+      {
+        "type": "arc",
+        "from": {
+          "data": "table"
+        },
+        "encode": {
+          "enter": {
+            "fill": {
+              "scale": "color",
+              "field": "label"
+            },
+            "x": {
+              "signal": "width / 2"
+            },
+            "y": {
+              "signal": "height / 2"
+            },
+            "startAngle": {
+              "field": "startAngle"
+            },
+            "endAngle": {
+              "field": "endAngle"
+            },
+            "outerRadius": {
+              "signal": "width / 4.5"
+            },
+            "stroke": {
+              "value": "#fff"
+            }
+          }
+        }
+      },
+      {
+        "name": "category_labels",
+        "type": "text",
+        "from": {
+          "data": "table"
+        },
+        "encode": {
+          "enter": {
+            "font": {
+              "value": "roboto"
+            },
+            "fill": {
+              "value": "rgba(0,0,0,0.7)"
+            },
+            "fontSize": {
+              "value": 12
+            },
+            "x": {
+              "signal": "width / 2"
+            },
+            "y": {
+              "signal": "height / 2"
+            },
+            "radius": {
+              "signal": "width/3.15"
+            },
+            "theta": {
+              "signal": "(datum.startAngle + datum.endAngle)/2"
+            },
+            "text": {
+              "signal": "datum.label + ', ' + format(datum.count/datum.total, '.0%')"
+            },
+            "baseline": {
+              "value": "middle"
+            },
+            "align": {
+              "value": "center"
+            }
+          }
+        }
+      }
+    ]
+  }

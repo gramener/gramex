@@ -1,0 +1,98 @@
+[
+  {
+    "sourceid": 39,
+    "dstid": 2,
+    "month": 3,
+    "date_month": "2018-03-01",
+    "mean_travel_time": 655.76,
+    "standard_deviation_travel_time": 454.64
+  },
+  {
+    "sourceid": 2,
+    "dstid": 2,
+    "month": 1,
+    "date_month": "2018-01-01",
+    "mean_travel_time": 595.57,
+    "standard_deviation_travel_time": 597.74
+  },
+  {
+    "sourceid": 2,
+    "dstid": 39,
+    "month": 3,
+    "date_month": "2018-03-01",
+    "mean_travel_time": 708.52,
+    "standard_deviation_travel_time": 525.47
+  },
+  {
+    "sourceid": 39,
+    "dstid": 39,
+    "month": 2,
+    "date_month": "2018-02-01",
+    "mean_travel_time": 589.61,
+    "standard_deviation_travel_time": 458.08
+  },
+  {
+    "sourceid": 2,
+    "dstid": 2,
+    "month": 2,
+    "date_month": "2018-02-01",
+    "mean_travel_time": 567.37,
+    "standard_deviation_travel_time": 529.61
+  },
+  {
+    "sourceid": 39,
+    "dstid": 2,
+    "month": 1,
+    "date_month": "2018-01-01",
+    "mean_travel_time": 631.63,
+    "standard_deviation_travel_time": 436.38
+  },
+  {
+    "sourceid": 39,
+    "dstid": 39,
+    "month": 3,
+    "date_month": "2018-03-01",
+    "mean_travel_time": 615.19,
+    "standard_deviation_travel_time": 496.82
+  },
+  {
+    "sourceid": 2,
+    "dstid": 39,
+    "month": 1,
+    "date_month": "2018-01-01",
+    "mean_travel_time": 678.37,
+    "standard_deviation_travel_time": 507.14
+  },
+  {
+    "sourceid": 39,
+    "dstid": 39,
+    "month": 1,
+    "date_month": "2018-01-01",
+    "mean_travel_time": 578.01,
+    "standard_deviation_travel_time": 515.87
+  },
+  {
+    "sourceid": 39,
+    "dstid": 2,
+    "month": 2,
+    "date_month": "2018-02-01",
+    "mean_travel_time": 649.74,
+    "standard_deviation_travel_time": 445.26
+  },
+  {
+    "sourceid": 2,
+    "dstid": 39,
+    "month": 2,
+    "date_month": "2018-02-01",
+    "mean_travel_time": 696.38,
+    "standard_deviation_travel_time": 511.92
+  },
+  {
+    "sourceid": 2,
+    "dstid": 2,
+    "month": 3,
+    "date_month": "2018-03-01",
+    "mean_travel_time": 622.5,
+    "standard_deviation_travel_time": 601.28
+  }
+]

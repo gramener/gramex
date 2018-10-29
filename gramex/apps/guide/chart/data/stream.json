@@ -1,0 +1,302 @@
+[
+  {
+    "x": "item 1",
+    "y": 20,
+    "c": 0,
+    "product": 0
+  },
+  {
+    "x": "item 1",
+    "y": 40,
+    "c": 1,
+    "product": 1
+  },
+  {
+    "x": "item 2",
+    "y": 20,
+    "c": 0,
+    "product": 0
+  },
+  {
+    "x": "item 2",
+    "y": 20,
+    "c": 1,
+    "product": 1
+  },
+  {
+    "x": "item 3",
+    "y": 81,
+    "c": 0,
+    "product": 0
+  },
+  {
+    "x": "item 3",
+    "y": 53,
+    "c": 1,
+    "product": 1
+  },
+  {
+    "x": "item 4",
+    "y": 19,
+    "c": 0,
+    "product": 0
+  },
+  {
+    "x": "item 4",
+    "y": 87,
+    "c": 1,
+    "product": 1
+  },
+  {
+    "x": "item 5",
+    "y": 52,
+    "c": 0,
+    "product": 0
+  },
+  {
+    "x": "item 5",
+    "y": 48,
+    "c": 1,
+    "product": 1
+  },
+  {
+    "x": "item 6",
+    "y": 24,
+    "c": 0,
+    "product": 0
+  },
+  {
+    "x": "item 6",
+    "y": 49,
+    "c": 1,
+    "product": 1
+  },
+  {
+    "x": "item 7",
+    "y": 87,
+    "c": 0,
+    "product": 0
+  },
+  {
+    "x": "item 7",
+    "y": 66,
+    "c": 1,
+    "product": 1
+  },
+  {
+    "x": "item 8",
+    "y": 17,
+    "c": 0,
+    "product": 0
+  },
+  {
+    "x": "item 8",
+    "y": 27,
+    "c": 1,
+    "product": 1
+  },
+  {
+    "x": "item 9",
+    "y": 68,
+    "c": 0,
+    "product": 0
+  },
+  {
+    "x": "item 9",
+    "y": 16,
+    "c": 1,
+    "product": 1
+  },
+  {
+    "x": "item 10",
+    "y": 49,
+    "c": 0,
+    "product": 0
+  },
+  {
+    "x": "item 10",
+    "y": 15,
+    "c": 1,
+    "product": 1
+  },
+  {
+    "x": "item 1",
+    "y": 20,
+    "c": 2,
+    "product": 2
+  },
+  {
+    "x": "item 2",
+    "y": 40,
+    "c": 2,
+    "product": 2
+  },
+  {
+    "x": "item 3",
+    "y": 25,
+    "c": 2,
+    "product": 2
+  },
+  {
+    "x": "item 4",
+    "y": 45,
+    "c": 2,
+    "product": 2
+  },
+  {
+    "x": "item 5",
+    "y": 35,
+    "c": 2,
+    "product": 2
+  },
+  {
+    "x": "item 6",
+    "y": 55,
+    "c": 2,
+    "product": 2
+  },
+  {
+    "x": "item 7",
+    "y": 95,
+    "c": 2,
+    "product": 2
+  },
+  {
+    "x": "item 8",
+    "y": 100,
+    "c": 2,
+    "product": 2
+  },
+  {
+    "x": "item 9",
+    "y": 110,
+    "c": 2,
+    "product": 2
+  },
+  {
+    "x": "item 10",
+    "y": 45,
+    "c": 2,
+    "product": 2
+  },
+  {
+    "x": "item 1",
+    "y": 10,
+    "c": 3,
+    "product": 1
+  },
+  {
+    "x": "item 1",
+    "y": 20,
+    "c": 4,
+    "product": 0
+  },
+  {
+    "x": "item 2",
+    "y": 30,
+    "c": 3,
+    "product": 1
+  },
+  {
+    "x": "item 2",
+    "y": 40,
+    "c": 4,
+    "product": 0
+  },
+  {
+    "x": "item 3",
+    "y": 81,
+    "c": 3,
+    "product": 1
+  },
+  {
+    "x": "item 3",
+    "y": 53,
+    "c": 4,
+    "product": 0
+  },
+  {
+    "x": "item 4",
+    "y": 19,
+    "c": 3,
+    "product": 1
+  },
+  {
+    "x": "item 4",
+    "y": 87,
+    "c": 4,
+    "product": 0
+  },
+  {
+    "x": "item 5",
+    "y": 52,
+    "c": 3,
+    "product": 1
+  },
+  {
+    "x": "item 5",
+    "y": 48,
+    "c": 4,
+    "product": 0
+  },
+  {
+    "x": "item 6",
+    "y": 24,
+    "c": 3,
+    "product": 1
+  },
+  {
+    "x": "item 6",
+    "y": 49,
+    "c": 4,
+    "product": 0
+  },
+  {
+    "x": "item 7",
+    "y": 87,
+    "c": 3,
+    "product": 1
+  },
+  {
+    "x": "item 7",
+    "y": 66,
+    "c": 4,
+    "product": 0
+  },
+  {
+    "x": "item 8",
+    "y": 17,
+    "c": 3,
+    "product": 1
+  },
+  {
+    "x": "item 8",
+    "y": 27,
+    "c": 4,
+    "product": 0
+  },
+  {
+    "x": "item 9",
+    "y": 68,
+    "c": 3,
+    "product": 1
+  },
+  {
+    "x": "item 9",
+    "y": 16,
+    "c": 4,
+    "product": 0
+  },
+  {
+    "x": "item 10",
+    "y": 49,
+    "c": 3,
+    "product": 1
+  },
+  {
+    "x": "item 10",
+    "y": 15,
+    "c": 4,
+    "product": 0
+  }
+]

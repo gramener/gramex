@@ -1,8 +1,11 @@
 {
   "$schema": "https://vega.github.io/schema/vega/v4.json",
   "width": 600,
-  "height": 360,
+  "height": 330,
   "autosize": "fit",
+  "padding": {
+    "top": 30
+  },
   "signals": [
     {
       "name": "interpolate",
@@ -41,13 +44,10 @@
     {
       "name": "color",
       "type": "ordinal",
-      "domain": [
-        "Kerala",
-        "Punjab",
-        "Goa",
-        "Hyderabad",
-        "chennai"
-      ],
+      "domain": {
+        "data": "table",
+        "field": "c"
+      },
       "range": [
         "#9C27B0",
         "#109618",
@@ -104,7 +104,19 @@
   ],
   "legends": [
     {
-      "orient": "top",
+      "orient": "none",
+      "encode": {
+        "legend": {
+          "update": {
+            "x": {
+              "signal": "width*0.4"
+            },
+            "y": {
+              "value": -20
+            }
+          }
+        }
+      },
       "fill": "color",
       "zindex": 0,
       "direction": "horizontal",
@@ -193,7 +205,7 @@
               "y": {
                 "scale": "y",
                 "field": "y",
-                "offset": -5
+                "offset": 15
               },
               "fill": {
                 "value": "#000"

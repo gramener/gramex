@@ -1,0 +1,218 @@
+{
+    "$schema": "https://vega.github.io/schema/vega/v4.json",
+    "width": 600,
+    "height": 360,
+    "padding": 30,
+    "data": [
+      {
+        "name": "table",
+        "url": "<%= absolute_url %>data/bullet.json"
+      }
+    ],
+    "scales": [
+      {
+        "name": "xscale",
+        "type": "band",
+        "domain": {
+          "data": "table",
+          "field": "title"
+        },
+        "range": "width",
+        "padding": 0.3,
+        "round": true
+      },
+      {
+        "name": "yscale",
+        "domain": {
+          "data": "table",
+          "field": "d"
+        },
+        "nice": true,
+        "range": "height"
+      }
+    ],
+    "axes": [
+      {
+        "orient": "bottom",
+        "scale": "xscale",
+        "ticks": false,
+        "labelPadding": 10
+      }
+    ],
+    "marks": [
+      {
+        "type": "rect",
+        "from": {
+          "data": "table"
+        },
+        "encode": {
+          "enter": {
+            "x": {
+              "scale": "xscale",
+              "field": "title"
+            },
+            "width": {
+              "scale": "xscale",
+              "band": 1
+            },
+            "y": {
+              "scale": "yscale",
+              "field": "d"
+            },
+            "y2": {
+              "scale": "yscale",
+              "value": 0
+            }
+          },
+          "update": {
+            "fill": {
+              "value": "#F5F5F5"
+            }
+          }
+        }
+      },
+      {
+        "type": "rect",
+        "from": {
+          "data": "table"
+        },
+        "encode": {
+          "enter": {
+            "x": {
+              "scale": "xscale",
+              "field": "title"
+            },
+            "width": {
+              "scale": "xscale",
+              "band": 1
+            },
+            "y": {
+              "scale": "yscale",
+              "field": "b"
+            },
+            "y2": {
+              "scale": "yscale",
+              "value": 0
+            }
+          },
+          "update": {
+            "fill": {
+              "value": "#FEC44F"
+            }
+          }
+        }
+      },
+      {
+        "type": "rect",
+        "from": {
+          "data": "table"
+        },
+        "encode": {
+          "enter": {
+            "x": {
+              "scale": "xscale",
+              "field": "title",
+              "offset": {
+                "offset": {
+                  "signal": "bandwidth('xscale')/3"
+                }
+              }
+            },
+            "width": {
+              "scale": "xscale",
+              "band": 0.33
+            },
+            "y": {
+              "scale": "yscale",
+              "field": "a"
+            },
+            "y2": {
+              "scale": "yscale",
+              "value": 0
+            }
+          },
+          "update": {
+            "fill": [
+              {
+                "test": "datum['b'] > datum['a']",
+                "value": "red"
+              },
+              {
+                "value": "#259B24"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "name": "item_score",
+        "type": "text",
+        "from": {
+          "data": "table"
+        },
+        "encode": {
+          "enter": {
+            "x": {
+              "scale": "xscale",
+              "field": "title"
+            },
+            "dx": {
+              "signal": "bandwidth('xscale')/2"
+            },
+            "y": {
+              "scale": "yscale",
+              "field": "a"
+            },
+            "dy": {
+              "value": -10
+            },
+            "align": {
+              "value": "center"
+            },
+            "fill": {
+              "value": "black"
+            },
+            "text": {
+              "field": "a"
+            },
+            "fontSize": {
+              "value": 12
+            }
+          }
+        }
+      },
+      {
+        "name": "line_d",
+        "type": "rule",
+        "from": {
+          "data": "table"
+        },
+        "encode": {
+          "enter": {
+            "stroke": {
+              "value": "#000"
+            },
+            "strokeDash": {
+              "value": [2,2]
+            },
+            "x": {
+              "scale": "xscale",
+              "field": "title"
+            },
+            "x2": {
+              "scale": "xscale",
+              "field": "title",
+              "offset": {
+                "signal": "bandwidth('xscale')"
+              }
+            },
+            "y": {
+              "scale": "yscale",
+              "field": "c"
+            }
+          }
+        }
+      }
+    ]
+  }
+  

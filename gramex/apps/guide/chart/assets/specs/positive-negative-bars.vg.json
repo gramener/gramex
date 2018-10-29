@@ -18,7 +18,7 @@
         "field": "category"
       },
       "range": "width",
-      "padding": 0.05,
+      "padding": 0.4,
       "round": true,
       "nice": true
     },
@@ -58,13 +58,13 @@
             "value": 0
           },
           "fill": {
-            "signal": "datum.amount > 0 ? 'red' : 'green'"
+            "signal": "datum.amount > 0 ? 'green' : 'red'"
           }
         }
       }
     },
     {
-      "name": "item_name",
+      "name": "item_score",
       "type": "text",
       "from": {
         "data": "table"
@@ -84,6 +84,39 @@
           },
           "dx": {
             "signal": "bandwidth('xscale')/2"
+          },
+          "align": {
+            "value": "center"
+          },
+          "fill": {
+            "value": "black"
+          },
+          "text": {
+            "field": "amount"
+          },
+          "fontSize": {
+            "value": 12
+          }
+        }
+      }
+    },
+    {
+      "name": "item_name",
+      "type": "text",
+      "from": {
+        "data": "table"
+      },
+      "encode": {
+        "enter": {
+          "x": {
+            "scale": "xscale",
+            "field": "category"
+          },
+          "dx": {
+            "value": 20
+          },
+          "dy": {
+            "signal": "datum.amount > 0 ? 200 : 170"
           },
           "align": {
             "value": "center"

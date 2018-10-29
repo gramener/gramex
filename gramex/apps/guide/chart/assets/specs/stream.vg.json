@@ -1,0 +1,85 @@
+{
+  "$schema": "https://vega.github.io/schema/vega/v4.json",
+  "width": 590,
+  "height": 350,
+  "padding": 5,
+  "autosize": "fit",
+  "title": {"text": "Stream Graph","anchor":"middle"},
+  "data": [
+    {
+      "name": "table",
+      "url": "<%= absolute_url %>data/stream.json",
+      "transform": [
+        {
+          "offset":"center",
+          "type": "stack",
+          "groupby": ["x"],
+          "field": "y"
+        }
+      ]
+    }
+  ],
+
+  "scales": [
+    {
+      "name": "x",
+      "type": "point",
+      "range": "width",
+      "padding": 10,
+      "domain": {"data": "table", "field": "x"}
+    },
+    {
+      "name": "y",
+      "type": "linear",
+      "range": "height",
+      "nice": true, "zero": true,
+      "domain": {"data": "table", "field": "y1"}
+    },
+    {
+      "name": "color",
+      "type": "ordinal",
+      "range": "category",
+      "domain": {"data": "table", "field": "product"}
+    }
+  ],
+
+  "axes": [
+    {"orient": "bottom", "scale": "x", "zindex": 1},
+    {"orient": "left", "scale": "y", "zindex": 1}
+  ],
+
+  "marks": [
+    {
+      "format": "center",
+      "type": "group",
+      "from": {
+        "facet": {
+          "name": "series",
+          "data": "table",
+          "groupby": "c"
+        }
+      },
+      "marks": [
+        {
+          "type": "area",
+          "from": {"data": "series"},
+          "encode": {
+            "enter": {
+              "interpolate": {"value": "monotone"},
+              "x": {"scale": "x", "field": "x"},
+              "y": {"scale": "y", "field": "y0"},
+              "y2": {"scale": "y", "field": "y1"},
+              "fill": {"scale": "color", "field": "product"}
+            },
+            "update": {
+              "fillOpacity": {"value": 1}
+            },
+            "hover": {
+              "fillOpacity": {"value": 0.5}
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

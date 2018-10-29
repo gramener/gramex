@@ -1,0 +1,187 @@
+{
+  "$schema": "https://vega.github.io/schema/vega/v4.json",
+  "width": 600,
+  "height": 340,
+  "autosize": "fit",
+  "padding": {
+    "top": 20
+  },
+  "title": "Multi Line",
+  "config": {
+    "group": {
+      "fill": "#F0F0F0",
+      "x": 100
+    },
+    "axis": {
+      "grid": true,
+      "gridColor": "black",
+      "gridOpacity": 0.3,
+      "gridDash": 2
+    },
+    "title": {
+      "offset": 7,
+      "fontSize": 16,
+      "anchor": "start",
+      "fontWeight": "bold"
+    }
+  },
+  "data": [
+    {
+      "name": "table",
+      "url": "<%= absolute_url %>data/stream-2.json"
+    }
+  ],
+  "scales": [
+    {
+      "name": "x",
+      "type": "point",
+      "range": "width",
+      "nice": true,
+      "paddingOuter": 0.3,
+      "domain": {
+        "data": "table",
+        "field": "x"
+      }
+    },
+    {
+      "name": "y",
+      "type": "linear",
+      "range": "height",
+      "nice": true,
+      "domainMax": 100,
+      "domain": {
+        "data": "table",
+        "field": "y"
+      }
+    },
+    {
+      "name": "color",
+      "type": "ordinal",
+      "range": [
+        "#3366CC",
+        "#DC3912",
+        "#FF9900",
+        "#109618",
+        "#9C27B0"
+      ],
+      "domain": {
+        "data": "table",
+        "field": "c"
+      }
+    }
+  ],
+  "axes": [
+    {
+      "orient": "bottom",
+      "scale": "x",
+      "ticks": false,
+      "titlePadding": 5,
+      "minExtent": 35,
+      "labelPadding": 7,
+      "title": "X - Axis"
+    },
+    {
+      "orient": "left",
+      "scale": "y",
+      "ticks": false,
+      "titlePadding": 5,
+      "labelFlush": true,
+      "labelPadding": 7,
+      "minExtent": 25,
+      "title": "Y - Axis"
+    }
+  ],
+  "legends": [
+    {
+      "fill": "color",
+      "direction": "horizontal",
+      "padding": 10,
+      "orient": "none",
+      "encode": {
+        "legend": {
+          "update": {
+            "x2": {
+              "signal": "width"
+            },
+            "y2": {
+              "value": 0
+            }
+          }
+        }
+      },
+      "symbolType": "square"
+    }
+  ],
+  "marks": [
+    {
+      "type": "group",
+      "from": {
+        "facet": {
+          "name": "series",
+          "data": "table",
+          "groupby": "c"
+        }
+      },
+      "marks": [
+        {
+          "type": "line",
+          "from": {
+            "data": "series"
+          },
+          "encode": {
+            "enter": {
+              "x": {
+                "scale": "x",
+                "field": "x"
+              },
+              "y": {
+                "scale": "y",
+                "field": "y"
+              },
+              "stroke": {
+                "scale": "color",
+                "field": "c"
+              },
+              "strokeWidth": {
+                "value": 1
+              }
+            }
+          }
+        },
+        {
+          "type": "symbol",
+          "from": {
+            "data": "series"
+          },
+          "shape": "cross",
+          "encode": {
+            "enter": {
+              "width": {
+                "scale": "x",
+                "field": "x"
+              },
+              "x": {
+                "scale": "x",
+                "field": "x"
+              },
+              "y": {
+                "scale": "y",
+                "field": "y"
+              },
+              "fill": {
+                "scale": "color",
+                "field": "c"
+              },
+              "stroke": {
+                "value": "white"
+              },
+              "strokeWidth": {
+                "value": 1.5
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

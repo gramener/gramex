@@ -1,0 +1,46 @@
+[
+{
+    "category": "item1",
+    "amount": 10
+},
+{
+    "category": "item2",
+    "amount": 15
+},
+{
+    "category": "item3",
+    "amount": 20
+},
+{
+    "category": "item4",
+    "amount": 9
+},
+{
+    "category": "item5",
+    "amount": 5
+},
+{
+    "category": "item6",
+    "amount": 11
+},
+{
+    "category": "item7",
+    "amount": 15
+},
+{
+    "category": "item8",
+    "amount": 18
+},
+{
+    "category": "item9",
+    "amount": 15
+},
+{
+    "category": "item10",
+    "amount": 12
+},
+{
+    "category": "item11",
+    "amount": 11
+}
+]

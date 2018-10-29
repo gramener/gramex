@@ -1,0 +1,224 @@
+{
+  "$schema": "https://vega.github.io/schema/vega/v4.json",
+  "description": "https://gramener.invisionapp.com/d/main/#/console/7709561/326727930/preview",
+  "width": 590,
+  "height": 320,
+  "autosize": "fit",
+  "padding": {
+    "left": 5,
+    "top": 25,
+    "right": 5,
+    "bottom": 15
+  },
+  "title": {
+    "text": "HORIZONTAL HISTOGRAM",
+    "anchor": "start",
+    "fontSize": 13,
+    "font": "Roboto",
+    "fontWeight": 900,
+    "color": "#485465"
+  },
+  "data": [
+    {
+      "name": "table",
+      "values": [
+        {
+          "category": "N1",
+          "bar_type": "Legend 1",
+          "value": 40
+        },
+        {
+          "category": "N1",
+          "bar_type": "Legend 2",
+          "value": 30
+        },
+        {
+          "category": "N2",
+          "bar_type": "Legend 1",
+          "value": 50
+        },
+        {
+          "category": "N2",
+          "bar_type": "Legend 2",
+          "value": 30
+        },
+        {
+          "category": "N3",
+          "bar_type": "Legend 1",
+          "value": 30
+        },
+        {
+          "category": "N3",
+          "bar_type": "Legend 2",
+          "value": 15
+        },
+        {
+          "category": "N4",
+          "bar_type": "Legend 1",
+          "value": 50
+        },
+        {
+          "category": "N4",
+          "bar_type": "Legend 2",
+          "value": 40
+        }
+      ]
+    }
+  ],
+  "scales": [
+    {
+      "name": "yscale",
+      "type": "band",
+      "paddingInner": 0.3,
+      "paddingOuter": 0.5,
+      "domain": {
+        "data": "table",
+        "field": "category"
+      },
+      "range": "height"
+    },
+    {
+      "name": "xscale",
+      "type": "linear",
+      "domain": {
+        "data": "table",
+        "field": "value"
+      },
+      "range": "width",
+      "round": true,
+      "zero": true,
+      "nice": true
+    },
+    {
+      "name": "color",
+      "type": "ordinal",
+      "domain": {
+        "field": "bar_type",
+        "data": "table"
+      },
+      "range": [
+        "#76DDFB",
+        "#53A8E2"
+      ]
+    }
+  ],
+  "axes": [
+    {
+      "orient": "left",
+      "scale": "yscale",
+      "ticks": false,
+      "labelPadding": 8,
+      "labelColor": "#485465",
+      "labelFontSize": 10,
+      "labelFontWeight": 500,
+      "zindex": 1,
+      "domain": false,
+      "title": "Category",
+      "titleColor": "#485465",
+      "titleFont": "roboto",
+      "titlePadding": 16,
+      "titleFontSize": 12
+    },
+    {
+      "orient": "bottom",
+      "scale": "xscale",
+      "domain": false,
+      "ticks": false,
+      "tickCount": 5,
+      "title": "Variable",
+      "titleColor": "#485465",
+      "titleFont": "roboto",
+      "titlePadding": 16,
+      "titleFontSize": 12,
+      "labelPadding": 8,
+      "labelColor": "#485465",
+      "labelFontSize": 10,
+      "labelFontWeight": 500
+    }
+  ],
+  "legends": [
+    {
+      "orient": "top-right",
+      "fill": "color",
+      "offset": 10,
+      "zindex": 1,
+      "direction": "horizontal",
+      "symbolType": "circle",
+      "labelFontSize": 11,
+      "labelFont": "Roboto",
+      "labelFontWeight": "500",
+      "labelColor": "#485465",
+      "columnPadding": 25
+    }
+  ],
+  "marks": [
+    {
+      "type": "group",
+      "from": {
+        "facet": {
+          "data": "table",
+          "name": "facet",
+          "groupby": "category"
+        }
+      },
+      "encode": {
+        "enter": {
+          "y": {
+            "scale": "yscale",
+            "field": "category"
+          }
+        }
+      },
+      "signals": [
+        {
+          "name": "height",
+          "update": "bandwidth('yscale')"
+        }
+      ],
+      "scales": [
+        {
+          "name": "pos",
+          "type": "band",
+          "range": "height",
+          "domain": {
+            "data": "facet",
+            "field": "bar_type"
+          }
+        }
+      ],
+      "marks": [
+        {
+          "name": "bars",
+          "from": {
+            "data": "facet"
+          },
+          "type": "rect",
+          "encode": {
+            "enter": {
+              "y": {
+                "scale": "pos",
+                "field": "bar_type"
+              },
+              "height": {
+                "scale": "pos",
+                "band": 0.9
+              },
+              "x": {
+                "scale": "xscale",
+                "field": "value"
+              },
+              "x2": {
+                "scale": "xscale",
+                "value": 0
+              },
+              "fill": {
+                "scale": "color",
+                "field": "bar_type"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

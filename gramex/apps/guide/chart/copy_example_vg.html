@@ -7,7 +7,8 @@
 var spec = <%= spec %>
 var view = new vega.View(vega.parse(spec))
     .renderer('svg')
-    .initialize('#chart')
+    .logLevel(vega.Warn)
+    .hover()
     .run()
 </script>
 </xmp>

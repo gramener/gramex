@@ -98,7 +98,7 @@
           "aggregate": "sum",
           "field": "quantity",
           "type": "quantitative",
-          "format": ".1f"
+          "format": ".2f"
         }
       }
     }

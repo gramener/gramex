@@ -92,7 +92,7 @@
             "field": "y"
           },
           "dx": {
-            "value": -25
+            "value": -20
           },
           "dy": {
             "value": 10
@@ -139,7 +139,7 @@
             "value": 15
           },
           "dy": {
-            "value": -5
+            "value": -7
           },
           "fill": {
             "value": "black"

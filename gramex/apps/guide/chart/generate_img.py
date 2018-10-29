@@ -3,7 +3,7 @@ import shutil
 import logging
 from gramex.handlers import Capture         # Import the capture library
 
-capture = Capture(engine='chrome', port=9902, timeout=30)
+capture = Capture(engine='chrome', port=9905, timeout=30)
 
 
 def generator():

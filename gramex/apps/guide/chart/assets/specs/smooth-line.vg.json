@@ -1,0 +1,293 @@
+{
+  "$schema": "https://vega.github.io/schema/vega/v4.json",
+  "width": 600,
+  "height": 360,
+  "autosize": "fit",
+  "signals": [
+    {
+      "name": "signal_tooltip",
+      "on": [
+        {
+          "events": "mousemove",
+          "update": "invert('x', clamp(x(), 0, width))"
+        }
+      ]
+    },
+    {
+      "name": "hover",
+      "value": 0,
+      "on": [
+        {
+          "events": "*:mouseover",
+          "update": "1"
+        },
+        {
+          "events": "*:mousedown",
+          "update": "0"
+        }
+      ]
+    }
+  ],
+  "data": [
+    {
+      "name": "table",
+      "url": "<%= absolute_url %>data/smooth-line.json",
+      "format": {
+        "type": "json",
+        "parse": {
+          "date": "date"
+        }
+      }
+    },
+    {
+      "name": "index_selector",
+      "source": "table",
+      "transform": [
+        {
+          "type": "filter",
+          "expr": "month(datum.date) == month(signal_tooltip) && year(datum.date) == year(signal_tooltip)"
+        }
+      ]
+    }
+  ],
+  "scales": [
+    {
+      "name": "x",
+      "type": "time",
+      "range": "width",
+      "padding": 1,
+      "domain": {
+        "data": "table",
+        "field": "date"
+      }
+    },
+    {
+      "name": "y",
+      "type": "linear",
+      "range": "height",
+      "nice": true,
+      "zero": true,
+      "domain": {
+        "data": "table",
+        "field": "count"
+      }
+    },
+    {
+      "name": "color",
+      "type": "ordinal",
+      "domain": [
+        "India",
+        "Pakistan"
+      ],
+      "range": [
+        "#00AEFF",
+        "#69B714"
+      ]
+    }
+  ],
+  "axes": [
+    {
+      "orient": "right",
+      "scale": "y",
+      "grid": true,
+      "ticks": false,
+      "domain": false,
+      "gridColor": {
+        "value": "#f7f7f7"
+      }
+    },
+    {
+      "orient": "bottom",
+      "scale": "x",
+      "grid": false,
+      "ticks": false,
+      "labelAngle": 270,
+      "labelPadding": 30,
+      "format": "%b %Y"
+    }
+  ],
+  "legends": [
+    {
+      "orient": "top",
+      "fill": "color",
+      "zindex": 0,
+      "direction": "horizontal",
+      "symbolType": "circle",
+      "labelFontSize": 12,
+      "labelFontWeight": 400
+    }
+  ],
+  "title": {
+    "text": "No. of Incidents",
+    "align": "right",
+    "orient": "left",
+    "font": "georgia, sans-serif",
+    "fontSize": 10,
+    "fontWeight": 400
+  },
+  "marks": [
+    {
+      "name": "fire",
+      "type": "group",
+      "from": {
+        "facet": {
+          "name": "series",
+          "data": "table",
+          "groupby": "country"
+        }
+      },
+      "marks": [
+        {
+          "type": "line",
+          "from": {
+            "data": "series"
+          },
+          "encode": {
+            "enter": {
+              "interpolate": {
+                "value": "monotone"
+              },
+              "x": {
+                "scale": "x",
+                "field": "date"
+              },
+              "y": {
+                "scale": "y",
+                "field": "count"
+              },
+              "stroke": {
+                "scale": "color",
+                "field": "country"
+              },
+              "strokeWidth": {
+                "value": 2
+              }
+            }
+          }
+        },
+        {
+          "type": "rect",
+          "from": {
+            "data": "index_selector"
+          },
+          "encode": {
+            "update": {
+              "x": {
+                "scale": "x",
+                "field": "date",
+                "offset": -15
+              },
+              "y": {
+                "scale": "y",
+                "field": "count",
+                "offset": -10
+              },
+              "width": {
+                "value": 45
+              },
+              "height": {
+                "value": 20
+              },
+              "fill": {
+                "value": "#f6f6f6"
+              },
+              "cornerRadius": {
+                "value": 3
+              },
+              "fillOpacity": {
+                "signal": "hover"
+              }
+            }
+          }
+        },
+        {
+          "type": "symbol",
+          "from": {
+            "data": "index_selector"
+          },
+          "encode": {
+            "update": {
+              "x": {
+                "scale": "x",
+                "field": "date"
+              },
+              "y": {
+                "scale": "y",
+                "field": "count"
+              },
+              "fill": {
+                "scale": "color",
+                "field": "country"
+              },
+              "fillOpacity": {
+                "signal": "hover"
+              }
+            }
+          }
+        },
+        {
+          "type": "text",
+          "from": {
+            "data": "index_selector"
+          },
+          "encode": {
+            "update": {
+              "x": {
+                "scale": "x",
+                "field": "date",
+                "offset": 12
+              },
+              "y": {
+                "scale": "y",
+                "field": "count",
+                "offset": 4
+              },
+              "fill": {
+                "value": "#333333"
+              },
+              "text": {
+                "field": "count"
+              },
+              "fillOpacity": {
+                "signal": "hover"
+              }
+            }
+          }
+        },
+        {
+          "type": "text",
+          "from": {
+            "data": "index_selector"
+          },
+          "encode": {
+            "update": {
+              "x": {
+                "scale": "x",
+                "field": "date",
+                "offset": 12
+              },
+              "y": {
+                "field": {
+                  "group": "height"
+                },
+                "offset": 10
+              },
+              "align": {
+                "value": "center"
+              },
+              "fill": {
+                "value": "#333333"
+              },
+              "text": {
+                "signal": "timeFormat(signal_tooltip, '%b %Y')"
+              },
+              "fillOpacity": {
+                "signal": "hover"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

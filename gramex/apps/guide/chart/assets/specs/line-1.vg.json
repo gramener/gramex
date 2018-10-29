@@ -41,13 +41,7 @@
     {
       "name": "color",
       "type": "ordinal",
-      "domain": [
-        "Kerala",
-        "Punjab",
-        "Goa",
-        "Hyderabad",
-        "chennai"
-      ],
+      "domain": {"data": "table", "field": "c"},
       "range": [
         "#9C27B0",
         "#109618",

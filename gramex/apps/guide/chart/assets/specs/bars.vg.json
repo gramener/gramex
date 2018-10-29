@@ -85,10 +85,7 @@
           },
           "y": {
             "field": "y",
-            "offset": {
-              "field": "height",
-              "mult": -0.03
-            }
+            "offset": -10
           },
           "fill": {
             "value": "black"

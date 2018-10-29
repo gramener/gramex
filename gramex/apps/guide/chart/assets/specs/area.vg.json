@@ -1,0 +1,107 @@
+{
+    "$schema": "https://vega.github.io/schema/vega/v4.json",
+    "width": 600,
+    "height": 360,
+    "autosize": "fit",
+    "data": [
+        {
+            "name": "table",
+            "url": "<%= absolute_url %>data/area.json"
+        }
+    ],
+    "scales": [
+        {
+            "name": "xscale",
+            "type": "point",
+            "domain": {
+                "data": "table",
+                "field": "category"
+            },
+            "range": "width",
+            "padding": 0.7,
+            "round": true
+        },
+        {
+            "name": "yscale",
+            "domain": {
+                "data": "table",
+                "field": "amount"
+            },
+            "range": "height"
+        }
+    ],
+    "axes": [
+        {
+            "orient": "bottom",
+            "scale": "xscale",
+            "ticks": false,
+            "labelPadding": 10,
+            "domainColor": "#9E9E9E"
+        },
+        {
+            "orient": "left",
+            "scale": "yscale",
+            "labelPadding": 10,
+            "ticks": false,
+            "domainColor": "#9E9E9E"
+        }
+    ],
+    "marks": [
+        {
+            "type": "area",
+            "from": {
+                "data": "table"
+            },
+            "encode": {
+                "enter": {
+                    "x": {
+                        "scale": "xscale",
+                        "field": "category"
+                    },
+                    "width": {
+                        "scale": "xscale",
+                        "band": 1
+                    },
+                    "y": {
+                        "scale": "yscale",
+                        "field": "amount"
+                    },
+                    "y2": {
+                        "scale": "yscale",
+                        "value": 0
+                    },
+                    "fill": {
+                        "value": "#FEC44F"
+                    }
+                }
+            }
+        },
+        {
+            "type": "symbol",
+            "from": {
+                "data": "table"
+            },
+            "encode": {
+                "enter": {
+                    "x": {
+                        "scale": "xscale",
+                        "field": "category"
+                    },
+                    "y": {
+                        "scale": "yscale",
+                        "field": "amount"
+                    },
+                    "fill": {
+                        "value": "#FEC44F"
+                    },
+                    "stroke": {
+                        "value": "white"
+                    },
+                    "size": {
+                        "value": 70
+                    }
+                }
+            }
+        }
+    ]
+}

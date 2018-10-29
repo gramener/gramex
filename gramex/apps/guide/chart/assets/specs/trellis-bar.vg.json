@@ -1,0 +1,428 @@
+{
+  "$schema": "https://vega.github.io/schema/vega/v4.json",
+  "description": "Data retrieved from Uber Movement, (c) 2017 Uber Technologies, Inc., https://movement.uber.com, LICENSE:CC BY-NC",
+  "width": 150,
+  "height": 150,
+  "padding": {
+    "top": 30,
+    "left": 30
+  },
+  "autosize": "pad",
+  "data": [
+    {
+      "name": "ward_names",
+      "url": "<%= absolute_url %>data/hyd-wards.json"
+    },
+    {
+      "name": "table",
+      "url": "<%= absolute_url %>data/uber.json",
+      "format": {
+        "type": "json",
+        "parse": {
+          "date_month": "date"
+        }
+      },
+      "transform": [
+        {
+          "type": "window",
+          "groupby": [
+            "sourceid",
+            "dstid"
+          ],
+          "ops": [
+            "sum",
+            "first_value"
+          ],
+          "fields": [
+            "mean_travel_time",
+            "mean_travel_time"
+          ],
+          "sort": {
+            "field": "date_month",
+            "order": "ascending"
+          },
+          "as": [
+            "cumulative_mean_travel_time",
+            "first_value"
+          ]
+        },
+        {
+          "type": "formula",
+          "expr": "datum.mean_travel_time - datum.first_value",
+          "as": "mean_travel_time_change"
+        },
+        {
+          "type": "collect",
+          "sort": {
+            "field": [
+              "date_month",
+              "sourceid",
+              "dstid"
+            ]
+          }
+        },
+        {
+          "type": "lookup",
+          "from": "ward_names",
+          "key": "MOVEMENT_ID",
+          "fields": [
+            "sourceid",
+            "dstid"
+          ],
+          "values": [
+            "SOURCE_NAME"
+          ],
+          "as": [
+            "source_name",
+            "dst_name"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "source_domain",
+      "source": "table",
+      "transform": [
+        {
+          "type": "aggregate",
+          "groupby": [
+            "sourceid"
+          ]
+        },
+        {
+          "type": "lookup",
+          "from": "ward_names",
+          "key": "MOVEMENT_ID",
+          "fields": [
+            "sourceid"
+          ],
+          "values": [
+            "SOURCE_NAME"
+          ],
+          "as": [
+            "source_name"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "dst_domain",
+      "source": "table",
+      "transform": [
+        {
+          "type": "aggregate",
+          "groupby": [
+            "dstid"
+          ]
+        },
+        {
+          "type": "lookup",
+          "from": "ward_names",
+          "key": "MOVEMENT_ID",
+          "fields": [
+            "dstid"
+          ],
+          "values": [
+            "SOURCE_NAME"
+          ],
+          "as": [
+            "dst_name"
+          ]
+        }
+      ]
+    }
+  ],
+  "scales": [
+    {
+      "name": "main_xscale",
+      "type": "band",
+      "domain": {
+        "data": "table",
+        "field": "dstid"
+      },
+      "range": "width"
+    },
+    {
+      "name": "main_yscale",
+      "type": "band",
+      "domain": {
+        "data": "table",
+        "field": "sourceid"
+      },
+      "range": "height"
+    },
+    {
+      "name": "xscale",
+      "type": "band",
+      "domain": {
+        "data": "table",
+        "fields": [
+          "date_month"
+        ]
+      },
+      "range": [
+        0,
+        {
+          "signal": "bandwidth('main_xscale')*2"
+        }
+      ],
+      "padding": 0.5,
+      "round": true
+    },
+    {
+      "name": "yscale",
+      "domain": {
+        "data": "table",
+        "fields": [
+          "mean_travel_time"
+        ]
+      },
+      "zero": false,
+      "range": [
+        {
+          "signal": "bandwidth('main_yscale')*2"
+        },
+        0
+      ]
+    }
+  ],
+  "layout": {
+    "columns": 2,
+    "padding": 15,
+    "center": true,
+    "titleBand": 0.5
+  },
+  "marks": [
+    {
+      "name": "cell",
+      "type": "group",
+      "from": {
+        "facet": {
+          "name": "ward_facet",
+          "data": "table",
+          "groupby": [
+            "source_name",
+            "dst_name"
+          ]
+        }
+      },
+      "encode": {
+        "update": {
+          "width": {
+            "signal": "width"
+          },
+          "height": {
+            "signal": "height"
+          }
+        }
+      },
+      "axes": [
+        {
+          "scale": "yscale",
+          "orient": "left",
+          "gridScale": "yscale",
+          "grid": true,
+          "gridDash": [
+            5
+          ],
+          "gridWidth": 0.3,
+          "domain": false,
+          "labels": false,
+          "ticks": false
+        }
+      ],
+      "marks": [
+        {
+          "type": "rect",
+          "from": {
+            "data": "ward_facet"
+          },
+          "encode": {
+            "enter": {
+              "x": {
+                "scale": "xscale",
+                "field": "date_month"
+              },
+              "width": {
+                "scale": "xscale",
+                "band": 1
+              },
+              "y": {
+                "scale": "yscale",
+                "field": "mean_travel_time"
+              },
+              "y2": {
+                "scale": "yscale",
+                "signal": "datum.first_value"
+              }
+            },
+            "update": {
+              "fill": {
+                "signal": "datum.mean_travel_time_change > 0 ? '#FFAD38' : '#38B0FF'"
+              },
+              "fillOpacity": {
+                "value": 1
+              }
+            },
+            "hover": {
+              "fillOpacity": {
+                "value": 0.6
+              }
+            }
+          }
+        },
+        {
+          "type": "text",
+          "from": {
+            "data": "ward_facet"
+          },
+          "encode": {
+            "enter": {
+              "align": {
+                "value": "center"
+              },
+              "baseline": {
+                "value": "bottom"
+              },
+              "fill": {
+                "value": "black"
+              },
+              "fontSize": {
+                "value": 9
+              },
+              "x": {
+                "scale": "xscale",
+                "field": "date_month",
+                "band": 0.5
+              },
+              "y": {
+                "scale": "yscale",
+                "field": "mean_travel_time"
+              },
+              "text": {
+                "field": "mean_travel_time"
+              }
+            },
+            "update": {
+              "dy": {
+                "signal": "datum.mean_travel_time > datum.first_value ? -2 : 12"
+              },
+              "fillOpacity": {
+                "value": 0
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "row-title",
+      "type": "group",
+      "role": "row-title",
+      "title": {
+        "text": "Starting Ward",
+        "offset": 30,
+        "fontWeight": 100,
+        "orient": "left"
+      }
+    },
+    {
+      "name": "column-title",
+      "type": "group",
+      "role": "column-title",
+      "title": {
+        "text": "Dropping Ward",
+        "fontWeight": 100,
+        "offset": 70
+      }
+    },
+    {
+      "name": "row_header",
+      "type": "group",
+      "role": "row-header",
+      "from": {
+        "data": "source_domain"
+      },
+      "title": {
+        "text": {
+          "signal": "parent.source_name"
+        },
+        "fontSize": 10,
+        "offset": 30,
+        "orient": "left",
+        "baseline": "middle"
+      },
+      "encode": {
+        "update": {
+          "height": {
+            "signal": "bandwidth('main_yscale')*2"
+          }
+        }
+      },
+      "axes": [
+        {
+          "scale": "yscale",
+          "orient": "left",
+          "grid": false,
+          "domain": false,
+          "encode": {
+            "labels": {
+              "interactive": true,
+              "update": {
+                "text": {
+                  "signal": "format(datum.value, 'd')+' sec'"
+                }
+              }
+            }
+          },
+          "ticks": false,
+          "tickCount": 5
+        }
+      ]
+    },
+    {
+      "name": "column_header",
+      "type": "group",
+      "role": "column-header",
+      "from": {
+        "data": "dst_domain"
+      },
+      "title": {
+        "text": {
+          "signal": "parent.dst_name"
+        },
+        "fontSize": 10,
+        "offset": -50,
+        "orient": "bottom",
+        "baseline": "middle"
+      },
+      "encode": {
+        "update": {
+          "width": {
+            "signal": "bandwidth('main_xscale')*2"
+          }
+        }
+      },
+      "axes": [
+        {
+          "scale": "xscale",
+          "orient": "top",
+          "zindex": 0,
+          "labelOverlap": "parity",
+          "encode": {
+            "labels": {
+              "interactive": true,
+              "update": {
+                "text": {
+                  "signal": "timeFormat(datum.value, '%b')"
+                }
+              }
+            }
+          },
+          "ticks": false,
+          "domain": false
+        }
+      ]
+    }
+  ]
+}

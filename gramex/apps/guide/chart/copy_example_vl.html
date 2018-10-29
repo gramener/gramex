@@ -8,7 +8,9 @@
   var vl_spec = <%= spec %>
   var view = new vega.View(vega.parse(vl.compile(vl_spec).spec))
     .renderer('svg')
+    .logLevel(vega.Warn)
     .initialize('#chart')
+    .hover()
     .run()
   </script>
 </xmp>

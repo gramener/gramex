@@ -2,17 +2,12 @@
   "$schema": "https://vega.github.io/schema/vega/v4.json",
   "width": 600,
   "height": 345,
-  "padding": {"bottom": 10, "top": 5},
+  "padding": {
+    "bottom": 10,
+    "top": 5
+  },
   "autosize": "fix",
   "signals": [
-    {
-      "name": "width",
-      "value": 600
-    },
-    {
-      "name": "height",
-      "value": 345
-    },
     {
       "name": "startAngle",
       "value": 0
@@ -27,12 +22,11 @@
     },
     {
       "name": "clickLabel",
-      "value": 0,
+      "value": 0.3,
       "on": [
         {
-          "events": "@chartLabel:click",
-          "update": "{value: 1}",
-          "force": true
+          "events": "*:mousemove",
+          "update": "clickLabel == 1 ? 0.3 : 1"
         }
       ]
     }
@@ -146,6 +140,11 @@
                 "scale": "outer_radius_scale",
                 "field": "order"
               }
+            },
+            "update": {
+              "fillOpacity": {
+                "signal": "clickLabel"
+              }
             }
           }
         },
@@ -190,7 +189,7 @@
           },
           "encode": {
             "enter": {
-              "name": "chartLabel",
+              "name": "mark_t",
               "interactive": true,
               "x": {
                 "signal": "(width / 2) - 10"
@@ -209,6 +208,11 @@
               },
               "align": {
                 "value": "right"
+              }
+            },
+            "update": {
+              "fillOpacity": {
+                "signal": "clickLabel"
               }
             }
           }
