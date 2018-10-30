@@ -614,6 +614,9 @@ def init(cmd, args):
         if os.path.exists(target):
             app_log.warning('Skipping existing %s', path)
             continue
+        if not os.path.isfile(target):
+            app_log.warning('Skipping non-file %s', path)
+            continue
         with io.open(os.path.join(source_dir, path), 'rb') as handle:
             result = Template(handle.read()).generate(**data)
         with io.open(target, 'wb') as handle:
