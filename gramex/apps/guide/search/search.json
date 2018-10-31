@@ -495,6 +495,41 @@
       "Upgrade": -1
     }
   },
+  "1.44": {
+    "": {
+      "Gramex 1.44 Release Notes": -1
+    },
+    "admin-gramex-info": {
+      "Admin gramex info": -1
+    },
+    "bug-fixes": {
+      "Bug fixes": -1
+    },
+    "eula": {
+      "EULA": -1
+    },
+    "formhandler-supports-urls": {
+      "FormHandler supports URLs": -1
+    },
+    "g1": {
+      "g1": -1
+    },
+    "groupmeans": {
+      "Groupmeans": -1
+    },
+    "rmarkdown": {
+      "RMarkdown": -1
+    },
+    "stats": {
+      "Stats": -1
+    },
+    "upgrade": {
+      "Upgrade": -1
+    },
+    "vega-gallery": {
+      "Vega gallery": -1
+    }
+  },
   "about": {
     "": {
       "About Gramex": -1
@@ -1380,6 +1415,20 @@
       "Streaming output": -1
     }
   },
+  "groupmeans": {
+    "": {
+      "GroupMeans analyzes root causes": -1
+    },
+    "exploratory-analysis": {
+      "Exploratory analysis": -1
+    },
+    "root-cause-analysis": {
+      "Root cause analysis": -1
+    },
+    "upload-your-data": {
+      "Upload your data": -1
+    }
+  },
   "handlers": {
     "": {
       "Writing handlers": -1
@@ -1526,6 +1575,12 @@
     },
     "expose-model": {
       "Expose model": -1
+    },
+    "groupmeans": {
+      "GroupMeans": -1
+    },
+    "links-to-machine-learning-and-analytics-usecases": {
+      "Links to Machine Learning and Analytics Usecases": -1
     },
     "once-the-model-is-trained-save-it": {
       "Once the model is trained, save it": -1
@@ -1913,6 +1968,9 @@
     },
     "rest-of-your-script-can-use-the-packages-above": {
       "Rest of your script can use the packages above.": -1
+    },
+    "rmarkdown": {
+      "RMarkdown": -1
     }
   },
   "release": {
