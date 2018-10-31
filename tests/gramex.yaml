@@ -318,6 +318,11 @@ url:
           function: markdown.markdown(content)
           headers:
             Content-Type: text/html; charset=UTF-8
+        "*.Rmd":
+          encoding: utf-8
+          function: rmarkdown(content, handler)
+          headers:
+            Content-Type: text/html; charset=UTF-8
         "*.yaml":
           encoding: utf-8
           function: badgerfish(content, handler)

@@ -198,3 +198,37 @@ def plot_async(handler):
 ```
 
 ![Asynchronous plot](plot_async.png)
+
+## RMarkdown
+
+Gramex renders RMarkdown files as HTML outputs using
+[`FileHandler`](../filehandler/#transforming-content)
+transform [`rmarkdown`](http://code.gramener.com/cto/gramex/tree/master/gramex/transforms/rmarkdown.py).
+
+Also saves the HTML file to the directory where `.Rmd` files are located.
+
+Use below configuration to renders all `*.Rmd` files as HTML 
+
+```yaml
+  r/rmarkdown:
+    pattern: /$YAMLURL/(.*Rmd)
+    handler: FileHandler
+    kwargs:
+      path: $YAMLPATH     # path at which Rmd files (.*Rmd) are located
+      transform:
+        "*.Rmd":          # Any file matching .Rmd
+          function: rmarkdown(content, handler)
+          headers:
+            Content-Type: text/html
+            Cache-Control: max-age=3600
+```
+
+<div class="example">
+  <a class="example-demo" href="RMarkdown-story.Rmd" target="_blank">RMarkdown example</a>
+  <a class="example-src" href="http://code.gramener.com/cto/gramex/tree/master/gramex/apps/guide/r/RMarkdown-story.Rmd">Source</a>
+</div>
+
+<iframe src="RMarkdown-story.Rmd" style="height: 600px !important"></iframe>
+
+To learn more about Rmarkdown, head over to
+[RStudio's: Get started with Rmarkdown](https://rmarkdown.rstudio.com/lesson-1.html).

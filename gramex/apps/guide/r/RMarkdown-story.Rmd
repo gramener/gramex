@@ -1,0 +1,38 @@
+---
+title: "RMarkdown ggplot"
+author: "Gramex"
+output: html_document
+---
+
+```{r include = FALSE}
+library(ggplot2)
+```
+
+## ggplot: mpg data
+
+Display dataset
+
+```{r}
+mpg
+```
+
+## displ on hwy
+
+```{r}
+ggplot(mpg, aes(x=displ, y=hwy)) + geom_point()
+```
+
+## color on class 
+
+And adjust size
+
+```{r out.width = "50%"}
+ggplot(mpg, aes(x=displ, y=hwy, color=class)) + geom_point()
+```
+
+## Facets on class
+
+```{r}
+ggplot(mpg, aes(x=displ, y=hwy, color=manufacturer)) + geom_point() +
+  facet_grid(~class)
+```

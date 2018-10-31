@@ -10,7 +10,8 @@ import requests
 import markdown
 from gramex.http import OK, FORBIDDEN, METHOD_NOT_ALLOWED
 from orderedattrdict import AttrDict
-from gramex.transforms import badgerfish
+from gramex.ml import r
+from gramex.transforms import badgerfish, rmarkdown
 from . import server, tempfiles, TestGramex
 
 
@@ -139,6 +140,24 @@ class TestFileHandler(TestGramex):
     def test_markdown(self):
         with (server.info.folder / 'dir/markdown.md').open(encoding='utf-8') as f:
             self.check('/dir/transform/markdown.md', text=markdown.markdown(f.read()))
+
+    def test_rmarkdown(self):
+        # install rmarkdown if missing
+        r('''
+            packages <- c('rmarkdown')
+            new.packages <- packages[!(packages %in% installed.packages()[,"Package"])]
+            if (length(new.packages)) install.packages(new.packages)
+        ''')
+
+        def _callback(f):
+            f = f.result()
+            return f
+        path = server.info.folder / 'dir/rmarkdown.Rmd'
+        handler = AttrDict(file=path)
+        result = rmarkdown('', handler).add_done_callback(_callback)
+        self.check('/dir/transform/rmarkdown.Rmd', text=result)
+        htmlpath = str(server.info.folder / 'dir/rmarkdown.html')
+        tempfiles[htmlpath] = htmlpath
 
     def test_transform_badgerfish(self):
         handler = AttrDict(file=server.info.folder / 'dir/badgerfish.yaml')

@@ -1,0 +1,15 @@
+---
+title: "RMarkdown"
+author: "Gramex"
+output: html_document
+---
+
+```{r}
+a <- 2
+```
+
+## a
+
+```{r}
+a
+```
