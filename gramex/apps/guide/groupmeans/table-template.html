@@ -1,0 +1,33 @@
+<% if (data.length !=0) { %>
+<table class="table table-hover table-border">
+  <tr>
+    <th>Groups</th>
+    <th>number</th>
+    <th>biggies</th>
+    <th>means</th>
+    <th>gain</th>
+    <th>p-value</th>
+  </tr>
+  <% _.each(data, function(d){ %>
+    <% biggies = d.biggies.split("\n") %>
+    <% for (var i = 0;i<biggies.length;i++){biggies[i] = biggies[i].replace(/\s{2,}/g, '-')}%>
+    <% means = d.means.split("\n") %>
+    <tr>
+      <td rowspan="<%=biggies.length-2%>" class="align-middle"><%= d.group %></td>
+      <td rowspan="<%=biggies.length-2%>" class="align-middle"><%= d.number %></td>
+      <td><%= biggies[1].split("-")[0] %></td>
+      <td><%= biggies[1].split("-")[1] %></td>
+      <td rowspan="<%=biggies.length-2%>" class="align-middle"><%= d.gain %></td>
+      <td rowspan="<%=biggies.length-2%>" class="align-middle"><%= d.prob %></td>
+    </tr>
+    <% for(i=2;i<biggies.length-1;i++){ %>
+    <tr>
+      <td><%= biggies[i].split("-")[0] %></td>
+      <td><%= biggies[i].split("-")[1] %></td>
+    </tr>
+    <% } %>
+  <% }) %>
+</table>
+<% } else { %>
+<p> No Significance Found, please change parameters</p>
+<% } %>

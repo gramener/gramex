@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Page Title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="../ui/bootstraptheme.css">
+    <link rel="stylesheet" href="../ui/font-awesome/css/font-awesome.min.css">
+  </head>
+  <body>
+    <script type="text/html" src="table-template.html"></script>
+  </body>
+  <script src="../ui/jquery/dist/jquery.min.js"></script>
+  <script src="../ui/popper.js/dist/umd/popper.min.js"></script>
+  <script src="../ui/bootstrap/dist/js/bootstrap.min.js"></script>
+  <script src="../ui/lodash/lodash.min.js"></script>
+  <script src="../ui/g1/dist/g1.min.js"></script>
+  <script>
+    function populate(url) {
+      $.getJSON(url).done(function (data) {
+        $('body').template({ data: data })
+      })
+    }
+    populate('nas-groupmeans?groups=Gender&groups=Father%20edu&numbers=Maths%20%&numbers=Reading%20%')
+  </script>
+</html>

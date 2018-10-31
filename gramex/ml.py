@@ -13,6 +13,7 @@ class Classifier(object):
     '''
     TODO
     '''
+
     def train(self, data, model_class='sklearn.naive_bayes.BernoulliNB', model_kwargs={},
               output=None, input=None, labels=None):
         '''
@@ -155,3 +156,81 @@ def r(code=None, path=None, rel=True, conda=True, convert=True,
         result = r(code)
 
     return result
+
+
+def groupmeans(data, groups, numbers, cutoff=.01, quantile=.95, minsize=None,
+               weight=None):
+    '''
+    Yields the significant differences in average between every pair of
+    groups and numbers.
+
+    Parameters
+    ----------
+    data : pandas.DataFrame
+    groups : non-empty iterable containing category column names in data
+    numbers : non-empty iterable containing numeric column names in data
+    cutoff : ignore anything with prob > cutoff.
+        cutoff=None ignores significance checks, speeding it up a LOT.
+    quantile : number that represents target improvement. Defaults to .95.
+        The ``diff`` returned is the % impact of everyone moving to the 95th
+        percentile
+    minsize : each group should contain at least minsize values.
+        If minsize=None, automatically set the minimum size to
+        1% of the dataset, or 10, whichever is larger.
+    '''
+    from scipy.stats.mstats import ttest_ind
+    if minsize is None:
+        minsize = max(len(data.index) // 100, 10)
+
+    if weight is None:
+        means = data[numbers].mean()
+    else:
+        means = weighted_avg(data, numbers, weight)
+    results = []
+    for group in groups:
+        grouped = data.groupby(group, sort=False)
+        if weight is None:
+            ave = grouped[numbers].mean()
+        else:
+            ave = grouped.apply(lambda v: weighted_avg(v, numbers, weight))
+        ave['#'] = sizes = grouped.size()
+        # Each group should contain at least minsize values
+        biggies = sizes[sizes >= minsize].index
+        # ... and at least 2 groups overall, to compare.
+        if len(biggies) < 2:
+            continue
+        for number in numbers:
+            if number == group:
+                continue
+            sorted_cats = ave[number][biggies].dropna().sort_values()
+            if len(sorted_cats) < 2:
+                continue
+            lo = data[number][grouped.groups[sorted_cats.index[0]]].values
+            hi = data[number][grouped.groups[sorted_cats.index[-1]]].values
+            _, prob = ttest_ind(
+                pd.np.ma.masked_array(lo, pd.np.isnan(lo)),
+                pd.np.ma.masked_array(hi, pd.np.isnan(hi))
+            )
+            if prob > cutoff:
+                continue
+            results.append({
+                'group': group,
+                'number': number,
+                'prob': prob,
+                'gain': sorted_cats.iloc[-1] / means[number] - 1,
+                'biggies': ave.loc[biggies][number],
+                'means': ave[[number, '#']].sort_values(number),
+            })
+
+    results = pd.DataFrame(results)
+    if len(results) > 0:
+        results = results.set_index(['group', 'number'])
+    return results.reset_index()  # Flatten multi-index.
+
+
+def weighted_avg(data, numeric_cols, weight):
+    '''
+    Computes weighted average for specificied columns
+    '''
+    sumprod = data[numeric_cols].multiply(data[weight], axis=0).sum()
+    return sumprod / data[weight].sum()

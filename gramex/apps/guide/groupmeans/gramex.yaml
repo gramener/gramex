@@ -1,0 +1,58 @@
+url:
+  # FormHandlers for the nas data loading.
+  groupmeans-nas:
+    pattern: /$YAMLURL/nas
+    handler: FormHandler
+    kwargs:
+      url: $YAMLPATH/nas.csv
+      function: guide_groupmeans.autolyse_add(data)
+      modify: data.round(2)
+      default:
+        _limit: 10000000000
+  groupmeans-nas-groupmeans:
+    pattern: /$YAMLURL/nas-groupmeans
+    handler: FormHandler
+    kwargs:
+      url: $YAMLPATH/nas.csv
+      function: guide_groupmeans.autolyse_add(data)
+      modify: guide_groupmeans.autolyse(data, handler)
+      default:
+        _limit: 10000000000
+    cache: false
+  # FormHandlers for custom uploaded data.
+  groupmeans-custom-data:
+    pattern: /$YAMLURL/custom-data
+    handler: FormHandler
+    kwargs:
+      url: $YAMLPATH/uploaded-files/data.csv
+      default:
+        _limit: 10000000000
+  groupmeans-custom-data-grouped:
+    pattern: /$YAMLURL/custom-data-groupmeans
+    handler: FormHandler
+    kwargs:
+      url: $YAMLPATH/uploaded-files/data.csv
+      modify: guide_groupmeans.autolyse(data, handler)
+      default:
+        _limit: 10000000000
+    cache: false
+  # UploadHandler for the custom Data
+  groupmeans-uploadhandler:
+    pattern: /$YAMLURL/upload
+    handler: UploadHandler
+    kwargs:
+      path: $YAMLPATH/uploaded-files/
+      if_exists: overwrite
+      methods: post
+  groupmeans-filedownloader:
+    pattern: /$YAMLURL/download-data
+    handler: FunctionHandler
+    kwargs:
+      function: guide_groupmeans.autolyse_download
+  # Filehandlers to render pages and templates.
+  groupmeans-user-data:
+    pattern: /$YAMLURL/custom-explore
+    handler: FileHandler
+    kwargs:
+      path: $YAMLPATH/custom.html
+      template: true
