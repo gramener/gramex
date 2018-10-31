@@ -63,6 +63,8 @@
   <script src="ui/jquery/dist/jquery.min.js"></script>
   <script src="ui/popper.js/dist/umd/popper.min.js"></script>
   <script src="ui/bootstrap/dist/js/bootstrap.min.js"></script>
+  <script src="ui/lodash/lodash.min.js"></script>
+  <script src="ui/g1/dist/g1.min.js"></script>
 
   <div class="container-fluid">
     {% if not current_tab %}
@@ -78,8 +80,6 @@
       </div>
 
     {% elif current_tab == 'users' %}
-      <script src="ui/lodash/lodash.min.js"></script>
-      <script src="ui/g1/dist/g1.min.js"></script>
       <script id="action-template" type="text/html">
         <td>
           <i class="fa fa-lg mr-2 cursor-pointer fa-ban"   title="Reset password" data-action="reset"></i>
@@ -141,7 +141,31 @@
       </script>
 
     {% elif current_tab == 'info' %}
-      <div class="h1 text-danger">Work in progress</div>
+      <script type="text/html" id="stats-template">
+        <div class="container-fluid">
+          <div class="row">
+          <% _.each(data, function(stats, header) { %>
+            <div class="col-xs-6 col-sm-4 col-md-4">
+              <h4 class="h4"><%= _.startCase(header) %></h4>
+              <ul class="list-unstyled">
+                <% _.each(stats, function(value, name)  { %>
+                <li class="w-100">
+                  <strong class="w-50"><%= _.startCase(name) %></strong>:
+                  <span class="w-50"><%= value %></span>
+                </li>
+                <% }) %>
+              </ul>
+            </div>
+          <% }) %>
+          </div>
+        </div>
+      </script>
+
+      <script>
+        $.get('info').done(function(data) {
+          $('#stats-template').template({'data': data})
+        })
+      </script>
 
     {% elif current_tab == 'config' %}
       <div class="h1 text-danger">Work in progress</div>

@@ -65,3 +65,11 @@ url:
       on_message:
         function: gramexadmin.evaluate(handler, message)
       # auth: $ADMIN_KWARGS
+
+  apps/admin2/info-$*:
+    pattern: /$YAMLURL/info
+    handler: FunctionHandler
+    kwargs:
+      function: gramexadmin.system_information
+      headers:
+        Content-Type: application/json      # Display as JSON

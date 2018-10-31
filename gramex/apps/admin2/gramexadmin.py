@@ -1,5 +1,8 @@
 """Auth module role settings."""
 import sys
+import os
+import psutil
+import conda
 from tornado.web import HTTPError
 from cachetools import TTLCache
 from six.moves import StringIO
@@ -105,3 +108,29 @@ def evaluate(handler, code):
     if result is not None:
         retval += repr(result)
     handler.write_message(retval)
+
+
+def system_information(handler):
+    '''Handler for system info'''
+    process = psutil.Process(os.getpid())
+    pow_mb = 20
+    return {
+        'system_stats': {
+            'cpu_count': '{0}'.format(psutil.cpu_count()),
+            'cpu_usage': '{0}%'.format(psutil.cpu_percent()),
+            'memory_usage': '{0}%'.format(psutil.virtual_memory().percent),
+            'disk_usage': '{0}%'.format(psutil.disk_usage('/').percent)
+        },
+        'gramex_stats': {
+            'gramex_version': gramex.__version__,
+            'gramex_path': str(gramex.paths.source),
+            'gramex_memory_usage': '{:,.2f}MB'.format(
+                process.memory_info()[0] / 2. ** pow_mb),
+            'open_files': len(process.open_files())
+        },
+        'python_stats': {
+            'python_version': '{0}.{1}.{2}'.format(*sys.version_info[:3]),
+            'conda_version': conda.__version__,
+            'python_path': sys.executable
+        },
+    }
