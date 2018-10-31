@@ -1268,6 +1268,13 @@ url:
       url: sales.xlsx
       xsrf_cookies: false     # We're testing PUT/PUST/DELETE to see if they fail
 
+  formhandler/url:
+    pattern: /formhandler/url
+    handler: FormHandler
+    kwargs:
+      url: http://localhost:9999/sales.xlsx
+      xsrf_cookies: false     # We're testing PUT/PUST/DELETE to see if they fail
+
   formhandler/mysql:
     pattern: /formhandler/mysql
     handler: FormHandler

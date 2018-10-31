@@ -59,16 +59,18 @@ def filter(url, args={}, meta={}, engine=None, table=None, ext=None,
     It accepts the following parameters:
 
     :arg source url: Pandas DataFrame, sqlalchemy URL, directory or file name,
-        `.format``-ed using ``args``.
+        http(s) data file, all `.format``-ed using ``args``.
     :arg dict args: URL query parameters as a dict of lists. Pass handler.args or parse_qs results
     :arg dict meta: this dict is updated with metadata during the course of filtering
-    :arg string table: table name (if url is an SQLAlchemy URL), ``.format``-ed
+    :arg str engine: over-rides the auto-detected engine. Can be 'dataframe', 'file',
+        'http', 'https', 'sqlalchemy', 'dir'
+    :arg str table: table name (if url is an SQLAlchemy URL), ``.format``-ed
         using ``args``.
-    :arg string ext: file extension (if url is a file). Defaults to url extension
-    :arg string query: optional SQL query to execute (if url is a database),
+    :arg str ext: file extension (if url is a file). Defaults to url extension
+    :arg str query: optional SQL query to execute (if url is a database),
         ``.format``-ed using ``args`` and supports SQLAlchemy SQL parameters.
         Loads entire result in memory before filtering.
-    :arg string queryfile: optional SQL query file to execute (if url is a database).
+    :arg str queryfile: optional SQL query file to execute (if url is a database).
         Same as specifying the ``query:`` in a file. Overrides ``query:``
     :arg function transform: optional in-memory transform of source data. Takes
         the result of gramex.cache.open or gramex.cache.query. Must return a
@@ -188,10 +190,10 @@ def filter(url, args={}, meta={}, engine=None, table=None, ext=None,
         if callable(transform):
             data = transform(data)
         return _filter_frame(data, meta=meta, controls=controls, args=args)
-    elif engine == 'file':
+    elif engine in {'file', 'http', 'https'}:
         params = {k: v[0] for k, v in args.items() if len(v) > 0 and _path_safe(v[0])}
         url = url.format(**params)
-        if not os.path.exists(url):
+        if engine == 'file' and not os.path.exists(url):
             raise OSError('url: %s not found' % url)
         # Get the full dataset. Then filter it
         data = gramex.cache.open(url, ext, transform=transform, **kwargs)
@@ -865,10 +867,10 @@ def download(data, format='json', template=None, **kwargs):
     It takes the following arguments:
 
     :arg dataset data: A DataFrame or a dict of DataFrames
-    :arg string format: Output format. Can be ``csv|json|html|xlsx|template``
+    :arg str format: Output format. Can be ``csv|json|html|xlsx|template``
     :arg file template: Path to template file for ``template`` format
     :arg dict kwargs: Additional parameters that are passed to the relevant renderer
-    :return: a byte-string with the download file contents
+    :return: bytes with the download file contents
 
     When ``data`` is a DataFrame, this is what different ``format=`` parameters
     return:
@@ -1106,13 +1108,15 @@ def filtercols(url, args={}, meta={}, engine=None, table=None, ext=None,
         `.format``-ed using ``args``.
     :arg dict args: URL query parameters as a dict of lists. Pass handler.args or parse_qs results
     :arg dict meta: this dict is updated with metadata during the course of filtering
-    :arg string table: table name (if url is an SQLAlchemy URL), ``.format``-ed
+    :arg str engine: over-rides the auto-detected engine. Can be 'dataframe', 'file',
+        'http', 'https', 'sqlalchemy', 'dir'
+    :arg str table: table name (if url is an SQLAlchemy URL), ``.format``-ed
         using ``args``.
-    :arg string ext: file extension (if url is a file). Defaults to url extension
-    :arg string query: optional SQL query to execute (if url is a database),
+    :arg str ext: file extension (if url is a file). Defaults to url extension
+    :arg str query: optional SQL query to execute (if url is a database),
         ``.format``-ed using ``args`` and supports SQLAlchemy SQL parameters.
         Loads entire result in memory before filtering.
-    :arg string queryfile: optional SQL query file to execute (if url is a database).
+    :arg str queryfile: optional SQL query file to execute (if url is a database).
         Same as specifying the ``query:`` in a file. Overrides ``query:``
     :arg function transform: optional in-memory transform of source data. Takes
         the result of gramex.cache.open or gramex.cache.query. Must return a

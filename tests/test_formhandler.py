@@ -149,6 +149,7 @@ class TestFormHandler(TestGramex):
 
     def test_file(self):
         self.check_filter('/formhandler/file', na_position='last')
+        self.check_filter('/formhandler/url', na_position='last')
         self.check_filter('/formhandler/file-multi', na_position='last', key='big',
                           df=self.sales[self.sales['sales'] > 100])
         self.check_filter('/formhandler/file-multi', na_position='last', key='by-growth',

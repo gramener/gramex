@@ -39,6 +39,23 @@ You can read from multiple file formats as well as databases. The URL may be a
     key: sales
 ```
 
+You can read from a HTTP or HTTPS URL.
+
+```yaml
+    # This URL is read once and cached forever
+    url: https://learn.gramener.com/guide/formhandler/flags.csv
+    ext: csv          # Explicitly specify the extension for HTTP(S) urls
+```
+
+This is cached permanently unless the URL is changed. You change the URL using
+[FormHandler parameters](#formhandler-parameters) like below:
+
+```yaml
+    # This URL is refreshed every time the FormHandler gets a new ?v=...
+    url: https://learn.gramener.com/guide/formhandler/flags.csv?version={v}
+    ext: csv          # Explicitly specify the extension for HTTP(S) urls
+```
+
 Additional parameters like `delimiter:`, `ext:`, etc are passed to
 [gramex.cache.open](../cache/#data-caching), which uses the Pandas ``read_*``
 methods.
