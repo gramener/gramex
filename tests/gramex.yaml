@@ -2442,13 +2442,13 @@ url:
     pattern: /filters/sales
     handler: FilterHandler
     kwargs:
-      url: sales.xlsx
+      url: $YAMLPATH/sales.xlsx
 
   filters/census:
     pattern: /filters/census
     handler: FilterHandler
     kwargs:
-      url: sales.xlsx
+      url: $YAMLPATH/sales.xlsx
       sheetname: census
 sms:
   amazonsns:

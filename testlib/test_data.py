@@ -505,157 +505,142 @@ class FilterColsMixin(object):
     sales = gramex.cache.open(sales_file, 'xlsx')
     census = gramex.cache.open(sales_file, 'xlsx', sheet_name='census')
 
+    def unique_of(self, data, cols):
+        return data.groupby(cols).size().reset_index().drop(0, 1)
+
+    def check_keys(self, result, keys):
+        eq_(set(result.keys()), set(keys))
+
     def test_filtercols_frame(self):
-        # ?_c=City returns up to 100 distinct values of the City column like
-        # {'City': ['c1', 'c1', 'c3', ...]}
-        result = gramex.data.filtercols(args={
-            '_c': ['District']
-        }, **self.urls['census'])
-        eq_(set(result.keys()), {'District'})
-        ok_(set(result['District']['District']).issubset(set(self.census['District'].unique())))
-        ok_(len(result['District']) <= 100)
+        # ?_c=District returns up to 100 distinct values of the District column like
+        # {'District': ['d1', 'd2', 'd3', ...]}
+        cols = ['District']
+        args = {'_c': cols}
+        result = gramex.data.filtercols(args=args, **self.urls['census'])
+        self.check_keys(result, cols)
+        for key, val in result.items():
+            eqframe(val, self.unique_of(self.census, key).head(100))
 
     def test_filtercols_limit(self):
-        # ?_c=City&_limit=200 returns 200 values. (_limit= defaults to 100 values)
+        # ?_c=District&_limit=200 returns 200 values. (_limit= defaults to 100 values)
+        cols = ['District']
         limit = 200
-        result = gramex.data.filtercols(args={
-            '_c': ['District'],
-            '_limit': [limit]
-        }, **self.urls['census'])
-        eq_(set(result.keys()), {'District'})
-        ok_(set(result['District']['District']).issubset(set(self.census['District'].unique())))
-        ok_(len(result['District']) <= limit)
+        args = {'_c': cols, '_limit': [limit]}
+        result = gramex.data.filtercols(args=args, **self.urls['census'])
+        self.check_keys(result, cols)
+        for key, val in result.items():
+            eqframe(val, self.unique_of(self.census, key).head(limit))
 
     def test_filtercols_multicols(self):
-        # ?_c=City&_c=Product returns distinct values for both City and Product like
+        # ?_c=city&_c=product returns distinct values for both City and Product like
         # {'City': ['c1', 'c1', ...], 'Product': ['p1', 'p2', ...]}
-        result = gramex.data.filtercols(args={
-            '_c': ['city', 'product'],
-        }, **self.urls['sales'])
-        eq_(set(result.keys()), {'city', 'product'})
-        eq_(set(result['city']['city']), set(self.sales['city'].unique()))
-        eq_(set(result['product']['product']), set(self.sales['product'].unique()))
+        cols = ['city', 'product']
+        args = {'_c': cols}
+        result = gramex.data.filtercols(args=args, **self.urls['sales'])
+        self.check_keys(result, cols)
+        for key, val in result.items():
+            eqframe(val, self.unique_of(self.sales, key))
 
     def test_filtercols_sort_asc(self):
         # ?_c=City&_sort=City returns cities with data sorted by City sorted alphabetically
-        result = gramex.data.filtercols(args={
-            '_c': ['city'],
-            '_sort': ['city'],
-        }, **self.urls['sales'])
-        expected = self.sales[['city']].drop_duplicates().sort_values('city')
-        eq_(set(result.keys()), {'city'})
-        eqframe(result['city'], expected)
+        cols = ['city']
+        args = {'_c': cols, '_sort': ['city']}
+        result = gramex.data.filtercols(args=args, **self.urls['sales'])
+        self.check_keys(result, cols)
+        for key, val in result.items():
+            expected = self.unique_of(self.sales, key)
+            eqframe(val, expected.sort_values('city'))
 
     def test_filtercols_sort_desc(self):
         # ?_c=City&_sort=-City returns cities with data sorted by City reverse alphabetically
-        result = gramex.data.filtercols(args={
-            '_c': ['city'],
-            '_sort': ['-city'],
-        }, **self.urls['sales'])
-        expected = self.sales[['city']].drop_duplicates()
-        expected = expected.sort_values('city', ascending=False)
-        eq_(set(result.keys()), {'city'})
-        eqframe(result['city'], expected)
+        cols = ['city']
+        args = {'_c': cols, '_sort': ['-city']}
+        result = gramex.data.filtercols(args=args, **self.urls['sales'])
+        self.check_keys(result, cols)
+        for key, val in result.items():
+            expected = self.unique_of(self.sales, key)
+            eqframe(val, expected.sort_values('city', ascending=False))
 
     def test_filtercols_sort_desc_by_sales(self):
         raise SkipTest('TODO: FIX sort')
         # ?_c=City&_sort=-Sales returns cities with data sorted by largest sales first
-        result = gramex.data.filtercols(args={
-            '_c': ['city'],
-            '_sort': ['-sales'],
-        }, **self.urls['sales'])
-        expected = self.sales.sort_values('sales', ascending=False)[['city']]
-        expected = expected.drop_duplicates().head(100)
-        eqframe(result['city'], expected)
+        cols = ['city']
+        args = {'_c': cols, '_sort': ['-sales']}
+        result = gramex.data.filtercols(args=args, **self.urls['sales'])
+        self.check_keys(result, cols)
+        expected = self.sales.sort_values('sales', ascending=False)
+        for key, val in result.items():
+            eqframe(val, self.unique_of(expected, key))
 
     def test_filtercols_sort_by_city_and_sales(self):
         # ?_c=City&_sort=City&_sort=-Sales returns cities with data sorted by
         # city first, then by largest sales
-        result = gramex.data.filtercols(args={
-            '_c': ['city'],
-            '_sort': ['city', '-sales'],
-        }, **self.urls['sales'])
+        cols = ['city']
+        args = {'_c': cols, '_sort': ['city', '-sales']}
+        result = gramex.data.filtercols(args=args, **self.urls['sales'])
+        self.check_keys(result, cols)
         expected = self.sales.sort_values(['city', 'sales'], ascending=[True, False])
-        expected = expected[['city']].drop_duplicates().head(100)
-        eqframe(result['city'], expected)
+        for key, val in result.items():
+            eqframe(val, self.unique_of(expected, key))
 
     def test_filtercols_with_filter(self):
         # ?Product=p1&_c=City filters by Product=p1 and returns cities
-        col = 'District'
-        result = gramex.data.filtercols(args={
-            '_c': [col],
-            'State': ['KERALA'],
-        }, **self.urls['census'])
-        expected = self.census[self.census['State'] == 'KERALA'][col]
-        expected = expected.unique()
-        eq_(set(result[col][col]), set(expected))
+        cols = ['District']
+        args = {'_c': cols, 'State': ['KERALA']}
+        result = gramex.data.filtercols(args=args, **self.urls['census'])
+        self.check_keys(result, cols)
+        expected = self.census[self.census['State'] == 'KERALA']
+        for key, val in result.items():
+            eqframe(val, self.unique_of(expected, key))
 
     def test_filtercols_multicols_with_filter(self):
         # ?Product=p1&_c=City&_c=Product filters by Product=p1 and returns
         # cities. But it returns products too -- UNFILTERED by Product=p1. (That
         # would only return p1!)
-        result = gramex.data.filtercols(args={
-            '_c': ['District', 'DistrictCaps'],
-            '_sort': ['State', 'District'],
-            'State': ['KERALA'],
-            '_limit': [10],
-        }, **self.urls['census'])
+        cols = ['District', 'DistrictCaps']
+        args = {'_c': cols, '_sort': ['State', 'District'], 'State': ['KERALA'],
+                '_limit': [10]}
+        result = gramex.data.filtercols(args=args, **self.urls['census'])
+        self.check_keys(result, cols)
         filtered = self.census.sort_values(['State', 'District'])
-        filtered = filtered[filtered['State'] == 'KERALA']
-        filtered_district = filtered[['District']].drop_duplicates().head(10)
-        filtered_districtcaps = filtered[['DistrictCaps']].drop_duplicates().head(10)
-        eqframe(result['District'], filtered_district)
-        eqframe(result['DistrictCaps'], filtered_districtcaps)
+        expected = filtered[filtered['State'] == 'KERALA']
+        for key, val in result.items():
+            eqframe(val, self.unique_of(expected, key).head(10))
 
     def test_filtercols_multicols_with_multifilter(self):
         raise SkipTest('TODO: FIX sort')
         # ?Product=p1&City=c1&_c=City&_c=Product returns Cities filtered by
         # Product=p1 (not City=c1), and Products filtered by City=c1 (not
         # Product=p1).
-        result = gramex.data.filtercols(args={
-            '_c': ['DistrictCaps'],
-            '_sort': ['State', 'District'],
-            'State': ['KERALA'],
-            'District>~': ['K'],
-            '_limit': [10],
-        }, **self.urls['census'])
-        filtered = self.census.sort_values(['State', 'District'])
-        filtered = filtered[filtered['State'] == 'KERALA']
-        filtered = filtered[filtered['District'] >= 'K']
-        filtered = filtered['DistrictCaps'].unique()[:10]
-        eq_(set(result['DistrictCaps']['DistrictCaps']), set(filtered))
+        cols = ['DistrictCaps']
+        args = {'_c': cols, '_sort': ['State', 'District'],
+                'State': ['KERALA'], 'District>~': ['K'], '_limit': [10]}
+        result = gramex.data.filtercols(args=args, **self.urls['census'])
+        self.check_keys(result, cols)
+        df = self.census.sort_values(['State', 'District'])
+        expected = df[df['State'].eq('KERALA') & df['District'].ge('K')]
+        for key, val in result.items():
+            eqframe(val, self.unique_of(expected, key).head(10))
 
     def test_filtercols_with_filter_unicode(self):
         # ?देश=भारत&_c=city filters by देश=भारत and returns cities
-        col = 'city'
-        result = gramex.data.filtercols(args={
-            '_c': [col],
-            'देश': ['भारत'],
-        }, **self.urls['sales'])
-        expected = self.sales[self.sales['देश'] == 'भारत'][col]
-        expected = expected.unique()
-        eq_(set(result[col][col]), set(expected))
+        cols = ['city']
+        args = {'_c': cols, 'देश': ['भारत']}
+        result = gramex.data.filtercols(args=args, **self.urls['sales'])
+        self.check_keys(result, cols)
+        expected = self.sales[self.sales['देश'] == 'भारत']
+        for key, val in result.items():
+            eqframe(val, self.unique_of(expected, key))
 
     def test_filtercols_with_filter_unicode_values(self):
         # ?देश=भारत&_c=product filters by देश=भारत and returns cities
-        col = 'product'
-        result = gramex.data.filtercols(args={
-            '_c': [col],
-            'देश': ['भारत'],
-        }, **self.urls['sales'])
-        expected = self.sales[self.sales['देश'] == 'भारत'][col]
-        expected = expected.unique()
-        eq_(set(result[col][col]), set(expected))
-
-    def test_filtercols_file(self):
-        # ?_c=City returns up to 100 distinct values of the City column like
-        # {'City': ['c1', 'c1', 'c3', ...]}
-        result = gramex.data.filtercols(args={
-            '_c': ['city']
-        }, **self.urls['sales'])
-        eq_(set(result.keys()), {'city'})
-        ok_(set(result['city']['city']).issubset(set(self.sales['city'].unique())))
-        ok_(len(result['city']) <= 100)
+        cols = ['product']
+        args = {'_c': cols, 'देश': ['भारत']}
+        result = gramex.data.filtercols(args=args, **self.urls['sales'])
+        self.check_keys(result, cols)
+        expected = self.sales[self.sales['देश'] == 'भारत']
+        for key, val in result.items():
+            eqframe(val, self.unique_of(expected, key))
 
 
 class TestFilterColsFrame(FilterColsMixin):

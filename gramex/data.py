@@ -689,9 +689,14 @@ def _filter_frame(data, meta, controls, args, source='select', id=[]):
                             agg_dict[col].append(agg)
                         else:
                             agg_dict[col] = [agg]
-                data = groups.agg(agg_dict)
-                data.columns = agg_cols
-                data = data.reset_index()
+                if not agg_cols:
+                    # If no aggregation columns exist, just show groupby columns.
+                    data = groups.agg('size').reset_index()
+                    data = data.iloc[:, [0]]
+                else:
+                    data = groups.agg(agg_dict)
+                    data.columns = agg_cols
+                    data = data.reset_index()
                 # Apply HAVING operators
                 for key, col, op, vals in cols_having:
                     data = _filter_frame_col(data, key, col, op, vals, meta)
@@ -1180,14 +1185,13 @@ def filtercols(url, args={}, meta={}, engine=None, table=None, ext=None,
         # col_args takes _sort, _c and all filters from args
         col_args = {}
         for key, value in args.items():
-            if key in {'_sort', '_c'}:
+            if key in ['_sort']:
                 col_args[key] = value
             # Ignore any filters on the column we are currently processing
             if not key.startswith('_') and key != col:
                 col_args[key] = value
-        if engine == 'sqlalchemy':
-            col_args['_by'] = col_args['_c']
-            col_args['_c'] = []
-        filtered = gramex.data.filter(url, table=table, args=col_args, **kwargs)
-        result[col] = filtered[[col]].drop_duplicates().head(limit)
+        col_args['_by'] = [col]
+        col_args['_c'] = []
+        col_args['_limit'] = [limit]
+        result[col] = gramex.data.filter(url, table=table, args=col_args, **kwargs)
     return result

@@ -4,7 +4,6 @@ from __future__ import unicode_literals
 import os
 import gramex.cache
 import pandas as pd
-from nose.tools import eq_, ok_
 from pandas.util.testing import assert_frame_equal as afe
 from . import TestGramex, folder
 
@@ -21,29 +20,29 @@ class TestFilterHandler(TestGramex):
             expected.index = actual.index
             afe(actual, expected, **kwargs)
 
+        def unique_of(data, cols):
+            return data.groupby(cols).size().reset_index().drop(0, 1)
+
         self.check('/filters/sales?_c=city')
 
         result = self.get('/filters/sales', params={'_c': ['city']}).json()
-        expected = self.sales[['city']].drop_duplicates()
+        expected = unique_of(self.sales, 'city')
         eqframe(result['city'], expected, check_like=True)
 
         result = self.get('/filters/sales', params={'_c': ['city', 'product']}).json()
-        expected_city = self.sales[['city']].drop_duplicates()
-        expected_product = self.sales[['product']].drop_duplicates()
-        eqframe(result['city'], expected_city, check_like=True)
-        eqframe(result['product'], expected_product, check_like=True)
+        for col in ['city', 'product']:
+            expected_col = unique_of(self.sales, col)
+            eqframe(result[col], expected_col, check_like=True)
 
         limit = 10
         _args = {'_c': ['city'], '_limit': [limit]}
         result = self.get('/filters/sales', params=_args).json()
-        actual = pd.DataFrame(result['city'])
-        ok_(set(actual['city']).issubset(set(self.sales['city'].unique())))
-        ok_(len(actual['city']) <= limit)
+        expected = unique_of(self.sales, 'city').head(limit)
+        eqframe(result['city'], expected, check_like=True)
 
         _args = {'_c': ['city'], '_sort': ['city']}
         result = self.get('/filters/sales', params=_args).json()
-        expected = self.sales[['city']].drop_duplicates().sort_values('city')
-        eq_(set(result.keys()), {'city'})
+        expected = unique_of(self.sales, 'city').sort_values('city')
         eqframe(result['city'], expected)
 
         # _args = {'_c': ['city'], '_sort': ['-city']}
@@ -55,13 +54,13 @@ class TestFilterHandler(TestGramex):
         _args = {'_c': ['city'], '_sort': ['city', '-sales']}
         result = self.get('/filters/sales', params=_args).json()
         expected = self.sales.sort_values(['city', 'sales'], ascending=[True, False])
-        expected = expected[['city']].drop_duplicates().head(100)
+        expected = unique_of(self.sales, 'city')
         eqframe(result['city'], expected)
 
         _args = {'_c': ['District'], 'State': ['KERALA']}
         result = self.get('/filters/census', params=_args).json()
-        expected = self.census[self.census['State'] == 'KERALA'][['District']]
-        expected = expected.drop_duplicates().head(100)
+        expected = self.census[self.census['State'] == 'KERALA']
+        expected = unique_of(expected, 'District')
         eqframe(result['District'], expected)
 
         _args = {
@@ -73,10 +72,8 @@ class TestFilterHandler(TestGramex):
         result = self.get('/filters/census', params=_args).json()
         filtered = self.census.sort_values(['State', 'District'])
         filtered = filtered[filtered['State'] == 'KERALA']
-        filtered_district = filtered[['District']].drop_duplicates().head(10)
-        filtered_districtcaps = filtered[['DistrictCaps']].drop_duplicates().head(10)
-        eqframe(result['District'], filtered_district)
-        eqframe(result['DistrictCaps'], filtered_districtcaps)
+        for col in ['District', 'DistrictCaps']:
+            eqframe(result[col], unique_of(filtered, col).head(10))
 
         # _args = {
         #     '_c': ['DistrictCaps'],
@@ -92,14 +89,9 @@ class TestFilterHandler(TestGramex):
         # filtered = filtered[['DistrictCaps']].drop_duplicates().head(10)
         # eqframe(result['DistrictCaps'], filtered)
 
-        _args = {'_c': ['city'], 'देश': ['भारत']}
-        result = self.get('/filters/sales', params=_args).json()
-        expected = self.sales[self.sales['देश'] == 'भारत'][['city']]
-        expected = expected.drop_duplicates().head(100)
-        eqframe(result['city'], expected)
-
-        _args = {'_c': ['product'], 'देश': ['भारत']}
-        result = self.get('/filters/sales', params=_args).json()
-        expected = self.sales[self.sales['देश'] == 'भारत'][['product']]
-        expected = expected.drop_duplicates().head(100)
-        eqframe(result['product'], expected)
+        for col in ['city', 'product']:
+            _args = {'_c': [col], 'देश': ['भारत']}
+            result = self.get('/filters/sales', params=_args).json()
+            expected = self.sales[self.sales['देश'] == 'भारत']
+            expected = unique_of(expected, col)
+            eqframe(result[col], expected)
