@@ -79,6 +79,10 @@
         {% end %}
       </div>
 
+    {% elif current_tab not in tab_list %}
+      <div class="h1 text-danger">Unknown feature</div>
+      <p>This feature may be disabled or missing. Please go to the <a href=".">admin home page</a>.</p>
+
     {% elif current_tab == 'users' %}
       <script id="action-template" type="text/html">
         <td>
@@ -172,10 +176,6 @@
 
     {% elif current_tab == 'logs' %}
       <div class="h1 text-danger">Work in progress</div>
-
-    {% else %}
-      <div class="h1 text-danger">Unknown feature</div>
-      <p>This feature may be disabled or missing. Please go to the <a href=".">admin home page</a>.</p>
 
     {% end %}
   </div>

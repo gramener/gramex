@@ -7,8 +7,9 @@ from pathlib import Path
 from orderedattrdict import AttrDict
 import gramex
 
-# Don't print the districting DEBUG messages from matplotlib
-logging.getLogger('matplotlib').setLevel(logging.WARNING)
+# Don't print the distracting DEBUG messages from some modules
+for logger in ['matplotlib', 'MARKDOWN']:
+    logging.getLogger(logger).setLevel(logging.WARNING)
 
 info = AttrDict(
     folder=Path(__file__).absolute().parent,

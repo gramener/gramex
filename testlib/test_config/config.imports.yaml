@@ -1,3 +1,4 @@
+# import: file imports file as-is
 import-file:
   source:
     import: config.b.yaml
@@ -8,6 +9,7 @@ import-file:
         yy: 4
     d: null
 
+# import: [file, file] imports both files
 import-list:
   source:
     import: [config.a.yaml, config.b.yaml]
@@ -19,6 +21,7 @@ import-list:
       xx: 3
       yy: 4
 
+# import: '*.yaml' imports wildcard files
 import-wildcard:
   source:
     import: 'dir1/config.*.yaml'
@@ -26,18 +29,21 @@ import-wildcard:
     # Ensure that the result is sorted by path, for stability.
     import: [dir1/config.a.yaml, dir1/config.b.yaml]
 
+# import: '**/*.yaml' recursively gets files
 import-glob:
   source:
     import: 'dir1/**/config.*.yaml'
   target:
     import: [dir1/config.a.yaml, dir1/config.b.yaml, dir1/subdir/config.c.yaml]
 
+# Missing files are ignored
 import-missing-file:
   source:
     import: [config.b.yaml, config.missing.yaml]
   target:
     import: config.b.yaml
 
+# import: {path: file} imports file
 import-dict-with-path:
   source:
     import:
@@ -45,12 +51,14 @@ import-dict-with-path:
   target:
     import: config.a.yaml
 
+# import: [{path: file}, {path: file}] imports both files
 import-list-of-dict-with-path:
   source:
     import: [{path: config.a.yaml}, {path: config.b.yaml}]
   target:
     import: [config.a.yaml, config.b.yaml]
 
+# import: {a: {path: file}} imports file
 import-dict-of-dict-with-path:
   source:
     import:
@@ -59,12 +67,14 @@ import-dict-of-dict-with-path:
   target:
     import: [config.a.yaml, config.b.yaml]
 
+# Use of import within an import is allowed
 import-in-import:
   source:
     import: config.subimport.yaml
   target:
     import: config.b.yaml
 
+# Variables are available for use in imports
 import-without-vars:
   source:
     import:
@@ -74,6 +84,7 @@ import-without-vars:
     YAMLURL: $YAMLURL
     CUSTOM: ''
 
+# Variables can be modified from the outside when importing
 import-vars:
   source:
     import:
@@ -86,7 +97,7 @@ import-vars:
     YAMLURL: custom-yamlurl
     CUSTOM: {x: 1, y: true}
 
-
+# Imports allow name-spacing all keys
 import-namespace-star:
   source:
     import: {sub: {path: config.b.yaml, namespace: '*'}}
@@ -95,6 +106,7 @@ import-namespace-star:
     'sub:config.b.yaml:c': {'xx': 3, 'yy': 4}
     'sub:config.b.yaml:d': null
 
+# Imports allow name-spacing specific keys
 import-namespace-c:
   source:
     import: {sub: {path: config.b.yaml, namespace: 'c'}}
@@ -103,6 +115,7 @@ import-namespace-c:
     c: {'sub:config.b.yaml:xx': 3, 'sub:config.b.yaml:yy': 4}
     d: null
 
+# Imports allow name-spacing specific keys when the path is a list
 import-namespace-c-list:
   source:
     import:
@@ -119,6 +132,7 @@ import-namespace-c-list:
         'sub:config.b.yaml:xx': 3
         'sub:config.b.yaml:yy': 4
 
+# Imports allow name-spacing all AND specific keys. That's the same as name-spacing all keys
 import-namespace-star_c:
   source:
     import:  {sub: {path: config.b.yaml, namespace: ['*', 'c']}}
@@ -127,20 +141,29 @@ import-namespace-star_c:
     'sub:config.b.yaml:c': {'sub:config.b.yaml:xx': 3, 'sub:config.b.yaml:yy': 4}
     'sub:config.b.yaml:d': null
 
+# Namespacing works with variables
 import-namespace-vars:
   source:
     import:
       app1:
         path: config.urlimport.yaml
         YAMLURL: url1
+        CUSTOM:
+          x: 1
         namespace: [url]
       app2:
         path: config.urlimport.yaml
         YAMLURL: url2
+        CUSTOM:
+          x: 2
         namespace: [url]
   target:
     url:
       app1:config.urlimport.yaml:pattern:
         handler: url1
+        custom:
+          x: 1
       app2:config.urlimport.yaml:pattern:
         handler: url2
+        custom:
+          x: 2

@@ -2,7 +2,6 @@ from __future__ import unicode_literals
 
 import os
 import email
-import lxml.html
 import gramex
 import gramex.cache
 from binascii import a2b_base64
@@ -82,16 +81,12 @@ class TestAlerts2(TestGramex):
         mail = run_alert('alert-markdown')
         obj = email.message_from_string(mail['msg'])
         body, html = obj.get_payload()
-        tree = lxml.html.fromstring(html.get_payload(decode=True).decode('utf-8'))
-        eq_(tree.tag, 'h1')
-        eq_(tree.text, 'markdown')
+        self.check_css(html.get_payload(decode=True).decode('utf-8'), ('h1', 'markdown'))
 
         mail = run_alert('alert-markdown-template')
         obj = email.message_from_string(mail['msg'])
         body, html = obj.get_payload()
-        tree = lxml.html.fromstring(html.get_payload(decode=True).decode('utf-8'))
-        eq_(tree.tag, 'h1')
-        eq_(tree.text, 'template-alert')
+        self.check_css(html.get_payload(decode=True).decode('utf-8'), ('h1', 'template-alert'))
 
     def test_attachments(self):
         mail = run_alert('alert-attachments')

@@ -1,7 +1,9 @@
 import os
+import six
 import shutil
 import requests
 import unittest
+from nose.tools import eq_, ok_
 from orderedattrdict import AttrDict
 from . import server
 from gramex import conf
@@ -62,27 +64,87 @@ class TestGramex(unittest.TestCase):
         '''
         r = self.get(url, session=session, data=data, method=method, timeout=timeout,
                      headers=request_headers)
-        self.assertEqual(r.status_code, code, '%s: code %d != %d' % (url, r.status_code, code))
+        eq_(r.status_code, code, '%s: code %d != %d' % (url, r.status_code, code))
         if text is not None:
             self.assertIn(text, r.text, '%s: %s not in %s' % (url, text, r.text))
         if no_text is not None:
             self.assertNotIn(text, r.text, '%s: %s should not be in %s' % (url, text, r.text))
         if path is not None:
             with (server.info.folder / path).open('rb') as file:
-                self.assertEqual(r.content, file.read(), '%s != %s' % (url, path))
+                eq_(r.content, file.read(), '%s != %s' % (url, path))
         if headers is not None:
             for header, value in headers.items():
                 if value is None or value is False:
-                    self.assertFalse(header in r.headers,
-                                     '%s: should not have header %s' % (url, header))
+                    ok_(header not in r.headers, '%s: should not have header %s' % (url, header))
                 elif value is True:
-                    self.assertTrue(header in r.headers,
-                                    '%s: should have header %s' % (url, header))
+                    ok_(header in r.headers, '%s: should have header %s' % (url, header))
                 else:
                     actual = r.headers[header]
-                    self.assertEqual(actual, value,
-                                     '%s: header %s = %s != %s' % (url, header, actual, value))
+                    eq_(actual, value, '%s: header %s = %s != %s' % (url, header, actual, value))
         return r
+
+    def check_css(self, html, *selectors):
+        '''
+        Checks if a series of CSS selectors are present in the HTML. For example:
+
+            self.check_css(html,
+                ('h1', 'Admin'),              # first H1 is Admin
+                ('h1', 'is', 'Admin'),        # first H1 has text Admin
+                ('img', 'is', {'src': 'X'}),  # first img has src="X"
+                ('h1', 1, 'X'},               # second H1 should have text X
+                ('h1', -1, 'X'},              # last H1 should have text X
+                ('h1', 'has', 'X'},           # any H1 should have text X
+                ('h1', 'all', 'X'},           # all H1 should have text X
+            )
+        '''
+        import re
+        import lxml.html
+        from lxml.cssselect import CSSSelector
+        tree = lxml.html.fromstring(html)
+
+        for selector in selectors:
+            if len(selector) == 2:
+                (css, val), how = selector, 'is'
+            elif len(selector) == 3:
+                css, how, val = selector
+            else:
+                raise ValueError('Selector %s must be a (css, how, val) triple' % selector)
+            # Check all matching nodes. At least one node must exist
+            nodes = CSSSelector(css)(tree)
+            ok_(len(nodes) > 0, 'CSS %s missing' % css)
+
+            # val must be a dict. Convert text values to dict. Raise error for rest
+            if isinstance(val, six.string_types):
+                val = {'@text': val}
+            elif not isinstance(val, dict):
+                raise ValueError('CSS %s has invalid value %s' % (css, val))
+
+            for attr, v in val.items():
+                if attr == '@text':
+                    actuals = [node.text for node in nodes]
+                else:
+                    actuals = [node.get(attr, None) for node in nodes]
+
+                # Try substring search. Else try regexp search
+                regex = re.compile(v)
+                match = lambda x: x in actual or regex.search(x)        # noqa
+
+                # First or specified selector should match v
+                if how == 'is' or isinstance(how, int):
+                    actual = actuals[0 if how == 'is' else how]
+                    if not match(actual):
+                        self.fail('CSS %s@%s = %s != %s' % (css, attr, actual, v))
+                # Any selector should match v
+                elif how in {'has', 'any'}:
+                    if not any(match(actual) for actual in actuals):
+                        self.fail('CSS %s@%s has no %s' % (css, attr, v))
+                # All selectors should match v
+                elif how == 'all':
+                    if not all(match(actual) for actual in actuals):
+                        self.fail('CSS %s@%s is not all %s' % (css, attr, v))
+                else:
+                    raise ValueError('CSS %s: invalid how: "%s"' % (css, how))
+        return tree
 
 
 class TestSchedule(TestGramex):
@@ -97,4 +159,4 @@ class TestSchedule(TestGramex):
         # fails, increase schedule.schedule-startup-slow.kwargs.count. It may be
         # due to slow startup.
         max_count = conf.schedule['schedule-startup-slow'].kwargs.count - 1
-        self.assertTrue(0 < info['schedule-count'] < max_count, 'Schedule still running')
+        ok_(0 < info['schedule-count'] < max_count, 'Schedule still running')

@@ -2654,6 +2654,20 @@ import:
     LOGVIEWER_SCHEDULER_SETUP:
       thread: false
 
+  admin/default:
+    path: $GRAMEXAPPS/admin2/gramex.yaml
+    YAMLURL: /$YAMLURL/admin/default/
+
+  admin/kwargs:
+    path: $GRAMEXAPPS/admin2/gramex.yaml
+    YAMLURL: /$YAMLURL/admin/kwargs/
+    ADMIN_KWARGS:
+      logo: logo.png
+      title: Custom title
+      components: [users, info, shell]
+      theme: '?font-family-base=roboto'
+      authhandler: auth/db
+
 # Invalid services should be ignored
 invalid-service: true
 

@@ -37,8 +37,8 @@ def get_auth_conf(kwargs):
     elif auth_conf.get('handler', None) == 'DBAuth':
         # For DBAuth, hoist the user.column into as the id: for the URL
         user_column = auth_kwargs.get('user', {}).get('column', 'user')
-        data_conf = DBAuth.clear_special_keys(auth_kwargs.copy(), 'user',
-                                              'password', 'forgot', 'signup')
+        data_conf = DBAuth.clear_special_keys(
+            auth_kwargs.copy(), 'user', 'password', 'forgot', 'signup', 'template', 'delay')
         data_conf['id'] = user_column
         return authhandler, auth_conf, data_conf
     else:

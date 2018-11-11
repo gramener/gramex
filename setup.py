@@ -213,6 +213,7 @@ setup(
         'websocket-client',         # For websocket testing
         'pdfminer.six',             # For CaptureHandler testing
         'bandit',                   # For security testing
+        'cssselect',                # For HTML testing (test_admin.py)
     ],
     cmdclass={
         'develop': PostDevelopCommand,

@@ -90,8 +90,7 @@ class AuthBase(TestGramex):
               headers={}, post_args={}):
         params = self.redirect_kwargs(query_next, header_next, referer=referer)
         r = self.session.get(self.url, **params)
-        tree = lxml.html.fromstring(r.text)
-        eq_(tree.xpath('.//h1')[0].text, 'Auth')
+        tree = self.check_css(r.text, ('h1', 'Auth'))
 
         # Create form submission data
         data = {'user': user, 'password': password}
@@ -563,8 +562,7 @@ class TestDBAuthSignup(DBAuthBase):
         # Visiting the page with ?signup shows the signup template
         session = requests.Session()
         r = session.get(self.url + '?signup')
-        tree = lxml.html.fromstring(r.text)
-        eq_(tree.xpath('.//h1')[0].text, 'Signup')
+        tree = self.check_css(r.text, ('h1', 'Signup'))
 
         # POST an empty username. Raises HTTP 400: User invalid
         r = session.post(self.url + '?signup', data={

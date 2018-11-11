@@ -1,3 +1,4 @@
 url:
   pattern:
     handler: $YAMLURL
+    custom: $CUSTOM
