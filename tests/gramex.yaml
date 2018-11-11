@@ -2668,6 +2668,14 @@ import:
       theme: '?font-family-base=roboto'
       authhandler: auth/db
 
+  admin/auth:
+    path: $GRAMEXAPPS/admin2/gramex.yaml
+    YAMLURL: /$YAMLURL/admin/auth/
+    ADMIN_AUTH:
+      login_url: /auth/simple
+      membership:
+        user: [alpha, delta]
+
 # Invalid services should be ignored
 invalid-service: true
 

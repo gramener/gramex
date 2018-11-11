@@ -33,6 +33,9 @@ import:
       title: Admin  Page Options                            # Navbar title
       components: [info, users, shell]                      # Components to show
       theme: '?primary=%2320186f&dark=%2320186f&font-family-base=roboto&body-bg=%23f8f8f8'  # Bootstrap theme query
+    ADMIN_AUTH:
+      membership:
+        email: [admin1@example.org, admin2@example.org]     # Only allow these users
 ```
 
 The `ADMIN_KWARGS` section accepts the following parameters:
@@ -48,6 +51,9 @@ The `ADMIN_KWARGS` section accepts the following parameters:
     - `info`: [Gramex & server info component](#admin-info)
     - `config`: [Gramex configuration component](#admin-config)
     - `logs`: [Log viewer component](#admin-logs)
+
+The `ADMIN_AUTH` section is the same as specifying the `auth:`
+[authorization](../auth/#authorization) on all admin pages.
 
 <div class="example">
   <a class="example-demo" href="admin-kwargs/">Admin page options example</a>

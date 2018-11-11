@@ -222,8 +222,8 @@ class BaseMixin(object):
         # Treat True as an empty dict, i.e. auth: {}
         if auth is True:
             auth = AttrDict()
-        # If auth is False or None, ignore it. Otherwise, process the auth
-        if auth is not None and auth is not False:
+        # Set up the auth
+        if isinstance(auth, dict):
             cls._login_url = auth.get('login_url', None)
             cls._on_init_methods.append(cls.authorize)
             cls.permissions = []
@@ -238,6 +238,8 @@ class BaseMixin(object):
                 memberships = [memberships]
             if len(memberships):
                 cls.permissions.append(check_membership(memberships))
+        elif auth:
+            app_log.error('url:%s.auth is not a dict', cls.name)
 
     @classmethod
     def setup_log(cls):

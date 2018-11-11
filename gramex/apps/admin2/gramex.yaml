@@ -24,6 +24,7 @@ url:
       path: $YAMLPATH/index.html
       template: true
       admin_kwargs: $ADMIN_KWARGS
+      auth: $ADMIN_AUTH
       # Admin panel configuration
       components:
         'users':
@@ -57,19 +58,21 @@ url:
     handler: gramexadmin.AdminFormHandler
     kwargs:
       admin_kwargs: $ADMIN_KWARGS
+      auth: $ADMIN_AUTH
 
   apps/admin2/webshell-$*:
     pattern: /$YAMLURL/webshell
     handler: WebSocketHandler
     kwargs:
+      auth: $ADMIN_AUTH
       on_message:
         function: gramexadmin.evaluate(handler, message)
-      # auth: $ADMIN_KWARGS
 
   apps/admin2/info-$*:
     pattern: /$YAMLURL/info
     handler: FunctionHandler
     kwargs:
       function: gramexadmin.system_information
+      auth: $ADMIN_AUTH
       headers:
         Content-Type: application/json      # Display as JSON
