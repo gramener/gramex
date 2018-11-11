@@ -7,6 +7,9 @@ from pathlib import Path
 from orderedattrdict import AttrDict
 import gramex
 
+# Don't print the districting DEBUG messages from matplotlib
+logging.getLogger('matplotlib').setLevel(logging.WARNING)
+
 info = AttrDict(
     folder=Path(__file__).absolute().parent,
     thread=None,
@@ -27,6 +30,16 @@ def start_gramex():
             gramex.init()
         except Exception as e:
             info.exception = e
+
+    # Tornado 5.0 on Python 3 does not create an event loop on new threads.
+    # See https://github.com/tornadoweb/tornado/issues/2183
+    # Tell Tornado to explicitly create an event loop for our thread.
+    try:
+        import asyncio
+        from tornado.platform.asyncio import AnyThreadEventLoopPolicy
+        asyncio.set_event_loop_policy(AnyThreadEventLoopPolicy())
+    except ImportError:
+        pass
 
     info.thread = threading.Thread(name='server', target=run_gramex)
     info.thread.start()
