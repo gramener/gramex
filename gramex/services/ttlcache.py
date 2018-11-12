@@ -1,7 +1,9 @@
 '''
-Same as cachetools/ttl.py, but with option to specify an expiry for EACH key.
+Same as cachetools/ttl.py 3.0.0, but with option to specify an expiry for EACH key.
 '''
 # Modifications are marked with CHANGE:
+
+from __future__ import absolute_import
 
 import collections
 import time
@@ -65,9 +67,8 @@ class TTLCache(Cache):
     """LRU Cache implementation with per-item time-to-live (TTL) value."""
 
     # CHANGE: ttl parameter defaults to MAXTTL
-    def __init__(self, maxsize, ttl=MAXTTL, timer=time.time, missing=None,
-                 getsizeof=None):
-        Cache.__init__(self, maxsize, missing, getsizeof)
+    def __init__(self, maxsize, ttl=MAXTTL, timer=time.time, getsizeof=None):
+        Cache.__init__(self, maxsize, getsizeof)
         self.__root = root = _Link()
         root.prev = root.next = root
         self.__links = collections.OrderedDict()
@@ -96,7 +97,7 @@ class TTLCache(Cache):
         else:
             return cache_getitem(self, key)
 
-    # CHANGE: optional expire parameter added
+    # CHANGE: optional expire=None parameter added
     def __setitem__(self, key, value, expire=None, cache_setitem=Cache.__setitem__):
         with self.__timer as time:
             self.expire(time)
