@@ -118,14 +118,14 @@
             { name: password_column, hide: true },
             { name: 'actions', template: $('#action-template').html() }
           ],
-          actions: {
+          actions: [{
             'reset': function(obj) {
               var data = {}
               data[user_key] = obj.row[user_column]
               return $.ajax(auth_conf.pattern + '?' + forgot_key, {method: 'POST', data: data})
                 .done(function() { obj.notify('Email sent') })
             }
-          }
+          }]
         })
       </script>
 
