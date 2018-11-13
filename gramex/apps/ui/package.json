@@ -24,6 +24,7 @@
     "topojson": "3",
     "url-search-params": "0.10",
     "vega": "4",
+    "vega-embed": "3.23.1",
     "vega-lite": "3.0.0-rc6"
   }
 }

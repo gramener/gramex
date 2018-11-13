@@ -1,0 +1,198 @@
+{
+  "$schema": "https://vega.github.io/schema/vega/v4.json",
+  "width": 600,
+  "height": 310,
+  "padding": {
+    "top": 50
+  },
+  "autosize": "fit",
+  "signals": [
+    {
+      "name": "signal_gradientLength",
+      "value": 200
+    }
+  ],
+  "data": [
+    {
+      "name": "table",
+      "url": "https://api.myjson.com/bins/yiz0u"
+    }
+  ],
+  "title": {
+    "text": "Bubble Chart",
+    "anchor": "start"
+  },
+  "scales": [
+    {
+      "name": "x",
+      "type": "band",
+      "round": true,
+      "nice": true,
+      "padding": 0.5,
+      "zero": true,
+      "domain": {
+        "data": "table",
+        "field": "Label"
+      },
+      "range": "width"
+    },
+    {
+      "name": "y",
+      "type": "point",
+      "domain": {
+        "data": "table",
+        "field": "category"
+      },
+      "range": "height"
+    },
+    {
+      "name": "size",
+      "type": "linear",
+      "round": true,
+      "nice": false,
+      "zero": true,
+      "domain": {
+        "data": "table",
+        "field": "Depth"
+      },
+      "range": [
+        25,
+        500
+      ]
+    },
+    {
+      "name": "color",
+      "type": "quantize",
+      "domain": {
+        "data": "table",
+        "field": "Depth"
+      },
+      "range": [
+        "#489851",
+        "#67d661",
+        "#d1eaa8",
+        "#f5d6a1",
+        "#e78364",
+        "#d73029"
+      ]
+    },
+    {
+      "name": "label",
+      "type": "ordinal",
+      "domain": {
+        "data": "table",
+        "field": "Label"
+      },
+      "range": [
+        "#489851",
+        "#67d661",
+        "#d1eaa8",
+        "#f5d6a1",
+        "#e78364",
+        "#d73029"
+      ]
+    }
+  ],
+  "axes": [
+    {
+      "scale": "x",
+      "grid": true,
+      "gridOpacity": 0.9,
+      "gridColor": "#F0F2F4",
+      "domain": true,
+      "orient": "top",
+      "ticks": false,
+      "titleFont": "roboto",
+      "titleColor": "#485465",
+      "titleFontSize": 12,
+      "titleFontWeight": 500,
+      "titlePadding": 16,
+      "labelColor": "#485465",
+      "labelFontSize": 10,
+      "labelPadding": 20,
+      "labelFontWeight": 500
+    },
+    {
+      "scale": "y",
+      "grid": true,
+      "gridOpacity": 0.9,
+      "gridColor": "#F0F2F4",
+      "domain": true,
+      "orient": "left",
+      "ticks": false,
+      "titleFont": "roboto",
+      "titleColor": "#485465",
+      "titleFontSize": 12,
+      "titleFontWeight": 500,
+      "titlePadding": 16,
+      "labelColor": "#485465",
+      "labelFontSize": 10,
+      "labelFontWeight": 500,
+      "labelPadding": 10,
+      "labelFont": "roboto"
+    }
+  ],
+  "marks": [
+    {
+      "name": "circles",
+      "type": "symbol",
+      "from": {
+        "data": "table"
+      },
+      "encode": {
+        "enter": {
+          "x": {
+            "scale": "x",
+            "field": "Label"
+          },
+          "y": {
+            "scale": "y",
+            "field": "category"
+          },
+          "tooltip": {
+            "signal": "{'Depth': datum.Depth,'Label': datum.Label, 'Category': datum.category}"
+          },
+          "size": {
+            "scale": "size",
+            "field": "Depth"
+          },
+          "shape": {
+            "value": "circle"
+          },
+          "fill": {
+            "scale": "label",
+            "field": "Label"
+          }
+        }
+      }
+    }
+  ],
+  "legends": [
+    {
+      "type": "gradient",
+      "orient": "none",
+      "encode": {
+        "labels": {
+          "update": {
+            "text": {
+              "value": ""
+            }
+          }
+        },
+        "legend": {
+          "update": {
+            "x": {
+              "signal": "width - signal_gradientLength"
+            },
+            "y": {
+              "value": -80
+            }
+          }
+        }
+      },
+      "direction": "horizontal",
+      "fill": "color",
+      "title": "Color Represents"
+    }
+  ]
+}
