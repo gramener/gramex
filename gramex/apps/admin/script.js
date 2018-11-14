@@ -52,43 +52,43 @@ $('.formhandler').formhandler({
   },
   edit: true,
   add: true,
-  actions: {
-    'logout': function (row) {
+  actions: [{
+    'logout': function (obj) {
       $.ajax('./pop_user', {
         method: 'GET',
         data: {
-          user: row[config.id]
+          user: obj.row[config.id]
         },
         error: function () {
           alertMessage('Logout user failed!', 'warning', 2000)
         },
         success: function () {
-          alertMessage(row[config.id] +' is logged out from all his sessions successfully!', 'info', 2000)
+          alertMessage(obj.row[config.id] + ' is logged out from all his sessions successfully!', 'info', 2000)
         }
       })
     },
-    'delete': function (row, rowNo) {
+    'delete': function (obj) {
       $('.loader').removeClass('d-none')
       $.ajax(src, {
         method: 'DELETE',
         data: {
-          user: row[config.id]
+          user: obj.row[config.id]
         },
         error: function () {
           alertMessage('User deletion failed!', 'warning', 2000)
         },
         success: function () {
           $('.loader').addClass('d-none')
-          alertMessage(row[config.id] + ' is deleted successfully!', 'info', 2000)
-          $('.formhandler' + ' tr[data-row="' + rowNo + '"]').hide()
+          alertMessage(obj.row[config.id] + ' is deleted successfully!', 'info', 2000)
+          $('.formhandler' + ' tr[data-row="' + obj.index + '"]').hide()
         }
       })
     },
-    'reset_password': function (row) {
-      $.ajax(config.login_url +'?'+ config.forgot_key, {
+    'reset_password': function (obj) {
+      $.ajax(config.login_url + '?' + config.forgot_key, {
         method: 'POST',
         data: {
-          user: row[config.id]
+          user: obj.row[config.id]
         },
         error: function () {
           alertMessage('Reset password email failed!', 'warning', 2000)
@@ -98,6 +98,6 @@ $('.formhandler').formhandler({
         }
       })
     }
-  }
+  }]
 
 })
