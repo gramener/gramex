@@ -16,7 +16,7 @@ install_requires = [
     # 'rpy2',                         # For gramex.ml.r()
     # 'line_profiler',                # For gramex.debug
 
-    # These are pre-packaged in conda
+    # These are pre-packaged in Anaconda, not Miniconda
     'colorama',                     # For gramex.init()
     'pandas',                       # For gramex.data.filter()
     'matplotlib',                   # For gramex.data.download()
@@ -24,13 +24,8 @@ install_requires = [
     'sqlalchemy',                   # For gramex.data.filter()
     'datashape',                    # For gramex.handlers.datahandler
     'blaze',                        # For gramex.handlers.datahandler
-    'ldap3',                        # For gramex.handlers.authhandler.LDAPAuth
-    'cachetools',                   # For gramex.services.ttlcache
-    'redis',                        # For gramex.cache.RedisStore
     'h5py',                         # For gramex.cache.HDF5Store
-    'ipdb',                         # For gramex.debug
     'lxml',                         # For gramex.pptgen
-    'markdown',                     # For gramex.services.create_alert()
 
     # For setup
     'setuptools >= 16.0',       # 16.0 has good error message support
@@ -42,8 +37,6 @@ install_requires = [
     'watchdog >= 0.8',              # Monitor file changes
     'tornado >= 4.3',               # Web server
     'pyyaml >= 3.10',               # Parse YAML files for config
-    # Used by colorlog. Anaconda has colorama, but 0.3.7 fixes an exit-reset-code bug
-    'colorama >= 0.3.7',
     'colorlog >= 2.7.0',            # Coloured log files
     'shutilwhich >= 1.1.0',         # shutil.which backport
     'passlib >= 1.6.5',             # password storage (e.g. in handlers.DBAuth)
@@ -51,7 +44,7 @@ install_requires = [
     # Handler / service specific
     'crontab >= 0.21',              # services.schedule to parse crontab entries
     'xmljson >= 0.1.5',             # transforms.badgerfish to convert objects to/from XML
-    'cachetools >= 1.1.6',          # services.cache for memory cache
+    'cachetools >= 2.1.0',          # services.cache for memory cache
     'diskcache >= 2.8.3',           # services.cache for disk cache
     'oauthlib >= 1.1.2',            # OAuth request-signing
     'python-pptx >= 0.6.6',         # pptgen
@@ -60,9 +53,9 @@ install_requires = [
     'boto3 >= 1.5',                 # Amazon services
 
     # Optional dependencies (batteries included principle)
-    'markdown',                     # For Markdown transfroms
+    'markdown',                     # For transforms, gramex.services.create_alert()
     'pymysql',                      # For MySQL connections
-    'ipdb',                         # For debugging
+    'ipdb',                         # For gramex.debug
     'textblob',                     # For Gramex Guide TwitterRESTHandler example
     'psycopg2 >= 2.7.1',            # For PostgreSQL connections
     'ldap3 >= 2.2.4',               # For LDAP connections
