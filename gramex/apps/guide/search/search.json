@@ -530,6 +530,44 @@
       "Vega gallery": -1
     }
   },
+  "1.45": {
+    "": {
+      "Gramex 1.44 Release Notes": -1
+    },
+    "actions": {
+      "Actions": -1
+    },
+    "admin": {
+      "Admin": -1
+    },
+    "auth": {
+      "Auth": -1
+    },
+    "bootstrap-select": {
+      "bootstrap-select": -1
+    },
+    "developer-updates": {
+      "Developer Updates": -1
+    },
+    "dropzonejs": {
+      "dropzonejs": -1
+    },
+    "g1": {
+      "g1": -1
+    },
+    "stats": {
+      "Stats": -1
+    },
+    "ui-components": {
+      "UI Components": -1
+    },
+    "upgrade": {
+      "Upgrade": -1
+    },
+    "vega-gallery": {
+      "Vega gallery": -1
+    }
+  },
   "about": {
     "": {
       "About Gramex": -1
