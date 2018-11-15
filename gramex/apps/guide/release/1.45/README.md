@@ -7,7 +7,7 @@ prefix: 1.45
 
 ## Vega gallery
 
-Treemap and circle grid examples are added to [chart gallery]((../../chart/gallery.html))
+Treemap and circle grid examples are added to [chart gallery](../../chart/gallery.html)
 
 [![vega-g](../1.44/vega-gallery.png)](../../chart/gallery.html)
 
