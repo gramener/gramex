@@ -1,5 +1,5 @@
 ---
-title: Gramex 1.44 Release Notes
+title: Gramex 1.45 Release Notes
 prefix: 1.45
 ...
 
