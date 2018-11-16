@@ -125,6 +125,14 @@ To enable it, ensure that you specify:
 - Either `components: [..., shell, ...]`, i.e. include `shell` in `components:`
 - Or do not specify any `components:`
 
+In the shell, you can run these commands:
+
+```python
+1 + 2                   # Evaluate Python expressions
+import gramex           # All gramex libraries are available
+handler.session         # WebsocketHandler instance is available as 'handler'
+```
+
 The web shell is available as a component. To embed it in your page, add:
 
 ```html

@@ -1,6 +1,10 @@
+import ast
+import gramex
+from nose.tools import eq_, ok_
 from . import server
 from .test_auth import AuthBase
 from gramex.http import FORBIDDEN
+from websocket import create_connection
 
 
 class TestAdmin(AuthBase):
@@ -56,4 +60,17 @@ class TestAdmin(AuthBase):
 
     def test_shell(self):
         self.check('/admin/default/?tab=shell')
-        # TODO: add tests
+        ws_url = server.base_url.replace('http://', 'ws://') + '/admin/default/webshell'
+        ws = create_connection(ws_url)
+        # Python expressions are computed
+        ws.send('1 + 2')
+        eq_(ws.recv(), '3')
+        # Session state is maintained. Gramex can be imported
+        ws.send('import gramex')
+        eq_(ws.recv(), '')
+        ws.send('gramex.__version__')
+        eq_(ast.literal_eval(ws.recv()), gramex.__version__)
+        # handler is available for use
+        ws.send('handler.session')
+        result = ast.literal_eval(ws.recv())
+        ok_('_t' in result and 'id' in result)

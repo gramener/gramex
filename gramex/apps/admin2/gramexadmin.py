@@ -93,6 +93,7 @@ def evaluate(handler, code):
     # Run code and get the result. (Result is None for exec)
     try:
         context = contexts.setdefault(handler.session['id'], {})
+        context['handler'] = handler
         if mode == 'eval':
             result = eval(co, context)
         else:
