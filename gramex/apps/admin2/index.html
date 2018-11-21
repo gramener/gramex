@@ -145,29 +145,12 @@
       </script>
 
     {% elif current_tab == 'info' %}
-      <script type="text/html" id="stats-template">
-        <div class="container-fluid">
-          <div class="row">
-          <% _.each(data, function(stats, header) { %>
-            <div class="col-xs-6 col-sm-4 col-md-4">
-              <h4 class="h4"><%= _.startCase(header) %></h4>
-              <ul class="list-unstyled">
-                <% _.each(stats, function(value, name)  { %>
-                <li class="w-100">
-                  <strong class="w-50"><%= _.startCase(name) %></strong>:
-                  <span class="w-50"><%= value %></span>
-                </li>
-                <% }) %>
-              </ul>
-            </div>
-          <% }) %>
-          </div>
-        </div>
-      </script>
-
+      <div class="gramex_info" data-src="info"></div>
       <script>
-        $.get('info').done(function(data) {
-          $('#stats-template').template({'data': data})
+        $('.gramex_info').formhandler({
+          'editable': false,
+          'count': false,
+          'page': false
         })
       </script>
 

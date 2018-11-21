@@ -1,8 +1,7 @@
 """Auth module role settings."""
-import sys
 import os
-import psutil
-import conda
+import sys
+from tornado.gen import coroutine, Return
 from tornado.web import HTTPError
 from cachetools import TTLCache
 from six.moves import StringIO
@@ -10,6 +9,7 @@ import gramex
 from gramex.config import app_log
 from gramex.http import INTERNAL_SERVER_ERROR
 from gramex.handlers import FormHandler, DBAuth
+
 
 contexts = TTLCache(maxsize=100, ttl=1800)
 
@@ -111,27 +111,61 @@ def evaluate(handler, code):
     handler.write_message(retval)
 
 
+@coroutine
 def system_information(handler):
     '''Handler for system info'''
-    process = psutil.Process(os.getpid())
-    pow_mb = 20
-    return {
-        'system_stats': {
-            'cpu_count': '{0}'.format(psutil.cpu_count()),
-            'cpu_usage': '{0}%'.format(psutil.cpu_percent()),
-            'memory_usage': '{0}%'.format(psutil.virtual_memory().percent),
-            'disk_usage': '{0}%'.format(psutil.disk_usage('/').percent)
-        },
-        'gramex_stats': {
-            'gramex_version': gramex.__version__,
-            'gramex_path': str(gramex.paths.source),
-            'gramex_memory_usage': '{:,.2f}MB'.format(
-                process.memory_info()[0] / 2. ** pow_mb),
-            'open_files': len(process.open_files())
-        },
-        'python_stats': {
-            'python_version': '{0}.{1}.{2}'.format(*sys.version_info[:3]),
-            'conda_version': conda.__version__,
-            'python_path': sys.executable
-        },
+    value, error = {}, {}
+    try:
+        import psutil
+        process = psutil.Process(os.getpid())
+        value['system', 'cpu-count'] = psutil.cpu_count()
+        value['system', 'cpu-usage'] = psutil.cpu_percent()
+        value['system', 'memory-usage'] = psutil.virtual_memory().percent
+        value['system', 'disk-usage'] = psutil.disk_usage('/').percent
+        value['gramex', 'memory-usage'] = process.memory_info()[0]
+        value['gramex', 'open-files'] = len(process.open_files())
+    except ImportError:
+        app_log.warning('psutil required for system stats')
+        error['system', 'cpu-count'] = 'psutil not installed'
+        error['system', 'cpu-usage'] = 'psutil not installed'
+        error['system', 'memory-usage'] = 'psutil not installed'
+        error['system', 'disk-usage'] = 'psutil not installed'
+        error['gramex', 'memory-usage'] = 'psutil not installed'
+        error['gramex', 'open-files'] = 'psutil not installed'
+    try:
+        import conda
+        value['conda', 'version'] = conda.__version__,
+    except ImportError:
+        app_log.warning('conda required for conda stats')
+        error['conda', 'version'] = 'conda not installed'
+
+    from shutilwhich import which
+    value['node', 'path'] = which('node')
+    value['git', 'path'] = which('git')
+
+    from gramex.cache import Subprocess
+    apps = {
+        ('node', 'version'): Subprocess('node --version', shell=True),
+        ('npm', 'version'): Subprocess('npm --version', shell=True),
+        ('yarn', 'version'): Subprocess('yarn --version', shell=True),
+        ('git', 'version'): Subprocess('git --version', shell=True),
     }
+    for key, proc in apps.items():
+        stdout, stderr = yield proc.wait_for_exit()
+        value[key] = stdout.strip()
+        if not value[key]:
+            error[key] = stderr.strip()
+
+    value['python', 'version'] = '{0}.{1}.{2}'.format(*sys.version_info[:3])
+    value['python', 'path'] = sys.executable
+    value['gramex', 'version'] = gramex.__version__
+    value['gramex', 'path'] = os.path.dirname(gramex.__file__)
+
+    import pandas as pd
+    df = pd.DataFrame({'value': value, 'error': error}).reset_index()
+    df.columns = ['section', 'key'] + df.columns[2:].tolist()
+    df = df[['section', 'key', 'value', 'error']].sort_values(['section', 'key'])
+    df['error'] = df['error'].fillna('')
+    data = gramex.data.filter(df, handler.args)
+    # TODO: handle _format, _meta, _download, etc just like FormHandler
+    raise Return(gramex.data.download(data))

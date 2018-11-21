@@ -1,7 +1,8 @@
 import ast
 import gramex
-from nose.tools import eq_, ok_
+import pandas as pd
 from . import server
+from nose.tools import ok_, eq_
 from .test_auth import AuthBase
 from gramex.http import FORBIDDEN
 from websocket import create_connection
@@ -52,7 +53,26 @@ class TestAdmin(AuthBase):
 
     def test_info(self):
         self.check('/admin/default/?tab=info')
-        # TODO: add tests
+        result = self.check('/admin/default/info').json()
+        ok_(isinstance(result, list))
+        data = pd.DataFrame(result).set_index(['section', 'key'])
+        index = data.index
+        ok_(data['value']['python', 'path'])
+        ok_(data['value']['python', 'version'])
+        eq_(data['value']['gramex', 'version'], gramex.__version__)
+        ok_(data['value']['gramex', 'path'])
+        ok_(('gramex', 'memory-usage') in index)
+        ok_(('gramex', 'open-files') in index)
+        ok_(('system', 'cpu-count') in index)
+        ok_(('system', 'cpu-usage') in index)
+        ok_(('system', 'disk-usage') in index)
+        ok_(('system', 'memory-usage') in index)
+        ok_(('node', 'version') in index)
+        ok_(('node', 'path') in index)
+        ok_(('npm', 'version') in index)
+        ok_(('yarn', 'version') in index)
+        ok_(('git', 'version') in index)
+        ok_(('git', 'path') in index)
 
     def test_users(self):
         self.check('/admin/default/?tab=users')

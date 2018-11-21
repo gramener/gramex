@@ -1,7 +1,7 @@
----
+<!-- ---
 title: Admin page
 prefix: Admin
-...
+... -->
 
 [TOC]
 
@@ -157,7 +157,51 @@ The web shell is available as a component. To embed it in your page, add:
 
 ### Admin: Info
 
-WIP: Shows information about Gramex and the server.
+The info page shows information about versions, paths and other details about
+Gramex and its dependencies.
+
+To enable it, ensure that you specify:
+
+- Either `components: [..., info, ...]`, i.e. include `info` in `components:`
+- Or do not specify any `components:`
+
+This exposes JSON data at `<admin-page>/info` as a list of objects consistent
+with [FormHandler](../formhandler/).
+
+```json
+[
+    {"section":"git","key":"path","value":"D:\\bin\\git.EXE","error":null},
+    {"section":"git","key":"version","value":"git version 2.15.1\n","error":""},{"section":"gramex","key":"memory usage","value":153411584,"error":""},
+    ...
+]
+```
+
+The information provided includes (in a `<section>.<key>` notation):
+
+- `git.path`: path where git is installed
+- `git.version`: git version
+- `node.path`: path where node is installed
+- `node.version`: node version
+- `npm.version`: npm version
+- `yarn.version`: yarn version
+- `python.path`: path where Python is installed
+- `python.version`: Python version
+- `gramex.path`: path where this instance of Gramex is installed
+- `gramex.version`: Gramex version (for current instance)
+- `gramex.memory-usage`: total memory used by Gramex
+- `gramex.open-files`: number of files opened by Gramex
+- `system.cpu-count`: number of CPUs in the system
+- `system.cpu-usage`: % of CPU used by the system
+- `system.disk-usage`: % of root disk used by the system
+- `system.memory-usage`: % of memory used by the system
+
+The result is stored in the `value` column. If the value is not available, the `error` is stored in the `error` column.
+
+<div class="example">
+  <a class="example-demo" href="admin-kwargs/?tab=info">Info page example</a>
+  <a class="example-src" href="http://code.gramener.com/cto/gramex/tree/master/gramex/apps/guide/admin/gramex.yaml">Source</a>
+</div>
+
 
 ### Admin: Config
 
