@@ -8,7 +8,6 @@ log:
 app:
   settings:
     login_url: /$YAMLURL/auth/db        # Use DB Auth by default -- it works offline
-    cookie_secret: COOKIE_NAME
     autoreload: False
     debug: False
     xsrf_cookie_kwargs:
