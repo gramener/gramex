@@ -1,0 +1,114 @@
+{
+  "version": 1,
+  "width": 83,
+  "height": 25,
+  "duration": 6.122486,
+  "command": "bash",
+  "title": null,
+  "env": {
+    "TERM": "cygwin",
+    "SHELL": null
+  },
+  "stdout": [
+    [
+      0.253753,
+      "\r\r\nAnand S@OBSIDIAN \u001b[32mSun Dec 02 11:55 PM \u001b[33m/d/temp/app\u001b[0m\u001b[32m\u001b[00m\r\r\n$ "
+    ],
+    [
+      0.089407,
+      "g"
+    ],
+    [
+      0.157007,
+      "r"
+    ],
+    [
+      0.099275,
+      "a"
+    ],
+    [
+      0.129959,
+      "m"
+    ],
+    [
+      0.110761,
+      "e"
+    ],
+    [
+      0.068755,
+      "x"
+    ],
+    [
+      0.232302,
+      " "
+    ],
+    [
+      0.130669,
+      "i"
+    ],
+    [
+      0.149741,
+      "n"
+    ],
+    [
+      0.110692,
+      "i"
+    ],
+    [
+      0.14392,
+      "t"
+    ],
+    [
+      0.136217,
+      "\r\n"
+    ],
+    [
+      2.991766,
+      "DEBUG   02-Dec 23:55:18 config PORT Loading config: d:\\site\\gramener.com\\viz\\async-gramex\\gramex\\apps.yaml\r\r\n"
+    ],
+    [
+      0.007942,
+      "DEBUG   02-Dec 23:55:18 config PORT Loading config: C:\\Users\\Anand S\\AppData\\Local\\Gramex Data\\apps\\apps.yaml\r\r\n"
+    ],
+    [
+      0.007258,
+      "INFO    02-Dec 23:55:18 install PORT Initializing Gramex project at D:\\temp\\app\r\r\n"
+    ],
+    [
+      0.1856,
+      "Initialized empty Git repository in /cygdrive/d/temp/app/.git/\r\n"
+    ],
+    [
+      0.052397,
+      "INFO    02-Dec 23:55:19 install PORT Setting up D:\\temp\\app\r\r\n"
+    ],
+    [
+      0.265625,
+      "\r\r\nAnand S@OBSIDIAN \u001b[32mSun Dec 02 11:55 PM \u001b[33m/d/temp/app\u001b[0m\u001b[32m\u001b[00m\r\r\n$ "
+    ],
+    [
+      0.503292,
+      "l"
+    ],
+    [
+      0.057804,
+      "s"
+    ],
+    [
+      0.096364,
+      "\r\n"
+    ],
+    [
+      0.067614,
+      "total 32\r\ndrwxr-xr-x 1    0 Dec  2 23:55 \u001b[0m\u001b[01;36m.git\u001b[0m/\r\n-rw-r--r-- 1  725 Dec  2 23:55 .editorconfig\r\n-rw-r--r-- 1 1150 Dec  2 23:55 .eslintrc.js\r\n-rw-r--r-- 1   47 Dec  2 23:55 .flake8\r\n-rw-r--r-- 1  945 Dec  2 23:55 .gitignore\r\n-rw-r--r-- 1  563 "
+    ],
+    [
+      0.003332,
+      "Dec  2 23:55 .gitlab-ci.yml\r\n-rw-r--r-- 1 2639 Dec  2 23:55 .htmllintrc\r\n-rw-r--r-- 1 1141 Dec  2 23:55 .stylelintrc.js\r\n-rw-r--r-- 1  239 Dec  2 23:55 gramex.yaml\r\n-rw-r--r-- 1 1507 Dec  2 23:55 index.html\r\n-rw-r--r-- 1  301 Dec  2 23:55 README.md\r\n"
+    ],
+    [
+      0.069724,
+      "\r\r\nAnand S@OBSIDIAN \u001b[32mSun Dec 02 11:55 PM \u001b[33m/d/temp/app\u001b[0m\u001b[32m\u001b[00m\r\r\n$ "
+    ]
+  ]
+}

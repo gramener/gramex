@@ -9,6 +9,11 @@ argparse@^1.0.7:
   dependencies:
     sprintf-js "~1.0.2"
 
+asciinema-player@^2.6.1:
+  version "2.6.1"
+  resolved "https://registry.yarnpkg.com/asciinema-player/-/asciinema-player-2.6.1.tgz#3874c3ea5bb36583ed032a7b712af74c19c2b940"
+  integrity sha512-W6nW8+X/Krw6aRXQG45qvOZA4g765zbtjoBbjkQl1R7RLPihT00iqMHuHQYbNC1lhFg8x3MkE9ZhOELgSJQX6g==
+
 balanced-match@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/balanced-match/-/balanced-match-1.0.0.tgz#89b4d199ab2bee49de164ea02b89ce462d71b767"
