@@ -1,6 +1,7 @@
 url:
-    modelhandler-iris:
-        pattern: /$YAMLURL/iris
-        handler: ModelHandler
-        kwargs:
-            path: $YAMLPATH/iris.pkl
+  modelhandler-iris:
+    pattern: /$YAMLURL/model/(.*)/(.*)
+    handler: ModelHandler
+    kwargs:
+      path: $YAMLPATH/
+      xsrf_cookies: false

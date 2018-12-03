@@ -26,15 +26,13 @@ class TestClassifier(unittest.TestCase):
         eq_(model1.output, data.columns[-1])
 
         # Train accepts explicit model_class, model_kwargs, input and output
-        model2 = Classifier()
         inputs = ['petal_length', 'petal_width', 'sepal_length', 'sepal_width']
-        model2.train(
-            data,                                 # DataFrame with input & output columns
-            model_class='sklearn.svm.SVC',        # Any sklearn model works
-            model_kwargs={'kernel': 'sigmoid'},   # Optional model parameters
-            input=inputs,
-            output='species'
-        )
+        model2 = Classifier(model_class='sklearn.svm.SVC',        # Any sklearn model works
+                            # Optional model parameters
+                            model_kwargs={'kernel': 'sigmoid'},
+                            input=inputs,
+                            output='species')
+        model2.train(data)                                 # DataFrame with input & output columns
         eq_(model2.input, inputs)
         eq_(model2.output, model1.output)
         ok_(isinstance(model2.model, SVC))
@@ -68,6 +66,9 @@ class TestClassifier(unittest.TestCase):
             'petal_width': 0.4,
         }])
         eq_(result.tolist(), ['setosa'])
+
+    # def test_linear_model_with_controlled_data(self):
+    #     ...
 
     @classmethod
     def tearDownClass(cls):

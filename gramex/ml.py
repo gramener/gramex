@@ -11,11 +11,31 @@ load = joblib.load                      # noqa
 
 class Classifier(object):
     '''
-    TODO
+        :arg data DataFrame: data to train / re-train the model with
+        :arg model_class str: model class to use (default: ``sklearn.naive_bayes.BernoulliNB``)
+        :arg model_kwargs dict: kwargs to pass to model class constructor (defaults: ``{}``)
+        :arg output str: output column name (default: last column in training data)
+        :arg input list: input column names (default: all columns except ``output``)
+        :arg labels list: list of possible output values (default: unique ``output`` in training)
     '''
 
-    def train(self, data, model_class='sklearn.naive_bayes.BernoulliNB', model_kwargs={},
-              output=None, input=None, labels=None):
+    def __init__(self, **kwargs):
+        vars(self).update(kwargs)
+        self.model_class = kwargs.get('model_class', 'sklearn.naive_bayes.BernoulliNB')
+        self.trained = False  # Boolean Flag
+
+    def __str__(self):
+        return repr(vars(self))
+
+    def update_params(self, params):
+        model_keys = ('model_class', 'url', 'input', 'output', 'trained', 'query', 'model_kwargs')
+        model_params = {k: v[0] if isinstance(v, list) and k != 'input' else v
+                        for k, v in params.items() if k in model_keys}
+        if model_params:
+            self.trained = params.get('trained', False)
+        vars(self).update(model_params)
+
+    def train(self, data):
         '''
         :arg data DataFrame: data to train / re-train the model with
         :arg model_class str: model class to use (default: ``sklearn.naive_bayes.BernoulliNB``)
@@ -27,25 +47,30 @@ class Classifier(object):
         Notes:
         - If model has already been trained, extend the model. Else create it
         '''
-        self.output = output if output is not None else data.columns[-1]
-        self.input = input
-        if self.input is None:
-            self.input = list(data.columns)
-            self.input.remove(self.output)
-
-        # If model does not exist, create model
+        self.output = vars(self).get('output', data.columns[-1])
+        self.input = vars(self).get('input', list(data.columns[:-1]))
+        self.model_kwargs = vars(self).get('model_kwargs', {})
+        self.labels = vars(self).get('labels', None)
+        # If model_kwargs have changed since we trained last, re-train model.
+        if not self.trained and hasattr(self, 'model'):
+            vars(self).pop('model')
         if not hasattr(self, 'model'):
             # Split it into input (x) and output (y)
             x, y = data[self.input], data[self.output]
-
             # Transform the data
             self.scaler = StandardScaler()
             self.scaler.fit(x)
-
             # Train the classifier. Partially, if possible
-            clf = locate(model_class)(**model_kwargs)
-            if labels is not None and hasattr(clf, 'partial_fit'):
-                clf.partial_fit(self.scaler.transform(x), y, classes=labels)
+            try:
+                clf = locate(self.model_class)(**self.model_kwargs)
+            except TypeError:
+                raise ValueError('{0} is not a correct model class'.format(self.model_class))
+            if self.labels and hasattr(clf, 'partial_fit'):
+                try:
+                    clf.partial_fit(self.scaler.transform(x),
+                                    y, classes=self.labels)
+                except AttributeError:
+                    raise ValueError('{0} does not support partial fit'.format(self.model_class))
             else:
                 clf.fit(self.scaler.transform(x), y)
             self.model = clf
@@ -65,7 +90,6 @@ class Classifier(object):
         if not isinstance(data, pd.DataFrame):
             data = pd.DataFrame(data, columns=self.input)
         # Take only trained input columns
-        data = data[self.input]
         return self.model.predict(self.scaler.transform(data))
 
     def save(self, path):

@@ -2444,11 +2444,12 @@ url:
       headers:
         Content-Type: application/json
 
-  model/iris:
-    pattern: /model/iris
+  model/generic:
+    pattern: /model/(.*)/(.*)
     handler: ModelHandler
     kwargs:
-      path: $YAMLPATH/gen.iris.pkl
+      path: $YAMLPATH/
+      xsrf_cookies: false
 
   filters/sales:
     pattern: /filters/sales
