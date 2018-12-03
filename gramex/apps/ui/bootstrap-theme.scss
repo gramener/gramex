@@ -51,13 +51,29 @@ $opacity-values: (
   border: none;
 }
 
-// .cursor-pointer - cursor as pointer
+// .overflow-* exists in Bootstrap 4.2. Remove when we migrate.
+// https://github.com/twbs/bootstrap/pull/27268
 // --------------------------------------------------------------------------
-.cursor-pointer {
-  cursor: pointer;
+$overflows: auto, scroll, hidden !default;
+@each $value in $overflows {
+  .overflow-#{$value} { overflow: $value !important; }
 }
 
+// .cursor-* and .pointer-*
+// --------------------------------------------------------------------------
+.cursor-pointer {
+  cursor: pointer !important;
+}
+.cursor-default {
+  cursor: default !important;
+}
+.pointer-events-none {
+  pointer-events: none !important;
+}
+
+
 // .font-size-h*: font-sizes
+// --------------------------------------------------------------------------
 $font-sizes: (
   h1: $h1-font-size,
   h2: $h2-font-size,
@@ -78,6 +94,14 @@ $btn-border-radius-xs:        0.2rem !default;
 .btn-xs {
   @include button-size($input-btn-padding-y-xs, $input-btn-padding-x-xs, $font-size-xs, $input-btn-line-height-xs, $btn-border-radius-xs);
 }
+
+// Border utilities
+// --------------------------------------------------------------------------
+.border-2 { border-width: $border-width * 2 !important; }
+.border-top-1 { border-top-width: $border-width !important; }
+.border-right-1 { border-right-width: $border-width !important; }
+.border-left-1 { border-left-width: $border-width !important; }
+.border-bottom-1 { border-bottom-width: $border-width !important; }
 
 // Border radius utilities
 // --------------------------------------------------------------------------
@@ -140,11 +164,15 @@ $switch-colors: (
     height: 100%;
   }
   .switch-#{$class}>label:before {
-    background: $val;
+    background: $custom-control-label-disabled-color;
     border-radius: inherit;
     content: '';
     display: block;
     height: 100%;
+    transition: .1s left ease-out;
+  }
+  .switch-#{$class}>input:checked+label:before {
+    background: $val;
   }
   .switch-#{$class}>label:after {
     background: $switch-control-color;
@@ -185,6 +213,12 @@ $shadow: 0 $shadow-y $shadow-blur rgba($black, .2) !default;
 }
 .text-shadow-none {
   text-shadow: none;
+}
+
+// .text-decoration-none exists in Bootstrap 4.2. Remove when we migrate.
+// https://github.com/twbs/bootstrap/issues/26952
+.text-decoration-none {
+  text-decoration: none !important;
 }
 
 

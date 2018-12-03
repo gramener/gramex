@@ -37,3 +37,10 @@
 /* Predefined background URL image */
 .bg-img { background-image: url('bg.png'); %}
 .bg-img-sm { background-image: url('bg-small.png'); %}
+
+/* Container to demo overflows */
+.o-box {
+  font-size: 1.5em;
+  width: 6em;
+  height: 2.5em;
+}

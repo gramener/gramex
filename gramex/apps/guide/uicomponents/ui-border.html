@@ -1,0 +1,19 @@
+<h2 class="toc">Border</h2>
+
+<p>Apart from the
+  <a href="https://getbootstrap.com/docs/4.1/utilities/borders/">Bootstrap border classes</a>,
+  you can use <code>.border-2</code> for a border twice as thick. Similarly,
+  <code>border-top-1</code>,
+  <code>border-right-1</code>,
+  <code>border-bottom-1</code>,
+  <code>border-left-1</code> add a 1px border on each side.
+</p>
+
+{% apply view_source %}
+<div class="row text-center">
+  <div class="col"><div class="border">Border</div></div>
+  <div class="col"><div class="border border-2">Border-2</div></div>
+  <div class="col"><div class="border border-2 border-dark">Border-2 dark</div></div>
+  <div class="col"><div class="border border-2 border-primary border-top-1 border-left-0 border-right-0">Border-2 varied</div></div>
+</div>
+{% end %}
