@@ -1,7 +1,4 @@
 {
-  "1.27.0": {
-    "": {}
-  },
   "1.30": {
     "": {
       "Gramex 1.30 Release Notes": -1
@@ -532,7 +529,7 @@
   },
   "1.45": {
     "": {
-      "Gramex 1.44 Release Notes": -1
+      "Gramex 1.45 Release Notes": -1
     },
     "actions": {
       "Actions": -1
@@ -568,11 +565,48 @@
       "Vega gallery": -1
     }
   },
+  "1.46": {
+    "": {
+      "Gramex 1.46 Release Notes": -1
+    },
+    "admin": {
+      "Admin": -1
+    },
+    "admin-console-webshell": {
+      "Admin console (webshell)": -1
+    },
+    "admin-info": {
+      "Admin info": -1
+    },
+    "bootstrapbundlejs": {
+      "bootstrap.bundle.js": -1
+    },
+    "developer-updates": {
+      "Developer Updates": -1
+    },
+    "gramex-init": {
+      "gramex init": -1
+    },
+    "modelhandler": {
+      "ModelHandler": -1
+    },
+    "other-updates": {
+      "Other Updates": -1
+    },
+    "stats": {
+      "Stats": -1
+    },
+    "upgrade": {
+      "Upgrade": -1
+    },
+    "vega-gallery": {
+      "Vega gallery": -1
+    }
+  },
   "about": {
     "": {
       "About Gramex": -1
-    },
-    "gramex-projects": {}
+    }
   },
   "admin": {
     "": {
@@ -646,14 +680,12 @@
     "place-body-and-html-in-a-file": {
       "Place body and HTML in a file": -1
     },
-    "scheduler-examples": {},
     "send-a-scheduled-email": {
       "Send a scheduled email": -1
     },
     "send-alerts-on-condition": {
       "Send alerts on condition": -1
     },
-    "send-an-email-once": {},
     "send-as-a-different-user": {
       "Send as a different user": -1
     },
@@ -939,7 +971,6 @@
     "configuration-access": {
       "Configuration access": -1
     },
-    "configuration-syntax": {},
     "custom-http-headers": {
       "Custom HTTP Headers": -1
     },
@@ -1274,7 +1305,6 @@
     "": {
       "FacebookGraphHandler": -1
     },
-    "facebook-oauth": {},
     "facebook-persist": {
       "Facebook Persist": -1
     }
@@ -1413,7 +1443,6 @@
     "formhandler-templates": {
       "FormHandler templates": -1
     },
-    "formhandler-transforms": {},
     "formhandler-vega-charts": {
       "FormHandler Vega charts": -1
     },
@@ -1480,12 +1509,6 @@
     "tornado-handler-attributes": {
       "Tornado handler attributes": -1
     }
-  },
-  "i18n": {
-    "": {},
-    "client": {},
-    "internationalisation": {},
-    "server": {}
   },
   "init": {
     "": {
@@ -1605,14 +1628,20 @@
     "": {
       "ModelHandler provides ML APIs": -1
     },
+    "api-reference": {
+      "API Reference": -1
+    },
     "classifier": {
       "Classifier": -1
     },
     "construct-the-model": {
       "Construct the model": -1
     },
-    "expose-model": {
-      "Expose model": -1
+    "example-usage": {
+      "Example Usage": -1
+    },
+    "expose-endpoints": {
+      "Expose Endpoints": -1
     },
     "groupmeans": {
       "GroupMeans": -1
@@ -1620,17 +1649,11 @@
     "links-to-machine-learning-and-analytics-usecases": {
       "Links to Machine Learning and Analytics Usecases": -1
     },
-    "once-the-model-is-trained-save-it": {
-      "Once the model is trained, save it": -1
-    },
     "read-the-data-into-a-pandas-dataframe": {
       "Read the data into a Pandas DataFrame": -1
     },
     "result-should-be-setosa": {
       "result should be ['setosa']": -1
-    },
-    "train-model": {
-      "Train model": -1
     }
   },
   "node": {
@@ -1912,11 +1935,9 @@
     "charting": {
       "Charting": -1
     },
-    "configuration": {},
     "configuration-and-handlers": {
       "Configuration and Handlers": -1
     },
-    "data-validationconfiguration-driven-charts": {},
     "editorconfig": {
       ".editorconfig": -1
     },
@@ -1962,7 +1983,6 @@
     "introduction": {
       "Introduction": -1
     },
-    "problem-definition": {},
     "readmemd": {
       "README.md": -1
     },
@@ -1971,10 +1991,7 @@
     },
     "screenshots-via-capturehandler": {
       "Screenshots via CaptureHandler": -1
-    },
-    "style-1": {},
-    "style-2": {},
-    "style-3": {}
+    }
   },
   "r": {
     "": {
@@ -2091,15 +2108,7 @@
   "tutorials": {
     "": {
       "Tutorials": -1
-    },
-    "from-file": {},
-    "modify-the-result": {},
-    "query-option": {},
-    "queryfile-option": {},
-    "read-data-from-different-sources": {},
-    "reading-from-databases": {},
-    "safe-practices-with-databases": {},
-    "usecase-retail-sales-tracker": {}
+    }
   },
   "twitterresthandler": {
     "": {

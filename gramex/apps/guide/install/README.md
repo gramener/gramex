@@ -49,11 +49,11 @@ To remove Gramex, run `pip uninstall gramex`
 
 ```shell
 # Install a specific version of Gramex
-pip install --verbose gramex==1.40.0
+pip install --verbose gramex==1.46.0
 
 # Install a specific branch or tag from the Gramex source code
 pip install --verbose https://code.gramener.com/cto/gramex/repository/archive.tar.bz2?ref=dev
-pip install --verbose https://code.gramener.com/cto/gramex/repository/archive.tar.bz2?ref=v1.40.0
+pip install --verbose https://code.gramener.com/cto/gramex/repository/archive.tar.bz2?ref=v1.46.0
 
 # Install a local version for Gramex development
 git clone https://code.gramener.com/cto/gramex.git

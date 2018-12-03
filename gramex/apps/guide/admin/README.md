@@ -1,7 +1,7 @@
-<!-- ---
+---
 title: Admin page
 prefix: Admin
-... -->
+...
 
 [TOC]
 
