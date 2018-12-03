@@ -1,0 +1,127 @@
+{
+  "$schema": "https://vega.github.io/schema/vega/v4.json",
+  "width": 600,
+  "height": 360,
+  "autosize": "fit",
+  "title": {
+    "text": "Ribbon Chart",
+    "anchor": "start"
+  },
+  "data": [
+    {
+      "name": "data_table",
+      "url": "<%= absolute_url %>data/ribbon.json",
+      "transform": [
+        {
+          "offset": "center",
+          "type": "stack",
+          "groupby": [
+            "x"
+          ],
+          "field": "y"
+        }
+      ]
+    }
+  ],
+  "scales": [
+    {
+      "name": "scales_x",
+      "type": "point",
+      "range": "width",
+      "padding": 10,
+      "domain": {
+        "data": "data_table",
+        "field": "x"
+      }
+    },
+    {
+      "name": "scales_y",
+      "type": "linear",
+      "range": "height",
+      "nice": true,
+      "zero": true,
+      "domain": {
+        "data": "data_table",
+        "field": "y1"
+      }
+    },
+    {
+      "name": "scales_color",
+      "type": "ordinal",
+      "range": [
+        "#3466cc"
+      ],
+      "domain": {
+        "data": "data_table",
+        "field": "product"
+      }
+    }
+  ],
+  "axes": [
+    {
+      "orient": "bottom",
+      "scale": "scales_x",
+      "zindex": 1,
+      "ticks": false,
+      "labelPadding": 12
+    },
+    {
+      "orient": "left",
+      "scale": "scales_y",
+      "zindex": 1,
+      "ticks": false,
+      "labelPadding": 12
+    }
+  ],
+  "marks": [
+    {
+      "name": "marks_area_group",
+      "format": "center",
+      "type": "group",
+      "from": {
+        "facet": {
+          "name": "series",
+          "data": "data_table",
+          "groupby": "c"
+        }
+      },
+      "marks": [
+        {
+          "name": "marks_area",
+          "type": "area",
+          "from": {
+            "data": "series"
+          },
+          "encode": {
+            "enter": {
+              "interpolate": {
+                "value": "monotone"
+              },
+              "fillOpacity": {
+                "value": 1
+              }
+            },
+            "update": {
+              "x": {
+                "scale": "scales_x",
+                "field": "x"
+              },
+              "y": {
+                "scale": "scales_y",
+                "field": "y0"
+              },
+              "y2": {
+                "scale": "scales_y",
+                "field": "y1"
+              },
+              "fill": {
+                "scale": "scales_color",
+                "field": "product"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

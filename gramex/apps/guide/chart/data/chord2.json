@@ -1,0 +1,30 @@
+[
+  {
+    "source": "C1",
+    "target": "B2"
+  },
+  {
+    "source": "C2",
+    "target": "B1"
+  },
+  {
+    "source": "A2",
+    "target": "D1"
+  },
+  {
+    "source": "C2",
+    "target": "D2"
+  },
+  {
+    "source": "C2",
+    "target": "C2"
+  },
+  {
+    "source": "B2",
+    "target": "C1"
+  },
+  {
+    "source": "A2",
+    "target": "A1"
+  }
+]

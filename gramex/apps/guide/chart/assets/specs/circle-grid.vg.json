@@ -15,7 +15,7 @@
   "data": [
     {
       "name": "table",
-      "url": "https://api.myjson.com/bins/yiz0u"
+      "url": "<%= absolute_url %>data/circle-grid.json"
     }
   ],
   "title": {

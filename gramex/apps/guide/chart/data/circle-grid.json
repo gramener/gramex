@@ -1,0 +1,302 @@
+[  
+    {  
+       "category":"Category 1",
+       "Label":"CA",
+       "Depth":5
+    },
+    {  
+       "category":"Category 1",
+       "Label":"CB",
+       "Depth":2
+    },
+    {  
+       "category":"Category 1",
+       "Label":"CC",
+       "Depth":2
+    },
+    {  
+       "category":"Category 1",
+       "Label":"CD",
+       "Depth":1
+    },
+    {  
+       "category":"Category 1",
+       "Label":"CE",
+       "Depth":3
+    },
+    {  
+       "category":"Category 1",
+       "Label":"CF",
+       "Depth":1
+    },
+    {  
+       "category":"Category 1",
+       "Label":"CG",
+       "Depth":5
+    },
+    {  
+       "category":"Category 1",
+       "Label":"CH",
+       "Depth":1
+    },
+    {  
+       "category":"Category 1",
+       "Label":"CI",
+       "Depth":4
+    },
+    {  
+       "category":"Category 1",
+       "Label":"CJ",
+       "Depth":1
+    },
+    {  
+       "category":"Category 1",
+       "Label":"CK",
+       "Depth":5
+    },
+    {  
+       "category":"Category 1",
+       "Label":"CL",
+       "Depth":1
+    },
+    {  
+       "category":"Category 2",
+       "Label":"CA",
+       "Depth":1
+    },
+    {  
+       "category":"Category 2",
+       "Label":"CB",
+       "Depth":4
+    },
+    {  
+       "category":"Category 2",
+       "Label":"CC",
+       "Depth":5
+    },
+    {  
+       "category":"Category 2",
+       "Label":"CD",
+       "Depth":1
+    },
+    {  
+       "category":"Category 2",
+       "Label":"CE",
+       "Depth":4
+    },
+    {  
+       "category":"Category 2",
+       "Label":"CF",
+       "Depth":3
+    },
+    {  
+       "category":"Category 2",
+       "Label":"CG",
+       "Depth":4
+    },
+    {  
+       "category":"Category 2",
+       "Label":"CH",
+       "Depth":3
+    },
+    {  
+       "category":"Category 2",
+       "Label":"CI",
+       "Depth":5
+    },
+    {  
+       "category":"Category 2",
+       "Label":"CJ",
+       "Depth":2
+    },
+    {  
+       "category":"Category 2",
+       "Label":"CK",
+       "Depth":1
+    },
+    {  
+       "category":"Category 2",
+       "Label":"CL",
+       "Depth":2
+    },
+    {  
+       "category":"Category 3",
+       "Label":"CA",
+       "Depth":4
+    },
+    {  
+       "category":"Category 3",
+       "Label":"CB",
+       "Depth":4
+    },
+    {  
+       "category":"Category 3",
+       "Label":"CC",
+       "Depth":2
+    },
+    {  
+       "category":"Category 3",
+       "Label":"CD",
+       "Depth":4
+    },
+    {  
+       "category":"Category 3",
+       "Label":"CE",
+       "Depth":3
+    },
+    {  
+       "category":"Category 3",
+       "Label":"CF",
+       "Depth":3
+    },
+    {  
+       "category":"Category 3",
+       "Label":"CG",
+       "Depth":3
+    },
+    {  
+       "category":"Category 3",
+       "Label":"CH",
+       "Depth":4
+    },
+    {  
+       "category":"Category 3",
+       "Label":"CI",
+       "Depth":4
+    },
+    {  
+       "category":"Category 3",
+       "Label":"CJ",
+       "Depth":4
+    },
+    {  
+       "category":"Category 3",
+       "Label":"CK",
+       "Depth":1
+    },
+    {  
+       "category":"Category 3",
+       "Label":"CL",
+       "Depth":3
+    },
+    {  
+       "category":"Category 4",
+       "Label":"CA",
+       "Depth":1
+    },
+    {  
+       "category":"Category 4",
+       "Label":"CB",
+       "Depth":5
+    },
+    {  
+       "category":"Category 4",
+       "Label":"CC",
+       "Depth":2
+    },
+    {  
+       "category":"Category 4",
+       "Label":"CD",
+       "Depth":3
+    },
+    {  
+       "category":"Category 4",
+       "Label":"CE",
+       "Depth":3
+    },
+    {  
+       "category":"Category 4",
+       "Label":"CF",
+       "Depth":2
+    },
+    {  
+       "category":"Category 4",
+       "Label":"CG",
+       "Depth":1
+    },
+    {  
+       "category":"Category 4",
+       "Label":"CH",
+       "Depth":5
+    },
+    {  
+       "category":"Category 4",
+       "Label":"CI",
+       "Depth":5
+    },
+    {  
+       "category":"Category 4",
+       "Label":"CJ",
+       "Depth":4
+    },
+    {  
+       "category":"Category 4",
+       "Label":"CK",
+       "Depth":1
+    },
+    {  
+       "category":"Category 4",
+       "Label":"CL",
+       "Depth":4
+    },
+    {  
+       "category":"Category 5",
+       "Label":"CA",
+       "Depth":5
+    },
+    {  
+       "category":"Category 5",
+       "Label":"CB",
+       "Depth":2
+    },
+    {  
+       "category":"Category 5",
+       "Label":"CC",
+       "Depth":2
+    },
+    {  
+       "category":"Category 5",
+       "Label":"CD",
+       "Depth":2
+    },
+    {  
+       "category":"Category 5",
+       "Label":"CE",
+       "Depth":1
+    },
+    {  
+       "category":"Category 5",
+       "Label":"CF",
+       "Depth":1
+    },
+    {  
+       "category":"Category 5",
+       "Label":"CG",
+       "Depth":4
+    },
+    {  
+       "category":"Category 5",
+       "Label":"CH",
+       "Depth":5
+    },
+    {  
+       "category":"Category 5",
+       "Label":"CI",
+       "Depth":2
+    },
+    {  
+       "category":"Category 5",
+       "Label":"CJ",
+       "Depth":3
+    },
+    {  
+       "category":"Category 5",
+       "Label":"CK",
+       "Depth":5
+    },
+    {  
+       "category":"Category 5",
+       "Label":"CL",
+       "Depth":3
+    }
+ ]

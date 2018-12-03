@@ -1,0 +1,149 @@
+{
+  "$schema": "https://vega.github.io/schema/vega/v4.json",
+  "width": 600,
+  "height": 360,
+  "autosize": "fit",
+  "title": {
+    "text": "SUNBURST CHART (Half)",
+    "anchor": "start"
+  },
+  "data": [
+    {
+      "name": "data_tree",
+      "url": "<%= absolute_url %>data/sunburst-3.json",
+      "transform": [
+        {
+          "type": "stratify",
+          "key": "id",
+          "parentKey": "parent"
+        },
+        {
+          "type": "partition",
+          "field": "size",
+          "sort": {
+            "field": "value"
+          },
+          "size": [
+            {
+              "signal": "1*PI"
+            },
+            {
+              "signal": "width/2"
+            }
+          ],
+          "as": [
+            "a0",
+            "r0",
+            "a1",
+            "r1",
+            "depth",
+            "children"
+          ]
+        }
+      ]
+    }
+  ],
+  "scales": [
+    {
+      "name": "scales_color",
+      "type": "ordinal",
+      "domain": {
+        "data": "data_tree",
+        "field": "size"
+      },
+      "range": {
+        "scheme": "blueorange",
+        "count": 10
+      }
+    }
+  ],
+  "marks": [
+    {
+      "name": "marks_arc",
+      "type": "arc",
+      "from": {
+        "data": "data_tree"
+      },
+      "encode": {
+        "enter": {
+          "stroke": {
+            "value": "white"
+          },
+          "zindex": {
+            "value": 0
+          }
+        },
+        "update": {
+          "x": {
+            "signal": "width/2"
+          },
+          "y": {
+            "signal": "height"
+          },
+          "startAngle": {
+            "signal": "datum.a0-1.57"
+          },
+          "endAngle": {
+            "signal": "datum.a1-1.56"
+          },
+          "innerRadius": {
+            "field": "r0"
+          },
+          "outerRadius": {
+            "field": "r1"
+          },
+          "fill": {
+            "scale": "scales_color",
+            "field": "size"
+          },
+          "strokeWidth": {
+            "signal": "width/100 * 0.5"
+          },
+          "tooltip": {
+            "signal": "datum.name + (datum.size ? ', ' + datum.size + ' bytes' : '')"
+          }
+        }
+      }
+    },
+    {
+      "name": "marks_label_text",
+      "type": "text",
+      "from": {
+        "data": "data_tree"
+      },
+      "encode": {
+        "enter": {
+          "align": {
+            "value": "center"
+          },
+          "baseline": {
+            "value": "bottom"
+          }
+        },
+        "update": {
+          "x": {
+            "signal": "width/2"
+          },
+          "y": {
+            "signal": "height"
+          },
+          "theta": {
+            "signal": "(datum.a0+datum.a1-3.14)/2"
+          },
+          "radius": {
+            "signal": "datum.r0 * 1.35"
+          },
+          "text": {
+            "signal": "datum.parent == null || datum.parent == 1 ? datum.name : ''"
+          },
+          "fill": {
+            "signal": "datum.size != null ? 'black' : 'white'"
+          },
+          "fontSize": {
+            "signal": "width/100 * 2"
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,234 @@
+{
+  "$schema": "https://vega.github.io/schema/vega/v4.json",
+  "width": 600,
+  "height": 360,
+  "autosize": "fit",
+  "data": [
+    {
+      "name": "data_table",
+      "url": "<%= absolute_url %>data/radial-donut.json",
+      "transform": [
+        {
+          "type": "pie"
+        }
+      ]
+    }
+  ],
+  "scales": [
+    {
+      "name": "scale_color",
+      "type": "ordinal",
+      "domain": {
+        "data": "data_table",
+        "field": "category"
+      },
+      "range": {
+        "scheme": "dark2"
+      }
+    }
+  ],
+  "marks": [
+    {
+      "type": "arc",
+      "from": {
+        "data": "data_table"
+      },
+      "encode": {
+        "enter": {
+          "startAngle": {
+            "field": "startAngle"
+          },
+          "endAngle": {
+            "field": "endAngle"
+          },
+          "innerRadius": {
+            "value": 0
+          },
+          "stroke": {
+            "value": "#fff"
+          },
+          "fill": {
+            "scale": "scale_color",
+            "field": "category"
+          }
+        },
+        "update": {
+          "x": {
+            "signal": "width / 2"
+          },
+          "y": {
+            "signal": "height / 2"
+          },
+          "outerRadius": {
+            "signal": "datum.value"
+          }
+        }
+      }
+    },
+    {
+      "type": "text",
+      "from": {
+        "data": "data_table"
+      },
+      "encode": {
+        "enter": {
+          "fill": {
+            "value": "#000"
+          },
+          "align": {
+            "value": "center"
+          },
+          "baseline": {
+            "value": "middle"
+          }
+        },
+        "update": {
+          "x": {
+            "signal": "width/2"
+          },
+          "y": {
+            "signal": "height/2"
+          },
+          "radius": {
+            "signal": "datum.value + (height * 0.2)"
+          },
+          "theta": {
+            "signal": "( datum.startAngle + datum.endAngle ) / 2"
+          },
+          "text": {
+            "signal": "datum.category"
+          }
+        }
+      }
+    },
+    {
+      "type": "text",
+      "from": {
+        "data": "data_table"
+      },
+      "encode": {
+        "enter": {
+          "fill": {
+            "value": "#000'"
+          },
+          "align": {
+            "value": "right"
+          },
+          "baseline": {
+            "value": "middle"
+          },
+          "dy": {
+            "value": 15
+          }
+        },
+        "update": {
+          "x": {
+            "signal": "width/2"
+          },
+          "y": {
+            "signal": "height/2"
+          },
+          "radius": {
+            "signal": "datum.value + (height*0.2)"
+          },
+          "theta": {
+            "signal": "( datum.startAngle + datum.endAngle ) / 2"
+          },
+          "text": {
+            "signal": "datum.value + ', '"
+          }
+        }
+      }
+    },
+    {
+      "type": "text",
+      "from": {
+        "data": "data_table"
+      },
+      "encode": {
+        "enter": {
+          "x": {
+            "field": {
+              "group": "width"
+            },
+            "mult": 0.5
+          },
+          "y": {
+            "field": {
+              "group": "height"
+            },
+            "mult": 0.5
+          },
+          "align": {
+            "value": "left"
+          },
+          "baseline": {
+            "value": "middle"
+          },
+          "dy": {
+            "value": 15
+          }
+        },
+        "update": {
+          "radius": {
+            "signal": "datum.value + (height*0.2)"
+          },
+          "theta": {
+            "signal": "( datum.startAngle + datum.endAngle ) / 2"
+          },
+          "fill": {
+            "signal": "ceil( datum.value * 0.1) >= 15 ? '#5BC0DE' : '#ff0000'"
+          },
+          "text": {
+            "signal": "ceil( datum.value * 0.1) + '%' "
+          }
+        }
+      }
+    },
+    {
+      "type": "group",
+      "encode": {
+        "enter": {
+          "x": {
+            "signal": "width/2"
+          },
+          "y": {
+            "signal": "height/2"
+          }
+        }
+      },
+      "marks": [
+        {
+          "type": "rule",
+          "from": {
+            "data": "data_table"
+          },
+          "encode": {
+            "enter": {
+              "stroke": {
+                "value": "#000"
+              },
+              "strokeWidth": {
+                "value": 1
+              }
+            },
+            "update": {
+              "x": {
+                "signal": "( datum.value + (height * 0.12) ) * cos((datum.startAngle - 45))"
+              },
+              "y": {
+                "signal": "( datum.value + (height * 0.12) ) * sin((datum.startAngle - 45))"
+              },
+              "x2": {
+                "signal": "(datum.value * 1.1) * cos(datum.startAngle - 45)"
+              },
+              "y2": {
+                "signal": "(datum.value * 1.1) * sin(datum.startAngle - 45)"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

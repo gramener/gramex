@@ -1,0 +1,162 @@
+{
+  "$schema": "https://vega.github.io/schema/vega/v4.json",
+  "width": 600,
+  "height": 360,
+  "autosize": "fit",
+  "data": [
+    {
+      "name": "data_table",
+      "url": "<%= absolute_url %>data/horizontal-bars-1.json",
+      "transform": [
+        {
+          "type": "stack",
+          "groupby": [
+            "x"
+          ],
+          "sort": {
+            "field": "c"
+          },
+          "field": "y"
+        }
+      ]
+    }
+  ],
+  "scales": [
+    {
+      "name": "scales_xScale",
+      "type": "linear",
+      "range": "width",
+      "domain": {
+        "data": "data_table",
+        "field": "y1"
+      }
+    },
+    {
+      "name": "scales_yScale",
+      "type": "band",
+      "range": "height",
+      "domain": {
+        "data": "data_table",
+        "field": "x"
+      }
+    },
+    {
+      "name": "scales_color",
+      "type": "ordinal",
+      "range": [
+        "#dd83c4",
+        "#e4de89",
+        "#81c4e9"
+      ],
+      "domain": {
+        "data": "data_table",
+        "field": "label"
+      }
+    }
+  ],
+  "axes": [
+    {
+      "orient": "left",
+      "scale": "scales_yScale",
+      "domain": false,
+      "ticks": false,
+      "offset": -20,
+      "zindex": 1,
+      "labelBaseline": "bottom",
+      "labelAlign": "center",
+      "encode": {
+        "labels": {
+          "enter": {
+            "fontSize": {
+              "value": 12
+            },
+            "fontWeight": {
+              "value": "bold"
+            },
+            "fill": {
+              "value": "white"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "marks": [
+    {
+      "name": "marks_rect",
+      "type": "rect",
+      "from": {
+        "data": "data_table"
+      },
+      "encode": {
+        "enter": {
+          "fillOpacity": {
+            "value": 1
+          }
+        },
+        "update": {
+          "y": {
+            "scale": "scales_yScale",
+            "field": "x"
+          },
+          "height": {
+            "scale": "scales_yScale",
+            "band": 0.5,
+            "round": true
+          },
+          "x": {
+            "scale": "scales_xScale",
+            "field": "y0"
+          },
+          "x2": {
+            "scale": "scales_xScale",
+            "signal": "datum.y1 + 15"
+          },
+          "cornerRadius": {
+            "signal": "width/100 + 5"
+          },
+          "fill": {
+            "scale": "scales_color",
+            "field": "label"
+          }
+        }
+      }
+    }
+  ],
+  "legends": [
+    {
+      "orient": "none",
+      "encode": {
+        "labels": {
+          "enter": {
+            "fill": {
+              "value": "black"
+            },
+            "fontWeight": {
+              "value": "bold"
+            }
+          },
+          "update": {
+            "fontSize": {
+              "signal": "width/100 * 2"
+            }
+          }
+        },
+        "legend": {
+          "update": {
+            "x": {
+              "signal": "width/3"
+            },
+            "y": {
+              "signal": "height - 10"
+            }
+          }
+        }
+      },
+      "direction": "horizontal",
+      "fill": "scales_color",
+      "rowPadding": 20,
+      "symbolType": "circle"
+    }
+  ]
+}

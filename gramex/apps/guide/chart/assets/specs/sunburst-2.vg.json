@@ -1,0 +1,172 @@
+{
+  "$schema": "https://vega.github.io/schema/vega/v4.json",
+  "width": 600,
+  "height": 600,
+  "autosize": "fit",
+  "data": [
+    {
+      "name": "data_tree",
+      "url": "<%= absolute_url %>data/sunburst-2.json",
+      "transform": [
+        {
+          "type": "stratify",
+          "key": "id",
+          "parentKey": "parent"
+        },
+        {
+          "type": "partition",
+          "field": "size",
+          "sort": {
+            "field": "value"
+          },
+          "size": [
+            {
+              "signal": "2 * PI"
+            },
+            {
+              "signal": "width / 2"
+            }
+          ],
+          "as": [
+            "a0",
+            "r0",
+            "a1",
+            "r1",
+            "depth",
+            "children"
+          ]
+        }
+      ]
+    }
+  ],
+  "scales": [
+    {
+      "name": "scales_color",
+      "type": "ordinal",
+      "domain": {
+        "data": "data_tree",
+        "field": "size"
+      },
+      "range": {
+        "scheme": "tableau20"
+      }
+    }
+  ],
+  "marks": [
+    {
+      "name": "marks_arc",
+      "type": "arc",
+      "from": {
+        "data": "data_tree"
+      },
+      "encode": {
+        "enter": {
+          "stroke": {
+            "value": "white"
+          },
+          "strokeWidth": {
+            "value": 3
+          },
+          "zindex": {
+            "value": 0
+          }
+        },
+        "update": {
+          "x": {
+            "signal": "width / 2"
+          },
+          "y": {
+            "signal": "height / 2"
+          },
+          "fill": {
+            "scale": "scales_color",
+            "signal": "datum.id==1?'#fff':datum.size"
+          },
+          "tooltip": {
+            "signal": "datum.name + (datum.size ? ', ' + datum.size + ' bytes' : '')"
+          },
+          "startAngle": {
+            "field": "a0"
+          },
+          "endAngle": {
+            "field": "a1"
+          },
+          "innerRadius": {
+            "field": "r0"
+          },
+          "outerRadius": {
+            "field": "r1"
+          }
+        }
+      }
+    },
+    {
+      "name": "marks_center_circle",
+      "type": "symbol",
+      "encode": {
+        "enter": {
+          "shape": {
+            "value": "circle"
+          },
+          "fill": {
+            "value": "white"
+          }
+        },
+        "update": {
+          "x": {
+            "signal": "width/2"
+          },
+          "y": {
+            "signal": "height/2"
+          },
+          "size": {
+            "field": "height/2 - r0"
+          }
+        }
+      }
+    },
+    {
+      "name": "marks_label_text",
+      "type": "text",
+      "from": {
+        "data": "data_tree"
+      },
+      "encode": {
+        "enter": {
+          "fontWeight": {
+            "value": "bold"
+          },
+          "baseline": {
+            "value": "middle"
+          },
+          "align": {
+            "value": "center"
+          },
+          "limit": {
+            "value": 100
+          }
+        },
+        "update": {
+          "x": {
+            "signal": "width/2"
+          },
+          "y": {
+            "signal": "height/2"
+          },
+          "theta": {
+            "signal": "(datum.a0+datum.a1)/2"
+          },
+          "radius": {
+            "signal": "datum.r0 + 30"
+          },
+          "text": {
+            "signal": "datum.size == null ? datum.name : ''"
+          },
+          "fill": {
+            "signal": "datum.size != null ? 'black' : 'white'"
+          }
+        }
+      }
+    }
+  ]
+}
