@@ -31,10 +31,10 @@ url:
             headers:
                 Content-Type: application/json
 
-    addpath:
-        pattern: /$YAMLURL/addpath/(.*?)/(.*?)
+    path:
+        pattern: /$YAMLURL/path/(.*?)/(.*?)
         handler: FunctionHandler
         kwargs:
-            function: json.dumps(int(handler.path_args[0]) + int(handler.path_args[1]))
+            function: json.dumps(handler.path_args)
             headers:
                 Content-Type: application/json      # Display as JSON

@@ -1,7 +1,7 @@
 ---
 title: FunctionHandler runs Python code
 prefix: FunctionHandler
-...
+---
 
 [TOC]
 
@@ -85,6 +85,8 @@ url:
 [RequestHandler][requesthandler]. It accesses the URL query parameters to add up
 all `x` arguments.
 
+## URL path arguments
+
 You can specify wildcards in the URL pattern. For example:
 
 ```yaml
@@ -116,6 +118,25 @@ url:
     kwargs:
         function: calculations.method(handler, 10, h=handler, val=0)
 ```
+
+You can also pass these directly in the `function:`
+
+```yaml
+url:
+    path:
+        pattern: /path/(.*?)/(.*?)
+        handler: FunctionHandler
+        kwargs:
+            function: json.dumps(handler.path_args)
+```
+Sample output:
+
+- [path/city/Tokyo](path/city/Tokyo) shows `["city", "Tokyo"]`
+- [path/age/30](path/age/30) shows `["age", "30"]`
+
+`path_args` is available to [all handlers](../handler/#basehandler-attributes).
+
+## Function headers
 
 To send the output as a download (e.g. as a PDF), use:
 
@@ -219,26 +240,6 @@ args = handler.argparse(
     gender={'choices': ['M', 'F']}, # Raise error if gender is not M or F
 )
 ```
-
-## Path arguments
-
-If your URL pattern has wild cards, these are available as `handler.path_args`.
-For example:
-
-```yaml
-url:
-    addpath:
-        pattern: /addpath/(.*?)/(.*?)
-        handler: FunctionHandler
-        kwargs:
-            function: json.dumps(int(handler.path_args[0]) + int(handler.path_args[1]))
-```
-Sample output:
-
-- [addpath/10/35](addpath/10/35) shows 45
-- [addpath/-30/90](addpath/-30/90) shows 60
-
-`path_args` is available to [all handlers](../handler/#basehandler-attributes).
 
 ## Streaming output
 
