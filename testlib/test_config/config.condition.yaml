@@ -75,7 +75,7 @@ modules are available:
     e if re.IGNORECASE: 1
     f if os.name: 1
     g if GRAMEXPATH: 1
-    h if ''.join(sys.argv[1:]): 1
+    h if ''.join(sys.argv): 1
     i if os.getcwd(): 1
   expected:
     a: 1
