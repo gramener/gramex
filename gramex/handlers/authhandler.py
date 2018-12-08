@@ -49,6 +49,15 @@ except ImportError:
 class AuthHandler(BaseHandler):
     '''The parent handler for all Auth handlers.'''
     @classmethod
+    def setup_default_kwargs(cls):
+        super(AuthHandler, cls).setup_default_kwargs()
+        # Warn and ignore if AuthHandler sets an auth:
+        conf = cls.conf.setdefault('kwargs', {})
+        if 'auth' in conf:
+            conf.pop('auth')
+            app_log.warning('%s: Ignoring auth on AuthHandler', cls.name)
+
+    @classmethod
     def setup(cls, prepare=None, action=None, delay=None, session_expiry=None,
               session_inactive=None, user_key='user', lookup=None, **kwargs):
         # Switch SSL certificates if required to access Google, etc

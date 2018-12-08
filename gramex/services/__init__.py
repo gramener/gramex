@@ -684,6 +684,7 @@ def url(conf):
         kwargs = urlspec.get('kwargs', {})
         if hasattr(handler, 'setup'):
             try:
+                urlspec.handler.setup_default_kwargs()
                 urlspec.handler.setup(**kwargs)
             except Exception:
                 app_log.exception('url: %s: setup exception in handler %s', name, spec.handler)

@@ -6,6 +6,7 @@ from . import TestGramex
 from nose.tools import eq_, ok_
 from six.moves.urllib_request import urlopen
 from six.moves.urllib_error import HTTPError
+from gramex.services import info
 from gramex.http import OK, NOT_FOUND, INTERNAL_SERVER_ERROR, FORBIDDEN
 
 
@@ -155,6 +156,23 @@ class TestMime(TestGramex):
 class TestBaseHandler(TestGramex):
     def test_headers(self):
         self.check('/', headers={'X-BaseHandler': 'base'})
+
+    def test_kwargs(self):
+        # Fetch {name: handler_class} for Tornado 5.0 onwards
+        classes = {
+            rule.handler_class.name: rule.handler_class
+            for rules in info.app.default_router.rules
+            for rule in rules.target.rules
+        }
+        # FileHandler inherits kwargs from handlers.FileHandler and handlers.BaseHandler
+        cls = classes['base']
+        eq_(cls.name, 'base')
+        eq_(cls.kwargs['path'], 'dir/index.html')
+        headers = cls.kwargs['headers']
+        eq_(headers['X-BaseHandler'], 'base')
+        eq_(headers['X-BaseHandler'], 'base')
+        eq_(headers['X-FileHandler'], 'base')
+        eq_(headers['X-FileHandler-Base'], 'base')
 
 
 class TestDefaultGramexYAML(TestGramex):

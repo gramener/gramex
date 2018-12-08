@@ -1,7 +1,7 @@
 ---
 title: Auth handlers log in users
 prefix: Auth
-...
+---
 
 Your session data is:
 <iframe frameborder="0" src="session"></iframe>
@@ -1549,6 +1549,9 @@ url:
       auth: true
 ```
 
+Note: The `auth:` section is ignored by `AuthHandler`s. Otherwise, no one will
+be able to log into the application.
+
 You can restrict who can log in using [roles](#roles) or any other condition.
 
 ## Login URLs
@@ -1653,6 +1656,30 @@ You can specify any function of your choice. The function must return (or yield)
 
 To repeat auth conditions across multiple handlers, see [Reusing Configurations](#reusing-configurations).
 
+## Protect all pages
+
+To add access control to the entire application, use:
+
+```yaml
+handlers:
+  BaseHandler:
+    # Protect all pages in the application. All auth: configurations allowed
+    auth:
+      login_url: /$YAMLPATH/login/
+```
+
+This is the same as adding the `auth: ...` to every handler in the application.
+
+You can over-ride this `auth:` in a handler.
+
+You can also apply this to specific handlers. For example, this protects all
+[FormHandlers](../formhandler/) and [FileHandlers](../filehandler/):
+
+```yaml
+handlers:
+  FormHandler: {auth: true}
+  FileHandler: {auth: true}
+```
 
 ## Templates for unauthorized
 

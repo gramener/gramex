@@ -42,7 +42,6 @@ class BaseMixin(object):
         cls._set_xsrf = set_xsrf
 
         cls.kwargs = cls.conf.get('kwargs', AttrDict())
-        cls.setup_default_kwargs()
 
         cls.setup_transform(transform)
         cls.setup_redirect(redirect)
@@ -50,11 +49,9 @@ class BaseMixin(object):
         # override_user is run before authorize
         cls.setup_session(conf.app.get('session'))
         cls.setup_auth(auth)
-        # Update defaults from BaseHandler. Only error (for now).
-        # Use objectpath instead of a direct reference - in case handler.BaseHandler is undefined
-        cls.setup_log()
-        cls.setup_error(error or objectpath(conf, 'handlers.BaseHandler.error', {}))
+        cls.setup_error(error)
         cls.setup_xsrf(xsrf_cookies)
+        cls.setup_log()
 
         # app.settings.debug enables debugging exceptions using pdb
         if conf.app.settings.get('debug', False):
@@ -78,9 +75,13 @@ class BaseMixin(object):
 
     @classmethod
     def setup_default_kwargs(cls):
-        '''Use configs under handlers.<ClassName>.* as the default for kwargs'''
-        update = objectpath(conf, 'handlers.' + cls.conf.handler, {})
-        merge(cls.conf.setdefault('kwargs', {}), update, mode='setdefault')
+        '''
+        Use default config from handlers.<Class>.* and handlers.BaseHandler.
+        Called by gramex.services.url().
+        '''
+        c = cls.conf.setdefault('kwargs', {})
+        merge(c, objectpath(conf, 'handlers.' + cls.conf.handler, {}), mode='setdefault')
+        merge(c, objectpath(conf, 'handlers.BaseHandler', {}), mode='setdefault')
 
     @classmethod
     def setup_transform(cls, transform):
@@ -97,7 +98,7 @@ class BaseMixin(object):
     @staticmethod
     def _purge_keys(data):
         '''
-        Returns keys to be deleted. These are either None values or
+        Returns session keys to be deleted. These are either None values or
         those with expired keys based on _t.
         setup_session makes the session store call this method.
         Until v1.20 (31 Jul 2017) no _t keys were set.
@@ -252,6 +253,23 @@ class BaseMixin(object):
         cls.log_request = lambda handler: logger.info(log_info(handler))
 
     @classmethod
+    def _error_fn(cls, error_code, error_config):
+        template_kwargs = {}
+        if 'autoescape' in error_config:
+            if not error_config['autoescape']:
+                template_kwargs['autoescape'] = None
+            else:
+                app_log.error('url:%s.error.%d.autoescape can only be false', cls.name, error_code)
+        if 'whitespace' in error_config:
+            template_kwargs['whitespace'] = error_config['whitespace']
+
+        def error(*args, **kwargs):
+            tmpl = gramex.cache.open(error_config['path'], 'template', **template_kwargs)
+            return tmpl.generate(*args, **kwargs)
+
+        return error
+
+    @classmethod
     def setup_error(cls, error):
         '''
         Sample configuration::
@@ -286,40 +304,29 @@ class BaseMixin(object):
                 return app_log.error('url:%s.error.%d is not a dict', cls.name, error_code)
             # Make a copy of the original. When we add headers, etc, it shouldn't affect original
             error_config = AttrDict(error_config)
-            if 'path' in error_config:
-                encoding = error_config.get('encoding', 'utf-8')
-                template_kwargs = {}
-                if 'autoescape' in error_config:
-                    if not error_config['autoescape']:
-                        template_kwargs['autoescape'] = None
-                    else:
-                        app_log.error('url:%s.error.%d.autoescape can only be false',
-                                      cls.name, error_code)
-                if 'whitespace' in error_config:
-                    template_kwargs['whitespace'] = error_config['whitespace']
-
-                def get_error_fn(error_config):
-                    def error(*args, **kwargs):
-                        tmpl = gramex.cache.open(error_config['path'], 'template',
-                                                 **template_kwargs)
-                        return tmpl.generate(*args, **kwargs)
-                    return error
-
-                cls.error[error_code] = {'function': get_error_fn(error_config)}
-                mime_type, encoding = mimetypes.guess_type(error_config['path'], strict=False)
-                if mime_type:
-                    error_config.setdefault('headers', {}).setdefault('Content-Type', mime_type)
-            elif 'function' in error_config:
+            error_path, error_function = error_config.get('path'), error_config.get('function')
+            if error_function:
+                if error_path:
+                    error_config.pop('path')
+                    app_log.warning('url.%s.error.%d has function: AND path:. Ignoring path:',
+                                    cls.name, error_code)
                 cls.error[error_code] = {'function': build_transform(
                     error_config,
                     vars=AttrDict((('status_code', None), ('kwargs', None), ('handler', None))),
                     filename='url:%s.error.%d' % (cls.name, error_code)
                 )}
+            elif error_path:
+                encoding = error_config.get('encoding', 'utf-8')
+                cls.error[error_code] = {'function': cls._error_fn(error_code, error_config)}
+                mime_type, encoding = mimetypes.guess_type(error_path, strict=False)
+                if mime_type:
+                    error_config.setdefault('headers', {}).setdefault('Content-Type', mime_type)
             else:
                 app_log.error('url.%s.error.%d must have a path or function key',
                               cls.name, error_code)
-        if error_code in cls.error:
-            cls.error[error_code]['conf'] = error_config
+            # Add the error configuration for reference
+            if error_code in cls.error:
+                cls.error[error_code]['conf'] = error_config
         cls._write_error, cls.write_error = cls.write_error, cls._write_custom_error
 
     @classmethod

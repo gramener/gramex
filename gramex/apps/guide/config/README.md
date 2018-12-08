@@ -340,6 +340,9 @@ url:
 The function is passed the same 3 keyword arguments mentioned above. Its return
 value is rendered as a string.
 
+If a `function:` **and** `path:` are both specified, `function:` is used, and
+`path:` is ignored with a warning log.
+
 To repeat error pages across multiple handlers, see [Reusing Configurations](#reusing-configurations).
 
 Both methods support some customisations. Here is a full example showing the

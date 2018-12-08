@@ -62,6 +62,13 @@ url:
   pathnorm1: {pattern: "/./path/norm1", handler: FunctionHandler, kwargs: {function: str("/path/norm1") }}
   pathnorm2: {pattern: "/path/./norm2", handler: FunctionHandler, kwargs: {function: str("/path/norm2") }}
 
+  # test_handlers
+  base:
+    pattern: /base
+    handler: FileHandler
+    kwargs:
+      path: dir/index.html
+
   # TestFunctionHandler
   func/args:
     pattern: /func/args
