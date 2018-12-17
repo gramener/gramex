@@ -19,6 +19,7 @@ from threading import Thread
 from six.moves.queue import Queue
 from orderedattrdict import AttrDict
 from tornado.concurrent import Future
+from tornado.ioloop import IOLoop, PeriodicCallback
 from gramex.config import app_log, merge, CustomJSONDecoder, CustomJSONEncoder
 from six.moves.urllib_parse import urlparse
 
@@ -606,6 +607,7 @@ class Subprocess(object):
         self.proc = subprocess.Popen(args, **kwargs)        # nosec
         self.thread = {}        # Has the running threads
         self.future = {}        # Stores the futures indicating stream close
+        self.loop = IOLoop.current()
 
         # Buffering has 2 modes. buffer_size='line' reads and writes line by line
         # buffer_size=<number> reads in byte chunks. Define the appropriate method
@@ -624,7 +626,7 @@ class Subprocess(object):
                         break
                 while self.proc.poll() is None:
                     time.sleep(MILLISECOND)
-                future.set_result(retval())
+                self.loop.add_callback(future.set_result, retval())
         else:
             # If the buffer size is 0 or negative, use the default buffer size to read
             if buffer_size <= 0:
@@ -647,7 +649,7 @@ class Subprocess(object):
                         break
                 while self.proc.poll() is None:
                     time.sleep(MILLISECOND)
-                future.set_result(retval())
+                self.loop.add_callback(future.set_result, retval())
 
         callbacks_lookup = {'stdout': stream_stdout, 'stderr': stream_stderr}
         for stream in ('stdout', 'stderr'):
@@ -771,14 +773,15 @@ def daemon(args, restart=1, first_line=None, stream=True, timeout=5, buffer_size
                     raise AssertionError('%s: wrong first line: %s' % (arg_str, actual))
         elif callable(first_line):
             check = first_line
+        loop = IOLoop.current()
 
         def checker(proc):
             try:
                 check(proc)
             except Exception as e:
-                future.set_exception(e)
+                loop.add_callback(future.set_exception, e)
             else:
-                future.set_result(proc)
+                loop.add_callback(future.set_result, proc)
 
         proc._check_thread = t = Thread(target=checker, args=(proc, ))
         t.daemon = True     # Thread dies with the program
@@ -833,13 +836,10 @@ class KeyStore(object):
                 'KeyStore: purge_keys=%r invalid. Must be function(dict)',
                 purge_keys)
         # Periodically flush and purge buffers
-        import tornado.ioloop
         if flush is not None:
-            tornado.ioloop.PeriodicCallback(
-                self.flush, callback_time=flush * 1000).start()
+            PeriodicCallback(self.flush, callback_time=flush * 1000).start()
         if purge is not None:
-            tornado.ioloop.PeriodicCallback(
-                self.purge, callback_time=purge * 1000).start()
+            PeriodicCallback(self.purge, callback_time=purge * 1000).start()
         # Call close() when Python gracefully exits
         atexit.register(self.close)
 
