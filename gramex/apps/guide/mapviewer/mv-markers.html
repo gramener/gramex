@@ -20,10 +20,8 @@
         options: {
           title: '$$ tooltip text',
         },
-        attrs: {
-          tooltip: function (d) {
-            return '<div>State: ' + d.name + '</div>'
-          }
+        tooltip: function (d) {
+          return `<div>State: ${d.name}</div>`
         }
       }
     }

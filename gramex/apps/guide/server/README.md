@@ -3,6 +3,8 @@ title: Gramex is a web server
 prefix: Server
 ...
 
+Gramex a data visualization server written in Python and JavaScript.
+
 [TOC]
 
 ## Creating Gramex apps

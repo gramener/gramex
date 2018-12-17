@@ -101,10 +101,12 @@ table tbody td { border-bottom: 1px solid #eee; }
     text-decoration: none;
     white-space: nowrap;
 }
+.menu li ul {
+    padding: 0.1rem 1rem;
+}
 .menu ul {
     margin: 0;
     padding: 0;
-    border-bottom: 2px ridge #4F627D;
 }
 .menu li {
     list-style: none;

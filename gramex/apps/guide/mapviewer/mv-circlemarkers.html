@@ -17,6 +17,9 @@ var map = g1.mapviewer({
       url: 'cities.json',
       latitude: 'lat',
       longitude: 'long',
+      tooltip: function (d) {
+        return `${d.name}: ${d.crimes}`
+      },
       attrs: {
         fillColor: {
           metric: 'pollution',
