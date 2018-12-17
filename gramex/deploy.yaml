@@ -14,7 +14,7 @@ handlers:
         ignore: '*'                 # By default, ignore all files
         allow: [
           # Document formats (ignore .doc and .ppt: old and unsafe formats)
-          '*.md', '*.markdown', '*.html', '*.txt', '*.pdf', '*.rst',
+          '*.md', '*.markdown', '*.html', '*.htm', '*.txt', '*.pdf', '*.rst',
           '*.pptx', '*.docx',
           # Image formats
           '*.png', '*.svg', '*.jp*g', '*.gif', '*.ico',
