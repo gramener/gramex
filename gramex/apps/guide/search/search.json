@@ -603,10 +603,40 @@
       "Vega gallery": -1
     }
   },
-  "about": {
+  "1.47": {
     "": {
-      "About Gramex": -1
+      "Gramex 1.47 Release Notes": -1
+    },
+    "ajaxchain": {
+      "$.ajaxchain": -1
+    },
+    "auth": {
+      "Auth": -1
+    },
+    "g1": {
+      "g1": -1
+    },
+    "guide": {
+      "Guide": -1
+    },
+    "stats": {
+      "Stats": -1
+    },
+    "template": {
+      "$.template": -1
+    },
+    "ui-components": {
+      "UI Components": -1
+    },
+    "upgrade": {
+      "Upgrade": -1
+    },
+    "urlchange": {
+      "$.urlchange": -1
     }
+  },
+  "about": {
+    "": {}
   },
   "admin": {
     "": {
@@ -824,6 +854,9 @@
     },
     "otp": {
       "OTP": -1
+    },
+    "protect-all-pages": {
+      "Protect all pages": -1
     },
     "replace-the-below-line-with-the-relevant-version-for-your-system": {
       "Replace the below line with the relevant version for your system": -1
@@ -1469,17 +1502,21 @@
     "function-arguments": {
       "Function arguments": -1
     },
+    "function-headers": {
+      "Function headers": -1
+    },
     "function-methods": {
       "Function methods": -1
     },
     "parse-url-arguments": {
       "Parse URL arguments": -1
     },
-    "path-arguments": {
-      "Path arguments": -1
-    },
+    "path-arguments": {},
     "streaming-output": {
       "Streaming output": -1
+    },
+    "url-path-arguments": {
+      "URL path arguments": -1
     }
   },
   "groupmeans": {
