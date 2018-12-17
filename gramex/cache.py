@@ -607,7 +607,7 @@ class Subprocess(object):
         self.proc = subprocess.Popen(args, **kwargs)        # nosec
         self.thread = {}        # Has the running threads
         self.future = {}        # Stores the futures indicating stream close
-        self.loop = IOLoop.current()
+        self.loop = _get_current_ioloop()
 
         # Buffering has 2 modes. buffer_size='line' reads and writes line by line
         # buffer_size=<number> reads in byte chunks. Define the appropriate method
@@ -773,7 +773,7 @@ def daemon(args, restart=1, first_line=None, stream=True, timeout=5, buffer_size
                     raise AssertionError('%s: wrong first line: %s' % (arg_str, actual))
         elif callable(first_line):
             check = first_line
-        loop = IOLoop.current()
+        loop = _get_current_ioloop()
 
         def checker(proc):
             try:
@@ -789,6 +789,18 @@ def daemon(args, restart=1, first_line=None, stream=True, timeout=5, buffer_size
     else:
         future.set_result(proc)
     return future
+
+
+def _get_current_ioloop():
+    '''
+    Return the current IOLoop. But if we're not already in an IOLoop, return an
+    object that mimics add_callback() by running the method immediately.
+    This allows daemon() to be run without Tornado / asyncio.
+    '''
+    loop = IOLoop.current(instance=False)
+    if loop is None:
+        loop = AttrDict(add_callback=lambda fn, *args, **kwargs: fn(*args, **kwargs))
+    return loop
 
 
 def get_store(type, **kwargs):

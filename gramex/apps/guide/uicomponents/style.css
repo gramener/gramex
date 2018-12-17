@@ -36,6 +36,12 @@
   white-space: nowrap;
 }
 
+#theme-picker {
+  z-index: 100;
+  right: 0;
+  top: 2.8rem;
+}
+
 /* The main contents section may go beyond the page. Don't extend page width for this. */
 .show-source main { overflow-x: auto; }
 .viewsource-wrapper pre { display: none; }
