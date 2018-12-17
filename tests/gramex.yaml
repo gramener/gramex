@@ -2470,6 +2470,13 @@ url:
     kwargs:
       url: $YAMLPATH/sales.xlsx
       sheetname: census
+
+  ui/sass:
+    pattern: /ui/sass
+    handler: FunctionHandler
+    kwargs:
+      function: gramex.apps.ui.sass(handler, r"$YAMLPATH/vars.scss")
+
 sms:
   amazonsns:
     type: amazonsns

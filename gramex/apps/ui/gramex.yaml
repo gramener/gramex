@@ -14,7 +14,4 @@ url:
     pattern: /$YAMLURL/bootstraptheme.css
     handler: FunctionHandler
     kwargs:
-      function: uiapp.bootstraptheme(handler, $bootstrap4)
-      headers:
-        Cache-Control: public, max-age=0
-        Content-Type: text/css
+      function: gramex.apps.ui.sass

@@ -1,0 +1,21 @@
+// URL arguments are available as variables
+{% for key, val in variables.items() %}
+  ${{ key }}: {% raw val %};
+{% end %}
+$color: black !default;
+.color_arg {
+  color: $color;
+}
+
+// Ensure that paths are available for import
+.bootstrap_path {
+  after: "{{ bootstrap_path }}";
+}
+.uicomponents_path {
+  after: "{{ uicomponents_path }}";
+}
+
+//
+.google_font {
+  after: "{{ google_fonts }}";
+}

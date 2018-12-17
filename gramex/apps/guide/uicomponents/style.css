@@ -12,9 +12,16 @@
   top: 3rem;
   height: calc(100vh - 3rem);
   overflow-y: auto;
-  width: 20rem;
+  min-width: 10rem;
   display: block;
 }
+/* Don't show the sidebar on small screens */
+@media screen and (max-width: 640px) {
+  #toc-nav {
+    display: none;
+  }
+}
+/* Highlight the current scrollspy level */
 #toc-nav [data-level].active {
   color: #000;
   font-weight: bold;
@@ -35,8 +42,8 @@
 .show-source .viewsource-wrapper pre { display: block; }
 
 /* Predefined background URL image */
-.bg-img { background-image: url('bg.png'); %}
-.bg-img-sm { background-image: url('bg-small.png'); %}
+.bg-img { background-image: url('bg.png'); }
+.bg-img-sm { background-image: url('bg-small.png'); }
 
 /* Container to demo overflows */
 .o-box {

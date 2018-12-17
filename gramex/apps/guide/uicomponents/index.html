@@ -14,61 +14,61 @@
   <link rel="stylesheet" href="../ui/tether-shepherd/dist/css/shepherd-theme-dark.css">
   <link rel="stylesheet" href="../ui/bootstrap-select/dist/css/bootstrap-select.min.css">
   <link rel="stylesheet" href="../node_modules/prismjs/themes/prism-okaidia.css">
-  <link rel="stylesheet" href="style.css?v=3.23">
+  <link rel="stylesheet" href="style.css?v=3.25">
   <script src="../ui/jquery/dist/jquery.min.js"></script>
   <script src="../ui/tether-shepherd/dist/js/tether.js"></script>
   <script src="../ui/tether-shepherd/dist/js/shepherd.min.js"></script>
 </head>
 <body class="show-source" data-spy="scroll" data-target="#toc-nav" data-offset="80">
-  <nav class="navbar navbar-dark bg-dark position-fixed w-100 top-nav">
+  <nav class="navbar navbar-dark bg-dark fixed-top w-100 top-nav">
     <h1 class="h5 m-0 text-light" href=".">Gramex UI Components</h1>
     <form class="form-inline">
       <button class="btn btn-sm btn-light ml-2 toggle-source" type="button">Toggle source</button>
       <button class="btn btn-sm btn-light ml-2" type="button" data-toggle="collapse" data-target="#theme-picker" aria-expanded="false" aria-controls="theme-picker">Change theme</button>
     </form>
-    <div id="theme-picker" class="theme bg-dark text-light collapse">
-      <!-- htmllint label-req-for="false" -->
-      <form class="container-fluid pt-4 pb-4">
-        <div class="theme-contents d-flex align-self-start">
-          <div class="column mr-4 theme-colors">
-            <div v-for="(info, name) in color">
-              <input v-bind:id="name" v-bind:name="name" type="color" v-bind:value="info.value">
-              <label v-bind:for="name">${ info.title }</label>
-            </div>
-          </div><!-- .theme-colors -->
-          <div class="column mr-4 theme-toggles">
-            <div v-for="(info, name) in toggle">
-              <label>
-                <input v-bind:name="name" type="checkbox" v-model="info.value"> ${ info.title }
-              </label>
-            </div>
-          </div><!-- .theme-toggles -->
-          <div class="column mr-4 theme-selects">
-            <div v-for="(info, name) in font" class="mb-4">
-              <label v-bind:for="name">${ info.title }</label>
-              <select class="form-control form-control-sm" v-bind:name="name" v-model="info.value">
-                <option v-for="(fontinfo, fontname) in info.options" v-bind:value="fontname">
-                  ${ fontinfo }
-                </option>
-              </select>
-            </div>
-          </div><!-- .theme-selects -->
-          <div class="column mr-4 theme-predefined">
-            <p>Pre-defined themes</p>
-            <div v-for="(info, name) in theme">
-              <a v-bind:href="info.href" class="text-light">${ name }</a>
-            </div>
-          </div><!-- .theme-predefined -->
-        </div><!-- .theme-contents -->
-        <p>
-          <button type="submit" class="btn btn-primary">Apply theme</button>
-          <a v-bind:href="cssurl" class="btn btn-light">Link to CSS</a>
-        </p>
-      </form>
-      <!-- htmllint label-req-for="true" -->
-    </div><!-- #theme-picker -->
   </nav>
-  <div class="pt-2">&nbsp;</div>
+  <div id="theme-picker" class="theme bg-dark text-light collapse position-fixed" style="z-index:100;right:0;top:2.8rem">
+    <!-- htmllint label-req-for="false" -->
+    <form class="container-fluid pt-4 pb-4">
+      <div class="theme-contents d-flex align-self-start">
+        <div class="column mr-4 theme-colors">
+          <div v-for="(info, name) in color">
+            <input v-bind:id="name" v-bind:name="name" type="color" v-bind:value="info.value">
+            <label v-bind:for="name">${ info.title }</label>
+          </div>
+        </div><!-- .theme-colors -->
+        <div class="column mr-4 theme-toggles">
+          <div v-for="(info, name) in toggle">
+            <label>
+              <input v-bind:name="name" type="checkbox" v-model="info.value"> ${ info.title }
+            </label>
+          </div>
+        </div><!-- .theme-toggles -->
+        <div class="column mr-4 theme-selects">
+          <div v-for="(info, name) in font" class="mb-4">
+            <label v-bind:for="name">${ info.title }</label>
+            <select class="form-control form-control-sm" v-bind:name="name" v-model="info.value">
+              <option v-for="(fontinfo, fontname) in info.options" v-bind:value="fontname">
+                ${ fontinfo }
+              </option>
+            </select>
+          </div>
+        </div><!-- .theme-selects -->
+        <div class="column mr-4 theme-predefined">
+          <p>Pre-defined themes</p>
+          <div v-for="(info, name) in theme">
+            <a v-bind:href="info.href" class="text-light">${ name }</a>
+          </div>
+        </div><!-- .theme-predefined -->
+      </div><!-- .theme-contents -->
+      <p>
+        <button type="submit" class="btn btn-primary">Apply theme</button>
+        <a v-bind:href="cssurl" class="btn btn-light">Link to CSS</a>
+      </p>
+    </form>
+    <!-- htmllint label-req-for="true" -->
+  </div><!-- #theme-picker -->
+  <div class="pt-2 m-1">&nbsp;</div>
   <div class="container-fluid component d-flex">
     <nav class="mt-3 nav" id="toc-nav">
       <a v-for="entry in toc"
