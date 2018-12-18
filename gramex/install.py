@@ -13,6 +13,7 @@ import shlex
 import shutil
 import datetime
 import requests
+from glob import glob
 from shutilwhich import which
 from pathlib import Path
 from subprocess import Popen, check_output, CalledProcessError      # nosec
@@ -587,6 +588,26 @@ def _run_console(cmd, **kwargs):
     proc.communicate()
 
 
+def _copy_file(source, target, template_data=None):
+    '''
+    Copy single file as binary from source filename to target directory.
+    Warn if source is not a file, or if target exists, and exit.
+    If template_data is specified, treat source as a Tornado template.
+    '''
+    if os.path.exists(target):
+        app_log.warning('Skipping existing %s', target)
+        return
+    if not os.path.isfile(source):
+        app_log.warning('Skipping non-file %s', source)
+        return
+    with io.open(source, 'rb') as handle:
+        result = handle.read()
+        if template_data is not None:
+            result = Template(result).generate(**template_data)
+    with io.open(target, 'wb') as handle:
+        handle.write(result)
+
+
 def init(cmd, args):
     '''Create Gramex scaffolding files.'''
     if len(cmd) > 1:
@@ -600,28 +621,27 @@ def init(cmd, args):
         'email': _check_output('git config user.email', default='user@example.org'),
         'date': datetime.datetime.today().strftime('%Y-%m-%d')
     }
-    # Create a git repo if required.
+    # Copy all files as templates
+    source_dir = os.path.join(variables['GRAMEXPATH'], 'apps', 'init')
+    for path in os.listdir(source_dir):
+        source = os.path.join(source_dir, path)
+        target = os.path.join(args.target, path)
+        _copy_file(source, target, template_data=data)
+    # Copy error files as-is (not as templates)
+    error_dir = os.path.join(args.target, 'error')
+    if not os.path.exists(error_dir):
+        os.makedirs(error_dir)
+    for source in glob(os.path.join(variables['GRAMEXPATH'], 'handlers', '?0?.html')):
+        target = os.path.join(error_dir, os.path.basename(source))
+        _copy_file(source, target)
+
+    # Create a git repo if none exists.
     # But if git is not installed, do not stop. Continue with the rest.
     if not os.path.exists(os.path.join(args.target, '.git')):
         try:
             _run_console('git init')
         except OSError:
             pass
-    # Copy all files as templates
-    source_dir = os.path.join(variables['GRAMEXPATH'], 'apps', 'init')
-    for path in os.listdir(source_dir):
-        target = os.path.join(args.target, path)
-        if os.path.exists(target):
-            app_log.warning('Skipping existing %s', path)
-            continue
-        source = os.path.join(source_dir, path)
-        if not os.path.isfile(source):
-            app_log.warning('Skipping non-file %s', path)
-            continue
-        with io.open(source, 'rb') as handle:
-            result = Template(handle.read()).generate(**data)
-        with io.open(target, 'wb') as handle:
-            handle.write(result)
     run_setup(args.target)
 
 
