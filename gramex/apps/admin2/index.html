@@ -20,7 +20,7 @@
   {% except ValueError %}{% set authhandler, auth_conf, data_conf = None, {}, {} %}{% end %}
 
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-3">
-    <a class="navbar-brand py-0 d-flex" href=".">
+    <a class="navbar-brand py-0 d-flex" href="{{ admin_kwargs.get('home', '.') }}">
       {% if admin_kwargs.get('logo') %}
         <img class="pr-2" src="{{ admin_kwargs['logo'] }}" alt="">
       {% end %}
@@ -87,6 +87,7 @@
         <td>
           <i class="fa fa-lg mr-2 cursor-pointer fa-ban"   title="Reset password" data-action="reset"></i>
           <i class="fa fa-lg mr-2 cursor-pointer fa-trash" title="Delete user"    data-action="delete"></i>
+          <i class="fa fa-lg mr-2 cursor-pointer fa-ban"   title="Reset password" data-action="reset"></i>
         </td>
       </script>
       {% if authhandler %}

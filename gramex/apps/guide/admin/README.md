@@ -30,6 +30,7 @@ import:
     YAMLURL: /$YAMLURL/admin-kwargs/        # URL to show the admin page at
     ADMIN_KWARGS:
       logo: https://gramener.com/uistatic/gramener.png      # Logo URL
+      home: /$YAMLURL/                                      # URL that logo links to
       title: Admin  Page Options                            # Navbar title
       components: [info, users, shell]                      # Components to show
       theme: '?primary=%2320186f&dark=%2320186f&font-family-base=roboto&body-bg=%23f8f8f8'  # Bootstrap theme query
@@ -41,6 +42,7 @@ import:
 The `ADMIN_KWARGS` section accepts the following parameters:
 
 - `logo`: Logo image URL. Either an absolute URL or relative to the admin page.
+- `home`: Logo link URL. Clicking on the logo takes you to this link.
 - `title`: Title displayed on the navbar. Defaults to "Admin"
 - `theme`: The [UI theme](../uicomponents/) for the page. For example,
   `?font-family-base=Roboto` makes the font Roboto.

@@ -17,6 +17,7 @@ import:
     YAMLURL: /$YAMLURL/admin-user/
     ADMIN_KWARGS:
       logo: https://gramener.com/uistatic/gramener.png
+      home: /$YAMLURL/
       title: User Management
       theme: '?primary=%2320186f&dark=%2320186f&font-family-base=roboto&body-bg=%23f8f8f8'
       components: [users]
