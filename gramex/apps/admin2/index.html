@@ -90,7 +90,9 @@
         </td>
       </script>
       {% if authhandler %}
-        <div class="users" data-src="users"></div>
+        <div class="users" data-src="users">
+          <i class="fa fa-spinner fa-spin fa-3x text-center d-block"></i>
+        </div>
       {% else %}
         <div class="alert alert-danger">
           <h4 class="alert-heading">User management is not enabled</h4>
@@ -144,7 +146,9 @@
       </script>
 
     {% elif current_tab == 'info' %}
-      <div class="gramex_info" data-src="info"></div>
+      <div class="gramex_info" data-src="info">
+        <i class="fa fa-spinner fa-spin fa-3x text-center d-block"></i>
+      </div>
       <script>
         $('.gramex_info').formhandler({
           'editable': false,
