@@ -5,7 +5,7 @@ prefix: FileHandler
 
 [TOC]
 
-[gramex.yaml](../gramex.yaml) uses the [FileHandler][filehandler]
+[gramex.yaml](../gramex.yaml.source) uses the [FileHandler][filehandler]
 to display files. This folder uses the following configuration:
 
 ```yaml
@@ -88,7 +88,7 @@ url:
       path: "*.yaml"              # becomes anything.yaml, replacing the * here
 ```
 
-For example, [yaml/gramex](yaml/gramex) actually renders [gramex.yaml](gramex.yaml).
+For example, [yaml/gramex](yaml/gramex) actually renders [gramex.yaml](gramex.yaml.source).
 
 To replace `.html` extension with `.yaml`, use:
 

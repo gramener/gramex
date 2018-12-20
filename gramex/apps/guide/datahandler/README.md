@@ -27,7 +27,7 @@ browses [gorilla genes](genome?format=html&limit=10):
 
 To start you off, there's a `database.sqlite3` in this application folder.
 (Gramex downloaded [flags data](https://gramener.com/flags/) on startup. See
-[dbsetup.flags()](dbsetup.py) and the scheduler in [gramex.yaml](gramex.yaml).
+[dbsetup.flags()](dbsetup.py) and the scheduler in [gramex.yaml](gramex.yaml.source).
 
 The `DataHandler` below exposes the flags table in `database.sqlite3` at the URL [flags](flags).
 

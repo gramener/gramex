@@ -5,7 +5,7 @@ prefix: Scheduler
 
 [TOC]
 
-The `schedule:` section in [gramex.yaml](gramex.yaml) lets you run tasks on
+The `schedule:` section in [gramex.yaml](gramex.yaml.source) lets you run tasks on
 startup or at specific times. Here are some sample uses:
 
 - email insights every Wednesday
@@ -14,7 +14,7 @@ startup or at specific times. Here are some sample uses:
 
 Here is a sample configuration:
 
-<iframe frameborder="0" src="gramex.yaml"></iframe>
+<iframe frameborder="0" src="gramex.yaml.source"></iframe>
 
 Each named schedule section has the following keys:
 

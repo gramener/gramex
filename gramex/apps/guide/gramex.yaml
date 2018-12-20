@@ -68,6 +68,7 @@ url:
         kwargs:
             path: $GRAMEXPATH/gramex.yaml
             headers:
+                Content-Type: text/plain
                 Cache-Control: public, max-age=300
 
     # Static files are cached on the browser

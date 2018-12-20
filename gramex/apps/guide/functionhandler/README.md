@@ -29,9 +29,9 @@ def total(*items):
     return json.dumps(sum(float(item) for item in items))
 ```
 
-You can see all configurations used in this page in [gramex.yaml](gramex.yaml):
+You can see all configurations used in this page in [gramex.yaml](gramex.yaml.source):
 
-<iframe frameborder="0" src="gramex.yaml"></iframe>
+<iframe frameborder="0" src="gramex.yaml.source"></iframe>
 
 After the function executes, users can be redirected via the `redirect:` config
 documented the [redirection configuration](../config/#redirection).
@@ -68,7 +68,7 @@ Try it below:
 </form>
 ```
 
-To set this up, [gramex.yaml](gramex.yaml) used the following configuration:
+To set this up, [gramex.yaml](gramex.yaml.source) used the following configuration:
 
 ```yaml
 url:
