@@ -4,8 +4,7 @@
   "description": "controlpanel application",
   "main": "index.js",
   "scripts": {
-    "test": "npm run test",
-    "install": "uglifyjs webshell.js > webshell.min.js"
+    "test": "npm run test"
   },
   "author": "",
   "license": "ISC"
