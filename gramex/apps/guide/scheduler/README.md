@@ -92,15 +92,16 @@ FunctionHandler changes a schedule based on the URL's `?minutes=` parameter:
 from gramex.services.scheduler import Task
 
 def update_schedule(handler):
+    from gramex import service      # Available only if Gramex is running
     # If our scheduler is already set up, stop it first
-    if 'custom-schedule' in gramex.service.schedule:
-        gramex.service.schedule['custom-schedule'].stop()
+    if 'custom-schedule' in service.schedule:
+        service.schedule['custom-schedule'].stop()
     # Create a new scheduler with this configuration
     schedule = AttrDict(
         function=scheduler_method,            # Run this function
         minutes=handler.get_arg('minutes'),   # ... based on the URL's ?minutes=
     )
     # Set up the scheduled task. This will at the minute specified by ?minutes=
-    gramex.service.schedule['custom-schedule'] = Task(
-        'custom-schedule', schedule, gramex.service.threadpool)
+    service.schedule['custom-schedule'] = Task(
+        'custom-schedule', schedule, service.threadpool)
 ```

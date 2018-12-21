@@ -64,8 +64,8 @@ email:
 This creates an `SMTPMailer` instance that can be used as follows:
 
 ```python
-import gramex
-mailer = gramex.service.email['gramex-guide-gmail']
+from  gramex import service     # Available only if Gramex is running
+mailer = service.email['gramex-guide-gmail']
 # Or, to construct the SMTPMailer when using Gramex as a library, use:
 # from gramex.services import SMTPMailer
 # mailer = SMTPMailer(type='gmail', email='gramex.guide@gmail.com', password='...')
@@ -190,7 +190,7 @@ def email_alert():
     analysis = find_unusual_events(data)                          # Apply some analysis
     if 'unusual' in analysis:                                     # If something is unusual
         tmpl = gramex.cache.open(template_file, 'template')       #   open a template
-        gramex.service.email['email-alert'].mail(                 #   and send the email
+        service.email['email-alert'].mail(                        #   and send the email
             to='recipients@example.org',                          #   to the recipients
             subject='Alert: {unusual}'.format(**analysis),        #   with a clear subject
             html=tmpl.generate(data=data, analysis=analysis),     #   and render the template.

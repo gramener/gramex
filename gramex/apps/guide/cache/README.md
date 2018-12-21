@@ -220,16 +220,17 @@ memory caches, and defeats the purpose of data caching.
 
 ### Using cache stores
 
-Your functions can access these caches at `gramex.service.cache[<key>]`.
+Your functions can access these caches from `cache` object in `gramex.service`.
 For example, the default in-memory Gramex cache is at
-`gramex.service.cache.memory`. The disk cache above is at
+`gramex.service.cache['memory']`. The disk cache above is at
 `gramex.service.cache['big-disk-cache']`.
 
 The cache stores can be treated like a dictionary. They also support a `.set()`
 method which accepts an `expire=` parameter. For example:
 
     :::python
-    cache = gramex.service.cache['big-disk-cache']
+    from gramex import service      # Available only if Gramex is running
+    cache = service.cache['big-disk-cache']
     cache['key'] = 'value'
     cache['key']      # returns 'value'
     del cache['key']  # clears the key

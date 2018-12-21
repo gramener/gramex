@@ -93,7 +93,7 @@ To send an SMS programmatically -- for example, inside a
 
 ```python
 import gramex
-notifier = gramex.service.sms['amazon']
+notifier = gramex.service.sms['amazon']     # Available only if Gramex is running
 # Or, to construct the Notifier when using Gramex as a library, use:
 # from gramex.services import AmazonSNS
 # notifier = AmazonSNS(aws_access_key_id, aws_access_secret_key, region_name)

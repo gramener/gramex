@@ -302,7 +302,8 @@ blocking Gramex. Gramex provides a global threadpool that you can use. It's at
 `gramex.service.threadpool`.
 
 ```python
-result = yield gramex.service.threadpool.submit(slow_calculation, *args, **kwargs)
+from gramex import service      # Available only if Gramex is running
+result = yield service.threadpool.submit(slow_calculation, *args, **kwargs)
 ```
 
 [ThreadPoolExecutor]: https://docs.python.org/3/library/concurrent.futures.html#concurrent.futures.ThreadPoolExecutor
@@ -313,11 +314,12 @@ well. For example:
 ```python
 @tornado.gen.coroutine
 def calculate(data1, data2):
+    from gramex import service      # Available only if Gramex is running
     group1, group2 = yield [
-        gramex.service.threadpool.submit(data1.groupby, ['category']),
-        gramex.service.threadpool.submit(data2.groupby, ['category']),
+        service.threadpool.submit(data1.groupby, ['category']),
+        service.threadpool.submit(data2.groupby, ['category']),
     ]
-    result = gramex.service.threadpool.submit(pd.concat, [group1, group2])
+    result = service.threadpool.submit(pd.concat, [group1, group2])
     raise tornado.gen.Return(result)
 ```
 
