@@ -323,6 +323,8 @@ def insert(url, meta={}, args=None, engine=None, table=None, ext=None, id=None,
     ``id`` is a column name or a list of column names defining the primary key.
     Calling this in a handler with ``?id=3&x=2`` inserts a new record with id=3 and x=2.
 
+    If the target file / table does not exist, it is created.
+
     It accepts the same parameters as :py:func:`filter`, and returns the number of updated rows.
     '''
     if engine is None:
@@ -340,20 +342,28 @@ def insert(url, meta={}, args=None, engine=None, table=None, ext=None, id=None,
     rows = pd.DataFrame.from_dict(args)
     if engine == 'dataframe':
         rows = _pop_columns(rows, url.columns, meta['ignored'])
-        url = url.append(rows)
+        url = url.append(rows, sort=False)
         return len(rows)
     elif engine == 'file':
-        data = gramex.cache.open(url, ext, transform=None, **kwargs)
-        rows = _pop_columns(rows, data.columns, meta['ignored'])
-        data = data.append(rows, sort=False)
+        try:
+            data = gramex.cache.open(url, ext, transform=None, **kwargs)
+        except (OSError, IOError):
+            data = rows
+        else:
+            rows = _pop_columns(rows, data.columns, meta['ignored'])
+            data = data.append(rows, sort=False)
         gramex.cache.save(data, url, ext, index=False, **kwargs)
         return len(rows)
     elif engine == 'sqlalchemy':
         if table is None:
             raise ValueError('No table: specified')
         engine = create_engine(url, **kwargs)
-        cols = get_table(engine, table).columns
-        rows = _pop_columns(rows, [col.name for col in cols], meta['ignored'])
+        try:
+            cols = get_table(engine, table).columns
+        except sqlalchemy.exc.NoSuchTableError:
+            pass
+        else:
+            rows = _pop_columns(rows, [col.name for col in cols], meta['ignored'])
         if '.' in table:
             kwargs['schema'], table = table.rsplit('.', 1)
         rows.to_sql(table, engine, if_exists='append', index=False, **kwargs)

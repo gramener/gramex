@@ -381,29 +381,48 @@ class TestInsert(unittest.TestCase):
     def setUpClass(cls):
         cls.insert_file = sales_file + '.insert.xlsx'
         shutil.copy(sales_file, cls.insert_file)
-
-    def test_insert_frame(self):
-        raise SkipTest('TODO: write insert test cases for DataFrame')
-
-    def test_insert_file(self):
-        data = gramex.cache.open(self.insert_file, 'xlsx')
-        insert_rows = {
+        cls.tmpfiles = [cls.insert_file]
+        cls.insert_rows = {
             'देश': ['भारत', None],
             'city': [None, 'Paris'],
             'product': ['芯片', 'Crème'],
             'sales': ['0', -100],
             # Do not add growth column
         }
-        gramex.data.insert(url=self.insert_file, args=insert_rows)
+
+    def test_insert_frame(self):
+        raise SkipTest('TODO: write insert test cases for DataFrame')
+
+    def test_insert_file(self):
+        data = gramex.cache.open(self.insert_file, 'xlsx')
+        gramex.data.insert(url=self.insert_file, args=self.insert_rows)
         new_data = gramex.cache.open(self.insert_file, 'xlsx')
         # Check original data is identical
         afe(data, new_data.head(len(data)))
         # Check if added rows are correct
-        added_rows = pd.DataFrame(insert_rows)
+        added_rows = pd.DataFrame(self.insert_rows)
         added_rows['sales'] = added_rows['sales'].astype(float)
         added_rows['growth'] = pd.np.nan
         added_rows.index = new_data.tail(2).index
         afe(new_data.tail(2), added_rows, check_like=True)
+
+    def test_insert_new_file(self):
+        new_files = [
+            {'url': os.path.join(folder, 'insert.csv'), 'encoding': 'utf-8'},
+            {'url': os.path.join(folder, 'insert.xlsx'), 'sheet_name': 'test'},
+            {'url': os.path.join(folder, 'insert.hdf'), 'key': 'test'},
+        ]
+        for conf in new_files:
+            if os.path.exists(conf['url']):
+                os.remove(conf['url'])
+            self.tmpfiles.append(conf['url'])
+            gramex.data.insert(args=self.insert_rows, **conf)
+            # Check if added rows are correct
+            actual = gramex.data.filter(**conf)
+            expected = pd.DataFrame(self.insert_rows)
+            actual['sales'] = actual['sales'].astype(float)
+            expected['sales'] = expected['sales'].astype(float)
+            afe(actual, expected, check_like=True)
 
     def test_insert_mysql(self):
         raise SkipTest('TODO: write insert test cases for MySQL')
@@ -416,8 +435,9 @@ class TestInsert(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        if os.path.exists(cls.insert_file):
-            os.remove(cls.insert_file)
+        for path in cls.tmpfiles:
+            if os.path.exists(path):
+                os.remove(path)
 
 
 class TestEdit(unittest.TestCase):
