@@ -1,6 +1,7 @@
 import os
 import inspect
 import pandas as pd
+from tornado.gen import coroutine, Return
 from gramex.config import locate, app_log
 from sklearn.externals import joblib
 from sklearn.preprocessing import StandardScaler
@@ -258,3 +259,109 @@ def weighted_avg(data, numeric_cols, weight):
     '''
     sumprod = data[numeric_cols].multiply(data[weight], axis=0).sum()
     return sumprod / data[weight].sum()
+
+
+def _google_translate(q, source, target, key):
+    import requests
+    api = 'https://translation.googleapis.com/language/translate/v2'
+    params = {'q': q, 'target': target, 'source': source, 'key': key}
+    try:
+        r = requests.post(api, data=params)
+    except requests.RequestException:
+        return app_log.exception('Cannot connect to Google Translate')
+    response = r.json()
+    if 'error' in response:
+        return app_log.error('Google Translate API error: %s', response['error'])
+    return {
+        'q': q,
+        't': [t['translatedText'] for t in response['data']['translations']],
+        'source': [source] * len(q),
+        'target': [target] * len(q),
+    }
+
+
+translate_api = {
+    'google': _google_translate
+}
+
+
+def translate(*q, **kwargs):
+    '''
+    Translate strings using the Google Translate API. Example::
+
+        translate('Hello', 'World', source='en', target='de', key='...')
+
+    returns a DataFrame::
+
+        source  target  q       t
+        en      de      Hello   ...
+        en      de      World   ...
+
+    The results can be cached via a ``cache={...}`` that has parameters for
+    :py:func:`gramex.data.filter`. Example::
+
+        translate('Hello', key='...', cache={'url': 'translate.xlsx'})
+
+    :arg str q: one or more strings to translate
+    :arg str source: 2-letter source language (e.g. en, fr, es, hi, cn, etc). default: en
+    :arg str target: 2-letter target language (e.g. en, fr, es, hi, cn, etc). default: hi
+    :arg str key: Google Translate API key
+    :arg dict cache: kwargs for :py:func:`gramex.data.filter`. Has keys such as
+        url (required), table (for databases), sheet_name (for Excel), etc.
+
+    Reference: https://cloud.google.com/translate/docs/apis
+    '''
+    import gramex.data
+
+    source = kwargs.get('source', 'en')
+    target = kwargs.get('target', 'nl')
+    key = kwargs.get('key', None)
+    cache = kwargs.get('cache', None)
+    api = kwargs.get('api', 'google')
+
+    if cache is not None:
+        if not isinstance(cache, dict):
+            raise ValueError('cache= must be a FormHandler dict config, not %r' % cache)
+
+    # Store data in cache with fixed columns: source, target, q, t
+    result = pd.DataFrame(columns=['source', 'target', 'q', 't'])
+    if not q:
+        return result
+
+    # Fetch from cache, if any
+    if cache:
+        try:
+            result = gramex.data.filter(args={
+                'q': q,
+                'source': [source] * len(q),
+                'target': [target] * len(q),
+            }, **cache)
+        except Exception:
+            app_log.warning('Cannot fetch from translate cache: %r', dict(cache))
+        # Remove already cached  results from q
+        q = [v for v in q if v not in set(result.get('q', []))]
+
+    if len(q):
+        new_data = translate_api[api](q, source, target, key)
+        if new_data is not None:
+            result = result.append(pd.DataFrame(new_data), sort=False)
+            if cache:
+                gramex.data.insert(id=['source', 'target', 'q'], args=new_data, **cache)
+
+    return result
+
+
+@coroutine
+def translator(handler, source='en', target='nl', key=None, cache=None, api='google'):
+    args = handler.argparse(
+        q={'nargs': '*', 'default': []},
+        source={'default': source},
+        target={'default': target}
+    )
+    import gramex
+    result = yield gramex.service.threadpool.submit(
+        translate, *args.q, source=args.source, target=args.target, key=key, cache=cache, api=api)
+
+    # TODO: support gramex.data.download features
+    handler.set_header('Content-Type', 'application/json; encoding="UTF-8"')
+    raise Return(result.to_json(orient='records'))

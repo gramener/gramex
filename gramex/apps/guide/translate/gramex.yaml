@@ -1,0 +1,20 @@
+url:
+  translate/translate:
+    pattern: /$YAMLURL/translate
+    handler: FunctionHandler
+    kwargs:
+      function: gramex.ml.translator
+      kwargs:
+        key: $GOOGLE_API_KEY
+        source: en
+        target: nl
+        cache:
+          url: sqlite:///$GRAMEXDATA/apps/guide/translate.db
+          table: translate
+
+  translate/cache:
+    pattern: /$YAMLURL/cache
+    handler: FormHandler
+    kwargs:
+      url: sqlite:///$GRAMEXDATA/apps/guide/translate.db
+      table: translate

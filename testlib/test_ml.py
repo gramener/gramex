@@ -6,8 +6,8 @@ from sklearn.svm import SVC
 from sklearn.naive_bayes import BernoulliNB
 import gramex.ml
 import gramex.cache
-from gramex.ml import Classifier
 from nose.tools import eq_, ok_
+from pandas.util.testing import assert_frame_equal as afe
 from . import folder
 
 
@@ -19,7 +19,7 @@ class TestClassifier(unittest.TestCase):
         data = pd.read_csv(path, encoding='utf-8')
 
         # Model can be trained without specifying a model class, input or output
-        model1 = Classifier()
+        model1 = gramex.ml.Classifier()
         model1.train(data)
         ok_(isinstance(model1.model, BernoulliNB))
         eq_(model1.input, data.columns[:4].tolist())
@@ -27,12 +27,13 @@ class TestClassifier(unittest.TestCase):
 
         # Train accepts explicit model_class, model_kwargs, input and output
         inputs = ['petal_length', 'petal_width', 'sepal_length', 'sepal_width']
-        model2 = Classifier(model_class='sklearn.svm.SVC',        # Any sklearn model works
-                            # Optional model parameters
-                            model_kwargs={'kernel': 'sigmoid'},
-                            input=inputs,
-                            output='species')
-        model2.train(data)                                 # DataFrame with input & output columns
+        model2 = gramex.ml.Classifier(
+            model_class='sklearn.svm.SVC',    # Any sklearn model
+            # Optional model parameters
+            model_kwargs={'kernel': 'sigmoid'},
+            input=inputs,
+            output='species')
+        model2.train(data)                   # DataFrame with input & output columns
         eq_(model2.input, inputs)
         eq_(model2.output, model1.output)
         ok_(isinstance(model2.model, SVC))
@@ -171,3 +172,69 @@ class TestAutolyse(unittest.TestCase):
             '"Aquitaine":16,"Poitou-Charentes":8,"Alsace":4,"BO":4}}},"prob":{"0":0.0000015713}}'
         ])
         self.base([u'Régions'], ['FloatsWithZero'], autolysis_string)
+
+
+_translate = {
+    ('Apple', 'en', 'nl'): 'appel',
+    ('Orange', 'en', 'nl'): 'Oranje',
+    ('Apple', 'en', 'de'): 'Apfel',
+    ('Orange', 'en', 'de'): 'Orange',
+}
+_translate_count = []
+
+
+def translate_mock(q, source, target, key='...'):
+    '''Mock the Google Translate API results'''
+    _translate_count.append(1)
+    t = [_translate[item, source, target] for item in q]
+    n = len(q)
+    return {'q': q, 't': t, 'source': [source] * n, 'target': [target] * n}
+
+
+class TestTranslate(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.cache = os.path.join(folder, 'translate.xlsx')
+        gramex.ml.translate_api['mock'] = translate_mock
+
+    def test_translate(self):
+        def check(q, result, **kwargs):
+            kwargs['api'] = 'mock'
+            actual = gramex.ml.translate(*q, **kwargs)
+            expected = pd.DataFrame([
+                {'source': item[0], 'target': item[1], 'q': item[2], 't': item[3]}
+                for item in result
+            ])
+            actual.index = expected.index
+            afe(actual, expected, check_like=True)
+
+        check(['Apple'], [
+            ['en', 'nl', 'Apple', 'appel']
+        ])
+        check(['Apple', 'Orange'], [
+            ['en', 'nl', 'Apple', 'appel'],
+            ['en', 'nl', 'Orange', 'Oranje']
+        ])
+        check(['Apple', 'Orange'], [
+            ['en', 'de', 'Apple', 'Apfel'],
+            ['en', 'de', 'Orange', 'Orange']
+        ], source='en', target='de')
+
+        if os.path.exists(self.cache):
+            os.remove(self.cache)
+
+        cache = {'url': self.cache}
+        count = len(_translate_count)
+        check(['Apple'], [['en', 'nl', 'Apple', 'appel']], cache=cache)
+        eq_(len(_translate_count), count + 1)
+        check(['Apple'], [['en', 'nl', 'Apple', 'appel']], cache=cache)
+        eq_(len(_translate_count), count + 1)
+        check(['Apple'], [['en', 'de', 'Apple', 'Apfel']], target='de', cache=cache)
+        eq_(len(_translate_count), count + 2)
+        check(['Apple'], [['en', 'de', 'Apple', 'Apfel']], target='de', cache=cache)
+        eq_(len(_translate_count), count + 2)
+
+    @classmethod
+    def tearDownClass(cls):
+        if os.path.exists(cls.cache):
+            os.remove(cls.cache)

@@ -1,9 +1,3 @@
-variables:
-  # Created by root.node@gmail.com
-  # https://console.developers.google.com/apis/api/customsearch.googleapis.com/overview?project=big-query-1009
-  # This key is also used by https://code.gramener.com/s.anand/exceltranslate
-  GOOGLE_API_KEY: AIzaSyBsSkZb3hxciFp0ZB3KLqO1-aQW-K-hqSw
-
 url:
     proxyhandler/github/search/users:
         pattern: /$YAMLURL/github/(.*)

@@ -6,6 +6,8 @@ variables:
   NUMBER: 1
   LIST: [1, 2, 3]
   DICT: {b: 1}
+  TRANSLATE_DB: $YAMLPATH/translate.db
+  TRANSLATE_XLSX: $YAMLPATH/translate.xlsx
 
 handlers:
   BaseHandler:
@@ -2476,6 +2478,33 @@ url:
     handler: FunctionHandler
     kwargs:
       function: gramex.apps.ui.sass(handler, r"$YAMLPATH/vars.scss")
+
+  translate/db:
+    pattern: /translate/db
+    handler: FunctionHandler
+    kwargs:
+      function: gramex.ml.translator
+      kwargs:
+        key: ...
+        source: en
+        target: nl
+        api: mock
+        cache:
+          url: sqlite:///$TRANSLATE_DB
+          table: translate
+  translate/xlsx:
+    pattern: /translate/xlsx
+    handler: FunctionHandler
+    kwargs:
+      function: gramex.ml.translator
+      kwargs:
+        key: ...
+        source: en
+        target: nl
+        api: mock
+        cache:
+          url: $TRANSLATE_XLSX
+          sheet_name: translate
 
 sms:
   amazonsns:

@@ -131,6 +131,8 @@ Once logged in, you can:
 
 ### Google Translate
 
+**Note**: Use the [Gramex translate](../translate/) functionality to cache & edit translations.
+
 You can set up a secret key to access the
 [Google Translate API](https://cloud.google.com/translate/docs/quickstart):
 

@@ -1,6 +1,12 @@
 variables:
     GUIDE_ROOT: $YAMLURL                # Used by guide.py to pass to markdown.template
 
+    # Created by root.node@gmail.com
+    # https://console.developers.google.com/apis/api/customsearch.googleapis.com/overview?project=big-query-1009
+    # This key is also used by https://code.gramener.com/s.anand/exceltranslate
+    # Used by proxyhandler/ and translate/
+    GOOGLE_API_KEY: AIzaSyBsSkZb3hxciFp0ZB3KLqO1-aQW-K-hqSw
+
 log:
     root:
         level: INFO                     # Just log info, not debug
