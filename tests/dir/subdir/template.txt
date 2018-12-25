@@ -1,0 +1,22 @@
+{% whitespace oneline %}
+--
+
+{# Print all one-letter parameters from a to h #}
+{% set g = globals() %}
+{% for key in 'abcdefgh' %}
+  {% if key in g %}
+    {{ key }}={{ g[key]}}
+  {% end %}
+{% end %}
+
+{# Sub-templates inherit template kwargs. And use path relative to current template #}
+{% if 'h' not in globals() %}
+  {{ T('template.txt', h='sub') }}
+{% end %}
+
+{# path is available as a variable in sub-template #}
+{% import os %}
+{% set assert(os.path.basename(path) == 'template.txt') %}
+
+{# handler is available in sub-template #}
+{% set assert handler %}

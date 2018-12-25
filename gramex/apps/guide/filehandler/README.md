@@ -231,7 +231,7 @@ url:
     handler: FileHandler            # displays a file
     kwargs:
       path: page.html               # named page.html
-      template: "*.html"            # Apply the transform to all HTML files
+      template: true                # rendered as a Tornado template
 ```
 
 The file can contain any template feature. Here's a sample `page.html`.
@@ -243,8 +243,41 @@ The file can contain any template feature. Here's a sample `page.html`.
 </ul>
 ```
 
-You can use `template: true` as an alternative to `template: '*'`, where all
-files are treated as templates.
+Templates can import sub-templates using the `T()` function. For example:
+
+```html
+This imports components/navbar.html in-place as a template.
+{% raw T('components/navbar.html', title="App name", menu=["Home", "Dashboard"]) %}
+
+Use {% raw ... %} instead of {{ ... }} to avoid auto-escaping the HTML.
+```
+
+Templates have access to these variables:
+
+- `handler`: the FileHandler object. You can access:
+  - `handler.kwargs` for the FileHandler configuration
+  - `handler.get_argument()` to fetch URL query parameters
+  - [see more attributes](../handlers/#basehandler-attributes)
+- `path`: the absolute path of the current template
+- If it's a sub-template, all other variables passed when calling `T()` are also
+  passed. If a sub-template calls a sub-sub-template, the sub-template variables
+  are cascaded to the sub-sub-template.
+
+You can apply templates to specific file patterns. For example:
+
+```yaml
+url:
+  template:
+    pattern: /templates/(.*)
+    handler: FileHandler
+    kwargs:
+      path: templates/          # Render files from this path
+      # Specify ONE of the following
+      template: '*.html'        # Only HTML files are rendered as templates
+      template: 'template.*'    # Only template.* files are rendered as templates
+      template: '*'             # Same as template: true
+```
+
 
 ## XSRF
 

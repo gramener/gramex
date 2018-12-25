@@ -170,7 +170,6 @@ class TestFileHandler(TestGramex):
         # gramex.yaml has configured template.* to take handler and x as params
         self.check('/dir/transform/template.txt?x=►', text='x – ►')
         self.check('/dir/transform/template.txt?x=λ', text='x – λ')
-        self.check('/dir/transform/template-handler.txt')
 
     def test_template(self):
         self.check('/dir/template/index-template.txt?arg=►', text='– ►')
@@ -179,6 +178,11 @@ class TestFileHandler(TestGramex):
         self.check('/dir/template-true/non-index-template.txt?arg=►', text='– ►')
         self.check('/dir/template-index/index-template.txt?arg=►', text='– ►')
         self.check('/dir/template-index/non-index-template.txt', path='dir/non-index-template.txt')
+
+    def test_subtemplate(self):
+        self.check('/dir/transform/template.sub.txt', text='OK')
+        self.check('/dir/template/template.sub.txt', text='OK')
+        self.check('/dir/template-true/template.sub.txt', text='OK')
 
     def test_merge(self):
         self.check('/dir/merge.txt', text='Α.TXT\nΒ.Html\n', headers={
