@@ -33,6 +33,27 @@ git checkout dev
 pip install -e .
 ```
 
+## Test Gramex
+
+Gramex uses [nosetests](https://nose.readthedocs.io/en/latest/) for unit tests.
+The tests are in 2 folders:
+
+- [testlib/](https://code.gramener.com/cto/gramex/tree/master/testlib/)
+  has library tests that can run without starting Gramex.
+- [tests/](https://code.gramener.com/cto/gramex/tree/master/tests/)
+  has URL-based tests that run after starting the Gramex server.
+
+To run the tests, just run `python setup.py nosetests` for the first time.
+Thereafter, you can run `nosetests`.
+
+The tests take a long time. To test a subset, use `nosetests tests.<module>:<ClassName>.<method>`. For example:
+
+```bash
+nosetests testlib                           # Only test the libraries
+nosetests testlib.test_data                 # Only run testlib/test_data.py
+nosetests testlib.test_data:TestFilter      # Only run the TestFilter class
+nosetests testlib.test_data:TestFilter.test_get_engine      # Run a single method
+```
 
 ## Update Gramex
 
@@ -52,11 +73,7 @@ python setup.py nosetests   # if you changed any functionality
 
 On Windows, you may need to [enable Powershell scripts](http://stackoverflow.com/a/18533754/100904).
 
-The tests take a long time. To test a subset, use `nosetests tests.<module>:<ClassName>.<method>`. For example:
-
-```bash
-nosetests testlib.test_data:TestFilter.test_get_engine
-```
+The tests take a long time. To test a subset, use `nosetests tests.<module>:<ClassName>.<method>`.
 
 Commit your changes and push your branch:
 
