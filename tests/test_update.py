@@ -36,20 +36,19 @@ class TestUpdate(TestGramex):
         eq_(r.json(), {'version': gramex.__version__})
 
     def test_update_method(self):
-        conn = gramex.services.info.eventlog.conn
+        query = gramex.services.info.eventlog.query
         # Truncate the events database to ensure that the update check is ALWAYS performed
-        conn.execute('DELETE FROM events')
+        query('DELETE FROM events')
         with assert_raises(requests.HTTPError):
             gramex.gramex_update(server.base_url + '/nonexistent/')
 
         # Only push latest events since last update
-        conn.execute('DELETE FROM events')
-        conn.execute('INSERT INTO events VALUES (?, ?, ?)', [0, 'startup', ''])
-        conn.execute('INSERT INTO events VALUES (?, ?, ?)', [1, 'shutdown', ''])
-        conn.execute('INSERT INTO events VALUES (?, ?, ?)', [2, 'update', ''])
-        conn.execute('INSERT INTO events VALUES (?, ?, ?)', [3, 'startup', ''])
-        conn.execute('INSERT INTO events VALUES (?, ?, ?)', [4, 'shutdown', ''])
-        conn.commit()
+        query('DELETE FROM events')
+        query('INSERT INTO events VALUES (?, ?, ?)', [0, 'startup', ''])
+        query('INSERT INTO events VALUES (?, ?, ?)', [1, 'shutdown', ''])
+        query('INSERT INTO events VALUES (?, ?, ?)', [2, 'update', ''])
+        query('INSERT INTO events VALUES (?, ?, ?)', [3, 'startup', ''])
+        query('INSERT INTO events VALUES (?, ?, ?)', [4, 'shutdown', ''])
         result = gramex.gramex_update(server.base_url + '/update/')
         # Only the last 2 events are sent
         eq_(len(result['logs']), 2)

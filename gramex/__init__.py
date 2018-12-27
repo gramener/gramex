@@ -186,22 +186,22 @@ def gramex_update(url):
 
     if not services.info.eventlog:
         return app_log.error('eventlog: service is not running. So Gramex update is disabled')
-    conn = services.info.eventlog.conn
-    query = 'SELECT * FROM events WHERE event="update" ORDER BY time DESC LIMIT 1'
-    update = conn.execute(query).fetchone()
+
+    query = services.info.eventlog.query
+    update = query('SELECT * FROM events WHERE event="update" ORDER BY time DESC LIMIT 1')
     delay = 24 * 60 * 60            # Wait for one day before updates
-    if update is not None and time.time() < update['time'] + delay:
+    if update and time.time() < update[0]['time'] + delay:
         return app_log.debug('Gramex update ran recently. Deferring check.')
 
     meta = {
         'dir': variables.get('GRAMEXDATA'),
         'uname': platform.uname(),
     }
-    if update is None:
-        events = conn.execute('SELECT * FROM events')
+    if update:
+        events = query('SELECT * FROM events WHERE time > ? ORDER BY time',
+                       (update[0]['time'], ))
     else:
-        events = conn.execute('SELECT * FROM events WHERE time > ? ORDER BY time',
-                              (update['time'], ))
+        events = query('SELECT * FROM events')
     logs = [dict(log, **meta) for log in events]
 
     r = requests.post(url, data=json.dumps(logs))
