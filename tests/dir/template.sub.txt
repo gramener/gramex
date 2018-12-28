@@ -1,24 +1,6 @@
-{% import re %}
-{% set check = lambda r, *p: re.search(
-      r'^\s*' + r'\s*'.join(p) + r'\s*$',
-      result,
-      re.MULTILINE
-) %}
+{% set x = 'Hello' %}
+{% set y = 'world' %}
+{% include 'subdir/template.txt' %}
 
-{% set result = T('subdir/template.txt', a=1, b=2) %}
-{% set result = '\n'.join(result.split('--')) %}
-{{ result }}
-
-{# parameters are passed to sub-template #}
-{% set assert(check(result, 'a=1', 'b=2')) %}
-{% set assert(check(result, 'a=1', 'b=2', 'h=sub')) %}
-
-{# path is available in as a variable in template #}
-{% import os %}
-{% set assert(os.path.basename(path) == 'template.sub.txt') %}
-
-{# handler is available in template #}
-{% set assert handler %}
-
-{# If all the above checks are fine, then print this string but split it to avoid string match if template is not rendered  #}
-{{ 'O' + 'K' }}
+{# handler is available in template, with a .path attribute #}
+{% set assert(handler.path) %}

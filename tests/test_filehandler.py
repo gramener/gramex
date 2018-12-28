@@ -180,9 +180,9 @@ class TestFileHandler(TestGramex):
         self.check('/dir/template-index/non-index-template.txt', path='dir/non-index-template.txt')
 
     def test_subtemplate(self):
-        self.check('/dir/transform/template.sub.txt', text='OK')
-        self.check('/dir/template/template.sub.txt', text='OK')
-        self.check('/dir/template-true/template.sub.txt', text='OK')
+        self.check('/dir/transform/template.sub.txt', text='Hello world')
+        self.check('/dir/template/template.sub.txt', text='Hello world')
+        self.check('/dir/template-true/template.sub.txt', text='Hello world')
 
     def test_merge(self):
         self.check('/dir/merge.txt', text='Α.TXT\nΒ.Html\n', headers={

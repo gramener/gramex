@@ -216,17 +216,14 @@ class TestOpen(unittest.TestCase):
 
     def test_open_template(self):
         path = os.path.join(cache_folder, 'template.txt')
-        with io.open(path, encoding='utf-8') as handle:
-            expected = Template(handle.read(), autoescape=None)
 
         def check(reload):
             result, reloaded = gramex.cache.open(
-                path, 'template', _reload_status=True, encoding='utf-8', autoescape=None)
+                path, 'template', _reload_status=True, autoescape=None)
             eq_(reloaded, reload)
             ok_(isinstance(result, Template))
-            val = result.generate(name='x')
-            eq_(val, expected.generate(name='x'))
-            eq_(val.split(b'\n')[0], b'<b>x</b>')
+            first_line = result.generate(name='高').decode('utf-8').split('\n')[0]
+            eq_(first_line, '1: name=高')
 
         self.check_file_cache(path, check)
 

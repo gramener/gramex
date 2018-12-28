@@ -1,0 +1,9 @@
+{{ 'name=' + name }}
+
+{#
+
+Do not add any lines here, except as comments.
+Imported via template.txt.
+Used in testlib.test_cache_module:TestOpen.test_open_template().
+
+#}

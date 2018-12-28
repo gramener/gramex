@@ -243,25 +243,15 @@ The file can contain any template feature. Here's a sample `page.html`.
 </ul>
 ```
 
-Templates can import sub-templates using the `T()` function. For example:
+Templates can import sub-templates using `{% include %}`. For example:
 
 ```html
 This imports components/navbar.html in-place as a template.
-{% raw T('components/navbar.html', title="App name", menu=["Home", "Dashboard"]) %}
+{% set title, menu = "App name", ["Home", "Dashboard"] %}
+{% include 'components/navbar.html' %}
 
-Use {% raw ... %} instead of {{ ... }} to avoid auto-escaping the HTML.
+All parent template variables are available in the sub-template.
 ```
-
-Templates have access to these variables:
-
-- `handler`: the FileHandler object. You can access:
-  - `handler.kwargs` for the FileHandler configuration
-  - `handler.get_argument()` to fetch URL query parameters
-  - [see more attributes](../handlers/#basehandler-attributes)
-- `path`: the absolute path of the current template
-- If it's a sub-template, all other variables passed when calling `T()` are also
-  passed. If a sub-template calls a sub-sub-template, the sub-template variables
-  are cascaded to the sub-sub-template.
 
 You can apply templates to specific file patterns. For example:
 

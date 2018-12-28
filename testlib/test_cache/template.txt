@@ -1,7 +1,9 @@
-{{ '<b>' + name + '</b>' }}
+{{ len(name) }}: {% include 'template.sub.txt' %}
 
 Do not change the first line above. That is used in the code.
 The rest of this file can be changed.
+
+Used in testlib.test_cache_module:TestOpen.test_open_template().
 
 Unicode: ±©®
 

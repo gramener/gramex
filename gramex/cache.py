@@ -15,6 +15,7 @@ import tempfile
 import mimetypes
 import subprocess       # nosec
 import pandas as pd
+import tornado.template
 from threading import Thread
 from six.moves.queue import Queue
 from orderedattrdict import AttrDict
@@ -106,6 +107,11 @@ def _markdown(handle, **kwargs):
     return markdown(handle.read(), **{k: kwargs.pop(k, v) for k, v in _markdown_defaults.items()})
 
 
+def _template(path, **kwargs):
+    root, name = os.path.split(path)
+    return tornado.template.Loader(root, **kwargs).load(name)
+
+
 def stat(path):
     '''
     Returns a file status tuple - based on file last modified time and file size
@@ -146,6 +152,8 @@ _OPEN_CALLBACKS = dict(
     table=pd.read_table,
     md=_markdown,
     markdown=_markdown,
+    tmpl=_template,
+    template=_template,
 )
 
 
@@ -249,9 +257,6 @@ def open(path, callback=None, transform=None, rel=False, **kwargs):
             elif callback in {'json'}:
                 import json
                 method = opener(json.load)
-            elif callback in {'template', 'tmpl'}:
-                from tornado.template import Template
-                method = opener(Template, read=True)
             elif callback in {'config'}:
                 from gramex.config import PathConfig
                 method = PathConfig
