@@ -81,7 +81,9 @@ def sqlite_create_db(db, **tables):
     url = 'sqlite:///' + path
     engine = sa.create_engine(url, encoding=str_utf8)
     for table_name, data in tables.items():
-        data.to_sql(table_name, con=engine, index=False)
+        # sqlite limits SQLITE_MAX_VARIABLE_NUMBER to 999
+        # Ensure # columns * chunksize < 999
+        data.to_sql(table_name, con=engine, index=False, chunksize=100)
     return url
 
 
