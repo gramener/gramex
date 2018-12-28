@@ -1,7 +1,4 @@
 import tornado.gen
-import gramex.ml
-import gramex.cache
-import gramex.services
 
 
 @tornado.gen.coroutine
@@ -11,6 +8,10 @@ def rmarkdown(content, handler=None, **kwargs):
 
     HTML file is placed at path: $YAMLPATH location.
     '''
+    import gramex.ml
+    import gramex.cache
+    import gramex.services
+
     rmdfilepath = str(handler.file)
     htmlpath = yield gramex.services.info.threadpool.submit(
         gramex.ml.r,

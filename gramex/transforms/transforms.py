@@ -3,10 +3,8 @@ import six
 import json
 import importlib
 import tornado.gen
-import gramex.transforms
 from types import GeneratorType
 from orderedattrdict import AttrDict
-from gramex.cache import reload_module
 from gramex.config import app_log, locate, variables, CustomJSONEncoder
 
 
@@ -220,6 +218,8 @@ def build_transform(conf, vars=None, filename='transform', cache=False, iter=Tru
     ]
 
     # Compile the function with context variables
+    import gramex.transforms
+    from gramex.cache import reload_module
     context = dict(
         reload_module=reload_module,
         GeneratorType=GeneratorType,
