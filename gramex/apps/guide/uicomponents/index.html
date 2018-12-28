@@ -212,6 +212,12 @@
     var toc = new Vue({el: '#toc-nav', data: {toc: toctree}, delimiters: ['${', '}']})
   </script>
   <script>
+    // Click on top nav to scroll to the top
+    $('.top-nav').on('click', function(e) {
+      if ($(e.target).is('.top-nav'))
+        $(window).scrollTop(0)
+    })
+
     /* Prism copy to clipboard for all pre with viewsource class */
     // ref: https://stackoverflow.com/a/34198183
     $('pre.viewsource').each(function () {

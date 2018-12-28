@@ -32,7 +32,7 @@ def only_source(html):
 
 
 def load_page(page):
-    return gramex.cache.open(page, 'template', rel=True).generate(
+    return gramex.cache.open(page, 'template', rel=True, whitespace='all').generate(
         view_source=view_source,
         only_source=only_source
     )
