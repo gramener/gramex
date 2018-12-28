@@ -52,5 +52,5 @@ class TestTwitterRESTHandler(TestGramex):
                 self.assertEqual(len(result), 2)
                 self.assertEqual(result[0]['user']['screen_name'].lower(), 'gramener')
 
-        self.assertEqual(response['get-redirect'].status_code, OK)
-        self.assertEqual(response['post-fail'].status_code, METHOD_NOT_ALLOWED)
+        self.assertIn(response['get-redirect'].status_code, {OK, CLIENT_TIMEOUT})
+        self.assertIn(response['post-fail'].status_code, {METHOD_NOT_ALLOWED, CLIENT_TIMEOUT})

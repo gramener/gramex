@@ -18,6 +18,7 @@ from pptx.shapes.shapetree import SlideShapes
 from pptx.enum.shapes import MSO_SHAPE, MSO_SHAPE_TYPE
 from unittest import TestCase
 from nose.tools import eq_, ok_, assert_raises
+from nose.plugins.skip import SkipTest
 from pandas.util.testing import assert_frame_equal
 from gramex import pptgen
 from . import folder, sales_file
@@ -246,20 +247,23 @@ class TestPPTGen(TestCase):
     def test_group_and_image(self):
         # Test case for group objects.
         for img in [self.image, 'https://gramener.com/uistatic/img/store-supply-chain.png']:
-            target = pptgen.pptgen(
-                source=self.input,
-                only=5,
-                group_test={
-                    'slide-title': 'Group Test',
-                    'Group 1': {
-                        'Caption': {
-                            'text': 'New caption'
-                        },
-                        'Picture': {
-                            'image': img
+            try:
+                target = pptgen.pptgen(
+                    source=self.input,
+                    only=5,
+                    group_test={
+                        'slide-title': 'Group Test',
+                        'Group 1': {
+                            'Caption': {
+                                'text': 'New caption'
+                            },
+                            'Picture': {
+                                'image': img
+                            }
                         }
-                    }
-                })
+                    })
+            except requests.ConnectionError:
+                raise SkipTest('No internet connection. Skipping HTTPS image test')
             eq_(len(target.slides), 1)
             grp_shape = self.get_shape(target, 'Group 1')[0]
             for shape in SlideShapes(grp_shape.element, grp_shape):
