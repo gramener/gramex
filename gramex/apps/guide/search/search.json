@@ -635,6 +635,41 @@
       "$.urlchange": -1
     }
   },
+  "1.48": {
+    "": {
+      "Gramex 1.48 Release Notes": -1
+    },
+    "admin-page-enhancements": {
+      "Admin page enhancements": -1
+    },
+    "auto-create-tables": {
+      "Auto-create tables": -1
+    },
+    "automated-translations": {
+      "Automated translations": -1
+    },
+    "better-gramex-init": {
+      "Better gramex init": -1
+    },
+    "bugfixes": {
+      "Bugfixes": -1
+    },
+    "documentation": {
+      "Documentation": -1
+    },
+    "sass-support": {
+      "SASS support": -1
+    },
+    "stats": {
+      "Stats": -1
+    },
+    "template-components": {
+      "Template components": -1
+    },
+    "upgrade": {
+      "Upgrade": -1
+    }
+  },
   "about": {
     "": {}
   },
@@ -1104,6 +1139,9 @@
     },
     "set-up-gramex": {
       "Set up Gramex": -1
+    },
+    "test-gramex": {
+      "Test Gramex": -1
     },
     "update-gramex": {
       "Update Gramex": -1
@@ -2140,6 +2178,20 @@
     },
     "reuse-code": {
       "Reuse code": -1
+    }
+  },
+  "translate": {
+    "": {
+      "Translate": -1
+    },
+    "translate-api": {
+      "Translate API": -1
+    },
+    "translate-cache": {
+      "Translate cache": -1
+    },
+    "translate-function": {
+      "Translate function": -1
     }
   },
   "tutorials": {

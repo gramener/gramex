@@ -14,7 +14,7 @@ In this version, two new interaction components are released.
 ### $.urlchange
 
 [$.urlchange](https://code.gramener.com/cto/g1#urlchange) acts as an event listener for URL hash changes.
-triggered by [$.urlfilter](https://code.gramener.com/cto/g1#urlfilter) -- 
+triggered by [$.urlfilter](https://code.gramener.com/cto/g1#urlfilter) --
 This makes it easy to build URL-driven applications.
 
 Suppose we have buttons that sort based on "City" or "Sales".
@@ -55,7 +55,7 @@ New UI classes are added
 - [border](../../uicomponents/#border) - `.border-2` for a border twice as thick.
     - Similarly, `border-top-1`, `border-right-1`, `border-bottom-1`, `border-left-1` add a `1px` border on each side.
 - [overflow](../../uicomponents/#overflow) - `.overflow-hidden`, `.overflow-auto` and `.overflow-scroll` set the overflow styles.
-- [text-decoration](../../uicomponents/#text-decoration) - `.text-decoration-none` removes the text-decoration. 
+- [text-decoration](../../uicomponents/#text-decoration) - `.text-decoration-none` removes the text-decoration.
 - [cursor](../../uicomponents/#cursor) - `.cursor-default` helps when you make clickable elements non-clickable.
     - `.pointer-events-none` sets the pointer-events to none
 
@@ -79,7 +79,7 @@ This is the same as adding the `auth: ...` to every handler in the application.
 
 ## Guide
 
-We've re-ordered and grouped [gramex guide's](../../) index sidebar into logical heading.
+We've re-ordered and grouped [Gramex Guide](../../) index sidebar into logical heading.
 
 ## Stats
 
