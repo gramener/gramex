@@ -21,7 +21,7 @@ from six.moves.queue import Queue
 from orderedattrdict import AttrDict
 from tornado.concurrent import Future
 from tornado.ioloop import IOLoop, PeriodicCallback
-from gramex.config import app_log, merge, CustomJSONDecoder, CustomJSONEncoder
+from gramex.config import app_log, merge, used_kwargs, CustomJSONDecoder, CustomJSONEncoder
 from six.moves.urllib_parse import urlparse
 
 
@@ -321,11 +321,7 @@ def save(data, url, callback=None, **kwargs):
         return callback(data, url, **kwargs)
     elif callback in _SAVE_CALLBACKS:
         method = getattr(data, _SAVE_CALLBACKS[callback])
-        argspec = inspect.getargspec(method)
-        # Remove arguments
-        if argspec.keywords is None:
-            kwargs = {key: val for key, val in kwargs.items() if key in argspec.args}
-        return method(url, **kwargs)
+        return method(url, **(used_kwargs(method, kwargs)[0]))
     else:
         raise TypeError('gramex.cache.save(callback="%s") is unknown' % callback)
 

@@ -27,6 +27,7 @@ import sys
 import yaml
 import string
 import socket
+import inspect
 import logging
 import datetime
 import dateutil.tz
@@ -811,3 +812,26 @@ def ioloop_running(loop):
     if hasattr(loop, 'asyncio_loop'):
         return loop.asyncio_loop.is_running()
     raise NotImplementedError('Cannot determine tornado.ioloop is running')
+
+
+def used_kwargs(method, kwargs, ignore_keywords=False):
+    '''
+    Splits kwargs into those used by method, and those that are not.
+
+    Returns a tuple of (used, rest). *used* is a dict subset of kwargs
+    with only keys used by method. *rest* has the remaining kwargs keys.
+
+    If the method uses **kwargs (keywords), it uses all keys. To ignore this
+    and return only named arguments, use ``ignore_keywords=True``.
+    '''
+    argspec = inspect.getargspec(method)
+    # If method uses **kwargs, return all kwargs (unless you ignore **kwargs)
+    if argspec.keywords and not ignore_keywords:
+        used, rest = kwargs, {}
+    else:
+        # Split kwargs into 2 dicts -- used and rest
+        used, rest = {}, {}
+        for key, val in kwargs.items():
+            target = used if key in set(argspec.args) else rest
+            target[key] = val
+    return used, rest
