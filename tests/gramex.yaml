@@ -2483,7 +2483,7 @@ url:
     pattern: /translate/db
     handler: FunctionHandler
     kwargs:
-      function: gramex.ml.translator
+      function: gramex.ml.translater
       kwargs:
         key: ...
         source: en
@@ -2496,6 +2496,7 @@ url:
     pattern: /translate/xlsx
     handler: FunctionHandler
     kwargs:
+      # Spell translater as translator. The latter must also work
       function: gramex.ml.translator
       kwargs:
         key: ...

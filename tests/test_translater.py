@@ -6,7 +6,7 @@ from testlib.test_ml import translate_mock, _translate_count
 from . import TestGramex
 
 
-class TestTranslator(TestGramex):
+class TestTranslater(TestGramex):
     @classmethod
     def setUpClass(cls):
         cls.stores = ['db', 'xlsx']

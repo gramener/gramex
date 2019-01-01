@@ -352,7 +352,7 @@ def translate(*q, **kwargs):
 
 
 @coroutine
-def translator(handler, source='en', target='nl', key=None, cache=None, api='google'):
+def translater(handler, source='en', target='nl', key=None, cache=None, api='google'):
     args = handler.argparse(
         q={'nargs': '*', 'default': []},
         source={'default': source},
@@ -365,3 +365,7 @@ def translator(handler, source='en', target='nl', key=None, cache=None, api='goo
     # TODO: support gramex.data.download features
     handler.set_header('Content-Type', 'application/json; encoding="UTF-8"')
     raise Return(result.to_json(orient='records'))
+
+
+# Gramex 1.48 spelt translater as translator. Accept both spellings.
+translator = translater

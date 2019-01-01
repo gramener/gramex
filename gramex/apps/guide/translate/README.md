@@ -5,7 +5,7 @@ prefix: Translate
 
 [TOC]
 
-**v1.48**. Gramex supports translation on the fly. To set up a translator, use:
+**v1.48**. Gramex supports translation on the fly. To set up a translater, use:
 
 ```yaml
 url:
@@ -13,7 +13,7 @@ url:
     pattern: /$YAMLURL/translate
     handler: FunctionHandler
     kwargs:
-      function: gramex.ml.translator
+      function: gramex.ml.translater
       kwargs:
         # Get key from https://cloud.google.com/translate/docs/quickstart
         key: ...
