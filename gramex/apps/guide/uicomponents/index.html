@@ -94,7 +94,6 @@
       {% raw load_page('ui-border.html') %}
       {% raw load_page('ui-shadow.html') %}
       {% raw load_page('ui-text.html') %}
-      {% raw load_page('ui-overflow.html') %}
       {% raw load_page('ui-tours.html') %}
       {% raw load_page('ui-underline.html') %}
 
@@ -226,7 +225,7 @@
       $this.wrap('<div/>').removeClass('viewsource');
       $wrapper = $this.parent();
       $wrapper.addClass('viewsource-wrapper').css({position: 'relative'})
-      $button.css({position: 'absolute', top: 10, right: 10}).appendTo($wrapper).addClass('viewsource btn btn-default');
+      $button.css({position: 'absolute', top: 10, right: 10}).appendTo($wrapper).addClass('viewsource btn btn-light');
       var copyCode = new Clipboard('button.viewsource', {
         target: function (trigger) {
           return trigger.previousElementSibling;

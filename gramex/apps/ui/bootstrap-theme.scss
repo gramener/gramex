@@ -1,4 +1,4 @@
-// Uses: Bootstrap 4.1.3
+// Uses: Bootstrap 4.2.1
 // Change above line when changing Bootstrap version (to bust gramex.cache)
 
 // Import Google fonts
@@ -49,14 +49,6 @@ $opacity-values: (
   height: 100%;
   overflow-y: auto;
   border: none;
-}
-
-// .overflow-* exists in Bootstrap 4.2. Remove when we migrate.
-// https://github.com/twbs/bootstrap/pull/27268
-// --------------------------------------------------------------------------
-$overflows: auto, scroll, hidden !default;
-@each $value in $overflows {
-  .overflow-#{$value} { overflow: $value !important; }
 }
 
 // .cursor-* and .pointer-*
@@ -214,13 +206,6 @@ $shadow: 0 $shadow-y $shadow-blur rgba($black, .2) !default;
 .text-shadow-none {
   text-shadow: none;
 }
-
-// .text-decoration-none exists in Bootstrap 4.2. Remove when we migrate.
-// https://github.com/twbs/bootstrap/issues/26952
-.text-decoration-none {
-  text-decoration: none !important;
-}
-
 
 // .underline: underlined inputs
 // --------------------------------------------------------------------------
@@ -500,8 +485,7 @@ $arrow-height: $font-size-base + $arrow-padding-y;
 
 // .slider: input slider
 // --------------------------------------------------------------------------
-// Note: Bootstrap 4.1 will have custom-range:
-// https://github.com/twbs/bootstrap/issues/17916
+// Note: Bootstrap 4.2 has custom-range. .slider is deprecated.
 $track-height: 0.4rem;
 .slider {
   -webkit-appearance: none;     // Required for any custom styling
