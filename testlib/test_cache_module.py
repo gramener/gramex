@@ -232,7 +232,7 @@ class TestOpen(unittest.TestCase):
         extensions = [
             'markdown.extensions.codehilite',
             'markdown.extensions.extra',
-            'markdown.extensions.headerid',
+            'markdown.extensions.toc',
             'markdown.extensions.meta',
             'markdown.extensions.sane_lists',
             'markdown.extensions.smarty',

@@ -31,7 +31,7 @@ _opener_defaults = dict(mode='r', buffering=-1, encoding='utf-8', errors='strict
 _markdown_defaults = dict(output_format='html5', extensions=[
     'markdown.extensions.codehilite',
     'markdown.extensions.extra',
-    'markdown.extensions.headerid',
+    'markdown.extensions.toc',
     'markdown.extensions.meta',
     'markdown.extensions.sane_lists',
     'markdown.extensions.smarty',
