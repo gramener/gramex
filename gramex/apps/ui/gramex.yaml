@@ -9,9 +9,11 @@ url:
       index: true
       headers:
         Cache-Control: public, max-age=86400
+      auth: false
 
   apps/ui/bootstrap4-$*:
     pattern: /$YAMLURL/bootstraptheme.css
     handler: FunctionHandler
     kwargs:
       function: gramex.apps.ui.sass
+      auth: false
