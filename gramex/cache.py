@@ -903,9 +903,16 @@ class RedisStore(KeyStore):
     '''
     A KeyStore that stores data in a Redis database. Typical usage::
 
-        >>> store = RedisStore('localhost:6379:1')      # host:port:db
+        >>> store = RedisStore('localhost:6379:1:password=x:...')     # host:port:db:params
         >>> value = store.load(key)
         >>> store.dump(key, value)
+
+    The path in the constructor contains parameters separated by colon (:):
+
+    - `host`: the Redis server location (default: localhost)
+    - `port`: the Redis server port (default: 6379)
+    - `db`: the Redis server DB number (default: 0)
+    - zero or more parameters passed to StrictRedis (e.g. password=abc)
 
     Values are encoded as JSON using gramex.config.CustomJSONEncoder (thus
     handling datetime.) Keys are JSON encoded.
@@ -914,7 +921,7 @@ class RedisStore(KeyStore):
     def __init__(self, path=None, *args, **kwargs):
         super(RedisStore, self).__init__(*args, **kwargs)
         from redis import StrictRedis
-        host, port, db = 'localhost', 6379, 0
+        host, port, db, redis_kwargs = 'localhost', 6379, 0, {}
         if isinstance(path, six.string_types):
             parts = path.split(':')
             if len(parts):
@@ -923,12 +930,10 @@ class RedisStore(KeyStore):
                 port = int(parts.pop(0))
             if len(parts):
                 db = int(parts.pop(0))
-        self.store = StrictRedis(
-            host=host,
-            port=port,
-            db=db,
-            decode_responses=True,
-            encoding='utf-8')
+            redis_kwargs = dict(part.split('=', 2) for part in parts)
+        redis_kwargs['decode_responses'] = True
+        redis_kwargs.setdefault('encoding', 'utf-8')
+        self.store = StrictRedis(host=host, port=port, db=db, **redis_kwargs)
 
     def load(self, key, default=None):
         result = self.store.get(key)

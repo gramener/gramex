@@ -92,6 +92,9 @@ app:
   session:
     type: redis         # Persistent multi-instance data store
     path: localhost:6379:0  # Redis server:port:db (default: localhost:6379:0)
+    # You can pass more parameters to https://redis-py.readthedocs.io/en/latest/
+    # by adding :key=value:key=value:... to path. For example:
+    # path: localhost:6379:0:password=your-password
     expiry: 31          # Session cookies expiry in days
     flush: 5            # Not relevant for redis stores these are live
     purge: 86400        # Delete old sessions periodically (in seconds)
