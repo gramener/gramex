@@ -432,7 +432,10 @@ The alert service takes four kinds of parameters:
 
 ## Alert API
 
-To send a mail programmatically use `gramex.services.create_alert(config)`.
+To run an existing alert, run `gramex.service.alert['your-alert-name'].run()`.
+Replace `'your-alert-name'` with the name (key) of the alert you created.
+
+To create an alert programmatically use `gramex.services.create_alert(config)`.
 This returns a function that sends an alert based on the configuration.
 
 ```python
