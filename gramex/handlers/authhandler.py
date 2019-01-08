@@ -8,7 +8,6 @@ import uuid
 import base64
 import string
 import logging
-import functools
 import tornado.web
 import tornado.gen
 import tornado.escape
@@ -17,7 +16,7 @@ from random import choice
 from socket import gethostname
 from cachetools import TTLCache
 from tornado.auth import (GoogleOAuth2Mixin, FacebookGraphMixin, TwitterMixin,
-                          OAuth2Mixin, urllib_parse, _auth_return_future)
+                          OAuth2Mixin, urllib_parse)
 from collections import Counter
 from orderedattrdict import AttrDict
 import gramex
@@ -391,6 +390,10 @@ class OAuth2(AuthHandler, OAuth2Mixin):
 class GoogleAuth(AuthHandler, GoogleOAuth2Mixin):
     @tornado.gen.coroutine
     def get(self):
+        self.settings[self._OAUTH_SETTINGS_KEY] = {
+            'key': self.kwargs['key'],
+            'secret': self.kwargs['secret']
+        }
         redirect_uri = '{0.protocol:s}://{0.host:s}{0.path:s}'.format(self.request)
         code = self.get_arg('code', '')
         if code:
@@ -420,22 +423,6 @@ class GoogleAuth(AuthHandler, GoogleOAuth2Mixin):
                 scope=scope,
                 response_type='code',
                 extra_params=extra_params)
-
-    @_auth_return_future
-    def get_authenticated_user(self, redirect_uri, code, callback):
-        '''This Tornado method is overridden to use self.kwargs, not self.settings'''
-        http = self.get_auth_http_client()
-        body = urllib_parse.urlencode({
-            'redirect_uri': redirect_uri,
-            'code': code,
-            'client_id': self.kwargs['key'],
-            'client_secret': self.kwargs['secret'],
-            'grant_type': 'authorization_code',
-        })
-        http.fetch(self._OAUTH_ACCESS_TOKEN_URL,
-                   functools.partial(self._on_access_token, callback),
-                   method='POST', body=body,
-                   headers={'Content-Type': 'application/x-www-form-urlencoded'})
 
 
 class FacebookAuth(AuthHandler, FacebookGraphMixin):
