@@ -5,11 +5,13 @@ from __future__ import unicode_literals
 
 import io
 import os
+import re
 import six
 import sys
 import yaml
 import stat
 import shlex
+import string
 import shutil
 import datetime
 import requests
@@ -588,24 +590,34 @@ def _run_console(cmd, **kwargs):
     proc.communicate()
 
 
-def _copy_file(source, target, template_data=None):
+def _mkdir(path):
+    '''Create directory tree up to path if path does not exist'''
+    if not os.path.exists(path):
+        os.makedirs(path)
+
+
+def _copy(source, target, template_data=None):
     '''
-    Copy single file as binary from source filename to target directory.
-    Warn if source is not a file, or if target exists, and exit.
+    Copy single directory or file (as binary) from source to target.
+    Warn if target exists, or source is not file/directory, and exit.
     If template_data is specified, treat source as a Tornado template.
     '''
     if os.path.exists(target):
-        app_log.warning('Skipping existing %s', target)
-        return
-    if not os.path.isfile(source):
-        app_log.warning('Skipping non-file %s', source)
-        return
-    with io.open(source, 'rb') as handle:
-        result = handle.read()
-        if template_data is not None:
-            result = Template(result).generate(**template_data)
-    with io.open(target, 'wb') as handle:
-        handle.write(result)
+        app_log.warning('Skip existing %s', target)
+    elif os.path.isdir(source):
+        _mkdir(target)
+    elif os.path.isfile(source):
+        with io.open(source, 'rb') as handle:
+            result = handle.read()
+            from mimetypes import guess_type
+            filetype = guess_type(source)[0]
+            basetype = 'text' if filetype is None else filetype.split('/')[0]
+            if template_data is not None and basetype in {'text', 'application'}:
+                result = Template(result).generate(**template_data)
+        with io.open(target, 'wb') as handle:
+            handle.write(result)
+    else:
+        app_log.warning('Skip unknown file %s', source)
 
 
 def init(cmd, args):
@@ -619,21 +631,30 @@ def init(cmd, args):
         'appname': os.path.basename(args.target),
         'author': _check_output('git config user.name', default='Author'),
         'email': _check_output('git config user.email', default='user@example.org'),
-        'date': datetime.datetime.today().strftime('%Y-%m-%d')
+        'date': datetime.datetime.today().strftime('%Y-%m-%d'),
+        'version': gramex.__version__,
     }
-    # Copy all files as templates
+    # Ensure that appname is a valid Python module name
+    appname = re.sub(r'[^a-z0-9_]+', '_', data['appname'].lower())
+    if appname[0] not in string.ascii_lowercase:
+        appname = 'app' + appname
+
+    # Copy all directories & files (as templates)
     source_dir = os.path.join(variables['GRAMEXPATH'], 'apps', 'init')
-    for path in os.listdir(source_dir):
-        source = os.path.join(source_dir, path)
-        target = os.path.join(args.target, path)
-        _copy_file(source, target, template_data=data)
+    for root, dirs, files in os.walk(source_dir):
+        for name in dirs + files:
+            source = os.path.join(root, name)
+            relpath = os.path.relpath(root, start=source_dir)
+            target = os.path.join(args.target, relpath, name.replace('appname', appname))
+            _copy(source, target, template_data=data)
+    for empty_dir in ('img', 'data'):
+        _mkdir(os.path.join(args.target, 'assets', empty_dir))
     # Copy error files as-is (not as templates)
     error_dir = os.path.join(args.target, 'error')
-    if not os.path.exists(error_dir):
-        os.makedirs(error_dir)
+    _mkdir(error_dir)
     for source in glob(os.path.join(variables['GRAMEXPATH'], 'handlers', '?0?.html')):
         target = os.path.join(error_dir, os.path.basename(source))
-        _copy_file(source, target)
+        _copy(source, target)
 
     # Create a git repo if none exists.
     # But if git is not installed, do not stop. Continue with the rest.
@@ -670,8 +691,7 @@ alert:
 def mail(cmd, args):
     # Get config file location
     default_dir = os.path.join(variables['GRAMEXDATA'], 'mail')
-    if not os.path.exists(default_dir):
-        os.makedirs(default_dir)
+    _mkdir(default_dir)
     confpath = args.get('conf', os.path.join(default_dir, 'gramexmail.yaml'))
 
     if not os.path.exists(confpath):

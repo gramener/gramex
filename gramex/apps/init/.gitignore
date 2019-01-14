@@ -1,7 +1,12 @@
 # Ignore files that should not be committed.
 # Do not commit data, passwords, secret information or large files.
 
-# Ignore bower components and npm modules
+# Don't commit the assets/ folder except for the README.md file
+# Store them in a shared folder and sync here.
+assets/**
+!assets/README*
+
+# Ignore npm and bower modules. These should be created by yarn/npm and bower.
 node_modules/
 bower_components/
 
@@ -11,7 +16,7 @@ bower_components/
 # Ignore byte-compiled / optimised / DLL files
 *.py[cod]
 
-# Do not commit data files
+# Do not commit data files.
 *.csv
 *.db
 *.sqlite3
@@ -52,10 +57,8 @@ bower_components/
 # IPython Notebook checkpoints
 .ipynb_checkpoints
 
-# Windows shortcut files
+# Windows / Mac OS artefacts
 *.lnk
-
-# Windows / Mac OS junk files
 Desktop.ini
 $RECYCLE.BIN/
 *[Tt]humbs.db

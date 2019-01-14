@@ -287,7 +287,7 @@ schedule:
 # Define this section at the end, to allow it to use previous services.
 url:
     default:                            # A unique name for this handler
-        priority: -1                    # Apply this pattern with low than normal priority
+        priority: -100                  # Apply this pattern with low than normal priority
         pattern: /(.*)                  # All URLs beginning with /
         handler: FileHandler                # Handler used
         kwargs:                             # Options to the handler
@@ -296,16 +296,22 @@ url:
             index: true                     #   display the index
             headers:
                 Cache-Control: max-age=60   # By default, cache for a minute
+                # Standard libraries won't ever change. Cache for 10 years
                 'node_modules/**':
-                  Cache-Control: public, max-age=315360000  # Cache for 10 years
+                  Cache-Control: public, max-age=315360000
                 'bower_components/**':
-                  Cache-Control: public, max-age=315360000  # Cache for 10 years
+                  Cache-Control: public, max-age=315360000
+                # Local assets don't change too frequently. Cache for 1 day
+                'assets/**':
+                  Cache-Control: public, max-age=86400
+                'favicon.ico':
+                  Cache-Control: public, max-age=86400
 
     # Provide a default favicon.ico from the Gramex/ directory.
     # Reduces the number of HTTP 404 errors, and bandwidth.
-    # Keep priority same as default priority. Otherwise it will never get executed.
+    # Keep priority higher than default to ensure it gets executed.
     favicon:
-        priority: -1
+        priority: -90
         pattern: /favicon.ico
         handler: FileHandler
         kwargs:
