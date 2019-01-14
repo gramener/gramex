@@ -797,9 +797,10 @@ fstream@^1.0.0, fstream@^1.0.10, fstream@^1.0.2:
     mkdirp ">=0.5 0"
     rimraf "2"
 
-g1@0.11:
-  version "0.11.0"
-  resolved "https://registry.yarnpkg.com/g1/-/g1-0.11.0.tgz#d6bc74a001a921350541ec93af54a13f93864091"
+g1@0.12:
+  version "0.12.0"
+  resolved "https://registry.yarnpkg.com/g1/-/g1-0.12.0.tgz#ddb582d9c086dd3de1dc7e3be37ccc4a3b1bbb7e"
+  integrity sha512-JH3jmYWhUluOWTaycXZ+B/MJ2y1MJJraFXk2dw7tLuCCTEHm7wXT7Q2mNSAo8RdW25bemYS33GoMfF8cqZWV5g==
 
 gauge@~2.7.3:
   version "2.7.4"
