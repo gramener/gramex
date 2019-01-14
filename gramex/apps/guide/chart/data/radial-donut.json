@@ -1,8 +1,26 @@
 [
-    {"category": "Item1", "value": 100},
-    {"category": "Item2", "value": 120},
-    {"category": "Item3", "value": 130},
-    {"category": "Item4", "value": 150},
-    {"category": "Item5", "value": 170},
-    {"category": "Item6", "value": 110}
-  ]
+  {
+    "category": "Item1",
+    "revenue": 100
+  },
+  {
+    "category": "Item2",
+    "revenue": 120
+  },
+  {
+    "category": "Item3",
+    "revenue": 130
+  },
+  {
+    "category": "Item4",
+    "revenue": 150
+  },
+  {
+    "category": "Item5",
+    "revenue": 170
+  },
+  {
+    "category": "Item6",
+    "revenue": 110
+  }
+]

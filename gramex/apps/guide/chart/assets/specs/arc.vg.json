@@ -1,0 +1,301 @@
+{
+  "$schema": "https://vega.github.io/schema/vega/v4.json",
+  "width": 600,
+  "height": 360,
+  "autosize": "fit",
+  "data": [
+    {
+      "name": "edges",
+      "url": "<% absolute_url %>data/arc.json",
+      "format": {
+        "type": "json",
+        "property": "links"
+      }
+    },
+    {
+      "name": "sourceDegree",
+      "source": "edges",
+      "transform": [
+        {
+          "type": "aggregate",
+          "groupby": [
+            "source"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "targetDegree",
+      "source": "edges",
+      "transform": [
+        {
+          "type": "aggregate",
+          "groupby": [
+            "target"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "nodes",
+      "url": "<% absolute_url %>data/arc.json",
+      "format": {
+        "type": "json",
+        "property": "nodes"
+      },
+      "transform": [
+        {
+          "type": "window",
+          "ops": [
+            "rank"
+          ],
+          "as": [
+            "order"
+          ]
+        },
+        {
+          "type": "lookup",
+          "from": "sourceDegree",
+          "key": "source",
+          "fields": [
+            "index"
+          ],
+          "as": [
+            "sourceDegree"
+          ],
+          "default": {
+            "count": 0
+          }
+        },
+        {
+          "type": "lookup",
+          "from": "targetDegree",
+          "key": "target",
+          "fields": [
+            "index"
+          ],
+          "as": [
+            "targetDegree"
+          ],
+          "default": {
+            "count": 0
+          }
+        },
+        {
+          "type": "formula",
+          "as": "degree",
+          "expr": "datum.sourceDegree.count + datum.targetDegree.count"
+        },
+        {
+          "type": "extent",
+          "field": "size",
+          "signal": "extent"
+        }
+      ]
+    }
+  ],
+  "scales": [
+    {
+      "name": "scales_position",
+      "type": "band",
+      "domain": {
+        "data": "nodes",
+        "field": "order",
+        "sort": true
+      },
+      "range": "width"
+    },
+    {
+      "name": "scales_color",
+      "type": "ordinal",
+      "range": [
+        "#f2c34e"
+      ],
+      "domain": {
+        "data": "nodes",
+        "field": "group"
+      }
+    }
+  ],
+  "marks": [
+    {
+      "name": "layout",
+      "type": "symbol",
+      "interactive": false,
+      "from": {
+        "data": "nodes"
+      },
+      "encode": {
+        "enter": {
+          "y": {
+            "value": 0
+          }
+        },
+        "update": {
+          "x": {
+            "scale": "scales_position",
+            "field": "order"
+          },
+          "size": {
+            "field": "degree",
+            "mult": 5,
+            "offset": 10
+          },
+          "fill": {
+            "scale": "scales_color",
+            "field": "group"
+          }
+        }
+      }
+    },
+    {
+      "type": "path",
+      "from": {
+        "data": "edges"
+      },
+      "encode": {
+        "enter": {
+          "stroke": {
+            "value": "#60c0de"
+          },
+          "strokeOpacity": {
+            "value": 1
+          }
+        },
+        "update": {
+          "strokeWidth": {
+            "signal": "datum.value * 0.1"
+          }
+        }
+      },
+      "transform": [
+        {
+          "type": "lookup",
+          "from": "layout",
+          "key": "datum.index",
+          "fields": [
+            "datum.source",
+            "datum.target"
+          ],
+          "as": [
+            "sourceNode",
+            "targetNode"
+          ]
+        },
+        {
+          "type": "linkpath",
+          "sourceX": {
+            "expr": "min(datum.sourceNode.x, datum.targetNode.x)"
+          },
+          "targetX": {
+            "expr": "max(datum.sourceNode.x, datum.targetNode.x)"
+          },
+          "sourceY": {
+            "expr": "0"
+          },
+          "targetY": {
+            "expr": "0"
+          },
+          "shape": "arc"
+        }
+      ]
+    },
+    {
+      "type": "text",
+      "from": {
+        "data": "nodes"
+      },
+      "encode": {
+        "enter": {
+          "align": {
+            "value": "center"
+          },
+          "baseline": {
+            "value": "middle"
+          }
+        },
+        "update": {
+          "x": {
+            "scale": "scales_position",
+            "field": "order"
+          },
+          "y": {
+            "signal": "height * 0.6"
+          },
+          "fontSize": {
+            "signal": "width / 50"
+          },
+          "text": {
+            "field": "name"
+          }
+        }
+      }
+    },
+    {
+      "name": "marks_grp_circle",
+      "type": "group",
+      "marks": [
+        {
+          "type": "symbol",
+          "from": {
+            "data": "layout"
+          },
+          "encode": {
+            "enter": {
+              "stroke": {
+                "value": "white"
+              },
+              "strokeWidth": {
+                "value": 2
+              }
+            },
+            "update": {
+              "x": {
+                "field": "x"
+              },
+              "y": {
+                "field": "y"
+              },
+              "fill": {
+                "field": "fill"
+              },
+              "size": {
+                "signal": "(datum.datum.size/extent[1]) * (width/100) * width"
+              }
+            }
+          }
+        },
+        {
+          "type": "text",
+          "from": {
+            "data": "layout"
+          },
+          "encode": {
+            "enter": {
+              "align": {
+                "value": "center"
+              },
+              "baseline": {
+                "value": "middle"
+              }
+            },
+            "update": {
+              "x": {
+                "field": "x"
+              },
+              "y": {
+                "field": "y"
+              },
+              "text": {
+                "signal": "datum.datum.size"
+              },
+              "fontSize": {
+                "signal": "width / 50"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

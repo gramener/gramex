@@ -1,0 +1,87 @@
+[  
+    {  
+       "name":"Tejaswi Yadav",
+       "P_points":15,
+       "N_points":68
+    },
+    {  
+       "name":"Anna Hazare",
+       "P_points":69,
+       "N_points":164
+    },
+    {  
+       "name":"Mayawati",
+       "P_points":110,
+       "N_points":35
+    },
+    {  
+       "name":"Randeep Singh Surjewala",
+       "P_points":12,
+       "N_points":58
+    },
+    {  
+       "name":"Manish Tiwari",
+       "P_points":115,
+       "N_points":61
+    },
+    {  
+       "name":"Piyush Goyal",
+       "P_points":91,
+       "N_points":155
+    },
+    {  
+       "name":"Digvijay Singh",
+       "P_points":63,
+       "N_points":163
+    },
+    {  
+       "name":"Ahmed Patel",
+       "P_points":40,
+       "N_points":199
+    },
+    {  
+       "name":"Arup Vishwas",
+       "P_points":102,
+       "N_points":99
+    },
+    {  
+       "name":"Ghulam Nabi Azaad",
+       "P_points":146,
+       "N_points":152
+    },
+    {  
+       "name":"Manish Sisodia",
+       "P_points":15,
+       "N_points":155
+    },
+    {  
+       "name":"Mamta Banerjee",
+       "P_points":43,
+       "N_points":13
+    },
+    {  
+       "name":"Farooq Abdullah",
+       "P_points":150,
+       "N_points":59
+    },
+    {  
+       "name":"Jaiveer Shergil",
+       "P_points":26,
+       "N_points":126
+    },
+    {  
+       "name":"Kapil Sibbal",
+       "P_points":46,
+       "N_points":24
+    },
+    {  
+       "name":"Somnath Bharti",
+       "P_points":29,
+       "N_points":186
+    },
+    {  
+       "name":"Arvind Kejriwal",
+       "P_points":85,
+       "N_points":130
+    }
+ ]

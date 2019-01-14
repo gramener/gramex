@@ -6,18 +6,18 @@
   "data": [
     {
       "name": "data_table",
-      "url": "<%= absolute_url %>data/circle-packing-1.json",
+      "url": "<%= dataset_url %>",
       "transform": [
         {
           "type": "stratify",
-          "key": "id",
-          "parentKey": "parent"
+          "key": "<%= data_mapper.column_1 %>",
+          "parentKey": "<%= data_mapper.column_3 %>"
         },
         {
           "type": "pack",
           "field": "size",
           "sort": {
-            "field": "size"
+            "field": "<%= data_mapper.column_4 %>"
           },
           "size": [
             {
@@ -37,7 +37,7 @@
       "type": "ordinal",
       "domain": {
         "data": "data_table",
-        "field": "size"
+        "field": "<%= data_mapper.column_4 %>"
       },
       "range": [
         "#d0f1fc",
@@ -53,7 +53,7 @@
       "type": "quantize",
       "domain": {
         "data": "data_table",
-        "field": "size"
+        "field": "<%= data_mapper.column_4 %>"
       },
       "range": [
         "#d0f1fc",
@@ -69,7 +69,7 @@
       "type": "linear",
       "domain": {
         "data": "data_table",
-        "field": "size"
+        "field": "<%= data_mapper.column_4 %>"
       },
       "range": [
         20,
@@ -105,14 +105,14 @@
             "signal": "4 * datum.r * datum.r"
           },
           "stroke": {
-            "signal": "datum.size ? 'grey' : 'black'"
+            "signal": "datum.<%= data_mapper.column_4 %> ? 'grey' : 'black'"
           },
           "fill": {
             "scale": "scales_color",
-            "field": "size"
+            "field": "<%= data_mapper.column_4 %>"
           },
           "tooltip": {
-            "signal": "datum.name + (datum.size ? ', ' + datum.size + ' bytes' : '')"
+            "signal": "datum.<%= data_mapper.column_2 %> + (datum.<%= data_mapper.column_4 %> ? ', ' + datum.<%= data_mapper.column_4 %> + ' bytes' : '')"
           }
         }
       }
@@ -135,7 +135,7 @@
             "value": "middle"
           },
           "fill": {
-            "value": "#000"
+            "value": "#000000"
           }
         },
         "update": {
@@ -146,7 +146,7 @@
             "signal": "datum.y"
           },
           "text": {
-            "signal": "datum.size != null ? datum.name : '' "
+            "signal": "datum.<%= data_mapper.column_4 %> != null ? datum.<%= data_mapper.column_2 %> : '' "
           },
           "fontSize": {
             "signal": "datum.r < 50 ? 0: 12 "

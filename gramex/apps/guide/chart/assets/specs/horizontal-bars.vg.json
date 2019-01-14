@@ -22,7 +22,7 @@
       "axis": {
         "ticks": false,
         "title": null,
-        "domainColor": "white",
+        "domainColor": "#ffffff",
         "labelAlign": "left",
         "labelPadding": -9,
         "position": -18
@@ -65,7 +65,7 @@
           "type": "quantitative"
         },
         "color": {
-          "value": "black"
+          "value": "#000000"
         },
         "size": {
           "value": 12

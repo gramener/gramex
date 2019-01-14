@@ -20,82 +20,11 @@
   "data": [
     {
       "name": "source",
-      "values": [
-        {
-          "Variable A": 2,
-          "Variable B": 12,
-          "Depth": 4
-        },
-        {
-          "Variable A": 4,
-          "Variable B": 12,
-          "Depth": 1
-        },
-        {
-          "Variable A": 7,
-          "Variable B": 9,
-          "Depth": 5
-        },
-        {
-          "Variable A": 7.5,
-          "Variable B": 2,
-          "Depth": 5
-        },
-        {
-          "Variable A": 5,
-          "Variable B": 12,
-          "Depth": 4
-        },
-        {
-          "Variable A": 2,
-          "Variable B": 3,
-          "Depth": 3
-        },
-        {
-          "Variable A": 2,
-          "Variable B": 7,
-          "Depth": 3
-        },
-        {
-          "Variable A": 3,
-          "Variable B": 6,
-          "Depth": 4
-        },
-        {
-          "Variable A": 5,
-          "Variable B": 11,
-          "Depth": 3
-        },
-        {
-          "Variable A": 5,
-          "Variable B": 12,
-          "Depth": 5
-        },
-        {
-          "Variable A": 4,
-          "Variable B": 10,
-          "Depth": 3
-        },
-        {
-          "Variable A": 3,
-          "Variable B": 12,
-          "Depth": 4
-        },
-        {
-          "Variable A": null,
-          "Variable B": 12,
-          "Depth": 4
-        },
-        {
-          "Variable A": 3,
-          "Variable B": null,
-          "Depth": 4
-        }
-      ],
+      "url": "<%= dataset_url %>",
       "transform": [
         {
           "type": "filter",
-          "expr": "datum['Variable B'] != null && datum['Variable A'] != null && datum['Depth'] != null"
+          "expr": "datum['<%= data_mapper.column_2 %>'] != null && datum['<%= data_mapper.column_1 %>'] != null && datum['<%= data_mapper.column_3%>'] != null"
         }
       ]
     }
@@ -135,7 +64,7 @@
       "zero": true,
       "domain": {
         "data": "source",
-        "field": "Depth"
+        "field": "<%= data_mapper.column_3%>"
       },
       "range": [
         25,
@@ -152,7 +81,7 @@
       "ticks": false,
       "tickCount": 12,
       "labelPadding": 10,
-      "title": "Variable B",
+      "title": "<%= data_mapper.column_2 %>",
       "titleFont": "roboto",
       "titleColor": "#485465",
       "titleFontSize": 12,
@@ -171,7 +100,7 @@
       "orient": "left",
       "ticks": false,
       "tickCount": 7,
-      "title": "Variable A",
+      "title": "<%= data_mapper.column_1 %>",
       "titleFont": "roboto",
       "titleColor": "#485465",
       "titleFontSize": 12,
@@ -194,15 +123,15 @@
         "update": {
           "x": {
             "scale": "x",
-            "field": "Variable B"
+            "field": "<%= data_mapper.column_2 %>"
           },
           "y": {
             "scale": "y",
-            "field": "Variable A"
+            "field": "<%= data_mapper.column_1 %>"
           },
           "size": {
             "scale": "size",
-            "field": "Depth"
+            "field": "<%= data_mapper.column_3%>"
           },
           "shape": {
             "value": "circle"
@@ -234,7 +163,7 @@
             "value": -15
           },
           "text": {
-            "signal": "datum.datum['Variable B'] < 5 && datum.datum['Variable A'] > 3 ? 'Outlier': '' "
+            "signal": "datum.datum['<%= data_mapper.column_2 %>'] < 5 && datum.datum['<%= data_mapper.column_1 %>'] > 3 ? 'Outlier': '' "
           },
           "color": "#485465"
         }

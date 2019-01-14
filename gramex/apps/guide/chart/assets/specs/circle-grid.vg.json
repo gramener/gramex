@@ -14,7 +14,7 @@
   ],
   "data": [
     {
-      "name": "table",
+      "name": "data_table",
       "url": "<%= absolute_url %>data/circle-grid.json"
     }
   ],
@@ -24,23 +24,23 @@
   },
   "scales": [
     {
-      "name": "x",
+      "name": "scales_x",
       "type": "band",
       "round": true,
       "nice": true,
-      "padding": 0.5,
+      "padding": 1,
       "zero": true,
       "domain": {
-        "data": "table",
+        "data": "data_table",
         "field": "Label"
       },
       "range": "width"
     },
     {
-      "name": "y",
+      "name": "scales_y",
       "type": "point",
       "domain": {
-        "data": "table",
+        "data": "data_table",
         "field": "category"
       },
       "range": "height"
@@ -52,7 +52,7 @@
       "nice": false,
       "zero": true,
       "domain": {
-        "data": "table",
+        "data": "data_table",
         "field": "Depth"
       },
       "range": [
@@ -64,7 +64,7 @@
       "name": "color",
       "type": "quantize",
       "domain": {
-        "data": "table",
+        "data": "data_table",
         "field": "Depth"
       },
       "range": [
@@ -80,7 +80,7 @@
       "name": "label",
       "type": "ordinal",
       "domain": {
-        "data": "table",
+        "data": "data_table",
         "field": "Label"
       },
       "range": [
@@ -95,7 +95,7 @@
   ],
   "axes": [
     {
-      "scale": "x",
+      "scale": "scales_x",
       "grid": true,
       "gridOpacity": 0.9,
       "gridColor": "#F0F2F4",
@@ -113,7 +113,7 @@
       "labelFontWeight": 500
     },
     {
-      "scale": "y",
+      "scale": "scales_y",
       "grid": true,
       "gridOpacity": 0.9,
       "gridColor": "#F0F2F4",
@@ -137,16 +137,21 @@
       "name": "circles",
       "type": "symbol",
       "from": {
-        "data": "table"
+        "data": "data_table"
       },
       "encode": {
         "enter": {
+          "shape": {
+            "value": "circle"
+          }
+        },
+        "update": {
           "x": {
-            "scale": "x",
+            "scale": "scales_x",
             "field": "Label"
           },
           "y": {
-            "scale": "y",
+            "scale": "scales_y",
             "field": "category"
           },
           "tooltip": {
@@ -155,9 +160,6 @@
           "size": {
             "scale": "size",
             "field": "Depth"
-          },
-          "shape": {
-            "value": "circle"
           },
           "fill": {
             "scale": "label",

@@ -10,14 +10,6 @@
   },
   "signals": [
     {
-      "name": "_width",
-      "value": 480
-    },
-    {
-      "name": "_height",
-      "value": 250
-    },
-    {
       "name": "startAngle",
       "value": -1.57079632
     },
@@ -27,18 +19,24 @@
     },
     {
       "name": "minDimension",
-      "update": "_width > _height ? _height : _width"
+      "update": "width > height ? height : width"
+    },
+    {
+      "name": "sort",
+      "value": true
     }
   ],
   "data": [
     {
       "name": "future_dataset",
-      "url": "<%= absolute_url %>data/half-donut.json",
+      "url": "<%= dataset_url %>",
       "transform": [
         {
           "type": "pie",
-          "field": "count",
-          "sort": false,
+          "field": "<%= data_mapper.column_2 %>",
+          "sort": {
+            "signal": "sort"
+          },
           "startAngle": {
             "signal": "startAngle"
           },
@@ -49,7 +47,7 @@
         {
           "type": "joinaggregate",
           "fields": [
-            "count"
+            "<%= data_mapper.column_2 %>"
           ],
           "ops": [
             "sum"
@@ -67,7 +65,7 @@
       "type": "ordinal",
       "domain": {
         "data": "future_dataset",
-        "field": "label"
+        "field": "<%= data_mapper.column_1 %>"
       },
       "range": {
         "scheme": "category20"
@@ -82,7 +80,7 @@
         "data": "future_dataset"
       },
       "encode": {
-        "enter": {
+        "update": {
           "x": {
             "signal": "width/2"
           },
@@ -90,14 +88,14 @@
             "signal": "height"
           },
           "stroke": {
-            "value": "white"
+            "value": "#ffffff"
           },
           "strokeWidth": {
             "value": 2
           },
           "fill": {
             "scale": "color",
-            "field": "label"
+            "field": "<%= data_mapper.column_1 %>"
           },
           "startAngle": {
             "field": "startAngle"
@@ -121,16 +119,22 @@
         "data": "future_dataset"
       },
       "encode": {
-        "enter": {
+        "update": {
           "fill": {
             "scale": "color",
-            "field": "label"
+            "field": "<%= data_mapper.column_1 %>"
           },
           "xc": {
-            "signal": "(width/2) + (minDimension * 1.1) * cos(-PI/2 + (datum.startAngle + datum.endAngle)/2)"
+            "signal": "(width/2) + (minDimension * 1.2) * cos(-PI/2 + (datum.startAngle + datum.endAngle)/2)",
+            "offset": {
+              "signal": "(datum.startAngle + datum.endAngle)/2 > 0 ? 15 : -15"
+            }
           },
           "yc": {
-            "signal": "(height) + (minDimension * 1.1) * sin(-PI/2 + (datum.startAngle + datum.endAngle)/2)"
+            "signal": "(height) + (minDimension * 1.2) * sin(-PI/2 + (datum.startAngle + datum.endAngle)/2)",
+            "offset": {
+              "value": 7
+            }
           },
           "width": {
             "value": 45
@@ -148,7 +152,7 @@
         "data": "future_dataset"
       },
       "encode": {
-        "enter": {
+        "update": {
           "fontWeight": {
             "value": "600"
           },
@@ -165,34 +169,34 @@
             "signal": "height"
           },
           "radius": {
-            "signal": "minDimension * 1.1"
+            "signal": "minDimension * 1.2"
           },
           "theta": {
-            "signal": "(datum.startAngle + datum.endAngle)/2"
+            "signal": "(datum.startAngle + datum.endAngle) / 2"
           },
           "text": {
-            "signal": "(datum.count/datum.total) * 100 + '%'"
+            "signal": "(datum['<%= data_mapper.column_2 %>']/datum.total) * 100 + '%'"
           },
           "baseline": {
-            "value": "middle"
+            "value": "top"
           },
           "fill": {
-            "value": "white"
+            "value": "#ffffff"
           },
           "align": {
-            "value": "center"
+            "signal": "(datum.startAngle + datum.endAngle)/2 > 0 && (datum.startAngle + datum.endAngle)/2 < 3.14 ? 'left' : 'right' "
           }
         }
       }
     },
     {
-      "name": "future_labels_text",
+      "name": "future_<%= data_mapper.column_1 %>s_text",
       "type": "text",
       "from": {
         "data": "future_dataset"
       },
       "encode": {
-        "enter": {
+        "update": {
           "fontWeight": {
             "value": "600"
           },
@@ -201,7 +205,7 @@
           },
           "fill": {
             "scale": "color",
-            "field": "label"
+            "field": "<%= data_mapper.column_1 %>"
           },
           "fontSize": {
             "value": 12
@@ -212,20 +216,23 @@
           "y": {
             "signal": "height"
           },
+          "dy": {
+            "value": -10
+          },
           "radius": {
             "signal": "minDimension * 1.2"
           },
           "theta": {
-            "signal": "(datum.startAngle + datum.endAngle)/2.05"
+            "signal": "(datum.startAngle + datum.endAngle)/2"
           },
           "text": {
-            "signal": "datum.label"
+            "signal": "datum['<%= data_mapper.column_1 %>']"
           },
           "baseline": {
             "value": "bottom"
           },
           "align": {
-            "value": "center"
+            "signal": "(datum.startAngle + datum.endAngle)/2 > 0 && (datum.startAngle + datum.endAngle)/2 < 3.14 ? 'left' : 'right' "
           }
         }
       }

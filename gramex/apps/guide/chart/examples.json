@@ -1,49 +1,330 @@
 [
-{"category": "Sunburst charts", "chart": "sunburst-1", "title": "Sunburst 1"},
-{"category": "Sunburst charts", "chart": "sunburst-2", "title": "Sunburst 2"},
-{"category": "Sunburst charts", "chart": "sunburst-3", "title": "Sunburst 3"},
-{"category": "Sunburst charts", "chart": "sunburst-4", "title": "Sunburst 4"},
-{"category": "Infographics", "chart": "donut-infographic", "title": "Donut Infographic"},
-{"category": "Circle packing charts", "chart": "circle-packing", "title": "Circle Packing"},
-{"category": "Circle packing charts", "chart": "circle-packing-1", "title": "Circle Packing 1"},
-{"category": "Bar charts", "chart": "horizontal-bars-1", "title": "Horizontal Bars 1"},
-{"category": "Bar charts", "chart": "horizontal-histogram", "title": "Horizontal Histogram chart"},
-{"category": "Bar charts", "chart": "horizontal-bars", "title": "Horizontal Bars"},
-{"category": "Bar charts", "chart": "bars", "title": "Bars"},
-{"category": "Bar charts", "chart": "pyramid", "title": "Pyramid chart"},
-{"category": "Bar charts", "chart": "stacked-pyramid", "title": "Stacked Pyramid"},
-{"category": "Bar charts", "chart": "grouped-bars", "title": "Grouped bar chart"},
-{"category": "Bar charts", "chart": "normalized-stacked-bar", "title": "Normalized stacked bar chart"},
-{"category": "Bar charts", "chart": "positive-negative-bars", "title": "Positive Negative Bar chart"},
-{"category": "Bar charts", "chart": "horizontal-positive-negative-bars", "title": "Horizontal Positive Negative Bar chart"},
-{"category": "Bar charts", "chart": "bullet", "title": "Bullet chart"},
-{"category": "Pie charts", "chart": "pie", "title": "Pie"},
-{"category": "Pie charts", "chart": "donut", "title": "Donut"},
-{"category": "Pie charts", "chart": "radial", "title": "Radial"},
-{"category": "Pie charts", "chart": "half-donut", "title": "Half Donut"},
-{"category": "Pie charts", "chart": "chord", "title": "Chord"},
-{"category": "Pie charts", "chart": "radial-donut", "title": "Radial Donut"},
-{"category": "Sankey charts", "chart": "sankey", "title": "Sankey"},
-{"category": "Scatter plots", "chart": "scatter-plot", "title": "Scatter Plot"},
-{"category": "Scatter plots", "chart": "scatter", "title": "Scatter"},
-{"category": "Scatter plots", "chart": "bubble", "title": "Bubble chart"},
-{"category": "Scatter plots", "chart": "bubble-3", "title": "Bubble 3 chart"},
-{"category": "Scatter plots", "chart": "circle-grid", "title": "Circle Grid chart"},
-{"category": "Treemap", "chart": "treemap", "title": "Treemap"},
-{"category": "Treemap", "chart": "treemap-1", "title": "Treemap 1"},
-{"category": "Treemap", "chart": "treemap-2", "title": "Treemap 2"},
-{"category": "Treemap", "chart": "treemap-3", "title": "Treemap 3"},
-{"category": "Treemap", "chart": "treemap-4", "title": "Treemap 4"},
-{"category": "Treemap", "chart": "treemap-5", "title": "Treemap 5"},
-{"category": "Trellis charts", "chart": "trellis-bar", "title": "Trellis Bar"},
-{"category": "Line Area charts", "chart": "line-0", "title": "Line 0"},
-{"category": "Line Area charts", "chart": "line-1", "title": "Line 1"},
-{"category": "Line Area charts", "chart": "line-2", "title": "Line 2"},
-{"category": "Line Area charts", "chart": "line-3", "title": "Line 3"},
-{"category": "Line Area charts", "chart": "line-4", "title": "Line 4"},
-{"category": "Line Area charts", "chart": "smooth-line", "title": "Smooth Line chart"},
-{"category": "Line Area charts", "chart": "stream", "title": "Stream chart"},
-{"category": "Line Area charts", "chart": "area", "title": "Area chart"},
-{"category": "Line Area charts", "chart": "ribbon", "title": "Ribbon chart"},
-{"category": "Box Plots", "chart": "horizontal-box-plot", "title": "Horizontal Box Plot"}
+  {
+    "category": "Sunburst charts",
+    "chart": "sunburst-1",
+    "title": "Sunburst 1"
+  },
+  {
+    "category": "Sunburst charts",
+    "chart": "sunburst-2",
+    "title": "Sunburst 2"
+  },
+  {
+    "category": "Sunburst charts",
+    "chart": "sunburst-3",
+    "title": "Sunburst 3"
+  },
+  {
+    "category": "Sunburst charts",
+    "chart": "sunburst-4",
+    "title": "Sunburst 4"
+  },
+  {
+    "category": "Infographics",
+    "chart": "donut-infographic",
+    "title": "Donut Infographic"
+  },
+  {
+    "category": "Circle packing charts",
+    "chart": "circle-packing-1",
+    "title": "Circle Packing 1",
+    "data_mapper": {
+      "column_1": "id",
+      "column_2": "name",
+      "column_3": "parent",
+      "column_4": "size"
+    },
+    "dataset_url": "<%= absolute_url %>data/circle-packing-1.json"
+  },
+  {
+    "category": "Circle packing charts",
+    "chart": "circle-packing",
+    "title": "Circle Packing"
+  },
+  {
+    "category": "Bar charts",
+    "chart": "horizontal-bars-1",
+    "title": "Horizontal Bars 1",
+    "data_mapper": {
+      "column_1": "x",
+      "column_2": "y",
+      "column_3": "c",
+      "column_4": "label"
+    },
+    "dataset_url": "<%= absolute_url %>data/horizontal-bars-1.json"
+  },
+  {
+    "category": "Bar charts",
+    "chart": "bars",
+    "title": "Bars",
+    "data_mapper": {
+      "column_1": "category",
+      "column_2": "amount"
+    },
+    "dataset_url": "<%= absolute_url %>data/bars.json"
+  },
+  {
+    "category": "Bar charts",
+    "chart": "stacked-pyramid",
+    "title": "Stacked Pyramid",
+    "data_mapper": {
+      "column_1": "Ranks",
+      "column_2": "name",
+      "column_3": "value"
+    },
+    "dataset_url": "<%= absolute_url %>data/stacked-pyramid.json"
+  },
+  {
+    "category": "Bar charts",
+    "chart": "positive-negative-bars",
+    "title": "Positive Negative Bar chart",
+    "data_mapper": {
+      "column_1": "category",
+      "column_2": "amount"
+    },
+    "dataset_url": "<%= absolute_url %>data/pos-neg-items.json"
+  },
+  {
+    "category": "Bar charts",
+    "chart": "horizontal-positive-negative-bars",
+    "title": "Horizontal Positive Negative Bar chart",
+    "data_mapper": {
+      "column_1": "category",
+      "column_2": "amount"
+    },
+    "dataset_url": "<%= absolute_url %>data/pos-neg-items.json"
+  },
+  {
+    "category": "Bar charts",
+    "chart": "bullet",
+    "title": "Bullet chart",
+    "data_mapper": {
+      "column_1": "title",
+      "column_2": "a",
+      "column_3": "b",
+      "column_4": "c",
+      "column_5": "d"
+    },
+    "dataset_url": "<%= absolute_url %>data/bullet.json"
+  },
+  {
+    "category": "Bar charts",
+    "chart": "pyramid",
+    "title": "Pyramid chart"
+  },
+  {
+    "category": "Bar charts",
+    "chart": "horizontal-histogram",
+    "title": "Horizontal Histogram chart"
+  },
+  {
+    "category": "Bar charts",
+    "chart": "horizontal-bars",
+    "title": "Horizontal Bars"
+  },
+  {
+    "category": "Bar charts",
+    "chart": "grouped-bars",
+    "title": "Grouped bar chart"
+  },
+  {
+    "category": "Bar charts",
+    "chart": "normalized-stacked-bar",
+    "title": "Normalized stacked bar chart"
+  },
+  {
+    "category": "Pie charts",
+    "chart": "half-donut",
+    "title": "Half Donut",
+    "data_mapper": {
+      "column_1": "label",
+      "column_2": "count"
+    },
+    "dataset_url": "<%= absolute_url %>data/half-donut.json"
+  },
+  {
+    "category": "Pie charts",
+    "chart": "donut",
+    "title": "Donut",
+    "data_mapper": {
+      "column_1": "count",
+      "column_2": "label"
+    },
+    "dataset_url": "<%= absolute_url %>data/half-donut.json"
+  },
+  {
+    "category": "Pie charts",
+    "chart": "radial",
+    "title": "Radial"
+  },
+  {
+    "category": "Pie charts",
+    "chart": "radial-donut",
+    "title": "Radial Donut",
+    "data_mapper": {
+      "column_2": "category",
+      "column_1": "revenue"
+    },
+    "dataset_url": "<%= absolute_url %>data/radial-donut.json"
+  },
+  {
+    "category": "Sankey charts",
+    "chart": "sankey",
+    "title": "Sankey"
+  },
+  {
+    "category": "Scatter plots",
+    "chart": "scatter-plot",
+    "title": "Scatter Plot",
+    "data_mapper": {
+      "column_1": "Variable A",
+      "column_2": "Variable B",
+      "column_3": "Depth"
+    },
+    "dataset_url": "<%= absolute_url %>data/scatter-plot.json"
+  },
+  {
+    "category": "Scatter plots",
+    "chart": "bubble-3",
+    "title": "Bubble 3 chart",
+    "data_mapper": {
+      "column_1": "category",
+      "column_2": "V1",
+      "column_3": "Label",
+      "column_4": "Depth"
+    },
+    "dataset_url": "<%= absolute_url %>data/bubble-3.json"
+  },
+  {
+    "category": "Scatter plots",
+    "chart": "scatter",
+    "title": "Scatter"
+  },
+  {
+    "category": "Scatter plots",
+    "chart": "bubble",
+    "title": "Bubble chart"
+  },
+  {
+    "category": "Scatter plots",
+    "chart": "circle-grid",
+    "title": "Circle Grid chart"
+  },
+  {
+    "category": "Treemap",
+    "chart": "treemap-1",
+    "title": "Treemap 1",
+    "data_mapper": {
+      "column_1": "id",
+      "column_2": "name",
+      "column_3": "parent",
+      "column_4": "size"
+    },
+    "dataset_url": "<%= absolute_url %>data/treemap-1.json"
+  },
+  {
+    "category": "Treemap",
+    "chart": "treemap",
+    "title": "Treemap"
+  },
+  {
+    "category": "Treemap",
+    "chart": "treemap-2",
+    "title": "Treemap 2"
+  },
+  {
+    "category": "Treemap",
+    "chart": "treemap-3",
+    "title": "Treemap 3"
+  },
+  {
+    "category": "Treemap",
+    "chart": "treemap-4",
+    "title": "Treemap 4"
+  },
+  {
+    "category": "Treemap",
+    "chart": "treemap-5",
+    "title": "Treemap 5"
+  },
+  {
+    "category": "Trellis charts",
+    "chart": "trellis-bar",
+    "title": "Trellis Bar"
+  },
+  {
+    "category": "Line Area charts",
+    "chart": "area",
+    "title": "Area chart",
+    "data_mapper": {
+      "column_1": "category",
+      "column_2": "amount"
+    },
+    "dataset_url": "<%= absolute_url %>data/area.json"
+  },
+  {
+    "category": "Line Area charts",
+    "chart": "line-0",
+    "title": "Line 0"
+  },
+  {
+    "category": "Line Area charts",
+    "chart": "line-1",
+    "title": "Line 1"
+  },
+  {
+    "category": "Line Area charts",
+    "chart": "line-2",
+    "title": "Line 2"
+  },
+  {
+    "category": "Line Area charts",
+    "chart": "line-3",
+    "title": "Line 3"
+  },
+  {
+    "category": "Line Area charts",
+    "chart": "line-4",
+    "title": "Line 4"
+  },
+  {
+    "category": "Line Area charts",
+    "chart": "smooth-line",
+    "title": "Smooth Line chart"
+  },
+  {
+    "category": "Line Area charts",
+    "chart": "stream",
+    "title": "Stream chart"
+  },
+  {
+    "category": "Line Area charts",
+    "chart": "ribbon",
+    "title": "Ribbon chart"
+  },
+  {
+    "category": "Box Plots",
+    "chart": "horizontal-box-plot",
+    "title": "Horizontal Box Plot"
+  },
+  {
+    "category": "Parallel Coordinates",
+    "chart": "parallel-coordinates",
+    "title": "Parallel Coordinates"
+  },
+  {
+    "category": "Arc Diagram",
+    "chart": "arc",
+    "title": "Arc Diagram"
+  },
+  {
+    "category": "Word Cloud",
+    "chart": "wordcloud",
+    "title": "Word Cloud 1"
+  },
+  {
+    "category": "Word Cloud",
+    "chart": "wordcloud-2",
+    "title": "Word Cloud 2"
+  }
 ]

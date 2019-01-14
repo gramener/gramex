@@ -3,232 +3,89 @@
   "width": 600,
   "height": 360,
   "autosize": "fit",
+  "signals": [
+    {"name": "zero", "value": 0},
+    {"name": "two_PI", "value": 6.29},
+    {"name": "sort", "value": true},
+    {"name": "minDimension", "update": "width > height ? height : width"}
+  ],
   "data": [
     {
-      "name": "data_table",
-      "url": "<%= absolute_url %>data/radial-donut.json",
+      "name": "table",
+      "url": "<%= dataset_url %>",
       "transform": [
         {
-          "type": "pie"
+          "type": "pie",
+          "field": "<%= data_mapper.column_1 %>",
+          "startAngle": {"signal": "zero"},
+          "endAngle": {"signal": "two_PI"},
+          "sort": {"signal": "sort"}
+        },
+        {
+          "type": "joinaggregate",
+          "fields": ["<%= data_mapper.column_1 %>"],
+          "ops": ["sum"],
+          "as": ["total"]
         }
       ]
     }
   ],
   "scales": [
     {
-      "name": "scale_color",
+      "name": "text_to_color",
       "type": "ordinal",
-      "domain": {
-        "data": "data_table",
-        "field": "category"
-      },
-      "range": {
-        "scheme": "dark2"
-      }
+      "domain": {"data": "table", "field": "<%= data_mapper.column_2 %>"},
+      "range": "category"
+    },
+    {
+      "name": "normalize_radius",
+      "type": "linear",
+      "domain": {"data": "table", "field": "<%= data_mapper.column_1 %>"},
+      "range": {"signal": "[0, height/2]"}
     }
   ],
   "marks": [
     {
+      "name": "arc segment",
       "type": "arc",
-      "from": {
-        "data": "data_table"
-      },
+      "from": {"data": "table"},
       "encode": {
-        "enter": {
-          "startAngle": {
-            "field": "startAngle"
-          },
-          "endAngle": {
-            "field": "endAngle"
-          },
-          "innerRadius": {
-            "value": 0
-          },
-          "stroke": {
-            "value": "#fff"
-          },
-          "fill": {
-            "scale": "scale_color",
-            "field": "category"
-          }
-        },
         "update": {
-          "x": {
-            "signal": "width / 2"
-          },
-          "y": {
-            "signal": "height / 2"
-          },
-          "outerRadius": {
-            "signal": "datum.value"
-          }
+          "fill": {"scale": "text_to_color", "field": "<%= data_mapper.column_2 %>"},
+          "x": {"signal": "width / 2"},
+          "y": {"signal": "height / 2"},
+          "startAngle": {"field": "startAngle"},
+          "endAngle": {"field": "endAngle"},
+          "outerRadius": {"field": "<%= data_mapper.column_1 %>", "scale": "normalize_radius"},
+          "innerRadius": {"value": 0},
+          "stroke": {"value": "#ffffff"},
+          "opacity": {"value": 0.9}
         }
       }
     },
     {
+      "name": "text labels",
       "type": "text",
-      "from": {
-        "data": "data_table"
-      },
+      "from": {"data": "table"},
       "encode": {
-        "enter": {
-          "fill": {
-            "value": "#000"
-          },
-          "align": {
-            "value": "center"
-          },
-          "baseline": {
-            "value": "middle"
-          }
-        },
         "update": {
-          "x": {
-            "signal": "width/2"
-          },
-          "y": {
-            "signal": "height/2"
-          },
-          "radius": {
-            "signal": "datum.value + (height * 0.2)"
-          },
-          "theta": {
-            "signal": "( datum.startAngle + datum.endAngle ) / 2"
-          },
+          "font": {"value": "roboto"},
+          "fill": {"value": "#800040"},
+          "opacity": {"value": 0.7},
+          "fontSize": {"value": 12},
+          "x": {"signal": "width / 2"},
+          "y": {"signal": "height / 2"},
+          "radius": {"field": "<%= data_mapper.column_1 %>", "scale": "normalize_radius", "offset": {"value": 10}},
+          "theta": {"signal": "(datum['startAngle'] + datum['endAngle']) / 2"},
           "text": {
-            "signal": "datum.category"
+            "signal": "datum['<%= data_mapper.column_2 %>'] + ', ' + format(datum['<%= data_mapper.column_1 %>']/datum['total'], '.0%')"
+          },
+          "baseline": {"value": "middle"},
+          "align": {
+            "signal": "(datum.startAngle + datum.endAngle)/2 > 0 && (datum.startAngle + datum.endAngle)/2 < 3.14 ? 'left' : 'right' "
           }
         }
       }
-    },
-    {
-      "type": "text",
-      "from": {
-        "data": "data_table"
-      },
-      "encode": {
-        "enter": {
-          "fill": {
-            "value": "#000'"
-          },
-          "align": {
-            "value": "right"
-          },
-          "baseline": {
-            "value": "middle"
-          },
-          "dy": {
-            "value": 15
-          }
-        },
-        "update": {
-          "x": {
-            "signal": "width/2"
-          },
-          "y": {
-            "signal": "height/2"
-          },
-          "radius": {
-            "signal": "datum.value + (height*0.2)"
-          },
-          "theta": {
-            "signal": "( datum.startAngle + datum.endAngle ) / 2"
-          },
-          "text": {
-            "signal": "datum.value + ', '"
-          }
-        }
-      }
-    },
-    {
-      "type": "text",
-      "from": {
-        "data": "data_table"
-      },
-      "encode": {
-        "enter": {
-          "x": {
-            "field": {
-              "group": "width"
-            },
-            "mult": 0.5
-          },
-          "y": {
-            "field": {
-              "group": "height"
-            },
-            "mult": 0.5
-          },
-          "align": {
-            "value": "left"
-          },
-          "baseline": {
-            "value": "middle"
-          },
-          "dy": {
-            "value": 15
-          }
-        },
-        "update": {
-          "radius": {
-            "signal": "datum.value + (height*0.2)"
-          },
-          "theta": {
-            "signal": "( datum.startAngle + datum.endAngle ) / 2"
-          },
-          "fill": {
-            "signal": "ceil( datum.value * 0.1) >= 15 ? '#5BC0DE' : '#ff0000'"
-          },
-          "text": {
-            "signal": "ceil( datum.value * 0.1) + '%' "
-          }
-        }
-      }
-    },
-    {
-      "type": "group",
-      "encode": {
-        "enter": {
-          "x": {
-            "signal": "width/2"
-          },
-          "y": {
-            "signal": "height/2"
-          }
-        }
-      },
-      "marks": [
-        {
-          "type": "rule",
-          "from": {
-            "data": "data_table"
-          },
-          "encode": {
-            "enter": {
-              "stroke": {
-                "value": "#000"
-              },
-              "strokeWidth": {
-                "value": 1
-              }
-            },
-            "update": {
-              "x": {
-                "signal": "( datum.value + (height * 0.12) ) * cos((datum.startAngle - 45))"
-              },
-              "y": {
-                "signal": "( datum.value + (height * 0.12) ) * sin((datum.startAngle - 45))"
-              },
-              "x2": {
-                "signal": "(datum.value * 1.1) * cos(datum.startAngle - 45)"
-              },
-              "y2": {
-                "signal": "(datum.value * 1.1) * sin(datum.startAngle - 45)"
-              }
-            }
-          }
-        }
-      ]
     }
   ]
 }

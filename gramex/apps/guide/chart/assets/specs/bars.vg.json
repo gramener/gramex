@@ -6,7 +6,7 @@
   "data": [
     {
       "name": "table",
-      "url": "<%= absolute_url %>data/bars.json"
+      "url": "<%= dataset_url %>"
     }
   ],
   "scales": [
@@ -15,7 +15,7 @@
       "type": "band",
       "domain": {
         "data": "table",
-        "field": "category"
+        "field": "<%= data_mapper.column_1 %>"
       },
       "range": "width",
       "padding": 0.3,
@@ -25,7 +25,7 @@
       "name": "yscale",
       "domain": {
         "data": "table",
-        "field": "amount"
+        "field": "<%= data_mapper.column_2 %>"
       },
       "nice": true,
       "range": "height"
@@ -50,7 +50,7 @@
         "enter": {
           "x": {
             "scale": "xscale",
-            "field": "category"
+            "field": "<%= data_mapper.column_1 %>"
           },
           "width": {
             "scale": "xscale",
@@ -58,7 +58,7 @@
           },
           "y": {
             "scale": "yscale",
-            "field": "amount"
+            "field": "<%= data_mapper.column_2 %>"
           },
           "y2": {
             "scale": "yscale",
@@ -88,7 +88,7 @@
             "offset": -10
           },
           "fill": {
-            "value": "black"
+            "value": "#000000"
           },
           "align": {
             "value": "right"
@@ -97,7 +97,7 @@
             "value": "middle"
           },
           "text": {
-            "field": "datum.amount"
+            "field": "datum['<%= data_mapper.column_2 %>']"
           }
         }
       }

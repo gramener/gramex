@@ -14,7 +14,7 @@
     },
     "axis": {
       "grid": true,
-      "gridColor": "black",
+      "gridColor": "#000000",
       "gridOpacity": 0.3,
       "gridDash": 2
     },
@@ -28,34 +28,34 @@
   "data": [
     {
       "name": "table",
-      "url": "<%= absolute_url %>data/stream-2.json"
+      "url": "<%= dataset_url %>"
     }
   ],
   "scales": [
     {
-      "name": "x",
+      "name": "scale_band",
       "type": "point",
       "range": "width",
       "nice": true,
       "paddingOuter": 0.3,
       "domain": {
         "data": "table",
-        "field": "x"
+        "field": "item"
       }
     },
     {
-      "name": "y",
+      "name": "scale_height",
       "type": "linear",
       "range": "height",
       "nice": true,
       "domainMax": 100,
       "domain": {
         "data": "table",
-        "field": "y"
+        "field": "point_height"
       }
     },
     {
-      "name": "color",
+      "name": "scale_color",
       "type": "ordinal",
       "range": [
         "#3366CC",
@@ -66,14 +66,14 @@
       ],
       "domain": {
         "data": "table",
-        "field": "c"
+        "field": "category"
       }
     }
   ],
   "axes": [
     {
       "orient": "bottom",
-      "scale": "x",
+      "scale": "scale_band",
       "ticks": false,
       "titlePadding": 5,
       "minExtent": 35,
@@ -82,7 +82,7 @@
     },
     {
       "orient": "left",
-      "scale": "y",
+      "scale": "scale_height",
       "ticks": false,
       "titlePadding": 5,
       "labelFlush": true,
@@ -93,7 +93,7 @@
   ],
   "legends": [
     {
-      "fill": "color",
+      "fill": "scale_color",
       "direction": "horizontal",
       "padding": 10,
       "orient": "none",
@@ -119,7 +119,7 @@
         "facet": {
           "name": "series",
           "data": "table",
-          "groupby": "c"
+          "groupby": "category"
         }
       },
       "marks": [
@@ -131,16 +131,16 @@
           "encode": {
             "enter": {
               "x": {
-                "scale": "x",
-                "field": "x"
+                "scale": "scale_band",
+                "field": "item"
               },
               "y": {
-                "scale": "y",
-                "field": "y"
+                "scale": "scale_height",
+                "field": "point_height"
               },
               "stroke": {
-                "scale": "color",
-                "field": "c"
+                "scale": "scale_color",
+                "field": "category"
               },
               "strokeWidth": {
                 "value": 1
@@ -157,23 +157,23 @@
           "encode": {
             "enter": {
               "width": {
-                "scale": "x",
-                "field": "x"
+                "scale": "scale_band",
+                "field": "item"
               },
               "x": {
-                "scale": "x",
-                "field": "x"
+                "scale": "scale_band",
+                "field": "item"
               },
               "y": {
-                "scale": "y",
-                "field": "y"
+                "scale": "scale_height",
+                "field": "point_height"
               },
               "fill": {
-                "scale": "color",
-                "field": "c"
+                "scale": "scale_color",
+                "field": "category"
               },
               "stroke": {
-                "value": "white"
+                "value": "#ffffff"
               },
               "strokeWidth": {
                 "value": 1.5

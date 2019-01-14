@@ -6,17 +6,17 @@
   "data": [
     {
       "name": "pyramid_data1",
-      "url": "<%= absolute_url %>data/stacked-pyramid.json",
+      "url": "<%= dataset_url %>",
       "transform": [
         {
           "type": "stack",
           "groupby": [
-            "Ranks"
+            "<%= data_mapper.column_1 %>"
           ],
-          "field": "value",
+          "field": "<%= data_mapper.column_3 %>",
           "offset": "center",
           "sort": {
-            "field": "name",
+            "field": "<%= data_mapper.column_2 %>",
             "order": "descending"
           },
           "as": [
@@ -43,7 +43,7 @@
       "padding": 0.3,
       "domain": {
         "data": "pyramid_data1",
-        "field": "Ranks"
+        "field": "<%= data_mapper.column_1 %>"
       },
       "range": "height"
     },
@@ -53,7 +53,7 @@
       "range": "category",
       "domain": {
         "data": "pyramid_data1",
-        "field": "name"
+        "field": "<%= data_mapper.column_2 %>"
       }
     }
   ],
@@ -67,7 +67,7 @@
         "enter": {
           "y": {
             "scale": "py_yscale",
-            "field": "Ranks"
+            "field": "<%= data_mapper.column_1 %>"
           },
           "height": {
             "scale": "py_yscale",
@@ -84,7 +84,7 @@
           },
           "fill": {
             "scale": "color",
-            "field": "name"
+            "field": "<%= data_mapper.column_2 %>"
           }
         }
       }

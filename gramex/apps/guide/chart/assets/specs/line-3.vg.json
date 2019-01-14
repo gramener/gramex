@@ -82,7 +82,7 @@
       "orient": "right",
       "scale": "y",
       "ticks": true,
-      "tickColor": "white",
+      "tickColor": "#ffffff",
       "labels": false
     },
     {
@@ -208,7 +208,7 @@
                 "offset": 15
               },
               "fill": {
-                "value": "#000"
+                "value": "#000000"
               },
               "text": {
                 "field": "y"

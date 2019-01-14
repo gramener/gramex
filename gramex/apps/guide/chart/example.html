@@ -1,21 +1,32 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <meta charset="utf-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <title>Vega chart gallery</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" type="text/css" media="screen" href="ui/bootstraptheme.css" />
+  <link rel="stylesheet" type="text/css" media="screen" href="ui/bootstraptheme.css?primary=%23314ccd&secondary=%23868e96&success=%231ec68e&info=%2317a2b8&warning=%23ffd334&danger=%23dc3545&light=%23f4f7fb&dark=%23607d9c&body-bg=%23ffffff&body-color=%23103036&enable-rounded=on&enable-shadows=on&enable-gradients=on&enable-transitions=on&enable-print-styles=on&font-family-base=open-sans&headings-font-family=roboto" />
+  <link rel="stylesheet" href="ui/font-awesome/css/font-awesome.min.css">
+  <link rel="stylesheet" href="css/main.css">
 </head>
+
 <body>
   <nav class="navbar navbar-expand-lg navbar-light bg-light d-flex mb-3">
     <a class="navbar-brand" href="gallery.html">Vega Gallery</a>
   </nav>
+  <div id="prop-editor">
+  </div>
   <div class="container">
     <h1></h1>
+    <!-- <canvas id="myCanvas" resize></canvas> -->
     <div id="chart"></div>
     <p class="mt-3 text-center">
-      <button class="btn-sm btn btn-dark copy" data-toggle="tooltip" data-placement="top" title="Copied" type="button">
+      <button class="btn-sm btn btn-primary ripple render-chart shadow-none" type="button">
+        Customize chart
+      </button>
+      <button class="btn-sm btn btn-dark blue-fade copy shadow-none" data-toggle="tooltip" data-placement="top" title="Copied"
+        type="button">
         Copy code
       </button>
     </p>
@@ -33,49 +44,339 @@
   <script src="ui/vega/build/vega.min.js"></script>
   <script src="ui/vega-lite/build/vega-lite.min.js"></script>
   <script src="ui/vega-embed/build/vega-embed.min.js"></script>
-
+  <script src="node_modules/paper/dist/paper-full.js"></script>
+  <script src="mark_types.js"></script>
+  <script src="form_marshal.js"></script>
   <script>
+    /* globals template_data */
     var specName = window.location.href.split('chart=')[1]
+    // Refactor: These three global variables exist because
+    // I haven't yet figured out how to compose event listeners
+    var dataset_name, templates, mapper
+
+
     $('h1').html(specName.split('-').join(' '))
 
-    vega.loader().load('assets/specs/' + specName + '.vg.json')
-      .then(function(spec) {
-        // modify relative to absolute urls
-        spec = _.template(spec)({absolute_url: location.href.split('example.html')[0]})
+    // dangling state TODO: refactor to inside actions
+    $('.code div').show()
+    $('#prop-editor').hide()
 
-        var parsed_spec = JSON.parse(spec)
-        var copy_code_file,
-          compiled_spec,
-          compiled_spec = parsed_spec,
-          schema_type = parsed_spec.$schema.split('/')[4]
 
-        if (schema_type == 'vega-lite') {
-          compiled_spec = vl.compile(parsed_spec).spec
-          copy_code_file = 'copy_example_vl.html'
-        } else if (schema_type == 'vega') {
-          copy_code_file = 'copy_example_vg.html'
-        }
+    var view, json_file_spec, data_mapper
+    var model = {
+      vega_spec: null,
+      form_spec: null
+    }
 
-        fetch(copy_code_file)
-          .then(function (res) { return res.text() })
+    var time = {
+      history: [],
+      pos: -1
+    }
+
+    function templatize_gallery_json(res) {
+      var templatized_res = _.template(JSON.stringify(res))({
+        absolute_url: location.href.split('example.html')[0]
+      })
+
+      return Promise.resolve(JSON.parse(templatized_res))
+    }
+
+    Promise.all(
+      [
+        vega.loader().load('assets/specs/' + specName + '.vg.json'),
+        fetch('examples.json')
+          .then(function (res) { return res.json() })
+          .then(templatize_gallery_json)
           .then(function (res) {
-            $('.code pre').html(_.template(res)({ spec: spec }))
+            return Promise.resolve(res
+              .filter(function (item) {
+                return item.chart == specName
+              })
+              .map(function (item) {
+                return item.data_mapper
+              })[0])
+          }),
+        fetch('examples.json')
+          .then(function (res) { return res.json() })
+          .then(templatize_gallery_json)
+          .then(function (res) {
+            return Promise.resolve(res
+              .filter(function (item) {
+                return item.chart == specName
+              })
+              .map(function (item) {
+                return item.dataset_url
+              })[0])
+          })
+      ]
+    )
+      .then(renderCopyPasteBlock)
+      .catch(function (error) {
+      })
+
+    function chartDidRender() {
+      // if base already rendered, only rerender customizechart tab-content
+      if (templates) {
+        $('#customize_chart').html(_.template(templates.customize_chart)({
+          templates: templates, data: template_data(model.vega_spec, view)
+        }))
+        form_default_setter()
+        $('body')
+          .on('change', '#customize_chart', function (event) {
+            if (event.target.dataset['delete']) {
+              event.target.dataset['delete'].split('@').map(function (del_prop) {
+                _.unset(model.vega_spec, event.target.dataset['path'].split('.').slice(0, -1).join('.') + '.' + del_prop)
+              })
+
+
+            }
+
+            if (!event.target.dataset['path'].endsWith('$')) {
+              _.set(model.vega_spec,
+                event.target.dataset['path'].split('.'),
+                event.target.type === 'number' ? parseFloat(event.target.value) : event.target.value
+              )
+            }
+
+            renderChart(model.vega_spec)
+            time.pos++
+          })
+        return
+      }
+
+      var template_urls = [
+        './templates/main.template.html',
+        './templates/stages.template.html',
+        './templates/data_loader.template.html',
+        './templates/data_mapper.template.html',
+        './templates/customize_chart.template.html',
+        './templates/publish_embed.template.html',
+        './templates/layer_list.template.html',
+        './templates/property_list.template.html',
+        './templates/property_detail.template.html',
+        './templates/input.template.html',
+        './templates/mark.template.html',
+        './templates/select.template.html',
+        './templates/padding.template.html',
+        './templates/data_range_tabs.template.html'
+      ]
+
+      Promise.all(
+        template_urls
+          .map(function (url) { return fetch(url) })
+      )
+        .then(responses => {
+          return Promise.all(responses.map(res => res.text()))
+        })
+        .then(function (tmpls) {
+          templates = tmpls.reduce(function (acc, curr, index) {
+            acc[template_urls[index].split('.template.html')[0].split('./templates/')[1]] = curr
+            return acc
+          }, {})
+
+          $('#prop-editor').html(_.template(templates.main)({
+            templates: templates, data: template_data(model.vega_spec, view)
+          }))
+
+          $('a[data-toggle="tab"]', $('#stages')).on('shown.bs.tab', function (e) {
+            $('h6', $(e.relatedTarget)).removeClass('arrow-info').addClass('arrow-light')
+            $(e.relatedTarget).closest('li').css('pointer-events', 'none')
+            $('h6', $(e.target)).removeClass('arrow-light').addClass('arrow-info')
           })
 
-        vegaEmbed('#chart', compiled_spec, {defaultStyle: true, renderer: 'svg'}).then(function() {
-          setTimeout(function() {
-            window.renderComplete = true
-          }, 25000)
-        }).catch(console.error)
+          form_default_setter()
+
+
+          // REFACTOR: event listeners only generate data (not update DOM)
+          $('.render-chart').one('click', function () {
+            if ($(this).text() == 'Render Chart') {
+              $(this).text('Customize Chart')
+              $('.copy').prop('disabled', false)
+
+              $('#data-viewer').hide()
+              $('#prop-editor').hide()
+            } else {
+              $('#data-viewer').show()
+              $('#prop-editor').show()
+
+              $(this).text('Render Chart')
+              $('.copy').prop('disabled', true)
+            }
+          })
+        })
+
+    }
+
+    function form_default_setter(remove_this_bad_arg) {
+
+      var vega_spec_ids = get_vega_spec_id(model.vega_spec)
+      // initialize form with spec values
+      vega_spec_ids.map(function (vega_spec_id) {
+        if ($('[data-path="' + vega_spec_id + '"]').length >= 1) {
+          var bad_variable = $('[data-path="' + vega_spec_id + '"]')
+            .val(_.get(model.vega_spec, vega_spec_id.split('.')))
+
+          if (remove_this_bad_arg !== 'undo') {
+            bad_variable.trigger('change')
+          }
+        }
+      })
+    }
+
+    function renderCopyPasteBlock(response) {
+      json_file_spec = response[0]
+      data_mapper = response[1]
+      dataset_url = response[2]
+      // <%= absolute_url %>data/<%= dataset_name %>.json
+      // var dataset_url = absolute_url + data/ + dataset_name + '.json'
+      if (!data_mapper)
+        $('.render-chart').remove()
+
+      // modify relative to absolute urls
+      var spec = _.template(json_file_spec)({
+        absolute_url: location.href.split('example.html')[0],
+        // dataset_name: dataset_name,
+        dataset_url: dataset_url,
+        data_mapper: data_mapper
+      })
+
+      var parsed_spec = JSON.parse(spec)
+      var copy_code_file,
+        compiled_spec,
+        compiled_spec = parsed_spec,
+        schema_type = parsed_spec.$schema.split('/')[4]
+
+      if (schema_type == 'vega-lite') {
+        compiled_spec = vl.compile(parsed_spec).spec
+        copy_code_file = 'copy_example_vl.html'
+      } else if (schema_type == 'vega') {
+        copy_code_file = 'copy_example_vg.html'
+      }
+
+      fetch(copy_code_file)
+        .then(function (res) { return res.text() })
+        .then(function (res) {
+          $('.code pre').html(_.template(res)({ spec: spec }))
+        })
+
+      // REFACTOR: return Promise of compiled_spec
+      model.vega_spec = compiled_spec
+
+      renderChart(compiled_spec, {}, function (result) {
+        setTimeout(function () {
+          window.renderComplete = true
+        }, 25000)
+        view = result.view
+
+        chartDidRender()
+        time.pos++
+      })
+
+    }
+
+
+    /////////////////////////////////////////////////
+    /////////////////////////////////////////////////
+    ///////////// EVENT LISTENERS ///////////////////
+    /////////////////////////////////////////////////
+    /////////////////////////////////////////////////
+
+    $('body')
+      .on('click', '.undo', function () {
+        if (time.pos == -1) {
+          // disable undo button
+          $('.undo').removeClass('cursor-pointer')
+          return
+        }
+        if (!$('.undo').hasClass('cursor-pointer')) {
+          $('.undo').addClass('cursor-pointer')
+        }
+        model.vega_spec = _.cloneDeep(time.history[time.pos].vega_spec)
+        time.pos--
+        form_default_setter('undo')
+        renderChart(model.vega_spec)
+      })
+      .on('click', '.redo', function () {
+        if (time.pos == time.history.length) {
+          // disable redo button
+          $('.redo').removeClass('cursor-pointer')
+          return
+        }
+        if (!$('.redo').hasClass('cursor-pointer')) {
+          $('.redo').addClass('cursor-pointer')
+        }
+        time.pos++
+        model.vega_spec = _.cloneDeep(time.history[time.pos].vega_spec)
+        form_default_setter('undo')
+        renderChart(model.vega_spec)
+      })
+      .on('click', '.next-dataloader', function (event) {
+        dataset_name = $('.fh-url').val()
+
+        function on_cols_fetch(res) {
+          var fh_dataset = res[0], gallery_dataset = res[1]
+          // RENDER DATA-MAPPER dropdowns with fh_col_names
+          $('#data_mapper').html(_.template(templates['data_mapper'])({
+            templates: templates,
+            fh_col_names: Array_Object_keys(fh_dataset),
+            gallery_columns: Array_Object_keys(gallery_dataset)
+          }))
+
+          mapper = {}
+          $('body').on('change', '.mapper-table', function (event) {
+            var all_dropdowns_selected = true
+
+            Object.values(data_mapper).map(function (gallery_column) {
+              mapper[gallery_column] = $('#map-' + slug(gallery_column)).val()
+              if (!$('#map-' + slug(gallery_column)).val()) {
+                all_dropdowns_selected = false
+              }
+            })
+
+            if (all_dropdowns_selected) {
+              // TODO: run renderCopyPasteBlock so that user can check if
+              // columns are mapped properly...
+              // renderCopyPasteBlock([json_file_spec, mapper, dataset_name])
+            }
+          })
+
+
+        }
+
+        Promise.all([fetch(dataset_name), fetch(model.vega_spec.data[0].url)])
+          .then(function (responses) {
+            return Promise.all(responses.map(function (res) { return res.json() }))
+          })
+          .then(on_cols_fetch)
+
+        // TODO: validate url
+        $('a[href="#data_mapper"').click()
+      })
+      .on('click', '.save-mapper', function (event) {
+        // Re render props-editor template
+        // Check with mapper values and rerender only if changed
+
+        // mapper = {
+        //   label: 'Name of Town',
+        //   count: 'Population'
+        // }
+
+        var new_mapper = Object.keys(data_mapper).reduce(function (acc, current_col) {
+          acc[current_col] = mapper[data_mapper[current_col]]
+          return acc
+        }, {})
+
+
+        renderCopyPasteBlock([json_file_spec, new_mapper, dataset_name])
+
+        $('a[href="#customize_chart"').click()
 
       })
-      .catch(function(error) {
-        console.error(error)
-      })
+
 
     $('.copy')
       .tooltip({ trigger: 'click' })
-      .on('click', function(e) {
+      .on('click', function (e) {
         var $textarea = $('<textarea></textarea>')
           .val($('.code pre').text())
           .appendTo(document.body)
@@ -88,6 +389,84 @@
         }, 1000)
       })
 
+    function renderChart(spec, options, callback) {
+      options = Object.assign({}, options, { defaultStyle: true, renderer: 'svg', runAsync: true })
+      vegaEmbed('#chart', spec, options).then(function (result) {
+        if (callback) callback(result)
+        view = result.view
+        var spec_validation_true = true
+        if (spec_validation_true) {
+          time.history.push(_.cloneDeep(model))
+        }
+
+        // renderCanvas(view)
+      }).catch(console.error)
+    }
+
+    function get_vega_spec_id(obj) {
+      var vega_spec_ids = []
+      function jsonPathTraversor(obj, current_path) {
+        if (typeof obj !== 'object') {
+          // leaf node
+          vega_spec_ids.push(current_path.slice(1))
+        } else {
+          if (Array.isArray(obj)) {
+            obj.map(function (item, index) {
+              jsonPathTraversor(obj[index], current_path + '.' + index)
+            })
+          } else {
+            Object.keys(obj).map(function (item) {
+              jsonPathTraversor(obj[item], current_path + '.' + item)
+            })
+          }
+        }
+      }
+
+      jsonPathTraversor(obj, '')
+      return vega_spec_ids
+    }
+
+
+
+    function renderCanvas(chart_view) {
+      // Get a reference to the canvas object
+      var canvas = document.getElementById('myCanvas');
+      canvas.height = chart_view.height()
+      canvas.width = chart_view.width()
+
+      // Create an empty project and a view for the canvas:
+      paper.setup(canvas);
+      var tool = new paper.Tool();
+
+      var svg_string
+      chart_view.toSVG().then((res) => {
+        svg_string = res
+        paper.project.importSVG(svg_string)
+        $('#chart').hide()
+
+        tool.onMouseDown = function (event) {
+          var hitOptions = {
+            segments: true,
+            stroke: true,
+            fill: true
+          };
+          var hitResult = paper.project.hitTest(event.point, hitOptions);
+
+          if (!hitResult) {
+            paper.project.activeLayer.selected = false;
+          }
+
+          if (hitResult) {
+            paper.project.activeLayer.selected = false;
+            hitResult.item.selected = true;
+          }
+        }
+      })
+
+      paper.view.draw();
+    }
+
   </script>
 </body>
+
 </html>

@@ -11,3 +11,11 @@ url:
       path: $YAMLPATH/data/
       headers:
         Access-Control-Allow-Origin: '*'
+
+  towns-data:
+    pattern: /$YAMLURL/towns
+    handler: FormHandler
+    kwargs:
+      url: $YAMLPATH/data/towns.xlsx
+      headers:
+        Access-Control-Allow-Origin: '*'

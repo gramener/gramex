@@ -1,0 +1,147 @@
+{
+  "$schema": "https://vega.github.io/schema/vega/v4.json",
+  "width": 600,
+  "height": 360,
+  "autosize": "fit",
+  "config": {
+    "axisBand": {"bandPosition": 1, "tickExtra": true, "tickOffset": 0}
+  },
+  "signals": [
+    {"name": "fields", "value": ["Item 1", "Item 2", "Item 3", "Item 4"]},
+    {"name": "plotWidth", "value": 120},
+    {"name": "height", "update": "height"}
+  ],
+  "data": [
+    {
+      "name": "iris",
+      "url": "<%= absolute_url %>data/horizontal-box-plot.json",
+      "transform": [
+        {
+          "type": "fold",
+          "fields": {"signal": "fields"},
+          "as": ["organ", "value"]
+        }
+      ]
+    }
+  ],
+  "scales": [
+    {
+      "name": "scales_layout",
+      "type": "band",
+      "range": "height",
+      "domain": {"data": "iris", "field": "organ"}
+    },
+    {
+      "name": "scales_xscale",
+      "type": "linear",
+      "range": "width",
+      "round": true,
+      "domain": {"data": "iris", "field": "value"},
+      "zero": true,
+      "nice": true
+    }
+  ],
+  "axes": [
+    {"orient": "top", "scale": "scales_xscale", "zindex": 1},
+    {"orient": "left", "scale": "scales_layout", "tickCount": 5, "zindex": 1}
+  ],
+  "marks": [
+    {
+      "name": "marks_group",
+      "type": "group",
+      "from": {"facet": {"data": "iris", "name": "organs", "groupby": "organ"}},
+      "encode": {
+        "update": {
+          "yc": {"scale": "scales_layout", "field": "organ", "band": 0.5},
+          "height": {"signal": "plotWidth"},
+          "width": {"signal": "width"}
+        }
+      },
+      "data": [
+        {
+          "name": "data_summary",
+          "source": "organs",
+          "transform": [
+            {
+              "type": "aggregate",
+              "fields": ["value", "value", "value", "value", "value"],
+              "ops": ["min", "q1", "median", "q3", "max"],
+              "as": ["min", "q1", "median", "q3", "max"]
+            }
+          ]
+        }
+      ],
+      "marks": [
+        {
+          "name": "marks_line",
+          "type": "rect",
+          "from": {"data": "data_summary"},
+          "encode": {
+            "enter": {"fill": {"value": "black"}, "height": {"value": 1}},
+            "update": {
+              "yc": {"signal": "plotWidth / 2", "offset": -0.5},
+              "x": {"scale": "scales_xscale", "field": "min"},
+              "x2": {"scale": "scales_xscale", "field": "max"}
+            }
+          }
+        },
+        {
+          "name": "marks_block",
+          "type": "rect",
+          "from": {"data": "data_summary"},
+          "encode": {
+            "enter": {
+              "fill": {"value": "#f2c34e"},
+              "cornerRadius": {"value": 0}
+            },
+            "update": {
+              "yc": {"signal": "plotWidth / 2"},
+              "height": {"signal": "plotWidth / 2"},
+              "x": {"scale": "scales_xscale", "field": "q1"},
+              "x2": {"scale": "scales_xscale", "field": "q3"}
+            }
+          }
+        },
+        {
+          "name": "marks_mid_line",
+          "type": "rect",
+          "from": {"data": "data_summary"},
+          "encode": {
+            "enter": {"fill": {"value": "black"}, "width": {"value": 2}},
+            "update": {
+              "yc": {"signal": "plotWidth / 2"},
+              "height": {"signal": "plotWidth / 2"},
+              "x": {"scale": "scales_xscale", "field": "median"}
+            }
+          }
+        },
+        {
+          "name": "marks_line_end",
+          "type": "rect",
+          "from": {"data": "data_summary"},
+          "encode": {
+            "enter": {"fill": {"value": "#000"}, "width": {"value": 1}},
+            "update": {
+              "yc": {"signal": "plotWidth/2"},
+              "height": {"signal": "plotWidth/2"},
+              "x": {"scale": "scales_xscale", "field": "max"}
+            }
+          }
+        },
+        {
+          "name": "marks_start_line",
+          "type": "rect",
+          "from": {"data": "data_summary"},
+          "encode": {
+            "enter": {"fill": {"value": "#000"}, "width": {"value": 1}},
+            "update": {
+              "yc": {"signal": "plotWidth/2"},
+              "height": {"signal": "plotWidth/2"},
+              "x": {"scale": "scales_xscale", "field": "min"}
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

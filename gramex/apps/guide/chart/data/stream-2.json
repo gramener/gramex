@@ -1,302 +1,302 @@
 [
   {
-    "x": "item 1",
-    "y": 10,
-    "c": "Category 1"
+    "item": "item 1",
+    "point_height": 10,
+    "category": "Category 1"
   },
   {
-    "x": "item 2",
-    "y": 15,
-    "c": "Category 1"
+    "item": "item 2",
+    "point_height": 15,
+    "category": "Category 1"
   },
   {
-    "x": "item 3",
-    "y": 20,
-    "c": "Category 1"
+    "item": "item 3",
+    "point_height": 20,
+    "category": "Category 1"
   },
   {
-    "x": "item 4",
-    "y": 9,
-    "c": "Category 1"
+    "item": "item 4",
+    "point_height": 9,
+    "category": "Category 1"
   },
   {
-    "x": "item 5",
-    "y": 5,
-    "c": "Category 1"
+    "item": "item 5",
+    "point_height": 5,
+    "category": "Category 1"
   },
   {
-    "x": "item 6",
-    "y": 11,
-    "c": "Category 1"
+    "item": "item 6",
+    "point_height": 11,
+    "category": "Category 1"
   },
   {
-    "x": "item 7",
-    "y": 15,
-    "c": "Category 1"
+    "item": "item 7",
+    "point_height": 15,
+    "category": "Category 1"
   },
   {
-    "x": "item 8",
-    "y": 18,
-    "c": "Category 1"
+    "item": "item 8",
+    "point_height": 18,
+    "category": "Category 1"
   },
   {
-    "x": "item 9",
-    "y": 15,
-    "c": "Category 1"
+    "item": "item 9",
+    "point_height": 15,
+    "category": "Category 1"
   },
   {
-    "x": "item 10",
-    "y": 12,
-    "c": "Category 1"
+    "item": "item 10",
+    "point_height": 12,
+    "category": "Category 1"
   },
   {
-    "x": "item 11",
-    "y": 4,
-    "c": "Category 1"
+    "item": "item 11",
+    "point_height": 4,
+    "category": "Category 1"
   },
   {
-    "x": "item 12",
-    "y": 10,
-    "c": "Category 1"
+    "item": "item 12",
+    "point_height": 10,
+    "category": "Category 1"
   },
   {
-    "x": "item 1",
-    "y": 20,
-    "c": "Category 2"
+    "item": "item 1",
+    "point_height": 20,
+    "category": "Category 2"
   },
   {
-    "x": "item 2",
-    "y": 25,
-    "c": "Category 2"
+    "item": "item 2",
+    "point_height": 25,
+    "category": "Category 2"
   },
   {
-    "x": "item 3",
-    "y": 29,
-    "c": "Category 2"
+    "item": "item 3",
+    "point_height": 29,
+    "category": "Category 2"
   },
   {
-    "x": "item 4",
-    "y": 25,
-    "c": "Category 2"
+    "item": "item 4",
+    "point_height": 25,
+    "category": "Category 2"
   },
   {
-    "x": "item 5",
-    "y": 20,
-    "c": "Category 2"
+    "item": "item 5",
+    "point_height": 20,
+    "category": "Category 2"
   },
   {
-    "x": "item 6",
-    "y": 30,
-    "c": "Category 2"
+    "item": "item 6",
+    "point_height": 30,
+    "category": "Category 2"
   },
   {
-    "x": "item 7",
-    "y": 32,
-    "c": "Category 2"
+    "item": "item 7",
+    "point_height": 32,
+    "category": "Category 2"
   },
   {
-    "x": "item 8",
-    "y": 35,
-    "c": "Category 2"
+    "item": "item 8",
+    "point_height": 35,
+    "category": "Category 2"
   },
   {
-    "x": "item 9",
-    "y": 30,
-    "c": "Category 2"
+    "item": "item 9",
+    "point_height": 30,
+    "category": "Category 2"
   },
   {
-    "x": "item 10",
-    "y": 25,
-    "c": "Category 2"
+    "item": "item 10",
+    "point_height": 25,
+    "category": "Category 2"
   },
   {
-    "x": "item 11",
-    "y": 19,
-    "c": "Category 2"
+    "item": "item 11",
+    "point_height": 19,
+    "category": "Category 2"
   },
   {
-    "x": "item 12",
-    "y": 22,
-    "c": "Category 2"
+    "item": "item 12",
+    "point_height": 22,
+    "category": "Category 2"
   },
   {
-    "x": "item 1",
-    "y": 40,
-    "c": "Category 3"
+    "item": "item 1",
+    "point_height": 40,
+    "category": "Category 3"
   },
   {
-    "x": "item 2",
-    "y": 35,
-    "c": "Category 3"
+    "item": "item 2",
+    "point_height": 35,
+    "category": "Category 3"
   },
   {
-    "x": "item 3",
-    "y": 39,
-    "c": "Category 3"
+    "item": "item 3",
+    "point_height": 39,
+    "category": "Category 3"
   },
   {
-    "x": "item 4",
-    "y": 35,
-    "c": "Category 3"
+    "item": "item 4",
+    "point_height": 35,
+    "category": "Category 3"
   },
   {
-    "x": "item 5",
-    "y": 45,
-    "c": "Category 3"
+    "item": "item 5",
+    "point_height": 45,
+    "category": "Category 3"
   },
   {
-    "x": "item 6",
-    "y": 40,
-    "c": "Category 3"
+    "item": "item 6",
+    "point_height": 40,
+    "category": "Category 3"
   },
   {
-    "x": "item 7",
-    "y": 42,
-    "c": "Category 3"
+    "item": "item 7",
+    "point_height": 42,
+    "category": "Category 3"
   },
   {
-    "x": "item 8",
-    "y": 45,
-    "c": "Category 3"
+    "item": "item 8",
+    "point_height": 45,
+    "category": "Category 3"
   },
   {
-    "x": "item 9",
-    "y": 40,
-    "c": "Category 3"
+    "item": "item 9",
+    "point_height": 40,
+    "category": "Category 3"
   },
   {
-    "x": "item 10",
-    "y": 35,
-    "c": "Category 3"
+    "item": "item 10",
+    "point_height": 35,
+    "category": "Category 3"
   },
   {
-    "x": "item 11",
-    "y": 42,
-    "c": "Category 3"
+    "item": "item 11",
+    "point_height": 42,
+    "category": "Category 3"
   },
   {
-    "x": "item 12",
-    "y": 39,
-    "c": "Category 3"
+    "item": "item 12",
+    "point_height": 39,
+    "category": "Category 3"
   },
   {
-    "x": "item 1",
-    "y": 50,
-    "c": "Category 4"
+    "item": "item 1",
+    "point_height": 50,
+    "category": "Category 4"
   },
   {
-    "x": "item 2",
-    "y": 53,
-    "c": "Category 4"
+    "item": "item 2",
+    "point_height": 53,
+    "category": "Category 4"
   },
   {
-    "x": "item 3",
-    "y": 50,
-    "c": "Category 4"
+    "item": "item 3",
+    "point_height": 50,
+    "category": "Category 4"
   },
   {
-    "x": "item 4",
-    "y": 57,
-    "c": "Category 4"
+    "item": "item 4",
+    "point_height": 57,
+    "category": "Category 4"
   },
   {
-    "x": "item 5",
-    "y": 60,
-    "c": "Category 4"
+    "item": "item 5",
+    "point_height": 60,
+    "category": "Category 4"
   },
   {
-    "x": "item 6",
-    "y": 65,
-    "c": "Category 4"
+    "item": "item 6",
+    "point_height": 65,
+    "category": "Category 4"
   },
   {
-    "x": "item 7",
-    "y": 64,
-    "c": "Category 4"
+    "item": "item 7",
+    "point_height": 64,
+    "category": "Category 4"
   },
   {
-    "x": "item 8",
-    "y": 60,
-    "c": "Category 4"
+    "item": "item 8",
+    "point_height": 60,
+    "category": "Category 4"
   },
   {
-    "x": "item 9",
-    "y": 57,
-    "c": "Category 4"
+    "item": "item 9",
+    "point_height": 57,
+    "category": "Category 4"
   },
   {
-    "x": "item 10",
-    "y": 52,
-    "c": "Category 4"
+    "item": "item 10",
+    "point_height": 52,
+    "category": "Category 4"
   },
   {
-    "x": "item 11",
-    "y": 58,
-    "c": "Category 4"
+    "item": "item 11",
+    "point_height": 58,
+    "category": "Category 4"
   },
   {
-    "x": "item 12",
-    "y": 65,
-    "c": "Category 4"
+    "item": "item 12",
+    "point_height": 65,
+    "category": "Category 4"
   },
   {
-    "x": "item 1",
-    "y": 70,
-    "c": "Category 5"
+    "item": "item 1",
+    "point_height": 70,
+    "category": "Category 5"
   },
   {
-    "x": "item 2",
-    "y": 67,
-    "c": "Category 5"
+    "item": "item 2",
+    "point_height": 67,
+    "category": "Category 5"
   },
   {
-    "x": "item 3",
-    "y": 64,
-    "c": "Category 5"
+    "item": "item 3",
+    "point_height": 64,
+    "category": "Category 5"
   },
   {
-    "x": "item 4",
-    "y": 73,
-    "c": "Category 5"
+    "item": "item 4",
+    "point_height": 73,
+    "category": "Category 5"
   },
   {
-    "x": "item 5",
-    "y": 80,
-    "c": "Category 5"
+    "item": "item 5",
+    "point_height": 80,
+    "category": "Category 5"
   },
   {
-    "x": "item 6",
-    "y": 76,
-    "c": "Category 5"
+    "item": "item 6",
+    "point_height": 76,
+    "category": "Category 5"
   },
   {
-    "x": "item 7",
-    "y": 78,
-    "c": "Category 5"
+    "item": "item 7",
+    "point_height": 78,
+    "category": "Category 5"
   },
   {
-    "x": "item 8",
-    "y": 70,
-    "c": "Category 5"
+    "item": "item 8",
+    "point_height": 70,
+    "category": "Category 5"
   },
   {
-    "x": "item 9",
-    "y": 76,
-    "c": "Category 5"
+    "item": "item 9",
+    "point_height": 76,
+    "category": "Category 5"
   },
   {
-    "x": "item 10",
-    "y": 73,
-    "c": "Category 5"
+    "item": "item 10",
+    "point_height": 73,
+    "category": "Category 5"
   },
   {
-    "x": "item 11",
-    "y": 83,
-    "c": "Category 5"
+    "item": "item 11",
+    "point_height": 83,
+    "category": "Category 5"
   },
   {
-    "x": "item 12",
-    "y": 81,
-    "c": "Category 5"
+    "item": "item 12",
+    "point_height": 81,
+    "category": "Category 5"
   }
 ]

@@ -1,85 +1,118 @@
 {
-    "$schema": "https://vega.github.io/schema/vega/v4.json",
-    "width": 600,
-    "height": 310,
-    "padding": {"top": 30},
-    "autosize": "fit",
-    "signals": [
-      {
-        "name": "signal_gradientLength",
-        "value": 200
-      }
-    ],
-    "title": {
-      "text": "Bubble Chart",
-      "anchor": "start",
-      "color": "#485465"
-    },
-  
-    "data": [
-      {
-      "name": "table",
-      "url": "https://api.myjson.com/bins/1h3p3i"
+  "$schema": "https://vega.github.io/schema/vega/v4.json",
+  "width": 600,
+  "height": 310,
+  "padding": {
+    "top": 30
+  },
+  "autosize": "fit",
+  "signals": [
+    {
+      "name": "signal_gradientLength",
+      "value": 200
     }
-    ],
-    "scales": [
-      {
-      "name": "x",
-      "type": "point",
+  ],
+  "title": {
+    "text": "Bubble Chart",
+    "anchor": "start",
+    "color": "#485465"
+  },
+  "data": [
+    {
+      "name": "data_table",
+      "url": "<%= absolute_url %>data/bubble-3.json"
+    },
+    {
+      "name": "total_count",
+      "source": "data_table",
+      "transform": [
+        {
+          "type": "aggregate",
+          "groupby": [
+            "category"
+          ],
+          "as": [
+            "sum"
+          ]
+        }
+      ]
+    }
+  ],
+  "scales": [
+    {
+      "name": "scales_x",
+      "type": "band",
       "round": true,
       "nice": true,
-      "padding": 0.1,
+      "padding": 1,
       "zero": true,
-      "domain": {"data": "table", "field": "category"},
+      "domain": {
+        "data": "data_table",
+        "field": "category"
+      },
       "range": "width"
     },
     {
-      "name": "y",
+      "name": "scales_y",
       "type": "linear",
       "round": true,
       "nice": true,
       "padding": 0.1,
       "zero": true,
-      "domain": {"data": "table", "field": "V1"},
+      "domain": {
+        "data": "data_table",
+        "field": "V1"
+      },
       "range": "height"
     },
     {
-      "name": "size",
+      "name": "scales_size",
       "type": "linear",
       "round": true,
       "nice": false,
       "zero": true,
-      "domain": {"data": "table", "field": "Depth"},
-      "range": [25, 500]
+      "domain": {
+        "data": "data_table",
+        "field": "Depth"
+      },
+      "range": [
+        25,
+        500
+      ]
     },
     {
-      "name": "label_axis",
-      "type": "point",
-      "round": true,
-      "nice": false,
-      "zero": false,
-      "domain": {"data": "table", "field": "Label"},
-      "range": "width"
-    },
-    {
-      "name": "label",
+      "name": "scales_label",
       "type": "ordinal",
       "round": true,
       "nice": false,
       "zero": false,
-      "domain": {"data": "table", "field": "Label"},
-      "range": ["#f1be5c", "#6dd98a", "#e7625a"]
+      "domain": {
+        "data": "data_table",
+        "field": "Depth"
+      },
+      "range": [
+        "#f1be5c",
+        "#6dd98a",
+        "#e7625a"
+      ]
     },
     {
-        "name": "color",
-        "type": "quantize",
-        "domain": {"data": "table", "field": "Depth"},
-        "range": ["#f1be5c", "#6dd98a", "#e7625a"]
-      }
-    ],
-    "axes": [
-      {
-      "scale": "x",
+      "name": "scales_color",
+      "type": "quantize",
+      "domain": {
+        "data": "data_table",
+        "field": "Depth"
+      },
+      "range": [
+        "#f1be5c",
+        "#6dd98a",
+        "#e7625a"
+      ]
+    }
+  ],
+  "axes": [
+    {
+      "scale": "scales_x",
       "grid": false,
       "domain": true,
       "orient": "bottom",
@@ -96,7 +129,7 @@
       "labelFontWeight": 500
     },
     {
-      "scale": "y",
+      "scale": "scales_y",
       "grid": false,
       "gridOpacity": 0.9,
       "gridColor": "#F0F2F4",
@@ -114,74 +147,98 @@
       "labelFontWeight": 500,
       "labelPadding": 10,
       "labelFont": "roboto"
-    },
-    {
-      "scale": "label_axis",
-      "grid": true,
-      "gridOpacity": 0.9,
-      "gridColor": "#F0F2F4",
-      "domain": false,
-      "orient": "top",
-      "ticks": false,
-      "title": "Label",
-      "titleFont": "roboto",
-      "titleColor": "#485465",
-      "titleFontSize": 12,
-      "titleFontWeight": 500,
-      "titlePadding": 16,
-      "labelColor": "#485465",
-      "labelFontSize": 10,
-      "labelFontWeight": 500,
-      "labelPadding": 10,
-      "labelFont": "roboto"
     }
-    ],
-    "marks": [
-      {
-        "name": "circles",
-        "type": "symbol",
-        "from": {
-          "data": "table"
+  ],
+  "marks": [
+    {
+      "name": "marks_circles",
+      "type": "symbol",
+      "from": {
+        "data": "data_table"
+      },
+      "encode": {
+        "enter": {
+          "shape": {
+            "value": "circle"
+          }
         },
-        "encode": {
-          "enter": {
-            "x": {"scale": "x", "field": "category"},
-            "y": {"scale": "y", "field":"V1"},
-            "size": {"scale": "size", "field": "Depth"},
-            "shape": {"value": "circle"},
-            "fill": {"scale": "label", "field": "Label"}
+        "update": {
+          "x": {
+            "scale": "scales_x",
+            "field": "category"
+          },
+          "y": {
+            "scale": "scales_y",
+            "field": "V1"
+          },
+          "size": {
+            "scale": "scales_size",
+            "field": "Depth"
+          },
+          "fill": {
+            "scale": "scales_label",
+            "field": "Depth"
+          },
+          "fillOpacity": {
+            "value": 0.6
           }
         }
       }
-    ],
-    "legends": [
-      {
+    },
+    {
+      "name": "marks_text",
+      "type": "text",
+      "from": {
+        "data": "total_count"
+      },
+      "encode": {
+        "update": {
+          "x": {
+            "scale": "scales_x",
+            "field": "category"
+          },
+          "y": {
+            "value": -20
+          },
+          "text": {
+            "signal": "datum.sum"
+          }
+        }
+      }
+    }
+  ],
+  "legends": [
+    {
       "type": "gradient",
       "orient": "none",
-      "gradientLength": {"signal": "signal_gradientLength"},
+      "gradientLength": {
+        "signal": "signal_gradientLength"
+      },
       "gradientThickness": 10,
       "encode": {
-          "labels": {
-            "update": {
-              "text": {
-                "value": ""
-              }
-            }
-          },
-          "legend": {
-            "update": {
-              "x": {
-                "signal": "width - signal_gradientLength"
-              },
-              "y": {
-                "value": -90
-              }
+        "labels": {
+          "update": {
+            "text": {
+              "value": ""
             }
           }
         },
-        "direction": "horizontal",
-        "fill": "color",
-        "title": "Color Represents"
-      }
-    ]
-  }
+        "legend": {
+          "enter": {
+            "y": {
+              "value": -60
+            }
+          },
+          "update": {
+            "x": {
+              "signal": "width - signal_gradientLength"
+            }
+          }
+        }
+      },
+      "direction": "horizontal",
+      "fill": "scales_color",
+      "title": "Color Represents"
+    }
+  ]
+}

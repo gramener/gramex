@@ -1,0 +1,11 @@
+<% layer_list.map(function(layer, index) { %>
+  <li>
+    <a href="#<%= layer.name %>-props" data-toggle="tab" class="<%= (index === 0) ? 'active show': '' %>">
+      <button type="button" class="btn btn-sm bg-blue-light-hover bg-transparent shadow-none w-100 h-100 text-left">
+        <div class="color-gray-dark color-blue-on-hover font-weight-bold mb-1 sm1" title="<%= layer.name %>">
+          <%= layer.name %>
+        </div>
+      </button>
+    </a>
+  </li>
+<% }) %>

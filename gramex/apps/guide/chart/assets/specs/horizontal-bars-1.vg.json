@@ -6,17 +6,17 @@
   "data": [
     {
       "name": "data_table",
-      "url": "<%= absolute_url %>data/horizontal-bars-1.json",
+      "url": "<%= dataset_url %>",
       "transform": [
         {
           "type": "stack",
           "groupby": [
-            "x"
+            "<%= data_mapper.column_1 %>"
           ],
           "sort": {
-            "field": "c"
+            "field": "<%= data_mapper.column_3 %>"
           },
-          "field": "y"
+          "field": "<%= data_mapper.column_2 %>"
         }
       ]
     }
@@ -37,7 +37,7 @@
       "range": "height",
       "domain": {
         "data": "data_table",
-        "field": "x"
+        "field": "<%= data_mapper.column_1 %>"
       }
     },
     {
@@ -50,7 +50,7 @@
       ],
       "domain": {
         "data": "data_table",
-        "field": "label"
+        "field": "<%= data_mapper.column_4 %>"
       }
     }
   ],
@@ -74,7 +74,7 @@
               "value": "bold"
             },
             "fill": {
-              "value": "white"
+              "value": "#fffff"
             }
           }
         }
@@ -97,7 +97,7 @@
         "update": {
           "y": {
             "scale": "scales_yScale",
-            "field": "x"
+            "field": "<%= data_mapper.column_1 %>"
           },
           "height": {
             "scale": "scales_yScale",
@@ -117,7 +117,7 @@
           },
           "fill": {
             "scale": "scales_color",
-            "field": "label"
+            "field": "<%= data_mapper.column_4 %>"
           }
         }
       }
@@ -130,7 +130,7 @@
         "labels": {
           "enter": {
             "fill": {
-              "value": "black"
+              "value": "#000000"
             },
             "fontWeight": {
               "value": "bold"

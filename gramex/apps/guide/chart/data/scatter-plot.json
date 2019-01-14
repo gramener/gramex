@@ -1,0 +1,72 @@
+[
+    {
+      "Variable A": 2,
+      "Variable B": 12,
+      "Depth": 4
+    },
+    {
+      "Variable A": 4,
+      "Variable B": 12,
+      "Depth": 1
+    },
+    {
+      "Variable A": 7,
+      "Variable B": 9,
+      "Depth": 5
+    },
+    {
+      "Variable A": 7.5,
+      "Variable B": 2,
+      "Depth": 5
+    },
+    {
+      "Variable A": 5,
+      "Variable B": 12,
+      "Depth": 4
+    },
+    {
+      "Variable A": 2,
+      "Variable B": 3,
+      "Depth": 3
+    },
+    {
+      "Variable A": 2,
+      "Variable B": 7,
+      "Depth": 3
+    },
+    {
+      "Variable A": 3,
+      "Variable B": 6,
+      "Depth": 4
+    },
+    {
+      "Variable A": 5,
+      "Variable B": 11,
+      "Depth": 3
+    },
+    {
+      "Variable A": 5,
+      "Variable B": 12,
+      "Depth": 5
+    },
+    {
+      "Variable A": 4,
+      "Variable B": 10,
+      "Depth": 3
+    },
+    {
+      "Variable A": 3,
+      "Variable B": 12,
+      "Depth": 4
+    },
+    {
+      "Variable A": null,
+      "Variable B": 12,
+      "Depth": 4
+    },
+    {
+      "Variable A": 3,
+      "Variable B": null,
+      "Depth": 4
+    }
+  ]

@@ -73,7 +73,7 @@
       "interactive": false,
       "encode": {
         "enter": {
-         
+
         },
         "update": {
           "x": {"field": "x0"},
@@ -132,11 +132,11 @@
           "opacity": {"value": 1},
           "x": {"value": 100},
           "y": {"value": -10},
-          
+
           "dx": {"value": 0},
           "angle": {"value": 0},
           "align": {"value": "center"},
-          
+
           "font": {"value": "roboto"},
           "fontSize": {"value": 12},
           "fontStyle": {"value": "normal"},
@@ -159,11 +159,11 @@
           "opacity": {"value": 1},
           "x": {"value": 250},
           "y": {"value": 0},
-          
+
           "dx": {"value": 0},
           "angle": {"value": 0},
           "align": {"value": "center"},
-          
+
           "font": {"value": "roboto"},
           "fontSize": {"value": 12},
           "fontStyle": {"value": "normal"},
