@@ -243,6 +243,12 @@ The file can contain any template feature. Here's a sample `page.html`.
 </ul>
 ```
 
+Templates can use all variables in the [template syntax][template-syntax], like:
+
+- `handler`: the current request handler object
+- `request`: alias for `handler.request`
+- `current_user`: alias for `handler.current_user`
+
 Templates can import sub-templates using `{% include %}`. For example:
 
 ```html
@@ -405,6 +411,7 @@ This is useful to pack multiple static files into one, as the example shows.
 
 [filehandler]: https://learn.gramener.com/gramex/gramex.handlers.html#gramex.handlers.FileHandler
 [template]: http://www.tornadoweb.org/en/stable/template.html
+[template-syntax]: http://www.tornadoweb.org/en/stable/guide/templates.html#template-syntax
 
 
 ## Transforming content

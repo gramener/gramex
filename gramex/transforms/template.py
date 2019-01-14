@@ -21,4 +21,9 @@ def template(content, handler=None, **kwargs):
             loader = tornado.template.Loader(os.path.dirname(str(handler.path)))
         tmpl = template_cache[content] = tornado.template.Template(content, loader=loader)
 
-    raise tornado.gen.Return(tmpl.generate(handler=handler, **kwargs).decode('utf-8'))
+    if handler is not None:
+        for key, val in handler.get_template_namespace().items():
+            kwargs.setdefault(key, val)
+
+    # handler is added to kwargs by handler.get_template_namespace()
+    raise tornado.gen.Return(tmpl.generate(**kwargs).decode('utf-8'))
