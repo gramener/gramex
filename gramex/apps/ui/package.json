@@ -16,6 +16,7 @@
     "leaflet": "1.2",
     "lodash": "4",
     "moment": "2",
+    "morphdom": "2",
     "node-sass": "4",
     "noty": "3",
     "numeral": "2",

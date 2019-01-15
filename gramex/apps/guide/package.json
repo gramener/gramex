@@ -10,7 +10,6 @@
   "dependencies": {
     "asciinema-player": "^2.6.1",
     "clipboard": "1",
-    "g1": "^0.9.0",
     "prismjs": "1",
     "vue": "2"
   },

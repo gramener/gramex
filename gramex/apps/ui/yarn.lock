@@ -1212,6 +1212,11 @@ moment@2, moment@^2.9.0:
   version "2.22.2"
   resolved "https://registry.yarnpkg.com/moment/-/moment-2.22.2.tgz#3c257f9839fc0e93ff53149632239eb90783ff66"
 
+morphdom@2:
+  version "2.3.3"
+  resolved "https://registry.yarnpkg.com/morphdom/-/morphdom-2.3.3.tgz#70b0aec3db0832688f7fcbde2a8921cf508c4f16"
+  integrity sha512-z+/GEulEfhrSFPOJSum8o5lZNv63cAGBPeFHO2WgpGo636Ln67ZuVydp2q0iTaZIXdf5FDNP2ZY6uhtg+LjlsA==
+
 ms@2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/ms/-/ms-2.0.0.tgz#5608aeadfc00be6c2901df5f9861788de0d597c8"

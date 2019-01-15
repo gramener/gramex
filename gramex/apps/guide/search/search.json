@@ -670,6 +670,35 @@
       "Upgrade": -1
     }
   },
+  "1.49": {
+    "": {
+      "Gramex 1.49 Release Notes": -1
+    },
+    "better-gramex-init": {
+      "Better gramex init": -1
+    },
+    "bootstrap-42": {
+      "Bootstrap 4.2": -1
+    },
+    "bugfixes": {
+      "Bugfixes": -1
+    },
+    "chart-gallery": {
+      "Chart gallery": -1
+    },
+    "g1-animated-templates": {
+      "g1 animated templates": -1
+    },
+    "g1-search": {
+      "g1 $.search": -1
+    },
+    "stats": {
+      "Stats": -1
+    },
+    "upgrade": {
+      "Upgrade": -1
+    }
+  },
   "about": {
     "": {}
   },

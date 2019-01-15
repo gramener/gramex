@@ -1,12 +1,12 @@
 FROM continuumio/anaconda3:latest
 
 LABEL description="Gramener data visualization server"
-LABEL version="1.48"
+LABEL version="1.49"
 LABEL maintainer="s.anand@gramener.com"
 
 # Install nodejs and node libraries
 RUN apt-get update && apt-get install -y gnupg
-RUN (curl -sL https://deb.nodesource.com/setup_8.x | bash -) && \
+RUN (curl -sL https://deb.nodesource.com/setup_10.x | bash -) && \
     apt-get install -y nodejs && \
     npm install -g yarn && \
 # Install Chrome / Puppeteer dependencies

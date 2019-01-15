@@ -29,11 +29,6 @@ bootstrap-select@^1.13.1:
   resolved "https://registry.yarnpkg.com/bootstrap-select/-/bootstrap-select-1.13.1.tgz#f59c02926fb5ac6356b9d1cdbc5384c2f013d9ba"
   integrity sha1-9ZwCkm+1rGNWudHNvFOEwvAT2bo=
 
-bootstrap@^4.1.3:
-  version "4.1.3"
-  resolved "https://registry.yarnpkg.com/bootstrap/-/bootstrap-4.1.3.tgz#0eb371af2c8448e8c210411d0cb824a6409a12be"
-  integrity sha512-rDFIzgXcof0jDyjNosjv4Sno77X4KuPeFxG2XZZv1/Kc8DRVGVADdoQyyOVDwPqL36DDmtCQbrpMCqvpPLJQ0w==
-
 brace-expansion@^1.1.7:
   version "1.1.9"
   resolved "https://registry.yarnpkg.com/brace-expansion/-/brace-expansion-1.1.9.tgz#acdc7dde0e939fb3b32fe933336573e2a7dc2b7c"
@@ -77,14 +72,6 @@ fs.realpath@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/fs.realpath/-/fs.realpath-1.0.0.tgz#1504ad2523158caa40db4a2787cb01411994ea4f"
   integrity sha1-FQStJSMVjKpA20onh8sBQRmU6k8=
-
-g1@^0.9.0:
-  version "0.9.0"
-  resolved "https://registry.yarnpkg.com/g1/-/g1-0.9.0.tgz#dea7d5852176780dc335971ec3e5a02c4a897546"
-  integrity sha512-V6X1oPh3O/N5Vny49qZl2pkOToJtkFuRwNqfLrZux6RfwRwSX1+mnTTeMgOeQtdolzhJtle7c91lxlPNS2Qc8g==
-  dependencies:
-    bootstrap "^4.1.3"
-    bootstrap-select "^1.13.1"
 
 glob@7:
   version "7.1.2"
