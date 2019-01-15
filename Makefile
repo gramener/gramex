@@ -106,4 +106,4 @@ push-docs: docs
 
 push-pypi: clean
 	python setup.py sdist
-	twine upload dist/*
+	twine upload -u gramener dist/*

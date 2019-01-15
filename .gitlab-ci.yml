@@ -66,6 +66,7 @@ deploy-uat-demo:
         git checkout -- .;
         git pull;
         pip install --verbose -e .;
+        gramex setup --all;
         gramex license accept;
       "'
     - 'ssh -t ubuntu@demo.gramener.com "
@@ -73,5 +74,6 @@ deploy-uat-demo:
         git checkout -- .;
         git pull;
         pip install --verbose -e .;
+        gramex setup --all;
         gramex license accept;
       "'
