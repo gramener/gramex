@@ -11,8 +11,17 @@
   ${{ key }}: {% raw val %};
 {% end %}
 
+// Any variable that begins with "color" becomes part of the theme colors.
+// Bootstrap uses $theme-colors to define the color theme.
+$theme-colors: (
+  {% for key in (v for v in variables if v.startswith('color')) %}
+    "{{ key }}": ${{ key }},
+  {% end %}
+);
+
 // Import bootstrap
 @import "{{ bootstrap_path }}";
+
 
 // opacity-30 to primary-lighten-8
 $opacity-values: (
@@ -24,11 +33,11 @@ $opacity-values: (
   60: 0.6,
   70: 0.7,
   80: 0.8,
-  90: 0.9
+  90: 0.9,
 );
-@each $clr, $perc in $opacity-values {
+@each $clr, $percent in $opacity-values {
   .opacity-#{$clr} {
-    opacity: $perc;
+    opacity: $percent;
   }
 }
 
@@ -206,6 +215,37 @@ $shadow: 0 $shadow-y $shadow-blur rgba($black, .2) !default;
 .text-shadow-none {
   text-shadow: none;
 }
+
+// .ls letter-spacing utilities
+// --------------------------------------------------------------------------
+$letter-spacing-1: 0.05em !default;
+$letter-spacing-2: 0.10em !default;
+$letter-spacing-3: 0.20em !default;
+$letter-spacing-4: 0.30em !default;
+.ls-1 { letter-spacing: $letter-spacing-1; }
+.ls-2 { letter-spacing: $letter-spacing-2; }
+.ls-3 { letter-spacing: $letter-spacing-3; }
+.ls-4 { letter-spacing: $letter-spacing-4; }
+$letter-spacing-n1: -0.025em !default;
+$letter-spacing-n2: -0.050em !default;
+$letter-spacing-n3: -0.100em !default;
+$letter-spacing-n4: -0.150em !default;
+.ls-n1 { letter-spacing: $letter-spacing-n1; }
+.ls-n2 { letter-spacing: $letter-spacing-n2; }
+.ls-n3 { letter-spacing: $letter-spacing-n3; }
+.ls-n4 { letter-spacing: $letter-spacing-n4; }
+
+// .lh line-height utilities
+// --------------------------------------------------------------------------
+$line-height-1: 1 !default;
+$line-height-2: 1.1 !default;
+$line-height-3: 1.25 !default;
+$line-height-4: 2.0 !default;
+.lh-1 { line-height: $line-height-1; }
+.lh-2 { line-height: $line-height-2; }
+.lh-3 { line-height: $line-height-3; }
+.lh-4 { line-height: $line-height-4; }
+
 
 // .underline: underlined inputs
 // --------------------------------------------------------------------------
@@ -679,5 +719,14 @@ $ripple-opacity: .2;
   box-shadow: 0 0 0 0.2rem $primary;
 }
 .upload + label * {
-  pointer-events: none;   // Cchildren (e.g. buttons) should not handle their own events
+  pointer-events: none;   // Children (e.g. buttons) should not handle their own events
+}
+
+// Other utilities
+// --------------------------------------------------------------------------
+.h-full {
+  min-height: 100vh !important;
+}
+.z-9 {
+  z-index: 9000 !important;
 }
