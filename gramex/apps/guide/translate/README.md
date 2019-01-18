@@ -18,8 +18,8 @@ url:
         # Get key from https://cloud.google.com/translate/docs/quickstart
         key: ...
         # See list of languages: https://cloud.google.com/translate/docs/languages
-        source: en    # Convert from English, by default
-        target: nl    # Convert to Dutch by default
+        source: en    # Convert from English. Leave it blank to auto-detect
+        target: nl    # Convert to Dutch
         # Cache results in this FormHandler structure
         cache:
           url: sqlite:///$YAMLPATH/translate.db
@@ -41,13 +41,16 @@ It accepts the following URL query parameters:
 - `?target=` is the optional target [language](https://cloud.google.com/translate/docs/languages) to translate to.
     - [translate?q=Apple&target=de](translate?q=Apple&target=de) returns "Apfel" in German
 - `?source=` is the optional source [language](https://cloud.google.com/translate/docs/languages) to translate to.
-    - [translate?q=Apfel&source=de&target=en](translate?q=Apfel&source=de&target=en) returns "Apple" from German to English
+    - [translate?q=Apfel&source=de&target=en](translate?q=Apfel&source=de&target=en) returns     "Apple" from German to English
+    - Ignore it, or set it to an empty string, to auto-detect language.
+      [translate?q=monde&source=&target=en](translate?q=monde&source=&target=en) auto-detects
+      "monde" as French, and converts it to "world" in English
 
 The response is a JSON list. Each entry is an object with the following keys:
 
 - `q`: original string to translate (e.g. Apple)
 - `t`: translated string (e.g. appel)
-- `source`: source langauge (e.g. en)
+- `source`: source language (e.g. en -- which may have been auto-detected)
 - `target`: target language (e.g. nl)
 
 Example:
@@ -101,11 +104,11 @@ You can translate strings in Python using `gramex.ml.translate`. For example:
 
 ```python
 >>> import gramex.ml
->>> gramex.ml.translate('Apple', key='...')
+>>> gramex.ml.translate('Apple', target='nl', key='...')
   source target      q      t
 0     en     nl  Apple  appel
 
->>> gramex.ml.translate('Apple', 'Orange', key='...')
+>>> gramex.ml.translate('Apple', 'Orange', target='nl', key='...')
   source target       q       t
 0     en     nl   Apple   appel
 1     en     nl  Orange  Oranje
@@ -124,6 +127,6 @@ This fetches data dynamically from Google Translate. You can specify a
 
 ```python
 >>> cache = {'url': 'translate.xlsx', 'sheet_name': 'translate'}
->>> gramex.ml.translate('Apple', cache=cache, key='...')    # Saves data in cache
->>> gramex.ml.translate('Apple', cache=cache, key='...')    # Fetches result from cache
+>>> gramex.ml.translate('Apple', target='nl', cache=cache, key='...')  # Save data in cache
+>>> gramex.ml.translate('Apple', target='nl', cache=cache, key='...')  # Fetch result from cache
 ```

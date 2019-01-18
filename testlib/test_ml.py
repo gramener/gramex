@@ -174,11 +174,15 @@ class TestAutolyse(unittest.TestCase):
         self.base([u'Régions'], ['FloatsWithZero'], autolysis_string)
 
 
+# Map (q, source, target) -> (detected source, translation)
 _translate = {
-    ('Apple', 'en', 'nl'): 'appel',
-    ('Orange', 'en', 'nl'): 'Oranje',
-    ('Apple', 'en', 'de'): 'Apfel',
-    ('Orange', 'en', 'de'): 'Orange',
+    ('Apple', None, 'nl'): ('en', 'appel'),
+    ('Orange', None, 'nl'): ('en', 'Oranje'),
+    ('Apple', 'en', 'nl'): ('en', 'appel'),
+    ('Orange', 'en', 'nl'): ('en', 'Oranje'),
+    ('Apple', 'en', 'de'): ('en', 'Apfel'),
+    ('Orange', 'en', 'de'): ('en', 'Orange'),
+    ('apfel', '', 'en'): ('de', 'apple'),           # used by tests/test_translater
 }
 _translate_count = []
 
@@ -186,9 +190,13 @@ _translate_count = []
 def translate_mock(q, source, target, key='...'):
     '''Mock the Google Translate API results'''
     _translate_count.append(1)
-    t = [_translate[item, source, target] for item in q]
-    n = len(q)
-    return {'q': q, 't': t, 'source': [source] * n, 'target': [target] * n}
+    vals = [_translate[item, source, target] for item in q]
+    return {
+        'source': [v[0] for v in vals],
+        'target': [target] * len(q),
+        'q': q,
+        't': [v[1] for v in vals],
+    }
 
 
 class TestTranslate(unittest.TestCase):
@@ -210,11 +218,11 @@ class TestTranslate(unittest.TestCase):
 
         check(['Apple'], [
             ['en', 'nl', 'Apple', 'appel']
-        ])
+        ], target='nl')
         check(['Apple', 'Orange'], [
             ['en', 'nl', 'Apple', 'appel'],
             ['en', 'nl', 'Orange', 'Oranje']
-        ])
+        ], target='nl')
         check(['Apple', 'Orange'], [
             ['en', 'de', 'Apple', 'Apfel'],
             ['en', 'de', 'Orange', 'Orange']
@@ -225,13 +233,13 @@ class TestTranslate(unittest.TestCase):
 
         cache = {'url': self.cache}
         count = len(_translate_count)
-        check(['Apple'], [['en', 'nl', 'Apple', 'appel']], cache=cache)
+        check(['Apple'], [['en', 'nl', 'Apple', 'appel']], target='nl', cache=cache)
         eq_(len(_translate_count), count + 1)
-        check(['Apple'], [['en', 'nl', 'Apple', 'appel']], cache=cache)
+        check(['Apple'], [['en', 'nl', 'Apple', 'appel']], target='nl', cache=cache)
         eq_(len(_translate_count), count + 1)
-        check(['Apple'], [['en', 'de', 'Apple', 'Apfel']], target='de', cache=cache)
+        check(['Apple'], [['en', 'de', 'Apple', 'Apfel']], source='en', target='de', cache=cache)
         eq_(len(_translate_count), count + 2)
-        check(['Apple'], [['en', 'de', 'Apple', 'Apfel']], target='de', cache=cache)
+        check(['Apple'], [['en', 'de', 'Apple', 'Apfel']], source='en', target='de', cache=cache)
         eq_(len(_translate_count), count + 2)
 
     @classmethod

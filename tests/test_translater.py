@@ -37,6 +37,9 @@ class TestTranslater(TestGramex):
             # Ensure that cache does not trigger request again
             r = self.check(url, data={'q': ['Apple', 'Orange'], 'target': 'de'}).json()
             eq_(len(_translate_count), count + 1)
+            # source='' autodetects
+            r = self.check(url, data={'q': 'apfel', 'source': '', 'target': 'en'}).json()
+            eq_(r, [{'q': 'apfel', 't': 'apple', 'source': 'de', 'target': 'en'}])
 
     @classmethod
     def tearDownClass(cls):

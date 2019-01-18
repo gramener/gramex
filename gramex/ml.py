@@ -263,10 +263,11 @@ def weighted_avg(data, numeric_cols, weight):
 
 def _google_translate(q, source, target, key):
     import requests
-    api = 'https://translation.googleapis.com/language/translate/v2'
-    params = {'q': q, 'target': target, 'source': source, 'key': key}
+    params = {'q': q, 'target': target, 'key': key}
+    if source:
+        params['source'] = source
     try:
-        r = requests.post(api, data=params)
+        r = requests.post('https://translation.googleapis.com/language/translate/v2', data=params)
     except requests.RequestException:
         return app_log.exception('Cannot connect to Google Translate')
     response = r.json()
@@ -275,7 +276,7 @@ def _google_translate(q, source, target, key):
     return {
         'q': q,
         't': [t['translatedText'] for t in response['data']['translations']],
-        'source': [source] * len(q),
+        'source': [t['detectedSourceLanguage'] for t in response['data']['translations']],
         'target': [target] * len(q),
     }
 
@@ -285,7 +286,7 @@ translate_api = {
 }
 
 
-def translate(*q, **kwargs):
+def translate(*q, source=None, target=None, key=None, cache=None, api='google'):
     '''
     Translate strings using the Google Translate API. Example::
 
@@ -303,8 +304,9 @@ def translate(*q, **kwargs):
         translate('Hello', key='...', cache={'url': 'translate.xlsx'})
 
     :arg str q: one or more strings to translate
-    :arg str source: 2-letter source language (e.g. en, fr, es, hi, cn, etc). default: en
-    :arg str target: 2-letter target language (e.g. en, fr, es, hi, cn, etc). default: hi
+    :arg str source: 2-letter source language (e.g. en, fr, es, hi, cn, etc).
++        If empty or None, auto-detects source
+    :arg str target: 2-letter target language (e.g. en, fr, es, hi, cn, etc).
     :arg str key: Google Translate API key
     :arg dict cache: kwargs for :py:func:`gramex.data.filter`. Has keys such as
         url (required), table (for databases), sheet_name (for Excel), etc.
@@ -312,12 +314,6 @@ def translate(*q, **kwargs):
     Reference: https://cloud.google.com/translate/docs/apis
     '''
     import gramex.data
-
-    source = kwargs.get('source', 'en')
-    target = kwargs.get('target', 'nl')
-    key = kwargs.get('key', None)
-    cache = kwargs.get('cache', None)
-    api = kwargs.get('api', 'google')
 
     if cache is not None:
         if not isinstance(cache, dict):
@@ -331,11 +327,10 @@ def translate(*q, **kwargs):
     # Fetch from cache, if any
     if cache:
         try:
-            result = gramex.data.filter(args={
-                'q': q,
-                'source': [source] * len(q),
-                'target': [target] * len(q),
-            }, **cache)
+            args = {'q': q, 'target': [target] * len(q)}
+            if source:
+                args['source']: [source] * len(q)
+            result = gramex.data.filter(args=args, **cache)
         except Exception:
             app_log.warning('Cannot fetch from translate cache: %r', dict(cache))
         # Remove already cached  results from q
