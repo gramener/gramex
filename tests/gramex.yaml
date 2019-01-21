@@ -2235,6 +2235,23 @@ url:
         login_url: /auth/simple
       path: dir/alpha.txt
       xsrf_cookies: false
+  auth/login-url-query:
+    pattern: /auth/login-url-query
+    handler: FileHandler
+    kwargs:
+      auth:
+        login_url: /auth/simple-query
+        query: later
+      path: dir/alpha.txt
+      xsrf_cookies: false
+  auth/simple-query:
+    pattern: /auth/simple-query
+    handler: SimpleAuth
+    kwargs:
+      credentials: {alpha: alpha}
+      redirect:
+        query: later
+        url: /dir/index/
   auth/login-url-false:
     pattern: /auth/login-url-false
     handler: FileHandler

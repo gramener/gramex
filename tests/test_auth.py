@@ -650,10 +650,10 @@ class TestDBAuthSignup(DBAuthBase):
 
 
 class TestAuthorize(DBAuthBase, LoginFailureMixin):
-    def initialize(self, url, user='alpha', login_url='/login/'):
+    def initialize(self, url, user='alpha', login_url='/login/', next_key='next'):
         self.session = requests.Session()
         r = self.session.get(server.base_url + url)
-        eq_(r.url, server.base_url + login_url + '?' + urlencode({'next': url}))
+        eq_(r.url, server.base_url + login_url + '?' + urlencode({next_key: url}))
         r = self.session.post(server.base_url + url)
         eq_(r.url, server.base_url + url)
         eq_(r.status_code, UNAUTHORIZED)
@@ -731,6 +731,9 @@ class TestAuthorize(DBAuthBase, LoginFailureMixin):
         eq_(r.status_code, UNAUTHORIZED)
         eq_(r.url, server.base_url + url)
         self.login_ok('alpha', 'alpha', check_next='/dir/index/')
+
+    def test_auth_custom_query(self):
+        self.initialize('/auth/login-url-query', login_url='/auth/simple-query', next_key='later')
 
     def test_auth_template(self):
         self.initialize('/auth/unauthorized-template', user='alpha')

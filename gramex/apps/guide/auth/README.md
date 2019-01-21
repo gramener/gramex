@@ -133,8 +133,43 @@ is as follows:
 3. If credentials are valid, store the user details and redirect the user. Else
    show an error message.
 
-After logging in, users are re-directed to the `?next=` URL. You can change this
-using the [redirection configuration](../config/#redirection).
+After logging in, users are re-directed to the `?next=` URL, else the Referer
+(i.e. the page from which the user visited the login page.) You can change this
+using the [redirection configuration](../config/#redirection). For example, to
+use `?later=` instead of `?next=`, you need to do this:
+
+```yaml
+url:
+  login/auth:
+    pattern: /$YAMLURL/login/
+    handler: SimpleAuth
+    kwargs:
+      credentials: {alpha: alpha}
+      redirect:
+        query: later                  # ?later= is used for redirection
+        header: Referer               # else, the Referer header
+        url: /$YAMLURL/               # else redirect to this page
+  app/home:
+    pattern: /$YAMLURL/
+    handler: ...
+    kwargs:
+      auth:
+        login_url: /$YAMLURL/login/   # Use this as the login URL
+        query: later                  # Send ?later= to the login URL
+```
+
+To force the user to a fixed URL after logging in, use:
+
+```yaml
+url:
+  login/auth:
+    pattern: /$YAMLURL/login/
+    handler: SimpleAuth
+    kwargs:
+      credentials: {alpha: alpha}
+      redirect:
+        url: /$YAMLURL/               # Always redirect to this page after login
+```
 
 Every time the user logs in, the session ID is changed to prevent
 [session fixation](https://www.owasp.org/index.php/Session_fixation).

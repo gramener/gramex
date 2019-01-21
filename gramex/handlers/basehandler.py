@@ -664,7 +664,10 @@ class BaseHandler(RequestHandler, BaseMixin):
                             next_url = self.request.full_url()
                         else:
                             next_url = self.request.uri
-                        url += '?' + urlencode(dict(next=next_url))
+                        next_key = 'next'
+                        if isinstance(self.conf.kwargs.auth, dict):
+                            next_key = self.conf.kwargs.auth.get('query', 'next')
+                        url += '?' + urlencode({next_key: next_url})
                     self.redirect(url)
                     return
             # Else, send a 401 header

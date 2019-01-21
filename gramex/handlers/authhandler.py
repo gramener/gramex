@@ -1192,7 +1192,7 @@ class EmailAuth(SimpleAuth):
     3. App generates a new OTP (valid for ``minutes_to_expiry`` minutes).
     4. App emails the OTP link to the user's email. On fail, ask for email again
     5. If email was sent, app shows a message asking user to check email
-    6. User clicks on email and visits link with OTP (``GET /?password=<otp>``)
+    6. User clicks on email and visits link with OTP (``GET /?password=<otp>&next=...``)
     7. App checks if OTP is valid. If yes, logs user in and redirects
     8. On any error, shows form template with error
     '''
@@ -1205,6 +1205,7 @@ class EmailAuth(SimpleAuth):
         cls.subject = subject
         cls.body = body
         cls.recover = OTP(size=size)
+        cls.redirect_key = kwargs.get('redirect', {}).get('query', 'next')
 
     @tornado.gen.coroutine
     def get(self):
@@ -1233,7 +1234,10 @@ class EmailAuth(SimpleAuth):
         info = {
             'user': user,
             'password': token,
-            'link': link + '?' + six.moves.urllib_parse.urlencode({self.password.arg: token}),
+            'link': link + '?' + six.moves.urllib_parse.urlencode({
+                self.password.arg: token,
+                self.redirect_key: self.session.pop('_next_url', '/')
+            }),
         }
         try:
             yield gramex.service.threadpool.submit(
