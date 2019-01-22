@@ -2744,7 +2744,3 @@ invalid-service: true
 
 eventlog:
   path: $YAMLPATH/events.db
-
-encrypt:
-  public_key: $YAMLPATH/../testlib/id_rsa.pub
-  private_key: $YAMLPATH/../testlib/id_rsa

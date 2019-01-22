@@ -36,13 +36,6 @@ app:
         # In production, do not show traceback by default
         serve_traceback: False
 
-# Encrypt info (e.g. Gramex-User header) by this public & private key (generated
-# by SSH) to override the user object in a session
-encrypt:
-    private_key: $HOME/.ssh/id_rsa
-    public_key: $HOME/.ssh/id_rsa.pub
-
-
 url:
     default:                  # Override the default handler with a more secure version
         kwargs:               # Options to the handler

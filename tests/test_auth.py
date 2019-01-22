@@ -10,6 +10,7 @@ import pandas as pd
 import sqlalchemy as sa
 from nose.tools import eq_, ok_
 from nose.plugins.skip import SkipTest
+from tornado.web import create_signed_value
 from six.moves.urllib_parse import urlencode
 import gramex
 import gramex.config
@@ -250,8 +251,9 @@ class TestSimpleAuth(AuthBase, LoginMixin, LoginFailureMixin):
         self.login_ok('alpha', 'alpha', check_next='/dir/index/')
         eq_({'user': 'alpha', 'id': 'alpha'}, self.get_session()['user'])
         result = {'user': 'override', 'role': 'admin'}
-        message = gramex.services.info['encrypt'].encrypt(result)
-        session_data = self.get_session(headers={'X-Gramex-User': message})
+        secret = gramex.service.app.settings['cookie_secret']
+        cipher = create_signed_value(secret, 'user', json.dumps(result))
+        session_data = self.get_session(headers={'X-Gramex-User': cipher})
         eq_(result, session_data['user'])
 
     def test_otp(self):

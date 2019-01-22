@@ -13,10 +13,9 @@ import gramex.cache
 from binascii import b2a_base64, hexlify
 from orderedattrdict import AttrDict
 from six.moves.urllib_parse import urlparse, urlsplit, urljoin, urlencode
-from tornado.web import RequestHandler, HTTPError, MissingArgumentError
+from tornado.web import RequestHandler, HTTPError, MissingArgumentError, decode_signed_value
 from tornado.websocket import WebSocketHandler
 from gramex import conf, __version__
-from gramex.services import info
 from gramex.config import merge, objectpath, app_log
 from gramex.transforms import build_transform
 from gramex.http import UNAUTHORIZED, FORBIDDEN, BAD_REQUEST
@@ -538,8 +537,11 @@ class BaseMixin(object):
         headers = self.request.headers
         cipher = headers.get('X-Gramex-User')
         if cipher:
+            import json
             try:
-                user = info['encrypt'].decrypt(cipher)
+                user = json.loads(decode_signed_value(
+                    conf.app.settings['cookie_secret'], 'user', cipher,
+                    max_age_days=self._session_expiry))
             except Exception:
                 reason = '%s: invalid X-Gramex-User: %s' % (self.name, cipher)
                 raise HTTPError(BAD_REQUEST, reason=reason)

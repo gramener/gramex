@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 import io
 import os
 import re
+import json
 import time
 import logging
 from PIL import Image
@@ -14,8 +15,9 @@ from pdfminer.pdfparser import PDFParser
 from pdfminer.pdfdocument import PDFDocument
 from pdfminer.pdfpage import PDFPage
 from pdfminer.high_level import extract_text_to_fp
+from tornado.web import create_signed_value
+import gramex
 from gramex.handlers import Capture
-from gramex.services import info
 from . import TestGramex, server
 
 _captures = {}
@@ -248,8 +250,9 @@ class TestCaptureHandlerChrome(TestCaptureHandler):
 
         # Check that the request can mimic a user
         user = {'id': 'login@example.org', 'role': 'manager'}
+        secret = gramex.service.app.settings['cookie_secret']
         result = self.fetch(self.src, params={'url': '/auth/session'}, headers={
-            'x-gramex-user': info['encrypt'].encrypt(user),
+            'x-gramex-user': create_signed_value(secret, 'user', json.dumps(user)),
         })
         text = get_text(result.content)
         ok_(user['id'] in text)
