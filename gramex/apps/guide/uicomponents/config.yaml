@@ -14,12 +14,12 @@ color:
     dark:       {title: Dark,            default: '#343a40'}
     body-bg:    {title: Body background, default: '#ffffff'}
     body-color: {title: Body color,      default: '#212529'}
-    color1:     {title: Color 1,         default: '#6610f2'}
-    color2:     {title: Color 2,         default: '#e83e8c'}
-    color3:     {title: Color 3,         default: '#20c997'}
-    color4:     {title: Color 4,         default: '#6f42c1'}
-    color5:     {title: Color 5,         default: '#ffc107'}
-    color6:     {title: Color 6,         default: '#3d3d3d'}
+    color1:     {title: Color 1,         default: '#6f42c1'}
+    color2:     {title: Color 2,         default: '#6610f2'}
+    color3:     {title: Color 3,         default: '#e83e8c'}
+    color4:     {title: Color 4,         default: '#ffc107'}
+    color5:     {title: Color 5,         default: '#20c997'}
+    color6:     {title: Color 6,         default: '#dee2e6'}
 
 # Other variables:
 # font-size-base
