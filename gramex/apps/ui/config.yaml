@@ -10,3 +10,11 @@ fonts:
     century-gothic:      {stack: '"Century Gothic", CenturyGothic, AppleGothic, sans-serif'}
     roboto-condensed:    {stack: '"Roboto Condensed", sans-serif', google: Roboto+Condensed}
     open-sans-condensed: {stack: '"Open Sans Condensed", sans-serif', google: 'Open+Sans+Condensed:300'}
+
+defaults:
+    color1: '#6f42c1'   # $purple
+    color2: '#6610f2'   # $indigo
+    color3: '#e83e8c'   # $pink
+    color4: '#ffc107'   # $yellow
+    color5: '#20c997'   # $teal
+    color6: '#dee2e6'   # $gray-300

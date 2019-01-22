@@ -7,7 +7,7 @@ import json
 import gramex.cache
 from hashlib import md5
 from tornado.gen import coroutine, Return
-from gramex.config import variables, app_log
+from gramex.config import variables, app_log, merge
 
 
 def join(*args):
@@ -33,13 +33,16 @@ def sass(handler, template=uicomponents_path):
     args.update({key: handler.get_arg(key) for key in handler.args})
     args = {key: val for key, val in args.items() if val}
 
+    # Set default args
+    config = gramex.cache.open(config_file)
+    merge(args, config.get('defaults'), mode='setdefault')
+
     cache_key = {'template': template, 'args': args}
     cache_key = json.dumps(
         cache_key, sort_keys=True, ensure_ascii=True).encode('utf-8')
     cache_key = md5(cache_key).hexdigest()[:5]
 
     # Replace fonts from config file, if available
-    config = gramex.cache.open(config_file)
     google_fonts = set()
     for key in ('font-family-base', 'headings-font-family'):
         if key in args and args[key] in config['fonts']:

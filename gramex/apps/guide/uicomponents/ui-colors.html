@@ -1,0 +1,30 @@
+<h2 class="toc">Colors</h2>
+
+<p>Since <code>Gramex v1.50</code>, custom color classes are available.
+  These extend theme colors like <code>primary</code>, <code>success</code>, etc.</p>
+
+{% apply view_source %}
+<p>
+  <button class="btn btn-color1">color-1</button>
+  <button class="btn btn-color2">color-2</button>
+  <button class="btn btn-color3">color-3</button>
+  <button class="btn btn-color4">color-4</button>
+  <button class="btn btn-color5">color-5</button>
+  <button class="btn btn-color6">color-6</button>
+</p>
+{% end %}
+
+<p>The default Bootstrap theme colors are:</p>
+
+{% apply view_source %}
+<p>
+  <button type="button" class="btn btn-primary">primary</button>
+  <button type="button" class="btn btn-secondary">secondary</button>
+  <button type="button" class="btn btn-success">success</button>
+  <button type="button" class="btn btn-warning">warning</button>
+  <button type="button" class="btn btn-danger">danger</button>
+  <button type="button" class="btn btn-info">info</button>
+  <button type="button" class="btn btn-light">light</button>
+  <button type="button" class="btn btn-dark">dark</button>
+</p>
+{% end %}
