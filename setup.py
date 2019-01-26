@@ -11,58 +11,50 @@ import os
 
 # Libraries required for Gramex
 # Keep this in sync with guide/license/thirdparty.md
+# REQ: required packages for Gramex
+# OPT: optional packages not required for startup, but "batteries included"
+# (conda): packages is part of Anaconda, not Miniconda
 install_requires = [
     # Requires conda install
-    # 'rpy2',                         # For gramex.ml.r()
-    # 'line_profiler',                # For gramex.debug
-
-    # These are pre-packaged in Anaconda, not Miniconda
-    'colorama',                     # For gramex.init()
-    'pandas',                       # For gramex.data.filter()
-    'matplotlib',                   # For gramex.data.download()
-    'seaborn',                      # For gramex.data.download()
-    'sqlalchemy',                   # For gramex.data.filter()
-    'datashape',                    # For gramex.handlers.datahandler
-    'blaze',                        # For gramex.handlers.datahandler
-    'h5py',                         # For gramex.cache.HDF5Store
-    'lxml',                         # For gramex.pptgen
-
-    # For setup
-    'setuptools >= 16.0',       # 16.0 has good error message support
-
-    # General utilities
-    'six',                          # Python 3 compatibility
-    'pathlib',                      # Manipulate paths. Part of Python 3.3+
-    'orderedattrdict >= 1.4.3',     # OrderedDict with attr access for configs
-    'watchdog >= 0.8',              # Monitor file changes
-    'tornado >= 4.3',               # Web server
-    'pyyaml >= 3.10',               # Parse YAML files for config
-    'colorlog >= 2.7.0',            # Coloured log files
-    'shutilwhich >= 1.1.0',         # shutil.which backport
-    'passlib >= 1.6.5',             # password storage (e.g. in handlers.DBAuth)
-
-    # Handler / service specific
-    'crontab >= 0.21',              # services.schedule to parse crontab entries
-    'xmljson >= 0.1.5',             # transforms.badgerfish to convert objects to/from XML
-    'cachetools >= 2.1.0',          # services.cache for memory cache
-    'diskcache >= 2.8.3',           # services.cache for disk cache
-    'oauthlib >= 1.1.2',            # OAuth request-signing
-    'python-pptx >= 0.6.6',         # pptgen
-    'sqlitedict >= 1.5.0',          # SQLiteStore
-    'redis >= 2.10.0',              # RedisStore
-    'boto3 >= 1.5',                 # Amazon services
-
-    # Optional dependencies (batteries included principle)
-    'markdown',                     # For transforms, gramex.services.create_alert()
-    'pymysql',                      # For MySQL connections
-    'ipdb',                         # For gramex.debug
-    'textblob',                     # For Gramex Guide TwitterRESTHandler example
-    'psycopg2 >= 2.7.1',            # For PostgreSQL connections
-    'ldap3 >= 2.2.4',               # For LDAP connections
-
-    # Derived dependencies (not used by Gramex directly)
-    'argh >= 0.24.1',               # Required by watchdog
-    'pathtools >= 0.1.1',           # Required by watchdog
+    # 'rpy2',                         # OPT: (conda) For gramex.ml.r()
+    # 'line_profiler',                # OPT: (conda) For gramex.debug
+    'argh >= 0.24.1',               # REQ: dependency for watchdog
+    'blaze',                        # OPT: (conda) gramex.handlers.datahandler
+    'boto3 >= 1.5',                 # SRV: Amazon services
+    'cachetools >= 2.1.0',          # SRV: services.cache for memory cache
+    'colorama',                     # REQ: (conda) gramex.init()
+    'colorlog >= 2.7.0',            # IMP: Coloured log files
+    'crontab >= 0.21',              # SRV: services.schedule to parse crontab entries
+    'datashape',                    # OPT: (conda) gramex.handlers.datahandler
+    'diskcache >= 2.8.3',           # SRV: services.cache for disk cache
+    'h5py',                         # OPT: (conda) gramex.cache.HDF5Store
+    'ipdb',                         # OPT: gramex.debug
+    'ldap3 >= 2.2.4',               # OPT: LDAP connections
+    'lxml',                         # OPT: (conda) gramex.pptgen
+    'markdown',                     # OPT: transforms, gramex.services.create_alert()
+    'matplotlib',                   # OPT: (conda) gramex.data.download()
+    'oauthlib >= 1.1.2',            # SRV: OAuth request-signing
+    'orderedattrdict >= 1.4.3',     # IMP: OrderedDict with attr access for configs
+    'pandas',                       # REQ: (conda) gramex.data.filter()
+    'passlib >= 1.6.5',             # IMP: password storage (e.g. in handlers.DBAuth)
+    'pathlib',                      # IMP: Manipulate paths. Part of Python 3.3+
+    'pathtools >= 0.1.1',           # REQ: dependency for watchdog
+    'psycopg2 >= 2.7.1',            # OPT: PostgreSQL connections
+    'pymysql',                      # OPT: MySQL connections
+    'pytest',                       # OPT: (conda) pytest --gramex
+    'python-pptx >= 0.6.6',         # SRV: pptgen
+    'pyyaml >= 3.10',               # IMP: Parse YAML files for config
+    'redis >= 2.10.0',              # SRV: RedisStore
+    'seaborn',                      # OPT: (conda) gramex.data.download()
+    'setuptools >= 16.0',           # IMP: 16.0 has good error message support
+    'shutilwhich >= 1.1.0',         # IMP: shutil.which backport
+    'six',                          # IMP: Python 3 compatibility
+    'sqlalchemy',                   # REQ: (conda) gramex.data.filter()
+    'sqlitedict >= 1.5.0',          # SRV: SQLiteStore
+    'textblob',                     # OPT: Gramex Guide TwitterRESTHandler example
+    'tornado >= 4.3',               # IMP: Web server
+    'watchdog >= 0.8',              # IMP: Monitor file changes
+    'xmljson >= 0.1.5',             # SRV: transforms.badgerfish to convert objects to/from XML
 ]
 
 if sys.version_info[0] < 3:
