@@ -186,6 +186,10 @@
   <script src="../ui/g1/dist/g1.min.js"></script>
   <script src="../ui/select2/dist/js/select2.min.js"></script>
   <script src="../ui/bootstrap-select/dist/js/bootstrap-select.min.js"></script>
+  <script>
+  // https://github.com/snapappointments/bootstrap-select/issues/2107
+  $.fn.selectpicker.Constructor.BootstrapVersion = '4'
+  </script>
   <script src="../node_modules/clipboard/dist/clipboard.min.js"></script>
   <script src="../node_modules/prismjs/prism.js"></script>
   <script src="../node_modules/vue/dist/vue.min.js"></script>

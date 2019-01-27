@@ -1,5 +1,15 @@
 <h2 class="toc">Select</h2>
 
+<p>This uses the <a href="https://www.npmjs.com/package/bootstrap-select">bootstrap-select</a> library.</p>
+
+{% apply only_source %}
+<script src="../ui/bootstrap-select/dist/js/bootstrap-select.min.js"></script>
+<script>
+// https://github.com/snapappointments/bootstrap-select/issues/2107
+$.fn.selectpicker.Constructor.BootstrapVersion = '4'
+</script>
+{% end %}
+
 {% apply view_source %}
 <select class="select-multiple w-100" name="states[]" multiple="multiple">
   <option value="AP" selected>Andhra Pradesh</option>
