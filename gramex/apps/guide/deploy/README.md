@@ -404,7 +404,7 @@ app:
 You can then connect to `https://your-gramex-server/`.
 
 To generate a free HTTPS certificate for a domain, visit
-[Certbot](https://certbot.eff.org/)
+[letsencrypt.org/](https://letsencrypt.org/)
 
 To generate a self-signed HTTPS certificate for testing, run:
 
@@ -614,6 +614,117 @@ Listen 80
 </VirtualHost>
 ```
 
+## CORS
+
+When one server sends a request to another server via AJAX, we need to enable
+[Cross-Origin Resource Sharing (CORS)](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS).
+
+To enable this, you need to add the
+[Access-Control-Allow-Origin: *](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Origin)
+HTTP header. For example:
+
+```yaml
+url:
+  cors-page:
+    pattern: /$YAMLURL/cors-page
+    handler: ...
+    kwargs:
+      ...
+      headers:
+        Access-Control-Allow-Origin: '*'        # Allow CORS from any domain
+```
+
+Now, you can access this URL from any server via AJAX. For example:
+
+```js
+$.getJSON('https://gramex-server/cors-page')
+    .done(...)
+```
+
+Instead of `Access-Control-Allow-Origin: *`, you may specify a **single**
+domain, like: `Access-Control-Allow-Origin: https://gramener.com/`.
+
+But if you want to allow multiple domains, define them in Python. For example:
+
+```yaml
+url:
+  cors-page:
+    pattern: ...
+    handler: FunctionHandler
+    kwargs:
+      function: mymodule.mycalc(handler)    # Headers are set by this function
+```
+
+```python
+# mymodule.py
+def mycalc(handler):
+    # The request has an 'Origin:' headers.
+    origin = handler.request.headers.get('Origin')
+    # If it is an allowed domain, send the same as a response.
+    allowed_domains = {'https://gramener.com', 'https://learn.gramener.com'}
+    if origin in allowed_domains:
+        handler.set_header('Access-Control-Allow-Origin', origin)
+    # ... rest of your code
+```
+
+### CORS POST with auth
+
+CORS does not send cookie information. Nor does it send custom HTTP headers
+(e.g. X-XsrfToken). So CORS does not work with POST requests with
+[XSRF](#../filehandler/#xsrf), nor with [authenticated users](../auth/).
+
+To enable a Gramex client server to communicate a Gramex host server via CORS,
+you need to do 4 things:
+
+1. In the client, send the XSRF token and cookie from the HTML file. Note: this
+   uses [templates](../filehandler/#templates):
+
+```html
+<script>
+$.ajax('https://gramex-server/cors-page', {
+  method: 'POST',
+  xhrFields: {withCredentials: true}            // Send cookies
+  data: { _xsrf: '{{ handler.xsrf_token }}' },  // Send XSRF token
+})
+</script>
+```
+
+2. In the host, add additional headers in `gramex.yaml`:
+
+```yaml
+url:
+  cors:
+    pattern: /$YAMLURL/cors-page
+    handler: FunctionHandler
+    kwargs:
+      function: mymodule.mycalc(handler)
+      methods: [GET, POST, OPTIONS]             # Important: Allow OPTIONS
+      auth: true                                # Pick any auth conditions
+      headers:
+          Access-Control-Allow-Methods: GET, POST, OPTIONS      # Important
+          Access-Control-Allow-Credentials: true                # Important
+          # Access-Control-Allow-Origin: must be set dynamically by mycalc()
+```
+
+3. In the client AND the host, enable a distributed
+   [session data mechanism](../auth/#session-data) like Redis:
+
+```yaml
+app:
+  session:
+    type: redis
+    path: localhost:6379:0
+```
+
+4. In the host `mymodule.mycalc()`, set the `Access-Control-Allow-Origin` header:
+
+```python
+def mycalc(handler):
+    origin = handler.request.headers.get('Origin', '*')
+    handler.set_header('Access-Control-Allow-Origin', origin)
+```
+
+
 ## Shared deployment
 
 To deploy on Gramener's [UAT server](https://uat.gramener.com/monitor/apps), see
@@ -772,7 +883,7 @@ Updated log is pushed via websockets on port 7890.
 `--daemonize` runs the task as a daemon and `--ignore-crawlers` ignores web crawlers.
 
 If `report.html` should be accessed on an endpoint, ensure it is configured in nginx or other-related routes.
-To serve it in a specific project, 
+To serve it in a specific project,
 
 ```yaml
 url:
@@ -801,7 +912,7 @@ Following attributes are reported in graphical and textual formats:
 
 - Total requests, valid requests, failed requests
 - Visitors per day, hits, bandwidth utilized
-- Distribution of traffic for your application endpoints 
+- Distribution of traffic for your application endpoints
 
 ![goaccess dashboard](https://goaccess.io/images/goaccess-dark-gray.png)
 
