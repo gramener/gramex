@@ -587,7 +587,12 @@ class BaseHandler(RequestHandler, BaseMixin):
         self.args = {}
         for k in self.request.arguments:
             key = (k if isinstance(k, six.binary_type) else k.encode('latin-1')).decode('utf-8')
-            self.args[key] = self.get_arguments(k)
+            # Invalid unicode (e.g. ?x=%f4) throws HTTPError. This disrupts even
+            # error handlers. So if there's invalid unicode, log & continue.
+            try:
+                self.args[key] = self.get_arguments(k)
+            except HTTPError:
+                app_log.exception('Invalid URL argument %s' % k)
 
         self._session, self._session_json = None, 'null'
         if self.cache:

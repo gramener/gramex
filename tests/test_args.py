@@ -20,6 +20,8 @@ class TestArgs(TestGramex):
         f('?高', {'高': ['']})
         f('?=&高=λ&兴=σ&兴=█', {'高': ['λ'], '兴': ['σ', '█'], '': ['']})
         f('?देश=भारत', {'देश': ['भारत']})
+        # Keys with invalid unicode get ignored. Here, %f4 is invalid. All 'x' keys are ignored.
+        f('?x=%f4&x=1&y=%7E', {'y': ['~']})
 
     def test_get_args(self):
         r = self.get('/func/get_arg?x=a&x=b&val=x&first=x&default=x')
