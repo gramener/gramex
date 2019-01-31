@@ -184,6 +184,10 @@ class TestCaptureHandlerChrome(TestCaptureHandler):
         eq_(len(prs.slides), 1)
         self.check_img(prs.slides[0].shapes[0].image.blob)
 
+        # Non-existent selectors raise a HTTP error
+        self.fetch(self.src, code=500, params={
+            'url': self.url, 'selector': 'nonexistent', 'ext': 'pptx'})
+
         # Check selector=.subset has a 100x100 green patch
         title = '高=σ'
         result = self.fetch(self.src, params={
@@ -257,3 +261,13 @@ class TestCaptureHandlerChrome(TestCaptureHandler):
         text = get_text(result.content)
         ok_(user['id'] in text)
         ok_(user['role'] in text)
+
+    def err(self, code, **params):
+        return self.fetch(self.src, code=code, params=params)
+
+    def test_errors(self):
+        # nonexistent URLs should capture the 404 page and return a screenshot
+        self.err(code=200, url='/nonexistent')
+        self.err(code=500, url='http://nonexistent')
+        self.err(code=400, url=self.url, ext='nonexistent')
+        self.err(code=500, url=self.url, selector='nonexistent', ext='png')

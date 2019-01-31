@@ -191,6 +191,9 @@ To encode URLs using JavaScript:
         location.href = 'capture?ext=png&url=' + encodeURIComponent(url)
     })
 
+If the response HTTP status code is 200, the response is the screenshot.
+If the status code is 40x or 50x, the response text has the error message.
+
 **Authentication is implicit**. The cookies passed to `capture` are passed to the
 `?url=` parameter. This is exactly as-if the user clicking the capture link were
 visiting the target page.

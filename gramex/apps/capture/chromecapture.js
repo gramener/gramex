@@ -52,6 +52,7 @@ async function screenshot(page, options, selector) {
         let el = document.querySelector(selector)
         if (!el) return
         let rect = el.getBoundingClientRect()
+        if (!rect || !rect.width || !rect.height) return
         return {x: rect.x, y: rect.y, width: rect.width, height: rect.height}
       },
       selector)
@@ -203,13 +204,13 @@ function webapp(req, res) {
       } else {
         console.error('Missing file', info.path)
         res.setHeader('Content-Type', 'text/plain')
-        res.send('Missing output file.')
+        res.status(500).send('Missing output file.')
       }
     })
     .catch((e) => {
-      res.setHeader('Content-Type', 'text/plain')
-      res.send(e.toString())
       console.error(e)
+      res.setHeader('Content-Type', 'text/plain')
+      res.status(500).send(e.toString())
     })
 }
 
