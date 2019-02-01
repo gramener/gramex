@@ -2,6 +2,11 @@
 # yarn lockfile v1
 
 
+anchor-js@^4.2.0:
+  version "4.2.0"
+  resolved "https://registry.yarnpkg.com/anchor-js/-/anchor-js-4.2.0.tgz#6360fcec75074de2361dc67525cbf6882a765687"
+  integrity sha512-qIh35DLc0YNlRD6k39ULIPNI6iHxFFhtaJr02I7ttsh31bhZjeSa3jjEUx1/sQ4zPOyxrUhuXGuWl981ZLNzBQ==
+
 argparse@^1.0.7:
   version "1.0.10"
   resolved "https://registry.yarnpkg.com/argparse/-/argparse-1.0.10.tgz#bcd6791ea5ae09725e17e5ad988134cd40b3d911"

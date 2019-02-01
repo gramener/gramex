@@ -8,6 +8,7 @@
   "author": "Bhanu K <bhanu.kamapantula@gramener.com>",
   "license": "UNLICENSED",
   "dependencies": {
+    "anchor-js": "^4.2.0",
     "asciinema-player": "^2.6.1",
     "clipboard": "1",
     "prismjs": "1",
