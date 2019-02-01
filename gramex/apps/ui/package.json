@@ -1,9 +1,10 @@
 {
   "name": "gramex-apps-ui",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "author": "Bhanu K <bhanu.kamapantula@gramener.com>",
-  "license": "UNLICENSED",
+  "license": "MIT",
   "dependencies": {
+    "@fortawesome/fontawesome-free": "5",
     "bootstrap": "4.2.1",
     "bootstrap-select": "1.13",
     "d3": "4",
@@ -11,7 +12,7 @@
     "daterangepicker": "2",
     "dropzone": "5",
     "font-awesome": "*",
-    "g1": "0.12",
+    "g1": "0.13",
     "jquery": "~3",
     "leaflet": "1.2",
     "lodash": "4",
