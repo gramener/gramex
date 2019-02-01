@@ -28,6 +28,36 @@ url:
           # url: $YAMLPATH/translate.xlsx
 ```
 
+To translate content in a page, use
+[g1 $.translate](https://code.gramener.com/cto/g1/tree/master/docs/translate.md):
+
+```html
+<ul>
+  <li lang-target="de">This is translated into <em>German</em></li>
+  <li lang-target="nl">This is translated into <em>Dutch</em></li>
+</ul>
+<script src="ui/jquery/dist/jquery.min.js"></script>
+<script src="ui/dist/g1/g1.min.js">
+<script>
+  // Translate text nodes under element with lang-target=
+  $('[lang-target]').translate({
+    url: './translate',         // Gramex translate URL endpoint
+  })
+</script>
+```
+
+Here is the output:
+
+<ul>
+  <li lang-target="de">This is translated into <em>German</em></li>
+  <li lang-target="nl">This is translated into <em>Dutch</em></li>
+</ul>
+<script src="../ui/g1/dist/g1.min.js"></script>
+<script>$('[lang-target]').translate({url: 'translate'})</script>
+
+You add `lang-target=` to any number of nodes. All child text nodes are also
+translated.
+
 ## Translate API
 
 This sets up a URL [translate](translate) that translates using the
