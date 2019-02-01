@@ -323,6 +323,7 @@ def translate(*q, source=None, target=None, key=None, cache=None, api='google'):
     result = pd.DataFrame(columns=['source', 'target', 'q', 't'])
     if not q:
         return result
+    original_q = q
 
     # Fetch from cache, if any
     if cache:
@@ -332,7 +333,7 @@ def translate(*q, source=None, target=None, key=None, cache=None, api='google'):
                 args['source']: [source] * len(q)
             result = gramex.data.filter(args=args, **cache)
         except Exception:
-            app_log.warning('Cannot fetch from translate cache: %r', dict(cache))
+            app_log.exception('Cannot fetch from translate cache: %r', dict(cache))
         # Remove already cached  results from q
         q = [v for v in q if v not in set(result.get('q', []))]
 
@@ -342,6 +343,11 @@ def translate(*q, source=None, target=None, key=None, cache=None, api='google'):
             result = result.append(pd.DataFrame(new_data), sort=False)
             if cache:
                 gramex.data.insert(id=['source', 'target', 'q'], args=new_data, **cache)
+
+    # Sort results by q
+    result['order'] = result['q'].map(original_q.index)
+    result.sort_values('order', inplace=True)
+    del result['order']
 
     return result
 

@@ -34,8 +34,12 @@ class TestTranslater(TestGramex):
                 {'q': 'Orange', 't': 'Orange', 'source': 'en', 'target': 'de'}
             ])
             eq_(len(_translate_count), count + 1)
-            # Ensure that cache does not trigger request again
-            r = self.check(url, data={'q': ['Apple', 'Orange'], 'target': 'de'}).json()
+            # Ensure that cache does not trigger request again, but preserves order
+            r = self.check(url, data={'q': ['Orange', 'Apple'], 'target': 'de'}).json()
+            eq_(r, [
+                {'q': 'Orange', 't': 'Orange', 'source': 'en', 'target': 'de'},
+                {'q': 'Apple', 't': 'Apfel', 'source': 'en', 'target': 'de'}
+            ])
             eq_(len(_translate_count), count + 1)
             # source='' autodetects
             r = self.check(url, data={'q': 'apfel', 'source': '', 'target': 'en'}).json()

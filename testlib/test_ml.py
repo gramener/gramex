@@ -227,6 +227,10 @@ class TestTranslate(unittest.TestCase):
             ['en', 'de', 'Apple', 'Apfel'],
             ['en', 'de', 'Orange', 'Orange']
         ], source='en', target='de')
+        check(['Orange', 'Apple'], [
+            ['en', 'de', 'Orange', 'Orange'],
+            ['en', 'de', 'Apple', 'Apfel'],
+        ], source='en', target='de')
 
         if os.path.exists(self.cache):
             os.remove(self.cache)
