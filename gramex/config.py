@@ -818,10 +818,10 @@ def used_kwargs(method, kwargs, ignore_keywords=False):
     '''
     Splits kwargs into those used by method, and those that are not.
 
-    Returns a tuple of (used, rest). *used* is a dict subset of kwargs
-    with only keys used by method. *rest* has the remaining kwargs keys.
+    Returns a tuple of (used, rest). *used* is a dict subset of kwargs with only
+    keys used by method. *rest* has the remaining kwargs keys.
 
-    If the method uses **kwargs (keywords), it uses all keys. To ignore this
+    If the method uses ``**kwargs`` (keywords), it uses all keys. To ignore this
     and return only named arguments, use ``ignore_keywords=True``.
     '''
     argspec = inspect.getargspec(method)

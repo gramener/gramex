@@ -189,17 +189,15 @@ def groupmeans(data, groups, numbers, cutoff=.01, quantile=.95, minsize=None,
     Yields the significant differences in average between every pair of
     groups and numbers.
 
-    Parameters
-    ----------
-    data : pandas.DataFrame
-    groups : non-empty iterable containing category column names in data
-    numbers : non-empty iterable containing numeric column names in data
-    cutoff : ignore anything with prob > cutoff.
+    :arg DataFrame data: pandas.DataFrame to analyze
+    :arg list groups: category column names to group data by
+    :arg list numbers: numeric column names in to summarize data by
+    :arg float cutoff: ignore anything with prob > cutoff.
         cutoff=None ignores significance checks, speeding it up a LOT.
-    quantile : number that represents target improvement. Defaults to .95.
+    :arg float quantile: number that represents target improvement. Defaults to .95.
         The ``diff`` returned is the % impact of everyone moving to the 95th
         percentile
-    minsize : each group should contain at least minsize values.
+    :arg int minsize: each group should contain at least minsize values.
         If minsize=None, automatically set the minimum size to
         1% of the dataset, or 10, whichever is larger.
     '''
@@ -305,7 +303,7 @@ def translate(*q, source=None, target=None, key=None, cache=None, api='google'):
 
     :arg str q: one or more strings to translate
     :arg str source: 2-letter source language (e.g. en, fr, es, hi, cn, etc).
-+        If empty or None, auto-detects source
+        If empty or None, auto-detects source
     :arg str target: 2-letter target language (e.g. en, fr, es, hi, cn, etc).
     :arg str key: Google Translate API key
     :arg dict cache: kwargs for :py:func:`gramex.data.filter`. Has keys such as

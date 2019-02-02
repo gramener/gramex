@@ -1,13 +1,3 @@
-'''logviewer
-requests.csv*
-default keys - ['time', 'ip', 'user.id', 'status',
-                'duration', 'method', 'uri', 'error']
-mandatory keys - ['time', 'ip', 'user.id', 'status',
-                'duration', 'uri']
-custom metrics
-    new_session
-    new_login :todo
-'''
 import re
 import sys
 import os.path
