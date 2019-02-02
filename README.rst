@@ -7,7 +7,7 @@ data-based web apps with less code.
 Gramex takes a component based approach building data apps. (Like LEGO bricks.)
 This needs fewer steps, takes less time, and builds apps with fewer bugs.
 
-`Examples of public data apps built on Gramex <https://gramener.com/demo>`_
+`Examples of public data apps built on Gramex <https://gramener.com/demo/>`_
 
 Gramex supports a wide varied of visualizations to choose from.
 
@@ -24,7 +24,7 @@ Technology
 ----------
 
 Gramex is built on top of Python, Node.js, R and their ecosystem of libraries.
-`See full list <https://learn.gramener.com/guide/license/thirdparty.md>`.
+`See full list <https://learn.gramener.com/guide/license/thirdparty.md>`_.
 
 Gramex supports 50+ data sources. This includes most relational databases
 supported by
@@ -35,13 +35,16 @@ supported by
 Contributing
 ------------
 
-- Need help?
-  `Browse the issues <https://code.gramener.com/cto/gramener/gramex/issues>`_
-- Want to report a bug or request a feature?
-	`Open an issue <https://code.gramener.com/cto/gramex/issues/new>`_.
-	If it is a security issue, please email to security@gramener.com, rather
-	than publicly sharing the vulnerability.
-- Want to fix a bug or add a feature? Fork it, make changes, and send a pull request.
+**Need help?**
+`Browse the issues <https://code.gramener.com/cto/gramener/gramex/issues>`_
+
+**Want to report a bug or request a feature?**
+`Open an issue <https://code.gramener.com/cto/gramex/issues/new>`_.
+If it is a security issue, please email to security@gramener.com, rather
+than publicly sharing the vulnerability.
+
+**Want to fix a bug or add a feature?**
+Fork it, make changes, and send a pull request.
 
 
 License

@@ -106,4 +106,5 @@ push-docs: docs
 
 push-pypi: clean
 	python setup.py sdist
+	# Note: if this fails, add '-p PASSWORD'
 	twine upload -u gramener dist/*

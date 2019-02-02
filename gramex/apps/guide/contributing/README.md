@@ -122,7 +122,7 @@ Merge with master, create an annotated tag and push the master branch:
 ```bash
 git checkout master
 git merge dev
-git tag -a v1.x.x           # Annotate with a one-line summary of features
+git tag -a v1.x.x -m"One-line summary of features"
 git push --follow-tags
 git checkout dev            # Switch back to dev
 git merge master
