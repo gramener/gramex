@@ -753,10 +753,35 @@ replaces `args`.
 
 Some sample uses:
 
+- [Validate inputs](#formhandler-validation)
 - Add/modify/delete arguments based on the user. You can access the user ID via
   `handler.current_user` inside the `prepare:` expression
 - Add/modify/delete arguments based on external data.
 - Replace argument values.
+
+
+## FormHandler validation
+
+The [prepare](#formhandler-prepare) function can raise a HTTPError in case of
+invalid inputs. For example, add a `prepare: my_module.validate(args, handler)`
+and use this `validate()` function:
+
+```python
+# my_module.py
+from tornado.web import HTTPError
+from gramex.http import BAD_REQUEST
+
+def validate(args, handler):
+    if 'city' in args and 'state' not in args:
+        raise HTTPError(BAD_REQUEST, 'Cannot use ?city= without ?state=')
+
+    admin = 'admin' in (handler.current_user or {}).get('role', '')
+    if 'city' in args and not admin:
+        raise HTTPError(BAD_REQUEST, 'Only admins can search by ?city=')
+```
+
+This will raise a HTTP 400 Bad Request error if you use `?city=` without
+`?state=`, or if a non-admin user requests `?city=`.
 
 
 ## FormHandler multiple datasets
