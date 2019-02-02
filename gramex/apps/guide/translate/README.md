@@ -37,7 +37,7 @@ To translate content in a page, use
   <li lang-target="nl">This is translated into <em>Dutch</em></li>
 </ul>
 <script src="ui/jquery/dist/jquery.min.js"></script>
-<script src="ui/dist/g1/g1.min.js">
+<script src="ui/dist/g1/g1.min.js"></script>
 <script>
   // Translate text nodes under element with lang-target=
   $('[lang-target]').translate({

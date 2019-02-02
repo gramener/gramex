@@ -88,8 +88,8 @@
     $body
   </section>
 
-  <script src="node_modules/clipboard/dist/clipboard.min.js"></script>
-  <script src="node_modules/anchor-js/anchor.min.js"></script>
+  <script src="/$GUIDE_ROOT/node_modules/clipboard/dist/clipboard.min.js"></script>
+  <script src="/$GUIDE_ROOT/node_modules/anchor-js/anchor.min.js"></script>
   <script src="/$GUIDE_ROOT/script.js"></script>
 </body>
 </html>

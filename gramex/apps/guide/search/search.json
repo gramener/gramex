@@ -699,6 +699,38 @@
       "Upgrade": -1
     }
   },
+  "1.50": {
+    "": {
+      "Gramex 1.50 Release Notes": -1
+    },
+    "bugfixes": {
+      "Bugfixes": -1
+    },
+    "cors-and-formhandler-validation-docs": {
+      "CORS and FormHandler validation docs": -1
+    },
+    "encrypt-service-is-deprecated": {
+      "Encrypt service is deprecated": -1
+    },
+    "g1-upgraded-to-013": {
+      "g1 upgraded to 0.13": -1
+    },
+    "gramex-has-a-new-test-framework": {
+      "Gramex has a new test framework": -1
+    },
+    "stats": {
+      "Stats": -1
+    },
+    "translations-are-easier": {
+      "Translations are easier": -1
+    },
+    "ui-components-have-new-colors-utilities-and-libraries": {
+      "UI components have new colors, utilities and libraries": -1
+    },
+    "upgrade": {
+      "Upgrade": -1
+    }
+  },
   "about": {
     "": {}
   },
@@ -856,9 +888,7 @@
     "database-auth": {
       "Database auth": -1
     },
-    "decrypt-the-user-key-the-decrypted-user-will-be-the-same-as-user": {
-      "Decrypt the user key. The decrypted user will be the same as user": -1
-    },
+    "decrypt-the-user-key-the-decrypted-user-will-be-the-same-as-user": {},
     "direct-ldap-login": {
       "Direct LDAP login": -1
     },
@@ -874,9 +904,7 @@
     "forgot-password": {
       "Forgot password": -1
     },
-    "get-the-encrypted-user-key-as-a-long-string-eg-rx5nqv1lxaa0qi": {
-      "Get the encrypted user key as a long string, e.g. rx5/NQV1lXaA0QI...": -1
-    },
+    "get-the-encrypted-user-key-as-a-long-string-eg-rx5nqv1lxaa0qi": {},
     "google-auth": {
       "Google auth": -1
     },
@@ -955,9 +983,7 @@
     "templates-for-unauthorized": {
       "Templates for unauthorized": -1
     },
-    "this-is-the-user-object-we-want-to-mimic": {
-      "This is the user object we want to mimic": -1
-    },
+    "this-is-the-user-object-we-want-to-mimic": {},
     "twitter-auth": {
       "Twitter auth": -1
     },
@@ -1276,6 +1302,12 @@
     "common-errors": {
       "Common errors": -1
     },
+    "cors": {
+      "CORS": -1
+    },
+    "cors-post-with-auth": {
+      "CORS POST with auth": -1
+    },
     "deployment-checklist": {
       "Deployment checklist": -1
     },
@@ -1311,6 +1343,9 @@
     },
     "missing-dependency": {
       "Missing dependency": -1
+    },
+    "mymodulepy": {
+      "mymodule.py": -1
     },
     "nginx-log-analyzer": {
       "nginx log analyzer": -1
@@ -1543,6 +1578,9 @@
     "formhandler-templates": {
       "FormHandler templates": -1
     },
+    "formhandler-validation": {
+      "FormHandler validation": -1
+    },
     "formhandler-vega-charts": {
       "FormHandler Vega charts": -1
     },
@@ -1551,6 +1589,9 @@
     },
     "matrix-plots": {
       "Matrix plots": -1
+    },
+    "my_modulepy": {
+      "my_module.py": -1
     },
     "preventing-sql-injection": {
       "Preventing SQL injection": -1
@@ -2196,6 +2237,24 @@
   "test": {
     "": {
       "Automate tests": -1
+    },
+    "browsers": {
+      "Browsers": -1
+    },
+    "examples": {
+      "Examples": -1
+    },
+    "matches": {
+      "Matches": -1
+    },
+    "structure": {
+      "Structure": -1
+    },
+    "ui-test": {
+      "UI test": -1
+    },
+    "url-test": {
+      "URL test": -1
     }
   },
   "tips": {

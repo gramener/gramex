@@ -39,7 +39,7 @@ urltest:
       params: {x: 1}
 ```
 
-## urltest
+## URL test
 
 Here are the `urltest:` actions:
 
@@ -80,9 +80,9 @@ Here are the `urltest:` actions:
     - `a: {.text: Link, href: true}`: Each `<a>` has text "Link" and has a href attribute
     - `a: {.length: 10}`: There are 10 `<a>` elements
 
-## browsers
+## Browsers
 
-To set up [UI testing](#uitest) (or browser testing), define a `browsers:` section:
+To set up [UI testing](#ui-test) (or browser testing), define a `browsers:` section:
 
 ```yaml
 browsers:
@@ -95,7 +95,7 @@ browsers:
 Read how to [download the drivers](https://www.seleniumhq.org/download/) and add
 them to your PATH.
 
-# uitest
+# UI test
 
 Once you set up the [browsers](#browsers), you can use thes `uitest:` actions:
 
