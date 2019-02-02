@@ -1,5 +1,6 @@
 import os
 import inspect
+import threading
 import pandas as pd
 from tornado.gen import coroutine, Return
 from gramex.config import locate, app_log
@@ -282,6 +283,9 @@ def _google_translate(q, source, target, key):
 translate_api = {
     'google': _google_translate
 }
+# Prevent translate cache from being accessed concurrently across threads.
+# TODO: avoid threads and use Tornado ioloop/gen instead.
+_translate_cache_lock = threading.Lock()
 
 
 def translate(*q, **kwargs):
@@ -311,6 +315,7 @@ def translate(*q, **kwargs):
 
     Reference: https://cloud.google.com/translate/docs/apis
     '''
+    import gramex.data
     source = kwargs.pop('source', None)
     target = kwargs.pop('target', None)
     key = kwargs.pop('key', None)
@@ -332,10 +337,10 @@ def translate(*q, **kwargs):
             args = {'q': q, 'target': [target] * len(q)}
             if source:
                 args['source'] = [source] * len(q)
-            import gramex.data
-            result = gramex.data.filter(args=args, **cache)
+            with _translate_cache_lock:
+                result = gramex.data.filter(args=args, **cache)
         except Exception:
-            app_log.exception('Cannot fetch from translate cache: %r', dict(cache))
+            app_log.exception('Cannot query %r in translate cache: %r', args, dict(cache))
         # Remove already cached  results from q
         q = [v for v in q if v not in set(result.get('q', []))]
 
@@ -344,11 +349,13 @@ def translate(*q, **kwargs):
         if new_data is not None:
             result = result.append(pd.DataFrame(new_data), sort=False)
             if cache:
-                gramex.data.insert(id=['source', 'target', 'q'], args=new_data, **cache)
+                with _translate_cache_lock:
+                    gramex.data.insert(id=['source', 'target', 'q'], args=new_data, **cache)
 
     # Sort results by q
     result['order'] = result['q'].map(original_q.index)
     result.sort_values('order', inplace=True)
+    result.drop_duplicates(subset=['q'], inplace=True)
     del result['order']
 
     return result
