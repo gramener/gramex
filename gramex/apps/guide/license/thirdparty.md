@@ -27,6 +27,7 @@ Gramex uses open source third party libraries that use one of these licenses:
 - [colorama](https://pypi.python.org/pypi/colorama/): [BSD license][BSD]
 - [colorlog](https://pypi.python.org/pypi/colorlog/): [MIT license][MIT]
 - [crontab](https://pypi.python.org/pypi/crontab/): [LGPL license][LGPL]
+- [cssselect](https://pypi.python.org/pypi/cssselect/): [BSD license][BSD]
 - [diskcache](https://pypi.python.org/pypi/diskcache/): [Apache license][Apache]
 - [futures](https://pypi.python.org/pypi/futures/): [PSF license][PSF]
 - [blaze](https://pypi.python.org/pypi/blaze/): [MIT license][MIT]

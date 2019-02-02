@@ -6,66 +6,21 @@ prefix: Test
 Create a `gramextest.yaml` in your app directory and run `pytest`. This runs
 tests mentioned in `gramextest.yaml`.
 
-Here's a sample `gramextest.yaml`:
+Here's a sample [gramextest.yaml](gramextest.yaml):
 
-```yaml
-variables:                          # Define variables for re-use in the app
-  BASE: https://httpbin.org         #   Define the base URL
+<iframe frameborder="0" src="gramextest.yaml.source"></iframe>
 
-urltest:                            # Run tests on URLs without a browser
-  - fetch: $BASE/get                # Fetch this URL
-  - fetch:
-      url: $BASE/get                # Fetch this URL
-      params: {x: 1, y: abc}        # with ?x=1&y=abc
-      method: GET                   # as a GET request
-      request_headers:              # with these HTTP request headers
-        X-Test: Gramex
-    code: 200                       # HTTP status should be 200
-    headers:                        # Check the response HTTP headers
-      Server: true                  #   Server header is present
-      Nonexistent: null             #   Nonexistent header is missing
-      Host: [has, httpbin.org]      #   Host header has the word httpbin.org
-    text:                           # Check the response text
-      - [has, args, headers]        #   Has at least one of these words
-      - [has no, hello, world]      #   Has none of these words
-    json:                           # Check the response as JSON
-      args: {x: '1', y: abc}        #   {args: ...} matches this object
-      args.x: '1'                   #   {args: {x: ...}} is '1'
-      args.y: [has, abc]            #   {args: {y: ...}} has the word 'abc'
-    html:                           # Check the response as HTML
-      h1: Title                     #   All <h1> have "Title" as text
-      li: {class: item}             #   All <li> have class="item"
-      img: {.length: 10}            #   There are 10 <img> elements
-      li.item:first-child:          #   The first li.item
-        class: [has, item]          #       has "item" in the class
-        .text: [has no, error]      #       does not have "error" in the text
+Run it using `pytest` or `pytest gramextest.yaml`:
 
-  - fetch: https://...              # Fetch the next URL and continue with the tests
+<link rel="stylesheet" type="text/css" href="../node_modules/asciinema-player/resources/public/css/asciinema-player.css">
+<asciinema-player src="pytest.rec" cols="100" rows="20" idle-time-limit="0.5" autoplay="1"></asciinema-player>
 
-browsers:                           # Open multiple browsers to run UI tests
-    Firefox: true                   # https://github.com/mozilla/geckodriver/releases
-    Chrome: true                    # https://sites.google.com/a/chromium.org/chromedriver/downloads
-    Edge: true                      # https://developer.microsoft.com/en-us/microsoft-edge/tools/webdriver/
+You can run [specific tests](https://docs.pytest.org/en/latest/usage.html#specifying-tests-selecting-tests)
+by mentioning its name. For example:
 
-uitest:                             # Run UI tests in the browser on the URL
-  - fetch: $BASE/get                # Fetch this URL in the browser
-    find h1:                        # Find the node "h1" as a CSS selector
-      .text: Title                  #   The text should be "Title"
-      class: ''                     #   The attribute class= should be empty
-    find xpath //input:             # Find the node "//input" as an XPath selector
-      name: 'search'                #   The attribute name= should be "search"
-      :value: [has, hello]          #   The property "value" should have "hello"
-    scroll: '#demos'                # Scroll the CSS element into vide
-    wait: 1                         # Wait for 1 seconds
-  -                                 # You can break test cases anywhere to repeat actions
-    wait: 1                         # Wait again for 1 second. This is a repeated action
-    click: xpath //a[text()='Home']                 # Click on link with text "Home"
-    click: xpath //a[contains(text(), 'Gramex')]    # Click on first link mentioning Gramex
-    script:
-        - window.x = 1              # Run the script
-        - return window.x: 1        # Run the script and check return value is 1
-```
-
+- `pytest -k urltest` -- run all `urltest:`
+- `pytest -k urltest:4` -- run the 4th `urltest`
+- `pytest -k uitest:3:Chrome` -- run the 3rd `uitest` on Chrome
 
 ## Structure
 
@@ -125,9 +80,24 @@ Here are the `urltest:` actions:
     - `a: {.text: Link, href: true}`: Each `<a>` has text "Link" and has a href attribute
     - `a: {.length: 10}`: There are 10 `<a>` elements
 
-## uitest
+## browsers
 
-Here are the `uitest:` actions:
+To set up [UI testing](#uitest) (or browser testing), define a `browsers:` section:
+
+```yaml
+browsers:
+    Chrome: true
+    Firefox: true
+    Edge: true
+    # ...
+```
+
+Read how to [download the drivers](https://www.seleniumhq.org/download/) and add
+them to your PATH.
+
+# uitest
+
+Once you set up the [browsers](#browsers), you can use thes `uitest:` actions:
 
 - `fetch`: fetches the URL via a GET request
 - `find <selector>`: finds a CSS/XPath selector and tests its attributes.
@@ -245,3 +215,5 @@ test:
         # TODO: text implies true
         - test //[@id=searchresults]//a[contains(@text, 'Google auth')]
 ```
+
+<script src="../node_modules/asciinema-player/resources/public/js/asciinema-player.js"></script>

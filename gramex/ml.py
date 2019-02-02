@@ -284,7 +284,7 @@ translate_api = {
 }
 
 
-def translate(*q, source=None, target=None, key=None, cache=None, api='google'):
+def translate(*q, **kwargs):
     '''
     Translate strings using the Google Translate API. Example::
 
@@ -311,8 +311,11 @@ def translate(*q, source=None, target=None, key=None, cache=None, api='google'):
 
     Reference: https://cloud.google.com/translate/docs/apis
     '''
-    import gramex.data
-
+    source = kwargs.pop('source', None)
+    target = kwargs.pop('target', None)
+    key = kwargs.pop('key', None)
+    cache = kwargs.pop('cache', None)
+    api = kwargs.pop('api', 'google')
     if cache is not None:
         if not isinstance(cache, dict):
             raise ValueError('cache= must be a FormHandler dict config, not %r' % cache)
@@ -328,7 +331,8 @@ def translate(*q, source=None, target=None, key=None, cache=None, api='google'):
         try:
             args = {'q': q, 'target': [target] * len(q)}
             if source:
-                args['source']: [source] * len(q)
+                args['source'] = [source] * len(q)
+            import gramex.data
             result = gramex.data.filter(args=args, **cache)
         except Exception:
             app_log.exception('Cannot fetch from translate cache: %r', dict(cache))

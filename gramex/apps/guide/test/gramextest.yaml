@@ -1,0 +1,54 @@
+variables:                          # Define variables for re-use in the app
+  BASE: https://httpbin.org         #   Define the base URL
+
+urltest:                            # Run tests on URLs without a browser
+  - fetch: $BASE/get                # Fetch this URL
+  - fetch:
+      url: $BASE/get                # Fetch this URL
+      params: {x: 1, y: abc}        # with ?x=1&y=abc
+      method: GET                   # as a GET request
+      headers:                      # with these HTTP request headers
+        X-Test: Gramex
+    code: 200                       # HTTP status should be 200
+    headers:                        # Check the response HTTP headers
+      Server: true                  #   Server header is present
+      Nonexistent: null             #   Nonexistent header is missing
+      Date: [endswith, GMT, UTC]    #   Date header ends with GMT or UTC
+    text:                           # Check the response text
+      - [has, args, headers]        #   Has at least one of these words
+      - [has no, hello, world]      #   Has none of these words
+    json:                           # Check the response as JSON
+      args: {x: '1', y: abc}        #   {args: ...} matches this object
+      args.x: '1'                   #   {args: {x: ...}} is '1'
+      args.y: [has, abc]            #   {args: {y: ...}} has the word 'abc'
+  - fetch: $BASE/html               # Fetch this URL
+    html:                           # Check the response as HTML
+      h1: [has, Herman]             #   All <h1> have "Herman" in the text
+      p:first-child: [has, cool]    #   First <p> has the word "cool"
+      p:                            #   All <p> elements
+        class: null                 #     have no class
+        .text: [has, cool]          #     and have "cool" in the text
+
+# Open browsers to run tests. Download drivers from https://www.seleniumhq.org/download/
+browsers:               # Open multiple browsers to run UI tests
+    Chrome:             # Run tests on Chrome
+      headless: true    #   optional: in headless mode
+    # Firefox: true
+    # Edge: true
+
+uitest:                             # Run UI tests in the browser on the URL
+  - fetch: https://www.google.com/  # Fetch this URL in the browser
+    # find title: Google              # Find CSS selector "title" has the text Google
+    find xpath //input[@title]:     # Find the first input node that has a title using XPath
+      name: 'q'                     #   The attribute name= should be "q"
+    type xpath //input[@title]: gramener   # Type "gramener" in the input
+  - find xpath //input[@title]:     # The same input has
+      :value: [has, gramener]       #   The property "value" as "gramener"
+  - click: xpath //input[@value='Google Search']    # Click on the "Google Search" button
+    wait: 1                         # Wait for 1 second
+  - scroll: '.fbar'                 # Scroll the footer (CSS .fbar) into view
+  - script:
+        - window.x = 1              # Run the script
+        - return window.x: 1        # Run the script and check return value is 1
+  - # Some element must contain the word "insights"
+    'find xpath //*[text()[contains(., "insights")]]': true

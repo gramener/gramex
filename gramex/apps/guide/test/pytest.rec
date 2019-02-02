@@ -1,0 +1,314 @@
+{
+  "version": 1,
+  "width": 106,
+  "height": 24,
+  "duration": 15.171964,
+  "command": "bash",
+  "title": null,
+  "env": {
+    "TERM": "cygwin",
+    "SHELL": null
+  },
+  "stdout": [
+    [
+      0.366239,
+      "\r\r\nAnand S@OBSIDIAN \u001b[32mSat Feb 02 01:10 PM \u001b[33m.../gramener.com/viz/async-gramex\u001b[0m\u001b[32m (dev)\u001b[00m\r\r\n$ "
+    ],
+    [
+      0.324931,
+      "p"
+    ],
+    [
+      0.000903,
+      "y"
+    ],
+    [
+      0.000642,
+      "t"
+    ],
+    [
+      0.000373,
+      "e"
+    ],
+    [
+      0.001684,
+      "s"
+    ],
+    [
+      0.000383,
+      "t"
+    ],
+    [
+      0.000547,
+      " "
+    ],
+    [
+      0.000374,
+      "-"
+    ],
+    [
+      0.00055,
+      "v"
+    ],
+    [
+      0.000398,
+      " "
+    ],
+    [
+      0.000396,
+      "g"
+    ],
+    [
+      0.000366,
+      "r"
+    ],
+    [
+      0.00041,
+      "a"
+    ],
+    [
+      0.000441,
+      "m"
+    ],
+    [
+      0.000385,
+      "e"
+    ],
+    [
+      0.000373,
+      "x"
+    ],
+    [
+      0.000372,
+      "/"
+    ],
+    [
+      0.000364,
+      "a"
+    ],
+    [
+      0.000372,
+      "p"
+    ],
+    [
+      0.000364,
+      "p"
+    ],
+    [
+      0.000363,
+      "s"
+    ],
+    [
+      0.000368,
+      "/"
+    ],
+    [
+      0.000361,
+      "g"
+    ],
+    [
+      0.000364,
+      "u"
+    ],
+    [
+      0.000396,
+      "i"
+    ],
+    [
+      0.000365,
+      "d"
+    ],
+    [
+      0.000369,
+      "e"
+    ],
+    [
+      0.000364,
+      "/"
+    ],
+    [
+      0.000362,
+      "t"
+    ],
+    [
+      0.000372,
+      "e"
+    ],
+    [
+      0.000362,
+      "s"
+    ],
+    [
+      0.000363,
+      "t"
+    ],
+    [
+      0.001774,
+      "/"
+    ],
+    [
+      0.000473,
+      "g"
+    ],
+    [
+      0.000435,
+      "r"
+    ],
+    [
+      0.000407,
+      "a"
+    ],
+    [
+      0.001366,
+      "m"
+    ],
+    [
+      0.000376,
+      "e"
+    ],
+    [
+      0.000412,
+      "x"
+    ],
+    [
+      0.000364,
+      "t"
+    ],
+    [
+      0.000363,
+      "e"
+    ],
+    [
+      0.001397,
+      "s"
+    ],
+    [
+      0.001473,
+      "t"
+    ],
+    [
+      0.001658,
+      "."
+    ],
+    [
+      0.000601,
+      "y"
+    ],
+    [
+      0.0013,
+      "a"
+    ],
+    [
+      0.000499,
+      "m"
+    ],
+    [
+      0.000646,
+      "l"
+    ],
+    [
+      0.432679,
+      "\r\n"
+    ],
+    [
+      2.714592,
+      "WARNING:gramex:Missing config: D:\\site\\gramener.com\\viz\\async-gramex\\gramex.yaml\r\r\n"
+    ],
+    [
+      0.096099,
+      "============================= test session starts =============================\r\r\nplatform win32 -- Python 3.6.5, pytest-3.5.1, py-1.5.3, pluggy-0.6.0 -- C:\\anaconda\\3.6\\python.exe\r\r\ncachedir: .pytest_cache\r\r\nrootdir: D:\\site\\gramener.com\\viz\\async-gramex,"
+    ],
+    [
+      0.000995,
+      " inifile:\r\r\nplugins: remotedata-0.2.1, openfiles-0.3.0, doctestplus-0.1.3, arraydiff-0.2, gramex-1.49.0\r\r\ncollecting ... "
+    ],
+    [
+      2.113413,
+      "collected 9 items\r\r\n\r\r\ngramex/apps/guide/test/gramextest.yaml::urltest:1 "
+    ],
+    [
+      1.123542,
+      "PASSED"
+    ],
+    [
+      0.015633,
+      "                 [ 11%]\r\r\ngramex/apps/guide/test/gramextest.yaml::urltest:2 "
+    ],
+    [
+      1.270267,
+      "PASSED                 [ 22%]\r\r\ngramex/apps/guide/test/gramextest.yaml::urltest:3 "
+    ],
+    [
+      1.038965,
+      "PASSED                 [ 33%]\r\r\ngramex/apps/guide/test/gramextest.yaml::uitest:Chrome:1 "
+    ],
+    [
+      0.830847,
+      "PASSED"
+    ],
+    [
+      0.002784,
+      "           [ 44%]\r\r\ngramex/apps/guide/test/gramextest.yaml::uitest:Chrome:2 "
+    ],
+    [
+      0.056043,
+      "PASSED"
+    ],
+    [
+      0.007911,
+      "           [ 55%]\r\r\ngramex/apps/guide/test/gramextest.yaml::uitest:Chrome:3 "
+    ],
+    [
+      4.238094,
+      "PASSED"
+    ],
+    [
+      0.00115,
+      "           [ 66%]\r\r\ngramex/apps/guide/test/gramextest.yaml::uitest:Chrome:4 "
+    ],
+    [
+      0.02896,
+      "PASSED"
+    ],
+    [
+      0.004501,
+      "           [ 77%]"
+    ],
+    [
+      0.001518,
+      "\r\r\ngramex/apps/guide/test/gramextest.yaml::uitest:Chrome:5 "
+    ],
+    [
+      0.019406,
+      "PASSED"
+    ],
+    [
+      0.006312,
+      "           [ 88%]"
+    ],
+    [
+      0.001007,
+      "\r\r\ngramex/apps/guide/test/gramextest.yaml::uitest:Chrome:6 "
+    ],
+    [
+      0.047644,
+      "PASSED"
+    ],
+    [
+      0.00397,
+      "           [100%]"
+    ],
+    [
+      0.106154,
+      "\r\r\n\r\r\n"
+    ],
+    [
+      0.021393,
+      "========================== 9 passed in 10.91 seconds ==========================\r\r\n"
+    ],
+    [
+      0.268332,
+      "\r\r\nAnand S@OBSIDIAN \u001b[32mSat Feb 02 01:10 PM \u001b[33m.../gramener.com/viz/async-gramex\u001b[0m\u001b[32m (dev)\u001b[00m\r\r\n$ "
+    ]
+  ]
+}

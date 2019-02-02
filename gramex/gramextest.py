@@ -63,7 +63,8 @@ class YamlFile(pytest.File):
     '''
     def collect(self):
         # TODO: report error if YAML is invalid
-        conf = gramex.cache.open(self.fspath, 'config')
+        conf = gramex.cache.open(str(self.fspath), 'config')
+        # TODO: create browser only when running test
         for browser, kwargs in conf.get('browsers', {}).items():
             if kwargs in (False, None):
                 continue
@@ -72,11 +73,11 @@ class YamlFile(pytest.File):
             drivers[browser] = getattr(webdriver, browser)(desired_capabilities=capabilities)
         # TODO: improve naming so that we can use pytest -k
         for index, actions in enumerate(conf.get('urltest', [])):
-            name = 'urltest: #{}'.format(index + 1)
+            name = 'urltest:{}'.format(index + 1)
             yield YamlItem(name, self, actions, URLTest())
         for index, actions in enumerate(conf.get('uitest', [])):
             for browser in drivers:
-                name = 'uitest: #{} {}'.format(index + 1, browser)
+                name = 'uitest:{}:{}'.format(browser, index + 1)
                 yield YamlItem(name, self, actions, UITest(browser))
 
 
@@ -87,7 +88,9 @@ class YamlItem(pytest.Item):
             actions = {actions: {}}
         self.run = []
         for action, options in actions.items():
-            cmd, *arg = action.strip().split(maxsplit=1)
+            # PY3: cmd, *arg = action.strip().split(maxsplit=1)
+            parts = action.strip().split(None, 1)
+            cmd, arg = (parts[0], parts[1:]) if len(parts) > 1 else (parts[0], [])
             method = getattr(registry, cmd, None)
             if method is None:
                 raise ConfError('ERROR: Unknown action: {}'.format(action))
@@ -186,8 +189,8 @@ class UITest(object):
         if _text is not default:
             if _text is None or _text is False:
                 return match(node, _text, msg + ': null')
-            if _text is True:
-                return match(len(node), ['>', 0], msg + ': exists')
+            elif node is None:
+                return ConfError('%s matched no nodes' % selector)
             return match(node.text, _text, msg)
         elif node is None:
             # TODO: Fix all error reporting
@@ -218,10 +221,11 @@ class UITest(object):
         time.sleep(float(seconds))
 
     def click(self, selector):
-        self._get(selector).click()
+        self._get(selector, must_exist=True).click()
 
     def scroll(self, selector):
-        self.driver.execute_script('arguments[0].scrollIntoView()', self._get(selector))
+        self.driver.execute_script('arguments[0].scrollIntoView()',
+                                   self._get(selector, must_exist=True))
 
     def script(self, script=None, **scripts):
         # script: alert(1)
@@ -247,7 +251,7 @@ class UITest(object):
             match(self.driver.execute_script(code), expected, msg)
 
     def type(self, selector, text):
-        self._get(selector).send_keys(text)
+        self._get(selector, must_exist=True).send_keys(text)
 
     def screenshot():
         pass
@@ -265,14 +269,17 @@ class UITest(object):
         ('xpath', False): 'find_element_by_xpath',
     }
 
-    def _get(self, selector, multiple=False):
+    def _get(self, selector, multiple=False, must_exist=False):
         engine = 'css'
         if selector.startswith('xpath '):
-            engine, selector = selector.split(maxsplit=1)
+            engine, selector = selector.split(None, 1)
         try:
             return getattr(self.driver, self.select_method[engine, multiple])(selector)
         except NoSuchElementException:
-            return None
+            if must_exist:
+                raise ConfError('No element: ' + selector)
+            else:
+                return None
 
 
 def add_operator(grouping, *args):

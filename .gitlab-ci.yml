@@ -32,6 +32,7 @@ validate:
     - gramex license accept
     - python setup.py nosetests
     - bandit gramex --recursive --format csv || true    # Just run bandit as a warning
+    - pytest -v gramex/apps/guide/test/gramextest.yaml
     - gramex --listen.port=1234 > gramex.log 2>&1 &
     - sleep 10
     - pytest tests/gramextest.yaml
@@ -47,6 +48,7 @@ validate-py2:
     - pip install -e .
     - gramex license accept
     - python setup.py nosetests
+    - pytest -v gramex/apps/guide/test/gramextest.yaml
     - gramex --listen.port=1234 > gramex.log 2>&1 &
     - sleep 10
     - pytest tests/gramextest.yaml

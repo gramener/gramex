@@ -25,6 +25,7 @@ install_requires = [
     'colorama',                     # REQ: (conda) gramex.init()
     'colorlog >= 2.7.0',            # IMP: Coloured log files
     'crontab >= 0.21',              # SRV: services.schedule to parse crontab entries
+    'cssselect',                    # OPT: pytest gramex plugin
     'datashape',                    # OPT: (conda) gramex.handlers.datahandler
     'diskcache >= 2.8.3',           # SRV: services.cache for disk cache
     'h5py',                         # OPT: (conda) gramex.cache.HDF5Store
