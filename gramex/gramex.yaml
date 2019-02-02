@@ -52,7 +52,7 @@ handlers:
 
     FileHandler:
         ignore:
-            - gramex.yaml               # Always ignore gramex.yaml in Filehandlers
+            - gramex*.yaml              # Always ignore gramex config files
             - ".*"                      # Hide dotfiles
             - "*.py*"                   # Hide Python scripts
         allow: '.allow'                 # Allow special dotfile

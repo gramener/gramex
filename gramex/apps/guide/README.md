@@ -19,6 +19,7 @@ prefix: Guide
 - [Quickstart](quickstart/)
 - [Gramex is a web server](server/)
 - [Configurations control Gramex](config/)
+- [Testing Gramex apps](test/)
 
 ## Reference
 

@@ -1,0 +1,72 @@
+variables:
+  BASE: http://localhost:1234
+
+not urltest:
+  - fetch: $BASE
+    code: 200
+    html:
+      html: true
+      head meta[name="viewport"]: {content: [has, width]}
+      title: Gramex Guide
+      h1: Gramex Guide
+      input[type="search"]: {data-url: search/searchindex.json}
+      nav ul > li > a: {.length: [greater than, 30], href: true}
+      .content ul > li > a: {.length: [greater than, 30], href: true}
+
+  - fetch: $BASE/formhandler/flags
+    code: 200
+    headers:
+      Content-Type: application/json
+      X-Missing: null
+    json:
+      missing: null
+      'length(@)': [[greater than, 150], [less than, 200]]
+      '[0]': {ID: AND, c1: 35, c2: 1, c3: 26, c4: 0, c5: 32, c6: 0, c7: 0, c8: 4,
+              Name: Andorra, Continent: Europe, Symbols: null, Shapes: null,
+              Stripes: Vertical, Cross: null, Union-Flag: null,Text: null}
+
+  - fetch:
+      url: $BASE/formhandler/flags
+      method: GET
+      params: {Continent: [Europe, Asia], Symbols: Landscape, _sort: ID, _meta: y}
+    code: [IS, 302, 200]
+    text:
+      - [has, Landscape, na]
+      - [has, Symbols]
+      - [has, Europe]
+      - [has, Asia]
+    headers:
+      Fh-Data-By: [is, '[]', na]
+      # TODO: type conversion from string to int
+      Fh-Data-Count: '4'
+      Content-Length: [is not, '0', '1']
+      Fh-Data-Filters: [[HAS, Continent], [HAS, Europe], [HAS, Asia], [HAS, Symbols], [HAS, Landscape]]
+      Server: [matches, ^Gramex/\d+\.\d+\.\d+$$]
+      Content-Type: [starts with, application, na]
+      Date: [ends with, GMT, UTC]
+    json:
+      'length(@)': 4
+      '[0].ID': KHM
+      '[0].Text': null
+      '[3].Stripes': Horizontal
+
+browsers:
+  # Only ChromeDriver is installed on Gitlab CI
+  Chrome: {headless: true}
+
+uitest:
+  - fetch: $BASE
+    find h1: Gramex Guide
+    find nav ul > li > a: {.length: [greater than, 30], href: true}
+    type input: googleauth
+    'find #searchresults > div': {.length: 3}
+    # TODO: at least one of the elements contains this
+    'find xpath //*[@id="searchresults"]//a[contains(text(), "Google auth")]': {href: true}
+    script:
+      - "return document.title == document.querySelector('h1').textContent": true
+      - "return document.title": [has, Gramex Guide]
+  - click: xpath //*[@id="searchresults"]//a[contains(text(), "Google auth")]
+    script:
+      - 'return location.pathname': '/auth/'
+      - 'return window.scrollY': [greater than, 0]
+  - back: 1

@@ -29,6 +29,7 @@ install_requires = [
     'diskcache >= 2.8.3',           # SRV: services.cache for disk cache
     'h5py',                         # OPT: (conda) gramex.cache.HDF5Store
     'ipdb',                         # OPT: gramex.debug
+    'jmespath',                     # OPT:  pytest gramex plugin
     'ldap3 >= 2.2.4',               # OPT: LDAP connections
     'lxml',                         # OPT: (conda) gramex.pptgen
     'markdown',                     # OPT: transforms, gramex.services.create_alert()
@@ -41,11 +42,12 @@ install_requires = [
     'pathtools >= 0.1.1',           # REQ: dependency for watchdog
     'psycopg2 >= 2.7.1',            # OPT: PostgreSQL connections
     'pymysql',                      # OPT: MySQL connections
-    'pytest',                       # OPT: (conda) pytest --gramex
+    'pytest',                       # OPT: (conda) pytest gramex plugin
     'python-pptx >= 0.6.6',         # SRV: pptgen
     'pyyaml >= 3.10',               # IMP: Parse YAML files for config
     'redis >= 2.10.0',              # SRV: RedisStore
     'seaborn',                      # OPT: (conda) gramex.data.download()
+    'selenium',                     # OPT: pytest gramex plugin
     'setuptools >= 16.0',           # IMP: 16.0 has good error message support
     'shutilwhich >= 1.1.0',         # IMP: shutil.which backport
     'six',                          # IMP: Python 3 compatibility
@@ -187,7 +189,8 @@ setup(
     install_requires=install_requires,
     zip_safe=False,
     entry_points={
-        'console_scripts': ['gramex = gramex:commandline']
+        'console_scripts': ['gramex = gramex:commandline'],
+        'pytest11': ['gramextest = gramex.gramextest']
     },
     test_suite='tests',
     tests_require=[
