@@ -46,7 +46,7 @@ To translate content in a page, use
 </script>
 ```
 
-Here is the output:
+Here is the output (rendered below in real-time using the API):
 
 <ul>
   <li lang-target="de">This is translated into <em>German</em></li>
@@ -123,7 +123,7 @@ The `cache:` section accepts standard [FormHandler](../formhandler/) keys. For e
 The data is stored in the cache as a table with same 4 columns as the response:
 `q`, `t`, `source` and `target`.
 
-[See the current cache data](cache?_format=table).
+[See the current cache data](cache?_format=html).
 
 You can allow users to edit this cache using [FormHandler](../formhandler/).
 
