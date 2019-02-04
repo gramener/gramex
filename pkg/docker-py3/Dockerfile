@@ -16,7 +16,8 @@ RUN (curl -sL https://deb.nodesource.com/setup_10.x | bash -) && \
             libasound2 libatk1.0-0 libgtk-3-0 && \
 # Install gramex
     pip install https://code.gramener.com/cto/gramex/repository/archive.tar.bz2?ref=master && \
-    gramex setup --all
+    gramex setup --all && \
+    gramex license accept
 
 # Export port 9988
 EXPOSE 9988
