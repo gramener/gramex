@@ -50,6 +50,10 @@ To use an existing instance of chromecapture.js running on a different port, use
                 engine: chrome
                 url: http://server:port/capture/    # Use chromecapture.js from this URL
 
+The default viewport size is 1200x768. To set a custom viewport for images or
+PPTX, use `?width=` and `?height=`. For example, `?width=1920&height=1080`
+changes the viewport to 1920x1080.
+
 By default, requests timeout within 10 seconds. To change this, use `timeout:`.
 
     :::yaml
@@ -142,8 +146,8 @@ It accepts the following arguments:
     - `?selector=`: Restrict screenshot to (optional) CSS selector in URL
       <br>**Example**: [?selector=.content](capture?selector=.content&ext=png) excludes the sidebar.
     - `?scale=`: zooms the screen by a factor. Default: 1.
-      <br>**Example**: [?scale=0.2](capture?scale=0.2&ext=pdf) compared with
-      [?scale=1](capture?scale=1&ext=pdf)
+      <br>**Example**: [?scale=0.2](capture?scale=0.2&ext=png) compared with
+      [?scale=1](capture?scale=1&ext=png)
 - For PPTX (Only in `engine: chrome` from **v1.23.1**):
     - `?layout=`: A3, A4, Letter, 16x9, 16x10, 4x3. Default: `4x3`
       <br>**Example**: [?layout=16x9](capture?layout=16x9&ext=pptx&width=1200&height=600)
