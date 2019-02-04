@@ -77,5 +77,6 @@
         }, false)
     </script>
   {% end %}
+  {% if 'recaptcha' in kwargs %}{% include "auth.recaptcha.template.html" %}{% end %}
 </body>
 </html>

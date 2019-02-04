@@ -404,6 +404,25 @@ url:
                 header: Referer
                 url: /$YAMLURL
 
+    auth/recaptcha:
+        pattern: /$YAMLURL/recaptcha
+        handler: SimpleAuth
+        kwargs:
+            template: $YAMLPATH/simple.html
+            # https://www.google.com/recaptcha/admin/site/344898552/settings
+            recaptcha:
+              key: 6Lf4u44UAAAAAFUEab2QNmEpbdFswIsB887aZwmQ
+              # Normally, you would not publish the secret if the repo is public.
+              # But this reCAPTCHA key only works on gramener.com and localhost.
+              secret: 6Lf4u44UAAAAAEgK-Qt5LRZKnzFDZkFSwztC1LWM
+            credentials:
+                alpha: alpha
+                beta: beta
+            redirect:
+                query: next
+                header: Referer
+                url: /$YAMLURL
+
     auth/sms:
         pattern: /$YAMLURL/sms
         handler: SMSAuth

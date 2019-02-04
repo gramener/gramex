@@ -54,5 +54,6 @@
       <p>We sent an email to <code>{{ email }}</code> with a link to log in.</p>
     {% end %}
   </form>
+  {% if 'recaptcha' in kwargs %}{% include "auth.recaptcha.template.html" %}{% end %}
 </body>
 </html>

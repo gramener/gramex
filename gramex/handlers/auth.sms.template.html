@@ -62,5 +62,6 @@
       <button type="submit">Log in</button>
     {% end %}
   </form>
+  {% if 'recaptcha' in kwargs %}{% include "auth.recaptcha.template.html" %}{% end %}
 </body>
 </html>

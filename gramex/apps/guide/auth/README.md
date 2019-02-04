@@ -1416,7 +1416,7 @@ url:
     pattern: /$YAMLURL/login/
     handler: ...                # Any auth handler can be used
     kwargs:
-      ...                     # Add parameters for the auth handler
+      ...                       # Add parameters for the auth handler
       prepare: module.function(args, handler)
 ```
 
@@ -1433,6 +1433,52 @@ def function(args, handler):
 
 The changes to the arguments will be saved in `handler.args`, which all auth
 handlers use. (NOTE: These changes need not affect `handler.get_argument()`.)
+
+## Recaptcha
+
+Auth handlers support a `recaptcha:` configuration that checks CAPTCHA
+validation via [reCAPTCHA v3](https://developers.google.com/recaptcha/docs/v3).
+
+reCAPTCHA v3 checks if a login is legitimate **without user interaction**, i.e.
+without prompting the user to take any action. This is a frictionless mechanism.
+To set this up, [register reCAPTCHA v3 keys here](https://g.co/recaptcha/v3),
+then add this configuration:
+
+```yaml
+url:
+  auth/login:
+    pattern: /$YAMLURL/login/
+    handler: ...                # Any auth handler that supports templates
+    kwargs:
+      ...
+      recaptcha:                # Add this section for recaptcha
+        key: YOUR-RECAPTCHA-KEY
+        secret: YOUR-RECAPTCHA-SECRET
+```
+
+If you use your own login `template:`, add this code at the bottom of the page:
+
+```html
+{% if 'recaptcha' in handler.kwargs %}
+  {% set recaptcha = handler.kwargs.recaptcha %}
+  <script src="https://www.google.com/recaptcha/api.js?render={{ recaptcha.key }}"></script>
+  <script>
+    grecaptcha.ready(function () {
+      grecaptcha.execute('{{ recaptcha.key }}', { action: '{{ recaptcha.action }}' }).then(function (token) {
+        document.querySelector('input[name="recaptcha"]').value = token
+      })
+    })
+  </script>
+{% end %}
+```
+
+Try this example, and observe the reCAPTCHA logo at the bottom-right of the screen:
+
+<div class="example">
+  <a class="example-demo" href="recaptcha">Recaptcha example</a>
+  <a class="example-src" href="http://code.gramener.com/cto/gramex/tree/master/gramex/apps/guide/auth/gramex.yaml">Source</a>
+</div>
+
 
 ## Lookup attributes
 

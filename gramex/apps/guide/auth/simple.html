@@ -28,6 +28,7 @@
 
     <form method="POST">
       <input type="hidden" name="_xsrf" value="{{ handler.xsrf_token }}">
+      <input type="hidden" name="recaptcha">
       <label for="user">Username</label>
       <input name="user" placeholder="Username">
       <label for="password">Password</label>
@@ -35,6 +36,16 @@
       <button type="submit">Log in</button>
     </form>
   </section>
-
+  {% if 'recaptcha' in handler.kwargs %}
+    {% set recaptcha = handler.kwargs.recaptcha %}
+    <script src="https://www.google.com/recaptcha/api.js?render={{ recaptcha.key }}"></script>
+    <script>
+      grecaptcha.ready(function () {
+        grecaptcha.execute('{{ recaptcha.key }}', { action: '{{ recaptcha.action }}' }).then(function (token) {
+          document.querySelector('input[name="recaptcha"]').value = token
+        })
+      })
+    </script>
+  {% end %}
 </body>
 </html>

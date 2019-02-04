@@ -1,0 +1,12 @@
+<script src="https://www.google.com/recaptcha/api.js?render={{ kwargs.recaptcha.key }}"></script>
+<script>
+  grecaptcha.ready(function () {
+    grecaptcha.execute('{{ kwargs.recaptcha.key }}', { action: '{{ kwargs.recaptcha.action }}' }).then(function (token) {
+      var input = document.createElement('input')
+      input.setAttribute('name', 'recaptcha')
+      input.setAttribute('type', 'hidden')
+      input.value = token
+      document.querySelector('form').appendChild(input)
+    })
+  })
+</script>

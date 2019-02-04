@@ -8,8 +8,6 @@ import uuid
 import base64
 import string
 import logging
-import tornado.web
-import tornado.gen
 import tornado.escape
 import tornado.httpclient
 from random import choice
@@ -17,11 +15,13 @@ from socket import gethostname
 from cachetools import TTLCache
 from tornado.auth import (GoogleOAuth2Mixin, FacebookGraphMixin, TwitterMixin,
                           OAuth2Mixin, urllib_parse)
+from tornado.gen import coroutine, sleep, Return
+from tornado.web import HTTPError
 from collections import Counter
 from orderedattrdict import AttrDict
 import gramex
 import gramex.cache
-from gramex.http import UNAUTHORIZED, BAD_REQUEST, INTERNAL_SERVER_ERROR
+from gramex.http import UNAUTHORIZED, BAD_REQUEST, FORBIDDEN, INTERNAL_SERVER_ERROR
 from gramex.config import check_old_certs, app_log, objectpath, str_utf8, merge
 from gramex.transforms import build_transform
 from .basehandler import BaseHandler, build_log_info
@@ -32,6 +32,7 @@ _forgot_template = os.path.join(_folder, 'forgot.template.html')
 _signup_template = os.path.join(_folder, 'signup.template.html')
 _user_info_path = os.path.join(gramex.variables.GRAMEXDATA, 'auth.user.db')
 _user_info = gramex.cache.SQLiteStore(_user_info_path, table='user')
+threadpool = gramex.service.threadpool
 
 # Python 3 csv.writer.writerow writes as str(), which is unicode in Py3.
 # Python 2 csv.writer.writerow writes as str(), which is bytes in Py2.
@@ -47,6 +48,8 @@ except ImportError:
 
 class AuthHandler(BaseHandler):
     '''The parent handler for all Auth handlers.'''
+    _RECAPTCHA_VERIFY_URL = 'https://www.google.com/recaptcha/api/siteverify'
+
     @classmethod
     def setup_default_kwargs(cls):
         super(AuthHandler, cls).setup_default_kwargs()
@@ -58,9 +61,9 @@ class AuthHandler(BaseHandler):
 
     @classmethod
     def setup(cls, prepare=None, action=None, delay=None, session_expiry=None,
-              session_inactive=None, user_key='user', lookup=None, **kwargs):
+              session_inactive=None, user_key='user', lookup=None, recaptcha=None, **kwargs):
         # Switch SSL certificates if required to access Google, etc
-        gramex.service.threadpool.submit(check_old_certs)
+        threadpool.submit(check_old_certs)
 
         # Set up default redirection based on ?next=...
         if 'redirect' not in kwargs:
@@ -104,9 +107,18 @@ class AuthHandler(BaseHandler):
         if prepare is not None:
             cls.auth_methods['prepare'] = build_transform(
                 conf={'function': prepare},
-                vars={'args': None, 'handler': None},
+                vars={'handler': None, 'args': None},
                 filename='url:%s:prepare' % cls.name,
                 iter=False)
+        # Prepare recaptcha
+        if recaptcha is not None:
+            if 'key' not in recaptcha:
+                app_log.error('%s: recaptcha.key missing', cls.name)
+            elif 'key' not in recaptcha:
+                app_log.error('%s: recaptcha.secret missing', cls.name)
+            else:
+                recaptcha.setdefault('action', 'login')
+                cls.auth_methods['recaptcha'] = cls.check_recaptcha
 
         # Set up post-login actions
         cls.actions = []
@@ -118,12 +130,16 @@ class AuthHandler(BaseHandler):
                     conf, vars=AttrDict(handler=None),
                     filename='url:%s:%s' % (cls.name, conf.function)))
 
+    @coroutine
     def prepare(self):
         super(AuthHandler, self).prepare()
         if 'prepare' in self.auth_methods:
-            result = self.auth_methods['prepare'](args=self.args, handler=self)
+            result = yield threadpool.submit(
+                self.auth_methods['prepare'], handler=self, args=self.args)
             if result is not None:
                 self.args = result
+        if 'recaptcha' in self.auth_methods:
+            yield self.auth_methods['recaptcha'](self, self.kwargs.recaptcha)
 
     @staticmethod
     def update_user(user_id, **kwargs):
@@ -132,7 +148,7 @@ class AuthHandler(BaseHandler):
         info.update(kwargs)
         _user_info.dump(user_id, info)
 
-    @tornado.gen.coroutine
+    @coroutine
     def set_user(self, user, id):
         # Find session expiry time
         expires_days = self.session_expiry
@@ -160,7 +176,7 @@ class AuthHandler(BaseHandler):
         # Extend user attributes looking up the user ID in a lookup table
         if self.lookup is not None:
             # Look up the user ID in the lookup table and fetch all matching rows
-            users = yield gramex.service.threadpool.submit(
+            users = yield threadpool.submit(
                 gramex.data.filter, args={self.lookup_id: [user['id']]}, **self.lookup)
             if len(users) > 0 and self.lookup_id in users.columns:
                 # Update the user attributes with the non-null items in the looked up row
@@ -180,7 +196,7 @@ class AuthHandler(BaseHandler):
             callback(self)
         self.log_user_event(event='login')
 
-    @tornado.gen.coroutine
+    @coroutine
     def fail_user(self, user, id):
         '''
         When user login fails, delay response. Delay = self.delay[# of failures].
@@ -190,7 +206,7 @@ class AuthHandler(BaseHandler):
         failures = self.failed_logins[user[id]] = self.failed_logins[user[id]] + 1
         index = failures - 1
         delay = self.delay[index] if index < len(self.delay) else self.delay[-1]
-        yield tornado.gen.sleep(delay)
+        yield sleep(delay)
 
     def render_template(self, path, **kwargs):
         '''
@@ -200,6 +216,24 @@ class AuthHandler(BaseHandler):
         namespace = self.get_template_namespace()
         namespace.update(kwargs)
         self.finish(template.generate(**namespace))
+
+    @coroutine
+    def check_recaptcha(self, conf):
+        if self.request.method != 'POST':
+            return
+        token = self.get_argument('recaptcha', None)
+        if token is None:
+            raise HTTPError(FORBIDDEN, "'recaptcha' argument missing from POST")
+        body = six.moves.urllib_parse.urlencode({
+            'secret': conf.secret,
+            'response': token,
+            'remoteip': self.request.remote_ip
+        })
+        http = tornado.httpclient.AsyncHTTPClient()
+        response = yield http.fetch(self._RECAPTCHA_VERIFY_URL, method='POST', body=body)
+        result = json.loads(response.body)
+        if not result['success']:
+            raise HTTPError(FORBIDDEN, 'recaptcha failed: %s' % ', '.join(result['error-codes']))
 
 
 class LogoutHandler(AuthHandler):
@@ -285,7 +319,7 @@ class OAuth2(AuthHandler, OAuth2Mixin):
         cls.user_info = merge({} if user_info is None else user_info,
                               cls.USER_INFO_DEFAULTS, mode='setdefault')
 
-    @tornado.gen.coroutine
+    @coroutine
     def get(self):
         redirect_uri = '{0.protocol:s}://{0.host:s}{0.path:s}'.format(self.request)
         code = self.get_arg('code', '')
@@ -329,7 +363,7 @@ class OAuth2(AuthHandler, OAuth2Mixin):
                     body=('Access token response not form-encoded nor JSON:\n\n' +
                           'Content-Type: %s\n\n%s') % (mime_type, body),
                     headers={}))
-                raise tornado.gen.Return()
+                raise Return()
             # Save the returned session info in a config-specified session key.
             # This defaults to 'access_token'
             params.update(args)
@@ -384,11 +418,11 @@ class OAuth2(AuthHandler, OAuth2Mixin):
             mime_type = response.headers.get('Content-Type', 'text/plain')
             self.set_header('Content-Type', mime_type)
             self.write(response.body)
-            raise tornado.gen.Return()
+            raise Return()
 
 
 class GoogleAuth(AuthHandler, GoogleOAuth2Mixin):
-    @tornado.gen.coroutine
+    @coroutine
     def get(self):
         self.settings[self._OAUTH_SETTINGS_KEY] = {
             'key': self.kwargs['key'],
@@ -426,7 +460,7 @@ class GoogleAuth(AuthHandler, GoogleOAuth2Mixin):
 
 
 class FacebookAuth(AuthHandler, FacebookGraphMixin):
-    @tornado.gen.coroutine
+    @coroutine
     def get(self):
         redirect_uri = '{0.protocol:s}://{0.host:s}{0.path:s}'.format(self.request)
         code = self.get_arg('code', '')
@@ -452,7 +486,7 @@ class FacebookAuth(AuthHandler, FacebookGraphMixin):
 
 
 class TwitterAuth(AuthHandler, TwitterMixin):
-    @tornado.gen.coroutine
+    @coroutine
     def get(self):
         oauth_token = self.get_arg('oauth_token', '')
         if oauth_token:
@@ -495,7 +529,7 @@ class SAMLAuth(AuthHandler):
             'request_uri': request_uri,
         }
 
-    @tornado.gen.coroutine
+    @coroutine
     def get(self):
         '''Process sso request and metadata request.'''
         auth = self.initiate_saml_login()
@@ -506,7 +540,7 @@ class SAMLAuth(AuthHandler):
             errors = settings.validate_metadata(metadata)
             if errors:
                 app_log.error('%s: SAML metadata errors: %s', self.name, errors)
-                raise tornado.web.HTTPError(INTERNAL_SERVER_ERROR, reason='Errors in metadata')
+                raise HTTPError(INTERNAL_SERVER_ERROR, reason='Errors in metadata')
             self.set_header('Content-Type', 'text/xml')
             self.write(metadata)
         # Logout
@@ -517,7 +551,7 @@ class SAMLAuth(AuthHandler):
             self.save_redirect_page()
             self.redirect(auth.login())
 
-    @tornado.gen.coroutine
+    @coroutine
     def post(self):
         '''Validate and authenticate user based upon SAML response.'''
         auth = self.initiate_saml_login()
@@ -528,7 +562,7 @@ class SAMLAuth(AuthHandler):
             errors = auth.get_errors()
             if errors:
                 app_log.error('%s: SAML ACS error: %s', self.name, errors)
-                raise tornado.gen.Return()
+                raise Return()
             yield self.set_user({
                 'samlUserdata': auth.get_attributes(),
                 'samlNameId': auth.get_nameid(),
@@ -573,22 +607,22 @@ class LDAPAuth(AuthHandler):
         self.set_status(UNAUTHORIZED)
         self.set_header('Auth-Error', code)
         self.render_template(self.template, error={'code': code, 'error': error})
-        raise tornado.gen.Return()
+        raise Return()
 
-    @tornado.gen.coroutine
+    @coroutine
     def bind(self, server, user, password, error):
         import ldap3
         conn = ldap3.Connection(server, user, password)
         try:
-            result = yield gramex.service.threadpool.submit(conn.bind)
+            result = yield threadpool.submit(conn.bind)
             if not result:
                 self.report_error(error, exc_info=False)
                 conn = None
-            raise tornado.gen.Return(conn)
+            raise Return(conn)
         except ldap3.core.exceptions.LDAPException:
             self.report_error('conn', exc_info=True)
 
-    @tornado.gen.coroutine
+    @coroutine
     def post(self):
         import ldap3
         kwargs = self.kwargs
@@ -687,12 +721,12 @@ class SimpleAuth(AuthHandler):
         cls.user.setdefault('arg', 'user')
         cls.password.setdefault('arg', 'password')
 
-    @tornado.gen.coroutine
+    @coroutine
     def get(self):
         self.save_redirect_page()
         self.render_template(self.template, error=None)
 
-    @tornado.gen.coroutine
+    @coroutine
     def post(self):
         user = self.get_arg(self.user.arg, None)
         password = self.get_arg(self.password.arg, None)
@@ -845,7 +879,7 @@ class DBAuth(SimpleAuth):
             template = self.signup.template
         self.render_template(template, error=None)
 
-    @tornado.gen.coroutine
+    @coroutine
     def post(self):
         if self.forgot and self.forgot.key in self.args:
             yield self.forgot_password()
@@ -854,7 +888,7 @@ class DBAuth(SimpleAuth):
         else:
             yield self.login()
 
-    @tornado.gen.coroutine
+    @coroutine
     def login(self):
         user = self.get_arg(self.user.arg, None)
         password = self.get_arg(self.password.arg, None)
@@ -864,13 +898,13 @@ class DBAuth(SimpleAuth):
             yield self.fail_user({'user': user}, 'user')
             self.render_template(self.template, error=self.report_error(
                 BAD_REQUEST, 'fail', 'User name or password is empty'))
-            raise tornado.gen.Return()
+            raise Return()
 
         for encrypt in self.encrypt:
             for result in encrypt(handler=self, content=password):
                 password = result
 
-        users = yield gramex.service.threadpool.submit(gramex.data.filter, args={
+        users = yield threadpool.submit(gramex.data.filter, args={
             self.user.column: [user],
             self.password.column: [password],
         }, **self.query_kwargs)
@@ -884,7 +918,7 @@ class DBAuth(SimpleAuth):
             self.render_template(self.template, error=self.report_error(
                 UNAUTHORIZED, 'fail', 'Cannot log in'))
 
-    @tornado.gen.coroutine
+    @coroutine
     def forgot_password(self):
         template = self.forgot.template
         error = {}
@@ -902,16 +936,15 @@ class DBAuth(SimpleAuth):
             else:
                 self.render_template(template, error=self.report_error(
                     BAD_REQUEST, 'forgot-invalid-user', 'user/email cannot be empty'))
-                raise tornado.gen.Return()
-            users = yield gramex.service.threadpool.submit(
-                gramex.data.filter, args=query, **self.query_kwargs)
+                raise Return()
+            users = yield threadpool.submit(gramex.data.filter, args=query, **self.query_kwargs)
             user = None if len(users) == 0 else users.iloc[0].to_dict()
             email_column = self.forgot.get('email_column', 'email')
 
             # If a matching user exists in the database
             if user is not None and user[email_column]:
                 # generate token and set expiry
-                token = yield gramex.service.threadpool.submit(
+                token = yield threadpool.submit(
                     self.recover.token,
                     user=user[self.user.column],
                     email=user[email_column],
@@ -928,7 +961,7 @@ class DBAuth(SimpleAuth):
                 }
                 if self.forgot.email_as:
                     kwargs['from'] = self.forgot.email_as
-                yield gramex.service.threadpool.submit(mailer.mail, **kwargs)
+                yield threadpool.submit(mailer.mail, **kwargs)
             # If no user matches the user ID or email ID
             else:
                 if user is None:
@@ -939,19 +972,19 @@ class DBAuth(SimpleAuth):
 
         # Step 2: User clicks on email, submits new password via POST ?forgot=<token>&password=...
         else:
-            row = yield gramex.service.threadpool.submit(self.recover.pop, forgot_key)
+            row = yield threadpool.submit(self.recover.pop, forgot_key)
             # if system generated token in database
             if row is not None:
                 password = self.get_arg(self.password.arg, None)
                 if not password:
                     self.render_template(template, error=self.report_error(
                         BAD_REQUEST, 'forgot-invalid-password', 'password cannot be empty'))
-                    raise tornado.gen.Return()
+                    raise Return()
                 for encrypt in self.encrypt:
                     for result in encrypt(handler=self, content=password):
                         password = result
                 # Update password in database
-                yield gramex.service.threadpool.submit(
+                yield threadpool.submit(
                     gramex.data.update, id=[self.user.column], args={
                         self.user.column: [row['user']],
                         self.password.column: [password]
@@ -960,21 +993,21 @@ class DBAuth(SimpleAuth):
                 error = self.report_error(UNAUTHORIZED, 'forgot-token-invalid', 'Invalid Token')
         self.render_template(template, error=error)
 
-    @tornado.gen.coroutine
+    @coroutine
     def signup_user(self):
         # Checks if email exists => suggest password recovery
         signup_user = self.get_arg(self.user.arg, None)
         if not signup_user:
             self.render_template(self.signup.template, error=self.report_error(
                 BAD_REQUEST, 'signup-invalid-user', 'User cannot be empty'))
-            raise tornado.gen.Return()
+            raise Return()
 
-        users = yield gramex.service.threadpool.submit(
+        users = yield threadpool.submit(
             gramex.data.filter, args={self.user.column: [signup_user]}, **self.query_kwargs)
         if len(users) > 0:
             self.render_template(self.signup.template, error=self.report_error(
                 BAD_REQUEST, 'signup-exists', 'User exists'))
-            raise tornado.gen.Return()
+            raise Return()
 
         # Validates fields using validation function if they exists
         if 'validate' in self.signup:
@@ -982,7 +1015,7 @@ class DBAuth(SimpleAuth):
             if validate_error:
                 self.render_template(self.signup.template, error=self.report_error(
                     BAD_REQUEST, 'signup-invalid', 'Validation failed', validate_error))
-                raise tornado.gen.Return()
+                raise Return()
 
         # Else, add the following fields to the database:
         #  - fields mentioned in ``signup.columns:``
@@ -998,7 +1031,7 @@ class DBAuth(SimpleAuth):
             values[field] = self.args.get(column, [])
         if self.forgot and self.forgot.arg in self.args:
             values[self.forgot.email_column] = self.args.get(self.forgot.arg, [])
-        yield gramex.service.threadpool.submit(
+        yield threadpool.submit(
             gramex.data.insert, id=[self.user.column], args=values, **self.query_kwargs)
 
         # Send a password reset link
@@ -1025,7 +1058,7 @@ class IntegratedAuth(AuthHandler):
         self.csas.pop(self.session['id'], None)
         self.write('Unauthorized')
 
-    @tornado.gen.coroutine
+    @coroutine
     def get(self):
         try:
             import sspi
@@ -1039,45 +1072,45 @@ class IntegratedAuth(AuthHandler):
         challenge = self.request.headers.get('Authorization')
         if not challenge:
             self.negotiate()
-            raise tornado.gen.Return()
+            raise Return()
 
         scheme, auth_data = challenge.split(None, 2)
         if scheme != 'Negotiate':
             app_log.error('%s: unsupported Authorization: %s', self.name, challenge)
             self.unauthorized()
-            raise tornado.gen.Return()
+            raise Return()
 
         # Get the security context
         session_id = self.session['id']
         if session_id not in self.csas:
             realm = self.realm
             spn = 'http/%s' % realm
-            self.csas[session_id] = yield gramex.service.threadpool.submit(
+            self.csas[session_id] = yield threadpool.submit(
                 sspi.ServerAuth, "Negotiate", spn=spn)
         csa = self.csas[session_id]
 
         try:
-            err, sec_buffer = yield gramex.service.threadpool.submit(
+            err, sec_buffer = yield threadpool.submit(
                 csa.authorize, base64.b64decode(auth_data))
         except Exception:
             # The token may be invalid, password may be wrong, or server unavailable
             app_log.exception('%s: authorize() failed on: %s', self.name, auth_data)
             self.unauthorized()
-            raise tornado.gen.Return()
+            raise Return()
 
         # If SEC_I_CONTINUE_NEEDED, send challenge again
         # If err is anything other than zero, we don't know what it is
         if err == sspicon.SEC_I_CONTINUE_NEEDED:
             self.negotiate(base64.b64encode(sec_buffer[0].Buffer))
-            raise tornado.gen.Return()
+            raise Return()
         elif err != 0:
             app_log.error('%s: authorize() unknown response: %s', self.name, err)
             self.unauthorized()
-            raise tornado.gen.Return()
+            raise Return()
 
         # The security context contains the user ID. Retrieve it.
         # Split the DOMAIN\username into its parts. Add to the user object
-        user_id = yield gramex.service.threadpool.submit(
+        user_id = yield threadpool.submit(
             csa.ctxt.QueryContextAttributes, sspicon.SECPKG_ATTR_NAMES)
         parts = user_id.split('\\', 2)
         user = {
@@ -1137,17 +1170,17 @@ class SMSAuth(SimpleAuth):
         self.save_redirect_page()
         self.render_template(self.template, phone=None, error=None)
 
-    @tornado.gen.coroutine
+    @coroutine
     def post(self):
         user = self.get_arg(self.user.arg, None)
         password = self.get_arg(self.password.arg, None)
         if password is None:
             expire = time.time() + self.expire
-            token = yield gramex.service.threadpool.submit(
+            token = yield threadpool.submit(
                 self.recover.token, user=user, email=user, expire=expire)
             notifier = gramex.service.sms[self.service]
             try:
-                yield gramex.service.threadpool.submit(
+                yield threadpool.submit(
                     notifier.send, to=user, subject=self.message % token, sender=self.sender)
             except Exception as e:
                 app_log.exception('%s: cannot send SMS OTP', self.name)
@@ -1156,7 +1189,7 @@ class SMSAuth(SimpleAuth):
                 app_log.debug('%s: sent OTP to %s', self.name, user)
                 self.render_template(self.template, phone=user, error=None)
         else:
-            row = yield gramex.service.threadpool.submit(self.recover.pop, password)
+            row = yield threadpool.submit(self.recover.pop, password)
             if row is not None:
                 yield self.set_user({'user': user}, id='user')
                 self.redirect_next()
@@ -1207,14 +1240,14 @@ class EmailAuth(SimpleAuth):
         cls.recover = OTP(size=size)
         cls.redirect_key = kwargs.get('redirect', {}).get('query', 'next')
 
-    @tornado.gen.coroutine
+    @coroutine
     def get(self):
         self.save_redirect_page()
         password = self.get_arg(self.password.arg, None)
         if password is None:
             self.render_template(self.template, email=None, error=None)
         else:
-            row = yield gramex.service.threadpool.submit(self.recover.pop, password)
+            row = yield threadpool.submit(self.recover.pop, password)
             if row is not None:
                 email = row['email']
                 hd = email.rsplit('@', 2)[-1]       # host domain
@@ -1224,10 +1257,10 @@ class EmailAuth(SimpleAuth):
                 self.render_template(self.template, email=None, error='wrong-pw',
                                      msg='Invalid token')
 
-    @tornado.gen.coroutine
+    @coroutine
     def post(self):
         user = self.get_arg(self.user.arg, None)
-        token = yield gramex.service.threadpool.submit(
+        token = yield threadpool.submit(
             self.recover.token, user=user, email=user, expire=time.time() + self.expire)
         emailer = gramex.service.email[self.service]
         link = self.request.protocol + "://" + self.request.host + self.request.path
@@ -1240,7 +1273,7 @@ class EmailAuth(SimpleAuth):
             }),
         }
         try:
-            yield gramex.service.threadpool.submit(
+            yield threadpool.submit(
                 emailer.mail, to=user, subject=self.subject.format(**info),
                 body=self.body.format(**info))
         except Exception as e:
