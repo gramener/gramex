@@ -496,6 +496,54 @@ FormHandler is designed to work without JavaScript. For example:
 This form filters without using any JavaScript code. It applies the URL query
 parameters directly.
 
+## FormHandler transforms
+
+FormHandler has 4 ways of transforming the request / data using Python functions.
+
+| Transform                                   | When does it run?               | What does it do?   | What can it accept?                                              |
+|---------------------------------------------|---------------------------------|--------------------|------------------------------------------------------------------|
+| [prepare](#formhandler-prepare)             | Before loading data             | Replaces arguments | `args`: [handlers.args](../modelhandler/#basehandler-attributes) |
+| [queryfunction](#formhandler-queryfunction) | Before loading data             | Replaces DB query  | `args`: [handlers.args](../modelhandler/#basehandler-attributes) |
+| [function](#formhandler-functions)          | After loading, before filtering | Replaces data      | `data`: Pandas DataFrame (DF) of loaded data                     |
+| [modify](#formhandler-modify)               | After filtering                 | Replaces result    | `data`: DF of *filtered* data<br>`handler`: Handler              |
+
+Click on the links to learn how to use them.
+
+## FormHandler prepare
+
+To modify the arguments before executing the query, use `prepare:`.
+
+```yaml
+url:
+  replace:
+    pattern: /$YAMLURL/replace
+    handler: FormHandler
+    kwargs:
+      url: $YAMLPATH/flags.csv
+      prepare: args.update(Cross=args.pop('c', []))
+      # Another example:
+      # prepare: my_module.calc(args, handler)
+```
+
+This `prepare:` method replaces the `?c=` with `?Cross=`. So
+[replace?c=Yes](replace?c=Yes&_format=html) is actually the same as
+[flags?Cross=Yes](flags?Cross=Yes&_format=html).
+
+`prepare:` is a Python expression that modifies `args`. `args` is a dict
+containing the URL query parameters as lists of strings. `?x=1&y=2` becomes is
+`{'x': ['1'], 'y': ['2']}`. `args` has [default values](#formhandler-defaults)
+merged in. You can modify `args` in-place and return None, or return a value that
+replaces `args`.
+
+Some sample uses:
+
+- [Validate inputs](#formhandler-validation)
+- Add/modify/delete arguments based on the user. You can access the user ID via
+  `handler.current_user` inside the `prepare:` expression
+- Add/modify/delete arguments based on external data.
+- Replace argument values.
+
+
 ## FormHandler functions
 
 Add `function: ...` to transform the data before filtering. Try this
@@ -526,6 +574,88 @@ To transform the data after filtering, use [modify](#formhandler-modify).
 
 `function:` also works with [database queries](#formhandler-query), but loads
 the **entire** table before transforming, so ensure that you have enough memory.
+
+## FormHandler modify
+
+You can modify the data returned after filtering using the `modify:` key. Try
+this [example](totals):
+
+```yaml
+url:
+  totals:
+    pattern: /$YAMLURL/totals
+    handler: FormHandler
+    kwargs:
+      url: $YAMLPATH/flags.csv
+      modify: data.sum(numeric_only=True).to_frame().T
+```
+
+This runs the following steps:
+
+1. Load `flags.csv`
+2. Filter the data using the URL query parameters
+3. Evaluate the `modify:` expression. It can use a DataFrame `data`. The result
+   of the expression must be a DataFrame (or dict of DataFrames.)
+
+This transforms the data *after filtering*.
+e.g. the [Asia result](totals?Continent=Asia) shows totals only for Asia.
+To transform the data before filtering, use [function](#formhandler-functions).
+
+`modify:` also works with [database queries](#formhandler-query).
+
+If you have [multiple datasets](#formhandler-multiple-datasets), `modify:` can
+modify all of these datasets -- and join them if required.
+
+[This example](modify-multi?_format=html) has two `modify:` -- the first for a
+single query, the second applies on both datasets.
+
+```yaml
+url:
+  formhandler-modify-multi:
+    pattern: /$YAMLURL/modify-multi
+    handler: FormHandler
+    kwargs:
+      symbols:
+        url: sqlite:///$YAMLPATH/../datahandler/database.sqlite3
+        table: flags
+        query: 'SELECT Continent, COUNT(DISTINCT Symbols) AS dsymbols FROM flags GROUP BY Continent'
+        # Modify ONLY this query. Adds rank column to symbols dataset
+        modify: data.assign(rank=data['dsymbols'].rank())
+      colors:
+        url: $YAMLPATH/flags.csv
+        function: data.groupby('Continent').sum().reset_index()
+      # Modify BOTH datasets. data is a dict of DataFrames.
+      modify: data['colors'].merge(data['symbols'], on='Continent')
+```
+
+`modify:` can be any expression that uses `data`, which is a dict of DataFrames
+`{'colors': DataFrame(...), 'symbols': DataFrame(...)`. It can return a single
+DataFrame or any dict of DataFrames.
+
+`modify:` can be applied to [FormHandler edit](#formhandler-edits) methods
+
+Below configuration has two `modify:` -- which are called after edit operations.
+
+```yaml
+  formhandler-edits-multidata-modify:
+    pattern: /$YAMLURL/edits-multidata-modify
+    handler: FormHandler
+    kwargs:
+      csv:
+        url: $YAMLPATH/sales-edits.csv
+        encoding: utf-8
+        id: [city, product]
+        modify: len(handler.args.keys())
+      sql:
+        url: mysql+pymysql://root@$MYSQL_SERVER/DB?charset=utf8
+        table: sales
+        id: [city, product]
+      modify: len(handler.args.keys())
+```
+
+`modify:` can be any expression/function that uses `data` -- count of records edited and `handler` --
+`handler.args` contains [data submitted]((#formhandler-edits)) by the user.
+
 
 ## FormHandler query
 
@@ -725,41 +855,6 @@ url:
 ```
 
 
-## FormHandler prepare
-
-To modify the arguments before executing the query, use `prepare:`.
-
-```yaml
-url:
-  replace:
-    pattern: /$YAMLURL/replace
-    handler: FormHandler
-    kwargs:
-      url: $YAMLPATH/flags.csv
-      prepare: args.update(Cross=args.pop('c', []))
-      # Another example:
-      # prepare: my_module.calc(args, handler)
-```
-
-This `prepare:` method replaces the `?c=` with `?Cross=`. So
-[replace?c=Yes](replace?c=Yes&_format=html) is actually the same as
-[flags?Cross=Yes](flags?Cross=Yes&_format=html).
-
-`prepare:` is a Python expression that modifies `args`. `args` is a dict
-containing the URL query parameters as lists of strings. `?x=1&y=2` becomes is
-`{'x': ['1'], 'y': ['2']}`. `args` has [default values](#formhandler-defaults)
-merged in. You can modify `args` in-place and return None, or return a value that
-replaces `args`.
-
-Some sample uses:
-
-- [Validate inputs](#formhandler-validation)
-- Add/modify/delete arguments based on the user. You can access the user ID via
-  `handler.current_user` inside the `prepare:` expression
-- Add/modify/delete arguments based on external data.
-- Replace argument values.
-
-
 ## FormHandler validation
 
 The [prepare](#formhandler-prepare) function can raise a HTTPError in case of
@@ -822,87 +917,6 @@ Note:
 
 - If `format:` is specified against multiple datasets, the return value could be
   in any format (unspecified).
-
-## FormHandler modify
-
-You can modify the data returned after filtering using the `modify:` key. Try
-this [example](totals):
-
-```yaml
-url:
-  totals:
-    pattern: /$YAMLURL/totals
-    handler: FormHandler
-    kwargs:
-      url: $YAMLPATH/flags.csv
-      modify: data.sum(numeric_only=True).to_frame().T
-```
-
-This runs the following steps:
-
-1. Load `flags.csv`
-2. Filter the data using the URL query parameters
-3. Evaluate the `modify:` expression. It can use a DataFrame `data`. The result
-   of the expression must be a DataFrame (or dict of DataFrames.)
-
-This transforms the data *after filtering*.
-e.g. the [Asia result](totals?Continent=Asia) shows totals only for Asia.
-To transform the data before filtering, use [function](#formhandler-functions).
-
-`modify:` also works with [database queries](#formhandler-query).
-
-If you have [multiple datasets](#formhandler-multiple-datasets), `modify:` can
-modify all of these datasets -- and join them if required.
-
-[This example](modify-multi?_format=html) has two `modify:` -- the first for a
-single query, the second applies on both datasets.
-
-```yaml
-url:
-  formhandler-modify-multi:
-    pattern: /$YAMLURL/modify-multi
-    handler: FormHandler
-    kwargs:
-      symbols:
-        url: sqlite:///$YAMLPATH/../datahandler/database.sqlite3
-        table: flags
-        query: 'SELECT Continent, COUNT(DISTINCT Symbols) AS dsymbols FROM flags GROUP BY Continent'
-        # Modify ONLY this query. Adds rank column to symbols dataset
-        modify: data.assign(rank=data['dsymbols'].rank())
-      colors:
-        url: $YAMLPATH/flags.csv
-        function: data.groupby('Continent').sum().reset_index()
-      # Modify BOTH datasets. data is a dict of DataFrames.
-      modify: data['colors'].merge(data['symbols'], on='Continent')
-```
-
-`modify:` can be any expression that uses `data`, which is a dict of DataFrames
-`{'colors': DataFrame(...), 'symbols': DataFrame(...)`. It can return a single
-DataFrame or any dict of DataFrames.
-
-`modify:` can be applied to [FormHandler edit](#formhandler-edits) methods
-
-Below configuration has two `modify:` -- which are called after edit operations.
-
-```yaml
-  formhandler-edits-multidata-modify:
-    pattern: /$YAMLURL/edits-multidata-modify
-    handler: FormHandler
-    kwargs:
-      csv:
-        url: $YAMLPATH/sales-edits.csv
-        encoding: utf-8
-        id: [city, product]
-        modify: len(handler.args.keys())
-      sql:
-        url: mysql+pymysql://root@$MYSQL_SERVER/DB?charset=utf8
-        table: sales
-        id: [city, product]
-      modify: len(handler.args.keys())
-```
-
-`modify:` can be any expression/function that uses `data` -- count of records edited and `handler` --
-`handler.args` contains [data submitted]((#formhandler-edits)) by the user.
 
 ## FormHandler directory listing
 
