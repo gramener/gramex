@@ -32,7 +32,6 @@ _forgot_template = os.path.join(_folder, 'forgot.template.html')
 _signup_template = os.path.join(_folder, 'signup.template.html')
 _user_info_path = os.path.join(gramex.variables.GRAMEXDATA, 'auth.user.db')
 _user_info = gramex.cache.SQLiteStore(_user_info_path, table='user')
-threadpool = gramex.service.threadpool
 
 # Python 3 csv.writer.writerow writes as str(), which is unicode in Py3.
 # Python 2 csv.writer.writerow writes as str(), which is bytes in Py2.
@@ -63,7 +62,7 @@ class AuthHandler(BaseHandler):
     def setup(cls, prepare=None, action=None, delay=None, session_expiry=None,
               session_inactive=None, user_key='user', lookup=None, recaptcha=None, **kwargs):
         # Switch SSL certificates if required to access Google, etc
-        threadpool.submit(check_old_certs)
+        gramex.service.threadpool.submit(check_old_certs)
 
         # Set up default redirection based on ?next=...
         if 'redirect' not in kwargs:
@@ -134,7 +133,7 @@ class AuthHandler(BaseHandler):
     def prepare(self):
         super(AuthHandler, self).prepare()
         if 'prepare' in self.auth_methods:
-            result = yield threadpool.submit(
+            result = yield gramex.service.threadpool.submit(
                 self.auth_methods['prepare'], handler=self, args=self.args)
             if result is not None:
                 self.args = result
@@ -176,7 +175,7 @@ class AuthHandler(BaseHandler):
         # Extend user attributes looking up the user ID in a lookup table
         if self.lookup is not None:
             # Look up the user ID in the lookup table and fetch all matching rows
-            users = yield threadpool.submit(
+            users = yield gramex.service.threadpool.submit(
                 gramex.data.filter, args={self.lookup_id: [user['id']]}, **self.lookup)
             if len(users) > 0 and self.lookup_id in users.columns:
                 # Update the user attributes with the non-null items in the looked up row
@@ -614,7 +613,7 @@ class LDAPAuth(AuthHandler):
         import ldap3
         conn = ldap3.Connection(server, user, password)
         try:
-            result = yield threadpool.submit(conn.bind)
+            result = yield gramex.service.threadpool.submit(conn.bind)
             if not result:
                 self.report_error(error, exc_info=False)
                 conn = None
@@ -904,7 +903,7 @@ class DBAuth(SimpleAuth):
             for result in encrypt(handler=self, content=password):
                 password = result
 
-        users = yield threadpool.submit(gramex.data.filter, args={
+        users = yield gramex.service.threadpool.submit(gramex.data.filter, args={
             self.user.column: [user],
             self.password.column: [password],
         }, **self.query_kwargs)
@@ -937,14 +936,15 @@ class DBAuth(SimpleAuth):
                 self.render_template(template, error=self.report_error(
                     BAD_REQUEST, 'forgot-invalid-user', 'user/email cannot be empty'))
                 raise Return()
-            users = yield threadpool.submit(gramex.data.filter, args=query, **self.query_kwargs)
+            users = yield gramex.service.threadpool.submit(
+                gramex.data.filter, args=query, **self.query_kwargs)
             user = None if len(users) == 0 else users.iloc[0].to_dict()
             email_column = self.forgot.get('email_column', 'email')
 
             # If a matching user exists in the database
             if user is not None and user[email_column]:
                 # generate token and set expiry
-                token = yield threadpool.submit(
+                token = yield gramex.service.threadpool.submit(
                     self.recover.token,
                     user=user[self.user.column],
                     email=user[email_column],
@@ -961,7 +961,7 @@ class DBAuth(SimpleAuth):
                 }
                 if self.forgot.email_as:
                     kwargs['from'] = self.forgot.email_as
-                yield threadpool.submit(mailer.mail, **kwargs)
+                yield gramex.service.threadpool.submit(mailer.mail, **kwargs)
             # If no user matches the user ID or email ID
             else:
                 if user is None:
@@ -972,7 +972,7 @@ class DBAuth(SimpleAuth):
 
         # Step 2: User clicks on email, submits new password via POST ?forgot=<token>&password=...
         else:
-            row = yield threadpool.submit(self.recover.pop, forgot_key)
+            row = yield gramex.service.threadpool.submit(self.recover.pop, forgot_key)
             # if system generated token in database
             if row is not None:
                 password = self.get_arg(self.password.arg, None)
@@ -984,7 +984,7 @@ class DBAuth(SimpleAuth):
                     for result in encrypt(handler=self, content=password):
                         password = result
                 # Update password in database
-                yield threadpool.submit(
+                yield gramex.service.threadpool.submit(
                     gramex.data.update, id=[self.user.column], args={
                         self.user.column: [row['user']],
                         self.password.column: [password]
@@ -1002,7 +1002,7 @@ class DBAuth(SimpleAuth):
                 BAD_REQUEST, 'signup-invalid-user', 'User cannot be empty'))
             raise Return()
 
-        users = yield threadpool.submit(
+        users = yield gramex.service.threadpool.submit(
             gramex.data.filter, args={self.user.column: [signup_user]}, **self.query_kwargs)
         if len(users) > 0:
             self.render_template(self.signup.template, error=self.report_error(
@@ -1031,7 +1031,7 @@ class DBAuth(SimpleAuth):
             values[field] = self.args.get(column, [])
         if self.forgot and self.forgot.arg in self.args:
             values[self.forgot.email_column] = self.args.get(self.forgot.arg, [])
-        yield threadpool.submit(
+        yield gramex.service.threadpool.submit(
             gramex.data.insert, id=[self.user.column], args=values, **self.query_kwargs)
 
         # Send a password reset link
@@ -1085,12 +1085,12 @@ class IntegratedAuth(AuthHandler):
         if session_id not in self.csas:
             realm = self.realm
             spn = 'http/%s' % realm
-            self.csas[session_id] = yield threadpool.submit(
+            self.csas[session_id] = yield gramex.service.threadpool.submit(
                 sspi.ServerAuth, "Negotiate", spn=spn)
         csa = self.csas[session_id]
 
         try:
-            err, sec_buffer = yield threadpool.submit(
+            err, sec_buffer = yield gramex.service.threadpool.submit(
                 csa.authorize, base64.b64decode(auth_data))
         except Exception:
             # The token may be invalid, password may be wrong, or server unavailable
@@ -1110,7 +1110,7 @@ class IntegratedAuth(AuthHandler):
 
         # The security context contains the user ID. Retrieve it.
         # Split the DOMAIN\username into its parts. Add to the user object
-        user_id = yield threadpool.submit(
+        user_id = yield gramex.service.threadpool.submit(
             csa.ctxt.QueryContextAttributes, sspicon.SECPKG_ATTR_NAMES)
         parts = user_id.split('\\', 2)
         user = {
@@ -1176,11 +1176,11 @@ class SMSAuth(SimpleAuth):
         password = self.get_arg(self.password.arg, None)
         if password is None:
             expire = time.time() + self.expire
-            token = yield threadpool.submit(
+            token = yield gramex.service.threadpool.submit(
                 self.recover.token, user=user, email=user, expire=expire)
             notifier = gramex.service.sms[self.service]
             try:
-                yield threadpool.submit(
+                yield gramex.service.threadpool.submit(
                     notifier.send, to=user, subject=self.message % token, sender=self.sender)
             except Exception as e:
                 app_log.exception('%s: cannot send SMS OTP', self.name)
@@ -1189,7 +1189,7 @@ class SMSAuth(SimpleAuth):
                 app_log.debug('%s: sent OTP to %s', self.name, user)
                 self.render_template(self.template, phone=user, error=None)
         else:
-            row = yield threadpool.submit(self.recover.pop, password)
+            row = yield gramex.service.threadpool.submit(self.recover.pop, password)
             if row is not None:
                 yield self.set_user({'user': user}, id='user')
                 self.redirect_next()
@@ -1247,7 +1247,7 @@ class EmailAuth(SimpleAuth):
         if password is None:
             self.render_template(self.template, email=None, error=None)
         else:
-            row = yield threadpool.submit(self.recover.pop, password)
+            row = yield gramex.service.threadpool.submit(self.recover.pop, password)
             if row is not None:
                 email = row['email']
                 hd = email.rsplit('@', 2)[-1]       # host domain
@@ -1260,7 +1260,7 @@ class EmailAuth(SimpleAuth):
     @coroutine
     def post(self):
         user = self.get_arg(self.user.arg, None)
-        token = yield threadpool.submit(
+        token = yield gramex.service.threadpool.submit(
             self.recover.token, user=user, email=user, expire=time.time() + self.expire)
         emailer = gramex.service.email[self.service]
         link = self.request.protocol + "://" + self.request.host + self.request.path
@@ -1273,7 +1273,7 @@ class EmailAuth(SimpleAuth):
             }),
         }
         try:
-            yield threadpool.submit(
+            yield gramex.service.threadpool.submit(
                 emailer.mail, to=user, subject=self.subject.format(**info),
                 body=self.body.format(**info))
         except Exception as e:
