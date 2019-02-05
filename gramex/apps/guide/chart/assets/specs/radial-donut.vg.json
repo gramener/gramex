@@ -59,7 +59,8 @@
           "outerRadius": {"field": "<%= data_mapper.column_1 %>", "scale": "normalize_radius"},
           "innerRadius": {"value": 0},
           "stroke": {"value": "#ffffff"},
-          "opacity": {"value": 0.9}
+          "opacity": {"value": 0.9},
+          "tooltip": {"signal": "datum"}
         }
       }
     },
@@ -69,9 +70,9 @@
       "from": {"data": "table"},
       "encode": {
         "update": {
-          "font": {"value": "roboto"},
+          "font": {"value": "Roboto"},
           "fill": {"value": "#800040"},
-          "opacity": {"value": 0.7},
+          "opacity": {"signal": "datum.endAngle < 1 ? 0: 1"},
           "fontSize": {"value": 12},
           "x": {"signal": "width / 2"},
           "y": {"signal": "height / 2"},

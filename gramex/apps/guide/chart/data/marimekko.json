@@ -1,0 +1,122 @@
+[
+    {
+      "quantity": 43,
+      "items": "Tier 1",
+      "sub-items": "SubItem 1",
+      "width": 150
+    },
+    {
+      "quantity": 42,
+      "items": "Tier 1",
+      "sub-items": "SubItem 2",
+      "width": 150
+    },
+    {
+      "quantity": 2,
+      "items": "Tier 1",
+      "sub-items": "SubItem 3",
+      "width": 150
+    },
+    {
+      "quantity": 4,
+      "items": "Tier 1",
+      "sub-items": "SubItem 4",
+      "width": 150
+    },
+    {
+      "quantity": 9,
+      "items": "Tier 1",
+      "sub-items": "SubItem 5",
+      "width": 150
+    },
+    {
+      "quantity": 82,
+      "items": "Tier 2",
+      "sub-items": "SubItem 1",
+      "width": 50
+    },
+    {
+      "quantity": 15,
+      "items": "Tier 2",
+      "sub-items": "SubItem 2",
+      "width": 50
+    },
+    {
+      "quantity": 0.9,
+      "items": "Tier 2",
+      "sub-items": "SubItem 3",
+      "width": 50
+    },
+    {
+      "quantity": 1,
+      "items": "Tier 2",
+      "sub-items": "SubItem 4",
+      "width": 50
+    },
+    {
+      "quantity": 2,
+      "items": "Tier 2",
+      "sub-items": "SubItem 5",
+      "width": 50
+    },
+    {
+      "quantity": 88,
+      "items": "Tier 3",
+      "sub-items": "SubItem 1",
+      "width": 70
+    },
+    {
+      "quantity": 12,
+      "items": "Tier 3",
+      "sub-items": "SubItem 2",
+      "width": 70
+    },
+    {
+      "quantity": 14,
+      "items": "FED",
+      "sub-items": "SubItem 1",
+      "width": 70
+    },
+    {
+      "quantity": 54,
+      "items": "FED",
+      "sub-items": "SubItem 2",
+      "width": 70
+    },
+    {
+      "quantity": 0.9,
+      "items": "FED",
+      "sub-items": "SubItem 3",
+      "width": 70
+    },
+    {
+      "quantity": 2,
+      "items": "FED",
+      "sub-items": "SubItem 4",
+      "width": 70
+    },
+    {
+      "quantity": 3,
+      "items": "FED",
+      "sub-items": "SubItem 5",
+      "width": 70
+    },
+    {
+      "quantity": 79,
+      "items": "Others",
+      "sub-items": "SubItem 1",
+      "width": 90
+    },
+    {
+      "quantity": 21,
+      "items": "Others",
+      "sub-items": "SubItem 2",
+      "width": 90
+    },
+    {
+      "quantity": 100,
+      "items": "Title",
+      "sub-items": "SubItem 1",
+      "width": 40
+    }
+  ]

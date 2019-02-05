@@ -1,7 +1,7 @@
 <% property_list.map(function(property, index){ %>
-  <li>
-    <a href="#<%= property.id %>" data-toggle="tab" class="<%= index === 0 ? 'active show': '' %>" >
-      <button type="button" class="btn btn-sm bg-blue-light-hover bg-transparent shadow-none w-100 h-100 text-left">
+  <li class="mb-1">
+    <a href="#<%= property.id %>" data-toggle="tab" class="<%= index === 0 ? 'active show': '' %> rounded-0" >
+      <button type="button" class="btn btn-sm bg-blue-light-hover rounded-0 bg-transparent shadow-none w-100 h-100 text-left">
         <div class="color-gray-dark color-blue-on-hover font-weight-bold mb-1 sm1" title="<%= property.title %>">
           <%= property.title %>
         </div>

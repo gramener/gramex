@@ -10,24 +10,80 @@ var type_mapper_handler = {
 
 // Note: convert 'String' to 'Text'
 var type_mapper = {
+  // title
+  orient: 'Text',
+  anchor: {
+    type: 'select',
+    values: ['start', 'middle', 'end']
+  },
+  color: 'Color',
+  frame: 'Text',
+  name: 'Text',
+  offset: 'Number',
   // symbol
   size: 'Number',
-  shape: 'Text',
+  shape: {
+    type: 'select',
+    values: ['circle', 'square', 'cross', 'diamond', 'triangle-up', 'triangle-down', 'triangle-right', 'triangle-left']
+  },
+  cursor: {
+    type: 'select',
+    values: ['default', 'pointer', 'crosshair', 'move', 'grab']
+  },
   // text
-  angle: 'Number',
-  dx: 'Number',
+  angle: {
+    type: 'range',
+    attrs: {
+      min: -180,
+      max: 180,
+      step: 5
+    }
+  },
+  dx: {
+    type: 'range',
+    attrs: {
+      min: -20,
+      max: 20,
+      step: 5
+    }
+  },
   dy: 'Number',
-  fontSize: 'Number',
-  fontWeight: 'Number',
+  fontSize: {
+    type: 'range',
+    attrs: {
+      min: 8,
+      max: 36,
+      step: 1
+    }
+  },
+  fontWeight: {
+    type: 'select',
+    values: ['Normal', 'Bold']
+  },
   limit: 'Number',
   radius: 'Number',
   theta: 'Number',
-  align: 'Text',
-  baseline: 'Text',
-  dir: 'Text',
+  align: {
+    type: 'select',
+    values: ['left', 'center', 'right']
+  },
+  baseline: {
+    type: 'select',
+    values: ['alphabetic', 'top', 'middle', 'bottom']
+  },
+  dir: {
+    type: 'select',
+    values: ['ltr', 'rtl']
+  },
   ellipsis: 'Text',
-  font: 'Text',
-  fontStyle: 'Text',
+  font: {
+    type: 'select',
+    values: ['Roboto', 'Helvetica Neue', 'Serif', 'Open Sans', 'Sans-Serif', 'Monospace']
+  },
+  fontStyle: {
+    type: 'select',
+    values: ['Normal', 'Bold', 'Italic']
+  },
   text: 'Text',
   // arc
   startAngle: 'Number',
@@ -37,7 +93,10 @@ var type_mapper = {
   outerRadius: 'Number',
   // cornerRadius: 'Number',
   // line
-  interpolate: 'Text',
+  interpolate: {
+    type: 'select',
+    values: ['basis', 'bundle', 'cardinal', 'catmull-rom', 'linear', 'monotone', 'natural', 'step', 'step-after', 'step-before']
+  },
   tension: 'Number',
   defined: 'Boolean',
   // Rect
@@ -51,18 +110,44 @@ var type_mapper = {
   y2: 'Number',
   yc: 'Number',
   height: 'Number',
-  opacity: 'Number',
+  opacity: {
+    type: 'range',
+    attrs: {
+      min: 0,
+      max: 1,
+      step: 0.1
+    }
+  },
   fill: 'Color',
-  fillOpacity: 'Number',
+  fillOpacity: {
+    type: 'range',
+    attrs: {
+      min: 0,
+      max: 1,
+      step: 0.1
+    }
+  },
   stroke: 'Color',
-  strokeOpacity: 'Number',
+  strokeOpacity: {
+    type: 'range',
+    attrs: {
+      min: 0,
+      max: 1,
+      step: 0.1
+    }
+  },
   strokeWidth: 'Number',
-  strokeCap: 'Text',
+  strokeCap: {
+    type: 'select',
+    values: ['butt', 'round', 'square']
+  },
   strokeDash: 'Number',
   strokeDashOffset: 'Number',
-  strokeJoin: 'Text',
+  strokeJoin:  {
+    type: 'select',
+    values: ['miter', 'round', 'bevel']
+  },
   strokeMiterLimit: 'Number',
-  cursor: 'Text',
   href: 'URL',
   tooltip: 'Any',
   zindex: 'Number'

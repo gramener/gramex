@@ -6,11 +6,11 @@
 
 <div class="tab-content">
 
-  <div class="tab-pane active show mt-4" id="data_loader">
+  <div class="tab-pane active show" id="data_loader">
     <%= _.template(templates['data_loader'])({ templates: templates, data: data}) %>
   </div>
 
-  <div class="tab-pane mt-4" id="data_mapper">
+  <div class="tab-pane" id="data_mapper">
     <h3>Data Mapper</h3>
   </div>
 
@@ -19,7 +19,7 @@
   </div>
 
 
-  <div class="tab-pane mt-4" id="publish_embed">
+  <div class="tab-pane" id="publish_embed">
     <%= _.template(templates['publish_embed'])({ templates: templates, data: data}) %>
   </div>
 </div>

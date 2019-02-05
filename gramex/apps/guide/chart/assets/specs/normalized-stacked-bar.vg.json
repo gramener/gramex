@@ -27,7 +27,7 @@
         },
         "y": {
           "aggregate": "sum",
-          "field": "quantity",
+          "field": "<%= data_mapper.column_1 %>",
           "type": "quantitative",
           "stack": "normalize",
           "axis": null
@@ -74,7 +74,7 @@
         },
         "y": {
           "aggregate": "sum",
-          "field": "quantity",
+          "field": "<%= data_mapper.column_1 %>",
           "type": "quantitative",
           "stack": "normalize",
           "axis": null
@@ -96,7 +96,7 @@
         },
         "text": {
           "aggregate": "sum",
-          "field": "quantity",
+          "field": "<%= data_mapper.column_1 %>",
           "type": "quantitative",
           "format": ".2f"
         }

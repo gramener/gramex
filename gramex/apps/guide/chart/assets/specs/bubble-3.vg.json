@@ -118,7 +118,7 @@
       "orient": "bottom",
       "ticks": false,
       "title": "Category",
-      "titleFont": "roboto",
+      "titleFont": "Roboto",
       "titleColor": "#485465",
       "titleFontSize": 12,
       "titleFontWeight": 500,
@@ -137,7 +137,7 @@
       "orient": "left",
       "ticks": false,
       "title": "Y Variable",
-      "titleFont": "roboto",
+      "titleFont": "Roboto",
       "titleColor": "#485465",
       "titleFontSize": 12,
       "titleFontWeight": 500,
@@ -146,7 +146,7 @@
       "labelFontSize": 10,
       "labelFontWeight": 500,
       "labelPadding": 10,
-      "labelFont": "roboto"
+      "labelFont": "Roboto"
     }
   ],
   "marks": [

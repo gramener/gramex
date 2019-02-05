@@ -3,6 +3,14 @@
     "width": 600,
     "height": 360,
     "autosize": "fit",
+    "title": {
+      "text": "SCATTER PLOT",
+      "anchor": "start",
+      "color": "#485465",
+      "fontSize": 13,
+      "fontWeight": 900,
+      "font": "roboto"
+    },
     "signals": [
       {
         "name": "zero",
@@ -99,7 +107,8 @@
             },
             "opacity": {
               "value": 0.9
-            }
+            },
+            "tooltip": {"signal": "datum"}
           }
         }
       },
@@ -112,14 +121,12 @@
         "encode": {
           "update": {
             "font": {
-              "value": "roboto"
+              "value": "Roboto"
             },
             "fill": {
               "value": "#800040"
             },
-            "opacity": {
-              "value": 0.7
-            },
+            "opacity": {"signal": "datum.endAngle < 1 ? 0: 1"},
             "fontSize": {
               "value": 12
             },

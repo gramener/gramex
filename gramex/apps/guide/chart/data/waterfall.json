@@ -1,0 +1,8 @@
+[
+    {"id":"y","dataID" : "Q1","start": 0, "end": 300},
+    {"id":"c","dataID" : "Type 1","start": 300, "end": 350},
+    {"id":"c","dataID" : "Type 2","start": 350, "end": 450},
+    {"id":"c","dataID" : "Type 3","start": 450, "end": 400},
+    {"id":"c","dataID" : "Type 4","start": 400, "end": 500},
+    {"id":"y","dataID" : "Q2","start": 0, "end": 500}
+  ]

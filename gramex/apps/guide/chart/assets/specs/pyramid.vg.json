@@ -6,17 +6,17 @@
   "data": [
     {
       "name": "pyramid_data1",
-      "url": "<%= absolute_url %>data/pyramid.json",
+      "url": "<%= dataset_url %>",
       "transform": [
         {
           "type": "stack",
           "groupby": [
-            "category"
+            "<%= data_mapper.column_1 %>"
           ],
           "sort": {
-            "field": "amount"
+            "field": "<%= data_mapper.column_2 %>"
           },
-          "field": "amount",
+          "field": "<%= data_mapper.column_2 %>",
           "offset": "center",
           "as": [
             "amount1",
@@ -41,7 +41,7 @@
       "type": "band",
       "domain": {
         "data": "pyramid_data1",
-        "field": "category"
+        "field": "<%= data_mapper.column_1 %>"
       },
       "range": "height"
     }
@@ -57,7 +57,7 @@
         "enter": {
           "y": {
             "scale": "py_yscale",
-            "field": "category"
+            "field": "<%= data_mapper.column_1 %>"
           },
           "height": {
             "scale": "py_yscale",
@@ -101,7 +101,7 @@
             "value": "black"
           },
           "title": {
-            "value": "category"
+            "value": "<%= data_mapper.column_1 %>"
           },
           "align": {
             "value": "center"
@@ -110,7 +110,7 @@
             "value": "top"
           },
           "text": {
-            "field": "datum.category"
+            "field": "datum['<%= data_mapper.column_1 %>']"
           }
         }
       }
@@ -154,7 +154,7 @@
             "value": "bottom"
           },
           "text": {
-            "field": "datum.amount"
+            "field": "datum['<%= data_mapper.column_2 %>']"
           }
         }
       }

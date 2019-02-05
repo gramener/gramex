@@ -21,48 +21,7 @@
   "data": [
     {
       "name": "table",
-      "values": [
-        {
-          "category": "N1",
-          "bar_type": "Legend 1",
-          "value": 40
-        },
-        {
-          "category": "N1",
-          "bar_type": "Legend 2",
-          "value": 30
-        },
-        {
-          "category": "N2",
-          "bar_type": "Legend 1",
-          "value": 50
-        },
-        {
-          "category": "N2",
-          "bar_type": "Legend 2",
-          "value": 30
-        },
-        {
-          "category": "N3",
-          "bar_type": "Legend 1",
-          "value": 30
-        },
-        {
-          "category": "N3",
-          "bar_type": "Legend 2",
-          "value": 15
-        },
-        {
-          "category": "N4",
-          "bar_type": "Legend 1",
-          "value": 50
-        },
-        {
-          "category": "N4",
-          "bar_type": "Legend 2",
-          "value": 40
-        }
-      ]
+      "url": "<% dataset_url %>"
     }
   ],
   "scales": [
@@ -73,7 +32,7 @@
       "paddingOuter": 0.5,
       "domain": {
         "data": "table",
-        "field": "category"
+        "field": "<%= data_mapper.column_1 %>"
       },
       "range": "height"
     },
@@ -82,7 +41,7 @@
       "type": "linear",
       "domain": {
         "data": "table",
-        "field": "value"
+        "field": "<%= data_mapper.column_3 %>"
       },
       "range": "width",
       "round": true,
@@ -93,7 +52,7 @@
       "name": "color",
       "type": "ordinal",
       "domain": {
-        "field": "bar_type",
+        "field": "<%= data_mapper.column_2 %>",
         "data": "table"
       },
       "range": [
@@ -115,7 +74,7 @@
       "domain": false,
       "title": "Category",
       "titleColor": "#485465",
-      "titleFont": "roboto",
+      "titleFont": "Roboto",
       "titlePadding": 16,
       "titleFontSize": 12
     },
@@ -127,7 +86,7 @@
       "tickCount": 5,
       "title": "Variable",
       "titleColor": "#485465",
-      "titleFont": "roboto",
+      "titleFont": "Roboto",
       "titlePadding": 16,
       "titleFontSize": 12,
       "labelPadding": 8,
@@ -158,14 +117,14 @@
         "facet": {
           "data": "table",
           "name": "facet",
-          "groupby": "category"
+          "groupby": "<%= data_mapper.column_1 %>"
         }
       },
       "encode": {
         "enter": {
           "y": {
             "scale": "yscale",
-            "field": "category"
+            "field": "<%= data_mapper.column_1 %>"
           }
         }
       },
@@ -182,7 +141,7 @@
           "range": "height",
           "domain": {
             "data": "facet",
-            "field": "bar_type"
+            "field": "<%= data_mapper.column_2 %>"
           }
         }
       ],
@@ -197,7 +156,7 @@
             "enter": {
               "y": {
                 "scale": "pos",
-                "field": "bar_type"
+                "field": "<%= data_mapper.column_2 %>"
               },
               "height": {
                 "scale": "pos",
@@ -205,15 +164,15 @@
               },
               "x": {
                 "scale": "xscale",
-                "field": "value"
+                "field": "<%= data_mapper.column_3 %>"
               },
               "x2": {
                 "scale": "xscale",
-                "value": 0
+                "<%= data_mapper.column_3 %>": 0
               },
               "fill": {
                 "scale": "color",
-                "field": "bar_type"
+                "field": "<%= data_mapper.column_2 %>"
               }
             }
           }

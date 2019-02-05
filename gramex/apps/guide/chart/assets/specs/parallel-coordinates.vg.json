@@ -17,7 +17,7 @@
   "data": [
     {
       "name": "data_table",
-      "url": "<%= absolute_url %>data/parallel-coordinates.csv",
+      "url": "<%= dataset_url %>",
       "format": {
         "type": "csv"
       }
@@ -161,7 +161,6 @@
             "data": "fields"
           },
           "encode": {
-            "enter": {},
             "update": {
               "x": {
                 "scale": "ord",

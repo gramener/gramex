@@ -1,0 +1,42 @@
+[
+  {
+    "category": "N1",
+    "bar_type": "Legend 1",
+    "value": 40
+  },
+  {
+    "category": "N1",
+    "bar_type": "Legend 2",
+    "value": 30
+  },
+  {
+    "category": "N2",
+    "bar_type": "Legend 1",
+    "value": 50
+  },
+  {
+    "category": "N2",
+    "bar_type": "Legend 2",
+    "value": 30
+  },
+  {
+    "category": "N3",
+    "bar_type": "Legend 1",
+    "value": 30
+  },
+  {
+    "category": "N3",
+    "bar_type": "Legend 2",
+    "value": 15
+  },
+  {
+    "category": "N4",
+    "bar_type": "Legend 1",
+    "value": 50
+  },
+  {
+    "category": "N4",
+    "bar_type": "Legend 2",
+    "value": 40
+  }
+]

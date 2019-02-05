@@ -15,7 +15,7 @@
     "color": "#485465",
     "fontSize": 13,
     "fontWeight": 900,
-    "font": "roboto"
+    "font": "Roboto"
   },
   "data": [
     {
@@ -39,7 +39,7 @@
       "zero": true,
       "domain": {
         "data": "source",
-        "field": "Variable B"
+        "field": "<%= data_mapper.column_2 %>"
       },
       "range": "width"
     },
@@ -52,7 +52,7 @@
       "zero": true,
       "domain": {
         "data": "source",
-        "field": "Variable A"
+        "field": "<%= data_mapper.column_1 %>"
       },
       "range": "height"
     },
@@ -66,10 +66,9 @@
         "data": "source",
         "field": "<%= data_mapper.column_3%>"
       },
-      "range": [
-        25,
-        250
-      ]
+      "range": {
+        "signal": "[5, width]"
+      }
     }
   ],
   "axes": [
@@ -82,7 +81,7 @@
       "tickCount": 12,
       "labelPadding": 10,
       "title": "<%= data_mapper.column_2 %>",
-      "titleFont": "roboto",
+      "titleFont": "Roboto",
       "titleColor": "#485465",
       "titleFontSize": 12,
       "titleFontWeight": 500,
@@ -90,7 +89,7 @@
       "labelColor": "#485465",
       "labelFontSize": 10,
       "labelFontWeight": 500,
-      "labelFont": "roboto"
+      "labelFont": "Roboto"
     },
     {
       "scale": "y",
@@ -101,7 +100,7 @@
       "ticks": false,
       "tickCount": 7,
       "title": "<%= data_mapper.column_1 %>",
-      "titleFont": "roboto",
+      "titleFont": "Roboto",
       "titleColor": "#485465",
       "titleFontSize": 12,
       "titleFontWeight": 500,
@@ -109,7 +108,7 @@
       "labelColor": "#485465",
       "labelFontSize": 10,
       "labelFontWeight": 500,
-      "labelFont": "roboto"
+      "labelFont": "Roboto"
     }
   ],
   "marks": [
@@ -121,6 +120,9 @@
       },
       "encode": {
         "update": {
+          "tooltip": {
+            "signal": "datum"
+          },
           "x": {
             "scale": "x",
             "field": "<%= data_mapper.column_2 %>"
@@ -131,13 +133,19 @@
           },
           "size": {
             "scale": "size",
-            "field": "<%= data_mapper.column_3%>"
+            "field": "<%= data_mapper.column_3 %>"
           },
           "shape": {
             "value": "circle"
           },
           "fill": {
             "value": "#53A8E2"
+          },
+          "stroke": {
+            "value": "#fffff"
+          },
+          "strokeWidth": {
+            "value": 1
           }
         }
       }

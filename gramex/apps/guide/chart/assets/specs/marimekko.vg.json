@@ -1,0 +1,232 @@
+{
+    "$schema": "https://vega.github.io/schema/vega/v4.json",
+    "width": 600,
+    "height": 360,
+    "autosize": "fit",
+    "data": [
+      {
+        "name": "data_table",
+        "url": "<%= dataset_url %>",
+        "transform": [
+          {
+            "type": "stack",
+            "groupby": [
+              "<%= data_mapper.column_2 %>"
+            ],
+            "sort": {
+              "field": "<%= data_mapper.column_3 %>"
+            },
+            "field": "<%= data_mapper.column_1 %>",
+            "offset": "normalize"
+          },
+          {
+            "type": "stack",
+            "groupby": [
+              "<%= data_mapper.column_2 %>"
+            ],
+            "sort": {
+              "field": "<%= data_mapper.column_3 %>"
+            },
+            "field": "<%= data_mapper.column_4 %>",
+            "as": [
+              "x0",
+              "x1"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "data2",
+        "source": "data_table",
+        "transform": [
+          {
+            "type": "aggregate",
+            "groupby": ["<%= data_mapper.column_2 %>"],
+            "fields": ["x1"],
+            "ops": ["max"],
+            "as": ["test2"]
+          },
+          {
+            "type": "stack",
+            "field": "test2",
+            "as": ["x0","x1"]
+          }
+        ]
+      },
+      {
+        "name": "test_table",
+        "source": "data_table",
+        "transform": [
+          {
+            "type": "lookup",
+            "from": "data2",
+            "key": "items",
+            "fields": ["<%= data_mapper.column_2 %>"],
+            "values": ["x1"],
+            "as": ["x1"],
+            "default": "some label"
+          },
+          {
+            "type": "lookup",
+            "from": "data2",
+            "key": "items",
+            "fields": ["<%= data_mapper.column_2 %>"],
+            "values": ["x0"],
+            "as": ["x0"],
+            "default": "some label"
+          }
+        ]
+      }
+    ],
+    "scales": [
+      {
+        "name": "scales_xscale",
+        "type": "linear",
+        "domain": {
+          "data": "test_table",
+          "field": "x1"
+        },
+        "range": "width",
+        "padding": 0,
+        "round": true
+      },
+      {
+        "name": "scales_yscale",
+        "type": "linear",
+        "range": "height",
+        "nice": true,
+        "domain": {
+          "data": "data_table",
+          "field": "y1"
+        }
+      },
+      {
+        "name": "scales_color",
+        "type": "ordinal",
+        "range": [
+          "#b7dcdb",
+          "#fbf3cc",
+          "#cd2927",
+          "#efaf18",
+          "#6ea105"
+        ],
+        "domain": {
+          "data": "data_table",
+          "field": "<%= data_mapper.column_3 %>"
+        }
+      }
+    ],
+    "axes": [
+      {
+        "orient": "bottom",
+        "scale": "scales_xscale",
+        "zindex": 1,
+        "ticks": false,
+        "labels": false
+      }
+    ],
+    "marks": [
+      {
+        "name": "marks_rect bars",
+        "type": "rect",
+        "from": {
+          "data": "test_table"
+        },
+        "encode": {
+          "update": {
+            "x": {
+              "scale": "scales_xscale",
+              "field": "x0"
+            },
+            "x2": {
+              "scale": "scales_xscale",
+              "field": "x1",
+              "band": 1
+            },
+            "y": {
+              "scale": "scales_yscale",
+              "field": "y0"
+            },
+            "y2": {
+              "scale": "scales_yscale",
+              "field": "y1"
+            },
+            "fill": {
+              "scale": "scales_color",
+              "field": "<%= data_mapper.column_3 %>"
+            },
+            "stroke": {"value": "#ffffff"}
+          }
+        }
+      },
+      {
+        "name": "marks_text",
+        "type": "text",
+        "from": {
+          "data": "test_table"
+        },
+        "encode": {
+          "enter": {
+            "align": {
+              "value": "center"
+            },
+            "baseline": {
+              "value": "middle"
+            },
+            "fill": {
+              "value": "#000000"
+            }
+          },
+          "update": {
+            "x": {
+              "scale": "scales_xscale",
+              "signal": "(datum.x0 + datum.x1)/2"
+            },
+            "y": {
+              "scale": "scales_yscale",
+              "signal": "(datum.y0 + datum.y1)/2"
+            },
+            "text": {
+              "signal": "ceil(datum['<%= data_mapper.column_1 %>'])"
+            }
+          }
+        }
+      },
+      {
+        "name": "marks_text_axis",
+        "type": "text",
+        "from": {
+          "data": "data2"
+        },
+        "encode": {
+          "enter": {
+            "align": {
+              "value": "center"
+            },
+            "baseline": {
+              "value": "middle"
+            },
+            "fill": {
+              "value": "#000000"
+            }
+          },
+          "update": {
+            "x": {
+              "scale": "scales_xscale",
+              "signal": "(datum.x0 + datum.x1)/2"
+            },
+            "y": {
+              "scale": "scales_yscale",
+              "value": 0
+            },
+            "dy": {
+              "value": 15
+            },
+            "text": {
+              "signal": "datum['<%= data_mapper.column_2 %>']"
+            }
+          }
+        }
+      }
+    ]
+  }

@@ -5,16 +5,16 @@
   "data": [
     {
       "name": "data_tree",
-      "url": "<%= absolute_url %>data/sunburst-4.json",
+      "url": "<%= dataset_url %>",
       "transform": [
         {
           "type": "stratify",
-          "key": "id",
-          "parentKey": "parent"
+          "key": "<%= data_mapper.column_1 %>",
+          "parentKey": "<%= data_mapper.column_3 %>"
         },
         {
           "type": "partition",
-          "field": "size",
+          "field": "<%= data_mapper.column_4 %>",
           "sort": {
             "field": "value"
           },
@@ -44,7 +44,7 @@
       "type": "ordinal",
       "domain": {
         "data": "data_tree",
-        "field": "size"
+        "field": "<%= data_mapper.column_4 %>"
       },
       "range": {
         "scheme": "blueorange",
@@ -89,13 +89,13 @@
           },
           "fill": {
             "scale": "scales_color",
-            "field": "size"
+            "field": "<%= data_mapper.column_4 %>"
           },
           "strokeWidth": {
             "signal": "width/100 * 0.5"
           },
           "tooltip": {
-            "signal": "datum.name + (datum.size ? ', ' + datum.size + ' bytes' : '')"
+            "signal": "datum['<%= data_mapper.column_2 %>'] + (datum['<%= data_mapper.column_4 %>'] ? ', ' + datum['<%= data_mapper.column_4 %>'] + ' bytes' : '')"
           }
         }
       }
@@ -138,7 +138,7 @@
             "signal": "(datum.a0+datum.a1)*90/PI-90"
           },
           "text": {
-            "signal": "datum.parent != null || datum.parent == 1 ? datum.name : ''"
+            "signal": "datum['<%= data_mapper.column_3 %>'] != null || datum['<%= data_mapper.column_3 %>'] == 1 ? datum['<%= data_mapper.column_2 %>'] : ''"
           },
           "fill": {
             "signal": "datum.size != null ? 'black' : 'white'"

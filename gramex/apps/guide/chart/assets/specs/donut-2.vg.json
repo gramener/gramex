@@ -1,0 +1,133 @@
+{
+    "$schema": "https://vega.github.io/schema/vega/v4.json",
+    "width": 600,
+    "height": 360,
+    "autosize": "fit",
+    "signals": [
+        { "name": "startAngle", "value": 0 },
+        { "name": "endAngle", "value": 6.29 },
+        { "name": "radius", "update": "width/2" }
+    ],
+    "data": [
+        {
+            "name": "table",
+            "url": "<%= dataset_url %>",
+            "transform": [
+                {
+                    "type": "pie",
+                    "field": "<%= data_mapper.column_1 %>",
+                    "startAngle": { "signal": "startAngle" },
+                    "endAngle": { "signal": "endAngle" }
+                },
+                {
+                    "type": "joinaggregate",
+                    "fields": ["<%= data_mapper.column_1 %>"],
+                    "ops": ["sum"],
+                    "as": ["total"]
+                },
+                {
+                    "type": "extent",
+                    "field": "<%= data_mapper.column_1 %>",
+                    "signal": "minmax"
+                }
+            ]
+        }
+    ],
+    "scales": [
+        {
+            "name": "color",
+            "type": "ordinal",
+            "domain": { "data": "table", "field": "<%= data_mapper.column_2 %>" },
+            "range": ["#6fcac8", "#f0b619", "#c92762"]
+        }
+    ],
+    "marks": [
+        {
+            "name": "group_arc",
+            "type": "group",
+            "encode": {
+                "update": {
+                    "x": { "signal": "width / 2" },
+                    "y": { "signal": "height / 2" },
+                    "zindex": { "value": 10 }
+                }
+            },
+            "marks": [
+                {
+                    "type": "arc",
+                    "from": { "data": "table" },
+                    "encode": {
+                        "enter": {
+                            "stroke": { "value": "#ffffff" }
+                        },
+                        "update": {
+                            "fill": { "scale": "color", "field": "<%= data_mapper.column_2 %>" },
+                            "startAngle": { "field": "startAngle" },
+                            "endAngle": { "field": "endAngle" },
+                            "outerRadius": { "signal": "width / 4.5" },
+                            "innerRadius": { "signal": "width / 4" }
+                        }
+                    }
+                },
+                {
+                    "name": "category_labels_symbol",
+                    "type": "symbol",
+                    "from": { "data": "table" },
+                    "encode": {
+                        "enter": {
+                            "font": { "value": "roboto" },
+                            "fill": { "value": "#ffffff" },
+                            "stroke": { "value": "#cccccc" },
+                            "size": { "value": 800 },
+                            "shpae": {"value": "circle"}
+                        },
+                        "update": {
+                            "x": { "signal": "0.5 * radius * cos((datum.startAngle+datum.endAngle-3.14)/2)" },
+                            "y": { "signal": "0.5 * radius * sin((datum.startAngle+datum.endAngle-3.14)/2)" }
+                        }
+                    }
+                },
+                {
+                    "name": "category_labels",
+                    "type": "text",
+                    "from": { "data": "table" },
+                    "encode": {
+                        "enter": {
+                            "fontWeight": { "value": "bold" },
+                            "baseline": { "value": "middle" },
+                            "align": { "value": "center" }
+                        },
+                        "update": {
+                            "fill": { "scale": "color", "field": "<%= data_mapper.column_2 %>" },
+                            "radius": { "signal": "width/4" },
+                            "theta": { "signal": "(datum.startAngle + datum.endAngle)/2" },
+                            "text": {
+                                "signal": "format(datum['<%= data_mapper.column_1 %>']/datum.total, '.0')"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "category_labels_text",
+                    "type": "text",
+                    "from": { "data": "table" },
+                    "encode": {
+                        "enter": {
+                            "fontSize": { "value": 20 },
+                            "fontWeight": { "value": "bold" },
+                            "baseline": { "value": "middle" },
+                            "fill": { "value": "#000000" },
+                            "align": { "value": "center" }
+                        },
+                        "update": {
+                            "text": {
+                                "signal": "minmax[1]"
+                            }
+                        }
+                    }
+                }
+            ]
+        }
+    ]
+
+}

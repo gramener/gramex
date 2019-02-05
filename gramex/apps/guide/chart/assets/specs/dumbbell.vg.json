@@ -1,0 +1,148 @@
+{
+    "$schema": "https://vega.github.io/schema/vega/v4.json",
+    "width": 600,
+    "height": 360,
+    "autosize": "fit",
+    "data": [
+      {
+        "name": "table",
+        "url": "<%= dataset_url %>"
+      }
+    ],
+    "scales": [
+      {
+        "name": "xscale",
+        "type": "band",
+        "range": "width",
+        "zero": true,
+        "nice": true,
+        "round": true,
+        "padding": 1,
+        "domain": {
+          "data": "table",
+          "field": "<%= data_mapper.column_1 %>"
+        }
+      },
+      {
+        "name": "yscale",
+        "type": "linear",
+        "range": "height",
+        "nice": true,
+        "zero": true,
+        "domain": {
+          "data": "table",
+          "field": "<%= data_mapper.column_2 %>"
+        }
+      }
+    ],
+    "axes": [
+      {
+        "orient": "left",
+        "scale": "yscale",
+        "domain": false,
+        "ticks": false,
+        "labels": false
+      },
+      {
+        "orient": "bottom",
+        "scale": "xscale",
+        "domain": false,
+        "ticks": false,
+        "labelFontWeight": "bold",
+        "labelFontSize": 12
+      }
+    ],
+    "marks": [
+      {
+        "name": "marks_rect",
+        "type": "rect",
+        "from": {
+          "data": "table"
+        },
+        "encode": {
+          "enter": {
+            "fill": {
+              "value": "#000000"
+            },
+            "height": {
+              "value": 0.1
+            }
+          },
+          "update": {
+            "x": {
+              "value": 0
+            },
+            "y": {
+              "scale": "yscale",
+              "value": 0
+            },
+            "x2": {
+              "signal": "width"
+            }
+          }
+        }
+      },
+      {
+        "name": "marks_symbol symbol",
+        "type": "symbol",
+        "from": {
+          "data": "table"
+        },
+        "encode": {
+          "enter": {
+            "dy": {
+              "value": 15
+            },
+           
+            "stroke": {
+              "value": "#ffffff"
+            }
+          },
+          "update": {
+            "x": {
+              "scale": "xscale",
+              "field": "<%= data_mapper.column_1 %>"
+            },
+            "y": {
+              "scale": "yscale",
+              "field": "<%= data_mapper.column_2 %>"
+            },
+            "size": {
+              "signal": "abs(datum['<%= data_mapper.column_2 %>']) * 100"
+            },
+            "shape": {
+              "signal": "datum['<%= data_mapper.column_2 %>'] < 0 ? 'triangle-down' : 'triangle-up' "
+            },
+             "fill": {
+              "signal": "datum['<%= data_mapper.column_2 %>'] < 0 ? 'red' : 'green' "
+            }
+          }
+        }
+      },
+      {
+        "name": "marks_symbol_text",
+        "type": "text",
+        "from": {
+          "data": "table"
+        },
+        "encode": {
+          "update": {
+            "text": {
+              "signal": "datum['<%= data_mapper.column_2 %>']"
+            },
+            "x": {
+              "scale": "xscale",
+              "field": "<%= data_mapper.column_1 %>"
+            },
+            "y": {
+              "scale": "yscale",
+              "signal": "datum['<%= data_mapper.column_2 %>'] - 4"
+            },
+            "align": {
+              "value": "center"
+            }
+          }
+        }
+      }
+    ]
+  }

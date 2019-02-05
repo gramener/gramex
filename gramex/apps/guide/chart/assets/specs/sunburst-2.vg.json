@@ -6,16 +6,16 @@
   "data": [
     {
       "name": "data_tree",
-      "url": "<%= absolute_url %>data/sunburst-2.json",
+      "url": "<%= dataset_url %>",
       "transform": [
         {
           "type": "stratify",
-          "key": "id",
-          "parentKey": "parent"
+          "key": "<%= data_mapper.column_1 %>",
+          "parentKey": "<%= data_mapper.column_3 %>"
         },
         {
           "type": "partition",
-          "field": "size",
+          "field": "<%= data_mapper.column_4 %>",
           "sort": {
             "field": "value"
           },
@@ -45,7 +45,7 @@
       "type": "ordinal",
       "domain": {
         "data": "data_tree",
-        "field": "size"
+        "field": "<%= data_mapper.column_4 %>"
       },
       "range": {
         "scheme": "tableau20"
@@ -80,10 +80,10 @@
           },
           "fill": {
             "scale": "scales_color",
-            "signal": "datum.id==1?'#fff':datum.size"
+            "signal": "datum['<%= data_mapper.column_1 %>']  == 1 ? '#ffffff' : datum['<%= data_mapper.column_4 %>']"
           },
           "tooltip": {
-            "signal": "datum.name + (datum.size ? ', ' + datum.size + ' bytes' : '')"
+            "signal": "datum['<%= data_mapper.column_2 %>'] + (datum['<%= data_mapper.column_4 %>'] ? ', ' + datum['<%= data_mapper.column_4 %>'] + ' bytes' : '')"
           },
           "startAngle": {
             "field": "a0"
@@ -154,16 +154,16 @@
             "signal": "height/2"
           },
           "theta": {
-            "signal": "(datum.a0+datum.a1)/2"
+            "signal": "(datum.a0 + datum.a1) / 2"
           },
           "radius": {
             "signal": "datum.r0 + 30"
           },
           "text": {
-            "signal": "datum.size == null ? datum.name : ''"
+            "signal": "datum['<%= data_mapper.column_4 %>'] == null ? datum['<%= data_mapper.column_2 %>'] : ''"
           },
           "fill": {
-            "signal": "datum.size != null ? 'black' : 'white'"
+            "signal": "datum['<%= data_mapper.column_4 %>'] != null ? 'black' : 'white'"
           }
         }
       }

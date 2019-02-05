@@ -40,7 +40,7 @@
       "paddingOuter": 0.3,
       "domain": {
         "data": "table",
-        "field": "item"
+        "field": "<%= data_mapper.column_3 %>"
       }
     },
     {
@@ -51,7 +51,7 @@
       "domainMax": 100,
       "domain": {
         "data": "table",
-        "field": "point_height"
+        "field": "<%= data_mapper.column_2 %>"
       }
     },
     {
@@ -66,7 +66,7 @@
       ],
       "domain": {
         "data": "table",
-        "field": "category"
+        "field": "<%= data_mapper.column_1 %>"
       }
     }
   ],
@@ -119,7 +119,7 @@
         "facet": {
           "name": "series",
           "data": "table",
-          "groupby": "category"
+          "groupby": "<%= data_mapper.column_1 %>"
         }
       },
       "marks": [
@@ -132,15 +132,15 @@
             "enter": {
               "x": {
                 "scale": "scale_band",
-                "field": "item"
+                "field": "<%= data_mapper.column_3 %>"
               },
               "y": {
                 "scale": "scale_height",
-                "field": "point_height"
+                "field": "<%= data_mapper.column_2 %>"
               },
               "stroke": {
                 "scale": "scale_color",
-                "field": "category"
+                "field": "<%= data_mapper.column_1 %>"
               },
               "strokeWidth": {
                 "value": 1
@@ -158,19 +158,19 @@
             "enter": {
               "width": {
                 "scale": "scale_band",
-                "field": "item"
+                "field": "<%= data_mapper.column_3 %>"
               },
               "x": {
                 "scale": "scale_band",
-                "field": "item"
+                "field": "<%= data_mapper.column_3 %>"
               },
               "y": {
                 "scale": "scale_height",
-                "field": "point_height"
+                "field": "<%= data_mapper.column_2 %>"
               },
               "fill": {
                 "scale": "scale_color",
-                "field": "category"
+                "field": "<%= data_mapper.column_1 %>"
               },
               "stroke": {
                 "value": "#ffffff"

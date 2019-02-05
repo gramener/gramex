@@ -6,16 +6,16 @@
   "data": [
     {
       "name": "tree",
-      "url": "<%= absolute_url %>data/flare.json",
+      "url": "<%= dataset_url %>",
       "transform": [
         {
           "type": "stratify",
-          "key": "id",
-          "parentKey": "parent"
+          "key": "<%= data_mapper.column_1 %>",
+          "parentKey": "<%= data_mapper.column_3 %>"
         },
         {
           "type": "treemap",
-          "field": "size",
+          "field": "<%= data_mapper.column_4 %>",
           "sort": {
             "field": "value"
           },
@@ -60,7 +60,7 @@
       "type": "ordinal",
       "domain": {
         "data": "nodes",
-        "field": "name"
+        "field": "<%= data_mapper.column_1 %>"
       },
       "range": [
         "#3182bd",
@@ -86,7 +86,7 @@
       ]
     },
     {
-      "name": "size",
+      "name": "<%= data_mapper.column_4 %>",
       "type": "ordinal",
       "domain": [
         2,
@@ -109,7 +109,7 @@
         "enter": {
           "fill": {
             "scale": "color",
-            "field": "name"
+            "field": "<%= data_mapper.column_1 %>"
           }
         },
         "update": {
@@ -158,7 +158,7 @@
         },
         "hover": {
           "tooltip": {
-            "signal": "datum.name + ': '+datum.size"
+            "signal": "datum.['<%= data_mapper.column_1 %>'] + ': '+datum['<%= data_mapper.column_4 %>']"
           }
         }
       }
@@ -172,7 +172,7 @@
       "encode": {
         "enter": {
           "font": {
-            "value": "Helvetica Neue, Arial"
+            "value": "Helvetica"
           },
           "align": {
             "value": "center"
@@ -184,12 +184,12 @@
             "value": "#000"
           },
           "text": {
-            "field": "name"
+            "field": "<%= data_mapper.column_1 %>"
           },
           "fontSize": [
             {
-              "test": "((datum.x1 - datum.x0)/datum.name.length) > 2.5 ? true: false",
-              "signal": "max(ceil((datum.x1 - datum.x0)/datum.name.length), 6)"
+              "test": "((datum.x1 - datum.x0)/datum['<%= data_mapper.column_1 %>'].length) > 2.5 ? true: false",
+              "signal": "max(ceil((datum.x1 - datum.x0)/datum['<%= data_mapper.column_1 %>'].length), 6)"
             },
             {
               "value": 0

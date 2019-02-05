@@ -34,12 +34,12 @@
   "data": [
     {
       "name": "table",
-      "url": "<%= absolute_url %>data/radial.json",
+      "url": "<%= dataset_url %>",
       "transform": [
         {
           "type": "collect",
           "sort": {
-            "field": "value"
+            "field": "<%= data_mapper.column_2 %>"
           }
         },
         {
@@ -60,7 +60,7 @@
       "type": "linear",
       "domain": {
         "data": "table",
-        "field": "value"
+        "field": "<%= data_mapper.column_2 %>"
       },
       "range": [
         0,
@@ -105,7 +105,7 @@
         "facet": {
           "data": "table",
           "name": "facet",
-          "groupby": "key"
+          "groupby": "<%= data_mapper.column_1 %>"
         }
       },
       "marks": [
@@ -130,7 +130,7 @@
               },
               "endAngle": {
                 "scale": "end_scale",
-                "field": "value"
+                "field": "<%= data_mapper.column_2 %>"
               },
               "innerRadius": {
                 "scale": "inner_radius_scale",
@@ -162,10 +162,10 @@
                 "value": "#e3e3e3"
               },
               "x": {
-                "signal": "(width / 2) + (sin(scale('end_scale',  datum.value)) * (scale('inner_radius_scale', datum.order) + scale('outer_radius_scale', datum.order))/2)"
+                "signal": "(width / 2) + (sin(scale('end_scale',  datum['<%= data_mapper.column_2 %>'])) * (scale('inner_radius_scale', datum.order) + scale('outer_radius_scale', datum.order))/2)"
               },
               "y": {
-                "signal": "(height / 2) + (-cos(scale('end_scale',  datum.value)) * (scale('inner_radius_scale', datum.order) + scale('outer_radius_scale', datum.order))/2)"
+                "signal": "(height / 2) + (-cos(scale('end_scale',  datum['<%= data_mapper.column_2 %>'])) * (scale('inner_radius_scale', datum.order) + scale('outer_radius_scale', datum.order))/2)"
               },
               "size": {
                 "value": 300
@@ -201,7 +201,7 @@
                 "value": "black"
               },
               "text": {
-                "field": "key"
+                "field": "<%= data_mapper.column_1 %>"
               },
               "baseline": {
                 "value": "middle"
@@ -225,16 +225,16 @@
           "encode": {
             "enter": {
               "x": {
-                "signal": "(width / 2) + (sin(scale('end_scale',  datum.value)) * (scale('inner_radius_scale', datum.order) + scale('outer_radius_scale', datum.order)) / 2)"
+                "signal": "(width / 2) + (sin(scale('end_scale',  datum['<%= data_mapper.column_2 %>'])) * (scale('inner_radius_scale', datum.order) + scale('outer_radius_scale', datum.order)) / 2)"
               },
               "y": {
-                "signal": "(height / 2) + (-cos(scale('end_scale',  datum.value)) * (scale('inner_radius_scale', datum.order) + scale('outer_radius_scale', datum.order)) / 2)"
+                "signal": "(height / 2) + (-cos(scale('end_scale',  datum['<%= data_mapper.column_2 %>'])) * (scale('inner_radius_scale', datum.order) + scale('outer_radius_scale', datum.order)) / 2)"
               },
               "fill": {
                 "value": "black"
               },
               "text": {
-                "field": "value"
+                "field": "<%= data_mapper.column_2 %>"
               },
               "baseline": {
                 "value": "middle"

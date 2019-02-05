@@ -23,12 +23,12 @@
       "transform": [
         {
           "type": "extent",
-          "field": "P_points",
+          "field": "<%= data_mapper.column_2 %>",
           "signal": "P_extent"
         },
         {
           "type": "extent",
-          "field": "N_points",
+          "field": "['<%= data_mapper.column_3 %>']",
           "signal": "N_extent"
         },
         {
@@ -42,7 +42,7 @@
             }
           ],
           "text": {
-            "field": "name"
+            "field": "<%= data_mapper.column_1 %>"
           },
           "rotate": 0,
           "fontSizeRange": [
@@ -60,7 +60,7 @@
       "type": "ordinal",
       "domain": {
         "data": "data_table",
-        "field": "name"
+        "field": "<%= data_mapper.column_1 %>"
       },
       "range": {
         "scheme": {
@@ -78,7 +78,7 @@
       "encode": {
         "enter": {
           "text": {
-            "field": "name"
+            "field": "<%= data_mapper.column_1 %>"
           },
           "align": {
             "value": "center"
@@ -99,10 +99,10 @@
           },
           "fill": {
             "scale": "scales_color",
-            "field": "name"
+            "field": "<%= data_mapper.column_1 %>"
           },
           "fontSize": {
-            "signal": "colorChange == 'Positive' ? (datum.P_points/P_extent[0]) * 2 : (datum.N_points/N_extent[0]) * 2"
+            "signal": "colorChange == 'Positive' ? (datum['<%= data_mapper.column_2 %>']/P_extent[0]) * 2 : (datum['<%= data_mapper.column_3 %>']/N_extent[0]) * 2"
           }
         },
         "hover": {

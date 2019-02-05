@@ -4,7 +4,7 @@
     "text": "Title",
     "anchor": "start",
     "fontSize": 18,
-    "font": "roboto",
+    "font": "Roboto",
     "fontWeight": "bold",
     "color": "#000000"
   },
@@ -21,18 +21,18 @@
   "data": [
     {
       "name": "tree",
-      "url": "https://api.myjson.com/bins/14x9x2",
+      "url": "<%= dataset_url %>",
       "transform": [
         {
           "type": "stratify",
-          "key": "id",
-          "parentKey": "parent"
+          "key": "<%= data_mapper.column_1 %>",
+          "parentKey": "<%= data_mapper.column_3 %>"
         },
         {
           "type": "treemap",
-          "field": "size",
+          "field": "<%= data_mapper.column_4 %>",
           "sort": {
-            "field": "size"
+            "field": "<%= data_mapper.column_4 %>"
           },
           "method": "squarify",
           "ratio": 2,
@@ -75,7 +75,7 @@
       "type": "quantize",
       "domain": {
         "data": "leaves",
-        "field": "size"
+        "field": "<%= data_mapper.column_4 %>"
       },
       "range": [
         "#e75e33",
@@ -86,11 +86,11 @@
       ]
     },
     {
-      "name": "size",
+      "name": "<%= data_mapper.column_4 %>",
       "type": "linear",
       "domain": {
         "data": "leaves",
-        "field": "size"
+        "field": "<%= data_mapper.column_4 %>"
       },
       "range": [
         20,
@@ -133,7 +133,7 @@
         "enter": {
           "fill": {
             "scale": "color",
-            "field": "size"
+            "field": "<%= data_mapper.column_4 %>"
           },
           "stroke": {
             "value": "#fff"
@@ -164,7 +164,7 @@
       "encode": {
         "enter": {
           "font": {
-            "value": "Helvetica Neue, Arial"
+            "value": "Helvetica"
           },
           "align": {
             "value": "center"
@@ -223,7 +223,7 @@
             "value": "center"
           },
           "font": {
-            "value": "roboto"
+            "value": "Roboto"
           },
           "fontSize": {
             "value": 12
@@ -276,7 +276,7 @@
             "value": "center"
           },
           "font": {
-            "value": "roboto"
+            "value": "Roboto"
           },
           "fontSize": {
             "value": 12

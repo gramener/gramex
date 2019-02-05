@@ -35,7 +35,7 @@
       "format": {
         "type": "json",
         "parse": {
-          "date": "date"
+          "date": "<%= data_mapper.column_1 %>"
         }
       }
     },
@@ -45,7 +45,7 @@
       "transform": [
         {
           "type": "filter",
-          "expr": "month(datum.date) == month(signal_tooltip) && year(datum.date) == year(signal_tooltip)"
+          "expr": "month(datum['<%= data_mapper.column_1 %>']) == month(signal_tooltip) && year(datum['<%= data_mapper.column_1 %>']) == year(signal_tooltip)"
         }
       ]
     }
@@ -58,7 +58,7 @@
       "padding": 1,
       "domain": {
         "data": "table",
-        "field": "date"
+        "field": "<%= data_mapper.column_1 %>"
       }
     },
     {
@@ -69,7 +69,7 @@
       "zero": true,
       "domain": {
         "data": "table",
-        "field": "count"
+        "field": "<%= data_mapper.column_2 %>"
       }
     },
     {
@@ -133,7 +133,7 @@
         "facet": {
           "name": "series",
           "data": "table",
-          "groupby": "country"
+          "groupby": "<%= data_mapper.column_3 %>"
         }
       },
       "marks": [
@@ -149,15 +149,15 @@
               },
               "x": {
                 "scale": "x",
-                "field": "date"
+                "field": "<%= data_mapper.column_1 %>"
               },
               "y": {
                 "scale": "y",
-                "field": "count"
+                "field": "<%= data_mapper.column_2 %>"
               },
               "stroke": {
                 "scale": "color",
-                "field": "country"
+                "field": "<%= data_mapper.column_3 %>"
               },
               "strokeWidth": {
                 "value": 2
@@ -174,12 +174,12 @@
             "update": {
               "x": {
                 "scale": "x",
-                "field": "date",
+                "field": "<%= data_mapper.column_1 %>",
                 "offset": -15
               },
               "y": {
                 "scale": "y",
-                "field": "count",
+                "field": "<%= data_mapper.column_2 %>",
                 "offset": -10
               },
               "width": {
@@ -209,15 +209,15 @@
             "update": {
               "x": {
                 "scale": "x",
-                "field": "date"
+                "field": "<%= data_mapper.column_1 %>"
               },
               "y": {
                 "scale": "y",
-                "field": "count"
+                "field": "<%= data_mapper.column_2 %>"
               },
               "fill": {
                 "scale": "color",
-                "field": "country"
+                "field": "<%= data_mapper.column_3 %>"
               },
               "fillOpacity": {
                 "signal": "hover"
@@ -234,19 +234,19 @@
             "update": {
               "x": {
                 "scale": "x",
-                "field": "date",
+                "field": "<%= data_mapper.column_1 %>",
                 "offset": 12
               },
               "y": {
                 "scale": "y",
-                "field": "count",
+                "field": "<%= data_mapper.column_2 %>",
                 "offset": 4
               },
               "fill": {
                 "value": "#333333"
               },
               "text": {
-                "field": "count"
+                "field": "<%= data_mapper.column_2 %>"
               },
               "fillOpacity": {
                 "signal": "hover"
@@ -263,7 +263,7 @@
             "update": {
               "x": {
                 "scale": "x",
-                "field": "date",
+                "field": "<%= data_mapper.column_1 %>",
                 "offset": 12
               },
               "y": {

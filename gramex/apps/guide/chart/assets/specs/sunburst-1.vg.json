@@ -36,12 +36,12 @@
   "data": [
     {
       "name": "data_tree",
-      "url": "<%= absolute_url %>data/sunburst-1.json",
+      "url": "<%= dataset_url %>",
       "transform": [
         {
           "type": "stratify",
-          "key": "id",
-          "parentKey": "parent"
+          "key": "<%= data_mapper.column_1 %>",
+          "parentKey": "<%= data_mapper.column_3 %>"
         },
         {
           "type": "partition",
@@ -77,7 +77,7 @@
         {
           "type": "aggregate",
           "groupby": [
-            "parent"
+            "<%= data_mapper.column_3 %>"
           ],
           "fields": [
             "size"
@@ -151,7 +151,7 @@
             "field": "size"
           },
           "tooltip": {
-            "signal": "datum.name + (datum.size ? ', ' + datum.size + ' bytes' : '')"
+            "signal": "datum['<%= data_mapper.column_2 %>'] + (datum.size ? ', ' + datum.size + ' bytes' : '')"
           }
         }
       }
@@ -216,7 +216,7 @@
             "signal": "datum.r0 + 50"
           },
           "text": {
-            "signal": "datum.name"
+            "signal": "datum['<%= data_mapper.column_2 %>']"
           },
           "fill": {
             "signal": "datum.size != null ? 'black' : 'white'"

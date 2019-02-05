@@ -1,72 +1,72 @@
 [
     {
-      "Variable A": 2,
-      "Variable B": 12,
-      "Depth": 4
+      "Y Axis Numbers": 2,
+      "X Axis Numbers": 12,
+      "Radius": 490
     },
     {
-      "Variable A": 4,
-      "Variable B": 12,
-      "Depth": 1
+      "Y Axis Numbers": 4,
+      "X Axis Numbers": 12,
+      "Radius": 110
     },
     {
-      "Variable A": 7,
-      "Variable B": 9,
-      "Depth": 5
+      "Y Axis Numbers": 7,
+      "X Axis Numbers": 9,
+      "Radius": 590
     },
     {
-      "Variable A": 7.5,
-      "Variable B": 2,
-      "Depth": 5
+      "Y Axis Numbers": 7.5,
+      "X Axis Numbers": 2,
+      "Radius": 412
     },
     {
-      "Variable A": 5,
-      "Variable B": 12,
-      "Depth": 4
+      "Y Axis Numbers": 5,
+      "X Axis Numbers": 12,
+      "Radius": 194
     },
     {
-      "Variable A": 2,
-      "Variable B": 3,
-      "Depth": 3
+      "Y Axis Numbers": 2,
+      "X Axis Numbers": 3,
+      "Radius": 300
     },
     {
-      "Variable A": 2,
-      "Variable B": 7,
-      "Depth": 3
+      "Y Axis Numbers": 2,
+      "X Axis Numbers": 7,
+      "Radius": 240
     },
     {
-      "Variable A": 3,
-      "Variable B": 6,
-      "Depth": 4
+      "Y Axis Numbers": 3,
+      "X Axis Numbers": 6,
+      "Radius": 370
     },
     {
-      "Variable A": 5,
-      "Variable B": 11,
-      "Depth": 3
+      "Y Axis Numbers": 5,
+      "X Axis Numbers": 11,
+      "Radius": 150
     },
     {
-      "Variable A": 5,
-      "Variable B": 12,
-      "Depth": 5
+      "Y Axis Numbers": 5,
+      "X Axis Numbers": 12,
+      "Radius": 500
     },
     {
-      "Variable A": 4,
-      "Variable B": 10,
-      "Depth": 3
+      "Y Axis Numbers": 4,
+      "X Axis Numbers": 10,
+      "Radius": 390
     },
     {
-      "Variable A": 3,
-      "Variable B": 12,
-      "Depth": 4
+      "Y Axis Numbers": 3,
+      "X Axis Numbers": 12,
+      "Radius": 70
     },
     {
-      "Variable A": null,
-      "Variable B": 12,
-      "Depth": 4
+      "Y Axis Numbers": null,
+      "X Axis Numbers": 12,
+      "Radius": 400
     },
     {
-      "Variable A": 3,
-      "Variable B": null,
-      "Depth": 4
+      "Y Axis Numbers": 3,
+      "X Axis Numbers": null,
+      "Radius": 40
     }
   ]

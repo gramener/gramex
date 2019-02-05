@@ -1,0 +1,149 @@
+{
+    "$schema": "https://vega.github.io/schema/vega/v4.json",
+    "width": 600,
+    "height": 360,
+    "autosize": "fit",
+    "data": [
+        {
+            "name": "table",
+            "url": "<%= dataset_url %>"
+        }
+    ],
+    "scales": [
+        {
+            "name": "yscale",
+            "type": "linear",
+            "round": true,
+            "range": "height",
+            "domain": {
+                "data": "table",
+                "field": "<%= data_mapper.column_4 %>"
+            }
+        },
+        {
+            "name": "xscale",
+            "type": "band",
+            "range": "width",
+            "zindex": 1,
+            "domain": {
+                "data": "table",
+                "field": "<%= data_mapper.column_2 %>"
+            },
+            "padding": 0.5
+        }
+    ],
+    "axes": [
+        {
+            "orient": "bottom",
+            "scale": "xscale"
+        },
+        {
+            "orient": "left",
+            "scale": "yscale"
+        }
+    ],
+    "marks": [
+        {
+            "type": "rect",
+            "from": {
+                "data": "table"
+            },
+            "encode": {
+                "update": {
+                    "y": {
+                        "scale": "yscale",
+                        "field": "<%= data_mapper.column_3 %>"
+                    },
+                    "y2": {
+                        "scale": "yscale",
+                        "field": "<%= data_mapper.column_4 %>"
+                    },
+                    "x": {
+                        "scale": "xscale",
+                        "field": "<%= data_mapper.column_2 %>"
+                    },
+                    "width": {
+                        "scale": "xscale",
+                        "band": 1
+                    },
+                    "fill": {
+                        "signal": "datum['<%= data_mapper.column_1 %>'] == 'y'?'#FEC44F': datum['<%= data_mapper.column_3 %>'] < datum['<%= data_mapper.column_4 %>'] ? '#00ABB4':'#FF0000'"
+                    }
+                }
+            }
+        },
+        {
+            "type": "rect",
+            "from": {
+                "data": "table"
+            },
+            "encode": {
+                "enter": {
+                    "fill": {
+                        "value": "#cccccc"
+                    },
+                    "stroke": {
+                        "value": "#000000"
+                    },
+                    "strokeWidth": {
+                        "value": 0.3
+                    },
+                    "strokeDash": {
+                        "value": [
+                            2,
+                            5
+                        ]
+                    },
+                    "width": {
+                        "value": 115
+                    }
+                },
+                "update": {
+                    "opacity": {
+                        "signal": "indexof(data('table'),datum)==length(data('table'))-1?'0':'1'"
+                    },
+                    "x": {
+                        "scale": "xscale",
+                        "field": "<%= data_mapper.column_2 %>"
+                    },
+                    "y2": {
+                        "scale": "yscale",
+                        "field": "<%= data_mapper.column_4 %>"
+                    }
+                }
+            }
+        },
+        {
+            "type": "text",
+            "from": {
+                "data": "table"
+            },
+            "encode": {
+                "enter": {
+                    "fill": {
+                        "value": "#000000"
+                    },
+                    "dy": {
+                        "value": -10
+                    },
+                    "dx": {
+                        "value": 10
+                    }
+                },
+                "update": {
+                    "text": {
+                        "signal": "datum['<%= data_mapper.column_4 %>'] - datum['<%= data_mapper.column_3 %>']"
+                    },
+                    "x": {
+                        "scale": "xscale",
+                        "field": "<%= data_mapper.column_2 %>"
+                    },
+                    "y2": {
+                        "scale": "yscale",
+                        "signal": "datum['<%= data_mapper.column_3 %>'] > datum['<%= data_mapper.column_4 %>'] ? datum['<%= data_mapper.column_3 %>'] : datum['<%= data_mapper.column_4 %>']"
+                    }
+                }
+            }
+        }
+    ]
+}

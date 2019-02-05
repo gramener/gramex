@@ -4,7 +4,7 @@
     "text": "Title",
     "anchor": "start",
     "fontSize": 18,
-    "font": "roboto",
+    "font": "Roboto",
     "fontWeight": "bold",
     "color": "#000000"
   },
@@ -164,7 +164,7 @@
       "encode": {
         "enter": {
           "font": {
-            "value": "Helvetica Neue, Arial"
+            "value": "Helvetica"
           },
           "align": {
             "value": "center"
@@ -224,7 +224,7 @@
             "value": "center"
           },
           "font": {
-            "value": "roboto"
+            "value": "Roboto"
           },
           "fontSize": {
             "value": 12
@@ -277,7 +277,7 @@
             "value": "center"
           },
           "font": {
-            "value": "roboto"
+            "value": "Roboto"
           },
           "fontSize": {
             "value": 12

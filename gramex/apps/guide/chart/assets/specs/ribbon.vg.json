@@ -16,9 +16,9 @@
           "offset": "center",
           "type": "stack",
           "groupby": [
-            "x"
+            "<%= data_mapper.column_1 %>"
           ],
-          "field": "y"
+          "field": "<%= data_mapper.column_2 %>"
         }
       ]
     }
@@ -31,7 +31,7 @@
       "padding": 10,
       "domain": {
         "data": "data_table",
-        "field": "x"
+        "field": "<%= data_mapper.column_1 %>"
       }
     },
     {
@@ -53,7 +53,7 @@
       ],
       "domain": {
         "data": "data_table",
-        "field": "product"
+        "field": "<%= data_mapper.column_4 %>"
       }
     }
   ],
@@ -82,7 +82,7 @@
         "facet": {
           "name": "series",
           "data": "data_table",
-          "groupby": "c"
+          "groupby": "<%= data_mapper.column_3 %>"
         }
       },
       "marks": [
@@ -104,7 +104,7 @@
             "update": {
               "x": {
                 "scale": "scales_x",
-                "field": "x"
+                "field": "<%= data_mapper.column_1 %>"
               },
               "y": {
                 "scale": "scales_y",
@@ -116,7 +116,7 @@
               },
               "fill": {
                 "scale": "scales_color",
-                "field": "product"
+                "field": "<%= data_mapper.column_4 %>"
               }
             }
           }
