@@ -259,6 +259,16 @@ This imports components/navbar.html in-place as a template.
 All parent template variables are available in the sub-template.
 ```
 
+You can also include other files using `{{ gramex.cache.open(...) }}`. For example:
+
+```html
+{% raw gramex.cache.open('README.txt') %}   -- inserts README.txt in-place
+{% raw gramex.cache.open('README.md') %}    -- inserts README.md as HTML
+```
+
+This converts README.md into HTML. See [data caching](../caching/#data-caching)
+for more formats.
+
 You can apply templates to specific file patterns. For example:
 
 ```yaml
