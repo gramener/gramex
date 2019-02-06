@@ -181,7 +181,7 @@ You can create your additional formatters by extending this.
 
 [logging-schema]: https://docs.python.org/3/library/logging.config.html#dictionary-schema-details
 [trfh]: https://docs.python.org/3/library/logging.handlers.html#logging.handlers.TimedRotatingFileHandler
-[gramex-yaml]: https://code.gramener.com/cto/gramex/blob/master/gramex/gramex.yaml
+[gramex-yaml]: https://github.com/gramener/gramex/blob/master/gramex/gramex.yaml
 
 ### Request logging
 

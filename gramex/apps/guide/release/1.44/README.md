@@ -75,7 +75,7 @@ If you're used gramex 0.x earlier, you can relate to [autolysis.groupmeans](http
 
 ## RMarkdown
 
-With [RMarkdown](../../r#rmarkdown) documents you can weave together narrative text and code to produce elegantly formatted outputs. 
+With [RMarkdown](../../r#rmarkdown) documents you can weave together narrative text and code to produce elegantly formatted outputs.
 
 You can now render RMarkdown files as HTML outputs using Gramex's [`FileHandler`](../../filehandler/) with `rmarkdown` transform.
 
@@ -94,7 +94,7 @@ url:
             Cache-Control: max-age=3600
 ```
 
-This [RMarkdown-story.Rmd](https://code.gramener.com/cto/gramex/blob/dev/gramex/apps/guide/r/RMarkdown-story.Rmd) file is rendered as
+This [RMarkdown-story.Rmd](https://github.com/gramener/gramex/blob/dev/gramex/apps/guide/r/RMarkdown-story.Rmd) file is rendered as
 
 [![rmarkdown](https://code.gramener.com/cto/gramex/uploads/bdba79584e703698113ba49d3e4d5312/image.png)](../../r/RMarkdown-story.Rmd)
 

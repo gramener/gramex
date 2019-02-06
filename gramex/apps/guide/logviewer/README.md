@@ -21,7 +21,7 @@ This configuration mounts the app at [log/](log/):
 
 <div class="example">
   <a class="example-demo" href="log/">Log Viewer</a>
-  <a class="example-src" href="http://code.gramener.com/cto/gramex/tree/master/gramex/apps/guide/logviewer/gramex.yaml">Source</a>
+  <a class="example-src" href="http://github.com/gramener/gramex/blob/master/gramex/apps/guide/logviewer/gramex.yaml">Source</a>
 </div>
 
 ## Logviewer usage
@@ -110,7 +110,7 @@ Typical `requests.csv` looks like
 1530012729594.0,::1,,200,2.0,GET,/style.css,
 ```
 
-By default, `requests.csv` are backed up on a weekly basis with date prefix. 
+By default, `requests.csv` are backed up on a weekly basis with date prefix.
 For eg: `requests.csv.2017-11-21`.
 
 Logviewer application uses data from `logviewer.db` for the front-end visuals.
@@ -131,7 +131,7 @@ For example, let's take `user1`
 
 - `user1` logs in at `10:00AM` on page `/page1`
 - Does nothing for next few minutes
-- Hits `/page2` at `10:05AM` -- right now `user1`'s session_time is `5mint `and counting. 
+- Hits `/page2` at `10:05AM` -- right now `user1`'s session_time is `5mint `and counting.
 - By default, a `15mint` threshold is considered to flag `new_session`.
 - Now the `user1` comes back again at `11:30AM`
 - This request is flagged for `new_session` and `session_time` is reset for this session.
@@ -153,7 +153,7 @@ As they tend to skew the session duration.
 
 Currently, logviewer application having `session` related visuals, is based on following
 
-- [`kpi-avgtimespent`](https://code.gramener.com/cto/gramex/blob/master/gramex/apps/logviewer/gramex.yaml): performs `SUM(session_time_sum)/SUM(new_session_sum)`
+- [`kpi-avgtimespent`](https://github.com/gramener/gramex/blob/master/gramex/apps/logviewer/gramex.yaml): performs `SUM(session_time_sum)/SUM(new_session_sum)`
 - `kpi-sessions`: performs `SUM(new_session_sum)`
 
 You can customize `kpi-avgtimespent` to consider only logged-in users
@@ -170,7 +170,7 @@ import:
         WHERE "user.id_1" == 1 {where}
 ```
 
-[`user.id_1`](https://code.gramener.com/cto/gramex/blob/master/gramex/apps/logviewer/gramex.yaml) by default ignores `['-', 'dev']` users.
+[`user.id_1`](https://github.com/gramener/gramex/blob/master/gramex/apps/logviewer/gramex.yaml) by default ignores `['-', 'dev']` users.
 
 ## Add custom visuals
 

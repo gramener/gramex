@@ -100,7 +100,7 @@ To serve WebSockets from behind an nginx reverse proxy, use the following config
     }
 
 [websockethandler]: https://learn.gramener.com/gramex/gramex.handlers.html#gramex.handlers.WebSocketHandler
-[chatbot-source]: https://code.gramener.com/cto/gramex/tree/dev/gramex/apps/guide/websockethandler/websocketchat.py
+[chatbot-source]: https://github.com/gramener/gramex/blob/dev/gramex/apps/guide/websockethandler/websocketchat.py
 [websocket-clients]: https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API/Writing_WebSocket_client_applications
 
 <script>

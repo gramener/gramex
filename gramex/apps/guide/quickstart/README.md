@@ -36,7 +36,7 @@ This step is required for UI components and built-in apps.
 ![picture](img/path1.png)
 
 - On Windows, While installing `nodejs`, be sure to keep track of the directory in which its installed;
-typically `C:/Program Files/nodejs/node` and ensure to add it to the system path. 
+typically `C:/Program Files/nodejs/node` and ensure to add it to the system path.
 
 ![picture](img/envi.png)
 
@@ -162,7 +162,7 @@ In addition, it generates a simple boilerplate for
 It helps developers define and maintain consistent coding styles between different editors and IDEs.
 The EditorConfig project consists of a file format for defining coding styles and a collection of
 text editor plugins that enable editors to read the file format and adhere to defined styles.
-EditorConfig files are easily readable and they work nicely with version control systems. 
+EditorConfig files are easily readable and they work nicely with version control systems.
 
 The supported Properties for `.editorconfig` are:
 
@@ -254,7 +254,7 @@ For the purpose of this tutorial, 2 endpoints are defined, a FileHandler to serv
 Thus the formhandler can be added to our current configuration as follows
 
 The import key is used to import other gramex apps/yaml files.
-In this case, it's being used to import the uicomponents library that is a key part of the styling in gramex apps. 
+In this case, it's being used to import the uicomponents library that is a key part of the styling in gramex apps.
 
 ```yaml
 url:
@@ -276,13 +276,13 @@ one of a few formats back to the front end.
 By default, data is returned as a JSON, however it can also be returned as a simple html table,
 an interactive table, a downloadable csv etc.
 
-The import section of this yaml file allows developers to import configuration files from any other gramex project or app and mount them at a particular url. In this case, import is being used to mount the UI Components Library (to serve bootstrap and some JS Libraries)as well as an interactive table that can be viewed by visiting visiting [this link](http://localhost:9988/data?_format=table) with gramex running. 
+The import section of this yaml file allows developers to import configuration files from any other gramex project or app and mount them at a particular url. In this case, import is being used to mount the UI Components Library (to serve bootstrap and some JS Libraries)as well as an interactive table that can be viewed by visiting visiting [this link](http://localhost:9988/data?_format=table) with gramex running.
 
 ![Formhandler Table Screenshot](img/fts.png)
 Click [here](../config/) for more information about yaml configurations
 and [here](../formhandler/) for more information about FormHandler.
 
-Click [here](https://code.gramener.com/karmanya.aggarwal/quickstart/) to download a working example of the app.
+Click [here](https://code.gramener.com/cto/quickstart/) to download a working example of the app.
 
 Click [here](../) to see a list of all the custom handlers that gramex offers
 
@@ -328,7 +328,7 @@ Once the scaffolding has been created, the data and scaffolding can be quickly v
 or a configuration driven [charting library](../formhandler/#formhandler-charts) (Vega, Vega-lite, Seaborn and Vegam).
 
 For the purpose of this quickstart, we'll be using vega/vega-lite and vegam charts.
-For this, we add a few more endpoints to the `gramex.yaml` file and specify the configurations for the charts that we've chosen. 
+For this, we add a few more endpoints to the `gramex.yaml` file and specify the configurations for the charts that we've chosen.
 
 Vega/Vega-lite/Vegam all work well with the default json output orientation that FormHandler offers,
 which makes adding charts almost seamless.
@@ -363,7 +363,7 @@ url:
 Here a new endpoint is added to our `gramex.yaml` named  `data-u1`, `data-u1` uses a FormHandler to
 load the first 1000 rows of data, drop the nulls, group by region and country and return it as a json string.
 
-It also defines a new custom format called barchart which is essentially a vegam chart that plots 
+It also defines a new custom format called barchart which is essentially a vegam chart that plots
 `region vs loan_amount` from our data and colors the bars by country.
 Now, the charts can be inserted in any html page/template via a simple `<script>` tag
 
@@ -375,7 +375,7 @@ Now, the charts can be inserted in any html page/template via a simple `<script>
 
 Thus, the script will make a request to the `alldata` endpoint, passing a start date, end date and
 chart type to server via URL Parameters which can be accessed in the backend through the
-request handler as in `somefunction(data,handler)`. 
+request handler as in `somefunction(data,handler)`.
 
 `_format=barchart` tells gramex that the output needs to be rendered as the format named barchart,
 via the spec defined in the yaml.
@@ -389,9 +389,9 @@ Finally, in order to use vega charts, an appropriate js file needs to be include
 ```
 ![Vega Barchart Screenshot](img/vega-barchart.png)
 
-For the formhandler table, 
+For the formhandler table,
 The G1 Library needs to be included (preferably, under the body tag in the html), a div needs to be
-included to contain the table and the table is rendered by calling the formhandler() function on that div. 
+included to contain the table and the table is rendered by calling the formhandler() function on that div.
 
 ```html
 <html>
@@ -429,10 +429,10 @@ url:
       function: data.dropna() # loaded data is accessed through a dataframe `data`
                               # dropna() is a pandas function that drops null rows
       modify: data.groupby(['region', 'country']).mean().reset_index()
-      # modify again is called on the dataframe. 
+      # modify again is called on the dataframe.
 ```
 
-it's also possible to reference functions inside python files as referenced below - 
+it's also possible to reference functions inside python files as referenced below -
 
 ```yaml
 url:
@@ -468,7 +468,7 @@ In order to facilitate filtering and drilldowns, the G1 library provides a urlfi
 updates url parameters in place - combined with formhandler, this allows for complicated filterign
 with very little custom code written.
 
-To use url filter, you first tag elements in html with the urlfilter class, then call urlfilter on the containing div. 
+To use url filter, you first tag elements in html with the urlfilter class, then call urlfilter on the containing div.
 
 for example,
 
@@ -483,10 +483,10 @@ for example,
 ```
 
 On clicking the referenced button, the page's url will be updated to include `city=somevalue`,
-which can then be picked up by multiple components on the same page. 
+which can then be picked up by multiple components on the same page.
 
 Thus, can be used to very easily filter views and data across multiple components
-From the quickstart example, look at the following function from fdd.js 
+From the quickstart example, look at the following function from fdd.js
 
 ```js
 function vega_update() {
@@ -496,12 +496,12 @@ function vega_update() {
 ```
 
 here, `url.parse` is used to pick up filter information from the url and pass it to the vega charts
-in order to update multiple charts at the same time. 
+in order to update multiple charts at the same time.
 
 Vega/Vegam/Vega-lite support limited interaction - tooltips and basic brushing is supported, however,
 for highly customized charts or svg interaction, d3.js can be used.
 
-While Gramener has some d3 charts already built and componentized, very often these are required to 
+While Gramener has some d3 charts already built and componentized, very often these are required to
 be custom built for a usecase or project.
 In order to do that, the UI Components library includes d3.js so it can be included in the html and used as follows
 
@@ -515,7 +515,7 @@ $.getJSON('data', function(data){
 </script>
 ```
 
-d3 is a large library and is outside the scope of this guide. 
+d3 is a large library and is outside the scope of this guide.
 
 ## Screenshots via CaptureHandler
 
@@ -528,7 +528,7 @@ Gramex has a feature to export your visuals in the following formats
 
 Follow the steps below to capture the dashboard
 
-- Configure the YAML file as follows - 
+- Configure the YAML file as follows -
 
 ```yaml
 url:
@@ -542,7 +542,7 @@ url:
 ```
 
 Post this, navigating to the capture endpoint will cause the server to take the capture and return the appropriate format.
-Preferred output format, delay, orientation and url to capture can be passed via url query parameters 
+Preferred output format, delay, orientation and url to capture can be passed via url query parameters
 
 ```html
 <ul class="dropdown-menu dropdown-right">
@@ -600,8 +600,8 @@ and the second with username 'alpha' and password 'alpha'
 
 ## G1 Mapviewer
 
-The G1 library also includes a module that allows for easy map based visuals. 
-in order to create the choropleth used in the example, the following modifications were required in the html. 
+The G1 library also includes a module that allows for easy map based visuals.
+in order to create the choropleth used in the example, the following modifications were required in the html.
 
 ```html
 <!-- stylesheets and js files need to be included, using ui components links-->
@@ -663,9 +663,9 @@ In this example, we have a geojson file, that contains polygons demarking countr
 Each polygon has associated labels, we're interested in the `NAME_EN` property which contains the name
 of the country that the polygon represents in English.
 
-Similarly, our dataset contains the columns `country` and `loan_amount` - thus this configuration 
+Similarly, our dataset contains the columns `country` and `loan_amount` - thus this configuration
 performs a join on the data from our csv file based on `country` and `NAME_EN` and assigns colours
 by the value of `loan_amount` on the map according to the colorscheme Viridis.
 
-The output should look similar to this 
+The output should look similar to this
 ![world map choropleth](img/choropleth.png)

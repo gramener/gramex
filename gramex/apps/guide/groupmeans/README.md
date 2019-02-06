@@ -40,7 +40,7 @@ It can be used to quickly identify the most significant factors onto a metric al
 
 <div class="example">
   <a class="example-demo" href="form.html">Explore the data yourself</a>
-  <a class="example-src" href="http://code.gramener.com/cto/gramex/tree/master/gramex/apps/guide/groupmeans">Source</a>
+  <a class="example-src" href="http://github.com/gramener/gramex/tree/master/gramex/apps/guide/groupmeans/">Source</a>
 </div>
 
 <!-- TODO: Allow users to pick from a pre-defined set of segments: Boys/Girls. Below Poverty, Siblings -->
@@ -49,5 +49,5 @@ It can be used to quickly identify the most significant factors onto a metric al
 
 <div class="example">
   <a class="example-demo" href="custom-explore">Upload your own csv and explore</a>
-  <a class="example-src" href="http://code.gramener.com/cto/gramex/tree/master/gramex/apps/guide/groupmeans">Source</a>
+  <a class="example-src" href="http://github.com/gramener/gramex/tree/master/gramex/apps/guide/groupmeans/">Source</a>
 </div>

@@ -103,7 +103,7 @@ See the source in the example below to understand how to use it.
 
 <div class="example">
   <a class="example-demo" href="mail">Try a sample email</a>
-  <a class="example-src" href="http://code.gramener.com/cto/gramex/tree/master/gramex/apps/guide/email/emailapp.py">Source</a>
+  <a class="example-src" href="http://github.com/gramener/gramex/blob/master/gramex/apps/guide/email/emailapp.py">Source</a>
 </div>
 
 ## HTML email

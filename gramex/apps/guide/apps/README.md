@@ -32,7 +32,7 @@ gramex install <appname> /path/to/app.zip
 You can specify a URL instead of a local path. For example:
 
 ```shell
-gramex install <appname> http://code.gramener.com/<user>/<repo>/repository/archive.zip
+gramex install <appname> http://github.com/<user>/<repo>/repository/archive.zip
 ```
 
 ... will install the app (if it's publicly accessible). To run it, use `gramex run <appname>`.
@@ -40,7 +40,7 @@ gramex install <appname> http://code.gramener.com/<user>/<repo>/repository/archi
 You can install from a Git repository by running a git command. For example:
 
 ```shell
-gramex install g --cmd="git clone git@code.gramener.com/s.anand/g.git"
+gramex install g --cmd="git clone git@code.gramener.com/cto/g1.git"
 ```
 
 In fact, `--cmd="..."` can be used to run any command. Here's an example using rsync:
@@ -52,7 +52,7 @@ gramex install <appname> --cmd="rsync -avzP ec2-user@demo.gramener.com/dir/"
 The `--cmd="..."` command is run as is, with the target app directory added at the end -- indicating where the app should be installed. If you want to specify it in the middle of the command, use the word `TARGET` in capitals instead. For example:
 
 ```shell
-gramex install g --cmd="git clone git@code.gramener.com/s.anand/g.git TARGET"
+gramex install g --cmd="git clone git@code.gramener.com/cto/g1.git TARGET"
 ```
 
 Gramex also updates an `apps.yaml` file in the Gramex app directory capturing details about the installation (allowing you to uninstall the application.)

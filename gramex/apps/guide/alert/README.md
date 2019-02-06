@@ -227,10 +227,8 @@ alert:
     #   role: manager
 ```
 
-**Note**: The server that sends the alert must be different from the server that
-runs the CaptureHandler.
-[BUG #391](https://code.gramener.com/cto/gramex/issues/391):
-alerts fetch requests synchronously.
+**Note**: If the server that sends the alert is the same as the the server that
+runs CaptureHandler, you must specify `thread: true`.
 
 The `user:` section sends an [X-Gramex-User](../auth/#encrypted-user) header to
 take a screenshot of a dashboard as the user would have seen it. Specify the
@@ -350,7 +348,7 @@ import:
 
 <div class="example">
   <a class="example-demo" href="preview/">Preview emails</a>
-  <a class="example-src" href="http://code.gramener.com/cto/gramex/tree/master/gramex/apps/guide/alert/gramex.yaml">Source</a>
+  <a class="example-src" href="http://github.com/gramener/gramex/blob/master/gramex/apps/guide/alert/gramex.yaml">Source</a>
 </div>
 
 ## Alert logs

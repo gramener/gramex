@@ -29,7 +29,7 @@ This returns the result:
 
 <div class="example">
   <a class="example-demo" href="total">Run total in JS</a>
-  <a class="example-src" href="http://code.gramener.com/cto/gramex/tree/master/gramex/apps/guide/node/nodeapp.py">Source</a>
+  <a class="example-src" href="http://github.com/gramener/gramex/blob/master/gramex/apps/guide/node/nodeapp.py">Source</a>
 </div>
 
 ## JavaScript conversion
@@ -90,5 +90,5 @@ This returns
 
 <div class="example">
   <a class="example-demo" href="inline_styles">Run inline_styles</a>
-  <a class="example-src" href="http://code.gramener.com/cto/gramex/tree/master/gramex/apps/guide/node/nodeapp.py">Source</a>
+  <a class="example-src" href="http://github.com/gramener/gramex/blob/master/gramex/apps/guide/node/nodeapp.py">Source</a>
 </div>

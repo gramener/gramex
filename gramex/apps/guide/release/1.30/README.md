@@ -184,7 +184,7 @@ To upgrade Gramex, run:
 
 ```bash
 pip uninstall gramex
-pip install --verbose https://code.gramener.com/cto/gramex/repository/archive.tar.bz2?ref=master
+pip install --verbose https://github.com/gramener/gramex/archive/master.zip
 ```
 
 This downloads Chromium and other front-end dependencies. That may take time.

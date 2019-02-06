@@ -59,7 +59,7 @@ report a HTTP 404 with the script injected into the page. This is fixed.
 
 Gramex test cases automatically run on Python 3, thanks to the new Python 3
 build environment in code.gramener.com.
-[.gitlab-ci.yml](https://code.gramener.com/cto/gramex/blob/dev/.gitlab-ci.yml) has:
+[.gitlab-ci.yml](https://github.com/gramener/gramex/blob/dev/.gitlab-ci.yml) has:
 
 ```yaml
 validate-py3:

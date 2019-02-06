@@ -8,7 +8,7 @@ See the [release notes](https://learn.gramener.com/gramex/history.html) for
 information about past releases.
 
 Features for the next 2 releases are below. Bugs to be fixed are at the
-[issue tracker](http://code.gramener.com/cto/gramex/issues).
+[issue tracker](http://github.com/gramener/gramex/issues).
 
 
 # Features
@@ -85,9 +85,3 @@ This is a work-in-progress list of features on the Gramex 1.0 roadmap.
 - Password management (2FA, forgot password, reset password, expiry, force single session, etc)
 - Login tracking (IP, history, device)
 - XSRF, XSS, etc
-
-## Decisions
-
-- 9 Jun 2016: Integration with SAML deferred for lack of an easy-to-install SAML
-  library on Windows. python-saml (and python3-saml) require `xmlsec` which is
-  difficult to install.

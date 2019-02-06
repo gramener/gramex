@@ -18,7 +18,7 @@ import:
 
 <div class="example">
   <a class="example-demo" href="admin/">Admin page example</a>
-  <a class="example-src" href="http://code.gramener.com/cto/gramex/tree/master/gramex/apps/guide/admin/gramex.yaml">Source</a>
+  <a class="example-src" href="http://github.com/gramener/gramex/blob/master/gramex/apps/guide/admin/gramex.yaml">Source</a>
 </div>
 
 You can configure the admin page as follows:
@@ -59,7 +59,7 @@ The `ADMIN_AUTH` section is the same as specifying the `auth:`
 
 <div class="example">
   <a class="example-demo" href="admin-kwargs/">Admin page options example</a>
-  <a class="example-src" href="http://code.gramener.com/cto/gramex/tree/master/gramex/apps/guide/admin/gramex.yaml">Source</a>
+  <a class="example-src" href="http://github.com/gramener/gramex/blob/master/gramex/apps/guide/admin/gramex.yaml">Source</a>
 </div>
 
 ### Admin: User management
@@ -94,7 +94,7 @@ url:
 
 <div class="example">
   <a class="example-demo" href="admin-user/">User management example</a>
-  <a class="example-src" href="http://code.gramener.com/cto/gramex/tree/master/gramex/apps/guide/admin/gramex.yaml">Source</a>
+  <a class="example-src" href="http://github.com/gramener/gramex/blob/master/gramex/apps/guide/admin/gramex.yaml">Source</a>
 </div>
 
 User management is available as a component. To embed it in your page, add a
@@ -113,10 +113,10 @@ FormHandler table component:
 
 <div class="example">
   <a class="example-demo" href="users.html">User management component example</a>
-  <a class="example-src" href="http://code.gramener.com/cto/gramex/tree/master/gramex/apps/guide/admin/users.html">Source</a>
+  <a class="example-src" href="http://github.com/gramener/gramex/blob/master/gramex/apps/guide/admin/users.html">Source</a>
 </div>
 
-You can specify custom actions & formats using FormHandler table. See the [admin page source code](https://code.gramener.com/cto/gramex/blob/dev/gramex/apps/admin2/index.html) for examples of custom actions.
+You can specify custom actions & formats using FormHandler table. See the [admin page source code](https://github.com/gramener/gramex/blob/dev/gramex/apps/admin2/index.html) for examples of custom actions.
 
 ### Admin: Shell
 
@@ -154,7 +154,7 @@ The web shell is available as a component. To embed it in your page, add:
 
 <div class="example">
   <a class="example-demo" href="shell.html">Web shell component example</a>
-  <a class="example-src" href="http://code.gramener.com/cto/gramex/tree/master/gramex/apps/guide/admin/shell.html">Source</a>
+  <a class="example-src" href="http://github.com/gramener/gramex/blob/master/gramex/apps/guide/admin/shell.html">Source</a>
 </div>
 
 ### Admin: Info
@@ -201,7 +201,7 @@ The result is stored in the `value` column. If the value is not available, the `
 
 <div class="example">
   <a class="example-demo" href="admin-kwargs/?tab=info">Info page example</a>
-  <a class="example-src" href="http://code.gramener.com/cto/gramex/tree/master/gramex/apps/guide/admin/gramex.yaml">Source</a>
+  <a class="example-src" href="http://github.com/gramener/gramex/blob/master/gramex/apps/guide/admin/gramex.yaml">Source</a>
 </div>
 
 
@@ -237,7 +237,7 @@ import:
 
 <div class="example">
   <a class="example-demo" href="admin1/">Admin page (old)</a>
-  <a class="example-src" href="http://code.gramener.com/cto/gramex/tree/master/gramex/apps/guide/admin/gramex.yaml">Source</a>
+  <a class="example-src" href="http://github.com/gramener/gramex/blob/master/gramex/apps/guide/admin/gramex.yaml">Source</a>
 </div>
 
 Use `ADMIN_*` variables to configure your app.

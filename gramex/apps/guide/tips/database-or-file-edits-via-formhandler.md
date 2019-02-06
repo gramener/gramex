@@ -52,7 +52,7 @@ This works similar to `gramex.data.download` or `gramex.data.filter`. Check out 
 
 - **Current usage**: [EY admin RPA](https://code.gramener.com/ey/ey-admin/blob/master/rpa/ey_admin_rpa.yaml#L13)
 - **Documentation**: This is well documented on the [guide for FormHandler](../formhandler/#formhandler-edits)
-- **Source code**: Head to the [source code](https://code.gramener.com/cto/gramex/blob/dev/gramex/data.py)
+- **Source code**: Head to the [source code](https://github.com/gramener/gramex/blob/dev/gramex/data.py)
   (`insert`/`delete`/`update` methods in `data.py`) and how `FormHandler`
-  [renders](https://code.gramener.com/cto/gramex/blob/dev/gramex/handlers/formhandler.py#L143) it,
+  [renders](https://github.com/gramener/gramex/blob/dev/gramex/handlers/formhandler.py) it,
   if you are interested.

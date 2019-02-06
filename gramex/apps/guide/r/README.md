@@ -203,11 +203,11 @@ def plot_async(handler):
 
 Gramex renders RMarkdown files as HTML outputs using
 [`FileHandler`](../filehandler/#transforming-content)
-transform [`rmarkdown`](http://code.gramener.com/cto/gramex/tree/master/gramex/transforms/rmarkdown.py).
+transform [`rmarkdown`](http://github.com/gramener/gramex/blob/master/gramex/transforms/rmarkdown.py).
 
 Also saves the HTML file to the directory where `.Rmd` files are located.
 
-Use below configuration to renders all `*.Rmd` files as HTML 
+Use below configuration to renders all `*.Rmd` files as HTML
 
 ```yaml
   r/rmarkdown:
@@ -225,7 +225,7 @@ Use below configuration to renders all `*.Rmd` files as HTML
 
 <div class="example">
   <a class="example-demo" href="RMarkdown-story.Rmd" target="_blank">RMarkdown example</a>
-  <a class="example-src" href="http://code.gramener.com/cto/gramex/tree/master/gramex/apps/guide/r/RMarkdown-story.Rmd">Source</a>
+  <a class="example-src" href="http://github.com/gramener/gramex/blob/master/gramex/apps/guide/r/RMarkdown-story.Rmd">Source</a>
 </div>
 
 <iframe src="RMarkdown-story.Rmd" style="height: 600px !important"></iframe>

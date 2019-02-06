@@ -52,18 +52,18 @@ To remove Gramex, run `pip uninstall gramex`
 pip install --verbose gramex==1.47.0
 
 # Install a specific branch or tag from the Gramex source code
-pip install --verbose https://code.gramener.com/cto/gramex/repository/archive.tar.bz2?ref=dev
-pip install --verbose https://code.gramener.com/cto/gramex/repository/archive.tar.bz2?ref=v1.47.0
+pip install --verbose https://github.com/gramener/gramex/archive/dev.zip
+pip install --verbose https://github.com/gramener/gramex/archive/v1.47.0.zip
 
 # Install a local version for Gramex development
-git clone https://code.gramener.com/cto/gramex.git
+git clone https://github.com/gramener/gramex.git
 pip install --verbose -e gramex
 ```
 
 [anaconda]: http://continuum.io/downloads
 [update]: http://docs.continuum.io/anaconda/install#updating-from-older-anaconda-versions
 [xcode]: https://developer.apple.com/xcode/download/
-[gramex]: https://code.gramener.com/cto/gramex/repository/archive.tar.bz2?ref=master
+[gramex]: https://github.com/gramener/gramex/archive/master.zip
 [conda-proxy]: https://conda.io/docs/user-guide/configuration/use-winxp-with-proxy.html
 [nodejs]: https://nodejs.org/en/
 
@@ -100,7 +100,7 @@ On a system **with an Internet connection** and the **same platform** (Windows/L
 
 1. Create a folder called `offline`
 2. Download [Anaconda][anaconda] into `offline`
-3. In the `offline` folder, run `pip download https://code.gramener.com/cto/gramex/repository/master/archive.tar.bz2`
+3. In the `offline` folder, run `pip download https://github.com/gramener/gramex/archive/master.zip`
 
 If you are behind a HTTP proxy, use `pip download --proxy=http://{proxy-host}:{port} ...`.
 
@@ -112,7 +112,7 @@ Copy the `offline` folder to the target machine (which need not have an Internet
 
 **Note**: This does not set up dependencies for
 [CaptureHandler](../capturehandler/) such as node.js, Chrome / PhantomJS. That
-requires an Internet-enabled machine or Docker. 
+requires an Internet-enabled machine or Docker.
 
 ### Offline Docker Install
 
@@ -120,7 +120,7 @@ On a system **with an Internet connection** and the **same platform** (Windows/L
 
 1. Install Docker (Docker CE/Docker Toolbox will both work - though CE is easier to use)
 2. In a Docker shell (Windows) or any shell(Linux) run the command `docker pull gramener/gramex`
-3. Run `docker images` to verify that the image has been downloaded to the machine. 
+3. Run `docker images` to verify that the image has been downloaded to the machine.
 4. Run `docker save gramener/gramex > gramex-latest.tar`
 5. (Optional) Split the saved image into smaller files for easier transfer using `split -b 100M gramex-latest.tar "gramex-latest.part*"`
 6. Install docker on the target machine using [binaries](https://docs.docker.com/install/linux/docker-ce/binaries/#next-steps)

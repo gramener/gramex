@@ -74,4 +74,18 @@ error, run these commands to increase the limit:
     printf "fs.inotify.max_user_watches=524288\n" | sudo tee -a /etc/sysctl.conf
     sudo sysctl --system
 
-To debug, see [issue #126](https://code.gramener.com/cto/gramex/issues/126)
+Some [useful commands for debugging](https://stackoverflow.com/questions/13758877/how-do-i-find-out-what-inotify-watches-have-been-registered):
+
+```bash
+# Lists inotify usage:
+for foo in /proc/*/fd/*; do readlink -f $foo; done | grep inotify | cut -d/ -f3 |xargs -I '{}' -- ps --no-headers -o '%p %U %a' -p '{}' | uniq -c | sort -n
+
+# To get the list of processes consuming inotify resources, run:
+for foo in /proc/*/fd/*; do readlink -f $foo; done | grep inotify | sort | uniq -c | sort -nr
+
+# Check max watches
+sysctl fs.inotify
+
+# List file descriptors used by a process
+for f in `/bin/ls /proc/<proc-id>/fd/`; do readlink -f "/proc/<proc-id>/fd/$f"; done | sort | uniq -c | sort -k 1nr
+```

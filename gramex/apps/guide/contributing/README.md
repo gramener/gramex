@@ -7,9 +7,9 @@ prefix: Contributing
 
 ## Set up Gramex
 
-- The [master branch](http://code.gramener.com/cto/gramex/tree/master/)
+- The [master branch](http://github.com/gramener/gramex/tree/master/)
   holds the latest stable version.
-- The [dev branch](http://code.gramener.com/cto/gramex/tree/dev/) has the
+- The [dev branch](http://github.com/gramener/gramex/tree/dev/) has the
   latest development version
 - All other branches are temporary feature branches
 
@@ -24,7 +24,7 @@ sudo apt-get install -y git make sqlite3 postgresql postgresql-contrib libpq-dev
 DEBIAN_FRONTEND=noninteractive apt-get -y -q install mysql-server
 ```
 
-Clone and install the [dev branch](http://code.gramener.com/cto/gramex/tree/dev/).
+Clone and install the [dev branch](http://github.com/gramener/gramex/tree/dev/).
 
 ```bash
 git clone git@code.gramener.com:cto/gramex.git
@@ -38,9 +38,9 @@ pip install -e .
 Gramex uses [nosetests](https://nose.readthedocs.io/en/latest/) for unit tests.
 The tests are in 2 folders:
 
-- [testlib/](https://code.gramener.com/cto/gramex/tree/master/testlib/)
+- [testlib/](https://github.com/gramener/gramex/tree/master/testlib/)
   has library tests that can run without starting Gramex.
-- [tests/](https://code.gramener.com/cto/gramex/tree/master/tests/)
+- [tests/](https://github.com/gramener/gramex/tree/master/tests/)
   has URL-based tests that run after starting the Gramex server.
 
 To run the tests, just run `python setup.py nosetests` for the first time.
@@ -83,7 +83,8 @@ git commit -m"Your detailed description of your changes."
 git push --set-upstream origin <branch-name>
 ```
 
-Submit a pull request to the [dev branch](http://code.gramener.com/cto/gramex/tree/dev/).. If possible:
+Submit a pull request to the [dev branch](http://github.com/gramener/gramex/tree/dev/).
+If possible:
 
 - Write unit tests
 - Document Python docstrings
@@ -91,7 +92,7 @@ Submit a pull request to the [dev branch](http://code.gramener.com/cto/gramex/tr
 
 ## Releasing Gramex
 
-Check [build errors](http://code.gramener.com/cto/gramex/builds).
+Check [build errors](http://github.com/gramener/gramex/builds).
 Test the `dev` branch on Python 2.7 and 3.6:
 
 ```bash
@@ -142,7 +143,7 @@ Deploy [docker instance](https://hub.docker.com/r/gramener/gramex/):
 
 ```bash
 export VERSION=1.x.x        # Replace with Gramex version
-docker build https://code.gramener.com/cto/gramex.git#master:pkg/docker-py3 -t gramener/gramex:$VERSION
+docker build https://github.com/gramener/gramex.git#master:pkg/docker-py3 -t gramener/gramex:$VERSION
 docker tag gramener/gramex:$VERSION gramener/gramex:latest
 docker login                # log in as sanand0 / pratapvardhan
 docker push gramener/gramex

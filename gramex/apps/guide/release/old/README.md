@@ -368,12 +368,12 @@ This is an interim release with minor features and major bugfixes.
     can be different for different file patterns. So within the same
     directory, you can serve different files with different content
     types and expiry using the same FileHandler. [Issue
-    176](https://code.gramener.com/s.anand/gramex/issues/176)
+    176](https://github.com/gramener/gramex/issues/176)
 -   All auth handlers lets you [change
     inputs](https://learn.gramener.com/guide/auth/#change-inputs) using
     a `prepare:` function. You can decrypt browser-encrypted passwords,
     prefix a `DOMAIN\` to the username, or restrict access by IP. [Issue
-    180](https://code.gramener.com/s.anand/gramex/issues/180)
+    180](https://github.com/gramener/gramex/issues/180)
 -   [Print
     statements](https://learn.gramener.com/guide/debug/#print-statements)
     can be replaced by `gramex.debug.print` - is a smarter replacement
@@ -387,21 +387,21 @@ The bugfixes are:
 
 -   Multiple Gramex instances running on the same system no longer
     over-write sessions. (This led to logouts.) [Issue
-    147](https://code.gramener.com/s.anand/gramex/issues/147)
+    147](https://github.com/gramener/gramex/issues/147)
 -   `gramex.cache.open` used to cache based on the file and its type,
     not arguments. So `gramex.cache.open('data.csv', encoding='cp1252')`
     and `gramex.cache.open('data.csv', encoding='utf-8')` would return
     the same cached result. This is fixed. [Issue
-    171](https://code.gramener.com/s.anand/gramex/issues/171)
+    171](https://github.com/gramener/gramex/issues/171)
 -   [FormHandler](https://learn.gramener.com/guide/formhandler/) and
     [DBAuth](https://learn.gramener.com/guide/auth/#database-auth)
     support tables with schemas (i.e. table names with dots in them,
     like `schema.table`.) [Issue
-    185](https://code.gramener.com/s.anand/gramex/issues/185) and [Issue
-    186](https://code.gramener.com/s.anand/gramex/issues/186)
+    185](https://github.com/gramener/gramex/issues/185) and [Issue
+    186](https://github.com/gramener/gramex/issues/186)
 -   A bug in [watch](https://learn.gramener.com/guide/watch/) led to
     file permission errors on Mac systems. This is resolved. [Issue
-    183](https://code.gramener.com/s.anand/gramex/issues/183)
+    183](https://github.com/gramener/gramex/issues/183)
 
 Stats:
 
@@ -781,7 +781,7 @@ This is a minor enhancement release with
 
 -   There was a bug where sessions were not being flushed, forcing users
     to log in when Gramex is restarted. This if fixed.
-    [\#84](https://code.gramener.com/s.anand/gramex/issues/84)
+    [\#84](https://github.com/gramener/gramex/issues/84)
 -   Instead of using `args:` and `kwargs:` in gramex.yaml, you can now
     use `function: method(arg, arg, key=val, ...)`.
 -   The user interface of the default login templates is improved. Here
@@ -809,7 +809,7 @@ This is a minor enhancement release with
     configuration now protects against XSS attacks as well.
 -   If Gramex is re-installed in a different location, the guide does
     not load. The error message now asks the user to uninstall the
-    guide. [\#76](https://code.gramener.com/s.anand/gramex/issues/76)
+    guide. [\#76](https://github.com/gramener/gramex/issues/76)
 
 ## v1.18.0 (2017-06-29)
 

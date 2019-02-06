@@ -38,7 +38,7 @@ edited by the user via `edit: true`
 ## Others
 
 - Gramex is not free for commercial use. Please read the
-[LICENSE](https://code.gramener.com/cto/gramex/blob/master/LICENSE.rst) and
+[LICENSE](https://github.com/gramener/gramex/blob/master/LICENSE.rst) and
 terms for non-commercial use.
 
 ## Stats

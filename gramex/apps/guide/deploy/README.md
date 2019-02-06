@@ -54,7 +54,7 @@ To install a Gramex application as a service on a Windows Server:
 
 - [Install Anaconda and Gramex](../install/)
     - Download and install [Anaconda][anaconda] 4.4.0 or later
-    - Run `pip install https://code.gramener.com/cto/gramex/repository/archive.tar.bz2?ref=master`.
+    - Run `pip install https://github.com/gramener/gramex/archive/master.zip`.
       (Replace ``master`` with ``dev`` for the development version).
 - Install your application in any folder - via `git clone` or by copying files
 - Run PowerShell or the Command Prompt **as administrator**
@@ -206,7 +206,7 @@ This:
 See [deploy.yaml][deploy-yaml] to understand the configurations.
 
 [zap]: https://www.owasp.org/index.php/OWASP_Zed_Attack_Proxy_Project
-[deploy-yaml]: https://code.gramener.com/cto/gramex/blob/master/gramex/deploy.yaml
+[deploy-yaml]: https://github.com/gramener/gramex/blob/master/gramex/deploy.yaml
 
 ## Relative URL mapping
 
