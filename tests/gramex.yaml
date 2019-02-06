@@ -1558,6 +1558,10 @@ url:
     kwargs:
       url: sales.xlsx
       sheet_name: dates
+      parse_dates: [date]
+      formats:
+        json:
+          date_format: iso
   formhandler/dir:
     pattern: /formhandler/dir
     handler: FormHandler

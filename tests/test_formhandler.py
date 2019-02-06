@@ -592,8 +592,11 @@ class TestFormHandler(TestGramex):
     def test_date_comparison(self):
         data = gramex.cache.open(os.path.join(folder, 'sales.xlsx'), 'xlsx', sheet_name='dates')
         for dt in ('2018-01-10', '2018-01-20T15:34Z'):
-            url = '/formhandler/dates?date>=%s&_format=xlsx' % dt
-            actual = pd.read_excel(BytesIO(self.get(url).content))
+            url = '/formhandler/dates?date>=%s' % dt
+            r = self.get(url, params={'_format': 'json', '_meta': 'y'})
+            # Check ISO output
+            pd.to_datetime(pd.DataFrame(r.json())['date'], format='%Y-%m-%dT%H:%M:%S.%fZ')
+            actual = pd.read_excel(BytesIO(self.get(url, params={'_format': 'xlsx'}).content))
             expected = data[data['date'] > pd.to_datetime(dt)]
             expected.index = actual.index
             afe(actual, expected, check_like=True)

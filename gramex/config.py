@@ -651,6 +651,11 @@ class CustomJSONEncoder(JSONEncoder):
             if obj.tzinfo is None:
                 obj = obj.replace(tzinfo=dateutil.tz.tzlocal())
             return obj.isoformat()
+        elif isinstance(obj, np.datetime64):
+            obj = obj.item()
+            if (isinstance(obj, datetime.datetime) and obj.tzinfo is None):
+                obj = obj.replace(tzinfo=dateutil.tz.tzlocal())
+            return obj.isoformat()
         elif isinstance(obj, np.integer):
             return int(obj)
         elif isinstance(obj, np.floating):

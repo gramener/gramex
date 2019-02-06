@@ -124,6 +124,42 @@ formhandler-flags:
 - Download the output at [flags?_format=pptx-table](flags?_format=pptx-table&_limit=10&_c=ID&_c=Name&_c=Continent&_c=Stripes).
 - Download the [input.pptx](input.pptx) used as a template
 
+### Date parsing
+
+If a file has dates stored as text, use the `parse_dates:` setting to convert it
+to a datetime.
+
+For example:
+
+```yaml
+formhandler-...:
+  pattern: /$YAMLURL/...
+  handler: FormHandler
+  kwargs:
+    url: $YAMLPATH/data.csv
+    parse_dates: start_date                 # convert start_date from string to datetime
+    parse_dates: [start_date, end_date]     # convert both columns from string to datetime
+```
+
+By default, datetimes are rendered in JSON as
+[`epoch`](https://en.wikipedia.org/wiki/Unix_time) times, i.e. time in
+milliseconds from 1-Jan-1980 UTC.  Use `formats.date_format: iso` to change this
+to ISO. This returns something like `2019-01-01T00:00:00.000Z`.
+
+```yaml
+formhandler-...:
+  pattern: /$YAMLURL/...
+  handler: FormHandler
+  kwargs:
+    url: ...
+    formats:
+      json:
+        date_format: iso            # Convert to ISO format instead of epoch
+```
+
+The ISO format can capture the time zone and is more human readable. Both ISO
+and epoch can be converted into JavaScript date objects via `new Date(date)`.
+
 ## FormHandler tables
 
 **v1.28**. Gramex includes the [g1][g1] library that includes a FormHandler
