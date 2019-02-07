@@ -673,8 +673,9 @@ def _filter_frame(data, meta, controls, args, source='select', id=[]):
         original_data.drop(data.index, inplace=True)
         return data
     elif source == 'update':
+        conv = {k: v.type for k, v in data.dtypes.items()}
         for key, val in cols_for_update.items():
-            original_data.loc[data.index, key] = val
+            original_data.loc[data.index, key] = conv[key](val)
         return data
     else:
         # Apply controls

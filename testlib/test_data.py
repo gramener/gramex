@@ -14,6 +14,7 @@ from orderedattrdict import AttrDict
 from nose.plugins.skip import SkipTest
 from nose.tools import eq_, ok_, assert_raises
 from pandas.util.testing import assert_frame_equal as afe
+from pandas.util.testing import assert_series_equal as ase
 import dbutils
 from . import folder, sales_file
 
@@ -441,11 +442,32 @@ class TestInsert(unittest.TestCase):
 
 
 class TestEdit(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.edit_file = sales_file + '.edit.xlsx'
+        shutil.copy(sales_file, cls.edit_file)
+        cls.tmpfiles = [cls.edit_file]
+
     def test_update(self):
-        raise SkipTest('TODO: write update test cases')
+        args = {
+            'देश': ['भारत'],
+            'city': ['Hyderabad'],
+            'product': ['Crème'],
+            'sales': ['0']
+        }
+        data = gramex.cache.open(self.edit_file, 'xlsx')
+        types_original = data.dtypes
+        gramex.data.update(data, args=args, id=['देश', 'city', 'product'])
+        ase(types_original, data.dtypes)
 
     def test_delete(self):
         raise SkipTest('TODO: write delete test cases')
+
+    @classmethod
+    def tearDownClass(cls):
+        for path in cls.tmpfiles:
+            if os.path.exists(path):
+                os.remove(path)
 
 
 class TestDownload(unittest.TestCase):
