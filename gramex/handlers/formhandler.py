@@ -214,7 +214,7 @@ class FormHandler(BaseHandler):
         else:
             self.set_format(opt.fmt, meta)
             self.set_header('Cache-Control', 'no-cache, no-store')
-            self.write(json.dumps(meta, indent=2))
+            self.write(json.dumps(meta, indent=2, cls=CustomJSONEncoder))
 
     @tornado.gen.coroutine
     def delete(self, *path_args, **path_kwargs):

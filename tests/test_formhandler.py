@@ -601,6 +601,14 @@ class TestFormHandler(TestGramex):
             expected.index = actual.index
             afe(actual, expected, check_like=True)
 
+    def test_edit_id_type(self):
+        target = self.copy_file('sales.xlsx', 'sales-edits.xlsx')
+        tempfiles[target] = target
+        args = {'sales': [1], 'date': [0]}
+        headers = {'count-data': '1'}
+        for method in ['put', 'delete']:
+            self.check('/formhandler/edits-dates', method=method, data=args, headers=headers)
+
     def test_dir(self):
         def check(expected, **params):
             actual = pd.DataFrame(self.get('/formhandler/dir', params=params).json())

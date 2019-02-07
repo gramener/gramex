@@ -1461,6 +1461,15 @@ url:
       modify: len(handler.args.keys())
       xsrf_cookies: false
 
+  formhandler/edits-dates:
+    pattern: /formhandler/edits-dates
+    handler: FormHandler
+    kwargs:
+      url: sales-edits.xlsx
+      sheet_name: dates
+      id: [sales]
+      xsrf_cookies: false
+
   formhandler/chart:
     pattern: /formhandler/chart
     handler: FormHandler
