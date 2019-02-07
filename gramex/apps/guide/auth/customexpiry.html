@@ -5,17 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Session expiry</title>
   <link rel="stylesheet" href="../style.css">
-  <link rel="stylesheet" href="../form.css">
 </head>
 <body class="container">
 
-  <nav class="menu">
-    <h1><a href=".">Back to Auth</a></h1>
+  <nav class="py-4">
+    <a href=".">&laquo; Back to Auth</a>
   </nav>
 
-  <section class="content">
+  <section>
     {% if error %}
-      <div class="alert">
+      <div class="alert alert-danger">
         <h2>Error logging in</h2>
         <p><strong>code</strong> {{ error['code'] }}</p>
         <p><strong>error</strong> {{ error['error'] }}</p>
@@ -48,17 +47,22 @@
 
     <form method="POST">
       <input type="hidden" name="_xsrf" value="{{ handler.xsrf_token }}">
-      <label for="user">Username</label>
-      <input name="user" placeholder="Username">
-      <label for="password">Password</label>
-      <input name="password" type="password" placeholder="Password">
-      <label class="checkbox">
-        <input name="remember" type="checkbox">
-        Remember me for 1 month
-      </label>
-      <button type="submit">Log in</button>
+      <div class="form-group">
+        <label for="user">Username</label>
+        <input name="user" class="form-control" placeholder="Username">
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input name="password" type="password" class="form-control" placeholder="Password">
+      </div>
+      <div class="form-group form-check">
+        <input name="remember" type="checkbox" class="form-check-input" id="remember">
+        <label class="form-check-label" for="remember">Remember me for 1 month</label>
+      </div>
+      <button type="submit" class="btn btn-primary">Log in</button>
     </form>
 
+    <hr>
     <h1>Custom Expiry</h1>
 
     <p>You can log in below as <code>alpha</code> with password
@@ -68,20 +72,26 @@
 
     <form method="POST">
       <input type="hidden" name="_xsrf" value="{{ handler.xsrf_token }}">
-      <label for="user">Username</label>
-      <input name="user" placeholder="Username">
-      <label for="password">Password</label>
-      <input name="password" type="password" placeholder="Password">
-      <label for="remember">Remember me for</label>
-      <select name="remember">
-        <option value="sec">10 seconds</option>
-        <option value="min">1 minute</option>
-        <option value="hour">1 hour</option>
-        <option value="day">1 day</option>
-        <option value="week">1 week</option>
-        <option value="month">1 month</option>
-      </select>
-      <button type="submit">Log in</button>
+      <div class="form-group">
+        <label for="user">Username</label>
+        <input name="user" class="form-control" placeholder="Username">
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input name="password" type="password" class="form-control" placeholder="Password">
+      </div>
+      <div class="form-group">
+        <label for="remember">Remember me for</label>
+        <select name="remember" class="form-control">
+          <option value="sec">10 seconds</option>
+          <option value="min">1 minute</option>
+          <option value="hour">1 hour</option>
+          <option value="day">1 day</option>
+          <option value="week">1 week</option>
+          <option value="month">1 month</option>
+        </select>
+      </div>
+      <button type="submit" class="btn btn-primary">Log in</button>
     </form>
   </section>
 

@@ -31,7 +31,7 @@ def total(*items):
 
 You can see all configurations used in this page in [gramex.yaml](gramex.yaml.source):
 
-<iframe frameborder="0" src="gramex.yaml.source"></iframe>
+<iframe class="w-100" frameborder="0" src="gramex.yaml.source"></iframe>
 
 After the function executes, users can be redirected via the `redirect:` config
 documented the [redirection configuration](../config/#redirection).

@@ -33,6 +33,6 @@ Complete below exercises to get an overview of the Gramex features.
 
 14. Write a form that lets users send an email.
 
-15. Make Gramex log the time into <code>time.log</code> on startup, and every 2 minutes.
+15. Make Gramex log the time into `time.log` on startup, and every 2 minutes.
 
 16. Make Gramex log a message when a file is changed.

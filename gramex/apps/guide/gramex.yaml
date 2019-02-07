@@ -81,7 +81,6 @@ url:
     static:
         pattern: /$YAMLURL/(.*.css|.*.js)
         handler: FileHandler
-        cache: {duration: 300}
         kwargs:
             path: $YAMLPATH/*
             headers:

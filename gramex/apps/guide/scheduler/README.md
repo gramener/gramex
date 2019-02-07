@@ -14,7 +14,7 @@ startup or at specific times. Here are some sample uses:
 
 Here is a sample configuration:
 
-<iframe frameborder="0" src="gramex.yaml.source"></iframe>
+<iframe class="w-100" frameborder="0" src="gramex.yaml.source"></iframe>
 
 Each named schedule section has the following keys:
 

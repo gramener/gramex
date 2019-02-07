@@ -140,11 +140,11 @@ class TestInstall(unittest.TestCase):
         # git commit -m"Add test files to this branch -- used by Gramex test cases"
         # git push -u origin test-apps-do-not-delete
         git_files = ['dir1/file.txt', 'dir1/file-dir1.txt', 'dir2/file.txt', 'dir2/file-dir2.txt']
-        git_url, branch = 'http://code.gramener.com/cto/gramex.git', 'test-apps-do-not-delete'
+        git_url, branch = 'http://github.com/gramener/gramex', 'test-apps-do-not-delete'
         try:
             requests.get(git_url)
         except requests.RequestException:
-            self.skipTest('Unable to connect to code.gramener.com')
+            self.skipTest('Unable to connect to github.com')
 
         cmd = 'git clone %s --branch %s --single-branch' % (git_url, branch)
         install(['git-url'], AttrDict(cmd=cmd))

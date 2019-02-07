@@ -134,7 +134,7 @@ url:
 The list of files uploaded can be retrieved from the [upload](upload) URL, along
 with associated information:
 
-<iframe src="upload"></iframe>
+<iframe class="w-100" src="upload"></iframe>
 
 You can also retrieve the data in Python via `FileUpload(path).info()`.
 

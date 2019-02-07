@@ -10,19 +10,19 @@
   </style>
 </head>
 <body class="container">
-  <nav class="menu">
-    <h1><a href=".">Back to Auth</a></h1>
+  <nav class="py-4">
+    <a href=".">&laquo; Back to Auth</a>
   </nav>
 
-  <section class="content">
+  <section>
     <h1>Google APIs</h1>
     <p id="login-info"></p>
     <form id="contacts">
-      <p>Show contacts for the last <input type="number" id="days" class="small-number" value="10"> days <button type="submit">Search</button></p>
+      <p>Show contacts for the last <input type="number" id="days" class="small-number" value="10"> days <button type="submit" class="btn btn-primary">Search</button></p>
     </form>
   </section>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.0.0/jquery.min.js"></script>
+  <script src="../ui/jquery/dist/jquery.min.js"></script>
   <script>
   $('#contacts').hide()
   $.getJSON('session')
@@ -46,7 +46,7 @@
         } else {
           var html=[
             '<p>Contacts updated in the last ', days, ' days:</p>',
-            '<table>',
+            '<table class="table table-sm">',
             '<thead><tr><th>Name</th><th>Email</th><th>Updated</th></tr></thead>',
             '<tbody>'
           ]

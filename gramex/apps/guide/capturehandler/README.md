@@ -21,34 +21,37 @@ prefix: CaptureHandler
 
 Add this to `gramex.yaml`:
 
-    :::yaml
-    url:
-        capture:
-            pattern: /$YAMLURL/capture
-            handler: CaptureHandler
-            kwargs:
-                engine: chrome
+```yaml
+url:
+    capture:
+        pattern: /$YAMLURL/capture
+        handler: CaptureHandler
+        kwargs:
+            engine: chrome
+```
 
 When Gramex runs, it starts `node chromecapture.js --port 9900` running a
 node.js based web application (chromecapture.js) at port 9900.
 
 To change the port, use:
 
-    :::yaml
-            pattern: /$YAMLURL/capture
-            handler: CaptureHandler
-            kwargs:
-                engine: chrome
-                port: 9901              # Use a different port
+```yaml
+    pattern: /$YAMLURL/capture
+    handler: CaptureHandler
+    kwargs:
+        engine: chrome
+        port: 9901              # Use a different port
+```
 
 To use an existing instance of chromecapture.js running on a different port, use:
 
-    :::yaml
-            pattern: /$YAMLURL/capture
-            handler: CaptureHandler
-            kwargs:
-                engine: chrome
-                url: http://server:port/capture/    # Use chromecapture.js from this URL
+```yaml
+    pattern: /$YAMLURL/capture
+    handler: CaptureHandler
+    kwargs:
+        engine: chrome
+        url: http://server:port/capture/    # Use chromecapture.js from this URL
+```
 
 The default viewport size is 1200x768. To set a custom viewport for images or
 PPTX, use `?width=` and `?height=`. For example, `?width=1920&height=1080`
@@ -56,23 +59,25 @@ changes the viewport to 1920x1080.
 
 By default, requests timeout within 10 seconds. To change this, use `timeout:`.
 
-    :::yaml
-            pattern: /$YAMLURL/capture
-            handler: CaptureHandler
-            kwargs:
-                timeout: 20     # Wait for max 20 seconds for server to respond
+```yaml
+    pattern: /$YAMLURL/capture
+    handler: CaptureHandler
+    kwargs:
+        timeout: 20     # Wait for max 20 seconds for server to respond
+```
 
 The default chromecapture.js is at `$GRAMEXPATH/apps/capture/chromecapture.js`.
 To use your own chromecapture.js, run it using `cmd:` on any port and point
 `url:` to that port:
 
-    :::yaml
-            pattern: /$YAMLURL/capture
-            handler: CaptureHandler
-            kwargs:
-                engine: chrome
-                cmd: node /path/to/chromecapture.js --port=9902
-                url: http://localhost:9902/
+```yaml
+    pattern: /$YAMLURL/capture
+    handler: CaptureHandler
+    kwargs:
+        engine: chrome
+        cmd: node /path/to/chromecapture.js --port=9902
+        url: http://localhost:9902/
+```
 
 To use a HTTP proxy, set the `ALL_PROXY` environment variable. If your proxy IP
 is `10.20.30.40` on port `8000`, then set `ALL_PROXY` to `10.20.30.40:8000`. See
@@ -86,11 +91,12 @@ supercede `ALL_PROXY`.)
 backward compatibility. To use it, install [PhantomJS](http://phantomjs.org/) and
 it to your PATH. Then add this to `gramex.yaml`:
 
-    :::yaml
-    url:
-        capture:
-            pattern: /$YAMLURL/capture
-            handler: CaptureHandler
+```yaml
+url:
+    capture:
+        pattern: /$YAMLURL/capture
+        handler: CaptureHandler
+```
 
 Note that the `engine: phantomjs` is not required.
 
@@ -98,11 +104,12 @@ Note that the `engine: phantomjs` is not required.
 
 You can add a link from any page to the `capture` page to take a screenshot.
 
-    :::html
-    <a href="capture?ext=pdf">PDF screenshot</a>
-    <a href="capture?ext=png">PNG screenshot</a>
-    <a href="capture?ext=jpg">JPG screenshot</a>
-    <a href="capture?ext=pptx">PPTX screenshot</a>
+```html
+<a href="capture?ext=pdf">PDF screenshot</a>
+<a href="capture?ext=png">PNG screenshot</a>
+<a href="capture?ext=jpg">JPG screenshot</a>
+<a href="capture?ext=pptx">PPTX screenshot</a>
+```
 
 Try it here:
 
@@ -180,20 +187,22 @@ ensure that the URL is encoded. So a selector `#item` does not become
 
 To encode URLs using a Python template:
 
-    :::html
-    {% from six.moves.urllib_parse import urlencode %}
-    <a href="capture?{{ urlencode(url='...', header='header text') }}
+```html
+{% from six.moves.urllib_parse import urlencode %}
+<a href="capture?{{ urlencode(url='...', header='header text') }}
+```
 
 To encode URLs using JavaScript:
 
-    :::js
-    $('.screenshot').attr('href', 'capture' +
-        '?url=' + encodeURIComponent(url) +
-        '&header=' + encodeURIComponent(header))
-    // Or use this:
-    $('.some-button').on('click', function() {
-        location.href = 'capture?ext=png&url=' + encodeURIComponent(url)
-    })
+```js
+$('.screenshot').attr('href', 'capture' +
+    '?url=' + encodeURIComponent(url) +
+    '&header=' + encodeURIComponent(header))
+// Or use this:
+$('.some-button').on('click', function() {
+    location.href = 'capture?ext=png&url=' + encodeURIComponent(url)
+})
+```
 
 If the response HTTP status code is 200, the response is the screenshot.
 If the status code is 40x or 50x, the response text has the error message.
@@ -203,9 +212,10 @@ If the status code is 40x or 50x, the response text has the error message.
 visiting the target page.
 
 To try this, [log in](../auth/simple?next=../capturehandler/) and then
-[take a screenshot](capture?ext=pdf).
+[take a screenshot](capture?ext=pdf). The screenshot will show the same
+authentication information as you see below.
 
-<iframe frameborder="0" src="../auth/session"></iframe>
+<iframe class="w-100" frameborder="0" src="../auth/session"></iframe>
 
 You can override the user by explicitly passing a cookie string using `?cookie=`.
 
@@ -220,16 +230,17 @@ restarts `capture.js` only if required.
 
 You can take screenshots from any Python program, using Gramex as a library.
 
-    :::python
-    import logging                              # Optional: Enable logging...
-    logging.basicConfig(level=logging.INFO)     # ... to see messages from Capture
-    from gramex.handlers import Capture         # Import the capture library
-    capture = Capture(engine='chrome')          # This runs chromecapture.js at port 9900
-    url = 'https://gramener.com/demo/'          # Page to take a screenshot of
-    with open('screenshot.pdf', 'wb') as f:
-        f.write(capture.pdf(url, orientation='landscape'))
-    with open('screenshot.png', 'wb') as f:
-        f.write(capture.png(url, width=1200, height=600, scale=0.8))
+```python
+import logging                              # Optional: Enable logging...
+logging.basicConfig(level=logging.INFO)     # ... to see messages from Capture
+from gramex.handlers import Capture         # Import the capture library
+capture = Capture(engine='chrome')          # This runs chromecapture.js at port 9900
+url = 'https://gramener.com/demo/'          # Page to take a screenshot of
+with open('screenshot.pdf', 'wb') as f:
+    f.write(capture.pdf(url, orientation='landscape'))
+with open('screenshot.png', 'wb') as f:
+    f.write(capture.png(url, width=1200, height=600, scale=0.8))
+```
 
 The [Capture](capture) class has convenience methods called `.pdf()`, `.png()`,
 `.jpg()` that accept the same parameters as the

@@ -11,7 +11,9 @@ This needs fewer steps, takes less time, and builds apps with fewer bugs.
 
 Gramex supports a wide varied of visualizations to choose from.
 
-.. image: https://learn.gramener.com/guide/chart/assets/banner.png
+.. image:: https://learn.gramener.com/guide/chart/assets/banner.png
+   :target: https://learn.gramener.com/guide/chart/gallery.html
+
 
 Getting Started
 ---------------
@@ -36,10 +38,10 @@ Contributing
 ------------
 
 **Need help?**
-`Browse the issues <https://code.gramener.com/cto/gramener/gramex/issues>`_
+`Browse the issues <https://github.com/gramener/gramex/issues>`_
 
 **Want to report a bug or request a feature?**
-`Open an issue <https://code.gramener.com/cto/gramex/issues/new>`_.
+`Open an issue <https://github.com/gramener/gramex/issues/new>`_.
 If it is a security issue, please email to security@gramener.com, rather
 than publicly sharing the vulnerability.
 

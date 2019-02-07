@@ -15,7 +15,7 @@ RUN (curl -sL https://deb.nodesource.com/setup_10.x | bash -) && \
             libxi6 libxtst6 libnss3 libcups2 libxss1 libxrandr2 libgconf2-4 \
             libasound2 libatk1.0-0 libgtk-3-0 && \
 # Install gramex
-    pip install https://code.gramener.com/cto/gramex/repository/archive.tar.bz2?ref=master && \
+    pip install gramex && \
     gramex setup --all && \
     gramex license accept
 

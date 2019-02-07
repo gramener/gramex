@@ -8,7 +8,7 @@ tests mentioned in `gramextest.yaml`.
 
 Here's a sample [gramextest.yaml](gramextest.yaml):
 
-<iframe frameborder="0" src="gramextest.yaml.source"></iframe>
+<iframe class="w-100" frameborder="0" src="gramextest.yaml.source"></iframe>
 
 Run it using `pytest` or `pytest gramextest.yaml`:
 
@@ -54,7 +54,7 @@ Here are the `urltest:` actions:
       `app.settings.cookie_secret` from `gramex.yaml` in the current directory.
 - `code`: [matches](#matching) the HTTP response status code.
     - `code: 200`: response must be HTTP 200
-    - `code: [in, 200, 302]`: response can be HTTP 200 or 302
+    - `code: [is, 200, 302]`: response can be HTTP 200 or 302
 - `headers`: matches the HTTP response headers. This is a dict. Keys are header
   names. Values are [matches](#matching).
     - `Server: true`: response must have a Server header

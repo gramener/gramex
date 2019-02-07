@@ -4,7 +4,7 @@ prefix: Auth
 ---
 
 Your session data is:
-<iframe frameborder="0" src="session"></iframe>
+<iframe class="w-100" frameborder="0" src="session"></iframe>
 
 [TOC]
 
@@ -15,7 +15,7 @@ against each session as a persistent key-value store. This is available as
 `handler.session` in every handler. For example, here is the contents of your
 [session](session) variable now:
 
-<iframe frameborder="0" src="session"></iframe>
+<iframe class="w-100" frameborder="0" src="session"></iframe>
 
 This has a `randkey` variable that was generated using the following code:
 

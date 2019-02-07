@@ -3,9 +3,9 @@ title: Smart alerts
 prefix: Alerts
 ...
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/RA5bxvsm8a0" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
-
 [TOC]
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/RA5bxvsm8a0" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
 
 ## Alert setup
 

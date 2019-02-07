@@ -32,7 +32,6 @@ urltest:                            # Run tests on URLs without a browser
 # Open browsers to run tests. Download drivers from https://www.seleniumhq.org/download/
 browsers:               # Open multiple browsers to run UI tests
     Chrome:             # Run tests on Chrome
-      headless: true    #   optional: in headless mode
     # Firefox: true
     # Edge: true
 

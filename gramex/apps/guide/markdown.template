@@ -4,92 +4,105 @@
   <meta charset="utf8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>$title</title>
-  <link rel="stylesheet" href="/$GUIDE_ROOT/style.css">
+  <link rel="stylesheet" href="/$GUIDE_ROOT/style.css?v=41">
 </head>
-<body class="container">
+<body>
 
-  <nav class="menu">
-    <h1><a href="/$GUIDE_ROOT/">Gramex Guide</a></h1>
-    <ul>
-      <li><a href="/$GUIDE_ROOT/search/">Index of topics</a></li>
-      <li><a href="#">About</a></li>
-      <li>
-        <ul>
-          <li><a href="/$GUIDE_ROOT/server/">Gramex</a></li>
-          <li><a target="_blank" href="https://learn.gramener.com/gramex/gramex.html">API Reference</a></li>
-          <li><a href="/$GUIDE_ROOT/release/">Release notes</a></li>
-          <li><a href="/$GUIDE_ROOT/license/">License</a></li>
-          <li><a href="/$GUIDE_ROOT/contributing/">Contributing</a></li>
-        </ul>
-      </li>
-      <li><a href="#">Usage</a></li>
-      <li>
-        <ul>
-          <li><a href="/$GUIDE_ROOT/install/">Install Gramex</a></li>
-          <li><a href="/$GUIDE_ROOT/init/">Gramex init</a></li>
-          <li><a href="/$GUIDE_ROOT/config/">Configurations</a></li>
-          <li><a href="/$GUIDE_ROOT/apps/">Run apps</a></li>
-          <li><a href="/$GUIDE_ROOT/deploy/">Deployment patterns</a></li>
-          <li><a href="/$GUIDE_ROOT/debug/">Debugging Gramex</a></li>
-          <li><a href="/$GUIDE_ROOT/test/">Testing Gramex</a></li>
-        </ul>
-      </li>
-      <li><a href="#">Handlers</a></li>
-      <li>
-        <ul>
-          <li><a href="/$GUIDE_ROOT/filehandler/">FileHandler</a></li>
-          <li><a href="/$GUIDE_ROOT/formhandler/">FormHandler</a></li>
-          <li><a href="/$GUIDE_ROOT/functionhandler/">FunctionHandler</a></li>
-          <li><a href="/$GUIDE_ROOT/auth/">Auth handlers</a></li>
-          <li><a href="/$GUIDE_ROOT/uploadhandler/">UploadHandler</a></li>
-          <li><a href="/$GUIDE_ROOT/capturehandler/">CaptureHandler</a></li>
-          <li><a href="/$GUIDE_ROOT/modelhandler/">ModelHandler</a></li>
-          <li><a href="/$GUIDE_ROOT/pptxhandler/">PPTXHandler</a></li>
-          <li><a href="/$GUIDE_ROOT/filterhandler/">FilterHandler</a></li>
-          <li><a href="/$GUIDE_ROOT/jsonhandler/">JSONHandler</a></li>
-          <li><a href="/$GUIDE_ROOT/proxyhandler/">ProxyHandler</a></li>
-          <li><a href="/$GUIDE_ROOT/processhandler/">ProcessHandler</a></li>
-          <li><a href="/$GUIDE_ROOT/websockethandler/">WebSocketHandler</a></li>
-          <li><a href="/$GUIDE_ROOT/twitterresthandler/">TwitterRESTHandler</a></li>
-          <li><a href="/$GUIDE_ROOT/facebookgraphhandler/">FacebookGraphHandler</a></li>
-          <li><a href="/$GUIDE_ROOT/handlers/">Write handlers</a></li>
-        </ul>
-      </li>
-      <li><a href="#">Services</a></li>
-      <li>
-        <ul>
-          <li><a href="/$GUIDE_ROOT/cache/">Cache requests</a></li>
-          <li><a href="/$GUIDE_ROOT/email/">Send email</a></li>
-          <li><a href="/$GUIDE_ROOT/alert/">Smart alerts</a></li>
-          <li><a href="/$GUIDE_ROOT/scheduler/">Schedule tasks</a></li>
-          <li><a href="/$GUIDE_ROOT/watch/">Watch files</a></li>
-        </ul>
-      </li>
-      <li><a href="#">Apps</a></li>
-      <li>
-        <ul>
-          <li><a href="/$GUIDE_ROOT/admin/">Admin page</a></li>
-          <li><a href="/$GUIDE_ROOT/chart/">Charts</a></li>
-          <li><a href="/$GUIDE_ROOT/uicomponents/">UI Components</a></li>
-          <li><a href="/$GUIDE_ROOT/g1/">g1</a></li>
-          <li><a href="/$GUIDE_ROOT/mapviewer/">Mapviewer</a></li>
-          <li><a href="/$GUIDE_ROOT/logviewer/">View logs</a></li>
-        </ul>
-      </li>
-      <li><a href="/$GUIDE_ROOT/tips/">Tips</a></li>
-      <li><a href="/$GUIDE_ROOT/exercises/">Exercises</a></li>
-      <li><a href="/$GUIDE_ROOT/tutorials/">Tutorials</a></li>
-    </ul>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark py-0">
+    <button class="btn bg-dark" type="button" data-toggle="collapse" data-target=".menu" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle sidebar">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <a class="navbar-brand mx-auto" href="/$GUIDE_ROOT/">
+      <img height="36" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACQAAAAkAQAAAADJe6U1AAAABGdBTUEAALGPC/xhBQAAAAJ0Uk5TAAB2k804AAAANUlEQVR42mNgwAX4/x8AkvZgsh5M/geTP8CyH0ggP1BKMoLIH8wfwG54AHbPA7jb+P9jcz0AKpcxBQbNJ8sAAAAASUVORK5CYII=" alt="Logo">
+      <span class="h5 text-uppercase">Gramex Guide</span>
+    </a>
   </nav>
 
-  <script src="/$GUIDE_ROOT/ui/jquery/dist/jquery.min.js"></script>
-  <section class="content">
-    <h1>$title</h1>
-    $body
-  </section>
+  <div class="container d-flex py-3">
+    <nav class="menu collapse pr-3 h-full">
+      <ul class="p-0">
+        <li><a href="/$GUIDE_ROOT/search/">Index of topics</a></li>
+        <li><a href="#">About</a></li>
+        <li>
+          <ul>
+            <li><a href="/$GUIDE_ROOT/server/">Gramex</a></li>
+            <li><a target="_blank" href="https://learn.gramener.com/gramex/gramex.html">API Reference</a></li>
+            <li><a href="/$GUIDE_ROOT/release/">Release notes</a></li>
+            <li><a href="/$GUIDE_ROOT/license/">License</a></li>
+            <li><a href="/$GUIDE_ROOT/contributing/">Contributing</a></li>
+          </ul>
+        </li>
+        <li><a href="#">Usage</a></li>
+        <li>
+          <ul>
+            <li><a href="/$GUIDE_ROOT/install/">Install Gramex</a></li>
+            <li><a href="/$GUIDE_ROOT/init/">Gramex init</a></li>
+            <li><a href="/$GUIDE_ROOT/config/">Configurations</a></li>
+            <li><a href="/$GUIDE_ROOT/apps/">Run apps</a></li>
+            <li><a href="/$GUIDE_ROOT/deploy/">Deployment patterns</a></li>
+            <li><a href="/$GUIDE_ROOT/debug/">Debugging Gramex</a></li>
+            <li><a href="/$GUIDE_ROOT/test/">Testing Gramex</a></li>
+          </ul>
+        </li>
+        <li><a href="#">Handlers</a></li>
+        <li>
+          <ul>
+            <li><a href="/$GUIDE_ROOT/filehandler/">FileHandler</a></li>
+            <li><a href="/$GUIDE_ROOT/formhandler/">FormHandler</a></li>
+            <li><a href="/$GUIDE_ROOT/functionhandler/">FunctionHandler</a></li>
+            <li><a href="/$GUIDE_ROOT/auth/">Auth handlers</a></li>
+            <li><a href="/$GUIDE_ROOT/uploadhandler/">UploadHandler</a></li>
+            <li><a href="/$GUIDE_ROOT/capturehandler/">CaptureHandler</a></li>
+            <li><a href="/$GUIDE_ROOT/modelhandler/">ModelHandler</a></li>
+            <li><a href="/$GUIDE_ROOT/pptxhandler/">PPTXHandler</a></li>
+            <li><a href="/$GUIDE_ROOT/filterhandler/">FilterHandler</a></li>
+            <li><a href="/$GUIDE_ROOT/jsonhandler/">JSONHandler</a></li>
+            <li><a href="/$GUIDE_ROOT/proxyhandler/">ProxyHandler</a></li>
+            <li><a href="/$GUIDE_ROOT/processhandler/">ProcessHandler</a></li>
+            <li><a href="/$GUIDE_ROOT/websockethandler/">WebSocketHandler</a></li>
+            <li><a href="/$GUIDE_ROOT/twitterresthandler/">TwitterRESTHandler</a></li>
+            <li><a href="/$GUIDE_ROOT/facebookgraphhandler/">FacebookGraphHandler</a></li>
+            <li><a href="/$GUIDE_ROOT/handlers/">Write handlers</a></li>
+          </ul>
+        </li>
+        <li><a href="#">Services</a></li>
+        <li>
+          <ul>
+            <li><a href="/$GUIDE_ROOT/cache/">Cache requests</a></li>
+            <li><a href="/$GUIDE_ROOT/email/">Send email</a></li>
+            <li><a href="/$GUIDE_ROOT/alert/">Smart alerts</a></li>
+            <li><a href="/$GUIDE_ROOT/scheduler/">Schedule tasks</a></li>
+            <li><a href="/$GUIDE_ROOT/watch/">Watch files</a></li>
+          </ul>
+        </li>
+        <li><a href="#">Apps</a></li>
+        <li>
+          <ul>
+            <li><a href="/$GUIDE_ROOT/admin/">Admin page</a></li>
+            <li><a href="/$GUIDE_ROOT/chart/">Charts</a></li>
+            <li><a href="/$GUIDE_ROOT/uicomponents/">UI Components</a></li>
+            <li><a href="/$GUIDE_ROOT/g1/">g1</a></li>
+            <li><a href="/$GUIDE_ROOT/mapviewer/">Mapviewer</a></li>
+            <li><a href="/$GUIDE_ROOT/logviewer/">View logs</a></li>
+          </ul>
+        </li>
+        <li><a href="/$GUIDE_ROOT/tips/">Tips</a></li>
+        <li><a href="/$GUIDE_ROOT/exercises/">Exercises</a></li>
+        <li><a href="/$GUIDE_ROOT/tutorials/">Tutorials</a></li>
+      </ul>
+    </nav>
+
+    <script src="/$GUIDE_ROOT/ui/jquery/dist/jquery.min.js"></script>
+    <script src="/$GUIDE_ROOT/ui/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
+    <section class="content">
+      <h1>$title</h1>
+      $body
+    </section>
+  </div>
 
   <script src="/$GUIDE_ROOT/node_modules/clipboard/dist/clipboard.min.js"></script>
   <script src="/$GUIDE_ROOT/node_modules/anchor-js/anchor.min.js"></script>
-  <script src="/$GUIDE_ROOT/script.js"></script>
+  <script src="/$GUIDE_ROOT/script.js?v=41"></script>
 </body>
 </html>

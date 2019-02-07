@@ -218,7 +218,7 @@ this JSON content analyzes the entities:
     },
     "encodingType": "UTF8"}'>Analyze the entities</button>
 
-<div class="codehilite"><pre><code id="entity-result">Click the button above to see the result</code></pre></div>
+<div class="codehilite"><pre>Click the button above to see the result</pre></div>
 
 
 To analyze the sentiment of text, send a POST request to
@@ -243,7 +243,7 @@ To analyze the sentiment of text, send a POST request to
     },
     "encodingType": "UTF8"}'>Analyze the sentiment</button>
 
-<div class="codehilite"><pre><code id="sentiment-result">Click the button above to see the result</code></pre></div>
+<div class="codehilite"><pre>Click the button above to see the result</pre></div>
 
 
 ## Facebook ProxyHandler
