@@ -133,11 +133,16 @@ It accepts the following arguments:
 - For PDF:
     - `?format=`: A3, A4, A5, Legal, Letter or Tabloid. Default: A4.
       <br>**Example**: [?format=Tabloid](capture?format=Tabloid)
-    - `?orientation=`: portrait or landscape. Default: portrait.
+    - `?orientation=`: portrait or landscape. Default: portrait.Post discussion with @s.anand, adding support for 
       <br>**Example**: [?orientation=landscape](capture?orientation=landscape)
-    - `?title=`: footer for the page. To be implemented
     - `media=`: `print` or `screen`. Default: `screen`. Only for Chrome.
       <br>**Example**: [?media=print](capture?media=print)
+    - `pageheader`: HTML template to add a custom header to the output pdf. Template cannot load external sources or run javascript, but can use inline css styles. For more info see [pupeteer documentation](https://github.com/GoogleChrome/puppeteer/blob/master/docs/api.md#pagepdfoptions). Ensure that enough margin is provided for the header, and that a font-size is defined.
+    <br>**Example**: [?pageheader](capture?pageheader=<span%20style="font-size:%2010px"%20class="title"></span>&margins=100px,,,)
+    - `pagefooter`: similar to `pageheader`
+    <br>**Example**: [?pagefooter](capture?pagefooter=<span%20style="font-size:%2010px"%20class="pageNumber"></span>&margins=,,100px,)
+    - `margins`: comma seperated list of html margins for the output pdf. order of the list is `top, right, bottom, left`, default margin is `1cm` for each margin
+    <br>**Example** [?margins=2cm,,2cm,](capture?margins=2cm,,2cm,) sets top and bottom margin to 2cm
 - For images (PNG/JPG):
     - `?width=`: image output width. Default: 1200
       <br>**Example**: [?width=600](capture?width=600&ext=png)

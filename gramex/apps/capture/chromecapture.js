@@ -76,11 +76,11 @@ async function render(q) {
   let margin = {};
   ['top', 'right', 'bottom', 'left'].forEach(
     (dir, ind) => margin[dir] = q.margins.split(',')[ind] || '1cm')
-  console.log('q.pageheader---------',q.pageheader, 'q.pagefooter', q.pagefooter)
+  // nulls or empty strings in headerTemplate and/or footerTemplate cause pupeteer
+  // to print some default header and footer if displayHeaderFooter is true
+  // thus to allow for either header or footer, we set the template to an empty div
   let pageheader = q.pageheader || '<div></div>'
   let pagefooter = q.pagefooter || '<div></div>'
-
-  console.log('----------margin------------', margin)
   let args = [
     '--no-sandbox',
     '--disable-setuid-sandbox',
@@ -124,8 +124,6 @@ async function render(q) {
     await page.waitForFunction('window.renderComplete')
   else if (!isNaN(+q.delay))
     await new Promise(res => setTimeout(res, +q.delay))
-  console.log('-------------footer', pagefooter)
-  console.log('----------------,header', pageheader)
   if (ext == 'pdf') {
     // TODO: header / footer
     if (media != 'print')
@@ -135,10 +133,7 @@ async function render(q) {
       format: q.format || 'A4',
       landscape: q.orientation == 'landscape',
       scale: q.scale || 1,
-      margin: {top: '1cm', right: '1cm', bottom: '1cm', left: '1cm'},
-      // nulls or empty strings in headerTemplate and/or footerTemplate cause pupeteer
-      // to print some default header and footer if displayHeaderFooter is true
-      // thus to allow for either header or footer, we set the template to an empty div
+      margin: margin,
       headerTemplate: pageheader,
       footerTemplate: pagefooter,
       displayHeaderFooter: true,
