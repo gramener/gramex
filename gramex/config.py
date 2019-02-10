@@ -677,8 +677,8 @@ class CustomJSONDecoder(JSONDecoder):
     # 2001-02-03T04:05:06Z
     # 2001-02-03T04:05:06+000
     # 2001-02-03T04:05:06.000+0000
-    re_datetimeval = re.compile('\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}')
-    re_datetimestr = re.compile('"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}')
+    re_datetimeval = re.compile(r'\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}')
+    re_datetimestr = re.compile(r'"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}')
 
     def __init__(self, *args, **kwargs):
         self.old_object_pairs_hook = kwargs.get('object_pairs_hook')

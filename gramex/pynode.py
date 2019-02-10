@@ -46,7 +46,7 @@ class Node(object):
                 # TODO: node_path
                 self.proc = yield daemon(
                     [which('node'), self._path, '--port=%s' % self.port],
-                    first_line=re.compile('pynode: 1.\d+.\d+ port: %s' % self.port),
+                    first_line=re.compile(r'pynode: 1.\d+.\d+ port: %s' % self.port),
                     cwd=self.cwd,
                 )
                 self.conn = yield websocket_connect(self.url, connect_timeout=self.timeout)

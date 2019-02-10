@@ -1,6 +1,11 @@
 Gramex
 ======
 
+.. image:: https://travis-ci.org/gramener/gramex.svg?branch=dev
+    :target: https://travis-ci.org/gramener/gramex
+.. image:: https://badge.fury.io/py/gramex.svg
+    :target: https://badge.fury.io/py/gramex
+
 Gramex is a visual analytics platform: a simple open-source way to build
 data-based web apps with less code.
 

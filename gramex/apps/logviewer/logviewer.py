@@ -121,7 +121,7 @@ def summarize(transforms=[], post_transforms=[], run=True,
     def filesince(filename, date):
         match = re.search(r'(\d{4}-\d{2}-\d{2})$', filename)
         backupdate = match.group() if match else ''
-        return backupdate >= date or backupdate is ''
+        return backupdate >= date or backupdate == ''
 
     # get this month log files if db is already created
     if table_exists(table(levels[-1]), conn):

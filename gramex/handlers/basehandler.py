@@ -794,7 +794,7 @@ class BaseHandler(RequestHandler, BaseMixin):
             elif nargs not in ('*', '+', None):
                 raise ValueError('%s: invalid nargs %s' % (key, nargs))
 
-            # type: convert to specified type
+            # convert to specified type
             newtype = config.get('type', None)
             if newtype is not None:
                 newval = []

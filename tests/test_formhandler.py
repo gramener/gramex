@@ -536,7 +536,7 @@ class TestFormHandler(TestGramex):
         data = pd.DataFrame(self.get(base.format('json')).json())
         for fmt in {'vega', 'vega-lite', 'vegam'}:
             r = self.get(base.format(fmt))
-            var = json.loads(re.findall('}\)\((.*?)}\)', r.text)[-1] + '}')
+            var = json.loads(re.findall(r'}\)\((.*?)}\)', r.text)[-1] + '}')
             var = var['spec']
             if 'fromjson' in var:
                 df = var['fromjson'][0]['data']

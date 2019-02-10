@@ -39,6 +39,7 @@
     "indent-width": 2,
     "label-req-for": false,                 // cannot use if multiple forms with same key
     "line-end-style": false,                // raises too many errors
+    "link-req-noopener": false,             // we only link internally, so no security issues
     "raw-ignore-regex": "<%.*?%>\\s*|{[%#{].*?[%#}]}\\s*",  // ignore templates
     "spec-char-escape": false,              // using > or < is not that big a deal
     "table-req-caption": false,
