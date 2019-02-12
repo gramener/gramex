@@ -1,4 +1,7 @@
 module.exports = {
+  "parserOptions": {
+    "ecmaVersion": 6    // Use ES6 parser. Browsers other than IE support it
+  },
   "plugins": [
     "template"          // Handle Tornado templates and JS in HTML files
   ],
@@ -14,7 +17,7 @@ module.exports = {
     "vg": true,         // vega.js
     "L": true,          // leaflet.js
     "ga": true,         // Google analytics
-    "G": true,          // G.min.js
+    "g1": true,         // g1.min.js
     "topojson": true,   // topojson.js
     "moment": true,     // moment.js
     "numeral": true,    // numeral.js
