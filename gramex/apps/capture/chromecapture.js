@@ -98,25 +98,23 @@ async function render(q) {
   // to print some default header and footer if displayHeaderFooter is true
   // thus to allow for either header or footer, we set the template to an empty div
   let lpad = '<div style="font-size: 10px;">'
-  if (q.headerTemplate || q.header){
-    pdf_options['headerTemplate'] = q.headerTemplate ? `${lpad}${q.headerTemplate}</div>` : (
-      q.header ? templatize(q.header) : '<div></div>')
+  pdf_options['headerTemplate'] = q.headerTemplate ? `${lpad}${q.headerTemplate}</div>` : (
+    q.header ? templatize(q.header) : '<div></div>')
+  pdf_options['footerTemplate'] = q.footerTemplate ? `${lpad}${q.footerTemplate}</div>` : (
+    q.footer ? templatize(q.footer) : '<div></div>')
+  if (q.headerTemplate || q.header)
     pdf_options.margin.top = '2cm'
-  }
-  if (q.footerTemplate || q.footer){
-    pdf_options['footerTemplate'] = q.footerTemplate ? `${lpad}${q.footerTemplate}</div>` : (
-      q.footer ? templatize(q.footer) : '<div></div>')
+  if (q.footerTemplate || q.footer)
     pdf_options.margin.bottom = '2cm'
-  }
-  if (!q.headerTemplate&&!q.header&&!q.footer&&!q.footerTemplate)
+  if (!q.headerTemplate && !q.header && !q.footer && !q.footerTemplate)
     pdf_options.displayHeaderFooter = false
   if (q.margins) {
     // if margins are specified use.
     let margin = {};
     ['top', 'right', 'bottom', 'left'].forEach(
       (dir, ind) => margin[dir] = q.margins.split(',')[ind] || '1cm')
+    pdf_options['margin'] = margin
   }
-
   let args = [
     '--no-sandbox',
     '--disable-setuid-sandbox',

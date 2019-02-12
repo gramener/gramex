@@ -137,11 +137,18 @@ It accepts the following arguments:
       <br>**Example**: [?orientation=landscape](capture?orientation=landscape)
     - `media=`: `print` or `screen`. Default: `screen`. Only for Chrome.
       <br>**Example**: [?media=print](capture?media=print)
-    - `pageheader`: HTML template to add a custom header to the output pdf. Template cannot load external sources or run javascript, but can use inline css styles. For more info see [pupeteer documentation](https://github.com/GoogleChrome/puppeteer/blob/master/docs/api.md#pagepdfoptions). Ensure that enough margin is provided for the header, and that a font-size is defined.
-    <br>**Example**: [?pageheader](capture?pageheader=<span%20style="font-size:%2010px"%20class="title"></span>&margins=100px,,,)
-    - `pagefooter`: similar to `pageheader`
-    <br>**Example**: [?pagefooter](capture?pagefooter=<span%20style="font-size:%2010px"%20class="pageNumber"></span>&margins=,,100px,)
-    - `margins`: comma seperated list of html margins for the output pdf. order of the list is `top, right, bottom, left`, default margin is `1cm` for each margin
+    - `header=`: a pipe seperated string, that sets the page Header for the output pdf.
+    Has access one or more of date, title, url, pageNumber and totalPages as well.
+      <br>**Example**: [?header=©|Gramener|{pageNumber}/{totalPages}](capture?header=©|Gramener|{pageNumber}/{totalPages})
+    - `footer=`: similar to `header`
+    - `headerTemplate=`: HTML template to add a custom header to the output pdf. 
+    Template cannot load external sources or run javascript, but can use inline css styles. For more info see [docs](https://github.com/GoogleChrome/puppeteer/blob/master/docs/api.md#pagepdfoptions).
+    Ensure that enough margin is provided for the header, and that a font-size is defined.
+    <br>**Example**: [?headerTemplate=<span%20class="title"></span>](capture?headerTemplate=<span%20class="title"></span>)
+    - `footerTemplate=`: similar to `headerTemplate`
+    <br>**Example**: [?footerTemplate=<span%20class="pageNumber"></span>](capture?footerTemplate=<span%20class="pageNumber"></span>)
+    - `margins=`: comma seperated list of margins for the output pdf. order of the list is `top, right, bottom, left`,
+    default margin is `1cm` for each margin
     <br>**Example** [?margins=2cm,,2cm,](capture?margins=2cm,,2cm,) sets top and bottom margin to 2cm
 - For images (PNG/JPG):
     - `?width=`: image output width. Default: 1200
