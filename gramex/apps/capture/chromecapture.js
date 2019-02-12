@@ -65,6 +65,18 @@ async function screenshot(page, options, selector) {
 }
 
 
+function templatize(input) {
+  // Accepts input header/footer | seperated strings and returns valid html for pupeteer.
+  // example input 'Gramener|{title}|{pageNumber}/{totalPages}'
+  // valid `special` terms in curly braces - date, title, url, pageNumber, totalPages.
+
+  let op = input || '\u00A9|Gramener|{pageNumber}/{totalPages}'
+  op = op.replace(/\{([^}]+)\}/g, (match) => `<span class="${match.slice(1, -1)}"></span>`)
+    .split('|').map(e => `<span>${e}</span>`).join('')
+  return `<div style="font-size: 10px; display: flex; flex-direction: row;
+        justify-content: space-between; width: 100%">${op}</div>`
+}
+
 async function render(q) {
   console.log('Opening', q.url)
 
@@ -79,8 +91,6 @@ async function render(q) {
   // nulls or empty strings in headerTemplate and/or footerTemplate cause pupeteer
   // to print some default header and footer if displayHeaderFooter is true
   // thus to allow for either header or footer, we set the template to an empty div
-  let pageheader = q.pageheader || '<div></div>'
-  let pagefooter = q.pagefooter || '<div></div>'
   let args = [
     '--no-sandbox',
     '--disable-setuid-sandbox',
