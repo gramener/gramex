@@ -325,7 +325,7 @@ class CaptureHandler(BaseHandler):
             footer={},
             headerTemplate={},
             footerTemplate={},
-            margins={'default':'1cm,1cm,1cm,1cm'},
+            margins={},
         )
         if args['url'] is None:
             raise HTTPError(BAD_REQUEST, reason='%s: CaptureHandler needs ?url=' % self.name)
