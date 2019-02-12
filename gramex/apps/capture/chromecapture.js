@@ -71,7 +71,7 @@ function templatize(input) {
   // valid `special` terms in curly braces - date, title, url, pageNumber, totalPages.
 
   let op = input || '\u00A9|Gramener|{pageNumber}/{totalPages}'
-  op = op.replace(/\{([^}]+)\}/g, (match) => `<span class="${match.slice(1, -1)}"></span>`)
+  op = op.replace(/{(.*?)}/g, (match) => `<span class="${match.slice(1, -1)}"></span>`)
     .split('|').map(e => `<span>${e}</span>`).join('')
   return `<div style="font-size: 10px; display: flex; flex-direction: row;
         justify-content: space-between; width: 100%">${op}</div>`
@@ -84,13 +84,39 @@ async function render(q) {
   let media = q.media || 'screen'
   let file = (q.file || 'screenshot') + '.' + ext
   let headers = q.headers || {}
-  let target = tmp.tmpNameSync({dir: render_dir, postfix: file})
-  let margin = {};
-  ['top', 'right', 'bottom', 'left'].forEach(
-    (dir, ind) => margin[dir] = q.margins.split(',')[ind] || '1cm')
+  let target = tmp.tmpNameSync({ dir: render_dir, postfix: file })
+  let pdf_options = {
+    path: target,
+    format: q.format || 'A4',
+    landscape: q.orientation == 'landscape',
+    scale: q.scale || 1,
+    margin: { top: '1cm', right: '1cm', bottom: '1cm', left: '1cm' },
+    printBackground: true,
+    displayHeaderFooter: true
+  }
   // nulls or empty strings in headerTemplate and/or footerTemplate cause pupeteer
   // to print some default header and footer if displayHeaderFooter is true
   // thus to allow for either header or footer, we set the template to an empty div
+  let lpad = '<div style="font-size: 10px;">'
+  if (q.headerTemplate || q.header){
+    pdf_options['headerTemplate'] = q.headerTemplate ? `${lpad}${q.headerTemplate}</div>` : (
+      q.header ? templatize(q.header) : '<div></div>')
+    pdf_options.margin.top = '2cm'
+  }
+  if (q.footerTemplate || q.footer){
+    pdf_options['footerTemplate'] = q.footerTemplate ? `${lpad}${q.footerTemplate}</div>` : (
+      q.footer ? templatize(q.footer) : '<div></div>')
+    pdf_options.margin.bottom = '2cm'
+  }
+  if (!q.headerTemplate&&!q.header&&!q.footer&&!q.footerTemplate)
+    pdf_options.displayHeaderFooter = false
+  if (q.margins) {
+    // if margins are specified use.
+    let margin = {};
+    ['top', 'right', 'bottom', 'left'].forEach(
+      (dir, ind) => margin[dir] = q.margins.split(',')[ind] || '1cm')
+  }
+
   let args = [
     '--no-sandbox',
     '--disable-setuid-sandbox',
@@ -138,17 +164,7 @@ async function render(q) {
     // TODO: header / footer
     if (media != 'print')
       await page.emulateMedia(media)
-    await page.pdf({
-      path: target,
-      format: q.format || 'A4',
-      landscape: q.orientation == 'landscape',
-      scale: q.scale || 1,
-      margin: margin,
-      headerTemplate: pageheader,
-      footerTemplate: pagefooter,
-      displayHeaderFooter: true,
-      printBackground: true
-    })
+    await page.pdf(pdf_options)
   } else {
     const options = {
       path: target,

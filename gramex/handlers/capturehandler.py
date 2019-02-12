@@ -321,9 +321,11 @@ class CaptureHandler(BaseHandler):
             title_size={'type': int, 'nargs': '*'},
             start={'nargs': '*'},
             debug={'nargs': '*'},
-            pageheader={},
-            pagefooter={},
-            margins={'default':'1cm,1cm,1cm,1cm'}
+            header={},
+            footer={},
+            headerTemplate={},
+            footerTemplate={},
+            margins={'default':'1cm,1cm,1cm,1cm'},
         )
         if args['url'] is None:
             raise HTTPError(BAD_REQUEST, reason='%s: CaptureHandler needs ?url=' % self.name)
