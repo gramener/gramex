@@ -65,6 +65,15 @@ async function screenshot(page, options, selector) {
 }
 
 
+function templatize(input) {
+  // Convert input into header / footer template.
+  return input
+    .replace(/\$\w+/g, (match) => `<span class="${match.slice(1)}"></span>`)
+    .split('|')
+    .map(v => `<span>${v}</span>`)
+    .join('')
+}
+
 async function render(q) {
   console.log('Opening', q.url)
 
@@ -72,8 +81,44 @@ async function render(q) {
   let media = q.media || 'screen'
   let file = (q.file || 'screenshot') + '.' + ext
   let headers = q.headers || {}
-  let target = tmp.tmpNameSync({dir: render_dir, postfix: file})
-
+  let target = tmp.tmpNameSync({ dir: render_dir, postfix: file })
+  let pdf_options = {
+    path: target,
+    format: q.format || 'A4',
+    landscape: q.orientation == 'landscape',
+    scale: q.scale || 1,
+    margin: {},
+    printBackground: true,
+  }
+  // If margins are specified, use them
+  let margin_keys = ['top', 'right', 'bottom', 'left']
+  if (q.margins)
+    pdf_options['margin'] = _.zipObject(margin_keys, q.margins.split(','))
+  if (q.header || q.headerTemplate || q.footer || q.footerTemplate) {
+    console.log(q.headerTemplate)
+    // For zoom: TODO: https://stackoverflow.com/a/51461829/100904
+    function template_wrap(s) {
+      return `<div style="
+        margin-left:${pdf_options.margin.left || '1cm'};
+        margin-right:${pdf_options.margin.right || '1cm'};
+        zoom:0.75;
+        font-size:10px;
+        display:flex;
+        justify-content:space-between;
+        width:100%">${s}</div>`
+    }
+    // If displayHeaderFooter, headerTemplate and footerTemplate MUST BOTH be present
+    pdf_options.displayHeaderFooter = true
+    pdf_options.headerTemplate = template_wrap(q.headerTemplate || templatize(q.header || ''))
+    pdf_options.footerTemplate = template_wrap(q.footerTemplate || templatize(q.footer || ''))
+    // Increase default margin if header / footer is present
+    if (q.header || q.headerTemplate)
+      pdf_options.margin.top = pdf_options.margin.top || '2cm'
+    if (q.footer || q.footerTemplate)
+      pdf_options.margin.bottom = pdf_options.margin.bottom || '2cm'
+  }
+  // Default to 1cm margin if none was specified
+  _.each(margin_keys, key => pdf_options.margin[key] = pdf_options.margin[key] || '1cm')
   let args = [
     '--no-sandbox',
     '--disable-setuid-sandbox',
@@ -117,19 +162,11 @@ async function render(q) {
     await page.waitForFunction('window.renderComplete')
   else if (!isNaN(+q.delay))
     await new Promise(res => setTimeout(res, +q.delay))
-
   if (ext == 'pdf') {
     // TODO: header / footer
     if (media != 'print')
       await page.emulateMedia(media)
-    await page.pdf({
-      path: target,
-      format: q.format || 'A4',
-      landscape: q.orientation == 'landscape',
-      scale: q.scale || 1,
-      margin: {top: '1cm', right: '1cm', bottom: '1cm', left: '1cm'},
-      printBackground: true
-    })
+    await page.pdf(pdf_options)
   } else {
     const options = {
       path: target,

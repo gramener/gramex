@@ -142,9 +142,24 @@ It accepts the following arguments:
       <br>**Example**: [?format=Tabloid](capture?format=Tabloid)
     - `?orientation=`: portrait or landscape. Default: portrait.
       <br>**Example**: [?orientation=landscape](capture?orientation=landscape)
-    - `?title=`: footer for the page. To be implemented
     - `media=`: `print` or `screen`. Default: `screen`. Only for Chrome.
       <br>**Example**: [?media=print](capture?media=print)
+    - `header=`: a pipe-separated string that sets the page header.
+      You can use `$pageNumber`, `$totalPages`, `$date`, `$title`, `$url` as variables.
+      <br>**Example**: [?header=Gramener](capture?header=Gramener): Left header "Gramener"
+      <br>**Example**: [?header=|$title|](capture?header=|$title|): Center header with page title
+      <br>**Example**: [?header=|$pageNumber](capture?header=|$pageNumber): Right header with page number
+      <br>**Example**: [?header=©|Gramener|$pageNumber/$totalPages](capture?header=©|Gramener|$pageNumber/$totalPages): Left, middle right headers.
+    - `footer=`: similar to `header`
+    - `headerTemplate=`: HTML template to add a custom header.
+      Template cannot load external sources or run javascript, but can use inline css styles.
+      [See docs](https://github.com/GoogleChrome/puppeteer/blob/master/docs/api.md#pagepdfoptions).
+      Ensure that enough margin is provided for the header.
+      <br>**Example**: [`?headerTemplate=<div style="border-bottom:1px solid black;display:flex;justify-content:space-between;width:100%"><span class="url"></span><span class="date"></span></div>`](capture?headerTemplate=<div style="border-bottom:1px solid black%3Bdisplay:flex%3Bjustify-content:space-between%3Bwidth:100%25"><span class="url"></span><span class="date"></span></div>)
+    - `footerTemplate=`: similar to `headerTemplate`
+    - `margins=`: comma-separated list of margins specifying top, right, bottom, left margins respectively.
+      default margin is `1cm,1cm,1cm,1cm`.
+      <br>**Example** [?margins=2cm,,2cm,](capture?margins=2cm,,2cm,) sets top and bottom margin to 2cm
 - For images (PNG/JPG):
     - `?width=`: image output width. Default: 1200
       <br>**Example**: [?width=600](capture?width=600&ext=png)

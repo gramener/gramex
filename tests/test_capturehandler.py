@@ -271,3 +271,6 @@ class TestCaptureHandlerChrome(TestCaptureHandler):
         self.err(code=500, url='http://nonexistent')
         self.err(code=400, url=self.url, ext='nonexistent')
         self.err(code=500, url=self.url, selector='nonexistent', ext='png')
+
+    def test_pdf_header_footer(self):
+        pass
