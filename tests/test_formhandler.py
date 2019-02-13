@@ -597,14 +597,14 @@ class TestFormHandler(TestGramex):
             # Check ISO output
             pd.to_datetime(pd.DataFrame(r.json())['date'], format='%Y-%m-%dT%H:%M:%S.%fZ')
             actual = pd.read_excel(BytesIO(self.get(url, params={'_format': 'xlsx'}).content))
-            expected = data[data['date'] > pd.to_datetime(dt)]
+            expected = data[data['date'] > pd.to_datetime(dt).tz_localize(None)]
             expected.index = actual.index
             afe(actual, expected, check_like=True)
 
     def test_edit_id_type(self):
         target = self.copy_file('sales.xlsx', 'sales-edits.xlsx')
         tempfiles[target] = target
-        args = {'sales': [1], 'date': [0]}
+        args = {'sales': [1], 'date': ['2018-01-10']}
         headers = {'count-data': '1'}
         for method in ['put', 'delete']:
             self.check('/formhandler/edits-dates', method=method, data=args, headers=headers)
