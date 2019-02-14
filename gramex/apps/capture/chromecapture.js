@@ -95,7 +95,6 @@ async function render(q) {
   if (q.margins)
     pdf_options['margin'] = _.zipObject(margin_keys, q.margins.split(','))
   if (q.header || q.headerTemplate || q.footer || q.footerTemplate) {
-    console.log(q.headerTemplate)
     // For zoom: TODO: https://stackoverflow.com/a/51461829/100904
     function template_wrap(s) {
       return `<div style="

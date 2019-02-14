@@ -273,4 +273,19 @@ class TestCaptureHandlerChrome(TestCaptureHandler):
         self.err(code=500, url=self.url, selector='nonexistent', ext='png')
 
     def test_pdf_header_footer(self):
-        pass
+        result = self.fetch(self.src, params={
+            'url': self.url, 'header': '\u00A9|Header|$pageNumber', 'footer': '|$title|'})
+        text = get_text(result.content)
+        # check if the variables work
+        ok_('pageNumber' not in text)
+        ok_('title' not in text)
+        result = self.fetch(self.src, params={
+            'url': self.url,
+            'headerTemplate': '''
+                <div><span class="url"></span><span class="date"></span>
+                <h1>Header</h1></div>'''
+        })
+        text = get_text(result.content)
+        ok_('Header' in text)
+        import datetime
+        ok_(datetime.datetime.today().strftime('%d/%m/%Y') in text)
