@@ -11,9 +11,14 @@ from PIL import Image
 from pptx import Presentation
 from pptx.util import Pt
 from nose.tools import eq_, ok_
+from pdfminer.layout import LAParams
+from pdfminer.pdfpage import PDFPage
+from pdfminer.pdfdevice import PDFDevice
 from pdfminer.pdfparser import PDFParser
 from pdfminer.pdfdocument import PDFDocument
-from pdfminer.pdfpage import PDFPage
+from pdfminer.converter import PDFPageAggregator
+from pdfminer.pdfinterp import PDFResourceManager
+from pdfminer.pdfinterp import PDFPageInterpreter
 from pdfminer.high_level import extract_text_to_fp
 from tornado.web import create_signed_value
 import gramex
@@ -51,6 +56,19 @@ def normalize(s):
     '''
     return re.sub(r'[^\x33-\x7f]+', '', s)
 
+
+def get_layout_elements(content):
+    '''Take content of pdf and return list of text in order that it occurs'''
+    rsrcmgr = PDFResourceManager()
+    device = PDFPageAggregator(rsrcmgr, laparams=LAParams())
+    interpreter = PDFPageInterpreter(rsrcmgr, device)
+    # Create a PDF device object.
+    parser = PDFParser(io.BytesIO(content))
+    # Create a PDF page aggregator object.
+    page = next(PDFPage.create_pages(PDFDocument(parser)))
+    interpreter.process_page(page)
+    # receive the LTPage object for the page.
+    return [child.get_text() for child in device.get_result() if hasattr(child, 'get_text')]
 
 class TestCaptureHandler(TestGramex):
     # Note: This only tests PhantomJS. See TestCaptureHandlerChrome for Chrome
@@ -273,19 +291,22 @@ class TestCaptureHandlerChrome(TestCaptureHandler):
         self.err(code=500, url=self.url, selector='nonexistent', ext='png')
 
     def test_pdf_header_footer(self):
-        result = self.fetch(self.src, params={
-            'url': self.url, 'header': '\u00A9|Header|$pageNumber', 'footer': '|$title|'})
-        text = get_text(result.content)
-        # check if the variables work
-        ok_('pageNumber' not in text)
-        ok_('title' not in text)
-        result = self.fetch(self.src, params={
-            'url': self.url,
-            'headerTemplate': '''
-                <div><span class="url"></span><span class="date"></span>
-                <h1>Header</h1></div>'''
+        result = self.fetch(self.src, params={'url': self.url,
+            'header': '\u00A9|Header|$pageNumber',
+            'footer': '|$title|'
         })
-        text = get_text(result.content)
-        ok_('Header' in text)
-        import datetime
-        ok_(datetime.datetime.today().strftime('%d/%m/%Y') in text)
+        # Check if elements are ordered correctly.
+        layout = get_layout_elements(result.content)
+        ok_('©' in layout[0])
+        ok_('Header' in layout[1])
+        ok_('1' in layout[2])
+        ok_('This is the footer' in layout[-1])
+        # Check templates
+        result = self.fetch(self.src, params={'url': self.url,
+            'headerTemplate': '<div><span class="url"></span><h1>Header</h1></div>',
+            'footerTemplate': '''<div style="font-size:5px">
+                <span class="pageNumber"></span>/<span class="totalPages"></span></div>'''
+        })
+        layout = get_layout_elements(result.content)
+        ok_(all([self.url in layout[0], 'Header' in layout[0]]))
+        ok_('1/1' in layout[-1])
