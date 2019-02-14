@@ -264,15 +264,16 @@ def init(force_reload=False, **kwargs):
     from . import services
     globals()['service'] = services.info    # gramex.service = gramex.services.info
 
-    # Set up a watch on config files (including imported files)
-    from services import watcher
-    watcher.watch('gramex-reconfig', paths=config_files, on_modified=lambda event: init())
-
     # Override final configurations
     final_config = +config_layers
     # --settings.debug => log.root.level = True
     if final_config.app.get('settings', {}).get('debug', False):
         final_config.log.root.level = logging.DEBUG
+
+    # Set up a watch on config files (including imported files)
+    if final_config.app.get('watch', True):
+        from services import watcher
+        watcher.watch('gramex-reconfig', paths=config_files, on_modified=lambda event: init())
 
     # Run all valid services. (The "+" before config_chain merges the chain)
     # Services may return callbacks to be run at the end
