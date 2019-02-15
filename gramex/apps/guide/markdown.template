@@ -4,7 +4,7 @@
   <meta charset="utf8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>$title</title>
-  <link rel="stylesheet" href="/$GUIDE_ROOT/style.css?v=41">
+  <link rel="stylesheet" href="/$GUIDE_ROOT/style.css?v=42">
 </head>
 <body>
 
@@ -95,6 +95,8 @@
 
     <script src="/$GUIDE_ROOT/ui/jquery/dist/jquery.min.js"></script>
     <script src="/$GUIDE_ROOT/ui/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/$GUIDE_ROOT/ui/lodash/lodash.min.js"></script>
+    <script src="/$GUIDE_ROOT/ui/g1/dist/g1.min.js"></script>
 
     <section class="content">
       <h1>$title</h1>
@@ -104,6 +106,6 @@
 
   <script src="/$GUIDE_ROOT/node_modules/clipboard/dist/clipboard.min.js"></script>
   <script src="/$GUIDE_ROOT/node_modules/anchor-js/anchor.min.js"></script>
-  <script src="/$GUIDE_ROOT/script.js?v=41"></script>
+  <script src="/$GUIDE_ROOT/script.js?v=42"></script>
 </body>
 </html>

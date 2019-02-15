@@ -42,14 +42,21 @@ url:
             path: $YAMLPATH
             default_filename: README.md
             index: true
-            transform:
+            transform: &MARKDOWN_TO_HTML
                 "*.md":
                     function: guide.markdown_template(content, handler)
                     encoding: utf-8
                     headers:
                         Content-Type: text/html
-            headers:
+            headers: &HEADERS
                 Cache-Control: public, max-age=300
+    markdown-g1:
+        pattern: /$YAMLURL/g1/(.*)
+        handler: FileHandler
+        kwargs:
+            path: $YAMLPATH/../ui/node_modules/g1/
+            transform: *MARKDOWN_TO_HTML
+            headers: *HEADERS
     # The welcome page is the first page that's served when users login.
     # Normally, / points README.md. Make /welcome point to the static welcome page
     welcome:
@@ -57,16 +64,14 @@ url:
         handler: FileHandler
         kwargs:
             path: $YAMLPATH/index.html
-            headers:
-                Cache-Control: public, max-age=300
+            headers: *HEADERS
     # The final *computed* gramex.yaml configuration
     final-config:
         pattern: /$YAMLURL/final-config
         handler: FunctionHandler
         kwargs:
             function: guide.config
-            headers:
-                Content-Type: text/yaml
+            headers: *HEADERS
     # Just serve the root gramex.yaml file
     root-config:
         pattern: /$YAMLURL/root.gramex.yaml
@@ -75,7 +80,7 @@ url:
             path: $GRAMEXPATH/gramex.yaml
             headers:
                 Content-Type: text/plain
-                Cache-Control: public, max-age=300
+                <<: *HEADERS
 
     # Static files are cached on the browser
     static:
@@ -94,4 +99,4 @@ url:
             path: $YAMLPATH
             headers:
                 Content-Type: text/plain
-                Cache-Control: public, max-age=300
+                headers: *HEADERS

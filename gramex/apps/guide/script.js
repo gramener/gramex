@@ -11,6 +11,25 @@ new Clipboard('.copy-button', {
   }
 })
 
+// If an example has render:html or render:js, render code from the next PRE tag
+var nodeIterator = document.createNodeIterator(
+  document.body,
+  NodeFilter.SHOW_COMMENT,
+  { acceptNode: function () { return NodeFilter.FILTER_ACCEPT } }
+)
+while (nodeIterator.nextNode()) {
+  var commentNode = nodeIterator.referenceNode
+  var match = commentNode.textContent.match(/render:(html|js)/i)
+  if (!match)
+    continue
+  var $code = $(commentNode).next('.codehilite')
+  var lang = match[1].toLowerCase()
+  if (lang == 'html')
+    $('<div class="mx-n3 px-3 mt-n3 mb-3 py-3 bg-light border">' + $code.text() + '</div>').insertAfter($code)
+  else if (lang == 'js')
+    $('<script>' + $code.text() + '</script>').insertAfter($code)
+}
+
 // Show or hide menu based on window size
 function toggle_menu(e) {
   $('.menu')[e.matches ? 'addClass' : 'removeClass']('show')
