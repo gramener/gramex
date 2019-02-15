@@ -834,7 +834,10 @@ def _filter_db(engine, table, meta, controls, args, source='select', id=[]):
                 meta['ignored'].append(('_c', hide_cols))
             if len(show_cols) == 0:
                 return pd.DataFrame()
-        if '_sort' in controls:
+        dialect = engine.dialect.name
+        force_sort = dialect == 'mssql' and (('_offset' in controls) or ('_limit' in controls))
+
+        def _apply_sort(query):
             meta['sort'], ignore_sorts = _filter_sort_columns(
                 controls['_sort'], colslist + query.columns.keys())
             for col, asc in meta['sort']:
@@ -842,20 +845,52 @@ def _filter_db(engine, table, meta, controls, args, source='select', id=[]):
                 query = query.order_by(orderby(col))
             if len(ignore_sorts) > 0:
                 meta['ignored'].append(('_sort', ignore_sorts))
+            return query
+
+        # If the user asks to sort *AND* dummy sorting is mandated by MSSQL,
+        # then perform the user's sorting at the end
+        if not force_sort and '_sort' in controls:
+            query = _apply_sort(query)
+
         if '_offset' in controls:
             try:
                 offset = min(int(v) for v in controls['_offset'])
             except ValueError:
                 raise ValueError('_offset not integer: %r' % controls['_offset'])
-            query = query.offset(offset)
+            if force_sort:
+                sortcol = colslist[0]
+            else:
+                query = query.offset(offset)
             meta['offset'] = offset
         if '_limit' in controls:
             try:
                 limit = min(int(v) for v in controls['_limit'])
             except ValueError:
                 raise ValueError('_limit not integer: %r' % controls['_limit'])
-            query = query.limit(limit)
+            if force_sort and '_offset' not in controls:
+                sortcol = colslist[0]
+            else:
+                query = query.limit(limit)
             meta['limit'] = limit
+        if force_sort:
+            inner_q = sqlalchemy.select(
+                [table,
+                 sqlalchemy.func.row_number().over(order_by=sqlalchemy.asc(sortcol)).label('rn')])
+            inner_q = inner_q.cte('mssql_sort')
+            if '_offset' in controls:
+                query = sqlalchemy.select([inner_q]).where(
+                    sqlalchemy.between(inner_q.c.rn, offset + 1, limit + offset))
+            else:
+                query = sqlalchemy.select([inner_q]).where(
+                    sqlalchemy.between(inner_q.c.rn, 1, limit))
+            # Sort if required.
+            if '_sort' in controls:
+                query = _apply_sort(query)
+            # hide the dummy column
+            if '_c' not in controls:
+                query = query.with_only_columns([c for c in colslist if c != 'rn'])
+            else:
+                query = query.with_only_columns([cols[col] for col in show_cols + ['rn']])
         return pd.read_sql(query, engine)
 
 
