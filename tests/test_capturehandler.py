@@ -13,7 +13,6 @@ from pptx.util import Pt
 from nose.tools import eq_, ok_
 from pdfminer.layout import LAParams
 from pdfminer.pdfpage import PDFPage
-from pdfminer.pdfdevice import PDFDevice
 from pdfminer.pdfparser import PDFParser
 from pdfminer.pdfdocument import PDFDocument
 from pdfminer.converter import PDFPageAggregator
@@ -69,6 +68,7 @@ def get_layout_elements(content):
     interpreter.process_page(page)
     # receive the LTPage object for the page.
     return [child.get_text() for child in device.get_result() if hasattr(child, 'get_text')]
+
 
 class TestCaptureHandler(TestGramex):
     # Note: This only tests PhantomJS. See TestCaptureHandlerChrome for Chrome
@@ -291,7 +291,8 @@ class TestCaptureHandlerChrome(TestCaptureHandler):
         self.err(code=500, url=self.url, selector='nonexistent', ext='png')
 
     def test_pdf_header_footer(self):
-        result = self.fetch(self.src, params={'url': self.url,
+        result = self.fetch(self.src, params={
+            'url': self.url,
             'header': '\u00A9|Header|$pageNumber',
             'footer': '|$title|'
         })
@@ -302,7 +303,8 @@ class TestCaptureHandlerChrome(TestCaptureHandler):
         ok_('1' in layout[2])
         ok_('This is the footer' in layout[-1])
         # Check templates
-        result = self.fetch(self.src, params={'url': self.url,
+        result = self.fetch(self.src, params={
+            'url': self.url,
             'headerTemplate': '<div><span class="url"></span><h1>Header</h1></div>',
             'footerTemplate': '''<div style="font-size:5px">
                 <span class="pageNumber"></span>/<span class="totalPages"></span></div>'''
