@@ -1,20 +1,21 @@
 {
+    "version": "1.50.0",
     "name": "gramex",
     "description": "Gramex: Visual Analytics Platform.",
     "url": "http://learn.gramener.com/guide/",
     "author": "Gramener",
     "author_email": "s.anand@gramener.com",
-    "version": "1.50.0",
-    "license": "Other/Proprietary License",
+    "license": "MIT",
     "keywords": "gramex",
     "classifiers": [
         "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",
-        "License :: Other/Proprietary License",
+        "License :: MIT",
         "Natural Language :: English",
         "Programming Language :: Python :: 2",
         "Programming Language :: Python :: 2.7",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.6"
-    ]
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7"
+      ]
 }

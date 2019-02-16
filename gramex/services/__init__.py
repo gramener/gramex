@@ -149,7 +149,12 @@ def app(conf):
             if ioloop_running(ioloop):
                 return
 
-            gramex.license.accept()
+            # If enterprise version is installed, user must accept license
+            try:
+                import gramexenterprise         # noqa
+                gramex.license.accept()
+            except ImportError:
+                pass
 
             app_log.info('Listening on port %d', conf.listen.port)
             app_log_extra['port'] = conf.listen.port

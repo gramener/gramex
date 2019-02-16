@@ -14,7 +14,6 @@ prefix: Guide
 
 ## Table of contents
 
-- [About Gramex](about/)
 - [Install Gramex](install/)
 - [Quickstart](quickstart/)
 - [Gramex is a web server](server/)
