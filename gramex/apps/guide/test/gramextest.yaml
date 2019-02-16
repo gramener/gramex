@@ -2,8 +2,10 @@ variables:                          # Define variables for re-use in the app
   BASE: https://httpbin.org         #   Define the base URL
 
 urltest:                            # Run tests on URLs without a browser
-  - fetch: $BASE/get                # Fetch this URL
-  - fetch:
+  - name: get-json-test             # Name of the test
+    fetch: $BASE/get                # Fetch this URL
+  - name: get-json-params
+    fetch:
       url: $BASE/get                # Fetch this URL
       params: {x: 1, y: abc}        # with ?x=1&y=abc
       method: GET                   # as a GET request
@@ -21,7 +23,8 @@ urltest:                            # Run tests on URLs without a browser
       args: {x: '1', y: abc}        #   {args: ...} matches this object
       args.x: '1'                   #   {args: {x: ...}} is '1'
       args.y: [has, abc]            #   {args: {y: ...}} has the word 'abc'
-  - fetch: $BASE/html               # Fetch this URL
+  - name: get-html
+    fetch: $BASE/html               # Fetch this URL
     html:                           # Check the response as HTML
       h1: [has, Herman]             #   All <h1> have "Herman" in the text
       p:first-child: [has, cool]    #   First <p> has the word "cool"
@@ -31,14 +34,18 @@ urltest:                            # Run tests on URLs without a browser
 
 # Open browsers to run tests. Download drivers from https://www.seleniumhq.org/download/
 browsers:               # Open multiple browsers to run UI tests
-    Chrome:             # Run tests on Chrome
+    Chrome: true        # Run tests on Chrome
     # Firefox: true
     # Edge: true
 
 uitest:                             # Run UI tests in the browser on the URL
-  - fetch: https://www.google.com/  # Fetch this URL in the browser
-    # find title: Google              # Find CSS selector "title" has the text Google
-    find xpath //input[@title]:     # Find the first input node that has a title using XPath
+  - name: fetch-google-home
+    fetch: https://www.google.com/  # Fetch this URL in the browser
+    resize: [800, 600]              # Resize the window to 800x600
+  - name: google-title
+    title: Google                   # Title should match Google
+  - title: [starts with, Goo]       # Title should start with "Goo"
+  - find xpath //input[@title]:     # Find the first input node that has a title using XPath
       name: 'q'                     #   The attribute name= should be "q"
     type xpath //input[@title]: gramener   # Type "gramener" in the input
   - find xpath //input[@title]:     # The same input has

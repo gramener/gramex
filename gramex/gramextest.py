@@ -54,7 +54,7 @@ def pytest_collect_file(parent, path):
 def pytest_runtest_teardown(item, nextitem):
     if nextitem is None:
         for browser, driver in drivers.items():
-            driver.close()
+            driver.quit()
 
 
 class YamlFile(pytest.File):
@@ -83,11 +83,14 @@ class YamlFile(pytest.File):
 
 class YamlItem(pytest.Item):
     def __init__(self, name, parent, actions, registry):
-        super(YamlItem, self).__init__(name, parent)
         if isinstance(actions, string_types):
             actions = {actions: {}}
         self.run = []
+        self.name = name
         for action, options in actions.items():
+            if action == 'name':
+                self.name = str(options)
+                continue
             # PY3: cmd, *arg = action.strip().split(maxsplit=1)
             parts = action.strip().split(None, 1)
             cmd, arg = (parts[0], parts[1:]) if len(parts) > 1 else (parts[0], [])
@@ -103,6 +106,8 @@ class YamlItem(pytest.Item):
             else:
                 # e.g. fetch: <url> and test: <selector>
                 self.run.append([method, [options], {}])
+
+        super(YamlItem, self).__init__(self.name, parent)
 
     def runtest(self):
         for method, args, kwargs in self.run:
@@ -206,6 +211,9 @@ class UITest(object):
                 actual = node.get_attribute(key)
             match(actual, expected, msg, key)
 
+    def title(self, text):
+        match(self.driver.title, text, 'title:')
+
     def fetch(self, url):
         self.driver.get(url)
 
@@ -252,6 +260,14 @@ class UITest(object):
 
     def type(self, selector, text):
         self._get(selector, must_exist=True).send_keys(text)
+
+    def resize(self, size):
+        if isinstance(size, string_types) and 'max' in size.lower():
+            self.driver.maximize_window()
+        elif isinstance(size, (list, tuple)) and len(size) == 2:
+            self.driver.set_window_size(*size)
+        else:
+            raise ConfError('Invalid resize: %r. Use [width,height] or "max"' % size)
 
     def screenshot():
         pass

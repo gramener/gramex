@@ -1,8 +1,9 @@
 variables:
   BASE: http://localhost:1234
 
-not urltest:
-  - fetch: $BASE
+urltest:
+  - name: home-page
+    fetch: $BASE
     code: 200
     html:
       html: true
@@ -13,7 +14,8 @@ not urltest:
       nav ul > li > a: {.length: [greater than, 30], href: true}
       .content ul > li > a: {.length: [greater than, 30], href: true}
 
-  - fetch: $BASE/formhandler/flags
+  - name: formhandler/flags
+    fetch: $BASE/formhandler/flags
     code: 200
     headers:
       Content-Type: application/json
@@ -25,7 +27,8 @@ not urltest:
               Name: Andorra, Continent: Europe, Symbols: null, Shapes: null,
               Stripes: Vertical, Cross: null, Union-Flag: null,Text: null}
 
-  - fetch:
+  - name: formhandler/flags-params
+    fetch:
       url: $BASE/formhandler/flags
       method: GET
       params: {Continent: [Europe, Asia], Symbols: Landscape, _sort: ID, _meta: y}
@@ -56,6 +59,13 @@ browsers:
 
 uitest:
   - fetch: $BASE
+  - resize: max
+  - resize: [800, 600]
+  - name: home-page-title
+    title: Gramex Guide
+  - name: home-page-title-startswith
+    title: [starts with, Gramex]
+  - name: home-page-features
     find h1: Gramex Guide
     find nav ul > li > a: {.length: [greater than, 30], href: true}
     type input: googleauth
@@ -65,8 +75,10 @@ uitest:
     script:
       - "return document.title == document.querySelector('h1').textContent": true
       - "return document.title": [has, Gramex Guide]
-  - click: xpath //*[@id="searchresults"]//a[contains(text(), "Google auth")]
+  - name: check-xpath
+    click: xpath //*[@id="searchresults"]//a[contains(text(), "Google auth")]
     script:
       - 'return location.pathname': '/auth/'
       - 'return window.scrollY': [greater than, 0]
-  - back: 1
+  - name: check-back
+    back: 1
