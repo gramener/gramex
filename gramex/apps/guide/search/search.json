@@ -731,6 +731,35 @@
       "Upgrade": -1
     }
   },
+  "1.51": {
+    "": {
+      "Gramex 1.51 is open source, with PDF support, security and testing": -1
+    },
+    "add-header-and-footer-to-pdf-screenshots": {
+      "Add header and footer to PDF screenshots": -1
+    },
+    "bugfixes": {
+      "Bugfixes": -1
+    },
+    "documentation-is-more-interactive": {
+      "Documentation is more interactive": -1
+    },
+    "gramex-is-open-source": {
+      "Gramex is open source": -1
+    },
+    "protect-against-bot-attacks": {
+      "Protect against bot attacks": -1
+    },
+    "stats": {
+      "Stats": -1
+    },
+    "test-application-on-resolutions": {
+      "Test application on resolutions": -1
+    },
+    "upgrade": {
+      "Upgrade": -1
+    }
+  },
   "about": {
     "": {}
   },
@@ -949,6 +978,9 @@
     },
     "protect-all-pages": {
       "Protect all pages": -1
+    },
+    "recaptcha": {
+      "Recaptcha": -1
     },
     "replace-the-below-line-with-the-relevant-version-for-your-system": {
       "Replace the below line with the relevant version for your system": -1
@@ -1444,6 +1476,152 @@
       "Facebook Persist": -1
     }
   },
+  "faq": {
+    "": {
+      "Gramex FAQ": -1
+    },
+    "deployment": {
+      "Deployment": -1
+    },
+    "describe-the-session-management-approach": {
+      "Describe the session management approach": -1
+    },
+    "does-gramex-enforce-enabling-ssl-on-landing-pages-that-have-authentication-function": {
+      "Does Gramex enforce enabling SSL on landing pages that have authentication function?": -1
+    },
+    "does-gramex-expose-any-private-object-references-eg-primary-keys": {
+      "Does Gramex expose any private object references (e.g. primary keys)?": -1
+    },
+    "does-gramex-have-a-policy-that-prohibits-sharing-of-individual-accounts-and-passwords": {
+      "Does Gramex have a Policy that prohibits sharing of individual accounts and passwords?": -1
+    },
+    "does-gramex-log-any-confidential-and-sensitive-personal-information-like-government-issued-ids-passwords-etc": {
+      "Does Gramex log any confidential and sensitive personal information like government issued IDs, passwords etc.": -1
+    },
+    "does-gramex-support-automatic-login-function-remember-me-function-to-store-credentials": {
+      "Does Gramex support automatic login function (remember me function to store credentials)?": -1
+    },
+    "does-gramex-support-two-step-registration-process-or-two-step-authentication": {
+      "Does Gramex support two-step registration process or two-step authentication?": -1
+    },
+    "does-gramex-use-http-post-method-when-transmitting-authentication-credentials-over-http": {
+      "Does Gramex use HTTP POST method when transmitting authentication credentials over HTTP?": -1
+    },
+    "example-hardware-requirements": {
+      "Example Hardware Requirements": -1
+    },
+    "gramex-deployment-manual-windows-server": {
+      "Gramex Deployment Manual - Windows Server": -1
+    },
+    "how-are-gramex-applications-audited-for-security-compliance": {
+      "How are Gramex applications audited for security compliance?": -1
+    },
+    "how-are-gramex-applications-deployed": {
+      "How are Gramex applications deployed?": -1
+    },
+    "how-does-gramex-defend-against-brute-force-login-attacks": {
+      "How does Gramex defend against brute force login attacks?": -1
+    },
+    "how-does-gramex-defend-from-cross-frame-scripting-xfs-attacks": {
+      "How does Gramex defend from Cross-frame Scripting (XFS) attacks?": -1
+    },
+    "how-does-gramex-defend-from-cross-site-request-forgery-csrf-attacks": {
+      "How does Gramex defend from Cross-site Request Forgery (CSRF) attacks?": -1
+    },
+    "how-does-gramex-defend-from-cross-site-scripting-xss-attacks": {
+      "How does Gramex defend from Cross-site Scripting (XSS) attacks.?": -1
+    },
+    "how-does-gramex-defend-from-directory-traversal-attacks": {
+      "How does Gramex defend from directory traversal attacks?": -1
+    },
+    "how-does-gramex-defend-from-header-injection-attacks-eg-crlf": {
+      "How does Gramex defend from header injection attacks (e.g. CRLF)?": -1
+    },
+    "how-does-gramex-defend-from-url-redirection-attacks": {
+      "How does Gramex defend from URL redirection attacks?": -1
+    },
+    "how-does-gramex-encrypt-password": {
+      "How does Gramex encrypt password?": -1
+    },
+    "how-does-gramex-handle-encryption-keys-elaborate-on-creation-regeneration-transmit-mechanism": {
+      "How does Gramex handle Encryption keys. Elaborate on creation, regeneration, transmit mechanism?": -1
+    },
+    "how-does-gramex-handle-network-data-in-transit-security-and-storage-data-at-rest-security": {
+      "How does Gramex handle network (data-in-transit) security and storage (data-at-rest) security?": -1
+    },
+    "how-does-gramex-integrate-with-r": {
+      "How does Gramex integrate with R?": -1
+    },
+    "how-does-gramex-load-and-store-data": {
+      "How does Gramex load and store data?": -1
+    },
+    "how-does-gramex-manage-digital-certificates-and-their-authentication": {
+      "How does Gramex manage Digital certificates and their authentication?": -1
+    },
+    "how-does-gramex-restrict-access-based-on-business-purpose-does-gramex-support-authorization-control-for-functions-or-services": {
+      "How does Gramex restrict access based on business purpose? Does Gramex support authorization control for functions or services?**": -1
+    },
+    "how-does-gramex-transform-data": {
+      "How does Gramex transform data?": -1
+    },
+    "how-is-data-backed-up": {
+      "How is data backed up?": -1
+    },
+    "how-is-the-gramex-source-code-maintained-and-updated": {
+      "How is the Gramex source code maintained and updated?": -1
+    },
+    "how-many-users-can-gramex-handle": {
+      "How many users can Gramex handle?": -1
+    },
+    "how-much-data-volume-can-gramex-handle": {
+      "How much data volume can Gramex handle?": -1
+    },
+    "integration": {
+      "Integration": -1
+    },
+    "security": {
+      "Security": -1
+    },
+    "what-anti-virus-protections-does-gramex-provide-or-use": {
+      "What anti-virus protections does Gramex provide or use?": -1
+    },
+    "what-applications-does-gramex-integrate-with-out-of-box": {
+      "What applications does Gramex integrate with out-of-box?": -1
+    },
+    "what-are-the-role-based-access-controls-that-are-supported-by-gramex-are-there-any-default-roles-or-default-permissions": {
+      "What are the role-based access controls that are supported by Gramex? Are there any default roles or default permissions?": -1
+    },
+    "what-authentication-mechanisms-does-gramex-support": {
+      "What authentication mechanisms does Gramex support?": -1
+    },
+    "what-databases-does-gramex-support": {
+      "What databases does Gramex support?": -1
+    },
+    "what-does-the-gramener-architecture-look-like": {
+      "What does the Gramener Architecture look like?": -1
+    },
+    "what-environment-is-required-for-gramex-applications": {
+      "What environment is required for Gramex applications?": -1
+    },
+    "what-input-file-formats-does-gramex-support": {
+      "What input file formats does Gramex support?": -1
+    },
+    "what-is-gramexs-logging-mechanism-what-information-is-captured-who-can-access-the-logs": {
+      "What is Gramex\u2019s logging mechanism? What information is captured? Who can access the logs?": -1
+    },
+    "what-open-source-libraries-and-licenses-does-gramex-use": {
+      "What open source libraries and licenses does Gramex use?": -1
+    },
+    "what-password-policies-does-gramex-support": {
+      "What password policies does Gramex support?": -1
+    },
+    "what-testing-do-gramex-applications-go-through": {
+      "What testing do Gramex applications go through?": -1
+    },
+    "where-does-it-fit-in-my-enterprises-architecture": {
+      "Where does it fit in my enterprise\u2019s architecture?": -1
+    }
+  },
   "filehandler": {
     "": {
       "FileHandler renders files": -1
@@ -1505,6 +1683,9 @@
     },
     "custom-http-headers": {
       "Custom HTTP Headers": -1
+    },
+    "date-parsing": {
+      "Date parsing": -1
     },
     "formhandler-charts": {
       "FormHandler charts": -1
@@ -1577,6 +1758,9 @@
     },
     "formhandler-templates": {
       "FormHandler templates": -1
+    },
+    "formhandler-transforms": {
+      "FormHandler transforms": -1
     },
     "formhandler-validation": {
       "FormHandler validation": -1
@@ -1739,6 +1923,15 @@
   "license": {
     "": {
       "Gramex license": -1
+    },
+    "gramex-enterprise-is-free-for-non-commercial-use": {
+      "Gramex Enterprise is free for non-commercial use": -1
+    },
+    "gramex-open-source-is-free-for-use": {
+      "Gramex Open Source is free for use": -1
+    },
+    "third-party-libraries": {
+      "Third party libraries": -1
     }
   },
   "linkcheck": {
@@ -2352,8 +2545,20 @@
     "": {
       "Watch files": -1
     },
+    "check-max-watches": {
+      "Check max watches": -1
+    },
     "inotify-limit": {
       "inotify limit": -1
+    },
+    "list-file-descriptors-used-by-a-process": {
+      "List file descriptors used by a process": -1
+    },
+    "lists-inotify-usage": {
+      "Lists inotify usage:": -1
+    },
+    "to-get-the-list-of-processes-consuming-inotify-resources-run": {
+      "To get the list of processes consuming inotify resources, run:": -1
     },
     "watching-files": {
       "Watching files": -1

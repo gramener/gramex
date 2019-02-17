@@ -105,11 +105,11 @@ Update the following and commit to `dev` branch:
 - `gramex/apps/guide/release/1.xx/README.md` -- add guide release notes
     - `make stats` for code size stats
     - `make coverage` for test coverage stats
+- `gramex/apps/guide/release/README.md` -- add release entry
 - `gramex/release.json` -- update the version number
 - `pkg/docker-py3/Dockerfile` -- update the version number
 - `python gramex/apps/guide/search/search.py` to update search index
 - `node gramex/apps/guide/search/searchindex.js` to update search index
-- `gramex/apps/guide/release/README.md` -- add release entry
 
 Commit and push the `dev` branch to the server. **Ensure pipeline passes.**:
 
