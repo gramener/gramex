@@ -28,7 +28,7 @@ PDF screenshots now support headers and footers.
 
 ![CaptureHandler header example{@width=600}](capture-header.png)
 
-This feature in [CaptureHandler](../capturehandler/) lets you:
+This feature in [CaptureHandler](../../capturehandler/) lets you:
 
 - Include any HTML you want, including styles and images
 - Include variables for page number, total pages, title, URL and date
@@ -36,7 +36,7 @@ This feature in [CaptureHandler](../capturehandler/) lets you:
   You may split this further into any number of sections.
 
 
-## Protect against bot attacks
+## Enhanced security: Protect against bots
 
 Gramex prevents againt bot attacks by incorporating
 [CAPTCHAs](https://en.wikipedia.org/wiki/CAPTCHA) into the login screen. This
@@ -57,7 +57,7 @@ Bots will not be able to log in.
 
 ## Test application on resolutions
 
-The [Gramex pytest plugin](../test/) supports 3 new commands:
+The [Gramex pytest plugin](../../test/) supports 3 new commands:
 
 - `resize: [800, 600]` runs UI tests on a browser with 800x600 resolution. You
   may set any value
@@ -69,15 +69,15 @@ DOC: upgrade g1 from 0.13 to 0.14 [S Anand]
 
 ### Documentation is more interactive
 
-The [g1 interactive library](../g1/) documentation shows examples in-place.
+The [g1 interactive library](../../g1/) documentation shows examples in-place.
 You can see the effect of the code directly.
 
-The guide now uses the Gramex [UI component library](../uicomponents/). We also
+The guide now uses the Gramex [UI component library](../../uicomponents/). We also
 have new documentation on:
 
-- [Frequently asked questions](../faq/)
-- [Setting viewport size in CaptureHandler](../capturehandler/)
-- [How FormHandler transforms work](../formhandler/#formhandler-transforms)
+- [Frequently asked questions](../../faq/)
+- [Setting viewport size in CaptureHandler](../../capturehandler/)
+- [How FormHandler transforms work](../../formhandler/#formhandler-transforms)
 
 ## Bugfixes
 
@@ -86,7 +86,7 @@ FormHandler processes data much better. Specifically:
 - FormHandler edits now infer types even for files. Edits preserve the types.
 - FormHandler updates would fail if the metadata had NumPy types. Now we use
   CustomJSONEncoder to handle these
-- FormHandler supports a [date parsing option](../formhandler/#date-parsing)
+- FormHandler supports a [date parsing option](../../formhandler/#date-parsing)
   option that lets you pick which columns in files should be treated as dates.
   You can also specify the date format for JSON output (defaults to ISO)
 
