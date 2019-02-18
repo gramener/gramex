@@ -164,3 +164,4 @@ class TestAlerts2(TestGramex):
         text = get_text(a2b_base64(attachment.get_payload()))
         ok_('login@example.org' in text)
         ok_('manager' in text)
+        ok_('id=login@example.org, role=manager' in obj['Subject'])

@@ -204,6 +204,14 @@ alert:
 Tornado templates escape all HTML content. To pass the HTML content raw,
 use `{% raw expression %}` instead of `{{ expression }}`.
 
+The templates can use these variables:
+
+- `config`: the alert configuration as an AttrDict. For example,
+  `config.subject` is the subject configuration
+- `data`: the data passed to the alert
+  - For multiple datasets, each key is available as variable holding the dataset
+- `index`: if `each:` is used, the index holds the key or index number
+
 ### Email dashboards
 
 To send a dashboard as an inline-image or an attachment, set up a
