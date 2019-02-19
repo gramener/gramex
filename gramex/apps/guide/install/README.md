@@ -25,7 +25,7 @@ Note: Gramex Enterprise is offered under a [commercial license](../license/) and
 provides additional features. To install it, run:
 
 ```shell
-pip install gramexenterpise
+pip install gramexenterprise
 ```
 
 ## Troubleshooting
