@@ -14,6 +14,7 @@ bower_components/
 * *
 
 # Ignore byte-compiled / optimised / DLL files
+__pycache__/
 *.py[cod]
 
 # Do not commit data files.
@@ -38,6 +39,9 @@ bower_components/
 *.avi
 *.mp*
 *.wmv
+
+# Unit test
+.pytest_cache/
 
 # Ignore Gramex 0.x artefacts and log files
 .cache/
