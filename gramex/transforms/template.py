@@ -18,7 +18,7 @@ def template(content, handler=None, **kwargs):
     else:
         loader = None
         if handler is not None and getattr(handler, 'path', None):
-            loader = tornado.template.Loader(os.path.dirname(str(handler.path)))
+            loader = tornado.template.Loader(os.path.dirname(str(handler.file)))
         tmpl = template_cache[content] = tornado.template.Template(content, loader=loader)
 
     if handler is not None:
