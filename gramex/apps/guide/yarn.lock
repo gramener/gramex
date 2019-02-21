@@ -123,10 +123,10 @@ lunr@^2:
   resolved "https://registry.yarnpkg.com/lunr/-/lunr-2.1.5.tgz#826601ccaeac29148e224154b34760faf4d81b70"
   integrity sha512-5Q8Q5Lu88qkQ7vwKyQXistAtgPHI+Ynmu796Od6/hTuFp3JLcQqftsRDAcu9eorzerl6xPKuH7KMhaxx0neYVQ==
 
-marked@0.3:
-  version "0.3.14"
-  resolved "https://registry.yarnpkg.com/marked/-/marked-0.3.14.tgz#42375c23e206b95fdd497dd1d2f33ae4d1cf3d6c"
-  integrity sha512-3emDbXi5/Jnv8Pff4GdrBxJhpQA2xzq/IzHGjsVvGZs7QK0wx1mg7rRy5UmP1T/Dt1RsWL8ikxIM3cHHGF/UJg==
+marked@0.6:
+  version "0.6.0"
+  resolved "https://registry.yarnpkg.com/marked/-/marked-0.6.0.tgz#a18d01cfdcf8d15c3c455b71c8329e5e0f01faa1"
+  integrity sha512-HduzIW2xApSXKXJSpCipSxKyvMbwRRa/TwMbepmlZziKdH8548WSoDP4SxzulEKjlo8BE39l+2fwJZuRKOln6g==
 
 minimatch@^3.0.4:
   version "3.0.4"

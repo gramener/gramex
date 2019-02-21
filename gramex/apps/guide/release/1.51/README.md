@@ -55,7 +55,7 @@ The CAPTCHA is invisible. Human users do not need to do anything different.
 Bots will not be able to log in.
 
 
-## Test application on resolutions
+## Test application on multiple screen resolutions
 
 The [Gramex pytest plugin](../../test/) supports 3 new commands:
 
