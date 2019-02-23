@@ -540,8 +540,8 @@ FormHandler has 4 ways of transforming the request / data using Python functions
 |---------------------------------------------|---------------------------------|--------------------|------------------------------------------------------------------|
 | [prepare](#formhandler-prepare)             | Before loading data             | Replaces arguments | `args`: [handlers.args](../modelhandler/#basehandler-attributes) |
 | [queryfunction](#formhandler-queryfunction) | Before loading data             | Replaces DB query  | `args`: [handlers.args](../modelhandler/#basehandler-attributes) |
-| [function](#formhandler-functions)          | After loading, before filtering | Replaces data      | `data`: Pandas DataFrame (DF) of loaded data                     |
-| [modify](#formhandler-modify)               | After filtering                 | Replaces result    | `data`: DF of *filtered* data<br>`handler`: Handler              |
+| [function](#formhandler-functions)          | After loading, before filtering | Replaces data      | `data`: DataFrame of loaded data<br>`handler`: handler           |
+| [modify](#formhandler-modify)               | After filtering                 | Replaces result    | `data`: DataFrame of *filtered* data<br>`handler`: handler       |
 
 Click on the links to learn how to use them.
 
@@ -594,14 +594,15 @@ url:
       url: $YAMLPATH/flags.csv
       function: data.groupby('Continent').sum().reset_index()
       # Another example:
-      # function: my_module.calc(data)
+      # function: my_module.calc(data, handler.args)
 ```
 
 This runs the following steps:
 
 1. Load `flags.csv`
 2. Run `function`, which must be an expression that returns a DataFrame. The
-   input data is a DataFrame called `data`.
+   expression can use the variables `data` (loaded DataFrame) and `handler`
+   (FormHandler object). You can access URL query parameters via `handler.args`
 3. Filter the data using the URL query parameters
 
 That this transforms the data *before filtering*.

@@ -95,7 +95,7 @@ class FormHandler(BaseHandler):
             if conf['function'] is not None:
                 fn_name = '%s.%s.transform' % (cls.name, key)
                 dataset['transform'] = build_transform(
-                    conf, vars={'data': None}, filename=fn_name, iter=False)
+                    conf, vars={'data': None, 'handler': None}, filename=fn_name, iter=False)
             # Convert modify: and prepare: into a data = modify(data) function
             for fn, fn_vars in cls.function_vars.items():
                 if fn in dataset:
@@ -114,6 +114,7 @@ class FormHandler(BaseHandler):
         filter_kwargs.pop('modify', None)
         prepare = filter_kwargs.pop('prepare', None)
         queryfunction = filter_kwargs.pop('queryfunction', None)
+        filter_kwargs['transform_kwargs'] = {'handler': self}
         # Use default arguments
         defaults = {
             k: v if isinstance(v, list) else [v]

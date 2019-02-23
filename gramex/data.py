@@ -47,8 +47,14 @@ _agg_type = {
 _numeric_types = {'int', 'long', 'float', 'Decimal'}
 
 
+def _transform_fn(transform, transform_kwargs):
+    if transform is not None and transform_kwargs is not None:
+        return lambda v: transform(v, **transform_kwargs)
+    return transform
+
+
 def filter(url, args={}, meta={}, engine=None, table=None, ext=None,
-           query=None, queryfile=None, transform=None, **kwargs):
+           query=None, queryfile=None, transform=None, transform_kwargs=None, **kwargs):
     '''
     Filters data using URL query parameters. Typical usage::
 
@@ -75,6 +81,8 @@ def filter(url, args={}, meta={}, engine=None, table=None, ext=None,
     :arg function transform: optional in-memory transform of source data. Takes
         the result of gramex.cache.open or gramex.cache.query. Must return a
         DataFrame. Applied to both file and SQLAlchemy urls.
+    :arg dict transform_kwargs: optional keyword arguments to be passed to the
+        transform function -- apart from data
     :arg dict kwargs: Additional parameters are passed to
         :py:func:`gramex.cache.open` or ``sqlalchemy.create_engine``
     :return: a filtered DataFrame
@@ -178,6 +186,7 @@ def filter(url, args={}, meta={}, engine=None, table=None, ext=None,
         'by': [],           # Group by columns as [col, ...]
     })
     controls = _pop_controls(args)
+    transform = _transform_fn(transform, transform_kwargs)
 
     # Use the appropriate filter function based on the engine
     if engine == 'dataframe':
@@ -187,8 +196,7 @@ def filter(url, args={}, meta={}, engine=None, table=None, ext=None,
         params = {k: v[0] for k, v in args.items() if len(v) > 0 and _path_safe(v[0])}
         url = url.format(**params)
         data = dirstat(url, **args)
-        if callable(transform):
-            data = transform(data)
+        data = transform(data) if callable(transform) else data
         return _filter_frame(data, meta=meta, controls=controls, args=args)
     elif engine in {'file', 'http', 'https'}:
         params = {k: v[0] for k, v in args.items() if len(v) > 0 and _path_safe(v[0])}
@@ -216,8 +224,7 @@ def filter(url, args={}, meta={}, engine=None, table=None, ext=None,
                 raise ValueError('table: must be string or list of strings, not %r' % table)
             all_params = {k: v[0] for k, v in args.items() if len(v) > 0}
             data = gramex.cache.query(text(query), engine, state, params=all_params)
-            if callable(transform):
-                data = transform(data)
+            data = transform(data) if callable(transform) else data
             return _filter_frame(data, meta=meta, controls=controls, args=args)
         elif table:
             table = table.format(**params)
@@ -233,7 +240,7 @@ def filter(url, args={}, meta={}, engine=None, table=None, ext=None,
 
 
 def delete(url, meta={}, args=None, engine=None, table=None, ext=None, id=None,
-           query=None, queryfile=None, transform=None, **kwargs):
+           query=None, queryfile=None, transform=None, transform_kwargs={}, **kwargs):
     '''
     Deletes data using URL query parameters. Typical usage::
 
@@ -273,7 +280,7 @@ def delete(url, meta={}, args=None, engine=None, table=None, ext=None, id=None,
 
 
 def update(url, meta={}, args=None, engine=None, table=None, ext=None, id=None,
-           query=None, queryfile=None, transform=None, **kwargs):
+           query=None, queryfile=None, transform=None, transform_kwargs={}, **kwargs):
     '''
     Update data using URL query parameters. Typical usage::
 
@@ -312,7 +319,7 @@ def update(url, meta={}, args=None, engine=None, table=None, ext=None, id=None,
 
 
 def insert(url, meta={}, args=None, engine=None, table=None, ext=None, id=None,
-           query=None, queryfile=None, transform=None, **kwargs):
+           query=None, queryfile=None, transform=None, transform_kwargs={}, **kwargs):
     '''
     Insert data using URL query parameters. Typical usage::
 
@@ -1104,7 +1111,7 @@ def dirstat(url, timeout=10, **kwargs):
 
 
 def filtercols(url, args={}, meta={}, engine=None, table=None, ext=None,
-               query=None, queryfile=None, transform=None, **kwargs):
+               query=None, queryfile=None, transform=None, transform_kwargs={}, **kwargs):
     '''
     Filter data and extract unique values of each column using URL query parameters.
     Typical usage::
@@ -1132,6 +1139,8 @@ def filtercols(url, args={}, meta={}, engine=None, table=None, ext=None,
     :arg function transform: optional in-memory transform of source data. Takes
         the result of gramex.cache.open or gramex.cache.query. Must return a
         DataFrame. Applied to both file and SQLAlchemy urls.
+    :arg dict transform_kwargs: optional keyword arguments to be passed to the
+        transform function -- apart from data
     :arg dict kwargs: Additional parameters are passed to
         :py:func:`gramex.cache.open` or ``sqlalchemy.create_engine``
     :return: a filtered DataFrame
