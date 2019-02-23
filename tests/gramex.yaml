@@ -400,6 +400,35 @@ url:
         'alpha.txt':
           encoding: utf-8
           function: six.text_type.title(content)
+  dir/map:
+    pattern: /dir/map/(.*)
+    handler: FileHandler
+    kwargs:
+      path:
+        '': dir/index.html
+        '(.*)/(.*)/(.*)': 'dir/{0}{1}{2}'
+        'url': 'dir/{file}{mid}.{ext}'
+        '(?P<ext>txt)/(.*)': 'dir/{1}.{ext}'
+        '(?P<n>\w+)/(.*)': 'dir/{n}.{1}'
+        '(.*)': 'dir/subdir/{0}.txt'
+      default:
+        file: ''
+        mid: ''
+        ext: txt
+      transform:
+        'alpha.txt':
+          encoding: utf-8
+          function: six.text_type.upper(content)
+  dir/map2:
+    pattern: /dir/map2/
+    handler: FileHandler
+    kwargs:
+      path:
+        '': 'dir/{file}{mid}.{ext}'
+      default:
+        file: ''
+        mid: ''
+        ext: txt
   dir/headers:
     pattern: /header/
     handler: FileHandler

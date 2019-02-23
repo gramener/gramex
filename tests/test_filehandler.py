@@ -192,6 +192,38 @@ class TestFileHandler(TestGramex):
             'Content-Type': 'text/html; charset=UTF-8'
         })
 
+    def test_map(self):
+        # '/dir/map/': dir/index.html
+        self.check('/dir/map/', path='dir/index.html')
+        # '/dir/map/(.*)/(.*)/(.*)': 'dir/{0}{1}{2}'
+        self.check('/dir/map/cap/ture/.js', path='dir/capture.js')
+        self.check('/dir/map/al/ph/a.txt', text='Α.TXT')    # Capitalized alpha.txt
+        self.check('/dir/map/x/y/z', code=404)
+        # '/dir/map/url': 'dir/{file}{mid}.{ext}'
+        self.check('/dir/map/url?file=template', path='dir/template.txt')
+        self.check('/dir/map/url?file=template&file=x', path='dir/template.txt')
+        self.check('/dir/map/url?file=template&mid=.sub', path='dir/template.sub.txt')
+        self.check('/dir/map/url?file=index&ext=html', path='dir/index.html')
+        self.check('/dir/map/url?file=nonexistent', code=404)
+        self.check('/dir/map/url', code=404)
+        # '/dir/map/(?P<ext>txt)/(.*)': 'dir/{1}.{ext}'
+        self.check('/dir/map/txt/template', path='dir/template.txt')
+        self.check('/dir/map/txt/capture?ext=js', code=404)
+        # '/dir/map/(?P<n>\w+)/(.*)': 'dir/{n}.{1}'
+        self.check('/dir/map/index/html', path='dir/index.html')
+        self.check('/dir/map/alpha/def', code=404)
+        # '/dir/map/(.*)': 'dir/subdir/{0}.txt'
+        self.check('/dir/map/template', path='dir/subdir/template.txt')
+        self.check('/dir/map/text', path='dir/subdir/text.txt')
+        self.check('/dir/map/abc', code=404)
+        # '': 'dir/{file}{mid}.{ext}'
+        self.check('/dir/map2/?file=template', path='dir/template.txt')
+        self.check('/dir/map2/?file=template&file=x', path='dir/template.txt')
+        self.check('/dir/map2/?file=template&mid=.sub', path='dir/template.sub.txt')
+        self.check('/dir/map2/?file=index&ext=html', path='dir/index.html')
+        self.check('/dir/map2/?file=nonexistent', code=404)
+        self.check('/dir/map2/', code=404)
+
     def test_pattern(self):
         self.check('/dir/pattern/alpha/text', path='dir/alpha.txt')
         self.check('/dir/pattern/text/text', path='dir/text.txt')
