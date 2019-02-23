@@ -63,11 +63,13 @@ class TestFilter(unittest.TestCase):
 
     def test_dirstat(self):
         for name in ('test_cache', 'test_config', '.'):
-            path = os.path.join(folder, name)
+            path = os.path.normpath(os.path.join(folder, name))
             files = sum((dirs + files for root, dirs, files in os.walk(path)), [])
             result = gramex.data.dirstat(path)
             eq_(len(files), len(result))
-            ok_({'path', 'name', 'dir', 'type', 'size', 'mtime'} <= set(result.columns))
+            eq_({'path', 'name', 'dir', 'type', 'size', 'mtime', 'level'}, set(result.columns))
+            ase(result['path'], path + result['dir'].str.replace('/', os.sep) + result['name'],
+                check_names=False)
 
     def flatten_sort(self, expected, by, sum_na, *columns):
         expected.columns = columns

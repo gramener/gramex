@@ -1053,7 +1053,6 @@ def download(data, format='json', template=None, **kwargs):
 def dirstat(url, timeout=10, **kwargs):
     '''
     Return a DataFrame with the list of all files & directories under the url.
-    The url can be a .
 
     It accepts the following parameters:
 
@@ -1063,13 +1062,12 @@ def dirstat(url, timeout=10, **kwargs):
     :arg int timeout: max seconds to wait. ``None`` to wait forever. (default: 10)
     :return: a DataFrame with columns:
         - ``type``: extension with a ``.`` prefix -- or ``dir``
-        - ``path``: full path to file / dir
-        - ``dir``: directory path to the file
+        - ``dir``: directory path to the file relative to the URL
         - ``name``: file name (including extension)
+        - ``path``: full path to file or dir. This equals url / dir / name
         - ``size``: file size
-        - ``mtime``: last modified time
-
-    TODO: max depth, filters, etc
+        - ``mtime``: last modified time in seconds since epoch
+        - ``level``: path depth (i.e. the number of paths in dir)
     '''
     try:
         url = sqlalchemy.engine.url.make_url(url)
@@ -1088,24 +1086,18 @@ def dirstat(url, timeout=10, **kwargs):
         for name in dirnames:
             path = os.path.join(dirpath, name)
             stat = os.stat(path)
+            dirname = dirpath.replace(target, '').replace(os.sep, '/') + '/'
             result.append({
-                'path': path,
-                'dir': dirpath,
-                'name': name,
-                'type': 'dir',
-                'size': stat.st_size,
-                'mtime': stat.st_mtime,
+                'path': path, 'dir': dirname, 'name': name, 'type': 'dir',
+                'size': stat.st_size, 'mtime': stat.st_mtime, 'level': dirname.count('/'),
             })
         for name in filenames:
             path = os.path.join(dirpath, name)
             stat = os.stat(path)
+            dirname = dirpath.replace(target, '').replace(os.sep, '/') + '/'
             result.append({
-                'path': path,
-                'dir': dirpath,
-                'name': name,
-                'type': os.path.splitext(name)[-1],
-                'size': stat.st_size,
-                'mtime': stat.st_mtime,
+                'path': path, 'dir': dirname, 'name': name, 'type': os.path.splitext(name)[-1],
+                'size': stat.st_size, 'mtime': stat.st_mtime, 'level': dirname.count('/'),
             })
     return pd.DataFrame(result)
 
