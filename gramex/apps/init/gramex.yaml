@@ -16,6 +16,7 @@ url:
         # Templates may have user-specific content. Cache privately.
         # Keep max-age small (in case we log out & log in as another user.)
         Cache-Control: private, max-age=1
+    cache: {expiry: {duration: 1}}
 
   {{ appname }}-login:
     # Default login_url is /login/. If you change this, change auth.login_url
