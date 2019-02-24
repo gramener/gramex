@@ -187,9 +187,8 @@ class TestFormHandler(TestGramex):
         self.eq('/formhandler/default', self.sales[self.sales['sales'] > cutoff].head(limit))
 
     def test_function(self):
-        # self.eq('/formhandler/file-function', self.sales[[]])
         self.eq('/formhandler/file-function?col=sales&_format=csv', self.sales[['sales']])
-        self.eq('/formhandler/file-function?col=देश&col=product&_format=csv  ',
+        self.eq('/formhandler/file-function?col=देश&col=product&_format=csv',
                 self.sales[['देश', 'product']])
 
     def test_modify(self):

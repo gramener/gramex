@@ -131,11 +131,12 @@ class TestFileHandler(TestGramex):
         self.check('/dir/normalize/dot/index.html', path='dir/index.html')
         self.check('/dir/normalize/dotdot/index.html', path='dir/index.html')
 
-    def test_filehandle_errors(self):
+    def test_filehandler_errors(self):
         self.check('/nonexistent', code=404)
         self.check('/dir/nonexistent-file', code=404)
-        self.check('/dir/noindex/../../gramex.yaml', code=404)
+        self.check('/dir/noindex/subdir/', code=404)
         self.check('/dir/noindex/../nonexistent', code=404)
+        self.check('/dir/noindex/../../gramex.yaml', code=403)
 
     def test_markdown(self):
         with (server.info.folder / 'dir/markdown.md').open(encoding='utf-8') as f:
