@@ -192,11 +192,11 @@ class FormHandler(BaseHandler):
             meta[key] = AttrDict()
             opt = self._options(dataset, self.args, path_args, path_kwargs, key)
             if 'id' not in opt.filter_kwargs:
-                raise HTTPError(BAD_REQUEST, '%s: %s requires id: <col> in gramex.yaml' % (
+                raise HTTPError(BAD_REQUEST, reason='%s: missing id: <col> for %s' % (
                     self.name, self.request.method))
             missing_args = [col for col in opt.filter_kwargs['id'] if col not in opt.args]
             if method != gramex.data.insert and len(missing_args) > 0:
-                raise HTTPError(BAD_REQUEST, '%s: missing column(s) in URL query: %s' % (
+                raise HTTPError(BAD_REQUEST, reason='%s: missing column(s) in URL query: %s' % (
                     self.name, ', '.join(missing_args)))
             # Execute the query. This returns the count of records updated
             result[key] = method(meta=meta[key], args=opt.args, **opt.filter_kwargs)
