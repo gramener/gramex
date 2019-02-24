@@ -6,9 +6,9 @@ from tornado.web import HTTPError
 from cachetools import TTLCache
 from six.moves import StringIO
 import gramex
+import gramex.handlers
 from gramex.config import app_log
 from gramex.http import INTERNAL_SERVER_ERROR
-from gramex.handlers import FormHandler, DBAuth
 
 
 contexts = TTLCache(maxsize=100, ttl=1800)
@@ -37,7 +37,7 @@ def get_auth_conf(kwargs):
     elif auth_conf.get('handler', None) == 'DBAuth':
         # For DBAuth, hoist the user.column into as the id: for the URL
         user_column = auth_kwargs.get('user', {}).get('column', 'user')
-        data_conf = DBAuth.clear_special_keys(
+        data_conf = gramex.handlers.DBAuth.clear_special_keys(
             auth_kwargs.copy(), 'user', 'password', 'forgot', 'signup', 'template', 'delay')
         data_conf['id'] = user_column
         return authhandler, auth_conf, data_conf
@@ -45,7 +45,7 @@ def get_auth_conf(kwargs):
         raise ValueError('Missing lookup: in url.%s (authhandler)' % authhandler)
 
 
-class AdminFormHandler(FormHandler):
+class AdminFormHandler(gramex.handlers.FormHandler):
     '''
     A customized FormHandler. Specify a "kwargs.admin_kwargs.authhandler: auth-handler".
     It lookup up "auth-handler" in the gramex config. If it has a "lookup:" or is a "DBAuth",
@@ -57,7 +57,7 @@ class AdminFormHandler(FormHandler):
         try:
             authhandler, auth_conf, data_conf = get_auth_conf(kwargs.get('admin_kwargs', {}))
         except ValueError as e:
-            super(FormHandler, cls).setup(**kwargs)
+            super(gramex.handlers.FormHandler, cls).setup(**kwargs)
             app_log.warning('%s: %s', cls.name, e.args[0])
             cls.reason = e.args[0]
             cls.get = cls.post = cls.put = cls.delete = cls.send_response
