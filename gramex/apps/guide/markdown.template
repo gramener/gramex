@@ -44,6 +44,7 @@
             <li><a href="/$GUIDE_ROOT/deploy/">Deployment patterns</a></li>
             <li><a href="/$GUIDE_ROOT/debug/">Debugging Gramex</a></li>
             <li><a href="/$GUIDE_ROOT/test/">Testing Gramex</a></li>
+            <li><a href="/$GUIDE_ROOT/snippets/">Snippets</a></li>
           </ul>
         </li>
         <li><a href="#">Handlers</a></li>
