@@ -16,7 +16,7 @@ Supported snippet commands: `grx-filehandler`, `grx-formhandler_db`, `grx-formha
 
 ## Features
 
-Features as of version `1.1.0`:
+Features as of version `1.2.0`:
 
 - `FileHandler` endpoint
 - `FormHandler` flat files and database endpoints
