@@ -14,6 +14,8 @@ In `gramex.yaml` or any `.yaml` file, type `grx-form`... it should prompt two `F
 
 Supported snippet commands: `grx-filehandler`, `grx-formhandler_db`, `grx-formhandler_csv`, `grx-email`, `grx-custom_session`, `grx-custom_log`, `grx-cache_assets`, `grx-auth_db`, `grx-auth_google`, `grx-auth_simple`.
 
+![how gramex snippet works](gramex-snippets.gif)
+
 ## Features
 
 Features as of version `1.2.0`:
@@ -25,7 +27,7 @@ Features as of version `1.2.0`:
 - `email` service
 - Caching assets
 
-Visit Marketplace to get the latest feature list.
+Features are likely to be updated rapidly, visit [VSCode Marketplace](https://marketplace.visualstudio.com/items?itemName=gramener.gramexsnippets) to get the latest feature list.
 
 ### YAML auto-suggestions bug in VSCode
 
@@ -44,8 +46,8 @@ There appears to be a [bug in VSCode](https://github.com/Microsoft/vscode/issues
 
 ## Changelog
 
-- [CHANGELOG](https://github.com/gramener/gramexsnippets/blob/master/CHANGELOG.md) maintains release-wise changes
+- [CHANGELOG](https://github.com/gramener/gramex-snippets/blob/master/CHANGELOG.md) maintains release-wise changes
 
 ## Bugs
 
-- Report bugs on [gramexsnippets](https://github.com/gramener/gramexsnippets/issues) repository
+- Report bugs on [gramex-snippets](https://github.com/gramener/gramex-snippets/issues) repository
