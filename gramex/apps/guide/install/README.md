@@ -28,6 +28,10 @@ provides additional features. To install it, run:
 pip install gramexenterprise
 ```
 
+## VSCode Extension
+
+Install [`Gramex Snippets` extension](https://marketplace.visualstudio.com/items?itemName=gramener.gramexsnippets) for VSCode IDE for Gramex related code snippets. Visit [VSCode Extension](../extension/) page for more details.
+
 ## Troubleshooting
 
 If Gramex does not install:
