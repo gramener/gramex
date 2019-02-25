@@ -121,8 +121,23 @@ Once you set up the [browsers](#browsers), you can use thes `uitest:` actions:
 - `click: <selector>`: clicks a CSS/XPath selector.
     - `click button.submit`: clicks `<button class="submit">`
     - `click xpath //button[text()="Submit"]`: clicks `<button>Submit</button>`
+- `hover: <selector>`: hover over a CSS/XPath selector
+    - `hover button.submit`: clicks `<button class="submit">`
+    - `hover xpath //button[text()="Submit"]`: clicks `<button>Submit</button>`
 - `type <selector>: <text>`: types the text into the CSS/XPath selector (if it's an input)
-- `wait: <n>` waits for `n` seconds
+- `clear: <selector>`: clears the text in the CSS/XPath selector (if it's an input)
+- `wait:` waits for a duration or condition
+    - `wait: <n>` waits for `n` seconds
+    - `wait: {selector: <selector>}` waits until CSS `selector` is in the DOM
+      (default timeout: 10s)
+    - `wait: {selector: "xpath <selector>"}` waits until XPath `selector` is in
+      the DOM (default timeout: 10s)
+    - `wait: {selector: <selector>, timeout: <n>}` waits until CSS `selector` is in
+      the DOM (with `n` seconds timeout)
+    - `wait: {script: <expression>}` waits until the JS `expression` evaluates
+      to true (default timeout: 10s)
+    - `wait: {script: <expression>, timeout: <n>}` waits until the JS
+      `expression` evaluates to true (with `n` seconds timeout)
 - `script:`: runs JavaScript and checks the results. This is a list
     - `- window.x = 1` sets `window.x` to 1
     - `- "return document.title": [has, Gramener]` [matches](#matching) the document title
@@ -132,9 +147,8 @@ Once you set up the [browsers](#browsers), you can use thes `uitest:` actions:
 - `back: <n>` goes back `n` pages in history
 - `forward: <n>` goes forward `n` pages in history
 - `scroll: <selector>` scrolls the CSS/XPath selector into view
-- `screenshot: <path>`:
+- `screenshot: <path>`: TODO:
 - `submit: <selector>`: TODO: submits the form at selector
-- `clear: <selector>`: TODO: clears the form at selector
 
 Selectors can be CSS or XPath. Selectors default to CSS. Use `xpath <selector>`
 for XPath selectors. For example:

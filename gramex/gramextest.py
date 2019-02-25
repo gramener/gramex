@@ -4,15 +4,18 @@ import os
 import pytest
 import re
 import requests
-import time
 import gramex.cache
 from fnmatch import fnmatch
 from lxml.html import document_fromstring
 from selenium import webdriver
-from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import NoSuchElementException, TimeoutException
 from six import string_types
 from tornado.web import create_signed_value
 from gramex.config import ChainConfig, PathConfig, objectpath, variables
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions
+from selenium.webdriver.common.action_chains import ActionChains
 
 # Get Gramex conf from current directory
 gramex_conf = ChainConfig()
@@ -21,6 +24,7 @@ gramex_conf['base'] = PathConfig('gramex.yaml')
 secret = objectpath(+gramex_conf, 'app.settings.cookie_secret')
 drivers = {}
 default = object()
+get_el = expected_conditions.presence_of_element_located
 
 
 class ChromeConf(dict):
@@ -211,6 +215,30 @@ class UITest(object):
                 actual = node.get_attribute(key)
             match(actual, expected, msg, key)
 
+    def wait(self, seconds=default, **attrs):
+        if seconds != default:
+            self.driver.implicitly_wait(float(seconds))
+            return
+        timeout = float(attrs.get('timeout', 10))
+        if 'selector' in attrs:
+            selector = attrs['selector']
+            opt = selector.strip().split(None, 1)
+            args = (By.XPATH, opt[1]) if opt[0] == 'xpath' else (By.CSS_SELECTOR, selector)
+            try:
+                WebDriverWait(self.driver, timeout).until(get_el(args))
+            except TimeoutException:
+                raise ConfError('selector: "%s" timed out after %.0fs' % (selector, timeout))
+        if 'script' in attrs:
+            script = attrs['script']
+            try:
+                WebDriverWait(self.driver, timeout).until(
+                    lambda v: self.driver.execute_script('return ' + script))
+            except TimeoutException:
+                raise ConfError('script: "%s" timed out after %.0fs' % (script, timeout))
+
+    def hover(self, selector):
+        ActionChains(self.driver).move_to_element(self._get(selector)).perform()
+
     def title(self, text):
         match(self.driver.title, text, 'title:')
 
@@ -224,9 +252,6 @@ class UITest(object):
     def forward(self, count=1):
         for index in range(count):
             self.driver.forward()
-
-    def wait(self, seconds):
-        time.sleep(float(seconds))
 
     def click(self, selector):
         self._get(selector, must_exist=True).click()
@@ -275,8 +300,8 @@ class UITest(object):
     def submit():
         pass
 
-    def clear():
-        pass
+    def clear(self, selector):
+        self._get(selector, must_exist=True).clear()
 
     select_method = {
         ('css', True): 'find_elements_by_css_selector',

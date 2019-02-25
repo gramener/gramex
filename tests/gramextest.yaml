@@ -68,13 +68,20 @@ uitest:
   - name: home-page-features
     find h1: Gramex Guide
     find nav ul > li > a: {.length: [greater than, 30], href: true}
+    hover: .navbar-toggler-icon
+    clear: input
     type input: googleauth
+    wait: 0.5
+  - name: check-search
+    wait: {selector: '#searchresults > div'}
     'find #searchresults > div': {.length: 3}
     # TODO: at least one of the elements contains this
     'find xpath //*[@id="searchresults"]//a[contains(text(), "Google auth")]': {href: true}
+  - name: check-script
     script:
       - "return document.title == document.querySelector('h1').textContent": true
       - "return document.title": [has, Gramex Guide]
+    wait: {script: 'document.title.match(/Guide/)'}
   - name: check-xpath
     click: xpath //*[@id="searchresults"]//a[contains(text(), "Google auth")]
     script:

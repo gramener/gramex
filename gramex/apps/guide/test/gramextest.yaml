@@ -47,14 +47,17 @@ uitest:                             # Run UI tests in the browser on the URL
   - title: [starts with, Goo]       # Title should start with "Goo"
   - find xpath //input[@title]:     # Find the first input node that has a title using XPath
       name: 'q'                     #   The attribute name= should be "q"
+    clear xpath //input[@title]: gramener  # Clear existing input text
     type xpath //input[@title]: gramener   # Type "gramener" in the input
   - find xpath //input[@title]:     # The same input has
       :value: [has, gramener]       #   The property "value" as "gramener"
   - click: xpath //input[@value='Google Search']    # Click on the "Google Search" button
     wait: 1                         # Wait for 1 second
+  - wait: {selector: '.fbar'}       # Wait for footer to appear
   - scroll: '.fbar'                 # Scroll the footer (CSS .fbar) into view
   - script:
         - window.x = 1              # Run the script
         - return window.x: 1        # Run the script and check return value is 1
+  - wait: {script: 'window.x == 1'} # Wait for window.x to become 1
   - # Some element must contain the word "insights"
     'find xpath //*[text()[contains(., "insights")]]': true
