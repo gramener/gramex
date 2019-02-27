@@ -7,7 +7,7 @@ var dataset_name, templates, mapper
 
 // dangling state TODO: refactor to inside actions
 $('.code div').show()
-$('#prop-editor').hide()
+// $('#prop-editor').hide()
 
 
 var view, json_file_spec, data_mapper
@@ -357,6 +357,20 @@ $('body')
         on_cols_fetch([csv_contents_converted, res[1]])
       })
   })
+  .on('click', '.publish', function() {
+    // generate unique url for current spec
+    // POST request to formhandler URL
+    $.post('_chartogram/', JSON.stringify({
+        chartname: specName,
+        spec: model.vega_spec
+    }), function (response) {
+      // create an URL with response.id
+      var link = location.href.split('example.html')[0] + '_chartogram/' + response.chart.id
+      $('.share-url').html(link)
+      $('.share-url').attr("href", link)
+    }, 'json')
+  })
+
 
 function getFileContent(file) {
   return new Promise(function (resolve) {
@@ -473,3 +487,27 @@ $('.copy')
       $('.copy').tooltip('hide')
     }, 1000)
   })
+
+  $('body')
+  .on('click', '.download-sample', function() {
+      $.get(model.vega_spec.data[0].url)
+        .done(function(res) {
+          var csv = Papa.unparse(res)
+          downloadString(csv, 'text/csv', specName + '.csv')
+        })
+    })
+
+
+  function downloadString(text, fileType, fileName) {
+    var blob = new Blob([text], { type: fileType });
+  
+    var a = document.createElement('a');
+    a.download = fileName;
+    a.href = URL.createObjectURL(blob);
+    a.dataset.downloadurl = [fileType, a.download, a.href].join(':');
+    a.style.display = "none";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function() { URL.revokeObjectURL(a.href); }, 1500);
+  }

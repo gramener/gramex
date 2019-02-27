@@ -48,20 +48,6 @@
     "dataset_url": "<%= absolute_url %>data/sunburst-4.json"
   },
   {
-    "category": "Infographics",
-    "chart": "donut-infographic",
-    "title": "Donut Infographic",
-    "data_mapper": {
-      "column_1":"id",
-      "column_2":"Name",
-      "column_3":"amount",
-      "column_4":"circle1_amount",
-      "column_5":"circle2_amount",
-      "column_6":"circle3_amount"
-    },
-    "dataset_url": "<%= absolute_url %>data/donut-infographic.json"
-  },
-  {
     "category": "Circle packing charts",
     "chart": "circle-packing",
     "title": "Circle Packing",
@@ -153,7 +139,20 @@
     },
     "dataset_url": "<%= absolute_url %>data/half-donut.json"
   },
-
+  {
+    "category": "Pie charts",
+    "chart": "donut-infographic",
+    "title": "Donut Infographic",
+    "data_mapper": {
+      "column_1":"id",
+      "column_2":"Name",
+      "column_3":"amount",
+      "column_4":"circle1_amount",
+      "column_5":"circle2_amount",
+      "column_6":"circle3_amount"
+    },
+    "dataset_url": "<%= absolute_url %>data/donut-infographic.json"
+  },
   {
     "category": "Bar charts",
     "chart": "bars",
@@ -297,11 +296,6 @@
     "dataset_url": "<%= absolute_url %>data/radial-donut.json"
   },
   {
-    "category": "Sankey charts",
-    "chart": "sankey",
-    "title": "Sankey"
-  },
-  {
     "category": "Scatter plots",
     "chart": "scatter-plot",
     "title": "Scatter Plot",
@@ -425,12 +419,7 @@
     "dataset_url": "<%= absolute_url %>data/treemap-2.json"
   },
   {
-    "category": "Trellis charts",
-    "chart": "trellis-bar",
-    "title": "Trellis Bar"
-  },
-  {
-    "category": "Line Area charts",
+    "category": "Line/Area charts",
     "chart": "area",
     "title": "Area chart",
     "data_mapper": {
@@ -440,7 +429,7 @@
     "dataset_url": "<%= absolute_url %>data/area.json"
   },
   {
-    "category": "Line Area charts",
+    "category": "Line/Area charts",
     "chart": "line-0",
     "title": "Line 0",
     "data_mapper": {
@@ -451,7 +440,7 @@
     "dataset_url": "<%= absolute_url %>data/stream-2.json"
   },
   {
-    "category": "Line Area charts",
+    "category": "Line/Area charts",
     "chart": "line-1",
     "title": "Line 1",
     "data_mapper": {
@@ -462,7 +451,7 @@
     "dataset_url": "<%= absolute_url %>data/states.json"
   },
   {
-    "category": "Line Area charts",
+    "category": "Line/Area charts",
     "chart": "smooth-line",
     "title": "Smooth Line chart",
     "data_mapper": {
@@ -475,7 +464,7 @@
     "dataset_url": "<%= absolute_url %>data/smooth-line.json"
   },
   {
-    "category": "Line Area charts",
+    "category": "Line/Area charts",
     "chart": "stream",
     "title": "Stream chart",
     "data_mapper": {
@@ -487,7 +476,7 @@
     "dataset_url": "<%= absolute_url %>data/stream.json"
   },
   {
-    "category": "Line Area charts",
+    "category": "Line/Area charts",
     "chart": "ribbon",
     "title": "Ribbon chart",
     "data_mapper": {
@@ -499,7 +488,7 @@
     "dataset_url": "<%= absolute_url %>data/stream.json"
   },
   {
-    "category": "Box Plots",
+    "category": "Others",
     "chart": "horizontal-box-plot",
     "title": "Horizontal Box Plot",
     "data_mapper": {
@@ -512,18 +501,7 @@
     "dataset_url": "<%= absolute_url %>data/horizontal-box-plot.json"
   },
   {
-    "category": "Parallel Coordinates",
-    "chart": "parallel-coordinates",
-    "title": "Parallel Coordinates",
-    "dataset_url": "<%= absolute_url %>data/parallel-coordinates.csv"
-  },
-  {
-    "category": "Arc Diagram",
-    "chart": "arc",
-    "title": "Arc Diagram"
-  },
-  {
-    "category": "Word Cloud",
+    "category": "Others",
     "chart": "wordcloud",
     "title": "Word Cloud 1",
     "data_mapper": {
@@ -534,8 +512,35 @@
     "dataset_url": "<%= absolute_url %>data/wordcloud.json"
   },
   {
-    "category": "Word Cloud",
+    "category": "Others",
+    "chart": "parallel-coordinates",
+    "title": "Parallel Coordinates",
+    "dataset_url": "<%= absolute_url %>data/parallel-coordinates.csv"
+  },
+  {
+    "category": "Others",
+    "chart": "arc",
+    "title": "Arc Diagram"
+  },
+  {
+    "category": "Others",
     "chart": "wordcloud-2",
     "title": "Word Cloud 2"
+  },
+  {
+    "category": "Others",
+    "chart": "sankey",
+    "title": "Sankey"
+  },
+  {
+    "category": "Others",
+    "chart": "heatgrid",
+    "title": "Heat Grid",
+    "dataset_url": "<%= absolute_url %>data/rainfall.json"
+  },
+  {
+    "category": "Others",
+    "chart": "trellis-bar",
+    "title": "Trellis Bar"
   }
 ]

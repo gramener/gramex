@@ -6,24 +6,12 @@
   "padding": {
     "top": 20
   },
-  "title": "Multi Line",
-  "config": {
-    "group": {
-      "fill": "#F0F0F0",
-      "x": 100
-    },
-    "axis": {
-      "grid": true,
-      "gridColor": "#000000",
-      "gridOpacity": 0.3,
-      "gridDash": 2
-    },
-    "title": {
-      "offset": 7,
-      "fontSize": 16,
-      "anchor": "start",
-      "fontWeight": "bold"
-    }
+  "title": {
+    "text": "Multi Line",
+    "offset": 7,
+    "fontSize": 16,
+    "anchor": "start",
+    "fontWeight": "bold"
   },
   "data": [
     {
@@ -78,6 +66,10 @@
       "titlePadding": 5,
       "minExtent": 35,
       "labelPadding": 7,
+      "grid": true,
+      "gridColor": "#000000",
+      "gridOpacity": 0.3,
+      "gridDash": 2,
       "title": "X - Axis"
     },
     {
@@ -87,6 +79,10 @@
       "titlePadding": 5,
       "labelFlush": true,
       "labelPadding": 7,
+      "grid": true,
+      "gridColor": "#000000",
+      "gridOpacity": 0.3,
+      "gridDash": 2,
       "minExtent": 25,
       "title": "Y - Axis"
     }
@@ -177,7 +173,8 @@
               },
               "strokeWidth": {
                 "value": 1.5
-              }
+              },
+              "tooltip": {"signal": "datum"}
             }
           }
         }

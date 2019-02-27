@@ -31,11 +31,11 @@
   "data": [
     {
       "name": "table",
-      "url": "<%= absolute_url %>data/smooth-line.json",
+      "url": "<%= dataset_url %>",
       "format": {
         "type": "json",
         "parse": {
-          "date": "<%= data_mapper.column_1 %>"
+          "<%= data_mapper.column_1 %>": "date"
         }
       }
     },
@@ -75,14 +75,11 @@
     {
       "name": "color",
       "type": "ordinal",
-      "domain": [
-        "India",
-        "Pakistan"
-      ],
-      "range": [
-        "#00AEFF",
-        "#69B714"
-      ]
+      "domain": {
+        "data": "table",
+        "field": "<%= data_mapper.column_3 %>"
+      },
+      "range": {"scheme": "category10"}
     }
   ],
   "axes": [
