@@ -22,7 +22,9 @@ app:
   listen:
     port: 9999              # Avoid clash with default Gramex port running tests
   session:
-    private_key: $YAMLPATH/id_rsa
+    domain: .localhost.local    # RequestCookieJar uses this domain for localhost
+    secure: false               # Don't set this to true. We're using HTTP, so it will fail
+    # httponly: true            # Not required. Already set in base gramex.yaml
 
 cache:
   memory:

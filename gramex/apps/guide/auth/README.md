@@ -28,10 +28,25 @@ def store_value(handler):
 The first time a user visits the [session](session) page, it generates the
 `randkey`. The next time this is preserved.
 
-The cookie is [HttpOnly](https://www.owasp.org/index.php/HttpOnly) - you cannot
-access it via JavaScript. On HTTPS connections, it is also a marked as a
-[Secure](https://www.owasp.org/index.php/SecureFlag) cookie - you cannot access
-the same cookie via HTTP.
+The session cookie is:
+
+- [HttpOnly](https://www.owasp.org/index.php/HttpOnly): You cannot access the
+  cookie via JavaScript using `document.cookie`
+- [Secure](https://www.owasp.org/index.php/SecureFlag) on HTTPS connections. If
+  you set the cookie on a HTTPS request, you cannot access it via HTTP.
+- [Domain](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie):
+  not specified. The cookie can be accessed by the Gramex server that sets the
+  cookie, but not subdomains.
+
+You can change these defaults as follows:
+
+```yaml
+app:
+  session:
+    httponly: false         # Allow JavaScript access via document.cookie
+    secure: false           # Cookies can be accessed via HTTP (not just HTTPS)
+    domain: .example.org    # All subdomains in .example.org can access session
+```
 
 You can store any variable against a session. These are stored in the `sid`
 secure cookie for a duration that's controlled by the `app.session.expiry`
