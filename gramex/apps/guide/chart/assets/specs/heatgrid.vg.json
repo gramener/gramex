@@ -1,0 +1,141 @@
+{
+  "$schema": "https://vega.github.io/schema/vega/v4.json",
+  "width": 700,
+  "height": 600,
+  "background": "red",
+  "padding": 5,
+  "title": "RED HILLS recorded 5.57 inches of rainfall, 540% of normal",
+  "data": [
+    {
+      "name": "table",
+      "url": "<%= dataset_url %>",
+      "transform": [
+        {
+          "type": "fold",
+          "fields": {
+            "signal": "lakes"
+          },
+          "as": [
+            "lake",
+            "rainfall"
+          ]
+        }
+      ]
+    }
+  ],
+  "signals": [
+    {
+      "name": "lakes",
+      "value": [
+        "POONDI",
+        "CHOLA VARAM",
+        "RED HILLS",
+        "TAMARAI PAKKAM",
+        "CHEMBARAM BAKKAM",
+        "KORATTUR ANICUT",
+        "VEERANAM",
+        "NUNGAM BAKKAM",
+        "MEENAM BAKKAM"
+      ]
+    }
+  ],
+  "scales": [
+    {
+      "name": "xscale",
+      "type": "band",
+      "domain": {
+        "data": "table",
+        "field": "lake"
+      },
+      "range": "width",
+      "padding": 0.05,
+      "round": true
+    },
+    {
+      "name": "yscale",
+      "type": "band",
+      "domain": {
+        "data": "table",
+        "field": "Date"
+      },
+      "range": "height"
+    },
+    {
+      "name": "rainfall_scale",
+      "type": "linear",
+      "domain": {
+        "data": "table",
+        "field": "rainfall"
+      },
+      "range": {
+        "signal": "[0, bandwidth('xscale')]"
+      }
+    }
+  ],
+  "axes": [
+    {
+      "orient": "top",
+      "scale": "xscale",
+      "tickSize": {
+        "signal": "datum.index/0.125%2 == 0 ? 10: 30"
+      },
+      "grid": true,
+      "tickExtra": true,
+      "bandPosition": 0
+    },
+    {
+      "orient": "left",
+      "scale": "yscale",
+      "tickExtra": true,
+      "bandPosition": 0,
+      "grid": true
+    }
+  ],
+  "marks": [
+    {
+      "type": "rect",
+      "from": {
+        "data": "table"
+      },
+      "encode": {
+        "enter": {
+          "x": {
+            "scale": "xscale",
+            "field": "lake",
+            "band": 0
+          },
+          "width": {
+            "scale": "rainfall_scale",
+            "field": "rainfall"
+          },
+          "y": {
+            "field": "Date",
+            "scale": "yscale"
+          },
+          "height": {
+            "signal": "bandwidth('yscale')"
+          },
+          "stroke": {
+            "signal": "datum.rainfall == null ? 'orange': 'green'"
+          },
+          "strokeWidth": {
+            "value": 1
+          }
+        },
+        "update": {
+          "fill": {
+            "value": "#89A1C5"
+          }
+        },
+        "hover": {
+          "fill": {
+            "value": "skyblue"
+          },
+          "tooltip": {
+            "signal": "datum"
+          }
+        }
+      }
+    }
+  ]
+}

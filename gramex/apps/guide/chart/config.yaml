@@ -1,0 +1,10 @@
+UICOMPONENTS:
+  jquery: ui/jquery/dist/jquery.min.js
+  bootstrapjs: ui/bootstrap/dist/js/bootstrap.bundle.min.js
+  bootstrapcss: ui/bootstraptheme.css
+  lodash: ui/lodash/lodash.min.js
+  g1: ui/g1/dist/g1.min.js
+  fontawesome: ui/font-awesome/css/font-awesome.min.css
+  dropzonejs: ui/dropzone/dist/min/dropzone.min.js
+SCHEMAS:
+  chart: CREATE TABLE IF NOT EXISTS chart (id VARCHAR(32) NOT NULL, time FLOAT, user TEXT, config TEXT, name TEXT, slug TEXT, PRIMARY KEY (id))
