@@ -1926,6 +1926,13 @@ url:
       function: utils.session
       headers:
         Content-Type: application/json
+  auth/user:
+    pattern: /auth/user
+    handler: FunctionHandler
+    kwargs:
+      function: json.dumps(handler.current_user)
+      headers:
+        Content-Type: application/json
 
   auth/otp:
     pattern: /auth/otp
@@ -2743,6 +2750,10 @@ alert:
       subject: "{{ config.salutation }} #{{ index }}! {{ config['prefix'] }} {{ row['votes'] }} votes"
       salutation: "Congrats"
       prefix: "You got"
+      attachments:
+        - http://localhost:9999/capturechrome?url=http://localhost:9999/auth/user&ext=pdf
+      user:
+        id: "{{ row['name'] }}"
     alert-data-inplace:
       service: smtps_stub
       data:

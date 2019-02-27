@@ -232,6 +232,7 @@ alert:
     # Optional: to capture the dashboard as a specific user, add this user section
     # user:
     #   id: user@example.org
+    #   email: {{ config['to'] }}       # User object values can be templates
     #   role: manager
 ```
 
@@ -240,8 +241,7 @@ runs CaptureHandler, you must specify `thread: true`.
 
 The `user:` section sends an [X-Gramex-User](../auth/#encrypted-user) header to
 take a screenshot of a dashboard as the user would have seen it. Specify the
-entire `user` object here. Also set up [encrypt:](../auth/#encrypted-user) in
-`gramex.yaml` -- with the same keys across all servers.
+entire `user` object here. Values in `user:` can be [templates](#use-templates).
 
 
 ### Dynamic emails from data
