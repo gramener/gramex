@@ -534,12 +534,6 @@
   },
   {
     "category": "Others",
-    "chart": "heatgrid",
-    "title": "Heat Grid",
-    "dataset_url": "<%= absolute_url %>data/rainfall.json"
-  },
-  {
-    "category": "Others",
     "chart": "trellis-bar",
     "title": "Trellis Bar"
   }
