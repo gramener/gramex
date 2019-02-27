@@ -2575,6 +2575,12 @@ url:
           url: $TRANSLATE_XLSX
           sheet_name: translate
 
+  shutdown:
+    pattern: /shutdown
+    handler: FunctionHandler
+    kwargs:
+      function: gramex.shutdown() or 'Done'
+
 sms:
   amazonsns:
     type: amazonsns
