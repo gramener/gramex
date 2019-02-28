@@ -49,39 +49,58 @@ In addition, the schedule is specified via the `minutes`, `hours`, `dates`, `wee
 For example, this configuration runs at on the 15th and 45th minute every 4 hours
 on the first and last day of the month (if it's a weekday) in 2016-17.
 
-    :::yaml
-    run-when-i-say:
-        function: schedule_utils.log_time()
-        minutes: '15, 45'           # Every 15th & 45th minute
-        hours: '*/4'                # Every 4 hours
-        dates: '1, L'               # On the first and last days of the month
-        weekdays: 'mon-fri'         # On weekdays
-        months: '*'                 # In every month
-        years: '2016, 2017'         # the next 2 years
+```yaml
+schedule:
+  run-when-i-say:
+    function: schedule_utils.log_time()
+    minutes: '15, 45'           # Every 15th & 45th minute
+    hours: '*/4'                # Every 4 hours
+    dates: '1, L'               # On the first and last days of the month
+    weekdays: 'mon-fri'         # On weekdays
+    months: '*'                 # In every month
+    years: '2016, 2017'         # the next 2 years
+```
 
 This configuration runs only on startup:
 
-    :::yaml
-    run-on-startup:
-        function: schedule_utils.log_time()
-        startup: true
+```yaml
+schedule:
+  run-on-startup:
+    function: schedule_utils.log_time()
+    startup: true
+```
 
 This configuration runs on startup, and re-runs every time the YAML file changes:
 
-    :::yaml
-    run-on-startup:
-        function: schedule_utils.log_time()
-        startup: '*'
+```yaml
+schedule:
+  run-on-startup:
+    function: schedule_utils.log_time()
+    startup: '*'
+```
 
 This configuration runs every hour on a separate thread:
 
-    :::yaml
-    run-every-hour:
-        function: schedule_utils.log_time()
-        hours: '*'
-        thread: true
+```yaml
+schedule:
+  run-every-hour:
+    function: schedule_utils.log_time()
+    hours: '*'
+    thread: true
+```
 
-The scheduler's time zone is the time zone of the server Gramex runs on, not UTC.
+The scheduler uses the local time zone of the server Gramex runs on. To run on
+[UTC](https://en.wikipedia.org/wiki/Coordinated_Universal_Time) (i.e. GMT), add
+`utc: true`:
+
+```yaml
+schedule:
+  run-on-utc-schedule:
+    function: schedule_utils.log_time()
+    hours: 5            # Run at 5am UTC
+    utc: true
+```
+
 
 ## Scheduler API
 

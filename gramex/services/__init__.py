@@ -462,7 +462,7 @@ def create_alert(name, alert):
 def alert(conf):
     from . import scheduler
     _stop_all_tasks(info.alert)
-    schedule_keys = 'minutes hours dates months weekdays years startup'.split()
+    schedule_keys = 'minutes hours dates months weekdays years startup utc'.split()
 
     for name, alert in conf.items():
         _key = cache_key('alert', alert)

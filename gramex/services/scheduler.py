@@ -20,6 +20,7 @@ class Task(object):
         - thread: True to run in a separate thread
         '''
         self.name = name
+        self.utc = schedule.get('utc', False)
         if 'function' not in schedule:
             raise ValueError('schedule %s has no function:' % name)
         if callable(schedule['function']):
@@ -27,7 +28,7 @@ class Task(object):
         else:
             self.function = build_transform(schedule, vars={}, filename='schedule:%s' % name)
         self.ioloop = ioloop or tornado.ioloop.IOLoop.current()
-        self.callback = None
+        self.delay, self.callback = None, None
 
         if schedule.get('thread'):
             fn = self.function
@@ -69,13 +70,13 @@ class Task(object):
         if self.callback is not None:
             app_log.debug('Stopping %s', self.name)
             self.ioloop.remove_timeout(self.callback)
-            self.callback = None
+            self.delay, self.callback = None, None
 
     def call_later(self):
         '''Schedule next run. Do NOT call twice: creates two callbacks'''
-        delay = self.cron.next(default_utc=False) if hasattr(self, 'cron') else None
+        delay = self.cron.next(default_utc=self.utc) if hasattr(self, 'cron') else None
         if delay is not None:
             app_log.debug('Scheduling %s after %.0fs', self.name, delay)
-            self.callback = self.ioloop.call_later(delay, self.run)
+            self.delay, self.callback = delay, self.ioloop.call_later(delay, self.run)
         else:
             app_log.debug('No further schedule for %s', self.name)

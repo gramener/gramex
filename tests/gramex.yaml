@@ -2646,6 +2646,13 @@ schedule:
     kwargs: {count: 1000}
     startup: true
     thread: true
+  schedule-timed:
+    function: gramex.config.app_log('schedule-timed ran now')
+    hours: 5
+  schedule-timed-utc:
+    function: gramex.config.app_log('schedule-timed-utc ran now')
+    hours: 5
+    utc: true
 
 email:
   smtps_stub:
