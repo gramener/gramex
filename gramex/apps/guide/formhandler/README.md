@@ -336,7 +336,7 @@ url:
         barchart:           # Allows ?_format=barchart
           format: vega
           spec:
-            "$schema": "https://vega.github.io/schema/vega/v3.json"
+            "$schema": "https://vega.github.io/schema/vega/v4.json"
             ...   # The rest of the Vega spec comes here
 ```
 
@@ -345,7 +345,7 @@ When you visit [vega-1?_format=barchart](vega-1?_format=barchart) it renders Jav
 ```html
 <script src="vega-1?_format=barchart" data-id="chart1"></script>
 ... rest of the page ...
-<script src="https://cdn.jsdelivr.net/npm/vega@3.2.1/build/vega.min.js"></script>
+<script src="ui/vega/build/vega.min.js"></script>
 ```
 
 This script draws a barchart from [`/vega-1`](http://github.com/gramener/gramex/blob/master/gramex/apps/guide/formhandler/vega.yaml) formhandler data within `<div id="chart1"></div>`. If `data-id` is missing, random ID is created.
@@ -364,12 +364,16 @@ var url = 'vega-1?_format=json&Continent!=Africa'
 $.getJSON(url)
   .done(function(new_data) {
     var view = document.querySelector('#chart1').vega
+    // Suppose, Vega spec in above example uses `data` as (name)[https://vega.github.io/vega/docs/data/]
+
     // Remove old data from namespace `data`
     view.remove('data', function(d) {return true}).run()
     // Insert new values into namespace `data`
     view.insert('data', new_data).run()
   })
 ```
+
+Note: For Vega-Lite, default dataset namespace is `source_0`
 
 <div class="example">
   <a class="example-demo" href="vega-examples">FormHandler Vega Chart examples</a>
@@ -381,8 +385,8 @@ Similarly, [Vega-Lite](https://vega.github.io/vega-lite/) charts are also suppor
 ```html
 <script src="vega-lite-1?_format=barchart"></script>
 ... rest of the page ...
-<script src="https://cdn.jsdelivr.net/npm/vega@3.2.1/build/vega.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/vega-lite@2.3.1/build/vega-lite.min.js"></script>
+<script src="ui/vega/build/vega.min.js"></script>
+<script src="ui/vega-lite/build/vega-lite.min.js"></script>
 ```
 
 <div class="example">
@@ -395,8 +399,8 @@ Similarly, Use `format: vegam` for [Vegam](https://www.npmjs.com/package/vegam) 
 ```html
 <script src="vegam-1?_format=barchart"></script>
 ... rest of the page ...
-<script src="https://cdn.jsdelivr.net/npm/vega@3.2.1/build/vega.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/vega-lite@2.3.1/build/vega-lite.min.js"></script>
+<script src="ui/vega/build/vega.min.js"></script>
+<script src="ui/vega-lite/build/vega-lite.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/vegam@0.0.2/dist/vegam.min.js"></script>
 ```
 
