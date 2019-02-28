@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+    <head><meta charset="utf-8" />
+        <title>Select Dataset</title>
+    </head>
+    <body>
+        {% from gramex.nlg.webapp import get_dataset_files, get_narrative_config_files %}
+        {% set NLG_DATASETS = get_dataset_files(handler) %}
+        {% set NLG_NARRATIVES = get_narrative_config_files(handler) %}
+        <link rel="stylesheet" href="ui/bootstraptheme.css" /> <!-- Add bootstrap -->
+        <!-- Include JS dependencies  -->
+        <script src="ui/lodash/lodash.min.js"></script>
+        <script src="ui/jquery/dist/jquery.min.js"></script>
+        <script src="ui/popper.js/dist/umd/popper.min.js"></script>
+        <script src="ui/bootstrap/dist/js/bootstrap.min.js"></script>
+        <script src="ui/g1/dist/g1.min.js"></script>
+
+        <form id="nlg-init-form" action="initform" method="POST" enctype="multipart/form-data">
+            <div class="form-row">
+                <p>Select Dataset:</p>
+                <select name="dataset" id="dataset-select" class="selectpicker" form="nlg-init-form">
+                    {% for filename in NLG_DATASETS %}
+                    <option value="{{ filename }}">{{ filename }}</option>
+                    {% end %}
+                    <option value="" selected>None</option>
+                </select>
+                <p>Select Narrative:</p>
+                <select name="narrative" id="narrative-select" class="selectpicker" form="nlg-init-form">
+                    {% for filename in NLG_NARRATIVES %}
+                    <option value="{{ filename }}">{{ filename }}</option>
+                    {% end %}
+                    <option value="" selected>None</option>
+                </select>
+            </div>
+            <br>
+            <p>Or upload new:</p>
+            <div class="form-row">
+                <input type="hidden" name="_xsrf" value="{{ handler.xsrf_token }}">
+                <p>Dataset:</p>
+                <input id="fileupload" name="data-file" type="file">
+                <p>Config:</p>
+                <input id="narrativeupload" name="config-file" type="file">
+            </div>
+            <button type="submit">Submit</button>
+        </form>
+    </body>
+</html>
+
