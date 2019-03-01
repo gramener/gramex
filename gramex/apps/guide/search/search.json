@@ -733,7 +733,7 @@
   },
   "1.51": {
     "": {
-      "Gramex 1.51 is open source, with PDF support, security and testing": -1
+      "Gramex 1.51 release notes": -1
     },
     "add-header-and-footer-to-pdf-screenshots": {
       "Add header and footer to PDF screenshots": -1
@@ -744,20 +744,63 @@
     "documentation-is-more-interactive": {
       "Documentation is more interactive": -1
     },
+    "enhanced-security-protect-against-bots": {
+      "Enhanced security: Protect against bots": -1
+    },
     "gramex-is-open-source": {
       "Gramex is open source": -1
     },
-    "protect-against-bot-attacks": {
-      "Protect against bot attacks": -1
-    },
+    "protect-against-bot-attacks": {},
     "stats": {
       "Stats": -1
     },
-    "test-application-on-resolutions": {
-      "Test application on resolutions": -1
+    "test-application-on-multiple-screen-resolutions": {
+      "Test application on multiple screen resolutions": -1
     },
+    "test-application-on-resolutions": {},
     "upgrade": {
       "Upgrade": -1
+    }
+  },
+  "1.52": {
+    "": {
+      "Gramex 1.52 release notes": -1
+    },
+    "alerts-can-be-synchronized-across-time-zones": {
+      "Alerts can be synchronized across time-zones": -1
+    },
+    "auto-complete-with-snippets-on-visual-studio-code": {
+      "Auto-complete with snippets on Visual Studio Code": -1
+    },
+    "browsing-files-with-formhandler-is-simpler": {
+      "Browsing files with FormHandler is simpler": -1
+    },
+    "formhandler-is-more-flexible": {
+      "FormHandler is more flexible": -1
+    },
+    "how-to-upgrade": {
+      "How to upgrade": -1
+    },
+    "load-balancing-with-authentication-across-domains": {
+      "Load balancing with authentication across domains": -1
+    },
+    "new-graphics-capability-with-d3-v5": {
+      "New graphics capability with d3 v5": -1
+    },
+    "search-engine-friendly-file-urls": {
+      "Search-engine friendly file URLs": -1
+    },
+    "smart-alerts-send-personalized-dashboards-as-attachments": {
+      "Smart alerts send personalized dashboards as attachments": -1
+    },
+    "statistics": {
+      "Statistics": -1
+    },
+    "templates-refresh-immediately-when-included-files-are-updated": {
+      "Templates refresh immediately when included files are updated": -1
+    },
+    "test-pages-created-by-javascript": {
+      "Test pages created by JavaScript": -1
     }
   },
   "about": {
@@ -1215,23 +1258,31 @@
     "": {
       "Contributing to Gramex": -1
     },
+    "if-this-fails-add-p-password": {
+      "If this fails, add '-p PASSWORD'": -1
+    },
     "push-docs-and-coverage-tests": {
       "Push docs and coverage tests": -1
     },
     "push-to-pypi": {
       "Push to pypi": -1
     },
-    "releasing-gramex": {
-      "Releasing Gramex": -1
+    "release-gramex-community-edition": {
+      "Release Gramex Community Edition": -1
     },
+    "release-gramex-enterprise-edition": {
+      "Release Gramex Enterprise Edition": -1
+    },
+    "releasing-gramex": {},
     "set-up-gramex": {
       "Set up Gramex": -1
     },
     "test-gramex": {
       "Test Gramex": -1
     },
-    "update-gramex": {
-      "Update Gramex": -1
+    "update-gramex": {},
+    "update-gramex-community-edition": {
+      "Update Gramex Community Edition": -1
     }
   },
   "dashboard": {
@@ -1895,6 +1946,9 @@
     },
     "uninstall-gramex": {
       "Uninstall Gramex": -1
+    },
+    "vscode-extension": {
+      "VSCode Extension": -1
     }
   },
   "jsonhandler": {
@@ -2425,6 +2479,17 @@
     },
     "twilio": {
       "Twilio": -1
+    }
+  },
+  "snippets": {
+    "": {
+      "Snippets (Visual Studio Code Extension)": -1
+    },
+    "how-to-use": {
+      "How to use": -1
+    },
+    "installation": {
+      "Installation": -1
     }
   },
   "test": {
