@@ -28,10 +28,10 @@ function template_data(vega_spec, view) {
     chart: [
       {
         title: 'Width',
-        id: 'g-width'.replace('.', '-'),
+        id: 'g-width',
         template: 'input',
         detail: {
-          id: 'g-width'.replace('.', '-'),
+          id: 'g-width',
           input: 'number',
           label: 'Width',
           unit: 'px',
@@ -47,9 +47,9 @@ function template_data(vega_spec, view) {
       {
         title: 'Height',
         template: 'input',
-        id: 'g-height'.replace('.', '-'),
+        id: 'g-height',
         detail: {
-          id: 'g-height'.replace('.', '-'),
+          id: 'g-height',
           input: 'number',
           label: 'Height',
           unit: 'px',
@@ -59,6 +59,56 @@ function template_data(vega_spec, view) {
             min: 0,
             max: 10000,
             step: 1
+          }
+        }
+      },
+      {
+        title: 'Padding',
+        template: 'padding',
+        id: 'g-padding',
+        detail: {
+          id: 'g-padding',
+          input: 'padding',
+          label: 'Height',
+          unit: 'px',
+          attrs: {
+            value: 360,
+            'data-path': 'height',
+            min: 0,
+            max: 10000,
+            step: 1
+          }
+        }
+      },
+      {
+        title: 'Background',
+        template: 'input',
+        id: 'g-background',
+        detail: {
+          id: 'g-background',
+          input: 'color',
+          label: 'Background',
+          unit: 'hex',
+          attrs: {
+            value: '#ffffff',
+            'data-path': 'background'
+          }
+        }
+      },
+      {
+        title: 'autosize',
+        template: 'select',
+        id: 'g-autosize',
+        detail: {
+          id: 'g-autosize',
+          input: 'select',
+          label: 'Autosize',
+          options: [
+            'fit', 'pad', 'none'
+          ],
+          attrs: {
+            value: 'fit',
+            'data-path': 'autosize',
           }
         }
       }

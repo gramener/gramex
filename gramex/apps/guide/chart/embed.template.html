@@ -1,0 +1,13 @@
+<div class="chart">
+</div>
+<script src="../ui/vega/build/vega.js"></script>
+<script src="../ui/vega-embed/build/vega-embed.js"></script>
+<script>
+  var spec = {% raw myvalue.get('spec') %}
+  vegaEmbed('.chart', spec, { defaultStyle: true, renderer: 'svg', runAsync: true,   "actions" : {
+    "source": false,
+    "compiled": false,
+    "editor": false
+  }, })
+    .catch(console.error)  // eslint-disable-line no-console
+</script>

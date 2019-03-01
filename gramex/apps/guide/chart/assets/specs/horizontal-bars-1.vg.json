@@ -83,7 +83,7 @@
   ],
   "marks": [
     {
-      "name": "marks_rect",
+      "name": "bars",
       "type": "rect",
       "from": {
         "data": "data_table"
