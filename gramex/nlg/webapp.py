@@ -16,10 +16,9 @@ from tornado.template import Template
 
 from gramex.config import variables
 from gramex.nlg import Narrative
-from gramex.nlg import grammar as G
+from gramex.nlg import grammar
 from gramex.nlg import templatize
-from gramex.nlg import utils as U
-
+from gramex.nlg import utils
 
 DATAFILE_EXTS = {'.csv', '.xls', '.xlsx', '.tsv'}
 
@@ -39,14 +38,14 @@ def render_live_template(handler):
     data = json.loads(handler.args['data'][0])
     df = pd.DataFrame.from_records(data)
     nrpath = op.join(nlg_path, handler.current_user.email, nrid)
-    with open(nrpath, 'r') as fout:
+    with open(nrpath, 'r') as fout:  # noqa: No encoding for json
         templates = json.load(fout)
     narratives = []
     style = json.loads(handler.args['style'][0])
     for t in templates['config']:
-        tmpl = U.add_html_styling(t['template'], style)
+        tmpl = utils.add_html_styling(t['template'], style)
         s = Template(tmpl).generate(df=df, fh_args=t.get('fh_args', {}),
-                                    G=G, U=U, orgdf=orgdf)
+                                    G=grammar, U=utils, orgdf=orgdf)
         rendered = s.decode('utf8')
         narratives.append(rendered)
     return '\n'.join(narratives)
@@ -55,7 +54,7 @@ def render_live_template(handler):
 def get_original_df(handler):
     """Get the original dataframe which was uploaded to the webapp."""
     data_dir = op.join(nlg_path, handler.current_user.email)
-    with open(op.join(data_dir, 'meta.cfg'), 'r') as fout:
+    with open(op.join(data_dir, 'meta.cfg'), 'r') as fout:  # noqa: No encoding for json
         meta = json.load(fout)
     dataset_path = op.join(data_dir, meta['dsid'])
     return pd.read_csv(dataset_path)
@@ -79,9 +78,9 @@ def render_template(handler):
     resp = []
     for t in templates:
         rendered = Template(t).generate(
-            orgdf=orgdf, df=df, fh_args=fh_args, G=G, U=U).decode('utf8')
+            orgdf=orgdf, df=df, fh_args=fh_args, G=grammar, U=utils).decode('utf8')
         rendered = rendered.replace('-', '')
-        grmerr = U.check_grammar(rendered)
+        grmerr = utils.check_grammar(rendered)
         resp.append({'text': rendered, 'grmerr': grmerr})
     return json.dumps(resp)
 
@@ -98,7 +97,7 @@ def process_template(handler):
         args = {}
     resp = []
     for t in text:
-        grammar_errors = U.check_grammar(t)
+        grammar_errors = utils.check_grammar(t)
         replacements, t, infl = templatize(t, args.copy(), df)
         resp.append({
             "text": t, "tokenmap": replacements, 'inflections': infl,
@@ -108,7 +107,7 @@ def process_template(handler):
 
 def read_current_config(handler):
     meta_path = op.join(nlg_path, handler.current_user.email, 'meta.cfg')
-    with open(meta_path, 'r') as fout:
+    with open(meta_path, 'r') as fout:  # noqa: No encoding for json
         meta = json.load(fout)
     return meta
 
@@ -159,8 +158,8 @@ def download_template(handler):
     conditions = json.loads(parse.unquote(handler.args["condts"][0]))
     fh_args = json.loads(parse.unquote(handler.args["args"][0]))
     template = Narrative(tmpl, conditions).templatize()
-    t_template = Template(U.NARRATIVE_TEMPLATE)
-    return t_template.generate(tmpl=template, fh_args=fh_args, G=G).decode("utf8")
+    t_template = Template(utils.NARRATIVE_TEMPLATE)
+    return t_template.generate(tmpl=template, fh_args=fh_args, G=grammar).decode("utf8")
 
 
 def download_config(handler):
@@ -182,7 +181,7 @@ def save_config(handler):
         nname += '.json'
     payload['dataset'] = parse.unquote(handler.args['dataset'][0])
     fpath = op.join(nlg_path, handler.current_user.email, nname)
-    with open(fpath, 'w') as fout:
+    with open(fpath, 'w') as fout:  # noqa: No encoding for json
         json.dump(payload, fout, indent=4)
 
 
@@ -191,8 +190,8 @@ def get_gramopts(handler):
 
     Primarily used for creating the select box in the template settings dialog."""
     funcs = {}
-    for attrname in dir(G):
-        obj = getattr(G, attrname)
+    for attrname in dir(grammar):
+        obj = getattr(grammar, attrname)
         if getattr(obj, 'gramopt', False):
             funcs[obj.fe_name] = {'source': obj.source, 'func_name': attrname}
     return funcs

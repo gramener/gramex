@@ -81,7 +81,7 @@ url:
       auth: $ADMIN_AUTH
       headers:
         Content-Type: application/json      # Display as JSON
-  
+
   # NLG Webapp handlers
   apps/admin2/nlg-data-selector-$*:
     pattern: /$YAMLURL/initform
@@ -119,7 +119,7 @@ url:
     kwargs:
       function: gramex.nlg.webapp.get_init_config
       headers:
-        Content-Type: application/json 
+        Content-Type: application/json
   apps/admin2/textproc-$*:
     pattern: /$YAMLURL/textproc
     handler: FunctionHandler

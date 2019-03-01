@@ -36,12 +36,12 @@ def _sort_search_results(items, priorities=SEARCH_PRIORITIES):
     return items
 
 
-class dfsearchres(dict):
+class DFSearchResults(dict):
     """A convenience wrapper around `dict` to collect search results."""
 
     def __setitem__(self, key, value):
         if key not in self:
-            super(dfsearchres, self).__setitem__(key, [value])
+            super(DFSearchResults, self).__setitem__(key, [value])
         elif self[key][0] != value:
             self[key].append(value)
 
@@ -69,7 +69,7 @@ class DFSearch(object):
         self.df = df
         # What do results contain?
         # A map of tokens to pandas slices
-        self.results = dfsearchres()
+        self.results = DFSearchResults()
         self.nlp = nlp
 
     def search(self, text, colname_fmt="df.columns[{}]",

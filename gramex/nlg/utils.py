@@ -59,7 +59,7 @@ def join_words(x, sep=' '):
     return sep.join(re.findall(r'\w+', x, re.IGNORECASE))
 
 
-class set_nlg_gramopt(object):
+class set_nlg_gramopt(object):  # noqa: class to be used as a decorator
     """Decorator for adding callables to grammar options of the webapp.
     """
     def __init__(self, **kwargs):
@@ -187,7 +187,7 @@ def check_grammar(text):
     url = "{}:{}/{}/check?language=en-us&text={}"
     try:
         resp = requests.get(url.format(host, port, apiversion, text))
-        if resp.status_code == 200:
+        if resp.status_code == requests.codes.ok:
             resp = resp.json()['matches']
         else:
             resp = []
@@ -203,7 +203,7 @@ def load_template(name, loc=None):
         except (NoOptionError, NoSectionError):
             loc = '~/.nlg/templates'
     tmpl_path = op.join(loc, name)
-    with open(tmpl_path, 'r') as fout:
+    with open(tmpl_path, 'r') as fout:  # NOQA: No encoding for json
         template = json.load(fout)
     return template
 

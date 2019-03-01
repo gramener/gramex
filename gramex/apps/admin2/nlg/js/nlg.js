@@ -76,7 +76,7 @@ class Template {
                 token.varname = varname
             }
             this.makeTemplate()
-       }
+        }
     }
 
     ignoreTokenTemplate(token) {
@@ -93,12 +93,12 @@ class Template {
         btn.setAttribute("class", "btn btn-success round")
         btn.setAttribute("title", "Add Token")
         btn.innerHTML = '<i class="fa fa-plus-circle">'
-        
+
         // change the listener to adder
         var parent = this
         btn.addEventListener("click", function (e) { parent.addTokenTemplate(token) })
     }
-    
+
     addTokenTemplate(token) {
         token.is_ignored = false
         var enabled_tmpl = token.enabledTemplate
@@ -117,7 +117,7 @@ class Template {
         btn.setAttribute("class", "btn btn-danger round")
         btn.setAttribute("title", "Ignore Token")
         btn.innerHTML = '<i class="fa fa-times-circle">'
-        
+
         // change the listener to remover
         var parent = this
         btn.addEventListener("click", function (e) { parent.ignoreTokenTemplate(token) })
@@ -169,7 +169,7 @@ class Template {
                     </button></td></tr>`
         }
         document.getElementById('table-body').innerHTML = html
-        
+
         for (let [token, tkobj] of Object.entries(this.tokenmap)) {
             // add search result dropdown listeners
             if (tkobj.tokenlist.length > 1) {
@@ -293,7 +293,7 @@ class Token {
             else { var selected = "" }
             html += `<option ${selected}>${fe_name}</option>`
         }
-        return html + '</select>' 
+        return html + '</select>'
     }
 
     changeGrammarOption() {
@@ -456,7 +456,7 @@ function downloadNarrative() {
 }
 
 function saveConfig() {
-    var elem = document.getElementById('narrative-name-editor') 
+    var elem = document.getElementById('narrative-name-editor')
     if (!(elem.value)) {
         alert('Please name the narrative.')
         elem.focus()
@@ -587,7 +587,7 @@ function addCondition(event) {
         template.makeTemplate()
         document.getElementById('edit-template').value = template.template
     }
-    
+
 }
 
 function addName(event) {
@@ -678,10 +678,10 @@ function copyToClipboard(elem_id) {
 function getRmButton(n) {
     // Get HTML for the delete template button.
     return `
-     <button id="rm-btn-${n}" title="Remove" type="button" class="btn btn-primary">
+    <button id="rm-btn-${n}" title="Remove" type="button" class="btn btn-primary">
         <i class="fa fa-trash"></i>
-     </button>
-     `
+    </button>
+    `
 }
 
 function getSettingsBtn(n) {
@@ -691,3 +691,4 @@ function getSettingsBtn(n) {
     </button>
     `
 }
+
