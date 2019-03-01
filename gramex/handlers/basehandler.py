@@ -145,6 +145,10 @@ class BaseMixin(object):
         cls._session_store = session_store_cache[key]
         cls.session = property(cls.get_session)
         cls._session_expiry = session_conf.get('expiry')
+        cls._session_cookie = {
+            key: session_conf[key] for key in ('domain', 'httponly', 'secure')
+            if key in session_conf
+        }
         cls._on_finish_methods.append(cls.save_session)
         cls._on_init_methods.append(cls.override_user)
         cls._on_finish_methods.append(cls.set_last_visited)
@@ -439,7 +443,8 @@ class BaseMixin(object):
     def _set_new_session_id(self, expires_days):
         '''Sets a new random session ID as the sid: cookie. Returns a bytes object'''
         session_id = b2a_base64(os.urandom(24))[:-1]
-        kwargs = dict(httponly=True, expires_days=expires_days)
+        kwargs = dict(self._session_cookie)
+        kwargs['expires_days'] = expires_days
         # Use Secure cookies on HTTPS to prevent leakage into HTTP
         if self.request.protocol == 'https':
             kwargs['secure'] = True

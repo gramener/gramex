@@ -4,7 +4,7 @@
   <meta charset="utf8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>$title</title>
-  <link rel="stylesheet" href="/$GUIDE_ROOT/style.css?v=42">
+  <link rel="stylesheet" href="/$GUIDE_ROOT/style.css?v=44">
 </head>
 <body>
 
@@ -27,6 +27,7 @@
           <ul>
             <li><a href="/$GUIDE_ROOT/server/">Gramex</a></li>
             <li><a href="/$GUIDE_ROOT/quickstart/">Quickstart</a></li>
+            <li><a href="/$GUIDE_ROOT/faq/">FAQ</a></li>
             <li><a target="_blank" href="https://learn.gramener.com/gramex/gramex.html">API Reference</a></li>
             <li><a href="/$GUIDE_ROOT/release/">Release notes</a></li>
             <li><a href="/$GUIDE_ROOT/license/">License</a></li>
@@ -43,6 +44,7 @@
             <li><a href="/$GUIDE_ROOT/deploy/">Deployment patterns</a></li>
             <li><a href="/$GUIDE_ROOT/debug/">Debugging Gramex</a></li>
             <li><a href="/$GUIDE_ROOT/test/">Testing Gramex</a></li>
+            <li><a href="/$GUIDE_ROOT/snippets/">Snippets</a></li>
           </ul>
         </li>
         <li><a href="#">Handlers</a></li>
@@ -106,6 +108,6 @@
 
   <script src="/$GUIDE_ROOT/node_modules/clipboard/dist/clipboard.min.js"></script>
   <script src="/$GUIDE_ROOT/node_modules/anchor-js/anchor.min.js"></script>
-  <script src="/$GUIDE_ROOT/script.js?v=42"></script>
+  <script src="/$GUIDE_ROOT/script.js?v=44"></script>
 </body>
 </html>

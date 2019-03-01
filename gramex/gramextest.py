@@ -4,15 +4,18 @@ import os
 import pytest
 import re
 import requests
-import time
 import gramex.cache
 from fnmatch import fnmatch
 from lxml.html import document_fromstring
 from selenium import webdriver
-from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import NoSuchElementException, TimeoutException
 from six import string_types
 from tornado.web import create_signed_value
 from gramex.config import ChainConfig, PathConfig, objectpath, variables
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions
+from selenium.webdriver.common.action_chains import ActionChains
 
 # Get Gramex conf from current directory
 gramex_conf = ChainConfig()
@@ -21,6 +24,7 @@ gramex_conf['base'] = PathConfig('gramex.yaml')
 secret = objectpath(+gramex_conf, 'app.settings.cookie_secret')
 drivers = {}
 default = object()
+get_el = expected_conditions.presence_of_element_located
 
 
 class ChromeConf(dict):
@@ -54,7 +58,7 @@ def pytest_collect_file(parent, path):
 def pytest_runtest_teardown(item, nextitem):
     if nextitem is None:
         for browser, driver in drivers.items():
-            driver.close()
+            driver.quit()
 
 
 class YamlFile(pytest.File):
@@ -83,11 +87,14 @@ class YamlFile(pytest.File):
 
 class YamlItem(pytest.Item):
     def __init__(self, name, parent, actions, registry):
-        super(YamlItem, self).__init__(name, parent)
         if isinstance(actions, string_types):
             actions = {actions: {}}
         self.run = []
+        self.name = name
         for action, options in actions.items():
+            if action == 'name':
+                self.name = str(options)
+                continue
             # PY3: cmd, *arg = action.strip().split(maxsplit=1)
             parts = action.strip().split(None, 1)
             cmd, arg = (parts[0], parts[1:]) if len(parts) > 1 else (parts[0], [])
@@ -103,6 +110,8 @@ class YamlItem(pytest.Item):
             else:
                 # e.g. fetch: <url> and test: <selector>
                 self.run.append([method, [options], {}])
+
+        super(YamlItem, self).__init__(self.name, parent)
 
     def runtest(self):
         for method, args, kwargs in self.run:
@@ -206,6 +215,33 @@ class UITest(object):
                 actual = node.get_attribute(key)
             match(actual, expected, msg, key)
 
+    def wait(self, seconds=default, **attrs):
+        if seconds != default:
+            self.driver.implicitly_wait(float(seconds))
+            return
+        timeout = float(attrs.get('timeout', 10))
+        if 'selector' in attrs:
+            selector = attrs['selector']
+            opt = selector.strip().split(None, 1)
+            args = (By.XPATH, opt[1]) if opt[0] == 'xpath' else (By.CSS_SELECTOR, selector)
+            try:
+                WebDriverWait(self.driver, timeout).until(get_el(args))
+            except TimeoutException:
+                raise ConfError('selector: "%s" timed out after %.0fs' % (selector, timeout))
+        if 'script' in attrs:
+            script = attrs['script']
+            try:
+                WebDriverWait(self.driver, timeout).until(
+                    lambda v: self.driver.execute_script('return ' + script))
+            except TimeoutException:
+                raise ConfError('script: "%s" timed out after %.0fs' % (script, timeout))
+
+    def hover(self, selector):
+        ActionChains(self.driver).move_to_element(self._get(selector)).perform()
+
+    def title(self, text):
+        match(self.driver.title, text, 'title:')
+
     def fetch(self, url):
         self.driver.get(url)
 
@@ -216,9 +252,6 @@ class UITest(object):
     def forward(self, count=1):
         for index in range(count):
             self.driver.forward()
-
-    def wait(self, seconds):
-        time.sleep(float(seconds))
 
     def click(self, selector):
         self._get(selector, must_exist=True).click()
@@ -253,14 +286,22 @@ class UITest(object):
     def type(self, selector, text):
         self._get(selector, must_exist=True).send_keys(text)
 
+    def resize(self, size):
+        if isinstance(size, string_types) and 'max' in size.lower():
+            self.driver.maximize_window()
+        elif isinstance(size, (list, tuple)) and len(size) == 2:
+            self.driver.set_window_size(*size)
+        else:
+            raise ConfError('Invalid resize: %r. Use [width,height] or "max"' % size)
+
     def screenshot():
         pass
 
     def submit():
         pass
 
-    def clear():
-        pass
+    def clear(self, selector):
+        self._get(selector, must_exist=True).clear()
 
     select_method = {
         ('css', True): 'find_elements_by_css_selector',

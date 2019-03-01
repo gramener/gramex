@@ -29,6 +29,7 @@ validate:
     - eslint gramex/apps
     - htmllint
     - pip install -e .
+    - pip install gramexenterprise
     - gramex license accept
     - python setup.py nosetests
     - bandit gramex --recursive --format csv || true    # Just run bandit as a warning
@@ -46,6 +47,7 @@ validate-py2:
   script:
     - flake8  # Check flake8 errors for Python 2
     - pip install -e .
+    - pip install gramexenterprise
     - gramex license accept
     - python setup.py nosetests
     - pytest -v gramex/apps/guide/test/gramextest.yaml
@@ -79,6 +81,7 @@ deploy-uat-demo:
         git checkout -- .;
         git pull;
         pip install --verbose -e .;
+        pip install gramexenterprise;
         gramex setup --all;
         gramex license accept;
       "'
@@ -87,6 +90,7 @@ deploy-uat-demo:
         git checkout -- .;
         git pull;
         pip install --verbose -e .;
+        pip install gramexenterprise;
         gramex setup --all;
         gramex license accept;
       "'

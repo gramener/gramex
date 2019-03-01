@@ -707,13 +707,15 @@ url:
 ```
 
 3. In the client AND the host, enable a distributed
-   [session data mechanism](../auth/#session-data) like Redis:
+   [session data mechanism](../auth/#session-data) like Redis,
+   and also to share cookies:
 
 ```yaml
 app:
   session:
     type: redis
-    path: localhost:6379:0
+    path: localhost:6379:0      # Run redis on localhost at port 6379. This uses DB 0
+    domain: .your-domain.com    # Allows cookies to be shared between *.your-domain.com
 ```
 
 4. In the host `mymodule.mycalc()`, set the `Access-Control-Allow-Origin` header:

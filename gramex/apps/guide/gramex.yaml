@@ -54,7 +54,8 @@ url:
         pattern: /$YAMLURL/g1/(.*)
         handler: FileHandler
         kwargs:
-            path: $YAMLPATH/../ui/node_modules/g1/
+            path: $GRAMEXAPPS/ui/node_modules/g1/
+            default_filename: README.md
             transform: *MARKDOWN_TO_HTML
             headers: *HEADERS
     # The welcome page is the first page that's served when users login.

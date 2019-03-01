@@ -12,6 +12,7 @@ from gramex.http import OK, FORBIDDEN, METHOD_NOT_ALLOWED
 from orderedattrdict import AttrDict
 from gramex.ml import r
 from gramex.transforms import badgerfish, rmarkdown
+from nose.plugins.skip import SkipTest
 from . import server, tempfiles, TestGramex
 
 
@@ -131,17 +132,20 @@ class TestFileHandler(TestGramex):
         self.check('/dir/normalize/dot/index.html', path='dir/index.html')
         self.check('/dir/normalize/dotdot/index.html', path='dir/index.html')
 
-    def test_filehandle_errors(self):
+    def test_filehandler_errors(self):
         self.check('/nonexistent', code=404)
         self.check('/dir/nonexistent-file', code=404)
-        self.check('/dir/noindex/../../gramex.yaml', code=404)
+        self.check('/dir/noindex/subdir/', code=404)
         self.check('/dir/noindex/../nonexistent', code=404)
+        self.check('/dir/noindex/../../gramex.yaml', code=403)
 
     def test_markdown(self):
         with (server.info.folder / 'dir/markdown.md').open(encoding='utf-8') as f:
             self.check('/dir/transform/markdown.md', text=markdown.markdown(f.read()))
 
     def test_rmarkdown(self):
+        if os.environ.get('BRANCH', '') not in {'dev', 'master'}:
+            raise SkipTest('Install slow rmarkdown installation only on dev/master')
         # install rmarkdown if missing
         r('''
             packages <- c('rmarkdown')
@@ -191,6 +195,38 @@ class TestFileHandler(TestGramex):
         self.check('/dir/merge.html', text='Β.HTML\nΑ.Txt\n', headers={
             'Content-Type': 'text/html; charset=UTF-8'
         })
+
+    def test_map(self):
+        # '/dir/map/': dir/index.html
+        self.check('/dir/map/', path='dir/index.html')
+        # '/dir/map/(.*)/(.*)/(.*)': 'dir/{0}{1}{2}'
+        self.check('/dir/map/cap/ture/.js', path='dir/capture.js')
+        self.check('/dir/map/al/ph/a.txt', text='Α.TXT')    # Capitalized alpha.txt
+        self.check('/dir/map/x/y/z', code=404)
+        # '/dir/map/url': 'dir/{file}{mid}.{ext}'
+        self.check('/dir/map/url?file=template', path='dir/template.txt')
+        self.check('/dir/map/url?file=template&file=x', path='dir/template.txt')
+        self.check('/dir/map/url?file=template&mid=.sub', path='dir/template.sub.txt')
+        self.check('/dir/map/url?file=index&ext=html', path='dir/index.html')
+        self.check('/dir/map/url?file=nonexistent', code=404)
+        self.check('/dir/map/url', code=404)
+        # '/dir/map/(?P<ext>txt)/(.*)': 'dir/{1}.{ext}'
+        self.check('/dir/map/txt/template', path='dir/template.txt')
+        self.check('/dir/map/txt/capture?ext=js', code=404)
+        # '/dir/map/(?P<n>\w+)/(.*)': 'dir/{n}.{1}'
+        self.check('/dir/map/index/html', path='dir/index.html')
+        self.check('/dir/map/alpha/def', code=404)
+        # '/dir/map/(.*)': 'dir/subdir/{0}.txt'
+        self.check('/dir/map/template', path='dir/subdir/template.txt')
+        self.check('/dir/map/text', path='dir/subdir/text.txt')
+        self.check('/dir/map/abc', code=404)
+        # '': 'dir/{file}{mid}.{ext}'
+        self.check('/dir/map2/?file=template', path='dir/template.txt')
+        self.check('/dir/map2/?file=template&file=x', path='dir/template.txt')
+        self.check('/dir/map2/?file=template&mid=.sub', path='dir/template.sub.txt')
+        self.check('/dir/map2/?file=index&ext=html', path='dir/index.html')
+        self.check('/dir/map2/?file=nonexistent', code=404)
+        self.check('/dir/map2/', code=404)
 
     def test_pattern(self):
         self.check('/dir/pattern/alpha/text', path='dir/alpha.txt')

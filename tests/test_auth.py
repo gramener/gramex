@@ -62,12 +62,13 @@ class TestSession(TestGramex):
     def test_cookies(self):
         r = requests.get(self.url + '?var=x')
         cookies = {c.name: c for c in r.cookies}
+        cookie = r.headers['Set-Cookie'].lower()
         self.assertIn('sid', cookies)
-        flags = [key.lower() for key in cookies['sid']._rest]
-        self.assertIn('httponly', flags)
+        self.assertIn('httponly', cookie)
+        self.assertIn('domain=.localhost.local', cookie)
         # HTTP requests should not have a secure flag
-        self.assertNotIn('secure', flags)
         # TODO: HTTPS requests SHOULD have a secure flag
+        self.assertNotIn('secure', cookie)
 
 
 class AuthBase(TestGramex):

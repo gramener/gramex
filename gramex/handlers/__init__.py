@@ -7,8 +7,7 @@ from .functionhandler import FunctionHandler
 from .websockethandler import WebSocketHandler
 from .filehandler import FileHandler
 from .datahandler import DataHandler, QueryHandler
-from .authhandler import (GoogleAuth, FacebookAuth, TwitterAuth, LDAPAuth, SimpleAuth, DBAuth,
-                          IntegratedAuth, LogoutHandler, SAMLAuth, OAuth2, SMSAuth, EmailAuth)
+from .authhandler import GoogleAuth, SimpleAuth, LogoutHandler
 from .processhandler import ProcessHandler
 from .jsonhandler import JSONHandler
 from .socialhandler import TwitterRESTHandler, FacebookGraphHandler
@@ -23,18 +22,37 @@ from .filterhandler import FilterHandler
 DirectoryHandler = FileHandler
 
 __all__ = [
-    'BaseHandler', 'FunctionHandler', 'FileHandler', 'DirectoryHandler',
-    'DataHandler', 'QueryHandler', 'JSONHandler', 'GoogleAuth',
-    'FacebookAuth', 'TwitterAuth', 'LDAPAuth', 'SimpleAuth', 'DBAuth', 'OAuth2',
-    'IntegratedAuth', 'SAMLAuth', 'SMSAuth', 'EmailAuth',
-    'LogoutHandler', 'ProcessHandler', 'TwitterRESTHandler',
-    'FacebookGraphHandler', 'UploadHandler',
-    'BaseWebSocketHandler', 'WebSocketHandler',
-    'CaptureHandler', 'Capture',
-    'FormHandler',
-    'PPTXHandler',
-    'ProxyHandler',
-    'ModelHandler',
+    'BaseHandler',
+    'BaseWebSocketHandler',
+    'Capture',
+    'CaptureHandler',
+    'DataHandler',
+    'DirectoryHandler',
+    'FacebookGraphHandler',
+    'FileHandler',
     'FilterHandler',
+    'FormHandler',
+    'FunctionHandler',
+    'GoogleAuth',
+    'JSONHandler',
+    'LogoutHandler',
+    'ModelHandler',
+    'PPTXHandler',
+    'ProcessHandler',
+    'ProxyHandler',
+    'QueryHandler',
     'SetupFailedHandler',
+    'SimpleAuth',
+    'TwitterRESTHandler',
+    'UploadHandler',
+    'WebSocketHandler',
 ]
+
+try:
+    # If Gramex enterprise is available, import all handlers
+    import gramexenterprise.handlers
+    if hasattr(gramexenterprise, 'handlers'):
+        from gramexenterprise.handlers import *             # noqa
+        __all__ += gramexenterprise.handlers.__all__
+except ImportError:
+    pass

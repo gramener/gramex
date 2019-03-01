@@ -95,7 +95,7 @@ class FormHandler(BaseHandler):
             if conf['function'] is not None:
                 fn_name = '%s.%s.transform' % (cls.name, key)
                 dataset['transform'] = build_transform(
-                    conf, vars={'data': None}, filename=fn_name, iter=False)
+                    conf, vars={'data': None, 'handler': None}, filename=fn_name, iter=False)
             # Convert modify: and prepare: into a data = modify(data) function
             for fn, fn_vars in cls.function_vars.items():
                 if fn in dataset:
@@ -114,6 +114,7 @@ class FormHandler(BaseHandler):
         filter_kwargs.pop('modify', None)
         prepare = filter_kwargs.pop('prepare', None)
         queryfunction = filter_kwargs.pop('queryfunction', None)
+        filter_kwargs['transform_kwargs'] = {'handler': self}
         # Use default arguments
         defaults = {
             k: v if isinstance(v, list) else [v]
@@ -191,11 +192,11 @@ class FormHandler(BaseHandler):
             meta[key] = AttrDict()
             opt = self._options(dataset, self.args, path_args, path_kwargs, key)
             if 'id' not in opt.filter_kwargs:
-                raise HTTPError(BAD_REQUEST, '%s: %s requires id: <col> in gramex.yaml' % (
+                raise HTTPError(BAD_REQUEST, reason='%s: missing id: <col> for %s' % (
                     self.name, self.request.method))
             missing_args = [col for col in opt.filter_kwargs['id'] if col not in opt.args]
             if method != gramex.data.insert and len(missing_args) > 0:
-                raise HTTPError(BAD_REQUEST, '%s: missing column(s) in URL query: %s' % (
+                raise HTTPError(BAD_REQUEST, reason='%s: missing column(s) in URL query: %s' % (
                     self.name, ', '.join(missing_args)))
             # Execute the query. This returns the count of records updated
             result[key] = method(meta=meta[key], args=opt.args, **opt.filter_kwargs)

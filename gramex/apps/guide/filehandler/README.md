@@ -47,10 +47,10 @@ For example,
 ```yaml
 url:
   static:
-    pattern: /static/(.*)                 # Any URL starting with /static/
+    pattern: /$YAMLURL/static/(.*)        # Any URL starting with /static/
     handler: FileHandler                  # uses this handler
     kwargs:
-      path: static/                       # Serve files from static/
+      path: $YAMLPATH/static/             # Serve files from static/
       default_filename: index.html        # using index.html as default
       index: true                         # List files if index.html is missing
       index_template: $YAMLPATH/template.html   # Use template.html to list directory
@@ -70,10 +70,10 @@ You can specify any URL for any file. For example, to map the file
 `filehandler/data.csv` to the URL `/filehandler/data`, use this configuration:
 
 ```yaml
-    pattern: /filehandler/data    # The URL /filehandler/data
-    handler: FileHandler          # uses this handler
+    pattern: /$YAMLURL/filehandler/data     # The URL /filehandler/data
+    handler: FileHandler                    # uses this handler
     kwargs:
-      path: filehandler/data.csv  # and maps to this file
+      path: $YAMLPATH/filehandler/data.csv  # and maps to this file
 ```
 
 You can also map regular expressions to file patterns. For example, to add a
@@ -82,10 +82,10 @@ You can also map regular expressions to file patterns. For example, to add a
 ```yaml
 url:
   yaml-extensions:
-    pattern: "/yaml/(.*)"         # yaml/anything
+    pattern: /$YAMLURL/yaml/(.*)  # yaml/anything
     handler: FileHandler
     kwargs:
-      path: "*.yaml"              # becomes anything.yaml, replacing the * here
+      path: $YAMLPATH/*.yaml      # becomes anything.yaml, replacing the * here
 ```
 
 For example, [yaml/gramex](yaml/gramex) actually renders [gramex.yaml](gramex.yaml.source).
@@ -95,11 +95,55 @@ To replace `.html` extension with `.yaml`, use:
 ```yaml
 url:
   replace-html-with-yaml:
-    pattern: "/(.*)\\.html"       # Note the double backslash instead of single backslash
+    pattern: /$YAMLURL/(.*)\\.html  # Note the double backslash instead of single backslash
     handler: FileHandler
     kwargs:
-      path: "*.yaml"              # The part in brackets replaces the * here
+      path: $YAMLPATH/*.yaml        # The part in brackets replaces the * here
 ```
+
+For more complex mappings, use a dictionary of regular expression mappings:
+
+```yaml
+url:
+  mapping:
+    pattern: /$YAMLURL/((foo|bar)/.*)       # /foo/anything and /bar/anything matches
+    handler: FileHandler
+    kwargs:
+      path:                                 # If path: is a dict, it's treated as a mapping
+        'foo/': $YAMLPATH/foo.html                     # /foo/ -> foo.html
+        'bar/': $YAMLPATH/bar.html                     # /bar/  -> bar.html
+        'foo/(.*)': $YAMLPATH/foo/{0}.html             # /foo/x -> foo/x.html
+        'bar/(?P<file>.*)': $YAMLPATH/bar/{file}.html  # /bar/x  -> bar/x.html
+```
+
+The mapping has keys that are regular expressions. They must match the part of
+the URL in brackets. (If there are multiple brackets, match the first one.)
+Values are file paths. They are formatted as string templates using the regular
+expression match groups and URL query parameters. So:
+
+- `{0}` matches the first capture group (in brackets, like `(.*)`),
+  `{1}` matches the second capture group, etc.
+- `{file}` matches the named capture group `(?P<file>.*)`, etc
+- If there's a URL query parameter `?file=`, the first value that replaces
+  `{file}` -- but only if there is no such named capture group
+
+When using URL query parameters, you should provide default values in case the
+request does not pass the parameter. You can do this using `default:`
+
+```yaml
+url:
+  mapping:
+    pattern: /$YAMLURL/                     # Home page
+    handler: FileHandler
+    kwargs:
+      path:                                 # If path: is a dict, it's treated as a mapping
+        '': $YAMLPATH/{dir}/{file}.{ext}    #  /?dir=foo&file=bar&ext=txt -> foo/bar.txt
+      default:
+        dir: ''             # ?dir= is the default
+        file: index         # ?file=index is the default
+        ext: html           # ?ext=html is the default
+```
+
 
 ## Caching
 

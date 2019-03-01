@@ -23,7 +23,7 @@ class TestSetup(unittest.TestCase):
         # Ensure that handler HTML files are there by checking for all files
         self.exists('handlers/filehandler.template.html')
         self.exists('handlers/auth.template.html')
-        self.exists('handlers/forgot.template.html')
+        self.exists('handlers/auth.recaptcha.template.html')
         self.exists('handlers/datahandler.template.html')
         self.exists('handlers/queryhandler.template.html')
 

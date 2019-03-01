@@ -22,7 +22,9 @@ app:
   listen:
     port: 9999              # Avoid clash with default Gramex port running tests
   session:
-    private_key: $YAMLPATH/id_rsa
+    domain: .localhost.local    # RequestCookieJar uses this domain for localhost
+    secure: false               # Don't set this to true. We're using HTTP, so it will fail
+    # httponly: true            # Not required. Already set in base gramex.yaml
 
 cache:
   memory:
@@ -400,6 +402,35 @@ url:
         'alpha.txt':
           encoding: utf-8
           function: six.text_type.title(content)
+  dir/map:
+    pattern: /dir/map/(.*)
+    handler: FileHandler
+    kwargs:
+      path:
+        '': dir/index.html
+        '(.*)/(.*)/(.*)': 'dir/{0}{1}{2}'
+        'url': 'dir/{file}{mid}.{ext}'
+        '(?P<ext>txt)/(.*)': 'dir/{1}.{ext}'
+        '(?P<n>\w+)/(.*)': 'dir/{n}.{1}'
+        '(.*)': 'dir/subdir/{0}.txt'
+      default:
+        file: ''
+        mid: ''
+        ext: txt
+      transform:
+        'alpha.txt':
+          encoding: utf-8
+          function: six.text_type.upper(content)
+  dir/map2:
+    pattern: /dir/map2/
+    handler: FileHandler
+    kwargs:
+      path:
+        '': 'dir/{file}{mid}.{ext}'
+      default:
+        file: ''
+        mid: ''
+        ext: txt
   dir/headers:
     pattern: /header/
     handler: FileHandler
@@ -1335,6 +1366,14 @@ url:
         query: 'SELECT * FROM sales WHERE sales > 100'
         function: data.sort_values('growth')
 
+  formhandler/file-function:
+    pattern: /formhandler/file-function
+    handler: FormHandler
+    kwargs:
+      url: sales.xlsx
+      sheet_name: sales
+      function: data[handler.args.get('col', [])]
+
   formhandler/sqlite-queryfunction:
     pattern: /formhandler/sqlite-queryfunction
     handler: FormHandler
@@ -1885,6 +1924,13 @@ url:
     handler: FunctionHandler
     kwargs:
       function: utils.session
+      headers:
+        Content-Type: application/json
+  auth/user:
+    pattern: /auth/user
+    handler: FunctionHandler
+    kwargs:
+      function: json.dumps(handler.current_user)
       headers:
         Content-Type: application/json
 
@@ -2538,6 +2584,12 @@ url:
           url: $TRANSLATE_XLSX
           sheet_name: translate
 
+  shutdown:
+    pattern: /shutdown
+    handler: FunctionHandler
+    kwargs:
+      function: gramex.shutdown() or 'Done'
+
 sms:
   amazonsns:
     type: amazonsns
@@ -2594,6 +2646,13 @@ schedule:
     kwargs: {count: 1000}
     startup: true
     thread: true
+  schedule-timed:
+    function: gramex.config.app_log('schedule-timed ran now')
+    hours: 5
+  schedule-timed-utc:
+    function: gramex.config.app_log('schedule-timed-utc ran now')
+    hours: 5
+    utc: true
 
 email:
   smtps_stub:
@@ -2698,6 +2757,10 @@ alert:
       subject: "{{ config.salutation }} #{{ index }}! {{ config['prefix'] }} {{ row['votes'] }} votes"
       salutation: "Congrats"
       prefix: "You got"
+      attachments:
+        - http://localhost:9999/capturechrome?url=http://localhost:9999/auth/user&ext=pdf
+      user:
+        id: "{{ row['name'] }}"
     alert-data-inplace:
       service: smtps_stub
       data:
@@ -2710,8 +2773,8 @@ alert:
     alert-capture:
       service: smtps_stub
       to: user@example.org
-      subject: CaptureHandler attachments with auth
-      html: The attachment should show the user name and role below
+      subject: CaptureHandler attachments id={{ config.user.id }}, role={{ config.user.role }}
+      html: The attachment should show the user name and role below for user
       user:
         id: login@example.org
         role: manager

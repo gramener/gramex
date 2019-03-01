@@ -1,10 +1,26 @@
 import os
 import tornado.gen
 import tornado.template
-from cachetools import LRUCache
+import gramex.cache
 
-# A fixed number of templates are compiled and cached
-template_cache = LRUCache(maxsize=1000)
+
+class CacheLoader(tornado.template.Loader):
+    def load(self, name, parent_path=None):
+        # Identical to tornado.template.Loader.load, but ALWAYS creates
+        # template, even if it's cached -- because _create_template caches it
+        name = self.resolve_path(name, parent_path=parent_path)
+        with self.lock:
+            self.templates[name] = self._create_template(name)
+            return self.templates[name]
+
+    def _template_opener(self, path):
+        with open(path, 'rb') as f:
+            return tornado.template.Template(f.read(), name=self._name, loader=self)
+
+    def _create_template(self, name):
+        # Use gramex.cache.open to ensure that the file is cached
+        self._name = name
+        return gramex.cache.open(os.path.join(self.root, name), self._template_opener)
 
 
 @tornado.gen.coroutine
@@ -13,13 +29,10 @@ def template(content, handler=None, **kwargs):
     Renders template from content. Used as a transform in any handler, mainly
     FileHandler.
     '''
-    if content in template_cache:
-        tmpl = template_cache[content]
-    else:
-        loader = None
-        if handler is not None and getattr(handler, 'path', None):
-            loader = tornado.template.Loader(os.path.dirname(str(handler.path)))
-        tmpl = template_cache[content] = tornado.template.Template(content, loader=loader)
+    loader = None
+    if handler is not None and getattr(handler, 'path', None):
+        loader = CacheLoader(os.path.dirname(str(handler.file)))
+    tmpl = tornado.template.Template(content, loader=loader)
 
     if handler is not None:
         for key, val in handler.get_template_namespace().items():

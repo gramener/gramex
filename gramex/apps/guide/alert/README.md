@@ -32,8 +32,9 @@ Email scheduling uses the same keys as [scheduler](../scheduler/): `minutes`,
 alert:
   alert-schedule:
     days: '*'                     # Send email every day
-    hours: '6, 12'                # at 6am and 12noon local time
+    hours: '6, 12'                # at 6am and 12noon
     minutes: 0                    # at the 0th minute, i.e. 6:00am and 12:00pm
+    utc: true                     # GMT (or UTC). Set false for local server time
     to: admin@example.org
     subject: Scheduled alert
     body: This email will be scheduled and sent as long as Gramex is running.
@@ -204,6 +205,14 @@ alert:
 Tornado templates escape all HTML content. To pass the HTML content raw,
 use `{% raw expression %}` instead of `{{ expression }}`.
 
+The templates can use these variables:
+
+- `config`: the alert configuration as an AttrDict. For example,
+  `config.subject` is the subject configuration
+- `data`: the data passed to the alert
+  - For multiple datasets, each key is available as variable holding the dataset
+- `index`: if `each:` is used, the index holds the key or index number
+
 ### Email dashboards
 
 To send a dashboard as an inline-image or an attachment, set up a
@@ -224,6 +233,7 @@ alert:
     # Optional: to capture the dashboard as a specific user, add this user section
     # user:
     #   id: user@example.org
+    #   email: {{ config['to'] }}       # User object values can be templates
     #   role: manager
 ```
 
@@ -232,8 +242,7 @@ runs CaptureHandler, you must specify `thread: true`.
 
 The `user:` section sends an [X-Gramex-User](../auth/#encrypted-user) header to
 take a screenshot of a dashboard as the user would have seen it. Specify the
-entire `user` object here. Also set up [encrypt:](../auth/#encrypted-user) in
-`gramex.yaml` -- with the same keys across all servers.
+entire `user` object here. Values in `user:` can be [templates](#use-templates).
 
 
 ### Dynamic emails from data

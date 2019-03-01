@@ -7,23 +7,30 @@ prefix: Install
 
 ## Installation
 
-Install pre-requisites:
-
 - Install [Anaconda][anaconda] 5.2.0 or later. [Update Anaconda][update] if required.
 - Install [node.js][nodejs] 8 or later.
 - On a Mac, install [Xcode][xcode].
 
-Run:
-
 ```shell
 npm install -g yarn             # Required for UI components and built-in apps
-pip install --verbose gramex    # --verbose shows progress when installing node modules
+pip install --verbose gramex    # Install latest version. --verbose shows progress
 gramex setup --all              # Set up UI components and built-in apps
 gramex                          # Start gramex. Press Ctrl-C to stop Gramex
 ```
 
 Gramex runs at `http://127.0.0.1:9988/` and shows the Gramex Guide by default.
 You may also run Gramex via `python -m gramex`.
+
+Note: Gramex Enterprise is offered under a [commercial license](../license/) and
+provides additional features. To install it, run:
+
+```shell
+pip install gramexenterprise
+```
+
+## VSCode Extension
+
+Install [`Gramex Snippets` extension](https://marketplace.visualstudio.com/items?itemName=gramener.gramexsnippets) for VSCode IDE for Gramex related code snippets. Visit [VSCode Extension](../extension/) page for more details.
 
 ## Troubleshooting
 

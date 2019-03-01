@@ -28,10 +28,25 @@ def store_value(handler):
 The first time a user visits the [session](session) page, it generates the
 `randkey`. The next time this is preserved.
 
-The cookie is [HttpOnly](https://www.owasp.org/index.php/HttpOnly) - you cannot
-access it via JavaScript. On HTTPS connections, it is also a marked as a
-[Secure](https://www.owasp.org/index.php/SecureFlag) cookie - you cannot access
-the same cookie via HTTP.
+The session cookie is:
+
+- [HttpOnly](https://www.owasp.org/index.php/HttpOnly): You cannot access the
+  cookie via JavaScript using `document.cookie`
+- [Secure](https://www.owasp.org/index.php/SecureFlag) on HTTPS connections. If
+  you set the cookie on a HTTPS request, you cannot access it via HTTP.
+- [Domain](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie):
+  not specified. The cookie can be accessed by the Gramex server that sets the
+  cookie, but not subdomains.
+
+You can change these defaults as follows:
+
+```yaml
+app:
+  session:
+    httponly: false         # Allow JavaScript access via document.cookie
+    secure: false           # Cookies can be accessed via HTTP (not just HTTPS)
+    domain: .example.org    # All subdomains in .example.org can access session
+```
 
 You can store any variable against a session. These are stored in the `sid`
 secure cookie for a duration that's controlled by the `app.session.expiry`
@@ -314,6 +329,7 @@ Google auth and connections to HTTPS sites may fail with a
 
 ## Facebook auth
 
+**Available in Gramex Enterprise**.
 This configuration creates a [Facebook login page](facebook):
 
 ```yaml
@@ -359,6 +375,7 @@ The user object `handler.current_user` looks like this:
 
 ## Twitter auth
 
+**Available in Gramex Enterprise**.
 This configuration creates a [Twitter login page](twitter):
 
 ```yaml
@@ -433,6 +450,7 @@ The user object `handler.current_user` looks like this:
 
 ## LDAP auth
 
+**Available in Gramex Enterprise**.
 There are 2 ways of logging into an LDAP server.
 
 1. **Direct** login with a user ID and password directly.
@@ -579,6 +597,7 @@ The user object `handler.current_user` looks like this:
 
 ## Database auth
 
+**Available in Gramex Enterprise**.
 This is the minimal configuration that lets you log in from an Excel file:
 
 ```yaml
@@ -840,6 +859,7 @@ signup:
 
 ## Integrated auth
 
+**Available in Gramex Enterprise**.
 IntegratedAuth allows Windows domain users to log into Gramex automatically if
 they've logged into Windows.
 
@@ -871,7 +891,8 @@ The user object `handler.current_user` looks like this:
 
 ## SAML Auth
 
-**v1.29**. SAML auth uses a [SAML](https://en.wikipedia.org/wiki/Security_Assertion_Markup_Language)
+**Available in Gramex Enterprise**.
+SAML auth uses a [SAML](https://en.wikipedia.org/wiki/Security_Assertion_Markup_Language)
 auth provided to log in. For example ADFS (Active Directory Federation Services)
 is a SAML auth provider. Caveats:
 
@@ -924,7 +945,8 @@ along with required claims (i.e. fields to be returned, such as `email_id`,
 
 ## OAuth2
 
-**v1.30**. Gramex lets you log in via any OAuth2 providers. This includes:
+**Available in Gramex Enterprise**.
+Gramex lets you log in via any OAuth2 providers. This includes:
 
 - [Facebook](https://developers.facebook.com/docs/facebook-login)
 - [Github](https://developer.github.com/apps/building-oauth-apps/)
@@ -997,7 +1019,8 @@ It accepts the following configuration:
 
 ## Email Auth
 
-**v1.38**. [EmailAuth](#emailauth) allows any user with a valid email ID to log
+**Available in Gramex Enterprise**.
+[EmailAuth](#emailauth) allows any user with a valid email ID to log
 in. This is a convenient alternative to [DBAuth](#dbauth). Users do not need to
 sign-up. Administrators don't need to provision accounts. Gramex can [restrict
 access](#authorization) just based on just their email ID or domain.
@@ -1112,7 +1135,8 @@ When you write your own login template form, you can use these Python variables:
 
 ## SMS Auth
 
-**v1.36**. SMSAuth sends a one-time password (OTP) via SMS for users to log in.
+**Available in Gramex Enterprise**.
+SMSAuth sends a one-time password (OTP) via SMS for users to log in.
 There is no permanent password mechanism.
 
 This requires a working [SMS service](../sms/). Here is a sample configuration:

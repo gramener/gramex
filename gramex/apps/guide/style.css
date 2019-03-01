@@ -1,4 +1,4 @@
-@import "ui/bootstraptheme.css?primary=%235b9bd5&warning=%23ed7d31&light=%23eeeeee&h1-font-size=2rem";
+@import "ui/bootstraptheme.css?primary=%235b9bd5&warning=%23ed7d31&light=%23eeeeee&h1-font-size=2rem&h2-font-size=1.5rem&h3-font-size=1.2rem";
 @import "ui/@fortawesome/fontawesome-free/css/all.min.css";
 @import "monokai.css?v=2";
 

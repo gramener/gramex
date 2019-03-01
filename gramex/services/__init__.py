@@ -33,12 +33,13 @@ import gramex.license
 import logging.config
 import concurrent.futures
 import six.moves.urllib.parse as urlparse
+from copy import deepcopy
 from six import text_type, string_types
 from tornado.template import Template
 from orderedattrdict import AttrDict
 from gramex import debug, shutdown, __version__
 from gramex.transforms import build_transform
-from gramex.config import locate, app_log, ioloop_running, app_log_extra, merge
+from gramex.config import locate, app_log, ioloop_running, app_log_extra, merge, walk
 from gramex.cache import urlfetch, cache_key
 from gramex.http import OK, NOT_MODIFIED
 from . import urlcache
@@ -59,7 +60,7 @@ info = AttrDict(
     sms=AttrDict(),
     _md=None,
 )
-_cache = AttrDict()
+_cache, _tmpl_cache = AttrDict(), AttrDict()
 atexit.register(info.threadpool.shutdown)
 
 
@@ -149,7 +150,12 @@ def app(conf):
             if ioloop_running(ioloop):
                 return
 
-            gramex.license.accept()
+            # If enterprise version is installed, user must accept license
+            try:
+                import gramexenterprise         # noqa
+                gramex.license.accept()
+            except ImportError:
+                pass
 
             app_log.info('Listening on port %d', conf.listen.port)
             app_log_extra['port'] = conf.listen.port
@@ -257,6 +263,13 @@ def _markdown_convert(content):
     return info['_markdown'].convert(content)
 
 
+def _tmpl(template_string):
+    '''Compile Tornado template. Cache the results'''
+    if template_string not in _tmpl_cache:
+        _tmpl_cache[template_string] = Template(template_string)
+    return _tmpl_cache[template_string]
+
+
 def create_alert(name, alert):
     '''Generate the function to be run by alert() using the alert configuration'''
 
@@ -282,39 +295,26 @@ def create_alert(name, alert):
     if not any(key in alert for key in ['to', 'cc', 'bcc']):
         app_log.error('alert: %s: missing to/cc/bcc', name)
         return
+    # Ensure that config has the right type (str, dict, list)
+    contentfields = ['body', 'html', 'bodyfile', 'htmlfile', 'markdown', 'markdownfile']
+    for key in ['to', 'cc', 'bcc', 'from', 'subject'] + contentfields:
+        if not isinstance(alert.get(key, ''), string_types + (list, )):
+            app_log.error('alert: %s: %s: %r must be a list or str', name, key, alert[key])
+            return
+    if not isinstance(alert.get('images', {}), dict):
+        app_log.error('alert: %s images: %r is not a dict', name, alert['images'])
+        return
+    if not isinstance(alert.get('attachments', []), list):
+        app_log.error('alert: %s attachments: %r is not a list', name, alert['attachments'])
+        return
 
     # Warn if subject is missing
     if 'subject' not in alert:
         app_log.warning('alert: %s: missing subject', name)
 
     # Warn if body, html, bodyfile, htmlfile keys are missing
-    contentfields = ['body', 'html', 'bodyfile', 'htmlfile', 'markdown', 'markdownfile']
     if not any(key in alert for key in contentfields):
         app_log.warning('alert: %s: missing body/html/bodyfile/htmlfile/...', name)
-
-    # Precompile templates
-    templates = {}
-    for key in ['to', 'cc', 'bcc', 'from', 'subject'] + contentfields:
-        if key in alert:
-            tmpl = alert[key]
-            if isinstance(tmpl, string_types):
-                templates[key] = Template(tmpl)
-            elif isinstance(tmpl, list):
-                templates[key] = [Template(subtmpl) for subtmpl in tmpl]
-            else:
-                app_log.error('alert: %s: %s: %r must be a list or str', name, key, tmpl)
-                return
-
-    if 'images' in alert:
-        images = alert['images']
-        if isinstance(images, dict):
-            templates['images'] = {cid: Template(path) for cid, path in images.items()}
-        else:
-            app_log.error('alert: %s images: %r is not a dict', name, images)
-    if 'attachments' in alert:
-        attachments = alert['attachments']
-        if isinstance(attachments, list):
-            templates['attachments'] = [Template(path) for path in attachments]
 
     # Pre-compile data.
     #   - `data: {key: [...]}` -- loads data in-place
@@ -397,20 +397,18 @@ def create_alert(name, alert):
             kwargslist.append(kwargs)
             for key in ['bodyfile', 'htmlfile', 'markdownfile']:
                 target = key.replace('file', '')
-                if key in templates and target not in templates:
-                    path = templates[key].generate(**data).decode('utf-8')
+                if key in alert and target not in alert:
+                    path = _tmpl(alert[key]).generate(**data).decode('utf-8')
                     tmpl = gramex.cache.open(path, 'template')
                     kwargs[target] = tmpl.generate(**data).decode('utf-8')
             try:
                 for key in ['to', 'cc', 'bcc', 'from', 'subject', 'body', 'html', 'markdown']:
-                    if key in templates:
-                        tmpl = templates[key]
-                        if isinstance(tmpl, list):
-                            kwargs[key] = []
-                            for subtmpl in tmpl:
-                                kwargs[key].append(subtmpl.generate(**data).decode('utf-8'))
+                    if key in alert:
+                        if isinstance(alert[key], list):
+                            kwargs[key] = [_tmpl(val).generate(**data).decode('utf-8')
+                                           for val in alert[key]]
                         else:
-                            kwargs[key] = tmpl.generate(**data).decode('utf-8')
+                            kwargs[key] = _tmpl(alert[key]).generate(**data).decode('utf-8')
             except Exception:
                 # If any template raises an exception, log it and continue with next email
                 app_log.exception('alert: %s(#%s).%s: Template exception', name, index, key)
@@ -418,15 +416,18 @@ def create_alert(name, alert):
             headers = {}
             # user: {id: ...} creates an X-Gramex-User header to mimic the user
             if 'user' in alert:
-                user = json.dumps(alert['user'], ensure_ascii=True, separators=(',', ':'))
+                user = deepcopy(alert['user'])
+                for key, val, node in walk(user):
+                    node[key] = _tmpl(val).generate(**data).decode('utf-8')
+                user = json.dumps(user, ensure_ascii=True, separators=(',', ':'))
                 headers['X-Gramex-User'] = tornado.web.create_signed_value(
                     info.app.settings['cookie_secret'], 'user', user)
             if 'markdown' in kwargs:
                 kwargs['html'] = _markdown_convert(kwargs.pop('markdown'))
-            if 'images' in templates:
+            if 'images' in alert:
                 kwargs['images'] = {}
-                for cid, val in templates['images'].items():
-                    urlpath = val.generate(**data).decode('utf-8')
+                for cid, val in alert['images'].items():
+                    urlpath = _tmpl(val).generate(**data).decode('utf-8')
                     urldata = urlfetch(urlpath, info=True, headers=headers)
                     if urldata['content_type'].startswith('image/'):
                         kwargs['images'][cid] = urldata['name']
@@ -437,10 +438,10 @@ def create_alert(name, alert):
                         app_log.error('alert: %s: %s: %d (%s) not an image: %s\n%r', name,
                                       cid, urldata['r'].status_code, urldata['content_type'],
                                       urlpath, first_line)
-            if 'attachments' in templates:
+            if 'attachments' in alert:
                 kwargs['attachments'] = [
-                    urlfetch(attachment.generate(**data).decode('utf-8'), headers=headers)
-                    for attachment in templates['attachments']
+                    urlfetch(_tmpl(attachment).generate(**data).decode('utf-8'), headers=headers)
+                    for attachment in alert['attachments']
                 ]
             if callable(callback):
                 return callback(**kwargs)
@@ -461,7 +462,7 @@ def create_alert(name, alert):
 def alert(conf):
     from . import scheduler
     _stop_all_tasks(info.alert)
-    schedule_keys = 'minutes hours dates months weekdays years startup'.split()
+    schedule_keys = 'minutes hours dates months weekdays years startup utc'.split()
 
     for name, alert in conf.items():
         _key = cache_key('alert', alert)

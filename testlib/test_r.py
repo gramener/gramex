@@ -4,6 +4,7 @@ import os
 import sys
 import pandas as pd
 from nose.tools import eq_, ok_, assert_raises
+from nose.plugins.skip import SkipTest
 from PIL import Image
 from gramex.ml import r
 from . import folder
@@ -63,7 +64,7 @@ def test_args():
 
 def test_install():
     r('''
-        packages <- c('rprojroot', 'ggplot2')
+        packages <- c('rprojroot')
         new.packages <- packages[!(packages %in% installed.packages()[,"Package"])]
         if (length(new.packages)) install.packages(new.packages)
     ''')
@@ -71,6 +72,13 @@ def test_install():
 
 
 def test_plots():
+    if os.environ.get('BRANCH', '') not in {'dev', 'master'}:
+        raise SkipTest('Install slow ggplot2 only on dev/master')
+    r('''
+        packages <- c('ggplot2')
+        new.packages <- packages[!(packages %in% installed.packages()[,"Package"])]
+        if (length(new.packages)) install.packages(new.packages)
+    ''')
     path = r(path='scriptplot.R')
     img = Image.open(path[0])
     eq_(img.size, (512, 512))           # noqa: E912 Size matches

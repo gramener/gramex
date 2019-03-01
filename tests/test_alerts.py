@@ -147,6 +147,10 @@ class TestAlerts2(TestGramex):
             obj = email.message_from_string(mail['msg'])
             eq_(obj['To'], row['name'].replace(' ', '_') + '@example.org')
             eq_(obj['Subject'], 'Congrats #%d! You got %d votes' % (index, row['votes']))
+            # Check that the attachment has the user object (which is a template)
+            main, attachment = obj.get_payload()
+            text = get_text(a2b_base64(attachment.get_payload()))
+            ok_(row['name'] in text)
 
         mails = run_alert('alert-data-inplace', count=2)
         fields = ['x@example.org', 'y@example.org']
@@ -164,3 +168,4 @@ class TestAlerts2(TestGramex):
         text = get_text(a2b_base64(attachment.get_payload()))
         ok_('login@example.org' in text)
         ok_('manager' in text)
+        ok_('id=login@example.org, role=manager' in obj['Subject'])

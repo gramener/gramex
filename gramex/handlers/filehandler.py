@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+import re
 import string
 import datetime
 import mimetypes
@@ -7,9 +8,10 @@ import tornado.web
 import tornado.gen
 from pathlib import Path, PureWindowsPath
 from fnmatch import fnmatch
-from six import string_types
+from six import string_types, text_type
 from tornado.escape import utf8
 from tornado.web import HTTPError
+from collections import defaultdict
 from orderedattrdict import AttrDict
 from six.moves.urllib.parse import urljoin
 from .basehandler import BaseHandler
@@ -57,6 +59,8 @@ class FileHandler(BaseHandler):
           `(..)` group.
         - A list of files to serve. These files are concatenated and served one
           after the other.
+        - A dict of {regex: path}. If the URL matches the regex, the path is
+          served. The path is string formatted using the regex capture groups
 
     :arg string default_filename: If the URL maps to a directory, this filename
         is displayed by default. For example, ``index.html`` or ``README.md``.
@@ -112,19 +116,16 @@ class FileHandler(BaseHandler):
 
     .. _glob pattern: https://docs.python.org/3/library/pathlib.html#pathlib.Path.glob
 
-    FileHandler exposes the following ``pathlib.Path`` attributes:
+    FileHandler exposes these attributes:
 
-    ``root``
-        Root path for this handler. Same as the ``path`` argument
-    ``path``
-        Absolute Path requested by the user, without adding a default filename
-    ``file``
-        Absolute Path served to the user, after adding a default filename
+    - ``root``: Root path for this handler. Aligns with the ``path`` argument
+    - ``path``; Absolute path requested by the user, without adding a default filename
+    - ``file``: Absolute path served to the user, after adding a default filename
     '''
 
     @classmethod
     def setup(cls, path, default_filename=None, index=None, index_template=None,
-              template=None, headers={}, methods=['GET', 'HEAD', 'POST'], **kwargs):
+              template=None, headers={}, default={}, methods=['GET', 'HEAD', 'POST'], **kwargs):
         # Convert template: '*.html' into transform: {'*.html': {function: template}}
         # Do this before BaseHandler setup so that it can invoke the transforms required
         if template is not None:
@@ -134,7 +135,9 @@ class FileHandler(BaseHandler):
         super(FileHandler, cls).setup(**kwargs)
 
         cls.root, cls.pattern = None, None
-        if isinstance(path, list):
+        if isinstance(path, dict):
+            cls.root = AttrDict([(re.compile(p + '$'), val) for p, val in path.items()])
+        elif isinstance(path, list):
             cls.root = [Path(path_item).absolute() for path_item in path]
         elif '*' in path:
             cls.pattern = path
@@ -144,6 +147,7 @@ class FileHandler(BaseHandler):
         cls.index = index
         cls.ignore = cls.set(cls.kwargs.ignore)
         cls.allow = cls.set(cls.kwargs.allow)
+        cls.default = default
         cls.index_template = read_template(
             Path(index_template) if index_template is not None else _default_index_template)
         cls.headers = AttrDict(objectpath(gramex_conf, 'handlers.FileHandler.headers', {}))
@@ -169,22 +173,37 @@ class FileHandler(BaseHandler):
         return result
 
     @tornado.gen.coroutine
-    def _head(self, path=None):
-        yield self._get(path, include_body=False)
+    def _head(self, *args, **kwargs):
+        kwargs['include_body'] = False
+        yield self._get(*args, **kwargs)
 
     @tornado.gen.coroutine
-    def _get(self, path=None, include_body=True):
-        self.include_body = include_body
+    def _get(self, *args, **kwargs):
+        self.include_body = kwargs.pop('include_body', True)
+        path = urljoin('/', args[0] if len(args) else '').lstrip('/')
         if isinstance(self.root, list):
             # Concatenate multiple files and serve them one after another
             for path_item in self.root:
                 yield self._get_path(path_item, multipart=True)
-        elif path is None:
+        elif isinstance(self.root, dict):
+            # Render path for the the first matching regex
+            for pattern, filestr in self.root.items():
+                match = pattern.match(path)
+                if match:
+                    q = defaultdict(text_type, **self.default)
+                    q.update({k: v[0] for k, v in self.args.items() if len(v) > 0})
+                    q.update(match.groupdict())
+                    p = Path(filestr.format(*match.groups(), **q)).absolute()
+                    app_log.debug('%s: %s renders %s', self.name, self.request.path, p)
+                    yield self._get_path(p)
+                    break
+            else:
+                raise HTTPError(NOT_FOUND, '%s matches no path key', self.request.path)
+        elif not args:
             # No group has been specified in the pattern. So just serve root
             yield self._get_path(self.root)
         else:
             # Eliminate parent directory references like `../` in the URL
-            path = urljoin('/', path)[1:]
             if self.pattern:
                 yield self._get_path(Path(self.pattern.replace('*', path)).absolute())
             else:
@@ -212,13 +231,13 @@ class FileHandler(BaseHandler):
         try:
             path = path.resolve()
         except OSError:
-            raise HTTPError(status_code=NOT_FOUND)
+            raise HTTPError(NOT_FOUND, '%s missing', path)
 
         self.path = path
         if self.path.is_dir():
             self.file = self.path / self.default_filename if self.default_filename else self.path
             if not (self.default_filename and self.file.exists()) and not self.index:
-                raise HTTPError(status_code=NOT_FOUND)
+                raise HTTPError(NOT_FOUND, '%s missing index', self.file)
             # Ensure URL has a trailing '/' when displaying the index / default file
             if not self.request.path.endswith('/'):
                 self.redirect(self.request.path + '/', permanent=True)
@@ -226,12 +245,12 @@ class FileHandler(BaseHandler):
         else:
             self.file = self.path
             if not self.file.exists():
-                raise HTTPError(status_code=NOT_FOUND)
+                raise HTTPError(NOT_FOUND, '%s missing', self.file)
             elif not self.file.is_file():
-                raise HTTPError(status_code=FORBIDDEN, log_message='%s is not a file' % self.path)
+                raise HTTPError(FORBIDDEN, '%s is not a file', self.path)
 
         if not self.allowed(self.file):
-            raise HTTPError(status_code=FORBIDDEN)
+            raise HTTPError(FORBIDDEN, '%s not permitted', self.file)
 
         if self.path.is_dir() and self.index and not (
                 self.default_filename and self.file.exists()):
