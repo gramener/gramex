@@ -8,6 +8,7 @@ docs/modules.rst
 tests/**/*.test
 tests/**/gen.*
 testlib/**/gen.*
+.noseids
 
 # Ignore byte-compiled / optimised / DLL files
 *.py[cod]

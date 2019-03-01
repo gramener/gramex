@@ -57,7 +57,7 @@ def get_original_df(handler):
     with open(op.join(data_dir, 'meta.cfg'), 'r') as fout:  # noqa: No encoding for json
         meta = json.load(fout)
     dataset_path = op.join(data_dir, meta['dsid'])
-    return pd.read_csv(dataset_path)
+    return pd.read_csv(dataset_path, encoding='utf-8')
 
 
 def render_template(handler):
@@ -227,7 +227,7 @@ def init_form(handler):
         meta['nrid'] = op.basename(config_path)
 
     # write meta config
-    with open(op.join(data_dir, 'meta.cfg'), 'w') as fout:
+    with open(op.join(data_dir, 'meta.cfg'), 'w') as fout:  # NOQA: no encoding for JSON
         json.dump(meta, fout, indent=4)
 
 
@@ -236,7 +236,7 @@ def edit_narrative(handler):
     user_dir = op.join(nlg_path, handler.current_user.email)
     dataset_name = handler.args.get('dsid', [''])[0]
     narrative_name = handler.args.get('nrid', [''])[0] + '.json'
-    with open(op.join(user_dir, 'meta.cfg'), 'w') as fout:
+    with open(op.join(user_dir, 'meta.cfg'), 'w') as fout:  # NOQA: no encoding for JSON
         json.dump({'dsid': dataset_name, 'nrid': narrative_name}, fout, indent=4)
 
 
@@ -245,11 +245,11 @@ def get_init_config(handler):
     user_dir = op.join(nlg_path, handler.current_user.email)
     metapath = op.join(user_dir, 'meta.cfg')
     if op.isfile(metapath):
-        with open(metapath, 'r') as fout:
+        with open(metapath, 'r') as fout:  # NOQA: no encoding for JSON
             meta = json.load(fout)
         config_file = op.join(user_dir, meta.get('nrid', ''))
         if op.isfile(config_file):
-            with open(config_file, 'r') as fout:
+            with open(config_file, 'r') as fout:  # NOQA: no encoding for JSON
                 meta['config'] = json.load(fout)
         return meta
     return {}

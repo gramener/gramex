@@ -31,6 +31,7 @@ install_requires = [
     'diskcache >= 2.8.3',           # SRV: services.cache for disk cache
     'h5py',                         # OPT: (conda) gramex.cache.HDF5Store
     'ipdb',                         # OPT: gramex.debug
+    'inflect',                      # REQ: NLG
     'jmespath',                     # OPT: pytest gramex plugin
     'ldap3 >= 2.2.4',               # OPT: LDAP connections
     'lxml',                         # OPT: (conda) gramex.pptgen
