@@ -12,6 +12,12 @@ url:
       template: true
       error:
         403: {path: $YAMLPATH/403.html}
+  filehandler-template:
+    pattern: /$YAMLURL/template
+    handler: FileHandler
+    kwargs:
+      path: $YAMLPATH/template.html
+      template: true
   yaml-badgerfish:
     pattern: /$YAMLURL/page.yaml                # Any URL starting with /filehandler/
     handler: FileHandler                        # uses this handler

@@ -17,7 +17,7 @@ from tornado.web import RequestHandler, HTTPError, MissingArgumentError, decode_
 from tornado.websocket import WebSocketHandler
 from gramex import conf, __version__
 from gramex.config import merge, objectpath, app_log
-from gramex.transforms import build_transform
+from gramex.transforms import build_transform, CacheLoader
 from gramex.http import UNAUTHORIZED, FORBIDDEN, BAD_REQUEST
 from gramex.cache import get_store
 # We don't use these, but these stores used to be defined here. Programs may import these
@@ -838,6 +838,11 @@ class BaseHandler(RequestHandler, BaseMixin):
                     result[key] = args_type(val[0])
 
         return result
+
+    def create_template_loader(self, template_path):
+        settings = self.application.settings
+        return CacheLoader(template_path, autoescape=settings['autoescape'],
+                           whitespace=settings.get('template_whitespace', None))
 
 
 class BaseWebSocketHandler(WebSocketHandler, BaseMixin):

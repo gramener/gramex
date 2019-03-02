@@ -278,41 +278,6 @@ url:
       template: true                # rendered as a Tornado template
 ```
 
-The file can contain any template feature. Here's a sample `page.html`.
-
-```html
-<p>argument x is {{ handler.get_argument('x', None) }}</p>
-<ul>
-    {% for item in [1, 2, 3] %}<li>{{ item }}</li>{% end %}
-</ul>
-```
-
-Templates can use all variables in the [template syntax][template-syntax], like:
-
-- `handler`: the current request handler object
-- `request`: alias for `handler.request`
-- `current_user`: alias for `handler.current_user`
-
-Templates can import sub-templates using `{% include %}`. For example:
-
-```html
-This imports components/navbar.html in-place as a template.
-{% set title, menu = "App name", ["Home", "Dashboard"] %}
-{% include 'components/navbar.html' %}
-
-All parent template variables are available in the sub-template.
-```
-
-You can also include other files using `{{ gramex.cache.open(...) }}`. For example:
-
-```html
-{% raw gramex.cache.open('README.txt') %}   -- inserts README.txt in-place
-{% raw gramex.cache.open('README.md') %}    -- inserts README.md as HTML
-```
-
-This converts README.md into HTML. See [data caching](../caching/#data-caching)
-for more formats.
-
 You can apply templates to specific file patterns. For example:
 
 ```yaml
@@ -327,6 +292,84 @@ url:
       template: 'template.*'    # Only template.* files are rendered as templates
       template: '*'             # Same as template: true
 ```
+
+Template files can contain any template feature. Here's a sample `page.html`.
+
+```html
+<p>argument x is {{ handler.get_argument('x', None) }}</p>
+<ul>
+    {% for item in [1, 2, 3] %}<li>{{ item }}</li>{% end %}
+</ul>
+```
+
+<div class="example">
+  <a class="example-demo" href="template">Template example</a>
+  <a class="example-src" href="http://github.com/gramener/gramex/tree/master/gramex/apps/guide/filehandler/template.html">Source</a>
+</div>
+
+### Template syntax
+
+Templates can use all variables in the [template syntax][template-syntax], like:
+
+- `handler`: the current request handler object
+- `request`: alias for `handler.request`
+- `current_user`: alias for `handler.current_user`
+
+### Sub-templates
+
+Templates import sub-templates using `{% include path/to/template.html %}`.
+
+- The path is relative to the parent template.
+- All parent template variables are available in the sub-template.
+
+For example:
+
+```html
+This imports navbar.html in-place as a template.
+{% set title, menu = 'App name', ['Home', 'Dashboard'] %}
+{% include path/relative/to/template/navbar.html %}
+
+navbar.html can use title and menu variables.
+```
+
+### UI Modules
+
+Templates import [modules](https://www.tornadoweb.org/en/stable/guide/templates.html#ui-modules)
+using `{% module Template('path/to/template.html', **kwargs) %}`.
+
+- The path is relative to the FileHandler root path (which may be different from the parenttemplate
+- Only the variables passed are available to the sub-template.
+
+For example:
+
+```html
+This import navbar.html in-place as a template.
+{% module Template('path/relative/to/filehandler/navbar.html',
+      title='App name',
+      menu=['Home', 'Dashboard'])
+%}
+```
+
+Modules can add CSS and JS to the parent template. For example:
+
+```html
+{% set_resources(css_files='/ui/bootstrap/dist/bootstrap.min.css') %} <!-- add Bootstrap -->
+{% set_resources(javascript_files='/ui/lodash/lodash.min.js') %}      <!-- add lodash -->
+{% set_resources(embedded_css='th { padding: 4px; }') %}    <!-- add CSS -->
+{% set_resources(embedded_js='alert("OK")') %}              <!-- add CSS -->
+```
+
+### Raw sub-templates
+
+You can also include other files using `{{ gramex.cache.open(...) }}`. For example:
+
+```html
+{% raw gramex.cache.open('README.txt') %}   -- inserts README.txt in-place
+{% raw gramex.cache.open('README.md') %}    -- inserts README.md as HTML
+```
+
+The second open statement converts README.md into HTML. See
+[data caching](../caching/#data-caching) for more formats.
 
 
 ## XSRF
