@@ -841,28 +841,49 @@ def _filter_db(engine, table, meta, controls, args, source='select', id=[]):
                 meta['ignored'].append(('_c', hide_cols))
             if len(show_cols) == 0:
                 return pd.DataFrame()
+
+        dialect = engine.dialect.name
+        mssql_offset = dialect == 'mssql' and '_offset' in controls
+
         if '_sort' in controls:
             meta['sort'], ignore_sorts = _filter_sort_columns(
                 controls['_sort'], colslist + query.columns.keys())
-            for col, asc in meta['sort']:
-                orderby = sqlalchemy.asc if asc else sqlalchemy.desc
-                query = query.order_by(orderby(col))
             if len(ignore_sorts) > 0:
                 meta['ignored'].append(('_sort', ignore_sorts))
+            if not mssql_offset:
+                for col, asc in meta['sort']:
+                    orderby = sqlalchemy.asc if asc else sqlalchemy.desc
+                    query = query.order_by(orderby(col))
         if '_offset' in controls:
             try:
                 offset = min(int(v) for v in controls['_offset'])
             except ValueError:
                 raise ValueError('_offset not integer: %r' % controls['_offset'])
-            query = query.offset(offset)
+            if not mssql_offset:
+                query = query.offset(offset)
             meta['offset'] = offset
         if '_limit' in controls:
             try:
                 limit = min(int(v) for v in controls['_limit'])
             except ValueError:
                 raise ValueError('_limit not integer: %r' % controls['_limit'])
-            query = query.limit(limit)
+            if not mssql_offset:
+                query = query.limit(limit)
             meta['limit'] = limit
+        if mssql_offset:
+            # Pick the column to sort by
+            col, asc = meta['sort'][0]
+            orderby = sqlalchemy.asc if asc else sqlalchemy.desc
+            innerq = sqlalchemy.select(
+                [table,
+                 sqlalchemy.func.row_number().over(order_by=orderby(col)).label('rn')])
+            innerq = innerq.cte('mssql_offset')
+            query = sqlalchemy.select([innerq]).where(
+                sqlalchemy.between(innerq.c.rn, offset + 1, offset + limit))
+            if '_c' not in controls:
+                query = query.with_only_columns([c for c in colslist if c != 'rn'])
+            else:
+                query = query.with_only_columns([cols[col] for col in show_cols])
         return pd.read_sql(query, engine)
 
 
