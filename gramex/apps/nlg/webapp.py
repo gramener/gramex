@@ -15,10 +15,10 @@ import pandas as pd
 from tornado.template import Template
 
 from gramex.config import variables
-from gramex.nlg import Narrative
-from gramex.nlg import grammar
-from gramex.nlg import templatize
-from gramex.nlg import utils
+from gramex.apps.nlg import Narrative
+from gramex.apps.nlg import grammar
+from gramex.apps.nlg import templatize
+from gramex.apps.nlg import utils
 
 DATAFILE_EXTS = {'.csv', '.xls', '.xlsx', '.tsv'}
 

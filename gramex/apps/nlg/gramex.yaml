@@ -1,0 +1,68 @@
+import:
+  ui:
+    path: $GRAMEXAPPS/ui/gramex.yaml
+    YAMLURL: $YAMLURL/ui/
+
+url:
+  nlg-data-selector-$*:
+    pattern: /$YAMLURL/initform
+    handler: FunctionHandler
+    kwargs:
+      headers:
+        Cache-Control: no-store
+      xsrf_cookies: false
+      function: gramex.apps.nlg.webapp.init_form
+      redirect:
+        url: /$YAMLURL/nlg-editor
+  nlg-editor-filehander-$*:
+    pattern: /$YAMLURL/nlg-editor
+    handler: FileHandler
+    kwargs:
+      path: $YAMLPATH/nlg/index.html
+      template: true
+      auth:
+        login_url: /$YAMLURL/login
+  tablepreview-$*:
+    pattern: /$YAMLURL/preview/(.*)/(.*)
+    handler: FormHandler
+    kwargs:
+      url: $GRAMEXDATA/nlg/{_0}/{_1}
+      headers:
+        Cache-Control: no-store
+  nlg-static_files-$*:
+    pattern: /$YAMLURL/nlg.js
+    handler: FileHandler
+    kwargs:
+      path: $YAMLPATH/nlg/js/nlg.js
+  nlg-config-handler-$*:
+    pattern: /$YAMLURL/initconf
+    handler: FunctionHandler
+    kwargs:
+      function: gramex.apps.nlg.webapp.get_init_config
+      headers:
+        Content-Type: application/json
+  textproc-$*:
+    pattern: /$YAMLURL/textproc
+    handler: FunctionHandler
+    priority: 1000000
+    kwargs:
+      function: gramex.apps.nlg.webapp.process_template
+      xsrf_cookies: false
+      headers:
+        Content-Type: application/json
+  rendertmpl-$*:
+    pattern: /$YAMLURL/render-template
+    handler: FunctionHandler
+    kwargs:
+      function: gramex.apps.nlg.webapp.render_template
+      xsrf_cookies: false
+      headers:
+        Content-Type: application/json
+  nlg_gramopts-$*:
+    pattern: /$YAMLURL/get-gramopts
+    handler: FunctionHandler
+    kwargs:
+      function: gramex.apps.nlg.webapp.get_gramopts
+      xsrf_cookies: false
+      headers:
+        Content-Type: application/json

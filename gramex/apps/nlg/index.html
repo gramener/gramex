@@ -7,7 +7,7 @@
 </head>
 
 <body>
-    {% from gramex.nlg.webapp import read_current_config %}
+    {% from gramex.apps.nlg.webapp import read_current_config %}
     {% set dsid = read_current_config(handler)['dsid'] %}
     <link rel="stylesheet" href="ui/bootstraptheme.css" /> <!-- Add bootstrap -->
     <link rel="stylesheet" href="ui/font-awesome/css/font-awesome.min.css">

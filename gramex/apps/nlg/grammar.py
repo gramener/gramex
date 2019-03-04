@@ -3,7 +3,7 @@ from spacy.lang.en import LEMMA_INDEX, LEMMA_EXC, LEMMA_RULES
 from spacy.lemmatizer import Lemmatizer
 from tornado.template import Template
 
-from gramex.nlg.utils import set_nlg_gramopt, nlp
+from gramex.apps.nlg.utils import set_nlg_gramopt, nlp
 
 infl = engine()
 L = Lemmatizer(LEMMA_INDEX, LEMMA_EXC, LEMMA_RULES)

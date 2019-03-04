@@ -14,8 +14,8 @@ import pandas as pd
 from spacy import load
 from spacy.matcher import PhraseMatcher
 
-from gramex.nlg import utils
-from gramex.nlg.grammar import concatenate_items, find_inflections
+from gramex.apps.nlg import utils
+from gramex.apps.nlg.grammar import concatenate_items, find_inflections
 
 default_nlp = load("en_core_web_sm")
 
