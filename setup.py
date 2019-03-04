@@ -200,6 +200,7 @@ setup(
     tests_require=[
         'nose',
         'coverage',
+        'python-dateutil',          # For schedule testing
         'testfixtures',             # For logcapture
         'sphinx_rtd_theme',         # For documentation
         'websocket-client',         # For websocket testing

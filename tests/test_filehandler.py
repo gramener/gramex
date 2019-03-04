@@ -12,15 +12,19 @@ from gramex.http import OK, FORBIDDEN, METHOD_NOT_ALLOWED
 from orderedattrdict import AttrDict
 from gramex.ml import r
 from gramex.transforms import badgerfish, rmarkdown
-from . import server, tempfiles, TestGramex
+from nose.plugins.skip import SkipTest
+from . import server, tempfiles, TestGramex, folder
+
+
+def write(path, text):
+    with io.open(path, 'w', encoding='utf-8') as out:
+        out.write(text)
 
 
 def setUpModule():
     # Create a unicode filename to test if FileHandler's directory listing shows it
-    folder = os.path.dirname(os.path.abspath(__file__))
     tempfiles.unicode_file = os.path.join(folder, 'dir', 'subdir', u'unicode–file.txt')
-    with io.open(tempfiles.unicode_file, 'w', encoding='utf-8') as out:
-        out.write(six.text_type(tempfiles.unicode_file))
+    write(tempfiles.unicode_file, six.text_type(tempfiles.unicode_file))
 
     # Create a symlink to test if these are displayed in a directory listing without errors
     # If os.symlink does not exist (Linux), raises an AttributeError
@@ -143,6 +147,8 @@ class TestFileHandler(TestGramex):
             self.check('/dir/transform/markdown.md', text=markdown.markdown(f.read()))
 
     def test_rmarkdown(self):
+        if os.environ.get('BRANCH', '') not in {'dev', 'master'}:
+            raise SkipTest('Install slow rmarkdown installation only on dev/master')
         # install rmarkdown if missing
         r('''
             packages <- c('rmarkdown')
@@ -181,9 +187,17 @@ class TestFileHandler(TestGramex):
         self.check('/dir/template-index/non-index-template.txt', path='dir/non-index-template.txt')
 
     def test_subtemplate(self):
-        self.check('/dir/transform/template.sub.txt', text='Hello world')
-        self.check('/dir/template/template.sub.txt', text='Hello world')
-        self.check('/dir/template-true/template.sub.txt', text='Hello world')
+        tempfiles.module = os.path.join(folder, 'dir', 'tempmodule.txt')
+        write(tempfiles.module, '{{ x }} {{ y }}')
+        for dir in ['transform', 'template', 'template-true']:
+            r = self.check('/dir/%s/template.sub.txt' % dir)
+            self.assertIn('Hello world', r.text)
+            self.assertIn('Second phrase', r.text)
+        write(tempfiles.module, '{{ y }} {{ x }}')
+        for dir in ['transform', 'template', 'template-true']:
+            r = self.check('/dir/%s/template.sub.txt' % dir)
+            self.assertIn('Hello world', r.text)
+            self.assertIn('phrase Second', r.text)
 
     def test_merge(self):
         self.check('/dir/merge.txt', text='Α.TXT\nΒ.Html\n', headers={

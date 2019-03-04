@@ -2,7 +2,7 @@
 
 from .transforms import build_transform, condition, flattener, once
 from .badgerfish import badgerfish
-from .template import template
+from .template import template, CacheLoader
 from .rmarkdown import rmarkdown
 from .auth import ensure_single_session
 from .twitterstream import TwitterStream
@@ -16,5 +16,6 @@ __all__ = [
     'condition',
     'flattener',
     'once',
+    'CacheLoader',
     'TwitterStream',
 ]

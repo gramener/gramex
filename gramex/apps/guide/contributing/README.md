@@ -55,7 +55,7 @@ nosetests testlib.test_data:TestFilter      # Only run the TestFilter class
 nosetests testlib.test_data:TestFilter.test_get_engine      # Run a single method
 ```
 
-## Update Gramex
+## Update Gramex Community Edition
 
 In the gramex folder, create a branch for local development.
 
@@ -90,10 +90,10 @@ If possible:
 - Document Python docstrings
 - Document the feature in the guide at `gramex/apps/guide/`
 
-## Releasing Gramex
+## Release Gramex Community Edition
 
-Check [build errors](http://github.com/gramener/gramex/builds).
-Test the `dev` branch on Python 2.7 and 3.6:
+Check [build errors](https://travis-ci.com/gramener/gramex).
+Test the `dev` branch locally on Python 2.7 and 3.6:
 
 ```bash
 PYTHON=/path/to/python2.7 make release-test
@@ -102,9 +102,10 @@ PYTHON=/path/to/python3.6 make release-test
 
 Update the following and commit to `dev` branch:
 
+- `rm gramex/apps/ui/yarn.lock && gramex setup ui` -- upgrade UI components
 - `gramex/apps/guide/release/1.xx/README.md` -- add guide release notes
     - `make stats` for code size stats
-    - `make coverage` for test coverage stats
+    - `make coverage` for test coverage stats (part of `make release-test`)
 - `gramex/apps/guide/release/README.md` -- add release entry
 - `gramex/release.json` -- update the version number
 - `pkg/docker-py3/Dockerfile` -- update the version number
@@ -137,6 +138,52 @@ Deploy on [gramener.com](https://gramener.com/gramex-update/) and
 make push-docs push-coverage
 # Push to pypi
 make push-pypi              # log in as gramener
+```
+
+Deploy [docker instance](https://hub.docker.com/r/gramener/gramex/):
+
+```bash
+export VERSION=1.x.x        # Replace with Gramex version
+docker build https://github.com/gramener/gramex.git#master:pkg/docker-py3 -t gramener/gramex:$VERSION
+docker tag gramener/gramex:$VERSION gramener/gramex:latest
+docker login                # log in as sanand0 / pratapvardhan
+docker push gramener/gramex
+```
+
+Re-start gramex on deployed servers.
+
+## Release Gramex Enterprise Edition
+
+Update the following and commit to `dev` branch:
+
+- `setup.py` -- update the version number to the Gramex version number
+- TODO: document CHANGELOG, etc.
+
+Commit and push the `dev` branch to the server. **Ensure pipeline passes.**:
+
+```bash
+git commit -m"DOC: Add v1.x.x release notes"
+git push                    # Push the dev branch
+```
+
+Merge with master, create an annotated tag and push the master branch:
+
+```bash
+git checkout master
+git merge dev
+git tag -a v1.x.x -m"One-line summary of features"
+git push --follow-tags
+git checkout dev            # Switch back to dev
+git merge master
+```
+
+Deploy on [pypi](https://pypi.python.org/pypi/gramexenterprise):
+
+```bash
+rm -rf dist/
+python setup.py sdist
+# If this fails, add '-p PASSWORD'
+twine upload -u gramener dist/*
 ```
 
 Deploy [docker instance](https://hub.docker.com/r/gramener/gramex/):

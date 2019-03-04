@@ -1,5 +1,5 @@
 ---
-title: Gramex 1.51 is open source, with PDF support, security and testing
+title: Gramex 1.51 release notes
 prefix: 1.51
 ...
 

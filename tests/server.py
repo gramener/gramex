@@ -31,6 +31,7 @@ def start_gramex():
             gramex.init()
         except Exception as e:
             info.exception = e
+        info.thread = None
 
     # Tornado 5.0 on Python 3 does not create an event loop on new threads.
     # See https://github.com/tornadoweb/tornado/issues/2183
@@ -63,6 +64,7 @@ def start_gramex():
 
 def stop_gramex():
     '''Terminate Gramex'''
-    if info.thread is not None:
-        gramex.shutdown()
-        info.thread = None
+    requests.get(base_url + '/shutdown')
+    tick = 0.1
+    while info.thread:
+        time.sleep(tick)

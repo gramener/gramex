@@ -22,7 +22,9 @@ app:
   listen:
     port: 9999              # Avoid clash with default Gramex port running tests
   session:
-    private_key: $YAMLPATH/id_rsa
+    domain: .localhost.local    # RequestCookieJar uses this domain for localhost
+    secure: false               # Don't set this to true. We're using HTTP, so it will fail
+    # httponly: true            # Not required. Already set in base gramex.yaml
 
 cache:
   memory:
@@ -1924,6 +1926,13 @@ url:
       function: utils.session
       headers:
         Content-Type: application/json
+  auth/user:
+    pattern: /auth/user
+    handler: FunctionHandler
+    kwargs:
+      function: json.dumps(handler.current_user)
+      headers:
+        Content-Type: application/json
 
   auth/otp:
     pattern: /auth/otp
@@ -2575,6 +2584,12 @@ url:
           url: $TRANSLATE_XLSX
           sheet_name: translate
 
+  shutdown:
+    pattern: /shutdown
+    handler: FunctionHandler
+    kwargs:
+      function: gramex.shutdown() or 'Done'
+
 sms:
   amazonsns:
     type: amazonsns
@@ -2631,6 +2646,13 @@ schedule:
     kwargs: {count: 1000}
     startup: true
     thread: true
+  schedule-timed:
+    function: gramex.config.app_log('schedule-timed ran now')
+    hours: 5
+  schedule-timed-utc:
+    function: gramex.config.app_log('schedule-timed-utc ran now')
+    hours: 5
+    utc: true
 
 email:
   smtps_stub:
@@ -2735,6 +2757,10 @@ alert:
       subject: "{{ config.salutation }} #{{ index }}! {{ config['prefix'] }} {{ row['votes'] }} votes"
       salutation: "Congrats"
       prefix: "You got"
+      attachments:
+        - http://localhost:9999/capturechrome?url=http://localhost:9999/auth/user&ext=pdf
+      user:
+        id: "{{ row['name'] }}"
     alert-data-inplace:
       service: smtps_stub
       data:

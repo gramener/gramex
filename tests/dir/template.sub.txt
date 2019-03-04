@@ -1,6 +1,7 @@
 {% set x = 'Hello' %}
 {% set y = 'world' %}
 {% include 'subdir/template.txt' %}
+{% module Template('dir/tempmodule.txt', x='Second', y='phrase') %}
 
 {# standard variables is available in template #}
 {% set assert(handler) %}
