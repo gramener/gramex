@@ -629,18 +629,20 @@ function addFHArgsSetter(sent, fh_args) {
 
 function getEditorURL() {
     var url = g1.url.parse(window.location.href)
-    var appname = url.relative.replace(/\/index.*/g, "")
+    var appname = url.relative.replace(/\/nlg-editor.*/g, "")
     return `${url.protocol}://${url.origin}${appname}/edit-narrative?dsid=${dataset_name}&nrid=${narrative_name}`
 }
 
 function getNarrativeEmbedCode() {
+    let url = g1.url.parse(window.location.href)
+    url = url + "render-live-template"
     let html = `
     <div id="narrative-result"></div>
     <script>
         $('.formhandler').on('load',
             function (e) {
                 $.ajax({
-                    url: "render-live-template",
+                    url: "${url}",
                     type: "POST",
                     data: {
                         data: JSON.stringify(e.formdata),

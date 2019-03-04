@@ -18,10 +18,10 @@ url:
     pattern: /$YAMLURL/nlg-editor
     handler: FileHandler
     kwargs:
-      path: $YAMLPATH/nlg/index.html
+      path: $YAMLPATH/index.html
       template: true
       auth:
-        login_url: /$YAMLURL/login
+        login_url: /$YAMLURL/../../login/
   tablepreview-$*:
     pattern: /$YAMLURL/preview/(.*)/(.*)
     handler: FormHandler
@@ -33,7 +33,7 @@ url:
     pattern: /$YAMLURL/nlg.js
     handler: FileHandler
     kwargs:
-      path: $YAMLPATH/nlg/js/nlg.js
+      path: $YAMLPATH/js/nlg.js
   nlg-config-handler-$*:
     pattern: /$YAMLURL/initconf
     handler: FunctionHandler
@@ -66,3 +66,23 @@ url:
       xsrf_cookies: false
       headers:
         Content-Type: application/json
+  save-config-$*:
+    pattern: /$YAMLURL/save-config
+    handler: FunctionHandler
+    kwargs:
+      function: gramex.apps.nlg.webapp.save_config
+      xsrf_cookies: false
+  edit-narrative-$*:
+    pattern: /$YAMLURL/edit-narrative
+    handler: FunctionHandler
+    kwargs:
+      function: gramex.apps.nlg.webapp.edit_narrative
+      auth:
+        login_url: /$YAMLURL/../../login/
+      redirect:
+        url: /$YAMLURL/nlg-editor
+  render-live-template-$*:
+    pattern: /$YAMLURL/render-live-template
+    handler: FunctionHandler
+    kwargs:
+      function: gramex.apps.nlg.webapp.render_live_template
