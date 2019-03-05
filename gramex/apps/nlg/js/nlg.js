@@ -190,6 +190,7 @@ class Template {
             var rmtokenbtn = document.getElementById(`rmtoken-${currentEditIndex}-${token}`)
             rmtokenbtn.addEventListener("click", function (e) { parent.ignoreTokenTemplate(tkobj) })
         }
+
     }
 }
 
@@ -283,7 +284,7 @@ class Token {
     }
 
     makeGrammarOptionsSelector(editIndex) {
-        var html = `<select id="gramopt-select-${editIndex}-${this.text}" class="selectpicker show-tick" multiple>`
+        var html = `<select id="gramopt-select-${editIndex}-${this.text}" class="select-multiple" multiple="multiple">`
         var appliedInfls = this.findAppliedInflections()
         for (let [fe_name, infl_obj] of Object.entries(grammarOptions)) {
             // check if this inflection is already applied
@@ -362,8 +363,8 @@ function renderPreview(fh) {
     }
     var innerHTML = "<p>\n";
     for (var i = 0; i < templates.length; i++) {
-        innerHTML += getRmButton(i) // + getConditionBtn(i) + getEditTemplateBtn(i)
-            + getSettingsBtn(i) + "\t" + templates[i].previewHTML + "</br>";
+        innerHTML += '<div class="pb-1">' + getRmButton(i) // + getConditionBtn(i) + getEditTemplateBtn(i)
+            + getSettingsBtn(i) + "\t" + templates[i].previewHTML + "</div>";
     }
     innerHTML += "</p>"
     document.getElementById("template-preview").innerHTML = innerHTML;
@@ -416,6 +417,7 @@ function triggerTemplateSettings(sentid) {
     editTemplate(currentEditIndex)
     $('#template-settings').modal({'show': true})
     $('#condition-editor').focus()
+    $(function() { $('.select-multiple').select2() })
 }
 
 function editTemplate(n) {
@@ -664,7 +666,7 @@ function shareNarrative() {
     var editor_url = document.getElementById('share-editor-url')
     editor_url.value = getEditorURL()
     var embed_code = document.getElementById('share-narrative-url')
-    embed_code.value = getNarrativeEmbedCode()
+    embed_code.innerText = getNarrativeEmbedCode()
     $('#share-modal').modal({'show': true})
 }
 
@@ -679,7 +681,7 @@ function copyToClipboard(elem_id) {
 function getRmButton(n) {
     // Get HTML for the delete template button.
     return `
-    <button id="rm-btn-${n}" title="Remove" type="button" class="btn btn-primary">
+    <button id="rm-btn-${n}" title="Remove" type="button" class="btn btn-danger btn-sm">
         <i class="fa fa-trash"></i>
     </button>
     `
@@ -687,7 +689,7 @@ function getRmButton(n) {
 
 function getSettingsBtn(n) {
     return `
-    <button id="settings-btn-${n}" title="Settings" type="button" class="btn btn-primary">
+    <button id="settings-btn-${n}" title="Settings" type="button" class="btn btn-primary btn-sm">
         <i class="fa fa-wrench"></i>
     </button>
     `
