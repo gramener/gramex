@@ -67,7 +67,7 @@ The [Gramex pytest plugin](../../test/) supports 3 new commands:
 DOC: upgrade g1 from 0.13 to 0.14 [S Anand]
 
 
-### Documentation is more interactive
+## Documentation is more interactive
 
 The [g1 interactive library](../../g1/) documentation shows examples in-place.
 You can see the effect of the code directly. Some examples:

@@ -101,7 +101,9 @@
     <script src="/{{ GUIDE_ROOT }}/ui/g1/dist/g1.min.js"></script>
 
     <section class="content">
-      <h1>{{ title }}</h1>
+      {% if title %}
+        <h1>{{ title }}</h1>
+      {% end %}
       {% raw body %}
     </section>
   </div>

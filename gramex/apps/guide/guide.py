@@ -23,6 +23,7 @@ def markdown_template(content, handler):
         # GUIDE_ROOT has the absolute URL of the Gramex guide
         'GUIDE_ROOT': gramex.config.variables.GUIDE_ROOT,
         'body': md.convert(content),
+        'title': ''
     }
     for key, val in md.Meta.items():
         kwargs[key] = val[0]
