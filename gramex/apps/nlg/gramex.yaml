@@ -13,15 +13,7 @@ url:
       xsrf_cookies: false
       function: gramex.apps.nlg.webapp.init_form
       redirect:
-        url: /$YAMLURL/nlg-editor
-  nlg-editor-filehander-$*:
-    pattern: /$YAMLURL/nlg-editor
-    handler: FileHandler
-    kwargs:
-      path: $YAMLPATH/index.html
-      template: true
-      auth:
-        login_url: /$YAMLURL/../../login/
+        url: /$YAMLURL/../?tab=nlg&action=edit
   tablepreview-$*:
     pattern: /$YAMLURL/preview/(.*)/(.*)
     handler: FormHandler
@@ -80,7 +72,7 @@ url:
       auth:
         login_url: /$YAMLURL/../../login/
       redirect:
-        url: /$YAMLURL/nlg-editor
+        url: /$YAMLURL/../?tab=nlg&action=edit
   render-live-template-$*:
     pattern: /$YAMLURL/render-live-template
     handler: FunctionHandler

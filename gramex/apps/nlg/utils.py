@@ -45,7 +45,7 @@ print(narrative)
 """
 
 config = ConfigParser()
-config.read(op.join(op.dirname(__file__), "..", "..", "config.ini"))
+config.read(op.join(op.dirname(__file__), "..", "..", "..", "config.ini"))
 
 
 def render_search_result(text, results, **kwargs):

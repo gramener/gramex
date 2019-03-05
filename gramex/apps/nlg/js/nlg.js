@@ -335,7 +335,7 @@ function addToNarrative() {
     // pick text from the "Type something" box, templatize, and add to narrative
     $.ajax({
         type: "POST",
-        url: "textproc",
+        url: "nlg/textproc",
         data: { "args": JSON.stringify(args), "data": JSON.stringify(df),
                 "text": JSON.stringify([document.getElementById("textbox").value]) },
         success: addToTemplates
@@ -387,7 +387,7 @@ function refreshTemplates() {
     var tmpls = templates.map(x => x.template)
     $.ajax({
         type: "POST",
-        url: "render-template",
+        url: "nlg/render-template",
         data: { "args": JSON.stringify(args), "data": JSON.stringify(df),
                 "template": JSON.stringify(tmpls) },
         success: updateTemplates
@@ -463,7 +463,7 @@ function saveConfig() {
     } else {
         narrative_name = elem.value
         $.ajax({
-            url: "save-config",
+            url: "nlg/save-config",
             type: "POST",
             data: {config: JSON.stringify(templates), name: narrative_name, dataset: dataset_name},
             headers: {'X-CSRFToken': false},
@@ -490,7 +490,7 @@ function downloadConfig() {
 function setInitialConfig() {
     $.ajax({
         // url: "initconf/meta.json",
-        url: "initconf",
+        url: "nlg/initconf",
         type: "GET",
         success: function (e) {
             dataset_name = e.dsid
@@ -552,7 +552,7 @@ function renderTemplate(text, success) {
     // render an arbitrary template and do `success` on success.
     $.ajax({
         type: "POST",
-        url: "render-template",
+        url: "nlg/render-template",
         data: {
             "args": JSON.stringify(args), "data": JSON.stringify(df),
             "template": JSON.stringify(text)
@@ -628,9 +628,8 @@ function addFHArgsSetter(sent, fh_args) {
 }
 
 function getEditorURL() {
-    var url = g1.url.parse(window.location.href)
-    var appname = url.relative.replace(/\/nlg-editor.*/g, "")
-    return `${url.protocol}://${url.origin}${appname}/edit-narrative?dsid=${dataset_name}&nrid=${narrative_name}`
+    let url = g1.url.parse(window.location.href)
+    return `${url.protocol}://${url.origin}${url.directory}nlg/edit-narrative?dsid=${dataset_name}&nrid=${narrative_name}`
 }
 
 function getNarrativeEmbedCode() {

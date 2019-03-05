@@ -199,7 +199,6 @@ def get_gramopts(handler):
 
 def init_form(handler):
     """Process input from the landing page and write the current session config."""
-
     meta = {}
     # prioritize files first
     data_dir = op.join(nlg_path, handler.current_user.email)

@@ -164,7 +164,12 @@
       <div class="h1 text-danger">Work in progress</div>
 
     {% elif current_tab == 'nlg' %}
-      {% include "../nlg/grmform.html" %}
+      {% set action = handler.get_argument('action', '') %}
+      {% if action == 'edit' %}
+        {% include "../nlg/index.html" %}
+      {% else %}
+        {% include "../nlg/grmform.html" %}
+      {% end %}
 
     {% end %}
   </div>

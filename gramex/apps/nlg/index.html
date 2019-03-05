@@ -9,17 +9,11 @@
 <body>
     {% from gramex.apps.nlg.webapp import read_current_config %}
     {% set dsid = read_current_config(handler)['dsid'] %}
-    <link rel="stylesheet" href="ui/bootstraptheme.css" /> <!-- Add bootstrap -->
-    <link rel="stylesheet" href="ui/font-awesome/css/font-awesome.min.css">
-    <div class="formhandler" data-src="preview/{{ handler.current_user.email }}/{{ dsid }}"></div>
+    <div class="formhandler" data-src="nlg/preview/{{ handler.current_user.email }}/{{ dsid }}"></div>
     <!-- Include JS dependencies  -->
-    <script src="ui/lodash/lodash.min.js"></script>
-    <script src="ui/jquery/dist/jquery.min.js"></script>
     <script src="ui/popper.js/dist/umd/popper.min.js"></script>
-    <script src="ui/bootstrap/dist/js/bootstrap.min.js"></script>
     <script src="ui/bootstrap-select/dist/js/bootstrap-select.min.js"></script>
-    <script src="ui/g1/dist/g1.min.js"></script>
-    <script src="nlg.js"></script>
+    <script src="nlg/nlg.js"></script>
     <script>
         // Render the FormHandler table
 
@@ -181,7 +175,7 @@
         document.getElementById("edit-template").rows = 10;
         $.ajax({
             type: "GET",
-            url: "get-gramopts",
+            url: "nlg/get-gramopts",
             success: function (resp) { grammarOptions = resp }
         })
     </script>
