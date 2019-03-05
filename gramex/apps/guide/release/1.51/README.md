@@ -38,8 +38,8 @@ This feature in [CaptureHandler](../../capturehandler/) lets you:
 
 ## Enhanced security: Protect against bots
 
-Gramex prevents againt bot attacks by incorporating
-[CAPTCHAs](https://en.wikipedia.org/wiki/CAPTCHA) into the login screen. This
+[Gramex auth](../../auth/#recaptcha) prevents againt bot attacks using
+[CAPTCHAs](https://en.wikipedia.org/wiki/CAPTCHA) in the login screen. This
 configuration will add [reCAPTCHA](https://www.google.com/recaptcha/) support.
 
 ```yaml
@@ -70,7 +70,10 @@ DOC: upgrade g1 from 0.13 to 0.14 [S Anand]
 ### Documentation is more interactive
 
 The [g1 interactive library](../../g1/) documentation shows examples in-place.
-You can see the effect of the code directly.
+You can see the effect of the code directly. Some examples:
+
+- [g1 urlfilter](../../g1/docs/urlfilter.md)
+- [g1 template](../../g1/docs/template.md)
 
 The guide now uses the Gramex [UI component library](../../uicomponents/). We also
 have new documentation on:

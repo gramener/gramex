@@ -140,8 +140,9 @@ at the same time in both servers. `utc: false` runs them at 6 am local time.
 
 ## Browsing files with FormHandler is simpler
 
-[FormHandler](../../formhandler/#formhandler-directory-listing) lets you browse
-files. The result now has 2 new columns:
+[FormHandler](../../formhandler/#formhandler-directory-listing) lets you
+[browse files](../..//formhandler/dir?_format=html&_c=dir&_c=name&_c=size&_c=type&_sort=-size).
+The result now has 2 new columns:
 
 - `dir`: relative path of the file or directory from the root
 - `level`: number of folder levels from root to the file
@@ -152,7 +153,11 @@ files. The result now has 2 new columns:
 
 [FormHandler functions](../../formhandler/#formhandler-functions) accept
 `handler` as a variable. This lets you transform the data using URL query
-parameters
+parameters.
+
+For example, if the URL has `?group=city`, you can add
+`function: data.groupby(handler.args.group).sum()` to group
+(or run any calculation) based on a user-provided input.
 
 FormHandler also reports errors in a more friendly way. Instead of this:
 
@@ -169,8 +174,8 @@ FormHandler also reports errors in a more friendly way. Instead of this:
 
 Gramex bundles d3 v5 under [ui/d3v5/](../../ui/d3v5/). This features new charts such as contours and equalEarth projections
 
-![Contours](https://raw.githubusercontent.com/d3/d3-contour/master/img/volcano.gif)
-![Equal Earth projection](https://raw.githubusercontent.com/d3/d3-geo/master/img/equalEarth.png)
+![Contours{@width=600}](https://raw.githubusercontent.com/d3/d3-contour/master/img/volcano.gif)
+![Equal Earth projection{@width=600}](https://raw.githubusercontent.com/d3/d3-geo/master/img/equalEarth.png)
 
 
 ## Statistics
