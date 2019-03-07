@@ -177,6 +177,8 @@ Some browsers support additional options. Here is the complete list of options:
 browsers:
   Chrome:
     headless: true    # Run without displaying browser, in headless mode
+    mobile:           # Enable mobileEmulation option
+      deviceName: iPhone 6/7/8
   Firefox:
     headless: true    # Run without displaying browser, in headless mode
 ```

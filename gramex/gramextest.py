@@ -42,6 +42,9 @@ class ChromeConf(dict):
         if val:
             self['goog:chromeOptions']['args'].append('--headless')
 
+    def mobile(self, val):
+        self['goog:chromeOptions']['mobileEmulation'] = val
+
 
 class FirefoxConf(dict):
     def __init__(self, **conf):
