@@ -2,9 +2,8 @@ variables:                          # Define variables for re-use in the app
   BASE: https://httpbin.org         #   Define the base URL
 
 urltest:                            # Run tests on URLs without a browser
-  - name: get-json-test             # Name of the test
-    fetch: $BASE/get                # Fetch this URL
-  - name: get-json-params
+  - fetch: $BASE/get                # Fetch this URL
+  - name: check /get                # Name this test explicitly
     fetch:
       url: $BASE/get                # Fetch this URL
       params: {x: 1, y: abc}        # with ?x=1&y=abc
@@ -12,20 +11,19 @@ urltest:                            # Run tests on URLs without a browser
       headers:                      # with these HTTP request headers
         X-Test: Gramex
     code: 200                       # HTTP status should be 200
-    headers:                        # Check the response HTTP headers
-      Server: true                  #   Server header is present
-      Nonexistent: null             #   Nonexistent header is missing
-      Date: [endswith, GMT, UTC]    #   Date header ends with GMT or UTC
-    text:                           # Check the response text
+  - text:                           # Check the response text
       - [has, args, headers]        #   Has at least one of these words
       - [has no, hello, world]      #   Has none of these words
-    json:                           # Check the response as JSON
+  - json:                           # Check the response as JSON
       args: {x: '1', y: abc}        #   {args: ...} matches this object
       args.x: '1'                   #   {args: {x: ...}} is '1'
       args.y: [has, abc]            #   {args: {y: ...}} has the word 'abc'
-  - name: get-html
-    fetch: $BASE/html               # Fetch this URL
-    html:                           # Check the response as HTML
+  - headers:                        # Check the response HTTP headers
+      Server: true                  #   Server header is present
+      Nonexistent: null             #   Nonexistent header is missing
+      Date: [endswith, GMT, UTC]    #   Date header ends with GMT or UTC
+  - fetch: $BASE/html               # Fetch this URL
+  - html:                           # Check the response as HTML
       h1: [has, Herman]             #   All <h1> have "Herman" in the text
       p:first-child: [has, cool]    #   First <p> has the word "cool"
       p:                            #   All <p> elements
@@ -39,15 +37,13 @@ browsers:               # Open multiple browsers to run UI tests
     # Edge: true
 
 uitest:                             # Run UI tests in the browser on the URL
-  - name: fetch-google-home
-    fetch: https://www.google.com/  # Fetch this URL in the browser
-    resize: [800, 600]              # Resize the window to 800x600
-  - name: google-title
-    title: Google                   # Title should match Google
+  - fetch: https://www.google.com/  # Fetch this URL in the browser
+  - resize: [800, 600]              # Resize the window to 800x600
+  - title: Google                   # Title should match Google
   - title: [starts with, Goo]       # Title should start with "Goo"
   - find xpath //input[@title]:     # Find the first input node that has a title using XPath
       name: 'q'                     #   The attribute name= should be "q"
-    clear xpath //input[@title]: gramener  # Clear existing input text
+    clear: xpath //input[@title]    # Clear existing input text
     type xpath //input[@title]: gramener   # Type "gramener" in the input
   - find xpath //input[@title]:     # The same input has
       :value: [has, gramener]       #   The property "value" as "gramener"

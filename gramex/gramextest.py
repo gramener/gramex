@@ -1,21 +1,23 @@
+import gramex.cache
 import jmespath
 import json
 import os
 import pytest
 import re
 import requests
-import gramex.cache
 from fnmatch import fnmatch
+from gramex.config import ChainConfig, PathConfig, objectpath, variables, CustomJSONEncoder
 from lxml.html import document_fromstring
+from orderedattrdict import AttrDict
 from selenium import webdriver
-from selenium.common.exceptions import NoSuchElementException, TimeoutException
-from six import string_types
-from tornado.web import create_signed_value
-from gramex.config import ChainConfig, PathConfig, objectpath, variables
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions
+from selenium.common.exceptions import NoSuchElementException, TimeoutException, WebDriverException
 from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions
+from selenium.webdriver.support.ui import WebDriverWait
+from six import string_types
+from time import sleep
+from tornado.web import create_signed_value
 
 # Get Gramex conf from current directory
 gramex_conf = ChainConfig()
@@ -25,6 +27,9 @@ secret = objectpath(+gramex_conf, 'app.settings.cookie_secret')
 drivers = {}
 default = object()
 get_el = expected_conditions.presence_of_element_located
+context_global, context_local = {}, {}
+mode = AttrDict(debug=0, mark='', skip=False)
+MAX = 999999
 
 
 class ChromeConf(dict):
@@ -65,6 +70,21 @@ class YamlFile(pytest.File):
     '''
     Generates 1 test case for each test: item in the YAML file.
     '''
+    def _parse(self, index, actions):
+        '''Return the test name as '''
+        if isinstance(actions, string_types):
+            actions = {actions: {}}
+        # name: "#0xx: <first action of the test>"
+        if 'name' in actions:
+            name = actions.pop('name')
+        else:
+            items = list(actions.items())
+            name = ''.join('{}: {}'.format(k, json.dumps(v)) for k, v in items[:1])
+            name += ', ...' if len(items) > 1 else ''
+        name = '{:03d}: {}'.format(index + 1, name)
+        mode.mark = actions.pop('mark', mode.mark)
+        return name, actions
+
     def collect(self):
         # TODO: report error if YAML is invalid
         conf = gramex.cache.open(str(self.fspath), 'config')
@@ -77,25 +97,20 @@ class YamlFile(pytest.File):
             drivers[browser] = getattr(webdriver, browser)(desired_capabilities=capabilities)
         # TODO: improve naming so that we can use pytest -k
         for index, actions in enumerate(conf.get('urltest', [])):
-            name = 'urltest:{}'.format(index + 1)
-            yield YamlItem(name, self, actions, URLTest())
+            name, actions = self._parse(index, actions)
+            yield YamlItem('url #{}'.format(name), self, actions, URLTest())
         for index, actions in enumerate(conf.get('uitest', [])):
+            name, actions = self._parse(index, actions)
             for browser in drivers:
-                name = 'uitest:{}:{}'.format(browser, index + 1)
-                yield YamlItem(name, self, actions, UITest(browser))
+                yield YamlItem('{} #{}'.format(browser, name), self, actions, UITest(browser))
 
 
 class YamlItem(pytest.Item):
     def __init__(self, name, parent, actions, registry):
-        if isinstance(actions, string_types):
-            actions = {actions: {}}
         self.run = []
         self.name = name
         for action, options in actions.items():
-            if action == 'name':
-                self.name = str(options)
-                continue
-            # PY3: cmd, *arg = action.strip().split(maxsplit=1)
+            # In PY3, this is simpler: cmd, *arg = action.strip().split(maxsplit=1)
             parts = action.strip().split(None, 1)
             cmd, arg = (parts[0], parts[1:]) if len(parts) > 1 else (parts[0], [])
             method = getattr(registry, cmd, None)
@@ -112,9 +127,16 @@ class YamlItem(pytest.Item):
                 self.run.append([method, [options], {}])
 
         super(YamlItem, self).__init__(self.name, parent)
+        if mode.mark:
+            self.add_marker(mode.mark)
 
     def runtest(self):
         for method, args, kwargs in self.run:
+            if mode.skip:
+                pytest.skip('skip mode')
+            if mode.debug:
+                pytest.set_trace()      # noqa
+                mode.debug = mode.debug - 1 if mode.debug >= 1 else 0
             method(*args, **kwargs)
 
     def repr_failure(self, excinfo):
@@ -131,7 +153,20 @@ class ConfError(Exception):
     '''Custom exception for error reporting.'''
 
 
-class URLTest(object):
+class BaseTest(object):
+    def debug(self, arg=None, **options):
+        # mode.debug is a decrementing integer counter
+        mode.debug = MAX if arg is True else 1 if arg is None else 0 if not arg else int(arg)
+
+    def skip(self, arg=True, **options):
+        mode.skip = arg
+
+    def wait(self, seconds=default, **attrs):
+        if seconds != default:
+            sleep(seconds)
+
+
+class URLTest(BaseTest):
     r = None
 
     def fetch(self, url, method='GET', timeout=10, headers=None, user=None, **kwargs):
@@ -172,6 +207,8 @@ class URLTest(object):
         for selector, value in matches.items():
             nodes = tree.cssselect(selector)
             if not isinstance(value, dict):
+                if len(nodes) == 0:
+                    raise ConfError('html: %s matched no nodes' % selector)
                 for node in nodes:
                     match(node.text_content(), value, 'html', selector)
             else:
@@ -186,7 +223,7 @@ class URLTest(object):
                             match(node.get(attr), val, 'html', selector, attr)
 
 
-class UITest(object):
+class UITest(BaseTest):
     def __init__(self, browser):
         self.browser = browser
         self.driver = drivers[browser]
@@ -213,11 +250,15 @@ class UITest(object):
                 actual = node.get_property(key[1:])
             else:
                 actual = node.get_attribute(key)
-            match(actual, expected, msg, key)
+            match(actual, expected, msg, key, node.get_attribute('outerHTML'))
+
+    def print(self, selector):                      # noqa
+        for node in self._get(selector, multiple=True, must_exist=True):
+            print(node.get_attribute('outerHTML'))  # noqa
 
     def wait(self, seconds=default, **attrs):
         if seconds != default:
-            self.driver.implicitly_wait(float(seconds))
+            sleep(seconds)
             return
         timeout = float(attrs.get('timeout', 10))
         if 'selector' in attrs:
@@ -236,6 +277,12 @@ class UITest(object):
             except TimeoutException:
                 raise ConfError('script: "%s" timed out after %.0fs' % (script, timeout))
 
+    def click(self, selector):
+        try:
+            self._get(selector, must_exist=True).click()
+        except WebDriverException as e:
+            raise ConfError('Cannot click on %s: %s' % (selector, e))
+
     def hover(self, selector):
         ActionChains(self.driver).move_to_element(self._get(selector)).perform()
 
@@ -253,12 +300,14 @@ class UITest(object):
         for index in range(count):
             self.driver.forward()
 
-    def click(self, selector):
-        self._get(selector, must_exist=True).click()
-
     def scroll(self, selector):
         self.driver.execute_script('arguments[0].scrollIntoView()',
                                    self._get(selector, must_exist=True))
+
+    def python(self, expr):
+        exec(str(expr), context_global, context_local)
+        for key, val in context_local.items():
+            self.driver.execute_script(key + '=' + json.dumps(val, cls=CustomJSONEncoder))
 
     def script(self, script=None, **scripts):
         # script: alert(1)
@@ -272,7 +321,11 @@ class UITest(object):
                     self._script(code)
                 # script: [window.x=1]
                 elif isinstance(code, string_types):
+                    keys = set(self.driver.execute_script('return Object.keys(window)'))
                     self.driver.execute_script(code)
+                    new_keys = set(self.driver.execute_script('return Object.keys(window)')) - keys
+                    for key in new_keys | set(context_local.keys()):
+                        context_local[key] = self.driver.execute_script('return ' + key)
                 else:
                     raise ConfError('Cannot run script: %r' % code)
         # script: {window.x: 1}

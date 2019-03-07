@@ -1,8 +1,8 @@
 {
   "version": 1,
   "width": 106,
-  "height": 24,
-  "duration": 15.171964,
+  "height": 35,
+  "duration": 6.00915,
   "command": "bash",
   "title": null,
   "env": {
@@ -11,304 +11,100 @@
   },
   "stdout": [
     [
-      0.366239,
-      "\r\r\nAnand S@OBSIDIAN \u001b[32mSat Feb 02 01:10 PM \u001b[33m.../gramener.com/viz/async-gramex\u001b[0m\u001b[32m (dev)\u001b[00m\r\r\n$ "
+      0.244642,
+      "\r\r\nAnand S@OBSIDIAN \u001b[32mThu Mar 07 12:33 PM \u001b[33m/d/temp/gramextest\u001b[0m\u001b[32m\u001b[00m\r\r\n$ "
     ],
     [
-      0.324931,
+      0.060182,
       "p"
     ],
     [
-      0.000903,
+      0.33027,
       "y"
     ],
     [
-      0.000642,
+      0.162033,
       "t"
     ],
     [
-      0.000373,
+      0.078035,
       "e"
     ],
     [
-      0.001684,
+      0.18015,
       "s"
     ],
     [
-      0.000383,
+      0.042227,
       "t"
     ],
     [
-      0.000547,
+      0.132846,
       " "
     ],
     [
-      0.000374,
+      0.148269,
       "-"
     ],
     [
-      0.00055,
+      0.169001,
       "v"
     ],
     [
-      0.000398,
-      " "
-    ],
-    [
-      0.000396,
-      "g"
-    ],
-    [
-      0.000366,
-      "r"
-    ],
-    [
-      0.00041,
-      "a"
-    ],
-    [
-      0.000441,
-      "m"
-    ],
-    [
-      0.000385,
-      "e"
-    ],
-    [
-      0.000373,
-      "x"
-    ],
-    [
-      0.000372,
-      "/"
-    ],
-    [
-      0.000364,
-      "a"
-    ],
-    [
-      0.000372,
-      "p"
-    ],
-    [
-      0.000364,
-      "p"
-    ],
-    [
-      0.000363,
-      "s"
-    ],
-    [
-      0.000368,
-      "/"
-    ],
-    [
-      0.000361,
-      "g"
-    ],
-    [
-      0.000364,
-      "u"
-    ],
-    [
-      0.000396,
-      "i"
-    ],
-    [
-      0.000365,
-      "d"
-    ],
-    [
-      0.000369,
-      "e"
-    ],
-    [
-      0.000364,
-      "/"
-    ],
-    [
-      0.000362,
-      "t"
-    ],
-    [
-      0.000372,
-      "e"
-    ],
-    [
-      0.000362,
-      "s"
-    ],
-    [
-      0.000363,
-      "t"
-    ],
-    [
-      0.001774,
-      "/"
-    ],
-    [
-      0.000473,
-      "g"
-    ],
-    [
-      0.000435,
-      "r"
-    ],
-    [
-      0.000407,
-      "a"
-    ],
-    [
-      0.001366,
-      "m"
-    ],
-    [
-      0.000376,
-      "e"
-    ],
-    [
-      0.000412,
-      "x"
-    ],
-    [
-      0.000364,
-      "t"
-    ],
-    [
-      0.000363,
-      "e"
-    ],
-    [
-      0.001397,
-      "s"
-    ],
-    [
-      0.001473,
-      "t"
-    ],
-    [
-      0.001658,
-      "."
-    ],
-    [
-      0.000601,
-      "y"
-    ],
-    [
-      0.0013,
-      "a"
-    ],
-    [
-      0.000499,
-      "m"
-    ],
-    [
-      0.000646,
-      "l"
-    ],
-    [
-      0.432679,
+      0.128094,
       "\r\n"
     ],
     [
-      2.714592,
-      "WARNING:gramex:Missing config: D:\\site\\gramener.com\\viz\\async-gramex\\gramex.yaml\r\r\n"
+      2.84279,
+      "============================= test session starts =============================\r\r\nplatform win32 -- Python 3.6.5, pytest-3.5.1, py-1.5.3, pluggy-0.6.0 -- C:\\anaconda\\3.6\\python.exe\r\r\ncachedir: .pytest_cache\r\r\nmetadata: {'Python': '3.6.5', 'Platform': 'Wind"
     ],
     [
-      0.096099,
-      "============================= test session starts =============================\r\r\nplatform win32 -- Python 3.6.5, pytest-3.5.1, py-1.5.3, pluggy-0.6.0 -- C:\\anaconda\\3.6\\python.exe\r\r\ncachedir: .pytest_cache\r\r\nrootdir: D:\\site\\gramener.com\\viz\\async-gramex,"
+      0.000266,
+      "ows-10-10.0.17134-SP0', 'Packages': {'pytest': '3.5.1', 'py': '1.5.3', 'pluggy': '0.6.0'}, 'Plugins': {'remotedata': '0.2.1', 'openfiles': '0.3.0', 'metadata': '1.8.0', 'html': '1.20.0', 'doctestplus': '0.1.3', 'arraydiff': '0.2', 'gramex': '1.52.0'}, 'JAV"
     ],
     [
-      0.000995,
-      " inifile:\r\r\nplugins: remotedata-0.2.1, openfiles-0.3.0, doctestplus-0.1.3, arraydiff-0.2, gramex-1.49.0\r\r\ncollecting ... "
+      0.002497,
+      "A_HOME': 'D:\\\\Apps\\\\jdk'}\r\r\nrootdir: D:\\temp\\gramextest, inifile:\r\r\nplugins: remotedata-0.2.1, openfiles-0.3.0, metadata-1.8.0, html-1.20.0, doctestplus-0.1.3, arraydiff-0.2, gramex-1.52.0\r\r\ncollecting ... "
     ],
     [
-      2.113413,
-      "collected 9 items\r\r\n\r\r\ngramex/apps/guide/test/gramextest.yaml::urltest:1 "
+      0.003187,
+      "collected 4 items\r\r\n\r\r\ngramextest.yaml::url #001: fetch: \"https://httpbin::org/get?x=1&y=abc\" "
     ],
     [
-      1.123542,
+      1.235839,
+      "PASSED [ 25%]\r\r\ngramextest.yaml::url #002: code: 200 PASSED"
+    ],
+    [
+      0.001091,
+      "                              [ 50%]"
+    ],
+    [
+      0.000725,
+      "\r\r\ngramextest.yaml::url #003: headers: {\"Date\": [\"endswith\", \"GMT\", \"UTC\"]} "
+    ],
+    [
+      0.000228,
       "PASSED"
     ],
     [
-      0.015633,
-      "                 [ 11%]\r\r\ngramex/apps/guide/test/gramextest.yaml::urltest:2 "
+      0.009016,
+      " [ 75%]\r\r\ngramextest.yaml::url #004: json: {\"args\": {\"x\": \"1\", \"y\": \"abc\"}, \"args::x\": \"1\"} PASSED"
     ],
     [
-      1.270267,
-      "PASSED                 [ 22%]\r\r\ngramex/apps/guide/test/gramextest.yaml::urltest:3 "
+      0.005539,
+      " [100%]"
     ],
     [
-      1.038965,
-      "PASSED                 [ 33%]\r\r\ngramex/apps/guide/test/gramextest.yaml::uitest:Chrome:1 "
-    ],
-    [
-      0.830847,
-      "PASSED"
-    ],
-    [
-      0.002784,
-      "           [ 44%]\r\r\ngramex/apps/guide/test/gramextest.yaml::uitest:Chrome:2 "
-    ],
-    [
-      0.056043,
-      "PASSED"
-    ],
-    [
-      0.007911,
-      "           [ 55%]\r\r\ngramex/apps/guide/test/gramextest.yaml::uitest:Chrome:3 "
-    ],
-    [
-      4.238094,
-      "PASSED"
-    ],
-    [
-      0.00115,
-      "           [ 66%]\r\r\ngramex/apps/guide/test/gramextest.yaml::uitest:Chrome:4 "
-    ],
-    [
-      0.02896,
-      "PASSED"
-    ],
-    [
-      0.004501,
-      "           [ 77%]"
-    ],
-    [
-      0.001518,
-      "\r\r\ngramex/apps/guide/test/gramextest.yaml::uitest:Chrome:5 "
-    ],
-    [
-      0.019406,
-      "PASSED"
-    ],
-    [
-      0.006312,
-      "           [ 88%]"
-    ],
-    [
-      0.001007,
-      "\r\r\ngramex/apps/guide/test/gramextest.yaml::uitest:Chrome:6 "
-    ],
-    [
-      0.047644,
-      "PASSED"
-    ],
-    [
-      0.00397,
-      "           [100%]"
-    ],
-    [
-      0.106154,
+      0.002859,
       "\r\r\n\r\r\n"
     ],
     [
-      0.021393,
-      "========================== 9 passed in 10.91 seconds ==========================\r\r\n"
+      0.007715,
+      "========================== 4 passed in 1.27 seconds ===========================\r\r\n"
     ],
     [
-      0.268332,
-      "\r\r\nAnand S@OBSIDIAN \u001b[32mSat Feb 02 01:10 PM \u001b[33m.../gramener.com/viz/async-gramex\u001b[0m\u001b[32m (dev)\u001b[00m\r\r\n$ "
+      0.221,
+      "\r\r\nAnand S@OBSIDIAN \u001b[32mThu Mar 07 12:33 PM \u001b[33m/d/temp/gramextest\u001b[0m\u001b[32m\u001b[00m\r\r\n$ "
     ]
   ]
 }

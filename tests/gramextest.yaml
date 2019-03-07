@@ -89,3 +89,28 @@ uitest:
       - 'return window.scrollY': [greater than, 0]
   - name: check-back
     back: 1
+
+  - mark: variables
+  - script: |
+      title = document.title
+      heading = document.querySelector('h1').textContent
+  - python: |
+      assert 'Guide' in title
+      assert 'Guide' in heading
+      assert heading == title
+      new_heading = 'New Guide'
+  - script: |
+      document.querySelector('h1').innerHTML =  new_heading
+      heading = document.querySelector('h1').textContent
+  - python: |
+      assert new_heading == heading
+
+  - mark: print
+  - print: h1
+  - print: xpath //h1
+
+  - mark: skip
+  - skip: true
+  - python: |
+      assert 1 == 0
+  - skip: false
