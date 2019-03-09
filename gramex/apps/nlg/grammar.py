@@ -10,6 +10,7 @@ L = Lemmatizer(LEMMA_INDEX, LEMMA_EXC, LEMMA_RULES)
 
 
 def is_plural_noun(text):
+    """Whether given text is a plural noun."""
     doc = nlp(text)
     for t in list(doc)[::-1]:
         if not t.is_punct:
@@ -71,6 +72,20 @@ def plural(word):
 
 @set_nlg_gramopt(source='G', fe_name="Singularize")
 def singular(word):
+    """
+    Singularize a word.
+
+    Parameters
+    ----------
+    word : str
+        Word to singularize.
+
+    Returns
+    -------
+    str
+        Singular of `word`.
+    """
+
     if is_plural_noun(word):
         word = infl.singular_noun(word)
     return word
@@ -78,7 +93,23 @@ def singular(word):
 
 # @set_nlg_gramopt(source='G', fe_name="Pluralize by")
 def pluralize_by(word, by):
-    """Pluralize a word depending on another argument."""
+    """
+    Pluralize a word depending on another argument.
+
+    Parameters
+    ----------
+    word : str
+        Word to pluralize
+    by : any
+        Any object checked for a pluralish value. If a sequence, it must have
+        length greater than 1 to qualify as plural.
+
+    Returns
+    -------
+    str
+        Plural or singular of `word`.
+    """
+
     if hasattr(by, '__iter__'):
         if len(by) > 1:
             word = plural(word)
@@ -94,6 +125,22 @@ def pluralize_by(word, by):
 
 # @set_nlg_gramopt(source='G', fe_name="Pluralize like")
 def pluralize_like(x, y):
+    """
+    Pluralize a word if another is a plural.
+
+    Parameters
+    ----------
+    x : str
+        The word to pluralize.
+    y : str
+        The word to check.
+
+    Returns
+    -------
+    str
+        Plural of `x` if `y` is plural, else singular.
+    """
+
     if not is_plural_noun(y):
         return singular(x)
     return plural(x)
@@ -131,14 +178,20 @@ def lemmatize(word, target_pos):
 
 def _token_inflections(x, y):
     """
-    Make changes in x lexically to turn it into y.
+    If two words share the same root, find lexical changes required for turning
+    one into another.
 
     Parameters
     ----------
-    x : [type]
-        [description]
-    y : [type]
-        [description]
+    x : spacy.token.Tokens
+    y : spacy.token.Tokens
+
+    Examples
+    --------
+    >>> _token_inflections('language', 'Language')
+    'upper'
+    >>> _token_inflections('language', 'languages')
+    'plural'
     """
     if x.lemma_ != y.lemma_:
         return False
@@ -162,6 +215,28 @@ def _token_inflections(x, y):
 
 
 def find_inflections(text, search, fh_args, df):
+    """
+    Find lexical inflections between words in input text and the search results
+    obtained from FormHandler arguments and dataframes.
+
+    Parameters
+    ----------
+    text : str
+        Input text
+    search : gramex.apps.nlg.search.DFSearchResults
+        The DFSearchResults object corresponding to `text` and `df`
+    fh_args : dict
+        FormHandler arguments.
+    df : pandas.DataFrame
+        The source dataframe.
+
+    Returns
+    -------
+    dict
+        With keys as tokens found in the dataframe or FH args, and values as
+        list of inflections applied on them to make them closer match tokens in `text`.
+    """
+
     text = nlp(text)
     inflections = {}
     for token, tklist in search.items():

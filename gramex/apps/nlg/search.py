@@ -18,16 +18,34 @@ from gramex.apps.nlg.grammar import find_inflections
 default_nlp = load("en_core_web_sm")
 
 SEARCH_PRIORITIES = [
-    {'type': 'ne'},  # A match which is an NE gets the higest priority
-    {'location': 'fh_args'},  # then one that is a formhandler arg
-    {'location': 'colname'},  # then one that is a column name
+    {'type': 'ne'},  # A match which is a named entity gets the higest priority
+    {'location': 'fh_args'},  # than one that is a formhandler arg
+    {'location': 'colname'},  # than one that is a column name
     {'type': 'quant'},  # etc
     {'location': 'cell'}
 ]
 
 
 def _sort_search_results(items, priorities=SEARCH_PRIORITIES):
-    """Sort a list of search results by `priorities`."""
+    """
+    Sort a list of search results by `priorities`.
+
+    Parameters
+    ----------
+    items : dict
+        Dictionary containing search results, where keys are tokens and values
+        are lists of locations where the token was found. Preferably this should
+        be a `DFSearchResults` object.
+    priorities : list, optional
+        List of rules that allow sorting of search results. A `rule` is any
+        subset of a search result dictionary. Lower indices indicate higher priorities.
+
+    Returns
+    -------
+    dict
+        Prioritized search results - for each {token: search_matches} pair, sort
+        search_matches such that a higher priority search result is enabled.
+    """
     match_ix = [[p.items() <= item.items() for p in priorities] for item in items]
     min_match = [m.index(True) for m in match_ix]
     items[min_match.index(min(min_match))]['enabled'] = True
@@ -35,7 +53,10 @@ def _sort_search_results(items, priorities=SEARCH_PRIORITIES):
 
 
 class DFSearchResults(dict):
-    """A convenience wrapper around `dict` to collect search results."""
+    """A convenience wrapper around `dict` to collect search results.
+
+    Different from `dict` in that values are always lists, and setting to
+    existing key appends to the list."""
 
     def __setitem__(self, key, value):
         if key not in self:
@@ -62,18 +83,47 @@ class DFSearchResults(dict):
 
 
 class DFSearch(object):
+    """Make a dataframe searchable."""
 
     def __init__(self, df, nlp=default_nlp, **kwargs):
+        """Default constrictor.
+
+        Parameters
+        ----------
+        df : pd.DataFrame
+            The dataframe to search.
+        nlp : A `spacy.lang` model, optional
+        """
         self.df = df
         # What do results contain?
-        # A map of tokens to pandas slices
+        # A map of tokens to list of search results.
         self.results = DFSearchResults()
         self.nlp = nlp
 
     def search(self, text, colname_fmt="df.columns[{}]",
                cell_fmt="df['{}'].iloc[{}]", **kwargs):
-        self.search_nes(text)
+        """
+        Search the dataframe.
 
+        Parameters
+        ----------
+        text : str
+            The text to search.
+        colname_fmt : str, optional
+            String format to describe dataframe columns in the search results,
+            can be one of "df.columns[{}]" or "df[{}]".
+        cell_fmt : str, optional
+            String format to describe dataframe values in the search results.
+            Can be one of "df.iloc[{}, {}]", "df.loc[{}, {}]", "df[{}][{}]", etc.
+
+        Returns
+        -------
+        dict
+            A dictionary who's keys are tokens from `text` found in
+            the source dataframe, and values are a list of locations in the df
+            where they are found.
+        """
+        self.search_nes(text)
         for token, ix in self.search_columns(text, **kwargs).items():
             ix = utils.sanitize_indices(self.df.shape, ix, 1)
             self.results[token] = {'location': 'colname', 'tmpl': colname_fmt.format(ix),
@@ -89,6 +139,13 @@ class DFSearch(object):
         return self.results
 
     def search_nes(self, text, colname_fmt="df.columns[{}]", cell_fmt="df['{}'].iloc[{}]"):
+        """Find named entities in text, and search for them in the dataframe.
+
+        Parameters
+        ----------
+        text : str
+            The text to search.
+        """
         self.doc = self.nlp(text)
         self.ents = utils.ner(self.doc)
         ents = [c.text for c in self.ents]
@@ -106,14 +163,26 @@ class DFSearch(object):
                 'tmpl': cell_fmt.format(self.df.columns[y], x), 'type': 'ne'}
 
     def search_table(self, text, **kwargs):
+        """Search the `.values` attribute of the dataframe for tokens in `text`."""
         kwargs['array'] = self.df.copy()
         return self._search_array(text, **kwargs)
 
     def search_columns(self, text, **kwargs):
+        """Search df columns for tokens in `text`."""
         kwargs['array'] = self.df.columns
         return self._search_array(text, **kwargs)
 
     def search_quant(self, quants, nround=2, cell_fmt="df['{}'].iloc[{}]"):
+        """Search the dataframe for a set of quantitative values.
+
+        Parameters
+        ----------
+        quants : list / array like
+            The values to search.
+        nround : int, optional
+            Numeric values in the dataframe are rounded to these many
+            significant digits before searching.
+        """
         dfclean = utils.sanitize_df(self.df, nround)
         quants = np.array(quants)
         n_quant = quants.astype('float').round(2)
@@ -127,8 +196,40 @@ class DFSearch(object):
 
     def _search_array(self, text, array, literal=False,
                       case=False, lemmatize=True, nround=2):
-        """Search for tokens in text within a pandas array.
-        Return {token: array_int_index}"""
+        """Search for tokens in text within an array.
+
+        Parameters
+        ----------
+        text : str or spacy document
+            Text to search
+        array : array-like
+            Array to search in.
+        literal : bool, optional
+            Whether to match tokens to values literally.
+        case : bool, optional
+            If true, run a case sensitive search.
+        lemmatize : bool, optional
+            If true (default), search on lemmas of tokens and values.
+        nround : int, optional
+            Significant digits used to round `array` before searching.
+
+        Returns
+        -------
+        dict
+            Mapping of tokens to a sequence of indices within `array`.
+
+        Example
+        -------
+        >>> _search_array('3', np.arange(5))
+        {'3': [2]}
+        >>> df = pd.DataFrame(np.eye(3), columns='one punch man'.split())
+        >>> _search_array('1', df.values)
+        {'1': [(0, 0), (1, 1), (2, 2)]}
+        >>> _search_array('punched man', df.columns)
+        {'punched': [1], 'man': [2]}
+        >>> _search_array('1 2 buckle my shoe', df.index)
+        {'1': [1], '2': [2]}
+        """
         if literal:
             # Expect text to be a list of strings, no preprocessing on anything.
             if not isinstance(text, list):
@@ -174,27 +275,36 @@ class DFSearch(object):
 
 
 def search_args(entities, args, lemmatized=True, fmt="fh_args['{}'][{}]",
-                argkeys=('_sort', '_by')):
+                argkeys=('_sort', '_by', '_c')):
     """
-    Search formhandler arguments.
+    Search formhandler arguments, as parsed by g1, for a set of tokens.
 
     Parameters
     ----------
     entities : list
-        list of spacyy entities
-    args : Formhandler args
-        [description]
+        list of named entities found in the source text
+    args : dict
+        FormHandler args as parsed by g1.url.parse(...).searchList
     lemmatized : bool, optional
-        whether to lemmatize search (the default is True, which [default_description])
+        whether to search on lemmas of text values
     fmt : str, optional
-        format used in the template (the default is "args['{}'][{}]", which [default_description])
+        String format used to describe FormHandler arguments in the template
     argkeys : list, optional
-        keys to be considered for the search (the default is None, which [default_description])
+        Formhandler argument keys to be considered for the search. Any key not
+        present in this will be ignored.
+        # TODO: Column names can be keys too!!
 
     Returns
     -------
-    [type]
-        [description]
+    dict
+        Mapping of entities / tokens to objects describing where they are found
+        in Formhandler arguemnts. Each search result object has the following
+        structure:
+        {
+            "type": "some token",
+            "location": "fh_args",
+            "tmpl": "fh_args['_by'][0]"  # The template that gets this token from fh_args
+        }
     """
     args = {k: v for k, v in args.items() if k in argkeys}
     search_res = {}
@@ -218,7 +328,29 @@ def search_args(entities, args, lemmatized=True, fmt="fh_args['{}'][{}]",
 
 
 def templatize(text, args, df):
-    """Process a piece of text and templatize it according to a dataframe."""
+    """Construct a tornado template which regenerates some
+    text from a dataframe and formhandler arguments.
+
+    The pipeline consists of:
+    1. cleaning the text and the dataframe
+    2. searching the dataframe and FH args for tokens in the text
+    3. detecting inflections on the tokens.
+
+    Parameters
+    ----------
+    text : str
+        Input text
+    args : dict
+        Formhandler arguments
+    df : pd.DataFrame
+        Source dataframe.
+
+    Returns
+    --------
+    tuple
+        of search results, cleaned text and token inflections. The webapp uses
+        these to construct a tornado template.
+    """
     clean_text = utils.sanitize_text(text)
     args = utils.sanitize_fh_args(args)
     dfs = DFSearch(df)

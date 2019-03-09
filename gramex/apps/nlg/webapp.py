@@ -106,6 +106,7 @@ def process_template(handler):
 
 
 def read_current_config(handler):
+    """Read the current data and narrative IDs written to the session file."""
     meta_path = op.join(nlg_path, handler.current_user.email, 'meta.cfg')
     with open(meta_path, 'r') as fout:  # noqa: No encoding for json
         meta = json.load(fout)
@@ -153,7 +154,7 @@ def get_narrative_config_files(handler):
 
 
 def download_template(handler):
-    """Download the current narrative template."""
+    """Download the current narrative template as a Python script."""
     tmpl = json.loads(parse.unquote(handler.args["tmpl"][0]))
     conditions = json.loads(parse.unquote(handler.args["condts"][0]))
     fh_args = json.loads(parse.unquote(handler.args["args"][0]))
@@ -163,7 +164,7 @@ def download_template(handler):
 
 
 def download_config(handler):
-    """Download the current narrative config."""
+    """Download the current narrative config as JSON."""
     payload = {}
     payload['config'] = json.loads(parse.unquote(handler.args['config'][0]))
     payload['data'] = json.loads(parse.unquote(handler.args.get('data', [None])[0]))
@@ -172,7 +173,8 @@ def download_config(handler):
 
 
 def save_config(handler):
-    """Save the current narrative config. (to ~/.config/gramexdata/nlg/email/)"""
+    """Save the current narrative config.
+    (to $GRAMEXDATA/{{ handler.current_user.email }})"""
     payload = {}
     payload['config'] = json.loads(parse.unquote(handler.args['config'][0]))
     payload['name'] = parse.unquote(handler.args['name'][0])
