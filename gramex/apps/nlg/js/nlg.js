@@ -417,7 +417,7 @@ function triggerTemplateSettings(sentid) {
     editTemplate(currentEditIndex)
     $('#template-settings').modal({'show': true})
     $('#condition-editor').focus()
-    $(function() { $('.select-multiple').select2() })
+    // $(function() { $('.select-multiple').select2() })
 }
 
 function editTemplate(n) {
@@ -497,7 +497,7 @@ function setInitialConfig() {
         success: function (e) {
             dataset_name = e.dsid
             narrative_name = e.nrid
-            setConfig(e.config)
+            if (e.config) { setConfig(e.config) }
         },
         error: function (e) { return false }
     })
@@ -547,10 +547,16 @@ function uploadConfig(e) {
 
 function checkTemplate() {
     // Render the template found in the template editor box against the df and args.
-    renderTemplate([document.getElementById("edit-template").value], editAreaCallback);
+    renderTemplate([document.getElementById("edit-template").value], editAreaCallback, showTraceback);
 }
 
-function renderTemplate(text, success) {
+function showTraceback(payload) {
+  let traceback = $($.parseHTML(payload.responseText)).filter('#traceback')[0]
+  document.getElementById('traceback').innerHTML = traceback.innerHTML
+    $('#tb-modal').modal({'show': true})
+}
+
+function renderTemplate(text, success, error) {
     // render an arbitrary template and do `success` on success.
     $.ajax({
         type: "POST",
@@ -559,7 +565,8 @@ function renderTemplate(text, success) {
             "args": JSON.stringify(args), "data": JSON.stringify(df),
             "template": JSON.stringify(text)
         },
-        success: success
+        success: success,
+        error: error
     })
 }
 

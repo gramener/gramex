@@ -11,10 +11,9 @@ from itertools import chain
 import numpy as np
 import pandas as pd
 from spacy import load
-from spacy.matcher import PhraseMatcher
 
 from gramex.apps.nlg import utils
-from gramex.apps.nlg.grammar import concatenate_items, find_inflections
+from gramex.apps.nlg.grammar import find_inflections
 
 default_nlp = load("en_core_web_sm")
 
@@ -174,41 +173,6 @@ class DFSearch(object):
         return {}
 
 
-def search_concatenations(text, df):
-    doc = default_nlp(text)
-    matcher = PhraseMatcher(default_nlp.vocab)
-    patterns = []
-    for _, series in df.items():
-        if series.dtype == np.dtype('O'):
-            patterns.extend([default_nlp(x) for x in series])
-    matcher.add("cell", None, *patterns)
-    spans = []
-    for _, start, end in matcher(doc):
-        spans.append(doc[start:end].text)
-    ideal = concatenate_items(spans)
-    if ideal not in text:
-        return ''
-    mask = df.isin(spans)
-    if mask.sum().sum() < 2:
-        return ''
-    # search for columns:
-    col = df.columns[mask.any(0)][0]
-    y = mask[col].nonzero()[0]
-    if set(np.diff(y)) == {1}:
-        return {ideal: "df.iloc[{}:{}, '{}']".format(y.min(), y.max(), col)}
-
-
-def lemmatized_df_search(x, y, fmt_string="df.columns[{}]"):
-    search_res = {}
-    tokens = list(chain(*x))
-    colnames = list(chain(*[default_nlp(c) for c in y]))
-    for i, xx in enumerate(colnames):
-        for yy in tokens:
-            if xx.lemma_ == yy.lemma_:
-                search_res[yy.text] = fmt_string.format(i)
-    return search_res
-
-
 def search_args(entities, args, lemmatized=True, fmt="fh_args['{}'][{}]",
                 argkeys=('_sort', '_by')):
     """
@@ -250,56 +214,6 @@ def search_args(entities, args, lemmatized=True, fmt="fh_args['{}'][{}]",
                         search_res[y.text] = {
                             'type': 'token', 'tmpl': fmt.format(k, i),
                             'location': 'fh_args'}
-    return search_res
-
-
-def search_df(tokens, df):
-    """Search a dataframe for tokens and return the coordinates."""
-    search_res = {}
-    txt_tokens = np.array([c.text for c in tokens])
-    coltype = df.columns.dtype
-    ixtype = df.index.dtype
-
-    # search in columns
-    column_ix = np.arange(df.shape[1])[df.columns.astype(str).isin(txt_tokens)]
-    for ix in column_ix:
-        token = df.columns[ix]
-        ix = utils.sanitize_indices(df.shape, ix, 1)
-        search_res[token] = "df.columns[{}]".format(ix)
-
-    # search in index
-    index_ix = df.index.astype(str).isin(txt_tokens)
-    for token in df.index[index_ix]:
-        if token not in search_res:
-            if ixtype == np.dtype("O"):
-                indexer = "df.loc['{}']".format(token)
-            else:
-                indexer = "df.loc[{}]".format(token)
-            search_res[token] = indexer
-
-    # search in table
-    for token in txt_tokens:
-        if token not in search_res:
-            mask = df.values.astype(str) == token
-            try:
-                column = df.columns[mask.sum(0).astype(bool)][0]
-                # don't sanitize column
-                index = df.index[mask.sum(1).astype(bool)][0]
-                index = utils.sanitize_indices(df.shape, index, 0)
-            except IndexError:
-                continue
-            if coltype == np.dtype("O"):
-                col_indexer = "'{}'".format(column)
-            else:
-                col_indexer = str(column)
-            if ixtype == np.dtype("O"):
-                ix_indexer = "'{}'".format(index)
-            else:
-                ix_indexer = str(index)
-            search_res[token] = "df.iloc[{}][{}]".format(ix_indexer, col_indexer)
-
-    unfound = [token for token in tokens if token.text not in search_res]
-    search_res.update(lemmatized_df_search(unfound, df.columns))
     return search_res
 
 

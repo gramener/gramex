@@ -8,14 +8,6 @@ from gramex.apps.nlg.utils import set_nlg_gramopt, nlp
 infl = engine()
 L = Lemmatizer(LEMMA_INDEX, LEMMA_EXC, LEMMA_RULES)
 
-QUANT_FILTER_TOKENS = {
-    ">=": ["at least", "more than", "over"],
-    "<=": ["at most", "less than", "below"],
-    "==": ["of"],
-    "<": ["less than"],
-    ">": ["more than"],
-}
-
 
 def is_plural_noun(text):
     doc = nlp(text)

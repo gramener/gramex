@@ -5,16 +5,13 @@
 """
 Miscellaneous utilities.
 """
-import json
 import os.path as op
 import re
-from configparser import ConfigParser, NoOptionError, NoSectionError
-from random import choice
+from configparser import ConfigParser
 
-import numpy as np
 import requests
 from spacy import load
-from spacy.matcher import Matcher, PhraseMatcher
+from spacy.matcher import Matcher
 from tornado.template import Template
 
 from gramex.data import filter as grmfilter  # NOQA: F401
@@ -71,16 +68,6 @@ class set_nlg_gramopt(object):  # noqa: class to be used as a decorator
             if not getattr(func, k, False):
                 setattr(func, k, v)
         return func
-
-
-def get_phrase_matcher(df):
-    matcher = PhraseMatcher(nlp.vocab)
-    for col in df.columns[df.dtypes == np.dtype("O")]:
-        for val in df[col].unique():
-            matcher.add(val, None, nlp(val))
-        if str(col).isalpha():
-            matcher.add(col, None, nlp(col))
-    return matcher
 
 
 def is_overlap(x, y):
@@ -164,22 +151,6 @@ def sanitize_fh_args(args, func=join_words):
     return args
 
 
-def humanize_comparison(x, y, bit, lot):
-    if x == y:
-        return choice(["the same", "identical"])
-    if x < y:
-        comparative = choice(["higher", "more", "greater"])
-    else:
-        comparative = choice(["less", "lower"])
-    if lot(x, y):
-        adj = choice(["a lot", "much"])
-    elif bit(x, y):
-        adj = choice(["a little", "a bit"])
-    else:
-        adj = ""
-    return " ".join([adj, comparative])
-
-
 def check_grammar(text):
     host = config.get('languagetool', 'hostname')
     port = config.get('languagetool', 'port')
@@ -194,18 +165,6 @@ def check_grammar(text):
     except requests.ConnectionError:
         resp = []
     return resp
-
-
-def load_template(name, loc=None):
-    if loc is None:
-        try:
-            loc = config.get('templates', 'location')
-        except (NoOptionError, NoSectionError):
-            loc = '~/.nlg/templates'
-    tmpl_path = op.join(loc, name)
-    with open(tmpl_path, 'r') as fout:  # NOQA: No encoding for json
-        template = json.load(fout)
-    return template
 
 
 def add_html_styling(template, style):

@@ -27,7 +27,6 @@
         var narrative_name = "";
         var dataset_name = "";
         // setContextMenu();
-        $('.formhandler').on('load', renderPreview);
         $(document).ready(setInitialConfig)
     </script>
       <div class="form-group row">
@@ -84,7 +83,10 @@
     </form>
     <div class="divider"></div>
     <div class="formhandler" data-src="nlg/preview/{{ handler.current_user.email }}/{{ dsid }}"></div>
-    <script>$('.formhandler').formhandler();</script>
+    <script>
+      $('.formhandler').on('load', renderPreview);
+      $('.formhandler').formhandler();
+    </script>
     <!--
     <button id="clear-tmpls" title="Clear Narrative" type="button" class="btn btn-danger">
         <i class="fa fa-trash"></i>
@@ -200,6 +202,22 @@
         </div>
     </div>
 
+    <!-- traceback modal-->
+    <div id="tb-modal" class="modal fade bd-example-modal-lg" tabindex="-1"
+    role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Traceback</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body" id="traceback">
+          </div>
+        </div>
+      </div>
+    </div>
     <!-- Template preview -->
     <script>
         document.getElementById("download-btn").addEventListener("click", downloadNarrative);
