@@ -42,11 +42,6 @@
           <p id="template-preview" style="font-family:monospace"></p>
         </div>
         <div class="col-sm-3">
-          <button id="download-btn" type="button" title="Download Narrative"
-          class="btn btn-primary">
-              Download Narrative
-              <i class="fa fa-download"></i>
-          </button>
           <button id="download-config-btn" type="button" title="Save Config"
           class="btn btn-primary">
               Save Config
@@ -220,7 +215,6 @@
     </div>
     <!-- Template preview -->
     <script>
-        document.getElementById("download-btn").addEventListener("click", downloadNarrative);
         document.getElementById("download-config-btn").addEventListener("click", saveConfig);
         // document.getElementById("config-upload").addEventListener("change", uploadConfig, false);
         document.getElementById("inspect").addEventListener("click", addToNarrative);

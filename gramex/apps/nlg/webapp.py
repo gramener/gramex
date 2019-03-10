@@ -15,7 +15,6 @@ import pandas as pd
 from tornado.template import Template
 
 from gramex.config import variables
-from gramex.apps.nlg import Narrative
 from gramex.apps.nlg import grammar
 from gramex.apps.nlg import templatize
 from gramex.apps.nlg import utils
@@ -151,16 +150,6 @@ def get_narrative_config_files(handler):
     if op.isdir(user_dir):
         return [f for f in os.listdir(user_dir) if f.endswith('.json')]
     return []
-
-
-def download_template(handler):
-    """Download the current narrative template as a Python script."""
-    tmpl = json.loads(parse.unquote(handler.args["tmpl"][0]))
-    conditions = json.loads(parse.unquote(handler.args["condts"][0]))
-    fh_args = json.loads(parse.unquote(handler.args["args"][0]))
-    template = Narrative(tmpl, conditions).templatize()
-    t_template = Template(utils.NARRATIVE_TEMPLATE)
-    return t_template.generate(tmpl=template, fh_args=fh_args, G=grammar).decode("utf8")
 
 
 def download_config(handler):

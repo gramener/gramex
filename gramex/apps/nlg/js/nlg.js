@@ -440,22 +440,6 @@ function editTemplate(n) {
     templates[n].makeSettingsTable()
 }
 
-function downloadNarrative() {
-    // Download the narrative as injected into a Python file.
-    currentTemplates = templates.map(x => x.template)
-    currentConditions = templates.map(x => x.condition)
-    url = "tmpl-download?tmpl="
-        + encodeURIComponent(JSON.stringify(currentTemplates))
-        + "&condts=" + encodeURIComponent(JSON.stringify(currentConditions))
-        + "&args=" + encodeURIComponent(JSON.stringify(args))
-    $.ajax({
-        url: url,
-        responseType: 'blob',
-        type: "GET",
-        headers: {'X-CSRFToken': false},
-        success: function() { window.location = url }
-    })
-}
 
 function saveConfig() {
     var elem = document.getElementById('narrative-name-editor')
