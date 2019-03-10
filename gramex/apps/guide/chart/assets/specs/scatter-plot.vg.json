@@ -17,6 +17,125 @@
     "fontWeight": 900,
     "font": "Roboto"
   },
+  "signals": [
+    {
+      "name": "down", "value": null,
+      "on": [
+        {"events": "touchend", "update": "null"},
+        {"events": "mousedown, touchstart", "update": "xy()"}
+      ]
+    },
+    {
+      "name": "delta", "value": [0, 0],
+      "on": [
+        {
+          "events": [
+            {
+              "source": "window", "type": "mousemove", "consume": true,
+              "between": [{"type": "mousedown"}, {"source": "window", "type": "mouseup"}]
+            },
+            {
+              "type": "touchmove", "consume": true,
+              "filter": "event.touches.length === 1"
+            }
+          ],
+          "update": "down ? [down[0]-x(), y()-down[1]] : [0,0]"
+        }
+      ]
+    },
+    {
+      "name": "xcur", "value": null,
+      "on": [
+        {
+          "events": "mousedown, touchstart, touchend",
+          "update": "slice(x_domain)"
+        }
+      ]
+    },
+    {
+      "name": "ycur", "value": null,
+      "on": [
+        {
+          "events": "mousedown, touchstart, touchend",
+          "update": "slice(y_domain)"
+        }
+      ]
+    },
+    {
+      "name": "anchor", "value": [0, 0],
+      "on": [
+        {
+          "events": "wheel",
+          "update": "[invert('xscale', x()), invert('yscale', y())]"
+        },
+        {
+          "events": {"type": "touchstart", "filter": "event.touches.length===2"},
+          "update": "[(x_domain[0] + x_domain[1]) / 2, (y_domain[0] + y_domain[1]) / 2]"
+        }
+      ]
+    },
+    {
+      "name": "zoom", "value": 1,
+      "on": [
+        {
+          "events": "wheel!",
+          "force": true,
+          "update": "pow(1.001, event.deltaY * pow(16, event.deltaMode))"
+        },
+        {
+          "events": {"signal": "dist2"},
+          "force": true,
+          "update": "dist1 / dist2"
+        }
+      ]
+    },
+    {
+      "name": "dist1", "value": 0,
+      "on": [
+        {
+          "events": {"type": "touchstart", "filter": "event.touches.length===2"},
+          "update": "pinchDistance(event)"
+        },
+        {
+          "events": {"signal": "dist2"},
+          "update": "dist2"
+        }
+      ]
+    },
+    {
+      "name": "dist2", "value": 0,
+      "on": [{
+        "events": {"type": "touchmove", "consume": true, "filter": "event.touches.length===2"},
+        "update": "pinchDistance(event)"
+      }]
+    },
+    {
+      "name": "x_domain", "update": "slice(x_extent)",
+      "on": [
+        {
+          "events": {"signal": "delta"},
+          "update": "[xcur[0] + span(xcur) * delta[0] / width, xcur[1] + span(xcur) * delta[0] / width]"
+        },
+        {
+          "events": {"signal": "zoom"},
+          "update": "[anchor[0] + (x_domain[0] - anchor[0]) * zoom, anchor[0] + (x_domain[1] - anchor[0]) * zoom]"
+        }
+      ]
+    },
+    {
+      "name": "y_domain", "update": "slice(y_extent)",
+      "on": [
+        {
+          "events": {"signal": "delta"},
+          "update": "[ycur[0] + span(ycur) * delta[1] / height, ycur[1] + span(ycur) * delta[1] / height]"
+        },
+        {
+          "events": {"signal": "zoom"},
+          "update": "[anchor[1] + (y_domain[0] - anchor[1]) * zoom, anchor[1] + (y_domain[1] - anchor[1]) * zoom]"
+        }
+      ]
+    }
+  ],
   "data": [
     {
       "name": "source",
@@ -25,34 +144,34 @@
         {
           "type": "filter",
           "expr": "datum['<%= data_mapper.column_2 %>'] != null && datum['<%= data_mapper.column_1 %>'] != null && datum['<%= data_mapper.column_3%>'] != null"
-        }
+        },
+        { "type": "extent", "field": "<%= data_mapper.column_2 %>", "signal": "x_extent" },
+        { "type": "extent", "field": "<%= data_mapper.column_1 %>", "signal": "y_extent" }
       ]
     }
   ],
   "scales": [
     {
-      "name": "x",
+      "name": "xscale",
       "type": "linear",
       "round": true,
       "nice": true,
       "padding": 0.1,
-      "zero": true,
+      "zero": false,
       "domain": {
-        "data": "source",
-        "field": "<%= data_mapper.column_2 %>"
+        "signal": "x_domain"
       },
       "range": "width"
     },
     {
-      "name": "y",
+      "name": "yscale",
       "type": "linear",
       "round": true,
       "nice": true,
       "padding": 0.1,
-      "zero": true,
+      "zero": false,
       "domain": {
-        "data": "source",
-        "field": "<%= data_mapper.column_1 %>"
+        "signal": "y_domain"
       },
       "range": "height"
     },
@@ -64,7 +183,7 @@
       "zero": true,
       "domain": {
         "data": "source",
-        "field": "<%= data_mapper.column_3%>"
+        "field": "<%= data_mapper.column_3 %>"
       },
       "range": {
         "signal": "[5, width]"
@@ -73,7 +192,7 @@
   ],
   "axes": [
     {
-      "scale": "x",
+      "scale": "xscale",
       "grid": false,
       "domain": true,
       "orient": "bottom",
@@ -92,7 +211,7 @@
       "labelFont": "Roboto"
     },
     {
-      "scale": "y",
+      "scale": "yscale",
       "grid": false,
       "domain": true,
       "labelPadding": 10,
@@ -113,22 +232,23 @@
   ],
   "marks": [
     {
-      "name": "mark_symbol",
+      "name": "Circles",
       "type": "symbol",
       "from": {
         "data": "source"
       },
+      "clip": true,
       "encode": {
         "update": {
           "tooltip": {
             "signal": "datum"
           },
           "x": {
-            "scale": "x",
+            "scale": "xscale",
             "field": "<%= data_mapper.column_2 %>"
           },
           "y": {
-            "scale": "y",
+            "scale": "yscale",
             "field": "<%= data_mapper.column_1 %>"
           },
           "size": {
@@ -151,18 +271,21 @@
       }
     },
     {
-      "name": "mark_outlier_text",
+      "name": "Annotation",
       "type": "text",
       "from": {
-        "data": "mark_symbol"
+        "data": "source"
       },
+      "clip": true,
       "encode": {
         "update": {
           "x": {
-            "field": "x"
+            "scale": "xscale",
+            "field": "<%= data_mapper.column_2 %>"
           },
           "y": {
-            "field": "y"
+            "scale": "yscale",
+            "field": "<%= data_mapper.column_1 %>"
           },
           "dy": {
             "value": -20
@@ -171,9 +294,8 @@
             "value": -15
           },
           "text": {
-            "signal": "datum.datum['<%= data_mapper.column_2 %>'] < 5 && datum.datum['<%= data_mapper.column_1 %>'] > 3 ? 'Outlier': '' "
-          },
-          "color": "#485465"
+            "signal": "datum['<%= data_mapper.column_2 %>'] < 5 && datum['<%= data_mapper.column_1 %>'] > 3 ? 'Outlier': '' "
+          }
         }
       }
     }

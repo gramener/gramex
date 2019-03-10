@@ -1,89 +1,44 @@
 [
   {
-    "category": "Sunburst charts",
-    "chart": "sunburst-1",
-    "title": "Sunburst 1",
+    "category": "Bar charts",
+    "chart": "top-k",
+    "title": "Top K Plot",
     "data_mapper": {
-      "column_1": "id",
-      "column_2": "name",
-      "column_3": "parent",
-      "column_4": "size"
+      "column_1": "Director",
+      "column_2": "Worldwide_Gross"
     },
-    "dataset_url": "<%= absolute_url %>data/sunburst-1.json"
+    "dataset_url": "<%= absolute_url %>data/movies.json"
   },
   {
-    "category": "Sunburst charts",
-    "chart": "sunburst-2",
-    "title": "Sunburst 2",
+    "category": "Bar charts",
+    "chart": "bars",
+    "title": "Bar Chart",
     "data_mapper": {
-      "column_1": "id",
-      "column_2": "name",
-      "column_3": "parent",
-      "column_4": "size"
+      "column_1": "category",
+      "column_2": "amount"
     },
-    "dataset_url": "<%= absolute_url %>data/sunburst-2.json"
+    "dataset_url": "<%= absolute_url %>data/bars.json"
   },
   {
-    "category": "Sunburst charts",
-    "chart": "sunburst-3",
-    "title": "Sunburst 3",
+    "category": "Bar charts",
+    "chart": "pyramid",
+    "title": "Pyramid chart",
     "data_mapper": {
-      "column_1": "id",
-      "column_2": "name",
-      "column_3": "parent",
-      "column_4": "size"
+      "column_1": "category",
+      "column_2": "amount"
     },
-    "dataset_url": "<%= absolute_url %>data/sunburst-4.json"
+    "dataset_url": "<%= absolute_url %>data/pyramid.json"
   },
   {
-    "category": "Sunburst charts",
-    "chart": "sunburst-4",
-    "title": "Sunburst 4",
+    "category": "Bar charts",
+    "chart": "stacked-pyramid",
+    "title": "Stacked Pyramid Chart",
     "data_mapper": {
-      "column_1": "id",
+      "column_1": "Ranks",
       "column_2": "name",
-      "column_3": "parent",
-      "column_4": "size"
+      "column_3": "value"
     },
-    "dataset_url": "<%= absolute_url %>data/sunburst-4.json"
-  },
-  {
-    "category": "Infographics",
-    "chart": "donut-infographic",
-    "title": "Donut Infographic",
-    "data_mapper": {
-      "column_1":"id",
-      "column_2":"Name",
-      "column_3":"amount",
-      "column_4":"circle1_amount",
-      "column_5":"circle2_amount",
-      "column_6":"circle3_amount"
-    },
-    "dataset_url": "<%= absolute_url %>data/donut-infographic.json"
-  },
-  {
-    "category": "Circle packing charts",
-    "chart": "circle-packing",
-    "title": "Circle Packing",
-    "data_mapper": {
-      "column_1": "id",
-      "column_2": "name",
-      "column_3": "parent",
-      "column_4": "size"
-    },
-    "dataset_url": "<%= absolute_url %>data/circle-packing.json"
-  },
-  {
-    "category": "Circle packing charts",
-    "chart": "circle-packing-1",
-    "title": "Circle Packing 1",
-    "data_mapper": {
-      "column_1": "id",
-      "column_2": "name",
-      "column_3": "parent",
-      "column_4": "size"
-    },
-    "dataset_url": "<%= absolute_url %>data/circle-packing-1.json"
+    "dataset_url": "<%= absolute_url %>data/stacked-pyramid.json"
   },
   {
     "category": "Bar charts",
@@ -111,16 +66,6 @@
   },
   {
     "category": "Bar charts",
-    "chart": "dumbbell",
-    "title": "Dumbbell",
-    "data_mapper": {
-      "column_1": "u",
-      "column_2": "v"
-    },
-    "dataset_url": "<%= absolute_url %>data/dumbbell.json"
-  },
-  {
-    "category": "Bar charts",
     "chart": "vertical-waterfall",
     "title": "Vertical Waterfall",
     "data_mapper": {
@@ -130,6 +75,16 @@
       "column_4": "end"
     },
     "dataset_url": "<%= absolute_url %>data/waterfall.json"
+  },
+  {
+    "category": "Bar charts",
+    "chart": "dumbbell",
+    "title": "Dumbbell",
+    "data_mapper": {
+      "column_1": "u",
+      "column_2": "v"
+    },
+    "dataset_url": "<%= absolute_url %>data/dumbbell.json"
   },
   {
     "category": "Bar charts",
@@ -153,27 +108,19 @@
     },
     "dataset_url": "<%= absolute_url %>data/half-donut.json"
   },
-
   {
-    "category": "Bar charts",
-    "chart": "bars",
-    "title": "Bar Chart",
+    "category": "Pie charts",
+    "chart": "donut-infographic",
+    "title": "Donut Infographic",
     "data_mapper": {
-      "column_1": "category",
-      "column_2": "amount"
+      "column_1": "id",
+      "column_2": "Name",
+      "column_3": "amount",
+      "column_4": "circle1_amount",
+      "column_5": "circle2_amount",
+      "column_6": "circle3_amount"
     },
-    "dataset_url": "<%= absolute_url %>data/bars.json"
-  },
-  {
-    "category": "Bar charts",
-    "chart": "stacked-pyramid",
-    "title": "Stacked Pyramid Chart",
-    "data_mapper": {
-      "column_1": "Ranks",
-      "column_2": "name",
-      "column_3": "value"
-    },
-    "dataset_url": "<%= absolute_url %>data/stacked-pyramid.json"
+    "dataset_url": "<%= absolute_url %>data/donut-infographic.json"
   },
   {
     "category": "Bar charts",
@@ -210,29 +157,8 @@
   },
   {
     "category": "Bar charts",
-    "chart": "pyramid",
-    "title": "Pyramid chart",
-    "data_mapper": {
-      "column_1": "category",
-      "column_2": "amount"
-    },
-    "dataset_url": "<%= absolute_url %>data/pyramid.json"
-  },
-  {
-    "category": "Bar charts",
     "chart": "horizontal-histogram",
     "title": "Horizontal Histogram chart",
-    "data_mapper": {
-      "column_1": "category",
-      "column_2": "bar_type",
-      "column_3": "value"
-    },
-    "dataset_url": "<%= absolute_url %>data/horizontal-histogram.json"
-  },
-  {
-    "category": "Bar charts",
-    "chart": "horizontal-bars",
-    "title": "Horizontal Bars",
     "data_mapper": {
       "column_1": "category",
       "column_2": "bar_type",
@@ -261,8 +187,8 @@
     "chart": "half-donut",
     "title": "Half Donut",
     "data_mapper": {
-      "column_1": "label",
-      "column_2": "count"
+      "column_2": "metric",
+      "column_1": "label"
     },
     "dataset_url": "<%= absolute_url %>data/half-donut.json"
   },
@@ -271,8 +197,8 @@
     "chart": "donut",
     "title": "Donut",
     "data_mapper": {
-      "column_1": "count",
-      "column_2": "label"
+      "column_2": "label",
+      "column_1": "metric"
     },
     "dataset_url": "<%= absolute_url %>data/half-donut.json"
   },
@@ -295,11 +221,6 @@
       "column_1": "Measure"
     },
     "dataset_url": "<%= absolute_url %>data/radial-donut.json"
-  },
-  {
-    "category": "Sankey charts",
-    "chart": "sankey",
-    "title": "Sankey"
   },
   {
     "category": "Scatter plots",
@@ -353,6 +274,78 @@
     "dataset_url": "<%= absolute_url %>data/circle-grid.json"
   },
   {
+    "category": "Sunburst charts",
+    "chart": "sunburst-1",
+    "title": "Sunburst 1",
+    "data_mapper": {
+      "column_1": "id",
+      "column_2": "name",
+      "column_3": "parent",
+      "column_4": "size"
+    },
+    "dataset_url": "<%= absolute_url %>data/sunburst-1.json"
+  },
+  {
+    "category": "Sunburst charts",
+    "chart": "sunburst-2",
+    "title": "Sunburst 2",
+    "data_mapper": {
+      "column_1": "id",
+      "column_2": "name",
+      "column_3": "parent",
+      "column_4": "size"
+    },
+    "dataset_url": "<%= absolute_url %>data/sunburst-2.json"
+  },
+  {
+    "category": "Sunburst charts",
+    "chart": "sunburst-3",
+    "title": "Sunburst 3",
+    "data_mapper": {
+      "column_1": "id",
+      "column_2": "name",
+      "column_3": "parent",
+      "column_4": "size"
+    },
+    "dataset_url": "<%= absolute_url %>data/sunburst-4.json"
+  },
+  {
+    "category": "Sunburst charts",
+    "chart": "sunburst-4",
+    "title": "Sunburst 4",
+    "data_mapper": {
+      "column_1": "Director",
+      "column_2": "name",
+      "column_3": "parent",
+      "column_4": "size"
+    },
+    "dataset_url": "<%= absolute_url %>data/movies.json"
+  },
+  {
+    "category": "Circle packing charts",
+    "chart": "circle-packing",
+    "title": "Circle Packing",
+    "data_mapper": {
+      "column_1": "id",
+      "column_2": "name",
+      "column_3": "parent",
+      "column_4": "size"
+    },
+    "dataset_url": "<%= absolute_url %>data/circle-packing.json"
+  },
+  {
+    "category": "Circle packing charts",
+    "chart": "circle-packing-1",
+    "title": "Circle Packing 1",
+    "data_mapper": {
+      "column_1": "id",
+      "column_2": "name",
+      "column_3": "parent",
+      "column_4": "size"
+    },
+    "dataset_url": "<%= absolute_url %>data/circle-packing-1.json"
+  },
+  {
     "category": "Treemap",
     "chart": "treemap-1",
     "title": "Treemap 1",
@@ -375,18 +368,6 @@
       "column_4": "size"
     },
     "dataset_url": "<%= absolute_url %>data/treemap-1.json"
-  },
-  {
-    "category": "Treemap",
-    "chart": "treemap-2",
-    "title": "Treemap 2",
-    "data_mapper": {
-      "column_1": "id",
-      "column_2": "name",
-      "column_3": "parent",
-      "column_4": "size"
-    },
-    "dataset_url": "<%= absolute_url %>data/treemap-2.json"
   },
   {
     "category": "Treemap",
@@ -413,34 +394,7 @@
     "dataset_url": "<%= absolute_url %>data/treemap-2.json"
   },
   {
-    "category": "Treemap",
-    "chart": "treemap-5",
-    "title": "Treemap 5",
-    "data_mapper": {
-      "column_1": "id",
-      "column_2": "name",
-      "column_3": "parent",
-      "column_4": "size"
-    },
-    "dataset_url": "<%= absolute_url %>data/treemap-2.json"
-  },
-  {
-    "category": "Trellis charts",
-    "chart": "trellis-bar",
-    "title": "Trellis Bar"
-  },
-  {
-    "category": "Line Area charts",
-    "chart": "area",
-    "title": "Area chart",
-    "data_mapper": {
-      "column_1": "category",
-      "column_2": "amount"
-    },
-    "dataset_url": "<%= absolute_url %>data/area.json"
-  },
-  {
-    "category": "Line Area charts",
+    "category": "Line charts",
     "chart": "line-0",
     "title": "Line 0",
     "data_mapper": {
@@ -451,18 +405,7 @@
     "dataset_url": "<%= absolute_url %>data/stream-2.json"
   },
   {
-    "category": "Line Area charts",
-    "chart": "line-1",
-    "title": "Line 1",
-    "data_mapper": {
-      "column_1": "category",
-      "column_2": "point_height",
-      "column_3": "item"
-    },
-    "dataset_url": "<%= absolute_url %>data/states.json"
-  },
-  {
-    "category": "Line Area charts",
+    "category": "Line charts",
     "chart": "smooth-line",
     "title": "Smooth Line chart",
     "data_mapper": {
@@ -475,7 +418,7 @@
     "dataset_url": "<%= absolute_url %>data/smooth-line.json"
   },
   {
-    "category": "Line Area charts",
+    "category": "Line charts",
     "chart": "stream",
     "title": "Stream chart",
     "data_mapper": {
@@ -487,55 +430,63 @@
     "dataset_url": "<%= absolute_url %>data/stream.json"
   },
   {
-    "category": "Line Area charts",
-    "chart": "ribbon",
-    "title": "Ribbon chart",
+    "category": "Line charts",
+    "chart": "area",
+    "title": "Area chart",
     "data_mapper": {
-      "column_1": "x",
-      "column_2": "y",
-      "column_3": "c",
-      "column_4": "product"
+      "column_1": "category",
+      "column_2": "amount"
     },
-    "dataset_url": "<%= absolute_url %>data/stream.json"
+    "dataset_url": "<%= absolute_url %>data/area.json"
   },
   {
-    "category": "Box Plots",
+    "category": "Others",
     "chart": "horizontal-box-plot",
     "title": "Horizontal Box Plot",
     "data_mapper": {
-      "column_1":"Item 1",
-      "column_2":"Item 2",
-      "column_3":"Item 3",
-      "column_4":"Item 4",
-      "column_5":"outliner"
+      "column_1": "Item 1",
+      "column_2": "Item 2",
+      "column_3": "Item 3",
+      "column_4": "Item 4",
+      "column_5": "outliner"
     },
     "dataset_url": "<%= absolute_url %>data/horizontal-box-plot.json"
   },
   {
-    "category": "Parallel Coordinates",
+    "category": "Others",
+    "chart": "wordcloud",
+    "title": "Word Cloud 1",
+    "data_mapper": {
+      "column_1": "name",
+      "column_2": "P_points",
+      "column_3": "N_points"
+    },
+    "dataset_url": "<%= absolute_url %>data/wordcloud.json"
+  },
+  {
+    "category": "Others",
     "chart": "parallel-coordinates",
     "title": "Parallel Coordinates",
     "dataset_url": "<%= absolute_url %>data/parallel-coordinates.csv"
   },
   {
-    "category": "Arc Diagram",
+    "category": "Others",
     "chart": "arc",
     "title": "Arc Diagram"
   },
   {
-    "category": "Word Cloud",
-    "chart": "wordcloud",
-    "title": "Word Cloud 1",
-    "data_mapper": {
-      "column_1":"name",
-      "column_2":"P_points",
-      "column_3":"N_points"
-    },
-    "dataset_url": "<%= absolute_url %>data/wordcloud.json"
-  },
-  {
-    "category": "Word Cloud",
+    "category": "Others",
     "chart": "wordcloud-2",
     "title": "Word Cloud 2"
+  },
+  {
+    "category": "Others",
+    "chart": "sankey",
+    "title": "Sankey"
+  },
+  {
+    "category": "Others",
+    "chart": "trellis-bar",
+    "title": "Trellis Bar"
   }
 ]

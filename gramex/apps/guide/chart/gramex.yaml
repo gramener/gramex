@@ -1,21 +1,49 @@
 import:
   ui:
-    path: $GRAMEXAPPS/ui/gramex.yaml    # Import the UI components
-    YAMLURL: $YAMLURL/ui/               # ... at this URL
+    path: $GRAMEXAPPS/ui/gramex.yaml # Import the UI components
+    YAMLURL: $YAMLURL/ui/ # ... at this URL
+
+variables:
+  CONFIGDB: sqlite:///$GRAMEXDATA/app.chartogram.db
+  SCHEMAS:
+    chart: CREATE TABLE IF NOT EXISTS
+      chart (id VARCHAR(32) NOT NULL,
+      time FLOAT, user TEXT,
+      config TEXT,
+      name TEXT,
+      slug TEXT,
+      PRIMARY KEY (id))
 
 url:
+  chart-page:
+    pattern: /$YAMLURL/chart(.*)
+    handler: FileHandler
+    kwargs:
+      path: $YAMLPATH/example.html
+      headers:
+        Access-Control-Allow-Origin: "*"
+
+  gallery-page:
+    pattern: /$YAMLURL/chartogram
+    handler: FileHandler
+    kwargs:
+      path: $YAMLPATH/gallery.html
+      headers:
+        Access-Control-Allow-Origin: "*"
+
   gallery-data:
     pattern: /$YAMLURL/data/(.*)
     handler: FileHandler
     kwargs:
       path: $YAMLPATH/data/
       headers:
-        Access-Control-Allow-Origin: '*'
+        Access-Control-Allow-Origin: "*"
 
-  towns-data:
-    pattern: /$YAMLURL/towns
-    handler: FormHandler
+  _chartogram/chart:
+    pattern: /$YAMLURL/_chartogram/(.*)
+    handler: FunctionHandler
     kwargs:
-      url: $YAMLPATH/data/towns.xlsx
+      function: chartogram.charthandler
+      methods: [GET, POST, PUT, DELETE]
       headers:
-        Access-Control-Allow-Origin: '*'
+        Content-Type: application/json

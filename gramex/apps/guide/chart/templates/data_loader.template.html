@@ -1,11 +1,11 @@
-<div class="d-flex flex-row-reverse h-75">
-  <div class="bg-dark position-absolute h-75 w-40 p-2 zindex-1 text-dark mr-2 shadow">
+<div class="d-flex flex-row-reverse">
+  <div class="width-550 height-370 bg-dark position-absolute p-2 zindex-1 text-dark shadow">
     <div class="row mx-0 h-100">
       <div class="w-100">
-        <div class="row">
+        <div class="d-flex">
           <p class="col-10 text-white font-weight-bold sm1">How do you want to upload your data?</p>
           <div class="col-2">
-            <button type="button" class="btn btn-sm dataloader-next bg-light">Next</button>
+            <button type="button" class="btn btn-sm btn-secondary dataloader-next">Next</button>
           </div>
         </div>
         <ul class="nav nav-tabs border-0 justify-content-around">
@@ -24,6 +24,7 @@
                   <div class="color-gray-dark pt-2 color-blue-on-hover font-weight-bold sm2">CSV upload</div>
                 </a>
               </label>
+              <button class="btn btn-sm btn-primary text-white download-sample my-2">sample data ⇩</button>
             </div>
           </li>
           <!-- <li class="nav-item w-25">
@@ -46,8 +47,8 @@
               ></textarea>
           </div> -->
 
-          <div class="tab-pane active show mt-4" id="csv-upload">
-            <div class="fh-table table-responsive"></div>
+          <div class="tab-pane active show mt-4 pt-4" id="csv-upload">
+            <div class="fh-table table-responsive bg-white"></div>
           </div>
 
           <!-- <div class="tab-pane" id="google-spreadsheet">

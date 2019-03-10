@@ -13,7 +13,6 @@
     name="<%= data.id %>"
     <%  if (data.input == 'color') { %>
       onchange="(function (e){ e.target.nextElementSibling.innerHTML = e.target.value }(event))"
-      value="#fffffe"
     <% } %>
     >
   <% if(data.input != 'color') { %>

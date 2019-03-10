@@ -1,32 +1,32 @@
 
-<div class="d-flex flex-row-reverse h-75">
-  <div class="bg-light position-absolute h-75 w-40 p-2 zindex-1 text-dark mr-2 shadow">
+<div class="d-flex flex-row-reverse">
+  <div class="width-550 height-370 bg-dark position-absolute p-2 zindex-1 text-white mr-2 shadow">
     <div class="row">
       <div class="col-10">
-        <h3>Data Mapper</h3>
+        <h5>Data Mapper</h5>
       </div>
       <div class="col-2">
-        <button type="button" class="btn btn-sm save-mapper bg-dark text-white">Next</button>
+        <button type="button" class="btn btn-sm btn-secondary datamapper-next bg-dark text-white">Next</button>
       </div>
     </div>
     <div class="row mx-0 h-100">
       <div id="data-mapper-template">
-        <p>Make sure chart is rendered seemingly exact with new data</p>
-        <table class="table table-responsive h-75 scrollbar mapper-table">
+        <div class="h6">Ensure column types (numerical/categorical) are mapped correctly</p>
+        <table class="table table-responsive h-75 scrollbar scrollbar-auto mapper-table text-white">
           <thead>
             <tr>
-              <th scope="col">Gallery Columns</th>
-              <th scope="col">Formhandler Columns</th>
+              <th scope="col">Current Data Columns</th>
+              <th scope="col">Your Data Columns</th>
             </tr>
           </thead>
           <tbody>
-            <% gallery_columns.map(function(gallery_column) { %>
+            <% _.forIn(data_mapper, function(value, key) { %>
               <tr>
                 <td>
-                  <%= gallery_column %>
+                  <%- key %>
                 </td>
                 <td>
-                  <% let id = "map-" + slug(gallery_column) %>
+                  <% var id = "map-" + slug(key) %>
                   <%= _.template(templates['select'])({ data: { id: id, label: undefined, options: fh_col_names}}) %>
                 </td>
               </tr>

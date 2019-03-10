@@ -59,7 +59,7 @@
             "value": 0
           },
           "fill": {
-            "signal": "datum.<%= data_mapper.column_2 %> > 0 ? 'green' : 'red'"
+            "signal": "datum['<%= data_mapper.column_2 %>'] > 0 ? '#5CB38B' : '#E6685C'"
           }
         }
       }

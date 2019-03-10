@@ -1,0 +1,7 @@
+.left-nav {
+  position: sticky;
+  display: block;
+  height: calc(100vh - 3rem);
+  overflow-y: auto;
+  top: 70px;
+}

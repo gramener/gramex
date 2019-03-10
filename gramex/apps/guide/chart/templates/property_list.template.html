@@ -1,9 +1,39 @@
-<% property_list.map(function(property, index){ %>
+
+<% var active = true %>
+<% _.uniq(Object.values(prop_groupings)).map(function(group) { %>
+  <% var props = property_list.filter(function(prop) { return prop_groupings[_.camelCase(prop.title)] === group }) %>
+    <% if (props.length > 1) { %>
+    <li class="mb-1 border border-color1 <%= active === true ? 'border-top-0': '' %> border-right-0 border-left-0">
+      <div class="font-weight-normal sm1 m-1 ml-2 text-white">
+        <%= _.toUpper(group) %>
+      </div>
+    </li>
+    <% _.sortBy(props, [function(o) { return o.title; }]).map(function(property){ %>
+      <li class="mb-1">
+        <a href="#<%= property.id %>" data-toggle="tab" class="<%= active === true ? 'active show': '' %> rounded-0" >
+          <button type="button" class="btn btn-sm bg-blue-light-hover rounded-0 bg-transparent shadow-none w-100 h-100 text-left">
+            <div class="color-gray-dark color-blue-on-hover font-weight-bold mb-1 sm1" title="<%= property.title %>">
+              <%= _.startCase(property.title) %>
+            </div>
+            <div class="color-text sm1 summary">
+
+            </div>
+          </button>
+        </a>
+      </li>
+      <% active = false %>
+    <% }) %>
+  <% } %>
+  <% property_list = property_list.filter(function(prop) { return prop_groupings[_.camelCase(prop.title)] !== group }) %>
+<% }) %>
+
+
+<% _.sortBy(property_list, [function(o) { return o.title; }]).map(function(property){ %>
   <li class="mb-1">
-    <a href="#<%= property.id %>" data-toggle="tab" class="<%= index === 0 ? 'active show': '' %> rounded-0" >
+    <a href="#<%= property.id %>" data-toggle="tab" class="rounded-0" >
       <button type="button" class="btn btn-sm bg-blue-light-hover rounded-0 bg-transparent shadow-none w-100 h-100 text-left">
         <div class="color-gray-dark color-blue-on-hover font-weight-bold mb-1 sm1" title="<%= property.title %>">
-          <%= property.title %>
+          <%= _.startCase(property.title) %>
         </div>
         <div class="color-text sm1 summary">
 

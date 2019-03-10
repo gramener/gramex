@@ -1,0 +1,164 @@
+{
+  "$schema": "https://vega.github.io/schema/vega/v5.json",
+  "width": 590,
+  "height": 360,
+  "padding": {
+    "left": 5,
+    "right": 5
+  },
+  "autosize": "fit",
+  "signals": [
+    {
+      "name": "k",
+      "value": 20,
+      "bind": {
+        "input": "range",
+        "min": 3,
+        "max": 50,
+        "step": 1
+      }
+    },
+    {
+      "name": "op",
+      "value": "average",
+      "bind": {
+        "input": "select",
+        "options": [
+          "average",
+          "median",
+          "sum"
+        ]
+      }
+    },
+    {
+      "name": "label",
+      "value": {
+        "average": "Average",
+        "median": "Median",
+        "sum": "Total"
+      }
+    }
+  ],
+  "title": {
+    "text": {
+      "signal": "'Top <%= data_mapper.column_1 %> by ' + label[op] + ' <%= data_mapper.column_2 %>'"
+    },
+    "anchor": "start"
+  },
+  "data": [
+    {
+      "name": "directors",
+      "url": "<%= dataset_url %>",
+      "transform": [
+        {
+          "type": "filter",
+          "expr": "datum['<%= data_mapper.column_1 %>'] != null && datum['<%= data_mapper.column_2 %>'] != null"
+        },
+        {
+          "type": "aggregate",
+          "groupby": [
+            "<%= data_mapper.column_1 %>"
+          ],
+          "ops": [
+            {
+              "signal": "op"
+            }
+          ],
+          "fields": [
+            "<%= data_mapper.column_2 %>"
+          ],
+          "as": [
+            "<%= data_mapper.column_2 %>"
+          ]
+        },
+        {
+          "type": "window",
+          "sort": {
+            "field": "<%= data_mapper.column_2 %>",
+            "order": "descending"
+          },
+          "ops": [
+            "row_number"
+          ],
+          "as": [
+            "rank"
+          ]
+        },
+        {
+          "type": "filter",
+          "expr": "datum.rank <= k"
+        }
+      ]
+    }
+  ],
+  "marks": [
+    {
+      "name": "Bars",
+      "type": "rect",
+      "from": {
+        "data": "directors"
+      },
+      "encode": {
+        "update": {
+          "x": {
+            "scale": "x",
+            "value": 0
+          },
+          "x2": {
+            "scale": "x",
+            "field": "<%= data_mapper.column_2 %>"
+          },
+          "y": {
+            "scale": "y",
+            "field": "<%= data_mapper.column_1 %>"
+          },
+          "height": {
+            "scale": "y",
+            "band": 1
+          },
+          "tooltip": {
+            "signal": "datum"
+          }
+        }
+      }
+    }
+  ],
+  "scales": [
+    {
+      "name": "x",
+      "type": "linear",
+      "domain": {
+        "data": "directors",
+        "field": "<%= data_mapper.column_2 %>"
+      },
+      "range": "width",
+      "nice": true
+    },
+    {
+      "name": "y",
+      "type": "band",
+      "domain": {
+        "data": "directors",
+        "field": "<%= data_mapper.column_1 %>",
+        "sort": {
+          "op": "max",
+          "field": "<%= data_mapper.column_2 %>",
+          "order": "descending"
+        }
+      },
+      "range": "height",
+      "padding": 0.1
+    }
+  ],
+  "axes": [
+    {
+      "scale": "x",
+      "orient": "bottom",
+      "tickCount": 5
+    },
+    {
+      "scale": "y",
+      "orient": "left"
+    }
+  ]
+}

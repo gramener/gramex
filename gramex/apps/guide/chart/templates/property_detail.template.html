@@ -11,7 +11,7 @@
     })(event, this)"
     >
     <!-- Title  -->
-    <div class="text-white sm1 pt-1 font-weight-bold"><%= property.title %></div>
+    <div class="text-white sm1 pt-1 font-weight-bold"><%= _.startCase(property.title) %></div>
     <!-- Prop Specific Custom Component -->
     <% if (property['detail']) { %>
       <%= _.template(templates[property['template']])({ templates: templates, data: property['detail']}) %>

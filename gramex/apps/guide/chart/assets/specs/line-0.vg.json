@@ -6,24 +6,16 @@
   "padding": {
     "top": 20
   },
-  "title": "Multi Line",
-  "config": {
-    "group": {
-      "fill": "#F0F0F0",
-      "x": 100
+  "title": {
+    "text": "Multi Line",
+    "offset": 20,
+    "fontSize": 16,
+    "limit": {
+      "signal": "width"
     },
-    "axis": {
-      "grid": true,
-      "gridColor": "#000000",
-      "gridOpacity": 0.3,
-      "gridDash": 2
-    },
-    "title": {
-      "offset": 7,
-      "fontSize": 16,
-      "anchor": "start",
-      "fontWeight": "bold"
-    }
+    "color": "#414141",
+    "anchor": "start",
+    "fontWeight": "bold"
   },
   "data": [
     {
@@ -36,7 +28,6 @@
       "name": "scale_band",
       "type": "point",
       "range": "width",
-      "nice": true,
       "paddingOuter": 0.3,
       "domain": {
         "data": "table",
@@ -47,8 +38,6 @@
       "name": "scale_height",
       "type": "linear",
       "range": "height",
-      "nice": true,
-      "domainMax": 100,
       "domain": {
         "data": "table",
         "field": "<%= data_mapper.column_2 %>"
@@ -57,13 +46,9 @@
     {
       "name": "scale_color",
       "type": "ordinal",
-      "range": [
-        "#3366CC",
-        "#DC3912",
-        "#FF9900",
-        "#109618",
-        "#9C27B0"
-      ],
+      "range": {
+        "scheme": "paired"
+      },
       "domain": {
         "data": "table",
         "field": "<%= data_mapper.column_1 %>"
@@ -78,6 +63,10 @@
       "titlePadding": 5,
       "minExtent": 35,
       "labelPadding": 7,
+      "grid": true,
+      "gridColor": "#000000",
+      "gridOpacity": 0.3,
+      "gridDash": 2,
       "title": "X - Axis"
     },
     {
@@ -87,6 +76,10 @@
       "titlePadding": 5,
       "labelFlush": true,
       "labelPadding": 7,
+      "grid": true,
+      "gridColor": "#000000",
+      "gridOpacity": 0.3,
+      "gridDash": 2,
       "minExtent": 25,
       "title": "Y - Axis"
     }
@@ -124,6 +117,7 @@
       },
       "marks": [
         {
+          "name": "Lines",
           "type": "line",
           "from": {
             "data": "series"
@@ -149,6 +143,7 @@
           }
         },
         {
+          "name": "Points",
           "type": "symbol",
           "from": {
             "data": "series"
@@ -177,7 +172,8 @@
               },
               "strokeWidth": {
                 "value": 1.5
-              }
+              },
+              "tooltip": {"signal": "datum"}
             }
           }
         }

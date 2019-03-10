@@ -32,6 +32,19 @@
       "url": "<%= dataset_url %>",
       "transform": [
         {
+          "type": "aggregate",
+          "groupby": [
+            "<%= data_mapper.column_1 %>"
+          ],
+          "fields": [
+            "<%= data_mapper.column_2 %>"
+          ],
+          "ops": ["sum"],
+          "as": [
+            "<%= data_mapper.column_2 %>"
+          ]
+        },
+        {
           "type": "pie",
           "field": "<%= data_mapper.column_2 %>",
           "sort": {
