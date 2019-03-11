@@ -173,7 +173,23 @@ function template_data(vega_spec, view) {
 }
 
 function axis_marshal(axis, index) {
-  var default_props = {}
+  var default_props = {
+    "grid": false,
+    "domain": true,
+    "labelPadding": 10,
+    "orient": "left",
+    "ticks": false,
+    "tickCount": 7,
+    "titleFont": "Roboto",
+    "titleColor": "#485465",
+    "titleFontSize": 12,
+    "titleFontWeight": 500,
+    "titlePadding": 16,
+    "labelColor": "#485465",
+    "labelFontSize": 10,
+    "labelFontWeight": 500,
+    "labelFont": "Roboto"
+  }
 
   // naming it to title, to see if code reuse is easy
   var title = Object.assign(default_props, axis)

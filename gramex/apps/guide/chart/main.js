@@ -25,8 +25,11 @@ var time = {
 
 function templatize_gallery_json(res) {
   var templatized_res = _.template(JSON.stringify(res))({
-    // absolute_url: location.href.split('example.html')[0]
-    absolute_url:  location.origin + '/'
+    // absolute_url: location.href.split('chart')[0]
+    absolute_url:
+      location.origin +
+      location.pathname.slice(0, location.pathname.lastIndexOf('/')) +
+      '/'
   })
 
   return Promise.resolve(JSON.parse(templatized_res))
@@ -151,10 +154,9 @@ $('body').on('change input', '#customize_chart', function(event) {
     )
   }
 
-  if (event.type == 'input') {
+  if (event.type == 'change') {
     renderChart(model.vega_spec)
   }
-
 })
 
 function chartDidRender() {
@@ -188,7 +190,6 @@ function chartDidRender() {
     './templates/select.template.html',
     './templates/color_schemes.template.html',
     './templates/padding.template.html',
-    './templates/data_range_tabs.template.html',
     './templates/external_url.template.html'
   ]
 
@@ -260,7 +261,7 @@ function form_default_setter(remove_this_bad_arg) {
       )
 
       if (remove_this_bad_arg !== 'undo') {
-        bad_variable.trigger('change')
+        bad_variable.trigger('input')
       }
     }
   })
@@ -274,7 +275,6 @@ function drawCopyPasteBlock(response) {
 
   // modify relative to absolute urls
   var spec = _.template(json_file_spec)({
-    absolute_url: location.href.split('example.html')[0],
     dataset_url: dataset_name,
     data_mapper: response[1].data_mapper
   })
@@ -479,8 +479,9 @@ $('body')
         // create an URL with response.id
         var link =
           window.location.origin +
-          '/_chartogram/' +
-          response.chart.id
+          location.pathname.slice(0, location.pathname.lastIndexOf('/')) +
+          '/' + 
+        '_chartogram/' + response.chart.id
         $('.share-url').html(link)
         $('.share-url').attr('href', link)
       },

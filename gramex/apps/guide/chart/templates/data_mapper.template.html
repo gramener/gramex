@@ -1,38 +1,39 @@
 
 <div class="d-flex flex-row-reverse">
-  <div class="width-550 height-370 bg-dark position-absolute p-2 zindex-1 text-white mr-2 shadow">
-    <div class="row">
-      <div class="col-10">
-        <h5>Data Mapper</h5>
-      </div>
-      <div class="col-2">
-        <button type="button" class="btn btn-sm btn-secondary datamapper-next bg-dark text-white">Next</button>
-      </div>
-    </div>
+  <div class="width-550 height-370 bg-dark position-absolute p-2 zindex-1 text-white mr-2 shadow rounded">
     <div class="row mx-0 h-100">
-      <div id="data-mapper-template">
-        <div class="h6">Ensure column types (numerical/categorical) are mapped correctly</p>
-        <table class="table table-responsive h-75 scrollbar scrollbar-auto mapper-table text-white">
-          <thead>
-            <tr>
-              <th scope="col">Current Data Columns</th>
-              <th scope="col">Your Data Columns</th>
-            </tr>
-          </thead>
-          <tbody>
-            <% _.forIn(data_mapper, function(value, key) { %>
-              <tr>
-                <td>
-                  <%- key %>
-                </td>
-                <td>
-                  <% var id = "map-" + slug(key) %>
-                  <%= _.template(templates['select'])({ data: { id: id, label: undefined, options: fh_col_names}}) %>
-                </td>
-              </tr>
-            <% }) %>
-          </tbody>
-        </table>
+      <div class="w-100">
+        <div class="d-flex">
+          <p class="col-10 text-white h5 py-2">Select based on data type of column</p>
+          <div class="col-2">
+            <button type="button" class="btn btn-md btn-secondary datamapper-next">Next</button>
+          </div>
+        </div>
+        <div class="row mx-0 h-100 justify-content-center">
+          <div id="data-mapper-template">
+            <table class="table table-responsive h-75 scrollbar scrollbar-auto mapper-table text-white pt-4">
+              <thead>
+                <tr>
+                  <th scope="col">Current Headers</th>
+                  <th scope="col">Your Data Headers</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% _.forIn(data_mapper, function(value, key) { %>
+                  <tr>
+                    <td>
+                      <%- value %>
+                    </td>
+                    <td>
+                      <% var id = "map-" + slug(key) %>
+                      <%= _.template(templates['select'])({ data: { id: id, label: undefined, options: fh_col_names}}) %>
+                    </td>
+                  </tr>
+                <% }) %>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
   </div>
