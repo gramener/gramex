@@ -43,12 +43,12 @@ function template_data(vega_spec, view) {
 
   data['layer_list'] = [
     {
-      name: 'Chart Dimensions'
+      name: 'Chart Layout'
     }
   ]
 
   data['property_list'] = {
-    'Chart Dimensions': [
+    'Chart Layout': [
       {
         title: 'Width',
         id: 'width',
@@ -174,21 +174,24 @@ function template_data(vega_spec, view) {
 
 function axis_marshal(axis, index) {
   var default_props = {
-    "grid": false,
-    "domain": true,
-    "labelPadding": 10,
-    "orient": "left",
-    "ticks": false,
-    "tickCount": 7,
-    "titleFont": "Roboto",
-    "titleColor": "#485465",
-    "titleFontSize": 12,
-    "titleFontWeight": 500,
-    "titlePadding": 16,
-    "labelColor": "#485465",
-    "labelFontSize": 10,
-    "labelFontWeight": 500,
-    "labelFont": "Roboto"
+    'title': '',
+    'labels': true,
+    'grid': false,
+    'domain': true,
+    'labelPadding': 10,
+    'orient': 'left',
+    'offset': 0,
+    'ticks': false,
+    'tickCount': 7,
+    'titleFont': 'Roboto',
+    'titleColor': '#485465',
+    'titleFontSize': 12,
+    'titleFontWeight': 500,
+    'titlePadding': 16,
+    'labelColor': '#485465',
+    'labelFontSize': 10,
+    'labelFontWeight': 500,
+    'labelFont': 'Roboto'
   }
 
   // naming it to title, to see if code reuse is easy
@@ -233,6 +236,7 @@ function title_marshal(title) {
   var default_props = {
     text: 'Chart title',
     anchor: 'start',
+    offset: 0,
     color: '#485465',
     fontSize: 16,
     fontWeight: 900,
@@ -337,7 +341,6 @@ function mark_marshal(mark, index, group_prefix) {
 
       return _mark_return_obj
     })
-
     return {
       title: titleMap(key),
       template: key == 'tooltip' ? 'tooltip' : 'mark',

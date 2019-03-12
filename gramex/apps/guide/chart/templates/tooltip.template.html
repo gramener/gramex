@@ -1,4 +1,53 @@
 <div class="border-color1 border-top pb-2"></div>
+
 <div>
-    <%= _.template(templates[data[3]['template']])({ data: data[3] }) %>
+  <!-- Hidden input text box that will update content from below onchange event -->
+
+  <!-- Bg1g1elow onchange event should be killed here before it raises up in the dom tree -->
+  <!-- <div> -->
+      <% console.log(data[3].attrs) %>
+  <input
+    id="<%- data[3].id %>"
+    name="<%- data[3].id %>"
+    class="form-control form-control-sm sm2 h-3 w-100 d-none"
+    <% for (key in data[3].attrs) { %>
+        <%= key + '="' + data[3].attrs[key] + '"' %>
+      <% } %>
+    type="text"
+  />
+  <!-- </div> -->
+
+  <div
+    onchange="(function(e) { event.stopImmediatePropagation();
+        var tooltip_signal = '{'
+        $('input:checked', $(e.currentTarget)).each(function(index, node) {
+            tooltip_signal += '\'' + node.id + '\' : datum[\'' + node.id + '\'],'
+        })
+        tooltip_signal += '}'
+        if ($('input:checked', $(e.currentTarget)).length == $('input', $(e.currentTarget)).length ||
+            $('input:checked', $(e.currentTarget)).length == 0)
+                tooltip_signal = 'datum'
+        $(e.currentTarget.previousElementSibling).val(tooltip_signal)
+        .trigger('change')
+
+    }(event))"
+    oninput="(function(e) { event.stopImmediatePropagation(); }(event))"
+  >
+    <% Object.values(data_columns)[0].map(function(first_data_col) { %>
+        <% console.log("inside", first_data_col) %>
+    <div class="custom-control custom-checkbox">
+      <input
+        type="checkbox"
+        class="custom-control-input"
+        id="<%- first_data_col %>"
+      />
+      <label
+        class="custom-control-label text-white"
+        for="<%- first_data_col %>"
+      >
+        <%- first_data_col %>
+      </label>
+    </div>
+    <% }) %>
+  </div>
 </div>

@@ -1,5 +1,5 @@
 
-<label class="mb-1 sm2 color-gray-dark" title="<%= data.label %>">
+<label class="mb-1 sm2 color-gray-dark font-weight-bold" title="<%= data.label %>">
   <%= data.label %>
 </label>
 <div class="form-inline position-relative">
@@ -15,7 +15,7 @@
       onchange="(function (e){ e.target.nextElementSibling.innerHTML = e.target.value }(event))"
     <% } %>
     >
-  <% if(data.input != 'color') { %>
+  <% if (data.input != 'color') { %>
     <label class="mb-1 sm2 position-absolute pos-tr pr-2 pt-2 h-2" title="<%= data.unit %>">
       <%= data.unit %>
     </label>

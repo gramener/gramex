@@ -15,6 +15,7 @@ var model = {
   vega_spec: null,
   form_spec: null,
   mapper: null,
+  example_spec_url_data: undefined,
   data_mapper: null
 }
 
@@ -190,6 +191,7 @@ function chartDidRender() {
     './templates/select.template.html',
     './templates/color_schemes.template.html',
     './templates/padding.template.html',
+    './templates/tooltip.template.html',
     './templates/external_url.template.html'
   ]
 
@@ -350,7 +352,7 @@ $('body')
   })
   .on('click', '.dataloader-next', function() {
     if (process_state.data_mapper) {
-      on_cols_fetch(process_state.data_mapper.args)
+      on_cols_fetch(process_state.data_mapper.args, true)
       // $('[href="#data_mapper"]').click()
       $('[href="#data_mapper"]').tab('show')
     } else {
@@ -361,7 +363,8 @@ $('body')
         })
         .then(function(res) {
           $('.loader').addClass('d-none')
-          on_cols_fetch(res)
+          model.example_spec_url_data = res
+          on_cols_fetch(res, true)
           // $('[href="#data_mapper"]').click()
           $('[href="#data_mapper"]').tab('show')
         })
@@ -369,37 +372,25 @@ $('body')
   })
   .on('click', '[href="#data_mapper"]', function() {
     if (process_state.data_mapper) {
-      on_cols_fetch(process_state.data_mapper.args)
+      on_cols_fetch(process_state.data_mapper.args, false)
     } else {
+      if (model.example_spec_url_data) {
+        on_cols_fetch(model.example_spec_url_data, false)
+        return
+      }
       $('.loader').removeClass('d-none')
       fetch(model.vega_spec.data[0].url)
         .then(function(res) {
           return res.json()
         })
         .then(function(res) {
+          model.example_spec_url_data = res
+          on_cols_fetch(res, true)
           $('.loader').addClass('d-none')
-          on_cols_fetch(res)
         })
     }
   })
   .on('click', '.datamapper-next', function() {
-    // Re render props-editor template
-    // Check with mapper values and rerender only if changed
-
-    // mapper = {
-    //   label: 'Name of Town',
-    //   count: 'Population'
-    // }
-
-    // model.mapper = Object.keys(model.data_mapper).reduce(function(
-    //   acc,
-    //   current_col
-    // ) {
-    //   acc[current_col] = model.mapper[model.data_mapper[current_col]];
-    //   return acc
-    // },
-    // {});
-
     $('a[href="#customize_chart"]').click()
   })
   .on('click', 'a[href="#customize_chart"]', function() {
@@ -422,9 +413,13 @@ $('body')
           function: 'on_cols_fetch',
           args: res
         }
-        on_cols_fetch(res)
+        on_cols_fetch(res, true)
+        process_state['data_mapper'] = {
+          function: 'on_cols_fetch',
+          args: res
+        }
         // $('[href="#data_mapper"]').click()
-        $('[href="#data_mapper"]').tab('show')
+        // $('[href="#data_mapper"]').tab('show')
       })
 
     // TODO: validate url
@@ -459,7 +454,7 @@ $('body')
         delete parsed_json_file_spec.data[0].url
         parsed_json_file_spec.data[0].values = csv_contents_converted
         json_file_spec = JSON.stringify(parsed_json_file_spec, null, 2)
-        // on_cols_fetch([csv_contents_converted, res[1]])
+        on_cols_fetch(csv_contents_converted, true)
         process_state['data_mapper'] = {
           function: 'on_cols_fetch',
           args: csv_contents_converted
@@ -480,8 +475,9 @@ $('body')
         var link =
           window.location.origin +
           location.pathname.slice(0, location.pathname.lastIndexOf('/')) +
-          '/' + 
-        '_chartogram/' + response.chart.id
+          '/' +
+          '_chartogram/' +
+          response.chart.id
         $('.share-url').html(link)
         $('.share-url').attr('href', link)
       },
@@ -499,17 +495,18 @@ function getFileContent(file) {
   })
 }
 
-function on_cols_fetch(fh_dataset) {
+function on_cols_fetch(fh_dataset, from_data_loader) {
   // state storage of res
 
   // RENDER DATA-MAPPER dropdowns with fh_col_names
-  $('#data_mapper').html(
-    _.template(templates['data_mapper'])({
-      templates: templates,
-      fh_col_names: array_Object_keys(fh_dataset),
-      data_mapper: model.data_mapper
-    })
-  )
+  if (from_data_loader)
+    $('#data_mapper').html(
+      _.template(templates['data_mapper'])({
+        templates: templates,
+        fh_col_names: array_Object_keys(fh_dataset),
+        data_mapper: model.data_mapper
+      })
+    )
 }
 
 $('body').on('change', '.mapper-table', function() {

@@ -28,6 +28,16 @@
   display: inline-block !important;
 }
 
+.sm1 {
+  font-size: 90% !important;
+  letter-spacing: 0.01rem;
+}
+
+.sm2 {
+  font-size: 80% !important;
+  letter-spacing: 0.01rem;
+}
+
 .w-10 {
   width: 10% !important;
 }
@@ -171,6 +181,35 @@ input[type="color"]::-webkit-color-swatch-wrapper {
 textarea#upload-data-text {
   height: 240px;
   width: 100%;
+}
+
+#chart {
+  -moz-user-select: none; /* Firefox all */
+  -ms-user-select: none; /* IE 10+ */
+  user-select: none; /* Likely future */
+}
+
+/* raise buttons on hover */
+.raise:hover,
+.raise:focus {
+  box-shadow: 0 0.5em 0.5em -0.4em var(--hover);
+  -webkit-transform: translateY(-0.25em);
+  transform: translateY(-0.25em);
+}
+
+button {
+  color: var(--color);
+  transition: 0.25s;
+}
+button:hover,
+button:focus {
+  border-color: var(--hover);
+  color: #fff;
+}
+
+.raise {
+  --color: #ffa260;
+  --hover: #e5ff60;
 }
 
 /* /////////////////// Scroll Bar ////////////////////// */

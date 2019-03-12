@@ -1,8 +1,15 @@
-<% property_list.map(function(property, index) { %>
+<% _.sortBy(property_list, [function(o) { return o.title; }]).map(function(property, index) { %>
   <div
     class="tab-pane <%= (index === 0) ? 'active show': '' %>"
     id="<%= property.id %>"
     onchange="(function (e, this_element){
+      if ($(e.target).attr('data-summary') == 'color_scheme') {
+        $('.summary', $('a[href=\'#' + this_element.id + '\']') ).text($(e.target).attr('title'))
+      } else {
+        $('.summary', $('a[href=\'#' + this_element.id + '\']') ).text(e.target.value)
+      }
+    })(event, this)"
+    oninput="(function (e, this_element){
       if ($(e.target).attr('data-summary') == 'color_scheme') {
         $('.summary', $('a[href=\'#' + this_element.id + '\']') ).text($(e.target).attr('title'))
       } else {
