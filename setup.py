@@ -31,6 +31,7 @@ install_requires = [
     'diskcache >= 2.8.3',           # SRV: services.cache for disk cache
     'h5py',                         # OPT: (conda) gramex.cache.HDF5Store
     'ipdb',                         # OPT: gramex.debug
+    'inflect',                      # REQ: NLG
     'jmespath',                     # OPT: pytest gramex plugin
     'ldap3 >= 2.2.4',               # OPT: LDAP connections
     'lxml',                         # OPT: (conda) gramex.pptgen
@@ -53,6 +54,7 @@ install_requires = [
     'setuptools >= 16.0',           # REQ: 16.0 has good error message support
     'shutilwhich >= 1.1.0',         # REQ: shutil.which backport
     'six',                          # REQ: Python 3 compatibility
+    'spacy',                        # REQ: NLG
     'sqlalchemy',                   # REQ: (conda) gramex.data.filter()
     'sqlitedict >= 1.5.0',          # SRV: SQLiteStore
     'textblob',                     # OPT: Gramex Guide TwitterRESTHandler example

@@ -2,6 +2,9 @@ import:
   apps/admin2/ui:
     path: $GRAMEXAPPS/ui/gramex.yaml
     YAMLURL: $YAMLURL/ui/
+  apps/admin2/nlg:
+    path: $GRAMEXAPPS/nlg/gramex.yaml
+    YAMLURL: $YAMLURL/nlg/
 
 url:
   # webshell.js is in ../admin/ and used by old admin app. Point it it
@@ -52,6 +55,11 @@ url:
           desc: Track usage and errors in Gramex
           color: success
           icon: fa-align-left
+        'nlg':
+          title: NLG
+          desc: Generate narratives from your data
+          color: danger
+          icon: fa-language
 
   apps/admin2/users-$*:
     pattern: /$YAMLURL/users
@@ -76,3 +84,4 @@ url:
       auth: $ADMIN_AUTH
       headers:
         Content-Type: application/json      # Display as JSON
+
