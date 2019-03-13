@@ -1,3 +1,9 @@
+variables:
+  LT_PORT: 8081
+  ALLOW_ORIGIN: "*"
+  LT_PUBLIC: true
+
+
 schedule:
   start-languagetool:
     function: gramex.apps.languagetool.start_languagetool
@@ -5,7 +11,7 @@ schedule:
 
 url:
   languagetool-$*:
-    pattern: /$YAMLURL/grammar-check/port/(.*)/text/(.*)
+    pattern: /$YAMLURL/grammar-check/(.*)/(.*)
     handler: FunctionHandler
     kwargs:
       function: gramex.apps.languagetool.grammar_check

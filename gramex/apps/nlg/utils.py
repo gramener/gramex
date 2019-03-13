@@ -146,7 +146,7 @@ def sanitize_fh_args(args, func=join_words):
 
 
 def check_grammar(text):
-    url = 'https://localhost:9988/languagetool/grammar-check/port/8081/text/'
+    url = 'https://localhost:9988/languagetool/grammar-check/8081/'
     resp = requests.get(url + text)
     if resp.status_code == requests.codes.ok:
         resp = resp.json()['matches']
