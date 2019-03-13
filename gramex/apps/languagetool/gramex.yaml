@@ -1,0 +1,11 @@
+schedule:
+  start-languagetool:
+    function: gramex.apps.languagetool.start_languagetool
+    startup: true
+
+url:
+  languagetool-$*:
+    pattern: /$YAMLURL/grammar-check/port/(.*)/text/(.*)
+    handler: FunctionHandler
+    kwargs:
+      function: gramex.apps.languagetool.grammar_check

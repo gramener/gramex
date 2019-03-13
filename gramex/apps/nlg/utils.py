@@ -4,9 +4,7 @@
 """
 Miscellaneous utilities.
 """
-import os.path as op
 import re
-from configparser import ConfigParser
 
 import requests
 from spacy import load
@@ -39,9 +37,6 @@ narrative = T(\"\"\"
               G=G, U=U)
 print(narrative)
 """
-
-config = ConfigParser()
-config.read(op.join(op.dirname(__file__), "..", "..", "..", "config.ini"))
 
 
 def render_search_result(text, results, **kwargs):
@@ -151,17 +146,11 @@ def sanitize_fh_args(args, func=join_words):
 
 
 def check_grammar(text):
-    host = config.get('languagetool', 'hostname')
-    port = config.get('languagetool', 'port')
-    apiversion = config.get('languagetool', 'apiversion')
-    url = "{}:{}/{}/check?language=en-us&text={}"
-    try:
-        resp = requests.get(url.format(host, port, apiversion, text))
-        if resp.status_code == requests.codes.ok:
-            resp = resp.json()['matches']
-        else:
-            resp = []
-    except requests.ConnectionError:
+    url = 'https://localhost:9988/languagetool/grammar-check/port/8081/text/'
+    resp = requests.get(url + text)
+    if resp.status_code == requests.codes.ok:
+        resp = resp.json()['matches']
+    else:
         resp = []
     return resp
 
