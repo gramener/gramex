@@ -16,7 +16,7 @@
       "type": "band",
       "domain": {
         "data": "table",
-        "field": "<%= data_mapper.column_1 %>"
+        "field": "category"
       },
       "range": "height",
       "padding": 0.2
@@ -26,7 +26,7 @@
       "type": "linear",
       "domain": {
         "data": "table",
-        "field": "<%= data_mapper.column_3 %>"
+        "field": "value"
       },
       "range": "width",
       "round": true,
@@ -38,7 +38,7 @@
       "type": "ordinal",
       "domain": {
         "data": "table",
-        "field": "<%= data_mapper.column_2 %>"
+        "field": "position"
       },
       "range": {
         "scheme": "category20"
@@ -65,14 +65,14 @@
         "facet": {
           "data": "table",
           "name": "facet",
-          "groupby": "<%= data_mapper.column_1 %>"
+          "groupby": "category"
         }
       },
       "encode": {
         "enter": {
           "y": {
             "scale": "yscale",
-            "field": "<%= data_mapper.column_1 %>"
+            "field": "category"
           }
         }
       },
@@ -89,7 +89,7 @@
           "range": "height",
           "domain": {
             "data": "facet",
-            "field": "<%= data_mapper.column_2 %>"
+            "field": "position"
           }
         }
       ],
@@ -104,7 +104,7 @@
             "enter": {
               "y": {
                 "scale": "pos",
-                "field": "<%= data_mapper.column_2 %>"
+                "field": "position"
               },
               "height": {
                 "scale": "pos",
@@ -112,7 +112,7 @@
               },
               "x": {
                 "scale": "xscale",
-                "field": "<%= data_mapper.column_3 %>"
+                "field": "value"
               },
               "x2": {
                 "scale": "xscale",
@@ -120,7 +120,7 @@
               },
               "fill": {
                 "scale": "color",
-                "field": "<%= data_mapper.column_2 %>"
+                "field": "position"
               }
             }
           }
@@ -153,7 +153,7 @@
                 "value": "middle"
               },
               "text": {
-                "field": "datum['<%= data_mapper.column_3 %>']"
+                "field": "value"
               }
             }
           }

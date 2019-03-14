@@ -3,9 +3,8 @@
 <div>
   <!-- Hidden input text box that will update content from below onchange event -->
 
-  <!-- Bg1g1elow onchange event should be killed here before it raises up in the dom tree -->
+  <!-- Below onchange event should be killed here before it raises up in the dom tree -->
   <!-- <div> -->
-      <% console.log(data[3].attrs) %>
   <input
     id="<%- data[3].id %>"
     name="<%- data[3].id %>"
@@ -34,7 +33,6 @@
     oninput="(function(e) { event.stopImmediatePropagation(); }(event))"
   >
     <% Object.values(data_columns)[0].map(function(first_data_col) { %>
-        <% console.log("inside", first_data_col) %>
     <div class="custom-control custom-checkbox">
       <input
         type="checkbox"

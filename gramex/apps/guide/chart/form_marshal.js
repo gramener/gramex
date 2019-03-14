@@ -1,5 +1,5 @@
 /* exported template_data */
-/* globals type_mapper */
+/* globals type_mapper, model */
 
 var scales_list
 var data_columns = { empty: [] }
@@ -160,7 +160,7 @@ function template_data(vega_spec, view) {
   function axes_iterator() {
     vega_spec.axes &&
       vega_spec.axes.map(function(axis, index) {
-        var axis_name = axis.scale + ' axis'
+        var axis_name = axis.scale.replace(/scale/ig, 'axis')
 
         data['layer_list'].push({ name: axis_name })
         data['property_list'][axis_name] = axis_marshal(axis, index)
@@ -168,6 +168,39 @@ function template_data(vega_spec, view) {
   }
 
   axes_iterator()
+
+
+  var signals = [
+    {
+      "name": "annotation_x",
+      "on":  [{
+        "events": "click",
+        "update": "x()"
+        }]
+    },
+    {
+      "name": "annotation_y",
+      "on":  [{
+        "events": "click",
+        "update": "y()"
+        }]
+    }
+  ]
+
+  var text_mark = {
+    "type": "text",
+    "encode": {
+      "update": {
+        "text": {"value": "mmo"},
+        "x": {
+          "signal": "annotation_x"
+        },
+        "y": {
+          "signal": "annotation_y"
+        }
+      }
+    }
+  }
 
   return data
 }
@@ -179,6 +212,7 @@ function axis_marshal(axis, index) {
     'grid': false,
     'domain': true,
     'labelPadding': 10,
+    'labelAngle': 0,
     'orient': 'left',
     'offset': 0,
     'ticks': false,
@@ -187,6 +221,7 @@ function axis_marshal(axis, index) {
     'titleColor': '#485465',
     'titleFontSize': 12,
     'titleFontWeight': 500,
+    'titleAngle': 0,
     'titlePadding': 16,
     'labelColor': '#485465',
     'labelFontSize': 10,
@@ -284,12 +319,6 @@ function mark_marshal(mark, index, group_prefix) {
   }
 
   var default_mark_props = {
-    fill: {
-      value: '#506FA8'
-    },
-    fillOpacity: {
-      value: 1
-    },
     stroke: {
       value: '#cccccc'
     },
@@ -305,12 +334,17 @@ function mark_marshal(mark, index, group_prefix) {
 
     var details = things.map(function(thing) {
       // if (scale || field) then return two objects (one for each)
-      var mark_data = 'from' in mark ? mark.from.data : 'empty'
+      var dataset_name = 'from' in mark ? mark.from.data : 'empty'
+
+      // ASSUMPTION: current charts only have single group
+      if (group_prefix) {
+        dataset_name = model.vega_spec.marks[0].from.facet.data
+      }
 
       var _mark_return_obj = {
         template: getTemplateType(key, thing),
         input: getInputType(key, thing),
-        options: getOptions(key, thing, mark_data),
+        options: getOptions(key, thing, dataset_name),
         label: getValueLabel(key, thing),
         id: (
           group_prefix +

@@ -67,8 +67,7 @@
             "field": "<%= data_mapper.column_2 %>"
           },
           "y2": {
-            "scale": "yscale",
-            "value": 0
+            "signal": "height"
           },
           "fill": {
             "value": "#FEC44F"

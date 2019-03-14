@@ -32,7 +32,7 @@
   "data": [
     {
       "name": "iris",
-      "url": "<%= absolute_url %>data/horizontal-box-plot.json",
+      "url": "<%= dataset_url %>",
       "transform": [
         {
           "type": "fold",

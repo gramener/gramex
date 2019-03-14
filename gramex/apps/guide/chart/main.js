@@ -2,7 +2,7 @@
 var specName = window.location.href.split('chart=')[1].split('#')[0]
 // Refactor: These three global variables exist because
 // I haven't yet figured out how to compose event listeners
-var dataset_name,
+var dataset_url,
     templates,
     process_state = {}
 
@@ -170,7 +170,7 @@ function chartDidRender() {
       })
     )
     form_default_setter()
-    renderChart(model.vega_spec)
+    // renderChart(model.vega_spec)
 
     time.pos++
     return
@@ -223,35 +223,34 @@ function chartDidRender() {
           data: template_data(model.vega_spec, view)
         })
       )
-
-      $('a[data-toggle="tab"]', $('#stages')).on('shown.bs.tab', function(e) {
-        $('h6', $(e.relatedTarget))
-          .removeClass('arrow-info')
-          .addClass('arrow-light')
-        // $(e.relatedTarget).closest('li').css('pointer-events', 'none')
-        $('h6', $(e.target))
-          .removeClass('arrow-light')
-          .addClass('arrow-info')
-      })
-
-      // REFACTOR: event listeners only generate data (not update DOM)
-      $('.render-chart').one('click', function() {
-        if ($(this).text() == 'Render Chart') {
-          $(this).text('Customize Chart')
-          $('.copy').prop('disabled', false)
-
-          $('#data-viewer').hide()
-          $('#prop-editor').hide()
-        } else {
-          $('#data-viewer').show()
-          $('#prop-editor').show()
-
-          $(this).text('Render Chart')
-          $('.copy').prop('disabled', true)
-        }
-      })
     })
 }
+
+$('body')
+.on('click', '.render-chart', function() {
+  if ($(this).text() == 'Render Chart') {
+    $(this).text('Customize Chart')
+    $('.copy').prop('disabled', false)
+
+    $('#data-viewer').hide()
+    $('#prop-editor').hide()
+  } else {
+    $('#data-viewer').show()
+    $('#prop-editor').show()
+
+    $(this).text('Render Chart')
+    $('.copy').prop('disabled', true)
+  }
+})
+.on('shown.bs.tab', '#stages a[data-toggle="tab"]', function(e) {
+  $('h6', $(e.relatedTarget))
+    .removeClass('arrow-info')
+    .addClass('arrow-light')
+  // $(e.relatedTarget).closest('li').css('pointer-events', 'none')
+  $('h6', $(e.target))
+    .removeClass('arrow-light')
+    .addClass('arrow-info')
+})
 
 function form_default_setter(remove_this_bad_arg) {
   var vega_spec_ids = get_vega_spec_id(model.vega_spec)
@@ -272,12 +271,12 @@ function form_default_setter(remove_this_bad_arg) {
 
 function drawCopyPasteBlock(response) {
   json_file_spec = response[0]
-  dataset_name = response[1].dataset_url
+  dataset_url = response[1].dataset_url
   if (!response[1].data_mapper) $('.render-chart').remove()
 
   // modify relative to absolute urls
   var spec = _.template(json_file_spec)({
-    dataset_url: dataset_name,
+    dataset_url: dataset_url,
     data_mapper: response[1].data_mapper
   })
 
@@ -288,7 +287,6 @@ function drawCopyPasteBlock(response) {
     setTimeout(function() {
       window.renderComplete = true
     }, 25000)
-    renderCopyPasteBlock(model.vega_spec)
     view = result.view
     chartDidRender()
     time.pos++
@@ -396,14 +394,14 @@ $('body')
   .on('click', 'a[href="#customize_chart"]', function() {
     drawCopyPasteBlock([
       json_file_spec,
-      { data_mapper: model.data_mapper, dataset_url: dataset_name }
+      { data_mapper: model.data_mapper, dataset_url: dataset_url }
     ])
   })
   .on('change', '.fh-url', function() {
-    dataset_name = $('.fh-url').val()
+    dataset_url = $('.fh-url').val()
 
     $('.loader').addClass('d-none')
-    fetch(dataset_name)
+    fetch(dataset_url)
       .then(function(res) {
         return res.json()
       })

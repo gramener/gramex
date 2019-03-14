@@ -19,7 +19,7 @@
   "data": [
     {
       "name": "data_table",
-      "url": "<%= absolute_url %>data/wordcloud.json",
+      "url": "<%= dataset_url %>",
       "transform": [
         {
           "type": "extent",

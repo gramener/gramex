@@ -25,7 +25,7 @@
   ],
   "scales": [
     {
-      "name": "scale_band",
+      "name": "x axis",
       "type": "point",
       "range": "width",
       "paddingOuter": 0.3,
@@ -35,7 +35,7 @@
       }
     },
     {
-      "name": "scale_height",
+      "name": "y axis",
       "type": "linear",
       "range": "height",
       "domain": {
@@ -58,7 +58,7 @@
   "axes": [
     {
       "orient": "bottom",
-      "scale": "scale_band",
+      "scale": "x axis",
       "ticks": false,
       "titlePadding": 5,
       "minExtent": 35,
@@ -71,7 +71,7 @@
     },
     {
       "orient": "left",
-      "scale": "scale_height",
+      "scale": "y axis",
       "ticks": false,
       "titlePadding": 5,
       "labelFlush": true,
@@ -125,11 +125,11 @@
           "encode": {
             "enter": {
               "x": {
-                "scale": "scale_band",
+                "scale": "x axis",
                 "field": "<%= data_mapper.column_3 %>"
               },
               "y": {
-                "scale": "scale_height",
+                "scale": "y axis",
                 "field": "<%= data_mapper.column_2 %>"
               },
               "stroke": {
@@ -152,15 +152,15 @@
           "encode": {
             "enter": {
               "width": {
-                "scale": "scale_band",
+                "scale": "x axis",
                 "field": "<%= data_mapper.column_3 %>"
               },
               "x": {
-                "scale": "scale_band",
+                "scale": "x axis",
                 "field": "<%= data_mapper.column_3 %>"
               },
               "y": {
-                "scale": "scale_height",
+                "scale": "y axis",
                 "field": "<%= data_mapper.column_2 %>"
               },
               "fill": {

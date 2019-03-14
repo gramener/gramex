@@ -14,20 +14,10 @@
     "chart": "bars",
     "title": "Bar Chart",
     "data_mapper": {
-      "column_1": "category",
-      "column_2": "amount"
+      "column_1": "Director",
+      "column_2": "Worldwide_Gross"
     },
-    "dataset_url": "<%= absolute_url %>data/bars.json"
-  },
-  {
-    "category": "Bar charts",
-    "chart": "pyramid",
-    "title": "Pyramid chart",
-    "data_mapper": {
-      "column_1": "category",
-      "column_2": "amount"
-    },
-    "dataset_url": "<%= absolute_url %>data/pyramid.json"
+    "dataset_url": "<%= absolute_url %>data/movies.json"
   },
   {
     "category": "Bar charts",
@@ -170,17 +160,7 @@
     "category": "Bar charts",
     "chart": "grouped-bars",
     "title": "Grouped bar chart",
-    "data_mapper": {
-      "column_1": "category",
-      "column_2": "position",
-      "column_3": "value"
-    },
     "dataset_url": "<%= absolute_url %>data/grouped-bars.json"
-  },
-  {
-    "category": "Bar charts",
-    "chart": "normalized-stacked-bar",
-    "title": "Normalized stacked bar chart"
   },
   {
     "category": "Pie charts",
@@ -247,11 +227,6 @@
   },
   {
     "category": "Scatter plots",
-    "chart": "scatter",
-    "title": "Scatter"
-  },
-  {
-    "category": "Scatter plots",
     "chart": "bubble",
     "title": "Bubble chart",
     "data_mapper": {
@@ -314,12 +289,12 @@
     "chart": "sunburst-4",
     "title": "Sunburst 4",
     "data_mapper": {
-      "column_1": "Director",
+      "column_1": "id",
       "column_2": "name",
       "column_3": "parent",
       "column_4": "size"
     },
-    "dataset_url": "<%= absolute_url %>data/movies.json"
+    "dataset_url": "<%= absolute_url %>data/sunburst-4.json"
   },
   {
     "category": "Circle packing charts",

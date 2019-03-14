@@ -19,7 +19,7 @@
       }
     },
     {
-      "name": "op",
+      "name": "operation",
       "value": "average",
       "bind": {
         "input": "select",
@@ -41,7 +41,7 @@
   ],
   "title": {
     "text": {
-      "signal": "'Top <%= data_mapper.column_1 %> by ' + label[op] + ' <%= data_mapper.column_2 %>'"
+      "signal": "'Top <%= data_mapper.column_1 %> by ' + label[operation] + ' <%= data_mapper.column_2 %>'"
     },
     "anchor": "start"
   },
@@ -61,7 +61,7 @@
           ],
           "ops": [
             {
-              "signal": "op"
+              "signal": "operation"
             }
           ],
           "fields": [
@@ -100,20 +100,26 @@
       },
       "encode": {
         "update": {
+          "fill": {
+            "value": "#506FA8"
+          },
+          "fillOpacity": {
+            "value": 1
+          },
           "x": {
-            "scale": "x",
+            "scale": "x axis",
             "value": 0
           },
           "x2": {
-            "scale": "x",
+            "scale": "x axis",
             "field": "<%= data_mapper.column_2 %>"
           },
           "y": {
-            "scale": "y",
+            "scale": "y axis",
             "field": "<%= data_mapper.column_1 %>"
           },
           "height": {
-            "scale": "y",
+            "scale": "y axis",
             "band": 1
           },
           "tooltip": {
@@ -125,7 +131,7 @@
   ],
   "scales": [
     {
-      "name": "x",
+      "name": "x axis",
       "type": "linear",
       "domain": {
         "data": "directors",
@@ -135,7 +141,7 @@
       "nice": true
     },
     {
-      "name": "y",
+      "name": "y axis",
       "type": "band",
       "domain": {
         "data": "directors",
@@ -152,12 +158,14 @@
   ],
   "axes": [
     {
-      "scale": "x",
+      "scale": "x axis",
+      "title": "<%= data_mapper.column_2 %>",
       "orient": "bottom",
       "tickCount": 5
     },
     {
-      "scale": "y",
+      "scale": "y axis",
+      "title": "<%= data_mapper.column_1 %>",
       "orient": "left"
     }
   ]
