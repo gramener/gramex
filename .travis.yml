@@ -55,7 +55,6 @@ script:
   - flake8
   - bandit gramex --recursive --format csv || true
   - pip install -e .
-  - python -m spacy download en
   - pip install gramexenterprise
   - gramex license accept
   - python setup.py nosetests
