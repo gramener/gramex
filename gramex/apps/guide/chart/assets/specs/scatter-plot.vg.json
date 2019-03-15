@@ -178,15 +178,12 @@
     {
       "name": "size",
       "type": "linear",
-      "round": true,
-      "nice": false,
-      "zero": true,
       "domain": {
         "data": "source",
         "field": "<%= data_mapper.column_3 %>"
       },
       "range": {
-        "signal": "[5, width]"
+        "signal": "[5, 1000]"
       }
     }
   ],

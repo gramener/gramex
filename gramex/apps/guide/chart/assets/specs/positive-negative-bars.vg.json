@@ -6,7 +6,22 @@
   "data": [
     {
       "name": "table",
-      "url": "<%= dataset_url %>"
+      "url": "<%= dataset_url %>",
+      "transform": [
+        {
+          "type": "aggregate",
+          "groupby": [
+            "<%= data_mapper.column_1 %>"
+          ],
+          "fields": [
+            "<%= data_mapper.column_2 %>"
+          ],
+          "ops": ["sum"],
+          "as": [
+            "<%= data_mapper.column_2 %>"
+          ]
+        }
+      ]
     }
   ],
   "scales": [
@@ -18,9 +33,8 @@
         "field": "<%= data_mapper.column_1 %>"
       },
       "range": "width",
-      "padding": 0.4,
-      "round": true,
-      "nice": true
+      "padding": 0.2,
+      "round": true
     },
     {
       "name": "yscale",
@@ -54,11 +68,13 @@
             "field": "<%= data_mapper.column_2 %>"
           },
           "y2": {
-            "scale": "yscale",
-            "value": 0
+            "signal": "scale('yscale', 0)"
           },
           "fill": {
             "signal": "datum['<%= data_mapper.column_2 %>'] > 0 ? '#5CB38B' : '#E6685C'"
+          },
+          "tooltip": {
+            "signal": "datum"
           }
         }
       }
@@ -77,10 +93,10 @@
           },
           "y": {
             "scale": "yscale",
-            "field": "<%= data_mapper.column_1 %>"
+            "field": "<%= data_mapper.column_2 %>"
           },
           "dy": {
-            "signal": "datum.amount > 0 ? -4 : 14"
+            "signal": "datum['<%= data_mapper.column_2 %>'] > 0 ? -4 : 14"
           },
           "dx": {
             "signal": "bandwidth('xscale')/2"
@@ -92,7 +108,7 @@
             "value": "black"
           },
           "text": {
-            "field": "<%= data_mapper.column_1 %>"
+            "field": "<%= data_mapper.column_2 %>"
           },
           "fontSize": {
             "value": 12
@@ -116,7 +132,7 @@
             "value": 20
           },
           "dy": {
-            "signal": "datum.<%= data_mapper.column_2 %> > 0 ? 200 : 170"
+            "signal": "datum['<%= data_mapper.column_2 %>'] > 0 ? height/2 + 14 : height/2 - 6"
           },
           "align": {
             "value": "center"
