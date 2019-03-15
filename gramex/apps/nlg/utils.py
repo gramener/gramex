@@ -48,7 +48,6 @@ def load_spacy_model():
     if "nlp" not in globals():
         global nlp
         nlp = load("en_core_web_sm")
-        print(">" * 80 + "MODEL LOADED" + "<" * 80)
     return nlp
 
 

@@ -313,6 +313,7 @@ def search_args(entities, args, lemmatized=True, fmt="fh_args['{}'][{}]",
     search_res = {}
     ent_tokens = list(chain(*entities))
     for k, v in args.items():
+        v = [t.lstrip('-') for t in v]
         # argtokens = list(chain(*[re.findall(r"\w+", f) for f in v]))
         argtokens = list(chain(*[utils.nlp(c) for c in v]))
         for i, x in enumerate(argtokens):
