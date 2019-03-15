@@ -3,7 +3,7 @@ from spacy.lang.en import LEMMA_INDEX, LEMMA_EXC, LEMMA_RULES
 from spacy.lemmatizer import Lemmatizer
 from tornado.template import Template
 
-from gramex.apps.nlg.utils import set_nlg_gramopt, nlp
+from gramex.apps.nlg import utils
 
 infl = engine()
 L = Lemmatizer(LEMMA_INDEX, LEMMA_EXC, LEMMA_RULES)
@@ -11,7 +11,7 @@ L = Lemmatizer(LEMMA_INDEX, LEMMA_EXC, LEMMA_RULES)
 
 def is_plural_noun(text):
     """Whether given text is a plural noun."""
-    doc = nlp(text)
+    doc = utils.nlp(text)
     for t in list(doc)[::-1]:
         if not t.is_punct:
             return t.tag_ in ('NNS', 'NNPS')
@@ -21,7 +21,7 @@ def is_plural_noun(text):
 is_singular_noun = lambda x: not is_plural_noun(x)  # NOQA: E731
 
 
-@set_nlg_gramopt(source='G', fe_name="Concate Items")
+@utils.set_nlg_gramopt(source='G', fe_name="Concate Items")
 def concatenate_items(items, sep=", "):
     """Concatenate a sequence of tokens into an English string.
 
@@ -50,7 +50,7 @@ def concatenate_items(items, sep=", "):
     return s
 
 
-@set_nlg_gramopt(source='G', fe_name="Pluralize")
+@utils.set_nlg_gramopt(source='G', fe_name="Pluralize")
 def plural(word):
     """Pluralize a word.
 
@@ -70,7 +70,7 @@ def plural(word):
     return word
 
 
-@set_nlg_gramopt(source='G', fe_name="Singularize")
+@utils.set_nlg_gramopt(source='G', fe_name="Singularize")
 def singular(word):
     """
     Singularize a word.
@@ -91,7 +91,7 @@ def singular(word):
     return word
 
 
-# @set_nlg_gramopt(source='G', fe_name="Pluralize by")
+# @utils.set_nlg_gramopt(source='G', fe_name="Pluralize by")
 def pluralize_by(word, by):
     """
     Pluralize a word depending on another argument.
@@ -123,7 +123,7 @@ def pluralize_by(word, by):
     return word
 
 
-# @set_nlg_gramopt(source='G', fe_name="Pluralize like")
+# @utils.set_nlg_gramopt(source='G', fe_name="Pluralize like")
 def pluralize_like(x, y):
     """
     Pluralize a word if another is a plural.
@@ -146,32 +146,32 @@ def pluralize_like(x, y):
     return plural(x)
 
 
-@set_nlg_gramopt(source='str', fe_name="Capitalize")
+@utils.set_nlg_gramopt(source='str', fe_name="Capitalize")
 def capitalize(word):
     return word.capitalize()
 
 
-@set_nlg_gramopt(source='str', fe_name="Lowercase")
+@utils.set_nlg_gramopt(source='str', fe_name="Lowercase")
 def lower(word):
     return word.lower()
 
 
-@set_nlg_gramopt(source='str', fe_name="Swapcase")
+@utils.set_nlg_gramopt(source='str', fe_name="Swapcase")
 def swapcase(word):
     return word.swapcase()
 
 
-@set_nlg_gramopt(source='str', fe_name="Title")
+@utils.set_nlg_gramopt(source='str', fe_name="Title")
 def title(word):
     return word.title()
 
 
-@set_nlg_gramopt(source='str', fe_name="Uppercase")
+@utils.set_nlg_gramopt(source='str', fe_name="Uppercase")
 def upper(word):
     return word.upper()
 
 
-# @set_nlg_gramopt(source="G", fe_name="Lemmatize")
+# @utils.set_nlg_gramopt(source="G", fe_name="Lemmatize")
 def lemmatize(word, target_pos):
     return L(word, target_pos)
 
@@ -237,14 +237,14 @@ def find_inflections(text, search, fh_args, df):
         list of inflections applied on them to make them closer match tokens in `text`.
     """
 
-    text = nlp(text)
+    text = utils.nlp(text)
     inflections = {}
     for token, tklist in search.items():
         tmpl = [t['tmpl'] for t in tklist if t.get('enabled', False)][0]
         rendered = Template('{{{{ {} }}}}'.format(tmpl)).generate(
             df=df, fh_args=fh_args).decode('utf8')
         if rendered != token:
-            x = nlp(rendered)[0]
+            x = utils.nlp(rendered)[0]
             y = text[[c.text for c in text].index(token)]
             infl = _token_inflections(x, y)
             if infl:
