@@ -336,7 +336,7 @@ function addToNarrative() {
     // pick text from the "Type something" box, templatize, and add to narrative
     $.ajax({
         type: "POST",
-        url: "nlg/textproc",
+        url: nlg_base + "textproc",
         data: { "args": JSON.stringify(args), "data": JSON.stringify(df),
                 "text": JSON.stringify([document.getElementById("textbox").value]) },
         success: addToTemplates
@@ -388,7 +388,7 @@ function refreshTemplates() {
     var tmpls = templates.map(x => x.template)
     $.ajax({
         type: "POST",
-        url: "nlg/render-template",
+        url: nlg_base + "render-template",
         data: { "args": JSON.stringify(args), "data": JSON.stringify(df),
                 "template": JSON.stringify(tmpls) },
         success: updateTemplates
@@ -449,7 +449,7 @@ function saveConfig() {
     } else {
         narrative_name = elem.value
         $.ajax({
-            url: "nlg/save-config",
+            url: nlg_base + "save-config",
             type: "POST",
             data: {config: JSON.stringify(templates), name: narrative_name, dataset: dataset_name},
             headers: {'X-CSRFToken': false},
@@ -459,7 +459,7 @@ function saveConfig() {
 }
 
 function downloadConfig() {
-    url = "config-download?config=" + encodeURIComponent(JSON.stringify(templates))
+    url = nlg_base + "config-download?config=" + encodeURIComponent(JSON.stringify(templates))
         + "&name=" + encodeURIComponent(document.getElementById('narrative-name-editor').value)
     if (document.getElementById("download-data-cb").checked) {
         url = url + "&data=" + encodeURIComponent(JSON.stringify(df))
@@ -476,7 +476,7 @@ function downloadConfig() {
 function setInitialConfig() {
     $.ajax({
         // url: "initconf/meta.json",
-        url: "nlg/initconf",
+        url: nlg_base + "initconf",
         type: "GET",
         success: function (e) {
             dataset_name = e.dsid
@@ -544,7 +544,7 @@ function renderTemplate(text, success, error) {
     // render an arbitrary template and do `success` on success.
     $.ajax({
         type: "POST",
-        url: "nlg/render-template",
+        url: nlg_base + "render-template",
         data: {
             "args": JSON.stringify(args), "data": JSON.stringify(df),
             "template": JSON.stringify(text)

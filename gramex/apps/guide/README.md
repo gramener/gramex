@@ -39,6 +39,7 @@ prefix: Guide
 - [TwitterRESTHandler](twitterresthandler/)
 - [FacebookGraphHandler](facebookgraphhandler/)
 - [UI components](uicomponents/)
+- [Natural Language Generation](nlg/)
 - [Charts](chart/)
 - [Cache requests](cache/)
 - [Send emails](email/)
