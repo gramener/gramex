@@ -23,10 +23,10 @@ import:
       login_url: /$YAMLURL/login
 ```
 
-This configuration mounts the app at [nlg/](nlg/): <!--TODO: Fix link -->
+This configuration mounts the app at [nlg/](nlg/):
 
 <div class="example">
-  <a class="example-demo" href="/">NLG</a> <!-- TODO: Fix link -->
+  <a class="example-demo" href="nlg/">NLG</a>
   <a class="example-src" href="http://github.com/gramener/gramex/blob/master/gramex/apps/guide/nlg/gramex.yaml">Source</a>
 </div>
 
@@ -34,17 +34,17 @@ This configuration mounts the app at [nlg/](nlg/): <!--TODO: Fix link -->
 
 The NLG component depends on two sources of information:
 
-1. A source dataset, which can be uploaded on the [landing page](nlg/).
+1. A source dataset, which can be uploaded on the [NLG webapp](nlg/).
    A dataset is uniquely identified with its filename. Once
-   uploaded, the file persists and is available for selection from the landing
-   page. Any *file* that makes a valid URL for
+   uploaded, the file persists and is available for selection from the app.
+   Any *file* that makes a valid URL for
    [FormHandler](http://learn.gramener.com/guide/formhandler) can be used with
    the NLG app.
 2. A _narrative_, which is a collection of templates and rules around them.
    The narrative consists of the configuration which governs the rendered text.
-   An existing narrative can be uploaded through the landing page, or can be
-   created through the [NLG IDE](nlg/index). Once created, the narrative can be
-   named and becomes available for selection from the landing page.
+   An existing narrative can be uploaded through the "Add Data" button, or can be
+   created through the [NLG IDE](nlg/). Once created, the narrative can be
+   named and becomes available for selection from the "Add Data" modal.
 
 ## The NLG IDE
 
@@ -101,7 +101,7 @@ This dialog provides configuration options for all template attributes:
 ## Naming and Saving a Narrative
 
 Once a narrative has been fully configured, it can be named and saved. Doing so
-causes it to appear the narrative dropdown menu on the landing page.
+causes it to appear the narrative dropdown menu on the app.
 
 
 ## Sharing a Narrative

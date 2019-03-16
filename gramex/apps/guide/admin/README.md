@@ -54,6 +54,7 @@ The `ADMIN_KWARGS` section accepts the following parameters:
     - `info`: [Gramex & server info component](#admin-info)
     - `config`: [Gramex configuration component](#admin-config)
     - `logs`: [Log viewer component](#admin-logs)
+    - `nlg`: [Natural Language Generation](../nlg/)
 
 The `ADMIN_AUTH` section is the same as specifying the `auth:`
 [authorization](../auth/#authorization) on all admin pages.
