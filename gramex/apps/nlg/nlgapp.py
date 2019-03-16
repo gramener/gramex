@@ -125,7 +125,6 @@ def get_dataset_files(handler):
     list
         List of filenames.
     """
-
     user_dir = op.join(nlg_path, handler.current_user.email)
     if op.isdir(user_dir):
         files = [f for f in os.listdir(user_dir) if op.splitext(f)[-1].lower() in DATAFILE_EXTS]
