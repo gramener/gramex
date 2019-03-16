@@ -4,6 +4,7 @@ import inspect
 import threading
 import pandas as pd
 from tornado.gen import coroutine, Return
+from tornado.httpclient import AsyncHTTPClient
 from gramex.config import locate, app_log, merge, variables
 from sklearn.externals import joblib
 from sklearn.preprocessing import StandardScaler
@@ -379,57 +380,53 @@ def translater(handler, source='en', target='nl', key=None, cache=None, api='goo
 
 
 _languagetool = {
-    'defaults': {
-        'version': '4.4',
-        'target': os.path.join(variables['GRAMEXDATA'], 'apps', 'languagetool'),
-        'port': 8081,
-        'url': 'http://localhost:{port}/v2/check?language=en-us&text={q}',
-        'cmd': ['java', '-cp', 'languagetool-server.jar', 'org.languagetool.server.HTTPServer',
-                '--port {port}']
-
-    }
+    'defaults': {k: v for k, v in variables.items() if k.startswith('LT_')},
+    'installed': os.path.isdir(variables['LT_CWD'])
 }
 
 
 @coroutine
 def languagetool(handler, *args, **kwargs):
     merge(kwargs, _languagetool['defaults'], mode='setdefault')
-
     # If languagetool is not installed, install it
-    if not _languagetool.get('installed'):
-        if not os.path.exists(kwargs['target']):
-            import requests, zipfile, io        # noqa
-            src = 'https://languagetool.org/download/LanguageTool-{version}.zip'.format(**kwargs)
-            app_log.info('Downloading languagetools from %s', src)
-            stream = io.BytesIO(requests.get(src).content)
-            app_log.info('Unzipping languagetools to %s', kwargs['target'])
-            zipfile.ZipFile(stream).extractall(kwargs['target'])
+    if not _languagetool['installed']:
+        if not os.path.isdir(kwargs['LT_TARGET']):
+            os.makedirs(kwargs['LT_TARGET'])
+        import requests, zipfile, io        # noqa
+        src = kwargs['LT_SRC'].format(**kwargs)
+        app_log.info('Downloading languagetools from %s', src)
+        stream = io.BytesIO(requests.get(src).content)
+        app_log.info('Unzipping languagetools to %s', kwargs['LT_TARGET'])
+        zipfile.ZipFile(stream).extractall(kwargs['LT_TARGET'])
         _languagetool['installed'] = True
 
     # Process request via languagetool
-    from tornado.httpclient import AsyncHTTPClient
     client = AsyncHTTPClient()
-    attempts = 1
-    while attempts:
-        url = kwargs['url'].format(
-            port=kwargs['port'],
-            q=six.moves.urllib_parse.quote(handler.get_argument('q', ''))
-        )
+    tries = int(handler.get_argument('tries', 3))
+    url = kwargs['LT_URL'].format(
+        port=kwargs['LT_PORT'], language=handler.get_argument('language', 'en-us'),
+        q=six.moves.urllib_parse.quote(handler.get_argument('q', ''))
+    )
+    while tries:
         try:
             result = yield client.fetch(url)
-            attempts = 0
-        except Exception as e:
+            tries = 0
+        except ConnectionRefusedError:
             # Start languagetool
             from gramex.cache import daemon
-            cmd = [p.format(**kwargs) for p in kwargs['cmd']]
-            cwd = os.path.join(kwargs['target'], 'LanguageTool-{version}'.format(**kwargs))
+            cmd = [p.format(**kwargs) for p in kwargs['LT_CMD']]
             app_log.info('Starting: %s', ' '.join(cmd))
-            _languagetool['proc'] = daemon(cmd, cwd=cwd, first_line=lambda: True, stream=True)
-            # Try again a few times until languagetool has started responding
-            result = yield client.fetch(url)
-            attempts = 0
+            if 'proc' not in _languagetool:
+                _languagetool['proc'] = daemon(cmd, cwd=kwargs['LT_CWD'], first_line=lambda: True,
+                                               stream=True)
+                import time
+                time.sleep(5)
+            try:
+                result = yield client.fetch(url)
+                tries = 0
+            except ConnectionRefusedError:
+                tries -= 1
 
-    handler.set_header('Content-Type', 'application/json')
     raise Return(result.body)
 
 

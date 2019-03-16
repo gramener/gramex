@@ -1,17 +1,19 @@
 variables:
   LT_PORT: 8081
-  ALLOW_ORIGIN: "*"
-  LT_PUBLIC: true
-
-
-schedule:
-  start-languagetool:
-    function: gramex.apps.languagetool.start_languagetool
-    startup: true
+  LT_ALLOW_ORIGIN: "*"
+  LT_VERSION: "4.4"
+  LT_TARGET: $GRAMEXDATA/languagetool/
+  LT_SRC: https://languagetool.org/download/LanguageTool-${LT_VERSION}.zip
+  LT_CMD: ['java', '-cp', 'languagetool-server.jar',
+           'org.languagetool.server.HTTPServer', '--port', '{LT_PORT}']
+  LT_CWD: ${LT_TARGET}/LanguageTool-${LT_VERSION}
+  LT_URL: "http://localhost:{port}/v2/check?language={language}&text={q}"
 
 url:
   languagetool-$*:
-    pattern: /$YAMLURL/grammar-check/(.*)/(.*)
+    pattern: /$YAMLURL/grammar-check
     handler: FunctionHandler
     kwargs:
-      function: gramex.apps.languagetool.grammar_check
+      function: gramex.ml.languagetool
+      headers:
+        Content-Type: application/json
