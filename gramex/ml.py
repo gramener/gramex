@@ -1,9 +1,10 @@
 import os
+import six
 import inspect
 import threading
 import pandas as pd
 from tornado.gen import coroutine, Return
-from gramex.config import locate, app_log
+from gramex.config import locate, app_log, merge, variables
 from sklearn.externals import joblib
 from sklearn.preprocessing import StandardScaler
 
@@ -375,6 +376,61 @@ def translater(handler, source='en', target='nl', key=None, cache=None, api='goo
     # TODO: support gramex.data.download features
     handler.set_header('Content-Type', 'application/json; encoding="UTF-8"')
     raise Return(result.to_json(orient='records'))
+
+
+_languagetool = {
+    'defaults': {
+        'version': '4.4',
+        'target': os.path.join(variables['GRAMEXDATA'], 'apps', 'languagetool'),
+        'port': 8081,
+        'url': 'http://localhost:{port}/v2/check?language=en-us&text={q}',
+        'cmd': ['java', '-cp', 'languagetool-server.jar', 'org.languagetool.server.HTTPServer',
+                '--port {port}']
+
+    }
+}
+
+
+@coroutine
+def languagetool(handler, *args, **kwargs):
+    merge(kwargs, _languagetool['defaults'], mode='setdefault')
+
+    # If languagetool is not installed, install it
+    if not _languagetool.get('installed'):
+        if not os.path.exists(kwargs['target']):
+            import requests, zipfile, io        # noqa
+            src = 'https://languagetool.org/download/LanguageTool-{version}.zip'.format(**kwargs)
+            app_log.info('Downloading languagetools from %s', src)
+            stream = io.BytesIO(requests.get(src).content)
+            app_log.info('Unzipping languagetools to %s', kwargs['target'])
+            zipfile.ZipFile(stream).extractall(kwargs['target'])
+        _languagetool['installed'] = True
+
+    # Process request via languagetool
+    from tornado.httpclient import AsyncHTTPClient
+    client = AsyncHTTPClient()
+    attempts = 1
+    while attempts:
+        url = kwargs['url'].format(
+            port=kwargs['port'],
+            q=six.moves.urllib_parse.quote(handler.get_argument('q', ''))
+        )
+        try:
+            result = yield client.fetch(url)
+            attempts = 0
+        except Exception as e:
+            # Start languagetool
+            from gramex.cache import daemon
+            cmd = [p.format(**kwargs) for p in kwargs['cmd']]
+            cwd = os.path.join(kwargs['target'], 'LanguageTool-{version}'.format(**kwargs))
+            app_log.info('Starting: %s', ' '.join(cmd))
+            _languagetool['proc'] = daemon(cmd, cwd=cwd, first_line=lambda: True, stream=True)
+            # Try again a few times until languagetool has started responding
+            result = yield client.fetch(url)
+            attempts = 0
+
+    handler.set_header('Content-Type', 'application/json')
+    raise Return(result.body)
 
 
 # Gramex 1.48 spelt translater as translator. Accept both spellings.
