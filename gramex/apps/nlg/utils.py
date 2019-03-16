@@ -9,8 +9,6 @@ import re
 from configparser import ConfigParser
 
 import requests
-from spacy import load
-from spacy.matcher import Matcher
 from tornado.template import Template
 
 from gramex.data import filter as grmfilter  # NOQA: F401
@@ -42,13 +40,34 @@ print(narrative)
 config = ConfigParser()
 config.read(op.join(op.dirname(__file__), "..", "..", "..", "config.ini"))
 
+_spacy = {
+    'model': False,
+    'lemmatizer': False,
+    'matcher': False
+}
+
 
 def load_spacy_model():
     """Load the spacy model when required."""
-    if "nlp" not in globals():
-        global nlp
+    if not _spacy['model']:
+        from spacy import load
         nlp = load("en_core_web_sm")
+        _spacy['model'] = nlp
+    else:
+        nlp = _spacy['model']
     return nlp
+
+
+def get_lemmatizer():
+    if not _spacy['lemmatizer']:
+        from spacy.lang.en import LEMMA_INDEX, LEMMA_EXC, LEMMA_RULES
+        from spacy.lemmatizer import Lemmatizer
+        lemmatizer = Lemmatizer(LEMMA_INDEX, LEMMA_EXC, LEMMA_RULES)
+        print('LEMMATIZER MADE!!!')
+        _spacy['lemmatizer'] = lemmatizer
+    else:
+        lemmatizer = _spacy['lemmatizer']
+    return lemmatizer
 
 
 def make_np_matcher(nlp, rules=NP_RULES):
@@ -66,9 +85,14 @@ def make_np_matcher(nlp, rules=NP_RULES):
     -------
     `spacy.matcher.Matcher`
     """
-    matcher = Matcher(nlp.vocab)
-    for k, v in rules.items():
-        matcher.add(k, None, v)
+    if not _spacy['matcher']:
+        from spacy.matcher import Matcher
+        matcher = Matcher(nlp.vocab)
+        for k, v in rules.items():
+            matcher.add(k, None, v)
+        _spacy['matcher'] = matcher
+    else:
+        matcher = _spacy['matcher']
     return matcher
 
 

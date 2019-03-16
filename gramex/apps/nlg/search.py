@@ -96,7 +96,7 @@ class DFSearch(object):
         # A map of tokens to list of search results.
         self.results = DFSearchResults()
         if not nlp:
-            nlp = getattr(utils, 'nlp', utils.load_spacy_model())
+            nlp = utils.load_spacy_model()
         self.nlp = nlp
         self.matcher = kwargs.get('matcher', utils.make_np_matcher(self.nlp))
 
@@ -306,13 +306,14 @@ def search_args(entities, args, lemmatized=True, fmt="fh_args['{}'][{}]",
             "tmpl": "fh_args['_by'][0]"  # The template that gets this token from fh_args
         }
     """
+    nlp = utils.load_spacy_model()
     args = {k: v for k, v in args.items() if k in argkeys}
     search_res = {}
     ent_tokens = list(chain(*entities))
     for k, v in args.items():
         v = [t.lstrip('-') for t in v]
         # argtokens = list(chain(*[re.findall(r"\w+", f) for f in v]))
-        argtokens = list(chain(*[utils.nlp(c) for c in v]))
+        argtokens = list(chain(*[nlp(c) for c in v]))
         for i, x in enumerate(argtokens):
             for y in ent_tokens:
                 if lemmatized:

@@ -7,8 +7,8 @@ import pandas as pd
 from gramex.apps.nlg import grammar as G
 from gramex.apps.nlg import search, utils
 
-utils.load_spacy_model()
-matcher = utils.make_np_matcher(utils.nlp)
+nlp = utils.load_spacy_model()
+matcher = utils.make_np_matcher(nlp)
 
 
 class TestUtils(unittest.TestCase):
@@ -24,7 +24,8 @@ class TestUtils(unittest.TestCase):
                              {'_sort': ['Office supplies']})
 
     def test_ner(self):
-        sent = utils.nlp(
+        nlp = utils.load_spacy_model()
+        sent = nlp(
             """
             US President Donald Trump is an entrepreneur and
             used to run his own reality show named 'The Apprentice'."""
@@ -122,7 +123,8 @@ class TestSearch(unittest.TestCase):
 
     def test_search_args(self):
         args = {"_sort": ["-votes"]}
-        doc = utils.nlp("James Stewart is the top voted actor.")
+        nlp = utils.load_spacy_model()
+        doc = nlp("James Stewart is the top voted actor.")
         ents = utils.ner(doc, matcher)
         self.assertDictEqual(
             search.search_args(ents, args),
@@ -137,7 +139,8 @@ class TestSearch(unittest.TestCase):
 
     def test_search_args_literal(self):
         args = {"_sort": ["-rating"]}
-        doc = utils.nlp("James Stewart has the highest rating.")
+        nlp = utils.load_spacy_model()
+        doc = nlp("James Stewart has the highest rating.")
         ents = utils.ner(doc, matcher)
         self.assertDictEqual(search.search_args(ents, args, lemmatized=False),
                              {'rating': {
