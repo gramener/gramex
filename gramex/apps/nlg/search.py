@@ -96,10 +96,7 @@ class DFSearch(object):
         # A map of tokens to list of search results.
         self.results = DFSearchResults()
         if not nlp:
-            if not hasattr(utils, 'nlp'):
-                nlp = utils.load_spacy_model()
-            else:
-                nlp = utils.nlp
+            nlp = getattr(utils, 'nlp', utils.load_spacy_model())
         self.nlp = nlp
         self.matcher = kwargs.get('matcher', utils.make_np_matcher(self.nlp))
 
@@ -355,8 +352,7 @@ def templatize(text, args, df):
         of search results, cleaned text and token inflections. The webapp uses
         these to construct a tornado template.
     """
-    if not hasattr(utils, 'nlp'):
-        utils.load_spacy_model()
+    utils.load_spacy_model()
     clean_text = utils.sanitize_text(text)
     args = utils.sanitize_fh_args(args)
     dfs = DFSearch(df)
