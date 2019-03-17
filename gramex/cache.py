@@ -38,6 +38,7 @@ _markdown_defaults = dict(output_format='html5', extensions=[
 ])
 # A set of temporary files to delete on program exit
 _TEMP_FILES = set()
+_ID_CACHE = set()
 
 
 def _delete_temp_files():
@@ -47,6 +48,14 @@ def _delete_temp_files():
 
 
 atexit.register(_delete_temp_files)
+
+
+def hashfn(fn):
+    '''Returns a unique hash value for the function.'''
+    # id() returns a unique value for the lifetime of an object.
+    # To ensure that ID is not re-cycled, cache object, so it's never released.
+    _ID_CACHE.add(fn)
+    return id(fn)
 
 
 def cache_key(*args):
@@ -238,7 +247,7 @@ def open(path, callback=None, transform=None, rel=False, **kwargs):
     key = (
         path,
         original_callback if callback_is_str else id(callback),
-        id(transform),
+        hashfn(transform),
         frozenset(((k, hashed(v)) for k, v in kwargs.items())),
     )
     cached = _cache.get(key, None)
