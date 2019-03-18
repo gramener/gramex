@@ -9,20 +9,17 @@ import re
 from six.moves.configparser import ConfigParser
 
 import requests
-from spacy import load
-from spacy.matcher import Matcher
 from tornado.template import Template
 
 from gramex.data import filter as grmfilter  # NOQA: F401
 
-nlp = load("en_core_web_sm")
-
-NP_MATCHER = Matcher(nlp.vocab)
-NP_MATCHER.add("NP1", None, [{"POS": "PROPN", "OP": "+"}])
-NP_MATCHER.add("NP2", None, [{"POS": "NOUN", "OP": "+"}])
-NP_MATCHER.add("NP3", None, [{"POS": "ADV", "OP": "+"}, {"POS": "VERB", "OP": "+"}])
-NP_MATCHER.add("NP4", None, [{"POS": "ADJ", "OP": "+"}, {"POS": "VERB", "OP": "+"}])
-NP_MATCHER.add("QUANT", None, [{"POS": "NUM", "OP": "+"}])
+NP_RULES = {
+    "NP1": [{"POS": "PROPN", "OP": "+"}],
+    "NP2": [{"POS": "NOUN", "OP": "+"}],
+    "NP3": [{"POS": "ADV", "OP": "+"}, {"POS": "VERB", "OP": "+"}],
+    "NP4": [{"POS": "ADJ", "OP": "+"}, {"POS": "VERB", "OP": "+"}],
+    "QUANT": [{"POS": "NUM", "OP": "+"}]
+}
 
 NARRATIVE_TEMPLATE = """
 {% autoescape None %}
@@ -42,6 +39,60 @@ print(narrative)
 
 config = ConfigParser()
 config.read(op.join(op.dirname(__file__), "..", "..", "..", "config.ini"))
+
+_spacy = {
+    'model': False,
+    'lemmatizer': False,
+    'matcher': False
+}
+
+
+def load_spacy_model():
+    """Load the spacy model when required."""
+    if not _spacy['model']:
+        from spacy import load
+        nlp = load("en_core_web_sm")
+        _spacy['model'] = nlp
+    else:
+        nlp = _spacy['model']
+    return nlp
+
+
+def get_lemmatizer():
+    if not _spacy['lemmatizer']:
+        from spacy.lang.en import LEMMA_INDEX, LEMMA_EXC, LEMMA_RULES
+        from spacy.lemmatizer import Lemmatizer
+        lemmatizer = Lemmatizer(LEMMA_INDEX, LEMMA_EXC, LEMMA_RULES)
+        _spacy['lemmatizer'] = lemmatizer
+    else:
+        lemmatizer = _spacy['lemmatizer']
+    return lemmatizer
+
+
+def make_np_matcher(nlp, rules=NP_RULES):
+    """Make a rule based noun phrase matcher.
+
+    Parameters
+    ----------
+    nlp : `spacy.lang`
+        The spacy model to use.
+    rules : dict, optional
+        Mapping of rule IDS to spacy attribute patterns, such that each mapping
+        defines a noun phrase structure.
+
+    Returns
+    -------
+    `spacy.matcher.Matcher`
+    """
+    if not _spacy['matcher']:
+        from spacy.matcher import Matcher
+        matcher = Matcher(nlp.vocab)
+        for k, v in rules.items():
+            matcher.add(k, None, v)
+        _spacy['matcher'] = matcher
+    else:
+        matcher = _spacy['matcher']
+    return matcher
 
 
 def render_search_result(text, results, **kwargs):
@@ -88,13 +139,15 @@ def unoverlap(tokens):
     return [textmap[t] for t in newtokens]
 
 
-def ner(doc, matcher=NP_MATCHER, match_ids=False, remove_overlap=True):
+def ner(doc, matcher, match_ids=False, remove_overlap=True):
     """Find all NEs and other nouns in a spacy doc.
 
     Parameters
     ----------
     doc: spacy.tokens.doc.Doc
         The document in which to search for entities.
+    matcher: spacy.matcher.Matcher
+        The rule based matcher to use for finding noun phrases.
     match_ids: list, optional
         IDs from the spacy matcher to filter from the matches.
     remove_overlap: bool, optional
@@ -115,7 +168,7 @@ def ner(doc, matcher=NP_MATCHER, match_ids=False, remove_overlap=True):
         entities.update([doc[start:end] for _, start, end in matcher(doc)])
     else:
         for m_id, start, end in matcher(doc):
-            if NP_MATCHER.vocab.strings[m_id] in match_ids:
+            if matcher.vocab.strings[m_id] in match_ids:
                 entities.add(doc[start:end])
     if remove_overlap:
         entities = unoverlap(entities)

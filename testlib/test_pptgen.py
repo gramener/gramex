@@ -246,7 +246,7 @@ class TestPPTGen(TestCase):
 
     def test_group_and_image(self):
         # Test case for group objects.
-        for img in [self.image, 'https://gramener.com/uistatic/img/store-supply-chain.png']:
+        for img in [self.image, 'https://learn.gramener.com/guide/pptxhandler/sample.png']:
             try:
                 target = pptgen.pptgen(
                     source=self.input,

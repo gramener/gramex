@@ -1,17 +1,14 @@
 from inflect import engine
-from spacy.lang.en import LEMMA_INDEX, LEMMA_EXC, LEMMA_RULES
-from spacy.lemmatizer import Lemmatizer
 from tornado.template import Template
 
-from gramex.apps.nlg.utils import set_nlg_gramopt, nlp
+from gramex.apps.nlg.utils import load_spacy_model, set_nlg_gramopt, get_lemmatizer
 
 infl = engine()
-L = Lemmatizer(LEMMA_INDEX, LEMMA_EXC, LEMMA_RULES)
 
 
 def is_plural_noun(text):
     """Whether given text is a plural noun."""
-    doc = nlp(text)
+    doc = load_spacy_model()(text)
     for t in list(doc)[::-1]:
         if not t.is_punct:
             return t.tag_ in ('NNS', 'NNPS')
@@ -173,7 +170,7 @@ def upper(word):
 
 # @set_nlg_gramopt(source="G", fe_name="Lemmatize")
 def lemmatize(word, target_pos):
-    return L(word, target_pos)
+    return get_lemmatizer()(word, target_pos)
 
 
 def _token_inflections(x, y):
@@ -236,7 +233,7 @@ def find_inflections(text, search, fh_args, df):
         With keys as tokens found in the dataframe or FH args, and values as
         list of inflections applied on them to make them closer match tokens in `text`.
     """
-
+    nlp = load_spacy_model()
     text = nlp(text)
     inflections = {}
     for token, tklist in search.items():

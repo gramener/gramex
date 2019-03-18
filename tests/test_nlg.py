@@ -1,12 +1,14 @@
 import os.path as op
 import re
 import unittest
-from nose.plugins.skip import SkipTest
 
 import pandas as pd
 
 from gramex.apps.nlg import grammar as g
 from gramex.apps.nlg import search, utils
+
+nlp = utils.load_spacy_model()
+matcher = utils.make_np_matcher(nlp)
 
 
 class TestUtils(unittest.TestCase):
@@ -22,12 +24,13 @@ class TestUtils(unittest.TestCase):
                              {'_sort': ['Office supplies']})
 
     def test_ner(self):
-        sent = utils.nlp(
+        nlp = utils.load_spacy_model()
+        sent = nlp(
             """
             US President Donald Trump is an entrepreneur and
             used to run his own reality show named 'The Apprentice'."""
         )
-        ents = utils.ner(sent)
+        ents = utils.ner(sent, matcher)
         self.assertSetEqual(
             set([c.text for c in utils.unoverlap(ents)]),
             {
@@ -120,30 +123,30 @@ class TestSearch(unittest.TestCase):
 
     def test_search_args(self):
         args = {"_sort": ["-votes"]}
-        doc = utils.nlp("James Stewart is the top voted actor.")
-        ents = utils.ner(doc)
-        result = search.search_args(ents, args)
-        if not result:
-            raise SkipTest('TODO: test_search_args not working, to be fixed')
-        self.assertDictEqual(result, {"voted": {
-            "tmpl": "fh_args['_sort'][0]",
-            "type": "token",
-            "location": "fh_args"
-        }})
+        nlp = utils.load_spacy_model()
+        doc = nlp("James Stewart is the top voted actor.")
+        ents = utils.ner(doc, matcher)
+        self.assertDictEqual(
+            search.search_args(ents, args),
+            {
+                "voted": {
+                    "tmpl": "fh_args['_sort'][0]",
+                    "type": "token",
+                    "location": "fh_args"
+                }
+            }
+        )
 
     def test_search_args_literal(self):
         args = {"_sort": ["-rating"]}
-        doc = utils.nlp("James Stewart has the highest rating.")
-        ents = utils.ner(doc)
-        result = search.search_args(ents, args, lemmatized=False)
-        if not result:
-            raise SkipTest('TODO: test_search_args_literal not working, to be fixed')
-
-        self.assertDictEqual(result, {'rating': {
-            "tmpl": "fh_args['_sort'][0]",
-            "location": "fh_args",
-            "type": "token"
-        }})
+        nlp = utils.load_spacy_model()
+        doc = nlp("James Stewart has the highest rating.")
+        ents = utils.ner(doc, matcher)
+        self.assertDictEqual(search.search_args(ents, args, lemmatized=False),
+                             {'rating': {
+                                 "tmpl": "fh_args['_sort'][0]",
+                                 "location": "fh_args",
+                                 "type": "token"}})
 
     def test_templatize(self):
         fpath = op.join(op.dirname(__file__), "actors.csv")

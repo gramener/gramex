@@ -48,7 +48,6 @@ url:
   textproc-$*:
     pattern: /$YAMLURL/textproc
     handler: FunctionHandler
-    priority: 1000000
     kwargs:
       function: gramex.apps.nlg.webapp.process_template
       xsrf_cookies: false
