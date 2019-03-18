@@ -7,15 +7,6 @@ import:
     YAMLURL: $YAMLURL/languagetool/
 
 url:
-  nlg-login-$*:
-    pattern: /$YAMLURL/login/
-    handler: GoogleAuth
-    kwargs:
-      key: 927738177604-a056ijlrivc6l27tjjuscsq8d16s8mu0.apps.googleusercontent.com
-      secret: RRSGD3qTUM4bMyqByEsi22Kn
-      redirect:
-        query: next
-        url: /$YAMLURL/
   nlg-home-$*:
     pattern: /$YAMLURL/
     handler: FileHandler
@@ -23,7 +14,7 @@ url:
       path: $YAMLPATH/index.html
       template: true
       auth:
-        login_url: /$YAMLURL/login/
+        login_url: /$YAMLURL/auth/google
   nlg-data-selector-$*:
     pattern: /$YAMLURL/initform
     handler: FunctionHandler
@@ -90,7 +81,7 @@ url:
     kwargs:
       function: gramex.apps.nlg.nlgapp.edit_narrative
       auth:
-        login_url: /$YAMLURL/login/
+        login_url: /$YAMLURL/auth/google
       redirect:
         url: /$YAMLURL/
   render-live-template-$*:
