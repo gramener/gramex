@@ -6,7 +6,7 @@ Miscellaneous utilities.
 """
 import os.path as op
 import re
-from configparser import ConfigParser
+from six.moves.configparser import ConfigParser
 
 import requests
 from tornado.template import Template
