@@ -5,6 +5,7 @@
 Miscellaneous utilities.
 """
 import re
+from six.moves.configparser import ConfigParser
 
 import six
 from tornado.template import Template
