@@ -46,6 +46,7 @@
       <div class="col-auto">
         <label for="narrative-name-editor">Narrative Title</label>
       </div>
+<<<<<<< HEAD
       <div class="col-auto">
         <input class="form-control" id="narrative-name-editor" placeholder="Name the Narrative">
       </div>
@@ -96,6 +97,76 @@
                   <option value="" selected hidden>Select Narrative</option>
                 </select>
               </div>
+=======
+
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col">
+          <p id="template-preview" class="text-monospace"></p>
+        </div>
+        <div class="col-sm-3">
+          <button id="download-config-btn" type="button" title="Save Config"
+          class="btn btn-primary">
+              Save Config
+              <i class="fa fa-save"></i>
+          </button>
+          <button id="share-narrative-btn" type="button" title="Share Narrative"
+          class="btn btn-primary">
+              Share
+              <i class="fa fa-share"></i>
+          </button>
+          <div class="alert alert-success alert-dismissable collapse" role="alert">
+            <strong>Saved!</strong>
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="divider"></div>
+    <form id="myform" enctype="multipart/form-data">
+        <div class="form-group">
+            <label for="textbox">Type Something:</label>
+            <textarea class="form-control" id="textbox" name="textbox" class="text-monospace">
+            </textarea>
+        </div>
+        <p>
+            <button id="inspect" type="button" title="Add to Template"
+                class="btn btn-primary">Add to Narrative
+                <i class="fa fa-plus-square"></i>
+            </button>
+        </p>
+    </form>
+    <div class="divider"></div>
+    <div class="formhandler" data-src="nlg/preview/{{ handler.current_user.email }}/{{ dsid }}"></div>
+    <script>
+      $('.formhandler').on('load', renderPreview);
+      $('.formhandler').formhandler();
+    </script>
+    <!--
+    <button id="clear-tmpls" title="Clear Narrative" type="button" class="btn btn-danger">
+        <i class="fa fa-trash"></i>
+    </button>
+    -->
+    <div class="modal fade" id="share-modal" role="dialog">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <textarea class="form-control" id="share-editor-url" class="text-monospace"></textarea>
+                <button id="copy-editor-url" title="Copy To Clipboard"
+                type="button" class="btn btn-primary">
+                    Copy Editor URL
+                    <i class="fa fa-copy"></i>
+                </button>
+                <pre>
+                  <code class="language-html" id="share-narrative-url" class="text-monospace"></code>
+                </pre>
+                <button id="copy-narrative-url" title="Copy To Clipboard"
+                type="button" class="btn btn-primary">
+                    Copy Embed Code
+                    <i class="fa fa-copy"></i>
+                </button>
+>>>>>>> a39baba82f9adb345a39ba2f824e26acf2bb380b
             </div>
             <div class="divider">Or Upload New</div>
             <div class="row">
@@ -120,6 +191,7 @@
   </div>
   <!--GRMFORM HTML END-->
 
+<<<<<<< HEAD
   <div class="container-fluid">
     <div class="row">
       <div class="col">
@@ -198,6 +270,14 @@
               <div class="modal-header"><h6>Template Settings</h6></div>
               <div id="tmpllist" class="modal-body">
                   <div>
+=======
+                      <div class="card shadow mb-3">
+                        <div class="card-body">
+                          <h4 class="card-title">Template Preview</h4>
+                          <p class="card-text" id="tmpl-setting-preview"></p>
+                        </div>
+                      </div>
+>>>>>>> a39baba82f9adb345a39ba2f824e26acf2bb380b
 
                     <div class="card shadow">
                       <div class="card-body">
@@ -214,6 +294,7 @@
                         <input class="form-control"
                         id="tmpl-name-editor" placeholder="Name the template">
                       </div>
+<<<<<<< HEAD
                       <div class="col-sm-4">
                         <button id="tmpl-name-btn" type="button" class="btn btn-primary success">
                             <i class="fa fa-check"></i>
@@ -234,6 +315,19 @@
                         </button>
                       </div>
                     </div>
+=======
+
+                      <div class="custom-control custom-switch mb-3">
+                          <input type="checkbox" class="custom-control-input" id="fh-arg-setter">
+                          <label class="custom-control-label" for="fh-arg-setter">Set current data</label>
+                      </div>
+
+                      <div class="form-group mb-3">
+                        <textarea class="form-control align-center" id="edit-template" name="templateditor"
+                        class="text-monospace" rows="10">
+                        </textarea>
+                      </div>
+>>>>>>> a39baba82f9adb345a39ba2f824e26acf2bb380b
 
                     <div class="custom-control custom-switch">
                         <input type="checkbox" class="custom-control-input" id="fh-arg-setter">
