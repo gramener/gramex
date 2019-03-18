@@ -9,12 +9,10 @@ from itertools import chain
 
 import numpy as np
 import pandas as pd
-from spacy import load
 
 from gramex.apps.nlg import utils
 from gramex.apps.nlg.grammar import find_inflections
 
-default_nlp = load("en_core_web_sm")
 
 SEARCH_PRIORITIES = [
     {'type': 'ne'},  # A match which is a named entity gets the higest priority
@@ -84,7 +82,7 @@ class DFSearchResults(dict):
 class DFSearch(object):
     """Make a dataframe searchable."""
 
-    def __init__(self, df, nlp=default_nlp, **kwargs):
+    def __init__(self, df, nlp=None, **kwargs):
         """Default constrictor.
 
         Parameters
@@ -97,7 +95,10 @@ class DFSearch(object):
         # What do results contain?
         # A map of tokens to list of search results.
         self.results = DFSearchResults()
+        if not nlp:
+            nlp = utils.load_spacy_model()
         self.nlp = nlp
+        self.matcher = kwargs.get('matcher', utils.make_np_matcher(self.nlp))
 
     def search(self, text, colname_fmt="df.columns[{}]",
                cell_fmt="df['{}'].iloc[{}]", **kwargs):
@@ -146,7 +147,7 @@ class DFSearch(object):
             The text to search.
         """
         self.doc = self.nlp(text)
-        self.ents = utils.ner(self.doc)
+        self.ents = utils.ner(self.doc, self.matcher)
         ents = [c.text for c in self.ents]
         for token, ix in self.search_columns(ents, literal=True).items():
             ix = utils.sanitize_indices(self.df.shape, ix, 1)
@@ -305,12 +306,14 @@ def search_args(entities, args, lemmatized=True, fmt="fh_args['{}'][{}]",
             "tmpl": "fh_args['_by'][0]"  # The template that gets this token from fh_args
         }
     """
+    nlp = utils.load_spacy_model()
     args = {k: v for k, v in args.items() if k in argkeys}
     search_res = {}
     ent_tokens = list(chain(*entities))
     for k, v in args.items():
+        v = [t.lstrip('-') for t in v]
         # argtokens = list(chain(*[re.findall(r"\w+", f) for f in v]))
-        argtokens = list(chain(*[default_nlp(c) for c in v]))
+        argtokens = list(chain(*[nlp(c) for c in v]))
         for i, x in enumerate(argtokens):
             for y in ent_tokens:
                 if lemmatized:
@@ -350,6 +353,7 @@ def templatize(text, args, df):
         of search results, cleaned text and token inflections. The webapp uses
         these to construct a tornado template.
     """
+    utils.load_spacy_model()
     clean_text = utils.sanitize_text(text)
     args = utils.sanitize_fh_args(args)
     dfs = DFSearch(df)

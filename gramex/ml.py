@@ -244,8 +244,8 @@ def groupmeans(data, groups, numbers, cutoff=.01, quantile=.95, minsize=None,
                 'number': number,
                 'prob': prob,
                 'gain': sorted_cats.iloc[-1] / means[number] - 1,
-                'biggies': ave.loc[biggies][number],
-                'means': ave[[number, '#']].sort_values(number),
+                'biggies': ave.loc[biggies][number].to_dict(),
+                'means': ave[[number, '#']].sort_values(number).to_dict(),
             })
 
     results = pd.DataFrame(results)

@@ -803,6 +803,29 @@
       "Test pages created by JavaScript": -1
     }
   },
+  "1.53": {
+    "": {
+      "Gramex 1.53 release notes": -1
+    },
+    "g1-features-fuzzy-search": {
+      "g1 features fuzzy search": -1
+    },
+    "gramextest-makes-testing-easier": {
+      "Gramextest makes testing easier": -1
+    },
+    "how-to-upgrade": {
+      "How to upgrade": -1
+    },
+    "natural-language-generation": {
+      "Natural Language Generation": -1
+    },
+    "statistics": {
+      "Statistics": -1
+    },
+    "templates-support-ui-modules": {
+      "Templates support UI modules": -1
+    }
+  },
   "about": {
     "": {}
   },
@@ -1701,14 +1724,26 @@
     "mime-types": {
       "MIME types": -1
     },
+    "raw-sub-templates": {
+      "Raw sub-templates": -1
+    },
     "redirecting-files": {
       "Redirecting files": -1
+    },
+    "sub-templates": {
+      "Sub-templates": -1
+    },
+    "template-syntax": {
+      "Template syntax": -1
     },
     "templates": {
       "Templates": -1
     },
     "transforming-content": {
       "Transforming content": -1
+    },
+    "ui-modules": {
+      "UI Modules": -1
     },
     "xsrf": {
       "XSRF": -1
@@ -2496,23 +2531,86 @@
     "": {
       "Automate tests": -1
     },
-    "browsers": {
-      "Browsers": -1
+    "browsers": {},
+    "check-content-on-page": {
+      "Check content on page": -1
     },
-    "examples": {
-      "Examples": -1
+    "check-html-response": {
+      "Check HTML response": -1
+    },
+    "check-http-headers": {
+      "Check HTTP headers": -1
+    },
+    "check-if-page-has-text": {
+      "Check if page has text": -1
+    },
+    "check-if-page-is-live": {
+      "Check if page is live": -1
+    },
+    "check-json-response": {
+      "Check JSON response": -1
+    },
+    "debugging": {
+      "Debugging": -1
+    },
+    "enable-only-the-browsers-you-need-and-install-the-drivers": {
+      "Enable only the browsers you need, and install the drivers": -1
+    },
+    "examples": {},
+    "execute-code": {
+      "Execute code": -1
+    },
+    "grouping": {
+      "Grouping": -1
+    },
+    "interact-with-the-browser": {
+      "Interact with the browser": -1
+    },
+    "interact-with-the-page": {
+      "Interact with the page": -1
     },
     "matches": {
       "Matches": -1
     },
-    "structure": {
-      "Structure": -1
+    "naming": {
+      "Naming": -1
+    },
+    "printing": {
+      "Printing": -1
+    },
+    "quickstart": {
+      "Quickstart": -1
+    },
+    "run-specific-tests": {
+      "Run specific tests": -1
+    },
+    "running-tests": {
+      "Running tests": -1
+    },
+    "selectors": {
+      "Selectors": -1
+    },
+    "set-up-browsers": {
+      "Set up browsers": -1
+    },
+    "skipping": {
+      "Skipping": -1
+    },
+    "structure": {},
+    "test-reporting": {
+      "Test reporting": -1
+    },
+    "test-specification": {
+      "Test specification": -1
     },
     "ui-test": {
       "UI test": -1
     },
     "url-test": {
       "URL test": -1
+    },
+    "waiting": {
+      "Waiting": -1
     }
   },
   "tips": {
