@@ -1,7 +1,9 @@
 # See http://doc.gitlab.com/ce/ci/yaml/README.html
 
 validate:
-  script: validate v1
+  script:
+    - validate v1
+    - pytest -v
 
 # Deploy application to a server
 # deploy:

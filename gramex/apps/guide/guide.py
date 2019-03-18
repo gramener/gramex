@@ -2,9 +2,10 @@
 Utility functions for gramex-guide
 '''
 
-import yaml
-import markdown
+import cachetools
 import gramex
+import markdown
+import yaml
 
 md = markdown.Markdown(extensions=[
     'markdown.extensions.extra',
@@ -15,14 +16,18 @@ md = markdown.Markdown(extensions=[
     'markdown.extensions.fenced_code',
     'markdown.extensions.toc',
 ], output_format='html5')
+# Create a cache for guide markdown content
+md_cache = cachetools.LRUCache(maxsize=5000000, getsizeof=len)
 
 
 def markdown_template(content, handler):
+    if content not in md_cache:
+        md_cache[content] = md.convert(content)
     kwargs = {
         'classes': '',
         # GUIDE_ROOT has the absolute URL of the Gramex guide
         'GUIDE_ROOT': gramex.config.variables.GUIDE_ROOT,
-        'body': md.convert(content),
+        'body': md_cache[content],
         'title': ''
     }
     for key, val in md.Meta.items():

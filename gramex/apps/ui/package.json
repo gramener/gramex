@@ -13,7 +13,7 @@
     "daterangepicker": "2",
     "dropzone": "5",
     "font-awesome": "*",
-    "g1": "0.15",
+    "g1": "0.16",
     "jquery": "~3",
     "leaflet": "1.2",
     "lodash": "4",
@@ -27,8 +27,8 @@
     "tether-shepherd": "1",
     "topojson": "3",
     "url-search-params": "npm:@ungap/url-search-params@0.1",
-    "vega": "4",
+    "vega": "5",
     "vega-embed": "3",
-    "vega-lite": "3.0.0-rc13"
+    "vega-lite": "3.0.0-rc15"
   }
 }

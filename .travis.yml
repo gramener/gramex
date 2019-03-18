@@ -42,9 +42,7 @@ install:
   - pip install flake8 pep8-naming flake8-gramex flake8-blind-except flake8-print flake8-debugger bandit nose
   # Install node.js and packages using yarn (faster than npm)
   - npm install -g yarn
-  - yarn global add eclint eslint eslint-plugin-html eslint-plugin-template
-  # Install htmllint-cli from github. npm has htmllint-cli@0.0.6 which uses htmllint@0.6.0 which does not support raw-ignore-regex
-  - yarn global add git+https://git@github.com/htmllint/htmllint-cli.git
+  - yarn global add eclint eslint eslint-plugin-html eslint-plugin-template htmllint-cli
   # Set up variables
   - export BRANCH=$TRAVIS_BRANCH
 
