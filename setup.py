@@ -57,7 +57,7 @@ install_requires = [
     'sqlalchemy',                   # REQ: (conda) gramex.data.filter()
     'sqlitedict >= 1.5.0',          # SRV: SQLiteStore
     'textblob',                     # OPT: Gramex Guide TwitterRESTHandler example
-    'tornado >= 4.3',               # REQ: Web server
+    'tornado == 5.1.1',             # REQ: Web server
     'watchdog >= 0.8',              # REQ: Monitor file changes
     'xlrd',                         # REQ: (conda) gramex.data.download()
     'xmljson >= 0.1.5',             # SRV: transforms.badgerfish to convert objects to/from XML
@@ -204,7 +204,6 @@ setup(
         'sphinx_rtd_theme',         # For documentation
         'websocket-client',         # For websocket testing
         'pdfminer.six',             # For CaptureHandler testing
-        'bandit',                   # For security testing
         'cssselect',                # For HTML testing (test_admin.py)
     ],
     cmdclass={

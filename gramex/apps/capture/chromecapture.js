@@ -94,18 +94,18 @@ async function render(q) {
   let margin_keys = ['top', 'right', 'bottom', 'left']
   if (q.margins)
     pdf_options['margin'] = _.zipObject(margin_keys, q.margins.split(','))
+  function template_wrap(s) {
+    return `<div style="
+      margin-left:${pdf_options.margin.left || '1cm'};
+      margin-right:${pdf_options.margin.right || '1cm'};
+      zoom:0.75;
+      font-size:10px;
+      display:flex;
+      justify-content:space-between;
+      width:100%">${s}</div>`
+  }
   if (q.header || q.headerTemplate || q.footer || q.footerTemplate) {
     // For zoom: TODO: https://stackoverflow.com/a/51461829/100904
-    function template_wrap(s) {
-      return `<div style="
-        margin-left:${pdf_options.margin.left || '1cm'};
-        margin-right:${pdf_options.margin.right || '1cm'};
-        zoom:0.75;
-        font-size:10px;
-        display:flex;
-        justify-content:space-between;
-        width:100%">${s}</div>`
-    }
     // If displayHeaderFooter, headerTemplate and footerTemplate MUST BOTH be present
     pdf_options.displayHeaderFooter = true
     pdf_options.headerTemplate = template_wrap(q.headerTemplate || templatize(q.header || ''))

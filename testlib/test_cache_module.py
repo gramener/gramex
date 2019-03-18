@@ -13,6 +13,7 @@ import gramex.cache
 import pandas as pd
 import sqlalchemy as sa
 from lxml import etree
+from gramex.cache import hashfn
 from gramex.config import variables, str_utf8
 from six import string_types
 from markdown import markdown
@@ -292,7 +293,7 @@ class TestOpen(unittest.TestCase):
         cache = {}
         kwargs = {'_reload_status': True, '_cache': cache}
         result, reloaded = gramex.cache.open(path, 'csv', **kwargs)
-        cache_key = (path, 'csv', id(None), frozenset())
+        cache_key = (path, 'csv', hashfn(None), frozenset())
         self.assertIn(cache_key, cache)
 
         # Initially, the file is loaded
@@ -309,7 +310,7 @@ class TestOpen(unittest.TestCase):
 
         # Additional kwargs are part of the cache key
         result, reloaded = gramex.cache.open(path, encoding='utf-8', **kwargs)
-        cache_key = (path, None, id(None), frozenset([('encoding', 'utf-8')]))
+        cache_key = (path, None, hashfn(None), frozenset([('encoding', 'utf-8')]))
         self.assertIn(cache_key, cache)
         eq_(reloaded, True)
         result, reloaded = gramex.cache.open(path, encoding='utf-8', **kwargs)
@@ -328,7 +329,7 @@ class TestOpen(unittest.TestCase):
             parse_dates={'date': [0, 1, 2]},
             dtype={'a': int, 'b': float, 'c': int},
             **kwargs)
-        cache_key = (path, None, id(None), frozenset([
+        cache_key = (path, None, hashfn(None), frozenset([
             ('header', 0),                              # hashable values hashed as-is
             ('parse_dates', '{"date":[0,1,2]}'),        # converts to compact json if possible
             ('dtype', None),                            # gives up with None otherwise
@@ -340,7 +341,7 @@ class TestOpen(unittest.TestCase):
         path = os.path.join(cache_folder, 'data.csv')
         new_cache = {}
         old_cache = gramex.cache._OPEN_CACHE
-        cache_key = (path, 'csv', id(None), frozenset())
+        cache_key = (path, 'csv', hashfn(None), frozenset())
 
         # Ensure that the path is cached
         gramex.cache.open(path, 'csv')
@@ -396,7 +397,7 @@ class TestOpen(unittest.TestCase):
 
         data = gramex.cache.open(path, 'csv', transform=len, _cache=cache)
         eq_(data, len(pd.read_csv(path)))                   # noqa - ignore encoding
-        cache_key = (path, 'csv', id(len), frozenset([]))
+        cache_key = (path, 'csv', hashfn(len), frozenset([]))
         self.assertIn(cache_key, cache)
 
         def transform2(d):
@@ -404,14 +405,22 @@ class TestOpen(unittest.TestCase):
 
         data = gramex.cache.open(path, 'csv', transform=transform2, _cache=cache)
         eq_(data, pd.read_csv(path)['a'].sum())             # noqa - ignore encoding
-        cache_key = (path, 'csv', id(transform2), frozenset([]))
+        cache_key = (path, 'csv', hashfn(transform2), frozenset([]))
         self.assertIn(cache_key, cache)
 
         # Check that non-callable transforms are ignored but used as cache key
         data = gramex.cache.open(path, 'csv', transform='ignore', _cache=cache)
         assert_frame_equal(data, pd.read_csv(path))         # noqa - ignore encoding
-        cache_key = (path, 'csv', id('ignore'), frozenset([]))
+        cache_key = (path, 'csv', hashfn('ignore'), frozenset([]))
         self.assertIn(cache_key, cache)
+
+        # Check that temporary caches are hashed by function
+        v = 1
+        data = gramex.cache.open(path, 'csv', lambda x: v, _cache=cache)
+        eq_(data, 1)
+        v = 2
+        data = gramex.cache.open(path, 'csv', lambda x: v, _cache=cache)
+        eq_(data, 2)
 
 
 class TestSqliteCacheQuery(unittest.TestCase):

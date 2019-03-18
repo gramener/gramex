@@ -4,7 +4,7 @@ import unittest
 
 import pandas as pd
 
-from gramex.apps.nlg import grammar as G
+from gramex.apps.nlg import grammar as g
 from gramex.apps.nlg import search, utils
 
 nlp = utils.load_spacy_model()
@@ -57,7 +57,7 @@ class TestDFSearch(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         fpath = op.join(op.dirname(__file__), "actors.csv")
-        cls.df = pd.read_csv(fpath)
+        cls.df = pd.read_csv(fpath, encoding='utf-8')
         cls.dfs = search.DFSearch(cls.df)
 
     def test__search_array(self):
@@ -150,7 +150,7 @@ class TestSearch(unittest.TestCase):
 
     def test_templatize(self):
         fpath = op.join(op.dirname(__file__), "actors.csv")
-        df = pd.read_csv(fpath)
+        df = pd.read_csv(fpath, encoding='utf-8')
         df.sort_values("votes", ascending=False, inplace=True)
         df.reset_index(inplace=True, drop=True)
 
@@ -226,34 +226,34 @@ class TestSearch(unittest.TestCase):
 class TestGrammar(unittest.TestCase):
 
     def test_is_plural(self):
-        self.assertTrue(G.is_plural_noun("languages"))
-        # self.assertTrue(G.is_plural("geese"))
-        self.assertTrue(G.is_plural_noun("bacteria"))
-        self.assertTrue(G.is_plural_noun("Office supplies"))
+        self.assertTrue(g.is_plural_noun("languages"))
+        # self.assertTrue(g.is_plural("geese"))
+        self.assertTrue(g.is_plural_noun("bacteria"))
+        self.assertTrue(g.is_plural_noun("Office supplies"))
 
     def test_concatenate_items(self):
-        self.assertEqual(G.concatenate_items("abc"), "a, b and c")
-        self.assertEqual(G.concatenate_items([1, 2, 3], sep=""), "123")
-        self.assertFalse(G.concatenate_items([]))
+        self.assertEqual(g.concatenate_items("abc"), "a, b and c")
+        self.assertEqual(g.concatenate_items([1, 2, 3], sep=""), "123")
+        self.assertFalse(g.concatenate_items([]))
 
     def test_pluralize(self):
-        self.assertEqual(G.plural("language"), "languages")
-        self.assertEqual(G.plural("languages"), "languages")
-        self.assertEqual(G.plural("bacterium"), "bacteria")
-        self.assertEqual(G.plural("goose"), "geese")
+        self.assertEqual(g.plural("language"), "languages")
+        self.assertEqual(g.plural("languages"), "languages")
+        self.assertEqual(g.plural("bacterium"), "bacteria")
+        self.assertEqual(g.plural("goose"), "geese")
 
     def test_singular(self):
-        self.assertEqual(G.singular("languages"), "language")
-        self.assertEqual(G.singular("language"), "language")
-        self.assertEqual(G.singular("bacteria"), "bacterium")
-        # self.assertEqual(G.singular("geese"), "goose")
+        self.assertEqual(g.singular("languages"), "language")
+        self.assertEqual(g.singular("language"), "language")
+        self.assertEqual(g.singular("bacteria"), "bacterium")
+        # self.assertEqual(g.singular("geese"), "goose")
 
     def test_pluralize_by(self):
-        self.assertEqual(G.pluralize_by("language", [1, 2]), "languages")
-        self.assertEqual(G.pluralize_by("languages", [1]), "language")
-        self.assertEqual(G.pluralize_by("language", []), "language")
-        self.assertEqual(G.pluralize_by("language", 1), "language")
-        self.assertEqual(G.pluralize_by("language", 2), "languages")
+        self.assertEqual(g.pluralize_by("language", [1, 2]), "languages")
+        self.assertEqual(g.pluralize_by("languages", [1]), "language")
+        self.assertEqual(g.pluralize_by("language", []), "language")
+        self.assertEqual(g.pluralize_by("language", 1), "language")
+        self.assertEqual(g.pluralize_by("language", 2), "languages")
 
 
 if __name__ == '__main__':
