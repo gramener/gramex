@@ -204,6 +204,7 @@ def add_html_styling(template, style):
         spanstyle = "background-color:#c8f442"
     for m in re.finditer(pattern, template):
         token = m.group()
-        repl = f'<span style="{spanstyle}">{token}</span>'
+        repl = '<span style="{ss}">{token}</span>'.format(
+            ss=spanstyle, token=token)
         template = re.sub(re.escape(token), repl, template, 1)
-    return f'<p>{template}</p>'
+    return '<p>{template}</p>'.format(template=template)
