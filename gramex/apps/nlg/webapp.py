@@ -8,7 +8,7 @@ with gramex.
 import json
 import os
 import os.path as op
-from urllib import parse
+from six.moves.urllib import parse
 
 import pandas as pd
 from tornado.template import Template
