@@ -123,7 +123,7 @@
   <div class="container-fluid">
     <div class="row">
       <div class="col">
-        <p id="template-preview" style="font-family:monospace"></p>
+        <p id="template-preview" class="text-monospace"></p>
       </div>
       <div class="col-sm-3">
         <button id="download-config-btn" type="button" title="Save Config"
@@ -150,7 +150,7 @@
       <div class="form-group">
           <label for="textbox">Type Something:</label>
           <textarea class="form-control" id="textbox" name="textbox"
-          style="font-family:monospace"></textarea>
+          class="text-monospace"></textarea>
       </div>
       <p>
           <button id="inspect" type="button" title="Add to Template"
@@ -173,7 +173,7 @@
   <div class="modal fade" id="share-modal" role="dialog">
       <div class="modal-dialog modal-lg">
           <div class="modal-content">
-              <textarea class="form-control" id="share-editor-url" style="font-family: monospace"></textarea>
+              <textarea class="form-control" id="share-editor-url" class="text- monospace"></textarea>
               <button id="copy-editor-url" title="Copy To Clipboard"
               type="button" class="btn btn-primary">
                   Copy Editor URL
@@ -181,7 +181,7 @@
               </button>
               <pre>
                 <code class="language-html" id="share-narrative-url"
-                style="font-family: monospace"></code>
+                class="text- monospace"></code>
               </pre>
               <button id="copy-narrative-url" title="Copy To Clipboard"
               type="button" class="btn btn-primary">
@@ -199,13 +199,12 @@
               <div id="tmpllist" class="modal-body">
                   <div>
 
-                    <div class="card shadow">
+                    <div class="card shadow mb-3">
                       <div class="card-body">
                         <h4 class="card-title">Template Preview</h4>
                         <p class="card-text" id="tmpl-setting-preview"></p>
                       </div>
                     </div>
-                    <br>
 
                     <div class="form-group row">
                       <label class="col-sm-4 col-form-label"
@@ -235,20 +234,18 @@
                       </div>
                     </div>
 
-                    <div class="custom-control custom-switch">
+                    <div class="custom-control custom-switch mb-3">
                         <input type="checkbox" class="custom-control-input" id="fh-arg-setter">
                         <label class="custom-control-label" for="fh-arg-setter">Set current data</label>
                     </div>
-                    <br>
 
                     <div class="form-group">
                       <textarea class="form-control align-center" id="edit-template" name="templateditor"
-                      style="font-family:monospace" rows="10"></textarea>
+                      class="text-monospace" rows="10"></textarea>
                     </div>
                     <!-- <textarea id="edit-template" class="align-center"
                     name="templateditor"
-                    style="font-family:monospace; font-size:10pt; width: 50em"></textarea> -->
-                    <br>
+                    class="text-monospace; font-size:10pt; width: 50em"></textarea> -->
 
                     <table class="table table-striped table-sm">
                         <thead>

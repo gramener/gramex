@@ -1,4 +1,4 @@
-/* globals currentEditIndex, grammarOptions, templates, args, df, currentEventHandlers */
+/* globals currentEditIndex, grammarOptions, templates, args, df, currentEventHandlers, nlg_base */
 /* exported addToNarrative, downloadConfig, setInitialConfig, uploadConfig, checkTemplate, saveTemplate, addCondition, addName, changeFHSetter, shareNarrative, copyToClipboard */
 /* eslint-disable no-global-assign */
 var narrative_name, dataset_name
@@ -341,15 +341,16 @@ class Token {
 
 
 function addToNarrative() {
-    // pick text from the "Type something" box, templatize, and add to narrative
-    $.ajax({
-        type: "POST",
-        url: nlg_base + "textproc",
-        data: {
-          "args": JSON.stringify(args), "data": JSON.stringify(df),
-          "text": JSON.stringify([document.getElementById("textbox").value]) },
-        success: addToTemplates
-    })
+  // pick text from the "Type something" box, templatize, and add to narrative
+  $.ajax({
+    type: 'POST',
+    url: nlg_base + 'textproc',
+    data: {
+      'args': JSON.stringify(args), 'data': JSON.stringify(df),
+      'text': JSON.stringify([document.getElementById('textbox').value])
+    },
+    success: addToTemplates
+  })
 }
 
 function addToTemplates(payload) {
@@ -394,15 +395,16 @@ function renderPreview(fh) {
 }
 
 function refreshTemplates() {
-    var tmpls = templates.map(x => x.template)
-    $.ajax({
-      type: "POST",
-      url: nlg_base + "render-template",
-      data: {
-        "args": JSON.stringify(args), "data": JSON.stringify(df),
-        "template": JSON.stringify(tmpls) },
-      success: updateTemplates
-    })
+  var tmpls = templates.map(x => x.template)
+  $.ajax({
+    type: 'POST',
+    url: nlg_base + 'render-template',
+    data: {
+      'args': JSON.stringify(args), 'data': JSON.stringify(df),
+      'template': JSON.stringify(tmpls)
+    },
+    success: updateTemplates
+  })
 }
 
 function updateTemplates(payload) {
