@@ -9,10 +9,10 @@ from itertools import chain
 
 import numpy as np
 import pandas as pd
+import six
 
 from gramex.apps.nlg import utils
 from gramex.apps.nlg.grammar import find_inflections
-
 
 SEARCH_PRIORITIES = [
     {'type': 'ne'},  # A match which is a named entity gets the higest priority
@@ -43,7 +43,7 @@ def _sort_search_results(items, priorities=SEARCH_PRIORITIES):
         Prioritized search results - for each {token: search_matches} pair, sort
         search_matches such that a higher priority search result is enabled.
     """
-    match_ix = [[p.items() <= item.items() for p in priorities] for item in items]
+    match_ix = [[six.viewitems(p) <= six.viewitems(item) for p in priorities] for item in items]
     min_match = [m.index(True) for m in match_ix]
     items[min_match.index(min(min_match))]['enabled'] = True
     return items
@@ -73,7 +73,7 @@ class DFSearchResults(dict):
         # unoverlap the keys
         to_remove = []
         for k in self:
-            if any([k in c for c in self.keys() - {k}]):
+            if any([k in c for c in six.viewkeys(self) - {k}]):
                 to_remove.append(k)
         for i in to_remove:
             del self[i]
@@ -234,17 +234,20 @@ class DFSearch(object):
             # Expect text to be a list of strings, no preprocessing on anything.
             if not isinstance(text, list):
                 raise TypeError('text is expected to be list of strs when literal=True.')
-            if not set([type(c) for c in text]).issubset({str, float, int}):
+            valid_types = {float, int, six.text_type}
+            if not set([type(c) for c in text]).issubset(valid_types):
                 raise TypeError('text can contain only strings or numbers when literal=True.')
             tokens = {c: str(c) for c in text}
         elif lemmatize:
             tokens = {c.lemma_: c.text for c in self.nlp(text)}
             if array.ndim == 1:
+                array = [c if isinstance(c, six.text_type) else six.u(c) for c in array]
                 array = [self.nlp(c) for c in array]
                 array = pd.Series([token.lemma_ for doc in array for token in doc])
             else:
                 for col in array.columns[array.dtypes == np.dtype('O')]:
-                    s = [self.nlp(c) for c in array[col]]
+                    s = [c if isinstance(c, six.text_type) else six.u(c) for c in array[col]]
+                    s = [self.nlp(c) for c in s]
                     try:
                         array[col] = [token.lemma_ for doc in s for token in doc]
                     except ValueError:
@@ -353,6 +356,8 @@ def templatize(text, args, df):
         of search results, cleaned text and token inflections. The webapp uses
         these to construct a tornado template.
     """
+    text = six.u(text)
+    args = {six.u(k): [six.u(c) for c in v] for k, v in args.items()}
     utils.load_spacy_model()
     clean_text = utils.sanitize_text(text)
     args = utils.sanitize_fh_args(args)

@@ -6,9 +6,10 @@ Miscellaneous utilities.
 """
 import os.path as op
 import re
-from six.moves.configparser import ConfigParser
 
 import requests
+import six
+from six.moves.configparser import ConfigParser
 from tornado.template import Template
 
 from gramex.data import filter as grmfilter  # NOQA: F401
@@ -131,7 +132,7 @@ def unoverlap(tokens):
     """From a set of tokens, remove all tokens that are contained within
     others."""
     textmap = {c.text: c for c in tokens}
-    text_tokens = textmap.keys()
+    text_tokens = six.viewkeys(textmap)
     newtokens = []
     for token in text_tokens:
         if not is_overlap(textmap[token], text_tokens - {token}):
