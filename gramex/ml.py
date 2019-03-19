@@ -400,13 +400,32 @@ def languagetool(handler, *args, **kwargs):
         zipfile.ZipFile(stream).extractall(kwargs['LT_TARGET'])
         _languagetool['installed'] = True
 
-    # Process request via languagetool
+    if not handler:
+        lang = kwargs.get('lang', 'en-us')
+        q = kwargs.get('q', '')
+    else:
+        lang = handler.get_argument('lang', 'en-us')
+        q = handler.get_argument('q', '')
+    result = yield languagetoolrequest(q, lang, **kwargs)
+    raise Return(result)
+
+
+@coroutine
+def languagetoolrequest(text, lang='en-us', **kwargs):
+    """Check grammar by making a request to the LanguageTool server.
+
+    Parameters
+    ----------
+    text : str
+        Text to check
+    lang : str, optional
+        Language. See a list of supported languages here: https://languagetool.org/api/v2/languages
+    """
     client = AsyncHTTPClient()
-    tries = int(handler.get_argument('tries', 3))
-    url = kwargs['LT_URL'].format(
-        port=kwargs['LT_PORT'], language=handler.get_argument('language', 'en-us'),
-        q=six.moves.urllib_parse.quote(handler.get_argument('q', ''))
-    )
+    url = kwargs['LT_URL'].format(**kwargs)
+    query = six.moves.urllib_parse.urlencode({'language': lang, 'text': text})
+    url = url + query
+    tries = 1  # See: https://github.com/gramener/gramex/pull/125#discussion_r266200480
     while tries:
         try:
             result = yield client.fetch(url)
@@ -417,16 +436,18 @@ def languagetool(handler, *args, **kwargs):
             cmd = [p.format(**kwargs) for p in kwargs['LT_CMD']]
             app_log.info('Starting: %s', ' '.join(cmd))
             if 'proc' not in _languagetool:
-                _languagetool['proc'] = daemon(cmd, cwd=kwargs['LT_CWD'], first_line=lambda: True,
-                                               stream=True)
-                import time
-                time.sleep(5)
+                import re
+                _languagetool['proc'] = daemon(
+                    cmd, cwd=kwargs['LT_CWD'],
+                    first_line=re.compile(r"Server started\s*$"),
+                    stream=True, timeout=5,
+                    buffer_size=512
+                )
             try:
                 result = yield client.fetch(url)
                 tries = 0
             except ConnectionRefusedError:
                 tries -= 1
-
     raise Return(result.body)
 
 

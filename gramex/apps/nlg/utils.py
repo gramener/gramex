@@ -6,7 +6,6 @@ Miscellaneous utilities.
 """
 import re
 
-import requests
 from tornado.template import Template
 
 from gramex.data import filter as grmfilter  # NOQA: F401
@@ -196,16 +195,6 @@ def sanitize_fh_args(args, func=join_words):
     for k, v in args.items():
         args[k] = [join_words(x) for x in v]
     return args
-
-
-def check_grammar(text):
-    url = 'https://localhost:9988/languagetool/grammar-check?q='
-    resp = requests.get(url + text)
-    if resp.status_code == requests.codes.ok:
-        resp = resp.json()['matches']
-    else:
-        resp = []
-    return resp
 
 
 def add_html_styling(template, style):

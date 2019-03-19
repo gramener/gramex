@@ -17,6 +17,7 @@ from gramex.config import variables
 from gramex.apps.nlg import grammar
 from gramex.apps.nlg import templatize
 from gramex.apps.nlg import utils
+from gramex.ml import languagetoolrequest
 
 DATAFILE_EXTS = {'.csv', '.xls', '.xlsx', '.tsv'}
 
@@ -78,7 +79,7 @@ def render_template(handler):
         rendered = Template(t).generate(
             orgdf=orgdf, df=df, fh_args=fh_args, G=grammar, U=utils).decode('utf8')
         rendered = rendered.replace('-', '')
-        grmerr = utils.check_grammar(rendered)
+        grmerr = languagetoolrequest(rendered)
         resp.append({'text': rendered, 'grmerr': grmerr})
     return json.dumps(resp)
 
@@ -95,7 +96,7 @@ def process_template(handler):
         args = {}
     resp = []
     for t in text:
-        grammar_errors = utils.check_grammar(t)
+        grammar_errors = languagetoolrequest(t)
         replacements, t, infl = templatize(t, args.copy(), df)
         resp.append({
             "text": t, "tokenmap": replacements, 'inflections': infl,
