@@ -34,10 +34,8 @@ class TestUtils(unittest.TestCase):
         self.assertSetEqual(
             set([c.text for c in utils.unoverlap(ents)]),
             {
-                "Donald Trump",
                 "\'The Apprentice\'",
-                "US President",
-                "President Donald",
+                "US President Donald Trump",
                 "entrepreneur",
                 "reality show"
             },
