@@ -244,7 +244,7 @@ class TestGrammar(unittest.TestCase):
         self.assertEqual(g.singular(u"languages"), "language")
         self.assertEqual(g.singular(u"language"), "language")
         self.assertEqual(g.singular(u"bacteria"), "bacterium")
-        # self.assertEqual(g.singulaur("geese"), "goose"
+        # self.assertEqual(g.singular("geese"), "goose"
 
     def test_pluralize_by(self):
         self.assertEqual(g.pluralize_by(u"language", [1, 2]), "languages")
