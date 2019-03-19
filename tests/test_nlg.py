@@ -26,7 +26,7 @@ class TestUtils(unittest.TestCase):
     def test_ner(self):
         nlp = utils.load_spacy_model()
         sent = nlp(
-            """
+            u"""
             US President Donald Trump is an entrepreneur and
             used to run his own reality show named 'The Apprentice'."""
         )
@@ -34,10 +34,8 @@ class TestUtils(unittest.TestCase):
         self.assertSetEqual(
             set([c.text for c in utils.unoverlap(ents)]),
             {
-                "Donald Trump",
                 "\'The Apprentice\'",
-                "US President",
-                "President Donald",
+                "US President Donald Trump",
                 "entrepreneur",
                 "reality show"
             },
@@ -61,14 +59,14 @@ class TestDFSearch(unittest.TestCase):
         cls.dfs = search.DFSearch(cls.df)
 
     def test__search_array(self):
-        sent = "The votes, names and ratings of artists."
+        sent = u"The votes, names and ratings of artists."
         res = self.dfs._search_array(sent, self.df.columns, lemmatize=False)
         self.assertDictEqual(res, {'votes': 3})
 
         res = self.dfs._search_array(sent, self.df.columns)
         self.assertDictEqual(res, {'votes': 3, 'names': 1, 'ratings': 2})
 
-        sent = "The votes, NAME and ratings of artists."
+        sent = u"The votes, NAME and ratings of artists."
         res = self.dfs._search_array(sent, self.df.columns,
                                      lemmatize=False)
         self.assertDictEqual(res, {'votes': 3, 'NAME': 1})
@@ -83,7 +81,7 @@ class TestDFSearch(unittest.TestCase):
                 "song": [20, 5, 15],
             }
         )
-        sent = "Kishore Kumar sang the most songs with Lata Mangeshkar."
+        sent = u"Kishore Kumar sang the most songs with Lata Mangeshkar."
         dfs = search.DFSearch(df)
         self.assertDictEqual(
             dfs.search(sent, lemmatize=True),
@@ -97,7 +95,7 @@ class TestDFSearch(unittest.TestCase):
         self.df.sort_values("votes", ascending=False, inplace=True)
         self.df.reset_index(inplace=True, drop=True)
         dfs = search.DFSearch(self.df)
-        sent = "Spencer Tracy is the top voted actor."
+        sent = u"Spencer Tracy is the top voted actor."
         self.assertDictEqual(
             dfs.search(sent),
             {
@@ -122,9 +120,9 @@ class TestSearch(unittest.TestCase):
         self.assertDictEqual(x, {'hello': ['world', 'underworld']})
 
     def test_search_args(self):
-        args = {"_sort": ["-votes"]}
+        args = {u"_sort": [u"-votes"]}
         nlp = utils.load_spacy_model()
-        doc = nlp("James Stewart is the top voted actor.")
+        doc = nlp(u"James Stewart is the top voted actor.")
         ents = utils.ner(doc, matcher)
         self.assertDictEqual(
             search.search_args(ents, args),
@@ -138,9 +136,9 @@ class TestSearch(unittest.TestCase):
         )
 
     def test_search_args_literal(self):
-        args = {"_sort": ["-rating"]}
+        args = {u"_sort": [u"-rating"]}
         nlp = utils.load_spacy_model()
-        doc = nlp("James Stewart has the highest rating.")
+        doc = nlp(u"James Stewart has the highest rating.")
         ents = utils.ner(doc, matcher)
         self.assertDictEqual(search.search_args(ents, args, lemmatized=False),
                              {'rating': {
@@ -186,7 +184,6 @@ class TestSearch(unittest.TestCase):
         )
 
     def test_search_sort(self):
-
         results = [
             {'tmpl': 'df.loc[0, "name"]', 'type': 'ne', 'location': 'cell'},
             {'tmpl': 'df.columns[0]', 'type': 'token', 'location': 'colname'},
@@ -226,10 +223,9 @@ class TestSearch(unittest.TestCase):
 class TestGrammar(unittest.TestCase):
 
     def test_is_plural(self):
-        self.assertTrue(g.is_plural_noun("languages"))
-        # self.assertTrue(g.is_plural("geese"))
-        self.assertTrue(g.is_plural_noun("bacteria"))
-        self.assertTrue(g.is_plural_noun("Office supplies"))
+        self.assertTrue(g.is_plural_noun(u"languages"))
+        self.assertTrue(g.is_plural_noun(u"bacteria"))
+        self.assertTrue(g.is_plural_noun(u"Office supplies"))
 
     def test_concatenate_items(self):
         self.assertEqual(g.concatenate_items("abc"), "a, b and c")
@@ -237,23 +233,23 @@ class TestGrammar(unittest.TestCase):
         self.assertFalse(g.concatenate_items([]))
 
     def test_pluralize(self):
-        self.assertEqual(g.plural("language"), "languages")
-        self.assertEqual(g.plural("languages"), "languages")
-        self.assertEqual(g.plural("bacterium"), "bacteria")
-        self.assertEqual(g.plural("goose"), "geese")
+        self.assertEqual(g.plural(u"language"), "languages")
+        self.assertEqual(g.plural(u"languages"), "languages")
+        self.assertEqual(g.plural(u"bacterium"), "bacteria")
+        self.assertEqual(g.plural(u"goose"), "geese")
 
     def test_singular(self):
-        self.assertEqual(g.singular("languages"), "language")
-        self.assertEqual(g.singular("language"), "language")
-        self.assertEqual(g.singular("bacteria"), "bacterium")
-        # self.assertEqual(g.singular("geese"), "goose")
+        self.assertEqual(g.singular(u"languages"), "language")
+        self.assertEqual(g.singular(u"language"), "language")
+        self.assertEqual(g.singular(u"bacteria"), "bacterium")
+        # self.assertEqual(g.singular("geese"), "goose"
 
     def test_pluralize_by(self):
-        self.assertEqual(g.pluralize_by("language", [1, 2]), "languages")
-        self.assertEqual(g.pluralize_by("languages", [1]), "language")
-        self.assertEqual(g.pluralize_by("language", []), "language")
-        self.assertEqual(g.pluralize_by("language", 1), "language")
-        self.assertEqual(g.pluralize_by("language", 2), "languages")
+        self.assertEqual(g.pluralize_by(u"language", [1, 2]), "languages")
+        self.assertEqual(g.pluralize_by(u"languages", [1]), "language")
+        self.assertEqual(g.pluralize_by(u"language", []), "language")
+        self.assertEqual(g.pluralize_by(u"language", 1), "language")
+        self.assertEqual(g.pluralize_by(u"language", 2), "languages")
 
 
 if __name__ == '__main__':
