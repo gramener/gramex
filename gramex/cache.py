@@ -473,6 +473,9 @@ def reload_module(*modules):
     for module in modules:
         name = getattr(module, '__name__', None)
         path = getattr(module, '__file__', None)
+        # sys.__file__ does not exist, but don't raise a warning. You can't reload it
+        if name in {'sys'}:
+            continue
         if name is None or path is None or not os.path.exists(path):
             app_log.warning('Path for module %s is %s: not found', name, path)
             continue
