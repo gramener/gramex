@@ -9,6 +9,7 @@ class Template {
     previewHTML = '', grmerr = null, name = ''
   ) {
     this.source_text = text
+    this.checkGrammar()
     this.tokenmap = {}
     this.inflections = inflections
     for (let [token, tkobj] of Object.entries(tokenmap)) {
@@ -30,6 +31,20 @@ class Template {
     this.name = name
   }
 
+  checkGrammar() {
+    let self = this
+    $.ajax(
+      {
+        url: 'nlg/languagetool/?lang=en-us&q=' + encodeURIComponent(`${this.source_text}`),
+        type: 'GET',
+        success: function (e) {
+          self.grmerr = e.matches
+          self.highlight()
+        }
+      }
+    )
+  }
+
   makeTemplate() {
     var sent = this.source_text
     for (let [tk, tokenobj] of Object.entries(this.tokenmap)) {
@@ -47,7 +62,7 @@ class Template {
       sent = addFHArgsSetter(sent, this.fh_args)
     }
     this.template = sent
-    this.highlight()
+    // this.highlight()
     document.getElementById('edit-template').value = this.template
   }
 
@@ -358,7 +373,8 @@ function addToTemplates(payload) {
   var template = new Template(
     payload.text, payload.tokenmap, payload.inflections, payload.fh_args)
   template.setFHArgs = payload.setFHArgs
-  template.grmerr = payload.grmerr
+  // template.grmerr = payload.grmerr
+  // checkGrammar(template)
   template.makeTemplate()
   templates.push(template)
   renderPreview(null)
