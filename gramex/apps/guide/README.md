@@ -51,6 +51,7 @@ prefix: Guide
 - [Writing handlers](handlers/)
 - [Debug Gramex](debug/)
 - [Mapviewer](mapviewer/)
+- [LanguageTool](languagetool/)
 - [Release Notes](release/)
 - [Tutorials](tutorials/)
 - [Python API reference](https://learn.gramener.com/gramex/gramex.html)
