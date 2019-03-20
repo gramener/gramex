@@ -1,8 +1,16 @@
 # Config file for automatic testing at travis-ci.org
 
-# Run in Python 3 only. Drop Python 2 testing
 language: python
-python: '3.7'
+
+matrix:
+  include:
+    - python: '2.7'
+      env: CONDA=2
+    - python: '3.7'
+      env: CONDA=3
+python:
+  - '2.7'
+  - '3.7'
 
 # Python 3.7 works only in Xenial with sudo
 # https://github.com/travis-ci/travis-ci/issues/9069#issuecomment-425720905
@@ -31,7 +39,7 @@ cache:
 
 install:
   # Install miniconda
-  - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O $HOME/miniconda.sh
+  - wget https://repo.continuum.io/miniconda/Miniconda$CONDA-latest-Linux-x86_64.sh -O $HOME/miniconda.sh
   - bash $HOME/miniconda.sh -b -u -p $HOME/miniconda
   - export PATH="$HOME/miniconda/bin:$PATH"
   - hash -r
