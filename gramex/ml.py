@@ -3,7 +3,8 @@ import six
 import inspect
 import threading
 import pandas as pd
-from tornado.gen import coroutine, Return
+import json
+from tornado.gen import coroutine, Return, sleep
 from tornado.httpclient import AsyncHTTPClient
 from gramex.config import locate, app_log, merge, variables
 from sklearn.externals import joblib
@@ -407,6 +408,24 @@ def languagetool(handler, *args, **kwargs):
         lang = handler.get_argument('lang', 'en-us')
         q = handler.get_argument('q', '')
     result = yield languagetoolrequest(q, lang, **kwargs)
+    errors = json.loads(result.decode('utf8'))['matches']
+    if errors:
+        result = {
+            "errors": errors,
+        }
+        corrected = list(q)
+        d_offset = 0  # difference in the offset caused by the correction
+        for error in errors:
+            # only accept the first replacement for an error
+            correction = error['replacements'][0]['value']
+            offset, limit = error['offset'], error['length']
+            offset += d_offset
+            del corrected[offset:(offset + limit)]
+            for i, char in enumerate(correction):
+                corrected.insert(offset + i, char)
+            d_offset += len(correction) - limit
+        result['correction'] = "".join(corrected)
+        result = json.dumps(result)
     raise Return(result)
 
 
@@ -425,7 +444,7 @@ def languagetoolrequest(text, lang='en-us', **kwargs):
     url = kwargs['LT_URL'].format(**kwargs)
     query = six.moves.urllib_parse.urlencode({'language': lang, 'text': text})
     url = url + query
-    tries = 1  # See: https://github.com/gramener/gramex/pull/125#discussion_r266200480
+    tries = 2  # See: https://github.com/gramener/gramex/pull/125#discussion_r266200480
     while tries:
         try:
             result = yield client.fetch(url)
@@ -447,6 +466,7 @@ def languagetoolrequest(text, lang='en-us', **kwargs):
                 result = yield client.fetch(url)
                 tries = 0
             except ConnectionRefusedError:
+                yield sleep(1)
                 tries -= 1
     raise Return(result.body)
 
