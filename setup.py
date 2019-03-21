@@ -54,6 +54,7 @@ install_requires = [
     'setuptools >= 16.0',           # REQ: 16.0 has good error message support
     'shutilwhich >= 1.1.0',         # REQ: shutil.which backport
     'six',                          # REQ: Python 3 compatibility
+    'spacy==2.0.18',                # REQ: NLG
     'sqlalchemy',                   # REQ: (conda) gramex.data.filter()
     'sqlitedict >= 1.5.0',          # SRV: SQLiteStore
     'textblob',                     # OPT: Gramex Guide TwitterRESTHandler example

@@ -3,6 +3,7 @@ import re
 import unittest
 
 import pandas as pd
+import six
 
 from gramex.apps.nlg import grammar as g
 from gramex.apps.nlg import search, utils
@@ -23,6 +24,9 @@ class TestUtils(unittest.TestCase):
         self.assertDictEqual(utils.sanitize_fh_args({'_sort': ['-Office supplies']}),
                              {'_sort': ['Office supplies']})
 
+    # English models are pretty broken on Python 2 as of this commit
+    # See https://github.com/explosion/spaCy/issues/3356
+    @unittest.skipIf(six.PY2, "spaCy 2.1 tokenizers broken on Python2.")
     def test_ner(self):
         nlp = utils.load_spacy_model()
         sent = nlp(
