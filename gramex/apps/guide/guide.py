@@ -22,15 +22,19 @@ md_cache = cachetools.LRUCache(maxsize=5000000, getsizeof=len)
 
 def markdown_template(content, handler):
     if content not in md_cache:
-        md_cache[content] = md.convert(content)
+        md_cache[content] = {
+            'content': md.convert(content),
+            'meta': md.Meta
+        }
+    content = md_cache[content]
     kwargs = {
         'classes': '',
         # GUIDE_ROOT has the absolute URL of the Gramex guide
         'GUIDE_ROOT': gramex.config.variables.GUIDE_ROOT,
-        'body': md_cache[content],
+        'body': content['content'],
         'title': ''
     }
-    for key, val in md.Meta.items():
+    for key, val in content['meta'].items():
         kwargs[key] = val[0]
     if 'xsrf' in content:
         handler.xsrf_token
