@@ -10,6 +10,7 @@ import unittest
 import gramex.data
 import gramex.cache
 import pandas as pd
+import sqlalchemy as sa
 from orderedattrdict import AttrDict
 from nose.plugins.skip import SkipTest
 from nose.tools import eq_, ok_, assert_raises
@@ -392,6 +393,11 @@ class TestInsert(unittest.TestCase):
             'sales': ['0', -100],
             # Do not add growth column
         }
+        cls.db = set()
+        cls.server = AttrDict(
+            mysql=os.environ.get('MYSQL_SERVER', 'localhost'),
+            postgres=os.environ.get('POSTGRES_SERVER', 'localhost'),
+        )
 
     def test_insert_frame(self):
         raise SkipTest('TODO: write insert test cases for DataFrame')
@@ -434,19 +440,50 @@ class TestInsert(unittest.TestCase):
             afe(actual, expected, check_like=True)
 
     def test_insert_mysql(self):
-        raise SkipTest('TODO: write insert test cases for MySQL')
+        url = dbutils.mysql_create_db(self.server.mysql, 'test_insert')
+        self.check_insert_db(url, 'mysql')
 
     def test_insert_postgres(self):
-        raise SkipTest('TODO: write insert test cases for PostgreSQL')
+        url = dbutils.postgres_create_db(self.server.postgres, 'test_insert')
+        self.check_insert_db(url, 'postgres')
 
     def test_insert_sqlite(self):
-        raise SkipTest('TODO: write insert test cases for SQLite')
+        path = os.path.join(os.path.dirname(__file__), 'test_insert.db')
+        url = 'sqlite:///' + path
+        self.check_insert_db(url, 'sqlite')
+
+    def check_insert_db(self, url, dbname):
+        self.db.add(dbname)
+        self.insert_rows['index'] = [1, 2]  # create a primary key
+        inserted_rows = gramex.data.insert(url, args=self.insert_rows,
+                                           table='test_insert', id='index')
+        eq_(inserted_rows, 2)
+        # query table here
+        actual = gramex.data.filter(url, table='test_insert')
+        expected = pd.DataFrame(self.insert_rows)
+        for df in [actual, expected]:
+            df.fillna('None', inplace=True)
+            df['sales'] = df['sales'].astype(float)
+        afe(actual, expected, check_like=True)
+        # Check if it created a primary key
+        engine = sa.create_engine(url)
+        insp = sa.inspect(engine)
+        ok_('index' in insp.get_pk_constraint('test_insert')['constrained_columns'] )
+        self.insert_rows.pop('index')
 
     @classmethod
     def tearDownClass(cls):
         for path in cls.tmpfiles:
             if os.path.exists(path):
                 os.remove(path)
+        if 'mysql' in cls.db:
+            dbutils.mysql_drop_db(cls.server.mysql, 'test_insert')
+        if 'postgres' in cls.db:
+            dbutils.postgres_drop_db(cls.server.postgres, 'test_insert')
+        if 'sqlite' in cls.db:
+            path = os.path.join(os.path.dirname(__file__), 'test_insert.db')
+            engine = sa.create_engine('sqlite:///' + path)
+            engine.execute('drop table test_insert')
 
 
 class TestEdit(unittest.TestCase):
