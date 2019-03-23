@@ -7,7 +7,7 @@
 </head>
 
 <body>
-    {% from gramex.apps.nlg.webapp import read_current_config %}
+    {% from gramex.apps.nlg.nlgapp import read_current_config %}
     {% set dsid = read_current_config(handler)['dsid'] %}
     <!-- Include JS dependencies  -->
     <script src="ui/popper.js/dist/umd/popper.min.js"></script>
