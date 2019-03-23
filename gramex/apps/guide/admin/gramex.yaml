@@ -9,7 +9,7 @@ import:
     ADMIN_KWARGS:
       logo: https://gramener.com/uistatic/gramener.png
       title: Admin Page Options
-      theme: '?primary=%2320186f&dark=%2320186f&font-family-base=roboto&body-bg=%23f8f8f8'
+      theme: '?dark=%2320186f&font-family-base=roboto&body-bg=%23f8f8f8'
       components: [info, shell, users]
 
   admin/admin-user:
@@ -33,3 +33,11 @@ import:
     ADMIN_ROLE: ['admin']
     LOGIN_URL: /$YAMLURL/../auth/db
     LOGOUT_URL: /$YAMLURL/../auth/logout
+
+url:
+  admin/schedule:
+    pattern: /$YAMLURL/schedule
+    handler: FileHandler
+    kwargs:
+      path: $YAMLPATH/schedule.html
+      template: true

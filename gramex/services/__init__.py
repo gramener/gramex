@@ -59,6 +59,7 @@ info = AttrDict(
     email=AttrDict(),
     sms=AttrDict(),
     _md=None,
+    _main_ioloop=None,
 )
 _cache, _tmpl_cache = AttrDict(), AttrDict()
 atexit.register(info.threadpool.shutdown)
@@ -214,6 +215,7 @@ def app(conf):
                 else:
                     tornado.ioloop.PeriodicCallback(check_exit, callback_time=500).start()
 
+            info._main_ioloop = ioloop
             ioloop.start()
 
         return callback
@@ -238,7 +240,8 @@ def schedule(conf):
             continue
         try:
             app_log.info('Initialising schedule:%s', name)
-            _cache[_key] = scheduler.Task(name, sched, info.threadpool, ioloop=None)
+            _cache[_key] = scheduler.Task(name, sched, info.threadpool,
+                                          ioloop=info._main_ioloop)
             info.schedule[name] = _cache[_key]
         except Exception as e:
             app_log.exception(e)
@@ -444,16 +447,19 @@ def create_alert(name, alert):
                     for attachment in alert['attachments']
                 ]
             if callable(callback):
-                return callback(**kwargs)
-            # Email recipient. TODO: run this in a queue. (Anand)
-            mailer.mail(**kwargs)
-            # Log the event
-            event = {'alert': name, 'service': service, 'from': mailer.email or '',
-                     'to': '', 'cc': '', 'bcc': '', 'subject': '',
-                     'datetime': datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%SZ")}
-            event.update({k: v for k, v in kwargs.items() if k in event})
-            event['attachments'] = ', '.join(kwargs.get('attachments', []))
-            alert_logger.info(event)
+                callback(**kwargs)
+            else:
+                # Email recipient. TODO: run this in a queue. (Anand)
+                mailer.mail(**kwargs)
+                # Log the event
+                event = {
+                    'alert': name, 'service': service, 'from': mailer.email or '',
+                    'to': '', 'cc': '', 'bcc': '', 'subject': '',
+                    'datetime': datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%SZ")
+                }
+                event.update({k: v for k, v in kwargs.items() if k in event})
+                event['attachments'] = ', '.join(kwargs.get('attachments', []))
+                alert_logger.info(event)
         return kwargslist
 
     return run_alert
@@ -467,7 +473,8 @@ def alert(conf):
     for name, alert in conf.items():
         _key = cache_key('alert', alert)
         if _key in _cache:
-            info.alert[name] = _cache[_key]
+            task = info.alert[name] = _cache[_key]
+            task.call_later()
             continue
         app_log.info('Initialising alert: %s', name)
         schedule = {key: alert[key] for key in schedule_keys if key in alert}
@@ -476,7 +483,8 @@ def alert(conf):
         schedule['function'] = create_alert(name, alert)
         if schedule['function'] is not None:
             try:
-                _cache[_key] = scheduler.Task(name, schedule, info.threadpool, ioloop=None)
+                _cache[_key] = scheduler.Task(name, schedule, info.threadpool,
+                                              ioloop=info._main_ioloop)
                 info.alert[name] = _cache[_key]
             except Exception:
                 app_log.exception('Failed to initialize alert: %s', name)

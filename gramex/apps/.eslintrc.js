@@ -2,6 +2,15 @@ module.exports = {
   "parserOptions": {
     "ecmaVersion": 6    // Use ES6 parser. Browsers other than IE support it
   },
+  "overrides": [{
+    "files": [
+      "admin2/rollup.config.js",
+      "admin2/schedule.src.js"
+    ],
+    "parserOptions": {
+      "sourceType": "module",
+    }
+  }],
   "plugins": [
     "template"          // Handle Tornado templates and JS in HTML files
   ],

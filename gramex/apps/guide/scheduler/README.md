@@ -14,11 +14,20 @@ startup or at specific times. Here are some sample uses:
 
 Here is a sample configuration:
 
-<iframe class="w-100" frameborder="0" src="gramex.yaml.source"></iframe>
+```yaml
+schedule:
+    run-on-startup:
+        function: logging.info(msg="Scheduled msg (on startup)")
+        startup: true
+    run-every-hour:
+        function: schedule_utils.log_time   # Log the current time
+        minutes: 0
+        hours: '*'
+```
 
 Each named schedule section has the following keys:
 
-- `function`: the function or expression to run (<strong>required</strong>)
+- `function`: the function or expression to run (**required**)
 - `args` and `kwargs`: the positional and keyword arguments to pass to the
   function. The function will be called as `function(*args, **kwargs)`. These
   are optional -- the function will by default be called as `function()`.
@@ -100,6 +109,13 @@ schedule:
     hours: 5            # Run at 5am UTC
     utc: true
 ```
+
+
+## Scheduler preview
+
+You can run schedules manually using the
+[Admin Schedule](../admin/#admin-schedule) component at
+[/admin/schedule](../admin/admin/schedule).
 
 
 ## Scheduler API

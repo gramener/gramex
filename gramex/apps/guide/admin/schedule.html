@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Schedule</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="../ui/bootstraptheme.css">
+  <link rel="stylesheet" href="../ui/@fortawesome/fontawesome-free/css/all.min.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Schedule page</h1>
+    <p>This is a custom page in which we have embedded the schedule component.</p>
+    <div class="table-responsive">
+      <div class="schedule"></div>
+    </div>
+    <script src="../ui/jquery/dist/jquery.min.js"></script>
+    <script src="../ui/lodash/lodash.min.js"></script>
+    <script src="../ui/g1/dist/g1.min.js"></script>
+    <script src="../ui/moment/min/moment.min.js"></script>
+    <script src="admin/schedule.js"></script>
+    <script>
+      $('.schedule').schedule({
+        url: 'admin/schedule-data',
+        xsrf: '{{ handler.xsrf_token }}'
+      })
+    </script>
+  </div>
+
+</body>
+</html>

@@ -1,8 +1,3 @@
-import:
-  alert-preview:
-    path: $GRAMEXAPPS/mail/gramex.yaml
-    YAMLURL: /$YAMLURL/preview/
-
 email:
     alert-gmail:
         type: gmail
