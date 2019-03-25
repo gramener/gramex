@@ -3,12 +3,11 @@
   max-height: 2em;
 }
 
-.home-action-desc {
-  white-space: normal;  /* Allow wrapping inside buttons */
+.admin-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
 }
 
-/* Responsive button widths */
-.home-action { width: 15rem; }
-@media (max-width: 576px) {
-  .home-action { width: 10rem; }
+.pre-wrap {
+  white-space: pre-wrap;
 }

@@ -29,11 +29,11 @@ import:
     path: $GRAMEXAPPS/admin2/gramex.yaml
     YAMLURL: /$YAMLURL/admin-kwargs/        # URL to show the admin page at
     ADMIN_KWARGS:
-      logo: https://gramener.com/uistatic/gramener.png      # Logo URL
-      home: /$YAMLURL/                                      # URL that logo links to
-      title: Admin  Page Options                            # Navbar title
-      components: [info, users, shell]                      # Components to show
-      theme: '?primary=%2320186f&dark=%2320186f&font-family-base=roboto&body-bg=%23f8f8f8'  # Bootstrap theme query
+      logo: https://gramener.com/uistatic/gramener.png  # Logo URL
+      home: /$YAMLURL/                                  # URL that logo links to
+      title: Admin  Page Options                        # Navbar title
+      components: [info, users, shell]                  # Components to show
+      theme: '?font-family-base=roboto'                 # UI component theme query
     ADMIN_AUTH:
       membership:
         email: [admin1@example.org, admin2@example.org]     # Only allow these users
@@ -49,6 +49,7 @@ The `ADMIN_KWARGS` section accepts the following parameters:
 - `components`: List of components to display. The admin page has pre-defined
   components (documented below). By default, all components are displayed. The list of components are:
     - `user`: [User management component](#admin-user-management)
+    - `schedule`: [Schedule component](#admin-schedule)
     - `shell`: [Python web shell component](#admin-shell)
     - `info`: [Gramex & server info component](#admin-info)
     - `config`: [Gramex configuration component](#admin-config)
@@ -63,7 +64,7 @@ The `ADMIN_AUTH` section is the same as specifying the `auth:`
   <a class="example-src" href="http://github.com/gramener/gramex/blob/master/gramex/apps/guide/admin/gramex.yaml">Source</a>
 </div>
 
-### Admin: User management
+## Admin: User management
 
 To manage users, add roles and other attributes, use the `user` component.
 To enable it:
@@ -105,7 +106,7 @@ FormHandler table component:
 <div class="users"></div>
 <script>
   $('.users').formhandler({
-    src: 'admin/users',         // Assuming the admin page is at admin/
+    src: 'admin/users-data',    // Assuming the admin page is at admin/
     edit: true,                 // Allow editing users
     add: true                   // Allow adding users
   })
@@ -119,7 +120,59 @@ FormHandler table component:
 
 You can specify custom actions & formats using FormHandler table. See the [admin page source code](https://github.com/gramener/gramex/blob/dev/gramex/apps/admin2/index.html) for examples of custom actions.
 
-### Admin: Shell
+## Admin: Schedule
+
+The schedule component lets you see all [scheduler tasks](../scheduler/) defined
+under the `schedule:` section, and run them.
+
+<div class="example">
+  <a class="example-demo" href="admin/schedule">Schedule example</a>
+  <a class="example-src" href="http://github.com/gramener/gramex/blob/master/gramex/apps/guide/admin/">Source</a>
+</div>
+
+The admin schedule component can be embdded in any page:
+
+```html
+<div class="schedule"></div>
+<script src="schedule.js"></script>
+<script>
+  $('.schedule').schedule({           // Embed the scheduler
+    url: 'admin/schedule-data',       // Assuming the admin page is at admin/
+    xsrf: '{{ handler.xsrf_token }}'  // Pass XSRF token. Requires FileHandler template
+  })
+</script>
+```
+
+<div class="example">
+  <a class="example-demo" href="schedule.html">Schedule component example</a>
+  <a class="example-src" href="http://github.com/gramener/gramex/blob/master/gramex/apps/guide/admin/schedule.html">Source</a>
+</div>
+
+## Admin: Alerts
+
+The alert component lets you see all [alerts](../alert/) defined under the
+`alert:` section, and preview or run them.
+
+<div class="example">
+  <a class="example-demo" href="admin/alert">Alert example</a>
+  <a class="example-src" href="http://github.com/gramener/gramex/blob/master/gramex/apps/guide/admin/">Source</a>
+</div>
+
+The admin alert component can be embdded in any page:
+
+```html
+<div class="schedule"></div>
+<script src="schedule.js"></script>
+<script>
+  $('.schedule').schedule({           // Alerts use the same component as schedulers
+    alert: true,                      // ... but with the alert: true option
+    url: 'admin/alert-data',          // Assuming the admin page is at admin/
+    xsrf: '{{ handler.xsrf_token }}'  // Pass XSRF token. Requires FileHandler template
+  })
+</script>
+```
+
+## Admin: Shell
 
 The shell adds a web-based Python shell that runs commands within the running
 Gramex instance. This is useful when debugging a live environment.
@@ -143,7 +196,7 @@ The web shell is available as a component. To embed it in your page, add:
 <script src="admin/webshell.js"></script>
 <script>
   $('.webshell').webshell({           // Embed the web shell here
-    url: 'admin/webshell',            // Assuming the admin page is at admin/
+    url: 'admin/webshell-data',       // Assuming the admin page is at admin/
     prompt: '>>> ',                   // Prompt to display at the start of each page
     welcome: [                        // Welcome message as a list of lines.
       'Welcome to the Gramex shell',
@@ -158,7 +211,7 @@ The web shell is available as a component. To embed it in your page, add:
   <a class="example-src" href="http://github.com/gramener/gramex/blob/master/gramex/apps/guide/admin/shell.html">Source</a>
 </div>
 
-### Admin: Info
+## Admin: Info
 
 The info page shows information about versions, paths and other details about
 Gramex and its dependencies.
@@ -168,8 +221,8 @@ To enable it, ensure that you specify:
 - Either `components: [..., info, ...]`, i.e. include `info` in `components:`
 - Or do not specify any `components:`
 
-This exposes JSON data at `<admin-page>/info` as a list of objects consistent
-with [FormHandler](../formhandler/).
+This exposes JSON data at `<admin-page>/info-data` as a list of objects
+consistent with [FormHandler](../formhandler/).
 
 ```json
 [
@@ -206,16 +259,16 @@ The result is stored in the `value` column. If the value is not available, the `
 </div>
 
 
-### Admin: Config
+## Admin: Config
 
 WIP: Shows the Gramex configuration, and allows users to edit it.
 
-### Admin: Logs
+## Admin: Logs
 
 WIP: Shows the Gramex logs.
 
 
-## Admin access
+## Admin access control
 
 TODO: explain how to restrict admin access
 

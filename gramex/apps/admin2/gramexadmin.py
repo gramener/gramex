@@ -1,17 +1,24 @@
 """Auth module role settings."""
-import os
-import sys
-from tornado.gen import coroutine, Return
-from tornado.web import HTTPError
-from cachetools import TTLCache
-from six.moves import StringIO
+from __future__ import unicode_literals
+
 import gramex
 import gramex.handlers
+import json
+import os
+import re
+import sys
+from binascii import b2a_base64
+from cachetools import TTLCache
 from gramex.config import app_log
 from gramex.http import INTERNAL_SERVER_ERROR
+from six.moves import StringIO
+from tornado.gen import coroutine, Return
+from tornado.web import HTTPError
 
 
 contexts = TTLCache(maxsize=100, ttl=1800)
+# A global mapping of cid: to filenames
+cidmap = TTLCache(maxsize=100, ttl=1800)
 
 
 def get_auth_conf(kwargs):
@@ -169,3 +176,59 @@ def system_information(handler):
     data = gramex.data.filter(df, handler.args)
     # TODO: handle _format, _meta, _download, etc just like FormHandler
     raise Return(gramex.data.download(data))
+
+
+def get_schedule(service_type):
+    import json
+    import pandas as pd
+    from cron_descriptor import get_description
+
+    data = []
+    for key, info in gramex.conf.get(service_type, {}).items():
+        entry = dict(info)
+        entry['name'] = key
+        entry['args'] = json.dumps(entry.get('args', []))
+        entry['kwargs'] = json.dumps(entry.get('kwargs', {}))
+        entry['schedule'] = ''
+        schedule = gramex.service[service_type][key]
+        entry['next'] = schedule.next * 1000 if schedule.next else None
+        if hasattr(schedule, 'cron_str'):
+            cron = schedule.cron_str
+            # cron_descriptor requires year to start with a number
+            if cron.endswith(' *'):
+                cron = cron[:-2]
+            entry['schedule'] = get_description(cron)
+            entry['schedule'] += ' UTC' if schedule.utc else ''
+        entry['startup'] = 'Y' if entry.get('startup', False) else ''
+        entry['thread'] = 'Y' if entry.get('thread', False) else ''
+        data.append(entry)
+    return pd.DataFrame(data)
+
+
+@coroutine
+def schedule(handler, service):
+    if handler.request.method == 'GET':
+        data = get_schedule(service)
+        data = gramex.data.filter(data, handler.args)
+        # TODO: handle _format, _meta, _download, etc just like FormHandler
+        raise Return(gramex.data.download(data))
+    elif handler.request.method == 'POST':
+        key = handler.get_argument('name')
+        schedule = gramex.service[service][key]
+        results, kwargs = [], {}
+        # If ?mock is set, and it's an alert, capture the alert mails in result
+        if handler.get_argument('mock', False) and service == 'alert':
+            kwargs = {'callback': lambda **kwargs: results.append(kwargs)}
+        if schedule.thread:
+            yield schedule.function(**kwargs)
+        else:
+            yield gramex.service.threadpool.submit(schedule.function, **kwargs)
+        for result in results:
+            if 'html' in result:
+                def _img(match):
+                    path = result['images'][match.group(1)]
+                    img = gramex.cache.open(path, 'bin', transform=b2a_base64)
+                    url = b'data:image/png;base64,' + img.replace(b'\n', b'')
+                    return url.decode('utf-8')
+                result['html'] = re.sub(r'cid:([^\'"\s]+)', _img, result['html'])
+        raise Return(json.dumps(results))

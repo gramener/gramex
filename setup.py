@@ -25,6 +25,7 @@ install_requires = [
     'cachetools >= 2.1.0',          # SRV: services.cache for memory cache
     'colorama',                     # REQ: (conda) gramex.init()
     'colorlog >= 2.7.0',            # REQ: Coloured log files
+    'cron-descriptor',              # OPT: admin/schedule to pretty-print cron
     'crontab >= 0.21',              # SRV: services.schedule to parse crontab entries
     'cssselect',                    # OPT: pytest gramex plugin
     'datashape',                    # OPT: (conda) gramex.handlers.datahandler

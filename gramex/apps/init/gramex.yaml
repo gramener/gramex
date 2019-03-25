@@ -59,7 +59,7 @@ import:
     ADMIN_KWARGS:
       logo: https://gramener.com/uistatic/gramener.png
       title: Admin
-      theme: '?primary=%2320186f&dark=%2320186f&font-family-base=roboto&body-bg=%23f8f8f8'
+      theme: '?body-bg=white&navbar-dark-color=rgba(255%2C255%2C255%2C.8)&navbar-dark-hover-color=white'
       # authhandler: name-of-DBAuth-handler    -- required for user management
     ADMIN_AUTH:
       membership:

@@ -2,10 +2,10 @@
 @import "ui/@fortawesome/fontawesome-free/css/all.min.css";
 @import "monokai.css?v=2";
 
-/* Heading color heirarchy */
+/* Heading color hierarchy */
 h1 { color: #5b9bd5; }
-h2 { color: #ed7d31; }
-h3 { color: #5c5c5c; }
+h2 { color: #ed7d31; margin-top: 1.5rem; }
+h3 { color: #5c5c5c; margin-top: 1.5rem; }
 
 /* Tables should have borders */
 table thead th { border-bottom: 1px solid #000; }
@@ -50,22 +50,20 @@ table tbody td { border-bottom: 1px solid #eee; }
 .example {
   font-size: 1.5rem;
   font-weight: bold;
-  padding: 0 1rem;
+  padding: 0.5rem 1rem;
   margin: 1rem -1rem;
-
   border: 1px solid rgba(0,0,0,.2);
-  background-color: rgba(237, 125, 55, 0.3);
-  box-shadow: 1px 1px 1px black;
 }
 .example a {
   border: none;
 }
 .example:before {
   content: "\25cd";
+  color: var(--info);
   font-size: 4rem;
   line-height: 0;
   position: relative;
-  top: 01rem;
+  top: 0.8rem;
 }
 .example-src {
   float: right;
