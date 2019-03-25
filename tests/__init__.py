@@ -11,7 +11,6 @@ from gramex.http import OK
 from gramex.services import info
 from nose.tools import eq_, ok_
 from orderedattrdict import AttrDict
-from time import time
 
 tempfiles = AttrDict()
 folder = os.path.dirname(os.path.abspath(__file__))
@@ -172,7 +171,7 @@ class TestSchedule(TestGramex):
         # Check that the schedules will run at 5 am in the appropriate time zone
         for key, tz in (('schedule-timed', tzlocal()), ('schedule-timed-utc',
                                                         tzutc())):
-            t = datetime.fromtimestamp(time() + info.schedule[key].delay, tz)
+            t = datetime.fromtimestamp(info.schedule[key].next, tz)
             eq_(t.hour, 5)
             # Ideally, this should be 0, but there may be a short delay
             ok_(t.minute < 2)

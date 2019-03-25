@@ -11,7 +11,7 @@
   <title>{{ title }}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="ui/bootstraptheme.css{{ admin_kwargs.get('theme', '') }}">
-  <link rel="stylesheet" href="ui/font-awesome/css/font-awesome.min.css">
+  <link rel="stylesheet" href="ui/@fortawesome/fontawesome-free/css/all.min.css">
   <link rel="stylesheet" href="admin.css">
 </head>
 <body>
@@ -30,13 +30,13 @@
       <span class="navbar-toggler-icon"></span>
     </button>
 
-    {% set current_tab = handler.get_argument('tab', '') %}
+    {% set current_tab = handler.path_args[0] %}
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
       <ul class="navbar-nav mr-auto">
         {% for tab_id in tab_list %}
           {% set tab = kwargs.components[tab_id] %}
           <li class="nav-item{% if current_tab == tab_id %} active{% end %}">
-            <a class="nav-link" href="{{ '?tab=' + tab_id }}">
+            <a class="nav-link" href="{{ tab_id }}">
               {{ tab.title }}
               {% if current_tab == tab_id %}<span class="sr-only">(current)</span>{% end %}
             </a>
@@ -63,17 +63,18 @@
   <script src="ui/jquery/dist/jquery.min.js"></script>
   <script src="ui/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
   <script src="ui/lodash/lodash.min.js"></script>
+  <script src="ui/moment/min/moment.min.js"></script>
   <script src="ui/g1/dist/g1.min.js"></script>
 
   <div class="container-fluid">
     {% if not current_tab %}
-      <div class="d-flex flex-wrap">
+      <div class="admin-grid">
         {% for tab_id in tab_list %}
           {% set tab = kwargs.components[tab_id] %}
-          <a class="home-action btn btn-light border-radius-lg mr-3 mb-3 py-3 d-inline-block text-center" href="?tab={{ tab_id }}">
-            <div><i class="text-{{ tab.color }} fa fa-4x {{ tab.icon }}"></i></div>
+          <a class="btn btn-light border-radius-lg mr-3 mb-3 py-3 d-inline-block text-center" href="{{ tab_id }}">
+            <div><i class="text-{{ tab.color }} fa-4x {{ tab.icon }}"></i></div>
             <h3 class="pt-3">{{ tab.title }}</h3>
-            <div class="home-action-desc">{{ tab.desc }}</div>
+            <div>{{ tab.desc }}</div>
           </a>
         {% end %}
       </div>
@@ -90,7 +91,7 @@
         </td>
       </script>
       {% if authhandler %}
-        <div class="users" data-src="users">
+        <div class="users" data-src="users-data">
           <i class="fa fa-spinner fa-spin fa-3x text-center d-block"></i>
         </div>
       {% else %}
@@ -130,12 +131,33 @@
         })
       </script>
 
+    {% elif current_tab == 'schedule' %}
+      <div class="schedule"></div>
+      <script src="schedule.js"></script>
+      <script>
+        $('.schedule').schedule({
+          url: 'schedule-data',
+          xsrf: '{{ handler.xsrf_token }}'
+        })
+      </script>
+
+    {% elif current_tab == 'alert' %}
+      <div class="schedule"></div>
+      <script src="schedule.js"></script>
+      <script>
+        $('.schedule').schedule({
+          url: 'alert-data',
+          alert: true,
+          xsrf: '{{ handler.xsrf_token }}'
+        })
+      </script>
+
     {% elif current_tab == 'shell' %}
       <div class="webshell"></div>
       <script src="webshell.js"></script>
       <script>
         $('.webshell').webshell({
-          url: 'webshell',
+          url: 'webshell-data',
           prompt: '>>> ',
           welcome: [
             'This is a Python console embedded in Gramex.',
@@ -146,14 +168,15 @@
       </script>
 
     {% elif current_tab == 'info' %}
-      <div class="gramex_info" data-src="info">
+      <div class="gramex_info" data-src="info-data">
         <i class="fa fa-spinner fa-spin fa-3x text-center d-block"></i>
       </div>
       <script>
         $('.gramex_info').formhandler({
-          'editable': false,
-          'count': false,
-          'page': false
+          editable: false,
+          count: false,
+          page: false,
+          export: false
         })
       </script>
 

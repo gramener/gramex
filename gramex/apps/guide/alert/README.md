@@ -210,8 +210,10 @@ The templates can use these variables:
 - `config`: the alert configuration as an AttrDict. For example,
   `config.subject` is the subject configuration
 - `data`: the data passed to the alert
-  - For multiple datasets, each key is available as variable holding the dataset
-- `index`: if `each:` is used, the index holds the key or index number
+    - For multiple datasets, each key is available as variable holding the dataset
+- if `each:` is used, then:
+    - `row`: the data for each entry that `each:` loops through
+    - `index`: the key or index number of each entry
 
 ### Email dashboards
 
@@ -340,25 +342,11 @@ service to use using `service: name-of-email-service`.
 
 ## Alert preview
 
-You can preview emails using the mail preview app. You can run this using:
+You can preview and run alerts manually using the
+[Admin Alert](../admin/#admin-alerts) component at
+[/admin/alert](../admin/admin/alert).
 
-```bash
-gramex run mail
-```
-
-... or include it in your application:
-
-```yaml
-import:
-  alert-preview:
-    path: $GRAMEXAPPS/mail/gramex.yaml
-    YAMLURL: /$YAMLURL/preview/
-```
-
-<div class="example">
-  <a class="example-demo" href="preview/">Preview emails</a>
-  <a class="example-src" href="http://github.com/gramener/gramex/blob/master/gramex/apps/guide/alert/gramex.yaml">Source</a>
-</div>
+**Note**: Before Gramex 1.54, there was a mail app that you could import. That is now deprecated.
 
 ## Alert logs
 
