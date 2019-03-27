@@ -2810,9 +2810,10 @@ import:
   admin/auth:
     path: $GRAMEXAPPS/admin2/gramex.yaml
     YAMLURL: /$YAMLURL/admin/auth/
+    ADMIN_KWARGS:
+      authhandler: auth/dbcsv
     ADMIN_AUTH:
       login_url: /auth/dbcsv
-      authhandler: auth/dbcsv
       membership:
         user: [alpha, delta]
 
