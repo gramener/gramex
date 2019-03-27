@@ -2,6 +2,7 @@
 import os
 import unittest
 import pandas as pd
+import six
 from sklearn.svm import SVC
 from sklearn.naive_bayes import BernoulliNB
 import gramex.ml
@@ -82,7 +83,35 @@ class TestAutolyse(unittest.TestCase):
     df = gramex.cache.open(path, encoding='utf-8')
 
     def base(self, groups, numbers, check_string):
-        eq_(gramex.ml.groupmeans(self.df, groups, numbers).to_json(), check_string)
+        gm = gramex.ml.groupmeans(self.df, groups, numbers)
+        df = pd.read_json(check_string)
+        eq_(set(gm.columns), set(df.columns))
+        df = df[gm.columns]
+        # groupmeans output has a RangeIndex and autolysis_string has an IntegerIndex
+        # Reset both
+        gm.reset_index(inplace=True)
+        df.reset_index(inplace=True)
+
+        # compare biggies
+        if 'biggies' in gm:
+            xbiggies, ybiggies = gm.pop('biggies'), df.pop('biggies')
+            for x, y in zip(xbiggies, ybiggies):
+                x = pd.Series(x)
+                y = pd.Series(y)
+                x.index = x.index.astype(six.text_type)
+                pd.testing.assert_series_equal(x, y)
+
+        # compare means
+        if 'means' in gm:
+            xmeans, ymeans = gm.pop('means'), df.pop('means')
+            for x, y in zip(xmeans, ymeans):
+                x = pd.DataFrame.from_dict(x)
+                y = pd.DataFrame.from_dict(y)
+                x.index = x.index.astype(six.text_type)
+                pd.testing.assert_frame_equal(x, y, check_column_type=False)
+
+        # compare remaining columns
+        pd.testing.assert_frame_equal(gm, df, check_dtype=False, check_column_type=False)
 
     def test_groupmeans_unicode_col_names(self):
         '''Unicode column names and categorical column values. '''
