@@ -1,0 +1,10 @@
+{
+  "scripts": {
+    "test": "npm run test",
+    "build": "rollup -c"
+  },
+  "dependencies": {
+    "rollup": "^1.6.0",
+    "rollup-plugin-htmlparts": "^1.1.2"
+  }
+}

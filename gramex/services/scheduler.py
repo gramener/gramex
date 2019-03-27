@@ -1,5 +1,6 @@
 '''Gramex scheduling service'''
 
+import time
 import tornado.ioloop
 from crontab import CronTab
 from gramex.transforms import build_transform
@@ -21,6 +22,7 @@ class Task(object):
         '''
         self.name = name
         self.utc = schedule.get('utc', False)
+        self.thread = schedule.get('thread', False)
         if 'function' not in schedule:
             raise ValueError('schedule %s has no function:' % name)
         if callable(schedule['function']):
@@ -28,9 +30,9 @@ class Task(object):
         else:
             self.function = build_transform(schedule, vars={}, filename='schedule:%s' % name)
         self.ioloop = ioloop or tornado.ioloop.IOLoop.current()
-        self.delay, self.callback = None, None
+        self._call_later(None)
 
-        if schedule.get('thread'):
+        if self.thread:
             fn = self.function
 
             def on_done(future):
@@ -38,14 +40,20 @@ class Task(object):
                 if exception:
                     app_log.error('%s (thread): %s', name, exception)
 
-            self.function = lambda: threadpool.submit(fn).add_done_callback(on_done)
+            def run_function(*args, **kwargs):
+                future = threadpool.submit(fn, *args, **kwargs)
+                future.add_done_callback(on_done)
+                return future
+
+            self.function = run_function
 
         # Run on schedule if any of the schedule periods are specified
         periods = 'minutes hours dates months weekdays years'.split()
         if any(schedule.get(key) for key in periods):
             # Convert all valid values into strings (e.g. 30 => '30'), and ignore any spaces
             cron = (str(schedule.get(key, '*')).replace(' ', '') for key in periods)
-            self.cron = CronTab(' '.join(cron))
+            self.cron_str = ' '.join(cron)
+            self.cron = CronTab(self.cron_str)
             self.call_later()
         elif not schedule.get('startup'):
             app_log.warning('schedule:%s has no schedule nor startup', name)
@@ -55,13 +63,13 @@ class Task(object):
         if startup == '*' or (startup is True and not ioloop_running(self.ioloop)):
             self.function()
 
-    def run(self):
+    def run(self, *args, **kwargs):
         '''Run task. Then set up next callback.'''
         app_log.info('Running %s', self.name)
         try:
-            self.result = self.function()
+            self.result = self.function(*args, **kwargs)
         finally:
-            # Do not schedule if stopped (e.g. via self.stop())
+            # Run again, if not stopped via self.stop() or end of schedule
             if self.callback is not None:
                 self.call_later()
 
@@ -70,13 +78,21 @@ class Task(object):
         if self.callback is not None:
             app_log.debug('Stopping %s', self.name)
             self.ioloop.remove_timeout(self.callback)
-            self.delay, self.callback = None, None
+            self._call_later(None)
 
     def call_later(self):
-        '''Schedule next run. Do NOT call twice: creates two callbacks'''
+        '''Schedule next run automatically. Do NOT call twice: creates two callbacks'''
         delay = self.cron.next(default_utc=self.utc) if hasattr(self, 'cron') else None
+        self._call_later(delay)
         if delay is not None:
             app_log.debug('Scheduling %s after %.0fs', self.name, delay)
-            self.delay, self.callback = delay, self.ioloop.call_later(delay, self.run)
         else:
             app_log.debug('No further schedule for %s', self.name)
+
+    def _call_later(self, delay):
+        '''Schedule next run after delay seconds. If delay is None, no more runs.'''
+        if delay is not None:
+            self.callback = self.ioloop.call_later(delay, self.run)
+            self.next = time.time() + delay
+        else:
+            self.callback, self.next = None, None

@@ -140,7 +140,8 @@ mail: |
     gramex mail --init              # Initializes config file
 
     The config is a gramex.yaml file. It must have email: and alert: sections.
-    $GRAMEXDATA/mail/gramexmail.yaml is the default config file.
+    If the current folder has a gramex.yaml, that's used. Else the default is
+    $GRAMEXDATA/mail/gramexmail.yaml.
 
     Options:
       --conf <path>                 # Specify a different conf file location
@@ -692,7 +693,12 @@ def mail(cmd, args):
     # Get config file location
     default_dir = os.path.join(variables['GRAMEXDATA'], 'mail')
     _mkdir(default_dir)
-    confpath = args.get('conf', os.path.join(default_dir, 'gramexmail.yaml'))
+    if 'conf' in args:
+        confpath = args.conf
+    elif os.path.exists('gramex.yaml'):
+        confpath = os.path.abspath('gramex.yaml')
+    else:
+        confpath = os.path.join(default_dir, 'gramexmail.yaml')
 
     if not os.path.exists(confpath):
         if 'init' in args:
@@ -726,9 +732,10 @@ def mail(cmd, args):
     alert_conf = conf.get('alert', {})
     email_conf = conf.get('email', {})
     setup_email(email_conf)
+    sys.path += os.path.dirname(confpath)
     for key in cmd:
         if key not in alert_conf:
-            app_log.error('Missing key %s', key)
+            app_log.error('Missing key %s in %s', key, confpath)
             continue
         alert = create_alert(key, alert_conf[key])
         alert()

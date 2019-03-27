@@ -496,16 +496,16 @@ def reload_module(*modules):
 
 def urlfetch(path, info=False, **kwargs):
     '''
-    If path is a file path, return as is.
-    If path is a file path and info is true, return a dict with name (filepath),
-    ext (extension), and content_type as well as r, url set to None.
-    If path is a URL, download the file, return the saved filename.
-    The filename extension is based on the URL's Content-Type HTTP header.
-    If info is true, returns a dict with name (filename), r (request)
-    url, ext (extension), content_type.
-    Any other keyword arguments are passed to requests.get.
-    Automatically delete the files on exit of the application.
-    This is a synchronous function, i.e. it waits until the file is downloaded.
+    - If path is a file path, return as is.
+    - If path is a file path and info is true, return a dict with name (filepath),
+      ext (extension), and content_type as well as r, url set to None.
+    - If path is a URL, download the file, return the saved filename.
+      The filename extension is based on the URL's Content-Type HTTP header.
+    - If info is true, returns a dict with name (filename), r (request)
+      url, ext (extension), content_type.
+    - Any other keyword arguments are passed to requests.get.
+    - Automatically delete the files on exit of the application.
+    - This is a synchronous function, i.e. it waits until the file is downloaded.
     '''
     url = urlparse(path)
     if url.scheme not in {'http', 'https'}:  # path is a filepath
