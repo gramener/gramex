@@ -76,7 +76,7 @@ class TestAdmin(AuthBase):
         ok_(('git', 'path') in index)
 
     def test_users(self):
-        self.check('/admin/auth/users')
+        self.check('/admin/default/users')
         self.check('/admin/auth/users-data').json()
         # TODO: add test cases
 

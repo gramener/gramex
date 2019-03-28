@@ -37,6 +37,10 @@ You can read from multiple file formats as well as databases. The URL may be a
 
     url: /path/to/file.hdf      # Reads the dataframe at key named 'sales'
     key: sales
+
+    url: /path/to/file.parquet  # Reads the parquet file
+
+    url: /path/to/file.feather  # Reads the feather file
 ```
 
 You can read from a HTTP or HTTPS URL.

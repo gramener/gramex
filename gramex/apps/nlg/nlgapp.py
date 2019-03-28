@@ -16,7 +16,7 @@ from tornado.template import Template
 from gramex.config import variables
 from gramex.apps.nlg import grammar
 from gramex.apps.nlg import templatize
-from gramex.apps.nlg import utils
+from gramex.apps.nlg import nlgutils as utils
 
 DATAFILE_EXTS = {'.csv', '.xls', '.xlsx', '.tsv'}
 

@@ -22,7 +22,7 @@ url:
       headers:
         Cache-Control: no-store
       xsrf_cookies: false
-      function: gramex.apps.nlg.webapp.init_form
+      function: gramex.apps.nlg.nlgapp.init_form
       redirect:
         query: next
       #   url: /$YAMLURL/
@@ -42,14 +42,14 @@ url:
     pattern: /$YAMLURL/initconf
     handler: FunctionHandler
     kwargs:
-      function: gramex.apps.nlg.webapp.get_init_config
+      function: gramex.apps.nlg.nlgapp.get_init_config
       headers:
         Content-Type: application/json
   textproc-$*:
     pattern: /$YAMLURL/textproc
     handler: FunctionHandler
     kwargs:
-      function: gramex.apps.nlg.webapp.process_template
+      function: gramex.apps.nlg.nlgapp.process_template
       xsrf_cookies: false
       headers:
         Content-Type: application/json
@@ -57,7 +57,7 @@ url:
     pattern: /$YAMLURL/render-template
     handler: FunctionHandler
     kwargs:
-      function: gramex.apps.nlg.webapp.render_template
+      function: gramex.apps.nlg.nlgapp.render_template
       xsrf_cookies: false
       headers:
         Content-Type: application/json
@@ -65,7 +65,7 @@ url:
     pattern: /$YAMLURL/get-gramopts
     handler: FunctionHandler
     kwargs:
-      function: gramex.apps.nlg.webapp.get_gramopts
+      function: gramex.apps.nlg.nlgapp.get_gramopts
       xsrf_cookies: false
       headers:
         Content-Type: application/json
@@ -73,13 +73,13 @@ url:
     pattern: /$YAMLURL/save-config
     handler: FunctionHandler
     kwargs:
-      function: gramex.apps.nlg.webapp.save_config
+      function: gramex.apps.nlg.nlgapp.save_config
       xsrf_cookies: false
   edit-narrative-$*:
     pattern: /$YAMLURL/edit-narrative
     handler: FunctionHandler
     kwargs:
-      function: gramex.apps.nlg.webapp.edit_narrative
+      function: gramex.apps.nlg.nlgapp.edit_narrative
       auth:
         login_url: /$YAMLURL/update/google
       redirect:
@@ -88,4 +88,4 @@ url:
     pattern: /$YAMLURL/render-live-template
     handler: FunctionHandler
     kwargs:
-      function: gramex.apps.nlg.webapp.render_live_template
+      function: gramex.apps.nlg.nlgapp.render_live_template

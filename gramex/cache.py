@@ -159,6 +159,8 @@ _OPEN_CALLBACKS = dict(
     sas=pd.read_sas,
     stata=pd.read_stata,
     table=pd.read_table,
+    parquet=pd.read_parquet,
+    feather=pd.read_feather,
     md=_markdown,
     markdown=_markdown,
     tmpl=_template,
@@ -187,7 +189,7 @@ def open(path, callback=None, transform=None, rel=False, **kwargs):
     - ``template``: reads files using tornado.Template via io.open
     - ``markdown`` or ``md``: reads files using markdown.markdown via io.open
     - ``csv``, ``excel``, ``xls``, `xlsx``, ``hdf``, ``html``, ``sas``,
-      ``stata``, ``table``: reads using Pandas
+      ``stata``, ``table``, ``parquet``, ``feather``: reads using Pandas
     - ``xml``, ``svg``, ``rss``, ``atom``: reads using lxml.etree
 
     For example::

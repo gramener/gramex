@@ -15,7 +15,7 @@
   <link rel="stylesheet" href="ui/font-awesome/css/font-awesome.min.css">
   <script src="ui/popper.js/dist/umd/popper.min.js"></script>
   <!--IDE HTML-->
-  {% from gramex.apps.nlg.webapp import read_current_config %}
+  {% from gramex.apps.nlg.nlgapp import read_current_config %}
   {% set dsid = read_current_config(handler)['dsid'] %}
   <!-- Include JS dependencies  -->
   <script src="ui/jquery/dist/jquery.min.js"></script>
@@ -60,7 +60,7 @@
   <!-- GRMFORM HTML -->
   <div class="modal fade grmform-modal" tabindex="-1" role="dialog"
   aria-labelledby="grmformModalLabel" aria-hidden="true">
-    {% from gramex.apps.nlg.webapp import get_dataset_files, get_narrative_config_files %}
+    {% from gramex.apps.nlg.nlgapp import get_dataset_files, get_narrative_config_files %}
     {% set NLG_DATASETS = get_dataset_files(handler) %}
     {% set NLG_NARRATIVES = get_narrative_config_files(handler) %}
     <div class="modal-dialog modal-lg">
