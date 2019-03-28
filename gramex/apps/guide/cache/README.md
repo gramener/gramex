@@ -294,6 +294,7 @@ The 2nd parameter can take the following values:
 
 - `gramex.cache.open(path, 'text', ...)` loads text files using `io.open`. You can use `txt` instead of `text`
 - `gramex.cache.open(path, 'json', ...)` loads JSON files using `json.load`
+- `gramex.cache.open(path, 'jsondata', ...)` loads JSON files using `pd.read_json`
 - `gramex.cache.open(path, 'yaml', ...)` loads YAML files using `yaml.load`
 - `gramex.cache.open(path, 'config', ...)` loads YAML files, but also allows variable substitution, imports, and other [config](../config/) files features.
 - `gramex.cache.open(path, 'csv', ...)` loads CSV files using `pd.read_csv`
