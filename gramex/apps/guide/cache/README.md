@@ -303,6 +303,8 @@ The 2nd parameter can take the following values:
 - `gramex.cache.open(path, 'sas', ...)` loads SAS files using `pd.read_sas`
 - `gramex.cache.open(path, 'stata', ...)` loads Stata files using `pd.read_stata`
 - `gramex.cache.open(path, 'table', ...)` loads tabular text files using `pd.read_table`
+- `gramex.cache.open(path, 'parquet', ...)` loads parquet files using `pd.read_parquet`. Requires [pyarrow](https://pypi.org/project/pyarrow/) or [fastparquet](https://pypi.org/project/fastparquet/)
+- `gramex.cache.open(path, 'feather', ...)` loads feather files using `pd.read_feather`. Requires [pyarrow](https://pypi.org/project/pyarrow/)
 - `gramex.cache.open(path, 'template', ...)` loads text using `tornado.template.Template`
 - `gramex.cache.open(path, 'md', ...)` loads text using `markdown.markdown`. You can use `markdown` instead of `md`
 

@@ -1,1 +1,1 @@
-from .search import templatize  # NOQA: F401
+from .nlgsearch import templatize       # NOQA: F401

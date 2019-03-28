@@ -22,7 +22,7 @@ NP_RULES = {
 NARRATIVE_TEMPLATE = """
 {% autoescape None %}
 from nlg import grammar as G
-from nlg import utils as U
+from nlg import nlgutils as U
 from tornado.template import Template as T
 import pandas as pd
 

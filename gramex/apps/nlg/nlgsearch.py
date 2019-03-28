@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 import six
 
-from gramex.apps.nlg import utils
+from gramex.apps.nlg import nlgutils as utils
 from gramex.apps.nlg.grammar import find_inflections
 
 SEARCH_PRIORITIES = [

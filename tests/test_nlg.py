@@ -5,7 +5,7 @@ import unittest
 import pandas as pd
 
 from gramex.apps.nlg import grammar as g
-from gramex.apps.nlg import search, utils
+from gramex.apps.nlg import nlgsearch as search, nlgutils as utils
 
 nlp = utils.load_spacy_model()
 matcher = utils.make_np_matcher(nlp)
