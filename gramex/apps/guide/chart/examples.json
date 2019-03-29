@@ -1,5 +1,67 @@
 [
   {
+    "category": "Chartogram Set",
+    "chart": "top-k",
+    "title": "Top K Plot",
+    "data_mapper": {
+      "column_1": "Director",
+      "column_2": "Worldwide_Gross"
+    },
+    "dataset_url": "<%= absolute_url %>data/movies.json"
+  },
+  {
+    "category": "Chartogram Set",
+    "chart": "bars",
+    "title": "Bar Chart",
+    "data_mapper": {
+      "column_1": "Director",
+      "column_2": "Worldwide_Gross"
+    },
+    "dataset_url": "<%= absolute_url %>data/movies.json"
+  },
+  {
+    "category": "Chartogram Set",
+    "chart": "scatter-plot",
+    "title": "Scatter Plot",
+    "data_mapper": {
+      "column_1": "Y Axis Numbers",
+      "column_2": "X Axis Numbers",
+      "column_3": "Radius"
+    },
+    "dataset_url": "<%= absolute_url %>data/scatter-plot.json"
+  },
+  {
+    "category": "Chartogram Set",
+    "chart": "donut",
+    "title": "Donut",
+    "data_mapper": {
+      "column_2": "label",
+      "column_1": "metric"
+    },
+    "dataset_url": "<%= absolute_url %>data/half-donut.json"
+  },
+  {
+    "category": "Chartogram Set",
+    "chart": "radial-donut",
+    "title": "Radial Donut",
+    "data_mapper": {
+      "column_2": "Category",
+      "column_1": "Measure"
+    },
+    "dataset_url": "<%= absolute_url %>data/radial-donut.json"
+  },
+  {
+    "category": "Chartogram Set",
+    "chart": "line-0",
+    "title": "Line 0",
+    "data_mapper": {
+      "column_1": "category",
+      "column_2": "point_height",
+      "column_3": "item"
+    },
+    "dataset_url": "<%= absolute_url %>data/stream-2.json"
+  },
+  {
     "category": "Bar charts",
     "chart": "top-k",
     "title": "Top K Plot",
@@ -89,30 +151,6 @@
     "dataset_url": "<%= absolute_url %>data/marimekko.json"
   },
   {
-    "category": "Pie charts",
-    "chart": "donut-2",
-    "title": "Donut Circle Labels",
-    "data_mapper": {
-      "column_1": "count",
-      "column_2": "label"
-    },
-    "dataset_url": "<%= absolute_url %>data/half-donut.json"
-  },
-  {
-    "category": "Pie charts",
-    "chart": "donut-infographic",
-    "title": "Donut Infographic",
-    "data_mapper": {
-      "column_1": "id",
-      "column_2": "Name",
-      "column_3": "amount",
-      "column_4": "circle1_amount",
-      "column_5": "circle2_amount",
-      "column_6": "circle3_amount"
-    },
-    "dataset_url": "<%= absolute_url %>data/donut-infographic.json"
-  },
-  {
     "category": "Bar charts",
     "chart": "positive-negative-bars",
     "title": "Positive Negative Bar chart",
@@ -164,16 +202,6 @@
   },
   {
     "category": "Pie charts",
-    "chart": "half-donut",
-    "title": "Half Donut",
-    "data_mapper": {
-      "column_2": "metric",
-      "column_1": "label"
-    },
-    "dataset_url": "<%= absolute_url %>data/half-donut.json"
-  },
-  {
-    "category": "Pie charts",
     "chart": "donut",
     "title": "Donut",
     "data_mapper": {
@@ -181,6 +209,16 @@
       "column_1": "metric"
     },
     "dataset_url": "<%= absolute_url %>data/half-donut.json"
+  },
+  {
+    "category": "Pie charts",
+    "chart": "radial-donut",
+    "title": "Radial Donut",
+    "data_mapper": {
+      "column_2": "Category",
+      "column_1": "Measure"
+    },
+    "dataset_url": "<%= absolute_url %>data/radial-donut.json"
   },
   {
     "category": "Pie charts",
@@ -194,13 +232,27 @@
   },
   {
     "category": "Pie charts",
-    "chart": "radial-donut",
-    "title": "Radial Donut",
+    "chart": "half-donut",
+    "title": "Half Donut",
     "data_mapper": {
-      "column_2": "Category",
-      "column_1": "Measure"
+      "column_2": "metric",
+      "column_1": "label"
     },
-    "dataset_url": "<%= absolute_url %>data/radial-donut.json"
+    "dataset_url": "<%= absolute_url %>data/half-donut.json"
+  },
+  {
+    "category": "Pie charts",
+    "chart": "donut-infographic",
+    "title": "Donut Infographic",
+    "data_mapper": {
+      "column_1": "id",
+      "column_2": "Name",
+      "column_3": "amount",
+      "column_4": "circle1_amount",
+      "column_5": "circle2_amount",
+      "column_6": "circle3_amount"
+    },
+    "dataset_url": "<%= absolute_url %>data/donut-infographic.json"
   },
   {
     "category": "Scatter plots",
@@ -443,6 +495,12 @@
     "chart": "parallel-coordinates",
     "title": "Parallel Coordinates",
     "dataset_url": "<%= absolute_url %>data/parallel-coordinates.csv"
+  },
+  {
+    "category": "Others",
+    "chart": "service-requests",
+    "title": "Service Requests",
+    "dataset_url": "<%= absolute_url %>data/service-requests.json"
   },
   {
     "category": "Others",

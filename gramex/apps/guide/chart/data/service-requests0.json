@@ -1,0 +1,72 @@
+[
+  {
+    "SR_Audit_Status": "Cancelled",
+    "SR_count": 95,
+    "mean_days": 136.8458834064,
+    "x_pos": 250,
+    "y_pos": 250
+  },
+  {
+    "SR_Audit_Status": "Closed",
+    "SR_count": 134,
+    "mean_days": 102.835734781,
+    "x_pos": 475,
+    "y_pos": 140
+  },
+  {
+    "SR_Audit_Status": "Completed",
+    "SR_count": 368,
+    "mean_days": 146.8535350619,
+    "x_pos": 350,
+    "y_pos": 140
+  },
+  {
+    "SR_Audit_Status": "Draft",
+    "SR_count": 181,
+    "mean_days": 6.694323652,
+    "x_pos": 50,
+    "y_pos": 140
+  },
+  {
+    "SR_Audit_Status": "In Progress",
+    "SR_count": 832,
+    "mean_days": 102.747100444,
+    "x_pos": 325,
+    "y_pos": 140
+  },
+  {
+    "SR_Audit_Status": "Pending",
+    "SR_count": 86,
+    "mean_days": 56.3092130975,
+    "x_pos": 275,
+    "y_pos": 140
+  },
+  {
+    "SR_Audit_Status": "Planning",
+    "SR_count": 1637,
+    "mean_days": 30.8595966962,
+    "x_pos": 225,
+    "y_pos": 140
+  },
+  {
+    "SR_Audit_Status": "Rejected",
+    "SR_count": 135,
+    "mean_days": 28.388340535,
+    "x_pos": 125,
+    "y_pos": 250
+  },
+  {
+    "SR_Audit_Status": "Submitted",
+    "SR_count": 2073,
+    "mean_days": 0.3534486888,
+    "x_pos": 75,
+    "y_pos": 140
+  },
+  {
+    "SR_Audit_Status": "Waiting Approval",
+    "SR_count": 1857,
+    "mean_days": 26.2065795713,
+    "x_pos": 125,
+    "y_pos": 140
+  }
+]

@@ -77,6 +77,8 @@ function renderChart(spec, options, callback) {
     delete options.timeTravel
   }
   options = Object.assign({}, options, {
+    height: $('.chart-area').height(),
+    width: $('.chart-area').width() - 40,
     defaultStyle: true,
     renderer: 'svg',
     runAsync: true
@@ -462,11 +464,26 @@ $('body')
   .on('click', '.publish', function() {
     // generate unique url for current spec
     // POST request to formhandler URL
+    clone_spec = _.cloneDeep(model.vega_spec)
+    try {
+      var annotation_in_group_mark = _.filter(clone_spec.marks[0].marks, ['name', 'Annotation'])
+      var annotation_in_mark = _.filter(clone_spec.marks, ['name', 'Annotation'])
+      if (annotation_in_mark.length > 0) {
+        annotation_in_mark[0].encode.update.x.signal = view._signals.annotation_x.value ? String(view._signals.annotation_x.value) : ""
+        annotation_in_mark[0].encode.update.y.signal = view._signals.annotation_y.value ? String(view._signals.annotation_y.value) : ""
+      } else if (annotation_in_group_mark.length > 0) {
+        annotation_in_group_mark[0].encode.update.x.signal = view._signals.annotation_x.value ? String(view._signals.annotation_x.value) : ""
+        annotation_in_mark[0].encode.update.y.signal = view._signals.annotation_y.value ? String(view._signals.annotation_y.value) : ""
+      }
+    } catch {
+
+    }
+
     $.post(
       '_chartogram/',
       JSON.stringify({
         chartname: specName,
-        spec: model.vega_spec
+        spec: clone_spec
       }),
       function(response) {
         // create an URL with response.id

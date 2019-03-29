@@ -1,0 +1,498 @@
+[
+  {
+    "from_status": "Cancelled",
+    "to_status": "Draft",
+    "count": 29,
+    "total_days": 3495.965162037,
+    "mean_days": 120.5505228289,
+    "stroke_width": 8.6893879726
+  },
+  {
+    "from_status": "Cancelled",
+    "to_status": "In Progress",
+    "count": 1,
+    "total_days": 8.1977199074,
+    "mean_days": 8.1977199074,
+    "stroke_width": 2.6920892599
+  },
+  {
+    "from_status": "Cancelled",
+    "to_status": "Pending",
+    "count": 2,
+    "total_days": 60.011087963,
+    "mean_days": 30.0055439815,
+    "stroke_width": 3.7832862563
+  },
+  {
+    "from_status": "Cancelled",
+    "to_status": "Planning",
+    "count": 14,
+    "total_days": 1274.351724537,
+    "mean_days": 91.0251231812,
+    "stroke_width": 6.9747856293
+  },
+  {
+    "from_status": "Cancelled",
+    "to_status": "Submitted",
+    "count": 49,
+    "total_days": 8161.8332291667,
+    "mean_days": 166.568025085,
+    "stroke_width": 10.504886367
+  },
+  {
+    "from_status": "Closed",
+    "to_status": "Completed",
+    "count": 85,
+    "total_days": 9532.3498263889,
+    "mean_days": 112.1452920752,
+    "stroke_width": 10.8809793806
+  },
+  {
+    "from_status": "Closed",
+    "to_status": "In Progress",
+    "count": 11,
+    "total_days": 502.4269907407,
+    "mean_days": 45.6751809764,
+    "stroke_width": 5.7344358948
+  },
+  {
+    "from_status": "Closed",
+    "to_status": "Planning",
+    "count": 21,
+    "total_days": 1798.1577662037,
+    "mean_days": 85.6265602954,
+    "stroke_width": 7.5118883882
+  },
+  {
+    "from_status": "Closed",
+    "to_status": "Submitted",
+    "count": 17,
+    "total_days": 1947.0538773148,
+    "mean_days": 114.5325810185,
+    "stroke_width": 7.6426977541
+  },
+  {
+    "from_status": "Completed",
+    "to_status": "Closed",
+    "count": 85,
+    "total_days": 5520.6608449074,
+    "mean_days": 64.9489511166,
+    "stroke_width": 9.6198114647
+  },
+  {
+    "from_status": "Completed",
+    "to_status": "Completed",
+    "count": 1,
+    "total_days": 0.000474537,
+    "mean_days": 0.000474537,
+    "stroke_width": 1.1475936009
+  },
+  {
+    "from_status": "Completed",
+    "to_status": "In Progress",
+    "count": 13,
+    "total_days": 762.2661689815,
+    "mean_days": 58.6358591524,
+    "stroke_width": 6.2544427112
+  },
+  {
+    "from_status": "Completed",
+    "to_status": "Planning",
+    "count": 36,
+    "total_days": 3308.0674652778,
+    "mean_days": 91.8907629244,
+    "stroke_width": 8.5839173172
+  },
+  {
+    "from_status": "Completed",
+    "to_status": "Rejected",
+    "count": 1,
+    "total_days": 30.3197222222,
+    "mean_days": 30.3197222222,
+    "stroke_width": 3.3465580615
+  },
+  {
+    "from_status": "Completed",
+    "to_status": "Submitted",
+    "count": 232,
+    "total_days": 44420.7862268519,
+    "mean_days": 191.4689061502,
+    "stroke_width": 15.517657966
+  },
+  {
+    "from_status": "Draft",
+    "to_status": "Cancelled",
+    "count": 26,
+    "total_days": 567.2846180556,
+    "mean_days": 21.818639156,
+    "stroke_width": 5.8803419416
+  },
+  {
+    "from_status": "Draft",
+    "to_status": "Completed",
+    "count": 2,
+    "total_days": 90.9215393519,
+    "mean_days": 45.4607696759,
+    "stroke_width": 4.0879246545
+  },
+  {
+    "from_status": "Draft",
+    "to_status": "Submitted",
+    "count": 135,
+    "total_days": 553.4377199074,
+    "mean_days": 4.099538666,
+    "stroke_width": 5.850284225
+  },
+  {
+    "from_status": "Draft",
+    "to_status": "Waiting Approval",
+    "count": 18,
+    "total_days": 0.0287037037,
+    "mean_days": 0.0015946502,
+    "stroke_width": 1.4116086421
+  },
+  {
+    "from_status": "In Progress",
+    "to_status": "Cancelled",
+    "count": 59,
+    "total_days": 2106.9095023148,
+    "mean_days": 35.7103305477,
+    "stroke_width": 7.7750338664
+  },
+  {
+    "from_status": "In Progress",
+    "to_status": "Closed",
+    "count": 272,
+    "total_days": 21707.4130439815,
+    "mean_days": 79.8066656029,
+    "stroke_width": 13.1381365122
+  },
+  {
+    "from_status": "In Progress",
+    "to_status": "Completed",
+    "count": 150,
+    "total_days": 8289.0061805556,
+    "mean_days": 55.2600412037,
+    "stroke_width": 10.5416968814
+  },
+  {
+    "from_status": "In Progress",
+    "to_status": "Draft",
+    "count": 9,
+    "total_days": 1424.4015972222,
+    "mean_days": 158.2668441358,
+    "stroke_width": 7.1433903755
+  },
+  {
+    "from_status": "In Progress",
+    "to_status": "In Progress",
+    "count": 3,
+    "total_days": 46.0997453704,
+    "mean_days": 15.3665817901,
+    "stroke_width": 3.605701312
+  },
+  {
+    "from_status": "In Progress",
+    "to_status": "Pending",
+    "count": 53,
+    "total_days": 1938.5992592593,
+    "mean_days": 36.5773445143,
+    "stroke_width": 7.6354748986
+  },
+  {
+    "from_status": "In Progress",
+    "to_status": "Planning",
+    "count": 24,
+    "total_days": 1564.4554166667,
+    "mean_days": 65.1856423611,
+    "stroke_width": 7.289133271
+  },
+  {
+    "from_status": "In Progress",
+    "to_status": "Submitted",
+    "count": 262,
+    "total_days": 48408.7028240741,
+    "mean_days": 184.7660413133,
+    "stroke_width": 15.8330636841
+  },
+  {
+    "from_status": "Pending",
+    "to_status": "Cancelled",
+    "count": 3,
+    "total_days": 436.485625,
+    "mean_days": 145.4952083333,
+    "stroke_width": 5.5708028169
+  },
+  {
+    "from_status": "Pending",
+    "to_status": "Closed",
+    "count": 1,
+    "total_days": 30.8750578704,
+    "mean_days": 30.8750578704,
+    "stroke_width": 3.3572299209
+  },
+  {
+    "from_status": "Pending",
+    "to_status": "Completed",
+    "count": 4,
+    "total_days": 380.8471527778,
+    "mean_days": 95.2117881944,
+    "stroke_width": 5.4176131115
+  },
+  {
+    "from_status": "Pending",
+    "to_status": "Draft",
+    "count": 1,
+    "total_days": 132.1451851852,
+    "mean_days": 132.1451851852,
+    "stroke_width": 4.3904928743
+  },
+  {
+    "from_status": "Pending",
+    "to_status": "In Progress",
+    "count": 70,
+    "total_days": 2594.0452314815,
+    "mean_days": 37.0577890212,
+    "stroke_width": 8.1366497991
+  },
+  {
+    "from_status": "Pending",
+    "to_status": "Submitted",
+    "count": 7,
+    "total_days": 1268.1940740741,
+    "mean_days": 181.1705820106,
+    "stroke_width": 6.9675549932
+  },
+  {
+    "from_status": "Planning",
+    "to_status": "Cancelled",
+    "count": 65,
+    "total_days": 2412.5883912037,
+    "mean_days": 37.1167444801,
+    "stroke_width": 8.0084311049
+  },
+  {
+    "from_status": "Planning",
+    "to_status": "Closed",
+    "count": 20,
+    "total_days": 789.5134722222,
+    "mean_days": 39.4756736111,
+    "stroke_width": 6.3007812982
+  },
+  {
+    "from_status": "Planning",
+    "to_status": "Completed",
+    "count": 26,
+    "total_days": 1226.9300925926,
+    "mean_days": 47.1896189459,
+    "stroke_width": 6.9184087303
+  },
+  {
+    "from_status": "Planning",
+    "to_status": "Draft",
+    "count": 2,
+    "total_days": 39.6939814815,
+    "mean_days": 19.8469907407,
+    "stroke_width": 3.5100430241
+  },
+  {
+    "from_status": "Planning",
+    "to_status": "In Progress",
+    "count": 1406,
+    "total_days": 37751.7011805556,
+    "mean_days": 26.8504275822,
+    "stroke_width": 14.9390806759
+  },
+  {
+    "from_status": "Planning",
+    "to_status": "Pending",
+    "count": 76,
+    "total_days": 2135.1992361111,
+    "mean_days": 28.0947267909,
+    "stroke_width": 7.7976625476
+  },
+  {
+    "from_status": "Planning",
+    "to_status": "Rejected",
+    "count": 3,
+    "total_days": 41.6050347222,
+    "mean_days": 13.8683449074,
+    "stroke_width": 3.5397237029
+  },
+  {
+    "from_status": "Planning",
+    "to_status": "Submitted",
+    "count": 39,
+    "total_days": 6119.9284027778,
+    "mean_days": 156.9212410969,
+    "stroke_width": 9.8447708425
+  },
+  {
+    "from_status": "Rejected",
+    "to_status": "Cancelled",
+    "count": 1,
+    "total_days": 0.001412037,
+    "mean_days": 0.001412037,
+    "stroke_width": 1.1938480881
+  },
+  {
+    "from_status": "Rejected",
+    "to_status": "Draft",
+    "count": 116,
+    "total_days": 810.3963888889,
+    "mean_days": 6.9861757663,
+    "stroke_width": 6.3354907865
+  },
+  {
+    "from_status": "Rejected",
+    "to_status": "Planning",
+    "count": 2,
+    "total_days": 25.8330208333,
+    "mean_days": 12.9165104167,
+    "stroke_width": 3.2544665634
+  },
+  {
+    "from_status": "Rejected",
+    "to_status": "Rejected",
+    "count": 1,
+    "total_days": 124.8601041667,
+    "mean_days": 124.8601041667,
+    "stroke_width": 4.3427655922
+  },
+  {
+    "from_status": "Rejected",
+    "to_status": "Submitted",
+    "count": 14,
+    "total_days": 2871.3350347222,
+    "mean_days": 205.095359623,
+    "stroke_width": 8.3201666373
+  },
+  {
+    "from_status": "Rejected",
+    "to_status": "Waiting Approval",
+    "count": 1,
+    "total_days": 1.15741e-5,
+    "mean_days": 1.15741e-5,
+    "stroke_width": 1.0583272585
+  },
+  {
+    "from_status": "Submitted",
+    "to_status": "Closed",
+    "count": 1,
+    "total_days": 49.0219097222,
+    "mean_days": 49.0219097222,
+    "stroke_width": 3.6460470149
+  },
+  {
+    "from_status": "Submitted",
+    "to_status": "Completed",
+    "count": 2,
+    "total_days": 86.0041435185,
+    "mean_days": 43.0020717593,
+    "stroke_width": 4.0452983263
+  },
+  {
+    "from_status": "Submitted",
+    "to_status": "In Progress",
+    "count": 1,
+    "total_days": 4.9512731481,
+    "mean_days": 4.9512731481,
+    "stroke_width": 2.491692209
+  },
+  {
+    "from_status": "Submitted",
+    "to_status": "Planning",
+    "count": 13,
+    "total_days": 298.0512152778,
+    "mean_days": 22.9270165598,
+    "stroke_width": 5.1550162272
+  },
+  {
+    "from_status": "Submitted",
+    "to_status": "Rejected",
+    "count": 2,
+    "total_days": 0.0001273148,
+    "mean_days": 6.36574e-5,
+    "stroke_width": 1.1062232869
+  },
+  {
+    "from_status": "Submitted",
+    "to_status": "Submitted",
+    "count": 1,
+    "total_days": 287.1963194444,
+    "mean_days": 287.1963194444,
+    "stroke_width": 5.1166573261
+  },
+  {
+    "from_status": "Submitted",
+    "to_status": "Waiting Approval",
+    "count": 2053,
+    "total_days": 7.4741435185,
+    "mean_days": 0.003640596,
+    "stroke_width": 2.6534473036
+  },
+  {
+    "from_status": "Waiting Approval",
+    "to_status": "Cancelled",
+    "count": 117,
+    "total_days": 3230.2764236111,
+    "mean_days": 27.6092002018,
+    "stroke_width": 8.5389336641
+  },
+  {
+    "from_status": "Waiting Approval",
+    "to_status": "Closed",
+    "count": 27,
+    "total_days": 902.3200810185,
+    "mean_days": 33.4192622599,
+    "stroke_width": 6.4807520587
+  },
+  {
+    "from_status": "Waiting Approval",
+    "to_status": "Completed",
+    "count": 28,
+    "total_days": 796.380162037,
+    "mean_days": 28.4421486442,
+    "stroke_width": 6.312269609
+  },
+  {
+    "from_status": "Waiting Approval",
+    "to_status": "Draft",
+    "count": 5,
+    "total_days": 301.7802199074,
+    "mean_days": 60.3560439815,
+    "stroke_width": 5.1679518453
+  },
+  {
+    "from_status": "Waiting Approval",
+    "to_status": "In Progress",
+    "count": 62,
+    "total_days": 3193.0493981481,
+    "mean_days": 51.5007967443,
+    "stroke_width": 8.5171187218
+  },
+  {
+    "from_status": "Waiting Approval",
+    "to_status": "Planning",
+    "count": 1450,
+    "total_days": 36633.8958912037,
+    "mean_days": 25.264755787,
+    "stroke_width": 14.8347328318
+  },
+  {
+    "from_status": "Waiting Approval",
+    "to_status": "Rejected",
+    "count": 165,
+    "total_days": 3184.5414351852,
+    "mean_days": 19.3002511223,
+    "stroke_width": 8.5121063211
+  },
+  {
+    "from_status": "Waiting Approval",
+    "to_status": "Submitted",
+    "count": 3,
+    "total_days": 423.3746527778,
+    "mean_days": 141.1248842593,
+    "stroke_width": 5.5360853063
+  }
+]

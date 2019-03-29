@@ -1,5 +1,5 @@
 {
-  "$schema": "https://vega.github.io/schema/vega/v4.json",
+  "$schema": "https://vega.github.io/schema/vega/v5.json",
   "description": "https://gramener.invisionapp.com/d/main/#/console/7709561/326727930/preview",
   "width": 590,
   "height": 320,
@@ -21,7 +21,7 @@
   "data": [
     {
       "name": "table",
-      "url": "<% dataset_url %>"
+      "url": "<%= dataset_url %>"
     }
   ],
   "scales": [
@@ -154,21 +154,18 @@
           "type": "rect",
           "encode": {
             "enter": {
-              "y": {
-                "scale": "pos",
-                "field": "<%= data_mapper.column_2 %>"
+              "tooltip": {
+                "signal": "datum"
               },
-              "height": {
-                "scale": "pos",
-                "band": 0.9
-              },
+              "y": {"signal": "scale('pos', datum['<%= data_mapper.column_2 %>'])"},
+              "height": {"signal": "bandwidth('pos')"},
               "x": {
                 "scale": "xscale",
                 "field": "<%= data_mapper.column_3 %>"
               },
               "x2": {
                 "scale": "xscale",
-                "<%= data_mapper.column_3 %>": 0
+                "value": 0
               },
               "fill": {
                 "scale": "color",

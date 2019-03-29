@@ -1,5 +1,5 @@
 {
-  "$schema": "https://vega.github.io/schema/vega/v4.json",
+  "$schema": "https://vega.github.io/schema/vega/v5.json",
   "width": 600,
   "height": 600,
   "signals": [
@@ -35,7 +35,7 @@
   "data": [
     {
       "name": "data_table",
-      "url": "<%= absolute_url %>data/donut-infographic.json",
+      "url": "<%= dataset_url %>",
       "transform": [
         {
           "type": "pie",

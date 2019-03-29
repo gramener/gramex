@@ -1,6 +1,6 @@
 {
-  "$schema": "https://vega.github.io/schema/vega/v4.json",
-  "width": 570,
+  "$schema": "https://vega.github.io/schema/vega/v5.json",
+  "width": 770,
   "height": 330,
   "autosize": "fit",
   "padding": {
@@ -19,120 +19,72 @@
   },
   "signals": [
     {
-      "name": "down", "value": null,
+      "name": "is_brush_ended",
+      "value": 0,
       "on": [
-        {"events": "touchend", "update": "null"},
-        {"events": "mousedown, touchstart", "update": "xy()"}
+        {"events": "view:mouseup, view:touchend", "update": "is_brushing ? is_brush_ended + 1 : 0"}
       ]
     },
     {
-      "name": "delta", "value": [0, 0],
+      "name": "is_brushing",
+      "value": false,
+      "on": [
+        {"events": {"signal": "brushX"}, "update": "true"},
+        {"events": {"signal": "brushY"}, "update": "true"},
+        {"events": "view:mouseup, view:touchend", "update": "false"}
+      ]
+    },
+    {
+      "name": "down",
+      "value": [0, 0],
+      "on": [{"events": "view:mousedown, view:touchstart", "update": "[x(), y()]"}
+      ]
+    },
+    {
+      "name": "brushX",
+      "value": 0,
       "on": [
         {
-          "events": [
-            {
-              "source": "window", "type": "mousemove", "consume": true,
-              "between": [{"type": "mousedown"}, {"source": "window", "type": "mouseup"}]
-            },
-            {
-              "type": "touchmove", "consume": true,
-              "filter": "event.touches.length === 1"
-            }
-          ],
-          "update": "down ? [down[0]-x(), y()-down[1]] : [0,0]"
+          "events": "[view:mousedown, view:mouseup] > view:mousemove, [view:touchstart, view:touchend] > view:touchmove",
+          "update": "[invert('xscale',down[0]), invert('xscale', x())]"
         }
       ]
     },
     {
-      "name": "xcur", "value": null,
+      "name": "brushY",
+      "value": 0,
       "on": [
         {
-          "events": "mousedown, touchstart, touchend",
-          "update": "slice(x_domain)"
+          "events": "[view:mousedown, view:mouseup] > view:mousemove, [view:touchstart, view:touchend] > view:touchmove",
+          "update": "[invert('yscale', y()), invert('yscale',down[1])]"
         }
       ]
     },
     {
-      "name": "ycur", "value": null,
+      "name": "x_domain",
+      "update": "slice(x_extent)",
       "on": [
-        {
-          "events": "mousedown, touchstart, touchend",
-          "update": "slice(y_domain)"
-        }
+        {"events": {"signal": "is_brush_ended"}, "update": "[brushX[0],  brushX[1]]"},
+        {"events": "window:dblclick", "update": "slice(x_extent)"}
       ]
     },
     {
-      "name": "anchor", "value": [0, 0],
+      "name": "y_domain",
+      "update": "slice(y_extent)",
+      "on": [
+        {"events": {"signal": "is_brush_ended"}, "update": "[brushY[0],  brushY[1]]"},
+        {"events": "window:dblclick", "update": "slice(y_extent)"}
+      ]
+    },
+    {
+      "name": "cursor",
+      "value": "'default'",
       "on": [
         {
-          "events": "wheel",
-          "update": "[invert('xscale', x()), invert('yscale', y())]"
+          "events": "[view:mousedown, view:mouseup] > view:mousemove!, [view:touchstart, view:touchend] > view:touchmove!",
+          "update": "'nwse-resize'"
         },
-        {
-          "events": {"type": "touchstart", "filter": "event.touches.length===2"},
-          "update": "[(x_domain[0] + x_domain[1]) / 2, (y_domain[0] + y_domain[1]) / 2]"
-        }
-      ]
-    },
-    {
-      "name": "zoom", "value": 1,
-      "on": [
-        {
-          "events": "wheel!",
-          "force": true,
-          "update": "pow(1.001, event.deltaY * pow(16, event.deltaMode))"
-        },
-        {
-          "events": {"signal": "dist2"},
-          "force": true,
-          "update": "dist1 / dist2"
-        }
-      ]
-    },
-    {
-      "name": "dist1", "value": 0,
-      "on": [
-        {
-          "events": {"type": "touchstart", "filter": "event.touches.length===2"},
-          "update": "pinchDistance(event)"
-        },
-        {
-          "events": {"signal": "dist2"},
-          "update": "dist2"
-        }
-      ]
-    },
-    {
-      "name": "dist2", "value": 0,
-      "on": [{
-        "events": {"type": "touchmove", "consume": true, "filter": "event.touches.length===2"},
-        "update": "pinchDistance(event)"
-      }]
-    },
-    {
-      "name": "x_domain", "update": "slice(x_extent)",
-      "on": [
-        {
-          "events": {"signal": "delta"},
-          "update": "[xcur[0] + span(xcur) * delta[0] / width, xcur[1] + span(xcur) * delta[0] / width]"
-        },
-        {
-          "events": {"signal": "zoom"},
-          "update": "[anchor[0] + (x_domain[0] - anchor[0]) * zoom, anchor[0] + (x_domain[1] - anchor[0]) * zoom]"
-        }
-      ]
-    },
-    {
-      "name": "y_domain", "update": "slice(y_extent)",
-      "on": [
-        {
-          "events": {"signal": "delta"},
-          "update": "[ycur[0] + span(ycur) * delta[1] / height, ycur[1] + span(ycur) * delta[1] / height]"
-        },
-        {
-          "events": {"signal": "zoom"},
-          "update": "[anchor[1] + (y_domain[0] - anchor[1]) * zoom, anchor[1] + (y_domain[1] - anchor[1]) * zoom]"
-        }
+        {"events": "view:mouseup, view:touchend", "update": "'default'"}
       ]
     }
   ],
@@ -229,6 +181,22 @@
   ],
   "marks": [
     {
+      "type": "rect",
+      "name": "brush",
+      "encode": {
+        "update": {
+          "opacity": {"signal": "is_brushing ? 1 : 0"},
+          "x": {"signal": "scale('xscale', brushX[0])"},
+          "x2": {"signal": "scale('xscale', brushX[1])"},
+          "y": {"signal": "scale('yscale', brushY[0])"},
+          "y2": {"signal": "scale('yscale', brushY[1])"},
+          "fill": {"value": "#cccccc"},
+          "zindex": {"value": -2},
+          "fillOpacity": {"value": 0.7}
+        }
+      }
+    },
+    {
       "name": "Circles",
       "type": "symbol",
       "from": {
@@ -259,39 +227,10 @@
             "value": "#53A8E2"
           },
           "stroke": {
-            "value": "#fffff"
+            "value": "#ffffff"
           },
           "strokeWidth": {
             "value": 1
-          }
-        }
-      }
-    },
-    {
-      "name": "Annotation",
-      "type": "text",
-      "from": {
-        "data": "source"
-      },
-      "clip": true,
-      "encode": {
-        "update": {
-          "x": {
-            "scale": "xscale",
-            "field": "<%= data_mapper.column_2 %>"
-          },
-          "y": {
-            "scale": "yscale",
-            "field": "<%= data_mapper.column_1 %>"
-          },
-          "dy": {
-            "value": -20
-          },
-          "dx": {
-            "value": -15
-          },
-          "text": {
-            "signal": "datum['<%= data_mapper.column_2 %>'] < 5 && datum['<%= data_mapper.column_1 %>'] > 3 ? 'Outlier': '' "
           }
         }
       }

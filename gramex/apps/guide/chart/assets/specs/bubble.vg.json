@@ -1,5 +1,5 @@
 {
-  "$schema": "https://vega.github.io/schema/vega/v4.json",
+  "$schema": "https://vega.github.io/schema/vega/v5.json",
   "description": "https://gramener.invisionapp.com/d/main/#/console/7709561/326727774/preview",
   "width": 495,
   "height": 320,
@@ -21,7 +21,7 @@
   "data": [
     {
       "name": "table",
-      "url": "<%= absolute_url %>data/bubble.json"
+      "url": "<%= dataset_url %>"
     }
   ],
   "scales": [

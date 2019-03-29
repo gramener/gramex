@@ -138,9 +138,53 @@ function template_data(vega_spec, view) {
   data['layer_list'].push({ name: 'Chart Title' })
   data['property_list']['Chart Title'] = title_marshal(vega_spec.title || {})
 
+  var signals = [
+    {
+      name: 'annotation_x',
+      on: [
+        {
+          events: 'click',
+          update: 'x()'
+        }
+      ]
+    },
+    {
+      name: 'annotation_y',
+      on: [
+        {
+          events: 'click',
+          update: 'y()'
+        }
+      ]
+    }
+  ]
+
+  vega_spec.signals = vega_spec.signals || []
+  vega_spec.signals = vega_spec.signals.concat(signals)
+
+  var text_mark = {
+    name: 'Annotation',
+    type: 'text',
+    encode: {
+      update: {
+        text: { value: '' },
+        fill: { value: '#000000' },
+        fontSize: { value: 16 },
+        x: {
+          signal: 'annotation_x'
+        },
+        y: {
+          signal: 'annotation_y'
+        }
+      }
+    }
+  }
+
   if (vega_spec.marks[0].type == 'group') {
+    vega_spec.marks[0].marks.push(text_mark)
     mark_iterator(vega_spec.marks[0].marks, 'marks.0.')
   } else {
+    vega_spec.marks.push(text_mark)
     mark_iterator(vega_spec.marks, '')
   }
 
@@ -160,7 +204,7 @@ function template_data(vega_spec, view) {
   function axes_iterator() {
     vega_spec.axes &&
       vega_spec.axes.map(function(axis, index) {
-        var axis_name = axis.scale.replace(/scale/ig, 'axis')
+        var axis_name = axis.scale.replace(/scale/gi, 'axis')
 
         data['layer_list'].push({ name: axis_name })
         data['property_list'][axis_name] = axis_marshal(axis, index)
@@ -169,64 +213,31 @@ function template_data(vega_spec, view) {
 
   axes_iterator()
 
-
-  var signals = [
-    {
-      "name": "annotation_x",
-      "on":  [{
-        "events": "click",
-        "update": "x()"
-        }]
-    },
-    {
-      "name": "annotation_y",
-      "on":  [{
-        "events": "click",
-        "update": "y()"
-        }]
-    }
-  ]
-
-  var text_mark = {
-    "type": "text",
-    "encode": {
-      "update": {
-        "text": {"value": "mmo"},
-        "x": {
-          "signal": "annotation_x"
-        },
-        "y": {
-          "signal": "annotation_y"
-        }
-      }
-    }
-  }
-
   return data
 }
 
 function axis_marshal(axis, index) {
   var default_props = {
-    'title': '',
-    'labels': true,
-    'grid': false,
-    'domain': true,
-    'labelPadding': 10,
-    'labelAngle': 0,
-    'orient': 'left',
-    'offset': 0,
-    'ticks': false,
-    'tickCount': 7,
-    'titleFont': 'Roboto',
-    'titleColor': '#485465',
-    'titleFontSize': 12,
-    'titleFontWeight': 500,
-    'titleAngle': 0,
-    'titlePadding': 16,
-    'labelColor': '#485465',
-    'labelFontSize': 10,
-    'labelFontWeight': 500,
-    'labelFont': 'Roboto'
+    title: '',
+    labels: true,
+    grid: false,
+    domain: true,
+    labelPadding: 10,
+    labelAngle: 0,
+    orient: 'left',
+    offset: 0,
+    ticks: false,
+    tickCount: 7,
+    titleFont: 'Roboto',
+    titleColor: '#485465',
+    titleFontSize: 12,
+    titleFontWeight: 500,
+    titleAngle: 0,
+    titlePadding: 16,
+    labelColor: '#485465',
+    labelFontSize: 10,
+    labelFontWeight: 500,
+    labelFont: 'Roboto'
   }
 
   // naming it to title, to see if code reuse is easy

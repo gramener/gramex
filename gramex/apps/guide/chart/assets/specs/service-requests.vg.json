@@ -1,0 +1,219 @@
+{
+    "$schema": "https://vega.github.io/schema/vega/v5.json",
+    "width": 400,
+    "height": 320,
+    "autosize": "fit",
+    "background": "white",
+    "padding": {
+      "top": 20
+    },
+    "data": [
+      {
+        "name": "circle_table",
+        "url": "data/service-requests0.json"
+      },
+      {
+        "name": "path_table",
+        "url": "<%= dataset_url %>",
+        "transform": [
+          {
+            "type": "lookup",
+            "from": "circle_table",
+            "key": "SR_Audit_Status",
+            "values": [
+              "x_pos",
+              "y_pos"
+            ],
+            "fields": [
+              "from_status",
+              "to_status"
+            ],
+            "as": [
+              "from_status_x_pos",
+              "from_status_y_pos",
+              "to_status_x_pos",
+              "to_status_y_pos"
+            ]
+          },
+          {
+            "type": "linkpath",
+            "orient": "horizontal",
+            "sourceX": "from_status_x_pos",
+            "sourceY": "from_status_y_pos",
+            "targetX": "to_status_x_pos",
+            "targetY": "to_status_y_pos",
+            "shape": "curve",
+            "as": "linkpath"
+          }
+        ]
+      }
+    ],
+    "signals": [
+      {
+        "name": "hovered_status",
+        "value": "null",
+        "on": [
+          {
+            "events": "symbol:mouseover",
+            "update": "datum.SR_Audit_Status"
+          },
+          {
+            "events": "symbol:mouseout",
+            "update": "null"
+          }
+        ]
+      }
+    ],
+    "scales": [
+      {
+        "name": "x_scale",
+        "type": "linear",
+        "domain": { "data": "circle_table", "field": "x_pos" },
+        "range": "width"
+      },
+      {
+        "name": "y_scale",
+        "type": "linear",
+        "domain": { "data": "circle_table", "field": "y_pos" },
+        "range": "height"
+      },
+      {
+        "name": "count_scale",
+        "type": "linear",
+        "domain": {
+          "data": "path_table",
+          "field": "count"
+        },
+        "range": {
+          "signal": "[2, 10]"
+        }
+      },
+      {
+        "name": "size",
+        "type": "linear",
+        "domain": {
+          "data": "circle_table",
+          "field": "SR_count"
+        },
+        "range": {
+          "signal": "[0, width]"
+        }
+      },
+      {
+        "name": "color",
+        "type": "linear",
+        "domain": {
+          "data": "circle_table",
+          "field": "mean_days"
+        },
+        "range": [
+          "#1A9850",
+          "#FFFFBF",
+          "#D73027"
+        ]
+      }
+    ],
+  
+    "marks": [
+      {
+        "name": "status_path",
+        "from": {
+          "data": "path_table"
+        },
+        "type": "path",
+        "encode": {
+          "update": {
+            "path": {
+              "field": "linkpath"
+            },
+            "x": {
+              "value": 0
+            },
+            "y": {
+              "value": 0
+            },
+            "strokeWidth": {
+              "field": "count",
+              "scale": "count_scale"
+            },
+            "stroke": {
+              "field": "mean_days",
+              "scale": "color"
+            },
+            "tooltip": {
+              "signal": "datum"
+            },
+            "hover": {
+              "strokeOpacity": { "value": 1 }
+            },
+            "strokeOpacity": {
+              "signal": "(datum.from_status == hovered_status || datum.to_status == hovered_status )? 1 : 0.2"
+            },
+            "zindex": {
+              "value": 2
+            }
+          }
+        }
+      },
+      {
+        "name": "status_circles",
+        "from": {
+          "data": "circle_table"
+        },
+        "type": "symbol",
+        "encode": {
+          "update": {
+            "x": {
+              "field": "x_pos"
+            },
+            "y": {
+              "field": "y_pos"
+            },
+            "size": {
+              "field": "SR_count",
+              "scale": "size"
+            },
+            "tooltip": {
+              "signal": "datum"
+            },
+            "fill": {
+              "field": "mean_days",
+              "scale": "color"
+            },
+            "zindex": {
+              "value": 4
+            }
+          }
+        }
+      },
+      {
+        "name": "status_circles_label",
+        "type": "text",
+        "from": {
+          "data": "circle_table"
+        }, "encode": {
+          "update": {
+            "x": {
+              "field": "x_pos"
+            },
+            "y": {
+              "field": "y_pos"
+            },
+            "align": { "value": "center" },
+            "dy": { "value": -20 },
+            "fontSize": { "value": 12 },
+            "text": {
+              "signal": "datum.SR_Audit_Status"
+            },
+            "fillOpacity": {
+              "value": 1
+            },
+            "zindex": {
+              "value": 4
+            }
+          }
+        }
+      }
+    ]
+  }
+  
