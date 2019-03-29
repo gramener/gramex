@@ -53,6 +53,22 @@ def _transform_fn(transform, transform_kwargs):
     return transform
 
 
+def _replace(engine, args, *vars, **kwargs):
+    escape = _sql_safe if engine == 'sqlalchemy' else _path_safe
+    params = {k: v[0] for k, v in args.items() if len(v) > 0 and escape(v[0])}
+
+    def _format(val):
+        if isinstance(val, six.string_types):
+            return val.format(**params)
+        if isinstance(val, list):
+            return [_format(v) for v in val]
+        if isinstance(val, dict):
+            return AttrDict([(k, _format(v)) for k, v in val.items()])
+        return val
+
+    return _format(list(vars)) + [_format(kwargs)]
+
+
 def filter(url, args={}, meta={}, engine=None, table=None, ext=None,
            query=None, queryfile=None, transform=None, transform_kwargs=None, **kwargs):
     '''
@@ -187,47 +203,40 @@ def filter(url, args={}, meta={}, engine=None, table=None, ext=None,
     })
     controls = _pop_controls(args)
     transform = _transform_fn(transform, transform_kwargs)
+    url, table, ext, query, queryfile, kwargs = _replace(
+        engine, args, url, table, ext, query, queryfile, **kwargs)
 
     # Use the appropriate filter function based on the engine
     if engine == 'dataframe':
         data = transform(url) if callable(transform) else url
         return _filter_frame(data, meta=meta, controls=controls, args=args)
     elif engine == 'dir':
-        params = {k: v[0] for k, v in args.items() if len(v) > 0 and _path_safe(v[0])}
-        url = url.format(**params)
         data = dirstat(url, **args)
         data = transform(data) if callable(transform) else data
         return _filter_frame(data, meta=meta, controls=controls, args=args)
     elif engine in {'file', 'http', 'https'}:
-        params = {k: v[0] for k, v in args.items() if len(v) > 0 and _path_safe(v[0])}
-        url = url.format(**params)
         if engine == 'file' and not os.path.exists(url):
             raise OSError('url: %s not found' % url)
         # Get the full dataset. Then filter it
         data = gramex.cache.open(url, ext, transform=transform, **kwargs)
         return _filter_frame(data, meta=meta, controls=controls, args=args)
     elif engine == 'sqlalchemy':
-        params = {k: v[0] for k, v in args.items() if len(v) > 0 and _sql_safe(v[0])}
-        url = url.format(**params)
         engine = create_engine(url, **kwargs)
         if query or queryfile:
             if queryfile:
                 query = gramex.cache.open(queryfile, 'text')
-            query, state = query.format(**params), None
+            state = None
             if isinstance(table, six.string_types):
-                state = [table.format(**params)]
+                state = [table]
             elif isinstance(table, (list, tuple)):
-                state = [t.format(**params) for t in table]
-            elif table is None:
-                state = None
-            else:
+                state = [t for t in table]
+            elif table is not None:
                 raise ValueError('table: must be string or list of strings, not %r' % table)
             all_params = {k: v[0] for k, v in args.items() if len(v) > 0}
             data = gramex.cache.query(text(query), engine, state, params=all_params)
             data = transform(data) if callable(transform) else data
             return _filter_frame(data, meta=meta, controls=controls, args=args)
         elif table:
-            table = table.format(**params)
             if callable(transform):
                 data = gramex.cache.query(table, engine, [table])
                 return _filter_frame(transform(data), meta=meta, controls=controls, args=args)
@@ -258,6 +267,8 @@ def delete(url, meta={}, args=None, engine=None, table=None, ext=None, id=None,
         engine = get_engine(url)
     meta.update({'filters': [], 'ignored': []})
     controls = _pop_controls(args)
+    url, table, ext, query, queryfile, kwargs = _replace(
+        engine, args, url, table, ext, query, queryfile, **kwargs)
     if engine == 'dataframe':
         data_filtered = _filter_frame(url, meta=meta, controls=controls,
                                       args=args, source='delete', id=id)
@@ -297,6 +308,8 @@ def update(url, meta={}, args=None, engine=None, table=None, ext=None, id=None,
         engine = get_engine(url)
     meta.update({'filters': [], 'ignored': []})
     controls = _pop_controls(args)
+    url, table, ext, query, queryfile, kwargs = _replace(
+        engine, args, url, table, ext, query, queryfile, **kwargs)
     if engine == 'dataframe':
         data_updated = _filter_frame(
             url, meta=meta, controls=controls, args=args, source='update', id=id)
@@ -347,6 +360,8 @@ def insert(url, meta={}, args=None, engine=None, table=None, ext=None, id=None,
             app_log.warning('data.insert: column %s has %d rows not %d. Extended last value %s',
                             key, rows, rowcount, val[-1])
     rows = pd.DataFrame.from_dict(args)
+    url, table, ext, query, queryfile, kwargs = _replace(
+        engine, args, url, table, ext, query, queryfile, **kwargs)
     if engine == 'dataframe':
         rows = _pop_columns(rows, url.columns, meta['ignored'])
         url = url.append(rows, sort=False)
