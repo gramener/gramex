@@ -200,6 +200,18 @@ class TestOpen(unittest.TestCase):
         self.check_file_cache(path, check)
         eq_(gramex.cache.open(path), gramex.cache.open(path, 'json'))
 
+    def test_open_jsondata(self):
+        path = os.path.join(cache_folder, 'data.jsondata')
+        expected = pd.read_json(path)
+
+        def check(reload):
+            result, reloaded = gramex.cache.open(path, 'jsondata', _reload_status=True)
+            eq_(reloaded, reload)
+            assert_frame_equal(result, expected)
+
+        self.check_file_cache(path, check)
+        assert_frame_equal(gramex.cache.open(path), gramex.cache.open(path, 'jsondata'))
+
     def test_open_yaml(self):
         path = os.path.join(cache_folder, 'data.yaml')
         with io.open(path, encoding='utf-8') as handle:
