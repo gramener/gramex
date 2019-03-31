@@ -560,9 +560,12 @@ class TestFormHandler(TestGramex):
         })
 
     def test_args(self):
-        # url: accepts query formatting for files
-        url = '/formhandler/arg-url?path=sales'
+        # url: and sheet_name: accepts query formatting for files
+        url = '/formhandler/arg-url?path=sales&sheet=sales&ext=excel'
         afe(pd.DataFrame(self.get(url).json()), self.sales, check_like=True)
+        url = '/formhandler/arg-url?path=sales&sheet=census'
+        census = gramex.cache.open(os.path.join(folder, 'sales.xlsx'), sheet_name='census')
+        afe(pd.DataFrame(self.get(url).json()), census, check_like=True)
         # url: and table: accept query formatting for SQLAlchemy
         url = '/formhandler/arg-table?db=formhandler&table=sales'
         afe(pd.DataFrame(self.get(url).json()), self.sales, check_like=True)

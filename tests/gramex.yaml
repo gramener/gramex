@@ -1428,38 +1428,40 @@ url:
     handler: FormHandler
     kwargs:
       url: sales-edits.xlsx
+      sheet_name: '{table}'
       id: [sales]
       xsrf_cookies: false
-      default: {x: 1}
+      default: {x: 1, table: sales}
 
   formhandler/edits-xlsx-multikey:
     pattern: /formhandler/edits-xlsx-multikey
     handler: FormHandler
     kwargs:
       url: sales-edits.xlsx
+      sheet_name: '{table}'
       id: [city, product]
       xsrf_cookies: false
-      default: {x: 1}
+      default: {x: 1, table: sales}
 
   formhandler/edits-sqlite-singlekey:
     pattern: /formhandler/edits-sqlite-singlekey
     handler: FormHandler
     kwargs:
       url: sqlite:///formhandler-edits.db
-      table: sales
+      table: '{table}'
       id: [sales]
       xsrf_cookies: false
-      default: {x: 1}
+      default: {x: 1, table: sales}
 
   formhandler/edits-sqlite-multikey:
     pattern: /formhandler/edits-sqlite-multikey
     handler: FormHandler
     kwargs:
       url: sqlite:///formhandler-edits.db
-      table: sales
+      table: '{table}'
       id: [city, product]
       xsrf_cookies: false
-      default: {x: 1}
+      default: {x: 1, table: sales}
 
   formhandler/edits-xlsx-redirect:
     pattern: /formhandler/edits-xlsx-redirect
@@ -1475,39 +1477,42 @@ url:
     handler: FormHandler
     kwargs:
       csv:
-        url: sales-edits.csv
+        url: '{file}'
         encoding: utf-8
         id: [city, product]
       sql:
         url: mysql+pymysql://root@$MYSQL_SERVER/test_formhandler?charset=utf8
-        table: sales
+        table: '{table}'
         id: [city, product]
       xsrf_cookies: false
+      default: {file: sales-edits.csv, table: sales}
 
   formhandler/edits-multidata-modify:
     pattern: /formhandler/edits-multidata-modify
     handler: FormHandler
     kwargs:
       csv:
-        url: sales-edits.csv
+        url: '{file}'
         encoding: utf-8
         id: [city, product]
         modify: len(handler.args.keys())
       sql:
         url: mysql+pymysql://root@$MYSQL_SERVER/test_formhandler?charset=utf8
-        table: sales
+        table: '{table}'
         id: [city, product]
       modify: len(handler.args.keys())
       xsrf_cookies: false
+      default: {file: sales-edits.csv, table: sales}
 
   formhandler/edits-dates:
     pattern: /formhandler/edits-dates
     handler: FormHandler
     kwargs:
       url: sales-edits.xlsx
-      sheet_name: dates
+      sheet_name: '{table}'
       id: [sales]
       xsrf_cookies: false
+      default: {table: dates}
 
   formhandler/chart:
     pattern: /formhandler/chart
@@ -1564,6 +1569,10 @@ url:
     handler: FormHandler
     kwargs:
       url: '{path}.xlsx'
+      ext: '{ext}'
+      sheet_name: '{sheet}'
+      default:
+        ext: xlsx
   formhandler/arg-table:
     pattern: /formhandler/arg-table
     handler: FormHandler
