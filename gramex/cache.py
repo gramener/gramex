@@ -156,6 +156,7 @@ _OPEN_CALLBACKS = dict(
     xlsx=pd.read_excel,
     hdf=pd.read_hdf,
     html=pd.read_html,
+    jsondata=pd.read_json,
     sas=pd.read_sas,
     stata=pd.read_stata,
     table=pd.read_table,
@@ -186,6 +187,7 @@ def open(path, callback=None, transform=None, rel=False, **kwargs):
     - ``config``: reads files using using :py:class:`gramex.config.PathConfig`.
       Same as ``yaml``, but allows ``import:`` and variable substitution.
     - ``json``: reads files using json.load via io.open
+    - ``jsondata``: reads files using pd.read_json
     - ``template``: reads files using tornado.Template via io.open
     - ``markdown`` or ``md``: reads files using markdown.markdown via io.open
     - ``csv``, ``excel``, ``xls``, `xlsx``, ``hdf``, ``html``, ``sas``,
