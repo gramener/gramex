@@ -45,23 +45,19 @@ The JSON response consists of an object containing two keys:
   <button class="btn btn-secondary ml-2">Check</button>
 </form>
 <div class="alert alert-success collapse my-2" role="alert">
-  <button type="button" class="close" data-toggle="collapse" aria-label="Close" id="closebtn">
-    <span aria-hidden="true">&times;</span>
-  </button>
-  <div class="viewsource-wraper">
-    <pre class="language-json"><code class="language-json" id="ltout"></code></pre>
-  </div>
+  <p class="correction"></p>
+  <pre class="language-json ltout"></code></pre>
 </div>
 <script>
   $('.ltform').on('submit', function (e) {
     e.preventDefault()
-    $('.alert').hide()
     $.ajax({
       url: "../languagetool/languagetool/",
       data: { q: $('.ltform input').val() }
-    }).done(function (e) {
-      $('#ltout').html(JSON.stringify(e, null, 4))
-      $('.alert-success').show()
+    }).done(function (data) {
+      $('.ltout').html(JSON.stringify(data, null, 4))
+      $('.correction').html('Correction: <strong>' + data.correction + '</strong>')
+      $('.alert-success').removeClass('collapse')
     })
   })
 </script>

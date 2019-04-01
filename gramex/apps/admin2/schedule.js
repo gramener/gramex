@@ -1,4 +1,3 @@
-/* eslint-disable */
 (function (factory) {
   typeof define === 'function' && define.amd ? define(factory) :
   factory();

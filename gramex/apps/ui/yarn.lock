@@ -114,9 +114,9 @@ block-stream@*:
     inherits "~2.0.0"
 
 bootstrap-select@1.13:
-  version "1.13.8"
-  resolved "https://registry.yarnpkg.com/bootstrap-select/-/bootstrap-select-1.13.8.tgz#c47047410511f6d8a8917a7738d1b03c95717d5d"
-  integrity sha512-WF6GJPgb98cv75X6/zoCWUNwM/HPoYKP6JDBryTNDCHMPV9YyMqU7xXncC7Se2M5VAt7kZQ/i2GSYwaf5Q/Z3w==
+  version "1.13.6"
+  resolved "https://registry.yarnpkg.com/bootstrap-select/-/bootstrap-select-1.13.6.tgz#dc41f8a7385ab4e385562b400d4cf2422f5ef852"
+  integrity sha512-MsOZjYVv0jjHOCUV6CG3J8MSsosrKL8MlA8DacMhMqFq43tTxMjjd7Czo5a/upKPNHW6asFq29oyKJTrPva6FQ==
 
 bootstrap@4.3.1:
   version "4.3.1"
@@ -2056,9 +2056,9 @@ vega-lib@^4.4.0:
     vega-wordcloud "^3.0.0"
 
 vega-lite@3:
-  version "3.0.2"
-  resolved "https://registry.yarnpkg.com/vega-lite/-/vega-lite-3.0.2.tgz#2e1c47d7663b56174f6b5adf6d575c9c6516a275"
-  integrity sha512-u0EWmsNpca1BIQeLsfGgfq4o6QwJQm9u+CpAkzLm6RWkLYfzDumC8jkdf6gZqLFwf1nXpw7tc3jL6o8PCXdjkA==
+  version "3.0.3"
+  resolved "https://registry.yarnpkg.com/vega-lite/-/vega-lite-3.0.3.tgz#1c585e825014e169dd3cd6f35368a281fc31f973"
+  integrity sha512-83qElIEtxYoqsYH2BriyWXVMUMOzgXkvdYXh7SoH+vqGcTTBE0XY4+jkuiMcvMq3RBFoeCKYbXyHylj54Puq8A==
   dependencies:
     "@types/clone" "~0.1.30"
     "@types/fast-json-stable-stringify" "^2.0.0"

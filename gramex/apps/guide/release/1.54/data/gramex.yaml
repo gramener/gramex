@@ -1,0 +1,39 @@
+url:
+  home:
+    pattern: /$YAMLURL/
+    handler: FileHandler
+    kwargs:
+      path: $YAMLPATH/index.html
+      template: true
+
+  excel-files:
+    pattern: /$YAMLURL/file1
+    handler: FormHandler
+    kwargs:
+      url: '$YAMLPATH/file1.xlsm'  # This is picked up from the pattern (.*?)
+      ext: xlsx
+      sheet_name: Data
+
+import:
+  # To secure application for production,
+  # replace 'YOUR-PROD-SERVER-NAME' with your production server host name.
+  deploy if socket.gethostname() in {'YOUR-PROD-SERVER-NAME'}: $GRAMEXPATH/deploy.yaml
+  # For alternate methods, see https://learn.gramener.com/guide/config/#conditions
+
+  # /ui/ has Gramex UI components -- use this like the node_modules/ directory
+  ui:
+    path: $GRAMEXAPPS/ui/gramex.yaml
+    YAMLURL: $YAMLURL/ui/
+
+  # /admin/ as an admin page to manage users, get system info, etc.
+  admin:
+    path: $GRAMEXAPPS/admin2/gramex.yaml    # Note the "admin2" instead of "admin"
+    YAMLURL: /$YAMLURL/admin/               # URL to show the admin page at
+    ADMIN_KWARGS:
+      logo: https://gramener.com/uistatic/gramener.png
+      title: Admin
+      theme: '?body-bg=white&navbar-dark-color=rgba(255%2C255%2C255%2C.8)&navbar-dark-hover-color=white'
+      # authhandler: name-of-DBAuth-handler    -- required for user management
+    ADMIN_AUTH:
+      membership:
+        hd: gramener.com                    # Only @gramener.com Google Auth are admins
