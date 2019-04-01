@@ -220,9 +220,12 @@ def schedule(handler, service):
         if handler.get_argument('mock', False) and service == 'alert':
             kwargs = {'callback': lambda **kwargs: results.append(kwargs)}
         if schedule.thread:
-            yield schedule.function(**kwargs)
+            args = yield schedule.function(**kwargs)
         else:
-            yield gramex.service.threadpool.submit(schedule.function, **kwargs)
+            args = yield gramex.service.threadpool.submit(schedule.function, **kwargs)
+        if service == 'alert' and isinstance(args, dict):
+            for arg in args.get('fail', []):
+                raise arg['error']
         for result in results:
             if 'html' in result:
                 def _img(match):

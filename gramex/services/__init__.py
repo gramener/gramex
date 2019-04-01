@@ -300,15 +300,16 @@ def create_alert(name, alert):
         return
     # Ensure that config has the right type (str, dict, list)
     contentfields = ['body', 'html', 'bodyfile', 'htmlfile', 'markdown', 'markdownfile']
-    for key in ['to', 'cc', 'bcc', 'from', 'subject'] + contentfields:
+    addr_fields = ['to', 'cc', 'bcc', 'reply_to', 'on_behalf_of', 'from']
+    for key in ['subject'] + addr_fields + contentfields:
         if not isinstance(alert.get(key, ''), string_types + (list, )):
-            app_log.error('alert: %s: %s: %r must be a list or str', name, key, alert[key])
+            app_log.error('alert: %s.%s: %r must be a list or str', name, key, alert[key])
             return
     if not isinstance(alert.get('images', {}), dict):
-        app_log.error('alert: %s images: %r is not a dict', name, alert['images'])
+        app_log.error('alert: %s.images: %r is not a dict', name, alert['images'])
         return
     if not isinstance(alert.get('attachments', []), list):
-        app_log.error('alert: %s attachments: %r is not a list', name, alert['attachments'])
+        app_log.error('alert: %s.attachments: %r is not a list', name, alert['attachments'])
         return
 
     # Warn if subject is missing
@@ -339,34 +340,31 @@ def create_alert(name, alert):
                 elif isinstance(dataset, list) or 'url' in dataset:
                     datasets[key] = dataset
                 else:
-                    app_log.error('alert: %s data: %s is missing url:', name, key)
+                    app_log.error('alert: %s.data: %s is missing url:', name, key)
         else:
-            app_log.error('alert: %s data: must be a data file or dict. Not %s',
+            app_log.error('alert: %s.data: must be a data file or dict. Not %s',
                           name, repr(alert['data']))
 
     if 'each' in alert and alert['each'] not in datasets:
-        app_log.error('alert: %s each: %s is not in data:', name, alert['each'])
+        app_log.error('alert: %s.each: %s is not in data:', name, alert['each'])
         return
 
     vars = {key: None for key in datasets}
-    vars['config'] = None
+    vars.update({'config': None, 'args': None})
     condition = build_transform(
         {'function': alert.get('condition', 'True')},
         filename='alert: %s' % name, vars=vars, iter=False)
 
     alert_logger = logging.getLogger('gramex.alert')
 
-    def run_alert(callback=None):
+    def load_datasets(data, each):
         '''
-        Runs the configured alert. If a callback is specified, calls the
-        callback with all email arguments. Else sends the email.
+        Modify data by load datasets and filter by condition.
+        Modify each to apply the each: argument, else return (None, None)
         '''
-        app_log.info('alert: %s running', name)
-        data = {'config': alert}
-        for key, dataset in datasets.items():
+        for key, val in datasets.items():
             # Allow raw data in lists as-is. Treat dicts as {url: ...}
-            data[key] = dataset if isinstance(dataset, list) else gramex.data.filter(**dataset)
-
+            data[key] = val if isinstance(val, list) else gramex.data.filter(**val)
         result = condition(**data)
         # Avoiding isinstance(result, pd.DataFrame) to avoid importing pandas
         if type(result).__name__ == 'DataFrame':
@@ -376,91 +374,122 @@ def create_alert(name, alert):
         elif not result:
             app_log.debug('alert: %s stopped. condition = %s', name, result)
             return
-
-        each = [(None, None)]
         if 'each' in alert:
             each_data = data[alert['each']]
             if isinstance(each_data, dict):
-                each = list(each_data.items())
+                each += list(each_data.items())
             elif isinstance(each_data, list):
-                each = list(enumerate(each_data))
+                each += list(enumerate(each_data))
             elif hasattr(each_data, 'iterrows'):
-                each = list(each_data.iterrows())
+                each += list(each_data.iterrows())
             else:
-                app_log.error('alert: %s: each: requires data.%s to be a dict/list/DataFrame',
-                              name, alert['each'])
-                return
+                raise ValueError('alert: %s: each: data.%s must be dict/list/DF, not %s' % (
+                                 name, alert['each'], type(each_data)))
+        else:
+            each.append((0, None))
 
-        kwargslist = []
+    def create_mail(data):
+        '''
+        Return kwargs that can be passed to a mailer.mail
+        '''
+        mail = {}
+        for key in ['bodyfile', 'htmlfile', 'markdownfile']:
+            target = key.replace('file', '')
+            if key in alert and target not in alert:
+                path = _tmpl(alert[key]).generate(**data).decode('utf-8')
+                tmpl = gramex.cache.open(path, 'template')
+                mail[target] = tmpl.generate(**data).decode('utf-8')
+        for key in addr_fields + ['subject', 'body', 'html', 'markdown']:
+            if key not in alert:
+                continue
+            if isinstance(alert[key], list):
+                mail[key] = [_tmpl(v).generate(**data).decode('utf-8') for v in alert[key]]
+            else:
+                mail[key] = _tmpl(alert[key]).generate(**data).decode('utf-8')
+        headers = {}
+        # user: {id: ...} creates an X-Gramex-User header to mimic the user
+        if 'user' in alert:
+            user = deepcopy(alert['user'])
+            for key, val, node in walk(user):
+                node[key] = _tmpl(val).generate(**data).decode('utf-8')
+            user = json.dumps(user, ensure_ascii=True, separators=(',', ':'))
+            headers['X-Gramex-User'] = tornado.web.create_signed_value(
+                info.app.settings['cookie_secret'], 'user', user)
+        if 'markdown' in mail:
+            mail['html'] = _markdown_convert(mail.pop('markdown'))
+        if 'images' in alert:
+            mail['images'] = {}
+            for cid, val in alert['images'].items():
+                urlpath = _tmpl(val).generate(**data).decode('utf-8')
+                urldata = urlfetch(urlpath, info=True, headers=headers)
+                if urldata['content_type'].startswith('image/'):
+                    mail['images'][cid] = urldata['name']
+                else:
+                    with io.open(urldata['name'], 'rb') as temp_file:
+                        bytestoread = 80
+                        first_line = temp_file.read(bytestoread)
+                    # TODO: let admin know that the image was not processed
+                    app_log.error('alert: %s: %s: %d (%s) not an image: %s\n%r', name,
+                                  cid, urldata['r'].status_code, urldata['content_type'],
+                                  urlpath, first_line)
+        if 'attachments' in alert:
+            mail['attachments'] = [
+                urlfetch(_tmpl(v).generate(**data).decode('utf-8'), headers=headers)
+                for v in alert['attachments']
+            ]
+        return mail
+
+    def run_alert(callback=None, args=None):
+        '''
+        Runs the configured alert. If a callback is specified, calls the
+        callback with all email arguments. Else sends the email.
+        If args= is specified, add it as data['args'].
+        '''
+        app_log.info('alert: %s running', name)
+        data, each, fail = {'config': alert, 'args': {} if args is None else args}, [], []
+        try:
+            load_datasets(data, each)
+        except Exception as e:
+            app_log.exception('alert: %s data processing failed', name)
+            fail.append({'error': e})
+
+        retval = []
         for index, row in each:
             data['index'], data['row'], data['config'] = index, row, alert
-
-            # Generate email content
-            kwargs = {}
-            kwargslist.append(kwargs)
-            for key in ['bodyfile', 'htmlfile', 'markdownfile']:
-                target = key.replace('file', '')
-                if key in alert and target not in alert:
-                    path = _tmpl(alert[key]).generate(**data).decode('utf-8')
-                    tmpl = gramex.cache.open(path, 'template')
-                    kwargs[target] = tmpl.generate(**data).decode('utf-8')
             try:
-                for key in ['to', 'cc', 'bcc', 'from', 'subject', 'body', 'html', 'markdown']:
-                    if key in alert:
-                        if isinstance(alert[key], list):
-                            kwargs[key] = [_tmpl(val).generate(**data).decode('utf-8')
-                                           for val in alert[key]]
-                        else:
-                            kwargs[key] = _tmpl(alert[key]).generate(**data).decode('utf-8')
-            except Exception:
-                # If any template raises an exception, log it and continue with next email
-                app_log.exception('alert: %s(#%s).%s: Template exception', name, index, key)
-                continue
-            headers = {}
-            # user: {id: ...} creates an X-Gramex-User header to mimic the user
-            if 'user' in alert:
-                user = deepcopy(alert['user'])
-                for key, val, node in walk(user):
-                    node[key] = _tmpl(val).generate(**data).decode('utf-8')
-                user = json.dumps(user, ensure_ascii=True, separators=(',', ':'))
-                headers['X-Gramex-User'] = tornado.web.create_signed_value(
-                    info.app.settings['cookie_secret'], 'user', user)
-            if 'markdown' in kwargs:
-                kwargs['html'] = _markdown_convert(kwargs.pop('markdown'))
-            if 'images' in alert:
-                kwargs['images'] = {}
-                for cid, val in alert['images'].items():
-                    urlpath = _tmpl(val).generate(**data).decode('utf-8')
-                    urldata = urlfetch(urlpath, info=True, headers=headers)
-                    if urldata['content_type'].startswith('image/'):
-                        kwargs['images'][cid] = urldata['name']
-                    else:
-                        with io.open(urldata['name'], 'rb') as temp_file:
-                            bytestoread = 80
-                            first_line = temp_file.read(bytestoread)
-                        app_log.error('alert: %s: %s: %d (%s) not an image: %s\n%r', name,
-                                      cid, urldata['r'].status_code, urldata['content_type'],
-                                      urlpath, first_line)
-            if 'attachments' in alert:
-                kwargs['attachments'] = [
-                    urlfetch(_tmpl(attachment).generate(**data).decode('utf-8'), headers=headers)
-                    for attachment in alert['attachments']
-                ]
-            if callable(callback):
-                callback(**kwargs)
+                retval.append(AttrDict(index=index, row=row, mail=create_mail(data)))
+            except Exception as e:
+                app_log.exception('alert: %s[%s] templating (row=%r)', name, index, row)
+                fail.append({'index': index, 'row': row, 'error': e})
+
+        callback = mailer.mail if not callable(callback) else callback
+        done = []
+        for v in retval:
+            try:
+                callback(**v.mail)
+            except Exception as e:
+                fail.append({'index': v.index, 'row': v.row, 'mail': v.mail, 'error': e})
+                app_log.exception('alert: %s[%s] delivery (row=%r)', name, v.index, v.row)
             else:
-                # Email recipient. TODO: run this in a queue. (Anand)
-                mailer.mail(**kwargs)
-                # Log the event
+                done.append(v)
                 event = {
                     'alert': name, 'service': service, 'from': mailer.email or '',
                     'to': '', 'cc': '', 'bcc': '', 'subject': '',
                     'datetime': datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%SZ")
                 }
-                event.update({k: v for k, v in kwargs.items() if k in event})
-                event['attachments'] = ', '.join(kwargs.get('attachments', []))
+                event.update({k: v for k, v in v.mail.items() if k in event})
+                event['attachments'] = ', '.join(v.mail.get('attachments', []))
                 alert_logger.info(event)
-        return kwargslist
+
+        # Run notifications
+        args = {'done': done, 'fail': fail}
+        for notification_name in alert.get('notify', []):
+            notify = info.alert.get(notification_name)
+            if notify is not None:
+                notify.run(callback=callback, args=args)
+            else:
+                app_log.error('alert: %s.notify: alert %s not defined', name, notification_name)
+        return args
 
     return run_alert
 

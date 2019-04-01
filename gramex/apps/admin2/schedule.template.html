@@ -47,11 +47,11 @@
   <% _.each(obj.results, function (row) { %>
     <table class="table table-sm bg-white mt-3">
       <tbody>
-        <% _.each(['to', 'cc', 'bcc', 'from', 'subject'], function (key) { %>
+        <% _.each(['to', 'cc', 'bcc', 'from', 'reply_to', 'on_behalf_of', 'subject'], function (key) { %>
           <% if (key in row) { %>
             <tr>
               <th><%- key %></th>
-              <td><%= row[key] %></td>
+              <td><%- row[key] %></td>
             </tr>
           <% } %>
         <% }) %>
@@ -69,7 +69,6 @@
         <% } %>
       </tbody>
     </table>
-
   <% }) %>
 </div>
 <!-- end -->
