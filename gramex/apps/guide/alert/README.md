@@ -1,7 +1,7 @@
 ---
 title: Smart alerts
 prefix: Alerts
-...
+---
 
 [TOC]
 
@@ -73,11 +73,29 @@ on GMail unless you enable
 ```yaml
 alert:
   alert-as-user:
-    to: admin@example.org
-    from: sender@example.org
+    to: "User name <admin@example.org>"
+    from: "Sender name <sender@example.org>"
     subject: Alert from Gramex
     body: This email is sent as if from sender@example.org
 ```
+
+### Reply to different user
+
+`reply_to:` picks a different user to send a reply to. When the user gets the
+email, it is from the `from:` ID or the email service account. But when the
+user replies, the reply is sent to the `reply_to:` address. For example:
+
+```yaml
+alert:
+  alert-as-user:
+    to: "User name <admin@example.org>"
+    reply_to: "Reply Person <reply@example.org>"
+    subject: Alert from Gramex
+    body: Replies to this email will be addressed to reply@example.org
+```
+
+You may also use the `on_behalf_of:` header to indicate that you're sending the
+alert on behalf of a different user.
 
 ### Email multiple people
 
@@ -181,7 +199,7 @@ alert:
         - https://example.org/sample.pptx
 ```
 
-### Use templates
+### Alert templates
 
 The `to`, `cc`, `bcc`, `from`, `subject`, `body`, `html`, `bodyfile`, `htmlfile`
 fields can all use Tornado templates to dynamically generate values.
@@ -209,11 +227,15 @@ The templates can use these variables:
 
 - `config`: the alert configuration as an AttrDict. For example,
   `config.subject` is the subject configuration
-- `data`: the data passed to the alert
-    - For multiple datasets, each key is available as variable holding the dataset
-- if `each:` is used, then:
+- Each dataset passed to the alert is available as a variable:
+    - If a single dataset is passed, `data` holds the dataset
+    - If multiple datasets are passed as a dict of `{<key>: ...}`,
+    - then the variable `<key>` holds the respective dataset
+- If `each:` is used, then the following variables are also available:
     - `row`: the data for each entry that `each:` loops through
     - `index`: the key or index number of each entry
+- `args`: If you run `alert.run(args=...)` via [alert API](#alert-api)
+  it holds whatever value was passed. It defaults to an empty dict `{}`.
 
 ### Email dashboards
 
@@ -244,17 +266,20 @@ runs CaptureHandler, you must specify `thread: true`.
 
 The `user:` section sends an [X-Gramex-User](../auth/#encrypted-user) header to
 take a screenshot of a dashboard as the user would have seen it. Specify the
-entire `user` object here. Values in `user:` can be [templates](#use-templates).
+entire `user` object here. Values in `user:` can be [templates](#alert-templates).
 
 
 ### Dynamic emails from data
 
 `data:` specifies one or more datasets. You can use these in templates to create
-dynamic content based on data. The `data:` can either be:
+dynamic content based on data. The `data:` can be:
 
-- `data: [... list of objects ...]` defines data as a list of objects in the YAML file
-- `data: file.xlsx` loads data from a CSV or Excel file as a DataFrame
-- `data: {url: ..., table: ...}` loads data from a SQLAlchemy URL and table
+- a string [FormHandler URL](../formhandler/).
+  `data: file.xlsx` loads data from a CSV or Excel file as a DataFrame
+- a dict [FormHandler definition](../formhandler/).
+  `data: {url: ..., table: ...}` loads data from a SQLAlchemy URL and table
+- a list of raw data.
+  `data: [... list of objects ...]` defines data as a list of objects in the YAML file
 
 The data is available to templates in a variable called `data`.
 
@@ -294,7 +319,8 @@ This data can be used directly in templates as variables named `plainlist`,
 `each:` specifies a dataset to iterate over. Each row becomes a separate email.
 
 `condition:` is a Python expression that filters the data and returns the final
-rows to send as email.
+rows to send as email. If the result is `False`, `[]`, `{}` or any false-y
+value, the alert will exit.
 
 Here is an example of a birthday alert email sent every day. (This assumes that
 `birthday.csv` has a column called `birthday` which has a format like
@@ -330,6 +356,53 @@ alert:
     cc: salesmanager@example.org
     subject: Sales target deficit of {{ row['target'] - row['value'] }}
 ```
+
+### Send notification on alert
+
+To send a notification alert *after* your alert(s) are done, use `notify:`.
+`notify:`  is a list of alerts to trigger after this alert runs.
+
+The notification alerts get an `args` data variable. This holds the history of
+notification successes and failures. For example:
+
+```yaml
+alert:
+  alert-mail:
+    to: 'user@example.org'
+    data: ...
+    each: ...
+    subject: ...
+    notify: [alert-notify, alert-success, alert-failure]
+  alert-notify:                   # Send notification after alert
+    to: 'admin@example.org'
+    subject: 'Sent {{ len(args["done"]) }} alerts, failed {{ len(args["fail"]) }} alerts'
+  alert-failure:
+    condition: args["fail"]       # Send notification only if there's a failure
+    to: 'admin@example.org'
+    subject: 'Failed on {{ len(args["fail"]) }} alerts. Sent {{ len(args["done"]) }}'
+  alert-success:
+    condition: not args["fail"]   # Send notification only if all alerts were successful
+    to: 'admin@example.org'
+    subject: 'Sent all {{ len(args["done"]) }} alerts'
+```
+
+- `args['done']` is a list of dicts for sent emails. Each dict has keys:
+    - `mail`: the email object that was sent. It has the following keys:
+        - `to`: sender
+        - `subject`: email subject
+        - `html`: html content
+        - `body`: body plain text content
+        - `attachments`: list of attachments
+        - `images`: dict of {image_name: path_to_image}
+        - other email headers such as `cc`, `bcc`, `reply_to`, etc
+    - `index`: the index of the email sent. If `each:` is used on a DataFrame or
+      dict, this is the key
+    - `row`: the data used in the email to be sent. If `each:` is used on a
+      DataFrame or dict, this is the value
+- `args['fail]` is a list of dicts for failed emails. This is identical to
+  `args['done']` but has an additional key:
+    - `error`: the Exception object that caused the failure
+
 
 ### Use multiple datasets
 
@@ -429,8 +502,33 @@ The alert service takes four kinds of parameters:
 
 To run an existing alert, run `gramex.service.alert['your-alert-name'].run()`.
 Replace `'your-alert-name'` with the name (key) of the alert you created.
+For example:
 
-To create an alert programmatically use `gramex.services.create_alert(config)`.
+```python
+import gramex
+
+def functionhandler(handler):
+    # This triggers the alert called my-alert-name
+    gramex.service.alert['my-alert-name'].run()
+```
+
+You can call `.run(args=...)` to pass an optional `args` variable to the
+templates. This can be used in the [alert templates](#alert-templates) as
+a variable `args`. For example, this alert:
+
+```yaml
+alert:
+  my-alert-name:
+    to: '{{ args.get('to', 'default@example.org') }}'
+```
+
+... will email `default@example.org`. But when you run
+`gramex.service.alert(...).run(args={'to': 'hi@example.org'})`, it will email
+`hi@example.org`.
+
+
+To **create** an alert programmatically use
+`gramex.services.create_alert(config)`.
 This returns a function that sends an alert based on the configuration.
 
 ```python

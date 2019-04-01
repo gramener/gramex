@@ -2696,6 +2696,8 @@ alert:
       to: "{{ 'user@example.org' }}"
       cc: "{{ 'cc@example.org' }}"
       bcc: "{{ 'bcc@example.org' }}"
+      reply_to: "{{ 'reply_to@example.org' }}"
+      on_behalf_of: "{{ 'on_behalf_of@example.org' }}"
       subject: "{{ 'subject' }}"
       body: "{{ 'body' }}"
       html: "{{ 'html' }}"
@@ -2789,6 +2791,33 @@ alert:
         role: manager
       attachments:
         - http://localhost:9999/capturechrome?url=http://localhost:9999/auth/session&ext=pdf
+    alert-run-args:
+      service: smtps_stub
+      to: "{{ args.get('to', 'default@local') }}"
+      subject: "{{ args.get('subject', 'default') }}"
+    alert-notify:
+      data:
+        - {email: alpha@example.org}
+        - {email: beta@example.org}
+        - {email: gamma@example.org}
+      each: data
+      to: "{{ row['email'] }}"
+      subject: "#{{ index }}: 1/val={{ 1 // args['val'][index] }}"
+      notify: [alert-notify-always, alert-notify-success, alert-notify-failure, alert-notify-nonexistent]
+    alert-notify-always:
+      service: smtps_stub
+      to: always@example.org
+      subject: '{{ len(args["done"]) }} done, {{ len(args["fail"]) }} failed'
+    alert-notify-success:
+      service: smtps_stub
+      to: success@example.org
+      subject: '{{ len(args["done"]) }} done'
+      condition: not args["fail"]
+    alert-notify-failure:
+      service: smtps_stub
+      to: failure@example.org
+      subject: '{{ len(args["done"]) }} done, {{ len(args["fail"]) }} failed'
+      condition: args["fail"]
 
 import:
   # Import from all subdirectories

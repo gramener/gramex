@@ -388,6 +388,9 @@ def insert(url, meta={}, args=None, engine=None, table=None, ext=None, id=None,
             rows = _pop_columns(rows, [col.name for col in cols], meta['ignored'])
         if '.' in table:
             kwargs['schema'], table = table.rsplit('.', 1)
+        # pandas does not document engine.dialect.has_table so it might change.
+        if not engine.dialect.has_table(engine, table) and id:
+            engine.execute(pd.io.sql.get_schema(rows, name=table, keys=id, con=engine))
         rows.to_sql(table, engine, if_exists='append', index=False, **kwargs)
         return len(rows)
     else:
