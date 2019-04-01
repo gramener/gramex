@@ -190,6 +190,10 @@ def get_schedule(service_type):
         entry['args'] = json.dumps(entry.get('args', []))
         entry['kwargs'] = json.dumps(entry.get('kwargs', {}))
         entry['schedule'] = ''
+        if key not in gramex.service[service_type]:
+            entry['schedule'] = 'NA'
+            data.append(entry)
+            continue
         schedule = gramex.service[service_type][key]
         entry['next'] = schedule.next * 1000 if schedule.next else None
         if hasattr(schedule, 'cron_str'):
