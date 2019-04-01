@@ -11,10 +11,10 @@ from .test_capturehandler import get_text
 from nose.tools import eq_, ok_
 
 
-def run_alert(name, count=1):
+def run_alert(name, count=1, **kwargs):
     '''Run named alert and return count mail results. If count is not 1, returns a list'''
     del utils.SMTPStub.stubs[:]
-    utils.info.alert[name].run()
+    utils.info.alert[name].run(**kwargs)
     eq_(len(utils.SMTPStub.stubs), count)
     if count == 1:
         return utils.SMTPStub.stubs[0]
@@ -60,6 +60,8 @@ class TestAlerts2(TestGramex):
         eq_(obj['To'], 'user@example.org')
         eq_(obj['Cc'], 'cc@example.org')
         eq_(obj['Bcc'], 'bcc@example.org')
+        eq_(obj['Reply-To'], 'reply_to@example.org')
+        eq_(obj['On-Behalf-Of'], 'on_behalf_of@example.org')
         eq_(obj['Subject'], 'subject')
         body, html = obj.get_payload()
         eq_(body.get_payload(decode=True).decode('utf-8'), 'body')
@@ -169,3 +171,38 @@ class TestAlerts2(TestGramex):
         ok_('login@example.org' in text)
         ok_('manager' in text)
         ok_('id=login@example.org, role=manager' in obj['Subject'])
+
+    def test_run_args(self):
+        mail = run_alert('alert-run-args')
+        obj = email.message_from_string(mail['msg'])
+        eq_(obj['To'], 'default@local')
+        eq_(obj['Subject'], 'default')
+        mail = run_alert('alert-run-args', args={'to': 'hi@local', 'subject': 'works'})
+        obj = email.message_from_string(mail['msg'])
+        eq_(obj['To'], 'hi@local')
+        eq_(obj['Subject'], 'works')
+
+    def test_notify(self):
+        mails = run_alert('alert-notify', count=4, args={'val': [1, 0, 1]})
+        objs = [email.message_from_string(mail['msg']) for mail in mails]
+        eq_(objs[0]['To'], 'alpha@example.org')
+        eq_(objs[0]['Subject'], '#0: 1/val=1')
+        eq_(objs[1]['To'], 'gamma@example.org')
+        eq_(objs[1]['Subject'], '#2: 1/val=1')
+        eq_(objs[2]['To'], 'always@example.org')
+        eq_(objs[2]['Subject'], '2 done, 1 failed')
+        eq_(objs[3]['To'], 'failure@example.org')
+        eq_(objs[3]['Subject'], '2 done, 1 failed')
+
+        mails = run_alert('alert-notify', count=5, args={'val': [1, 1, 1]})
+        objs = [email.message_from_string(mail['msg']) for mail in mails]
+        eq_(objs[0]['To'], 'alpha@example.org')
+        eq_(objs[0]['Subject'], '#0: 1/val=1')
+        eq_(objs[1]['To'], 'beta@example.org')
+        eq_(objs[1]['Subject'], '#1: 1/val=1')
+        eq_(objs[2]['To'], 'gamma@example.org')
+        eq_(objs[2]['Subject'], '#2: 1/val=1')
+        eq_(objs[3]['To'], 'always@example.org')
+        eq_(objs[3]['Subject'], '3 done, 0 failed')
+        eq_(objs[4]['To'], 'success@example.org')
+        eq_(objs[4]['Subject'], '3 done')
