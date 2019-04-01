@@ -2,6 +2,9 @@ import:
   ui:
     path: $GRAMEXAPPS/ui/gramex.yaml
     YAMLURL: $YAMLURL/ui/
+  languagetool:
+    path: $GRAMEXAPPS/languagetool/gramex.yaml
+    YAMLURL: $YAMLURL/languagetool/
 
 url:
   nlg-data-selector-$*:

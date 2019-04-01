@@ -4,12 +4,9 @@
 """
 Miscellaneous utilities.
 """
-import os.path as op
 import re
 
-import requests
 import six
-from six.moves.configparser import ConfigParser
 from tornado.template import Template
 
 from gramex.data import filter as grmfilter  # NOQA: F401
@@ -37,9 +34,6 @@ narrative = T(\"\"\"
               G=G, U=U)
 print(narrative)
 """
-
-config = ConfigParser()
-config.read(op.join(op.dirname(__file__), "..", "..", "..", "config.ini"))
 
 _spacy = {
     'model': False,
@@ -204,22 +198,6 @@ def sanitize_fh_args(args, func=join_words):
     return args
 
 
-def check_grammar(text):
-    host = config.get('languagetool', 'hostname')
-    port = config.get('languagetool', 'port')
-    apiversion = config.get('languagetool', 'apiversion')
-    url = "{}:{}/{}/check?language=en-us&text={}"
-    try:
-        resp = requests.get(url.format(host, port, apiversion, text))
-        if resp.status_code == requests.codes.ok:
-            resp = resp.json()['matches']
-        else:
-            resp = []
-    except requests.ConnectionError:
-        resp = []
-    return resp
-
-
 def add_html_styling(template, style):
     """Add HTML styling spans to template elements.
 
@@ -262,3 +240,20 @@ def add_html_styling(template, style):
             ss=spanstyle, token=token)
         template = re.sub(re.escape(token), repl, template, 1)
     return '<p>{template}</p>'.format(template=template)
+
+
+# @coroutine
+# def check_grammar(text, lang='en-us'):
+#     """Check `text` for grammatical errors.
+
+#     Parameters
+#     ----------
+#     text : str
+#         The text to check.
+#     lang : str, optional
+#         Language of text.
+#     """
+#     client = AsyncHTTPClient()
+#     query = six.moves.urllib.parse.urlencode({'q': text, 'lang': lang})
+#     resp = yield client.fetch("http://localhost:9988/admin/nlg/languagetool/?" + query)
+#     raise Return(resp.body)

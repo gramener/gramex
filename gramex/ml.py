@@ -1,9 +1,12 @@
 import os
+import six
 import inspect
 import threading
 import pandas as pd
-from tornado.gen import coroutine, Return
-from gramex.config import locate, app_log
+import json
+from tornado.gen import coroutine, Return, sleep
+from tornado.httpclient import AsyncHTTPClient
+from gramex.config import locate, app_log, merge, variables
 from sklearn.externals import joblib
 from sklearn.preprocessing import StandardScaler
 
@@ -375,6 +378,102 @@ def translater(handler, source='en', target='nl', key=None, cache=None, api='goo
     # TODO: support gramex.data.download features
     handler.set_header('Content-Type', 'application/json; encoding="UTF-8"')
     raise Return(result.to_json(orient='records'))
+
+
+_languagetool = {
+    'defaults': {k: v for k, v in variables.items() if k.startswith('LT_')},
+    'installed': os.path.isdir(variables['LT_CWD'])
+}
+
+
+@coroutine
+def languagetool(handler, *args, **kwargs):
+    import gramex
+    merge(kwargs, _languagetool['defaults'], mode='setdefault')
+    yield gramex.service.threadpool.submit(languagetool_download)
+    if not handler:
+        lang = kwargs.get('lang', 'en-us')
+        q = kwargs.get('q', '')
+    else:
+        lang = handler.get_argument('lang', 'en-us')
+        q = handler.get_argument('q', '')
+    result = yield languagetoolrequest(q, lang, **kwargs)
+    errors = json.loads(result.decode('utf8'))['matches']
+    if errors:
+        result = {
+            "errors": errors,
+        }
+        corrected = list(q)
+        d_offset = 0  # difference in the offset caused by the correction
+        for error in errors:
+            # only accept the first replacement for an error
+            correction = error['replacements'][0]['value']
+            offset, limit = error['offset'], error['length']
+            offset += d_offset
+            del corrected[offset:(offset + limit)]
+            for i, char in enumerate(correction):
+                corrected.insert(offset + i, char)
+            d_offset += len(correction) - limit
+        result['correction'] = "".join(corrected)
+        result = json.dumps(result)
+    raise Return(result)
+
+
+@coroutine
+def languagetoolrequest(text, lang='en-us', **kwargs):
+    """Check grammar by making a request to the LanguageTool server.
+
+    Parameters
+    ----------
+    text : str
+        Text to check
+    lang : str, optional
+        Language. See a list of supported languages here: https://languagetool.org/api/v2/languages
+    """
+    client = AsyncHTTPClient()
+    url = kwargs['LT_URL'].format(**kwargs)
+    query = six.moves.urllib_parse.urlencode({'language': lang, 'text': text})
+    url = url + query
+    tries = 2  # See: https://github.com/gramener/gramex/pull/125#discussion_r266200480
+    while tries:
+        try:
+            result = yield client.fetch(url)
+            tries = 0
+        except ConnectionRefusedError:
+            # Start languagetool
+            from gramex.cache import daemon
+            cmd = [p.format(**kwargs) for p in kwargs['LT_CMD']]
+            app_log.info('Starting: %s', ' '.join(cmd))
+            if 'proc' not in _languagetool:
+                import re
+                _languagetool['proc'] = daemon(
+                    cmd, cwd=kwargs['LT_CWD'],
+                    first_line=re.compile(r"Server started\s*$"),
+                    stream=True, timeout=5,
+                    buffer_size=512
+                )
+            try:
+                result = yield client.fetch(url)
+                tries = 0
+            except ConnectionRefusedError:
+                yield sleep(1)
+                tries -= 1
+    raise Return(result.body)
+
+
+def languagetool_download():
+    if _languagetool['installed']:
+        return
+    import requests, zipfile, io        # noqa
+    target = _languagetool['defaults']['LT_TARGET']
+    if not os.path.isdir(target):
+        os.makedirs(target)
+    src = _languagetool['defaults']['LT_SRC'].format(**_languagetool['defaults'])
+    app_log.info('Downloading languagetools from %s', src)
+    stream = io.BytesIO(requests.get(src).content)
+    app_log.info('Unzipping languagetools to %s', target)
+    zipfile.ZipFile(stream).extractall(target)
+    _languagetool['installed'] = True
 
 
 # Gramex 1.48 spelt translater as translator. Accept both spellings.
