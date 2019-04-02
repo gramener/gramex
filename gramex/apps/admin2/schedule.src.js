@@ -38,6 +38,7 @@ $.fn.schedule = function(options) {
     self.on('click', '.run', function () {
       var $this = $(this)
       var $icon = $('.fa', this).toggleClass('fa-play fa-spinner fa-spin')
+      $icon.parent('.btn').prop('disabled', true)
       var name = $this.data('name')
       var shortname = _.last((name || '').split(/:/))
       $.ajax(options.url, {
@@ -55,6 +56,7 @@ $.fn.schedule = function(options) {
         })
       }).always(function () {
         $icon.toggleClass('fa-play fa-spinner fa-spin')
+        $icon.parent('.btn').prop('disabled', false)
       })
     })
   })
