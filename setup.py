@@ -68,6 +68,9 @@ install_requires = [
 if sys.version_info[0] < 3:
     # handlers.datahandler uses futures (backport for 2.7)
     install_requires.append('futures >= 3.0.5')
+    # restrict pandas to v0.23, unicode comparisons fail in later versions
+    install_requires.remove('pandas')
+    install_requires.append('pandas==0.23')
 
 
 def read_gitignore(path, exclude=set()):
