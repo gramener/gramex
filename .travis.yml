@@ -55,4 +55,5 @@ script:
   - pip install -e .
   - pip install gramexenterprise
   - gramex license accept
+  - python -m spacy download en
   - python setup.py nosetests

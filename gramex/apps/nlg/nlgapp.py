@@ -35,7 +35,7 @@ def render_live_template(handler):
         nrid += '.json'
     data = json.loads(handler.args['data'][0])
     df = pd.DataFrame.from_records(data)
-    nrpath = op.join(nlg_path, handler.current_user.email, nrid)
+    nrpath = op.join(nlg_path, handler.current_user.id, nrid)
     with open(nrpath, 'r') as fout:  # noqa: No encoding for json
         templates = json.load(fout)
     narratives = []
@@ -51,7 +51,7 @@ def render_live_template(handler):
 
 def get_original_df(handler):
     """Get the original dataframe which was uploaded to the webapp."""
-    data_dir = op.join(nlg_path, handler.current_user.email)
+    data_dir = op.join(nlg_path, handler.current_user.id)
     with open(op.join(data_dir, 'meta.cfg'), 'r') as fout:  # noqa: No encoding for json
         meta = json.load(fout)
     dataset_path = op.join(data_dir, meta['dsid'])
@@ -107,7 +107,12 @@ def process_template(handler):
 
 def read_current_config(handler):
     """Read the current data and narrative IDs written to the session file."""
-    meta_path = op.join(nlg_path, handler.current_user.email, 'meta.cfg')
+    user_dir = op.join(nlg_path, handler.current_user.id)
+    meta_path = op.join(user_dir, 'meta.cfg')
+    if not op.isdir(user_dir):
+        os.mkdir(user_dir)
+    if not op.isfile(meta_path):
+        return {}
     with open(meta_path, 'r') as fout:  # noqa: No encoding for json
         meta = json.load(fout)
     return meta
@@ -125,7 +130,7 @@ def get_dataset_files(handler):
     list
         List of filenames.
     """
-    user_dir = op.join(nlg_path, handler.current_user.email)
+    user_dir = op.join(nlg_path, handler.current_user.id)
     if op.isdir(user_dir):
         files = [f for f in os.listdir(user_dir) if op.splitext(f)[-1].lower() in DATAFILE_EXTS]
     else:
@@ -145,8 +150,7 @@ def get_narrative_config_files(handler):
     list
         List of narrative configurations.
     """
-    # TODO: current_user.email needs to be replaced with a more suitable user ID
-    user_dir = op.join(nlg_path, handler.current_user.email)
+    user_dir = op.join(nlg_path, handler.current_user.id)
     if op.isdir(user_dir):
         return [f for f in os.listdir(user_dir) if f.endswith('.json')]
     return []
@@ -163,7 +167,7 @@ def download_config(handler):
 
 def save_config(handler):
     """Save the current narrative config.
-    (to $GRAMEXDATA/{{ handler.current_user.email }})"""
+    (to $GRAMEXDATA/{{ handler.current_user.id }})"""
     payload = {}
     payload['config'] = json.loads(parse.unquote(handler.args['config'][0]))
     payload['name'] = parse.unquote(handler.args['name'][0])
@@ -171,7 +175,7 @@ def save_config(handler):
     if not nname.endswith('.json'):
         nname += '.json'
     payload['dataset'] = parse.unquote(handler.args['dataset'][0])
-    fpath = op.join(nlg_path, handler.current_user.email, nname)
+    fpath = op.join(nlg_path, handler.current_user.id, nname)
     with open(fpath, 'w') as fout:  # noqa: No encoding for json
         json.dump(payload, fout, indent=4)
 
@@ -192,7 +196,7 @@ def init_form(handler):
     """Process input from the landing page and write the current session config."""
     meta = {}
     # prioritize files first
-    data_dir = op.join(nlg_path, handler.current_user.email)
+    data_dir = op.join(nlg_path, handler.current_user.id)
     if not op.isdir(data_dir):
         os.makedirs(data_dir)
 
@@ -223,7 +227,7 @@ def init_form(handler):
 
 def edit_narrative(handler):
     """Set the handler's narrative and dataset ID to the current session."""
-    user_dir = op.join(nlg_path, handler.current_user.email)
+    user_dir = op.join(nlg_path, handler.current_user.id)
     dataset_name = handler.args.get('dsid', [''])[0]
     narrative_name = handler.args.get('nrid', [''])[0] + '.json'
     with open(op.join(user_dir, 'meta.cfg'), 'w') as fout:  # NOQA: no encoding for JSON
@@ -232,7 +236,7 @@ def edit_narrative(handler):
 
 def get_init_config(handler):
     """Get the initial default configuration for the current user."""
-    user_dir = op.join(nlg_path, handler.current_user.email)
+    user_dir = op.join(nlg_path, handler.current_user.id)
     metapath = op.join(user_dir, 'meta.cfg')
     if op.isfile(metapath):
         with open(metapath, 'r') as fout:  # NOQA: no encoding for JSON

@@ -5,9 +5,6 @@ import:
   languagetool:
     path: $GRAMEXAPPS/languagetool/gramex.yaml
     YAMLURL: $YAMLURL/languagetool/
-  update:
-    path: $GRAMEXAPPS/update/gramex.yaml
-    YAMLURL: $YAMLURL/update/
 
 url:
   nlg-home-$*:
@@ -16,8 +13,6 @@ url:
     kwargs:
       path: $YAMLPATH/index.html
       template: true
-      auth:
-        login_url: /$YAMLURL/update/google
   nlg-data-selector-$*:
     pattern: /$YAMLURL/initform
     handler: FunctionHandler
@@ -83,8 +78,7 @@ url:
     handler: FunctionHandler
     kwargs:
       function: gramex.apps.nlg.nlgapp.edit_narrative
-      auth:
-        login_url: /$YAMLURL/update/google
+      auth: $ADMIN_AUTH
       redirect:
         url: /$YAMLURL/
   render-live-template-$*:
