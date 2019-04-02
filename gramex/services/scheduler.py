@@ -81,7 +81,7 @@ class Task(object):
             self._call_later(None)
 
     def call_later(self):
-        '''Schedule next run automatically. Do NOT call twice: creates two callbacks'''
+        '''Schedule next run automatically. Clears any previous scheduled runs'''
         delay = self.cron.next(default_utc=self.utc) if hasattr(self, 'cron') else None
         self._call_later(delay)
         if delay is not None:
@@ -92,6 +92,8 @@ class Task(object):
     def _call_later(self, delay):
         '''Schedule next run after delay seconds. If delay is None, no more runs.'''
         if delay is not None:
+            if self.callback is not None:
+                self.ioloop.remove_timeout(self.callback)
             self.callback = self.ioloop.call_later(delay, self.run)
             self.next = time.time() + delay
         else:
