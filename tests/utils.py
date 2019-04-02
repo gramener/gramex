@@ -15,7 +15,7 @@ from orderedattrdict import AttrDict
 from tornado import gen
 from tornado.web import RequestHandler, MissingArgumentError
 from tornado.httpclient import AsyncHTTPClient
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from gramex.cache import Subprocess
 from gramex.services import info
 from gramex.services.emailer import SMTPStub
@@ -113,9 +113,9 @@ def async_calc(handler):
         pd.np.arange(rows * len(cols)).reshape((rows, len(cols))),
         columns=cols)
     df = df % 4
-    counts = yield [thread_pool.submit(count_group, df, col) for col in cols]
+    counts = as_completed([thread_pool.submit(count_group, df, col) for col in cols])
     # result is [[250,250,250],[250,250,250],[250,250,250],[250,250,250]]
-    raise gen.Return(pd.concat(counts, axis=1).to_json(orient='values'))
+    raise gen.Return(pd.concat([c.result() for c in counts], axis=1).to_json(orient='values'))
 
 
 def httpbin(handler, mime='json', rand=None, status=200):

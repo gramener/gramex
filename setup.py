@@ -207,6 +207,7 @@ setup(
         'websocket-client',         # For websocket testing
         'pdfminer.six',             # For CaptureHandler testing
         'cssselect',                # For HTML testing (test_admin.py)
+        'beautifulsoup4'            # For pd.read_html (test_formhandler.py)
     ],
     cmdclass={
         'develop': PostDevelopCommand,
