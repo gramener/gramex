@@ -7,7 +7,7 @@
 </head>
 
 <body>
-  {% set base = 'nlg/' if handler.request.path == '/admin/' else '' %}
+  {% set base = 'nlg/' if handler.request.path.startswith('/admin/') else '' %}
   {% set kwargs = handler.kwargs %}
   {% set admin_kwargs = kwargs.get('admin_kwargs', '') or {} %}
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -16,7 +16,7 @@
   <script src="ui/popper.js/dist/umd/popper.min.js"></script>
   <!--IDE HTML-->
   {% from gramex.apps.nlg.nlgapp import read_current_config %}
-  {% set dsid = read_current_config(handler)['dsid'] %}
+  {% set dsid = read_current_config(handler).get('dsid') %}
   <!-- Include JS dependencies  -->
   <script src="ui/jquery/dist/jquery.min.js"></script>
   <script src="ui/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
@@ -160,11 +160,13 @@
       </p>
   </form>
   <div class="divider"></div>
-  <div class="formhandler" data-src="{{ base }}preview/{{ handler.current_user.email }}/{{ dsid }}"></div>
+  {% if dsid %}
+  <div class="formhandler" data-src="{{ base }}preview/{{ handler.current_user.id }}/{{ dsid }}"></div>
   <script>
     $('.formhandler').on('load', renderPreview);
     $('.formhandler').formhandler();
   </script>
+  {% end %}
   <!--
   <button id="clear-tmpls" title="Clear Narrative" type="button" class="btn btn-danger">
       <i class="fa fa-trash"></i>
