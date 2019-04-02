@@ -10,6 +10,10 @@ from gramex.config import locate, app_log, merge, variables
 from sklearn.externals import joblib
 from sklearn.preprocessing import StandardScaler
 
+if six.PY2:
+    import socket
+    ConnectionRefusedError = socket.error
+
 # Expose joblob.load via gramex.ml
 load = joblib.load                      # noqa
 
