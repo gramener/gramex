@@ -1,7 +1,7 @@
 from inflect import engine
 from tornado.template import Template
 
-from gramex.apps.nlg.utils import load_spacy_model, set_nlg_gramopt, get_lemmatizer
+from gramex.apps.nlg.nlgutils import load_spacy_model, set_nlg_gramopt, get_lemmatizer
 
 infl = engine()
 

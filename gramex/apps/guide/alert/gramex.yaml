@@ -69,6 +69,19 @@ alert:
         - $YAMLPATH/doc1.docx
         - https://example.org/sample.pptx
 
+  alert-notify:
+    to: user@example.org
+    subject: Email with notification
+    html: This email will trigger a notification at the end.
+    notify: [alert-notify-success]
+  alert-notify-success:
+    condition: not args['fail']
+    to: admin@example.org
+    subject: Email sent
+    html: |
+      {% import yaml %}
+      <pre style="white-space:prewrap">{{ yaml.dump(args, default_flow_style=False) }}</pre>
+
   alert-templates:
     to: '{{ "admin@example.org" }}'
     subject: Template email
@@ -90,9 +103,9 @@ alert:
       <p><img src="cid:img"></p>
     images:
       # TODO: avoid hard-coding the port
-      img: 'http://localhost:9999/capture?url=http://localhost:9999/&ext=png'
+      img: 'http://localhost:9900/capture?url=http://localhost:9988/&ext=png'
     attachments:
-      - 'http://localhost:9999/capture?url=http://localhost:9999/&ext=pdf'
+      - 'http://localhost:9900/capture?url=http://localhost:9988/&ext=pdf'
     user:
       id: 'sample@example.org'
       role: 'custom-role'

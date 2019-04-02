@@ -1428,38 +1428,40 @@ url:
     handler: FormHandler
     kwargs:
       url: sales-edits.xlsx
+      sheet_name: '{table}'
       id: [sales]
       xsrf_cookies: false
-      default: {x: 1}
+      default: {x: 1, table: sales}
 
   formhandler/edits-xlsx-multikey:
     pattern: /formhandler/edits-xlsx-multikey
     handler: FormHandler
     kwargs:
       url: sales-edits.xlsx
+      sheet_name: '{table}'
       id: [city, product]
       xsrf_cookies: false
-      default: {x: 1}
+      default: {x: 1, table: sales}
 
   formhandler/edits-sqlite-singlekey:
     pattern: /formhandler/edits-sqlite-singlekey
     handler: FormHandler
     kwargs:
       url: sqlite:///formhandler-edits.db
-      table: sales
+      table: '{table}'
       id: [sales]
       xsrf_cookies: false
-      default: {x: 1}
+      default: {x: 1, table: sales}
 
   formhandler/edits-sqlite-multikey:
     pattern: /formhandler/edits-sqlite-multikey
     handler: FormHandler
     kwargs:
       url: sqlite:///formhandler-edits.db
-      table: sales
+      table: '{table}'
       id: [city, product]
       xsrf_cookies: false
-      default: {x: 1}
+      default: {x: 1, table: sales}
 
   formhandler/edits-xlsx-redirect:
     pattern: /formhandler/edits-xlsx-redirect
@@ -1475,39 +1477,42 @@ url:
     handler: FormHandler
     kwargs:
       csv:
-        url: sales-edits.csv
+        url: '{file}'
         encoding: utf-8
         id: [city, product]
       sql:
         url: mysql+pymysql://root@$MYSQL_SERVER/test_formhandler?charset=utf8
-        table: sales
+        table: '{table}'
         id: [city, product]
       xsrf_cookies: false
+      default: {file: sales-edits.csv, table: sales}
 
   formhandler/edits-multidata-modify:
     pattern: /formhandler/edits-multidata-modify
     handler: FormHandler
     kwargs:
       csv:
-        url: sales-edits.csv
+        url: '{file}'
         encoding: utf-8
         id: [city, product]
         modify: len(handler.args.keys())
       sql:
         url: mysql+pymysql://root@$MYSQL_SERVER/test_formhandler?charset=utf8
-        table: sales
+        table: '{table}'
         id: [city, product]
       modify: len(handler.args.keys())
       xsrf_cookies: false
+      default: {file: sales-edits.csv, table: sales}
 
   formhandler/edits-dates:
     pattern: /formhandler/edits-dates
     handler: FormHandler
     kwargs:
       url: sales-edits.xlsx
-      sheet_name: dates
+      sheet_name: '{table}'
       id: [sales]
       xsrf_cookies: false
+      default: {table: dates}
 
   formhandler/chart:
     pattern: /formhandler/chart
@@ -1564,6 +1569,10 @@ url:
     handler: FormHandler
     kwargs:
       url: '{path}.xlsx'
+      ext: '{ext}'
+      sheet_name: '{sheet}'
+      default:
+        ext: xlsx
   formhandler/arg-table:
     pattern: /formhandler/arg-table
     handler: FormHandler
@@ -2687,6 +2696,8 @@ alert:
       to: "{{ 'user@example.org' }}"
       cc: "{{ 'cc@example.org' }}"
       bcc: "{{ 'bcc@example.org' }}"
+      reply_to: "{{ 'reply_to@example.org' }}"
+      on_behalf_of: "{{ 'on_behalf_of@example.org' }}"
       subject: "{{ 'subject' }}"
       body: "{{ 'body' }}"
       html: "{{ 'html' }}"
@@ -2780,6 +2791,33 @@ alert:
         role: manager
       attachments:
         - http://localhost:9999/capturechrome?url=http://localhost:9999/auth/session&ext=pdf
+    alert-run-args:
+      service: smtps_stub
+      to: "{{ args.get('to', 'default@local') }}"
+      subject: "{{ args.get('subject', 'default') }}"
+    alert-notify:
+      data:
+        - {email: alpha@example.org}
+        - {email: beta@example.org}
+        - {email: gamma@example.org}
+      each: data
+      to: "{{ row['email'] }}"
+      subject: "#{{ index }}: 1/val={{ 1 // args['val'][index] }}"
+      notify: [alert-notify-always, alert-notify-success, alert-notify-failure, alert-notify-nonexistent]
+    alert-notify-always:
+      service: smtps_stub
+      to: always@example.org
+      subject: '{{ len(args["done"]) }} done, {{ len(args["fail"]) }} failed'
+    alert-notify-success:
+      service: smtps_stub
+      to: success@example.org
+      subject: '{{ len(args["done"]) }} done'
+      condition: not args["fail"]
+    alert-notify-failure:
+      service: smtps_stub
+      to: failure@example.org
+      subject: '{{ len(args["done"]) }} done, {{ len(args["fail"]) }} failed'
+      condition: args["fail"]
 
 import:
   # Import from all subdirectories
@@ -2810,9 +2848,10 @@ import:
   admin/auth:
     path: $GRAMEXAPPS/admin2/gramex.yaml
     YAMLURL: /$YAMLURL/admin/auth/
+    ADMIN_KWARGS:
+      authhandler: auth/dbcsv
     ADMIN_AUTH:
       login_url: /auth/dbcsv
-      authhandler: auth/dbcsv
       membership:
         user: [alpha, delta]
 

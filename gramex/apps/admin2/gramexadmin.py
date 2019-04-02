@@ -190,6 +190,10 @@ def get_schedule(service_type):
         entry['args'] = json.dumps(entry.get('args', []))
         entry['kwargs'] = json.dumps(entry.get('kwargs', {}))
         entry['schedule'] = ''
+        if key not in gramex.service[service_type]:
+            entry['schedule'] = 'NA'
+            data.append(entry)
+            continue
         schedule = gramex.service[service_type][key]
         entry['next'] = schedule.next * 1000 if schedule.next else None
         if hasattr(schedule, 'cron_str'):
@@ -220,9 +224,12 @@ def schedule(handler, service):
         if handler.get_argument('mock', False) and service == 'alert':
             kwargs = {'callback': lambda **kwargs: results.append(kwargs)}
         if schedule.thread:
-            yield schedule.function(**kwargs)
+            args = yield schedule.function(**kwargs)
         else:
-            yield gramex.service.threadpool.submit(schedule.function, **kwargs)
+            args = yield gramex.service.threadpool.submit(schedule.function, **kwargs)
+        if service == 'alert' and isinstance(args, dict):
+            for arg in args.get('fail', []):
+                raise arg['error']
         for result in results:
             if 'html' in result:
                 def _img(match):

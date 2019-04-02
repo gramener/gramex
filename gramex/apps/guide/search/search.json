@@ -826,6 +826,50 @@
       "Templates support UI modules": -1
     }
   },
+  "1.54": {
+    "": {
+      "Gramex 1.54 release notes": -1
+    },
+    "admin-components-url-changed": {
+      "Admin components URL changed": -1
+    },
+    "admin-ui-features-alerts-and-schedules": {
+      "Admin UI features alerts and schedules": -1
+    },
+    "admin-ui-for-alert": {
+      "Admin UI for Alert": -1
+    },
+    "admin-ui-for-schedule": {
+      "Admin UI for Schedule": -1
+    },
+    "feather": {
+      "Feather": -1
+    },
+    "formhandler-creates-tables-with-primary-keys": {
+      "FormHandler creates tables with primary keys": -1
+    },
+    "formhandler-parameters": {
+      "FormHandler parameters": -1
+    },
+    "how-to-upgrade": {
+      "How to upgrade": -1
+    },
+    "jsondata": {
+      "JSONData": -1
+    },
+    "languagetool-app": {
+      "LanguageTool app": -1
+    },
+    "new-data-formats": {
+      "New data formats": -1
+    },
+    "parquet": {
+      "Parquet": -1
+    },
+    "statistics": {
+      "Statistics": -1
+    }
+  },
   "about": {
     "": {}
   },
@@ -833,8 +877,12 @@
     "": {
       "Admin page": -1
     },
-    "admin-access": {
-      "Admin access": -1
+    "admin-access": {},
+    "admin-access-control": {
+      "Admin access control": -1
+    },
+    "admin-alerts": {
+      "Admin: Alerts": -1
     },
     "admin-config": {
       "Admin: Config": -1
@@ -850,6 +898,9 @@
     },
     "admin-page-old": {
       "Admin page (old)": -1
+    },
+    "admin-schedule": {
+      "Admin: Schedule": -1
     },
     "admin-shell": {
       "Admin: Shell": -1
@@ -883,6 +934,9 @@
     "alert-setup": {
       "Alert setup": -1
     },
+    "alert-templates": {
+      "Alert templates": -1
+    },
     "avoid-re-sending-emails": {
       "Avoid re-sending emails": -1
     },
@@ -900,6 +954,9 @@
     },
     "place-body-and-html-in-a-file": {
       "Place body and HTML in a file": -1
+    },
+    "reply-to-different-user": {
+      "Reply to different user": -1
     },
     "send-a-scheduled-email": {
       "Send a scheduled email": -1
@@ -919,15 +976,16 @@
     "send-inline-images": {
       "Send inline images": -1
     },
+    "send-notification-on-alert": {
+      "Send notification on alert": -1
+    },
     "use-multiple-datasets": {
       "Use multiple datasets": -1
     },
     "use-multiple-services": {
       "Use multiple services": -1
     },
-    "use-templates": {
-      "Use templates": -1
-    }
+    "use-templates": {}
   },
   "apps": {
     "": {
@@ -2009,6 +2067,38 @@
       "PUT - write data": -1
     }
   },
+  "languagetool": {
+    "": {
+      "LanguageTool App for Gramex": -1
+    },
+    "autocorrect-with-languagetool": {
+      "Autocorrect with LanguageTool": -1
+    },
+    "configuration": {
+      "Configuration": -1
+    },
+    "examples": {
+      "Examples": -1
+    },
+    "installation": {
+      "Installation": -1
+    },
+    "languagetool": {
+      "LanguageTool": -1
+    },
+    "languagetool-api": {
+      "LanguageTool API": -1
+    },
+    "play-with-languagetool": {
+      "Play with LanguageTool": -1
+    },
+    "usage": {
+      "Usage": -1
+    },
+    "using-languagetool-with-ajax": {
+      "Using LanguageTool with Ajax": -1
+    }
+  },
   "license": {
     "": {
       "Gramex license": -1
@@ -2472,6 +2562,9 @@
     },
     "scheduler-api": {
       "Scheduler API": -1
+    },
+    "scheduler-preview": {
+      "Scheduler preview": -1
     }
   },
   "search": {

@@ -5,6 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{{ title }}</title>
   <link rel="stylesheet" href="/{{ GUIDE_ROOT }}/style.css?v=45">
+  <script>
+    /* global dataLayer */
+    window.dataLayer = window.dataLayer || []
+    function gtag() { dataLayer.push(arguments) }
+    gtag('js', new Date())
+    gtag('config', 'UA-42604894-1')
+    gtag('set', { 'user_id': '{% try %}{{ handler.current_user.email }}{% except %}{% end %}' })
+  </script>
 </head>
 <body>
 

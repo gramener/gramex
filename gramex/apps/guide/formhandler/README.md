@@ -37,6 +37,10 @@ You can read from multiple file formats as well as databases. The URL may be a
 
     url: /path/to/file.hdf      # Reads the dataframe at key named 'sales'
     key: sales
+
+    url: /path/to/file.parquet  # Reads the parquet file
+
+    url: /path/to/file.feather  # Reads the feather file
 ```
 
 You can read from a HTTP or HTTPS URL.
@@ -845,14 +849,15 @@ def good_query_function(args):
 
 ## FormHandler parameters
 
-The `url:`, `table:` and `query:` parameters are formatted using the path
-arguments and URL query parameters. This allows users to control where and how
-FormHandler picks up data. For example, take this structure:
+FormHandler parameters such as `url:`, `ext:`, `table:`, `query:`, `queryfile:`
+and all other kwargs (e.g. `sheet_name`) are formatted using the path arguments
+and URL query parameters. This allows users to control where and how FormHandler
+picks up data. For example, take this structure:
 
 ```yaml
 url:
-  parameters:
-    pattern: /$YAMLURL/(\w+)/(\w+)      # Maps /db/table to {_0:db, _1:table}
+  db-parameters:
+    pattern: /db/$YAMLURL/(\w+)/(\w+)   # Maps /db/table to {_0:db, _1:table}
     handler: FormHandler
     kwargs:
       url: sqlite:///$YAMLPATH/{_0}.db  # Use _0 as the DB file name
@@ -861,16 +866,24 @@ url:
         FROM {_1}                       # _1 comes from the path arguments
         WHERE {col}=:val                # ?col= as column, ?val= as val
         GROUP BY {group}
+  excel-parameters:
+    pattern: /xl/$YAMLURL/(\w+)/(\w+)    # Maps /file/sheet to {_0:file, _1:sheet}
+    handler: FormHandler
+    kwargs:
+      url: $YAMLPATH/{_0}.xlsx          # Use _0 as the file name
+      sheet_name: '{_1}'                # Use _1 as the sheet name
 ```
 
-The URL `/data/sales?group=org&col=city&val=London` returns the results of
+The URL `/db/data/sales?group=org&col=city&val=London` returns the results of
 `SELECT org, COUNT(*) FROM sales GROUP BY org WHERE city=London` running on
 `data.db`.
 
-`:arg` is the SQLAlchemy placeholder. It can only be used as values, not column
-names or in any other place. This will be safely formatted by SQL and can
-contain any value. On the other hand, use `{arg}` for column names, filenames,
-etc.
+The URL `/xl/sales/revenue` returns the "revenue" sheet from `sales.xlsx`.
+
+The `:val` used above is an SQLAlchemy argument. It is replaced by the value
+of `?val=` in values (not in column names or in any other place). This will be
+safely formatted by SQL and can contain any value. On the other hand, use
+`{arg}` for column names, filenames, etc.
 
 For security, there are 2 constraints:
 

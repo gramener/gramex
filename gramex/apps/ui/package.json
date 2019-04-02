@@ -15,7 +15,7 @@
     "font-awesome": "*",
     "g1": "0.16",
     "jquery": "~3",
-    "leaflet": "1.2",
+    "leaflet": "1.4",
     "lodash": "4",
     "moment": "2",
     "morphdom": "2",
@@ -29,6 +29,6 @@
     "url-search-params": "npm:@ungap/url-search-params@0.1",
     "vega": "5",
     "vega-embed": "3",
-    "vega-lite": "3.0.0-rc15"
+    "vega-lite": "3"
   }
 }

@@ -86,7 +86,7 @@ async function render(q) {
     path: target,
     format: q.format || 'A4',
     landscape: q.orientation == 'landscape',
-    scale: q.scale || 1,
+    scale: parseFloat(q.scale || 1),  // scale must be a double, not int
     margin: {},
     printBackground: true,
   }

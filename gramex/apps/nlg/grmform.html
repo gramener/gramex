@@ -4,7 +4,7 @@
         <title>Select Dataset</title>
     </head>
     <body>
-        {% from gramex.apps.nlg.webapp import get_dataset_files, get_narrative_config_files %}
+        {% from gramex.apps.nlg.nlgapp import get_dataset_files, get_narrative_config_files %}
         {% set NLG_DATASETS = get_dataset_files(handler) %}
         {% set NLG_NARRATIVES = get_narrative_config_files(handler) %}
         <!-- Include JS dependencies  -->
