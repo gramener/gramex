@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <title>NLG Login</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="/style.css">
+</head>
+
+<body class="bg-primary gradient-tc bg-no-repeat text-white">
+  {%! set base = '..' %}
+  {%! include template-navbar.html %}
+  {%! set kwargs = handler.kwargs %}
+  {%! try %}{%! set user = kwargs.user.arg %}{%! except %}{%! set user = 'user' %}{%! end %}
+  {%! try %}{%! set password = kwargs.password.arg %}{%! except %}{%! set password = 'password' %}{%! end %}
+  <div class="container d-flex flex-column align-items-center">
+    <div class="card shadow text-dark mx-auto my-4 px-5 py-3 col-md-6">
+      {%! if error %}
+        <div class="alert alert-danger mx-n3">
+          <h1 class="h4">Error logging in</h1>
+          <p>{{! error['error'] }}</p>
+          <div><small><strong>code</strong>: {{! error['code'] }}</small></div>
+        </div>
+      {%! end %}
+      <form method="POST">
+        <div class="form-group">
+          <label for="{{! user }}">Login</label>
+          <input type="text" class="form-control" name="{{! user }}" id="{{! user }}" value="{{! handler.get_argument(user, '') }}" placeholder="Login ID" autofocus required>
+        </div>
+        <div class="form-group">
+          <label for="{{! password  }}">Password</label>
+          <input type="password" class="form-control" name="{{! password }}" id="{{! password }}" placeholder="Password" required>
+        </div>
+        <input type="hidden" name="_xsrf" value="{{! handler.xsrf_token }}">
+        <p><button type="submit" class="btn btn-primary w-100 small">Login</button></p>
+        {%! if kwargs.get('forgot') %}
+          <p class="small"><a href="?{{! kwargs.forgot.key }}">Forgot password</a></p>
+        {%! end %}
+        <div>Default login: alpha (password: alpha)</div>
+      </form>
+    </div><!-- .card -->
+  </div>
+  <script src="../ui/jquery/dist/jquery.min.js"></script>
+  <script src="../ui/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+  {%! if 'hash' in kwargs.get('password', {}) %}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-sha256/0.9.0/sha256.min.js"></script>
+    <script>
+      /* globals sha256 */
+      // hash the password before submitting
+      $('form').on('submit', function() {
+        var $password = $('#{{! password }}').get(0)
+        $password.value = sha256($password.value)
+      })
+    </script>
+  {%! end %}
+</body>
+
+</html>
