@@ -10,8 +10,7 @@ class Template {
   ) {
     this.source_text = text
     // this.checkGrammar()
-    this.highlight()
-    this.tokenmap = {}
+    this.tokenmap = tokenmap
     this.inflections = inflections
     for (let [token, tkobj] of Object.entries(tokenmap)) {
       if (Array.isArray(tkobj)) {
@@ -42,11 +41,6 @@ class Template {
           self.grmerr = e.matches
           self.highlight()
         },
-        error: function(e) {
-          console.log('Error clause called!')
-          self.grmerr = {},
-          self.highlight()
-        }
       }
     )
   }
@@ -68,7 +62,7 @@ class Template {
       sent = addFHArgsSetter(sent, this.fh_args)
     }
     this.template = sent
-    // this.highlight()
+    this.highlight()
     document.getElementById('edit-template').value = this.template
   }
 

@@ -1,3 +1,14 @@
+schedule:
+  clean-anon-files:
+    function: gramex.apps.nlg.nlgapp.clean_anonymous_files
+    startup: true
+
+variables:
+  NLG_DEFAULT_AUTH:
+    login_url: /$YAMLURL/login/
+  NLG_AUTH:
+    function: gramex.apps.nlg.nlgapp.get_auth
+
 import:
   ui:
     path: $GRAMEXAPPS/ui/gramex.yaml
@@ -7,6 +18,15 @@ import:
     YAMLURL: $YAMLURL/languagetool/
 
 url:
+  simple-auth-$*:
+  # CAUTION: This setup is useful only for testing.
+  # It stores passwords in plain text. DO NOT USE IT IN PRODUCTION.
+    pattern: /$YAMLURL/login/
+    handler: SimpleAuth
+    kwargs:
+      credentials:
+        alpha: alpha
+      template: $YAMLPATH/login.html
   nlg-home-$*:
     pattern: /$YAMLURL/
     handler: FileHandler
@@ -27,7 +47,7 @@ url:
       xsrf_cookies: false
       function: gramex.apps.nlg.nlgapp.init_form
       redirect:
-        url: /$YAMLURL/
+        query: next
   tablepreview-$*:
     pattern: /$YAMLURL/preview/(.*)/(.*)
     handler: FormHandler
@@ -76,14 +96,13 @@ url:
     handler: FunctionHandler
     kwargs:
       function: gramex.apps.nlg.nlgapp.save_config
-      auth: $ADMIN_AUTH
-      xsrf_cookies: false
+      auth: $NLG_AUTH
   edit-narrative-$*:
     pattern: /$YAMLURL/edit-narrative
     handler: FunctionHandler
     kwargs:
       function: gramex.apps.nlg.nlgapp.edit_narrative
-      auth: $ADMIN_AUTH
+      auth: $NLG_AUTH
       redirect:
         url: /$YAMLURL/
   render-live-template-$*:
