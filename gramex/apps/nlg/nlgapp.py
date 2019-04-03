@@ -27,6 +27,15 @@ if not op.isdir(nlg_path):
     os.mkdir(nlg_path)
 
 
+
+def get_user_dir(handler):
+    if getattr(handler, 'current_user', False):
+        dirpath = op.join(nlg_path, handler.current_user.id)
+    else:
+        dirpath = op.join(nlg_path, 'anonymous')
+    return dirpath
+
+
 def render_live_template(handler):
     """Given a narrative ID and df records, render the template."""
     orgdf = get_original_df(handler)
@@ -51,7 +60,7 @@ def render_live_template(handler):
 
 def get_original_df(handler):
     """Get the original dataframe which was uploaded to the webapp."""
-    data_dir = op.join(nlg_path, handler.current_user.id)
+    data_dir = get_user_dir(handler)
     with open(op.join(data_dir, 'meta.cfg'), 'r') as fout:  # noqa: No encoding for json
         meta = json.load(fout)
     dataset_path = op.join(data_dir, meta['dsid'])
@@ -107,7 +116,7 @@ def process_template(handler):
 
 def read_current_config(handler):
     """Read the current data and narrative IDs written to the session file."""
-    user_dir = op.join(nlg_path, handler.current_user.id)
+    user_dir = get_user_dir(handler)
     meta_path = op.join(user_dir, 'meta.cfg')
     if not op.isdir(user_dir):
         os.mkdir(user_dir)
@@ -130,11 +139,12 @@ def get_dataset_files(handler):
     list
         List of filenames.
     """
-    user_dir = op.join(nlg_path, handler.current_user.id)
-    if op.isdir(user_dir):
-        files = [f for f in os.listdir(user_dir) if op.splitext(f)[-1].lower() in DATAFILE_EXTS]
-    else:
-        files = []
+    files = []
+    if getattr(handler, 'current_user', None):
+        user_dir = op.join(nlg_path, handler.current_user.id)
+        if op.isdir(user_dir):
+            allfiles = os.listdir(user_dir)
+            files = [f for f in allfiles if op.splitext(f)[-1].lower() in DATAFILE_EXTS]
     return files
 
 
@@ -150,10 +160,12 @@ def get_narrative_config_files(handler):
     list
         List of narrative configurations.
     """
-    user_dir = op.join(nlg_path, handler.current_user.id)
-    if op.isdir(user_dir):
-        return [f for f in os.listdir(user_dir) if f.endswith('.json')]
-    return []
+    files = []
+    if getattr(handler, 'current_user', None):
+        user_dir = op.join(nlg_path, handler.current_user.id)
+        if op.isdir(user_dir):
+            files = [f for f in os.listdir(user_dir) if f.endswith('.json')]
+    return files
 
 
 def download_config(handler):
@@ -195,8 +207,7 @@ def get_gramopts(handler):
 def init_form(handler):
     """Process input from the landing page and write the current session config."""
     meta = {}
-    # prioritize files first
-    data_dir = op.join(nlg_path, handler.current_user.id)
+    data_dir = get_user_dir(handler)
     if not op.isdir(data_dir):
         os.makedirs(data_dir)
 
@@ -221,7 +232,7 @@ def init_form(handler):
         meta['nrid'] = op.basename(config_path)
 
     # write meta config
-    with open(op.join(data_dir, 'meta.cfg'), 'w') as fout:  # NOQA: no encoding for JSON
+    with open(op.join(data_dir, 'meta.cfg'), 'w') as fout:  # NOQA
         json.dump(meta, fout, indent=4)
 
 
@@ -236,7 +247,7 @@ def edit_narrative(handler):
 
 def get_init_config(handler):
     """Get the initial default configuration for the current user."""
-    user_dir = op.join(nlg_path, handler.current_user.id)
+    user_dir = get_user_dir(handler)
     metapath = op.join(user_dir, 'meta.cfg')
     if op.isfile(metapath):
         with open(metapath, 'r') as fout:  # NOQA: no encoding for JSON

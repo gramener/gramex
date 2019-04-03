@@ -7,28 +7,28 @@
 </head>
 
 <body>
-  {% set base = 'nlg/' if handler.request.path.startswith('/admin/') else '' %}
-  {% set kwargs = handler.kwargs %}
-  {% set admin_kwargs = kwargs.get('admin_kwargs', '') or {} %}
+  {% set admin_kwargs = handler.kwargs.get('admin_kwargs', '') or {} %}
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="ui/bootstraptheme.css{{ admin_kwargs.get('theme', '') }}">
   <link rel="stylesheet" href="ui/font-awesome/css/font-awesome.min.css">
   <script src="ui/popper.js/dist/umd/popper.min.js"></script>
   <!--IDE HTML-->
-  {% from gramex.apps.nlg.nlgapp import read_current_config %}
+  {% from gramex.apps.nlg.nlgapp import read_current_config, get_user_dir %}
   {% set dsid = read_current_config(handler).get('dsid') %}
   <!-- Include JS dependencies  -->
+  {% if not nlg_base %}
   <script src="ui/jquery/dist/jquery.min.js"></script>
   <script src="ui/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
   <script src="ui/lodash/lodash.min.js"></script>
   <script src="ui/g1/dist/g1.min.js"></script>
+  {% end %}
   <script src="ui/bootstrap-select/dist/js/bootstrap-select.min.js"></script>
-  <script src="{{ base }}nlg.js"></script>
+  <script src="{{ nlg_base }}nlg.js"></script>
   <script>
       // Render the FormHandler table
 
       $.fn.selectpicker.Constructor.BootstrapVersion = '4'
-      var nlg_base = "{{ base }}"
+      var nlg_base = "{{ nlg_base }}"
       var df = null;
       var args = null;
       var templates = [];
@@ -72,12 +72,7 @@
           </button>
         </div>
         <div class="modal-body">
-          {% if admin_kwargs %}
-            {% set redirect = handler.request.path + "?tab=nlg" %}
-          {% else %}
-            {% set redirect = handler.request.path + base %}
-          {% end %}
-          <form id="nlg-init-form" action="{{ base  }}initform?next={{ redirect }}"
+          <form id="nlg-init-form" action="{{ nlg_base }}initform"
           method="POST" enctype="multipart/form-data">
             <div class="row">
               <div class="col">
@@ -161,7 +156,9 @@
   </form>
   <div class="divider"></div>
   {% if dsid %}
-  <div class="formhandler" data-src="{{ base }}preview/{{ handler.current_user.id }}/{{ dsid }}"></div>
+  {% from os.path import basename %}
+  {% set user_dir = basename(get_user_dir(handler)) %}
+  <div class="formhandler" data-src="{{ nlg_base }}preview/{{ user_dir }}/{{ dsid }}"></div>
   <script>
     $('.formhandler').on('load', renderPreview);
     $('.formhandler').formhandler();

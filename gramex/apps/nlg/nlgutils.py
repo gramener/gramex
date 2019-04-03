@@ -5,7 +5,6 @@
 Miscellaneous utilities.
 """
 import re
-from six.moves.configparser import ConfigParser
 
 import six
 from tornado.template import Template
@@ -241,20 +240,3 @@ def add_html_styling(template, style):
             ss=spanstyle, token=token)
         template = re.sub(re.escape(token), repl, template, 1)
     return '<p>{template}</p>'.format(template=template)
-
-
-# @coroutine
-# def check_grammar(text, lang='en-us'):
-#     """Check `text` for grammatical errors.
-
-#     Parameters
-#     ----------
-#     text : str
-#         The text to check.
-#     lang : str, optional
-#         Language of text.
-#     """
-#     client = AsyncHTTPClient()
-#     query = six.moves.urllib.parse.urlencode({'q': text, 'lang': lang})
-#     resp = yield client.fetch("http://localhost:9988/admin/nlg/languagetool/?" + query)
-#     raise Return(resp.body)
