@@ -12,7 +12,12 @@ url:
     handler: FileHandler
     kwargs:
       path: $YAMLPATH/index.html
-      template: true
+      # template: true
+      transform:
+        "index.html":
+          function: template
+          kwargs:
+            nlg_base: ''
   nlg-data-selector-$*:
     pattern: /$YAMLURL/initform
     handler: FunctionHandler
@@ -22,8 +27,7 @@ url:
       xsrf_cookies: false
       function: gramex.apps.nlg.nlgapp.init_form
       redirect:
-        query: next
-      #   url: /$YAMLURL/
+        url: /$YAMLURL/
   tablepreview-$*:
     pattern: /$YAMLURL/preview/(.*)/(.*)
     handler: FormHandler
@@ -72,6 +76,7 @@ url:
     handler: FunctionHandler
     kwargs:
       function: gramex.apps.nlg.nlgapp.save_config
+      auth: $ADMIN_AUTH
       xsrf_cookies: false
   edit-narrative-$*:
     pattern: /$YAMLURL/edit-narrative

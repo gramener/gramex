@@ -9,7 +9,8 @@ class Template {
     previewHTML = '', grmerr = null, name = ''
   ) {
     this.source_text = text
-    this.checkGrammar()
+    // this.checkGrammar()
+    this.highlight()
     this.tokenmap = {}
     this.inflections = inflections
     for (let [token, tkobj] of Object.entries(tokenmap)) {
@@ -35,10 +36,15 @@ class Template {
     let self = this
     $.ajax(
       {
-        url: 'nlg/languagetool/?lang=en-us&q=' + encodeURIComponent(`${this.source_text}`),
+        url: nlg_base + 'languagetool/?lang=en-us&q=' + encodeURIComponent(`${this.source_text}`),
         type: 'GET',
         success: function (e) {
           self.grmerr = e.matches
+          self.highlight()
+        },
+        error: function(e) {
+          console.log('Error clause called!')
+          self.grmerr = {},
           self.highlight()
         }
       }
@@ -625,7 +631,7 @@ function changeFHSetter() {
   document.getElementById('edit-template').value = template.template
 }
 
-function t_templatize(x) { return '{{' + x + '}]' }
+function t_templatize(x) { return '{{ ' + x + ' }}' }
 
 function escapeRegExp(string) {
   return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')  // $& means the whole matched string
