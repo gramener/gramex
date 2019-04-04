@@ -437,24 +437,20 @@ class TestInsert(unittest.TestCase):
             afe(actual, expected, check_like=True)
 
     def test_insert_mysql(self):
-        if six.PY2:
-            raise SkipTest('TODO: Fix UnicodeEncodeError on Python2')
         url = dbutils.mysql_create_db(server.mysql, 'test_insert')
         self.check_insert_db(url, 'mysql')
 
     def test_insert_postgres(self):
-        if six.PY2:
-            raise SkipTest('TODO: Fix UnicodeEncodeError on Python2')
         url = dbutils.postgres_create_db(server.postgres, 'test_insert')
         self.check_insert_db(url, 'postgres')
 
     def test_insert_sqlite(self):
-        if six.PY2:
-            raise SkipTest('TODO: Fix UnicodeEncodeError on Python2')
         url = dbutils.sqlite_create_db('test_insert.db')
         self.check_insert_db(url, 'sqlite')
 
     def check_insert_db(self, url, dbname):
+        if six.PY2:
+            raise SkipTest('pd.io.sql.get_schema fails for unicode colnames on Py2.')
         self.db.add(dbname)
         rows = self.insert_rows.copy()
         rows['index'] = [1, 2]  # create a primary key
