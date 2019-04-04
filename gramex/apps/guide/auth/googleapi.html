@@ -60,7 +60,7 @@
                 '<td>', contact.title.$t, '</td>',
                 '<td>', contact.gd$email && contact.gd$email.length ? contact.gd$email[0].address : '', '</td>',
                 '<td>', Math.round((today - contact.date) / 86400000), 'd</td>',
-              '</tr>')
+                '</tr>')
           html.push('</tbody></table>')
           $('#contacts').html(html.join(''))
         }

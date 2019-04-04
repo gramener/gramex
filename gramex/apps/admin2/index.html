@@ -105,8 +105,8 @@
         </div>
       {% end %}
       {% import json %}
-      <script>var auth_conf = {% raw json.dumps(auth_conf) %}</script>
       <script>
+        var auth_conf = {% raw json.dumps(auth_conf) %}
         var kwargs = auth_conf.kwargs || {}
         var forgot_key = (kwargs.forget || {}).key || 'forgot'
         var user_key = (kwargs.user || {}).arg || 'user'

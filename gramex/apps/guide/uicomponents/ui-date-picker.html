@@ -8,16 +8,16 @@
 <script>
 $(function() {
   // initialize daterange
-  var start = moment().subtract(29, 'days');
-  var end = moment();
+  var start = moment().subtract(29, 'days')
+  var end = moment()
 
   // TODO: rewrite this better
   function cb(start, end) {
     $('.daterange-container span').html(
-      start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
+      start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'))
   }
 
-  $(".daterange-container").daterangepicker({
+  $('.daterange-container').daterangepicker({
     startDate: start,
     endDate: end,
     ranges: {

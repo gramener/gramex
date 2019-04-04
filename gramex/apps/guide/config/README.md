@@ -676,7 +676,7 @@ assign `$URLROOT`:
 ```yaml
 variables:
     URLROOT:
-    function: utils.get_root
+        function: utils.get_root
 ```
 
 By default, the function is called with the variable name as key, i.e.
@@ -686,7 +686,7 @@ this calls `utils.get_root('URLROOT', 'test', x=1)`:
 ```yaml
 variables:
     URLROOT:
-    function: utils.get_root(key, 'test', x=1)
+        function: utils.get_root(key, 'test', x=1)
 ```
 
 This is another way of doing the same thing:
@@ -694,9 +694,9 @@ This is another way of doing the same thing:
 ```yaml
 variables:
     URLROOT:
-    function: utils.get_root
-    args: [=key, 'test']
-    kwargs: {x: 1}
+        function: utils.get_root
+        args: [=key, 'test']
+        kwargs: {x: 1}
 ```
 
 Computed variables can also use defaults. For example, this assigns `get_home()`
@@ -705,8 +705,8 @@ to `$HOME` only if it's not already defined.
 ```yaml
 variables:
     HOME:
-    default:
-        function: utils.get_home()
+        default:
+            function: utils.get_home()
 ```
 
 Note: As of now, the `function:` cannot use variables like `$HOME`, but can use

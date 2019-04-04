@@ -9,6 +9,7 @@
 
 {% apply view_source %}
 <script>
+  /* globals Shepherd */
   // more: http://github.hubspot.com/shepherd/docs/welcome/
   var tour = new Shepherd.Tour({
     defaults: {
@@ -17,27 +18,27 @@
   })
 
   var buttonActions = [{
-      text: 'Back',
-      classes: 'shepherd-button-secondary',
-      action: tour.back
-    }, {
-      text: 'Next',
-      classes: 'shepherd-button-example-primary',
-      action: tour.next
+    text: 'Back',
+    classes: 'shepherd-button-secondary',
+    action: tour.back
   }, {
-      text: 'Exit',
-      classes: 'shepherd-button-secondary',
-      action: tour.cancel
+    text: 'Next',
+    classes: 'shepherd-button-example-primary',
+    action: tour.next
+  }, {
+    text: 'Exit',
+    classes: 'shepherd-button-secondary',
+    action: tour.cancel
   }]
 
   var buttonExitActions = [{
-      text: 'Back',
-      classes: 'shepherd-button-secondary',
-      action: tour.back
-    }, {
-      text: 'Exit',
-      classes: 'shepherd-button-example-primary',
-      action: tour.cancel
+    text: 'Back',
+    classes: 'shepherd-button-secondary',
+    action: tour.back
+  }, {
+    text: 'Exit',
+    classes: 'shepherd-button-example-primary',
+    action: tour.cancel
   }]
 
   tour.addStep('tour', {
@@ -60,7 +61,7 @@
     attachTo: '.third top',
     buttons: buttonExitActions
   })
-  $('body').on('click', '.tour-start', function() {
+  $('body').on('click', '.tour-start', function () {
     tour.start()
   })
 </script>

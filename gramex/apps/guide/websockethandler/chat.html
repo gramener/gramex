@@ -58,7 +58,7 @@
       li.innerText = msg
   }
 
-  var url = location.href.replace(/^http/, 'ws').replace(/\/[^\/]*$/, '/chat')
+  var url = location.href.replace(/^http/, 'ws').replace(/\/[^/]*$/, '/chat')
   var ws = new WebSocket(url)
   ws.onmessage = function(event) {
     add_message(event.data, 'bot', true)
