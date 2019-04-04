@@ -8,6 +8,7 @@
   {% set title = admin_kwargs.get('title', 'Admin') %}
   {% set tab_list = admin_kwargs.get('components', []) or list(kwargs.components.keys()) %}
   {% set tab_list = [tab for tab in tab_list if tab in kwargs.components] %}
+  {% set current_tab = handler.path_args[0] %}
   <title>{{ title }}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="ui/bootstraptheme.css{{ admin_kwargs.get('theme', '') }}">
@@ -20,7 +21,7 @@
   {% except ValueError %}{% set authhandler, auth_conf, data_conf = None, {}, {} %}{% end %}
 
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-3">
-    <a class="navbar-brand py-0 d-flex" href="{{ admin_kwargs.get('home', '.') }}">
+    <a class="navbar-brand py-0 d-flex" href="{{ '.' if current_tab else admin_kwargs.get('home', '.') }}">
       {% if admin_kwargs.get('logo') %}
         <img class="pr-2" src="{{ admin_kwargs['logo'] }}" alt="">
       {% end %}
@@ -30,7 +31,6 @@
       <span class="navbar-toggler-icon"></span>
     </button>
 
-    {% set current_tab = handler.path_args[0] %}
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
       <ul class="navbar-nav mr-auto">
         {% for tab_id in tab_list %}

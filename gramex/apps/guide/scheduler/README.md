@@ -120,6 +120,17 @@ You can run schedules manually using the
 
 ## Scheduler API
 
+You can run an existing scheduler programmatically. This code runs the schedule
+named `run-when-i-say`.
+
+```python
+from gramex import service      # Available only if Gramex is running
+gramex.service.schedule['run-when-i-say'].run()
+```
+
+If it has a schedule, `.run()` will clear past schedules and set up a new
+schedule.
+
 You can create or update a scheduler dynamically. For example, this
 FunctionHandler changes a schedule based on the URL's `?minutes=` parameter:
 

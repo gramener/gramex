@@ -58,6 +58,7 @@ import:
     YAMLURL: /$YAMLURL/admin/               # URL to show the admin page at
     ADMIN_KWARGS:
       logo: https://gramener.com/uistatic/gramener.png
+      home: /$YAMLURL/
       title: Admin
       theme: '?body-bg=white&navbar-dark-color=rgba(255%2C255%2C255%2C.8)&navbar-dark-hover-color=white'
       # authhandler: name-of-DBAuth-handler    -- required for user management

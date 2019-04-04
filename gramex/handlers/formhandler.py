@@ -40,9 +40,9 @@ class FormHandler(BaseHandler):
     '''
     # FormHandler function kwargs and the parameters they accept:
     function_vars = {
-        'modify': {'data': None, 'key': None, 'handler': None},
-        'prepare': {'args': None, 'key': None, 'handler': None},
-        'queryfunction': {'args': None, 'key': None, 'handler': None},
+        'modify': AttrDict([('data', None), ('key', None), ('handler', None)]),
+        'prepare': AttrDict([('args', None), ('key', None), ('handler', None)]),
+        'queryfunction': AttrDict([('args', None), ('key', None), ('handler', None)]),
     }
     data_filter_method = staticmethod(gramex.data.filter)
 
@@ -94,8 +94,9 @@ class FormHandler(BaseHandler):
             }
             if conf['function'] is not None:
                 fn_name = '%s.%s.transform' % (cls.name, key)
+                fn_vars = AttrDict([('data', None), ('handler', None)])
                 dataset['transform'] = build_transform(
-                    conf, vars={'data': None, 'handler': None}, filename=fn_name, iter=False)
+                    conf, vars=fn_vars, filename=fn_name, iter=False)
             # Convert modify: and prepare: into a data = modify(data) function
             for fn, fn_vars in cls.function_vars.items():
                 if fn in dataset:
