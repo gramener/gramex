@@ -481,7 +481,10 @@ function saveConfig() {
       type: 'POST',
       data: { config: JSON.stringify(templates), name: narrative_name, dataset: dataset_name },
       headers: { 'X-CSRFToken': false },
-      success: function () { $('.alert-success').show() }
+      success: function () { $('.alert-success').show() },
+      error: function(httpObj, textStatus) {
+        alert('Please login to save the narrative.')
+      }
     })
   }
 }

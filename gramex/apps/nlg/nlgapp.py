@@ -28,12 +28,9 @@ if not op.isdir(nlg_path):
     os.mkdir(nlg_path)
 
 
-def get_auth(*args, **kwargs):
-    return variables.get('ADMIN_AUTH', variables.get('NLG_DEFAULT_AUTH'))
-
-
 def clean_anonymous_files():
-    """At startup, remove all files uploaded by anonymous users."""
+    """Remove all files uploaded by anonymous users.
+    This may be used at startup when deploying the app."""
     import shutil
     anon_dir = op.join(nlg_path, 'anonymous')
     if op.isdir(anon_dir):
@@ -197,7 +194,6 @@ def download_config(handler):
 def save_config(handler):
     """Save the current narrative config.
     (to $GRAMEXDATA/{{ handler.current_user.id }})"""
-    from ipdb import set_trace; set_trace()  # NOQA
     payload = {}
     payload['config'] = json.loads(parse.unquote(handler.args['config'][0]))
     payload['name'] = parse.unquote(handler.args['name'][0])
