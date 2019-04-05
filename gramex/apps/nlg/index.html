@@ -121,24 +121,11 @@
         <p id="template-preview" class="text-monospace"></p>
       </div>
       <div class="col-sm-3">
-        {% if is_user_authenticated(handler) %}
-          {% set save_login_label = 'Save Config' %}
-          <button id="save-config-btn" type="button" title="Save Config"
-          class="btn btn-primary">
-          Save Config
-          <i class="fa fa-save"></i>
-          </button>
-          <script>
-            document.getElementById("save-config-btn").addEventListener("click", saveConfig);
-          </script>
-        {% else %}
-          {% set save_login_label = 'Login' %}
-          <button id="save-config-btn" type="button" title="Login for more options"
-          class="btn btn-primary">
-          <a href="login/">Login</a>
-          <i class="fa fa-sign-in"></i>
-          </button>
-        {% end %}
+        <button id="save-config-btn" type="button" title="Save Config"
+        class="btn btn-primary">
+        Save Config
+        <i class="fa fa-save"></i>
+        </button>
         <button id="share-narrative-btn" type="button" title="Share Narrative"
         class="btn btn-primary">
             Share
@@ -307,6 +294,7 @@
   <!-- Template preview -->
   <script>
       // document.getElementById("config-upload").addEventListener("change", uploadConfig, false);
+      document.getElementById("save-config-btn").addEventListener("click", saveConfig);
       document.getElementById("inspect").addEventListener("click", addToNarrative);
       document.getElementById("check-template").addEventListener("click", checkTemplate);
       var saveBtn = document.getElementById("save-template")
