@@ -55,7 +55,8 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.5.1/min/dropzone.min.js"></script>
   <script src="common.js"></script>
   <script>
-    Dropzone.autoDiscover = false;
+    /* globals Dropzone, create_dropdowns, draw_table */
+    Dropzone.autoDiscover = false
     $(function () {
       $('#fileupload').dropzone({  // Needs a manual redirect for some reason
         success: function () {

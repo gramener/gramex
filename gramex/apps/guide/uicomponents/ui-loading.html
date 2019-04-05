@@ -12,16 +12,16 @@
 </p>
 
 <script>
+  /* globals Noty */
   $('body')
     .off('click.loading')
     .on('click.loading', '[data-url]', function() {
-      var container = $(this).attr('class')
       var $icon = $('<i class="fa fa-spinner fa-2x fa-fw align-middle"></i>').appendTo(this)
       $.ajax($(this).data('url'), {
         data: {'data': 'test data'},
         beforeSend: function() {  },
-        success: function() { new Noty({type: 'success', text: "Loaded AJAX request"}).show() },
-        error: function() { new Noty({type: 'error', text: "Failed to load AJAX request"}).show() },
+        success: function() { new Noty({type: 'success', text: 'Loaded AJAX request'}).show() },
+        error: function() { new Noty({type: 'error', text: 'Failed to load AJAX request'}).show() },
         complete: function() { $icon.fadeOut() }
       })
     })

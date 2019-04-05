@@ -12,7 +12,7 @@ url:
     pattern: /$YAMLURL/config
     handler: FunctionHandler
     kwargs:
-      function: guide_ui_app.get_config
+      function: json.dumps(gramex.cache.open(guide_ui_app.config_file, 'config'), ensure_ascii=True, indent=2)
       headers:
         Content-Type: application/json
       cache:

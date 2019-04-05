@@ -97,63 +97,67 @@
         <a href="https://getbootstrap.com/" target="_blank">Bootstrap 4</a>.
         These are to be used in all Gramex projects.
       </p>
-      {% from guide_ui_app import load_page %}
-      {% raw load_page('ui-about.html') %}
-      {% raw load_page('ui-custom.html') %}
-      {% raw load_page('ui-sass.html') %}
-      {% raw load_page('ui-libraries.html') %}
+      {% from guide_ui_app import only_source, view_source, config_file, ui_config_file %}
+      {% import gramex.cache, json %}
+      {% set config = gramex.cache.open(config_file, 'config') %}
+      {% set ui_config = gramex.cache.open(ui_config_file, 'config') %}
+      {% include 'ui-about.html' %}
+      {% include 'ui-custom.html' %}
+      {% include 'ui-fonts.html' %}
+      {% include 'ui-sass.html' %}
+      {% include 'ui-libraries.html' %}
 
       <h1 class="toc">Utilities</h1>
-      {% raw load_page('ui-colors.html') %}
-      {% raw load_page('ui-hover.html') %}
-      {% raw load_page('ui-cursor.html') %}
-      {% raw load_page('ui-round.html') %}
-      {% raw load_page('ui-ripple.html') %}
-      {% raw load_page('ui-border.html') %}
-      {% raw load_page('ui-shadow.html') %}
-      {% raw load_page('ui-text.html') %}
-      {% raw load_page('ui-zindex.html') %}
-      {% raw load_page('ui-tours.html') %}
-      {% raw load_page('ui-underline.html') %}
+      {% include 'ui-colors.html' %}
+      {% include 'ui-hover.html' %}
+      {% include 'ui-cursor.html' %}
+      {% include 'ui-round.html' %}
+      {% include 'ui-ripple.html' %}
+      {% include 'ui-border.html' %}
+      {% include 'ui-shadow.html' %}
+      {% include 'ui-text.html' %}
+      {% include 'ui-zindex.html' %}
+      {% include 'ui-tours.html' %}
+      {% include 'ui-underline.html' %}
 
       <h1 class="toc">Backgrounds</h1>
-      {% raw load_page('ui-background.html') %}
-      {% raw load_page('ui-height.html') %}
-      {% raw load_page('ui-gradient.html') %}
-      {% raw load_page('ui-opacity.html') %}
+      {% include 'ui-background.html' %}
+      {% include 'ui-height.html' %}
+      {% include 'ui-gradient.html' %}
+      {% include 'ui-opacity.html' %}
 
       <h1 class="toc">Positioning</h1>
-      {% raw load_page('ui-overlay.html') %}
-      {% raw load_page('ui-position.html') %}
+      {% include 'ui-overlay.html' %}
+      {% include 'ui-position.html' %}
 
       <h1 class="toc">Components</h1>
-      {% raw load_page('ui-arrow.html') %}
-      {% raw load_page('ui-divider.html') %}
-      {% raw load_page('ui-tail.html') %}
+      {% include 'ui-arrow.html' %}
+      {% include 'ui-divider.html' %}
+      {% include 'ui-tail.html' %}
 
       <h1 class="toc">Inputs</h1>
-      {% raw load_page('ui-select.html') %}
-      {% raw load_page('ui-slider.html') %}
-      {% raw load_page('ui-switch.html') %}
-      {% raw load_page('ui-upload.html') %}
+      {% include 'ui-select.html' %}
+      {% include 'ui-slider.html' %}
+      {% include 'ui-switch.html' %}
+      {% include 'ui-upload.html' %}
 
       <h1 class="toc">Bootstrap</h1>
-      {% raw load_page('ui-accordion.html') %}
-      {% raw load_page('ui-alert.html') %}
-      {% raw load_page('ui-button.html') %}
-      {% raw load_page('ui-card.html') %}
-      {% raw load_page('ui-dashboards.html') %}
-      {% raw load_page('ui-date-picker.html') %}
-      {% raw load_page('ui-dropdown.html') %}
-      {% raw load_page('ui-forms.html') %}
-      {% raw load_page('ui-grid.html') %}
-      {% raw load_page('ui-input.html') %}
-      {% raw load_page('ui-loading.html') %}
-      {% raw load_page('ui-login.html') %}
-      {% raw load_page('ui-modal.html') %}
-      {% raw load_page('ui-panel.html') %}
-      {% raw load_page('ui-table.html') %}
-      {% raw load_page('ui-tooltip.html') %}
+      {% include 'ui-accordion.html' %}
+      {% include 'ui-alert.html' %}
+      {% include 'ui-button.html' %}
+      {% include 'ui-card.html' %}
+      {% include 'ui-dashboards.html' %}
+      {% include 'ui-date-picker.html' %}
+      {% include 'ui-dropdown.html' %}
+      {% include 'ui-forms.html' %}
+      {% include 'ui-grid.html' %}
+      {% include 'ui-input.html' %}
+      {% include 'ui-loading.html' %}
+      {% include 'ui-login.html' %}
+      {% include 'ui-modal.html' %}
+      {% include 'ui-panel.html' %}
+      {% include 'ui-table.html' %}
+      {% include 'ui-tooltip.html' %}
     </main>
   </div><!-- .container-fluid -->
 
@@ -194,18 +198,19 @@
   <script src="../node_modules/prismjs/prism.js"></script>
   <script src="../node_modules/vue/dist/vue.min.js"></script>
   <script>
+    /* globals Vue, Noty */
+    /* exported app, toc */
+    var config = {% raw json.dumps(config, ensure_ascii = True, indent = 2) %}
     var q = g1.url.parse(location).searchKey
-    $.getJSON('config', function(config) {
-      // Set values based on inputs
-      _.each(config.color, function(info, name) { info.value = q[name] || info.default })
-      _.each(config.font, function(info, name) { info.value = q[name] || info.default })
-      _.each(config.fontsize, function(info, name) { info.value = q[name] || info.default })
-      _.each(config.toggle, function(info, name) { info.value = Object.keys(q).length > 0 ? (q[name] || '') : info.default })
-      _.each(config.theme, function(info, name) { info.href = '?' + $.param(info) })
-      config.cssurl = '../ui/bootstraptheme.css' + location.search
-      var app = new Vue({el: '#change-theme', data: config, delimiters: ['${', '}']})
-      $('[data-spy="scroll"]').scrollspy('refresh')
-    })
+    // Set values based on inputs
+    _.each(config.color, function(info, name) { info.value = q[name] || info.default })
+    _.each(config.font, function(info, name) { info.value = q[name] || info.default })
+    _.each(config.fontsize, function(info, name) { info.value = q[name] || info.default })
+    _.each(config.toggle, function(info, name) { info.value = Object.keys(q).length > 0 ? (q[name] || '') : info.default })
+    _.each(config.theme, function(info) { info.href = '?' + $.param(info) })
+    config.cssurl = '../ui/bootstraptheme.css' + location.search
+    var app = new Vue({el: '#change-theme', data: config, delimiters: ['${', '}']})
+    $('[data-spy="scroll"]').scrollspy('refresh')
 
     // Toggle view source
     $('body').on('click', '.toggle-source', function() {
@@ -218,8 +223,8 @@
         return document.querySelector('.upload-container').innerHTML
       }
     })
-    clipboard.on('success', function(e) {
-      new Noty({type: 'success', text: "Copied!"}).show()
+    clipboard.on('success', function() {
+      new Noty({type: 'success', text: 'Copied!'}).show()
     })
     var toctree = $('.toc').map(function() {
       var text = $(this).text()
@@ -239,31 +244,31 @@
     /* Prism copy to clipboard for all pre with viewsource class */
     // ref: https://stackoverflow.com/a/34198183
     $('pre.viewsource').each(function () {
-      $this = $(this);
-      $button = $('<button class="btn-sm" type="button">Copy</button>');
-      $this.wrap('<div/>').removeClass('viewsource');
-      $wrapper = $this.parent();
+      var $this = $(this)
+      var $button = $('<button class="btn-sm" type="button">Copy</button>')
+      $this.wrap('<div/>').removeClass('viewsource')
+      var $wrapper = $this.parent()
       $wrapper.addClass('viewsource-wrapper').css({position: 'relative'})
-      $button.css({position: 'absolute', top: 10, right: 10}).appendTo($wrapper).addClass('viewsource btn btn-light');
+      $button.css({position: 'absolute', top: 10, right: 10}).appendTo($wrapper).addClass('viewsource btn btn-light')
       var copyCode = new Clipboard('button.viewsource', {
         target: function (trigger) {
-          return trigger.previousElementSibling;
+          return trigger.previousElementSibling
         }
-      });
+      })
       copyCode.on('success', function (event) {
-        event.clearSelection();
-        event.trigger.textContent = 'Copied';
+        event.clearSelection()
+        event.trigger.textContent = 'Copied'
         window.setTimeout(function () {
-          event.trigger.textContent = 'Copy';
-        }, 2000);
-      });
+          event.trigger.textContent = 'Copy'
+        }, 2000)
+      })
       copyCode.on('error', function (event) {
-        event.trigger.textContent = 'Press "Ctrl + C" to copy';
+        event.trigger.textContent = 'Press "Ctrl + C" to copy'
         window.setTimeout(function () {
-          event.trigger.textContent = 'Copy';
-        }, 2000);
-      });
-    });
+          event.trigger.textContent = 'Copy'
+        }, 2000)
+      })
+    })
   </script>
 </body>
 </html>

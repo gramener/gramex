@@ -72,15 +72,17 @@
   <script src="script.js"></script>
 
   <script src="webshell.js"></script>
-  <script>$('.webshell').webshell({
-    url: 'webshell',
-    prompt: '>>> ',
-    welcome: [
-      'This is a Python console embedded in Gramex.',
-      'Click on the input box below. Type a Python expression. Press ENTER to evaluate.',
-      '>>> '
-    ]
-  })</script>
+  <script>
+    $('.webshell').webshell({
+      url: 'webshell',
+      prompt: '>>> ',
+      welcome: [
+        'This is a Python console embedded in Gramex.',
+        'Click on the input box below. Type a Python expression. Press ENTER to evaluate.',
+        '>>> '
+      ]
+    })
+  </script>
 </body>
 
 </html>
