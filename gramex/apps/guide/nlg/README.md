@@ -112,3 +112,12 @@ After a narrative has been named and saved, it be shared in two modes:
    IDE, with the current dataset and the current narrative set in the session.
 2. **Embed mode** - Copy an HTML snippet to embed into a page which contains a
    Formhandler table. The template will render live as the table changes.
+
+
+## Authenticating the NLG App
+
+Saving, sharing and rendering narratives from the NLG app requires authentication.
+Authentication can be set via the `$NLG_AUTH` YAML variable which can be any valid
+[auth](../auth/#authorization) configuration.
+
+When using the NLG app through the [admin](../admin) page, `$NLG_AUTH` defaults to `$ADMIN_AUTH`.
