@@ -482,8 +482,10 @@ function saveConfig() {
       data: { config: JSON.stringify(templates), name: narrative_name, dataset: dataset_name },
       headers: { 'X-CSRFToken': false },
       success: function () { $('.alert-success').show() },
-      error: function(httpObj, textStatus) {
-        alert('Please login to save the narrative.')
+      error: function(httpObj) {
+        if (httpObj.status == 401) {
+          alert('Please login to save the narrative.')
+        }
       }
     })
   }
@@ -628,7 +630,9 @@ function changeFHSetter() {
   document.getElementById('edit-template').value = template.template
 }
 
+/* eslint-disable no-unused-vars */
 function t_templatize(x) { return '{{ ' + x + ' }}' }
+/* eslint-enable no-unused-vars */
 
 function escapeRegExp(string) {
   return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')  // $& means the whole matched string
