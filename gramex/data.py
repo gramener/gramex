@@ -558,8 +558,8 @@ def _filter_db_col(query, method, key, col, op, vals, column, conv, meta):
     - Updates ``meta`` with the fields used for filtering (or ignored)
     '''
     # In PY2, .python_type returns str. We want unicode
-    if conv == six.binary_type:
-        conv = six.text_type
+    sql_types = {six.binary_type: six.text_type, pd.datetime: six.text_type}
+    conv = sql_types.get(conv, conv)
     vals = tuple(conv(val) for val in vals if val)
     if op not in {'', '!'} and len(vals) == 0:
         meta['ignored'].append((key, vals))
