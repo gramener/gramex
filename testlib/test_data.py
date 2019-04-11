@@ -269,6 +269,19 @@ class TestFilter(unittest.TestCase):
                     # Don't check_dtype in that case.
                     eq(args, subset, check_dtype=len(subset) > 0)
 
+        # _by= empty
+        aggs = ['growth|sum', 'sales|sum']
+        expected = pd.DataFrame(
+            [[sales[agg[0]].agg(agg[1]) for agg in [x.split('|') for x in aggs]]],
+            columns=aggs
+        )
+        eq({'_by': [], '_c': aggs}, expected)
+        expected = (sales.select_dtypes(include=pd.np.number).agg('sum')
+                    .to_frame().T.add_suffix('|sum'))
+        eq({'_by': []}, expected)
+        for _c in [[], ['']]:
+            ok_(gramex.data.filter(args={'_by': [], '_c': _c}, **kwargs).empty)
+
         # Invalid values raise errors
         with assert_raises(ValueError):
             eq({'_limit': ['abc']}, sales)
