@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 from . import TestGramex
+from gramex.http import FOUND
 
 
 class TestFunctionHandler(TestGramex):
@@ -68,5 +69,8 @@ class TestFunctionHandler(TestGramex):
     def test_methods(self):
         self.check('/func/methods', method='get', code=405)
         self.check('/func/methods', method='delete', code=405)
-        self.check('/func/methods', method='post')
-        self.check('/func/methods', method='put')
+        for method in ['post', 'put']:
+            r = self.get('/func/methods', method=method,
+                         headers={'NEXT': '/abc'}, allow_redirects=False)
+            self.assertEqual(r.status_code, FOUND)
+            self.assertEqual(r.headers.get('Location'), '/abc')

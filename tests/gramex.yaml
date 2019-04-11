@@ -236,6 +236,10 @@ url:
       function: utils.params_as_json
       methods: [PUT, POST]
       xsrf_cookies: false
+      redirect:
+        query: next
+        header: NEXT
+        url: /dir/index/
 
   # TestFileHandler
   dir/noindex:
