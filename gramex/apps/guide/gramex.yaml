@@ -54,7 +54,7 @@ url:
         pattern: /$YAMLURL/g1/(.*)
         handler: FileHandler
         kwargs:
-            path: $GRAMEXAPPS/ui/node_modules/g1/
+            path: $GRAMEXAPPS/ui/node_modules/g1/docs/
             default_filename: README.md
             transform: *MARKDOWN_TO_HTML
             headers: *HEADERS
