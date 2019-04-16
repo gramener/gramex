@@ -20,8 +20,7 @@ RUN apt-get install -y python-dev python3-dev build-essential
 # ModelHandler Requires scikit-learn
 RUN conda install scikit-learn
 # Install gramex
-RUN pip install psycopg2-binary && \
-    pip install gramex && \
+RUN pip install gramex && \
     gramex setup --all && \
     gramex license accept
 
