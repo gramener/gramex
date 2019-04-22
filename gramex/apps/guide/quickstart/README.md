@@ -302,6 +302,8 @@ The final output can be seen [here](index5.html)
 and the source for the app as a whole can be found [here]()
 </details>
 
+If you've followed along with this quickstart, you now have a basic idea of how to build a simple static dashboard with gramex.
+To see more of what gramex is able to do and learn more about particular features or how to add interactivity; look at some of our [demos](), the rest of our [guides](), or our [documentation](../)
 ## FAQS
  - inotify watch limit reached
  - Port is busy
