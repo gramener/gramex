@@ -1,0 +1,26 @@
+import:
+  ui:
+    path: $GRAMEXAPPS/ui/gramex.yaml
+    YAMLURL: $YAMLURL/ui/
+url:
+  superstore-data:
+    pattern: /$YAMLURL/data
+    handler: FormHandler
+    kwargs:
+      url: $YAMLPATH/store-sales.csv
+  formhandler-chart:
+    pattern: /$YAMLURL/chart
+    handler: FormHandler
+    kwargs:
+      url: $YAMLURL/store-sales.csv
+      function: data.groupby('Segment').sum().reset_index()
+      formats:
+        barchart:                       # Define a format called barchart
+          format: seaborn               # This uses seaborn as the format
+          chart: barplot                # Chart can be any standard seaborn chart
+          ext: svg                      # Use a matplot backend (svg, pdf, png)
+          width: 400                    # Image width in pixels. Default: 640px
+          height: 300                   # Image height in pixels. Default: 480px
+          dpi: 48                       # Image resolution (dots per inch). Default: 96
+          x: Segment                  # additional parameters are passed to barplot()
+          y: Sales
