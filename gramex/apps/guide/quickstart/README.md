@@ -49,7 +49,7 @@ In order to complete this tutorial, you will need:
 
 ## Step 0: Create the Project
 <details>
-  <summary> Expand </summary>
+  <summary> Expand This Section </summary>
 
 We need a place to hold together all the files related to our application - including source code, data and configuration files. Create a folder at a convenient location on your computer and move the downloaded dataset file into it.
 For the remainder of the tutorial, we will refer to this folder as the "project folder". At this time, the project folder should only contain the file `store-sales.csv`.
