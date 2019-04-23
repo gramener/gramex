@@ -91,7 +91,7 @@ You could also, visit [http://localhost:9988/data?_limit=10&_format=html](http:/
 
 ## Step 2: Laying out some scaffolding
 
-Since we now have access to the data from a REST API, we are ready to start building the frontend. At the moment, our `index.html` file just has some text in it, let's add some HTML 
+Since we now have access to the data from a REST API, we are ready to start building the frontend. At the moment, our `index.html` file just has some text in it, let's add some HTML.
 
 ```html
 <!DOCTYPE html>
@@ -112,7 +112,7 @@ Since we now have access to the data from a REST API, we are ready to start buil
 ```
 This is essentially just a bunch of boilerplate, and includes css and js files for the next bit. 
 If you notice all of our css and js links are relative to a ui/ directory - but we have no such directory in our project folder? 
-This is because Gramex bundles a lot of common css and js files (bootstrap, lodash, our own interaction library g1) as part of a feature called UI Components. 
+This is because Gramex bundles a lot of common css and js files (bootstrap, lodash, our own interaction library g1) as part of a feature called [UI Components](../uicomponents). 
 
 To use these to our dashboard, we add the following lines to our gramex.yaml - 
 ```yaml
@@ -149,7 +149,8 @@ The simplest and sometimes most effective way to represent data is just a table,
     $('.formhandler').formhandler({pageSize: 5})
   </script>
 ```
-so overall, our `index.html` file looks like 
+
+So overall, our `index.html` file looks like:
 ```html
 <!DOCTYPE html>
 <html>
@@ -170,6 +171,7 @@ so overall, our `index.html` file looks like
   </script>
 </html>
 ```
+
 After saving the file, when you open [`http://localhost:9988`](http://localhost:9988), you should see a table similar to the one at the top of this page. The table is interactive. Try playing around with it. Here's a few things you could try:
 
 * Click the dropdown arrows near the column headers to see sorting options
@@ -183,7 +185,8 @@ To proceed with the tutorial, return to [`http://localhost:9988`](http://localho
 Now that we have a table that gets data from our file, let's add a simple barchart to display data grouped by Segment. 
 To do this, we'll use a library called [Vega-lite](https://vega.github.io/vega-lite/). Vega-lite is a really simple to use, configuration drived javascript charting library and supports most simple chart types. It also fits in quite well with the javascript ecosystem.
 
-To do this, we add a few pieces to our `index.html`, firstly, we have the schema for the chart itself
+To do this, we add a few pieces to our `index.html`, firstly, we have the schema for the chart itself:
+
 ```html
 <script>
 var spec = {
@@ -208,6 +211,7 @@ var spec = {
   }
 }
 ```
+
 Details of the specification can be found in the vega-lite [docs](https://vega.github.io/vega-lite/docs/), but some things to notice - 
 the data key in our spec accepts a url field, we've set the url to our Rest API endpoint, except an extra url query parameter `_by=Segment` this exploits another FormHandler filter, which aggregates the data coming from our csv by a column from the dataset, in this case. visit [http:localhost:9988/data?_by=Segment](http:localhost:9988/data?_by=Segment) or click [here](data?_by=Segment)to get a better sense of what the resultant aggregated data looks like. 
 Subsequently, we've also set the x and y axis values to `Sales|sum` and `Segment` respectively, telling our spec to plot those quantities from the data that FormHandler returns. 
@@ -227,7 +231,7 @@ We also need to add a div in our `index.html` in which we shall place our chart,
 </script>
 ```
 
-So overall, our current index.html should look like the following
+So overall, our current index.html should look like the following:
 
 ```html
 <!DOCTYPE html>
@@ -280,19 +284,26 @@ So overall, our current index.html should look like the following
 </script>
 </html>
 ```
-at this point our browser at [localhost:9988/](http://localhost:9988/) should look like [this](index4.html)
+
+At this point our browser at [localhost:9988/](http://localhost:9988/) should look like [this](index4.html).
 
 ## Step 4: Final Touches and Making things prettier.
 
-we can now flex some html and bootstrap muscle to make our dashboard look slightly better. We add a second chart to plot the aggregate sum of Quantity by Segment and hide a few columns from our dataset to ensure our table fits on the page without horizontal scrolling. 
+We can now flex some html and bootstrap muscle to make our dashboard look slightly better. We add a second chart to plot the aggregate sum of Quantity by Segment and hide a few columns from our dataset to ensure our table fits on the page without horizontal scrolling. 
 The final output can be seen [here](index5.html)
 and the source for the app as a whole can be found [here]()
 
 If you've followed along with this quickstart, you now have a basic idea of how to build a simple static dashboard with gramex.
 To see more of what gramex is able to do and learn more about particular features or how to add interactivity; look at some of our [demos](), the rest of our [guides](), or our [documentation](../)
-## FAQS
+
+
+## Troubleshooting
+
  - inotify watch limit reached
  - Port is busy
  - Don't see any text at localhost:9988, instead just a list of files in the directory
  - CSS/JS Not available. 
  - vega chart not rendering for some reason
+
+
+## FAQs
