@@ -706,38 +706,40 @@ def _filter_frame(data, meta, controls, args, source='select', id=[]):
         # Apply controls
         if '_by' in controls:
             by = _filter_groupby_columns(controls['_by'], data.columns, meta)
+            # If ?_c is not specified, use 'col|sum' for all numeric columns
+            # TODO: This does not support ?_c=-<col> to hide a column
+            col_list = controls.get('_c', None)
+            if col_list is None:
+                col_list = [col + _agg_sep + 'sum' for col in data.columns      # noqa
+                            if pd.api.types.is_numeric_dtype(data[col])]
+            agg_cols = []
+            agg_dict = AttrDict()
+            for key in col_list:
+                col, agg, val = _filter_col(key, data.columns)
+                if agg is not None:
+                    # Convert aggregation into a Pandas GroupBy agg function
+                    agg = agg.lower()
+                    agg = _frame_functions.get(agg, agg)
+                    agg_cols.append(key)
+                    if col in agg_dict:
+                        agg_dict[col].append(agg)
+                    else:
+                        agg_dict[col] = [agg]
             if len(by) > 0:
-                groups = data.groupby(by)
-                # If ?_c is not specified, use 'col|sum' for all numeric columns
-                # TODO: This does not support ?_c=-<col> to hide a column
-                col_list = controls.get('_c', None)
-                if col_list is None:
-                    col_list = [col + _agg_sep + 'sum' for col in data.columns      # noqa
-                                if pd.api.types.is_numeric_dtype(data[col])]
-                agg_cols = []
-                agg_dict = AttrDict()
-                for key in col_list:
-                    col, agg, val = _filter_col(key, data.columns)
-                    if agg is not None:
-                        # Convert aggregation into a Pandas GroupBy agg function
-                        agg = agg.lower()
-                        agg = _frame_functions.get(agg, agg)
-                        agg_cols.append(key)
-                        if col in agg_dict:
-                            agg_dict[col].append(agg)
-                        else:
-                            agg_dict[col] = [agg]
                 if not agg_cols:
                     # If no aggregation columns exist, just show groupby columns.
-                    data = groups.agg('size').reset_index()
+                    data = data.groupby(by).agg('size').reset_index()
                     data = data.iloc[:, [0]]
                 else:
-                    data = groups.agg(agg_dict)
+                    data = data.groupby(by).agg(agg_dict)
                     data.columns = agg_cols
                     data = data.reset_index()
                 # Apply HAVING operators
                 for key, col, op, vals in cols_having:
                     data = _filter_frame_col(data, key, col, op, vals, meta)
+            else:
+                row = [data[col].agg(op) for col, ops in agg_dict.items() for op in ops]
+                data = pd.DataFrame([row], columns=agg_cols)
         elif '_c' in controls:
             show_cols, hide_cols = _filter_select_columns(controls['_c'], data.columns, meta)
             data = data[show_cols]
@@ -829,29 +831,30 @@ def _filter_db(engine, table, meta, controls, args, source='select', id=[]):
         # Apply controls
         if '_by' in controls:
             by = _filter_groupby_columns(controls['_by'], colslist, meta)
-            if len(by) > 0:
-                query = query.group_by(*by)
-                # If ?_c is not specified, use 'col|sum' for all numeric columns
-                # TODO: This does not support ?_c=-<col> to hide a column
-                col_list = controls.get('_c', None)
-                if col_list is None:
-                    col_list = [col + _agg_sep + 'sum' for col, column in cols.items()  # noqa
-                                if column.type.python_type.__name__ in _numeric_types]
-                agg_cols = AttrDict([(col, cols[col]) for col in by])   # {label: ColumnElement}
-                typ = {}                                                # {label: python type}
-                for key in col_list:
-                    col, agg, val = _filter_col(key, colslist)
-                    if agg is not None:
-                        # Convert aggregation into SQLAlchemy query
-                        agg = agg.lower()
-                        typ[key] = _agg_type.get(agg, cols[col].type.python_type)
-                        agg_func = getattr(sqlalchemy.sql.expression.func, agg)
-                        agg_cols[key] = agg_func(cols[col]).label(key)
-                query = query.with_only_columns(agg_cols.values())
-                # Apply HAVING operators
-                for key, col, op, vals in cols_having:
-                    query = _filter_db_col(query, query.having, key, col, op, vals,
-                                           agg_cols[col], typ[col], meta)
+            query = query.group_by(*by)
+            # If ?_c is not specified, use 'col|sum' for all numeric columns
+            # TODO: This does not support ?_c=-<col> to hide a column
+            col_list = controls.get('_c', None)
+            if col_list is None:
+                col_list = [col + _agg_sep + 'sum' for col, column in cols.items()  # noqa
+                            if column.type.python_type.__name__ in _numeric_types]
+            agg_cols = AttrDict([(col, cols[col]) for col in by])   # {label: ColumnElement}
+            typ = {}                                                # {label: python type}
+            for key in col_list:
+                col, agg, val = _filter_col(key, colslist)
+                if agg is not None:
+                    # Convert aggregation into SQLAlchemy query
+                    agg = agg.lower()
+                    typ[key] = _agg_type.get(agg, cols[col].type.python_type)
+                    agg_func = getattr(sqlalchemy.sql.expression.func, agg)
+                    agg_cols[key] = agg_func(cols[col]).label(key)
+            if not agg_cols:
+                return pd.DataFrame()
+            query = query.with_only_columns(agg_cols.values())
+            # Apply HAVING operators
+            for key, col, op, vals in cols_having:
+                query = _filter_db_col(query, query.having, key, col, op, vals,
+                                       agg_cols[col], typ[col], meta)
         elif '_c' in controls:
             show_cols, hide_cols = _filter_select_columns(controls['_c'], colslist, meta)
             query = query.with_only_columns([cols[col] for col in show_cols])

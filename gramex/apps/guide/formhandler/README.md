@@ -478,6 +478,11 @@ You can specify custom aggregations using `?_c=col|aggregation`. For example:
     - `_c=c1|avg`: mean value of "c1" in each continent
     - `_c=c1|max`: max value of "c1" in each continent
 
+You can also aggregate on entire column using empty `?by=`. For example:
+
+- [_by=&_c=c1|avg&_c=c2|count](flags?_by=&_c=c1|avg&_c=c2|count)
+- [On SQLite _by=&_c=c3|avg&_c=c2|count&c1>=90](db?_by=&_c=c3|avg&_c=c2|count&c1>=90)
+
 Filters on columns apply BEFORE the grouping. For example:
 
 - [?c1>=80&_by=Continent&_c=Name|count](flags?c1>=80&_by=Continent&_c=Name|count&_format=table): count of countries by continent where c1 > 80
