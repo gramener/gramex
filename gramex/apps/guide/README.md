@@ -16,7 +16,6 @@ prefix: Guide
 
 - [Install Gramex](install/)
 - [Quickstart](quickstart/)
-- [Gramex Tutorials](gramextutorials/)
 - [Gramex is a web server](server/)
 - [Configurations control Gramex](config/)
 - [Testing Gramex apps](test/)

@@ -1,12 +1,12 @@
 ---
-title: Tutorial: Building Dashboards with Gramex
+title: Tutorial: Building Interactive Dashboards with Gramex
 prefix: g1dashboards
 ...
 
 [TOC]
 
 In this tutorial, we will build upon the application we created during the
-[quickstart](../quickstart) and add some interativity to it,
+[quickstart](../quickstart) and add interactive elements to it,
 making it a dashboard in the true sense of the word.
 
 After finishing this tutorial, you will:
@@ -24,9 +24,9 @@ and successfully built the Gramex application described in it.
 
 The quickstart focused on laying out the typical scaffolding required by a Gramex
 application. Once this is done, we are free to focus our attention on individual
-elements within our application, and how they affect with each other. Typical
+elements within our application, and how they interact with each other. Typical
 data applications need to be reactive to new incoming data and user actions.
-This tutorial walks through some of the ways of achieving this 
+This tutorial walks through some of the ways of achieving this interactivity
 with Gramex.
 
 If you remember, in the quickstart we had sales data from a fictional
@@ -45,7 +45,7 @@ into two broad steps:
 2. making elements in the application respond to these changes.
 
 As long as we are able to correctly fulfil these two conditions, we can be
-confident that our dashboard is truly dynamic.
+confident that our dashboard is truly interactive.
 
 Let's get started.
 
@@ -123,7 +123,7 @@ To try it out, put he following snippet in the `<body>` of `index.html`:
 
 ```html
 <script>
-  $('body').urlfilter({target: 'pushState'})
+  $('body').urlfilter()
   $(window).on('#?', function(e) { console.log(e.change) })
     .urlchange()
 </script>
