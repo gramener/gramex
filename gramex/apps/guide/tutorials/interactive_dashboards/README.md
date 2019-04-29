@@ -15,7 +15,7 @@ After finishing this tutorial, you will:
 ## Requirements
 
 This tutorial assumes that you have gone through the [quickstart](../quickstart)
-and successfully built the Gramex application described in it.
+and successfully built the Gramex application described in it. Some knowledge of basic Javascript and Jquery would also be very helpful. 
 
 
 ## Introduction
@@ -48,12 +48,7 @@ variety of data sources like files and databases and read data from them.
 It can then expose this data through a [REST API](../quickstart/#step-1-expose-the-data-through-a-rest-api).
 Possibly the most powerful feature of FormHandler, is that we can filter, aggregate, sort and otherwise query the data simply by adding URL Query parameters. This means that if [data](../quickstart/data) is our typical data endpoint, then [data?Segment=Consumer](../quickstart/data?Segment=Consumer) returns only those rows which have Consumer in the Segment Column. We'll exploit this feature a lot to build interactive dashboards. Check out the list of possible operations in the [formhandler documentation](/formhandler/#formhandler-filters)
 
-
-## Explain simple events/interaction with Ajax
-- make an ajax call and update the chart. 
-
-
-Data from FormHandler can be rendered as an interactive table like this one:
+Data from FormHandler can also be rendered as an interactive table like this one:
 
 <div class="formhandler" data-src="../quickstart/data?_c=-Order%20ID&_c=-Sub-Category&_c=-Sales&_c=-Quantity&_c=-Ship%20Mode&_c=-Ship%20Date"></div>
 <script>
@@ -69,35 +64,17 @@ step as follows:
 ```html
 <script src="ui/g1/dist/g1.min.js"></script>
 ```
-
-You can interact with the g1 FormHandler table in many ways - like changing the
-number of rows you want to see in the table, retrieving different 'pages' of the dataset, etc.
-You can also interact with the individual columns of the dataset -
-you can sort, filter, and hide them. Additionally, you can click on any value within
-the table to filter the corresponding column by that value. When
-such a filter is applied, a hint appears at the top right corner of the table.
-You can click on it to remove the filter.
-
-Our goal, now, is to automatically detect these interactions, and trigger
-certain events when the table changes.
-
+We can quickly sort, filter or tab through the data using the table.
 
 ## Step 2: Detecting Changes in the URL
 
-Notice that any interaction with the FormHandler table changes the URL -
-specifically the URL hash. Thus, watching for changes in the URL hash is a
-reliably proxy for detecting changes in the FormHandler table. Not only is this
-a proxy, the URL hash actually reflects the arguments supplied to the
-FormHandler endpoint. These are arguments that are used to apply
-[filters and aggregations](../formhandler/#formhandler-filters) on the dataset.
-
-g1 also provides a way of [listening to changes in the
-URL](https://code.gramener.com/cto/g1/blob/master/docs/urlchange.md).
+Notice that any interaction with the table changes the URL - specifically the URL hash.
+This is intentional, by storing the state of various interactions and filters in the URL, we create the ability to share a particular view of the data, just by sharing the URL.
+You could do this manually, by attaching an event listener to window.location and parsing it, but g1 provides a simpler way to this via [urlchange](https://code.gramener.com/cto/g1/blob/master/docs/urlchange.md)
 To try it out, put he following snippet in the `<body>` of `index.html`:
 
 ```html
 <script>
-  $('body').urlfilter()
   $(window).on('#?', function(e) { console.log(e.change) })
     .urlchange()
 </script>
@@ -105,7 +82,7 @@ To try it out, put he following snippet in the `<body>` of `index.html`:
 
 This snippet is essentially telling the browser to log the URL hash changes in the console
 whenever they happen. Generally, we can ask the browser to run any function when the url
-change event is triggered. We will see an example of this in the next section.
+change event is triggered. 
 After you save the file and refresh the browser, open up the browser console.
 This can be done by right clicking anywhere on the page, and clicking on 'Inspect Element' in the menu.
 This will open up a split pane in the browser window. Within this window, navigate to the tab
