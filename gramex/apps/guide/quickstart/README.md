@@ -66,7 +66,7 @@ INFO    22-Apr 13:34:26 __init__ PORT Listening on port 9988
 INFO    22-Apr 13:34:26 __init__ 9988 <Ctrl-B> opens the browser. <Ctrl-D> starts the debugger.
 ```
 
-At this time, if you open a browser window at [`http://localhost:9988`](http://localhost:9988), you should see the text you had typed in the index.html file. it should look something like [this](index2.html)
+At this time, if you open a browser window at [`http://localhost:9988`](http://localhost:9988), you should see the text you had typed in the index.html file. It should look something like [this](index2.html).
 
 Gramex internally watches files for changes, so you can change anything in index.html, and refresh the link in your browser without restarting the server.
 </details>
@@ -89,9 +89,9 @@ url:
 ```
 
 After you save the file, Gramex will be able to serve the CSV data through the `/data` resource endpoint. To verify this, visit [`http://localhost:9988/data?_limit=10`](http://localhost:9988/data?_limit=10) in your browser. You should now see a JSON payload representing the first ten rows of the dataset.
-it should look something like [this](/data?_limit=10)
+It should look something like [this](/data?_limit=10).
 
-You could also, visit [http://localhost:9988/data?_limit=10&_format=html](http://localhost:9988/data?_limit=10&_format=html) to see the first ten rows as a simple HTML table. it should look something like [this](data?_limit=10&_format=html)
+You could also, visit [http://localhost:9988/data?_limit=10&_format=html](http://localhost:9988/data?_limit=10&_format=html) to see the first ten rows as a simple HTML table. It should look something like [this](data?_limit=10&_format=html).
 </details>
 
 ## Step 2: Laying out some scaffolding
@@ -127,7 +127,7 @@ If you notice all of our css and js links are relative to a ui/ directory - but 
 
 This is because Gramex bundles a lot of common css and js files (bootstrap, lodash, our own interaction library g1) as part of a feature called [UI Components](../uicomponents). 
 
-To use these in our dashboard, we add the following lines to our gramex.yaml - 
+To use these in our dashboard, we add the following lines to our gramex.yaml:
 ```yaml
 import:
   ui:
@@ -229,9 +229,9 @@ var spec = {
 }
 ```
 
-Details of the specification can be found in the vega-lite [docs](https://vega.github.io/vega-lite/docs/), but some things to notice - 
+Details of the specification can be found in the vega-lite [docs](https://vega.github.io/vega-lite/docs/), but some things to note:
 
-* the data key in our spec accepts a url field, we've set the url to our Rest API endpoint, except an extra url query parameter `_by=Segment` this exploits another FormHandler feature, which aggregates the data coming from our csv by a column from the dataset, in this case. visit [http:localhost:9988/data?_by=Segment](http:localhost:9988/data?_by=Segment) or click [here](data?_by=Segment)to get a better sense of what the resultant aggregated data looks like.
+* The data key in our spec accepts a url field, we've set the url to our Rest API endpoint, except an extra url query parameter `_by=Segment` this exploits another FormHandler feature, which aggregates the data coming from our csv by a column from the dataset, in this case. Visit [http:localhost:9988/data?_by=Segment](http:localhost:9988/data?_by=Segment) or click [here](data?_by=Segment) to get a better sense of what the resultant aggregated data looks like.
 * We've set the x and y axis values to `Sales|sum` and `Segment` respectively, telling Vega-lite to plot those quantities from the data that FormHandler returns. 
 
 We also need to add a div in our `index.html` in which we shall place our chart, and a little bit of Javascript code to render the chart.
@@ -247,7 +247,7 @@ We also need to add a div in our `index.html` in which we shall place our chart,
 </script>
 ```
 
-So overall, our current index.html should look like the following:
+At this stage, our index.html should look like the following:
 
 ```html
 <!DOCTYPE html>
@@ -322,7 +322,7 @@ Download the final [gramex.yaml](serve/gramex2.yaml).
 ## Next steps
 
 If you've followed along with this quickstart, you now have a basic idea of how to build a simple static dashboard with gramex.
-To see more of what gramex is able to do and learn more about particular features or how to add interactivity; look at some of our [demos](), the rest of our [tutorials](../tutorials), or our [documentation](../)
+To see more of what gramex is able to do and learn more about particular features or how to add interactivity; look at some of our [demos](), the rest of our [tutorials](../tutorials), or our [documentation](../).
 
 
 ## Troubleshooting
