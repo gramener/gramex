@@ -19,9 +19,3 @@ url:
     kwargs:
       url: $YAMLPATH/../../quickstart/store-sales.csv
 
-  store-sales-ctab:
-    pattern: /$YAMLURL/store-sales-ctab
-    handler: FormHandler
-    kwargs:
-      url: $YAMLPATH/../../quickstart/store-sales.csv
-      modify: data.groupby(['Category', 'Region'])['Sales'].sum().reset_index()
