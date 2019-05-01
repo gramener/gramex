@@ -8,7 +8,7 @@ url:
     handler: FileHandler
     pattern: /$YAMLURL/store-sales.csv
     kwargs:
-      path: $YAMLPATH/../quickstart/store-sales.csv
+      path: $YAMLPATH/../../quickstart/store-sales.csv
       headers:
         Content-Type: text/plain
         Content-Disposition: attachment;
@@ -17,11 +17,11 @@ url:
     pattern: /$YAMLURL/data
     handler: FormHandler
     kwargs:
-      url: $YAMLPATH/../quickstart/store-sales.csv
+      url: $YAMLPATH/../../quickstart/store-sales.csv
 
   store-sales-ctab:
     pattern: /$YAMLURL/store-sales-ctab
     handler: FormHandler
     kwargs:
-      url: $YAMLPATH/../quickstart/store-sales.csv
+      url: $YAMLPATH/../../quickstart/store-sales.csv
       modify: data.groupby(['Category', 'Region'])['Sales'].sum().reset_index()
