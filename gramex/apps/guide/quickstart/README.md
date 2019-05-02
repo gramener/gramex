@@ -12,15 +12,12 @@ grouped by product segment, region and product category.
 
 SuperStore is a fictional department store for whom we will build a data application with Gramex.
 This application will allow users to see the store's sales across segments at a glance. 
-After finishing this tutorial,
-you will be able to:
+After finishing this tutorial, we will be able to:
 
-
-1. Read the source data from a REST API.
-2. Preview the data in a minimal spreadsheet.
+1. Convert a Data File into a REST API.
+2. Preview the data in an interactive table
 3. Create a chart showing sales and embed it in your application.
-4. Filter the data by values and dynamically redraw the chart.
-5. Deploy all of the above as a standalone web application.
+4. Deploy all of the above as a standalone web application.
 
 Here is what the data looks like:
 
@@ -41,10 +38,10 @@ After completing step 5, your application should look like [this](index5.html).
 
 ### Requirements
 
-In order to complete this tutorial, you will need:
+In order to complete this tutorial, you will need to:
 
 1. [Install and set up Gramex](../install)
-2. The SuperStore dataset: Please [download the data](serve/store-sales.csv) and save it at a convenient location on your computer.
+2. [download the data](serve/store-sales.csv) and save it at a convenient location on your computer.
 
 
 ## Step 0: Create the Project
@@ -57,7 +54,7 @@ For the remainder of the tutorial, we will refer to this folder as the "project 
 * To set up the project, create a file named `gramex.yaml` in the project folder, leave it blank for now. 
 * Create a second file called `index.html` and put any html you like in there. For now, just a simple bit of text will do, so type in `Hello Gramex!` and save it. 
 
-Having saved the `index.html` file, open up a terminal and navigate to the project folder and type `gramex` to start the server. 
+Having saved the `index.html` file, open up a terminal; navigate to the project folder and type `gramex` to start the server. 
 
 You should start seeing some output now, which is the Gramex server logging its startup sequence. By the time you see the following lines, Gramex has fully started, and is ready to accept requests.
 
@@ -155,7 +152,7 @@ url:
 <details>
   <summary> Expand This Section </summary>
  
-The simplest and sometimes most effective way to represent data is just a table, and Gramex provides a way of embedding tabular data in any HTML page as an interactive table. To use this feature, we insert the following lines in our `index.html`:
+The simplest and sometimes most effective way to represent data can be a table, and Gramex provides a way of embedding tabular data in any HTML page as an interactive table. To use this feature, we insert the following lines in our `index.html`:
 
 ```html
   <div class="formhandler" data-src="data"></div>
@@ -322,16 +319,18 @@ Download the final [gramex.yaml](serve/gramex2.yaml).
 ## Next steps
 
 If you've followed along with this quickstart, you now have a basic idea of how to build a simple static dashboard with gramex.
-To see more of what gramex is able to do and learn more about particular features or how to add interactivity; look at some of our [demos](), the rest of our [tutorials](../tutorials), or our [documentation](../).
+To see more of what gramex is able to do and learn more about particular features or how to add interactivity; look at some of our [demos](gramener.com/demo), the rest of our [tutorials](../tutorials), or our [documentation](../).
 
 
 ## Troubleshooting
 
- - inotify watch limit reached
- - Port is busy
- - Don't see any text at localhost:9988, instead just a list of files in the directory
- - CSS/JS Not available. 
- - vega chart not rendering for some reason
-
-
-## FAQs
+- Gramex doesn't start:
+    - [Inotify watch limit reached](https://unix.stackexchange.com/questions/s just13751/kernel-inotify-watch-limit-reached)
+    - Port is busy
+        - Gramex runs on port 9988 by default, you can run `gramex --listen.port=<port number>` to run on an arbritary port. 
+- Don't see any text at localhost:9988, instead just a list of files in the directory
+    - You may not have a gramex.yaml in your project directory. Create one and restart Gramex.
+- CSS/JS Not available.
+    - You may have forgotten to add UI Components in Step 2, or could be missing NodeJS; ensure NodeJS is installed, run `gramex setup ui` and restart gramex. If it still doesn't work, open an issue on [github](https://github.com/gramener/gramex) or email cto@gramener.com  
+- vega chart not rendering for some reason
+    - You may have forgotten to include vega and vega lite dependencies in step 2.
