@@ -40,9 +40,10 @@ to sales are:
 
 In order to complete this tutorial, we will need to:
 
-1. [Install and set up Gramex](../install)
-2. [Download the data](serve/store-sales.csv) and save it at a convenient location on our computer.
+* [Install and set up Gramex](../install)
+* [Download the data](serve/store-sales.csv) and save it at a convenient location on our computer.
 
+*Calls to action, or the steps where something needs to be copy pasted or edited will always be a bullet point similar to these*
 
 ## Step 0: Create the Project
 <details>
@@ -57,10 +58,10 @@ For the remainder of the tutorial, we will refer to this folder as the "project 
 * To set up the project, create a file named `gramex.yaml` in the project folder, leave it blank for now. 
 * Create a second file called `index.html` and put any html you like in there. For now, just a simple bit of text will do, so type in `Hello Gramex!` and save it. 
 
-*As an aside, index.html and gramex.yaml are the only two files we'll be editing throughout this guide*
+*index.html and gramex.yaml are the only two files we'll be editing throughout this guide*
 
 ```bash
-$ echo `Hello Gramex!` > index.html
+$ echo "Hello Gramex!" > index.html
 ```
 
 * Having saved the `index.html` file, open up a terminal; navigate to the project folder and type `gramex` to start the server. 
