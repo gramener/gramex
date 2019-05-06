@@ -348,18 +348,30 @@ At this stage, our index.html should look like the following:
 At this point our browser at [localhost:9988/](http://localhost:9988/) should look like <i class="fas fa-eye"> [Current Output](index4.html).</i>
 </details>
 
-## Step 4: Final Touches and Making Things Prettier.
+## Step 5: Final Touches and Making Things Prettier.
 <details>
   <summary> Expand This Section </summary>
 
-We can now flex front-end muscle to make our dashboard look slightly better. 
+We can now flex front-end muscle to make our dashboard look slightly better. we're not going to talk about these changes in a lot of detail for the sake of brevity. Feel free to go through the rest of our guides to get a better handle on some of these. 
 
-* We've Added a second chart to plot the aggregate sum of Quantity by Segment,
-* Hidden a few columns from our dataset to ensure our table fits on the page without horizontal scrolling.
-* Modified the vega-lite spec a little,
-    * Changed the colours
-    * Changed the font
-    * Added a Chart Title
+1. We've Added a second chart to plot the aggregate sum of Quantity by Segment. Since it's the same chart, we can reuse the specification we used before, but need to change values of certain fields - so we created a function to which we can pass the fields that need to be updated: the div to draw the chart, the x-axis column name and the title of the chart.
+
+```javascript
+render_charts('#chart1', 'Sales|sum', 'Sales by Segment')
+render_charts('#chart2', 'Quantity|sum', 'Quantity by Segment')
+function render_charts(chartid, xfield, title) {
+  spec.title.text = title
+  spec.encoding.x.field = xfield
+  var view = new vega.View(vega.parse(vl.compile(spec).spec))
+    .renderer('svg')
+    .initialize(chartid)
+    .hover()
+    .run()
+}
+```
+2. To format the table a little, we've used a FormHandler filter similar to what we had introduced in Step 4, to hide some columns from our dataset. We've also used a feature of UI components, wherein we can override [bootstrap variables by passing url query parameters to the css import line](../uicomponents). In this case, we've set link-color to black.
+3. Finally, we've modified the vega-lite configuration of the chart to add a color scale, and change the fonts of the chart. 
+We can look at  
 
 <i class="fas fa-eye"> [Final Output](index5.html) </i>
 
