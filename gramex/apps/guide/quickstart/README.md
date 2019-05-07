@@ -14,12 +14,12 @@ SuperStore is a fictional department store for whom we will build a data applica
 This application will allow users to see the store's sales across segments at a glance. 
 After finishing this tutorial, we will be able to:
 
-1. Convert a Data File into a REST API.
-2. Preview the data in an interactive table.
-3. Create a chart showing sales and embed it in our application.
-4. Deploy all of the above as a standalone web application.
+1. convert a data file into a REST API,
+2. preview the data in an interactive table,
+3. create a chart showing sales across multiple categories, and
+4. deploy all of the above as a standalone web application.
 
-Here is what the data looks like:
+This is what the data looks like:
 
 <div class="formhandler" data-src="data?_c=-Order%20ID&_c=-Sub-Category&_c=-Sales&_c=-Quantity&_c=-Ship%20Mode&_c=-Ship%20Date"></div>
 <script>
@@ -35,12 +35,12 @@ to sales are:
 * Segment - the type of customer who bought the product.
 
 <p class="alert alert-success" role="alert">
-<i class="fas fa-eye"></i> After completing step 5, our application should look like <a href="index5.html">this</a>.
+<i class="fas fa-eye"></i> After completing this exercise, our application should look like <a href="index5.html">this</a>.
 </p>
 
 ### Requirements
 
-In order to complete this tutorial, we will need to:
+In order to start this tutorial, we will need to:
 
 * [Install and set up Gramex](../install)
 * [Download the data](serve/store-sales.csv) and save it at a convenient location on our computer.
@@ -106,12 +106,15 @@ $ echo "Hello Gramex!" > index.html
   <div class="card-body">
   <h4 class="card-title"><i class="fas fa-code"></i></h4>
   <p class="card-text">
-    Having saved the <kbd>index.html</kbd> file, open up a terminal; navigate to the project folder and type <kbd>gramex</kbd> to start the server. 
+    Type the following command to start the Gramex server.
   </p>
   </div>
 </div>  
-
 <br>
+```bash
+$ gramex
+```
+
 We should start seeing some output now, which is the Gramex server logging its startup sequence. Once we see the following lines, Gramex has fully started, and is ready to accept requests.
 
 ```console
@@ -140,7 +143,7 @@ In order to provide our dashboard with access to the data, we need to create a U
   <div class="card-body">
   <h4 class="card-title"><i class="fas fa-code"></i></h4>
   <p class="card-text">
-    Create a formhandler endpoint on our server by adding the following lines to the empty <kbd>gramex.yaml</kbd> file, which we had created in Step 0:
+    Create a formhandler endpoint on our server by adding the following lines to the empty <kbd>gramex.yaml</kbd> file, which we had created in the previous section:
   </p>
   </div>
 </div>
@@ -228,7 +231,7 @@ import:
     YAMLURL: $YAMLURL/ui/               # ... at this URL
 ```
 
-At this point, `gramex.yaml` now contains the following lines and will not change for the rest of this tutorial. Essentially, we are done with the backend configuration.
+At this point, `gramex.yaml` contains the following lines and will not change for the rest of this tutorial. Essentially, we are done with the backend configuration.
 
 ```yaml
 # gramex.yaml
@@ -505,7 +508,7 @@ function render_charts(chartid, xfield, title) {
 Here are a few more ways in which we can tweak our dashboard:
 
 1. To hide some of the columns from our dataset, we can use a FormHandler filter similar to what we had introduced in Step 4.
-2. We can use a feature of UI components, which allows us to override [bootstrap variables by passing url query parameters to the css import line](../uicomponents). For example, setting link-color to black.
+2. We can use a feature of UI components, which allows us to override [bootstrap variables by passing url query parameters to the css import line](../uicomponents/#custom-bootstrap). For example, setting link-color to black.
 3. We can modify the vega-lite configuration of the chart to add a color scale, and change the fonts of the chart. 
 
 <p class="alert alert-success" role="alert">
