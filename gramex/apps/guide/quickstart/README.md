@@ -14,10 +14,9 @@ SuperStore is a fictional department store for whom we will build a data applica
 This application will allow users to see the store's sales across segments at a glance. 
 After finishing this tutorial, we will be able to:
 
-1. convert a data file into a REST API,
-2. preview the data in an interactive table,
-3. create a chart showing sales across multiple categories, and
-4. deploy all of the above as a standalone web application.
+1. Convert a data file into a REST API,
+2. Preview the data in an interactive table,
+3. Create a chart showing sales across multiple categories, and
 
 This is what the data looks like:
 
@@ -85,7 +84,7 @@ For the remainder of the tutorial, we will refer to this folder as the "project 
 </div>
 <br>
 
-`"index.html"` and `"gramex.yaml"` are the only two files we'll be editing throughout this guide. For now, let's put some text in `"index.html"` as follows:
+`"index.html"` and `"gramex.yaml"` are the only two files we'll be editing throughout this guide. For now, let's put some text in `"index.html"`:
 <br>
 
 <div class="card shadow text-white bg-dark">
@@ -130,7 +129,8 @@ At this time, if you open a browser window at [`http://localhost:9988`](http://l
 <i class="fas fa-eye"></i> It should look something like <a href="index2.html">this</a>.
 </p>
 
-Gramex internally watches files for changes, so you can change anything in `"index.html"`, and refresh the link in your browser without restarting the server.
+Gramex internally watches files for changes, so we can change anything in `"index.html"`, and refresh the link in the browser without restarting the server.
+![Step 0 gif](https://cloud.gramener.com/f/5684de979acd45d4a14d/?dl=1)
 </details>
 
 ## Step 1: Expose the data through a REST API
@@ -170,6 +170,7 @@ You could also, visit [http://localhost:9988/data?_limit=10&_format=html](http:/
 <p class="alert alert-success" role="alert">
 <i class="fa fa-eye"></i> It should look like <a href="data?_limit=10&_format=html">this</a>.
 </p>
+![Step 1 gif](https://cloud.gramener.com/f/379c20a01b3c416ca3cd/?dl=1)
 </details>
 
 ## Step 2: Laying out some scaffolding
