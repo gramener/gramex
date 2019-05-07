@@ -43,7 +43,7 @@ to sales are:
 In order to start this tutorial, we will need to:
 
 * [Install and set up Gramex](../install)
-* [Download the data](serve/store-sales.csv) and save it at a convenient location on our computer.
+* [Download the data](serve/store-sales.csv) and save it at a convenient location on your computer.
 
 <div class="card shadow text-white bg-dark">
   <div class="card-body">
@@ -159,7 +159,7 @@ url:
       url: $YAMLPATH/store-sales.csv
 ```
 
-After you save the file, Gramex will be able to serve the CSV data through the `/data` resource endpoint. To verify this, visit [`http://localhost:9988/data?_limit=10`](http://localhost:9988/data?_limit=10) in our browser. You should now see a JSON payload representing the first ten rows of the dataset.
+After you save the file, Gramex will be able to serve the CSV data through the `/data` resource endpoint. To verify this, visit [`http://localhost:9988/data?_limit=10`](http://localhost:9988/data?_limit=10) in your browser. You should now see a JSON payload representing the first ten rows of the dataset.
 
 <p class="alert alert-success" role="alert">
 <i class="fa fa-eye"></i> It should look like <a href="data?_limit=10">this</a>.
