@@ -18,3 +18,9 @@ url:
     handler: FormHandler
     kwargs:
       url: $YAMLPATH/store-sales.csv
+
+  snippets:
+    pattern: /$YAMLURL/snippets/(.*)
+    handler: FileHandler
+    kwargs:
+      path: $YAMLPATH/snippets/

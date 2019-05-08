@@ -46,7 +46,6 @@ In order to start this tutorial, we will need to:
 
 <div class="card shadow text-white bg-dark">
   <div class="card-body">
-  <h4 class="card-title"><i class="fas fa-code"></i></h4>
   <p class="card-text">
     Any action items, points of interest, or places where you have to edit code will be displayed in a card similar to this one.
   </p>
@@ -61,7 +60,6 @@ We need a place to hold together all the files related to our application - incl
 
 <div class="card shadow text-white bg-dark">
   <div class="card-body">
-  <h4 class="card-title"><i class="fas fa-code"></i></h4>
   <p class="card-text">
     Create a folder at a convenient location on your computer and move the downloaded dataset file into it.
   </p>
@@ -73,7 +71,6 @@ For the remainder of the tutorial, we will refer to this folder as the "project 
 
 <div class="card shadow text-white bg-dark">
   <div class="card-body">
-    <h4 class="card-title"><i class="fas fa-code"></i></h4>
     <div class="card-text">
     <ul>
       <li>To set up the project, create a file named <kbd>gramex.yaml</kbd> in the project folder, leave it blank for now.</li>
@@ -89,30 +86,39 @@ For the remainder of the tutorial, we will refer to this folder as the "project 
 
 <div class="card shadow text-white bg-dark">
   <div class="card-body">
-  <h4 class="card-title"><i class="fas fa-code"></i></h4>
-  <p class="card-text">
-    Open up a terminal, navigate to the project folder and type the following:
-  </p>
+  <div class="card-text">
+    <p>Open up a terminal, navigate to the project folder and type the following:</p>
+    <ul class="nav nav-tabs">
+      <li class="nav-item">
+        <a class="nav-link active"><i class="fas fa-terminal"></i> Terminal</a>
+      </li>
+    </ul>
+    <pre><code id="bash1" class="bash"></code></pre>
+  </div>
   </div>
 </div>  
 <br>
 
-```bash
-$ echo "Hello Gramex!" > index.html
-```
+<script>
+  $.get('snippets/hello.sh').done(
+    (e) => { $('#bash1').text(e) }
+  )
+</script>
 
 <div class="card shadow text-white bg-dark">
   <div class="card-body">
-  <h4 class="card-title"><i class="fas fa-code"></i></h4>
-  <p class="card-text">
-    Type the following command to start the Gramex server.
-  </p>
+    <div class="card-text">
+      <p>Type the following command to start the Gramex server.</p>
+      <ul class="nav nav-tabs">
+        <li class="nav-item">
+          <a class="nav-link active"><i class="fas fa-terminal"></i> Terminal</a>
+        </li>
+      </ul>
+      <pre><code id="bash2" class="bash">gramex</code></pre>
+    </div>
   </div>
 </div>  
 <br>
-```bash
-$ gramex
-```
 
 We should start seeing some output now, which is the Gramex server logging its startup sequence. Once we see the following lines, Gramex has fully started, and is ready to accept requests.
 
@@ -141,23 +147,24 @@ In order to provide our dashboard with access to the data, we need to create a U
 
 <div class="card shadow text-white bg-dark">
   <div class="card-body">
-  <h4 class="card-title"><i class="fas fa-code"></i></h4>
-  <p class="card-text">
-    Create a formhandler endpoint on our server by adding the following lines to the empty <kbd>gramex.yaml</kbd> file, which we had created in the previous section:
-  </p>
+    <div class="card-text">
+      <p>Create a formhandler endpoint on our server by adding the following lines to the empty <kbd>gramex.yaml</kbd> file, which we had created in the previous section:</p>
+      <ul class="nav nav-tabs">
+        <li class="nav-item">
+          <a class="nav-link active"><i class="fas fa-code"></i> <span class="text-monospace">gramex.yaml</span></a>
+        </li>
+      </ul>
+      <pre><code id="yaml1" class="language-yaml"></code></pre>
+    </div>
   </div>
 </div>
 
-<br>
-```yaml
-# Gramex.yaml
-url:
-  superstore-data:
-    pattern: /$YAMLURL/data
-    handler: FormHandler
-    kwargs:
-      url: $YAMLPATH/store-sales.csv
-```
+<script>
+  $.get('snippets/gramex1.yaml').done(
+    (e) => { $('#yaml1').text(e) }
+  )
+</script>
+
 
 After you save the file, Gramex will be able to serve the CSV data through the `/data` resource endpoint. To verify this, visit [`http://localhost:9988/data?_limit=10`](http://localhost:9988/data?_limit=10) in your browser. You should now see a JSON payload representing the first ten rows of the dataset.
 
@@ -181,33 +188,23 @@ Since we now have access to the data from a REST API, we are ready to start buil
 
 <div class="card shadow text-white bg-dark">
   <div class="card-body">
-  <h4 class="card-title"><i class="fas fa-code"></i></h4>
-  <p class="card-text">
-    At the moment, our <kbd>index.html</kbd> file just has some text in it. Let's add the following HTML to it.
-  </p>
+    <div class="card-text">
+      <p>At the moment, our <kbd>index.html</kbd> file just has some text in it. Let's add the following HTML to it.</p>
+      <ul class="nav nav-tabs">
+        <li class="nav-item">
+          <a class="nav-link active"><i class="fas fa-code"></i> <span class="text-monospace">index.html</span></a>
+        </li>
+      </ul>
+      <pre><code id="html1" class="language-html"></code></pre>
+    </div>
   </div>
 </div>
-<br>
-```html
-<!-- index.html -->
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8" />
-  <title>SuperStore Sales Dashboard</title>
-  <link rel="stylesheet" href="ui/bootstraptheme.css">
-</head>
-<body>
-  <div class="placeholder">This div shall hold our data</div>
-</body>
-  <script src="ui/jquery/dist/jquery.min.js"></script>
-  <script src="ui/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="ui/lodash/lodash.min.js"></script>
-  <script src="ui/g1/dist/g1.min.js"></script>
-  <script src="ui/vega/build/vega.min.js"></script>
-  <script src="ui/vega-lite/build/vega-lite.min.js"></script>
-</html>
-```
+
+<script>
+  $.get('snippets/index1.html').done(
+    (e) => { $('#html1').text(e) }
+  )
+</script>
 
 This is just some boilerplate that includes css and js files we will need.
 
@@ -217,37 +214,38 @@ This is because Gramex bundles a lot of common css and js files ([bootstrap](htt
 
 <div class="card shadow text-white bg-dark">
   <div class="card-body">
-  <h4 class="card-title"><i class="fas fa-code"></i></h4>
-  <p class="card-text">
-    To use these in our dashboard, we add the following lines to our <kbd>gramex.yaml</kbd>:
-  </p>
+    <div class="card-text">
+      <p>To use these in our dashboard, we add the following lines to our <kbd>gramex.yaml</kbd>:</p>
+      <ul class="nav nav-tabs">
+        <li class="nav-item">
+          <a class="nav-link active"><i class="fas fa-code"></i> <span class="text-monospace">gramex.yaml</span></a>
+        </li>
+      </ul>
+      <pre><code id="yaml2" class="language-yaml"></code></pre>
+    </div>
   </div>
 </div>
-<br>
-```yaml
-# gramex.yaml
-import:
-  ui:
-    path: $GRAMEXAPPS/ui/gramex.yaml    # Import the UI components
-    YAMLURL: $YAMLURL/ui/               # ... at this URL
-```
 
+<script>
+  $.get('snippets/gramex_2.yaml').done(
+    (e) => { $('#yaml2').text(e) }
+  )
+</script>
+
+<br>
 At this point, `gramex.yaml` contains the following lines and will not change for the rest of this tutorial. Essentially, we are done with the backend configuration.
 
-```yaml
-# gramex.yaml
-import:
-  ui:
-    path: $GRAMEXAPPS/ui/gramex.yaml    # Import the UI components
-    YAMLURL: $YAMLURL/ui/               # ... at this URL
-
-url:
-  superstore-data:
-    pattern: /$YAMLURL/data
-    handler: FormHandler
-    kwargs:
-      url: $YAMLPATH/store-sales.csv
-```
+<ul class="nav nav-tabs">
+  <li class="nav-item">
+    <a class="nav-link active"><i class="fas fa-code"></i> <span class="text-monospace">gramex.yaml</span></a>
+  </li>
+</ul>
+<pre><code id="yaml3" class="language-yaml"></code></pre>
+<script>
+  $.get('gramex2.yaml').done(
+    (e) => { $('#yaml3').text(e) }
+  )
+</script>
 
 <p class="alert alert-success" role="alert">
 <i class="fa fa-eye"></i> At this time our HTML should look like <a href="index6.html">this</a>.
@@ -263,43 +261,39 @@ Accordingly, Gramex provides a way of embedding tabular data in any HTML page as
 
 <div class="card shadow text-white bg-dark">
   <div class="card-body">
-  <h4 class="card-title"><i class="fas fa-code"></i></h4>
-  <p class="card-text">
-    To show the data as a table, insert the following lines in <kbd>index.html</kbd>:
-  </p>
+    <div class="card-text">
+      <p>To show the data as a table, insert the following lines in <kbd>index.html</kbd>:</p>
+      <ul class="nav nav-tabs">
+        <li class="nav-item">
+          <a class="nav-link active"><i class="fas fa-code"></i> <span class="text-monospace">index.html</span></a>
+        </li>
+      </ul>
+      <pre><code id="html2" class="language-html"></code></pre>
+    </div>
   </div>
 </div>
+
+<script>
+  $.get('snippets/fh.html').done(
+    (e) => { $('#html2').text(e) }
+  )
+</script>
+
 <br>
-
-```html
-<!-- index.html -->
-  <div class="formhandler" data-src="data"></div>
-  <script>
-    $('.formhandler').formhandler({pageSize: 5})
-  </script>
-```
-
 The full `index.html` file now looks like:
-```html
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8" />
-  <title>SuperStore Sales Dashboard</title>
-  <link rel="stylesheet" href="ui/bootstraptheme.css">
-</head>
-<body>
-  <div class="formhandler" data-src="data"></div>
-</body>
-  <script src="ui/jquery/dist/jquery.min.js"></script>
-  <script src="ui/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="ui/lodash/lodash.min.js"></script>
-  <script src="ui/g1/dist/g1.min.js"></script>
-  <script>
-    $('.formhandler').formhandler({pageSize: 5})
-  </script>
-</html>
-```
+<ul class="nav nav-tabs">
+  <li class="nav-item">
+    <a class="nav-link active"><i class="fas fa-code"></i> <span class="text-monospace">index.html</span></a>
+  </li>
+</ul>
+<pre><code id="html3" class="language-html"></code></pre>
+
+<script>
+  $.get('snippets/fh-after.html').done(
+    (e) => { $('#html3').text(e) }
+  )
+</script>
+
 
 After saving the file, when we open [`http://localhost:9988`](http://localhost:9988), we should see a table similar to the one at the top of this page. 
 
@@ -309,21 +303,18 @@ The table is interactive. Try playing around with it. Here's a few things you co
   <div class="card shadow text-white bg-dark">
     <img class="card-img-top" src="img/fh-g1-1.png" alt="Card image cap">
     <div class="card-body">
-      <h5 class="card-title">Column Operations</h5>
       <p class="card-text">Click the dropdown arrows near the column headers to see column options.
     </div>
   </div>
   <div class="card shadow text-white bg-dark">
     <img class="card-img-top" src="img/fh-g1-2.png" alt="Card image cap">
     <div class="card-body">
-      <h5 class="card-title">Pagination</h5>
       <p class="card-text">Try getting the second, third or the 1365th 'page' of the dataset from the menu at the top of the table.
     </div>
   </div>
   <div class="card shadow text-white bg-dark">
     <img class="card-img-top" src="img/fh-g1-3.png" alt="Card image cap">
     <div class="card-body">
-      <h5 class="card-title">Data Size</h5>
       <p class="card-text">See 20, 50 or more rows at a time in the table from the dropdown menu to the right of the page list.
     </div>
   </div>
@@ -348,41 +339,23 @@ To actually draw the chart, we'll use a library called [Vega-lite](https://vega.
 
 <div class="card shadow text-white bg-dark">
   <div class="card-body">
-  <h4 class="card-title"><i class="fas fa-code"></i></h4>
-  <div class="card-text">
-    Add the following <span class="font-italic">chart specification</span> to your HTML.
-  </div>
+    <div class="card-text">
+      <p>Add the following <span class="font-italic">chart specification</span> to your HTML:</p>
+      <ul class="nav nav-tabs">
+        <li class="nav-item">
+          <a class="nav-link active"><i class="fas fa-code"></i> <span class="text-monospace">index.html</span></a>
+        </li>
+      </ul>
+      <pre><code id="html4" class="language-html"></code></pre>
+    </div>
   </div>
 </div>
 
-<br>
-
-```html
-<!-- index.html -->
 <script>
-var spec = {
-  "$schema": "https://vega.github.io/schema/vega-lite/v3.json",
-  "description": "A bar chart that sorts the y-values by the x-values.",
-  "width": 360,
-  "height": 200,
-  "data": {"url": "data?_by=Segment"},
-  "mark": "bar",
-  "encoding": {
-    "y": {
-      "field": "Segment",
-      "type": "nominal",
-      "sort": {"encoding": "x"},
-      "axis": {"title": "Segment"}
-    },
-    "x": {
-      "field": "Sales|sum",
-      "type": "quantitative",
-      "axis": {"title": "Sales"}
-    }
-  }
-}
+  $.get('snippets/chartspec.html').done(
+    (e) => { $('#html4').text(e) }
+  )
 </script>
-```
 
 Details of the specification can be found in the vega-lite [docs](https://vega.github.io/vega-lite/docs/), but some things to note:
 
@@ -390,83 +363,41 @@ Details of the specification can be found in the vega-lite [docs](https://vega.g
 * the data key is set to the FormHandler URL with grouping by Segment: `{"url": "data?_by=Segment"}`
 * We've set the x and y axis values to `Sales|sum` and `Segment` respectively, telling Vega-lite to plot those quantities from the data that FormHandler returns. 
 
-
 <div class="card shadow text-white bg-dark">
   <div class="card-body">
-  <h4 class="card-title"><i class="fas fa-code"></i></h4>
-  <div class="card-text">
-    Add a div in the page in which to place the chart, and a little bit of Javascript code to render the chart:
-  </div>
+    <div class="card-text">
+      <p>Add a div in the page in which to place the chart, and a little bit of Javascript code to render the chart:</p>
+      <ul class="nav nav-tabs">
+        <li class="nav-item">
+          <a class="nav-link active"><i class="fas fa-code"></i> <span class="text-monospace">index.html</span></a>
+        </li>
+      </ul>
+      <pre><code id="html5" class="language-html"></code></pre>
+    </div>
   </div>
 </div>
+
+<script>
+  $.get('snippets/vega1.html').done(
+    (e) => { $('#html5').text(e) }
+  )
+</script>
+
 <br>
 
-```html
-<!-- index.html -->
-<div id="chart"></div>
-<script>
-  var view = new vega.View(vega.parse(vl.compile(spec).spec))
-      .renderer('svg')
-      .initialize('#chart')
-      .hover()
-      .run()
-</script>
-```
-
 At this stage, the contents of `index.html` should be as follows:
+<ul class="nav nav-tabs">
+  <li class="nav-item">
+    <a class="nav-link active"><i class="fas fa-code"></i> <span class="text-monospace">index.html</span></a>
+  </li>
+</ul>
+<pre><code id="html6" class="language-html"></code></pre>
 
-```html
-<!-- index.html -->
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8" />
-  <title>SuperStore Sales Dashboard</title>
-  <link rel="stylesheet" href="ui/bootstraptheme.css">
-</head>
-<body>
-  <div id="chart"></div>
-  <div class="formhandler" data-src="data"></div>
-</body>
-<script src="ui/jquery/dist/jquery.min.js"></script>
-<script src="ui/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-<script src="ui/lodash/lodash.min.js"></script>
-<script src="ui/g1/dist/g1.min.js"></script>
-<script src="ui/vega/build/vega.min.js"></script>
-<script src="ui/vega-lite/build/vega-lite.min.js"></script>
 <script>
-  $('.formhandler').formhandler({pageSize: 5})
-  var spec = {
-    "$schema": "https://vega.github.io/schema/vega-lite/v3.json",
-    "width": 360,
-    "height": 200,
-    "description": "A bar chart that sorts the y-values by the x-values.",
-    "data": {"url": "data?_by=Segment"},
-    "mark": "bar",
-    "encoding": {
-      "y": {
-        "field": "Segment",
-        "type": "nominal",
-        "sort": {"encoding": "x"},
-        "axis": {"title": "Segment"}
-      },
-      "x": {
-        "field": "Sales|sum",
-        "type": "quantitative",
-        "axis": {"title": "Sales"}
-      }
-    }
-  }
-  var view = new vega.View(vega.parse(vl.compile(spec).spec))
-      .renderer('svg')
-      .height(spec.height)
-      .width(spec.width)
-      .initialize('#chart')
-      .hover()
-      .run()
+  $.get('index4.html').done(
+    (e) => { $('#html6').text(e) }
+  )
 </script>
-</html>
-```
 
 <p class="alert alert-success" role="alert">
 <i class="fa fa-eye"></i> At this time our HTML should look like <a href="index4.html">this</a>.
@@ -484,27 +415,25 @@ Let's add a second chart to plot the aggregate sum of Quantity by Segment. It's 
 
 <div class="card shadow text-white bg-dark">
   <div class="card-body">
-  <h4 class="card-title"><i class="fas fa-code"></i></h4>
-  <div class="card-text">
-    Create a function which accepts the fields to be updated, the <code>&lt;div&gt;</code> to place the chart, the X-axis label and the title of the chart.
-  </div>
+    <div class="card-text">
+      <p>Create a function which accepts the fields to be updated, the <code>&lt;div&gt;</code> to place the chart, the X-axis label and the title of the chart.</p>
+      <ul class="nav nav-tabs">
+        <li class="nav-item">
+          <a class="nav-link active"><i class="fas fa-code"></i> <span class="text-monospace">index.html</span></a>
+        </li>
+      </ul>
+      <pre><code id="js1" class="language-javascript"></code></pre>
+    </div>
   </div>
 </div>
-<br>
 
-```javascript
-render_charts('#chart1', 'Sales|sum', 'Sales by Segment')
-render_charts('#chart2', 'Quantity|sum', 'Quantity by Segment')
-function render_charts(chartid, xfield, title) {
-  spec.title.text = title
-  spec.encoding.x.field = xfield
-  var view = new vega.View(vega.parse(vl.compile(spec).spec))
-    .renderer('svg')
-    .initialize(chartid)
-    .hover()
-    .run()
-}
-```
+<script>
+  $.get('snippets/render.js').done(
+    (e) => { $('#js1').text(e) }
+  )
+</script>
+
+<br>
 
 Here are a few more ways in which we can tweak our dashboard:
 
