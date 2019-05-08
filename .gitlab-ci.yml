@@ -57,6 +57,16 @@ validate-py2:
     - cat gramex.log
     - kill %1
 
+# Deploy the guide from dev, master, doc-* branches gramener.com
+deploy-guide:
+  only: [dev, master, /^doc-.*$/]
+  script:
+    - rsync -avzP gramex/apps/guide ubuntu@gramener.com:/mnt/gramener/apps/v1/
+    - 'ssh -t ubuntu@gramener.com "
+        /mnt/gramener/anaconda/bin/gramex setup /mnt/gramener/apps/v1/guide;
+        /mnt/gramener/anaconda/bin/gramex setup ui;
+      "'
+
 # Deploy the dev / master branches on gramener.com
 deploy-gramener:
   only: [dev, master]
