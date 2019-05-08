@@ -428,9 +428,7 @@ Let's add a second chart to plot the aggregate sum of Quantity by Segment. It's 
 </div>
 
 <script>
-  $.get('snippets/render.js').done(
-    (e) => { $('#js1').text(e) }
-  )
+  $.get('snippets/render.js', (e) => { $('#js1').text(e) }, 'text')
 </script>
 
 <br>
