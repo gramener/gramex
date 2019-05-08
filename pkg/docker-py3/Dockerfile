@@ -29,3 +29,8 @@ EXPOSE 9988
 
 # Use CMD instead of ENTRYPOINT. It can be overridden to run bash
 CMD ["gramex"]
+
+COPY .
+COPY test.sh test.sh
+RUN  chmod +x test.sh 
+#RUN  /test.sh
