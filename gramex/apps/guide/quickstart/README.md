@@ -3,10 +3,10 @@ title: Quickstart with Gramex
 prefix: Quickstart
 ...
 
-[TOC]
-
 Gramex is a platform that allows users to create visual storyboards from data. This guide follows a concise, step by step approach to create a simple dashboard that analyses and displays a fictional supermarket's sales;
 grouped by product segment, region and product category.
+
+[TOC]
 
 ## Introduction
 
@@ -33,9 +33,8 @@ to sales are:
 * Category, SubCategory - the type of the product that was sold.
 * Segment - the type of customer who bought the product.
 
-<p class="alert alert-success" role="alert">
-<i class="fas fa-eye"></i> After completing this exercise, our application should look like <a href="index5.html">this</a>.
-</p>
+<script type="text/html" src="snippets/example-output.html" class="outputfinal"></script>
+
 
 ### Requirements
 
@@ -398,10 +397,7 @@ At this stage, the contents of `index.html` should be as follows:
     (e) => { $('#html6').text(e) }
   )
 </script>
-
-<p class="alert alert-success" role="alert">
-<i class="fa fa-eye"></i> At this time our HTML should look like <a href="index4.html">this</a>.
-</p>
+<script type="text/html" src="snippets/example-output.html" class="output4"></script>
 
 </details>
 
@@ -429,6 +425,9 @@ Let's add a second chart to plot the aggregate sum of Quantity by Segment. It's 
 
 <script>
   $.get('snippets/render.js', (e) => { $('#js1').text(e) }, 'text')
+  $('script.outputfinal').template({data: {'url': 'index5.html', 'text': 'Our Final Output Should Look Like This'}})
+  $('script.output4').template({data:{url: 'index4.html', 'text': 'At this time our HTML should look like this.'}}) 
+</p>
 </script>
 
 <br>
@@ -439,9 +438,7 @@ Here are a few more ways in which we can tweak our dashboard:
 2. We can use a feature of UI components, which allows us to override [bootstrap variables by passing url query parameters to the css import line](../uicomponents/#custom-bootstrap). For example, setting link-color to black.
 3. We can modify the vega-lite configuration of the chart to add a color scale, and change the fonts of the chart. 
 
-<p class="alert alert-success" role="alert">
-<i class="fa fa-eye"></i> To see all of this configuration in action, see <a href="index5.html">this</a>.
-</p>
+<script type="text/html" class="outputfinal" src="example-output.html"></script>
 <p class="alert alert-success" role="alert">
 <i class="fa fa-download"></i> Download the final <a href="serve/gramex2.yaml">gramex.yaml</a>.
 </p>
