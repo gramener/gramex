@@ -423,13 +423,6 @@ Let's add a second chart to plot the aggregate sum of Quantity by Segment. It's 
   </div>
 </div>
 
-<script>
-  $.get('snippets/render.js', (e) => { $('#js1').text(e) }, 'text')
-  $('script.outputfinal').template({data: {'url': 'index5.html', 'text': 'Our Final Output Should Look Like This'}})
-  $('script.output4').template({data:{url: 'index4.html', 'text': 'At this time our HTML should look like this.'}}) 
-</p>
-</script>
-
 <br>
 
 Here are a few more ways in which we can tweak our dashboard:
@@ -438,7 +431,7 @@ Here are a few more ways in which we can tweak our dashboard:
 2. We can use a feature of UI components, which allows us to override [bootstrap variables by passing url query parameters to the css import line](../uicomponents/#custom-bootstrap). For example, setting link-color to black.
 3. We can modify the vega-lite configuration of the chart to add a color scale, and change the fonts of the chart. 
 
-<script type="text/html" class="outputfinal" src="example-output.html"></script>
+<script type="text/html" class="outputfinal" src="snippets/example-output.html"></script>
 <p class="alert alert-success" role="alert">
 <i class="fa fa-download"></i> Download the final <a href="serve/gramex2.yaml">gramex.yaml</a>.
 </p>
@@ -467,3 +460,9 @@ To see more of what Gramex's functionality and features; look at:
     - You may have forgotten to add UI Components in Step 2, or could be missing NodeJS; ensure NodeJS is installed, run `gramex setup ui` and restart gramex. If it still doesn't work, open an issue on [github](https://github.com/gramener/gramex) or email cto@gramener.com  
 - vega chart not rendering for some reason
     - You may have forgotten to include vega and vega lite dependencies in step 2.
+
+<script>
+  $.get('snippets/render.js', (e) => { $('#js1').text(e) }, 'text')
+  $('script.outputfinal').template({data: {'url': 'index5.html', 'text': 'Our Final Output Should Look Like This'}})
+  $('script.output4').template({data:{url: 'index4.html', 'text': 'At this time our HTML should look like this.'}}) 
+</script>
