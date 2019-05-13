@@ -51,6 +51,13 @@ url:
             headers: &HEADERS
                 Cache-Control: public, max-age=300
     markdown-g1:
+        pattern: /$YAMLURL/g1/([a-z0-0]+)
+        handler: FileHandler
+        kwargs:
+            path: $GRAMEXAPPS/ui/node_modules/g1/docs/*.md
+            transform: *MARKDOWN_TO_HTML
+            headers: *HEADERS
+    markdown-g1-default:
         pattern: /$YAMLURL/g1/(.*)
         handler: FileHandler
         kwargs:

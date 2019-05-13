@@ -103,7 +103,7 @@ PYTHON=/path/to/python3.6 make release-test
 Update the following and commit to `dev` branch:
 
 - `cd gramex/apps/admin2/; yarn run build; cd ../../..`
-- `rm gramex/apps/ui/yarn.lock && gramex setup ui` -- upgrade UI components
+- `cd gramex/apps/ui/; yarn upgrade; cd ../../..` -- upgrade UI components
 - `gramex/apps/guide/release/1.xx/README.md` -- add guide release notes
     - `make stats` for code size stats
     - `make coverage` for test coverage stats (part of `make release-test`)
