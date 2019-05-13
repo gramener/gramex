@@ -31,6 +31,7 @@ validate:
     - pip install -e .
     - pip install gramexenterprise
     - gramex license accept
+    - python -m spacy download en_core_web_sm
     - python setup.py nosetests
     - bandit gramex --recursive --format csv || true    # Just run bandit as a warning
     - pytest -v gramex/apps/guide/test/gramextest.yaml
