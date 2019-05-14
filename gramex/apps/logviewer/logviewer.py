@@ -11,6 +11,7 @@ import gramex.data
 import gramex.cache
 from gramex import conf
 from gramex.config import app_log
+from gramex.transforms import build_transform
 
 if sys.version_info.major == 3:
     unicode = str
@@ -154,7 +155,7 @@ def summarize(transforms=[], post_transforms=[], run=True,
     # apply transforms on raw data
     app_log.info('logviewer: applying transforms')
     for spec in transforms:
-        apply_transform(data, spec)
+        apply_transform(data, spec)  # applies on copy
     delete = 'DELETE FROM {} WHERE time >= "{}"'.format
     # levels should go from M > W > D
     for freq in levels:
@@ -259,6 +260,12 @@ def apply_transform(data, spec):
         'ENDSWITH': lambda s, v: s.str.endswith(v)
     }
     # TODO: STRREPLACE
+    if spec['type'] == 'function':
+        fn = build_transform(
+            {'function': spec['expr']}, vars={'data': None},
+            filename='lv: %s' % spec.get('name'))
+        fn(data)  # applies on copy
+        return data
     expr = spec['expr']
     func = pandas_transforms[expr['op']]
     kwargs = expr.get('kwargs', {})
