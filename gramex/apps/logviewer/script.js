@@ -26,9 +26,14 @@ function updateParams(params, keeponly, remove) {
 }
 
 function vegamDraw(s, on) {
-  s.spec.width = $(on).width()
+  var $on = $(on)
+  s.spec.width = $on.width()
   s.spec.height = 250
+  $on.css({'width': s.spec.width, 'height': s.spec.height})
+    .addClass('overflow-auto vegam')
   // need vega spec to alter
+  var removes = {'fit-x': 'height', 'fit-y': 'width'}
+  delete s.spec[removes[s.spec.autosize.type]]
   var vspec = vl.compile(s.spec).spec
   // remove tooltip for certain mark types
   vspec.marks.forEach(function(m) {
@@ -47,7 +52,7 @@ function vegamDraw(s, on) {
       console.log(item.datum)   // eslint-disable-line no-console
     }
   })
-  vegaTooltip.vegaLite(view, s.spec)
+  vegaTooltip.default(view, s.spec)
 }
 
 function unitDraw(o, on, formatter) {
