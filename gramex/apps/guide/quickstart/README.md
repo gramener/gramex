@@ -43,13 +43,7 @@ In order to start this tutorial, we will need to:
 * [Install and set up Gramex](../install)
 * [Download the data](serve/store-sales.csv) and save it at a convenient location on your computer.
 
-<div class="card shadow text-white bg-dark">
-  <div class="card-body">
-  <p class="card-text">
-    Any action items, points of interest, or places where you have to edit code will be displayed in a card similar to this one.
-  </p>
-  </div>
-</div>
+<script type="text/html" class="action-demo" src="snippets/call-to-action-cards.html"></script>
 
 ## Step 0: Create the Project
 <details>
@@ -57,67 +51,18 @@ In order to start this tutorial, we will need to:
 
 We need a place to hold together all the files related to our application - including data, source code and configuration files.
 
-<div class="card shadow text-white bg-dark">
-  <div class="card-body">
-  <p class="card-text">
-    Create a folder at a convenient location on your computer and move the downloaded dataset file into it.
-  </p>
-  </div>
-</div>
+<script type="text/html" class="action-save" src="snippets/call-to-action-cards.html"></script>
 
-<br>
 For the remainder of the tutorial, we will refer to this folder as the "project folder". At this time, the project folder should only contain the file `store-sales.csv`.
 
-<div class="card shadow text-white bg-dark">
-  <div class="card-body">
-    <div class="card-text">
-    <ul>
-      <li>To set up the project, create a file named <kbd>gramex.yaml</kbd> in the project folder, leave it blank for now.</li>
-      <li>Create a second file called <kbd>index.html</kbd> and put any html you like in there. For now, just a simple bit of text will do.</li>
-    </ul>
-    </div>
-  </div>
-</div>
-<br>
+<script type=text/html src="snippets/call-to-action-cards.html" class="step0coa"></script>
 
 `"index.html"` and `"gramex.yaml"` are the only two files we'll be editing throughout this guide. For now, let's put some text in `"index.html"`:
-<br>
 
-<div class="card shadow text-white bg-dark">
-  <div class="card-body">
-  <div class="card-text">
-    <p>Open up a terminal, navigate to the project folder and type the following:</p>
-    <ul class="nav nav-tabs">
-      <li class="nav-item">
-        <a class="nav-link active"><i class="fas fa-terminal"></i> Terminal</a>
-      </li>
-    </ul>
-    <pre><code id="bash1" class="bash"></code></pre>
-  </div>
-  </div>
-</div>  
-<br>
+<script type="text/html" src="snippets/call-to-action-cards.html" class="step0term"></script>
 
-<script>
-  $.get('snippets/hello.sh').done(
-    (e) => { $('#bash1').text(e) }
-  )
-</script>
-
-<div class="card shadow text-white bg-dark">
-  <div class="card-body">
-    <div class="card-text">
-      <p>Type the following command to start the Gramex server.</p>
-      <ul class="nav nav-tabs">
-        <li class="nav-item">
-          <a class="nav-link active"><i class="fas fa-terminal"></i> Terminal</a>
-        </li>
-      </ul>
-      <pre><code id="bash2" class="bash">gramex</code></pre>
-    </div>
-  </div>
-</div>  
-<br>
+<script type="text/html" src="snippets/call-to-action-cards.html" class="step0term2"></script>
+a
 
 We should start seeing some output now, which is the Gramex server logging its startup sequence. Once we see the following lines, Gramex has fully started, and is ready to accept requests.
 
@@ -464,5 +409,27 @@ To see more of what Gramex's functionality and features; look at:
 <script>
   $.get('snippets/render.js', (e) => { $('#js1').text(e) }, 'text')
   $('script.outputfinal').template({data: {'url': 'index5.html', 'text': 'Our Final Output Should Look Like This'}})
-  $('script.output4').template({data:{url: 'index4.html', 'text': 'At this time our HTML should look like this.'}}) 
+  $('script.output4').template({data:{url: 'index4.html', 'text': 'At this time our HTML should look like this.'}})
+  $('script.action-demo').template({data:{'card_body_text': 'Action Items, Points of interest, or Code Snippets will be displayed in a card similar to this one.'}})
+  $('script.action-save').template({data:{'card_body_text': 'Create a folder at a convenient location on your computer and move the downloaded dataset file into it.'}})
+  $('script.step0coa').template({data:{'card_body_text': "<ul><li>To set up the project, create a file named <kbd>gramex.yaml</kbd> in the project folder, leave it blank for now.</li><li>Create a second file called <kbd>index.html</kbd> and put any html you like in there. For now, just a simple bit of text will do.</li>"}})
+  $.get('snippets/hello.sh').done((e) => {
+    $('script.step0term').template({
+      data: {
+        card_body_text: 'Open up a terminal, navigate to the project folder and type the following:',
+        code: true,
+        card_body_code_type: 'bash',
+        card_body_code: e
+
+      }
+    })
+  })
+  $('script.step0term2').template({
+    data:{
+      card_body_text: 'Type the following command to start the Gramex server.',
+      card_body_type: 'bash',
+      code: true,
+      card_body_code: 'gramex'
+    }
+  })
 </script>
