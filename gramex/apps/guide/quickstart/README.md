@@ -6,6 +6,7 @@ prefix: Quickstart
 Gramex is a platform that allows users to create visual storyboards from data. This guide follows a concise, step by step approach to create a simple dashboard that analyses and displays a fictional supermarket's sales;
 grouped by product segment, region and product category.
 
+
 [TOC]
 
 ## Introduction
@@ -77,7 +78,8 @@ At this time, if you open a browser window at [`http://localhost:9988`](http://l
 <script type="text/html" src="snippets/example-output.html" class="step0output"></script>
 
 Gramex internally watches files for changes, so we can change anything in `"index.html"`, and refresh the link in the browser without restarting the server.
-![Step 0 gif](https://cloud.gramener.com/f/5684de979acd45d4a14d/?dl=1)
+
+<img src="https://cloud.gramener.com/f/5684de979acd45d4a14d/?dl=1" width="400"></img>
 </details>
 
 ## Step 1: Expose the data through a REST API
@@ -139,32 +141,13 @@ After saving the file, when we open [`http://localhost:9988`](http://localhost:9
 
 The table is interactive. Try playing around with it. Here's a few things you could try:
 
-<div class="card-deck">
-  <div class="card shadow text-white bg-dark">
-    <img class="card-img-top" src="img/fh-g1-1.png" alt="Card image cap">
-    <div class="card-body">
-      <p class="card-text">Click the dropdown arrows near the column headers to see column options.
-    </div>
-  </div>
-  <div class="card shadow text-white bg-dark">
-    <img class="card-img-top" src="img/fh-g1-2.png" alt="Card image cap">
-    <div class="card-body">
-      <p class="card-text">Try getting the second, third or the 1365th 'page' of the dataset from the menu at the top of the table.
-    </div>
-  </div>
-  <div class="card shadow text-white bg-dark">
-    <img class="card-img-top" src="img/fh-g1-3.png" alt="Card image cap">
-    <div class="card-body">
-      <p class="card-text">See 20, 50 or more rows at a time in the table from the dropdown menu to the right of the page list.
-    </div>
-  </div>
-</div>
+* Click the dropdown arrows near the column headers to see column options.
+* Try getting the second, third or the 1365th 'page' of the dataset from the menu at the top of the table.
+* See 20, 50 or more rows at a time in the table from the dropdown menu to the right of the page list.
 
-<br>
-<p class="alert alert-success" role="alert">
-<i class="fa fa-eye"></i> At this time our HTML should look like <a href="index7.html">this</a>.
-</p>
+![Table Interactive gif](https://cloud.gramener.com/f/9eb799fbfc574c049c47/?dl=1)
 
+<script type="text/html" class="step3output" src="snippets/example-output.html"></script>
 </details>
 
 ## Step 4: Adding A Chart
@@ -177,25 +160,8 @@ FormHandler lets us do a lot of data querying, filtering and grouping just by ed
 
 To actually draw the chart, we'll use a library called [Vega-lite](https://vega.github.io/vega-lite/). Vega-lite is a really simple to use, configuration driven javascript charting library and supports many common chart types. To draw a chart, we add a few pieces to our `index.html`.
 
-<div class="card shadow text-white bg-dark">
-  <div class="card-body">
-    <div class="card-text">
-      <p>Add the following <span class="font-italic">chart specification</span> to your HTML:</p>
-      <ul class="nav nav-tabs">
-        <li class="nav-item">
-          <a class="nav-link active"><i class="fas fa-code"></i> <span class="text-monospace">index.html</span></a>
-        </li>
-      </ul>
-      <pre><code id="html4" class="language-html"></code></pre>
-    </div>
-  </div>
-</div>
+<script type="text/html" src="snippets/call-to-action-cards.html" class="step4coa1"></script><br>
 
-<script>
-  $.get('snippets/chartspec.html').done(
-    (e) => { $('#html4').text(e) }
-  )
-</script>
 
 Details of the specification can be found in the vega-lite [docs](https://vega.github.io/vega-lite/docs/), but some things to note:
 
@@ -203,41 +169,9 @@ Details of the specification can be found in the vega-lite [docs](https://vega.g
 * the data key is set to the FormHandler URL with grouping by Segment: `{"url": "data?_by=Segment"}`
 * We've set the x and y axis values to `Sales|sum` and `Segment` respectively, telling Vega-lite to plot those quantities from the data that FormHandler returns. 
 
-<div class="card shadow text-white bg-dark">
-  <div class="card-body">
-    <div class="card-text">
-      <p>Add a div in the page in which to place the chart, and a little bit of Javascript code to render the chart:</p>
-      <ul class="nav nav-tabs">
-        <li class="nav-item">
-          <a class="nav-link active"><i class="fas fa-code"></i> <span class="text-monospace">index.html</span></a>
-        </li>
-      </ul>
-      <pre><code id="html5" class="language-html"></code></pre>
-    </div>
-  </div>
-</div>
+<script type="text/html" src="snippets/call-to-action-cards.html" class="step4coa2"></script><br>
 
-<script>
-  $.get('snippets/vega1.html').done(
-    (e) => { $('#html5').text(e) }
-  )
-</script>
-
-<br>
-
-At this stage, the contents of `index.html` should be as follows:
-<ul class="nav nav-tabs">
-  <li class="nav-item">
-    <a class="nav-link active"><i class="fas fa-code"></i> <span class="text-monospace">index.html</span></a>
-  </li>
-</ul>
-<pre><code id="html6" class="language-html"></code></pre>
-
-<script>
-  $.get('index4.html').done(
-    (e) => { $('#html6').text(e) }
-  )
-</script>
+<script type="text/html" src="snippets/call-to-action-cards.html" class="step4coa3"></script><br>
 <script type="text/html" src="snippets/example-output.html" class="output4"></script>
 
 </details>
@@ -250,21 +184,8 @@ We can now flex front-end muscle to make our dashboard look slightly better. We 
 
 Let's add a second chart to plot the aggregate sum of Quantity by Segment. It's the same chart - we are just changing the axes. Thus, we can reuse the earlier specification, but we still need to change values of certain fields. So we created a function to which we can pass the fields that need to be updated: the div to draw the chart, the x-axis column name and the title of the chart.
 
-<div class="card shadow text-white bg-dark">
-  <div class="card-body">
-    <div class="card-text">
-      <p>Create a function which accepts the fields to be updated, the <code>&lt;div&gt;</code> to place the chart, the X-axis label and the title of the chart.</p>
-      <ul class="nav nav-tabs">
-        <li class="nav-item">
-          <a class="nav-link active"><i class="fas fa-code"></i> <span class="text-monospace">index.html</span></a>
-        </li>
-      </ul>
-      <pre><code id="js1" class="language-javascript"></code></pre>
-    </div>
-  </div>
-</div>
+<script type="text/html" src="snippets/call-to-action-cards.html" class="step5coa1"></script><br>
 
-<br>
 
 Here are a few more ways in which we can tweak our dashboard:
 
@@ -282,10 +203,10 @@ Here are a few more ways in which we can tweak our dashboard:
 ## Next steps
 
 If you have followed along with this quickstart, you now have a basic idea of how to build a simple static dashboard with Gramex.
-To see more of what Gramex's functionality and features; look at:
+To see more of what Gramex's functionality and features, including how to build interactive, URL driven dashboards; look at:
 
-* our [demos](gramener.com/demo),
-* the rest of our [tutorials](../tutorials), and
+* the rest of our [tutorials](../tutorials),
+* our [demos](gramener.com/demo), and,
 * our detailed [documentation](../).
 
 
@@ -303,3 +224,4 @@ To see more of what Gramex's functionality and features; look at:
     - You may have forgotten to include vega and vega lite dependencies in step 2.
 
 <script src="common.js"></script>
+
