@@ -98,7 +98,7 @@ In order to provide our dashboard with access to the data, we need to create a U
           <a class="nav-link active"><i class="fas fa-code"></i> <span class="text-monospace">gramex.yaml</span></a>
         </li>
       </ul>
-      <pre><code id="yaml1" class="language-yaml"></code></pre>
+      <pre><code id="yaml1" class="lang-yaml"></code></pre>
     </div>
   </div>
 </div>
@@ -139,7 +139,7 @@ Since we now have access to the data from a REST API, we are ready to start buil
           <a class="nav-link active"><i class="fas fa-code"></i> <span class="text-monospace">index.html</span></a>
         </li>
       </ul>
-      <pre><code id="html1" class="language-html"></code></pre>
+      <pre><code id="html1" class="lang-html"></code></pre>
     </div>
   </div>
 </div>
@@ -165,7 +165,7 @@ This is because Gramex bundles a lot of common css and js files ([bootstrap](htt
           <a class="nav-link active"><i class="fas fa-code"></i> <span class="text-monospace">gramex.yaml</span></a>
         </li>
       </ul>
-      <pre><code id="yaml2" class="language-yaml"></code></pre>
+      <pre><code id="yaml2" class="lang-yaml"></code></pre>
     </div>
   </div>
 </div>
@@ -184,7 +184,7 @@ At this point, `gramex.yaml` contains the following lines and will not change fo
     <a class="nav-link active"><i class="fas fa-code"></i> <span class="text-monospace">gramex.yaml</span></a>
   </li>
 </ul>
-<pre><code id="yaml3" class="language-yaml"></code></pre>
+<pre><code id="yaml3" class="lang-yaml"></code></pre>
 <script>
   $.get('gramex2.yaml').done(
     (e) => { $('#yaml3').text(e) }
@@ -212,7 +212,7 @@ Accordingly, Gramex provides a way of embedding tabular data in any HTML page as
           <a class="nav-link active"><i class="fas fa-code"></i> <span class="text-monospace">index.html</span></a>
         </li>
       </ul>
-      <pre><code id="html2" class="language-html"></code></pre>
+      <pre><code id="html2" class="lang-html"></code></pre>
     </div>
   </div>
 </div>
@@ -230,7 +230,7 @@ The full `index.html` file now looks like:
     <a class="nav-link active"><i class="fas fa-code"></i> <span class="text-monospace">index.html</span></a>
   </li>
 </ul>
-<pre><code id="html3" class="language-html"></code></pre>
+<pre><code id="html3" class="lang-html"></code></pre>
 
 <script>
   $.get('snippets/fh-after.html').done(
@@ -290,7 +290,7 @@ To actually draw the chart, we'll use a library called [Vega-lite](https://vega.
           <a class="nav-link active"><i class="fas fa-code"></i> <span class="text-monospace">index.html</span></a>
         </li>
       </ul>
-      <pre><code id="html4" class="language-html"></code></pre>
+      <pre><code id="html4" class="lang-html"></code></pre>
     </div>
   </div>
 </div>
@@ -316,7 +316,7 @@ Details of the specification can be found in the vega-lite [docs](https://vega.g
           <a class="nav-link active"><i class="fas fa-code"></i> <span class="text-monospace">index.html</span></a>
         </li>
       </ul>
-      <pre><code id="html5" class="language-html"></code></pre>
+      <pre><code id="html5" class="lang-html"></code></pre>
     </div>
   </div>
 </div>
@@ -335,7 +335,7 @@ At this stage, the contents of `index.html` should be as follows:
     <a class="nav-link active"><i class="fas fa-code"></i> <span class="text-monospace">index.html</span></a>
   </li>
 </ul>
-<pre><code id="html6" class="language-html"></code></pre>
+<pre><code id="html6" class="lang-html"></code></pre>
 
 <script>
   $.get('index4.html').done(
@@ -363,7 +363,7 @@ Let's add a second chart to plot the aggregate sum of Quantity by Segment. It's 
           <a class="nav-link active"><i class="fas fa-code"></i> <span class="text-monospace">index.html</span></a>
         </li>
       </ul>
-      <pre><code id="js1" class="language-javascript"></code></pre>
+      <pre><code id="js1" class="lang-javascript"></code></pre>
     </div>
   </div>
 </div>
