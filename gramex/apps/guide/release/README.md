@@ -5,6 +5,8 @@ prefix: Release
 
 Gramex is released *twice a month* -- on the 1<sup>st</sup> and the 15<sup>th</sup>.
 
+- [v1.55.0: FormHandler and UI component upgrades](1.55/) <small>15 May 2019</small>
+- No release in April. We changed direction to focus on documentation and usability.
 - [v1.54.0: Admin UI for alerts, LanguageTool, New data formats](1.54/) <small>31 Mar 2019</small>
 - [v1.53.0: NLG (beta), Gramextest, Fuzzy search, Template UI modules](1.53/) <small>18 Mar 2019</small>
 - [v1.52.0: Auto-complete snippets, SEO-friendly URLs and Personalized alerts](1.52/) <small>1 Mar 2019</small>

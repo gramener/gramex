@@ -1,8 +1,8 @@
+# Note: continiuumio/miniconda3 is Python 3.5. conda/miniconda3 is Python 3.7
 FROM conda/miniconda3:latest
-# continiuumio/miniconda3 is python3.5, this is 3.7
 
 LABEL description="Gramener data visualization server"
-LABEL version="1.54"
+LABEL version="1.55"
 LABEL maintainer="s.anand@gramener.com"
 
 # Install nodejs and node libraries

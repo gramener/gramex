@@ -870,6 +870,29 @@
       "Statistics": -1
     }
   },
+  "1.55": {
+    "": {
+      "Gramex 1.55 release notes": -1
+    },
+    "bug-fixes": {
+      "Bug fixes": -1
+    },
+    "formhandler-summarizes-data": {
+      "FormHandler summarizes data": -1
+    },
+    "how-to-upgrade": {
+      "How to upgrade": -1
+    },
+    "other-enhancements": {
+      "Other enhancements": -1
+    },
+    "statistics": {
+      "Statistics": -1
+    },
+    "ui-component-upgrades": {
+      "UI component upgrades": -1
+    }
+  },
   "about": {
     "": {}
   },
