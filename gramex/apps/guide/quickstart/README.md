@@ -60,9 +60,9 @@ For the remainder of the tutorial, we will refer to this folder as the "project 
 `"index.html"` and `"gramex.yaml"` are the only two files we'll be editing throughout this guide. For now, let's put some text in `"index.html"`:
 
 <script type="text/html" src="snippets/call-to-action-cards.html" class="step0term"></script>
-
+<br>
 <script type="text/html" src="snippets/call-to-action-cards.html" class="step0term2"></script>
-a
+
 
 We should start seeing some output now, which is the Gramex server logging its startup sequence. Once we see the following lines, Gramex has fully started, and is ready to accept requests.
 
@@ -74,10 +74,7 @@ INFO    22-Apr 13:34:26 __init__ 9988 <Ctrl-B> opens the browser. <Ctrl-D> start
 Note that these may not be the _last_ lines you see in the startup logs, since some Gramex services may start later. Look for these lines in the last few lines.
 
 At this time, if you open a browser window at [`http://localhost:9988`](http://localhost:9988), you should see the text in `"index.html"`.
-
-<p class="alert alert-success" role="alert">
-<i class="fas fa-eye"></i> It should look something like <a href="index2.html">this</a>.
-</p>
+<script type="text/html" src="snippets/example-output.html" class="step0output"></script>
 
 Gramex internally watches files for changes, so we can change anything in `"index.html"`, and refresh the link in the browser without restarting the server.
 ![Step 0 gif](https://cloud.gramener.com/f/5684de979acd45d4a14d/?dl=1)
@@ -89,39 +86,19 @@ Gramex internally watches files for changes, so we can change anything in `"inde
 
 In order to provide our dashboard with access to the data, we need to create a URL that sends data to the dashboard. To do this, we use a Gramex component called [`FormHandler`](../formhandler).
 
-<div class="card shadow text-white bg-dark">
-  <div class="card-body">
-    <div class="card-text">
-      <p>Create a formhandler endpoint on our server by adding the following lines to the empty <kbd>gramex.yaml</kbd> file, which we had created in the previous section:</p>
-      <ul class="nav nav-tabs">
-        <li class="nav-item">
-          <a class="nav-link active"><i class="fas fa-code"></i> <span class="text-monospace">gramex.yaml</span></a>
-        </li>
-      </ul>
-      <pre><code id="yaml1" class="language-yaml"></code></pre>
-    </div>
-  </div>
-</div>
-
-<script>
-  $.get('snippets/gramex1.yaml').done(
-    (e) => { $('#yaml1').text(e) }
-  )
-</script>
+<script type="text/html" src="snippets/call-to-action-cards.html" class="step1gramex"></script>
 
 
 After you save the file, Gramex will be able to serve the CSV data through the `/data` resource endpoint. To verify this, visit [`http://localhost:9988/data?_limit=10`](http://localhost:9988/data?_limit=10) in your browser. You should now see a JSON payload representing the first ten rows of the dataset.
 
-<p class="alert alert-success" role="alert">
-<i class="fa fa-eye"></i> It should look like <a href="data?_limit=10">this</a>.
-</p>
+<script type="text/html" class="step1dataop" src="snippets/example-output.html"></script>
+
 
 You could also, visit [http://localhost:9988/data?_limit=10&_format=html](http://localhost:9988/data?_limit=10&_format=html) to see the first ten rows as a simple HTML table.
 
-<p class="alert alert-success" role="alert">
-<i class="fa fa-eye"></i> It should look like <a href="data?_limit=10&_format=html">this</a>.
-</p>
-![Step 1 gif](https://cloud.gramener.com/f/379c20a01b3c416ca3cd/?dl=1)
+<script type="text/html" class="step1dataophtml" src="snippets/example-output.html"></script>
+
+<img src="https://cloud.gramener.com/f/379c20a01b3c416ca3cd/?dl=1" width="500">
 </details>
 
 ## Step 2: Laying out some scaffolding
@@ -130,25 +107,8 @@ You could also, visit [http://localhost:9988/data?_limit=10&_format=html](http:/
 
 Since we now have access to the data from a REST API, we are ready to start building the frontend.
 
-<div class="card shadow text-white bg-dark">
-  <div class="card-body">
-    <div class="card-text">
-      <p>At the moment, our <kbd>index.html</kbd> file just has some text in it. Let's add the following HTML to it.</p>
-      <ul class="nav nav-tabs">
-        <li class="nav-item">
-          <a class="nav-link active"><i class="fas fa-code"></i> <span class="text-monospace">index.html</span></a>
-        </li>
-      </ul>
-      <pre><code id="html1" class="language-html"></code></pre>
-    </div>
-  </div>
-</div>
+<script type="text/html" src="snippets/call-to-action-cards.html" class="step2coa"></script><br>
 
-<script>
-  $.get('snippets/index1.html').done(
-    (e) => { $('#html1').text(e) }
-  )
-</script>
 
 This is just some boilerplate that includes css and js files we will need.
 
@@ -156,44 +116,13 @@ Note that all of our css and js links are relative to a `ui/` directory - but we
 
 This is because Gramex bundles a lot of common css and js files ([bootstrap](https://getbootstrap.com), [lodash](https://lodash.com), [g1](https://www.npmjs.com/package/g1)) as part of a feature called [UI Components](../uicomponents). 
 
-<div class="card shadow text-white bg-dark">
-  <div class="card-body">
-    <div class="card-text">
-      <p>To use these in our dashboard, we add the following lines to our <kbd>gramex.yaml</kbd>:</p>
-      <ul class="nav nav-tabs">
-        <li class="nav-item">
-          <a class="nav-link active"><i class="fas fa-code"></i> <span class="text-monospace">gramex.yaml</span></a>
-        </li>
-      </ul>
-      <pre><code id="yaml2" class="language-yaml"></code></pre>
-    </div>
-  </div>
-</div>
+<script type="text/html" src="snippets/call-to-action-cards.html" class="step2coa2"></script><br>
 
-<script>
-  $.get('snippets/gramex_2.yaml').done(
-    (e) => { $('#yaml2').text(e) }
-  )
-</script>
+At this point, `gramex.yaml` contains the following lines and will not change for the rest of this tutorial. We are done with the backend configuration.
 
-<br>
-At this point, `gramex.yaml` contains the following lines and will not change for the rest of this tutorial. Essentially, we are done with the backend configuration.
+<script type="text/html" src="snippets/call-to-action-cards.html" class="step2coa3"></script><br>
+<script type="text/html" src="snippets/example-output.html" class="step2output"></script><br>
 
-<ul class="nav nav-tabs">
-  <li class="nav-item">
-    <a class="nav-link active"><i class="fas fa-code"></i> <span class="text-monospace">gramex.yaml</span></a>
-  </li>
-</ul>
-<pre><code id="yaml3" class="language-yaml"></code></pre>
-<script>
-  $.get('gramex2.yaml').done(
-    (e) => { $('#yaml3').text(e) }
-  )
-</script>
-
-<p class="alert alert-success" role="alert">
-<i class="fa fa-eye"></i> At this time our HTML should look like <a href="index6.html">this</a>.
-</p>
 </details>
 
 ## Step 3: Filling in the Data
@@ -202,41 +131,8 @@ At this point, `gramex.yaml` contains the following lines and will not change fo
  
 The simplest and sometimes most effective way to represent data can be a table. 
 Accordingly, Gramex provides a way of embedding tabular data in any HTML page as an interactive table. 
-
-<div class="card shadow text-white bg-dark">
-  <div class="card-body">
-    <div class="card-text">
-      <p>To show the data as a table, insert the following lines in <kbd>index.html</kbd>:</p>
-      <ul class="nav nav-tabs">
-        <li class="nav-item">
-          <a class="nav-link active"><i class="fas fa-code"></i> <span class="text-monospace">index.html</span></a>
-        </li>
-      </ul>
-      <pre><code id="html2" class="language-html"></code></pre>
-    </div>
-  </div>
-</div>
-
-<script>
-  $.get('snippets/fh.html').done(
-    (e) => { $('#html2').text(e) }
-  )
-</script>
-
-<br>
-The full `index.html` file now looks like:
-<ul class="nav nav-tabs">
-  <li class="nav-item">
-    <a class="nav-link active"><i class="fas fa-code"></i> <span class="text-monospace">index.html</span></a>
-  </li>
-</ul>
-<pre><code id="html3" class="language-html"></code></pre>
-
-<script>
-  $.get('snippets/fh-after.html').done(
-    (e) => { $('#html3').text(e) }
-  )
-</script>
+<script type="text/html" src="snippets/call-to-action-cards.html" class="step3coa"></script><br>
+<script type="text/html" src="snippets/call-to-action-cards.html" class="step3html"></script><br>
 
 
 After saving the file, when we open [`http://localhost:9988`](http://localhost:9988), we should see a table similar to the one at the top of this page. 
@@ -406,30 +302,4 @@ To see more of what Gramex's functionality and features; look at:
 - vega chart not rendering for some reason
     - You may have forgotten to include vega and vega lite dependencies in step 2.
 
-<script>
-  $.get('snippets/render.js', (e) => { $('#js1').text(e) }, 'text')
-  $('script.outputfinal').template({data: {'url': 'index5.html', 'text': 'Our Final Output Should Look Like This'}})
-  $('script.output4').template({data:{url: 'index4.html', 'text': 'At this time our HTML should look like this.'}})
-  $('script.action-demo').template({data:{'card_body_text': 'Action Items, Points of interest, or Code Snippets will be displayed in a card similar to this one.'}})
-  $('script.action-save').template({data:{'card_body_text': 'Create a folder at a convenient location on your computer and move the downloaded dataset file into it.'}})
-  $('script.step0coa').template({data:{'card_body_text': "<ul><li>To set up the project, create a file named <kbd>gramex.yaml</kbd> in the project folder, leave it blank for now.</li><li>Create a second file called <kbd>index.html</kbd> and put any html you like in there. For now, just a simple bit of text will do.</li>"}})
-  $.get('snippets/hello.sh').done((e) => {
-    $('script.step0term').template({
-      data: {
-        card_body_text: 'Open up a terminal, navigate to the project folder and type the following:',
-        code: true,
-        card_body_code_type: 'bash',
-        card_body_code: e
-
-      }
-    })
-  })
-  $('script.step0term2').template({
-    data:{
-      card_body_text: 'Type the following command to start the Gramex server.',
-      card_body_type: 'bash',
-      code: true,
-      card_body_code: 'gramex'
-    }
-  })
-</script>
+<script src="common.js"></script>
