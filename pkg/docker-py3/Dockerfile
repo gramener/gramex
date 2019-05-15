@@ -1,21 +1,26 @@
-FROM continuumio/anaconda3:latest
+FROM conda/miniconda3:latest
+# continiuumio/miniconda3 is python3.5, this is 3.7
 
 LABEL description="Gramener data visualization server"
 LABEL version="1.54"
 LABEL maintainer="s.anand@gramener.com"
 
 # Install nodejs and node libraries
-RUN apt-get update && apt-get install -y gnupg
+RUN apt-get update && apt-get install -y gnupg && apt-get install -y curl
 RUN (curl -sL https://deb.nodesource.com/setup_10.x | bash -) && \
     apt-get install -y nodejs && \
-    npm install -g yarn && \
+    npm install -g yarn
 # Install Chrome / Puppeteer dependencies
 # https://github.com/GoogleChrome/puppeteer/issues/404#issuecomment-323555784
-    apt-get install -y libpangocairo-1.0-0 libx11-xcb1 libxcomposite1 libxdamage1 \
-            libxi6 libxtst6 libnss3 libcups2 libxss1 libxrandr2 libgconf2-4 \
-            libasound2 libatk1.0-0 libgtk-3-0 && \
+RUN apt-get install -y libpangocairo-1.0-0 libx11-xcb1 libxcomposite1 libxdamage1 \
+    libxi6 libxtst6 libnss3 libcups2 libxss1 libxrandr2 libgconf2-4 \
+    libasound2 libatk1.0-0 libgtk-3-0 libpq-dev
+# Install psycopg2 and psutil depenedencies
+RUN apt-get install -y python-dev python3-dev build-essential
+# ModelHandler Requires scikit-learn
+RUN conda install scikit-learn
 # Install gramex
-    pip install gramex && \
+RUN pip install gramex && \
     gramex setup --all && \
     gramex license accept
 
