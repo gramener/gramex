@@ -25,3 +25,9 @@ url:
     kwargs:
       url: $YAMLPATH/store-sales.csv
       modify: data.groupby(['Category', 'Region'])['Sales'].sum().reset_index()
+
+  snippets:
+    pattern: /$YAMLURL/snippets/(.*)
+    handler: FileHandler
+    kwargs:
+      path: $YAMLPATH/snippets/
