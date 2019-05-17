@@ -6,7 +6,7 @@ prefix: fddcharts
 [TOC]
 
 In the [previous tutorial](./1_building_interactive_dashboards.md), we learnt how to use a
-FormHandler table to trigger changes in charts. However, this is only one part of the
+FormHandler table to trigger changes in charts. However, this is only part of the
 interactivity we want in our dashboard. Note that the charts we had in the previous
 tutorial were not interactive by themselves, in that clicking on them does nothing. In this
 tutorial, we close the interactivity loop by making the charts trigger changes in the
@@ -70,9 +70,12 @@ Each row of this table represents a product category, and each column represents
 geographical region. Each cell denotes the total sales in the corresponding category and
 the region. Such a table is called a cross-tabulation or a contingency table - it is a
 common operation used to aggregate a metric (in this case, sales) across two dimensions
-(region and category).
+(region and product category).
 
-After finishing this tutorial, you will have an application like [this](./index2.html).
+<a href="index2.html">
+<p class="alert alert-info" role="alert"><i class="fa fa-eye fa-lg"></i> After finishing this tutorial, you will have an application like this.</p>
+</a>
+
 Before we proceed with the tutorial, do play around with the sample application to get an
 better idea of our goal for this tutorial. Specifically, take a look at how:
 
@@ -94,22 +97,40 @@ on concepts introduced in it, like:
 ## Step 0: Basic Layout and Scaffolding
 
 To begin with, let's just reproduce some of what we did in the last tutorial, beginning
-with laying out a FormHandler table, by adding the following code to the `<body>` of our
-HTML:
+with laying out a FormHandler table.
 
-```html
-<div class="formhandler" data-src="data"></div>
-<script>
-  $('.formhandler').formhandler({pageSize: 5})
-</script>
-```
+<div class="card shadow text-white bg-dark">
+  <div class="card-body">
+   <div class="card-text">
+     <p>Add the FormHandler table to your application by adding the following code in the <kbd>&lt;body&gt;</kbd> of <kbd>index.html</kbd>.</p>
+     <ul class="nav nav-tabs">
+       <li class="nav-item">
+         <a class="nav-link active"><i class="fas fa-code"></i> <span class="text-monospace">index.html</span></a>
+       </li>
+     </ul>
+     <pre><code id="html1" class="language-html"></code></pre>
+   </div>
+  </div>
+</div>
+<script>$.get('../../quickstart/snippets/fh.html').done((e) => {$('#html1').text(e)})</script>
+<br>
 
-Now we need to add some space in the page in which the chart would reside. To do this,
-add the following lines to the `<body>`:
+Now we need to add some space in the page in which the chart would reside.
 
-```html
-<div id="chart"></div>
-```
+<div class="card shadow text-white bg-dark">
+  <div class="card-body">
+   <div class="card-text">
+     <p>Add a placeholder for the chart in your page as follows:</p>
+     <ul class="nav nav-tabs">
+       <li class="nav-item">
+         <a class="nav-link active"><i class="fas fa-code"></i> <span class="text-monospace">index.html</span></a>
+       </li>
+     </ul>
+     <pre><code id="html1" class="language-html">&lt;div id="chart"&gt;&lt;/div&gt;</code></pre>
+   </div>
+  </div>
+</div>
+<br>
 
 This `<div>` element is empty, because we will be rendering the chart through a javascript
 function, similar to the `draw_charts` function from the previous tutorial.
@@ -120,16 +141,22 @@ function, similar to the `draw_charts` function from the previous tutorial.
 FormHandler can be used to [transform a dataset](../../formhandler#formhandler-transforms)
 in a variety of ways. In this example, we will use FormHandler's
 [`modify`](../../formhandler/formhandler-modify) function to perform the cross-tabulation.
-To do this, add the following lines to `gramex.yaml`, under the `url:` section.
 
-```yaml
-  store-sales-ctab:
-    pattern: /$YAMLURL/store-sales-ctab
-    handler: FormHandler
-    kwargs:
-      url: $YAMLPATH/store-sales.csv
-      modify: data.groupby(['Category', 'Region'])['Sales'].sum().reset_index()
-```
+<div class="card shadow text-white bg-dark">
+  <div class="card-body">
+   <div class="card-text">
+     <p>Add the following to <kbd>gramex.yaml</kbd> to create a HTTP resource which cross-tabulates the data.</p>
+     <ul class="nav nav-tabs">
+       <li class="nav-item">
+         <a class="nav-link active"><i class="fas fa-code"></i> <span class="text-monospace">gramex.yaml</span></a>
+       </li>
+     </ul>
+     <pre><code id="yaml1" class="language-yaml"></code></pre>
+   </div>
+  </div>
+</div>
+<script>$.get('snippets/ctab.yaml').done((e) => {$('#yaml1').text(e)})</script>
+<br>
 
 Just as we had earlier created an endpoint to serve data in it's original format, in the
 snippet above, we are creating a new endpoint to serve the cross-tabulated data. After
@@ -146,54 +173,42 @@ pandas expression. See [FormHandler documentation](../../formhandler) for detail
 ## Step 2: Drawing the Chart
 
 Just like we had a specification for the bar charts in the previous examples, we will use
-the following specification for the color table chart:
+a different specification for the color table chart.
 
-```javascript
-  var spec = {
-    "width": 360,
-    "height": 270,
-    "data": {"url": "store-sales-ctab"},
-    "$schema": "https://vega.github.io/schema/vega-lite/v3.json",
-    "encoding": {
-      "y": {"field": "Category", "type": "nominal"},
-      "x": {"field": "Region", "type": "nominal"}
-    },
-    "layer": [
-      {
-        "mark": "rect",
-        "selection": {"brush": {"type": "interval"}},
-        "encoding": {
-          "color": {"field": "Sales", "type": "quantitative",
-            "legend": {"format": "0.1s"}}
-        }
-      },
-      {
-        "mark": "text",
-        "encoding": {
-          "text": {"field": "Sales", "type": "quantitative"},
-          "color": {
-            "condition": {"test": "datum['Sales'] < 100000", "value": "black"},
-            "value": "white"
-          }
-        }
-      }
-    ]
-  }
-```
+<div class="card shadow text-white bg-dark">
+  <div class="card-body">
+   <div class="card-text">
+     <p>Add the following Vega specification for a heatmap chart to your <kbd>index.html</kbd>.</p>
+     <ul class="nav nav-tabs">
+       <li class="nav-item">
+         <a class="nav-link active"><i class="fas fa-code"></i> <span class="text-monospace">index.html</span></a>
+       </li>
+     </ul>
+     <pre><code id="ctab_spec" class="language-javascript"></code></pre>
+   </div>
+  </div>
+</div>
+<script>$.get('snippets/ctab_spec.js').done((e) => {$('#ctab_spec').text(e)})</script>
+<br>
 
 Next, let's write a function to compile this specification into a Vega view and draw the
-chart, and call that function:
+chart.
 
-```javascript
-  function draw_chart() {
-    var view = new vega.View(vega.parse(vl.compile(spec).spec))
-      .renderer('svg')
-      .initialize('#chart')
-      .hover()
-      .run()
-  }
-  draw_chart()
-```
+<div class="card shadow text-white bg-dark">
+  <div class="card-body">
+   <div class="card-text">
+     <p>Add the following function to <kbd>index.html</kbd> to compile the chart specification into a Vega view and draw the chart.</p>
+     <ul class="nav nav-tabs">
+       <li class="nav-item">
+         <a class="nav-link active"><i class="fas fa-code"></i> <span class="text-monospace">index.html</span></a>
+       </li>
+     </ul>
+     <pre><code id="draw_ctab" class="language-javascript"></code></pre>
+   </div>
+  </div>
+</div>
+<script>$.get('snippets/draw_ctab.js').done((e) => {$('#draw_ctab').text(e)})</script>
+<br>
 
 At this point, you should be able to see the chart. Again, as in the previous tutorial,
 the next step is to redraw the chart on URL changes.
@@ -208,30 +223,36 @@ Remember that we are using two _different_ endpoints for the table and the chart
 [`/store-sales-ctab`](http://localhost:9988/store-sales-ctab) for the chart. Thus, to
 render the chart successfully on URL changes, we must be able to grab filters from the
 table and apply them to the cross-tab endpoints. This, too, involves setting the
-`data.url` attribute of the chart specification on each change inn the URL. The following
-function does this:
+`data.url` attribute of the chart specification on each change in the URL.
 
-```javascript
-  var baseDataURL = spec.data.url  // keep the original URL handy
-  function redrawChartFromURL(e) {
-    if (e.hash.relative) { // if the URL hash contains filters, add them to the spec's URL
-      spec.data.url = g1.url.parse(baseDataURL).toString() + e.hash.relative
-    } else { spec.data.url = baseDataURL }  // otherwise restore to the original URL
-    draw_chart()  // draw the chart
-  }
-```
+<div class="card shadow text-white bg-dark">
+  <div class="card-body">
+   <div class="card-text">
+     <p>Add the following function to <kbd>index.html</kbd> to get URL changes and apply them to the chart spec.</p>
+     <ul class="nav nav-tabs">
+       <li class="nav-item">
+         <a class="nav-link active"><i class="fas fa-code"></i> <span class="text-monospace">index.html</span></a>
+       </li>
+     </ul>
+     <pre><code id="redraw_ctab" class="language-javascript"></code></pre>
+     <p>Finally, we hook up this function with the URL changes using the following code:</p>
+     <ul class="nav nav-tabs">
+       <li class="nav-item">
+         <a class="nav-link active"><i class="fas fa-code"></i> <span class="text-monospace">index.html</span></a>
+       </li>
+     </ul>
+     <pre><code id="redraw_ctab_hook" class="language-javascript"></code></pre>
+   </div>
+  </div>
+</div>
+<script>$.get('snippets/redraw_ctab.js').done((e) => {$('#redraw_ctab').text(e)})</script>
+<script>$.get('snippets/redraw_ctab_hook.js').done((e) => {$('#redraw_ctab_hook').text(e)})</script>
+<br>
 
-Finally, we hook up this function with the URL changes using the followind code:
-
-```javascript
-  $('body').urlfilter({target: 'pushState'})
-  $(window).on('#', redrawChartFromURL)
-    .urlchange()
-```
 
 At this point, the chart should redraw itself based on the table filters. As an example,
-try setting the 'Region' column to 'South'. The chart should contain only one column now.
-Similarly, try filtering by some columns except 'Category' or 'Region', and the sales
+try setting the `Region` column to `South`. The chart should contain only one column now.
+Similarly, try filtering by some columns except `Category` or `Region`, and the sales
 values in the chart should change.
 
 
@@ -247,37 +268,42 @@ amounts to:
    query, and
 3. redrawing the table according to this query.
 
-Let's put all of this logic together in a function as follows:
-
-```javascript
-  function filterTableOnClick(event, item) {
-    var qparts = {};
-    Object.entries(item.tooltip || item.datum).forEach(([key, val]) => {
-      if (!(key == "Sales")) {
-        qparts[key] = val;
-      }
-    })
-    if (_.isEmpty(qparts)) { return }
-    var url = g1.url.parse(location.hash.replace('#', ''))
-    location.hash = url.update(qparts).toString();
-  }
-```
+<div class="card shadow text-white bg-dark">
+  <div class="card-body">
+   <div class="card-text">
+     <p>Let's put all of this logic together in a function as follows:</p>
+     <ul class="nav nav-tabs">
+       <li class="nav-item">
+         <a class="nav-link active"><i class="fas fa-code"></i> <span class="text-monospace">index.html</span></a>
+       </li>
+     </ul>
+     <pre><code id="filterTableOnClick" class="language-javascript"></code></pre>
+   </div>
+  </div>
+</div>
+<script>$.get('snippets/filterTableOnClick.js').done((e) => {$('#filterTableOnClick').text(e)})</script>
+<br>
 
 We need to run this function on _every click_ that is registered on the chart. Therefore,
 we will add this function as an event listener to the chart. Since we're drawing the chart
 inside the `draw_chart` function, we need to add the event listener within the function as
-well. Change the `draw_chart` function to this:
+well.
 
-```javascript
-  function draw_chart() {
-    var view = new vega.View(vega.parse(vl.compile(spec).spec))
-      .renderer('svg')
-      .initialize('#chart')
-      .hover()
-      .run()
-    view.addEventListener('click', filterTableOnClick)
-  }
-```
+<div class="card shadow text-white bg-dark">
+  <div class="card-body">
+   <div class="card-text">
+     <p>Change the <kbd>draw_chart</kbd> function to the following:</p>
+     <ul class="nav nav-tabs">
+       <li class="nav-item">
+         <a class="nav-link active"><i class="fas fa-code"></i> <span class="text-monospace">index.html</span></a>
+       </li>
+     </ul>
+     <pre><code id="draw_chart_final" class="language-javascript"></code></pre>
+   </div>
+  </div>
+</div>
+<script>$.get('snippets/draw_chart_final.js').done((e) => {$('#draw_chart_final').text(e)})</script>
+<br>
 
 That's it!
 
