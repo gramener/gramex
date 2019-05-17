@@ -8,16 +8,16 @@
   from the URL. For example:
   <a href="../ui/bootstraptheme.css?primary=maroon" target="_blank"><code>ui/bootstraptheme.css?primary=maroon</code></a>
   creates a CSS that has the primary color as maroon.
-  (<a href="?primary=maroon">See the effect on this page</a>.)</p>
+  (<a class="urlfilter" href="?primary=maroon#custom-bootstrap">See the effect on this page</a>.)</p>
 
 <p id="custom-vars">See the <a href="https://github.com/twbs/bootstrap/blob/v4-dev/scss/_variables.scss">list of Bootstrap variables</a>
   you can change. Here are some examples:</p>
 
 <ul>
-  <li><a href="?body-bg=yellow"><code>?body-bg=yellow</code></a></li>
-  <li><a href="?link-color=black"><code>?link-color=black</code></a></li>
-  <li><a href="?paragraph-margin-bottom=5rem"><code>?paragraph-margin-bottom=5rem</code></a></li>
-  <li><a href=".">Reset theme</a></li>
+  <li><a class="urlfilter" href="?body-bg=yellow#custom-bootstrap"><code>?body-bg=yellow</code></a></li>
+  <li><a class="urlfilter" href="?link-color=black#custom-bootstrap"><code>?link-color=black</code></a></li>
+  <li><a class="urlfilter" href="?paragraph-margin-bottom=5rem#custom-bootstrap"><code>?paragraph-margin-bottom=5rem</code></a></li>
+  <li><a href=".#custom-bootstrap">Reset theme</a></li>
 </ul>
 
 <p>In addition, any variable beginning with <code>color</code> is added as a
@@ -36,7 +36,16 @@
 </p>
 
 <p>You can change some common variables from the <kbd>Change Theme</kbd>
-  button on at the top of this page to colors, fonts and style.</p>
+  button on at the top of this page to colors, fonts and style. The styles include:</p>
+
+<ul>
+  {% for name, info in config.toggle.items() %}
+    <li>
+      <a class="urlfilter" href="?{{ name }}=true#custom-bootstrap"><code>?{{ name }}={{ 'false' if info.default == 'true' else 'true' }}</code></a>
+      (default: {{ info.default }})
+    </li>
+  {% end %}
+</ul>
 
 <p>There are also additional components and utilities in the library. See the
 sidebar for a full list.</p>

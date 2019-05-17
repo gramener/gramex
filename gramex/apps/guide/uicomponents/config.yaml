@@ -30,34 +30,22 @@ color:
 toggle:
     enable-rounded:
       title: Rounded
-      default: 'on'
-      options:
-        'on': {enable-rounded: "true"}
-        '': {enable-rounded: "false"}
+      default: 'true'
     enable-shadows:
       title: Shadows
-      default: ''
-      options:
-        'on': {enable-shadows: "true"}
-        '': {enable-shadows: "false"}
+      default: 'false'
     enable-gradients:
       title: Gradients
-      default: ''
-      options:
-        'on': {enable-gradients: "true"}
-        '': {enable-gradients: "false"}
+      default: 'false'
     enable-transitions:
       title: Transitions
-      default: 'on'
-      options:
-        'on': {enable-transitions: "true"}
-        '': {enable-transitions: "false"}
+      default: 'true'
+    enable-responsive-font-sizes:
+      title: Responsive fonts
+      default: 'false'
     enable-print-styles:
       title: Print styles
-      default: 'on'
-      options:
-        'on': {enable-print-styles: "true"}
-        '': {enable-print-styles: "false"}
+      default: 'true'
 
 font:
   font-family-base:

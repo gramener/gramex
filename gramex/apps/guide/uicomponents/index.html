@@ -28,69 +28,89 @@
     </form>
   </nav>
 
-<div id="change-theme" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-xl">
-    <form class="modal-content">
-      <!-- htmllint label-req-for="false" -->
-      <div class="modal-body">
-        <div class="row">
-          <div class="col-auto">
-            <h4>Color</h4>
-            <div v-for="(info, name) in color">
-              <input v-bind:id="name" v-bind:name="name" type="color" v-bind:value="info.value">
-              <label v-bind:for="name">${ info.title }</label>
-            </div>
-          </div>
-          <div class="col-auto">
-            <h4>Font family</h4>
-            <div v-for="(info, name) in font" class="mb-4">
-              <label v-bind:for="name">${ info.title }</label>
-              <select class="form-control form-control-sm" v-bind:name="name" v-model="info.value">
-                <option v-for="(fontinfo, fontname) in info.options" v-bind:value="fontname">
-                  ${ fontinfo }
-                </option>
-              </select>
-            </div>
-            <h4>Font size</h4>
-            <div v-for="(info, name) in fontsize" class="form-group row mb-0">
-              <div class="col-sm-4">
-                <input class="form-control form-control-sm" v-bind:id="name" v-bind:name="name" v-bind:value="info.value">
+  <script type="text/html" id="change-theme-template">
+    <div id="change-theme" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-xl">
+        <form class="modal-content">
+          <!-- htmllint label-req-for="false" -->
+          <div class="modal-body">
+            <div class="row justify-content-center">
+              <div class="col-auto">
+                <h4>Color</h4>
+                <% _.each(color, function (info, name) { %>
+                  <div>
+                    <input id="<%- name %>" name="<%- name %>" type="color" value="<%- info.value %>">
+                    <label for="<%- name %>"><%- info.title  %></label>
+                  </div>
+                <% }) %>
               </div>
-              <label class="col-sm-8 col-form-label-sm" v-bind:for="name">${ info.title }</label>
-            </div>
-          </div><!-- .theme-fonts -->
-          <div class="col-auto">
-            <h4>Style</h4>
-            <div v-for="(info, name) in toggle">
-              <label>
-                <input v-bind:name="name" type="checkbox" v-model="info.value"> ${ info.title }
-              </label>
-            </div>
-            <h4 class="mt-3">Theme</h4>
-            <div v-for="(info, name) in theme">
-              <a v-bind:href="info.href">${ name }</a>
-            </div>
-          </div>
-        </div><!-- .row -->
-      </div><!-- .modal-body -->
-      <div class="modal-footer">
-        <button type="submit" class="btn btn-primary">Apply theme</button>
-        <a v-bind:href="cssurl" class="btn btn-light">Link to CSS</a>
-      </div><!-- .modal-footer -->
-      <!-- htmllint label-req-for="true" -->
-    </form><!-- .modal-content -->
-  </div><!-- .modal-dialog -->
-</div><!-- #change-theme -->
-
+              <div class="col-auto">
+                <h4>Font family</h4>
+                <% _.each(font, function (info, name) { %>
+                  <div class="mb-4">
+                    <label for="<%- name %>"><%- info.title %></label>
+                    <select class="form-control form-control-sm" name="<%- name %>">
+                      <% _.each(info.options, function (fontinfo, fontname) { %>
+                        <option value="<%- fontname %>"><%- fontinfo %></option>
+                      <% }) %>
+                    </select>
+                  </div>
+                <% }) %>
+                <h4>Font size</h4>
+                <% _.each(fontsize, function (info, name) { %>
+                  <div class="form-group row mb-0">
+                    <div class="col-sm-4">
+                      <input class="form-control form-control-sm" id="<%- name %>" name="<%- name %>" value="<%- info.value %>">
+                    </div>
+                    <label class="col-sm-8 col-form-label-sm" for="<%- name %>"><%- info.title %></label>
+                  </div>
+                <% }) %>
+              </div><!-- .theme-fonts -->
+              <div class="col-auto">
+                <h4>Style</h4>
+                <table class="table table-sm table-borderless">
+                  <% console.log(toggle) %>
+                  <% _.each(toggle, function (info, name) { %>
+                    <tr>
+                      <td><label class="my-1 ml-n1" for="<%- name %>"><%- info.title %></label></td>
+                      <td>
+                        <select class="form-control form-control-sm" name="<%- name %>">
+                          <% _.each(['false', 'true'], function (val) { %>
+                            <option <%= val == info.value ? 'selected' : '' %>><%= val %></option>
+                          <% }) %>
+                        </select>
+                      </td>
+                    </tr>
+                  <% }) %>
+                </table>
+                <h4 class="mt-3">Theme</h4>
+                <% _.each(theme, function (info, name) { %>
+                  <div>
+                    <a href="<%- info.href %>"><%- name %></a>
+                  </div>
+                <% }) %>
+              </div>
+            </div><!-- .row -->
+          </div><!-- .modal-body -->
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-primary">Apply theme</button>
+            <a href="<%- cssurl %>" class="btn btn-light">Link to CSS</a>
+          </div><!-- .modal-footer -->
+          <!-- htmllint label-req-for="true" -->
+        </form><!-- .modal-content -->
+      </div><!-- .modal-dialog -->
+    </div><!-- .modal -->
+  </script><!-- #change-theme-template -->
 
   <div class="pt-2 m-1">&nbsp;</div>
   <div class="container-fluid component d-flex">
-    <nav class="mt-3 nav" id="toc-nav">
-      <a v-for="entry in toc"
-        class="nav-link"
-        v-bind:data-level="entry.level"
-        v-bind:href="entry.href">${ entry.name }</a>
-    </nav>
+    <template id="toc-nav-template">
+      <nav id="toc-nav" class="mt-3 nav" id="toc-nav">
+        <% _.each(toc, function (entry) { %>
+          <a class="nav-link" data-level="<%- entry.level %>" href="<%- entry.href %>"><%- entry.name %></a>
+        <% }) %>
+      </nav>
+    </template>
     <main role="main" class="ml-3">
       <h1 class="toc">Introduction</h1>
       <p>The Gramex UI component library is a set of UI components that extend
@@ -185,7 +205,6 @@
   <script src="../ui/noty/lib/noty.min.js"></script>
   <script src="../ui/moment/min/moment-with-locales.min.js"></script>
   <script src="../ui/daterangepicker/daterangepicker.js"></script>
-  <script src="../ui/url-search-params/build/url-search-params.js"></script>
   <script src="../ui/lodash/lodash.min.js"></script>
   <script src="../ui/g1/dist/g1.min.js"></script>
   <script src="../ui/select2/dist/js/select2.min.js"></script>
@@ -196,20 +215,18 @@
   </script>
   <script src="../node_modules/clipboard/dist/clipboard.min.js"></script>
   <script src="../node_modules/prismjs/prism.js"></script>
-  <script src="../node_modules/vue/dist/vue.min.js"></script>
   <script>
-    /* globals Vue, Noty */
-    /* exported app, toc */
+    /* globals Noty */
     var config = {% raw json.dumps(config, ensure_ascii = True, indent = 2) %}
     var q = g1.url.parse(location).searchKey
     // Set values based on inputs
     _.each(config.color, function(info, name) { info.value = q[name] || info.default })
     _.each(config.font, function(info, name) { info.value = q[name] || info.default })
     _.each(config.fontsize, function(info, name) { info.value = q[name] || info.default })
-    _.each(config.toggle, function(info, name) { info.value = Object.keys(q).length > 0 ? (q[name] || '') : info.default })
+    _.each(config.toggle, function(info, name) { info.value = q[name] || info.default })
     _.each(config.theme, function(info) { info.href = '?' + $.param(info) })
     config.cssurl = '../ui/bootstraptheme.css' + location.search
-    var app = new Vue({el: '#change-theme', data: config, delimiters: ['${', '}']})
+    $('#change-theme-template').template(config)
     $('[data-spy="scroll"]').scrollspy('refresh')
 
     // Toggle view source
@@ -232,9 +249,11 @@
       $(this).attr('id', slug)
       return {level: 'l' + this.tagName[1], name: text, href: '#' + slug}
     })
-    var toc = new Vue({el: '#toc-nav', data: {toc: toctree}, delimiters: ['${', '}']})
+    $('#toc-nav-template').template({toc: toctree})
   </script>
   <script>
+    $('body').urlfilter()
+
     // Click on top nav to scroll to the top
     $('.top-nav').on('click', function(e) {
       if ($(e.target).is('.top-nav'))
