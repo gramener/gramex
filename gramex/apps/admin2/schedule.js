@@ -56,8 +56,8 @@
           notify(logs, {
             name: shortname,
             results: [],
-            error: error.filter('section.content').find('pre').html() || msg,
-            traceback: error.filter('#traceback').html()
+            error: error.filter('section.content').find('pre').html() || msg || 'Error',
+            traceback: error.filter('#traceback').html() || 'Unknown error'
           });
         }).always(function () {
           $icon.toggleClass('fa-play fa-spinner fa-spin');
