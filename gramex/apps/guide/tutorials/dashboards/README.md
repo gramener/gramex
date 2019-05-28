@@ -16,11 +16,17 @@ After finishing this tutorial, you will:
 * have a better understanding of [FormHandler](../../formhandler/) tables,
 * be able to create visual elements that react to changes in the data.
 
+
 ## Requirements
 
-This tutorial assumes that you have gone through the [quickstart](../../quickstart)
-and have successfully built the Gramex application described in it. Some knowledge of basic
-Javascript and Jquery would also be helpful, but is not required.
+This tutorial assumes that you have gone through the
+[quickstart](../quickstart) and have successfully built the Gramex
+application and created these files:
+
+* [gramex.yaml](../quickstart/output/gramex.yaml.source)
+* [store-sales.csv](../quickstart/store-sales.csv)
+
+Basic Javascript and JQuery knowledge helps, but is not required.
 
 
 ## Introduction
@@ -80,7 +86,7 @@ We can easily sort, filter or paginate through the data using the table.
 <div class="card shadow text-white bg-dark">
   <div class="card-body">
    <div class="card-text">
-     <p>We have covered importing the g1 library in our <kbd>ndex.html</kbd> in the quickstart's <a href="../../quickstart/#step-2-laying-out-some-scaffolding">scaffolding</a> step as follows:</p>
+     <p>We have covered importing the g1 library in our <kbd>index.html</kbd> in the quickstart's <a href="../../quickstart/#step-2-laying-out-some-scaffolding">scaffolding</a> step as follows:</p>
      <ul class="nav nav-tabs">
        <li class="nav-item">
          <a class="nav-link active"><i class="fas fa-code"></i> <span class="text-monospace">index.html</span></a>
@@ -120,6 +126,7 @@ but g1 provides a simpler way to this via [urlchange](https://code.gramener.com/
 This snippet is essentially telling the browser to log the URL hash changes in the console
 whenever they happen. Generally, we can ask the browser to run any function when the url
 change event is triggered.
+
 After you save the file and refresh the browser, open up the browser console.
 This can be done by right clicking anywhere on the page, and clicking on 'Inspect Element' in the menu.
 This will open up a split pane in the browser window. Within this window, navigate to the tab

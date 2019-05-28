@@ -12,7 +12,7 @@ grouped by product segment, region and product category.
 ## Introduction
 
 SuperStore is a fictional department store for whom we will build a data application with Gramex.
-This application will allow users to see the store's sales across segments at a glance. 
+This application will allow users to see the store's sales across segments at a glance.
 After finishing this tutorial, we will be able to:
 
 1. Convert a data file into a REST API,
@@ -42,7 +42,7 @@ to sales are:
 In order to start this tutorial, we will need to:
 
 * [Install and set up Gramex](../install)
-* [Download the data](serve/store-sales.csv) and save it at a convenient location on your computer.
+* [Download the data](store-sales.csv) and save it as `store-sales.csv` at a convenient location on your computer.
 
 <script type="text/html" class="action-demo" src="snippets/call-to-action-cards.html"></script>
 
@@ -116,7 +116,7 @@ This is just some boilerplate that includes css and js files we will need.
 
 Note that all of our css and js links are relative to a `ui/` directory - but we have no such directory in our project folder.
 
-This is because Gramex bundles a lot of common css and js files ([bootstrap](https://getbootstrap.com), [lodash](https://lodash.com), [g1](https://www.npmjs.com/package/g1)) as part of a feature called [UI Components](../uicomponents). 
+This is because Gramex bundles a lot of common css and js files ([bootstrap](https://getbootstrap.com), [lodash](https://lodash.com), [g1](https://www.npmjs.com/package/g1)) as part of a feature called [UI Components](../uicomponents).
 
 <script type="text/html" src="snippets/call-to-action-cards.html" class="step2coa2"></script><br>
 
@@ -130,14 +130,14 @@ At this point, `gramex.yaml` contains the following lines and will not change fo
 ## Step 3: Filling in the Data
 <details>
   <summary> Expand This Section </summary>
- 
-The simplest and sometimes most effective way to represent data can be a table. 
-Accordingly, Gramex provides a way of embedding tabular data in any HTML page as an interactive table. 
+
+The simplest and sometimes most effective way to represent data can be a table.
+Accordingly, Gramex provides a way of embedding tabular data in any HTML page as an interactive table.
 <script type="text/html" src="snippets/call-to-action-cards.html" class="step3coa"></script><br>
 <script type="text/html" src="snippets/call-to-action-cards.html" class="step3html"></script><br>
 
 
-After saving the file, when we open [`http://localhost:9988`](http://localhost:9988), we should see a table similar to the one at the top of this page. 
+After saving the file, when we open [`http://localhost:9988`](http://localhost:9988), we should see a table similar to the one at the top of this page.
 
 The table is interactive. Try playing around with it. Here's a few things you could try:
 
@@ -167,7 +167,7 @@ Details of the specification can be found in the vega-lite [docs](https://vega.g
 
 * the spec consists of a bunch of nested fields, `width`, `height`, `data`, etc
 * the data key is set to the FormHandler URL with grouping by Segment: `{"url": "data?_by=Segment"}`
-* We've set the x and y axis values to `Sales|sum` and `Segment` respectively, telling Vega-lite to plot those quantities from the data that FormHandler returns. 
+* We've set the x and y axis values to `Sales|sum` and `Segment` respectively, telling Vega-lite to plot those quantities from the data that FormHandler returns.
 
 <script type="text/html" src="snippets/call-to-action-cards.html" class="step4coa2"></script><br>
 
@@ -180,7 +180,7 @@ Details of the specification can be found in the vega-lite [docs](https://vega.g
 <details>
   <summary> Expand This Section </summary>
 
-We can now flex front-end muscle to make our dashboard look slightly better. We will keep this section short, but frontend appearances can be endlessly configured. Feel free to go through the rest of our guides to get a better handle on some of these. 
+We can now flex front-end muscle to make our dashboard look slightly better. We will keep this section short, but frontend appearances can be endlessly configured. Feel free to go through the rest of our guides to get a better handle on some of these.
 
 Let's add a second chart to plot the aggregate sum of Quantity by Segment. It's the same chart - we are just changing the axes. Thus, we can reuse the earlier specification, but we still need to change values of certain fields. So we created a function to which we can pass the fields that need to be updated: the div to draw the chart, the x-axis column name and the title of the chart.
 
@@ -191,11 +191,11 @@ Here are a few more ways in which we can tweak our dashboard:
 
 1. To hide some of the columns from our dataset, we can use a FormHandler filter similar to what we had introduced in Step 4.
 2. We can use a feature of UI components, which allows us to override [bootstrap variables by passing url query parameters to the css import line](../uicomponents/#custom-bootstrap). For example, setting link-color to black.
-3. We can modify the vega-lite configuration of the chart to add a color scale, and change the fonts of the chart. 
+3. We can modify the vega-lite configuration of the chart to add a color scale, and change the fonts of the chart.
 
 <script type="text/html" class="outputfinal" src="snippets/example-output.html"></script>
 <p class="alert alert-success" role="alert">
-<i class="fa fa-download"></i> Download the final <a href="serve/gramex2.yaml">gramex.yaml</a>.
+<i class="fa fa-download"></i> Download the final <a href="output/gramex.yaml.source">gramex.yaml</a>.
 </p>
 
 </details>
@@ -215,13 +215,12 @@ To see more of what Gramex's functionality and features, including how to build 
 - Gramex doesn't start:
     - [Inotify watch limit reached](https://unix.stackexchange.com/questions/s just13751/kernel-inotify-watch-limit-reached)
     - Port is busy
-        - Gramex runs on port 9988 by default, you can run `gramex --listen.port=<port number>` to run on an arbritary port. 
+        - Gramex runs on port 9988 by default, you can run `gramex --listen.port=<port number>` to run on an arbritary port.
 - Don't see any text at localhost:9988, instead just a list of files in the directory
     - You may not have a gramex.yaml in your project directory. Create one and restart Gramex.
 - CSS/JS Not available.
-    - You may have forgotten to add UI Components in Step 2, or could be missing NodeJS; ensure NodeJS is installed, run `gramex setup ui` and restart gramex. If it still doesn't work, open an issue on [github](https://github.com/gramener/gramex) or email cto@gramener.com  
+    - You may have forgotten to add UI Components in Step 2, or could be missing NodeJS; ensure NodeJS is installed, run `gramex setup ui` and restart gramex. If it still doesn't work, open an issue on [github](https://github.com/gramener/gramex) or email cto@gramener.com
 - vega chart not rendering for some reason
     - You may have forgotten to include vega and vega lite dependencies in step 2.
 
 <script src="common.js"></script>
-

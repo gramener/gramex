@@ -15,8 +15,10 @@ prefix: Guide
 ## Table of contents
 
 - [Install Gramex](install/)
-- [Quickstart](quickstart/)
 - [Tutorials](tutorials/)
+    - [Quickstart](tutorials/quickstart/)
+    - [Dashboards](tutorials/dashboards/)
+    - [Charts](tutorials/charts/)
 - [Gramex is a web server](server/)
 - [Configurations control Gramex](config/)
 - [Testing Gramex apps](test/)
