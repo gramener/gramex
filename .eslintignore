@@ -10,5 +10,4 @@ gramex/apps/capture/chromecapture.js
 gramex/apps/admin2/schedule.js
 
 # Ignore snippets found in documentation and tutorials
-gramex/apps/guide/quickstart/*
-gramex/apps/guide/tutorials/interactive_dashboards/snippets/*
+gramex/apps/guide/tutorials/*
