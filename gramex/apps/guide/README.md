@@ -15,7 +15,11 @@ prefix: Guide
 ## Table of contents
 
 - [Install Gramex](install/)
-- [Quickstart](quickstart/)
+- [Tutorials](tutorials/)
+    - [Quickstart](tutorials/quickstart/)
+    - [Dashboards](tutorials/dashboards/)
+    - [Charts](tutorials/charts/)
+    - [Dropdown & Search](tutorials/g1-dropdown)
 - [Gramex is a web server](server/)
 - [Configurations control Gramex](config/)
 - [Testing Gramex apps](test/)
@@ -53,7 +57,6 @@ prefix: Guide
 - [Mapviewer](mapviewer/)
 - [LanguageTool](languagetool/)
 - [Release Notes](release/)
-- [Tutorials](tutorials/)
 - [Python API reference](https://learn.gramener.com/gramex/gramex.html)
 - [Gramex License](license/)
 

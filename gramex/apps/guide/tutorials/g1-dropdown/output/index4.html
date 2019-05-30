@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>SuperStore Sales Dashboard</title>
+  <link rel="stylesheet" href="../../ui/bootstraptheme.css">
+  <link rel="stylesheet" href="../../ui/bootstrap-select/dist/css/bootstrap-select.min.css">
+</head>
+
+<body>
+  <div class="text-center h2">SuperStore Dataset</div>
+  <div class="formhandler" data-src="../../data?_c=-Order ID&_c=-Order Date&_c=-Ship Date"></div>
+  <div id="chart"></div>
+  <div id="container1"></div>
+
+</body>
+<script src="../../ui/jquery/dist/jquery.min.js"></script>
+<script src="../../ui/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../../ui/lodash/lodash.min.js"></script>
+<script src="../../ui/g1/dist/g1.min.js"></script>
+<script src="../../ui/vega/build/vega.min.js"></script>
+<script src="../../ui/vega-lite/build/vega-lite.min.js"></script>
+<script src="../../ui/vega-tooltip/build/vega-tooltip.min.js"></script>
+<script src="../../ui/bootstrap-select/dist/js/bootstrap-select.min.js"></script>
+<script>
+  $.fn.selectpicker.Constructor.BootstrapVersion = '4';
+  $('.formhandler').formhandler({ pageSize: 5 })
+  var spec = {
+    "width": 360,
+    "height": 270,
+    "data": {"url": "../../store-sales-ctab"},
+    "$schema": "https://vega.github.io/schema/vega-lite/v3.json",
+    "encoding": {
+      "y": {"field": "Category", "type": "nominal"},
+      "x": {"field": "Region", "type": "nominal"}
+    },
+    "layer": [
+      {
+        "mark": "rect",
+        "selection": {"brush": {"type": "interval"}},
+        "encoding": {
+          "color": {"field": "Sales", "type": "quantitative",
+            "legend": {"format": "0.1s"}}
+        }
+      },
+      {
+        "mark": "text",
+        "encoding": {
+          "text": {"field": "Sales", "type": "quantitative"},
+          "color": {
+            "condition": {"test": "datum['Sales'] < 100000", "value": "black"},
+            "value": "white"
+          }
+        }
+      }
+    ]
+  }
+  function draw_chart() {
+    var view = new vega.View(vega.parse(vl.compile(spec).spec))
+      .renderer('svg')
+      .initialize('#chart')
+      .hover()
+      .run()
+    view.addEventListener('click', filterTableOnClick)
+  }
+  draw_chart()
+
+  // Add event listeners
+
+  // updating the chart via URL
+  var baseDataURL = spec.data.url
+  function redrawChartFromURL(e) {
+    if (e.hash.relative) {
+      spec.data.url = g1.url.parse(baseDataURL).toString() + e.hash.relative
+    } else { spec.data.url = baseDataURL }
+    draw_chart()
+  }
+  $('body').urlfilter({target: 'pushState'})
+  $(window).on('#', redrawChartFromURL)
+    .urlchange()
+  function filterTableOnClick(event, item) {
+    var qparts = {};
+    Object.entries(item.tooltip || item.datum).forEach(([key, val]) => {
+      if (!(key == "Sales")) {
+        qparts[key] = val;
+      }
+    })
+    if (_.isEmpty(qparts)) { return }
+    var url = g1.url.parse(location.hash.replace('#', ''))
+    location.hash = url.update(qparts).toString();
+  }
+  $('#container1').on('change', redrawChartFromURL)
+  .dropdown({
+    "url": "../../data?_by=Sub-Category",
+    "key": "Sub-Category",
+    "label_key": "Sub-Category",
+    "value_key": "Sub-Category",
+    "target": "#",
+    "options": {liveSearch: true}
+  })
+</script>
+
+</html>

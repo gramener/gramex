@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>SuperStore Sales Dashboard</title>
+    <link rel="stylesheet" href="ui/bootstraptheme.css">
+</head>
+
+<body>
+
+  <div class="formhandler" data-src="data"></div>
+  <div id="barchart"></div>
+
+
+  <script src="ui/jquery/dist/jquery.min.js"></script>
+  <script src="ui/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="ui/lodash/lodash.min.js"></script>
+  <script src="ui/g1/dist/g1.min.js"></script>
+  <script>
+    $('.formhandler').formhandler({pageSize: 5})
+  </script>
+
+  <script>
+    $('#barchart').load('chart?_format=barchart')
+  </script>
+</body>
+
+</html>

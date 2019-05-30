@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>SuperStore Sales Dashboard</title>
+  <link rel="stylesheet" href="ui/bootstraptheme.css?link-color=black&font-family-base=open-sans">
+</head>
+
+<body>
+  <div class="text-center h2"><div>SuperStore Dataset</div></div>
+  <div class="container-fluid">
+    <div class="d-flex justify-content-between mt-4">
+      <div id="chart1"></div>
+      <div id="chart2"></div>
+    </div>
+    <div class="formhandler mt-5" data-src="data?_c=-Order ID&_c=-Order Date&_c=-Ship Date"></div>
+  </div>
+
+</body>
+<script src="ui/jquery/dist/jquery.min.js"></script>
+<script src="ui/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+<script src="ui/lodash/lodash.min.js"></script>
+<script src="ui/g1/dist/g1.min.js"></script>
+<script src="ui/vega/build/vega.min.js"></script>
+<script src="ui/vega-lite/build/vega-lite.min.js"></script>
+<script>
+  $('.formhandler').formhandler({ pageSize: 5, edit: false })
+  var spec = {
+    "$schema": "https://vega.github.io/schema/vega-lite/v3.json",
+    "width": 360,
+    "height": 200,
+    "data": { "url": "data?_by=Segment" },
+    "mark": "bar",
+    "title": {"fontSize": 20},
+    "encoding": {
+      "y": {
+        "field": "Segment",
+        "type": "nominal",
+        "sort": { "encoding": "x" },
+        "axis": {
+          "title": "Segment",
+          "labelFontSize": 13,
+          "titleFontSize": 18
+        }
+      },
+      "x": {
+        "field": "Sales|sum",
+        "type": "quantitative",
+        "axis": {
+          "labelFontSize": 13,
+          "titleFontSize": 18,
+        },
+      },
+      "color": {"field": "", "type": "quantitative"}
+    }
+  }
+  render_charts('#chart1', 'Sales|sum', 'Sales by Segment')
+  render_charts('#chart2', 'Quantity|sum', 'Quantity by Segment')
+  function render_charts(chartid, xfield, title) {
+    spec.title.text = title
+    spec.encoding.x.field = xfield
+    spec.encoding.color.field = xfield
+    var view = new vega.View(vega.parse(vl.compile(spec).spec))
+      .renderer('svg')
+      .initialize(chartid)
+      .hover()
+      .run()
+  }
+</script>
+
+</html>

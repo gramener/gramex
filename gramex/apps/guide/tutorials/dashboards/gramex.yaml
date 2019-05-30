@@ -1,0 +1,21 @@
+import:
+  ui:
+    path: $GRAMEXAPPS/ui/gramex.yaml    # Import the UI components
+    YAMLURL: $YAMLURL/ui/               # ... at this URL
+
+url:
+  dataset-sales-serve-data-file:
+    handler: FileHandler
+    pattern: /$YAMLURL/store-sales.csv
+    kwargs:
+      path: $YAMLPATH/../../quickstart/store-sales.csv
+      headers:
+        Content-Type: text/plain
+        Content-Disposition: attachment;
+
+  superstore-data:
+    pattern: /$YAMLURL/data
+    handler: FormHandler
+    kwargs:
+      url: $YAMLPATH/../../quickstart/store-sales.csv
+
