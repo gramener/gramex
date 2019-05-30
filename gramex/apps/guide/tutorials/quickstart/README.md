@@ -15,13 +15,13 @@ SuperStore is a fictional department store for whom we will build a data applica
 This application will allow users to see the store's sales across segments at a glance.
 After finishing this tutorial, we will be able to:
 
-1. Convert a data file into a REST API,
-2. Preview the data in an interactive table,
-3. Create a chart showing sales across multiple categories, and
+1. convert a data file into a REST API,
+2. preview the data in an interactive table, and
+3. create a chart showing sales across multiple categories.
 
 This is what the data looks like:
 
-<div class="formhandler" data-src="data?_c=-Order%20ID&_c=-Sub-Category&_c=-Sales&_c=-Quantity&_c=-Ship%20Mode&_c=-Ship%20Date"></div>
+<div class="formhandler" data-src="../data?_c=-Order%20ID&_c=-Sub-Category&_c=-Sales&_c=-Quantity&_c=-Ship%20Mode&_c=-Ship%20Date"></div>
 <script>
   $('.formhandler').formhandler({pageSize: 5})
 </script>
@@ -41,14 +41,14 @@ to sales are:
 
 In order to start this tutorial, we will need to:
 
-* [Install and set up Gramex](../install)
-* [Download the data](store-sales.csv) and save it as `store-sales.csv` at a convenient location on your computer.
+* [Install and set up Gramex](../../install)
+* [Download the data](../store-sales.csv) and save it as `store-sales.csv` at a convenient location on your computer.
 
 <script type="text/html" class="action-demo" src="snippets/call-to-action-cards.html"></script>
 
 ## Step 0: Create the Project
 <details>
-  <summary> Expand This Section </summary>
+<summary> Expand This Section </summary>
 
 We need a place to hold together all the files related to our application - including data, source code and configuration files.
 

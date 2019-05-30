@@ -19,6 +19,7 @@ prefix: Guide
     - [Quickstart](tutorials/quickstart/)
     - [Dashboards](tutorials/dashboards/)
     - [Charts](tutorials/charts/)
+    - [Dropdown & Search](tutorials/g1-dropdown)
 - [Gramex is a web server](server/)
 - [Configurations control Gramex](config/)
 - [Testing Gramex apps](test/)

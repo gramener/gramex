@@ -5,34 +5,30 @@ prefix: fddcharts
 
 [TOC]
 
-In the [previous tutorial](./1_building_interactive_dashboards.md), we learnt how to use a
-FormHandler table to trigger changes in charts. However, this is only part of the
-interactivity we want in our dashboard. Note that the charts we had in the previous
-tutorial were not interactive by themselves, in that clicking on them does nothing. In this
-tutorial, we close the interactivity loop by making the charts trigger changes in the
-FormHandler table. This way, both the table and the charts can be used to control each
-other, allowing better exploration of data. 
+In the [previous tutorial](../dashboards/), we saw how filtering a table can
+redraw charts. The charts themselves were not interactive. In this
+tutorial, we close the loop by making the charts trigger changes in the
+FormHandler table. 
 
 ## Introduction
 
-While we will build upon what we learnt in the last tutorial, we will use a different
-visualization this time - a colored table which shows total sales for different regions
+We will use a different visualization this time - a colored table which shows total sales for different regions
 and product categories.
 
 <div id="chart">
 </div>
-<script src="../../quickstart/ui/jquery/dist/jquery.min.js"></script>
-<script src="../../quickstart/ui/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-<script src="../../quickstart/ui/lodash/lodash.min.js"></script>
-<script src="../../quickstart/ui/g1/dist/g1.min.js"></script>
-<script src="../../quickstart/ui/vega/build/vega.min.js"></script>
-<script src="../../quickstart/ui/vega-lite/build/vega-lite.min.js"></script>
-<script src="../../quickstart/ui/vega-tooltip/build/vega-tooltip.min.js"></script>
+<script src="../ui/jquery/dist/jquery.min.js"></script>
+<script src="../ui/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../ui/lodash/lodash.min.js"></script>
+<script src="../ui/g1/dist/g1.min.js"></script>
+<script src="../ui/vega/build/vega.min.js"></script>
+<script src="../ui/vega-lite/build/vega-lite.min.js"></script>
+<script src="../ui/vega-tooltip/build/vega-tooltip.min.js"></script>
 <script>
   var spec = {
     "width": 360,
     "height": 270,
-    "data": {"url": "../../quickstart/store-sales-ctab"},
+    "data": {"url": "../store-sales-ctab"},
     "$schema": "https://vega.github.io/schema/vega-lite/v3.json",
     "encoding": {
       "y": {"field": "Category", "type": "nominal"},
@@ -66,17 +62,15 @@ and product categories.
   .run()
 </script>
 
-Each row of this table represents a product category, and each column represents a
-geographical region. Each cell denotes the total sales in the corresponding category and
-the region. Such a table is called a cross-tabulation or a contingency table - it is a
+Such a table is called a cross-tabulation or a contingency table - it is a
 common operation used to aggregate a metric (in this case, sales) across two dimensions
 (region and product category).
 
-<a href="index2.html">
+<a href="output/index2.html">
 <p class="alert alert-info" role="alert"><i class="fa fa-eye fa-lg"></i> After finishing this tutorial, you will have an application like this.</p>
 </a>
 
-Before we proceed with the tutorial, do play around with the sample application to get an
+Do play around with the sample application to get an
 better idea of our goal for this tutorial. Specifically, take a look at how:
 
 * Applying filters on the 'Region' and 'Category' changes the chart.
@@ -86,12 +80,12 @@ better idea of our goal for this tutorial. Specifically, take a look at how:
 ## Requirements
 
 This tutorial assumes that you have gone through the
-[previous tutorial](./1_building_interactive_dashboards.md). We will be building heavily
-on concepts introduced in it, like:
+[previous tutorial](./1_building_interactive_dashboards.md). Specifically, we
+will be building on:
 
-1. [FormHandler tables](./1_building_interactive_dashboards.md#step-1-working-with-formhandler),
-2. how they introduce [changes in the URL](./1_building_interactive_dashboards.md#step-2-detecting-changes-in-the-url), and
-3. how we use these changes to [effect changes in the charts](./1_building_interactive_dashboards.md#step-3-redrawing-charts-on-url-changes).
+1. [FormHandler tables](../dashboards#step-1-working-with-formhandler),
+2. how they introduce [changes in the URL](../dashboards#step-2-detecting-changes-in-the-url), and
+3. how we use this to [effect changes in the charts](../dashboards#step-3-redrawing-charts-on-url-changes).
 
 
 ## Step 0: Basic Layout and Scaffolding
@@ -99,10 +93,10 @@ on concepts introduced in it, like:
 To begin with, let's just reproduce some of what we did in the last tutorial, beginning
 with laying out a FormHandler table.
 
-<div class="card shadow text-white bg-dark">
+<div class="card shadow text-grey bg-dark">
   <div class="card-body">
    <div class="card-text">
-     <p>Add the FormHandler table to your application by adding the following code in the <kbd>&lt;body&gt;</kbd> of <kbd>index.html</kbd>.</p>
+     <p class="text-white">Add the FormHandler table to your application by adding the following code in the <kbd>&lt;body&gt;</kbd> of <kbd>index.html</kbd>.</p>
      <ul class="nav nav-tabs">
        <li class="nav-item">
          <a class="nav-link active"><i class="fas fa-code"></i> <span class="text-monospace">index.html</span></a>
@@ -112,15 +106,15 @@ with laying out a FormHandler table.
    </div>
   </div>
 </div>
-<script>$.get('../../quickstart/snippets/fh.html').done((e) => {$('#html1').text(e)})</script>
+<script>$.get('../quickstart/snippets/fh.html').done((e) => {$('#html1').text(e)})</script>
 <br>
 
-Now we need to add some space in the page in which the chart would reside.
+Now we need to add some space in the page to hold the chart.
 
-<div class="card shadow text-white bg-dark">
+<div class="card shadow text-grey bg-dark">
   <div class="card-body">
    <div class="card-text">
-     <p>Add a placeholder for the chart in your page as follows:</p>
+     <p class="text-white">Add a placeholder for the chart in your page as follows:</p>
      <ul class="nav nav-tabs">
        <li class="nav-item">
          <a class="nav-link active"><i class="fas fa-code"></i> <span class="text-monospace">index.html</span></a>
@@ -132,7 +126,7 @@ Now we need to add some space in the page in which the chart would reside.
 </div>
 <br>
 
-This `<div>` element is empty, because we will be rendering the chart through a javascript
+We will be rendering the chart through a javascript
 function, similar to the `draw_charts` function from the previous tutorial.
 
 
@@ -142,10 +136,10 @@ FormHandler can be used to [transform a dataset](../../formhandler#formhandler-t
 in a variety of ways. In this example, we will use FormHandler's
 [`modify`](../../formhandler/formhandler-modify) function to perform the cross-tabulation.
 
-<div class="card shadow text-white bg-dark">
+<div class="card shadow text-grey bg-dark">
   <div class="card-body">
    <div class="card-text">
-     <p>Add the following to <kbd>gramex.yaml</kbd> to create a HTTP resource which cross-tabulates the data.</p>
+     <p class="text-white">Add the following to <kbd>gramex.yaml</kbd> to create a HTTP resource which cross-tabulates the data.</p>
      <ul class="nav nav-tabs">
        <li class="nav-item">
          <a class="nav-link active"><i class="fas fa-code"></i> <span class="text-monospace">gramex.yaml</span></a>
@@ -155,12 +149,11 @@ in a variety of ways. In this example, we will use FormHandler's
    </div>
   </div>
 </div>
-<script>$.get('snippets/ctab.yaml').done((e) => {$('#yaml1').text(e)})</script>
+<script>$.get('../dashboards/snippets/ctab.yaml').done((e) => {$('#yaml1').text(e)})</script>
 <br>
 
-Just as we had earlier created an endpoint to serve data in it's original format, in the
-snippet above, we are creating a new endpoint to serve the cross-tabulated data. After
-saving `gramex.yaml`, you can try it by visiting
+In the snippet above, we are creating a new endpoint to serve the cross-tabulated data. After
+saving `gramex.yaml`, visit
 [`http://localhost:9988/store-sales-ctab`](http://localhost:9988/store-sales-ctab) in your
 browser. You should see a JSON array containing 12 objects, each of which represents a
 combination of a region and a product category.
@@ -175,10 +168,10 @@ pandas expression. See [FormHandler documentation](../../formhandler) for detail
 Just like we had a specification for the bar charts in the previous examples, we will use
 a different specification for the color table chart.
 
-<div class="card shadow text-white bg-dark">
+<div class="card shadow text-grey bg-dark">
   <div class="card-body">
    <div class="card-text">
-     <p>Add the following Vega specification for a heatmap chart to your <kbd>index.html</kbd>.</p>
+     <p class="text-white">Add the following Vega specification for a heatmap chart to your <kbd>index.html</kbd>.</p>
      <ul class="nav nav-tabs">
        <li class="nav-item">
          <a class="nav-link active"><i class="fas fa-code"></i> <span class="text-monospace">index.html</span></a>
@@ -188,16 +181,16 @@ a different specification for the color table chart.
    </div>
   </div>
 </div>
-<script>$.get('snippets/ctab_spec.js').done((e) => {$('#ctab_spec').text(e)})</script>
+<script>$.get('snippets/ctab_spec.js.source').done((e) => {$('#ctab_spec').text(e)})</script>
 <br>
 
 Next, let's write a function to compile this specification into a Vega view and draw the
 chart.
 
-<div class="card shadow text-white bg-dark">
+<div class="card shadow text-grey bg-dark">
   <div class="card-body">
    <div class="card-text">
-     <p>Add the following function to <kbd>index.html</kbd> to compile the chart specification into a Vega view and draw the chart.</p>
+     <p class="text-white">Add the following function to <kbd>index.html</kbd> to compile the chart specification into a Vega view and draw the chart.</p>
      <ul class="nav nav-tabs">
        <li class="nav-item">
          <a class="nav-link active"><i class="fas fa-code"></i> <span class="text-monospace">index.html</span></a>
@@ -217,25 +210,25 @@ the next step is to redraw the chart on URL changes.
 ## Step 3: Redrawing Charts on URL Changes
 
 In the previous tutorial, we had managed to obtain the hash changes in the URL and use
-these as queries on the original dataset. The approach in this case is a little different.
-Remember that we are using two _different_ endpoints for the table and the chart - i.e.
+these as queries on the original dataset. In this case,
+remember that we are using two _different_ endpoints for the table and the chart - i.e.
 [`/data`](http://localhost:9988/data) for the table and
 [`/store-sales-ctab`](http://localhost:9988/store-sales-ctab) for the chart. Thus, to
 render the chart successfully on URL changes, we must be able to grab filters from the
 table and apply them to the cross-tab endpoints. This, too, involves setting the
 `data.url` attribute of the chart specification on each change in the URL.
 
-<div class="card shadow text-white bg-dark">
+<div class="card shadow text-grey bg-dark">
   <div class="card-body">
    <div class="card-text">
-     <p>Add the following function to <kbd>index.html</kbd> to get URL changes and apply them to the chart spec.</p>
+     <p class="text-white">Add the following function to <kbd>index.html</kbd> to get URL changes and apply them to the chart spec.</p>
      <ul class="nav nav-tabs">
        <li class="nav-item">
          <a class="nav-link active"><i class="fas fa-code"></i> <span class="text-monospace">index.html</span></a>
        </li>
      </ul>
      <pre><code id="redraw_ctab" class="language-javascript"></code></pre>
-     <p>Finally, we hook up this function with the URL changes using the following code:</p>
+     <p class="text-white">Finally, we hook up this function with the URL changes using the following code:</p>
      <ul class="nav nav-tabs">
        <li class="nav-item">
          <a class="nav-link active"><i class="fas fa-code"></i> <span class="text-monospace">index.html</span></a>
@@ -268,10 +261,10 @@ amounts to:
    query, and
 3. redrawing the table according to this query.
 
-<div class="card shadow text-white bg-dark">
+<div class="card shadow text-grey bg-dark">
   <div class="card-body">
    <div class="card-text">
-     <p>Let's put all of this logic together in a function as follows:</p>
+     <p class="text-white">Let's put all of this logic together in a function as follows:</p>
      <ul class="nav nav-tabs">
        <li class="nav-item">
          <a class="nav-link active"><i class="fas fa-code"></i> <span class="text-monospace">index.html</span></a>
@@ -289,10 +282,10 @@ we will add this function as an event listener to the chart. Since we're drawing
 inside the `draw_chart` function, we need to add the event listener within the function as
 well.
 
-<div class="card shadow text-white bg-dark">
+<div class="card shadow text-grey bg-dark">
   <div class="card-body">
    <div class="card-text">
-     <p>Change the <kbd>draw_chart</kbd> function to the following:</p>
+     <p class="text-white">Change the <kbd>draw_chart</kbd> function to the following:</p>
      <ul class="nav nav-tabs">
        <li class="nav-item">
          <a class="nav-link active"><i class="fas fa-code"></i> <span class="text-monospace">index.html</span></a>

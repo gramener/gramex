@@ -11,6 +11,7 @@
     "anchor-js": "^4.2.0",
     "asciinema-player": "^2.6.1",
     "clipboard": "1",
+    "highlight.js": "^9.15.8",
     "prismjs": "1",
     "vue": "2"
   },

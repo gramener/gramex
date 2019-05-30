@@ -4,34 +4,32 @@
 <head>
   <meta charset="utf-8" />
   <title>SuperStore Sales Dashboard</title>
-  <link rel="stylesheet" href="../../quickstart/ui/bootstraptheme.css">
+  <link rel="stylesheet" href="../../ui/bootstraptheme.css">
+  <link rel="stylesheet" href="../../ui/bootstrap-select/dist/css/bootstrap-select.min.css">
 </head>
 
 <body>
   <div class="text-center h2">SuperStore Dataset</div>
-  <div class="container-fluid">
-    <div class="d-flex justify-content-center">
-      <div id="chart1"></div>
-      <div id="chart2"></div>
-    </div>
-    <div class="formhandler" data-src="../../quickstart/data?_c=-Order ID&_c=-Order Date&_c=-Ship Date"></div>
-  </div>
+  <div class="formhandler" data-src="../../data?_c=-Order ID&_c=-Order Date&_c=-Ship Date"></div>
   <div id="chart"></div>
+  <div id="container1"></div>
 
 </body>
-<script src="../../quickstart/ui/jquery/dist/jquery.min.js"></script>
-<script src="../../quickstart/ui/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-<script src="../../quickstart/ui/lodash/lodash.min.js"></script>
-<script src="../../quickstart/ui/g1/dist/g1.min.js"></script>
-<script src="../../quickstart/ui/vega/build/vega.min.js"></script>
-<script src="../../quickstart/ui/vega-lite/build/vega-lite.min.js"></script>
-<script src="../../quickstart/ui/vega-tooltip/build/vega-tooltip.min.js"></script>
+<script src="../../ui/jquery/dist/jquery.min.js"></script>
+<script src="../../ui/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../../ui/lodash/lodash.min.js"></script>
+<script src="../../ui/g1/dist/g1.min.js"></script>
+<script src="../../ui/vega/build/vega.min.js"></script>
+<script src="../../ui/vega-lite/build/vega-lite.min.js"></script>
+<script src="../../ui/vega-tooltip/build/vega-tooltip.min.js"></script>
+<script src="../../ui/bootstrap-select/dist/js/bootstrap-select.min.js"></script>
 <script>
+  $.fn.selectpicker.Constructor.BootstrapVersion = '4';
   $('.formhandler').formhandler({ pageSize: 5 })
   var spec = {
     "width": 360,
     "height": 270,
-    "data": {"url": "../../quickstart/store-sales-ctab"},
+    "data": {"url": "../../store-sales-ctab"},
     "$schema": "https://vega.github.io/schema/vega-lite/v3.json",
     "encoding": {
       "y": {"field": "Category", "type": "nominal"},
@@ -92,6 +90,14 @@
     var url = g1.url.parse(location.hash.replace('#', ''))
     location.hash = url.update(qparts).toString();
   }
+  $('#container1').dropdown({
+    "url": "../../data?_by=Sub-Category",
+    "key": "Sub-Category",
+    "label_key": "Sub-Category",
+    "value_key": "Sub-Category",
+    "target": "#",
+    "options": {liveSearch: true}
+  })
 </script>
 
 </html>

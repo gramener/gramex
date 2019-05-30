@@ -5,11 +5,10 @@ prefix: g1dashboards
 
 [TOC]
 
-At the end of the [quickstart](../../quickstart) we had a very simple dashboard, with an
-interactive table and a few charts. However, that in itself is not very interesting. We would
-want some ways to filter through data, either by clicking or selecting certain visual elements in
-the charts etc. This guide will walk through the process of creating such interactive,
-URL driven dashboards with gramex.
+In the [quickstart](../../quickstart) we had a dashboard with a
+table and a few charts. Often, that is not enough. We need an interactive
+way to filter through data. This tutorials deals with adding such
+interactivity with Gramex.
 
 After finishing this tutorial, you will:
 
@@ -26,18 +25,14 @@ application and created these files:
 * [gramex.yaml](../quickstart/output/gramex.yaml.source)
 * [store-sales.csv](../quickstart/store-sales.csv)
 
-Basic Javascript and JQuery knowledge helps, but is not required.
-
 
 ## Introduction
 
-Recall that in the quickstart we had sales data from a fictional superstore.
-We had displayed this data in an table and added a bar chart that
-showed the sales of different customer segments. This chart was static, in that it
-displayed a single view for the complete dataset - we had no ability to filter or zoom or look
-into a subset of the data - or change the chart in any way at all.
+The chart we made in the quickstart was static, in that it
+displayed a single view for the complete dataset - with no way to filter the
+data or change the chart dynamically.
 
-To fix this, there are two things we need to accomplish:
+To fix this, we need to:
 
 1. detect events like:
     * clicks on chart or table elements
@@ -45,48 +40,29 @@ To fix this, there are two things we need to accomplish:
     * selection or drag interactions with the chart.
 2. ensure that every element in our dashboard reponds to these events.
 
-Let's get started.
-
-
 ## Step 0: Quickstart Recap
 
-If you have gone through the [quickstart](../../quickstart), you should have an
-application that looks like [this](../../quickstart/index5.html). Specifically,
-the application should have:
+By the end of the [quickstart](../../quickstart), you should have an
+application that looks like [this](../../quickstart/index5.html), and has:
 
-  1. A table showing the data
-  2. A bar chart showing sales (order values) aggregated by customer segment
-  3. A bar chart showing order quantities aggregated by customer segment
+  1. a table showing the data,
+  2. a bar chart showing sales (order values) aggregated by customer segment,
+  3. a bar chart showing order quantities aggregated by customer segment
 
 
 ## Step 1: Working with [FormHandler](../../formhandler/)
 
-The `FormHandler` component is Gramex's primary data model. It can connect to a
-variety of data sources like files and databases and read data from them.
-It can then expose this data through a [REST API](../../quickstart/#step-1-expose-the-data-through-a-rest-api).
-The most powerful feature of FormHandler is that we can filter, aggregate, sort and
-otherwise query the data simply by adding URL Query parameters.
-Think of FormHandler as 'SQL over HTTP'. This means that if [data](../../quickstart/data)
+The `FormHandler` component is Gramex's primary data model.
+Think of FormHandler as 'SQL over HTTP'. If [data](../../quickstart/data)
 is our typical data endpoint, then [data?Segment=Consumer](../../quickstart/data?Segment=Consumer)
 returns only those rows which have Consumer in the Segment Column. We'll exploit this feature
 heavily to build interactive dashboards. Check out the list of possible operations in the
-[formhandler documentation](/formhandler/#formhandler-filters)
+[formhandler documentation](/formhandler/#formhandler-filters).
 
-Data from FormHandler can also be rendered as an interactive table like this one:
-
-<div class="formhandler" data-src="../../quickstart/data?_c=-Order%20ID&_c=-Sub-Category&_c=-Sales&_c=-Quantity&_c=-Ship%20Mode&_c=-Ship%20Date"></div>
-<script>
-  $('.formhandler').formhandler({pageSize: 5})
-</script>
-
-This table comes from [`g1`](https://npmjs.com/package/g1) - a JS
-library that adds interactivity to various Gramex components.
-We can easily sort, filter or paginate through the data using the table.
-
-<div class="card shadow text-white bg-dark">
+<div class="card shadow text-grey bg-dark">
   <div class="card-body">
    <div class="card-text">
-     <p>We have covered importing the g1 library in our <kbd>index.html</kbd> in the quickstart's <a href="../../quickstart/#step-2-laying-out-some-scaffolding">scaffolding</a> step as follows:</p>
+     <p class="text-white">We have covered importing the g1 library in our <kbd>index.html</kbd> in the quickstart's <a href="../../quickstart/#step-2-laying-out-some-scaffolding">scaffolding</a> step as follows:</p>
      <ul class="nav nav-tabs">
        <li class="nav-item">
          <a class="nav-link active"><i class="fas fa-code"></i> <span class="text-monospace">index.html</span></a>
@@ -100,16 +76,14 @@ We can easily sort, filter or paginate through the data using the table.
 
 ## Step 2: Detecting Changes in the URL
 
-Notice that any interaction with the table changes the URL - specifically the URL hash.
-This is intentional, by storing the state of various interactions and filters in the URL, we
-create the ability to share a particular view of the data, just by sharing the URL.
-You could do this manually, by attaching an event listener to <kbd>window.location</kbd> attribute and parsing it,
-but g1 provides a simpler way to this via [urlchange](https://code.gramener.com/cto/g1/blob/master/docs/urlchange.md).
+Any interaction with the table changes the URL hash. By storing the state of
+interactions in the URL, we can capture a particular view of the data, just by capturing the URL.
+g1 provides a way to listen to URL changes via [urlchange](https://code.gramener.com/cto/g1/blob/master/docs/urlchange.md).
 
-<div class="card shadow text-white bg-dark">
+<div class="card shadow text-grey bg-dark">
   <div class="card-body">
    <div class="card-text">
-     <p>To see how <kbd>urlchange</kbd> works, put the following snippet in the
+     <p class="text-white">To see how <kbd>urlchange</kbd> works, put the following snippet in the
      <kbd>&lt;body&gt;</kbd> of <kbd>index.html</kbd>:</p>
      <ul class="nav nav-tabs">
        <li class="nav-item">
@@ -123,36 +97,30 @@ but g1 provides a simpler way to this via [urlchange](https://code.gramener.com/
 <script>$.get('snippets/urlchange.html').done((e) => {$('#html1').text(e)})</script>
 
 
-This snippet is essentially telling the browser to log the URL hash changes in the console
-whenever they happen. Generally, we can ask the browser to run any function when the url
-change event is triggered.
+Here, we are logging URL hash changes in the console whenever they happen.
+Generally, any function can be run when the url change event is triggered.
 
 After you save the file and refresh the browser, open up the browser console.
-This can be done by right clicking anywhere on the page, and clicking on 'Inspect Element' in the menu.
-This will open up a split pane in the browser window. Within this window, navigate to the tab
-labeled "Console".
-
-Now, whenever you interact with the g1 table, you should see some output printed in the console.
-What you see is a JSON object containing the changed URL hash.
+Now, whenever you interact with the g1 table, you should see the URL hash printed in the
+console.
 
 
 ## Step 3: Redrawing Charts on URL Changes
 
-Now that we have managed to trigger some action whenever the URL changes, all we have to do is
-to change this action to something that redraws the existing charts with the new data present
-in the FormHandler table.
+Now all we have to do is to change the console logging action to something that
+redraws the existing charts with the new data present in the FormHandler table.
 
-<div class="card shadow text-white bg-dark">
+<div class="card shadow text-grey bg-dark">
   <div class="card-body">
    <div class="card-text">
-     <p>Recollect that we had the following specification for our charts:</p>
+     <p class="text-white">Recollect that we had the following specification for our charts:</p>
      <ul class="nav nav-tabs">
        <li class="nav-item">
          <a class="nav-link active"><i class="fas fa-code"></i> <span class="text-monospace">index.html</span></a>
        </li>
      </ul>
      <pre><code id="chartspec" class="language-javascript"></code></pre>
-     <p>and the following function to draw the charts:</p>
+     <p class="text-white">and the following function to draw the charts:</p>
      <ul class="nav nav-tabs">
        <li class="nav-item">
          <a class="nav-link active"><i class="fas fa-code"></i> <span class="text-monospace">index.html</span></a>
@@ -174,10 +142,10 @@ Note that the chart gets its data from the `data.url` attribute enclosed in the 
 Therefore, we need to grab the changed URL hash, and set `spec.data.url` to the changed
 URL.
 
-<div class="card shadow text-white bg-dark">
+<div class="card shadow text-grey bg-dark">
   <div class="card-body">
    <div class="card-text">
-     <p>Let's draw a function that grabs the changed URL, sets the <kbd>data.url</kbd> attribute of
+     <p class="text-white">Let's draw a function that grabs the changed URL, sets the <kbd>data.url</kbd> attribute of
      the spec to the new URL, and redraws the charts.</p>
      <ul class="nav nav-tabs">
        <li class="nav-item">
@@ -194,10 +162,10 @@ URL.
 Finally, we must remember to remove the earlier URL change listener (which simply logged changes
 to the console), and add our new function as the listener.
 
-<div class="card shadow text-white bg-dark">
+<div class="card shadow text-grey bg-dark">
   <div class="card-body">
    <div class="card-text">
-     <p>The changed event listener function should look be as follows:</p>
+     <p class="text-white">The changed event listener function should look be as follows:</p>
      <ul class="nav nav-tabs">
        <li class="nav-item">
          <a class="nav-link active"><i class="fas fa-code"></i> <span class="text-monospace">index.html</span></a>
