@@ -10,12 +10,6 @@ table and a few charts. Often, that is not enough. We need an interactive
 way to filter through data. This tutorials deals with adding such
 interactivity with Gramex.
 
-After finishing this tutorial, you will:
-
-* have a better understanding of [FormHandler](../../formhandler/) tables,
-* be able to create visual elements that react to changes in the data.
-
-
 ## Requirements
 
 This tutorial assumes that you have gone through the
@@ -24,15 +18,18 @@ application and created these files:
 
 * [gramex.yaml](../quickstart/output/gramex.yaml.source)
 * [store-sales.csv](../quickstart/store-sales.csv)
+* [index.html](../../quickstart/index5.html.source)
+
+The application you have at the end of the quickstart should look like
+[this](../../quickstart/index5.html).
 
 
 ## Introduction
 
-The chart we made in the quickstart was static, in that it
-displayed a single view for the complete dataset - with no way to filter the
+The chart in the quickstart displayed a single view for the complete dataset - with no way to filter the
 data or change the chart dynamically.
 
-To fix this, we need to:
+By the end of this tutorial, you will have learnt to:
 
 1. detect events like:
     * clicks on chart or table elements
@@ -40,38 +37,30 @@ To fix this, we need to:
     * selection or drag interactions with the chart.
 2. ensure that every element in our dashboard reponds to these events.
 
-## Step 0: Quickstart Recap
-
-By the end of the [quickstart](../../quickstart), you should have an
-application that looks like [this](../../quickstart/index5.html), and has:
-
-  1. a table showing the data,
-  2. a bar chart showing sales (order values) aggregated by customer segment,
-  3. a bar chart showing order quantities aggregated by customer segment
-
 
 ## Step 1: Working with [FormHandler](../../formhandler/)
 
 The `FormHandler` component is Gramex's primary data model.
 Think of FormHandler as 'SQL over HTTP'. If [data](../../quickstart/data)
 is our typical data endpoint, then [data?Segment=Consumer](../../quickstart/data?Segment=Consumer)
-returns only those rows which have Consumer in the Segment Column. We'll exploit this feature
-heavily to build interactive dashboards. Check out the list of possible operations in the
+returns only those rows which have "Consumer" in the "Segment" column.
+Check out the list of possible operations in the
 [formhandler documentation](/formhandler/#formhandler-filters).
 
 <div class="card shadow text-grey bg-dark">
   <div class="card-body">
    <div class="card-text">
-     <p class="text-white">We have covered importing the g1 library in our <kbd>index.html</kbd> in the quickstart's <a href="../../quickstart/#step-2-laying-out-some-scaffolding">scaffolding</a> step as follows:</p>
+     <p class="text-white">Add the formhandler table to the page as follows:</p>
      <ul class="nav nav-tabs">
        <li class="nav-item">
          <a class="nav-link active"><i class="fas fa-code"></i> <span class="text-monospace">index.html</span></a>
        </li>
      </ul>
-     <pre><code class="language-html">&lt;script src="ui/g1/dist/g1.min.js"&gt;&lt;/script&gt;</code></pre>
+     <pre><code id="html0" class="language-html"></code></pre>
    </div>
   </div>
 </div>
+<script>$.get('snippets/fh.html').done((e) => {$('#html0').text(e)})</script>
 
 
 ## Step 2: Detecting Changes in the URL
@@ -145,7 +134,7 @@ URL.
 <div class="card shadow text-grey bg-dark">
   <div class="card-body">
    <div class="card-text">
-     <p class="text-white">Let's draw a function that grabs the changed URL, sets the <kbd>data.url</kbd> attribute of
+     <p class="text-white">Add the following function which grabs the changed URL, sets the <kbd>data.url</kbd> attribute of
      the spec to the new URL, and redraws the charts.</p>
      <ul class="nav nav-tabs">
        <li class="nav-item">
@@ -162,10 +151,11 @@ URL.
 Finally, we must remember to remove the earlier URL change listener (which simply logged changes
 to the console), and add our new function as the listener.
 
+<!--
 <div class="card shadow text-grey bg-dark">
   <div class="card-body">
    <div class="card-text">
-     <p class="text-white">The changed event listener function should look be as follows:</p>
+     <p class="text-white">The changed event listener function should look like:</p>
      <ul class="nav nav-tabs">
        <li class="nav-item">
          <a class="nav-link active"><i class="fas fa-code"></i> <span class="text-monospace">index.html</span></a>
@@ -176,6 +166,13 @@ to the console), and add our new function as the listener.
   </div>
 </div>
 <script>$.get('snippets/urlchange_final.js').done((e) => {$('#urlchange_final').text(e)})</script>
+-->
+
+The changed event listener should look like:
+
+```javascript
+$(window).on('#?', draw_charts).urlchange()
+```
 
 <a href="index1.html">
 <p class="alert alert-info" role="alert"><i class="fa fa-eye fa-lg"></i> Our dashboard should look like this.</p>
