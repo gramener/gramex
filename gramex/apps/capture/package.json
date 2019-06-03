@@ -11,7 +11,7 @@
     "minimist": "^1.2.0",
     "lodash": "^4.17.4",
     "officegen": "^0.4.5",
-    "puppeteer": "^1.8.0",
+    "puppeteer": "^1.17.0",
     "tmp": "0.0.33"
   },
   "repository": {
