@@ -6,7 +6,7 @@ url:
       url: $YAMLPATH/flags.csv
       function: data.groupby('Continent').sum().reset_index()
       default:
-        col: c1
+        COL_METRIC: c1
       formats:
         barchart:
           format: vega-lite
@@ -20,7 +20,7 @@ url:
             mark: bar
             encoding:
               x: {field: Continent, type: ordinal}
-              y: {field: c1, type: quantitative}
+              y: {field: '{COL_METRIC}', type: quantitative}
         linechart:
           format: vega-lite
           spec:
@@ -31,7 +31,7 @@ url:
             mark: line
             encoding:
               x: {field: Continent, type: ordinal}
-              y: {field: c1, type: quantitative}
+              y: {field: '{COL_METRIC}', type: quantitative}
         horizontalbarchart:
           format: vega-lite
           spec:
@@ -44,7 +44,7 @@ url:
             mark: bar
             encoding:
               y: {field: Continent, type: ordinal}
-              x: {field: c1, type: quantitative}
+              x: {field: '{COL_METRIC}', type: quantitative}
         scatterplot:
           format: vega-lite
           spec:
@@ -56,7 +56,7 @@ url:
               contains: padding
             mark: point
             encoding:
-              x: {field: c1, type: quantitative}
+              x: {field: '{COL_METRIC}', type: quantitative}
               y: {field: c2, type: quantitative}
         coloredscatterplot:
           format: vega-lite
@@ -69,7 +69,7 @@ url:
               contains: padding
             mark: point
             encoding:
-              x: {field: c1, type: quantitative}
+              x: {field: '{COL_METRIC}', type: quantitative}
               y: {field: c2, type: quantitative}
               color: {field: Continent, type: nominal}
               shape: {field: Continent, type: nominal}

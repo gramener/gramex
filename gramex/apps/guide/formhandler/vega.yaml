@@ -12,7 +12,7 @@ url:
       url: $YAMLPATH/flags.csv
       function: data.groupby('Continent').sum().reset_index()
       default:
-        col: c1
+        COL_METRIC: c1
       formats:
         barchart:
           format: vega
@@ -32,7 +32,7 @@ url:
                 round: true
               -
                 name: yscale
-                domain: {data: data, field: c1}
+                domain: {data: data, field: '{COL_METRIC}'}
                 nice: true
                 range: height
             axes:
@@ -46,7 +46,7 @@ url:
                   enter:
                     x: {scale: xscale, field: Continent}
                     width: {scale: xscale, band: 1}
-                    y: {scale: yscale, field: c1}
+                    y: {scale: yscale, field: '{COL_METRIC}'}
                     y2: {scale: yscale, value: 0}
         linechart:
           format: vega
@@ -66,7 +66,7 @@ url:
                 round: true
               -
                 name: yscale
-                domain: {data: data, field: c1}
+                domain: {data: data, field: '{COL_METRIC}'}
                 nice: true
                 range: height
             axes:
@@ -79,7 +79,7 @@ url:
                 encode:
                   enter:
                     x: {scale: xscale, field: Continent}
-                    y: {scale: yscale, field: c1}
+                    y: {scale: yscale, field: '{COL_METRIC}'}
         horizontalbarchart:
           format: vega
           spec:
@@ -98,7 +98,7 @@ url:
                 round: true
               -
                 name: xscale
-                domain: {data: data, field: c1}
+                domain: {data: data, field: '{COL_METRIC}'}
                 nice: true
                 range: width
             axes:
@@ -112,7 +112,7 @@ url:
                   enter:
                     y: {scale: yscale, field: Continent}
                     height: {scale: yscale, band: 1}
-                    x: {scale: xscale, field: c1}
+                    x: {scale: xscale, field: '{COL_METRIC}'}
                     x2: {scale: xscale, value: 0}
         scatterplot:
           format: vega

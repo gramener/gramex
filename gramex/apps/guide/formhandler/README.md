@@ -379,6 +379,39 @@ $.getJSON(url)
 
 Note: For Vega-Lite, default dataset namespace is `source_0`
 
+### Parameter Substitution
+
+Vega spec can be formatted using the path arguments and URL query parameters.
+
+```yaml
+url:
+  formhandler-vega-lite-1:
+    pattern: /$YAMLURL/vega-lite-1
+    handler: FormHandler
+    kwargs:
+      url: $YAMLPATH/flags.csv
+      function: data.groupby('Continent').sum().reset_index()
+      default:
+        COL_METRIC: c1                   # COL_METRIC defaults to c1
+        COL_DIMENSION: Continent         # COL_DIMENSION defaults to Continent
+        CHART_TYPE: bar                  # CHART_TYPE defaults to bar
+      formats:
+        barchart:
+          format: vega-lite
+          spec:
+            "$schema": "https://vega.github.io/schema/vega-lite/v2.json"
+            mark: '{CHART_TYPE}'
+            encoding:
+              x: {field: '{COL_DIMENSION}', type: ordinal}     # COL_DIMENSION set to dim for ?COL_METRIC=dim
+              y: {field: '{COL_METRIC}', type: quantitative}   # COL_METRIC set to val for ?COL_METRIC=val
+```
+
+Using the above endpoint, below url draws `bar` chart with `y=c4` and `x=Continent`
+
+```html
+<script src="vega-lite-1?_format=barchart&CHART_TYPE=bar&COL_METRIC=c4"></script>
+```
+
 <div class="example">
   <a class="example-demo" href="vega-examples">FormHandler Vega Chart examples</a>
   <a class="example-src" href="vega.yaml">Source</a>
