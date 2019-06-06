@@ -15,6 +15,7 @@ from nose.tools import eq_, ok_
 from gramex import conf
 from gramex.http import BAD_REQUEST, FOUND
 from gramex.config import variables, objectpath, merge
+from gramex.data import _replace
 from orderedattrdict import AttrDict, DefaultAttrDict
 from pandas.util.testing import assert_frame_equal as afe
 from . import folder, TestGramex, dbutils, tempfiles
@@ -537,7 +538,7 @@ class TestFormHandler(TestGramex):
         eq_(tree.get('viewBox'), '0 0 500 300')
         # TODO: expand on test cases
         # Check spec, data for vega, vega-lite, vegam formats
-        base = '/formhandler/chart?_format={}'
+        base = '/formhandler/chart?_format={}&CHART_TYPE=bar'
         data = pd.DataFrame(self.get(base.format('json')).json())
         for fmt in {'vega', 'vega-lite', 'vegam'}:
             r = self.get(base.format(fmt))
@@ -551,6 +552,7 @@ class TestFormHandler(TestGramex):
                 df = (df[0] if isinstance(df, list) else df)['values']
             yaml_path = os.path.join(folder, '{}.yaml'.format(fmt))
             spec = gramex.cache.open(yaml_path, 'yaml')
+            spec, *_ = _replace('', {'CHART_TYPE': ['bar']}, spec)
             afe(pd.DataFrame(df), data)
             self.assertDictEqual(var, spec)
 

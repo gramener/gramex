@@ -168,7 +168,8 @@ class FormHandler(BaseHandler):
             result = self.modify_all(data=result, key=None, handler=self)
 
         format_options = self.set_format(opt.fmt, meta)
-        params = {k: v[0] for k, v in self.args.items() if len(v) > 0}
+        format_options['args'] = opt.args
+        params = {k: v[0] for k, v in opt.args.items() if len(v) > 0}
         for key, val in format_options.items():
             if isinstance(val, six.text_type):
                 format_options[key] = val.format(**params)
