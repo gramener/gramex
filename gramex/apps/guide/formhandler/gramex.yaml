@@ -58,14 +58,14 @@ url:
       pattern: /$YAMLURL/db
       handler: FormHandler
       kwargs:
-        url: sqlite:///$YAMLPATH/../datahandler/database.sqlite3
+        url: sqlite:///$YAMLPATH/database.sqlite3
         table: flags
 
     formhandler-query:
       pattern: /$YAMLURL/query
       handler: FormHandler
       kwargs:
-        url: sqlite:///$YAMLPATH/../datahandler/database.sqlite3
+        url: sqlite:///$YAMLPATH/database.sqlite3
         table: flags
         query: 'SELECT Continent, COUNT(*) AS num, SUM(c1) FROM flags GROUP BY Continent'
 
@@ -73,7 +73,7 @@ url:
       pattern: /$YAMLURL/queryfile
       handler: FormHandler
       kwargs:
-        url: sqlite:///$YAMLPATH/../datahandler/database.sqlite3
+        url: sqlite:///$YAMLPATH/database.sqlite3
         table: flags
         queryfile: $YAMLPATH/continents.sql
 
@@ -93,7 +93,7 @@ url:
       handler: FormHandler
       kwargs:
         symbols:
-          url: sqlite:///$YAMLPATH/../datahandler/database.sqlite3
+          url: sqlite:///$YAMLPATH/database.sqlite3
           table: flags
           query: 'SELECT Continent, COUNT(DISTINCT Symbols) AS dsymbols FROM flags GROUP BY Continent'
           modify: data.assign(rank=data['dsymbols'].rank())
@@ -212,3 +212,11 @@ url:
       handler: FormHandler
       kwargs:
         url: $YAMLPATH/
+
+schedule:
+  data-setup-flags-db:
+    function: pandas.read_csv(r'$YAMLPATH/flags.csv').to_sql(
+      'flags',
+      sqlalchemy.create_engine('sqlite:///$YAMLURL/database.sqlite3'),
+      if_exists='replace', index=False)
+    startup: true

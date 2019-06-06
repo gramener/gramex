@@ -1,4 +1,5 @@
-{% from vegaconfig import examples %}
+{% import gramex.cache %}
+{% set examples = gramex.cache.open(handler.kwargs.examples_path, 'yaml') %}
 {% set flavor = handler.path_args[0] %}
 <!DOCTYPE html>
 <html>

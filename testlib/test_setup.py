@@ -24,8 +24,6 @@ class TestSetup(unittest.TestCase):
         self.exists('handlers/filehandler.template.html')
         self.exists('handlers/auth.template.html')
         self.exists('handlers/auth.recaptcha.template.html')
-        self.exists('handlers/datahandler.template.html')
-        self.exists('handlers/queryhandler.template.html')
 
         # Ensure that all JSON files in pptgen/ are included
         self.exists('pptgen/fonts.json')

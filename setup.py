@@ -6,7 +6,6 @@ from fnmatch import fnmatch
 from io import open
 import logging
 import json
-import sys
 import os
 
 # Libraries required for Gramex
@@ -21,7 +20,6 @@ install_requires = [
     # 'sklearn',                      # OPT: (conda) For gramex.ml
     # 'joblib',                       # OPT: For gramex.ml
     'argh >= 0.24.1',               # REQ: dependency for watchdog
-    'blaze',                        # OPT: (conda) gramex.handlers.datahandler
     'boto3 >= 1.5',                 # SRV: Amazon services
     'cachetools >= 2.1.0',          # SRV: services.cache for memory cache
     'colorama',                     # REQ: (conda) gramex.init()
@@ -29,7 +27,6 @@ install_requires = [
     'cron-descriptor',              # OPT: admin/schedule to pretty-print cron
     'crontab >= 0.21',              # SRV: services.schedule to parse crontab entries
     'cssselect',                    # OPT: pytest gramex plugin
-    'datashape',                    # OPT: (conda) gramex.handlers.datahandler
     'diskcache >= 2.8.3',           # SRV: services.cache for disk cache
     'h5py',                         # OPT: (conda) gramex.cache.HDF5Store
     'ipdb',                         # OPT: gramex.debug
@@ -64,10 +61,6 @@ install_requires = [
     'xlrd',                         # REQ: (conda) gramex.data.download()
     'xmljson >= 0.1.5',             # SRV: transforms.badgerfish to convert objects to/from XML
 ]
-
-if sys.version_info[0] < 3:
-    # handlers.datahandler uses futures (backport for 2.7)
-    install_requires.append('futures >= 3.0.5')
 
 
 def read_gitignore(path, exclude=set()):

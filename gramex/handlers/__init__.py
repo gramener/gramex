@@ -6,7 +6,6 @@ from .basehandler import BaseHandler, BaseWebSocketHandler, SetupFailedHandler
 from .functionhandler import FunctionHandler
 from .websockethandler import WebSocketHandler
 from .filehandler import FileHandler
-from .datahandler import DataHandler, QueryHandler
 from .authhandler import GoogleAuth, SimpleAuth, LogoutHandler
 from .processhandler import ProcessHandler
 from .jsonhandler import JSONHandler
@@ -26,7 +25,6 @@ __all__ = [
     'BaseWebSocketHandler',
     'Capture',
     'CaptureHandler',
-    'DataHandler',
     'DirectoryHandler',
     'FacebookGraphHandler',
     'FileHandler',
@@ -40,7 +38,6 @@ __all__ = [
     'PPTXHandler',
     'ProcessHandler',
     'ProxyHandler',
-    'QueryHandler',
     'SetupFailedHandler',
     'SimpleAuth',
     'TwitterRESTHandler',
