@@ -238,6 +238,14 @@ def compile_function(spec, key, data, handler):
     if key not in spec:
         return None
     _vars = {'_color': None, 'data': None, 'handler': None}
+    # Rename columns name with url args values for chart gen.
+    _custom_dict = dict()
+    for k, v in data.args.items():
+        if k in spec[key]:
+            _custom_dict.update({v: spec[key][k]})
+    if _custom_dict:
+        spec[key] = _custom_dict
+
     if not isinstance(spec[key], (dict,)):
         spec[key] = {'function': '{}'.format(spec[key])}
     elif isinstance(spec[key], (dict,)) and 'function' not in spec[key]:
@@ -254,6 +262,17 @@ def table(shape, spec, data):
         return
     spec = copy.deepcopy(spec['table'])
     handler = data.pop('handler') if 'handler' in data else None
+
+    # Replace columns name with url args values.
+    if 'columns' in spec:
+        _custom_dict = dict()
+        for k, v in handler.args.items():
+            if k in spec['columns']:
+                _custom_dict.update({v[0]: spec['columns'][k]})
+                del spec['columns'][k]
+        if _custom_dict:
+            spec['columns'].update(_custom_dict)
+
     data = compile_function(spec, 'data', data, handler)
     if not len(data):
         return
