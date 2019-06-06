@@ -305,6 +305,7 @@ class CaptureHandler(BaseHandler):
             url={'default': self.request.headers.get('Referer', None)},
             ext={'choices': self.ext, 'default': 'pdf'},
             file={'default': 'screenshot'},
+            emulate={},
             selector={'nargs': '*'},
             cookie={},
             delay={},

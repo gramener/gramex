@@ -126,8 +126,7 @@ It accepts the following arguments:
 - `?file=`: screenshot file name. Default: `screenshot`.
   <br>**Example**: [?file=newfile](capture?file=newfile)
 - `?ext=`: format of output. Can be pdf, png, jpg or pptx. Default: `pdf`.
-  <br>**Example**: [?ext=png](capture?ext=png). `pptx` is available only in
-  Chrome, from **v1.23.1**.
+  <br>**Example**: [?ext=png](capture?ext=png). (`ext=pptx` available only in `engine: chrome` from **v1.23.1**)
 - `?delay=`: wait for before taking a screenshot.
   - If this is a number, waits for this many milliseconds.
     <br>**Example**: [?delay=1000](capture?url=timer.html&delay=1000)
@@ -142,7 +141,7 @@ It accepts the following arguments:
       <br>**Example**: [?format=Tabloid](capture?format=Tabloid)
     - `?orientation=`: portrait or landscape. Default: portrait.
       <br>**Example**: [?orientation=landscape](capture?orientation=landscape)
-    - `media=`: `print` or `screen`. Default: `screen`. Only for Chrome.
+    - `media=`: `print` or `screen`. Default: `screen`. (Only in `engine: chrome`)
       <br>**Example**: [?media=print](capture?media=print)
     - `header=`: a pipe-separated string that sets the page header.
       You can use `$pageNumber`, `$totalPages`, `$date`, `$title`, `$url` as variables.
@@ -165,11 +164,14 @@ It accepts the following arguments:
       <br>**Example**: [?width=600](capture?width=600&ext=png)
     - `?height=`: image output height. Default: auto (full page)
       <br>**Example**: [?height=600](capture?height=600&ext=png)
-    - `?selector=`: Restrict screenshot to (optional) CSS selector in URL
-      <br>**Example**: [?selector=.content](capture?selector=.content&ext=png) excludes the sidebar.
     - `?scale=`: zooms the screen by a factor. Default: 1.
       <br>**Example**: [?scale=0.2](capture?scale=0.2&ext=png) compared with
       [?scale=1](capture?scale=1&ext=png)
+    - `?selector=`: Restrict screenshot to (optional) CSS selector in URL
+      <br>**Example**: [?selector=.content](capture?selector=.content&ext=png) excludes the sidebar.
+    - `?emulate=`: emulate full page on a device. Ignores `?width=`, `?height=` and `?scale=`. (Only in `engine: chrome` from **v1.56.0**)
+      <br>**Example**: [?emulate=iPhone 6](capture?emulate=iPhone 6&ext=png).
+      Device names can be [iPhone 8, Nexus 10, Galaxy S5, etc][mobiledevices].
 - For PPTX (Only in `engine: chrome` from **v1.23.1**):
     - `?layout=`: A3, A4, Letter, 16x9, 16x10, 4x3. Default: `4x3`
       <br>**Example**: [?layout=16x9](capture?layout=16x9&ext=pptx&width=1200&height=600)
@@ -264,3 +266,4 @@ The [Capture](capture) class has convenience methods called `.pdf()`, `.png()`,
 
 [capturehandler]: https://learn.gramener.com/gramex/gramex.handlers.html#gramex.handlers.CaptureHandler
 [capture]: https://learn.gramener.com/gramex/gramex.handlers.html#gramex.handlers.Capture
+[mobiledevices]: https://github.com/GoogleChrome/puppeteer/blob/v1.17.0/lib/DeviceDescriptors.js

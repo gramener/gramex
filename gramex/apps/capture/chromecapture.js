@@ -145,11 +145,17 @@ async function render(q) {
     delete headers.cookie
   }
 
-  await page.setViewport({
-    width: +q.width || 1200,
-    height: +q.height || 768,
-    deviceScaleFactor: +q.scale || 1    // Apply for PDF?
-  })
+  if (q.emulate) {
+    let device = Object.assign({}, puppeteer.devices[q.emulate])
+    device.viewport.deviceScaleFactor = +q.scale || device.viewport.deviceScaleFactor
+    await page.emulate(device)
+  } else {
+    await page.setViewport({
+      width: +q.width || 1200,
+      height: +q.height || 768,
+      deviceScaleFactor: +q.scale || 1    // Apply for PDF?
+    })
+  }
 
   // Set additional HTTP headers
   ignore_headers.forEach(function (header) { delete headers[header] })
