@@ -670,9 +670,6 @@ class TestAuthorize(DBAuthBase, LoginFailureMixin):
         self.initialize('/auth/functionhandler')
         self.check('/auth/functionhandler', text='OK', session=self.session)
 
-    def test_auth_datahandler(self):
-        self.initialize('/auth/datahandler')
-
     def test_auth_jsonhandler(self):
         self.initialize('/auth/jsonhandler/')
         r = self.check('/auth/jsonhandler/', session=self.session)

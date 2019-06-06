@@ -1,6 +1,6 @@
 '''
 Test utilities to create and drop databases.
-Used by test_datahandler.py, test_queryhandler.py, ../testlib/
+Used by ../testlib/
 '''
 from __future__ import unicode_literals
 

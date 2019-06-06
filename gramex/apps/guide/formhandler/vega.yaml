@@ -3,8 +3,9 @@ url:
     pattern: /$YAMLURL/(vega|vega-lite|vegam)-examples
     handler: FileHandler
     kwargs:
-        path: $YAMLPATH/vega.html
-        template: true
+      path: $YAMLPATH/vega.html
+      template: true
+      examples_path: $YAMLPATH/examples.yaml
   formhandler-vega-1:
     pattern: /$YAMLURL/vega-1
     handler: FormHandler
