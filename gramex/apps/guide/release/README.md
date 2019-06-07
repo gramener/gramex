@@ -5,6 +5,7 @@ prefix: Release
 
 Gramex is released *twice a month* -- on the 1<sup>st</sup> and the 15<sup>th</sup>.
 
+- [v1.56.0: Vega parameter substitution, Tutorials, Chrome device emulation and UI component upgrades](1.56/) <small>07 Jun 2019</small>
 - [v1.55.0: FormHandler and UI component upgrades](1.55/) <small>15 May 2019</small>
 - No release in April. We changed direction to focus on documentation and usability.
 - [v1.54.0: Admin UI for alerts, LanguageTool, New data formats](1.54/) <small>31 Mar 2019</small>

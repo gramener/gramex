@@ -893,6 +893,35 @@
       "UI component upgrades": -1
     }
   },
+  "1.56": {
+    "": {
+      "Gramex 1.56 release notes": -1
+    },
+    "bug-fixes": {
+      "Bug fixes": -1
+    },
+    "chrome-device-emulation": {
+      "Chrome device emulation": -1
+    },
+    "how-to-upgrade": {
+      "How to upgrade": -1
+    },
+    "other-enhancements": {
+      "Other enhancements": -1
+    },
+    "statistics": {
+      "Statistics": -1
+    },
+    "ui-component-upgrades": {
+      "UI component upgrades": -1
+    },
+    "url-driven-dashboards-tutorial": {
+      "URL Driven Dashboards Tutorial": -1
+    },
+    "vega-parameter-substitution": {
+      "Vega parameter substitution": -1
+    }
+  },
   "about": {
     "": {}
   },
@@ -1245,6 +1274,44 @@
       "Vega": -1
     }
   },
+  "charts": {
+    "": {
+      "Tutorial: Creating Interactive Charts with Gramex": -1
+    },
+    "charts-not-rendering-automatically": {
+      "Charts not rendering automatically": -1
+    },
+    "exercises": {
+      "Exercises": -1
+    },
+    "introduction": {
+      "Introduction": -1
+    },
+    "next-steps-faq": {
+      "Next Steps / FAQ": -1
+    },
+    "requirements": {
+      "Requirements": -1
+    },
+    "step-0-basic-layout-and-scaffolding": {
+      "Step 0: Basic Layout and Scaffolding": -1
+    },
+    "step-1-performing-the-cross-tabulation-with-formhandler": {
+      "Step 1: Performing the Cross-Tabulation with FormHandler": -1
+    },
+    "step-2-drawing-the-chart": {
+      "Step 2: Drawing the Chart": -1
+    },
+    "step-3-redrawing-charts-on-url-changes": {
+      "Step 3: Redrawing Charts on URL Changes": -1
+    },
+    "step-4-filtering-the-table-on-chart-interactions": {
+      "Step 4: Filtering the Table on Chart Interactions": -1
+    },
+    "troubleshooting": {
+      "Troubleshooting": -1
+    }
+  },
   "config": {
     "": {
       "Configurations control Gramex": -1
@@ -1392,6 +1459,38 @@
   "dashboard": {
     "": {
       "Templatize visualization dashboard creation": -1
+    }
+  },
+  "dashboards": {
+    "": {
+      "Tutorial: Building Interactive Dashboards with Gramex": -1
+    },
+    "charts-not-rendering-automatically": {
+      "Charts not rendering automatically": -1
+    },
+    "exercises": {
+      "Exercises": -1
+    },
+    "introduction": {
+      "Introduction": -1
+    },
+    "next-steps-faq": {
+      "Next Steps / FAQ": -1
+    },
+    "requirements": {
+      "Requirements": -1
+    },
+    "step-1-working-with-formhandler": {
+      "Step 1: Working with ": -1
+    },
+    "step-2-detecting-changes-in-the-url": {
+      "Step 2: Detecting Changes in the URL": -1
+    },
+    "step-3-redrawing-charts-on-url-changes": {
+      "Step 3: Redrawing Charts on URL Changes": -1
+    },
+    "troubleshooting": {
+      "Troubleshooting": -1
     }
   },
   "datahandler": {
@@ -1944,6 +2043,9 @@
     "my_modulepy": {
       "my_module.py": -1
     },
+    "parameter-substitution": {
+      "Parameter Substitution": -1
+    },
     "preventing-sql-injection": {
       "Preventing SQL injection": -1
     },
@@ -1976,6 +2078,41 @@
     },
     "url-path-arguments": {
       "URL path arguments": -1
+    }
+  },
+  "g1-dropdown": {
+    "": {
+      "Tutorial: Dropdown Menus & Search": -1
+    },
+    "charts-not-rendering-automatically": {
+      "Charts not rendering automatically": -1
+    },
+    "exercises": {
+      "Exercises": -1
+    },
+    "introduction": {
+      "Introduction": -1
+    },
+    "next-steps-faq": {
+      "Next Steps / FAQ": -1
+    },
+    "step-0-laying-out-the-scaffolding": {
+      "Step 0: Laying out the Scaffolding": -1
+    },
+    "step-1-making-a-dropdown-menu": {
+      "Step 1: Making a Dropdown Menu": -1
+    },
+    "step-2-changing-the-url-on-selection-events": {
+      "Step 2: Changing the URL on Selection Events": -1
+    },
+    "step-3-enabling-search": {
+      "Step 3: Enabling Search": -1
+    },
+    "step-4-redrawing-the-chart-on-url-changes": {
+      "Step 4: Redrawing the Chart on URL Changes": -1
+    },
+    "troubleshooting": {
+      "Troubleshooting": -1
     }
   },
   "groupmeans": {
@@ -2461,76 +2598,59 @@
   },
   "quickstart": {
     "": {
-      "Quickstart Guide": -1
+      "Quickstart with Gramex": -1
     },
-    "authentication": {
-      "Authentication": -1
-    },
-    "backend-data-transformation": {
-      "Backend Data Transformation": -1
-    },
-    "business-case": {
-      "Business Case": -1
-    },
-    "charting": {
-      "Charting": -1
-    },
-    "configuration-and-handlers": {
-      "Configuration and Handlers": -1
-    },
-    "editorconfig": {
-      ".editorconfig": -1
-    },
-    "eslintrcjs": {
-      ".eslintrc.js": -1
-    },
-    "flake8": {
-      ".flake8": -1
-    },
-    "folder-structure-of-a-simple-gramex-dashboard": {
-      "Folder Structure of a Simple Gramex Dashboard": -1
-    },
-    "g1-mapviewer": {
-      "G1 Mapviewer": -1
-    },
-    "gitignore": {
-      ".gitignore": -1
-    },
-    "gitlab-ciyml": {
-      ".gitlab-ci.yml": -1
-    },
-    "gramex-init": {
-      "Gramex Init": -1
-    },
-    "gramex-installation-on-windowslinux": {
-      "Gramex Installation on Windows/Linux": -1
-    },
-    "gramexyaml": {
-      "gramex.yaml": -1
-    },
-    "htmllintrc": {
-      ".htmllintrc": -1
-    },
-    "indexhtml": {
-      "index.html": -1
-    },
-    "installing-gramex": {
-      "Installing Gramex": -1
-    },
-    "interactivitydrilldowns-and-filtering": {
-      "Interactivity/Drilldowns and Filtering": -1
-    },
+    "authentication": {},
+    "backend-data-transformation": {},
+    "business-case": {},
+    "charting": {},
+    "configuration-and-handlers": {},
+    "editorconfig": {},
+    "eslintrcjs": {},
+    "flake8": {},
+    "folder-structure-of-a-simple-gramex-dashboard": {},
+    "g1-mapviewer": {},
+    "gitignore": {},
+    "gitlab-ciyml": {},
+    "gramex-init": {},
+    "gramex-installation-on-windowslinux": {},
+    "gramexyaml": {},
+    "htmllintrc": {},
+    "indexhtml": {},
+    "installing-gramex": {},
+    "interactivitydrilldowns-and-filtering": {},
     "introduction": {
       "Introduction": -1
     },
-    "readmemd": {
-      "README.md": -1
+    "next-steps": {
+      "Next steps": -1
     },
-    "scaffolding": {
-      "Scaffolding": -1
+    "readmemd": {},
+    "requirements": {
+      "Requirements": -1
     },
-    "screenshots-via-capturehandler": {
-      "Screenshots via CaptureHandler": -1
+    "scaffolding": {},
+    "screenshots-via-capturehandler": {},
+    "step-0-create-the-project": {
+      "Step 0: Create the Project": -1
+    },
+    "step-1-expose-the-data-through-a-rest-api": {
+      "Step 1: Expose the data through a REST API": -1
+    },
+    "step-2-laying-out-some-scaffolding": {
+      "Step 2: Laying out some scaffolding": -1
+    },
+    "step-3-filling-in-the-data": {
+      "Step 3: Filling in the Data": -1
+    },
+    "step-4-adding-a-chart": {
+      "Step 4: Adding A Chart": -1
+    },
+    "step-5-appearance-and-final-touches": {
+      "Step 5: Appearance and Final Touches": -1
+    },
+    "troubleshooting": {
+      "Troubleshooting": -1
     }
   },
   "r": {
