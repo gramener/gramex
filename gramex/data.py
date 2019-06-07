@@ -1050,7 +1050,7 @@ def download(data, format='json', template=None, args={}, **kwargs):
             out = out.getvalue()
             if format == 'vega':
                 out = b'[' + out + b']'
-        kwargs['spec'], *_ = _replace('', args, spec)
+        kwargs['spec'], _ = _replace('', args, spec)
         conf = json.dumps(kwargs, ensure_ascii=True, separators=(',', ':'), indent=None)
         conf = conf.encode('utf-8').replace(b'"__DATA__"', out)
         script = gramex.cache.open(_VEGA_SCRIPT, 'bin')

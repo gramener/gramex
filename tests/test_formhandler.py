@@ -552,7 +552,7 @@ class TestFormHandler(TestGramex):
                 df = (df[0] if isinstance(df, list) else df)['values']
             yaml_path = os.path.join(folder, '{}.yaml'.format(fmt))
             spec = gramex.cache.open(yaml_path, 'yaml')
-            spec, *_ = _replace('', {'CHART_TYPE': ['bar']}, spec)
+            spec, _ = _replace('', {'CHART_TYPE': ['bar']}, spec)
             afe(pd.DataFrame(df), data)
             self.assertDictEqual(var, spec)
 
