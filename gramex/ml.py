@@ -4,10 +4,10 @@ import inspect
 import threading
 import pandas as pd
 import json
+import joblib
 from tornado.gen import coroutine, Return, sleep
 from tornado.httpclient import AsyncHTTPClient
 from gramex.config import locate, app_log, merge, variables
-from sklearn.externals import joblib
 from sklearn.preprocessing import StandardScaler
 
 # Expose joblob.load via gramex.ml

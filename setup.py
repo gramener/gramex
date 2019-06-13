@@ -19,6 +19,7 @@ install_requires = [
     # 'line_profiler',                # OPT: (conda) For gramex.debug
     # 'rpy2',                         # OPT: (conda) For gramex.ml.r()
     # 'sklearn',                      # OPT: (conda) For gramex.ml
+    # 'joblib',                       # OPT: For gramex.ml
     'argh >= 0.24.1',               # REQ: dependency for watchdog
     'blaze',                        # OPT: (conda) gramex.handlers.datahandler
     'boto3 >= 1.5',                 # SRV: Amazon services
