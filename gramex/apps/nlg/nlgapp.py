@@ -182,15 +182,6 @@ def get_narrative_config_files(handler):
     return files
 
 
-def download_config(handler):
-    """Download the current narrative config as JSON."""
-    payload = {}
-    payload['config'] = json.loads(parse.unquote(handler.args['config'][0]))
-    payload['data'] = json.loads(parse.unquote(handler.args.get('data', [None])[0]))
-    payload['name'] = parse.unquote(handler.args['name'][0])
-    return json.dumps(payload, indent=4)
-
-
 def save_config(handler):
     """Save the current narrative config.
     (to $GRAMEXDATA/{{ handler.current_user.id }})"""
