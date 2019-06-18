@@ -4,8 +4,6 @@
 #   Set this variable to any valid auth configuration to use it
 #   within the NLG app.
 
-
-
 import:
   ui:
     path: $GRAMEXAPPS/ui/gramex.yaml
@@ -20,11 +18,7 @@ url:
     handler: FileHandler
     kwargs:
       path: $YAMLPATH/index.html
-      transform:
-        "index.html":
-          function: template
-          kwargs:
-            nlg_base: ''
+      template: true
   nlg-data-selector-$*:
     pattern: /$YAMLURL/initform
     handler: FunctionHandler
@@ -46,7 +40,7 @@ url:
     pattern: /$YAMLURL/nlg.js
     handler: FileHandler
     kwargs:
-      path: $YAMLPATH/js/nlg.js
+      path: $YAMLPATH/nlg.js
   nlg-config-handler-$*:
     pattern: /$YAMLURL/initconf
     handler: FunctionHandler

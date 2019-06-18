@@ -35,7 +35,7 @@ class Template {
     let self = this
     $.ajax(
       {
-        url: nlg_base + 'languagetool/?lang=en-us&q=' + encodeURIComponent(`${this.source_text}`),
+        url: nlg_base + '/languagetool/?lang=en-us&q=' + encodeURIComponent(`${this.source_text}`),
         type: 'GET',
         success: function (e) {
           self.grmerr = e.matches
@@ -359,7 +359,7 @@ function addToNarrative() {
   // pick text from the "Type something" box, templatize, and add to narrative
   $.ajax({
     type: 'POST',
-    url: nlg_base + 'textproc',
+    url: nlg_base + '/textproc',
     data: {
       'args': JSON.stringify(args), 'data': JSON.stringify(df),
       'text': JSON.stringify([document.getElementById('textbox').value])
@@ -414,7 +414,7 @@ function refreshTemplates() {
   var tmpls = templates.map(x => x.template)
   $.ajax({
     type: 'POST',
-    url: nlg_base + 'render-template',
+    url: nlg_base + '/render-template',
     data: {
       'args': JSON.stringify(args), 'data': JSON.stringify(df),
       'template': JSON.stringify(tmpls)
@@ -474,10 +474,11 @@ function saveConfig() {
   if (!(elem.value)) {
     alert('Please name the narrative.')
     elem.focus()
+    return false
   } else {
     narrative_name = elem.value
     $.ajax({
-      url: nlg_base + 'save-config',
+      url: nlg_base + '/save-config',
       type: 'POST',
       data: { config: JSON.stringify(templates), name: narrative_name, dataset: dataset_name },
       headers: { 'X-CSRFToken': false },
@@ -489,10 +490,11 @@ function saveConfig() {
       }
     })
   }
+  return true
 }
 
 function downloadConfig() {
-  let url = nlg_base + 'config-download?config=' + encodeURIComponent(JSON.stringify(templates))
+  let url = nlg_base + '/config-download?config=' + encodeURIComponent(JSON.stringify(templates))
     + '&name=' + encodeURIComponent(document.getElementById('narrative-name-editor').value)
   if (document.getElementById('download-data-cb').checked) {
     url = url + '&data=' + encodeURIComponent(JSON.stringify(df))
@@ -509,7 +511,7 @@ function downloadConfig() {
 function setInitialConfig() {
   $.ajax({
     // url: 'initconf/meta.json',
-    url: nlg_base + 'initconf',
+    url: nlg_base + '/initconf',
     type: 'GET',
     success: function (e) {
       dataset_name = e.dsid
@@ -577,7 +579,7 @@ function renderTemplate(text, success, error) {
   // render an arbitrary template and do `success` on success.
   $.ajax({
     type: 'POST',
-    url: nlg_base + 'render-template',
+    url: nlg_base + '/render-template',
     data: {
       'args': JSON.stringify(args), 'data': JSON.stringify(df),
       'template': JSON.stringify(text)
@@ -660,15 +662,14 @@ function getEditorURL() {
 }
 
 function getNarrativeEmbedCode() {
-  let url = g1.url.parse(window.location.href)
-  url = url + 'render-live-template'
+  let nlg_path = g1.url.parse(window.location.href).pathname
   let html = `
     <div id="narrative-result"></div>
     <script>
         $('.formhandler').on('load',
             function (e) {
                 $.ajax({
-                    url: "${url}",
+                    url: "${nlg_path}/render-live-template",
                     type: "POST",
                     data: {
                         data: JSON.stringify(e.formdata),
@@ -676,7 +677,7 @@ function getNarrativeEmbedCode() {
                         style: true
                     },
                     success: function (pl) {
-                        document.getElementById("narrative-result").innerHTML = pl
+                        $("#narrative-result").html(pl)
                     }
                 })
             }
@@ -687,19 +688,24 @@ function getNarrativeEmbedCode() {
 }
 
 function shareNarrative() {
-  saveConfig()
-  var editor_url = document.getElementById('share-editor-url')
-  editor_url.value = getEditorURL()
-  var embed_code = document.getElementById('share-narrative-url')
-  embed_code.innerText = getNarrativeEmbedCode()
-  $('#share-modal').modal({ 'show': true })
+  if (saveConfig()) {
+    let editor_url = document.getElementById('share-editor-url')
+    editor_url.value = getEditorURL()
+    let embed_code = document.getElementById('share-narrative-url')
+    embed_code.innerText = getNarrativeEmbedCode()
+    $('#share-modal').modal({ 'show': true })
+  }
 }
 
-function copyToClipboard(elem_id) {
-  var elem = document.getElementById(elem_id)
-  elem.select()
-  document.execCommand('copy')
-
+function copyToClipboard(elem_id){
+  var $temp = $("<div>");
+  $("body").append($temp);
+  $temp.attr("contenteditable", true)
+       .html($('#' + elem_id).html()).select()
+       .on("focus", function() { document.execCommand('selectAll',false,null) })
+       .focus();
+  document.execCommand("copy");
+  $temp.remove();
 }
 
 // Markup buttons
