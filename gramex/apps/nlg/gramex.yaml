@@ -52,7 +52,7 @@ url:
     pattern: /$YAMLURL/textproc
     handler: FunctionHandler
     kwargs:
-      function: gramex.apps.nlg.nlgapp.process_template
+      function: gramex.apps.nlg.nlgapp.process_text
       xsrf_cookies: false
       headers:
         Content-Type: application/json

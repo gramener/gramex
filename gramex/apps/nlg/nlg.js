@@ -1,5 +1,5 @@
 /* globals currentEditIndex, grammarOptions, templates, args, df, currentEventHandlers, nlg_base */
-/* exported addToNarrative, downloadConfig, setInitialConfig, uploadConfig, checkTemplate, saveTemplate, addCondition, addName, changeFHSetter, shareNarrative, copyToClipboard */
+/* exported addToNarrative, setInitialConfig, checkTemplate, saveTemplate, addCondition, addName, changeFHSetter, shareNarrative, copyToClipboard */
 /* eslint-disable no-global-assign */
 var narrative_name, dataset_name
 
@@ -9,7 +9,6 @@ class Template {
     previewHTML = '', grmerr = null, name = ''
   ) {
     this.source_text = text
-    // this.checkGrammar()
     this.tokenmap = tokenmap
     this.inflections = inflections
     for (let [token, tkobj] of Object.entries(tokenmap)) {
@@ -33,16 +32,12 @@ class Template {
 
   checkGrammar() {
     let self = this
-    $.ajax(
-      {
-        url: nlg_base + '/languagetool/?lang=en-us&q=' + encodeURIComponent(`${this.source_text}`),
-        type: 'GET',
-        success: function (e) {
-          self.grmerr = e.matches
-          self.highlight()
-        },
-      }
-    )
+    $.getJSON(
+        nlg_base + '/languagetool/?lang=en-us&q=' + encodeURIComponent(`${this.source_text}`)
+    ).done((e) => {
+        self.grmerr = e.matches
+        self.highlight()
+    })
   }
 
   makeTemplate() {
@@ -63,7 +58,7 @@ class Template {
     }
     this.template = sent
     this.highlight()
-    document.getElementById('edit-template').value = this.template
+    $('#edit-template').val(this.template)
   }
 
   highlight() {
@@ -92,56 +87,12 @@ class Template {
 
   assignToVariable(token) {
     if (!(token.varname)) {
-      var varname = prompt('Enter variable name:')
+      let varname = prompt('Enter variable name:')
       if (varname) {
         token.varname = varname
       }
       this.makeTemplate()
     }
-  }
-
-  ignoreTokenTemplate(token) {
-    token.is_ignored = true
-    var enabled = token.enabledTemplate
-    var escaped = escapeRegExp(enabled.tmpl)
-    var expr = `\\{\\{\\ [^\\{\\}]*${escaped}[^\\{\\}]*\\ \\}\\}`
-    var pattern = new RegExp(expr)
-    this.template = this.template.replace(pattern, token.text)
-
-    // UI
-    document.getElementById('edit-template').value = this.template
-    var btn = document.getElementById(`rmtoken-${currentEditIndex}-${token.text}`)
-    btn.setAttribute('class', 'btn btn-success round')
-    btn.setAttribute('title', 'Add Token')
-    btn.innerHTML = '<i class="fa fa-plus-circle">'
-
-    // change the listener to adder
-    var parent = this
-    btn.addEventListener('click', function () { parent.addTokenTemplate(token) })
-  }
-
-  addTokenTemplate(token) {
-    token.is_ignored = false
-    var enabled_tmpl = token.enabledTemplate
-    var tmplstr = enabled_tmpl.tmpl
-    if (token.inflections) {
-      for (let i = 0; i < token.inflections.length; i++) {
-        tmplstr = makeInflString(tmplstr, token.inflections[i])
-      }
-    }
-    var pattern = new RegExp(token.text)
-    this.template = this.template.replace(pattern, t_templatize(tmplstr))
-
-    // UI
-    document.getElementById('edit-template').value = this.template
-    var btn = document.getElementById(`rmtoken-${currentEditIndex}-${token.text}`)
-    btn.setAttribute('class', 'btn btn-danger round')
-    btn.setAttribute('title', 'Ignore Token')
-    btn.innerHTML = '<i class="fa fa-times-circle">'
-
-    // change the listener to remover
-    var parent = this
-    btn.addEventListener('click', function () { parent.ignoreTokenTemplate(token) })
   }
 
   get condition() {
@@ -161,55 +112,24 @@ class Template {
   }
 
   makeSettingsTable() {
-    // make the HTML table for the nth template.
-    var html = ''
-    for (let [token, tkobj] of Object.entries(this.tokenmap)) {
-      html += `<tr><th scope="row" class="align-middle">${token}</th>`
-
-      if (tkobj.tokenlist.length > 1) {
-        var dd_html = tkobj.makeSearchResultsDropdown()
-        html += `<td>${dd_html}</td>`
-      } else {
-        html += `<td class="align-middle" style="font-family:monospace">${tkobj.tokenlist[0].tmpl}</td>`
-      }
-
-      // grammar dropdown
-      var grop_html = tkobj.makeGrammarOptionsSelector(currentEditIndex)
-      html += `<td class="align-middle">${grop_html}</td>`
-
-      // add button to assign to variable
-      html += `<td class="align-middle">
-                <button id="assignvar-${currentEditIndex}-${token}" title="Assign to variable" class="btn btn-success round">
-                <i class="fa fa-plus-circle">
-            </td>`
-
-      // remover dropdown
-      html += `<td class="align-middle">
-                    <button id="rmtoken-${currentEditIndex}-${token}" title="Ignore token" class="btn btn-danger round">
-                        <i class="fa fa-times-circle">
-                    </button></td></tr>`
-    }
-    document.getElementById('table-body').innerHTML = html
+    $('#tmplsettings').template({tokenmap: this.tokenmap, grammarOptions: grammarOptions})
 
     for (let [token, tkobj] of Object.entries(this.tokenmap)) {
       // add search result dropdown listeners
+      let tkselector = token.replace(/\s/g, "_")
       if (tkobj.tokenlist.length > 1) {
-        let dd_id = `srdd-${currentEditIndex}-${token}`
-        document.getElementById(dd_id).onchange = function () { tkobj.changeTokenTemplate() }
+        $(`#srdd-${currentEditIndex}-${tkselector}`).on('change', function () { tkobj.changeTokenTemplate() })
       }
 
       // add grammar options listeners
-      var gramOptSelect = document.getElementById(`gramopt-select-${currentEditIndex}-${token}`)
-      gramOptSelect.addEventListener('change', function () { tkobj.changeGrammarOption() })
+      $(`#gramopt-select-${currentEditIndex}-${tkselector}`).on('change', (e) => { tkobj.changeGrammarOption() })
 
       // add variable assignment listener
-      var assignBtn = document.getElementById(`assignvar-${currentEditIndex}-${token}`)
       var parent = this
-      assignBtn.addEventListener('click', function () { parent.assignToVariable(tkobj) })
+      $(`#assignvar-${currentEditIndex}-${tkselector}`).on('click', (e) => { parent.assignToVariable(tkobj) })
 
-      // Add remove listener
-      var rmtokenbtn = document.getElementById(`rmtoken-${currentEditIndex}-${token}`)
-      rmtokenbtn.addEventListener('click', function () { parent.ignoreTokenTemplate(tkobj) })
+      // remove listener
+      $(`#assignvar-${currentEditIndex}-${tkselector}`).on('click', (e) => { parent.ignoreTokenTemplate(tkobj) })
     }
 
   }
@@ -223,36 +143,22 @@ function makeGrammarErrorPopover(span, errobj) {
 }
 
 class Token {
-  constructor(parent, text, tokenlist, inflections, varname = null, template = '') {
+  constructor(parent, text, tokenlist, inflections, template = '') {
     this.parent = parent
     this.text = text
     this.tokenlist = tokenlist
     this.inflections = inflections
-    this.varname = varname
     this.template = template
-    this.is_ignored = false
   }
 
   toJSON() {
     return {
       text: this.text, tokenlist: this.tokenlist, inflections: this.inflections,
-      varname: this.varname, template: this.template
-    }
-  }
-
-  get varname() {
-    return this._varname
-  }
-
-  set varname(value) {
-    this._varname = value
-    if (value) {
-      this.template = this._varname
+      template: this.template
     }
   }
 
   makeTemplate() {
-    if (this.is_ignored) { return this.text }
     var enabled = this.enabledTemplate
     var tmplstr = enabled.tmpl
     if (this.inflections) {
@@ -275,63 +181,17 @@ class Token {
     return undefined
   }
 
-  makeSearchResultsDropdown() {
-    var dropdown_id = `srdd-${currentEditIndex}-${this.text}`
-    var html = `
-            <div style="font-family:monospace">
-            <select class="selectpicker" id="${dropdown_id}">
-            <option selected>
-                ${this.enabledTemplate.tmpl}
-            </option>`
-    for (let i = 0; i < this.tokenlist.length; i++) {
-      let tmpl = this.tokenlist[i]
-      if (!(tmpl.enabled)) {
-        html += `<div style="font-family:monospace">
-                            <option>${tmpl.tmpl}</option>
-                        </div>`
-      }
-    }
-    // add dd option change listeners here.
-    return html + '</select></div>'
-  }
-
-  findAppliedInflections() {
-    var applied_inflections = new Set()
-    if (this.inflections) {
-      for (let i = 0; i < this.inflections.length; i++) {
-        applied_inflections.add(this.inflections[i].fe_name)
-      }
-    }
-    return applied_inflections
-  }
-
-  makeGrammarOptionsSelector(editIndex) {
-    var html = `<select id="gramopt-select-${editIndex}-${this.text}" class="select-multiple" multiple="multiple">`
-    var appliedInfls = this.findAppliedInflections()
-    var selected
-    for (let fe_name of Object.keys(grammarOptions)) {
-      // check if this inflection is already applied
-      if (appliedInfls.has(fe_name)) {
-        selected = 'selected'
-      }
-      else { selected = '' }
-      html += `<option ${selected}>${fe_name}</option>`
-    }
-    return html + '</select>'
-  }
-
   changeGrammarOption() {
     // remove all currently applied inflections on the token
     this.inflections = []
 
     // add the currently selected inflections
-    var selected = document.getElementById(`gramopt-select-${currentEditIndex}-${this.text}`).selectedOptions
-    var inflections = Array.from(selected).map(x => x.value)
+    var inflections = $(`#gramopt-select-${currentEditIndex}-${this.text.replace(/\s/g, '_')}`).val()
     var newInflections = []
     for (let i = 0; i < inflections.length; i++) {
       let infl = {}
       let fe_name = inflections[i]
-      infl['fe_name'] = fe_name
+      infl['fe_name'] = inflections[i]
       infl['source'] = grammarOptions[fe_name]['source']
       infl['func_name'] = grammarOptions[fe_name]['func_name']
       newInflections.push(infl)
@@ -341,8 +201,7 @@ class Token {
   }
 
   changeTokenTemplate() {
-    var dd_id = `srdd-${currentEditIndex}-${this.text}`
-    var newTmpl = document.getElementById(dd_id).value
+    var newTmpl = $(`#srdd-${currentEditIndex}-${this.text.replace(/\s/g, '_')}`).val()
     for (let i = 0; i < this.tokenlist.length; i++) {
       var tmplobj = this.tokenlist[i]
       if (tmplobj.tmpl == newTmpl) {
@@ -357,15 +216,13 @@ class Token {
 
 function addToNarrative() {
   // pick text from the "Type something" box, templatize, and add to narrative
-  $.ajax({
-    type: 'POST',
-    url: nlg_base + '/textproc',
-    data: {
-      'args': JSON.stringify(args), 'data': JSON.stringify(df),
-      'text': JSON.stringify([document.getElementById('textbox').value])
-    },
-    success: addToTemplates
-  })
+  $.post(
+    nlg_base + '/textproc',
+    JSON.stringify({
+      'args': args, 'data': df,
+      'text': [$('#textbox').val()]
+    }), addToTemplates
+  )
 }
 
 function addToTemplates(payload) {
@@ -373,8 +230,6 @@ function addToTemplates(payload) {
   var template = new Template(
     payload.text, payload.tokenmap, payload.inflections, payload.fh_args)
   template.setFHArgs = payload.setFHArgs
-  // template.grmerr = payload.grmerr
-  // checkGrammar(template)
   template.makeTemplate()
   templates.push(template)
   renderPreview(null)
@@ -387,40 +242,25 @@ function renderPreview(fh) {
     refreshTemplates()
     return true
   }
-  var innerHTML = '<p>\n'
-  for (var i = 0; i < templates.length; i++) {
-    innerHTML += '<div class="pb-1">' + getRmButton(i) // + getConditionBtn(i) + getEditTemplateBtn(i)
-      + getSettingsBtn(i) + '\t' + templates[i].previewHTML + '</div>'
-  }
-  innerHTML += '</p>'
-  document.getElementById('template-preview').innerHTML = innerHTML
-
-  // add listeners to buttons
+  $('#template-preview').template({templates: templates})
   for (let i = 0; i < templates.length; i++) {
-
     // add the remove listener
-    var btn = document.getElementById(`rm-btn-${i}`)
     var deleteListener = function () { deleteTemplate(i) }
-    btn.addEventListener('click', deleteListener)
+    $(`#rm-btn-${i}`).on('click', deleteListener)
 
     // add setting listener
-    btn = document.getElementById(`settings-btn-${i}`)
     var settingsListener = function () { triggerTemplateSettings(i) }
-    btn.addEventListener('click', settingsListener)
+    $(`#settings-btn-${i}`).on('click', settingsListener)
   }
 }
 
 function refreshTemplates() {
-  var tmpls = templates.map(x => x.template)
-  $.ajax({
-    type: 'POST',
-    url: nlg_base + '/render-template',
-    data: {
-      'args': JSON.stringify(args), 'data': JSON.stringify(df),
-      'template': JSON.stringify(tmpls)
-    },
-    success: updateTemplates
-  })
+  $.post(nlg_base + '/render-template',
+    JSON.stringify({
+      'args': args, 'data': df,
+      'template': templates.map(x => x.template)
+    }), updateTemplates
+  )
 }
 
 function updateTemplates(payload) {
@@ -445,38 +285,26 @@ function triggerTemplateSettings(sentid) {
   editTemplate(currentEditIndex)
   $('#template-settings').modal({ 'show': true })
   $('#condition-editor').focus()
-  // $(function() { $('.select-multiple').select2() })
 }
 
 function editTemplate(n) {
   currentEditIndex = n
-  document.getElementById('edit-template').value = templates[n].template
-  document.getElementById('tmpl-setting-preview').innerHTML = templates[n].previewHTML
-  var currentCondition = templates[n].condition
-  if (currentCondition) {
-    document.getElementById('condition-editor').value = currentCondition
-  }
-  else {
-    document.getElementById('condition-editor').value = ''
-  }
-  if (templates[n].name != null) {
-    document.getElementById('tmpl-name-editor').value = templates[n].name
-  }
-  else {
-    document.getElementById('tmpl-name-editor').value = ''
-  }
+  $('#edit-template').val(templates[n].template)
+  $('#tmpl-setting-preview').html( templates[n].previewHTML)
+  $('#condition-editor').val(templates[n].condition)
+  $('#tmpl-name-editor').val(templates[n].name)
   templates[n].makeSettingsTable()
 }
 
 
 function saveConfig() {
-  var elem = document.getElementById('narrative-name-editor')
-  if (!(elem.value)) {
+  var elem = $('#narrative-name-editor')
+  if (!(elem.val())) {
     alert('Please name the narrative.')
     elem.focus()
     return false
   } else {
-    narrative_name = elem.value
+    narrative_name = elem.val()
     $.ajax({
       url: nlg_base + '/save-config',
       type: 'POST',
@@ -493,39 +321,14 @@ function saveConfig() {
   return true
 }
 
-function downloadConfig() {
-  let url = nlg_base + '/config-download?config=' + encodeURIComponent(JSON.stringify(templates))
-    + '&name=' + encodeURIComponent(document.getElementById('narrative-name-editor').value)
-  if (document.getElementById('download-data-cb').checked) {
-    url = url + '&data=' + encodeURIComponent(JSON.stringify(df))
-  }
-  $.ajax({
-    url: url,
-    responseType: 'blob',
-    type: 'GET',
-    headers: { 'X-CSRFToken': false },
-    success: function () { window.location = url }
-  })
-}
-
 function setInitialConfig() {
-  $.ajax({
-    // url: 'initconf/meta.json',
-    url: nlg_base + '/initconf',
-    type: 'GET',
-    success: function (e) {
+  $.getJSON(nlg_base + '/initconf',
+    (e) => {
       dataset_name = e.dsid
       narrative_name = e.nrid
       if (e.config) { setConfig(e.config) }
     },
-    error: function () { return false }
-  })
-  // $.ajax({
-  //     url: 'initconf/config.json',
-  //     type: 'GET',
-  //     success: setConfig,
-  //     error: function (e) { return false }
-  // })
+  )
 }
 
 function setConfig(configobj) {
@@ -533,93 +336,62 @@ function setConfig(configobj) {
   for (let i = 0; i < configobj.config.length; i++) {
     var tmpl = configobj.config[i]
     var tmplobj = new Template(
-      tmpl.text, tmpl.tokenmap, tmpl.inflections,
+      tmpl.source_text, tmpl.tokenmap, tmpl.inflections,
       tmpl._fh_args, tmpl._condition, tmpl.setFHArgs,
       tmpl.template, tmpl.previewHTML, tmpl.grmerr, tmpl.name)
     templates.push(tmplobj)
   }
-  document.getElementById('narrative-name-editor').value = configobj.name
+  $('#narrative-name-editor').val(configobj.name)
   args = null
   renderPreview(null)
 }
 
-function uploadConfig() {
-  var reader = new FileReader()
-  reader.onload = function () {
-    var config = JSON.parse(reader.result)
-    templates = []
-    for (let i = 0; i < config.config.length; i++) {
-      var tmpl = config.config[i]
-      var tmplobj = new Template(
-        tmpl.text, tmpl.tokenmap, tmpl.inflections,
-        tmpl._fh_args, tmpl._condition, tmpl.setFHArgs,
-        tmpl.template, tmpl.previewHTML, tmpl.grmerr, tmpl.name)
-      templates.push(tmplobj)
-    }
-    document.getElementById('narrative-name-editor').value = config.name
-    args = null
-    renderPreview(null)
-  }
-  var elem = document.getElementById('config-upload')
-  reader.readAsText(elem.files[0])
-}
-
 function checkTemplate() {
   // Render the template found in the template editor box against the df and args.
-  renderTemplate([document.getElementById('edit-template').value], editAreaCallback, showTraceback)
+  $.post(nlg_base + '/render-template',
+    JSON.stringify({
+      'args': args, 'data': df,
+      'template': [$('#edit-template').val()]
+    })
+  ).done(editAreaCallback).fail(showTraceback)
 }
 
 function showTraceback(payload) {
   let traceback = $($.parseHTML(payload.responseText)).filter('#traceback')[0]
-  document.getElementById('traceback').innerHTML = traceback.innerHTML
+  $('#traceback').html(traceback.innerHTML)
   $('#tb-modal').modal({ 'show': true })
 }
 
-function renderTemplate(text, success, error) {
-  // render an arbitrary template and do `success` on success.
-  $.ajax({
-    type: 'POST',
-    url: nlg_base + '/render-template',
-    data: {
-      'args': JSON.stringify(args), 'data': JSON.stringify(df),
-      'template': JSON.stringify(text)
-    },
-    success: success,
-    error: error
-  })
-}
 
 function editAreaCallback(payload) {
   var template = templates[currentEditIndex]
   template.rendered_text = payload[0].text
   template.highlight()
-  document.getElementById('tmpl-setting-preview').innerHTML = template.previewHTML
+  $('#tmpl-setting-preview').html(template.previewHTML)
 }
 
 function saveTemplate() {
   // Save the template found in the template editor box at `currentEditIndex`.
-  var tbox = document.getElementById('edit-template')
-  var pbox = document.getElementById('tmpl-setting-preview')
-  templates[currentEditIndex].template = tbox.value
-  templates[currentEditIndex].text = pbox.textContent
+  templates[currentEditIndex].template = $('#edit-template').val()
+  templates[currentEditIndex].text = $('#tmpl-setting-preview').text()
   templates[currentEditIndex].highlight()
+  $('#save-template').attr('disabled', true)
   renderPreview(null)
-  document.getElementById('save-template').disabled = true
 }
 
 function addCondition() {
-  var condition = document.getElementById('condition-editor').value
+  var condition = $('#condition-editor').val()
   if (condition) {
     var template = templates[currentEditIndex]
     template.condition = condition
     template.makeTemplate()
-    document.getElementById('edit-template').value = template.template
+    $('#edit-template').val(template.template)
   }
 
 }
 
 function addName() {
-  var name = document.getElementById('tmpl-name-editor').value
+  let name = $('#tmpl-name-editor').val()
   if (name) {
     templates[currentEditIndex].name = name
   }
@@ -627,9 +399,9 @@ function addName() {
 
 function changeFHSetter() {
   let template = templates[currentEditIndex]
-  template.setFHArgs = document.getElementById('fh-arg-setter').checked
+  template.setFHArgs = $('#fh-arg-setter').attr('checked')
   template.makeTemplate()
-  document.getElementById('edit-template').value = template.template
+  $('#edit-template').val(template.template)
 }
 
 /* eslint-disable no-unused-vars */
@@ -651,37 +423,27 @@ function makeInflString(tmpl, infl) {
 }
 
 function addFHArgsSetter(sent, fh_args) {
-  var setterLine = `{% set fh_args = ${JSON.stringify(fh_args)} %}\n`
+  let setterLine = `{% set fh_args = ${JSON.stringify(fh_args)} %}\n`
   setterLine += '{% set df = U.grmfilter(orgdf, fh_args.copy()) %}\n'
   return setterLine + sent
 }
 
-function getEditorURL() {
-  let url = g1.url.parse(window.location.href)
-  return `${url.protocol}://${url.origin}${url.directory}nlg/edit-narrative?dsid=${dataset_name}&nrid=${narrative_name}`
-}
 
 function getNarrativeEmbedCode() {
   let nlg_path = g1.url.parse(window.location.href).pathname
   let html = `
     <div id="narrative-result"></div>
     <script>
-        $('.formhandler').on('load',
-            function (e) {
-                $.ajax({
-                    url: "${nlg_path}/render-live-template",
-                    type: "POST",
-                    data: {
-                        data: JSON.stringify(e.formdata),
-                        nrid: "${narrative_name}",
-                        style: true
-                    },
-                    success: function (pl) {
-                        $("#narrative-result").html(pl)
-                    }
-                })
-            }
-        )
+      $('.formhandler').on('load',
+        (e) => {
+          $.post("${nlg_path}/render-live-template",
+            {
+              data: JSON.stringify(e.formdata),
+              nrid: "${narrative_name}", style: true
+            }, (f) => $("#narrative-result").html(pl)
+          )
+        }
+      )
     </script>
     `
   return html
@@ -689,10 +451,7 @@ function getNarrativeEmbedCode() {
 
 function shareNarrative() {
   if (saveConfig()) {
-    let editor_url = document.getElementById('share-editor-url')
-    editor_url.value = getEditorURL()
-    let embed_code = document.getElementById('share-narrative-url')
-    embed_code.innerText = getNarrativeEmbedCode()
+    $('#share-narrative-url').text(getNarrativeEmbedCode())
     $('#share-modal').modal({ 'show': true })
   }
 }
@@ -708,20 +467,12 @@ function copyToClipboard(elem_id){
   $temp.remove();
 }
 
-// Markup buttons
-function getRmButton(n) {
-  // Get HTML for the delete template button.
-  return `
-    <button id="rm-btn-${n}" title="Remove" type="button" class="btn btn-danger btn-sm">
-        <i class="fa fa-trash"></i>
-    </button>
-    `
-}
-
-function getSettingsBtn(n) {
-  return `
-    <button id="settings-btn-${n}" title="Settings" type="button" class="btn btn-primary btn-sm">
-        <i class="fa fa-wrench"></i>
-    </button>
-    `
+function findAppliedInflections(tkobj) {
+  var applied_inflections = new Set()
+  if (tkobj.inflections) {
+    for (let i = 0; i < tkobj.inflections.length; i++) {
+      applied_inflections.add(tkobj.inflections[i].fe_name)
+    }
+  }
+  return applied_inflections
 }
