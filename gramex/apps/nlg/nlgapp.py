@@ -38,6 +38,7 @@ def clean_anonymous_files():
 
 
 def is_user_authenticated(handler):
+    """Check if the current user is authenticated."""
     current_user = getattr(handler, 'current_user', False)
     return bool(current_user)
 
@@ -84,17 +85,10 @@ def get_original_df(handler):
 def render_template(handler):
     """Render a set of templates against a dataframe and formhandler actions on it."""
     orgdf = get_original_df(handler)
-    payload = parse.parse_qsl(handler.request.body.decode("utf8"))
-    if not payload:
-        payload = json.loads(handler.request.body.decode("utf8"))
-        fh_args = payload['args']
-        templates = payload['template']
-        df = pd.DataFrame.from_records(payload['data'])
-    else:
-        payload = dict(payload)
-        fh_args = json.loads(payload.get("args", {}))
-        templates = json.loads(payload["template"])
-        df = pd.read_json(payload["data"], orient="records")
+    payload = json.loads(handler.request.body.decode("utf8"))
+    fh_args = payload['args']
+    templates = payload['template']
+    df = pd.DataFrame.from_records(payload['data'])
     # fh_args = {k: [x.lstrip('-') for x in v] for k, v in fh_args.items()}
     resp = []
     for t in templates:
@@ -106,18 +100,16 @@ def render_template(handler):
     return json.dumps(resp)
 
 
-def process_template(handler):
+def process_text(handler):
     """Process English text in the context of a df and formhandler arguments
     to templatize it."""
-    payload = parse.parse_qsl(handler.request.body.decode("utf8"))
-    payload = dict(payload)
-    text = json.loads(payload["text"])
-    df = pd.read_json(payload["data"], orient="records")
-    args = json.loads(payload.get("args", {}))
+    payload = json.loads(handler.request.body.decode("utf8"))
+    df = pd.DataFrame.from_records(payload["data"])
+    args = payload.get("args", {})
     if args is None:
         args = {}
     resp = []
-    for t in text:
+    for t in payload['text']:
         # grammar_errors = yield utils.check_grammar(t)
         replacements, t, infl = templatize(t, args.copy(), df)
         resp.append({
