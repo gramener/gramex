@@ -487,9 +487,9 @@ function copyToClipboard(elem_id){
   var $temp = $("<div>");
   $("body").append($temp);
   $temp.attr("contenteditable", true)
-       .html($('#' + elem_id).html()).select()
-       .on("focus", function() { document.execCommand('selectAll',false,null) })
-       .focus();
+        .html($('#' + elem_id).html()).select()
+        .on("focus", function() { document.execCommand('selectAll',false,null) })
+        .focus();
   document.execCommand("copy");
   $temp.remove();
 }
