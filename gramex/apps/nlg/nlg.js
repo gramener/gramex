@@ -4,6 +4,8 @@
 var narrative_name, dataset_name
 
 class Template {
+  // Class to hold a piece of text that gets rendered as a
+  // tornado template when the narrative is invoked anywhere.
   constructor(
     text, tokenmap, inflections, fh_args, condition = '', setFHArgs = false, template = '',
     previewHTML = '', grmerr = null, name = ''
@@ -31,6 +33,8 @@ class Template {
   }
 
   checkGrammar() {
+    // Check the English text for grammatical errors using LanguageTool.
+    // learn.gramener.com/guide/languagetool
     let self = this
     $.getJSON(
         nlg_base + '/languagetool/?lang=en-us&q=' + encodeURIComponent(`${this.source_text}`)
@@ -41,6 +45,8 @@ class Template {
   }
 
   makeTemplate() {
+    // Apply all token variations, inflections, formhandler arguments,
+    // etc to the source text to turn it into a Tornado template.
     var sent = this.source_text
     for (let [tk, tokenobj] of Object.entries(this.tokenmap)) {
       sent = sent.replace(tk, tokenobj.makeTemplate())
@@ -62,6 +68,7 @@ class Template {
   }
 
   highlight() {
+    // Highlight the template preview to show which tokens have been 'templatized'.
     var highlighted, span
     if (this.rendered_text != null) {
       highlighted = this.rendered_text
@@ -86,6 +93,7 @@ class Template {
   }
 
   assignToVariable(token) {
+    // Assign a variable name to a token.
     if (!(token.varname)) {
       let varname = prompt('Enter variable name:')
       if (varname) {
@@ -112,6 +120,7 @@ class Template {
   }
 
   makeSettingsTable() {
+    // Generate the modal that lets users change template settings.
     $('#tmplsettings').template({tokenmap: this.tokenmap, grammarOptions: grammarOptions})
 
     for (let [token, tkobj] of Object.entries(this.tokenmap)) {
@@ -136,6 +145,7 @@ class Template {
 }
 
 function makeGrammarErrorPopover(span, errobj) {
+  // Parse the grammar error from LanguageTool and display it as a popover.
   var errmsg = errobj.message.replace(/"/g, '\'')
   return `<span style="background-color:#ed7171" data-toggle="popover" data-trigger="hover"
     title="${errmsg}"
@@ -143,6 +153,8 @@ function makeGrammarErrorPopover(span, errobj) {
 }
 
 class Token {
+  // Class to hold a token contained within a template.
+  // In a tornado template, a token is anything enclosed within double braces.
   constructor(parent, text, tokenlist, inflections, template = '') {
     this.parent = parent
     this.text = text
@@ -182,7 +194,7 @@ class Token {
   }
 
   changeGrammarOption() {
-    // remove all currently applied inflections on the token
+    // Change the applied inflections on the token.
     this.inflections = []
 
     // add the currently selected inflections
@@ -201,6 +213,7 @@ class Token {
   }
 
   changeTokenTemplate() {
+    // Re-generate the template for this token based on applied inflections, etc.
     var newTmpl = $(`#srdd-${currentEditIndex}-${this.text.replace(/\s/g, '_')}`).val()
     for (let i = 0; i < this.tokenlist.length; i++) {
       var tmplobj = this.tokenlist[i]
@@ -215,27 +228,26 @@ class Token {
 
 
 function addToNarrative() {
-  // pick text from the "Type something" box, templatize, and add to narrative
+  // Pick text from the input textarea, templatize, and add to the narrative.
   $.post(
     nlg_base + '/textproc',
     JSON.stringify({
       'args': args, 'data': df,
       'text': [$('#textbox').val()]
-    }), addToTemplates
+    }), (pl) => {
+      payload = pl[0]
+      var template = new Template(
+        payload.text, payload.tokenmap, payload.inflections, payload.fh_args)
+      template.setFHArgs = payload.setFHArgs
+      template.makeTemplate()
+      templates.push(template)
+      renderPreview(null)
+    }
   )
 }
 
-function addToTemplates(payload) {
-  payload = payload[0]
-  var template = new Template(
-    payload.text, payload.tokenmap, payload.inflections, payload.fh_args)
-  template.setFHArgs = payload.setFHArgs
-  template.makeTemplate()
-  templates.push(template)
-  renderPreview(null)
-}
-
 function renderPreview(fh) {
+  // Render the preview of all current templates on the front page.
   if (fh) {
     df = fh.formdata
     args = g1.url.parse(g1.url.parse(window.location.href).hash).searchList
@@ -255,22 +267,21 @@ function renderPreview(fh) {
 }
 
 function refreshTemplates() {
+  // Refresh the output of all templates in the current narrative.
   $.post(nlg_base + '/render-template',
     JSON.stringify({
       'args': args, 'data': df,
       'template': templates.map(x => x.template)
-    }), updateTemplates
+    }), (e) => {
+      for (let i = 0; i < e.length; i++) {
+        var tmpl = templates[i]
+        tmpl.rendered_text = e[i].text
+        tmpl.grmerr = e[i].grmerr
+        tmpl.highlight()
+      }
+      renderPreview(null)
+    }
   )
-}
-
-function updateTemplates(payload) {
-  for (let i = 0; i < payload.length; i++) {
-    var tmpl = templates[i]
-    tmpl.rendered_text = payload[i].text
-    tmpl.grmerr = payload[i].grmerr
-    tmpl.highlight()
-  }
-  renderPreview(null)
 }
 
 function deleteTemplate(n) {
@@ -281,6 +292,7 @@ function deleteTemplate(n) {
 }
 
 function triggerTemplateSettings(sentid) {
+  // Show the template settings modal for a given template.
   currentEditIndex = sentid
   editTemplate(currentEditIndex)
   $('#template-settings').modal({ 'show': true })
@@ -288,6 +300,7 @@ function triggerTemplateSettings(sentid) {
 }
 
 function editTemplate(n) {
+  // Edit and update a template source.
   currentEditIndex = n
   $('#edit-template').val(templates[n].template)
   $('#tmpl-setting-preview').html( templates[n].previewHTML)
@@ -298,6 +311,7 @@ function editTemplate(n) {
 
 
 function saveConfig() {
+  // Save the current narrative to $GRAMEXDATA/nlg/{{ handler.current_user.email }}/
   var elem = $('#narrative-name-editor')
   if (!(elem.val())) {
     alert('Please name the narrative.')
@@ -322,6 +336,8 @@ function saveConfig() {
 }
 
 function setInitialConfig() {
+  // At page ready, load the latest config for the authenticated user
+  // and show it.
   $.getJSON(nlg_base + '/initconf',
     (e) => {
       dataset_name = e.dsid
@@ -332,6 +348,7 @@ function setInitialConfig() {
 }
 
 function setConfig(configobj) {
+  // Set the config for a given (user, narrative_id) pair.
   templates = []
   for (let i = 0; i < configobj.config.length; i++) {
     var tmpl = configobj.config[i]
@@ -348,22 +365,25 @@ function setConfig(configobj) {
 
 function checkTemplate() {
   // Render the template found in the template editor box against the df and args.
+  // Show traceback if any.
   $.post(nlg_base + '/render-template',
     JSON.stringify({
       'args': args, 'data': df,
       'template': [$('#edit-template').val()]
     })
-  ).done(editAreaCallback).fail(showTraceback)
+  ).done(updatePreview).fail(showTraceback)
 }
 
 function showTraceback(payload) {
+  // Show traceback if tornado.Template(tmpl).generate(**kwargs) fails
   let traceback = $($.parseHTML(payload.responseText)).filter('#traceback')[0]
   $('#traceback').html(traceback.innerHTML)
   $('#tb-modal').modal({ 'show': true })
 }
 
 
-function editAreaCallback(payload) {
+function updatePreview(payload) {
+  // Update the preview of a template after it has been edited.
   var template = templates[currentEditIndex]
   template.rendered_text = payload[0].text
   template.highlight()
@@ -371,7 +391,7 @@ function editAreaCallback(payload) {
 }
 
 function saveTemplate() {
-  // Save the template found in the template editor box at `currentEditIndex`.
+  // Update the source for a given template.
   templates[currentEditIndex].template = $('#edit-template').val()
   templates[currentEditIndex].text = $('#tmpl-setting-preview').text()
   templates[currentEditIndex].highlight()
@@ -380,6 +400,7 @@ function saveTemplate() {
 }
 
 function addCondition() {
+  // Add a condition to a template, upon which the template would render.
   var condition = $('#condition-editor').val()
   if (condition) {
     var template = templates[currentEditIndex]
@@ -391,6 +412,7 @@ function addCondition() {
 }
 
 function addName() {
+  // Add an optional name to a template.
   let name = $('#tmpl-name-editor').val()
   if (name) {
     templates[currentEditIndex].name = name
@@ -398,6 +420,7 @@ function addName() {
 }
 
 function changeFHSetter() {
+  // Add formhandler arguments or URL filters to the template.
   let template = templates[currentEditIndex]
   template.setFHArgs = $('#fh-arg-setter').attr('checked')
   template.makeTemplate()
@@ -413,6 +436,7 @@ function escapeRegExp(string) {
 }
 
 function makeInflString(tmpl, infl) {
+  // Detect chosen inflections for a token and convert them to Tornado templates.
   var tmplstr = tmpl
   var infl_source = infl.source
   if (infl_source == 'str') {
@@ -423,6 +447,7 @@ function makeInflString(tmpl, infl) {
 }
 
 function addFHArgsSetter(sent, fh_args) {
+  // Add formhandler arguments or URL filters to the template.
   let setterLine = `{% set fh_args = ${JSON.stringify(fh_args)} %}\n`
   setterLine += '{% set df = U.grmfilter(orgdf, fh_args.copy()) %}\n'
   return setterLine + sent
@@ -430,6 +455,7 @@ function addFHArgsSetter(sent, fh_args) {
 
 
 function getNarrativeEmbedCode() {
+  // Generate embed code for this narrative.
   let nlg_path = g1.url.parse(window.location.href).pathname
   let html = `
     <div id="narrative-result"></div>
@@ -450,6 +476,7 @@ function getNarrativeEmbedCode() {
 }
 
 function shareNarrative() {
+  // Launch the "Share" modal.
   if (saveConfig()) {
     $('#share-narrative-url').text(getNarrativeEmbedCode())
     $('#share-modal').modal({ 'show': true })
@@ -468,6 +495,7 @@ function copyToClipboard(elem_id){
 }
 
 function findAppliedInflections(tkobj) {
+  // Find the inflections applied on a given token.
   var applied_inflections = new Set()
   if (tkobj.inflections) {
     for (let i = 0; i < tkobj.inflections.length; i++) {
