@@ -18,8 +18,8 @@ def is_plural_noun(text):
 is_singular_noun = lambda x: not is_plural_noun(x)  # NOQA: E731
 
 
-@set_nlg_gramopt(source='G', fe_name="Concate Items")
-def concatenate_items(items, sep=", "):
+@set_nlg_gramopt(source='G', fe_name='Concate Items')
+def concatenate_items(items, sep=', '):
     """Concatenate a sequence of tokens into an English string.
 
     Parameters
@@ -39,15 +39,15 @@ def concatenate_items(items, sep=", "):
     if len(items) == 1:
         return items[0]
     items = list(map(str, items))
-    if sep == ", ":
+    if sep == ', ':
         s = sep.join(items[:-1])
-        s += " and " + items[-1]
+        s += ' and ' + items[-1]
     else:
         s = sep.join(items)
     return s
 
 
-@set_nlg_gramopt(source='G', fe_name="Pluralize")
+@set_nlg_gramopt(source='G', fe_name='Pluralize')
 def plural(word):
     """Pluralize a word.
 
@@ -67,7 +67,7 @@ def plural(word):
     return word
 
 
-@set_nlg_gramopt(source='G', fe_name="Singularize")
+@set_nlg_gramopt(source='G', fe_name='Singularize')
 def singular(word):
     """
     Singularize a word.
@@ -88,7 +88,7 @@ def singular(word):
     return word
 
 
-# @set_nlg_gramopt(source='G', fe_name="Pluralize by")
+# @set_nlg_gramopt(source='G', fe_name='Pluralize by')
 def pluralize_by(word, by):
     """
     Pluralize a word depending on another argument.
@@ -120,7 +120,7 @@ def pluralize_by(word, by):
     return word
 
 
-# @set_nlg_gramopt(source='G', fe_name="Pluralize like")
+# @set_nlg_gramopt(source='G', fe_name='Pluralize like')
 def pluralize_like(x, y):
     """
     Pluralize a word if another is a plural.
@@ -143,32 +143,32 @@ def pluralize_like(x, y):
     return plural(x)
 
 
-@set_nlg_gramopt(source='str', fe_name="Capitalize")
+@set_nlg_gramopt(source='str', fe_name='Capitalize')
 def capitalize(word):
     return word.capitalize()
 
 
-@set_nlg_gramopt(source='str', fe_name="Lowercase")
+@set_nlg_gramopt(source='str', fe_name='Lowercase')
 def lower(word):
     return word.lower()
 
 
-@set_nlg_gramopt(source='str', fe_name="Swapcase")
+@set_nlg_gramopt(source='str', fe_name='Swapcase')
 def swapcase(word):
     return word.swapcase()
 
 
-@set_nlg_gramopt(source='str', fe_name="Title")
+@set_nlg_gramopt(source='str', fe_name='Title')
 def title(word):
     return word.title()
 
 
-@set_nlg_gramopt(source='str', fe_name="Uppercase")
+@set_nlg_gramopt(source='str', fe_name='Uppercase')
 def upper(word):
     return word.upper()
 
 
-# @set_nlg_gramopt(source="G", fe_name="Lemmatize")
+# @set_nlg_gramopt(source='G', fe_name='Lemmatize')
 def lemmatize(word, target_pos):
     return get_lemmatizer()(word, target_pos)
 
