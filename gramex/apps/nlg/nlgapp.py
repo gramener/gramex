@@ -5,24 +5,23 @@
 Module for gramex exposure. This shouldn't be imported anywhere, only for use
 with gramex.
 """
+import glob
 import json
 import os
 import os.path as op
-from six.moves.urllib import parse
 
 import pandas as pd
+from six.moves.urllib import parse
 from tornado.template import Template
 
-from gramex.config import variables
 from gramex.apps.nlg import grammar
-from gramex.apps.nlg import templatize
 from gramex.apps.nlg import nlgutils as utils
-
+from gramex.apps.nlg import templatize
+from gramex.config import variables
 
 DATAFILE_EXTS = {'.csv', '.xls', '.xlsx', '.tsv'}
 
-grx_data_dir = variables['GRAMEXDATA']
-nlg_path = op.join(grx_data_dir, 'nlg')
+nlg_path = op.join(variables['GRAMEXDATA'], 'nlg')
 
 if not op.isdir(nlg_path):
     os.mkdir(nlg_path)
@@ -44,7 +43,7 @@ def is_user_authenticated(handler):
 
 
 def get_user_dir(handler):
-    if getattr(handler, 'current_user', False):
+    if is_user_authenticated(handler):
         dirpath = op.join(nlg_path, handler.current_user.id)
     else:
         dirpath = op.join(nlg_path, 'anonymous')
@@ -85,7 +84,7 @@ def get_original_df(handler):
 def render_template(handler):
     """Render a set of templates against a dataframe and formhandler actions on it."""
     orgdf = get_original_df(handler)
-    payload = json.loads(handler.request.body.decode("utf8"))
+    payload = json.loads(handler.request.body.decode('utf8'))
     fh_args = payload['args']
     templates = payload['template']
     df = pd.DataFrame.from_records(payload['data'])
@@ -103,19 +102,17 @@ def render_template(handler):
 def process_text(handler):
     """Process English text in the context of a df and formhandler arguments
     to templatize it."""
-    payload = json.loads(handler.request.body.decode("utf8"))
-    df = pd.DataFrame.from_records(payload["data"])
-    args = payload.get("args", {})
-    if args is None:
-        args = {}
+    payload = json.loads(handler.request.body.decode('utf8'))
+    df = pd.DataFrame.from_records(payload['data'])
+    args = payload.get('args', {}) or {}
     resp = []
     for t in payload['text']:
         # grammar_errors = yield utils.check_grammar(t)
         replacements, t, infl = templatize(t, args.copy(), df)
         resp.append({
-            "text": t, "tokenmap": replacements, 'inflections': infl,
-            "fh_args": args, "setFHArgs": False,
-            # "grmerr": json.loads(grammar_errors.decode('utf8'))['matches']
+            'text': t, 'tokenmap': replacements, 'inflections': infl,
+            'fh_args': args, 'setFHArgs': False,
+            # 'grmerr': json.loads(grammar_errors.decode('utf8'))['matches']
         })
     return json.dumps(resp)
 
@@ -145,13 +142,8 @@ def get_dataset_files(handler):
     list
         List of filenames.
     """
-    files = []
-    if getattr(handler, 'current_user', None):
-        user_dir = op.join(nlg_path, handler.current_user.id)
-        if op.isdir(user_dir):
-            allfiles = os.listdir(user_dir)
-            files = [f for f in allfiles if op.splitext(f)[-1].lower() in DATAFILE_EXTS]
-    return files
+    files = glob.glob('{}/*'.format(get_user_dir(handler)))
+    return [f for f in files if op.splitext(f)[-1].lower() in DATAFILE_EXTS]
 
 
 def get_narrative_config_files(handler):
@@ -166,20 +158,16 @@ def get_narrative_config_files(handler):
     list
         List of narrative configurations.
     """
-    files = []
-    if getattr(handler, 'current_user', None):
-        user_dir = op.join(nlg_path, handler.current_user.id)
-        if op.isdir(user_dir):
-            files = [f for f in os.listdir(user_dir) if f.endswith('.json')]
-    return files
+    return glob.glob('{}/*.json'.format(get_user_dir(handler)))
 
 
 def save_config(handler):
     """Save the current narrative config.
     (to $GRAMEXDATA/{{ handler.current_user.id }})"""
     payload = {}
-    payload['config'] = json.loads(parse.unquote(handler.args['config'][0]))
-    payload['name'] = parse.unquote(handler.args['name'][0])
+    for k in ['config', 'name', 'dataset']:
+        payload[k] = parse.unquote(handler.args[k][0])
+    payload['config'] = json.loads(payload['config'])
     nname = payload['name']
     if not nname.endswith('.json'):
         nname += '.json'

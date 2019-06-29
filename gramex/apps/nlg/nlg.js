@@ -37,7 +37,7 @@ class Template {
     // learn.gramener.com/guide/languagetool
     let self = this
     $.getJSON(
-        nlg_base + '/languagetool/?lang=en-us&q=' + encodeURIComponent(`${this.source_text}`)
+        `${nlg_base}/languagetool/?lang=en-us&q=${encodeURIComponent(this.source_text)}`
     ).done((e) => {
         self.grmerr = e.matches
         self.highlight()

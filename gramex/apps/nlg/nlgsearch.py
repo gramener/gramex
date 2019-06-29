@@ -100,8 +100,8 @@ class DFSearch(object):
         self.nlp = nlp
         self.matcher = kwargs.get('matcher', utils.make_np_matcher(self.nlp))
 
-    def search(self, text, colname_fmt="df.columns[{}]",
-               cell_fmt="df['{}'].iloc[{}]", **kwargs):
+    def search(self, text, colname_fmt='df.columns[{}]',
+               cell_fmt='df["{}"].iloc[{}]', **kwargs):
         """
         Search the dataframe.
 
@@ -111,10 +111,10 @@ class DFSearch(object):
             The text to search.
         colname_fmt : str, optional
             String format to describe dataframe columns in the search results,
-            can be one of "df.columns[{}]" or "df[{}]".
+            can be one of 'df.columns[{}]' or 'df[{}]'.
         cell_fmt : str, optional
             String format to describe dataframe values in the search results.
-            Can be one of "df.iloc[{}, {}]", "df.loc[{}, {}]", "df[{}][{}]", etc.
+            Can be one of 'df.iloc[{}, {}]', 'df.loc[{}, {}]', 'df[{}][{}]', etc.
 
         Returns
         -------
@@ -133,12 +133,12 @@ class DFSearch(object):
             x = utils.sanitize_indices(self.df.shape, x, 0)
             y = utils.sanitize_indices(self.df.shape, y, 1)
             self.results[token] = {
-                'location': "cell", 'tmpl': cell_fmt.format(self.df.columns[y], x),
+                'location': 'cell', 'tmpl': cell_fmt.format(self.df.columns[y], x),
                 'type': 'token'}
         self.search_quant([c.text for c in self.doc if c.pos_ == 'NUM'])
         return self.results
 
-    def search_nes(self, text, colname_fmt="df.columns[{}]", cell_fmt="df['{}'].iloc[{}]"):
+    def search_nes(self, text, colname_fmt='df.columns[{}]', cell_fmt='df["{}"].iloc[{}]'):
         """Find named entities in text, and search for them in the dataframe.
 
         Parameters
@@ -152,14 +152,14 @@ class DFSearch(object):
         for token, ix in self.search_columns(ents, literal=True).items():
             ix = utils.sanitize_indices(self.df.shape, ix, 1)
             self.results[token] = {
-                'location': "colname",
+                'location': 'colname',
                 'tmpl': colname_fmt.format(ix), 'type': 'ne'
             }
         for token, (x, y) in self.search_table(ents, literal=True).items():
             x = utils.sanitize_indices(self.df.shape, x, 0)
             y = utils.sanitize_indices(self.df.shape, y, 1)
             self.results[token] = {
-                'location': "cell",
+                'location': 'cell',
                 'tmpl': cell_fmt.format(self.df.columns[y], x), 'type': 'ne'}
 
     def search_table(self, text, **kwargs):
@@ -172,7 +172,7 @@ class DFSearch(object):
         kwargs['array'] = self.df.columns
         return self._search_array(text, **kwargs)
 
-    def search_quant(self, quants, nround=2, cell_fmt="df['{}'].iloc[{}]"):
+    def search_quant(self, quants, nround=2, cell_fmt='df["{}"].iloc[{}]'):
         """Search the dataframe for a set of quantitative values.
 
         Parameters
@@ -191,7 +191,7 @@ class DFSearch(object):
             y = utils.sanitize_indices(dfclean.shape, y, 1)
             tk = quants[n_quant == dfclean.iloc[x, y]][0].item()
             self.results[tk] = {
-                'location': "cell", 'tmpl': cell_fmt.format(self.df.columns[y], x),
+                'location': 'cell', 'tmpl': cell_fmt.format(self.df.columns[y], x),
                 'type': 'quant'}
 
     def _search_array(self, text, array, literal=False,
@@ -277,7 +277,7 @@ class DFSearch(object):
         return {}
 
 
-def search_args(entities, args, lemmatized=True, fmt="fh_args['{}'][{}]",
+def search_args(entities, args, lemmatized=True, fmt='fh_args["{}"][{}]',
                 argkeys=('_sort', '_by', '_c')):
     """
     Search formhandler arguments, as parsed by g1, for a set of tokens.
@@ -304,9 +304,9 @@ def search_args(entities, args, lemmatized=True, fmt="fh_args['{}'][{}]",
         in Formhandler arguemnts. Each search result object has the following
         structure:
         {
-            "type": "some token",
-            "location": "fh_args",
-            "tmpl": "fh_args['_by'][0]"  # The template that gets this token from fh_args
+            'type': 'some token',
+            'location': 'fh_args',
+            'tmpl': 'fh_args['_by'][0]'  # The template that gets this token from fh_args
         }
     """
     nlp = utils.load_spacy_model()
@@ -315,7 +315,7 @@ def search_args(entities, args, lemmatized=True, fmt="fh_args['{}'][{}]",
     ent_tokens = list(chain(*entities))
     for k, v in args.items():
         v = [t.lstrip('-') for t in v]
-        # argtokens = list(chain(*[re.findall(r"\w+", f) for f in v]))
+        # argtokens = list(chain(*[re.findall(r'\w+', f) for f in v]))
         argtokens = list(chain(*[nlp(c) for c in v]))
         for i, x in enumerate(argtokens):
             for y in ent_tokens:

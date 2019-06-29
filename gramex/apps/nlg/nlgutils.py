@@ -9,14 +9,12 @@ import re
 import six
 from tornado.template import Template
 
-from gramex.data import filter as grmfilter  # NOQA: F401
-
 NP_RULES = {
-    "NP1": [{"POS": "PROPN", "OP": "+"}],
-    "NP2": [{"POS": "NOUN", "OP": "+"}],
-    "NP3": [{"POS": "ADV", "OP": "+"}, {"POS": "VERB", "OP": "+"}],
-    "NP4": [{"POS": "ADJ", "OP": "+"}, {"POS": "VERB", "OP": "+"}],
-    "QUANT": [{"POS": "NUM", "OP": "+"}]
+    'NP1': [{'POS': 'PROPN', 'OP': '+'}],
+    'NP2': [{'POS': 'NOUN', 'OP': '+'}],
+    'NP3': [{'POS': 'ADV', 'OP': '+'}, {'POS': 'VERB', 'OP': '+'}],
+    'NP4': [{'POS': 'ADJ', 'OP': '+'}, {'POS': 'VERB', 'OP': '+'}],
+    'QUANT': [{'POS': 'NUM', 'OP': '+'}]
 }
 
 NARRATIVE_TEMPLATE = """
@@ -27,9 +25,9 @@ from tornado.template import Template as T
 import pandas as pd
 
 df = None  # set your dataframe here.
-narrative = T(\"\"\"
+narrative = T(\'\'\"
               {{ tmpl }}
-              \"\"\").generate(
+              \'\'\").generate(
               tornado_tmpl=True, orgdf=df, fh_args={{ fh_args }},
               G=G, U=U)
 print(narrative)
@@ -46,7 +44,7 @@ def load_spacy_model():
     """Load the spacy model when required."""
     if not _spacy['model']:
         from spacy import load
-        nlp = load("en_core_web_sm")
+        nlp = load('en_core_web_sm')
         _spacy['model'] = nlp
     else:
         nlp = _spacy['model']
@@ -117,7 +115,7 @@ class set_nlg_gramopt(object):  # noqa: class to be used as a decorator
 
 def is_overlap(x, y):
     """Whether the token x is contained within any span in the sequence y."""
-    if "NUM" in [c.pos_ for c in x]:
+    if 'NUM' in [c.pos_ for c in x]:
         return False
     return any([x.text in yy for yy in y])
 
@@ -179,7 +177,7 @@ def sanitize_indices(shape, i, axis=0):
 
 def sanitize_text(text, d_round=2):
     """All text cleaning and standardization logic goes here."""
-    nums = re.findall(r"\d+\.\d+", text)
+    nums = re.findall(r'\d+\.\d+', text)
     for num in nums:
         text = re.sub(num, str(round(float(num), d_round)), text)
     return text
@@ -219,11 +217,11 @@ def add_html_styling(template, style):
     -------
     >>> t = 'Hello, {{ name }}!'
     >>> add_html_styling(t, True)
-    'Hello, <span style="background-color:#c8f442">{{ name }}</span>!'
+    'Hello, <span style='background-color:#c8f442'>{{ name }}</span>!'
     >>> add_html_styling(t, False)
     'Hello, {{ name }}!'
     >>> add_html_style(t, {'background-color': '#ffffff', 'font-family': 'monospace'})
-    'Hello, <span style="background-color:#c8f442;font-family:monospace">{{ name }}</span>!'
+    'Hello, <span style='background-color:#c8f442;font-family:monospace'>{{ name }}</span>!'
     """
 
     if not style:
@@ -231,9 +229,9 @@ def add_html_styling(template, style):
     pattern = re.compile(r'\{\{[^\{\}]+\}\}')
     if isinstance(style, dict):
         # convert the style dict into a stylized HTML span
-        spanstyle = ";".join(['{}:{}'.format(k, v) for k, v in style.items()])
+        spanstyle = ';'.join(['{}:{}'.format(k, v) for k, v in style.items()])
     else:
-        spanstyle = "background-color:#c8f442"
+        spanstyle = 'background-color:#c8f442'
     for m in re.finditer(pattern, template):
         token = m.group()
         repl = '<span style="{ss}">{token}</span>'.format(
