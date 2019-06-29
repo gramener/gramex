@@ -101,7 +101,7 @@ This dialog provides configuration options for all template attributes:
 ## Naming and Saving a Narrative
 
 Once a narrative has been fully configured, it can be named and saved. Doing so
-causes it to appear the narrative dropdown menu on the app.
+causes it to appear in the narrative dropdown menu on the app.
 
 
 ## Sharing a Narrative
