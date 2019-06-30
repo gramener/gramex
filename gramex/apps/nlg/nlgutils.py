@@ -9,6 +9,8 @@ import re
 import six
 from tornado.template import Template
 
+from gramex.data import filter as grmfilter  # NOQA: F401
+
 NP_RULES = {
     'NP1': [{'POS': 'PROPN', 'OP': '+'}],
     'NP2': [{'POS': 'NOUN', 'OP': '+'}],

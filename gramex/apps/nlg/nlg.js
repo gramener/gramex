@@ -1,5 +1,5 @@
 /* globals currentEditIndex, grammarOptions, templates, args, df, currentEventHandlers, nlg_base */
-/* exported addToNarrative, setInitialConfig, checkTemplate, saveTemplate, addCondition, addName, changeFHSetter, shareNarrative, copyToClipboard */
+/* exported addToNarrative, setInitialConfig, checkTemplate, saveTemplate, addCondition, addName, shareNarrative, copyToClipboard */
 /* eslint-disable no-global-assign */
 var narrative_name, dataset_name
 
@@ -7,7 +7,7 @@ class Template {
   // Class to hold a piece of text that gets rendered as a
   // tornado template when the narrative is invoked anywhere.
   constructor(
-    text, tokenmap, inflections, fh_args, condition = '', setFHArgs = false, template = '',
+    text, tokenmap, inflections, fh_args, condition = '', template = '',
     previewHTML = '', grmerr = null, name = ''
   ) {
     this.source_text = text
@@ -24,7 +24,6 @@ class Template {
       }
     }
     this.fh_args = fh_args
-    this.setFHArgs = setFHArgs
     this.condition = condition
     this.template = template
     this.previewHTML = previewHTML
@@ -59,10 +58,8 @@ class Template {
     if (this.condition) {
       sent = `{% if ${this.condition} %}\n\t` + sent + '\n{% end %}'
     }
-    if (this.setFHArgs) {
-      sent = addFHArgsSetter(sent, this.fh_args)
-    }
-    this.template = sent
+
+    this.template = addFHArgsSetter(sent, this.fh_args)
     this.highlight()
     $('#edit-template').val(this.template)
   }
@@ -238,7 +235,6 @@ function addToNarrative() {
       payload = pl[0]
       var template = new Template(
         payload.text, payload.tokenmap, payload.inflections, payload.fh_args)
-      template.setFHArgs = payload.setFHArgs
       template.makeTemplate()
       templates.push(template)
       renderPreview(null)
@@ -354,7 +350,7 @@ function setConfig(configobj) {
     var tmpl = configobj.config[i]
     var tmplobj = new Template(
       tmpl.source_text, tmpl.tokenmap, tmpl.inflections,
-      tmpl._fh_args, tmpl._condition, tmpl.setFHArgs,
+      tmpl._fh_args, tmpl._condition,
       tmpl.template, tmpl.previewHTML, tmpl.grmerr, tmpl.name)
     templates.push(tmplobj)
   }
@@ -417,14 +413,6 @@ function addName() {
   if (name) {
     templates[currentEditIndex].name = name
   }
-}
-
-function changeFHSetter() {
-  // Add formhandler arguments or URL filters to the template.
-  let template = templates[currentEditIndex]
-  template.setFHArgs = $('#fh-arg-setter').attr('checked')
-  template.makeTemplate()
-  $('#edit-template').val(template.template)
 }
 
 /* eslint-disable no-unused-vars */

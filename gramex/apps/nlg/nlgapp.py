@@ -111,7 +111,7 @@ def process_text(handler):
         replacements, t, infl = templatize(t, args.copy(), df)
         resp.append({
             'text': t, 'tokenmap': replacements, 'inflections': infl,
-            'fh_args': args, 'setFHArgs': False,
+            'fh_args': args
             # 'grmerr': json.loads(grammar_errors.decode('utf8'))['matches']
         })
     return json.dumps(resp)
