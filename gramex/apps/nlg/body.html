@@ -50,7 +50,7 @@
             <div class="col">
               <select name="narrative" id="narrative-select" class="form-control" form="nlg-init-form">
                 {% for filename in NLG_NARRATIVES %}
-                <option value="{{ filename }}">{{ filename }}</option>
+                <option value="{{ filename }}">{{ op.basename(filename) }}</option>
                 {% end %}
                 <option value="" selected hidden>Select Narrative</option>
               </select>
@@ -104,10 +104,10 @@
       Save Config
       <i class="fa fa-save"></i>
       </button>
-      <button id="share-narrative-btn" type="button" title="Share Narrative"
+      <button id="share-narrative-btn" type="button" title="Embed Narrative"
       class="btn btn-primary">
-          Share
-          <i class="fa fa-share"></i>
+          Embed
+          <i class="fa fa-code"></i>
       </button>
       <div class="alert alert-success alert-dismissable collapse" role="alert">
         <strong>Saved!</strong>
@@ -138,28 +138,8 @@
   {% from os.path import basename %}
   {% set user_dir = basename(get_user_dir(handler)) %}
   <div class="formhandler" data-src="{{ nlg_base }}/preview/{{ user_dir }}/{{ dsid }}"></div>
-
   {% end %}
-  <!--
-  <button id="clear-tmpls" title="Clear Narrative" type="button" class="btn btn-danger">
-      <i class="fa fa-trash"></i>
-  </button>
-  -->
-  <div class="modal fade" id="share-modal" role="dialog">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <pre>
-              <code class="language-html" id="share-narrative-url"
-              class="text- monospace"></code>
-            </pre>
-            <button id="copy-narrative-url" title="Copy To Clipboard"
-            type="button" class="btn btn-primary">
-                Copy Embed Code
-                <i class="fa fa-copy"></i>
-            </button>
-        </div>
-    </div>
-  </div>
+
   <div class="modal fade" id="template-settings" role="dialog">
     <div class="modal-dialog modal-lg">
       <div class="modal-content">
@@ -319,8 +299,6 @@
   .on('focus', "#edit-template", (e) => {$('#save-template').attr('disabled', false)})
   .on('click', "#condition-btn", addCondition)
   .on('click', "#share-narrative-btn", shareNarrative)
-  .on("click", "#copy-editor-url", (e) => {copyToClipboard('share-editor-url')})
-  .on("click", "#copy-narrative-url", (e) => {copyToClipboard('share-narrative-url')})
   .on('click', "#tmpl-name-btn", addName)
 
   $("#textbox").attr('cols', 119)

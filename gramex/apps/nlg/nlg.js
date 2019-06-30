@@ -466,20 +466,17 @@ function getNarrativeEmbedCode() {
 function shareNarrative() {
   // Launch the "Share" modal.
   if (saveConfig()) {
-    $('#share-narrative-url').text(getNarrativeEmbedCode())
-    $('#share-modal').modal({ 'show': true })
+    copyToClipboard(getNarrativeEmbedCode())
   }
 }
 
-function copyToClipboard(elem_id){
-  var $temp = $("<div>");
-  $("body").append($temp);
-  $temp.attr("contenteditable", true)
-        .html($('#' + elem_id).html()).select()
-        .on("focus", function() { document.execCommand('selectAll',false,null) })
-        .focus();
-  document.execCommand("copy");
-  $temp.remove();
+function copyToClipboard(text) {
+  // insert `text` in a temporary element and copy it to clipboard
+  var tempTextArea = $('<textarea>')
+  $('body').append(tempTextArea)
+  tempTextArea.val(text).select()
+  document.execCommand('copy')
+  tempTextArea.remove()
 }
 
 function findAppliedInflections(tkobj) {
