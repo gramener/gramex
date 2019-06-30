@@ -198,17 +198,10 @@
                 </button>
               </div>
             </div>
-            <div class="custom-control custom-switch mb-3">
-                <input type="checkbox" class="custom-control-input" id="fh-arg-setter">
-                <label class="custom-control-label" for="fh-arg-setter">Set current data</label>
-            </div>
             <div class="form-group">
               <textarea class="form-control align-center text-monospace"
               id="edit-template" name="templateditor" rows="10"></textarea>
             </div>
-            <!-- <textarea id="edit-template" class="align-center"
-            name="templateditor"
-            class="text-monospace; font-size:10pt; width: 50em"></textarea> -->
             <table class="table table-striped table-sm">
               <thead>
                   <tr>
@@ -329,7 +322,6 @@
   .on("click", "#copy-editor-url", (e) => {copyToClipboard('share-editor-url')})
   .on("click", "#copy-narrative-url", (e) => {copyToClipboard('share-narrative-url')})
   .on('click', "#tmpl-name-btn", addName)
-  .on('change', "#fh-arg-setter", changeFHSetter)
 
   $("#textbox").attr('cols', 119)
   $("#edit-template").attr('cols', 69).attr('rows', 10)
