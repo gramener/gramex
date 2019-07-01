@@ -65,8 +65,8 @@ Here's the preview of the data and the corresponding chart.
   draw_chart()
   var baseDataURL = spec.data.url
   function redrawChartFromURL(e) {
-    if (e.hash.relative) {
-      spec.data.url = g1.url.parse(baseDataURL).toString() + e.hash.relative
+    if (e.hash.search) {
+      spec.data.url = baseDataURL + '?' + e.hash.search
     } else { spec.data.url = baseDataURL }
     draw_chart()
   }
@@ -109,6 +109,17 @@ In this tutorial we will walk through the search and dropdown functionality
 provided by [g1](https://www.npmjs.com/package/g1), the Gramex interaction
 library, and how it integrates with URL changes and therefore with FormHandlers
 and Vega charts.
+
+### Outcome
+
+By the end of the tutorial, we will have learned how to:
+
+1. embed a dropdown menu in an HTML page,
+2. detect selection events in the dropdown menu,
+3. trigger events on selection.
+
+<a href="output/index3.html">
+<p class="alert alert-info" role="alert"><i class="fa fa-eye fa-lg"></i> The dashboard should look like this.</p></a>
 
 ## Step 0: Laying out the Scaffolding
 

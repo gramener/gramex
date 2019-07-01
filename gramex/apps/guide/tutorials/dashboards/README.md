@@ -10,24 +10,14 @@ table and a few charts. Often, that is not enough. We need an interactive
 way to filter through data. This tutorials deals with adding such
 interactivity with Gramex.
 
-## Requirements
-
-This tutorial assumes that you have gone through the
-[quickstart](../quickstart) and have successfully built the Gramex
-application and created these files:
-
-* [gramex.yaml](../quickstart/output/gramex.yaml.source)
-* [store-sales.csv](../quickstart/store-sales.csv)
-* [index.html](../../quickstart/index5.html.source)
-
-The application you have at the end of the quickstart should look like
-[this](../../quickstart/index5.html).
-
 
 ## Introduction
 
 The chart in the quickstart displayed a single view for the complete dataset - with no way to filter the
 data or change the chart dynamically.
+
+
+### Outcome
 
 By the end of this tutorial, you will have learnt to:
 
@@ -36,6 +26,20 @@ By the end of this tutorial, you will have learnt to:
     * filters applied to the table
     * selection or drag interactions with the chart.
 2. ensure that every element in our dashboard reponds to these events.
+
+The application you have at the end of the quickstart should look like
+[this](../../quickstart/index5.html).
+
+
+### Requirements
+
+This tutorial assumes that you have gone through the
+[quickstart](../quickstart) and have successfully built the Gramex
+application and created these files:
+
+* [gramex.yaml](../quickstart/output/gramex.yaml.source)
+* [store-sales.csv](../quickstart/store-sales.csv)
+* [index.html](../../quickstart/index5.html.source)
 
 
 ## Step 1: Working with [FormHandler](../../formhandler/)
@@ -47,20 +51,17 @@ returns only those rows which have "Consumer" in the "Segment" column.
 Check out the list of possible operations in the
 [formhandler documentation](/formhandler/#formhandler-filters).
 
-<div class="card shadow text-grey bg-dark">
-  <div class="card-body">
-   <div class="card-text">
-     <p class="text-white">Add the formhandler table to the page as follows:</p>
-     <ul class="nav nav-tabs">
-       <li class="nav-item">
-         <a class="nav-link active"><i class="fas fa-code"></i> <span class="text-monospace">index.html</span></a>
-       </li>
-     </ul>
-     <pre><code id="html0" class="language-html"></code></pre>
-   </div>
-  </div>
-</div>
-<script>$.get('snippets/fh.html').done((e) => {$('#html0').text(e)})</script>
+Add the formhandler table to the page as follows:
+
+<!-- render:html -->
+```html
+<div class="formhandler" data-src="../data?_c=-Order ID&_c=-Order Date&_c=-Ship Date&_c=-Quantity&_c=-Discount&_c=-Profit"></div>
+<script src="../ui/g1/dist/g1.min.js"></script>
+<script>
+  $('.formhandler').formhandler({pageSize: 5})
+</script>
+```
+[View Source](snippets/fh.html){: class="source"}
 
 
 ## Step 2: Detecting Changes in the URL
@@ -197,3 +198,5 @@ segment has only about two thirds the total sales of the Consumer segment.
 
 
 ## Next Steps / FAQ
+
+<script src="../tutorial.js"></script>

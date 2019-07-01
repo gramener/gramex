@@ -3,18 +3,18 @@
 <head>
   <meta charset="utf-8" />
   <title>SuperStore Sales Dashboard</title>
-  <link rel="stylesheet" href="ui/bootstraptheme.css">
+  <link rel="stylesheet" href="../ui/bootstraptheme.css">
 </head>
 <body>
   <div id="chart"></div>
-  <div class="formhandler" data-src="data"></div>
+  <div class="formhandler" data-src="../data"></div>
 </body>
-<script src="ui/jquery/dist/jquery.min.js"></script>
-<script src="ui/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-<script src="ui/lodash/lodash.min.js"></script>
-<script src="ui/g1/dist/g1.min.js"></script>
-<script src="ui/vega/build/vega.min.js"></script>
-<script src="ui/vega-lite/build/vega-lite.min.js"></script>
+<script src="../ui/jquery/dist/jquery.min.js"></script>
+<script src="../ui/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../ui/lodash/lodash.min.js"></script>
+<script src="../ui/g1/dist/g1.min.js"></script>
+<script src="../ui/vega/build/vega.min.js"></script>
+<script src="../ui/vega-lite/build/vega-lite.min.js"></script>
 <script>
   $('.formhandler').formhandler({pageSize: 5})
   var spec = {
@@ -22,7 +22,7 @@
     "description": "A bar chart that sorts the y-values by the x-values.",
     "width": 360,
     "height": 200,
-    "data": {"url": "data?_by=Segment"},
+    "data": {"url": "../data?_by=Segment"},
     "mark": "bar",
     "encoding": {
       "y": {

@@ -77,7 +77,20 @@ better idea of our goal for this tutorial. Specifically, take a look at how:
 * Clicking on different cells in the chart changes the table.
 
 
-## Requirements
+### Outcome
+
+By the end of this tutorial, you will have learned how to:
+
+1. perform basic transformations with FormHandler,
+2. detect interactions on charts
+3. triggering events based on these interactions.
+
+<a href="output/index2.html">
+<p class="alert alert-info" role="alert"><i class="fa fa-eye fa-lg"></i> After finishing this tutorial, you will have an application like this.</p>
+</a>
+
+
+### Requirements
 
 This tutorial assumes that you have gone through the
 [previous tutorial](./1_building_interactive_dashboards.md). Specifically, we
@@ -156,7 +169,16 @@ In the snippet above, we are creating a new endpoint to serve the cross-tabulate
 saving `gramex.yaml`, visit
 [`http://localhost:9988/store-sales-ctab`](http://localhost:9988/store-sales-ctab) in your
 browser. You should see a JSON array containing 12 objects, each of which represents a
-combination of a region and a product category.
+combination of a region and a product category, as follows:
+
+```js
+[
+  {"Category":"Furniture","Region":"Central","Sales":130887.5002000001},
+  {"Category":"Office Supplies","Region":"East","Sales":125007.708},
+  {"Category":"Technology","Region":"South","Sales":97852.945},
+  // etc
+]
+```
 
 _Note_: The transforms supported by FormHandler work seamlessly with
 [pandas](https://pandas.pydata.org). Almost evey transformation can be expressed as a

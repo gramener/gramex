@@ -72,8 +72,9 @@
   // updating the chart via URL
   var baseDataURL = spec.data.url
   function redrawChartFromURL(e) {
-    if (e.hash.relative) {
-      spec.data.url = g1.url.parse(baseDataURL).toString() + e.hash.relative
+    console.log(e.hash)
+    if (e.hash.search) {
+      spec.data.url = baseDataURL + '?' + e.hash.search
     } else { spec.data.url = baseDataURL }
     draw_chart()
   }
