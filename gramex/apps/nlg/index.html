@@ -15,9 +15,9 @@
 <script src="ui/g1/dist/g1.min.js"></script>
 
 <body>
+  {% from gramex import variables %}
+  {% set nlg_base = variables.get('NLG_BASE', '') %}
   <div class="container-fluid">
-    {% import os %}
-    {% set nlg_base = locals().get('nlg_base', '') %}
     {% include "./body.html" %}
   </div>
 </body>

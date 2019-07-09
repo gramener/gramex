@@ -227,7 +227,7 @@ class Token {
 function addToNarrative() {
   // Pick text from the input textarea, templatize, and add to the narrative.
   $.post(
-    nlg_base + '/textproc',
+    `${nlg_base}/textproc`,
     JSON.stringify({
       'args': args, 'data': df,
       'text': [$('#textbox').val()]
@@ -264,7 +264,7 @@ function renderPreview(fh) {
 
 function refreshTemplates() {
   // Refresh the output of all templates in the current narrative.
-  $.post(nlg_base + '/render-template',
+  $.post(`${nlg_base}/render-template`,
     JSON.stringify({
       'args': args, 'data': df,
       'template': templates.map(x => x.template)
@@ -316,7 +316,7 @@ function saveConfig() {
   } else {
     narrative_name = elem.val()
     $.ajax({
-      url: nlg_base + '/save-config',
+      url: `${nlg_base}/save-config`,
       type: 'POST',
       data: { config: JSON.stringify(templates), name: narrative_name, dataset: dataset_name },
       headers: { 'X-CSRFToken': false },
@@ -334,7 +334,7 @@ function saveConfig() {
 function setInitialConfig() {
   // At page ready, load the latest config for the authenticated user
   // and show it.
-  $.getJSON(nlg_base + '/initconf',
+  $.getJSON(`${nlg_base}/initconf`,
     (e) => {
       dataset_name = e.dsid
       narrative_name = e.nrid
@@ -362,7 +362,7 @@ function setConfig(configobj) {
 function checkTemplate() {
   // Render the template found in the template editor box against the df and args.
   // Show traceback if any.
-  $.post(nlg_base + '/render-template',
+  $.post(`${nlg_base}/render-template`,
     JSON.stringify({
       'args': args, 'data': df,
       'template': [$('#edit-template').val()]
@@ -451,10 +451,10 @@ function getNarrativeEmbedCode() {
       $('.formhandler').on('load',
         (e) => {
           $.post("${nlg_path}/render-live-template",
-            {
-              data: JSON.stringify(e.formdata),
+            JSON.stringify({
+              data: e.formdata,
               nrid: "${narrative_name}", style: true
-            }, (f) => $("#narrative-result").html(pl)
+            }), (f) => $("#narrative-result").html(f)
           )
         }
       )

@@ -187,7 +187,8 @@
       <div class="h1 text-danger">Work in progress</div>
 
     {% elif current_tab == 'nlg' %}
-      {% set nlg_base = '/admin/nlg' %} <!-- How to get where admin is mounted? -->
+      {% import gramex %}
+      {% set nlg_base = gramex.variables.get('NLG_BASE', '') %}
       {% include "../nlg/body.html" %}
 
     {% end %}

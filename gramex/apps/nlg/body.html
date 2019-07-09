@@ -303,7 +303,7 @@
 
   $("#textbox").attr('cols', 119)
   $("#edit-template").attr('cols', 69).attr('rows', 10)
-  $.getJSON(nlg_base + "/get-gramopts").done(
+  $.getJSON(`${nlg_base}/get-gramopts`).done(
     (resp) => { grammarOptions = resp }
   )
 </script>
