@@ -52,19 +52,18 @@ def get_user_dir(handler):
 
 def render_live_template(handler):
     """Given a narrative ID and df records, render the template."""
+    payload = json.loads(handler.request.body)
     orgdf = get_original_df(handler)
-    nrid = handler.args['nrid'][0]
+    nrid = payload['nrid']
     if not nrid.endswith('.json'):
         nrid += '.json'
-    data = json.loads(handler.args['data'][0])
-    df = pd.DataFrame.from_records(data)
+    df = pd.DataFrame.from_records(payload['data'])
     nrpath = op.join(nlg_path, handler.current_user.id, nrid)
     with open(nrpath, 'r') as fout:  # noqa: No encoding for json
         templates = json.load(fout)
     narratives = []
-    style = json.loads(handler.args['style'][0])
     for t in templates['config']:
-        tmpl = utils.add_html_styling(t['template'], style)
+        tmpl = utils.add_html_styling(t['template'], payload['style'])
         s = Template(tmpl).generate(df=df, fh_args=t.get('fh_args', {}),
                                     G=grammar, U=utils, orgdf=orgdf)
         rendered = s.decode('utf8')
