@@ -58,7 +58,7 @@ Users can now type English text into the IDE and add it to the narrative. This
 automatically templatizes the text, and adds the template to the narrative. For
 example, typing "Humphrey Bogart is at the top of the list." does this:
 
-![](images/nlg-ide-toplist.png)
+![](images/nlg-ide-toplist.gif)
 
 This means that the input statement has been templatized and added
 to the narrative. The part of the input text that was successfully templatized
@@ -67,35 +67,50 @@ the [Template Settings] modal.
 
 
 ## Template Settings
-![](images/nlg-template-settings.png)
+<img src="images/nlg-template-settings.png" height="404" width="400">
 
 This dialog provides configuration options for all template attributes:
 
-1. **Template Name** - Each template can optionally be named.
-2. **Condition** - Any Python expression which evaluates to a boolean may be set as
-   a condition, which controls whether the template is rendered.
-3. The actual Tornado template itself can be edited. Any valid Tornado template
-   is acceptable.
-4. **Token Settings** - Every token from the input text that finds a match in
-   the dataset or in FormHandler arguments (i.e. every token that is highlighted
-   in the preview) is converted into a
-   [template expression](https://www.tornadoweb.org/en/stable/template.html#syntax-reference).
-   Such tokens have their own attributes, as follows:
-    - **Token search results** - if a token is found in more than one place (say, a
-      dataframe cell as well as a FormHandler argument), this setting allows the
-      user to select the right result.
-    - **Grammar options** - the NLG engine may automatically apply certain
-      string formatting or lexical operations to the template expression to make
-      it match the input text. Any number of these operations can be enabled /
-      disabled through this setting.
-    - **Make variable** - a token may be set as a local variable within the
-      template.
-    - **Ignore** - the template expression corresponding to the token may be
-      ignored, and set back to the literal input text.
-5. **Run Template** - Run the current template against the dataframe and preview
-   its output.
-6. **Save Template** - Save the template. Note that this is required if the
-   template has been manually edited in the textarea.
+### Template Name
+
+Each template can optionally be named.
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/fexUWzXpyPU" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
+### Condition
+
+Any Python expression which evaluates to a boolean may be set as a condition,
+which controls whether the template is rendered.
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/V1q7M0PuXUM" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
+
+### Editing the Tornado template
+
+The actual Tornado template itself can be edited. Any valid Tornado template is
+acceptable. After editing the template, you can preview it's result by clicking
+on the 'Run Template' button at the bottom.
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/5IJjCcFO7JU" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
+
+### Token Settings
+
+Every token from the input text that finds a match in the dataset or in
+FormHandler arguments (i.e. every token that is highlighted in the preview)
+is converted into a
+[template
+expression](https://www.tornadoweb.org/en/stable/template.html#syntax-reference).
+
+Such tokens have their own attributes, as follows:
+
+* **Token search results** - if a token is found in more than one place (say, a
+  dataframe cell as well as a FormHandler argument), this setting allows the
+  user to select the right result.
+* **Grammar options** - the NLG engine may automatically apply certain
+  string formatting or lexical operations to the template expression to make
+  it match the input text. Any number of these operations can be enabled /
+  disabled through this setting.
 
 
 ## Naming and Saving a Narrative
@@ -104,14 +119,12 @@ Once a narrative has been fully configured, it can be named and saved. Doing so
 causes it to appear in the narrative dropdown menu on the app.
 
 
-## Sharing a Narrative
+## Embedding a narrative in an web page
 
-After a narrative has been named and saved, it be shared in two modes:
-
-1. **IDE mode** - This option lets users copy a URL that redirects to the
-   IDE, with the current dataset and the current narrative set in the session.
-2. **Embed mode** - Copy an HTML snippet to embed into a page which contains a
-   Formhandler table. The template will render live as the table changes.
+After a narrative has been named and saved, it be embedded in any HTML page.
+Click on the "Embed" button and to copy the embed code and paste it in any HTML
+file. It will work as long as there is a formhandler element present on the
+page, and is connected to the embed code via an event listener.
 
 
 ## Authenticating the NLG App
