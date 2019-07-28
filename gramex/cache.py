@@ -424,7 +424,7 @@ def query(sql, engine, state=None, **kwargs):
     _cache = kwargs.pop('_cache', _QUERY_CACHE)
     store_cache = True
 
-    key = (sql, engine.url)
+    key = (str(sql), json.dumps(kwargs.get('params', {}), sort_keys=True), engine.url)
     current_status = _cache.get(key, {}).get('status', None)
     if isinstance(state, (list, tuple)):
         status = _table_status(engine, tuple(state))

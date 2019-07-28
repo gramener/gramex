@@ -21,7 +21,7 @@ install_requires = [
     # 'joblib',                       # OPT: For gramex.ml
     'argh >= 0.24.1',               # REQ: dependency for watchdog
     'boto3 >= 1.5',                 # SRV: Amazon services
-    'cachetools >= 2.1.0',          # SRV: services.cache for memory cache
+    'cachetools >= 3.0.0',          # SRV: services.cache for memory cache
     'colorama',                     # REQ: (conda) gramex.init()
     'colorlog >= 2.7.0',            # REQ: Coloured log files
     'cron-descriptor',              # OPT: admin/schedule to pretty-print cron
