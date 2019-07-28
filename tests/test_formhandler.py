@@ -630,3 +630,12 @@ class TestFormHandler(TestGramex):
             check(df, root=path)
             check(df.sort_values('size'), root=path, _sort='size')
             check(df.sort_values('name', ascending=False), root=path, _sort='-name')
+
+    def test_cache(self):
+        c1 = len(gramex.cache._QUERY_CACHE)
+        self.check('/formhandler/modify-multi')
+        c2 = len(gramex.cache._QUERY_CACHE)
+        self.check('/formhandler/modify-multi')
+        c3 = len(gramex.cache._QUERY_CACHE)
+        eq_(c2 - c1, 1)
+        eq_(c3, c2)
