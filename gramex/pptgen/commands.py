@@ -157,12 +157,15 @@ def generate_style(style, data, handler):
 
 def rect_css(shape, **kwargs):
     '''Function to add text to shape.'''
-    for key in {'fill', 'stroke'}:
+    for key in {'fill', 'stroke', 'rotation'}:
         if kwargs.get(key):
-            fill = shape.fill if key == 'fill' else shape.line.fill
-            rectcss = kwargs[key].rsplit('#')[-1].lower()
-            rectcss = rectcss + ('0' * (6 - len(rectcss)))
-            chart_css(fill, kwargs, rectcss)
+            if key == 'rotation':
+                shape.rotation = int(kwargs[key])
+            else:
+                fill = shape.fill if key == 'fill' else shape.line.fill
+                rectcss = kwargs[key].rsplit('#')[-1].lower()
+                rectcss = rectcss + ('0' * (6 - len(rectcss)))
+                chart_css(fill, kwargs, rectcss)
 
 
 def add_text_to_shape(shape, textval, **kwargs):
@@ -933,6 +936,7 @@ def css(shape, spec, data):
     pxl_to_inch = 10000
     handler = data.pop('handler') if 'handler' in data else None
     spec = copy.deepcopy(spec['css'])
+    spec = _update_shape_spec(spec, data)
     data = compile_function(spec, 'data', data, handler)
     style = copy.deepcopy(spec.get('style', {}))
     shape_prop = {'width', 'height', 'top', 'left'}
@@ -956,6 +960,14 @@ def css(shape, spec, data):
                 _style[key] = compile_function(style, key, data, handler)
             _style[key] = _style[key](data) if callable(_style[key]) else _style[key]
     rect_css(shape, **_style)
+
+
+def _update_shape_spec(spec, data):
+    """Function to update spec values."""
+    for k in data.keys():
+        if k in dict(spec['style']).keys():
+            spec['style'][k] = template(spec['style'][k], data)
+    return spec
 
 
 cmdlist = {
