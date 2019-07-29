@@ -40,8 +40,7 @@ After finishing this tutorial, we will be able to:
 
 Our application should look like:
 
-[View source](index5.html){: class="source"}
-
+[View source](../quickstart/output/3/index.html){: class="source"}
 
 ### Requirements
 
@@ -90,7 +89,7 @@ Note that these may not be the _last_ lines you see in the startup logs, since s
 At this time, if you open a browser window at [`http://localhost:9988`](http://localhost:9988),
 you should see the text "Hello Gramex" in `"index.html"`.
 
-[View source](index2.html){: class="source"}
+[View source](../quickstart/output/1/index.html){: class="source"}
 
 Gramex internally watches files for changes, so we can change anything in `"index.html"`, and refresh the link in the browser without restarting the server.
 
@@ -210,7 +209,7 @@ url:
       url: $YAMLPATH/store-sales.csv
 ```
 
-[View source](index6.html){: class="source"}
+[View source](../quickstart/output/4/index.html){: class="source"}
 
 ## Step 3: Filling in the Data
 
@@ -227,7 +226,7 @@ To show the data as a table, insert the following lines in
 </script>
 ```
 
-[View source](index7.html){: class="source"}
+[View source](../quickstart/output/5/index.html){: class="source"}
 
 After saving the file, when we open
 [`http://localhost:9988`](http://localhost:9988),
@@ -287,7 +286,7 @@ var view = new vega.View(vega.parse(vl.compile(spec).spec))
     .run()
 </script>
 ```
-[View source](index4.html){: class="source"}
+[View source](../quickstart/output/2/index.html){: class="source"}
 
 
 Details of the specification can be found in the vega-lite [docs](https://vega.github.io/vega-lite/docs/), but some things to note:
@@ -331,7 +330,7 @@ Here are a few more ways in which we can tweak our dashboard:
 2. We can use a feature of UI components, which allows us to override [bootstrap variables by passing url query parameters to the css import line](../uicomponents/#custom-bootstrap). For example, setting link-color to black.
 3. We can modify the vega-lite configuration of the chart to add a color scale, and change the fonts of the chart.
 
-[View source](index5.html){: class="source"}
+[View source](../quickstart/output/3/index.html){: class="source"}
 
 ## Next steps
 
@@ -356,5 +355,4 @@ To see more of what Gramex's functionality and features, including how to build 
 - vega chart not rendering for some reason
     - You may have forgotten to include vega and vega lite dependencies in step 2.
 
-<!--<script src="common.js"></script>-->
 <script src="../tutorial.js"></script>

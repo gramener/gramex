@@ -118,8 +118,9 @@ By the end of the tutorial, we will have learned how to:
 2. detect selection events in the dropdown menu,
 3. trigger events on selection.
 
-<a href="output/index3.html">
-<p class="alert alert-info" role="alert"><i class="fa fa-eye fa-lg"></i> The dashboard should look like this.</p></a>
+The dashboard should look like this:
+
+[View Source](../g1dropdown/output/3/index.html){: class="source"}
 
 ## Step 0: Laying out the Scaffolding
 
@@ -130,9 +131,9 @@ following files into your project folder:
 * [`gramex.yaml`](../../gramex.yaml)
 * [`store-sales.csv`](../store-sales.csv)
 
-<a href="../charts/output/index2.html">
-<p class="alert alert-info" role="alert"><i class="fa fa-eye fa-lg"></i> Our dashboard should look like this.</p>
-</a>
+At this stage, the output should look like this:
+
+[View Source](../g1dropdown/output/0/index.html){: class="source"}
 
 ## Step 1: Making a Dropdown Menu
 
@@ -187,8 +188,9 @@ We need to now feed these values into the dropdown menu.
 </div>
 <script>$.get('snippets/subcategories.html').done((e) => {$('#dd-subcategories').text(e)})</script>
 
-<a href="output/index1.html">
-<p class="alert alert-info" role="alert"><i class="fa fa-eye fa-lg"></i> Our dashboard should look like this.</p></a>
+At this stage, the output should look like this:
+
+[View Source](../g1dropdown/output/1/index.html){: class="source"}
 
 Notice that we now have a dropdown menu which contains the unique subcategories
 found in the dataset.
@@ -214,8 +216,9 @@ reloads.
 </div>
 <script>$.get('snippets/pushstate.html').done((e) => {$('#pushstate').text(e)})</script>
 
-<a href="output/index2.html">
-<p class="alert alert-info" role="alert"><i class="fa fa-eye fa-lg"></i> Our dashboard should look like this.</p></a>
+At this stage, the output should look like this:
+
+[View Source](../g1dropdown/output/2/index.html){: class="source"}
 
 By setting the `"target"` option of the `dropdown` function to `"#"`, we
 are ensuring that the selected option is added to the hash of the URL.
@@ -241,8 +244,9 @@ dropdown can become impractical.
 </div>
 <script>$.get('snippets/livesearch.html').done((e) => {$('#livesearch').text(e)})</script>
 
-<a href="output/index3.html">
-<p class="alert alert-info" role="alert"><i class="fa fa-eye fa-lg"></i> Our dashboard should look like this.</p></a>
+At this stage, the output should look like this:
+
+[View Source](../g1dropdown/output/3/index.html){: class="source"}
 
 Notice that a textbox has appeared at the top of the dropdown menu, allowing
 search-as-you-type.
@@ -271,9 +275,9 @@ whenever a selection happens.
 </div>
 <script>$.get('snippets/redraw.html').done((e) => {$('#redraw').text(e)})</script>
 
-<a href="output/index3.html">
-<p class="alert alert-info" role="alert"><i class="fa fa-eye fa-lg"></i> Our dashboard should look like this.</p></a>
+The dashboard should look like this:
 
+[View Source](../g1dropdown/output/4/index.html){: class="source"}
 
 ## Exercises
 
@@ -284,3 +288,5 @@ whenever a selection happens.
 
 
 ## Next Steps / FAQ
+
+<script src="../tutorial.js"></script>

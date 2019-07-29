@@ -66,10 +66,6 @@ Such a table is called a cross-tabulation or a contingency table - it is a
 common operation used to aggregate a metric (in this case, sales) across two dimensions
 (region and product category).
 
-<a href="output/index2.html">
-<p class="alert alert-info" role="alert"><i class="fa fa-eye fa-lg"></i> After finishing this tutorial, you will have an application like this.</p>
-</a>
-
 Do play around with the sample application to get an
 better idea of our goal for this tutorial. Specifically, take a look at how:
 
@@ -85,9 +81,10 @@ By the end of this tutorial, you will have learned how to:
 2. detect interactions on charts
 3. triggering events based on these interactions.
 
-<a href="output/index2.html">
-<p class="alert alert-info" role="alert"><i class="fa fa-eye fa-lg"></i> After finishing this tutorial, you will have an application like this.</p>
-</a>
+After finishing this tutorial, you will have an application like this:
+
+[View Source](output/index2.html){: class="source"}
+
 
 
 ### Requirements
@@ -119,7 +116,7 @@ with laying out a FormHandler table.
    </div>
   </div>
 </div>
-<script>$.get('../quickstart/snippets/fh.html').done((e) => {$('#html1').text(e)})</script>
+<script>$.get('../dashboards/snippets/fh.html').done((e) => {$('#html1').text(e)})</script>
 <br>
 
 Now we need to add some space in the page to hold the chart.
@@ -337,3 +334,5 @@ you apply a filter to the table, it should reflect in the chart.
 
 
 ## Next Steps / FAQ
+
+<script src="../tutorial.js"></script>

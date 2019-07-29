@@ -175,9 +175,9 @@ The changed event listener should look like:
 $(window).on('#?', draw_charts).urlchange()
 ```
 
-<a href="index1.html">
-<p class="alert alert-info" role="alert"><i class="fa fa-eye fa-lg"></i> Our dashboard should look like this.</p>
-</a>
+Our dashboard should look like this:
+
+[View source](index1.html){: class="source"}
 
 Save your file and reload the page. As you click on any value in the table,
 the charts will redraw based on the applied filter. As a special case of this, try filtering the

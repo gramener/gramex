@@ -16,3 +16,45 @@ url:
     kwargs:
       url: $YAMLPATH/store-sales.csv
       modify: data.groupby(['Category', 'Region'])['Sales'].sum().reset_index()
+
+  # quickstart-output-steps:
+  #   pattern: /$YAMLURL/quickstart/output/([1-9]+)/index.html
+  #   handler: FileHandler
+  #   kwargs:
+  #     path: $YAMLPATH/quickstart/output/index.html
+  #     transform:
+  #       "index.html":
+  #         function: template
+  #         args: =content
+  #         kwargs:
+  #           handler: =handler
+  #     Content-Type: text/html
+  #     Cache-Control: no-store
+
+  quickstart-output-steps:
+    pattern: /$YAMLURL/quickstart/output/([0-9]+)/index.html
+    handler: FileHandler
+    kwargs:
+      path: $YAMLPATH/quickstart/output/index.html
+      transform:
+        "index.html":
+          function: template
+          args: =content
+          kwargs:
+            handler: =handler
+      Content-Type: text/html
+      Cache-Control: no-store
+
+  g1-dropdown-output-steps:
+    pattern: /$YAMLURL/g1dropdown/output/([0-9]+)/index.html
+    handler: FileHandler
+    kwargs:
+      path: $YAMLPATH/g1-dropdown/output/index.html
+      transform:
+        "index.html":
+          function: template
+          args: =content
+          kwargs:
+            handler: =handler
+      Content-Type: text/html
+      Cache-Control: no-store
