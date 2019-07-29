@@ -355,9 +355,4 @@ To see more of what Gramex's functionality and features, including how to build 
 - vega chart not rendering for some reason
     - You may have forgotten to include vega and vega lite dependencies in step 2.
 
-<<<<<<< HEAD
 <script src="../tutorial.js"></script>
-=======
-<!--<script src="common.js"></script>-->
-<script src="../tutorial.js"></script>
->>>>>>> 83628755f12fb7bfb66632a9476f3d8b1df5b037

@@ -55,13 +55,17 @@ Add the formhandler table to the page as follows:
 
 <!-- render:html -->
 ```html
-<div class="formhandler" data-src="../data?_c=-Order ID&_c=-Order Date&_c=-Ship Date&_c=-Quantity&_c=-Discount&_c=-Profit"></div>
+<link rel="stylesheet" href="../ui/bootstraptheme.css">
+<div class="formhandler" data-src="../data?_c=-Ship Date&_c=-Order Date&_c=-Order ID&_c=-Ship Mode&_c=-Quantity&_c=-Discount"></div>
+<script src="../ui/jquery/dist/jquery.min.js"></script>
+<script src="../ui/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../ui/lodash/lodash.min.js"></script>
 <script src="../ui/g1/dist/g1.min.js"></script>
 <script>
   $('.formhandler').formhandler({pageSize: 5})
 </script>
 ```
-[View Source](snippets/fh.html){: class="source"}
+[View Source](../dashboards/output/1/index.html){: class="source"}
 
 
 ## Step 2: Detecting Changes in the URL
@@ -76,7 +80,7 @@ g1 provides a way to listen to URL changes via [urlchange](https://code.gramener
     .urlchange()
 </script>
 ```
-[View Source](snippets/urlchange.html){: class="source"}
+[View Source](../dashboards/output/2/index.html){: class="source"}
 
 
 Here, we are logging URL hash changes in the console whenever they happen.
@@ -153,7 +157,8 @@ The changed event listener should look like:
 ```javascript
 $(window).on('#?', draw_charts).urlchange()
 ```
-[View Source](./index1.html){: class="source"}
+
+[View Source](../dashboards/output/3/index.html){: class="source"}
 
 Save your file and reload the page. As you click on any value in the table,
 the charts will redraw based on the applied filter. As a special case of this, try filtering the
