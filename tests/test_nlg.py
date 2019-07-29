@@ -88,7 +88,7 @@ class TestDFSearch(unittest.TestCase):
             dfs.search(sent, lemmatize=True),
             {
                 'songs': [{"location": "colname", "type": "token", "tmpl": "df.columns[1]"}],
-                'Lata': [{'location': 'cell', 'tmpl': "df['partner'].iloc[0]", 'type': 'token'}],
+                'Lata': [{'location': 'cell', 'tmpl': 'df["partner"].iloc[0]', 'type': 'token'}],
             }
         )
 
@@ -101,10 +101,10 @@ class TestDFSearch(unittest.TestCase):
             dfs.search(sent),
             {
                 'Spencer Tracy': [
-                    {'location': 'cell', 'tmpl': "df['name'].iloc[0]", 'type': 'ne'}
+                    {'location': 'cell', 'tmpl': 'df["name"].iloc[0]', 'type': 'ne'}
                 ],
                 'voted': [{'location': 'colname', 'tmpl': 'df.columns[-1]', 'type': 'token'}],
-                'actor': [{'location': 'cell', 'tmpl': "df['category'].iloc[-4]", 'type': 'token'}]
+                'actor': [{'location': 'cell', 'tmpl': 'df["category"].iloc[-4]', 'type': 'token'}]
             }
         )
 
@@ -129,7 +129,7 @@ class TestSearch(unittest.TestCase):
             search.search_args(ents, args),
             {
                 "voted": {
-                    "tmpl": "fh_args['_sort'][0]",
+                    "tmpl": 'fh_args["_sort"][0]',
                     "type": "token",
                     "location": "fh_args"
                 }
@@ -143,7 +143,7 @@ class TestSearch(unittest.TestCase):
         ents = utils.ner(doc, matcher)
         self.assertDictEqual(search.search_args(ents, args, lemmatized=False),
                              {'rating': {
-                                 "tmpl": "fh_args['_sort'][0]",
+                                 "tmpl": 'fh_args["_sort"][0]',
                                  "location": "fh_args",
                                  "type": "token"}})
 
@@ -159,12 +159,12 @@ class TestSearch(unittest.TestCase):
         Ingrid Bergman at a rating of 0.29614.
         """
         ideal = """
-        {{ df['name'].iloc[0] }} is the top {{ fh_args['_sort'][0] }}
-        {{ df['category'].iloc[-4] }}, followed by {{ df['name'].iloc[1] }}.
-        The least {{ fh_args['_sort'][0] }} {{ df['category'].iloc[-1] }} is
-        {{ df['name'].iloc[-1] }}, trailing at only {{ df['votes'].iloc[-1] }}
-        {{ df.columns[-1] }}, followed by {{ df['name'].iloc[-2] }} at a {{ df.columns[2] }}
-        of {{ df['rating'].iloc[-2] }}.
+        {{ df["name"].iloc[0] }} is the top {{ fh_args["_sort"][0] }}
+        {{ df["category"].iloc[-4] }}, followed by {{ df["name"].iloc[1] }}.
+        The least {{ fh_args["_sort"][0] }} {{ df["category"].iloc[-1] }} is
+        {{ df["name"].iloc[-1] }}, trailing at only {{ df["votes"].iloc[-1] }}
+        {{ df.columns[-1] }}, followed by {{ df["name"].iloc[-2] }} at a {{ df.columns[2] }}
+        of {{ df["rating"].iloc[-2] }}.
         """
         args = {"_sort": ["-votes"]}
         tokenmap, text, inflections = search.templatize(doc, args, df)
