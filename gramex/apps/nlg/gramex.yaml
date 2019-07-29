@@ -3,17 +3,6 @@
 #   Authentication is needed for saving and sharing narratives.
 #   Set this variable to any valid auth configuration to use it
 #   within the NLG app.
-# $NLG_BASE:
-#   The endpoint at which the NLG app is mounted.
-#   Specify this when importing the NLG app in another gramex app, as follows:
-#
-#   ```yaml
-#   import:
-#     nlg:
-#       path: $GRAMEXAPPS/nlg/gramex.yaml
-#       YAMLURL: $YAMLURL/nlg-endpoint/
-#       NLG_BASE: nlg-endpoint
-#   ```
 
 import:
   ui:
@@ -32,8 +21,6 @@ url:
       transform:
         "index.html":
           function: template
-          kwargs:
-            nlg_base: $NLG_BASE
   nlg-data-selector-$*:
     pattern: /$YAMLURL/initform
     handler: FunctionHandler
@@ -52,10 +39,10 @@ url:
       headers:
         Cache-Control: no-store
   nlg-static_files-$*:
-    pattern: /$YAMLURL/nlg.js
+    pattern: /$YAMLURL/(.*)
     handler: FileHandler
     kwargs:
-      path: $YAMLPATH/nlg.js
+      path: $YAMLPATH
   nlg-config-handler-$*:
     pattern: /$YAMLURL/initconf
     handler: FunctionHandler

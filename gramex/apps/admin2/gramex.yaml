@@ -6,7 +6,6 @@ import:
     path: $GRAMEXAPPS/nlg/gramex.yaml
     YAMLURL: $YAMLURL/nlg
     NLG_AUTH: $ADMIN_AUTH
-    NLG_BASE: /admin/nlg
 
 url:
   # webshell.js is in ../admin/ and used by old admin app. Point it it

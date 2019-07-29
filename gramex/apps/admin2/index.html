@@ -188,7 +188,7 @@
 
     {% elif current_tab == 'nlg' %}
       {% import gramex %}
-      {% set nlg_base = gramex.variables.get('NLG_BASE', '') %}
+      {% set nlg_base = 'nlg' %}
       {% include "../nlg/body.html" %}
 
     {% end %}
