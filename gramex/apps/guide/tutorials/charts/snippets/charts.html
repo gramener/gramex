@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html>
 
@@ -8,17 +9,12 @@
 </head>
 
 <body>
-  <div class="text-center h2">SuperStore Dataset</div>
-  <div class="container-fluid">
-    <div class="d-flex justify-content-center">
-      <div id="chart1"></div>
-      <div id="chart2"></div>
-    </div>
+
     <div class="formhandler" data-src="../../data?_c=-Order ID&_c=-Order Date&_c=-Ship Date"></div>
-  </div>
-  <div id="chart"></div>
+    <div id="chart"></div>
 
 </body>
+
 <script src="../../ui/jquery/dist/jquery.min.js"></script>
 <script src="../../ui/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 <script src="../../ui/lodash/lodash.min.js"></script>
@@ -64,28 +60,8 @@
       .initialize('#chart')
       .hover()
       .run()
-    view.addEventListener('click', filterTableOnClick)
   }
   draw_chart()
-
-  // Add event listeners
-
-  // updating the chart via URL
-  var baseDataURL = spec.data.url
-  function redrawChartFromURL(e) {
-    if (e.hash.search) {
-      spec.data.url = baseDataURL + '?' + e.hash.search
-    } else { spec.data.url = baseDataURL }
-    draw_chart()
-  }
-  $('body').urlfilter({target: 'pushState'})
-  $(window).on('#', redrawChartFromURL)
-    .urlchange()
-  function filterTableOnClick(event, item) {
-    var query = {"Region": item.datum.Region, "Category": item.datum.Category}
-    var url = g1.url.parse(location.hash.replace('#', ''))
-    location.hash = url.update(query).toString();
-  }
 </script>
 
 </html>

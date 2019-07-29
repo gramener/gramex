@@ -118,7 +118,7 @@ url:
 After you save the file, Gramex will be able to serve the CSV data through the
 `/data` resource endpoint.
 To verify this, visit
-[`http://localhost:9988/data?_limit=10`](http://localhost:9988/data?_limit=10)
+[`http://localhost:9988/tutorials/data?_limit=10`](http://localhost:9988/tutorials/data?_limit=10)
 in your browser. You should now see a JSON payload representing the
 first ten rows of the dataset as follows:
 
@@ -141,7 +141,7 @@ first ten rows of the dataset as follows:
 ```
 
 You could also visit
-[http://localhost:9988/data?_limit=10&_format=html](http://localhost:9988/data?_limit=10&_format=html)
+[http://localhost:9988/tutorials/data?_limit=10&_format=html](http://localhost:9988/tutorials/data?_limit=10&_format=html)
 to see the first ten rows as a simple HTML table.
 
 <img src="https://cloud.gramener.com/f/379c20a01b3c416ca3cd/?dl=1" width="500">
@@ -243,7 +243,7 @@ The table is interactive. Try playing around with it. Here's a few things you co
 
 ## Step 4: Adding A Chart
 
-Let's add a simple barchart to display data grouped by Segment. Formhandler automatically does the grouping for us simply by changing the URL. Adding a `?_by` query to any FormHandler URL, like [data?_by=Segment](data?_by=Segment), changes the output: each of our numeric columns now has the sum of all rows having a particular Segment value.
+Let's add a simple barchart to display data grouped by Segment. Formhandler automatically does the grouping for us simply by changing the URL. Adding a `?_by` query to any FormHandler URL, like [data?_by=Segment](../data?_by=Segment), changes the output: each of our numeric columns now has the sum of all rows having a particular Segment value.
 
 FormHandler lets us do a lot of data querying, filtering and grouping just by editing the URL. See [FormHandler Filters](../formhandler/#formhandler-filters) for  list of all possible values.
 
@@ -327,7 +327,7 @@ render_charts('#chart2', 'Quantity|sum', 'Quantity by Segment')
 Here are a few more ways in which we can tweak our dashboard:
 
 1. To hide some of the columns from our dataset, we can use a FormHandler filter similar to what we had introduced in Step 4.
-2. We can use a feature of UI components, which allows us to override [bootstrap variables by passing url query parameters to the css import line](../uicomponents/#custom-bootstrap). For example, setting link-color to black.
+2. We can use a feature of UI components, which allows us to override [bootstrap variables by passing url query parameters to the css import line](../../uicomponents/#custom-bootstrap). For example, setting link-color to black.
 3. We can modify the vega-lite configuration of the chart to add a color scale, and change the fonts of the chart.
 
 [View source](../quickstart/output/3/index.html){: class="source"}
@@ -337,9 +337,9 @@ Here are a few more ways in which we can tweak our dashboard:
 If you have followed along with this quickstart, you now have a basic idea of how to build a simple static dashboard with Gramex.
 To see more of what Gramex's functionality and features, including how to build interactive, URL driven dashboards; look at:
 
-* the rest of our [tutorials](../tutorials),
-* our [demos](gramener.com/demo), and,
-* our detailed [documentation](../).
+* the rest of our [tutorials](../),
+* our [demos](https://gramener.com/demo), and,
+* our detailed [documentation](/).
 
 
 ## Troubleshooting
@@ -355,4 +355,9 @@ To see more of what Gramex's functionality and features, including how to build 
 - vega chart not rendering for some reason
     - You may have forgotten to include vega and vega lite dependencies in step 2.
 
+<<<<<<< HEAD
 <script src="../tutorial.js"></script>
+=======
+<!--<script src="common.js"></script>-->
+<script src="../tutorial.js"></script>
+>>>>>>> 83628755f12fb7bfb66632a9476f3d8b1df5b037

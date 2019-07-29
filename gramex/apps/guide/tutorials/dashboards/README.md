@@ -5,7 +5,7 @@ prefix: g1dashboards
 
 [TOC]
 
-In the [quickstart](../../quickstart) we had a dashboard with a
+In the [quickstart](../quickstart) we had a dashboard with a
 table and a few charts. Often, that is not enough. We need an interactive
 way to filter through data. This tutorials deals with adding such
 interactivity with Gramex.
@@ -28,7 +28,7 @@ By the end of this tutorial, you will have learnt to:
 2. ensure that every element in our dashboard reponds to these events.
 
 The application you have at the end of the quickstart should look like
-[this](../../quickstart/index5.html).
+[this](../quickstart/index5.html).
 
 
 ### Requirements
@@ -38,8 +38,8 @@ This tutorial assumes that you have gone through the
 application and created these files:
 
 * [gramex.yaml](../quickstart/output/gramex.yaml.source)
-* [store-sales.csv](../quickstart/store-sales.csv)
-* [index.html](../../quickstart/index5.html.source)
+* [store-sales.csv](../store-sales.csv)
+* [index.html](../quickstart/index5.html.source)
 
 
 ## Step 1: Working with [FormHandler](../../formhandler/)
@@ -70,21 +70,13 @@ Any interaction with the table changes the URL hash. By storing the state of
 interactions in the URL, we can capture a particular view of the data, just by capturing the URL.
 g1 provides a way to listen to URL changes via [urlchange](https://code.gramener.com/cto/g1/blob/master/docs/urlchange.md).
 
-<div class="card shadow text-grey bg-dark">
-  <div class="card-body">
-   <div class="card-text">
-     <p class="text-white">To see how <kbd>urlchange</kbd> works, put the following snippet in the
-     <kbd>&lt;body&gt;</kbd> of <kbd>index.html</kbd>:</p>
-     <ul class="nav nav-tabs">
-       <li class="nav-item">
-         <a class="nav-link active"><i class="fas fa-code"></i> <span class="text-monospace">index.html</span></a>
-       </li>
-     </ul>
-     <pre><code id="html1" class="language-html"></code></pre>
-   </div>
-  </div>
-</div>
-<script>$.get('snippets/urlchange.html').done((e) => {$('#html1').text(e)})</script>
+```html
+<script>
+  $(window).on('#?', function(e) { console.log(e.change) })
+    .urlchange()
+</script>
+```
+[View Source](snippets/urlchange.html){: class="source"}
 
 
 Here, we are logging URL hash changes in the console whenever they happen.
@@ -99,29 +91,41 @@ console.
 
 Now all we have to do is to change the console logging action to something that
 redraws the existing charts with the new data present in the FormHandler table.
+Recollect that we had the following specification for our charts,
+followed by a function to render them.
 
-<div class="card shadow text-grey bg-dark">
-  <div class="card-body">
-   <div class="card-text">
-     <p class="text-white">Recollect that we had the following specification for our charts:</p>
-     <ul class="nav nav-tabs">
-       <li class="nav-item">
-         <a class="nav-link active"><i class="fas fa-code"></i> <span class="text-monospace">index.html</span></a>
-       </li>
-     </ul>
-     <pre><code id="chartspec" class="language-javascript"></code></pre>
-     <p class="text-white">and the following function to draw the charts:</p>
-     <ul class="nav nav-tabs">
-       <li class="nav-item">
-         <a class="nav-link active"><i class="fas fa-code"></i> <span class="text-monospace">index.html</span></a>
-       </li>
-     </ul>
-     <pre><code id="drawcharts" class="language-javascript"></code></pre>
-   </div>
-  </div>
-</div>
-<script>$.get('snippets/chartspec.js').done((e) => {$('#chartspec').text(e)})</script>
-<script>$.get('snippets/render_charts.js').done((e) => {$('#drawcharts').text(e)})</script>
+```html
+<script>
+var spec = {
+  "$schema": "https://vega.github.io/schema/vega-lite/v3.json",
+  "description": "A bar chart that sorts the y-values by the x-values.",
+  "width": 360,
+  "height": 200,
+  "data": { "url": "data?_by=Segment" },
+  "mark": "bar",
+  "encoding": {
+    "y": {
+      "field": "Segment",
+      "type": "nominal",
+      "sort": { "encoding": "x" },
+      "axis": { "title": "Segment" }
+    },
+    "x": {
+      "field": "Sales|sum",
+      "type": "quantitative",
+    }
+  }
+}
+function render_charts(chartid, xfield){
+  spec.encoding.x.field = xfield
+  var view = new vega.View(vega.parse(vl.compile(spec).spec))
+  .renderer('svg')
+  .initialize(chartid)
+  .hover()
+  .run()
+}
+</script>
+```
 
 Note that the chart gets its data from the `data.url` attribute enclosed in the spec:
 
@@ -130,54 +134,26 @@ Note that the chart gets its data from the `data.url` attribute enclosed in the 
 ```
 
 Therefore, we need to grab the changed URL hash, and set `spec.data.url` to the changed
-URL.
+URL.Add the following function which grabs the changed URL, sets the <kbd>data.url</kbd>
+attribute of the spect to the new URL, and redraws the charts.
 
-<div class="card shadow text-grey bg-dark">
-  <div class="card-body">
-   <div class="card-text">
-     <p class="text-white">Add the following function which grabs the changed URL, sets the <kbd>data.url</kbd> attribute of
-     the spec to the new URL, and redraws the charts.</p>
-     <ul class="nav nav-tabs">
-       <li class="nav-item">
-         <a class="nav-link active"><i class="fas fa-code"></i> <span class="text-monospace">index.html</span></a>
-       </li>
-     </ul>
-     <pre><code id="drawurlchange" class="language-javascript"></code></pre>
-   </div>
-  </div>
-</div>
-<script>$.get('snippets/chart_urlchange.js').done((e) => {$('#drawurlchange').text(e)})</script>
-
+```js
+function draw_charts(e) {
+  spec.data.url = "data?" + e.hash.search + "&_by=Segment"
+  render_charts('#chart1', 'Sales|sum')
+  render_charts('#chart2', 'Quantity|sum')
+}
+```
 
 Finally, we must remember to remove the earlier URL change listener (which simply logged changes
 to the console), and add our new function as the listener.
-
-<!--
-<div class="card shadow text-grey bg-dark">
-  <div class="card-body">
-   <div class="card-text">
-     <p class="text-white">The changed event listener function should look like:</p>
-     <ul class="nav nav-tabs">
-       <li class="nav-item">
-         <a class="nav-link active"><i class="fas fa-code"></i> <span class="text-monospace">index.html</span></a>
-       </li>
-     </ul>
-     <pre><code id="urlchange_final" class="language-javascript"></code></pre>
-   </div>
-  </div>
-</div>
-<script>$.get('snippets/urlchange_final.js').done((e) => {$('#urlchange_final').text(e)})</script>
--->
 
 The changed event listener should look like:
 
 ```javascript
 $(window).on('#?', draw_charts).urlchange()
 ```
-
-Our dashboard should look like this:
-
-[View source](index1.html){: class="source"}
+[View Source](./index1.html){: class="source"}
 
 Save your file and reload the page. As you click on any value in the table,
 the charts will redraw based on the applied filter. As a special case of this, try filtering the
