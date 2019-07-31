@@ -339,6 +339,17 @@ def chart(shape, spec, data):
             style[key] = compile_function(style, key, data, handler)
 
     data = compile_function(info, 'data', data, handler)
+
+    """chart data columns positional identifiers changes."""
+    dt_cols = data.columns
+    input_colspec = spec['chart'].get('color', {})
+    input_cols = input_colspec.keys()
+    if all(isinstance(x, int) for x in input_cols):
+        for x in list(input_cols):
+            if x < len(dt_cols):
+                style['color'][dt_cols[x]] = input_colspec[x]
+                input_colspec[dt_cols[x]] = input_colspec.pop(x)
+
     # Getting subset of data if `usecols` is defined.
     change_data = data.reset_index(drop=True)[info.get('usecols', data.columns)]
     series_cols = change_data.columns.drop(info['x']) if info['x'] else change_data.columns
