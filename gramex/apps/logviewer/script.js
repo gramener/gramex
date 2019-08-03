@@ -1,5 +1,4 @@
-/*global config, $, vega, vegam, moment, g1, vegaTooltip, vl,
-console, location */
+/*global config, vega, vegam, vegaTooltip, vl */
 /* exported updateParams, vegamDraw, unitDraw, filterTime, filterSelect,
 drawFilters drawViz, updateView */
 
@@ -48,7 +47,7 @@ function vegamDraw(s, on) {
     .run()
   view.addEventListener('click', function(event, item) {
     console.log('CLICK', event, item)   // eslint-disable-line no-console
-    if (typeof item !== 'undefined' && item.hasOwnProperty('datum')) {
+    if (typeof item !== 'undefined' && 'datum' in item) {
       console.log(item.datum)   // eslint-disable-line no-console
     }
   })

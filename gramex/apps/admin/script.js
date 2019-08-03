@@ -1,4 +1,4 @@
-/* global $, config, active_users, setTimeout */
+/* global config, active_users */
 
 function alertMessage(msgOne, context, timer) {
   var $msg = $('<div class="alert align-middle alert-' + context + ' alert-dismissable" role="alert">' +

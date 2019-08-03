@@ -1,5 +1,3 @@
-/* globals g1 */
-
 $(function () {
   try {
     var recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)()

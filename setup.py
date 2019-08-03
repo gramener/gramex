@@ -43,6 +43,7 @@ install_requires = [
     'pathlib',                      # REQ: Manipulate paths. Part of Python 3.3+
     'pathtools >= 0.1.1',           # REQ: dependency for watchdog
     'psycopg2 >= 2.7.1',            # OPT: PostgreSQL connections
+    'psutil',                       # REQ: monitor process
     'pymysql',                      # OPT: MySQL connections
     'pytest',                       # OPT: (conda) pytest gramex plugin
     'python-pptx >= 0.6.6',         # SRV: pptgen
@@ -55,6 +56,7 @@ install_requires = [
     'six',                          # REQ: Python 3 compatibility
     'sqlalchemy',                   # REQ: (conda) gramex.data.filter()
     'sqlitedict >= 1.5.0',          # SRV: SQLiteStore
+    'tables',                       # REQ: HDF5 reading / writing
     'textblob',                     # OPT: Gramex Guide TwitterRESTHandler example
     'tornado == 5.1.1',             # REQ: Web server
     'watchdog >= 0.8',              # REQ: Monitor file changes

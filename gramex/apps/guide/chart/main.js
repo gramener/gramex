@@ -1,4 +1,4 @@
-/* globals template_data, Promise, vega, array_Object_keys, slug, vegaEmbed, Papa, g1 */
+/* globals template_data, vega, array_Object_keys, slug, vegaEmbed, Papa */
 var specName = window.location.href.split('chart=')[1].split('#')[0]
 // Refactor: These three global variables exist because
 // I haven't yet figured out how to compose event listeners

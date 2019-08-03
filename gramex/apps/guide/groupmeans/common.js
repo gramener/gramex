@@ -1,5 +1,4 @@
 /* exported draw_table, create_dropdowns */
-/* globals g1 */
 function draw_table(url) {
   /**
   * Draws the groupmeans table template
