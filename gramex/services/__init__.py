@@ -809,9 +809,11 @@ def cache(conf):
             info.cache[name] = urlcache.DiskCache(
                 path, size_limit=config['size'], eviction_policy='least-recently-stored')
             atexit.register(info.cache[name].close)
-        # if default: true, make this the default cache for gramex.cache.open
+        # if default: true, make this the default cache for gramex.cache.{open,query}
         if config.get('default'):
-            gramex.cache.open_cache(info.cache[name])
+            for key in ['_OPEN_CACHE', '_QUERY_CACHE']:
+                val = gramex.cache.set_cache(info.cache[name], getattr(gramex.cache, key))
+                setattr(gramex.cache, key, val)
 
 
 def eventlog(conf):

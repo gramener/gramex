@@ -349,7 +349,7 @@ class TestOpen(unittest.TestCase):
         self.assertIn(cache_key, cache)
 
     def test_change_cache(self):
-        # gramex.cache.open_cache() changes the default cache
+        # gramex.cache.set_cache() changes the default cache
         path = os.path.join(cache_folder, 'data.csv')
         new_cache = {}
         old_cache = gramex.cache._OPEN_CACHE
@@ -361,7 +361,7 @@ class TestOpen(unittest.TestCase):
         old_cache_data = dict(old_cache)
 
         # Updating the cache copies data and empties from the old one
-        gramex.cache.open_cache(new_cache)
+        gramex.cache._OPEN_CACHE = gramex.cache.set_cache(new_cache, old_cache)
         eq_(new_cache, old_cache_data)
         eq_(old_cache, {})
 
@@ -442,6 +442,7 @@ class TestSqliteCacheQuery(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.url = dbutils.sqlite_create_db('test_cache.db', t1=cls.data, t2=cls.data)
+        cls.engine = sa.create_engine(cls.url, encoding=str_utf8)
 
     @classmethod
     def tearDownClass(cls):
@@ -456,21 +457,29 @@ class TestSqliteCacheQuery(unittest.TestCase):
         eq_(w('db', 'tbl', 'db', ['a.x', 'b.y']), "(db='a' AND tbl='x') OR (db='b' AND tbl='y')")
 
     def test_query_state_invalid(self):
-        # Just take the sqlite URL for now
-        engine = sa.create_engine(self.url, encoding=str_utf8)
         # Empty state list raises an error
         with assert_raises(ValueError):
-            gramex.cache.query('SELECT * FROM t1', engine, state=[])
+            gramex.cache.query('SELECT * FROM t1', self.engine, state=[])
         # State list with invalid type raises an error
         with assert_raises(ValueError):
-            gramex.cache.query('SELECT * FROM t1', engine, state=[None])
+            gramex.cache.query('SELECT * FROM t1', self.engine, state=[None])
         # Anything other than a string, list/tuple or function should raise a TypeError
         with assert_raises(TypeError):
-            gramex.cache.query('SELECT * FROM t1', engine, state=1)
+            gramex.cache.query('SELECT * FROM t1', self.engine, state=1)
 
     def test_query_value(self):
-        engine = sa.create_engine(self.url, encoding=str_utf8)
-        assert_frame_equal(gramex.cache.query('SELECT * FROM t2', engine=engine), self.data)
+        assert_frame_equal(gramex.cache.query('SELECT * FROM t2', engine=self.engine), self.data)
+
+    def test_query_cache(self):
+        sql = 'SELECT * FROM t1 LIMIT 2'
+        kwargs = dict(sql=sql, engine=self.engine, state=['t1'], _reload_status=True)
+        c0 = len(gramex.cache._QUERY_CACHE)
+        eq_(gramex.cache.query(**kwargs)[1], True)
+        c1 = len(gramex.cache._QUERY_CACHE)
+        eq_(gramex.cache.query(**kwargs)[1], False)
+        c2 = len(gramex.cache._QUERY_CACHE)
+        eq_(c1, c0 + 1)
+        eq_(c1, c2)
 
     def test_query_states(self):
         # Check for 3 combinations
@@ -479,8 +488,8 @@ class TestSqliteCacheQuery(unittest.TestCase):
         # 3. state is a callable (checks updated time of .state file)
         for state in self.states:
             msg = 'failed at state=%s, url=%s' % (state, self.url)
-            engine = sa.create_engine(self.url, encoding=str_utf8)
-            kwargs = dict(sql='SELECT * FROM t1', engine=engine, state=state, _reload_status=True)
+            sql = 'SELECT * FROM t1'
+            kwargs = dict(sql=sql, engine=self.engine, state=state, _reload_status=True)
             eq_(gramex.cache.query(**kwargs)[1], True, msg)
             eq_(gramex.cache.query(**kwargs)[1], False, msg)
             eq_(gramex.cache.query(**kwargs)[1], False, msg)
@@ -489,7 +498,7 @@ class TestSqliteCacheQuery(unittest.TestCase):
             if callable(state):
                 touch(state_file, data=b'x')
             else:
-                self.data.to_sql('t1', engine, if_exists='append', index=False)
+                self.data.to_sql('t1', self.engine, if_exists='append', index=False)
 
             eq_(gramex.cache.query(**kwargs)[1], True, msg)
             eq_(gramex.cache.query(**kwargs)[1], False, msg)
@@ -509,6 +518,7 @@ class TestMySQLCacheQuery(TestSqliteCacheQuery):
     def setUpClass(cls):
         cls.url = dbutils.mysql_create_db(variables.MYSQL_SERVER, 'test_cache',
                                           t1=cls.data, t2=cls.data)
+        cls.engine = sa.create_engine(cls.url, encoding=str_utf8)
 
     @classmethod
     def tearDownClass(cls):
@@ -522,10 +532,11 @@ class TestPostgresCacheQuery(TestSqliteCacheQuery):
     def setUpClass(cls):
         cls.url = dbutils.postgres_create_db(variables.POSTGRES_SERVER, 'test_cache',
                                              **{'t1': cls.data, 't2': cls.data, 'sc.t3': cls.data})
+        cls.engine = sa.create_engine(cls.url, encoding=str_utf8)
 
     def test_schema(self):
-        engine = sa.create_engine(self.url, encoding=str_utf8)
-        assert_frame_equal(gramex.cache.query('SELECT * FROM sc.t3', engine=engine), self.data)
+        assert_frame_equal(
+            gramex.cache.query('SELECT * FROM sc.t3', engine=self.engine), self.data)
 
     @classmethod
     def tearDownClass(cls):
