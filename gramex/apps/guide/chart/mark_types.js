@@ -1,6 +1,5 @@
 // Refer https://github.com/vega/vega-parser/blob/master/schema/encode.js
 /* exported type_mapper */
-/* globals Proxy */
 
 var type_mapper_handler = {
   get: function (obj, prop) {

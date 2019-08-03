@@ -1,8 +1,6 @@
 // This file is compiled into schedule.js via "yarn run build".
 // Changing it has no impact.Compile before checking output.
 
-/* globals $, _ */
-
 import {
   base_template, name_template, actions_schedule_template, actions_alert_template,
   function_template, schedule_template, notification_template
