@@ -31,6 +31,21 @@ url:
       Content-Type: text/html
       Cache-Control: no-store
 
+  quickstart-output-steps-source:
+    pattern: /$YAMLURL/quickstart/output/([0-9]+)/index.html.source
+    handler: FileHandler
+    kwargs:
+      path: $YAMLPATH/quickstart/output/index.html
+      transform:
+        "index.html":
+          function: template
+          args: =content
+          kwargs:
+            handler: =handler
+      headers:
+        Content-Type: text/plain
+        Cache-Control: no-store
+
   g1-dropdown-output-steps:
     pattern: /$YAMLURL/g1dropdown/output/([0-9]+)/index.html
     handler: FileHandler
