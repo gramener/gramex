@@ -1,7 +1,0 @@
-url:
-  modelhandler-iris:
-    pattern: /$YAMLURL/model/(.*)/(.*)
-    handler: ModelHandler
-    kwargs:
-      path: $YAMLPATH/
-      xsrf_cookies: false

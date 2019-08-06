@@ -1,7 +1,8 @@
 capture:
     target: $GRAMEXPATH/apps/capture/
 guide:
-    target: $GRAMEXPATH/apps/guide/
+    target: $GRAMEXDATA/apps/guide/
+    url: https://github.com/gramexrecipes/gramex-guide/archive/dev.zip
 gramex-update:
     target: $GRAMEXPATH/apps/update/
 logviewer:
@@ -10,7 +11,3 @@ mail:
     target: $GRAMEXPATH/apps/mail/
 smartalerts:
     target: $GRAMEXPATH/apps/smartalerts/
-wrangler:
-    cmd: git clone https://code.gramener.com/s.anand/wrangler.git
-databrowse:
-    cmd: git clone https://code.gramener.com/soumya.ranjan/databrowse.git
