@@ -1,8 +1,0 @@
-schedule:
-    run-on-startup:
-        function: logging.info(msg="Scheduled msg (on startup)")
-        startup: true
-    run-every-hour:
-        function: schedule_utils.log_time   # Log the current time
-        minutes: 0
-        hours: '*'

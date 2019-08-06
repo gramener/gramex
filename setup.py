@@ -106,6 +106,8 @@ def install_apps(self):
                 gramex.install.run_setup(target)
             except Exception:
                 logging.exception('Installation failed: %s', target)
+    # Install guide
+    gramex.install.install(['guide'], {})
 
 
 class PostDevelopCommand(develop):

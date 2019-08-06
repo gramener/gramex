@@ -1,7 +1,0 @@
-text-template.txt
-=================
-{{ data.to_string() }}
-
-metadata
-========
-{% import json %}{% raw json.dumps(meta, indent=4) %}

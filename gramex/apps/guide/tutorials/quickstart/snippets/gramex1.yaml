@@ -1,6 +1,0 @@
-url:
-  superstore-data:
-    pattern: /$YAMLURL/data
-    handler: FormHandler
-    kwargs:
-      url: $YAMLPATH/store-sales.csv

@@ -29,9 +29,3 @@ class TestSetup(unittest.TestCase):
         self.exists('pptgen/fonts.json')
         self.exists('pptgen/colors.json')
         self.exists('pptgen/release.json')
-
-        # Ensure that the Gramex guide is installed by checking for a few files
-        self.exists('apps/guide/index.html')
-        self.exists('apps/guide/gramex.yaml')
-        self.exists('apps/guide/README.md')
-        self.exists('apps/guide/install/README.md')
