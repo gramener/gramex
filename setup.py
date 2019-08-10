@@ -18,7 +18,6 @@ install_requires = [
     # 'line_profiler',                # OPT: (conda) For gramex.debug
     # 'rpy2',                         # OPT: (conda) For gramex.ml.r()
     # 'sklearn',                      # OPT: (conda) For gramex.ml
-    # 'joblib',                       # OPT: For gramex.ml
     'argh >= 0.24.1',               # REQ: dependency for watchdog
     'boto3 >= 1.5',                 # SRV: Amazon services
     'cachetools >= 3.0.0',          # SRV: services.cache for memory cache
@@ -32,6 +31,7 @@ install_requires = [
     'ipdb',                         # OPT: gramex.debug
     'inflect',                      # REQ: NLG
     'jmespath',                     # OPT: pytest gramex plugin
+    'joblib',                       # OPT: For gramex.ml
     'ldap3 >= 2.2.4',               # OPT: LDAP connections
     'lxml',                         # OPT: (conda) gramex.pptgen
     'markdown',                     # OPT: transforms, gramex.services.create_alert()
