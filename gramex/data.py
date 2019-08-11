@@ -227,7 +227,7 @@ def filter(url, args={}, meta={}, engine=None, table=None, ext=None,
                 query = gramex.cache.open(queryfile, 'text')
             state = None
             if isinstance(table, six.string_types):
-                state = [table]
+                state = table if ' ' in table else [table]
             elif isinstance(table, (list, tuple)):
                 state = [t for t in table]
             elif table is not None:

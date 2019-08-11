@@ -21,7 +21,7 @@ install_requires = [
     # 'joblib',                       # OPT: For gramex.ml
     'argh >= 0.24.1',               # REQ: dependency for watchdog
     'boto3 >= 1.5',                 # SRV: Amazon services
-    'cachetools >= 2.1.0',          # SRV: services.cache for memory cache
+    'cachetools >= 3.0.0',          # SRV: services.cache for memory cache
     'colorama',                     # REQ: (conda) gramex.init()
     'colorlog >= 2.7.0',            # REQ: Coloured log files
     'cron-descriptor',              # OPT: admin/schedule to pretty-print cron
@@ -42,6 +42,7 @@ install_requires = [
     'pathlib',                      # REQ: Manipulate paths. Part of Python 3.3+
     'pathtools >= 0.1.1',           # REQ: dependency for watchdog
     'psycopg2 >= 2.7.1',            # OPT: PostgreSQL connections
+    'psutil',                       # REQ: monitor process
     'pymysql',                      # OPT: MySQL connections
     'pytest',                       # OPT: (conda) pytest gramex plugin
     'python-pptx >= 0.6.6',         # SRV: pptgen
@@ -54,6 +55,7 @@ install_requires = [
     'six',                          # REQ: Python 3 compatibility
     'sqlalchemy',                   # REQ: (conda) gramex.data.filter()
     'sqlitedict >= 1.5.0',          # SRV: SQLiteStore
+    'tables',                       # REQ: HDF5 reading / writing
     'textblob',                     # OPT: Gramex Guide TwitterRESTHandler example
     'tornado == 5.1.1',             # REQ: Web server
     'watchdog >= 0.8',              # REQ: Monitor file changes
@@ -103,6 +105,8 @@ def install_apps(self):
                 gramex.install.run_setup(target)
             except Exception:
                 logging.exception('Installation failed: %s', target)
+    # Install guide
+    gramex.install.install(['guide'], {})
 
 
 class PostDevelopCommand(develop):

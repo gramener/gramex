@@ -37,12 +37,13 @@ install:
   - hash -r
   - conda config --set always_yes yes --set changeps1 no
   # Install conda packages
-  - conda install -y -q blaze colorama datashape h5py lxml matplotlib pandas pytest seaborn sqlalchemy rpy2 line_profiler tzlocal scikit-learn
+  - conda install -y -q colorama h5py lxml matplotlib pandas pytest seaborn sqlalchemy rpy2 line_profiler tzlocal scikit-learn
   # Install pip modules
   - pip install flake8 pep8-naming flake8-gramex flake8-blind-except flake8-print flake8-debugger bandit nose
   # Install node.js and packages using yarn (faster than npm)
   - npm install -g yarn
-  - yarn global add eclint eslint eslint-plugin-html eslint-plugin-template htmllint-cli
+  - yarn global add eclint eslint eslint-plugin-html htmllint-cli
+  - yarn install
   # Set up variables
   - export BRANCH=$TRAVIS_BRANCH
 

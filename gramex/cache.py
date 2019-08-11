@@ -293,18 +293,15 @@ def open(path, callback=None, transform=None, rel=False, **kwargs):
     return (result, reloaded) if _reload_status else result
 
 
-def open_cache(cache):
+def set_cache(cache, old_cache):
     '''
     Use ``cache`` as the new cache for all open requests.
     Copies keys from old cache, and deletes them from the old cache.
     '''
-    global _OPEN_CACHE
-    # Copy keys from old cache to new cache. Delete from
-    keys = list(_OPEN_CACHE.keys())
-    for key in keys:
-        cache[key] = _OPEN_CACHE[key]
-        del _OPEN_CACHE[key]
-    _OPEN_CACHE = cache
+    for key in list(old_cache.keys()):
+        cache[key] = old_cache[key]
+        del old_cache[key]
+    return cache
 
 
 _SAVE_CALLBACKS = dict(
@@ -424,7 +421,7 @@ def query(sql, engine, state=None, **kwargs):
     _cache = kwargs.pop('_cache', _QUERY_CACHE)
     store_cache = True
 
-    key = (sql, engine.url)
+    key = (str(sql), json.dumps(kwargs.get('params', {}), sort_keys=True), engine.url)
     current_status = _cache.get(key, {}).get('status', None)
     if isinstance(state, (list, tuple)):
         status = _table_status(engine, tuple(state))

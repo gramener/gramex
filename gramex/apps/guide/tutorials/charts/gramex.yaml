@@ -1,6 +1,0 @@
-url:
-  chartsnippets:
-    pattern: /$YAMLURL/snippets/(.*)
-    handler: FileHandler
-    kwargs:
-      path: $YAMLPATH/snippets/

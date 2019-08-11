@@ -1,4 +1,0 @@
-import:
-  languagetool:
-    path: $GRAMEXAPPS/languagetool/gramex.yaml   # Source of the app
-    YAMLURL: $YAMLURL/languagetool/                    # Location to mount at

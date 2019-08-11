@@ -1,4 +1,4 @@
-/* globals document, $, JSONEditor */
+/* globals JSONEditor */
 (function () {
   var script = document.currentScript,
       id = script.getAttribute('data-id') || 'editor',

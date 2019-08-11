@@ -1,4 +1,3 @@
-/* globals $, WebSocket */
 // TODO: detailed docs
 
 $.fn.webshell = function(options) {
