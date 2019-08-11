@@ -1,5 +1,7 @@
 /* globals currentEditIndex, grammarOptions, templates, args, df, currentEventHandlers, nlg_base */
-/* exported addToNarrative, setInitialConfig, checkTemplate, saveTemplate, addCondition, addName, shareNarrative, copyToClipboard */
+/* exported addToNarrative, setInitialConfig, checkTemplate, saveTemplate,
+addCondition, addName, shareNarrative, copyToClipboard,
+findAppliedInflections */
 /* eslint-disable no-global-assign */
 var narrative_name, dataset_name
 
@@ -36,10 +38,10 @@ class Template {
     // learn.gramener.com/guide/languagetool
     let self = this
     $.getJSON(
-        `${nlg_base}/languagetool/?lang=en-us&q=${encodeURIComponent(this.source_text)}`
+      `${nlg_base}/languagetool/?lang=en-us&q=${encodeURIComponent(this.source_text)}`
     ).done((e) => {
-        self.grmerr = e.matches
-        self.highlight()
+      self.grmerr = e.matches
+      self.highlight()
     })
   }
 
@@ -122,20 +124,37 @@ class Template {
 
     for (let [token, tkobj] of Object.entries(this.tokenmap)) {
       // add search result dropdown listeners
-      let tkselector = token.replace(/\s/g, "_")
+      let tkselector = token.replace(/\s/g, '_')
       if (tkobj.tokenlist.length > 1) {
         $(`#srdd-${currentEditIndex}-${tkselector}`).on('change', function () { tkobj.changeTokenTemplate() })
       }
 
       // add grammar options listeners
-      $(`#gramopt-select-${currentEditIndex}-${tkselector}`).on('change', (e) => { tkobj.changeGrammarOption() })
+      $(`#gramopt-select-${currentEditIndex}-${tkselector}`).on('change',
+        /*eslint-disable no-unused-vars*/
+        (e) => {
+        /*eslint-enable no-unused-vars*/
+          tkobj.changeGrammarOption()
+        }
+      )
 
       // add variable assignment listener
       var parent = this
-      $(`#assignvar-${currentEditIndex}-${tkselector}`).on('click', (e) => { parent.assignToVariable(tkobj) })
-
+      $(`#assignvar-${currentEditIndex}-${tkselector}`).on('click',
+        /*eslint-disable no-unused-vars*/
+        (e) => {
+        /*eslint-enable no-unused-vars*/
+          parent.assignToVariable(tkobj)
+        }
+      )
       // remove listener
-      $(`#assignvar-${currentEditIndex}-${tkselector}`).on('click', (e) => { parent.ignoreTokenTemplate(tkobj) })
+      $(`#assignvar-${currentEditIndex}-${tkselector}`).on('click',
+        /*eslint-disable no-unused-vars*/
+        (e) => {
+        /*eslint-enable no-unused-vars*/
+          parent.ignoreTokenTemplate(tkobj)
+        }
+      )
     }
 
   }
@@ -232,7 +251,7 @@ function addToNarrative() {
       'args': args, 'data': df,
       'text': [$('#textbox').val()]
     }), (pl) => {
-      payload = pl[0]
+      var payload = pl[0]
       var template = new Template(
         payload.text, payload.tokenmap, payload.inflections, payload.fh_args)
       template.makeTemplate()
@@ -334,13 +353,11 @@ function saveConfig() {
 function setInitialConfig() {
   // At page ready, load the latest config for the authenticated user
   // and show it.
-  $.getJSON(`${nlg_base}/initconf`,
-    (e) => {
-      dataset_name = e.dsid
-      narrative_name = e.nrid
-      if (e.config) { setConfig(e.config) }
-    },
-  )
+  $.getJSON(`${nlg_base}/initconf`).done((e) => {
+    dataset_name = e.dsid
+    narrative_name = e.nrid
+    if (e.config) { setConfig(e.config) }
+  })
 }
 
 function setConfig(configobj) {
