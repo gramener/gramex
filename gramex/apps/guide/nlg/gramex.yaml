@@ -1,4 +1,0 @@
-import:
-  nlg:
-    path: $GRAMEXAPPS/nlg/gramex.yaml   # Source of the app
-    YAMLURL: $YAMLURL/nlg/              # Location to mount at
