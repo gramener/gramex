@@ -47,7 +47,7 @@ install_requires = [
     'pymysql',                      # OPT: MySQL connections
     'pytest',                       # OPT: (conda) pytest gramex plugin
     'python-pptx >= 0.6.6',         # SRV: pptgen
-    'pyyaml >= 3.10',               # REQ: Parse YAML files for config
+    'pyyaml >= 5.1',                # REQ: Parse YAML files for config
     'redis >= 2.10.0',              # SRV: RedisStore
     'seaborn',                      # OPT: (conda) gramex.data.download()
     'selenium',                     # OPT: pytest gramex plugin
