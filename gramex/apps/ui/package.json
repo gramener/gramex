@@ -1,6 +1,6 @@
 {
   "name": "gramex-apps-ui",
-  "version": "0.2.0",
+  "version": "1.57.0",
   "author": "Bhanu K <bhanu.kamapantula@gramener.com>",
   "license": "MIT",
   "dependencies": {
@@ -15,7 +15,7 @@
     "font-awesome": "*",
     "g1": "0.17",
     "jquery": "~3",
-    "leaflet": "1.4",
+    "leaflet": "1.5",
     "lodash": "4",
     "moment": "2",
     "morphdom": "2",
@@ -23,12 +23,12 @@
     "noty": "3",
     "numeral": "2",
     "popper.js": "1",
-    "select2": "^4.0.6-rc.1",
+    "select2": "4",
     "tether-shepherd": "1",
     "topojson": "3",
     "url-search-params": "npm:@ungap/url-search-params@0.1",
     "vega": "5",
-    "vega-embed": "3",
+    "vega-embed": "4",
     "vega-lite": "3"
   }
 }
