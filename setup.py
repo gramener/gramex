@@ -204,6 +204,7 @@ setup(
         'websocket-client',         # For websocket testing
         'pdfminer.six',             # For CaptureHandler testing
         'cssselect',                # For HTML testing (test_admin.py)
+        'psycopg2 >= 2.7.1'
     ],
     cmdclass={
         'develop': PostDevelopCommand,
