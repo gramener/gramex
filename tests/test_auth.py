@@ -610,8 +610,8 @@ class TestDBAuthSignup(DBAuthBase):
         }, mail)
         obj = email.message_from_string(mail['msg'])
         msg = obj.get_payload(decode=True).decode('utf-8')
-        ok_('auth/dbsignup?signup=' in msg)
-        token = msg.split('auth/dbsignup?signup=')[1].split()[0]
+        ok_('auth/dbsignup?forgot=' in msg)
+        token = msg.split('auth/dbsignup?forgot=')[1].split()[0]
 
         # Check that the user has been added to the users database
         user_engine = sa.create_engine(self.config.url)
