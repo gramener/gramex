@@ -334,18 +334,19 @@ function saveConfig() {
     return false
   } else {
     narrative_name = elem.val()
-    $.ajax({
-      url: `${nlg_base}/save-config`,
-      type: 'POST',
-      data: { config: JSON.stringify(templates), name: narrative_name, dataset: dataset_name },
-      headers: { 'X-CSRFToken': false },
-      success: function () { $('.alert-success').show() },
-      error: function(httpObj) {
-        if (httpObj.status == 401) {
-          alert('Please login to save the narrative.')
+    $.post(
+      `${nlg_base}/save-config`,
+      {
+        config: JSON.stringify(templates),
+        name: narrative_name, dataset: dataset_name
+      },
+      (e) => {
+        if (e.search('anonymous') > -1) {
+          $('.alert-warning').show()
         }
+        $('.alert-success').show()
       }
-    })
+    )
   }
   return true
 }

@@ -171,9 +171,12 @@ def save_config(handler):
     if not nname.endswith('.json'):
         nname += '.json'
     payload['dataset'] = parse.unquote(handler.args['dataset'][0])
-    fpath = op.join(nlg_path, handler.current_user.id, nname)
+
+    user_dir = get_user_dir(handler)
+    fpath = op.join(user_dir, nname)
     with open(fpath, 'w') as fout:  # noqa: No encoding for json
         json.dump(payload, fout, indent=4)
+    return fpath
 
 
 def get_gramopts(handler):
