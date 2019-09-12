@@ -344,7 +344,7 @@ function saveConfig() {
         if (e.search('anonymous') > -1) {
           $('.alert-warning').show()
         }
-        $('.alert-success').show()
+        $('#savealert').show()
       }
     )
   }
@@ -485,6 +485,7 @@ function shareNarrative() {
   // Launch the "Share" modal.
   if (saveConfig()) {
     copyToClipboard(getNarrativeEmbedCode())
+    $('#embedalert').show()
   }
 }
 
