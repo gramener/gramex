@@ -1,0 +1,20 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+repos:
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v2.0.0
+  hooks:
+  - id: trailing-whitespace
+    description: This hook trims trailing whitespace.
+  - id: end-of-file-fixer
+    description: Ensures that a file is either empty or ends with one newline.
+  - id: check-yaml
+    description: This hook checks yaml files for parseable syntax.
+  - id: check-added-large-files
+    description: Prevent giant files from being committed. Defaults to 500kB.
+  - id: pretty-format-json
+    description: This hook sets a standard for formatting JSON files.
+    args: [--indent=2, --no-sort-keys]
+  - id: flake8
+    description: This hook runs flake8.
+
