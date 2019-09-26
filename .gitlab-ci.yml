@@ -40,23 +40,6 @@ validate:
     - cat gramex.log
     - kill %1
 
-# Test the dev and master branches on Python 3 as well
-validate-py2:
-  only: [dev, master]
-  tags: [py2]
-  script:
-    - flake8  # Check flake8 errors for Python 2
-    - pip install -e .
-    - pip install gramexenterprise
-    - gramex license accept
-    - python setup.py nosetests
-    - pytest -v gramex/apps/guide/test/gramextest.yaml
-    - gramex --listen.port=1234 > gramex.log 2>&1 &
-    - sleep 10
-    - pytest tests/gramextest.yaml
-    - cat gramex.log
-    - kill %1
-
 # Deploy the guide from dev, master, doc-* branches gramener.com
 deploy-guide:
   only: [dev, master, /^doc-.*$/]

@@ -116,6 +116,13 @@ def _markdown(handle, **kwargs):
     return markdown(handle.read(), **{k: kwargs.pop(k, v) for k, v in _markdown_defaults.items()})
 
 
+@opener
+def _yaml(handle, **kwargs):
+    import yaml
+    defaults = {'Loader': yaml.FullLoader}
+    return yaml.load(handle.read(), **{k: kwargs.pop(k, v) for k, v in defaults.items()})
+
+
 def _template(path, **kwargs):
     root, name = os.path.split(path)
     return tornado.template.Loader(root, **kwargs).load(name)
@@ -166,6 +173,8 @@ _OPEN_CALLBACKS = dict(
     markdown=_markdown,
     tmpl=_template,
     template=_template,
+    yml=_yaml,
+    yaml=_yaml
 )
 
 
@@ -264,9 +273,6 @@ def open(path, callback=None, transform=None, rel=False, **kwargs):
             method = None
             if callback in _OPEN_CALLBACKS:
                 method = _OPEN_CALLBACKS[callback]
-            elif callback in {'yml', 'yaml'}:
-                import yaml
-                method = opener(yaml.load)
             elif callback in {'json'}:
                 import json
                 method = opener(json.load)

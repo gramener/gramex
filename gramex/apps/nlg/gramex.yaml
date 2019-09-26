@@ -80,6 +80,8 @@ url:
     kwargs:
       function: gramex.apps.nlg.nlgapp.save_config
       auth: $NLG_AUTH
+      headers:
+        Content-Type: text/plain
   edit-narrative-$*:
     pattern: /$YAMLURL/edit-narrative
     handler: FunctionHandler

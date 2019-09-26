@@ -18,7 +18,6 @@ install_requires = [
     # 'line_profiler',                # OPT: (conda) For gramex.debug
     # 'rpy2',                         # OPT: (conda) For gramex.ml.r()
     # 'sklearn',                      # OPT: (conda) For gramex.ml
-    # 'joblib',                       # OPT: For gramex.ml
     'argh >= 0.24.1',               # REQ: dependency for watchdog
     'boto3 >= 1.5',                 # SRV: Amazon services
     'cachetools >= 3.0.0',          # SRV: services.cache for memory cache
@@ -31,6 +30,7 @@ install_requires = [
     'h5py',                         # OPT: (conda) gramex.cache.HDF5Store
     'ipdb',                         # OPT: gramex.debug
     'jmespath',                     # OPT: pytest gramex plugin
+    'joblib',                       # OPT: For gramex.ml
     'ldap3 >= 2.2.4',               # OPT: LDAP connections
     'lxml',                         # OPT: (conda) gramex.pptgen
     'markdown',                     # OPT: transforms, gramex.services.create_alert()
@@ -46,7 +46,7 @@ install_requires = [
     'pymysql',                      # OPT: MySQL connections
     'pytest',                       # OPT: (conda) pytest gramex plugin
     'python-pptx >= 0.6.6',         # SRV: pptgen
-    'pyyaml >= 3.10',               # REQ: Parse YAML files for config
+    'pyyaml >= 5.1',                # REQ: Parse YAML files for config
     'redis >= 2.10.0',              # SRV: RedisStore
     'seaborn',                      # OPT: (conda) gramex.data.download()
     'selenium',                     # OPT: pytest gramex plugin

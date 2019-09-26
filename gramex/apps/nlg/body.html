@@ -109,9 +109,21 @@
           Embed
           <i class="fa fa-code"></i>
       </button>
-      <div class="alert alert-success alert-dismissable collapse" role="alert">
+      <div id="savealert" class="alert alert-success collapse" role="alert">
         <strong>Saved!</strong>
-        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+        <button type="button" class="close" data-toggle="collapse" data-target=".alert-success" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="alert alert-warning collapse" role="alert">
+        <p><strong>Warning:</strong> Saving config without authentication. Persistence is not guaranteed.</p>
+        <button type="button" class="close" data-toggle="collapse" data-target=".alert-warning" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div id="embedalert" class="alert alert-success collapse" role="alert">
+        <p>Embed code copied to clipboard.</p>
+        <button type="button" class="close" data-toggle="collapse" data-target=".alert-warning" aria-label="Close">
             <span aria-hidden="true">&times;</span>
         </button>
       </div>

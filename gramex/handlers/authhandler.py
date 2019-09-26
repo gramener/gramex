@@ -133,11 +133,11 @@ class AuthHandler(BaseHandler):
             yield self.auth_methods['recaptcha'](self, self.kwargs.recaptcha)
 
     @staticmethod
-    def update_user(user_id, **kwargs):
+    def update_user(_user_id, **kwargs):
         '''Update user login/logout event.'''
-        info = _user_info.load(user_id)
+        info = _user_info.load(_user_id)
         info.update(kwargs)
-        _user_info.dump(user_id, info)
+        _user_info.dump(_user_id, info)
 
     @coroutine
     def set_user(self, user, id):
