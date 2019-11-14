@@ -204,6 +204,7 @@ class FileHandler(BaseHandler):
             yield self._get_path(self.root)
         else:
             # Eliminate parent directory references like `../` in the URL
+            path = urljoin('/', path)[1:]
             if self.pattern:
                 yield self._get_path(Path(self.pattern.replace('*', path)).absolute())
             else:

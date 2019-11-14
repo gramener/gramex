@@ -272,6 +272,11 @@ class TestFileHandler(TestGramex):
         # Paths are resolved before ignoring
         self.check('/dir/ignore-all-except/', path='dir/index.html')
 
+    def test_parent(self):
+        # Eliminate parent directory references
+        from gramex import variables
+        self.check('/{}'.format(variables['GRAMEXDATA']), code=404)
+
     def test_methods(self):
         config = {
             '/methods/get-only': {
