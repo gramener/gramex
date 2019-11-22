@@ -33,22 +33,11 @@ validate:
     - gramex license accept
     - python setup.py nosetests
     - bandit gramex --recursive --format csv || true    # Just run bandit as a warning
-    - pytest -v gramex/apps/guide/test/gramextest.yaml
     - gramex --listen.port=1234 > gramex.log 2>&1 &
     - sleep 10
     - pytest tests/gramextest.yaml
     - cat gramex.log
     - kill %1
-
-# Deploy the guide from dev, master, doc-* branches gramener.com
-deploy-guide:
-  only: [dev, master, /^doc-.*$/]
-  script:
-    - rsync -avzP gramex/apps/guide ubuntu@gramener.com:/mnt/gramener/apps/v1/
-    - 'ssh -t ubuntu@gramener.com "
-        /mnt/gramener/anaconda/bin/gramex setup /mnt/gramener/apps/v1/guide;
-        /mnt/gramener/anaconda/bin/gramex setup ui;
-      "'
 
 # Deploy the dev / master branches on gramener.com
 deploy-gramener:
@@ -59,7 +48,7 @@ deploy-gramener:
         git checkout -- .;
         git pull;
         rm -rf /mnt/gramener/apps/v1/guide /mnt/gramener/apps/v1/gramex-update;
-        cp -R /mnt/gramener/apps/gramex/gramex/apps/guide /mnt/gramener/apps/v1/;
+        cp -R /home/ubuntu/.config/gramexdata/apps/guide /mnt/gramener/apps/v1/;
         cp -R /mnt/gramener/apps/gramex/gramex/apps/update /mnt/gramener/apps/v1/gramex-update;
         /mnt/gramener/anaconda/bin/gramex setup /mnt/gramener/apps/v1/guide;
         /mnt/gramener/anaconda/bin/gramex setup ui;
