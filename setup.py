@@ -42,13 +42,13 @@ install_requires = [
     'passlib >= 1.6.5',             # REQ: password storage (e.g. in handlers.DBAuth)
     'pathlib',                      # REQ: Manipulate paths. Part of Python 3.3+
     'pathtools >= 0.1.1',           # REQ: dependency for watchdog
-    'psycopg2 >= 2.7.1',            # OPT: PostgreSQL connections
     'psutil',                       # REQ: monitor process
     'pymysql',                      # OPT: MySQL connections
     'pytest',                       # OPT: (conda) pytest gramex plugin
     'python-pptx >= 0.6.6',         # SRV: pptgen
     'pyyaml >= 5.1',                # REQ: Parse YAML files for config
     'redis >= 2.10.0',              # SRV: RedisStore
+    'requests',                     # REQ: HTTP library for python
     'seaborn',                      # OPT: (conda) gramex.data.download()
     'selenium',                     # OPT: pytest gramex plugin
     'setuptools >= 16.0',           # REQ: 16.0 has good error message support
@@ -204,6 +204,7 @@ setup(
         'websocket-client',         # For websocket testing
         'pdfminer.six',             # For CaptureHandler testing
         'cssselect',                # For HTML testing (test_admin.py)
+        'psycopg2 >= 2.7.1'         # OPT: PostgreSQL connections
     ],
     cmdclass={
         'develop': PostDevelopCommand,
