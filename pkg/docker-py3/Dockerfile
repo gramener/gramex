@@ -2,7 +2,7 @@
 FROM conda/miniconda3:latest
 
 LABEL description="Gramener data visualization server"
-LABEL version="1.57"
+LABEL version="1.58"
 LABEL maintainer="s.anand@gramener.com"
 
 # Install nodejs and node libraries
