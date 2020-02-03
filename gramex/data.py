@@ -769,20 +769,20 @@ def _filter_frame(data, meta, controls, args, source='select', id=[]):
         return data
 
 
-def _filter_db(engine, table, meta, controls, args, source='select', id=[]):
+def _filter_db(engine, table_name, meta, controls, args, source='select', id=[]):
     '''
 
     It accepts the following parameters
 
     :arg sqlalchemy engine engine: constructed sqlalchemy string
-    :arg database table table: table name in the mentioned database
+    :arg database table table_name: table name in the mentioned database
     :arg controls: dictionary of `_sort`, `_c`, `_offset`, `_limit` params
     :arg meta: dictionary of `filters`, `ignored`, `sort`, `offset`, `limit` params from kwargs
     :arg args: dictionary of user arguments to filter the data
     :arg source: accepted values - `update`, `delete` for PUT, DELETE methods in FormHandler
     :arg id: list of keys specific to data using which values can be updated
     '''
-    table = get_table(engine, table)
+    table = get_table(engine, table_name)
     cols = table.columns
     colslist = cols.keys()
 
@@ -884,7 +884,7 @@ def _filter_db(engine, table, meta, controls, args, source='select', id=[]):
                 raise ValueError('_limit not integer: %r' % controls['_limit'])
             query = query.limit(limit)
             meta['limit'] = limit
-        return pd.read_sql(query, engine)
+        return gramex.cache.query(query, engine, state=[table_name])
 
 
 _VEGA_SCRIPT = os.path.join(_FOLDER, 'download.vega.js')
