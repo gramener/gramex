@@ -480,7 +480,10 @@ class TestInsert(unittest.TestCase):
         inserted = gramex.data.insert(url, args=rows, table='test_insert', id='index')
         eq_(inserted, 2)
         # query table here
+        c0 = len(gramex.cache._QUERY_CACHE)
         actual = gramex.data.filter(url, table='test_insert')
+        c1 = len(gramex.cache._QUERY_CACHE)
+        eq_(c1, c0 + 1)
         expected = pd.DataFrame(rows)
         for df in [actual, expected]:
             df['sales'] = df['sales'].astype(float)
