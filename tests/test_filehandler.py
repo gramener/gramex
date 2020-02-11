@@ -115,6 +115,10 @@ class TestFileHandler(TestGramex):
             'Content-Disposition': None
         })
 
+        self.check('/dir/image.JPG', path='dir/image.JPG', headers={
+            'Content-Type': 'image/jpeg'
+        })
+
     def test_args(self):
         self.check('/dir/args/?高=σ', text=json.dumps({'高': ['σ']}))
         self.check('/dir/args/?高=σ&高=λ&س=►', text=json.dumps(

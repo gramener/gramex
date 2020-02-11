@@ -67,7 +67,7 @@ class Node(object):
         # Note: read_message() cannot be called again while a request is running.
         # (Yes, that's odd. Maybe Anand is missing something.)
         # So wait until the read_future is cleared.
-        while self.conn.read_future is not None:
+        while getattr(self.conn, 'read_future', None) is not None:
             yield sleep(self._delay)
         msg = yield self.conn.read_message()
         # If node has died, clear the connection to restart it.
