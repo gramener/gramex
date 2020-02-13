@@ -453,7 +453,7 @@ def _pop_controls(args):
     '''Filter out data controls: sort, limit, offset and column (_c) from args'''
     return {
         key: args.pop(key)
-        for key in ('_sort', '_limit', '_offset', '_c', '_by')
+        for key in ('_sort', '_limit', '_offset', '_c', '_by', '_by_c')
         if key in args
     }
 
@@ -830,6 +830,7 @@ def _filter_db(engine, table, meta, controls, args, source='select', id=[]):
     else:
         # Apply controls
         if '_by' in controls or '_by_c' in controls:
+            print('controls', controls)
             by = _filter_groupby_columns(controls.get('_by', []) + controls.get('_by_c', []), colslist, meta)
             query = query.group_by(*by)
             # If ?_c is not specified, use 'col|sum' for all numeric columns
@@ -851,7 +852,9 @@ def _filter_db(engine, table, meta, controls, args, source='select', id=[]):
             if not agg_cols:
                 return pd.DataFrame()
             controls['_by_c'] = controls.get('_by_c', controls['_by'])
+            print(controls['_by_c'], controls['_by'])
             show_cols, hide_cols =  _filter_select_columns(controls['_by_c'], colslist, meta)
+            print('show_cols', show_cols, hide_cols)
             if len(hide_cols) > 0:
                 meta['ignored'].append(('_c', hide_cols))
             query = query.with_only_columns([cols[col] for col in show_cols] + list(agg_cols.values()))
