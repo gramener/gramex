@@ -829,8 +829,8 @@ def _filter_db(engine, table, meta, controls, args, source='select', id=[]):
         return res.rowcount
     else:
         # Apply controls
-        if '_by' in controls:
-            by = _filter_groupby_columns(controls['_by'], colslist, meta)
+        if '_by' in controls or '_by_c' in controls:
+            by = _filter_groupby_columns(controls.get('_by', []) + controls.get('_by_c', []), colslist, meta)
             query = query.group_by(*by)
             # If ?_c is not specified, use 'col|sum' for all numeric columns
             # TODO: This does not support ?_c=-<col> to hide a column
@@ -838,7 +838,7 @@ def _filter_db(engine, table, meta, controls, args, source='select', id=[]):
             if col_list is None:
                 col_list = [col + _agg_sep + 'sum' for col, column in cols.items()  # noqa
                             if column.type.python_type.__name__ in _numeric_types]
-            agg_cols = AttrDict([(col, cols[col]) for col in by])   # {label: ColumnElement}
+            agg_cols = AttrDict()
             typ = {}                                                # {label: python type}
             for key in col_list:
                 col, agg, val = _filter_col(key, colslist)
@@ -850,7 +850,11 @@ def _filter_db(engine, table, meta, controls, args, source='select', id=[]):
                     agg_cols[key] = agg_func(cols[col]).label(key)
             if not agg_cols:
                 return pd.DataFrame()
-            query = query.with_only_columns(agg_cols.values())
+            controls['_by_c'] = controls.get('_by_c', controls['_by'])
+            show_cols, hide_cols =  _filter_select_columns(controls['_by_c'], colslist, meta)
+            if len(hide_cols) > 0:
+                meta['ignored'].append(('_c', hide_cols))
+            query = query.with_only_columns([cols[col] for col in show_cols] + list(agg_cols.values()))
             # Apply HAVING operators
             for key, col, op, vals in cols_having:
                 query = _filter_db_col(query, query.having, key, col, op, vals,
