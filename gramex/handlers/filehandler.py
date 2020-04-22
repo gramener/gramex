@@ -241,7 +241,8 @@ class FileHandler(BaseHandler):
                 raise HTTPError(NOT_FOUND, '%s missing index', self.file)
             # Ensure URL has a trailing '/' when displaying the index / default file
             if not self.request.path.endswith('/'):
-                self.redirect(self.request.path + '/', permanent=True)
+                suffix = '/?' + self.request.query if self.request.query else '/'
+                self.redirect(self.request.path + suffix, permanent=True)
                 return
         else:
             self.file = self.path

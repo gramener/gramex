@@ -46,10 +46,10 @@ class TestFileHandler(TestGramex):
 
     def test_filehandler(self):
         def adds_slash(url, check):
-            self.assertFalse(url.endswith('/'), 'redirect_with_slash url must not end with /')
-            r = self.get(url)
+            self.assertFalse(url.endswith('/'), 'adds_slash url must not end with /')
+            r = self.get(url + '?高=σ&λ=►')
             if check:
-                self.assertTrue(r.url.endswith('/'), url)
+                self.assertTrue(r.url.endswith(url + '/?%E9%AB%98=%CF%83&%CE%BB=%E2%96%BA'))
                 redirect_codes = (301, 302)
                 self.assertIn(r.history[0].status_code, redirect_codes, url)
             else:
