@@ -263,6 +263,7 @@ class TestFileHandler(TestGramex):
     def test_ignore(self):
         self.check('/dir/index/gramex.yaml', code=FORBIDDEN)
         self.check('/dir/index/.hidden', code=FORBIDDEN)
+        self.check('/dir/index/.hidedir/file.txt', code=FORBIDDEN)
         self.check('/dir/index/ignore-file.txt')
         self.check('/dir/ignore-file/ignore-file.txt', code=FORBIDDEN)
         self.check('/dir/index/ignore-list.txt')

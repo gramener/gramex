@@ -6,7 +6,7 @@ import datetime
 import mimetypes
 import tornado.web
 import tornado.gen
-from pathlib import Path, PureWindowsPath
+from pathlib import Path
 from fnmatch import fnmatch
 from six import string_types, text_type
 from tornado.escape import utf8
@@ -27,12 +27,7 @@ def _match(path, pat):
     '''
     Check if path matches pattern -- case insensitively.
     '''
-    # pathlib.match() does not accept ** -- it splits by path.
-    # Use fnmatch if ** is present in the pattern.
-    if '**' in pat:
-        return fnmatch(str(path).lower(), '*/' + pat.lower())
-    # Use PureWindowsPath to match case-insensitively
-    return PureWindowsPath(path).match(pat)
+    return fnmatch(str(path).lower(), '*/' + pat.lower())
 
 
 def read_template(path):
