@@ -47,7 +47,8 @@ testlib/**/gen.*
 tests/*.db
 
 # Don't commit uploads created by test cases
-tests/uploads
+tests/uploads/
+tests/drive/
 
 # Don't commit ZIP files, except what's required for testing
 *.7z

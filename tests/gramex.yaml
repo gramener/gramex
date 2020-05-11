@@ -1174,6 +1174,19 @@ url:
       xsrf_cookies: false
       transform: invalid-transform
 
+  drive:
+    pattern: /drive
+    handler: DriveHandler
+    kwargs:
+      path: $YAMLPATH/drive/
+      user_fields: {id: str, role: str}
+      tags: [tag, cat, date, m]   # date tag will be ignored
+      allow: [.txt, .html, .csv, .md, .xlsx, .zip, .py, .jpg]
+      ignore: [.py, .zip]
+      max_file_size: 10000
+      modify: utils.drivehandler_modify
+      xsrf_cookies: false
+
   auth/session:
     pattern: /auth/session
     handler: FunctionHandler

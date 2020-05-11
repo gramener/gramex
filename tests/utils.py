@@ -403,6 +403,12 @@ class CounterHandler(BaseHandler):
         self.write('%d' % counters['counterhandler'])
 
 
+def drivehandler_modify(data, key, handler):
+    if handler.request.method == 'GET':
+        data['m'] = 'OK'
+    return data
+
+
 if __name__ == '__main__':
     # Call the method mentioned in the command line
     method_name = sys.argv[1]
