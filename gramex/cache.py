@@ -162,6 +162,7 @@ _OPEN_CALLBACKS = dict(
     xls=pd.read_excel,
     xlsx=pd.read_excel,
     hdf=pd.read_hdf,
+    h5=pd.read_hdf,
     html=pd.read_html,
     jsondata=pd.read_json,
     sas=pd.read_sas,
@@ -188,7 +189,7 @@ def open(path, callback=None, transform=None, rel=False, **kwargs):
         open('data.yaml')           # Loads a YAML file
         open('data.csv')            # Loads a CSV file
 
-    The 2nd parameter (callback) a predefined string that can be one of
+    The 2nd parameter (callback) accepts a predefined string that can be one of:
 
     - ``bin``: reads binary files using io.open
     - ``text`` or ``txt``: reads text files using io.open
@@ -199,7 +200,7 @@ def open(path, callback=None, transform=None, rel=False, **kwargs):
     - ``jsondata``: reads files using pd.read_json
     - ``template``: reads files using tornado.Template via io.open
     - ``markdown`` or ``md``: reads files using markdown.markdown via io.open
-    - ``csv``, ``excel``, ``xls``, `xlsx``, ``hdf``, ``html``, ``sas``,
+    - ``csv``, ``excel``, ``xls``, `xlsx``, ``hdf``, ``h5``, ``html``, ``sas``,
       ``stata``, ``table``, ``parquet``, ``feather``: reads using Pandas
     - ``xml``, ``svg``, ``rss``, ``atom``: reads using lxml.etree
 
