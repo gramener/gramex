@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  {% set kwargs = handler.kwargs %}
+  {% set filemanager_kwargs = kwargs.get('filemanager_kwargs', '') or {} %}
+  {% set title = filemanager_kwargs.get('title', 'File manager') %}
+  {% import filemanager %}
+  {% set print(filemanager.__file__) %}
+  <title>{{ title }}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="ui/bootstraptheme.css{{ filemanager_kwargs.get('theme', '') }}">
+  <link rel="stylesheet" href="ui/@fortawesome/fontawesome-free/css/all.min.css">
+  <link rel="stylesheet" href="ui/dropzone/dist/min/dropzone.min.css">
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-3">
+    <a class="navbar-brand py-0 d-flex" href="{{ filemanager_kwargs.get('home', '.') }}">
+      {% if filemanager_kwargs.get('logo') %}
+        <img class="pr-2" src="{{ filemanager_kwargs['logo'] }}" alt="">
+      {% end %}
+      <div class="text-middle d-flex-inline">{{ title }}</div>
+    </a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav mr-auto">
+        <li class="nav-item"><a class="btn btn-primary" href="./help" role="button">Help <i class="fa fa-question-circle"></i></a></li>
+      </ul>
+    </div>
+  </nav>
+
+  {% if handler.request.uri.endswith('help') %}
+  {% include 'readme.html' %}
+  {% else %}
+
+  <script src="ui/jquery/dist/jquery.min.js"></script>
+  <script src="ui/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="ui/lodash/lodash.min.js"></script>
+  <script src="ui/moment/min/moment.min.js"></script>
+  <script src="ui/g1/dist/g1.min.js"></script>
+  <script src="ui/dropzone/dist/min/dropzone.min.js"></script>
+  <script src="filemanager.js"></script>
+
+  {% set drives = filemanager.get_drive_urls(handler) %}
+  <div class="container-fluid">
+    {% if len(drives) > 0 %}
+    <ul class="nav nav-tabs" id="drivetabs" role="tablist">
+    {% for i, (drive, url) in enumerate(drives) %}
+      {% if url %}
+      <li class="nav-item">
+        {% set active = "active" if i == 0 else "" %}
+        {% set selected = "true" if i == 0 else "false" %}
+        <a class="nav-link {{ active }}" id="{{ drive }}-tab" data-toggle="tab" href="#{{ drive }}-manager" role="tab" aria-controls="{{ drive }}-manager" aria-selected="{{ selected }}">{{ drive }}</a>
+      </li>
+      {% end %}
+    {% end %}
+    </ul>
+    <div class="tab-content">
+    {% for i, (drive, url) in enumerate(drives) %}
+      {% if url %}
+      {% set tab_attrs = "show active" if i == 0 else "" %}
+      <div class="tab-pane fade {{ tab_attrs }} mt-2" id="{{ drive }}-manager" role="tabpanel" aria-labelledby="{{ drive }}-tab">
+        <div class="divider border-dark">Drop a file below to upload it.</div>
+        <div class="drive-{{ drive }} mt-2" data-src="{{ url.pattern }}"></div>
+      </div>
+      {% end %}
+    {% end %}
+    </div>
+    {% else %}
+    <div class="alert alert-warning" role="alert">
+      <strong>No drives found.</strong> Please add drives to your application as follows:
+    </div>
+    {% include 'drivehandler-snippet.html' %}
+    <div class="alert alert-primary" role="alert">
+      Refer to the <a class="btn btn-primary" href="./help">help <i class="fa fa-question-circle"></i></a> for details.
+    </div>
+    {% end %}
+  </div>
+  <script>
+    Dropzone.autoDiscover = false
+    var fh_elems = $('*[class*="drive-"]')
+    for (i=0; i<fh_elems.length;i++) {
+      $(fh_elems.get(i)).filemanager()
+    }
+  </script>
+  {% end %}
+
+</body>
+</html>
