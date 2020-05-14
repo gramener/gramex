@@ -1,7 +1,4 @@
 '''Python-PPTX customized module.'''
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-
 import os
 import six
 import copy

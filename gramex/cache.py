@@ -1,6 +1,4 @@
 '''Caching utilities'''
-from __future__ import unicode_literals
-
 import io
 import os
 import re

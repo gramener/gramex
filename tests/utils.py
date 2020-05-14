@@ -1,7 +1,4 @@
-# -*- coding: utf-8 -*-
 '''Test case utilities'''
-from __future__ import unicode_literals
-
 import os
 import csv
 import six

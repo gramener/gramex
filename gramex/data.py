@@ -1,8 +1,6 @@
 '''
 Interact with data from the browser
 '''
-from __future__ import unicode_literals
-
 import io
 import os
 import re

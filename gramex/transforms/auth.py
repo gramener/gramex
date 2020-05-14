@@ -1,7 +1,6 @@
 '''
 Authentication transforms
 '''
-from __future__ import unicode_literals
 import six
 from gramex.config import app_log
 
