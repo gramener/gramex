@@ -7,7 +7,6 @@
   {% set filemanager_kwargs = kwargs.get('filemanager_kwargs', '') or {} %}
   {% set title = filemanager_kwargs.get('title', 'File manager') %}
   {% import filemanager %}
-  {% set print(filemanager.__file__) %}
   <title>{{ title }}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="ui/bootstraptheme.css{{ filemanager_kwargs.get('theme', '') }}">

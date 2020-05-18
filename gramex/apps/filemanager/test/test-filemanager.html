@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>filemanager tests</title>
+  <link rel="stylesheet" href="../node_modules/bootstrap/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="../node_modules/font-awesome/css/font-awesome.min.css">
+  <script src="../node_modules/jquery/dist/jquery.min.js"></script>
+  <script src="../node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="../node_modules/lodash/lodash.min.js"></script>
+  <script src="../node_modules/moment/min/moment.min.js"></script>
+  <script src="../node_modules/numeral/min/numeral.min.js"></script>
+  <script src="../node_modules/d3/build/d3.js"></script>
+  <script src="../node_modules/d3-scale-chromatic/dist/d3-scale-chromatic.js"></script>
+  <script src="../node_modules/g1/dist/g1.min.js"></script>
+  <script src="../node_modules/dropzone/dist/min/dropzone.min.js"></script>
+  <script src="../filemanager.js"></script>
+  <script src="tape.js"></script>
+  <script src="tape-stream.js"></script>
+</head>
+
+<body>
+  <div class="filemanager" data-src="/default"></div>
+  <div class="fm-opts" data-src="/default"></div>
+  <div class="fm-opts-2" data-src="/default"></div>
+  <div class="fm-opts-reserved" data-src="/default"></div>
+  <div class="edit-fname" data-src="/default"></div>
+</body>
+<script>
+  tape('$().filemanager default', function(t) {
+    $('.filemanager').on('load', function(e) {
+      t.plan(4)
+
+      // Check the right columns
+      let column_names = ["file", "size", "mime", "date", "Delete", "tags"]
+      t.deepEqual(column_names, _.map(e.options.columns, "name"))
+
+      // check file links
+      let file_link = "/default?id=<%- row.id %>&_format=file&_download"
+      t.equal(file_link, e.options.columns[0].link)
+
+      // check delete button
+      let delete_template = '<td><button class="btn btn-danger" data-action="delete">&times;</button></td>'
+      t.equal(delete_template, e.options.columns[4].template)
+
+      // check editable fields
+      let editable = [{input: "text"}, false, false, false, false, {input: "text"}]
+      t.deepEqual(editable, _.map(e.options.columns, "editable"))
+      t.end()
+
+    }).filemanager()
+  })
+
+  tape('$().filemanager options', function(t) {
+    // Check if non-reserved formhandler options work
+    t.plan(2)
+    $('.fm-opts').on('load', function(e) {
+      t.equal(e.formdata.length, 1)
+    }).filemanager({pageSize: 1})
+    $('.fm-opts-2').on('load', function(e) {
+      t.equal(e.formdata.length, 2)
+      t.end()
+    }).filemanager({pageSize: 2})
+  })
+
+  tape('$().filemanager reserved options', function(t) {
+    // Check if reserved options are protected.
+    $('.fm-opts-reserved').on('load', function(e) {
+      t.plan(2)
+
+      let tags = e.options.columns[5]
+      t.notOk(tags.title, "No title for reserved columns")
+
+      let newCol = e.options.columns[6]
+      t.equal(newCol.title, "MyNewColumnTitle")
+      t.end()
+
+    }).filemanager({
+      columns: [
+        // This column should not work
+        {
+          name: "tags",
+          title: "MYTAGS"
+        },
+        // This one should
+        {
+          name: "MyNewColumn",
+          title: "MyNewColumnTitle"
+        }
+      ]
+    })
+  })
+
+var formdata = null
+var btn = null
+
+tape('$().filemanager change file name', function(t) {
+  $('.edit-fname').on('load', function(e) {
+    formdata = e
+  }).filemanager()
+
+  let editbtn = $('.edit-fname').find(".btn-success")
+  setTimeout(function() {editbtn.click()}, 1000)
+  editbtn.click()
+
+  $('.form-control.form-control-sm').val("foo")
+  let savebtn = $('.edit-fname').find(".btn-success")
+  setTimeout(function() {savebtn.click()}, 1000)
+  savebtn.click()
+
+  console.log($('.form-control.form-control-sm').val())
+  // $(this).find(".btn-success").trigger("click")
+
+
+})
+
+</script>
+
+</html>

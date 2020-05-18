@@ -22,7 +22,7 @@ function get_default_opts(url) {
         template: '<td><button class="btn btn-danger" data-action="delete">&times;</button></td>',
         editable: false
       },
-      {name: "tags"},
+      {name: "tags", editable: {input: "text"}},
     ]
   }
 }
@@ -36,9 +36,15 @@ function updateColumns(fm, fh) {
   let cols_to_add = _.filter(fh, function(d) {return to_add.includes(d.name)})
   fm.push(...cols_to_add)
   return fm
-
 }
-
+//
+// 1. Code review
+// 2. Tests
+// 3. Projects: DRL contact tracing, Pratap's PoCs may use file. Nikhil too.
+// 4. Run from cL with pupetteer
+// 5. Check tape-stream.js
+// Files to check:
+//https://code.gramener.com/cto/g1/-/blob/master/test/server.js
 function renderTable(el, opts) {
   let url = el.dataset.src
   let default_opts = get_default_opts(url)
