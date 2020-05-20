@@ -57,4 +57,4 @@ script:
   - pip install gramexenterprise
   - gramex license accept
   # - python setup.py nosetests
-  - cd gramex/apps/filemanager/ && sh tests/test.sh
+  - cd gramex/apps/filemanager/ && sh test/test.sh
