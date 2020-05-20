@@ -2,7 +2,6 @@ import:
   apps/filemanager/ui:
     path: $GRAMEXAPPS/ui/gramex.yaml
     YAMLURL: $YAMLURL/ui/
-  test: '*/gramex.yaml'
 
 url:
   apps/filemanager/home-$*:

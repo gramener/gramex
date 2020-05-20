@@ -1,22 +1,26 @@
-schedule:
-  run_puppeteer:
-    function: utils.test
-    #thread: true
-    startup: true
+import:
+  parent:
+    path: $YAMLPATH/../gramex.yaml
+    url: $YAMLURL/
 
 url:
-  test-drive1:
-    pattern: $YAMLURL/drive1
+  apps/filemanager/test/data-$*:
+    pattern: /$YAMLURL/default
+    handler: FormHandler
+    kwargs:
+      url: $YAMLPATH/default-drive.csv
+  apps/filemanager/test/testfiles-$*:
+    pattern: /$YAMLURL/(.*).html
+    handler: FileHandler
+    kwargs:
+      path: $YAMLPATH/*.html
+  apps/filemanager/test/js-$*:
+    pattern: /$YAMLPATH/(.*).js
+    handler: FileHandler
+    kwargs:
+      path: $YAMLPATH/*.js
+  apps/filemanager/test/default-drive-$*:
+    pattern: /$YAMLURL/drive1
     handler: DriveHandler
     kwargs:
       path: $YAMLPATH/drive1
-  test-drive2:
-    pattern: $YAMLURL/drive2
-    handler: DriveHandler
-    kwargs:
-      path: $YAMLPATH/drive2
-  test-drive3:
-    pattern: $YAMLURL/drive3
-    handler: DriveHandler
-    kwargs:
-      path: $YAMLPATH/drive3
