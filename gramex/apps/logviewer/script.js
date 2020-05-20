@@ -1,4 +1,4 @@
-/*global config, vega, vegam, vegaTooltip, vl */
+/*global config, vega, vegam, vegaTooltip, vegaLite */
 /* exported updateParams, vegamDraw, unitDraw, filterTime, filterSelect,
 drawFilters drawViz, updateView */
 
@@ -33,7 +33,7 @@ function vegamDraw(s, on) {
   // need vega spec to alter
   var removes = {'fit-x': 'height', 'fit-y': 'width'}
   delete s.spec[removes[s.spec.autosize.type]]
-  var vspec = vl.compile(s.spec).spec
+  var vspec = vegaLite.compile(s.spec).spec
   // remove tooltip for certain mark types
   vspec.marks.forEach(function(m) {
     if (['line', 'area'].indexOf(m.type) > -1) {
