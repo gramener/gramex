@@ -17,6 +17,7 @@ addons:
   apt:
     packages:
       - pandoc
+      - libgconf-2-4
 
 # Cache modules for faster builds
 cache:
@@ -42,7 +43,7 @@ install:
   - pip install flake8 pep8-naming flake8-gramex flake8-blind-except flake8-print flake8-debugger bandit nose
   # Install node.js and packages using yarn (faster than npm)
   - npm install -g yarn
-  - yarn global --ignore-engines add eclint eslint eslint-plugin-html htmllint-cli browserify
+  - yarn global --ignore-engines add eclint eslint eslint-plugin-html htmllint-cli browserify tap-merge faucet
   - yarn install
   # Set up variables
   - export BRANCH=$TRAVIS_BRANCH
