@@ -1,94 +1,70 @@
-function get_default_opts(url) {
-  return {
-    edit: true,
-    columns: [
-      {
-        name: "file", link: `${url}?id=<%- row.id %>&_format=file&_download`,
-        editable: {
-          input: "text"
-        }
+const DOWNLOAD_LINK = '?id=<%- row.id %>&_format=file&_download'
+const DEFAULT_OPTS = {
+  edit: true,
+  columns: [
+    {
+      name: "file", // link: `${url}`,
+      editable: {
+        input: "text"
+      }
+    },
+    {name: 'size', editable: false},
+    {name: 'mime', editable: false},
+    {
+      name: 'date',
+      format: function(d) {
+        return moment.duration(moment().diff(moment.unix(d.value))).humanize() + ' ago'
       },
-      {name: 'size', editable: false},
-      {name: 'mime', editable: false},
-      {
-        name: 'date',
-        format: function(d) {
-          return moment.duration(moment().diff(moment.unix(d.value))).humanize() + ' ago'
-        },
-        editable: false
-      },
-      {
-        name: 'Delete',
-        template: '<td><button class="btn btn-danger" data-action="delete">&times;</button></td>',
-        editable: false
-      },
-      {name: "tags", editable: {input: "text"}},
-    ]
-  }
+      editable: false
+    },
+    {
+      name: 'Delete',
+      template: '<td><button class="btn btn-danger" data-action="delete">&times;</button></td>',
+      editable: false
+    },
+    {name: "tags", editable: {input: "text"}},
+  ],
+  exportTemplate: '<button id="uploadbtn" class="btn btn-primary">Upload</button>'
+}
+const DEFAULT_COLS = _.map(DEFAULT_OPTS.columns, "name")
+
+function attach_dropzone(el, opts, parent = null, clickable = true) {
+  if (!(parent)) { parent = el }
+  $(el).dropzone({
+    url: $(parent).attr('data-src'),
+    clickable: clickable,
+    createImageThumbnails: false,
+    previewTemplate: "<div></div>",
+    init: function() {
+      this.on('success', function(e) { renderTable(parent, opts) })
+    }
+  })
 }
 
-function updateColumns(fm, fh) {
-  // Update the filemanager columns with whatever the user has provided
-  // under the formhandler columns, but keep some reserved as default.
-  let default_columns = _.map(fm, "name")
-  let user_columns = _.map(fh, "name")
-  let to_add = _.difference(user_columns, default_columns)
-  let cols_to_add = _.filter(fh, function(d) {return to_add.includes(d.name)})
-  fm.push(...cols_to_add)
-  return fm
-}
-//
-// 1. Code review
-// 2. Tests
-// 3. Projects: DRL contact tracing, Pratap's PoCs may use file. Nikhil too.
-// 4. Run from cL with pupetteer
-// 5. Check tape-stream.js
-// Files to check:
-//https://code.gramener.com/cto/g1/-/blob/master/test/server.js
 function renderTable(el, opts) {
-  let url = el.dataset.src
-  let default_opts = get_default_opts(url)
-  let user_columns = (opts.columns || []).slice()
-  Object.assign(opts, default_opts)
-  opts.columns = updateColumns(default_opts.columns, user_columns)
+  let filecol = _.find(opts.columns, (c) => {return c.name == "file"})
+  filecol.link = filecol.link || el.dataset.src + DOWNLOAD_LINK
   $(el).on('load', function(e) {
-    let btn = $(this).find('[id^="formhandler-export-"]').get(0)
-    $(btn).text('Upload')
-    $(btn).removeClass('dropdown-toggle')
-    $(btn).removeClass('btn-light')
-    $(btn).addClass('btn-primary')
+    let btn = $(this).find('#uploadbtn').get(0)
     if (!($(btn).hasClass('dz-clickable'))) {
-      $(btn).dropzone({
-        url: $(el).attr('data-src'),
-        createImageThumbnails: false,
-        previewTemplate: "<div></div>",
-        init: function() {
-          this.on('success', function(e) { renderTable(el, opts) })
-        }
-      })
+      attach_dropzone(btn, opts, el)
     }
-    $(btn).next().remove()
     // Attach a dropzone to the whole element
     if (!(el.dropzone)) {
-      $(el).dropzone({
-        url: $(el).attr('data-src'),
-        clickable: false,
-        createImageThumbnails: false,
-        previewTemplate: "<div></div>",
-        init: function() {
-          this.on('success', function(e) { renderTable(el, opts) })
-        }
-      })
+      attach_dropzone(el, opts, clickable = false)
     }
   })
   .formhandler(opts)
 }
 
 $.fn.filemanager = function(opts) {
-  // update opts with filemanager's default opts
-  opts = opts || {}
+  opts = opts || {columns: []}
+  newopts = Object.assign({}, opts, DEFAULT_OPTS)
+  newopts.columns.forEach((s)=>{
+    Object.assign(s, _.find(opts.columns, (col) => {return col.name == s.name}))
+  })
+  newopts.columns.push(..._.filter(opts.columns, (c) => {return !(DEFAULT_COLS.includes(c.name))}))
   this.each(function() {
-    let el = this
-    renderTable(el, opts)
+    renderTable(this, newopts)
   })
 }

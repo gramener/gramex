@@ -25,11 +25,12 @@
   <div class="fm-opts-2" data-src="/default"></div>
   <div class="fm-opts-reserved" data-src="/default"></div>
   <div class="edit-fname" data-src="/default"></div>
+  <div class="empty-drive" data-src="/drive1"></div>
 </body>
 <script>
   tape('$().filemanager default', function(t) {
     $('.filemanager').on('load', function(e) {
-      t.plan(4)
+      t.plan(6)
 
       // Check the right columns
       let column_names = ["file", "size", "mime", "date", "Delete", "tags"]
@@ -37,11 +38,14 @@
 
       // check file links
       let file_link = "/default?id=<%- row.id %>&_format=file&_download"
-      t.equal(file_link, e.options.columns[0].link)
+      t.equal(e.options.columns[0].link, file_link)
 
       // check delete button
-      let delete_template = '<td><button class="btn btn-danger" data-action="delete">&times;</button></td>'
-      t.equal(delete_template, e.options.columns[4].template)
+      let fh_table = $(e.target).find('.table').get(1)
+      let buttons = Array(...$(fh_table).find('button'))
+      t.equal(buttons.length, 3)
+      t.same(_.map(buttons, (b) => {return $(b).hasClass("btn-danger")}), [true, true, true])
+      t.same(_.map(buttons, (b) => {return $(b).attr("data-action")}), ["delete", "delete", "delete"])
 
       // check editable fields
       let editable = [{input: "text"}, false, false, false, false, {input: "text"}]
@@ -69,7 +73,7 @@
       t.plan(2)
 
       let tags = e.options.columns[5]
-      t.notOk(tags.title, "No title for reserved columns")
+      t.equal(tags.title, "MYTAGS")
 
       let newCol = e.options.columns[6]
       t.equal(newCol.title, "MyNewColumnTitle")
@@ -77,12 +81,10 @@
 
     }).filemanager({
       columns: [
-        // This column should not work
         {
           name: "tags",
           title: "MYTAGS"
         },
-        // This one should
         {
           name: "MyNewColumn",
           title: "MyNewColumnTitle"
@@ -90,28 +92,10 @@
       ]
     })
   })
-
-var formdata = null
-var btn = null
-
-tape('$().filemanager change file name', function(t) {
-  $('.edit-fname').on('load', function(e) {
-    formdata = e
-  }).filemanager()
-
-  let editbtn = $('.edit-fname').find(".btn-success")
-  setTimeout(function() {editbtn.click()}, 1000)
-  editbtn.click()
-
-  $('.form-control.form-control-sm').val("foo")
-  let savebtn = $('.edit-fname').find(".btn-success")
-  setTimeout(function() {savebtn.click()}, 1000)
-  savebtn.click()
-
-  console.log($('.form-control.form-control-sm').val())
-  // $(this).find(".btn-success").trigger("click")
-
-
+tape('Check empty drive', function(t) {
+  t.plan()
+  $('.empty-drive').filemanager()
+  t.end()
 })
 
 </script>

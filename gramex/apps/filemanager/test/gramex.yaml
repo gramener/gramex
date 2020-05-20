@@ -1,0 +1,22 @@
+schedule:
+  run_puppeteer:
+    function: utils.test
+    #thread: true
+    startup: true
+
+url:
+  test-drive1:
+    pattern: $YAMLURL/drive1
+    handler: DriveHandler
+    kwargs:
+      path: $YAMLPATH/drive1
+  test-drive2:
+    pattern: $YAMLURL/drive2
+    handler: DriveHandler
+    kwargs:
+      path: $YAMLPATH/drive2
+  test-drive3:
+    pattern: $YAMLURL/drive3
+    handler: DriveHandler
+    kwargs:
+      path: $YAMLPATH/drive3

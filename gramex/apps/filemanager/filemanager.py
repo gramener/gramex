@@ -13,7 +13,3 @@ def get_drive_urls(handler):
         for d in fm_kwargs['drives']:
             drives.append((d, conf.url.get(d, '')))
     return drives
-
-
-def get_custom_fields(drive):
-    raise NotImplementedError
