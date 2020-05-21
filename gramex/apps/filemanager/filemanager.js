@@ -24,8 +24,16 @@ const DEFAULT_OPTS = {
     },
     {name: "tags", editable: {input: "text"}},
   ],
-  exportTemplate: '<button id="uploadbtn" class="btn btn-primary">Upload</button>'
+  exportTemplate: '<button id="uploadbtn" class="btn btn-primary">Upload</button>',
+  notification: ".drivenotif"
 }
+const NOTIFICATION_TEMPLATE = `
+<div class="alert alert-warning alert-dismissible" role="alert">
+  <template class="notif"><%= message %></template>
+  <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+    <span aria-hidden="true">&times;</span>
+  </button>
+</div>`
 const DEFAULT_COLS = _.map(DEFAULT_OPTS.columns, "name")
 
 function attach_dropzone(el, opts, parent = null, clickable = true) {
@@ -37,6 +45,16 @@ function attach_dropzone(el, opts, parent = null, clickable = true) {
     previewTemplate: "<div></div>",
     init: function() {
       this.on('success', function(e) { renderTable(parent, opts) })
+      .on('error', function(file, error, xhr) {
+        $(opts.notification).html(NOTIFICATION_TEMPLATE)
+        if (xhr.status == 413) {
+          $("template.notif").template({message: 'File too large.'})
+        } else if (xhr.status == 415) {
+          $("template.notif").template({message: 'File type not allowed.'})
+        } else if (xhr.status == 0) {
+          $("template.notif").template({message: 'Server not reachable.'})
+        }
+      })
     }
   })
 }

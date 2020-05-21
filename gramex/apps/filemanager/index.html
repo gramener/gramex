@@ -16,7 +16,7 @@
   <body>
     {% include 'navbar.html' %}
     {% if handler.request.uri.endswith('help') %}
-      {% include 'readme.html' %}
+      {% include 'README.html' %}
     {% else %}
       {% include 'filemanager.html' %}
     {% end %}

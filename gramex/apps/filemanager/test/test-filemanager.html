@@ -93,9 +93,11 @@
     })
   })
 tape('Check empty drive', function(t) {
-  t.plan()
-  $('.empty-drive').filemanager()
-  t.end()
+  t.plan(1)
+  $('.empty-drive').on('load', (e) => {
+    t.equal(e.formdata.length, 0)
+    t.end()
+  }).filemanager()
 })
 
 </script>
