@@ -1,8 +1,8 @@
-set -ex
+set -x
 
 cd ../ui/ && gramex setup .
 cd -
-npm install
+yarn install
 browserify -s tape -r tape -o test/tape.js
 cd test
 nohup gramex &
