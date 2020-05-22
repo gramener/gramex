@@ -38,7 +38,7 @@ function attach_dropzone(el, parent, url, clickable = true, success = null) {
       previewTemplate: "<div></div>",
       init: function() {
         this.on('success', success) // function(e) { renderTable(parent, opts) })
-        .on('error', $(parent).data("formhandler")._failHandler)
+        .on('error', $(parent).data("formhandler").failHandler)
         }
       })
   } catch (err) { if (err.message != "Dropzone already attached.") throw err }
