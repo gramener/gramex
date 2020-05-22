@@ -23,7 +23,6 @@
     {% set tab_attrs = "show active" if i == 0 else "" %}
     <div class="tab-pane fade {{ tab_attrs }} mt-2" id="{{ drive }}-manager" role="tabpanel" aria-labelledby="{{ drive }}-tab">
     {% if url %}
-      <div class="drivenotif"></div>
       <div class="divider border-dark">Drop a file below to upload it.</div>
       <div class="drivetab mt-2" data-src="{{ url.pattern }}"></div>
     {% else %}
