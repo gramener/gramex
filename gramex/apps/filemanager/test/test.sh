@@ -1,6 +1,7 @@
 set -ex
 
-gramex setup ui
+cd ../ui/ && gramex setup .
+cd -
 npm install
 browserify -s tape -r tape -o test/tape.js
 cd test
