@@ -26,6 +26,7 @@
   <div class="fm-opts-reserved" data-src="default"></div>
   <div class="edit-fname" data-src="default"></div>
   <div class="empty-drive" data-src="drive1"></div>
+  <div class="error-drive" data-src="default"></div>
 </body>
 <script>
   tape('$().filemanager default', function(t) {
@@ -92,13 +93,29 @@
       ]
     })
   })
-tape('Check empty drive', function(t) {
-  t.plan(1)
-  $('.empty-drive').on('load', (e) => {
-    t.equal(e.formdata.length, 0)
+
+  tape('Check empty drive', function(t) {
+    t.plan(1)
+    $('.empty-drive').on('load', (e) => {
+      t.equal(e.formdata.length, 0)
+      t.end()
+    }).filemanager()
+  })
+  tape('Error drive', function(t) {
+    t.plan(1)
+    $('.error-drive').on('load', function(e) {
+      t.equal(e.formdata.length, 3)
+      t.end()
+    }).filemanager()
+  })
+  tape('Test failhandler', function (t) {
+    t.plan(1)
+    $('.error-drive').get(0).dropzone._callbacks.error.forEach((e) => {
+      if (typeof(e) == "function") { e("error", "FailHandler Error Message", null) }
+    })
+    t.equal($('.alert-warning').text(), " FailHandler Error Message: null ×")
     t.end()
-  }).filemanager()
-})
+  })
 
 </script>
 
