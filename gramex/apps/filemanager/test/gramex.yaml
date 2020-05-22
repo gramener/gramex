@@ -1,4 +1,7 @@
 import:
+  ui:
+    path: $GRAMEXAPPS/ui/gramex.yaml
+    url: $YAMLURL/ui/
   parent:
     path: $YAMLPATH/../gramex.yaml
     url: $YAMLURL/
