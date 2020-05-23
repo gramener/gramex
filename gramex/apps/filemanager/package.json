@@ -33,7 +33,7 @@
     "express": "4",
     "faucet": "0.0",
     "font-awesome": "4",
-    "g1": "0.17.3",
+    "g1": "0.17.4",
     "glob": "7.1",
     "html-minifier": "3",
     "is-plain-object": "2",
