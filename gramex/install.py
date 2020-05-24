@@ -1,8 +1,6 @@
 '''
 Defines command line services to install, setup and run apps.
 '''
-from __future__ import unicode_literals
-
 import io
 import os
 import re

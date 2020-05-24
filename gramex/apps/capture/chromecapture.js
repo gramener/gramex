@@ -121,6 +121,7 @@ async function render(q) {
   let args = [
     '--no-sandbox',
     '--disable-setuid-sandbox',
+    '--ignore-certificate-errors'
   ]
   // If a proxy environment variable is defined, use it
   let proxy = process.env.HTTPS_PROXY || process.env.HTTP_PROXY || process.env.ALL_PROXY

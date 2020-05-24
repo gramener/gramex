@@ -1,7 +1,4 @@
-# -*- coding: utf-8 -*-
 '''Test case utilities'''
-from __future__ import unicode_literals
-
 import os
 import csv
 import six
@@ -401,6 +398,12 @@ class CounterHandler(BaseHandler):
 
     def get(self):
         self.write('%d' % counters['counterhandler'])
+
+
+def drivehandler_modify(data, key, handler):
+    if handler.request.method == 'GET':
+        data['m'] = 'OK'
+    return data
 
 
 if __name__ == '__main__':

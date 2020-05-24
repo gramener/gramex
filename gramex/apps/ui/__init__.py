@@ -1,6 +1,4 @@
 '''Main UI application'''
-from __future__ import unicode_literals
-
 import io
 import os
 import json

@@ -1,4 +1,3 @@
-from __future__ import unicode_literals
 from . import TestGramex
 from nose.tools import eq_, ok_
 

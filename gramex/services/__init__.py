@@ -10,8 +10,6 @@ For example, if ``gramex.yaml`` contains this section::
 ... then :func:`log` is called as ``log({"version": 1})``. If no such function
 exists, a warning is raised.
 '''
-from __future__ import unicode_literals
-
 import io
 import re
 import os

@@ -1,8 +1,6 @@
 '''
 Debugging and profiling tools for Gramex
 '''
-from __future__ import print_function, unicode_literals
-
 import os
 import gc
 import six
@@ -77,7 +75,6 @@ def print(*args, **kwargs):             # noqa
     A replacement for the ``print`` function that also logs the (file, function,
     line, msg) from where it is called. For example::
 
-        >>> from __future__ import print_function       # required for Python 2.x
         >>> from gramex.debug import print              # import print function
         >>> print('hello world')                        # It works like the print function
         <file>(line).<function>: hello world

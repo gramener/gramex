@@ -17,6 +17,7 @@ from .pptxhandler import PPTXHandler
 from .proxyhandler import ProxyHandler
 from .modelhandler import ModelHandler
 from .filterhandler import FilterHandler
+from .drivehandler import DriveHandler
 
 DirectoryHandler = FileHandler
 
@@ -26,6 +27,7 @@ __all__ = [
     'Capture',
     'CaptureHandler',
     'DirectoryHandler',
+    'DriveHandler',
     'FacebookGraphHandler',
     'FileHandler',
     'FilterHandler',
