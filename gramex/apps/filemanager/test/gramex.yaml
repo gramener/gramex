@@ -16,4 +16,4 @@ url:
     pattern: /$YAMLURL/drive1
     handler: DriveHandler
     kwargs:
-      path: $YAMLPATH/drive1
+      path: $YAMLPATH/drive1/
