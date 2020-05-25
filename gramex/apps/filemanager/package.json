@@ -10,6 +10,19 @@
   "scripts": {
     "test": "bash test/test.sh"
   },
+  "eslintConfig": {
+    "overrides": [
+      {
+        "files": [
+          "test/puppet.js"
+        ]
+      }
+    ],
+    "parserOptions": {
+      "sourceType": "module",
+      "ecmaVersion": 8
+    }
+  },
   "devDependencies": {
     "browserify": "14",
     "faucet": "0.0",
