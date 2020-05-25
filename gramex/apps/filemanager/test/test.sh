@@ -1,6 +1,7 @@
 # Create test/tape.js dynamically. It's not committed
 browserify -s tape -r tape -o test/tape.js
 
+cd test/
 rm -f gramex.log
 gramex --listen.port=9999 > gramex.log 2>&1 &
 GRAMEX_PID=$!

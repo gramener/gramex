@@ -52,7 +52,7 @@ install:
 
 script:
   - eclint check '**/*.html' '**/*.js' '**/*.css' '**/*.yaml' '**/*.md'
-  # - eslint gramex/apps
+  - eslint gramex/apps
   - htmllint
   - flake8
   - bandit gramex --recursive --format csv || true
