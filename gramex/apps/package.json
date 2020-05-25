@@ -1,6 +1,6 @@
 {
   "devDependencies": {
     "eslint-plugin-html": "6",
-    "eslint-plugin-template": "0.3"
+    "eslint-plugin-template": "0.4"
   }
 }

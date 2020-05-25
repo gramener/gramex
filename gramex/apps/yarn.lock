@@ -68,10 +68,10 @@ eslint-plugin-html@6:
   dependencies:
     htmlparser2 "^4.1.0"
 
-eslint-plugin-template@0.3:
-  version "0.3.2"
-  resolved "https://registry.yarnpkg.com/eslint-plugin-template/-/eslint-plugin-template-0.3.2.tgz#06cf0ab93a047ed145c37352f7ac45f033aa2a13"
-  integrity sha512-8QzwRLTx4X3vt+OkS7zVnhZExDqKgjYk5Ar/MIRJO1bQXA33t8SkXe9hoHsXhgxTH/1OxWJG4bubcWoJZ1wWmQ==
+eslint-plugin-template@0.4:
+  version "0.4.0"
+  resolved "https://registry.yarnpkg.com/eslint-plugin-template/-/eslint-plugin-template-0.4.0.tgz#5bf650ca92ed15f73e99a0718d6efa673d8bdcc3"
+  integrity sha512-AjQ/v1SSYhVbJLF6wZOQ1HXfSjezKQi1zn4XYpQKDJaoa/6atwchkDHidrJ/ROtPzXkTEnFrzOmE/YtzkR4zdA==
   dependencies:
     htmlparser2 "3"
 
