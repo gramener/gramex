@@ -45,6 +45,7 @@ install:
   - nvm install 12
   - npm install -g yarn
   - yarn global add eclint eslint htmllint-cli
+  - yarn install
   # Set up variables
   - export BRANCH=$TRAVIS_BRANCH
 
