@@ -27,6 +27,8 @@
   <div class="error-drive" data-src="default"></div>
 </body>
 <script>
+  /* eslint-env browser, jquery */
+  /* globals _, tape */
   tape('$().filemanager default', function(t) {
     $('.filemanager').on('load', function(e) {
       t.plan(6)

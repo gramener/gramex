@@ -17,7 +17,6 @@ addons:
   apt:
     packages:
       - pandoc
-      - libgconf-2-4
 
 # Cache modules for faster builds
 cache:
@@ -45,14 +44,14 @@ install:
   # Install node.js and packages using yarn (faster than npm)
   - nvm install 12
   - npm install -g yarn
-  - yarn global add eclint eslint eslint-plugin-html htmllint-cli
+  - yarn global add eclint eslint htmllint-cli
   - yarn install
   # Set up variables
   - export BRANCH=$TRAVIS_BRANCH
 
 script:
   - eclint check '**/*.html' '**/*.js' '**/*.css' '**/*.yaml' '**/*.md'
-  - eslint gramex/apps
+  - eslint --ext js,html gramex/apps
   - htmllint
   - flake8
   - bandit gramex --recursive --format csv || true
