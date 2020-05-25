@@ -1,3 +1,4 @@
+/* eslint-env browser, jquery */
 // TODO: detailed docs
 
 $.fn.webshell = function(options) {

@@ -22,6 +22,19 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "eslintConfig": {
+    "overrides": [
+      {
+        "files": [
+          "chromecapture.js"
+        ]
+      }
+    ],
+    "parserOptions": {
+      "sourceType": "module",
+      "ecmaVersion": 8
+    }
+  },
   "author": "S Anand <s.anand@gramener.com>",
   "license": "ISC"
 }

@@ -13,23 +13,8 @@
     <script src="ui/popper.js/dist/umd/popper.min.js"></script>
     <script src="ui/bootstrap-select/dist/js/bootstrap-select.min.js"></script>
     <script src="nlg/nlg.js"></script>
-    <script>
-        // Render the FormHandler table
 
-        $.fn.selectpicker.Constructor.BootstrapVersion = '4'
-        var df = null;
-        var args = null;
-        var templates = [];
-        var currentEventHandlers = {};
-        var currentEditIndex = null;
-        var currentSpanId = null;
-        var grammarOptions = []
-        var narrative_name = "";
-        var dataset_name = "";
-        // setContextMenu();
-        $(document).ready(setInitialConfig)
-    </script>
-      <div class="form-group row">
+    <div class="form-group row">
         <label class="col-sm-2 col-form-label" for="narrative-name-editor">Narrative Title</label>
         <div class="col-sm-10">
           <input class="form-control" id="narrative-name-editor" placeholder="Name the Narrative">
@@ -77,10 +62,6 @@
     </form>
     <div class="divider"></div>
     <div class="formhandler" data-src="nlg/preview/{{ handler.current_user.email }}/{{ dsid }}"></div>
-    <script>
-      $('.formhandler').on('load', renderPreview);
-      $('.formhandler').formhandler();
-    </script>
     <!--
     <button id="clear-tmpls" title="Clear Narrative" type="button" class="btn btn-danger">
         <i class="fa fa-trash"></i>
@@ -207,29 +188,51 @@
     </div>
     <!-- Template preview -->
     <script>
-        document.getElementById("download-config-btn").addEventListener("click", saveConfig);
-        // document.getElementById("config-upload").addEventListener("change", uploadConfig, false);
-        document.getElementById("inspect").addEventListener("click", addToNarrative);
-        document.getElementById("check-template").addEventListener("click", checkTemplate);
-        var saveBtn = document.getElementById("save-template")
-        saveBtn.addEventListener("click", saveTemplate);
-        document.getElementById("edit-template").addEventListener('focus', function (e) {saveBtn.disabled = false})
-        document.getElementById("condition-btn").addEventListener("click", addCondition);
-        document.getElementById("share-narrative-btn").addEventListener("click", shareNarrative);
-        document.getElementById("copy-editor-url").addEventListener("click",
-            function (e) {copyToClipboard('share-editor-url')});
-        document.getElementById("copy-narrative-url").addEventListener("click",
-            function (e) {copyToClipboard('share-narrative-url')});
-        document.getElementById("tmpl-name-btn").addEventListener("click", addName);
-        document.getElementById("fh-arg-setter").addEventListener("change", changeFHSetter)
-        // document.getElementById("clear-tmpls").addEventListener('click', clearNarrative);
-        document.getElementById("textbox").cols = 119;
-        document.getElementById("edit-template").cols = 69;
-        document.getElementById("edit-template").rows = 10;
+        /* eslint-env browser, jquery */
+        /* globals addCondition, addName, addToNarrative, changeFHSetter, checkTemplate,
+              copyToClipboard, renderPreview, saveConfig, saveTemplate, setInitialConfig,
+              shareNarrative */
+        /* exported df, args, templates, currentEventHandlers, currentEditIndex, currentSpanId,
+              grammarOptions, narrative_name, dataset_name */
+        $.fn.selectpicker.Constructor.BootstrapVersion = '4'
+        var df = null
+        var args = null
+        var templates = []
+        var currentEventHandlers = {}
+        var currentEditIndex = null
+        var currentSpanId = null
+        var grammarOptions = []
+        var narrative_name = ''
+        var dataset_name = ''
+        // setContextMenu()
+        $(document).ready(setInitialConfig)
+
+        $('.formhandler').on('load', renderPreview)
+        $('.formhandler').formhandler()
+
+        document.getElementById('download-config-btn').addEventListener('click', saveConfig)
+        // document.getElementById('config-upload').addEventListener('change', uploadConfig, false)
+        document.getElementById('inspect').addEventListener('click', addToNarrative)
+        document.getElementById('check-template').addEventListener('click', checkTemplate)
+        var saveBtn = document.getElementById('save-template')
+        saveBtn.addEventListener('click', saveTemplate)
+        document.getElementById('edit-template').addEventListener('focus', function () {saveBtn.disabled = false})
+        document.getElementById('condition-btn').addEventListener('click', addCondition)
+        document.getElementById('share-narrative-btn').addEventListener('click', shareNarrative)
+        document.getElementById('copy-editor-url').addEventListener('click',
+          function () {copyToClipboard('share-editor-url')})
+        document.getElementById('copy-narrative-url').addEventListener('click',
+          function () {copyToClipboard('share-narrative-url')})
+        document.getElementById('tmpl-name-btn').addEventListener('click', addName)
+        document.getElementById('fh-arg-setter').addEventListener('change', changeFHSetter)
+        // document.getElementById('clear-tmpls').addEventListener('click', clearNarrative)
+        document.getElementById('textbox').cols = 119
+        document.getElementById('edit-template').cols = 69
+        document.getElementById('edit-template').rows = 10
         $.ajax({
-            type: "GET",
-            url: "nlg/get-gramopts",
-            success: function (resp) { grammarOptions = resp }
+          type: 'GET',
+          url: 'nlg/get-gramopts',
+          success: function (resp) { grammarOptions = resp }
         })
     </script>
 </body>

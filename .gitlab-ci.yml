@@ -20,25 +20,6 @@ variables:
   MYSQL_SERVER: mysql
   REDIS_SERVER: redis
 
-# Perform these checks on every commit
-validate:
-  tags: [py3]
-  script:
-    - eclint check '**/*.html' '**/*.js' '**/*.css' '**/*.yaml' '**/*.md'
-    - flake8
-    - eslint gramex/apps
-    - htmllint
-    - pip install -e .
-    - pip install gramexenterprise
-    - gramex license accept
-    - python setup.py nosetests
-    - bandit gramex --recursive --format csv || true    # Just run bandit as a warning
-    - gramex --listen.port=1234 > gramex.log 2>&1 &
-    - sleep 10
-    - pytest tests/gramextest.yaml
-    - cat gramex.log
-    - kill %1
-
 # Deploy the dev / master branches on gramener.com
 deploy-gramener:
   only: [dev, master]

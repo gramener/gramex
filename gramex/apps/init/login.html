@@ -47,6 +47,7 @@
   {%! if 'hash' in kwargs.get('password', {}) %}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/js-sha256/0.9.0/sha256.min.js"></script>
     <script>
+      /* eslint-env browser, jquery */
       /* globals sha256 */
       // hash the password before submitting
       $('form').on('submit', function() {

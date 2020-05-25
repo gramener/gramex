@@ -1,3 +1,4 @@
+/* eslint-env browser, jquery */
 /* global config, active_users */
 
 function alertMessage(msgOne, context, timer) {
