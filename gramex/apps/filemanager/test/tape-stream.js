@@ -1,3 +1,4 @@
+/* eslint-env browser */
 /* globals tape */
 /* eslint no-console: 0 */
 

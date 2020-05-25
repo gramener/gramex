@@ -1,4 +1,6 @@
-/*exported config*/
+/* globals d3 */
+/* exported config */
+
 var x_axis_format = '%d %b %Y'
 var dt_axis_tickcount = {interval: 'day', 'step': 1}
 var config = {

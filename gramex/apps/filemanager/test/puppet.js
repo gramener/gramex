@@ -1,6 +1,6 @@
-/* eslint no-console: 0 */
-
+/* eslint-env browser, node */
 const glob = require('glob')
+
 async function run_puppeteer() {
   const puppeteer = require('puppeteer')
   const browser = await puppeteer.launch({

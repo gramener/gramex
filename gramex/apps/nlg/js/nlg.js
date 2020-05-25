@@ -1,4 +1,5 @@
-/* globals currentEditIndex, grammarOptions, templates, args, df, currentEventHandlers */
+/* eslint-env es6, browser, jquery */
+/* globals g1, currentEditIndex, grammarOptions, templates, args, df, currentEventHandlers */
 /* exported addToNarrative, downloadConfig, setInitialConfig, uploadConfig, checkTemplate, saveTemplate, addCondition, addName, changeFHSetter, shareNarrative, copyToClipboard */
 /* eslint-disable no-global-assign */
 var narrative_name, dataset_name

@@ -1,6 +1,6 @@
-/*global config, vega, vegam, vegaTooltip, vegaLite */
-/* exported updateParams, vegamDraw, unitDraw, filterTime, filterSelect,
-drawFilters drawViz, updateView */
+/* eslint-env browser, jquery */
+/* global moment, config, vega, vegam, vegaTooltip, vegaLite, g1 */
+/* exported updateParams, vegamDraw, unitDraw, filterTime, filterSelect, drawFilters, drawViz, updateView */
 
 function updateParams(params, keeponly, remove) {
   var query = g1.url.parse(params)
