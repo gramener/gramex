@@ -45,7 +45,7 @@ install:
   # Install node.js and packages using yarn (faster than npm)
   - nvm install 12
   - npm install -g yarn
-  - yarn global --ignore-engines add eclint eslint eslint-plugin-html htmllint-cli browserify tap-merge faucet
+  - yarn global add eclint eslint eslint-plugin-html htmllint-cli
   - yarn install
   # Set up variables
   - export BRANCH=$TRAVIS_BRANCH
