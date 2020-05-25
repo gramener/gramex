@@ -49,11 +49,6 @@ tests/*.db
 # Don't commit uploads created by test cases
 tests/uploads/
 tests/drive/
-gramex/apps/filemanager/test/drive*
-gramex/apps/filemanager/test/tape.js
-gramex/apps/filemanager/test/nohup.out
-gramex/apps/filemanager/test/gramex-pid.txt
-
 
 # Don't commit ZIP files, except what's required for testing
 *.7z

@@ -1,10 +1,10 @@
 import:
   ui:
     path: $GRAMEXAPPS/ui/gramex.yaml
-    url: $YAMLURL/ui/
+    YAMLURL: /$YAMLURL/ui/
   parent:
-    path: $YAMLPATH/../gramex.yaml
-    url: $YAMLURL/
+    path: $GRAMEXAPPS/filemanager/gramex.yaml
+    YAMLURL: /$YAMLURL/filemanager/
 
 url:
   apps/filemanager/test/data-$*:
@@ -12,16 +12,6 @@ url:
     handler: FormHandler
     kwargs:
       url: $YAMLPATH/default-drive.csv
-  apps/filemanager/test/testfiles-$*:
-    pattern: /$YAMLURL/(.*).html
-    handler: FileHandler
-    kwargs:
-      path: $YAMLPATH/*.html
-  apps/filemanager/test/js-$*:
-    pattern: /$YAMLPATH/(.*).js
-    handler: FileHandler
-    kwargs:
-      path: $YAMLPATH/*.js
   apps/filemanager/test/default-drive-$*:
     pattern: /$YAMLURL/drive1
     handler: DriveHandler
