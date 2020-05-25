@@ -9,10 +9,10 @@ module.exports = {
     'ecmaVersion': 6    // Use ES6 parser. Browsers other than IE support it
   },
   // These default plugins are installed in the root gramex director via package.json
-  'plugins': [
-    'html',
-    'template'
-  ],
+  // 'plugins': [
+  //   'template',
+  //   'html'
+  // ],
   // Styles are based on recommended eslint fields, but with specific overrides
   'extends': 'eslint:recommended',
   'rules': {
