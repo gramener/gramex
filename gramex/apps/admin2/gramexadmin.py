@@ -1,6 +1,4 @@
 """Auth module role settings."""
-from __future__ import unicode_literals
-
 import gramex
 import gramex.handlers
 import json

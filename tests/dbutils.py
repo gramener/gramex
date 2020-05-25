@@ -2,8 +2,6 @@
 Test utilities to create and drop databases.
 Used by ../testlib/
 '''
-from __future__ import unicode_literals
-
 import os
 import sqlalchemy as sa
 from nose.plugins.skip import SkipTest

@@ -1,9 +1,6 @@
-# -*- coding: utf-8 -*-
 '''
 Python Node.js bridge
 '''
-from __future__ import unicode_literals
-
 import os
 import re
 import json

@@ -1,4 +1,3 @@
-from __future__ import unicode_literals
 import requests
 import lxml.html
 from nose.plugins.skip import SkipTest
