@@ -34,7 +34,7 @@ install:
   # KILLME
   - nvm 12
   - npm install -g yarn
-  - cd gramex/apps/filemanager/ && yarn install && yarn test
+  - cd gramex/apps/filemanager/ && yarn install
 
   # Install miniconda
   - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O $HOME/miniconda.sh
@@ -47,7 +47,7 @@ install:
   # Install pip modules
   - pip install flake8 pep8-naming flake8-gramex flake8-blind-except flake8-print flake8-debugger bandit nose
   # Install node.js and packages using yarn (faster than npm)
-  - nvm 12
+  - nvm install 12
   - npm install -g yarn
   - yarn global --ignore-engines add eclint eslint eslint-plugin-html htmllint-cli browserify tap-merge faucet
   - yarn install
