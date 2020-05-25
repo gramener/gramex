@@ -31,11 +31,6 @@ cache:
   #   - $HOME/miniconda
 
 install:
-  # KILLME
-  - nvm install 12
-  - npm install -g yarn
-  - cd gramex/apps/filemanager/ && yarn install
-
   # Install miniconda
   - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O $HOME/miniconda.sh
   - bash $HOME/miniconda.sh -b -u -p $HOME/miniconda
