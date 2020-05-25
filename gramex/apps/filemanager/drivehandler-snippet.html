@@ -1,0 +1,15 @@
+<pre><code>
+url:
+  pattern: /$YAMLURL/mydrive
+  handler: DriveHandler
+  kwargs:
+    path: $YAMLPATH/path/to/drive  # folder where files are stored
+    user_fields: [id, role, hd]         # user attributes to store
+    tags: [tag]                         # &lt;input name=""&gt; to store
+    allow: [.doc, .docx]            # Only allow these files
+    ignore: [.pdf]                 # Exclude these files
+    max_file_size: 100000                # Files must be smaller than this
+    redirect:                           # After uploading the file,
+        query: next                     #   ... redirect to ?next=
+        url: /$YAMLURL/                 #   ... else to this directory
+</code></pre>

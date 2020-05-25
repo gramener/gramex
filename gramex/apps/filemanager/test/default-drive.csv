@@ -1,0 +1,4 @@
+id,file,ext,path,size,mime,date,user_id,user_role,user_hd,tag
+1,imdb_ratings.csv,.csv,imdb-ratings.csv,791,text/csv,2020-05-18 03:02:27,jaidev.deshpande@gramener.com,,gramener.com,
+2,actors.csv,.csv,actors.csv,443,text/csv,2020-05-18 03:02:27,jaidev.deshpande@gramener.com,,gramener.com,
+3,data-list.json,.json,data-list.json,49,application/json,2020-05-18 03:02:54,jaidev.deshpande@gramener.com,,gramener.com,

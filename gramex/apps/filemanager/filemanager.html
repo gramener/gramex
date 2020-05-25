@@ -1,0 +1,55 @@
+<script src="ui/jquery/dist/jquery.min.js"></script>
+<script src="ui/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+<script src="ui/lodash/lodash.min.js"></script>
+<script src="ui/moment/min/moment.min.js"></script>
+<script src="ui/g1/dist/g1.min.js"></script>
+<script src="ui/dropzone/dist/min/dropzone.min.js"></script>
+<script src="filemanager.js"></script>
+
+{% set drives = filemanager.get_drive_urls(handler) %}
+<div class="container-fluid">
+  {% if len(drives) > 0 %}
+  <ul class="nav nav-tabs" id="drivetabs" role="tablist">
+  {% for i, (drive, url) in enumerate(drives) %}
+    <li class="nav-item">
+      {% set active = "active" if i == 0 else "" %}
+      {% set selected = "true" if i == 0 else "false" %}
+      <a class="nav-link {{ active }}" id="{{ drive }}-tab" data-toggle="tab" href="#{{ drive }}-manager" role="tab" aria-controls="{{ drive }}-manager" aria-selected="{{ selected }}">{{ drive }}</a>
+    </li>
+  {% end %}
+  </ul>
+  <div class="tab-content">
+  {% for i, (drive, url) in enumerate(drives) %}
+    {% set tab_attrs = "show active" if i == 0 else "" %}
+    <div class="tab-pane fade {{ tab_attrs }} mt-2" id="{{ drive }}-manager" role="tabpanel" aria-labelledby="{{ drive }}-tab">
+    {% if url %}
+      <div class="divider border-dark">Drop a file below to upload it.</div>
+      <div class="drivetab mt-2" data-src="{{ url.pattern }}"></div>
+    {% else %}
+      <div class="alert alert-danger">
+        URL associated with <a class="text-monospace">{{ drive }}</a> not found.
+        Please check the <a class="text-monospace">drives:</a> argument under <a class="text-monospace">FILEMANAGER_KWARGS</a>.
+      </div>
+      <div class="alert alert-primary" role="alert">
+        Refer to the <a class="btn btn-primary" href="./help">help <i class="fa fa-question-circle"></i></a> for details.
+      </div>
+    {% end %}
+    </div>
+  {% end %}
+  </div>
+  {% else %}
+  <div class="alert alert-warning" role="alert">
+    <strong>No drives found.</strong> Please add drives to your application as follows:
+  </div>
+  {% include 'drivehandler-snippet.html' %}
+  <div class="alert alert-primary" role="alert">
+    Refer to the <a class="btn btn-primary" href="./help">help <i class="fa fa-question-circle"></i></a> for details.
+  </div>
+  {% end %}
+</div>
+<script>
+  /* eslint-env jquery */
+  /* globals Dropzone */
+  Dropzone.autoDiscover = false
+  $('.drivetab').filemanager()
+</script>
