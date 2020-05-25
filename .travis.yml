@@ -45,14 +45,15 @@ install:
   - nvm install 12
   - npm install -g yarn
   - yarn global add eclint eslint htmllint-cli
-  - yarn install
   # Set up variables
   - export BRANCH=$TRAVIS_BRANCH
 
 script:
   - eclint check '**/*.html' '**/*.js' '**/*.css' '**/*.yaml' '**/*.md'
   - eslint --ext js,html gramex/apps
-  - htmllint
+  # htmllint: ignore test coverage, node_modules, Sphinx doc _builds
+  - find . -name '*.html' | grep -v htmlcov | grep -v node_modules | grep -v _build | xargs htmllint
+  # Run Python checks
   - flake8
   - bandit gramex --recursive --format csv || true
   - pip install -e .
