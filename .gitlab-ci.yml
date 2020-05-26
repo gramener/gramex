@@ -24,36 +24,30 @@ variables:
 deploy-gramener:
   only: [dev, master]
   script:
-    - 'ssh -t ubuntu@gramener.com "
+    - 'ssh ubuntu@gramener.com "
         cd /mnt/gramener/apps/gramex;
         git checkout -- .;
         git pull;
-        rm -rf /mnt/gramener/apps/v1/guide /mnt/gramener/apps/v1/gramex-update;
-        cp -R /home/ubuntu/.config/gramexdata/apps/guide /mnt/gramener/apps/v1/;
+        export PATH=/mnt/gramener/anaconda3/bin/:$PATH;
+        pip install -e .;
+        gramex setup --all;
+        pip install gramexenterprise;
+        gramex license accept;
+        rm -rf /mnt/gramener/apps/v1/gramex-update;
         cp -R /mnt/gramener/apps/gramex/gramex/apps/update /mnt/gramener/apps/v1/gramex-update;
-        /mnt/gramener/anaconda/bin/gramex setup /mnt/gramener/apps/v1/guide;
-        /mnt/gramener/anaconda/bin/gramex setup ui;
       "'
 
-# Deploy the master branch additionally on uat & demo servers
-deploy-uat-demo:
+# Deploy the master branch additionally on UAT server
+deploy-uat:
   only: [master]
   script:
-    - 'ssh -t ubuntu@uat.gramener.com "
+    - 'ssh ubuntu@uat.gramener.com "
         cd ~/gramex;
         git checkout -- .;
         git pull;
-        pip install --verbose -e .;
-        pip install gramexenterprise;
+        export PATH=/home/ubuntu/anaconda3/bin/:$PATH;
+        pip install -e .;
         gramex setup --all;
-        gramex license accept;
-      "'
-    - 'ssh -t ubuntu@demo.gramener.com "
-        cd /mnt/data/apps/gramex/gramex/;
-        git checkout -- .;
-        git pull;
-        pip install --verbose -e .;
         pip install gramexenterprise;
-        gramex setup --all;
         gramex license accept;
       "'
