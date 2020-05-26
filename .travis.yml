@@ -63,7 +63,7 @@ script:
   - pip install -e .
   - pip install gramexenterprise
   - gramex license accept
-  # - python setup.py nosetests
+  - python setup.py nosetests
 
   # Test specific apps
   - cd $TRAVIS_BUILD_DIR/gramex/apps/filemanager/ && yarn install && yarn test
