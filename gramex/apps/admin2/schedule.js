@@ -1,7 +1,7 @@
 (function (factory) {
   typeof define === 'function' && define.amd ? define(factory) :
   factory();
-}(function () { 'use strict';
+}((function () { 'use strict';
 
   var base_template = "<div class=\"schedule-formhandler\"></div><div class=\"schedule-logs\"></div>";
   var name_template = "<td><%- _.last((obj.value || '').split(/:/)) %></td>";
@@ -11,7 +11,7 @@
   var function_template = "<td><pre class=\"mb-0 pre-wrap\"><%- value %></pre> <% var args = JSON.parse(row.args), kwargs = JSON.parse(row.kwargs) %> <% if (_.size(args) + _.size(kwargs)) { %> <div><a data-toggle=\"collapse\" href=\"#kwargs<%- index %>\" class=\"sm1\">Expand arguments...</a></div><div class=\"collapse\" id=\"kwargs<%- index %>\"> <%= _.size(args) ? '<pre>' + JSON.stringify(args, null, 2) + '</pre>' : '' %> <%= _.size(kwargs) ? '<pre>' + JSON.stringify(kwargs, null, 2) + '</pre>' : '' %> </div> <% } %> </td>";
   var schedule_template = "<td><div><%- row.schedule %></div><div class=\"small\"><%- row.next ? moment.utc(row.next).fromNow() : '' %></div></td>";
 
-  // This file is compiled into schedule.js via "yarn run build".
+  /* eslint-env browser, jquery */
 
   var notification_msg = _.template(notification_template);
 
@@ -67,4 +67,4 @@
     });
   };
 
-}));
+})));
