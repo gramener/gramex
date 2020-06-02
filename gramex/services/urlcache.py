@@ -13,6 +13,7 @@ See gramex.handlers.BaseHandler for examples on how to use these objects.
 from six.moves import cPickle
 from diskcache import Cache as DiskCache
 from .ttlcache import TTLCache as MemoryCache
+from .rediscache import RedisCache
 from gramex.config import app_log
 from gramex.http import OK, NOT_MODIFIED
 
@@ -34,6 +35,8 @@ def get_cachefile(store):
         return MemoryCacheFile
     elif isinstance(store, DiskCache):
         return DiskCacheFile
+    elif isinstance(store, RedisCache):
+        return RedisCacheFile
     else:
         app_log.warning('cache: ignoring unknown store %s', store)
         return CacheFile
@@ -91,3 +94,35 @@ class MemoryCacheFile(CacheFile):
 class DiskCacheFile(MemoryCacheFile):
     '''Identical interface to MemoryCacheFile'''
     pass
+
+
+class RedisCacheFile(CacheFile):
+    def get(self):
+        return self.store.get(self.key)
+
+    def wrap(self, handler):
+        self._finish = handler.finish
+
+        def finish(chunk=None):
+            # Save the headers and body originally written
+            headers = [[name, value] for name, value in handler._headers.get_all()
+                       if name not in ignore_headers]
+            body = b''.join(handler._write_buffer)
+
+            # Call the original finish
+            self._finish(chunk)
+
+            # Cache headers and body (only for allowed HTTP responses)
+            status = handler.get_status()
+            if status in self.statuses:
+                self.store.set(
+                    key=self.key,
+                    value={
+                        'status': OK if status == NOT_MODIFIED else status,
+                        'headers': headers,
+                        'body': body,
+                    },
+                    expire=self.expire,
+                )
+
+        handler.finish = finish

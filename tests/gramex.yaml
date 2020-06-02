@@ -36,6 +36,10 @@ cache:
   disk:
     type: disk
     path: $YAMLPATH/.cache-url
+  redis:
+    type: redis
+    path: localhost:6379:0
+    size: 50000000
   # We could test more disk caches, but they're slow
 
 url:

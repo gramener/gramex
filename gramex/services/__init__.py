@@ -787,6 +787,9 @@ _cache_defaults = {
     },
     'disk': {
         'size': 10000000000,    # 10 GiB
+    },
+    'redis': {
+        'size': 500000000,
     }
 }
 
@@ -807,6 +810,9 @@ def cache(conf):
             info.cache[name] = urlcache.DiskCache(
                 path, size_limit=config['size'], eviction_policy='least-recently-stored')
             atexit.register(info.cache[name].close)
+        elif cache_type == 'redis':
+            path = config['path'] if 'path' in config else None
+            info.cache[name] = urlcache.RedisCache(path=path, maxsize=config['size'])
         # if default: true, make this the default cache for gramex.cache.{open,query}
         if config.get('default'):
             for key in ['_OPEN_CACHE', '_QUERY_CACHE']:
