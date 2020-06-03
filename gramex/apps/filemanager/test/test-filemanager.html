@@ -31,7 +31,7 @@
   /* globals _, tape */
   tape('$().filemanager default', function(t) {
     $('.filemanager').on('load', function(e) {
-      t.plan(6)
+      t.plan(7)
 
       // Check the right columns
       let column_names = ['file', 'size', 'mime', 'date', 'Delete', 'tags']
@@ -51,6 +51,13 @@
       // check editable fields
       let editable = [{input: 'text'}, false, false, false, false, {input: 'text'}]
       t.deepEqual(editable, _.map(e.options.columns, 'editable'))
+
+      // check filesizes
+      t.equal(
+        $('.filemanager').find('a[href*="?size"]').text(), " 791.00 B  443.00 B  49.00 B ",
+        "File sizes are humanized."
+      )
+
       t.end()
 
     }).filemanager()

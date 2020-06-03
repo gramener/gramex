@@ -1,6 +1,29 @@
 /* eslint-env browser, jquery */
 /* globals moment, _ */
 
+const BASE = 1000
+const humanize_filesize = function(d) {
+  let x = d.value
+  let unit = ""
+  let size = ""
+  let gb = Math.pow(BASE, 3)
+  let mb = Math.pow(BASE, 2)
+  if (x >= gb) {  // gigabytes
+    unit = "GB"
+    size = x / gb
+  } else if (x >= mb) { // megabytes
+    unit = "MB"
+    size = x / mb
+  } else if (x >= BASE) { // kilobytes
+    unit = "KB"
+    size = x / BASE
+  } else {
+    unit = "B"
+    size = x
+  }
+  return `${size.toFixed(2)} ${unit}`
+}
+
 const DOWNLOAD_LINK = '?id=<%- row.id %>&_format=file&_download'
 const DEFAULT_OPTS = {
   edit: true,
@@ -11,7 +34,7 @@ const DEFAULT_OPTS = {
         input: 'text'
       }
     },
-    {name: 'size', editable: false},
+    {name: 'size', editable: false, format: humanize_filesize},
     {name: 'mime', editable: false},
     {
       name: 'date',
