@@ -50,4 +50,19 @@
   <h3>Embedding FileManager</h3>
   Just like FormHandler, the FileManager component can be embedded in any <code>&lt;div&gt;</code> element, as follows:
   {% include 'filemanager-snippet.html' %}
+  <h3>FAQs</h3>
+  <ul>
+    <li>
+      <strong>Q: How do I restrict access to files?</strong>
+      <p><strong>A: </strong>Use <a class="text-monospace" href="https://learn.gramener.com/guide/formhandler/#formhandler-prepare">formhandler-prepare</a>. The <code>prepare</code> function can raise a <code>BAD_REQUEST</code> error based on the role, hd or user ID found in the handler. Note that DriveHandler is an extension of FormHandler. Therefore, any FormHandler feature works with DriveHandler.</p>
+    </li>
+    <li>
+      <strong>Q: How do I validate an uploaded file?</strong>
+      <p><strong>A: </strong>Use <a class="text-monospace" href="https://learn.gramener.com/guide/formhandler/#formhandler-prepare">formhandler-prepare</a>. See <a href="https://learn.gramener.com/guide/formhandler/#formhandler-validation">formhandler validation</a>.</p>
+    </li>
+    <li>
+      <strong>Q: What happens if I upload the same file twice?</strong>
+      <p><strong>A: </strong>The original file gets renamed on disk only, and then the new file gets stored as usual. To disambiguate between files, get the path of the file via it's ID, like <code>?id=3&_c=path</code></p>
+    </li>
+  </ul>
 </div>
