@@ -177,6 +177,11 @@ class BuildTransform(unittest.TestCase):
         ''', vars=vars)
         self.check_transform(transform, 'function: max(x, y, 3)', vars=vars)
 
+        def transform(x=1, y=2):
+            result = x
+            return result if isinstance(result, GeneratorType) else [result, ]
+        self.check_transform(transform, 'function: x', vars=vars)
+
     def test_fn_kwargs(self):
         def transform(_val):
             result = dict(_val, a=1, b=2)

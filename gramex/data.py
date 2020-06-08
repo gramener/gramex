@@ -1006,7 +1006,7 @@ def download(data, format='json', template=None, args={}, **kwargs):
     elif format in {'pptx', 'ppt'}:
         from gramex.pptgen import pptgen    # noqa
         out = io.BytesIO()
-        pptgen(target=out, data=data, is_formhandler=True, **kwargs)
+        pptgen(target=out, data=data, **kwargs)
         return out.getvalue()
     elif format in {'seaborn', 'sns'}:
         kw = AttrDict()
