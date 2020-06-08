@@ -32,15 +32,15 @@ cache:
 install:
   # Install miniconda
   - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O $HOME/miniconda.sh
-  - time bash $HOME/miniconda.sh -b -u -p $HOME/miniconda
+  - bash $HOME/miniconda.sh -b -u -p $HOME/miniconda
   # Add conda to path. "hash -r" rescans the $PATH
   - export PATH="$HOME/miniconda/bin:$PATH"
-  - time hash -r
+  - hash -r
   # Install conda packages
   - conda config --set always_yes yes --set changeps1 no
   - conda install -y -q colorama h5py lxml matplotlib pandas pytest seaborn sqlalchemy rpy2 line_profiler tzlocal scikit-learn
   # Install pip modules
-  - pip install flake8 pep8-naming flake8-gramex flake8-blind-except flake8-print flake8-debugger bandit nose
+  - pip install flake8 pep8-naming flake8-gramex flake8-blind-except flake8-print flake8-debugger bandit nose nose-timer
   # Install node.js and packages using yarn (faster than npm)
   - nvm install 12
   - npm install -g yarn
@@ -49,21 +49,21 @@ install:
   - export BRANCH=$TRAVIS_BRANCH
 
 script:
-  - time eclint check '**/*.html' '**/*.js' '**/*.css' '**/*.yaml' '**/*.md'
+  - eclint check '**/*.html' '**/*.js' '**/*.css' '**/*.yaml' '**/*.md'
   # eslint requires eslint-plugin-* which are in package.json. yarn install them first
   - yarn install
-  - time eslint --ext js,html gramex/apps
+  - eslint --ext js,html gramex/apps
   # htmllint: ignore test coverage, node_modules, Sphinx doc _builds
-  - time find . -name '*.html' | grep -v htmlcov | grep -v node_modules | grep -v _build | xargs htmllint
+  - find . -name '*.html' | grep -v htmlcov | grep -v node_modules | grep -v _build | xargs htmllint
   # Run Python flake8 and bandit security checks
-  - time flake8
-  - time bandit gramex --recursive --format csv || true    # Just run bandit as a warning
+  - flake8
+  - bandit gramex --recursive --format csv || true    # Just run bandit as a warning
 
   # Install Gramex and accept the license
-  - time pip install -e .
-  - time pip install gramexenterprise
-  - time gramex license accept
-  - time python setup.py nosetests
+  - pip install -e .
+  - pip install gramexenterprise
+  - gramex license accept
+  - python setup.py nosetests
 
   # Test specific apps
   - cd $TRAVIS_BUILD_DIR/gramex/apps/filemanager/ && yarn install && yarn test
