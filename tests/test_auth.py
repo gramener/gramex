@@ -565,7 +565,7 @@ class TestDBAuthSignup(DBAuthBase):
         cls.config = gramex.conf.url['auth/dbsignup'].kwargs
         cls.create_database(cls.config.url, cls.config.table)
         cls.url = server.base_url + '/auth/dbsignup'
-        cls.LOGIN_TIMEOUT = 5
+        cls.LOGIN_TIMEOUT = 10
 
     def test_signup(self):
         # Visiting the page with ?signup shows the signup template
