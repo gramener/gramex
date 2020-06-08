@@ -74,6 +74,7 @@ class AuthBase(TestGramex):
     @classmethod
     def setUpClass(cls):
         cls.session = requests.Session()
+        cls.LOGIN_TIMEOUT = 10
 
     @staticmethod
     def redirect_kwargs(query_next, header_next, referer=None):
@@ -88,7 +89,7 @@ class AuthBase(TestGramex):
         return {'params': params, 'headers': headers}
 
     def login(self, user, password, query_next=None, header_next=None, referer=None,
-              headers={}, post_args={}, timeout=10):
+              headers={}, post_args={}):
         params = self.redirect_kwargs(query_next, header_next, referer=referer)
         r = self.session.get(self.url, **params)
         tree = self.check_css(r.text, ('h1', 'Auth'))
@@ -101,7 +102,8 @@ class AuthBase(TestGramex):
         # Submitting the correct password redirects
         if headers is not None:
             params['headers'].update(headers)
-        return self.session.post(self.url, timeout=timeout, data=data, headers=params['headers'])
+        return self.session.post(self.url, timeout=self.LOGIN_TIMEOUT,
+                                 data=data, headers=params['headers'])
 
     def logout(self, query_next=None, header_next=None):
         url = server.base_url + '/auth/logout'
@@ -492,7 +494,7 @@ class DBAuthBase(AuthBase):
         # issue: 399 DBAuth shouldn't accept empty username or password
         falsy = ['', None, 'abc']
         for (user, password) in [(x, y) for x in falsy for y in falsy]:
-            r = self.login(user, password, timeout=5)
+            r = self.login(user, password)
             # for valid but non-existent username, password
             if user and password:
                 eq_(r.status_code, UNAUTHORIZED)
@@ -563,6 +565,7 @@ class TestDBAuthSignup(DBAuthBase):
         cls.config = gramex.conf.url['auth/dbsignup'].kwargs
         cls.create_database(cls.config.url, cls.config.table)
         cls.url = server.base_url + '/auth/dbsignup'
+        cls.LOGIN_TIMEOUT = 5
 
     def test_signup(self):
         # Visiting the page with ?signup shows the signup template
