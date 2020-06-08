@@ -2013,7 +2013,7 @@ alert:
     alert-each:
       service: smtps_stub
       data: $YAMLPATH/actors.csv
-      condition: data[data['votes'] > 100]
+      condition: data[data['votes'] > 120]
       each: data
       to: "{{ row['name'].replace(' ', '_') + '@example.org' }}"
       subject: "{{ config.salutation }} #{{ index }}! {{ config['prefix'] }} {{ row['votes'] }} votes"
