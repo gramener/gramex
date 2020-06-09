@@ -1,3 +1,4 @@
+/* eslint-env browser, jquery */
 /* globals JSONEditor */
 (function () {
   var script = document.currentScript,

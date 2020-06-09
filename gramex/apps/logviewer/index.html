@@ -64,12 +64,14 @@
   <script>
   // TODO: config driven app
   // TODO: switch between aggD, aggW, addM based on date range selection
-  {% raw render %}
+  /* eslint-env browser, jquery */
+  /* globals g1, moment, drawFilters, drawViz, updateView */
+  {% raw render %}  // eslint-disable-line
 
   var params = g1.url.parse(location.search)
   var dtfmt = 'YYYY-MM-DD 00:00:00'
   // default update
-  if (!params.searchKey.hasOwnProperty('time>~')  && !params.searchKey.hasOwnProperty('time<~')) {
+  if (!('time>~' in params.searchKey || 'time<~' in params.searchKey)) {
     var start = moment().subtract(29, 'days').format(dtfmt)
     var end = moment().format(dtfmt)
     params.update({'time>~': start, 'time<~': end})
@@ -79,27 +81,27 @@
   // draw views on params
   drawViz(params)
   $('body')
-  .on('click', '.filter-submit', function(e) {
-    var dt = $('.filter-time input').data('daterangepicker')
-    var ranges = ('?time>~=' + moment(dt.startDate._d).format(dtfmt)
-            + '&time<~=' + moment(dt.endDate._d).format(dtfmt))
-    var select = $('.filters select')
-      .filter(function(){ return this.value !== ''})
-      .serialize()
-    if (select) {
-      ranges = ranges + '&' + select
-    }
-    // location.search = ranges
-    history.pushState({}, '', ranges)
-    updateView()
-  })
-  .on('click', '#download-dropdown .dropdown-item', function(e) {
-    e.preventDefault()
-    var options = g1.url.parse(this.href).search
-    var url = ('capture?' + options +
-      '&delay=renderComplete&url=' + encodeURIComponent(location.href))
-    location.href = url
-  })
+    .on('click', '.filter-submit', function() {
+      var dt = $('.filter-time input').data('daterangepicker')
+      var ranges = ('?time>~=' + moment(dt.startDate._d).format(dtfmt)
+              + '&time<~=' + moment(dt.endDate._d).format(dtfmt))
+      var select = $('.filters select')
+        .filter(function(){ return this.value !== ''})
+        .serialize()
+      if (select) {
+        ranges = ranges + '&' + select
+      }
+      // location.search = ranges
+      history.pushState({}, '', ranges)
+      updateView()
+    })
+    .on('click', '#download-dropdown .dropdown-item', function(e) {
+      e.preventDefault()
+      var options = g1.url.parse(this.href).search
+      var url = ('capture?' + options +
+        '&delay=renderComplete&url=' + encodeURIComponent(location.href))
+      location.href = url
+    })
   $(window).on('popstate', updateView)
   $(document).ajaxStop(function(){
     window.renderComplete = true

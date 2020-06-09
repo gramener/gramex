@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    {% set kwargs = handler.kwargs %}
+    {% set filemanager_kwargs = kwargs.get('filemanager_kwargs', '') or {} %}
+    {% set title = filemanager_kwargs.get('title', 'File manager') %}
+    {% import filemanager %}
+    <title>{{ title }}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="ui/bootstraptheme.css{{ filemanager_kwargs.get('theme', '') }}">
+    <link rel="stylesheet" href="ui/@fortawesome/fontawesome-free/css/all.min.css">
+    <link rel="stylesheet" href="ui/dropzone/dist/min/dropzone.min.css">
+  </head>
+  <body>
+    {% include 'navbar.html' %}
+    {% if handler.request.uri.endswith('help') %}
+      {% include 'README.html' %}
+    {% else %}
+      {% include 'filemanager.html' %}
+    {% end %}
+  </body>
+</html>

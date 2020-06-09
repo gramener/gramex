@@ -1,0 +1,19 @@
+<pre></code>
+  &lt;!-- Include Dropzone and moment --&gt;
+  &lt;link rel="stylesheet" href="ui/dropzone/dist/min/dropzone.min.css"&gt;
+  &lt;script src="ui/dropzone/dist/min/dropzone.min.js"&gt;&lt;/script&gt;
+  &lt;script src="ui/moment/min/moment-with-locales.min.js"&gt;&lt;/script&gt;
+  &lt;div class="filemanager" data-src="drive"&gt;&lt;/div&gt;
+  &lt;script&gt;
+    Dropzone.autodiscover = false
+    $('.filemanager').filemanager({
+      pageSize: 4,
+      data: ...,
+      columns: [
+        {name: "foo"},
+        {name: "bar"}
+      ]
+      // FormHandler options
+    })
+  &lt;/script&gt;
+</code></pre>

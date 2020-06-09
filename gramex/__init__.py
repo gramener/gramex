@@ -118,12 +118,6 @@ def callback_commandline(commands):
 
     Returns a callback method and kwargs for the callback method.
     '''
-    # Ensure that log colours are printed properly on cygwin.
-    if sys.platform == 'cygwin':        # colorama.init() gets it wrong on Cygwin
-        import colorlog.escape_codes    # noqa: Let colorlog call colorama.init() first
-        import colorama
-        colorama.init(convert=True)     # Now we'll override with convert=True
-
     # Set logging config at startup. (Services may override this.)
     log_config = (+PathConfig(paths['source'] / 'gramex.yaml')).get('log', AttrDict())
     log_config.root.level = logging.INFO
@@ -155,11 +149,8 @@ def callback_commandline(commands):
         raise NotImplementedError('Unknown gramex command: %s' % base_command)
 
     # Use current dir as base (where gramex is run from) if there's a gramex.yaml.
-    # Else use source/guide, and point the user to the welcome screen
     if not os.path.isfile('gramex.yaml'):
-        from gramex.install import run
-        args.setdefault('browser', '/welcome')
-        return run, {'cmd': ['guide'], 'args': args}
+        return console, {'msg': 'No gramex.yaml. See https://learn.gramener.com/guide/'}
 
     app_log.info('Gramex %s | %s | Python %s', __version__, os.getcwd(),
                  sys.version.replace('\n', ' '))

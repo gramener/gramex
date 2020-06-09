@@ -1,10 +1,7 @@
 # Require setuptools -- distutils does not support install_requires
-from setuptools.command.develop import develop
-from setuptools.command.install import install
 from setuptools import setup, find_packages
 from fnmatch import fnmatch
 from io import open
-import logging
 import json
 import os
 
@@ -77,51 +74,6 @@ def read_gitignore(path, exclude=set()):
 
 
 ignore_patterns = list(read_gitignore('.gitignore', exclude={'node_modules'}))
-
-
-def install_apps(self):
-    logging.basicConfig(level=logging.INFO)
-    try:
-        import gramex.install
-    except Exception:
-        logging.error('Run gramex setup --all to install apps')
-        return
-    # Guess the installation directory
-    if hasattr(self, 'installed_projects') and 'gramex' in self.installed_projects:
-        install_dir = self.installed_projects['gramex'].location
-    elif hasattr(self, 'install_lib'):
-        install_dir = self.install_lib
-    elif hasattr(self, 'install_dir'):
-        install_dir = self.install_dir
-    else:
-        logging.error('Run gramex setup --all to install apps')
-        return
-    # Install the gramex apps
-    root = os.path.join(os.path.abspath(install_dir), 'gramex', 'apps')
-    logging.info('Setting up Gramex apps at %s', root)
-    for filename in os.listdir(root):
-        target = os.path.join(root, filename)
-        if os.path.isdir(target):
-            try:
-                gramex.install.run_setup(target)
-            except Exception:
-                logging.exception('Installation failed: %s', target)
-    # Install guide
-    gramex.install.install(['guide'], {})
-
-
-class PostDevelopCommand(develop):
-    """Post-installation for development mode."""
-    def run(self):
-        develop.run(self)
-        install_apps(self)
-
-
-class PostInstallCommand(install):
-    """Post-installation for installation mode."""
-    def run(self):
-        install.run(self)
-        install_apps(self)
 
 
 def recursive_include(root, path, ignores=[], allows=[]):
@@ -206,9 +158,5 @@ setup(
         'cssselect',                # For HTML testing (test_admin.py)
         'psycopg2 >= 2.7.1'         # OPT: PostgreSQL connections
     ],
-    cmdclass={
-        'develop': PostDevelopCommand,
-        'install': PostInstallCommand,
-    },
     **release_args
 )

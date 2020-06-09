@@ -1,0 +1,53 @@
+<div class="container-fluid">
+  <h3>File Manager</h3>
+  File Manager is a Gramex app used to upload, download, rename, delete and annotate files within a Gramex application.
+  <h4>Usage</h4>
+  FileManager can be imported in a Gramex app as follows:
+  <pre><code>
+  import:
+    filemanager:
+      path: $GRAMEXAPPS/filemanager/gramex.yaml
+      YAMLURL: $YAMLURL/filemanager/
+  </code></pre>
+  This mounts the FileManager page at <code><a href="/filemanager/">/filemanager/</a></code>.
+  For each <code>DriveHandler</code> endpoint configured in your Gramex app, the FileManager page shows a FormHandler table of files stored in that drive.
+  This table can be used to:
+  <ul>
+    <li><strong>Upload new files</strong> - Click the "Upload" button, or drop files anywhere on the table.</li>
+    <li><strong>Download files</strong> - Click any file under the "File" column to download it.</li>
+    <li><strong>Delete existing files</strong> - Click the cross for a file under the "Delete" column.</li>
+    <li><strong>Rename files</strong> - Click the "Edit" button, make changes to filenames, and click "Save".</li>
+  </ul>
+
+  <h4>FileManager Options</h4>
+  FileManager can be configured by using options under <code>FILEMANAGER_KWARGS</code> in <code>gramex.yaml</code> as follows:
+  <pre><code>
+  import:
+    filemanager:
+      path: $GRAMEXAPPS/filemanager/gramex.yaml
+      YAMLURL: $YAMLURL/filemanager/
+      FILEMANAGER_KWARGS:
+        drives: ['drive1', 'drive2']              # Show only these drives in the FileManager page
+        title: "MyAwesomeFileManager"             # Title of the FileManager page
+        logo: $YAMLPATH/data/assets/gramener.png  # Logo for the FileManager page
+        theme: ...                                # Bootstrap theme for the FileManager page.
+  </code></pre>
+  <div class="divider"></div>
+  <h3>Drive Handler</h3>
+  DriveHandler allows uploading, downloading, renaming, deletion and annotation of files in a Gramex application.
+  <h4>Usage</h4>
+  Use DriveHandler in Gramex app as follows:
+  {% include 'drivehandler-snippet.html' %}
+  This endpoint is a FormHandler that allows:
+  <ul>
+    <li>GET <code>?ext=.xlsx</code> - List Excel files (FormHandler interface)</li>
+    <li>GET <code>?_format=file&id=2</code> - Download file with ID=2</li>
+    <li>PUT <code>?id=3&file=abc.txt</code> - Rename file with ID=3 to abc.txt</li>
+    <li>PUT <code>?id=3&mime=text/html&tag=x</code> - Set MIME type type and tag of ID=4</li>
+    <li>DELETE ?id=4</code> - Delete file with ID=4</li>
+    <li>POST ?tag=x&tag=y</code> - Upload one or more files. Tag 1st file as x, 2nd as y</li>
+  </ul>
+  <h3>Embedding FileManager</h3>
+  Just like FormHandler, the FileManager component can be embedded in any <code>&lt;div&gt;</code> element, as follows:
+  {% include 'filemanager-snippet.html' %}
+</div>

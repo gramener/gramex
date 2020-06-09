@@ -24,6 +24,7 @@ from gramex.cache import KeyStore, JSONStore, HDF5Store, SQLiteStore, RedisStore
 server_header = 'Gramex/%s' % __version__
 session_store_cache = {}
 _missing = object()
+_arg_default = object()
 
 
 class BaseMixin(object):
@@ -612,7 +613,7 @@ class BaseHandler(RequestHandler, BaseMixin):
         elif 'X-HTTP-Method-Override' in self.request.headers:
             self.request.method = self.request.headers['X-HTTP-Method-Override'].upper()
 
-    def get_arg(self, name, default=RequestHandler._ARG_DEFAULT, first=False):
+    def get_arg(self, name, default=_arg_default, first=False):
         '''
         Returns the value of the argument with the given name. Similar to
         ``.get_argument`` but uses ``self.args`` instead.
@@ -626,7 +627,7 @@ class BaseHandler(RequestHandler, BaseMixin):
         ``self.args`` is always UTF-8 decoded unicode. Whitespaces are stripped.
         '''
         if name not in self.args:
-            if default is RequestHandler._ARG_DEFAULT:
+            if default is _arg_default:
                 raise MissingArgumentError(name)
             return default
         return self.args[name][0 if first else -1]
@@ -853,7 +854,7 @@ class BaseWebSocketHandler(WebSocketHandler, BaseMixin):
         if self._set_xsrf:
             self.xsrf_token
 
-    @tornado.web.asynchronous
+    @tornado.gen.coroutine
     def get(self, *args, **kwargs):
         for method in self._on_init_methods:
             method(self)

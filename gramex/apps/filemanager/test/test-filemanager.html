@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>filemanager tests</title>
+  <link rel="stylesheet" href="ui/bootstrap/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="ui/font-awesome/css/font-awesome.min.css">
+  <script src="ui/jquery/dist/jquery.min.js"></script>
+  <script src="ui/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="ui/lodash/lodash.min.js"></script>
+  <script src="ui/moment/min/moment.min.js"></script>
+  <script src="ui/numeral/min/numeral.min.js"></script>
+  <script src="ui/g1/dist/g1.min.js"></script>
+  <script src="ui/dropzone/dist/min/dropzone.min.js"></script>
+  <script src="filemanager/filemanager.js"></script>
+  <script src="tape.js"></script>
+  <script src="tape-stream.js"></script>
+</head>
+
+<body>
+  <div class="filemanager" data-src="default"></div>
+  <div class="fm-opts" data-src="default"></div>
+  <div class="fm-opts-2" data-src="default"></div>
+  <div class="fm-opts-reserved" data-src="default"></div>
+  <div class="edit-fname" data-src="default"></div>
+  <div class="empty-drive" data-src="drive1"></div>
+  <div class="error-drive" data-src="default"></div>
+</body>
+<script>
+  /* eslint-env browser, jquery */
+  /* globals _, tape */
+  tape('$().filemanager default', function(t) {
+    $('.filemanager').on('load', function(e) {
+      t.plan(6)
+
+      // Check the right columns
+      let column_names = ['file', 'size', 'mime', 'date', 'Delete', 'tags']
+      t.deepEqual(column_names, _.map(e.options.columns, 'name'))
+
+      // check file links
+      let file_link = 'default?id=<%- row.id %>&_format=file&_download'
+      t.equal(e.options.columns[0].link, file_link)
+
+      // check delete button
+      let fh_table = $(e.target).find('.table').get(1)
+      let buttons = Array(...$(fh_table).find('button'))
+      t.equal(buttons.length, 3)
+      t.same(_.map(buttons, (b) => {return $(b).hasClass('btn-danger')}), [true, true, true])
+      t.same(_.map(buttons, (b) => {return $(b).attr('data-action')}), ['delete', 'delete', 'delete'])
+
+      // check editable fields
+      let editable = [{input: 'text'}, false, false, false, false, {input: 'text'}]
+      t.deepEqual(editable, _.map(e.options.columns, 'editable'))
+      t.end()
+
+    }).filemanager()
+  })
+
+  tape('$().filemanager options', function(t) {
+    // Check if non-reserved formhandler options work
+    t.plan(2)
+    $('.fm-opts').on('load', function(e) {
+      t.equal(e.formdata.length, 1)
+    }).filemanager({pageSize: 1})
+    $('.fm-opts-2').on('load', function(e) {
+      t.equal(e.formdata.length, 2)
+      t.end()
+    }).filemanager({pageSize: 2})
+  })
+
+  tape('$().filemanager reserved options', function(t) {
+    // Check if reserved options are protected.
+    $('.fm-opts-reserved').on('load', function(e) {
+      t.plan(2)
+
+      let tags = e.options.columns[5]
+      t.equal(tags.title, 'MYTAGS')
+
+      let newCol = e.options.columns[6]
+      t.equal(newCol.title, 'MyNewColumnTitle')
+      t.end()
+
+    }).filemanager({
+      columns: [
+        {
+          name: 'tags',
+          title: 'MYTAGS'
+        },
+        {
+          name: 'MyNewColumn',
+          title: 'MyNewColumnTitle'
+        }
+      ]
+    })
+  })
+
+  tape('Check empty drive', function(t) {
+    t.plan(1)
+    $('.empty-drive').on('load', (e) => {
+      t.equal(e.formdata.length, 0)
+      t.end()
+    }).filemanager()
+  })
+  tape('Error drive', function(t) {
+    t.plan(1)
+    $('.error-drive').on('load', function(e) {
+      t.equal(e.formdata.length, 3)
+      t.end()
+    }).filemanager()
+  })
+  tape('Test failhandler', function (t) {
+    t.plan(1)
+    $('.error-drive').get(0).dropzone._callbacks.error.forEach((e) => {
+      if (typeof(e) == 'function')
+        e('error', 'FailHandler Error Message', null)
+    })
+    t.ok($('.alert-warning').text().match(/FailHandler Error Message.*null/))
+    t.end()
+  })
+
+</script>
+
+</html>

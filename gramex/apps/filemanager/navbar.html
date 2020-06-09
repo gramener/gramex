@@ -1,0 +1,16 @@
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-3">
+  <a class="navbar-brand py-0 d-flex" href="{{ filemanager_kwargs.get('home', '.') }}">
+    {% if filemanager_kwargs.get('logo') %}
+      <img class="pr-2" src="{{ filemanager_kwargs['logo'] }}" alt="">
+    {% end %}
+    <div class="text-middle d-flex-inline">{{ title }}</div>
+  </a>
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+  <div class="collapse navbar-collapse" id="navbarSupportedContent">
+    <ul class="navbar-nav mr-auto">
+      <li class="nav-item"><a class="btn btn-primary" href="./help" role="button">Help <i class="fa fa-question-circle"></i></a></li>
+    </ul>
+  </div>
+</nav>

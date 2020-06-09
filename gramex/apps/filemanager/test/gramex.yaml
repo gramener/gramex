@@ -1,0 +1,19 @@
+import:
+  ui:
+    path: $GRAMEXAPPS/ui/gramex.yaml
+    YAMLURL: /$YAMLURL/ui/
+  parent:
+    path: $GRAMEXAPPS/filemanager/gramex.yaml
+    YAMLURL: /$YAMLURL/filemanager/
+
+url:
+  apps/filemanager/test/data-$*:
+    pattern: /$YAMLURL/default
+    handler: FormHandler
+    kwargs:
+      url: $YAMLPATH/default-drive.csv
+  apps/filemanager/test/default-drive-$*:
+    pattern: /$YAMLURL/drive1
+    handler: DriveHandler
+    kwargs:
+      path: $YAMLPATH/drive1/
