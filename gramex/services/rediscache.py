@@ -2,6 +2,7 @@ import six
 from six.moves import cPickle
 from redis import StrictRedis
 
+
 class RedisCache():
     '''
     LRU Cache that stores data in a Redis database. Typical usage::
@@ -16,7 +17,7 @@ class RedisCache():
     - `port`: the Redis server port (default: 6379)
     - `db`: the Redis server DB number (default: 0)
     - zero or more parameters passed to StrictRedis (e.g. password=abc)
-    
+
     `maxsize` defines the maximum limit of cache. This will set maxmemory for the redis instance
     and not specific to a db.
 
@@ -42,7 +43,7 @@ class RedisCache():
             if self.currsize > maxsize:
                 self.flush()
             self.store.config_set('maxmemory', maxsize)
-            self.store.config_set('maxmemory-policy', 'allkeys-lru')  # Approximate LRU cache 
+            self.store.config_set('maxmemory-policy', 'allkeys-lru')  # Approximate LRU cache
 
     def __getitem__(self, key):
         key = cPickle.dumps(key, cPickle.HIGHEST_PROTOCOL)
@@ -76,10 +77,10 @@ class RedisCache():
 
     def get(self, key, *args, **kwargs):
         return self.__getitem__(key)
-    
+
     def set(self, key, value, expire=None):
         return self.__setitem__(key, value, expire)
-    
+
     def keys(self):
         return self.store.keys()
 

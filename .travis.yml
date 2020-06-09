@@ -12,6 +12,7 @@ sudo: yes
 services:
   - mysql
   - postgresql
+  - redis-server
 
 addons:
   apt:

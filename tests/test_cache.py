@@ -75,22 +75,22 @@ class TestCacheConstructor(unittest.TestCase):
         cache_size = 50000000
         eq_(cache['redis'].maxsize, cache_size)
 
-
     def test_redis_cache_size(self):
         # Need to run a redis-server on localhost:6379:0
         redis = gramex.services.info.cache['redis']
         old_keys = set(redis.keys())
-        data = gramex.cache.open(os.path.join(folder, 'sales.xlsx'), _cache=redis)
+        gramex.cache.open(os.path.join(folder, 'sales.xlsx'), _cache=redis)
         new_keys = set(redis.keys()) - old_keys
         eq_(len(new_keys), 1)           # only 1 new key should have been added
-
 
     def test_redis_pickle(self):
         # Need to run a redis-server on localhost:6379:0
         redis = gramex.services.info.cache['redis']
         old_keys = set(redis.keys())
-        lock = lambda x: Lock()         # Non Picklable object
-        data = gramex.cache.open(os.path.join(folder, 'sales.xlsx'), transform=lock, _cache=redis)
+
+        def lock(x):
+            return Lock()         # Non Picklable object
+        gramex.cache.open(os.path.join(folder, 'sales.xlsx'), transform=lock, _cache=redis)
         new_keys = set(redis.keys()) - old_keys
         eq_(len(new_keys), 0)           # It should not be cached
 
