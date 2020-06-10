@@ -829,9 +829,9 @@ def used_kwargs(method, kwargs, ignore_keywords=False):
     If the method uses ``**kwargs`` (keywords), it uses all keys. To ignore this
     and return only named arguments, use ``ignore_keywords=True``.
     '''
-    argspec = inspect.getargspec(method)
+    argspec = inspect.getfullargspec(method)
     # If method uses **kwargs, return all kwargs (unless you ignore **kwargs)
-    if argspec.keywords and not ignore_keywords:
+    if argspec.varkw and not ignore_keywords:
         used, rest = kwargs, {}
     else:
         # Split kwargs into 2 dicts -- used and rest
