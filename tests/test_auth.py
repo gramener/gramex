@@ -619,7 +619,7 @@ class TestDBAuthSignup(DBAuthBase):
         user_engine = sa.create_engine(self.config.url)
         users = pd.read_sql('SELECT * FROM %s' % self.config.table, user_engine)
         users = users.set_index(self.config.user.column)
-        user = users.ix['newuser']
+        user = users.loc['newuser']
         eq_(user['email'], 'any@example.org')
 
         # Check that the user has been added to the recovery database
