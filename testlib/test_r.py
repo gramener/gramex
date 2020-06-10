@@ -14,12 +14,12 @@ def test_init():
         # R_HOME is set to a non-existent directory
         os.environ['R_HOME'] = os.path.join(folder, 'R')
         with assert_raises(RuntimeError):
-            import rpy2.robjects
+            import rpy2.robjects  # NOQA: F401
     # But Gramex uses Conda PATH
     r('ls()')
-    import rpy2.rinterface
+    from rpy2 import rinterface
     # Note: in your machine, ensure "conda" is part of your Anaconda PATH
-    ok_('conda' in rpy2.rinterface.R_HOME)
+    ok_('conda' in rinterface.R_HOME)
 
 
 def test_command():

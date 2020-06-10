@@ -641,7 +641,7 @@ class TestDBAuthSignup(DBAuthBase):
         eq_(r.status_code, OK)
         users2 = pd.read_sql('SELECT * FROM %s' % self.config.table, user_engine)
         users2 = users2.set_index(self.config.user.column)
-        user2 = users2.ix['newuser']
+        user2 = users2.loc['newuser']
         ok_(user2[self.config.password.column] != user[self.config.password.column])
 
         # Check that we can log in
