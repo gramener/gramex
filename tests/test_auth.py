@@ -74,6 +74,7 @@ class AuthBase(TestGramex):
     @classmethod
     def setUpClass(cls):
         cls.session = requests.Session()
+        cls.LOGIN_TIMEOUT = 10
 
     @staticmethod
     def redirect_kwargs(query_next, header_next, referer=None):
@@ -101,7 +102,8 @@ class AuthBase(TestGramex):
         # Submitting the correct password redirects
         if headers is not None:
             params['headers'].update(headers)
-        return self.session.post(self.url, timeout=10, data=data, headers=params['headers'])
+        return self.session.post(self.url, timeout=self.LOGIN_TIMEOUT,
+                                 data=data, headers=params['headers'])
 
     def logout(self, query_next=None, header_next=None):
         url = server.base_url + '/auth/logout'
@@ -563,6 +565,7 @@ class TestDBAuthSignup(DBAuthBase):
         cls.config = gramex.conf.url['auth/dbsignup'].kwargs
         cls.create_database(cls.config.url, cls.config.table)
         cls.url = server.base_url + '/auth/dbsignup'
+        cls.LOGIN_TIMEOUT = 10
 
     def test_signup(self):
         # Visiting the page with ?signup shows the signup template
@@ -616,7 +619,7 @@ class TestDBAuthSignup(DBAuthBase):
         user_engine = sa.create_engine(self.config.url)
         users = pd.read_sql('SELECT * FROM %s' % self.config.table, user_engine)
         users = users.set_index(self.config.user.column)
-        user = users.ix['newuser']
+        user = users.loc['newuser']
         eq_(user['email'], 'any@example.org')
 
         # Check that the user has been added to the recovery database
@@ -638,7 +641,7 @@ class TestDBAuthSignup(DBAuthBase):
         eq_(r.status_code, OK)
         users2 = pd.read_sql('SELECT * FROM %s' % self.config.table, user_engine)
         users2 = users2.set_index(self.config.user.column)
-        user2 = users2.ix['newuser']
+        user2 = users2.loc['newuser']
         ok_(user2[self.config.password.column] != user[self.config.password.column])
 
         # Check that we can log in
