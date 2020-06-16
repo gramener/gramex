@@ -606,13 +606,15 @@ def _copy(source, target, template_data=None):
     elif os.path.isdir(source):
         _mkdir(target)
     elif os.path.isfile(source):
+        app_log.info('Copy file %s', source)
         with io.open(source, 'rb') as handle:
             result = handle.read()
             from mimetypes import guess_type
             filetype = guess_type(source)[0]
             basetype = 'text' if filetype is None else filetype.split('/')[0]
-            if template_data is not None and basetype in {'text', 'application'}:
-                result = Template(result).generate(**template_data)
+            if template_data is not None:
+                if basetype in {'text'} or filetype in {'application/javascript'}:
+                    result = Template(result).generate(**template_data)
         with io.open(target, 'wb') as handle:
             handle.write(result)
     else:
