@@ -125,7 +125,7 @@ class TestMime(TestGramex):
     def setUp(self):
         self.mime_map = {
             '.yml': 'text/yaml; charset=UTF-8',
-            '.yaml': 'text/yaml; charset=UTF-8',
+            # '.yaml': 'text/yaml; charset=UTF-8', .yaml files are disallowed
             '.md': 'text/markdown; charset=UTF-8',
             '.markdown': 'text/markdown; charset=UTF-8',
             '.json': 'application/json',
