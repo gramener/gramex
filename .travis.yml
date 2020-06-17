@@ -9,6 +9,12 @@ python: '3.7'
 dist: xenial
 sudo: yes
 
+env:
+  global:
+    # Twitter secrets
+    # Read more here: https://docs.travis-ci.com/user/encryption-keys/
+    secure: Rv+AOBuA7/+cAFZjUk8itosKNcUwYLb3EQQK/dr8Mm0oN3qz0rJCNXS1giHjStAkGEGOZJhR1Oth0dwGALQVi293wVrh5NJJbPLxlnNmknfaVnlCmknF+HMbmc7YxTwklGFnzABiKbB/PL1Q3t6d3sigGqV1iB9ucD8H4Ne4qsG+q5lURb/iG30v3KzDFWykU3ALM4+L4PieQphTYRtph3VTw/bbyc+5E4Y3mZkOg+sF4HD+HGYT6rtOlraHxFgxiSlYQCTKCur7tHQYyomoFVlFLlAzt9Eg5Cn6yI/Bm8ZekesqO7feC8gAeZRLrx84IoMei4bWZyUKxAquExpzKJd8srG1BuwbyU9zBj+jvLcH13EW6fhZqZbyXoQKWr0pG/pmqzZwBjnwHhFvNJ6JE2AJ9XB9lKhhf8WTJ5rK2oUhqrggk8XGqPoC3HveawX5f1vBhxTw6sLCJ5cK66tNL7J4FjdboO9SYA/fH7fetxPcueMq4N6ShU4OycqDwvc9XASoweOfBszrO+iIwTKFU1c9HKrbceOgVlTI2fUcg6N4fDjy8dOZ0HSjgjDyceodEyq74VrO4bv5J2HgIk/LATJmyPzUubaDqM0bowJ1FUr7P7oUCRYO+Zx8Xx5YfHBj3GATbLB/VA8el2TxkXbG96KDUOod17JfkfmKtQhFYhY=
+
 services:
   - mysql
   - postgresql

@@ -1094,11 +1094,10 @@ url:
     handler: TwitterRESTHandler
     kwargs:
       # Gramener > Gramex guide app: https://apps.twitter.com/app/12449610/keys
-      # TODO: Try regenerating these
-      key: XkCVNZD5sfWECxHGAGnlHGQFa
-      secret: yU00bx5dHYMbge9IyO5H1KeC5uFnWndntG7u6CH6O4HDZHQg0p
-      access_key: 445767176-pqio8PuGlpzULSstlZQbLhRqFJfNBjWFH5LqNRgI
-      access_secret: zVosr4wIS3aM80hErmWUkMePZ6vX830yI7VKxar6xZqgp
+      key: $TWITTER_KEY
+      secret: $TWITTER_SECRET
+      access_key: $TWITTER_ACCESS_KEY
+      access_secret: $TWITTER_ACCESS_SECRET
       xsrf_cookies: false
 
   api/twitter-get:
@@ -1106,11 +1105,10 @@ url:
     handler: TwitterRESTHandler
     kwargs:
       # Gramener > Gramex guide app: https://apps.twitter.com/app/12449610/keys
-      # TODO: Try regenerating these
-      key: XkCVNZD5sfWECxHGAGnlHGQFa
-      secret: yU00bx5dHYMbge9IyO5H1KeC5uFnWndntG7u6CH6O4HDZHQg0p
-      access_key: 445767176-pqio8PuGlpzULSstlZQbLhRqFJfNBjWFH5LqNRgI
-      access_secret: zVosr4wIS3aM80hErmWUkMePZ6vX830yI7VKxar6xZqgp
+      key: $TWITTER_KEY
+      secret: $TWITTER_SECRET
+      access_key: $TWITTER_ACCESS_KEY
+      access_secret: $TWITTER_ACCESS_SECRET
       methods: GET
       xsrf_cookies: false
 
