@@ -64,7 +64,7 @@ class TestLogViewer(TestGramex):
         # check filters
         for col in ['status', 'ip']:
             eq_(self.get('{}/filter{}/'.format(base, col)).json(),
-                [{col: x} for x in sorted(df[col].unique())]
+                [{col: x} for x in sorted(df[col].unique().astype(str))]
                 )
         eq_(self.get('{}/filter{}/'.format(base, 'users')).json(),
             [{'user.id': x} for x in
