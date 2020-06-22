@@ -1063,10 +1063,16 @@ def download(data, format='json', template=None, args={}, **kwargs):
                     out.write(b',')
                 out.write(json_encode(key).encode('utf-8'))
                 out.write(b':')
-                out.write(val.to_json(**kwargs).encode('utf-8'))
+                xxx = val.to_json(**kwargs)
+                out.write(xxx.encode('utf-8'))
             out.write(b'}')
         else:
-            out.write(data['data'].to_json(**kwargs).encode('utf-8'))
+            xxx = data['data']
+            try:
+                xxx.to_json(**kwargs)
+            except UnicodeDecodeError:
+                xxx.to_pickle('/tmp/test.pkl')
+            out.write(xxx.to_json(**kwargs).encode('utf-8'))
         return out.getvalue()
 
 

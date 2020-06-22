@@ -71,7 +71,7 @@ script:
   - pip install -e .
   - pip install gramexenterprise
   - gramex license accept
-  - gramex setup ui  # ensure node-sass exists
+  - gramex setup --all  # ensure node-sass, puppetter exists
   - python setup.py nosetests
 
   # Test specific apps
