@@ -5,7 +5,7 @@ import mimetypes
 import tornado.web
 import tornado.gen
 from pathlib import Path
-from fnmatch import fnmatch
+import fnmatch
 from six import string_types, text_type
 from tornado.escape import utf8
 from tornado.web import HTTPError
@@ -25,7 +25,7 @@ def _match(path, pat):
     '''
     Check if path matches pattern -- case insensitively.
     '''
-    return fnmatch(str(path).lower(), '*/' + pat.lower())
+    return re.search(str(path).lower(), fnmatch.translate('*/' + pat.lower()))
 
 
 def read_template(path):
