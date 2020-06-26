@@ -7,12 +7,14 @@ import unittest
 import gramex.cache
 import gramex.config
 import gramex.services
+from threading import Lock
 from six.moves.urllib.parse import urlencode
 from nose.tools import eq_, ok_
+from nose.plugins.skip import SkipTest
 from orderedattrdict import AttrDict
 from . import TestGramex, tempfiles, folder
 from gramex.http import OK, NOT_FOUND, NOT_MODIFIED
-from gramex.services.urlcache import ignore_headers, MemoryCache, DiskCache
+from gramex.services.urlcache import ignore_headers, MemoryCache, DiskCache, RedisCache
 
 info = AttrDict()
 
@@ -66,6 +68,34 @@ class TestCacheConstructor(unittest.TestCase):
         keys = list(cache.keys())
         eq_(len(keys), 1)           # it has only 1 key
         eq_(keys[0][0], path)       # with the file we just opened
+
+    def get_redis_cache(self):
+        # Need to run a redis-server on localhost:6379:0
+        cache = gramex.services.info.cache
+        if 'redis' not in cache:
+            raise SkipTest('Redis Cache not created')
+        return cache['redis']
+
+    def test_redis_cache(self):
+        redis_cache = self.get_redis_cache()
+        self.assertIsInstance(redis_cache, RedisCache)
+        cache_size = 50000000
+        eq_(redis_cache.maxsize, cache_size)
+
+    def test_redis_cache_size(self):
+        redis = self.get_redis_cache()
+        redis.store.flushall()
+        gramex.cache.open(os.path.join(folder, 'sales.xlsx'), _cache=redis)
+        eq_(len(redis), 1)      # only 1 new key should have been added
+
+    def test_redis_pickle(self):
+        def lock(x):
+            return Lock()       # Non Picklable object
+
+        redis = self.get_redis_cache()
+        redis.store.flushall()
+        gramex.cache.open(os.path.join(folder, 'sales.xlsx'), transform=lock, _cache=redis)
+        eq_(len(redis), 0)      # It should not be cached
 
 
 class TestCacheKey(unittest.TestCase):
