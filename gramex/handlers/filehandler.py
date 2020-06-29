@@ -5,7 +5,7 @@ import mimetypes
 import tornado.web
 import tornado.gen
 from pathlib import Path
-from pathspec import PathSpec  # NOQA: F401
+from pathspec import PathSpec
 from six import string_types, text_type
 from tornado.escape import utf8
 from tornado.web import HTTPError
@@ -19,14 +19,6 @@ from gramex.http import FORBIDDEN, NOT_FOUND
 
 # Directory indices are served using this template by default
 _default_index_template = Path(__file__).absolute().parent / 'filehandler.template.html'
-
-
-def _match(path, pat):
-    '''
-    Check if path matches pattern -- case insensitively.
-    '''
-    return PathSpec.from_lines('gitwildmatch', [pat.lower()]).match_file(str(path).lower())
-    # return fnmatch.fnmatch(str(path).lower(), '*/' + pat.lower())
 
 
 def read_template(path):
