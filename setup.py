@@ -38,6 +38,7 @@ install_requires = [
     'passlib >= 1.6.5',             # REQ: password storage (e.g. in handlers.DBAuth)
     'pathlib',                      # REQ: Manipulate paths. Part of Python 3.3+
     'pathtools >= 0.1.1',           # REQ: dependency for watchdog
+    'pathspec',                     # .gitignore specifications
     'psutil',                       # REQ: monitor process
     'pymysql',                      # OPT: MySQL connections
     'pytest',                       # OPT: (conda) pytest gramex plugin
