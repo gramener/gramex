@@ -39,6 +39,7 @@ testlib/**/gen.*
 
 *.ppt*
 !testlib/input.pptx
+!testlib/input2.pptx
 !tests/template.pptx
 !gramex/apps/guide/formhandler/input.pptx
 !gramex/apps/guide/pptxhandler/examples-input.pptx

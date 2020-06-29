@@ -182,6 +182,21 @@ class BuildTransform(unittest.TestCase):
             return result if isinstance(result, GeneratorType) else [result, ]
         self.check_transform(transform, 'function: x', vars=vars)
 
+        def transform(x=1, y=2):
+            result = x.real
+            return result if isinstance(result, GeneratorType) else [result, ]
+        self.check_transform(transform, 'function: x.real', vars=vars)
+
+        def transform(x=1, y=2):
+            result = x.conjugate()
+            return result if isinstance(result, GeneratorType) else [result, ]
+        self.check_transform(transform, 'function: x.conjugate()', vars=vars)
+
+        def transform(x=1, y=2):
+            result = x.to_bytes(2, 'big')
+            return result if isinstance(result, GeneratorType) else [result, ]
+        self.check_transform(transform, 'function: x.to_bytes(2, "big")', vars=vars)
+
     def test_fn_kwargs(self):
         def transform(_val):
             result = dict(_val, a=1, b=2)

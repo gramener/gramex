@@ -221,7 +221,7 @@ def open(path, callback=None, transform=None, rel=False, **kwargs):
     This is called as ``my_format_reader_function('data.fmt', arg='value')`` and
     cached. Future calls do not re-load and re-calculate this data.
 
-    ``transform=`` is an optioanl function that processes the data returned by
+    ``transform=`` is an optional function that processes the data returned by
     the callback. For example::
 
         # Returns the count of the CSV file, updating it only when changed
@@ -230,7 +230,7 @@ def open(path, callback=None, transform=None, rel=False, **kwargs):
         # After loading data.xlsx into a DataFrame, returned the grouped result
         open('data.xlsx', 'xslx', transform=lambda data: data.groupby('city')['sales'].sum())
 
-    If ``transform=`` is not a callable, it is ignored.
+    If ``transform=`` is not a callable, it is ignored, but used as a cache key.
 
     ``rel=True`` opens the path relative to the caller function's file path. If
     ``D:/app/calc.py`` calls ``open('data.csv', 'csv', rel=True)``, the path

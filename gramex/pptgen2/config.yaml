@@ -1,0 +1,333 @@
+# config.yaml has configurations for features not supported by python-pptx, but required by pptgen2.
+# The Python files in this folder load this configuration and use it.
+
+# Transition
+# ---------------------------------------------------------------------
+# PowerPoint's UI uses different names than OXML does. For example, the UI shows "Clock" as a
+# transition. Actually, it's a wheen transition with 1 spoke. `transition-alias` converts PowerPoint
+# UI names into XML tag names and attributes.
+transition-alias:
+  airplane: { tag: prstTrans, prst: airplane }
+  box: { tag: prism, isInverted: 1 }
+  checkerboard: { tag: checker }
+  clock: { tag: wheel, spokes: 1 }
+  clock-counterclockwise: { tag: wheelReverse, spokes: 1 }
+  crush: { tag: prstTrans, prst: crush }
+  cube: { tag: prism }
+  curtains: { tag: prstTrans, prst: curtains }
+  drape: { tag: prstTrans, prst: drape }
+  fall-over: { tag: prstTrans, prst: fallOver }
+  fly-through: { tag: flythrough }
+  fracture: { tag: prstTrans, prst: fracture }
+  orbit: { tag: prism, isContent: 1, isInverted: 1 }
+  origami: { tag: prstTrans, prst: origami }
+  page-curl-double: { tag: prstTrans, prst: pageCurlDouble }
+  page-curl-single: { tag: prstTrans, prst: pageCurlSingle }
+  peel-off: { tag: prstTrans, prst: peelOff }
+  prestige: { tag: prstTrans, prst: prestige }
+  random-bars: { tag: randomBar }
+  rotate: { tag: prism, isContent: 1 }
+  shape-circle: { tag: circle }
+  shape-diamond: { tag: diamond }
+  shape-in: { tag: zoom, dir: in }
+  shape-out: { tag: zoom, dir: out }
+  shape-plus: { tag: plus }
+  uncover: { tag: pull }
+  wind: { tag: prstTrans, prst: wind }
+  windows: { tag: window }
+  zoom: { tag: warp }
+  zoom-and-rotate: { tag: newsflash }
+
+# List transition tags and attributes for options.
+# Keys are OXML tag names, and lists all valid transitions (e.g. <blinds>, <checker>, ...).
+# Values list option names, and map these to OXML attributes.
+#   e.g. `transition: blinds horizontal` becomes `<blinds dir="horz">`
+# default: indicates the default option(s)
+# ns: indicates the namespace. Defaults to "p:" (required for newer transition -- see nsmap:)
+transition:
+  none: {}
+  blinds:
+    horizontal: { dir: horz }
+    vertical: { dir: vert }
+  checker:
+    horizontal: { dir: horz }
+    vertical: { dir: vert }
+  circle: {}
+  comb:
+    horizontal: { dir: horz }
+    vertical: { dir: vert }
+  conveyor:
+    # Conveyor is one of the newer transitions, and requires the p14: namespace (instead of p:)
+    ns: p14
+    # If no option is specified, it defaults to the "right" option
+    default: [right]
+    # Directions can be left, right, etc. PowerPoint maps "From left" to dir="r". We do the same
+    left: { dir: r }
+    right: { dir: l }
+  cover:
+    left: { dir: r }
+    right: { dir: l }
+    top: { dir: d }
+    bottom: { dir: u }
+    top-left: { dir: rd }
+    top-right: { dir: ld }
+    bottom-left: { dir: ru }
+    bottom-right: { dir: lu }
+  cut:
+    through-black: { thruBlk: 1 }
+  diamond: {}
+  dissolve: {}
+  doors:
+    ns: p14
+    default: [vertical]
+    horizontal: { dir: horz }
+    vertical: { dir: vert }
+  fade:
+    through-black: { thruBlk: 1 }
+  ferris:
+    ns: p14
+    default: [left]
+    left: { dir: r }
+    right: { dir: l }
+  flash:
+    ns: p14
+  flip:
+    ns: p14
+    default: [right]
+    left: { dir: r }
+    right: { dir: l }
+  flythrough:
+    ns: p14
+    default: [in]
+    in: { dir: in }
+    out: { dir: out }
+    bounce: { hasBounce: 1 }
+  gallery:
+    ns: p14
+    default: [right]
+    left: { dir: r }
+    right: { dir: l }
+  glitter:
+    ns: p14
+    default: [hexagon, left]
+    left: { dir: l }
+    right: { dir: r }
+    top: { dir: u }
+    bottom: { dir: d }
+    diamond: { pattern: diamond }
+    hexagon: { pattern: hexagon }
+  honeycomb:
+    ns: p14
+  morph:
+    ns: p159
+    default: [by-object]
+    by-object: { option: byObject }
+    by-word: { option: byWord }
+    by-char: { option: byChar }
+  newsflash: {}
+  pan:
+    ns: p14
+    default: [bottom]
+    left: { dir: r }
+    right: { dir: l }
+    top: { dir: d }
+    bottom: { dir: u }
+  plus: {}
+  prstTrans:
+    ns: p15
+    left: { invX: 1 }
+    right: { invX: 0 }
+    top: { invY: 1 }
+    bottom: { invY: 0 }
+  prism:
+    ns: p14
+    left: { dir: r }
+    right: { dir: l }
+    top: { dir: d }
+    bottom: { dir: u }
+    inverted: { isInverted: 1 }
+    content: { isContent: 1 }
+  pull:
+    left: { dir: r }
+    right: { dir: l }
+    top: { dir: d }
+    bottom: { dir: u }
+    top-left: { dir: rd }
+    top-right: { dir: ld }
+    bottom-left: { dir: ru }
+    bottom-right: { dir: lu }
+  push:
+    left: { dir: r }
+    right: { dir: l }
+    top: { dir: d }
+    bottom: { dir: u }
+  random: {}
+  randomBar:
+    horizontal: { dir: horz }
+    vertical: { dir: vert }
+  reveal:
+    ns: p14
+    default: [right]
+    left: { dir: r }
+    right: { dir: l }
+    through-black: { thruBlk: 1 }
+  ripple:
+    ns: p14
+    default: [center]
+    top-left: { dir: rd }
+    top-right: { dir: ld }
+    bottom-left: { dir: ru }
+    bottom-right: { dir: lu }
+    center: { dir: center }
+  shred:
+    ns: p14
+    default: [strips, in]
+    in: { dir: in }
+    out: { dir: out }
+    strips: { pattern: strip }
+    particles: { pattern: rectangle }
+  split:
+    in: { dir: in }
+    out: { dir: out }
+    horizontal: { orient: horz }
+    vertical: { orient: vert }
+  switch:
+    ns: p14
+    default: [right]
+    left: { dir: r }
+    right: { dir: l }
+  strips:
+    top-left: { dir: rd }
+    top-right: { dir: ld }
+    bottom-left: { dir: ru }
+    bottom-right: { dir: lu }
+  vortex:
+    ns: p14
+    default: [left]
+    left: { dir: r }
+    right: { dir: l }
+    top: { dir: d }
+    bottom: { dir: u }
+  warp:
+    ns: p14
+    default: [in]
+    in: { dir: in }
+    out: { dir: out }
+  wedge: {}
+  wheel: {}     # spokes=<int>
+  wheelReverse: # spokes=int
+    ns: p14
+  window:
+    ns: p14
+    default: [vertical]
+    horizontal: { dir: horz }
+    vertical: { dir: vert }
+  wipe:
+    left: { dir: r }
+    right: { dir: l }
+    top: { dir: d }
+    bottom: { dir: u }
+  zoom:
+    in: { dir: in }
+    out: { dir: out }
+
+# Extend the default PPTX schemas provided by python-pptx. Newer transitions use these namespaces
+nsmap:
+  mc: http://schemas.openxmlformats.org/markup-compatibility/2006
+  p14: http://schemas.microsoft.com/office/powerpoint/2010/main
+  p15: http://schemas.microsoft.com/office/powerpoint/2012/main
+  p159: http://schemas.microsoft.com/office/powerpoint/2015/09/main
+
+# Actual OXML template for transitions in different namespaces
+transition-tmpl:
+  p: |
+    <root xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+      <mc:AlternateContent xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006">
+        <mc:Choice xmlns:p14="http://schemas.microsoft.com/office/powerpoint/2010/main" Requires="p14">
+          <p:transition p14:dur="300">
+            <p:{tag} {attrs}/>
+          </p:transition>
+        </mc:Choice>
+        <mc:Fallback>
+          <p:transition spd="fast">
+            <p:{tag} {attrs}/>
+          </p:transition>
+        </mc:Fallback>
+      </mc:AlternateContent>
+    </root>
+
+  p14: |
+    <root xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+      <mc:AlternateContent xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006">
+        <mc:Choice xmlns:p14="http://schemas.microsoft.com/office/powerpoint/2010/main" Requires="p14">
+          <p:transition p14:dur="300">
+            <p14:{tag} {attrs}/>
+          </p:transition>
+        </mc:Choice>
+        <mc:Fallback>
+          <p:transition spd="fast">
+            <p:fade/>
+          </p:transition>
+        </mc:Fallback>
+      </mc:AlternateContent>
+    </root>
+
+  p15: |
+    <root xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+      <mc:AlternateContent xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006">
+        <mc:Choice xmlns:p15="http://schemas.microsoft.com/office/powerpoint/2012/main" Requires="p15">
+          <p:transition xmlns:p14="http://schemas.microsoft.com/office/powerpoint/2010/main" p14:dur="300">
+            <p15:{tag} {attrs}/>
+          </p:transition>
+        </mc:Choice>
+        <mc:Fallback>
+          <p:transition spd="fast">
+            <p:fade/>
+          </p:transition>
+        </mc:Fallback>
+      </mc:AlternateContent>
+    </root>
+
+  p159: |
+    <root xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+      <mc:AlternateContent xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006">
+        <mc:Choice xmlns:p159="http://schemas.microsoft.com/office/powerpoint/2015/09/main" Requires="p159">
+          <p:transition xmlns:p14="http://schemas.microsoft.com/office/powerpoint/2010/main" p14:dur="300">
+            <p159:{tag} {attrs}/>
+          </p:transition>
+        </mc:Choice>
+        <mc:Fallback>
+          <p:transition spd="fast">
+            <p:fade/>
+          </p:transition>
+        </mc:Fallback>
+      </mc:AlternateContent>
+    </root>
+
+# Links
+# ---------------------------------------------------------------------
+# If we use special links like `link: back`, etc., they map into these special URLs in OXML
+link-action:
+  first: ppaction://hlinkshowjump?jump=firstslide
+  last: ppaction://hlinkshowjump?jump=lastslide
+  next: ppaction://hlinkshowjump?jump=nextslide
+  previous: ppaction://hlinkshowjump?jump=previousslide
+  prev: ppaction://hlinkshowjump?jump=previousslide
+  end: ppaction://hlinkshowjump?jump=endshow
+  back: ppaction://hlinkshowjump?jump=lastslideviewed
+  noaction: ppaction://noaction
+  # Ref: https://docs.microsoft.com/en-us/openspecs/office_standards/ms-oe376/7ff3db24-b7b9-4ffe-aa78-3ec47cab2489
+  # Unused options:
+  #   ppaction://customshow?id=SHOW_ID
+  #   ppaction://macro?name=MACRO_NAME
+  #   ppaction://program
+
+# Links can be specified on shapes or text, and they're defined on different OXML tags
+link-attrs:
+  # For shapes, modify <p:cNvPr> under shape._element
+  shape: {tag: p:cNvPr, el: _element}
+  # For text, odify <a:rPr> under run._r
+  text: {tag: a:rPr, el: _r}
+
+# If link: target is one of these file types, use ppaction://hlinkpres indicating that it's a PPTX
+link-ppt-files: [.ppt, .pptx, .pptm, .pps, .ppsm]

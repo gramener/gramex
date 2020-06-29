@@ -34,7 +34,7 @@ install_requires = [
     'markdown',                     # OPT: transforms, gramex.services.create_alert()
     'matplotlib',                   # OPT: (conda) gramex.data.download()
     'oauthlib >= 1.1.2',            # SRV: OAuth request-signing
-    'orderedattrdict >= 1.4.3',     # REQ: OrderedDict with attr access for configs
+    'orderedattrdict >= 1.6.0',     # REQ: OrderedDict with attr access for configs
     'pandas',                       # REQ: (conda) gramex.data.filter()
     'passlib >= 1.6.5',             # REQ: password storage (e.g. in handlers.DBAuth)
     'pathlib',                      # REQ: Manipulate paths. Part of Python 3.3+
