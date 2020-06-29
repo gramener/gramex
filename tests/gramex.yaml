@@ -458,9 +458,9 @@ url:
           Sub: b
         '*':
           All: x
-        '*/install/**':
+        '**/install/**':
           Sub: x
-        'gramex-bower-package/**':
+        '**/gramex-bower-package':
           Sub: y
 
   dir/data:
