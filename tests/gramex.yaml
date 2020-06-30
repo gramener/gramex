@@ -462,9 +462,9 @@ url:
           Sub: b
         '*':
           All: x
-        '*/install/**':
+        '**/install/**':
           Sub: x
-        'gramex-bower-package/**':
+        '**/gramex-bower-package':
           Sub: y
 
   dir/data:
@@ -1098,10 +1098,10 @@ url:
     handler: TwitterRESTHandler
     kwargs:
       # Gramener > Gramex guide app: https://apps.twitter.com/app/12449610/keys
-      key: XkCVNZD5sfWECxHGAGnlHGQFa
-      secret: yU00bx5dHYMbge9IyO5H1KeC5uFnWndntG7u6CH6O4HDZHQg0p
-      access_key: 445767176-pqio8PuGlpzULSstlZQbLhRqFJfNBjWFH5LqNRgI
-      access_secret: zVosr4wIS3aM80hErmWUkMePZ6vX830yI7VKxar6xZqgp
+      key: $TWITTER_KEY
+      secret: $TWITTER_SECRET
+      access_key: $TWITTER_ACCESS_KEY
+      access_secret: $TWITTER_ACCESS_SECRET
       xsrf_cookies: false
 
   api/twitter-get:
@@ -1109,10 +1109,10 @@ url:
     handler: TwitterRESTHandler
     kwargs:
       # Gramener > Gramex guide app: https://apps.twitter.com/app/12449610/keys
-      key: XkCVNZD5sfWECxHGAGnlHGQFa
-      secret: yU00bx5dHYMbge9IyO5H1KeC5uFnWndntG7u6CH6O4HDZHQg0p
-      access_key: 445767176-pqio8PuGlpzULSstlZQbLhRqFJfNBjWFH5LqNRgI
-      access_secret: zVosr4wIS3aM80hErmWUkMePZ6vX830yI7VKxar6xZqgp
+      key: $TWITTER_KEY
+      secret: $TWITTER_SECRET
+      access_key: $TWITTER_ACCESS_KEY
+      access_secret: $TWITTER_ACCESS_SECRET
       methods: GET
       xsrf_cookies: false
 
@@ -2017,7 +2017,7 @@ alert:
     alert-each:
       service: smtps_stub
       data: $YAMLPATH/actors.csv
-      condition: data[data['votes'] > 100]
+      condition: data[data['votes'] > 120]
       each: data
       to: "{{ row['name'].replace(' ', '_') + '@example.org' }}"
       subject: "{{ config.salutation }} #{{ index }}! {{ config['prefix'] }} {{ row['votes'] }} votes"

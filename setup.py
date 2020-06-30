@@ -26,7 +26,6 @@ install_requires = [
     'diskcache >= 2.8.3',           # SRV: services.cache for disk cache
     'h5py',                         # OPT: (conda) gramex.cache.HDF5Store
     'ipdb',                         # OPT: gramex.debug
-    'inflect',                      # REQ: NLG
     'jmespath',                     # OPT: pytest gramex plugin
     'joblib',                       # OPT: For gramex.ml
     'ldap3 >= 2.2.4',               # OPT: LDAP connections
@@ -35,7 +34,7 @@ install_requires = [
     'matplotlib',                   # OPT: (conda) gramex.data.download()
     'oauthlib >= 1.1.2',            # SRV: OAuth request-signing
     'orderedattrdict >= 1.6.0',     # REQ: OrderedDict with attr access for configs
-    'pandas',                       # REQ: (conda) gramex.data.filter()
+    'pandas == 0.25.3',             # REQ: (conda) gramex.data.filter()
     'passlib >= 1.6.5',             # REQ: password storage (e.g. in handlers.DBAuth)
     'pathlib',                      # REQ: Manipulate paths. Part of Python 3.3+
     'pathtools >= 0.1.1',           # REQ: dependency for watchdog
