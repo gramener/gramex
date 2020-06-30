@@ -70,15 +70,16 @@ class TestLogViewer(TestGramex):
             [{'user.id': x} for x in
              sorted(df[df_user1]['user.id'].unique())]
             )
-        ideal = df[df_uri1]['uri'].value_counts().astype(int)[:100]
-        ideal = ideal.rename_axis('uri').reset_index(name='views')
-        ideal = ideal.sort_values(by=['views', 'uri'], ascending=[False, True])
-        ideal.reset_index(inplace=True, drop=True)
-        actual = self.get('{}/filter{}/'.format(base, 'uri')).json()
-        actual = pd.DataFrame.from_records(actual)
-        actual.sort_values(by=['views', 'uri'], ascending=[False, True], inplace=True)
-        actual.reset_index(inplace=True, drop=True)
-        afe(actual, ideal)
+        # ToDo: See https://github.com/gramener/gramex/issues/252
+        # ideal = df[df_uri1]['uri'].value_counts().astype(int)[:100]
+        # ideal = ideal.rename_axis('uri').reset_index(name='views')
+        # ideal = ideal.sort_values(by=['views', 'uri'], ascending=[False, True])
+        # ideal.reset_index(inplace=True, drop=True)
+        # actual = self.get('{}/filter{}/'.format(base, 'uri')).json()
+        # actual = pd.DataFrame.from_records(actual)
+        # actual.sort_values(by=['views', 'uri'], ascending=[False, True], inplace=True)
+        # actual.reset_index(inplace=True, drop=True)
+        # afe(actual, ideal)
         # check KPIs
         eq_(self.get('{}/kpi-{}/'.format(base, 'pageviews')).json(),
             [{'value': len(df[df_uri1].index)}]

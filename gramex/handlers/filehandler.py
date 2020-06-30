@@ -5,7 +5,7 @@ import mimetypes
 import tornado.web
 import tornado.gen
 from pathlib import Path
-from pathspec import PathSpec
+from fnmatch import fnmatch
 from six import string_types, text_type
 from tornado.escape import utf8
 from tornado.web import HTTPError
@@ -19,6 +19,13 @@ from gramex.http import FORBIDDEN, NOT_FOUND
 
 # Directory indices are served using this template by default
 _default_index_template = Path(__file__).absolute().parent / 'filehandler.template.html'
+
+
+def _match(path, pat):
+    '''
+    Check if path matches pattern -- case insensitively.
+    '''
+    return fnmatch(str(path).lower(), '*/' + pat.lower())
 
 
 def read_template(path):
@@ -132,7 +139,6 @@ class FileHandler(BaseHandler):
         cls.default_filename = default_filename
         cls.index = index
         cls.ignore = cls.set(cls.kwargs.ignore)
-        cls.pathspec = PathSpec.from_lines('gitwildmatch', map(lambda x: x.lower(), cls.ignore))
         cls.allow = cls.set(cls.kwargs.allow)
         cls.default = default
         cls.index_template = read_template(
@@ -203,11 +209,12 @@ class FileHandler(BaseHandler):
         Override this method for a custom implementation.
         '''
         for ignore in self.ignore:
-            if self.pathspec.match_file(str(path).lower()):
+            if _match(path, ignore):
                 # Check allows only if an ignore: is matched.
                 # If any allow: is matched, allow it
-                if PathSpec.from_lines('gitwildmatch', self.allow).match_file(path):
-                    return True
+                for allow in self.allow:
+                    if _match(path, allow):
+                        return True
                 app_log.debug('%s: Disallow "%s". It matches "%s"', self.name, path, ignore)
                 return False
         return True
@@ -277,8 +284,7 @@ class FileHandler(BaseHandler):
 
             for header_name, header_value in self.headers.items():
                 if isinstance(header_value, dict):
-                    if PathSpec.from_lines('gitwildmatch', [header_name]).match_file(
-                            str(self.file)):
+                    if _match(self.file, header_name):
                         for header_name, header_value in header_value.items():
                             self.set_header(header_name, header_value)
                 else:
@@ -286,7 +292,7 @@ class FileHandler(BaseHandler):
 
             transform = {}
             for pattern, trans in self.transform.items():
-                if PathSpec.from_lines('gitwildmatch', [pattern]).match_file(str(self.file)):
+                if _match(self.file, pattern):
                     transform = trans
                     break
 
