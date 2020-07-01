@@ -211,7 +211,9 @@ class TestPPTGen(TestCase):
     def test_slide_filter(self, slides=[1, 2, 3]):
         # Rules are specified as rule-name={shape: {rule}, ...}
         rule1 = {'slide-number': 1, 'Title 1': {'width': 10}}
-        rule2 = {'slide-number': [2, 3], 'Title 1': {'width': 20}, 'Rectangle 1': {'width': 20}}
+        rule2 = {'slide-number': [2, 3],
+                 'Title 1': {'width': 20},
+                 'Rectangle 1': {'width': 20}}
         prs = pptgen(source=self.input, only=slides, rules=[rule1, rule2])
         eq_(self.get_shape(prs.slides[0].shapes, 'Title 1').width, pptx.util.Inches(10))
         eq_(self.get_shape(prs.slides[1].shapes, 'Title 1').width, pptx.util.Inches(20))
@@ -435,7 +437,6 @@ class TestPPTGen(TestCase):
             {'Group 1': {
                 'clone-shape': data,
                 'top': {'expr': '1 + clone.val'},
-                # TODO: These groups are outside the page. WHY?
                 'Picture': {
                     'clone-shape': data,
                     'left': {'expr': '1 + clone.val / 2'},

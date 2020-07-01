@@ -148,6 +148,7 @@ setup(
     test_suite='tests',
     tests_require=[
         'nose',
+        'nose-timer',
         'coverage',
         'python-dateutil',          # For schedule testing
         'testfixtures',             # For logcapture

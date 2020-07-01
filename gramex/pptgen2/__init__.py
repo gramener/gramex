@@ -153,13 +153,13 @@ def load_data(_conf, _default_key: str = None, **kwargs) -> dict:
 
     ``_conf`` is processed as follows:
 
-    - String ``'data.xlsx'`` is loaded via :py:function:`gramex.cache.open` into ``{data: ...}`` if
+    - String ``'data.xlsx'`` is loaded via :py:func:`gramex.cache.open` into ``{data: ...}`` if
         ``_default_key == 'url'``
-    - String ``'data[0]'`` is evaluated via :py:function:`gramex.transforms.build_transform` into
+    - String ``'data[0]'`` is evaluated via :py:func:`gramex.transforms.build_transform` into
         ``{data: ...}``` if ``_default_key == 'function'``
     - String ``anything``` raises an Exception if ``_default_key`` is None
-    - Dict ``{url: ...}`` is loaded with :py:function:`gramex.data.filter` into ``{data: ...}``
-    - Dict ``{function: ...}`` is evaluated via :py:function:`gramex.transforms.build_transform`
+    - Dict ``{url: ...}`` is loaded with :py:func:`gramex.data.filter` into ``{data: ...}``
+    - Dict ``{function: ...}`` is evaluated via :py:func:`gramex.transforms.build_transform`
         into ``{data: ...}``
     - Dict ``{x: ..., y: ...}`` loads the respective datasets into ``x`` and ``y`` instead of
         ``data``. Each dataset is processed using the above rules.

@@ -198,7 +198,7 @@ def name(shape, spec, data: dict):
 def print_command(shape, spec, data: dict):
     spec = spec if isinstance(spec, (list, tuple)) else [spec]
     for item in spec:
-        print('    %s: %s' % (item, expr(item, data)))
+        print('    %s: %s' % (item, expr(item, data)))      # noqa
 
 
 # Position & style commands
