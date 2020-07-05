@@ -146,17 +146,7 @@ setup(
         'pytest11': ['gramextest = gramex.gramextest']
     },
     test_suite='tests',
-    tests_require=[
-        'nose',
-        'nose-timer',
-        'coverage',
-        'python-dateutil',          # For schedule testing
-        'testfixtures',             # For logcapture
-        'sphinx_rtd_theme',         # For documentation
-        'websocket-client',         # For websocket testing
-        'pdfminer.six',             # For CaptureHandler testing
-        'cssselect',                # For HTML testing (test_admin.py)
-        'psycopg2 >= 2.7.1'         # OPT: PostgreSQL connections
-    ],
+    # Install test libraries via `make test-setup` -> tests/requirements.txt.
+    # Use this instead of tests_require because nose plugins are installed this way.
     **release_args
 )

@@ -21,7 +21,7 @@ from gramex.handlers import BaseHandler
 watch_info = []
 ws_info = []
 counters = Counter()
-slow = {'value': 0, 'started': False, 'max': 10}
+slow = {'value': 0, 'started': False, 'max': 20}
 
 
 def args_as_json(handler):
@@ -169,7 +169,8 @@ def slow_count_start():
 
 def slow_count_check(delay=0.01):
     time.sleep(delay)
-    assert slow['start'] < slow['value'] < slow['max'] - 1, 'Schedule runs in parallel'
+    assert slow['start'] < slow['value'], 'Schedule already started'
+    assert slow['value'] < slow['max'] - 1, 'Schedule runs in parallel'
 
 
 def slow_count(delay=0.01):
