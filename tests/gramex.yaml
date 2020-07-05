@@ -70,6 +70,25 @@ url:
   pathnorm1: {pattern: "/./path/norm1", handler: FunctionHandler, kwargs: {function: str("/path/norm1") }}
   pathnorm2: {pattern: "/path/./norm2", handler: FunctionHandler, kwargs: {function: str("/path/norm2") }}
 
+  # TestSchedule
+  schedule-key:
+    pattern: /schedule-key
+    handler: FunctionHandler
+    kwargs:
+      function: utils.schedule_key()
+
+  slow-count-start:
+    pattern: /slow-count-start
+    handler: FunctionHandler
+    kwargs:
+      function: utils.slow_count_start()
+
+  slow-count-check:
+    pattern: /slow-count-check
+    handler: FunctionHandler
+    kwargs:
+      function: utils.slow_count_check()
+
   # test_handlers
   base:
     pattern: /base
@@ -1900,16 +1919,13 @@ watch:
     on_modified: nonexistent            # This should not throw an error, only report a warning
 
 schedule:
-  schedule-startup-set-key:
-    function: utils.slow_count          # Set global value schedule-key to 1
-    args: ['schedule-key', 1]
+  schedule-start:
+    function: utils.schedule_start
     startup: true
-  schedule-startup-slow:
+  schedule-slow-count:
     function: utils.slow_count          # Set global schedule-count every 10ms
-    args: 'schedule-count'
-    kwargs: {count: 1000}
-    startup: true
     thread: true
+    startup: true
   schedule-timed:
     function: gramex.config.app_log('schedule-timed ran now')
     hours: 5
