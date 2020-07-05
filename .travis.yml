@@ -61,6 +61,7 @@ script:
   - pip install gramexenterprise
   - gramex license accept
   - gramex setup --all  # ensure node-sass, puppetter exists
+  - export NOSE_WITH_COVERAGE=1
   - make test
 
   # Test specific apps
