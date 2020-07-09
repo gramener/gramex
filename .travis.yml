@@ -45,9 +45,10 @@ install:
   - hash -r
   # Install conda packages
   - conda config --set always_yes yes --set changeps1 no
-  - conda install -y -q colorama h5py lxml matplotlib pandas pytest seaborn sqlalchemy line_profiler tzlocal scikit-learn
+  # For the NumPy version below, see: https://bitbucket.org/rpy2/rpy2/issues/572
+  # Newer versions of NumPy require newer versions of rpy2. The latter are not available on conda.
+  - conda install -y -q colorama h5py lxml matplotlib pandas pytest seaborn sqlalchemy line_profiler tzlocal scikit-learn rpy2 numpy=1.16
   # rpy2 v2.9.6 is compatible with pandas 1.0, not available on the default channel
-  - conda install -c conda-forge rpy2
   # Install node.js
   - nvm install 12
   # Set up variables
