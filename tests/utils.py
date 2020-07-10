@@ -168,9 +168,9 @@ def slow_count_start():
 
 
 def slow_count_check(delay=0.01):
-    time.sleep(delay)
-    assert slow['start'] < slow['value'], 'Schedule already started'
-    assert slow['value'] < slow['max'] - 1, 'Schedule runs in parallel'
+    time.sleep(delay * 2)
+    assert slow['start'] < slow['value'], 'Schedule has not yet started'
+    assert slow['value'] < slow['max'] - 1, 'Schedule is not running in parallel'
 
 
 def slow_count(delay=0.01):

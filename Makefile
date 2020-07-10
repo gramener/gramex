@@ -64,6 +64,8 @@ test-setup:
 	$(PYTHON) -m pip install -r tests/requirements.txt
 
 test: test-setup
+	# Use python setup.py nosetests to ensure the correct Python runs.
+	# (Note: Dependencies are set up via test-setup. setup.py does not have any tests_require.)
 	$(PYTHON) setup.py nosetests
 
 release-test: clean-test lint docs test

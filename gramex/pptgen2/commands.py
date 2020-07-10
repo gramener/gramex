@@ -11,6 +11,7 @@ import io
 import matplotlib.cm
 import matplotlib.colors
 import os
+import pandas as pd
 import pptx
 import pptx.util
 import re
@@ -20,11 +21,12 @@ from functools import partial
 from gramex.config import objectpath
 from gramex.transforms import build_transform
 from lxml.html import fragments_fromstring, builder, HtmlElement
+from orderedattrdict import AttrDict
 from pptx.dml.color import RGBColor
 from pptx.dml.fill import FillFormat
 from pptx.enum.base import EnumValue
 from pptx.enum.dml import MSO_THEME_COLOR, MSO_FILL
-from pptx.enum.text import PP_ALIGN
+from pptx.enum.text import PP_ALIGN, MSO_VERTICAL_ANCHOR
 from pptx.opc.constants import RELATIONSHIP_TYPE as RT
 from pptx.oxml.ns import _nsmap, qn
 from pptx.oxml.simpletypes import ST_Percentage
@@ -56,13 +58,16 @@ def expr(val, data: dict = {}):
     return val
 
 
-def assign(convert, *path: List[str]):
-    '''assign(int, 'font', 'size') returns a method(para, '10') -> para.font.size = int(10)'''
+def assign(convert, path: str):
+    '''assign(int, 'font.3.size') returns a method(para, '10') -> para.font[3].size = int(10)'''
+    path = path.split('.')
+
     def method(node, value, data):
         for p in path[:-1]:
-            node = getattr(node, p)
+            node = node[int(p)] if p.isdigit() else getattr(node, p)
         # To clear the bold, italic, etc, we need to set it to None. So don't convert None
         setattr(node, path[-1], None if value is None else convert(value))
+
     return method
 
 
@@ -119,7 +124,7 @@ def fill_color(fill: FillFormat, val: Union[str, tuple, list, None]) -> None:
 
     - a named color, like ``black``
     - a hex value, like ``#f80`` or ``#ff8800``
-    - an RGB value, like ``rgb(255, 255, 0)``
+    - an RGB value, like ``rgb(255, 255, 0)`` or ``rgb(1, 0.5, 0.1)``
     - a tuple or list of RGB values, like ``(255, 255, 0)`` or ``[255, 255, 0]``
     - a theme color, like ``ACCENT_1``, ``ACCENT_2``, ``BACKGROUND_1``, ``DARK_1``, ``LIGHT_2``
     - a theme color with a brightness modifier, like ``ACCENT_1+40``, which is 40% brighter than
@@ -130,7 +135,11 @@ def fill_color(fill: FillFormat, val: Union[str, tuple, list, None]) -> None:
     if val == 'none':
         fill.background()
     elif isinstance(val, (list, tuple)):
-        fill.fore_color.rgb = RGBColor(*val[:3])
+        val = val[:3]
+        if any(isinstance(v, float) for v in val) and all(0 <= v <= 1 for v in val):
+            fill.fore_color.rgb = RGBColor(*(int(v * 256 if v < 1 else 255) for v in val))  # noqa
+        else:
+            fill.fore_color.rgb = RGBColor(*val)
     elif isinstance(val, str):
         val = color_map.get(val, val).upper()
         if val.startswith('#'):
@@ -179,9 +188,9 @@ def binary(val: Union[str, int, float]) -> bool:
     raise ValueError('Invalid boolean: %r' % val)
 
 
-def alignment(val: str) -> EnumValue:
-    '''Convert string to alignment value'''
-    alignment = getattr(PP_ALIGN, val.upper(), None)
+def alignment(enum, val: str) -> EnumValue:
+    '''Convert string to alignment value. enum can be PP_ALIGN or MSO_VERTICAL_ANCHOR'''
+    alignment = getattr(enum, val.upper(), None)
     if alignment is not None:
         return alignment
     raise ValueError('Invalid alignment: %s' % val)
@@ -250,14 +259,14 @@ def zoom(shape, spec, data: dict):
         shape.height = int(shape.height * val)
 
 
-def set_color(prop, attr, shape, spec, data: dict):
+def set_color(attr, shape, spec, data: dict):
     '''Generator for fill, stroke commands'''
     val = expr(spec, data)
     if val is not None:
         fill_color(objectpath(shape, attr), val)
 
 
-def set_opacity(prop, attr, shape, spec, data: dict):
+def set_opacity(attr, shape, spec, data: dict):
     '''Generator for fill-opacity, stroke-opacity commands'''
     val = expr(spec, data)
     if val is not None:
@@ -338,17 +347,32 @@ def get_elements(children: List[Union[str, HtmlElement]], element_builder):
     Convert head & tail text into specified tag, so that we can just process all text and elements
     as a single list.
     '''
+    elements, open = [], True
     for e in children:
-        if isinstance(e, HtmlElement):
-            tail = e.tail.rstrip() if e.tail else e.tail
-            if e.text or list(e):
-                e.tail = ''
-                yield e if e.tag == element_builder.args[0] else element_builder(e)
-            if tail:
-                yield element_builder(tail)
-        elif isinstance(e, str):
+        if isinstance(e, str):
+            e = re.sub(r'\s+', ' ', e, re.DOTALL)
             if e:
-                yield element_builder(e.rstrip())
+                if open and len(elements):
+                    elements[-1].text += e
+                else:
+                    elements.append(element_builder(e))
+            open = True
+        elif isinstance(e, HtmlElement):
+            if e.tag != element_builder.args[0]:
+                if open and len(elements):
+                    elements[-1].append(e)
+                else:
+                    elements.append(element_builder(e))
+                open = True
+            else:
+                elements.append(e)
+                open = False
+                tail = re.sub(r'\s+', ' ', e.tail, re.DOTALL) if e.tail else ''
+                if tail.strip():
+                    elements.append(element_builder(tail))
+                    open = True
+
+    return elements
 
 
 def baseline(run, val, data):
@@ -368,31 +392,39 @@ def strike(run, val, data):
     run.font._rPr.set('strike', val)
 
 
-para_attr_method = {
-    'align': assign(alignment, 'alignment'),
-    'bold': assign(binary, 'font', 'bold'),
+def get_text_frame(shape):
+    # Get the text frame. Note: don't use .has_text_frame. This function should work for cells too
+    try:
+        return shape.text_frame
+    except AttributeError:
+        raise ValueError('Cannot set text on shape %s that has no text frame' % shape.name)
+
+
+para_methods = {
+    'align': assign(partial(alignment, PP_ALIGN), 'alignment'),
+    'bold': assign(binary, 'font.bold'),
     'color': lambda p, v, d: fill_color(p.font.fill, v),
-    'font-name': assign(str, 'font', 'name'),
-    'font-size': assign(length, 'font', 'size'),
-    'italic': assign(binary, 'font', 'italic'),
+    'font-name': assign(str, 'font.name'),
+    'font-size': assign(length, 'font.size'),
+    'italic': assign(binary, 'font.italic'),
     'level': assign(int, 'level'),
     'line-spacing': assign(length, 'line_spacing'),
     'space-after': assign(length, 'space_after'),
     'space-before': assign(length, 'space_before'),
-    'underline': assign(binary, 'font', 'underline'),
+    'underline': assign(binary, 'font.underline'),
 }
-run_attr_method = {
+run_methods = {
     'baseline': baseline,
-    'bold': assign(binary, 'font', 'bold'),
+    'bold': assign(binary, 'font.bold'),
     'color': lambda r, v, d: fill_color(r.font.fill, v),
-    'font-name': assign(str, 'font', 'name'),
-    'font-size': assign(length, 'font', 'size'),
+    'font-name': assign(str, 'font.name'),
+    'font-size': assign(length, 'font.size'),
     'hover': lambda r, v, d: set_link('text', 'hlinkMouseOver', d['prs'], d['slide'], r, v),
-    'italic': assign(binary, 'font', 'italic'),
+    'italic': assign(binary, 'font.italic'),
     'link': lambda r, v, d: set_link('text', 'hlinkClick', d['prs'], d['slide'], r, v),
     'strike': strike,
     'tooltip': lambda r, v, d: set_tooltip('text', d['prs'], d['slide'], r, v),
-    'underline': assign(binary, 'font', 'underline'),
+    'underline': assign(binary, 'font.underline'),
 }
 
 
@@ -401,11 +433,9 @@ def text(shape, spec, data):
     val = expr(spec, data)
     if val is None:
         return
-    if not shape.has_text_frame:
-        raise ValueError('Cannot add text to shape %s that has no text frame' % shape.name)
+    frame = get_text_frame(shape)
     # Delete all but the first para (required), and its first run (to preserve formatting).
     # All new paras and runs get the same formatting as the first para & run, by default
-    frame = shape.text_frame
     for p in frame.paragraphs[1:]:
         p._p.getparent().remove(p._p)
     for r in frame.paragraphs[0].runs[1:]:
@@ -422,8 +452,8 @@ def text(shape, spec, data):
         p._pPr.attrib.update(para_defaults)
         # Set specified para attributes
         for attr, val in para.attrib.items():
-            if attr in para_attr_method:
-                para_attr_method[attr](p, val, data)
+            if attr in para_methods:
+                para_methods[attr](p, val, data)
         for j, run in enumerate(get_elements([para.text] + list(para), builder.A)):
             # The first run MAY exist, if there was text. Or not. Create if required
             r = p.add_run() if j >= len(p.runs) else p.runs[j]
@@ -432,15 +462,14 @@ def text(shape, spec, data):
             # Set specified run attributes
             r.text = run.text
             for attr, val in run.attrib.items():
-                if attr in run_attr_method:
-                    run_attr_method[attr](r, val, data)
+                if attr in run_methods:
+                    run_methods[attr](r, val, data)
 
 
 def replace(shape, spec, data):
     if not isinstance(spec, dict):
         raise ValueError('replace: needs a dict of {old: new} text, not %r' % spec)
-    if not shape.has_text_frame:
-        raise ValueError('Cannot add text to shape %s that has no text frame' % shape.name)
+    frame = get_text_frame(shape)
 
     def insert_run_after(r, p, original_r):
         new_r = copy.deepcopy(original_r)
@@ -448,7 +477,7 @@ def replace(shape, spec, data):
         return _Run(new_r, p)
 
     spec = {re.compile(old): fragments_fromstring(expr(new, data)) for old, new in spec.items()}
-    for p in shape.text_frame.paragraphs:
+    for p in frame.paragraphs:
         for r in p.runs:
             for old, tree in spec.items():
                 match = old.search(r.text)
@@ -461,27 +490,27 @@ def replace(shape, spec, data):
                         r = insert_run_after(r, p, original_r) if j > 0 else r
                         r.text = run.text
                         for attr, val in run.attrib.items():
-                            if attr in run_attr_method:
-                                run_attr_method[attr](r, val, data)
+                            if attr in run_methods:
+                                run_methods[attr](r, val, data)
                     if suffix:
                         # Ensure suffix has same attrs as original text
                         r = insert_run_after(r, p, original_r)
                         r.text = suffix
 
 
-def set_text(attr, on_para, shape, spec, data):
+def set_text(attr, on_run, shape, spec, data):
     '''Generator for bold, italic, color, and other text commands'''
     val = expr(spec, data)
     if val is not None:
-        if not shape.has_text_frame:
-            raise ValueError('Cannot change text of shape %s that has no text frame' % shape.name)
-        # If on_para=True, set attr on every para, clear attr on every run (e.g. bold, italic)
-        # Else, set attr on every run, clear attr on every para (e.g. color)
-        para_method, run_method = para_attr_method[attr], run_attr_method[attr]
-        for para in shape.text_frame.paragraphs:
-            para_method(para, val if on_para else None, data)
+        frame = get_text_frame(shape)
+        para_method, run_method = para_methods[attr], run_methods[attr]
+        for para in frame.paragraphs:
+            para_method(para, val, data)
             for run in para.runs:
-                run_method(run, None if on_para else val, data)
+                # If on_run=False, clear attr on every run (e.g. bold, italic)
+                # Else, set attr on every run too (e.g. color)
+                # (because PPT doesn't display use color on para.)
+                run_method(run, val if on_run else None, data)
 
 
 # Image commands
@@ -492,6 +521,7 @@ def image(shape, spec, data: dict):
     if val is not None:
         rid = shape._pic.blipFill.blip.rEmbed
         part = shape.part.related_parts[rid]
+        # TODO: This REPLACES the image. We must CREATE an image. Else cloning images fails
         if urlparse(val).netloc:
             part._blob = requests.get(val).content
         else:
@@ -516,6 +546,115 @@ def image_height(shape, spec, data: dict):
         shape.width, shape.height = int(val * shape.width / shape.height), val
 
 
+# Table commands
+# ---------------------------------------------------------------------
+def table_align(shape, spec, data: dict):
+    val = expr(spec, data)
+    if val is not None:
+        val = alignment(PP_ALIGN, val)
+        for para in shape.text_frame.paragraphs:
+            para.alignment = val
+
+
+def table_assign(convert, attr, shape, spec, data: dict):
+    val = expr(spec, data)
+    if val is not None:
+        setattr(shape, attr, convert(val))
+
+
+def _resize(elements, n):
+    '''Ensure that a tr, tc or gridCol list has n children by cloning or deleting last element'''
+    for index in range(len(elements), n, -1):
+        elements[index - 1].delete()
+    for index in range(len(elements), n):
+        elements[-1].addnext(copy.deepcopy(elements[-1]))
+
+
+table_commands = {
+    'text': text,
+    'fill': partial(set_color, 'fill'),
+    'fill-opacity': partial(set_opacity, 'fill'),
+    'align': table_align,
+    # TODO: table borders
+    'vertical-align': partial(
+        table_assign, partial(alignment, MSO_VERTICAL_ANCHOR), 'vertical_anchor'),
+    'margin-left': partial(table_assign, length, 'margin_left'),
+    'margin-right': partial(table_assign, length, 'margin_right'),
+    'margin-top': partial(table_assign, length, 'margin_top'),
+    'margin-bottom': partial(table_assign, length, 'margin_bottom'),
+    # TODO: width: column-wise width
+    'bold': partial(set_text, 'bold', False),
+    'color': partial(set_text, 'color', True),     # PPT needs colors on runs too, not only paras
+    'font-name': partial(set_text, 'font-name', False),
+    'font-size': partial(set_text, 'font-size', False),
+    'italic': partial(set_text, 'italic', False),
+    'underline': partial(set_text, 'underline', False),
+}
+
+
+def table(shape, spec, data: dict):
+    if not shape.has_table:
+        raise ValueError('Cannot run table commands on shape %s that is not a table' % shape.name)
+    table = shape.table
+
+    # Set or get table first/last row/col attributes
+    table.first_row = bool(expr(spec.get('header-row', table.first_row), data))
+    table.last_row = bool(expr(spec.get('total-row', table.last_row), data))
+    table.first_col = bool(expr(spec.get('first-column', table.first_col), data))
+    table.last_col = bool(expr(spec.get('last-column', table.last_col), data))
+
+    # table data must be a DataFrame if specified. Else, create a DataFrame from existing text
+    table_data = expr(spec.get('data', None), data)
+    if table_data is not None and not isinstance(table_data, pd.DataFrame):
+        raise ValueError('data on table %s must be a DataFrame, not %r' % (shape.name, table_data))
+    # Extract data from table text if no data is specified.
+    if table_data is None:
+        table_data = pd.DataFrame([[cell.text for cell in row.cells] for row in table.rows])
+        # If the PPTX table has a header row, set the first row as the DataFrame header too
+        if table.first_row:
+            table_data = table_data.T.set_index([0]).T
+
+    # Adjust PPTX table size to data table size
+    header_offset = 1 if table.first_row else 0
+    _resize(table._tbl.tr_lst, len(table_data) + header_offset)
+    data_cols = len(table_data.columns)
+    _resize(table._tbl.tblGrid.gridCol_lst, data_cols)
+    for row in table.rows:
+        _resize(row._tr.tc_lst, data_cols)
+
+    # Set header row text. No data-driven formatting can be applied on header rows
+    if table.first_row:
+        for j, column in enumerate(table_data.columns):
+            table.cell(0, j).text = column
+
+    # If `text` is not specified, just use the table value
+    expr_mode = data.get('_expr_mode')
+    spec.setdefault('text', 'cell.val' if expr_mode else {'expr': 'cell.val'})
+
+    # TODO: Handle nans
+    # Apply table commands. (Copy data to avoid modifying original. We'll add data['cell'] later)
+    data = dict(data)
+    for key, cmdspec in spec.items():
+        cmd = table_commands.get(key, None)
+        if cmd is None:
+            continue
+        # The command spec can be an expression, or a dict of expressions for each column.
+        # Always convert into a {column: expression}.
+        # But carefully, handling {value: ...} in expr mode and {expr: ...} in literal mode
+        if (not isinstance(cmdspec, dict) or
+                (expr_mode and 'value' in cmdspec) or
+                (not expr_mode and 'expr' in cmdspec)):
+            cmdspec = {column: cmdspec for column in table_data.columns}
+        for i, (index, row) in enumerate(table_data.iterrows()):
+            for j, (column, val) in enumerate(row.iteritems()):
+                data['cell'] = AttrDict(
+                    val=val, column=column, index=index, row=row, data=table_data,
+                    pos=AttrDict(row=i, column=j))
+                cell = table.cell(i + header_offset, j)
+                if column in cmdspec:
+                    cmd(cell, cmdspec[column], data)
+
+
 cmdlist = {
     # Basic commands
     'name': name,
@@ -538,10 +677,10 @@ cmdlist = {
     'adjustment3': partial(set_adjustment, 2),
     'adjustment4': partial(set_adjustment, 3),
     # Style
-    'fill': partial(set_color, 'fill', 'fill'),
-    'stroke': partial(set_color, 'stroke', 'line.fill'),
-    'fill-opacity': partial(set_opacity, 'fill-opacity', 'fill'),
-    'stroke-opacity': partial(set_opacity, 'stroke-opacity', 'line.fill'),
+    'fill': partial(set_color, 'fill'),
+    'stroke': partial(set_color, 'line.fill'),
+    'fill-opacity': partial(set_opacity, 'fill'),
+    'stroke-opacity': partial(set_opacity, 'line.fill'),
     'stroke-width': stroke_width,
     # Image
     'image': image,
@@ -557,15 +696,15 @@ cmdlist = {
     # Text
     'replace': replace,
     'text': text,
-    'bold': partial(set_text, 'bold', True),
-    'color': partial(set_text, 'color', False),         # "False" to set color on runs not paras
-    'font-name': partial(set_text, 'font-name', True),
-    'font-size': partial(set_text, 'font-size', True),
-    'italic': partial(set_text, 'italic', True),
-    'underline': partial(set_text, 'underline', True),
+    'bold': partial(set_text, 'bold', False),
+    'color': partial(set_text, 'color', True),  # PPT needs colors on runs too, not only paras
+    'font-name': partial(set_text, 'font-name', False),
+    'font-size': partial(set_text, 'font-size', False),
+    'italic': partial(set_text, 'italic', False),
+    'underline': partial(set_text, 'underline', False),
     # Others
+    'table': table,
     # 'chart': chart,
-    # 'table': table,
     # Custom charts
     # 'sankey': sankey,
     # 'bullet': bullet,

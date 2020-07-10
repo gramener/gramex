@@ -9,6 +9,7 @@ import gramex.data
 import pandas as pd
 import pptx
 from fnmatch import fnmatchcase
+from gramex.config import app_log
 from gramex.transforms import build_transform
 from orderedattrdict import AttrDict
 from pptx import Presentation
@@ -45,6 +46,7 @@ def pptgen(source: Union[str, pptx.presentation.Presentation],
     :arg handler: if PPTXHandler passes a handler, make it available to the commands as a variable
     :return: target PPTX
     '''
+    # TODO: source can be an expression. PPTXHandler may need to use multiple themes
     prs = source if isinstance(source, pptx.presentation.Presentation) else Presentation(source)
     # Load data with additional variables:
     #   prs: source presentation
@@ -66,10 +68,7 @@ def pptgen(source: Union[str, pptx.presentation.Presentation],
 
     # Loop through each rule (copying them to protect from modification)
     for rule in copy.deepcopy(rules):
-        # slide_data is the data for this rule. If `data:` is specified, override original data
-        slide_data = load_data(rule.get('data', {}), _default_key='function', **data)
-        slides_in_rule = tuple(slide_filter(
-            slides, rule.get('slide-number', []), rule.get('slide-title', [])))
+        slides_in_rule = tuple(slide_filter(slides, rule, data))
         if len(slides_in_rule) == 0:
             # TODO: warn user that no slides matched this rule
             continue
@@ -79,7 +78,7 @@ def pptgen(source: Union[str, pptx.presentation.Presentation],
         # Copy all slides into the `copies` list BEFORE applying any rules. Ensures that rules
         # applied to slide 1 don't propagate into 2, 3, etc.
         copies = []
-        copy_seq = iterate_on(rule.get('copy-slide', [None]), slide_data)
+        copy_seq = iterate_on(rule.get('copy-slide', [None]), data)
         for i, (copy_key, copy_val) in enumerate(copy_seq):
             copy_row = AttrDict(pos=i, key=copy_key, val=copy_val, slides=[])
             copies.append(copy_row)
@@ -91,7 +90,9 @@ def pptgen(source: Union[str, pptx.presentation.Presentation],
                 copy_row.slides.append(slide)
         # Apply rules on all copied slides
         for copy_row in copies:
-            slide_data.update(copy=copy_row)        # Rule can use 'copy' as a variable
+            # Include rule-level `data:`. Add copy, slide as variables
+            slide_data = load_data(
+                rule.get('data', {}), _default_key='function', copy=copy_row, **data)
             for slide in copy_row.slides:
                 slide_data['slide'] = slide         # Rule can use 'slide' as a variable
                 transition(slide, rule.get('transition', None), data)
@@ -99,6 +100,16 @@ def pptgen(source: Union[str, pptx.presentation.Presentation],
     if target:
         prs.save(target)
     return prs
+
+
+# List of commands that can be used in a rule. Shapes cannot have these names
+rule_cmdlist = {
+    'copy-slide',
+    'data',
+    'slide-number',
+    'slide-title',
+    'transition',
+}
 
 
 def apply_commands(rule: Dict[str, dict], shapes, data: dict):
@@ -111,17 +122,19 @@ def apply_commands(rule: Dict[str, dict], shapes, data: dict):
     :arg dict data: data context for the commands in the rule
     '''
     # Apply every rule to every pattern -- as long as the rule key matches the shape name
-    for shape in shapes:
-        for pattern, spec in rule.items():
+    for pattern, spec in rule.items():
+        if pattern in rule_cmdlist:
+            continue
+        shape_matched = False
+        for shape in shapes:
             if not fnmatchcase(shape.name, pattern):
                 continue
-            shape_data = load_data(spec.get('data', {}), _default_key='function', **data)
-            shape_data['shape'] = shape         # Commands can use 'shape' as a variable
+            shape_matched = True
             # Clone all slides into the `clones` list BEFORE applying any command. Ensures that
             # commands applied to the shape don't propagate into its clones
             clones = []
-            clone_seq = iterate_on(spec.get('clone-shape', [None]), shape_data)
-            parent_clone = shape_data.get('clone', None)
+            clone_seq = iterate_on(spec.get('clone-shape', [None]), data)
+            parent_clone = data.get('clone', None)
             for i, (clone_key, clone_val) in enumerate(clone_seq):
                 if i > 0:
                     # This copies only a shape, group or image. Not table, chart, media, equation,
@@ -132,14 +145,21 @@ def apply_commands(rule: Dict[str, dict], shapes, data: dict):
                 clones.append(AttrDict(pos=i, key=clone_key, val=clone_val, shape=shape,
                                        parent=parent_clone))
             # Run commands in the spec on all cloned shapes
-            for clone in clones:
-                shape_data.update(clone=clone)
+            for i, clone in enumerate(clones):
+                # Include shape-level `data:`. Add shape, clone as variables
+                shape_data = load_data(
+                    spec.get('data', {}), _default_key='function', shape=shape, clone=clone,
+                    **{k: v for k, v in data.items() if k not in {'shape', 'clone'}})
                 for cmd in spec:
                     if cmd in commands.cmdlist:
                         commands.cmdlist[cmd](clone.shape, spec[cmd], shape_data)
+                    else:
+                        app_log.warn('pptgen2: Unknown command: %s on shape: %s', cmd, pattern)
                 # If the shape is a group, apply spec to each sub-shape
                 if shape.element.tag.endswith('}grpSp'):
                     apply_commands(spec, SlideShapes(clone.shape.element, shapes), shape_data)
+        if not shape_matched:
+            app_log.warn('pptgen2: No shape matches pattern: %s', pattern)
 
 
 def load_data(_conf, _default_key: str = None, **kwargs) -> dict:
@@ -241,25 +261,27 @@ def pick_only_slides(prs: Presentation, only: Union[int, List[int]] = None) -> l
     return list(prs.slides)
 
 
-def slide_filter(slides, numbers: Union[int, List[int]], titles: Union[str, List[str]]):
+def slide_filter(slides, rule: dict, data: dict):
     '''
     Filter slides. Return iterable of (index, slide) for only those slides matching numbers/titles.
 
     :arg Slides slides: a Slides object (e.g. ``prs.slides``) to select slides from
-    :arg int/list numbers: slide number(s) to filter. 1 is the first slide. [1, 3] is slides 1 & 3
-    :arg str/list titles: slide title pattern(s) to filter. "*Match*" matches all slides with
-        "match" anywhere in the title (case-insensitive)
+    :arg dict rule: a dict that may have a ``slide-number`` or ``slide-title`` key to filter by.
+        These can be expressions. ``slide-number`` is the slide number(s) to filter. 1 is the first
+        slide. ``[1, 3]`` is slides 1 & 3. ``slide-title`` has the slide title pattern(s) to filter
+        e.g. ``*Match*`` matches all slides with "match" anywhere in the title (case-insensitive).
+    :arg dict data: data context for the rule
     :return: an iterable that yields (index, slide)
     '''
-    # TODO: allow slide numbers and slide-titles to be data-driven
-    # slide_numbers is the SET of 1-indexed slide numbers this rule applies to
-    slide_numbers = set(numbers if isinstance(numbers, list) else [numbers])
-
+    numbers = commands.expr(rule.get('slide-number', []), data)
+    titles = commands.expr(rule.get('slide-title', []), data)
+    # numbers is the SET of 1-indexed slide numbers this rule applies to
+    numbers = set(numbers if isinstance(numbers, list) else [numbers])
     # titles is a LIST of title patterns - ANY of which the slide title must match
     titles = titles if isinstance(titles, list) else [titles]
-
+    # yield only the slides that match these conditions
     for index, slide in enumerate(slides):
-        if slide_numbers and (index + 1 not in slide_numbers):
+        if numbers and (index + 1 not in numbers):
             continue
         title = slide.shapes.title.text if slide.shapes.title else ''
         if titles and (not any(fnmatchcase(title.lower(), pattern.lower()) for pattern in titles)):

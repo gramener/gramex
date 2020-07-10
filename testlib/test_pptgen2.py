@@ -5,16 +5,15 @@ import pandas as pd
 import pptx
 from gramex.config import objectpath
 from gramex.pptgen2 import pptgen, load_data, commands
-from lxml.etree import tostring
-from lxml.html import fragments_fromstring, builder
 from nose.tools import eq_, ok_, assert_raises
 from orderedattrdict import AttrDict
 from pandas.util.testing import assert_frame_equal as afe
 from pptx import Presentation
 from pptx.dml.color import _NoneColor
 from pptx.enum.dml import MSO_THEME_COLOR, MSO_FILL
-from pptx.enum.text import PP_ALIGN
+from pptx.enum.text import PP_ALIGN, MSO_VERTICAL_ANCHOR as MVA
 from pptx.oxml.ns import _nsmap, qn
+from testfixtures import LogCapture
 from unittest import TestCase
 from . import folder, sales_file
 
@@ -102,15 +101,16 @@ class TestPPTGen(TestCase):
     def test_expr(self):
         # Test expr mode - when strings are expressions
         t = lambda v: commands.expr(v, data={'_expr_mode': True, 'x': 1})    # noqa
-        eq_(t('x'), 1)                          # Value is a variable
-        eq_(t('"x"'), 'x')                      # String is a literal
-        eq_(t('"{x}"'), '{x}')                  # String is a literal
-        eq_(t('f"x"'), 'x')                     # f-string is a template
-        eq_(t('f"{x}"'), '1')                   # f-string is a template using data
+        eq_(t('x + 0'), 1)                      # Value is a variable
+        eq_(t('"x + 0"'), 'x + 0')              # String is a literal
+        eq_(t('"{x + 0}"'), '{x + 0}')          # String is a literal
+        eq_(t('f"x + 0"'), 'x + 0')             # f-string is a template
+        eq_(t('f"{x + 0}"'), '1')               # f-string is a template using data
         for val in [None, True, 1, []]:         # Non-string returns as-is
             eq_(t(val), val)
         afe(t(self.data), self.data)
-        eq_(t({'value': 'x'}), 'x')             # value: is a template
+        eq_(t({'value': 'x + 0'}), 'x + 0')     # value: is a template
+        # NOTE: literal cannot process x + 0. Just test with x
         eq_(t({'value': '{x}'}), '1')           # value: is a template using data
         for val in [None, 1, [], {}]:           # value: non-string returns as-is
             eq_(t({'value': val}), val)
@@ -118,17 +118,18 @@ class TestPPTGen(TestCase):
 
         # Test literal mode - when strings are values
         t = lambda v: commands.expr(v, data={'_expr_mode': False, 'x': 1})   # noqa
-        eq_(t('x'), 'x')                        # Value is a literal
-        eq_(t('"x"'), '"x"')                    # String value is a literal
-        eq_(t('{x}'), '1')                      # String template is formatted
-        eq_(t('f"x"'), 'f"x"')                  # f-string value is a literal
-        for val in [None, True, 1, []]:         # Non-string returns as-is
+        eq_(t('x + 0'), 'x + 0')                    # Value is a literal
+        eq_(t('"x + 0"'), '"x + 0"')                # String value is a literal
+        # NOTE: literal cannot process expressions like x + 0. Just test with x
+        eq_(t('{x}'), '1')                          # String template is formatted
+        eq_(t('f"x + 0"'), 'f"x + 0"')              # f-string value is a literal
+        for val in [None, True, 1, []]:             # Non-string returns as-is
             eq_(t(val), val)
         afe(t(self.data), self.data)
-        eq_(t({'expr': 'x'}), 1)                # expr: is a variable
-        eq_(t({'expr': '"{x}"'}), '{x}')        # expr: quoted string becomes the string literal
-        eq_(t({'expr': 'f"{x}"'}), '1')         # expr: f-string is a template using data
-        for val in [None, 1, [], {}]:           # expr: non-string returns as-is
+        eq_(t({'expr': 'x + 0'}), 1)                # expr: is a variable
+        eq_(t({'expr': '"{x + 0}"'}), '{x + 0}')    # expr: quoted string becomes string literal
+        eq_(t({'expr': 'f"{x + 0}"'}), '1')         # expr: f-string is a template using data
+        for val in [None, 1, [], {}]:               # expr: non-string returns as-is
             eq_(t({'expr': val}), val)
 
     def test_length(self):
@@ -208,13 +209,25 @@ class TestPPTGen(TestCase):
         eq_(len(prs.slides), 1)
         eq_(prs.slides[0].shapes.title.text, self.prs.slides[0].shapes.title.text)
 
+    def test_incorrect(self, slides=1):
+        with LogCapture() as logs:
+            pptgen(source=self.input, only=slides, rules=[
+                {'No-Shape': {'left': 0}},
+                {'Title 1': {'no-command': 0}}
+            ])
+        logs.check(
+            ('gramex', 'WARNING', 'pptgen2: No shape matches pattern: No-Shape'),
+            ('gramex', 'WARNING', 'pptgen2: Unknown command: no-command on shape: Title 1')
+        )
+
     def test_slide_filter(self, slides=[1, 2, 3]):
         # Rules are specified as rule-name={shape: {rule}, ...}
+        data = {'x': [2, 3]}
         rule1 = {'slide-number': 1, 'Title 1': {'width': 10}}
-        rule2 = {'slide-number': [2, 3],
+        rule2 = {'slide-number': {'expr': 'x'},
                  'Title 1': {'width': 20},
                  'Rectangle 1': {'width': 20}}
-        prs = pptgen(source=self.input, only=slides, rules=[rule1, rule2])
+        prs = pptgen(source=self.input, only=slides, data=data, rules=[rule1, rule2])
         eq_(self.get_shape(prs.slides[0].shapes, 'Title 1').width, pptx.util.Inches(10))
         eq_(self.get_shape(prs.slides[1].shapes, 'Title 1').width, pptx.util.Inches(20))
         eq_(self.get_shape(prs.slides[2].shapes, 'Title 1').width, pptx.util.Inches(20))
@@ -386,6 +399,8 @@ class TestPPTGen(TestCase):
             ('rgb(255, 0, 0)', {'rgb': (255, 0, 0)}),
             ((255, 0, 0), {'rgb': (255, 0, 0)}),
             ([255, 0, 0], {'rgb': (255, 0, 0)}),
+            ((1.0, 0.5, 0), {'rgb': (255, 128, 0)}),
+            ([1.0, 0.5, 0], {'rgb': (255, 128, 0)}),
             ('ACCENT_1', {'theme_color': MSO_THEME_COLOR.ACCENT_1, 'brightness': 0}),
             ('ACCENT_2+40', {'theme_color': MSO_THEME_COLOR.ACCENT_2, 'brightness': 0.4}),
             ('ACCENT_3-20', {'theme_color': MSO_THEME_COLOR.ACCENT_3, 'brightness': -0.2}),
@@ -431,21 +446,23 @@ class TestPPTGen(TestCase):
             eq_(shapes[1].top, pptx.util.Inches(2.0))
             eq_(shapes[2].top, pptx.util.Inches(3.5))
         # Clone groups
-        text = ('f"{clone.pos}, {clone.key}, {clone.val}, {clone.shape.text}, ' +
-                '{clone.parent.key}, {clone.parent.val}"')
         prs = pptgen(source=self.input, target=self.output, only=slides, rules=[
             {'Group 1': {
                 'clone-shape': data,
-                'top': {'expr': '1 + clone.val'},
+                'data': {'myclone': 'clone'},
+                'top': {'expr': '1 + myclone.val'},
                 'Picture': {
                     'clone-shape': data,
-                    'left': {'expr': '1 + clone.val / 2'},
+                    'data': {'subclone': 'clone'},
+                    'left': {'expr': '1 + subclone.val / 2'},
                     'image-width': 0.2,
                 },
                 'Caption': {
                     'clone-shape': data,
-                    'left': {'expr': '1 + clone.val / 2'},
-                    'text': {'expr': text},
+                    'data': {'subclone2': 'clone'},
+                    'left': {'expr': '1 + subclone2.val / 2'},
+                    'text': '{clone.pos}, {clone.key}, {clone.val}, {clone.shape.text}, ' +
+                            '{clone.parent.key}, {clone.parent.val}',
                     'fill': 'red',
                 }
             }}
@@ -463,18 +480,6 @@ class TestPPTGen(TestCase):
                 eq_(caption[i * n + j].fill.fore_color.rgb, (255, 0, 0))
                 eq_(caption[i * n + j].text, f'{j}, {jk}, {jv}, Grouped image, {ik}, {iv}')
 
-    def test_get_elements(self):
-        def conv(s: str, element_maker):
-            tree = fragments_fromstring(s)
-            return ''.join([tostring(el).decode('utf-8')
-                            for el in commands.get_elements(tree, element_maker)])
-        # Text is wrapped around a <p> tag
-        eq_(conv(' xyz ', builder.P), '<p> xyz</p>')
-        eq_(conv(' <a>xyz</a> ', builder.P), '<p><a>xyz</a></p>')
-        eq_(conv(' x <a>y</a> z ', builder.P), '<p> x</p><p><a>y</a></p><p> z</p>')
-        eq_(conv(' x <p>y</p> z ', builder.P), '<p> x</p><p>y</p><p> z</p>')
-        eq_(conv('<a>x</a> y <p>z</p>', builder.P), '<p><a>x</a></p><p> y</p><p>z</p>')
-
     def test_text(self, slides=4):
         # Non-strings are converted to str
         for val in (1, ['x'], ):
@@ -489,7 +494,7 @@ class TestPPTGen(TestCase):
         shape = self.get_shape(prs.slides[0].shapes, 'TextBox 1')
         eq_(shape.text, text)
         # Para and run formatting works
-        text = '''P0R0
+        text = '''P0R0 <a>P0R1</a> P0R2 <a>P0R3</a> P0R4
             <p align="left" bold="y" color="#ff0000" font-name="Arial" font-size="8 pt" italic="y"
                 level="0" line-spacing="3 pt" space-before="16 pt" space-after="20 pt"
                 underline="y"
@@ -503,16 +508,17 @@ class TestPPTGen(TestCase):
                 <a bold="y" baseline="-35%" strike="single"> P2R1 </a>
                 <a baseline="subscript" strike="none"> P2R2 </a>
                 P2R3</p>
-            <a color="#00f">P3R1</a>
+            P3R0 <a color="#00f">P3R1</a> P3R2
         '''
         prs = pptgen(source=self.input, target=self.output, only=slides, rules=[
             {'TextBox 1': {'text': text}}])
         shape = self.get_shape(prs.slides[0].shapes, 'TextBox 1')
-        eq_(shape.text.split(), 'P0R0 P1R0 P1R1 P1R2 P2R0 P2R1 P2R2 P2R3 P3R1'.split())
+        eq_(shape.text.split(),
+            'P0R0 P0R1 P0R2 P0R3 P0R4 P1R0 P1R1 P1R2 P2R0 P2R1 P2R2 P2R3 P3R0 P3R1 P3R2'.split())
         paras = shape.text_frame.paragraphs
         # Para 0 has the right attributes and text
-        eq_(paras[0].text.rstrip(), 'P0R0')
-        eq_(paras[0].runs[0].text.rstrip(), 'P0R0')
+        eq_(paras[0].text, 'P0R0 P0R1 P0R2 P0R3 P0R4 ')
+        eq_(paras[0].runs[0].text, 'P0R0 ')
         # Para 0 attributes are preserved
         eq_(paras[0].level, 0)
         eq_(paras[0].alignment, PP_ALIGN.CENTER)
@@ -533,7 +539,7 @@ class TestPPTGen(TestCase):
         eq_(paras[1].space_before, pptx.util.Pt(16))
         eq_(paras[1].space_after, pptx.util.Pt(20))
         eq_(paras[1].font.underline, True)
-        eq_(paras[1].runs[0].text.strip(), 'P1R0')
+        eq_(paras[1].runs[0].text, ' P1R0 ')
         # Para 1 run 2 has the specified attributes
         eq_(paras[1].runs[1].text, ' P1R1 ')
         eq_(paras[1].runs[1].font.bold, False)
@@ -564,8 +570,10 @@ class TestPPTGen(TestCase):
         eq_(paras[2].runs[2].font._rPr.get('baseline'), '-25000')
         eq_(paras[2].runs[2].font._rPr.get('strike'), 'noStrike')
         # Para 3: runs are auto-wrapped into paras
-        eq_(paras[3].runs[0].text, 'P3R1')
-        eq_(paras[3].runs[0].font.color.rgb, (0, 0, 255))
+        eq_(paras[3].runs[0].text, ' P3R0 ')
+        eq_(paras[3].runs[1].text, 'P3R1')
+        eq_(paras[3].runs[1].font.color.rgb, (0, 0, 255))
+        eq_(paras[3].runs[2].text, ' P3R2 ')
 
     def test_text_style(self, slides=4):
         prs = pptgen(source=self.input, target=self.output, only=slides, rules=[
@@ -581,12 +589,14 @@ class TestPPTGen(TestCase):
         shape = self.get_shape(prs.slides[0].shapes, 'TextBox 1')
         for para in shape.text_frame.paragraphs:
             eq_(para.font.bold, False)
+            eq_(para.font.fill.fore_color.rgb, (0, 0, 255))
             eq_(para.font.italic, True)
             eq_(para.font.name, 'Calibri')
             eq_(para.font.size, pptx.util.Pt(10))
             eq_(para.font.underline, False)
             for run in para.runs:
                 eq_(run.font.bold, None)
+                # PPT needs colors on runs too, not only paras
                 eq_(run.font.fill.fore_color.rgb, (0, 0, 255))
                 eq_(run.font.italic, None)
                 eq_(run.font.name, None)
@@ -698,6 +708,108 @@ class TestPPTGen(TestCase):
             target = target.slide.shapes.title.text
         eq_(target, attr['target'])
 
+    def test_table(self, slides=9):
+        data = self.data.head(10)       # The 10th row has NaNs. Ensure the row is included
+        prs = pptgen(source=self.input, target=self.output, only=slides, mode='expr',
+                     data={'data': data},
+                     rules=[
+                         {'Table 1': {'table': {'data': 'data'}}},
+                         {'Table 2': {'table': {'data': 'data'}}},
+                     ])
+        for row_offset, shape_name in ((1, 'Table 1'), (0, 'Table 2')):
+            table = self.get_shape(prs.slides[0].shapes, shape_name).table
+            for i, (index, row) in enumerate(data.iterrows()):
+                for j, (column, val) in enumerate(row.iteritems()):
+                    cell = table.rows[i + row_offset].cells[j]
+                    eq_(cell.text, '{}'.format(val))
+
+        cmds = {'table': {
+            'data': data,
+            'header-row': False,
+            'total-row': True,
+            'first-column': True,
+            'last-column': True,
+            'align': {'expr': '"left" if cell.pos.row % 2 else "right"'},
+            'bold': {'expr': 'cell.pos.row % 2'},
+            'color': {'expr': '"red" if cell.pos.row % 3 else "green"'},
+            'fill': {'expr': '"#eee" if cell.pos.row % 2 else "#ccc"'},
+            'fill-opacity': 0.4,
+            'font-name': 'Arial',
+            'font-size': {'expr': '"10 pt" if cell.column == "देश" else "8 pt"'},
+            'italic': {
+                'देश': True,
+                'city': {'expr': 'cell.pos.row % 2'},
+            },
+            'margin-left': {
+                'देश': '0.05 in',
+                'city': {'expr': '0 if cell.pos.column % 2 else "0.1 in"'},
+            },
+            'margin-right': '1 pt',
+            'margin-top': {'expr': '0 if cell.pos.column % 2 else "0.1 in"'},
+            'margin-bottom': 0,
+            'underline': {'expr': 'cell.pos.column % 2'},
+            'vertical-align': {
+                'देश': 'middle',
+                'city': {'expr': '"top" if cell.pos.row % 2 else "bottom"'},
+            },
+            # Add text: at the end to verify that it over-rides bold:, italic:, etc
+            'text': '{cell.pos.row} {cell.pos.column} <a italic="y">{cell.index}</a> ' +
+                    '{cell.column} {cell.val} {cell.row.size} {cell.data.size}',
+        }}
+        prs = pptgen(source=self.input, target=self.output, only=slides, rules=[
+            {'Table 1': cmds}, {'Table 2': cmds}
+        ])
+        for shape_name in ('Table 1', 'Table 2'):
+            src_table = self.get_shape(self.prs.slides[slides - 1].shapes, shape_name).table
+            table = self.get_shape(prs.slides[0].shapes, shape_name).table
+            # Table shape is extended or contracted
+            eq_(len(table.rows), len(data))
+            eq_(len(table.columns), len(data.columns))
+            # Special rows / columns are set
+            eq_(table.first_row, False)
+            eq_(table.last_row, True)
+            eq_(table.first_col, True)
+            eq_(table.last_col, True)
+            # Check cell contents
+            maxrow, maxcol = len(src_table.rows) - 1, len(src_table.columns) - 1
+            for i, (index, row) in enumerate(data.iterrows()):
+                # Row height is the same as in the source table (or its last row)
+                eq_(table.rows[i].height, src_table.rows[min(i, maxrow)].height)
+                for j, (column, val) in enumerate(row.iteritems()):
+                    # Column width is the same as in the source table (or its last column)
+                    eq_(table.columns[j].width, src_table.columns[min(j, maxcol)].width)
+                    # Text matches, and all cell.* attributes are correct
+                    cell = table.rows[i].cells[j]
+                    paras = cell.text_frame.paragraphs
+                    eq_(cell.text, f'{i} {j} {index} {column} {val} {row.size} {data.size}')
+                    eq_(paras[0].font.bold, bool(i % 2))
+                    # Check para font color, but not run font color. Run is overwritten because
+                    # text: command is given AFTER color: command
+                    eq_(paras[0].font.color.rgb, (255, 0, 0) if i % 3 else (0, 128, 0))
+                    eq_(cell.fill.fore_color.rgb, (238, 238, 238) if i % 2 else (204, 204, 204))
+                    self.check_opacity(cell.fill.fore_color, 0.4)
+                    eq_(paras[0].font.size,
+                        pptx.util.Pt(10) if column == 'देश' else pptx.util.Pt(8))
+                    eq_(paras[0].font.name, 'Arial')
+                    eq_(paras[0].font.italic,
+                        True if column == 'देश' else
+                        bool(i % 2) if column == 'city' else
+                        None)
+                    eq_(paras[0].runs[1].font.italic, True)
+                    eq_(paras[0].font.underline, bool(j % 2))
+                    eq_(paras[0].alignment, PP_ALIGN.LEFT if i % 2 else PP_ALIGN.RIGHT)
+                    eq_(cell.vertical_anchor,
+                        MVA.MIDDLE if column == 'देश' else
+                        (MVA.TOP if i % 2 else MVA.BOTTOM) if column == 'city' else
+                        None)
+                    eq_(cell.margin_left,
+                        pptx.util.Inches(0.05) if column == 'देश' else
+                        pptx.util.Inches(0 if j % 2 else 0.1) if column == 'city' else
+                        pptx.util.Inches(0.1))
+                    eq_(cell.margin_right, pptx.util.Pt(1))
+                    eq_(cell.margin_top, pptx.util.Inches(0 if j % 2 else 0.1))
+                    eq_(cell.margin_bottom, 0)
+
     # TODO: if we delete slide 6 and use slides=[6, 7], this causes an error
     def test_copy_slide(self, slides=[7, 8]):
         data = [1, 1.5, 2]
@@ -705,25 +817,30 @@ class TestPPTGen(TestCase):
             {
                 'slide-numbers': [1, 2],
                 'copy-slide': data,
-                'Title 1': {'text': 'f"{copy.key} - {copy.val}"'},
-                'TL': {'top': 'copy.val', 'left': 'copy.val'},
-                'TC': {'top': 'copy.val', 'left': 'copy.val * 2'},
-                'TR': {'top': 'copy.val', 'left': 'copy.val * 3'},
-                'CL': {'top': 'copy.val * 2', 'left': 'copy.val'},
-                'CC': {'top': 'copy.val * 2', 'left': 'copy.val * 2'},
-                'CR': {'top': 'copy.val * 2', 'left': 'copy.val * 3'},
-                'BL': {'top': 'copy.val * 3', 'left': 'copy.val'},
-                'BC': {'top': 'copy.val * 3', 'left': 'copy.val * 2'},
-                'BR': {'top': 'copy.val * 3', 'left': 'copy.val * 3'},
+                'data': {'mycopy': 'copy'},
+                'Title 1': {'text': 'f"{copy.pos}: {copy.key} - {copy.val}: {len(copy.slides)}"'},
+                'TL': {'top': 'copy.val', 'left': 'mycopy.val'},
+                'TC': {'top': 'copy.val', 'left': 'mycopy.val * 2'},
+                'TR': {'top': 'copy.val', 'left': 'mycopy.val * 3'},
+                'CL': {'top': 'copy.val * 2', 'left': 'mycopy.val'},
+                'CC': {'top': 'copy.val * 2', 'left': 'mycopy.val * 2'},
+                'CR': {'top': 'copy.val * 2', 'left': 'mycopy.val * 3'},
+                'BL': {'top': 'copy.val * 3', 'left': 'mycopy.val'},
+                'BC': {'top': 'copy.val * 3', 'left': 'mycopy.val * 2'},
+                'BR': {'top': 'copy.val * 3', 'left': 'mycopy.val * 3'},
             }
         ])
-        # All shapes are copied into 3 slides
+        # All shapes are copied into 3 slides?
         eq_(len(prs.slides), len(slides) * len(data))
         names = [[shape.name for shape in slide.shapes] for slide in prs.slides]
         eq_(names[0], names[2])
         eq_(names[0], names[4])
         eq_(names[1], names[3])
         eq_(names[1], names[5])
+        # Titles are copied?
+        eq_(prs.slides[0].shapes.title.text, '0: 0 - 1: 2')
+        eq_(prs.slides[2].shapes.title.text, '1: 1 - 1.5: 2')
+        eq_(prs.slides[4].shapes.title.text, '2: 2 - 2: 2')
         # Position commands are applied?
         for val, slide in zip(data, (1, 3, 5)):
             eq_(self.get_shape(prs.slides[slide].shapes, 'TL').left, pptx.util.Inches(val))
@@ -744,7 +861,7 @@ class TestPPTGen(TestCase):
             eq_(para.runs[1]._r.find('.//' + qn('a:hlinkClick')).get('action'),
                 'ppaction://hlinkshowjump?jump=firstslide')
 
-    # @classmethod
-    # def tearDown(cls):
-    #     if os.path.exists(cls.output):
-    #         os.remove(cls.output)
+    @classmethod
+    def tearDown(cls):
+        if os.path.exists(cls.output):
+            os.remove(cls.output)
