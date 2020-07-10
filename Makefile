@@ -55,13 +55,15 @@ lint:
 	# htmllint: ignore test coverage, node_modules, Sphinx doc _builds
 	find . -name '*.html' | grep -v htmlcov | grep -v node_modules | grep -v _build | xargs htmllint
 	# Run Python flake8 and bandit security checks
-	command -v flake8 2>/dev/null 2>&1 || pip install flake8 pep8-naming flake8-gramex flake8-blind-except flake8-print flake8-debugger
+	command -v flake8 2>/dev/null 2>&1 || $(PYTHON) -m pip install flake8 pep8-naming flake8-gramex flake8-blind-except flake8-print flake8-debugger
 	flake8 gramex testlib tests
-	command -v bandit 2>/dev/null 2>&1 || pip install bandit
+	command -v bandit 2>/dev/null 2>&1 || $(PYTHON) -m pip install bandit
 	bandit gramex --recursive --format csv || true    # Just run bandit as a warning
 
-test:
-	pip install nose
+test-setup:
+	$(PYTHON) -m pip install -r tests/requirements.txt
+
+test: test-setup
 	$(PYTHON) setup.py nosetests
 
 release-test: clean-test lint docs test
