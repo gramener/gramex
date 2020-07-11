@@ -639,6 +639,7 @@ def init(cmd, args):
     appname = re.sub(r'[^a-z0-9_]+', '_', data['appname'].lower())
     if appname[0] not in string.ascii_lowercase:
         appname = 'app' + appname
+    data['appname'] = appname
 
     # Copy all directories & files (as templates)
     source_dir = os.path.join(variables['GRAMEXPATH'], 'apps', 'init')
