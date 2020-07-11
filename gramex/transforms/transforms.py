@@ -108,6 +108,7 @@ def build_transform(conf, vars=None, filename='transform', cache=False, iter=Tru
     Any Python expression is also allowed. The following are valid functions::
 
         function: 1                 # returns 1
+        function: _val.type         # Returns _val.type
         function: _val + 1          # Increments the input parameter by 1
         function: json.dumps(_val)  # Returns the input as a string
         function: json.dumps        # This is the same as json.dumps(_val)
@@ -180,7 +181,12 @@ def build_transform(conf, vars=None, filename='transform', cache=False, iter=Tru
     # If expr is like "x" or "module.x", construct it if it's callable
     # Else, use the expression as-is
     function_name = _full_name(tree.body[0].value)
-    if function_name is not None:
+    module_name = function_name.split('.')[0] if isinstance(function_name, str) else None
+    # If the module or function is one of the vars themselves, return it as-is
+    # _val.type will be used as-is, then, rather than looking for an "_val" module
+    if module_name in vars:
+        expr = function_name
+    elif function_name is not None:
         function = locate(function_name, modules=['gramex.transforms'])
         if function is None:
             app_log.error('%s: Cannot load function %s' % (filename, function_name))

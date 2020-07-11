@@ -106,6 +106,7 @@
       {% end %}
       {% import json %}
       <script>
+        /* eslint-env browser, jquery */
         var auth_conf = {% raw json.dumps(auth_conf) %}
         var kwargs = auth_conf.kwargs || {}
         var forgot_key = (kwargs.forget || {}).key || 'forgot'
@@ -135,6 +136,7 @@
       <div class="schedule"></div>
       <script src="schedule.js"></script>
       <script>
+        /* eslint-env browser, jquery */
         $('.schedule').schedule({
           url: 'schedule-data',
           xsrf: '{{ handler.xsrf_token }}'
@@ -145,6 +147,7 @@
       <div class="schedule"></div>
       <script src="schedule.js"></script>
       <script>
+        /* eslint-env browser, jquery */
         $('.schedule').schedule({
           url: 'alert-data',
           alert: true,
@@ -156,6 +159,7 @@
       <div class="webshell"></div>
       <script src="webshell.js"></script>
       <script>
+        /* eslint-env browser, jquery */
         $('.webshell').webshell({
           url: 'webshell-data',
           prompt: '>>> ',
@@ -172,6 +176,7 @@
         <i class="fa fa-spinner fa-spin fa-3x text-center d-block"></i>
       </div>
       <script>
+        /* eslint-env browser, jquery */
         $('.gramex_info').formhandler({
           editable: false,
           count: false,
@@ -185,14 +190,6 @@
 
     {% elif current_tab == 'logs' %}
       <div class="h1 text-danger">Work in progress</div>
-
-    {% elif current_tab == 'nlg' %}
-      {% set action = handler.get_argument('action', '') %}
-      {% if action == 'edit' %}
-        {% include "../nlg/index.html" %}
-      {% else %}
-        {% include "../nlg/grmform.html" %}
-      {% end %}
 
     {% end %}
   </div>

@@ -1,0 +1,13 @@
+# Base testing packages
+nose
+nose-timer
+coverage
+
+# Support modules for testing
+python-dateutil       # For schedule testing
+testfixtures          # For logcapture
+sphinx_rtd_theme      # For documentation
+websocket-client      # For websocket testing
+pdfminer.six          # For CaptureHandler testing
+cssselect             # For HTML testing (test_admin.py)
+psycopg2 >= 2.7.1     # OPT: PostgreSQL connections

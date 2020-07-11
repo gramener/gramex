@@ -139,7 +139,7 @@ class TestAlerts2(TestGramex):
 
     def test_each(self):
         data = gramex.cache.open(os.path.join(folder, 'actors.csv'))
-        cutoff = 100
+        cutoff = 120
         subset = data[data['votes'] > cutoff]
 
         mails = run_alert('alert-each', count=len(subset))

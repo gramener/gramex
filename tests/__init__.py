@@ -4,11 +4,6 @@ import shutil
 import six
 import unittest
 from . import server
-from datetime import datetime
-from dateutil.tz import tzlocal, tzutc
-from gramex import conf
-from gramex.http import OK
-from gramex.services import info
 from nose.tools import eq_, ok_
 from orderedattrdict import AttrDict
 
@@ -147,31 +142,3 @@ class TestGramex(unittest.TestCase):
                 else:
                     raise ValueError('CSS %s: invalid how: "%s"' % (css, how))
         return tree
-
-
-class TestSchedule(TestGramex):
-    # Keep this in __init__ to ensure that it runs IMMEDIATELY on startup.
-    # That makes it easier to check if slow-running threads are still live.
-    def test_schedule(self):
-        # Run this test as soon as Gramex starts to check if schedule has run.
-        self.assertIn('schedule-key', info)
-        self.check('/', code=OK)
-
-        # This tests that long running threads run in parallel. We run
-        # utils.slow_count every 10ms for kwargs.count seconds. If this test
-        # fails, increase schedule.schedule-startup-slow.kwargs.count. It may be
-        # due to slow startup.
-        max_count = conf.schedule['schedule-startup-slow'].kwargs.count - 1
-        ok_(0 < info['schedule-count'] < max_count, 'Schedule still running')
-
-    def test_timed_schedule(self):
-        # Check that schedules are present and created
-        ok_('schedule-timed' in info.schedule)
-        ok_('schedule-timed-utc' in info.schedule)
-        # Check that the schedules will run at 5 am in the appropriate time zone
-        for key, tz in (('schedule-timed', tzlocal()), ('schedule-timed-utc',
-                                                        tzutc())):
-            t = datetime.fromtimestamp(info.schedule[key].next, tz)
-            eq_(t.hour, 5)
-            # Ideally, this should be 0, but there may be a short delay
-            ok_(t.minute < 2)

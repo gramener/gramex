@@ -6,22 +6,20 @@ PYTHON ?= python
 BROWSER := $(PYTHON) -c "import os, sys; os.startfile(os.path.abspath(sys.argv[1]))"
 
 help:
+	@echo "test - run tests quickly with the default Python"
+	@echo "release-test - all tests required for release (lint, docs, coverage)"
+	@echo "push-pypi - upload package to pypi"
+	@echo "stats - show code stats"
+	@echo "push-docs - upload documentation to gramener.com"
+	@echo "push-coverage - upload coverage stats to gramener.com"
+	@echo "lint - check style with flake8, eclint, eslint, htmllint, bandit"
+	@echo "docs - generate Sphinx HTML documentation, including API docs"
+	@echo "release - package and upload a release"
+	@echo "dist - package"
 	@echo "clean - remove all build, test, coverage and Python artifacts"
 	@echo "clean-build - remove build artifacts"
 	@echo "clean-pyc - remove Python file artifacts"
 	@echo "clean-test - remove test and coverage artifacts"
-	@echo "lint - check style with flake8"
-	@echo "test - run tests quickly with the default Python"
-	@echo "test-all - run tests on every Python version with tox"
-	@echo "coverage - check code coverage quickly with the default Python"
-	@echo "docs - generate Sphinx HTML documentation, including API docs"
-	@echo "pdf - convert documentation in PDF"
-	@echo "release - package and upload a release"
-	@echo "dist - package"
-	@echo "install - install the package to the active Python's site-packages"
-	@echo "release-test - all tests required for release (lint, docs, coverage)"
-	@echo "stats - show code stats"
-	@echo "push-coverage - upload coverage stats"
 
 clean: clean-build clean-pyc clean-test
 
@@ -41,23 +39,36 @@ clean-pyc:
 	find . -name '__pycache__' -exec rm -fr {} +
 
 clean-test:
-	rm -fr .tox/
 	rm -f .coverage
 	rm -fr tests/htmlcov/
 	rm -fr tests/.cache-url
 
 lint:
+	# Install packages using yarn (faster than npm)
+	command -v yarn >/dev/null 2>&1 || npm install -g yarn
+	command -v eclint 2>/dev/null 2>&1 || yarn global add eclint eslint htmllint-cli
+	# eclint check files, ignoring node_modules
+	find . -type f \( -name "*.html" -o -name "*.js" -o -name "*.css" -o -name "*.yaml" -o -name "*.md" \) ! -path '*/node_modules/*' ! -path '*/_build/*' ! -path '*/htmlcov/*' ! -path '*/.eggs/*' -print0 | xargs -0 eclint check
+	# eslint requires eslint-plugin-* which are in package.json. yarn install them first
+	yarn install
+	eslint --ext js,html gramex/apps
+	# htmllint: ignore test coverage, node_modules, Sphinx doc _builds
+	find . -name '*.html' | grep -v htmlcov | grep -v node_modules | grep -v _build | xargs htmllint
+	# Run Python flake8 and bandit security checks
+	command -v flake8 2>/dev/null 2>&1 || $(PYTHON) -m pip install flake8 pep8-naming flake8-gramex flake8-blind-except flake8-print flake8-debugger
 	flake8 gramex testlib tests
+	command -v bandit 2>/dev/null 2>&1 || $(PYTHON) -m pip install bandit
+	bandit gramex --recursive --format csv || true    # Just run bandit as a warning
 
-test:
+test-setup:
+	$(PYTHON) -m pip install -r tests/requirements.txt
+
+test: test-setup
+	# Use python setup.py nosetests to ensure the correct Python runs.
+	# (Note: Dependencies are set up via test-setup. setup.py does not have any tests_require.)
 	$(PYTHON) setup.py nosetests
 
-test-all:
-	tox
-
-coverage:
-	$(PYTHON) -m nose --with-coverage --cover-package=gramex --cover-erase --cover-html --cover-html-dir=htmlcov --cover-branches
-	$(BROWSER) tests/htmlcov/index.html
+release-test: clean-test lint docs test
 
 docs:
 	rm -f docs/gramex* docs/modules.rst
@@ -65,28 +76,12 @@ docs:
 	$(MAKE) -C docs clean
 	$(MAKE) -C docs html
 
-PDFLATEX := $(shell pdflatex -version 2>/dev/null)
-pdf: docs
-ifdef PDFLATEX
-	$(MAKE) -C docs latexpdf
-else
-	@echo "No pdflatex found. Install pdflatex to build PDF docs"
-endif
-
-showdocs:
-	$(BROWSER) docs/_build/html/index.html
-
-release-test: clean-test lint docs coverage
-
 release: clean
 	$(PYTHON) setup.py sdist
 	$(PYTHON) setup.py bdist_wheel
 
 dist: clean release
 	ls -l dist
-
-install: clean
-	$(PYTHON) setup.py install
 
 stats:
 	@echo python

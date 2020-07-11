@@ -1,0 +1,28 @@
+import:
+  apps/filemanager/ui:
+    path: $GRAMEXAPPS/ui/gramex.yaml
+    YAMLURL: $YAMLURL/ui/
+
+url:
+  apps/filemanager/home-$*:
+    pattern: /$YAMLURL/
+    handler: FileHandler
+    kwargs:
+      path: $YAMLPATH/index.html
+      template: true
+      filemanager_kwargs: $FILEMANAGER_KWARGS
+      auth: $FILEMANAGER_AUTH
+
+  apps/filemanager/help-$*:
+    pattern: /$YAMLURL/help
+    handler: FileHandler
+    kwargs:
+      path: $YAMLPATH/index.html
+      template: true
+      auth: $FILEMANAGER_AUTH
+
+  apps/filemanager/home-static-$*:
+    pattern: /$YAMLURL/(.+)
+    handler: FileHandler
+    kwargs:
+      path: $YAMLPATH/

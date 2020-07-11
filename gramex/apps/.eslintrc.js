@@ -1,43 +1,24 @@
+/* eslint-env node */
+
+// This file has common options for all Gramex apps
+// See https://eslint.org/docs/user-guide/configuring
+// To override for specific apps, add it in package.json > eslintConfig
+// ... or add a .eslintrc.js
 module.exports = {
-  "parserOptions": {
-    "ecmaVersion": 6    // Use ES6 parser. Browsers other than IE support it
+  'parserOptions': {
+    'ecmaVersion': 6    // Use ES6 parser. Browsers other than IE support it
   },
-  "overrides": [{
-    "files": [
-      "admin2/rollup.config.js",
-      "admin2/schedule.src.js"
-    ],
-    "parserOptions": {
-      "sourceType": "module",
-    }
-  }],
-  "plugins": [
-    "template"          // Handle Tornado templates and JS in HTML files
+  // These default plugins are installed in the root gramex director via package.json
+  'plugins': [
+    'html',
+    'template'
   ],
-  "env": {
-    "es6": true,        // Allow ES6 in JavaScript
-    "browser": true,    // Include browser globals
-    "jquery": true,     // Include jQuery and $
-    "mocha": true       // Include it(), assert(), etc
-  },
-  "globals": {
-    "_": true,          // underscore.js
-    "d3": true,         // d3.js
-    "vg": true,         // vega.js
-    "L": true,          // leaflet.js
-    "ga": true,         // Google analytics
-    "g1": true,         // g1.min.js
-    "topojson": true,   // topojson.js
-    "moment": true,     // moment.js
-    "numeral": true,    // numeral.js
-    "assert": true      // chai.js
-  },
-  "extends": "eslint:recommended",
-  "rules": {
-    /* Override default rules */
-    "indent": [2, 2, { "VariableDeclarator": 2 }],  // Force 2 space indentation
-    "linebreak-style": 2,           // Force UNIX style line
-    "quotes": [1, "single"],        // Prefer double-quotes style
-    "semi": [1, "never"]            // Prefer no-semicolon style
+  // Styles are based on recommended eslint fields, but with specific overrides
+  'extends': 'eslint:recommended',
+  'rules': {
+    'indent': [2, 2, { 'VariableDeclarator': 2 }],  // Force 2 space indentation
+    'linebreak-style': 2,           // Force UNIX style line
+    'quotes': [1, 'single'],        // Prefer double-quotes style
+    'semi': [1, 'never']            // Prefer no-semicolon style
   }
-};
+}

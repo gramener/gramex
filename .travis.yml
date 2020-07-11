@@ -9,9 +9,16 @@ python: '3.7'
 dist: xenial
 sudo: yes
 
+env:
+  global:
+    # Twitter secrets
+    # Read more here: https://docs.travis-ci.com/user/encryption-keys/
+    secure: "rZaZkcujQTr1RhsyyMj+dlazx2fkbHxKJgaspPXLqFYyh+Fidqyvekl6itr2mqOxUbP6DZIc3y/viAs8HcDFBK65z+U/hqvZjbS/H+NIWCfAMVHhAjJ/MiXLl5sloy14x1EYaybpFp/7/fGwc8nQK8nHOEdAOADyre338wZ/d33CtMZFkKkPrhijgRodnnKvh8t10RiChELKotHAZ+Aw9mIQiHbeTkjCJsn1CkkwmifpNOAoLjBnJViqiieFznZO4dOhcuvlgVZNxEaJ2MCUkNr4VITGL8jALNmC3yfQzl6sGwVVYp5dsaiF2Hi2NTPO4AkcypbgCSyf6dAuQJLvkmbaeGJ01WQB/0el0FptsmE432hPd34Wut1FN48Dagw1Q6Jj2NkD1U2Pqt30se0u1u+4nAB10+kbUlLpyOd/6Eo2mOGZcQCSE45jxcJeGvh1nr2SCk5ORkseR531AwbduOgr49t6oBlzukRiy/vrYlOwx3kwtGeGRH/fIrIsFVWx+UWzLF/9yO2skJDp9VUVpdCS9vWxex4qi8eO+86XGXorTm2Yq5FQAlq6nzk8YojEJWaaHy9Q987SrwJlYOHMpubJIHWSXfdDdImqIKmzJLKVojyIUK8hunvMIGY1Rm5YQRoY6xHJde1rzus9EYxBYdEE1vf2e0oB24Ummq/eylE="
+
 services:
   - mysql
   - postgresql
+  - redis-server
 
 addons:
   apt:
@@ -33,27 +40,38 @@ install:
   # Install miniconda
   - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O $HOME/miniconda.sh
   - bash $HOME/miniconda.sh -b -u -p $HOME/miniconda
+  # Add conda to path. "hash -r" rescans the $PATH
   - export PATH="$HOME/miniconda/bin:$PATH"
   - hash -r
-  - conda config --set always_yes yes --set changeps1 no
   # Install conda packages
-  - conda install -y -q colorama h5py lxml matplotlib pandas pytest seaborn sqlalchemy rpy2 line_profiler tzlocal scikit-learn
-  # Install pip modules
-  - pip install flake8 pep8-naming flake8-gramex flake8-blind-except flake8-print flake8-debugger bandit nose
-  # Install node.js and packages using yarn (faster than npm)
-  - npm install -g yarn
-  - yarn global add eclint eslint eslint-plugin-html htmllint-cli
-  - yarn install
+  - conda config --set always_yes yes --set changeps1 no
+  # For the NumPy version below, see: https://bitbucket.org/rpy2/rpy2/issues/572
+  # Newer versions of NumPy require newer versions of rpy2. The latter are not available on conda.
+  - conda install -y -q colorama h5py lxml matplotlib pandas pytest seaborn sqlalchemy line_profiler tzlocal scikit-learn rpy2 numpy=1.16
+  # rpy2 v2.9.6 is compatible with pandas 1.0, not available on the default channel
+  # Install node.js
+  - nvm install 12
   # Set up variables
   - export BRANCH=$TRAVIS_BRANCH
 
 script:
-  - eclint check '**/*.html' '**/*.js' '**/*.css' '**/*.yaml' '**/*.md'
-  - eslint gramex/apps
-  - htmllint
-  - flake8
-  - bandit gramex --recursive --format csv || true
+  - make lint
+
+  # Install Gramex and accept the license
   - pip install -e .
   - pip install gramexenterprise
   - gramex license accept
-  - python setup.py nosetests
+  - gramex setup --all  # ensure node-sass, puppetter exists
+  - export NOSE_WITH_COVERAGE=1
+  - export NOSE_WITH_TIMER=1
+  - make test
+
+  # Test specific apps
+  - cd $TRAVIS_BUILD_DIR/gramex/apps/filemanager/ && yarn install && yarn test
+
+  # TODO: Incorporate later
+  # - gramex --listen.port=1234 > gramex.log 2>&1 &
+  # - sleep 10
+  # - pytest tests/gramextest.yaml
+  # - cat gramex.log
+  # - kill %1

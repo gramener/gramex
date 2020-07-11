@@ -1,10 +1,7 @@
 # Require setuptools -- distutils does not support install_requires
-from setuptools.command.develop import develop
-from setuptools.command.install import install
 from setuptools import setup, find_packages
 from fnmatch import fnmatch
 from io import open
-import logging
 import json
 import os
 
@@ -29,16 +26,16 @@ install_requires = [
     'diskcache >= 2.8.3',           # SRV: services.cache for disk cache
     'h5py',                         # OPT: (conda) gramex.cache.HDF5Store
     'ipdb',                         # OPT: gramex.debug
-    'inflect',                      # REQ: NLG
     'jmespath',                     # OPT: pytest gramex plugin
     'joblib',                       # OPT: For gramex.ml
     'ldap3 >= 2.2.4',               # OPT: LDAP connections
     'lxml',                         # OPT: (conda) gramex.pptgen
     'markdown',                     # OPT: transforms, gramex.services.create_alert()
     'matplotlib',                   # OPT: (conda) gramex.data.download()
+    'numpy == 1.16',
     'oauthlib >= 1.1.2',            # SRV: OAuth request-signing
-    'orderedattrdict >= 1.4.3',     # REQ: OrderedDict with attr access for configs
-    'pandas',                       # REQ: (conda) gramex.data.filter()
+    'orderedattrdict >= 1.6.0',     # REQ: OrderedDict with attr access for configs
+    'pandas == 0.25.3',             # REQ: (conda) gramex.data.filter()
     'passlib >= 1.6.5',             # REQ: password storage (e.g. in handlers.DBAuth)
     'pathlib',                      # REQ: Manipulate paths. Part of Python 3.3+
     'pathtools >= 0.1.1',           # REQ: dependency for watchdog
@@ -77,51 +74,6 @@ def read_gitignore(path, exclude=set()):
 
 
 ignore_patterns = list(read_gitignore('.gitignore', exclude={'node_modules'}))
-
-
-def install_apps(self):
-    logging.basicConfig(level=logging.INFO)
-    try:
-        import gramex.install
-    except Exception:
-        logging.error('Run gramex setup --all to install apps')
-        return
-    # Guess the installation directory
-    if hasattr(self, 'installed_projects') and 'gramex' in self.installed_projects:
-        install_dir = self.installed_projects['gramex'].location
-    elif hasattr(self, 'install_lib'):
-        install_dir = self.install_lib
-    elif hasattr(self, 'install_dir'):
-        install_dir = self.install_dir
-    else:
-        logging.error('Run gramex setup --all to install apps')
-        return
-    # Install the gramex apps
-    root = os.path.join(os.path.abspath(install_dir), 'gramex', 'apps')
-    logging.info('Setting up Gramex apps at %s', root)
-    for filename in os.listdir(root):
-        target = os.path.join(root, filename)
-        if os.path.isdir(target):
-            try:
-                gramex.install.run_setup(target)
-            except Exception:
-                logging.exception('Installation failed: %s', target)
-    # Install guide
-    gramex.install.install(['guide'], {})
-
-
-class PostDevelopCommand(develop):
-    """Post-installation for development mode."""
-    def run(self):
-        develop.run(self)
-        install_apps(self)
-
-
-class PostInstallCommand(install):
-    """Post-installation for installation mode."""
-    def run(self):
-        install.run(self)
-        install_apps(self)
 
 
 def recursive_include(root, path, ignores=[], allows=[]):
@@ -171,6 +123,7 @@ gramex_files = [
     'favicon.ico',
     'release.json',
     'download.vega.js',
+    'pptgen2/config.yaml',
 ]
 gramex_files += list(recursive_include('gramex', 'handlers', ignore_patterns, ['*.html']))
 gramex_files += list(recursive_include('gramex', 'pptgen', ignore_patterns, ['*.json']))
@@ -195,20 +148,7 @@ setup(
         'pytest11': ['gramextest = gramex.gramextest']
     },
     test_suite='tests',
-    tests_require=[
-        'nose',
-        'coverage',
-        'python-dateutil',          # For schedule testing
-        'testfixtures',             # For logcapture
-        'sphinx_rtd_theme',         # For documentation
-        'websocket-client',         # For websocket testing
-        'pdfminer.six',             # For CaptureHandler testing
-        'cssselect',                # For HTML testing (test_admin.py)
-        'psycopg2 >= 2.7.1'         # OPT: PostgreSQL connections
-    ],
-    cmdclass={
-        'develop': PostDevelopCommand,
-        'install': PostInstallCommand,
-    },
+    # Install test libraries via `make test-setup` -> tests/requirements.txt.
+    # Use this instead of tests_require because nose plugins are installed this way.
     **release_args
 )

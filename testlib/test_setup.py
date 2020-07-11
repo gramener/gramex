@@ -29,3 +29,6 @@ class TestSetup(unittest.TestCase):
         self.exists('pptgen/fonts.json')
         self.exists('pptgen/colors.json')
         self.exists('pptgen/release.json')
+
+        # Ensure that all YAML files in pptgen2/ are included
+        self.exists('pptgen2/config.yaml')

@@ -1,4 +1,4 @@
-"""PPTGen module."""
+'''PPTGen module.'''
 import io
 import os
 import sys
@@ -107,7 +107,7 @@ def replicate_slides(data, prs, change, slide, slides_to_remove, index, handler)
 
 
 def register(config):
-    """Function to register a new `command` to command list."""
+    '''Function to register a new `command` to command list.'''
     global COMMANDS_LIST
     resister_command = config.pop('register', {})
     if not isinstance(resister_command, (dict,)):

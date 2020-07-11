@@ -9,6 +9,7 @@ include gramex/release.json
 include gramex/download.vega.js
 include gramex/handlers/*.html
 include gramex/pptgen/*.json
+include gramex/pptgen2/config.yaml
 
 # Include Gramex apps
 graft gramex/apps

@@ -1,4 +1,4 @@
-/* eslint-env es6, node */
+/* eslint-env browser, es6, node */
 /* eslint-disable no-console */
 
 const puppeteer = require('puppeteer')

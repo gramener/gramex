@@ -4,13 +4,14 @@
 # Configurations for app: {{ appname }}
 # ----------------------------------------------------------------------------
 url:
-  {{ appname }}-home:
+  '{{ appname }}-home':
     pattern: /$YAMLURL/
     handler: FileHandler
     kwargs:
       path: $YAMLPATH/index.html
       # See https://learn.gramener.com/guide/auth/#authorization for auth rules
-      auth: true
+      auth:
+        login_url: /$YAMLURL/login/
       template: true
       headers:
         # Templates may have user-specific content. Cache privately.
@@ -18,9 +19,7 @@ url:
         Cache-Control: private, max-age=1
     cache: {expiry: {duration: 1}}
 
-  {{ appname }}-login:
-    # Default login_url is /login/. If you change this, change auth.login_url
-    # https://learn.gramener.com/guide/auth/#login-urls
+  '{{ appname }}-login':
     pattern: /$YAMLURL/login/
     # You MUST change the auth before deploying. DBAuth is commonly used.
     # See https://learn.gramener.com/guide/auth/#database-auth
@@ -31,12 +30,15 @@ url:
         alpha: alpha
         beta: beta
 
-  {{ appname }}-logout:
+  '{{ appname }}-logout':
     pattern: /$YAMLURL/logout/
     handler: LogoutHandler
 
-
-
+# Notify testers what user ID and password to use
+test:
+  auth:
+    user: alpha
+    password: alpha
 
 
 # Gramex init configurations for app: {{ appname }}
@@ -65,6 +67,7 @@ import:
     ADMIN_AUTH:
       membership:
         hd: gramener.com                    # Only @gramener.com Google Auth are admins
+
 
 handlers:
   BaseHandler:

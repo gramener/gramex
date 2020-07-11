@@ -1,3 +1,4 @@
+/* eslint-env browser, node */
 /* globals phantom */
 /* eslint-disable no-console, no-unused-vars */
 

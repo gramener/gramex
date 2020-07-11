@@ -36,6 +36,10 @@ cache:
   disk:
     type: disk
     path: $YAMLPATH/.cache-url
+  redis:
+    type: redis
+    path: localhost:6379:0
+    size: 50000000
   # We could test more disk caches, but they're slow
 
 url:
@@ -65,6 +69,25 @@ url:
 
   pathnorm1: {pattern: "/./path/norm1", handler: FunctionHandler, kwargs: {function: str("/path/norm1") }}
   pathnorm2: {pattern: "/path/./norm2", handler: FunctionHandler, kwargs: {function: str("/path/norm2") }}
+
+  # TestSchedule
+  schedule-key:
+    pattern: /schedule-key
+    handler: FunctionHandler
+    kwargs:
+      function: utils.schedule_key()
+
+  slow-count-start:
+    pattern: /slow-count-start
+    handler: FunctionHandler
+    kwargs:
+      function: utils.slow_count_start()
+
+  slow-count-check:
+    pattern: /slow-count-check
+    handler: FunctionHandler
+    kwargs:
+      function: utils.slow_count_check()
 
   # test_handlers
   base:
@@ -458,9 +481,9 @@ url:
           Sub: b
         '*':
           All: x
-        '*/install/**':
+        '**/install/**':
           Sub: x
-        'gramex-bower-package/**':
+        '**/gramex-bower-package':
           Sub: y
 
   dir/data:
@@ -1094,10 +1117,10 @@ url:
     handler: TwitterRESTHandler
     kwargs:
       # Gramener > Gramex guide app: https://apps.twitter.com/app/12449610/keys
-      key: XkCVNZD5sfWECxHGAGnlHGQFa
-      secret: yU00bx5dHYMbge9IyO5H1KeC5uFnWndntG7u6CH6O4HDZHQg0p
-      access_key: 445767176-pqio8PuGlpzULSstlZQbLhRqFJfNBjWFH5LqNRgI
-      access_secret: zVosr4wIS3aM80hErmWUkMePZ6vX830yI7VKxar6xZqgp
+      key: $TWITTER_KEY
+      secret: $TWITTER_SECRET
+      access_key: $TWITTER_ACCESS_KEY
+      access_secret: $TWITTER_ACCESS_SECRET
       xsrf_cookies: false
 
   api/twitter-get:
@@ -1105,10 +1128,10 @@ url:
     handler: TwitterRESTHandler
     kwargs:
       # Gramener > Gramex guide app: https://apps.twitter.com/app/12449610/keys
-      key: XkCVNZD5sfWECxHGAGnlHGQFa
-      secret: yU00bx5dHYMbge9IyO5H1KeC5uFnWndntG7u6CH6O4HDZHQg0p
-      access_key: 445767176-pqio8PuGlpzULSstlZQbLhRqFJfNBjWFH5LqNRgI
-      access_secret: zVosr4wIS3aM80hErmWUkMePZ6vX830yI7VKxar6xZqgp
+      key: $TWITTER_KEY
+      secret: $TWITTER_SECRET
+      access_key: $TWITTER_ACCESS_KEY
+      access_secret: $TWITTER_ACCESS_SECRET
       methods: GET
       xsrf_cookies: false
 
@@ -1896,16 +1919,13 @@ watch:
     on_modified: nonexistent            # This should not throw an error, only report a warning
 
 schedule:
-  schedule-startup-set-key:
-    function: utils.slow_count          # Set global value schedule-key to 1
-    args: ['schedule-key', 1]
+  schedule-start:
+    function: utils.schedule_start
     startup: true
-  schedule-startup-slow:
+  schedule-slow-count:
     function: utils.slow_count          # Set global schedule-count every 10ms
-    args: 'schedule-count'
-    kwargs: {count: 1000}
-    startup: true
     thread: true
+    startup: true
   schedule-timed:
     function: gramex.config.app_log('schedule-timed ran now')
     hours: 5
@@ -2013,7 +2033,7 @@ alert:
     alert-each:
       service: smtps_stub
       data: $YAMLPATH/actors.csv
-      condition: data[data['votes'] > 100]
+      condition: data[data['votes'] > 120]
       each: data
       to: "{{ row['name'].replace(' ', '_') + '@example.org' }}"
       subject: "{{ config.salutation }} #{{ index }}! {{ config['prefix'] }} {{ row['votes'] }} votes"
