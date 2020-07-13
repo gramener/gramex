@@ -45,10 +45,12 @@ install:
   - hash -r
   # Install conda packages
   - conda config --set always_yes yes --set changeps1 no
-  # For the NumPy version below, see: https://bitbucket.org/rpy2/rpy2/issues/572
-  # Newer versions of NumPy require newer versions of rpy2. The latter are not available on conda.
-  - conda install -y -q colorama h5py lxml matplotlib pandas pytest seaborn sqlalchemy line_profiler tzlocal scikit-learn rpy2 numpy=1.16
   # rpy2 v2.9.6 is compatible with pandas 1.0, not available on the default channel
+  - conda install -y -q colorama h5py lxml matplotlib pandas pytest seaborn sqlalchemy line_profiler tzlocal scikit-learn rpy2
+  # install.packages("rmarkdown") has installation issues with numpy 1.16.6, 1.17.0, etc but is OK with 1.16.0
+  # https://bitbucket.org/rpy2/rpy2/issues/572
+  # Don't ask people to change the critical NumPy for the rarely used RMarkdown. Use the conda installer instead
+  - conda install -y -q -c r r-rmarkdown
   # Install node.js
   - nvm install 12
   # Set up variables
@@ -62,9 +64,11 @@ script:
   - pip install gramexenterprise
   - gramex license accept
   - gramex setup --all  # ensure node-sass, puppetter exists
-  - export NOSE_WITH_COVERAGE=1
-  - export NOSE_WITH_TIMER=1
-  - make test
+
+  # Run tests, explicitly showing coverage
+  - make test-setup
+  - coverage run -m nose
+  - coverage report -m
 
   # Test specific apps
   - cd $TRAVIS_BUILD_DIR/gramex/apps/filemanager/ && yarn install && yarn test

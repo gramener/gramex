@@ -18,7 +18,7 @@ import re
 import requests
 from PIL import Image
 from functools import partial
-from gramex.config import objectpath
+from gramex.config import app_log, objectpath
 from gramex.transforms import build_transform
 from lxml.html import fragments_fromstring, builder, HtmlElement
 from orderedattrdict import AttrDict
@@ -87,7 +87,7 @@ length_alias = {'"': 'inches', 'in': 'inches', 'inch': 'inches',
 
 def length_class(unit_str: str):
     '''Converts unit string like in, inch, cm, etc to pptx.util.Inches, pptx.util.Cm, etc.'''
-    unit = length_alias.get(unit_str, unit_str).title()
+    unit = length_alias.get(unit_str.lower(), unit_str.lower()).title()
     if hasattr(pptx.util, unit):
         return getattr(pptx.util, unit)
     elif not unit:
@@ -519,15 +519,16 @@ def set_text(attr, on_run, shape, spec, data):
 def image(shape, spec, data: dict):
     val = expr(spec, data)
     if val is not None:
-        rid = shape._pic.blipFill.blip.rEmbed
-        part = shape.part.related_parts[rid]
-        # TODO: This REPLACES the image. We must CREATE an image. Else cloning images fails
+        # Load image contents as a bytestring
         if urlparse(val).netloc:
-            part._blob = requests.get(val).content
+            content = requests.get(val).content
         else:
-            part._blob = gramex.cache.open(val, 'bin')
-        # Preserve aspect ratio and width. Adjust height
-        img = Image.open(io.BytesIO(part._blob))
+            content = gramex.cache.open(val, 'bin')
+        # Add the image part
+        image_part, rid = shape.part.get_or_add_image_part(io.BytesIO(content))
+        shape.element.blipFill.blip.rEmbed = rid
+        # Preserve aspect ratio and width. Adjust height via a "cover" algorithm
+        img = Image.open(io.BytesIO(content))
         img_width, img_height = img.size
         shape.height = int(shape.width * img_height / img_width)
 
@@ -562,15 +563,24 @@ def table_assign(convert, attr, shape, spec, data: dict):
         setattr(shape, attr, convert(val))
 
 
+def table_width(table, col_index, spec, data):
+    table._tbl.tblGrid.gridCol_lst[col_index].set('w', str(length(expr(spec, data))))
+
+
 def _resize(elements, n):
     '''Ensure that a tr, tc or gridCol list has n children by cloning or deleting last element'''
     for index in range(len(elements), n, -1):
         elements[index - 1].delete()
     for index in range(len(elements), n):
-        elements[-1].addnext(copy.deepcopy(elements[-1]))
+        last_element = copy.deepcopy(elements[-1])
+        # When copying the last element, remove the a:extLst. This may have a rowId and colId
+        # Note: Anand isn't sure if this removes any useful properties. See https://bit.ly/2ZYDw7B
+        for ext_lst in last_element.findall('.//' + qn('a:extLst')):
+            ext_lst.getparent().remove(ext_lst)
+        elements[-1].addnext(last_element)
 
 
-table_commands = {
+table_cell_commands = {
     'text': text,
     'fill': partial(set_color, 'fill'),
     'fill-opacity': partial(set_opacity, 'fill'),
@@ -590,6 +600,9 @@ table_commands = {
     'italic': partial(set_text, 'italic', False),
     'underline': partial(set_text, 'underline', False),
 }
+table_col_commands = {
+    'width': table_width,
+}
 
 
 def table(shape, spec, data: dict):
@@ -598,7 +611,8 @@ def table(shape, spec, data: dict):
     table = shape.table
 
     # Set or get table first/last row/col attributes
-    table.first_row = bool(expr(spec.get('header-row', table.first_row), data))
+    header_row = expr(spec.get('header-row', table.first_row), data)
+    table.first_row = bool(header_row)
     table.last_row = bool(expr(spec.get('total-row', table.last_row), data))
     table.first_col = bool(expr(spec.get('first-column', table.first_col), data))
     table.last_col = bool(expr(spec.get('last-column', table.last_col), data))
@@ -622,10 +636,13 @@ def table(shape, spec, data: dict):
     for row in table.rows:
         _resize(row._tr.tc_lst, data_cols)
 
-    # Set header row text. No data-driven formatting can be applied on header rows
+    # Set header row text from header-row or from data column headers
     if table.first_row:
-        for j, column in enumerate(table_data.columns):
-            table.cell(0, j).text = column
+        header_columns = table_data.columns
+        if isinstance(header_row, (list, tuple, pd.Index, pd.Series)):
+            header_columns = header_row[:len(table_data.columns)]
+        for j, column in enumerate(header_columns):
+            text(table.cell(0, j), column, {'_expr_mode': False})
 
     # If `text` is not specified, just use the table value
     expr_mode = data.get('_expr_mode')
@@ -634,10 +651,8 @@ def table(shape, spec, data: dict):
     # TODO: Handle nans
     # Apply table commands. (Copy data to avoid modifying original. We'll add data['cell'] later)
     data = dict(data)
+    columns = table_data.columns.tolist()
     for key, cmdspec in spec.items():
-        cmd = table_commands.get(key, None)
-        if cmd is None:
-            continue
         # The command spec can be an expression, or a dict of expressions for each column.
         # Always convert into a {column: expression}.
         # But carefully, handling {value: ...} in expr mode and {expr: ...} in literal mode
@@ -645,14 +660,30 @@ def table(shape, spec, data: dict):
                 (expr_mode and 'value' in cmdspec) or
                 (not expr_mode and 'expr' in cmdspec)):
             cmdspec = {column: cmdspec for column in table_data.columns}
-        for i, (index, row) in enumerate(table_data.iterrows()):
-            for j, (column, val) in enumerate(row.iteritems()):
-                data['cell'] = AttrDict(
-                    val=val, column=column, index=index, row=row, data=table_data,
-                    pos=AttrDict(row=i, column=j))
-                cell = table.cell(i + header_offset, j)
-                if column in cmdspec:
-                    cmd(cell, cmdspec[column], data)
+        # Apply commands that run on each cell
+        if key in table_cell_commands:
+            for i, (index, row) in enumerate(table_data.iterrows()):
+                for j, (column, val) in enumerate(row.iteritems()):
+                    data['cell'] = AttrDict(
+                        val=val, column=column, index=index, row=row, data=table_data,
+                        pos=AttrDict(row=i, column=j))
+                    cell = table.cell(i + header_offset, j)
+                    if column in cmdspec:
+                        table_cell_commands[key](cell, cmdspec[column], data)
+            for column in cmdspec:
+                if column not in columns:
+                    app_log.warn('pptgen2: No column: %s in table: %s', column, shape.name)
+        # Apply commands that run on each column
+        elif key in table_col_commands:
+            for column, colspec in cmdspec.items():
+                if column in columns:
+                    col_index = columns.index(column)
+                    data['cell'] = AttrDict(
+                        val=column, column=column, index=None, row=table.columns, data=table_data,
+                        pos=AttrDict(row=-1, column=col_index))
+                    table_col_commands[key](table, col_index, colspec, data)
+                else:
+                    app_log.warn('pptgen2: No column: %s in table: %s', column, shape.name)
 
 
 cmdlist = {

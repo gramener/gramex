@@ -1,0 +1,2 @@
+source: $YAMLPATH/input2.pptx
+target: $YAMLPATH/nonexistent.pptx
