@@ -840,3 +840,45 @@ def used_kwargs(method, kwargs, ignore_keywords=False):
             target = used if key in set(argspec.args) else rest
             target[key] = val
     return used, rest
+
+from elasticsearch import Elasticsearch
+from time import localtime, strftime
+
+class ConnSingleton:
+    def __init__(self, cls):
+        self.cls = cls
+        self.instance = None
+
+    def __call__(self, *args, **kwargs):
+        if self.instance == None:
+            self.instance = self.cls(*args, **kwargs)
+        return self.instance
+
+allowed_log_levels = ["INFO","ERROR","DEBUG","WARN"]
+@ConnSingleton
+class ElDb:
+    connection = None
+    def get_connection(self):
+        if self.connection is None or not self.connection.ping():
+            self.connection = Elasticsearch("https://nikshay.gramener.com", http_auth=("eladm","eladm")) 
+        return self.connection 
+
+
+
+def log(**kwargs):
+    '''
+    Writes the log into Elastic Search and application log.
+    
+    '''
+    log_args = kwargs.copy()
+    if 'level' in log_args.keys():
+        log_level = log_args['level'].upper()
+        if not log_level in allowed_log_levels:
+            log_args["level"] = "UNKNOWN"
+        log_args["level"] = log_level
+    log_args["time"] = strftime("%Y-%m-%d %H:%M:%S", localtime())
+    log_args["port"] = app_log_extra['port']
+    app_log.info(log_args)
+
+    es = ElDb().get_connection()
+    res = es.index(index="log_index", body=log_args)
