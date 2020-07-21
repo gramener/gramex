@@ -38,6 +38,8 @@ from random import choice
 from fnmatch import fnmatch
 from six import string_types
 from collections import OrderedDict
+from time import localtime, strftime
+from elasticsearch import Elasticsearch
 from pydoc import locate as _locate, ErrorDuringImport
 from yaml import Loader, MappingNode
 from json import loads, JSONEncoder, JSONDecoder
@@ -841,8 +843,13 @@ def used_kwargs(method, kwargs, ignore_keywords=False):
             target[key] = val
     return used, rest
 
-from elasticsearch import Elasticsearch
-from time import localtime, strftime
+
+esl_paths = AttrDict()
+esl_paths['source'] = Path(__file__).absolute().parent
+esl_conf = (+PathConfig(esl_paths['source'] / 'gramex.yaml')).get('eslog', AttrDict())
+# The above config needs to be fixed. Gramex is loading this as a service
+allowed_log_levels = ["INFO","ERROR","DEBUG","WARN"]
+
 
 class ConnSingleton:
     def __init__(self, cls):
@@ -854,21 +861,24 @@ class ConnSingleton:
             self.instance = self.cls(*args, **kwargs)
         return self.instance
 
-allowed_log_levels = ["INFO","ERROR","DEBUG","WARN"]
+
 @ConnSingleton
 class ElDb:
     connection = None
     def get_connection(self):
         if self.connection is None or not self.connection.ping():
-            self.connection = Elasticsearch("https://nikshay.gramener.com", http_auth=("eladm","eladm")) 
+            self.connection = Elasticsearch(esl_conf['host'],
+                http_auth=(esl_conf['user'],esl_conf['pass'])) 
         return self.connection 
-
 
 
 def log(**kwargs):
     '''
     Writes the log into Elastic Search and application log.
-    
+    Usage:
+        log(level='INFO',x=1, y=2, msg='log string') writes to ES as below
+        {'level': 'INFO', 'x': 1, 'y': 2, 'msg': 'log string', 'time': '2020-07-21 13:41:00', 
+            'port': 9988}
     '''
     log_args = kwargs.copy()
     if 'level' in log_args.keys():
@@ -879,6 +889,8 @@ def log(**kwargs):
     log_args["time"] = strftime("%Y-%m-%d %H:%M:%S", localtime())
     log_args["port"] = app_log_extra['port']
     app_log.info(log_args)
-
-    es = ElDb().get_connection()
-    res = es.index(index="log_index", body=log_args)
+    try:
+        es = ElDb().get_connection()
+        es.index(index=esl_conf['index'], body=log_args)
+    except Exception:
+        app_log.error("unable to store in ES")
