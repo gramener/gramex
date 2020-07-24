@@ -71,6 +71,8 @@ class Exotel(Notifier):
         >>> notifier = Exotel(
         ...     sid='...',
         ...     token='...',
+        ...     key='...',
+        ...     domain='...',
         ...     priority='high',
         ... )
         >>> notifier.send(
@@ -78,18 +80,19 @@ class Exotel(Notifier):
         ...     subject='This is the content of the message',
         ...     sender='gramex')
     '''
-    def __init__(self, sid, token, priority='high'):
+    def __init__(self, sid, token, key=None, domain=None, priority='high'):
         self.sid = sid
         self.token = token
+        self.key = key = key or sid
+        self.domain = domain = domain or 'api.exotel.com'
         self.priority = priority
-        self.send_url = 'https://{}:{}@api.exotel.com/v1/Accounts/{}/Sms/send.json'.format(
-            self.sid, self.token, self.sid)
-        self.stat_url = 'https://{}:{}@api.exotel.com/v1/Accounts/{}/SMS/Messages/%s.json'.format(
-            self.sid, self.token, self.sid)
+        self.host = f'https://{key}:{token}@{domain}'
+        # URL path /SMS/* seems case-insensitive. Exotel docs show /SMS/, /Sms/, etc.
+        self.send_url = f'{self.host}/v1/Accounts/{sid}/sms/send.json'
 
     def _handle_response(self, r):
         if r.status_code != OK:
-            raise RuntimeError('Exotel API failed: %s' % r.text)
+            raise RuntimeError('Exotel API failed: %d %s' % (r.status_code, r.text))
         result = r.json()
         return result['SMSMessage']
 
@@ -103,7 +106,7 @@ class Exotel(Notifier):
         return self._handle_response(r)
 
     def status(self, result):
-        r = requests.get(self.stat_url % result['Sid'])
+        r = requests.get(self.host + result['Uri'])
         return self._handle_response(r)
 
 
