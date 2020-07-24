@@ -28,6 +28,7 @@ _IGNORE_HEADERS = {
     'content-length',   # The new request will have a different content - length
     'content-md5',      # ... and different content - md5
 }
+DEFAULT_TIMEOUT = 10
 
 
 class Capture(object):
@@ -73,7 +74,7 @@ class Capture(object):
     capture.js is running at ``url``. If not, it runs ``cmd`` and checks again.
     Until capture.js is detected, all capture methods will fail.
     '''
-    def __init__(self, port=None, url=None, engine=None, cmd=None, timeout=10):
+    def __init__(self, port=None, url=None, engine=None, cmd=None, timeout=DEFAULT_TIMEOUT):
         # Set default values for port, url and cmd
         self.engine = self.engines['phantomjs' if engine is None else engine]
         port = self.default_port if port is None else port
@@ -100,7 +101,8 @@ class Capture(object):
         :class:`CaptureHandler` calls this method if ``?start`` is passed.
         '''
         with self.lock:
-            thread = Thread(target=self._start)
+            thread = Thread(target=self._start,
+                            name=f'Capture {self.engine} @ {self.url}')
             thread.daemon = True
             thread.start()
 
@@ -274,14 +276,10 @@ class CaptureHandler(BaseHandler):
     captures = {}
 
     @classmethod
-    def setup(cls, port=None, url=None, engine=None, cmd=None, **kwargs):
+    def setup(cls, port=None, url=None, engine=None, cmd=None, timeout=DEFAULT_TIMEOUT, **kwargs):
         super(CaptureHandler, cls).setup(**kwargs)
-        capture_kwargs = {}
-        for kwarg in ('timeout', ):
-            if kwarg in kwargs:
-                capture_kwargs[kwarg] = kwargs.pop(kwarg)
-        # Create a new Capture only if the config has changed
-        config = dict(engine=engine, port=port, url=url, cmd=cmd, **capture_kwargs)
+        # Create a new Capture only if the config has changed.
+        config = dict(engine=engine, port=port, url=url, cmd=cmd, timeout=timeout)
         config_str = json.dumps(config, separators=[',', ':'], sort_keys=True)
         if config_str not in cls.captures:
             cls.captures[config_str] = cls.capture = Capture(**config)
