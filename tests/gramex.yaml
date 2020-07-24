@@ -1925,13 +1925,14 @@ schedule:
   schedule-slow-count:
     function: utils.slow_count          # Set global schedule-count every 10ms
     thread: true
-    startup: true
   schedule-timed:
-    function: gramex.config.app_log('schedule-timed ran now')
+    function: gramex.config.app_log.info('schedule-timed ran now')
     hours: 5
+    minutes: 0
   schedule-timed-utc:
-    function: gramex.config.app_log('schedule-timed-utc ran now')
+    function: gramex.config.app_log.info('schedule-timed-utc ran now')
     hours: 5
+    minutes: 0
     utc: true
 
 email:

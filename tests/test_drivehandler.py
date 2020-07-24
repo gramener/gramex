@@ -51,8 +51,8 @@ class TestDriveHandler(TestGramex):
             eq_(result['file'], file)
             # Extension is stored in lowercase even if filename is in uppercase
             eq_(result['ext'], os.path.splitext(f['file'])[1].lower())
-            # Current time in seconds is stored as the date
-            ok_(time.time() - result['date'] < 2)
+            # Current time in seconds is stored as the date, to within a few seconds
+            self.assertLess(time.time() - result['date'], 5)
             for field in ('tag', 'cat', 'user_id', 'user_role'):
                 if field in f:
                     eq_(result[field], f[field])
