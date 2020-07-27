@@ -16,6 +16,7 @@
     "font-awesome": "*",
     "g1": "0.17",
     "jquery": "~3",
+    "jstree": "^3.3.10",
     "leaflet": "1.6",
     "lodash": "4",
     "moment": "2",

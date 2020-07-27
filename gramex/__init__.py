@@ -270,12 +270,23 @@ def init(force_reload=False, **kwargs):
     # Services may return callbacks to be run at the end
     for key, val in final_config.items():
         if key not in conf or conf[key] != val or force_reload:
+
             if hasattr(services, key):
                 app_log.debug('Loading service: %s', key)
                 conf[key] = deepcopy(val)
+
+                # remove the comments in new (key, value) format
+                if isinstance(conf[key], dict):
+                    for comment_key in list(conf[key].keys()):
+                        if '_comment' in comment_key:
+                            app_log.debug('Removing comment (%s)', comment_key)
+                            conf[key].pop(comment_key)
+
                 callback = getattr(services, key)(conf[key])
                 if callable(callback):
                     callbacks[key] = callback
+            elif '_comment' in key:
+                app_log.debug('Ignoring comment (%s)', key)
             else:
                 app_log.error('No service named %s', key)
 

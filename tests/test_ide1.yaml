@@ -1,0 +1,9 @@
+url:
+  Key: Value
+  Key1: Value
+  template:
+    handler: FileHandler
+    kwargs:
+      path: templates/
+      template: '*'
+    pattern: /templates/(.*)

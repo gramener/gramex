@@ -60,6 +60,15 @@ url:
     kwargs:
         function: nonexistent
 
+  # Test IDE
+  post-get-config:
+    pattern: /ide_config_handler
+    handler: FunctionHandler
+    kwargs:
+      function: gramex.apps.ide.ide.ide_config_handler
+      xsrf_cookies: false
+
+        
   # TestGramex
   pathdepth1: {pattern: "/path/.*",       handler: "gramex.handlers.FunctionHandler", kwargs: {function: str("/path/.*")}}
   pathdepth2: {pattern: "/path/file",     handler: FunctionHandler, kwargs: {function: str("/path/file")     }}

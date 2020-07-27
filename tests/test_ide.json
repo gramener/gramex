@@ -1,0 +1,6 @@
+[{"id": "3", "text": "kwargs", "parent": "2", 
+"data": {"1": {"key": "path", "value": "templates/"}, "2": {"key": "template", "value": "*"}}}, 
+{"id": "2", "text": "template", "parent": "1", 
+"data": {"1": {"key": "handler", "value": "FileHandler"}, "2": {"key": "pattern", "value": "/templates/(.*)"}}}, 
+{"id": "1", "text": "url", "parent": "#", 
+"data": {"1": {"key": "Key", "value": "Value"}, "2": {"key": "Key1", "value": "Value"}}}]
