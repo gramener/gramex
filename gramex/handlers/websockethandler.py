@@ -35,7 +35,7 @@ class WebSocketHandler(BaseWebSocketHandler):
                 setattr(cls, method, build_transform(
                     kwargs[method],
                     vars=OrderedDict((arg, None) for arg in override_methods[method]),
-                    filename='url:%s.%s' % (cls.name, method)))
+                    filename='url:%s.%s' % (getattr(cls, 'name', cls.__name__), method)))
 
     def check_origin(self, origin):
         origins = self.kwargs.get('origins', [])

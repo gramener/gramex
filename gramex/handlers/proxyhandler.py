@@ -7,10 +7,12 @@ from tornado.httpclient import AsyncHTTPClient, HTTPRequest
 from gramex.transforms import build_transform
 from gramex.config import app_log
 from gramex.http import MOVED_PERMANENTLY, FOUND
-from .basehandler import BaseHandler
+from .basehandler import BaseWebSocketHandler, BaseHandler
+from tornado.websocket import WebSocketHandler
+from gramex.handlers import WebSocketHandler as GWebSocketHandler
 
 
-class ProxyHandler(BaseHandler):
+class ProxyHandler(BaseHandler, BaseWebSocketHandler):
     '''
     Passes the request to another HTTP REST API endpoint and returns its
     response. This is useful when:
@@ -63,7 +65,9 @@ class ProxyHandler(BaseHandler):
     def setup(cls, url, request_headers={}, default={}, prepare=None, modify=None,
               headers={}, methods=['GET', 'HEAD', 'POST'],
               connect_timeout=20, request_timeout=20, **kwargs):
+        kwargs.update({'conf': cls.conf})
         super(ProxyHandler, cls).setup(**kwargs)
+        GWebSocketHandler.setup(**kwargs)
         cls.url, cls.request_headers, cls.default = url, request_headers, default
         cls.headers = headers
         cls.connect_timeout, cls.request_timeout = connect_timeout, request_timeout
@@ -77,8 +81,23 @@ class ProxyHandler(BaseHandler):
         for method in methods:
             setattr(cls, method.lower(), cls.method)
 
+    def open(self):
+        print('open')
+
+    def on_message(self, message):
+        print('message: ', message)
+        self.write_message('Got Message: ' + message)
+
+    def on_close(self):
+        print('close')
+
     @tornado.gen.coroutine
     def method(self, *path_args):
+        ws = self.request.headers.get('Upgrade', '') == 'websocket'
+        if ws:
+            print('Got a websocket')
+            # Is the following a tornado websockethandler
+            return WebSocketHandler.get(self)
         # Construct HTTP headers
         headers = HTTPHeaders(self.request.headers if self.request_headers.get('*', None) else {})
         for key, val in self.request_headers.items():
