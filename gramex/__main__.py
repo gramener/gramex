@@ -10,4 +10,3 @@ Gramex command line server
 import gramex
 
 gramex.commandline()
-
