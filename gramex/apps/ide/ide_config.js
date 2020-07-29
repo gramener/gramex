@@ -14,8 +14,8 @@ function get_node_data(){
   $("table > tbody > tr").each(function () {
     //create object and json for the de-selected node here so that it can be updated
     prev_node_data = prev_node_data +' "'+row+'"'+
-       ': {"key": "'+$(this).find('td').eq(0).text() +
-       '", "value": "'+$(this).find('td').eq(1).text() +
+        ': {"key": "'+$(this).find('td').eq(0).text() +
+        '", "value": "'+$(this).find('td').eq(1).text() +
     '"},'
     row = row+1;
   });
