@@ -64,7 +64,6 @@ class ProxyHandler(BaseHandler, BaseWebSocketHandler):
     def setup(cls, url, request_headers={}, default={}, prepare=None, modify=None,
               headers={}, methods=['GET', 'HEAD', 'POST'],
               connect_timeout=20, request_timeout=20, **kwargs):
-        kwargs.update({'conf': cls.conf})
         super(ProxyHandler, cls).setup(**kwargs)
         WebSocketHandler._setup(cls, **kwargs)
         cls.url, cls.request_headers, cls.default = url, request_headers, default
@@ -79,16 +78,6 @@ class ProxyHandler(BaseHandler, BaseWebSocketHandler):
         cls.browser = AsyncHTTPClient()
         for method in methods:
             setattr(cls, method.lower(), cls.method)
-
-    def open(self):
-        print('open')
-
-    def on_message(self, message):
-        print('message: ', message)
-        self.write_message('Got Message: ' + message)
-
-    def on_close(self):
-        print('close')
 
     def authorize(self, *args, **kwargs):
         if self.request.headers.get('Upgrade', '') == 'websocket':

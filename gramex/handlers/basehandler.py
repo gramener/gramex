@@ -39,7 +39,6 @@ class BaseMixin(object):
         cls._on_finish_methods = []
         cls._set_xsrf = set_xsrf
 
-        cls.conf = getattr(cls, 'conf', kwargs.pop('conf', {}))
         cls.kwargs = cls.conf.get('kwargs', AttrDict())
 
         cls.setup_transform(transform)

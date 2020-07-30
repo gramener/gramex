@@ -34,7 +34,7 @@ class WebSocketHandler(BaseWebSocketHandler):
                 setattr(cls, method, build_transform(
                     kwargs[method],
                     vars=OrderedDict((arg, None) for arg in override_methods[method]),
-                    filename='url:%s.%s' % (getattr(cls, 'name', cls.__name__), method)))
+                    filename='url:%s.%s' % (cls.name, method)))
 
     @classmethod
     def setup(cls, **kwargs):
