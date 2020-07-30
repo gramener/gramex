@@ -1,10 +1,10 @@
 "%PREFIX%\Scripts\conda.exe" install -c default rpy2 r-rmarkdown r-ggplot2 -y
 
 {% for entry in release.lib %}
-"%PREFIX%\Scripts\pip.exe" install "{% raw entry %}"
+"%PREFIX%\Scripts\pip.exe" install --use-feature=2020-resolver "{% raw entry %}"
 {% end %}
 {% for entry in release.pip %}
-"%PREFIX%\Scripts\pip.exe" install "{% raw entry %}"
+"%PREFIX%\Scripts\pip.exe" install --use-feature=2020-resolver "{% raw entry %}"
 {% end %}
 
 call "%PREFIX%\Library\bin\yarn.cmd" config set ignore-engines true
