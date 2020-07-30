@@ -46,6 +46,8 @@ from json import loads, JSONEncoder, JSONDecoder
 from yaml.constructor import ConstructorError
 from orderedattrdict import AttrDict, DefaultAttrDict
 from errno import EACCES, EPERM
+import time, queue, threading
+
 
 ERROR_SHARING_VIOLATION = 32        # from winerror.ERROR_SHARING_VIOLATION
 
@@ -848,7 +850,8 @@ esl_paths = AttrDict()
 esl_paths['source'] = Path(__file__).absolute().parent
 esl_conf = (+PathConfig(esl_paths['source'] / 'gramex.yaml')).get('eslog', AttrDict())
 # The above config needs to be fixed. Gramex is loading this as a service
-allowed_log_levels = ["INFO","ERROR","DEBUG","WARN"]
+allowed_log_levels = ['INFO', 'ERROR', 'DEBUG', 'WARN']
+es_q = queue.Queue()
 
 
 class ConnSingleton:
@@ -864,33 +867,54 @@ class ConnSingleton:
 
 @ConnSingleton
 class ElDb:
+    '''
+    Maintains ElasticSearch connection. Picks the ES configuration from 
+    environment variables.
+    '''
     connection = None
     def get_connection(self):
+        # check if connection is created or still alive
         if self.connection is None or not self.connection.ping():
-            self.connection = Elasticsearch(esl_conf['host'],
-                http_auth=(esl_conf['user'],esl_conf['pass'])) 
-        return self.connection 
+            self.connection = Elasticsearch(variables['ES_HOST'],
+                http_auth=(variables['ES_USER'], variables['ES_PASS']))
+        return self.connection
 
+
+def log_to_es():
+    '''
+    A thread which picks the logs from log() via a queue and stores in ElasticSearch.
+    todo: do a bulk indexing.
+    '''
+    while True:
+        time.sleep(0.1)
+        try:
+            log_doc = es_q.get()
+            es = ElDb().get_connection()
+            es.index(index=variables['ES_INDEX'], body=log_doc)
+        except Exception:
+            app_log.error('unable to store in ES')
+
+if esl_conf['enabled']:
+    '''
+    Initialize a thread only if eslog is enabled in gramex.yaml
+    '''
+    est = threading.Thread(target=log_to_es, daemon=True)
+    est.start()
 
 def log(**kwargs):
     '''
     Writes the log into Elastic Search and application log.
+    Calls app_log to write logs to application log.
+    Pushes logs to the queue for log_to_es thread to pick and store in ES. This is done
+    only when ES logging in enables in gramex.yaml.
     Usage:
         log(level='INFO',x=1, y=2, msg='log string') writes to ES as below
-        {'level': 'INFO', 'x': 1, 'y': 2, 'msg': 'log string', 'time': '2020-07-21 13:41:00', 
+        {'level': 'INFO', 'x': 1, 'y': 2, 'msg': 'log string', 'time': '2020-07-21 13:41:00',
             'port': 9988}
     '''
-    log_args = kwargs.copy()
-    if 'level' in log_args.keys():
-        log_level = log_args['level'].upper()
-        if not log_level in allowed_log_levels:
-            log_args["level"] = "UNKNOWN"
-        log_args["level"] = log_level
-    log_args["time"] = strftime("%Y-%m-%d %H:%M:%S", localtime())
-    log_args["port"] = app_log_extra['port']
-    app_log.info(log_args)
-    try:
-        es = ElDb().get_connection()
-        es.index(index=esl_conf['index'], body=log_args)
-    except Exception:
-        app_log.error("unable to store in ES")
+    kwargs['level'] = kwargs.get('level', 'INFO').upper()
+    kwargs['time'] = strftime('%Y-%m-%d %H:%M:%S', localtime())
+    kwargs['port'] = app_log_extra['port']
+    app_log.log(getattr(logging,kwargs['level']), kwargs)
+    if esl_conf['enabled']:
+        es_q.put(kwargs)

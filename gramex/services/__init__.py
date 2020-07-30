@@ -190,6 +190,8 @@ def app(conf):
                 def check_exit():
                     if exit[0] is True:
                         shutdown()
+                        # gramex.config.c.terminate()
+
                     # If Ctrl-D is pressed, run the Python debugger
                     char = debug.getch()
                     if char == b'\x04':
