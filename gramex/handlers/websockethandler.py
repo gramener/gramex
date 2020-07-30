@@ -19,9 +19,8 @@ class WebSocketHandler(BaseWebSocketHandler):
     The handler has a ``.write_message(text)`` method that sends a message back
     to the client.
     '''
-    @classmethod
-    def setup(cls, **kwargs):
-        super(WebSocketHandler, cls).setup(**kwargs)
+    @staticmethod
+    def _setup(cls, **kwargs):
         override_methods = {
             'open': ['handler'],
             'on_message': ['handler', 'message'],
@@ -36,6 +35,11 @@ class WebSocketHandler(BaseWebSocketHandler):
                     kwargs[method],
                     vars=OrderedDict((arg, None) for arg in override_methods[method]),
                     filename='url:%s.%s' % (getattr(cls, 'name', cls.__name__), method)))
+
+    @classmethod
+    def setup(cls, **kwargs):
+        super(WebSocketHandler, cls).setup(**kwargs)
+        cls._setup(cls, **kwargs)
 
     def check_origin(self, origin):
         origins = self.kwargs.get('origins', [])
