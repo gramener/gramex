@@ -901,6 +901,7 @@ if esl_conf['enabled']:
     est = threading.Thread(target=log_to_es, daemon=True)
     est.start()
 
+
 def log(**kwargs):
     '''
     Writes the log into Elastic Search and application log.
