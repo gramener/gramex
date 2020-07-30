@@ -4,27 +4,38 @@
 """
 import json
 import yaml
-from functools import reduce
-import operator
 from gramex.config import app_log
 
-node_id = 0         # counter to generate node id's while creating JSON from YAML
 
-def recursive_parse_dict_create_json(d, pid, new_d, config_list):
-    global node_id
-    data_id = 0
-    for k, v in d.items():
-        if isinstance(v, dict):
-            node_id += 1
-            new_pd = {"id": '%d' % node_id, "text": "%s" % k, "parent": "%s" % pid, "data": {}}
-            recursive_parse_dict_create_json(v, int(new_pd['id']), new_pd, config_list)
-        elif new_d:
-            data_id += 1
-            new_d['data'].update({"%d" % data_id: {"key": k, "value": v}})
-        else:
-            app_log.error('No data element in dict: ', d)
+def parse_dict_create_json(cfg):
+    node_id = 0
+    new_d = {}
+    config_list = []
+    pid = "#"
 
-    if new_d:config_list.append(new_d)
+    def recursive_parse(cfg, pid, new_d, config_list):
+        nonlocal node_id
+        data_id = 0
+        for k, v in cfg.items():
+            if isinstance(v, dict):
+                node_id += 1
+                new_pd = {"id": '%d' % node_id, "text": k, "parent": "%s" % pid, "data": {}}
+                recursive_parse(v, node_id, new_pd, config_list)
+            elif isinstance(v, (list,tuple)):
+                raise Exception("Yet to be implemented")
+            elif new_d:
+                data_id += 1
+                new_d['data'].update({"%d" % data_id: {"key": k, "value": v}})
+            else:
+                node_id += 1
+                row = {"id": '%d' % node_id, "text": pid, "parent": pid, "data": {1: {"key": k, "value": v}}}
+                config_list.append(row)
+
+        if new_d:
+            config_list.append(new_d)
+
+    recursive_parse(cfg, pid, new_d, config_list)
+
     return config_list
 
 
@@ -33,29 +44,28 @@ def parse_json_create_dict(src):
     root = {}
     for node in src:
         el = root if node['parent'] == '#' else objs[node['parent']]
-        el[node['text']] = objs[node['id']]
+        if node['text'] == '#':
+            el.update(objs[node['id']])
+        else:
+            el[node['text']] = objs[node['id']]
     return root
 
 def ide_config_handler(handler, _yaml_file='gramex.yaml'):
-    global node_id
-    parsed_config = {}
     final_list = []
-    node_id = 0
-
     _yaml_file = handler.get_arg('filename')  # comment this line for testing with file
-    # if handler == "GET":                    # with file
+    #if handler == "GET":                    # with file
     if handler.request.method == "GET":    # using browser request
         with open(_yaml_file) as fin:
             cfg_data = yaml.safe_load(fin)
         try:
-            final_list = recursive_parse_dict_create_json(cfg_data, "#", parsed_config, final_list)
+            final_list = parse_dict_create_json(cfg_data)
         except Exception as ex:
             app_log.debug("Exception while creating json: " + format(ex))
             return json.dumps({"Result": [{"Failure": "true"}]})
 
         return json.dumps(final_list)
 
-    # elif handler == 'POST':                   #with file
+    #elif handler == 'POST':                   #with file
     #    with open(_yaml_file) as fin:
     #        body = yaml.safe_load(fin)
     elif handler.request.method == 'POST':   # using browser request
@@ -67,7 +77,7 @@ def ide_config_handler(handler, _yaml_file='gramex.yaml'):
             return json.dumps({"Result": [{"Failure": "true"}]})
         if yaml_out:
             with open(_yaml_file, 'w') as fout:
-                yaml.dump(yaml_out, fout)
+                yaml.safe_dump(yaml_out, fout)
                 app_log.info("Updated file: "+_yaml_file)
                 return json.dumps({"Result": [{"Success": "true"}]})
         else:
@@ -79,7 +89,8 @@ def ide_config_handler(handler, _yaml_file='gramex.yaml'):
 """
 if __name__ == "__main__":
     # test GET
-    # ide_config_handler('GET', "C:/Users/sandeep.bhat/Desktop/Temp/gramex.yaml");
+    # ide_config_handler('GET', "C:/Users/sandeep.bhat/Desktop/Temp/test_ide.yaml");
     # test POST # please make sure you have back-up of file as it will be overwritten
     # ide_config_handler('POST', "C:/Users/sandeep.bhat/Desktop/Temp/yaml_file2.yaml");
+    # ide_config_handler('POST', "C:/Users/sandeep.bhat/Desktop/Temp/new.json");
 """

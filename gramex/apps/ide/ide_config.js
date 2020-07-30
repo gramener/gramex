@@ -13,10 +13,14 @@ function get_node_data(){
   var prev_node_data = "{"
   $("table > tbody > tr").each(function () {
     //create object and json for the de-selected node here so that it can be updated
+    var value = $(this).find('td').eq(1).text();
+    value = value === 'true' ? true : value === 'false' ? false :
+            (isNaN(value) ? '"'+value+'"' : value);
+    //console.log(value)
     prev_node_data = prev_node_data +' "'+row+'"'+
         ': {"key": "'+$(this).find('td').eq(0).text() +
-        '", "value": "'+$(this).find('td').eq(1).text() +
-    '"},'
+        '", "value": '+value+
+    '},'
     row = row+1;
   });
   // remove last comma
@@ -74,23 +78,45 @@ $(config_tree)
   selectedNode = $(config_tree).jstree('get_selected',true)[0];
   if (typeof selectedNode !== "undefined") {
     //console.log(selectedNode.data)
-    var i, no_keys = Object.keys(selectedNode.data).length;
-    var current_table = document.getElementById(config_table);
+    if (selectedNode.data !== null){
+      var i, no_keys = Object.keys(selectedNode.data).length;
+      var current_table = document.getElementById(config_table);
 
-    // First clear the table data and then insert from selected node
-    $(config_table_body).empty();
-    for (i=1 ; i <= no_keys; i++){
-      //console.log((selectedNode.data)[i]);
-      //console.log((selectedNode.data)[i].key);
-      $(config_table_body).append(
-      "<tr>"+
-      "<td contenteditable='true' vertical-align: top; padding: 20px><strong>"+selectedNode.data[i].key+"</strong></td>"+
-      "<td contenteditable='true' vertical-align: top; padding: 20px>"+selectedNode.data[i].value+"</td>"+
-      "<td><span class='table-up'><a href='#!' class='indigo-text'><i class='fas fa-long-arrow-alt-up' aria-hidden='true'></i></a></span><span class='table-down'><a href='#!' class='indigo-text'><i class='fas fa-long-arrow-alt-down' aria-hidden='true'></i></a></span></td>"+
-      "<td><span class='table-duplicate'><button type='button' class='btn btn-info btn-rounded btn-sm my-0 waves-effect waves-light'>Clone</button></span></td>"+
-      "<td><span class='table-remove'><button type='button' class='btn btn-danger btn-rounded btn-sm my-0'>Remove</button></span></td>"+
-      "</tr>");
-
+      // First clear the table data and then insert from selected node
+      $(config_table_body).empty();
+      for (i=1 ; i <= no_keys; i++){
+        //console.log((selectedNode.data)[i]);
+        //console.log((selectedNode.data)[i].key);
+        $(config_table_body).append(
+        "<tr>"+
+        "<td contenteditable='true' vertical-align: top; padding: 20px><strong>"+selectedNode.data[i].key+"</strong></td>"+
+        "<td contenteditable='true' vertical-align: top; padding: 20px>"+selectedNode.data[i].value+"</td>"+
+        "<td><span class='table-up'><a href='#!' class='indigo-text'><i class='fas fa-long-arrow-alt-up' aria-hidden='true'></i></a></span><span class='table-down'><a href='#!' class='indigo-text'><i class='fas fa-long-arrow-alt-down' aria-hidden='true'></i></a></span></td>"+
+        "<td><span class='table-duplicate'><button type='button' class='btn btn-info btn-rounded btn-sm my-0 waves-effect waves-light'>Clone</button></span></td>"+
+        "<td><span class='table-remove'><button type='button' class='btn btn-danger btn-rounded btn-sm my-0'>Remove</button></span></td>"+
+        "</tr>");
+          $('i').prop('disabled', false);
+      }
+      if (selectedNode.parent === selectedNode.text){
+          $('.table-duplicate').prop('disabled', true);
+          $('i').prop('disabled', true);
+          $('.table-remove').prop('disabled', true);
+      }
+    }
+    else{
+      $(config_table_body).empty();
+    }
+  }
+});
+$(config_tree)
+.on("copy_node.jstree", function (e, data) {
+  data.node.data = $.extend(true, {}, data.original.data);
+  if (data.node.children_d.length > 0) {
+    var tree = $(this).jstree(true);
+    for (var i = 0; i < data.node.children_d.length; i++) {
+      var originalChild = tree.get_node(data.original.children_d[i]);
+      var copiedChild = tree.get_node(data.node.children_d[i]);
+      copiedChild.data = $.extend(true, {}, originalChild.data);
     }
   }
 });
