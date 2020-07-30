@@ -34,7 +34,8 @@ class TestProxyHandler(AuthBase):
 
     def test_unauthorised(self):
         try:
-            create_connection(base_url.replace('http://', 'ws://') + '/ws-proxy/auth/')
+            url = base_url.replace('http://', 'ws://') + '/ws-proxy/auth/'
+            create_connection(url)
         except WebSocketException as exc:
             self.assertEqual(exc.status_code, UNAUTHORIZED)
         else:

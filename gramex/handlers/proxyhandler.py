@@ -8,8 +8,7 @@ from gramex.transforms import build_transform
 from gramex.config import app_log
 from gramex.http import MOVED_PERMANENTLY, FOUND
 from .basehandler import BaseWebSocketHandler, BaseHandler
-from tornado.websocket import WebSocketHandler
-from gramex.handlers import WebSocketHandler as GWebSocketHandler
+from gramex.handlers import WebSocketHandler
 
 
 class ProxyHandler(BaseHandler, BaseWebSocketHandler):
@@ -67,7 +66,7 @@ class ProxyHandler(BaseHandler, BaseWebSocketHandler):
               connect_timeout=20, request_timeout=20, **kwargs):
         kwargs.update({'conf': cls.conf})
         super(ProxyHandler, cls).setup(**kwargs)
-        GWebSocketHandler._setup(cls, **kwargs)
+        WebSocketHandler._setup(cls, **kwargs)
         cls.url, cls.request_headers, cls.default = url, request_headers, default
         cls.headers = headers
         cls.connect_timeout, cls.request_timeout = connect_timeout, request_timeout
@@ -91,12 +90,16 @@ class ProxyHandler(BaseHandler, BaseWebSocketHandler):
     def on_close(self):
         print('close')
 
+    def authorize(self, *args, **kwargs):
+        if self.request.headers.get('Upgrade', '') == 'websocket':
+            WebSocketHandler.authorize(self)
+        else:
+            super(ProxyHandler, self).authorize()
+
     @tornado.gen.coroutine
     def method(self, *path_args):
         ws = self.request.headers.get('Upgrade', '') == 'websocket'
         if ws:
-            print('Got a websocket')
-            # Is the following a tornado websockethandler
             return WebSocketHandler.get(self)
         # Construct HTTP headers
         headers = HTTPHeaders(self.request.headers if self.request_headers.get('*', None) else {})
