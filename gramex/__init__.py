@@ -50,7 +50,7 @@ callbacks = {}                  # Services callbacks
 # Populate __version__ from release.json
 with (paths['source'] / 'release.json').open() as _release_file:
     release = json.load(_release_file, object_pairs_hook=AttrDict)
-    __version__ = release.version
+    __version__ = release.info.version
 
 _sys_path = list(sys.path)      # Preserve original sys.path
 

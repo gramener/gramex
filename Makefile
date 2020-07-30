@@ -14,6 +14,7 @@ help:
 	@echo "push-coverage - upload coverage stats to gramener.com"
 	@echo "lint - check style with flake8, eclint, eslint, htmllint, bandit"
 	@echo "docs - generate Sphinx HTML documentation, including API docs"
+	@echo "conda - create conda package"
 	@echo "release - package and upload a release"
 	@echo "dist - package"
 	@echo "clean - remove all build, test, coverage and Python artifacts"
@@ -67,6 +68,11 @@ test: test-setup
 	# Use python setup.py nosetests to ensure the correct Python runs.
 	# (Note: Dependencies are set up via test-setup. setup.py does not have any tests_require.)
 	$(PYTHON) setup.py nosetests
+
+conda:
+	# conda install conda-build
+	python pkg/conda/conda-setup.py
+	conda build -c conda-forge pkg/conda/
 
 release-test: clean-test lint docs test
 

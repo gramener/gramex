@@ -1,10 +1,17 @@
 {
-    "version": "1.61.1",
+  "#1": "This file has setup details for Gramex.",
+  "#2": "We had to use JSON, not YAML. setup.py requires standard libraries (no YAML).",
+  "#3": "Keys with '#' are comments. (JSON doesn't support comments.)",
+
+  "info#": "Release info for setup.py to package on pypi, and gramex/__init__.py for version info",
+  "info": {
     "name": "gramex",
-    "description": "Gramex: Visual Analytics Platform.",
-    "url": "http://learn.gramener.com/guide/",
+    "version": "1.61.1",
     "author": "Gramener",
     "author_email": "s.anand@gramener.com",
+    "url": "https://gramener.com/gramex/",
+    "download_url": "https://github.com/gramener/gramex",
+    "description": "Gramex: Visual Analytics Platform",
     "license": "MIT",
     "keywords": "gramex",
     "classifiers": [
@@ -16,4 +23,73 @@
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7"
       ]
+  },
+
+  "console#": "Command-line scripts provided by Gramex",
+  "console": [
+      "gramex = gramex:commandline",
+      "slidesense = gramex.pptgen2:commandline"
+  ],
+
+  "lib#1": "Libraries required for Gramex. Keep in sync with guide/license/thirdparty.md",
+  "lib#2": "REQ: required packages for Gramex",
+  "lib#3": "SRV: required for specific services",
+  "lib#4": "OPT: optional packages. Not required for startup, but for optional libraries",
+  "lib": {
+    "argh >=0.24.1":              "REQ: dependency for watchdog",
+    "boto3 >=1.5":                "SRV: Amazon services",
+    "cachetools >=3.0.0":         "SRV: services.cache for memory cache",
+    "colorama":                   "REQ: conda: gramex.init()",
+    "colorlog >=2.7.0":           "REQ: Coloured log files",
+    "crontab >=0.21":             "SRV: services.schedule to parse crontab entries (conda-forge)",
+    "cssselect":                  "OPT: pytest gramex plugin",
+    "diskcache >=2.8.3":          "SRV: services.cache for disk cache (conda-forge)",
+    "h5py":                       "OPT: conda: gramex.cache.HDF5Store",
+    "ipdb":                       "OPT: gramex.debug (conda-forge)",
+    "jmespath":                   "OPT: pytest gramex plugin",
+    "joblib":                     "OPT: For gramex.ml",
+    "ldap3 >=2.2.4":              "OPT: LDAP connections",
+    "lxml":                       "OPT: conda: gramex.pptgen",
+    "markdown":                   "OPT: transforms, gramex.services.create_alert()",
+    "matplotlib":                 "OPT: conda: gramex.data.download()",
+    "oauthlib >=1.1.2":           "SRV: OAuth request-signing",
+    "pandas ==0.25.3":            "REQ: conda: gramex.data.filter()",
+    "passlib >=1.6.5":            "REQ: password storage (e.g. in handlers.DBAuth)",
+    "pathlib":                    "REQ: Manipulate paths. Part of Python 3.3+",
+    "pathtools >=0.1.1":          "REQ: dependency for watchdog",
+    "psutil":                     "REQ: monitor process",
+    "pymysql":                    "OPT: MySQL connections",
+    "pytest":                     "OPT: conda: pytest gramex plugin",
+    "python-pptx >=0.6.6":        "SRV: pptgen (conda-forge)",
+    "pyyaml >=5.1":               "REQ: Parse YAML files for config",
+    "redis >=2.10.0":             "SRV: RedisStore",
+    "requests":                   "REQ: HTTP library for python",
+    "scikit-learn":               "OPT: conda: For gramex.ml",
+    "seaborn":                    "OPT: conda: gramex.data.download()",
+    "selenium":                   "OPT: pytest gramex plugin",
+    "setuptools >=16.0":          "REQ: 16.0 has good error message support",
+    "shutilwhich >=1.1.0":        "REQ: shutil.which backport (conda-forge)",
+    "six":                        "REQ: Python 3 compatibility",
+    "sqlalchemy":                 "REQ: conda: gramex.data.filter()",
+    "sqlitedict >=1.5.0":         "SRV: SQLiteStore (conda-forge)",
+    "textblob":                   "OPT: Gramex Guide TwitterRESTHandler example (conda-forge)",
+    "tornado ==5.1.1":            "REQ: Web server",
+    "watchdog >=0.8":             "REQ: Monitor file changes",
+    "tzlocal":                    "TODO: Why is this required?",
+    "xlrd":                       "REQ: conda: gramex.data.download()"
+  },
+
+  "pip#": "Packages that can only be installed via pip, not via conda",
+  "pip": {
+      "cron-descriptor":          "OPT: admin/schedule to pretty-print cron",
+      "orderedattrdict >=1.6.0":  "REQ: OrderedDict with attr access for configs",
+      "tables":                   "REQ: HDF5 reading / writing",
+      "xmljson >=0.1.5":          "SRV: transforms.badgerfish to convert objects to/from XML"
+  },
+
+  "conda#": "Packages that can only be installed via conda on Windows, not via pip",
+  "conda": {
+    "line_profiler":              "OPT: conda: For gramex.debug",
+    "rpy2":                       "OPT: conda: For gramex.ml.r()"
+  }
 }
