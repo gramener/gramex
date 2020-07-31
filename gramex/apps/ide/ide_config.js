@@ -1,5 +1,5 @@
 /* eslint-env browser, jquery */
-/* eslint-disable no-console, no-unused-vars, no-quotes, no-semi, no-indent */
+/* eslint-disable no-console, no-unused-vars, quotes, semi, indent */
 
 $(function () {
   var config_url = "./changeConfig";     // url for editing config
