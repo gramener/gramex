@@ -1,5 +1,5 @@
 /* eslint-env browser, jquery */
-/* eslint-disable no-console, no-unused-vars */
+/* eslint-disable no-console, no-unused-vars, no-quotes, no-semi, no-indent */
 
 $(function () {
   var config_url = "./changeConfig";     // url for editing config
@@ -34,6 +34,7 @@ function get_node_data(){
 }
 
 function append_table_row(k=null,v=null){
+  var key, value;
   if(k){key = k}else{key = "Key"}
   if(v){value = v}else{value = "Value"}
   const row = `
@@ -86,7 +87,7 @@ $(config_tree)
     prev_node.data = JSON.parse(get_node_data());
   }
 
-  selectedNode = $(config_tree).jstree('get_selected',true)[0];
+  var selectedNode = $(config_tree).jstree('get_selected',true)[0];
   if (typeof selectedNode !== "undefined") {
     if (selectedNode.data !== null){
       var i, no_keys = Object.keys(selectedNode.data).length;
