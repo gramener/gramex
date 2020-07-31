@@ -1,9 +1,12 @@
+/* eslint-env browser, jquery */
+/* eslint-disable no-console, no-unused-vars */
+
 $(function () {
   var config_url = "./changeConfig";     // url for editing config
-  var config_tree = "#jstree"            // treeID in html
-  var config_table = "#disp_table"       // tableID in html
-  var config_table_body = "#table_body"  // tbodyID in html
-  var yaml_file= "gramex.yaml"           // yaml file to be edited
+  var config_tree = "#jstree";            // treeID in html
+  var config_table = "#disp_table";       // tableID in html
+  var config_table_body = "#table_body";  // tbodyID in html
+  var yaml_file= "gramex.yaml";           // yaml file to be edited
   var config_data=[];          // populated by get call
 
   //GET data from table request and send
