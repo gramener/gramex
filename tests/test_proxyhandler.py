@@ -1,9 +1,10 @@
 import requests
 from gramex.http import METHOD_NOT_ALLOWED
-from . import TestGramex
+from .test_websockethandler import TestWebSocketHandler
 
 
-class TestProxyHandler(TestGramex):
+class TestProxyHandler(TestWebSocketHandler):
+
     def test_proxyhandler(self):
         session = requests.Session()
         r = self.check('/auth/session', session=session)
