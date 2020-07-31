@@ -13,15 +13,15 @@ def parse_dict_create_json(cfg):
     config_list = []
     pid = "#"
 
-    def recursive_parse(cfg, pid, new_d, config_list):
-        nonlocal node_id
+    def recursive_parse(cfg, pid, new_d):
+        nonlocal node_id, config_list
         data_id = 0
         for k, v in cfg.items():
             if isinstance(v, dict):
                 node_id += 1
                 new_pd = {"id": '%d' % node_id, "text": k, "parent": "%s" % pid, "data": {}}
-                recursive_parse(v, node_id, new_pd, config_list)
-            elif isinstance(v, (list,tuple)):
+                recursive_parse(v, node_id, new_pd)
+            elif isinstance(v, (list, tuple)):
                 raise Exception("Yet to be implemented")
             elif new_d:
                 data_id += 1
@@ -34,7 +34,7 @@ def parse_dict_create_json(cfg):
         if new_d:
             config_list.append(new_d)
 
-    recursive_parse(cfg, pid, new_d, config_list)
+    recursive_parse(cfg, pid, new_d)
 
     return config_list
 
@@ -50,10 +50,11 @@ def parse_json_create_dict(src):
             el[node['text']] = objs[node['id']]
     return root
 
+
 def ide_config_handler(handler, _yaml_file='gramex.yaml'):
     final_list = []
     _yaml_file = handler.get_arg('filename')  # comment this line for testing with file
-    #if handler == "GET":                    # with file
+    # if handler == "GET":                    # with file
     if handler.request.method == "GET":    # using browser request
         with open(_yaml_file) as fin:
             cfg_data = yaml.safe_load(fin)
@@ -65,7 +66,7 @@ def ide_config_handler(handler, _yaml_file='gramex.yaml'):
 
         return json.dumps(final_list)
 
-    #elif handler == 'POST':                   #with file
+    # elif handler == 'POST':                   #with file
     #    with open(_yaml_file) as fin:
     #        body = yaml.safe_load(fin)
     elif handler.request.method == 'POST':   # using browser request
@@ -86,11 +87,13 @@ def ide_config_handler(handler, _yaml_file='gramex.yaml'):
     else:
         app_log.debug("Unrecognized http request :" + handler.request.method)
         return json.dumps({"Result": [{"Failure": "true"}]})
+
+
 """
 if __name__ == "__main__":
     # test GET
     # ide_config_handler('GET', "C:/Users/sandeep.bhat/Desktop/Temp/test_ide.yaml");
-    # test POST # please make sure you have back-up of file as it will be overwritten
+    # test POST ----- please make sure you have back-up of file as it will be overwritten
     # ide_config_handler('POST', "C:/Users/sandeep.bhat/Desktop/Temp/yaml_file2.yaml");
     # ide_config_handler('POST', "C:/Users/sandeep.bhat/Desktop/Temp/new.json");
 """

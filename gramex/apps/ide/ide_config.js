@@ -1,13 +1,12 @@
 $(function () {
-var config_url = "./changeConfig";     // url for editing config
-var config_tree = "#jstree"            // treeID in html
-var config_table = "#disp_table"       // tableID in html
-var config_table_body = "#table_body"  // tbodyID in html
-var yaml_file= "gramex.yaml"           // yaml file to be edited
-var config_data=[];      // populated by get call
+  var config_url = "./changeConfig";     // url for editing config
+  var config_tree = "#jstree"            // treeID in html
+  var config_table = "#disp_table"       // tableID in html
+  var config_table_body = "#table_body"  // tbodyID in html
+  var yaml_file= "gramex.yaml"           // yaml file to be edited
+  var config_data=[];          // populated by get call
 
-//GET data from table request and send
-
+  //GET data from table request and send
 function get_node_data(){
   var row = 1;
   var prev_node_data = "{"
@@ -16,7 +15,6 @@ function get_node_data(){
     var value = $(this).find('td').eq(1).text();
     value = value === 'true' ? true : value === 'false' ? false :
             (isNaN(value) ? '"'+value+'"' : value);
-    //console.log(value)
     prev_node_data = prev_node_data +' "'+row+'"'+
         ': {"key": "'+$(this).find('td').eq(0).text() +
         '", "value": '+value+
@@ -29,10 +27,24 @@ function get_node_data(){
     prev_node_data = prev_node_data.slice(0, -1);
   }
   prev_node_data = prev_node_data + "}"
-  //console.log(prev_node_data);
   return prev_node_data;
 }
 
+function append_table_row(k=null,v=null){
+  if(k){key = k}else{key = "Key"}
+  if(v){value = v}else{value = "Value"}
+  const row = `
+  <tr class="hide">
+  <td contenteditable="true"><strong>`+key+`</strong></td>
+  <td contenteditable="true">`+value+`</td>
+  <td><span class="table-up"><a href="#!" class="indigo-text"><i class="fas fa-long-arrow-alt-up" aria-hidden="true"></i></a></span>
+    <span class="table-down"><a href="#!" class="indigo-text"><i class="fas fa-long-arrow-alt-down" aria-hidden="true"></i></a></span></td>
+  <td><span class="table-duplicate"><button type="button" class="btn btn-info btn-rounded btn-sm my-0 waves-effect waves-light">Clone</button></span></td>
+  <td><span class="table-remove"><button type="button" class="btn btn-danger btn-rounded btn-sm my-0 waves-effect waves-light">Remove</button></span></td>
+  </tr>`;
+
+  return row;
+}
 //Create an GET request and send
 $.ajax({
   url: config_url+"?filename="+yaml_file,
@@ -64,20 +76,15 @@ $.ajax({
 $(config_tree)
 .on("changed.jstree", function (e, data) {
 
-  //console.log("De-selected Node: " +data.changed.deselected[0]);
-  //console.log("Selected Node: " +data.changed.selected[0]);
-  //console.log(data);
   // save/update data for previous node if modified
   var prev_node = $(config_tree).jstree(true).get_node(data.changed.deselected[0]);
 
   if (typeof prev_node !== 'úndefined'){
     prev_node.data = JSON.parse(get_node_data());
-    //console.log(prev_node.data);
   }
 
   selectedNode = $(config_tree).jstree('get_selected',true)[0];
   if (typeof selectedNode !== "undefined") {
-    //console.log(selectedNode.data)
     if (selectedNode.data !== null){
       var i, no_keys = Object.keys(selectedNode.data).length;
       var current_table = document.getElementById(config_table);
@@ -85,22 +92,13 @@ $(config_tree)
       // First clear the table data and then insert from selected node
       $(config_table_body).empty();
       for (i=1 ; i <= no_keys; i++){
-        //console.log((selectedNode.data)[i]);
-        //console.log((selectedNode.data)[i].key);
-        $(config_table_body).append(
-        "<tr>"+
-        "<td contenteditable='true' vertical-align: top; padding: 20px><strong>"+selectedNode.data[i].key+"</strong></td>"+
-        "<td contenteditable='true' vertical-align: top; padding: 20px>"+selectedNode.data[i].value+"</td>"+
-        "<td><span class='table-up'><a href='#!' class='indigo-text'><i class='fas fa-long-arrow-alt-up' aria-hidden='true'></i></a></span><span class='table-down'><a href='#!' class='indigo-text'><i class='fas fa-long-arrow-alt-down' aria-hidden='true'></i></a></span></td>"+
-        "<td><span class='table-duplicate'><button type='button' class='btn btn-info btn-rounded btn-sm my-0 waves-effect waves-light'>Clone</button></span></td>"+
-        "<td><span class='table-remove'><button type='button' class='btn btn-danger btn-rounded btn-sm my-0'>Remove</button></span></td>"+
-        "</tr>");
-          $('i').prop('disabled', false);
+        $(config_table_body).append(append_table_row(selectedNode.data[i].key,selectedNode.data[i].value));
+        $('i').prop('disabled', false).css('opacity',1);
       }
       if (selectedNode.parent === selectedNode.text){
-          $('.table-duplicate').prop('disabled', true);
-          $('i').prop('disabled', true);
-          $('.table-remove').prop('disabled', true);
+          $('.table-duplicate').prop('disabled', true).css('opacity',0.5);
+          $('i').prop('disabled', true).css('opacity',0.5);
+          $('.table-remove').prop('disabled', true).css('opacity',0.5);
       }
     }
     else{
@@ -137,26 +135,16 @@ $('button').on('click', function () {
     data: xdata,
     dataType: 'json',
     success: function(response) {
-      console.log("POST Successful");//Do Something
+      console.log("POST Successful");
     },
     error: function(xhr) {
-    console.log("Error while posting config data");//Do Something
+    console.log("Error while posting config data");
     }
   });
 });
 // Insert new node into the key/value table
 $('.table-add').on('click', 'i', () => {
-  const newTr = `
-  <tr class="hide">
-  <td contenteditable="true"><strong>Key</strong></td>
-  <td contenteditable="true">Value</td>
-  <td><span class="table-up"><a href="#!" class="indigo-text"><i class="fas fa-long-arrow-alt-up" aria-hidden="true"></i></a></span>
-    <span class="table-down"><a href="#!" class="indigo-text"><i class="fas fa-long-arrow-alt-down" aria-hidden="true"></i></a></span></td>
-  <td><span class="table-duplicate"><button type="button" class="btn btn-info btn-rounded btn-sm my-0 waves-effect waves-light">Clone</button></span></td>
-  <td><span class="table-remove"><button type="button" class="btn btn-danger btn-rounded btn-sm my-0 waves-effect waves-light">Remove</button></span></td>
-  </tr>`;
-
-  $('tbody').append(newTr);
+  $('tbody').append(append_table_row());
 });
 // Append duplicated row at the end of the table
 $(config_table).on('click', '.table-duplicate', function () {
