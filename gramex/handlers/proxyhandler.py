@@ -7,10 +7,11 @@ from tornado.httpclient import AsyncHTTPClient, HTTPRequest
 from gramex.transforms import build_transform
 from gramex.config import app_log
 from gramex.http import MOVED_PERMANENTLY, FOUND
-from .basehandler import BaseHandler
+from .basehandler import BaseWebSocketHandler, BaseHandler
+from gramex.handlers import WebSocketHandler
 
 
-class ProxyHandler(BaseHandler):
+class ProxyHandler(BaseHandler, BaseWebSocketHandler):
     '''
     Passes the request to another HTTP REST API endpoint and returns its
     response. This is useful when:
@@ -64,6 +65,7 @@ class ProxyHandler(BaseHandler):
               headers={}, methods=['GET', 'HEAD', 'POST'],
               connect_timeout=20, request_timeout=20, **kwargs):
         super(ProxyHandler, cls).setup(**kwargs)
+        WebSocketHandler._setup(cls, **kwargs)
         cls.url, cls.request_headers, cls.default = url, request_headers, default
         cls.headers = headers
         cls.connect_timeout, cls.request_timeout = connect_timeout, request_timeout
@@ -77,8 +79,17 @@ class ProxyHandler(BaseHandler):
         for method in methods:
             setattr(cls, method.lower(), cls.method)
 
+    def authorize(self, *args, **kwargs):
+        if self.request.headers.get('Upgrade', '') == 'websocket':
+            WebSocketHandler.authorize(self)
+        else:
+            super(ProxyHandler, self).authorize()
+
     @tornado.gen.coroutine
     def method(self, *path_args):
+        ws = self.request.headers.get('Upgrade', '') == 'websocket'
+        if ws:
+            return WebSocketHandler.get(self)
         # Construct HTTP headers
         headers = HTTPHeaders(self.request.headers if self.request_headers.get('*', None) else {})
         for key, val in self.request_headers.items():
