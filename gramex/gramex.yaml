@@ -217,7 +217,11 @@ eventlog:
     path: $GRAMEXDATA/logs/events.db          # Location of application event logs.
 
 eslog:
-    enabled: True
+    es_host: $ES_HOST
+    es_user: $ES_USER
+    es_pass: $ES_PASS
+    es_index: $ES_INDEX
+
 # ------------------------------------------------------------------------------
 # The app, schedule, url sections are defined at the end to allow these to use
 # earlier services.

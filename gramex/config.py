@@ -846,60 +846,19 @@ def used_kwargs(method, kwargs, ignore_keywords=False):
     return used, rest
 
 
-esl_paths = AttrDict()
-esl_paths['source'] = Path(__file__).absolute().parent
-esl_conf = (+PathConfig(esl_paths['source'] / 'gramex.yaml')).get('eslog', AttrDict())
-# The above config needs to be fixed. Gramex is loading this as a service
-allowed_log_levels = ['INFO', 'ERROR', 'DEBUG', 'WARN']
-es_q = queue.Queue()
+esq = queue.Queue()
+es_conf = AttrDict()
 
 
-class ConnSingleton:
-    def __init__(self, cls):
-        self.cls = cls
-        self.instance = None
-
-    def __call__(self, *args, **kwargs):
-        if self.instance == None:
-            self.instance = self.cls(*args, **kwargs)
-        return self.instance
-
-
-@ConnSingleton
-class ElDb:
+def get_connection():
     '''
-    Maintains ElasticSearch connection. Picks the ES configuration from 
-    environment variables.
+    Create a new connection if the connection doesn't exist or not alive.
+    Else return the existing active connection.
     '''
-    connection = None
-    def get_connection(self):
-        # check if connection is created or still alive
-        if self.connection is None or not self.connection.ping():
-            self.connection = Elasticsearch(variables['ES_HOST'],
-                http_auth=(variables['ES_USER'], variables['ES_PASS']))
-        return self.connection
-
-
-def log_to_es():
-    '''
-    A thread which picks the logs from log() via a queue and stores in ElasticSearch.
-    todo: do a bulk indexing.
-    '''
-    while True:
-        time.sleep(0.1)
-        try:
-            log_doc = es_q.get()
-            es = ElDb().get_connection()
-            es.index(index=variables['ES_INDEX'], body=log_doc)
-        except Exception:
-            app_log.error('unable to store in ES')
-
-if esl_conf['enabled']:
-    '''
-    Initialize a thread only if eslog is enabled in gramex.yaml
-    '''
-    est = threading.Thread(target=log_to_es, daemon=True)
-    est.start()
+    if 'connection' not in es_conf or es_conf['connection'].ping():
+        es_conf['connection'] = Elasticsearch(es_conf['es_host'],
+            http_auth=(es_conf['es_user'], es_conf['es_pass']))
+    return es_conf['connection']
 
 
 def log(**kwargs):
@@ -917,5 +876,5 @@ def log(**kwargs):
     kwargs['time'] = strftime('%Y-%m-%d %H:%M:%S', localtime())
     kwargs['port'] = app_log_extra['port']
     app_log.log(getattr(logging,kwargs['level']), kwargs)
-    if esl_conf['enabled']:
-        es_q.put(kwargs)
+    if es_conf:
+        esq.put(kwargs)
