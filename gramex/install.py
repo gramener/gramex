@@ -6,7 +6,6 @@ import os
 import re
 import six
 import sys
-import time
 import yaml
 import stat
 import shlex
@@ -180,6 +179,7 @@ else:
             # Typically happens on uninstall immediately after bower / npm / git
             # (e.g. during testing.)
             elif exc_info[1].winerror == winerror.ERROR_SHARING_VIOLATION:
+                import time
                 delays = [0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1.0]
                 for delay in delays:
                     time.sleep(delay)
@@ -199,7 +199,7 @@ else:
         raise exc_info[1]
 
 
-def safe_rmtree(target, retries=100, delay=0.05):
+def safe_rmtree(target):
     '''
     A replacement for shutil.rmtree that removes directories within $GRAMEXDATA.
     It tries to remove the target multiple times, recovering from errors.
@@ -210,15 +210,11 @@ def safe_rmtree(target, retries=100, delay=0.05):
     elif target.lower().startswith(variables['GRAMEXDATA'].lower()):
         # Try multiple times to recover from errors, since we have no way of
         # auto-resuming rmtree: https://bugs.python.org/issue8523
-        for count in range(retries):
+        for count in range(100):
             try:
                 shutil.rmtree(target, onerror=_ensure_remove)
             except TryAgainError:
                 pass
-            # If permission is denied, e.g. antivirus, file is open, etc, keep trying with delay
-            except OSError:
-                app_log.warning('    Trying again to delete', target)
-                time.sleep(delay)
             else:
                 break
         return True
