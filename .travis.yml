@@ -38,7 +38,7 @@ cache:
 
 install:
   # Install miniconda
-  - wget https://repo.anaconda.com/miniconda/Miniconda3-py37_4.8.3-Linux-x86_64.sh -O $HOME/miniconda.sh
+  - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O $HOME/miniconda.sh
   - bash $HOME/miniconda.sh -b -u -p $HOME/miniconda
   # Add conda to path. "hash -r" rescans the $PATH
   - export PATH="$HOME/miniconda/bin:$PATH"
