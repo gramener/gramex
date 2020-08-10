@@ -1,4 +1,3 @@
-import io
 import gramex.data
 import numpy as np
 import os
@@ -507,11 +506,6 @@ class TestPPTGen(TestCase):
                 {'TextBox 1': {'text': str(val)}}])
             shape = self.get_shape(prs.slides[0].shapes, 'TextBox 1')
             eq_(shape.text, str(val))
-        # Empty strings clear text
-        prs = pptgen(source=self.input, target=self.output, only=slides, rules=[
-            {'TextBox 1': {'text': ''}}])
-        shape = self.get_shape(prs.slides[0].shapes, 'TextBox 1')
-        eq_(shape.text, '')
         # Unicode characters work
         text = '高σ高λس►'
         prs = pptgen(source=self.input, target=self.output, only=slides, rules=[
@@ -946,26 +940,6 @@ class TestPPTGen(TestCase):
             para = self.get_shape(prs.slides[n].shapes, 'TextBox 1').text_frame.paragraphs[0]
             eq_(para.runs[1]._r.find('.//' + qn('a:hlinkClick')).get('action'),
                 'ppaction://hlinkshowjump?jump=firstslide')
-
-    def chart_data(self, shape):
-        return pd.read_excel(
-            io.BytesIO(shape.chart.part.chart_workbook.xlsx_part.blob), index_col=0).fillna('')
-
-    def test_chart(self, slides=[10]):
-        data = pd.DataFrame({
-            'Alpha': [1, 2, 3],
-            'Beta': [4, 5, 6],
-            'Gamma': [7, 9, ''],
-        }, index=['X', 'Y', 'Z'])
-        charts = ['Column Chart', 'Line Chart', 'Bar Chart']
-        prs = pptgen(source=self.input, target=self.output, only=slides, rules=[
-            {'Pie Chart': {'chart-data': data[['Alpha']]}},
-            *({chart: {'chart-data': data}} for chart in charts)
-        ])
-        shapes = prs.slides[0].shapes
-        for chart in charts:
-            afe(self.chart_data(self.get_shape(shapes, chart)), data)
-        afe(self.chart_data(self.get_shape(shapes, 'Pie Chart')), data[['Alpha']])
 
     def test_commandline(self):
         # "slidesense" prints usage

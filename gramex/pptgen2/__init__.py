@@ -332,17 +332,14 @@ def copy_slide(prs, source, target_index):
             # This removes notes slide formatting and just copies the text
             dest.notes_slide.notes_text_frame.text = source.notes_slide.notes_text_frame.text
             continue
+        # TODO: https://github.com/scanny/python-pptx/issues/132#issuecomment-414001942
         elif 'chart' in val.reltype:
-            # https://github.com/scanny/python-pptx/issues/132#issuecomment-414001942
-            # Does not work for Treemap, modern charts.
-            # TODO: Replace with underlying lxml code
-            partname = target.package.next_partname(pptx.parts.chart.ChartPart.partname_template)
-            xlsx_blob = target.chart_workbook.xlsx_part.blob
-            target = pptx.parts.chart.ChartPart(
-                partname, target.content_type, copy.deepcopy(target._element),
-                package=target.package)
-            target.chart_workbook.xlsx_part = pptx.parts.chart.EmbeddedXlsxPart.new(
-                xlsx_blob, target.package)
+            pass
+            # partname = target.package.next_partname(pptx.parts.chart.ChartPart.partname_template)
+            # target = pptx.parts.chart.ChartPart(partname, target.content_type,
+            #     copy.deepcopy(target._element), package=target.package)
+            # target.chart_workbook.xlsx_part = pptx.parts.chart.EmbeddedXlsxPart.new(
+            #     target.chart_workbook.xlsx_part.blob, target.package)
         # TODO: handle diagrams
         dest.part.rels.add_relationship(val.reltype, target, val.rId, val.is_external)
     # Move appended slide into target_index

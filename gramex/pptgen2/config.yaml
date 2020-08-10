@@ -331,37 +331,3 @@ link-attrs:
 
 # If link: target is one of these file types, use ppaction://hlinkpres indicating that it's a PPTX
 link-ppt-files: [.ppt, .pptx, .pptm, .pps, .ppsm]
-
-# Charts
-# ---------------------------------------------------------------------
-chart-type:
-  # All valid children of <plotArea>
-  '{http://schemas.openxmlformats.org/drawingml/2006/chart}area3DChart': Category
-  '{http://schemas.openxmlformats.org/drawingml/2006/chart}areaChart': Category
-  '{http://schemas.openxmlformats.org/drawingml/2006/chart}bar3DChart': Category
-  '{http://schemas.openxmlformats.org/drawingml/2006/chart}barChart': Category
-  # Bubble charts are not yet supported
-  # '{http://schemas.openxmlformats.org/drawingml/2006/chart}bubbleChart': Bubble
-  # '{http://schemas.openxmlformats.org/drawingml/2006/chart}doughnutChart': Bubble
-  '{http://schemas.openxmlformats.org/drawingml/2006/chart}line3DChart': Category
-  '{http://schemas.openxmlformats.org/drawingml/2006/chart}lineChart': Category
-  '{http://schemas.openxmlformats.org/drawingml/2006/chart}ofPieChart': Category
-  '{http://schemas.openxmlformats.org/drawingml/2006/chart}pie3DChart': Category
-  '{http://schemas.openxmlformats.org/drawingml/2006/chart}pieChart': Category
-  '{http://schemas.openxmlformats.org/drawingml/2006/chart}radarChart': Category
-  '{http://schemas.openxmlformats.org/drawingml/2006/chart}scatterChart': Xy
-  '{http://schemas.openxmlformats.org/drawingml/2006/chart}stockChart': Category
-  '{http://schemas.openxmlformats.org/drawingml/2006/chart}surface3DChart': Category
-  '{http://schemas.openxmlformats.org/drawingml/2006/chart}surfaceChart': Category
-
-new-chart-layouts:
-  # These have reltype http://schemas.microsoft.com/office/2014/relationships/chartEx
-  # instead of http://schemas.openxmlformats.org/officeDocument/2006/relationships/chart
-  # cx:plotArea > cx:plotAreaRegion > cx:Series @layoutId
-  # TODO: Support these as well
-  boxWhisker: null
-  clusteredColumn: null
-  paretoLine: null
-  sunburst: null
-  treemap: null
-  waterfall: null
