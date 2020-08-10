@@ -68,7 +68,7 @@ script:
   # Run tests, explicitly showing coverage
   - make test-setup
   - coverage run -m nose
-  - coverage report --show-missing --ignore-errors
+  - coverage report -m
 
   # Test specific apps
   - cd $TRAVIS_BUILD_DIR/gramex/apps/filemanager/ && yarn install && yarn test

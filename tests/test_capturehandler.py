@@ -16,14 +16,12 @@ from pdfminer.converter import PDFPageAggregator
 from pdfminer.pdfinterp import PDFResourceManager
 from pdfminer.pdfinterp import PDFPageInterpreter
 from pdfminer.high_level import extract_text_to_fp
-from shutilwhich import which
 from tornado.web import create_signed_value
 import gramex
 from gramex.handlers import Capture
 from . import TestGramex, server
 
 _captures = {}
-paths = {'phantomjs': which('phantomjs'), 'node': which('node')}
 
 
 def get_capture(name, **kwargs):
@@ -67,11 +65,6 @@ def get_layout_elements(content):
     interpreter.process_page(page)
     # receive the LTPage object for the page.
     return [child.get_text() for child in device.get_result() if hasattr(child, 'get_text')]
-
-
-def test_dependencies():
-    assert paths['phantomjs'], 'phantomjs is not installed'
-    assert paths['node'], 'node is not installed'
 
 
 class TestCaptureHandler(TestGramex):

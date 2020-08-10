@@ -710,7 +710,6 @@ class Subprocess(object):
             # Thread writes from self.proc.stdout / stderr to appropriate callbacks
             self.thread[stream] = t = Thread(
                 target=_write,
-                name=f'cache.Subprocess: {args}',
                 args=(getattr(self.proc, stream), callbacks, future, retval))
             t.daemon = True     # Thread dies with the program
             t.start()
