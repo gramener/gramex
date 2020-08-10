@@ -276,9 +276,7 @@ def init(force_reload=False, **kwargs):
                 # remove the comments in new (key, value) format
                 if isinstance(conf[key], dict):
                     for comment_key in list(conf[key].keys()):
-                        if 'comment' in comment_key:
-                            app_log.debug('Removing comment (%s)', comment_key)
-                            conf[key].pop(comment_key)
+                        if comment_key == 'comment': conf[key].pop(comment_key)
 
                 callback = getattr(services, key)(conf[key])
                 if callable(callback):

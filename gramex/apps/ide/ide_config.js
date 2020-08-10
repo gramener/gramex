@@ -1,5 +1,5 @@
 /* eslint-env browser, jquery */
-/* eslint-disable no-console, no-unused-vars, quotes, semi, indent */
+/* eslint-disable no-console, quotes, semi, indent valid-typeof*/
 
 $(function () {
   var config_url = "./changeConfig";     // url for editing config
@@ -12,12 +12,11 @@ $(function () {
   //GET data from table request and send
 function get_node_data(){
   var row = 1;
-  var prev_node_data = "{"
+  var prev_node_data = '{'
   $("table > tbody > tr").each(function () {
     //create object and json for the de-selected node here so that it can be updated
     var value = $(this).find('td').eq(1).text();
-    value = value === 'true' ? true : value === 'false' ? false :
-            (isNaN(value) ? '"'+value+'"' : value);
+    value = value === 'true' ? true : value === 'false' ? false : (isNaN(value) ? '"'+value+'"' : value);
     prev_node_data = prev_node_data +' "'+row+'"'+
         ': {"key": "'+$(this).find('td').eq(0).text() +
         '", "value": '+value+
@@ -29,7 +28,7 @@ function get_node_data(){
   if (lastChar == ',') {
     prev_node_data = prev_node_data.slice(0, -1);
   }
-  prev_node_data = prev_node_data + "}"
+  prev_node_data = prev_node_data + '}'
   return prev_node_data;
 }
 
