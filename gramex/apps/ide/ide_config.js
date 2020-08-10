@@ -1,5 +1,5 @@
 /* eslint-env browser, jquery */
-/* eslint-disable no-console, quotes, semi, indent valid-typeof*/
+/* eslint-disable no-console, quotes, semi, indent, valid-typeof, no-unused-vars*/
 
 $(function () {
   var config_url = "./changeConfig";     // url for editing config
@@ -70,7 +70,7 @@ $.ajax({
       ]
     });
   },
-  error: function(xhr) {
+  error: function(response) {
   console.log("Error while getting config data");//Do Something
   }
 });
@@ -90,7 +90,6 @@ $(config_tree)
   if (typeof selectedNode !== "undefined") {
     if (selectedNode.data !== null){
       var i, no_keys = Object.keys(selectedNode.data).length;
-      var current_table = document.getElementById(config_table);
 
       // First clear the table data and then insert from selected node
       $(config_table_body).empty();
@@ -140,7 +139,7 @@ $('button').on('click', function () {
     success: function(response) {
       console.log("POST Successful");
     },
-    error: function(xhr) {
+    error: function(response) {
     console.log("Error while posting config data");
     }
   });
