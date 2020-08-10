@@ -22,6 +22,7 @@ from gramex.config import app_log, objectpath
 from gramex.transforms import build_transform
 from lxml.html import fragments_fromstring, builder, HtmlElement
 from orderedattrdict import AttrDict
+from pptx.chart import data as pptxchartdata
 from pptx.dml.color import RGBColor
 from pptx.dml.fill import FillFormat
 from pptx.enum.base import EnumValue
@@ -372,7 +373,7 @@ def get_elements(children: List[Union[str, HtmlElement]], element_builder):
                     elements.append(element_builder(tail))
                     open = True
 
-    return elements
+    return elements or [element_builder('')]
 
 
 def baseline(run, val, data):
@@ -686,6 +687,34 @@ def table(shape, spec, data: dict):
                     app_log.warn('pptgen2: No column: %s in table: %s', column, shape.name)
 
 
+def chart_data(shape, spec, data: dict):
+    if not hasattr(shape, 'chart'):
+        raise ValueError('Cannot set chart-data on shape: %s' % shape.name)
+    chartdata = pd.read_excel(io.BytesIO(shape.chart.part.chart_workbook.xlsx_part.blob),
+                              index_col=0)
+    val = expr(spec, {'chartdata': chartdata, **data})
+    if val is not None:
+        if not isinstance(val, pd.DataFrame):
+            raise ValueError('chart-data: must be a DataFrame, not %s' % val)
+        chart_tag = shape.chart.plots._plotArea.xCharts[0].tag
+        if chart_tag not in conf['chart-type']:
+            raise ValueError('Shape %s: unsupported chart %s' % (shape.name, chart_tag))
+        chart_type = conf['chart-type'][chart_tag]
+        # Create a new instance of CategoryChartData(), XYChartData() or BubbleChartData()
+        new_chart_data = getattr(pptxchartdata, chart_type + 'ChartData')()
+        new_chart_data.categories = val.index
+        if chart_type == 'Category':
+            for name, col in val.iteritems():
+                new_chart_data.add_series(name, col.values)
+        # TODO: This messes up the resulting Excel sheet, and is not extensible. Rewrite via lxml
+        elif chart_type == 'Xy':
+            for name, col in val.iteritems():
+                series = new_chart_data.add_series(name)
+                for index, v in col.iteritems():
+                    series.add_data_point(index, v)
+        shape.chart.replace_data(new_chart_data)
+
+
 cmdlist = {
     # Basic commands
     'name': name,
@@ -735,7 +764,7 @@ cmdlist = {
     'underline': partial(set_text, 'underline', False),
     # Others
     'table': table,
-    # 'chart': chart,
+    'chart-data': chart_data,
     # Custom charts
     # 'sankey': sankey,
     # 'bullet': bullet,

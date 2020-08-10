@@ -1,9 +1,6 @@
-# Base testing packages
-nose
-nose-timer
-coverage
+nose                  # Base testing package
+coverage              # For code coverage in .travis.yml
 
-# Support modules for testing
 python-dateutil       # For schedule testing
 testfixtures          # For logcapture
 sphinx_rtd_theme      # For documentation

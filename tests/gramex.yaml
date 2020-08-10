@@ -1775,6 +1775,33 @@ url:
       on_close:
         function: utils.ws_on_close
 
+  ws-proxy/socket:
+    pattern: /ws-proxy/socket(.*?)/(.*?)
+    handler: ProxyHandler
+    kwargs:
+      url: /proxy/httpbin{0}/{1}
+      open:
+        function: utils.ws_open
+      on_message:
+        function: utils.ws_on_message
+      on_close:
+        function: utils.ws_on_close
+
+  ws-proxy/socket-auth:
+    pattern: /ws-proxy/auth(.*?)/(.*?)
+    handler: ProxyHandler
+    kwargs:
+      auth:
+        membership:
+          id: alpha
+      url: /proxy/httpbin{0}/{1}
+      open:
+        function: utils.ws_open
+      on_message:
+        function: utils.ws_on_message
+      on_close:
+        function: utils.ws_on_close
+
   ws/socket-auth:
     pattern: /ws/auth
     handler: WebSocketHandler
@@ -1925,13 +1952,14 @@ schedule:
   schedule-slow-count:
     function: utils.slow_count          # Set global schedule-count every 10ms
     thread: true
-    startup: true
   schedule-timed:
-    function: gramex.config.app_log('schedule-timed ran now')
+    function: gramex.config.app_log.info('schedule-timed ran now')
     hours: 5
+    minutes: 0
   schedule-timed-utc:
-    function: gramex.config.app_log('schedule-timed-utc ran now')
+    function: gramex.config.app_log.info('schedule-timed-utc ran now')
     hours: 5
+    minutes: 0
     utc: true
 
 email:
