@@ -149,3 +149,6 @@ docs/_build
 
 # For Linux FUSE file system
 .fuse_hidden*
+
+# Dockerfile template output
+pkg/docker-py3/Dockerfile

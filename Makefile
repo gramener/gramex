@@ -68,6 +68,11 @@ test: test-setup
 	# (Note: Dependencies are set up via test-setup. setup.py does not have any tests_require.)
 	$(PYTHON) setup.py nosetests
 
+
+docker:
+	$(PYTHON) -m pip install docker
+	$(PYTHON) pkg/docker-py3/build.py
+
 release-test: clean-test lint docs test
 
 docs:
