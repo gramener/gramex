@@ -840,3 +840,15 @@ def used_kwargs(method, kwargs, ignore_keywords=False):
             target = used if key in set(argspec.args) else rest
             target[key] = val
     return used, rest
+
+
+def drop_keys(conf, drop={}):
+    '''
+    Returns a deep copy of a configuration removing specified keys.
+    ``drop_keys(conf, {'comment'})`` drops the "comment" key from any dict or sub-dict.
+    '''
+    if isinstance(conf, dict):
+        conf = {k: drop_keys(v, drop) for k, v in conf.items() if k not in drop}
+    elif isinstance(conf, (list, tuple)):
+        conf = [drop_keys(v, drop) for v in conf]
+    return conf
