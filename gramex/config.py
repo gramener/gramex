@@ -765,6 +765,18 @@ def recursive_encode(data, encoding='utf-8'):
             node[key] = value.encode(encoding)
 
 
+def prune_keys(conf, keys={}):
+    '''
+    Returns a deep copy of a configuration removing specified keys.
+    ``prune_keys(conf, {'comment'})`` drops the "comment" key from any dict or sub-dict.
+    '''
+    if isinstance(conf, dict):
+        conf = {k: prune_keys(v, keys) for k, v in conf.items() if k not in keys}
+    elif isinstance(conf, (list, tuple)):
+        conf = [prune_keys(v, keys) for v in conf]
+    return conf
+
+
 class TimedRotatingCSVHandler(logging.handlers.TimedRotatingFileHandler):
     '''
     Same as logging.handlers.TimedRotatingFileHandler, but writes to a CSV.
@@ -840,15 +852,3 @@ def used_kwargs(method, kwargs, ignore_keywords=False):
             target = used if key in set(argspec.args) else rest
             target[key] = val
     return used, rest
-
-
-def drop_keys(conf, drop={}):
-    '''
-    Returns a deep copy of a configuration removing specified keys.
-    ``drop_keys(conf, {'comment'})`` drops the "comment" key from any dict or sub-dict.
-    '''
-    if isinstance(conf, dict):
-        conf = {k: drop_keys(v, drop) for k, v in conf.items() if k not in drop}
-    elif isinstance(conf, (list, tuple)):
-        conf = [drop_keys(v, drop) for v in conf]
-    return conf
