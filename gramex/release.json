@@ -89,7 +89,6 @@
 
   "conda#": "Packages that can only be installed via conda on Windows, not via pip",
   "conda": {
-    "line_profiler":              "OPT: conda: For gramex.debug",
-    "rpy2":                       "OPT: conda: For gramex.ml.r()"
+    "line_profiler":              "OPT: conda: For gramex.debug"
   }
 }
