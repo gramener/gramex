@@ -11,4 +11,5 @@ streamer = client.api.build(
     decode=True,
 )
 for chunk in streamer:
-    print(chunk['stream'])  # noqa
+    if 'stream' in chunk:
+        print(chunk['stream'])  # noqa
