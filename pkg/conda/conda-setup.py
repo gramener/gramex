@@ -3,6 +3,7 @@ import json
 from io import open
 from glob import glob
 from orderedattrdict import AttrDict
+from shutil import copy
 from tornado.template import Template
 
 
@@ -15,3 +16,6 @@ for path in glob(os.path.join(folder, 'template.*')):
         content = Template(handle.read()).generate(release=release, json=json)
     with open(path.replace('template.', ''), 'wb') as handle:
         handle.write(content)
+
+# Copy license file
+copy(os.path.join(folder, '../../LICENSE'), os.path.join(folder, 'LICENSE'))
