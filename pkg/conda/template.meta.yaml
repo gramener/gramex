@@ -40,6 +40,7 @@ requirements:
     - pip             # REQ: conda: Set up pip packages
     - nodejs>=7.6     # REQ: conda: CaptureHandler, apps/ui, etc
     - yarn            # REQ: conda: gramex setup (conda-forge)
+    - conda
 
     {% for entry in release.lib %}
     - "{% raw entry %}"

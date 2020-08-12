@@ -6,12 +6,12 @@
   "info#": "Release info for setup.py to package on pypi, and gramex/__init__.py for version info",
   "info": {
     "name": "gramex",
-    "version": "1.61.1",
+    "version": "1.62.0",
+    "description": "Gramex: Visual Analytics Platform",
     "author": "Gramener",
     "author_email": "s.anand@gramener.com",
     "url": "https://gramener.com/gramex/",
     "download_url": "https://github.com/gramener/gramex",
-    "description": "Gramex: Visual Analytics Platform",
     "license": "MIT",
     "keywords": "gramex",
     "classifiers": [
