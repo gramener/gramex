@@ -68,6 +68,13 @@ test: test-setup
 	# (Note: Dependencies are set up via test-setup. setup.py does not have any tests_require.)
 	$(PYTHON) setup.py nosetests
 
+
+push-docker:
+	$(PYTHON) -m pip install docker
+	$(PYTHON) pkg/docker-py3/build.py
+	docker login                # log in as sanand0 / pratapvardhan
+	docker push gramener/gramex
+
 release-test: clean-test lint docs test
 
 docs:
