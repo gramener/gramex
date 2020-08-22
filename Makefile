@@ -74,6 +74,12 @@ conda:
 	python pkg/conda/conda-setup.py
 	conda build -c conda-forge pkg/conda/
 
+push-docker:
+	$(PYTHON) -m pip install docker
+	$(PYTHON) pkg/docker-py3/build.py
+	docker login                # log in as sanand0 / pratapvardhan
+	docker push gramener/gramex
+
 release-test: clean-test lint docs test
 
 docs:
