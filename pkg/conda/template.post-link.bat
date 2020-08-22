@@ -1,5 +1,3 @@
-"%PREFIX%\Scripts\conda.exe" install -c default rpy2 r-rmarkdown r-ggplot2 -y
-
 {% for entry in release.lib %}
 "%PREFIX%\Scripts\pip.exe" install --use-feature=2020-resolver "{% raw entry %}"
 {% end %}
