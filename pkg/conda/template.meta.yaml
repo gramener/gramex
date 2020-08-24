@@ -20,7 +20,10 @@ about:
 
 build:
   number: 1
-  entry_points: {% raw json.dumps(release.console) %}
+  entry_points:
+  {% for entry in release.console %}
+    - {{ entry }}
+  {% end %}
 
 requirements:
   build:
