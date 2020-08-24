@@ -1,6 +1,9 @@
+{% set name = release.info.name %}
+{% set version = release.info.version %}
+
 package:
-  name: "{{ release.info.name }}"
-  version: "{{ release.info.version }}"
+  name: "{{ name }}"
+  version: "{{ version }}"
 
 source:
   url: https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.tar.gz
