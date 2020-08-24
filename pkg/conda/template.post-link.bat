@@ -3,5 +3,5 @@
 {% end %}
 
 call "%PREFIX%\Library\bin\yarn.cmd" config set ignore-engines true
-"%PREFIX%\Scripts\gramex.exe" setup ui > %PREFIX%\.messages.txt 2>&1
+rem "%PREFIX%\Scripts\gramex.exe" setup ui > %PREFIX%\.messages.txt 2>&1
 if errorlevel 1 exit 1
