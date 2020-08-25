@@ -50,7 +50,12 @@ requirements:
     {% for entry in release.conda %}
     - "{% raw entry %}"
     {% end %}
+    {% for entry in release.lib %}
+    - "{% raw entry %}"
+    {% end %}
 
 test:
   imports:
+    - gramex
+  commands:
     - gramex
