@@ -1,13 +1,10 @@
-{% set name = release.info.name %}
-{% set version = release.info.version %}
-
 package:
-  name: "{{ name }}"
-  version: "{{ version }}"
+  name: "{{ release.info.name }}"
+  version: "{{ release.info.version }}"
 
 source:
-  url: https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.tar.gz
-  sha256: 494a9c152c096e6b4eec089c5fb223b67f330ef792449d3e089d7ecc430825cf
+  git_url: {{ release.info.url }}.git
+  git_rev: v{{ release.info.version }}
 
 about:
   home: "{{ release.info.url }}"
