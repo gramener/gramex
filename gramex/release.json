@@ -62,7 +62,6 @@
     "pytest":                     "OPT: conda: pytest gramex plugin",
     "python-pptx>=0.6.6":         "SRV: pptgen (conda-forge)",
     "pyyaml>=5.1":                "REQ: Parse YAML files for config",
-    "redis>=2.10.0":              "SRV: RedisStore",
     "requests":                   "REQ: HTTP library for python",
     "scikit-learn":               "OPT: conda: For gramex.ml",
     "seaborn":                    "OPT: conda: gramex.data.download()",
@@ -84,7 +83,8 @@
       "cron-descriptor":          "OPT: admin/schedule to pretty-print cron",
       "orderedattrdict>=1.6.0":   "REQ: OrderedDict with attr access for configs",
       "tables":                   "REQ: HDF5 reading / writing",
-      "xmljson>=0.1.5":           "SRV: transforms.badgerfish to convert objects to/from XML"
+      "xmljson>=0.1.5":           "SRV: transforms.badgerfish to convert objects to/from XML",
+      "redis>=2.10.0":            "SRV: RedisStore"
   },
 
   "conda#": "Packages that can only be installed via conda on Windows, not via pip",
