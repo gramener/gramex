@@ -3,7 +3,7 @@ package:
   version: "{{ release.info.version }}"
 
 source:
-  git_url: {{ release.info.url }}.git
+  git_url: {{ release.info.download_url }}.git
   git_rev: v{{ release.info.version }}
 
 about:
