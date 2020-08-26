@@ -771,7 +771,7 @@ def prune_keys(conf, keys={}):
     ``prune_keys(conf, {'comment'})`` drops the "comment" key from any dict or sub-dict.
     '''
     if isinstance(conf, dict):
-        conf = {k: prune_keys(v, keys) for k, v in conf.items() if k not in keys}
+        conf = AttrDict({k: prune_keys(v, keys) for k, v in conf.items() if k not in keys})
     elif isinstance(conf, (list, tuple)):
         conf = [prune_keys(v, keys) for v in conf]
     return conf
