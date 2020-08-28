@@ -141,6 +141,7 @@ class TestPPTGen(TestCase):
     def test_length(self):
         length = commands.length
         eq_(length(3.2), pptx.util.Inches(3.2))
+        eq_(length(np.int64(3)), pptx.util.Inches(3))
         for unit in ('', '"', 'in', 'inch'):
             eq_(length('3.2' + unit), pptx.util.Inches(3.2))
             eq_(length('3.2  ' + unit), pptx.util.Inches(3.2))
