@@ -907,8 +907,8 @@ def test(conf):
 
 def gramexlog(conf):
     from elasticsearch import Elasticsearch
+    from elasticsearch import helpers
 
-    info.gramexlog.index = index = conf.get('index', 'gramexlog')
     info.gramexlog.poll = poll = conf.get('poll', 1)
     info.gramexlog.queue = queue = []
     info.gramexlog.maxlength = conf.get('maxlength', 100000)
@@ -918,7 +918,7 @@ def gramexlog(conf):
     def log_to_es():
         try:
             if queue:
-                connection.index(index=index, body=queue)
+                helpers.bulk(connection, queue)
                 queue.clear()
         except Exception as ex:
             # TODO: If the connection broke, re-create it

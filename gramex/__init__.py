@@ -29,6 +29,7 @@ import os
 import sys
 import json
 import yaml
+import uuid
 import logging
 import logging.config
 import datetime
@@ -311,6 +312,9 @@ def log(**kwargs):
         kwargs['level'] = kwargs.get('level', 'INFO').upper()
         kwargs['time'] = datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%SZ')
         kwargs['port'] = app_log_extra['port']
+        # _index and _id are must for bulk indexing in ElasticSearch
+        kwargs['_index'] = conf.get('index', 'gramexlog')
+        kwargs['_id'] = uuid.uuid4()
         if len(conf.queue) < conf.maxlength:
             conf.queue.append(kwargs)
         else:
