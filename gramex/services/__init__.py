@@ -15,6 +15,7 @@ import re
 import os
 import sys
 import json
+import queue
 import atexit
 import signal
 import socket
@@ -37,6 +38,7 @@ from tornado.template import Template
 from orderedattrdict import AttrDict
 from gramex import debug, shutdown, __version__
 from gramex.transforms import build_transform
+from gramex.config import esq, get_connection, es_conf
 from gramex.config import locate, app_log, ioloop_running, app_log_extra, merge, walk
 from gramex.cache import urlfetch, cache_key
 from gramex.http import OK, NOT_MODIFIED
@@ -189,7 +191,9 @@ def app(conf):
 
                 def check_exit():
                     if exit[0] is True:
+                        kill_pill.set()
                         shutdown()
+
                     # If Ctrl-D is pressed, run the Python debugger
                     char = debug.getch()
                     if char == b'\x04':
@@ -902,3 +906,36 @@ def test(conf):
     # Remove auth: section when running gramex.
     # If there are passwords here, they will not be loaded in memory
     conf.pop('auth', None)
+
+
+# Pill which is used to kill log_to_es thread. Will be set on pressing CTRL+C.
+kill_pill = threading.Event()
+
+
+def log_to_es(sig_to_die, log_index, esq, interval=0.1):
+    '''
+    A thread which picks the logs from log() via a queue and stores in ElasticSearch.
+    Dies when sig_to_die threading event is set.
+    todo: do a bulk indexing.
+    '''
+    while not sig_to_die.wait(interval):
+        try:
+            log_doc = esq.get(block=False)
+            es = get_connection()
+            es.index(index=log_index, body=log_doc)
+            esq.task_done()
+        except queue.Empty:
+            # Raised when queue is empty
+            pass
+        except Exception as ex:
+            # This generic exception should be caught for thread to continue its execution
+            app_log.error('ES Store {}'.format(ex))
+
+
+def eslog(conf):
+    '''
+    Creates the thread which logs to ES.
+    '''
+    index = conf.get('es_index', 'log_index')
+    es_conf.update(conf)
+    info.threadpool.submit(log_to_es, kill_pill, index, esq)
