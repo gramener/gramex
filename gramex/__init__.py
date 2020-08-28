@@ -31,11 +31,12 @@ import json
 import yaml
 import logging
 import logging.config
+import datetime
 import tornado.ioloop
 from pathlib import Path
 from orderedattrdict import AttrDict
 from gramex.config import ChainConfig, PathConfig, app_log, variables, setup_variables
-from gramex.config import ioloop_running, prune_keys
+from gramex.config import ioloop_running, prune_keys, app_log_extra
 
 paths = AttrDict()              # Paths where configurations are stored
 conf = AttrDict()               # Final merged configurations
@@ -291,3 +292,27 @@ def shutdown():
     if ioloop_running(ioloop):
         app_log.info('Shutting down Gramex...')
         ioloop.stop()
+
+
+def log(**kwargs):
+    '''
+    Writes the log into Elastic Search and application log.
+    Calls app_log to write logs to application log.
+    Pushes logs to the queue for log_to_es thread to pick and store in ES. This is done
+    only when ES logging in enables in gramex.yaml.
+    Usage:
+        log(level='INFO',x=1, y=2, msg='log string') writes to ES as below
+        {'level': 'INFO', 'x': 1, 'y': 2, 'msg': 'log string', 'time': '2020-07-21 13:41:00',
+            'port': 9988}
+    '''
+    from . import services
+    conf = services.info.gramexlog
+    if conf:
+        kwargs['level'] = kwargs.get('level', 'INFO').upper()
+        kwargs['time'] = datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%SZ')
+        kwargs['port'] = app_log_extra['port']
+        if len(conf.queue) < conf.maxlength:
+            conf.queue.append(kwargs)
+        else:
+            raise IndexError('Gramex log queue (%s) is too long (max: %s)' % (
+                len(conf.queue), conf.maxlength))

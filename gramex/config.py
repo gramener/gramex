@@ -38,15 +38,12 @@ from random import choice
 from fnmatch import fnmatch
 from six import string_types
 from collections import OrderedDict
-from time import localtime, strftime
-from elasticsearch import Elasticsearch
 from pydoc import locate as _locate, ErrorDuringImport
 from yaml import Loader, MappingNode
 from json import loads, JSONEncoder, JSONDecoder
 from yaml.constructor import ConstructorError
 from orderedattrdict import AttrDict, DefaultAttrDict
 from errno import EACCES, EPERM
-import queue
 
 
 ERROR_SHARING_VIOLATION = 32        # from winerror.ERROR_SHARING_VIOLATION
@@ -856,37 +853,3 @@ def used_kwargs(method, kwargs, ignore_keywords=False):
             target = used if key in set(argspec.args) else rest
             target[key] = val
     return used, rest
-
-
-esq = queue.Queue()
-es_conf = AttrDict()
-
-
-def get_connection():
-    '''
-    Create a new connection if the connection doesn't exist or not alive.
-    Else return the existing active connection.
-    '''
-    if 'connection' not in es_conf or es_conf['connection'].ping():
-        es_conf['connection'] = Elasticsearch(
-            es_conf['es_host'], http_auth=(es_conf['es_user'], es_conf['es_pass']))
-    return es_conf['connection']
-
-
-def log(**kwargs):
-    '''
-    Writes the log into Elastic Search and application log.
-    Calls app_log to write logs to application log.
-    Pushes logs to the queue for log_to_es thread to pick and store in ES. This is done
-    only when ES logging in enables in gramex.yaml.
-    Usage:
-        log(level='INFO',x=1, y=2, msg='log string') writes to ES as below
-        {'level': 'INFO', 'x': 1, 'y': 2, 'msg': 'log string', 'time': '2020-07-21 13:41:00',
-            'port': 9988}
-    '''
-    kwargs['level'] = kwargs.get('level', 'INFO').upper()
-    kwargs['time'] = strftime('%Y-%m-%d %H:%M:%S', localtime())
-    kwargs['port'] = app_log_extra['port']
-    app_log.log(getattr(logging, kwargs['level']), kwargs)
-    if es_conf:
-        esq.put(kwargs)

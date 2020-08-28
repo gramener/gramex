@@ -15,7 +15,6 @@ import re
 import os
 import sys
 import json
-import queue
 import atexit
 import signal
 import socket
@@ -26,6 +25,7 @@ import mimetypes
 import threading
 import webbrowser
 import tornado.web
+import tornado.ioloop
 import gramex.data
 import gramex.cache
 import gramex.license
@@ -38,7 +38,6 @@ from tornado.template import Template
 from orderedattrdict import AttrDict
 from gramex import debug, shutdown, __version__
 from gramex.transforms import build_transform
-from gramex.config import esq, get_connection, es_conf
 from gramex.config import locate, app_log, ioloop_running, app_log_extra, merge, walk
 from gramex.cache import urlfetch, cache_key
 from gramex.http import OK, NOT_MODIFIED
@@ -58,6 +57,7 @@ info = AttrDict(
     eventlog=AttrDict(),
     email=AttrDict(),
     sms=AttrDict(),
+    gramexlog=AttrDict(),
     _md=None,
     _main_ioloop=None,
 )
@@ -129,8 +129,6 @@ class GramexApp(tornado.web.Application):
 
 def app(conf):
     '''Set up tornado.web.Application() -- only if the ioloop hasn't started'''
-    import tornado.ioloop
-
     ioloop = tornado.ioloop.IOLoop.current()
     if ioloop_running(ioloop):
         app_log.warning('Ignoring app config change when running')
@@ -191,7 +189,6 @@ def app(conf):
 
                 def check_exit():
                     if exit[0] is True:
-                        kill_pill.set()
                         shutdown()
 
                     # If Ctrl-D is pressed, run the Python debugger
@@ -908,34 +905,29 @@ def test(conf):
     conf.pop('auth', None)
 
 
-# Pill which is used to kill log_to_es thread. Will be set on pressing CTRL+C.
-kill_pill = threading.Event()
+def gramexlog(conf):
+    from elasticsearch import Elasticsearch
 
+    info.gramexlog.index = index = conf.get('index', 'gramexlog')
+    info.gramexlog.poll = poll = conf.get('poll', 1)
+    info.gramexlog.queue = queue = []
+    info.gramexlog.maxlength = conf.get('maxlength', 100000)
+    info.gramexlog.connection = connection = Elasticsearch(
+        conf['host'], http_auth=(conf.get('user'), conf.get('pass')))
 
-def log_to_es(sig_to_die, log_index, esq, interval=0.1):
-    '''
-    A thread which picks the logs from log() via a queue and stores in ElasticSearch.
-    Dies when sig_to_die threading event is set.
-    todo: do a bulk indexing.
-    '''
-    while not sig_to_die.wait(interval):
+    def log_to_es():
         try:
-            log_doc = esq.get(block=False)
-            es = get_connection()
-            es.index(index=log_index, body=log_doc)
-            esq.task_done()
-        except queue.Empty:
-            # Raised when queue is empty
-            pass
+            if queue:
+                connection.index(index=index, body=queue)
+                queue.clear()
         except Exception as ex:
+            # TODO: If the connection broke, re-create it
             # This generic exception should be caught for thread to continue its execution
             app_log.error('ES Store {}'.format(ex))
 
+    info.gramexlog.callback = tornado.ioloop.PeriodicCallback(log_to_es, poll * 1000)
 
-def eslog(conf):
-    '''
-    Creates the thread which logs to ES.
-    '''
-    index = conf.get('es_index', 'log_index')
-    es_conf.update(conf)
-    info.threadpool.submit(log_to_es, kill_pill, index, esq)
+    def start_callback():
+        info.gramexlog.callback.start()
+
+    return start_callback
