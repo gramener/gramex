@@ -75,7 +75,7 @@ def assign(convert, path: str):
 # Length utilities
 # ---------------------------------------------------------------------
 length_unit = pptx.util.Inches          # The default length unit is inches. This is exposed
-_length_expr = re.compile(r'''          # A length expression can be:
+_length_expr = re.compile(r'''          # A length expression can be:ex
     ([\d\.]+)                           #   Any integer or floating point (without + or -)
     \s*                                 #   optionally followed by spaces
     ("|in|inch|inches|cm|mm|pt|cp|centipoint|centipoints|emu|)  # and a unit that may be blank
@@ -103,7 +103,7 @@ def length(val: Union[str, int, float]) -> pptx.util.Length:
         match = _length_expr.match(val)
         if match:
             return length_class(match.group(2))(float(match.group(1)))
-    elif isinstance(val, (int, float)):
+    elif isinstance(val, (int, float, pd.np.number)):
         return length_unit(val)
     raise ValueError('Invalid length: %r' % val)
 
