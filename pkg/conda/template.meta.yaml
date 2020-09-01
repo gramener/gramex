@@ -1,0 +1,58 @@
+package:
+  name: "{{ release.info.name }}"
+  version: "{{ release.info.version }}"
+
+source:
+  git_url: {{ release.info.download_url }}.git
+  git_rev: v{{ release.info.version }}
+
+about:
+  home: "{{ release.info.url }}"
+  license: "{{ release.info.license }}"
+  license_family: "{{ release.info.license }}"
+  license_file: "LICENSE"
+  summary: "{{ release.info.description }}"
+  doc_url: "{{ release.info.url }}"
+  dev_url: "{{ release.info.download_url }}"
+
+build:
+  number: 1
+  entry_points:
+  {% for entry in release.console %}
+    - {{ entry }}
+  {% end %}
+
+requirements:
+  build:
+    - pip
+    - setuptools
+    - python
+    - colorama
+    - h5py
+    - lxml
+    - matplotlib
+    - pandas
+    - pytest
+    - seaborn
+    - sqlalchemy
+    - tzlocal
+    - scikit-learn
+    - pyyaml>=5.1
+  run:
+    - python          # REQ: conda: Base Python
+    - pip             # REQ: conda: Set up pip packages
+    - nodejs>=7.6     # REQ: conda: CaptureHandler, apps/ui, etc
+    - yarn            # REQ: conda: gramex setup (conda-forge)
+    - conda
+    {% for entry in release.conda %}
+    - "{% raw entry %}"
+    {% end %}
+    {% for entry in release.lib %}
+    - "{% raw entry %}"
+    {% end %}
+
+test:
+  imports:
+    - gramex
+  commands:
+    - gramex
