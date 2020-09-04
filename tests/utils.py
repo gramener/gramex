@@ -6,6 +6,7 @@ import sys
 import json
 import time
 import random
+import gramex
 import pandas as pd
 from collections import Counter
 from orderedattrdict import AttrDict
@@ -430,6 +431,15 @@ def drivehandler_modify(data, key, handler):
     if handler.request.method == 'GET':
         data['m'] = 'OK'
     return data
+
+
+def gramex_log(handler):
+    gramex.log({key: val[0] for key, val in handler.args.items()})
+    return ''
+
+
+def gramex_log_queue(handler):
+    return info.gramexlog.queue
 
 
 if __name__ == '__main__':

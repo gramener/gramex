@@ -1894,6 +1894,18 @@ url:
           url: $TRANSLATE_XLSX
           sheet_name: translate
 
+  log:
+    pattern: /log
+    handler: FunctionHandler
+    kwargs:
+      function: utils.gramex_log
+
+  log/queue:
+    pattern: /log/queue
+    handler: FunctionHandler
+    kwargs:
+      function: utils.gramex_log_queue
+
   shutdown:
     pattern: /shutdown
     handler: FunctionHandler

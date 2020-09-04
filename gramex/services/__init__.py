@@ -15,6 +15,7 @@ import re
 import os
 import sys
 import json
+import uuid
 import atexit
 import signal
 import socket
@@ -906,18 +907,25 @@ def test(conf):
 
 
 def gramexlog(conf):
+    '''
+    '''
     from elasticsearch import Elasticsearch
     from elasticsearch import helpers
 
     info.gramexlog.poll = poll = conf.get('poll', 1)
     info.gramexlog.queue = queue = []
     info.gramexlog.maxlength = conf.get('maxlength', 100000)
+    info.gramexlog.index = index = conf.get('index', 'gramexlog')
     info.gramexlog.connection = connection = Elasticsearch(
         conf['host'], http_auth=(conf.get('user'), conf.get('pass')))
 
     def log_to_es():
         try:
             if queue:
+                # Override _index and _id -- a must for bulk indexing in ElasticSearch
+                for item in queue:
+                    item['_index'] = index
+                    item['_id'] = uuid.uuid4()
                 helpers.bulk(connection, queue)
                 queue.clear()
         except Exception as ex:

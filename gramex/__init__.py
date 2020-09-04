@@ -29,7 +29,6 @@ import os
 import sys
 import json
 import yaml
-import uuid
 import logging
 import logging.config
 import datetime
@@ -297,26 +296,28 @@ def shutdown():
 
 def log(**kwargs):
     '''
-    Writes the log into Elastic Search and application log.
-    Calls app_log to write logs to application log.
-    Pushes logs to the queue for log_to_es thread to pick and store in ES. This is done
-    only when ES logging in enables in gramex.yaml.
-    Usage:
-        log(level='INFO',x=1, y=2, msg='log string') writes to ES as below
-        {'level': 'INFO', 'x': 1, 'y': 2, 'msg': 'log string', 'time': '2020-07-21 13:41:00',
-            'port': 9988}
+    Logs structured information for future reference. Typical usage::
+
+        gramex.log(level='INFO', x=1, msg='abc')
+
+    This logs ``{level: INFO, x: 1, msg: abc, port: 9988, time: 2020-07-21 13:41:00}``. 3 keys
+    are added:
+
+    1. ``level``: logging level. Defaults to INFO
+    2. ``time``: current time as YYYY-MM-DD HH:MM:ZZ in UTC
+    3. ``port``: application's current port
+
+    If a logging service like ElasticSearch has been configured, it will periodically flush the
+    logs into ElasticSearch.
     '''
     from . import services
     conf = services.info.gramexlog
-    if conf:
+    if conf and 'queue' in conf and 'maxlength' in conf:
         kwargs['level'] = kwargs.get('level', 'INFO').upper()
         kwargs['time'] = datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%SZ')
         kwargs['port'] = app_log_extra['port']
-        # _index and _id are must for bulk indexing in ElasticSearch
-        kwargs['_index'] = conf.get('index', 'gramexlog')
-        kwargs['_id'] = uuid.uuid4()
-        if len(conf.queue) < conf.maxlength:
-            conf.queue.append(kwargs)
+        if len(conf['queue']) < conf['maxlength']:
+            conf['queue'].append(kwargs)
         else:
             raise IndexError('Gramex log queue (%s) is too long (max: %s)' % (
-                len(conf.queue), conf.maxlength))
+                len(conf['queue']), conf['maxlength']))
