@@ -1,0 +1,39 @@
+# Test cases for config.drop_keys
+# drop_keys(source) should equal target
+
+- source: {}
+  target: {}
+- source: []
+  target: []
+
+- source:
+    comment: 0
+    url:
+      home:
+        comment: 0
+        path: /
+      pptx:
+        comment: 0
+        handler: PPTXHandler
+        kwargs:
+          comment: 0
+          rules:
+            - Shape 1: {text: 1, comment: 0}
+            - Shape 2: {text: 2, comment: 0}
+    alert:
+      alert1:
+        comment: 0
+        service: sms
+  target:
+    url:
+      home:
+        path: /
+      pptx:
+        handler: PPTXHandler
+        kwargs:
+          rules:
+            - Shape 1: {text: 1}
+            - Shape 2: {text: 2}
+    alert:
+      alert1:
+        service: sms

@@ -1,0 +1,13 @@
+url:
+  slidesense-test:
+    pattern: /output.pptx
+    handler: PPTXHandler
+    kwargs:
+      version: 2
+      import: $YAMLPATH/slidesense-config.yaml
+
+  some-other-config:
+    pattern: /
+    handler: FileHandler
+    kwargs:
+      path: $YAMLPATH/index.html

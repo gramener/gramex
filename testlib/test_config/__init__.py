@@ -13,7 +13,7 @@ from nose.tools import eq_, ok_
 from orderedattrdict import AttrDict
 from yaml.constructor import ConstructorError
 from gramex.config import ChainConfig, PathConfig, walk, merge, ConfigYAMLLoader, _add_ns
-from gramex.config import recursive_encode, TimedRotatingCSVHandler
+from gramex.config import recursive_encode, prune_keys, TimedRotatingCSVHandler
 
 info = AttrDict(
     home=Path(__file__).absolute().parent,
@@ -385,6 +385,14 @@ class TestConfig(unittest.TestCase):
         out = {ba: bb, True: [1, bb], None: {ba: bb, b'': {ba: 1, bb: 0.1}}}
         recursive_encode(src)
         eq_(src, out)
+
+    def test_prune_keys(self):
+        for scalar in (None, True, 1, float(1), 'abc', {1, 2}):
+            eq_(prune_keys(scalar, 'comment'), scalar)
+        with open(info.home / 'config.prune_keys.yaml', encoding='utf-8') as handle:
+            tests = yaml.load(handle, Loader=yaml.SafeLoader)
+        for test in tests:
+            eq_(prune_keys(test['source'], 'comment'), test['target'])
 
 
 class TestTimedRotatingCSVHandler(unittest.TestCase):

@@ -5,62 +5,6 @@ from io import open
 import json
 import os
 
-# Libraries required for Gramex
-# Keep this in sync with guide/license/thirdparty.md
-# REQ: required packages for Gramex
-# OPT: optional packages not required for startup, but "batteries included"
-# (conda): packages is part of Anaconda, not Miniconda
-install_requires = [
-    # Requires conda install
-    # 'line_profiler',                # OPT: (conda) For gramex.debug
-    # 'rpy2',                         # OPT: (conda) For gramex.ml.r()
-    # 'sklearn',                      # OPT: (conda) For gramex.ml
-    'argh >= 0.24.1',               # REQ: dependency for watchdog
-    'boto3 >= 1.5',                 # SRV: Amazon services
-    'cachetools >= 3.0.0',          # SRV: services.cache for memory cache
-    'colorama',                     # REQ: (conda) gramex.init()
-    'colorlog >= 2.7.0',            # REQ: Coloured log files
-    'cron-descriptor',              # OPT: admin/schedule to pretty-print cron
-    'crontab >= 0.21',              # SRV: services.schedule to parse crontab entries
-    'cssselect',                    # OPT: pytest gramex plugin
-    'diskcache >= 2.8.3',           # SRV: services.cache for disk cache
-    'h5py',                         # OPT: (conda) gramex.cache.HDF5Store
-    'ipdb',                         # OPT: gramex.debug
-    'jmespath',                     # OPT: pytest gramex plugin
-    'joblib',                       # OPT: For gramex.ml
-    'ldap3 >= 2.2.4',               # OPT: LDAP connections
-    'lxml',                         # OPT: (conda) gramex.pptgen
-    'markdown',                     # OPT: transforms, gramex.services.create_alert()
-    'matplotlib',                   # OPT: (conda) gramex.data.download()
-    'numpy == 1.16',
-    'oauthlib >= 1.1.2',            # SRV: OAuth request-signing
-    'orderedattrdict >= 1.6.0',     # REQ: OrderedDict with attr access for configs
-    'pandas == 0.25.3',             # REQ: (conda) gramex.data.filter()
-    'passlib >= 1.6.5',             # REQ: password storage (e.g. in handlers.DBAuth)
-    'pathlib',                      # REQ: Manipulate paths. Part of Python 3.3+
-    'pathtools >= 0.1.1',           # REQ: dependency for watchdog
-    'psutil',                       # REQ: monitor process
-    'pymysql',                      # OPT: MySQL connections
-    'pytest',                       # OPT: (conda) pytest gramex plugin
-    'python-pptx >= 0.6.6',         # SRV: pptgen
-    'pyyaml >= 5.1',                # REQ: Parse YAML files for config
-    'redis >= 2.10.0',              # SRV: RedisStore
-    'requests',                     # REQ: HTTP library for python
-    'seaborn',                      # OPT: (conda) gramex.data.download()
-    'selenium',                     # OPT: pytest gramex plugin
-    'setuptools >= 16.0',           # REQ: 16.0 has good error message support
-    'shutilwhich >= 1.1.0',         # REQ: shutil.which backport
-    'six',                          # REQ: Python 3 compatibility
-    'sqlalchemy',                   # REQ: (conda) gramex.data.filter()
-    'sqlitedict >= 1.5.0',          # SRV: SQLiteStore
-    'tables',                       # REQ: HDF5 reading / writing
-    'textblob',                     # OPT: Gramex Guide TwitterRESTHandler example
-    'tornado == 5.1.1',             # REQ: Web server
-    'watchdog >= 0.8',              # REQ: Monitor file changes
-    'xlrd',                         # REQ: (conda) gramex.data.download()
-    'xmljson >= 0.1.5',             # SRV: transforms.badgerfish to convert objects to/from XML
-]
-
 
 def read_gitignore(path, exclude=set()):
     '''
@@ -71,9 +15,6 @@ def read_gitignore(path, exclude=set()):
             line = line.strip()
             if line and not line.startswith('#') and line not in exclude:
                 yield line
-
-
-ignore_patterns = list(read_gitignore('.gitignore', exclude={'node_modules'}))
 
 
 def recursive_include(root, path, ignores=[], allows=[]):
@@ -107,12 +48,14 @@ def recursive_include(root, path, ignores=[], allows=[]):
     os.chdir(cwd)
 
 
+ignore_patterns = list(read_gitignore('.gitignore', exclude={'node_modules'}))
+
 with open('README.rst', encoding='utf-8') as handle:
     long_description = handle.read() + '\n\n'
 
-# release.json contains name, description, version, etc
+# release.json contains release info (name, description, version), packages to install, etc
 with open('gramex/release.json', encoding='utf-8') as handle:
-    release_args = json.load(handle)
+    release = json.load(handle)
 
 # Add a matching line in MANIFEST.in
 # Add a matching list in testlib/test_setup.py for verification
@@ -141,14 +84,14 @@ setup(
         'gramex': gramex_files,
     },
     include_package_data=True,
-    install_requires=install_requires,
+    install_requires=[req for part in ('lib', 'pip', 'conda') for req in release[part]],
     zip_safe=False,
     entry_points={
-        'console_scripts': ['gramex = gramex:commandline'],
+        'console_scripts': release['console'],
         'pytest11': ['gramextest = gramex.gramextest']
     },
     test_suite='tests',
-    # Install test libraries via `make test-setup` -> tests/requirements.txt.
-    # Use this instead of tests_require because nose plugins are installed this way.
-    **release_args
+    # NOTE: Don't use tests_require. setup.py can't install nose plugins like coverage.
+    # Use `make test-setup` to install rest requirements from tests/requirements.txt.
+    **release['info']
 )

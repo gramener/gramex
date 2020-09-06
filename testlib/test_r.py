@@ -16,7 +16,7 @@ def test_init():
         with assert_raises(RuntimeError):
             import rpy2.robjects  # NOQA: F401
     # But Gramex uses Conda PATH
-    r('ls()')
+    r('1 + 2')
     import rpy2.rinterface
     # Note: in your machine, ensure "conda" is part of your Anaconda PATH
     ok_('conda' in rpy2.rinterface.R_HOME)

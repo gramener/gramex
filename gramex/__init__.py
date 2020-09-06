@@ -33,10 +33,9 @@ import logging
 import logging.config
 import tornado.ioloop
 from pathlib import Path
-from copy import deepcopy
 from orderedattrdict import AttrDict
 from gramex.config import ChainConfig, PathConfig, app_log, variables, setup_variables
-from gramex.config import ioloop_running
+from gramex.config import ioloop_running, prune_keys
 
 paths = AttrDict()              # Paths where configurations are stored
 conf = AttrDict()               # Final merged configurations
@@ -50,7 +49,7 @@ callbacks = {}                  # Services callbacks
 # Populate __version__ from release.json
 with (paths['source'] / 'release.json').open() as _release_file:
     release = json.load(_release_file, object_pairs_hook=AttrDict)
-    __version__ = release.version
+    __version__ = release.info.version
 
 _sys_path = list(sys.path)      # Preserve original sys.path
 
@@ -272,7 +271,7 @@ def init(force_reload=False, **kwargs):
         if key not in conf or conf[key] != val or force_reload:
             if hasattr(services, key):
                 app_log.debug('Loading service: %s', key)
-                conf[key] = deepcopy(val)
+                conf[key] = prune_keys(val, {'comment'})
                 callback = getattr(services, key)(conf[key])
                 if callable(callback):
                     callbacks[key] = callback

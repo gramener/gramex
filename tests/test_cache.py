@@ -132,10 +132,10 @@ class TestCacheKey(unittest.TestCase):
 
         # Check if cookies.* works
         cache_key = gramex.services._get_cache_key(
-            {'key': ['request.uri', 'cookies.sid']}, 'cookie')
+            {'key': ['request.uri', 'cookies.sid2']}, 'cookie')
         eq_(cache_key(cookie('x', 1)), ('uri', '~'))
-        eq_(cache_key(cookie('sid', '')), ('uri', ''))
-        eq_(cache_key(cookie('sid', 'λ–►')), ('uri', 'λ–►'))
+        eq_(cache_key(cookie('sid2', '')), ('uri', ''))
+        eq_(cache_key(cookie('sid2', 'λ–►')), ('uri', 'λ–►'))
 
     def test_header(self):
         def header(key, value):

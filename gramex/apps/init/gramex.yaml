@@ -4,7 +4,7 @@
 # Configurations for app: {{ appname }}
 # ----------------------------------------------------------------------------
 url:
-  '{{ appname }}-home':
+  {{ appname }}-home:
     pattern: /$YAMLURL/
     handler: FileHandler
     kwargs:
@@ -19,7 +19,7 @@ url:
         Cache-Control: private, max-age=1
     cache: {expiry: {duration: 1}}
 
-  '{{ appname }}-login':
+  {{ appname }}-login:
     pattern: /$YAMLURL/login/
     # You MUST change the auth before deploying. DBAuth is commonly used.
     # See https://learn.gramener.com/guide/auth/#database-auth
@@ -30,7 +30,7 @@ url:
         alpha: alpha
         beta: beta
 
-  '{{ appname }}-logout':
+  {{ appname }}-logout:
     pattern: /$YAMLURL/logout/
     handler: LogoutHandler
 

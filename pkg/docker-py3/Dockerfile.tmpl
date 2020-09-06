@@ -1,0 +1,26 @@
+FROM continuumio/miniconda3:latest
+
+LABEL description="{{ description }}"
+LABEL version="{{ version }}"
+LABEL maintainer="{{ author_email }}"
+
+# Install system requirements. The ORDER of runs is critical. Keep them exactly in this order
+RUN apt update
+RUN apt -y install gcc git pandoc
+RUN pip install gramex
+RUN conda install -y -c conda-forge nodejs yarn
+RUN yarn config set ignore-engines true
+RUN gramex setup --all
+RUN conda install -y scikit-learn tzlocal rpy2
+RUN conda install -y -c r r-markdown r-ggplot2
+RUN apt -y install gconf-service libasound2 libatk1.0-0 libc6 libcairo2 libcups2 libdbus-1-3 \
+    libexpat1 libfontconfig1 libgcc1 libgconf-2-4 libgdk-pixbuf2.0-0 libglib2.0-0 \
+    libgtk-3-0 libnspr4 libpango-1.0-0 libpangocairo-1.0-0 libstdc++6 libx11-6 \
+    libx11-xcb1 libxcb1 libxcomposite1 libxcursor1 libxdamage1 libxext6 \
+    libxfixes3 libxi6 libxrandr2 libxrender1 libxss1 libxtst6 ca-certificates \
+    fonts-liberation libappindicator1 libnss3 lsb-release xdg-utils
+
+EXPOSE 9988
+
+# Use CMD instead of ENTRYPOINT. It can be overridden to run bash
+CMD ["gramex"]
