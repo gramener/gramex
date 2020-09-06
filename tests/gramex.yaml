@@ -1233,6 +1233,15 @@ url:
       headers:
         Content-Type: application/json
 
+  auth/authorize:
+    pattern: /auth/authorize
+    handler: SimpleAuth
+    kwargs:
+      credentials:
+        alpha: alpha
+        beta: beta
+      auth: true
+
   auth/logout:
     pattern: /auth/logout
     handler: LogoutHandler

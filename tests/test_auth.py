@@ -293,6 +293,10 @@ class TestSimpleAuth(AuthBase, LoginMixin, LoginFailureMixin):
             r = self.session.get(server.base_url + '/auth/session', params={'gramex-otp': otp})
             eq_(r.status_code, BAD_REQUEST)
 
+    def test_authorize(self):
+        # If an Auth handler has an auth:, the auth: is ignored. Auth handlers are always open
+        self.check('/auth/authorize')
+
 
 class TestExpiry(AuthBase):
     # Just apply LoginMixin tests to AuthBase

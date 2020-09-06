@@ -227,7 +227,7 @@ class BaseMixin(object):
             auth = AttrDict()
         # Set up the auth
         if isinstance(auth, dict):
-            cls._login_url = auth.get('login_url', None)
+            cls._auth = auth
             cls._on_init_methods.append(cls.authorize)
             cls.permissions = []
             # Add check for condition
@@ -665,8 +665,9 @@ class BaseHandler(RequestHandler, BaseMixin):
         if not self.current_user:
             # Redirect non-AJAX requests GET/HEAD to login URL (if it's a string)
             ajax = self.request.headers.get('X-Requested-With', '').lower() == 'xmlhttprequest'
+            auth = setattr(self, '_auth', {})
             if self.request.method in ('GET', 'HEAD') and not ajax:
-                url = self.get_login_url() if self._login_url is None else self._login_url
+                url = auth.get('login_url', self.get_login_url())
                 # If login_url is a string, redirect
                 if isinstance(url, six.string_types):
                     if '?' not in url:
@@ -675,9 +676,7 @@ class BaseHandler(RequestHandler, BaseMixin):
                             next_url = self.request.full_url()
                         else:
                             next_url = self.request.uri
-                        next_key = 'next'
-                        if isinstance(self.conf.kwargs.auth, dict):
-                            next_key = self.conf.kwargs.auth.get('query', 'next')
+                        next_key = auth.get('query', 'next')
                         url += '?' + urlencode({next_key: next_url})
                     self.redirect(url)
                     return

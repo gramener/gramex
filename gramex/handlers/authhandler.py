@@ -41,15 +41,6 @@ class AuthHandler(BaseHandler):
     _RECAPTCHA_VERIFY_URL = 'https://www.google.com/recaptcha/api/siteverify'
 
     @classmethod
-    def setup_default_kwargs(cls):
-        super(AuthHandler, cls).setup_default_kwargs()
-        # Warn and ignore if AuthHandler sets an auth:
-        conf = cls.conf.setdefault('kwargs', {})
-        if 'auth' in conf:
-            conf.pop('auth')
-            app_log.warning('%s: Ignoring auth on AuthHandler', cls.name)
-
-    @classmethod
     def setup(cls, prepare=None, action=None, delay=None, session_expiry=None,
               session_inactive=None, user_key='user', lookup=None, recaptcha=None, **kwargs):
         # Switch SSL certificates if required to access Google, etc
@@ -224,6 +215,10 @@ class AuthHandler(BaseHandler):
         result = json.loads(response.body)
         if not result['success']:
             raise HTTPError(FORBIDDEN, 'recaptcha failed: %s' % ', '.join(result['error-codes']))
+
+    def authorize(self):
+        '''AuthHandlers don't have authorization. They're meant to log users in.'''
+        pass
 
 
 class LogoutHandler(AuthHandler):
