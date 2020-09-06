@@ -263,6 +263,7 @@ app:
         login_url: /login/              # URL used to log in
 
     session:
+        cookie: sid     # Name of the session ID cookie
         type: json      # Type of store to use: hdf5, json or memory
         flush: 5        # Write store to disk periodically (in seconds)
                         # For type:json, use 5 seconds. It does not save to disk automatically

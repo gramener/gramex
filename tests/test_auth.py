@@ -30,18 +30,18 @@ class TestSession(TestGramex):
 
     def test_session(self):
         r1 = self.session1.get(self.url + '?var=x')
-        self.assertIn('sid', r1.cookies)
+        self.assertIn('sid2', r1.cookies)
         self.data1 = json.loads(r1.text)
         self.assertIn('id', self.data1)
         eq_(self.data1['var'], 'x')
 
         r2 = self.session2.get(self.url)
-        self.assertIn('sid', r2.cookies)
+        self.assertIn('sid2', r2.cookies)
         self.data2 = json.loads(r2.text)
         self.assertIn('id', self.data2)
         self.assertNotIn('var', self.data2)
 
-        self.assertNotEqual(r1.cookies['sid'], r2.cookies['sid'])
+        self.assertNotEqual(r1.cookies['sid2'], r2.cookies['sid2'])
         self.assertNotEqual(self.data1['id'], self.data2['id'])
 
         # Test expiry date. It should be within a few seconds of now, plus expiry date
@@ -62,7 +62,7 @@ class TestSession(TestGramex):
         r = requests.get(self.url + '?var=x')
         cookies = {c.name: c for c in r.cookies}
         cookie = r.headers['Set-Cookie'].lower()
-        self.assertIn('sid', cookies)
+        self.assertIn('sid2', cookies)
         self.assertIn('httponly', cookie)
         self.assertIn('domain=.localhost.local', cookie)
         # HTTP requests should not have a secure flag
@@ -144,9 +144,9 @@ class AuthBase(TestGramex):
 class LoginMixin(object):
     def test_login(self):
         self.login_ok('alpha', 'alpha', check_next='/dir/index/')
-        old_sid = self.session.cookies['sid']
+        old_sid = self.session.cookies['sid2']
         self.login_ok('beta', 'beta', check_next='/dir/index/')
-        new_sid = self.session.cookies['sid']
+        new_sid = self.session.cookies['sid2']
         # Test session fixation: login changes sid
         self.assertNotEqual(old_sid, new_sid)
 
@@ -307,7 +307,7 @@ class TestExpiry(AuthBase):
 
     def check_expiry(self, days):
         to_expire = time.time() + days * 24 * 60 * 60
-        expires = {c.name: c.expires for c in self.session.cookies}.get('sid', 0)
+        expires = {c.name: c.expires for c in self.session.cookies}.get('sid2', 0)
         self.assertLess(abs(to_expire - expires), 2)
         session = self.session.get(server.base_url + '/auth/session').json()
         self.assertLess(abs(to_expire - session.get('_t', 0)), 2)

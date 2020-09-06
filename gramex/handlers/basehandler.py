@@ -144,6 +144,7 @@ class BaseMixin(object):
         cls._session_store = session_store_cache[key]
         cls.session = property(cls.get_session)
         cls._session_expiry = session_conf.get('expiry')
+        cls._session_cookie_id = session_conf.get('cookie', 'sid')
         cls._session_cookie = {
             key: session_conf[key] for key in ('domain', 'httponly', 'secure')
             if key in session_conf
@@ -449,7 +450,7 @@ class BaseMixin(object):
             kwargs['secure'] = True
         # Websockets cannot set cookies. They raise a RuntimeError. Ignore those.
         try:
-            self.set_secure_cookie('sid', session_id, **kwargs)
+            self.set_secure_cookie(self._session_cookie_id, session_id, **kwargs)
         except RuntimeError:
             pass
         return session_id
@@ -486,7 +487,7 @@ class BaseMixin(object):
         if getattr(self, '_session', None) is None:
             # Populate self._session based on the sid. If there's no sid cookie,
             # generate one and create an associated session object
-            session_id = self.get_secure_cookie('sid', max_age_days=9999999)
+            session_id = self.get_secure_cookie(self._session_cookie_id, max_age_days=9999999)
             # If there's no session id cookie "sid", create a random 32-char cookie
             if session_id is None:
                 session_id = self._set_new_session_id(expires_days)
@@ -573,7 +574,7 @@ class BaseMixin(object):
         '''
         # For efficiency reasons, don't call get_session every time. Check
         # session only if there's a valid sid cookie (with possibly long expiry)
-        if self.get_secure_cookie('sid', max_age_days=9999999):
+        if self.get_secure_cookie(self._session_cookie_id, max_age_days=9999999):
             session = self.get_session()
             if '_i' in session:
                 session['_l'] = time.time()
