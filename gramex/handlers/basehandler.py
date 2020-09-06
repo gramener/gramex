@@ -665,7 +665,7 @@ class BaseHandler(RequestHandler, BaseMixin):
         if not self.current_user:
             # Redirect non-AJAX requests GET/HEAD to login URL (if it's a string)
             ajax = self.request.headers.get('X-Requested-With', '').lower() == 'xmlhttprequest'
-            auth = setattr(self, '_auth', {})
+            auth = getattr(self, '_auth', {})
             if self.request.method in ('GET', 'HEAD') and not ajax:
                 url = auth.get('login_url', self.get_login_url())
                 # If login_url is a string, redirect
