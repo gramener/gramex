@@ -275,10 +275,12 @@ def _google_translate(q, source, target, key):
     response = r.json()
     if 'error' in response:
         return app_log.error('Google Translate API error: %s', response['error'])
+    print(response)
     return {
         'q': q,
         't': [t['translatedText'] for t in response['data']['translations']],
-        'source': [t['detectedSourceLanguage'] for t in response['data']['translations']],
+        'source': [t.get('detectedSourceLanguage', params.get('source', None))
+                   for t in response['data']['translations']],
         'target': [target] * len(q),
     }
 
@@ -310,7 +312,6 @@ def translate(*q, **kwargs):
 
     :arg str q: one or more strings to translate
     :arg str source: 2-letter source language (e.g. en, fr, es, hi, cn, etc).
-        If empty or None, auto-detects source
     :arg str target: 2-letter target language (e.g. en, fr, es, hi, cn, etc).
     :arg str key: Google Translate API key
     :arg dict cache: kwargs for :py:func:`gramex.data.filter`. Has keys such as
