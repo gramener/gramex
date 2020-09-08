@@ -275,7 +275,6 @@ def _google_translate(q, source, target, key):
     response = r.json()
     if 'error' in response:
         return app_log.error('Google Translate API error: %s', response['error'])
-    print(response)
     return {
         'q': q,
         't': [t['translatedText'] for t in response['data']['translations']],
