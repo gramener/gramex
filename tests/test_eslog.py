@@ -1,15 +1,18 @@
 from nose.tools import eq_
 from . import TestGramex
+import json
+import time
 
 
 class TestESLog(TestGramex):
     def test_elog(self):
         self.check('/log', {'level': 'INFO', 'x': 1, 'msg': 'abc'})
-        result = self.check('/log/queue').json()
-        eq_(result['level'], 'INFO')
-        eq_(result['x'], '1')
-        eq_(result['msg'], 'abc')
-        eq_(result['port'], '9999')
+        result = self.check('/log/queue')
+        result = json.loads(result.content)
+        eq_(result[0]['level'], 'INFO')
+        eq_(result[0]['x'], '1')
+        eq_(result[0]['msg'], 'abc')
+        eq_(result[0]['port'], 9999)
         # TODO: Check that this is within 5 seconds of now
         # eq_(result['time'], )
 
@@ -25,3 +28,18 @@ class TestESLog(TestGramex):
 
         # Run without configuring gramexlog
         # Run after configuring gramexlog manually
+
+        # Without eslog config, log queue should be empty
+        # Check if the log is written to elastic search
+        # What happens when elastic search is not running?
+
+    def search_log_doc(self):
+        import uuid
+        x = uuid.uuid4()
+        no_of_docs = 5
+        for i in range(no_of_docs):
+            self.check('/log', {'level': 'WARN', 'x': x, 'msg': 'abc'})
+        time.sleep(5)
+        result = self.check('/log/search', {'x': x})
+        result = result.json()
+        eq_(result['hits']['total']['value'], no_of_docs)

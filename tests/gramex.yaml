@@ -1906,6 +1906,12 @@ url:
     kwargs:
       function: utils.gramex_log_queue
 
+  log/search:
+    pattern: /log/search
+    handler: FunctionHandler
+    kwargs:
+      function: utils.search_log     
+
   shutdown:
     pattern: /shutdown
     handler: FunctionHandler
