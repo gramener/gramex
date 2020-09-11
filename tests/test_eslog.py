@@ -5,7 +5,7 @@ import time
 
 
 class TestESLog(TestGramex):
-    def test_elog(self):
+    def test_eslog(self):
         self.check('/log', {'level': 'INFO', 'x': 1, 'msg': 'abc'})
         result = self.check('/log/queue')
         result = json.loads(result.content)
@@ -31,7 +31,12 @@ class TestESLog(TestGramex):
 
         # Without eslog config, log queue should be empty
         # Check if the log is written to elastic search
-        # What happens when elastic search is not running?
+
+    def test_eslog_not_running(self):
+        # 1. Create a connection to a nonexistent elasticsearch port and send the request
+        # 2. Stop elasticsearch and send a log message
+        # self.check('/log', {'level': 'WARN', 'x': x, 'msg': 'abc'})
+        pass
 
     def search_log_doc(self):
         import uuid

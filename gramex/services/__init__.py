@@ -917,7 +917,7 @@ def gramexlog(conf):
     info.gramexlog.maxlength = conf.get('maxlength', 100000)
     info.gramexlog.index = index = conf.get('index', 'gramexlog')
     info.gramexlog.connection = connection = Elasticsearch(
-        conf['host'], http_auth=(conf.get('user'), conf.get('pass')))
+        conf['host'] or None, http_auth=(conf.get('user'), conf.get('pass')))
 
     def log_to_es():
         try:

@@ -294,14 +294,14 @@ def shutdown():
         ioloop.stop()
 
 
-def log(**kwargs):
+def log(handler=None, **kwargs):
     '''
     Logs structured information for future reference. Typical usage::
 
         gramex.log(level='INFO', x=1, msg='abc')
 
-    This logs ``{level: INFO, x: 1, msg: abc, port: 9988, time: 2020-07-21 13:41:00}``. 3 keys
-    are added:
+    This logs ``{level: INFO, x: 1, msg: abc, port: 9988, time: 2020-07-21 13:41:00}``. 3 keys are
+    added:
 
     1. ``level``: logging level. Defaults to INFO
     2. ``time``: current time as YYYY-MM-DD HH:MM:ZZ in UTC
@@ -309,7 +309,24 @@ def log(**kwargs):
 
     If a logging service like ElasticSearch has been configured, it will periodically flush the
     logs into ElasticSearch.
+
+    By default, this logs into the ``default`` index. If you have multiple log indices, you can
+    optionally add an ``_index="log-name"``. For example, if the ``gramex.yaml`` configuration was
+    like this::
+
+        gramexlog:
+            app1:
+                host: localhost
+                index: app1
+            app2:
+                host: localhost
+                index: app2
+
+    ... then, ``gramex.log(x=1, y=2, _index='app1')`` will log into the ``app1`` index.
     '''
+    # If any argument is a
+    if handler is not None:
+        kwargs.update({key: val[0] for key, val in handler.args.items()})
     from . import services
     conf = services.info.gramexlog
     if conf and 'queue' in conf and 'maxlength' in conf:

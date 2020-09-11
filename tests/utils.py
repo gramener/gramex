@@ -434,30 +434,14 @@ def drivehandler_modify(data, key, handler):
 
 # from elasticsearch import Elasticsearch
 # es = Elasticsearch("localhost", http_auth=("eladm","eladm"))
-from gramex.services import info as inf
-
-def gramex_log(handler):
-    gramex.log(**{key: val[0] for key, val in handler.args.items()})
-    return ''
-
 
 def gramex_log_queue(handler):
     return json.dumps(info.gramexlog.queue)
 
 
 def search_log(handler):
-    query_body = {
-        "query": {
-            "bool": {
-            "must": {
-                "match": {      
-                "x": handler.args['x'][0]
-                }
-            }
-            }
-        }
-        }
-    res = inf.gramexlog.connection.search(index="gramexlog", body=query_body)
+    query_body = {"query": {"bool": {"must": {"match": {"x": handler.args['x'][0]}}}}}
+    res = info.gramexlog.connection.search(index="gramexlog", body=query_body)
     return res
 
 
