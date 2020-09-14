@@ -86,7 +86,7 @@ setup(
     include_package_data=True,
     # Pick up dependencies from gramex/release.json
     # To ensure that pip install works, only include packages that work via pip (not conda)
-    install_requires=release['lib'] + release['pip'],
+    install_requires=[req for part in ('lib', 'pip') for req in release[part]],
     zip_safe=False,
     entry_points={
         'console_scripts': release['console'],
