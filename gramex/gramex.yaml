@@ -27,6 +27,10 @@ mime:
     .h5:        application/x-hdf5
     .hdf5:      application/x-hdf5
     .pkl:       application/octet-stream
+    .ttf:       font/ttf
+    .otf:       font/otf
+    .woff:      font/woff
+    .woff2:     font/woff2
 
 # Configure the thread pool that's shared across Gramex to run parallel threads.
 threadpool:
