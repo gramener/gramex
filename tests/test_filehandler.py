@@ -9,7 +9,7 @@ from gramex.http import OK, FORBIDDEN, METHOD_NOT_ALLOWED
 from orderedattrdict import AttrDict
 from gramex.ml import r
 from gramex.transforms import badgerfish, rmarkdown
-from nose.tools import ok_
+from nose.tools import ok_, eq_
 from nose.plugins.skip import SkipTest
 from . import server, tempfiles, TestGramex, folder
 
@@ -48,11 +48,11 @@ class TestFileHandler(TestGramex):
             r = self.get(url + '?高=σ&λ=►')
             if check:
                 self.assertTrue(r.url.endswith(url + '/?%E9%AB%98=%CF%83&%CE%BB=%E2%96%BA'))
-                redirect_codes = (301, 302)
                 self.assertIn(r.history[0].status_code, redirect_codes, url)
             else:
                 self.assertEqual(len(r.history), 0)
 
+        redirect_codes = (301, 302)
         self.check('/dir/noindex/', code=404)
         adds_slash('/dir/noindex/subdir', False)
         self.check('/dir/noindex/subdir/', code=404)
@@ -116,6 +116,11 @@ class TestFileHandler(TestGramex):
         self.check('/dir/image.JPG', path='dir/image.JPG', headers={
             'Content-Type': 'image/jpeg'
         })
+
+        r = self.get('/dir/index/subdir', allow_redirects=False, headers={
+            'X-Request-URI': 'https://x.com/a/dir/index/subdir'})
+        ok_(r.status_code in redirect_codes)
+        eq_(r.headers['Location'], 'https://x.com/a/dir/index/subdir/')
 
     def test_args(self):
         self.check('/dir/args/?高=σ', text=json.dumps({'高': ['σ']}))

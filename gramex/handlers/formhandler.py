@@ -1,4 +1,3 @@
-import six
 import json
 import tornado.gen
 import gramex.cache
@@ -169,10 +168,10 @@ class FormHandler(BaseHandler):
         format_options['args'] = opt.args
         params = {k: v[0] for k, v in opt.args.items() if len(v) > 0}
         for key, val in format_options.items():
-            if isinstance(val, six.text_type):
+            if isinstance(val, str):
                 format_options[key] = val.format(**params)
             # In PY2, the values are binary. TODO: ensure that format values are in Unicode
-            elif isinstance(val, six.binary_type):
+            elif isinstance(val, bytes):
                 format_options[key] = val.decode('utf-8').format(**params)
         if opt.download:
             self.set_header('Content-Disposition', 'attachment;filename=%s' % opt.download)

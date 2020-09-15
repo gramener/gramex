@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from nose.tools import eq_, ok_
 from nose.plugins.skip import SkipTest
 from tornado.web import create_signed_value
-from six.moves.urllib_parse import urlencode
+from urllib.parse import urlencode, urljoin
 import gramex
 import gramex.config
 from gramex.cache import SQLiteStore
@@ -114,14 +114,14 @@ class AuthBase(TestGramex):
         r = self.login(*args, **kwargs)
         eq_(r.status_code, OK)
         self.assertNotRegexpMatches(r.text, 'error code')
-        eq_(r.url, server.base_url + check_next)
+        eq_(r.url, urljoin(server.base_url, check_next))
 
     def logout_ok(self, *args, **kwargs):
         check_next = kwargs.pop('check_next')
         # logout() does not accept user, password. So Just pass the kwargs
         r = self.logout(**kwargs)
         eq_(r.status_code, OK)
-        eq_(r.url, server.base_url + check_next)
+        eq_(r.url, urljoin(server.base_url, check_next))
 
     def unauthorized(self, *args, **kwargs):
         r = self.login(*args, **kwargs)
@@ -138,7 +138,7 @@ class AuthBase(TestGramex):
             if 'data' in kwargs:
                 data.update(kwargs.pop('data'))
             r = session.post(self.url, data=data, allow_redirects=False, **kwargs)
-            eq_(r.headers['Location'], url)
+            eq_(urljoin(server.base_url, r.headers['Location']), urljoin(server.base_url, url))
 
 
 class LoginMixin(object):

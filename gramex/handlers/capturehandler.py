@@ -1,6 +1,5 @@
 import re
 import os
-import six
 import json
 import time
 import shlex
@@ -11,10 +10,10 @@ import tornado.gen
 from orderedattrdict import AttrDict
 from threading import Thread, Lock
 from subprocess import Popen, PIPE, STDOUT      # nosec
-from six.moves.urllib.parse import urlencode, urljoin
+from urllib.parse import urlencode, urljoin
 from tornado.web import HTTPError
 from tornado.httpclient import AsyncHTTPClient
-from gramex.config import app_log, variables, recursive_encode
+from gramex.config import app_log, variables
 from gramex.http import OK, BAD_REQUEST, GATEWAY_TIMEOUT, BAD_GATEWAY, CLIENT_TIMEOUT
 from .basehandler import BaseHandler
 
@@ -191,8 +190,6 @@ class Capture(object):
                 yield tornado.gen.sleep(self.check_interval)
         if not self.started:
             raise RuntimeError('%s not started. See logs' % self.engine.script)
-        if six.PY2:
-            recursive_encode(kwargs)
         r = yield self.browser.fetch(
             self.url, method='POST', body=urlencode(kwargs, doseq=True), raise_error=False,
             connect_timeout=self.timeout, request_timeout=self.timeout, headers=headers)
@@ -328,7 +325,10 @@ class CaptureHandler(BaseHandler):
             raise HTTPError(BAD_REQUEST, reason='%s: CaptureHandler needs ?url=' % self.name)
 
         # If the URL is a relative URL, treat it relative to the called path
-        args['url'] = urljoin(self.request.full_url(), args['url'])
+        # If xrequest_uri is specified and is a full URL, use that as the base.
+        # Else use the full request URL as the backup.
+        base = urljoin(self.request.full_url(), self.xrequest_uri)
+        args['url'] = urljoin(base, args['url'])
         # Copy all relevant HTTP headers as-is
         args['headers'] = {
             key: val for key, val in self.request.headers.items()

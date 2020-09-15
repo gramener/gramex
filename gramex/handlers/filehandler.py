@@ -6,12 +6,11 @@ import tornado.web
 import tornado.gen
 from pathlib import Path
 from fnmatch import fnmatch
-from six import string_types, text_type
 from tornado.escape import utf8
 from tornado.web import HTTPError
 from collections import defaultdict
 from orderedattrdict import AttrDict
-from six.moves.urllib.parse import urljoin
+from urllib.parse import urljoin, urlsplit, urlunsplit
 from .basehandler import BaseHandler
 from gramex.config import objectpath, app_log
 from gramex import conf as gramex_conf
@@ -160,7 +159,7 @@ class FileHandler(BaseHandler):
         for pattern in result:
             if not pattern:
                 app_log.warning('%s: Ignoring empty pattern "%r"', cls.name, pattern)
-            elif not isinstance(pattern, string_types):
+            elif not isinstance(pattern, (str, bytes)):
                 app_log.warning('%s: pattern "%r" is not a string. Ignoring.', cls.name, pattern)
             result.add(pattern)
         return result
@@ -183,7 +182,7 @@ class FileHandler(BaseHandler):
             for pattern, filestr in self.root.items():
                 match = pattern.match(path)
                 if match:
-                    q = defaultdict(text_type, **self.default)
+                    q = defaultdict(str, **self.default)
                     q.update({k: v[0] for k, v in self.args.items() if len(v) > 0})
                     q.update(match.groupdict())
                     p = Path(filestr.format(*match.groups(), **q)).absolute()
@@ -234,8 +233,9 @@ class FileHandler(BaseHandler):
                 raise HTTPError(NOT_FOUND, '%s missing index', self.file)
             # Ensure URL has a trailing '/' when displaying the index / default file
             if not self.request.path.endswith('/'):
-                suffix = '/?' + self.request.query if self.request.query else '/'
-                self.redirect(self.request.path + suffix, permanent=True)
+                p = urlsplit(self.xrequest_uri)
+                r = urlunsplit((p.scheme, p.netloc, p.path + '/', p.query, p.fragment))
+                self.redirect(r, permanent=True)
                 return
         else:
             self.file = self.path
