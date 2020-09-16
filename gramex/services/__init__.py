@@ -911,20 +911,20 @@ def gramexlog(conf):
     '''
     from elasticsearch import Elasticsearch
     from elasticsearch import helpers
-
-    info.gramexlog.poll = poll = conf.get('poll', 1)
+    default_conf = conf.get('default')
+    info.gramexlog.conf = conf
+    info.gramexlog.poll = poll = default_conf.get('poll', 1)
     info.gramexlog.queue = queue = []
-    info.gramexlog.maxlength = conf.get('maxlength', 100000)
-    info.gramexlog.index = index = conf.get('index', 'gramexlog')
+    info.gramexlog.maxlength = default_conf.get('maxlength', 100000)
     info.gramexlog.connection = connection = Elasticsearch(
-        conf['host'] or None, http_auth=(conf.get('user'), conf.get('pass')))
+        default_conf.get('host') or None, http_auth=(
+            default_conf.get('user'), default_conf.get('pass')))
 
     def log_to_es():
         try:
             if queue:
-                # Override _index and _id -- a must for bulk indexing in ElasticSearch
+                # Override _id -- a must for bulk indexing in ElasticSearch
                 for item in queue:
-                    item['_index'] = index
                     item['_id'] = uuid.uuid4()
                 helpers.bulk(connection, queue)
                 queue.clear()

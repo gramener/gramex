@@ -333,6 +333,8 @@ def log(handler=None, **kwargs):
         kwargs['level'] = kwargs.get('level', 'INFO').upper()
         kwargs['time'] = datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%SZ')
         kwargs['port'] = app_log_extra['port']
+        idx = kwargs.get('_index', 'default')
+        kwargs['_index'] = conf['conf'].get(idx).get('index')
         if len(conf['queue']) < conf['maxlength']:
             conf['queue'].append(kwargs)
         else:
