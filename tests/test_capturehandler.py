@@ -320,7 +320,7 @@ class TestCaptureHandlerChrome(TestCaptureHandler):
         ok_(re.search(r'1\s*/\s*1', layout[-1]))
 
     def test_browser_disconnect(self):
-        result = self.fetch(self.src, params={
-            'url': self.url, 'file': 'capture', 'ext': 'jpg', '_test_disconnect': 1})
-        self.check_filename(result, 'capture.jpg')
-        self.check_img(result.content)
+        content = self.capture.jpg(url=server.base_url + self.url, _test_disconnect=1)
+        time.sleep(0.2)
+        content = self.capture.jpg(url=server.base_url + self.url)
+        self.check_img(content)
