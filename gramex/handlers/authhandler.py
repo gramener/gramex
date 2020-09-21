@@ -1,6 +1,5 @@
 import os
 import csv
-import six
 import json
 import time
 import uuid
@@ -10,6 +9,7 @@ import tornado.httpclient
 from tornado.auth import GoogleOAuth2Mixin
 from tornado.gen import coroutine, sleep
 from tornado.web import HTTPError
+from urllib.parse import urlencode
 from collections import Counter
 from orderedattrdict import AttrDict
 import gramex
@@ -205,7 +205,7 @@ class AuthHandler(BaseHandler):
         token = self.get_argument('recaptcha', None)
         if token is None:
             raise HTTPError(FORBIDDEN, "'recaptcha' argument missing from POST")
-        body = six.moves.urllib_parse.urlencode({
+        body = urlencode({
             'secret': conf.secret,
             'response': token,
             'remoteip': self.request.remote_ip
@@ -242,7 +242,7 @@ class GoogleAuth(AuthHandler, GoogleOAuth2Mixin):
             'key': self.kwargs['key'],
             'secret': self.kwargs['secret']
         }
-        redirect_uri = '{0.protocol:s}://{0.host:s}{0.path:s}'.format(self.request)
+        redirect_uri = self.xrequest_uri
         code = self.get_arg('code', '')
         if code:
             access = yield self.get_authenticated_user(
@@ -403,7 +403,7 @@ def csv_encode(values, *args, **kwargs):
     buf = StringIOClass()
     writer = csv.writer(buf, *args, **kwargs)
     writer.writerow([
-        v if isinstance(v, six.text_type) else
-        v.decode('utf-8') if isinstance(v, six.binary_type) else repr(v)
+        v if isinstance(v, str) else
+        v.decode('utf-8') if isinstance(v, bytes) else repr(v)
         for v in values])
     return buf.getvalue().strip()

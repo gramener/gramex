@@ -27,6 +27,10 @@ mime:
     .h5:        application/x-hdf5
     .hdf5:      application/x-hdf5
     .pkl:       application/octet-stream
+    .ttf:       font/ttf
+    .otf:       font/otf
+    .woff:      font/woff
+    .woff2:     font/woff2
 
 # Configure the thread pool that's shared across Gramex to run parallel threads.
 threadpool:
@@ -263,6 +267,7 @@ app:
         login_url: /login/              # URL used to log in
 
     session:
+        cookie: sid     # Name of the session ID cookie
         type: json      # Type of store to use: hdf5, json or memory
         flush: 5        # Write store to disk periodically (in seconds)
                         # For type:json, use 5 seconds. It does not save to disk automatically

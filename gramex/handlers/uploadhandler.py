@@ -1,5 +1,4 @@
 import os
-import six
 import time
 import json
 import gramex
@@ -7,7 +6,7 @@ import shutil
 import mimetypes
 import tornado.gen
 from datetime import datetime
-from six.moves import zip_longest
+from itertools import zip_longest
 from orderedattrdict import AttrDict
 from tornado.web import HTTPError
 from gramex.config import app_log
@@ -28,7 +27,7 @@ class FileUpload(object):
         for cat in ('file', 'delete', 'save'):
             keys.setdefault(cat, [cat])
             if not isinstance(keys[cat], list):
-                if isinstance(keys[cat], six.string_types):
+                if isinstance(keys[cat], (str, bytes)):
                     keys[cat] = [keys[cat]]
                 else:
                     app_log.error('FileUpload: cat: %r must be a list or str', keys[cat])

@@ -1,5 +1,4 @@
 import os
-import six
 import json
 import gramex
 import tornado.gen
@@ -53,7 +52,7 @@ class SocialMixin(object):
         if content and response.code == OK:
             content = yield gramex.service.threadpool.submit(self.run_transforms, content=content)
         # Convert to JSON if required
-        if not isinstance(content, (six.binary_type, six.text_type)):
+        if not isinstance(content, (str, bytes)):
             content = json.dumps(content, ensure_ascii=True, separators=(',', ':'))
         raise tornado.gen.Return(content)
 
@@ -195,8 +194,7 @@ class TwitterRESTHandler(SocialMixin, BaseHandler, TwitterMixin):
             self.redirect_next()
         else:
             self.save_redirect_page()
-            yield self.authorize_redirect(callback_uri=self.request.protocol + "://" +
-                                          self.request.host + self.request.uri)
+            yield self.authorize_redirect(callback_uri=self.xrequest_uri)
 
     def _oauth_consumer_token(self):
         return dict(key=self.kwargs['key'],
@@ -255,7 +253,7 @@ class FacebookGraphHandler(SocialMixin, BaseHandler, FacebookGraphMixin):
 
     @tornado.gen.coroutine
     def login(self):
-        redirect_uri = self.request.protocol + "://" + self.request.host + self.request.uri
+        redirect_uri = self.xrequest_uri
         if self.get_argument('code', False):
             info = self.session[self.user_info] = yield self.get_authenticated_user(
                 redirect_uri=redirect_uri,

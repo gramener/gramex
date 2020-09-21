@@ -136,11 +136,8 @@ def apply_commands(rule: Dict[str, dict], shapes, data: dict):
     for pattern, spec in rule.items():
         if pattern in rule_cmdlist:
             continue
-        shape_matched = False
-        for shape in shapes:
-            if not fnmatchcase(shape.name, pattern):
-                continue
-            shape_matched = True
+        matched_shapes = [shape for shape in shapes if fnmatchcase(shape.name, pattern)]
+        for shape in matched_shapes:
             # Clone all slides into the `clones` list BEFORE applying any command. Ensures that
             # commands applied to the shape don't propagate into its clones
             clones = []
@@ -172,7 +169,7 @@ def apply_commands(rule: Dict[str, dict], shapes, data: dict):
                 if is_group:
                     apply_commands(spec, SlideShapes(clone.shape.element, shapes), shape_data)
         # Warn if the pattern is neither a shape nor a command
-        if (not shape_matched and pattern not in special_cmdlist and
+        if (not matched_shapes and pattern not in special_cmdlist and
                 pattern not in commands.cmdlist):
             app_log.warn('pptgen2: No shape matches pattern: %s', pattern)
 

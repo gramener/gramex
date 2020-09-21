@@ -1,6 +1,5 @@
 import io
 import os
-import six
 import tornado.web
 import tornado.gen
 from threading import RLock
@@ -100,7 +99,7 @@ class ProcessHandler(BaseHandler):
             elif not target:
                 pass
             # strings are treated as files
-            elif isinstance(target, six.string_types):
+            elif isinstance(target, (str, bytes)):
                 # cache file handles for re-use between stdout, stderr
                 if target not in self.handles:
                     self.handles[target] = io.open(target, mode='wb')

@@ -1,7 +1,6 @@
-import six
 import tornado.web
 import tornado.gen
-from six.moves.urllib_parse import urlsplit, urlunsplit, parse_qs, urlencode
+from urllib.parse import urlsplit, urlunsplit, parse_qs, urlencode
 from tornado.httputil import HTTPHeaders
 from tornado.httpclient import AsyncHTTPClient, HTTPRequest
 from gramex.transforms import build_transform
@@ -99,14 +98,14 @@ class ProxyHandler(BaseHandler, BaseWebSocketHandler):
                 if key in self.request.headers:
                     headers[key] = self.request.headers[key]
             else:
-                headers[key] = six.text_type(val).format(handler=self)
+                headers[key] = str(val).format(handler=self)
 
         # Update query parameters
         # TODO: use a named capture for path_args? This is not the right method
         parts = urlsplit(self.url.format(*path_args))
         params = {
-            key: ([six.text_type(v).format(handler=self) for v in val] if isinstance(val, list)
-                  else six.text_type(val).format(handler=self))
+            key: ([str(v).format(handler=self) for v in val] if isinstance(val, list)
+                  else str(val).format(handler=self))
             for key, val in self.default.items()
         }
         params.update(parse_qs(parts.query))

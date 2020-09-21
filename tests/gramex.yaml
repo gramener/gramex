@@ -22,6 +22,7 @@ app:
   listen:
     port: 9999              # Avoid clash with default Gramex port running tests
   session:
+    cookie: sid2                # Name the cookie differently from "sid"
     domain: .localhost.local    # RequestCookieJar uses this domain for localhost
     secure: false               # Don't set this to true. We're using HTTP, so it will fail
     # httponly: true            # Not required. Already set in base gramex.yaml

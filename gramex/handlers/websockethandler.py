@@ -1,6 +1,5 @@
 from collections import OrderedDict
-from six import string_types
-from six.moves.urllib_parse import urlparse
+from urllib.parse import urlparse
 from gramex.transforms import build_transform
 from .basehandler import BaseWebSocketHandler
 
@@ -45,7 +44,7 @@ class WebSocketHandler(BaseWebSocketHandler):
         origins = self.kwargs.get('origins', [])
         if not origins:
             return True
-        if isinstance(origins, string_types):
+        if isinstance(origins, (str, bytes)):
             origins = [origins]
         domain = urlparse(origin).netloc
         for allowed_origin in origins:
