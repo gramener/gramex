@@ -53,7 +53,6 @@ cp -R $GRAMEXAPPS_SRC/* $GRAMEXAPPS_OFFLINE/
 cp -R $GRAMEXDATA_SRC/* $GRAMEXDATA_OFFLINE/
 
 # Build the archive
-chmod +x ./install.sh
 tar -jcvf gramex-offline.tar.bz2 -C $OFFLINE .
 
 # Cleanup
