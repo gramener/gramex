@@ -74,6 +74,12 @@ conda:
 	python pkg/conda/conda-setup.py
 	conda build -c conda-forge pkg/conda/
 
+offline:
+	python pkg/conda/conda-setup.py
+	python pkg/offline/offline-setup.py
+	bash pkg/offline/build.sh
+	@echo "Move ./gramex-offline.tar.bz2 to the target machine, unpack it, and run the `install.sh` script from the same folder."
+
 push-docker:
 	$(PYTHON) -m pip install docker
 	$(PYTHON) pkg/docker-py3/build.py

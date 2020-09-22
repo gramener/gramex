@@ -152,3 +152,14 @@ docs/_build
 
 # License copied to conda build_dir
 pkg/conda/LICENSE
+
+# Files produced by make offline
+*.tar.bz2
+pkg/offline/GRAMEXAPPS/
+pkg/offline/GRAMEXDATA/
+pkg/offline/_conda_offline_pkg/
+pkg/offline/_conda_offline_recipe/
+pkg/offline/conda/
+pkg/offline/pip/
+pkg/offline/build.sh
+pkg/offline/install.sh
