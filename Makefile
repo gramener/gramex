@@ -71,12 +71,11 @@ test: test-setup
 
 conda:
 	# conda install conda-build
-	python pkg/conda/conda-setup.py
+	python pkg/build_tempaltes.py
 	conda build -c conda-forge pkg/conda/
 
 offline:
-	python pkg/conda/conda-setup.py
-	python pkg/offline/offline-setup.py
+	python pkg/build_tempaltes.py
 	bash pkg/offline/build.sh
 	@echo "Move ./gramex-offline.tar.bz2 to the target machine, unpack it, and run the 'install.sh' script from the same folder."
 
