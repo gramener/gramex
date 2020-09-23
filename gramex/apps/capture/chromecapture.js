@@ -74,6 +74,16 @@ function templatize(input) {
     .join('')
 }
 
+const browser_setup = async (args) => {
+  browser = await puppeteer.launch({args: args})
+  browser.on('disconnected', () => {
+    console.log('Reconnecting browser')
+    browser.close()
+    browser_setup(args)
+  })
+  return browser
+}
+
 async function render(q) {
   console.log('Opening', q.url)
 
@@ -129,7 +139,8 @@ async function render(q) {
     args.push('--proxy-server=' + proxy)
 
   if (typeof browser == 'undefined')
-    browser = await puppeteer.launch({args: args})
+    browser = await browser_setup(args)
+
   let page = await browser.newPage()
 
   // Clear past cookies
@@ -226,6 +237,10 @@ async function render(q) {
     }
   }
   await page.close()
+  if (q._test_disconnect){
+    console.log('Disconnecting browser')
+    browser.disconnect()
+  }
   return {path: target, file: file}
 }
 
