@@ -28,6 +28,7 @@
   "console#": "Command-line scripts provided by Gramex",
   "console": [
       "gramex = gramex:commandline",
+      "secrets = gramex.secrets:commandline",
       "slidesense = gramex.pptgen2:commandline"
   ],
 

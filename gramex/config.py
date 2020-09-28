@@ -159,13 +159,16 @@ _warned_paths = set()
 # Get the directory where gramex is located. This is the same as the directory
 # where this file (config.py) is located.
 _gramex_path = os.path.dirname(os.path.abspath(__file__))
+# Secret variables
+secrets = {}
 
 
 def setup_variables():
     '''Initialise variables'''
     variables = DefaultAttrDict(str)
-    # Load all environment variables
+    # Load all environment variables, and overwrite with secrets
     variables.update(os.environ)
+    variables.update(secrets)
     # GRAMEXPATH is the Gramex root directory
     variables['GRAMEXPATH'] = _gramex_path
     # GRAMEXAPPS is the Gramex apps directory
@@ -852,3 +855,34 @@ def used_kwargs(method, kwargs, ignore_keywords=False):
             target = used if key in set(argspec.args) else rest
             target[key] = val
     return used, rest
+
+
+def setup_secrets(path, max_age_days=1000000):
+    '''
+    Load ``<path>/.secrets.yaml`` (which must be a dict) into gramex.config.variables.
+
+    If there's a ``SECRET_URL:`` and ``SECRET_KEY:`` key, the text from ``SECRET_URL:`` is
+    decrypted using ``secrets_key``.
+    '''
+    secrets_path = path / '.secrets.yaml'
+    if not secrets_path.is_file():
+        return
+
+    with secrets_path.open(encoding='utf-8') as handle:
+        result = yaml.load(handle, Loader=yaml.SafeLoader)
+    if not isinstance(result, dict):
+        raise ValueError('%s: must be a key: value YAML file' % path)
+    # If SECRETS_URL: and SECRETS_KEY: are set, fetch secrets from URL and decrypted with the key.
+    # This allows changing secrets remotely without access to the server.
+    secrets_url = result.pop('SECRETS_URL', None)
+    secrets_key = result.pop('SECRETS_KEY', None)
+    if secrets_url and secrets_key:
+        from urllib.request import urlopen
+        from tornado.web import decode_signed_value
+        app_log.info('Fetching remote secrets from %s', secrets_url)
+        # Load string from the URL -- but ignore comments
+        value = yaml.load(urlopen(secrets_url), Loader=yaml.SafeLoader)
+        value = decode_signed_value(secrets_key, '', value, max_age_days=max_age_days)
+        result.update(loads(value.decode('utf-8')))
+    secrets.clear()
+    secrets.update(result)

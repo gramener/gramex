@@ -35,7 +35,7 @@ import tornado.ioloop
 from pathlib import Path
 from orderedattrdict import AttrDict
 from gramex.config import ChainConfig, PathConfig, app_log, variables, setup_variables
-from gramex.config import ioloop_running, prune_keys
+from gramex.config import ioloop_running, prune_keys, setup_secrets
 
 paths = AttrDict()              # Paths where configurations are stored
 conf = AttrDict()               # Final merged configurations
@@ -226,6 +226,11 @@ def init(force_reload=False, **kwargs):
     Services are re-initialised if their configurations have changed. Service
     callbacks are always re-run (even if the configuration hasn't changed.)
     '''
+    try:
+        setup_secrets(paths['base'])
+    except Exception as e:
+        app_log.exception(e)
+
     # Reset variables
     variables.clear()
     variables.update(setup_variables())
