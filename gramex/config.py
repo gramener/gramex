@@ -635,9 +635,6 @@ def locate(path, modules=[], forceload=0):
         return None
 
 
-_checked_old_certs = []
-
-
 class CustomJSONEncoder(JSONEncoder):
     '''
     Encodes object to JSON, additionally converting datetime into ISO 8601 format
@@ -700,42 +697,6 @@ class CustomJSONDecoder(JSONDecoder):
         if callable(self.old_object_pairs_hook):
             return self.old_object_pairs_hook(obj)
         return dict(obj)
-
-
-def check_old_certs():
-    '''
-    The latest SSL certificates from certifi don't work for Google Auth. Do
-    a one-time check to access accounts.google.com. If it throws an SSL
-    error, switch to old SSL certificates. See
-    https://github.com/tornadoweb/tornado/issues/1534
-    '''
-    if not _checked_old_certs:
-        _checked_old_certs.append(True)
-
-        import ssl
-        from tornado.httpclient import HTTPClient, AsyncHTTPClient
-
-        # Use HTTPClient to check instead of AsyncHTTPClient because it's synchronous.
-        _client = HTTPClient()
-        try:
-            # Use accounts.google.com because we know it fails with new certifi certificates
-            # cdn.redhat.com is another site that fails.
-            _client.fetch("https://accounts.google.com/")
-        except ssl.SSLError:
-            try:
-                import certifi      # noqa: late import to minimise dependencies
-                AsyncHTTPClient.configure(None, defaults=dict(ca_certs=certifi.old_where()))
-                app_log.warning('Using old SSL certificates for compatibility')
-            except ImportError:
-                pass
-            try:
-                _client.fetch("https://accounts.google.com/")
-            except ssl.SSLError:
-                app_log.error('Gramex cannot connect to HTTPS sites. Auth may fail')
-        except Exception:
-            # Ignore any other kind of exception
-            app_log.warning('Gramex has no direct Internet connection')
-        _client.close()
 
 
 def objectpath(node, keypath, default=None):
