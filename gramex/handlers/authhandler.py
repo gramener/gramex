@@ -239,11 +239,10 @@ class GoogleAuth(AuthHandler, GoogleOAuth2Mixin):
             'key': self.kwargs['key'],
             'secret': self.kwargs['secret']
         }
-        redirect_uri = self.xrequest_uri
         code = self.get_arg('code', '')
         if code:
             access = yield self.get_authenticated_user(
-                redirect_uri=redirect_uri,
+                redirect_uri=self.xredirect_uri,
                 code=code)
             user = yield self.oauth2_request(
                 'https://www.googleapis.com/oauth2/v1/userinfo',
@@ -263,7 +262,7 @@ class GoogleAuth(AuthHandler, GoogleOAuth2Mixin):
                 extra_params['approval_prompt'] = 'auto'
             # Return the list
             yield self.authorize_redirect(
-                redirect_uri=redirect_uri,
+                redirect_uri=self.xredirect_uri,
                 client_id=self.kwargs['key'],
                 scope=scope,
                 response_type='code',

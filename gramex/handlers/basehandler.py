@@ -634,9 +634,15 @@ class BaseHandler(RequestHandler, BaseMixin):
         return self.args[name][0 if first else -1]
 
     def prepare(self):
-        # If X-Request-URI domain is specified, use it. Else use RELATIVE URL, which allows nginx
-        # to proxy_redirect Location headers
+        # If X-Request-URI is specified, use it. Else, when redirecting use RELATIVE URL. That
+        # allows nginx to proxy_redirect Location headers
         self.xrequest_uri = self.request.headers.get('X-Request-URI', self.request.uri)
+        # When passing to URL query parameters (e.g. /login/?next=), use the full URL
+        self.xrequest_full_url = urljoin(self.request.full_url(), self.xrequest_uri)
+        # For third-party redirection (e.g. Google Auth / Twitter needs a callback URI), then use
+        # the full URL WITHOUT query parameters
+        self.xredirect_uri = '{0.scheme:s}://{0.netloc:s}{0.path:s}'.format(
+            urlsplit(self.xrequest_full_url))
         for method in self._on_init_methods:
             method(self)
 
@@ -677,7 +683,7 @@ class BaseHandler(RequestHandler, BaseMixin):
                     # Redirect to the login_url adding ?next=<X-Request-URI>
                     p = urlsplit(url)
                     q = parse_qsl(p.query)
-                    q.append((auth.get('query', 'next'), self.xrequest_uri))
+                    q.append((auth.get('query', 'next'), self.xrequest_full_url))
                     target = urlunsplit((p.scheme, p.netloc, p.path, urlencode(q), p.fragment))
                     self.redirect(target)
                     return
