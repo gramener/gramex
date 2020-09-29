@@ -12,6 +12,7 @@
     "d3v5": "npm:d3@5",
     "daterangepicker": "2",
     "daterangepickerv3": "npm:daterangepicker@3",
+    "dayjs": "1",
     "dropzone": "5",
     "font-awesome": "*",
     "g1": "0.17",
