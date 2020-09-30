@@ -3,9 +3,9 @@
 
 
 "@fortawesome/fontawesome-free@5":
-  version "5.14.0"
-  resolved "https://registry.yarnpkg.com/@fortawesome/fontawesome-free/-/fontawesome-free-5.14.0.tgz#a371e91029ebf265015e64f81bfbf7d228c9681f"
-  integrity sha512-OfdMsF+ZQgdKHP9jUbmDcRrP0eX90XXrsXIdyjLbkmSBzmMXPABB8eobUJtivaupucYaByz6WNe1PI1JuYm3qA==
+  version "5.15.0"
+  resolved "https://registry.yarnpkg.com/@fortawesome/fontawesome-free/-/fontawesome-free-5.15.0.tgz#631b04d6301fee06d4bd7a9824fe7157735cbdb6"
+  integrity sha512-wXetjQBNMTP59MAYNR1tdahMDOLx3FYj3PKdso7PLFLDpTvmAIqhSSEqnSTmWKahRjD+Sh5I5635+5qaoib5lw==
 
 "@types/clone@~2.1.0":
   version "2.1.0"
@@ -2260,9 +2260,9 @@ vega-label@~1.0.0:
     vega-util "^1.15.2"
 
 vega-lite@4:
-  version "4.16.7"
-  resolved "https://registry.yarnpkg.com/vega-lite/-/vega-lite-4.16.7.tgz#216a55e1a90aa740b68a197a1ae96dbae005b427"
-  integrity sha512-b2B8faFsVjVzs/6hAnJ/pd//kuN1MdeKCy1VGuIy8cxmRwj//M+uRa02csZvtv8z4y6oMwo/4gR8ES213uFbUw==
+  version "4.16.8"
+  resolved "https://registry.yarnpkg.com/vega-lite/-/vega-lite-4.16.8.tgz#23a91f9b87a97c7ffc6d754d0ec8f6a3b04d6976"
+  integrity sha512-WB9OOHbFyIaLvx5k9m8XGEaB2p0sTC9Srtsm9ETQ6EoOksdLQtVesxCalgT+cGaUVtHAiqBNmLh/nQGxZXml7w==
   dependencies:
     "@types/clone" "~2.1.0"
     "@types/fast-json-stable-stringify" "^2.0.0"
