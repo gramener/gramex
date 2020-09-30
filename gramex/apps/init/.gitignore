@@ -1,5 +1,9 @@
 # Ignore files that should not be committed.
-# Do not commit data, passwords, secret information or large files.
+# Avoid committing data and large files.
+
+# Do not commit passwords, keys or any, secret information. Store it in .secrets.yaml instead
+{{ '.secret*' }}
+{# Added as a template to commit .secrets.yaml in THIS folder, but not in repos #}
 
 # Don't commit the assets/ folder except for the README.md file
 # Store them in a shared folder and sync here.

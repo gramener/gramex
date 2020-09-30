@@ -671,7 +671,8 @@ class TestAuthorize(DBAuthBase, LoginFailureMixin):
     def initialize(self, url, user='alpha', login_url='/login/', next_key='next'):
         self.session = requests.Session()
         r = self.session.get(server.base_url + url)
-        eq_(r.url, server.base_url + login_url + '?' + urlencode({next_key: url}))
+        eq_(r.url, server.base_url + login_url + '?' + urlencode({
+            next_key: server.base_url + url}))
         r = self.session.post(server.base_url + url)
         eq_(r.url, server.base_url + url)
         eq_(r.status_code, UNAUTHORIZED)

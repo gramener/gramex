@@ -324,11 +324,8 @@ class CaptureHandler(BaseHandler):
         if args['url'] is None:
             raise HTTPError(BAD_REQUEST, reason='%s: CaptureHandler needs ?url=' % self.name)
 
-        # If the URL is a relative URL, treat it relative to the called path
-        # If xrequest_uri is specified and is a full URL, use that as the base.
-        # Else use the full request URL as the backup.
-        base = urljoin(self.request.full_url(), self.xrequest_uri)
-        args['url'] = urljoin(base, args['url'])
+        # ?url= can be a relative URL. Use the full X-Request URL as the base
+        args['url'] = urljoin(self.xrequest_full_url, args['url'])
         # Copy all relevant HTTP headers as-is
         args['headers'] = {
             key: val for key, val in self.request.headers.items()

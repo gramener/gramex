@@ -194,7 +194,7 @@ class TwitterRESTHandler(SocialMixin, BaseHandler, TwitterMixin):
             self.redirect_next()
         else:
             self.save_redirect_page()
-            yield self.authorize_redirect(callback_uri=self.xrequest_uri)
+            yield self.authorize_redirect(callback_uri=self.xredirect_uri)
 
     def _oauth_consumer_token(self):
         return dict(key=self.kwargs['key'],
@@ -253,10 +253,9 @@ class FacebookGraphHandler(SocialMixin, BaseHandler, FacebookGraphMixin):
 
     @tornado.gen.coroutine
     def login(self):
-        redirect_uri = self.xrequest_uri
         if self.get_argument('code', False):
             info = self.session[self.user_info] = yield self.get_authenticated_user(
-                redirect_uri=redirect_uri,
+                redirect_uri=self.xredirect_uri,
                 client_id=self.kwargs['key'],
                 client_secret=self.kwargs['secret'],
                 code=self.get_argument('code'))
@@ -267,6 +266,6 @@ class FacebookGraphHandler(SocialMixin, BaseHandler, FacebookGraphMixin):
             self.save_redirect_page()
             scope = self.kwargs.get('scope', 'user_posts,read_insights')
             yield self.authorize_redirect(
-                redirect_uri=redirect_uri,
+                redirect_uri=self.xredirect_uri,
                 client_id=self.kwargs['key'],
                 extra_params={'scope': scope})

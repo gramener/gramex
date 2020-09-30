@@ -15,7 +15,7 @@ from orderedattrdict import AttrDict
 import gramex
 import gramex.cache
 from gramex.http import UNAUTHORIZED, FORBIDDEN
-from gramex.config import check_old_certs, app_log, objectpath, str_utf8
+from gramex.config import app_log, objectpath, str_utf8
 from gramex.transforms import build_transform
 from .basehandler import BaseHandler, build_log_info
 
@@ -43,9 +43,6 @@ class AuthHandler(BaseHandler):
     @classmethod
     def setup(cls, prepare=None, action=None, delay=None, session_expiry=None,
               session_inactive=None, user_key='user', lookup=None, recaptcha=None, **kwargs):
-        # Switch SSL certificates if required to access Google, etc
-        gramex.service.threadpool.submit(check_old_certs)
-
         # Set up default redirection based on ?next=...
         if 'redirect' not in kwargs:
             kwargs['redirect'] = AttrDict([('query', 'next'), ('header', 'Referer')])
@@ -242,11 +239,10 @@ class GoogleAuth(AuthHandler, GoogleOAuth2Mixin):
             'key': self.kwargs['key'],
             'secret': self.kwargs['secret']
         }
-        redirect_uri = self.xrequest_uri
         code = self.get_arg('code', '')
         if code:
             access = yield self.get_authenticated_user(
-                redirect_uri=redirect_uri,
+                redirect_uri=self.xredirect_uri,
                 code=code)
             user = yield self.oauth2_request(
                 'https://www.googleapis.com/oauth2/v1/userinfo',
@@ -266,7 +262,7 @@ class GoogleAuth(AuthHandler, GoogleOAuth2Mixin):
                 extra_params['approval_prompt'] = 'auto'
             # Return the list
             yield self.authorize_redirect(
-                redirect_uri=redirect_uri,
+                redirect_uri=self.xredirect_uri,
                 client_id=self.kwargs['key'],
                 scope=scope,
                 response_type='code',

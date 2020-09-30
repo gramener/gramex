@@ -1904,6 +1904,20 @@ url:
           url: $TRANSLATE_XLSX
           sheet_name: translate
 
+  variables:
+    pattern: /variables
+    handler: FunctionHandler
+    kwargs:
+      function: gramex.config.variables
+      headers:
+        Content-Type: application/json
+
+  secrets:
+    pattern: /secrets
+    handler: FunctionHandler
+    kwargs:
+      function: f'$SECRET1 $SECRET2 $REMOTE_SECRET1 $REMOTE_SECRET2'
+
   shutdown:
     pattern: /shutdown
     handler: FunctionHandler

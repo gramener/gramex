@@ -17,3 +17,5 @@ url:
     kwargs:
       function: gramex.apps.ui.sass
       auth: false
+      headers:
+        Cache-Control: public, max-age=86400

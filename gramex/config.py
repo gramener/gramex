@@ -159,13 +159,16 @@ _warned_paths = set()
 # Get the directory where gramex is located. This is the same as the directory
 # where this file (config.py) is located.
 _gramex_path = os.path.dirname(os.path.abspath(__file__))
+# Secret variables
+secrets = {}
 
 
 def setup_variables():
     '''Initialise variables'''
     variables = DefaultAttrDict(str)
-    # Load all environment variables
+    # Load all environment variables, and overwrite with secrets
     variables.update(os.environ)
+    variables.update(secrets)
     # GRAMEXPATH is the Gramex root directory
     variables['GRAMEXPATH'] = _gramex_path
     # GRAMEXAPPS is the Gramex apps directory
@@ -632,9 +635,6 @@ def locate(path, modules=[], forceload=0):
         return None
 
 
-_checked_old_certs = []
-
-
 class CustomJSONEncoder(JSONEncoder):
     '''
     Encodes object to JSON, additionally converting datetime into ISO 8601 format
@@ -697,42 +697,6 @@ class CustomJSONDecoder(JSONDecoder):
         if callable(self.old_object_pairs_hook):
             return self.old_object_pairs_hook(obj)
         return dict(obj)
-
-
-def check_old_certs():
-    '''
-    The latest SSL certificates from certifi don't work for Google Auth. Do
-    a one-time check to access accounts.google.com. If it throws an SSL
-    error, switch to old SSL certificates. See
-    https://github.com/tornadoweb/tornado/issues/1534
-    '''
-    if not _checked_old_certs:
-        _checked_old_certs.append(True)
-
-        import ssl
-        from tornado.httpclient import HTTPClient, AsyncHTTPClient
-
-        # Use HTTPClient to check instead of AsyncHTTPClient because it's synchronous.
-        _client = HTTPClient()
-        try:
-            # Use accounts.google.com because we know it fails with new certifi certificates
-            # cdn.redhat.com is another site that fails.
-            _client.fetch("https://accounts.google.com/")
-        except ssl.SSLError:
-            try:
-                import certifi      # noqa: late import to minimise dependencies
-                AsyncHTTPClient.configure(None, defaults=dict(ca_certs=certifi.old_where()))
-                app_log.warning('Using old SSL certificates for compatibility')
-            except ImportError:
-                pass
-            try:
-                _client.fetch("https://accounts.google.com/")
-            except ssl.SSLError:
-                app_log.error('Gramex cannot connect to HTTPS sites. Auth may fail')
-        except Exception:
-            # Ignore any other kind of exception
-            app_log.warning('Gramex has no direct Internet connection')
-        _client.close()
 
 
 def objectpath(node, keypath, default=None):
@@ -852,3 +816,38 @@ def used_kwargs(method, kwargs, ignore_keywords=False):
             target = used if key in set(argspec.args) else rest
             target[key] = val
     return used, rest
+
+
+def setup_secrets(path, max_age_days=1000000):
+    '''
+    Load ``<path>/.secrets.yaml`` (which must be a dict) into gramex.config.variables.
+
+    If there's a ``SECRET_URL:`` and ``SECRET_KEY:`` key, the text from ``SECRET_URL:`` is
+    decrypted using ``secrets_key``.
+    '''
+    secrets_path = path / '.secrets.yaml'
+    if not secrets_path.is_file():
+        return
+
+    with secrets_path.open(encoding='utf-8') as handle:
+        result = yaml.load(handle, Loader=yaml.SafeLoader)
+    # Ignore empty .secret.yaml
+    if not result:
+        return
+    # If it's non-empty, it must be a dict
+    if not isinstance(result, dict):
+        raise ValueError('%s: must be a YAML file with a single dict' % path)
+    # If SECRETS_URL: and SECRETS_KEY: are set, fetch secrets from URL and decrypted with the key.
+    # This allows changing secrets remotely without access to the server.
+    secrets_url = result.pop('SECRETS_URL', None)
+    secrets_key = result.pop('SECRETS_KEY', None)
+    if secrets_url and secrets_key:
+        from urllib.request import urlopen
+        from tornado.web import decode_signed_value
+        app_log.info('Fetching remote secrets from %s', secrets_url)
+        # Load string from the URL -- but ignore comments
+        value = yaml.load(urlopen(secrets_url), Loader=yaml.SafeLoader)
+        value = decode_signed_value(secrets_key, '', value, max_age_days=max_age_days)
+        result.update(loads(value.decode('utf-8')))
+    secrets.clear()
+    secrets.update(result)
