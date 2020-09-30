@@ -831,8 +831,12 @@ def setup_secrets(path, max_age_days=1000000):
 
     with secrets_path.open(encoding='utf-8') as handle:
         result = yaml.load(handle, Loader=yaml.SafeLoader)
+    # Ignore empty .secret.yaml
+    if not result:
+        return
+    # If it's non-empty, it must be a dict
     if not isinstance(result, dict):
-        raise ValueError('%s: must be a key: value YAML file' % path)
+        raise ValueError('%s: must be a YAML file with a single dict' % path)
     # If SECRETS_URL: and SECRETS_KEY: are set, fetch secrets from URL and decrypted with the key.
     # This allows changing secrets remotely without access to the server.
     secrets_url = result.pop('SECRETS_URL', None)
