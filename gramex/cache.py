@@ -14,12 +14,14 @@ import mimetypes
 import subprocess       # nosec
 import pandas as pd
 import tornado.template
+from lxml import etree
 from threading import Thread
 from six.moves.queue import Queue
 from orderedattrdict import AttrDict
 from tornado.concurrent import Future
 from tornado.ioloop import IOLoop, PeriodicCallback
 from gramex.config import app_log, merge, used_kwargs, CustomJSONDecoder, CustomJSONEncoder
+from gramex.config import PathConfig
 from six.moves.urllib_parse import urlparse
 
 
@@ -151,7 +153,7 @@ def hashed(val):
 # gramex.cache.open() stores its cache here.
 # {(path, callback): {data: ..., stat: ...}}
 _OPEN_CACHE = {}
-_OPEN_CALLBACKS = dict(
+open_callback = dict(
     bin=opener(None, read=True, mode='rb', encoding=None, errors=None),
     txt=opener(None, read=True),
     text=opener(None, read=True),
@@ -162,6 +164,7 @@ _OPEN_CALLBACKS = dict(
     hdf=pd.read_hdf,
     h5=pd.read_hdf,
     html=pd.read_html,
+    json=opener(json.load),
     jsondata=pd.read_json,
     sas=pd.read_sas,
     stata=pd.read_stata,
@@ -172,6 +175,11 @@ _OPEN_CALLBACKS = dict(
     markdown=_markdown,
     tmpl=_template,
     template=_template,
+    xml=etree.parse,
+    svg=etree.parse,
+    rss=etree.parse,
+    atom=etree.parse,
+    config=PathConfig,
     yml=_yaml,
     yaml=_yaml
 )
@@ -198,7 +206,7 @@ def open(path, callback=None, transform=None, rel=False, **kwargs):
     - ``jsondata``: reads files using pd.read_json
     - ``template``: reads files using tornado.Template via io.open
     - ``markdown`` or ``md``: reads files using markdown.markdown via io.open
-    - ``csv``, ``excel``, ``xls``, `xlsx``, ``hdf``, ``h5``, ``html``, ``sas``,
+    - ``csv``, ``excel``, ``xls``, ``xlsx``, ``hdf``, ``h5``, ``html``, ``sas``,
       ``stata``, ``table``, ``parquet``, ``feather``: reads using Pandas
     - ``xml``, ``svg``, ``rss``, ``atom``: reads using lxml.etree
 
@@ -220,6 +228,12 @@ def open(path, callback=None, transform=None, rel=False, **kwargs):
 
     This is called as ``my_format_reader_function('data.fmt', arg='value')`` and
     cached. Future calls do not re-load and re-calculate this data.
+
+    To support a new callback string, set ``gramex.cache.open_callback[key] = method``.
+    For example::
+
+        gramex.cache.open_callback['shp'] = geopandas.read_file     # Register
+        prs = gramex.cache.open('my.shp', layer='countries')        # Open with method
 
     ``transform=`` is an optional function that processes the data returned by
     the callback. For example::
@@ -270,18 +284,8 @@ def open(path, callback=None, transform=None, rel=False, **kwargs):
             data = callback(path, **kwargs)
         elif callback_is_str:
             method = None
-            if callback in _OPEN_CALLBACKS:
-                method = _OPEN_CALLBACKS[callback]
-            elif callback in {'json'}:
-                import json
-                method = opener(json.load)
-            elif callback in {'config'}:
-                from gramex.config import PathConfig
-                method = PathConfig
-            elif callback in {'xml', 'svg', 'rss', 'atom'}:
-                from lxml import etree
-                method = etree.parse
-
+            if callback in open_callback:
+                method = open_callback[callback]
             if method is not None:
                 data = method(path, **kwargs)
             elif original_callback is None:

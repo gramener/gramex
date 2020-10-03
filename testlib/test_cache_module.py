@@ -273,6 +273,23 @@ class TestOpen(unittest.TestCase):
             eq_(etree.tostring(gramex.cache.open(path)),
                 etree.tostring(gramex.cache.open(path, ext)))
 
+    def test_open_custom(self):
+        def img_size(path, scale=1):
+            return tuple(v * scale for v in Image.open(path).size)
+
+        def check(reload):
+            result, reloaded = gramex.cache.open(path, 'png', _reload_status=True)
+            eq_(reloaded, reload)
+            eq_(result, expected)
+
+        from PIL import Image
+        path = os.path.join(cache_folder, 'data.png')
+        expected = img_size(path)
+
+        gramex.cache.open_callback['png'] = img_size
+        self.check_file_cache(path, check)
+        eq_(gramex.cache.open(path, scale=2), tuple(v * 2 for v in expected))
+
     def test_save(self):
         path = os.path.join(cache_folder, 'data.csv')
         data = pd.read_csv(path, encoding='utf-8')
