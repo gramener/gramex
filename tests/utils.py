@@ -441,7 +441,9 @@ def gramex_log_queue(handler):
 
 def search_log(handler):
     query_body = {"query": {"bool": {"must": {"match": {"x": handler.args['x'][0]}}}}}
-    res = info.gramexlog.connection.search(index="gramexlog", body=query_body)
+    app = handler.args.get('_app',['default'])[0]
+    idx = info.gramexlog.conf[app].get('index', app)
+    res = info.gramexlog.connection[app].search(index=idx, body=query_body)
     return res
 
 

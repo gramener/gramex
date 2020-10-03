@@ -222,11 +222,6 @@ gramexlog:
         user: $ES_USER
         pass: $ES_PASS
         index: gramexlog
-    app:
-        host: $ES_HOST
-        user: $ES_USER
-        pass: $ES_PASS
-        index: app
 
 # ------------------------------------------------------------------------------
 # The app, schedule, url sections are defined at the end to allow these to use

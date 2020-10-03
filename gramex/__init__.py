@@ -322,21 +322,24 @@ def log(handler=None, **kwargs):
                 host: localhost
                 index: app2
 
-    ... then, ``gramex.log(x=1, y=2, _index='app1')`` will log into the ``app1`` index.
+    ... then, ``gramex.log(x=1, y=2, _app='app1')`` will log into the ``app1`` index.
     '''
     # If any argument is a
     if handler is not None:
         kwargs.update({key: val[0] for key, val in handler.args.items()})
     from . import services
     conf = services.info.gramexlog
-    if conf and 'queue' in conf and 'maxlength' in conf:
-        kwargs['level'] = kwargs.get('level', 'INFO').upper()
-        kwargs['time'] = datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%SZ')
-        kwargs['port'] = app_log_extra['port']
-        idx = kwargs.get('_index', 'default')
-        kwargs['_index'] = conf['conf'].get(idx).get('index')
-        if len(conf['queue']) < conf['maxlength']:
-            conf['queue'].append(kwargs)
-        else:
-            raise IndexError('Gramex log queue (%s) is too long (max: %s)' % (
-                len(conf['queue']), conf['maxlength']))
+    try:
+        if conf and 'queue' in conf and 'maxlength' in conf:
+            kwargs['level'] = kwargs.get('level', 'INFO').upper()
+            kwargs['time'] = datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%SZ')
+            kwargs['port'] = app_log_extra['port']
+            if '_app' in kwargs.keys() and kwargs.get('_app', '') not in conf['conf'].keys():
+                raise IndexError('EsLog not configured for application')
+            if len(conf['queue']) < conf['maxlength']:
+                conf['queue'].append(kwargs)
+            else:
+                raise IndexError('Gramex log queue (%s) is too long (max: %s)' % (
+                    len(conf['queue']), conf['maxlength']))
+    except Exception:
+        pass

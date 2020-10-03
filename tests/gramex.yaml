@@ -1918,6 +1918,13 @@ url:
     kwargs:
       function: gramex.shutdown() or 'Done'
 
+gramexlog:
+  test_app:
+      host: $ES_HOST_1
+      user: $ES_USER
+      pass: $ES_PASS
+      index: test_app
+
 sms:
   amazonsns:
     type: amazonsns

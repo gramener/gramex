@@ -15,7 +15,6 @@ import re
 import os
 import sys
 import json
-import uuid
 import atexit
 import signal
 import socket
@@ -909,24 +908,31 @@ def test(conf):
 def gramexlog(conf):
     '''
     '''
+    # import uuid
     from elasticsearch import Elasticsearch
-    from elasticsearch import helpers
+    # from elasticsearch import helpers
     default_conf = conf.get('default')
+
+    def get_conn(conf, key):
+        return Elasticsearch(conf[key].get('host'),
+                             http_auth=(conf[key].get('user'), conf[key].get('pass')))
+
     info.gramexlog.conf = conf
     info.gramexlog.poll = poll = default_conf.get('poll', 1)
     info.gramexlog.queue = queue = []
     info.gramexlog.maxlength = default_conf.get('maxlength', 100000)
-    info.gramexlog.connection = connection = Elasticsearch(
-        default_conf.get('host') or None, http_auth=(
-            default_conf.get('user'), default_conf.get('pass')))
+    info.gramexlog.connection = connection = {key: get_conn(conf, key) for key in conf.keys()}
 
     def log_to_es():
         try:
             if queue:
                 # Override _id -- a must for bulk indexing in ElasticSearch
                 for item in queue:
-                    item['_id'] = uuid.uuid4()
-                helpers.bulk(connection, queue)
+                    item['app'] = app = item.get('_app', 'default')
+                    item['index'] = conf.get(app).get('index', app)
+                    connection[item['app']].index(index=item['index'], body=item)
+                    # item['_id'] = uuid.uuid4()
+                # helpers.bulk(connection, queue)
                 queue.clear()
         except Exception as ex:
             # TODO: If the connection broke, re-create it
