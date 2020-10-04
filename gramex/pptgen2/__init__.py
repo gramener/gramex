@@ -476,5 +476,7 @@ def commandline(args=None):
     rules.setdefault('target', 'output.pptx')
     rules.setdefault('mode', 'expr')
     gramex.pptgen2.pptgen(**rules)
-    if not rules.get('no-open', False):
+    # If --no-open is specified, or the OS doesn't have startfile (e.g. Linux), stop here.
+    # Otherwise, open the output PPTX created
+    if not rules.get('no-open', False) and hasattr(os, 'startfile'):
         os.startfile(rules['target'])
