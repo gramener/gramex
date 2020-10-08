@@ -334,12 +334,12 @@ def log(handler=None, **kwargs):
             kwargs['level'] = kwargs.get('level', 'INFO').upper()
             kwargs['time'] = datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%SZ')
             kwargs['port'] = app_log_extra['port']
-            if '_app' in kwargs.keys() and kwargs.get('_app', '') not in conf['conf'].keys():
-                raise IndexError('EsLog not configured for application')
+            if '_app' in kwargs and kwargs['_app'] not in conf['conf']:
+                raise IndexError('ESLog not configured for application')
             if len(conf['queue']) < conf['maxlength']:
-                conf['queue'].append(kwargs)
+                conf['queue'][kwargs['_app']].append(kwargs)
             else:
                 raise IndexError('Gramex log queue (%s) is too long (max: %s)' % (
-                    len(conf['queue']), conf['maxlength']))
+                    len(conf['queue'][kwargs['_app']]), conf['maxlength']))
     except Exception:
-        pass
+        app_log.exception('ESlog failed')

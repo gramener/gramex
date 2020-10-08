@@ -906,11 +906,10 @@ def test(conf):
 
 
 def gramexlog(conf):
-    '''
-    '''
-    # import uuid
-    from elasticsearch import Elasticsearch
-    # from elasticsearch import helpers
+    '''Set up gramexlog service'''
+    import uuid
+    from elasticsearch import Elasticsearch, helpers
+    from collections import defaultdict
     default_conf = conf.get('default')
 
     def get_conn(conf, key):
@@ -919,25 +918,24 @@ def gramexlog(conf):
 
     info.gramexlog.conf = conf
     info.gramexlog.poll = poll = default_conf.get('poll', 1)
-    info.gramexlog.queue = queue = []
+    info.gramexlog.queue = queue = defaultdict(list)
     info.gramexlog.maxlength = default_conf.get('maxlength', 100000)
     info.gramexlog.connection = connection = {key: get_conn(conf, key) for key in conf.keys()}
 
     def log_to_es():
-        try:
-            if queue:
-                # Override _id -- a must for bulk indexing in ElasticSearch
+        for app, items in queue.items():
+            if not items:
+                continue
+            try:
                 for item in queue:
                     item['app'] = app = item.get('_app', 'default')
                     item['index'] = conf.get(app).get('index', app)
-                    connection[item['app']].index(index=item['index'], body=item)
-                    # item['_id'] = uuid.uuid4()
-                # helpers.bulk(connection, queue)
-                queue.clear()
-        except Exception as ex:
-            # TODO: If the connection broke, re-create it
-            # This generic exception should be caught for thread to continue its execution
-            app_log.error('ES Store {}'.format(ex))
+                helpers.bulk(connection[app], items)
+                queue[app].clear()
+            except Exception:
+                # TODO: If the connection broke, re-create it
+                # This generic exception should be caught for thread to continue its execution
+                app_log.exception('ESLog push to app: %s failed', app)
 
     info.gramexlog.callback = tornado.ioloop.PeriodicCallback(log_to_es, poll * 1000)
 
