@@ -1,11 +1,47 @@
 import json
+from functools import wraps
+from inspect import signature
 import tornado.web
 import tornado.gen
 from types import GeneratorType
+from typing import get_type_hints
 from gramex.transforms import build_transform
 from gramex.config import app_log, CustomJSONEncoder
 from .basehandler import BaseHandler
 from tornado.util import unicode_type
+
+
+def add_handler(func):
+    """Wrap a function to make it compatible with a tornado.web.RequestHandler
+
+    1. Path arguments become args of the function.
+    2. URL params and request body payload becomes kwargs of the function.
+
+    Parameters
+    ----------
+    func : callable
+        function to be wrapped.
+    """
+    sig = signature(func)
+
+    @wraps(func)
+    def wrapper(handler):
+        args = handler.path_args
+        if handler.request.method == 'GET':
+            kwargs = {k: v[0] for k, v in handler.args.items()}
+        elif handler.request.method == 'POST':
+            kwargs = handler.body
+        hints = get_type_hints(func)
+        for arg, argtype in hints.items():
+            param = sig.parameters.get(arg, False)
+            if param:
+                if param.kind == param.VAR_POSITIONAL:
+                    args = [argtype(k) for k in args]
+                else:
+                    kwargs[arg] = argtype(kwargs[arg])
+        return json.dumps(func(*args, **kwargs))
+
+    return wrapper
 
 
 class FunctionHandler(BaseHandler):
