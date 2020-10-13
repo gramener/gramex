@@ -6,6 +6,9 @@ import gramex.cache
 import gramex.data
 from gramex.handlers import BaseHandler
 import tornado.escape
+from io import BytesIO
+
+_model_cache = {}
 
 
 class ModelHandler(BaseHandler):
@@ -13,9 +16,34 @@ class ModelHandler(BaseHandler):
     Allows users to create API endpoints to train/test models exposed through Scikit-Learn.
     TODO: support Scikit-Learn Pipelines for data transformations.
     '''
+    def _load_keras_model(self, path):
+        """Load a Keras model into a local cache.
+
+        Parameters
+        ----------
+        path : str
+            Path to a Keras model.
+        """
+        model = _model_cache.get(path, False)
+        if not model:
+            _model_cache[path] = gramex.cache.open(path)
+        return _model_cache[path]
+
     @classmethod
     def setup(cls, path, **kwargs):
+        if os.path.splitext(path)[-1] == '.h5':
+            from tensorflow.keras.models import load_model
+            gramex.cache.open_callback['h5'] = load_model
+            cls.model_type = "keras"
+            cls._model_loader = cls._load_keras_model
+        else:
+            cls.model_type = "sklearn"
+            cls._model_loader = staticmethod(lambda x: gramex.cache.open(x, gramex.ml.load))
         super(ModelHandler, cls).setup(**kwargs)
+        prepare = kwargs.get('prepare', False)
+        if prepare:
+            from pydoc import locate
+            cls.prepare = locate(prepare)
         cls.path = path
 
     def prepare(self):
@@ -27,11 +55,16 @@ class ModelHandler(BaseHandler):
         Expects multi-row paramets to be formatted as the output of handler.argparse.
         '''
         self.set_header('Content-Type', 'application/json; charset=utf-8')
-        self.pickle_file_path = os.path.join(
-            self.path, self.path_args[0] + '.pkl')
-        self.request_body = {}
-        if self.request.body:
-            self.request_body = tornado.escape.json_decode(self.request.body)
+        if self.model_type == "sklearn":
+            self.model_path = os.path.join(
+                self.path, self.path_args[0] + '.pkl')
+            self.request_body = {}
+            if self.request.body:
+                self.request_body = tornado.escape.json_decode(self.request.body)
+        elif self.model_type == "keras":
+            self.model_path = self.path
+            from skimage.io import imread
+            self.request_body = {'image': imread(BytesIO(self.request.body))}
         if self.args:
             self.request_body.update(self.args)
         url = self.request_body.get('url', '')
@@ -53,7 +86,7 @@ class ModelHandler(BaseHandler):
         Request to model/name/data will return the training data specified in model.url,
         this should accept most formhandler flags and filters as well.
         '''
-        model = gramex.cache.open(self.pickle_file_path, gramex.ml.load)
+        model = self._model_loader(self.model_path)
         if self.get_data_flag():
             file_kwargs = self.listify(['engine', 'url', 'ext', 'table', 'query', 'id'])
             _format = file_kwargs.pop('_format', ['json'])[0]
@@ -79,7 +112,7 @@ class ModelHandler(BaseHandler):
         doesn't currently work on DF's thanks to the gramex.data bug.
         '''
         try:
-            model = gramex.cache.open(self.pickle_file_path, gramex.ml.load)
+            model = self._model_loader(self.model_path)
         except EnvironmentError: # noqa
             model = gramex.ml.Classifier(**self.request_body)
         if self.get_data_flag():
@@ -87,20 +120,28 @@ class ModelHandler(BaseHandler):
             gramex.data.update(model.url, args=file_kwargs, id=file_kwargs['id'])
         else:
             if not self._train(model):
-                model.save(self.pickle_file_path)
+                model.save(self.model_path)
 
     def _predict(self, model):
         '''Helper function for model.train.'''
-        params = self.listify(model.input)
-        if hasattr(model, 'model') and model.trained:
-            data = pd.DataFrame(params)
-            data = data[model.input]
-            data['result'] = model.predict(data)
-            self.write(data.to_json(orient='records'))
-        elif params:
-            raise AttributeError('model not trained')
-        else:
-            return
+        if self.model_type == "sklearn":
+            params = self.listify(model.input)
+            if hasattr(model, 'model') and model.trained:
+                data = pd.DataFrame(params)
+                data = data[model.input]
+                data['result'] = model.predict(data)
+                self.write(data.to_json(orient='records'))
+            elif params:
+                raise AttributeError('model not trained')
+            else:
+                return
+        elif self.model_type == "keras":
+            from skimage.transform import resize
+            image = self.request_body['image']
+            height, width = model.input.shape[1:-1]
+            image = resize(image, (height, width))
+            pred = model.predict(image.reshape((1,) + image.shape)).ravel()
+            self.write(json.dumps(pred.tolist()))
 
     def post(self, *path_args, **path_kwargs):
         '''
@@ -112,7 +153,7 @@ class ModelHandler(BaseHandler):
         '''
         # load model object - if it doesn't exist, send a response asking to create the model
         try:
-            model = gramex.cache.open(self.pickle_file_path, gramex.ml.load)
+            model = self._model_loader(self.model_path)
         except EnvironmentError: # noqa
             # Log error
             self.write({'Error': 'Please Send PUT Request, model does not exist'})
@@ -122,7 +163,8 @@ class ModelHandler(BaseHandler):
             gramex.data.insert(model.url, args=file_kwargs)
         else:
             # If /data/ is not path_args[1] then post is sending a predict request
-            if self._train(model):
+            # Keras models cannot yet be trained by ModelHandler
+            if self.model_type == "sklearn" and self._train(model):
                 return
             self._predict(model)
 
@@ -134,15 +176,15 @@ class ModelHandler(BaseHandler):
         if self.get_data_flag():
             file_kwargs = self.listify(['id'])
             try:
-                model = gramex.cache.open(self.pickle_file_path, gramex.ml.load)
+                model = self._model_loader(self.model_path)
             except EnvironmentError: # noqa
                 self.write(
                     {'Error': 'Please Send PUT Request, model does not exist'})
                 raise EnvironmentError # noqa
             gramex.data.delete(model.url, args=file_kwargs, id=file_kwargs['id'])
             return
-        if os.path.exists(self.pickle_file_path):
-            os.unlink(self.pickle_file_path)
+        if os.path.exists(self.model_path):
+            os.unlink(self.model_path)
 
     def _train(self, model):
         ''' Looks for Model-Retrain in Request Headers,
@@ -161,7 +203,7 @@ class ModelHandler(BaseHandler):
             # Train the model.
             model.train(data)
             model.trained = True
-            model.save(self.pickle_file_path)
+            model.save(self.model_path)
             return True
 
     def listify(self, checklst):
