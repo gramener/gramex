@@ -1,8 +1,37 @@
 from . import TestGramex
 from gramex.http import FOUND
+from gramex.handlers.functionhandler import add_handler
+
+
+@add_handler
+def total(*items: float) -> float:
+    return sum(items)
+
+
+@add_handler
+def name_age(name, age):
+    return f'{name} is {age} years old.'
+
+
+@add_handler
+def urlparse(name, age):
+    return f'{name} is {age} years old.'
+
+
+@add_handler
+def urlparse_hinted(name: str, age: int) -> str:
+    return f'{name} is {age} years old.'
 
 
 class TestFunctionHandler(TestGramex):
+
+    def test_add_handler(self):
+        self.check('/func/total/40/2', text="42.0")
+        self.check('/func/name/johndoe/age/42', text="johndoe is 42 years old.")
+        self.check('/func/foo?name=johndoe&age=42', text="johndoe is 42 years old.")
+        # When type hints are violated:
+        self.check('/func/hints?name=johndoe&age=42.3', code=500)
+
     def test_args(self):
         etag = {'headers': {'Etag': True}}
         text = '{"args": [0, 1], "kwargs": {"a": "a", "b": "b"}}'

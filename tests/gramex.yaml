@@ -265,6 +265,28 @@ url:
         header: NEXT
         url: /dir/index/
 
+  # Test `add_handler` decorator
+  func/total:
+    pattern: /func/total/(.*)/(.*)
+    handler: FunctionHandler
+    kwargs:
+      function: tests.test_functionhandler.total(handler)
+  func/lookup:
+    pattern: /func/name/([a-z]+)/age/([0-9]+)
+    handler: FunctionHandler
+    kwargs:
+      function: tests.test_functionhandler.name_age
+  func/params:
+    pattern: /func/foo
+    handler: FunctionHandler
+    kwargs:
+      function: tests.test_functionhandler.name_age
+  func/hints:
+    pattern: /func/hints
+    handler: FunctionHandler
+    kwargs:
+      function: tests.test_functionhandler.urlparse_hinted
+
   # TestFileHandler
   dir/noindex:
     pattern: /dir/noindex/(.*)
