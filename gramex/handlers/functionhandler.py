@@ -66,12 +66,12 @@ def add_handler(func):
     An alternate way of configuring this is as follows:
 
     url:
-        pattern: /$YAMLURL/func/name/(.*)/age/(.*)
+        pattern: /$YAMLURL/greet/name/(.*)/age/(.*)
         handler: FunctionHandler
         kwargs:
             funtion: gramex.handlers.functionhandler.add_handler(greet.birthday)(handler)
 
-    Here, `/greet/Gramex/10` returns "Gramex turns 10 today! Happy Birthday!".
+    Here, `/greet/name/Gramex/age/10` returns "Gramex turns 10 today! Happy Birthday!".
     `add_handler` can also be used as a decorator,
 
     @add_handler
