@@ -11,34 +11,117 @@ from .basehandler import BaseHandler
 from tornado.util import unicode_type
 
 
+def _parse_handler(handler, sig):
+    if handler.request.method in ('GET', 'DELETE'):
+        if handler.path_args:
+            args, kwargs = handler.path_args, {}
+        else:
+            arguments = {k: v[0] if len(v) == 1 else v for k, v in handler.args.items()}
+            arguments = {k: v for k, v in arguments.items() if k in sig.parameters}
+            args, kwargs = [], {}
+            for arg, val in arguments.items():
+                param = sig.parameters[arg]
+                if param.kind == param.VAR_POSITIONAL:
+                    args.extend(val)
+                elif param.kind == param.POSITIONAL_ONLY:
+                    args.append(val)
+                elif param.kind in (param.KEYWORD_ONLY, param.POSITIONAL_OR_KEYWORD):
+                    kwargs[arg] = val
+    elif handler.request.method in ('POST', 'PUT'):
+        args = []
+        try:
+            kwargs = json.loads(handler.request.body)
+        except (TypeError, json.JSONDecodeError):
+            kwargs = {k: v[0] if len(v) == 1 else v for k, v in handler.args.items()}
+        kwargs = {k: v for k, v in kwargs.items() if k in sig.parameters}
+    return args, kwargs
+
+
 def add_handler(func):
     """Wrap a function to make it compatible with a tornado.web.RequestHandler
 
-    1. Path arguments become args of the function.
-    2. URL params and request body payload becomes kwargs of the function.
+    Use this decorator if you'd rather not write a FunctionHandler function from scratch,
+    but reuse an existing one.
 
     Parameters
     ----------
     func : callable
         function to be wrapped.
+
+    Usage
+    -----
+    Suppose you have the following function in `greet.,py`:
+
+    def birthday(name, age):
+        return f'{name} turns {age} today! Happy Birthday!'
+
+    Then, in `gramex.yaml`, you can use it as a FunctionHandler as follows:
+    url:
+        pattern: /$YAMLURL/greet
+        handler: FunctionHandler
+        kwargs:
+            funtion: gramex.handlers.functionhandler.add_handler(greet.birthday)(handler)
+
+    Now, `/greet?name=Gramex&age=10` returns "Gramex turns 10 today! Happy Birthday!".
+    An alternate way of configuring this is as follows:
+
+    url:
+        pattern: /$YAMLURL/func/name/(.*)/age/(.*)
+        handler: FunctionHandler
+        kwargs:
+            funtion: gramex.handlers.functionhandler.add_handler(greet.birthday)(handler)
+
+    Here, `/greet/Gramex/10` returns "Gramex turns 10 today! Happy Birthday!".
+    `add_handler` can also be used as a decorator,
+
+    @add_handler
+    def birthday(name, age):
+        return f'{name} turns {age} today! Happy Birthday!'
+
+    which simplifies the FunctionHandler configuration in `gramex.yaml` as follows:
+    url:
+        pattern: /$YAMLURL/greet
+        handler: FunctionHandler
+        kwargs:
+            funtion: greet.birthday  # notice that calling the wrapper is not required here
+
+    Arbitrary functions can be wrapped with `add_handler`. However, it does make some assumptions:
+
+    1. In a GET and DELETE requests, `handler.path_args` are converted to positional arguments,
+    and URL parameters are converted to keyword arguments.
+    2. In POST andd PUT requests, `handler.request.body` is deserialized and passed directly to
+    the wrapped function as a dict of keyword arguments. URL parameters and path arguments
+    are _ignored_.
+
+    The wrapper also naively tries to enforce types based on any type annotations that are found
+    in the wrapped function.
+
+    Note that this alone does not guarantee RESTfulness. This function simply translates
+    handler data and attempts to typecast inputs to the required format.
     """
     sig = signature(func)
 
     @wraps(func)
     def wrapper(handler):
-        args = handler.path_args
-        if handler.request.method == 'GET':
-            kwargs = {k: v[0] for k, v in handler.args.items()}
-        elif handler.request.method == 'POST':
-            kwargs = handler.body
+        args, kwargs = _parse_handler(handler, sig)
         hints = get_type_hints(func)
         for arg, argtype in hints.items():
-            param = sig.parameters.get(arg, False)
-            if param:
-                if param.kind == param.VAR_POSITIONAL:
-                    args = [argtype(k) for k in args]
-                else:
-                    kwargs[arg] = argtype(kwargs[arg])
+            if argtype is not type(None):  # NOQA: E721
+                if argtype is bool:
+                    args = [json.loads(k) for k in args]
+                    named_arg = kwargs.get(arg)
+                    if named_arg:
+                        try:
+                            named_arg = json.loads(named_arg)
+                        except json.JSONDecodeError:
+                            pass
+                        kwargs[arg] = named_arg
+                param = sig.parameters.get(arg, False)
+                if param:
+                    if param.kind == param.VAR_POSITIONAL:
+                        args = [argtype(k) for k in args]
+                    else:
+                        kwargs[arg] = argtype(kwargs[arg])
         return json.dumps(func(*args, **kwargs))
 
     return wrapper

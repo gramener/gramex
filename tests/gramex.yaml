@@ -271,6 +271,8 @@ url:
     handler: FunctionHandler
     kwargs:
       function: tests.test_functionhandler.total(handler)
+      methods: [GET, DELETE]
+      xsrf_cookies: false
   func/lookup:
     pattern: /func/name/([a-z]+)/age/([0-9]+)
     handler: FunctionHandler
@@ -281,11 +283,36 @@ url:
     handler: FunctionHandler
     kwargs:
       function: tests.test_functionhandler.name_age
+      xsrf_cookies: false
   func/hints:
     pattern: /func/hints
     handler: FunctionHandler
     kwargs:
       function: tests.test_functionhandler.urlparse_hinted
+      xsrf_cookies: false
+  func/multiargs:
+    pattern: /func/multi
+    handler: FunctionHandler
+    kwargs:
+      function: tests.test_functionhandler.total
+      xsrf_cookies: false
+  func/strtotal:
+    pattern: /func/strtotal
+    handler: FunctionHandler
+    kwargs:
+      function: tests.test_functionhandler.strtotal
+  func/types:
+    pattern: /func/nativetypes
+    handler: FunctionHandler
+    kwargs:
+      function: tests.test_functionhandler.native_types
+      xsrf_cookies: false
+  func/defaultNamed:
+    pattern: /func/defaultNamed
+    handler: FunctionHandler
+    kwargs:
+      function: tests.test_functionhandler.greet
+
 
   # TestFileHandler
   dir/noindex:
