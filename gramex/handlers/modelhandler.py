@@ -38,6 +38,8 @@ class ModelHandler(BaseHandler):
         '''
         self.set_header('Content-Type', 'application/json; charset=utf-8')
         if self.engine == "sklearn":
+            self.model_path = os.path.join(
+                self.path, self.path_args[0] + '.pkl')
             self.request_body = {}
             if self.request.body:
                 self.request_body = tornado.escape.json_decode(self.request.body)
