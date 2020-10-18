@@ -221,7 +221,7 @@ gramexlog:
         host: $ES_HOST
         user: $ES_USER
         pass: $ES_PASS
-        index: gramexlog
+        index: local_log
 
 # ------------------------------------------------------------------------------
 # The app, schedule, url sections are defined at the end to allow these to use

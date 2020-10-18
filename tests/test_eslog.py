@@ -43,7 +43,7 @@ class TestESLog(TestGramex):
         x = uuid.uuid4()
         no_of_docs = 5
         for i in range(no_of_docs):
-            self.check('/log', {'level': 'WARN', 'x': x, 'msg': 'abc'})
+            self.check('/log', {'level': 'WARN', 'x': x, 'msg': i})
         time.sleep(5)
         result = self.check('/log/search', {'x': x})
         result = result.json()
@@ -53,11 +53,10 @@ class TestESLog(TestGramex):
         def create_check_logs(app_name):
             import uuid
             x = uuid.uuid4()
-            # x = 100
             no_of_docs = 5
             for i in range(no_of_docs):
-                self.check('/log', {'level': 'WARN', 'x': x, 'msg': 'abc', '_app': app_name})
-            time.sleep(5)
+                self.check('/log', {'level': 'WARN', 'x': x, 'msg': i, '_app': app_name})
+            time.sleep(10)
             result = self.check('/log/search', {'x': x, '_app': app_name})
             result = result.json()
             eq_(result['hits']['total']['value'], no_of_docs)

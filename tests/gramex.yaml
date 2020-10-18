@@ -1923,7 +1923,7 @@ gramexlog:
       host: $ES_HOST_1
       user: $ES_USER
       pass: $ES_PASS
-      index: test_app
+      index: rem_log
 
 sms:
   amazonsns:

@@ -907,7 +907,6 @@ def test(conf):
 
 def gramexlog(conf):
     '''Set up gramexlog service'''
-    import uuid
     from elasticsearch import Elasticsearch, helpers
     from collections import defaultdict
     default_conf = conf.get('default')
@@ -927,9 +926,9 @@ def gramexlog(conf):
             if not items:
                 continue
             try:
-                for item in queue:
+                for item in items:
                     item['app'] = app = item.get('_app', 'default')
-                    item['index'] = conf.get(app).get('index', app)
+                    item['_index'] = conf.get(app).get('index', app)
                 helpers.bulk(connection[app], items)
                 queue[app].clear()
             except Exception:
