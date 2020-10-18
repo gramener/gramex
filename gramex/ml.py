@@ -9,8 +9,13 @@ from tornado.gen import coroutine, Return, sleep
 from tornado.httpclient import AsyncHTTPClient
 from gramex.config import locate, app_log, merge, variables
 
-# Expose joblob.load via gramex.ml
-load = joblib.load                      # noqa
+
+def load(path, engine='sklearn', **kwargs):
+    if engine == 'sklearn':
+        return joblib.load(path, **kwargs)
+    if engine == "keras":
+        from tensorflow.keras.models import load_model
+        return load_model(path, **kwargs)
 
 
 class Classifier(object):
