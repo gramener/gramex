@@ -317,6 +317,18 @@ url:
     handler: FunctionHandler
     kwargs:
       function: tests.test_functionhandler.greet
+  func/yielder:
+    pattern: /func/yielder
+    handler: FunctionHandler
+    kwargs:
+      function: tests.test_functionhandler.yielder
+  func/square:
+    pattern: /func/power
+    handler: FunctionHandler
+    kwargs:
+      function: tests.test_functionhandler.power
+      kwargs:
+        x: 2
 
 
   # TestFileHandler

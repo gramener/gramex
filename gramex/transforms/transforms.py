@@ -373,7 +373,7 @@ def once(*args, **kwargs):
     return True
 
 
-def _parse_handler(handler, sig):
+def _parse_handler(handler, sig, cfg_args, cfg_kwargs):
     args = handler.path_args
     arguments = {k: v[0] if len(v) == 1 else v for k, v in handler.args.items()}
     if not arguments:
@@ -382,7 +382,7 @@ def _parse_handler(handler, sig):
         except json.JSONDecodeError:
             pass
     arguments = {k: v for k, v in arguments.items() if k in sig.parameters}
-    kwargs = {}
+    kwargs = cfg_kwargs
     for arg, val in arguments.items():
         param = sig.parameters[arg]
         if param.kind == param.VAR_POSITIONAL:
@@ -391,6 +391,7 @@ def _parse_handler(handler, sig):
             args.append(val)
         elif param.kind in (param.KEYWORD_ONLY, param.POSITIONAL_OR_KEYWORD):
             kwargs[arg] = val
+    args.extend(cfg_args)
     return args, kwargs
 
 
@@ -455,8 +456,8 @@ def handler(func):
     sig = signature(func)
 
     @wraps(func)
-    def wrapper(handler):
-        args, kwargs = _parse_handler(handler, sig)
+    def wrapper(handler, *cfg_args, **cfg_kwargs):
+        args, kwargs = _parse_handler(handler, sig, cfg_args, cfg_kwargs)
         hints = get_type_hints(func)
         for arg, argtype in hints.items():
             if argtype is not type(None):  # NOQA: E721
@@ -482,6 +483,11 @@ def handler(func):
                                 kwargs[arg] = argtype.__origin__(map(member_type, kwargs[arg]))
                             else:
                                 continue
-        return json.dumps(func(*args, **kwargs))
+        result = func(*args, **kwargs)
+        try:
+            result = json.dumps(result)
+        except TypeError:
+            pass
+        return result
 
     return wrapper

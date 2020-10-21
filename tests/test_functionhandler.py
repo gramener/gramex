@@ -7,6 +7,17 @@ from gramex.transforms import handler
 
 
 @handler
+def yielder(*i):
+    for item in i:
+        yield item
+
+
+@handler
+def power(x: int, y: float) -> float:
+    return y ** x
+
+
+@handler
 def total(*items: float) -> float:
     return sum(items)
 
@@ -45,6 +56,13 @@ def greet(name="Stranger"):
 
 
 class TestFunctionHandler(TestGramex):
+
+    def test_config_kwargs(self):
+        self.check('/func/power?y=3', text='9.0')
+        self.check('/func/power?y=3&x=3', text='27.0')
+
+    def test_yielder(self):
+        self.check('/func/yielder?i=a&i=b&i=c', text='abc')
 
     def test_add_handler_get(self):
         self.check('/func/total/40/2', text="42.0")
