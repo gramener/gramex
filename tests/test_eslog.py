@@ -1,65 +1,59 @@
-from nose.tools import eq_
-from . import TestGramex
 import json
-import time
+import requests
+from nose.tools import eq_
+from .server import base_url
+from . import TestGramex
 
 
 class TestESLog(TestGramex):
-    def test_eslog(self, port=9999):
-        self.check('/log', {'level': 'INFO', 'x': 1, 'msg': 'abc'})
-        result = self.check('/log/queue')
-        result = json.loads(result.content)
-        eq_(result[0]['level'], 'INFO')
-        eq_(result[0]['x'], '1')
-        eq_(result[0]['msg'], 'abc')
-        eq_(result[0]['port'], port)
-        # TODO: Check that this is within 5 seconds of now
-        # eq_(result['time'], )
+    def test_default(self):
+        self.check('/gramexlog/delete')
+        # If no arguments are specified, logs an empty dict
+        self.check('/gramexlog/default')
+        # Logs any URL query parameters specified
+        self.check('/gramexlog/default', {'x': [1, 2], '高': 'σ', 'س': ''})
+        result = self.check('/gramexlog/search?index=default').json()['hits']
+        eq_(json.dumps(result, sort_keys=True), json.dumps([
+            {},
+            {'x': '2', '高': 'σ', 'س': ''},
+        ], sort_keys=True))
 
-        # This logs ``{level: INFO, x: 1, msg: abc, port: 9988, time: 2020-07-21 13:41:00}``.
-        # 3 keys are added:
+    def test_extra(self, status=200, port=9999):
+        self.check('/gramexlog/delete')
+        self.check('/gramexlog/extra')
+        self.check('/gramexlog/extra', {'x': [1, 2], '高': 'σ', 'س': ''})
+        rows = self.check('/gramexlog/search?index=extra').json()['hits']
+        eq_(len(rows), 2)
+        for row in rows:
+            eq_(row['int'], 1)
+            eq_(row['bool'], True)
+            eq_(row['str'], 'msg')
+            eq_(row['none'], None)
+            eq_(row['name'], 'gramexlog/extra')
+            eq_(row['class'], 'FunctionHandler')
+            eq_(row['method'], 'GET')
+            eq_(row['uri'], '/gramexlog/extra')
+            eq_(row['status'], status)
+            eq_(row['port'], port)
+            eq_(row['error'], '')
+            eq_(row['request.path'], '/gramexlog/extra')
+            eq_(row['headers.Host'], 'localhost:9999')
+            eq_(row['cookies.sid'], '')
+            eq_(row['user.id'], '')
+            eq_(row['env.HOME'], 'D:\\cygwin64\\home\\Anand')
+            eq_(row['args.y'], '')
+        eq_(rows[0]['args.x'], '')
+        eq_(rows[1]['args.x'], '2')
+        eq_(rows[1]['x'], '2')
+        eq_(rows[1]['高'], 'σ')
+        eq_(rows[1]['س'], '')
 
-        # 1. ``level``: logging level. Defaults to INFO
-        # 2. ``time``: current time as YYYY-MM-DD HH:MM:ZZ in UTC
-        # 3. ``port``: application's current port
+    def test_nonexistent(self):
+        # Even non-existent logging requests will succeed.
+        # Gramex will wait for the (nonexistent) server to come up.
+        self.check('/gramexlog/nonexistent')
+        # TODO: check that the logs report errors when trying to connect
 
-        # If a logging service like ElasticSearch has been configured, it will periodically flush
-        # the logs into ElasticSearch.
-
-        # Run without configuring gramexlog
-        # Run after configuring gramexlog manually
-
-        # Without eslog config, log queue should be empty
-        # Check if the log is written to elastic search
-
-    def test_eslog_not_running(self):
-        # 1. Create a connection to a nonexistent elasticsearch port and send the request
-        # 2. Stop elasticsearch and send a log message
-        # self.check('/log', {'level': 'WARN', 'x': x, 'msg': 'abc'})
-        pass
-
-    def search_log_doc(self):
-        import uuid
-        x = uuid.uuid4()
-        no_of_docs = 5
-        for i in range(no_of_docs):
-            self.check('/log', {'level': 'WARN', 'x': x, 'msg': i})
-        time.sleep(5)
-        result = self.check('/log/search', {'x': x})
-        result = result.json()
-        eq_(result['hits']['total']['value'], no_of_docs)
-
-    def log_multiple_apps(self):
-        def create_check_logs(app_name):
-            import uuid
-            x = uuid.uuid4()
-            no_of_docs = 5
-            for i in range(no_of_docs):
-                self.check('/log', {'level': 'WARN', 'x': x, 'msg': i, '_app': app_name})
-            time.sleep(10)
-            result = self.check('/log/search', {'x': x, '_app': app_name})
-            result = result.json()
-            eq_(result['hits']['total']['value'], no_of_docs)
-
-        create_check_logs(app_name='default')
-        create_check_logs(app_name='test_app')
+    @classmethod
+    def tearDownClass(cls):
+        requests.get(base_url + '/gramexlog/delete')

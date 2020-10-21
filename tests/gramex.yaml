@@ -1894,23 +1894,35 @@ url:
           url: $TRANSLATE_XLSX
           sheet_name: translate
 
-  log:
-    pattern: /log
+  gramexlog/default:
+    pattern: /gramexlog/default
     handler: FunctionHandler
     kwargs:
       function: gramex.log
 
-  log/queue:
-    pattern: /log/queue
+  gramexlog/extra:
+    pattern: /gramexlog/extra
     handler: FunctionHandler
     kwargs:
-      function: utils.gramex_log_queue
+      function: gramex.log(handler, 'extra', int=1, bool=True, str='msg', none=None)
 
-  log/search:
-    pattern: /log/search
+  gramexlog/nonexistent:
+    pattern: /gramexlog/nonexistent
     handler: FunctionHandler
     kwargs:
-      function: utils.search_log
+      function: gramex.log(handler, 'nonexistent')
+
+  gramexlog/delete:
+    pattern: /gramexlog/delete
+    handler: FunctionHandler
+    kwargs:
+      function: utils.gramexlog_delete
+
+  gramexlog/search:
+    pattern: /gramexlog/search
+    handler: FunctionHandler
+    kwargs:
+      function: utils.gramexlog_search
 
   shutdown:
     pattern: /shutdown
@@ -1919,17 +1931,15 @@ url:
       function: gramex.shutdown() or 'Done'
 
 gramexlog:
+  flush: 0.2
   default:
-      host: $ES_HOST
-      user: $ES_USER
-      pass: $ES_PASS
-      index: local_log
-
-  test_app:
-      host: $ES_HOST_1
-      user: $ES_USER
-      pass: $ES_PASS
-      index: rem_log
+      host: localhost
+  extra:
+      host: localhost
+      keys: [name, class, method, uri, status, port, error,
+             args.x, args.y, request.path, headers.Host, cookies.sid, user.id, env.HOME]
+  nonexistent:
+      host: nonexistent
 
 sms:
   amazonsns:

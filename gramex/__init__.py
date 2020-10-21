@@ -324,20 +324,21 @@ def log(*args, **kwargs):
     # gramexlog() positional arguments may have a handler and app (in any order). Find these
     handler, app = None, services.info.gramexlog.get('defaultapp', None)
     for arg in args:
-        if hasattr(arg, 'args'):
+        # Pretend that anything that has a .args is a handler
+        if hasattr(getattr(arg, 'args', None), 'items'):
             handler = arg
+        # ... and anything that's a string is an index name
         elif isinstance(arg, str):
             app = arg
-    # Stop them from logging into an unknown app
+    # If the user logs into an unknown app, stop immediately
     try:
         conf = services.info.gramexlog.apps[app]
     except KeyError:
-        raise Exception(f'gramexlog: no config for {app}')
-    # Add additional logging keys and append to queue
-    try:
-        if conf.all_args and handler:
-            kwargs.update({key: val[-1] for key, val in handler.args.items()})
-        kwargs.update(conf.extra_keys(handler))
-        conf.queue.append(kwargs)
-    except Exception:
-        app_log.exception('gramexlog: failed')
+        raise ValueError(f'gramexlog: no config for {app}')
+
+    # Add all URL query parameters. In case of multiple values, capture the last
+    if handler:
+        kwargs.update({key: val[-1] for key, val in handler.args.items()})
+    # Add additional keys specified in gramex.yaml via keys:
+    kwargs.update(conf.extra_keys(handler))
+    conf.queue.append(kwargs)

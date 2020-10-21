@@ -920,12 +920,10 @@ def gramexlog(conf):
     for app, app_conf in conf.items():
         app_config = info.gramexlog.apps[app] = AttrDict()
         app_config.queue = []
-        app_config.conn = Elasticsearch(
-            app_conf.get('host', 'localhost'),
-            http_auth=(app_conf.get('user', ''), app_conf.get('pass', '')))
-        keys = app_conf.get('keys', [])
-        app_config.all_args = 'args' in keys
-        app_config.extra_keys = build_log_info([key for key in keys if key != 'args'])
+        keys = app_conf.pop('keys', [])
+        app_config.extra_keys = build_log_info(keys)
+        # Ensure all gramexlog keys are popped from app_conf, leaving only Elasticsearch keys
+        app_config.conn = Elasticsearch(**app_conf)
 
     def push():
         for app, app_config in info.gramexlog.apps.items():
@@ -945,4 +943,5 @@ def gramexlog(conf):
             info.gramexlog.callback = tornado.ioloop.PeriodicCallback(push, flush * 1000)
             info.gramexlog.callback.start()
 
+    info.gramexlog.push = push
     return start_callback

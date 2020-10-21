@@ -432,16 +432,22 @@ def drivehandler_modify(data, key, handler):
     return data
 
 
-def gramex_log_queue(handler):
-    return json.dumps(info.gramexlog.queue)
+def gramexlog_delete(handler):
+    # Delete all indices and clear all queues
+    for app, app_config in info.gramexlog.apps.items():
+        app_config.queue.clear()
+        if app != 'nonexistent':
+            app_config.conn.indices.delete(index=app, ignore=[404])
 
 
-def search_log(handler):
-    query_body = {"query": {"bool": {"must": {"match": {"x": handler.args['x'][0]}}}}}
-    app = handler.args.get('_app', ['default'])[0]
-    idx = info.gramexlog.conf[app].get('index', app)
-    res = info.gramexlog.connection[app].search(index=idx, body=query_body)
-    return res
+def gramexlog_search(handler):
+    info.gramexlog.push()
+    # ElasticSearch may need some time to re-index. This can vary across systems
+    time.sleep(1)
+    app = handler.get_arg('index')
+    app_config = info.gramexlog.apps[app]
+    results = app_config.conn.search(index=app, ignore=[404]).get('hits', {}).get('hits', [])
+    return {'hits': [result['_source'] for result in results]}
 
 
 if __name__ == '__main__':
