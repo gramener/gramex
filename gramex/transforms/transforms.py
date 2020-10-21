@@ -1,9 +1,12 @@
 import ast
 import six
+from functools import wraps
 import json
 import importlib
+from inspect import signature
 import tornado.gen
 from types import GeneratorType
+from typing import get_type_hints
 from orderedattrdict import AttrDict
 from gramex.config import app_log, locate, variables, CustomJSONEncoder
 
@@ -368,3 +371,121 @@ def once(*args, **kwargs):
         return False
     db[key] = True
     return True
+
+
+def _parse_handler(handler, sig):
+    args = handler.path_args
+    arguments = {k: v[0] if len(v) == 1 else v for k, v in handler.args.items()}
+    if not arguments:
+        try:
+            arguments = json.loads(handler.request.body)
+        except json.JSONDecodeError:
+            pass
+    arguments = {k: v for k, v in arguments.items() if k in sig.parameters}
+    kwargs = {}
+    for arg, val in arguments.items():
+        param = sig.parameters[arg]
+        if param.kind == param.VAR_POSITIONAL:
+            args.extend(val)
+        elif param.kind == param.POSITIONAL_ONLY:
+            args.append(val)
+        elif param.kind in (param.KEYWORD_ONLY, param.POSITIONAL_OR_KEYWORD):
+            kwargs[arg] = val
+    return args, kwargs
+
+
+def handler(func):
+    """Wrap a function to make it compatible with a tornado.web.RequestHandler
+
+    Use this decorator if you'd rather not write a FunctionHandler function from scratch,
+    but reuse an existing one.
+
+    Parameters
+    ----------
+    func : callable
+        function to be wrapped.
+
+    Usage
+    -----
+    Suppose you have the following function in `greet.py`:
+
+    def birthday(name, age):
+        return f'{name} turns {age} today! Happy Birthday!'
+
+    Then, in `gramex.yaml`, you can use it as a FunctionHandler as follows:
+    url:
+        pattern: /$YAMLURL/greet
+        handler: FunctionHandler
+        kwargs:
+            function: gramex.handlers.functionhandler.add_handler(greet.birthday)(handler)
+
+    Now, `/greet?name=Gramex&age=10` returns "Gramex turns 10 today! Happy Birthday!".
+    An alternate way of configuring this is as follows:
+
+    url:
+        pattern: /$YAMLURL/greet/name/(.*)/age/(.*)
+        handler: FunctionHandler
+        kwargs:
+            funtion: gramex.handlers.functionhandler.add_handler(greet.birthday)(handler)
+
+    Here, `/greet/name/Gramex/age/10` returns "Gramex turns 10 today! Happy Birthday!".
+    `add_handler` can also be used as a decorator,
+
+    @add_handler
+    def birthday(name, age):
+        return f'{name} turns {age} today! Happy Birthday!'
+
+    which simplifies the FunctionHandler configuration in `gramex.yaml` as follows:
+    url:
+        pattern: /$YAMLURL/greet
+        handler: FunctionHandler
+        kwargs:
+            funtion: greet.birthday  # notice that calling the wrapper is not required here
+
+    Arbitrary functions can be wrapped with `add_handler`. However, it does make some assumptions:
+
+    1. In a GET and DELETE requests, `handler.path_args` are converted to positional arguments,
+    and URL parameters are converted to keyword arguments.
+    2. In POST and PUT requests, `handler.request.body` is deserialized and passed directly to
+    the wrapped function as a dict of keyword arguments. URL parameters and path arguments
+    are _ignored_.
+
+    The wrapper also naively tries to enforce types based on any type annotations that are found
+    in the wrapped function.
+
+    Note that this alone does not guarantee RESTfulness. This function simply translates
+    handler data and attempts to typecast inputs to the required format.
+    """
+    sig = signature(func)
+
+    @wraps(func)
+    def wrapper(handler):
+        args, kwargs = _parse_handler(handler, sig)
+        hints = get_type_hints(func)
+        for arg, argtype in hints.items():
+            if argtype is not type(None):  # NOQA: E721
+                if argtype is bool:
+                    args = [json.loads(k) for k in args]
+                    named_arg = kwargs.get(arg)
+                    if named_arg:
+                        try:
+                            named_arg = json.loads(named_arg)
+                        except json.JSONDecodeError:
+                            pass
+                        kwargs[arg] = named_arg
+                param = sig.parameters.get(arg, False)
+                if param:
+                    if param.kind == param.VAR_POSITIONAL:
+                        args = [argtype(k) for k in args]
+                    else:
+                        try:
+                            kwargs[arg] = argtype(kwargs[arg])
+                        except TypeError:
+                            if argtype._name in ('List', 'Tuple'):
+                                member_type = argtype.__args__[0]
+                                kwargs[arg] = argtype.__origin__(map(member_type, kwargs[arg]))
+                            else:
+                                continue
+        return json.dumps(func(*args, **kwargs))
+
+    return wrapper

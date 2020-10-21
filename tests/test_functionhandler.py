@@ -1,22 +1,22 @@
 import json
+from typing import List
 
 from . import TestGramex
-from typing import List
 from gramex.http import FOUND
-from gramex.handlers.functionhandler import add_handler
+from gramex.transforms import handler
 
 
-@add_handler
+@handler
 def total(*items: float) -> float:
     return sum(items)
 
 
-@add_handler
-def total_list(items: List[float], start: float) -> float:
-    return sum(items, start=start)
+@handler
+def total_list(items: List[int], start: float) -> float:
+    return sum(items, start)
 
 
-@add_handler
+@handler
 def strtotal(*items: str) -> str:
     s = ''
     for i in items:
@@ -24,22 +24,22 @@ def strtotal(*items: str) -> str:
     return s
 
 
-@add_handler
+@handler
 def name_age(name, age):
     return f'{name} is {age} years old.'
 
 
-@add_handler
+@handler
 def urlparse_hinted(name: str, age: int) -> str:
     return f'{name} is {age} years old.'
 
 
-@add_handler
+@handler
 def native_types(a: int, b: float, c: bool, d: None):
     return {'msg': f'{a} items @ {b} each together cost {a * b}.', 'c': c, 'd': d}
 
 
-@add_handler
+@handler
 def greet(name="Stranger"):
     return f'Hello, {name}!'
 
@@ -63,6 +63,7 @@ class TestFunctionHandler(TestGramex):
             text='{"msg": "3 items @ 1.5 each together cost 4.5.", "c": false, "d": "null"}')
         self.check('/func/defaultNamed', text="Hello, Stranger!")
         self.check('/func/defaultNamed?name=gramex', text="Hello, gramex!")
+        self.check('/func/multilist?items=1&items=2&items=3&start=1', text="7.0")
 
     def test_add_handler_delete(self):
         self.check('/func/total/40/2', text="42.0", method='delete')
@@ -77,14 +78,15 @@ class TestFunctionHandler(TestGramex):
         # When type hints are violated:
         self.check('/func/hints', method='post', data={'name': 'johndoe', 'age': '42.3'},
                    code=500)
-        # When POSTing positional args
-        self.check('/func/multi', method='post', data={'items': [1, 2, 3]}, code=500)
         # Check typecasting
         self.check(
             '/func/nativetypes', method='post',
             data=json.dumps({'a': 3, 'b': 1.5, 'c': False, 'd': None}),
             text='{"msg": "3 items @ 1.5 each together cost 4.5.", "c": false, "d": null}')
         self.check('/func/defaultNamed', text="Hello, Stranger!")
+        # Check if POSTing urlparams and path args works
+        self.check('/func/foo?name=johndoe&age=42', method='post', text="johndoe is 42 years old.")
+        self.check('/func/name/johndoe/age/42', text="johndoe is 42 years old.")
 
     def test_args(self):
         etag = {'headers': {'Etag': True}}

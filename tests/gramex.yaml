@@ -296,7 +296,7 @@ url:
     kwargs:
       function: tests.test_functionhandler.total
       xsrf_cookies: false
-  func/multiargs:
+  func/multilist:
     pattern: /func/multilist
     handler: FunctionHandler
     kwargs:

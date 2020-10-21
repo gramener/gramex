@@ -1,6 +1,6 @@
 '''Functions to transform data'''
 
-from .transforms import build_transform, condition, flattener, once
+from .transforms import build_transform, condition, flattener, once, handler
 from .badgerfish import badgerfish
 from .template import template, CacheLoader
 from .rmarkdown import rmarkdown
@@ -18,4 +18,5 @@ __all__ = [
     'once',
     'CacheLoader',
     'TwitterStream',
+    'handler'
 ]
