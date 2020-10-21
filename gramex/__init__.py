@@ -42,10 +42,10 @@ paths = AttrDict()              # Paths where configurations are stored
 conf = AttrDict()               # Final merged configurations
 config_layers = ChainConfig()   # Loads all configurations. init() updates it
 
+callbacks = {}                  # Services callbacks
+
 paths['source'] = Path(__file__).absolute().parent      # Where gramex source code is
 paths['base'] = Path('.')                               # Where gramex is run from
-
-callbacks = {}                  # Services callbacks
 
 # Populate __version__ from release.json
 with (paths['source'] / 'release.json').open() as _release_file:
@@ -268,22 +268,22 @@ def init(force_reload=False, **kwargs):
 
     # Run all valid services. (The "+" before config_chain merges the chain)
     # Services may return callbacks to be run at the end
+    callbacks = {}
     for key, val in final_config.items():
         if key not in conf or conf[key] != val or force_reload:
             if hasattr(services, key):
                 app_log.debug('Loading service: %s', key)
                 conf[key] = prune_keys(val, {'comment'})
-                callback = getattr(services, key)(conf[key])
-                if callable(callback):
-                    callbacks[key] = callback
+                callbacks[key] = getattr(services, key)(conf[key])
             else:
                 app_log.error('No service named %s', key)
 
-    # Run the callbacks. Specifically, the app service starts the Tornado ioloop
-    for key in (+config_layers).keys():
-        if key in callbacks:
-            app_log.debug('Running callback: %s', key)
-            callbacks[key]()
+    # Run the callbacks. Run the app callback last since it starts the Tornado ioloop
+    callbacks['app'] = callbacks.pop('app', None)
+    for key, callback in callbacks.items():
+        app_log.debug('Running callback: %s', key)
+        if callable(callback):
+            callback()
 
 
 def shutdown():
@@ -294,7 +294,7 @@ def shutdown():
         ioloop.stop()
 
 
-def log(handler=None, **kwargs):
+def log(handler=None, _app='default', **kwargs):
     '''
     Logs structured information for future reference. Typical usage::
 
@@ -324,22 +324,20 @@ def log(handler=None, **kwargs):
 
     ... then, ``gramex.log(x=1, y=2, _app='app1')`` will log into the ``app1`` index.
     '''
-    # If any argument is a
-    if handler is not None:
-        kwargs.update({key: val[0] for key, val in handler.args.items()})
     from . import services
-    conf = services.info.gramexlog
     try:
-        if conf and 'queue' in conf and 'maxlength' in conf:
-            kwargs['level'] = kwargs.get('level', 'INFO').upper()
-            kwargs['time'] = datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%SZ')
-            kwargs['port'] = app_log_extra['port']
-            if '_app' in kwargs and kwargs['_app'] not in conf['conf']:
-                raise IndexError('ESLog not configured for application')
-            if len(conf['queue']) < conf['maxlength']:
-                conf['queue'][kwargs['_app']].append(kwargs)
-            else:
-                raise IndexError('Gramex log queue (%s) is too long (max: %s)' % (
-                    len(conf['queue'][kwargs['_app']]), conf['maxlength']))
+        conf = services.info.gramexlog[_app]
+    except KeyError:
+        raise Exception(f'gramexlog: no config for {_app}')
+    try:
+        # If a handler is passed as the first argument, use the last URL query parameter values
+        if hasattr(handler, 'args'):
+            kwargs.update({key: val[-1] for key, val in handler.args.items()})
+        kwargs['level'] = kwargs.get('level', 'INFO').upper()
+        kwargs['time'] = datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%SZ')
+        kwargs['port'] = app_log_extra['port']
+        if len(conf.queue) >= conf.maxlength:
+            raise IndexError(f'gramexlog: {_app} queue > maxlength: {conf.maxlength}')
+        conf.queue.append(kwargs)
     except Exception:
-        app_log.exception('ESlog failed')
+        app_log.exception('gramexlog: failed')

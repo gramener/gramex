@@ -6,7 +6,6 @@ import sys
 import json
 import time
 import random
-import gramex
 import pandas as pd
 from collections import Counter
 from orderedattrdict import AttrDict
@@ -432,8 +431,6 @@ def drivehandler_modify(data, key, handler):
         data['m'] = 'OK'
     return data
 
-# from elasticsearch import Elasticsearch
-# es = Elasticsearch("localhost", http_auth=("eladm","eladm"))
 
 def gramex_log_queue(handler):
     return json.dumps(info.gramexlog.queue)
@@ -441,7 +438,7 @@ def gramex_log_queue(handler):
 
 def search_log(handler):
     query_body = {"query": {"bool": {"must": {"match": {"x": handler.args['x'][0]}}}}}
-    app = handler.args.get('_app',['default'])[0]
+    app = handler.args.get('_app', ['default'])[0]
     idx = info.gramexlog.conf[app].get('index', app)
     res = info.gramexlog.connection[app].search(index=idx, body=query_body)
     return res

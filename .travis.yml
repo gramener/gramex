@@ -19,6 +19,7 @@ services:
   - mysql
   - postgresql
   - redis-server
+  - elasticsearch
 
 addons:
   apt:

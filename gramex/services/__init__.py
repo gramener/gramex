@@ -907,38 +907,37 @@ def test(conf):
 
 def gramexlog(conf):
     '''Set up gramexlog service'''
-    from elasticsearch import Elasticsearch, helpers
-    from collections import defaultdict
-    default_conf = conf.get('default')
+    try:
+        from elasticsearch import Elasticsearch, helpers
+    except ImportError:
+        app_log.error('gramexlog: elasticsearch missing. pip install elasticsearch')
+        return
 
-    def get_conn(conf, key):
-        return Elasticsearch(conf[key].get('host'),
-                             http_auth=(conf[key].get('user'), conf[key].get('pass')))
+    for app, app_conf in conf.items():
+        info.gramexlog[app] = app_config = AttrDict(app_conf)
+        app_config.setdefault('poll', 5),
+        app_config.setdefault('maxlength', 100000),
+        app_config.queue = []
+        app_config.conn = Elasticsearch(
+            app_conf.get('host', 'localhost'),
+            http_auth=(app_conf.get('user', ''), app_conf.get('pass', '')))
 
-    info.gramexlog.conf = conf
-    info.gramexlog.poll = poll = default_conf.get('poll', 1)
-    info.gramexlog.queue = queue = defaultdict(list)
-    info.gramexlog.maxlength = default_conf.get('maxlength', 100000)
-    info.gramexlog.connection = connection = {key: get_conn(conf, key) for key in conf.keys()}
-
-    def log_to_es():
-        for app, items in queue.items():
-            if not items:
-                continue
+        def eslog():
+            for item in app_config.queue:
+                item.setdefault('app', app)
+                item.setdefault('_index', app)
             try:
-                for item in items:
-                    item['app'] = app = item.get('_app', 'default')
-                    item['_index'] = conf.get(app).get('index', app)
-                helpers.bulk(connection[app], items)
-                queue[app].clear()
+                helpers.bulk(app_config.conn, app_config.queue)
+                app_config.queue.clear()
             except Exception:
                 # TODO: If the connection broke, re-create it
                 # This generic exception should be caught for thread to continue its execution
-                app_log.exception('ESLog push to app: %s failed', app)
+                app_log.exception('gramexlog: push to app: %s failed', app)
 
-    info.gramexlog.callback = tornado.ioloop.PeriodicCallback(log_to_es, poll * 1000)
+        app_config.callback = tornado.ioloop.PeriodicCallback(eslog, app_config.poll * 1000)
 
     def start_callback():
-        info.gramexlog.callback.start()
+        for app, app_config in info.gramexlog.items():
+            app_config.callback.start()
 
     return start_callback

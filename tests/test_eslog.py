@@ -5,14 +5,14 @@ import time
 
 
 class TestESLog(TestGramex):
-    def test_eslog(self):
+    def test_eslog(self, port=9999):
         self.check('/log', {'level': 'INFO', 'x': 1, 'msg': 'abc'})
         result = self.check('/log/queue')
         result = json.loads(result.content)
         eq_(result[0]['level'], 'INFO')
         eq_(result[0]['x'], '1')
         eq_(result[0]['msg'], 'abc')
-        eq_(result[0]['port'], 9999)
+        eq_(result[0]['port'], port)
         # TODO: Check that this is within 5 seconds of now
         # eq_(result['time'], )
 
