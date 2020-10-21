@@ -1,6 +1,7 @@
 import json
 
 from . import TestGramex
+from typing import List
 from gramex.http import FOUND
 from gramex.handlers.functionhandler import add_handler
 
@@ -8,6 +9,11 @@ from gramex.handlers.functionhandler import add_handler
 @add_handler
 def total(*items: float) -> float:
     return sum(items)
+
+
+@add_handler
+def total_list(items: List[float], start: float) -> float:
+    return sum(items, start=start)
 
 
 @add_handler
@@ -48,6 +54,7 @@ class TestFunctionHandler(TestGramex):
         self.check('/func/hints?name=johndoe&age=42.3', code=500)
         # When multiple arguments are passed:
         self.check('/func/multi?items=1&items=2&items=3', text="6.0")
+        self.check('/func/multilist?items=1&items=2&items=3&start=1', text="7.0")
         # Positional args with types
         self.check('/func/strtotal?items=a&items=b&items=c', text='abc')
         # Test native types:

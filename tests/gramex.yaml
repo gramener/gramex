@@ -296,6 +296,11 @@ url:
     kwargs:
       function: tests.test_functionhandler.total
       xsrf_cookies: false
+  func/multiargs:
+    pattern: /func/multilist
+    handler: FunctionHandler
+    kwargs:
+      function: tests.test_functionhandler.total_list
   func/strtotal:
     pattern: /func/strtotal
     handler: FunctionHandler
