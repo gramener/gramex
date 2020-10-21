@@ -31,21 +31,20 @@ import json
 import yaml
 import logging
 import logging.config
-import datetime
 import tornado.ioloop
 from pathlib import Path
 from orderedattrdict import AttrDict
 from gramex.config import ChainConfig, PathConfig, app_log, variables, setup_variables
-from gramex.config import ioloop_running, prune_keys, app_log_extra
+from gramex.config import ioloop_running, prune_keys
 
 paths = AttrDict()              # Paths where configurations are stored
 conf = AttrDict()               # Final merged configurations
 config_layers = ChainConfig()   # Loads all configurations. init() updates it
 
-callbacks = {}                  # Services callbacks
-
 paths['source'] = Path(__file__).absolute().parent      # Where gramex source code is
 paths['base'] = Path('.')                               # Where gramex is run from
+
+callbacks = {}                  # Services callbacks
 
 # Populate __version__ from release.json
 with (paths['source'] / 'release.json').open() as _release_file:
@@ -294,7 +293,7 @@ def shutdown():
         ioloop.stop()
 
 
-def log(handler=None, _app='default', **kwargs):
+def log(*args, **kwargs):
     '''
     Logs structured information for future reference. Typical usage::
 
@@ -310,34 +309,35 @@ def log(handler=None, _app='default', **kwargs):
     If a logging service like ElasticSearch has been configured, it will periodically flush the
     logs into ElasticSearch.
 
-    By default, this logs into the ``default`` index. If you have multiple log indices, you can
-    optionally add an ``_index="log-name"``. For example, if the ``gramex.yaml`` configuration was
-    like this::
+    By default, this logs into the first index. ``gramex.yaml`` can specify multiple indices::
 
         gramexlog:
-            app1:
+            index1:
                 host: localhost
-                index: app1
-            app2:
+            index2:
                 host: localhost
-                index: app2
+                keys: [port]
 
-    ... then, ``gramex.log(x=1, y=2, _app='app1')`` will log into the ``app1`` index.
+    Then, ``gramex.log('index1', x=1, y=2)`` will log into the ``index1``.
     '''
     from . import services
+    # gramexlog() positional arguments may have a handler and app (in any order). Find these
+    handler, app = None, services.info.gramexlog.get('defaultapp', None)
+    for arg in args:
+        if hasattr(arg, 'args'):
+            handler = arg
+        elif isinstance(arg, str):
+            app = arg
+    # Stop them from logging into an unknown app
     try:
-        conf = services.info.gramexlog[_app]
+        conf = services.info.gramexlog.apps[app]
     except KeyError:
-        raise Exception(f'gramexlog: no config for {_app}')
+        raise Exception(f'gramexlog: no config for {app}')
+    # Add additional logging keys and append to queue
     try:
-        # If a handler is passed as the first argument, use the last URL query parameter values
-        if hasattr(handler, 'args'):
+        if conf.all_args and handler:
             kwargs.update({key: val[-1] for key, val in handler.args.items()})
-        kwargs['level'] = kwargs.get('level', 'INFO').upper()
-        kwargs['time'] = datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%SZ')
-        kwargs['port'] = app_log_extra['port']
-        if len(conf.queue) >= conf.maxlength:
-            raise IndexError(f'gramexlog: {_app} queue > maxlength: {conf.maxlength}')
+        kwargs.update(conf.extra_keys(handler))
         conf.queue.append(kwargs)
     except Exception:
         app_log.exception('gramexlog: failed')

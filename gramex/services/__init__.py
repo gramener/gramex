@@ -57,7 +57,7 @@ info = AttrDict(
     eventlog=AttrDict(),
     email=AttrDict(),
     sms=AttrDict(),
-    gramexlog=AttrDict(),
+    gramexlog=AttrDict(apps=AttrDict()),
     _md=None,
     _main_ioloop=None,
 )
@@ -227,7 +227,7 @@ def _stop_all_tasks(tasks):
 
 
 def schedule(conf):
-    '''Set up the Gramex PeriodicCallback scheduler'''
+    '''Set up the Gramex scheduler'''
     # Create tasks running on ioloop for the given schedule, store it in info.schedule
     from . import scheduler
     _stop_all_tasks(info.schedule)
@@ -907,37 +907,42 @@ def test(conf):
 
 def gramexlog(conf):
     '''Set up gramexlog service'''
+    from gramex.transforms import build_log_info
     try:
         from elasticsearch import Elasticsearch, helpers
     except ImportError:
         app_log.error('gramexlog: elasticsearch missing. pip install elasticsearch')
         return
 
+    flush = conf.pop('flush', 5)
+    if len(conf):
+        info.gramexlog.defaultapp = next(iter(conf.keys()))
     for app, app_conf in conf.items():
-        info.gramexlog[app] = app_config = AttrDict(app_conf)
-        app_config.setdefault('poll', 5),
-        app_config.setdefault('maxlength', 100000),
+        app_config = info.gramexlog.apps[app] = AttrDict()
         app_config.queue = []
         app_config.conn = Elasticsearch(
             app_conf.get('host', 'localhost'),
             http_auth=(app_conf.get('user', ''), app_conf.get('pass', '')))
+        keys = app_conf.get('keys', [])
+        app_config.all_args = 'args' in keys
+        app_config.extra_keys = build_log_info([key for key in keys if key != 'args'])
 
-        def eslog():
+    def push():
+        for app, app_config in info.gramexlog.apps.items():
             for item in app_config.queue:
-                item.setdefault('app', app)
-                item.setdefault('_index', app)
+                item['_index'] = app
             try:
                 helpers.bulk(app_config.conn, app_config.queue)
                 app_config.queue.clear()
             except Exception:
                 # TODO: If the connection broke, re-create it
                 # This generic exception should be caught for thread to continue its execution
-                app_log.exception('gramexlog: push to app: %s failed', app)
-
-        app_config.callback = tornado.ioloop.PeriodicCallback(eslog, app_config.poll * 1000)
+                app_log.exception('gramexlog: push to %s failed', app)
 
     def start_callback():
-        for app, app_config in info.gramexlog.items():
-            app_config.callback.start()
+        # TODO: This does not re-schedule if flush: changes. Restarting PeriodicCallbacks is tough
+        if not info.gramexlog.get('callback', None):
+            info.gramexlog.callback = tornado.ioloop.PeriodicCallback(push, flush * 1000)
+            info.gramexlog.callback.start()
 
     return start_callback

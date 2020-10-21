@@ -3,7 +3,6 @@ import os
 import six
 import time
 import logging
-import datetime
 import mimetypes
 import traceback
 import tornado.gen
@@ -15,7 +14,7 @@ from tornado.web import RequestHandler, HTTPError, MissingArgumentError, decode_
 from tornado.websocket import WebSocketHandler
 from gramex import conf, __version__
 from gramex.config import merge, objectpath, app_log
-from gramex.transforms import build_transform, CacheLoader
+from gramex.transforms import build_transform, build_log_info, CacheLoader
 from gramex.http import UNAUTHORIZED, FORBIDDEN, BAD_REQUEST
 from gramex.cache import get_store
 # We don't use these, but these stores used to be defined here. Programs may import these
@@ -945,59 +944,3 @@ def _handle(path):
         # Open file handles accordingly
         handle_cache[path] = open(path, 'ab') if six.PY2 else io.open(path, 'a', encoding='utf-8')
     return handle_cache[path]
-
-
-def build_log_info(keys, *vars):
-    '''
-    Creates a ``handler.method(vars)`` that returns a dictionary of computed
-    values. ``keys`` defines what keys are returned in the dictionary. The values
-    are computed using the formulas in the code.
-    '''
-    # Define direct keys. These can be used as-is
-    direct_vars = {
-        'name': 'handler.name',
-        'class': 'handler.__class__.__name__',
-        'time': 'round(time.time() * 1000, 0)',
-        'datetime': 'datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%SZ")',
-        'method': 'handler.request.method',
-        'uri': 'handler.request.uri',
-        'ip': 'handler.request.remote_ip',
-        'status': 'handler.get_status()',
-        'duration': 'round(handler.request.request_time() * 1000, 0)',
-        'port': 'conf.app.listen.port',
-        # TODO: get_content_size() is not available in RequestHandler
-        # 'size': 'handler.get_content_size()',
-        'user': '(handler.current_user or {}).get("id", "")',
-        'session': 'handler.session.get("id", "")',
-        'error': 'getattr(handler, "_exception", "")',
-    }
-    # Define object keys for us as key.value. E.g. cookies.sid, user.email, etc
-    object_vars = {
-        'args': 'handler.get_argument("{val}", "")',
-        'request': 'getattr(handler.request, "{val}", "")',
-        'headers': 'handler.request.headers.get("{val}", "")',
-        'cookies': 'handler.request.cookies["{val}"].value ' +
-                   'if "{val}" in handler.request.cookies else ""',
-        'user': '(handler.current_user or {{}}).get("{val}", "")',
-        'env': 'os.environ.get("{val}", "")',
-    }
-    vals = []
-    for key in keys:
-        if key in vars:
-            vals.append('"{}": {},'.format(key, key))
-            continue
-        if key in direct_vars:
-            vals.append('"{}": {},'.format(key, direct_vars[key]))
-            continue
-        if '.' in key:
-            prefix, value = key.split('.', 2)
-            if prefix in object_vars:
-                vals.append('"{}": {},'.format(key, object_vars[prefix].format(val=value)))
-                continue
-        app_log.error('Skipping unknown key %s', key)
-    code = compile('def fn(handler, %s):\n\treturn {%s}' % (', '.join(vars), ' '.join(vals)),
-                   filename='log', mode='exec')
-    context = {'os': os, 'time': time, 'datetime': datetime, 'conf': conf, 'AttrDict': AttrDict}
-    # The code is constructed entirely by this function. Using exec is safe
-    exec(code, context)         # nosec
-    return context['fn']
