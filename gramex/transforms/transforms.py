@@ -426,7 +426,7 @@ def handler(func):
         pattern: /$YAMLURL/greet/name/(.*)/age/(.*)
         handler: FunctionHandler
         kwargs:
-            funtion: gramex.handlers.functionhandler.add_handler(greet.birthday)(handler)
+            function: gramex.handlers.functionhandler.add_handler(greet.birthday)(handler)
 
     Here, `/greet/name/Gramex/age/10` returns "Gramex turns 10 today! Happy Birthday!".
     `add_handler` can also be used as a decorator,
@@ -440,15 +440,11 @@ def handler(func):
         pattern: /$YAMLURL/greet
         handler: FunctionHandler
         kwargs:
-            funtion: greet.birthday  # notice that calling the wrapper is not required here
+            function: greet.birthday  # notice that calling the wrapper is not required here
 
-    Arbitrary functions can be wrapped with `add_handler`. However, it does make some assumptions:
-
-    1. In a GET and DELETE requests, `handler.path_args` are converted to positional arguments,
-    and URL parameters are converted to keyword arguments.
-    2. In POST and PUT requests, `handler.request.body` is deserialized and passed directly to
-    the wrapped function as a dict of keyword arguments. URL parameters and path arguments
-    are _ignored_.
+    Arbitrary functions can be wrapped with `add_handler`. However, it assumes that
+    `handler.path_args`, if found, are converted to positional arguments,
+    and everything else, like URL parameters and request body, are converted to keyword arguments.
 
     The wrapper also naively tries to enforce types based on any type annotations that are found
     in the wrapped function.
