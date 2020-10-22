@@ -5,6 +5,7 @@ import pandas as pd
 import gramex.cache
 import gramex.data
 from gramex.handlers import BaseHandler
+from gramex.transforms import build_transform
 import tornado.escape
 from io import BytesIO
 
@@ -16,16 +17,18 @@ class ModelHandler(BaseHandler):
     '''
 
     @classmethod
-    def setup(cls, path, **kwargs):
-        if os.path.splitext(path)[-1] == '.h5':
-            cls.engine = "keras"
-        else:
-            cls.engine = "sklearn"
-        super(ModelHandler, cls).setup(**kwargs)
+    def setup(cls, path, engine='sklearn', **kwargs):
+        cls.engine = engine
+        super(ModelHandler, cls).setup(path, **kwargs)
         prepare = kwargs.get('prepare', False)
         if prepare:
             from pydoc import locate
-            cls.prepare = locate(prepare)
+            cls._on_init_methods.append(build_transform(
+                conf={'function': locate(prepare)},
+                vars={'handler': None, 'args': None},
+                filename='url:%s:prepare' % cls.name,
+                iter=False
+            ))
         cls.path = path
 
     def prepare(self):
