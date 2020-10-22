@@ -128,6 +128,16 @@ def _template(path, **kwargs):
     return tornado.template.Loader(root, **kwargs).load(name)
 
 
+def excel_reader(path, sheet_name=None, range=None, name=None, table=None, header=0):
+    pass
+    # import openpyxl
+    # Read the file using openpyxl
+    # If range (e.g. A10:C30) is specified, return cells in that range
+    # If name is specified, return cells in that named range using wb.defined_names
+    # If table is specified, return cells in that named table using ws.tables
+    # Convert into a DataFrame -- using header if specified. header can be int, list of int, None
+
+
 def stat(path):
     '''
     Returns a file status tuple - based on file last modified time and file size
@@ -180,6 +190,7 @@ open_callback = dict(
     rss=etree.parse,
     atom=etree.parse,
     config=PathConfig,
+    xl=excel_reader,
     yml=_yaml,
     yaml=_yaml
 )
