@@ -267,7 +267,6 @@ def init(force_reload=False, **kwargs):
 
     # Run all valid services. (The "+" before config_chain merges the chain)
     # Services may return callbacks to be run at the end
-    callbacks = {}
     for key, val in final_config.items():
         if key not in conf or conf[key] != val or force_reload:
             if hasattr(services, key):
