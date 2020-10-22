@@ -914,13 +914,17 @@ def gramexlog(conf):
         app_log.error('gramexlog: elasticsearch missing. pip install elasticsearch')
         return
 
+    # We call push() every 'flush' seconds. Defaults to 5s unless gramexlog.flush is specified
     flush = conf.pop('flush', 5)
+    # Set the defaultapp to the first config key under gramexlog:
     if len(conf):
         info.gramexlog.defaultapp = next(iter(conf.keys()))
     for app, app_conf in conf.items():
         app_config = info.gramexlog.apps[app] = AttrDict()
         app_config.queue = []
         keys = app_conf.pop('keys', [])
+        # If user specifies keys: [port, args.x, ...], these are captured as additional keys.
+        # The keys use same spec as Gramex logging.
         app_config.extra_keys = build_log_info(keys)
         # Ensure all gramexlog keys are popped from app_conf, leaving only Elasticsearch keys
         app_config.conn = Elasticsearch(**app_conf)
@@ -937,6 +941,8 @@ def gramexlog(conf):
                 # This generic exception should be caught for thread to continue its execution
                 app_log.exception('gramexlog: push to %s failed', app)
 
+    # Schedule push() every 'flush' seconds. This cannot be done unless Gramex has started.
+    # So return a callback, which will be called after Gramex is initialized.
     def start_callback():
         # TODO: This does not re-schedule if flush: changes. Restarting PeriodicCallbacks is tough
         if not info.gramexlog.get('callback', None):

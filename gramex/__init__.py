@@ -277,7 +277,7 @@ def init(force_reload=False, **kwargs):
             else:
                 app_log.error('No service named %s', key)
 
-    # Run the callbacks. Run the app callback last since it starts the Tornado ioloop
+    # Run the callbacks. Specifically, the app service starts the Tornado ioloop
     callbacks['app'] = callbacks.pop('app', None)
     for key, callback in callbacks.items():
         app_log.debug('Running callback: %s', key)
@@ -321,7 +321,8 @@ def log(*args, **kwargs):
     Then, ``gramex.log('index1', x=1, y=2)`` will log into the ``index1``.
     '''
     from . import services
-    # gramexlog() positional arguments may have a handler and app (in any order). Find these
+    # gramexlog() positional arguments may have a handler and app (in any order)
+    # The app defaults to the first gramexlog:
     handler, app = None, services.info.gramexlog.get('defaultapp', None)
     for arg in args:
         # Pretend that anything that has a .args is a handler

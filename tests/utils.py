@@ -440,10 +440,10 @@ def gramexlog_delete(handler):
             app_config.conn.indices.delete(index=app, ignore=[404])
 
 
-def gramexlog_search(handler):
+def gramexlog_search(handler, interval=0.2):
     info.gramexlog.push()
     # ElasticSearch may need some time to re-index. This can vary across systems
-    time.sleep(1)
+    time.sleep(interval)
     app = handler.get_arg('index')
     app_config = info.gramexlog.apps[app]
     results = app_config.conn.search(index=app, ignore=[404]).get('hits', {}).get('hits', [])
