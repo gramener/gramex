@@ -45,7 +45,6 @@ from yaml.constructor import ConstructorError
 from orderedattrdict import AttrDict, DefaultAttrDict
 from errno import EACCES, EPERM
 
-
 ERROR_SHARING_VIOLATION = 32        # from winerror.ERROR_SHARING_VIOLATION
 
 # gramex.config.app_log is the default logger used by all of gramex

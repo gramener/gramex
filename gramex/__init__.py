@@ -272,16 +272,17 @@ def init(force_reload=False, **kwargs):
             if hasattr(services, key):
                 app_log.debug('Loading service: %s', key)
                 conf[key] = prune_keys(val, {'comment'})
-                callbacks[key] = getattr(services, key)(conf[key])
+                callback = getattr(services, key)(conf[key])
+                if callable(callback):
+                    callbacks[key] = callback
             else:
                 app_log.error('No service named %s', key)
 
     # Run the callbacks. Specifically, the app service starts the Tornado ioloop
-    callbacks['app'] = callbacks.pop('app', None)
-    for key, callback in callbacks.items():
-        app_log.debug('Running callback: %s', key)
-        if callable(callback):
-            callback()
+    for key in (+config_layers).keys():
+        if key in callbacks:
+            app_log.debug('Running callback: %s', key)
+            callbacks[key]()
 
 
 def shutdown():

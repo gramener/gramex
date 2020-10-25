@@ -190,7 +190,6 @@ def app(conf):
                 def check_exit():
                     if exit[0] is True:
                         shutdown()
-
                     # If Ctrl-D is pressed, run the Python debugger
                     char = debug.getch()
                     if char == b'\x04':
@@ -914,8 +913,9 @@ def gramexlog(conf):
         app_log.error('gramexlog: elasticsearch missing. pip install elasticsearch')
         return
 
-    # We call push() every 'flush' seconds. Defaults to 5s unless gramexlog.flush is specified
+    # We call push() every 'flush' seconds on the main IOLoop. Defaults to every 5 seconds
     flush = conf.pop('flush', 5)
+    ioloop = info._main_ioloop or tornado.ioloop.IOLoop.current()
     # Set the defaultapp to the first config key under gramexlog:
     if len(conf):
         info.gramexlog.defaultapp = next(iter(conf.keys()))
@@ -940,14 +940,10 @@ def gramexlog(conf):
                 # TODO: If the connection broke, re-create it
                 # This generic exception should be caught for thread to continue its execution
                 app_log.exception('gramexlog: push to %s failed', app)
+        if 'handle' in info.gramexlog:
+            ioloop.remove_timeout(info.gramexlog.handle)
+        # Call again after flush seconds
+        info.gramexlog.handle = ioloop.call_later(flush, push)
 
-    # Schedule push() every 'flush' seconds. This cannot be done unless Gramex has started.
-    # So return a callback, which will be called after Gramex is initialized.
-    def start_callback():
-        # TODO: This does not re-schedule if flush: changes. Restarting PeriodicCallbacks is tough
-        if not info.gramexlog.get('callback', None):
-            info.gramexlog.callback = tornado.ioloop.PeriodicCallback(push, flush * 1000)
-            info.gramexlog.callback.start()
-
+    info.gramexlog.handle = ioloop.call_later(flush, push)
     info.gramexlog.push = push
-    return start_callback
