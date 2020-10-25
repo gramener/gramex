@@ -5,7 +5,6 @@ from types import GeneratorType
 from gramex.transforms import build_transform
 from gramex.config import app_log, CustomJSONEncoder
 from .basehandler import BaseHandler
-from tornado.util import unicode_type
 
 
 class FunctionHandler(BaseHandler):
@@ -59,13 +58,17 @@ class FunctionHandler(BaseHandler):
             # Resolve futures and write the result immediately
             if tornado.concurrent.is_future(item):
                 item = yield item
-            if isinstance(item, (bytes, unicode_type, dict)):
+            if isinstance(item, (bytes, str)):
+                self.write(item)
+                if multipart:
+                    self.flush()
+            elif isinstance(item, (int, float, bool, type(None), list, tuple, dict)):
                 self.write(json.dumps(item, separators=(',', ':'), ensure_ascii=True,
-                                      cls=CustomJSONEncoder) if isinstance(item, dict) else item)
+                                      cls=CustomJSONEncoder))
                 if multipart:
                     self.flush()
             else:
-                app_log.warning('url:%s: FunctionHandler can write strings/dict, not %s',
+                app_log.warning('url:%s: FunctionHandler can write scalars/list/dict, not %s',
                                 self.name, repr(item))
 
         if self.redirects:

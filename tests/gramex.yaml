@@ -267,66 +267,69 @@ url:
 
   # Test `add_handler` decorator
   func/total:
+    pattern: /func/total
+    handler: FunctionHandler
+    kwargs:
+      function: functionutils.total
+      xsrf_cookies: false
+  func/total/:
     pattern: /func/total/(.*)/(.*)
     handler: FunctionHandler
     kwargs:
-      function: tests.test_functionhandler.total(handler)
+      function: functionutils.total(handler)
       methods: [GET, DELETE]
       xsrf_cookies: false
-  func/lookup:
-    pattern: /func/name/([a-z]+)/age/([0-9]+)
+  func/name_age/:
+    pattern: /func/name_age/([a-z]+)/age/([0-9]+)
     handler: FunctionHandler
     kwargs:
-      function: tests.test_functionhandler.name_age
-  func/params:
-    pattern: /func/foo
+      function: functionutils.name_age
+  func/name_age:
+    pattern: /func/name_age
     handler: FunctionHandler
     kwargs:
-      function: tests.test_functionhandler.name_age
+      function: functionutils.name_age
+      kwargs:
+        name: alpha
+        age: 10
       xsrf_cookies: false
   func/hints:
     pattern: /func/hints
     handler: FunctionHandler
     kwargs:
-      function: tests.test_functionhandler.urlparse_hinted
-      xsrf_cookies: false
-  func/multiargs:
-    pattern: /func/multi
-    handler: FunctionHandler
-    kwargs:
-      function: tests.test_functionhandler.total
+      function: functionutils.hints
       xsrf_cookies: false
   func/multilist:
     pattern: /func/multilist
     handler: FunctionHandler
     kwargs:
-      function: tests.test_functionhandler.total_list
+      function: functionutils.multilist
   func/strtotal:
     pattern: /func/strtotal
     handler: FunctionHandler
     kwargs:
-      function: tests.test_functionhandler.strtotal
-  func/types:
+      function: functionutils.strtotal
+  func/nativetypes:
     pattern: /func/nativetypes
     handler: FunctionHandler
     kwargs:
-      function: tests.test_functionhandler.native_types
+      function: functionutils.nativetypes
       xsrf_cookies: false
-  func/defaultNamed:
-    pattern: /func/defaultNamed
+  func/greet:
+    pattern: /func/greet
     handler: FunctionHandler
     kwargs:
-      function: tests.test_functionhandler.greet
+      function: functionutils.greet
   func/yielder:
     pattern: /func/yielder
     handler: FunctionHandler
     kwargs:
-      function: tests.test_functionhandler.yielder
-  func/square:
+      function: functionutils.yielder
+  func/power:
     pattern: /func/power
     handler: FunctionHandler
     kwargs:
-      function: tests.test_functionhandler.power
+      function: functionutils.power
       kwargs:
         x: 2
 

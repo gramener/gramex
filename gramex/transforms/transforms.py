@@ -3,12 +3,15 @@ import six
 from functools import wraps
 import json
 import importlib
-from inspect import signature
 import tornado.gen
+import yaml
 from types import GeneratorType
-from typing import get_type_hints
 from orderedattrdict import AttrDict
 from gramex.config import app_log, locate, variables, CustomJSONEncoder
+
+
+def identity(x):
+    return x
 
 
 def _arg_repr(arg):
@@ -373,26 +376,28 @@ def once(*args, **kwargs):
     return True
 
 
-def _parse_handler(handler, sig, cfg_args, cfg_kwargs):
-    args = handler.path_args
-    arguments = {k: v[0] if len(v) == 1 else v for k, v in handler.args.items()}
-    if not arguments:
-        try:
-            arguments = json.loads(handler.request.body)
-        except json.JSONDecodeError:
-            pass
-    arguments = {k: v for k, v in arguments.items() if k in sig.parameters}
-    kwargs = cfg_kwargs
-    for arg, val in arguments.items():
-        param = sig.parameters[arg]
-        if param.kind == param.VAR_POSITIONAL:
-            args.extend(val)
-        elif param.kind == param.POSITIONAL_ONLY:
-            args.append(val)
-        elif param.kind in (param.KEYWORD_ONLY, param.POSITIONAL_OR_KEYWORD):
-            kwargs[arg] = val
-    args.extend(cfg_args)
-    return args, kwargs
+# int(x), float(x), str(x) do a good job of converting strings to respective types.
+# But not all types work smoothly. Handle them here.
+_convert_map = {
+    # bool("true") fails Use yaml.load in such cases
+    bool: lambda x: yaml.load(x, Loader=yaml.SafeLoader) if isinstance(x, (str, bytes)) else x,
+    # NoneType("None") doesn't work either. Just return None
+    type(None): lambda x: None,
+}
+
+
+def convert(hint, *args):
+    from pandas.core.common import flatten
+    args = list(flatten(args))
+    # If hint is List[int], Tuple[int], etc. then return a list or a tuple after type conversion
+    #   hint.__args__ = (int, )
+    #   hint.__origin__ = list or tuple
+    if hasattr(hint, '__args__'):
+        method = _convert_map.get(hint.__args__[0], hint.__args__[0])
+        return hint.__origin__(map(method, args))
+    # Otherwise, just pick the LAST value and return it
+    method = _convert_map.get(hint, hint)
+    return method(args[-1])
 
 
 def handler(func):
@@ -453,41 +458,46 @@ def handler(func):
     Note that this alone does not guarantee RESTfulness. This function simply translates
     handler data and attempts to typecast inputs to the required format.
     """
-    sig = signature(func)
+    from inspect import signature
+    from typing import get_type_hints
+    from pandas.core.common import flatten
+
+    params = signature(func).parameters
+    hints = get_type_hints(func)
 
     @wraps(func)
     def wrapper(handler, *cfg_args, **cfg_kwargs):
-        args, kwargs = _parse_handler(handler, sig, cfg_args, cfg_kwargs)
-        hints = get_type_hints(func)
-        for arg, argtype in hints.items():
-            if argtype is not type(None):  # NOQA: E721
-                if argtype is bool:
-                    args = [json.loads(k) for k in args]
-                    named_arg = kwargs.get(arg)
-                    if named_arg:
-                        try:
-                            named_arg = json.loads(named_arg)
-                        except json.JSONDecodeError:
-                            pass
-                        kwargs[arg] = named_arg
-                param = sig.parameters.get(arg, False)
-                if param:
-                    if param.kind == param.VAR_POSITIONAL:
-                        args = [argtype(k) for k in args]
-                    else:
-                        try:
-                            kwargs[arg] = argtype(kwargs[arg])
-                        except TypeError:
-                            if argtype._name in ('List', 'Tuple'):
-                                member_type = argtype.__args__[0]
-                                kwargs[arg] = argtype.__origin__(map(member_type, kwargs[arg]))
-                            else:
-                                continue
-        result = func(*args, **kwargs)
-        try:
-            result = json.dumps(result)
-        except TypeError:
-            pass
-        return result
+        # We'll create a (*args, **kwargs)
+        # College args from the config args:, then pattern /(.*)/(.*)
+        # Collect kwargs from the config kwargs:, then pattern /(?P<key>.*), then URL query params
+        all_args, all_kwargs = list(cfg_args), dict(cfg_kwargs)
+        all_args.extend(handler.path_args)
+        all_kwargs.update(handler.path_kwargs)
+        all_kwargs.update(handler.args)
+        # If POSTed with Content-Type: application/json, parse body as well
+        if handler.request.headers.get('Content-Type', '') == 'application/json':
+            all_kwargs.update(json.loads(handler.request.body))
+
+        # Map these into the signature
+        args, kwargs = [], {}
+        for arg, param in params.items():
+            hint = hints.get(arg, identity)
+            # Populate positional arguments from all_args
+            if len(all_args):
+                if param.kind in {param.POSITIONAL_ONLY, param.POSITIONAL_OR_KEYWORD}:
+                    args.append(convert(hint, all_args.pop(0)))
+                elif param.kind == param.VAR_POSITIONAL:
+                    for val in all_args:
+                        args.append(convert(hint, val))
+                    all_args.clear()
+            # Populate keyword arguments from all_kwargs
+            if arg in all_kwargs:
+                if param.kind in {param.KEYWORD_ONLY, param.POSITIONAL_OR_KEYWORD}:
+                    kwargs[arg] = convert(hint, all_kwargs.pop(arg))
+                elif param.kind == param.VAR_POSITIONAL:
+                    for val in flatten([all_kwargs.pop(arg)]):
+                        args.append(convert(hint, val))
+
+        return func(*args, **kwargs)
 
     return wrapper
