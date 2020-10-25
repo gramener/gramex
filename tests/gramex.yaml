@@ -1936,8 +1936,10 @@ gramexlog:
       host: localhost
   extra:
       host: localhost
-      keys: [name, class, method, uri, status, port, error,
-             args.x, args.y, request.path, headers.Host, cookies.sid, user.id, env.HOME]
+      keys: [
+        name, class, method, uri, status, port, error,
+        args.x, args.y, request.path, headers.Host, cookies.sid, user.id, env.HOME
+      ]
   nonexistent:
       host: nonexistent
 
