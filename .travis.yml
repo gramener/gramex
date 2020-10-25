@@ -21,6 +21,14 @@ services:
   - redis-server
   - elasticsearch
 
+# By default, Travis uses ElasticSearch 5.5.0. We want to test with 7.x
+# https://docs.travis-ci.com/user/database-setup/#installing-specific-versions-of-elasticsearch
+before_install:
+  - curl https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-7.9.3-amd64.deb -o elasticsearch.deb
+  - sudo dpkg -i --force-confnew elasticsearch.deb
+  - sudo chown -R elasticsearch:elasticsearch /etc/default/elasticsearch
+  - sudo service elasticsearch restart
+
 addons:
   apt:
     packages:
