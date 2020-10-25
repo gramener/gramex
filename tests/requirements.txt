@@ -8,3 +8,6 @@ websocket-client      # For websocket testing
 pdfminer.six          # For CaptureHandler testing
 cssselect             # For HTML testing (test_admin.py)
 psycopg2 >= 2.7.1     # OPT: PostgreSQL connections
+
+# In .travis.yml, we specify ElasticSearch 7.x. So use same version here
+elasticsearch>=7.0.0,<8.0.0   # OPT: Test gramexlog: features. Use

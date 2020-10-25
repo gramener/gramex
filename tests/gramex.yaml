@@ -1987,11 +1987,54 @@ url:
     kwargs:
       function: f'$SECRET1 $SECRET2 $REMOTE_SECRET1 $REMOTE_SECRET2'
 
+  gramexlog/default:
+    pattern: /gramexlog/default
+    handler: FunctionHandler
+    kwargs:
+      function: gramex.log
+
+  gramexlog/extra:
+    pattern: /gramexlog/extra
+    handler: FunctionHandler
+    kwargs:
+      function: gramex.log(handler, 'extra', int=1, bool=True, str='msg', none=None)
+
+  gramexlog/nonexistent:
+    pattern: /gramexlog/nonexistent
+    handler: FunctionHandler
+    kwargs:
+      function: gramex.log(handler, 'nonexistent')
+
+  gramexlog/delete:
+    pattern: /gramexlog/delete
+    handler: FunctionHandler
+    kwargs:
+      function: utils.gramexlog_delete
+
+  gramexlog/search:
+    pattern: /gramexlog/search
+    handler: FunctionHandler
+    kwargs:
+      function: utils.gramexlog_search
+
   shutdown:
     pattern: /shutdown
     handler: FunctionHandler
     kwargs:
       function: gramex.shutdown() or 'Done'
+
+gramexlog:
+  flush: 0.2
+  default:
+      host: localhost
+  extra:
+      host: localhost
+      keys: [
+        name, class, method, uri, status, port, error,
+        args.x, args.y, request.path, headers.Host, cookies.sid, user.id, env.HOME
+      ]
+  nonexistent:
+      host: nonexistent
 
 sms:
   amazonsns:
