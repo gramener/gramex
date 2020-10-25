@@ -1,3 +1,4 @@
+import os
 import json
 import requests
 from gramex.http import OK
@@ -55,7 +56,7 @@ class TestESLog(TestGramex):
                     eq_(row['headers.Host'], 'localhost:9999')
                     eq_(row['cookies.sid'], '')
                     eq_(row['user.id'], '')
-                    eq_(row['env.HOME'], 'D:\\cygwin64\\home\\Anand')
+                    eq_(row['env.HOME'], os.environ['HOME'])
                     eq_(row['args.y'], '')
                 eq_(rows[0]['args.x'], '')
                 eq_(rows[1]['args.x'], '2')
