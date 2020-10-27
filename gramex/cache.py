@@ -129,13 +129,56 @@ def _template(path, **kwargs):
 
 
 def excel_reader(path, sheet_name=None, range=None, name=None, table=None, header=0):
-    pass
     # import openpyxl
     # Read the file using openpyxl
     # If range (e.g. A10:C30) is specified, return cells in that range
+
     # If name is specified, return cells in that named range using wb.defined_names
     # If table is specified, return cells in that named table using ws.tables
     # Convert into a DataFrame -- using header if specified. header can be int, list of int, None
+    import openpyxl
+    import pandas as pd
+    from openpyxl import load_workbook
+
+    wb = load_workbook(path)
+    data_rows = []
+
+    def get_table_ref(sheet, table_name):
+        if sheet not in wb.sheetnames:
+            raise IndexError("Sheet not found")
+        ws = wb[sheet]
+        range_str = [table.ref if table.name.lower() == table_name.lower() else None for table in ws._tables]
+        return range_str
+
+    def get_rows(sheet, range_string):
+        if sheet not in wb.sheetnames:
+            raise IndexError("Sheet not found")
+        ws = wb[sheet]
+        for row in ws[range_string]:
+            data_rows.append([cell.value for cell in row])
+
+    if range is not None:
+        sheet = 'Sheet1' if sheet_name is None else sheet_name
+        get_rows(sheet, range)
+
+    if name is not None:
+        sheet, range_str = list(wb.defined_names[name].destinations)[0]
+        get_rows(sheet, range_str)
+
+    if table is not None:
+        sheet = 'Sheet1' if sheet_name is None else sheet_name
+        range_str = get_table_ref(sheet, table)
+        if range_str[0] is None:
+            raise(IndexError("Table not found"))
+        get_rows(sheet, range_str[0])
+
+    header_val = None
+    if header is not None:
+        header_val = list(data_rows[header])
+        del data_rows[header]
+
+    df = pd.DataFrame(data_rows, columns=header_val)
+    return df
 
 
 def stat(path):
