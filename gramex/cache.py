@@ -151,8 +151,9 @@ def excel_reader(path, sheet_name='Sheet1', range=None, name=None, table=None, h
         get_rows(sheet_name, range)
 
     if name is not None:
-        sheet, range_str = list(wb[sheet_name].defined_names[name].destinations)[0]
-        get_rows(sheet, range_str)
+        sheetid = wb.sheetnames.index('sales')
+        range_str = wb.defined_names.get(name, sheetid).attr_text.split('!')[1].replace('$','')
+        get_rows(sheet_name, range_str)
 
     if table is not None:
         get_rows(sheet_name, wb[sheet_name].tables[table].ref)
