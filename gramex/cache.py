@@ -136,7 +136,6 @@ def excel_reader(path, sheet_name=None, range=None, name=None, table=None, heade
     # If name is specified, return cells in that named range using wb.defined_names
     # If table is specified, return cells in that named table using ws.tables
     # Convert into a DataFrame -- using header if specified. header can be int, list of int, None
-    import openpyxl
     import pandas as pd
     from openpyxl import load_workbook
 
@@ -147,7 +146,8 @@ def excel_reader(path, sheet_name=None, range=None, name=None, table=None, heade
         if sheet not in wb.sheetnames:
             raise IndexError("Sheet not found")
         ws = wb[sheet]
-        range_str = [table.ref if table.name.lower() == table_name.lower() else None for table in ws._tables]
+        range_str = [(table.ref if table.name.lower() ==
+                      table_name.lower() else None) for table in ws._tables]
         return range_str
 
     def get_rows(sheet, range_string):
