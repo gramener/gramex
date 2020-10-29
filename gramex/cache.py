@@ -170,14 +170,12 @@ def read_excel(io, sheet_name=0, table=None, name=None, range=None, header=_unde
     # Header defaults to 0 if undefined. If it's not None, apply the header
     header = 0 if header is _undef else header
     if header is not None:
-        data = (data
-            .T.set_index(header).T      # Set header rows as column names
-            .reset_index(drop=True)     # Drop index with "holes" where headers were
-            .rename_axis(               # # Column name will be the header index (e.g. 0). Drop it
-                [None] * len(header) if isinstance(header, (list, tuple)) else None,
-                axis=1)
-            )
-    return data.infer_objects()            # Convert data types
+        data = (data.T.set_index(header).T      # Set header rows as column names
+                    .reset_index(drop=True)     # Drop index with "holes" where headers were
+                    .rename_axis(               # Column name has header index (e.g. 0). Drop it
+                        [None] * len(header) if isinstance(header, (list, tuple)) else None,
+                        axis=1))
+    return data.infer_objects()                 # Convert data types
 
 
 def stat(path):

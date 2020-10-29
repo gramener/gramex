@@ -1,11 +1,11 @@
 nose                  # Base testing package
 coverage              # For code coverage in .travis.yml
 
-python-dateutil       # For schedule testing
-testfixtures          # For logcapture
-sphinx_rtd_theme      # For documentation
-websocket-client      # For websocket testing
-pdfminer.six          # For CaptureHandler testing
 cssselect             # For HTML testing (test_admin.py)
 openpyxl              # For gramex.cache.open(..., 'xlsx')
+pdfminer.six          # For CaptureHandler testing
 psycopg2 >= 2.7.1     # For PostgreSQL connections
+python-dateutil       # For schedule testing
+sphinx_rtd_theme      # For documentation
+testfixtures          # For logcapture
+websocket-client      # For websocket testing
