@@ -265,6 +265,75 @@ url:
         header: NEXT
         url: /dir/index/
 
+  # Test `add_handler` decorator
+  func/total:
+    pattern: /func/total
+    handler: FunctionHandler
+    kwargs:
+      function: functionutils.total
+      xsrf_cookies: false
+  func/total/:
+    pattern: /func/total/(.*)/(.*)
+    handler: FunctionHandler
+    kwargs:
+      function: functionutils.total(handler)
+      methods: [GET, DELETE]
+      xsrf_cookies: false
+  func/name_age/:
+    pattern: /func/name_age/([a-z]+)/age/([0-9]+)
+    handler: FunctionHandler
+    kwargs:
+      function: functionutils.name_age
+  func/name_age:
+    pattern: /func/name_age
+    handler: FunctionHandler
+    kwargs:
+      function: functionutils.name_age
+      kwargs:
+        name: alpha
+        age: 10
+      xsrf_cookies: false
+  func/hints:
+    pattern: /func/hints
+    handler: FunctionHandler
+    kwargs:
+      function: functionutils.hints
+      xsrf_cookies: false
+  func/multilist:
+    pattern: /func/multilist
+    handler: FunctionHandler
+    kwargs:
+      function: functionutils.multilist
+  func/strtotal:
+    pattern: /func/strtotal
+    handler: FunctionHandler
+    kwargs:
+      function: functionutils.strtotal
+  func/nativetypes:
+    pattern: /func/nativetypes
+    handler: FunctionHandler
+    kwargs:
+      function: functionutils.nativetypes
+      xsrf_cookies: false
+  func/greet:
+    pattern: /func/greet
+    handler: FunctionHandler
+    kwargs:
+      function: functionutils.greet
+  func/yielder:
+    pattern: /func/yielder
+    handler: FunctionHandler
+    kwargs:
+      function: functionutils.yielder
+  func/power:
+    pattern: /func/power
+    handler: FunctionHandler
+    kwargs:
+      function: functionutils.power
+      kwargs:
+        x: 2
+
+
   # TestFileHandler
   dir/noindex:
     pattern: /dir/noindex/(.*)
@@ -1918,11 +1987,54 @@ url:
     kwargs:
       function: f'$SECRET1 $SECRET2 $REMOTE_SECRET1 $REMOTE_SECRET2'
 
+  gramexlog/default:
+    pattern: /gramexlog/default
+    handler: FunctionHandler
+    kwargs:
+      function: gramex.log
+
+  gramexlog/extra:
+    pattern: /gramexlog/extra
+    handler: FunctionHandler
+    kwargs:
+      function: gramex.log(handler, 'extra', int=1, bool=True, str='msg', none=None)
+
+  gramexlog/nonexistent:
+    pattern: /gramexlog/nonexistent
+    handler: FunctionHandler
+    kwargs:
+      function: gramex.log(handler, 'nonexistent')
+
+  gramexlog/delete:
+    pattern: /gramexlog/delete
+    handler: FunctionHandler
+    kwargs:
+      function: utils.gramexlog_delete
+
+  gramexlog/search:
+    pattern: /gramexlog/search
+    handler: FunctionHandler
+    kwargs:
+      function: utils.gramexlog_search
+
   shutdown:
     pattern: /shutdown
     handler: FunctionHandler
     kwargs:
       function: gramex.shutdown() or 'Done'
+
+gramexlog:
+  flush: 0.2
+  default:
+      host: localhost
+  extra:
+      host: localhost
+      keys: [
+        name, class, method, uri, status, port, error,
+        args.x, args.y, request.path, headers.Host, cookies.sid, user.id, env.HOME
+      ]
+  nonexistent:
+      host: nonexistent
 
 sms:
   amazonsns:

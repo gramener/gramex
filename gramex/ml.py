@@ -127,7 +127,7 @@ def _conda_r_home():
 
 
 def r(code=None, path=None, rel=True, conda=True, convert=True,
-      repo='https://cran.microsoft.com/', **kwargs):
+      repo='https://cran.r-project.org/', **kwargs):
     '''
     Runs the R script and returns the result.
 

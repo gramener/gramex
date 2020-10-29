@@ -296,3 +296,55 @@ def shutdown():
     if ioloop_running(ioloop):
         app_log.info('Shutting down Gramex...')
         ioloop.stop()
+
+
+def log(*args, **kwargs):
+    '''
+    Logs structured information for future reference. Typical usage::
+
+        gramex.log(level='INFO', x=1, msg='abc')
+
+    This logs ``{level: INFO, x: 1, msg: abc, port: 9988, time: 2020-07-21 13:41:00}``. 3 keys are
+    added:
+
+    1. ``level``: logging level. Defaults to INFO
+    2. ``time``: current time as YYYY-MM-DD HH:MM:ZZ in UTC
+    3. ``port``: application's current port
+
+    If a logging service like ElasticSearch has been configured, it will periodically flush the
+    logs into ElasticSearch.
+
+    By default, this logs into the first index. ``gramex.yaml`` can specify multiple indices::
+
+        gramexlog:
+            index1:
+                host: localhost
+            index2:
+                host: localhost
+                keys: [port]
+
+    Then, ``gramex.log('index1', x=1, y=2)`` will log into the ``index1``.
+    '''
+    from . import services
+    # gramexlog() positional arguments may have a handler and app (in any order)
+    # The app defaults to the first gramexlog:
+    handler, app = None, services.info.gramexlog.get('defaultapp', None)
+    for arg in args:
+        # Pretend that anything that has a .args is a handler
+        if hasattr(getattr(arg, 'args', None), 'items'):
+            handler = arg
+        # ... and anything that's a string is an index name
+        elif isinstance(arg, str):
+            app = arg
+    # If the user logs into an unknown app, stop immediately
+    try:
+        conf = services.info.gramexlog.apps[app]
+    except KeyError:
+        raise ValueError(f'gramexlog: no config for {app}')
+
+    # Add all URL query parameters. In case of multiple values, capture the last
+    if handler:
+        kwargs.update({key: val[-1] for key, val in handler.args.items()})
+    # Add additional keys specified in gramex.yaml via keys:
+    kwargs.update(conf.extra_keys(handler))
+    conf.queue.append(kwargs)
