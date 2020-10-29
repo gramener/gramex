@@ -25,6 +25,7 @@ from gramex.config import PathConfig
 from six.moves.urllib_parse import urlparse
 
 
+_undef = object()
 MILLISECOND = 0.001         # in seconds
 _opener_defaults = dict(mode='r', buffering=-1, encoding='utf-8', errors='strict',
                         newline=None, closefd=True)
@@ -128,43 +129,55 @@ def _template(path, **kwargs):
     return tornado.template.Loader(root, **kwargs).load(name)
 
 
-def excel_reader(path, sheet_name='Sheet1', range=None, name=None, table=None, header=0):
-    # import openpyxl
-    # Read the file using openpyxl
-    # If range (e.g. A10:C30) is specified, return cells in that range
+def read_excel(io, sheet_name=0, table=None, name=None, range=None, header=_undef, **kwargs):
+    '''
+    Read data from an Excel file as a DataFrame
 
-    # If name is specified, return cells in that named range using wb.defined_names
-    # If table is specified, return cells in that named table using ws.tables
-    # Convert into a DataFrame -- using header if specified. header can be int, list of int, None
-    import pandas as pd
-    from openpyxl import load_workbook
+    :arg str/file io: path or file-like object pointing to an Excel file
+    :arg str/int sheet_name: sheet to load data from. Sheet names are specified as strings.
+        Integers pick zero-indexed sheet position. default: 0
+    :arg str table: Worksheet table to load from sheet, e.g. ``'Table1'``
+    :arg str name: Defined name to load from sheet, e.g. ``'MyNamedRange'``
+    :arg str range: Cell range to load from sheet, e.g. ``'A1:C10'``
+    :arg None/int/list[int] header: Row (0-indexed) to use for the column labels.
+        A list of integers is combined into a MultiIndex. Use None if there is no header.
 
-    wb = load_workbook(path)
-    data_rows = []
+    If none of ``table``, ``name``, ``range`` are specified, this loads the entire sheet using
+    ``pd.read_excel``. All other keyword arguments are passed through to ``pd.read_excel``.
 
-    def get_rows(sheet, range_string):
-        ws = wb[sheet]
-        for row in ws[range_string]:
-            data_rows.append([cell.value for cell in row])
+    If any of these are specified, we use ``openpyxl`` to read a specific cell range and infer
+    column types. ``table`` overrides ``name`` overrides ``range``.
+    '''
+    if not any((range, name, table)):
+        return pd.read_excel(io, sheet_name=sheet_name, header=0 if header is _undef else header,
+                             **kwargs)
 
-    if range is not None:
-        get_rows(sheet_name, range)
-
-    if name is not None:
-        sheetid = wb.sheetnames.index('sales')
-        range_str = wb.defined_names.get(name, sheetid).attr_text.split('!')[1].replace('$', '')
-        get_rows(sheet_name, range_str)
-
+    import openpyxl
+    wb = openpyxl.load_workbook(io)
+    # Pick a SINGLE sheet using sheet_name -- it can be an int or a str
+    ws = wb[wb.sheetnames[sheet_name] if isinstance(sheet_name, int) else sheet_name]
+    # Get the data range to be picked
     if table is not None:
-        get_rows(sheet_name, wb[sheet_name].tables[table].ref)
+        range = ws.tables[table].ref
+        # Tables themselves specify whether they have a column header. Use this as default
+        if header is _undef:
+            header = list(__builtins__['range'](ws.tables[table].headerRowCount))
+    elif name is not None:
+        sheetid = wb.sheetnames.index(ws.title)
+        range = wb.defined_names.get(name, sheetid).attr_text.split('!')[-1]
 
-    header_val = None
+    data = pd.DataFrame([[cell.value for cell in row] for row in ws[range]])
+    # Header defaults to 0 if undefined. If it's not None, apply the header
+    header = 0 if header is _undef else header
     if header is not None:
-        header_val = list(data_rows[header])
-        del data_rows[header]
-
-    df = pd.DataFrame(data_rows, columns=header_val)
-    return df
+        data = (data
+            .T.set_index(header).T      # Set header rows as column names
+            .reset_index(drop=True)     # Drop index with "holes" where headers were
+            .rename_axis(               # # Column name will be the header index (e.g. 0). Drop it
+                [None] * len(header) if isinstance(header, (list, tuple)) else None,
+                axis=1)
+            )
+    return data.infer_objects()            # Convert data types
 
 
 def stat(path):
@@ -197,9 +210,9 @@ open_callback = dict(
     txt=opener(None, read=True),
     text=opener(None, read=True),
     csv=pd.read_csv,
-    excel=pd.read_excel,
-    xls=pd.read_excel,
-    xlsx=pd.read_excel,
+    excel=read_excel,
+    xls=read_excel,
+    xlsx=read_excel,
     hdf=pd.read_hdf,
     h5=pd.read_hdf,
     html=pd.read_html,
@@ -219,7 +232,6 @@ open_callback = dict(
     rss=etree.parse,
     atom=etree.parse,
     config=PathConfig,
-    xl=excel_reader,
     yml=_yaml,
     yaml=_yaml
 )

@@ -7,4 +7,5 @@ sphinx_rtd_theme      # For documentation
 websocket-client      # For websocket testing
 pdfminer.six          # For CaptureHandler testing
 cssselect             # For HTML testing (test_admin.py)
-psycopg2 >= 2.7.1     # OPT: PostgreSQL connections
+openpyxl              # For gramex.cache.open(..., 'xlsx')
+psycopg2 >= 2.7.1     # For PostgreSQL connections
