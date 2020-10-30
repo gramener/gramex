@@ -822,7 +822,7 @@ def setup_secrets(path, max_age_days=1000000):
     '''
     Load ``<path>/.secrets.yaml`` (which must be a dict) into gramex.config.variables.
 
-    If there's a ``SECRET_URL:`` and ``SECRET_KEY:`` key, the text from ``SECRET_URL:`` is
+    If there's a ``SECRETS_URL:`` and ``SECRETS_KEY:`` key, the text from ``SECRETS_URL:`` is
     decrypted using ``secrets_key``.
     '''
     secrets_path = path / '.secrets.yaml'
