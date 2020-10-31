@@ -304,26 +304,8 @@ def log(*args, **kwargs):
 
         gramex.log(level='INFO', x=1, msg='abc')
 
-    This logs ``{level: INFO, x: 1, msg: abc, port: 9988, time: 2020-07-21 13:41:00}``. 3 keys are
-    added:
-
-    1. ``level``: logging level. Defaults to INFO
-    2. ``time``: current time as YYYY-MM-DD HH:MM:ZZ in UTC
-    3. ``port``: application's current port
-
-    If a logging service like ElasticSearch has been configured, it will periodically flush the
-    logs into ElasticSearch.
-
-    By default, this logs into the first index. ``gramex.yaml`` can specify multiple indices::
-
-        gramexlog:
-            index1:
-                host: localhost
-            index2:
-                host: localhost
-                keys: [port]
-
-    Then, ``gramex.log('index1', x=1, y=2)`` will log into the ``index1``.
+    This logs ``{level: INFO, x: 1, msg: abc}`` into a logging queue. If a `gramexlog` service like
+    ElasticSearch has been configured, it will periodically flush the logs into the server.
     '''
     from . import services
     # gramexlog() positional arguments may have a handler and app (in any order)
@@ -333,7 +315,7 @@ def log(*args, **kwargs):
         # Pretend that anything that has a .args is a handler
         if hasattr(getattr(arg, 'args', None), 'items'):
             handler = arg
-        # ... and anything that's a string is an index name
+        # ... and anything that's a string is an index name. The last string overrides all
         elif isinstance(arg, str):
             app = arg
     # If the user logs into an unknown app, stop immediately

@@ -446,7 +446,8 @@ def gramexlog_search(handler, interval=0.2):
     time.sleep(interval)
     app = handler.get_arg('index')
     app_config = info.gramexlog.apps[app]
-    results = app_config.conn.search(index=app, ignore=[404]).get('hits', {}).get('hits', [])
+    results = app_config.conn.search(index=app_config.get('index', app), ignore=[404])
+    results = results.get('hits', {}).get('hits', [])
     return {'hits': [result['_source'] for result in results]}
 
 

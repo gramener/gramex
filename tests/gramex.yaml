@@ -2037,6 +2037,7 @@ gramexlog:
         name, class, method, uri, status, port, error,
         args.x, args.y, request.path, headers.Host, cookies.sid, user.id, env.HOME
       ]
+      index: extraindex
   nonexistent:
       host: nonexistent
 

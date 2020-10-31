@@ -932,7 +932,7 @@ def gramexlog(conf):
     def push():
         for app, app_config in info.gramexlog.apps.items():
             for item in app_config.queue:
-                item['_index'] = app
+                item['_index'] = app_config.get('index', app)
             try:
                 helpers.bulk(app_config.conn, app_config.queue)
                 app_config.queue.clear()
