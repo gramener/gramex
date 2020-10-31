@@ -332,7 +332,11 @@ url:
       function: functionutils.power
       kwargs:
         x: 2
-
+  func/sales:
+    pattern: /func/sales
+    handler: FunctionHandler
+    kwargs:
+      function: functionutils.sales
 
   # TestFileHandler
   dir/noindex:

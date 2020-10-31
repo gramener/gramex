@@ -386,6 +386,8 @@ _convert_map = {
     bool: lambda x: yaml.load(x, Loader=yaml.SafeLoader) if isinstance(x, (str, bytes)) else x,
     # NoneType("None") doesn't work either. Just return None
     type(None): lambda x: None,
+    # TODO: Convert dates but without importing pandas on startup
+    # datetime.datetime: lambda x: pd.to_datetime(x).to_pydatetime,
 }
 
 

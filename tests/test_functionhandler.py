@@ -1,7 +1,9 @@
 import json
-
+import gramex.cache
+import pandas as pd
 from . import TestGramex
 from gramex.http import FOUND
+from pandas.util.testing import assert_frame_equal as afe
 
 
 class TestFunctionHandler(TestGramex):
@@ -100,13 +102,17 @@ class TestWrapper(TestGramex):
         self.check('/func/multilist?items=1&items=2&items=3&start=1', text='7.0')
         # Positional args with types
         self.check('/func/strtotal?items=a&items=b&items=c', text='abc')
-        # Test native types:
+        # Test native types. Note: "i=false" won't work -- use "i=" since it's a np.bool8
+        # Note: datetimes must be quoted, since they'll be read as JSON usually.
         self.check(
-            '/func/nativetypes?a=3&b=1.5&c=false&d=str&e=null',
-            text='{"msg":"3*1.5=4.5.","c":false,"d":"str","e":null}')
+            '/func/nativetypes?a=3&b=1.5&c=false&d=d&e=null&f=3&g=1.5&h=h&i=',
+            text=''.join(['3', '1.5', 'false', 'd', 'null', '3', '1.5', 'h', 'false',
+                          '"2020-01-01T00:00:00+00:00"', '{"a":3,"b":1.5}', '[3,1.5]']))
         self.check('/func/greet', text='Hello, Stranger!')
         self.check('/func/greet?name=gramex', text='Hello, gramex!')
         self.check('/func/multilist?items=1&items=2&items=3&start=1', text='7.0')
+        sales = self.check('/func/sales').json()
+        afe(pd.DataFrame(sales), gramex.cache.open('sales.xlsx', rel=True))
 
     def test_add_handler_post(self):
         self.check(
@@ -122,9 +128,11 @@ class TestWrapper(TestGramex):
         # Check typecasting
         self.check(
             '/func/nativetypes', method='post',
-            data=json.dumps({'a': 3, 'b': 1.5, 'c': False, 'd': 'str', 'e': None}),
+            data=json.dumps({'a': 3, 'b': 1.5, 'c': False, 'd': 'd', 'e': None, 'f': 3,
+                             'g': 1.5, 'h': 'h', 'i': False}),
             request_headers={'Content-Type': 'application/json'},
-            text='{"msg":"3*1.5=4.5.","c":false,"d":"str","e":null}')
+            text=''.join(['3', '1.5', 'false', 'd', 'null', '3', '1.5', 'h', 'false',
+                          '"2020-01-01T00:00:00+00:00"', '{"a":3,"b":1.5}', '[3,1.5]']))
         self.check('/func/greet', text='Hello, Stranger!')
         # Check if POSTing url params and path args works
         self.check('/func/name_age?name=johndoe&age=42', method='post',

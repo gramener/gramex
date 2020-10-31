@@ -2,6 +2,9 @@
 Utilities to test gramex.transforms.handler
 '''
 
+import datetime
+import gramex.cache
+import numpy as np
 from typing import List
 from gramex.transforms import handler
 
@@ -46,10 +49,28 @@ def hints(name: str, age: int) -> str:
 
 
 @handler
-def nativetypes(a: int, b: float, c: bool, d: str, e: None):
-    return {'msg': f'{a}*{b}={a * b}.', 'c': c, 'd': d, 'e': e}
+def nativetypes(a: int, b: float, c: bool, d: str, e: None, f: np.uintc, g: np.double, h: np.str_,
+                i: np.bool8):
+    '''Yield objects of almost all types, plus list and dict'''
+    yield a
+    yield b
+    yield c
+    yield d
+    yield e
+    yield f
+    yield g
+    yield h
+    yield i
+    yield datetime.datetime(year=2020, month=1, day=1, tzinfo=datetime.timezone.utc)
+    yield {'a': a, 'b': b}
+    yield [a, b]
 
 
 @handler
 def greet(name="Stranger"):
     return f'Hello, {name}!'
+
+
+@handler
+def sales():
+    return gramex.cache.open('sales.xlsx', rel=True)

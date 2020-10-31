@@ -58,18 +58,31 @@ class FunctionHandler(BaseHandler):
             # Resolve futures and write the result immediately
             if tornado.concurrent.is_future(item):
                 item = yield item
+            # To check if item is a numpy object, avoid isinstance(numpy.int8), etc.
+            # Importing numpy is slow. Instead, check the class name.
+            # Strip trailing numbers (e.g. int8, int16, int32)
+            # Strip trailing underscore (e.g. str_, bytes_)
+            # Strip leading 'u' (e.g. uint, ulong)
+            cls = type(item).__name__.rstrip('0123456789_').lstrip('u')
             if isinstance(item, (bytes, str)):
                 self.write(item)
                 if multipart:
                     self.flush()
-            elif isinstance(item, (int, float, bool, type(None), list, tuple, dict)):
+            # Allow ANY type that can be converted by CustomJSONEncoder.
+            # This includes JSON types, detected by isinstance(item, ...))
+            # and numpy types, detected by cls in (...)
+            # and anything with a to_dict, e.g. DataFrames
+            elif (isinstance(item, (int, float, bool, type(None), list, tuple, dict)) or
+                  cls in ('datetime', 'int', 'intc', 'float', 'bool', 'ndarray', 'bytes', 'str') or
+                  hasattr(item, 'to_dict')):
                 self.write(json.dumps(item, separators=(',', ':'), ensure_ascii=True,
                                       cls=CustomJSONEncoder))
                 if multipart:
                     self.flush()
-            else:
-                app_log.warning('url:%s: FunctionHandler can write scalars/list/dict, not %s',
-                                self.name, repr(item))
+                continue
+
+            app_log.warning('url:%s: FunctionHandler can write scalars/list/dict, not %s: %s',
+                            self.name, type(item), repr(item))
 
         if self.redirects:
             self.redirect_next()
