@@ -106,7 +106,7 @@ class TestWrapper(TestGramex):
         # Note: datetimes must be quoted, since they'll be read as JSON usually.
         self.check(
             '/func/nativetypes?a=3&b=1.5&c=false&d=d&e=null&f=3&g=1.5&h=h&i=',
-            text=''.join(['3', '1.5', 'false', 'd', 'null', '3', '1.5', 'h', 'false',
+            text=''.join(['3', '1.5', 'false', 'd', '', '3', '1.5', 'h', 'false',
                           '"2020-01-01T00:00:00+00:00"', '{"a":3,"b":1.5}', '[3,1.5]']))
         self.check('/func/greet', text='Hello, Stranger!')
         self.check('/func/greet?name=gramex', text='Hello, gramex!')
@@ -131,7 +131,7 @@ class TestWrapper(TestGramex):
             data=json.dumps({'a': 3, 'b': 1.5, 'c': False, 'd': 'd', 'e': None, 'f': 3,
                              'g': 1.5, 'h': 'h', 'i': False}),
             request_headers={'Content-Type': 'application/json'},
-            text=''.join(['3', '1.5', 'false', 'd', 'null', '3', '1.5', 'h', 'false',
+            text=''.join(['3', '1.5', 'false', 'd', '', '3', '1.5', 'h', 'false',
                           '"2020-01-01T00:00:00+00:00"', '{"a":3,"b":1.5}', '[3,1.5]']))
         self.check('/func/greet', text='Hello, Stranger!')
         # Check if POSTing url params and path args works

@@ -68,11 +68,14 @@ class FunctionHandler(BaseHandler):
                 self.write(item)
                 if multipart:
                     self.flush()
+            # Ignore None as a return type
+            elif item is None:
+                pass
             # Allow ANY type that can be converted by CustomJSONEncoder.
             # This includes JSON types, detected by isinstance(item, ...))
             # and numpy types, detected by cls in (...)
             # and anything with a to_dict, e.g. DataFrames
-            elif (isinstance(item, (int, float, bool, type(None), list, tuple, dict)) or
+            elif (isinstance(item, (int, float, bool, list, tuple, dict)) or
                   cls in ('datetime', 'int', 'intc', 'float', 'bool', 'ndarray', 'bytes', 'str') or
                   hasattr(item, 'to_dict')):
                 self.write(json.dumps(item, separators=(',', ':'), ensure_ascii=True,
