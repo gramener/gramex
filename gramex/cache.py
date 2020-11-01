@@ -153,7 +153,7 @@ def read_excel(io, sheet_name=0, table=None, name=None, range=None, header=_unde
                              **kwargs)
 
     import openpyxl
-    wb = openpyxl.load_workbook(io)
+    wb = openpyxl.load_workbook(io, data_only=True)
     # Pick a SINGLE sheet using sheet_name -- it can be an int or a str
     ws = wb[wb.sheetnames[sheet_name] if isinstance(sheet_name, int) else sheet_name]
     # Get the data range to be picked
@@ -163,8 +163,18 @@ def read_excel(io, sheet_name=0, table=None, name=None, range=None, header=_unde
         if header is _undef:
             header = list(__builtins__['range'](ws.tables[table].headerRowCount))
     elif name is not None:
-        sheetid = wb.sheetnames.index(ws.title)
-        range = wb.defined_names.get(name, sheetid).attr_text.split('!')[-1]
+        # If the name is workbook-scoped, get it directly
+        defined_name = wb.defined_names.get(name)
+        # Else, if it's sheet-scoped, get it related to the sheet
+        if defined_name is None:
+            defined_name = wb.defined_names.get(name, wb.sheetnames.index(ws.title))
+        # Raise an error if we can't find it
+        if defined_name is None:
+            raise ValueError(f'{io}: missing name {name} in sheet {sheet_name}')
+        # Note: This only works if it's a cell range. If we create a named range inside a table,
+        # Excel may store this as =Table[[#All],[Col1]:[Col5]], which isn't a valid range.
+        # Currently, we ignore that, and assumed that the name is like Sheet1!A1:C10
+        range = defined_name.attr_text.split('!')[-1]
 
     data = pd.DataFrame([[cell.value for cell in row] for row in ws[range]])
     # Header defaults to 0 if undefined. If it's not None, apply the header

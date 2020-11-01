@@ -79,10 +79,9 @@ class FunctionHandler(BaseHandler):
                                       cls=CustomJSONEncoder))
                 if multipart:
                     self.flush()
-                continue
-
-            app_log.warning('url:%s: FunctionHandler can write scalars/list/dict, not %s: %s',
-                            self.name, type(item), repr(item))
+            else:
+                app_log.warning('url:%s: FunctionHandler can write scalars/list/dict, not %s: %s',
+                                self.name, type(item), repr(item))
 
         if self.redirects:
             self.redirect_next()

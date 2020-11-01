@@ -651,6 +651,15 @@ url:
       url: sales.xlsx
       xsrf_cookies: false     # We're testing PUT/PUST/DELETE to see if they fail
 
+  formhandler/exceltable:
+    pattern: /formhandler/exceltable
+    handler: FormHandler
+    kwargs:
+      url: sales.xlsx
+      sheet_name: table
+      table: MainTable
+      xsrf_cookies: false     # We're testing PUT/PUST/DELETE to see if they fail
+
   formhandler/url:
     pattern: /formhandler/url
     handler: FormHandler
