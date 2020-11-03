@@ -15,7 +15,8 @@ RUN apt -y install gconf-service libasound2 libatk1.0-0 libc6 libcairo2 libcups2
     libxfixes3 libxi6 libxrandr2 libxrender1 libxss1 libxtst6 ca-certificates \
     fonts-liberation libappindicator1 libnss3 lsb-release xdg-utils
 
+# Expose port 9988 by default. It can be overridden, e.g. via -p 3333:3333
 EXPOSE 9988
 
-# Use CMD instead of ENTRYPOINT. It can be overridden to run bash
+# Use CMD instead of ENTRYPOINT. It can be overridden to run /bin/bash
 CMD ["gramex"]
