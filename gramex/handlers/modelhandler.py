@@ -4,7 +4,7 @@ import gramex.ml
 import pandas as pd
 import gramex.cache
 import gramex.data
-from gramex.handlers import BaseHandler
+from gramex.handlers import BaseHandler, AuthHandler
 from gramex.transforms import build_transform
 import tornado.escape
 from io import BytesIO
@@ -22,9 +22,8 @@ class ModelHandler(BaseHandler):
         super(ModelHandler, cls).setup(path, **kwargs)
         prepare = kwargs.get('prepare', False)
         if prepare:
-            from pydoc import locate
             cls._on_init_methods.append(build_transform(
-                conf={'function': locate(prepare)},
+                conf={'function': prepare},
                 vars={'handler': None, 'args': None},
                 filename='url:%s:prepare' % cls.name,
                 iter=False
@@ -55,6 +54,7 @@ class ModelHandler(BaseHandler):
         url = self.request_body.get('url', '')
         if url and gramex.data.get_engine(url) == 'file':
             self.request_body['url'] = os.path.join(self.path, os.path.split(url)[-1])
+        super(AuthHandler, self).prepare()
 
     def get_data_flag(self):
         '''
