@@ -25,6 +25,7 @@ import mimetypes
 import threading
 import webbrowser
 import tornado.web
+import tornado.ioloop
 import gramex.data
 import gramex.cache
 import gramex.license
@@ -56,6 +57,7 @@ info = AttrDict(
     eventlog=AttrDict(),
     email=AttrDict(),
     sms=AttrDict(),
+    gramexlog=AttrDict(apps=AttrDict()),
     _md=None,
     _main_ioloop=None,
 )
@@ -127,8 +129,6 @@ class GramexApp(tornado.web.Application):
 
 def app(conf):
     '''Set up tornado.web.Application() -- only if the ioloop hasn't started'''
-    import tornado.ioloop
-
     ioloop = tornado.ioloop.IOLoop.current()
     if ioloop_running(ioloop):
         app_log.warning('Ignoring app config change when running')
@@ -226,7 +226,7 @@ def _stop_all_tasks(tasks):
 
 
 def schedule(conf):
-    '''Set up the Gramex PeriodicCallback scheduler'''
+    '''Set up the Gramex scheduler'''
     # Create tasks running on ioloop for the given schedule, store it in info.schedule
     from . import scheduler
     _stop_all_tasks(info.schedule)
@@ -902,3 +902,48 @@ def test(conf):
     # Remove auth: section when running gramex.
     # If there are passwords here, they will not be loaded in memory
     conf.pop('auth', None)
+
+
+def gramexlog(conf):
+    '''Set up gramexlog service'''
+    from gramex.transforms import build_log_info
+    try:
+        from elasticsearch import Elasticsearch, helpers
+    except ImportError:
+        app_log.error('gramexlog: elasticsearch missing. pip install elasticsearch')
+        return
+
+    # We call push() every 'flush' seconds on the main IOLoop. Defaults to every 5 seconds
+    flush = conf.pop('flush', 5)
+    ioloop = info._main_ioloop or tornado.ioloop.IOLoop.current()
+    # Set the defaultapp to the first config key under gramexlog:
+    if len(conf):
+        info.gramexlog.defaultapp = next(iter(conf.keys()))
+    for app, app_conf in conf.items():
+        app_config = info.gramexlog.apps[app] = AttrDict()
+        app_config.queue = []
+        keys = app_conf.pop('keys', [])
+        # If user specifies keys: [port, args.x, ...], these are captured as additional keys.
+        # The keys use same spec as Gramex logging.
+        app_config.extra_keys = build_log_info(keys)
+        # Ensure all gramexlog keys are popped from app_conf, leaving only Elasticsearch keys
+        app_config.conn = Elasticsearch(**app_conf)
+
+    def push():
+        for app, app_config in info.gramexlog.apps.items():
+            for item in app_config.queue:
+                item['_index'] = app_config.get('index', app)
+            try:
+                helpers.bulk(app_config.conn, app_config.queue)
+                app_config.queue.clear()
+            except Exception:
+                # TODO: If the connection broke, re-create it
+                # This generic exception should be caught for thread to continue its execution
+                app_log.exception('gramexlog: push to %s failed', app)
+        if 'handle' in info.gramexlog:
+            ioloop.remove_timeout(info.gramexlog.handle)
+        # Call again after flush seconds
+        info.gramexlog.handle = ioloop.call_later(flush, push)
+
+    info.gramexlog.handle = ioloop.call_later(flush, push)
+    info.gramexlog.push = push

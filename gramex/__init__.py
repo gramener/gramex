@@ -296,3 +296,37 @@ def shutdown():
     if ioloop_running(ioloop):
         app_log.info('Shutting down Gramex...')
         ioloop.stop()
+
+
+def log(*args, **kwargs):
+    '''
+    Logs structured information for future reference. Typical usage::
+
+        gramex.log(level='INFO', x=1, msg='abc')
+
+    This logs ``{level: INFO, x: 1, msg: abc}`` into a logging queue. If a `gramexlog` service like
+    ElasticSearch has been configured, it will periodically flush the logs into the server.
+    '''
+    from . import services
+    # gramexlog() positional arguments may have a handler and app (in any order)
+    # The app defaults to the first gramexlog:
+    handler, app = None, services.info.gramexlog.get('defaultapp', None)
+    for arg in args:
+        # Pretend that anything that has a .args is a handler
+        if hasattr(getattr(arg, 'args', None), 'items'):
+            handler = arg
+        # ... and anything that's a string is an index name. The last string overrides all
+        elif isinstance(arg, str):
+            app = arg
+    # If the user logs into an unknown app, stop immediately
+    try:
+        conf = services.info.gramexlog.apps[app]
+    except KeyError:
+        raise ValueError(f'gramexlog: no config for {app}')
+
+    # Add all URL query parameters. In case of multiple values, capture the last
+    if handler:
+        kwargs.update({key: val[-1] for key, val in handler.args.items()})
+    # Add additional keys specified in gramex.yaml via keys:
+    kwargs.update(conf.extra_keys(handler))
+    conf.queue.append(kwargs)

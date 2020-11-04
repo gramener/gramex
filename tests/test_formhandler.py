@@ -152,6 +152,7 @@ class TestFormHandler(TestGramex):
                           df=self.sales[self.sales['sales'] > 100])
         self.check_filter('/formhandler/file-multi', na_position='last', key='by-growth',
                           df=self.sales.sort_values('growth'))
+        self.check_filter('/formhandler/exceltable', na_position='last')
 
     def test_sqlite(self):
         self.check_filter('/formhandler/sqlite', na_position='first')

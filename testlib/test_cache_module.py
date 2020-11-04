@@ -18,10 +18,10 @@ from collections import OrderedDict
 from orderedattrdict import AttrDict
 from tornado.template import Template
 from orderedattrdict.yamlutils import AttrDictYAMLLoader
-from pandas.util.testing import assert_frame_equal
+from pandas.util.testing import assert_frame_equal as afe
 from nose.tools import eq_, ok_, assert_raises
 import dbutils
-from . import folder
+from . import folder, tests_dir
 
 cache_folder = os.path.join(folder, 'test_cache')
 state_file = os.path.join(cache_folder, '.state')
@@ -177,10 +177,39 @@ class TestOpen(unittest.TestCase):
             result, reloaded = gramex.cache.open(path, 'csv', _reload_status=True,
                                                  encoding='utf-8')
             eq_(reloaded, reload)
-            assert_frame_equal(result, expected)
+            afe(result, expected)
 
         self.check_file_cache(path, check)
-        assert_frame_equal(gramex.cache.open(path), gramex.cache.open(path, 'csv'))
+        afe(gramex.cache.open(path), gramex.cache.open(path, 'csv'))
+
+    def test_xlsx(self):
+        path = os.path.join(tests_dir, 'sales.xlsx')
+        # Excel files are loaded via pd.read_excel by default
+        afe(gramex.cache.open(path, sheet_name='sales'),
+            pd.read_excel(path, sheet_name='sales'))
+        # Load range. sales!A1:E25 is the same as the sheet "sales"
+        afe(gramex.cache.open(path, sheet_name='sales', range='A1:E25'),
+            pd.read_excel(path, sheet_name='sales'))
+        # sheet_name defaults to 0
+        afe(gramex.cache.open(path, range='A1:E25'), pd.read_excel(path))
+        # sheet_name can be an int, not just a str
+        afe(gramex.cache.open(path, sheet_name=1, range='A1:$B$34'),
+            pd.read_excel(path, sheet_name=1))
+        # header can be any int or list of int, passed directly to pd.read_excel
+        afe(gramex.cache.open(path, sheet_name='sales', header=[0, 1], range='A$1:$E25'),
+            pd.read_excel(path, sheet_name='sales', header=[0, 1]))
+        # header=None doesn't add a header
+        afe(gramex.cache.open(path, sheet_name='sales', header=None, range='A$1:$E25'),
+            pd.read_excel(path, sheet_name='sales', header=None))
+        # Load table. "SalesTable" is the same as table!A1B11
+        afe(gramex.cache.open(path, sheet_name='table', table='SalesTable'),
+            gramex.cache.open(path, sheet_name='table', range='A1:$B$11'))
+        afe(gramex.cache.open(path, sheet_name='table', table='CensusTable'),
+            gramex.cache.open(path, sheet_name='table', range='$D1:F$23'))
+        # Load named range. The "sales" named range is the same as the sheet "sales"
+        afe(gramex.cache.open(path, sheet_name='sales', defined_name='sales'),
+            gramex.cache.open(path, sheet_name='sales'))
+        # Test failure conditions, edge cases, etc.
 
     def test_open_json(self):
         path = os.path.join(cache_folder, 'data.json')
@@ -204,10 +233,10 @@ class TestOpen(unittest.TestCase):
         def check(reload):
             result, reloaded = gramex.cache.open(path, 'jsondata', _reload_status=True)
             eq_(reloaded, reload)
-            assert_frame_equal(result, expected)
+            afe(result, expected)
 
         self.check_file_cache(path, check)
-        assert_frame_equal(gramex.cache.open(path), gramex.cache.open(path, 'jsondata'))
+        afe(gramex.cache.open(path), gramex.cache.open(path, 'jsondata'))
 
     def test_open_yaml(self):
         path = os.path.join(cache_folder, 'data.yaml')
@@ -310,7 +339,7 @@ class TestOpen(unittest.TestCase):
                     result = result[0]
                 elif ext == 'json':
                     result = pd.DataFrame(data)
-                assert_frame_equal(result, data)
+                afe(result, data)
             finally:
                 os.remove(target)
 
@@ -436,7 +465,7 @@ class TestOpen(unittest.TestCase):
 
         # Check that non-callable transforms are ignored but used as cache key
         data = gramex.cache.open(path, 'csv', transform='ignore', _cache=cache)
-        assert_frame_equal(data, pd.read_csv(path))         # noqa - ignore encoding
+        afe(data, pd.read_csv(path))         # noqa - ignore encoding
         cache_key = (path, 'csv', hashfn('ignore'), frozenset([]))
         self.assertIn(cache_key, cache)
 
@@ -482,7 +511,7 @@ class TestSqliteCacheQuery(unittest.TestCase):
             gramex.cache.query('SELECT * FROM t1', self.engine, state=1)
 
     def test_query_value(self):
-        assert_frame_equal(gramex.cache.query('SELECT * FROM t2', engine=self.engine), self.data)
+        afe(gramex.cache.query('SELECT * FROM t2', engine=self.engine), self.data)
 
     def test_query_cache(self):
         sql = 'SELECT * FROM t1 LIMIT 2'
@@ -549,7 +578,7 @@ class TestPostgresCacheQuery(TestSqliteCacheQuery):
         cls.engine = sa.create_engine(cls.url, encoding=str_utf8)
 
     def test_schema(self):
-        assert_frame_equal(
+        afe(
             gramex.cache.query('SELECT * FROM sc.t3', engine=self.engine), self.data)
 
     @classmethod

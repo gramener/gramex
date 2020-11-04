@@ -3,7 +3,7 @@
 validate:
   script:
     - validate v1
-    - pytest -v
+    # - pytest -v
 
 # Deploy application to a server
 # deploy:
@@ -13,5 +13,5 @@ validate:
 #   variables:
 #     SERVER: ubuntu@uat.gramener.com       # Deploy to uat.gramener.com/app-name/
 #     URL: app-name                         # Change this to your app-name
-#     SETUP: npm install && bower install   # You can use any setup script here
-#     VERSION: v1                           # v0, v1 or static
+#     SETUP: yarn install                   # You can use any setup script here
+#     VERSION: py3v1                        # py3v1 or static

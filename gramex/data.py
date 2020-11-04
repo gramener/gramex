@@ -67,7 +67,7 @@ def _replace(engine, args, *vars, **kwargs):
     return _format(list(vars)) + [_format(kwargs)]
 
 
-def filter(url, args={}, meta={}, engine=None, table=None, ext=None,
+def filter(url, args={}, meta={}, engine=None, ext=None,
            query=None, queryfile=None, transform=None, transform_kwargs=None, **kwargs):
     '''
     Filters data using URL query parameters. Typical usage::
@@ -84,8 +84,6 @@ def filter(url, args={}, meta={}, engine=None, table=None, ext=None,
     :arg dict meta: this dict is updated with metadata during the course of filtering
     :arg str engine: over-rides the auto-detected engine. Can be 'dataframe', 'file',
         'http', 'https', 'sqlalchemy', 'dir'
-    :arg str table: table name (if url is an SQLAlchemy URL), ``.format``-ed
-        using ``args``.
     :arg str ext: file extension (if url is a file). Defaults to url extension
     :arg str query: optional SQL query to execute (if url is a database),
         ``.format``-ed using ``args`` and supports SQLAlchemy SQL parameters.
@@ -102,7 +100,10 @@ def filter(url, args={}, meta={}, engine=None, table=None, ext=None,
     :return: a filtered DataFrame
 
     Remaining kwargs are passed to :py:func:`gramex.cache.open` if ``url`` is a file, or
-    ``sqlalchemy.create_engine`` if ``url`` is a SQLAlchemy URL.
+    ``sqlalchemy.create_engine`` if ``url`` is a SQLAlchemy URL. In particular:
+
+    :arg str table: table name (if url is an SQLAlchemy URL), ``.format``-ed
+        using ``args``.
 
     If this is used in a handler as::
 
@@ -201,8 +202,8 @@ def filter(url, args={}, meta={}, engine=None, table=None, ext=None,
     })
     controls = _pop_controls(args)
     transform = _transform_fn(transform, transform_kwargs)
-    url, table, ext, query, queryfile, kwargs = _replace(
-        engine, args, url, table, ext, query, queryfile, **kwargs)
+    url, ext, query, queryfile, kwargs = _replace(
+        engine, args, url, ext, query, queryfile, **kwargs)
 
     # Use the appropriate filter function based on the engine
     if engine == 'dataframe':
@@ -219,6 +220,7 @@ def filter(url, args={}, meta={}, engine=None, table=None, ext=None,
         data = gramex.cache.open(url, ext, transform=transform, **kwargs)
         return _filter_frame(data, meta=meta, controls=controls, args=args)
     elif engine == 'sqlalchemy':
+        table = kwargs.pop('table', None)
         engine = create_engine(url, **kwargs)
         if query or queryfile:
             if queryfile:

@@ -25,6 +25,7 @@ from gramex.config import PathConfig
 from six.moves.urllib_parse import urlparse
 
 
+_undef = object()
 MILLISECOND = 0.001         # in seconds
 _opener_defaults = dict(mode='r', buffering=-1, encoding='utf-8', errors='strict',
                         newline=None, closefd=True)
@@ -128,6 +129,65 @@ def _template(path, **kwargs):
     return tornado.template.Loader(root, **kwargs).load(name)
 
 
+def read_excel(io, sheet_name=0, table=None, name=None, range=None, header=_undef, **kwargs):
+    '''
+    Read data from an Excel file as a DataFrame
+
+    :arg str/file io: path or file-like object pointing to an Excel file
+    :arg str/int sheet_name: sheet to load data from. Sheet names are specified as strings.
+        Integers pick zero-indexed sheet position. default: 0
+    :arg str table: Worksheet table to load from sheet, e.g. ``'Table1'``
+    :arg str name: Defined name to load from sheet, e.g. ``'MyNamedRange'``
+    :arg str range: Cell range to load from sheet, e.g. ``'A1:C10'``
+    :arg None/int/list[int] header: Row (0-indexed) to use for the column labels.
+        A list of integers is combined into a MultiIndex. Use None if there is no header.
+
+    If none of ``table``, ``name``, ``range`` are specified, this loads the entire sheet using
+    ``pd.read_excel``. All other keyword arguments are passed through to ``pd.read_excel``.
+
+    If any of these are specified, we use ``openpyxl`` to read a specific cell range and infer
+    column types. ``table`` overrides ``name`` overrides ``range``.
+    '''
+    if not any((range, name, table)):
+        return pd.read_excel(io, sheet_name=sheet_name, header=0 if header is _undef else header,
+                             **kwargs)
+
+    import openpyxl
+    wb = openpyxl.load_workbook(io, data_only=True)
+    # Pick a SINGLE sheet using sheet_name -- it can be an int or a str
+    ws = wb[wb.sheetnames[sheet_name] if isinstance(sheet_name, int) else sheet_name]
+    # Get the data range to be picked
+    if table is not None:
+        range = ws.tables[table].ref
+        # Tables themselves specify whether they have a column header. Use this as default
+        if header is _undef:
+            header = list(__builtins__['range'](ws.tables[table].headerRowCount))
+    elif name is not None:
+        # If the name is workbook-scoped, get it directly
+        defined_name = wb.defined_names.get(name)
+        # Else, if it's sheet-scoped, get it related to the sheet
+        if defined_name is None:
+            defined_name = wb.defined_names.get(name, wb.sheetnames.index(ws.title))
+        # Raise an error if we can't find it
+        if defined_name is None:
+            raise ValueError(f'{io}: missing name {name} in sheet {sheet_name}')
+        # Note: This only works if it's a cell range. If we create a named range inside a table,
+        # Excel may store this as =Table[[#All],[Col1]:[Col5]], which isn't a valid range.
+        # Currently, we ignore that, and assumed that the name is like Sheet1!A1:C10
+        range = defined_name.attr_text.split('!')[-1]
+
+    data = pd.DataFrame([[cell.value for cell in row] for row in ws[range]])
+    # Header defaults to 0 if undefined. If it's not None, apply the header
+    header = 0 if header is _undef else header
+    if header is not None:
+        data = (data.T.set_index(header).T      # Set header rows as column names
+                    .reset_index(drop=True)     # Drop index with "holes" where headers were
+                    .rename_axis(               # Column name has header index (e.g. 0). Drop it
+                        [None] * len(header) if isinstance(header, (list, tuple)) else None,
+                        axis=1))
+    return data.infer_objects()                 # Convert data types
+
+
 def stat(path):
     '''
     Returns a file status tuple - based on file last modified time and file size
@@ -158,9 +218,9 @@ open_callback = dict(
     txt=opener(None, read=True),
     text=opener(None, read=True),
     csv=pd.read_csv,
-    excel=pd.read_excel,
-    xls=pd.read_excel,
-    xlsx=pd.read_excel,
+    excel=read_excel,
+    xls=read_excel,
+    xlsx=read_excel,
     hdf=pd.read_hdf,
     h5=pd.read_hdf,
     html=pd.read_html,

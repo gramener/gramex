@@ -20,9 +20,9 @@ variables:
   MYSQL_SERVER: mysql
   REDIS_SERVER: redis
 
-# Deploy the dev / master branches on gramener.com
+# Deploy the master / release branches on gramener.com
 deploy-gramener:
-  only: [dev, master]
+  only: [master, release]
   script:
     - 'ssh ubuntu@gramener.com "
         cd /mnt/gramener/apps/gramex;
@@ -37,9 +37,9 @@ deploy-gramener:
         cp -R /mnt/gramener/apps/gramex/gramex/apps/update /mnt/gramener/apps/v1/gramex-update;
       "'
 
-# Deploy the master branch additionally on UAT server
+# Deploy the release branch additionally on UAT server
 deploy-uat:
-  only: [master]
+  only: [release]
   script:
     - 'ssh ubuntu@uat.gramener.com "
         cd ~/gramex;
