@@ -4,10 +4,9 @@ import gramex.ml
 import pandas as pd
 import gramex.cache
 import gramex.data
-from gramex.handlers import BaseHandler, AuthHandler
+from gramex.handlers import BaseHandler
 from gramex.transforms import build_transform
 import tornado.escape
-from io import BytesIO
 
 
 class ModelHandler(BaseHandler):
@@ -19,18 +18,18 @@ class ModelHandler(BaseHandler):
     @classmethod
     def setup(cls, path, engine='sklearn', **kwargs):
         cls.engine = engine
-        super(ModelHandler, cls).setup(path, **kwargs)
+        cls.path = path
+        super(ModelHandler, cls).setup(**kwargs)
         prepare = kwargs.get('prepare', False)
         if prepare:
             cls._on_init_methods.append(build_transform(
                 conf={'function': prepare},
-                vars={'handler': None, 'args': None},
+                vars={'handler': None},
                 filename='url:%s:prepare' % cls.name,
                 iter=False
             ))
-        cls.path = path
 
-    def prepare(self):
+    def prepare(self, *args, **kwargs):
         '''
         Gets called automatically at the beginning of every request.
         takes model name from request path and creates the pickle file path.
@@ -39,22 +38,20 @@ class ModelHandler(BaseHandler):
         Expects multi-row paramets to be formatted as the output of handler.argparse.
         '''
         self.set_header('Content-Type', 'application/json; charset=utf-8')
+        self.request_body = {}
         if self.engine == "sklearn":
             self.model_path = os.path.join(
                 self.path, self.path_args[0] + '.pkl')
-            self.request_body = {}
             if self.request.body:
                 self.request_body = tornado.escape.json_decode(self.request.body)
-        elif self.engine == "keras":
-            from skimage.io import imread
+        else:
             self.model_path = self.path
-            self.request_body = {'image': imread(BytesIO(self.request.body))}
         if self.args:
             self.request_body.update(self.args)
         url = self.request_body.get('url', '')
         if url and gramex.data.get_engine(url) == 'file':
             self.request_body['url'] = os.path.join(self.path, os.path.split(url)[-1])
-        super(AuthHandler, self).prepare()
+        BaseHandler.prepare(self, *args, **kwargs)
 
     def get_data_flag(self):
         '''
