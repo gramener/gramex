@@ -36,7 +36,7 @@ class ModelHandler(BaseHandler):
             self.request_body.update(self.args)
         url = self.request_body.get('url', '')
         if url and gramex.data.get_engine(url) == 'file':
-            self.request_body['url'] = os.path.join(self.path, os.path.split(url)[-1])
+            self.request_body['url'] = url
 
     def get_data_flag(self):
         '''

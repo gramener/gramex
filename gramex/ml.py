@@ -8,6 +8,7 @@ import pandas as pd
 from tornado.gen import coroutine, Return, sleep
 from tornado.httpclient import AsyncHTTPClient
 from gramex.config import locate, app_log, merge, variables
+from gramex.install import _mkdir
 
 # Expose joblob.load via gramex.ml
 load = joblib.load                      # noqa
@@ -101,6 +102,7 @@ class Classifier(object):
         '''
         Serializes the model and associated parameters
         '''
+        _mkdir(os.path.dirname(path))
         joblib.dump(self, path, compress=9)
 
 
