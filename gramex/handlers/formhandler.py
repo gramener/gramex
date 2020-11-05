@@ -181,7 +181,7 @@ class FormHandler(BaseHandler):
         # If modify has changed the content type from a dataframe, write it as-is
         if isinstance(result, (pd.DataFrame, dict)):
             self.write(gramex.data.download(result, **format_options))
-        else:
+        elif result:
             self.write(result)
 
     @tornado.gen.coroutine
