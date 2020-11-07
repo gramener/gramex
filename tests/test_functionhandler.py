@@ -113,6 +113,12 @@ class TestWrapper(TestGramex):
         self.check('/func/multilist?items=1&items=2&items=3&start=1', text='7.0')
         sales = self.check('/func/sales').json()
         afe(pd.DataFrame(sales), gramex.cache.open('sales.xlsx', rel=True))
+        self.check('/func/content/003.json',
+                   text='{"x":3}',
+                   headers={'Content-Type': 'application/json'})
+        self.check('/func/content/003.txt',
+                   text='x=3',
+                   headers={'Content-Type': 'text/plain'})
 
     def test_add_handler_post(self):
         self.check(

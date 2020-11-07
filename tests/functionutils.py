@@ -4,6 +4,7 @@ Utilities to test gramex.transforms.handler
 
 import datetime
 import gramex.cache
+import json
 import numpy as np
 from typing import List
 from gramex.transforms import handler
@@ -74,3 +75,13 @@ def greet(name="Stranger"):
 @handler
 def sales():
     return gramex.cache.open('sales.xlsx', rel=True)
+
+
+@handler
+def content(x: int, y: str, handler):
+    if y == 'json':
+        handler.set_header('Content-Type', 'application/json')
+        return json.dumps({'x': x}, separators=(',', ':'))
+    elif y == 'txt':
+        handler.set_header('Content-Type', 'text/plain')
+        return f'x={x}'

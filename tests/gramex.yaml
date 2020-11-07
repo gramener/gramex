@@ -337,6 +337,11 @@ url:
     handler: FunctionHandler
     kwargs:
       function: functionutils.sales
+  func/content:
+    pattern: /func/content/(\d+)\.(txt|json)
+    handler: FunctionHandler
+    kwargs:
+      function: functionutils.content
 
   # TestFileHandler
   dir/noindex:

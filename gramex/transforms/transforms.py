@@ -408,60 +408,52 @@ def convert(hint, *args):
 def handler(func):
     """Wrap a function to make it compatible with a tornado.web.RequestHandler
 
-    Use this decorator if you'd rather not write a FunctionHandler function from scratch,
-    but reuse an existing one.
+    Use this decorator to expose a function as a REST API, with path or URL parameters mapped to
+    function arguments with type conversion.
 
-    Parameters
-    ----------
-    func : callable
-        function to be wrapped.
+    Suppose you have the following function in ``greet.py``::
 
-    Usage
-    -----
-    Suppose you have the following function in `greet.py`:
+        @handler
+        def birthday(name: str, age: int):
+            return f'{name} turns {age:d} today! Happy Birthday!'
 
-    def birthday(name, age):
-        return f'{name} turns {age} today! Happy Birthday!'
+    Then, in ``gramex.yaml``, you can use it as a FunctionHandler as follows::
 
-    Then, in `gramex.yaml`, you can use it as a FunctionHandler as follows:
-    url:
-        pattern: /$YAMLURL/greet
-        handler: FunctionHandler
-        kwargs:
-            function: gramex.handlers.functionhandler.add_handler(greet.birthday)(handler)
+        url:
+            pattern: /$YAMLURL/greet
+            handler: FunctionHandler
+            kwargs:
+                function: greet.birthday
 
-    Now, `/greet?name=Gramex&age=10` returns "Gramex turns 10 today! Happy Birthday!".
-    An alternate way of configuring this is as follows:
+    Now, ``/greet?name=Gramex&age=0010`` returns "Gramex turns 10 today! Happy Birthday!".
+    It converts the URL parameters into the types found in the annotations, e.g. `0010` into 10.
 
-    url:
-        pattern: /$YAMLURL/greet/name/(.*)/age/(.*)
-        handler: FunctionHandler
-        kwargs:
-            function: gramex.handlers.functionhandler.add_handler(greet.birthday)(handler)
+    An alternate way of configuring this is as follows::
 
-    Here, `/greet/name/Gramex/age/10` returns "Gramex turns 10 today! Happy Birthday!".
-    `add_handler` can also be used as a decorator,
+        url:
+            pattern: /$YAMLURL/greet/name/(.*)/age/(.*)
+            handler: FunctionHandler
+            kwargs:
+                # You can pass name=... and age=... as default values
+                # but ensure that handler is the first argument in the config.
+                function: greet.birthday(handler, name='Name', age=10)
 
-    @add_handler
-    def birthday(name, age):
-        return f'{name} turns {age} today! Happy Birthday!'
+    Now, ``/greet/name/Gramex/age/0010`` returns "Gramex turns 10 today! Happy Birthday!".
 
-    which simplifies the FunctionHandler configuration in `gramex.yaml` as follows:
-    url:
-        pattern: /$YAMLURL/greet
-        handler: FunctionHandler
-        kwargs:
-            function: greet.birthday  # notice that calling the wrapper is not required here
+    The function args and kwargs are taken from these sources this in order.
 
-    Arbitrary functions can be wrapped with `add_handler`. However, it assumes that
-    `handler.path_args`, if found, are converted to positional arguments,
-    and everything else, like URL parameters and request body, are converted to keyword arguments.
+    1. From the YAML function, e.g. ``function: greet.birthday('Name', age=10)`` sets
+       ``name='Name'`` and ``age=10``
+    2. Over-ridden by YAML URL pattern, e.g. ``pattern: /$YAMLPATH/(.*)/(?P<age>.*)`` when called
+       with ``/greet/Name/10`` sets ``name='Name'`` and ``age=10``
+    3. Over-ridden by URL query parameters, e.g. ``/greet?name=Name&age=10`` sets ``name='Name'``
+       and ``age=10``
+    4. Over-ridden by URL POST body parameters, e.g. ``curl -X POST /greet -d "?name=Name&age=10"``
+       sets ``name='Name'`` and ``age=10``
 
-    The wrapper also naively tries to enforce types based on any type annotations that are found
-    in the wrapped function.
-
-    Note that this alone does not guarantee RESTfulness. This function simply translates
-    handler data and attempts to typecast inputs to the required format.
+    ``handler`` is also available as a kwarg. You can use this as the last positional argument or
+    a keyword argument. Both ``def birthday(name, age, handler)`` and
+    ``def birthday(name, age, handler=None)`` are valid.
     """
     from inspect import signature
     from typing import get_type_hints
@@ -476,6 +468,7 @@ def handler(func):
         # College args from the config args:, then pattern /(.*)/(.*)
         # Collect kwargs from the config kwargs:, then pattern /(?P<key>.*), then URL query params
         all_args, all_kwargs = list(cfg_args), dict(cfg_kwargs)
+        all_kwargs.setdefault('handler', handler)
         all_args.extend(handler.path_args)
         all_kwargs.update(handler.path_kwargs)
         all_kwargs.update(handler.args)
