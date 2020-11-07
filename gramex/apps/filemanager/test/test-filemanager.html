@@ -18,27 +18,84 @@
 </head>
 
 <body>
+
+  <div class="drive1" data-src="drive1"></div>
+  <div class="drive2" data-src="drive2"></div>
   <div class="filemanager" data-src="default"></div>
   <div class="fm-opts" data-src="default"></div>
   <div class="fm-opts-2" data-src="default"></div>
   <div class="fm-opts-reserved" data-src="default"></div>
   <div class="edit-fname" data-src="default"></div>
-  <div class="empty-drive" data-src="drive1"></div>
+  <div class="empty-drive" data-src="drive-empty"></div>
   <div class="error-drive" data-src="default"></div>
 </body>
 <script>
   /* eslint-env browser, jquery */
   /* globals _, tape */
+
+  // Runs a test that uploads files into a DriveHandler URL.
+  // e.g. upload_files(test, 'drive1', ['a', 'b']) uploads drive1a.txt, drive2b.txt into drive1.
+  // If successful, closes the handle
+  function upload_files(t, url, tags) {
+    t.test(`... ${url}: POST uploads files`, function (st) {
+      var formData = new FormData()
+      tags.forEach(function (tag) {
+        formData.append('file', new File([`${url}${tag}`], `${url}${tag}.txt`))
+      })
+      $.ajax({
+        type: 'POST',
+        url: url,
+        contentType: false,
+        processData: false,
+        data: formData
+      }).done(function() {
+        st.pass('Posted')
+        st.end()
+      })
+    })
+  }
+
+  tape('Multi-element filemanager', function (t) {
+    upload_files(t, 'drive1', ['a', 'b', 'c'])
+    upload_files(t, 'drive2', ['a', 'b', 'c'])
+    t.test('... Load filemanager', function (st) {
+      st.plan(2)
+      $('.drive1, .drive2').on('load', function () {
+        st.pass('Loaded')
+      }).filemanager({
+        columns: [
+          {'name': 'delete'},
+          {'name': 'file'},
+          {'name': 'date'},
+          {'name': 'size'},
+        ]
+      })
+    })
+    // Tests https://github.com/gramener/gramex/issues/323
+    t.test('... Drive links are correct', function (st) {
+      st.equal($('.drive1 tbody a:eq(0)').attr('href'), 'drive1?id=1&_download')
+      st.equal($('.drive2 tbody a:eq(0)').attr('href'), 'drive2?id=1&_download')
+      st.end()
+    })
+    t.test('... Column order and attributes', function (st) {
+      st.deepEqual(
+        $('.drive1 thead th .dropdown > a').get().map(v => v.textContent.replace(/\s/g, '')),
+        ['Delete', 'File', 'Date', 'Size']
+      )
+      st.end()
+    })
+  })
+
   tape('$().filemanager default', function(t) {
     $('.filemanager').on('load', function(e) {
       t.plan(6)
 
       // Check the right columns
-      let column_names = ['file', 'size', 'mime', 'date', 'Delete', 'tags']
+      let column_names = ['file', 'size', 'mime', 'date', 'delete', 'tags']
       t.deepEqual(column_names, _.map(e.options.columns, 'name'))
 
       // check file links
-      let file_link = 'default?id=<%- row.id %>&_format=file&_download'
+      let file_link = 'default?id=<%- row.id %>&_download'
       t.equal(e.options.columns[0].link, file_link)
 
       // check delete button
@@ -63,35 +120,10 @@
       t.equal(e.formdata.length, 1)
     }).filemanager({pageSize: 1})
     $('.fm-opts-2').on('load', function(e) {
+      console.log(e.formdata)
       t.equal(e.formdata.length, 2)
       t.end()
     }).filemanager({pageSize: 2})
-  })
-
-  tape('$().filemanager reserved options', function(t) {
-    // Check if reserved options are protected.
-    $('.fm-opts-reserved').on('load', function(e) {
-      t.plan(2)
-
-      let tags = e.options.columns[5]
-      t.equal(tags.title, 'MYTAGS')
-
-      let newCol = e.options.columns[6]
-      t.equal(newCol.title, 'MyNewColumnTitle')
-      t.end()
-
-    }).filemanager({
-      columns: [
-        {
-          name: 'tags',
-          title: 'MYTAGS'
-        },
-        {
-          name: 'MyNewColumn',
-          title: 'MyNewColumnTitle'
-        }
-      ]
-    })
   })
 
   tape('Check empty drive', function(t) {

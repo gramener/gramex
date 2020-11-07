@@ -1,8 +1,12 @@
 from gramex import conf
+from gramex.config import app_log
 
 
 def get_drive_urls(handler):
-    """Find the drives requested by the filemanager app. By default, return all."""
+    '''
+    Return tuple of ((drive_name, drive_config)) requested by filemanager app.
+    If no drives are requested, returns all DriveHandlers.
+    '''
     fm_kwargs = handler.kwargs.get('filemanager_kwargs', '') or {}
     drives = []
     if 'drives' not in fm_kwargs:
@@ -10,6 +14,11 @@ def get_drive_urls(handler):
             if config.get('handler', '') == 'DriveHandler':
                 drives.append((key, config))
     else:
-        for d in fm_kwargs['drives']:
-            drives.append((d, conf.url.get(d, '')))
+        for drive in fm_kwargs['drives']:
+            if drive not in conf.url:
+                app_log.error(f'filemanager: No url: "{drive}" in gramex.yaml')
+            elif conf.url[drive].get('handler', '') != 'DriveHandler':
+                app_log.error(f'filemanager: rl: "{drive}" is not a DriveHandler')
+            else:
+                drives.append((drive, conf.url[drive]))
     return drives
