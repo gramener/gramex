@@ -34,7 +34,7 @@ class RedisCache():
                 port = int(parts.pop(0))
             if len(parts):
                 db = int(parts.pop(0))
-            redis_kwargs = dict(part.split('=', 2) for part in parts)
+            redis_kwargs = dict(part.split('=', 1) for part in parts)
         redis_kwargs['decode_responses'] = False
         r = StrictRedis(host=host, port=port, db=db, **redis_kwargs)
         self.store = r
