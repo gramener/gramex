@@ -2,7 +2,7 @@ from collections import defaultdict
 import json
 import os
 
-from gramex.config import app_log
+from gramex.config import app_log, variables
 from gramex.handlers import FormHandler
 from gramex.http import NOT_FOUND
 from gramex import cache, service
@@ -14,7 +14,6 @@ import sklearn.neighbors
 import sklearn.naive_bayes
 import sklearn.ensemble
 import sklearn.neural_network
-from sklearn.base import BaseEstimator
 from tornado.gen import coroutine
 from tornado.web import HTTPError
 
@@ -45,30 +44,23 @@ def _serialize_prediction(obj):
 
 class MLHandler(FormHandler):
     @classmethod
-    def setup(cls, model=None, model_kwargs=None, model_access=None, **kwargs):
+    def setup(cls, path='', model_class=None, model_params=None, **kwargs):
         super(MLHandler, cls).setup(**kwargs)
-        cls.model = model
-        if model_kwargs is None:
-            model_kwargs = {}
-        cls.model_kwargs = model_kwargs
-        cls.model_access = model_access
-        if model:
-            if op.isfile(model):
-                cls.model = cache.open(model, joblib.load)
-                cls.model_path = model
-            else:
-                class_module = SKLEARN_CLASSES.get(model, False)
-                if not class_module:
-                    raise ValueError('Algorithm not supported.')
-                mclass = getattr(class_module, model)
-                cls.model = mclass(**model_kwargs)
-                cls.model_path = model if model.endswith('.pkl') else model + '.pkl'
-                joblib.dump(cls.model, cls.model_path)
-
-        if isinstance(cls.model, BaseEstimator):
-            cls.engine = 'sklearn'
+        if path:
+            cls.model_path = path
         else:
-            cls.engine = ''
+            cls.model_path = op.join(variables['YAMLPATH'], cls.name + '.pkl')
+        if op.isfile(path):
+            cls.model = cache.open(path, joblib.load)
+        else:
+            class_module = SKLEARN_CLASSES.get(model_class, False)
+            if not class_module:
+                raise ValueError('Algorithm not supported.')
+            if not model_params:
+                model_params = {}
+            mclass = getattr(class_module, model_class)
+            cls.model = mclass(**model_params)
+            joblib.dump(cls.model, cls.model_path)
 
     def _fit(self, data):
         target = self.kwargs.get('target_col', self.get_arg('target_col'))
@@ -95,36 +87,33 @@ class MLHandler(FormHandler):
 
     @coroutine
     def get(self, *path_args, **path_kwargs):
-        if self.engine == 'sklearn':
-            if '_model' in self.args:
-                self.write({
-                    'params': self.model.get_params(),
-                    'score': SCORES[self.model_path][-1]
-                })
-            else:
-                try:
-                    data = pd.DataFrame(self.args)
-                except Exception as err:
-                    app_log.debug(err.msg)
-                prediction = yield service.threadpool.submit(self._predict, data)
-                self.write(_serialize_prediction(prediction))
+        if '_model' in self.args:
+            self.write({
+                'params': self.model.get_params(),
+                'score': SCORES[self.model_path][-1]
+            })
+        else:
+            try:
+                data = pd.DataFrame(self.args)
+            except Exception as err:
+                app_log.debug(err.msg)
+            prediction = yield service.threadpool.submit(self._predict, data)
+            self.write(_serialize_prediction(prediction))
         super(MLHandler, self).get(*path_args, **path_kwargs)
 
     @coroutine
     def post(self, *path_args, **path_kwargs):
-        if self.engine == 'sklearn':
-            data = pd.read_json(self.request.body.decode('utf8'))
-            if self.get_arg('_retrain', False):
-                score = yield service.threadpool.submit(self._fit, data)
-                self.write(dict(score=score))
-            else:
-                prediction = yield service.threadpool.submit(self._predict, data)
-                self.write(_serialize_prediction(prediction))
+        data = pd.read_json(self.request.body.decode('utf8'))
+        if self.get_arg('_retrain', False):
+            score = yield service.threadpool.submit(self._fit, data)
+            self.write(dict(score=score))
+        else:
+            prediction = yield service.threadpool.submit(self._predict, data)
+            self.write(_serialize_prediction(prediction))
         super(MLHandler, self).get(*path_args, **path_kwargs)
 
     @coroutine
     def put(self, *path_args, **path_kwargs):
-        self.model_path = path_args[0] + '.pkl'
         mclass = self.args.pop('class')[0]
         if not op.isfile(self.model_path):
             self.model = getattr(SKLEARN_CLASSES.get(mclass), mclass)(
@@ -147,7 +136,6 @@ class MLHandler(FormHandler):
 
     @coroutine
     def delete(self, *path_args, **path_kwargs):
-        model_path = path_args[0] + '.pkl'
-        if not op.isfile(model_path):
-            raise HTTPError(NOT_FOUND, reason=f'Model {model_path} does not exist.')
-        os.remove(model_path)
+        if not op.isfile(self.model_path):
+            raise HTTPError(NOT_FOUND, reason=f'Model {self.model_path} does not exist.')
+        os.remove(self.model_path)
