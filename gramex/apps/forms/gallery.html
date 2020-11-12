@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+  {% set base = '.' %}
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <title>Gallery - Form Builder</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://fonts.googleapis.com/css2?family=Comfortaa&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ base }}/style.css">
+  </head>
+
+  <body>
+    {% include template-navbar.html %}
+    {% import os %}
+    {% from form_builder import FOLDER %}
+    <!-- TODO: Filter bars -->
+    <div class="container py-4">
+      <h1>Forms Gallery</h1>
+      <div class="d-flex flex-row-reverse">
+        <input class="form-control w-50" type="search" data-search="@text" data-target=".card" data-hide-class="d-none" placeholder="filter by text">
+      </div>
+      <div class="gallery-grid mt-5 mb-4">
+        <script type="text/html" class="forms">
+          <% _.each(forms, function(_form) { %>
+            <% let _md = JSON.parse(_form.metadata)%>
+            <div class="card p-2 m-3 border-0 border-radius shadow overflow-hidden">
+              <a class="card-header pl-2 py-1 text-uppercase text-decoration-none text-center border-bottom-0" href="form/<%= _form.id %>">
+                <%= _md.name %>
+              </a>
+              <a href="form/<%= _form.id %>">
+                <img class="thumbnail mx-auto img-fluid" src="<%= _form.thumbnail || 'https://picsum.photos/160' %>">
+              </a>
+              <div class="card-body pl-1 d-flex justify-content-start">
+                <% _.each(Object.keys(_md.fields), function(el, count) { %>
+                  <a class="urlfilter px-1" href="?field=<%= el %>" data-count="<%= count %>"
+                  data-target='#'>
+                  <%= el %>
+                </a>
+                <% }) %>
+              </div><!-- .card-body -->
+            </div><!-- .card -->
+          <% }) %>
+        </script>
+      </div><!-- .card-deck -->
+    </div><!-- .container-fluid -->
+
+    <script src="{{ base }}/ui/jquery/dist/jquery.min.js"></script>
+    <script src="{{ base }}/ui/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ base }}/ui/lodash/lodash.min.js"></script>
+    <script src="{{ base }}/ui/g1/dist/g1.min.js"></script>
+    <script>
+      fetch('publish')
+        .then(response => response.json())
+        .then(function(data) {
+          $('.forms').template({forms: data})
+        })
+      $('body').search()
+      $('body').urlfilter()
+      $(window).on('#?field', function(e, field) {
+        $('.card').addClass('d-none')
+        $("a:contains(" + field + ")").closest('.card').removeClass('d-none')
+      }).urlchange()
+    </script>
+  </body>
+</html>

@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "clipboard": "^2.0.6",
+    "dragula": "^3.7.3"
+  }
+}

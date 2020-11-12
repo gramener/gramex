@@ -1,0 +1,31 @@
+<div class="editable-form-element">
+  <% _.each(fields, function (props, index) { %>
+    <% if(props.type === 'select') { %>
+      <div class="form-group">
+        <label for="input-select-prop-<%= index %>"><%= props.label %></label>
+        <select class="form-control" name="input-select-prop-<%= index %>" id="input-select-prop-<%= index %>" data-element="<%= index %>">
+          <% _.each(props.value, function(each_option) { %>
+            <option value="<%= each_option.value %>"><%= each_option.label %></option>
+          <% }) %>
+        </select>
+      </div>
+    <% } else if(props.type === 'input') { %>
+      <div class="form-group">
+        <label for="input-text-prop-<%= index %>"><%= props.label %></label>
+        <input type="text"
+          class="form-control" name="input-text-prop-<%= index %>" id="input-text-prop-<%= index %>" aria-describedby="helpId" placeholder="placeholder" value="<%= props.value %>" data-element="<%= index %>">
+        <small id="helpId" class="form-text text-muted">Help text</small>
+      </div>
+    <% } else if(props.type === 'checkbox') { %>
+      <div class="form-check">
+        <label for="input-checkbox-prop-<%= index %>" class="form-check-label">
+          <input type="checkbox" class="form-check-input" name="input-checkbox-prop-<%= index %>" id="input-checkbox-prop-<%= index %>" value="checkedValue" checked>
+          <%= props.label %>
+        </label>
+      </div>
+    <% } %>
+  <% }) %>
+</div>
+<% if(view !== 'form') { %>
+  <button class="btn btn-success">Save</button>
+<% } %>
