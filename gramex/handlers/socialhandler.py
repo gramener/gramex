@@ -18,17 +18,11 @@ store_cache = {}
 
 class SocialMixin(object):
     @classmethod
-    def setup_social(cls, user_info, transform={}, methods=['get', 'post'], **kwargs):
+    def setup_social(cls, user_info, **kwargs):
         # Session key that stores the user info
         cls.user_info = user_info
-
         # Set up methods
-        if not isinstance(methods, list):
-            methods = [methods]
-        methods = set(method.lower().strip() for method in methods)
-        for method in ('get', 'post', 'put', 'patch'):
-            if method in methods:
-                setattr(cls, method, cls.run)
+        cls.post = cls.put = cls.delete = cls.patch = cls.options = cls.get
 
     @tornado.gen.coroutine
     def social_response(self, response):

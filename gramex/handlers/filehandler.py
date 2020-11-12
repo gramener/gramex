@@ -63,8 +63,6 @@ class FileHandler(BaseHandler):
         these, the files will not be served.
     :arg list allow: List of glob patterns to allow. This overrides the ignore
         patterns, so use with care.
-    :arg list methods: List of HTTP methods to allow. Defaults to
-        `['GET', 'HEAD', 'POST']`.
     :arg string index_template: The file to be used as the template for
         displaying the index. If this file is missing, it defaults to Gramex's
         default ``filehandler.template.html``. It can use these string
@@ -117,7 +115,7 @@ class FileHandler(BaseHandler):
 
     @classmethod
     def setup(cls, path, default_filename=None, index=None, index_template=None,
-              template=None, headers={}, default={}, methods=['GET', 'HEAD', 'POST'], **kwargs):
+              template=None, headers={}, default={}, **kwargs):
         # Convert template: '*.html' into transform: {'*.html': {function: template}}
         # Do this before BaseHandler setup so that it can invoke the transforms required
         if template is not None:
@@ -144,10 +142,7 @@ class FileHandler(BaseHandler):
             Path(index_template) if index_template is not None else _default_index_template)
         cls.headers = AttrDict(objectpath(gramex_conf, 'handlers.FileHandler.headers', {}))
         cls.headers.update(headers)
-        # Set supported methods
-        for method in (methods if isinstance(methods, (tuple, list)) else [methods]):
-            method = method.lower()
-            setattr(cls, method, cls._head if method == 'head' else cls._get)
+        cls.post = cls.put = cls.delete = cls.patch = cls.options = cls.get
 
     @classmethod
     def set(cls, value):
@@ -165,12 +160,12 @@ class FileHandler(BaseHandler):
         return result
 
     @tornado.gen.coroutine
-    def _head(self, *args, **kwargs):
+    def head(self, *args, **kwargs):
         kwargs['include_body'] = False
-        yield self._get(*args, **kwargs)
+        yield self.get(*args, **kwargs)
 
     @tornado.gen.coroutine
-    def _get(self, *args, **kwargs):
+    def get(self, *args, **kwargs):
         self.include_body = kwargs.pop('include_body', True)
         path = urljoin('/', args[0] if len(args) else '').lstrip('/')
         if isinstance(self.root, list):
