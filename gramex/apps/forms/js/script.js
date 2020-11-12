@@ -86,9 +86,7 @@ $('body').on('click', '#user-form input', function () {
       $('.post-publish').removeClass('d-none')
       $('.form-link').html(`<a href="form/${response.data.modify.id}">View form</a>`)
     },
-    error: function () {
-      console.log("failed?")
-    },
+    error: function () { },
     complete: function() { $icon.fadeOut() }
   })
 }).on('shown.bs.tab', 'a[data-toggle="tab"]', function() {
