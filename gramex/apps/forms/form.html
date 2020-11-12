@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+  {% set base = '..' %}
+  {% set form_id = handler.path_args[0] %}
+  {% set view = 'form' %}
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <title>View a form - Form Builder</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="{{ base }}/node_modules/dragula/dist/dragula.min.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/styles/agate.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Comfortaa&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ base }}/style.css">
+  </head>
+  <body>
+    {% include 'template-navbar.html' %}
+    <div class="container my-3">
+      <h1>Viewing - Form {{ form_id }}</h1>
+      <div class="my-5 p-2 shadow" id="view-form"></div>
+      <h3>Embed form</h3>
+      <div class="divider"></div>
+      <p>
+        You can use any of the methods below to render the form. Note the file extensions in each of the approaches below.
+      </p>
+      <div class="py-3">
+        {% set _path = handler.request.uri.split('/form/')[0] %}
+        {% set _url = handler.request.protocol + '://' + handler.request.host + _path + "/embed/" + form_id %}
+        <h4>Bootstrap</h4>
+        Before anything, import Bootstrap 4 as a dependency.
+
+        <pre>
+          <code>&lt;script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.3/css/bootstrap.min.css"&gt;&lt;/script&gt;
+          </code>
+        </pre>
+        <h4>Using JavaScript</h4>
+        <p>
+          Below code renders the form in place.
+        </p>
+        <pre>
+          <code>&lt;link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.3/css/bootstrap.min.css"&gt;
+            &lt;div class="form-container"&gt;
+              &lt;script src="{% raw _url + '.js' %}"&gt;&lt;/script&gt;
+            &lt;/div&gt;
+          </code>
+        </pre>
+        <h4>Using HTML</h4>
+        <p>
+          Below code renders the form in <code>.form-container</code> element.
+        </p>
+        <pre>
+          <code>&lt;div class="form-container"&gt;&lt;/div&gt;
+            &lt;script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"&gt;&lt;/script&gt;
+            &lt;script&gt;
+              $('.form-container').load("{% raw _url + '.html' %}")
+            &lt;/script&gt;
+          </code>
+        </pre>
+
+        <h4>Server-side rendering</h4>
+        <p>
+          Below snippet is a Gramex server-side rendering example which renders the form in place.
+        </p>
+        <pre>
+          <code>{%! import requests %}
+            {%! raw requests.get('{{ _url + '.html' }}').text %}
+          </code>
+        </pre>
+      </div>
+
+      <button class="btn btn-primary btn-sm mt-2" id="toggle-source">Toggle source</button>
+      <div class="sourcecode-container d-none m-4 overflow-auto">
+        <pre class="viewsource"><code class="language-html"></code></pre>
+      </div>
+      <div class="divider"></div>
+
+      <h3>Change device resolutions</h3>
+      <div class="preview-container py-2 my-2">
+        <div class="d-flex flex-row-reverse">
+          <div class="btn-group" data-toggle="buttons">
+            <button type="button" class="btn btn-secondary" data-device="mobile">Mobile</button>
+            <button type="button" class="btn btn-secondary" data-device="tablet">Tablet</button>
+            <button type="button" class="btn btn-secondary" data-device="laptop">Laptop</button>
+          </div>
+        </div>
+        <div id="preview" class="d-none">
+          <div id="preview-body" class="shadow">
+            <iframe id="frame"></iframe>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script type="text/html" data-target="#view-form" class="popover-template" src="{{ base }}/popover-form.html"></script>
+
+    <script src="{{ base }}/ui/jquery/dist/jquery.min.js"></script>
+    <script src="{{ base }}/ui/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ base }}/ui/lodash/lodash.min.js"></script>
+    <script src="{{ base }}/ui/g1/dist/g1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/highlight.min.js"></script>
+    <script src="{{ base }}/node_modules/clipboard/dist/clipboard.min.js"></script>
+    <script src="{{ base }}/js/code-highlighting.js"></script>
+    <script>
+      /* exported hljs, dragula, form_id */
+      const form_id = '{% raw form_id %}'
+    </script>
+    <script src="{{ base }}/js/view-form.js"></script>
+  </body>
+</html>

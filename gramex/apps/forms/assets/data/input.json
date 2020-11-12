@@ -1,0 +1,72 @@
+[
+  {
+    "fields": {
+      "id": {
+        "type": "input",
+        "label": "Name",
+        "value": "text-input"
+        },
+        "inputsize": {
+          "type": "select",
+          "label": "Input Size",
+          "value": [
+            {
+              "label": "Small",
+              "value": "form-control-sm",
+              "selected": false
+            }, {
+              "label": "Medium",
+              "value": "form-control-md",
+              "selected": true
+            }, {
+              "label": "Large",
+              "value": "form-control-lg",
+              "selected": false
+            }
+          ]
+        },
+        "inputwidth": {
+          "type": "select",
+          "label": "Input Width",
+          "value": [
+            {
+              "label": "Short",
+              "value": "col-sm-4",
+              "selected": false
+            },
+            {
+              "label": "Medium",
+              "value": "col-sm-6",
+              "selected": true
+            },
+            {
+              "label": "Long",
+              "value": "col-sm-8",
+              "selected": false
+            }
+          ]
+        },
+        "label": {
+          "type": "input",
+          "label": "Label Text",
+          "value": "Text Input"
+        },
+        "helptext": {
+          "type": "input",
+          "label": "Help Text",
+          "value": "help"
+        },
+        "placeholder": {
+          "type": "input",
+          "label": "Placeholder",
+          "value": "placeholder"
+        },
+        "required": {
+          "type": "checkbox",
+          "label": "Required",
+          "value": false
+        }
+    },
+    "title": "Text Input"
+  }
+]
