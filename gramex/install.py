@@ -3,7 +3,6 @@ Defines command line services to install, setup and run apps.
 '''
 import io
 import os
-import re
 import six
 import sys
 import time
@@ -25,7 +24,7 @@ from tornado.template import Template
 from orderedattrdict.yamlutils import from_yaml         # noqa
 import gramex
 import gramex.license
-from gramex.config import ChainConfig, PathConfig, variables, app_log
+from gramex.config import ChainConfig, PathConfig, variables, app_log, slug
 
 usage = '''
 install: |
@@ -640,7 +639,7 @@ def init(cmd, args):
         'version': gramex.__version__,
     }
     # Ensure that appname is a valid Python module name
-    appname = re.sub(r'[^a-z0-9_]+', '_', data['appname'].lower())
+    appname = slug.python_module(data['appname'])
     if appname[0] not in string.ascii_lowercase:
         appname = 'app' + appname
     data['appname'] = appname

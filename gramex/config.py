@@ -43,6 +43,7 @@ from yaml import Loader, MappingNode
 from json import loads, JSONEncoder, JSONDecoder
 from yaml.constructor import ConstructorError
 from orderedattrdict import AttrDict, DefaultAttrDict
+from slugify import slugify
 from errno import EACCES, EPERM
 
 ERROR_SHARING_VIOLATION = 32        # from winerror.ERROR_SHARING_VIOLATION
@@ -59,6 +60,19 @@ app_log = logging.LoggerAdapter(app_log, app_log_extra)
 # sqlalchemy.create_engine requires an encoding= that must be an str across
 # Python 2 and Python 3. Expose this for other modules to use
 str_utf8 = str('utf-8')             # noqa
+
+# Common slug patterns
+slug = AttrDict(
+    # Python modules must be lowercase, with letters, numbers or _, separated by _
+    module=lambda s: slugify(s, lowercase=True, regex_pattern=r'[^a-z0-9_]+', separator='_'),
+    # Allow files to contain ASCII characters except
+    #   - spaces
+    #   - wildcards: * or ?
+    #   - quotes: " or '
+    #   - directory or drive separators: / or \ or :
+    #   - pipe symbol: |
+    filename=lambda s: slugify(s, regex_pattern=r'[^!#$%&()+,-.0-9;<=>@A-Z\[\]^_`a-z{}~]'),
+)
 
 
 def walk(node):

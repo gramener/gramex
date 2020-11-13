@@ -62,6 +62,7 @@
     "pymysql":                    "OPT: MySQL connections",
     "pytest":                     "OPT: conda: pytest gramex plugin",
     "python-pptx>=0.6.6":         "SRV: pptgen (conda-forge)",
+    "python-slugify":             "REQ: Pre-defined slugs at gramex.config.slug",
     "pyyaml>=5.1":                "REQ: Parse YAML files for config",
     "requests":                   "REQ: HTTP library for python",
     "scikit-learn":               "OPT: conda: For gramex.ml",
