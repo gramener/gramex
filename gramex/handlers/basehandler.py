@@ -7,6 +7,7 @@ import mimetypes
 import traceback
 import tornado.gen
 import gramex.cache
+from typing import Union
 from binascii import b2a_base64, hexlify
 from orderedattrdict import AttrDict
 from urllib.parse import urlsplit, urlunsplit, parse_qsl, urljoin, urlencode
@@ -15,7 +16,7 @@ from tornado.websocket import WebSocketHandler
 from gramex import conf, __version__
 from gramex.config import merge, objectpath, app_log
 from gramex.transforms import build_transform, build_log_info, CacheLoader
-from gramex.http import UNAUTHORIZED, FORBIDDEN, BAD_REQUEST
+from gramex.http import UNAUTHORIZED, FORBIDDEN, BAD_REQUEST, METHOD_NOT_ALLOWED
 from gramex.cache import get_store
 # We don't use these, but these stores used to be defined here. Programs may import these
 from gramex.cache import KeyStore, JSONStore, HDF5Store, SQLiteStore, RedisStore    # noqa
@@ -72,15 +73,15 @@ class BaseMixin(object):
         return kwargs
 
     @classmethod
-    def setup_httpmethods(cls, methods):
+    def setup_httpmethods(cls, methods: Union[list, tuple, str]):
         if methods is None:
             return
-        else:
-            if isinstance(methods, list):
-                methods = ''.join(methods)
-            methods = re.sub(' +', ' ',methods)
-            methods = set(methods.lower().replace(', ',',').replace(' ',',').split(","))
-            cls._http_methods = methods
+        if isinstance(methods, (list, tuple)):
+            methods = ' '.join(methods)
+        if not isinstance(methods, str):
+            raise ValueError('methods: %r invalid -- use a string/list, e.g. [GET, PUT]')
+        if methods:
+            cls._http_methods = set(methods.upper().replace(',', ' ').split())
             cls._on_init_methods.append(cls.check_http_method)
 
     @classmethod
@@ -355,11 +356,10 @@ class BaseMixin(object):
         cls.check_xsrf_cookie = cls.noop if xsrf_cookies is False else cls.xsrf_ajax
 
     def check_http_method(self):
-        '''
-        It verfies the methods if doesn't match raises and error
-        '''
+        '''If method: [...] is specified, reject all methods not in the allowed methods set'''
         if self.request.method not in self._http_methods:
-            raise http.METHOD_NOT_ALLOWED
+            raise HTTPError(METHOD_NOT_ALLOWED, f'{self.name}: method {self.request.method} ' +
+                            f'not in allowed methods {self._http_methods}')
 
     def xsrf_ajax(self):
         '''
