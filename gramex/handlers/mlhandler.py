@@ -49,7 +49,7 @@ class MLHandler(FormHandler):
         if path:
             cls.model_path = path
         else:
-            cls.model_path = op.join(variables['YAMLPATH'], cls.name + '.pkl')
+            cls.model_path = op.join(variables['YAMLPATH'], op.basename(cls.name) + '.pkl')
         if op.isfile(path):
             cls.model = cache.open(path, joblib.load)
         else:
@@ -88,10 +88,10 @@ class MLHandler(FormHandler):
     @coroutine
     def get(self, *path_args, **path_kwargs):
         if '_model' in self.args:
-            self.write({
-                'params': self.model.get_params(),
-                'score': SCORES[self.model_path][-1]
-            })
+            out = {'params': self.model.get_params()}
+            if len(SCORES[self.model_path]) > 0:
+                out['score'] = SCORES[self.model_path][-1]
+            self.write(out)
         else:
             try:
                 data = pd.DataFrame(self.args)

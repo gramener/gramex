@@ -1087,6 +1087,14 @@ url:
         age: {type: float, nullable: False, default: 18}
         dept: varchar(10)
 
+  mlhandler/predict:
+    pattern: /mlhandler
+    handler: MLHandler
+    kwargs:
+      path: $YAMLPATH/iris.pkl
+      model_class: LogisticRegression
+      xsrf_cookies: false
+
   capture:
     pattern: /capture
     handler: CaptureHandler
