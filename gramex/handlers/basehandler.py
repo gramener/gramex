@@ -28,7 +28,7 @@ _arg_default = object()
 
 class BaseMixin(object):
     @classmethod
-    def setup(cls, transform={}, redirect={}, auth=None, log=None, set_xsrf=None,
+    def setup(cls, transform={}, redirect={}, methods=None, auth=None, log=None, set_xsrf=None,
               error=None, xsrf_cookies=None, **kwargs):
         '''
         One-time setup for all request handlers. This is called only when
@@ -49,6 +49,7 @@ class BaseMixin(object):
         cls.setup_error(error)
         cls.setup_xsrf(xsrf_cookies)
         cls.setup_log()
+        cls.setup_httpmethods(methods)
 
         # app.settings.debug enables debugging exceptions using pdb
         if conf.app.settings.get('debug', False):
@@ -69,6 +70,18 @@ class BaseMixin(object):
         for special_key in args:
             kwargs.pop(special_key, None)
         return kwargs
+
+    @classmethod
+    def setup_httpmethods(cls, methods):
+        if methods is None:
+            return
+        else:
+            if isinstance(methods, list):
+                methods = ''.join(methods)
+            methods = re.sub(' +', ' ',methods)
+            methods = set(methods.lower().replace(', ',',').replace(' ',',').split(","))
+            cls._http_methods = methods
+            cls._on_init_methods.append(cls.check_http_method)
 
     @classmethod
     def setup_default_kwargs(cls):
@@ -340,6 +353,13 @@ class BaseMixin(object):
             xsrf_cookies: true          # or anything other than false keeps it enabled
         '''
         cls.check_xsrf_cookie = cls.noop if xsrf_cookies is False else cls.xsrf_ajax
+
+    def check_http_method(self):
+        '''
+        It verfies the methods if doesn't match raises and error
+        '''
+        if self.request.method not in self._http_methods:
+            raise http.METHOD_NOT_ALLOWED
 
     def xsrf_ajax(self):
         '''
