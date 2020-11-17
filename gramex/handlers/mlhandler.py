@@ -2,10 +2,11 @@ from collections import defaultdict
 import json
 import os
 
+import gramex
 from gramex.config import app_log, variables
 from gramex.handlers import FormHandler
 from gramex.http import NOT_FOUND
-from gramex import cache, service
+from gramex import cache
 import joblib
 import numpy as np
 import pandas as pd
@@ -97,7 +98,7 @@ class MLHandler(FormHandler):
                 data = pd.DataFrame(self.args)
             except Exception as err:
                 app_log.debug(err.msg)
-            prediction = yield service.threadpool.submit(self._predict, data)
+            prediction = yield gramex.service.threadpool.submit(self._predict, data)
             self.write(_serialize_prediction(prediction))
         super(MLHandler, self).get(*path_args, **path_kwargs)
 
@@ -105,10 +106,10 @@ class MLHandler(FormHandler):
     def post(self, *path_args, **path_kwargs):
         data = pd.read_json(self.request.body.decode('utf8'))
         if self.get_arg('_retrain', False):
-            score = yield service.threadpool.submit(self._fit, data)
+            score = yield gramex.service.threadpool.submit(self._fit, data)
             self.write(dict(score=score))
         else:
-            prediction = yield service.threadpool.submit(self._predict, data)
+            prediction = yield gramex.service.threadpool.submit(self._predict, data)
             self.write(_serialize_prediction(prediction))
         super(MLHandler, self).get(*path_args, **path_kwargs)
 
@@ -129,7 +130,7 @@ class MLHandler(FormHandler):
         joblib.dump(self.model, self.model_path)
         if self.get_arg('_retrain', False):
             data = pd.read_json(self.request.body.decode('utf8'))
-            score = yield service.threadpool.submit(self._fit, data)
+            score = yield gramex.service.threadpool.submit(self._fit, data)
             self.write({'score': score})
         else:
             self.write({'params': self.model.get_params()})
