@@ -146,6 +146,8 @@ class FormHandler(BaseHandler):
             # Run query in a separate threadthread
             futures[key] = gramex.service.threadpool.submit(
                 self.data_filter_method, args=opt.args, meta=meta[key], **opt.filter_kwargs)
+            # gramex.data.filter() should set the schema only on first load. Pop it once done
+            dataset.pop('schema', None)
         result = AttrDict()
         for key, val in futures.items():
             try:
@@ -202,6 +204,8 @@ class FormHandler(BaseHandler):
                     self.name, ', '.join(missing_args)))
             # Execute the query. This returns the count of records updated
             result[key] = method(meta=meta[key], args=opt.args, **opt.filter_kwargs)
+            # method() should set the schema only on first load. Pop it once done
+            dataset.pop('schema', None)
         for key, val in result.items():
             modify = self.datasets[key].get('modify', None)
             if callable(modify):

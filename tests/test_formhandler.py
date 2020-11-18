@@ -166,11 +166,13 @@ class TestFormHandler(TestGramex):
         self.check_filter('/formhandler/sqlite-queryfunction?ct=Hyderabad&ct=Coimbatore',
                           na_position='last',
                           df=self.sales[self.sales['city'].isin(['Hyderabad', 'Coimbatore'])])
+        self.check_schema('/formhandler/schema/sqlite')
 
     def test_mysql(self):
         dbutils.mysql_create_db(variables.MYSQL_SERVER, 'test_formhandler', sales=self.sales)
         try:
             self.check_filter('/formhandler/mysql', na_position='first')
+            self.check_schema('/formhandler/schema/mysql')
         finally:
             dbutils.mysql_drop_db(variables.MYSQL_SERVER, 'test_formhandler')
 
@@ -178,6 +180,7 @@ class TestFormHandler(TestGramex):
         dbutils.postgres_create_db(variables.POSTGRES_SERVER, 'test_formhandler', sales=self.sales)
         try:
             self.check_filter('/formhandler/postgres', na_position='last')
+            self.check_schema('/formhandler/schema/postgres')
         finally:
             dbutils.postgres_drop_db(variables.POSTGRES_SERVER, 'test_formhandler')
 
@@ -305,6 +308,23 @@ class TestFormHandler(TestGramex):
             eq_(len(result), len(self.sales) + count)
         elif method == 'put':
             eq_(len(result), len(self.sales))
+
+    def check_schema(self, url):
+        # Even if table was not created, it's created on startup
+        self.check(url, text='[]')
+        # POST sets all default values
+        self.check(url, method='post', data={'dept': 'a'})
+        # POST multiple values works
+        eq_(self.check(url).json(), [{'id': 1, 'email': 'none', 'age': 18.0, 'dept': 'a'}])
+        self.check(url, method='post', data={
+            'email': ['a@x.co', 'b@x.co'],
+            'age': ['.5', '1E1'],
+            'dept': ['b', 'c']})
+        eq_(self.check(url).json(), [
+            {'id': 1, 'email': 'none', 'age': 18.0, 'dept': 'a'},
+            {'id': 2, 'email': 'a@x.co', 'age': 0.5, 'dept': 'b'},
+            {'id': 3, 'email': 'b@x.co', 'age': 10.0, 'dept': 'c'},
+        ])
 
     def test_invalid_edit(self):
         self.copy_file('sales.xlsx', 'sales-edits.xlsx')

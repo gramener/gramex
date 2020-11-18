@@ -655,6 +655,12 @@ url:
     kwargs:
       url: sales.xlsx
       xsrf_cookies: false     # We're testing PUT/PUST/DELETE to see if they fail
+      # schema is ignored for files
+      schema:
+        id: {type: int, primary_key: True, autoincrement: True}
+        email: {nullable: True, default: none}
+        age: {type: float, nullable: False, default: 18}
+        dept: varchar(10)
 
   formhandler/exceltable:
     pattern: /formhandler/exceltable
@@ -983,6 +989,54 @@ url:
       url: dir:///$YAMLPATH/{root}
       default:
         root: '.'
+      # schema is ignored for directories
+      schema:
+        id: {type: int, primary_key: True, autoincrement: True}
+        email: {nullable: True, default: none}
+        age: {type: float, nullable: False, default: 18}
+        dept: varchar(10)
+
+  formhandler/schema/mysql:
+    pattern: /formhandler/schema/mysql
+    handler: FormHandler
+    kwargs:
+      url: mysql+pymysql://root@$MYSQL_SERVER/test_formhandler?charset=utf8
+      table: new
+      id: id
+      xsrf_cookies: false
+      schema:
+        id: {type: int, primary_key: True, autoincrement: True}
+        # MySQL doesn't allow TEXT to have a default value on Linux. Use varchar instead.
+        # https://stackoverflow.com/a/4553664
+        email: {type: varchar(99), nullable: True, default: none}
+        age: {type: float, nullable: False, default: 18}
+        dept: varchar(10)
+  formhandler/schema/postgres:
+    pattern: /formhandler/schema/postgres
+    handler: FormHandler
+    kwargs:
+      url: postgresql://postgres@$POSTGRES_SERVER/test_formhandler
+      table: new
+      id: id
+      xsrf_cookies: false
+      schema:
+        id: {type: int, primary_key: True, autoincrement: True}
+        email: {nullable: True, default: none}
+        age: {type: float, nullable: False, default: 18}
+        dept: varchar(10)
+  formhandler/schema/sqlite:
+    pattern: /formhandler/schema/sqlite
+    handler: FormHandler
+    kwargs:
+      url: sqlite:///formhandler.db
+      table: new
+      id: id
+      xsrf_cookies: false
+      schema:
+        id: {type: int, primary_key: True, autoincrement: True}
+        email: {nullable: True, default: none}
+        age: {type: float, nullable: False, default: 18}
+        dept: varchar(10)
 
   capture:
     pattern: /capture
