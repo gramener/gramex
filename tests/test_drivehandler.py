@@ -90,7 +90,7 @@ class TestDriveHandler(TestGramex):
 
         # If filename has weird characters, it's hyphenated
         data = self.check_upload(dict(file='userdata.csv', name='β x.csv'))
-        eq_(data.path.iloc[0], '--x.csv')
+        eq_(data.path.iloc[0], 'b-x.csv')
 
         # If content-type is available, it's used. Else it's guessed
         data = self.check_upload(dict(file='userdata.csv', mime='text/plain'))

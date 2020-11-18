@@ -639,7 +639,7 @@ def init(cmd, args):
         'version': gramex.__version__,
     }
     # Ensure that appname is a valid Python module name
-    appname = slug.python_module(data['appname'])
+    appname = slug.module(data['appname'])
     if appname[0] not in string.ascii_lowercase:
         appname = 'app' + appname
     data['appname'] = appname
