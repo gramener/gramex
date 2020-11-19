@@ -692,6 +692,22 @@ url:
     kwargs:
       url: sqlite:///formhandler.db
       table: sales
+  
+  formhandler/get-only:
+    pattern: /formhandler/sqlite
+    handler: FormHandler
+    kwargs:
+      url: sqlite:///formhandler.db
+      table: sales
+      methods: GET, PUT, DELETE
+  
+  formhandler/get-only-array:
+    pattern: /formhandler/sqlite
+    handler: FormHandler
+    kwargs:
+      url: sqlite:///formhandler.db
+      table: sales
+      methods: [GET, PUT, DELETE]
 
   formhandler/file-multi:
     pattern: /formhandler/file-multi
@@ -1004,6 +1020,11 @@ url:
       headers:
         Cache-Control: no-store
 
+  process/get-only:
+    pattern: /process/args
+    handler: ProcessHandler
+    kwargs:
+      methods: GET
   process/args:
     pattern: /process/args
     handler: ProcessHandler

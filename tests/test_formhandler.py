@@ -628,3 +628,10 @@ class TestFormHandler(TestGramex):
             check(df, root=path)
             check(df.sort_values('size'), root=path, _sort='size')
             check(df.sort_values('name', ascending=False), root=path, _sort='-name')
+    
+    def test_methods(self):
+        for method in ['get','delete', 'put']:
+            self.check(url='/formhandler/get-only',method=method, code=200)
+            self.check(url='/formhandler/get-only-array',method=method, code=200)
+        self.check(url='/formhandler/get-only',method='post', code=404)
+        self.check(url='/formhandler/get-only-array',method='post', code=404)
