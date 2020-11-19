@@ -1,3 +1,4 @@
+from io import StringIO
 import os
 
 from gramex.http import OK
@@ -24,11 +25,22 @@ class TestMLHandler(TestGramex):
         if op.exists(cls.model_path):
             os.remove(cls.model_path)
 
+    def tearDown(self):
+        self.get('/mlhandler?_cache=true', method='delete')
+
     def test_train(self):
         resp = self.get(
             '/mlhandler?_retrain=1&target_col=species', method='post',
             data=self.df.to_json(orient='records'))
-        self.assertGreaterEqual(resp.json()['score'], self.ACC_TOL)  # NOQA: E912
+        self.assertGreaterEqual(resp.json()['score'], self.ACC_TOL)
+
+    def test_post_file(self):
+        buff = StringIO()
+        self.df.to_csv(buff, index=False, encoding='utf8')
+        buff.seek(0)
+        resp = self.get('/mlhandler?_retrain=1&target_col=species', method='post',
+                        files={'file': ('iris.csv', buff.read())})
+        self.assertGreaterEqual(resp.json()['score'], self.ACC_TOL)
 
     def test_single_predict(self):
         resp = self.get(
@@ -62,14 +74,12 @@ class TestMLHandler(TestGramex):
         self.assertEqual(resp.json()['params'], ideal_params)
 
     def test_modify_retrain(self):
-        self.test_train()
         resp = self.get(
             '/mlhandler?class=DecisionTreeClassifier&_retrain=1&max_depth=10&target_col=species',
             method='put', data=self.df.to_json(orient='records'))
         self.assertEqual(resp.json(), {'score': 1.0})
 
     def test_delete(self):
-        self.test_train()
         resp = self.get('/mlhandler', method='delete')
         self.assertEqual(resp.status_code, OK)
         self.assertFalse(op.exists(self.model_path))
