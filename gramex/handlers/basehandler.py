@@ -57,7 +57,7 @@ class BaseMixin(object):
             cls.log_exception = cls.debug_exception
 
     # A list of special keys for BaseHandler. Can be extended by other classes.
-    special_keys = ['transform', 'redirect', 'auth', 'log', 'set_xsrf',
+    special_keys = ['transform', 'redirect', 'methods', 'auth', 'log', 'set_xsrf',
                     'error', 'xsrf_cookies', 'headers']
 
     @classmethod

@@ -10,7 +10,7 @@ from io import BytesIO
 from lxml import etree
 from nose.tools import eq_, ok_
 from gramex import conf
-from gramex.http import BAD_REQUEST, FOUND
+from gramex.http import BAD_REQUEST, FOUND, METHOD_NOT_ALLOWED
 from gramex.config import variables, objectpath, merge
 from gramex.data import _replace
 from orderedattrdict import AttrDict, DefaultAttrDict
@@ -628,10 +628,16 @@ class TestFormHandler(TestGramex):
             check(df, root=path)
             check(df.sort_values('size'), root=path, _sort='size')
             check(df.sort_values('name', ascending=False), root=path, _sort='-name')
-    
+
+
+class TestFeatures(TestGramex):
+
     def test_methods(self):
-        for method in ['get','delete', 'put']:
-            self.check(url='/formhandler/get-only',method=method, code=200)
-            self.check(url='/formhandler/get-only-array',method=method, code=200)
-        self.check(url='/formhandler/get-only',method='post', code=404)
-        self.check(url='/formhandler/get-only-array',method='post', code=404)
+        urls = [
+            '/formhandler/methods?city=Singapore',
+            '/formhandler/methods-list?city=Singapore'
+        ]
+        for url in urls:
+            for method in ['get', 'delete', 'put']:
+                self.check(url, method=method)
+            self.check(url, method='post', code=METHOD_NOT_ALLOWED)
