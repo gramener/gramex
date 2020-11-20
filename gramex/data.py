@@ -66,7 +66,7 @@ def _replace(engine, args, *vars, **kwargs):
     return _format(list(vars)) + [_format(kwargs)]
 
 
-def filter(url, args={}, meta={}, engine=None, ext=None,
+def filter(url, args={}, meta={}, engine=None, ext=None, columns=None,
            query=None, queryfile=None, transform=None, transform_kwargs=None, **kwargs):
     '''
     Filters data using URL query parameters. Typical usage::
@@ -84,6 +84,13 @@ def filter(url, args={}, meta={}, engine=None, ext=None,
     :arg str engine: over-rides the auto-detected engine. Can be 'dataframe', 'file',
         'http', 'https', 'sqlalchemy', 'dir'
     :arg str ext: file extension (if url is a file). Defaults to url extension
+    :arg dict columns: database column names to create if required (if url is a database).
+        Keys are column names. Values can be SQL types, or dicts with these keys:
+            - ``type`` (str), e.g. ``"VARCHAR(10)"``
+            - ``default`` (str/int/float/bool), e.g. ``"none@example.org"``
+            - ``nullable`` (bool), e.g. ``False``
+            - ``primary_key`` (bool), e.g. ``True`` -- used only when creating new tables
+            - ``autoincrement`` (bool), e.g. ``True`` -- used only when creating new tables
     :arg str query: optional SQL query to execute (if url is a database),
         ``.format``-ed using ``args`` and supports SQLAlchemy SQL parameters.
         Loads entire result in memory before filtering.
@@ -103,12 +110,6 @@ def filter(url, args={}, meta={}, engine=None, ext=None,
 
     :arg str table: table name (if url is an SQLAlchemy URL), ``.format``-ed
         using ``args``.
-    :arg dict schema: column names, with values are SQL types, or dicts with keys:
-        - ``type`` (str), e.g. ``"VARCHAR(10)"``
-        - ``default`` (str/int/float/bool), e.g. ``"none@example.org"``
-        - ``nullable`` (bool), e.g. ``False``
-        - ``primary_key`` (bool), e.g. ``True`` -- used only when creating new tables
-        - ``autoincrement`` (bool), e.g. ``True`` -- used only when creating new tables
 
     If this is used in a handler as::
 
@@ -188,6 +189,7 @@ def filter(url, args={}, meta={}, engine=None, ext=None,
     - ``limit``: Limit as integer - ``None`` if limit is not applied
     - ``count``: Total number of rows, if available
     - ``by``: Group by columns as ``[col, ...]``
+    - ``inserted``: List of (dict of primary values) for each inserted row
 
     These variables may be useful to show additional information about the
     filtered data.
@@ -226,7 +228,7 @@ def filter(url, args={}, meta={}, engine=None, ext=None,
         return _filter_frame(data, meta=meta, controls=controls, args=args)
     elif engine == 'sqlalchemy':
         table = kwargs.pop('table', None)
-        engine = alter(url, table, **kwargs)
+        engine = alter(url, table, columns, **kwargs)
         if query or queryfile:
             if queryfile:
                 query = gramex.cache.open(queryfile, 'text')
@@ -253,16 +255,16 @@ def filter(url, args={}, meta={}, engine=None, ext=None,
         raise ValueError('engine: %s invalid. Can be sqlalchemy|file|dataframe' % engine)
 
 
-def delete(url, meta={}, args=None, engine=None, table=None, ext=None, id=None,
+def delete(url, meta={}, args=None, engine=None, table=None, ext=None, id=None, columns=None,
            query=None, queryfile=None, transform=None, transform_kwargs={}, **kwargs):
     '''
     Deletes data using URL query parameters. Typical usage::
 
         count = gramex.data.delete(dataframe, args=handler.args, id=['id'])
         count = gramex.data.delete('file.csv', args=handler.args, id=['id'])
-        count = gramex.data.delete('mysql://server/db', table='table', args=handler.args, id='id')
+        count = gramex.data.delete('mysql://server/db', table='x', args=handler.args, id=['id'])
 
-    ``id`` is a column name or a list of column names defining the primary key.
+    ``id`` is a list of column names defining the primary key.
     Calling this in a handler with ``?id=1&id=2`` deletes rows with id is 1 or 2.
 
     It accepts the same parameters as :py:func:`filter`, and returns the number
@@ -287,24 +289,23 @@ def delete(url, meta={}, args=None, engine=None, table=None, ext=None, id=None,
     elif engine == 'sqlalchemy':
         if table is None:
             raise ValueError('No table: specified')
-        engine = alter(url, table, **kwargs)
+        engine = alter(url, table, columns, **kwargs)
         return _filter_db(engine, table, meta=meta, controls=controls, args=args,
                           source='delete', id=id)
     else:
         raise ValueError('engine: %s invalid. Can be sqlalchemy|file|dataframe' % engine)
-    return 0
 
 
-def update(url, meta={}, args=None, engine=None, table=None, ext=None, id=None,
+def update(url, meta={}, args=None, engine=None, table=None, ext=None, id=None, columns=None,
            query=None, queryfile=None, transform=None, transform_kwargs={}, **kwargs):
     '''
     Update data using URL query parameters. Typical usage::
 
         count = gramex.data.update(dataframe, args=handler.args, id=['id'])
         count = gramex.data.update('file.csv', args=handler.args, id=['id'])
-        count = gramex.data.update('mysql://server/db', table='table', args=handler.args, id='id')
+        count = gramex.data.update('mysql://server/db', table='x', args=handler.args, id=['id'])
 
-    ``id`` is a column name or a list of column names defining the primary key.
+    ``id`` is a list of column names defining the primary key.
     Calling this in a handler with ``?id=1&x=2`` updates x=2 where id=1.
 
     It accepts the same parameters as :py:func:`filter`, and returns the number of updated rows.
@@ -328,24 +329,23 @@ def update(url, meta={}, args=None, engine=None, table=None, ext=None, id=None,
     elif engine == 'sqlalchemy':
         if table is None:
             raise ValueError('No table: specified')
-        engine = alter(url, table, **kwargs)
+        engine = alter(url, table, columns, **kwargs)
         return _filter_db(engine, table, meta=meta, controls=controls, args=args,
                           source='update', id=id)
     else:
         raise ValueError('engine: %s invalid. Can be sqlalchemy|file|dataframe' % engine)
-    return 0
 
 
-def insert(url, meta={}, args=None, engine=None, table=None, ext=None, id=None,
+def insert(url, meta={}, args=None, engine=None, table=None, ext=None, id=None, columns=None,
            query=None, queryfile=None, transform=None, transform_kwargs={}, **kwargs):
     '''
     Insert data using URL query parameters. Typical usage::
 
         count = gramex.data.insert(dataframe, args=handler.args, id=['id'])
         count = gramex.data.insert('file.csv', args=handler.args, id=['id'])
-        count = gramex.data.insert('mysql://server/db', table='table', args=handler.args, id='id')
+        count = gramex.data.insert('mysql://server/db', table='x', args=handler.args, id=['id'])
 
-    ``id`` is a column name or a list of column names defining the primary key.
+    ``id`` is a list of column names defining the primary key.
     Calling this in a handler with ``?id=3&x=2`` inserts a new record with id=3 and x=2.
 
     If the target file / table does not exist, it is created.
@@ -357,7 +357,7 @@ def insert(url, meta={}, args=None, engine=None, table=None, ext=None, id=None,
     _pop_controls(args)
     if not args:
         raise ValueError('No args: specified')
-    meta.update({'filters': [], 'ignored': []})
+    meta.update({'filters': [], 'ignored': [], 'inserted': []})
     # If values do not have equal number of elements, pad them and warn
     rowcount = max(len(val) for val in args.values())
     for key, val in args.items():
@@ -386,7 +386,7 @@ def insert(url, meta={}, args=None, engine=None, table=None, ext=None, id=None,
     elif engine == 'sqlalchemy':
         if table is None:
             raise ValueError('No table: specified')
-        engine = alter(url, table, **kwargs)
+        engine = alter(url, table, columns, **kwargs)
         try:
             cols = get_table(engine, table).columns
         except sa.exc.NoSuchTableError:
@@ -395,15 +395,39 @@ def insert(url, meta={}, args=None, engine=None, table=None, ext=None, id=None,
             rows = _pop_columns(rows, [col.name for col in cols], meta['ignored'])
         if '.' in table:
             kwargs['schema'], table = table.rsplit('.', 1)
-        # Create table WITH A PRIMARY KEY, if it doesn't exist.
+        # If the DB doesn't yet have the table, create it WITH THE PRIMARY KEYS.
         # Note: pandas does not document engine.dialect.has_table so it might change.
         if not engine.dialect.has_table(engine, table) and id:
             engine.execute(pd.io.sql.get_schema(rows, name=table, keys=id, con=engine))
-        rows.to_sql(table, engine, if_exists='append', index=False, **kwargs)
+
+        def insert_method(tbl, conn, keys, data_iter):
+            '''Pandas .to_sql() doesn't return inserted row primary keys. Capture it in meta'''
+            data = [dict(zip(keys, row)) for row in data_iter]
+            # If the ?id= is not provided, Pandas creates a schema based on available columns,
+            # without the `id` column. SQLAlchemy won't return inserted_primary_key unless the
+            # metadata has a primary key. So, hoping that the table already has a primary key,
+            # load table from DB via extend_existing=True.
+            sa_table = sa.Table(table, tbl.table.metadata,
+                                extend_existing=True, autoload_with=engine)
+            r = conn.execute(sa_table.insert(), data)
+            # SQLAlchemy 1.4+ supports inserted_primary_key_rows, but is in beta (Nov 2020).
+            # ids = getattr(r, 'inserted_primary_key_rows', [])
+            # If we have SQLAlchemy 1.3, only single inserts have an inserted_primary_key.
+            ids = [r.inserted_primary_key] if hasattr(r, 'inserted_primary_key') else []
+            # Add non-empty IDs as a dict with associated keys
+            id_cols = [col.name for col in sa_table.primary_key]
+            for row in ids:
+                if row:
+                    meta['inserted'].append(dict(zip(id_cols, row)))
+
+        kwargs['method'] = insert_method
+        # If user passes ?col= with empty value, replace with NULL. If the column is an INT/FLOAT,
+        # type conversion int('') / float('') will fail.
+        rows.replace('', None, inplace=True)
+        pd.io.sql.to_sql(rows, table, engine, if_exists='append', index=False, **kwargs)
         return len(rows)
     else:
         raise ValueError('engine: %s invalid. Can be sqlalchemy|file|dataframe' % engine)
-    return 0
 
 
 def get_engine(url):
@@ -1241,11 +1265,11 @@ def filtercols(url, args={}, meta={}, engine=None, table=None, ext=None,
     return result
 
 
-def alter(url: str, table: str, schema: dict = None, **kwargs):
+def alter(url: str, table: str, columns: dict = None, **kwargs):
     '''
-    Create or alter a table with schema specified in columns::
+    Create or alter a table with columns specified::
 
-        gramex.data.alter(url, table, schema={
+        gramex.data.alter(url, table, columns={
             'id': {'type': 'int', 'primary_key': True, 'autoincrement': True},
             'email': {'nullable': True, 'default': 'none'},
             'age': {'type': 'float', 'nullable': False, 'default': 18},
@@ -1255,7 +1279,7 @@ def alter(url: str, table: str, schema: dict = None, **kwargs):
 
     :arg str url: sqlalchemy URL
     :arg str table: table name
-    :arg dict schema: column names, with values are SQL types, or dicts with keys:
+    :arg dict columns: column names, with values are SQL types, or dicts with keys:
         - ``type`` (str), e.g. ``"VARCHAR(10)"``
         - ``default`` (str/int/float/bool), e.g. ``"none@example.org"``
         - ``nullable`` (bool), e.g. ``False``
@@ -1267,21 +1291,21 @@ def alter(url: str, table: str, schema: dict = None, **kwargs):
 
     If the table exists, any new columns are added. Existing columns are unchanged.
 
-    If the table does not exist, the table is created with the specified schema.
+    If the table does not exist, the table is created with the specified columns.
 
     Note: ``primary_key`` and ``autoincrement`` don't work on existing tables because:
         - SQLite disallows PRIMARY KEY with ALTER. https://stackoverflow.com/a/1120030/100904
         - AUTO_INCREMENT doesn't work without PRIMARY KEY in MySQL
     '''
     engine = create_engine(url, **kwargs)
-    if schema is None:
+    if columns is None:
         return engine
     try:
         db_table = get_table(engine, table)
     except sa.exc.NoSuchTableError:
         # If the table's not in the DB, create it
         cols = []
-        for name, row in schema.items():
+        for name, row in columns.items():
             row = dict({'type': row} if isinstance(row, str) else row, name=name)
             col_type = row.get('type', 'text')
             if isinstance(col_type, str):
@@ -1297,7 +1321,7 @@ def alter(url: str, table: str, schema: dict = None, **kwargs):
         # If the table's already in the DB, add new columns. We can't change column types
         with engine.connect() as conn:
             with conn.begin():
-                for name, row in schema.items():
+                for name, row in columns.items():
                     if name in db_table.columns:
                         continue
                     row = {'type': row} if isinstance(row, str) else row

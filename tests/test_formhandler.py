@@ -166,13 +166,13 @@ class TestFormHandler(TestGramex):
         self.check_filter('/formhandler/sqlite-queryfunction?ct=Hyderabad&ct=Coimbatore',
                           na_position='last',
                           df=self.sales[self.sales['city'].isin(['Hyderabad', 'Coimbatore'])])
-        self.check_schema('/formhandler/schema/sqlite')
+        self.check_columns('/formhandler/columns/sqlite')
 
     def test_mysql(self):
         dbutils.mysql_create_db(variables.MYSQL_SERVER, 'test_formhandler', sales=self.sales)
         try:
             self.check_filter('/formhandler/mysql', na_position='first')
-            self.check_schema('/formhandler/schema/mysql')
+            self.check_columns('/formhandler/columns/mysql')
         finally:
             dbutils.mysql_drop_db(variables.MYSQL_SERVER, 'test_formhandler')
 
@@ -180,7 +180,7 @@ class TestFormHandler(TestGramex):
         dbutils.postgres_create_db(variables.POSTGRES_SERVER, 'test_formhandler', sales=self.sales)
         try:
             self.check_filter('/formhandler/postgres', na_position='last')
-            self.check_schema('/formhandler/schema/postgres')
+            self.check_columns('/formhandler/columns/postgres')
         finally:
             dbutils.postgres_drop_db(variables.POSTGRES_SERVER, 'test_formhandler')
 
@@ -309,13 +309,15 @@ class TestFormHandler(TestGramex):
         elif method == 'put':
             eq_(len(result), len(self.sales))
 
-    def check_schema(self, url):
+    def check_columns(self, url):
         # Even if table was not created, it's created on startup
         self.check(url, text='[]')
-        # POST sets all default values
-        self.check(url, method='post', data={'dept': 'a'})
-        # POST multiple values works
+        # POST returns auto-inserted ID
+        r = self.check(url, method='post', data={'dept': 'a'})
+        eq_(r.json()['data']['inserted'], [{'id': 1}])
+        # ... and sets all default values
         eq_(self.check(url).json(), [{'id': 1, 'email': 'none', 'age': 18.0, 'dept': 'a'}])
+        # POST multiple values works
         self.check(url, method='post', data={
             'email': ['a@x.co', 'b@x.co'],
             'age': ['.5', '1E1'],
@@ -378,7 +380,7 @@ class TestFormHandler(TestGramex):
     def test_edit_multikey_multi_value(self):
         self.check_edit('post', 'multikey', {
             'देश': ['भारत', 'भारत', 'भारत'],
-            'city': ['Bangalore', 'Bangalore', 'Bangalore'],
+            'city': ['Bangalore', 'Bangalore', ''],
             'product': ['Alpha', 'Beta', 'Gamma'],
             'sales': ['100', '', '300'],
             'growth': ['0.32', '0.50', '0.12'],
