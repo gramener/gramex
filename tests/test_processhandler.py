@@ -1,3 +1,4 @@
+from gramex.http import METHOD_NOT_ALLOWED
 import io
 import os
 import time
@@ -87,5 +88,5 @@ class TestProcessHandler(TestGramex):
         self.check(url='/process/error', code=200, text='ZeroDivisionError')
 
     def test_methods(self):
-        self.check(url='/process/get-only', method='get', code=200)
-        self.check(url='/process/get-only', method='post', code=404)
+        self.check(url='/process/get-only', method='get')
+        self.check(url='/process/get-only', method='post', code=METHOD_NOT_ALLOWED)

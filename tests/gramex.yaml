@@ -1082,7 +1082,10 @@ url:
     pattern: /process/get-only
     handler: ProcessHandler
     kwargs:
+      args: [python, "$YAMLPATH/processtest.py", a, '1', 'x y']
+      cwd: "${YAMLPATH}/../"
       methods: GET
+      xsrf_cookies: false
   process/nonexistent-command:
     pattern: /process/nonexistent-command
     handler: ProcessHandler
