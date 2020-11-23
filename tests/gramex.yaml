@@ -2015,7 +2015,31 @@ url:
     pattern: /ui/sass
     handler: FunctionHandler
     kwargs:
-      function: gramex.apps.ui.sass(handler, r"$YAMLPATH/vars.scss")
+      function: gramex.apps.ui.sass(handler, r"$YAMLPATH/sass/vars.scss")
+
+  ui/sass2:
+    pattern: /ui/sass2
+    handler: FunctionHandler
+    kwargs:
+      function: >
+        gramex.apps.ui.sass2(handler, vars={
+          'primary': 'red',
+          'color-alpha': 'blue',
+          'color-empty': '',
+          'imports': [
+            'sass/a.scss',
+            r'$YAMLPATH/sass/b.scss',
+            'https://fonts.googleapis.com/css?family=lato',
+          ]
+        })
+
+  ui/sass-file:
+    pattern: /ui/sass-file/(.*)
+    handler: FileHandler
+    kwargs:
+      path: $YAMLPATH/sass/
+      scss: '*.scss'
+      sass: true
 
   translate/db:
     pattern: /translate/db
@@ -2362,6 +2386,25 @@ import:
       login_url: /auth/dbcsv
       membership:
         user: [alpha, delta]
+
+  ui1:
+    path: $GRAMEXAPPS/ui/gramex.yaml
+    YAMLURL: $YAMLURL/ui1/
+    UI_VARS:
+      primary: red
+      color-alpha: blue
+      $key: skip-invalid
+      color-empty: ''                         # Skipped because value is empty
+      imports:
+        - sass/a.scss               # Import from cwd
+        - $YAMLPATH/sass/b.scss     # Import from absolute path
+        - https://fonts.googleapis.com/css?family=lato
+
+  ui2:
+    path: $GRAMEXAPPS/ui/gramex.yaml
+    YAMLURL: $YAMLURL/ui2/
+    UI_VARS:
+      imports: https://fonts.googleapis.com/css?family=lato
 
 # Invalid services should be ignored
 invalid-service: true

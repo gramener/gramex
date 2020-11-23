@@ -19,3 +19,15 @@ url:
       auth: false
       headers:
         Cache-Control: public, max-age=86400
+
+  apps/ui/theme-$*:
+    pattern: /$YAMLURL/theme.css
+    handler: FunctionHandler
+    kwargs:
+      function: gramex.apps.ui.sass2
+      kwargs:
+        path: $YAMLPATH/gramexui.scss
+        vars: $UI_VARS
+      auth: false
+      headers:
+        Cache-Control: public, max-age=86400

@@ -39,4 +39,18 @@ def template(content, handler=None, **kwargs):
             kwargs.setdefault(key, val)
 
     # handler is added to kwargs by handler.get_template_namespace()
-    raise tornado.gen.Return(tmpl.generate(**kwargs).decode('utf-8'))
+    return tmpl.generate(**kwargs).decode('utf-8')
+
+
+@tornado.gen.coroutine
+def sass(content, handler):
+    '''
+    Renders a SCSS file as CSS via node-sass.
+    Ignore the content provided. node-sass needs the file actually located at handler.path.
+    '''
+    from gramex.apps.ui import sass2
+    result = yield sass2(handler, handler.path)
+    return result.decode('utf-8')
+
+
+scss = sass
