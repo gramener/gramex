@@ -1095,6 +1095,13 @@ url:
       model_class: LogisticRegression
       xsrf_cookies: false
 
+  mlhandler/blank:
+    pattern: /mlblank
+    handler: MLHandler
+    kwargs:
+      path: $YAMLPATH/blank.pkl
+      xsrf_cookies: false
+
   capture:
     pattern: /capture
     handler: CaptureHandler

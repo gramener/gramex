@@ -1,7 +1,7 @@
 from io import StringIO
 import os
 
-from gramex.http import OK
+from gramex.http import OK, NOT_FOUND
 import joblib
 import pandas as pd
 from sklearn.metrics import accuracy_score
@@ -22,8 +22,9 @@ class TestMLHandler(TestGramex):
 
     @classmethod
     def tearDownClass(cls):
-        if op.exists(cls.model_path):
-            os.remove(cls.model_path)
+        for path in [cls.model_path, op.join(folder, 'blank.pkl')]:
+            if op.exists(path):
+                os.remove(path)
 
     def tearDown(self):
         self.get('/mlhandler?_cache=true', method='delete')
@@ -83,3 +84,21 @@ class TestMLHandler(TestGramex):
         resp = self.get('/mlhandler', method='delete')
         self.assertEqual(resp.status_code, OK)
         self.assertFalse(op.exists(self.model_path))
+
+    def test_blank_slate(self):
+        # Assert that a model doesn't have to exist
+        model_path = op.join(folder, 'blank.pkl')
+        r = self.get('/mlblank&sepal_length=5.9&sepal_width=3&petal_length=5.1&petal_width=1.8')
+        self.assertEqual(r.status_code, NOT_FOUND)
+        self.assertFalse(op.exists(model_path))
+
+        # Make the model
+        r = self.get(
+            '/mlblank?class=LogisticRegression&C=100.0&_retrain=1&target_col=species',
+            method='put', data=self.df.to_json(orient='records'))
+        self.assertEqual(r.status_code, OK)
+        self.assertGreater(r.json()['score'], self.ACC_TOL)
+
+        # Check the model on disk
+        model = joblib.load(model_path)
+        self.assertIsInstance(model, LogisticRegression)

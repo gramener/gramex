@@ -1,4 +1,5 @@
 from collections import defaultdict
+from inspect import getargspec
 import json
 import os
 import warnings
@@ -75,10 +76,13 @@ class MLHandler(FormHandler):
                     Overwriting it.'''
                     warnings.warn(textwrap.dedent(msg))
                     cls.model = mclass(**model_params)
-        else:
+        elif model_class:
             mclass = search_modelclass(model_class)
             cls.model = mclass(**model_params)
-        joblib.dump(cls.model, cls.model_path)
+        else:
+            cls.model = None
+        if cls.model:
+            joblib.dump(cls.model, cls.model_path)
 
     def _fit(self, data):
         data = self._filtercols(data)
@@ -98,9 +102,19 @@ class MLHandler(FormHandler):
         data = self._filtercols(data)
         return self.model.predict(data)
 
-    def _coerce_model_params(self):
-        model_params = self.model.get_params()
-        new_params = {k: v[0] for k, v in self.args.items() if k in model_params}
+    def _coerce_model_params(self, mclass=None, params=None):
+        if self.model:
+            model_params = self.model.get_params()
+        else:
+            spec = getargspec(mclass)
+            m_args = spec.args
+            m_args.remove('self')
+            m_defaults = spec.defaults
+            model_params = {k: v for k, v in zip(m_args, m_defaults)}
+        if not params:
+            new_params = {k: v[0] for k, v in self.args.items() if k in model_params}
+        else:
+            new_params = params
         param_types = {}
         for k, v in model_params.items():
             if v is None:
@@ -108,6 +122,10 @@ class MLHandler(FormHandler):
             else:
                 param_types[k] = type(v)
         return {k: param_types[k](v) for k, v in new_params.items()}
+
+    def _filter_model_params(self, mclass):
+        spec = [c for c in getargspec(mclass).args if c != 'self']
+        return {k: v[0] for k, v in self.args.items() if k in spec}
 
     def _filtercols(self, data):
         include = self.args.get('_include', [])
@@ -149,7 +167,11 @@ class MLHandler(FormHandler):
                     outpath = op.join(self._data_cachedir, f['filename'])
                     with open(outpath, 'wb') as fout:
                         fout.write(f['body'])
-                    dfs.append(gramex.cache.open(outpath))
+                    if outpath.endswith('.json'):
+                        xdf = gramex.cache.open(outpath, pd.read_json)
+                    else:
+                        xdf = gramex.cache.open(outpath)
+                    dfs.append(xdf)
             data = pd.concat(dfs, axis=0)
         # Otherwise look in request.body
         else:
@@ -177,9 +199,12 @@ class MLHandler(FormHandler):
     def put(self, *path_args, **path_kwargs):
         # TODO: If we change the model class, GET ?_model does not return the new one
         mclass = self.args.pop('class')[0]
+        _retrain = self.args.pop('_retrain', False)
         if not op.isfile(self.model_path):
-            self.model = search_modelclass(mclass)(
-                **{k: v[0] for k, v in self.args.items()})
+            mclass = search_modelclass(mclass)
+            mparams = self._filter_model_params(mclass)
+            mparams = self._coerce_model_params(mclass, mparams)
+            self.model = mclass(**mparams)
         else:
             self.model = joblib.load(self.model_path)
             mclass = search_modelclass(mclass)
@@ -189,7 +214,7 @@ class MLHandler(FormHandler):
             else:
                 [setattr(self.model, k, v) for k, v in model_kwargs.items()]
         joblib.dump(self.model, self.model_path)
-        if self.get_arg('_retrain', False):
+        if _retrain:
             data = self._parse_data()
             score = yield gramex.service.threadpool.submit(self._fit, data)
             self.write({'score': score})
