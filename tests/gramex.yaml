@@ -678,6 +678,24 @@ url:
       url: http://localhost:9999/sales.xlsx
       xsrf_cookies: false     # We're testing PUT/PUST/DELETE to see if they fail
 
+  formhandler/methods:
+    pattern: /formhandler/methods
+    handler: FormHandler
+    kwargs:
+      url: sales-methods.xlsx
+      id: city
+      # Methods can be specified in any case, separated by a comma and/or spaces
+      methods: GET , put DELete
+      xsrf_cookies: false
+  formhandler/methods-list:
+    pattern: /formhandler/methods-list
+    handler: FormHandler
+    kwargs:
+      url: sales-methods.xlsx
+      id: city
+      methods: [GET, PUT, DELETE]
+      xsrf_cookies: false
+
   formhandler/mysql:
     pattern: /formhandler/mysql
     handler: FormHandler
@@ -1114,6 +1132,14 @@ url:
     kwargs:
       args: [python, "$YAMLPATH/processtest.py", a, '1', 'x y']
       cwd: "${YAMLPATH}/../"
+  process/get-only:
+    pattern: /process/get-only
+    handler: ProcessHandler
+    kwargs:
+      args: [python, "$YAMLPATH/processtest.py", a, '1', 'x y']
+      cwd: "${YAMLPATH}/../"
+      methods: GET
+      xsrf_cookies: false
   process/nonexistent-command:
     pattern: /process/nonexistent-command
     handler: ProcessHandler

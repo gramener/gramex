@@ -10,7 +10,7 @@ from io import BytesIO
 from lxml import etree
 from nose.tools import eq_, ok_
 from gramex import conf
-from gramex.http import BAD_REQUEST, FOUND
+from gramex.http import BAD_REQUEST, FOUND, METHOD_NOT_ALLOWED
 from gramex.config import variables, objectpath, merge
 from gramex.data import _replace
 from orderedattrdict import AttrDict, DefaultAttrDict
@@ -18,6 +18,14 @@ from pandas.util.testing import assert_frame_equal as afe
 from . import folder, TestGramex, dbutils, tempfiles
 
 xlsx_mime_type = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+
+
+def copy_file(source, target):
+    target = os.path.join(folder, target)
+    source = os.path.join(folder, source)
+    shutil.copyfile(source, target)
+    tempfiles[target] = target
+    return target
 
 
 class TestFormHandler(TestGramex):
@@ -261,14 +269,6 @@ class TestFormHandler(TestGramex):
             out = self.get('/formhandler/file-multi?_format=%s&_download=test.%s' % (fmt, fmt))
             eq_(out.headers['Content-Disposition'], 'attachment;filename=test.%s' % fmt)
 
-    @staticmethod
-    def copy_file(source, target):
-        target = os.path.join(folder, target)
-        source = os.path.join(folder, source)
-        shutil.copyfile(source, target)
-        tempfiles[target] = target
-        return target
-
     def call(self, url, args, method, headers):
         r = self.check('/formhandler/edits-' + url, data=args, method=method, headers=headers)
         meta = r.json()
@@ -283,7 +283,7 @@ class TestFormHandler(TestGramex):
 
     def check_edit(self, method, source, args, count):
         # Edits the correct count of records, returns empty value and saves to file
-        target = self.copy_file('sales.xlsx', 'sales-edits.xlsx')
+        target = copy_file('sales.xlsx', 'sales-edits.xlsx')
         self.call('xlsx-' + source, args, method, {'Count-Data': str(count)})
         result = gramex.cache.open(target)
         # Check result. TODO: check that the values are correctly added
@@ -329,7 +329,7 @@ class TestFormHandler(TestGramex):
         ])
 
     def test_invalid_edit(self):
-        self.copy_file('sales.xlsx', 'sales-edits.xlsx')
+        copy_file('sales.xlsx', 'sales-edits.xlsx')
         for method in ['delete', 'put']:
             # Editing with no ID columns defined raises an error
             self.check('/formhandler/file?city=A&product=B', method=method, code=400)
@@ -395,7 +395,7 @@ class TestFormHandler(TestGramex):
         }, count=3)
 
     def test_edit_redirect(self):
-        self.copy_file('sales.xlsx', 'sales-edits.xlsx')
+        copy_file('sales.xlsx', 'sales-edits.xlsx')
         # redirect: affects POST, PUT and DELETE
         for method in ['post', 'put', 'delete']:
             r = self.get('/formhandler/edits-xlsx-redirect', method=method, data={
@@ -503,7 +503,7 @@ class TestFormHandler(TestGramex):
             dbutils.mysql_drop_db(variables.MYSQL_SERVER, 'test_formhandler')
 
     def test_edit_json(self):
-        target = self.copy_file('sales.xlsx', 'sales-edits.xlsx')
+        target = copy_file('sales.xlsx', 'sales-edits.xlsx')
         target = os.path.join(folder, 'formhandler-edits.db')
         dbutils.sqlite_create_db(target, sales=self.sales)
         tempfiles[target] = target
@@ -632,7 +632,7 @@ class TestFormHandler(TestGramex):
             afe(actual, expected, check_like=True)
 
     def test_edit_id_type(self):
-        target = self.copy_file('sales.xlsx', 'sales-edits.xlsx')
+        target = copy_file('sales.xlsx', 'sales-edits.xlsx')
         tempfiles[target] = target
         args = {'sales': [1], 'date': ['2018-01-10']}
         headers = {'count-data': '1'}
@@ -650,3 +650,17 @@ class TestFormHandler(TestGramex):
             check(df, root=path)
             check(df.sort_values('size'), root=path, _sort='size')
             check(df.sort_values('name', ascending=False), root=path, _sort='-name')
+
+
+class TestFeatures(TestGramex):
+
+    def test_methods(self):
+        copy_file('sales.xlsx', 'sales-methods.xlsx')
+        urls = [
+            '/formhandler/methods?city=Singapore',
+            '/formhandler/methods-list?city=Singapore'
+        ]
+        for url in urls:
+            for method in ['get', 'put', 'delete']:
+                self.check(url, method=method)
+            self.check(url, method='post', code=METHOD_NOT_ALLOWED)
