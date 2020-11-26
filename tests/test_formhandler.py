@@ -175,6 +175,9 @@ class TestFormHandler(TestGramex):
                           na_position='last',
                           df=self.sales[self.sales['city'].isin(['Hyderabad', 'Coimbatore'])])
         self.check_columns('/formhandler/columns/sqlite')
+        eq_(self.get('/formhandler/state').json(), [])
+        self.check_filter('/formhandler/sqlite-state?x=1', na_position='last')
+        eq_(self.get('/formhandler/state').json(), [{'x': ['1']}, '/formhandler/sqlite-state'])
 
     def test_mysql(self):
         dbutils.mysql_create_db(variables.MYSQL_SERVER, 'test_formhandler', sales=self.sales)

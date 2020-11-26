@@ -40,6 +40,7 @@ class FormHandler(BaseHandler):
         'modify': {'data': None, 'key': None, 'handler': None},
         'prepare': {'args': None, 'key': None, 'handler': None},
         'queryfunction': {'args': None, 'key': None, 'handler': None},
+        'state': {'args': None, 'key': None, 'handler': None},
     }
     data_filter_method = staticmethod(gramex.data.filter)
 
@@ -111,6 +112,7 @@ class FormHandler(BaseHandler):
         filter_kwargs.pop('modify', None)
         prepare = filter_kwargs.pop('prepare', None)
         queryfunction = filter_kwargs.pop('queryfunction', None)
+        state = filter_kwargs.pop('state', None)
         filter_kwargs['transform_kwargs'] = {'handler': self}
         # Use default arguments
         defaults = {
@@ -128,6 +130,8 @@ class FormHandler(BaseHandler):
                 args = result
         if callable(queryfunction):
             filter_kwargs['query'] = queryfunction(args=args, key=key, handler=self)
+        if callable(state):
+            filter_kwargs['state'] = lambda: state(args=args, key=key, handler=self)
         return AttrDict(
             fmt=args.pop('_format', ['json'])[0],
             download=args.pop('_download', [''])[0],
