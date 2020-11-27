@@ -38,6 +38,7 @@
   "lib#4": "OPT: optional packages. Not required for startup, but for optional libraries",
   "lib": {
     "argh>=0.24.1":               "REQ: dependency for watchdog",
+    "awesome-slugify":            "REQ: MLHandler model names",
     "boto3>=1.5":                 "SRV: Amazon services",
     "cachetools>=3.0.0":          "SRV: services.cache for memory cache",
     "colorama":                   "REQ: conda: gramex.init()",

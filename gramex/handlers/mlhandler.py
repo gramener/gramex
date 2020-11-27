@@ -15,6 +15,7 @@ import joblib
 import numpy as np
 import pandas as pd
 import pydoc
+from slugify import slugify
 from tornado.gen import coroutine
 from tornado.web import HTTPError
 
@@ -52,7 +53,7 @@ def _serialize_prediction(obj):
     # Serialize a list or an array or a tensor
     if isinstance(obj, np.ndarray):
         obj = obj.tolist()
-    return json.dumps(obj)
+    return json.dumps(obj, indent=4)
 
 
 class MLHandler(FormHandler):
@@ -64,7 +65,10 @@ class MLHandler(FormHandler):
         if path:
             cls.model_path = path
         else:
-            cls.model_path = op.join(variables['YAMLPATH'], op.basename(cls.name) + '.pkl')
+            mname = slugify(cls.name) + '.pkl'
+            mpath = op.join(variables['GRAMEXDATA'], 'apps', 'mlhandler')
+            _mkdir(mpath)
+            cls.model_path = op.join(mpath, mname)
         if op.isfile(path):
             cls.model = cache.open(path, joblib.load)
             if model_class:
@@ -86,7 +90,7 @@ class MLHandler(FormHandler):
 
     def _fit(self, data):
         data = self._filtercols(data)
-        target = self.kwargs.get('target_col', self.get_arg('target_col'))
+        target = self.kwargs.get('_target_col', self.get_arg('_target_col'))
         target = data.pop(target)
         self.model.fit(data, target)
         joblib.dump(self.model, self.model_path)
@@ -134,7 +138,26 @@ class MLHandler(FormHandler):
             data = data[include]
         if len(exclude) > 0:
             data.drop(exclude, axis=1, inplace=True)
+        data = self.preprocess_data(data)
         return data
+
+    def preprocess_data(self, df):
+        # Drop nulls
+        dropna = self.args.get('_drop_na', True)
+        if isinstance(dropna, list):
+            subset = dropna
+        else:
+            subset = None
+        df.dropna(inplace=True, subset=subset)
+
+        # Deduplicate
+        dedup = self.args.get('_deduplicate', True)
+        if isinstance(dedup, list):
+            subset = dedup
+        else:
+            subset = None
+        df.drop_duplicates(inplace=True, subset=subset)
+        return df
 
     @property
     def _data_cachedir(self):
@@ -148,7 +171,8 @@ class MLHandler(FormHandler):
             out = {'params': self.model.get_params()}
             if len(SCORES[self.model_path]) > 0:
                 out['score'] = SCORES[self.model_path][-1]
-            self.write(out)
+            out['model'] = self.model.__class__.__name__
+            self.write(json.dumps(out, indent=4))
         else:
             try:
                 data = pd.DataFrame(self.args)
@@ -188,7 +212,7 @@ class MLHandler(FormHandler):
         if self.get_arg('_retrain', False):
             data = self._parse_data()
             score = yield gramex.service.threadpool.submit(self._fit, data)
-            self.write(dict(score=score))
+            self.write(json.dumps(dict(score=score), indent=4))
         else:
             data = self._parse_data(False)
             prediction = yield gramex.service.threadpool.submit(self._predict, data)
@@ -214,12 +238,13 @@ class MLHandler(FormHandler):
             else:
                 [setattr(self.model, k, v) for k, v in model_kwargs.items()]
         joblib.dump(self.model, self.model_path)
+        out = {'model': self.model.__class__.__name__,
+               'params': self.model.get_params()}
         if _retrain:
             data = self._parse_data()
             score = yield gramex.service.threadpool.submit(self._fit, data)
-            self.write({'score': score})
-        else:
-            self.write({'params': self.model.get_params()})
+            out.update({'score': score})
+        self.write(json.dumps(out, indent=4))
 
     @coroutine
     def delete(self, *path_args, **path_kwargs):

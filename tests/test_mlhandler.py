@@ -31,7 +31,7 @@ class TestMLHandler(TestGramex):
 
     def test_train(self):
         resp = self.get(
-            '/mlhandler?_retrain=1&target_col=species', method='post',
+            '/mlhandler?_retrain=1&_target_col=species', method='post',
             data=self.df.to_json(orient='records'))
         self.assertGreaterEqual(resp.json()['score'], self.ACC_TOL)
 
@@ -39,7 +39,7 @@ class TestMLHandler(TestGramex):
         buff = StringIO()
         self.df.to_csv(buff, index=False, encoding='utf8')
         buff.seek(0)
-        resp = self.get('/mlhandler?_retrain=1&target_col=species', method='post',
+        resp = self.get('/mlhandler?_retrain=1&_target_col=species', method='post',
                         files={'file': ('iris.csv', buff.read())})
         self.assertGreaterEqual(resp.json()['score'], self.ACC_TOL)
 
@@ -52,7 +52,8 @@ class TestMLHandler(TestGramex):
         self.test_train()
         df = self.df[[c for c in self.df if c != 'species']]
         resp = self.get('/mlhandler', method='post', data=df.to_json(orient='records'))
-        self.assertGreaterEqual(accuracy_score(self.df['species'], resp.json()), self.ACC_TOL)
+        df = self.df.drop_duplicates()
+        self.assertGreaterEqual(accuracy_score(df['species'], resp.json()), self.ACC_TOL)
 
     def test_get_model_params(self):
         resp = self.get('/mlhandler?_model')
@@ -76,9 +77,9 @@ class TestMLHandler(TestGramex):
 
     def test_modify_retrain(self):
         resp = self.get(
-            '/mlhandler?class=DecisionTreeClassifier&_retrain=1&max_depth=10&target_col=species',
+            '/mlhandler?class=DecisionTreeClassifier&_retrain=1&max_depth=10&_target_col=species',
             method='put', data=self.df.to_json(orient='records'))
-        self.assertEqual(resp.json(), {'score': 1.0})
+        self.assertEqual(resp.json()['score'], 1.0)
 
     def test_delete(self):
         resp = self.get('/mlhandler', method='delete')
@@ -94,7 +95,7 @@ class TestMLHandler(TestGramex):
 
         # Make the model
         r = self.get(
-            '/mlblank?class=LogisticRegression&C=100.0&_retrain=1&target_col=species',
+            '/mlblank?class=LogisticRegression&C=100.0&_retrain=1&_target_col=species',
             method='put', data=self.df.to_json(orient='records'))
         self.assertEqual(r.status_code, OK)
         self.assertGreater(r.json()['score'], self.ACC_TOL)
