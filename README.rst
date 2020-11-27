@@ -32,7 +32,8 @@ If it is a security issue, please email to security@gramener.com, rather
 than publicly sharing the vulnerability.
 
 **Want to fix a bug or add a feature?**
-Fork it, make changes, and send a pull request.
+`Read the contributing guidelines <https://learn.gramener.com/guide/contributing/>`_.
+Fork this repo, make changes, test it, and send a pull request.
 
 
 License
