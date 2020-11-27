@@ -176,6 +176,18 @@ class TestFormHandler(TestGramex):
                           df=self.sales[self.sales['city'].isin(['Hyderabad', 'Coimbatore'])])
         self.check_columns('/formhandler/columns/sqlite')
 
+        # Check the state: functionality. Every time /formhandler/sqlite-state is called,
+        # it calls state(args, path), which is logged in `/formhandler/state`
+        eq_(self.get('/formhandler/state').json(), [], 'Start with blank slate')
+        self.check('/formhandler/sqlite-state?x=1')
+        eq_(self.get('/formhandler/state').json(), [{'x': ['1']}, '/formhandler/sqlite-state'],
+            'state() is called once per request')
+        self.check('/formhandler/sqlite-state?x=2')
+        eq_(self.get('/formhandler/state').json(), [
+            {'x': ['1']}, '/formhandler/sqlite-state',
+            {'x': ['2']}, '/formhandler/sqlite-state',
+        ], 'state() is called twice for 2 requests')
+
     def test_mysql(self):
         dbutils.mysql_create_db(variables.MYSQL_SERVER, 'test_formhandler', sales=self.sales)
         try:

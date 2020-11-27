@@ -779,6 +779,20 @@ url:
       url: sqlite:///formhandler.db
       queryfunction: utils.sales_query(args, handler)
 
+  formhandler/sqlite-state:
+    pattern: /formhandler/sqlite-state
+    handler: FormHandler
+    kwargs:
+      url: sqlite:///formhandler.db
+      state: utils.state(args, handler.request.path)
+      queryfunction: utils.sales_query(args, handler)
+
+  formhandler/state-info:
+    pattern: /formhandler/state
+    handler: FunctionHandler
+    kwargs:
+      function: utils.get_state_info()
+
   formhandler/default:
     pattern: /formhandler/default
     handler: FormHandler

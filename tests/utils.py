@@ -20,6 +20,7 @@ from gramex.handlers import BaseHandler
 
 watch_info = []
 ws_info = []
+state_info = []
 counters = Counter()
 slow = {'value': 0, 'max': 20}
 
@@ -449,6 +450,14 @@ def gramexlog_search(handler, interval=0.2):
     results = app_config.conn.search(index=app_config.get('index', app), ignore=[404])
     results = results.get('hits', {}).get('hits', [])
     return {'hits': [result['_source'] for result in results]}
+
+
+def state(*args):
+    state_info.extend(args)
+
+
+def get_state_info():
+    return state_info
 
 
 if __name__ == '__main__':

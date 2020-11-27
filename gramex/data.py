@@ -228,17 +228,18 @@ def filter(url, args={}, meta={}, engine=None, ext=None, columns=None,
         return _filter_frame(data, meta=meta, controls=controls, args=args)
     elif engine == 'sqlalchemy':
         table = kwargs.pop('table', None)
+        state = kwargs.pop('state', None)
         engine = alter(url, table, columns, **kwargs)
         if query or queryfile:
             if queryfile:
                 query = gramex.cache.open(queryfile, 'text')
-            state = None
-            if isinstance(table, six.string_types):
-                state = table if ' ' in table else [table]
-            elif isinstance(table, (list, tuple)):
-                state = [t for t in table]
-            elif table is not None:
-                raise ValueError('table: must be string or list of strings, not %r' % table)
+            if not state:
+                if isinstance(table, six.string_types):
+                    state = table if ' ' in table else [table]
+                elif isinstance(table, (list, tuple)):
+                    state = [t for t in table]
+                elif table is not None:
+                    raise ValueError('table: must be string or list of strings, not %r' % table)
             all_params = {k: v[0] for k, v in args.items() if len(v) > 0}
             data = gramex.cache.query(sa.text(query), engine, state, params=all_params)
             data = transform(data) if callable(transform) else data

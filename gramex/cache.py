@@ -493,9 +493,6 @@ def query(sql, engine, state=None, **kwargs):
     _cache = kwargs.pop('_cache', _QUERY_CACHE)
     store_cache = True
 
-    key = (str(sql), json.dumps(kwargs.get('params', {}), sort_keys=True), engine.url)
-    cached = _cache.get(key, {})
-    current_status = cached.get('status', None) if cached else None
     if isinstance(state, (list, tuple)):
         status = _table_status(engine, tuple(state))
     elif isinstance(state, six.string_types):
@@ -510,7 +507,8 @@ def query(sql, engine, state=None, **kwargs):
         raise TypeError('gramex.cache.query(state=) must be a table list, query or fn, not %s',
                         repr(state))
 
-    if status == current_status:
+    key = (str(sql), json.dumps(kwargs.get('params', {}), sort_keys=True), engine.url)
+    if key in _cache and _cache[key]['status'] == status:
         result = _cache[key]['data']
     else:
         app_log.debug('gramex.cache.query: %s. engine: %s. state: %s. kwargs: %s', sql, engine,
