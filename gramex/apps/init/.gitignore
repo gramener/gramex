@@ -1,14 +1,20 @@
 # Ignore files that should not be committed.
-# Avoid committing data and large files.
+
+{% if not git_lfs %}
+# Git doesn't version large files well. We prefer Git LFS.
+# But since Git LFS is not installed on the system that initialized this file,
+#   - We'll skip the assets/ folder except for the README.md file.
+#   - You need to store them in a shared folder and deploy it yourself.
+# OR, install Git LFS from https://git-lfs.github.com/, and then:
+#   - Run `git lfs install && git lfs track "assets/**"`
+#   - Remove the two lines below to track assets/** via Git LFS
+assets/**
+!assets/README*
+{% end %}
 
 # Do not commit passwords, keys or any, secret information. Store it in .secrets.yaml instead
 {{ '.secret*' }}
 {# Added as a template to commit .secrets.yaml in THIS folder, but not in repos #}
-
-# Don't commit the assets/ folder except for the README.md file
-# Store them in a shared folder and sync here.
-assets/**
-!assets/README*
 
 # Ignore npm and bower modules. These should be created by yarn/npm and bower.
 node_modules/

@@ -3,7 +3,6 @@ Defines command line services to install, setup and run apps.
 '''
 import io
 import os
-import six
 import sys
 import time
 import yaml
@@ -275,7 +274,7 @@ def run_install(config):
         app_log.info('Downloading: %s', url)
         response = requests.get(url)
         response.raise_for_status()
-        handle = six.BytesIO(response.content)
+        handle = io.BytesIO(response.content)
 
     # Identify relevant files from the ZIP file
     zipfile = ZipFile(handle)
@@ -298,7 +297,7 @@ def run_command(config):
     '''
     appcmd = config.cmd
     # Split the command into an array of words
-    if isinstance(appcmd, six.string_types):
+    if isinstance(appcmd, str):
         appcmd = shlex.split(appcmd)
     # If the app is a Cygwin app, TARGET should be a Cygwin path too.
     target = config.target
@@ -581,7 +580,7 @@ def _check_output(cmd, default=b'', **kwargs):
 
 
 def _run_console(cmd, **kwargs):
-    '''Run cmd and  pipe output to console (sys.stdout / sys.stderr)'''
+    '''Run cmd and pipe output to console (sys.stdout / sys.stderr)'''
     cmd = shlex.split(cmd)
     try:
         proc = Popen(cmd, bufsize=-1, stdout=sys.stdout, stderr=sys.stderr,
@@ -644,6 +643,20 @@ def init(cmd, args):
         appname = 'app' + appname
     data['appname'] = appname
 
+    # Create a git repo. But if git fails, do not stop. Continue with the rest.
+    try:
+        _run_console('git init')
+    except OSError:
+        pass
+    # Install Git LFS if available. Set git_lfs=None if it fails, so .gitignore ignores assets/**
+    data['git_lfs'] = which('git-lfs')
+    if data['git_lfs']:
+        try:
+            _run_console('git lfs install')
+            _run_console('git lfs track "assets/**"')
+        except OSError:
+            data['git_lfs'] = None
+
     # Copy all directories & files (as templates)
     source_dir = os.path.join(variables['GRAMEXPATH'], 'apps', 'init')
     for root, dirs, files in os.walk(source_dir):
@@ -661,13 +674,6 @@ def init(cmd, args):
         target = os.path.join(error_dir, os.path.basename(source))
         _copy(source, target)
 
-    # Create a git repo if none exists.
-    # But if git is not installed, do not stop. Continue with the rest.
-    if not os.path.exists(os.path.join(args.target, '.git')):
-        try:
-            _run_console('git init')
-        except OSError:
-            pass
     run_setup(args.target)
 
 

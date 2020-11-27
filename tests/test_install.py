@@ -6,7 +6,7 @@ import subprocess
 from pathlib import Path
 from shutilwhich import which
 from orderedattrdict import AttrDict
-from six.moves.urllib.parse import urljoin
+from urllib.parse import urljoin
 import gramex
 from gramex.config import variables, PathConfig
 from gramex.install import install, uninstall, run
