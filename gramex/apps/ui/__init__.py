@@ -91,20 +91,21 @@ def sass2(handler,
           vars: dict = None):
     '''
     Compile a SASS file using custom variables.
-    The special variable ``imports:`` can be a str/list of URLs or libraries to import.
+    The special variables ``@import``, ``@use`` and ``@forward`` can be a str/list of URLs or
+    libraries to import.
     '''
     # Get SASS vars from YAML config. It may be an empty string or null. Convert to dict
     vars = {} if not vars else dict(vars)
     # Override with URL query params
     vars.update({key: handler.get_arg(key) for key in handler.args})
     # Filter out invalid args
-    args, imports, theme_colors = {}, [], []
+    args, commands, theme_colors = {}, {}, []
     for key, val in vars.items():
+        if key in {'@import', '@use', '@forward'}:
+            commands[key] = list(val) if isinstance(val, list) else [val] if val else []
         # Allow only alphanumeric SASS keys
-        if not valid_sass_key.match(key):
+        elif not valid_sass_key.match(key):
             app_log.warning('sass: "${key}" key not allowed. Use alphanumeric')
-        elif key == 'imports':
-            imports = list(val) if isinstance(val, list) else [val] if val else []
         # Ignore empty args, e.g. ?primary=
         elif val:
             args[key] = val
@@ -117,7 +118,7 @@ def sass2(handler,
 
     # Create cache key based on state = path + imports + args. Output to <cache-key>.css
     path = os.path.normpath(path).replace('\\', '/')
-    state = [path, imports, args]
+    state = [path, commands, args]
     cache_key = json.dumps(state, sort_keys=True, ensure_ascii=True).encode('utf-8')
     cache_key = md5(cache_key).hexdigest()[:8]
     cache_file = join(cache_dir, f'{cache_key}.css')
@@ -128,8 +129,11 @@ def sass2(handler,
         scss_path = cache_file[:-4] + '.scss'
         # ... whose contents include all variables
         content = [f'${key}: {val};' for key, val in args.items()]
-        # ... and imports (converting \ to / to handle Windows paths)
-        content += ['@import "%s";' % url.replace('\\', '/') for url in imports]
+        # ... and commands @import, @use, @forward (convert \ to / to handle Windows paths)
+        content += [
+            '%s "%s";' % (key, url.replace('\\', '/'))
+            for key, urls in commands.items()
+            for url in urls]
         # ... and the main SCSS file we want to use
         content.append(f'@import "{path}";')
         with open(scss_path, 'w', encoding='utf-8') as handle:

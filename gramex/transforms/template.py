@@ -43,7 +43,7 @@ def template(content, handler=None, **kwargs):
 
 
 @tornado.gen.coroutine
-def sass(content, handler):
+def scss(content, handler):
     '''
     Renders a SCSS file as CSS via node-sass.
     Ignore the content provided. node-sass needs the file actually located at handler.path.
@@ -53,4 +53,5 @@ def sass(content, handler):
     return result.decode('utf-8')
 
 
-scss = sass
+# SCSS files and SASS files are compiled exactly the same way
+sass = scss

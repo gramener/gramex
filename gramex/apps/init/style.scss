@@ -1,0 +1,28 @@
+// See http://sass-lang.com/documentation/ for SCSS docs
+
+// VARIABLES. See https://github.com/twbs/bootstrap/blob/v4-dev/scss/_variables.scss
+// $body-bg: $white;
+// $body-color: $gray900;
+$navbar-dark-color: rgba(255, 255, 255, .8);
+// $navbar-dark-hover-color: white;
+
+// COLORS. Example: define "color-accent1" to use it in bg-accent1, text-accent1, etc.
+// $theme-colors: (
+//   "color-accent1": #DC2626;
+//   "color-accent2": #DB2777;
+// )
+
+// FONTS
+// $headings-font-family: "Roboto Slab", "Segoe UI", sans-serif;
+// $font-family-base: "Open Sans", sans-serif;
+// @import url("https://fonts.googleapis.com/css?family=Roboto");
+// @import url("https://fonts.googleapis.com/css?family=Open+Sans");
+
+@import "gramexui";           // BOOTSTRAP + Gramex UI components
+// @import "bootstrap";          // BOOTSTRAP only
+
+@import url("ui/@fortawesome/fontawesome-free/css/all.min.css");    // FONTAWESOME v5
+// @import url("ui/font-awesome/css/font-awesome.min.css");            // FONTAWESOME v4
+
+
+// Add custom CSS for app: {{ appname }}

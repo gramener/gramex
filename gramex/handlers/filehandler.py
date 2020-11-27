@@ -72,9 +72,9 @@ class FileHandler(BaseHandler):
         - ``$body`` - an unordered list with all filenames as links
     :arg dict headers: HTTP headers to set on the response.
     :arg dict transform: Transformations that should be applied to the files.
-        The key matches a `glob pattern`_ (e.g. ``'*.md'`` or ``'data/*'``.) The
-        value is a dict with the same structure as :class:`FunctionHandler`,
-        and accepts these keys:
+        The key matches one or more `glob patterns`_ separated by space/comma
+        (e.g. ``'*.md, 'data/**'``.) The value is a dict with the same
+        structure as :class:`FunctionHandler`, and accepts these keys:
 
         ``function``
             A string that resolves into any Python function or method (e.g.
@@ -106,7 +106,7 @@ class FileHandler(BaseHandler):
     :arg string scss: ``scss="*.scss"`` renders all SCSS files as CSS using node-sass
         (new in Gramex 1.66).
 
-    .. _glob pattern: https://docs.python.org/3/library/pathlib.html#pathlib.Path.glob
+    .. _glob patterns: https://docs.python.org/3/library/pathlib.html#pathlib.Path.glob
 
     FileHandler exposes these attributes:
 
@@ -119,14 +119,15 @@ class FileHandler(BaseHandler):
     def setup(cls, path, default_filename=None, index=None, index_template=None,
               headers={}, default={}, **kwargs):
         # Convert template: '*.html' into transform: {'*.html': {function: template}}
-        # Convert sass: '*.scss' into transform: {'*.scss': {function: sass}}
+        # Convert sass: ['*.scss', '*.sass'] into transform: {'*.scss': {function: sass}}
         # Do this before BaseHandler setup so that it can invoke the transforms required
         for key in ('template', 'sass', 'scss'):
             val = kwargs.pop(key, None)
             if val:
                 # template/sass: true is the same as template: '*'
-                val = '*' if val is True else val
-                kwargs.setdefault('transform', AttrDict())[val] = AttrDict(function=key)
+                val = '*' if val is True else val if isinstance(val, (list, tuple)) else [val]
+                kwargs.setdefault('transform', AttrDict()).update({
+                    v: AttrDict(function=key) for v in val})
         super(FileHandler, cls).setup(**kwargs)
 
         cls.root, cls.pattern = None, None
@@ -290,9 +291,11 @@ class FileHandler(BaseHandler):
                 else:
                     self.set_header(header_name, header_value)
 
+            # Use the first matching transform.
             transform = {}
             for pattern, trans in self.transform.items():
-                if _match(self.file, pattern):
+                # Patterns may be specified as '*.md, *.MD, md/**' -- split by comma or space
+                if any(_match(self.file, part) for part in pattern.replace(',', ' ').split()):
                     transform = trans
                     break
 

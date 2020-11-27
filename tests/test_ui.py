@@ -19,12 +19,12 @@ class TestUI(TestGramex):
 
     def test_ui_import(self):
         text = self.check('/ui1/theme.css', headers={'Content-Type': 'text/css'}).text
-        ok_('@import "https://fonts.googleapis.com/css?family=lato"' in text, 'imports: url list')
-        ok_('.ui-import-1{color:red}' in text, 'imports: file relative to cwd')
-        ok_('.ui-import-2{color:azure}' in text, 'imports: file via absolute path')
+        ok_('@import "https://fonts.googleapis.com/css?family=lato"' in text, '@import: url list')
+        ok_('.ui-import-a{color:red}' in text, '@import: file relative to cwd')
+        ok_('.ui-import-b{color:red}' in text, '@import: file via absolute path')
 
         text = self.check('/ui2/theme.css', headers={'Content-Type': 'text/css'}).text
-        ok_('@import "https://fonts.googleapis.com/css?family=lato"' in text, 'imports: url')
+        ok_('@import "https://fonts.googleapis.com/css?family=lato"' in text, '@import: url')
 
     def check_vars(self, url):
         text = self.check(url).text
@@ -36,17 +36,10 @@ class TestUI(TestGramex):
         text = self.check(url + '?primary=blue&color-alpha=').text
         ok_('--primary: blue' in text, 'vars: URL overrides YAML')
         ok_('--alpha' not in text, 'vars: URL clears YAML')
-        ok_('.ui-import-1{color:blue}' in text, 'vars: cascaded into imports')
+        ok_('.ui-import-a{color:blue}' in text, 'vars: cascaded into @import')
 
     def test_vars(self):
         self.check_vars('/ui1/theme.css')
 
     def test_sass2(self):
         self.check_vars('/ui/sass2')
-
-    def test_filehandler(self):
-        for ext in ('scss', 'sass'):
-            text = self.check(f'/ui/sass-file/import.{ext}?primary=red&color-alpha=purple').text
-            ok_('.ui-import-1{color:red}' in text, 'imports a.scss and passes it UI variables')
-            ok_('--primary: red' in text, 'imports bootstrap with variables')
-            ok_('--alpha: purple' in text, 'imports gramexui with variables')

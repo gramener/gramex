@@ -451,8 +451,25 @@ url:
           headers:
             Content-Type: text/html; charset=UTF-8
         "template-handler.txt":
-            encoding: utf-8
-            function: template
+          encoding: utf-8
+          function: template
+  dir/transform-sass:
+    pattern: /dir/transform-sass/(.*)
+    handler: FileHandler
+    kwargs:
+      path: sass
+      transform:
+        # Multiple globs can be separated by spaces or commas
+        " import.sass,import.scss a.scss, b.scss":
+          encoding: utf-8
+          function: sass
+  dir/sass-file:
+    pattern: /dir/sass-file/(.*)
+    handler: FileHandler
+    kwargs:
+      path: $YAMLPATH/sass/
+      scss: ' missing.scss,import.scss, a.scss b.scss'
+      sass: '*.sass'
   dir/template:
     pattern: "/dir/template/(.*)"
     handler: FileHandler
@@ -2052,20 +2069,12 @@ url:
           'primary': 'red',
           'color-alpha': 'blue',
           'color-empty': '',
-          'imports': [
+          '@import': [
             'sass/a.scss',
             r'$YAMLPATH/sass/b.scss',
             'https://fonts.googleapis.com/css?family=lato',
           ]
         })
-
-  ui/sass-file:
-    pattern: /ui/sass-file/(.*)
-    handler: FileHandler
-    kwargs:
-      path: $YAMLPATH/sass/
-      scss: '*.scss'
-      sass: true
 
   translate/db:
     pattern: /translate/db
@@ -2421,7 +2430,7 @@ import:
       color-alpha: blue
       $key: skip-invalid
       color-empty: ''                         # Skipped because value is empty
-      imports:
+      '@import':
         - sass/a.scss               # Import from cwd
         - $YAMLPATH/sass/b.scss     # Import from absolute path
         - https://fonts.googleapis.com/css?family=lato
@@ -2430,7 +2439,7 @@ import:
     path: $GRAMEXAPPS/ui/gramex.yaml
     YAMLURL: $YAMLURL/ui2/
     UI_VARS:
-      imports: https://fonts.googleapis.com/css?family=lato
+      '@import': https://fonts.googleapis.com/css?family=lato
 
 # Invalid services should be ignored
 invalid-service: true
