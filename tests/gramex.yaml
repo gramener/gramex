@@ -1102,6 +1102,12 @@ url:
       path: $YAMLPATH/blank.pkl
       xsrf_cookies: false
 
+  mlhandler/nopath:
+    pattern: /mlnopath
+    handler: MLHandler
+    kwargs:
+      xsrf_cookies: false
+
   capture:
     pattern: /capture
     handler: CaptureHandler

@@ -20,7 +20,7 @@ from tornado.gen import coroutine
 from tornado.web import HTTPError
 
 op = os.path
-DATA_CACHE = {}
+DATA_CACHE = defaultdict(dict)
 SCORES = defaultdict(list)
 MLCLASS_MODULES = [
     'sklearn.linear_model',
@@ -89,9 +89,12 @@ class MLHandler(FormHandler):
             joblib.dump(cls.model, cls.model_path)
 
     def _fit(self, data):
-        data = self._filtercols(data)
+        data = self._transform(data)
         target = self.kwargs.get('_target_col', self.get_arg('_target_col'))
         target = data.pop(target)
+        DATA_CACHE[self.name]['input'] = data.columns.tolist()
+        DATA_CACHE[self.name]['target'] = target.name
+        DATA_CACHE[self.name]['train_shape'] = data.shape
         self.model.fit(data, target)
         joblib.dump(self.model, self.model_path)
         if not self.get_arg('_score', False):
@@ -103,7 +106,7 @@ class MLHandler(FormHandler):
             return SCORES[self.model_path][-1]
 
     def _predict(self, data):
-        data = self._filtercols(data)
+        data = self._transform(data)
         return self.model.predict(data)
 
     def _coerce_model_params(self, mclass=None, params=None):
@@ -131,32 +134,46 @@ class MLHandler(FormHandler):
         spec = [c for c in getargspec(mclass).args if c != 'self']
         return {k: v[0] for k, v in self.args.items() if k in spec}
 
-    def _filtercols(self, data):
+    def _deduplicate(self, df):
+        dedup = json.loads(self.get_arg('_deduplicate', 'true'))
+        if dedup:
+            if isinstance(dedup, list):
+                subset = dedup
+            else:
+                subset = None
+            return df.drop_duplicates(subset=subset)
+        return df
+
+    def _dropna(self, df):
+        dropna = json.loads(self.get_arg('_dropna', 'true'))
+        if dropna:
+            if isinstance(dropna, list):
+                subset = dropna
+            else:
+                subset = None
+            return df.dropna(subset=subset)
+        return df
+
+    def _filtercols(self, df):
+        target_col = self.kwargs.get('_target_col', self.get_arg('_target_col', False))
+        if target_col:
+            target = df.pop(target_col)
         include = self.args.get('_include', [])
         exclude = self.args.get('_exclude', [])
         if len(include) > 0:
-            data = data[include]
+            df = df[include]
         if len(exclude) > 0:
-            data.drop(exclude, axis=1, inplace=True)
-        data = self.preprocess_data(data)
-        return data
+            df.drop(exclude, axis=1, inplace=True)
+        if target_col:
+            df[target_col] = target
+        return df
 
-    def preprocess_data(self, df):
-        # Drop nulls
-        dropna = self.args.get('_drop_na', True)
-        if isinstance(dropna, list):
-            subset = dropna
-        else:
-            subset = None
-        df.dropna(inplace=True, subset=subset)
-
-        # Deduplicate
-        dedup = self.args.get('_deduplicate', True)
-        if isinstance(dedup, list):
-            subset = dedup
-        else:
-            subset = None
-        df.drop_duplicates(inplace=True, subset=subset)
+    def _transform(self, df=None):
+        if df is None:
+            df = DATA_CACHE[self.name]['data'].copy()
+        df = self._deduplicate(df)
+        df = self._dropna(df)
+        df = self._filtercols(df)
         return df
 
     @property
@@ -167,7 +184,11 @@ class MLHandler(FormHandler):
 
     @coroutine
     def get(self, *path_args, **path_kwargs):
-        if '_model' in self.args:
+        if self.args.get('_cache', False):
+            out = {k: v for k, v in DATA_CACHE[self.name].items() if k != 'data'}
+            out.update({'data': DATA_CACHE[self.name]['data'].to_dict(orient='records')})
+            self.write(json.dumps(out, indent=4))
+        elif self.args.get('_model', False):
             out = {'params': self.model.get_params()}
             if len(SCORES[self.model_path]) > 0:
                 out['score'] = SCORES[self.model_path][-1]
@@ -201,10 +222,10 @@ class MLHandler(FormHandler):
         else:
             data = pd.read_json(self.request.body.decode('utf8'))
         if _cache:
-            orgdf = DATA_CACHE.get(self.name, [])
+            orgdf = DATA_CACHE.get(self.name, {}).get('data', [])
             if len(orgdf):
                 data = pd.concat((orgdf, data), axis=0)
-                DATA_CACHE[self.name] = data
+            DATA_CACHE[self.name]['data'] = data
         return data
 
     @coroutine
@@ -248,7 +269,7 @@ class MLHandler(FormHandler):
 
     @coroutine
     def delete(self, *path_args, **path_kwargs):
-        if self.get_arg('_cache', False):
+        if self.args.get('_cache', False):
             if self.name in DATA_CACHE:
                 del DATA_CACHE[self.name]
         else:
