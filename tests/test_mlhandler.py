@@ -1,4 +1,4 @@
-from io import StringIO
+from io import StringIO, BytesIO
 import os
 import random
 
@@ -119,6 +119,20 @@ class TestMLHandler(TestGramex):
         model = joblib.load(model_path)
         self.assertIsInstance(model, LogisticRegression)
 
+        # Get the model parameters
+        r = self.get('/mlblank?_model')
+        self.assertEqual(r.status_code, OK)
+        self.assertEqual(r.json()['params']['C'], 100.0)
+
+        # Download the model
+        r = self.get('/mlblank?_download')
+        self.assertEqual(r.status_code, OK)
+        buff = BytesIO(r.content)
+        buff.seek(0)
+        clf = joblib.load(buff)
+        self.assertIsInstance(clf, LogisticRegression)
+        self.assertEqual(clf.C, 100.0)
+
     def test_model_path(self):
         r = self.get('/mlnopath?class=LogisticRegression&C=100.0', method='put')
         out = r.json()
@@ -136,7 +150,7 @@ class TestMLHandler(TestGramex):
         resp = self.get('/mlhandler?_retrain=1&_target_col=species'
                         '&_exclude=sepal_width&_exclude=petal_length',
                         method='post', files={'file': ('iris.csv', buff.read())})
-        self.assertGreaterEqual(resp.json()['score'], self.ACC_TOL)
+        self.assertGreaterEqual(resp.json()['score'], 0.8)
 
         r = self.get('/mlhandler?_cache').json()['data']
         # Check that the data still has all columns

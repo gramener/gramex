@@ -216,6 +216,8 @@ class MLHandler(FormHandler):
 
     @coroutine
     def get(self, *path_args, **path_kwargs):
+        if self.model is None:
+            self.model = cache.open(self.model_path, joblib.load)
         if self.args.get('_cache', False):
             out = {k: v for k, v in DATA_CACHE[self.name].items() if k != 'data'}
             out.update({'data': DATA_CACHE[self.name]['data'].to_dict(orient='records')})
@@ -227,6 +229,11 @@ class MLHandler(FormHandler):
                 out['score'] = SCORES[self.model_path][-1]
             out['model'] = self.model.__class__.__name__
             self.write(json.dumps(out, indent=4))
+        elif self.args.get('_download', False):
+            self.set_header('Content-Type', 'application/octet-strem')
+            self.set_header('Content-Disposition',
+                            f'attachment; filename={op.basename(self.model_path)}')
+            return open(self.model_path, 'rb').read()
         else:
             try:
                 data = pd.DataFrame(self.args)
@@ -246,9 +253,9 @@ class MLHandler(FormHandler):
                     with open(outpath, 'wb') as fout:
                         fout.write(f['body'])
                     if outpath.endswith('.json'):
-                        xdf = gramex.cache.open(outpath, pd.read_json)
+                        xdf = cache.open(outpath, pd.read_json)
                     else:
-                        xdf = gramex.cache.open(outpath)
+                        xdf = cache.open(outpath)
                     dfs.append(xdf)
             data = pd.concat(dfs, axis=0)
         # Otherwise look in request.body
@@ -284,7 +291,7 @@ class MLHandler(FormHandler):
             mparams = self._coerce_model_params(mclass, mparams)
             self.model = mclass(**mparams)
         else:
-            self.model = joblib.load(self.model_path)
+            self.model = cache.open(self.model_path, joblib.load)
             mclass = search_modelclass(mclass)
             model_kwargs = self._coerce_model_params()
             if not isinstance(self.model, mclass):
