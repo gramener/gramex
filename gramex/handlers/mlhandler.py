@@ -15,6 +15,9 @@ import joblib
 import numpy as np
 import pandas as pd
 import pydoc
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from slugify import slugify
 from tornado.gen import coroutine
 from tornado.web import HTTPError
@@ -56,6 +59,25 @@ def _serialize_prediction(obj):
     return json.dumps(obj, indent=4)
 
 
+def is_categorical(s, num_treshold=0.66):
+    """Check if a series contains a categorical variable.
+
+    Parameters
+    ----------
+    s : pd.Series
+
+    Returns
+    -------
+    bool:
+        Whether the series is categorical.
+    """
+    if pd.api.types.is_numeric_dtype(s):
+        if s.nunique() / s.shape[0] <= num_treshold:
+            return True
+        return False
+    return True
+
+
 class MLHandler(FormHandler):
     @classmethod
     def setup(cls, path='', model_class=None, model_params=None, **kwargs):
@@ -95,11 +117,12 @@ class MLHandler(FormHandler):
         DATA_CACHE[self.name]['input'] = data.columns.tolist()
         DATA_CACHE[self.name]['target'] = target.name
         DATA_CACHE[self.name]['train_shape'] = data.shape
-        self.model.fit(data, target)
-        joblib.dump(self.model, self.model_path)
+        self.pipeline = self._assemble_pipeline(data)
+        self.pipeline.fit(data, target)
+        joblib.dump(self.pipeline, self.model_path)
         if not self.get_arg('_score', False):
             try:
-                score = self.model.score(data, target)
+                score = self.pipeline.score(data, target)
             except AttributeError:
                 score = f"A model of type {type(self.model)} does not have a score method."
             SCORES[self.model_path].append(score)
@@ -133,6 +156,15 @@ class MLHandler(FormHandler):
     def _filter_model_params(self, mclass):
         spec = [c for c in getargspec(mclass).args if c != 'self']
         return {k: v[0] for k, v in self.args.items() if k in spec}
+
+    def _assemble_pipeline(self, data):
+        if json.loads(self.get_arg('_pipeline', 'false')):
+            categoricals = [c for c in data if is_categorical(data[c])]
+            numericals = [c for c in data if pd.api.types.is_numeric_dtype(data[c])]
+            ct = ColumnTransformer([('ohe', OneHotEncoder(sparse=False), categoricals),
+                                    ('scaler', StandardScaler(), numericals)])
+            return Pipeline([('transform', ct), (self.model.__class__.__name__, self.model)])
+        return self.model
 
     def _deduplicate(self, df):
         dedup = json.loads(self.get_arg('_deduplicate', 'true'))
@@ -190,6 +222,7 @@ class MLHandler(FormHandler):
             self.write(json.dumps(out, indent=4))
         elif self.args.get('_model', False):
             out = {'params': self.model.get_params()}
+            out.update({k: v for k, v in DATA_CACHE[self.name].items() if k != 'data'})
             if len(SCORES[self.model_path]) > 0:
                 out['score'] = SCORES[self.model_path][-1]
             out['model'] = self.model.__class__.__name__

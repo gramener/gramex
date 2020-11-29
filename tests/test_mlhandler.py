@@ -4,11 +4,15 @@ import random
 
 from gramex.config import variables
 from gramex.http import OK, NOT_FOUND, INTERNAL_SERVER_ERROR
+from gramex.handlers.mlhandler import is_categorical
 import joblib
+import numpy as np
 import pandas as pd
-from sklearn.metrics import accuracy_score
+from sklearn.datasets import make_classification
 from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score
 from sklearn.naive_bayes import GaussianNB
+from sklearn.pipeline import Pipeline
 
 from . import TestGramex, folder
 op = os.path
@@ -36,6 +40,13 @@ class TestMLHandler(TestGramex):
             '/mlhandler?_retrain=1&_target_col=species', method='post',
             data=self.df.to_json(orient='records'))
         self.assertGreaterEqual(resp.json()['score'], self.ACC_TOL)
+        # Check model metadata
+        r = self.get('/mlhandler?_model').json()
+        self.assertDictContainsSubset(
+            {'input': ['sepal_length', 'sepal_width', 'petal_length', 'petal_width'],
+             'target': 'species',
+             'train_shape': [136, 4]},
+            r)
 
     def test_post_file(self):
         buff = StringIO()
@@ -60,8 +71,10 @@ class TestMLHandler(TestGramex):
     def test_get_model_params(self):
         resp = self.get('/mlhandler?_model')
         ideal_params = LogisticRegression().get_params()
-        actual_params = resp.json()['params']
-        self.assertEqual(ideal_params, actual_params)
+        actual_params = resp.json()
+        self.assertEqual(
+            {'params': ideal_params, 'model': 'LogisticRegression'},
+            actual_params)
 
     def test_make_model(self):
         resp = self.get('/mlhandler?class=GaussianNB', method='put')
@@ -201,3 +214,33 @@ class TestMLHandler(TestGramex):
         r = self.get('/mlhandler?_cache').json()
         self.assertListEqual(r['train_shape'], [df.drop_duplicates().shape[0], 4])
         self.assertEqual(len(r['data']), df.shape[0])
+
+    def test_is_categorical(self):
+        self.assertTrue(is_categorical(pd.Series(['a', 'b', 'c'])))
+        self.assertFalse(is_categorical(pd.Series([1, 2, 3, 4])))
+        self.assertTrue(is_categorical(pd.Series([1, 1, 1, 2])))
+        self.assertTrue(is_categorical(pd.Series([1, 1, 2, 2]), 0.5))
+        data, _ = make_classification()
+        self.assertFalse(
+            any([is_categorical(pd.Series(data[:, i])) for i in range(data.shape[1])]))
+
+    def test_pipeline(self):
+        X, y = make_classification()  # NOQA: N806
+        df = pd.DataFrame(X)
+        df['target'] = y
+        df['categorical'] = [random.choice('abc') for i in range(X.shape[0])]
+        resp = self.get(
+            '/mlhandler?_retrain=1&_target_col=target&_pipeline=true', method='post',
+            data=df.to_json(orient='records'))
+        self.assertEqual(resp.status_code, OK)
+
+        # load the pipeline
+        pipe = joblib.load(op.join(folder, 'iris.pkl'))
+        self.assertIsInstance(pipe, Pipeline)
+        x_transformed = pipe.named_steps['transform'].transform(df)
+        # Check that the transformed dataset has the 20 original columns and the
+        # three one-hot encoded ones.
+        self.assertSequenceEqual(x_transformed.shape, (100, 23))  # NOQA: E912
+        # check if the normalization has occured
+        np.testing.allclose(x_transformed[:, :20].mean(axis=0), np.zeros((20,)))  # NOQA: E912
+        np.testing.allclose(x_transformed[:, :20].var(axis=0), np.ones((20,)))  # NOQA: E912
