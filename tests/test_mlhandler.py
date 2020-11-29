@@ -72,7 +72,7 @@ class TestMLHandler(TestGramex):
         resp = self.get('/mlhandler?_model')
         ideal_params = LogisticRegression().get_params()
         actual_params = resp.json()
-        self.assertEqual(
+        self.assertDictContainsSubset(
             {'params': ideal_params, 'model': 'LogisticRegression'},
             actual_params)
 
@@ -226,7 +226,7 @@ class TestMLHandler(TestGramex):
 
     def test_pipeline(self):
         X, y = make_classification()  # NOQA: N806
-        df = pd.DataFrame(X)
+        df = pd.DataFrame(X, columns=[f'c{i}' for i in range(X.shape[1])])
         df['target'] = y
         df['categorical'] = [random.choice('abc') for i in range(X.shape[0])]
         resp = self.get(
@@ -240,7 +240,9 @@ class TestMLHandler(TestGramex):
         x_transformed = pipe.named_steps['transform'].transform(df)
         # Check that the transformed dataset has the 20 original columns and the
         # three one-hot encoded ones.
-        self.assertSequenceEqual(x_transformed.shape, (100, 23))  # NOQA: E912
+        self.assertSequenceEqual(x_transformed.shape, (100, X.shape[1] + 3))
         # check if the normalization has occured
-        np.testing.allclose(x_transformed[:, :20].mean(axis=0), np.zeros((20,)))  # NOQA: E912
-        np.testing.allclose(x_transformed[:, :20].var(axis=0), np.ones((20,)))  # NOQA: E912
+        np.testing.assert_allclose(x_transformed[:, -X.shape[1]:].mean(axis=0),
+                                   np.zeros((X.shape[1],)), atol=1e-6)
+        np.testing.assert_allclose(x_transformed[:, -X.shape[1]:].var(axis=0),
+                                   np.ones((X.shape[1],)), atol=1e-6)
