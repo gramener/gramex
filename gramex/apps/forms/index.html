@@ -17,10 +17,33 @@
   {% import os %}
   {% from form_builder import FOLDER %}
   <div class="container-fluid py-4">
-    <div class="card-deck">
+    <h1 class="text-center text-muted">Creating a new form</h1>
+    <div class="form-details step-1 my-3 py-3">
+      <h3>Step 1 - Form details</h3>
+      <div class="divider"></div>
+      <form class="needs-validation" novalidate>
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label for="form-name">Form name</label>
+            <input type="text"
+              class="form-control" name="form-name" id="form-name" aria-describedby="form-name-helpId" placeholder="" pattern=".{5,}" value="form name..." minlength="5" required="required">
+            <small class="text-muted">At least five characters are required</small>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label for="form-description">Description</label>
+            <textarea class="form-control" name="form-description" id="form-description" rows="2" cols="5" minlength="5" required="required"></textarea>
+            <small class="text-muted">At least five characters are required</small>
+          </div>
+        </div>
+      </form>
+    </div>
+    <h3>Step 2 - Configure form</h3>
+    <div class="divider"></div>
+
+    <div class="card-deck step-2">
       <div class="card border-0">
         <div class="card-header bg-white d-flex justify-content-between">
-          <h5 class="card-title my-0">Pick Snippets</h5>
+          <h5 class="card-title my-0">Select fields</h5>
         </div><!-- .card-header -->
         <div class="card-body h-100">
           {% set snippets_path = os.path.join(FOLDER, 'snippets.html') %}
@@ -35,6 +58,9 @@
           <div id="user-form">
             <form class="user-form h-100 w-100"></form>
           </div>
+          <a class="btn btn-link d-none" title="Edit code">
+            <i class="fa fa-code"></i>
+          </a>
           <div class="divider"></div>
           <input type="text" class="py-2 form-control d-none" id="form-name" placeholder="Name your form" required>
           <button class="btn btn-primary mt-2 d-none" id="publish-form">Publish</button>
@@ -54,6 +80,8 @@
         </div><!-- .card-header -->
         <div class="card-body">
           <div id="element-properties"></div>
+          <div id="editor-html"></div>
+          <button class="btn btn-primary update-form d-none my-2">Update form</button>
         </div><!-- .card-body -->
       </div><!-- .card -->
     </div><!-- .card-deck -->
@@ -67,9 +95,17 @@
   <script src="{{ base }}/ui/lodash/lodash.min.js"></script>
   <script src="{{ base }}/ui/g1/dist/g1.min.js"></script>
   <script src="{{ base }}/node_modules/dragula/dist/dragula.min.js"></script>
+  <script src="{{ base }}/node_modules/monaco-editor/min/vs/loader.js"></script>
   <script>
     /* exported user, user_name */
-    let user = '{% raw handler.current_user.get("id") %}'
+    let user = '{% raw handler.current_user.get("id") if handler.current_user else '' %}'
+    require.config({ paths: { 'vs': '{{ base }}/node_modules/monaco-editor/min/vs' }})
+    var editor
+    require(['vs/editor/editor.main'], function() {
+      editor = monaco.editor.create(document.getElementById('editor-html'), {
+        language: 'html'
+      })
+    })
   </script>
   <script src="{{ base }}/js/script.js"></script>
   <!-- Commonly used libraries:
