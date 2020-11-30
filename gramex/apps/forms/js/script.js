@@ -1,7 +1,8 @@
-/* globals dragula, user, user_name */
+/* globals dragula, user, user_name, editor */
 
 const right = '.user-form'
 const left = '.tab-pane'
+// var editor
 
 $(function () {
   setTimeout(function () {
@@ -44,7 +45,7 @@ var dragAndDrop = {
   dropped: function () {
     // this.count++;
     $('#publish-form').removeClass('d-none')
-    $('#form-name').removeClass('d-none')
+    $('.btn-link').removeClass('d-none')
   }
 };
 
@@ -70,6 +71,7 @@ $('body').on('click', '#user-form input', function () {
   let _md = {
     name: $('#form-name').val() || `Untitled`,
     categories: [],
+    description: $('#form-description').val(),
     fields: _.countBy(_.map(element_data.fields, 'type'))
   }
   $.ajax('publish', {
@@ -84,10 +86,21 @@ $('body').on('click', '#user-form input', function () {
       $('.post-publish').removeClass('d-none')
       $('.form-link').html(`<a href="form/${response.data.modify.id}">View form</a>`)
     },
-    error: function () { },
+    error: function () {
+      console.log("failed?")
+    },
     complete: function() { $icon.fadeOut() }
   })
 }).on('shown.bs.tab', 'a[data-toggle="tab"]', function() {
   // on tab change, dragula needs to be reinitialized, e.target.id
   // dragAndDrop.dragula.destroy(); // dragAndDrop.init()
+}).on('click', '.btn-link', function() {
+  $('.update-form').removeClass('d-none')
+  editor.setValue(
+    document.getElementById('user-form').innerHTML
+  )
+}).on('click', '.update-form', function() {
+  let $icon = $('<i class="fa fa-spinner fa-2x fa-fw align-middle"></i>').appendTo(this)
+  $('#user-form').html(editor.getValue())
+  $icon.fadeOut()
 })

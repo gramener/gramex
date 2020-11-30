@@ -62,3 +62,8 @@ pre code {
 .sourcecode-container pre code {
   white-space: pre;
 }
+#editor-html {
+  width: 30vw;
+  height: 30vw;
+  border:1px solid grey;
+}
