@@ -13,12 +13,27 @@ import:
   apps/forms/ui:
     path: $GRAMEXAPPS/ui/gramex.yaml
     YAMLURL: $YAMLURL/ui/
+  apps/forms/admin:
+    path: $GRAMEXAPPS/admin2/gramex.yaml
+    YAMLURL: $YAMLURL/admin/
 
 # Configurations for app: form_builder
 # ----------------------------------------------------------------------------
 url:
   forms/home-$*:
     pattern: /$YAMLURL/
+    handler: FileHandler
+    kwargs:
+      path: $YAMLPATH/gallery.html
+      template: true
+      headers:
+        # Templates may have user-specific content. Cache privately.
+        # Keep max-age small (in case we log out & log in as another user.)
+        Cache-Control: private, max-age=1
+    cache: {expiry: {duration: 1}}
+
+  forms/create-$*:
+    pattern: /$YAMLURL/create
     handler: FileHandler
     kwargs:
       path: $YAMLPATH/index.html
@@ -37,6 +52,7 @@ url:
       path: $YAMLPATH
       default_filename: index.html    #   default filename
       index: true                     #   display the index
+      sass: "*.scss"
       headers:
           Cache-Control: max-age=60   # By default, cache for a minute
           # Standard libraries won't ever change. Cache for 10 years
@@ -64,12 +80,6 @@ url:
     handler: FileHandler
     kwargs:
       path: $YAMLPATH/form.html
-      template: true
-  forms/gallery-$*:
-    pattern: /$YAMLURL/gallery
-    handler: FileHandler
-    kwargs:
-      path: $YAMLPATH/gallery.html
       template: true
   forms/embed-$*:
     pattern: /$YAMLURL/embed/(\d+)\.(json|html|js)

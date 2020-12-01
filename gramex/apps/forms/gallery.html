@@ -7,8 +7,9 @@
     <title>Gallery - Form Builder</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="https://fonts.googleapis.com/css2?family=Comfortaa&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ base }}/style.css">
+    <link rel="stylesheet" href="{{ base }}/style.scss">
   </head>
+  {% set title = 'Form Builder - Home page' %}
 
   <body>
     {% include template-navbar.html %}
@@ -16,7 +17,27 @@
     {% from form_builder import FOLDER %}
     <!-- TODO: Filter bars -->
     <div class="container py-4">
-      <h1>Forms Gallery</h1>
+      <p class="h4 text-center mb-4">Create, discover, embed forms</p>
+      <div class="row introduction text-center my-4 py-4">
+        <div class="col-md-4">
+          <img class="img-fluid border-radius-xl mb-2" alt="Create forms easily" src="{{base}}/assets/img/introduction/create.png">
+          <h5 class="mt-4">Create forms visually</h5>
+          <a class="btn btn-success mt-2" href="create">Get started</a>
+        </div>
+        <div class="col-md-4">
+          <img class="img-fluid border-radius-xl mb-2" alt="Embed anywhere" src="{{base}}/assets/img/introduction/embed.png">
+          <h5 class="mt-3">Embed anywhere</h5>
+          <a class="btn btn-success mt-2" href="form/47">Learn how</a>
+        </div>
+        <div class="col-md-4">
+          <img class="img-fluid border-radius-xl mb-2" alt="Embed anywhere" src="{{base}}/assets/img/introduction/collection.svg">
+          <h5 class="mt-3">Collect and analyze</h5>
+          <a class="btn btn-success mt-2 disabled" href="form/47">Coming soon!</a>
+        </div>
+      </div>
+      <div class="divider"></div>
+
+      <h1>Discover Forms</h1>
       <div class="d-flex flex-row-reverse">
         <input class="form-control w-50" type="search" data-search="@text" data-target=".card" data-hide-class="d-none" placeholder="filter by text">
       </div>
