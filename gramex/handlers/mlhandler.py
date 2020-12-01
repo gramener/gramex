@@ -260,7 +260,11 @@ class MLHandler(FormHandler):
             data = pd.concat(dfs, axis=0)
         # Otherwise look in request.body
         else:
-            data = pd.read_json(self.request.body.decode('utf8'))
+            try:
+                data = pd.read_json(self.request.body.decode('utf8'))
+            except ValueError:
+                data = DATA_CACHE.get(self.name, {}).get('data', [])
+                _cache = False
         if _cache:
             orgdf = DATA_CACHE.get(self.name, {}).get('data', [])
             if len(orgdf):
