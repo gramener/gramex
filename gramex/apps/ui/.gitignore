@@ -1,0 +1,3 @@
+# Ignore theme/ folders that are generated
+theme/bootswatch/
+theme/themes-guide/

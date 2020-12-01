@@ -86,49 +86,43 @@ valid_sass_key = re.compile(r'[_a-zA-Z][_a-zA-Z0-9\-]*')
 
 
 @coroutine
-def sass2(handler,
-          path: str = join(ui_dir, 'gramexui.scss'),
-          vars: dict = None):
+def sass2(handler, path: str = join(ui_dir, 'gramexui.scss')):
     '''
-    Compile a SASS file using custom variables.
+    Compile a SASS file using custom variables from URL query parameters.
     The special variables ``@import``, ``@use`` and ``@forward`` can be a str/list of URLs or
     libraries to import.
     '''
-    # Get SASS vars from YAML config. It may be an empty string or null. Convert to dict
-    vars = {} if not vars else dict(vars)
-    # Override with URL query params
-    vars.update({key: handler.get_arg(key) for key in handler.args})
-    # Filter out invalid args
-    args, commands, theme_colors = {}, {}, []
-    for key, val in vars.items():
+    # Get valid variables from URL query parameters
+    vars, commands, theme_colors = {}, {}, []
+    for key, vals in handler.args.items():
         if key in {'@import', '@use', '@forward'}:
-            commands[key] = list(val) if isinstance(val, list) else [val] if val else []
+            commands[key] = vals
         # Allow only alphanumeric SASS keys
         elif not valid_sass_key.match(key):
             app_log.warning('sass: "${key}" key not allowed. Use alphanumeric')
-        # Ignore empty args, e.g. ?primary=
-        elif val:
-            args[key] = val
+        # Pick the last arg, if it's non-empty
+        elif len(vals) and vals[-1]:
+            vars[key] = vals[-1]
             # ?color-alpha=red creates theme colors like .bg-alpha, .text-alpha, etc.
             # color_ is also supported for Python keyword arguments
             if key.startswith('color-') or key.startswith('color_'):
                 theme_colors.append(f'"{key[6:]}": ${key}')
     if theme_colors:
-        args['theme-colors'] = f'({", ".join(theme_colors)})'
+        vars['theme-colors'] = f'({", ".join(theme_colors)})'
 
     # Create cache key based on state = path + imports + args. Output to <cache-key>.css
     path = os.path.normpath(path).replace('\\', '/')
-    state = [path, commands, args]
+    state = [path, commands, vars]
     cache_key = json.dumps(state, sort_keys=True, ensure_ascii=True).encode('utf-8')
     cache_key = md5(cache_key).hexdigest()[:8]
-    cache_file = join(cache_dir, f'{cache_key}.css')
+    cache_file = join(cache_dir, f'theme-{cache_key}.css')
 
     # Recompile if output cache_file is missing, or path has been updated
     if not os.path.exists(cache_file) or os.stat(path).st_mtime > os.stat(cache_file).st_mtime:
         # Create an SCSS file
         scss_path = cache_file[:-4] + '.scss'
         # ... whose contents include all variables
-        content = [f'${key}: {val};' for key, val in args.items()]
+        content = [f'${key}: {val};' for key, val in vars.items()]
         # ... and commands @import, @use, @forward (convert \ to / to handle Windows paths)
         content += [
             '%s "%s";' % (key, url.replace('\\', '/'))

@@ -1,6 +1,9 @@
 "use strict"
 
 module.exports = {
+  plugins: [
+    "stylelint-scss"
+  ],
   rules: {
     "at-rule-no-unknown": true,
     "block-no-empty": true,

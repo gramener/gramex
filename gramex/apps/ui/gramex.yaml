@@ -7,27 +7,26 @@ url:
     kwargs:
       path: $YAMLPATH/node_modules/
       index: true
+      auth: false
       headers:
         Cache-Control: public, max-age=86400
+
+  apps/ui/theme-$*:
+    pattern: /$YAMLURL/theme/(.*)
+    handler: FileHandler
+    kwargs:
+      path: $YAMLPATH/theme/
+      index: true
+      sass: '*.scss, *.sass'
       auth: false
+      headers:
+        Cache-Control: public, max-age=86400
 
   apps/ui/bootstrap4-$*:
     pattern: /$YAMLURL/bootstraptheme.css
     handler: FunctionHandler
     kwargs:
       function: gramex.apps.ui.sass
-      auth: false
-      headers:
-        Cache-Control: public, max-age=86400
-
-  apps/ui/theme-$*:
-    pattern: /$YAMLURL/theme.css
-    handler: FunctionHandler
-    kwargs:
-      function: gramex.apps.ui.sass2
-      kwargs:
-        path: $YAMLPATH/gramexui.scss
-        vars: $UI_VARS
       auth: false
       headers:
         Cache-Control: public, max-age=86400

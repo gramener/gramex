@@ -2068,27 +2068,17 @@ url:
       url: $YAMLPATH/sales.xlsx
       sheet_name: census
 
-  ui/sass:
-    pattern: /ui/sass
+  uitest/sass:
+    pattern: /uitest/sass
     handler: FunctionHandler
     kwargs:
       function: gramex.apps.ui.sass(handler, r"$YAMLPATH/sass/vars.scss")
 
-  ui/sass2:
-    pattern: /ui/sass2
+  uitest/sass2:
+    pattern: /uitest/sass2
     handler: FunctionHandler
     kwargs:
-      function: >
-        gramex.apps.ui.sass2(handler, vars={
-          'primary': 'red',
-          'color-alpha': 'blue',
-          'color-empty': '',
-          '@import': [
-            'sass/a.scss',
-            r'$YAMLPATH/sass/b.scss',
-            'https://fonts.googleapis.com/css?family=lato',
-          ]
-        })
+      function: gramex.apps.ui.sass2(handler)
 
   translate/db:
     pattern: /translate/db
@@ -2436,24 +2426,9 @@ import:
       membership:
         user: [alpha, delta]
 
-  ui1:
+  ui:
     path: $GRAMEXAPPS/ui/gramex.yaml
-    YAMLURL: $YAMLURL/ui1/
-    UI_VARS:
-      primary: red
-      color-alpha: blue
-      $key: skip-invalid
-      color-empty: ''                         # Skipped because value is empty
-      '@import':
-        - sass/a.scss               # Import from cwd
-        - $YAMLPATH/sass/b.scss     # Import from absolute path
-        - https://fonts.googleapis.com/css?family=lato
-
-  ui2:
-    path: $GRAMEXAPPS/ui/gramex.yaml
-    YAMLURL: $YAMLURL/ui2/
-    UI_VARS:
-      '@import': https://fonts.googleapis.com/css?family=lato
+    YAMLURL: $YAMLURL/ui/
 
 # Invalid services should be ignored
 invalid-service: true
