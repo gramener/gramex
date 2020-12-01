@@ -22,13 +22,3 @@ function escapeHtml(unsafe) {
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
 }
-
-$('body').on('click', 'button#toggle-source', function() {
-  if($('.btn.viewsource').hasClass('d-none')) {
-    $('.btn.viewsource').removeClass('d-none')
-    $('.sourcecode-container').removeClass('d-none')
-  } else {
-    $('.btn.viewsource').addClass('d-none')
-    $('.sourcecode-container').addClass('d-none')
-  }
-})

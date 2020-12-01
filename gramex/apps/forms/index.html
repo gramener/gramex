@@ -9,10 +9,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="{{ base }}/node_modules/dragula/dist/dragula.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Comfortaa&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{{ base }}/style.css">
+  <link rel="stylesheet" href="{{ base }}/style.scss">
 </head>
-
+{% set title = 'Form Builder - Create a form' %}
 <body>
+  {% from gramex import variables %}
   {% include template-navbar.html %}
   {% import os %}
   {% from form_builder import FOLDER %}
