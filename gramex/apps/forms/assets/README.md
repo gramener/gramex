@@ -1,18 +1,3 @@
-form_builder assets
-================================================================================
-
-Files in this directory are not version controlled. They are ignored by
-`../.gitignore`.
-
-This folder is typically synced from shared drives such as Google Drive,
-Dropbox, Seafile, etc.
-
-
-Folder structure
---------------------------------------------------------------------------------
-
-We recommend creating sub-folders as follows:
-
-- `assets/img/`     has images
-- `assets/data/`    has data files (e.g. topoJSON maps, XLSX, CSV, SQLite files)
-- `assets/fonts/`   has custom fonts (if required)
+version https://git-lfs.github.com/spec/v1
+oid sha256:2449a834520451d837f987a831b99ac5081bd63d96048c900d2448d4946cf058
+size 599
