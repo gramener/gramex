@@ -29,10 +29,10 @@ before_install:
   - sudo chown -R elasticsearch:elasticsearch /etc/default/elasticsearch
   - sudo service elasticsearch restart
 
-addons:
-  apt:
-    packages:
-      - pandoc
+    # addons:
+    #   apt:
+    #     packages:
+    #       - pandoc
 
 # Cache modules for faster builds
 cache:
