@@ -200,7 +200,7 @@ class FormHandler(BaseHandler):
             meta[key] = AttrDict()
             opt = self._options(dataset, self.args, path_args, path_kwargs, key)
             if 'id' not in opt.filter_kwargs:
-                raise HTTPError(BAD_REQUEST, reason='%s: missing id: <col> for %s' % (
+                raise HTTPError(BAD_REQUEST, reason='%s: need id: kwarg to %s' % (
                     self.name, self.request.method))
             missing_args = [col for col in opt.filter_kwargs['id'] if col not in opt.args]
             if method != gramex.data.insert and len(missing_args) > 0:
