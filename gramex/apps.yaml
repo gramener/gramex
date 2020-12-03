@@ -1,5 +1,7 @@
 capture:
     target: $GRAMEXPATH/apps/capture/
+forms:
+    target: $GRAMEXPATH/apps/forms/
 guide:
     target: $GRAMEXDATA/apps/guide/
     url: https://github.com/gramexrecipes/gramex-guide/archive/v1.66.0.zip
