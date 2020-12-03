@@ -24,7 +24,7 @@ url:
     pattern: /$YAMLURL/
     handler: FileHandler
     kwargs:
-      path: $YAMLPATH/gallery.html
+      path: $YAMLPATH/index.html
       template: true
       headers:
         # Templates may have user-specific content. Cache privately.
@@ -36,7 +36,7 @@ url:
     pattern: /$YAMLURL/create
     handler: FileHandler
     kwargs:
-      path: $YAMLPATH/index.html
+      path: $YAMLPATH/create.html
       template: true
       headers:
         # Templates may have user-specific content. Cache privately.
