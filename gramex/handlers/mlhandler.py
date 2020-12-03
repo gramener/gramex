@@ -6,9 +6,10 @@ import warnings
 from tempfile import gettempdir
 
 import gramex
-from gramex.config import app_log, variables
+from gramex.config import app_log, variables, slug
+from gramex import data as gdata
 from gramex.handlers import FormHandler
-from gramex.http import NOT_FOUND
+from gramex.http import NOT_FOUND, BAD_REQUEST
 from gramex.install import _mkdir
 from gramex import cache
 import joblib
@@ -18,7 +19,7 @@ import pydoc
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
-from slugify import slugify
+from sklearn import metrics
 from tornado.gen import coroutine
 from tornado.web import HTTPError
 
@@ -81,13 +82,22 @@ def is_categorical(s, num_treshold=0.66):
 class MLHandler(FormHandler):
     @classmethod
     def setup(cls, path='', model_class=None, model_params=None, **kwargs):
+        # process data
+        data = kwargs.pop('data')
+        if isinstance(data, str):
+            filter_kwargs = {}
+            url = data
+        else:
+            url = data.pop('url')
+            filter_kwargs = data
+        DATA_CACHE[cls.name]['data'] = gdata.filter(url, **filter_kwargs)
         super(MLHandler, cls).setup(**kwargs)
         if not model_params:
             model_params = {}
         if path:
             cls.model_path = path
         else:
-            mname = slugify(cls.name) + '.pkl'
+            mname = slug(cls.name) + '.pkl'
             mpath = op.join(variables['GRAMEXDATA'], 'apps', 'mlhandler')
             _mkdir(mpath)
             cls.model_path = op.join(mpath, mname)
@@ -130,7 +140,12 @@ class MLHandler(FormHandler):
 
     def _predict(self, data):
         data = self._transform(data)
+        self.model = cache.open(self.model_path, joblib.load)
         return self.model.predict(data)
+
+    def _score(self, df, prediction, metric='accuracy_score'):
+        y_true = df[self.get_arg('_target_col')].values
+        return getattr(metrics, metric)(y_true, prediction)
 
     def _coerce_model_params(self, mclass=None, params=None):
         if self.model:
@@ -159,8 +174,18 @@ class MLHandler(FormHandler):
 
     def _assemble_pipeline(self, data):
         if json.loads(self.get_arg('_pipeline', 'false')):
-            categoricals = [c for c in data if is_categorical(data[c])]
-            numericals = [c for c in data if pd.api.types.is_numeric_dtype(data[c])]
+            nums = set(self.args.get('_nums', []))
+            cats = set(self.args.get('_cats', []))
+            both = nums.intersection(cats)
+            if len(both) > 0:
+                raise HTTPError(
+                    BAD_REQUEST,
+                    reason=f"Columns {both} cannot be both numerical and categorical.")
+            to_guess = set(data.columns.tolist()) - nums.union(cats)
+            categoricals = [c for c in to_guess if is_categorical(data[c])]
+            numericals = [c for c in to_guess if pd.api.types.is_numeric_dtype(data[c])]
+            categoricals += list(cats)
+            numericals += list(nums)
             ct = ColumnTransformer([('ohe', OneHotEncoder(sparse=False), categoricals),
                                     ('scaler', StandardScaler(), numericals)])
             return Pipeline([('transform', ct), (self.model.__class__.__name__, self.model)])
@@ -216,8 +241,6 @@ class MLHandler(FormHandler):
 
     @coroutine
     def get(self, *path_args, **path_kwargs):
-        if self.model is None:
-            self.model = cache.open(self.model_path, joblib.load)
         if self.args.get('_cache', False):
             out = {k: v for k, v in DATA_CACHE[self.name].items() if k != 'data'}
             out.update({'data': DATA_CACHE[self.name]['data'].to_dict(orient='records')})
@@ -281,7 +304,10 @@ class MLHandler(FormHandler):
         else:
             data = self._parse_data(False)
             prediction = yield gramex.service.threadpool.submit(self._predict, data)
-            self.write(_serialize_prediction(prediction))
+            if self.get_arg('_score', False):
+                self.write({'score': self._score(data, prediction)})
+            else:
+                self.write(_serialize_prediction(prediction))
         super(MLHandler, self).get(*path_args, **path_kwargs)
 
     @coroutine
