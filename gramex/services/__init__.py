@@ -31,9 +31,8 @@ import gramex.cache
 import gramex.license
 import logging.config
 import concurrent.futures
-import six.moves.urllib.parse as urlparse
 from copy import deepcopy
-from six import text_type, string_types
+from urllib.parse import urljoin, urlsplit, urlunsplit
 from tornado.template import Template
 from orderedattrdict import AttrDict
 from gramex import debug, shutdown, __version__
@@ -164,7 +163,7 @@ def app(conf):
             url = 'http://127.0.0.1:%d/' % conf.listen.port
             if conf.browser:
                 if isinstance(conf.browser, str):
-                    url = urlparse.urljoin(url, conf.browser)
+                    url = urljoin(url, conf.browser)
                 try:
                     browser = webbrowser.get()
                     app_log.info('Opening %s in %s browser', url, browser.__class__.__name__)
@@ -300,7 +299,7 @@ def create_alert(name, alert):
     contentfields = ['body', 'html', 'bodyfile', 'htmlfile', 'markdown', 'markdownfile']
     addr_fields = ['to', 'cc', 'bcc', 'reply_to', 'on_behalf_of', 'from']
     for key in ['subject'] + addr_fields + contentfields:
-        if not isinstance(alert.get(key, ''), string_types + (list, )):
+        if not isinstance(alert.get(key, ''), (str, list)):
             app_log.error('alert: %s.%s: %r must be a list or str', name, key, alert[key])
             return
     if not isinstance(alert.get('images', {}), dict):
@@ -327,13 +326,13 @@ def create_alert(name, alert):
     #   - `data: [...]` -- same as `data: {data: [...]}`
     datasets = {}
     if 'data' in alert:
-        if isinstance(alert['data'], string_types):
+        if isinstance(alert['data'], str):
             datasets = {'data': {'url': alert['data']}}
         elif isinstance(alert['data'], list):
             datasets = {'data': alert['data']}
         elif isinstance(alert['data'], dict):
             for key, dataset in alert['data'].items():
-                if isinstance(dataset, string_types):
+                if isinstance(dataset, str):
                     datasets[key] = {'url': dataset}
                 elif isinstance(dataset, list) or 'url' in dataset:
                     datasets[key] = dataset
@@ -555,11 +554,11 @@ def _sort_url_patterns(entry):
 
 def _url_normalize(pattern):
     '''Remove double slashes, ../, ./ etc in the URL path. Remove URL fragment'''
-    url = urlparse.urlsplit(pattern)
+    url = urlsplit(pattern)
     path = posixpath.normpath(url.path)
     if url.path.endswith('/') and not path.endswith('/'):
         path += '/'
-    return urlparse.urlunsplit((url.scheme, url.netloc, path, url.query, ''))
+    return urlunsplit((url.scheme, url.netloc, path, url.query, ''))
 
 
 def _get_cache_key(conf, name):
@@ -614,7 +613,7 @@ def _get_cache_key(conf, name):
     context = {
         'missing': '~',
         'argsep': ', ',         # join args using comma
-        'u': text_type          # convert to unicode
+        'u': str                # convert to unicode
     }
     # The code is constructed entirely by this function. Using exec is safe
     exec(method, context)       # nosec

@@ -15,9 +15,13 @@ url:
     pattern: /$YAMLURL/theme/(.*)
     handler: FileHandler
     kwargs:
-      path: $YAMLPATH/theme/
-      index: true
+      path:
+        '(.+\.scss)': '$YAMLPATH/theme/{0}'
+        '(.+\.png)': '$YAMLPATH/theme/{0}'
+        '.+': $YAMLPATH/theme/sample.html
+        '.*': $YAMLPATH/theme/index.html
       sass: '*.scss, *.sass'
+      template: '*.html'
       auth: false
       headers:
         Cache-Control: public, max-age=86400

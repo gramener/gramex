@@ -1,6 +1,6 @@
 {
   "name": "gramex-apps-ui",
-  "version": "1.58.0",
+  "version": "1.66.0",
   "author": "Bhanu K <bhanu.kamapantula@gramener.com>",
   "license": "MIT",
   "dependencies": {
@@ -35,8 +35,5 @@
     "vega": "5",
     "vega-embed": "6",
     "vega-lite": "4"
-  },
-  "scripts": {
-    "postinstall": "postinstall.js"
   }
 }

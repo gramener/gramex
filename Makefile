@@ -11,7 +11,6 @@ help:
 	@echo "push-pypi - upload package to pypi"
 	@echo "stats - show code stats"
 	@echo "push-docs - upload documentation to gramener.com"
-	@echo "push-coverage - upload coverage stats to gramener.com"
 	@echo "lint - check style with flake8, eclint, eslint, htmllint, bandit"
 	@echo "docs - generate Sphinx HTML documentation, including API docs"
 	@echo "conda - create conda package"
@@ -105,9 +104,6 @@ stats:
 	@echo tests
 	@find tests testlib -path '*node_modules/*' -prune -o -name '*.py' | grep '\.py$$' | xargs wc -l | tail -1
 
-push-coverage:
-	rsync -avzP tests/htmlcov/ ubuntu@gramener.com:/mnt/gramener/demo.gramener.com/gramextestcoverage/
-
 push-docs: docs
 	rsync -avzP docs/_build/html/ ubuntu@gramener.com:/mnt/gramener/learn.gramener.com/gramex/
 
@@ -115,3 +111,7 @@ push-pypi: clean
 	python setup.py sdist
 	# Note: if this fails, add '-p PASSWORD'
 	twine upload -u gramener dist/*
+
+# Gramex test coverage is part of Travis, and no longer needs to be deployed on gramener.com
+# push-coverage:
+# 	rsync -avzP tests/htmlcov/ ubuntu@gramener.com:/mnt/gramener/demo.gramener.com/gramextestcoverage/
