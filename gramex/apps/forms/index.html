@@ -20,21 +20,83 @@
         <script type="text/html" class="forms">
           <% _.each(forms, function(_form) { %>
             <% let _md = JSON.parse(_form.metadata)%>
-            <div class="card overflow-hidden">
+            <div class="card">
               <a href="form/<%= _form.id %>">
                 <img class="thumbnail mx-auto img-fluid" src="<%= _form.thumbnail || 'https://picsum.photos/160' %>">
               </a>
-              <div class="card-body border-top">
+              <div class="card-body border-top d-flex justify-content-between align-items-center">
                 <div class="font-weight-bold text-dark"><%= _md.name %></div>
                 <!--
                   - TODO: Add dropdown icon for actions - Delete, Rename, Open in New Tab
                 -->
+                <div class="btn-group dropdown">
+                  <button class="btn btn-link text-muted p-0" data-toggle="dropdown">
+                    <i class="fa fa-ellipsis-v"></i>
+                  </button>
+                  <div class="dropdown-menu">
+                    <button class="dropdown-item btn-link" type="button" data-toggle="modal" data-target="#renameModal">Rename</button>
+                    <button class="dropdown-item btn-link" type="button" data-toggle="modal" data-target="#removeModal">Remove</button>
+                    <a class="dropdown-item" href="form/<%= _form.id %>" target="_blank">Open in new tab</a>
+                  </div>
+                </div>
               </div><!-- .card-body -->
             </div><!-- .card -->
           <% }) %>
         </script>
       </div><!-- .card-deck -->
     </div><!-- .container-fluid -->
+
+    <!-- Button trigger modal -->
+    <button type="button" class="btn btn-primary">
+      Launch demo modal
+    </button>
+
+    <!-- Modal -->
+    <div class="modal fade" id="renameModal" tabindex="-1" aria-labelledby="renameModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content border-radius">
+          <div class="modal-header">
+            <h5 class="modal-title" id="renameModalLabel">Rename</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <p class="text-muted">
+              Please enter a new name for the form:
+            </p>
+            <input type="text" class="form-control" placeholder="">
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary">Save changes</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="removeModal" tabindex="-1" aria-labelledby="removeModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content border-radius">
+          <div class="modal-header">
+            <h5 class="modal-title" id="removeModalLabel">Remove form?</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <p class="text-muted">
+              Please enter a new name for the form:
+            </p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary">Remove form</button>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <script src="{{ base }}/ui/jquery/dist/jquery.min.js"></script>
     <script src="{{ base }}/ui/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
