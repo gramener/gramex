@@ -28,6 +28,9 @@
   -o-filter: grayscale(100%);
   filter: gray;
 }
+.gallery-grid .card:hover, .create-form:hover {
+  border: 2px solid #007bff;
+}
 .sourcecode-container {
   max-height: 30vw;
 }
