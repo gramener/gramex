@@ -9,6 +9,7 @@ import gramex.config
 import gramex.services
 from threading import Lock
 from six.moves.urllib.parse import urlencode
+from redis import StrictRedis
 from nose.tools import eq_, ok_
 from nose.plugins.skip import SkipTest
 from orderedattrdict import AttrDict
@@ -96,6 +97,12 @@ class TestCacheConstructor(unittest.TestCase):
         redis.store.flushall()
         gramex.cache.open(os.path.join(folder, 'sales.xlsx'), transform=lock, _cache=redis)
         eq_(len(redis), 0)      # It should not be cached
+
+    def test_redis_unpickling(self):
+        r = StrictRedis()      #  Connect to redis without gramex cache
+        r.set('Unpickled', 'Test')
+        cache = self.get_redis_cache()
+        eq_('Unpickled' in cache, True) # `Unpickled` should be available in cache
 
 
 class TestCacheKey(unittest.TestCase):

@@ -66,7 +66,7 @@ class RedisCache():
             try:
                 yield cPickle.loads(key)
             except cPickle.UnpicklingError:
-                yield key
+                yield key.decode('utf-8')
 
     @property
     def currsize(self):

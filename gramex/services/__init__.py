@@ -789,7 +789,7 @@ _cache_defaults = {
         'size': 10000000000,    # 10 GiB
     },
     'redis': {
-        'size': 500000000,      # 500 MiB
+        'size': None,           # None
     }
 }
 
