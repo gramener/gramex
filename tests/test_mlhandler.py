@@ -23,7 +23,64 @@ class TestMLHandler(TestGramex):
 
     @classmethod
     def setUpClass(cls):
+        cls.df = pd.read_csv(op.join(folder, 'iris.csv'), encoding='utf8')
+        # cls.df.to_csv(op.join(folder, 'iris.csv'), index=False, encoding='utf8')
+
+    @classmethod
+    def tearDownClass(cls):
+        model_path = op.join(folder, 'model.pkl')
+        if op.exists(model_path):
+            os.remove(model_path)
+
+    def test_default(self):
+        # Check if model has been trained on iris, and exists at the right path.
+        clf = joblib.load(op.join(folder, 'model.pkl'))
+        self.assertIsInstance(clf, LogisticRegression)
+        score = clf.score(self.df[[c for c in self.df if c != 'species']], self.df['species'])
+        self.assertGreaterEqual(score, self.ACC_TOL)
+
+    def test_get_predictions(self):
+        resp = self.get(
+            '/mlhandler?sepal_length=5.9&sepal_width=3&petal_length=5.1&petal_width=1.8')
+        self.assertEqual(resp.json(), ['virginica'])
+        req = '/mlhandler?'
+        samples = []
+        target = []
+        for row in self.df.sample(n=5).to_dict(orient='records'):
+            samples.extend([(col, value) for col, value in row.items() if col != 'species'])
+            target.append(row['species'])
+        params = '&'.join([f'{k}={v}' for k, v in samples])
+        resp = self.get(req + params)
+        self.assertGreaterEqual(accuracy_score(resp.json(), target), 0.8)  # NOQA: E912
+
+    def test_get_score(self):
+        req = '/mlhandler?_action=score&'
+        samples = []
+        for row in self.df.sample(n=5).to_dict(orient='records'):
+            samples.extend([(col, value) for col, value in row.items()])
+        params = '&'.join([f'{k}={v}' for k, v in samples])
+        resp = self.get(req + params)
+        self.assertGreaterEqual(resp.json()['score'], 0.8)  # NOQA: E912
+
+    def test_download(self):
+        r = self.get('/mlhandler?_download=true')
+        buff = BytesIO(r.content)
+        buff.seek(0)
+        clf = joblib.load(buff)
+        self.assertIsInstance(clf, LogisticRegression)
+
+    def test_get_model_params(self):
+        params = self.get('/mlhandler?_model=true').json()
+        self.assertDictEqual(LogisticRegression().get_params(), params)
+
+
+class _TestMLHandler(TestGramex):
+    ACC_TOL = 0.95
+
+    @classmethod
+    def setUpClass(cls):
         cls.df = pd.read_csv(op.join(folder, '..', 'testlib', 'iris.csv'), encoding='utf8')
+        cls.df.to_csv(op.join(folder, 'iris.csv'), index=False, encoding='utf8')
         cls.model_path = op.join(folder, 'iris.pkl')
 
     @classmethod
@@ -59,7 +116,7 @@ class TestMLHandler(TestGramex):
     def test_single_predict(self):
         resp = self.get(
             '/mlhandler?sepal_length=5.9&sepal_width=3&petal_length=5.1&petal_width=1.8')
-        self.assertEqual(resp.json()[0], 'virginica')
+        self.assertEqual(resp.json(), ['virginica'])
 
     def test_bulk_predict(self):
         self.test_train()
@@ -150,7 +207,7 @@ class TestMLHandler(TestGramex):
         resp = self.get('/mlhandler?_retrain=1&_target_col=species'
                         '&_exclude=sepal_width&_exclude=petal_length',
                         method='post', files={'file': ('iris.csv', buff.read())})
-        self.assertGreaterEqual(resp.json()['score'], 0.8)
+        self.assertGreaterEqual(resp.json()['score'], 0.8)  # NOQA: E912
 
         r = self.get('/mlhandler?_cache').json()['data']
         # Check that the data still has all columns

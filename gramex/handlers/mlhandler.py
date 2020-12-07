@@ -6,7 +6,7 @@ import warnings
 from tempfile import gettempdir
 
 import gramex
-from gramex.config import app_log, variables, slug
+from gramex.config import app_log, variables
 from gramex import data as gdata
 from gramex.handlers import FormHandler
 from gramex.http import NOT_FOUND, BAD_REQUEST
@@ -17,9 +17,11 @@ import numpy as np
 import pandas as pd
 import pydoc
 from sklearn.compose import ColumnTransformer
+from sklearn.metrics import accuracy_score
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn import metrics
+from slugify import slugify
 from tornado.gen import coroutine
 from tornado.web import HTTPError
 
@@ -81,6 +83,170 @@ def is_categorical(s, num_treshold=0.66):
 
 class MLHandler(FormHandler):
     @classmethod
+    def setup(cls, data=None, model=None, **kwargs):
+        if isinstance(data, str):
+            data = cache.open(data)
+        elif isinstance(data, dict):
+            data = gdata.filter(**data)
+        cls.cache_data(data)
+
+        # parse model kwargs
+        model_path = model.pop('path', '')
+        if op.exists(model_path):  # If the pkl exists, load it
+            cls.model = joblib.load(model_path)
+        else:  # build the model
+            params = model.get('params', {})
+            cls.model = search_modelclass(model['class'])(**params)
+            if model_path:  # if a path is specified, use to to store the model
+                cls.model_path = model_path
+            else:  # or create our own path
+                cls.model_path = op.join(variables['YAMLPATH'], slugify(cls.name) + '.pkl')
+
+            # train the model
+            target_col = model.get('target_col', False)
+            if not target_col:
+                raise ValueError('Target column not defined.')
+            DATA_CACHE[slugify(cls.name)]['target_col'] = target_col
+
+            # filter columns
+            data = cls._filtercols(data, **model)
+
+            # filter rows
+            data = cls._filterrows(data, **model)
+
+            # assemble the pipeline
+            if model.get('pipeline', False):
+                cls.model = cls._get_pipeline(data, **model)
+
+            # train the model
+            target = data[target_col]
+            train = data[[c for c in data if c != target_col]]
+            cls.model.fit(train, target)
+            joblib.dump(cls.model, cls.model_path)
+            app_log.critical(f'Model saved at {cls.model_path}')
+
+        super(MLHandler, cls).setup(**kwargs)
+
+    @classmethod
+    def cache_data(cls, data):
+        key = slugify(cls.name)
+        orgdata = DATA_CACHE.get(key, {'data': []}).get('data')
+        if len(orgdata):
+            if isinstance(orgdata, pd.DataFrame) and orgdata.columns == data.columns:
+                data = pd.concat((orgdata, data), axis=1)
+        DATA_CACHE[key]['data'] = data
+
+    @classmethod
+    def _filtercols(cls, data, **model_kwargs):
+        include = model_kwargs.get('include', [])
+        if include:
+            data = data[include]
+        exclude = model_kwargs.get('exclude', [])
+        if exclude:
+            data = data.drop(exclude, axis=1)
+        DATA_CACHE[slugify(cls.name)]['include'] = include
+        DATA_CACHE[slugify(cls.name)]['exclude'] = exclude
+        return data
+
+    @classmethod
+    def _filterrows(cls, data, **model_kwargs):
+        for method in 'dropna drop_duplicates'.split():
+            action = model_kwargs.get(method, True)
+            DATA_CACHE[slugify(cls.name)][action] = True
+            if action:
+                if isinstance(action, list):
+                    subset = action
+                else:
+                    subset = None
+                data = getattr(data, method)(subset=subset)
+        return data
+
+    @classmethod
+    def _get_pipeline(cls, data, **model_kwargs):
+        nums = set(model_kwargs.get('nums', []))
+        cats = set(model_kwargs.get('cats', []))
+        both = nums.intersection(cats)
+        if len(both) > 0:
+            raise HTTPError(
+                BAD_REQUEST,
+                reason=f"Columns {both} cannot be both numerical and categorical.")
+        to_guess = set(data.columns.tolist()) - nums.union(cats)
+        target_col = model_kwargs.get('target_col', False)
+        if target_col:
+            to_guess = to_guess - {target_col}
+        categoricals = [c for c in to_guess if is_categorical(data[c])]
+        numericals = [c for c in to_guess if pd.api.types.is_numeric_dtype(data[c])]
+        categoricals += list(cats)
+        numericals += list(nums)
+        assert len(set(categoricals) & set(numericals)) == 0
+        ct = ColumnTransformer([('ohe', OneHotEncoder(sparse=False), categoricals),
+                                ('scaler', StandardScaler(), numericals)])
+        return Pipeline([('transform', ct), (cls.model.__class__.__name__, cls.model)])
+
+    def _transform(self, data, **kwargs):
+        cfg = DATA_CACHE[slugify(self.name)]
+        for col in data:
+            data[col] = data[col].astype(cfg['data'][col].dtype)
+        # transform columns
+        include = cfg.get('include', kwargs.get('include', []))
+        if include:
+            data = data[include]
+        exclude = cfg.get('exclude', kwargs.get('exclude', []))
+        if exclude:
+            data = data.drop(exclude, axis=1)
+        # transform rows
+        dropna = cfg.get('dropna', kwargs.get('dropna', True))
+        if dropna:
+            if isinstance(dropna, list):
+                subset = dropna
+            else:
+                subset = None
+            data.dropna(subset=subset, inplace=True)
+        dedup = kwargs.get('deduplicate', cfg.get('deduplicate', True))
+        if dedup:
+            if isinstance(dedup, list):
+                subset = dedup
+            else:
+                subset = None
+            data.drop_duplicates(subset=subset, inplace=True)
+        return data
+
+    def _predict(self, data):
+        data = self._transform(data, deduplicate=False)
+        self.model = cache.open(self.model_path, joblib.load)
+        return self.model.predict(data)
+
+    @coroutine
+    def get(self, *path_args, **path_kwargs):
+        if self.args.get('_download', [False])[0]:
+            self.set_header('Content-Type', 'application/octet-strem')
+            self.set_header('Content-Disposition',
+                            f'attachment; filename={op.basename(self.model_path)}')
+            self.write(open(self.model_path, 'rb').read())
+        elif self.args.get('_model', [False])[0]:
+            self.write(json.dumps(self.model.get_params(), indent=4))
+        else:
+            action = self.args.pop('_action', ['predict'])[0]
+            try:
+                data = pd.DataFrame(self.args)
+            except Exception as err:
+                app_log.debug(err.msg)
+            target_col = DATA_CACHE[slugify(self.name)]['target_col']
+            if target_col in data:
+                target = data.pop(target_col)
+            else:
+                target = None
+            prediction = yield gramex.service.threadpool.submit(self._predict, data)
+            if action == 'predict':
+                self.write(_serialize_prediction(prediction))
+            elif action == 'score':
+                score = accuracy_score(target.astype(prediction.dtype), prediction)
+                self.write(json.dumps({'score': score}, indent=4))
+        super(MLHandler, self).get(*path_args, **path_kwargs)
+
+
+class _MLHandler(FormHandler):
+    @classmethod
     def setup(cls, path='', model_class=None, model_params=None, **kwargs):
         # process data
         data = kwargs.pop('data')
@@ -97,7 +263,7 @@ class MLHandler(FormHandler):
         if path:
             cls.model_path = path
         else:
-            mname = slug(cls.name) + '.pkl'
+            mname = slugify(cls.name) + '.pkl'
             mpath = op.join(variables['GRAMEXDATA'], 'apps', 'mlhandler')
             _mkdir(mpath)
             cls.model_path = op.join(mpath, mname)

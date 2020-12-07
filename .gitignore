@@ -152,3 +152,4 @@ docs/_build
 
 # License copied to conda build_dir
 pkg/conda/LICENSE
+*.pkl
