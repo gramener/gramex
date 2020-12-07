@@ -11,6 +11,7 @@ import pandas as pd
 from sklearn.datasets import make_classification
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score
+from sklearn.model_selection import train_test_split
 from sklearn.naive_bayes import GaussianNB
 from sklearn.pipeline import Pipeline
 
@@ -72,6 +73,84 @@ class TestMLHandler(TestGramex):
     def test_get_model_params(self):
         params = self.get('/mlhandler?_model=true').json()
         self.assertDictEqual(LogisticRegression().get_params(), params)
+
+    def test_get_bulk_predictions(self):
+        df = self.df.drop_duplicates()
+        target = df.pop('species')
+        resp = self.get('/mlhandler', method='post', data=df.to_json(orient='records'))
+        self.assertGreaterEqual(accuracy_score(target, resp.json()), self.ACC_TOL)
+
+    def test_get_bulk_score(self):
+        resp = self.get(
+            '/mlhandler?_action=score', method='post',
+            data=self.df.to_json(orient='records'))
+        self.assertGreaterEqual(resp.json()['score'], self.ACC_TOL)
+
+    def test_train(self):
+        # backup the original model
+        clf = joblib.load(op.join(folder, 'model.pkl'))
+        X, y = make_classification()
+        xtrain, xtest, ytrain, ytest = train_test_split(X, y, stratify=y, test_size=0.25)
+        df = pd.DataFrame(xtrain)
+        df['target'] = ytrain
+        try:
+            resp = self.get('/mlhandler?_action=train&_target_col=target', method='post',
+                            data=df.to_json(orient='records'))
+            self.assertGreaterEqual(resp.json()['score'], 0.8)  # NOQA: E912
+        finally:
+            joblib.dump(clf, op.join(folder, 'model.pkl'))
+
+    def test_get_cache(self):
+        df = pd.DataFrame.from_records(self.get('/mlhandler?_cache=true').json())
+        pd.testing.assert_frame_equal(df, self.df)
+
+    def test_clear_cache(self):
+        try:
+            r = self.get('/mlhandler?_clearcache=true')
+            self.assertEqual(r.status_code, OK)
+            self.assertListEqual(self.get('/mlhandler?_cache=true').json(), [])
+        finally:
+            self.get('/mlhandler?_action=append', method='post',
+                     data=self.df.to_json(orient='records'))
+
+    def test_append(self):
+        try:
+            r = self.get('/mlhandler?_action=append', method='post',
+                         data=self.df.to_json(orient='records'))
+            self.assertEqual(r.status_code, OK)
+            df = pd.DataFrame.from_records(self.get('/mlhandler?_cache=true').json())
+            self.assertEqual(df.shape[0], 2 * self.df.shape[0])
+        finally:
+            self.get('/mlhandler?_clearcache=true')
+            self.get('/mlhandler?_action=append', method='post',
+                     data=self.df.to_json(orient='records'))
+
+    def test_retrain(self):
+        # Make some data
+        x, y = make_classification()
+        xtrain, xtest, ytrain, ytest = train_test_split(x, y, stratify=y, test_size=0.25)
+        df = pd.DataFrame(xtrain)
+        df['target'] = ytrain
+        test_df = pd.DataFrame(xtest)
+        test_df['target'] = ytest
+        try:
+            # clear the cache
+            self.get('/mlhandler?_clearcache=true')
+            self.assertListEqual(self.get('/mlhandler?_cache=true').json(), [])
+            # append new data, don't train
+            self.get('/mlhandler?_action=append', method='post', data=df.to_json(orient='records'))
+            # now, retrain
+            self.get('/mlhandler?_action=retrain&_target_col=target', method='post')
+            # Check score against test dataset
+            resp = self.get(
+                '/mlhandler?_action=score', method='post',
+                data=test_df.to_json(orient='records'))
+            self.assertGreaterEqual(resp.json()['score'], 0.8)  # NOQA: E912
+        finally:
+            # revert to the original cache
+            self.get('/mlhandler?_clearcache=true')
+            self.get('/mlhandler?_action=append', method='post',
+                     data=self.df.to_json(orient='records'))
 
 
 class _TestMLHandler(TestGramex):

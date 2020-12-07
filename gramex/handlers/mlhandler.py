@@ -40,6 +40,15 @@ MLCLASS_MODULES = [
     'statsmodels.tsa.api',
     'tensorflow.keras.applications'
 ]
+TRAINING_DEFAULTS = [
+    ('include', []),
+    ('exclude', []),
+    ('dropna', True),
+    ('deduplicate', True),
+    ('pipeline', False),
+    ('nums', []),
+    ('cats', []),
+]
 
 
 def search_modelclass(mclass):
@@ -62,7 +71,7 @@ def _serialize_prediction(obj):
     return json.dumps(obj, indent=4)
 
 
-def is_categorical(s, num_treshold=0.66):
+def is_categorical(s, num_treshold=0.5):
     """Check if a series contains a categorical variable.
 
     Parameters
@@ -123,7 +132,7 @@ class MLHandler(FormHandler):
             train = data[[c for c in data if c != target_col]]
             cls.model.fit(train, target)
             joblib.dump(cls.model, cls.model_path)
-            app_log.critical(f'Model saved at {cls.model_path}')
+            app_log.info(f'Model saved at {cls.model_path}')
 
         super(MLHandler, cls).setup(**kwargs)
 
@@ -132,8 +141,8 @@ class MLHandler(FormHandler):
         key = slugify(cls.name)
         orgdata = DATA_CACHE.get(key, {'data': []}).get('data')
         if len(orgdata):
-            if isinstance(orgdata, pd.DataFrame) and orgdata.columns == data.columns:
-                data = pd.concat((orgdata, data), axis=1)
+            if isinstance(orgdata, pd.DataFrame) and np.all(orgdata.columns == data.columns):
+                data = pd.concat((orgdata, data), axis=0, ignore_index=True)
         DATA_CACHE[key]['data'] = data
 
     @classmethod
@@ -216,6 +225,42 @@ class MLHandler(FormHandler):
         self.model = cache.open(self.model_path, joblib.load)
         return self.model.predict(data)
 
+    def _parse_data(self, _cache=True):
+        # First look in self.request.files
+        if len(self.request.files) > 0:
+            dfs = []
+            for _, files in self.request.files.items():
+                for f in files:
+                    outpath = op.join(self._data_cachedir, f['filename'])
+                    with open(outpath, 'wb') as fout:
+                        fout.write(f['body'])
+                    if outpath.endswith('.json'):
+                        xdf = cache.open(outpath, pd.read_json)
+                    else:
+                        xdf = cache.open(outpath)
+                    dfs.append(xdf)
+            data = pd.concat(dfs, axis=0)
+        # Otherwise look in request.body
+        else:
+            try:
+                data = pd.read_json(self.request.body.decode('utf8'))
+            except ValueError:
+                data = DATA_CACHE.get(slugify(self.name), {}).get('data', [])
+                _cache = False
+        if _cache:
+            orgdf = DATA_CACHE.get(slugify(self.name), {}).get('data', [])
+            if len(orgdf):
+                data = pd.concat((orgdf, data), axis=0)
+            DATA_CACHE[slugify(self.name)]['data'] = data
+        return data
+
+    def _parse_trainopts_from_req(self):
+        opts = {}
+        for opt, default in TRAINING_DEFAULTS:
+            opts[opt] = self.args.get(f'_{opt}',
+                                      DATA_CACHE[slugify(self.name)].get(opt, default))
+        return opts
+
     @coroutine
     def get(self, *path_args, **path_kwargs):
         if self.args.get('_download', [False])[0]:
@@ -225,6 +270,15 @@ class MLHandler(FormHandler):
             self.write(open(self.model_path, 'rb').read())
         elif self.args.get('_model', [False])[0]:
             self.write(json.dumps(self.model.get_params(), indent=4))
+        elif self.args.get('_cache', [False])[0]:
+            data = DATA_CACHE[slugify(self.name)].get('data', [])
+            if len(data):
+                self.write(data.to_json(orient='records'))
+            else:
+                self.write(json.dumps([]))
+        elif self.args.get('_clearcache', [False])[0]:
+            del DATA_CACHE[slugify(self.name)]['data']
+            DATA_CACHE[slugify(self.name)]['data'] = []
         else:
             action = self.args.pop('_action', ['predict'])[0]
             try:
@@ -243,6 +297,60 @@ class MLHandler(FormHandler):
                 score = accuracy_score(target.astype(prediction.dtype), prediction)
                 self.write(json.dumps({'score': score}, indent=4))
         super(MLHandler, self).get(*path_args, **path_kwargs)
+
+    @coroutine
+    def post(self, *path_args, **path_kwargs):
+        action = self.args.get('_action', ['predict'])[0]
+        if action == 'retrain':
+            # Don't parse data from request, just train on the cached data
+            data = DATA_CACHE[slugify(self.name)].get('data', [])
+        else:
+            data = self._parse_data(False)
+        if action == 'predict':
+            prediction = yield gramex.service.threadpool.submit(self._predict, data)
+            self.write(_serialize_prediction(prediction))
+        elif action == 'score':
+            target_col = DATA_CACHE[slugify(self.name)]['target_col']
+            target = data.pop(target_col)
+            prediction = yield gramex.service.threadpool.submit(self._predict, data)
+            self.write(json.dumps({'score': accuracy_score(target, prediction)}, indent=4))
+        elif action in ('train', 'retrain'):
+            target_col = self.args.get('_target_col', [False])[0]
+            if not target_col:
+                older_target_col = DATA_CACHE[slugify(self.name)].get('target_col', False)
+                if not older_target_col:
+                    raise ValueError('target_col not specified')
+                else:
+                    target_col = older_target_col
+            else:
+                DATA_CACHE[slugify(self.name)]['target_col'] = target_col
+
+            opts = self._parse_trainopts_from_req()
+            # filter columns
+            data = self._filtercols(data, **opts)
+
+            # filter rows
+            data = self._filterrows(data, **opts)
+
+            # assemble the pipeline
+            if opts.get('pipeline', False):
+                self.model = self._get_pipeline(data, **opts)
+
+            # train the model
+            target = data[target_col]
+            train = data[[c for c in data if c != target_col]]
+            self.model.fit(train, target)
+            joblib.dump(self.model, self.model_path)
+            app_log.info(f'Model saved at {self.model_path}')
+            self.write(json.dumps({'score': self.model.score(train, target)}))
+        elif action == 'append':
+            try:
+                self.cache_data(data)
+            except Exception as err:
+                raise HTTPError(BAD_REQUEST, reason=f'{err.msg}')
+        else:
+            raise ValueError(f'Action {action} not supported.')
+        super(MLHandler, self).post(*path_args, **path_kwargs)
 
 
 class _MLHandler(FormHandler):
@@ -431,35 +539,6 @@ class _MLHandler(FormHandler):
             prediction = yield gramex.service.threadpool.submit(self._predict, data)
             self.write(_serialize_prediction(prediction))
         super(MLHandler, self).get(*path_args, **path_kwargs)
-
-    def _parse_data(self, _cache=True):
-        # First look in self.request.files
-        if len(self.request.files) > 0:
-            dfs = []
-            for _, files in self.request.files.items():
-                for f in files:
-                    outpath = op.join(self._data_cachedir, f['filename'])
-                    with open(outpath, 'wb') as fout:
-                        fout.write(f['body'])
-                    if outpath.endswith('.json'):
-                        xdf = cache.open(outpath, pd.read_json)
-                    else:
-                        xdf = cache.open(outpath)
-                    dfs.append(xdf)
-            data = pd.concat(dfs, axis=0)
-        # Otherwise look in request.body
-        else:
-            try:
-                data = pd.read_json(self.request.body.decode('utf8'))
-            except ValueError:
-                data = DATA_CACHE.get(self.name, {}).get('data', [])
-                _cache = False
-        if _cache:
-            orgdf = DATA_CACHE.get(self.name, {}).get('data', [])
-            if len(orgdf):
-                data = pd.concat((orgdf, data), axis=0)
-            DATA_CACHE[self.name]['data'] = data
-        return data
 
     @coroutine
     def post(self, *path_args, **path_kwargs):
