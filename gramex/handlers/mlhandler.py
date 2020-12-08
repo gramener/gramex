@@ -172,6 +172,9 @@ class MLHandler(FormHandler):
 
     @classmethod
     def _get_pipeline(cls, data, **model_kwargs):
+        # ToDo: Categorical detection is messed up
+        # 1. All data ops to be async.
+        # 2. jj
         nums = set(model_kwargs.get('nums', []))
         cats = set(model_kwargs.get('cats', []))
         both = nums.intersection(cats)
