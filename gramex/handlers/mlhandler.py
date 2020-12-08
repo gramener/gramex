@@ -261,6 +261,28 @@ class MLHandler(FormHandler):
                                       DATA_CACHE[slugify(self.name)].get(opt, default))
         return opts
 
+    def _coerce_model_params(self, mclass=None, params=None):
+        # If you need params for self.model, use mclass, don't rely on self.model attribute
+        # if self.model:
+        #     model_params = self.model.get_params()
+        # else:
+        spec = getargspec(mclass)
+        m_args = spec.args
+        m_args.remove('self')
+        m_defaults = spec.defaults
+        model_params = {k: v for k, v in zip(m_args, m_defaults)}
+        if not params:
+            new_params = {k: v[0] for k, v in self.args.items() if k in model_params}
+        else:
+            new_params = params
+        param_types = {}
+        for k, v in model_params.items():
+            if v is None:
+                param_types[k] = str
+            else:
+                param_types[k] = type(v)
+        return {k: param_types[k](v) for k, v in new_params.items()}
+
     @coroutine
     def get(self, *path_args, **path_kwargs):
         if self.args.get('_download', [False])[0]:
@@ -270,15 +292,12 @@ class MLHandler(FormHandler):
             self.write(open(self.model_path, 'rb').read())
         elif self.args.get('_model', [False])[0]:
             self.write(json.dumps(self.model.get_params(), indent=4))
-        elif self.args.get('_cache', [False])[0]:
+        elif '_cache' in self.args:
             data = DATA_CACHE[slugify(self.name)].get('data', [])
             if len(data):
                 self.write(data.to_json(orient='records'))
             else:
                 self.write(json.dumps([]))
-        elif self.args.get('_clearcache', [False])[0]:
-            del DATA_CACHE[slugify(self.name)]['data']
-            DATA_CACHE[slugify(self.name)]['data'] = []
         else:
             action = self.args.pop('_action', ['predict'])[0]
             try:
@@ -351,6 +370,29 @@ class MLHandler(FormHandler):
         else:
             raise ValueError(f'Action {action} not supported.')
         super(MLHandler, self).post(*path_args, **path_kwargs)
+
+    @coroutine
+    def put(self, *path_args, **path_kwargs):
+        if '_model' in self.args:
+            self.args.pop('_model')
+            mclass = self.args.pop('class')[0]
+            mclass = search_modelclass(mclass)
+            params = {k: v[0] for k, v in self.args.items()}
+            params = self._coerce_model_params(mclass, params)
+            self.model = mclass(**params)
+            joblib.dump(self.model, self.model_path)
+            self.write(json.dumps(self.model.get_params(), indent=4))
+
+    @coroutine
+    def delete(self, *path_args, **path_kwargs):
+        if '_model' in self.args:
+            if op.exists(self.model_path):
+                os.remove(self.model_path)
+            else:
+                raise HTTPError(NOT_FOUND, reason='No model found at f{self.model_path}.')
+        if '_cache' in self.args:
+            del DATA_CACHE[slugify(self.name)]['data']
+            DATA_CACHE[slugify(self.name)]['data'] = []
 
 
 class _MLHandler(FormHandler):

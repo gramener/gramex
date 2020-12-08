@@ -14,6 +14,7 @@ from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
 from sklearn.naive_bayes import GaussianNB
 from sklearn.pipeline import Pipeline
+from sklearn.tree import DecisionTreeClassifier
 
 from . import TestGramex, folder
 op = os.path
@@ -89,7 +90,7 @@ class TestMLHandler(TestGramex):
     def test_train(self):
         # backup the original model
         clf = joblib.load(op.join(folder, 'model.pkl'))
-        X, y = make_classification()
+        X, y = make_classification()  # NOQA: N806
         xtrain, xtest, ytrain, ytest = train_test_split(X, y, stratify=y, test_size=0.25)
         df = pd.DataFrame(xtrain)
         df['target'] = ytrain
@@ -106,9 +107,9 @@ class TestMLHandler(TestGramex):
 
     def test_clear_cache(self):
         try:
-            r = self.get('/mlhandler?_clearcache=true')
+            r = self.get('/mlhandler?_cache', method='delete')
             self.assertEqual(r.status_code, OK)
-            self.assertListEqual(self.get('/mlhandler?_cache=true').json(), [])
+            self.assertListEqual(self.get('/mlhandler?_cache').json(), [])
         finally:
             self.get('/mlhandler?_action=append', method='post',
                      data=self.df.to_json(orient='records'))
@@ -121,7 +122,7 @@ class TestMLHandler(TestGramex):
             df = pd.DataFrame.from_records(self.get('/mlhandler?_cache=true').json())
             self.assertEqual(df.shape[0], 2 * self.df.shape[0])
         finally:
-            self.get('/mlhandler?_clearcache=true')
+            self.get('/mlhandler?_cache', method='delete')
             self.get('/mlhandler?_action=append', method='post',
                      data=self.df.to_json(orient='records'))
 
@@ -135,7 +136,7 @@ class TestMLHandler(TestGramex):
         test_df['target'] = ytest
         try:
             # clear the cache
-            self.get('/mlhandler?_clearcache=true')
+            self.get('/mlhandler?_cache', method='delete')
             self.assertListEqual(self.get('/mlhandler?_cache=true').json(), [])
             # append new data, don't train
             self.get('/mlhandler?_action=append', method='post', data=df.to_json(orient='records'))
@@ -145,12 +146,45 @@ class TestMLHandler(TestGramex):
             resp = self.get(
                 '/mlhandler?_action=score', method='post',
                 data=test_df.to_json(orient='records'))
-            self.assertGreaterEqual(resp.json()['score'], 0.8)  # NOQA: E912
+            self.assertGreaterEqual(resp.json()['score'], 0.66)  # NOQA: E912
         finally:
             # revert to the original cache
-            self.get('/mlhandler?_clearcache=true')
+            self.get('/mlhandler?_cache', method='delete')
             self.get('/mlhandler?_action=append', method='post',
                      data=self.df.to_json(orient='records'))
+
+    def test_change_model(self):
+        # back up the original model
+        clf = joblib.load(op.join(folder, 'model.pkl'))
+        try:
+            # put a new model
+            r = self.get(
+                '/mlhandler?_model&class=DecisionTreeClassifier&criterion=entropy&splitter=random',
+                method='put')
+            self.assertEqual(r.status_code, OK)
+            self.assertEqual(r.json()['criterion'], 'entropy')
+            self.assertEqual(r.json()['splitter'], 'random')
+            model = joblib.load(op.join(folder, 'model.pkl'))
+            self.assertIsInstance(model, DecisionTreeClassifier)
+            self.assertEqual(model.criterion, 'entropy')
+            self.assertEqual(model.splitter, 'random')
+            # Train the model on the cache
+            self.get('/mlhandler?_action=retrain&_target_col=species', method='post')
+            resp = self.get(
+                '/mlhandler?_action=score', method='post')
+            self.assertGreaterEqual(resp.json()['score'], 0.8)  # NOQA: E912
+        finally:
+            # restore the backup
+            joblib.dump(clf, op.join(folder, 'model.pkl'))
+
+    def test_delete(self):
+        clf = joblib.load(op.join(folder, 'model.pkl'))
+        try:
+            r = self.get('/mlhandler?_model', method='delete')
+            self.assertEqual(r.status_code, OK)
+            self.assertFalse(op.exists(op.join(folder, 'model.pkl')))
+        finally:
+            joblib.dump(clf, op.join(folder, 'model.pkl'))
 
 
 class _TestMLHandler(TestGramex):
