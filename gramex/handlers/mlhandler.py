@@ -301,9 +301,13 @@ class MLHandler(FormHandler):
         else:
             action = self.args.pop('_action', ['predict'])[0]
             try:
-                data = pd.DataFrame(self.args)
+                data = pd.DataFrame.from_dict(
+                    {k: v for k, v in self.args.items() if not k.startswith('_')})
             except Exception as err:
                 app_log.debug(err.msg)
+                data = DATA_CACHE[slugify(self.name)]['data']
+            if len(data) == 0:
+                data = DATA_CACHE[slugify(self.name)]['data']
             target_col = DATA_CACHE[slugify(self.name)]['target_col']
             if target_col in data:
                 target = data.pop(target_col)
@@ -313,7 +317,8 @@ class MLHandler(FormHandler):
             if action == 'predict':
                 self.write(_serialize_prediction(prediction))
             elif action == 'score':
-                score = accuracy_score(target.astype(prediction.dtype), prediction)
+                score = accuracy_score(target.astype(prediction.dtype),
+                                       prediction)
                 self.write(json.dumps({'score': score}, indent=4))
         super(MLHandler, self).get(*path_args, **path_kwargs)
 
