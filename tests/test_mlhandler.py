@@ -14,6 +14,7 @@ from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
 from sklearn.naive_bayes import GaussianNB
 from sklearn.pipeline import Pipeline
+from sklearn.compose import ColumnTransformer
 from sklearn.tree import DecisionTreeClassifier
 
 from . import TestGramex, folder
@@ -37,7 +38,9 @@ class TestMLHandler(TestGramex):
     def test_default(self):
         # Check if model has been trained on iris, and exists at the right path.
         clf = joblib.load(op.join(folder, 'model.pkl'))
-        self.assertIsInstance(clf, LogisticRegression)
+        self.assertIsInstance(clf, Pipeline)
+        self.assertIsInstance(clf.named_steps['transform'], ColumnTransformer)
+        self.assertIsInstance(clf.named_steps['LogisticRegression'], LogisticRegression)
         score = clf.score(self.df[[c for c in self.df if c != 'species']], self.df['species'])
         self.assertGreaterEqual(score, self.ACC_TOL)
 
@@ -62,14 +65,16 @@ class TestMLHandler(TestGramex):
             samples.extend([(col, value) for col, value in row.items()])
         params = '&'.join([f'{k}={v}' for k, v in samples])
         resp = self.get(req + params)
-        self.assertGreaterEqual(resp.json()['score'], 0.8)  # NOQA: E912
+        self.assertGreaterEqual(resp.json()['score'], 0.6)  # NOQA: E912
 
     def test_download(self):
         r = self.get('/mlhandler?_download=true')
         buff = BytesIO(r.content)
         buff.seek(0)
         clf = joblib.load(buff)
-        self.assertIsInstance(clf, LogisticRegression)
+        self.assertIsInstance(clf, Pipeline)
+        self.assertIsInstance(clf.named_steps['transform'], ColumnTransformer)
+        self.assertIsInstance(clf.named_steps['LogisticRegression'], LogisticRegression)
 
     def test_get_model_params(self):
         params = self.get('/mlhandler?_model=true').json()
@@ -78,13 +83,15 @@ class TestMLHandler(TestGramex):
     def test_get_bulk_predictions(self):
         df = self.df.drop_duplicates()
         target = df.pop('species')
-        resp = self.get('/mlhandler', method='post', data=df.to_json(orient='records'))
+        resp = self.get('/mlhandler', method='post', data=df.to_json(orient='records'),
+                        headers={'Content-Type': 'application/json'})
         self.assertGreaterEqual(accuracy_score(target, resp.json()), self.ACC_TOL)
 
     def test_get_bulk_score(self):
         resp = self.get(
             '/mlhandler?_action=score', method='post',
-            data=self.df.to_json(orient='records'))
+            data=self.df.to_json(orient='records'),
+            headers={'Content-Type': 'application/json'})
         self.assertGreaterEqual(resp.json()['score'], self.ACC_TOL)
 
     def test_train(self):
@@ -96,7 +103,8 @@ class TestMLHandler(TestGramex):
         df['target'] = ytrain
         try:
             resp = self.get('/mlhandler?_action=train&_target_col=target', method='post',
-                            data=df.to_json(orient='records'))
+                            data=df.to_json(orient='records'),
+                            headers={'Content-Type': 'application/json'})
             self.assertGreaterEqual(resp.json()['score'], 0.8)  # NOQA: E912
         finally:
             joblib.dump(clf, op.join(folder, 'model.pkl'))
@@ -112,19 +120,22 @@ class TestMLHandler(TestGramex):
             self.assertListEqual(self.get('/mlhandler?_cache').json(), [])
         finally:
             self.get('/mlhandler?_action=append', method='post',
-                     data=self.df.to_json(orient='records'))
+                     data=self.df.to_json(orient='records'),
+                     headers={'Content-Type': 'application/json'})
 
     def test_append(self):
         try:
             r = self.get('/mlhandler?_action=append', method='post',
-                         data=self.df.to_json(orient='records'))
+                         data=self.df.to_json(orient='records'),
+                         headers={'Content-Type': 'application/json'})
             self.assertEqual(r.status_code, OK)
             df = pd.DataFrame.from_records(self.get('/mlhandler?_cache=true').json())
             self.assertEqual(df.shape[0], 2 * self.df.shape[0])
         finally:
             self.get('/mlhandler?_cache', method='delete')
             self.get('/mlhandler?_action=append', method='post',
-                     data=self.df.to_json(orient='records'))
+                     data=self.df.to_json(orient='records'),
+                     headers={'Content-Type': 'application/json'})
 
     def test_retrain(self):
         # Make some data
@@ -139,19 +150,22 @@ class TestMLHandler(TestGramex):
             self.get('/mlhandler?_cache', method='delete')
             self.assertListEqual(self.get('/mlhandler?_cache=true').json(), [])
             # append new data, don't train
-            self.get('/mlhandler?_action=append', method='post', data=df.to_json(orient='records'))
+            self.get('/mlhandler?_action=append', method='post', data=df.to_json(orient='records'),
+                     headers={'Content-Type': 'application/json'})
             # now, retrain
             self.get('/mlhandler?_action=retrain&_target_col=target', method='post')
             # Check score against test dataset
             resp = self.get(
                 '/mlhandler?_action=score', method='post',
-                data=test_df.to_json(orient='records'))
-            self.assertGreaterEqual(resp.json()['score'], 0.66)  # NOQA: E912
+                data=test_df.to_json(orient='records'),
+                headers={'Content-Type': 'application/json'})
+            self.assertGreaterEqual(resp.json()['score'], 0.6)  # NOQA: E912
         finally:
             # revert to the original cache
             self.get('/mlhandler?_cache', method='delete')
             self.get('/mlhandler?_action=append', method='post',
-                     data=self.df.to_json(orient='records'))
+                     data=self.df.to_json(orient='records'),
+                     headers={'Content-Type': 'application/json'})
 
     def test_change_model(self):
         # back up the original model
