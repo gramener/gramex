@@ -1,0 +1,111 @@
+<!-- Send Modal -->
+<div class="modal fade" id="sendModal" tabindex="-1" aria-labelledby="sendModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content border-radius">
+      <div class="modal-header">
+        <h5 class="modal-title" id="sendModalLabel">Send form</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        Send via
+        <ul class="nav nav-tabs nav-fill" id="send-options-tab" role="tablist">
+          <li class="nav-item" role="presentation">
+            <a class="nav-link active" id="send-email-tab" href="#send-email" data-toggle="tab" role="tab" aria-controls="" aria-selected="true">
+              <i class="fa fa-envelope"></i>
+            </a>
+          </li>
+          <li class="nav-item" role="presentation">
+            <a class="nav-link" id="send-link-tab" href="#send-link" data-toggle="tab" role="tab" aria-controls="" aria-selected="true">
+              <i class="fa fa-link"></i>
+            </a>
+          </li>
+          <li class="nav-item" role="presentation">
+            <a class="nav-link" id="send-code-tab" href="#send-code" data-toggle="tab" role="tab" aria-controls="" aria-selected="true">
+              <i class="fa fa-code"></i>
+            </a>
+          </li>
+        </ul>
+        <div class="tab-content" id="sendModalContent">
+          <div class="tab-pane fade show active" id="send-email" role="tabpanel" aria-labelledby="send-email-tab">
+            <h6 class="mt-3 font-weight-bold">Email</h6>
+            <form action="" class="email-form">
+              <div class="form-group mt-5">
+                <label for="recipient-email">To</label>
+                <input type="email" class="form-control border-top-0 border-left-0 border-right-0" name="recipient-email" id="recipient-email" aria-describedby="emailHelpId" placeholder="" value="bhanu.kamapantula@gramener.com">
+              </div>
+              <div class="form-group">
+                <label for="email-subject">Subject</label>
+                <input type="text" class="form-control border-top-0 border-left-0 border-right-0" name="email-subject" id="email-subject" aria-describedby="subjectHelpId" placeholder="" value="Gramex Forms">
+              </div>
+              <div class="form-group">
+                <label for="email-message">Message</label>
+                <textarea class="form-control" rows="4" name="email-message" id="email-message">I've invited you to fill a form:</textarea>
+              </div>
+            </form>
+          </div>
+          <div class="tab-pane fade" id="send-link" role="tabpanel" aria-labelledby="send-link-tab">
+            Link
+          </div>
+          <div class="tab-pane fade" id="send-code" role="tabpanel" aria-labelledby="send-code-tab">
+            <h3 class="mt-3">Embed form</h3>
+            <div class="divider"></div>
+            <p>
+              You can use any of the methods below to render the form. Note the file extensions in each of the approaches below.
+            </p>
+            <div class="py-3">
+              {% set _path = handler.request.uri.split('/form/')[0] %}
+              {% set _url = handler.request.protocol + '://' + handler.request.host + _path + "/embed/" + form_id %}
+              <h4>Bootstrap</h4>
+              Before anything, import Bootstrap 4 as a dependency.
+
+              <pre>
+                <code>&lt;script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.3/css/bootstrap.min.css"&gt;&lt;/script&gt;
+                </code>
+              </pre>
+              <h4>Using JavaScript</h4>
+              <p>
+                Below code renders the form in place.
+              </p>
+              <pre>
+                <code>&lt;link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.3/css/bootstrap.min.css"&gt;
+                  &lt;div class="form-container"&gt;
+                    &lt;script src="{% raw _url + '.js' %}"&gt;&lt;/script&gt;
+                  &lt;/div&gt;
+                </code>
+              </pre>
+              <h4>Using HTML</h4>
+              <p>
+                Below code renders the form in <code>.form-container</code> element.
+              </p>
+              <pre>
+                <code>&lt;div class="form-container"&gt;&lt;/div&gt;
+                  &lt;script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"&gt;&lt;/script&gt;
+                  &lt;script&gt;
+                    $('.form-container').load("{% raw _url + '.html' %}")
+                  &lt;/script&gt;
+                </code>
+              </pre>
+
+              <h4>Server-side rendering</h4>
+              <p>
+                Below snippet is a Gramex server-side rendering example which renders the form in place.
+              </p>
+              <pre>
+                <code>{%! import requests %}
+                  {%! raw requests.get('{{ _url + '.html' }}').text %}
+                </code>
+              </pre>
+            </div>
+
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-success submit-email">Send</button>
+      </div>
+    </div>
+  </div>
+</div>

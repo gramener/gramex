@@ -13,62 +13,18 @@
     <link href="https://fonts.googleapis.com/css2?family=Comfortaa&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ base }}/style.scss">
   </head>
-  {% set title = 'Form Builder - Create a form' %}
+  {% set title = 'Forms' %}
   <body>
-    {% include 'template-navbar.html' %}
+    {% include 'template-navbar-view-form.html' %}
     <div class="container my-3">
       <h1>Viewing - Form {{ form_id }}</h1>
       <div class="my-5 p-2 shadow" id="view-form"></div>
-      <h3>Embed form</h3>
-      <div class="divider"></div>
-      <p>
-        You can use any of the methods below to render the form. Note the file extensions in each of the approaches below.
-      </p>
-      <div class="py-3">
-        {% set _path = handler.request.uri.split('/form/')[0] %}
-        {% set _url = handler.request.protocol + '://' + handler.request.host + _path + "/embed/" + form_id %}
-        <h4>Bootstrap</h4>
-        Before anything, import Bootstrap 4 as a dependency.
-
-        <pre>
-          <code>&lt;script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.3/css/bootstrap.min.css"&gt;&lt;/script&gt;
-          </code>
-        </pre>
-        <h4>Using JavaScript</h4>
-        <p>
-          Below code renders the form in place.
-        </p>
-        <pre>
-          <code>&lt;link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.3/css/bootstrap.min.css"&gt;
-            &lt;div class="form-container"&gt;
-              &lt;script src="{% raw _url + '.js' %}"&gt;&lt;/script&gt;
-            &lt;/div&gt;
-          </code>
-        </pre>
-        <h4>Using HTML</h4>
-        <p>
-          Below code renders the form in <code>.form-container</code> element.
-        </p>
-        <pre>
-          <code>&lt;div class="form-container"&gt;&lt;/div&gt;
-            &lt;script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"&gt;&lt;/script&gt;
-            &lt;script&gt;
-              $('.form-container').load("{% raw _url + '.html' %}")
-            &lt;/script&gt;
-          </code>
-        </pre>
-
-        <h4>Server-side rendering</h4>
-        <p>
-          Below snippet is a Gramex server-side rendering example which renders the form in place.
-        </p>
-        <pre>
-          <code>{%! import requests %}
-            {%! raw requests.get('{{ _url + '.html' }}').text %}
-          </code>
-        </pre>
-      </div>
     </div>
+
+    {% include 'modals/themes.html' %}
+    {% include 'modals/settings.html' %}
+    {% include 'modals/send.html' %}
+
     <script type="text/html" data-target="#view-form" class="popover-template" src="{{ base }}/popover-form.html"></script>
 
     <script src="{{ base }}/ui/jquery/dist/jquery.min.js"></script>

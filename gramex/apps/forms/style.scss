@@ -45,3 +45,11 @@ pre code {
   height: 30vw;
   border:1px solid grey;
 }
+// view form
+.modal-content .form-control:focus {
+  box-shadow: none;
+}
+// themes side panel
+.modal-sm {
+  min-width: 300px;
+}
