@@ -63,7 +63,7 @@ def screenshots(kwargs):
             id = row[var.FORMS_ID]
             url = f'http://localhost:9988/form/{id}'   # TODO: Dynamically find port & URL
             # TODO: Use delay='renderComplete'
-            content = capture.png(url, selector='#view-form', width=width, delay=1000)
+            content = capture.png(url, selector=".container", width=width, height=height, delay=1000)
             # Save under GRAMEXDATA/forms/thumbnail/<id>.png, cropped to width and height
             target = os.path.join(var.GRAMEXDATA, 'forms', 'thumbnail', f'{id}.png')
             Image.open(BytesIO(content)).crop((0, 0, width, height)).save(target)

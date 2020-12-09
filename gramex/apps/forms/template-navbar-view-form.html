@@ -2,7 +2,7 @@
   <div class="container-fluid">
     <a class="navbar-brand py-0 d-flex" href="{{ base }}">
       <img class="pr-2" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACQAAAAkAQAAAADJe6U1AAAABGdBTUEAALGPC/xhBQAAAAJ0Uk5TAAB2k804AAAANUlEQVR42mNgwAX4/x8AkvZgsh5M/geTP8CyH0ggP1BKMoLIH8wfwG54AHbPA7jb+P9jcz0AKpcxBQbNJ8sAAAAASUVORK5CYII=" alt="gramener logo">
-      <div class="text-middle d-flex-inline">{{ title }}</div>
+      <div class="text-middle d-flex-inline">{{ form_title['name'] }}</div>
     </a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
@@ -46,13 +46,9 @@
           </div>
         </li>
         <li class="nav-item">
-          <img src="{{ handler.current_user.picture }}" width="30px" height="30px" alt="user avatar" class="round">
+          <img src="{{ handler.current_user.picture if handler.current_user else '' }}" width="30px" height="30px" alt="user avatar" class="round">
         </li>
       </ul>
-      <!-- <form class="form-inline ml-auto my-2 my-lg-0">
-        <input class="form-control mr-sm-2" type="search" placeholder="Filter forms" data-search="@text" data-target=".card" data-hide-class="d-none">
-        <a class="btn btn-success" href="{{ base }}/create">Create form</a>
-      </form> -->
     </div>
   </div>
 </nav>

@@ -69,10 +69,9 @@ $('body').on('click', '#user-form input', function () {
   let $icon = $('<i class="fa fa-spinner fa-2x fa-fw align-middle"></i>').appendTo(this)
   // create a database entry with for_edits
   let _md = {
-    name: $('#form-name').val() || `Untitled`,
+    name: $('#form-name').val() || 'Untitled',
     categories: [],
-    description: $('#form-description').val(),
-    fields: _.countBy(_.map(element_data.fields, 'type'))
+    description: $('#form-description').val()
   }
   $.ajax('publish', {
     method: 'POST',

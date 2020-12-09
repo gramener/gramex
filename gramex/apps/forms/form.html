@@ -1,8 +1,12 @@
 <!doctype html>
 <html lang="en">
+  {% import json %}
+  {% import gramex.data %}
+  {% from gramex.config import variables as var %}
   {% set base = '..' %}
   {% set form_id = handler.path_args[0] %}
   {% set view = 'form' %}
+  {% set form_title = json.loads(gramex.data.filter(url=var.FORMS_URL, table=var.FORMS_TABLE, args={'id': [form_id]})['metadata'].values[0]) %}
   <head>
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
@@ -17,7 +21,6 @@
   <body>
     {% include 'template-navbar-view-form.html' %}
     <div class="container my-3">
-      <h1>Viewing - Form {{ form_id }}</h1>
       <div class="my-5 p-2 shadow" id="view-form"></div>
     </div>
 
