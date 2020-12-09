@@ -63,7 +63,10 @@ class RedisCache():
 
     def __iter__(self):
         for key in self.store.scan_iter():
-            yield cPickle.loads(key)
+            try:
+                yield cPickle.loads(key)
+            except cPickle.UnpicklingError:
+                yield key.decode('utf-8')
 
     @property
     def currsize(self):

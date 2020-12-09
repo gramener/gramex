@@ -1015,7 +1015,7 @@ class RedisStore(KeyStore):
                 port = int(parts.pop(0))
             if len(parts):
                 db = int(parts.pop(0))
-            redis_kwargs = dict(part.split('=', 2) for part in parts)
+            redis_kwargs = dict(part.split('=', 1) for part in parts)
         redis_kwargs['decode_responses'] = True
         redis_kwargs.setdefault('encoding', 'utf-8')
         self.store = StrictRedis(host=host, port=port, db=db, **redis_kwargs)
