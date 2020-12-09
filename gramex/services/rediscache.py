@@ -1,6 +1,21 @@
-import six
 from six.moves import cPickle
 from redis import StrictRedis
+
+
+def get_redis(path: str, **kwargs):
+    host, port, db, redis_kwargs = 'localhost', 6379, 0, {}
+    if isinstance(path, str):
+        parts = path.split(':')
+        if len(parts):
+            host = parts.pop(0)
+        if len(parts):
+            port = int(parts.pop(0))
+        if len(parts):
+            db = int(parts.pop(0))
+        redis_kwargs = dict(part.split('=', 1) for part in parts)
+    for key, val in kwargs.items():
+        redis_kwargs.setdefault(key, val)
+    return StrictRedis(host=host, port=port, db=db, **redis_kwargs)
 
 
 class RedisCache():
@@ -22,22 +37,10 @@ class RedisCache():
     and not specific to a db.
 
     Both Keys and Values are stored as pickle dump.
-    This is an approximate LRU implementaion. Read more here.(https://redis.io/topics/lru-cache)
+    This is an approximate LRU implementation. Read more here.(https://redis.io/topics/lru-cache)
     '''
     def __init__(self, path=None, maxsize=None, *args, **kwargs):
-        host, port, db, redis_kwargs = 'localhost', 6379, 0, {}
-        if isinstance(path, six.string_types):
-            parts = path.split(':')
-            if len(parts):
-                host = parts.pop(0)
-            if len(parts):
-                port = int(parts.pop(0))
-            if len(parts):
-                db = int(parts.pop(0))
-            redis_kwargs = dict(part.split('=', 1) for part in parts)
-        redis_kwargs['decode_responses'] = False
-        r = StrictRedis(host=host, port=port, db=db, **redis_kwargs)
-        self.store = r
+        self.store = get_redis(path, decode_responses=False)
         self.size = 0
         if maxsize is not None:
             if self.currsize > maxsize:
@@ -66,7 +69,7 @@ class RedisCache():
             try:
                 yield cPickle.loads(key)
             except cPickle.UnpicklingError:
-                yield key.decode('utf-8')
+                yield key
 
     @property
     def currsize(self):

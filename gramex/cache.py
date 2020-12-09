@@ -1005,20 +1005,8 @@ class RedisStore(KeyStore):
 
     def __init__(self, path=None, *args, **kwargs):
         super(RedisStore, self).__init__(*args, **kwargs)
-        from redis import StrictRedis
-        host, port, db, redis_kwargs = 'localhost', 6379, 0, {}
-        if isinstance(path, six.string_types):
-            parts = path.split(':')
-            if len(parts):
-                host = parts.pop(0)
-            if len(parts):
-                port = int(parts.pop(0))
-            if len(parts):
-                db = int(parts.pop(0))
-            redis_kwargs = dict(part.split('=', 1) for part in parts)
-        redis_kwargs['decode_responses'] = True
-        redis_kwargs.setdefault('encoding', 'utf-8')
-        self.store = StrictRedis(host=host, port=port, db=db, **redis_kwargs)
+        from gramex.services.rediscache import get_redis
+        self.store = get_redis(path, decode_responses=True, encoding='utf-8')
 
     def load(self, key, default=None):
         result = self.store.get(key)

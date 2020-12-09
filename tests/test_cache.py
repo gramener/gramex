@@ -99,10 +99,10 @@ class TestCacheConstructor(unittest.TestCase):
         eq_(len(redis), 0)      # It should not be cached
 
     def test_redis_unpickling(self):
-        r = StrictRedis()      #  Connect to redis without gramex cache
+        r = StrictRedis()                   # Connect to redis without gramex cache
         r.set('Unpickled', 'Test')
         cache = self.get_redis_cache()
-        eq_('Unpickled' in cache, True) # `Unpickled` should be available in cache
+        eq_('Unpickled' in cache, True)     # `Unpickled` should be available in cache
 
 
 class TestCacheKey(unittest.TestCase):
