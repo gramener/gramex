@@ -102,7 +102,6 @@ def is_categorical(s, num_treshold=0.1):
 class MLHandler(FormHandler):
 
     @classmethod
-    @coroutine
     def setup(cls, data=None, model=None, **kwargs):
         cls.template = kwargs.pop('template', True)
         super(MLHandler, cls).setup(**kwargs)
@@ -149,7 +148,7 @@ class MLHandler(FormHandler):
             # train the model
             target = data[target_col]
             train = data[[c for c in data if c != target_col]]
-            cls.model = yield gramex.service.threadpool.submit(
+            gramex.service.threadpool.submit(
                 _fit, cls.model, train, target, cls.model_path, cls.name)
             # _fit(cls.model, train, target, cls.model_path, cls.name)
 
