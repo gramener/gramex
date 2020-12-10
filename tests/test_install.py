@@ -108,11 +108,12 @@ class TestInstall(unittest.TestCase):
 
         def check_init(**kwargs):
             result.cwd = os.getcwd()
-            result.opts = kwargs.get('cmd', {}).get('app', {})
+            result.opts = kwargs.get('args', {}).get('app', {})
 
         install(['run-app', self.zip_url], AttrDict())
         with MockGramex(check_init):
             run(['run-app'], AttrDict(dir='dir1', browser=False))
+        print(result)
         self.assertEqual(result.cwd, self.appdir('run-app/dir1/'))
         self.assertEqual(result.opts.get('browser'), False)
         self.check_uninstall('run-app')
