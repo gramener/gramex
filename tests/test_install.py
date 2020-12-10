@@ -113,7 +113,6 @@ class TestInstall(unittest.TestCase):
         install(['run-app', self.zip_url], AttrDict())
         with MockGramex(check_init):
             run(['run-app'], AttrDict(dir='dir1', browser=False))
-        print(result)
         self.assertEqual(result.cwd, self.appdir('run-app/dir1/'))
         self.assertEqual(result.opts.get('browser'), False)
         self.check_uninstall('run-app')
