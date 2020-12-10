@@ -41,7 +41,7 @@
                     <i class="fa fa-ellipsis-v"></i>
                   </button>
                   <div class="dropdown-menu">
-                    <button class="dropdown-item py-2 btn-link" type="button" data-toggle="modal" data-target="#renameModal" data-formaction="rename" data-form="<%= _form.id %>">
+                    <button class="dropdown-item py-2 btn-link" type="button" data-toggle="modal" data-target="#renameModal" data-formaction="rename" data-formname="<%= _md.name %>" data-form="<%= _form.id %>">
                       <i class="fa fa-text-width mr-3"></i> Rename
                     </button>
                     <button class="dropdown-item py-2 btn-link" type="button" data-toggle="modal" data-target="#removeModal" data-formaction="remove" data-form="<%= _form.id %>">
@@ -81,7 +81,7 @@
     <script src="{{ base }}/ui/g1/dist/g1.min.js"></script>
     <script>
       /* env: browser, jquery */
-      var forms, current_form_id, form_action
+      var forms, current_form_id, form_action, form_name
       $(function() {
         render_forms()
       })
@@ -104,6 +104,8 @@
       $('body').on('click', 'button[data-form]', function () {
         current_form_id = $(this).data('form')
         form_action = $(this).data('formaction')
+        form_name = $(this).data('formname')
+        $('#new-name').val(form_name)
       }).on('click', '.confirm-remove', function() {
         $.ajax('publish', {
           method: 'DELETE',
@@ -120,7 +122,7 @@
         .then(response => response.json())
         .then(function(response) {
           let _metadata = JSON.parse(response[0].metadata)
-          _metadata.name = $('#new-name').val() || _metadata.name
+          _metadata.name = $('#new-name').val() || form_name
           $.ajax('publish', {
             method: 'PUT',
             data: {metadata: JSON.stringify(_metadata), id: current_form_id},
