@@ -1,12 +1,12 @@
 from collections import defaultdict
-from inspect import getargspec
+from inspect import signature
 import json
 import os
 from tempfile import gettempdir
 from urllib.parse import parse_qs
 
 import gramex
-from gramex.config import app_log, variables
+from gramex.config import app_log
 from gramex import data as gdata
 from gramex.handlers import FormHandler
 from gramex.http import NOT_FOUND, BAD_REQUEST
@@ -21,6 +21,7 @@ from sklearn.compose import ColumnTransformer
 from sklearn.metrics import accuracy_score
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.utils import estimator_html_repr
 from slugify import slugify
 from tornado.gen import coroutine
 from tornado.web import HTTPError
@@ -51,11 +52,11 @@ TRAINING_DEFAULTS = [
 ]
 
 
-def _fit(model, x, y, path=None):
-    model.fit(x, y)
+def _fit(model, x, y, path=None, name=None):
+    getattr(model, 'partial_fit', model.fit)(x, y)
     if path:
         joblib.dump(model, path)
-        app_log.info(f'Model saved at {path}.')
+        app_log.info(f'{name}: Model saved at {path}.')
     return model
 
 
@@ -99,9 +100,11 @@ def is_categorical(s, num_treshold=0.1):
 
 
 class MLHandler(FormHandler):
+
     @classmethod
     @coroutine
     def setup(cls, data=None, model=None, **kwargs):
+        cls.template = kwargs.pop('template', True)
         super(MLHandler, cls).setup(**kwargs)
         if isinstance(data, str):
             data = cache.open(data)
@@ -113,15 +116,19 @@ class MLHandler(FormHandler):
         model_path = model.pop('path', '')
         if op.exists(model_path):  # If the pkl exists, load it
             cls.model = joblib.load(model_path)
+            cls.model_path = model_path
+            target_col = model.get('target_col', False)
+            DATA_CACHE[slugify(cls.name)]['target_col'] = target_col
         else:  # build the model
-            app_log.critical('STARTING...')
             params = model.get('params', {})
             cls.model = search_modelclass(model['class'])(**params)
             if model_path:  # if a path is specified, use to to store the model
                 cls.model_path = model_path
             else:  # or create our own path
-                cls.model_path = op.join(variables['YAMLPATH'], slugify(cls.name) + '.pkl')
-            app_log.critical(cls.model_path)
+                cls.model_path = op.join(
+                    gramex.config.variables['GRAMEXDATA'], 'apps', 'mlhandler',
+                    slugify(cls.name) + '.pkl')
+                _mkdir(op.dirname(cls.model_path))
 
             # train the model
             target_col = model.get('target_col', False)
@@ -142,9 +149,9 @@ class MLHandler(FormHandler):
             # train the model
             target = data[target_col]
             train = data[[c for c in data if c != target_col]]
-            app_log.critical('TRAINING...')
             cls.model = yield gramex.service.threadpool.submit(
-                _fit, cls.model, train, target, cls.model_path)
+                _fit, cls.model, train, target, cls.model_path, cls.name)
+            # _fit(cls.model, train, target, cls.model_path, cls.name)
 
     @classmethod
     def cache_data(cls, data):
@@ -305,10 +312,11 @@ class MLHandler(FormHandler):
         # if self.model:
         #     model_params = self.model.get_params()
         # else:
-        spec = getargspec(mclass)
-        m_args = spec.args
-        m_args.remove('self')
-        m_defaults = spec.defaults
+        spec = signature(mclass)
+        m_args = spec.parameters.keys()
+        if 'self' in m_args:
+            m_args.remove('self')
+        m_defaults = {k: v.default for k, v in spec.parameters.items()}
         model_params = {k: v for k, v in zip(m_args, m_defaults)}
         if not params:
             new_params = {k: v[0] for k, v in self.args.items() if k in model_params}
@@ -322,14 +330,19 @@ class MLHandler(FormHandler):
                 param_types[k] = type(v)
         return {k: param_types[k](v) for k, v in new_params.items()}
 
+    def _check_model_path(self):
+        if not op.exists(self.model_path):
+            raise HTTPError(NOT_FOUND, reason=f'No model found at {self.model_path}')
+
     @coroutine
     def get(self, *path_args, **path_kwargs):
-        if self.args.get('_download', [False])[0]:
+        self._check_model_path()
+        if '_download' in self.args:
             self.set_header('Content-Type', 'application/octet-strem')
             self.set_header('Content-Disposition',
                             f'attachment; filename={op.basename(self.model_path)}')
             self.write(open(self.model_path, 'rb').read())
-        elif self.args.get('_model', [False])[0]:
+        elif '_model' in self.args:
             if isinstance(self.model, Pipeline):
                 for k, v in self.model.named_steps.items():
                     if k != 'transform':
@@ -345,10 +358,13 @@ class MLHandler(FormHandler):
             else:
                 self.write(json.dumps([]))
         else:
-            action = self.args.pop('_action', ['predict'])[0]
+            self.set_header('Content-Type', 'application/json')
+            action = self.args.pop('_action', [''])[0]
             try:
                 data = pd.DataFrame.from_dict(
                     {k: v for k, v in self.args.items() if not k.startswith('_')})
+                if len(data) > 0 and not action:
+                    action = 'predict'
             except Exception as err:
                 app_log.debug(err.msg)
                 data = DATA_CACHE[slugify(self.name)]['data']
@@ -366,11 +382,24 @@ class MLHandler(FormHandler):
                 score = accuracy_score(target.astype(prediction.dtype),
                                        prediction)
                 self.write(json.dumps({'score': score}, indent=4))
+            else:
+                if isinstance(self.template, str) and op.isfile(self.template):
+                    self.render(
+                        self.template, handler=self,
+                        data=DATA_CACHE[slugify(self.name)].get('data'))
+                elif self.template:
+                    self.set_header('Content-Type', 'text/html')
+                    self.write(estimator_html_repr(self.model))
+                else:
+                    self.set_header('Content-Type', 'application/json')
+                    self.write(json.dumps([]))
         super(MLHandler, self).get(*path_args, **path_kwargs)
 
     @coroutine
     def post(self, *path_args, **path_kwargs):
         action = self.args.get('_action', ['predict'])[0]
+        if action in ('score', 'predict'):
+            self._check_model_path()
         if action == 'retrain':
             # Don't parse data from request, just train on the cached data
             data = DATA_CACHE[slugify(self.name)].get('data', [])
@@ -410,9 +439,9 @@ class MLHandler(FormHandler):
             # train the model
             target = data[target_col]
             train = data[[c for c in data if c != target_col]]
-            yield gramex.service.threadpool.submit(self.model.fit, train, target)
+            yield gramex.service.threadpool.submit(_fit, self.model, train, target)
             joblib.dump(self.model, self.model_path)
-            app_log.info(f'Model saved at {self.model_path}')
+            app_log.info(f'{self.name}: Model saved at {self.model_path}')
             self.write(json.dumps({'score': self.model.score(train, target)}))
         elif action == 'append':
             try:
@@ -434,14 +463,14 @@ class MLHandler(FormHandler):
             self.model = mclass(**params)
             joblib.dump(self.model, self.model_path)
             self.write(json.dumps(self.model.get_params(), indent=4))
+        else:
+            self._check_model_path()
 
     @coroutine
     def delete(self, *path_args, **path_kwargs):
+        self._check_model_path()
         if '_model' in self.args:
-            if op.exists(self.model_path):
-                os.remove(self.model_path)
-            else:
-                raise HTTPError(NOT_FOUND, reason='No model found at f{self.model_path}.')
+            os.remove(self.model_path)
         if '_cache' in self.args:
             del DATA_CACHE[slugify(self.name)]['data']
             DATA_CACHE[slugify(self.name)]['data'] = []

@@ -1118,6 +1118,16 @@ url:
         target_col: species
       xsrf_cookies: false
 
+  mlhandler/nopath:
+    pattern: /mlnopath
+    handler: MLHandler
+    kwargs:
+      data: $YAMLPATH/iris.csv
+      model:
+        class: LogisticRegression
+        target_col: species
+      xsrf_cookies: false
+
   capture:
     pattern: /capture
     handler: CaptureHandler
