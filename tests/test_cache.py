@@ -102,7 +102,7 @@ class TestCacheConstructor(unittest.TestCase):
         r = StrictRedis()                   # Connect to redis without gramex cache
         r.set('Unpickled', 'Test')
         cache = self.get_redis_cache()
-        eq_('Unpickled' in cache, True)     # `Unpickled` should be available in cache
+        eq_(b'Unpickled' in cache, True)     # `Unpickled` should be available in cache
 
 
 class TestCacheKey(unittest.TestCase):
