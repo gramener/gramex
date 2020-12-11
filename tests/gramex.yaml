@@ -1095,12 +1095,11 @@ url:
         #     model_class: LogisticRegression
         #     xsrf_cookies: false
 
-        # mlhandler/blank:
-        #   pattern: /mlblank
-        #   handler: MLHandler
-        #   kwargs:
-        #     path: $YAMLPATH/blank.pkl
-        #     xsrf_cookies: false
+  mlhandler/blank:
+    pattern: /mlblank
+    handler: MLHandler
+    kwargs:
+      xsrf_cookies: false
 
         # mlhandler/nopath:
         #   pattern: /mlnopath
@@ -1116,6 +1115,7 @@ url:
         path: $YAMLPATH/model.pkl
         class: LogisticRegression
         target_col: species
+        async: false
       xsrf_cookies: false
 
   mlhandler/nopath:

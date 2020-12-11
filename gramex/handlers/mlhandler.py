@@ -41,15 +41,17 @@ MLCLASS_MODULES = [
     'statsmodels.tsa.api',
     'tensorflow.keras.applications'
 ]
-TRAINING_DEFAULTS = [
-    ('include', []),
-    ('exclude', []),
-    ('dropna', True),
-    ('deduplicate', True),
-    ('pipeline', True),
-    ('nums', []),
-    ('cats', []),
-]
+TRAINING_DEFAULTS = {
+    'include': [],
+    'exclude': [],
+    'dropna': True,
+    'deduplicate': True,
+    'pipeline': True,
+    'nums': [],
+    'cats': [],
+    'class': None,
+    'target_col': None,
+}
 
 
 def _fit(model, x, y, path=None, name=None):
@@ -109,18 +111,29 @@ class MLHandler(FormHandler):
             data = cache.open(data)
         elif isinstance(data, dict):
             data = gdata.filter(**data)
-        cls.cache_data(data)
+        else:
+            data = None
+        if data is not None:
+            cls.cache_data(data)
 
         # parse model kwargs
+        if model is None:
+            model = {}
         model_path = model.pop('path', '')
         if op.exists(model_path):  # If the pkl exists, load it
             cls.model = joblib.load(model_path)
             cls.model_path = model_path
             target_col = model.get('target_col', False)
-            DATA_CACHE[slugify(cls.name)]['target_col'] = target_col
+            cls.set_opt('target_col', target_col)
         else:  # build the model
-            params = model.get('params', {})
-            cls.model = search_modelclass(model['class'])(**params)
+            params = cls._get_cached_params()
+            if not params:
+                params = model.get('params', {})
+            mclass = cls.get_opt('class', model.get('class', False))
+            if mclass:
+                cls.model = search_modelclass(mclass)(**params)
+            else:
+                cls.model = None
             if model_path:  # if a path is specified, use to to store the model
                 cls.model_path = model_path
             else:  # or create our own path
@@ -131,46 +144,59 @@ class MLHandler(FormHandler):
 
             # train the model
             target_col = model.get('target_col', False)
-            if not target_col:
+            if cls.model and not target_col:
                 raise ValueError('Target column not defined.')
-            DATA_CACHE[slugify(cls.name)]['target_col'] = target_col
+            cls.set_opt('target_col', target_col)
 
-            # filter columns
-            data = cls._filtercols(data, **model)
+            if cls.model is not None:
+                # filter columns
+                data = cls._filtercols(data, **model)
 
-            # filter rows
-            data = cls._filterrows(data, **model)
+                # filter rows
+                data = cls._filterrows(data, **model)
 
-            # assemble the pipeline
-            if model.get('pipeline', True):
-                cls.model = cls._get_pipeline(data, **model)
+                # assemble the pipeline
+                if model.get('pipeline', True):
+                    cls.model = cls._get_pipeline(data, **model)
+            else:
+                opts = cls.get_opt()
+                if opts:
+                    cls.model = cls._get_pipeline(data, **opts)
 
             # train the model
-            target = data[target_col]
-            train = data[[c for c in data if c != target_col]]
-            gramex.service.threadpool.submit(
-                _fit, cls.model, train, target, cls.model_path, cls.name)
-            # _fit(cls.model, train, target, cls.model_path, cls.name)
+            if data is not None:
+                target = data[target_col]
+                train = data[[c for c in data if c != target_col]]
+                if model.get('async', True):
+                    gramex.service.threadpool.submit(
+                        _fit, cls.model, train, target, cls.model_path, cls.name)
+                else:
+                    _fit(cls.model, train, target, cls.model_path, cls.name)
+
+    @classmethod
+    def _get_cached_params(cls):
+        cache = DATA_CACHE[slugify(cls.name)].get('opts', {})
+        return {k: v for k, v in cache.items() if k not in TRAINING_DEFAULTS.keys()}
 
     @classmethod
     def cache_data(cls, data):
         key = slugify(cls.name)
         orgdata = DATA_CACHE.get(key, {'data': []}).get('data')
-        if len(orgdata):
+        if orgdata and len(orgdata):
             if isinstance(orgdata, pd.DataFrame) and np.all(orgdata.columns == data.columns):
                 data = pd.concat((orgdata, data), axis=0, ignore_index=True)
         DATA_CACHE[key]['data'] = data
 
     @classmethod
     def _filtercols(cls, data, **model_kwargs):
-        include = model_kwargs.get('include', [])
+        include = cls.get_opt('include', model_kwargs.get('include', []))
         if include:
             data = data[include]
-        exclude = model_kwargs.get('exclude', [])
+        exclude = cls.get_opt('exclude', model_kwargs.get('exclude', []))
         if exclude:
             data = data.drop(exclude, axis=1)
-        DATA_CACHE[slugify(cls.name)]['include'] = include
-        DATA_CACHE[slugify(cls.name)]['exclude'] = exclude
+        cls.set_opt('include', include)
+        cls.set_opt('exclude', exclude)
         return data
 
     @classmethod
@@ -188,9 +214,11 @@ class MLHandler(FormHandler):
 
     @classmethod
     def _get_pipeline(cls, data, **model_kwargs):
-        # ToDo: Categorical detection is messed up
-        # 1. All data ops to be async.
-        # 2. jj
+        if data is not None:
+            if not len(data):
+                return None
+        else:
+            return None
         nums = set(model_kwargs.get('nums', []))
         cats = set(model_kwargs.get('cats', []))
         both = nums.intersection(cats)
@@ -222,6 +250,9 @@ class MLHandler(FormHandler):
             model = v
         elif isinstance(cls.model, BaseEstimator):
             model = cls.model
+        elif cls.model is None:
+            mclass = search_modelclass(cls.get_opt('class'))
+            model = mclass(**cls._get_cached_params())
         return Pipeline([('transform', ct), (model.__class__.__name__, model)])
 
     @property
@@ -229,6 +260,19 @@ class MLHandler(FormHandler):
         cache_dir = op.join(gettempdir(), self.session['id'])
         _mkdir(cache_dir)
         return cache_dir
+
+    @classmethod
+    def get_opt(cls, opt=None, default=None):
+        if opt:
+            return DATA_CACHE[slugify(cls.name)].get('opts', {}).get(opt, default)
+        return DATA_CACHE[slugify(cls.name)].get('opts', {})
+
+    @classmethod
+    def set_opt(cls, opt, value):
+        cache = DATA_CACHE[slugify(cls.name)]
+        if 'opts' not in cache:
+            cache['opts'] = {}
+        cache['opts'][opt] = value
 
     def _transform(self, data, **kwargs):
         cfg = DATA_CACHE[slugify(self.name)]
@@ -297,13 +341,16 @@ class MLHandler(FormHandler):
             if len(orgdf):
                 data = pd.concat((orgdf, data), axis=0)
             DATA_CACHE[slugify(self.name)]['data'] = data
+        if len(data) == 0:
+            data = DATA_CACHE.get(slugify(self.name), {}).get('data', [])
         return data
 
-    def _parse_trainopts_from_req(self):
+    def _parse_trainopts(self):
         opts = {}
-        for opt, default in TRAINING_DEFAULTS:
-            opts[opt] = self.args.get(f'_{opt}',
-                                      DATA_CACHE[slugify(self.name)].get(opt, default))
+        for opt, default in TRAINING_DEFAULTS.items():
+            val = self.args.get(f'{opt}', self.get_opt(f'{opt}', default))
+            self.set_opt(opt, val)
+            opts[opt] = val
         return opts
 
     def _coerce_model_params(self, mclass=None, params=None):
@@ -329,13 +376,22 @@ class MLHandler(FormHandler):
                 param_types[k] = type(v)
         return {k: param_types[k](v) for k, v in new_params.items()}
 
-    def _check_model_path(self):
+    def _check_model_path(self, error='raise'):
         if not op.exists(self.model_path):
-            raise HTTPError(NOT_FOUND, reason=f'No model found at {self.model_path}')
+            msg = f'No model found at {self.model_path}'
+            if error == 'raise':
+                raise HTTPError(NOT_FOUND, log_message=msg)
+            else:
+                import warnings
+                warnings.warn(msg)
+        if self.model is None:
+            self.model = cache.open(self.model_path, joblib.load)
 
     @coroutine
     def get(self, *path_args, **path_kwargs):
-        self._check_model_path()
+        if '_opts' in self.args:
+            self.write(json.dumps(self.get_opt(), indent=4))
+            self.finish()
         if '_download' in self.args:
             self.set_header('Content-Type', 'application/octet-strem')
             self.set_header('Content-Disposition',
@@ -349,8 +405,12 @@ class MLHandler(FormHandler):
                 params = v.get_params()
             elif isinstance(self.model, BaseEstimator):
                 params = self.model.get_params()
+            elif self.model is None:
+                params = self.get_opt()
             self.write(json.dumps(params, indent=4))
         elif '_cache' in self.args:
+            if '_opts' in self.args:
+                self.write(json.dumps(self.cache['opts']))
             data = DATA_CACHE[slugify(self.name)].get('data', [])
             if len(data):
                 self.write(data.to_json(orient='records'))
@@ -410,21 +470,21 @@ class MLHandler(FormHandler):
             prediction = yield gramex.service.threadpool.submit(self._predict, data)
             self.write(_serialize_prediction(prediction))
         elif action == 'score':
-            target_col = DATA_CACHE[slugify(self.name)]['target_col']
+            target_col = self.get_opt('target_col')
             score = yield gramex.service.threadpool.submit(self._predict, data, target_col)
             self.write(json.dumps({'score': score}, indent=4))
         elif action in ('train', 'retrain'):
             target_col = self.args.get('_target_col', [False])[0]
             if not target_col:
-                older_target_col = DATA_CACHE[slugify(self.name)].get('target_col', False)
+                older_target_col = self.get_opt('target_col', False)
                 if not older_target_col:
                     raise ValueError('target_col not specified')
                 else:
                     target_col = older_target_col
             else:
-                DATA_CACHE[slugify(self.name)]['target_col'] = target_col
+                self.set_opt('target_col', target_col)
 
-            opts = self._parse_trainopts_from_req()
+            opts = self._parse_trainopts()
             # filter columns
             data = self._filtercols(data, **opts)
 
@@ -433,7 +493,8 @@ class MLHandler(FormHandler):
 
             # assemble the pipeline
             if opts.get('pipeline', True):
-                self.model = self._get_pipeline(data, target_col=target_col, **opts)
+                # self.model = self._get_pipeline(data, target_col=target_col, **opts)
+                self.model = self._get_pipeline(data, **opts)
 
             # train the model
             target = data[target_col]
@@ -451,17 +512,33 @@ class MLHandler(FormHandler):
             raise ValueError(f'Action {action} not supported.')
         super(MLHandler, self).post(*path_args, **path_kwargs)
 
+    @property
+    def cache(self):
+        return DATA_CACHE[slugify(self.name)]
+
     @coroutine
     def put(self, *path_args, **path_kwargs):
         if '_model' in self.args:
             self.args.pop('_model')
-            mclass = self.args.pop('class')[0]
-            mclass = search_modelclass(mclass)
-            params = {k: v[0] for k, v in self.args.items()}
-            params = self._coerce_model_params(mclass, params)
-            self.model = mclass(**params)
-            joblib.dump(self.model, self.model_path)
-            self.write(json.dumps(self.model.get_params(), indent=4))
+            mclass = self.args.pop('class', [False])[0]
+            if not mclass:
+                mclass = self.get_opt('class')
+            self.set_opt('class', mclass)
+            # mclass = search_modelclass(mclass)
+            # params = {k: v[0] for k, v in self.args.items() if k not in TRAINING_DEFAULTS}
+            # params = self._coerce_model_params(mclass, params)
+            # self.set_opt('params', params)
+            # self.model = mclass(**params)
+            # joblib.dump(self.model, self.model_path)
+            # self.write(json.dumps(self.model.get_params(), indent=4))
+            for arg, value in self.args.items():
+                if arg not in ['include', 'exclude', 'cats', 'nums']:
+                    value = value[0]
+                self.set_opt(arg, value)
+            # Since model params are chaning, remove the model on disk
+            self.model = None
+            if op.exists(self.model_path):
+                os.remove(self.model_path)
         else:
             self._check_model_path()
 

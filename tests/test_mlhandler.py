@@ -32,6 +32,7 @@ class TestMLHandler(TestGramex):
         model_paths = [
             op.join(folder, 'model.pkl'),
             op.join(variables['GRAMEXDATA'], 'apps', 'mlhandler', 'mlhandler-nopath.pkl'),
+            op.join(variables['GRAMEXDATA'], 'apps', 'mlhandler', 'mlhandler-blank.pkl'),
         ]
         for path in model_paths:
             if op.exists(path):
@@ -178,8 +179,10 @@ class TestMLHandler(TestGramex):
                 '/mlhandler?_model&class=DecisionTreeClassifier&criterion=entropy&splitter=random',
                 method='put')
             self.assertEqual(r.status_code, OK)
+            r = self.get('/mlhandler?_model')
             self.assertEqual(r.json()['criterion'], 'entropy')
             self.assertEqual(r.json()['splitter'], 'random')
+            self.assertEqual(r.json()['class'], 'DecisionTreeClassifier')
             model = joblib.load(op.join(folder, 'model.pkl'))
             self.assertIsInstance(model, DecisionTreeClassifier)
             self.assertEqual(model.criterion, 'entropy')
@@ -257,6 +260,34 @@ class TestMLHandler(TestGramex):
         finally:
             joblib.dump(clf, op.join(folder, 'model.pkl'))
 
+    def test_blank_slate(self):
+        # Assert that a model doesn't have to exist
+        model_path = op.join(variables['GRAMEXDATA'], 'apps', 'mlhandler', 'mlhandler-blank.pkl')
+        self.assertFalse(op.exists(model_path))
+        r = self.get('/mlblank?sepal_length=5.9&sepal_width=3&petal_length=5.1&petal_width=1.8')
+        self.assertEqual(r.status_code, NOT_FOUND)
+
+        # Post options in any order, randomly
+        r = self.get('/mlblank?_model&class=LogisticRegression', method='put')
+        self.assertEqual(r.status_code, OK)
+
+        r = self.get('/mlblank?_model&target_col=species', method='put')
+        self.assertEqual(r.status_code, OK)
+        r = self.get('/mlblank?_model&exclude=petal_width', method='put')
+        self.assertEqual(r.status_code, OK)
+        r = self.get('/mlblank?_model&nums=sepal_length&nums=sepal_width&nums=petal_length',
+                     method='put')
+        self.assertEqual(r.status_code, OK)
+
+        # check the training opts
+        self.assertDictEqual(
+            self.get('/mlblank?_opts').json(),
+            {
+                'target_col': 'species', 'class': 'LogisticRegression',
+                'exclude': ['petal_width'],
+                'nums': ['sepal_length', 'sepal_width', 'petal_length']
+            }
+        )
 
 # class _TestMLHandler(TestGramex):
 #     ACC_TOL = 0.95
@@ -342,37 +373,6 @@ class TestMLHandler(TestGramex):
 #         self.assertEqual(resp.status_code, OK)
 #         self.assertFalse(op.exists(self.model_path))
 #
-#     def test_blank_slate(self):
-#         # Assert that a model doesn't have to exist
-#         model_path = op.join(folder, 'blank.pkl')
-#         r = self.get('/mlblank&sepal_length=5.9&sepal_width=3&petal_length=5.1&petal_width=1.8')
-#         self.assertEqual(r.status_code, NOT_FOUND)
-#         self.assertFalse(op.exists(model_path))
-#
-#         # Make the model
-#         r = self.get(
-#             '/mlblank?class=LogisticRegression&C=100.0&_retrain=1&_target_col=species',
-#             method='put', data=self.df.to_json(orient='records'))
-#         self.assertEqual(r.status_code, OK)
-#         self.assertGreater(r.json()['score'], self.ACC_TOL)
-#
-#         # Check the model on disk
-#         model = joblib.load(model_path)
-#         self.assertIsInstance(model, LogisticRegression)
-#
-#         # Get the model parameters
-#         r = self.get('/mlblank?_model')
-#         self.assertEqual(r.status_code, OK)
-#         self.assertEqual(r.json()['params']['C'], 100.0)
-#
-#         # Download the model
-#         r = self.get('/mlblank?_download')
-#         self.assertEqual(r.status_code, OK)
-#         buff = BytesIO(r.content)
-#         buff.seek(0)
-#         clf = joblib.load(buff)
-#         self.assertIsInstance(clf, LogisticRegression)
-#         self.assertEqual(clf.C, 100.0)
 #
 #     def test_model_path(self):
 #         r = self.get('/mlnopath?class=LogisticRegression&C=100.0', method='put')
