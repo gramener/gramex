@@ -3,6 +3,7 @@
   {% import json %}
   {% import gramex.data %}
   {% from gramex.config import variables as var %}
+  {% import urllib.parse %}
   {% set base = '..' %}
   {% set form_id = handler.path_args[0] %}
   {% set view = 'form' %}
@@ -14,8 +15,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="{{ base }}/node_modules/dragula/dist/dragula.min.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/styles/agate.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Comfortaa&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ base }}/style.scss">
+    <link rel="stylesheet" href="{{ base }}/style.scss?body-bg={{ urllib.parse.quote(handler.get_argument('bg', '#ff0000')) }}">
   </head>
   {% set title = 'Forms' %}
   <body>

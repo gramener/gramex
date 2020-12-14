@@ -11,6 +11,8 @@ $(function() {
       })
     }
   })
+
+  $('svg').urlfilter()
 })
 
 // escape html tags to show source code
