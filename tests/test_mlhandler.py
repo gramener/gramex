@@ -25,26 +25,18 @@ class TestMLHandler(TestGramex):
     @classmethod
     def setUpClass(cls):
         cls.df = pd.read_csv(op.join(folder, 'iris.csv'), encoding='utf8')
-        # cls.df.to_csv(op.join(folder, 'iris.csv'), index=False, encoding='utf8')
-
-    @classmethod
-    def tearDownClass(cls):
         root = op.join(gramex.config.variables['GRAMEXDATA'], 'apps', 'mlhandler')
-        paths = [
-            op.join(folder, 'model.pkl'),
-            op.join(root, 'mlhandler-nopath.pkl'),
-            op.join(root, 'mlhandler-blank.pkl'),
-            op.join(root, 'mlhandler-config.json'),
-            op.join(root, 'mlhandler-blank.json'),
-            op.join(root, 'mlhandler-nopath.json'),
-            op.join(root, 'mlhandler-config-data.h5'),
-            op.join(root, 'mlhandler-blank-data.h5'),
-            op.join(root, 'mlhandler-nopath-data.h5'),
-        ]
-        for path in paths:
-            if op.exists(path):
-                print('Removing: ', path)  # NOQA: T001
-                os.remove(path)
+        paths = [op.join(root, f) for f in [
+            'mlhandler-nopath/config.json',
+            'mlhandler-nopath/data.h5',
+            'mlhandler-blank/config.json',
+            'mlhandler-blank/data.h5',
+            'mlhandler-config/config.json',
+            'mlhandler-config/data.h5'
+        ]]
+        paths += [op.join(folder, 'model.pkl')]
+        for p in paths:
+            tempfiles['p'] = p
 
     def test_default(self):
         # Check if model has been trained on iris, and exists at the right path.
@@ -163,16 +155,16 @@ class TestMLHandler(TestGramex):
             resp = self.get('/mlhandler?_cache')
             self.assertListEqual(resp.json(), [])
             # append new data, don't train
-            # self.get('/mlhandler?_action=append', method='post', data=df.to_json(orient='records'),
-            #          headers={'Content-Type': 'application/json'})
-            # # now, retrain
-            # self.get('/mlhandler?_action=retrain&_target_col=target', method='post')
-            # # Check score against test dataset
-            # resp = self.get(
-            #     '/mlhandler?_action=score', method='post',
-            #     data=test_df.to_json(orient='records'),
-            #     headers={'Content-Type': 'application/json'})
-            # self.assertGreaterEqual(resp.json()['score'], 0.6)  # NOQA: E912
+            self.get('/mlhandler?_action=append', method='post', data=df.to_json(orient='records'),
+                     headers={'Content-Type': 'application/json'})
+            # now, retrain
+            self.get('/mlhandler?_action=retrain&_target_col=target', method='post')
+            # Check score against test dataset
+            resp = self.get(
+                '/mlhandler?_action=score', method='post',
+                data=test_df.to_json(orient='records'),
+                headers={'Content-Type': 'application/json'})
+            self.assertGreaterEqual(resp.json()['score'], 0.6)  # NOQA: E912
         finally:
             # revert to the original cache
             self.get('/mlhandler?_cache', method='delete')
@@ -267,12 +259,15 @@ class TestMLHandler(TestGramex):
             df['target'] = ytrain
             r = self.get('/mlhandler?_model&class=GaussianNB', method='put')
             self.assertEqual(r.status_code, OK)
-            self.assertDictEqual(r.json(), GaussianNB().get_params())
             r = self.get('/mlhandler?_action=train&_target_col=target', method='post',
                          data=df.to_json(orient='records'),
                          headers={'Content-Type': 'application/json'})
             self.assertEqual(r.status_code, OK)
             self.assertGreaterEqual(r.json()['score'], 0.8)  # NOQA: E912
+            # resp = self.get('/mlhandler?_model')
+            # self.assertDictEqual(resp.json(), GaussianNB().get_params())
+            clf = joblib.load(op.join(folder, 'model.pkl'))
+            self.assertIsInstance(clf.named_steps['GaussianNB'], GaussianNB)
         finally:
             joblib.dump(clf, op.join(folder, 'model.pkl'))
 
@@ -284,9 +279,6 @@ class TestMLHandler(TestGramex):
         self.assertEqual(r.status_code, NOT_FOUND)
 
         # Post options in any order, randomly
-        r = self.get('/mlblank?_model&class=LogisticRegression', method='put')
-        self.assertEqual(r.status_code, OK)
-
         r = self.get('/mlblank?_model&target_col=species', method='put')
         self.assertEqual(r.status_code, OK)
         r = self.get('/mlblank?_model&exclude=petal_width', method='put')
@@ -295,13 +287,23 @@ class TestMLHandler(TestGramex):
                      method='put')
         self.assertEqual(r.status_code, OK)
 
+        r = self.get('/mlblank?_model&class=LogisticRegression', method='put')
+        self.assertEqual(r.status_code, OK)
+
         # check the training opts
         self.assertDictEqual(
-            self.get('/mlblank?_opts').json(),
+            self.get('/mlblank?_cache&_opts').json(),
             {
-                'target_col': 'species', 'class': 'LogisticRegression',
+                'target_col': 'species',
                 'exclude': ['petal_width'],
                 'nums': ['sepal_length', 'sepal_width', 'petal_length']
+            }
+        )
+        self.assertDictEqual(
+            self.get('/mlblank?_cache&_params').json(),
+            {
+                'class': 'LogisticRegression',
+                'params': {}
             }
         )
 

@@ -26,6 +26,7 @@ def tearDown():
 
     for filename in tempfiles.values():
         if os.path.exists(filename):
+            print(f'Removing {filename}')
             os.unlink(filename)
 
 
