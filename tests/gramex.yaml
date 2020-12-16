@@ -40,7 +40,7 @@ cache:
   redis:
     type: redis
     path: localhost:6379:0
-    size: 50000000
+    size: 0
   # We could test more disk caches, but they're slow
 
 url:
