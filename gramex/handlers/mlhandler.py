@@ -53,7 +53,9 @@ TRAINING_DEFAULTS = {
 
 
 def _fit(model, x, y, path=None, name=None):
+    app_log.info('Starting training...')
     getattr(model, 'partial_fit', model.fit)(x, y)
+    app_log.info('Done training...')
     if path:
         joblib.dump(model, path)
         app_log.info(f'{name}: Model saved at {path}.')
@@ -103,7 +105,7 @@ class MLHandler(FormHandler):
 
     @classmethod
     def store_data(cls, df, append=False):
-        if append:
+        if op.exists(cls.data_store) and append:
             df = pd.concat((pd.read_hdf(cls.data_store, 'data'), df), axis=0, ignore_index=True)
         df.to_hdf(cls.data_store, 'data')
 
@@ -144,6 +146,8 @@ class MLHandler(FormHandler):
                                  cls.slug)
             _mkdir(config_dir)
         cls.config_dir = config_dir
+        cls.uploads_dir = op.join(config_dir, 'uploads')
+        _mkdir(cls.uploads_dir)
         cls.config_store = cache.JSONStore(op.join(cls.config_dir, 'config.json'), flush=None)
         cls.data_store = op.join(cls.config_dir, 'data.h5')
         cls.template = kwargs.pop('template', True)
@@ -170,18 +174,18 @@ class MLHandler(FormHandler):
             else:
                 target_col = cls.get_opt('target_col')
         else:  # build the model
+            mclass = cls.get_opt('class', model.get('class', False))
             params = cls.get_opt('params', {})
             if not params:
                 params = model.get('params', {})
-                cls.set_opt('params', params)
-
-            mclass = cls.get_opt('class', model.get('class', False))
             if mclass:
                 cls.model = search_modelclass(mclass)(**params)
                 cls.set_opt('class', mclass)
-
             else:
                 cls.model = None
+            # Params MUST come after class, or they will be ignored.
+            cls.set_opt('params', params)
+
             if model_path:  # if a path is specified, use to to store the model
                 cls.model_path = model_path
             else:  # or create our own path
@@ -196,31 +200,31 @@ class MLHandler(FormHandler):
                 cls.set_opt('target_col', target_col)
             else:
                 target_col = cls.get_opt('target_col', False)
-            if cls.model and not target_col:
-                raise ValueError('Target column not defined.')
+            if cls.model is not None and not target_col:
+                app_log.warning('Target column not defined. Nothing to do.')
+            else:
+                if cls.model is not None:
+                    if data is not None:
+                        # filter columns
+                        data = cls._filtercols(data)
 
-            if cls.model is not None:
-                # filter columns
-                data = cls._filtercols(data)
+                        # filter rows
+                        data = cls._filterrows(data)
 
-                # filter rows
-                data = cls._filterrows(data)
+                        # assemble the pipeline
+                        if model.get('pipeline', True):
+                            cls.model = cls._get_pipeline(data)
+                        else:
+                            cls.model = search_modelclass(mclass)(**params)
 
-                # assemble the pipeline
-                if model.get('pipeline', True):
-                    cls.model = cls._get_pipeline(data)
-                else:
-                    cls.model = search_modelclass(mclass)(**params)
-
-            # train the model
-            if data is not None:
-                target = data[target_col]
-                train = data[[c for c in data if c != target_col]]
-                if model.get('async', True):
-                    gramex.service.threadpool.submit(
-                        _fit, cls.model, train, target, cls.model_path, cls.name)
-                else:
-                    _fit(cls.model, train, target, cls.model_path, cls.name)
+                    # train the model
+                        target = data[target_col]
+                        train = data[[c for c in data if c != target_col]]
+                        if model.get('async', True):
+                            gramex.service.threadpool.submit(
+                                _fit, cls.model, train, target, cls.model_path, cls.name)
+                        else:
+                            _fit(cls.model, train, target, cls.model_path, cls.name)
         cls.config_store.flush()
 
     @classmethod
@@ -328,7 +332,7 @@ class MLHandler(FormHandler):
             dfs = []
             for _, files in self.request.files.items():
                 for f in files:
-                    outpath = op.join(self._data_cachedir, f['filename'])
+                    outpath = op.join(self.uploads_dir, f['filename'])
                     with open(outpath, 'wb') as fout:
                         fout.write(f['body'])
                     if outpath.endswith('.json'):
@@ -336,6 +340,7 @@ class MLHandler(FormHandler):
                     else:
                         xdf = cache.open(outpath)
                     dfs.append(xdf)
+                    os.remove(outpath)
             data = pd.concat(dfs, axis=0)
         # Otherwise look in request.body
         else:
@@ -478,7 +483,7 @@ class MLHandler(FormHandler):
             score = yield gramex.service.threadpool.submit(self._predict, data, target_col)
             self.write(json.dumps({'score': score}, indent=4))
         elif action in ('train', 'retrain'):
-            target_col = self.args.get('_target_col', [False])[0]
+            target_col = self.args.get('target_col', [False])[0]
             if not target_col:
                 older_target_col = self.get_opt('target_col', False)
                 if not older_target_col:

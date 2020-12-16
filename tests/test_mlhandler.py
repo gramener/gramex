@@ -1,4 +1,4 @@
-from io import BytesIO
+from io import BytesIO, StringIO
 import os
 
 import joblib
@@ -90,6 +90,15 @@ class TestMLHandler(TestGramex):
                         headers={'Content-Type': 'application/json'})
         self.assertGreaterEqual(accuracy_score(target, resp.json()), self.ACC_TOL)
 
+    def test_get_predictions_post_file(self):
+        df = self.df.drop_duplicates()
+        target = df.pop('species')
+        buff = StringIO()
+        self.df.to_csv(buff, index=False, encoding='utf8')
+        buff.seek(0)
+        resp = self.get('/mlhandler', method='post', files={'file': ('iris.csv', buff)})
+        self.assertGreaterEqual(accuracy_score(target, resp.json()), self.ACC_TOL)
+
     def test_get_bulk_score(self):
         resp = self.get(
             '/mlhandler?_action=score', method='post',
@@ -105,7 +114,7 @@ class TestMLHandler(TestGramex):
         df = pd.DataFrame(xtrain)
         df['target'] = ytrain
         try:
-            resp = self.get('/mlhandler?_action=train&_target_col=target', method='post',
+            resp = self.get('/mlhandler?_action=train&target_col=target', method='post',
                             data=df.to_json(orient='records'),
                             headers={'Content-Type': 'application/json'})
             self.assertGreaterEqual(resp.json()['score'], 0.8)  # NOQA: E912
@@ -158,7 +167,7 @@ class TestMLHandler(TestGramex):
             self.get('/mlhandler?_action=append', method='post', data=df.to_json(orient='records'),
                      headers={'Content-Type': 'application/json'})
             # now, retrain
-            self.get('/mlhandler?_action=retrain&_target_col=target', method='post')
+            self.get('/mlhandler?_action=retrain&target_col=target', method='post')
             # Check score against test dataset
             resp = self.get(
                 '/mlhandler?_action=score', method='post',
@@ -190,7 +199,7 @@ class TestMLHandler(TestGramex):
                 }
             })
             # Train the model on the cache
-            self.get('/mlhandler?_action=retrain&_target_col=species', method='post')
+            self.get('/mlhandler?_action=retrain&target_col=species', method='post')
             model = joblib.load(op.join(folder, 'model.pkl'))
             self.assertIsInstance(model, Pipeline)
             model = model.named_steps['DecisionTreeClassifier']
@@ -238,7 +247,7 @@ class TestMLHandler(TestGramex):
             xtrain, xtest, ytrain, ytest = train_test_split(X, y, stratify=y, test_size=0.25)
             df = pd.DataFrame(xtrain)
             df['target'] = ytrain
-            r = self.get('/mlhandler?_action=train&_target_col=target', method='post',
+            r = self.get('/mlhandler?_action=train&target_col=target', method='post',
                          data=df.to_json(orient='records'),
                          headers={'Content-Type': 'application/json'})
             self.assertEqual(r.status_code, OK)
@@ -259,7 +268,7 @@ class TestMLHandler(TestGramex):
             df['target'] = ytrain
             r = self.get('/mlhandler?_model&class=GaussianNB', method='put')
             self.assertEqual(r.status_code, OK)
-            r = self.get('/mlhandler?_action=train&_target_col=target', method='post',
+            r = self.get('/mlhandler?_action=train&target_col=target', method='post',
                          data=df.to_json(orient='records'),
                          headers={'Content-Type': 'application/json'})
             self.assertEqual(r.status_code, OK)
