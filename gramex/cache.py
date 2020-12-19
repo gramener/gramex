@@ -150,7 +150,7 @@ def read_excel(io, sheet_name=0, table=None, name=None, range=None, header=_unde
     '''
     if not any((range, name, table)):
         return pd.read_excel(io, sheet_name=sheet_name, header=0 if header is _undef else header,
-                             **kwargs)
+                             engine='openpyxl', **kwargs)
 
     import openpyxl
     wb = openpyxl.load_workbook(io, data_only=True)
