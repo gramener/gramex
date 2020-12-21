@@ -21,6 +21,7 @@ from sklearn.metrics import accuracy_score
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn.utils import estimator_html_repr
+# from sklearn.utils.validation import check_is_fitted
 from slugify import slugify
 from tornado.gen import coroutine
 from tornado.web import HTTPError
@@ -108,10 +109,13 @@ class MLHandler(FormHandler):
         if op.exists(cls.data_store) and append:
             df = pd.concat((pd.read_hdf(cls.data_store, 'data'), df), axis=0, ignore_index=True)
         df.to_hdf(cls.data_store, 'data')
+        return df
 
     @classmethod
     def load_data(cls):
-        return gramex.cache.open(cls.data_store)
+        if op.exists(cls.data_store):
+            return gramex.cache.open(cls.data_store)
+        return pd.DataFrame()
 
     @classmethod
     def get_opt(cls, key, default=None):
@@ -164,7 +168,17 @@ class MLHandler(FormHandler):
         # parse model kwargs
         if model is None:
             model = {}
-        model_path = model.pop('path', '')
+
+        default_model_path = op.join(
+            gramex.config.variables['GRAMEXDATA'], 'apps', 'mlhandler',
+            slugify(cls.name) + '.pkl')
+        model_path = model.pop('path', default_model_path)
+
+        # store the model kwargs from gramex.yaml into the store
+        for key in TRAINING_DEFAULTS:
+            kwarg = model.get(key, False)
+            if not cls.get_opt(key, False) and kwarg:
+                cls.set_opt(key, kwarg)
         if op.exists(model_path):  # If the pkl exists, load it
             cls.model = joblib.load(model_path)
             cls.model_path = model_path
@@ -189,9 +203,7 @@ class MLHandler(FormHandler):
             if model_path:  # if a path is specified, use to to store the model
                 cls.model_path = model_path
             else:  # or create our own path
-                cls.model_path = op.join(
-                    gramex.config.variables['GRAMEXDATA'], 'apps', 'mlhandler',
-                    slugify(cls.name) + '.pkl')
+                cls.model_path = default_model_path
                 _mkdir(op.dirname(cls.model_path))
 
             # train the model
@@ -217,7 +229,7 @@ class MLHandler(FormHandler):
                         else:
                             cls.model = search_modelclass(mclass)(**params)
 
-                    # train the model
+                        # train the model
                         target = data[target_col]
                         train = data[[c for c in data if c != target_col]]
                         if model.get('async', True):
@@ -226,6 +238,7 @@ class MLHandler(FormHandler):
                         else:
                             _fit(cls.model, train, target, cls.model_path, cls.name)
         cls.config_store.flush()
+        app_log.critical('Setup done!')
 
     @classmethod
     def _filtercols(cls, data):
@@ -443,13 +456,14 @@ class MLHandler(FormHandler):
                 target = data.pop(target_col)
             else:
                 target = None
-            prediction = yield gramex.service.threadpool.submit(self._predict, data)
-            if action == 'predict':
-                self.write(_serialize_prediction(prediction))
-            elif action == 'score':
-                score = accuracy_score(target.astype(prediction.dtype),
-                                       prediction)
-                self.write(json.dumps({'score': score}, indent=4))
+            if action in ('predict', 'score'):
+                prediction = yield gramex.service.threadpool.submit(self._predict, data)
+                if action == 'predict':
+                    self.write(_serialize_prediction(prediction))
+                elif action == 'score':
+                    score = accuracy_score(target.astype(prediction.dtype),
+                                           prediction)
+                    self.write(json.dumps({'score': score}, indent=4))
             else:
                 if isinstance(self.template, str) and op.isfile(self.template):
                     self.render(
@@ -465,7 +479,12 @@ class MLHandler(FormHandler):
 
     @coroutine
     def post(self, *path_args, **path_kwargs):
-        action = self.args.get('_action', ['predict'])[0]
+        action = self.args.get('_action', ['predict'])
+        if not set(action).issubset({'predict', 'score', 'append', 'train', 'retrain'}):
+            raise ValueError(f'Action {action} not supported.')
+        if len(action) == 1:
+            action = action[0]
+
         if action in ('score', 'predict'):
             self._check_model_path()
         if action == 'retrain':
@@ -473,8 +492,10 @@ class MLHandler(FormHandler):
             data = self.load_data()
         else:
             data = self._parse_data(False)
+
         if (action == 'score') & (len(data) == 0):
             data = self.load_data()
+
         if action == 'predict':
             prediction = yield gramex.service.threadpool.submit(self._predict, data)
             self.write(_serialize_prediction(prediction))
@@ -482,7 +503,17 @@ class MLHandler(FormHandler):
             target_col = self.get_opt('target_col')
             score = yield gramex.service.threadpool.submit(self._predict, data, target_col)
             self.write(json.dumps({'score': score}, indent=4))
-        elif action in ('train', 'retrain'):
+        elif (action == 'append') or ('append' in action):
+            try:
+                data = self.store_data(data, append=True)
+            except Exception as err:
+                raise HTTPError(BAD_REQUEST, reason=f'{err}')
+            if isinstance(action, list) and ('append' in action):
+                action.remove('append')
+                if len(action) == 1:
+                    action = action[0]
+
+        if action in ('train', 'retrain'):
             target_col = self.args.get('target_col', [False])[0]
             if not target_col:
                 older_target_col = self.get_opt('target_col', False)
@@ -511,13 +542,6 @@ class MLHandler(FormHandler):
             joblib.dump(self.model, self.model_path)
             app_log.info(f'{self.name}: Model saved at {self.model_path}')
             self.write(json.dumps({'score': self.model.score(train, target)}))
-        elif action == 'append':
-            try:
-                self.store_data(data, append=True)
-            except Exception as err:
-                raise HTTPError(BAD_REQUEST, reason=f'{err}')
-        else:
-            raise ValueError(f'Action {action} not supported.')
         super(MLHandler, self).post(*path_args, **path_kwargs)
 
     @coroutine
