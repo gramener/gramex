@@ -148,9 +148,15 @@ def read_excel(io, sheet_name=0, table=None, name=None, range=None, header=_unde
     If any of these are specified, we use ``openpyxl`` to read a specific cell range and infer
     column types. ``table`` overrides ``name`` overrides ``range``.
     '''
+
+    excel_format = io.split('.')[-1]
+    if excel_format == 'xls':
+        engine = kwargs.pop('engine', 'xlrd')
+    elif excel_format == 'xlsx':
+        engine = kwargs.pop('engine', 'opnpyxl')
     if not any((range, name, table)):
         return pd.read_excel(io, sheet_name=sheet_name, header=0 if header is _undef else header,
-                             engine='openpyxl', **kwargs)
+                             engine=engine, **kwargs)
 
     import openpyxl
     wb = openpyxl.load_workbook(io, data_only=True)
