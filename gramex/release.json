@@ -65,6 +65,7 @@
     "python-slugify":             "REQ: Pre-defined slugs at gramex.config.slug",
     "pyyaml>=5.1":                "REQ: Parse YAML files for config",
     "requests":                   "REQ: HTTP library for python",
+    "rpy2":                       "REQ: gramex.ml.r",
     "scikit-learn":               "OPT: conda: For gramex.ml",
     "seaborn":                    "OPT: conda: gramex.data.download()",
     "selenium":                   "OPT: pytest gramex plugin",

@@ -21,16 +21,12 @@ help:
 	@echo "clean-pyc - remove Python file artifacts"
 	@echo "clean-test - remove test and coverage artifacts"
 
-clean: clean-build clean-pyc clean-test
+clean: clean-build
 
 clean-build:
-	rm -rf build/
-	rm -rf dist/
-	rm -rf .eggs/
-	rm -rf tests/uploads/
-	rm -rf gramex-1.*
-	find . -name '*.egg-info' -exec rm -fr {} +
-	find . -name '*.egg' -exec rm -f {} +
+	git clean -fdx
+	conda build purge pkg/conda/
+	docker system prune -f
 
 clean-pyc:
 	find . -name '*.pyc' -exec rm -f {} +

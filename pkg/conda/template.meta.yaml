@@ -54,5 +54,6 @@ requirements:
 test:
   imports:
     - gramex
+    - rpy2
   commands:
     - gramex
