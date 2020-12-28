@@ -20,8 +20,6 @@ from sklearn.compose import ColumnTransformer
 from sklearn.metrics import accuracy_score
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
-from sklearn.utils import estimator_html_repr
-# from sklearn.utils.validation import check_is_fitted
 from slugify import slugify
 from tornado.gen import coroutine
 from tornado.web import HTTPError
@@ -51,6 +49,12 @@ TRAINING_DEFAULTS = {
     'cats': [],
     'target_col': None,
 }
+DEFAULT_TEMPLATE = op.join(op.dirname(__file__), '..', 'apps', 'mlhandler', 'template.html')
+
+
+def df2url(df):
+    s = ['&'.join([f'{k}={v}' for k, v in r.items()]) for r in df.to_dict(orient='records')]
+    return '&'.join(s)
 
 
 def _fit(model, x, y, path=None, name=None):
@@ -94,6 +98,7 @@ def is_categorical(s, num_treshold=0.1):
     -------
     bool:
         Whether the series is categorical.
+        uniques / count <= num_treshold / log(count)
     """
     if pd.api.types.is_numeric_dtype(s):
         if s.nunique() / s.shape[0] <= num_treshold:
@@ -238,7 +243,6 @@ class MLHandler(FormHandler):
                         else:
                             _fit(cls.model, train, target, cls.model_path, cls.name)
         cls.config_store.flush()
-        app_log.critical('Setup done!')
 
     @classmethod
     def _filtercols(cls, data):
@@ -330,8 +334,9 @@ class MLHandler(FormHandler):
             data.drop_duplicates(subset=subset, inplace=True)
         return data
 
-    def _predict(self, data, score_col=False):
-        data = self._transform(data, deduplicate=False)
+    def _predict(self, data, score_col=False, transform=True):
+        if transform:
+            data = self._transform(data, deduplicate=False)
         self.model = cache.open(self.model_path, joblib.load)
         if score_col and score_col in data:
             target = data[score_col]
@@ -457,7 +462,8 @@ class MLHandler(FormHandler):
             else:
                 target = None
             if action in ('predict', 'score'):
-                prediction = yield gramex.service.threadpool.submit(self._predict, data)
+                prediction = yield gramex.service.threadpool.submit(
+                    self._predict, data, transform=False)
                 if action == 'predict':
                     self.write(_serialize_prediction(prediction))
                 elif action == 'score':
@@ -466,12 +472,14 @@ class MLHandler(FormHandler):
                     self.write(json.dumps({'score': score}, indent=4))
             else:
                 if isinstance(self.template, str) and op.isfile(self.template):
+                    self.set_header('Content-Type', 'text/html')
+                    # return Template(self.template)
                     self.render(
                         self.template, handler=self,
                         data=self.load_data())
                 elif self.template:
                     self.set_header('Content-Type', 'text/html')
-                    self.write(estimator_html_repr(self.model))
+                    self.render(DEFAULT_TEMPLATE, handler=self, data=self.load_data())
                 else:
                     self.set_header('Content-Type', 'application/json')
                     self.write(json.dumps([]))
@@ -497,11 +505,16 @@ class MLHandler(FormHandler):
             data = self.load_data()
 
         if action == 'predict':
-            prediction = yield gramex.service.threadpool.submit(self._predict, data)
+            prediction = yield gramex.service.threadpool.submit(
+                self._predict, data, transform=False)
             self.write(_serialize_prediction(prediction))
         elif action == 'score':
             target_col = self.get_opt('target_col')
-            score = yield gramex.service.threadpool.submit(self._predict, data, target_col)
+            if target_col is None:
+                target_col = self.get_arg('target_col')
+                self.set_opt('target_col', target_col)
+            score = yield gramex.service.threadpool.submit(
+                self._predict, data, target_col, transform=False)
             self.write(json.dumps({'score': score}, indent=4))
         elif (action == 'append') or ('append' in action):
             try:
@@ -583,8 +596,9 @@ class MLHandler(FormHandler):
 
     @coroutine
     def delete(self, *path_args, **path_kwargs):
-        self._check_model_path()
         if '_model' in self.args:
-            os.remove(self.model_path)
+            if op.exists(self.model_path):
+                os.remove(self.model_path)
+            self.config_store.purge()
         if '_cache' in self.args:
             self.store_data(pd.DataFrame())
