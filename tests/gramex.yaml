@@ -97,6 +97,27 @@ url:
     kwargs:
       path: dir/index.html
 
+  # test_handlers:TestAlias
+  alias-command:
+    pattern: /alias-command
+    service: Command
+    kwargs:
+      args: [python, "$YAMLPATH/processtest.py", a, '1', 'x y']
+
+  alias-data:
+    pattern: /alias-data
+    service: Data
+    kwargs:
+      url: sales.xlsx
+      sheet_name: table
+
+  alias-function:
+    pattern: /alias-function
+    service: Function
+    handler: nonexistent    # service: overrides handler:
+    kwargs:
+      function: utils.params_as_json(0, 1, a="a", b="b")
+
   # TestFunctionHandler
   func/args:
     pattern: /func/args

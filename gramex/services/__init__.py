@@ -691,8 +691,11 @@ def url(conf):
         if _key in _cache:
             handlers.append(_cache[_key])
             continue
+        # service: is an alias for handler: and has higher priority
+        if 'service' in spec:
+            spec.handler = spec.service
         if 'handler' not in spec:
-            app_log.error('url: %s: no handler specified')
+            app_log.error('url: %s: no service: or handler: specified')
             continue
         app_log.debug('url: %s (%s) %s', name, spec.handler, spec.get('priority', ''))
         urlspec = AttrDict(spec)
