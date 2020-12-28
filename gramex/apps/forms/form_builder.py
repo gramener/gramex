@@ -29,7 +29,7 @@ def after_publish(handler, data):
         rows = gramex.data.filter(url=var.FORMS_URL, table=var.FORMS_TABLE, args={
             'user': [handler.current_user.id]})
         return {'id': rows['id'].max()}
-    else:
+    elif handler.request.method == 'GET':
         return data
 
 

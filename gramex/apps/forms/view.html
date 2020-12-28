@@ -19,43 +19,11 @@
   </head>
   {% set title = 'Forms' %}
   <body>
-    {% include 'template-navbar-view-form.html' %}
     <div class="container my-3">
-      <ul class="nav nav-tabs" id="myTab" role="tablist">
-        <li class="nav-item" role="presentation">
-          <a class="nav-link active" id="questions-tab" data-toggle="tab" href="#questions" role="tab" aria-controls="questions" aria-selected="true">Questions</a>
-        </li>
-        <li class="nav-item" role="presentation">
-          <a class="nav-link" id="responses-tab" data-toggle="tab" href="#responses" role="tab" aria-controls="responses" aria-selected="false">Responses</a>
-        </li>
-      </ul>
-      <div class="tab-content" id="myTabContent">
-        <div class="tab-pane fade show active" id="questions" role="tabpanel" aria-labelledby="questions-tab">
-          <div class="my-5 p-2 shadow" id="view-form">
-            <form></form>
-          </div>
-        </div>
-        <div class="tab-pane fade w-100" id="responses" role="tabpanel" aria-labelledby="responses-tab">
-          <div class="formhandler pt-3 mt-3" data-src="../analytics/?db={{ form_id }}" data-export="false" data-page-size="5"></div>
-        </div>
-      </div>
-    </div>
+      <div class="my-5 p-2 shadow" id="view-form">
+        <form class="analytics">
 
-    {% include 'modals/themes.html' %}
-    {% include 'modals/settings.html' %}
-    {% include 'modals/send.html' %}
-    {% include 'modals/remove.html' %}
-
-    <div aria-live="polite" aria-atomic="true" class="bg-dark">
-      <div class="toast-container position-fixed">
-        <div class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-delay="3000">
-          <div class="toast-header bg-dark text-white">
-            <strong class="mr-auto">Gramex Forms</strong>
-          </div>
-          <div class="toast-body">
-            Removed form.
-          </div>
-        </div>
+        </form>
       </div>
     </div>
 
@@ -71,8 +39,7 @@
     <script>
       /* exported hljs, dragula, form_id */
       const form_id = '{% raw form_id %}'
-      $('.formhandler').formhandler()
     </script>
-    <script src="{{ base }}/js/view-form.js"></script>
+    <script src="{{ base }}/js/preview-form.js"></script>
   </body>
 </html>

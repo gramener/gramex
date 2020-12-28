@@ -16,9 +16,9 @@
           </button>
         </li>
         <li class="nav-item mx-1 px-1">
-          <button class="round border-0" title="Preview">
+          <a class="round border-0" title="Preview" href="{{ base }}/view/{{ form_id }}" target="_blank" rel="noopener">
             <i class="fa fa-eye"></i>
-          </button>
+          </a>
         </li>
         <li class="nav-item mx-1 px-1">
           <button class="round border-0" title="Settings" type="button" data-toggle="modal" data-target="#settingsModal">
@@ -26,27 +26,19 @@
           </button>
         </li>
         <li class="nav-item mx-2 px-1">
-          <button class="btn btn-success" type="button" data-toggle="modal" data-target="#sendModal" >
-            Send
-          </button>
+          <button class="btn btn-success" type="button" data-toggle="modal" data-target="#sendModal">Send</button>
         </li>
         <li class="nav-item mx-4">
-          <div class="btn-group dropdown">
+          <div class="btn-group dropleft">
             <button class="btn btn-link text-muted p-0" data-toggle="dropdown">
               <i class="fa fa-ellipsis-v"></i>
             </button>
             <div class="dropdown-menu">
-              <!-- <button class="dropdown-item py-2 btn-link" type="button" data-toggle="modal" data-target="#renameModal" data-form="<%= _form.id %>">
-                <i class="fa fa-text-width mr-3"></i> Rename
-              </button> -->
-              <p class="dropdown-item">
-                Nothing yet
-              </p>
+              <button class="dropdown-item py-2 btn-link" type="button" data-toggle="modal" data-target="#removeModal" data-formaction="remove" data-form="{{ form_id }}" title="Remove the form">
+                <i class="fa fa-trash-alt mr-3"></i> Remove
+              </button>
             </div>
           </div>
-        </li>
-        <li class="nav-item">
-          <img src="" width="30px" height="30px" alt="user avatar" class="round">
         </li>
       </ul>
     </div>

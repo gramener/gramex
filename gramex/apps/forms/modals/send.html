@@ -10,7 +10,7 @@
       </div>
       <div class="modal-body">
         via
-        <ul class="nav nav-tabs nav-fill mt-4" id="send-options-tab" role="tablist">
+        <ul class="nav nav-tabs mt-4" id="send-options-tab" role="tablist">
           <li class="nav-item" role="presentation">
             <a class="nav-link active" id="send-link-tab" href="#send-link" data-toggle="tab" role="tab" aria-controls="" aria-selected="true">
               <i class="fa fa-link"></i>
@@ -23,11 +23,10 @@
           </li>
         </ul>
         {% set _path = handler.request.uri.split('/form/')[0] %}
-        {% set _url = handler.request.protocol + '://' + handler.request.host + _path + "/embed/" + form_id %}
+        {% set _url = handler.request.protocol + '://' + handler.request.host + _path + "/view/" + form_id %}
         <div class="tab-content" id="sendModalContent">
           <div class="tab-pane fade show active" id="send-link" role="tabpanel" aria-labelledby="send-link-tab">
             <h3 class="mt-3">Link</h3>
-            {% set print(handler.request) %}
             <input type="text" class="form-control border-0" readonly value="{{ _url }}">
           </div>
           <div class="tab-pane fade" id="send-code" role="tabpanel" aria-labelledby="send-code-tab">

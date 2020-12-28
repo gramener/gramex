@@ -81,6 +81,12 @@ url:
     kwargs:
       path: $YAMLPATH/form.html
       template: true
+  forms/form-view-$*:
+    pattern: /$YAMLURL/view/(.*)
+    handler: FileHandler
+    kwargs:
+      path: $YAMLPATH/view.html
+      template: true
   forms/embed-$*:
     pattern: /$YAMLURL/embed/(\d+)\.(json|html|js)
     handler: FunctionHandler
@@ -93,3 +99,18 @@ url:
     handler: FunctionHandler
     kwargs:
       function: form_builder.db_check
+  forms/analytics-$*:
+    pattern: /$YAMLURL/analytics/(.*)
+    handler: FormHandler
+    kwargs:
+      url: 'sqlite:///$GRAMEXDATA/forms/form_{db}.db'    # Pick any database
+      table: analytics                                   # Pick any table name to create
+      id: id                      # The "id" column is primary key
+      # Define your table's columns
+      columns:
+        response: TEXT            # Use any SQL type allowed by DB
+        id:
+          type: INTEGER           # Define an integer ID column
+          primary_key: true       # as a primary key
+          autoincrement: true     # that auto-increments
+        form_id: INTEGER
