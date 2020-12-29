@@ -10,33 +10,30 @@
 
 <body>
   <div class="container">
-    <ul class="nav nav-tabs" id="maintab" role="tablist">
-      <li class="nav-item">
-        <a class="nav-link active" id="model-tab" data-toggle="tab" href="#model" role="tab" aria-controls="model" aria-selected="true">Model</a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" id="data-tab" data-toggle="tab" href="#data" role="tab" aria-controls="data" aria-selected="false">Data</a>
-      </li>
+    <h2>MLHandler</h2>
+    <p>This is a <strong>sample Tornado tempate</strong> for MLHandler. It exposes the following variables:</p>
+    <ul>
+      <li><code>{{! handler }}</code> : The <code>MLHandler</code> instance.</li>
+      <li><code>{{! handler.model }}</code> : The <code>scikit-learn</code> model or pipeline associated with this handler.</li>
+      <li><code>{{! data }}</code> : The <code>pandas.DataFrame</code> containing the training data.</li>
     </ul>
-    <div class="tab-content" id="myTabContent">
-      <div class="tab-pane fade show active" id="model" role="tabpanel" aria-labelledby="model-tab">
-        <div class="row">
-          {% raw estimator_html_repr(handler.model) %}
-        </div>
-        <div class="divider">Change Model & Parameters</div>
-        <div class="row">
-          <div class="col">
-            <label for="algorithm">Pick a Model</label>
-            <input type="text" value="{{ handler.get_opt('class', '') }}" id="algorithm">
-          </div>
-          <div class="col">
-            <label for="params">Set the Parameters</label>
-            <textarea type="text" value="{{ json.dumps(handler.get_opt('params', ''), indent=4) }}" id="params"></textarea>
-          </div>
-        </div>
-      </div>
-      <div class="tab-pane fade" id="data" role="tabpanel" aria-labelledby="data-tab">...</div>
-    </div>
+    <p>You can write your own template, and specify it as the <kbd>template</kbd> argument of your <code>MLHandler</code> configuration. The above variables will be available to any such template.</p>
+    <hr></hr>
+    <h3>The Model:</h3>
+    {% raw estimator_html_repr(handler.model) %}
+    <p>Your model is a {{ handler.model.__class__.__name__ }}, with the following parameters:</p>
+    <pre><code>{{ handler.model.get_params() }}</code></pre>
+    <p>Download the model <a id="downloadlink">here.<a></p>
+    <hr></hr>
+    <h3>Training Data:</h3>
+    <p>The following table shows your training data.</p>
+    <div class="formhandler"></div>
+    <ul>
+      <li>The target column is <code>{{ handler.get_opt('target_col', 'Undefined') }}</code></li>
+      <li>You have excluded these columns from training: <code>{{ handler.get_opt('exclude', []) }}</code></li>
+      <li>You have specified these columns as categorical variables: <code>{{ handler.get_opt('cats', []) }}</code></li>
+      <li>You have specified these columns as numerical variables: <code>{{ handler.get_opt('nums', []) }}</code></li>
+    </ul>
   </div>
 </body>
 
@@ -46,5 +43,15 @@
     $('#algorithm').change(function(e) {
       console.log($(this).val())
     })
+  $(document).ready(function(e) {
+    let url = g1.url.parse(window.location)
+    url.search = "_cache"
+    $('.formhandler').attr('data-src', url.toString())
+    $('.formhandler').formhandler({
+      pageSize: 5
+    })
+    url.search = "_download"
+    $('#downloadlink').attr('href', url.toString())
+  })
   </script>
 </html>

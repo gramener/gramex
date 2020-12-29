@@ -248,10 +248,12 @@ class MLHandler(FormHandler):
     def _filtercols(cls, data):
         include = cls.get_opt('include', [])
         if include:
+            include += [cls.get_opt('target_col')]
             data = data[include]
-        exclude = cls.get_opt('exclude', [])
-        if exclude:
-            data = data.drop(exclude, axis=1)
+        else:
+            exclude = cls.get_opt('exclude', [])
+            if exclude:
+                data = data.drop(exclude, axis=1)
         return data
 
     @classmethod
@@ -597,8 +599,12 @@ class MLHandler(FormHandler):
     @coroutine
     def delete(self, *path_args, **path_kwargs):
         if '_model' in self.args:
-            if op.exists(self.model_path):
+            if '_opts' in self.args:
+                for k, default in TRAINING_DEFAULTS.items():
+                    if k in self.args:
+                        self.set_opt(k, default)
+            elif op.exists(self.model_path):
                 os.remove(self.model_path)
-            self.config_store.purge()
+                self.config_store.purge()
         if '_cache' in self.args:
             self.store_data(pd.DataFrame())

@@ -99,9 +99,10 @@ class TestMLHandler(TestGramex):
         df = self.df.drop_duplicates()
         target = df.pop('species')
         buff = StringIO()
-        self.df.to_csv(buff, index=False, encoding='utf8')
+        df.to_csv(buff, index=False, encoding='utf8')
         buff.seek(0)
-        resp = self.get('/mlhandler', method='post', files={'file': ('iris.csv', buff)})
+        resp = self.get('/mlhandler?_action=predict',
+                        method='post', files={'file': ('iris.csv', buff)})
         self.assertGreaterEqual(accuracy_score(target, resp.json()), self.ACC_TOL)
 
     def test_get_bulk_score(self):
@@ -337,8 +338,6 @@ class TestMLHandler(TestGramex):
         self.assertEqual(resp.status_code, OK)
 
     def test_append_train(self):
-        # df_train, df_append = train_test_split(self.df, stratify=self.df['species'].values,
-        #                                        test_size=0.8)
         df_train = self.df[self.df['species'] != 'virginica']
         df_append = self.df[self.df['species'] == 'virginica']
 
@@ -371,122 +370,40 @@ class TestMLHandler(TestGramex):
         # Score should improve by at least 30%
         self.assertGreaterEqual(new_score - org_score, 0.3)  # NOQA: E912
 
-#     def test_filtercols(self):
-#         buff = StringIO()
-#         self.df.to_csv(buff, index=False, encoding='utf8')
-#
-#         # Train excluding two columns:
-#         buff.seek(0)
-#         resp = self.get('/mlhandler?_retrain=1&_target_col=species'
-#                         '&_exclude=sepal_width&_exclude=petal_length',
-#                         method='post', files={'file': ('iris.csv', buff.read())})
-#         self.assertGreaterEqual(resp.json()['score'], 0.8)  # NOQA: E912
-#
-#         r = self.get('/mlhandler?_cache').json()['data']
-#         # Check that the data still has all columns
-#         self.assertSetEqual(
-#             set(pd.DataFrame.from_records(r).columns),
-#             {'sepal_length', 'petal_width', 'petal_length', 'sepal_width', 'species'})
-#         # But the model has only two
-#         self.assertEqual(joblib.load(op.join(folder, 'iris.pkl')).coef_.shape, (3, 2))
-#
-#         # Train including one column:
-#         buff.seek(0)
-#         resp = self.get('/mlhandler?_retrain=1&_target_col=species'
-#                         '&_include=sepal_width',
-#                         method='post', files={'file': ('iris.csv', buff.read())})
-#         self.assertGreaterEqual(resp.json()['score'], 0.5)
-#         # check coefficients shape
-#         self.assertEqual(joblib.load(op.join(folder, 'iris.pkl')).coef_.shape, (3, 1))
-#
-#     def test_deduplicate(self):
-#         buff = StringIO()
-#         self.df.to_csv(buff, index=False, encoding='utf8')
-#         buff.seek(0)
-#
-#         # Train as usual
-#         resp = self.get('/mlhandler?_retrain=1&_target_col=species',
-#                         method='post', files={'file': ('iris.csv', buff.read())})
-#         self.assertEqual(resp.status_code, OK)
-#
-#         # Check that the model was trained on 136 columns, after dropping duplicates
-#         r = self.get('/mlhandler?_cache').json()
-#         self.assertListEqual(r['train_shape'], [self.df.drop_duplicates().shape[0], 4])
-#         # But the data had 138 rows
-#         self.assertEqual(len(r['data']), self.df.shape[0])
-#
-#         # Train without deduplicating
-#         self.get('/mlhandler?_cache', method='delete')  # Clear the cache
-#         buff.seek(0)
-#         resp = self.get('/mlhandler?_retrain=1&_target_col=species&_deduplicate=false',
-#                         method='post', files={'file': ('iris.csv', buff.read())})
-#         self.assertEqual(resp.status_code, OK)
-#
-#         # Check that the model was trained on 138 columns, after dropping duplicates
-#         r = self.get('/mlhandler?_cache').json()
-#         self.assertListEqual(r['train_shape'], [self.df.shape[0], 4])
-#         # And the data had 138 rows
-#         self.assertEqual(len(r['data']), self.df.shape[0])
-#
-#     def test_dropna(self):
-#         # Randomly add nans to ten rows
-#         na_ix_r = [random.randint(0, self.df.shape[0]) for i in range(10)]
-#         na_ix_c = [random.randint(0, 4) for i in range(10)]
-#         df = self.df.copy()
-#         for row, col in zip(na_ix_r, na_ix_c):
-#             df.iloc[row, col] = pd.np.nan
-#
-#         buff = StringIO()
-#         df.to_csv(buff, index=False, encoding='utf8')
-#         buff.seek(0)
-#         # Train as usual
-#         self.get('/mlhandler?_retrain=1&_target_col=species',
-#                  method='post', files={'file': ('iris.csv', buff.read())})
-#         # Check that the data contains 138 rows, but the training happens on 126 rows.
-#         r = self.get('/mlhandler?_cache').json()
-#         self.assertListEqual(r['train_shape'], [df.drop_duplicates().dropna().shape[0], 4])
-#         self.assertEqual(len(r['data']), df.shape[0])
-#
-#         # Test disabling dropna
-#         self.get('/mlhandler?_cache', method='delete')  # Clear the cache
-#         buff.seek(0)
-#         # Train as usual
-#         r = self.get('/mlhandler?_retrain=1&_target_col=species&_dropna=false',
-#                      method='post', files={'file': ('iris.csv', buff.read())})
-#         self.assertEqual(r.status_code, INTERNAL_SERVER_ERROR)  # Can't train with NaNs
-#         # Check that the data contains 138 rows, but the training happens on 126 rows.
-#         r = self.get('/mlhandler?_cache').json()
-#         self.assertListEqual(r['train_shape'], [df.drop_duplicates().shape[0], 4])
-#         self.assertEqual(len(r['data']), df.shape[0])
-#
-#     def test_is_categorical(self):
-#         self.assertTrue(is_categorical(pd.Series(['a', 'b', 'c'])))
-#         self.assertFalse(is_categorical(pd.Series([1, 2, 3, 4])))
-#         self.assertTrue(is_categorical(pd.Series([1, 1, 1, 2])))
-#         self.assertTrue(is_categorical(pd.Series([1, 1, 2, 2]), 0.5))
-#         data, _ = make_classification()
-#         self.assertFalse(
-#             any([is_categorical(pd.Series(data[:, i])) for i in range(data.shape[1])]))
-#
-#     def test_pipeline(self):
-#         X, y = make_classification()  # NOQA: N806
-#         df = pd.DataFrame(X, columns=[f'c{i}' for i in range(X.shape[1])])
-#         df['target'] = y
-#         df['categorical'] = [random.choice('abc') for i in range(X.shape[0])]
-#         resp = self.get(
-#             '/mlhandler?_retrain=1&_target_col=target&_pipeline=true', method='post',
-#             data=df.to_json(orient='records'))
-#         self.assertEqual(resp.status_code, OK)
-#
-#         # load the pipeline
-#         pipe = joblib.load(op.join(folder, 'iris.pkl'))
-#         self.assertIsInstance(pipe, Pipeline)
-#         x_transformed = pipe.named_steps['transform'].transform(df)
-#         # Check that the transformed dataset has the 20 original columns and the
-#         # three one-hot encoded ones.
-#         self.assertSequenceEqual(x_transformed.shape, (100, X.shape[1] + 3))
-#         # check if the normalization has occured
-#         np.testing.assert_allclose(x_transformed[:, -X.shape[1]:].mean(axis=0),
-#                                    np.zeros((X.shape[1],)), atol=1e-6)
-#         np.testing.assert_allclose(x_transformed[:, -X.shape[1]:].var(axis=0),
-#                                    np.ones((X.shape[1],)), atol=1e-6)
+    def test_filtercols(self):
+        buff = StringIO()
+        self.df.to_csv(buff, index=False, encoding='utf8')
+
+        # Train excluding two columns:
+        buff.seek(0)
+        clf = joblib.load(op.join(folder, 'model.pkl'))
+        try:
+            resp = self.get('/mlhandler?_model&class=LogisticRegression&target_col=species'
+                            '&exclude=sepal_width&exclude=petal_length',
+                            method='put')
+            resp = self.get('/mlhandler?_action=retrain',
+                            files={'file': ('iris.csv', buff.read())},
+                            method='post')
+            self.assertGreaterEqual(resp.json()['score'], 0.8)  # NOQA: E912
+
+            r = self.get('/mlhandler?_cache').json()
+            # Check that the data still has all columns
+            self.assertSetEqual(
+                set(pd.DataFrame.from_records(r).columns),
+                {'sepal_length', 'petal_width', 'petal_length', 'sepal_width', 'species'})
+            # But the model has only two
+            pipe = joblib.load(op.join(folder, 'model.pkl'))
+            self.assertEqual(pipe.named_steps['LogisticRegression'].coef_.shape, (3, 2))
+
+            # Train including one column:
+            buff.seek(0)
+            self.get('/mlhandler?_model&include=sepal_width', method='put')
+            resp = self.get('/mlhandler?_action=retrain',
+                            method='post', files={'file': ('iris.csv', buff.read())})
+            self.assertGreaterEqual(resp.json()['score'], 0.5)
+            # check coefficients shape
+            pipe = joblib.load(op.join(folder, 'model.pkl'))
+            self.assertEqual(pipe.named_steps['LogisticRegression'].coef_.shape, (3, 1))
+        finally:
+            self.get('/mlhandler?_model&_opts&include&exclude', method='delete')
+            joblib.dump(clf, op.join(folder, 'model.pkl'))
