@@ -252,8 +252,9 @@ class MLHandler(FormHandler):
             data = data[include]
         else:
             exclude = cls.get_opt('exclude', [])
-            if exclude:
-                data = data.drop(exclude, axis=1)
+            to_exclude = [c for c in exclude if c in data]
+            if to_exclude:
+                data = data.drop(to_exclude, axis=1)
         return data
 
     @classmethod
@@ -317,12 +318,13 @@ class MLHandler(FormHandler):
         if include:
             data = data[include]
         exclude = self.get_opt('exclude', kwargs.get('exclude', []))
-        if exclude:
-            data = data.drop(exclude, axis=1)
+        to_exclude = [c for c in exclude if c in data]
+        if to_exclude:
+            data = data.drop(to_exclude, axis=1)
         # transform rows
         dropna = self.get_opt('dropna', kwargs.get('dropna', True))
         if dropna:
-            if isinstance(dropna, list):
+            if isinstance(dropna, list) and len(dropna) > 0:
                 subset = dropna
             else:
                 subset = None
@@ -465,7 +467,8 @@ class MLHandler(FormHandler):
                 target = None
             if action in ('predict', 'score'):
                 prediction = yield gramex.service.threadpool.submit(
-                    self._predict, data, transform=False)
+                    # self._predict, data, transform=False)
+                    self._predict, data)
                 if action == 'predict':
                     self.write(_serialize_prediction(prediction))
                 elif action == 'score':
@@ -508,7 +511,7 @@ class MLHandler(FormHandler):
 
         if action == 'predict':
             prediction = yield gramex.service.threadpool.submit(
-                self._predict, data, transform=False)
+                self._predict, data)
             self.write(_serialize_prediction(prediction))
         elif action == 'score':
             target_col = self.get_opt('target_col')
