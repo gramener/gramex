@@ -19,12 +19,6 @@
     </ul>
     <p>You can write your own template, and specify it as the <kbd>template</kbd> argument of your <code>MLHandler</code> configuration. The above variables will be available to any such template.</p>
     <hr></hr>
-    <h3>The Model:</h3>
-    {% raw estimator_html_repr(handler.model) %}
-    <p>Your model is a {{ handler.model.__class__.__name__ }}, with the following parameters:</p>
-    <pre><code>{{ handler.model.get_params() }}</code></pre>
-    <p>Download the model <a id="downloadlink">here.<a></p>
-    <hr></hr>
     <h3>Training Data:</h3>
     <p>The following table shows your training data.</p>
     <div class="formhandler"></div>
@@ -34,6 +28,12 @@
       <li>You have specified these columns as categorical variables: <code>{{ handler.get_opt('cats', []) }}</code></li>
       <li>You have specified these columns as numerical variables: <code>{{ handler.get_opt('nums', []) }}</code></li>
     </ul>
+    <hr></hr>
+    <h3>The Model:</h3>
+    {% raw estimator_html_repr(handler.model) %}
+    <p>Your model is a {{ handler.model.__class__.__name__ }}, with the following parameters:</p>
+    <pre><code>{{ handler.model.get_params() }}</code></pre>
+    <p>Download the model <a id="downloadlink">here.<a></p>
   </div>
 </body>
 
