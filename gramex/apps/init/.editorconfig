@@ -1,7 +1,5 @@
-# .editorconfig maintains consistent coding styles between different editors.
+# Maintains consistent coding styles between different editors.
 # Get plugins at http://editorconfig.org/
-#   - Sublime text: https://github.com/sindresorhus/editorconfig-sublime
-#   - Notepad++: https://github.com/editorconfig/editorconfig-notepad-plus-plus
 
 root = true
 
