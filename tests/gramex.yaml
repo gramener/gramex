@@ -1108,6 +1108,51 @@ url:
         age: {type: float, nullable: False, default: 18}
         dept: varchar(10)
 
+        # mlhandler/predict:
+        #   pattern: /mlhandler
+        #   handler: MLHandler
+        #   kwargs:
+        #     path: $YAMLPATH/iris.pkl
+        #     model_class: LogisticRegression
+        #     xsrf_cookies: false
+
+  mlhandler/blank:
+    pattern: /mlblank
+    handler: MLHandler
+    kwargs:
+      xsrf_cookies: false
+
+        # mlhandler/nopath:
+        #   pattern: /mlnopath
+        #   handler: MLHandler
+        #   kwargs:
+        #     xsrf_cookies: false
+  mlhandler/config:
+    pattern: /mlhandler
+    handler: MLHandler
+    kwargs:
+      data: $YAMLPATH/../testlib/iris.csv
+      model:
+        path: $YAMLPATH/model.pkl
+        class: LogisticRegression
+        target_col: species
+      xsrf_cookies: false
+
+  mlhandler/nopath:
+    pattern: /mlnopath
+    handler: MLHandler
+    kwargs:
+      data: $YAMLPATH/../testlib/iris.csv
+      model:
+        class: LogisticRegression
+        target_col: species
+      xsrf_cookies: false
+  mlhandler/incr:
+    pattern: /mlincr
+    handler: MLHandler
+    kwargs:
+      xsrf_cookies: false
+
   capture:
     pattern: /capture
     handler: CaptureHandler
