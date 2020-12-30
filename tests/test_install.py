@@ -108,7 +108,7 @@ class TestInstall(unittest.TestCase):
 
         def check_init(**kwargs):
             result.cwd = os.getcwd()
-            result.opts = kwargs.get('cmd', {}).get('app', {})
+            result.opts = kwargs.get('args', {}).get('app', {})
 
         install(['run-app', self.zip_url], AttrDict())
         with MockGramex(check_init):

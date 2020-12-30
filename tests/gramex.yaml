@@ -40,7 +40,7 @@ cache:
   redis:
     type: redis
     path: localhost:6379:0
-    size: 50000000
+    size: 0
   # We could test more disk caches, but they're slow
 
 url:
@@ -96,6 +96,27 @@ url:
     handler: FileHandler
     kwargs:
       path: dir/index.html
+
+  # test_handlers:TestAlias
+  alias-command:
+    pattern: /alias-command
+    service: Command
+    kwargs:
+      args: [python, "$YAMLPATH/processtest.py", a, '1', 'x y']
+
+  alias-data:
+    pattern: /alias-data
+    service: Data
+    kwargs:
+      url: sales.xlsx
+      sheet_name: table
+
+  alias-function:
+    pattern: /alias-function
+    service: Function
+    handler: nonexistent    # service: overrides handler:
+    kwargs:
+      function: utils.params_as_json(0, 1, a="a", b="b")
 
   # TestFunctionHandler
   func/args:
@@ -1110,7 +1131,7 @@ url:
     pattern: /mlhandler
     handler: MLHandler
     kwargs:
-      data: $YAMLPATH/iris.csv
+      data: $YAMLPATH/../testlib/iris.csv
       model:
         path: $YAMLPATH/model.pkl
         class: LogisticRegression
@@ -1121,7 +1142,7 @@ url:
     pattern: /mlnopath
     handler: MLHandler
     kwargs:
-      data: $YAMLPATH/iris.csv
+      data: $YAMLPATH/../testlib/iris.csv
       model:
         class: LogisticRegression
         target_col: species

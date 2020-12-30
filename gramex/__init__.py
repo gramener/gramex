@@ -11,13 +11,13 @@ Options
   --settings.xsrf_cookies=false Disable XSRF cookies (only for testing)
   --settings.cookie_secret=...  Change cookie encryption key
 
-Helper applications
+Helper applications. For usage, run with --help
   gramex init                   Add Gramex project scaffolding to current dir
   gramex service                Windows service setup
   gramex mail                   Send email from command line
   gramex license                See Gramex license, accept or reject it
 
-Installation commands. Run without arguments to see help
+Installation commands. For usage, run with --help
   gramex install                Install an app
   gramex update                 Update an app
   gramex setup                  Run make, npm install, bower install etc on app
@@ -123,37 +123,39 @@ def callback_commandline(commands):
     from . import services
     services.log(log_config)
 
-    # args has all optional command line args as a dict of values / lists.
-    # cmd has all positional arguments as a list.
-    args = parse_command_line(commands)
-    cmd = args.pop('_')
+    # kwargs has all optional command line args as a dict of values / lists.
+    # args has all positional arguments as a list.
+    kwargs = parse_command_line(commands)
+    args = kwargs.pop('_')
 
     # If --help or -V --version is specified, print a message and end
-    if args.get('V') is True or args.get('version') is True:
+    if kwargs.get('V') is True or kwargs.get('version') is True:
         return console, {'msg': 'Gramex %s' % __version__}
-    if args.get('help') is True:
-        return console, {'msg': __doc__.strip().format(**globals())}
 
     # Any positional argument is treated as a gramex command
-    if len(cmd) > 0:
-        kwargs = {'cmd': cmd, 'args': args}
-        base_command = cmd.pop(0).lower()
+    if len(args) > 0:
+        base_command = args.pop(0).lower()
         method = 'install' if base_command == 'update' else base_command
         if method in {
             'install', 'uninstall', 'setup', 'run', 'service', 'init',
             'mail', 'license',
         }:
             import gramex.install
-            return getattr(gramex.install, method), kwargs
+            if 'help' in kwargs:
+                return console, {'msg': gramex.install.show_usage(method)}
+            return getattr(gramex.install, method), {'args': args, 'kwargs': kwargs}
         raise NotImplementedError('Unknown gramex command: %s' % base_command)
+    elif kwargs.get('help') is True:
+        return console, {'msg': __doc__.strip().format(**globals())}
 
     # Use current dir as base (where gramex is run from) if there's a gramex.yaml.
     if not os.path.isfile('gramex.yaml'):
         return console, {'msg': 'No gramex.yaml. See https://learn.gramener.com/guide/'}
 
+    # Run gramex.init(cmd={command line arguments like YAML variables})
     app_log.info('Gramex %s | %s | Python %s', __version__, os.getcwd(),
                  sys.version.replace('\n', ' '))
-    return init, {'cmd': AttrDict(app=args)}
+    return init, {'cmd': AttrDict(app=kwargs)}
 
 
 def commandline(args=None):

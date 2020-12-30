@@ -258,6 +258,10 @@ class BaseMixin(object):
         elif auth:
             app_log.error('url:%s.auth is not a dict', cls.name)
 
+    def authorize(self):
+        '''BaseMixin assumes every handler has an authorize() function'''
+        pass
+
     @classmethod
     def setup_log(cls):
         '''

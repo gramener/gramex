@@ -426,12 +426,12 @@ def save_user_config(appname, value):
         yaml.safe_dump(user_config, handle, indent=4, default_flow_style=False)
 
 
-def get_app_config(appname, args):
+def get_app_config(appname, kwargs):
     '''
-    Get the stored configuration for appname, and override it with args.
+    Get the stored configuration for appname, and override it with kwargs.
     ``.target`` defaults to $GRAMEXDATA/apps/<appname>.
     '''
-    apps_config['cmd'] = {appname: args}
+    apps_config['cmd'] = {appname: kwargs}
     app_config = AttrDict((+apps_config).get(appname, {}))
     app_config.setdefault('target', str(app_dir / app_config.get('target', appname)))
     app_config.target = os.path.abspath(app_config.target)
@@ -458,16 +458,16 @@ def show_usage(command):
         ))
 
 
-def install(cmd, args):
-    if len(cmd) < 1:
+def install(args, kwargs):
+    if len(args) < 1:
         app_log.error(show_usage('install'))
         return
 
-    appname = cmd[0]
+    appname = args[0]
     app_log.info('Installing: %s', appname)
-    app_config = get_app_config(appname, args)
-    if len(cmd) == 2:
-        app_config.url = cmd[1]
+    app_config = get_app_config(appname, kwargs)
+    if len(args) == 2:
+        app_config.url = args[1]
         run_install(app_config)
     elif 'url' in app_config:
         run_install(app_config)
@@ -487,11 +487,11 @@ def install(cmd, args):
     app_log.info('Installed. Run `gramex run %s`', appname)
 
 
-def setup(cmd, args):
-    for target in cmd:
+def setup(args, kwargs):
+    for target in args:
         run_setup(target)
         return
-    if 'all' in args:
+    if 'all' in kwargs:
         root = os.path.join(variables['GRAMEXPATH'], 'apps')
         for filename in os.listdir(root):
             target = os.path.join(root, filename)
@@ -502,19 +502,19 @@ def setup(cmd, args):
     app_log.error(show_usage('setup'))
 
 
-def uninstall(cmd, args):
-    if len(cmd) < 1:
+def uninstall(args, kwargs):
+    if len(args) < 1:
         app_log.error(show_usage('uninstall'))
         return
-    if len(cmd) > 1 and args:
-        app_log.error('Arguments allowed only with single app. Ignoring %s', ', '.join(cmd[1:]))
-        cmd = cmd[:1]
+    if len(args) > 1 and kwargs:
+        app_log.error('Arguments allowed only with single app. Ignoring %s', ', '.join(args[1:]))
+        args = args[:1]
 
-    for appname in cmd:
+    for appname in args:
         app_log.info('Uninstalling: %s', appname)
 
         # Delete the target directory if it exists
-        app_config = get_app_config(appname, args)
+        app_config = get_app_config(appname, kwargs)
         if os.path.exists(app_config.target):
             safe_rmtree(app_config.target)
         else:
@@ -522,15 +522,15 @@ def uninstall(cmd, args):
         save_user_config(appname, None)
 
 
-def run(cmd, args):
-    if len(cmd) < 1:
+def run(args, kwargs):
+    if len(args) < 1:
         app_log.error(show_usage('run'))
         return
-    if len(cmd) > 1:
-        app_log.error('Can only run one app. Ignoring %s', ', '.join(cmd[1:]))
+    if len(args) > 1:
+        app_log.error('Can only run one app. Ignoring %s', ', '.join(args[1:]))
 
-    appname = cmd.pop(0)
-    app_config = get_app_config(appname, args)
+    appname = args.pop(0)
+    app_config = get_app_config(appname, kwargs)
 
     target = app_config.target
     if 'dir' in app_config:
@@ -540,7 +540,7 @@ def run(cmd, args):
         gramex.paths['base'] = Path('.')
         # If we run with updated parameters, save for next run under the .run config
         run_config = app_config.setdefault('run', {})
-        for key, val in args.items():
+        for key, val in kwargs.items():
             if key not in app_keys:
                 run_config[key] = app_config.pop(key)
         save_user_config(appname, app_config)
@@ -548,7 +548,7 @@ def run(cmd, args):
         cline = ' '.join('--%s=%s' % arg for arg in flatten_config(app_config.get('run', {})))
         app_log.info('Gramex %s | %s %s | %s | Python %s', gramex.__version__, appname, cline,
                      os.getcwd(), sys.version.replace('\n', ' '))
-        gramex.init(cmd=AttrDict(app=app_config['run']))
+        gramex.init(args=AttrDict(app=app_config['run']))
     elif appname in apps_config['user']:
         # The user configuration has a wrong path. Inform user
         app_log.error('%s: no directory %s', appname, app_config.target)
@@ -557,16 +557,16 @@ def run(cmd, args):
         app_log.error('%s: no directory %s', appname, app_config.target)
 
 
-def service(cmd, args):
+def service(args, kwargs):
     try:
         import gramex.winservice
     except ImportError:
         app_log.error('Unable to load winservice. Is this Windows?')
         raise
-    if len(cmd) < 1:
+    if len(args) < 1:
         app_log.error(show_usage('service'))
         return
-    gramex.winservice.GramexService.setup(cmd, **args)
+    gramex.winservice.GramexService.setup(args, **kwargs)
 
 
 def _check_output(cmd, default=b'', **kwargs):
@@ -623,15 +623,15 @@ def _copy(source, target, template_data=None):
         app_log.warning('Skip unknown file %s', source)
 
 
-def init(cmd, args):
+def init(args, kwargs):
     '''Create Gramex scaffolding files.'''
-    if len(cmd) > 1:
+    if len(args) > 1:
         app_log.error(show_usage('init'))
         return
-    args.setdefault('target', os.getcwd())
-    app_log.info('Initializing Gramex project at %s', args.target)
+    kwargs.setdefault('target', os.getcwd())
+    app_log.info('Initializing Gramex project at %s', kwargs.target)
     data = {
-        'appname': os.path.basename(args.target),
+        'appname': os.path.basename(kwargs.target),
         'author': _check_output('git config user.name', default='Author'),
         'email': _check_output('git config user.email', default='user@example.org'),
         'date': datetime.datetime.today().strftime('%Y-%m-%d'),
@@ -663,18 +663,18 @@ def init(cmd, args):
         for name in dirs + files:
             source = os.path.join(root, name)
             relpath = os.path.relpath(root, start=source_dir)
-            target = os.path.join(args.target, relpath, name.replace('appname', appname))
+            target = os.path.join(kwargs.target, relpath, name.replace('appname', appname))
             _copy(source, target, template_data=data)
     for empty_dir in ('img', 'data'):
-        _mkdir(os.path.join(args.target, 'assets', empty_dir))
+        _mkdir(os.path.join(kwargs.target, 'assets', empty_dir))
     # Copy error files as-is (not as templates)
-    error_dir = os.path.join(args.target, 'error')
+    error_dir = os.path.join(kwargs.target, 'error')
     _mkdir(error_dir)
     for source in glob(os.path.join(variables['GRAMEXPATH'], 'handlers', '?0?.html')):
         target = os.path.join(error_dir, os.path.basename(source))
         _copy(source, target)
 
-    run_setup(args.target)
+    run_setup(kwargs.target)
 
 
 default_mail_config = r'''# Gramex mail configuration at
@@ -699,30 +699,30 @@ alert:
 '''
 
 
-def mail(cmd, args):
+def mail(args, kwargs):
     # Get config file location
     default_dir = os.path.join(variables['GRAMEXDATA'], 'mail')
     _mkdir(default_dir)
-    if 'conf' in args:
-        confpath = args.conf
+    if 'conf' in kwargs:
+        confpath = kwargs.conf
     elif os.path.exists('gramex.yaml'):
         confpath = os.path.abspath('gramex.yaml')
     else:
         confpath = os.path.join(default_dir, 'gramexmail.yaml')
 
     if not os.path.exists(confpath):
-        if 'init' in args:
+        if 'init' in kwargs:
             with io.open(confpath, 'w', encoding='utf-8') as handle:
                 handle.write(default_mail_config.format(confpath=confpath))
             app_log.info('Initialized %s', confpath)
-        elif not cmd and not args:
+        elif not args and not kwargs:
             app_log.error(show_usage('mail'))
         else:
             app_log.error('Missing config %s. Use --init to generate skeleton', confpath)
         return
 
     conf = PathConfig(confpath)
-    if 'list' in args:
+    if 'list' in kwargs:
         for key, alert in conf.get('alert', {}).items():
             to = alert.get('to', '')
             if isinstance(to, list):
@@ -730,11 +730,11 @@ def mail(cmd, args):
             gramex.console('{:15}\t"{}" to {}'.format(key, alert.get('subject'), to))
         return
 
-    if 'init' in args:
+    if 'init' in kwargs:
         app_log.error('Config already exists at %s', confpath)
         return
 
-    if len(cmd) < 1:
+    if len(args) < 1:
         app_log.error(show_usage('mail'))
         return
 
@@ -743,7 +743,7 @@ def mail(cmd, args):
     email_conf = conf.get('email', {})
     setup_email(email_conf)
     sys.path += os.path.dirname(confpath)
-    for key in cmd:
+    for key in args:
         if key not in alert_conf:
             app_log.error('Missing key %s in %s', key, confpath)
             continue
@@ -751,16 +751,16 @@ def mail(cmd, args):
         alert()
 
 
-def license(cmd, args):
-    if len(cmd) == 0:
+def license(args, kwargs):
+    if len(args) == 0:
         gramex.console(gramex.license.EULA)
         if gramex.license.is_accepted():
             gramex.console('License already ACCEPTED. Run "gramex license reject" to reject')
         else:
             gramex.console('License NOT YET accepted. Run "gramex license accept" to accept')
-    elif cmd[0] == 'accept':
+    elif args[0] == 'accept':
         gramex.license.accept(force=True)
-    elif cmd[0] == 'reject':
+    elif args[0] == 'reject':
         gramex.license.reject()
     else:
-        app_log.error('Invalid command license %s', cmd[0])
+        app_log.error('Invalid command license %s', args[0])

@@ -189,3 +189,13 @@ class TestDefaultGramexYAML(TestGramex):
         self.check('/favicon.ico', path='../gramex/favicon.ico', headers={
             'Cache-Control': 'public, max-age=86400'
         })
+
+
+class TestAlias(TestGramex):
+    def test_alias(self):
+        # gramex.service uses service: as an alias for handler.
+        # It also creates alternate names for these services.
+        # Just check a few. If some work, all should work.
+        self.check('/alias-command')
+        self.check('/alias-data')
+        self.check('/alias-function')

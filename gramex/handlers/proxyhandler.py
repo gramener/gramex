@@ -72,8 +72,15 @@ class ProxyHandler(BaseHandler, BaseWebSocketHandler):
                 cls.info[key] = build_transform(
                     {'function': fn}, filename='url:%s.%s' % (cls.name, key),
                     vars={'handler': None, 'request': None, 'response': None})
-        cls.browser = AsyncHTTPClient()
         cls.post = cls.put = cls.delete = cls.patch = cls.options = cls.get
+
+    def browser(self):
+        # Create the browser when required. Don't create it in setup(), because:
+        #   gramex.services.init() calls setup() from a thread, and
+        #   AsyncHTTPClient can't be created from a thread
+        if not hasattr(self, '_browser'):
+            self._browser = AsyncHTTPClient()
+        return self._browser
 
     def authorize(self, *args, **kwargs):
         if self.request.headers.get('Upgrade', '') == 'websocket':
@@ -123,11 +130,11 @@ class ProxyHandler(BaseHandler, BaseWebSocketHandler):
             self.info['prepare'](handler=self, request=request, response=None)
 
         app_log.debug('%s: proxying %s', self.name, url)
-        response = yield self.browser.fetch(request, raise_error=False)
+        response = yield self.browser().fetch(request, raise_error=False)
 
         if response.code in (MOVED_PERMANENTLY, FOUND):
             location = response.headers.get('Location', '')
-            # TODO; check if Location: header MATCHES the url, not startswith
+            # TODO: check if Location: header MATCHES the url, not startswith
             # url: example.org/?x should match Location: example.org/?a=1&x
             # even though location does not start with url.
             if location.startswith(url):
