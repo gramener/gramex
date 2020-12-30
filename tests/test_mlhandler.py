@@ -24,7 +24,7 @@ class TestMLHandler(TestGramex):
 
     @classmethod
     def setUpClass(cls):
-        cls.df = pd.read_csv(op.join(folder, 'iris.csv'), encoding='utf8')
+        cls.df = pd.read_csv(op.join(folder, '..', 'testlib', 'iris.csv'), encoding='utf8')
         root = op.join(gramex.config.variables['GRAMEXDATA'], 'apps', 'mlhandler')
         paths = [op.join(root, f) for f in [
             'mlhandler-nopath/config.json',

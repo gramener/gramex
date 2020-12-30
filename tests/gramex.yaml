@@ -1131,7 +1131,7 @@ url:
     pattern: /mlhandler
     handler: MLHandler
     kwargs:
-      data: $YAMLPATH/iris.csv
+      data: $YAMLPATH/../testlib/iris.csv
       model:
         path: $YAMLPATH/model.pkl
         class: LogisticRegression
