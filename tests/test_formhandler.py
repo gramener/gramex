@@ -247,12 +247,12 @@ class TestFormHandler(TestGramex):
         eq_(out.headers.get('Content-Disposition'), None)
 
         out = self.get('/formhandler/file?_format=xlsx')
-        afe(pd.read_excel(BytesIO(out.content)), self.sales)
+        afe(pd.read_excel(BytesIO(out.content), engine='openpyxl'), self.sales)
         eq_(out.headers['Content-Type'], xlsx_mime_type)
         eq_(out.headers['Content-Disposition'], 'attachment;filename=data.xlsx')
 
         out = self.get('/formhandler/file-multi?_format=xlsx')
-        result = pd.read_excel(BytesIO(out.content), sheet_name=None)
+        result = pd.read_excel(BytesIO(out.content), sheet_name=None, engine='openpyxl')
         afe(result['big'], big)
         afe(result['by-growth'], by_growth)
         eq_(out.headers['Content-Type'], xlsx_mime_type)
@@ -638,7 +638,9 @@ class TestFormHandler(TestGramex):
             r = self.get(url, params={'_format': 'json', '_meta': 'y'})
             # Check ISO output
             pd.to_datetime(pd.DataFrame(r.json())['date'], format='%Y-%m-%dT%H:%M:%S.%fZ')
-            actual = pd.read_excel(BytesIO(self.get(url, params={'_format': 'xlsx'}).content))
+            actual = pd.read_excel(
+                BytesIO(self.get(url, params={'_format': 'xlsx'}).content),
+                engine='openpyxl')
             expected = data[data['date'] > pd.to_datetime(dt).tz_localize(None)]
             expected.index = actual.index
             afe(actual, expected, check_like=True)

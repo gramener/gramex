@@ -80,8 +80,8 @@ class TestCacheConstructor(unittest.TestCase):
     def test_redis_cache(self):
         redis_cache = self.get_redis_cache()
         self.assertIsInstance(redis_cache, RedisCache)
-        # When YAML config sets size: 0, .maxsize should not be set at all
-        eq_(redis_cache.maxsize, None)
+        # When YAML has size: 0, .maxsize is None on Windows/Old Redis, 0 on Linux/New Redis
+        ok_(redis_cache.maxsize in (0, None))
 
     def test_redis_cache_size(self):
         redis = self.get_redis_cache()

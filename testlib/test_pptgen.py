@@ -31,7 +31,7 @@ class TestPPTGen(TestCase):
         cls.input = os.path.join(folder, 'input.pptx')
         cls.output = os.path.join(folder, 'output.pptx')
         cls.image = os.path.join(folder, 'small-image.jpg')
-        cls.data = pd.read_excel(sales_file, encoding='utf-8')
+        cls.data = pd.read_excel(sales_file, encoding='utf-8', engine='openpyxl')
         if os.path.exists(cls.output):
             os.remove(cls.output)
 

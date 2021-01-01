@@ -691,7 +691,7 @@ def chart_data(shape, spec, data: dict):
     if not hasattr(shape, 'chart'):
         raise ValueError('Cannot set chart-data on shape: %s' % shape.name)
     chartdata = pd.read_excel(io.BytesIO(shape.chart.part.chart_workbook.xlsx_part.blob),
-                              index_col=0)
+                              index_col=0, engine='openpyxl')
     val = expr(spec, {'chartdata': chartdata, **data})
     if val is not None:
         if not isinstance(val, pd.DataFrame):

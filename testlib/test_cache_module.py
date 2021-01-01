@@ -186,21 +186,21 @@ class TestOpen(unittest.TestCase):
         path = os.path.join(tests_dir, 'sales.xlsx')
         # Excel files are loaded via pd.read_excel by default
         afe(gramex.cache.open(path, sheet_name='sales'),
-            pd.read_excel(path, sheet_name='sales'))
+            pd.read_excel(path, sheet_name='sales', engine='openpyxl'))
         # Load range. sales!A1:E25 is the same as the sheet "sales"
         afe(gramex.cache.open(path, sheet_name='sales', range='A1:E25'),
-            pd.read_excel(path, sheet_name='sales'))
+            pd.read_excel(path, sheet_name='sales', engine='openpyxl'))
         # sheet_name defaults to 0
-        afe(gramex.cache.open(path, range='A1:E25'), pd.read_excel(path))
+        afe(gramex.cache.open(path, range='A1:E25'), pd.read_excel(path, engine='openpyxl'))
         # sheet_name can be an int, not just a str
         afe(gramex.cache.open(path, sheet_name=1, range='A1:$B$34'),
-            pd.read_excel(path, sheet_name=1))
+            pd.read_excel(path, sheet_name=1, engine='openpyxl'))
         # header can be any int or list of int, passed directly to pd.read_excel
         afe(gramex.cache.open(path, sheet_name='sales', header=[0, 1], range='A$1:$E25'),
-            pd.read_excel(path, sheet_name='sales', header=[0, 1]))
+            pd.read_excel(path, sheet_name='sales', header=[0, 1], engine='openpyxl'))
         # header=None doesn't add a header
         afe(gramex.cache.open(path, sheet_name='sales', header=None, range='A$1:$E25'),
-            pd.read_excel(path, sheet_name='sales', header=None))
+            pd.read_excel(path, sheet_name='sales', header=None, engine='openpyxl'))
         # Load table. "SalesTable" is the same as table!A1B11
         afe(gramex.cache.open(path, sheet_name='table', table='SalesTable'),
             gramex.cache.open(path, sheet_name='table', range='A1:$B$11'))
