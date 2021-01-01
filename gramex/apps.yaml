@@ -2,7 +2,7 @@ capture:
     target: $GRAMEXPATH/apps/capture/
 guide:
     target: $GRAMEXDATA/apps/guide/
-    url: https://github.com/gramexrecipes/gramex-guide/archive/v1.66.0.zip
+    url: https://github.com/gramexrecipes/gramex-guide/archive/v1.67.0.zip
 gramex-update:
     target: $GRAMEXPATH/apps/update/
 logviewer:

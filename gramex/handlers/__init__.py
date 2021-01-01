@@ -27,6 +27,7 @@ Facebook = FacebookGraphHandler
 File = DirectoryHandler = FileHandler
 Filter = FilterHandler
 Function = FunctionHandler
+ML = MLHandler
 Proxy = ProxyHandler
 Screenshot = CaptureHandler
 Slide = PPTXHandler
@@ -56,6 +57,7 @@ __all__ = [
     'JSONHandler',
     'LogoutHandler',
     'ModelHandler',
+    'ML',
     'MLHandler',
     'PPTXHandler',
     'ProcessHandler',
