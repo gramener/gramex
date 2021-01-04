@@ -8,6 +8,7 @@
 #user-form {
   width: 300px;
   height: 300px;
+  overflow-y: auto;
 }
 .gallery-grid {
   /* Each chart takes up 160px + 10px gap, and expands like justified inline-blocks */
@@ -57,4 +58,7 @@ pre code {
   top: 7%;
   right: 2%;
   width: 200px;
+}
+.navbar-brand img {
+  height: 32px;
 }

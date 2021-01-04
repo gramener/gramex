@@ -36,9 +36,12 @@
           </div>
         </div>
         <div class="tab-pane fade w-100" id="responses" role="tabpanel" aria-labelledby="responses-tab">
-          <div class="formhandler pt-3 mt-3" data-src="../analytics/?db={{ form_id }}" data-export="false" data-page-size="5"></div>
+          <div class="formhandler pt-3 mt-3" data-src="../analytics/?db={{ form_id }}" data-export="false" data-count="true" data-page-size="5"></div>
         </div>
       </div>
+      <p>
+        <a class="btn btn-success" href="{{ base }}/create?id={{ form_id }}">Edit</a>
+      </p>
     </div>
 
     {% include 'modals/themes.html' %}
@@ -46,20 +49,7 @@
     {% include 'modals/send.html' %}
     {% include 'modals/remove.html' %}
 
-    <div aria-live="polite" aria-atomic="true" class="bg-dark">
-      <div class="toast-container position-fixed">
-        <div class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-delay="3000">
-          <div class="toast-header bg-dark text-white">
-            <strong class="mr-auto">Gramex Forms</strong>
-          </div>
-          <div class="toast-body">
-            Removed form.
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <script type="text/html" data-target="#view-form" class="popover-template" src="{{ base }}/popover-form.html"></script>
+    {% include 'toast.html' %}
 
     <script src="{{ base }}/ui/jquery/dist/jquery.min.js"></script>
     <script src="{{ base }}/ui/bootstrap/dist/js/bootstrap.bundle.min.js"></script>

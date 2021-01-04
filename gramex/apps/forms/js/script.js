@@ -1,4 +1,4 @@
-/* globals dragula, user, user_name, editor */
+/* globals dragula, user, user_name, editor, active_form_id */
 
 const right = '.user-form'
 const left = '.tab-pane'
@@ -57,7 +57,7 @@ $('body').on('click', '#user-form input', function () {
   // show options in the third container
   // current_form_el = this
   render_popover(element_data)
-}).on('change', '#element-properties input', function() {
+}).on('change', '#edit-html input', function() {
   // using an object (element_data) update respective form field in the second container
   const _el = $(this).data('element')
   for_edits.fields[_el].value = $(this).val()
@@ -73,23 +73,51 @@ $('body').on('click', '#user-form input', function () {
     categories: [],
     description: $('#form-description').val()
   }
-  $.ajax('publish', {
-    method: 'POST',
+  let form_details = {
     data: {
       config: JSON.stringify(element_data),
       html: $('#user-form form').html(),
       metadata: JSON.stringify(_md),
       user: user
-    },
-    success: function (response) {
-      $('.post-publish').removeClass('d-none')
-      $('.form-link').html(`<a href="form/${response.data.modify.id}">View form</a>`)
-    },
-    error: function () {
-      console.log("failed?")
-    },
-    complete: function() { $icon.fadeOut() }
-  })
+    }
+  }
+
+  if(active_form_id.length > 0) {
+    form_details.id = active_form_id
+    form_details.method = 'PUT'
+    // update existing form
+    $.ajax('publish', {
+      method: 'PUT',
+      data: form_details.data,
+      success: function () {
+        $('.post-publish').removeClass('d-none')
+        $('.form-link').html(`<a href="form/${form_details.id}">View form</a>`)
+      },
+      error: function () {
+        $('.toast-body').html('Unable to update the form. Please try again later.')
+        $('.toast').toast('show')
+      },
+      complete: function() { $icon.fadeOut() }
+    })
+  } else {
+    // POST creates a new identifier
+    delete form_details.data.id
+    form_details.method = 'POST'
+    $.ajax('publish', {
+      method: form_details.method,
+      data: form_details.data,
+      success: function (response) {
+        form_details.id = response.data.modify.id
+        $('.post-publish').removeClass('d-none')
+        $('.form-link').html(`<a href="form/${form_details.id}">View form</a>`)
+      },
+      error: function () {
+        $('.toast-body').html('Unable to publish the form. Please try again later.')
+        $('.toast').toast('show')
+      },
+      complete: function() { $icon.fadeOut() }
+    })
+  }
 }).on('shown.bs.tab', 'a[data-toggle="tab"]', function() {
   // on tab change, dragula needs to be reinitialized, e.target.id
   // dragAndDrop.dragula.destroy(); // dragAndDrop.init()

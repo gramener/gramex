@@ -21,13 +21,11 @@
   <body>
     <div class="container my-3">
       <div class="my-5 p-2 shadow" id="view-form">
-        <form class="analytics">
-
-        </form>
+        <form class="analytics"></form>
       </div>
     </div>
 
-    <script type="text/html" data-target="#view-form" class="popover-template" src="{{ base }}/popover-form.html"></script>
+    {% include 'toast.html' %}
 
     <script src="{{ base }}/ui/jquery/dist/jquery.min.js"></script>
     <script src="{{ base }}/ui/bootstrap/dist/js/bootstrap.bundle.min.js"></script>

@@ -28,24 +28,17 @@ function escapeHtml(unsafe) {
     .replace(/'/g, "&#039;");
 }
 
-// $(function() {
-  console.log("where?")
-  // setTimeout(function () {
-    $('body').on('submit', 'form.analytics', function (e) {
-      e.preventDefault()
-      console.log("e", e)
-      current_form_id = $(this).data('form')
-    // }).on('click', 'button[type="submit"]', function(e) {
-      console.log("...", form_id, `../analytics/?db=${form_id}`)
-      $.ajax(`../analytics/?db=${form_id}&form_id=${form_id}&response=${$('form').serialize()}`, {
-        method: 'POST',
-        data: $('form').serialize(),
-        success: function() {
-          $('#removeModal').modal('hide')
-          $('.toast-body').html('Removed form. Redirecting to the home page...')
-          $('.toast').toast('show')
-        }
-      })
-    })
-  // }, 3000)
-// })
+$('body').on('submit', 'form.analytics', function (e) {
+  e.preventDefault()
+  let $icon = $('<i class="fa fa-spinner fa-2x fa-fw align-middle"></i>').appendTo(this)
+  current_form_id = $(this).data('form')
+  $.ajax(`../analytics/?db=${form_id}&form_id=${form_id}&response=${encodeURIComponent($('form').serialize())}`, {
+    method: 'POST',
+    data: $('form').serialize(),
+    success: function() {
+      $('.toast-body').html('Your response has been recorded.')
+      $('.toast').toast('show')
+    },
+    complete: function() { $icon.fadeOut() }
+  })
+})

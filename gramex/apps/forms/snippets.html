@@ -1,41 +1,12 @@
 {% import os %}
 {% import glob %}
-{% set cls = '' %}
-<ul class="nav nav-tabs" role="tablist" id="snippetTabs">
-  {% for ind, item in enumerate(['input', 'select']) %}
-    {% if not os.path.isdir(item) %}
-      {% set cls = 'disabled' %}
-    {% end %}
-    {% if cls == 'disabled' %}
-      <li class="nav-item" role="presentation">
-        <a class="nav-link text-capitalize {{ 'show active' if ind == 0 else '' }}"
-        id="{{ item }}-tab" data-toggle="tab" href="#{{ item }}"
-        role="tab" aria-controls="{{ item }}" aria-selected="{{ 'false' if ind == 0 else '' }}"
-        >{{ item }}</a>
-      </li>
-    {% else %}
-      <li class="nav-item" role="presentation">
-        <a class="nav-link text-capitalize"
-        id="{{ item }}-tab" data-toggle="tab" href="#{{ item }}"
-        role="tab" aria-controls="{{ item }}" aria-selected="{{ 'false' if ind == 0 else '' }}"
-        >{{ item }}</a>
-      </li>
-    {% end %}
-  {% end %}
-</ul>
 
-<div class="tab-content mt-3" id="snippetTabsContent">
-  {% for root, snippet_dirs, files in os.walk(os.path.join(FOLDER, 'snippets')) %}
-    {% if len(snippet_dirs) > 0 %}
-      {% for _ind, _dir in enumerate(snippet_dirs) %}
-      <!-- <div class="drag-me"> -->
-        <div class="tab-pane fade {{ 'show active' if _ind == 0 else '' }}" id="{{ _dir }}" role="tabpanel" aria-labelledby="{{ _dir }}-tab">
-          {% for _f in glob.glob(os.path.join(FOLDER, 'snippets', _dir) + "/*") %}
-            {% module Template(_f) %}
-          {% end %}
-        </div>
-      <!-- </div> -->
-      {% end %}
+{% for root, snippet_dirs, files in os.walk(os.path.join(FOLDER, 'snippets')) %}
+  {% if len(snippet_dirs) > 0 %}
+    {% for _ind, _dir in enumerate(snippet_dirs) %}
+        {% for _f in glob.glob(os.path.join(FOLDER, 'snippets', _dir) + "/*") %}
+          {% module Template(_f) %}
+        {% end %}
     {% end %}
   {% end %}
-</div>
+{% end %}

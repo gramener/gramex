@@ -2,23 +2,32 @@
 <html lang="en">
 
 {% set base = '.' %}
+{% set title = 'Form Builder - Create a form' %}
 <head>
   <meta charset="utf-8">
   <meta http-equiv="x-ua-compatible" content="ie=edge">
-  <title>Form Builder</title>
+  <title>{{ title }}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="{{ base }}/node_modules/dragula/dist/dragula.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Comfortaa&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ base }}/style.scss">
 </head>
-{% set title = 'Form Builder - Create a form' %}
 <body>
-  {% from gramex import variables %}
-  {% include template-navbar.html %}
   {% import os %}
+  {% import json %}
+  {% from gramex import variables %}
   {% from form_builder import FOLDER %}
-  <div class="container-fluid py-4">
-    <h1 class="text-center text-muted">Creating a new form</h1>
+  {% from gramex.data import filter as gfilter %}
+  {% from gramex.config import variables as var %}
+
+  {% set active_form_id = handler.get_argument('id', '') %}
+  {% set form_details = gfilter(url=var.FORMS_URL, table=var.FORMS_TABLE, args={'id': [active_form_id]}) %}
+  {% set form_details = form_details %}
+  {% set _md = json.loads(form_details['metadata'].iloc[0]) %}
+
+  {% include template-navbar.html %}
+  <div class="container py-4">
+    <h1 class="text-center text-muted">{{ 'Updating an existing form' if active_form_id else 'Creating a new form' }}</h1>
     <div class="form-details step-1 my-3 py-3">
       <h3>Step 1 - Form details</h3>
       <div class="divider"></div>
@@ -27,12 +36,12 @@
           <div class="col-md-6 mb-3">
             <label for="form-name">Form name</label>
             <input type="text"
-              class="form-control" name="form-name" id="form-name" aria-describedby="form-name-helpId" placeholder="" pattern=".{5,}" value="form name..." minlength="5" required="required">
+              class="form-control" name="form-name" id="form-name" aria-describedby="form-name-helpId" placeholder="" pattern=".{5,}" value="{{ _md['name'] if active_form_id else 'form name...'}}" minlength="5" required="required">
             <small class="text-muted">At least five characters are required</small>
           </div>
           <div class="col-md-6 mb-3">
             <label for="form-description">Description</label>
-            <textarea class="form-control" name="form-description" id="form-description" rows="2" cols="5" minlength="5" required="required"></textarea>
+            <textarea class="form-control" name="form-description" id="form-description" rows="2" cols="5" minlength="5" required="required">{{ _md['description'] if active_form_id else ''}}</textarea>
             <small class="text-muted">At least five characters are required</small>
           </div>
         </div>
@@ -44,7 +53,7 @@
     <div class="card-deck step-2">
       <div class="card border-0">
         <div class="card-header bg-white d-flex justify-content-between">
-          <h5 class="card-title my-0">Select fields</h5>
+          <h5 class="card-title my-0">Drag fields</h5>
         </div><!-- .card-header -->
         <div class="card-body h-100">
           {% set snippets_path = os.path.join(FOLDER, 'snippets.html') %}
@@ -53,18 +62,23 @@
       </div><!-- .card -->
       <div class="card border-0">
         <div class="card-header bg-white d-flex justify-content-between">
-          <h5 class="card-title my-0">Drag here</h5>
+          <h5 class="card-title my-0">Drop here
+            <a class="btn btn-link py-0 {{ '' if active_form_id else 'd-none' }}" title="Edit code">
+              <i class="fa fa-code"></i>
+            </a>
+          </h5>
         </div><!-- .card-header -->
         <div class="card-body">
           <div id="user-form">
-            <form class="user-form h-100 w-100"></form>
+            <form class="user-form h-100 w-100">
+              {% if (active_form_id) %}
+                {% raw form_details['html'].iloc[0] %}
+              {% end %}
+            </form>
           </div>
-          <a class="btn btn-link d-none" title="Edit code">
-            <i class="fa fa-code"></i>
-          </a>
           <div class="divider"></div>
           <input type="text" class="py-2 form-control d-none" id="form-name" placeholder="Name your form" required>
-          <button class="btn btn-primary mt-2 d-none" id="publish-form">Publish</button>
+          <button class="btn btn-primary mt-2 {{ '' if active_form_id else 'd-none' }}" id="publish-form">{{ 'Update' if active_form_id else 'Publish' }}</button>
           <div class="py-2 my-2">
             <p class="post-publish d-none">
               <span class="form-link"></span>
@@ -77,18 +91,19 @@
       </div><!-- .card -->
       <div class="card border-0">
         <div class="card-header bg-white d-flex justify-content-between">
-          <h5 class="card-title my-0">Element Properties</h5>
+          <h5 class="card-title my-0">Edit HTML</h5>
         </div><!-- .card-header -->
         <div class="card-body">
-          <div id="element-properties"></div>
+          <div id="edit-html"></div>
           <div id="editor-html"></div>
           <button class="btn btn-primary update-form d-none my-2">Update form</button>
         </div><!-- .card-body -->
       </div><!-- .card -->
     </div><!-- .card-deck -->
   </div><!-- .container-fluid -->
+  {% include 'toast.html' %}
   <div class="popover-container"></div>
-  <script type="text/html" data-target="#element-properties" class="popover-template" src="popover-form.html"></script>
+  <script type="text/html" data-target="#edit-html" class="popover-template" src="popover-form.html"></script>
   <script type="text/html" class="input-template" src="snippets/input/text.html"></script>
 
   <script src="{{ base }}/ui/jquery/dist/jquery.min.js"></script>
@@ -98,24 +113,21 @@
   <script src="{{ base }}/node_modules/dragula/dist/dragula.min.js"></script>
   <script src="{{ base }}/node_modules/monaco-editor/min/vs/loader.js"></script>
   <script>
-    /* exported user, user_name */
+    /* exported user, user_name, active_form_id */
     let user = '{% raw handler.current_user.get("id") if handler.current_user else '' %}'
+    let active_form_id = '{{ active_form_id }}'
     require.config({ paths: { 'vs': '{{ base }}/node_modules/monaco-editor/min/vs' }})
     var editor
     require(['vs/editor/editor.main'], function() {
       editor = monaco.editor.create(document.getElementById('editor-html'), {
-        language: 'html'
+        language: 'html',
+        theme: 'vs-dark',
+        minimap: {
+          enabled: false
+        }
       })
     })
   </script>
   <script src="{{ base }}/js/script.js"></script>
-  <!-- Commonly used libraries:
-  <script src="ui/d3v5/dist/d3.min.js"></script>
-  <script src="ui/morphdom/dist/morphdom-umd.min.js"></script>
-  <script src="ui/moment/min/moment-with-locales.min.js"></script>
-  <script src="ui/daterangepicker/daterangepicker.js"></script>
-  <script src="ui/leaflet/dist/leaflet.js"></script>
-  <script src="ui/topojson/dist/topojson.min.js"></script>
-  -->
 </body>
 </html>
