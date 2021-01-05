@@ -3,10 +3,12 @@
 
 {% for root, snippet_dirs, files in os.walk(os.path.join(FOLDER, 'snippets')) %}
   {% if len(snippet_dirs) > 0 %}
-    {% for _ind, _dir in enumerate(snippet_dirs) %}
-        {% for _f in glob.glob(os.path.join(FOLDER, 'snippets', _dir) + "/*") %}
-          {% module Template(_f) %}
-        {% end %}
-    {% end %}
+    <div class="drag-fields">
+      {% for _ind, _dir in enumerate(snippet_dirs) %}
+          {% for _f in glob.glob(os.path.join(FOLDER, 'snippets', _dir) + "/*") %}
+            {% module Template(_f) %}
+          {% end %}
+      {% end %}
+    </div>
   {% end %}
 {% end %}

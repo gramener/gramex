@@ -1,7 +1,6 @@
 /* globals form_id */
 
 $(function() {
-  console.log("here")
   $('.btn.viewsource').addClass('d-none')
   $.ajax(`../embed/${form_id}.html`, {
     success: function(data) {

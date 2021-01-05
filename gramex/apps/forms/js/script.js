@@ -1,7 +1,7 @@
 /* globals dragula, user, user_name, editor, active_form_id */
 
 const right = '.user-form'
-const left = '.tab-pane'
+const left = '.drag-fields'
 // var editor
 
 $(function () {
@@ -43,7 +43,6 @@ var dragAndDrop = {
     return this.count < this.limit;
   },
   dropped: function () {
-    // this.count++;
     $('#publish-form').removeClass('d-none')
     $('.btn-link').removeClass('d-none')
   }
@@ -83,7 +82,7 @@ $('body').on('click', '#user-form input', function () {
   }
 
   if(active_form_id.length > 0) {
-    form_details.id = active_form_id
+    form_details.data.id = active_form_id
     form_details.method = 'PUT'
     // update existing form
     $.ajax('publish', {
@@ -91,7 +90,7 @@ $('body').on('click', '#user-form input', function () {
       data: form_details.data,
       success: function () {
         $('.post-publish').removeClass('d-none')
-        $('.form-link').html(`<a href="form/${form_details.id}">View form</a>`)
+        $('.form-link').html(`<a href="form/${active_form_id}">View form</a>`)
       },
       error: function () {
         $('.toast-body').html('Unable to update the form. Please try again later.')
