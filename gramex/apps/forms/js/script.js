@@ -1,8 +1,9 @@
 /* globals dragula, user, user_name, editor, active_form_id */
+/* exported editor */
 
 const right = '.user-form'
 const left = '.drag-fields'
-// var editor
+let editor
 
 $(function () {
   setTimeout(function () {
@@ -117,16 +118,23 @@ $('body').on('click', '#user-form input', function () {
       complete: function() { $icon.fadeOut() }
     })
   }
-}).on('shown.bs.tab', 'a[data-toggle="tab"]', function() {
-  // on tab change, dragula needs to be reinitialized, e.target.id
-  // dragAndDrop.dragula.destroy(); // dragAndDrop.init()
-}).on('click', '.btn-link', function() {
+}).on('click', '.edit-html-trigger', function() {
   $('.update-form').removeClass('d-none')
-  editor.setValue(
-    document.getElementById('user-form').innerHTML
-  )
 }).on('click', '.update-form', function() {
   let $icon = $('<i class="fa fa-spinner fa-2x fa-fw align-middle"></i>').appendTo(this)
   $('#user-form').html(editor.getValue())
   $icon.fadeOut()
+}).on('shown.bs.modal', '#editHTMLModal', function() {
+  if(window.monaco !== undefined)
+    monaco.editor.getModels().forEach(model => model.dispose())
+  require(['vs/editor/editor.main'], function() {
+    editor = monaco.editor.create(document.getElementById('editor-html'), {
+      language: 'html',
+      theme: 'vs-dark',
+      minimap: {
+        enabled: false
+      },
+      value: document.getElementById('user-form').innerHTML
+    })
+  })
 })

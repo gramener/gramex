@@ -63,7 +63,7 @@
       <div class="card border-0">
         <div class="card-header bg-white d-flex justify-content-between">
           <h5 class="card-title my-0">Drop here
-            <a class="btn btn-link py-0 {{ '' if active_form_id else 'd-none' }}" title="Edit code">
+            <a class="btn btn-link py-0 edit-html-trigger {{ '' if active_form_id else 'd-none' }}" data-toggle="modal" data-target="#editHTMLModal" title="Edit code">
               <i class="fa fa-code"></i>
             </a>
           </h5>
@@ -89,19 +89,11 @@
           </div>
         </div><!-- .card-body -->
       </div><!-- .card -->
-      <div class="card border-0">
-        <div class="card-header bg-white d-flex justify-content-between">
-          <h5 class="card-title my-0">Edit HTML</h5>
-        </div><!-- .card-header -->
-        <div class="card-body">
-          <div id="edit-html"></div>
-          <div id="editor-html"></div>
-          <button class="btn btn-primary update-form d-none my-2">Update form</button>
-        </div><!-- .card-body -->
-      </div><!-- .card -->
     </div><!-- .card-deck -->
   </div><!-- .container-fluid -->
   {% include 'toast.html' %}
+  {% include 'modals/edit-form-html.html' %}
+
   <div class="popover-container"></div>
   <script type="text/html" data-target="#edit-html" class="popover-template" src="popover-form.html"></script>
   <script type="text/html" class="input-template" src="snippets/input/text.html"></script>
@@ -117,16 +109,6 @@
     let user = '{% raw handler.current_user.get("id") if handler.current_user else '' %}'
     let active_form_id = '{{ active_form_id }}'
     require.config({ paths: { 'vs': '{{ base }}/node_modules/monaco-editor/min/vs' }})
-    var editor
-    require(['vs/editor/editor.main'], function() {
-      editor = monaco.editor.create(document.getElementById('editor-html'), {
-        language: 'html',
-        theme: 'vs-dark',
-        minimap: {
-          enabled: false
-        }
-      })
-    })
   </script>
   <script src="{{ base }}/js/script.js"></script>
 </body>
