@@ -462,13 +462,14 @@ class MLHandler(FormHandler):
                 data = self.load_data()
             target_col = self.get_opt('target_col')
             if target_col in data:
-                target = data.pop(target_col)
+                target = data[target_col]
+                to_predict = data.drop([target_col], axis=1)
             else:
                 target = None
             if action in ('predict', 'score'):
                 prediction = yield gramex.service.threadpool.submit(
                     # self._predict, data, transform=False)
-                    self._predict, data)
+                    self._predict, to_predict)
                 if action == 'predict':
                     self.write(_serialize_prediction(prediction))
                 elif action == 'score':
