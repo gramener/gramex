@@ -5,9 +5,7 @@
   {% if len(snippet_dirs) > 0 %}
     <div class="drag-fields">
       {% for _ind, _dir in enumerate(snippet_dirs) %}
-          {% for _f in glob.glob(os.path.join(FOLDER, 'snippets', _dir) + "/*") %}
-            {% module Template(_f) %}
-          {% end %}
+        {% module Template(os.path.join(FOLDER, 'snippets', _dir, "index.html")) %}
       {% end %}
     </div>
   {% end %}
