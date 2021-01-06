@@ -36,7 +36,7 @@
           <div class="col-md-6 mb-3">
             <label for="form-name">Form name</label>
             <input type="text"
-              class="form-control" name="form-name" id="form-name" aria-describedby="form-name-helpId" placeholder="" pattern=".{5,}" value="{{ _md['name'] if active_form_id else 'form name...'}}" minlength="5" required="required">
+              class="form-control" name="form-name" id="form-name" aria-describedby="form-name-helpId" placeholder="{{ _md['name'] if active_form_id else ''}}" pattern=".{5,}" value="" minlength="5" required="required">
             <small class="text-muted">At least five characters are required</small>
           </div>
           <div class="col-md-6 mb-3">
