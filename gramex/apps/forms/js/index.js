@@ -13,6 +13,20 @@ function render_forms() {
     })
 }
 
+/**
+ * Render toast after form removal or renaming
+ * @param {String} msg
+ * @param {String} el
+ */
+function post_action(msg, el) {
+  $(el).modal('hide')
+  $('.toast-body').html(msg)
+  $('.toast').toast('show')
+  setTimeout(function() {
+    render_forms()
+  }, 2000)
+}
+
 $('body').search()
 $('body').urlfilter()
 $(window).on('#?field', function(e, field) {
@@ -30,9 +44,7 @@ $('body').on('click', 'button[data-form]', function () {
     method: 'DELETE',
     data: {id: current_form_id},
     success: function() {
-      $('#removeModal').modal('hide')
-      $('.toast-body').html('Removed form')
-      $('.toast').toast('show')
+      post_action('Removed form. Refreshing the list.', '#removeModal')
     }
   })
 }).on('click', '.confirm-rename', function() {
@@ -46,12 +58,7 @@ $('body').on('click', 'button[data-form]', function () {
       method: 'PUT',
       data: {metadata: JSON.stringify(_metadata), id: current_form_id},
       success: function() {
-        $('#renameModal').modal('hide')
-        $('.toast-body').html('Updated name. Refreshing the list...')
-        $('.toast').toast('show')
-        setTimeout(function() {
-          render_forms()
-        }, 2000)
+        post_action('Updated name. Refreshing the list.', '#renameModal')
       }
     })
   })
