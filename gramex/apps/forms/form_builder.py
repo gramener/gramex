@@ -24,7 +24,8 @@ def after_publish(handler, data):
         # Capture thumbnails for all missing entries.
         # This makes requests to this SAME server, while this function is running.
         # To avoid deadlock, run it in a thread.
-        info.threadpool.submit(screenshots, handler.conf.kwargs)
+        protocol_host = handler.request.protocol + '://' + handler.request.host
+        info.threadpool.submit(screenshots, handler.conf.kwargs, protocol_host)
         # fetch id of the last inserted form by the user
         rows = gramex.data.filter(url=var.FORMS_URL, table=var.FORMS_TABLE, args={
             'user': [handler.current_user.id]})
@@ -50,7 +51,7 @@ def endpoint(id: int, format: str, handler=None):
         return f'document.write(`{row.html.iloc[0]}`)'
 
 
-def screenshots(kwargs):
+def screenshots(kwargs, host):
     '''
     Loop through all entries that don't have a thumbnail and create it.
     '''
@@ -61,7 +62,7 @@ def screenshots(kwargs):
         width, height = 300, 300    # TODO: Change dimensions later
         for index, row in pending.iterrows():
             id = row[var.FORMS_ID]
-            url = f'http://localhost:9988/form/{id}'   # TODO: Dynamically find port & URL
+            url = f'{host}/form/{id}'
             # TODO: Use delay='renderComplete'
             content = capture.png(url, selector=".container", width=width, height=height, delay=1000)
             # Save under GRAMEXDATA/forms/thumbnail/<id>.png, cropped to width and height
