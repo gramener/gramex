@@ -7,9 +7,9 @@
 
 #user-form {
   width: 300px;
-  height: 300px;
-  overflow-y: auto;
+  min-height: 300px;
 }
+
 .gallery-grid {
   /* Each chart takes up 160px + 10px gap, and expands like justified inline-blocks */
   display: grid;

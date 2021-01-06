@@ -33,23 +33,16 @@
               You can use any of the methods below to render the form. Note the file extensions in each of the approaches below.
             </p>
             <div class="py-3">
-              <h4>Bootstrap</h4>
-              Before anything, import Bootstrap 4 as a dependency.
-
-              <pre>
-                <code>&lt;link rel="stylesheet" href="{{ _url }}/ui/bootstrap/dist/css/bootstrap.min.css"&gt;</code>
-              </pre>
               <h4>Using JavaScript</h4>
               <p>
                 Below code renders the form in place.
               </p>
               <pre>
-                <code>&lt;link rel="stylesheet" href="{{ _url }}/ui/bootstrap/dist/css/bootstrap.min.css"&gt;
-&lt;script src="http://localhost:9988/ui/jquery/dist/jquery.min.js"&gt;&lt;/script&gt;
-&lt;div class="form-container"&gt;
-  &lt;script src="{% raw view_url + '.js' %}"&gt;&lt;/script&gt;
-&lt;/div&gt;</code>
-              </pre>
+                <code>{% apply escape %}<link rel="stylesheet" href="{{ _url }}/ui/bootstrap/dist/css/bootstrap.min.css">
+<script src="{{ _url }}/ui/jquery/dist/jquery.min.js"></script>
+<div class="form-container">
+  <script src="{% raw view_url + '.js' %}"></script>
+</div>{% end %}</code></pre>
               <h4>Using HTML</h4>
               <p>
                 Below code renders the form in <code>.form-container</code> element.
