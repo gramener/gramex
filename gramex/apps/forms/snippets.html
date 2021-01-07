@@ -1,12 +1,14 @@
-{% import os %}
-{% import glob %}
+<% let dirs = ['button', 'checkbox', 'email', 'number', 'password', 'radio', 'range', 'select', 'text'] %>
 
-{% for root, snippet_dirs, files in os.walk(os.path.join(FOLDER, 'snippets')) %}
-  {% if len(snippet_dirs) > 0 %}
-    <div class="drag-fields">
-      {% for _ind, _dir in enumerate(snippet_dirs) %}
-        {% module Template(os.path.join(FOLDER, 'snippets', _dir, "index.html")) %}
-      {% end %}
-    </div>
-  {% end %}
-{% end %}
+<div class="drag-fields"></div>
+  <%
+  (async () => {
+    const promises_json = dirs.map((item, index) => getJSONs(item))
+    const promises_html = dirs.map((item, index) => getHTMLs(item, index))
+    await Promise.all(promises_json + promises_html).then(responses => {
+      responses.map(response => {
+        console.log("update", response, response.length)
+      }) // responses.map
+    }) // Promise.all
+  })();
+  %>

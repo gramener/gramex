@@ -55,8 +55,7 @@
           <h5 class="card-title my-0">Drag fields</h5>
         </div><!-- .card-header -->
         <div class="card-body h-100">
-          {% set snippets_path = os.path.join(FOLDER, 'snippets.html') %}
-          {% module Template(snippets_path, FOLDER=FOLDER) %}
+          <script type="text/html" class="snippets-tmpl" src="snippets.html"></script>
         </div><!-- .card-body -->
       </div><!-- .card -->
       <div class="card border-0">
@@ -108,6 +107,29 @@
     let user = '{% raw handler.current_user.get("id") if handler.current_user else '' %}'
     let active_form_id = '{{ active_form_id }}'
     require.config({ paths: { 'vs': '{{ base }}/node_modules/monaco-editor/min/vs' }})
+
+
+    function getHTMLs(item, index) {
+      fetch(`snippets/?type=${item}&file=index&ext=html`)
+        .then(response => response.text())
+        .then(function(html) {
+          $('.drag-fields').append(html)
+          console.log("html", item)
+          return [index, html]
+        })
+    }
+
+    function getJSONs(item) {
+      fetch(`snippets/?type=${item}&file=config&ext=json`)
+        .then(response => response.json())
+        .then(function(_json) {
+          // <!-- $('.drag-fields').append(_json) -->
+          console.log("json", item, _json)
+          return _json
+        })
+    }
+
+    $('.snippets-tmpl').template()
   </script>
   <script src="{{ base }}/js/script.js"></script>
 </body>

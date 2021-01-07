@@ -114,3 +114,13 @@ url:
           primary_key: true       # as a primary key
           autoincrement: true     # that auto-increments
         form_id: INTEGER
+
+  forms/snippets/all:
+    pattern: /$YAMLURL/snippets/
+    handler: FileHandler
+    kwargs:
+      path:
+        '': $YAMLPATH/snippets/{type}/{file}.{ext}
+      headers:
+        Content-Type: text/plain
+        Content-Disposition: none
