@@ -1,0 +1,17 @@
+{
+  "options": {
+    "type": {
+      "name": "type",
+      "field": "text",
+      "label": "Text Input",
+      "value": "Input Value"
+    },
+    "text": {
+      "name": "text",
+      "field": "text",
+      "label": "Button text",
+      "help": "Text displayed on the button",
+      "value": "Button"
+    }
+  }
+}
