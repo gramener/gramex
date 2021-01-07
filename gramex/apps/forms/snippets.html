@@ -1,14 +1,35 @@
 <% let dirs = ['button', 'checkbox', 'email', 'number', 'password', 'radio', 'range', 'select', 'text'] %>
 
 <div class="drag-fields"></div>
-  <%
+<%
   (async () => {
-    const promises_json = dirs.map((item, index) => getJSONs(item))
-    const promises_html = dirs.map((item, index) => getHTMLs(item, index))
-    await Promise.all(promises_json + promises_html).then(responses => {
-      responses.map(response => {
-        console.log("update", response, response.length)
-      }) // responses.map
-    }) // Promise.all
+    const promises = []
+    const options = {}
+    const template = {}
+    dirs.forEach(dir => {
+      promises.push(fetch(`snippets/?type=${dir}&file=config&ext=json`)
+        .then(response => response.json())
+        .then(function(json) { options[dir] = json.options }))
+      promises.push(fetch(`snippets/?type=${dir}&file=index&ext=html`)
+        .then(response => response.text())
+        .then(function(text) { template[dir] = _.template(text) }))
+    })
+    await Promise.all(promises).then(responses => {
+      _.each(template, (tmpl, dir) => {
+        let vals = _.mapValues(options[dir], v => v.value)
+        $(tmpl(vals)).data('type', dir).data('vals', vals).appendTo('.drag-fields')
+      })
+      $('.form-group').on('click', function () {
+        $('#user-form').empty()
+        let field_vals = $(this).data('vals')
+        _.each(options[$(this).data('type')], function (option, key) {
+          let vals = _.mapValues(options[option.field], v => v.value)
+          _.extend(vals, option)
+          vals.value = field_vals[key]
+          console.log(vals, field_vals[key])
+          $('#user-form').append(template[option.field](vals))
+        })
+      })
+    })
   })();
-  %>
+%>

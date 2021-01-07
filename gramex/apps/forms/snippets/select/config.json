@@ -1,4 +1,18 @@
 {
   "options": {
+    "label": {
+      "name": "label",
+      "field": "text",
+      "label": "Select label",
+      "help": "Label for the dropdown",
+      "value": "Select"
+    },
+    "options": {
+      "name": "options",
+      "field": "list",
+      "label": "Options",
+      "help": "List of options for the dropdown",
+      "value": ["One", "Two"]
+    }
   }
 }

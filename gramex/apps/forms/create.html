@@ -108,27 +108,6 @@
     let active_form_id = '{{ active_form_id }}'
     require.config({ paths: { 'vs': '{{ base }}/node_modules/monaco-editor/min/vs' }})
 
-
-    function getHTMLs(item, index) {
-      fetch(`snippets/?type=${item}&file=index&ext=html`)
-        .then(response => response.text())
-        .then(function(html) {
-          $('.drag-fields').append(html)
-          console.log("html", item)
-          return [index, html]
-        })
-    }
-
-    function getJSONs(item) {
-      fetch(`snippets/?type=${item}&file=config&ext=json`)
-        .then(response => response.json())
-        .then(function(_json) {
-          // <!-- $('.drag-fields').append(_json) -->
-          console.log("json", item, _json)
-          return _json
-        })
-    }
-
     $('.snippets-tmpl').template()
   </script>
   <script src="{{ base }}/js/script.js"></script>

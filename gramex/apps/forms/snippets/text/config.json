@@ -1,5 +1,19 @@
 {
   "options": {
+    "label": {
+      "name": "label",
+      "field": "text",
+      "label": "Text label",
+      "help": "Label for the text field",
+      "value": "Text"
+    },
+    "placeholder": {
+      "name": "placeholder",
+      "field": "text",
+      "label": "Text placeholder",
+      "help": "Label for the text field",
+      "value": "Placeholder"
+    },
     "type": {
       "name": "type",
       "field": "text",
