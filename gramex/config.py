@@ -832,25 +832,30 @@ def used_kwargs(method, kwargs, ignore_keywords=False):
     return used, rest
 
 
-def setup_secrets(path, max_age_days=1000000):
+def setup_secrets(path, max_age_days=1000000, clear=True):
     '''
-    Load ``<path>/.secrets.yaml`` (which must be a dict) into gramex.config.variables.
+    Load ``<path>`` (which must be Path) as a YAML file. Update it into gramex.config.variables.
 
     If there's a ``SECRETS_URL:`` and ``SECRETS_KEY:`` key, the text from ``SECRETS_URL:`` is
     decrypted using ``secrets_key``.
+
+    If there's a ``SECRETS_IMPORT:`` string, list or dict, the values are treated as file patterns
+    pointing to other secrets file to be imported.
     '''
-    secrets_path = path / '.secrets.yaml'
-    if not secrets_path.is_file():
+    if not path.is_file():
         return
 
-    with secrets_path.open(encoding='utf-8') as handle:
+    with path.open(encoding='utf-8') as handle:
         result = yaml.load(handle, Loader=yaml.SafeLoader)
-    # Ignore empty .secret.yaml
+    # Ignore empty .secrets.yaml
     if not result:
         return
     # If it's non-empty, it must be a dict
     if not isinstance(result, dict):
         raise ValueError('%s: must be a YAML file with a single dict' % path)
+    # Clear secrets if we are re-initializing. Not if we're importing recursively.
+    if clear:
+        secrets.clear()
     # If SECRETS_URL: and SECRETS_KEY: are set, fetch secrets from URL and decrypted with the key.
     # This allows changing secrets remotely without access to the server.
     secrets_url = result.pop('SECRETS_URL', None)
@@ -863,5 +868,15 @@ def setup_secrets(path, max_age_days=1000000):
         value = yaml.load(urlopen(secrets_url), Loader=yaml.SafeLoader)
         value = decode_signed_value(secrets_key, '', value, max_age_days=max_age_days)
         result.update(loads(value.decode('utf-8')))
-    secrets.clear()
+    # If SECRETS_IMPORT: is set, fetch secrets from those file(s) as well.
+    # SECRETS_IMPORT: can be a file pattern, or a list/dict of file patterns
+    secrets_import = result.pop('SECRETS_IMPORT', None)
+    if secrets_import:
+        # Create a list of file patterns to import from
+        imports = (list(secrets_import.values()) if isinstance(secrets_import, dict) else
+                   secrets_import if isinstance(secrets_import, (list, tuple)) else
+                   [secrets_import])
+        for pattern in imports:
+            for import_path in path.parent.glob(pattern):
+                setup_secrets(import_path, max_age_days, clear=False)
     secrets.update(result)

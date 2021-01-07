@@ -12,3 +12,8 @@ class TestSecrets(TestGramex):
         eq_(variables['SECRET2'], 'alpha')
         eq_(variables['REMOTE_SECRET1'], 1)
         eq_(variables['REMOTE_SECRET2'], 'beta')
+        eq_(variables['SECRETS_DIR'], 'from_dir')
+        eq_(variables['SECRETS_OVERRIDE_DIR'], 'from_root')
+        eq_(variables['SECRETS_DICT'], 1)
+        eq_(variables['SECRETS_DIR_A'], 1)
+        eq_(variables['SECRETS_DIR_B'], 1)
