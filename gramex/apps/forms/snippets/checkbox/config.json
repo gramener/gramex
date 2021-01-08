@@ -1,3 +1,24 @@
 {
-  "options": {}
+  "options": {
+    "label": {
+      "name": "label",
+      "field": "text",
+      "label": "Checkbox label",
+      "help": "Label for the Checkbox field",
+      "value": "Checkbox"
+    },
+    "value": {
+      "name": "value",
+      "field": "select",
+      "label": "Checkbox selection",
+      "options": ["yes", "no"],
+      "value": "yes"
+    },
+    "name": {
+      "name": "text",
+      "field": "text",
+      "label": "Checkbox name",
+      "value": "checkbox-input"
+    }
+  }
 }

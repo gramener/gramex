@@ -1,3 +1,36 @@
 {
-  "options": {}
+  "options": {
+    "label": {
+      "name": "label",
+      "field": "text",
+      "label": "Email label",
+      "help": "Label for the email field",
+      "value": "Email"
+    },
+    "placeholder": {
+      "name": "placeholder",
+      "field": "text",
+      "label": "Email placeholder",
+      "help": "Label for the text field",
+      "value": "email address"
+    },
+    "value": {
+      "name": "value",
+      "field": "text",
+      "label": "Email Value",
+      "value": "hi@gramener.com"
+    },
+    "name": {
+      "name": "text",
+      "field": "text",
+      "label": "Email name",
+      "value": "email-input"
+    },
+    "pattern": {
+      "name": "pattern",
+      "field": "text",
+      "label": "Email pattern",
+      "value": ".+@gramener.com"
+    }
+  }
 }

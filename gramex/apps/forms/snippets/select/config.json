@@ -9,7 +9,7 @@
     },
     "options": {
       "name": "options",
-      "field": "list",
+      "field": "select",
       "label": "Options",
       "help": "List of options for the dropdown",
       "value": ["One", "Two"]

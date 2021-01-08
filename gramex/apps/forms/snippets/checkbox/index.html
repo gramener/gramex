@@ -1,6 +1,6 @@
 <div class="form-check py-2">
   <label class="form-check-label">
-    <input type="checkbox" class="form-check-input" name="checkbox-input" id="checkbox-input" value="checkedValue" checked>
-    Checkbox options
+    <input type="checkbox" class="form-check-input" name="<%= name %>" id="<%= name %>" value="<%= value %>" <%= (typeof checked !== undefined) ? "checked" : "" %> >
+    <%= label %>
   </label>
 </div>

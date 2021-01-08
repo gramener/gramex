@@ -5,11 +5,6 @@
   --grid-width: 200px;
 }
 
-#user-form {
-  width: 300px;
-  min-height: 300px;
-}
-
 .gallery-grid {
   /* Each chart takes up 160px + 10px gap, and expands like justified inline-blocks */
   display: grid;
@@ -58,4 +53,13 @@
 }
 .navbar-brand img {
   height: 32px;
+}
+// create form
+#user-form {
+  width: 300px;
+  min-height: 300px;
+}
+.drag-fields .form-group,
+.drag-fields .form-check {
+  cursor: pointer;
 }

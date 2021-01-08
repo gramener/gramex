@@ -19,14 +19,14 @@
         let vals = _.mapValues(options[dir], v => v.value)
         $(tmpl(vals)).data('type', dir).data('vals', vals).appendTo('.drag-fields')
       })
-      $('.form-group').on('click', function () {
+      $('.form-group, .form-check, .drag-fields button').on('click', function () {
         $('#user-form').empty()
         let field_vals = $(this).data('vals')
         _.each(options[$(this).data('type')], function (option, key) {
           let vals = _.mapValues(options[option.field], v => v.value)
           _.extend(vals, option)
           vals.value = field_vals[key]
-          console.log(vals, field_vals[key])
+          console.log(vals, field_vals[key], option.field)
           $('#user-form').append(template[option.field](vals))
         })
       })

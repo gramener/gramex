@@ -1,5 +1,7 @@
 <div class="form-group py-2">
-  <label for="email-input">Email</label>
-  <input type="email" class="form-control" name="email-input" id="email-input" aria-describedby="email-input-help" placeholder="email address">
-  <small id="email-input-help" class="form-text text-muted">Help text</small>
+  <label for="<%= name %>"><%= label %></label>
+  <input type="email" class="form-control" name="<%= name %>" id="<%= name %>" aria-describedby="email-<%= name %>" placeholder="<%= placeholder %>" pattern="<%= pattern %>">
+  <% if (typeof help != 'undefined') { %>
+    <small id="email-help" class="form-text text-muted"><%= help %></small>
+  <% } %>
 </div>

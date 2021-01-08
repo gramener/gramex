@@ -1,3 +1,24 @@
 {
-  "options": {}
+  "options": {
+    "label": {
+      "name": "label",
+      "field": "text",
+      "label": "Radio label",
+      "help": "Label for the Radio field",
+      "value": "Radio"
+    },
+    "value": {
+      "name": "value",
+      "field": "select",
+      "label": "Radio selection",
+      "options": ["yes", "no"],
+      "value": "yes"
+    },
+    "name": {
+      "name": "text",
+      "field": "text",
+      "label": "Radio name",
+      "value": "radio-input"
+    }
+  }
 }

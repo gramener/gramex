@@ -26,6 +26,17 @@
       "label": "Button text",
       "help": "Text displayed on the button",
       "value": "Button"
+    },
+    "value": {
+      "name": "value",
+      "field": "text",
+      "label": "Text Value",
+      "value": "Dummy"
+    },
+    "name": {
+      "name": "text",
+      "field": "text",
+      "value": "text-input"
     }
   }
 }

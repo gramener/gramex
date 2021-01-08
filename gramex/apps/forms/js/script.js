@@ -1,8 +1,8 @@
 /* globals dragula, user, user_name, editor, active_form_id */
 /* exported editor */
 
-const right = '.user-form'
 const left = '.drag-fields'
+const right = '.user-form'
 let editor
 
 $(function () {
@@ -53,19 +53,7 @@ function render_popover(data) {
   $('.popover-template').template({fields: data.fields, view: view})
 }
 
-$('body').on('click', '#user-form input', function () {
-  // show options in the third container
-  // current_form_el = this
-  render_popover(element_data)
-}).on('change', '#edit-html input', function() {
-  // using an object (element_data) update respective form field in the second container
-  const _el = $(this).data('element')
-  for_edits.fields[_el].value = $(this).val()
-  // render_popover(for_edits)
-  $('.input-template').on('template', function() {
-    $('#user-form input').html($('input-template').html())
-  }).template({data: for_edits.fields[_el]}, {target: '#user-form'})
-}).on('click', '#publish-form', function() {
+$('body').on('click', '#publish-form', function() {
   let $icon = $('<i class="fa fa-spinner fa-2x fa-fw align-middle"></i>').appendTo(this)
   // create a database entry with for_edits
   let _md = {

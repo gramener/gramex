@@ -1,3 +1,51 @@
 {
-  "options": {}
+  "options": {
+    "label": {
+      "name": "label",
+      "field": "text",
+      "label": "Number label",
+      "help": "Label for the Number field",
+      "value": "Number"
+    },
+    "placeholder": {
+      "name": "placeholder",
+      "field": "text",
+      "label": "Number placeholder",
+      "help": "Label for the text field",
+      "value": "Number"
+    },
+    "value": {
+      "name": "value",
+      "field": "text",
+      "label": "Number Value",
+      "value": "hi@gramener.com"
+    },
+    "name": {
+      "name": "text",
+      "field": "text",
+      "label": "Number name",
+      "value": "number-input"
+    },
+    "min": {
+      "name": "min",
+      "field": "number",
+      "label": "Minimum number",
+      "help": "Minimum allowed value",
+      "value": "1"
+    },
+    "max": {
+      "name": "max",
+      "field": "number",
+      "label": "Maximum number",
+      "help": "Maximum allowed value",
+      "value": "10"
+    },
+    "step": {
+      "name": "step",
+      "field": "number",
+      "label": "Step by",
+      "help": "Step number by",
+      "value": "1"
+    }
+  }
 }
