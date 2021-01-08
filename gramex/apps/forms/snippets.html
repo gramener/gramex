@@ -26,7 +26,7 @@
           let vals = _.mapValues(options[option.field], v => v.value)
           _.extend(vals, option)
           vals.value = field_vals[key]
-          console.log(vals, field_vals[key], option.field)
+          console.log(vals, field_vals[key])
           $('#user-form').append(template[option.field](vals))
         })
       })
