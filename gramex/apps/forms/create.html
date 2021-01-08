@@ -54,7 +54,7 @@
           <h5 class="card-title my-0">Drag fields</h5>
         </div><!-- .card-header -->
         <div class="card-body h-100">
-          <script type="text/html" class="snippets-tmpl" src="snippets.html"></script>
+          <div class="drag-fields"></div>
         </div><!-- .card-body -->
       </div><!-- .card -->
       <div class="card border-0">
@@ -107,12 +107,57 @@
   <script src="{{ base }}/node_modules/dragula/dist/dragula.min.js"></script>
   <script src="{{ base }}/node_modules/monaco-editor/min/vs/loader.js"></script>
   <script>
+    /* globals require */
     /* exported user, user_name, active_form_id */
     let user = '{% raw handler.current_user.get("id") if handler.current_user else '' %}'
     let active_form_id = '{{ active_form_id }}'
     require.config({ paths: { 'vs': '{{ base }}/node_modules/monaco-editor/min/vs' }})
 
-    $('.snippets-tmpl').template()
+    let dirs = ['button', 'checkbox', 'email', 'number', 'password', 'radio', 'range', 'select', 'text'];
+    const promises = []
+    const options = {}
+    const template = {}
+    dirs.forEach(dir => {
+      promises.push(fetch(`snippets/?type=${dir}&file=config&ext=json`)
+        .then(response => response.json())
+        .then(function(json) { options[dir] = json.options }))
+      promises.push(fetch(`snippets/?type=${dir}&file=index&ext=html`)
+        .then(response => response.text())
+        .then(function(text) { template[dir] = _.template(text) }))
+    })
+    Promise.all(promises).then(() => {
+      _.each(template, (tmpl, dir) => {
+        let vals = _.mapValues(options[dir], v => v.value)
+        $(tmpl(vals))
+          .data('type', dir)
+          .data('vals', vals)
+          .appendTo('.drag-fields')
+      })
+      // TODO: Can we ensure they all have a common parent class? I'll assume it's .form-group
+      $('.form-group, .form-check, .drag-fields button').on('click', function () {
+        $('#user-form').empty()
+          .data('editing-element', $(this))
+        let field_vals = $(this).data('vals')
+        _.each(options[$(this).data('type')], function (option, key) {
+          let vals = _.mapValues(options[option.field], v => v.value)
+          _.extend(vals, option)
+          vals.value = field_vals[key]
+          $(template[option.field](vals))
+            .appendTo('#user-form')
+            .addClass('form-element')
+            .data('key', key)
+            .data('field', option.field)
+        })
+      })
+    })
+    $('#user-form').on('input change', function (e) {
+      let vals = {}
+      $(':input', this).each(function () { vals[this.id] = this.value })
+      var $el = $(this).data('editing-element')
+      var field = $(e.target).parents('.form-element').data('field')
+      $el.html(template[field](vals))
+        .data('vals', vals)
+    })
   </script>
   <script src="{{ base }}/js/script.js"></script>
 </body>

@@ -1,8 +1,7 @@
-<% let dirs = ['button', 'checkbox', 'email', 'number', 'password', 'radio', 'range', 'select', 'text'] %>
-
 <div class="drag-fields"></div>
 <%
-  (async () => {
+  let dirs = ['button', 'checkbox', 'email', 'number', 'password', 'radio', 'range', 'select', 'text'];
+  (() => {
     const promises = []
     const options = {}
     const template = {}
@@ -14,7 +13,7 @@
         .then(response => response.text())
         .then(function(text) { template[dir] = _.template(text) }))
     })
-    await Promise.all(promises).then(responses => {
+    Promise.all(promises).then(() => {
       _.each(template, (tmpl, dir) => {
         let vals = _.mapValues(options[dir], v => v.value)
         $(tmpl(vals)).data('type', dir).data('vals', vals).appendTo('.drag-fields')
@@ -26,7 +25,6 @@
           let vals = _.mapValues(options[option.field], v => v.value)
           _.extend(vals, option)
           vals.value = field_vals[key]
-          console.log(vals, field_vals[key])
           $('#user-form').append(template[option.field](vals))
         })
       })
