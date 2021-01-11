@@ -98,8 +98,6 @@
   {% include 'toast.html' %}
   {% include 'modals/edit-form-html.html' %}
 
-  <script type="text/html" class="input-template" src="snippets/input/text.html"></script>
-
   <script src="{{ base }}/ui/jquery/dist/jquery.min.js"></script>
   <script src="{{ base }}/ui/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
   <script src="{{ base }}/ui/lodash/lodash.min.js"></script>
@@ -134,8 +132,8 @@
           .appendTo('.drag-fields')
       })
       // TODO: Can we ensure they all have a common parent class? I'll assume it's .form-group
-      $('.form-group, .form-check, .drag-fields button').on('click', function () {
-        $('#user-form').empty()
+      $('.form-group, .form-check, button').on('click', function () {
+        $('.edit-properties').empty()
           .data('editing-element', $(this))
         let field_vals = $(this).data('vals')
         _.each(options[$(this).data('type')], function (option, key) {
@@ -143,17 +141,18 @@
           _.extend(vals, option)
           vals.value = field_vals[key]
           $(template[option.field](vals))
-            .appendTo('#user-form')
+            .appendTo('.edit-properties')
             .addClass('form-element')
             .data('key', key)
             .data('field', option.field)
         })
       })
     })
-    $('#user-form').on('input change', function (e) {
+    $('.edit-properties').on('input change', function (e) {
       let vals = {}
       $(':input', this).each(function () { vals[this.id] = this.value })
       var $el = $(this).data('editing-element')
+      // console.log("e.target", e.target, $el)
       var field = $(e.target).parents('.form-element').data('field')
       $el.html(template[field](vals))
         .data('vals', vals)
