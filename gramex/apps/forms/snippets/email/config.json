@@ -18,7 +18,7 @@
       "name": "value",
       "field": "text",
       "label": "Email Value",
-      "value": "hi@gramener.com"
+      "value": "jane@example.com"
     },
     "name": {
       "name": "text",
@@ -30,7 +30,7 @@
       "name": "pattern",
       "field": "text",
       "label": "Email pattern",
-      "value": ".+@gramener.com"
+      "value": ".+@example.com"
     }
   }
 }

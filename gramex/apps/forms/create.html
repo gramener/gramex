@@ -2,7 +2,8 @@
 <html lang="en">
 
 {% set base = '.' %}
-{% set title = 'Form Builder - Create a form' %}
+{% set active_form_id = handler.get_argument('id', '') %}
+{% set title = 'Form Builder' if active_form_id else 'Form Builder - Create a form' %}
 <head>
   <meta charset="utf-8">
   <meta http-equiv="x-ua-compatible" content="ie=edge">
@@ -19,7 +20,6 @@
   {% from gramex.data import filter as gfilter %}
   {% from gramex.config import variables as var %}
 
-  {% set active_form_id = handler.get_argument('id', '') %}
   {% set form_details = gfilter(url=var.FORMS_URL, table=var.FORMS_TABLE, args={'id': [active_form_id]}) %}
   {% set form_details = form_details %}
   {% set _md = json.loads(form_details['metadata'].iloc[0]) %}
@@ -89,6 +89,9 @@
       <div class="border-0">
         <div class="card-header bg-white d-flex justify-content-between">
           <h5 class="card-title my-0">Edit properties
+            <a class="btn btn-link py-0 delete-field-trigger {{ '' if active_form_id else 'd-none' }}" data-toggle="modal" data-target="#deleteFieldModal" title="Delete field">
+              <i class="fa fa-trash-alt"></i>
+            </a>
           </h5>
         </div><!-- .card-header -->
         <div class="card-body edit-properties"></div>
@@ -97,6 +100,7 @@
   </div><!-- .container-fluid -->
   {% include 'toast.html' %}
   {% include 'modals/edit-form-html.html' %}
+  {% include 'modals/delete-form-field.html' %}
 
   <script src="{{ base }}/ui/jquery/dist/jquery.min.js"></script>
   <script src="{{ base }}/ui/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
@@ -110,52 +114,6 @@
     let user = '{% raw handler.current_user.get("id") if handler.current_user else '' %}'
     let active_form_id = '{{ active_form_id }}'
     require.config({ paths: { 'vs': '{{ base }}/node_modules/monaco-editor/min/vs' }})
-
-    let dirs = ['button', 'checkbox', 'email', 'number', 'password', 'radio', 'range', 'select', 'text'];
-    const promises = []
-    const options = {}
-    const template = {}
-    dirs.forEach(dir => {
-      promises.push(fetch(`snippets/?type=${dir}&file=config&ext=json`)
-        .then(response => response.json())
-        .then(function(json) { options[dir] = json.options }))
-      promises.push(fetch(`snippets/?type=${dir}&file=index&ext=html`)
-        .then(response => response.text())
-        .then(function(text) { template[dir] = _.template(text) }))
-    })
-    Promise.all(promises).then(() => {
-      _.each(template, (tmpl, dir) => {
-        let vals = _.mapValues(options[dir], v => v.value)
-        $(tmpl(vals))
-          .data('type', dir)
-          .data('vals', vals)
-          .appendTo('.drag-fields')
-      })
-      // TODO: Can we ensure they all have a common parent class? I'll assume it's .form-group
-      $('body').on('click', '.user-form .form-group, .user-form .form-check, .user-form button', function () {
-        $('.edit-properties').empty()
-          .data('editing-element', $(this))
-        let field_vals = $(this).data('vals')
-        _.each(options[$(this).data('type')], function (option, key) {
-          let vals = _.mapValues(options[option.field], v => v.value)
-          _.extend(vals, option)
-          vals.value = field_vals[key]
-          $(template[option.field](vals))
-            .appendTo('.edit-properties')
-            .addClass('form-element')
-            .data('key', key)
-            .data('field', option.field)
-        })
-      })
-    })
-    $('.edit-properties').on('input change', function (e) {
-      let vals = {}
-      $(':input', this).each(function () { vals[this.id] = this.value })
-      var $el = $(this).data('editing-element')
-      var field = $(e.target).parents('.form-element').data('field')
-      $el.html(template[field](vals))
-        .data('vals', vals)
-    })
   </script>
   <script src="{{ base }}/js/script.js"></script>
 </body>

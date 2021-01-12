@@ -11,18 +11,6 @@ $(function () {
   }, 300)
 }) // anonymous function
 
-let element_data, for_edits
-//, current_form_el
-let view = 'default'
-
-/* Fetch form fields and their attributes */
-fetch('assets/data/input.json')
-  .then(response => response.json())
-  .then(function(data) {
-    element_data = data[0]
-    for_edits = JSON.parse(JSON.stringify(element_data))
-  })
-
 var dragAndDrop = {
   limit: 20,
   count: 0,
@@ -55,9 +43,45 @@ var dragAndDrop = {
   }
 };
 
-function render_popover(data) {
-  $('.popover-template').template({fields: data.fields, view: view})
-}
+let dirs = ['button', 'checkbox', 'email', 'number', 'password', 'radio', 'range', 'select', 'text']
+const promises = []
+const options = {}
+const template = {}
+
+dirs.forEach(dir => {
+  promises.push(fetch(`snippets/?type=${dir}&file=config&ext=json`)
+    .then(response => response.json())
+    .then(function(json) { options[dir] = json.options }))
+  promises.push(fetch(`snippets/?type=${dir}&file=index&ext=html`)
+    .then(response => response.text())
+    .then(function(text) { template[dir] = _.template(text) }))
+})
+Promise.all(promises).then(() => {
+  _.each(template, (tmpl, dir) => {
+    let vals = _.mapValues(options[dir], v => v.value)
+    $(tmpl(vals))
+      .data('type', dir)
+      .data('vals', vals)
+      .appendTo('.drag-fields')
+  })
+  // TODO: Can we ensure they all have a common parent class? I'll assume it's .form-group
+  $('body').on('click', '.user-form .form-group, .user-form .form-check, .user-form button', function () {
+    $('.delete-field-trigger').removeClass('d-none')
+    $('.edit-properties').empty()
+      .data('editing-element', $(this))
+    let field_vals = $(this).data('vals')
+    _.each(options[$(this).data('type')], function (option, key) {
+      let vals = _.mapValues(options[option.field], v => v.value)
+      _.extend(vals, option)
+      vals.value = field_vals[key]
+      $(template[option.field](vals))
+        .appendTo('.edit-properties')
+        .addClass('form-element')
+        .data('key', key)
+        .data('field', option.field)
+    })
+  })
+})
 
 $('body').on('click', '#publish-form', function() {
   let $icon = $('<i class="fa fa-spinner fa-2x fa-fw align-middle"></i>').appendTo(this)
@@ -69,7 +93,7 @@ $('body').on('click', '#publish-form', function() {
   }
   let form_details = {
     data: {
-      config: JSON.stringify(element_data),
+      config: '',
       html: $('#user-form form').html(),
       metadata: JSON.stringify(_md),
       user: user
@@ -131,4 +155,17 @@ $('body').on('click', '#publish-form', function() {
       value: document.getElementById('user-form').innerHTML
     })
   })
+}).on('click', '.delete-field', function() {
+  $('.edit-properties').data('editing-element').remove()
+  $('.edit-properties').empty()
+  $('.delete-field-trigger').addClass('d-none')
+})
+$('.edit-properties').on('input change', function (e) {
+  let vals = {}
+  $(':input', this).each(function () { vals[this.id] = this.value })
+  var $el = $(this).data('editing-element')
+  var field = $(e.target).parents('.form-element').data('field')
+  // console.log("...", field, template[field])
+  $el.html(template[field](vals))
+    .data('vals', vals)
 })
