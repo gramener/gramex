@@ -132,7 +132,7 @@
           .appendTo('.drag-fields')
       })
       // TODO: Can we ensure they all have a common parent class? I'll assume it's .form-group
-      $('.form-group, .form-check, button').on('click', function () {
+      $('body').on('click', '.user-form .form-group, .user-form .form-check, .user-form button', function () {
         $('.edit-properties').empty()
           .data('editing-element', $(this))
         let field_vals = $(this).data('vals')
@@ -152,7 +152,6 @@
       let vals = {}
       $(':input', this).each(function () { vals[this.id] = this.value })
       var $el = $(this).data('editing-element')
-      // console.log("e.target", e.target, $el)
       var field = $(e.target).parents('.form-element').data('field')
       $el.html(template[field](vals))
         .data('vals', vals)

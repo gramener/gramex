@@ -1,5 +1,5 @@
 <div class="form-group py-2">
-  <label for="<%= name %>"><%= label %></label>
+  <label data-type="email" for="<%= name %>"><%= label %></label>
   <input type="email" class="form-control" name="<%= name %>" id="<%= name %>" aria-describedby="email-<%= name %>" placeholder="<%= placeholder %>" pattern="<%= pattern %>">
   <% if (typeof help != 'undefined') { %>
     <small id="email-help" class="form-text text-muted"><%= help %></small>

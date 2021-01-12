@@ -27,9 +27,7 @@ def after_publish(handler, data):
         protocol_host = handler.request.protocol + '://' + handler.request.host
         info.threadpool.submit(screenshots, handler.conf.kwargs, protocol_host)
         # fetch id of the last inserted form by the user
-        rows = gramex.data.filter(url=var.FORMS_URL, table=var.FORMS_TABLE, args={
-            'user': [handler.current_user.id]})
-        return {'id': rows['id'].max()}
+        return data
     elif handler.request.method == 'GET':
         return data
 

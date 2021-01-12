@@ -1,4 +1,4 @@
-/* globals dragula, user, user_name, editor, active_form_id */
+/* globals dragula, user, user_name, editor, active_form_id, options */
 /* exported editor */
 
 const left = '.drag-fields'
@@ -43,7 +43,13 @@ var dragAndDrop = {
   canMove: function () {
     return this.count < this.limit;
   },
-  dropped: function () {
+  dropped: function (el) {
+    let _type = $(el).find('label').data('type')
+    let vals = _.mapValues(options[_type], v => v.value)
+    $(el)
+      .data('type', _type)
+      .data('vals', vals)
+
     $('#publish-form').removeClass('d-none')
     $('.btn-link').removeClass('d-none')
   }
@@ -95,7 +101,7 @@ $('body').on('click', '#publish-form', function() {
       method: form_details.method,
       data: form_details.data,
       success: function (response) {
-        form_details.id = response.data.modify.id
+        form_details.id = response.data.inserted[0].id
         $('.post-publish').removeClass('d-none')
         $('.form-link').html(`<a href="form/${form_details.id}">View form</a>`)
       },
