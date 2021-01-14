@@ -17,7 +17,7 @@
     "value": {
       "name": "value",
       "field": "text",
-      "label": "Number Value",
+      "label": "Default Value",
       "value": "5"
     },
     "name": {

@@ -10,7 +10,7 @@
     "value": {
       "name": "value",
       "field": "select",
-      "label": "Checkbox selection",
+      "label": "Default value",
       "options": ["yes", "no"],
       "value": "yes"
     },

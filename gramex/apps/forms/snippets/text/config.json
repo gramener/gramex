@@ -23,7 +23,7 @@
     "value": {
       "name": "value",
       "field": "text",
-      "label": "Text Value",
+      "label": "Default Value",
       "value": "I'm a value"
     },
     "name": {

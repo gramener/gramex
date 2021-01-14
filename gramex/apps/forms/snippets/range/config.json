@@ -10,7 +10,7 @@
     "value": {
       "name": "value",
       "field": "number",
-      "label": "Selection value",
+      "label": "Default Value",
       "value": "yes"
     },
     "name": {
