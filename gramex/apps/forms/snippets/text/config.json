@@ -14,6 +14,12 @@
       "help": "Label for the text field",
       "value": "Placeholder"
     },
+    "type": {
+      "name": "type",
+      "field": "text",
+      "value": "text",
+      "label": "Text type"
+    },
     "value": {
       "name": "value",
       "field": "text",
@@ -21,7 +27,7 @@
       "value": "I'm a value"
     },
     "name": {
-      "name": "text",
+      "name": "name",
       "field": "text",
       "label": "Name",
       "value": "text-input"

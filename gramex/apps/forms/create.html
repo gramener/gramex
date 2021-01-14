@@ -23,6 +23,7 @@
   {% set form_details = gfilter(url=var.FORMS_URL, table=var.FORMS_TABLE, args={'id': [active_form_id]}) %}
   {% set form_details = form_details %}
   {% set _md = json.loads(form_details['metadata'].iloc[0]) %}
+  {% set _config = form_details['config'].iloc[0] if active_form_id else '' %}
 
   {% include template-navbar.html %}
   <div class="container py-4">
@@ -59,10 +60,13 @@
       </div><!-- .card -->
       <div class="card border-0">
         <div class="card-header bg-white d-flex justify-content-between">
-          <h5 class="card-title my-0">Drop here
-            <a class="btn btn-link py-0 edit-html-trigger {{ '' if active_form_id else 'd-none' }}" data-toggle="modal" data-target="#editHTMLModal" title="Edit code">
-              <i class="fa fa-code"></i>
-            </a>
+          <h5 class="card-title my-0 w-100">
+            <span class="float-left">Drop here</span>
+            <span class="float-right">
+              <a class="btn btn-link py-0 edit-html-trigger {{ '' if active_form_id else 'd-none' }}" data-toggle="modal" data-target="#editHTMLModal" title="Edit code">
+                <i class="fa fa-code"></i>
+              </a>
+            </span>
           </h5>
         </div><!-- .card-header -->
         <div class="card-body">
@@ -72,17 +76,6 @@
                 {% raw form_details['html'].iloc[0] %}
               {% end %}
             </form>
-          </div>
-          <div class="divider"></div>
-          <input type="text" class="py-2 form-control d-none" id="form-name" placeholder="Name your form" required>
-          <button class="btn btn-primary mt-2 {{ '' if active_form_id else 'd-none' }}" id="publish-form">{{ 'Update' if active_form_id else 'Publish' }}</button>
-          <div class="py-2 my-2">
-            <p class="post-publish d-none">
-              <span class="form-link"></span>
-              <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-up-right-square-fill" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                <path fill-rule="evenodd" d="M2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2zm3.879 10.828a.5.5 0 1 1-.707-.707l4.096-4.096H6.5a.5.5 0 0 1 0-1h3.975a.5.5 0 0 1 .5.5V9.5a.5.5 0 0 1-1 0V6.732l-4.096 4.096z"/>
-              </svg>
-            </p>
           </div>
         </div><!-- .card-body -->
       </div><!-- .card -->
@@ -102,6 +95,16 @@
   {% include 'modals/edit-form-html.html' %}
   {% include 'modals/delete-form-field.html' %}
 
+  <div class="floating-button m-2 p-2 position-fixed">
+    <button class="btn btn-primary ml-2 {{ '' if active_form_id else 'd-none' }}" id="publish-form">{{ 'Update' if active_form_id else 'Publish' }}</button>
+    <p class="post-publish text-center d-none">
+      <span class="form-link"></span>
+      <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-up-right-square-fill" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+        <path fill-rule="evenodd" d="M2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2zm3.879 10.828a.5.5 0 1 1-.707-.707l4.096-4.096H6.5a.5.5 0 0 1 0-1h3.975a.5.5 0 0 1 .5.5V9.5a.5.5 0 0 1-1 0V6.732l-4.096 4.096z"/>
+      </svg>
+    </p>
+  </div>
+
   <script src="{{ base }}/ui/jquery/dist/jquery.min.js"></script>
   <script src="{{ base }}/ui/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
   <script src="{{ base }}/ui/lodash/lodash.min.js"></script>
@@ -114,6 +117,7 @@
     let user = '{% raw handler.current_user.get("id") if handler.current_user else '' %}'
     let active_form_id = '{{ active_form_id }}'
     require.config({ paths: { 'vs': '{{ base }}/node_modules/monaco-editor/min/vs' }})
+    let _user_form_config = active_form_id ? JSON.parse('{% raw _config %}') : ''
   </script>
   <script src="{{ base }}/js/script.js"></script>
 </body>

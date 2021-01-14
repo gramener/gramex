@@ -5,7 +5,7 @@
       "field": "select",
       "label": "Button type",
       "options": ["submit", "reset", "button"],
-      "value": "submit"
+      "value": "button"
     },
     "text": {
       "name": "text",

@@ -21,10 +21,16 @@
       "value": "jane@example.com"
     },
     "name": {
-      "name": "text",
-      "field": "text",
+      "name": "name",
+      "field": "email",
       "label": "Email name",
       "value": "email-input"
+    },
+    "type": {
+      "name": "type",
+      "field": "email",
+      "value": "email",
+      "label": "Email type"
     },
     "pattern": {
       "name": "pattern",

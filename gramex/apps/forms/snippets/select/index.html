@@ -1,6 +1,7 @@
 <div class="form-group">
-  <label for="select-element"><%= label %></label>
+  <label data-type="select" for="select-element"><%= label %></label>
   <select class="form-control" name="<%= name %>" id="<%= name %>">
+    <!-- <% console.log("options", options) %> -->
     <% options.forEach(function (option) { %>
       <option value="<%= option %>"><%= option %></option>
     <% }) %>

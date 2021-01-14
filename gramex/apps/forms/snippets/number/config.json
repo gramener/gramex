@@ -12,7 +12,7 @@
       "field": "text",
       "label": "Number placeholder",
       "help": "Label for the text field",
-      "value": "Number"
+      "value": "Enter a number"
     },
     "value": {
       "name": "value",
@@ -21,10 +21,16 @@
       "value": "5"
     },
     "name": {
-      "name": "text",
+      "name": "name",
       "field": "text",
       "label": "Number name",
       "value": "number-input"
+    },
+    "type": {
+      "name": "type",
+      "field": "text",
+      "value": "number",
+      "label": "Number type"
     },
     "min": {
       "name": "min",

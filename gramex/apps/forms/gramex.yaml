@@ -124,3 +124,4 @@ url:
       headers:
         Content-Type: text/plain
         Content-Disposition: none
+        Cache-Control: "public, max-age=86400"

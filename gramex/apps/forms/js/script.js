@@ -60,8 +60,8 @@ Promise.all(promises).then(() => {
   _.each(template, (tmpl, dir) => {
     let vals = _.mapValues(options[dir], v => v.value)
     $(tmpl(vals))
-      .data('type', dir)
-      .data('vals', vals)
+      .attr('data-type', dir)
+      .attr('data-vals', vals)
       .appendTo('.drag-fields')
   })
   // TODO: Can we ensure they all have a common parent class? I'll assume it's .form-group
@@ -69,11 +69,21 @@ Promise.all(promises).then(() => {
     $('.delete-field-trigger').removeClass('d-none')
     $('.edit-properties').empty()
       .data('editing-element', $(this))
+    $('.form-group, .form-check').removeClass('highlight')
+    $(this).addClass('highlight')
     let field_vals = $(this).data('vals')
     _.each(options[$(this).data('type')], function (option, key) {
-      let vals = _.mapValues(options[option.field], v => v.value)
-      _.extend(vals, option)
-      vals.value = field_vals[key]
+      let vals
+      if(Object.keys(_user_form_config).length > 0) {
+        vals = _.mapValues(options[option.field], v => v.value)
+        _.extend(vals, option)
+        vals.value = _user_form_config[key]
+      }
+       else {
+        vals = _.mapValues(options[option.field], v => v.value)
+        _.extend(vals, option)
+        vals.value = field_vals[key]
+      }
       $(template[option.field](vals))
         .appendTo('.edit-properties')
         .addClass('form-element')
@@ -84,8 +94,12 @@ Promise.all(promises).then(() => {
 })
 
 $('body').on('click', '#publish-form', function() {
+  let _vals = {}
+  $('.edit-properties .form-group input').each(function(ind, item) { _vals[item.id] = item.value })
+  $('.user-form > *').removeClass('highlight')
+  $('.edit-properties').empty()
   let $icon = $('<i class="fa fa-spinner fa-2x fa-fw align-middle"></i>').appendTo(this)
-  // create a database entry with for_edits
+
   let _md = {
     name: $('#form-name').val() || 'Untitled',
     categories: [],
@@ -93,7 +107,7 @@ $('body').on('click', '#publish-form', function() {
   }
   let form_details = {
     data: {
-      config: '',
+      config: JSON.stringify(_vals),
       html: $('#user-form form').html(),
       metadata: JSON.stringify(_md),
       user: user
@@ -109,7 +123,7 @@ $('body').on('click', '#publish-form', function() {
       data: form_details.data,
       success: function () {
         $('.post-publish').removeClass('d-none')
-        $('.form-link').html(`<a href="form/${active_form_id}">View form</a>`)
+        $('.form-link').html(`<a href="form/${active_form_id}" target="_blank">View</a>`)
       },
       error: function () {
         $('.toast-body').html('Unable to update the form. Please try again later.')
@@ -127,7 +141,7 @@ $('body').on('click', '#publish-form', function() {
       success: function (response) {
         form_details.id = response.data.inserted[0].id
         $('.post-publish').removeClass('d-none')
-        $('.form-link').html(`<a href="form/${form_details.id}">View form</a>`)
+        $('.form-link').html(`<a href="form/${form_details.id}" target="_blank">View</a>`)
       },
       error: function () {
         $('.toast-body').html('Unable to publish the form. Please try again later.')
@@ -163,9 +177,8 @@ $('body').on('click', '#publish-form', function() {
 $('.edit-properties').on('input change', function (e) {
   let vals = {}
   $(':input', this).each(function () { vals[this.id] = this.value })
-  var $el = $(this).data('editing-element')
-  var field = $(e.target).parents('.form-element').data('field')
-  // console.log("...", field, template[field])
+  var $el = $('.edit-properties').data('editing-element')
+  var field = $($el).data('type')
   $el.html(template[field](vals))
     .data('vals', vals)
 })

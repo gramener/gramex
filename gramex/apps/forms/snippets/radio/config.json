@@ -5,7 +5,14 @@
       "field": "text",
       "label": "Radio label",
       "help": "Label for the Radio field",
-      "value": "Radio"
+      "value": "Radio button"
+    },
+    "placeholder": {
+      "name": "placeholder",
+      "field": "text",
+      "label": "Radio placeholder",
+      "help": "Label for the text field",
+      "value": "woot"
     },
     "value": {
       "name": "value",
@@ -15,7 +22,7 @@
       "value": "yes"
     },
     "name": {
-      "name": "text",
+      "name": "name",
       "field": "text",
       "label": "Radio name",
       "value": "radio-input"
