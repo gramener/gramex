@@ -74,16 +74,9 @@ Promise.all(promises).then(() => {
     let field_vals = $(this).data('vals')
     _.each(options[$(this).data('type')], function (option, key) {
       let vals
-      if(Object.keys(_user_form_config).length > 0) {
-        vals = _.mapValues(options[option.field], v => v.value)
-        _.extend(vals, option)
-        vals.value = _user_form_config[key]
-      }
-       else {
-        vals = _.mapValues(options[option.field], v => v.value)
-        _.extend(vals, option)
-        vals.value = field_vals[key]
-      }
+      vals = _.mapValues(options[option.field], v => v.value)
+      _.extend(vals, option)
+      vals.value = Object.keys(_user_form_config).length > 0 ? _user_form_config[key] : field_vals[key]
       $(template[option.field](vals))
         .appendTo('.edit-properties')
         .addClass('form-element')
