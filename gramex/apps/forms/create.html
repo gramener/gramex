@@ -82,12 +82,12 @@
       <div class="border-0">
         <div class="card-header bg-white d-flex justify-content-between">
           <h5 class="card-title my-0">Edit properties
-            <a class="btn btn-link py-0 delete-field-trigger {{ '' if active_form_id else 'd-none' }}" data-toggle="modal" data-target="#deleteFieldModal" title="Delete field">
-              <i class="fa fa-trash-alt"></i>
-            </a>
           </h5>
         </div><!-- .card-header -->
         <div class="card-body edit-properties"></div>
+        <a class="btn btn-danger ml-3 delete-field-trigger {{ '' if active_form_id else 'd-none' }}" data-toggle="modal" data-target="#deleteFieldModal" title="Delete field">
+          Delete field
+        </a>
       </div>
     </div><!-- .card-deck -->
   </div><!-- .container-fluid -->
