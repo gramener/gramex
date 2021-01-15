@@ -18,7 +18,8 @@
       "name": "text",
       "field": "text",
       "label": "Checkbox name",
-      "value": "checkbox-input"
+      "value": "checkbox-input",
+      "help": "Useful for mapping submission values"
     }
   }
 }

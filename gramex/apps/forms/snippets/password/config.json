@@ -18,7 +18,8 @@
       "name": "text",
       "field": "text",
       "label": "Password name",
-      "value": "password-input"
+      "value": "password-input",
+      "help": "Useful for mapping submission values"
     },
     "minlength": {
       "name": "minlength",

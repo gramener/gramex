@@ -24,13 +24,8 @@
       "name": "name",
       "field": "text",
       "label": "Number name",
-      "value": "number-input"
-    },
-    "type": {
-      "name": "type",
-      "field": "text",
-      "value": "number",
-      "label": "Number type"
+      "value": "number-input",
+      "help": "Useful for mapping submission values"
     },
     "min": {
       "name": "min",
@@ -50,7 +45,7 @@
       "name": "step",
       "field": "number",
       "label": "Step by",
-      "help": "Step number by",
+      "help": "Increment or decrement number by",
       "value": "1"
     }
   }

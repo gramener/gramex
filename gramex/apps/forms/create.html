@@ -24,6 +24,7 @@
   {% set form_details = form_details %}
   {% set _md = json.loads(form_details['metadata'].iloc[0]) %}
   {% set _config = form_details['config'].iloc[0] if active_form_id else '' %}
+  {% set form_fields = ['button', 'checkbox', 'email', 'hidden', 'meter', 'number', 'password', 'progress', 'radio', 'range', 'select', 'text', 'textarea'] %}
 
   {% include template-navbar.html %}
   <div class="container py-4">
@@ -52,17 +53,19 @@
     <div class="card-deck step-2">
       <div class="card border-0">
         <div class="card-header bg-white d-flex justify-content-between">
-          <h5 class="card-title my-0">Drag fields</h5>
-        </div><!-- .card-header -->
-        <div class="card-body h-100">
-          <div class="drag-fields"></div>
-        </div><!-- .card-body -->
-      </div><!-- .card -->
-      <div class="card border-0">
-        <div class="card-header bg-white d-flex justify-content-between">
           <h5 class="card-title my-0 w-100">
-            <span class="float-left">Drop here</span>
+            <span class="float-left">Add fields</span>
             <span class="float-right">
+              <div class="dropdown d-inline">
+                <button type="button" class="btn btn-link py-0" data-toggle="dropdown" title="Add new field" aria-haspopup="true" aria-expanded="false" id="dropdownMenuAddField">
+                  <i class="fa fa-plus"></i>
+                </button>
+                <div class="dropdown-menu" aria-labelledby="dropdownMenuAddFieldButton">
+                  {% for field in form_fields %}
+                    <button data-formfield="{{ field }}" class="btn btn-link form-field-trigger dropdown-item text-capitalize">{{ field }}</button>
+                  {% end %}
+                </div>
+              </div>
               <a class="btn btn-link py-0 edit-html-trigger {{ '' if active_form_id else 'd-none' }}" data-toggle="modal" data-target="#editHTMLModal" title="Edit code">
                 <i class="fa fa-code"></i>
               </a>
@@ -79,7 +82,7 @@
           </div>
         </div><!-- .card-body -->
       </div><!-- .card -->
-      <div class="border-0">
+      <div class="card border-0">
         <div class="card-header bg-white d-flex justify-content-between">
           <h5 class="card-title my-0">Edit properties
           </h5>
@@ -92,6 +95,7 @@
     </div><!-- .card-deck -->
   </div><!-- .container-fluid -->
   {% include 'toast.html' %}
+  {% include 'modals/add-field.html' %}
   {% include 'modals/edit-form-html.html' %}
   {% include 'modals/delete-form-field.html' %}
 
@@ -109,7 +113,6 @@
   <script src="{{ base }}/ui/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
   <script src="{{ base }}/ui/lodash/lodash.min.js"></script>
   <script src="{{ base }}/ui/g1/dist/g1.min.js"></script>
-  <script src="{{ base }}/node_modules/dragula/dist/dragula.min.js"></script>
   <script src="{{ base }}/node_modules/monaco-editor/min/vs/loader.js"></script>
   <script>
     /* globals require */

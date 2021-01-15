@@ -1,6 +1,6 @@
 <div class="form-group py-2">
   <label data-type="number" for="<%= name %>"><%= label %></label>
-  <input type="<%= type %>"
+  <input type="number"
     class="form-control" name="<%= name %>" id="<%= name %>" aria-describedby="<%= name %>-help" placeholder="<%= placeholder %>"
     min="<%= min %>" max="<%= max %>" step="<%= step %>" value="<%= value %>">
   <% if (typeof help != 'undefined') { %>

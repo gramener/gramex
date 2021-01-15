@@ -25,7 +25,8 @@
       "name": "name",
       "field": "text",
       "label": "Radio name",
-      "value": "radio-input"
+      "value": "radio-input",
+      "help": "Useful for mapping submission values"
     }
   }
 }

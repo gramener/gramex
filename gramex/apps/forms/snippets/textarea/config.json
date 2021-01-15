@@ -3,16 +3,16 @@
     "label": {
       "name": "label",
       "field": "text",
-      "label": "Email label",
-      "help": "Label for the email field",
-      "value": "Email"
+      "label": "Text label",
+      "help": "Label for the text field",
+      "value": "Textarea"
     },
     "placeholder": {
       "name": "placeholder",
       "field": "text",
-      "label": "Email placeholder",
+      "label": "Text placeholder",
       "help": "Label for the text field",
-      "value": "jane@example.com"
+      "value": "Placeholder"
     },
     "value": {
       "name": "value",
@@ -22,17 +22,17 @@
     },
     "name": {
       "name": "name",
-      "field": "email",
-      "label": "Email name",
-      "value": "email-input",
+      "field": "text",
+      "label": "Name",
+      "value": "textarea-input",
       "help": "Useful for mapping submission values"
     },
-    "pattern": {
-      "name": "pattern",
+    "rows": {
+      "name": "rows",
       "field": "text",
-      "label": "Email pattern",
-      "value": ".+@example.com",
-      "help": "Restrict emails to certain domains"
+      "label": "Number of rows",
+      "value": "3",
+      "help": "Height of the field"
     }
   }
 }

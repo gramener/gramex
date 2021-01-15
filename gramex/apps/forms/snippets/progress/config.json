@@ -1,0 +1,31 @@
+{
+  "options": {
+    "label": {
+      "name": "label",
+      "field": "text",
+      "label": "Progress label",
+      "help": "Label for the Progress field",
+      "value": "Progress"
+    },
+    "value": {
+      "name": "value",
+      "field": "text",
+      "label": "Default Value",
+      "value": "5"
+    },
+    "name": {
+      "name": "name",
+      "field": "text",
+      "label": "Progress name",
+      "value": "progress-input",
+      "help": "Useful for mapping submission values"
+    },
+    "max": {
+      "name": "max",
+      "field": "number",
+      "label": "Maximum number",
+      "help": "Maximum allowed value, defaults to 1 if unspecified",
+      "value": "10"
+    }
+  }
+}

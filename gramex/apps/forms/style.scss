@@ -59,8 +59,7 @@
   width: 300px;
   height: 80vh;
 }
-.drag-fields .form-group,
-.drag-fields .form-check {
+.user-form > * {
   cursor: pointer;
 }
 .floating-button {
@@ -70,5 +69,4 @@
 .highlight {
   border: 3px solid yellow;
   border-radius: 1em;
-  padding: 5px;
 }

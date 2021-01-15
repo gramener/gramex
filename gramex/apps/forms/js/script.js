@@ -1,49 +1,8 @@
-/* globals dragula, user, user_name, editor, active_form_id, options */
+/* globals user, user_name, editor, active_form_id, options */
 /* exported editor */
 
-const left = '.drag-fields'
-const right = '.user-form'
 let editor
-
-$(function () {
-  setTimeout(function () {
-    dragAndDrop.init()
-  }, 300)
-}) // anonymous function
-
-var dragAndDrop = {
-  limit: 20,
-  count: 0,
-  init: function () {
-    this.dragula();
-    this.drake();
-  },
-  drake: function () {
-    this.dragula.on('drop', this.dropped.bind(this));
-  },
-  dragula: function () {
-    this.dragula = dragula([document.querySelector(left), document.querySelector(right)],
-    {
-      moves: this.canMove.bind(this),
-      copy: true,
-    });
-  },
-  canMove: function () {
-    return this.count < this.limit;
-  },
-  dropped: function (el) {
-    let _type = $(el).find('label').data('type')
-    let vals = _.mapValues(options[_type], v => v.value)
-    $(el)
-      .data('type', _type)
-      .data('vals', vals)
-
-    $('#publish-form').removeClass('d-none')
-    $('.btn-link').removeClass('d-none')
-  }
-};
-
-let dirs = ['button', 'checkbox', 'email', 'number', 'password', 'radio', 'range', 'select', 'text']
+let dirs = ['button', 'checkbox', 'email', 'hidden', 'meter', 'number', 'password', 'progress', 'radio', 'range', 'select', 'text', 'textarea']
 const promises = []
 const options = {}
 const template = {}
@@ -61,15 +20,15 @@ Promise.all(promises).then(() => {
     let vals = _.mapValues(options[dir], v => v.value)
     $(tmpl(vals))
       .attr('data-type', dir)
-      .attr('data-vals', vals)
-      .appendTo('.drag-fields')
+      .attr('data-vals', JSON.stringify(vals))
+      .appendTo('.form-fields')
   })
   // TODO: Can we ensure they all have a common parent class? I'll assume it's .form-group
   $('body').on('click', '.user-form .form-group, .user-form .form-check, .user-form button', function () {
     $('.delete-field-trigger').removeClass('d-none')
     $('.edit-properties').empty()
       .data('editing-element', $(this))
-    $('.form-group, .form-check').removeClass('highlight')
+    $('.form-group, .form-check, button').removeClass('highlight')
     $(this).addClass('highlight')
     let field_vals = $(this).data('vals')
     _.each(options[$(this).data('type')], function (option, key) {
@@ -166,12 +125,25 @@ $('body').on('click', '#publish-form', function() {
   $('.edit-properties').data('editing-element').remove()
   $('.edit-properties').empty()
   $('.delete-field-trigger').addClass('d-none')
+}).on('click', '.form-field-trigger', function() {
+  let _type = $(this).data('formfield')
+  let vals = _.mapValues(options[_type], v => v.value)
+  $(`.form-fields > [data-type=${_type}]`)
+    .data('type', _type)
+    .data('vals', vals)
+    .clone()
+    .appendTo('.user-form')
+  $('#publish-form').removeClass('d-none')
+  $('.btn-link').removeClass('d-none')
 })
+
 $('.edit-properties').on('input change', function (e) {
   let vals = {}
   $(':input', this).each(function () { vals[this.id] = this.value })
   var $el = $('.edit-properties').data('editing-element')
   var field = $($el).data('type')
-  $el.html(template[field](vals))
-    .data('vals', vals)
+  // if(key !== "name")
+  console.log(vals)
+    $el.html(template[field](vals))
+      .data('vals', vals)
 })

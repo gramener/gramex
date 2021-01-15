@@ -14,23 +14,18 @@
       "help": "Label for the text field",
       "value": "Placeholder"
     },
-    "type": {
-      "name": "type",
-      "field": "text",
-      "value": "text",
-      "label": "Text type"
-    },
     "value": {
       "name": "value",
       "field": "text",
       "label": "Default Value",
-      "value": "I'm a value"
+      "value": ""
     },
     "name": {
       "name": "name",
       "field": "text",
       "label": "Name",
-      "value": "text-input"
+      "value": "text-input",
+      "help": "Useful for mapping submission values"
     }
   }
 }

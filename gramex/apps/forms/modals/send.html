@@ -42,6 +42,7 @@
 <script src="{{ _url }}/ui/jquery/dist/jquery.min.js"></script>
 <div class="form-container">
   <script src="{% raw view_url + '.js' %}"></script>
+  <button type="submit">Submit</button>
 </div>{% end %}</code></pre>
               <h4>Using HTML</h4>
               <p>
@@ -53,7 +54,8 @@
 &lt;script src="{{ _url }}/ui/jquery/dist/jquery.min.js"&gt;&lt;/script&gt;
 &lt;script&gt;
   $('.form-container').load("{% raw view_url + '.html' %}")
-&lt;/script&gt;</code>
+&lt;/script&gt;
+&lt;button type="submit" class="btn btn-primary"&gt;Submit&lt;/button&gt;</code>
               </pre>
 
               <h4>Server-side rendering</h4>
@@ -71,7 +73,7 @@
           </div>
           <div class="tab-pane fade" id="send-link" role="tabpanel" aria-labelledby="send-link-tab">
             <h3 class="mt-3">Link</h3>
-            <input type="text" class="form-control border-0" readonly value="{{ _url }}">
+            <input type="text" class="form-control border-0" readonly value="{{ _url + '/form/' + form_id }}">
           </div>
         </div>
       </div>
