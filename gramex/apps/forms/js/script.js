@@ -2,7 +2,7 @@
 /* exported editor */
 
 let editor
-let dirs = ['button', 'checkbox', 'email', 'hidden', 'number', 'password', 'radio', 'range', 'select', 'text', 'textarea']
+let dirs = ['button', 'checkbox', 'email', 'hidden', 'html', 'number', 'password', 'radio', 'range', 'select', 'text', 'textarea']
 const promises = []
 const options = {}
 const template = {}
@@ -106,8 +106,9 @@ $('body').on('click', '#publish-form', function() {
   $('.edit-properties').data('editing-element').remove()
   $('.edit-properties').empty()
   $('.delete-field-trigger').addClass('d-none')
-}).on('click', '.form-field-trigger', function() {
-  let _type = $(this).data('formfield')
+  $('.user-form > *').length < 2 ? $('.drag-fields-note').addClass('d-none') : $('.drag-fields-note').removeClass('d-none')
+}).on('click', '.form-fields > *', function() {
+  var _type = $(this).data('type')
   let vals = _.mapValues(options[_type], v => v.value)
   $(`.form-fields > [data-type=${_type}]`)
     .data('type', _type)
@@ -116,6 +117,8 @@ $('body').on('click', '#publish-form', function() {
     .appendTo('.user-form')
   $('#publish-form').removeClass('d-none')
   $('.btn-link').removeClass('d-none')
+  $('#addFieldModal').modal('hide')
+  $('.user-form > *').length < 2 ? $('.drag-fields-note').addClass('d-none') : $('.drag-fields-note').removeClass('d-none')
 })
 
 $('.edit-properties').on('input change', function (e) {

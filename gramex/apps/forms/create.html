@@ -10,6 +10,7 @@
   <title>{{ title }}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="{{ base }}/node_modules/dragula/dist/dragula.min.css">
+  <link rel="stylesheet" href="{{ base }}/node_modules/jqueryui/jquery-ui.css">
   <link rel="stylesheet" href="{{ base }}/style.scss">
 </head>
 <body>
@@ -24,7 +25,7 @@
   {% set form_details = form_details %}
   {% set _md = json.loads(form_details['metadata'].iloc[0]) %}
   {% set _config = form_details['config'].iloc[0] if active_form_id else '' %}
-  {% set form_fields = ['button', 'checkbox', 'email', 'hidden', 'number', 'password', 'radio', 'range', 'select', 'text', 'textarea'] %}
+  {% set form_fields = ['button', 'checkbox', 'email', 'hidden', 'html', 'number', 'password', 'radio', 'range', 'select', 'text', 'textarea'] %}
 
   {% include template-navbar.html %}
   <div class="container py-4">
@@ -56,22 +57,18 @@
           <h5 class="card-title my-0 w-100">
             <span class="float-left">Add fields</span>
             <span class="float-right">
-              <div class="dropdown d-inline">
-                <button type="button" class="btn btn-link py-0" data-toggle="dropdown" title="Add new field" aria-haspopup="true" aria-expanded="false" id="dropdownMenuAddField">
-                  <i class="fa fa-plus"></i>
-                </button>
-                <div class="dropdown-menu" aria-labelledby="dropdownMenuAddFieldButton">
-                  {% for field in form_fields %}
-                    <button data-formfield="{{ field }}" class="btn btn-link form-field-trigger dropdown-item text-capitalize">{{ field }}</button>
-                  {% end %}
-                </div>
-              </div>
+              <button class="btn btn-primary" data-toggle="modal" data-target="#addFieldModal">
+                <i class="fa fa-plus"></i>
+              </button>
             </span>
           </h5>
         </div><!-- .card-header -->
         <div class="card-body">
+          <small class="text-muted drag-fields-note d-none">
+            Drag fields to reorder.
+          </small>
           <div id="user-form">
-            <form class="user-form h-100 w-100">
+            <form class="user-form sortable mt-3 h-100 w-100">
               {% if (active_form_id) %}
                 {% raw form_details['html'].iloc[0] %}
               {% end %}
@@ -81,13 +78,16 @@
       </div><!-- .card -->
       <div class="card border-0">
         <div class="card-header bg-white d-flex justify-content-between">
-          <h5 class="card-title my-0">Edit properties
+          <h5 class="card-title my-0 w-100">
+            <span>Edit properties</span>
+            <a class="btn btn-danger float-right delete-field-trigger {{ '' if active_form_id else 'd-none' }}" data-toggle="modal" data-target="#deleteFieldModal" title="Delete field">
+              <i class="fa fa-trash-alt"></i>
+            </a>
           </h5>
         </div><!-- .card-header -->
-        <div class="card-body edit-properties"></div>
-        <a class="btn btn-danger ml-3 delete-field-trigger {{ '' if active_form_id else 'd-none' }}" data-toggle="modal" data-target="#deleteFieldModal" title="Delete field">
-          Delete field
-        </a>
+        <div class="card-body">
+          <div class="edit-properties"></div>
+        </div>
       </div>
     </div><!-- .card-deck -->
   </div><!-- .container-fluid -->
@@ -106,6 +106,7 @@
   </div>
 
   <script src="{{ base }}/ui/jquery/dist/jquery.min.js"></script>
+  <script src="{{ base }}/node_modules/jqueryui/jquery-ui.min.js"></script>
   <script src="{{ base }}/ui/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
   <script src="{{ base }}/ui/lodash/lodash.min.js"></script>
   <script src="{{ base }}/ui/g1/dist/g1.min.js"></script>
@@ -114,6 +115,7 @@
     let user = '{% raw handler.current_user.get("id") if handler.current_user else '' %}'
     let active_form_id = '{{ active_form_id }}'
     let _user_form_config = active_form_id ? JSON.parse('{% raw _config %}') : ''
+    $('.sortable').sortable()
   </script>
   <script src="{{ base }}/js/script.js"></script>
 </body>
