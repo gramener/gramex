@@ -66,9 +66,6 @@
                   {% end %}
                 </div>
               </div>
-              <a class="btn btn-link py-0 edit-html-trigger {{ '' if active_form_id else 'd-none' }}" data-toggle="modal" data-target="#editHTMLModal" title="Edit code">
-                <i class="fa fa-code"></i>
-              </a>
             </span>
           </h5>
         </div><!-- .card-header -->
@@ -96,7 +93,6 @@
   </div><!-- .container-fluid -->
   {% include 'toast.html' %}
   {% include 'modals/add-field.html' %}
-  {% include 'modals/edit-form-html.html' %}
   {% include 'modals/delete-form-field.html' %}
 
   <div class="floating-button m-2 p-2 position-fixed">
@@ -113,13 +109,10 @@
   <script src="{{ base }}/ui/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
   <script src="{{ base }}/ui/lodash/lodash.min.js"></script>
   <script src="{{ base }}/ui/g1/dist/g1.min.js"></script>
-  <script src="{{ base }}/node_modules/monaco-editor/min/vs/loader.js"></script>
   <script>
-    /* globals require */
     /* exported user, user_name, active_form_id */
     let user = '{% raw handler.current_user.get("id") if handler.current_user else '' %}'
     let active_form_id = '{{ active_form_id }}'
-    require.config({ paths: { 'vs': '{{ base }}/node_modules/monaco-editor/min/vs' }})
     let _user_form_config = active_form_id ? JSON.parse('{% raw _config %}') : ''
   </script>
   <script src="{{ base }}/js/script.js"></script>

@@ -102,25 +102,6 @@ $('body').on('click', '#publish-form', function() {
       complete: function() { $icon.fadeOut() }
     })
   }
-}).on('click', '.edit-html-trigger', function() {
-  $('.update-form').removeClass('d-none')
-}).on('click', '.update-form', function() {
-  let $icon = $('<i class="fa fa-spinner fa-2x fa-fw align-middle"></i>').appendTo(this)
-  $('#user-form').html(editor.getValue())
-  $icon.fadeOut()
-}).on('shown.bs.modal', '#editHTMLModal', function() {
-  if(window.monaco !== undefined)
-    monaco.editor.getModels().forEach(model => model.dispose())
-  require(['vs/editor/editor.main'], function() {
-    editor = monaco.editor.create(document.getElementById('editor-html'), {
-      language: 'html',
-      theme: 'vs-dark',
-      minimap: {
-        enabled: false
-      },
-      value: document.getElementById('user-form').innerHTML
-    })
-  })
 }).on('click', '.delete-field', function() {
   $('.edit-properties').data('editing-element').remove()
   $('.edit-properties').empty()
