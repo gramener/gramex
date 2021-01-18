@@ -3,6 +3,7 @@ import re
 import sqlite3
 import gramex.data
 from io import BytesIO
+from ast import literal_eval
 from PIL import Image
 from gramex.config import variables as var, app_log
 from gramex.handlers import Capture
@@ -10,6 +11,7 @@ from gramex.http import NOT_FOUND
 from gramex.services import info
 from gramex.transforms import handler
 from tornado.web import HTTPError
+import pandas as pd
 
 FOLDER = os.path.abspath(os.path.dirname(__file__))
 TARGET = os.path.join(var.GRAMEXDATA, 'forms', 'thumbnail')
@@ -17,6 +19,14 @@ capture = Capture(engine='chrome')
 
 if not os.path.exists(TARGET):
     os.makedirs(TARGET)
+
+
+def modify_columns(handler, data):
+    if handler.request.method == 'GET':
+        df_json = pd.concat([data, pd.DataFrame(data['response'].apply(literal_eval).to_list())], axis=1)
+        return df_json
+    else:
+        return data
 
 
 def after_publish(handler, data):

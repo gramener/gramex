@@ -31,9 +31,10 @@ $('body').on('submit', 'form.analytics', function (e) {
   e.preventDefault()
   let $icon = $('<i class="fa fa-spinner fa-2x fa-fw align-middle"></i>').appendTo(this)
   current_form_id = $(this).data('form')
-  $.ajax(`../analytics/?db=${form_id}&form_id=${form_id}&response=${encodeURIComponent($('form').serialize())}`, {
+  let _vals = {}
+  $.each($('form').serializeArray(), function() { _vals[this.name] = this.value })
+  $.ajax(`../analytics/?db=${form_id}&form_id=${form_id}&response=${JSON.stringify(_vals)}`, {
     method: 'POST',
-    data: $('form').serialize(),
     success: function() {
       $('.toast-body').html('Your response has been recorded.')
       $('.toast').toast('show')

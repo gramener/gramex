@@ -114,6 +114,7 @@ url:
           primary_key: true       # as a primary key
           autoincrement: true     # that auto-increments
         form_id: INTEGER
+      modify: form_builder.modify_columns(handler, data)
 
   forms/snippets/all:
     pattern: /$YAMLURL/snippets/
