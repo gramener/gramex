@@ -23,10 +23,9 @@ def after_publish(handler, data):
     if handler.request.method == 'POST':
         # Capture thumbnails for all missing entries.
         # This makes requests to this SAME server, while this function is running.
+        source_url = handler.xrequest_full_url.split('/publish')[0]
         # To avoid deadlock, run it in a thread.
-        protocol_host = handler.request.protocol + '://' + handler.request.host
-        info.threadpool.submit(screenshots, handler.conf.kwargs, protocol_host)
-        # fetch id of the last inserted form by the user
+        info.threadpool.submit(screenshots, handler.conf.kwargs, source_url)
         return data
     elif handler.request.method == 'GET':
         return data
