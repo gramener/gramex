@@ -2,7 +2,7 @@
 /* exported editor */
 
 let editor
-let dirs = ['button', 'checkbox', 'email', 'hidden', 'meter', 'number', 'password', 'progress', 'radio', 'range', 'select', 'text', 'textarea']
+let dirs = ['button', 'checkbox', 'email', 'hidden', 'number', 'password', 'radio', 'range', 'select', 'text', 'textarea']
 const promises = []
 const options = {}
 const template = {}

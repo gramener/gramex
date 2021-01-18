@@ -24,7 +24,7 @@
   {% set form_details = form_details %}
   {% set _md = json.loads(form_details['metadata'].iloc[0]) %}
   {% set _config = form_details['config'].iloc[0] if active_form_id else '' %}
-  {% set form_fields = ['button', 'checkbox', 'email', 'hidden', 'meter', 'number', 'password', 'progress', 'radio', 'range', 'select', 'text', 'textarea'] %}
+  {% set form_fields = ['button', 'checkbox', 'email', 'hidden', 'number', 'password', 'radio', 'range', 'select', 'text', 'textarea'] %}
 
   {% include template-navbar.html %}
   <div class="container py-4">
