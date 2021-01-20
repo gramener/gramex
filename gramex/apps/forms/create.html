@@ -26,13 +26,13 @@
   {% set _md = json.loads(form_details['metadata'].iloc[0]) if active_form_id else '' %}
   {% set _config = form_details['config'].iloc[0] if active_form_id else '' %}
   {% set form_fields = ['button', 'checkbox', 'email', 'hidden', 'html', 'number', 'password', 'radio', 'range', 'select', 'text', 'textarea'] %}
-  {% set _config = json.loads(_config) %}
+  {% set _config = json.loads(_config) if active_form_id else {} %}
+  {% set _config.pop('undefined') if _config else '' %}
   {% for k, v in _config.items() %}
     {% if k != 'undefined' %}
       {% set _config[k] = [json.loads(item) for item in v] %}
     {% end %}
   {% end %}
-  {% set _config.pop('undefined') %}
 
   {% include template-navbar.html %}
   <div class="container py-4">
