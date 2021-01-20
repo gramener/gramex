@@ -23,9 +23,16 @@
 
   {% set form_details = gfilter(url=var.FORMS_URL, table=var.FORMS_TABLE, args={'id': [active_form_id]}) %}
   {% set form_details = form_details %}
-  {% set _md = json.loads(form_details['metadata'].iloc[0]) %}
+  {% set _md = json.loads(form_details['metadata'].iloc[0]) if active_form_id else '' %}
   {% set _config = form_details['config'].iloc[0] if active_form_id else '' %}
   {% set form_fields = ['button', 'checkbox', 'email', 'hidden', 'html', 'number', 'password', 'radio', 'range', 'select', 'text', 'textarea'] %}
+  {% set _config = json.loads(_config) %}
+  {% for k, v in _config.items() %}
+    {% if k != 'undefined' %}
+      {% set _config[k] = [json.loads(item) for item in v] %}
+    {% end %}
+  {% end %}
+  {% set _config.pop('undefined') %}
 
   {% include template-navbar.html %}
   <div class="container py-4">
@@ -114,7 +121,7 @@
     /* exported user, user_name, active_form_id */
     let user = '{% raw handler.current_user.get("id") if handler.current_user else '' %}'
     let active_form_id = '{{ active_form_id }}'
-    let _user_form_config = active_form_id ? JSON.parse('{% raw _config %}') : ''
+    let _user_form_config = active_form_id ? JSON.parse('{% raw json.dumps(_config) %}') : ''
     $('.sortable').sortable()
   </script>
   <script src="{{ base }}/js/script.js"></script>

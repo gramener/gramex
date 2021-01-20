@@ -35,7 +35,7 @@ Promise.all(promises).then(() => {
       let vals
       vals = _.mapValues(options[option.field], v => v.value)
       _.extend(vals, option)
-      vals.value = Object.keys(_user_form_config).length > 0 ? _user_form_config[key] : field_vals[key]
+      vals.value = _user_form_config.length > 0 ? _user_form_config[key] : field_vals[key]
       $(template[option.field](vals))
         .appendTo('.edit-properties')
         .addClass('form-element')
@@ -57,9 +57,19 @@ $('body').on('click', '#publish-form', function() {
     categories: [],
     description: $('#form-description').val()
   }
+  let form_vals = {}
+  $('.user-form .form-group').each(function(ind, item) {
+    if(typeof item !== undefined) {
+      if(form_vals[$(item).attr('data-type')] === undefined) {
+        form_vals[$(item).attr('data-type')] = [$(item).attr('data-vals')]
+      } else {
+      form_vals[$(item).attr('data-type')].push($(item).attr('data-vals'))
+      }
+    }
+  })
   let form_details = {
     data: {
-      config: JSON.stringify(_vals),
+      config: JSON.stringify(form_vals),
       html: $('#user-form form').html(),
       metadata: JSON.stringify(_md),
       user: user
@@ -125,7 +135,7 @@ $('.edit-properties').on('input change', function (e) {
   let vals = {}
   $(':input', this).each(function () { vals[this.id] = this.value })
   var $el = $('.edit-properties').data('editing-element')
-  var field = $($el).data('type')
+  var field = $($el).attr('data-type')
   $el.html(template[field](vals))
-    .data('vals', vals)
+    .attr('data-vals', JSON.stringify(vals))
 })
