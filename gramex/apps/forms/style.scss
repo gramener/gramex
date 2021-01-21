@@ -70,3 +70,6 @@
   border: 3px solid yellow;
   border-radius: 1em;
 }
+.user-form .form-group[data-type]:before {
+  content: "\2195";
+}
