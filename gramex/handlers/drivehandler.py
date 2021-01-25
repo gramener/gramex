@@ -1,4 +1,3 @@
-import re
 import os
 import time
 import tornado.gen
@@ -8,7 +7,7 @@ from string import ascii_lowercase, digits
 from random import choice
 from mimetypes import guess_type
 from tornado.web import HTTPError
-from gramex.config import objectpath
+from gramex.config import objectpath, slug
 from gramex.http import NOT_FOUND, REQUEST_ENTITY_TOO_LARGE, UNSUPPORTED_MEDIA_TYPE
 from .formhandler import FormHandler
 
@@ -118,7 +117,7 @@ class DriveHandler(FormHandler):
         for i, upload in enumerate(uploads):
             file = os.path.basename(upload.get('filename', ''))
             ext = os.path.splitext(file)[1]
-            path = re.sub(r'[^!#$%&()+,.0-9;<=>@A-Z\[\]^`a-z{}~]', '-', file)
+            path = slug.filename(file)
             while os.path.exists(os.path.join(self.path, path)):
                 path = os.path.splitext(path)[0] + choice(digits + ascii_lowercase) + ext
             self.args['file'][i] = file

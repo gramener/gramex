@@ -3,11 +3,11 @@ import os
 import six
 import time
 import logging
-import datetime
 import mimetypes
 import traceback
 import tornado.gen
 import gramex.cache
+from typing import Union
 from binascii import b2a_base64, hexlify
 from orderedattrdict import AttrDict
 from urllib.parse import urlsplit, urlunsplit, parse_qsl, urljoin, urlencode
@@ -15,8 +15,8 @@ from tornado.web import RequestHandler, HTTPError, MissingArgumentError, decode_
 from tornado.websocket import WebSocketHandler
 from gramex import conf, __version__
 from gramex.config import merge, objectpath, app_log
-from gramex.transforms import build_transform, CacheLoader
-from gramex.http import UNAUTHORIZED, FORBIDDEN, BAD_REQUEST
+from gramex.transforms import build_transform, build_log_info, CacheLoader
+from gramex.http import UNAUTHORIZED, FORBIDDEN, BAD_REQUEST, METHOD_NOT_ALLOWED
 from gramex.cache import get_store
 # We don't use these, but these stores used to be defined here. Programs may import these
 from gramex.cache import KeyStore, JSONStore, HDF5Store, SQLiteStore, RedisStore    # noqa
@@ -29,7 +29,7 @@ _arg_default = object()
 
 class BaseMixin(object):
     @classmethod
-    def setup(cls, transform={}, redirect={}, auth=None, log=None, set_xsrf=None,
+    def setup(cls, transform={}, redirect={}, methods=None, auth=None, log=None, set_xsrf=None,
               error=None, xsrf_cookies=None, **kwargs):
         '''
         One-time setup for all request handlers. This is called only when
@@ -50,13 +50,14 @@ class BaseMixin(object):
         cls.setup_error(error)
         cls.setup_xsrf(xsrf_cookies)
         cls.setup_log()
+        cls.setup_httpmethods(methods)
 
         # app.settings.debug enables debugging exceptions using pdb
         if conf.app.settings.get('debug', False):
             cls.log_exception = cls.debug_exception
 
     # A list of special keys for BaseHandler. Can be extended by other classes.
-    special_keys = ['transform', 'redirect', 'auth', 'log', 'set_xsrf',
+    special_keys = ['transform', 'redirect', 'methods', 'auth', 'log', 'set_xsrf',
                     'error', 'xsrf_cookies', 'headers']
 
     @classmethod
@@ -70,6 +71,18 @@ class BaseMixin(object):
         for special_key in args:
             kwargs.pop(special_key, None)
         return kwargs
+
+    @classmethod
+    def setup_httpmethods(cls, methods: Union[list, tuple, str]):
+        if methods is None:
+            return
+        if isinstance(methods, (list, tuple)):
+            methods = ' '.join(methods)
+        if not isinstance(methods, str):
+            raise ValueError('methods: %r invalid -- use a string/list, e.g. [GET, PUT]')
+        if methods:
+            cls._http_methods = set(methods.upper().replace(',', ' ').split())
+            cls._on_init_methods.append(cls.check_http_method)
 
     @classmethod
     def setup_default_kwargs(cls):
@@ -245,6 +258,10 @@ class BaseMixin(object):
         elif auth:
             app_log.error('url:%s.auth is not a dict', cls.name)
 
+    def authorize(self):
+        '''BaseMixin assumes every handler has an authorize() function'''
+        pass
+
     @classmethod
     def setup_log(cls):
         '''
@@ -341,6 +358,12 @@ class BaseMixin(object):
             xsrf_cookies: true          # or anything other than false keeps it enabled
         '''
         cls.check_xsrf_cookie = cls.noop if xsrf_cookies is False else cls.xsrf_ajax
+
+    def check_http_method(self):
+        '''If method: [...] is specified, reject all methods not in the allowed methods set'''
+        if self.request.method not in self._http_methods:
+            raise HTTPError(METHOD_NOT_ALLOWED, f'{self.name}: method {self.request.method} ' +
+                            f'not in allowed methods {self._http_methods}')
 
     def xsrf_ajax(self):
         '''
@@ -949,59 +972,3 @@ def _handle(path):
     if path not in handle_cache:
         handle_cache[path] = io.open(path, 'a', encoding='utf-8')
     return handle_cache[path]
-
-
-def build_log_info(keys, *vars):
-    '''
-    Creates a ``handler.method(vars)`` that returns a dictionary of computed
-    values. ``keys`` defines what keys are returned in the dictionary. The values
-    are computed using the formulas in the code.
-    '''
-    # Define direct keys. These can be used as-is
-    direct_vars = {
-        'name': 'handler.name',
-        'class': 'handler.__class__.__name__',
-        'time': 'round(time.time() * 1000, 0)',
-        'datetime': 'datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%SZ")',
-        'method': 'handler.request.method',
-        'uri': 'handler.request.uri',
-        'ip': 'handler.request.remote_ip',
-        'status': 'handler.get_status()',
-        'duration': 'round(handler.request.request_time() * 1000, 0)',
-        'port': 'conf.app.listen.port',
-        # TODO: get_content_size() is not available in RequestHandler
-        # 'size': 'handler.get_content_size()',
-        'user': '(handler.current_user or {}).get("id", "")',
-        'session': 'handler.session.get("id", "")',
-        'error': 'getattr(handler, "_exception", "")',
-    }
-    # Define object keys for us as key.value. E.g. cookies.sid, user.email, etc
-    object_vars = {
-        'args': 'handler.get_argument("{val}", "")',
-        'request': 'getattr(handler.request, "{val}", "")',
-        'headers': 'handler.request.headers.get("{val}", "")',
-        'cookies': 'handler.request.cookies["{val}"].value ' +
-                   'if "{val}" in handler.request.cookies else ""',
-        'user': '(handler.current_user or {{}}).get("{val}", "")',
-        'env': 'os.environ.get("{val}", "")',
-    }
-    vals = []
-    for key in keys:
-        if key in vars:
-            vals.append('"{}": {},'.format(key, key))
-            continue
-        if key in direct_vars:
-            vals.append('"{}": {},'.format(key, direct_vars[key]))
-            continue
-        if '.' in key:
-            prefix, value = key.split('.', 2)
-            if prefix in object_vars:
-                vals.append('"{}": {},'.format(key, object_vars[prefix].format(val=value)))
-                continue
-        app_log.error('Skipping unknown key %s', key)
-    code = compile('def fn(handler, %s):\n\treturn {%s}' % (', '.join(vars), ' '.join(vals)),
-                   filename='log', mode='exec')
-    context = {'os': os, 'time': time, 'datetime': datetime, 'conf': conf, 'AttrDict': AttrDict}
-    # The code is constructed entirely by this function. Using exec is safe
-    exec(code, context)         # nosec
-    return context['fn']

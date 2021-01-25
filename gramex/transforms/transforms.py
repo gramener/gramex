@@ -1,11 +1,20 @@
 import ast
-import six
-import json
+import datetime
 import importlib
+import json
+import os
+import six
+import time
 import tornado.gen
+import yaml
+from functools import wraps
 from types import GeneratorType
 from orderedattrdict import AttrDict
 from gramex.config import app_log, locate, variables, CustomJSONEncoder
+
+
+def identity(x):
+    return x
 
 
 def _arg_repr(arg):
@@ -368,3 +377,183 @@ def once(*args, **kwargs):
         return False
     db[key] = True
     return True
+
+
+# int(x), float(x), str(x) do a good job of converting strings to respective types.
+# But not all types work smoothly. Handle them here.
+_convert_map = {
+    # bool("true") fails Use yaml.load in such cases
+    bool: lambda x: yaml.load(x, Loader=yaml.SafeLoader) if isinstance(x, (str, bytes)) else x,
+    # NoneType("None") doesn't work either. Just return None
+    type(None): lambda x: None,
+    # TODO: Convert dates but without importing pandas on startup
+    # datetime.datetime: lambda x: pd.to_datetime(x).to_pydatetime,
+}
+
+
+def convert(hint, *args):
+    from pandas.core.common import flatten
+    args = list(flatten(args))
+    # If hint is List[int], Tuple[int], etc. then return a list or a tuple after type conversion
+    #   hint.__args__ = (int, )
+    #   hint.__origin__ = list or tuple
+    if hasattr(hint, '__args__'):
+        method = _convert_map.get(hint.__args__[0], hint.__args__[0])
+        return hint.__origin__(map(method, args))
+    # Otherwise, just pick the LAST value and return it
+    method = _convert_map.get(hint, hint)
+    return method(args[-1])
+
+
+def handler(func):
+    """Wrap a function to make it compatible with a tornado.web.RequestHandler
+
+    Use this decorator to expose a function as a REST API, with path or URL parameters mapped to
+    function arguments with type conversion.
+
+    Suppose you have the following function in ``greet.py``::
+
+        @handler
+        def birthday(name: str, age: int):
+            return f'{name} turns {age:d} today! Happy Birthday!'
+
+    Then, in ``gramex.yaml``, you can use it as a FunctionHandler as follows::
+
+        url:
+            pattern: /$YAMLURL/greet
+            handler: FunctionHandler
+            kwargs:
+                function: greet.birthday
+
+    Now, ``/greet?name=Gramex&age=0010`` returns "Gramex turns 10 today! Happy Birthday!".
+    It converts the URL parameters into the types found in the annotations, e.g. `0010` into 10.
+
+    An alternate way of configuring this is as follows::
+
+        url:
+            pattern: /$YAMLURL/greet/name/(.*)/age/(.*)
+            handler: FunctionHandler
+            kwargs:
+                # You can pass name=... and age=... as default values
+                # but ensure that handler is the first argument in the config.
+                function: greet.birthday(handler, name='Name', age=10)
+
+    Now, ``/greet/name/Gramex/age/0010`` returns "Gramex turns 10 today! Happy Birthday!".
+
+    The function args and kwargs are taken from these sources this in order.
+
+    1. From the YAML function, e.g. ``function: greet.birthday('Name', age=10)`` sets
+       ``name='Name'`` and ``age=10``
+    2. Over-ridden by YAML URL pattern, e.g. ``pattern: /$YAMLPATH/(.*)/(?P<age>.*)`` when called
+       with ``/greet/Name/10`` sets ``name='Name'`` and ``age=10``
+    3. Over-ridden by URL query parameters, e.g. ``/greet?name=Name&age=10`` sets ``name='Name'``
+       and ``age=10``
+    4. Over-ridden by URL POST body parameters, e.g. ``curl -X POST /greet -d "?name=Name&age=10"``
+       sets ``name='Name'`` and ``age=10``
+
+    ``handler`` is also available as a kwarg. You can use this as the last positional argument or
+    a keyword argument. Both ``def birthday(name, age, handler)`` and
+    ``def birthday(name, age, handler=None)`` are valid.
+    """
+    from inspect import signature
+    from typing import get_type_hints
+    from pandas.core.common import flatten
+
+    params = signature(func).parameters
+    hints = get_type_hints(func)
+
+    @wraps(func)
+    def wrapper(handler, *cfg_args, **cfg_kwargs):
+        # We'll create a (*args, **kwargs)
+        # College args from the config args:, then pattern /(.*)/(.*)
+        # Collect kwargs from the config kwargs:, then pattern /(?P<key>.*), then URL query params
+        all_args, all_kwargs = list(cfg_args), dict(cfg_kwargs)
+        all_kwargs.setdefault('handler', handler)
+        all_args.extend(handler.path_args)
+        all_kwargs.update(handler.path_kwargs)
+        all_kwargs.update(handler.args)
+        # If POSTed with Content-Type: application/json, parse body as well
+        if handler.request.headers.get('Content-Type', '') == 'application/json':
+            all_kwargs.update(json.loads(handler.request.body))
+
+        # Map these into the signature
+        args, kwargs = [], {}
+        for arg, param in params.items():
+            hint = hints.get(arg, identity)
+            # Populate positional arguments from all_args
+            if len(all_args):
+                if param.kind in {param.POSITIONAL_ONLY, param.POSITIONAL_OR_KEYWORD}:
+                    args.append(convert(hint, all_args.pop(0)))
+                elif param.kind == param.VAR_POSITIONAL:
+                    for val in all_args:
+                        args.append(convert(hint, val))
+                    all_args.clear()
+            # Populate keyword arguments from all_kwargs
+            if arg in all_kwargs:
+                if param.kind in {param.KEYWORD_ONLY, param.POSITIONAL_OR_KEYWORD}:
+                    kwargs[arg] = convert(hint, all_kwargs.pop(arg))
+                elif param.kind == param.VAR_POSITIONAL:
+                    for val in flatten([all_kwargs.pop(arg)]):
+                        args.append(convert(hint, val))
+
+        return func(*args, **kwargs)
+
+    return wrapper
+
+
+def build_log_info(keys, *vars):
+    '''
+    Creates a ``handler.method(vars)`` that returns a dictionary of computed
+    values. ``keys`` defines what keys are returned in the dictionary. The values
+    are computed using the formulas in the code.
+    '''
+    from gramex import conf
+
+    # Define direct keys. These can be used as-is
+    direct_vars = {
+        'name': 'handler.name',
+        'class': 'handler.__class__.__name__',
+        'time': 'round(time.time() * 1000, 0)',
+        'datetime': 'datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%SZ")',
+        'method': 'handler.request.method',
+        'uri': 'handler.request.uri',
+        'ip': 'handler.request.remote_ip',
+        'status': 'handler.get_status()',
+        'duration': 'round(handler.request.request_time() * 1000, 0)',
+        'port': 'conf.app.listen.port',
+        # TODO: get_content_size() is not available in RequestHandler
+        # 'size': 'handler.get_content_size()',
+        'user': '(handler.current_user or {}).get("id", "")',
+        'session': 'handler.session.get("id", "")',
+        'error': 'getattr(handler, "_exception", "")',
+    }
+    # Define object keys for us as key.value. E.g. cookies.sid, user.email, etc
+    object_vars = {
+        'args': 'handler.get_argument("{val}", "")',
+        'request': 'getattr(handler.request, "{val}", "")',
+        'headers': 'handler.request.headers.get("{val}", "")',
+        'cookies': 'handler.request.cookies["{val}"].value ' +
+                   'if "{val}" in handler.request.cookies else ""',
+        'user': '(handler.current_user or {{}}).get("{val}", "")',
+        'env': 'os.environ.get("{val}", "")',
+    }
+    vals = []
+    for key in keys:
+        if key in vars:
+            vals.append('"{}": {},'.format(key, key))
+            continue
+        if key in direct_vars:
+            vals.append('"{}": {},'.format(key, direct_vars[key]))
+            continue
+        if '.' in key:
+            prefix, value = key.split('.', 2)
+            if prefix in object_vars:
+                vals.append('"{}": {},'.format(key, object_vars[prefix].format(val=value)))
+                continue
+        app_log.error('Skipping unknown key %s', key)
+    code = compile('def fn(handler, %s):\n\treturn {%s}' % (', '.join(vars), ' '.join(vals)),
+                   filename='log', mode='exec')
+    context = {'os': os, 'time': time, 'datetime': datetime, 'conf': conf, 'AttrDict': AttrDict}
+    # The code is constructed entirely by this function. Using exec is safe
+    exec(code, context)         # nosec
+    return context['fn']

@@ -128,6 +128,9 @@ log:
         tornado.access: {}
         tornado.application: {}
         tornado.general: {}
+        # Elasticsearch DEBUG logs are verbose. Restrict to INFO
+        elasticsearch:
+            level: INFO
     handlers:
         none:
             class: logging.NullHandler
@@ -302,12 +305,11 @@ url:
             path: .                         #   path is current dir
             default_filename: index.html    #   default filename
             index: true                     #   display the index
+            sass: ['*.scss', '*.sass']      # Handle SASS files
             headers:
                 Cache-Control: max-age=60   # By default, cache for a minute
                 # Standard libraries won't ever change. Cache for 10 years
                 'node_modules/**':
-                  Cache-Control: public, max-age=315360000
-                'bower_components/**':
                   Cache-Control: public, max-age=315360000
                 # Local assets don't change too frequently. Cache for 1 day
                 'assets/**':

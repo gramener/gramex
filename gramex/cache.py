@@ -2,7 +2,6 @@
 import io
 import os
 import re
-import six
 import sys
 import json
 import time
@@ -14,15 +13,18 @@ import mimetypes
 import subprocess       # nosec
 import pandas as pd
 import tornado.template
+from lxml import etree
 from threading import Thread
-from six.moves.queue import Queue
+from queue import Queue
 from orderedattrdict import AttrDict
 from tornado.concurrent import Future
 from tornado.ioloop import IOLoop, PeriodicCallback
 from gramex.config import app_log, merge, used_kwargs, CustomJSONDecoder, CustomJSONEncoder
-from six.moves.urllib_parse import urlparse
+from gramex.config import PathConfig
+from urllib.parse import urlparse
 
 
+_undef = object()
 MILLISECOND = 0.001         # in seconds
 _opener_defaults = dict(mode='r', buffering=-1, encoding='utf-8', errors='strict',
                         newline=None, closefd=True)
@@ -126,6 +128,64 @@ def _template(path, **kwargs):
     return tornado.template.Loader(root, **kwargs).load(name)
 
 
+def read_excel(io, sheet_name=0, table=None, name=None, range=None, header=_undef, **kwargs):
+    '''
+    Read data from an XLSX as a DataFrame using ``openpyxl``.
+
+    :arg str/file io: path or file-like object pointing to an Excel file
+    :arg str/int sheet_name: sheet to load data from. Sheet names are specified as strings.
+        Integers pick zero-indexed sheet position. default: 0
+    :arg str table: Worksheet table to load from sheet, e.g. ``'Table1'``
+    :arg str name: Defined name to load from sheet, e.g. ``'MyNamedRange'``
+    :arg str range: Cell range to load from sheet, e.g. ``'A1:C10'``
+    :arg None/int/list[int] header: Row (0-indexed) to use for the column labels.
+        A list of integers is combined into a MultiIndex. Use None if there is no header.
+
+    ``table`` overrides ``name`` overrides ``range``. If none of these are specified, loads entire
+    sheet via ``pd.read_excel``, passing the remaining kwargs.
+    '''
+    if not any((range, name, table)):
+        # Pandas defaults to xlrd, but we prefer openpyxl
+        kwargs.setdefault('engine', 'openpyxl')
+        return pd.read_excel(io, sheet_name=sheet_name, header=0 if header is _undef else header,
+                             **kwargs)
+
+    import openpyxl
+    wb = openpyxl.load_workbook(io, data_only=True)
+    # Pick a SINGLE sheet using sheet_name -- it can be an int or a str
+    ws = wb[wb.sheetnames[sheet_name] if isinstance(sheet_name, int) else sheet_name]
+    # Get the data range to be picked
+    if table is not None:
+        range = ws.tables[table].ref
+        # Tables themselves specify whether they have a column header. Use this as default
+        if header is _undef:
+            header = list(__builtins__['range'](ws.tables[table].headerRowCount))
+    elif name is not None:
+        # If the name is workbook-scoped, get it directly
+        defined_name = wb.defined_names.get(name)
+        # Else, if it's sheet-scoped, get it related to the sheet
+        if defined_name is None:
+            defined_name = wb.defined_names.get(name, wb.sheetnames.index(ws.title))
+        # Raise an error if we can't find it
+        if defined_name is None:
+            raise ValueError(f'{io}: missing name {name} in sheet {sheet_name}')
+        # Note: This only works if it's a cell range. If we create a named range inside a table,
+        # Excel may store this as =Table[[#All],[Col1]:[Col5]], which isn't a valid range.
+        # Currently, we ignore that, and assumed that the name is like Sheet1!A1:C10
+        range = defined_name.attr_text.split('!')[-1]
+
+    data = pd.DataFrame([[cell.value for cell in row] for row in ws[range]])
+    # Header defaults to 0 if undefined. If it's not None, apply the header
+    header = 0 if header is _undef else header
+    if header is not None:
+        data = (data.T.set_index(header).T      # Set header rows as column names
+                    .reset_index(drop=True)     # Drop index with "holes" where headers were
+                    .rename_axis(               # Column name has header index (e.g. 0). Drop it
+                        [None] * len(header) if isinstance(header, (list, tuple)) else None,
+                        axis=1))
+    return data.infer_objects()                 # Convert data types
+
+
 def stat(path):
     '''
     Returns a file status tuple - based on file last modified time and file size
@@ -151,17 +211,18 @@ def hashed(val):
 # gramex.cache.open() stores its cache here.
 # {(path, callback): {data: ..., stat: ...}}
 _OPEN_CACHE = {}
-_OPEN_CALLBACKS = dict(
+open_callback = dict(
     bin=opener(None, read=True, mode='rb', encoding=None, errors=None),
     txt=opener(None, read=True),
     text=opener(None, read=True),
     csv=pd.read_csv,
-    excel=pd.read_excel,
+    excel=read_excel,
     xls=pd.read_excel,
-    xlsx=pd.read_excel,
+    xlsx=read_excel,
     hdf=pd.read_hdf,
     h5=pd.read_hdf,
     html=pd.read_html,
+    json=opener(json.load),
     jsondata=pd.read_json,
     sas=pd.read_sas,
     stata=pd.read_stata,
@@ -172,6 +233,11 @@ _OPEN_CALLBACKS = dict(
     markdown=_markdown,
     tmpl=_template,
     template=_template,
+    xml=etree.parse,
+    svg=etree.parse,
+    rss=etree.parse,
+    atom=etree.parse,
+    config=PathConfig,
     yml=_yaml,
     yaml=_yaml
 )
@@ -198,7 +264,7 @@ def open(path, callback=None, transform=None, rel=False, **kwargs):
     - ``jsondata``: reads files using pd.read_json
     - ``template``: reads files using tornado.Template via io.open
     - ``markdown`` or ``md``: reads files using markdown.markdown via io.open
-    - ``csv``, ``excel``, ``xls``, `xlsx``, ``hdf``, ``h5``, ``html``, ``sas``,
+    - ``csv``, ``excel``, ``xls``, ``xlsx``, ``hdf``, ``h5``, ``html``, ``sas``,
       ``stata``, ``table``, ``parquet``, ``feather``: reads using Pandas
     - ``xml``, ``svg``, ``rss``, ``atom``: reads using lxml.etree
 
@@ -220,6 +286,12 @@ def open(path, callback=None, transform=None, rel=False, **kwargs):
 
     This is called as ``my_format_reader_function('data.fmt', arg='value')`` and
     cached. Future calls do not re-load and re-calculate this data.
+
+    To support a new callback string, set ``gramex.cache.open_callback[key] = method``.
+    For example::
+
+        gramex.cache.open_callback['shp'] = geopandas.read_file     # Register
+        prs = gramex.cache.open('my.shp', layer='countries')        # Open with method
 
     ``transform=`` is an optional function that processes the data returned by
     the callback. For example::
@@ -255,7 +327,7 @@ def open(path, callback=None, transform=None, rel=False, **kwargs):
     original_callback = callback
     if callback is None:
         callback = os.path.splitext(path)[-1][1:]
-    callback_is_str = isinstance(callback, six.string_types)
+    callback_is_str = isinstance(callback, str)
     key = (
         path,
         original_callback if callback_is_str else id(callback),
@@ -270,18 +342,8 @@ def open(path, callback=None, transform=None, rel=False, **kwargs):
             data = callback(path, **kwargs)
         elif callback_is_str:
             method = None
-            if callback in _OPEN_CALLBACKS:
-                method = _OPEN_CALLBACKS[callback]
-            elif callback in {'json'}:
-                import json
-                method = opener(json.load)
-            elif callback in {'config'}:
-                from gramex.config import PathConfig
-                method = PathConfig
-            elif callback in {'xml', 'svg', 'rss', 'atom'}:
-                from lxml import etree
-                method = etree.parse
-
+            if callback in open_callback:
+                method = open_callback[callback]
             if method is not None:
                 data = method(path, **kwargs)
             elif original_callback is None:
@@ -380,7 +442,7 @@ def _table_status(engine, tables):
         if len(tables) == 0:
             raise ValueError('gramex.cache.query table list is empty: %s', repr(tables))
         for name in tables:
-            if not name or not isinstance(name, six.string_types):
+            if not name or not isinstance(name, str):
                 raise ValueError('gramex.cache.query invalid table list: %s', repr(tables))
         if dialect == 'mysql':
             # https://dev.mysql.com/doc/refman/5.7/en/tables-table.html
@@ -429,12 +491,9 @@ def query(sql, engine, state=None, **kwargs):
     _cache = kwargs.pop('_cache', _QUERY_CACHE)
     store_cache = True
 
-    key = (str(sql), json.dumps(kwargs.get('params', {}), sort_keys=True), engine.url)
-    cached = _cache.get(key, {})
-    current_status = cached.get('status', None) if cached else None
     if isinstance(state, (list, tuple)):
         status = _table_status(engine, tuple(state))
-    elif isinstance(state, six.string_types):
+    elif isinstance(state, str):
         status = pd.read_sql(state, engine).to_dict(orient='list')
     elif callable(state):
         status = state()
@@ -446,7 +505,8 @@ def query(sql, engine, state=None, **kwargs):
         raise TypeError('gramex.cache.query(state=) must be a table list, query or fn, not %s',
                         repr(state))
 
-    if status == current_status:
+    key = (str(sql), json.dumps(kwargs.get('params', {}), sort_keys=True), engine.url)
+    if key in _cache and _cache[key]['status'] == status:
         result = _cache[key]['data']
     else:
         app_log.debug('gramex.cache.query: %s. engine: %s. state: %s. kwargs: %s', sql, engine,
@@ -500,7 +560,8 @@ def reload_module(*modules):
         fstat = stat(path)
         if fstat != _MODULE_CACHE.get(name, fstat):
             app_log.info('Reloading module %s', name)
-            six.moves.reload_module(module)
+            import importlib
+            importlib.reload(module)
         _MODULE_CACHE[name] = fstat
 
 
@@ -640,7 +701,7 @@ class Subprocess(object):
                 while True:
                     content = stream.readline()
                     if len(content) > 0:
-                        if isinstance(content, six.text_type):
+                        if isinstance(content, str):
                             content = content.encode('utf-8')
                         for callback in callbacks:
                             callback(content)
@@ -661,7 +722,7 @@ class Subprocess(object):
                     content = stream.read(buffer_size)
                     size = len(content)
                     if size > 0:
-                        if isinstance(content, six.text_type):
+                        if isinstance(content, str):
                             content = content.encode('utf-8')
                         for callback in callbacks:
                             # This may raise a ValueError: write to closed file.
@@ -689,7 +750,7 @@ class Subprocess(object):
             # as queue attributes (self.out, self.err)
             callbacks = list(callbacks) if isinstance(callbacks, list) else [callbacks]
             for index, method in enumerate(callbacks):
-                if isinstance(method, six.string_types):
+                if isinstance(method, str):
                     if method.startswith('list_'):
                         if hasattr(self, method):
                             callbacks[index] = getattr(self, method).append
@@ -742,7 +803,7 @@ def daemon(args, restart=1, first_line=None, stream=True, timeout=5, buffer_size
     4. Checks if the first line of output is a matches a string / re -- ensuring
        that the application started properly.
     '''
-    arg_str = args if isinstance(args, six.string_types) else ' '.join(args)
+    arg_str = args if isinstance(args, str) else ' '.join(args)
     try:
         key = cache_key(arg_str, kwargs)
     except (TypeError, ValueError):
@@ -784,7 +845,7 @@ def daemon(args, restart=1, first_line=None, stream=True, timeout=5, buffer_size
     future = Future()
     # If process was started, wait until it has initialized. Else just return the proc
     if first_line and started:
-        if isinstance(first_line, six.string_types):
+        if isinstance(first_line, str):
             def check(proc):
                 actual = queue.get(timeout=timeout).decode('utf-8')
                 if first_line not in actual:
@@ -895,9 +956,7 @@ class KeyStore(object):
 
     def _escape(self, key):
         '''Converts key into a unicode string (interpreting byte-string keys as UTF-8)'''
-        if isinstance(key, six.binary_type):
-            return six.text_type(key, encoding='utf-8')
-        return six.text_type(key)
+        return str(key, encoding='utf-8') if isinstance(key, bytes) else str(key)
 
     @staticmethod
     def purge_keys(data):
@@ -943,20 +1002,8 @@ class RedisStore(KeyStore):
 
     def __init__(self, path=None, *args, **kwargs):
         super(RedisStore, self).__init__(*args, **kwargs)
-        from redis import StrictRedis
-        host, port, db, redis_kwargs = 'localhost', 6379, 0, {}
-        if isinstance(path, six.string_types):
-            parts = path.split(':')
-            if len(parts):
-                host = parts.pop(0)
-            if len(parts):
-                port = int(parts.pop(0))
-            if len(parts):
-                db = int(parts.pop(0))
-            redis_kwargs = dict(part.split('=', 2) for part in parts)
-        redis_kwargs['decode_responses'] = True
-        redis_kwargs.setdefault('encoding', 'utf-8')
-        self.store = StrictRedis(host=host, port=port, db=db, **redis_kwargs)
+        from gramex.services.rediscache import get_redis
+        self.store = get_redis(path, decode_responses=True, encoding='utf-8')
 
     def load(self, key, default=None):
         result = self.store.get(key)
@@ -1087,10 +1134,7 @@ class HDF5Store(KeyStore):
         Converts key into a unicode string (interpreting byte-string keys as UTF-8).
         HDF5 does not accept / in key names. Replace those with tabs.
         '''
-        if isinstance(key, six.binary_type):
-            key = six.text_type(key, encoding='utf-8')
-        else:
-            key = six.text_type(key)
+        key = str(key, encoding='utf-8') if isinstance(key, bytes) else str(key)
         return key.replace('/', '\t')
 
     def keys(self):

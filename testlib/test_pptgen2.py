@@ -33,7 +33,7 @@ class TestPPTGen(TestCase):
         cls.prs = Presentation(cls.input)
         cls.output = os.path.join(folder, 'output.pptx')
         cls.image = os.path.join(folder, 'small-image.jpg')
-        cls.data = pd.read_excel(sales_file, encoding='utf-8')
+        cls.data = pd.read_excel(sales_file, encoding='utf-8', engine='openpyxl')
         if os.path.exists(cls.output):
             os.remove(cls.output)
 
@@ -950,7 +950,10 @@ class TestPPTGen(TestCase):
 
     def chart_data(self, shape):
         return pd.read_excel(
-            io.BytesIO(shape.chart.part.chart_workbook.xlsx_part.blob), index_col=0).fillna('')
+            io.BytesIO(shape.chart.part.chart_workbook.xlsx_part.blob),
+            index_col=0,
+            engine='openpyxl',
+        ).fillna('')
 
     def test_chart(self, slides=[10]):
         data = pd.DataFrame({

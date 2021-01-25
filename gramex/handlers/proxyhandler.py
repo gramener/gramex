@@ -29,7 +29,6 @@ class ProxyHandler(BaseHandler, BaseWebSocketHandler):
         - Any string value is formatted with ``handler`` as a variable.
     :arg dict default: Default URL query parameters
     :arg dict headers: HTTP headers to set on the response
-    :arg list methods: list of HTTP methods allowed (default: [GET, HEAD, POST])
     :arg function prepare: A function that accepts any of ``handler`` and ``request``
         (a tornado.httpclient.HTTPRequest) and modifies the ``request`` in-place
     :arg function modify: A function that accepts any of ``handler``, ``request``
@@ -61,8 +60,7 @@ class ProxyHandler(BaseHandler, BaseWebSocketHandler):
     '''
     @classmethod
     def setup(cls, url, request_headers={}, default={}, prepare=None, modify=None,
-              headers={}, methods=['GET', 'HEAD', 'POST'],
-              connect_timeout=20, request_timeout=20, **kwargs):
+              headers={}, connect_timeout=20, request_timeout=20, **kwargs):
         super(ProxyHandler, cls).setup(**kwargs)
         WebSocketHandler._setup(cls, **kwargs)
         cls.url, cls.request_headers, cls.default = url, request_headers, default
@@ -74,9 +72,15 @@ class ProxyHandler(BaseHandler, BaseWebSocketHandler):
                 cls.info[key] = build_transform(
                     {'function': fn}, filename='url:%s.%s' % (cls.name, key),
                     vars={'handler': None, 'request': None, 'response': None})
-        cls.browser = AsyncHTTPClient()
-        for method in methods:
-            setattr(cls, method.lower(), cls.method)
+        cls.post = cls.put = cls.delete = cls.patch = cls.options = cls.get
+
+    def browser(self):
+        # Create the browser when required. Don't create it in setup(), because:
+        #   gramex.services.init() calls setup() from a thread, and
+        #   AsyncHTTPClient can't be created from a thread
+        if not hasattr(self, '_browser'):
+            self._browser = AsyncHTTPClient()
+        return self._browser
 
     def authorize(self, *args, **kwargs):
         if self.request.headers.get('Upgrade', '') == 'websocket':
@@ -85,7 +89,7 @@ class ProxyHandler(BaseHandler, BaseWebSocketHandler):
             super(ProxyHandler, self).authorize()
 
     @tornado.gen.coroutine
-    def method(self, *path_args):
+    def get(self, *path_args):
         ws = self.request.headers.get('Upgrade', '') == 'websocket'
         if ws:
             return WebSocketHandler.get(self)
@@ -126,11 +130,11 @@ class ProxyHandler(BaseHandler, BaseWebSocketHandler):
             self.info['prepare'](handler=self, request=request, response=None)
 
         app_log.debug('%s: proxying %s', self.name, url)
-        response = yield self.browser.fetch(request, raise_error=False)
+        response = yield self.browser().fetch(request, raise_error=False)
 
         if response.code in (MOVED_PERMANENTLY, FOUND):
             location = response.headers.get('Location', '')
-            # TODO; check if Location: header MATCHES the url, not startswith
+            # TODO: check if Location: header MATCHES the url, not startswith
             # url: example.org/?x should match Location: example.org/?a=1&x
             # even though location does not start with url.
             if location.startswith(url):

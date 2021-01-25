@@ -40,6 +40,7 @@ class FormHandler(BaseHandler):
         'modify': {'data': None, 'key': None, 'handler': None},
         'prepare': {'args': None, 'key': None, 'handler': None},
         'queryfunction': {'args': None, 'key': None, 'handler': None},
+        'state': {'args': None, 'key': None, 'handler': None},
     }
     data_filter_method = staticmethod(gramex.data.filter)
 
@@ -111,6 +112,7 @@ class FormHandler(BaseHandler):
         filter_kwargs.pop('modify', None)
         prepare = filter_kwargs.pop('prepare', None)
         queryfunction = filter_kwargs.pop('queryfunction', None)
+        state = filter_kwargs.pop('state', None)
         filter_kwargs['transform_kwargs'] = {'handler': self}
         # Use default arguments
         defaults = {
@@ -128,6 +130,8 @@ class FormHandler(BaseHandler):
                 args = result
         if callable(queryfunction):
             filter_kwargs['query'] = queryfunction(args=args, key=key, handler=self)
+        if callable(state):
+            filter_kwargs['state'] = lambda: state(args=args, key=key, handler=self)
         return AttrDict(
             fmt=args.pop('_format', ['json'])[0],
             download=args.pop('_download', [''])[0],
@@ -146,6 +150,8 @@ class FormHandler(BaseHandler):
             # Run query in a separate threadthread
             futures[key] = gramex.service.threadpool.submit(
                 self.data_filter_method, args=opt.args, meta=meta[key], **opt.filter_kwargs)
+            # gramex.data.filter() should set the schema only on first load. Pop it once done
+            dataset.pop('schema', None)
         result = AttrDict()
         for key, val in futures.items():
             try:
@@ -181,7 +187,7 @@ class FormHandler(BaseHandler):
         # If modify has changed the content type from a dataframe, write it as-is
         if isinstance(result, (pd.DataFrame, dict)):
             self.write(gramex.data.download(result, **format_options))
-        else:
+        elif result:
             self.write(result)
 
     @tornado.gen.coroutine
@@ -194,7 +200,7 @@ class FormHandler(BaseHandler):
             meta[key] = AttrDict()
             opt = self._options(dataset, self.args, path_args, path_kwargs, key)
             if 'id' not in opt.filter_kwargs:
-                raise HTTPError(BAD_REQUEST, reason='%s: missing id: <col> for %s' % (
+                raise HTTPError(BAD_REQUEST, reason='%s: need id: kwarg to %s' % (
                     self.name, self.request.method))
             missing_args = [col for col in opt.filter_kwargs['id'] if col not in opt.args]
             if method != gramex.data.insert and len(missing_args) > 0:
@@ -202,6 +208,8 @@ class FormHandler(BaseHandler):
                     self.name, ', '.join(missing_args)))
             # Execute the query. This returns the count of records updated
             result[key] = method(meta=meta[key], args=opt.args, **opt.filter_kwargs)
+            # method() should set the schema only on first load. Pop it once done
+            dataset.pop('schema', None)
         for key, val in result.items():
             modify = self.datasets[key].get('modify', None)
             if callable(modify):

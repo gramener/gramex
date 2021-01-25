@@ -62,7 +62,7 @@ def test_args():
 
 def test_install():
     r('''
-        packages <- c('rprojroot')
+        packages <- c('rprojroot', 'lifecycle')
         new.packages <- packages[!(packages %in% installed.packages()[,"Package"])]
         if (length(new.packages)) install.packages(new.packages)
     ''')

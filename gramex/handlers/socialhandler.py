@@ -16,19 +16,13 @@ custom_responses = {
 store_cache = {}
 
 
-class SocialMixin(object):
+class SocialHandler(BaseHandler):
     @classmethod
-    def setup_social(cls, user_info, transform={}, methods=['get', 'post'], **kwargs):
+    def setup_social(cls, user_info, **kwargs):
         # Session key that stores the user info
         cls.user_info = user_info
-
         # Set up methods
-        if not isinstance(methods, list):
-            methods = [methods]
-        methods = set(method.lower().strip() for method in methods)
-        for method in ('get', 'post', 'put', 'patch'):
-            if method in methods:
-                setattr(cls, method, cls.run)
+        cls.post = cls.put = cls.delete = cls.patch = cls.options = cls.get
 
     @tornado.gen.coroutine
     def social_response(self, response):
@@ -124,7 +118,7 @@ class SocialMixin(object):
         return token
 
 
-class TwitterRESTHandler(SocialMixin, BaseHandler, TwitterMixin):
+class TwitterRESTHandler(SocialHandler, TwitterMixin):
     '''
     Proxy for the Twitter 1.1 REST API via these ``kwargs``::
 
@@ -159,7 +153,7 @@ class TwitterRESTHandler(SocialMixin, BaseHandler, TwitterMixin):
         cls.setup_social('user.twitter', **kwargs)
 
     @tornado.gen.coroutine
-    def run(self, path=None):
+    def get(self, path=None):
         path = self.kwargs.get('path', path)
         if not path and self.request.method == 'GET':
             yield self.login()
@@ -201,7 +195,7 @@ class TwitterRESTHandler(SocialMixin, BaseHandler, TwitterMixin):
                     secret=self.kwargs['secret'])
 
 
-class FacebookGraphHandler(SocialMixin, BaseHandler, FacebookGraphMixin):
+class FacebookGraphHandler(SocialHandler, FacebookGraphMixin):
     '''
     Proxy for the Facebook Graph API via these ``kwargs``::
 
@@ -236,7 +230,7 @@ class FacebookGraphHandler(SocialMixin, BaseHandler, FacebookGraphMixin):
         cls.setup_social('user.facebook', **kwargs)
 
     @tornado.gen.coroutine
-    def run(self, path=None):
+    def get(self, path=None):
         path = self.kwargs.get('path', path)
         if not path and self.request.method == 'GET':
             yield self.login()

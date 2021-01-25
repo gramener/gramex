@@ -184,6 +184,16 @@ class TestFileHandler(TestGramex):
         self.check('/dir/transform/template.txt?x=►', text='x – ►')
         self.check('/dir/transform/template.txt?x=λ', text='x – λ')
 
+    def test_sass(self):
+        for dir in ('/dir/transform-sass', '/dir/sass-file'):
+            for file in ('import.scss', 'import.sass'):
+                text = self.check(f'{dir}/{file}?primary=red&color-alpha=purple').text
+                ok_('.ui-import-a{color:red}' in text, f'{dir}.{file}: import a.scss with vars')
+                ok_('--primary: red' in text, f'{dir}.{file}: import bootstrap with vars')
+                ok_('--alpha: purple' in text, f'{dir}.{file}: import gramexui with vars')
+        self.check('/dir/transform-sass/a.scss?primary=blue', text='.ui-import-a{color:blue}')
+        self.check('/dir/transform-sass/b.scss?primary=blue', text='.ui-import-b{color:blue}')
+
     def test_template(self):
         self.check('/dir/template/index-template.txt?arg=►', text='– ►')
         self.check('/dir/template/non-index-template.txt?arg=►', text='– ►')

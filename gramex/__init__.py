@@ -11,13 +11,13 @@ Options
   --settings.xsrf_cookies=false Disable XSRF cookies (only for testing)
   --settings.cookie_secret=...  Change cookie encryption key
 
-Helper applications
+Helper applications. For usage, run with --help
   gramex init                   Add Gramex project scaffolding to current dir
   gramex service                Windows service setup
   gramex mail                   Send email from command line
   gramex license                See Gramex license, accept or reject it
 
-Installation commands. Run without arguments to see help
+Installation commands. For usage, run with --help
   gramex install                Install an app
   gramex update                 Update an app
   gramex setup                  Run make, npm install, bower install etc on app
@@ -123,37 +123,39 @@ def callback_commandline(commands):
     from . import services
     services.log(log_config)
 
-    # args has all optional command line args as a dict of values / lists.
-    # cmd has all positional arguments as a list.
-    args = parse_command_line(commands)
-    cmd = args.pop('_')
+    # kwargs has all optional command line args as a dict of values / lists.
+    # args has all positional arguments as a list.
+    kwargs = parse_command_line(commands)
+    args = kwargs.pop('_')
 
     # If --help or -V --version is specified, print a message and end
-    if args.get('V') is True or args.get('version') is True:
+    if kwargs.get('V') is True or kwargs.get('version') is True:
         return console, {'msg': 'Gramex %s' % __version__}
-    if args.get('help') is True:
-        return console, {'msg': __doc__.strip().format(**globals())}
 
     # Any positional argument is treated as a gramex command
-    if len(cmd) > 0:
-        kwargs = {'cmd': cmd, 'args': args}
-        base_command = cmd.pop(0).lower()
+    if len(args) > 0:
+        base_command = args.pop(0).lower()
         method = 'install' if base_command == 'update' else base_command
         if method in {
             'install', 'uninstall', 'setup', 'run', 'service', 'init',
             'mail', 'license',
         }:
             import gramex.install
-            return getattr(gramex.install, method), kwargs
+            if 'help' in kwargs:
+                return console, {'msg': gramex.install.show_usage(method)}
+            return getattr(gramex.install, method), {'args': args, 'kwargs': kwargs}
         raise NotImplementedError('Unknown gramex command: %s' % base_command)
+    elif kwargs.get('help') is True:
+        return console, {'msg': __doc__.strip().format(**globals())}
 
     # Use current dir as base (where gramex is run from) if there's a gramex.yaml.
     if not os.path.isfile('gramex.yaml'):
         return console, {'msg': 'No gramex.yaml. See https://learn.gramener.com/guide/'}
 
+    # Run gramex.init(cmd={command line arguments like YAML variables})
     app_log.info('Gramex %s | %s | Python %s', __version__, os.getcwd(),
                  sys.version.replace('\n', ' '))
-    return init, {'cmd': AttrDict(app=args)}
+    return init, {'cmd': AttrDict(app=kwargs)}
 
 
 def commandline(args=None):
@@ -296,3 +298,37 @@ def shutdown():
     if ioloop_running(ioloop):
         app_log.info('Shutting down Gramex...')
         ioloop.stop()
+
+
+def log(*args, **kwargs):
+    '''
+    Logs structured information for future reference. Typical usage::
+
+        gramex.log(level='INFO', x=1, msg='abc')
+
+    This logs ``{level: INFO, x: 1, msg: abc}`` into a logging queue. If a `gramexlog` service like
+    ElasticSearch has been configured, it will periodically flush the logs into the server.
+    '''
+    from . import services
+    # gramexlog() positional arguments may have a handler and app (in any order)
+    # The app defaults to the first gramexlog:
+    handler, app = None, services.info.gramexlog.get('defaultapp', None)
+    for arg in args:
+        # Pretend that anything that has a .args is a handler
+        if hasattr(getattr(arg, 'args', None), 'items'):
+            handler = arg
+        # ... and anything that's a string is an index name. The last string overrides all
+        elif isinstance(arg, str):
+            app = arg
+    # If the user logs into an unknown app, stop immediately
+    try:
+        conf = services.info.gramexlog.apps[app]
+    except KeyError:
+        raise ValueError(f'gramexlog: no config for {app}')
+
+    # Add all URL query parameters. In case of multiple values, capture the last
+    if handler:
+        kwargs.update({key: val[-1] for key, val in handler.args.items()})
+    # Add additional keys specified in gramex.yaml via keys:
+    kwargs.update(conf.extra_keys(handler))
+    conf.queue.append(kwargs)

@@ -10,7 +10,7 @@ from io import BytesIO
 from lxml import etree
 from nose.tools import eq_, ok_
 from gramex import conf
-from gramex.http import BAD_REQUEST, FOUND
+from gramex.http import BAD_REQUEST, FOUND, METHOD_NOT_ALLOWED
 from gramex.config import variables, objectpath, merge
 from gramex.data import _replace
 from orderedattrdict import AttrDict, DefaultAttrDict
@@ -18,6 +18,14 @@ from pandas.util.testing import assert_frame_equal as afe
 from . import folder, TestGramex, dbutils, tempfiles
 
 xlsx_mime_type = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+
+
+def copy_file(source, target):
+    target = os.path.join(folder, target)
+    source = os.path.join(folder, source)
+    shutil.copyfile(source, target)
+    tempfiles[target] = target
+    return target
 
 
 class TestFormHandler(TestGramex):
@@ -152,6 +160,7 @@ class TestFormHandler(TestGramex):
                           df=self.sales[self.sales['sales'] > 100])
         self.check_filter('/formhandler/file-multi', na_position='last', key='by-growth',
                           df=self.sales.sort_values('growth'))
+        self.check_filter('/formhandler/exceltable', na_position='last')
 
     def test_sqlite(self):
         self.check_filter('/formhandler/sqlite', na_position='first')
@@ -165,11 +174,25 @@ class TestFormHandler(TestGramex):
         self.check_filter('/formhandler/sqlite-queryfunction?ct=Hyderabad&ct=Coimbatore',
                           na_position='last',
                           df=self.sales[self.sales['city'].isin(['Hyderabad', 'Coimbatore'])])
+        self.check_columns('/formhandler/columns/sqlite')
+
+        # Check the state: functionality. Every time /formhandler/sqlite-state is called,
+        # it calls state(args, path), which is logged in `/formhandler/state`
+        eq_(self.get('/formhandler/state').json(), [], 'Start with blank slate')
+        self.check('/formhandler/sqlite-state?x=1')
+        eq_(self.get('/formhandler/state').json(), [{'x': ['1']}, '/formhandler/sqlite-state'],
+            'state() is called once per request')
+        self.check('/formhandler/sqlite-state?x=2')
+        eq_(self.get('/formhandler/state').json(), [
+            {'x': ['1']}, '/formhandler/sqlite-state',
+            {'x': ['2']}, '/formhandler/sqlite-state',
+        ], 'state() is called twice for 2 requests')
 
     def test_mysql(self):
         dbutils.mysql_create_db(variables.MYSQL_SERVER, 'test_formhandler', sales=self.sales)
         try:
             self.check_filter('/formhandler/mysql', na_position='first')
+            self.check_columns('/formhandler/columns/mysql')
         finally:
             dbutils.mysql_drop_db(variables.MYSQL_SERVER, 'test_formhandler')
 
@@ -177,6 +200,7 @@ class TestFormHandler(TestGramex):
         dbutils.postgres_create_db(variables.POSTGRES_SERVER, 'test_formhandler', sales=self.sales)
         try:
             self.check_filter('/formhandler/postgres', na_position='last')
+            self.check_columns('/formhandler/columns/postgres')
         finally:
             dbutils.postgres_drop_db(variables.POSTGRES_SERVER, 'test_formhandler')
 
@@ -223,12 +247,12 @@ class TestFormHandler(TestGramex):
         eq_(out.headers.get('Content-Disposition'), None)
 
         out = self.get('/formhandler/file?_format=xlsx')
-        afe(pd.read_excel(BytesIO(out.content)), self.sales)
+        afe(pd.read_excel(BytesIO(out.content), engine='openpyxl'), self.sales)
         eq_(out.headers['Content-Type'], xlsx_mime_type)
         eq_(out.headers['Content-Disposition'], 'attachment;filename=data.xlsx')
 
         out = self.get('/formhandler/file-multi?_format=xlsx')
-        result = pd.read_excel(BytesIO(out.content), sheet_name=None)
+        result = pd.read_excel(BytesIO(out.content), sheet_name=None, engine='openpyxl')
         afe(result['big'], big)
         afe(result['by-growth'], by_growth)
         eq_(out.headers['Content-Type'], xlsx_mime_type)
@@ -257,14 +281,6 @@ class TestFormHandler(TestGramex):
             out = self.get('/formhandler/file-multi?_format=%s&_download=test.%s' % (fmt, fmt))
             eq_(out.headers['Content-Disposition'], 'attachment;filename=test.%s' % fmt)
 
-    @staticmethod
-    def copy_file(source, target):
-        target = os.path.join(folder, target)
-        source = os.path.join(folder, source)
-        shutil.copyfile(source, target)
-        tempfiles[target] = target
-        return target
-
     def call(self, url, args, method, headers):
         r = self.check('/formhandler/edits-' + url, data=args, method=method, headers=headers)
         meta = r.json()
@@ -279,7 +295,7 @@ class TestFormHandler(TestGramex):
 
     def check_edit(self, method, source, args, count):
         # Edits the correct count of records, returns empty value and saves to file
-        target = self.copy_file('sales.xlsx', 'sales-edits.xlsx')
+        target = copy_file('sales.xlsx', 'sales-edits.xlsx')
         self.call('xlsx-' + source, args, method, {'Count-Data': str(count)})
         result = gramex.cache.open(target)
         # Check result. TODO: check that the values are correctly added
@@ -305,8 +321,27 @@ class TestFormHandler(TestGramex):
         elif method == 'put':
             eq_(len(result), len(self.sales))
 
+    def check_columns(self, url):
+        # Even if table was not created, it's created on startup
+        self.check(url, text='[]')
+        # POST returns auto-inserted ID
+        r = self.check(url, method='post', data={'dept': 'a'})
+        eq_(r.json()['data']['inserted'], [{'id': 1}])
+        # ... and sets all default values
+        eq_(self.check(url).json(), [{'id': 1, 'email': 'none', 'age': 18.0, 'dept': 'a'}])
+        # POST multiple values works
+        self.check(url, method='post', data={
+            'email': ['a@x.co', 'b@x.co'],
+            'age': ['.5', '1E1'],
+            'dept': ['b', 'c']})
+        eq_(self.check(url).json(), [
+            {'id': 1, 'email': 'none', 'age': 18.0, 'dept': 'a'},
+            {'id': 2, 'email': 'a@x.co', 'age': 0.5, 'dept': 'b'},
+            {'id': 3, 'email': 'b@x.co', 'age': 10.0, 'dept': 'c'},
+        ])
+
     def test_invalid_edit(self):
-        self.copy_file('sales.xlsx', 'sales-edits.xlsx')
+        copy_file('sales.xlsx', 'sales-edits.xlsx')
         for method in ['delete', 'put']:
             # Editing with no ID columns defined raises an error
             self.check('/formhandler/file?city=A&product=B', method=method, code=400)
@@ -357,7 +392,7 @@ class TestFormHandler(TestGramex):
     def test_edit_multikey_multi_value(self):
         self.check_edit('post', 'multikey', {
             'देश': ['भारत', 'भारत', 'भारत'],
-            'city': ['Bangalore', 'Bangalore', 'Bangalore'],
+            'city': ['Bangalore', 'Bangalore', ''],
             'product': ['Alpha', 'Beta', 'Gamma'],
             'sales': ['100', '', '300'],
             'growth': ['0.32', '0.50', '0.12'],
@@ -372,7 +407,7 @@ class TestFormHandler(TestGramex):
         }, count=3)
 
     def test_edit_redirect(self):
-        self.copy_file('sales.xlsx', 'sales-edits.xlsx')
+        copy_file('sales.xlsx', 'sales-edits.xlsx')
         # redirect: affects POST, PUT and DELETE
         for method in ['post', 'put', 'delete']:
             r = self.get('/formhandler/edits-xlsx-redirect', method=method, data={
@@ -480,7 +515,7 @@ class TestFormHandler(TestGramex):
             dbutils.mysql_drop_db(variables.MYSQL_SERVER, 'test_formhandler')
 
     def test_edit_json(self):
-        target = self.copy_file('sales.xlsx', 'sales-edits.xlsx')
+        target = copy_file('sales.xlsx', 'sales-edits.xlsx')
         target = os.path.join(folder, 'formhandler-edits.db')
         dbutils.sqlite_create_db(target, sales=self.sales)
         tempfiles[target] = target
@@ -603,13 +638,15 @@ class TestFormHandler(TestGramex):
             r = self.get(url, params={'_format': 'json', '_meta': 'y'})
             # Check ISO output
             pd.to_datetime(pd.DataFrame(r.json())['date'], format='%Y-%m-%dT%H:%M:%S.%fZ')
-            actual = pd.read_excel(BytesIO(self.get(url, params={'_format': 'xlsx'}).content))
+            actual = pd.read_excel(
+                BytesIO(self.get(url, params={'_format': 'xlsx'}).content),
+                engine='openpyxl')
             expected = data[data['date'] > pd.to_datetime(dt).tz_localize(None)]
             expected.index = actual.index
             afe(actual, expected, check_like=True)
 
     def test_edit_id_type(self):
-        target = self.copy_file('sales.xlsx', 'sales-edits.xlsx')
+        target = copy_file('sales.xlsx', 'sales-edits.xlsx')
         tempfiles[target] = target
         args = {'sales': [1], 'date': ['2018-01-10']}
         headers = {'count-data': '1'}
@@ -627,3 +664,17 @@ class TestFormHandler(TestGramex):
             check(df, root=path)
             check(df.sort_values('size'), root=path, _sort='size')
             check(df.sort_values('name', ascending=False), root=path, _sort='-name')
+
+
+class TestFeatures(TestGramex):
+
+    def test_methods(self):
+        copy_file('sales.xlsx', 'sales-methods.xlsx')
+        urls = [
+            '/formhandler/methods?city=Singapore',
+            '/formhandler/methods-list?city=Singapore'
+        ]
+        for url in urls:
+            for method in ['get', 'put', 'delete']:
+                self.check(url, method=method)
+            self.check(url, method='post', code=METHOD_NOT_ALLOWED)

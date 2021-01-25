@@ -20,6 +20,7 @@ from gramex.handlers import BaseHandler
 
 watch_info = []
 ws_info = []
+state_info = []
 counters = Counter()
 slow = {'value': 0, 'max': 20}
 
@@ -430,6 +431,33 @@ def drivehandler_modify(data, key, handler):
     if handler.request.method == 'GET':
         data['m'] = 'OK'
     return data
+
+
+def gramexlog_delete(handler):
+    # Delete all indices and clear all queues
+    for app, app_config in info.gramexlog.apps.items():
+        app_config.queue.clear()
+        if app != 'nonexistent':
+            app_config.conn.indices.delete(index=app, ignore=[404])
+
+
+def gramexlog_search(handler, interval=0.2):
+    info.gramexlog.push()
+    # ElasticSearch may need some time to re-index. This can vary across systems
+    time.sleep(interval)
+    app = handler.get_arg('index')
+    app_config = info.gramexlog.apps[app]
+    results = app_config.conn.search(index=app_config.get('index', app), ignore=[404])
+    results = results.get('hits', {}).get('hits', [])
+    return {'hits': [result['_source'] for result in results]}
+
+
+def state(*args):
+    state_info.extend(args)
+
+
+def get_state_info():
+    return state_info
 
 
 if __name__ == '__main__':

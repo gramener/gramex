@@ -13,7 +13,7 @@ from nose.tools import eq_, ok_
 from orderedattrdict import AttrDict
 from yaml.constructor import ConstructorError
 from gramex.config import ChainConfig, PathConfig, walk, merge, ConfigYAMLLoader, _add_ns
-from gramex.config import recursive_encode, prune_keys, TimedRotatingCSVHandler
+from gramex.config import recursive_encode, prune_keys, TimedRotatingCSVHandler, slug
 
 info = AttrDict(
     home=Path(__file__).absolute().parent,
@@ -393,6 +393,11 @@ class TestConfig(unittest.TestCase):
             tests = yaml.load(handle, Loader=yaml.SafeLoader)
         for test in tests:
             eq_(prune_keys(test['source'], 'comment'), test['target'])
+
+    def test_slug(self):
+        # Test all invalid characters, alphanumeric, and Unicode
+        eq_(slug.module('é ♥.2+c-d'), 'e_2_c_d')
+        eq_(slug.filename('é ♥.2+c-d *? \'" \\/: |'), 'e-.2+c-d')
 
 
 class TestTimedRotatingCSVHandler(unittest.TestCase):

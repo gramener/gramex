@@ -63,8 +63,6 @@ class FileHandler(BaseHandler):
         these, the files will not be served.
     :arg list allow: List of glob patterns to allow. This overrides the ignore
         patterns, so use with care.
-    :arg list methods: List of HTTP methods to allow. Defaults to
-        `['GET', 'HEAD', 'POST']`.
     :arg string index_template: The file to be used as the template for
         displaying the index. If this file is missing, it defaults to Gramex's
         default ``filehandler.template.html``. It can use these string
@@ -72,19 +70,11 @@ class FileHandler(BaseHandler):
 
         - ``$path`` - the directory name
         - ``$body`` - an unordered list with all filenames as links
-    :arg string template: Indicates that the contents of files matching this
-        string pattern must be treated as a Tornado template. This is the same as
-        specifying a ``function: template`` with the template string as a
-        pattern. (new in Gramex 1.14).
     :arg dict headers: HTTP headers to set on the response.
     :arg dict transform: Transformations that should be applied to the files.
-        The key matches a `glob pattern`_ (e.g. ``'*.md'`` or ``'data/*'``.) The
-        value is a dict with the same structure as :class:`FunctionHandler`,
-        and accepts these keys:
-
-        ``encoding``
-            The encoding to load the file as. If you don't specify an encoding,
-            file contents are passed to ``function`` as a binary string.
+        The key matches one or more `glob patterns`_ separated by space/comma
+        (e.g. ``'*.md, 'data/**'``.) The value is a dict with the same
+        structure as :class:`FunctionHandler`, and accepts these keys:
 
         ``function``
             A string that resolves into any Python function or method (e.g.
@@ -103,10 +93,20 @@ class FileHandler(BaseHandler):
             A value with of ``handler`` and ``content`` is replaced with the
             RequestHandler and file contents respectively.
 
+        ``encoding``
+            The encoding to load the file as. If you don't specify an encoding,
+            file contents are passed to ``function`` as a binary string.
+
         ``headers``:
             HTTP headers to set on the response.
+    :arg string template: ``template="*.html"`` renders all HTML files as Tornado templates.
+        ``template=True`` renders all files as Tornado templates (new in Gramex 1.14).
+    :arg string sass: ``sass="*.sass"`` renders all SASS files as CSS using node-sass
+        (new in Gramex 1.66).
+    :arg string scss: ``scss="*.scss"`` renders all SCSS files as CSS using node-sass
+        (new in Gramex 1.66).
 
-    .. _glob pattern: https://docs.python.org/3/library/pathlib.html#pathlib.Path.glob
+    .. _glob patterns: https://docs.python.org/3/library/pathlib.html#pathlib.Path.glob
 
     FileHandler exposes these attributes:
 
@@ -117,13 +117,17 @@ class FileHandler(BaseHandler):
 
     @classmethod
     def setup(cls, path, default_filename=None, index=None, index_template=None,
-              template=None, headers={}, default={}, methods=['GET', 'HEAD', 'POST'], **kwargs):
+              headers={}, default={}, **kwargs):
         # Convert template: '*.html' into transform: {'*.html': {function: template}}
+        # Convert sass: ['*.scss', '*.sass'] into transform: {'*.scss': {function: sass}}
         # Do this before BaseHandler setup so that it can invoke the transforms required
-        if template is not None:
-            if template is True:
-                template = '*'
-            kwargs.setdefault('transform', AttrDict())[template] = AttrDict(function='template')
+        for key in ('template', 'sass', 'scss'):
+            val = kwargs.pop(key, None)
+            if val:
+                # template/sass: true is the same as template: '*'
+                val = '*' if val is True else val if isinstance(val, (list, tuple)) else [val]
+                kwargs.setdefault('transform', AttrDict()).update({
+                    v: AttrDict(function=key) for v in val})
         super(FileHandler, cls).setup(**kwargs)
 
         cls.root, cls.pattern = None, None
@@ -144,10 +148,7 @@ class FileHandler(BaseHandler):
             Path(index_template) if index_template is not None else _default_index_template)
         cls.headers = AttrDict(objectpath(gramex_conf, 'handlers.FileHandler.headers', {}))
         cls.headers.update(headers)
-        # Set supported methods
-        for method in (methods if isinstance(methods, (tuple, list)) else [methods]):
-            method = method.lower()
-            setattr(cls, method, cls._head if method == 'head' else cls._get)
+        cls.post = cls.put = cls.delete = cls.patch = cls.options = cls.get
 
     @classmethod
     def set(cls, value):
@@ -165,12 +166,12 @@ class FileHandler(BaseHandler):
         return result
 
     @tornado.gen.coroutine
-    def _head(self, *args, **kwargs):
+    def head(self, *args, **kwargs):
         kwargs['include_body'] = False
-        yield self._get(*args, **kwargs)
+        yield self.get(*args, **kwargs)
 
     @tornado.gen.coroutine
-    def _get(self, *args, **kwargs):
+    def get(self, *args, **kwargs):
         self.include_body = kwargs.pop('include_body', True)
         path = urljoin('/', args[0] if len(args) else '').lstrip('/')
         if isinstance(self.root, list):
@@ -290,9 +291,11 @@ class FileHandler(BaseHandler):
                 else:
                     self.set_header(header_name, header_value)
 
+            # Use the first matching transform.
             transform = {}
             for pattern, trans in self.transform.items():
-                if _match(self.file, pattern):
+                # Patterns may be specified as '*.md, *.MD, md/**' -- split by comma or space
+                if any(_match(self.file, part) for part in pattern.replace(',', ' ').split()):
                     transform = trans
                     break
 

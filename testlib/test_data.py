@@ -414,7 +414,7 @@ class TestInsert(unittest.TestCase):
             'city': [None, 'Paris'],
             'product': ['芯片', 'Crème'],
             'sales': ['0', -100],
-            # Do not add growth column
+            # Do not add growth column, to see if it inserts defaults
         }
         cls.db = set()
 
@@ -453,10 +453,11 @@ class TestInsert(unittest.TestCase):
                 # https://github.com/pandas-dev/pandas/issues/24839
                 if conf['url'].endswith('.hdf') and pd.np.__version__.startswith('1.16'):
                     raise SkipTest('Ignore NumPy 1.16.2 / PyTables 3.4.4 quirk')
-            expected = pd.DataFrame(self.insert_rows)
-            actual['sales'] = actual['sales'].astype(float)
-            expected['sales'] = expected['sales'].astype(float)
-            afe(actual, expected, check_like=True)
+            else:
+                expected = pd.DataFrame(self.insert_rows)
+                actual['sales'] = actual['sales'].astype(float)
+                expected['sales'] = expected['sales'].astype(float)
+                afe(actual, expected, check_like=True)
 
     def test_insert_mysql(self):
         url = dbutils.mysql_create_db(server.mysql, 'test_insert')
@@ -472,11 +473,17 @@ class TestInsert(unittest.TestCase):
 
     def check_insert_db(self, url, dbname):
         self.db.add(dbname)
+
+        # Insert 2 rows in the EMPTY database with a primary key
         rows = self.insert_rows.copy()
-        rows['index'] = [1, 2]  # create a primary key
-        inserted = gramex.data.insert(url, args=rows, table='test_insert', id='index')
-        eq_(inserted, 2)
-        # query table here
+        rows['primary_key'] = [1, 2]
+        meta = {}
+        inserted = gramex.data.insert(url, meta, args=rows, table='test_insert', id='primary_key')
+        eq_(inserted, 2, 'insert() returns # of records added')
+        # metadata has no filters applied, and no columns ignored
+        eq_(meta['filters'], [])
+        eq_(meta['ignored'], [])
+        # Actual data created has the same content, factoring in type conversion
         actual = gramex.data.filter(url, table='test_insert')
         expected = pd.DataFrame(rows)
         for df in [actual, expected]:
@@ -485,10 +492,40 @@ class TestInsert(unittest.TestCase):
         # Check if it created a primary key
         engine = sa.create_engine(url)
         insp = sa.inspect(engine)
-        ok_('index' in insp.get_pk_constraint('test_insert')['constrained_columns'])
+        ok_('primary_key' in insp.get_pk_constraint('test_insert')['constrained_columns'])
         # Inserting duplicate keys raises an Exception
         with assert_raises(sa.exc.IntegrityError):
-            gramex.data.insert(url, args=rows, table='test_insert', id='index')
+            gramex.data.insert(url, args=rows, table='test_insert', id='primary_key')
+
+        # Inserting a single row returns meta['data']['inserted'] with the primary key
+        rows = {'primary_key': [3], 'देश': ['भारत'], 'city': ['London'], 'sales': ['']}
+        inserted = gramex.data.insert(url, meta, args=rows, table='test_insert', id='primary_key')
+        eq_(inserted, 1, 'insert() returns # of records added')
+        eq_(meta['inserted'], [{'primary_key': 3}])
+
+        # Adding multiple primary keys via id= is supported
+        rows = {'a': [1, 2], 'b': [True, False], 'x': [3, None], 'y': [None, 'y']}
+        inserted = gramex.data.insert(url, meta, args=rows, table='t2', id=['a', 'b'])
+        eq_(inserted, 2, 'insert() returns # of records added')
+        eq_(insp.get_pk_constraint('t2')['constrained_columns'], ['a', 'b'],
+            'multiple primary keys are created')
+        # Multiple primary keys are returned
+        rows = {'a': [3], 'b': [True]}
+        inserted = gramex.data.insert(url, meta, args=rows, table='t2', id=['a', 'b'])
+        eq_(meta['inserted'], [{'a': 3, 'b': True}])
+
+        # Primary keys not specified in input (AUTO INCREMENT) are turned
+        gramex.data.alter(url, 't3', columns={
+            'id': {'type': 'int', 'primary_key': True, 'autoincrement': True},
+            'x': 'varchar(10)'
+        })
+        # Single inserts return the ID
+        gramex.data.insert(url, meta, args={'x': ['a']}, table='t3')
+        eq_(meta['inserted'], [{'id': 1}])
+        gramex.data.insert(url, meta, args={'x': ['b']}, table='t3')
+        eq_(meta['inserted'], [{'id': 2}])
+        # TODO: multiple inserts don't yet return the IDs. When that's done in SQLAlchemy 1.4,
+        # implement test cases here.
 
     @classmethod
     def tearDownClass(cls):
@@ -578,10 +615,10 @@ class TestDownload(unittest.TestCase):
 
     def test_download_excel(self):
         out = gramex.data.download(self.dummy, format='xlsx')
-        afe(pd.read_excel(io.BytesIO(out)), self.dummy)
+        afe(pd.read_excel(io.BytesIO(out), engine='openpyxl'), self.dummy)
 
         out = gramex.data.download({'dummy': self.dummy, 'sales': self.sales}, format='xlsx')
-        result = pd.read_excel(io.BytesIO(out), sheet_name=None)
+        result = pd.read_excel(io.BytesIO(out), sheet_name=None, engine='openpyxl')
         afe(result['dummy'], self.dummy)
         afe(result['sales'], self.sales)
 
@@ -770,3 +807,77 @@ class TestFilterColsDB(unittest.TestCase, FilterColsMixin):
     @classmethod
     def tearDownClass(cls):
         dbutils.sqlite_drop_db('test_filtercols.db')
+
+
+class TestAlter(unittest.TestCase):
+    sales = gramex.cache.open(sales_file, 'xlsx')
+    db = set()
+
+    def check_alter(self, url, id=999, age=4.5):
+        # Add a new column of types str, int, float.
+        # Also test default, nullable
+        gramex.data.alter(url, table='sales', columns={
+            'id': {'type': 'int'},
+            'email': {'type': 'varchar(99)', 'nullable': True, 'default': 'none'},
+            'age': {'type': 'float', 'nullable': False, 'default': age},
+        })
+        # New tables also support primary_key, autoincrement
+        gramex.data.alter(url, table='new', columns={
+            'id': {'type': 'int', 'primary_key': True, 'autoincrement': True},
+            'email': {'type': 'varchar(99)', 'nullable': True, 'default': 'none'},
+            'age': {'type': 'float', 'nullable': False, 'default': age},
+        })
+        engine = sa.create_engine(url)
+        meta = sa.MetaData(bind=engine)
+        meta.reflect()
+        # Test types
+        for table in (meta.tables['sales'], meta.tables['new']):
+            eq_(table.columns.id.type.python_type, int)
+            # eq_(table.columns.id.nullable, True)
+            eq_(table.columns.email.type.python_type, str)
+            # eq_(table.columns.email.nullable, True)
+            eq_(table.columns.age.type.python_type, float)
+            eq_(table.columns.age.nullable, False)
+        # sales: insert and test row for default and types
+        gramex.data.insert(url, table='sales', args={'id': [id]})
+        result = gramex.data.filter(url, table='sales', args={'id': [id]})
+        eq_(len(result), 1)
+        eq_(result['id'].iloc[0], id)
+        eq_(result['email'].iloc[0], 'none')
+        eq_(result['age'].iloc[0], age)
+        # new: test types
+        gramex.data.insert(url, table='new', args={'age': [3.0, 4.0]})
+        afe(gramex.data.filter(url, table='new'), pd.DataFrame([
+            {'id': 1, 'email': 'none', 'age': 3.0},
+            {'id': 2, 'email': 'none', 'age': 4.0},
+        ]))
+
+    def test_mysql(self):
+        url = dbutils.mysql_create_db(server.mysql, 'test_alter', sales=self.sales)
+        self.db.add('mysql')
+        self.check_alter(url)
+
+    def test_postgres(self):
+        url = dbutils.postgres_create_db(server.postgres, 'test_alter', sales=self.sales)
+        self.db.add('postgres')
+        self.check_alter(url)
+
+    def test_sqlite(self):
+        url = dbutils.sqlite_create_db('test_alter.db', sales=self.sales)
+        self.db.add('sqlite')
+        self.check_alter(url)
+
+    @classmethod
+    def tearDownClass(cls):
+        if 'mysql' in cls.db:
+            dbutils.mysql_drop_db(server.mysql, 'test_alter')
+        if 'postgres' in cls.db:
+            dbutils.postgres_drop_db(server.postgres, 'test_alter')
+        if 'sqlite' in cls.db:
+            dbutils.sqlite_drop_db('test_alter.db')
+
+# TODO: insert() and update() should auto-run alter()
+
+# BUG: update() doesn't handle this right
+# ?id=1&data=x&id=2&data=y
+# {id: [1, 2], data: [x, y]}

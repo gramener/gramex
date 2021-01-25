@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gramex UI Themes</title>
+  <link rel="stylesheet" href="default.scss">
+</head>
+<body>
+  <!-- htmllint attr-bans="false" -->
+  <div class="container">
+    <div class="py-5" id="banner">
+      <h1 class="display-3 py-5">Gramex UI themes</h1>
+
+      {% import os,gramex.cache %}
+      {% set config = gramex.cache.open(os.path.join(os.path.dirname(handler.path), 'themes.json')) %}
+
+      <div class="d-flex flex-wrap justify-content-between">
+        {% for theme in config['themes'] %}
+          <a class="d-block my-2" style="width: 16rem" href="{{ theme }}">
+            <img src="{{ theme }}.png" class="card-img-top" alt="{{ theme }}">
+          </a>
+        {% end %}
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

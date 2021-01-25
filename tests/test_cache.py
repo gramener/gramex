@@ -8,7 +8,8 @@ import gramex.cache
 import gramex.config
 import gramex.services
 from threading import Lock
-from six.moves.urllib.parse import urlencode
+from urllib.parse import urlencode
+from redis import StrictRedis
 from nose.tools import eq_, ok_
 from nose.plugins.skip import SkipTest
 from orderedattrdict import AttrDict
@@ -79,8 +80,8 @@ class TestCacheConstructor(unittest.TestCase):
     def test_redis_cache(self):
         redis_cache = self.get_redis_cache()
         self.assertIsInstance(redis_cache, RedisCache)
-        cache_size = 50000000
-        eq_(redis_cache.maxsize, cache_size)
+        # When YAML has size: 0, .maxsize is None on Windows/Old Redis, 0 on Linux/New Redis
+        ok_(redis_cache.maxsize in (0, None))
 
     def test_redis_cache_size(self):
         redis = self.get_redis_cache()
@@ -96,6 +97,12 @@ class TestCacheConstructor(unittest.TestCase):
         redis.store.flushall()
         gramex.cache.open(os.path.join(folder, 'sales.xlsx'), transform=lock, _cache=redis)
         eq_(len(redis), 0)      # It should not be cached
+
+    def test_redis_unpickling(self):
+        r = StrictRedis()                   # Connect to redis without gramex cache
+        r.set('Unpickled', 'Test')          # Set a key that is not pickled
+        cache = self.get_redis_cache()      # When we read from the cache,
+        ok_(list(cache))                    # the unpicked key should not raise an Exception
 
 
 class TestCacheKey(unittest.TestCase):

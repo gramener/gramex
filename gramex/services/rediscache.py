@@ -1,6 +1,21 @@
-import six
-from six.moves import cPickle
+import pickle
 from redis import StrictRedis
+
+
+def get_redis(path: str, **kwargs):
+    host, port, db, redis_kwargs = 'localhost', 6379, 0, {}
+    if isinstance(path, str):
+        parts = path.split(':')
+        if len(parts):
+            host = parts.pop(0)
+        if len(parts):
+            port = int(parts.pop(0))
+        if len(parts):
+            db = int(parts.pop(0))
+        redis_kwargs = dict(part.split('=', 1) for part in parts)
+    for key, val in kwargs.items():
+        redis_kwargs.setdefault(key, val)
+    return StrictRedis(host=host, port=port, db=db, **redis_kwargs)
 
 
 class RedisCache():
@@ -19,40 +34,28 @@ class RedisCache():
     - zero or more parameters passed to StrictRedis (e.g. password=abc)
 
     `maxsize` defines the maximum limit of cache. This will set maxmemory for the redis instance
-    and not specific to a db.
+    and not specific to a db. If it's false-y (None, 0, etc.) no limit is set.
 
     Both Keys and Values are stored as pickle dump.
-    This is an approximate LRU implementaion. Read more here.(https://redis.io/topics/lru-cache)
+    This is an approximate LRU implementation. Read more here.(https://redis.io/topics/lru-cache)
     '''
     def __init__(self, path=None, maxsize=None, *args, **kwargs):
-        host, port, db, redis_kwargs = 'localhost', 6379, 0, {}
-        if isinstance(path, six.string_types):
-            parts = path.split(':')
-            if len(parts):
-                host = parts.pop(0)
-            if len(parts):
-                port = int(parts.pop(0))
-            if len(parts):
-                db = int(parts.pop(0))
-            redis_kwargs = dict(part.split('=', 2) for part in parts)
-        redis_kwargs['decode_responses'] = False
-        r = StrictRedis(host=host, port=port, db=db, **redis_kwargs)
-        self.store = r
+        self.store = get_redis(path, decode_responses=False)
         self.size = 0
-        if maxsize is not None:
+        if maxsize:
             if self.currsize > maxsize:
                 self.flush()
             self.store.config_set('maxmemory', maxsize)
             self.store.config_set('maxmemory-policy', 'allkeys-lru')  # Approximate LRU cache
 
     def __getitem__(self, key):
-        key = cPickle.dumps(key, cPickle.HIGHEST_PROTOCOL)
+        key = pickle.dumps(key, pickle.HIGHEST_PROTOCOL)
         result = self.store.get(key)
-        return None if result is None else cPickle.loads(result)
+        return None if result is None else pickle.loads(result)
 
     def __setitem__(self, key, value, expire=None):
-        key = cPickle.dumps(key, cPickle.HIGHEST_PROTOCOL)
-        value = cPickle.dumps(value, cPickle.HIGHEST_PROTOCOL)
+        key = pickle.dumps(key, pickle.HIGHEST_PROTOCOL)
+        value = pickle.dumps(value, pickle.HIGHEST_PROTOCOL)
         if expire and expire <= 0:
             expire = None
         self.store.set(key, value, ex=expire)
@@ -63,7 +66,11 @@ class RedisCache():
 
     def __iter__(self):
         for key in self.store.scan_iter():
-            yield cPickle.loads(key)
+            try:
+                yield pickle.loads(key)
+            except pickle.UnpicklingError:
+                # If redis already has keys created by other apps, yield them as-is
+                yield key
 
     @property
     def currsize(self):

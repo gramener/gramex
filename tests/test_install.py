@@ -6,7 +6,7 @@ import subprocess
 from pathlib import Path
 from shutilwhich import which
 from orderedattrdict import AttrDict
-from six.moves.urllib.parse import urljoin
+from urllib.parse import urljoin
 import gramex
 from gramex.config import variables, PathConfig
 from gramex.install import install, uninstall, run
@@ -108,7 +108,7 @@ class TestInstall(unittest.TestCase):
 
         def check_init(**kwargs):
             result.cwd = os.getcwd()
-            result.opts = kwargs.get('cmd', {}).get('app', {})
+            result.opts = kwargs.get('args', {}).get('app', {})
 
         install(['run-app', self.zip_url], AttrDict())
         with MockGramex(check_init):

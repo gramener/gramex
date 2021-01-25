@@ -1,12 +1,13 @@
 {
   "name": "gramex-apps-ui",
-  "version": "1.58.0",
+  "version": "1.67.0",
   "author": "Bhanu K <bhanu.kamapantula@gramener.com>",
   "license": "MIT",
   "dependencies": {
     "@fortawesome/fontawesome-free": "5",
-    "bootstrap": "4.4.1",
+    "bootstrap": "4.5",
     "bootstrap-select": "1.13",
+    "bootswatch": "4",
     "d3": "4",
     "d3-scale-chromatic": "*",
     "d3v5": "npm:d3@5",

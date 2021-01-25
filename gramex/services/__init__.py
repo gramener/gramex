@@ -25,14 +25,14 @@ import mimetypes
 import threading
 import webbrowser
 import tornado.web
+import tornado.ioloop
 import gramex.data
 import gramex.cache
 import gramex.license
 import logging.config
 import concurrent.futures
-import six.moves.urllib.parse as urlparse
 from copy import deepcopy
-from six import text_type, string_types
+from urllib.parse import urljoin, urlsplit, urlunsplit
 from tornado.template import Template
 from orderedattrdict import AttrDict
 from gramex import debug, shutdown, __version__
@@ -56,6 +56,7 @@ info = AttrDict(
     eventlog=AttrDict(),
     email=AttrDict(),
     sms=AttrDict(),
+    gramexlog=AttrDict(apps=AttrDict()),
     _md=None,
     _main_ioloop=None,
 )
@@ -127,8 +128,6 @@ class GramexApp(tornado.web.Application):
 
 def app(conf):
     '''Set up tornado.web.Application() -- only if the ioloop hasn't started'''
-    import tornado.ioloop
-
     ioloop = tornado.ioloop.IOLoop.current()
     if ioloop_running(ioloop):
         app_log.warning('Ignoring app config change when running')
@@ -164,7 +163,7 @@ def app(conf):
             url = 'http://127.0.0.1:%d/' % conf.listen.port
             if conf.browser:
                 if isinstance(conf.browser, str):
-                    url = urlparse.urljoin(url, conf.browser)
+                    url = urljoin(url, conf.browser)
                 try:
                     browser = webbrowser.get()
                     app_log.info('Opening %s in %s browser', url, browser.__class__.__name__)
@@ -226,7 +225,7 @@ def _stop_all_tasks(tasks):
 
 
 def schedule(conf):
-    '''Set up the Gramex PeriodicCallback scheduler'''
+    '''Set up the Gramex scheduler'''
     # Create tasks running on ioloop for the given schedule, store it in info.schedule
     from . import scheduler
     _stop_all_tasks(info.schedule)
@@ -300,7 +299,7 @@ def create_alert(name, alert):
     contentfields = ['body', 'html', 'bodyfile', 'htmlfile', 'markdown', 'markdownfile']
     addr_fields = ['to', 'cc', 'bcc', 'reply_to', 'on_behalf_of', 'from']
     for key in ['subject'] + addr_fields + contentfields:
-        if not isinstance(alert.get(key, ''), string_types + (list, )):
+        if not isinstance(alert.get(key, ''), (str, list)):
             app_log.error('alert: %s.%s: %r must be a list or str', name, key, alert[key])
             return
     if not isinstance(alert.get('images', {}), dict):
@@ -327,13 +326,13 @@ def create_alert(name, alert):
     #   - `data: [...]` -- same as `data: {data: [...]}`
     datasets = {}
     if 'data' in alert:
-        if isinstance(alert['data'], string_types):
+        if isinstance(alert['data'], str):
             datasets = {'data': {'url': alert['data']}}
         elif isinstance(alert['data'], list):
             datasets = {'data': alert['data']}
         elif isinstance(alert['data'], dict):
             for key, dataset in alert['data'].items():
-                if isinstance(dataset, string_types):
+                if isinstance(dataset, str):
                     datasets[key] = {'url': dataset}
                 elif isinstance(dataset, list) or 'url' in dataset:
                     datasets[key] = dataset
@@ -555,11 +554,11 @@ def _sort_url_patterns(entry):
 
 def _url_normalize(pattern):
     '''Remove double slashes, ../, ./ etc in the URL path. Remove URL fragment'''
-    url = urlparse.urlsplit(pattern)
+    url = urlsplit(pattern)
     path = posixpath.normpath(url.path)
     if url.path.endswith('/') and not path.endswith('/'):
         path += '/'
-    return urlparse.urlunsplit((url.scheme, url.netloc, path, url.query, ''))
+    return urlunsplit((url.scheme, url.netloc, path, url.query, ''))
 
 
 def _get_cache_key(conf, name):
@@ -614,7 +613,7 @@ def _get_cache_key(conf, name):
     context = {
         'missing': '~',
         'argsep': ', ',         # join args using comma
-        'u': text_type          # convert to unicode
+        'u': str                # convert to unicode
     }
     # The code is constructed entirely by this function. Using exec is safe
     exec(method, context)       # nosec
@@ -692,8 +691,11 @@ def url(conf):
         if _key in _cache:
             handlers.append(_cache[_key])
             continue
+        # service: is an alias for handler: and has higher priority
+        if 'service' in spec:
+            spec.handler = spec.service
         if 'handler' not in spec:
-            app_log.error('url: %s: no handler specified')
+            app_log.error('url: %s: no service: or handler: specified')
             continue
         app_log.debug('url: %s (%s) %s', name, spec.handler, spec.get('priority', ''))
         urlspec = AttrDict(spec)
@@ -902,3 +904,48 @@ def test(conf):
     # Remove auth: section when running gramex.
     # If there are passwords here, they will not be loaded in memory
     conf.pop('auth', None)
+
+
+def gramexlog(conf):
+    '''Set up gramexlog service'''
+    from gramex.transforms import build_log_info
+    try:
+        from elasticsearch import Elasticsearch, helpers
+    except ImportError:
+        app_log.error('gramexlog: elasticsearch missing. pip install elasticsearch')
+        return
+
+    # We call push() every 'flush' seconds on the main IOLoop. Defaults to every 5 seconds
+    flush = conf.pop('flush', 5)
+    ioloop = info._main_ioloop or tornado.ioloop.IOLoop.current()
+    # Set the defaultapp to the first config key under gramexlog:
+    if len(conf):
+        info.gramexlog.defaultapp = next(iter(conf.keys()))
+    for app, app_conf in conf.items():
+        app_config = info.gramexlog.apps[app] = AttrDict()
+        app_config.queue = []
+        keys = app_conf.pop('keys', [])
+        # If user specifies keys: [port, args.x, ...], these are captured as additional keys.
+        # The keys use same spec as Gramex logging.
+        app_config.extra_keys = build_log_info(keys)
+        # Ensure all gramexlog keys are popped from app_conf, leaving only Elasticsearch keys
+        app_config.conn = Elasticsearch(**app_conf)
+
+    def push():
+        for app, app_config in info.gramexlog.apps.items():
+            for item in app_config.queue:
+                item['_index'] = app_config.get('index', app)
+            try:
+                helpers.bulk(app_config.conn, app_config.queue)
+                app_config.queue.clear()
+            except Exception:
+                # TODO: If the connection broke, re-create it
+                # This generic exception should be caught for thread to continue its execution
+                app_log.exception('gramexlog: push to %s failed', app)
+        if 'handle' in info.gramexlog:
+            ioloop.remove_timeout(info.gramexlog.handle)
+        # Call again after flush seconds
+        info.gramexlog.handle = ioloop.call_later(flush, push)
+
+    info.gramexlog.handle = ioloop.call_later(flush, push)
+    info.gramexlog.push = push

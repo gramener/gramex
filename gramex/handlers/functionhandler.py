@@ -5,7 +5,6 @@ from types import GeneratorType
 from gramex.transforms import build_transform
 from gramex.config import app_log, CustomJSONEncoder
 from .basehandler import BaseHandler
-from tornado.util import unicode_type
 
 
 class FunctionHandler(BaseHandler):
@@ -23,24 +22,21 @@ class FunctionHandler(BaseHandler):
     :arg list args: positional arguments to be passed to the function.
     :arg dict kwargs: keyword arguments to be passed to the function.
     :arg dict headers: HTTP headers to set on the response.
-    :arg list methods: List of HTTP methods to allow. Defaults to
-        `['GET', 'POST']`.
     :arg string redirect: URL to redirect to when the result is done. Used to
         trigger calculations without displaying any output.
     '''
     @classmethod
-    def setup(cls, headers={}, methods=['GET', 'POST'], **kwargs):
+    def setup(cls, headers={}, **kwargs):
         super(FunctionHandler, cls).setup(**kwargs)
         # Don't use cls.info.function = build_transform(...) -- Python treats it as a method
         cls.info = {}
         cls.info['function'] = build_transform(kwargs, vars={'handler': None},
                                                filename='url: %s' % cls.name)
         cls.headers = headers
-        for method in (methods if isinstance(methods, (tuple, list)) else [methods]):
-            setattr(cls, method.lower(), cls._get)
+        cls.post = cls.put = cls.delete = cls.patch = cls.options = cls.get
 
     @tornado.gen.coroutine
-    def _get(self, *path_args):
+    def get(self, *path_args):
         if self.redirects:
             self.save_redirect_page()
 
@@ -59,14 +55,33 @@ class FunctionHandler(BaseHandler):
             # Resolve futures and write the result immediately
             if tornado.concurrent.is_future(item):
                 item = yield item
-            if isinstance(item, (bytes, unicode_type, dict)):
+            # To check if item is a numpy object, avoid isinstance(numpy.int8), etc.
+            # Importing numpy is slow. Instead, check the class name.
+            # Strip trailing numbers (e.g. int8, int16, int32)
+            # Strip trailing underscore (e.g. str_, bytes_)
+            # Strip leading 'u' (e.g. uint, ulong)
+            cls = type(item).__name__.rstrip('0123456789_').lstrip('u')
+            if isinstance(item, (bytes, str)):
+                self.write(item)
+                if multipart:
+                    self.flush()
+            # Ignore None as a return type
+            elif item is None:
+                pass
+            # Allow ANY type that can be converted by CustomJSONEncoder.
+            # This includes JSON types, detected by isinstance(item, ...))
+            # and numpy types, detected by cls in (...)
+            # and anything with a to_dict, e.g. DataFrames
+            elif (isinstance(item, (int, float, bool, list, tuple, dict)) or
+                  cls in ('datetime', 'int', 'intc', 'float', 'bool', 'ndarray', 'bytes', 'str') or
+                  hasattr(item, 'to_dict')):
                 self.write(json.dumps(item, separators=(',', ':'), ensure_ascii=True,
-                                      cls=CustomJSONEncoder) if isinstance(item, dict) else item)
+                                      cls=CustomJSONEncoder))
                 if multipart:
                     self.flush()
             else:
-                app_log.warning('url:%s: FunctionHandler can write strings/dict, not %s',
-                                self.name, repr(item))
+                app_log.warning('url:%s: FunctionHandler can write scalars/list/dict, not %s: %s',
+                                self.name, type(item), repr(item))
 
         if self.redirects:
             self.redirect_next()

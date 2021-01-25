@@ -7,9 +7,24 @@ url:
     kwargs:
       path: $YAMLPATH/node_modules/
       index: true
+      auth: false
       headers:
         Cache-Control: public, max-age=86400
+
+  apps/ui/theme-$*:
+    pattern: /$YAMLURL/theme/(.*)
+    handler: FileHandler
+    kwargs:
+      path:
+        '(.+\.scss)': '$YAMLPATH/theme/{0}'
+        '(.+\.png)': '$YAMLPATH/theme/{0}'
+        '.+': $YAMLPATH/theme/sample.html
+        '.*': $YAMLPATH/theme/index.html
+      sass: '*.scss, *.sass'
+      template: '*.html'
       auth: false
+      headers:
+        Cache-Control: public, max-age=86400
 
   apps/ui/bootstrap4-$*:
     pattern: /$YAMLURL/bootstraptheme.css
