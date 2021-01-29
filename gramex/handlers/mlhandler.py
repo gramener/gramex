@@ -84,6 +84,8 @@ def _serialize_prediction(obj):
     # Serialize a list or an array or a tensor
     if isinstance(obj, np.ndarray):
         obj = obj.tolist()
+    elif isinstance(obj, pd.DataFrame):
+        obj = obj.to_dict(orient='records')
     return json.dumps(obj, indent=4)
 
 
@@ -348,7 +350,13 @@ class MLHandler(FormHandler):
             target = data[score_col]
             data = data.drop([score_col], axis=1)
             return self.model.score(data, target)
-        return self.model.predict(data)
+        prediction = self.model.predict(data)
+        target_col = self.get_opt('target_col')
+        if target_col in data:
+            data['prediction'] = prediction
+        else:
+            data[target_col] = prediction
+        return data
 
     def _parse_data(self, _cache=True):
         # First look in self.request.files
@@ -471,11 +479,14 @@ class MLHandler(FormHandler):
                 to_predict = data
             if action in ('predict', 'score'):
                 prediction = yield gramex.service.threadpool.submit(
-                    # self._predict, data, transform=False)
                     self._predict, to_predict)
                 if action == 'predict':
                     self.write(_serialize_prediction(prediction))
                 elif action == 'score':
+                    if 'prediction' in prediction:
+                        prediction = prediction['prediction']
+                    else:
+                        prediction = prediction[target_col]
                     score = accuracy_score(target.astype(prediction.dtype),
                                            prediction)
                     self.write(json.dumps({'score': score}, indent=4))

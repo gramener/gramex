@@ -234,12 +234,13 @@ class TestMLHandler(TestGramex):
             self.get('/mlhandler?_model&_opts&include&exclude', method='delete')
             joblib.dump(clf, op.join(folder, 'model.pkl'))
 
-    def test_get_bulk_predictions(self):
+    def test_get_bulk_predictions(self, target_col='species'):
         df = self.df.drop_duplicates()
         target = df.pop('species')
         resp = self.get('/mlhandler', method='post', data=df.to_json(orient='records'),
                         headers={'Content-Type': 'application/json'})
-        self.assertGreaterEqual(accuracy_score(target, resp.json()), self.ACC_TOL)
+        out = pd.DataFrame.from_records(resp.json())
+        self.assertGreaterEqual(accuracy_score(target, out[target_col]), self.ACC_TOL)
 
     def test_get_bulk_score(self):
         resp = self.get(
@@ -256,10 +257,14 @@ class TestMLHandler(TestGramex):
         params = self.get('/mlhandler?_model').json()
         self.assertDictEqual(LogisticRegression().get_params(), params)
 
-    def test_get_predictions(self):
+    def test_get_predictions(self, target_col='species'):
         resp = self.get(
             '/mlhandler?sepal_length=5.9&sepal_width=3&petal_length=5.1&petal_width=1.8')
-        self.assertEqual(resp.json(), ['virginica'])
+        self.assertEqual(resp.json(), [
+            {'sepal_length': 5.9, 'sepal_width': 3.0,
+             'petal_length': 5.1, 'petal_width': 1.8,
+             target_col: 'virginica'}
+        ])
         req = '/mlhandler?'
         samples = []
         target = []
@@ -268,7 +273,8 @@ class TestMLHandler(TestGramex):
             target.append(row['species'])
         params = '&'.join([f'{k}={v}' for k, v in samples])
         resp = self.get(req + params)
-        self.assertGreaterEqual(accuracy_score(resp.json(), target), 0.8)  # NOQA: E912
+        self.assertGreaterEqual(
+            accuracy_score([c[target_col] for c in resp.json()], target), 0.8)  # NOQA: E912
 
     def test_get_predictions_post_file(self):
         df = self.df.drop_duplicates()
@@ -278,7 +284,8 @@ class TestMLHandler(TestGramex):
         buff.seek(0)
         resp = self.get('/mlhandler?_action=predict',
                         method='post', files={'file': ('iris.csv', buff)})
-        self.assertGreaterEqual(accuracy_score(target, resp.json()), self.ACC_TOL)
+        pred = pd.DataFrame.from_records(resp.json())['species']
+        self.assertGreaterEqual(accuracy_score(target, pred), self.ACC_TOL)
 
     def test_get_score(self):
         req = '/mlhandler?_action=score&'
@@ -402,8 +409,8 @@ class TestMLHandler(TestGramex):
         r = self.get('/mlhandler')
         self.assertEqual(r.status_code, OK)
         # Try getting predictions
-        self.test_get_predictions()
-        self.test_get_bulk_predictions()
+        self.test_get_predictions('target')
+        self.test_get_bulk_predictions('target')
 
     def test_train(self):
         # backup the original model
@@ -419,3 +426,6 @@ class TestMLHandler(TestGramex):
             self.assertGreaterEqual(resp.json()['score'], 0.8)  # NOQA: E912
         finally:
             joblib.dump(clf, op.join(folder, 'model.pkl'))
+            # TODO: The target_col has to be reset to species for a correct teardown.
+            # But any PUT deletes an existing model and causes subsequent tests to fail.
+            # Find an atomic way to reset configurations.
