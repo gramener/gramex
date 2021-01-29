@@ -270,9 +270,11 @@ class MLHandler(FormHandler):
         return data
 
     @classmethod
-    def _get_pipeline(cls, data):
-        if op.exists(cls.model_path):
-            return joblib.load(cls.model_path)
+    def _get_pipeline(cls, data, force=False):
+        if not force:
+            if op.exists(cls.model_path):
+                return joblib.load(cls.model_path)
+        # Else assemble the model anyway
         if data is not None:
             if not len(data):
                 return None
@@ -466,6 +468,7 @@ class MLHandler(FormHandler):
                 to_predict = data.drop([target_col], axis=1)
             else:
                 target = None
+                to_predict = data
             if action in ('predict', 'score'):
                 prediction = yield gramex.service.threadpool.submit(
                     # self._predict, data, transform=False)
@@ -551,8 +554,7 @@ class MLHandler(FormHandler):
 
             # assemble the pipeline
             if self.get_opt('pipeline', True):
-                # self.model = self._get_pipeline(data, target_col=target_col, **opts)
-                self.model = self._get_pipeline(data)
+                self.model = self._get_pipeline(data, force=True)
             # train the model
             target = data[target_col]
             train = data[[c for c in data if c != target_col]]
