@@ -32,6 +32,7 @@ $('body').on('submit', 'form.analytics', function (e) {
   let $icon = $('<i class="fa fa-spinner fa-2x fa-fw align-middle"></i>').appendTo(this)
   current_form_id = $(this).data('form')
   let _vals = {}
+  // below line fails for checkboxes with multiple values
   $.each($('form').serializeArray(), function() { _vals[this.name] = this.value })
   $.ajax(`../analytics/?db=${form_id}&form_id=${form_id}&response=${JSON.stringify(_vals)}`, {
     method: 'POST',

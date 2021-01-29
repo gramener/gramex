@@ -1,6 +1,8 @@
-<div class="form-check py-2">
-  <label data-type="radio" class="form-check-label">
-    <input type="radio" class="form-check-input" name="<%= name %>" id="<%= name %>" value="<%= value %>" <%= (typeof checked != undefined) ? "checked" : "" %>>
-    <%= label %>
-  </label>
-</div>
+<% options.split(',').forEach(function (option) { %>
+  <div class="form-check form-check-inline py-2">
+    <input type="radio" class="form-check-input" name="<%= name %>" id="<%= option %>" value="<%= option %>" <%= (typeof checked != undefined) ? "checked" : "" %>>
+    <label data-type="radio" class="form-check-label" for="<%= option %>">
+      <%= option %>
+    </label>
+  </div>
+<% }) %>

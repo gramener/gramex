@@ -16,10 +16,17 @@
     },
     "value": {
       "name": "value",
-      "field": "select",
+      "field": "text",
       "label": "Default Value",
-      "options": ["yes", "no"],
+      "options": "yes, no",
       "value": "yes"
+    },
+    "options": {
+      "name": "options",
+      "field": "text",
+      "label": "Options",
+      "help": "List of options for the selection separated by comma",
+      "value": "One"
     },
     "name": {
       "name": "name",
@@ -27,6 +34,11 @@
       "label": "Radio name",
       "value": "radio-input",
       "help": "Useful for mapping submission values"
+    },
+    "help": {
+      "name": "help",
+      "field": "text",
+      "value": "Radio help"
     }
   }
 }

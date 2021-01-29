@@ -12,12 +12,20 @@
       "field": "text",
       "value": "Checkbox help"
     },
+    "options": {
+      "name": "options",
+      "field": "text",
+      "label": "Options",
+      "help": "List of options for the selection separated by comma",
+      "value": "One"
+    },
     "value": {
       "name": "value",
-      "field": "select",
+      "field": "text",
       "label": "Default value",
-      "options": ["yes", "no"],
-      "value": "yes"
+      "options": "yes, no",
+      "value": "yes",
+      "help": ""
     },
     "name": {
       "name": "name",
