@@ -14,10 +14,16 @@
       "help": "Label for the text field",
       "value": "jane@example.com"
     },
+    "help": {
+      "name": "help",
+      "field": "text",
+      "value": "email help"
+    },
     "value": {
       "name": "value",
       "field": "text",
       "label": "Default Value",
+      "help": "",
       "value": ""
     },
     "name": {

@@ -7,6 +7,11 @@
       "help": "Label for the Checkbox field",
       "value": "Checkbox"
     },
+    "help": {
+      "name": "help",
+      "field": "text",
+      "value": "Checkbox help"
+    },
     "value": {
       "name": "value",
       "field": "select",
