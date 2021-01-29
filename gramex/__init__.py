@@ -229,7 +229,7 @@ def init(force_reload=False, **kwargs):
     callbacks are always re-run (even if the configuration hasn't changed.)
     '''
     try:
-        setup_secrets(paths['base'])
+        setup_secrets(paths['base'] / '.secrets.yaml')
     except Exception as e:
         app_log.exception(e)
 
