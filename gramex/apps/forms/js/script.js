@@ -23,6 +23,7 @@ Promise.all(promises).then(() => {
       .attr('data-vals', JSON.stringify(vals))
       .appendTo('.form-fields')
   })
+  $('.edit-properties-container').css('height', $(document).innerHeight())
   // TODO: Can we ensure they all have a common parent class? I'll assume it's .form-group
   $('body').on('click', '.user-form .form-group, .user-form .form-check, .user-form button', function () {
     $('.delete-field-trigger').removeClass('d-none')
@@ -30,7 +31,7 @@ Promise.all(promises).then(() => {
       .data('editing-element', $(this))
     $('.form-group, .form-check, button').removeClass('highlight')
     $(this).addClass('highlight')
-    let field_vals = $(this).data('vals')
+    let field_vals = JSON.parse($(this).attr('data-vals')) || $(this).data('vals')
     _.each(options[$(this).data('type')], function (option, key) {
       let vals
       vals = _.mapValues(options[option.field], v => v.value)
@@ -47,7 +48,7 @@ Promise.all(promises).then(() => {
 
 $('body').on('click', '#publish-form', function() {
   let _vals = {}
-  $('.edit-properties .form-group input').each(function(ind, item) { _vals[item.id] = item.value })
+  $('.edit-properties .form-group input, .edit-properties .form-check input').each(function(ind, item) { _vals[item.id] = item.value })
   $('.user-form > *').removeClass('highlight')
   $('.edit-properties').empty()
   let $icon = $('<i class="fa fa-spinner fa-2x fa-fw align-middle"></i>').appendTo(this)
@@ -58,12 +59,12 @@ $('body').on('click', '#publish-form', function() {
     description: $('#form-description').val()
   }
   let form_vals = {}
-  $('.user-form .form-group').each(function(ind, item) {
+  $('.user-form .form-group, .user-form .form-check').each(function(ind, item) {
     if(typeof item !== undefined) {
       if(form_vals[$(item).attr('data-type')] === undefined) {
         form_vals[$(item).attr('data-type')] = [$(item).attr('data-vals')]
       } else {
-      form_vals[$(item).attr('data-type')].push($(item).attr('data-vals'))
+        form_vals[$(item).attr('data-type')].push($(item).attr('data-vals'))
       }
     }
   })
@@ -138,4 +139,8 @@ $('.edit-properties').on('input change', function (e) {
   var field = $($el).attr('data-type')
   $el.html(template[field](vals))
     .attr('data-vals', JSON.stringify(vals))
+})
+$('.user-form').on('submit', function(es) {
+  // console.log("### returning false ###")
+  e.preventDefault()
 })

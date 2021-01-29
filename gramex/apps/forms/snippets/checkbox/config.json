@@ -20,7 +20,7 @@
       "value": "yes"
     },
     "name": {
-      "name": "text",
+      "name": "name",
       "field": "text",
       "label": "Checkbox name",
       "value": "checkbox-input",
