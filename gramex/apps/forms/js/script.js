@@ -137,7 +137,20 @@ $('.edit-properties').on('input change', function (e) {
   $(':input', this).each(function () { vals[this.id] = this.value })
   var $el = $('.edit-properties').data('editing-element')
   var field = $($el).attr('data-type')
-  $el.html(template[field](vals))
+  let _v = ""
+  // get all and stitch together
+  // since radio and checkbox fields each support multiple options
+  if(field === 'radio' || field === 'checkbox') {
+    let tmpl_items = $(template[field](vals))
+    _.each(tmpl_items, function(item) {
+      if($(item).hasClass('form-check')) {
+        _v += $(item).html().trim()
+      }
+    })
+  } else {
+    _v = $(template[field](vals)).html().trim()
+  }
+  $el.html(_v)
     .attr('data-vals', JSON.stringify(vals))
 })
 $('.user-form').on('submit', function(es) {

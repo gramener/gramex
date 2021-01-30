@@ -31,9 +31,20 @@ $('body').on('submit', 'form.analytics', function (e) {
   e.preventDefault()
   let $icon = $('<i class="fa fa-spinner fa-2x fa-fw align-middle"></i>').appendTo(this)
   current_form_id = $(this).data('form')
-  let _vals = {}
-  // below line fails for checkboxes with multiple values
-  $.each($('form').serializeArray(), function() { _vals[this.name] = this.value })
+  let field_vals = {}
+  // $.each($('form').serializeArray(), function() { _vals[this.name] = this.value })
+  // above line fails for checkboxes with multiple values, hence the following approach
+  let groups = _.groupBy($('form').serializeArray(), 'name')
+  field_vals = _(groups)
+    .map((values, _input) => {
+      const v = values.map(v => v.value)
+      return {_input, v}
+    }).value()
+  // convert {name: 'checkbox-input', value: ['yes']} to {'checkbox-input': ['yes']}
+  field_vals = _.map(field_vals, v => {
+    return { [v._input]: v.v }
+  })
+
   $.ajax(`../analytics/?db=${form_id}&form_id=${form_id}&response=${JSON.stringify(_vals)}`, {
     method: 'POST',
     success: function() {

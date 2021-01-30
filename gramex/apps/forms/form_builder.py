@@ -23,8 +23,14 @@ if not os.path.exists(TARGET):
 
 def modify_columns(handler, data):
     if handler.request.method == 'GET':
-        df_json = pd.concat([data, pd.DataFrame(data['response'].apply(literal_eval).to_list())], axis=1)
-        return df_json
+        # process json response
+        s = data['response'].apply(literal_eval)
+
+        df_json = pd.concat([pd.DataFrame(x) for x in s], keys=s.index)
+        df = pd.concat([data, df_json])
+        df.reset_index()
+        # collapse several rows (each row with all NaNs except one value) into one row
+        return pd.concat([pd.Series(df[col].dropna().values, name=col) for col in df], axis=1)
     else:
         return data
 
