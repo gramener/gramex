@@ -2,9 +2,9 @@
   "options": {
     "type": {
       "name": "type",
-      "field": "select",
+      "field": "text",
       "label": "Button type",
-      "options": ["submit", "reset", "button"],
+      "options": "submit, reset, button",
       "value": "button"
     },
     "text": {

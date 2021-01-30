@@ -25,7 +25,7 @@ Promise.all(promises).then(() => {
   })
   $('.edit-properties-container').css('height', $(document).innerHeight())
   // TODO: Can we ensure they all have a common parent class? I'll assume it's .form-group
-  $('body').on('click', '.user-form .form-group, .user-form .form-check, .user-form button', function () {
+  $('body').on('click', '.user-form .form-group, .user-form .form-check', function () {
     $('.delete-field-trigger').removeClass('d-none')
     $('.edit-properties').empty()
       .data('editing-element', $(this))
@@ -153,7 +153,6 @@ $('.edit-properties').on('input change', function (e) {
   $el.html(_v)
     .attr('data-vals', JSON.stringify(vals))
 })
-$('.user-form').on('submit', function(es) {
-  // console.log("### returning false ###")
+$('.user-form').on('submit', function(e) {
   e.preventDefault()
 })
