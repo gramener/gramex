@@ -1,0 +1,27 @@
+{% set bg_colors = ['#f8f4f2', '#c7dfd9', '#f6f6f6'] %}
+
+<div id="themesModal" class="modal fade bd-overlay-sm-right modal-right" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-sm" role="document">
+    <div class="modal-content no-border-radius">
+      <div class="modal-header">
+        <h6 class="modal-title">
+          <i class="fa fa-palette"></i>
+          Theme options
+        </h6>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p class="my-2">
+          <h6 class="sm1 text-uppercase">Background color</h6>
+          <svg width="100" height="70">
+            <circle class="urlfilter cursor-pointer" cx="10" cy="30" r="10" fill="{{ bg_colors[0] }}" href="?bg={{ urllib.parse.quote(bg_colors[0]) }}"/>
+            <circle class="urlfilter cursor-pointer" cx="40" cy="30" r="10" fill="{{ bg_colors[1] }}" href="?bg={{ urllib.parse.quote(bg_colors[1]) }}"/>
+            <circle class="urlfilter cursor-pointer" cx="70" cy="30" r="10" fill="{{ bg_colors[2] }}" href="?bg={{ urllib.parse.quote(bg_colors[2]) }}"/>
+          </svg>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>

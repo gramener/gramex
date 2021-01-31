@@ -1,0 +1,31 @@
+{
+  "options": {
+    "label": {
+      "name": "label",
+      "field": "text",
+      "label": "Text label",
+      "help": "Label for the text field",
+      "value": "Text"
+    },
+    "placeholder": {
+      "name": "placeholder",
+      "field": "text",
+      "label": "Text placeholder",
+      "help": "Label for the text field",
+      "value": "Placeholder"
+    },
+    "value": {
+      "name": "value",
+      "field": "text",
+      "label": "Default Value",
+      "value": ""
+    },
+    "name": {
+      "name": "name",
+      "field": "text",
+      "label": "Name",
+      "value": "text-input",
+      "help": "Useful for mapping submission values"
+    }
+  }
+}

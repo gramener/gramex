@@ -1,0 +1,44 @@
+{
+  "options": {
+    "label": {
+      "name": "label",
+      "field": "text",
+      "label": "Email label",
+      "help": "Label for the email field",
+      "value": "Email"
+    },
+    "placeholder": {
+      "name": "placeholder",
+      "field": "text",
+      "label": "Email placeholder",
+      "help": "Label for the text field",
+      "value": "jane@example.com"
+    },
+    "help": {
+      "name": "help",
+      "field": "text",
+      "value": "email help"
+    },
+    "value": {
+      "name": "value",
+      "field": "text",
+      "label": "Default Value",
+      "help": "",
+      "value": ""
+    },
+    "name": {
+      "name": "name",
+      "field": "email",
+      "label": "Email name",
+      "value": "email-input",
+      "help": "Useful for mapping submission values"
+    },
+    "pattern": {
+      "name": "pattern",
+      "field": "text",
+      "label": "Email pattern",
+      "value": "",
+      "help": "Restrict emails to certain domains (e.g. '.+@example.com')"
+    }
+  }
+}

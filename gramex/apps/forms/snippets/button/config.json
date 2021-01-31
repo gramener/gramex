@@ -1,0 +1,18 @@
+{
+  "options": {
+    "type": {
+      "name": "type",
+      "field": "text",
+      "label": "Button type",
+      "options": "submit, reset, button",
+      "value": "button"
+    },
+    "text": {
+      "name": "text",
+      "field": "text",
+      "label": "Button text",
+      "help": "Text displayed on the button",
+      "value": "Button"
+    }
+  }
+}

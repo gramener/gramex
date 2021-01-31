@@ -1,0 +1,43 @@
+{
+  "options": {
+    "label": {
+      "name": "label",
+      "field": "text",
+      "label": "Text label",
+      "help": "Label for the text field",
+      "value": "Textarea"
+    },
+    "placeholder": {
+      "name": "placeholder",
+      "field": "text",
+      "label": "Text placeholder",
+      "help": "Label for the text field",
+      "value": "Placeholder"
+    },
+    "help": {
+      "name": "help",
+      "field": "text",
+      "value": "Textarea help"
+    },
+    "value": {
+      "name": "value",
+      "field": "text",
+      "label": "Default Value",
+      "help": ""
+    },
+    "name": {
+      "name": "name",
+      "field": "text",
+      "label": "Name",
+      "value": "textarea-input",
+      "help": "Useful for mapping submission values. Needs to be unique."
+    },
+    "rows": {
+      "name": "rows",
+      "field": "text",
+      "label": "Number of rows",
+      "value": "3",
+      "help": "Height of the field"
+    }
+  }
+}

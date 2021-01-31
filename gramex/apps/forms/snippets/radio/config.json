@@ -1,0 +1,44 @@
+{
+  "options": {
+    "label": {
+      "name": "label",
+      "field": "text",
+      "label": "Radio label",
+      "help": "Label for the Radio field",
+      "value": "Radio button"
+    },
+    "placeholder": {
+      "name": "placeholder",
+      "field": "text",
+      "label": "Radio placeholder",
+      "help": "Label for the text field",
+      "value": ""
+    },
+    "value": {
+      "name": "value",
+      "field": "text",
+      "label": "Default Value",
+      "options": "yes, no",
+      "value": "yes"
+    },
+    "options": {
+      "name": "options",
+      "field": "text",
+      "label": "Options",
+      "help": "List of options for the selection separated by comma",
+      "value": "Radio one"
+    },
+    "name": {
+      "name": "name",
+      "field": "text",
+      "label": "Radio name",
+      "value": "radio-input",
+      "help": "Useful for mapping submission values"
+    },
+    "help": {
+      "name": "help",
+      "field": "text",
+      "value": ""
+    }
+  }
+}

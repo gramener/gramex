@@ -1,0 +1,38 @@
+{
+  "options": {
+    "label": {
+      "name": "label",
+      "field": "text",
+      "label": "Checkbox label",
+      "help": "Label for the Checkbox field",
+      "value": "Checkbox"
+    },
+    "help": {
+      "name": "help",
+      "field": "text",
+      "value": "Checkbox help"
+    },
+    "options": {
+      "name": "options",
+      "field": "text",
+      "label": "Options",
+      "help": "List of options for the selection separated by comma",
+      "value": "One"
+    },
+    "value": {
+      "name": "value",
+      "field": "text",
+      "label": "Default value",
+      "options": "yes, no",
+      "value": "yes",
+      "help": ""
+    },
+    "name": {
+      "name": "name",
+      "field": "text",
+      "label": "Checkbox name",
+      "value": "checkbox-input",
+      "help": "Useful for mapping submission values"
+    }
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "options": {
+    "label": {
+      "name": "label",
+      "field": "text",
+      "label": "Select label",
+      "help": "Label for the selection",
+      "value": "Select"
+    },
+    "options": {
+      "name": "options",
+      "field": "text",
+      "label": "Options",
+      "help": "List of options for the selection separated by comma",
+      "value": "One, Two"
+    },
+    "name": {
+      "name": "name",
+      "field": "text",
+      "label": "Selection name",
+      "value": "select-input",
+      "help": "Useful for mapping submission values"
+    }
+  }
+}

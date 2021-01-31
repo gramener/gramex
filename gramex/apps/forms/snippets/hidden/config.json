@@ -1,0 +1,24 @@
+{
+  "options": {
+    "label": {
+      "name": "label",
+      "field": "text",
+      "label": "Hidden label",
+      "help": "Label for the hidden field",
+      "value": "Hidden"
+    },
+    "value": {
+      "name": "value",
+      "field": "text",
+      "label": "Default Value",
+      "value": ""
+    },
+    "name": {
+      "name": "name",
+      "field": "text",
+      "label": "Hidden name",
+      "value": "hidden-input",
+      "help": "Useful for mapping submission values"
+    }
+  }
+}

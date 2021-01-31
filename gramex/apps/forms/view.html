@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  {% import json %}
+  {% import gramex.data %}
+  {% from gramex.config import variables as var %}
+  {% import urllib.parse %}
+  {% set base = '..' %}
+  {% set form_id = handler.path_args[0] %}
+  {% set view = 'form' %}
+  {% set form_title = json.loads(gramex.data.filter(url=var.FORMS_URL, table=var.FORMS_TABLE, args={'id': [form_id]})['metadata'].values[0]) %}
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <title>View a form - Form Builder</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="{{ base }}/node_modules/dragula/dist/dragula.min.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/styles/agate.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ base }}/style.scss?body-bg={{ urllib.parse.quote(handler.get_argument('bg', '#ffffff')) }}">
+  </head>
+  {% set title = 'Forms' %}
+  <body>
+    <div class="container my-3">
+      <div class="my-5" id="view-form">
+        <form class="analytics"></form>
+      </div>
+    </div>
+
+    {% include 'toast.html' %}
+
+    <script src="{{ base }}/ui/jquery/dist/jquery.min.js"></script>
+    <script src="{{ base }}/ui/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ base }}/ui/lodash/lodash.min.js"></script>
+    <script src="{{ base }}/ui/g1/dist/g1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/highlight.min.js"></script>
+    <script src="{{ base }}/node_modules/clipboard/dist/clipboard.min.js"></script>
+    <script src="{{ base }}/js/code-highlighting.js"></script>
+    <script>
+      /* exported hljs, dragula, form_id */
+      const form_id = '{% raw form_id %}'
+    </script>
+    <script src="{{ base }}/js/preview-form.js"></script>
+  </body>
+</html>

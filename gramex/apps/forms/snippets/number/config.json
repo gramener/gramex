@@ -1,0 +1,52 @@
+{
+  "options": {
+    "label": {
+      "name": "label",
+      "field": "text",
+      "label": "Number label",
+      "help": "Label for the Number field",
+      "value": "Number"
+    },
+    "placeholder": {
+      "name": "placeholder",
+      "field": "text",
+      "label": "Number placeholder",
+      "help": "Label for the text field",
+      "value": "Enter a number"
+    },
+    "value": {
+      "name": "value",
+      "field": "text",
+      "label": "Default Value",
+      "value": ""
+    },
+    "name": {
+      "name": "name",
+      "field": "text",
+      "label": "Number name",
+      "value": "number-input",
+      "help": "Useful for mapping submission values"
+    },
+    "min": {
+      "name": "min",
+      "field": "number",
+      "label": "Minimum number",
+      "help": "Minimum allowed value",
+      "value": "1"
+    },
+    "max": {
+      "name": "max",
+      "field": "number",
+      "label": "Maximum number",
+      "help": "Maximum allowed value",
+      "value": "10"
+    },
+    "step": {
+      "name": "step",
+      "field": "number",
+      "label": "Step by",
+      "help": "Increment or decrement number by",
+      "value": "1"
+    }
+  }
+}

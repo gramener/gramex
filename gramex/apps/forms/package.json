@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "clipboard": "^2.0.6",
+    "dragula": "^3.7.3",
+    "jqueryui": "^1.11.1",
+    "monaco-editor": "^0.21.2"
+  }
+}

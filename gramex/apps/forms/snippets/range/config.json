@@ -1,0 +1,45 @@
+{
+  "options": {
+    "label": {
+      "name": "label",
+      "field": "text",
+      "label": "Range label",
+      "help": "Label for the Range field",
+      "value": "Range"
+    },
+    "value": {
+      "name": "value",
+      "field": "number",
+      "label": "Default Value",
+      "value": "yes"
+    },
+    "name": {
+      "name": "text",
+      "field": "text",
+      "label": "Range name",
+      "value": "range-input",
+      "help": "Useful for mapping submission values"
+    },
+    "min": {
+      "name": "min",
+      "field": "number",
+      "label": "Minimum number",
+      "help": "Minimum allowed value",
+      "value": "1"
+    },
+    "max": {
+      "name": "max",
+      "field": "number",
+      "label": "Maximum number",
+      "help": "Maximum allowed value",
+      "value": "10"
+    },
+    "step": {
+      "name": "step",
+      "field": "number",
+      "label": "Step by",
+      "help": "Step number by",
+      "value": "1"
+    }
+  }
+}

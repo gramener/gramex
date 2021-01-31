@@ -1,0 +1,45 @@
+{
+  "options": {
+    "label": {
+      "name": "label",
+      "field": "text",
+      "label": "Password label",
+      "help": "Label for the Password field",
+      "value": "Password"
+    },
+    "placeholder": {
+      "name": "placeholder",
+      "field": "text",
+      "label": "Password placeholder",
+      "help": "Label for the text field",
+      "value": "Password placeholder"
+    },
+    "name": {
+      "name": "text",
+      "field": "text",
+      "label": "Password name",
+      "value": "password-input",
+      "help": "Useful for mapping submission values"
+    },
+    "minlength": {
+      "name": "minlength",
+      "field": "number",
+      "label": "Minimum characters",
+      "help": "Minimum allowed characters",
+      "value": "8"
+    },
+    "maxlength": {
+      "name": "maxlength",
+      "field": "number",
+      "label": "Maximum characters",
+      "help": "Maximum allowed characters",
+      "value": "30"
+    },
+    "size": {
+      "name": "size",
+      "field": "number",
+      "label": "Password size limit",
+      "value": "15"
+    }
+  }
+}
