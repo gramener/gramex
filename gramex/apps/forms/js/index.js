@@ -1,4 +1,4 @@
-var forms, current_form_id, form_action, form_name
+var current_form_id, form_name
 
 $(function() {
   render_forms()
@@ -8,16 +8,15 @@ function render_forms() {
   fetch('publish')
     .then(response => response.json())
     .then(function(data) {
-      forms = data
       $('.forms').template({forms: data})
     })
 }
 
-/**
- * Render toast after form removal or renaming
- * @param {String} msg
- * @param {String} el
- */
+/*
+Render toast after form removal or renaming
+@param {String} msg
+@param {String} el
+*/
 function post_action(msg, el) {
   $(el).modal('hide')
   $('.toast-body').html(msg)
@@ -36,7 +35,6 @@ $(window).on('#?field', function(e, field) {
 
 $('body').on('click', 'button[data-form]', function () {
   current_form_id = $(this).data('form')
-  form_action = $(this).data('formaction')
   form_name = $(this).data('formname')
   $('#new-name').val(form_name)
 }).on('click', '.confirm-remove', function() {

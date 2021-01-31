@@ -1,4 +1,4 @@
-/* globals user, user_name, editor, active_form_id, options */
+/* globals user, active_form_id, _user_form_config */
 /* exported editor */
 
 let editor
@@ -132,7 +132,7 @@ $('body').on('click', '#publish-form', function() {
   $('.user-form > *').length < 2 ? $('.drag-fields-note').addClass('d-none') : $('.drag-fields-note').removeClass('d-none')
 })
 
-$('.edit-properties').on('input change', function (e) {
+$('.edit-properties').on('input change', function () {
   let vals = {}
   $(':input', this).each(function () { vals[this.id] = this.value })
   var $el = $('.edit-properties').data('editing-element')

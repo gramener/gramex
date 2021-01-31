@@ -1,3 +1,5 @@
+/* globals module */
+
 module.exports = {
   "plugins": [
     "template"          // Handle Tornado templates and JS in HTML files
@@ -22,6 +24,7 @@ module.exports = {
   "extends": "eslint:recommended",
   "rules": {
     /* Override default rules */
+    "no-global-assign": ["off"],            // TODO: avoid current_form_id as a global
     "indent": ["off", 2],                   // We eventually want 2 space indentation
     "linebreak-style": ["off", "unix"],     // We eventually want UNIX style line
     "quotes": ["off", "double"],            // We may go for a double-quotes style

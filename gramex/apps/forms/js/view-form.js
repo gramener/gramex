@@ -1,4 +1,4 @@
-/* globals form_id */
+/* globals form_id, hljs, current_form_id */
 
 $(function() {
   $('.btn.viewsource').addClass('d-none')

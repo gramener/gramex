@@ -115,7 +115,7 @@
   <script src="{{ base }}/ui/lodash/lodash.min.js"></script>
   <script src="{{ base }}/ui/g1/dist/g1.min.js"></script>
   <script>
-    /* exported user, user_name, active_form_id */
+    /* exported user, user_name, active_form_id, _user_form_config */
     let user = '{% raw handler.current_user.get("id") if handler.current_user else '' %}'
     let active_form_id = '{{ active_form_id }}'
     let _user_form_config = active_form_id ? JSON.parse('{% raw json.dumps(_config).replace("'", r"\'") %}') : ''
