@@ -12,6 +12,7 @@ from gramex.services import info
 from gramex.transforms import handler
 from tornado.web import HTTPError
 import pandas as pd
+from sqlalchemy.exc import NoSuchTableError
 
 FOLDER = os.path.abspath(os.path.dirname(__file__))
 TARGET = os.path.join(var.GRAMEXDATA, 'forms', 'thumbnail')
@@ -97,15 +98,22 @@ def screenshots(kwargs, host):
         raise
 
 
-def db_check(handler):
-    """Create forms.db if it doesn't exist."""
+def create_form_tables():
+    """Create database and tables if they don't exist.
+    Runs on forms import (scheduler) or on demand at /configure."""
     db_path = var['FORMS_URL']
     db_path = re.sub(r'^sqlite:///', '', db_path)
     if(not os.path.isfile(db_path)):
-        conn = sqlite3.connect(db_path)
-        conn.execute('CREATE TABLE "new_table" (`id` INTEGER PRIMARY KEY AUTOINCREMENT,\
-            `metadata` TEXT, `config` TEXT, `thumbnail` TEXT, `html` TEXT, `user` TEXT)')
-        conn.close()
-        return "created database"
+        try:
+            response = gramex.data.filter(url=var.FORMS_URL, table=var.FORMS_TABLE)
+            return "table exists"
+        except NoSuchTableError:
+            conn = sqlite3.connect(db_path)
+            conn.execute(
+                'CREATE TABLE "forms" (`id`	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,\
+                `metadata` TEXT, `config` TEXT, `thumbnail` TEXT, `html` TEXT, `user` TEXT)')
+            conn.execute('CREATE TABLE `analytics`(`id` INTEGER, `response` TEXT)')
+            conn.close()
+            return "created necessary tables"
     else:
-        return "db exists"
+        return "tables exist already"

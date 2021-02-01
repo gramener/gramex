@@ -17,6 +17,11 @@ import:
     path: $GRAMEXAPPS/admin2/gramex.yaml
     YAMLURL: $YAMLURL/admin/
 
+schedule:
+  setup_form_tables:
+    function: form_builder.create_form_tables()
+    startup: true
+
 # Configurations for app: form_builder
 # ----------------------------------------------------------------------------
 url:
@@ -94,11 +99,6 @@ url:
       function: form_builder.endpoint(handler)
       headers:
         Access-Control-Allow-Origin: '*'        # Allow CORS from any domain
-  forms/dbcheck-$*:
-    pattern: /$YAMLURL/dbcheck
-    handler: FunctionHandler
-    kwargs:
-      function: form_builder.db_check
   forms/analytics-$*:
     pattern: /$YAMLURL/analytics/(.*)
     handler: FormHandler
@@ -126,3 +126,8 @@ url:
         Content-Type: text/plain
         Content-Disposition: none
         Cache-Control: "public, max-age=86400"
+  forms-create-tables:
+    pattern: /$YAMLURL/configure
+    handler: FunctionHandler
+    kwargs:
+      function: form_builder.create_form_tables
