@@ -23,7 +23,7 @@ if not os.path.exists(TARGET):
 
 
 def modify_columns(handler, data):
-    if handler.request.method == 'GET':
+    if handler.request.method == 'GET' and len(data):
         # process json response
         s = data['response'].apply(literal_eval)
 
@@ -96,24 +96,3 @@ def screenshots(kwargs, host):
     except Exception:
         app_log.exception('Screenshot failed')
         raise
-
-
-def create_form_tables():
-    """Create database and tables if they don't exist.
-    Runs on forms import (scheduler) or on demand at /configure."""
-    db_path = var['FORMS_URL']
-    db_path = re.sub(r'^sqlite:///', '', db_path)
-    if(not os.path.isfile(db_path)):
-        try:
-            response = gramex.data.filter(url=var.FORMS_URL, table=var.FORMS_TABLE)
-            return "table exists"
-        except NoSuchTableError:
-            conn = sqlite3.connect(db_path)
-            conn.execute(
-                'CREATE TABLE "forms" (`id`	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,\
-                `metadata` TEXT, `config` TEXT, `thumbnail` TEXT, `html` TEXT, `user` TEXT)')
-            conn.execute('CREATE TABLE `analytics`(`id` INTEGER, `response` TEXT)')
-            conn.close()
-            return "created necessary tables"
-    else:
-        return "tables exist already"

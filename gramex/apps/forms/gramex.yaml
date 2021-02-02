@@ -72,6 +72,16 @@ url:
       table: $FORMS_TABLE
       id: $FORMS_ID
       modify: form_builder.after_publish(handler, data)
+      columns:
+        metadata: TEXT
+        config: TEXT
+        thumbnail: TEXT
+        html: TEXT
+        user: TEXT
+        id:
+          type: INTEGER
+          primary_key: true
+          autoincrement: true
   forms/thumbnail-$*:
     pattern: /$YAMLURL/thumbnail/(.*)
     handler: FileHandler
@@ -103,18 +113,28 @@ url:
     pattern: /$YAMLURL/analytics/(.*)
     handler: FormHandler
     kwargs:
-      url: 'sqlite:///$GRAMEXDATA/forms/form_{db}.db'    # Pick any database
-      table: analytics                                   # Pick any table name to create
-      id: id                      # The "id" column is primary key
-      # Define your table's columns
-      columns:
-        response: TEXT            # Use any SQL type allowed by DB
-        id:
-          type: INTEGER           # Define an integer ID column
-          primary_key: true       # as a primary key
-          autoincrement: true     # that auto-increments
-        form_id: INTEGER
-      modify: form_builder.modify_columns(handler, data)
+      each_form:
+        url: 'sqlite:///$GRAMEXDATA/forms/form_{db}.db'    # Pick any database
+        table: analytics                                   # Pick any table name to create
+        id: id                      # The "id" column is primary key
+        columns:
+          response: TEXT            # Use any SQL type allowed by DB
+          id:
+            type: INTEGER           # Define an integer ID column
+            primary_key: true       # as a primary key
+            autoincrement: true     # that auto-increments
+          form_id: INTEGER
+        modify: form_builder.modify_columns(handler, data)
+      analytics:
+        url: 'sqlite:///$GRAMEXDATA/forms/forms.db'    # Pick any database
+        table: analytics                                   # Pick any table name to create
+        id: id                      # The "id" column is primary key
+        columns:
+          response: TEXT            # Use any SQL type allowed by DB
+          id:
+            type: INTEGER           # Define an integer ID column
+            primary_key: true       # as a primary key
+            autoincrement: true     # that auto-increments
 
   forms/snippets/all:
     pattern: /$YAMLURL/snippets/
@@ -126,8 +146,3 @@ url:
         Content-Type: text/plain
         Content-Disposition: none
         Cache-Control: "public, max-age=86400"
-  forms-create-tables:
-    pattern: /$YAMLURL/configure
-    handler: FunctionHandler
-    kwargs:
-      function: form_builder.create_form_tables

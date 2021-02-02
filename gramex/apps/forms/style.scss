@@ -79,3 +79,7 @@
   position: sticky;
   top: 5%;
 }
+// disable events while previewing the form at /form/id
+#formTabContent form {
+  pointer-events: none;
+}
