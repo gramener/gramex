@@ -17,11 +17,6 @@ import:
     path: $GRAMEXAPPS/admin2/gramex.yaml
     YAMLURL: $YAMLURL/admin/
 
-schedule:
-  setup_form_tables:
-    function: form_builder.create_form_tables()
-    startup: true
-
 # Configurations for app: form_builder
 # ----------------------------------------------------------------------------
 url:
