@@ -12,7 +12,6 @@ from gramex.services import info
 from gramex.transforms import handler
 from tornado.web import HTTPError
 import pandas as pd
-from sqlalchemy.exc import NoSuchTableError
 
 FOLDER = os.path.abspath(os.path.dirname(__file__))
 TARGET = os.path.join(var.GRAMEXDATA, 'forms', 'thumbnail')
