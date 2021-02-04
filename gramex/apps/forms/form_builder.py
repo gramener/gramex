@@ -1,6 +1,4 @@
 import os
-import re
-import sqlite3
 import gramex.data
 from io import BytesIO
 from ast import literal_eval
@@ -22,7 +20,7 @@ if not os.path.exists(TARGET):
 
 
 def modify_columns(handler, data):
-    if handler.request.method == 'GET':
+    if handler.request.method == 'GET' and len(data):
         # process json response
         s = data['response'].apply(literal_eval)
 
@@ -95,17 +93,3 @@ def screenshots(kwargs, host):
     except Exception:
         app_log.exception('Screenshot failed')
         raise
-
-
-def db_check(handler):
-    """Create forms.db if it doesn't exist."""
-    db_path = var['FORMS_URL']
-    db_path = re.sub(r'^sqlite:///', '', db_path)
-    if(not os.path.isfile(db_path)):
-        conn = sqlite3.connect(db_path)
-        conn.execute('CREATE TABLE "new_table" (`id` INTEGER PRIMARY KEY AUTOINCREMENT,\
-            `metadata` TEXT, `config` TEXT, `thumbnail` TEXT, `html` TEXT, `user` TEXT)')
-        conn.close()
-        return "created database"
-    else:
-        return "db exists"

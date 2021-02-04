@@ -1,4 +1,6 @@
+# ignore todo files
 TODO
+*.todo
 
 # Ignore auto-generated documentation
 docs/gramex*.rst

@@ -21,7 +21,7 @@
   <body>
     {% include 'template-navbar-view-form.html' %}
     <div class="container my-3">
-      <ul class="nav nav-tabs" id="myTab" role="tablist">
+      <ul class="nav nav-tabs" id="formTab" role="tablist">
         <li class="nav-item" role="presentation">
           <a class="nav-link active" id="questions-tab" data-toggle="tab" href="#questions" role="tab" aria-controls="questions" aria-selected="true">Questions</a>
         </li>
@@ -29,18 +29,20 @@
           <a class="nav-link" id="responses-tab" data-toggle="tab" href="#responses" role="tab" aria-controls="responses" aria-selected="false">Responses</a>
         </li>
       </ul>
-      <div class="tab-content" id="myTabContent">
+      <div class="tab-content" id="formTabContent">
         <div class="tab-pane fade show active" id="questions" role="tabpanel" aria-labelledby="questions-tab">
           <div class="my-5" id="view-form">
             <form></form>
+            <small class="text-muted">You are currently previewing the form.</small>
           </div>
         </div>
         <div class="tab-pane fade w-100" id="responses" role="tabpanel" aria-labelledby="responses-tab">
-          <div class="formhandler pt-3 mt-3" data-src="../analytics/?db={{ form_id }}" data-export="false" data-count="true" data-page-size="5"></div>
+          <div class="formhandler pt-3 mt-3" data-export="false" data-count="true" data-page-size="5"></div>
         </div>
       </div>
       <p>
         <a class="btn btn-success" href="{{ base }}/create?id={{ form_id }}">Edit</a>
+        <a class="btn btn-primary" href="{{ base }}/view/{{ form_id }}">View form</a>
       </p>
     </div>
 
@@ -61,9 +63,14 @@
     <script>
       /* exported hljs, dragula, form_id */
       const form_id = '{% raw form_id %}'
-      $('.formhandler').formhandler({
-        columns: [{name: "*" }, { name: "response", hide: true}]
-      })
+      fetch(`../analytics/?db=${form_id}`)
+        .then(response => response.json())
+        .then(function(response) {
+          $('.formhandler').formhandler({
+            data: response['each_form'],
+            columns: [{name: "*" }, { name: "response", hide: true}]
+          })
+        })
     </script>
     <script src="{{ base }}/js/view-form.js"></script>
   </body>

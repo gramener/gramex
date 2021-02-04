@@ -67,6 +67,16 @@ url:
       table: $FORMS_TABLE
       id: $FORMS_ID
       modify: form_builder.after_publish(handler, data)
+      columns:
+        metadata: TEXT
+        config: TEXT
+        thumbnail: TEXT
+        html: TEXT
+        user: TEXT
+        id:
+          type: INTEGER
+          primary_key: true
+          autoincrement: true
   forms/thumbnail-$*:
     pattern: /$YAMLURL/thumbnail/(.*)
     handler: FileHandler
@@ -94,27 +104,32 @@ url:
       function: form_builder.endpoint(handler)
       headers:
         Access-Control-Allow-Origin: '*'        # Allow CORS from any domain
-  forms/dbcheck-$*:
-    pattern: /$YAMLURL/dbcheck
-    handler: FunctionHandler
-    kwargs:
-      function: form_builder.db_check
   forms/analytics-$*:
     pattern: /$YAMLURL/analytics/(.*)
     handler: FormHandler
     kwargs:
-      url: 'sqlite:///$GRAMEXDATA/forms/form_{db}.db'    # Pick any database
-      table: analytics                                   # Pick any table name to create
-      id: id                      # The "id" column is primary key
-      # Define your table's columns
-      columns:
-        response: TEXT            # Use any SQL type allowed by DB
-        id:
-          type: INTEGER           # Define an integer ID column
-          primary_key: true       # as a primary key
-          autoincrement: true     # that auto-increments
-        form_id: INTEGER
-      modify: form_builder.modify_columns(handler, data)
+      each_form:
+        url: 'sqlite:///$GRAMEXDATA/forms/form_{db}.db'    # Pick any database
+        table: analytics                                   # Pick any table name to create
+        id: id                      # The "id" column is primary key
+        columns:
+          response: TEXT            # Use any SQL type allowed by DB
+          id:
+            type: INTEGER           # Define an integer ID column
+            primary_key: true       # as a primary key
+            autoincrement: true     # that auto-increments
+          form_id: INTEGER
+        modify: form_builder.modify_columns(handler, data)
+      analytics:
+        url: 'sqlite:///$GRAMEXDATA/forms/forms.db'    # Pick any database
+        table: analytics                                   # Pick any table name to create
+        id: id                      # The "id" column is primary key
+        columns:
+          response: TEXT            # Use any SQL type allowed by DB
+          id:
+            type: INTEGER           # Define an integer ID column
+            primary_key: true       # as a primary key
+            autoincrement: true     # that auto-increments
 
   forms/snippets/all:
     pattern: /$YAMLURL/snippets/
