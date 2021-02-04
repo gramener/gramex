@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+  {% import json %}
+  {% import gramex.data %}
+  {% from gramex.config import variables as var %}
+  {% import urllib.parse %}
+  {% set base = '..' %}
+  <!-- path_args = ['form', 'id'] or ['view', 'id'] -->
+  {% set form_id = handler.path_args[1] %}
+  {% set view = 'form' %}
+  {% set form_title = json.loads(gramex.data.filter(url=var.FORMS_URL, table=var.FORMS_TABLE, args={'id': [form_id]})['metadata'].values[0]) %}
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <title>View a form - Form Builder</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="{{ base }}/node_modules/dragula/dist/dragula.min.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/styles/agate.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ base }}/style.scss?body-bg={{ urllib.parse.quote(handler.get_argument('bg', '#ffffff')) }}">
+  </head>
+  {% set title = 'Forms' %}
+  <body>
+    {% if handler.path_args[0] == 'form' %}
+      {% include 'template-navbar-view-form.html' %}
+      <div class="container my-3">
+        <ul class="nav nav-tabs" id="formTab" role="tablist">
+          <li class="nav-item" role="presentation">
+            <a class="nav-link active" id="questions-tab" data-toggle="tab" href="#questions" role="tab" aria-controls="questions" aria-selected="true">Questions</a>
+          </li>
+          <li class="nav-item" role="presentation">
+            <a class="nav-link" id="responses-tab" data-toggle="tab" href="#responses" role="tab" aria-controls="responses" aria-selected="false">Responses</a>
+          </li>
+        </ul>
+        <div class="tab-content" id="formTabContent">
+          <div class="tab-pane fade show active" id="questions" role="tabpanel" aria-labelledby="questions-tab">
+            <div class="my-5" id="view-form">
+              <form></form>
+              <small class="text-muted">You are currently previewing the form.</small>
+            </div>
+          </div>
+          <div class="tab-pane fade w-100" id="responses" role="tabpanel" aria-labelledby="responses-tab">
+            <div class="formhandler pt-3 mt-3" data-export="false" data-count="true" data-page-size="5"></div>
+          </div>
+        </div>
+        <p>
+          <a class="btn btn-success" href="{{ base }}/create?id={{ form_id }}">Edit</a>
+          <a class="btn btn-primary" href="{{ base }}/view/{{ form_id }}">View form</a>
+        </p>
+        {% include 'modals/themes.html' %}
+        {% include 'modals/settings.html' %}
+        {% include 'modals/send.html' %}
+        {% include 'modals/remove.html' %}
+
+      {% else %}
+      <div class="container my-3">
+        <div class="my-5" id="view-form">
+          <form class="analytics"></form>
+        </div>
+      {% end %}
+    </div>
+    {% include 'toast.html' %}
+
+    <script src="{{ base }}/ui/jquery/dist/jquery.min.js"></script>
+    <script src="{{ base }}/ui/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ base }}/ui/lodash/lodash.min.js"></script>
+    <script src="{{ base }}/ui/g1/dist/g1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/highlight.min.js"></script>
+    <script src="{{ base }}/node_modules/clipboard/dist/clipboard.min.js"></script>
+    <script src="{{ base }}/js/code-highlighting.js"></script>
+    <script>
+      /* exported hljs, dragula, form_id */
+      const form_id = '{% raw form_id %}'
+      const this_view = '{% raw handler.path_args[0] %}'
+      if(this_view === 'form') {
+        fetch(`../analytics/?db=${form_id}`)
+          .then(response => response.json())
+          .then(function(response) {
+            $('.formhandler').formhandler({
+              data: response['each_form'],
+              columns: [{name: "*" }, { name: "response", hide: true}]
+            })
+          })
+      }
+    </script>
+    <script src="{{ base }}/js/viewform.js"></script>
+  </body>
+</html>
