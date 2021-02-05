@@ -23,7 +23,7 @@ $(function() {
         })
       }
   })
-  $('svg').urlfilter()
+  $('svg').urlfilter({target: '#'})
 })
 
 $('body').on('click', 'button[data-form]', function () {
