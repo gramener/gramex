@@ -5,14 +5,13 @@ import os
 from urllib.parse import parse_qs
 
 import gramex
-from gramex.config import app_log
+from gramex.config import app_log, CustomJSONEncoder
 from gramex import data as gdata
 from gramex.handlers import FormHandler
 from gramex.http import NOT_FOUND, BAD_REQUEST
 from gramex.install import _mkdir
 from gramex import cache
 import joblib
-import numpy as np
 import pandas as pd
 import pydoc
 from sklearn.base import BaseEstimator
@@ -50,6 +49,7 @@ TRAINING_DEFAULTS = {
     'target_col': None,
 }
 DEFAULT_TEMPLATE = op.join(op.dirname(__file__), '..', 'apps', 'mlhandler', 'template.html')
+_prediction_col = '_prediction'
 
 
 def df2url(df):
@@ -78,13 +78,6 @@ def search_modelclass(mclass):
         return cls
     msg = f'Model {mclass} not found. Please provide a full Python path.'
     raise HTTPError(NOT_FOUND, reason=msg)
-
-
-def _serialize_prediction(obj):
-    # Serialize a list or an array or a tensor
-    if isinstance(obj, np.ndarray):
-        obj = obj.tolist()
-    return json.dumps(obj, indent=4)
 
 
 def is_categorical(s, num_treshold=0.1):
@@ -270,14 +263,14 @@ class MLHandler(FormHandler):
         return data
 
     @classmethod
-    def _get_pipeline(cls, data):
-        if op.exists(cls.model_path):
+    def _get_pipeline(cls, data, force=False):
+        # If the model exists, return it
+        if op.exists(cls.model_path) and not force:
             return joblib.load(cls.model_path)
-        if data is not None:
-            if not len(data):
-                return None
-        else:
+        # If there's no data, return None
+        if data is None or not len(data):
             return None
+        # Else assemble the model
         nums = set(cls.get_opt('nums', []))
         cats = set(cls.get_opt('cats', []))
         both = nums.intersection(cats)
@@ -346,7 +339,8 @@ class MLHandler(FormHandler):
             target = data[score_col]
             data = data.drop([score_col], axis=1)
             return self.model.score(data, target)
-        return self.model.predict(data)
+        data[self.get_opt('target_col', _prediction_col)] = self.model.predict(data)
+        return data
 
     def _parse_data(self, _cache=True):
         # First look in self.request.files
@@ -462,16 +456,18 @@ class MLHandler(FormHandler):
                 data = self.load_data()
             target_col = self.get_opt('target_col')
             if target_col in data:
-                target = data.pop(target_col)
+                target = data[target_col]
+                to_predict = data.drop([target_col], axis=1)
             else:
                 target = None
+                to_predict = data
             if action in ('predict', 'score'):
                 prediction = yield gramex.service.threadpool.submit(
-                    # self._predict, data, transform=False)
-                    self._predict, data)
+                    self._predict, to_predict)
                 if action == 'predict':
-                    self.write(_serialize_prediction(prediction))
+                    self.write(json.dumps(prediction, indent=4, cls=CustomJSONEncoder))
                 elif action == 'score':
+                    prediction = prediction[target_col if target_col else _prediction_col]
                     score = accuracy_score(target.astype(prediction.dtype),
                                            prediction)
                     self.write(json.dumps({'score': score}, indent=4))
@@ -512,7 +508,7 @@ class MLHandler(FormHandler):
         if action == 'predict':
             prediction = yield gramex.service.threadpool.submit(
                 self._predict, data)
-            self.write(_serialize_prediction(prediction))
+            self.write(json.dumps(prediction, indent=4, cls=CustomJSONEncoder))
         elif action == 'score':
             target_col = self.get_opt('target_col')
             if target_col is None:
@@ -550,8 +546,7 @@ class MLHandler(FormHandler):
 
             # assemble the pipeline
             if self.get_opt('pipeline', True):
-                # self.model = self._get_pipeline(data, target_col=target_col, **opts)
-                self.model = self._get_pipeline(data)
+                self.model = self._get_pipeline(data, force=True)
             # train the model
             target = data[target_col]
             train = data[[c for c in data if c != target_col]]
