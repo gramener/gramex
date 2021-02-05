@@ -5,14 +5,13 @@ import os
 from urllib.parse import parse_qs
 
 import gramex
-from gramex.config import app_log
+from gramex.config import app_log, CustomJSONEncoder
 from gramex import data as gdata
 from gramex.handlers import FormHandler
 from gramex.http import NOT_FOUND, BAD_REQUEST
 from gramex.install import _mkdir
 from gramex import cache
 import joblib
-import numpy as np
 import pandas as pd
 import pydoc
 from sklearn.base import BaseEstimator
@@ -50,6 +49,7 @@ TRAINING_DEFAULTS = {
     'target_col': None,
 }
 DEFAULT_TEMPLATE = op.join(op.dirname(__file__), '..', 'apps', 'mlhandler', 'template.html')
+_prediction_col = '_prediction'
 
 
 def df2url(df):
@@ -78,15 +78,6 @@ def search_modelclass(mclass):
         return cls
     msg = f'Model {mclass} not found. Please provide a full Python path.'
     raise HTTPError(NOT_FOUND, reason=msg)
-
-
-def _serialize_prediction(obj):
-    # Serialize a list or an array or a tensor
-    if isinstance(obj, np.ndarray):
-        obj = obj.tolist()
-    elif isinstance(obj, pd.DataFrame):
-        obj = obj.to_dict(orient='records')
-    return json.dumps(obj, indent=4)
 
 
 def is_categorical(s, num_treshold=0.1):
@@ -273,15 +264,13 @@ class MLHandler(FormHandler):
 
     @classmethod
     def _get_pipeline(cls, data, force=False):
-        if not force:
-            if op.exists(cls.model_path):
-                return joblib.load(cls.model_path)
-        # Else assemble the model anyway
-        if data is not None:
-            if not len(data):
-                return None
-        else:
+        # If the model exists, return it
+        if op.exists(cls.model_path) and not force:
+            return joblib.load(cls.model_path)
+        # If there's no data, return None
+        if data is None or not len(data):
             return None
+        # Else assemble the model
         nums = set(cls.get_opt('nums', []))
         cats = set(cls.get_opt('cats', []))
         both = nums.intersection(cats)
@@ -351,11 +340,9 @@ class MLHandler(FormHandler):
             data = data.drop([score_col], axis=1)
             return self.model.score(data, target)
         prediction = self.model.predict(data)
+        # Write prediction into the target col. If target_col
         target_col = self.get_opt('target_col')
-        if target_col in data:
-            data['prediction'] = prediction
-        else:
-            data[target_col] = prediction
+        data[_prediction_col if target_col in data else target_col] = prediction
         return data
 
     def _parse_data(self, _cache=True):
@@ -481,10 +468,10 @@ class MLHandler(FormHandler):
                 prediction = yield gramex.service.threadpool.submit(
                     self._predict, to_predict)
                 if action == 'predict':
-                    self.write(_serialize_prediction(prediction))
+                    self.write(json.dumps(prediction, indent=4, cls=CustomJSONEncoder))
                 elif action == 'score':
-                    if 'prediction' in prediction:
-                        prediction = prediction['prediction']
+                    if _prediction_col in prediction:
+                        prediction = prediction[_prediction_col]
                     else:
                         prediction = prediction[target_col]
                     score = accuracy_score(target.astype(prediction.dtype),
@@ -527,7 +514,7 @@ class MLHandler(FormHandler):
         if action == 'predict':
             prediction = yield gramex.service.threadpool.submit(
                 self._predict, data)
-            self.write(_serialize_prediction(prediction))
+            self.write(json.dumps(prediction, indent=4, cls=CustomJSONEncoder))
         elif action == 'score':
             target_col = self.get_opt('target_col')
             if target_col is None:
