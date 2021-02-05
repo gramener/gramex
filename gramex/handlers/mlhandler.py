@@ -339,10 +339,7 @@ class MLHandler(FormHandler):
             target = data[score_col]
             data = data.drop([score_col], axis=1)
             return self.model.score(data, target)
-        prediction = self.model.predict(data)
-        # Write prediction into the target col. If target_col
-        target_col = self.get_opt('target_col')
-        data[_prediction_col if target_col in data else target_col] = prediction
+        data[self.get_opt('target_col', _prediction_col)] = self.model.predict(data)
         return data
 
     def _parse_data(self, _cache=True):
@@ -470,10 +467,7 @@ class MLHandler(FormHandler):
                 if action == 'predict':
                     self.write(json.dumps(prediction, indent=4, cls=CustomJSONEncoder))
                 elif action == 'score':
-                    if _prediction_col in prediction:
-                        prediction = prediction[_prediction_col]
-                    else:
-                        prediction = prediction[target_col]
+                    prediction = prediction[target_col if target_col else _prediction_col]
                     score = accuracy_score(target.astype(prediction.dtype),
                                            prediction)
                     self.write(json.dumps({'score': score}, indent=4))
