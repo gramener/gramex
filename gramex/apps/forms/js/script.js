@@ -148,6 +148,9 @@ $('.edit-properties').on('input change', function () {
       }
     })
   } else {
+    // $el includes outerHTML (.form-group onwards)
+    // without .html(), the rendered template will contain .form-group > .form-group > input/select etc.
+    // we need .form-group > input/select etc.
     _v = $(template[field](vals)).html().trim()
   }
   $el.html(_v)

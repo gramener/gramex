@@ -85,17 +85,11 @@ url:
       index: true
       # filehandler disables access to . directories, allow explicitly
       allow: "*/.config/*"
-  forms/form-$*:
-    pattern: /$YAMLURL/form/(.*)
-    handler: FileHandler
-    kwargs:
-      path: $YAMLPATH/form.html
-      template: true
   forms/form-view-$*:
-    pattern: /$YAMLURL/view/(.*)
+    pattern: /$YAMLURL/(form|view)/(.*)
     handler: FileHandler
     kwargs:
-      path: $YAMLPATH/view.html
+      path: $YAMLPATH/viewform.html
       template: true
   forms/embed-$*:
     pattern: /$YAMLURL/embed/(\d+)\.(json|html|js)
