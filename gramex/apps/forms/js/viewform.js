@@ -1,4 +1,4 @@
-/* globals form_id, hljs, current_form_id */
+/* globals form_id, hljs, current_form_id, this_view */
 
 // escape html tags to show source code
 function escapeHtml(unsafe) {

@@ -72,11 +72,25 @@
     <script src="{{ base }}/node_modules/clipboard/dist/clipboard.min.js"></script>
     <script src="{{ base }}/js/code-highlighting.js"></script>
     <script>
-      /* exported hljs, dragula, form_id */
+      /* exported hljs, dragula, form_id, this_view */
       const form_id = '{% raw form_id %}'
       const this_view = '{% raw handler.path_args[0] %}'
-      let url = g1.url.parse(location.href)
       let metadata = JSON.parse('{% raw json.dumps(metadata).replace("'", r"\'") %}')
+
+      function update_bg(bg) {
+        metadata['bg'] = bg
+        $('#themesModal').modal('hide');
+        $.ajax('../publish', {
+          method: 'PUT',
+          data: {metadata: JSON.stringify(metadata), id: form_id},
+          success: function() {
+            $('.toast-body').html('Updated background color!')
+            $('.toast').toast('show')
+            $('body').css('backgroundColor', bg)
+          }
+        })
+      }
+
       if(this_view === 'form') {
         fetch(`../analytics/?db=${form_id}`)
           .then(response => response.json())
@@ -86,21 +100,6 @@
               columns: [{name: "*" }, { name: "response", hide: true}]
             })
           })
-
-        function update_bg(bg) {
-          metadata['bg'] = bg
-          // g1.url.parse(location.hash.replace(/#/, '')).searchKey.bg
-          $('#themesModal').modal('hide');
-          $.ajax('../publish', {
-            method: 'PUT',
-            data: {metadata: JSON.stringify(metadata), id: form_id},
-            success: function(response) {
-              $('.toast-body').html('Updated background color!')
-              $('.toast').toast('show')
-              $('body').css('backgroundColor', bg)
-            }
-          })
-        }
 
         $(window).on('#?bg', function(e, bg) { update_bg(bg) })
           .urlchange()
