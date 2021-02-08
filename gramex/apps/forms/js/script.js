@@ -2,49 +2,43 @@
 /* exported editor */
 
 let editor
-let dirs = ['button', 'checkbox', 'email', 'hidden', 'number', 'password', 'radio', 'range', 'select', 'text', 'textarea']
-const promises = []
 const options = {}
 const template = {}
 
-dirs.forEach(dir => {
-  promises.push(fetch(`snippets/?type=${dir}&file=config&ext=json`)
-    .then(response => response.json())
-    .then(function(json) { options[dir] = json.options }))
-  promises.push(fetch(`snippets/?type=${dir}&file=index&ext=html`)
-    .then(response => response.text())
-    .then(function(text) { template[dir] = _.template(text) }))
-})
-Promise.all(promises).then(() => {
-  _.each(template, (tmpl, dir) => {
-    let vals = _.mapValues(options[dir], v => v.value)
-    $(tmpl(vals))
-      .attr('data-type', dir)
-      .attr('data-vals', JSON.stringify(vals))
-      .appendTo('.form-fields')
-  })
-  $('.edit-properties-container').css('height', $(document).innerHeight())
-  // TODO: Can we ensure they all have a common parent class? I'll assume it's .form-group
-  $('body').on('click', '.user-form .form-group, .user-form .form-check', function () {
-    $('.delete-field-trigger').removeClass('d-none')
-    $('.edit-properties').empty()
-      .data('editing-element', $(this))
-    $('.form-group, .form-check, button').removeClass('highlight')
-    $(this).addClass('highlight')
-    let field_vals = JSON.parse($(this).attr('data-vals')) || $(this).data('vals')
-    _.each(options[$(this).data('type')], function (option, key) {
-      let vals
-      vals = _.mapValues(options[option.field], v => v.value)
-      _.extend(vals, option)
-      vals.value = _user_form_config.length > 0 ? _user_form_config[key] : field_vals[key]
-      $(template[option.field](vals))
-        .appendTo('.edit-properties')
-        .addClass('form-element')
-        .data('key', key)
-        .data('field', option.field)
+fetch('snippets/snippets.json')
+  .then(response => response.json())
+  .then(json => {
+    _.each(json, (val, dir) => {
+      options[dir] = val.options
+      const tmpl = template[dir] = _.template(val.template)
+      let vals = _.mapValues(options[dir], v => v.value)
+      $(tmpl(vals))
+        .attr('data-type', dir)
+        .attr('data-vals', JSON.stringify(vals))
+        .appendTo('.form-fields')
+    })
+    $('.edit-properties-container').css('height', $(document).innerHeight())
+    // TODO: Can we ensure they all have a common parent class? I'll assume it's .form-group
+    $('body').on('click', '.user-form .form-group, .user-form .form-check', function () {
+      $('.delete-field-trigger').removeClass('d-none')
+      $('.edit-properties').empty()
+        .data('editing-element', $(this))
+      $('.form-group, .form-check, button').removeClass('highlight')
+      $(this).addClass('highlight')
+      let field_vals = JSON.parse($(this).attr('data-vals')) || $(this).data('vals')
+      _.each(options[$(this).data('type')], function (option, key) {
+        let vals
+        vals = _.mapValues(options[option.field], v => v.value)
+        _.extend(vals, option)
+        vals.value = _user_form_config.length > 0 ? _user_form_config[key] : field_vals[key]
+        $(template[option.field](vals))
+          .appendTo('.edit-properties')
+          .addClass('form-element')
+          .data('key', key)
+          .data('field', option.field)
+      })
     })
   })
-})
 
 $('body').on('click', '#publish-form', function() {
   let _vals = {}

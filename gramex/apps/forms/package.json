@@ -1,4 +1,7 @@
 {
+  "scripts": {
+    "postinstall": "node snippets/setup.js"
+  },
   "dependencies": {
     "clipboard": "^2.0.6",
     "dragula": "^3.7.3",
