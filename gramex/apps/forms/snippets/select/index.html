@@ -2,7 +2,7 @@
   <label data-type="select" for="select-element"><%= label %></label>
   <select class="form-control" name="<%= name %>" id="<%= name %>">
     <% options.split(',').forEach(function (option) { %>
-      <option value="<%= option.trim() %>"><%= option.trim() %></option>
+      <option value="<%= option.trim() %>" <%= value === option.trim() ? 'selected' : '' %>><%= option.trim() %></option>
     <% }) %>
   </select>
 </div>

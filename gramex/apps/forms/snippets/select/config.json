@@ -20,6 +20,12 @@
       "label": "Selection name",
       "value": "select-input",
       "help": "Useful for mapping submission values"
+    },
+    "value": {
+      "name": "value",
+      "field": "text",
+      "label": "Default Value",
+      "value": "Two"
     }
   }
 }
