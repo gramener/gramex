@@ -15,7 +15,7 @@ from orderedattrdict import AttrDict
 import gramex
 import gramex.cache
 from gramex.http import UNAUTHORIZED, FORBIDDEN
-from gramex.config import app_log, objectpath, str_utf8
+from gramex.config import app_log, objectpath, str_utf8, merge
 from gramex.transforms import build_transform
 from .basehandler import BaseHandler, build_log_info
 
@@ -125,6 +125,7 @@ class AuthHandler(BaseHandler):
         info = _user_info.load(_user_id)
         info.update(kwargs)
         _user_info.dump(_user_id, info)
+        return info
 
     @coroutine
     def set_user(self, user, id):
@@ -163,7 +164,10 @@ class AuthHandler(BaseHandler):
                     if not gramex.data.pd.isnull(val)
                 })
 
-        self.update_user(user[id], active='y', **user)
+        # Persist user attributes (e.g. refresh_token from Google auth.)
+        # If new user object doesn't have anything from previous login, restore it.
+        info = self.update_user(user[id], active='y', **user)
+        merge(self.session[self.session_user_key], info, mode='setdefault')
 
         # If session_inactive: is specified, set expiry date on the session
         if self.session_inactive is not None:
@@ -247,6 +251,7 @@ class GoogleAuth(AuthHandler, GoogleOAuth2Mixin):
             user = yield self.oauth2_request(
                 'https://www.googleapis.com/oauth2/v1/userinfo',
                 access_token=access['access_token'])
+            merge(user, access, mode='setdefault')
             yield self.set_user(user, id='email')
             self.session['google_access_token'] = access['access_token']
             self.redirect_next()
@@ -258,7 +263,7 @@ class GoogleAuth(AuthHandler, GoogleOAuth2Mixin):
             scope = list(set(scope) | {'profile', 'email'})
             # Ensure extra_params has auto approval prompt
             extra_params = self.kwargs.get('extra_params', {})
-            if 'approval_prompt' not in extra_params:
+            if 'approval_prompt' not in extra_params and 'prompt' not in extra_params:
                 extra_params['approval_prompt'] = 'auto'
             # Return the list
             yield self.authorize_redirect(
@@ -267,6 +272,50 @@ class GoogleAuth(AuthHandler, GoogleOAuth2Mixin):
                 scope=scope,
                 response_type='code',
                 extra_params=extra_params)
+
+    @classmethod
+    @coroutine
+    def exchange_refresh_token(cls, user, refresh_token=None):
+        '''
+        Exchange the refresh token for the current user for a new access token.
+
+        See https://developers.google.com/android-publisher/authorizatio#using_the_refresh_token
+
+        The token is picked up from the persistent user info store. Developers can explicitly pass
+        a refresh_token as well.
+
+        Sample usage in a FunctionHandler coroutine::
+
+            @tornado.gen.coroutine
+            def refresh(handler):
+                # Get the Google auth handler though which the current user logged in
+                auth_handler = gramex.service.url['google-handler'].handler_class
+                # Exchange refresh token for access token
+                yield auth_handler.exchange_refresh_token(handler.current_user)
+
+        It accepts the following parameters:
+
+        :arg dict user: current user object, i.e. ``handler.current_user`` (read-only)
+        :arg str refresh_token: optional. By default, the refresh token is picked up from
+            ``handler.current_user.refresh_token``
+        '''
+        if refresh_token is None:
+            if 'refresh_token' in user:
+                refresh_token = user['refresh_token']
+            else:
+                raise HTTPError(FORBIDDEN, "No refresh_token provided")
+        body = urlencode({
+            'grant_type': 'refresh_token',
+            'client_id': cls.kwargs['key'],
+            'client_secret': cls.kwargs['secret'],
+            'refresh_token': refresh_token,
+        })
+        http = tornado.httpclient.AsyncHTTPClient()
+        response = yield http.fetch(cls._OAUTH_ACCESS_TOKEN_URL, method='POST', body=body)
+        result = json.loads(response.body)
+        # Update the current user info and persist it
+        user.update(result)
+        cls.update_user(user['email'], **result)
 
 
 class SimpleAuth(AuthHandler):

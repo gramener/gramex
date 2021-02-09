@@ -57,6 +57,7 @@ info = AttrDict(
     email=AttrDict(),
     sms=AttrDict(),
     gramexlog=AttrDict(apps=AttrDict()),
+    url=AttrDict(),
     _md=None,
     _main_ioloop=None,
 )
@@ -683,13 +684,13 @@ def _cache_generator(conf, name):
 
 def url(conf):
     '''Set up the tornado web app URL handlers'''
-    handlers = []
+    info.url = {}
     # Sort the handlers in descending order of priority
     specs = sorted(conf.items(), key=_sort_url_patterns, reverse=True)
     for name, spec in specs:
         _key = cache_key('url', spec)
         if _key in _cache:
-            handlers.append(_cache[_key])
+            info.url[name] = _cache[_key]
             continue
         # service: is an alias for handler: and has higher priority
         if 'service' in spec:
@@ -741,11 +742,10 @@ def url(conf):
         except Exception:
             app_log.exception('url: %s: invalid', name)
             continue
-        _cache[_key] = handler_entry
-        handlers.append(handler_entry)
+        info.url[name] = _cache[_key] = handler_entry
 
     info.app.clear_handlers()
-    info.app.add_handlers('.*$', handlers)
+    info.app.add_handlers('.*$', info.url.values())
 
 
 def mime(conf):
