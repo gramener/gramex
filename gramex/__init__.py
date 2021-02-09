@@ -40,6 +40,7 @@ from gramex.config import ioloop_running, prune_keys, setup_secrets
 paths = AttrDict()              # Paths where configurations are stored
 conf = AttrDict()               # Final merged configurations
 config_layers = ChainConfig()   # Loads all configurations. init() updates it
+appconfig = AttrDict()          # Final app configuration
 
 paths['source'] = Path(__file__).absolute().parent      # Where gramex source code is
 paths['base'] = Path('.')                               # Where gramex is run from
@@ -262,19 +263,20 @@ def init(force_reload=False, **kwargs):
     globals()['service'] = services.info    # gramex.service = gramex.services.info
 
     # Override final configurations
-    final_config = +config_layers
+    appconfig.clear()
+    appconfig.update(+config_layers)
     # --settings.debug => log.root.level = True
-    if final_config.app.get('settings', {}).get('debug', False):
-        final_config.log.root.level = logging.DEBUG
+    if appconfig.app.get('settings', {}).get('debug', False):
+        appconfig.log.root.level = logging.DEBUG
 
     # Set up a watch on config files (including imported files)
-    if final_config.app.get('watch', True):
+    if appconfig.app.get('watch', True):
         from services import watcher
         watcher.watch('gramex-reconfig', paths=config_files, on_modified=lambda event: init())
 
     # Run all valid services. (The "+" before config_chain merges the chain)
     # Services may return callbacks to be run at the end
-    for key, val in final_config.items():
+    for key, val in appconfig.items():
         if key not in conf or conf[key] != val or force_reload:
             if hasattr(services, key):
                 app_log.debug('Loading service: %s', key)

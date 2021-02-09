@@ -199,3 +199,13 @@ class TestAlias(TestGramex):
         self.check('/alias-command')
         self.check('/alias-data')
         self.check('/alias-function')
+
+
+class TestConfig(TestGramex):
+    def test_appconfig(self):
+        # gramex.appconfig should contain the current app configuration
+        r = self.check('/appconfig').json()
+        eq_(r['url']['appconfig']['pattern'], '/appconfig')
+        eq_(r['url']['appconfig']['kwargs']['headers'], {
+            'Content-Type': 'application/json'
+        })

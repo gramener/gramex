@@ -118,6 +118,14 @@ url:
     kwargs:
       function: utils.params_as_json(0, 1, a="a", b="b")
 
+  appconfig:
+    pattern: /appconfig
+    handler: FunctionHandler
+    kwargs:
+      function: gramex.appconfig
+      headers:
+        Content-Type: application/json
+
   # TestFunctionHandler
   func/args:
     pattern: /func/args
