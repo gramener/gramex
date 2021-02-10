@@ -12,7 +12,7 @@ from tornado.web import HTTPError
 import pandas as pd
 
 FOLDER = os.path.abspath(os.path.dirname(__file__))
-TARGET = os.path.join(var.GRAMEXDATA, 'forms', 'thumbnail')
+TARGET = os.path.join(var.GRAMEXDATA, 'uifactory', 'thumbnail')
 capture = Capture(engine='chrome')
 
 if not os.path.exists(TARGET):
@@ -46,7 +46,7 @@ def after_publish(handler, data):
     elif handler.request.method == 'DELETE':
         _id = handler.get_argument('id')
         gramex.data.delete(url=var.FORMS_URL, table=var.FORMS_TABLE, args=handler.args, id=['id'])
-        os.remove(os.path.join(var.GRAMEXDATA, 'forms', f'form_{_id}.db'))
+        os.remove(os.path.join(var.GRAMEXDATA, 'uifactory', f'form_{_id}.db'))
 
 
 @handler
@@ -81,8 +81,8 @@ def screenshots(kwargs, host):
             # TODO: Use delay='renderComplete'
             content = capture.png(url, selector=".container", width=width, height=height,
                                   delay=1000)
-            # Save under GRAMEXDATA/forms/thumbnail/<id>.png, cropped to width and height
-            target = os.path.join(var.GRAMEXDATA, 'forms', 'thumbnail', f'{id}.png')
+            # Save under GRAMEXDATA/uifactory/thumbnail/<id>.png, cropped to width and height
+            target = os.path.join(var.GRAMEXDATA, 'uifactory', 'thumbnail', f'{id}.png')
             Image.open(BytesIO(content)).crop((0, 0, width, height)).save(target)
             # Update the database with the thumbnail filename
             gramex.data.update(

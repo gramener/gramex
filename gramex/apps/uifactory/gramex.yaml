@@ -2,25 +2,25 @@
 # on 2020-10-27 by bhanu.k <bhanu.kamapantula@gramener.com>
 
 variables:
-  FORMS_URL: 'sqlite:///$GRAMEXDATA/forms/forms.db'
-  FORMS_TABLE: forms
+  FORMS_URL: 'sqlite:///$GRAMEXDATA/uifactory/uifactory.db'
+  FORMS_TABLE: uifactory
   FORMS_ID: id
-  FORMS_PATH: $GRAMEXDATA/forms
+  FORMS_PATH: $GRAMEXDATA/uifactory
 
 # Gramex init configurations for app: form_builder
 # ----------------------------------------------------------------------------
 import:
-  apps/forms/ui:
+  apps/uifactory/ui:
     path: $GRAMEXAPPS/ui/gramex.yaml
     YAMLURL: $YAMLURL/ui/
-  apps/forms/admin:
+  apps/uifactory/admin:
     path: $GRAMEXAPPS/admin2/gramex.yaml
     YAMLURL: $YAMLURL/admin/
 
 # Configurations for app: form_builder
 # ----------------------------------------------------------------------------
 url:
-  forms/home-$*:
+  uifactory/home-$*:
     pattern: /$YAMLURL/
     handler: FileHandler
     kwargs:
@@ -32,7 +32,7 @@ url:
         Cache-Control: private, max-age=1
     cache: {expiry: {duration: 1}}
 
-  forms/create-$*:
+  uifactory/create-$*:
     pattern: /$YAMLURL/create
     handler: FileHandler
     kwargs:
@@ -44,7 +44,7 @@ url:
         Cache-Control: private, max-age=1
     cache: {expiry: {duration: 1}}
 
-  forms/static-$*:
+  uifactory/static-$*:
     pattern: /$YAMLURL/(.*)
     handler: FileHandler
     priority: -100
@@ -59,7 +59,7 @@ url:
           'node_modules/**':
             Cache-Control: public, max-age=315360000
 
-  forms/publish-$*:
+  uifactory/publish-$*:
     pattern: /$YAMLURL/publish
     handler: FormHandler
     kwargs:
@@ -77,7 +77,7 @@ url:
           type: INTEGER
           primary_key: true
           autoincrement: true
-  forms/thumbnail-$*:
+  uifactory/thumbnail-$*:
     pattern: /$YAMLURL/thumbnail/(.*)
     handler: FileHandler
     kwargs:
@@ -85,26 +85,26 @@ url:
       index: true
       # filehandler disables access to . directories, allow explicitly
       allow: "*/.config/*"
-  forms/form-view-$*:
+  uifactory/form-view-$*:
     pattern: /$YAMLURL/(form|view)/(.*)
     handler: FileHandler
     kwargs:
       path: $YAMLPATH/viewform.html
       template: true
-  forms/embed-$*:
+  uifactory/embed-$*:
     pattern: /$YAMLURL/embed/(\d+)\.(json|html|js)
     handler: FunctionHandler
     kwargs:
       function: form_builder.endpoint(handler)
       headers:
         Access-Control-Allow-Origin: '*'        # Allow CORS from any domain
-  forms/analytics-$*:
+  uifactory/analytics-$*:
     pattern: /$YAMLURL/analytics/(.*)
     handler: FormHandler
     kwargs:
       each_form:
-        url: 'sqlite:///$GRAMEXDATA/forms/form_{db}.db'    # Pick any database
-        table: analytics                                   # Pick any table name to create
+        url: $FORMS_URL
+        table: analytics
         id: id                      # The "id" column is primary key
         columns:
           response: TEXT            # Use any SQL type allowed by DB
@@ -115,8 +115,8 @@ url:
           form_id: INTEGER
         modify: form_builder.modify_columns(handler, data)
       analytics:
-        url: 'sqlite:///$GRAMEXDATA/forms/forms.db'    # Pick any database
-        table: analytics                                   # Pick any table name to create
+        url: 'sqlite:///$GRAMEXDATA/uifactory/ui.db'    # Pick any database
+        table: analytics                                # Pick any table name to create
         id: id                      # The "id" column is primary key
         columns:
           response: TEXT            # Use any SQL type allowed by DB
@@ -125,7 +125,7 @@ url:
             primary_key: true       # as a primary key
             autoincrement: true     # that auto-increments
 
-  forms/snippets/all:
+  uifactory/snippets/all:
     pattern: /$YAMLURL/snippets/
     handler: FileHandler
     kwargs:
