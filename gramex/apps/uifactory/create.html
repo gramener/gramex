@@ -9,7 +9,6 @@
   <meta http-equiv="x-ua-compatible" content="ie=edge">
   <title>{{ title }}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="{{ base }}/node_modules/dragula/dist/dragula.min.css">
   <link rel="stylesheet" href="{{ base }}/node_modules/jqueryui/jquery-ui.css">
   <link rel="stylesheet" href="{{ base }}/style.scss">
 </head>
@@ -36,25 +35,17 @@
   {% include template-navbar.html %}
   <div class="container py-4">
     <h1 class="text-center text-muted">{{ 'Updating an existing form' if active_form_id else 'Creating a new form' }}</h1>
-    <div class="form-details step-1 my-3 py-3">
-      <h3>Step 1 - Form details</h3>
-      <div class="divider"></div>
+    <div class="form-details step-1 my-3 py-3 border border-top border-left-0 border-right-0 border-bottom-0 pt-2 border-primary">
       <form class="needs-validation" novalidate>
         <div class="row">
-          <div class="col-md-6 mb-3">
-            <label for="form-name">Form name</label>
-            <input type="text" class="form-control" name="form-name" id="form-name" aria-describedby="form-name-helpId" value="{{_md['name'] if active_form_id else '' }}" pattern=".{5,}" minlength="5" required="required">
-            <small class="text-muted">At least five characters are required</small>
-          </div>
-          <div class="col-md-6 mb-3">
-            <label for="form-description">Description</label>
-            <textarea class="form-control" name="form-description" id="form-description" rows="2" cols="5" minlength="5" required="required">{{ _md['description'] if active_form_id else ''}}</textarea>
-            <small class="text-muted">At least five characters are required</small>
-          </div>
+          <h2 class="col-12 my-2 cursor-pointer underline" id="form-name" contenteditable="true">{{_md['name'] if active_form_id else 'Untitled form' }}</h2>
+          <p class="col-12 my-2 cursor-pointer underline" id="form-description" contenteditable="true">
+            {{_md['description'] if active_form_id else 'Form description' }}
+          </p>
         </div>
       </form>
     </div>
-    <h3>Step 2 - Configure form</h3>
+    <h3>Configure fields</h3>
     <div class="divider"></div>
 
     <div class="card-deck step-2">
@@ -83,7 +74,7 @@
         <div class="card-header bg-white d-flex justify-content-between">
           <h5 class="card-title my-0 w-100">
             <span>Edit properties</span>
-            <a class="btn btn-danger float-right delete-field-trigger {{ '' if active_form_id else 'd-none' }}" data-toggle="modal" data-target="#deleteFieldModal" title="Delete field">
+            <a class="btn btn-danger float-right delete-field-trigger d-none" data-toggle="modal" data-target="#deleteFieldModal" title="Delete field">
               <i class="fa fa-trash-alt"></i>
             </a>
           </h5>

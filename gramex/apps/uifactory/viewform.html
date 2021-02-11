@@ -14,7 +14,6 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <title>View a form - Form Builder</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="{{ base }}/node_modules/dragula/dist/dragula.min.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/styles/agate.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ base }}/style.scss?body-bg={{ urllib.parse.quote(metadata['bg'] if 'bg' in metadata else '#ffffff') }}">
   </head>
@@ -72,7 +71,7 @@
     <script src="{{ base }}/node_modules/clipboard/dist/clipboard.min.js"></script>
     <script src="{{ base }}/js/code-highlighting.js"></script>
     <script>
-      /* exported hljs, dragula, form_id, this_view */
+      /* exported hljs, form_id, this_view */
       const form_id = '{% raw form_id %}'
       const this_view = '{% raw handler.path_args[0] %}'
       let metadata = JSON.parse('{% raw json.dumps(metadata).replace("'", r"\'") %}')

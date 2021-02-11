@@ -1,9 +1,11 @@
-<div class="form-group py-2">
-  <label data-type="number" for="<%= name %>"><%= label %></label>
+<div class="form-group py-2 <%= typeof view !== undefined && view === 'editing' ? 'row' : '' %>">
+  <label data-type="number" for="<%= name %>" class="<%= typeof view !== undefined && view === 'editing' ? 'col-sm-3' : '' %>"><%= label %></label>
+  <% if(typeof view !== undefined && view === 'editing') { %><div class="col-sm-9"><% } %>
   <input type="number"
     class="form-control" name="<%= name %>" id="<%= name %>" aria-describedby="<%= name %>-help" placeholder="<%= placeholder %>"
     min="<%= min %>" max="<%= max %>" step="<%= step %>" value="<%= value %>">
   <% if (typeof help != 'undefined') { %>
     <small id="number-help" class="form-text text-muted"><%= help %></small>
   <% } %>
+  <% if(typeof view !== undefined && view === 'editing') { %></div><% } %>
 </div>

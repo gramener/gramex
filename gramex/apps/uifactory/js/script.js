@@ -5,6 +5,14 @@ let editor
 const options = {}
 const template = {}
 
+$(window).on('click', function(e) {
+  if(!$(e.target).closest('.edit-properties').length && !$(e.target).closest('.user-form').length) {
+    $('.edit-properties').empty()
+    $('.delete-field-trigger').addClass('d-none')
+    $('.user-form > *').removeClass('highlight')
+  }
+})
+
 fetch('snippets/snippets.json')
   .then(response => response.json())
   .then(json => {
@@ -12,6 +20,7 @@ fetch('snippets/snippets.json')
       options[dir] = val.options
       const tmpl = template[dir] = _.template(val.template)
       let vals = _.mapValues(options[dir], v => v.value)
+      vals['view'] = 'default'
       $(tmpl(vals))
         .attr('data-type', dir)
         .attr('data-vals', JSON.stringify(vals))
@@ -31,6 +40,7 @@ fetch('snippets/snippets.json')
         vals = _.mapValues(options[option.field], v => v.value)
         _.extend(vals, option)
         vals.value = _user_form_config.length > 0 ? _user_form_config[key] : field_vals[key]
+        vals['view'] = 'editing'
         $(template[option.field](vals))
           .appendTo('.edit-properties')
           .addClass('form-element')
@@ -48,9 +58,9 @@ $('body').on('click', '#publish-form', function() {
   let $icon = $('<i class="fa fa-spinner fa-2x fa-fw align-middle"></i>').appendTo(this)
 
   let _md = {
-    name: $('#form-name').val() || 'Untitled',
+    name: $('#form-name').text() || 'Untitled',
     categories: [],
-    description: $('#form-description').val()
+    description: $('#form-description').text()
   }
   let form_vals = {}
   $('.user-form .form-group, .user-form .form-check').each(function(ind, item) {
@@ -115,6 +125,7 @@ $('body').on('click', '#publish-form', function() {
 }).on('click', '.form-fields > *', function() {
   var _type = $(this).data('type')
   let vals = _.mapValues(options[_type], v => v.value)
+  vals['view'] = 'updating'
   $(`.form-fields > [data-type=${_type}]`)
     .data('type', _type)
     .data('vals', vals)
@@ -132,6 +143,7 @@ $('.edit-properties').on('input change', function () {
   var $el = $('.edit-properties').data('editing-element')
   var field = $($el).attr('data-type')
   let _v = ""
+  vals['view'] = 'updating'
   // get all and stitch together
   // since radio and checkbox fields each support multiple options
   if(field === 'radio' || field === 'checkbox') {
