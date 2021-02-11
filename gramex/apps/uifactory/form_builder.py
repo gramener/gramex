@@ -46,7 +46,8 @@ def after_publish(handler, data):
     elif handler.request.method == 'DELETE':
         _id = handler.get_argument('id')
         gramex.data.delete(url=var.FORMS_URL, table=var.FORMS_TABLE, args=handler.args, id=['id'])
-        os.remove(os.path.join(var.GRAMEXDATA, 'uifactory', f'form_{_id}.db'))
+        if(os.path.exists(os.path.join(var.GRAMEXDATA, 'uifactory', f'form_{_id}.db'))):
+            os.remove(os.path.join(var.GRAMEXDATA, 'uifactory', f'form_{_id}.db'))
 
 
 @handler

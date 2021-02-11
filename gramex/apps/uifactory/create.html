@@ -54,14 +54,8 @@
           <h5 class="card-title my-0">Add fields</h5>
         </div><!-- .card-header -->
         <div class="card-body">
-          <small class="text-muted drag-fields-note d-none">
-            Drag fields to reorder.
-          </small>
           <div id="user-form">
             <form class="user-form sortable mt-3 w-100">
-              {% if (active_form_id) %}
-                {% raw form_details['html'].iloc[0] %}
-              {% end %}
             </form>
             <div class="divider"></div>
             <button class="btn btn-primary mb-4" data-toggle="modal" data-target="#addFieldModal" title="Add a field">
@@ -72,12 +66,7 @@
       </div><!-- .card -->
       <div class="card border-0">
         <div class="card-header bg-white d-flex justify-content-between">
-          <h5 class="card-title my-0 w-100">
-            <span>Edit properties</span>
-            <a class="btn btn-danger float-right delete-field-trigger d-none" data-toggle="modal" data-target="#deleteFieldModal" title="Delete field">
-              <i class="fa fa-trash-alt"></i>
-            </a>
-          </h5>
+          <h5 class="card-title my-0 w-100">Edit properties</h5>
         </div><!-- .card-header -->
         <div class="card-body edit-properties-container">
           <div class="edit-properties"></div>
@@ -87,7 +76,7 @@
   </div><!-- .container-fluid -->
   {% include 'toast.html' %}
   {% include 'modals/add-field.html' %}
-  {% include 'modals/delete-form-field.html' %}
+  <template class="field-actions" src="field-actions.html"></template>
 
   <div class="floating-button m-2 p-2 position-fixed">
     <button class="btn btn-primary ml-2 {{ '' if active_form_id else 'd-none' }}" id="publish-form">{{ 'Update' if active_form_id else 'Publish' }}</button>
@@ -109,7 +98,14 @@
     let user = '{% raw handler.current_user.get("id") if handler.current_user else '' %}'
     let active_form_id = '{{ active_form_id }}'
     let _user_form_config = active_form_id ? JSON.parse('{% raw json.dumps(_config).replace("'", r"\'") %}') : ''
-    $('.sortable').sortable()
+    $('.sortable').sortable({
+      start: function() {
+        $('.actions').addClass('d-none')
+      }, stop: function(e, ui) {
+        $('.actions').insertBefore(ui.item[0])
+        $('.actions').removeClass('d-none')
+      }
+    })
   </script>
   <script src="{{ base }}/js/script.js"></script>
 </body>

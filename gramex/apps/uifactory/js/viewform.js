@@ -10,21 +10,33 @@ function escapeHtml(unsafe) {
     .replace(/'/g, "&#039;");
 }
 
-$(function() {
-  $('.btn.viewsource').addClass('d-none')
-  $.ajax(`../embed/${form_id}.html`, {
-    success: function(data) {
-      $('#view-form form').html(
-        this_view === 'form' ? data : data + '<button class="btn btn-primary" type="submit">Submit</button>'
-        )
-        $('pre code.language-html').html(escapeHtml($('#view-form form').html()))
-        document.querySelectorAll('pre code').forEach((block) => {
-          hljs.highlightBlock(block)
+let template = {}
+// fetch snippets.json to create the template variable
+fetch('../snippets/snippets.json')
+  .then(response => response.json())
+  .then(function(json)  {
+    _.each(json, (val, dir) => {
+      template[dir] = _.template(val.template)
+    })
+  }).then(function() {
+    // use the snippets config to render the form using user-created form config
+    $('.btn.viewsource').addClass('d-none')
+    $.ajax(`../embed/${form_id}.json`, {
+      success: function(_form_config) {
+        _.each(_form_config, function(opts, dir) {
+          _.each(opts, function(opt) {
+            opt = JSON.parse(opt)
+            opt['view'] = '...'
+            $(template[dir](opt))
+              .attr('data-type', dir)
+              .attr('data-vals', JSON.stringify(opt))
+              .appendTo('#view-form form')
+          })
         })
       }
+    })
+    $('svg').urlfilter({target: '#'})
   })
-  $('svg').urlfilter({target: '#'})
-})
 
 $('body').on('click', 'button[data-form]', function () {
   current_form_id = $(this).data('form')

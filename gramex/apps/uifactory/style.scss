@@ -70,11 +70,6 @@
   border: 3px solid yellow;
   border-radius: 1em;
 }
-.user-form .form-check[data-type]:before,
-.user-form .form-group[data-type]:before {
-  content: url("assets/img/arrow-down-up.svg");
-  margin: 5% 2%;
-}
 .edit-properties {
   position: sticky;
   top: 5%;
