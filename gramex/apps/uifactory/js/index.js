@@ -1,3 +1,5 @@
+/* globals initiate_copy */
+
 var current_form_id, form_name
 
 $(function() {
@@ -60,4 +62,7 @@ $('body').on('click', 'button[data-form]', function () {
       }
     })
   })
+}).on('click', '[data-formaction]', function() {
+  if($(this).data('formaction') === 'copy')
+    initiate_copy('.', $(this).data('form'))
 })

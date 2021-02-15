@@ -54,7 +54,7 @@ fetch('snippets/snippets.json')
     // render existing form using JSON
     if(active_form_id) {
       _.each(_user_form_config, function(opts, dir) {
-        _.each(opts, function(opt, ind) {
+        _.each(opts, function(opt) {
           opt['view'] = '...'
           $(template[dir](opt))
             .attr('data-type', dir)
@@ -148,7 +148,7 @@ $('body').on('click', '#publish-form', function() {
 }).on('click', '[data-action]', function() {
   const form_el = $(this).parent().parent().next()
   if($(this).data('action') === 'duplicate') {
-    form_el.clone().appendTo('.user-form')
+    form_el.clone().insertAfter(form_el)
   } else if($(this).data('action') === 'delete') {
     form_el.remove()
   }

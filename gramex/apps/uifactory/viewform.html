@@ -48,7 +48,6 @@
           <a class="btn btn-primary" href="{{ base }}/view/{{ form_id }}">View form</a>
         </p>
         {% include 'modals/themes.html' %}
-        {% include 'modals/settings.html' %}
         {% include 'modals/send.html' %}
         {% include 'modals/remove.html' %}
 
@@ -104,6 +103,7 @@
           .urlchange()
       }
     </script>
+    <script src="{{ base }}/js/fork-form.js"></script>
     <script src="{{ base }}/js/viewform.js"></script>
   </body>
 </html>

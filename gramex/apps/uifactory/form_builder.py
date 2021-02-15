@@ -34,13 +34,19 @@ def modify_columns(handler, data):
 
 
 def after_publish(handler, data):
+    source_url = handler.xrequest_full_url.split('/publish')[0]
     if handler.request.method == 'POST':
         # Capture thumbnails for all missing entries.
         # This makes requests to this SAME server, while this function is running.
-        source_url = handler.xrequest_full_url.split('/publish')[0]
         # To avoid deadlock, run it in a thread.
-        info.threadpool.submit(screenshots, handler.conf.kwargs, source_url)
+        info.threadpool.submit(
+            screenshots, handler.conf.kwargs, source_url,
+            args={'thumbnail!': [], '_c': [var.FORMS_ID]})
         return data
+    elif handler.request.method == 'PUT':
+        info.threadpool.submit(
+            screenshots, handler.conf.kwargs, source_url,
+            args={'_c': [var.FORMS_ID], 'id': handler.get_argument('id')})
     elif handler.request.method == 'GET':
         return data
     elif handler.request.method == 'DELETE':
@@ -67,14 +73,13 @@ def endpoint(id: int, format: str, handler=None):
         return f'document.write(`{row.html.iloc[0]}`)'
 
 
-def screenshots(kwargs, host):
+def screenshots(kwargs, host, args):
     '''
     Loop through all entries that don't have a thumbnail and create it.
     '''
     try:
         # Get ID for all entries without a thumbnail
-        pending = gramex.data.filter(url=var.FORMS_URL, table=var.FORMS_TABLE,
-                                     args={'thumbnail!': [], '_c': [var.FORMS_ID]})
+        pending = gramex.data.filter(url=var.FORMS_URL, table=var.FORMS_TABLE, args=args)
         width, height = 300, 300    # TODO: Change dimensions later
         for index, row in pending.iterrows():
             id = row[var.FORMS_ID]

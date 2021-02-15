@@ -1,14 +1,4 @@
-/* globals form_id, hljs, current_form_id, this_view */
-
-// escape html tags to show source code
-function escapeHtml(unsafe) {
-  return unsafe
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-}
+/* globals form_id, current_form_id, initiate_copy */
 
 let template = {}
 // fetch snippets.json to create the template variable
@@ -78,4 +68,7 @@ $('body').on('click', 'button[data-form]', function () {
     },
     complete: function() { $icon.fadeOut() }
   })
+}).on('click', '[data-formaction]', function() {
+  if($(this).data('formaction') === 'copy')
+    initiate_copy('..', form_id)
 })
