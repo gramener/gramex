@@ -29,6 +29,11 @@ def tearDown():
             os.unlink(filename)
 
 
+def in_(a, b, msg=None):
+    '''Is dict a a subset of dict b?'''
+    ok_(a.items() <= b.items(), msg)
+
+
 class TestGramex(unittest.TestCase):
     '''Base class to test Gramex running as a subprocess'''
 

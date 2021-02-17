@@ -16,7 +16,7 @@ import gramex.config
 from gramex.cache import SQLiteStore
 from gramex.handlers.authhandler import _user_info_path
 from gramex.http import OK, UNAUTHORIZED, FORBIDDEN, BAD_REQUEST
-from . import TestGramex, server, tempfiles, dbutils
+from . import TestGramex, server, tempfiles, dbutils, in_
 
 folder = os.path.dirname(os.path.abspath(__file__))
 
@@ -235,12 +235,12 @@ class TestSimpleAuth(AuthBase, LoginMixin, LoginFailureMixin):
 
     def test_attributes(self):
         self.login('gamma', 'gamma')
-        eq_({'user': 'gamma', 'id': 'gamma', 'role': 'user', 'password': 'gamma'},
+        in_({'user': 'gamma', 'id': 'gamma', 'role': 'user', 'password': 'gamma'},
             self.get_session()['user'])
 
     def test_logout_action(self):
         self.login_ok('alpha', 'alpha', check_next='/dir/index/')
-        eq_({'user': 'alpha', 'id': 'alpha'}, self.get_session()['user'])
+        in_({'user': 'alpha', 'id': 'alpha'}, self.get_session()['user'])
         self.logout_ok(check_next='/dir/index/')
         self.assertTrue('user' not in self.get_session())
 
@@ -249,18 +249,18 @@ class TestSimpleAuth(AuthBase, LoginMixin, LoginFailureMixin):
         # log into first session
         self.session = session1
         self.login_ok('alpha', 'alpha', check_next='/dir/index/')
-        eq_({'user': 'alpha', 'id': 'alpha'}, self.get_session()['user'])
+        in_({'user': 'alpha', 'id': 'alpha'}, self.get_session()['user'])
         # log into second session
         self.session = session2
         self.login_ok('alpha', 'alpha', check_next='/dir/index/')
-        eq_({'user': 'alpha', 'id': 'alpha'}, self.get_session()['user'])
+        in_({'user': 'alpha', 'id': 'alpha'}, self.get_session()['user'])
         # first session should be logged out now
         self.session = session1
         self.assertTrue('user' not in self.get_session())
 
     def test_override(self):
         self.login_ok('alpha', 'alpha', check_next='/dir/index/')
-        eq_({'user': 'alpha', 'id': 'alpha'}, self.get_session()['user'])
+        in_({'user': 'alpha', 'id': 'alpha'}, self.get_session()['user'])
         result = {'user': 'override', 'role': 'admin'}
         secret = gramex.service.app.settings['cookie_secret']
         cipher = create_signed_value(secret, 'user', json.dumps(result))
@@ -273,18 +273,18 @@ class TestSimpleAuth(AuthBase, LoginMixin, LoginFailureMixin):
         otp1 = self.session.get(server.base_url + '/auth/otp?expire=10').json()
         otp2 = self.session.get(server.base_url + '/auth/otp?expire=10').json()
         otp_dead = self.session.get(server.base_url + '/auth/otp?expire=0').json()
-        eq_({'user': 'alpha', 'id': 'alpha'}, self.get_session()['user'])
+        in_({'user': 'alpha', 'id': 'alpha'}, self.get_session()['user'])
 
         self.session = requests.Session()
         self.assertTrue('user' not in self.get_session())
         session_data = self.get_session(headers={'X-Gramex-OTP': otp1})
-        eq_({'user': 'alpha', 'id': 'alpha'}, session_data['user'])
+        in_({'user': 'alpha', 'id': 'alpha'}, session_data['user'])
 
         self.session = requests.Session()
         self.assertTrue('user' not in self.get_session())
         session_data = self.session.get(server.base_url + '/auth/session',
                                         params={'gramex-otp': otp2}).json()
-        eq_({'user': 'alpha', 'id': 'alpha'}, session_data['user'])
+        in_({'user': 'alpha', 'id': 'alpha'}, session_data['user'])
 
         self.session = requests.Session()
         for otp in [otp1, otp2, otp_dead, 'nan']:
@@ -450,21 +450,21 @@ class TestUserKey(AuthBase):
         # /auth/userkey stores user info in session.userkey
         self.login_ok('alpha', 'alpha', check_next='/')
         session = self.session.get(server.base_url + '/auth/session').json()
-        eq_(session.get('userkey'), {'user': 'alpha', 'id': 'alpha'})
+        in_({'user': 'alpha', 'id': 'alpha'}, session.get('userkey'))
         eq_(session.get('user'), None)
 
         # This lets us have multiple logins
         self.url = server.base_url + '/auth/simple'
         self.login_ok('beta', 'beta', check_next='/dir/index/')
         session = self.session.get(server.base_url + '/auth/session').json()
-        eq_(session.get('userkey'), {'user': 'alpha', 'id': 'alpha'})
-        eq_(session.get('user'), {'user': 'beta', 'id': 'beta'})
+        in_({'user': 'alpha', 'id': 'alpha'}, session.get('userkey'))
+        in_({'user': 'beta', 'id': 'beta'}, session.get('user'))
 
         # ... and log out from just a single login
         self.session.get(server.base_url + '/auth/userkey_logout')
         session = self.session.get(server.base_url + '/auth/session').json()
         eq_(session.get('userkey'), None)
-        eq_(session.get('user'), {'user': 'beta', 'id': 'beta'})
+        in_({'user': 'beta', 'id': 'beta'}, session.get('user'))
 
 
 class TestLookup(AuthBase):
