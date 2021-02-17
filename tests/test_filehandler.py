@@ -202,6 +202,10 @@ class TestFileHandler(TestGramex):
         self.check('/dir/template-index/index-template.txt?arg=►', text='– ►')
         self.check('/dir/template-index/non-index-template.txt', path='dir/non-index-template.txt')
 
+        # Treat *.template.html and *.tmpl.html files as templates (via default FileHandler)
+        self.check('/filetest.template.html', text='555')
+        self.check('/filetest.tmpl.html', text='555')
+
     def test_subtemplate(self):
         tempfiles.module = os.path.join(folder, 'dir', 'tempmodule.txt')
         write(tempfiles.module, '{{ x }} {{ y }}')
