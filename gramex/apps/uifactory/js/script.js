@@ -22,9 +22,9 @@ fetch('snippets/snippets.json')
       const tmpl = template[dir] = _.template(val.template)
       let vals = _.mapValues(options[dir], v => v.value)
       vals['view'] = 'default'
-      // ftype is introduced to know html field
+      // component attribute is introduced to know html field
       // type attribute (which is already captured) conflicts with knowing field type since button field has a type attribute
-      vals.ftype = dir
+      vals.component = dir
       $("<div class='field-container'>" + tmpl(vals) + "</div>")
         .attr('data-type', dir)
         .attr('data-vals', JSON.stringify(vals))
@@ -57,7 +57,7 @@ fetch('snippets/snippets.json')
     // render existing form using JSON
     if(active_form_id) {
       _.each(_user_form_config, function(opts) {
-        let dir = opts.ftype
+        let dir = opts.component
         opts['view'] = '...'
         $("<div class='field-container'>" + template[dir](opts) + "</div>")
           .attr('data-type', dir)
@@ -82,8 +82,8 @@ $('body').on('click', '#publish-form', function() {
   let form_vals = []
   $('.user-form > :not(.actions)').each(function(ind, item) {
     let _vals = JSON.parse($(item).attr('data-vals'))
-    _vals['ftype'] = $(item).attr('data-type')
-    if(_vals.ftype === 'html')
+    _vals['component'] = $(item).attr('data-type')
+    if(_vals.component === 'html')
       _vals.value = _vals.value.replace(/\n/g, "\\n")
     if(typeof item !== undefined) {
       form_vals.push(_vals)

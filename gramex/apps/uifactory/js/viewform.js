@@ -14,7 +14,7 @@ fetch('../snippets/snippets.json')
     $.ajax(`../embed/${form_id}.json`, {
       success: function(_form_config) {
         _.each(_form_config, function(opts) {
-          let dir = opts.ftype
+          let dir = opts.component
           opts['view'] = '...'
           if(dir === 'html')
             opts.value = opts.value.replace(/\\n/g, "<br>")
