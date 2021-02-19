@@ -13,15 +13,15 @@ fetch('../snippets/snippets.json')
     $('.btn.viewsource').addClass('d-none')
     $.ajax(`../embed/${form_id}.json`, {
       success: function(_form_config) {
-        _.each(_form_config, function(opts, dir) {
-          _.each(opts, function(opt) {
-            opt = JSON.parse(opt)
-            opt['view'] = '...'
-            $(template[dir](opt))
-              .attr('data-type', dir)
-              .attr('data-vals', JSON.stringify(opt))
-              .appendTo('#view-form form')
-          })
+        _.each(_form_config, function(opts) {
+          let dir = opts.ftype
+          opts['view'] = '...'
+          if(dir === 'html')
+            opts.value = opts.value.replace(/\\n/g, "<br>")
+          $(template[dir](opts))
+            .attr('data-type', dir)
+            .attr('data-vals', JSON.stringify(opts))
+            .appendTo('#view-form form')
         })
       }
     })

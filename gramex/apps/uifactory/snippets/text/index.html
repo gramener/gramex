@@ -1,4 +1,4 @@
-<div class="form-group py-2 <%= typeof view !== undefined && view === 'editing' ? 'row' : '' %>">
+<div class="py-2 <%= typeof view !== undefined && view === 'editing' ? 'row' : '' %>">
   <label data-type="text" for="<%= name %>" class="<%= typeof view !== undefined && view === 'editing' ? 'col-sm-3' : '' %>"><%= label %></label>
   <% if(typeof view !== undefined && view === 'editing') { %><div class="col-sm-9"><% } %>
   <input type="text" class="form-control" name="<%= name %>" id="<%= name %>" aria-describedby="text-<%= name %>" placeholder="<%= placeholder %>" value="<%= value %>">
@@ -7,3 +7,4 @@
   <% } %>
   <% if(typeof view !== undefined && view === 'editing') { %></div><% } %>
 </div>
+<!-- should support multiple root elements -->

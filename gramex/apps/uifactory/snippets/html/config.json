@@ -1,0 +1,31 @@
+{
+  "options": {
+    "label": {
+      "name": "label",
+      "field": "text",
+      "label": "Text label",
+      "help": "Label for the text field",
+      "value": "Custom HTML"
+    },
+    "value": {
+      "name": "value",
+      "field": "textarea",
+      "label": "Write or paste HTML",
+      "help": ""
+    },
+    "name": {
+      "name": "name",
+      "field": "text",
+      "label": "Name",
+      "value": "custom-html",
+      "help": "Useful for mapping submission values. Needs to be unique."
+    },
+    "rows": {
+      "name": "rows",
+      "field": "text",
+      "label": "Number of rows",
+      "value": "3",
+      "help": "Height of the field"
+    }
+  }
+}

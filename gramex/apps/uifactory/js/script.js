@@ -22,17 +22,20 @@ fetch('snippets/snippets.json')
       const tmpl = template[dir] = _.template(val.template)
       let vals = _.mapValues(options[dir], v => v.value)
       vals['view'] = 'default'
-      $(tmpl(vals))
+      // ftype is introduced to know html field
+      // type attribute (which is already captured) conflicts with knowing field type since button field has a type attribute
+      vals.ftype = dir
+      $("<div class='field-container'>" + tmpl(vals) + "</div>")
         .attr('data-type', dir)
         .attr('data-vals', JSON.stringify(vals))
         .appendTo('.form-fields')
     })
     $('.edit-properties-container').css('height', $(document).innerHeight())
     // TODO: Can we ensure they all have a common parent class? I'll assume it's .form-group
-    $('body').on('click', '.user-form .form-group, .user-form .form-check', function () {
+    $('body').on('click', '.user-form > :not(.actions)', function () {
       $('.edit-properties').empty()
         .data('editing-element', $(this))
-      $('.form-group, .form-check, button').removeClass('highlight')
+      $('.user-form > *').removeClass('highlight')
       $(this).addClass('highlight')
       $('.actions').insertBefore(this)
       $('.actions').removeClass('d-none')
@@ -41,7 +44,7 @@ fetch('snippets/snippets.json')
         let vals
         vals = _.mapValues(options[option.field], v => v.value)
         _.extend(vals, option)
-        vals.value = _user_form_config.length > 0 ? _user_form_config[key] : field_vals[key]
+        vals.value = field_vals[key]
         vals['view'] = 'editing'
         $(template[option.field](vals))
           .appendTo('.edit-properties')
@@ -53,21 +56,20 @@ fetch('snippets/snippets.json')
   }).then(function() {
     // render existing form using JSON
     if(active_form_id) {
-      _.each(_user_form_config, function(opts, dir) {
-        _.each(opts, function(opt) {
-          opt['view'] = '...'
-          $(template[dir](opt))
-            .attr('data-type', dir)
-            .attr('data-vals', JSON.stringify(opt))
-            .appendTo('.user-form')
-        })
+      _.each(_user_form_config, function(opts) {
+        let dir = opts.ftype
+        opts['view'] = '...'
+        $("<div class='field-container'>" + template[dir](opts) + "</div>")
+          .attr('data-type', dir)
+          .attr('data-vals', JSON.stringify(opts))
+          .appendTo('.user-form')
       })
     }
   })
 
 $('body').on('click', '#publish-form', function() {
   let _vals = {}
-  $('.edit-properties .form-group input, .edit-properties .form-check input').each(function(ind, item) { _vals[item.id] = item.value })
+  $('.edit-properties > input, .edit-properties > input').each(function(ind, item) { _vals[item.id] = item.value })
   $('.user-form > *').removeClass('highlight')
   $('.edit-properties').empty()
   let $icon = $('<i class="fa fa-spinner fa-2x fa-fw align-middle"></i>').appendTo(this)
@@ -77,14 +79,14 @@ $('body').on('click', '#publish-form', function() {
     categories: [],
     description: $('#form-description').text().trim()
   }
-  let form_vals = {}
-  $('.user-form .form-group, .user-form .form-check').each(function(ind, item) {
+  let form_vals = []
+  $('.user-form > :not(.actions)').each(function(ind, item) {
+    let _vals = JSON.parse($(item).attr('data-vals'))
+    _vals['ftype'] = $(item).attr('data-type')
+    if(_vals.ftype === 'html')
+      _vals.value = _vals.value.replace(/\n/g, "\\n")
     if(typeof item !== undefined) {
-      if(form_vals[$(item).attr('data-type')] === undefined) {
-        form_vals[$(item).attr('data-type')] = [$(item).attr('data-vals')]
-      } else {
-        form_vals[$(item).attr('data-type')].push($(item).attr('data-vals'))
-      }
+      form_vals.push(_vals)
     }
   })
   let form_details = {
@@ -179,7 +181,7 @@ $('.edit-properties').on('input change', function () {
     // we need .form-group > input/select etc.
     _v = $(template[field](vals)).html().trim()
   }
-  $el.html(_v)
+  $el.html("<div class='field-container'>" + _v + "</div>")
     .attr('data-vals', JSON.stringify(vals))
   $('.field-actions').template({base: '.'})
   $('.actions').removeClass('d-none')
