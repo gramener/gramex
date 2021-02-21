@@ -48,6 +48,6 @@ class WebSocketHandler(BaseWebSocketHandler):
             origins = [origins]
         domain = urlparse(origin).netloc
         for allowed_origin in origins:
-            if domain.netloc.endswith(allowed_origin):
+            if domain.endswith(allowed_origin):
                 return True
         return False
