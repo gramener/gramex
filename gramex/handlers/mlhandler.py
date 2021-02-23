@@ -16,12 +16,21 @@ import pandas as pd
 import pydoc
 from sklearn.base import BaseEstimator
 from sklearn.compose import ColumnTransformer
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, roc_auc_score
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.preprocessing import OneHotEncoder, StandardScaler, LabelEncoder
 from slugify import slugify
 from tornado.gen import coroutine
 from tornado.web import HTTPError
+try:
+    from transformers import pipeline, TextClassificationPipeline
+    from transformers import AutoModelForSequenceClassification
+    from transformers import Trainer, TrainingArguments
+    import torch
+    TRANSFORMERS_INSTALLED = True
+except ImportError:
+    TRANSFORMERS_INSTALLED = False
+
 
 op = os.path
 DATA_CACHE = defaultdict(dict)
@@ -38,7 +47,7 @@ MLCLASS_MODULES = [
     'statsmodels.tsa.api',
     'tensorflow.keras.applications'
 ]
-TRAINING_DEFAULTS = {
+SKLEARN_DEFAULTS = {
     'include': [],
     'exclude': [],
     'dropna': True,
@@ -48,6 +57,14 @@ TRAINING_DEFAULTS = {
     'cats': [],
     'target_col': None,
 }
+TRANSFORMERS_DEFAULTS = dict(
+    num_train_epochs=1,
+    per_device_train_batch_size=16,
+    per_device_eval_batch_size=32,
+    weight_decay=0.01,
+    warmup_steps=100,
+)
+SENTIMENT_LENC = LabelEncoder().fit(['NEGATIVE', 'POSITIVE'])
 DEFAULT_TEMPLATE = op.join(op.dirname(__file__), '..', 'apps', 'mlhandler', 'template.html')
 _prediction_col = '_prediction'
 
@@ -100,7 +117,48 @@ def is_categorical(s, num_treshold=0.1):
     return True
 
 
-class MLHandler(FormHandler):
+def move_to_cpu(model):
+    if isinstance(model, TextClassificationPipeline):
+        model.model.to('cpu')
+    else:
+        model.to('cpu')
+
+
+class SentimentDataset(torch.utils.data.Dataset):
+    def __init__(self, encodings, labels):
+        self.encodings = encodings
+        self.labels = labels
+
+    def __getitem__(self, idx):
+        item = {key: torch.tensor(val[idx]) for key, val in self.encodings.items()}
+        item['labels'] = torch.tensor(self.labels[idx])
+        return item
+
+    def __len__(self):
+        return len(self.labels)
+
+
+class BaseMLHandler(FormHandler):
+
+    @classmethod
+    def setup(cls, data=None, model=None, config_dir='', **kwargs):
+        cls.slug = slugify(cls.name)
+        # Create the config store directory
+        if not op.isdir(config_dir):
+            config_dir = op.join(gramex.config.variables['GRAMEXDATA'], 'apps', 'mlhandler',
+                                 cls.slug)
+            _mkdir(config_dir)
+        cls.config_dir = config_dir
+        cls.config_store = cache.JSONStore(op.join(cls.config_dir, 'config.json'), flush=None)
+        cls.data_store = op.join(cls.config_dir, 'data.h5')
+
+        # Create the uploads directory
+        cls.uploads_dir = op.join(config_dir, 'uploads')
+        _mkdir(cls.uploads_dir)
+
+        cls.template = kwargs.pop('template', True)
+
+        super(BaseMLHandler, cls).setup(**kwargs)
 
     @classmethod
     def store_data(cls, df, append=False):
@@ -117,14 +175,14 @@ class MLHandler(FormHandler):
 
     @classmethod
     def get_opt(cls, key, default=None):
-        if key in TRAINING_DEFAULTS:
-            return cls.config_store.load('transform', {}).get(key, TRAINING_DEFAULTS[key])
+        if key in SKLEARN_DEFAULTS:
+            return cls.config_store.load('transform', {}).get(key, SKLEARN_DEFAULTS[key])
         if key in ('class', 'params'):
             return cls.config_store.load('model', {}).get(key, default)
 
     @classmethod
     def set_opt(cls, key, value):
-        if key in TRAINING_DEFAULTS:
+        if key in SKLEARN_DEFAULTS:
             transform = cls.config_store.load('transform', {})
             transform[key] = value
             cls.config_store.dump('transform', transform)
@@ -140,20 +198,58 @@ class MLHandler(FormHandler):
         cls.config_store.changed = True
         cls.config_store.flush()
 
+    def _transform(self, data, **kwargs):
+        raise NotImplementedError
+
+    def _parse_data(self, _cache=True):
+        # First look in self.request.files
+        if len(self.request.files) > 0:
+            dfs = []
+            for _, files in self.request.files.items():
+                for f in files:
+                    outpath = op.join(self.uploads_dir, f['filename'])
+                    with open(outpath, 'wb') as fout:
+                        fout.write(f['body'])
+                    if outpath.endswith('.json'):
+                        xdf = cache.open(outpath, pd.read_json)
+                    else:
+                        xdf = cache.open(outpath)
+                    dfs.append(xdf)
+                    os.remove(outpath)
+            data = pd.concat(dfs, axis=0)
+        # Otherwise look in request.body
+        else:
+            if self.request.headers.get('Content-Type', '') == 'application/json':
+                try:
+                    data = pd.read_json(self.request.body.decode('utf8'))
+                except ValueError:
+                    data = self.load_data()
+                    _cache = False
+            else:
+                data = pd.DataFrame.from_dict(parse_qs(self.request.body.decode('utf8')))
+        if _cache:
+            self.store_data(data)
+        if len(data) == 0:
+            data = self.load_data()
+        return data
+
+
+class MLHandler(BaseMLHandler):
+
     @classmethod
-    def setup(cls, data=None, model=None, config_dir='', **kwargs):
-        cls.slug = slugify(cls.name)
-        if not op.isdir(config_dir):
-            config_dir = op.join(gramex.config.variables['GRAMEXDATA'], 'apps', 'mlhandler',
-                                 cls.slug)
-            _mkdir(config_dir)
-        cls.config_dir = config_dir
-        cls.uploads_dir = op.join(config_dir, 'uploads')
-        _mkdir(cls.uploads_dir)
-        cls.config_store = cache.JSONStore(op.join(cls.config_dir, 'config.json'), flush=None)
-        cls.data_store = op.join(cls.config_dir, 'data.h5')
-        cls.template = kwargs.pop('template', True)
-        super(MLHandler, cls).setup(**kwargs)
+    def setup(cls, data=None, model=None, backend='sklearn', config_dir='', **kwargs):
+
+        # From filehanlder: do the following
+        # cls.post = cls.put = cls.delete = cls.patch = cls.options = cls.get
+        # for clnmame in CLASSES:
+        #     setattr(cls, method) = getattr(clname, method)
+        super(MLHandler, cls).setup(data, model, config_dir, **kwargs)
+        # if backend == 'sklearn':
+        #     SklearnHandler.fit(**kwargs)
+        # elif backend == 'transformers':
+        #     NLPHAndler.fit(**kwargs)
+
+        # Handle data if provided in the YAML config.
         if isinstance(data, str):
             data = cache.open(data)
         elif isinstance(data, dict):
@@ -173,7 +269,7 @@ class MLHandler(FormHandler):
         model_path = model.pop('path', default_model_path)
 
         # store the model kwargs from gramex.yaml into the store
-        for key in TRAINING_DEFAULTS:
+        for key in SKLEARN_DEFAULTS:
             kwarg = model.get(key, False)
             if not cls.get_opt(key, False) and kwarg:
                 cls.set_opt(key, kwarg)
@@ -340,38 +436,6 @@ class MLHandler(FormHandler):
             data = data.drop([score_col], axis=1)
             return self.model.score(data, target)
         data[self.get_opt('target_col', _prediction_col)] = self.model.predict(data)
-        return data
-
-    def _parse_data(self, _cache=True):
-        # First look in self.request.files
-        if len(self.request.files) > 0:
-            dfs = []
-            for _, files in self.request.files.items():
-                for f in files:
-                    outpath = op.join(self.uploads_dir, f['filename'])
-                    with open(outpath, 'wb') as fout:
-                        fout.write(f['body'])
-                    if outpath.endswith('.json'):
-                        xdf = cache.open(outpath, pd.read_json)
-                    else:
-                        xdf = cache.open(outpath)
-                    dfs.append(xdf)
-                    os.remove(outpath)
-            data = pd.concat(dfs, axis=0)
-        # Otherwise look in request.body
-        else:
-            if self.request.headers.get('Content-Type', '') == 'application/json':
-                try:
-                    data = pd.read_json(self.request.body.decode('utf8'))
-                except ValueError:
-                    data = self.load_data()
-                    _cache = False
-            else:
-                data = pd.DataFrame.from_dict(parse_qs(self.request.body.decode('utf8')))
-        if _cache:
-            self.store_data(data)
-        if len(data) == 0:
-            data = self.load_data()
         return data
 
     def _coerce_model_params(self, mclass=None, params=None):
@@ -582,7 +646,7 @@ class MLHandler(FormHandler):
                 os.remove(self.model_path)
             self.set_opt('params', params)
 
-            for opt, default in TRAINING_DEFAULTS.items():
+            for opt, default in SKLEARN_DEFAULTS.items():
                 if opt in self.args:
                     val = self.args.pop(opt)
                     if not isinstance(default, list):
@@ -598,7 +662,7 @@ class MLHandler(FormHandler):
     def delete(self, *path_args, **path_kwargs):
         if '_model' in self.args:
             if '_opts' in self.args:
-                for k, default in TRAINING_DEFAULTS.items():
+                for k, default in SKLEARN_DEFAULTS.items():
                     if k in self.args:
                         self.set_opt(k, default)
             elif op.exists(self.model_path):
@@ -606,3 +670,83 @@ class MLHandler(FormHandler):
                 self.config_store.purge()
         if '_cache' in self.args:
             self.store_data(pd.DataFrame())
+
+
+class TransformersHandler(BaseMLHandler):
+
+    def _merge_train_opts(self):
+        kwargs = {k: self.get_arg(k, TRANSFORMERS_DEFAULTS.get(k)) for k in TRANSFORMERS_DEFAULTS}
+        kwargs = {k: type(TRANSFORMERS_DEFAULTS.get(k))(v) for k, v in kwargs.items()}
+        return kwargs
+
+    @classmethod
+    def load_model(cls, task, model):
+        if model is None:
+            model = {}
+        path = model.get('path', False)
+        if path:
+            if op.isdir(path):
+                model = AutoModelForSequenceClassification.from_pretrained(path, device=-1)
+            else:
+                model = cache.open(task, pipeline, device=-1)
+        else:
+            path = op.join(
+                gramex.config.variables['GRAMEXDATA'], 'apps', 'mlhandler',
+                slugify(cls.name), 'model')
+            model = cache.open(task, pipeline, device=-1)
+        _mkdir(path)
+        cls.model_path = path
+        cls.model = model
+
+    @classmethod
+    def setup(cls, task, model=None, **kwargs):
+        if not TRANSFORMERS_INSTALLED:
+            raise ImportError('pip install transformers')
+        super(TransformersHandler, cls).setup(**kwargs)
+        cls.load_model(task, model)
+
+    def _train(self, data):
+        if isinstance(self.model, TextClassificationPipeline):
+            model = self.model.model
+        else:
+            model = self.model
+        enc = self.model.tokenizer(data['text'].tolist(), truncation=True, padding=True)
+        labels = SENTIMENT_LENC.transform(data['label'])
+        train_dataset = SentimentDataset(enc, labels)
+        model_output_dir = op.join(op.dirname(self.model_path), 'results')
+        model_log_dir = op.join(op.dirname(self.model_path), 'logs')
+        trargs = TrainingArguments(
+            output_dir=model_output_dir, logging_dir=model_log_dir, **self._merge_train_opts())
+        Trainer(model=model, args=trargs, train_dataset=train_dataset).train()
+        self.model.save_pretrained(self.model_path)
+        move_to_cpu(self.model)
+        pred = self._predict(data)
+        res = {
+            'roc_auc': roc_auc_score(
+                labels, SENTIMENT_LENC.transform([c['label'] for c in pred]))
+        }
+        return res
+
+    def _predict(self, data):
+        return self.model(data['text'].tolist())
+
+    def _score(self, data):
+        pred = self._predict(data)
+        score = roc_auc_score(
+            *map(SENTIMENT_LENC.transform, (data['label'], [c['label'] for c in pred])))
+        return {'roc_auc': score}
+
+    @coroutine
+    def get(self, *path_args, **path_kwargs):
+        text = self.get_argument('text')
+        result = self.model(text)
+        self.write(json.dumps(result, indent=2))
+
+    @coroutine
+    def post(self, *path_args, **path_kwargs):
+        # Data should always be present as [{'text': ..., 'label': ...}, {'text': ...}] arrays
+        data = self._parse_data(_cache=False)
+        action = self.args.get('_action', ['predict'])[0]
+        move_to_cpu(self.model)
+        res = yield gramex.service.threadpool.submit(getattr(self, f'_{action}'), data=data)
+        self.write(json.dumps(res, indent=2, cls=CustomJSONEncoder))
