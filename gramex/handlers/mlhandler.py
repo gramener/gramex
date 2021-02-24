@@ -24,9 +24,9 @@ from tornado.gen import coroutine
 from tornado.web import HTTPError
 try:
     from transformers import pipeline, TextClassificationPipeline
-    from transformers import AutoModelForSequenceClassification
+    from transformers import AutoModelForSequenceClassification, AutoTokenizer  # NOQA: F401
     from transformers import Trainer, TrainingArguments
-    import torch
+    from gramex.dl_utils import SentimentDataset
     TRANSFORMERS_INSTALLED = True
 except ImportError:
     TRANSFORMERS_INSTALLED = False
@@ -84,6 +84,40 @@ def _fit(model, x, y, path=None, name=None):
     return model
 
 
+def _train_transformer(model, data, model_path, **kwargs):
+    # if isinstance(model, TextClassificationPipeline):
+    #     model = model.model
+    # else:
+    #     model = model
+    enc = model.tokenizer(data['text'].tolist(), truncation=True, padding=True)
+    labels = SENTIMENT_LENC.transform(data['label'])
+    train_dataset = SentimentDataset(enc, labels)
+    model_output_dir = op.join(op.dirname(model_path), 'results')
+    model_log_dir = op.join(op.dirname(model_path), 'logs')
+    trargs = TrainingArguments(
+        output_dir=model_output_dir, logging_dir=model_log_dir, **kwargs)
+    Trainer(model=model.model, args=trargs, train_dataset=train_dataset).train()
+    model.save_pretrained(model_path)
+    move_to_cpu(model)
+    pred = _predict_transformer(model, data)
+    res = {
+        'roc_auc': roc_auc_score(
+            labels, SENTIMENT_LENC.transform([c['label'] for c in pred]))
+    }
+    return res
+
+
+def _predict_transformer(model, data):
+        return model(data['text'].tolist())
+
+
+def _score_transformer(model, data):
+    pred = _predict_transformer(model, data)
+    score = roc_auc_score(
+        *map(SENTIMENT_LENC.transform, (data['label'], [c['label'] for c in pred])))
+    return {'roc_auc': score}
+
+
 def search_modelclass(mclass):
     for module in MLCLASS_MODULES:
         cls = pydoc.locate(f'{module}.{mclass}')
@@ -122,20 +156,6 @@ def move_to_cpu(model):
         model.model.to('cpu')
     else:
         model.to('cpu')
-
-
-class SentimentDataset(torch.utils.data.Dataset):
-    def __init__(self, encodings, labels):
-        self.encodings = encodings
-        self.labels = labels
-
-    def __getitem__(self, idx):
-        item = {key: torch.tensor(val[idx]) for key, val in self.encodings.items()}
-        item['labels'] = torch.tensor(self.labels[idx])
-        return item
-
-    def __len__(self):
-        return len(self.labels)
 
 
 class BaseMLHandler(FormHandler):
@@ -233,6 +253,33 @@ class BaseMLHandler(FormHandler):
             data = self.load_data()
         return data
 
+    def _coerce_transformers_opts(self):
+        kwargs = {k: self.get_arg(k, TRANSFORMERS_DEFAULTS.get(k)) for k in TRANSFORMERS_DEFAULTS}
+        kwargs = {k: type(TRANSFORMERS_DEFAULTS.get(k))(v) for k, v in kwargs.items()}
+        return kwargs
+
+    @classmethod
+    def load_transformer(cls, task, model):
+        if model is None:
+            model = {}
+        path = model.get('path', False)
+        # if path:
+        #     if op.isdir(path):
+        #         model = AutoModelForSequenceClassification.from_pretrained(path, device=-1)
+        #         tokenizer = AutoTokenizer.from_pretrained(path, device=-1)
+        #         model = pipeline(task, model=model, tokenizer=tokenizer, device=-1)
+        #     else:
+        #         model = cache.open(task, pipeline, device=-1)
+        # else:
+        if not path:
+            path = op.join(
+                gramex.config.variables['GRAMEXDATA'], 'apps', 'mlhandler',
+                slugify(cls.name), 'model')
+            model = cache.open(task, pipeline, device=-1)
+        _mkdir(path)
+        cls.model_path = path
+        cls.model = model
+
 
 class MLHandler(BaseMLHandler):
 
@@ -243,95 +290,103 @@ class MLHandler(BaseMLHandler):
         # cls.post = cls.put = cls.delete = cls.patch = cls.options = cls.get
         # for clnmame in CLASSES:
         #     setattr(cls, method) = getattr(clname, method)
-        super(MLHandler, cls).setup(data, model, config_dir, **kwargs)
+        task = kwargs.pop('task', False)
         # if backend == 'sklearn':
         #     SklearnHandler.fit(**kwargs)
         # elif backend == 'transformers':
-        #     NLPHAndler.fit(**kwargs)
-
-        # Handle data if provided in the YAML config.
-        if isinstance(data, str):
-            data = cache.open(data)
-        elif isinstance(data, dict):
-            data = gdata.filter(**data)
+        #     NLPHandler.fit(**kwargs)
+        if backend != 'sklearn':
+            if not TRANSFORMERS_INSTALLED:
+                raise ImportError('pip install transformers')
+            super(MLHandler, cls).setup(**kwargs)
+            cls.load_transformer(task, model)
+            cls.get = NLPHandler.get
+            cls.post = NLPHandler.post
         else:
-            data = None
-        if data is not None:
-            cls.store_data(data)
-
-        # parse model kwargs
-        if model is None:
-            model = {}
-
-        default_model_path = op.join(
-            gramex.config.variables['GRAMEXDATA'], 'apps', 'mlhandler',
-            slugify(cls.name) + '.pkl')
-        model_path = model.pop('path', default_model_path)
-
-        # store the model kwargs from gramex.yaml into the store
-        for key in SKLEARN_DEFAULTS:
-            kwarg = model.get(key, False)
-            if not cls.get_opt(key, False) and kwarg:
-                cls.set_opt(key, kwarg)
-        if op.exists(model_path):  # If the pkl exists, load it
-            cls.model = joblib.load(model_path)
-            cls.model_path = model_path
-            target_col = model.get('target_col', False)
-            if target_col:
-                cls.set_opt('target_col', target_col)
+            super(MLHandler, cls).setup(data, model, config_dir, **kwargs)
+            # Handle data if provided in the YAML config.
+            if isinstance(data, str):
+                data = cache.open(data)
+            elif isinstance(data, dict):
+                data = gdata.filter(**data)
             else:
-                target_col = cls.get_opt('target_col')
-        else:  # build the model
-            mclass = cls.get_opt('class', model.get('class', False))
-            params = cls.get_opt('params', {})
-            if not params:
-                params = model.get('params', {})
-            if mclass:
-                cls.model = search_modelclass(mclass)(**params)
-                cls.set_opt('class', mclass)
-            else:
-                cls.model = None
-            # Params MUST come after class, or they will be ignored.
-            cls.set_opt('params', params)
+                data = None
+            if data is not None:
+                cls.store_data(data)
 
-            if model_path:  # if a path is specified, use to to store the model
+            # parse model kwargs
+            if model is None:
+                model = {}
+
+            default_model_path = op.join(
+                gramex.config.variables['GRAMEXDATA'], 'apps', 'mlhandler',
+                slugify(cls.name) + '.pkl')
+            model_path = model.pop('path', default_model_path)
+
+            # store the model kwargs from gramex.yaml into the store
+            for key in SKLEARN_DEFAULTS:
+                kwarg = model.get(key, False)
+                if not cls.get_opt(key, False) and kwarg:
+                    cls.set_opt(key, kwarg)
+            if op.exists(model_path):  # If the pkl exists, load it
+                cls.model = joblib.load(model_path)
                 cls.model_path = model_path
-            else:  # or create our own path
-                cls.model_path = default_model_path
-                _mkdir(op.dirname(cls.model_path))
+                target_col = model.get('target_col', False)
+                if target_col:
+                    cls.set_opt('target_col', target_col)
+                else:
+                    target_col = cls.get_opt('target_col')
+            else:  # build the model
+                mclass = cls.get_opt('class', model.get('class', False))
+                params = cls.get_opt('params', {})
+                if not params:
+                    params = model.get('params', {})
+                if mclass:
+                    cls.model = search_modelclass(mclass)(**params)
+                    cls.set_opt('class', mclass)
+                else:
+                    cls.model = None
+                # Params MUST come after class, or they will be ignored.
+                cls.set_opt('params', params)
 
-            # train the model
-            target_col = model.get('target_col', False)
-            if target_col:
-                cls.set_opt('target_col', target_col)
-            else:
-                target_col = cls.get_opt('target_col', False)
-            if cls.model is not None and not target_col:
-                app_log.warning('Target column not defined. Nothing to do.')
-            else:
-                if cls.model is not None:
-                    if data is not None:
-                        # filter columns
-                        data = cls._filtercols(data)
+                if model_path:  # if a path is specified, use to to store the model
+                    cls.model_path = model_path
+                else:  # or create our own path
+                    cls.model_path = default_model_path
+                    _mkdir(op.dirname(cls.model_path))
 
-                        # filter rows
-                        data = cls._filterrows(data)
+                # train the model
+                target_col = model.get('target_col', False)
+                if target_col:
+                    cls.set_opt('target_col', target_col)
+                else:
+                    target_col = cls.get_opt('target_col', False)
+                if cls.model is not None and not target_col:
+                    app_log.warning('Target column not defined. Nothing to do.')
+                else:
+                    if cls.model is not None:
+                        if data is not None:
+                            # filter columns
+                            data = cls._filtercols(data)
 
-                        # assemble the pipeline
-                        if model.get('pipeline', True):
-                            cls.model = cls._get_pipeline(data)
-                        else:
-                            cls.model = search_modelclass(mclass)(**params)
+                            # filter rows
+                            data = cls._filterrows(data)
 
-                        # train the model
-                        target = data[target_col]
-                        train = data[[c for c in data if c != target_col]]
-                        if model.get('async', True):
-                            gramex.service.threadpool.submit(
-                                _fit, cls.model, train, target, cls.model_path, cls.name)
-                        else:
-                            _fit(cls.model, train, target, cls.model_path, cls.name)
-        cls.config_store.flush()
+                            # assemble the pipeline
+                            if model.get('pipeline', True):
+                                cls.model = cls._get_pipeline(data)
+                            else:
+                                cls.model = search_modelclass(mclass)(**params)
+
+                            # train the model
+                            target = data[target_col]
+                            train = data[[c for c in data if c != target_col]]
+                            if model.get('async', True):
+                                gramex.service.threadpool.submit(
+                                    _fit, cls.model, train, target, cls.model_path, cls.name)
+                            else:
+                                _fit(cls.model, train, target, cls.model_path, cls.name)
+            cls.config_store.flush()
 
     @classmethod
     def _filtercols(cls, data):
@@ -672,74 +727,19 @@ class MLHandler(BaseMLHandler):
             self.store_data(pd.DataFrame())
 
 
-class TransformersHandler(BaseMLHandler):
-
-    def _merge_train_opts(self):
-        kwargs = {k: self.get_arg(k, TRANSFORMERS_DEFAULTS.get(k)) for k in TRANSFORMERS_DEFAULTS}
-        kwargs = {k: type(TRANSFORMERS_DEFAULTS.get(k))(v) for k, v in kwargs.items()}
-        return kwargs
+class NLPHandler(BaseMLHandler):
 
     @classmethod
-    def load_model(cls, task, model):
-        if model is None:
-            model = {}
-        path = model.get('path', False)
-        if path:
-            if op.isdir(path):
-                model = AutoModelForSequenceClassification.from_pretrained(path, device=-1)
-            else:
-                model = cache.open(task, pipeline, device=-1)
-        else:
-            path = op.join(
-                gramex.config.variables['GRAMEXDATA'], 'apps', 'mlhandler',
-                slugify(cls.name), 'model')
-            model = cache.open(task, pipeline, device=-1)
-        _mkdir(path)
-        cls.model_path = path
-        cls.model = model
-
-    @classmethod
-    def setup(cls, task, model=None, **kwargs):
+    def setup(cls, task, model=None, config_dir='', **kwargs):
         if not TRANSFORMERS_INSTALLED:
             raise ImportError('pip install transformers')
-        super(TransformersHandler, cls).setup(**kwargs)
-        cls.load_model(task, model)
-
-    def _train(self, data):
-        if isinstance(self.model, TextClassificationPipeline):
-            model = self.model.model
-        else:
-            model = self.model
-        enc = self.model.tokenizer(data['text'].tolist(), truncation=True, padding=True)
-        labels = SENTIMENT_LENC.transform(data['label'])
-        train_dataset = SentimentDataset(enc, labels)
-        model_output_dir = op.join(op.dirname(self.model_path), 'results')
-        model_log_dir = op.join(op.dirname(self.model_path), 'logs')
-        trargs = TrainingArguments(
-            output_dir=model_output_dir, logging_dir=model_log_dir, **self._merge_train_opts())
-        Trainer(model=model, args=trargs, train_dataset=train_dataset).train()
-        self.model.save_pretrained(self.model_path)
-        move_to_cpu(self.model)
-        pred = self._predict(data)
-        res = {
-            'roc_auc': roc_auc_score(
-                labels, SENTIMENT_LENC.transform([c['label'] for c in pred]))
-        }
-        return res
-
-    def _predict(self, data):
-        return self.model(data['text'].tolist())
-
-    def _score(self, data):
-        pred = self._predict(data)
-        score = roc_auc_score(
-            *map(SENTIMENT_LENC.transform, (data['label'], [c['label'] for c in pred])))
-        return {'roc_auc': score}
+        super(NLPHandler, cls).setup(**kwargs)
+        cls.load_transformer(task, model)
 
     @coroutine
     def get(self, *path_args, **path_kwargs):
         text = self.get_argument('text')
-        result = self.model(text)
+        result = yield gramex.service.threadpool.submit(_predict_transformer, self.model, text)
         self.write(json.dumps(result, indent=2))
 
     @coroutine
@@ -748,5 +748,13 @@ class TransformersHandler(BaseMLHandler):
         data = self._parse_data(_cache=False)
         action = self.args.get('_action', ['predict'])[0]
         move_to_cpu(self.model)
-        res = yield gramex.service.threadpool.submit(getattr(self, f'_{action}'), data=data)
+        if action == 'train':
+            kwargs = self._coerce_transformers_opts()
+            kwargs['model_path'] = self.model_path
+        else:
+            kwargs = {}
+        res = yield gramex.service.threadpool.submit(
+            globals()[f'_{action}_transformer'], self.model, data=data,
+            **kwargs
+        )
         self.write(json.dumps(res, indent=2, cls=CustomJSONEncoder))
