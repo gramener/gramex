@@ -108,7 +108,9 @@ def _train_transformer(model, data, model_path, **kwargs):
 
 
 def _predict_transformer(model, data):
-        return model(data['text'].tolist())
+    if isinstance(data, (str, list)):
+        return model(data)
+    return model(data['text'].tolist())
 
 
 def _score_transformer(model, data):
@@ -740,7 +742,7 @@ class NLPHandler(BaseMLHandler):
 
     @coroutine
     def get(self, *path_args, **path_kwargs):
-        text = self.get_argument('text')
+        text = self.get_arguments('text')
         result = yield gramex.service.threadpool.submit(_predict_transformer, self.model, text)
         self.write(json.dumps(result, indent=2))
 
