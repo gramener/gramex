@@ -231,7 +231,7 @@ class TestMLHandler(TestGramex):
             pipe = joblib.load(op.join(folder, 'model.pkl'))
             self.assertEqual(pipe.named_steps['LogisticRegression'].coef_.shape, (3, 1))
         finally:
-            self.get('/mlhandler?_model&_opts&include&exclude', method='delete')
+            self.get('/mlhandler?&_model&_opts=include&_opts=exclude', method='delete')
             joblib.dump(clf, op.join(folder, 'model.pkl'))
 
     def test_get_bulk_predictions(self, target_col='species'):

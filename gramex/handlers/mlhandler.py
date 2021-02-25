@@ -43,9 +43,6 @@ MLCLASS_MODULES = [
     'sklearn.neighbors',
     'sklearn.neural_network',
     'sklearn.naive_bayes',
-    'statsmodels.api',
-    'statsmodels.tsa.api',
-    'tensorflow.keras.applications'
 ]
 SKLEARN_DEFAULTS = {
     'include': [],
@@ -69,18 +66,12 @@ DEFAULT_TEMPLATE = op.join(op.dirname(__file__), '..', 'apps', 'mlhandler', 'tem
 _prediction_col = '_prediction'
 
 
-def df2url(df):
-    s = ['&'.join([f'{k}={v}' for k, v in r.items()]) for r in df.to_dict(orient='records')]
-    return '&'.join(s)
-
-
 def _fit(model, x, y, path=None, name=None):
     app_log.info('Starting training...')
     getattr(model, 'partial_fit', model.fit)(x, y)
     app_log.info('Done training...')
-    if path:
-        joblib.dump(model, path)
-        app_log.info(f'{name}: Model saved at {path}.')
+    joblib.dump(model, path)
+    app_log.info(f'{name}: Model saved at {path}.')
     return model
 
 
@@ -99,7 +90,7 @@ def _train_transformer(model, data, model_path, **kwargs):
     Trainer(model=model.model, args=trargs, train_dataset=train_dataset).train()
     model.save_pretrained(model_path)
     move_to_cpu(model)
-    pred = _predict_transformer(model, data)
+    pred = model(data['text'].tolist())
     res = {
         'roc_auc': roc_auc_score(
             labels, SENTIMENT_LENC.transform([c['label'] for c in pred]))
@@ -107,14 +98,8 @@ def _train_transformer(model, data, model_path, **kwargs):
     return res
 
 
-def _predict_transformer(model, data):
-    if isinstance(data, (str, list)):
-        return model(data)
-    return model(data['text'].tolist())
-
-
 def _score_transformer(model, data):
-    pred = _predict_transformer(model, data)
+    pred = model(data['text'].tolist())
     score = roc_auc_score(
         *map(SENTIMENT_LENC.transform, (data['label'], [c['label'] for c in pred])))
     return {'roc_auc': score}
@@ -147,9 +132,7 @@ def is_categorical(s, num_treshold=0.1):
         uniques / count <= num_treshold / log(count)
     """
     if pd.api.types.is_numeric_dtype(s):
-        if s.nunique() / s.shape[0] <= num_treshold:
-            return True
-        return False
+        return s.nunique() / s.shape[0] <= num_treshold
     return True
 
 
@@ -383,11 +366,8 @@ class MLHandler(BaseMLHandler):
                             # train the model
                             target = data[target_col]
                             train = data[[c for c in data if c != target_col]]
-                            if model.get('async', True):
-                                gramex.service.threadpool.submit(
-                                    _fit, cls.model, train, target, cls.model_path, cls.name)
-                            else:
-                                _fit(cls.model, train, target, cls.model_path, cls.name)
+                            gramex.service.threadpool.submit(
+                                _fit, cls.model, train, target, cls.model_path, cls.name)
             cls.config_store.flush()
 
     @classmethod
@@ -673,9 +653,8 @@ class MLHandler(BaseMLHandler):
             # train the model
             target = data[target_col]
             train = data[[c for c in data if c != target_col]]
-            yield gramex.service.threadpool.submit(_fit, self.model, train, target)
-            # _fit(self.model, train, target)
-            joblib.dump(self.model, self.model_path)
+            yield gramex.service.threadpool.submit(
+                _fit, self.model, train, target, self.model_path)
             app_log.info(f'{self.name}: Model saved at {self.model_path}')
             self.write(json.dumps({'score': self.model.score(train, target)}))
         super(MLHandler, self).post(*path_args, **path_kwargs)
@@ -719,14 +698,12 @@ class MLHandler(BaseMLHandler):
 
     @coroutine
     def delete(self, *path_args, **path_kwargs):
-        if '_model' in self.args:
-            if '_opts' in self.args:
-                for k, default in SKLEARN_DEFAULTS.items():
-                    if k in self.args:
-                        self.set_opt(k, default)
-            elif op.exists(self.model_path):
-                os.remove(self.model_path)
-                self.config_store.purge()
+        if '_model' in self.args and op.exists(self.model_path):
+            os.remove(self.model_path)
+            self.config_store.purge()
+        for opt in self.get_arguments('_opts'):
+            if opt in SKLEARN_DEFAULTS:
+                self.set_opt(opt, SKLEARN_DEFAULTS[opt])
         if '_cache' in self.args:
             self.store_data(pd.DataFrame())
 
@@ -743,7 +720,7 @@ class NLPHandler(BaseMLHandler):
     @coroutine
     def get(self, *path_args, **path_kwargs):
         text = self.get_arguments('text')
-        result = yield gramex.service.threadpool.submit(_predict_transformer, self.model, text)
+        result = yield gramex.service.threadpool.submit(self.model, text)
         self.write(json.dumps(result, indent=2))
 
     @coroutine
@@ -752,13 +729,14 @@ class NLPHandler(BaseMLHandler):
         data = self._parse_data(_cache=False)
         action = self.args.get('_action', ['predict'])[0]
         move_to_cpu(self.model)
+        kwargs = {}
         if action == 'train':
             kwargs = self._coerce_transformers_opts()
             kwargs['model_path'] = self.model_path
+            args = _train_transformer, self.model, data
+        elif action == 'score':
+            args = _score_transformer, self.model, data
         else:
-            kwargs = {}
-        res = yield gramex.service.threadpool.submit(
-            globals()[f'_{action}_transformer'], self.model, data=data,
-            **kwargs
-        )
+            args = self.model, data['text'].tolist()
+        res = yield gramex.service.threadpool.submit(*args, **kwargs)
         self.write(json.dumps(res, indent=2, cls=CustomJSONEncoder))
