@@ -1,5 +1,5 @@
 from torch.utils.data import Dataset
-from torch import tensor
+import torch
 
 
 class SentimentDataset(Dataset):
@@ -8,8 +8,8 @@ class SentimentDataset(Dataset):
         self.labels = labels
 
     def __getitem__(self, idx):
-        item = {key: tensor(val[idx]) for key, val in self.encodings.items()}
-        item['labels'] = tensor(self.labels[idx])
+        item = {key: torch.tensor(val[idx]) for key, val in self.encodings.items()}
+        item['labels'] = torch.tensor(self.labels[idx]).to(torch.int64)
         return item
 
     def __len__(self):
