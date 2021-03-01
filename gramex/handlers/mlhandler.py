@@ -462,6 +462,8 @@ class MLHandler(BaseMLHandler):
             target = data[score_col]
             data = data.drop([score_col], axis=1)
             return self.model.score(data, target)
+        # Set data in the same order as the transformer requests
+        data = data[self.model.named_steps['transform']._feature_names_in]
         data[self.get_opt('target_col', _prediction_col)] = self.model.predict(data)
         return data
 

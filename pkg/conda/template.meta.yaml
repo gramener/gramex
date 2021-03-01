@@ -3,8 +3,9 @@ package:
   version: "{{ release.info.version }}"
 
 source:
-  git_url: {{ release.info.download_url }}.git
-  git_rev: v{{ release.info.version }}
+  # Gramex >=1.67 requires git lfs on the build machine. Specifying git sources here breaks it.
+  # Use local path for the source instead.
+  path: ../../
 
 about:
   home: "{{ release.info.url }}"

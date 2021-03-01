@@ -961,15 +961,17 @@ class TestPPTGen(TestCase):
             'Beta': [4, 5, 6],
             'Gamma': [7, 9, ''],
         }, index=['X', 'Y', 'Z'])
-        charts = ['Column Chart', 'Line Chart', 'Bar Chart']
+        charts_2d = ['Column Chart', 'Line Chart', 'Bar Chart']
+        charts_1d = ['Pie Chart', 'Donut Chart']
         prs = pptgen(source=self.input, target=self.output, only=slides, rules=[
-            {'Pie Chart': {'chart-data': data[['Alpha']]}},
-            *({chart: {'chart-data': data}} for chart in charts)
+            *({chart: {'chart-data': data[['Alpha']]}} for chart in charts_1d),
+            *({chart: {'chart-data': data}} for chart in charts_2d)
         ])
         shapes = prs.slides[0].shapes
-        for chart in charts:
+        for chart in charts_2d:
             afe(self.chart_data(self.get_shape(shapes, chart)), data)
-        afe(self.chart_data(self.get_shape(shapes, 'Pie Chart')), data[['Alpha']])
+        for chart in charts_1d:
+            afe(self.chart_data(self.get_shape(shapes, chart)), data[['Alpha']])
 
     def test_commandline(self):
         # "slidesense" prints usage

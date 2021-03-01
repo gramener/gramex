@@ -1,4 +1,5 @@
-FROM continuumio/miniconda3:latest
+# Pin miniconda3 version to the latest one that has Python 3.7 in the base env
+FROM continuumio/miniconda3:4.8.2
 
 LABEL description="{{ description }}"
 LABEL version="{{ version }}"
