@@ -2,6 +2,7 @@ from collections import defaultdict
 from inspect import signature
 import json
 import os
+from shutil import rmtree
 from urllib.parse import parse_qs
 
 import gramex
@@ -248,20 +249,8 @@ class BaseMLHandler(FormHandler):
         if model is None:
             model = {}
         path = model.get('path', False)
-        # if path:
-        #     if op.isdir(path):
-        #         model = AutoModelForSequenceClassification.from_pretrained(path, device=-1)
-        #         tokenizer = AutoTokenizer.from_pretrained(path, device=-1)
-        #         model = pipeline(task, model=model, tokenizer=tokenizer, device=-1)
-        #     else:
-        #         model = cache.open(task, pipeline, device=-1)
-        # else:
         if not path:
-            path = op.join(
-                gramex.config.variables['GRAMEXDATA'], 'apps', 'mlhandler',
-                slugify(cls.name), 'model')
-            model = cache.open(task, pipeline, device=-1)
-        _mkdir(path)
+            path = None
         cls.model_path = path
         cls.model = model
 
@@ -287,6 +276,7 @@ class MLHandler(BaseMLHandler):
             cls.load_transformer(task, model)
             cls.get = NLPHandler.get
             cls.post = NLPHandler.post
+            cls.delete = NLPHandler.delete
         else:
             super(MLHandler, cls).setup(data, model, config_dir, **kwargs)
             # Handle data if provided in the YAML config.
@@ -740,3 +730,7 @@ class NLPHandler(BaseMLHandler):
             args = self.model, data['text'].tolist()
         res = yield gramex.service.threadpool.submit(*args, **kwargs)
         self.write(json.dumps(res, indent=2, cls=CustomJSONEncoder))
+
+    @coroutine
+    def delete(self, *path_args, **path_kwargs):
+        rmtree(self.model_path)
