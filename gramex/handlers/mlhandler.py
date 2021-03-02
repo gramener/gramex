@@ -1,7 +1,9 @@
 from collections import defaultdict
 from inspect import signature
+from io import BytesIO
 import json
 import os
+import re
 from shutil import rmtree
 from urllib.parse import parse_qs
 
@@ -15,16 +17,15 @@ from gramex import cache
 import joblib
 import pandas as pd
 import pydoc
-from sklearn.base import BaseEstimator
 from sklearn.compose import ColumnTransformer
-from sklearn.metrics import accuracy_score, roc_auc_score
+from sklearn.metrics import roc_auc_score
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler, LabelEncoder
 from slugify import slugify
 from tornado.gen import coroutine
 from tornado.web import HTTPError
 try:
-    from transformers import pipeline, TextClassificationPipeline
+    from transformers import pipeline, TextClassificationPipeline  # NOQA: F401
     from transformers import AutoModelForSequenceClassification, AutoTokenizer  # NOQA: F401
     from transformers import Trainer, TrainingArguments
     from gramex.dl_utils import SentimentDataset
@@ -150,34 +151,37 @@ class BaseMLHandler(FormHandler):
     def setup(cls, data=None, model=None, config_dir='', **kwargs):
         cls.slug = slugify(cls.name)
         # Create the config store directory
-        if not op.isdir(config_dir):
+        if not config_dir:
             config_dir = op.join(gramex.config.variables['GRAMEXDATA'], 'apps', 'mlhandler',
                                  cls.slug)
-            _mkdir(config_dir)
+        _mkdir(config_dir)
         cls.config_dir = config_dir
         cls.config_store = cache.JSONStore(op.join(cls.config_dir, 'config.json'), flush=None)
         cls.data_store = op.join(cls.config_dir, 'data.h5')
 
-        # Create the uploads directory
-        cls.uploads_dir = op.join(config_dir, 'uploads')
-        _mkdir(cls.uploads_dir)
-
-        cls.template = kwargs.pop('template', True)
+        template = kwargs.pop('template', False)
+        if not op.isfile(template):
+            template = DEFAULT_TEMPLATE
+        cls.template = template
 
         super(BaseMLHandler, cls).setup(**kwargs)
 
     @classmethod
     def store_data(cls, df, append=False):
-        if op.exists(cls.data_store) and append:
-            df = pd.concat((pd.read_hdf(cls.data_store, 'data'), df), axis=0, ignore_index=True)
-        df.to_hdf(cls.data_store, 'data')
-        return df
+        df.to_hdf(cls.data_store, format="table", key="data", append=append)
+        try:
+            rdf = gramex.cache.open(cls.data_store, key="data")
+        except KeyError:
+            rdf = df
+        return rdf
 
     @classmethod
     def load_data(cls):
-        if op.exists(cls.data_store):
-            return gramex.cache.open(cls.data_store)
-        return pd.DataFrame()
+        try:
+            df = gramex.cache.open(cls.data_store, key="data")
+        except (KeyError, FileNotFoundError):
+            df = pd.DataFrame()
+        return df
 
     @classmethod
     def get_opt(cls, key, default=None):
@@ -213,15 +217,16 @@ class BaseMLHandler(FormHandler):
             dfs = []
             for _, files in self.request.files.items():
                 for f in files:
-                    outpath = op.join(self.uploads_dir, f['filename'])
-                    with open(outpath, 'wb') as fout:
-                        fout.write(f['body'])
-                    if outpath.endswith('.json'):
-                        xdf = cache.open(outpath, pd.read_json)
-                    else:
-                        xdf = cache.open(outpath)
+                    buff = BytesIO(f['body'])
+                    try:
+                        ext = re.sub('^\.', '', op.splitext(f['filename'])[-1])
+                        if ext == 'json':
+                            xdf = pd.read_json(buff)
+                        else:
+                            xdf = cache.open_callback[ext](buff)
+                    except KeyError:
+                        raise HTTPError(BAD_REQUEST, reason=f"File extension {ext} not supported.")
                     dfs.append(xdf)
-                    os.remove(outpath)
             data = pd.concat(dfs, axis=0)
         # Otherwise look in request.body
         else:
@@ -390,17 +395,14 @@ class MLHandler(BaseMLHandler):
         # If the model exists, return it
         if op.exists(cls.model_path) and not force:
             return joblib.load(cls.model_path)
-        # If there's no data, return None
-        if data is None or not len(data):
-            return None
+
         # Else assemble the model
         nums = set(cls.get_opt('nums', []))
         cats = set(cls.get_opt('cats', []))
         both = nums.intersection(cats)
         if len(both) > 0:
-            raise HTTPError(
-                BAD_REQUEST,
-                reason=f"Columns {both} cannot be both numerical and categorical.")
+            raise HTTPError(BAD_REQUEST,
+                            reason=f"Columns {both} cannot be both numerical and categorical.")
         to_guess = set(data.columns.tolist()) - nums.union(cats)
         target_col = cls.get_opt('target_col', False)
         if target_col:
@@ -412,6 +414,7 @@ class MLHandler(BaseMLHandler):
         categoricals += list(cats)
         numericals += list(nums)
         assert len(set(categoricals) & set(numericals)) == 0
+
         steps = []
         if categoricals:
             steps.append(('ohe', OneHotEncoder(sparse=False), categoricals))
@@ -422,6 +425,7 @@ class MLHandler(BaseMLHandler):
         mclass = model_kwargs.get('class', False)
         if mclass:
             model = search_modelclass(mclass)(**model_kwargs.get('params', {}))
+            cls.set_opt('params', model.get_params())
             return Pipeline([('transform', ct), (model.__class__.__name__, model)])
         return cls.model
 
@@ -429,29 +433,8 @@ class MLHandler(BaseMLHandler):
         orgdata = self.load_data()
         for col in data:
             data[col] = data[col].astype(orgdata[col].dtype)
-        # transform columns
-        include = self.get_opt('include', kwargs.get('include', []))
-        if include:
-            data = data[include]
-        exclude = self.get_opt('exclude', kwargs.get('exclude', []))
-        to_exclude = [c for c in exclude if c in data]
-        if to_exclude:
-            data = data.drop(to_exclude, axis=1)
-        # transform rows
-        dropna = self.get_opt('dropna', kwargs.get('dropna', True))
-        if dropna:
-            if isinstance(dropna, list) and len(dropna) > 0:
-                subset = dropna
-            else:
-                subset = None
-            data.dropna(subset=subset, inplace=True)
-        dedup = self.get_opt('deduplicate', kwargs.get('deduplicate', True))
-        if dedup:
-            if isinstance(dedup, list):
-                subset = dedup
-            else:
-                subset = None
-            data.drop_duplicates(subset=subset, inplace=True)
+        data = self._filtercols(data)
+        data = self._filterrows(data)
         return data
 
     def _predict(self, data, score_col=False, transform=True):
@@ -467,123 +450,60 @@ class MLHandler(BaseMLHandler):
         data[self.get_opt('target_col', _prediction_col)] = self.model.predict(data)
         return data
 
-    def _coerce_model_params(self, mclass=None, params=None):
-        # If you need params for self.model, use mclass, don't rely on self.model attribute
-        # if self.model:
-        #     model_params = self.model.get_params()
-        # else:
-        spec = signature(mclass)
-        m_args = spec.parameters.keys()
-        if 'self' in m_args:
-            m_args.remove('self')
-        m_defaults = {k: v.default for k, v in spec.parameters.items()}
-        model_params = {k: v for k, v in zip(m_args, m_defaults)}
-        if not params:
-            new_params = {k: v[0] for k, v in self.args.items() if k in model_params}
-        else:
-            new_params = params
-        param_types = {}
-        for k, v in model_params.items():
-            if v is None:
-                param_types[k] = str
-            else:
-                param_types[k] = type(v)
-        return {k: param_types[k](v) for k, v in new_params.items()}
-
-    def _check_model_path(self, error='raise'):
+    def _check_model_path(self):
         if not op.exists(self.model_path):
             msg = f'No model found at {self.model_path}'
-            if error == 'raise':
-                raise HTTPError(NOT_FOUND, log_message=msg)
-            else:
-                import warnings
-                warnings.warn(msg)
+            raise HTTPError(NOT_FOUND, log_message=msg)
         if self.model is None:
             self.model = cache.open(self.model_path, joblib.load)
 
     @coroutine
     def get(self, *path_args, **path_kwargs):
-        if '_download' in self.args:
-            self.set_header('Content-Type', 'application/octet-strem')
-            self.set_header('Content-Disposition',
-                            f'attachment; filename={op.basename(self.model_path)}')
-            self.write(open(self.model_path, 'rb').read())
-        elif '_model' in self.args:
-            self._check_model_path()
-            if isinstance(self.model, Pipeline):
-                for k, v in self.model.named_steps.items():
-                    if k != 'transform':
-                        break
-                params = v.get_params()
-            elif isinstance(self.model, BaseEstimator):
-                params = self.model.get_params()
-            elif self.model is None:
-                params = self.get_opt('params')
-            self.write(json.dumps(params, indent=4))
+        if '_params' in self.args:
+            params = {
+                'opts': self.config_store.load('transform'),
+                'params': self.config_store.load('model')
+            }
+            self.write(json.dumps(params, indent=2))
         elif '_cache' in self.args:
-            if '_opts' in self.args:
-                self.write(json.dumps(self.config_store.load('transform')))
-                self.finish()
-            elif '_params' in self.args:
-                self.write(json.dumps(self.config_store.load('model')))
-                self.finish()
-            else:
-                data = self.load_data()
-                if len(data):
-                    self.write(data.to_json(orient='records'))
-                else:
-                    self.write(json.dumps([]))
+            self.write(self.load_data().to_json(orient='records'))
         else:
             self._check_model_path()
-            self.set_header('Content-Type', 'application/json')
-            action = self.args.pop('_action', [''])[0]
-            try:
-                data = pd.DataFrame.from_dict(
-                    {k: v for k, v in self.args.items() if not k.startswith('_')})
-                if len(data) > 0 and not action:
-                    action = 'predict'
-            except Exception as err:
-                app_log.debug(err.msg)
-                data = self.load_data()
-            if len(data) == 0:
-                data = self.load_data()
-            target_col = self.get_opt('target_col')
-            if target_col in data:
-                target = data[target_col]
-                to_predict = data.drop([target_col], axis=1)
+            if '_download' in self.args:
+                self.set_header('Content-Type', 'application/octet-strem')
+                self.set_header('Content-Disposition',
+                                f'attachment; filename={op.basename(self.model_path)}')
+                with open(self.model_path, 'rb') as fout:
+                    self.write(fout.read())
+            elif '_model' in self.args:
+                self.write(json.dumps(self.get_opt('params'), indent=2))
+
             else:
-                target = None
-                to_predict = data
-            if action in ('predict', 'score'):
-                prediction = yield gramex.service.threadpool.submit(
-                    self._predict, to_predict)
-                if action == 'predict':
-                    self.write(json.dumps(prediction, indent=4, cls=CustomJSONEncoder))
-                elif action == 'score':
-                    prediction = prediction[target_col if target_col else _prediction_col]
-                    score = accuracy_score(target.astype(prediction.dtype),
-                                           prediction)
-                    self.write(json.dumps({'score': score}, indent=4))
-            else:
-                if isinstance(self.template, str) and op.isfile(self.template):
-                    self.set_header('Content-Type', 'text/html')
-                    # return Template(self.template)
-                    self.render(
-                        self.template, handler=self,
-                        data=self.load_data())
-                elif self.template:
-                    self.set_header('Content-Type', 'text/html')
-                    self.render(DEFAULT_TEMPLATE, handler=self, data=self.load_data())
-                else:
+                try:
+                    data = pd.DataFrame.from_dict(
+                        {k: v for k, v in self.args.items() if not k.startswith('_')})
+                except Exception as err:
+                    app_log.debug(err.msg)
+                    data = []
+                if len(data) > 0:
                     self.set_header('Content-Type', 'application/json')
-                    self.write(json.dumps([]))
+                    target_col = self.get_opt('target_col')
+                    if target_col in data:
+                        data = data.drop([target_col], axis=1)
+                    # if action in ('predict', 'score'):
+                    prediction = yield gramex.service.threadpool.submit(
+                        self._predict, data)
+                    self.write(json.dumps(prediction, indent=2, cls=CustomJSONEncoder))
+                else:
+                    self.set_header('Content-Type', 'text/html')
+                    self.render(self.template, handler=self, data=self.load_data())
         super(MLHandler, self).get(*path_args, **path_kwargs)
 
     @coroutine
     def post(self, *path_args, **path_kwargs):
         action = self.args.get('_action', ['predict'])
         if not set(action).issubset({'predict', 'score', 'append', 'train', 'retrain'}):
-            raise ValueError(f'Action {action} not supported.')
+            raise ValueError(f'Action(s) {action} not supported.')
         if len(action) == 1:
             action = action[0]
 
@@ -601,7 +521,7 @@ class MLHandler(BaseMLHandler):
         if action == 'predict':
             prediction = yield gramex.service.threadpool.submit(
                 self._predict, data)
-            self.write(json.dumps(prediction, indent=4, cls=CustomJSONEncoder))
+            self.write(json.dumps(prediction, indent=2, cls=CustomJSONEncoder))
         elif action == 'score':
             target_col = self.get_opt('target_col')
             if target_col is None:
@@ -609,7 +529,7 @@ class MLHandler(BaseMLHandler):
                 self.set_opt('target_col', target_col)
             score = yield gramex.service.threadpool.submit(
                 self._predict, data, target_col, transform=False)
-            self.write(json.dumps({'score': score}, indent=4))
+            self.write(json.dumps({'score': score}, indent=2))
         elif (action == 'append') or ('append' in action):
             try:
                 data = self.store_data(data, append=True)
@@ -631,10 +551,7 @@ class MLHandler(BaseMLHandler):
             else:
                 self.set_opt('target_col', target_col)
 
-            # filter columns
             data = self._filtercols(data)
-
-            # filter rows
             data = self._filterrows(data)
 
             # assemble the pipeline
@@ -651,40 +568,30 @@ class MLHandler(BaseMLHandler):
 
     @coroutine
     def put(self, *path_args, **path_kwargs):
-        if '_model' in self.args:
-            self.args.pop('_model')
-            mclass = self.args.pop('class', [False])[0]
-            if mclass:
-                self.set_opt('class', mclass)
-            else:
-                mclass = self.get_opt('class')
-            params = self.get_opt('params', {})
-            if mclass is not None:
-                # parse the params as the signature dictates
-                for param in signature(search_modelclass(mclass)).parameters:
-                    if param in self.args:
-                        value = self.args.pop(param)
-                        if len(value) == 1:
-                            value = value[0]
-                        params[param] = value
-
-            # Since model params are changing, remove the model on disk
-            self.model = None
-            if op.exists(self.model_path):
-                os.remove(self.model_path)
-            self.set_opt('params', params)
-
-            for opt, default in SKLEARN_DEFAULTS.items():
-                if opt in self.args:
-                    val = self.args.pop(opt)
-                    if not isinstance(default, list):
-                        if isinstance(val, list) and len(val) == 1:
-                            val = val[0]
-                    self.set_opt(opt, val)
-
-            self.config_store.flush()
-        else:
-            self._check_model_path()
+        mclass = self.args.pop('class', [self.get_opt('class')])[0]
+        self.set_opt('class', mclass)
+        params = self.get_opt('params', {})
+        if mclass:
+            # parse the params as the signature dictates
+            for param in signature(search_modelclass(mclass)).parameters:
+                if param in self.args:
+                    value = self.args.pop(param)
+                    if len(value) == 1:
+                        value = value[0]
+                    params[param] = value
+        # Since model params are changing, remove the model on disk
+        self.model = None
+        if op.exists(self.model_path):
+            os.remove(self.model_path)
+        self.set_opt('params', params)
+        for opt, default in SKLEARN_DEFAULTS.items():
+            if opt in self.args:
+                val = self.args.pop(opt)
+                if not isinstance(default, list):
+                    if isinstance(val, list) and len(val) == 1:
+                        val = val[0]
+                self.set_opt(opt, val)
+        self.config_store.flush()
 
     @coroutine
     def delete(self, *path_args, **path_kwargs):
