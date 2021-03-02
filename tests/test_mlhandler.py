@@ -265,6 +265,8 @@ class TestMLHandler(TestGramex):
              'petal_length': 5.1, 'petal_width': 1.8,
              target_col: 'virginica'}
         ])
+        resp = self.get(
+            '/mlhandler?sepal_width=3&petal_length=5.1&sepal_length=5.9&petal_width=1.8')
         req = '/mlhandler?'
         samples = []
         target = []
