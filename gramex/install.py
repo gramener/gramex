@@ -316,7 +316,7 @@ def run_command(config):
     if not safe_rmtree(config.target):
         app_log.error('Cannot delete target %s. Aborting installation', config.target)
         return
-    proc = Popen(appcmd, bufsize=-1, stdout=sys.stdout, stderr=sys.stderr, **kwargs)    # nosec
+    proc = Popen(appcmd, bufsize=-1, **kwargs)      # nosec
     proc.communicate()
     return proc.returncode
 
@@ -580,11 +580,10 @@ def _check_output(cmd, default=b'', **kwargs):
 
 
 def _run_console(cmd, **kwargs):
-    '''Run cmd and pipe output to console (sys.stdout / sys.stderr)'''
+    '''Run cmd and pipe output to console. Log and raise error if cmd is not found'''
     cmd = shlex.split(cmd)
     try:
-        proc = Popen(cmd, bufsize=-1, stdout=sys.stdout, stderr=sys.stderr,
-                     universal_newlines=True, **kwargs)
+        proc = Popen(cmd, bufsize=-1, universal_newlines=True, **kwargs)
     except OSError:
         app_log.error('Cannot find command: %s', cmd[0])
         raise
