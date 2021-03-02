@@ -1,4 +1,3 @@
-import boto3
 import requests
 from gramex.http import OK
 from gramex.config import app_log
@@ -38,6 +37,7 @@ class AmazonSNS(Notifier):
 
     def __init__(self, aws_access_key_id, aws_secret_access_key,
                  smstype='Transactional', **kwargs):
+        import boto3
         self.client = boto3.client(
             'sns',
             aws_access_key_id=aws_access_key_id,
