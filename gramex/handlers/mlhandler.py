@@ -220,10 +220,7 @@ class BaseMLHandler(FormHandler):
                     buff = BytesIO(f['body'])
                     try:
                         ext = re.sub('^\.', '', op.splitext(f['filename'])[-1])
-                        if ext == 'json':
-                            xdf = pd.read_json(buff)
-                        else:
-                            xdf = cache.open_callback[ext](buff)
+                        xdf = cache.open_callback['jsondata' if ext == 'json' else ext](buff)
                     except KeyError:
                         raise HTTPError(BAD_REQUEST, reason=f"File extension {ext} not supported.")
                     dfs.append(xdf)
@@ -253,10 +250,20 @@ class BaseMLHandler(FormHandler):
     def load_transformer(cls, task, model):
         if model is None:
             model = {}
-        path = model.get('path', False)
-        if not path:
-            path = None
+        default_model_path = op.join(
+            gramex.config.variables['GRAMEXDATA'], 'apps', 'mlhandler',
+            slugify(cls.name))
+        path = model.get('path', default_model_path)
         cls.model_path = path
+        # try loading from model_path
+        try:
+            _model = AutoModelForSequenceClassification.from_pretrained(cls.model_path)
+            _tokenizer = AutoTokenizer.from_pretrained(cls.model_path)
+            model = pipeline(task=task, model=_model, tokenizer=_tokenizer)
+        except Exception as err:
+            app_log.warning(f'Could not load model from {cls.model_path}.')
+            app_log.warning(f'{err}')
+            model = pipeline(task)
         cls.model = model
 
 
@@ -348,7 +355,6 @@ class MLHandler(BaseMLHandler):
                         if data is not None:
                             # filter columns
                             data = cls._filtercols(data)
-
                             # filter rows
                             data = cls._filterrows(data)
 
@@ -523,10 +529,11 @@ class MLHandler(BaseMLHandler):
                 self._predict, data)
             self.write(json.dumps(prediction, indent=2, cls=CustomJSONEncoder))
         elif action == 'score':
-            target_col = self.get_opt('target_col')
-            if target_col is None:
-                target_col = self.get_arg('target_col')
-                self.set_opt('target_col', target_col)
+            # target_col = self.get_opt('target_col')
+            # if target_col is None:
+            #     target_col = self.get_arg('target_col')
+            #     self.set_opt('target_col', target_col)
+            target_col = self.get_cached_arg('target_col')
             score = yield gramex.service.threadpool.submit(
                 self._predict, data, target_col, transform=False)
             self.write(json.dumps({'score': score}, indent=2))
@@ -541,15 +548,16 @@ class MLHandler(BaseMLHandler):
                     action = action[0]
 
         if action in ('train', 'retrain'):
-            target_col = self.args.get('target_col', [False])[0]
-            if not target_col:
-                older_target_col = self.get_opt('target_col', False)
-                if not older_target_col:
-                    raise ValueError('target_col not specified')
-                else:
-                    target_col = older_target_col
-            else:
-                self.set_opt('target_col', target_col)
+            # target_col = self.args.get('target_col', [False])[0]
+            # if not target_col:
+            #     older_target_col = self.get_opt('target_col', False)
+            #     if not older_target_col:
+            #         raise ValueError('target_col not specified')
+            #     else:
+            #         target_col = older_target_col
+            # else:
+            #     self.set_opt('target_col', target_col)
+            target_col = self.get_cached_arg('target_col')
 
             data = self._filtercols(data)
             data = self._filterrows(data)
@@ -565,6 +573,13 @@ class MLHandler(BaseMLHandler):
             app_log.info(f'{self.name}: Model saved at {self.model_path}')
             self.write(json.dumps({'score': self.model.score(train, target)}))
         super(MLHandler, self).post(*path_args, **path_kwargs)
+
+    def get_cached_arg(self, argname):
+        val = self.get_arg(argname, False)
+        if not val:
+            return self.get_opt(val)
+        self.set_opt(argname, val)
+        return val
 
     @coroutine
     def put(self, *path_args, **path_kwargs):
@@ -593,16 +608,28 @@ class MLHandler(BaseMLHandler):
                 self.set_opt(opt, val)
         self.config_store.flush()
 
+    def _delete_model(self):
+        pass
+
+    def _delete_opts(self):
+        pass
+
+    def _delete_cache(self):
+        pass
+
     @coroutine
     def delete(self, *path_args, **path_kwargs):
-        if '_model' in self.args and op.exists(self.model_path):
-            os.remove(self.model_path)
-            self.config_store.purge()
-        for opt in self.get_arguments('_opts'):
-            if opt in SKLEARN_DEFAULTS:
-                self.set_opt(opt, SKLEARN_DEFAULTS[opt])
-        if '_cache' in self.args:
-            self.store_data(pd.DataFrame())
+        for item in self.get_arguments('delete', []):
+            getattr(self, f'_delete_{item}')(self)
+
+        # if '_model' in self.args and op.exists(self.model_path):
+        #     os.remove(self.model_path)
+        #     self.config_store.purge()
+        # for opt in self.get_arguments('_opts'):
+        #     if opt in SKLEARN_DEFAULTS:
+        #         self.set_opt(opt, SKLEARN_DEFAULTS[opt])
+        # if '_cache' in self.args:
+        #     self.store_data(pd.DataFrame())
 
 
 class NLPHandler(BaseMLHandler):
