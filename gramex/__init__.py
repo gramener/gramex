@@ -1,23 +1,19 @@
 '''
 Gramex {__version__} Copyright (c) 2017 by Gramener
+Help: https://learn.gramener.com/guide/
 
-Start the Gramex server on port 9988 at the current directory.
-If no gramex.yaml exists, show the guide (https://learn.gramener.com/guide/)
-
-Options
+Common startup options
   --listen.port=9090            Starts Gramex at port 9090
-  --browser                     Open the browser after startup
-  --settings.debug              Enable serving tracebacks and autoreload
-  --settings.xsrf_cookies=false Disable XSRF cookies (only for testing)
-  --settings.cookie_secret=...  Change cookie encryption key
+  --browser=true                Open the browser after startup
+  --settings.debug              Start Python debugger on error
 
-Helper applications. For usage, run with --help
+Helper applications. For usage, run "gramex <app> --help"
   gramex init                   Add Gramex project scaffolding to current dir
   gramex service                Windows service setup
   gramex mail                   Send email from command line
   gramex license                See Gramex license, accept or reject it
 
-Installation commands. For usage, run with --help
+Installation commands. For usage, run "gramex <command> --help"
   gramex install                Install an app
   gramex update                 Update an app
   gramex setup                  Run make, npm install, bower install etc on app
