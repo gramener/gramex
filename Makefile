@@ -24,6 +24,7 @@ help:
 clean: clean-build clean-pyc clean-test
 
 clean-build:
+	git clean -fdx
 	rm -rf build/
 	rm -rf dist/
 	rm -rf .eggs/
@@ -69,6 +70,7 @@ test: test-setup
 	$(PYTHON) setup.py nosetests
 
 conda:
+	make clean
 	# conda install conda-build
 	python pkg/conda/conda-setup.py
 	conda build -c conda-forge pkg/conda/
