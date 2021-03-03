@@ -69,6 +69,7 @@ test: test-setup
 	$(PYTHON) setup.py nosetests
 
 conda:
+	git clean -fdx
 	# conda install conda-build
 	python pkg/conda/conda-setup.py
 	conda build -c conda-forge pkg/conda/
