@@ -56,6 +56,7 @@ SKLEARN_DEFAULTS = {
     'cats': [],
     'target_col': None,
 }
+ACTIONS = ['predict', 'score', 'append', 'train', 'retrain']
 TRANSFORMERS_DEFAULTS = dict(
     num_train_epochs=1,
     per_device_train_batch_size=16,
@@ -68,6 +69,14 @@ DEFAULT_TEMPLATE = op.join(op.dirname(__file__), '..', 'apps', 'mlhandler', 'tem
 _prediction_col = '_prediction'
 
 
+def _remove(path):
+    if op.exists(path):
+        if op.isfile(path):
+            os.remove(path)
+        elif op.isdir(path):
+            rmtree(path)
+
+
 def _fit(model, x, y, path=None, name=None):
     app_log.info('Starting training...')
     getattr(model, 'partial_fit', model.fit)(x, y)
@@ -78,10 +87,6 @@ def _fit(model, x, y, path=None, name=None):
 
 
 def _train_transformer(model, data, model_path, **kwargs):
-    # if isinstance(model, TextClassificationPipeline):
-    #     model = model.model
-    # else:
-    #     model = model
     enc = model.tokenizer(data['text'].tolist(), truncation=True, padding=True)
     labels = SENTIMENT_LENC.transform(data['label'])
     train_dataset = SentimentDataset(enc, labels)
@@ -139,10 +144,7 @@ def is_categorical(s, num_treshold=0.1):
 
 
 def move_to_cpu(model):
-    if isinstance(model, TextClassificationPipeline):
-        model.model.to('cpu')
-    else:
-        model.to('cpu')
+    getattr(model, 'model', model).to('cpu')
 
 
 class BaseMLHandler(FormHandler):
@@ -159,11 +161,7 @@ class BaseMLHandler(FormHandler):
         cls.config_store = cache.JSONStore(op.join(cls.config_dir, 'config.json'), flush=None)
         cls.data_store = op.join(cls.config_dir, 'data.h5')
 
-        template = kwargs.pop('template', False)
-        if not op.isfile(template):
-            template = DEFAULT_TEMPLATE
-        cls.template = template
-
+        cls.template = kwargs.pop('template', DEFAULT_TEMPLATE)
         super(BaseMLHandler, cls).setup(**kwargs)
 
     @classmethod
@@ -211,7 +209,7 @@ class BaseMLHandler(FormHandler):
     def _transform(self, data, **kwargs):
         raise NotImplementedError
 
-    def _parse_data(self, _cache=True):
+    def _parse_data(self, _cache=True, append=False):
         # First look in self.request.files
         if len(self.request.files) > 0:
             dfs = []
@@ -236,7 +234,7 @@ class BaseMLHandler(FormHandler):
             else:
                 data = pd.DataFrame.from_dict(parse_qs(self.request.body.decode('utf8')))
         if _cache:
-            self.store_data(data)
+            self.store_data(data, append)
         if len(data) == 0:
             data = self.load_data()
         return data
@@ -247,30 +245,30 @@ class BaseMLHandler(FormHandler):
         return kwargs
 
     @classmethod
-    def load_transformer(cls, task, model):
-        if model is None:
-            model = {}
+    def load_transformer(cls, task, _model={}):
         default_model_path = op.join(
             gramex.config.variables['GRAMEXDATA'], 'apps', 'mlhandler',
             slugify(cls.name))
-        path = model.get('path', default_model_path)
+        path = _model.get('path', default_model_path)
         cls.model_path = path
         # try loading from model_path
+        kwargs = {}
+        if task == "ner":
+            kwargs['grouped_entities'] = True
         try:
-            _model = AutoModelForSequenceClassification.from_pretrained(cls.model_path)
-            _tokenizer = AutoTokenizer.from_pretrained(cls.model_path)
-            model = pipeline(task=task, model=_model, tokenizer=_tokenizer)
+            kwargs['model'] = AutoModelForSequenceClassification.from_pretrained(cls.model_path)
+            kwargs['tokenizer'] = AutoTokenizer.from_pretrained(cls.model_path)
         except Exception as err:
             app_log.warning(f'Could not load model from {cls.model_path}.')
             app_log.warning(f'{err}')
-            model = pipeline(task)
+        model = pipeline(task, **kwargs)
         cls.model = model
 
 
 class MLHandler(BaseMLHandler):
 
     @classmethod
-    def setup(cls, data=None, model=None, backend='sklearn', config_dir='', **kwargs):
+    def setup(cls, data=None, model={}, backend='sklearn', config_dir='', **kwargs):
 
         # From filehanlder: do the following
         # cls.post = cls.put = cls.delete = cls.patch = cls.options = cls.get
@@ -300,10 +298,6 @@ class MLHandler(BaseMLHandler):
                 data = None
             if data is not None:
                 cls.store_data(data)
-
-            # parse model kwargs
-            if model is None:
-                model = {}
 
             default_model_path = op.join(
                 gramex.config.variables['GRAMEXDATA'], 'apps', 'mlhandler',
@@ -412,7 +406,10 @@ class MLHandler(BaseMLHandler):
         to_guess = set(data.columns.tolist()) - nums.union(cats)
         target_col = cls.get_opt('target_col', False)
         if target_col:
-            to_guess = to_guess - {target_col}
+            try:
+                to_guess = to_guess - {target_col}
+            except TypeError:
+                app_log.critical(target_col)
         categoricals = [c for c in to_guess if is_categorical(data[c])]
         for c in categoricals:
             to_guess.remove(c)
@@ -443,7 +440,9 @@ class MLHandler(BaseMLHandler):
         data = self._filterrows(data)
         return data
 
-    def _predict(self, data, score_col=False, transform=True):
+    def _predict(self, data=None, score_col=False, transform=True):
+        if data is None:
+            data = self._parse_data(False)
         if transform:
             data = self._transform(data, deduplicate=False)
         self.model = cache.open(self.model_path, joblib.load)
@@ -505,79 +504,42 @@ class MLHandler(BaseMLHandler):
                     self.render(self.template, handler=self, data=self.load_data())
         super(MLHandler, self).get(*path_args, **path_kwargs)
 
+    def _append(self):
+        self._parse_data(_cache=True, append=True)
+
+    def _train(self, data=None):
+        target_col = self.get_argument('target_col', self.get_opt('target_col'))
+        self.set_opt('target_col', target_col)
+        data = self._parse_data(False) if data is None else data
+        data = self._filtercols(data)
+        data = self._filterrows(data)
+        target = data[target_col]
+        train = data[[c for c in data if c != target_col]]
+        self.model = self._get_pipeline(data, force=True)
+        _fit(self.model, train, target, self.model_path)
+        return {'score': self.model.score(train, target)}
+
+    def _retrain(self):
+        return self._train(self.load_data())
+
+    def _score(self):
+        self._check_model_path()
+        data = self._parse_data(False)
+        target_col = self.get_argument('target_col', self.get_opt('target_col'))
+        self.set_opt('target_col', target_col)
+        return {'score': self._predict(data, target_col, transform=False)}
+
     @coroutine
     def post(self, *path_args, **path_kwargs):
-        action = self.args.get('_action', ['predict'])
-        if not set(action).issubset({'predict', 'score', 'append', 'train', 'retrain'}):
-            raise ValueError(f'Action(s) {action} not supported.')
-        if len(action) == 1:
-            action = action[0]
-
-        if action in ('score', 'predict'):
-            self._check_model_path()
-        if action == 'retrain':
-            # Don't parse data from request, just train on the cached data
-            data = self.load_data()
-        else:
-            data = self._parse_data(False)
-
-        if (action == 'score') & (len(data) == 0):
-            data = self.load_data()
-
-        if action == 'predict':
-            prediction = yield gramex.service.threadpool.submit(
-                self._predict, data)
-            self.write(json.dumps(prediction, indent=2, cls=CustomJSONEncoder))
-        elif action == 'score':
-            # target_col = self.get_opt('target_col')
-            # if target_col is None:
-            #     target_col = self.get_arg('target_col')
-            #     self.set_opt('target_col', target_col)
-            target_col = self.get_cached_arg('target_col')
-            score = yield gramex.service.threadpool.submit(
-                self._predict, data, target_col, transform=False)
-            self.write(json.dumps({'score': score}, indent=2))
-        elif (action == 'append') or ('append' in action):
-            try:
-                data = self.store_data(data, append=True)
-            except Exception as err:
-                raise HTTPError(BAD_REQUEST, reason=f'{err}')
-            if isinstance(action, list) and ('append' in action):
-                action.remove('append')
-                if len(action) == 1:
-                    action = action[0]
-
-        if action in ('train', 'retrain'):
-            # target_col = self.args.get('target_col', [False])[0]
-            # if not target_col:
-            #     older_target_col = self.get_opt('target_col', False)
-            #     if not older_target_col:
-            #         raise ValueError('target_col not specified')
-            #     else:
-            #         target_col = older_target_col
-            # else:
-            #     self.set_opt('target_col', target_col)
-            target_col = self.get_cached_arg('target_col')
-
-            data = self._filtercols(data)
-            data = self._filterrows(data)
-
-            # assemble the pipeline
-            if self.get_opt('pipeline', True):
-                self.model = self._get_pipeline(data, force=True)
-            # train the model
-            target = data[target_col]
-            train = data[[c for c in data if c != target_col]]
-            yield gramex.service.threadpool.submit(
-                _fit, self.model, train, target, self.model_path)
-            app_log.info(f'{self.name}: Model saved at {self.model_path}')
-            self.write(json.dumps({'score': self.model.score(train, target)}))
+        action = self.args.pop('_action', ['predict'])[0]
+        if action not in ACTIONS:
+            raise ValueError(f'Action {action} not supported.')
+        res = yield gramex.service.threadpool.submit(getattr(self, f"_{action}"))
+        self.write(json.dumps(res, indent=2, cls=CustomJSONEncoder))
         super(MLHandler, self).post(*path_args, **path_kwargs)
 
     def get_cached_arg(self, argname):
-        val = self.get_arg(argname, False)
-        if not val:
-            return self.get_opt(val)
+        val = self.get_arg(argname, self.get_opt(argname))
         self.set_opt(argname, val)
         return val
 
@@ -596,8 +558,7 @@ class MLHandler(BaseMLHandler):
                     params[param] = value
         # Since model params are changing, remove the model on disk
         self.model = None
-        if op.exists(self.model_path):
-            os.remove(self.model_path)
+        _remove(self.model_path)
         self.set_opt('params', params)
         for opt, default in SKLEARN_DEFAULTS.items():
             if opt in self.args:
@@ -609,33 +570,31 @@ class MLHandler(BaseMLHandler):
         self.config_store.flush()
 
     def _delete_model(self):
-        pass
-
-    def _delete_opts(self):
-        pass
+        _remove(self.model_path)
+        self.config_store.purge()
 
     def _delete_cache(self):
-        pass
+        self.store_data(pd.DataFrame())
+
+    def _delete_opts(self):
+        for opt in self.get_arguments('_opts'):
+            if opt in SKLEARN_DEFAULTS:
+                self.set_opt(opt, SKLEARN_DEFAULTS[opt])
 
     @coroutine
     def delete(self, *path_args, **path_kwargs):
-        for item in self.get_arguments('delete', []):
-            getattr(self, f'_delete_{item}')(self)
-
-        # if '_model' in self.args and op.exists(self.model_path):
-        #     os.remove(self.model_path)
-        #     self.config_store.purge()
-        # for opt in self.get_arguments('_opts'):
-        #     if opt in SKLEARN_DEFAULTS:
-        #         self.set_opt(opt, SKLEARN_DEFAULTS[opt])
-        # if '_cache' in self.args:
-        #     self.store_data(pd.DataFrame())
+        for item in self.get_arguments('delete'):
+            try:
+                getattr(self, f'_delete_{item}')()
+            except AttributeError:
+                raise HTTPError(BAD_REQUEST, f'Cannot delete {item}.')
 
 
 class NLPHandler(BaseMLHandler):
 
     @classmethod
-    def setup(cls, task, model=None, config_dir='', **kwargs):
+    def setup(cls, task, model={}, config_dir='', **kwargs):
+        cls.task = task
         if not TRANSFORMERS_INSTALLED:
             raise ImportError('pip install transformers')
         super(NLPHandler, cls).setup(**kwargs)
@@ -655,16 +614,25 @@ class NLPHandler(BaseMLHandler):
         move_to_cpu(self.model)
         kwargs = {}
         if action == 'train':
+            if self.task == "ner":
+                raise HTTPError(BAD_REQUEST,
+                                reason="Action not yet supported for task {self.task}")
             kwargs = self._coerce_transformers_opts()
             kwargs['model_path'] = self.model_path
             args = _train_transformer, self.model, data
         elif action == 'score':
+            if self.task == "ner":
+                raise HTTPError(BAD_REQUEST,
+                                reason="Action not yet supported for task {self.task}")
             args = _score_transformer, self.model, data
-        else:
+        elif self.task == "sentiment-analysis":
             args = self.model, data['text'].tolist()
-        res = yield gramex.service.threadpool.submit(*args, **kwargs)
+            res = yield gramex.service.threadpool.submit(*args, **kwargs)
+        elif self.task == "ner":
+            res = yield gramex.service.threadpool.submit(lambda x: [self.model(k) for k in x],
+                                                         data['text'].tolist())
         self.write(json.dumps(res, indent=2, cls=CustomJSONEncoder))
 
     @coroutine
     def delete(self, *path_args, **path_kwargs):
-        rmtree(self.model_path)
+        _remove(self.model_path)

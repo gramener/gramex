@@ -52,7 +52,7 @@ class TestMLHandler(TestGramex):
             df = pd.DataFrame.from_records(self.get('/mlhandler?_cache').json())
             self.assertEqual(df.shape[0], 2 * self.df.shape[0])
         finally:
-            self.get('/mlhandler?_cache', method='delete')
+            self.get('/mlhandler?delete=cache', method='delete')
             self.get('/mlhandler?_action=append', method='post',
                      data=self.df.to_json(orient='records'),
                      headers={'Content-Type': 'application/json'})
@@ -65,9 +65,11 @@ class TestMLHandler(TestGramex):
         self.assertEqual(resp.status_code, OK)
 
         resp = self.get(
-            '/mlincr?_action=append&_action=train', method='post',
+            '/mlincr?_action=append', method='post',
             data=df_train.to_json(orient='records'),
             headers={'Content-Type': 'application/json'})
+        self.assertEqual(resp.status_code, OK)
+        resp = self.get('/mlincr?_action=train', method='post')
         self.assertEqual(resp.status_code, OK)
 
         resp = self.get(
@@ -77,9 +79,11 @@ class TestMLHandler(TestGramex):
         org_score = resp.json()['score']
 
         resp = self.get(
-            '/mlincr?_action=append&_action=train', method='post',
+            '/mlincr?_action=append', method='post',
             data=df_append.to_json(orient='records'),
             headers={'Content-Type': 'application/json'})
+        self.assertEqual(resp.status_code, OK)
+        resp = self.get('/mlincr?_action=train', method='post')
         self.assertEqual(resp.status_code, OK)
         resp = self.get(
             '/mlincr?_action=score', method='post',
@@ -159,7 +163,7 @@ class TestMLHandler(TestGramex):
 
     def test_clear_cache(self):
         try:
-            r = self.get('/mlhandler?_cache', method='delete')
+            r = self.get('/mlhandler?delete=cache', method='delete')
             self.assertEqual(r.status_code, OK)
             self.assertListEqual(self.get('/mlhandler?_cache').json(), [])
         finally:
@@ -179,7 +183,7 @@ class TestMLHandler(TestGramex):
     def test_delete(self):
         clf = joblib.load(op.join(folder, 'model.pkl'))
         try:
-            r = self.get('/mlhandler?_model', method='delete')
+            r = self.get('/mlhandler?delete=model', method='delete')
             self.assertEqual(r.status_code, OK)
             self.assertFalse(op.exists(op.join(folder, 'model.pkl')))
             # check if the correct error message is shown
@@ -232,7 +236,7 @@ class TestMLHandler(TestGramex):
             pipe = joblib.load(op.join(folder, 'model.pkl'))
             self.assertEqual(pipe.named_steps['LogisticRegression'].coef_.shape, (3, 1))
         finally:
-            self.get('/mlhandler?&_model&_opts=include&_opts=exclude', method='delete')
+            self.get('/mlhandler?delete=opts&_opts=include&_opts=exclude', method='delete')
             joblib.dump(clf, op.join(folder, 'model.pkl'))
 
     def test_get_bulk_predictions(self, target_col='species'):
@@ -320,7 +324,7 @@ class TestMLHandler(TestGramex):
     def test_post_after_delete_custom_model(self):
         org_clf = joblib.load(op.join(folder, 'model.pkl'))
         try:
-            r = self.get('/mlhandler?_model', method='delete')
+            r = self.get('/mlhandler?delete=model', method='delete')
             self.assertEqual(r.status_code, OK)
             self.assertFalse(op.exists(op.join(folder, 'model.pkl')))
             # recreate the model
@@ -343,7 +347,7 @@ class TestMLHandler(TestGramex):
     def test_post_after_delete_default_model(self):
         clf = joblib.load(op.join(folder, 'model.pkl'))
         try:
-            r = self.get('/mlhandler?_model', method='delete')
+            r = self.get('/mlhandler?delete=model', method='delete')
             self.assertEqual(r.status_code, OK)
             self.assertFalse(op.exists(op.join(folder, 'model.pkl')))
             # recreate the model
@@ -370,7 +374,7 @@ class TestMLHandler(TestGramex):
         clf = joblib.load(op.join(folder, 'model.pkl'))
         try:
             # clear the cache
-            resp = self.get('/mlhandler?_cache', method='delete')
+            resp = self.get('/mlhandler?delete=cache', method='delete')
             self.assertEqual(resp.status_code, OK)
             resp = self.get('/mlhandler?_cache')
             self.assertListEqual(resp.json(), [])
@@ -387,7 +391,7 @@ class TestMLHandler(TestGramex):
             self.assertGreaterEqual(resp.json()['score'], 0.6)  # NOQA: E912
         finally:
             # revert to the original cache
-            self.get('/mlhandler?_cache', method='delete')
+            self.get('/mlhandler?delete=cache', method='delete')
             self.get('/mlhandler?_action=append', method='post',
                      data=self.df.to_json(orient='records'),
                      headers={'Content-Type': 'application/json'})
