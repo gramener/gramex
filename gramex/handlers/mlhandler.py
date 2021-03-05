@@ -1,4 +1,3 @@
-from collections import defaultdict
 from inspect import signature
 from io import BytesIO
 import json
@@ -25,18 +24,15 @@ from slugify import slugify
 from tornado.gen import coroutine
 from tornado.web import HTTPError
 try:
-    from transformers import pipeline, TextClassificationPipeline  # NOQA: F401
-    from transformers import AutoModelForSequenceClassification, AutoTokenizer  # NOQA: F401
+    from transformers import pipeline
+    from transformers import AutoModelForSequenceClassification, AutoTokenizer
     from transformers import Trainer, TrainingArguments
     from gramex.dl_utils import SentimentDataset
-    TRANSFORMERS_INSTALLED = True
 except ImportError:
     TRANSFORMERS_INSTALLED = False
 
 
 op = os.path
-DATA_CACHE = defaultdict(dict)
-SCORES = defaultdict(list)
 MLCLASS_MODULES = [
     'sklearn.linear_model',
     'sklearn.tree',
@@ -46,7 +42,7 @@ MLCLASS_MODULES = [
     'sklearn.neural_network',
     'sklearn.naive_bayes',
 ]
-SKLEARN_DEFAULTS = {
+TRANSFORMS = {
     'include': [],
     'exclude': [],
     'dropna': True,
@@ -66,7 +62,6 @@ TRANSFORMERS_DEFAULTS = dict(
 )
 SENTIMENT_LENC = LabelEncoder().fit(['NEGATIVE', 'POSITIVE'])
 DEFAULT_TEMPLATE = op.join(op.dirname(__file__), '..', 'apps', 'mlhandler', 'template.html')
-_prediction_col = '_prediction'
 
 
 def _remove(path):
@@ -113,14 +108,10 @@ def _score_transformer(model, data):
 
 
 def search_modelclass(mclass):
-    for module in MLCLASS_MODULES:
+    for module in MLCLASS_MODULES + [mclass]:
         cls = pydoc.locate(f'{module}.{mclass}')
         if cls:
             return cls
-    # Search with the literal path
-    cls = pydoc.locate(mclass)
-    if cls:
-        return cls
     msg = f'Model {mclass} not found. Please provide a full Python path.'
     raise HTTPError(NOT_FOUND, reason=msg)
 
@@ -183,14 +174,15 @@ class BaseMLHandler(FormHandler):
 
     @classmethod
     def get_opt(cls, key, default=None):
-        if key in SKLEARN_DEFAULTS:
-            return cls.config_store.load('transform', {}).get(key, SKLEARN_DEFAULTS[key])
-        if key in ('class', 'params'):
-            return cls.config_store.load('model', {}).get(key, default)
+        return cls.config_store.load('transform', {}).get(
+            key, TRANSFORMS.get(
+                key, cls.config_store.load('model', {}).get(key, default)
+            )
+        )
 
     @classmethod
     def set_opt(cls, key, value):
-        if key in SKLEARN_DEFAULTS:
+        if key in TRANSFORMS:
             transform = cls.config_store.load('transform', {})
             transform[key] = value
             cls.config_store.dump('transform', transform)
@@ -205,9 +197,6 @@ class BaseMLHandler(FormHandler):
             cls.config_store.update['model'] = model
         cls.config_store.changed = True
         cls.config_store.flush()
-
-    def _transform(self, data, **kwargs):
-        raise NotImplementedError
 
     def _parse_data(self, _cache=True, append=False):
         # First look in self.request.files
@@ -233,10 +222,10 @@ class BaseMLHandler(FormHandler):
                     _cache = False
             else:
                 data = pd.DataFrame.from_dict(parse_qs(self.request.body.decode('utf8')))
-        if _cache:
-            self.store_data(data, append)
         if len(data) == 0:
             data = self.load_data()
+        elif _cache:
+            self.store_data(data, append)
         return data
 
     def _coerce_transformers_opts(self):
@@ -305,7 +294,7 @@ class MLHandler(BaseMLHandler):
             model_path = model.pop('path', default_model_path)
 
             # store the model kwargs from gramex.yaml into the store
-            for key in SKLEARN_DEFAULTS:
+            for key in TRANSFORMS:
                 kwarg = model.get(key, False)
                 if not cls.get_opt(key, False) and kwarg:
                     cls.set_opt(key, kwarg)
@@ -383,10 +372,7 @@ class MLHandler(BaseMLHandler):
         for method in 'dropna drop_duplicates'.split():
             action = cls.get_opt(method, True)
             if action:
-                if isinstance(action, list):
-                    subset = action
-                else:
-                    subset = None
+                subset = action if isinstance(action, list) else None
                 data = getattr(data, method)(subset=subset)
         return data
 
@@ -403,13 +389,7 @@ class MLHandler(BaseMLHandler):
         if len(both) > 0:
             raise HTTPError(BAD_REQUEST,
                             reason=f"Columns {both} cannot be both numerical and categorical.")
-        to_guess = set(data.columns.tolist()) - nums.union(cats)
-        target_col = cls.get_opt('target_col', False)
-        if target_col:
-            try:
-                to_guess = to_guess - {target_col}
-            except TypeError:
-                app_log.critical(target_col)
+        to_guess = set(data.columns.tolist()) - nums.union(cats) - {cls.get_opt('target_col')}
         categoricals = [c for c in to_guess if is_categorical(data[c])]
         for c in categoricals:
             to_guess.remove(c)
@@ -418,12 +398,10 @@ class MLHandler(BaseMLHandler):
         numericals += list(nums)
         assert len(set(categoricals) & set(numericals)) == 0
 
-        steps = []
-        if categoricals:
-            steps.append(('ohe', OneHotEncoder(sparse=False), categoricals))
-        if numericals:
-            steps.append(('scaler', StandardScaler(), numericals))
-        ct = ColumnTransformer(steps)
+        ct = ColumnTransformer(
+            [('ohe', OneHotEncoder(sparse=False), categoricals),
+             ('scaler', StandardScaler(), numericals)]
+        )
         model_kwargs = cls.config_store.load('model', {})
         mclass = model_kwargs.get('class', False)
         if mclass:
@@ -440,27 +418,34 @@ class MLHandler(BaseMLHandler):
         data = self._filterrows(data)
         return data
 
-    def _predict(self, data=None, score_col=False, transform=True):
+    def _predict(self, data=None, score_col=''):
         if data is None:
             data = self._parse_data(False)
-        if transform:
-            data = self._transform(data, deduplicate=False)
+        data = self._transform(data, deduplicate=False)
         self.model = cache.open(self.model_path, joblib.load)
-        if score_col and score_col in data:
-            target = data[score_col]
-            data = data.drop([score_col], axis=1)
+        try:
+            target = data.pop(score_col)
             return self.model.score(data, target)
-        # Set data in the same order as the transformer requests
-        data = data[self.model.named_steps['transform']._feature_names_in]
-        data[self.get_opt('target_col', _prediction_col)] = self.model.predict(data)
-        return data
+        except KeyError:
+            # Set data in the same order as the transformer requests
+            data = data[self.model.named_steps['transform']._feature_names_in]
+            data[self.get_opt('target_col', '_prediction')] = self.model.predict(data)
+            return data
 
     def _check_model_path(self):
-        if not op.exists(self.model_path):
-            msg = f'No model found at {self.model_path}'
-            raise HTTPError(NOT_FOUND, log_message=msg)
-        if self.model is None:
+        try:
             self.model = cache.open(self.model_path, joblib.load)
+        except FileNotFoundError:
+            raise HTTPError(NOT_FOUND, f'No model found at {self.model_path}')
+
+    @coroutine
+    def prepare(self):
+        flattened = {}
+        for k, v in self.args.items():
+            if not isinstance(TRANSFORMS.get(k), list) and isinstance(v, list) and len(v) == 1:
+                v = v[0]
+            flattened[k] = v
+        self.args = flattened
 
     @coroutine
     def get(self, *path_args, **path_kwargs):
@@ -485,16 +470,17 @@ class MLHandler(BaseMLHandler):
 
             else:
                 try:
-                    data = pd.DataFrame.from_dict(
-                        {k: v for k, v in self.args.items() if not k.startswith('_')})
+                    data_args = {k: v for k, v in self.args.items() if not k.startswith('_')}
+                    data_args = {
+                        k: [v] if not isinstance(v, list) else v for k, v in data_args.items()
+                    }
+                    data = pd.DataFrame.from_dict(data_args)
                 except Exception as err:
                     app_log.debug(err.msg)
                     data = []
                 if len(data) > 0:
                     self.set_header('Content-Type', 'application/json')
-                    target_col = self.get_opt('target_col')
-                    if target_col in data:
-                        data = data.drop([target_col], axis=1)
+                    data = data.drop([self.get_opt('target_col')], axis=1, errors='ignore')
                     # if action in ('predict', 'score'):
                     prediction = yield gramex.service.threadpool.submit(
                         self._predict, data)
@@ -527,11 +513,11 @@ class MLHandler(BaseMLHandler):
         data = self._parse_data(False)
         target_col = self.get_argument('target_col', self.get_opt('target_col'))
         self.set_opt('target_col', target_col)
-        return {'score': self._predict(data, target_col, transform=False)}
+        return {'score': self._predict(data, target_col)}
 
     @coroutine
     def post(self, *path_args, **path_kwargs):
-        action = self.args.pop('_action', ['predict'])[0]
+        action = self.args.pop('_action', 'predict')
         if action not in ACTIONS:
             raise ValueError(f'Action {action} not supported.')
         res = yield gramex.service.threadpool.submit(getattr(self, f"_{action}"))
@@ -545,7 +531,7 @@ class MLHandler(BaseMLHandler):
 
     @coroutine
     def put(self, *path_args, **path_kwargs):
-        mclass = self.args.pop('class', [self.get_opt('class')])[0]
+        mclass = self.args.pop('class', self.get_opt('class'))
         self.set_opt('class', mclass)
         params = self.get_opt('params', {})
         if mclass:
@@ -553,20 +539,19 @@ class MLHandler(BaseMLHandler):
             for param in signature(search_modelclass(mclass)).parameters:
                 if param in self.args:
                     value = self.args.pop(param)
-                    if len(value) == 1:
-                        value = value[0]
+                    # if len(value) == 1:
+                    #     value = value[0]
                     params[param] = value
         # Since model params are changing, remove the model on disk
         self.model = None
         _remove(self.model_path)
         self.set_opt('params', params)
-        for opt, default in SKLEARN_DEFAULTS.items():
-            if opt in self.args:
-                val = self.args.pop(opt)
-                if not isinstance(default, list):
-                    if isinstance(val, list) and len(val) == 1:
-                        val = val[0]
-                self.set_opt(opt, val)
+        for opt in TRANSFORMS.keys() & self.args.keys():
+            val = self.args.pop(opt)
+            # if not isinstance(TRANSFORMS[opt], list):
+            #     if isinstance(val, list) and len(val) == 1:
+            #         val = val[0]
+            self.set_opt(opt, val)
         self.config_store.flush()
 
     def _delete_model(self):
@@ -577,9 +562,8 @@ class MLHandler(BaseMLHandler):
         self.store_data(pd.DataFrame())
 
     def _delete_opts(self):
-        for opt in self.get_arguments('_opts'):
-            if opt in SKLEARN_DEFAULTS:
-                self.set_opt(opt, SKLEARN_DEFAULTS[opt])
+        for opt in set(self.get_arguments('_opts')) & TRANSFORMS.keys():
+            self.set_opt(opt, TRANSFORMS[opt])
 
     @coroutine
     def delete(self, *path_args, **path_kwargs):

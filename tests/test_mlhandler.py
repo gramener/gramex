@@ -91,7 +91,7 @@ class TestMLHandler(TestGramex):
             headers={'Content-Type': 'application/json'})
         new_score = resp.json()['score']
         # Score should improve by at least 30%
-        self.assertGreaterEqual(new_score - org_score, 0.3)  # NOQA: E912
+        self.assertGreaterEqual(new_score - org_score, 0.29)  # NOQA: E912
 
     def test_blank_slate(self):
         # Assert that a model doesn't have to exist
