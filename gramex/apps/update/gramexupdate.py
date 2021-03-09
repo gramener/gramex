@@ -55,6 +55,8 @@ def consolidate():
 
     def merge(path, force=False):
         '''Merge log file from path into database'''
+        if not os.path.exists(path):
+            return
         src = os.path.split(path)[-1]
         if src in merged and not force:
             return
@@ -91,6 +93,15 @@ def consolidate():
         # SQLite supports 999 variables in an insert by default.
         # chunksize=60 ensures that 15 columns x 60 = 750 is within the limit.
         result.to_sql('logs', engine, if_exists='append', index=False, chunksize=60)
+
+        # Summarize monthly results into "mau" (Monthly Average Users) table
+        engine.execute('DROP TABLE IF EXISTS mau')
+        engine.execute('''
+            CREATE TABLE mau as
+                SELECT SUBSTR(date, 0, 8) AS month, COUNT(DISTINCT node) AS nodes
+                FROM logs
+                GROUP BY SUBSTR(date, 0, 8)
+        ''')
 
     merge(log_file, force=True)
     for log_file in glob(log_file + '*'):

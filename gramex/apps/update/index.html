@@ -12,8 +12,10 @@
       <a href="https://learn.gramener.com/guide/install/">these instructions</a>.</p>
     <p>Examples of visualisations created by Gramex are at <a href="https://gramener.com/">gramener.com</a>.</p>
 
-    <h2 class="auth d-none">Usage: <span id="user-count"></span> machines / day</h2>
+    <h2 class="auth d-none">Monthly Users</h2>
     <div id="users-by-month"></div>
+    <h2 class="auth d-none">Daily: <span id="user-count"></span> machines / day</h2>
+    <div id="users-by-date"></div>
     <h2 class="auth d-none">Browse logs</h2>
     <div class="data"></div>
   </div>
@@ -38,17 +40,8 @@
   <script>
     /* eslint-env browser, jquery */
     /* globals moment, _, vegaEmbed */
-    var vlSpec = {
-      '$schema': 'https://vega.github.io/schema/vega-lite/v2.json',
-      'mark': 'bar',
-      'encoding': {
-        'x': { 'field': 'date', 'type': 'nominal', 'axis': {'title': ''} },
-        'y': { 'field': 'users', 'type': 'quantitative', 'axis': {'title': ''} }
-      }
-    }
     var from = moment().subtract(1, 'month').format('YYYY-MM-DD')
-    var url = 'data?date>~=' + from + '&_by=date&_by=node&_sort=-date&_c=event|count'
-    $.getJSON(url)
+    $.getJSON(`data/logs?date>~=${from}&_by=date&_by=node&_sort=-date&_c=event|count`)
       .done(function(data) {
         $('.auth.d-none').removeClass('d-none')
         var usage = _.map(_.groupBy(data, 'date'), function (v, date) {
@@ -56,12 +49,31 @@
         })
         var mean = _.meanBy(usage, function(row) { return row.users })
         $('#user-count').html(Math.round(mean))
-        vlSpec.data = {values: usage}
-        vegaEmbed('#users-by-month', vlSpec, {actions: false})
+        vegaEmbed('#users-by-date', {
+          '$schema': 'https://vega.github.io/schema/vega-lite/v2.json',
+          'mark': 'bar',
+          'data': { 'values': usage },
+          'encoding': {
+            'x': { 'field': 'date', 'type': 'nominal', 'axis': {'title': ''} },
+            'y': { 'field': 'users', 'type': 'quantitative', 'axis': {'title': ''} }
+          }
+        }, {actions: false})
         $('.data').formhandler({
-          src: 'data?date>~=' + from,
+          src: 'data/logs?date>~=' + from,
           columns: 'date,event,ip,system,node,cwd,args'
         })
+      })
+    $.getJSON('data/mau?_sort=-month&_limit=24')
+      .done(function(data) {
+        vegaEmbed('#users-by-month', {
+          '$schema': 'https://vega.github.io/schema/vega-lite/v2.json',
+          'mark': 'bar',
+          'data': { 'values': data },
+          'encoding': {
+            'x': { 'field': 'month', 'type': 'nominal', 'axis': {'title': 'Month'} },
+            'y': { 'field': 'nodes', 'type': 'quantitative', 'axis': {'title': 'Users'} }
+          }
+        }, {actions: false})
       })
   </script>
 </body>
