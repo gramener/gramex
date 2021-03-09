@@ -3,7 +3,6 @@ from io import BytesIO
 import json
 import os
 import re
-from shutil import rmtree
 from urllib.parse import parse_qs
 
 import gramex
@@ -11,7 +10,7 @@ from gramex.config import app_log, CustomJSONEncoder
 from gramex import data as gdata
 from gramex.handlers import FormHandler
 from gramex.http import NOT_FOUND, BAD_REQUEST
-from gramex.install import _mkdir
+from gramex.install import _mkdir, safe_rmtree
 from gramex import cache
 import joblib
 import pandas as pd
@@ -64,14 +63,6 @@ SENTIMENT_LENC = LabelEncoder().fit(['NEGATIVE', 'POSITIVE'])
 DEFAULT_TEMPLATE = op.join(op.dirname(__file__), '..', 'apps', 'mlhandler', 'template.html')
 
 
-def _remove(path):
-    if op.exists(path):
-        if op.isfile(path):
-            os.remove(path)
-        elif op.isdir(path):
-            rmtree(path)
-
-
 def _fit(model, x, y, path=None, name=None):
     app_log.info('Starting training...')
     getattr(model, 'partial_fit', model.fit)(x, y)
@@ -107,6 +98,7 @@ def _score_transformer(model, data):
     return {'roc_auc': score}
 
 
+# ToDo: Use gramex.config.locate
 def search_modelclass(mclass):
     for module in MLCLASS_MODULES + [mclass]:
         cls = pydoc.locate(f'{module}.{mclass}')
@@ -144,6 +136,7 @@ class BaseMLHandler(FormHandler):
     def setup(cls, data=None, model=None, config_dir='', **kwargs):
         cls.slug = slugify(cls.name)
         # Create the config store directory
+        # use config_dir or DEFAULT_VALUE
         if not config_dir:
             config_dir = op.join(gramex.config.variables['GRAMEXDATA'], 'apps', 'mlhandler',
                                  cls.slug)
@@ -544,7 +537,7 @@ class MLHandler(BaseMLHandler):
                     params[param] = value
         # Since model params are changing, remove the model on disk
         self.model = None
-        _remove(self.model_path)
+        safe_rmtree(self.model_path, gramexdata=False)
         self.set_opt('params', params)
         for opt in TRANSFORMS.keys() & self.args.keys():
             val = self.args.pop(opt)
@@ -555,7 +548,7 @@ class MLHandler(BaseMLHandler):
         self.config_store.flush()
 
     def _delete_model(self):
-        _remove(self.model_path)
+        safe_rmtree(self.model_path, gramexdata=False)
         self.config_store.purge()
 
     def _delete_cache(self):
@@ -619,4 +612,4 @@ class NLPHandler(BaseMLHandler):
 
     @coroutine
     def delete(self, *path_args, **path_kwargs):
-        _remove(self.model_path)
+        safe_rmtree(self.model_path, gramexdata=False)

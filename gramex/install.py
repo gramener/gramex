@@ -197,32 +197,42 @@ else:
         raise exc_info[1]
 
 
-def safe_rmtree(target, retries=100, delay=0.05):
+def _try_remove(target, retries=100, delay=0.05, func=shutil.rmtree, **kwargs):
+    for count in range(retries):
+        try:
+            func(target, **kwargs)
+        except TryAgainError:
+            pass
+        # If permission is denied, e.g. antivirus, file is open, etc, keep trying with delay
+        except OSError:
+            app_log.warning('    Trying again to delete', target)
+            time.sleep(delay)
+        else:
+            break
+
+
+def safe_rmtree(target, retries=100, delay=0.05, gramexdata=True):
     '''
-    A replacement for shutil.rmtree that removes directories within $GRAMEXDATA.
+    A replacement for shutil.rmtree and os.remove that removes directories,
+    optionally within $GRAMEXDATA.
     It tries to remove the target multiple times, recovering from errors.
     '''
     if not os.path.exists(target):
         return True
     # TODO: check case insensitive in Windows, but case sensitive on other OS
-    elif target.lower().startswith(variables['GRAMEXDATA'].lower()):
-        # Try multiple times to recover from errors, since we have no way of
-        # auto-resuming rmtree: https://bugs.python.org/issue8523
-        for count in range(retries):
-            try:
-                shutil.rmtree(target, onerror=_ensure_remove)
-            except TryAgainError:
-                pass
-            # If permission is denied, e.g. antivirus, file is open, etc, keep trying with delay
-            except OSError:
-                app_log.warning('    Trying again to delete', target)
-                time.sleep(delay)
-            else:
-                break
-        return True
+    func, kwargs = (shutil.rmtree, {'onerror': _ensure_remove}) if \
+        os.path.isdir(target) else (os.remove, {})
+    if gramexdata:
+        if target.lower().startswith(variables['GRAMEXDATA'].lower()):
+            # Try multiple times to recover from errors, since we have no way of
+            # auto-resuming rmtree: https://bugs.python.org/issue8523
+            _try_remove(target, retries, delay, func, **kwargs)
+            return True
+        else:
+            app_log.warning('Not removing directory %s (outside $GRAMEXDATA)', target)
+            return False
     else:
-        app_log.warning('Not removing directory %s (outside $GRAMEXDATA)', target)
-        return False
+        _try_remove(target, retries, delay, func, **kwargs)
 
 
 def zip_prefix_filter(members, prefix):
