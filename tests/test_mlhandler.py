@@ -35,9 +35,9 @@ class TestMLHandler(TestGramex):
             'mlhandler-config/data.h5',
             'mlhandler-incr/config.json',
             'mlhandler-incr/data.h5',
-            'mlhandler-blank.pkl',
-            'mlhandler-incr.pkl',
-            'mlhandler-nopath.pkl',
+            'mlhandler-blank/mlhandler-blank.pkl',
+            'mlhandler-incr/mlhandler-incr.pkl',
+            'mlhandler-nopath/mlhandler-nopath.pkl',
         ]]
         paths += [op.join(folder, 'model.pkl')]
         for p in paths:
@@ -328,8 +328,9 @@ class TestMLHandler(TestGramex):
         self.assertGreaterEqual(accuracy_score(target, pred), self.ACC_TOL)
 
     def test_model_default_path(self):
-        clf = joblib.load(op.join(
-            gramex.config.variables['GRAMEXDATA'], 'apps', 'mlhandler', 'mlhandler-nopath.pkl'))
+        clf = joblib.load(
+            op.join(gramex.config.variables['GRAMEXDATA'], 'apps', 'mlhandler',
+                    'mlhandler-nopath', 'mlhandler-nopath.pkl'))
         self.assertIsInstance(clf, Pipeline)
         self.assertIsInstance(clf.named_steps['transform'], ColumnTransformer)
         self.assertIsInstance(clf.named_steps['LogisticRegression'], LogisticRegression)

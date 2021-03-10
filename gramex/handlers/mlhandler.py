@@ -15,11 +15,10 @@ import joblib
 import pandas as pd
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import OneHotEncoder, StandardScaler, LabelEncoder
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from slugify import slugify
 from tornado.gen import coroutine
 from tornado.web import HTTPError
-
 
 op = os.path
 MLCLASS_MODULES = [
@@ -42,14 +41,6 @@ TRANSFORMS = {
     'target_col': None,
 }
 ACTIONS = ['predict', 'score', 'append', 'train', 'retrain']
-TRANSFORMERS_DEFAULTS = dict(
-    num_train_epochs=1,
-    per_device_train_batch_size=16,
-    per_device_eval_batch_size=32,
-    weight_decay=0.01,
-    warmup_steps=100,
-)
-SENTIMENT_LENC = LabelEncoder().fit(['NEGATIVE', 'POSITIVE'])
 DEFAULT_TEMPLATE = op.join(op.dirname(__file__), '..', 'apps', 'mlhandler', 'template.html')
 search_modelclass = lambda x: locate(x, MLCLASS_MODULES)  # NOQA: E731
 
@@ -81,17 +72,12 @@ def is_categorical(s, num_treshold=0.1):
     return True
 
 
-def move_to_cpu(model):
-    getattr(model, 'model', model).to('cpu')
-
-
 class MLHandler(FormHandler):
 
     @classmethod
     def setup(cls, data=None, model={}, config_dir='', **kwargs):
         cls.slug = slugify(cls.name)
         # Create the config store directory
-        # use config_dir or DEFAULT_VALUE
         if not config_dir:
             config_dir = op.join(gramex.config.variables['GRAMEXDATA'], 'apps', 'mlhandler',
                                  cls.slug)
@@ -106,13 +92,11 @@ class MLHandler(FormHandler):
             data = gdata.filter(**data)
             cls.store_data(data)
         except TypeError:
+            app_log.warning('MLHandler could not find training data.')
             data = None
 
-        default_model_path = op.join(
-            gramex.config.variables['GRAMEXDATA'], 'apps', 'mlhandler',
-            slugify(cls.name) + '.pkl')
+        default_model_path = op.join(cls.config_dir, slugify(cls.name) + '.pkl')
         cls.model_path = model.pop('path', default_model_path)
-        _mkdir(op.dirname(cls.model_path))
 
         # store the model kwargs from gramex.yaml into the store
         for key in TRANSFORMS:
@@ -123,47 +107,32 @@ class MLHandler(FormHandler):
 
         if op.exists(cls.model_path):  # If the pkl exists, load it
             cls.model = joblib.load(cls.model_path)
-        else:
+        elif data is not None:
             mclass = cls.get_opt('class', model.get('class', False))
             params = cls.get_opt('params', {})
-            if mclass:
-                cls.model = search_modelclass(mclass)(**params)
-                cls.set_opt('class', mclass)
-            else:
-                cls.model = None
+            data = cls._filtercols(data)
+            data = cls._filterrows(data)
+            cls.model = cls._assemble_pipeline(data, mclass=mclass, params=params)
 
-            if cls.model is not None:
-                if not target_col:
-                    app_log.warning('Target column not defined. Nothing to do.')
-                elif data is not None:
-                    data = cls._filtercols(data)
-                    data = cls._filterrows(data)
-
-                    cls.model = cls._assemble_pipeline(data, mclass=mclass, params=params)
-
-                    # train the model
-                    target = data[target_col]
-                    train = data[[c for c in data if c != target_col]]
-                    gramex.service.threadpool.submit(
-                        _fit, cls.model, train, target, cls.model_path, cls.name)
+            # train the model
+            target = data[target_col]
+            train = data[[c for c in data if c != target_col]]
+            gramex.service.threadpool.submit(
+                _fit, cls.model, train, target, cls.model_path, cls.name)
         cls.config_store.flush()
+
+    @classmethod
+    def load_data(cls, default=pd.DataFrame()):
+        try:
+            df = gramex.cache.open(cls.data_store, key="data")
+        except (KeyError, FileNotFoundError):
+            df = default
+        return df
 
     @classmethod
     def store_data(cls, df, append=False):
         df.to_hdf(cls.data_store, format="table", key="data", append=append)
-        try:
-            rdf = gramex.cache.open(cls.data_store, key="data")
-        except KeyError:
-            rdf = df
-        return rdf
-
-    @classmethod
-    def load_data(cls):
-        try:
-            df = gramex.cache.open(cls.data_store, key="data")
-        except (KeyError, FileNotFoundError):
-            df = pd.DataFrame()
-        return df
+        return cls.load_data(df)
 
     @classmethod
     def get_opt(cls, key, default=None):
@@ -392,7 +361,7 @@ class MLHandler(FormHandler):
     def post(self, *path_args, **path_kwargs):
         action = self.args.pop('_action', 'predict')
         if action not in ACTIONS:
-            raise ValueError(f'Action {action} not supported.')
+            raise HTTPError(BAD_REQUEST, f'Action {action} not supported.')
         res = yield gramex.service.threadpool.submit(getattr(self, f"_{action}"))
         self.write(json.dumps(res, indent=2, cls=CustomJSONEncoder))
         super(MLHandler, self).post(*path_args, **path_kwargs)
@@ -409,10 +378,9 @@ class MLHandler(FormHandler):
         params = self.get_opt('params', {})
         if mclass:
             # parse the params as the signature dictates
-            for param in signature(search_modelclass(mclass)).parameters:
-                if param in self.args:
-                    value = self.args.pop(param)
-                    params[param] = value
+            for param in signature(search_modelclass(mclass)).parameters & self.args.keys():
+                value = self.args.pop(param)
+                params[param] = value
         # Since model params are changing, remove the model on disk
         self.model = None
         safe_rmtree(self.model_path, gramexdata=False)
