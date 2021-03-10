@@ -100,6 +100,7 @@ def consolidate():
             CREATE TABLE mau as
                 SELECT SUBSTR(date, 0, 8) AS month, COUNT(DISTINCT node) AS nodes
                 FROM logs
+                WHERE node NOT LIKE 'travis-%'
                 GROUP BY SUBSTR(date, 0, 8)
         ''')
 
