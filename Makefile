@@ -70,6 +70,7 @@ test: test-setup
 
 conda:
 	# conda install conda-build
+	conda build purge
 	python pkg/conda/conda-setup.py
 	conda build -c conda-forge pkg/conda/
 
