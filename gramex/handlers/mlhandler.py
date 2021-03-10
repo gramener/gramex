@@ -3,10 +3,9 @@ from io import BytesIO
 import json
 import os
 import re
-from urllib.parse import parse_qs
 
 import gramex
-from gramex.config import app_log, CustomJSONEncoder
+from gramex.config import app_log, CustomJSONEncoder, locate
 from gramex import data as gdata
 from gramex.handlers import FormHandler
 from gramex.http import NOT_FOUND, BAD_REQUEST
@@ -14,7 +13,6 @@ from gramex.install import _mkdir, safe_rmtree
 from gramex import cache
 import joblib
 import pandas as pd
-import pydoc
 from sklearn.compose import ColumnTransformer
 from sklearn.metrics import roc_auc_score
 from sklearn.pipeline import Pipeline
@@ -45,7 +43,7 @@ TRANSFORMS = {
     'include': [],
     'exclude': [],
     'dropna': True,
-    'deduplicate': True,
+    'drop_duplicates': True,
     'pipeline': True,
     'nums': [],
     'cats': [],
@@ -61,6 +59,7 @@ TRANSFORMERS_DEFAULTS = dict(
 )
 SENTIMENT_LENC = LabelEncoder().fit(['NEGATIVE', 'POSITIVE'])
 DEFAULT_TEMPLATE = op.join(op.dirname(__file__), '..', 'apps', 'mlhandler', 'template.html')
+search_modelclass = lambda x: locate(x, MLCLASS_MODULES)  # NOQA: E731
 
 
 def _fit(model, x, y, path=None, name=None):
@@ -96,16 +95,6 @@ def _score_transformer(model, data):
     score = roc_auc_score(
         *map(SENTIMENT_LENC.transform, (data['label'], [c['label'] for c in pred])))
     return {'roc_auc': score}
-
-
-# ToDo: Use gramex.config.locate
-def search_modelclass(mclass):
-    for module in MLCLASS_MODULES + [mclass]:
-        cls = pydoc.locate(f'{module}.{mclass}')
-        if cls:
-            return cls
-    msg = f'Model {mclass} not found. Please provide a full Python path.'
-    raise HTTPError(NOT_FOUND, reason=msg)
 
 
 def is_categorical(s, num_treshold=0.1):
@@ -191,33 +180,36 @@ class BaseMLHandler(FormHandler):
         cls.config_store.changed = True
         cls.config_store.flush()
 
-    def _parse_data(self, _cache=True, append=False):
-        # First look in self.request.files
-        if len(self.request.files) > 0:
-            dfs = []
-            for _, files in self.request.files.items():
-                for f in files:
-                    buff = BytesIO(f['body'])
-                    try:
-                        ext = re.sub('^\.', '', op.splitext(f['filename'])[-1])
-                        xdf = cache.open_callback['jsondata' if ext == 'json' else ext](buff)
-                    except KeyError:
-                        raise HTTPError(BAD_REQUEST, reason=f"File extension {ext} not supported.")
-                    dfs.append(xdf)
-            data = pd.concat(dfs, axis=0)
-        # Otherwise look in request.body
-        else:
-            if self.request.headers.get('Content-Type', '') == 'application/json':
+    def _parse_multipart_form_data(self):
+        dfs = []
+        for _, files in self.request.files.items():
+            for f in files:
+                buff = BytesIO(f['body'])
                 try:
-                    data = pd.read_json(self.request.body.decode('utf8'))
-                except ValueError:
-                    data = self.load_data()
-                    _cache = False
-            else:
-                data = pd.DataFrame.from_dict(parse_qs(self.request.body.decode('utf8')))
-        if len(data) == 0:
+                    ext = re.sub(r'^.', '', op.splitext(f['filename'])[-1])
+                    xdf = cache.open_callback['jsondata' if ext == 'json' else ext](buff)
+                    dfs.append(xdf)
+                except KeyError:
+                    app_log.warning(f"File extension {ext} not supported.")
+                    continue
+        return pd.concat(dfs, axis=0)
+
+    def _parse_application_json(self):
+        return pd.read_json(self.request.body.decode('utf8'))
+
+    def _parse_data(self, _cache=True, append=False):
+        header = self.request.headers.get('Content-Type', '').split(';')[0]
+        header = slugify(header).replace('-', '_')
+        try:
+            data = getattr(self, f'_parse_{header}')()
+        except AttributeError:
+            app_log.warning(f"Content-Type {header} not supported, reading cached data.")
             data = self.load_data()
-        elif _cache:
+        except ValueError:
+            app_log.warning('Could not read data from request, reading cached data.')
+            data = self.load_data()
+
+        if _cache:
             self.store_data(data, append)
         return data
 
@@ -251,16 +243,7 @@ class MLHandler(BaseMLHandler):
 
     @classmethod
     def setup(cls, data=None, model={}, backend='sklearn', config_dir='', **kwargs):
-
-        # From filehanlder: do the following
-        # cls.post = cls.put = cls.delete = cls.patch = cls.options = cls.get
-        # for clnmame in CLASSES:
-        #     setattr(cls, method) = getattr(clname, method)
         task = kwargs.pop('task', False)
-        # if backend == 'sklearn':
-        #     SklearnHandler.fit(**kwargs)
-        # elif backend == 'transformers':
-        #     NLPHandler.fit(**kwargs)
         if backend != 'sklearn':
             if not TRANSFORMERS_INSTALLED:
                 raise ImportError('pip install transformers')
@@ -271,111 +254,85 @@ class MLHandler(BaseMLHandler):
             cls.delete = NLPHandler.delete
         else:
             super(MLHandler, cls).setup(data, model, config_dir, **kwargs)
-            # Handle data if provided in the YAML config.
-            if isinstance(data, str):
-                data = cache.open(data)
-            elif isinstance(data, dict):
+            try:
                 data = gdata.filter(**data)
-            else:
-                data = None
-            if data is not None:
                 cls.store_data(data)
+            except TypeError:
+                data = None
 
             default_model_path = op.join(
                 gramex.config.variables['GRAMEXDATA'], 'apps', 'mlhandler',
                 slugify(cls.name) + '.pkl')
-            model_path = model.pop('path', default_model_path)
+            cls.model_path = model.pop('path', default_model_path)
+            _mkdir(op.dirname(cls.model_path))
 
             # store the model kwargs from gramex.yaml into the store
             for key in TRANSFORMS:
-                kwarg = model.get(key, False)
-                if not cls.get_opt(key, False) and kwarg:
-                    cls.set_opt(key, kwarg)
-            if op.exists(model_path):  # If the pkl exists, load it
-                cls.model = joblib.load(model_path)
-                cls.model_path = model_path
-                target_col = model.get('target_col', False)
-                if target_col:
-                    cls.set_opt('target_col', target_col)
-                else:
-                    target_col = cls.get_opt('target_col')
-            else:  # build the model
+                cls.set_opt(key, model.get(key, cls.get_opt(key)))
+            cls.set_opt('class', model.get('class'))
+            cls.set_opt('params', model.get('params', {}))
+            target_col = cls.get_opt('target_col')
+
+            if op.exists(cls.model_path):  # If the pkl exists, load it
+                cls.model = joblib.load(cls.model_path)
+            else:
                 mclass = cls.get_opt('class', model.get('class', False))
                 params = cls.get_opt('params', {})
-                if not params:
-                    params = model.get('params', {})
                 if mclass:
                     cls.model = search_modelclass(mclass)(**params)
                     cls.set_opt('class', mclass)
                 else:
                     cls.model = None
-                # Params MUST come after class, or they will be ignored.
-                cls.set_opt('params', params)
 
-                if model_path:  # if a path is specified, use to to store the model
-                    cls.model_path = model_path
-                else:  # or create our own path
-                    cls.model_path = default_model_path
-                    _mkdir(op.dirname(cls.model_path))
+                if cls.model is not None:
+                    if not target_col:
+                        app_log.warning('Target column not defined. Nothing to do.')
+                    elif data is not None:
+                        data = cls._filtercols(data)
+                        data = cls._filterrows(data)
 
-                # train the model
-                target_col = model.get('target_col', False)
-                if target_col:
-                    cls.set_opt('target_col', target_col)
-                else:
-                    target_col = cls.get_opt('target_col', False)
-                if cls.model is not None and not target_col:
-                    app_log.warning('Target column not defined. Nothing to do.')
-                else:
-                    if cls.model is not None:
-                        if data is not None:
-                            # filter columns
-                            data = cls._filtercols(data)
-                            # filter rows
-                            data = cls._filterrows(data)
+                        cls.model = cls._assemble_pipeline(data, mclass=mclass, params=params)
 
-                            # assemble the pipeline
-                            if model.get('pipeline', True):
-                                cls.model = cls._get_pipeline(data)
-                            else:
-                                cls.model = search_modelclass(mclass)(**params)
-
-                            # train the model
-                            target = data[target_col]
-                            train = data[[c for c in data if c != target_col]]
-                            gramex.service.threadpool.submit(
-                                _fit, cls.model, train, target, cls.model_path, cls.name)
+                        # train the model
+                        target = data[target_col]
+                        train = data[[c for c in data if c != target_col]]
+                        gramex.service.threadpool.submit(
+                            _fit, cls.model, train, target, cls.model_path, cls.name)
             cls.config_store.flush()
 
     @classmethod
-    def _filtercols(cls, data):
-        include = cls.get_opt('include', [])
+    def _filtercols(cls, data, **kwargs):
+        include = kwargs.get('include', cls.get_opt('include', []))
         if include:
             include += [cls.get_opt('target_col')]
             data = data[include]
         else:
-            exclude = cls.get_opt('exclude', [])
+            exclude = kwargs.get('exclude', cls.get_opt('exclude', []))
             to_exclude = [c for c in exclude if c in data]
             if to_exclude:
                 data = data.drop(to_exclude, axis=1)
         return data
 
     @classmethod
-    def _filterrows(cls, data):
+    def _filterrows(cls, data, **kwargs):
         for method in 'dropna drop_duplicates'.split():
-            action = cls.get_opt(method, True)
+            action = kwargs.get(method, cls.get_opt(method, True))
             if action:
                 subset = action if isinstance(action, list) else None
                 data = getattr(data, method)(subset=subset)
         return data
 
     @classmethod
-    def _get_pipeline(cls, data, force=False):
+    def _assemble_pipeline(cls, data, force=False, mclass='', params=None):
         # If the model exists, return it
         if op.exists(cls.model_path) and not force:
             return joblib.load(cls.model_path)
 
-        # Else assemble the model
+        # If preprocessing is not enabled, return the root model
+        if not cls.get_opt('pipeline', True):
+            return search_modelclass(mclass)(**params)
+
+        # Else assemble the preprocessing pipeline
         nums = set(cls.get_opt('nums', []))
         cats = set(cls.get_opt('cats', []))
         both = nums.intersection(cats)
@@ -407,14 +364,14 @@ class MLHandler(BaseMLHandler):
         orgdata = self.load_data()
         for col in data:
             data[col] = data[col].astype(orgdata[col].dtype)
-        data = self._filtercols(data)
-        data = self._filterrows(data)
+        data = self._filtercols(data, **kwargs)
+        data = self._filterrows(data, **kwargs)
         return data
 
     def _predict(self, data=None, score_col=''):
         if data is None:
             data = self._parse_data(False)
-        data = self._transform(data, deduplicate=False)
+        data = self._transform(data, drop_duplicates=False)
         self.model = cache.open(self.model_path, joblib.load)
         try:
             target = data.pop(score_col)
@@ -474,7 +431,6 @@ class MLHandler(BaseMLHandler):
                 if len(data) > 0:
                     self.set_header('Content-Type', 'application/json')
                     data = data.drop([self.get_opt('target_col')], axis=1, errors='ignore')
-                    # if action in ('predict', 'score'):
                     prediction = yield gramex.service.threadpool.submit(
                         self._predict, data)
                     self.write(json.dumps(prediction, indent=2, cls=CustomJSONEncoder))
@@ -494,7 +450,7 @@ class MLHandler(BaseMLHandler):
         data = self._filterrows(data)
         target = data[target_col]
         train = data[[c for c in data if c != target_col]]
-        self.model = self._get_pipeline(data, force=True)
+        self.model = self._assemble_pipeline(data, force=True)
         _fit(self.model, train, target, self.model_path)
         return {'score': self.model.score(train, target)}
 
@@ -532,8 +488,6 @@ class MLHandler(BaseMLHandler):
             for param in signature(search_modelclass(mclass)).parameters:
                 if param in self.args:
                     value = self.args.pop(param)
-                    # if len(value) == 1:
-                    #     value = value[0]
                     params[param] = value
         # Since model params are changing, remove the model on disk
         self.model = None
@@ -541,9 +495,6 @@ class MLHandler(BaseMLHandler):
         self.set_opt('params', params)
         for opt in TRANSFORMS.keys() & self.args.keys():
             val = self.args.pop(opt)
-            # if not isinstance(TRANSFORMS[opt], list):
-            #     if isinstance(val, list) and len(val) == 1:
-            #         val = val[0]
             self.set_opt(opt, val)
         self.config_store.flush()
 

@@ -118,7 +118,12 @@ class TestMLHandler(TestGramex):
             {
                 'target_col': 'species',
                 'exclude': ['petal_width'],
-                'nums': ['sepal_length', 'sepal_width', 'petal_length']
+                'nums': ['sepal_length', 'sepal_width', 'petal_length'],
+                'include': [],
+                'pipeline': True,
+                'drop_duplicates': True,
+                'dropna': True,
+                'cats': []
             }
         )
         self.assertDictEqual(
@@ -290,6 +295,18 @@ class TestMLHandler(TestGramex):
 
     def test_get_predictions_post_file(self):
         df = self.df.drop_duplicates()
+        target = df.pop('species')
+        buff = StringIO()
+        df.to_csv(buff, index=False, encoding='utf8')
+        buff.seek(0)
+        resp = self.get('/mlhandler?_action=predict',
+                        method='post', files={'file': ('iris.csv', buff)})
+        pred = pd.DataFrame.from_records(resp.json())['species']
+        self.assertGreaterEqual(accuracy_score(target, pred), self.ACC_TOL)
+
+    def test_get_predictions_duplicates(self):
+        df = self.df.drop_duplicates()
+        df = pd.concat([df, df], axis=0, ignore_index=True)
         target = df.pop('species')
         buff = StringIO()
         df.to_csv(buff, index=False, encoding='utf8')
