@@ -109,7 +109,7 @@ log:
             - logfile
     loggers:
         gramex:
-            level: DEBUG
+            level: INFO
             propagate: false
             handlers: [gramex-console, gramex-logfile]
         gramex.user:

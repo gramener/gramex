@@ -358,7 +358,7 @@ def open(path, callback=None, transform=None, rel=False, **kwargs):
         try:
             _cache[key] = cached
         except Exception:
-            app_log.error('gramex.cache.open: %s cannot cache %r' % (type(_cache), data))
+            app_log.exception('gramex.cache.open: %s cannot cache %r' % (type(_cache), data))
     result = cached['data']
     return (result, reloaded) if _reload_status else result
 

@@ -3,6 +3,7 @@ Defines command line services to install, setup and run apps.
 '''
 import io
 import os
+import re
 import sys
 import time
 import yaml
@@ -15,7 +16,7 @@ import requests
 from glob import glob
 from shutilwhich import which
 from pathlib import Path
-from subprocess import Popen, check_output, CalledProcessError      # nosec
+from subprocess import Popen, check_output, CalledProcessError, PIPE  # nosec
 from orderedattrdict import AttrDict
 from orderedattrdict.yamlutils import AttrDictYAMLLoader
 from zipfile import ZipFile
@@ -147,6 +148,11 @@ license: |
     gramex license                  # Show Gramex license
     gramex license accept           # Accept Gramex license
     gramex license reject           # Reject Gramex license
+
+check: |
+    usage: gramex check
+
+    Checks if all features of Gramex are working fine.
 '''
 usage = yaml.load(usage, Loader=AttrDictYAMLLoader)     # nosec
 
@@ -773,3 +779,36 @@ def license(args, kwargs):
         gramex.license.reject()
     else:
         app_log.error('Invalid command license %s', args[0])
+
+
+def check(args, kwargs):
+    '''
+    Checks if everything is OK
+    '''
+    missing = []
+
+    def report(key, cmd, optional=False):
+        result = _check_output(cmd, b'', shell=True, stderr=PIPE).decode('utf-8')
+        match = re.search(r'\d+\.\d+\.\d+', result)
+        if match:
+            version = match.group(0)
+            gramex.console(f'{key}: {version}')
+        elif optional:
+            gramex.console(f'{key}: optional, missing')
+        else:
+            missing.append(key)
+            gramex.console(f'{key}: missing')
+
+    report('pip', 'pip --version')
+    report('conda', 'conda --version')
+    report('node', 'node --version')
+    report('npm', 'npm --version')
+    report('yarn', 'yarn --version')
+    report('git', 'git --version')
+
+    # TODO: ui components -- specifically node-sass
+    # TODO: CaptureHandler
+    # TODO: R
+    # TODO: pynode
+
+    return missing

@@ -9,6 +9,7 @@ Common startup options
 
 Helper applications. For usage, run "gramex <app> --help"
   gramex init                   Add Gramex project scaffolding to current dir
+  gramex check                  Check if Gramex features are working fine
   gramex service                Windows service setup
   gramex mail                   Send email from command line
   gramex license                See Gramex license, accept or reject it
@@ -134,7 +135,7 @@ def callback_commandline(commands):
         base_command = args.pop(0).lower()
         method = 'install' if base_command == 'update' else base_command
         if method in {
-            'install', 'uninstall', 'setup', 'run', 'service', 'init',
+            'install', 'uninstall', 'check', 'setup', 'run', 'service', 'init',
             'mail', 'license',
         }:
             import gramex.install
