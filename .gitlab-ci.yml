@@ -53,15 +53,19 @@ deploy-uat:
       "'
 
 
+# On Gitlab Pipeline Schedules at https://code.gramener.com/cto/gramex/-/pipeline_schedules
+# create a new INACTIVE schedule that runs on the "release" branch.
+# When releasing a new branch, run the schedule. It'll build the releases for download.
 build-pypi:
-  only: [jd-auto-build]
+  only: [release, master, /^build-.*/]
   script:
     - bash pkg/build_pypi.sh
   artifacts:
     paths:
       - "dist/gramex*.tar.gz"
+
 build-conda:
-  only: [jd-auto-build]
+  only: [release, master, /^build-.*/]
   script:
     - bash pkg/build_conda.sh
   artifacts:
