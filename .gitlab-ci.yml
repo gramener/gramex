@@ -71,3 +71,11 @@ build-conda:
   artifacts:
     paths:
       - "pkg/gramex*.tar.bz2"
+
+build-docker:
+  only: [release, master, /^build-.*/, jd-bld-docker]
+  script:
+    - bash pkg/build_docker.sh
+  artifacts:
+    paths:
+      - "pkg/docker/gramex*.tar"
