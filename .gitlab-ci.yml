@@ -57,7 +57,7 @@ deploy-uat:
 # create a new INACTIVE schedule that runs on the "release" branch.
 # When releasing a new branch, run the schedule. It'll build the releases for download.
 build-pypi:
-  only: [release, master, /^build-.*/]
+  only: [release, /^build-.*/]
   script:
     - bash pkg/build_pypi.sh
   artifacts:
@@ -65,7 +65,7 @@ build-pypi:
       - "dist/gramex*.tar.gz"
 
 build-conda:
-  only: [release, master, /^build-.*/]
+  only: [release, /^build-.*/]
   script:
     - bash pkg/build_conda.sh
   artifacts:
