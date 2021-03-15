@@ -588,7 +588,8 @@ def service(args, kwargs):
 def _check_output(cmd, default=b'', **kwargs):
     '''Run cmd and return output. Return default in case the command fails'''
     try:
-        return check_output(shlex.split(cmd), **kwargs).strip()     # nosec
+        cmd = shlex.split(cmd) if not kwargs.get('shell', False) else cmd
+        return check_output(cmd, **kwargs).strip()     # nosec
     # OSError is raised if the cmd is not found.
     # CalledProcessError is raised if the cmd returns an error.
     except (OSError, CalledProcessError):
@@ -806,9 +807,30 @@ def check(args, kwargs):
     report('yarn', 'yarn --version')
     report('git', 'git --version')
 
-    # TODO: ui components -- specifically node-sass
     # TODO: CaptureHandler
+    from gramex.handlers import Capture
+    from PIL import Image
+    capture = Capture(engine='chrome')
+    image = io.BytesIO()
+    image.write(capture.jpg('https://gramener.com/img-2019/gramener.jpg'))
+    image.seek(0)
+    assert Image.open(image).format == 'JPEG', 'CaptureHandler Fail.'
+
     # TODO: R
-    # TODO: pynode
+    def _check_r():
+        try:
+            from gramex.ml import r
+            assert r('sum(c, 1, 2, 3)')[0] == 6, 'rpy2 fail.'
+        except ImportError:
+            gramex.console("R: rpy2 not found.")
+
+    # TODO: ui components -- specifically node-sass
+    from gramex.transforms.template import sass
+
+    def _set_header(*args, **kwargs):
+        return
+    compiled = sass(
+        '// ', AttrDict({'path': '', 'args': {}, 'set_header': _set_header}))
+    assert compiled == '', 'Node-SASS FAIL.'
 
     return missing
