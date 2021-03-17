@@ -133,7 +133,8 @@ def sass2(handler, path: str = join(ui_dir, 'gramexui.scss')):
         with open(scss_path, 'w', encoding='utf-8') as handle:
             handle.write('\n'.join(content))
         # Compile SASS file. Allow @import from template dir, UI dir, Bootstrap dir
-        proc = yield gramex.service.threadpool.submit(subprocess.run, [
+        # proc = yield gramex.service.threadpool.submit(subprocess.run, [
+        proc = subprocess.run([
             'node', sass_path, scss_path, cache_file,
             '--output-style', 'compressed',
             '--include-path', os.path.dirname(path),

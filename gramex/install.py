@@ -807,30 +807,42 @@ def check(args, kwargs):
     report('yarn', 'yarn --version')
     report('git', 'git --version')
 
-    # TODO: CaptureHandler
-    from gramex.handlers import Capture
-    from PIL import Image
-    capture = Capture(engine='chrome')
-    image = io.BytesIO()
-    image.write(capture.jpg('https://gramener.com/img-2019/gramener.jpg'))
-    image.seek(0)
-    assert Image.open(image).format == 'JPEG', 'CaptureHandler Fail.'
+    def _check_CaptureHandler():
+        from gramex.handlers import Capture
+        from PIL import Image
+        capture = Capture(engine='chrome')
+        image = io.BytesIO()
+        image.write(capture.jpg('https://python.org'))
+        image.seek(0)
+        assert Image.open(image).format == 'JPEG'
 
-    # TODO: R
     def _check_r():
         try:
             from gramex.ml import r
-            assert r('sum(c, 1, 2, 3)')[0] == 6, 'rpy2 fail.'
+            assert r('sum(c(1, 2, 3))')[0] == 6, 'rpy2 fail.'
         except ImportError:
             gramex.console("R: rpy2 not found.")
 
-    # TODO: ui components -- specifically node-sass
-    from gramex.transforms.template import sass
+    def _check_node_sass():
+        from gramex.transforms.template import sass
+        from tempfile import NamedTemporaryFile
 
-    def _set_header(*args, **kwargs):
-        return
-    compiled = sass(
-        '// ', AttrDict({'path': '', 'args': {}, 'set_header': _set_header}))
-    assert compiled == '', 'Node-SASS FAIL.'
+        def _set_header(*args, **kwargs):
+            return
+        with NamedTemporaryFile() as ntf:
+            ntf.write(b'// ')
+            compiled = sass(
+                '// ', AttrDict({'path': ntf.name,
+                                 'args': {}, 'set_header': _set_header}))
+        assert compiled.result() == ''
 
+    for func in [_check_CaptureHandler, _check_r, _check_node_sass]:
+        name = func.__name__.replace('_check_', '')
+        try:
+            func()
+            status = "OK"
+        except (AssertionError, ImportError):
+            status = "FAIL"
+            missing.append(name)
+        gramex.console(f'{name}: {status}')
     return missing
