@@ -819,7 +819,7 @@ def check(args, kwargs):
     def _check_r():
         try:
             from gramex.ml import r
-            assert r('sum(c(1, 2, 3))')[0] == 6, 'rpy2 fail.'
+            assert r('sum(c(1, 2, 3))')[0] == 6
         except ImportError:
             gramex.console("R: rpy2 not found.")
 
