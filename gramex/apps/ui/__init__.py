@@ -150,4 +150,5 @@ def _sass(handler, path: str = join(ui_dir, 'gramexui.scss')):
 
 @coroutine
 def sass2(*args, **kwargs):
-    yield gramex.services.threadpool.submit(_sass, *args, **kwargs)
+    res = yield gramex.service.threadpool.submit(_sass, *args, **kwargs)
+    raise Return(res)
