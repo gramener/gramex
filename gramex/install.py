@@ -824,17 +824,16 @@ def check(args, kwargs):
             gramex.console("R: rpy2 not found.")
 
     def _check_node_sass():
-        from gramex.transforms.template import sass
+        from gramex.apps.ui import _sass
         from tempfile import NamedTemporaryFile
 
         def _set_header(*args, **kwargs):
             return
         with NamedTemporaryFile() as ntf:
             ntf.write(b'// ')
-            compiled = sass(
-                '// ', AttrDict({'path': ntf.name,
-                                 'args': {}, 'set_header': _set_header}))
-        assert compiled.result() == ''
+            ntf.seek(0)
+            compiled = _sass(AttrDict({'args': {}, 'set_header': _set_header}), ntf.name)
+        assert compiled == b''
 
     for func in [_check_CaptureHandler, _check_r, _check_node_sass]:
         name = func.__name__.replace('_check_', '')

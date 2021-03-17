@@ -85,8 +85,7 @@ bootstrap_dir = join(ui_dir, 'node_modules', 'bootstrap', 'scss')
 valid_sass_key = re.compile(r'[_a-zA-Z][_a-zA-Z0-9\-]*')
 
 
-@coroutine
-def sass2(handler, path: str = join(ui_dir, 'gramexui.scss')):
+def _sass(handler, path: str = join(ui_dir, 'gramexui.scss')):
     '''
     Compile a SASS file using custom variables from URL query parameters.
     The special variables ``@import``, ``@use`` and ``@forward`` can be a str/list of URLs or
@@ -147,3 +146,8 @@ def sass2(handler, path: str = join(ui_dir, 'gramexui.scss')):
 
     handler.set_header('Content-Type', 'text/css')
     return gramex.cache.open(cache_file, 'bin', mode='rb')
+
+
+@coroutine
+def sass2(*args, **kwargs):
+    yield gramex.services.threadpool.submit(_sass, *args, **kwargs)
