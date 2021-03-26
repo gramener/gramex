@@ -18,10 +18,7 @@ fetch('../snippets/snippets.json')
           opts['view'] = '...'
           if(dir === 'html')
             opts.value = opts.value.replace(/\\n/g, "<br>")
-          $(template[dir](opts))
-            .attr('data-type', dir)
-            .attr('data-vals', JSON.stringify(opts))
-            .appendTo('#view-form form')
+          $(`<${dir}></${dir}>`).attr(opts).appendTo('#view-form form')
         })
       }
     })

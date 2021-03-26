@@ -14,58 +14,38 @@ $(window).on('click', function(e) {
   }
 })
 
-fetch('snippets/snippets.json')
-  .then(response => response.json())
-  .then(json => {
-    _.each(json, (val, dir) => {
-      options[dir] = val.options
-      const tmpl = template[dir] = _.template(val.template)
-      let vals = _.mapValues(options[dir], v => v.value)
-      vals['view'] = 'default'
-      // component attribute is introduced to know html field
-      // type attribute (which is already captured) conflicts with knowing field type since button field has a type attribute
-      vals.component = dir
-      $("<div class='field-container'>" + tmpl(vals) + "</div>")
-        .attr('data-type', dir)
-        .attr('data-vals', JSON.stringify(vals))
-        .appendTo('.form-fields')
+/**
+  * Generate identifier for components.
+  * @returns String
+*/
+function generate_id() {
+  return Math.random().toString(36).substring(7)
+}
+
+$(function() {
+  $('<g-button></g-button>').appendTo('.form-fields')
+  $('<g-checkbox></g-checkbox>').appendTo('.form-fields')
+  $('<g-email></g-email>').appendTo('.form-fields')
+  $('<g-hidden></g-hidden>').appendTo('.form-fields')
+  $('<g-html></g-html>').appendTo('.form-fields')
+  $('<g-number></g-number>').appendTo('.form-fields')
+  $('<g-password></g-password>').appendTo('.form-fields')
+  $('<g-radio></g-radio>').appendTo('.form-fields')
+  $('<g-range></g-range>').appendTo('.form-fields')
+
+  $('<g-select></g-select>').appendTo('.form-fields')
+  $('<g-text></g-text>').appendTo('.form-fields')
+  $('<g-textarea></g-textarea>').appendTo('.form-fields')
+
+  // render existing form using JSON
+  if(active_form_id) {
+    _.each(_user_form_config, function(opts) {
+      let dir = opts.component
+      $(`<${dir}></${dir}>`).attr(opts)
+        .appendTo('.user-form')
     })
-    $('.edit-properties-container').css('height', $(document).innerHeight())
-    // TODO: Can we ensure they all have a common parent class? I'll assume it's .form-group
-    $('body').on('click', '.user-form > :not(.actions)', function () {
-      $('.edit-properties').empty()
-        .data('editing-element', $(this))
-      $('.user-form > *').removeClass('highlight')
-      $(this).addClass('highlight')
-      $('.actions').insertBefore(this)
-      $('.actions').removeClass('d-none')
-      let field_vals = JSON.parse($(this).attr('data-vals')) || $(this).data('vals')
-      _.each(options[$(this).data('type')], function (option, key) {
-        let vals
-        vals = _.mapValues(options[option.field], v => v.value)
-        _.extend(vals, option)
-        vals.value = field_vals[key]
-        vals['view'] = 'editing'
-        $(template[option.field](vals))
-          .appendTo('.edit-properties')
-          .addClass('form-element')
-          .data('key', key)
-          .data('field', option.field)
-      })
-    })
-  }).then(function() {
-    // render existing form using JSON
-    if(active_form_id) {
-      _.each(_user_form_config, function(opts) {
-        let dir = opts.component
-        opts['view'] = '...'
-        $("<div class='field-container'>" + template[dir](opts) + "</div>")
-          .attr('data-type', dir)
-          .attr('data-vals', JSON.stringify(opts))
-          .appendTo('.user-form')
-      })
-    }
-  })
+  }
+})
 
 $('body').on('click', '#publish-form', function() {
   let _vals = {}
@@ -81,11 +61,12 @@ $('body').on('click', '#publish-form', function() {
   }
   let form_vals = []
   $('.user-form > :not(.actions)').each(function(ind, item) {
-    let _vals = JSON.parse($(item).attr('data-vals'))
-    _vals['component'] = $(item).attr('data-type')
+    _vals = item.__obj
+    _vals['component'] = item.tagName.toLowerCase()
     if(_vals.component === 'html')
-      _vals.value = _vals.value.replace(/\n/g, "\\n")
+    _vals.value = _vals.value.replace(/\n/g, "\\n")
     if(typeof item !== undefined) {
+      delete _vals.$target
       form_vals.push(_vals)
     }
   })
@@ -136,10 +117,12 @@ $('body').on('click', '#publish-form', function() {
     })
   }
 }).on('click', '.form-fields > *', function() {
-  var _type = $(this).data('type')
-  let vals = _.mapValues(options[_type], v => v.value)
+  // every field added to .user-form will have a new identifier
+  this.id = generate_id()
+  var _type = this.tagName.toLowerCase()
+  let vals = _.mapValues(fields[_type], v => v.value)
   vals['view'] = 'updating'
-  $(`.form-fields > [data-type=${_type}]`)
+  $(`.form-fields > ${_type}`)
     .data('type', _type)
     .data('vals', vals)
     .clone()
@@ -159,34 +142,84 @@ $('body').on('click', '#publish-form', function() {
   $('.actions').addClass('d-none')
 })
 
-$('.edit-properties').on('input change', function () {
+$('body').on('click', '.user-form > :not(.actions)', function () {
+  let this_el = $(this)
+  let this_field = $(this).get(0).tagName.toLowerCase()
+  $('.edit-properties').empty()
+    .data('editing-element', $(this))
+  $('.user-form > *').removeClass('highlight')
+  $(this).addClass('highlight')
+  $('.actions').insertBefore(this)
+  $('.actions').removeClass('d-none')
+
+  // Need access to field's (ex: g-button) JSON config to render the attributes on the right side.
+  let vals = fields[this_field]
+  let field_properties = this_el.get(0).__obj
+  for(key in field_properties) {
+    if(key in vals)
+      vals[key].value = field_properties[key]
+  }
+  _.each(vals, function(item) {
+    let _el = document.createElement(item.name)
+    item.id = generate_id()
+    item.origin = this_el.get(0).id
+    $(_el).attr(item)
+    document.querySelector('.edit-properties').appendChild(_el)
+  })
+})
+
+// use element.matches instead of tagName.toLowerCase()
+// each g-* element on the attributes form on the right side will have an origin attribute
+// its value is the id of the element that's currently edited
+$(document).on('change', '.edit-properties > [origin]', function () {
   let vals = {}
-  $(':input', this).each(function () { vals[this.id] = this.value })
-  var $el = $('.edit-properties').data('editing-element')
-  var field = $($el).attr('data-type')
-  let _v = ""
-  vals['view'] = 'updating'
-  // get all and stitch together
-  // since radio and checkbox fields each support multiple options
-  if(field === 'radio' || field === 'checkbox') {
+  var $el = $(this).closest('[origin]').get(0)
+  var $current_attr = $(this)
+  var edited_field, field
+
+  edited_field = $(`#${$el.getAttribute('origin')}`)
+  field = edited_field.get(0).tagName.toLowerCase()
+
+  if($(this).find('.selectpicker').length > 0) {
+    // we have found a select element
+    vals[$($el).attr('field')] = $(this).find('.selectpicker').val()
+  } else if(
+      $current_attr.attr('name') == 'g-text' ||
+      $current_attr.attr('name') == 'g-email' ||
+      $current_attr.attr('name') == 'g-number' ||
+      $current_attr.attr('name') == 'g-range' ||
+      $current_attr.attr('name') == 'g-textarea') {
+      if($current_attr.attr('name') == 'g-textarea') {
+        // textarea
+        vals[$($el).attr('field')] = $current_attr.find('textarea').val()
+      } else {
+        // email, number, range, text
+        vals[$($el).attr('field')] = $current_attr.find('input').val()
+      }
+  }
+  else if(
+      $current_attr.attr('name') === 'g-radio' ||
+      $current_attr.attr('name') === 'g-checkbox') {
+    // TODO - not implemented yet
+    // since radio and checkbox fields each support multiple options
     let tmpl_items = $(template[field](vals))
     _.each(tmpl_items, function(item) {
       if($(item).hasClass('form-check')) {
         _v += $(item).html().trim()
       }
     })
+  } else if($current_attr.attr('name') === 'g-html') {
+    vals[$el.field] = $current_attr.find('textarea').val()
   } else {
-    // $el includes outerHTML (.form-group onwards)
-    // without .html(), the rendered template will contain .form-group > .form-group > input/select etc.
-    // we need .form-group > input/select etc.
-    _v = $(template[field](vals)).html().trim()
+    // handle other attributes
   }
-  $el.html("<div class='field-container'>" + _v + "</div>")
-    .attr('data-vals', JSON.stringify(vals))
+  delete vals[""]
+  $($(edited_field).get(0)).attr(vals)
   $('.field-actions').template({base: '.'})
   $('.actions').removeClass('d-none')
-  $('.actions').insertBefore($el)
+  // $('.actions').insertBefore($el)
 })
+
 $('.user-form').on('submit', function(e) {
   e.preventDefault()
 })
