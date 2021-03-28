@@ -60,7 +60,7 @@ class FirefoxConf(dict):
 def pytest_collect_file(parent, path):
     # This plugin parses gramextest*.yaml files
     if fnmatch(path.basename, 'gramextest*.yaml'):
-        return YamlFile(path, parent)
+        return YamlFile.from_parent(parent, fspath=path)
 
 
 def pytest_runtest_teardown(item, nextitem):
@@ -101,11 +101,13 @@ class YamlFile(pytest.File):
         # TODO: improve naming so that we can use pytest -k
         for index, actions in enumerate(conf.get('urltest', [])):
             name, actions = self._parse(index, actions)
-            yield YamlItem('url #{}'.format(name), self, actions, URLTest())
+            yield YamlItem.from_parent(
+                self, name='url #{}'.format(name), actions=actions, registry=URLTest())
         for index, actions in enumerate(conf.get('uitest', [])):
             name, actions = self._parse(index, actions)
             for browser in drivers:
-                yield YamlItem('{} #{}'.format(browser, name), self, actions, UITest(browser))
+                yield YamlItem(self, name='{} #{}'.format(browser, name),
+                               actions=actions, registry=UITest(browser))
 
 
 class YamlItem(pytest.Item):
