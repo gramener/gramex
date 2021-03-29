@@ -1,29 +1,20 @@
 /* globals form_id, current_form_id, initiate_copy */
 
 let template = {}
-// fetch snippets.json to create the template variable
-fetch('../snippets/snippets.json')
-  .then(response => response.json())
-  .then(function(json)  {
-    _.each(json, (val, dir) => {
-      template[dir] = _.template(val.template)
+// use the snippets config to render the form using user-created form config
+$('.btn.viewsource').addClass('d-none')
+$.ajax(`../embed/${form_id}.json`, {
+  success: function(_form_config) {
+    _.each(_form_config, function(opts) {
+      let dir = opts.component
+      opts['view'] = '...'
+      if(dir === 'html')
+        opts.value = opts.value.replace(/\\n/g, "<br>")
+      $(`<${dir}></${dir}>`).attr(opts).appendTo('#view-form form')
     })
-  }).then(function() {
-    // use the snippets config to render the form using user-created form config
-    $('.btn.viewsource').addClass('d-none')
-    $.ajax(`../embed/${form_id}.json`, {
-      success: function(_form_config) {
-        _.each(_form_config, function(opts) {
-          let dir = opts.component
-          opts['view'] = '...'
-          if(dir === 'html')
-            opts.value = opts.value.replace(/\\n/g, "<br>")
-          $(`<${dir}></${dir}>`).attr(opts).appendTo('#view-form form')
-        })
-      }
-    })
-    $('svg').urlfilter({target: '#'})
-  })
+  }
+})
+$('svg').urlfilter({target: '#'})
 
 $('body').on('click', 'button[data-form]', function () {
   current_form_id = $(this).data('form')
