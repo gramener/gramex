@@ -56,8 +56,15 @@ $('body').on('click', 'button[data-form]', function () {
   field_vals = _.map(field_vals, v => {
     return { [v._input]: v.v }
   })
+  // convert array of objects to object
+  let field_vals_obj = {}
+  _.each(field_vals, function(item) {
+    for(key in item) {
+      field_vals_obj[key] = item[key]
+    }
+  })
 
-  $.ajax(`../analytics/?db=${form_id}&form_id=${form_id}&response=${JSON.stringify(field_vals)}`, {
+  $.ajax(`../analytics/?db=${form_id}&form_id=${form_id}&response=${JSON.stringify(field_vals_obj)}`, {
     method: 'POST',
     success: function() {
       $('.toast-body').html('Your response has been recorded.')

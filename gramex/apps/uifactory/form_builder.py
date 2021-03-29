@@ -10,6 +10,7 @@ from gramex.services import info
 from gramex.transforms import handler
 from tornado.web import HTTPError
 import pandas as pd
+import ast
 
 FOLDER = os.path.abspath(os.path.dirname(__file__))
 TARGET = os.path.join(var.GRAMEXDATA, 'uifactory', 'thumbnail')
@@ -22,11 +23,11 @@ if not os.path.exists(TARGET):
 def modify_columns(handler, data):
     if handler.request.method == 'GET' and len(data):
         # process json response
-        s = data['response'].apply(literal_eval)
-
-        df_json = pd.concat([pd.DataFrame(x) for x in s], keys=s.index)
-        df = pd.concat([data, df_json])
-        df.reset_index()
+        df = pd.DataFrame(data)
+        df = df.join(
+            pd.concat(
+                [pd.DataFrame(pd.json_normalize(ast.literal_eval(x))) for x in df['response']])
+        )
         # collapse several rows (each row with all NaNs except one value) into one row
         return pd.concat([pd.Series(df[col].dropna().values, name=col) for col in df], axis=1)
     else:
