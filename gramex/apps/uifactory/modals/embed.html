@@ -38,24 +38,26 @@
                 Below code renders the form in place.
               </p>
               <pre>
-                <code>{% apply escape %}<link rel="stylesheet" href="{{ _url }}/ui/bootstrap/dist/css/bootstrap.min.css">
-<script src="{{ _url }}/ui/jquery/dist/jquery.min.js"></script>
-<div class="form-container">
-  <script src="{% raw view_url + '.js' %}"></script>
-  <button type="submit">Submit</button>
-</div>{% end %}</code></pre>
+                <code class="language-html">&lt;link rel="stylesheet" href="{{ _url }}/ui/bootstrap/dist/css/bootstrap.min.css"&gt;
+&lt;script src="{{ _url }}/ui/jquery/dist/jquery.min.js"&gt;&lt;/script&gt;
+&lt;div class="container"&gt;
+&nbsp;&nbsp;&lt;form&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;script src="{% raw view_url + '.js' %}"&gt;&lt;/script&gt;
+&nbsp;&nbsp;&lt;/form&gt;
+&lt;/div&gt;</code></pre>
               <h4>Using HTML</h4>
               <p>
                 Below code renders the form in <code>.form-container</code> element.
               </p>
               <pre>
-                <code>&lt;link rel="stylesheet" href="{{ _url }}/ui/bootstrap/dist/css/bootstrap.min.css"&gt;
-&lt;div class="form-container"&gt;&lt;/div&gt;
+                <code class="language-html">&lt;link rel="stylesheet" href="{{ _url }}/ui/bootstrap/dist/css/bootstrap.min.css"&gt;
+&lt;div class="container"&gt;
+&nbsp;&nbsp;&lt;form&gt;&lt;/form&gt;
+&lt;/div&gt;
 &lt;script src="{{ _url }}/ui/jquery/dist/jquery.min.js"&gt;&lt;/script&gt;
 &lt;script&gt;
-  $('.form-container').load("{% raw view_url + '.html' %}")
-&lt;/script&gt;
-&lt;button type="submit" class="btn btn-primary"&gt;Submit&lt;/button&gt;</code>
+&nbsp;&nbsp;$('.container form').load("{% raw view_url + '.html' %}")
+&lt;/script&gt;</code>
               </pre>
 
               <h4>Server-side rendering</h4>
@@ -63,9 +65,11 @@
                 Below snippet is a Gramex server-side rendering example which renders the form in place.
               </p>
               <pre>
-                <code>&lt;link rel="stylesheet" href="{{ _url }}/ui/bootstrap/dist/css/bootstrap.min.css"&gt;
+                <code class="language-python">&lt;link rel="stylesheet" href="{{ _url }}/ui/bootstrap/dist/css/bootstrap.min.css"&gt;
                   {%! import requests %}
+                  &lt;form&gt;
                   {%! raw requests.get('{{ view_url + '.html' }}').text %}
+                  &lt;/form&gt;
                 </code>
               </pre>
             </div>

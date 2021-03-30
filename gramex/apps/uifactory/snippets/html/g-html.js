@@ -1,4 +1,4 @@
-createComponent({
+uifactory.register({
   name: 'g-html',
   template: /* HTML */`
   <label data-type="html" for="<%= name %>"><%= label %></label>

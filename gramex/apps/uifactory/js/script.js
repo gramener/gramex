@@ -63,7 +63,7 @@ $('body').on('click', '#publish-form', function() {
   $('.user-form > :not(.actions)').each(function(ind, item) {
     _vals = item.__obj
     _vals['component'] = item.tagName.toLowerCase()
-    if(_vals.component === 'html')
+    if(_vals.component === 'g-html')
     _vals.value = _vals.value.replace(/\n/g, "\\n")
     if(typeof item !== undefined) {
       delete _vals.$target
@@ -156,11 +156,16 @@ $('body').on('click', '.user-form > :not(.actions)', function () {
   let vals = fields[this_field]
   let field_properties = this_el.get(0).__obj
   for(key in field_properties) {
-    if(key in vals)
-      vals[key].value = field_properties[key]
+    if(key in vals[0]) {
+      _.each(vals, function(item) {
+        if(item.name === key) {
+          item.value = field_properties[key]
+        }
+      })
+    }
   }
   _.each(vals, function(item) {
-    let _el = document.createElement(item.name)
+    let _el = document.createElement(item.field)
     item.id = generate_id()
     item.origin = this_el.get(0).id
     $(_el).attr(item)
@@ -184,22 +189,22 @@ $(document).on('change', '.edit-properties > [origin]', function () {
     // we have found a select element
     vals[$($el).attr('field')] = $(this).find('.selectpicker').val()
   } else if(
-      $current_attr.attr('name') == 'g-text' ||
-      $current_attr.attr('name') == 'g-email' ||
-      $current_attr.attr('name') == 'g-number' ||
-      $current_attr.attr('name') == 'g-range' ||
-      $current_attr.attr('name') == 'g-textarea') {
-      if($current_attr.attr('name') == 'g-textarea') {
+      $current_attr.attr('field') == 'g-text' ||
+      $current_attr.attr('field') == 'g-email' ||
+      $current_attr.attr('field') == 'g-number' ||
+      $current_attr.attr('field') == 'g-range' ||
+      $current_attr.attr('field') == 'g-textarea') {
+      if($current_attr.attr('field') == 'g-textarea') {
         // textarea
-        vals[$($el).attr('field')] = $current_attr.find('textarea').val()
+        vals[$($el).attr('name')] = $current_attr.find('textarea').val()
       } else {
         // email, number, range, text
-        vals[$($el).attr('field')] = $current_attr.find('input').val()
+        vals[$($el).attr('name')] = $current_attr.find('input').val()
       }
   }
   else if(
-      $current_attr.attr('name') === 'g-radio' ||
-      $current_attr.attr('name') === 'g-checkbox') {
+      $current_attr.attr('field') === 'g-radio' ||
+      $current_attr.attr('field') === 'g-checkbox') {
     // TODO - not implemented yet
     // since radio and checkbox fields each support multiple options
     let tmpl_items = $(template[field](vals))
@@ -208,8 +213,8 @@ $(document).on('change', '.edit-properties > [origin]', function () {
         _v += $(item).html().trim()
       }
     })
-  } else if($current_attr.attr('name') === 'g-html') {
-    vals[$el.field] = $current_attr.find('textarea').val()
+  } else if($current_attr.attr('field') === 'g-html') {
+    vals[$el.name] = $current_attr.find('textarea').val()
   } else {
     // handle other attributes
   }

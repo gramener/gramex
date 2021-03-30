@@ -1,4 +1,4 @@
-createComponent({
+uifactory.register({
   name: 'g-email',
   template: /* HTML */`
   <label data-type="email" for="<%= name %>"><%= label %></label>

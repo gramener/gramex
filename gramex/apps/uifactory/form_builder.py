@@ -22,14 +22,15 @@ if not os.path.exists(TARGET):
 
 def modify_columns(handler, data):
     if handler.request.method == 'GET' and len(data):
-        # process json response
+        # create dataframe from data, filter responses for the current form
         df = pd.DataFrame(data)
+        df = df[df['form_id'].astype('int') == int(handler.get_argument('db'))]
+        # collapse several rows (each row with all NaNs except one value) into one row
         df = df.join(
             pd.concat(
                 [pd.DataFrame(pd.json_normalize(ast.literal_eval(x))) for x in df['response']])
         )
-        # collapse several rows (each row with all NaNs except one value) into one row
-        return pd.concat([pd.Series(df[col].dropna().values, name=col) for col in df], axis=1)
+        return df
     else:
         return data
 

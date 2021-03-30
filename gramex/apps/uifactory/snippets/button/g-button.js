@@ -1,4 +1,4 @@
-createComponent({
+uifactory.register({
   name: 'g-button',
   template: /* HTML */`
 <style>

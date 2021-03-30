@@ -141,3 +141,10 @@ url:
           # Standard libraries won't ever change. Cache for 10 years
           'node_modules/**':
             Cache-Control: public, max-age=315360000
+
+  uifactory/edit-components:
+    pattern: /$YAMLURL/edit/(|[a-z0-9_]+\-[a-z0-9_]+)
+    handler: FileHandler
+    kwargs:
+      path: $YAMLPATH/edit.html
+      template: true

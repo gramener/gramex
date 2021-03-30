@@ -1,4 +1,4 @@
-createComponent({
+uifactory.register({
   name: 'g-radio',
   template: /* HTML */`
   <label data-type="text" for="<%= name %>"><%= label %></label>

@@ -1,4 +1,4 @@
-/* globals form_id, current_form_id, initiate_copy */
+/* globals form_id, current_form_id, initiate_copy, hljs */
 
 let template = {}
 // use the snippets config to render the form using user-created form config
@@ -8,10 +8,12 @@ $.ajax(`../embed/${form_id}.json`, {
     _.each(_form_config, function(opts) {
       let dir = opts.component
       opts['view'] = '...'
-      if(dir === 'html')
+      if(dir === 'g-html') {
         opts.value = opts.value.replace(/\\n/g, "<br>")
+      }
       $(`<${dir}></${dir}>`).attr(opts).appendTo('#view-form form')
     })
+    hljs.highlightAll()
   }
 })
 $('svg').urlfilter({target: '#'})

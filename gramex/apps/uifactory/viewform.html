@@ -14,8 +14,11 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <title>View a form - Form Builder</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/styles/agate.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ base }}/node_modules/bootstrap-select/dist/css/bootstrap-select.min.css">
     <link rel="stylesheet" href="{{ base }}/style.scss?body-bg={{ urllib.parse.quote(metadata['bg'] if 'bg' in metadata else '#ffffff') }}">
+    <!-- <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/styles/agate.min.css" rel="stylesheet"> -->
+    <link rel="stylesheet"
+      href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.7.1/styles/default.min.css">
   </head>
   {% set title = 'Forms' %}
   <body>
@@ -48,7 +51,7 @@
           <a class="btn btn-primary" href="{{ base }}/view/{{ form_id }}">View form</a>
         </p>
         {% include 'modals/themes.html' %}
-        {% include 'modals/send.html' %}
+        {% include 'modals/embed.html' %}
         {% include 'modals/remove.html' %}
 
       {% else %}
@@ -66,12 +69,18 @@
     <script src="{{ base }}/ui/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{{ base }}/ui/lodash/lodash.min.js"></script>
     <script src="{{ base }}/ui/g1/dist/g1.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/highlight.min.js"></script>
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/highlight.min.js"></script> -->
+    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.7.1/highlight.min.js"></script>
     <script src="{{ base }}/node_modules/clipboard/dist/clipboard.min.js"></script>
-    <script src="{{ base }}/js/code-highlighting.js"></script>
+    <script src="{{ base }}/node_modules/bootstrap-select/dist/js/bootstrap-select.min.js"></script>
+    <script>
+      // bootstrap select needs to be informed of the Bootstrap version
+      $.fn.selectpicker.Constructor.BootstrapVersion = '4';
+    </script>
 
     <script src="{{ base }}/js/fields.js"></script>
-    <script src="{{ base }}/js/component.js"></script>
+    <!-- <script src="{{ base }}/js/component.js"></script> -->
+    <script src="{{ base }}/node_modules/uifactory/uifactory.js"></script>
     <script src="{{ base }}/snippets/button/g-button.js"></script>
     <script src="{{ base }}/snippets/checkbox/g-checkbox.js"></script>
     <script src="{{ base }}/snippets/email/g-email.js"></script>

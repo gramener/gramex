@@ -10,7 +10,7 @@ $('body').on('render', 'g-select', function (e) {
   $(this.querySelector('select')).selectpicker();
 })
 
-createComponent({
+uifactory.register({
   name: 'g-select',
   template: /* HTML */`
 <style>
