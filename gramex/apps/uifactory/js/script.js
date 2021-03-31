@@ -174,7 +174,7 @@ $(document).on('change', '.edit-properties > [origin]', function () {
 
   if($(this).find('.selectpicker').length > 0) {
     // we have found a select element
-    vals[$($el).attr('field')] = $(this).find('.selectpicker').val()
+    vals[$($el).attr('name')] = $(this).find('.selectpicker').val()
   } else if(
       $current_attr.attr('field') == 'g-text' ||
       $current_attr.attr('field') == 'g-email' ||
