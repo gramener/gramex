@@ -25,12 +25,16 @@ def modify_columns(handler, data):
         # create dataframe from data, filter responses for the current form
         df = pd.DataFrame(data)
         df = df[df['form_id'].astype('int') == int(handler.get_argument('db'))]
-        # collapse several rows (each row with all NaNs except one value) into one row
-        df = df.join(
-            pd.concat(
-                [pd.DataFrame(pd.json_normalize(ast.literal_eval(x))) for x in df['response']])
-        )
-        return df
+        # at least one form response is required
+        if(df.shape[0] > 0):
+            # collapse several rows (each row with all NaNs except one value) into one row
+            df = df.join(
+                pd.concat(
+                    [pd.DataFrame(pd.json_normalize(ast.literal_eval(x))) for x in df['response']])
+            )
+            return df
+        else:
+            return pd.DataFrame.from_dict({"error": ["no entries yet"]})
     else:
         return data
 
