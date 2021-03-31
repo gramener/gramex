@@ -139,7 +139,8 @@ var fields = {
     {
       "field": "g-text",
       "name": "help",
-      "value": "Checkbox help"
+      "value": "Checkbox help",
+      "label": "Help"
     },
     {
       "field": "g-text",
@@ -376,7 +377,8 @@ var fields = {
     {
       "field": "g-text",
       "name": "help",
-      "value": ""
+      "value": "",
+      "label": "Help"
     }
   ],
   "g-range": [
@@ -701,6 +703,7 @@ var fields = {
     {
       "field": "g-text",
       "name": "help",
+      "label": "Help",
       "value": "Textarea help"
     },
     {

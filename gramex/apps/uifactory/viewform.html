@@ -16,13 +16,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="{{ base }}/node_modules/bootstrap-select/dist/css/bootstrap-select.min.css">
     <link rel="stylesheet" href="{{ base }}/style.scss?body-bg={{ urllib.parse.quote(metadata['bg'] if 'bg' in metadata else '#ffffff') }}">
-    <!-- <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/styles/agate.min.css" rel="stylesheet"> -->
     <link rel="stylesheet"
       href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.7.1/styles/default.min.css">
   </head>
   {% set title = 'Forms' %}
   <body>
     {% if handler.path_args[0] == 'form' %}
+      {% include 'template-navbar-view-form.html' %}
       <div class="container my-3">
         <ul class="nav nav-tabs" id="formTab" role="tablist">
           <li class="nav-item" role="presentation">
@@ -38,14 +38,14 @@
             <p class="text-muted"> {{ metadata['description'] }}</p>
             <div class="my-5" id="view-form">
               <form></form>
-              <small class="text-muted">You are currently previewing the form.</small>
             </div>
+            <h2 class="text-muted">You are currently previewing the form. Click <em>View Form</em> to submit values.</h2>
           </div>
           <div class="tab-pane fade w-100" id="responses" role="tabpanel" aria-labelledby="responses-tab">
             <div class="formhandler pt-3 mt-3" data-export="false" data-count="true" data-page-size="5"></div>
           </div>
         </div>
-        <p>
+        <p class="my-3 py-3">
           <a class="btn btn-success" href="{{ base }}/create?id={{ form_id }}">Edit</a>
           <a class="btn btn-primary" href="{{ base }}/view/{{ form_id }}">View form</a>
         </p>
@@ -69,7 +69,6 @@
     <script src="{{ base }}/ui/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{{ base }}/ui/lodash/lodash.min.js"></script>
     <script src="{{ base }}/ui/g1/dist/g1.min.js"></script>
-    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/highlight.min.js"></script> -->
     <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.7.1/highlight.min.js"></script>
     <script src="{{ base }}/node_modules/clipboard/dist/clipboard.min.js"></script>
     <script src="{{ base }}/node_modules/bootstrap-select/dist/js/bootstrap-select.min.js"></script>
@@ -79,7 +78,6 @@
     </script>
 
     <script src="{{ base }}/js/fields.js"></script>
-    <!-- <script src="{{ base }}/js/component.js"></script> -->
     <script src="{{ base }}/node_modules/uifactory/uifactory.js"></script>
     <script src="{{ base }}/snippets/button/g-button.js"></script>
     <script src="{{ base }}/snippets/checkbox/g-checkbox.js"></script>
@@ -118,7 +116,7 @@
           .then(response => response.json())
           .then(function(response) {
             $('.formhandler').formhandler({
-              data: response['each_form'],
+              data: _.map(response['each_form'], function(item) { return JSON.parse(item['response']) }),
               columns: [{name: "*" }, { name: "response", hide: true}]
             })
           })

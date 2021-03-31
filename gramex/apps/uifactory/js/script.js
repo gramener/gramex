@@ -122,7 +122,8 @@ $('body').on('click', '#publish-form', function() {
 }).on('click', '[data-action]', function() {
   const form_el = $(this).parent().parent().next()
   if($(this).data('action') === 'duplicate') {
-    form_el.clone().insertAfter(form_el)
+    form_el.removeClass('highlight')
+    form_el.clone().attr('id', generate_id()).insertAfter(form_el)
   } else if($(this).data('action') === 'delete') {
     form_el.remove()
   }
