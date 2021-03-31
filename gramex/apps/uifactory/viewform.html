@@ -23,7 +23,6 @@
   {% set title = 'Forms' %}
   <body>
     {% if handler.path_args[0] == 'form' %}
-      {% include 'template-navbar-view-form.html' %}
       <div class="container my-3">
         <ul class="nav nav-tabs" id="formTab" role="tablist">
           <li class="nav-item" role="presentation">
@@ -61,6 +60,7 @@
         <div class="my-5" id="view-form">
           <form class="analytics"></form>
         </div>
+      </div>
       {% end %}
     </div>
     {% include 'toast.html' %}
