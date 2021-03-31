@@ -9,7 +9,7 @@ uifactory.register({
     filter: brightness(70%) contrast(120%);
     border-radius: 0.2rem 0.2rem 0 0;
   }
-  resizable-accordion > details > main > * { 
+  resizable-accordion > details > main > * {
     resize: vertical;
     overflow-y: auto;
     overflow-x: hidden;

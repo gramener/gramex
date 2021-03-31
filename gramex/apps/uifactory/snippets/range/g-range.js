@@ -10,5 +10,5 @@ uifactory.register({
   <input type="range" class="form-control-range" id="<%= name %>"
   min="<%= min %>" max="<%= max %>" step="<%= step %>" value="<%= value %>">
   `,
-   options: fields['g-range']
+  options: fields['g-range']
 })
