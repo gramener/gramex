@@ -21,19 +21,10 @@ function generate_id() {
 }
 
 $(function() {
-  $('<g-button></g-button>').appendTo('.form-fields')
-  $('<g-checkbox></g-checkbox>').appendTo('.form-fields')
-  $('<g-email></g-email>').appendTo('.form-fields')
-  $('<g-hidden></g-hidden>').appendTo('.form-fields')
-  $('<g-html></g-html>').appendTo('.form-fields')
-  $('<g-number></g-number>').appendTo('.form-fields')
-  $('<g-password></g-password>').appendTo('.form-fields')
-  $('<g-radio></g-radio>').appendTo('.form-fields')
-  $('<g-range></g-range>').appendTo('.form-fields')
-
-  $('<g-select></g-select>').appendTo('.form-fields')
-  $('<g-text></g-text>').appendTo('.form-fields')
-  $('<g-textarea></g-textarea>').appendTo('.form-fields')
+  // add fields to the modal which can be viewed on + click in user form on the left
+  for(let field in fields) {
+    $(`<${field}></${field}>`).appendTo('.form-fields')
+  }
 
   // render existing form using JSON
   if(active_form_id) {
@@ -152,9 +143,10 @@ $('body').on('click', '.user-form > :not(.actions)', function () {
 
   // Need access to field's (ex: g-button) JSON config to render the attributes on the right side.
   let vals = fields[this_field]
+  let names = _.map(vals, function(item) { return item.name })
   let field_properties = this_el.get(0).__obj
   for(let key in field_properties) {
-    if(key in vals[0]) {
+    if(names.indexOf(key) !== -1) {
       _.each(vals, function(item) {
         if(item.name === key) {
           item.value = field_properties[key]

@@ -436,210 +436,6 @@ var fields = {
       "value": ""
     },
     {
-      "label": "g-text",
-      "name": "actions-box",
-      "field": "actions-box",
-      "value": "false"
-    },
-    {
-      "label": "g-text",
-      "name": "container",
-      "field": "container",
-      "value": "false"
-    },
-    {
-      "label": "g-text",
-      "name": "count-selected-text",
-      "field": "count-selected-text",
-      "value": "{0} selected"
-    },
-    {
-      "label": "g-text",
-      "name": "deselect-all-text",
-      "field": "deselect-all-text",
-      "value": "Deselect All"
-    },
-    {
-      "label": "g-text",
-      "name": "dropdown-align-right",
-      "field": "dropdown-align-right",
-      "value": "false"
-    },
-    {
-      "label": "g-text",
-      "name": "dropup-auto",
-      "field": "dropup-auto",
-      "value": "true"
-    },
-    {
-      "label": "g-text",
-      "name": "header",
-      "field": "header",
-      "value": "false"
-    },
-    {
-      "label": "g-text",
-      "name": "hide-disabled",
-      "field": "hide-disabled",
-      "value": "false"
-    },
-    {
-      "label": "g-text",
-      "name": "icon-base",
-      "field": "icon-base",
-      "value": "glyphicon"
-    },
-    {
-      "label": "g-text",
-      "name": "live-search",
-      "field": "live-search",
-      "value": "false"
-    },
-    {
-      "label": "g-text",
-      "name": "live-search-normalize",
-      "field": "live-search-normalize",
-      "value": "false"
-    },
-    {
-      "label": "g-text",
-      "name": "live-search-placeholder",
-      "field": "live-search-placeholder",
-      "value": "null"
-    },
-    {
-      "label": "g-text",
-      "name": "live-search-style",
-      "field": "live-search-style",
-      "value": "contains"
-    },
-    {
-      "label": "g-text",
-      "name": "max-options",
-      "field": "max-options",
-      "value": "false"
-    },
-    {
-      "label": "g-text",
-      "name": "max-options-text",
-      "field": "max-options-text",
-      "value": "Limit Reached, {n} items selected"
-    },
-    {
-      "label": "g-text",
-      "name": "mobile",
-      "field": "mobile",
-      "value": "false"
-    },
-    {
-      "label": "g-text",
-      "name": "multiple-separator",
-      "field": "multiple-separator",
-      "value": ""
-    },
-    {
-      "label": "g-text",
-      "name": "none-selected-text",
-      "field": "none-selected-text",
-      "value": "Nothing selected"
-    },
-    {
-      "label": "g-text",
-      "name": "none-results-text",
-      "field": "none-results-text",
-      "value": "No results matched {0}"
-    },
-    {
-      "label": "g-text",
-      "name": "select-all-text",
-      "field": "select-all-text",
-      "value": "Select All"
-    },
-    {
-      "label": "g-text",
-      "name": "selected-text-format",
-      "field": "selected-text-format",
-      "value": "values"
-    },
-    {
-      "label": "g-text",
-      "name": "select-on-tab",
-      "field": "select-on-tab",
-      "value": "false"
-    },
-    {
-      "label": "g-text",
-      "name": "show-content",
-      "field": "show-content",
-      "value": "true"
-    },
-    {
-      "label": "g-text",
-      "name": "show-icon",
-      "field": "show-icon",
-      "value": "true"
-    },
-    {
-      "label": "g-text",
-      "name": "show-subtext",
-      "field": "show-subtext",
-      "value": "false"
-    },
-    {
-      "label": "g-text",
-      "name": "show-tick",
-      "field": "show-tick",
-      "value": "false"
-    },
-    {
-      "label": "g-text",
-      "name": "size",
-      "field": "size",
-      "value": "auto"
-    },
-    {
-      "label": "g-text",
-      "name": "style",
-      "field": "style",
-      "value": "btn-light"
-    },
-    {
-      "label": "g-text",
-      "name": "style-base",
-      "field": "style-base",
-      "value": "btn"
-    },
-    {
-      "label": "g-text",
-      "name": "tick-icon",
-      "field": "tick-icon",
-      "value": "glyphicon-ok"
-    },
-    {
-      "label": "g-text",
-      "name": "title",
-      "field": "title",
-      "value": "null"
-    },
-    {
-      "label": "g-text",
-      "name": "virtual-scroll",
-      "field": "virtual-scroll",
-      "value": "600"
-    },
-    {
-      "label": "g-text",
-      "name": "width",
-      "field": "width",
-      "value": "false"
-    },
-    {
-      "label": "g-text",
-      "name": "window-padding",
-      "field": "window-padding",
-      "value": "0"
-    },
-    {
       "field": "g-text",
       "name": "label",
       "label": "Select label",
@@ -652,6 +448,210 @@ var fields = {
       "label": "Selection name",
       "value": "select-input",
       "help": "Useful for mapping submission values"
+    },
+    {
+      "label": "actions-box",
+      "name": "actions-box",
+      "field": "g-text",
+      "value": "false"
+    },
+    {
+      "label": "container",
+      "name": "container",
+      "field": "g-text",
+      "value": "false"
+    },
+    {
+      "label": "count-selected-text",
+      "name": "count-selected-text",
+      "field": "g-text",
+      "value": "{0} selected"
+    },
+    {
+      "label": "deselect-all-text",
+      "name": "deselect-all-text",
+      "field": "g-text",
+      "value": "Deselect All"
+    },
+    {
+      "label": "dropdown-align-right",
+      "name": "dropdown-align-right",
+      "field": "g-text",
+      "value": "false"
+    },
+    {
+      "label": "dropup-auto",
+      "name": "dropup-auto",
+      "field": "g-text",
+      "value": "true"
+    },
+    {
+      "label": "header",
+      "name": "header",
+      "field": "g-text",
+      "value": "false"
+    },
+    {
+      "label": "hide-disabled",
+      "name": "hide-disabled",
+      "field": "g-text",
+      "value": "false"
+    },
+    {
+      "label": "icon-base",
+      "name": "icon-base",
+      "field": "g-text",
+      "value": "glyphicon"
+    },
+    {
+      "label": "live-search",
+      "name": "live-search",
+      "field": "g-text",
+      "value": "false"
+    },
+    {
+      "label": "live-search-normalize",
+      "name": "live-search-normalize",
+      "field": "g-text",
+      "value": "false"
+    },
+    {
+      "label": "live-search-placeholder",
+      "name": "live-search-placeholder",
+      "field": "g-text",
+      "value": "null"
+    },
+    {
+      "label": "live-search-style",
+      "name": "live-search-style",
+      "field": "g-text",
+      "value": "contains"
+    },
+    {
+      "label": "max-options",
+      "name": "max-options",
+      "field": "g-text",
+      "value": "false"
+    },
+    {
+      "label": "max-options-text",
+      "name": "max-options-text",
+      "field": "g-text",
+      "value": "Limit Reached, {n} items selected"
+    },
+    {
+      "label": "mobile",
+      "name": "mobile",
+      "field": "g-text",
+      "value": "false"
+    },
+    {
+      "label": "multiple-separator",
+      "name": "multiple-separator",
+      "field": "g-text",
+      "value": ""
+    },
+    {
+      "label": "none-selected-text",
+      "name": "none-selected-text",
+      "field": "g-text",
+      "value": "Nothing selected"
+    },
+    {
+      "label": "none-results-text",
+      "name": "none-results-text",
+      "field": "g-text",
+      "value": "No results matched {0}"
+    },
+    {
+      "label": "select-all-text",
+      "name": "select-all-text",
+      "field": "g-text",
+      "value": "Select All"
+    },
+    {
+      "label": "selected-text-format",
+      "name": "selected-text-format",
+      "field": "g-text",
+      "value": "values"
+    },
+    {
+      "label": "select-on-tab",
+      "name": "select-on-tab",
+      "field": "g-text",
+      "value": "false"
+    },
+    {
+      "label": "show-content",
+      "name": "show-content",
+      "field": "g-text",
+      "value": "true"
+    },
+    {
+      "label": "show-icon",
+      "name": "show-icon",
+      "field": "g-text",
+      "value": "true"
+    },
+    {
+      "label": "show-subtext",
+      "name": "show-subtext",
+      "field": "g-text",
+      "value": "false"
+    },
+    {
+      "label": "show-tick",
+      "name": "show-tick",
+      "field": "g-text",
+      "value": "false"
+    },
+    {
+      "label": "size",
+      "name": "size",
+      "field": "g-text",
+      "value": "auto"
+    },
+    {
+      "label": "style",
+      "name": "style",
+      "field": "g-text",
+      "value": "btn-light"
+    },
+    {
+      "label": "style-base",
+      "name": "style-base",
+      "field": "g-text",
+      "value": "btn"
+    },
+    {
+      "label": "tick-icon",
+      "name": "tick-icon",
+      "field": "g-text",
+      "value": "glyphicon-ok"
+    },
+    {
+      "label": "title",
+      "name": "title",
+      "field": "g-text",
+      "value": "null"
+    },
+    {
+      "label": "virtual-scroll",
+      "name": "virtual-scroll",
+      "field": "g-text",
+      "value": "600"
+    },
+    {
+      "label": "width",
+      "name": "width",
+      "field": "g-text",
+      "value": "false"
+    },
+    {
+      "label": "window-padding",
+      "name": "window-padding",
+      "field": "g-text",
+      "value": "0"
     }
   ],
   "g-text": [
