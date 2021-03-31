@@ -10,7 +10,6 @@ from gramex.services import info
 from gramex.transforms import handler
 from tornado.web import HTTPError
 import pandas as pd
-import ast
 
 FOLDER = os.path.abspath(os.path.dirname(__file__))
 TARGET = os.path.join(var.GRAMEXDATA, 'uifactory', 'thumbnail')
@@ -30,7 +29,7 @@ def modify_columns(handler, data):
             # collapse several rows (each row with all NaNs except one value) into one row
             df = df.join(
                 pd.concat(
-                    [pd.DataFrame(pd.json_normalize(ast.literal_eval(x))) for x in df['response']])
+                    [pd.DataFrame(pd.json_normalize(literal_eval(x))) for x in df['response']])
             )
             return df
         else:
