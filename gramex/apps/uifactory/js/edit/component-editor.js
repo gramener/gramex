@@ -1,3 +1,5 @@
+/* globals uifactory */
+
 uifactory.register({
   name: 'component-editor',
   template: /* HTML */`<!-- Write the component template -->
@@ -29,6 +31,8 @@ uifactory.register({
     </div>
   </div>
   <script>
+  /* globals uifactory, on */
+
   function updatePreview(e) {
     const target = e.target.closest('component-editor')
     const container = target.querySelector('.preview > .container')

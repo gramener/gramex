@@ -1,3 +1,5 @@
+/* globals uifactory, fields */
+
 uifactory.register({
   name: 'g-range',
   template: /* HTML */`

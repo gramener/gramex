@@ -30,6 +30,8 @@ g-repeat {
   >
   </component-editor>
   <script>
+  /* exported on */
+
   const DOCUMENT_NODE_TYPE = 9;
   const on = function(event, selector, fn, {matchTarget, once} = {}) {
     document.body.addEventListener(event, function(e) {

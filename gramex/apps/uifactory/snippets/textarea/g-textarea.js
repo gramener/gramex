@@ -1,3 +1,5 @@
+/* globals uifactory, fields */
+
 (function() {
   const templateString = /* HTML */`
   <style>

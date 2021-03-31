@@ -1,9 +1,7 @@
-/* globals user, active_form_id, _user_form_config */
+/* globals user, active_form_id, _user_form_config, fields */
 /* exported editor */
 
 let editor
-const options = {}
-const template = {}
 $('.field-actions').template({base: '.'})
 
 $(window).on('click', function(e) {
@@ -155,7 +153,7 @@ $('body').on('click', '.user-form > :not(.actions)', function () {
   // Need access to field's (ex: g-button) JSON config to render the attributes on the right side.
   let vals = fields[this_field]
   let field_properties = this_el.get(0).__obj
-  for(key in field_properties) {
+  for(let key in field_properties) {
     if(key in vals[0]) {
       _.each(vals, function(item) {
         if(item.name === key) {
@@ -180,10 +178,7 @@ $(document).on('change', '.edit-properties > [origin]', function () {
   let vals = {}
   var $el = $(this).closest('[origin]').get(0)
   var $current_attr = $(this)
-  var edited_field, field
-
-  edited_field = $(`#${$el.getAttribute('origin')}`)
-  field = edited_field.get(0).tagName.toLowerCase()
+  var edited_field = $(`#${$el.getAttribute('origin')}`)
 
   if($(this).find('.selectpicker').length > 0) {
     // we have found a select element
@@ -207,12 +202,6 @@ $(document).on('change', '.edit-properties > [origin]', function () {
       $current_attr.attr('field') === 'g-checkbox') {
     // TODO - not implemented yet
     // since radio and checkbox fields each support multiple options
-    let tmpl_items = $(template[field](vals))
-    _.each(tmpl_items, function(item) {
-      if($(item).hasClass('form-check')) {
-        _v += $(item).html().trim()
-      }
-    })
   } else if($current_attr.attr('field') === 'g-html') {
     vals[$el.name] = $current_attr.find('textarea').val()
   } else {

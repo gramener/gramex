@@ -1,3 +1,5 @@
+/* exported fields */
+
 var fields = {
   "g-button": [
     {

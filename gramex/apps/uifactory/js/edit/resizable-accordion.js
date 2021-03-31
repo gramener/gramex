@@ -1,3 +1,5 @@
+/* globals uifactory */
+
 uifactory.register({
   name: 'resizable-accordion',
   template: /* HTML */`<!-- Write the component template -->
@@ -30,6 +32,8 @@ uifactory.register({
     </main>
   </details>
   <script>
+  /* globals on */
+
   on('click', 'resizable-accordion > details > summary > button', function(e) {
     const resizableAccordion = e.target.parentElement.parentElement.parentElement
     if(resizableAccordion.hasAttribute('open')) {

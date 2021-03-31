@@ -1,6 +1,5 @@
 /* globals form_id, current_form_id, initiate_copy, hljs */
 
-let template = {}
 // use the snippets config to render the form using user-created form config
 $('.btn.viewsource').addClass('d-none')
 $.ajax(`../embed/${form_id}.json`, {
@@ -52,7 +51,7 @@ $('body').on('click', 'button[data-form]', function () {
   // convert array of objects to object
   let field_vals_obj = {}
   _.each(field_vals, function(item) {
-    for(key in item) {
+    for(let key in item) {
       field_vals_obj[key] = item[key]
     }
   })

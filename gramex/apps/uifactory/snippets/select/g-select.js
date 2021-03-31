@@ -1,3 +1,5 @@
+/* globals uifactory, fields */
+
 $('body').on('render', 'g-select', function (e) {
   const opts = Object.assign({}, this.__obj)
   const bsSelectAttributes = ["title", "multiple", "value", "data-actions-box","data-container","data-count-selected-text","data-deselect-all-text","data-dropdown-align-right","data-dropup-auto","data-header","data-hide-disabled","data-icon-base","data-live-search","data-live-search-normalize","data-live-search-placeholder","data-live-search-style","data-max-options","data-max-options-text","data-mobile","data-multiple-separator","data-none-selected-text","data-none-results-text","data-select-all-text","data-selected-text-format","data-select-on-tab","data-show-content","data-show-icon","data-show-subtext","data-show-tick","data-size","data-style","data-style-base","data-tick-icon","data-title","data-virtual-scroll","data-width","data-window-padding"];

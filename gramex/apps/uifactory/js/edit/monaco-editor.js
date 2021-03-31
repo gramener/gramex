@@ -1,3 +1,5 @@
+/* globals uifactory */
+
 uifactory.register({
   name: 'monaco-editor',
   template: /* HTML */`<!-- Write the component template -->
@@ -6,6 +8,8 @@ uifactory.register({
     <%= code %>
   </code>
   <script>
+  /* globals on */
+
   on('render', 'monaco-editor', function(e) {
     require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.20.0/min/vs' }});
     require(
