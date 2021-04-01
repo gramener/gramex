@@ -94,9 +94,10 @@ def is_categorical(s, num_treshold=0.1):
         uniques / count <= num_treshold / log(count)
     """
     if pd.api.types.is_numeric_dtype(s):
-        if s.nunique() / s.shape[0] <= num_treshold:
-            return True
         return False
+        # if s.nunique() / s.shape[0] <= num_treshold:
+        #     return True
+        # return False
     return True
 
 
