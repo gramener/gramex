@@ -54,24 +54,6 @@ def _fit(model, x, y, path=None, name=None):
     return model
 
 
-def is_categorical(s, num_treshold=0.1):
-    """Check if a series contains a categorical variable.
-
-    Parameters
-    ----------
-    s : pd.Series
-
-    Returns
-    -------
-    bool:
-        Whether the series is categorical.
-        uniques / count <= num_treshold / log(count)
-    """
-    if pd.api.types.is_numeric_dtype(s):
-        return s.nunique() / s.shape[0] <= num_treshold
-    return True
-
-
 class MLHandler(FormHandler):
 
     @classmethod
@@ -233,13 +215,13 @@ class MLHandler(FormHandler):
             raise HTTPError(BAD_REQUEST,
                             reason=f"Columns {both} cannot be both numerical and categorical.")
         to_guess = set(data.columns.tolist()) - nums.union(cats) - {cls.get_opt('target_col')}
-        categoricals = [c for c in to_guess if is_categorical(data[c])]
-        for c in categoricals:
-            to_guess.remove(c)
-        numericals = [c for c in to_guess if pd.api.types.is_numeric_dtype(data[c])]
-        categoricals += list(cats)
-        numericals += list(nums)
-        assert len(set(categoricals) & set(numericals)) == 0
+        numericals = list(nums)
+        categoricals = list(cats)
+        for c in to_guess:
+            if pd.api.types.is_numeric_dtype(data[c]):
+                numericals.append(c)
+            else:
+                categoricals.append(c)
 
         ct = ColumnTransformer(
             [('ohe', OneHotEncoder(sparse=False), categoricals),
