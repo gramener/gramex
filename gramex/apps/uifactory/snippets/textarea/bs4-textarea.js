@@ -3,11 +3,11 @@
 (function() {
   const templateString = /* HTML */`
   <style>
-    g-textarea {
+    bs4-textarea {
       display: block;
     }
   </style>
-  <template component=""
+  <template component="bs4-textarea"
     label="Textarea"
     placeholder="Placeholder"
     value=""
@@ -23,10 +23,10 @@
 })()
 
 uifactory.register({
-  name: 'g-textarea',
+  name: 'bs4-textarea',
   template: /* HTML */`
   <style>
-    g-textarea {
+    bs4-textarea {
       display: block;
     }
   </style>
@@ -36,5 +36,5 @@ uifactory.register({
     <small id="text-input-help" class="form-text text-muted"><%= help %></small>
   <% } %>
   `,
-  options: fields['g-textarea']
+  properties: fields['bs4-textarea']
 })

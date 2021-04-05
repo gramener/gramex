@@ -1,7 +1,7 @@
 /* globals uifactory, fields */
 
 uifactory.register({
-  name: 'g-button',
+  name: 'bs4-button',
   template: /* HTML */`
 <style>
   @import url('https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/css/bootstrap.min.css');
@@ -53,5 +53,5 @@ uifactory.register({
   <i class="<%- Object.values(iconClass).join(' ') %>"></i>
   <%= label %>
 </button>`,
-options: fields['g-button']
+properties: fields['bs4-button']
 })

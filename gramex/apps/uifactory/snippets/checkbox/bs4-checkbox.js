@@ -1,7 +1,7 @@
 /* globals uifactory, fields */
 
 uifactory.register({
-  name: 'g-checkbox',
+  name: 'bs4-checkbox',
   template: /* HTML */`
   <label data-type="text" for="<%= name %>"><%= label %></label>
   <% options.split(',').forEach(function (option, ind) { %>
@@ -16,5 +16,5 @@ uifactory.register({
     </div>
   <% }) %>
   `,
-  options: fields['g-checkbox']
+  properties: fields['bs4-checkbox']
 })

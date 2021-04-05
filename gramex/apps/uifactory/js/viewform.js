@@ -7,7 +7,7 @@ $.ajax(`../embed/${form_id}.json`, {
     _.each(_form_config, function(opts) {
       let dir = opts.component
       opts['view'] = '...'
-      if(dir === 'g-html') {
+      if(dir === 'bs4-html') {
         opts.value = opts.value.replace(/\\n/g, "<br>")
       }
       $(`<${dir}></${dir}>`).attr(opts).appendTo('#view-form form')

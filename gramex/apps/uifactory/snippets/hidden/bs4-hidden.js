@@ -1,9 +1,9 @@
 /* globals uifactory, fields */
 
 uifactory.register({
-  name: 'g-hidden',
+  name: 'bs4-hidden',
   template: /* HTML */`
   <input type="hidden" id="<%= name %>" name="<%= name %>" value="<%= value %>">
   `,
-  options: fields['g-hidden']
+  properties: fields['bs4-hidden']
 })

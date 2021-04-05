@@ -1,7 +1,7 @@
 /* globals uifactory, fields */
 
 uifactory.register({
-  name: 'g-email',
+  name: 'bs4-email',
   template: /* HTML */`
   <label data-type="email" for="<%= name %>"><%= label %></label>
   <input type="email" class="form-control" name="<%= name %>" id="<%= name %>" aria-describedby="email-<%= name %>"
@@ -10,5 +10,5 @@ uifactory.register({
     <small id="email-help" class="form-text text-muted"><%= help %></small>
   <% } %>
   `,
-  options: fields['g-email']
+  properties: fields['bs4-email']
 })

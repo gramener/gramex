@@ -1,7 +1,7 @@
 /* globals uifactory, fields */
 
 uifactory.register({
-  name: 'g-radio',
+  name: 'bs4-radio',
   template: /* HTML */`
   <label data-type="text" for="<%= name %>"><%= label %></label>
   <% options.split(',').forEach(function (option, ind) { %>
@@ -16,5 +16,5 @@ uifactory.register({
     </div>
   <% }) %>
   `,
-  options: fields['g-radio']
+  properties: fields['bs4-radio']
 })

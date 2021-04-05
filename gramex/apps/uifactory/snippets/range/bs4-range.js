@@ -1,10 +1,10 @@
 /* globals uifactory, fields */
 
 uifactory.register({
-  name: 'g-range',
+  name: 'bs4-range',
   template: /* HTML */`
   <style>
-    g-range {
+    bs4-range {
       display: block;
     }
   </style>
@@ -12,5 +12,5 @@ uifactory.register({
   <input type="range" class="form-control-range" id="<%= name %>"
   min="<%= min %>" max="<%= max %>" step="<%= step %>" value="<%= value %>">
   `,
-  options: fields['g-range']
+  properties: fields['bs4-range']
 })

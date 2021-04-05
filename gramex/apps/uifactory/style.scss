@@ -59,8 +59,11 @@
   width: 300px;
   height: 80vh;
 }
-.user-form > * {
+.user-form > *,
+.analytics > * {
   cursor: pointer;
+  display: block;
+  padding: 1rem;
 }
 .floating-button {
   bottom: 5%;

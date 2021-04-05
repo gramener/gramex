@@ -1,7 +1,7 @@
 /* globals uifactory, fields */
 
 uifactory.register({
-  name: 'g-html',
+  name: 'bs4-html',
   template: /* HTML */`
   <label data-type="html" for="<%= name %>"><%= label %></label>
   <%= value %>
@@ -9,5 +9,5 @@ uifactory.register({
     <small id="text-input-help" class="form-text text-muted"><%= help %></small>
   <% } %>
   `,
-  options: fields['g-html']
+  properties: fields['bs4-html']
 })

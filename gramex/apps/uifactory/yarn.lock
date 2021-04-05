@@ -48,9 +48,9 @@ tiny-emitter@^2.0.0:
   resolved "https://registry.yarnpkg.com/tiny-emitter/-/tiny-emitter-2.1.0.tgz#1d1a56edfc51c43e863cbb5382a72330e3555423"
   integrity sha512-NB6Dk1A9xgQPMoGqC5CVXn123gWyte215ONT5Pp5a0yt4nlEoO1ZWeCwpncaekPHXO60i47ihFnZPiRPjRMq4Q==
 
-uifactory@^0.0.2:
-  version "0.0.2"
-  resolved "https://registry.yarnpkg.com/uifactory/-/uifactory-0.0.2.tgz#b97e048b7c1f6c8dab1c8866af71f41aedb0af5f"
-  integrity sha512-GsUWeSByZYt1xhq7BhPdD/9vaxe9Bznl6R+xQZjVOKwv6uy3+HVOi3bhV8sfRyIjpUMlr8MqaLloV5Aw9v72fA==
+uifactory@^0.0.3:
+  version "0.0.3"
+  resolved "https://registry.yarnpkg.com/uifactory/-/uifactory-0.0.3.tgz#a8baeff8e868949a126db93a68aaeb9d93b0408a"
+  integrity sha512-4PLuQZ2rGM4eSk+7VssG7U+bpUNdZH7gnLrx/O2zbq4Qflwxf+fXGSbh9YloQ17fd1/SkY73R6pI/VDNyQsBQw==
   dependencies:
     lodash "^4.17.21"

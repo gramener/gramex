@@ -50,9 +50,9 @@ $('body').on('click', '#publish-form', function() {
   }
   let form_vals = []
   $('.user-form > :not(.actions)').each(function(ind, item) {
-    _vals = item.__obj
+    _vals = item.__model
     _vals['component'] = item.tagName.toLowerCase()
-    if(_vals.component === 'g-html')
+    if(_vals.component === 'bs4-html')
     _vals.value = _vals.value.replace(/\n/g, "\\n")
     if(typeof item !== undefined) {
       delete _vals.$target
@@ -109,8 +109,10 @@ $('body').on('click', '#publish-form', function() {
   // every field added to .user-form will have a new identifier
   this.id = generate_id()
   var _type = this.tagName.toLowerCase()
-  let vals = _.mapValues(fields[_type], v => v.value)
-  vals['view'] = 'updating'
+  // let vals = _.mapValues(fields[_type], v => v.value)
+  // let vals = fields[_type]
+  let vals = _.mapValues(_.keyBy(fields[_type], 'name'), 'value')
+  // vals['view'] = 'updating'
   $(`.form-fields > ${_type}`)
     .data('type', _type)
     .data('vals', vals)
@@ -142,10 +144,10 @@ $('body').on('click', '.user-form > :not(.actions)', function () {
   $('.actions').insertBefore(this)
   $('.actions').removeClass('d-none')
 
-  // Need access to field's (ex: g-button) JSON config to render the attributes on the right side.
+  // Need access to field's (ex: bs4-button) JSON config to render the attributes on the right side.
   let vals = fields[this_field]
   let names = _.map(vals, function(item) { return item.name })
-  let field_properties = this_el.get(0).__obj
+  let field_properties = this_el.get(0).__model
   for(let key in field_properties) {
     if(names.indexOf(key) !== -1) {
       _.each(vals, function(item) {
@@ -155,6 +157,7 @@ $('body').on('click', '.user-form > :not(.actions)', function () {
       })
     }
   }
+  console.log("field_properties", this_el, field_properties, vals)
   _.each(vals, function(item) {
     let _el = document.createElement(item.field)
     item.id = generate_id()
@@ -165,7 +168,7 @@ $('body').on('click', '.user-form > :not(.actions)', function () {
 })
 
 // use element.matches instead of tagName.toLowerCase()
-// each g-* element on the attributes form on the right side will have an origin attribute
+// each bs4-* element on the attributes form on the right side will have an origin attribute
 // its value is the id of the element that's currently edited
 $(document).on('change', '.edit-properties > [origin]', function () {
   let vals = {}
@@ -177,12 +180,12 @@ $(document).on('change', '.edit-properties > [origin]', function () {
     // we have found a select element
     vals[$($el).attr('name')] = $(this).find('.selectpicker').val()
   } else if(
-      $current_attr.attr('field') == 'g-text' ||
-      $current_attr.attr('field') == 'g-email' ||
-      $current_attr.attr('field') == 'g-number' ||
-      $current_attr.attr('field') == 'g-range' ||
-      $current_attr.attr('field') == 'g-textarea') {
-      if($current_attr.attr('field') == 'g-textarea') {
+      $current_attr.attr('field') == 'bs4-text' ||
+      $current_attr.attr('field') == 'bs4-email' ||
+      $current_attr.attr('field') == 'bs4-number' ||
+      $current_attr.attr('field') == 'bs4-range' ||
+      $current_attr.attr('field') == 'bs4-textarea') {
+      if($current_attr.attr('field') == 'bs4-textarea') {
         // textarea
         vals[$($el).attr('name')] = $current_attr.find('textarea').val()
       } else {
@@ -191,11 +194,11 @@ $(document).on('change', '.edit-properties > [origin]', function () {
       }
   }
   else if(
-      $current_attr.attr('field') === 'g-radio' ||
-      $current_attr.attr('field') === 'g-checkbox') {
+      $current_attr.attr('field') === 'bs4-radio' ||
+      $current_attr.attr('field') === 'bs4-checkbox') {
     // TODO - not implemented yet
     // since radio and checkbox fields each support multiple options
-  } else if($current_attr.attr('field') === 'g-html') {
+  } else if($current_attr.attr('field') === 'bs4-html') {
     vals[$el.name] = $current_attr.find('textarea').val()
   } else {
     // handle other attributes

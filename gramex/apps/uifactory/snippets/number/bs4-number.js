@@ -1,10 +1,10 @@
 /* globals uifactory, fields */
 
 uifactory.register({
-  name: 'g-number',
+  name: 'bs4-number',
   template: /* HTML */`
   <style>
-    g-number {
+    bs4-number {
       display: block;
     }
   </style>
@@ -16,5 +16,5 @@ uifactory.register({
     <small id="number-help" class="form-text text-muted"><%= help %></small>
   <% } %>
   `,
-  options: fields['g-number']
+  properties: fields['bs4-number']
 })
