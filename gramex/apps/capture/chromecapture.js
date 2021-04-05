@@ -143,6 +143,15 @@ async function render(q) {
 
   let page = await browser.newPage()
 
+  page
+    .on('console', message => console.log(`${message.type().toUpperCase()} ${message.text()}`))
+    .on('pageerror', error => console.log(`ERROR: ${error.message}`))
+    .on('response', response => {
+      if (response.status() >= 400)
+        console.log(`HTTP ${response.status()}: ${response.url()}`)
+    })
+    .on('requestfailed', request => console.log(`${request.failure().errorText}: ${request.url()}`))
+
   // Clear past cookies
   let cookies = await page.cookies(q.url)
   await page.deleteCookie(...cookies)
