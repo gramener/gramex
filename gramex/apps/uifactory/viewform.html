@@ -117,7 +117,7 @@
           .then(response => response.json())
           .then(function(response) {
             $('.formhandler').formhandler({
-              data: _.map(response['each_form'], function(item) { return JSON.parse(item['response']) }),
+              data: response['each_form'],
               columns: [{name: "*" }, { name: "response", hide: true}]
             })
           })

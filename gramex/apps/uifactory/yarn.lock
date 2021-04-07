@@ -33,7 +33,7 @@ jqueryui@^1.11.1:
   resolved "https://registry.yarnpkg.com/jqueryui/-/jqueryui-1.11.1.tgz#8718550705f5568d1199196169094db73b2291bc"
   integrity sha1-hxhVBwX1Vo0RmRlhaQlNtzsikbw=
 
-lodash@^4.17.21:
+lodash@4:
   version "4.17.21"
   resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.21.tgz#679591c564c3bffaae8454cf0b3df370c3d6911c"
   integrity sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==
@@ -48,9 +48,9 @@ tiny-emitter@^2.0.0:
   resolved "https://registry.yarnpkg.com/tiny-emitter/-/tiny-emitter-2.1.0.tgz#1d1a56edfc51c43e863cbb5382a72330e3555423"
   integrity sha512-NB6Dk1A9xgQPMoGqC5CVXn123gWyte215ONT5Pp5a0yt4nlEoO1ZWeCwpncaekPHXO60i47ihFnZPiRPjRMq4Q==
 
-uifactory@^0.0.3:
-  version "0.0.3"
-  resolved "https://registry.yarnpkg.com/uifactory/-/uifactory-0.0.3.tgz#a8baeff8e868949a126db93a68aaeb9d93b0408a"
-  integrity sha512-4PLuQZ2rGM4eSk+7VssG7U+bpUNdZH7gnLrx/O2zbq4Qflwxf+fXGSbh9YloQ17fd1/SkY73R6pI/VDNyQsBQw==
+uifactory@^0.0.4:
+  version "0.0.4"
+  resolved "https://registry.yarnpkg.com/uifactory/-/uifactory-0.0.4.tgz#e16b2088276f7c67fd67d212e3144b8725987cbf"
+  integrity sha512-mQlefMI4W00U7f27r6Pa1dwkAfSbtwzkl8lwuTtTTpihawVz8474QNwLi4+2CJkyWjQ0Fc9rlKS1SXwN9LWirQ==
   dependencies:
-    lodash "^4.17.21"
+    lodash "4"

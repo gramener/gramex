@@ -30,26 +30,72 @@ $(function() {
   if(active_form_id) {
     _.each(_user_form_config, function(opts) {
       let dir = opts.component
-      $(`<${dir}></${dir}>`).attr(opts)
+      // _user_form_config only retains attributes from fields.js, `id` isn't captured
+      $(`<${dir} id="${generate_id()}"></${dir}>`).attr(opts)
         .appendTo('.user-form')
     })
   }
 })
 
+/**
+  * updates configuration for an existing form
+  * @param {Object} form_details
+*/
+function update_existing_form(form_details, $icon) {
+  $.ajax('publish', {
+    method: form_details.method,
+    data: form_details.data,
+    success: function () {
+      $('.post-publish').removeClass('d-none')
+      $('.form-link').html(`<a href="form/${active_form_id}" target="_blank">View</a>`)
+    },
+    error: function () {
+      $('.toast-body').html('Unable to update the form. Please try again later.')
+      $('.toast').toast('show')
+    },
+    complete: function() { $icon.fadeOut() }
+  })
+}
+
+/**
+  * creates configuration for a new form
+  * @param {Object} form_details
+*/
+function create_new_form(form_details, $icon) {
+  $.ajax('publish', {
+    method: form_details.method,
+    data: form_details.data,
+    success: function (response) {
+      form_details.id = response.data.inserted[0].id
+      $('.post-publish').removeClass('d-none')
+      $('.form-link').html(`<a href="form/${form_details.id}" target="_blank">View</a>`)
+      window.location.href = `create?id=${form_details.id}`
+    },
+    error: function () {
+      $('.toast-body').html('Unable to publish the form. Please try again later.')
+      $('.toast').toast('show')
+    },
+    complete: function() { $icon.fadeOut() }
+  })
+}
+
 $('body').on('click', '#publish-form', function() {
   let _vals = {}
-  $('.edit-properties > input, .edit-properties > input').each(function(ind, item) { _vals[item.id] = item.value })
-  $('.user-form > *').removeClass('highlight')
-  $('.edit-properties').empty()
+  let form_vals = []
+  let _html = ''
   let $icon = $('<i class="fa fa-spinner fa-2x fa-fw align-middle"></i>').appendTo(this)
-
   let _md = {
     name: $('#form-name').text() || 'Untitled',
     categories: [],
     description: $('#form-description').text().trim()
   }
-  let form_vals = []
+
+  $('.edit-properties > input, .edit-properties > input').each(function(ind, item) { _vals[item.id] = item.value })
+  $('.user-form > *').removeClass('highlight')
+  $('.edit-properties').empty()
+
   $('.user-form > :not(.actions)').each(function(ind, item) {
+    _html += item.outerHTML
     _vals = item.__model
     _vals['component'] = item.tagName.toLowerCase()
     if(_vals.component === 'bs4-html')
@@ -62,7 +108,7 @@ $('body').on('click', '#publish-form', function() {
   let form_details = {
     data: {
       config: JSON.stringify(form_vals),
-      html: $('#user-form form').html(),
+      html: _html,
       metadata: JSON.stringify(_md),
       user: user
     }
@@ -71,48 +117,18 @@ $('body').on('click', '#publish-form', function() {
   if(active_form_id.length > 0) {
     form_details.data.id = active_form_id
     form_details.method = 'PUT'
-    // update existing form
-    $.ajax('publish', {
-      method: 'PUT',
-      data: form_details.data,
-      success: function () {
-        $('.post-publish').removeClass('d-none')
-        $('.form-link').html(`<a href="form/${active_form_id}" target="_blank">View</a>`)
-      },
-      error: function () {
-        $('.toast-body').html('Unable to update the form. Please try again later.')
-        $('.toast').toast('show')
-      },
-      complete: function() { $icon.fadeOut() }
-    })
+    update_existing_form(form_details, $icon)
   } else {
     // POST creates a new identifier
     delete form_details.data.id
     form_details.method = 'POST'
-    $.ajax('publish', {
-      method: form_details.method,
-      data: form_details.data,
-      success: function (response) {
-        form_details.id = response.data.inserted[0].id
-        $('.post-publish').removeClass('d-none')
-        $('.form-link').html(`<a href="form/${form_details.id}" target="_blank">View</a>`)
-        window.location.href = `create?id=${form_details.id}`
-      },
-      error: function () {
-        $('.toast-body').html('Unable to publish the form. Please try again later.')
-        $('.toast').toast('show')
-      },
-      complete: function() { $icon.fadeOut() }
-    })
+    create_new_form(form_details, $icon)
   }
 }).on('click', '.form-fields > *', function() {
   // every field added to .user-form will have a new identifier
   this.id = generate_id()
   var _type = this.tagName.toLowerCase()
-  // let vals = _.mapValues(fields[_type], v => v.value)
-  // let vals = fields[_type]
   let vals = _.mapValues(_.keyBy(fields[_type], 'name'), 'value')
-  // vals['view'] = 'updating'
   $(`.form-fields > ${_type}`)
     .data('type', _type)
     .data('vals', vals)
@@ -157,7 +173,6 @@ $('body').on('click', '.user-form > :not(.actions)', function () {
       })
     }
   }
-  console.log("field_properties", this_el, field_properties, vals)
   _.each(vals, function(item) {
     let _el = document.createElement(item.field)
     item.id = generate_id()
@@ -207,7 +222,7 @@ $(document).on('change', '.edit-properties > [origin]', function () {
   $($(edited_field).get(0)).attr(vals)
   $('.field-actions').template({base: '.'})
   $('.actions').removeClass('d-none')
-  // $('.actions').insertBefore($el)
+  $('.actions').insertBefore(edited_field)
 })
 
 $('.user-form').on('submit', function(e) {

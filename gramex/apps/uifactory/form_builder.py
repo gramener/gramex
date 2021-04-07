@@ -25,7 +25,12 @@ def modify_columns(handler, data):
         df = pd.DataFrame(data)
         df = df[df['form_id'].astype('int') == int(handler.get_argument('db'))]
         if(df.shape[0] > 0):
-            return df
+            response = []
+            for _, row in df.iterrows():
+                response.append(
+                    literal_eval(row['response'])
+                )
+            return pd.DataFrame(response)
         else:
             return pd.DataFrame.from_dict({"error": ["no entries yet"]})
     else:

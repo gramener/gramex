@@ -204,7 +204,7 @@ var fields = {
       "field": "bs4-text",
       "name": "pattern",
       "label": "Email pattern",
-      "value": "",
+      "value": ".+@gramener.com",
       "help": "Restrict emails to certain domains (e.g. '.+@example.com')"
     }
   ],
