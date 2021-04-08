@@ -68,20 +68,22 @@ bs4-select .dropdown-menu.inner{
 }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.18/dist/js/bootstrap-select.min.js"></script>
-<label class="d-block" data-type="select" for="select-element"><%= label %></label>
-<select class="selectpicker" name="<%= name %>" id="<%= name %>">
-  <% if (typeof options !== undefined) { %>
-    <%= options.split(', ').map((opt) => {
-      var selected = opt === value ? "selected" : "";
-      return '<option class="text-dark pb-1 pl-5"' + selected + ' value="' + opt + '">' + opt + '</option>'
-    }).join('') %>
-  <% } %>
-  <% [...this.children].forEach(child => { %>
-    <% if (child.tagName === 'OPTION' ) { %>
-      <%= child.outerHTML %>
+<script type="text/html">
+  <label class="d-block" data-type="select" for="select-element"><%= label %></label>
+  <select class="selectpicker" name="<%= name %>" id="<%= name %>">
+    <% if (typeof options !== undefined) { %>
+      <%= options.split(', ').map((opt) => {
+        var selected = opt === value ? "selected" : "";
+        return '<option class="text-dark pb-1 pl-5"' + selected + ' value="' + opt + '">' + opt + '</option>'
+      }).join('') %>
     <% } %>
-  <% }) %>
-</select>
+    <% [...this.children].forEach(child => { %>
+      <% if (child.tagName === 'OPTION' ) { %>
+        <%= child.outerHTML %>
+      <% } %>
+    <% }) %>
+  </select>
+</script>
 <script>
   $.fn.selectpicker.Constructor.BootstrapVersion = '4';
   document.body.addEventListener('render', function (e) {
