@@ -71,6 +71,8 @@ url:
       index: true
       # filehandler disables access to . directories, allow explicitly
       allow: "*/.config/*"
+      headers:
+        Content-Control: "no-cache"
 
   uifactory/form-view-$*:
     pattern: /$YAMLURL/(form|view)/(.*)

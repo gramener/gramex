@@ -50,7 +50,7 @@ def after_publish(handler, data):
     elif handler.request.method == 'PUT':
         info.threadpool.submit(
             screenshots, handler.conf.kwargs, source_url,
-            args={'_c': [var.FORMS_ID], 'id': handler.get_argument('id')})
+            args={'_c': [var.FORMS_ID], 'id': [handler.get_argument('id')]})
     elif handler.request.method == 'GET':
         return data
     elif handler.request.method == 'DELETE':
