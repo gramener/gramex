@@ -10,7 +10,12 @@ function render_forms() {
   fetch('publish')
     .then(response => response.json())
     .then(function(data) {
-      $('.forms').template({forms: data})
+      // parse metadata as JSON
+      // filter forms by template type and non template type
+      let _data = _.each(data, function(item) { item.metadata = JSON.parse(item.metadata); })
+      let templates = _.filter(_data, function(item) { return Object.keys(item.metadata).indexOf('template') > -1 ? item : '' })
+      $('.forms').template({forms: _.filter(_data, function(item) { return Object.keys(item.metadata).indexOf('template') > -1 ? '' : item })})
+      $('.form-templates').template({templates: templates})
     })
 }
 

@@ -15,20 +15,50 @@
     {% import os %}
     {% from form_builder import FOLDER %}
     <div class="container">
-      <h4>Start a new form</h4>
-      <div class="create-form col-lg-2 text-center border mb-3 py-3">
-        <a href="{{ base }}/create">
-          <div class="card-body">
-            <i class="fa fa-plus fa-3x"></i>
+      <h4>Start a new form or use a template</h4>
+      <div class="gallery-grid pt-3 pb-5">
+        <div class="card m-0 align-items-center">
+          <div class="create-form m-auto">
+            <a href="{{ base }}/create">
+              <div class="card-body">
+                <i class="fa fa-plus fa-3x"></i>
+              </div>
+            </a>
           </div>
-        </a>
+        </div>
+        <script type="text/html" class="form-templates">
+          <% _.each(templates, function(_template) { %>
+            <% let _md = _template.metadata %>
+            <div class="card">
+              <a href="form/<%= _template.id %>">
+                <img class="thumbnail mx-auto img-fluid" src="<%= _template.thumbnail || 'https://picsum.photos/160' %>">
+              </a>
+              <div class="card-body border-top d-flex justify-content-between align-items-center">
+                <div class="font-weight-bold text-dark"><%= _md.name %></div>
+                <div class="btn-group dropdown">
+                  <button class="btn btn-link text-muted p-0" data-toggle="dropdown">
+                    <i class="fa fa-ellipsis-v"></i>
+                  </button>
+                  <div class="dropdown-menu">
+                    <button class="dropdown-item py-2 btn-link" type="button" data-formaction="copy" data-formname="<%= _md.name %>" data-form="<%= _template.id %>">
+                      <i class="fa fa-copy mr-3"></i> Make a copy
+                    </button>
+                    <a class="dropdown-item py-2" href="form/<%= _template.id %>" target="_blank">
+                      <i class="fa fa-external-link-square-alt mr-3"></i> Open in new tab
+                    </a>
+                  </div>
+                </div>
+              </div><!-- .card-body -->
+            </div>
+          <% }) %>
+        </script>
       </div>
       <div class="divider"></div>
       <h4>Recent forms</h4>
       <div class="gallery-grid pt-3 pb-5">
         <script type="text/html" class="forms">
           <% _.each(forms, function(_form) { %>
-            <% let _md = JSON.parse(_form.metadata)%>
+            <% let _md = _form.metadata %>
             <div class="card">
               <a href="form/<%= _form.id %>">
                 <img class="thumbnail mx-auto img-fluid" src="<%= _form.thumbnail || 'https://picsum.photos/160' %>">

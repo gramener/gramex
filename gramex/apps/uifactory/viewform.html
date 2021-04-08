@@ -9,6 +9,7 @@
   {% set form_id = handler.path_args[1] %}
   {% set view = 'form' %}
   {% set metadata = json.loads(gramex.data.filter(url=var.FORMS_URL, table=var.FORMS_TABLE, args={'id': [form_id]})['metadata'].values[0]) %}
+  {% set is_template = True if 'template' in metadata else False %}
   <head>
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
@@ -46,7 +47,9 @@
           </div>
         </div>
         <p class="my-3 py-3">
-          <a class="btn btn-success" href="{{ base }}/create?id={{ form_id }}">Edit</a>
+          {% if not is_template %}
+            <a class="btn btn-success" href="{{ base }}/create?id={{ form_id }}">Edit</a>
+          {% end %}
           <a class="btn btn-primary" href="{{ base }}/view/{{ form_id }}">View form</a>
         </p>
         {% include 'modals/themes.html' %}
