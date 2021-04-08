@@ -6,6 +6,9 @@ $(function() {
   render_forms()
 })
 
+/**
+  * Render forms on page load or on a form rename or on making a form a template
+*/
 function render_forms() {
   fetch('publish')
     .then(response => response.json())
@@ -19,10 +22,10 @@ function render_forms() {
     })
 }
 
-/*
-Render toast after form removal or renaming
-@param {String} msg
-@param {String} el
+/**
+  * Render toast after form removal or renaming
+  * @param {String} msg
+  * @param {String} el
 */
 function post_action(msg, el) {
   $(el).modal('hide')
@@ -70,4 +73,8 @@ $('body').on('click', 'button[data-form]', function () {
 }).on('click', '[data-formaction]', function() {
   if($(this).data('formaction') === 'copy')
     initiate_copy('.', $(this).data('form'))
+  else if($(this).data('formaction') === 'template')
+    // update form.metadata.template = 1
+    // make_form_template('.', $(this).data('form'))
+    initiate_copy('.', $(this).data('form'), true);
 })
