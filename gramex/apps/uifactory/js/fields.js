@@ -67,55 +67,57 @@ var fields = {
     },
     {
       "field": "bs4-select",
-      "name": "borderSize",
+      "name": "border-size",
       "label": "Button borderSize",
       "value": 1,
       "options": "1, 2, 3, 4, 5"
     },
     {
       "field": "bs4-select",
-      "name": "borderColor",
+      "name": "border-color",
       "label": "Button borderColor",
       "value": "primary",
       "options": "primary, secondary, success, danger, warning, info, light, dark, white"
     },
     {
       "field": "bs4-select",
-      "name": "borderRounded",
+      "name": "border-rounded",
       "label": "Button borderRounded",
       "value": "false",
       "options": "false, true"
     },
     {
       "field": "bs4-select",
-      "name": "borderRadiusSize",
+      "name": "border-radius-size",
       "label": "Button borderRadiusSize",
       "value": 0,
       "options": "0, 1, 2, 3"
     },
     {
       "field": "bs4-select",
-      "name": "borderRadiusPosition",
+      "name": "border-radius-position",
       "label": "Button borderRadiusPosition",
       "value": "",
       "options": "top, end, bottom, start"
     },
     {
       "field": "bs4-select",
-      "name": "iconLibrary",
+      "name": "icon-library",
       "label": "Button iconLibrary",
       "value": "",
       "options": "bi, fa"
     },
     {
-      "field": "bs4-button",
-      "name": "iconType",
+      "field": "bs4-text",
+      "name": "icon-type",
       "label": "Button iconType",
-      "value": ""
+      "value": "",
+      "help": "Valid fontawesome icon",
+      "placeholder": "for example: arrow-right"
     },
     {
       "field": "bs4-select",
-      "name": "iconPosition",
+      "name": "icon-position",
       "label": "Button iconPosition",
       "value": "",
       "options": "start, end"

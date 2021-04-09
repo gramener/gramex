@@ -33,21 +33,21 @@ uifactory.register({
 <!-- border: [true, false] -->
 <% klass.borderClass = border === 'true' ? 'border' : '' %>
 <!-- borderSize: [1, 2, 3, 4, 5] -->
-<% klass.borderSizeClass = border === 'true' && border-size ? 'border-' + border-size : '' %>
+<% klass.borderSizeClass = border === 'true' && borderSize ? 'border-' + borderSize : '' %>
 <!-- border-Color: ['primary','secondary', 'success', 'danger', 'warning', 'info', 'light', 'dark', 'white'] -->
-<% klass.borderColorClass = obj['border-color'] ? 'border-' + obj['border-color'] : '' %>
+<% klass.borderColorClass = obj['borderColor'] ? 'border-' + obj['borderColor'] : '' %>
 <!-- borderRounded: [true, false] -->
 <% klass.borderRoundedClass = obj['border-rounded'] === 'true' ? 'rounded' : '' %>
 <!-- borderRadiusSize: [0, 1, 2, 3] -->
-<% klass.borderRadiusSizeClass = obj['border-rounded'] === 'true' && obj['border-radius-size'] ? 'rounded-' + obj['border-radius-size'] : '' %>
+<% klass.borderRadiusSizeClass = obj['borderRounded'] === 'true' && obj['borderRadiusSize'] ? 'rounded-' + obj['borderRadiusSize'] : '' %>
 <!-- borderRadiusPosition: ['top', 'end', 'bottom', 'start'] -->
-<% klass.borderRadiusPositionClass = obj['border-radius-position'] ? 'rounded-' + obj['border-radius-position'] : '' %>
+<% klass.borderRadiusPositionClass = obj['borderRadiusPosition'] ? 'rounded-' + obj['borderRadiusPosition'] : '' %>
 
 <% var iconClass = {} %>
-<% iconClass.library = obj['icon-library'] ? obj['icon-library'] : 'bi' %>
-<% iconClass.type = obj['icon-type'] ? iconClass.library + '-' + obj['icon-type'] : 'd-none' %>
+<% iconClass.library = obj['iconLibrary'] ? obj['iconLibrary'] : 'bi' %>
+<% iconClass.type = obj['iconType'] ? iconClass.library + '-' + obj['iconType'] : 'd-none' %>
 <!-- iconPosition: ['start', 'end'] -->
-<% iconClass.position = obj['icon-position'] ? 'float-' + obj['icon-position']  : '' %>
+<% iconClass.position = obj['iconPosition'] ? 'float-' + obj['iconPosition']  : '' %>
 
 <button type="<%= type %>" class="btn <%= Object.values(klass).join(' ') %>">
   <i class="<%- Object.values(iconClass).join(' ') %>"></i>
