@@ -59,6 +59,9 @@ $('body').on('click', 'button[data-form]', function () {
   $.ajax(`../analytics/?db=${form_id}&form_id=${form_id}&response=${JSON.stringify(field_vals_obj)}`, {
     method: 'POST',
     success: function() {
+      // submit another record
+      $('#view-form').addClass('d-none')
+      $('.post-submission').removeClass('d-none')
       $('.toast-body').html('Your response has been recorded.')
       $('.toast').toast('show')
     },

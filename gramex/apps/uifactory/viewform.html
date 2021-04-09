@@ -15,7 +15,6 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <title>View a form - Form Builder</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <!-- <link rel="stylesheet" href="{{ base }}/node_modules/bootstrap-select/dist/css/bootstrap-select.min.css"> -->
     <link rel="stylesheet" href="{{ base }}/style.scss?body-bg={{ urllib.parse.quote(metadata['bg'] if 'bg' in metadata else '#ffffff') }}">
     <link rel="stylesheet"
       href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.7.1/styles/default.min.css">
@@ -63,6 +62,12 @@
         <div class="my-5" id="view-form">
           <form class="analytics"></form>
         </div>
+        <div class="post-submission py-2 d-none">
+          <p class="my-2">
+            Thanks for submitting your inputs.
+          </p>
+          <a href="{{ base }}/form/{{ form_id }}">View responses</a> or <a href="{{ base }}/view/{{ form_id }}">submit another response</a>.
+        </div>
       </div>
       {% end %}
     </div>
@@ -74,11 +79,6 @@
     <script src="{{ base }}/ui/g1/dist/g1.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.7.1/highlight.min.js"></script>
     <script src="{{ base }}/node_modules/clipboard/dist/clipboard.min.js"></script>
-    <!-- <script src="{{ base }}/node_modules/bootstrap-select/dist/js/bootstrap-select.min.js"></script> -->
-    <script>
-      // bootstrap select needs to be informed of the Bootstrap version
-      // $.fn.selectpicker.Constructor.BootstrapVersion = '4';
-    </script>
 
     <script src="{{ base }}/js/fields.js"></script>
     <script src="{{ base }}/node_modules/uifactory/uifactory.js"></script>

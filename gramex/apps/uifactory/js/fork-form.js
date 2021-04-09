@@ -31,7 +31,10 @@ function initiate_copy(base, form_id, template) {
         method: !template ? 'POST' : 'PUT',
         data: form_details,
         success: function (response) {
-          $('.toast-body').html('Copy successful. Redirecting to new form.')
+          if(!template)
+            $('.toast-body').html('Copy successful. Redirecting to new form.')
+          else
+            $('.toast-body').html('Selected form is now a template. Refreshing the list.')
           $('.toast').toast('show')
           setTimeout(function () {
             // refresh the forms when an existing form is made a template
