@@ -83,6 +83,9 @@ bs4-select .dropdown-menu.inner{
       <% } %>
     <% }) %>
   </select>
+  <% if (typeof help != 'undefined') { %>
+    <small id="text-input-help" class="form-text text-muted"><%= help %></small>
+  <% } %>
 </script>
 <script>
   $.fn.selectpicker.Constructor.BootstrapVersion = '4';

@@ -5,13 +5,15 @@ uifactory.register({
   template: /* HTML */`
   <script type="text/html">
     <label data-type="text" for="<%= name %>"><%= label %></label>
-    <% options.split(',').forEach(function (option, ind) { %>
+    <% options.split('|').map(item => item.trim()).forEach(function (option, ind) { %>
+      <% let values = value.split('|').map(item => item.trim()) %>
       <div class="form-check p-0">
-        <input type="checkbox" class="px-2" name="<%= name %>" id="<%= ind + '-' + option.trim() %>" value="<%= option.trim() %>" <%= value === 'yes' ? "checked" : "" %> >
-        <label data-type="checkbox" class="px-2" for="<%= ind + '-' + option.trim() %>">
-          <%= option.trim() %>
+        <input type="checkbox" class="px-2" name="<%= name %>" id="<%= ind + '-' + option %>" value="<%= option %>"
+          <%= values.indexOf(option) > -1 ? "checked" : "" %> >
+        <label data-type="checkbox" class="px-2" for="<%= ind + '-' + option %>">
+          <%= option %>
         </label>
-        <% if (typeof help != 'undefined' && ind === options.split(',').length - 1) { %>
+        <% if (typeof help != 'undefined' && ind === options.split('|').map(item => item.trim()).length - 1) { %>
           <small id="text-input-help" class="form-text text-muted"><%= help %></small>
         <% } %>
       </div>

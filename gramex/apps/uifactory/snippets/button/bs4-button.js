@@ -33,15 +33,15 @@ uifactory.register({
 <!-- border: [true, false] -->
 <% klass.borderClass = border === 'true' ? 'border' : '' %>
 <!-- borderSize: [1, 2, 3, 4, 5] -->
+<% klass.borderSize = border === 'true' && borderSize ? borderSize : 0 %>
+<!-- borderSize: [1, 2, 3, 4, 5] -->
 <% klass.borderSizeClass = border === 'true' && borderSize ? 'border-' + borderSize : '' %>
 <!-- border-Color: ['primary','secondary', 'success', 'danger', 'warning', 'info', 'light', 'dark', 'white'] -->
-<% klass.borderColorClass = obj['borderColor'] ? 'border-' + obj['borderColor'] : '' %>
+<% klass.borderColorClass = border === 'true' && borderColor ? 'border-' + borderColor : '' %>
 <!-- borderRounded: [true, false] -->
-<% klass.borderRoundedClass = obj['border-rounded'] === 'true' ? 'rounded' : '' %>
-<!-- borderRadiusSize: [0, 1, 2, 3] -->
-<% klass.borderRadiusSizeClass = obj['borderRounded'] === 'true' && obj['borderRadiusSize'] ? 'rounded-' + obj['borderRadiusSize'] : '' %>
+<% klass.borderRoundedClass = borderRounded === 'true' ? 'rounded' : '' %>
 <!-- borderRadiusPosition: ['top', 'end', 'bottom', 'start'] -->
-<% klass.borderRadiusPositionClass = obj['borderRadiusPosition'] ? 'rounded-' + obj['borderRadiusPosition'] : '' %>
+<% klass.borderRadiusPositionClass = borderRounded === 'true' && borderRadiusPosition ? 'rounded-' + borderRadiusPosition : '' %>
 
 <% var iconClass = {} %>
 <% iconClass.library = obj['iconLibrary'] ? obj['iconLibrary'] : 'bi' %>

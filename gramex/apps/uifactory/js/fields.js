@@ -6,36 +6,41 @@ var fields = {
       "field": "bs4-select",
       "name": "size",
       "label": "Button size",
-      "value": "",
-      "options": "small, medium, large"
+      "value": "medium",
+      "options": "small, medium, large",
+      "help": "Change button size (default: medium)"
     },
     {
       "field": "bs4-select",
       "name": "type",
       "label": "Button type",
       "value": "submit",
-      "options": "button, submit, reset"
+      "options": "button, submit, reset",
+      "help": "Change button type (default: submit)"
     },
     {
       "field": "bs4-select",
       "name": "color",
       "label": "Button color",
       "value": "primary",
-      "options": "primary, secondary, success, danger, warning, info, light, dark, white"
+      "options": "primary, secondary, success, danger, warning, info, light, dark, white",
+      "help": "Change button color (default: primary)"
     },
     {
       "field": "bs4-select",
       "name": "outline",
       "label": "Button outline",
       "value": "false",
-      "options": "false, true"
+      "options": "false, true",
+      "help": "Make button with outline (default: false)"
     },
     {
       "field": "bs4-select",
       "name": "gradient",
       "label": "Button gradient",
       "value": "false",
-      "options": "false, true"
+      "options": "false, true",
+      "help": "Enable gradient for Button. Needs button outline to be false."
     },
     {
       "field": "bs4-select",
@@ -49,14 +54,16 @@ var fields = {
       "name": "link",
       "label": "Button link",
       "value": "false",
-      "options": "false, true"
+      "options": "false, true",
+      "help": "Make button style as link"
     },
     {
       "field": "bs4-select",
       "name": "shape",
       "label": "Button shape",
-      "value": "",
-      "options": "pill, circle"
+      "value": "none",
+      "options": "none, pill, circle",
+      "help": "Control button shape"
     },
     {
       "field": "bs4-select",
@@ -70,35 +77,32 @@ var fields = {
       "name": "border-size",
       "label": "Button borderSize",
       "value": 1,
-      "options": "1, 2, 3, 4, 5"
+      "options": "1, 2, 3, 4, 5",
+      "help": "Button border should be `true`"
     },
     {
       "field": "bs4-select",
       "name": "border-color",
       "label": "Button borderColor",
       "value": "primary",
-      "options": "primary, secondary, success, danger, warning, info, light, dark, white"
+      "options": "primary, secondary, success, danger, warning, info, light, dark, white",
+      "help": "Button border should be `true`"
     },
     {
       "field": "bs4-select",
       "name": "border-rounded",
       "label": "Button borderRounded",
       "value": "false",
-      "options": "false, true"
-    },
-    {
-      "field": "bs4-select",
-      "name": "border-radius-size",
-      "label": "Button borderRadiusSize",
-      "value": 0,
-      "options": "0, 1, 2, 3"
+      "options": "false, true",
+      "help": "Works for pill and circle shapes with border rounded enabled."
     },
     {
       "field": "bs4-select",
       "name": "border-radius-position",
       "label": "Button borderRadiusPosition",
-      "value": "",
-      "options": "top, end, bottom, start"
+      "value": "top",
+      "options": "top, end, bottom, start",
+      "help": "Works for pill and circle shapes with border rounded enabled."
     },
     {
       "field": "bs4-select",
@@ -112,7 +116,7 @@ var fields = {
       "name": "icon-type",
       "label": "Button iconType",
       "value": "",
-      "help": "Valid fontawesome icon",
+      "help": "Visit <a target='_blank' rel='noopener' href='https://icons.getbootstrap.com/'>Bootstrap Icons</a> (bi), <a target='_blank' rel='noopener' href='https://fontawesome.com/icons/'>Font Awesome Icons</a> (fa) for icon values.",
       "placeholder": "for example: arrow-right"
     },
     {
@@ -140,24 +144,23 @@ var fields = {
     },
     {
       "field": "bs4-text",
-      "name": "help",
-      "value": "Checkbox help",
-      "label": "Help"
-    },
-    {
-      "field": "bs4-text",
       "name": "options",
       "label": "Options",
-      "help": "List of options for the selection separated by comma",
-      "value": "One, Two"
+      "help": "List of options for the selection separated by | (pipe) delimiter",
+      "value": "One | Two"
     },
     {
       "field": "bs4-text",
       "name": "value",
       "label": "Default value",
-      "options": "yes, no",
-      "value": "yes",
-      "help": ""
+      "value": "One",
+      "help": "One option will be selected by default"
+    },
+    {
+      "field": "bs4-text",
+      "name": "help",
+      "value": "Checkbox help",
+      "label": "Help"
     },
     {
       "field": "bs4-text",
@@ -179,12 +182,13 @@ var fields = {
       "field": "bs4-text",
       "name": "placeholder",
       "label": "Email placeholder",
-      "help": "Label for the text field",
+      "help": "Enter text for placeholder. Enabled when no value is entered.",
       "value": "jane@example.com"
     },
     {
       "field": "bs4-text",
       "name": "help",
+      "help": "",
       "value": "email help",
       "label": "Help text"
     },
@@ -231,7 +235,7 @@ var fields = {
       "name": "label",
       "label": "Text label",
       "help": "Label for the text field",
-      "value": "Custom HTML"
+      "value": ""
     },
     {
       "field": "bs4-textarea",
@@ -239,13 +243,6 @@ var fields = {
       "label": "Write or paste HTML",
       "help": "",
       "value": "<h1>HTML</h1>"
-    },
-    {
-      "field": "bs4-text",
-      "name": "name",
-      "label": "Name",
-      "value": "custom-html",
-      "help": "Useful for mapping submission values. Needs to be unique."
     }
   ],
   "bs4-number": [
@@ -275,6 +272,13 @@ var fields = {
       "label": "Number name",
       "value": "number-input",
       "help": "Useful for mapping submission values"
+    },
+    {
+      "field": "bs4-text",
+      "name": "help",
+      "help": "",
+      "value": "Number helper",
+      "label": "Help text"
     },
     {
       "field": "bs4-number",
@@ -351,24 +355,17 @@ var fields = {
     },
     {
       "field": "bs4-text",
-      "name": "placeholder",
-      "label": "Radio placeholder",
-      "help": "Label for the text field",
-      "value": ""
+      "name": "options",
+      "label": "Options",
+      "help": "List of options for the selection separated by | (pipe) delimiter",
+      "value": "Radio one | Radio two"
     },
     {
       "field": "bs4-text",
       "name": "value",
       "label": "Default Value",
-      "options": "yes, no",
-      "value": "yes"
-    },
-    {
-      "field": "bs4-text",
-      "name": "options",
-      "label": "Options",
-      "help": "List of options for the selection separated by comma",
-      "value": "Radio one, Radio two"
+      "value": "Radio one",
+      "help": "Radio one option will be selected by default"
     },
     {
       "field": "bs4-text",
@@ -381,7 +378,8 @@ var fields = {
       "field": "bs4-text",
       "name": "help",
       "value": "",
-      "label": "Help"
+      "label": "Help",
+      "help": ""
     }
   ],
   "bs4-range": [
@@ -396,7 +394,8 @@ var fields = {
       "field": "bs4-number",
       "name": "value",
       "label": "Default Value",
-      "value": ""
+      "value": "",
+      "help": "Value should be within minimum and maximum values"
     },
     {
       "field": "bs4-text",
@@ -404,6 +403,13 @@ var fields = {
       "label": "Range name",
       "value": "range-input",
       "help": "Useful for mapping submission values"
+    },
+    {
+      "field": "bs4-text",
+      "name": "help",
+      "label": "Help",
+      "value": "range-help",
+      "help": "Help text"
     },
     {
       "field": "bs4-number",
@@ -433,7 +439,7 @@ var fields = {
       "name": "options",
       "label": "Select options",
       "value": "",
-      "help": "Separate values by comma"
+      "help": "List of options for the selection separated by comma"
     },{
       "field": "bs4-text",
       "name": "value",
@@ -453,6 +459,13 @@ var fields = {
       "label": "Selection name",
       "value": "select-input",
       "help": "Useful for mapping submission values"
+    },
+    {
+      "field": "bs4-text",
+      "name": "help",
+      "label": "Help",
+      "value": "select-help",
+      "help": "Describe the field"
     },
     {
       "label": "actions-box",
@@ -671,14 +684,15 @@ var fields = {
       "field": "bs4-text",
       "name": "placeholder",
       "label": "Text placeholder",
-      "help": "Label for the text field",
+      "help": "Placeholder for the field",
       "value": "Placeholder.."
     },
     {
       "field": "bs4-text",
       "name": "value",
       "label": "Default Value",
-      "value": ""
+      "value": "",
+      "help": "Set value"
     },
     {
       "field": "bs4-text",
@@ -686,6 +700,13 @@ var fields = {
       "label": "Name",
       "value": "text-input",
       "help": "Useful for mapping submission values"
+    },
+    {
+      "field": "bs4-text",
+      "name": "help",
+      "label": "Help",
+      "value": "",
+      "help": "Help text"
     }
   ],
   "bs4-textarea": [

@@ -35,6 +35,10 @@ $(function() {
         .appendTo('.user-form')
     })
   }
+
+  window.onbeforeunload = function() {
+    return confirm("All changes will be lost. Confirm refresh.")
+  }
 })
 
 /**

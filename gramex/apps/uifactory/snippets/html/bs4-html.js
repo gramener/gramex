@@ -3,7 +3,7 @@
 uifactory.register({
   name: 'bs4-html',
   template: /* HTML */`
-  <label data-type="html" for="<%= name %>"><%= label %></label>
+  <label data-type="html" for="custom-html"><%= label %></label>
   <%= value %>
   <% if (typeof help != 'undefined') { %>
     <small id="text-input-help" class="form-text text-muted"><%= help %></small>
