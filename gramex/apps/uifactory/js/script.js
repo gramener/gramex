@@ -36,9 +36,9 @@ $(function() {
     })
   }
 
-  // window.onbeforeunload = function() {
-  //   return confirm("All changes will be lost. Confirm refresh.")
-  // }
+  window.onbeforeunload = function() {
+    return confirm("All changes will be lost. Confirm refresh.")
+  }
 })
 
 /**

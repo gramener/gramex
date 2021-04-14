@@ -76,8 +76,7 @@
 .edit-properties {
   position: sticky;
   top: 2%;
-  min-height: 80%;
-  max-height: 80%;
+  height: 60%;
   overflow: auto;
 }
 // disable events while previewing the form at /form/id
@@ -86,4 +85,5 @@
 }
 .edit-properties > * {
   padding: 0.5rem;
+  display: inline-grid;
 }
