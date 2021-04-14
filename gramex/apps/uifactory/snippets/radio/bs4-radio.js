@@ -6,10 +6,9 @@ uifactory.register({
   <script type="text/html">
     <label data-type="text" for="<%= name %>"><%= label %></label>
     <% options.split('|').map(item => item.trim()).forEach(function (option, ind) { %>
-      <% let values = value.split('|').map(item => item.trim()) %>
       <div class="form-check py-2 px-0">
         <input type="radio" class="px-2" name="<%= name %>" id="<%= option %>" value="<%= option %>"
-          <%= values.indexOf(option) > -1 ? "checked" : "" %>>
+          <%= value === option ? "checked" : "" %>>
         <label data-type="radio" class="px-2" for="<%= option %>">
           <%= option %>
         </label>

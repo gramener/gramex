@@ -36,9 +36,9 @@ $(function() {
     })
   }
 
-  window.onbeforeunload = function() {
-    return confirm("All changes will be lost. Confirm refresh.")
-  }
+  // window.onbeforeunload = function() {
+  //   return confirm("All changes will be lost. Confirm refresh.")
+  // }
 })
 
 /**
@@ -195,9 +195,9 @@ $(document).on('change', '.edit-properties > [origin]', function () {
   var $current_attr = $(this)
   var edited_field = $(`#${$el.getAttribute('origin')}`)
 
-  if($(this).find('.selectpicker').length > 0) {
+  if($(this).find('select').length > 0) {
     // we have found a select element
-    vals[$($el).attr('name')] = $(this).find('.selectpicker').val()
+    vals[$($el).attr('name')] = $(this).find('select').val()
   } else if(
       $current_attr.attr('field') == 'bs4-text' ||
       $current_attr.attr('field') == 'bs4-email' ||

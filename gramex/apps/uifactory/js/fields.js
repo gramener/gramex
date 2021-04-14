@@ -47,7 +47,8 @@ var fields = {
       "name": "transparent",
       "label": "Button transparent",
       "value": "false",
-      "options": "false, true"
+      "options": "false, true",
+      "help": "Make button transparent"
     },
     {
       "field": "bs4-select",
@@ -70,7 +71,8 @@ var fields = {
       "name": "border",
       "label": "Button border",
       "value": "false",
-      "options": "false, true"
+      "options": "false, true",
+      "help": "Enable border"
     },
     {
       "field": "bs4-select",
@@ -78,7 +80,7 @@ var fields = {
       "label": "Button borderSize",
       "value": 1,
       "options": "1, 2, 3, 4, 5",
-      "help": "Button border should be `true`"
+      "help": "Higher value enables thicker border. Button border should be `true`"
     },
     {
       "field": "bs4-select",
@@ -86,7 +88,7 @@ var fields = {
       "label": "Button borderColor",
       "value": "primary",
       "options": "primary, secondary, success, danger, warning, info, light, dark, white",
-      "help": "Button border should be `true`"
+      "help": "Changes border color. Button border should be `true`"
     },
     {
       "field": "bs4-select",
@@ -109,7 +111,8 @@ var fields = {
       "name": "icon-library",
       "label": "Button iconLibrary",
       "value": "",
-      "options": "bi, fa"
+      "options": "bi, fa",
+      "help": "Pick one of the libraries: Bootstrap Icons or Font Awesome Icons"
     },
     {
       "field": "bs4-text",
@@ -124,13 +127,15 @@ var fields = {
       "name": "icon-position",
       "label": "Button iconPosition",
       "value": "",
-      "options": "start, end"
+      "options": "start, end",
+      "help": "Position of Bootstrap or Font Awesome icon"
     },
     {
       "field": "bs4-text",
       "name": "label",
       "label": "Button label",
-      "value": "I'm a button!"
+      "value": "I'm a button!",
+      "help": "Change the text displayed on button"
     }
 
   ],
@@ -154,7 +159,7 @@ var fields = {
       "name": "value",
       "label": "Default value",
       "value": "One",
-      "help": "One option will be selected by default"
+      "help": "One option will be selected by default. To check multiple values, separate them by | (pipe) delimiter."
     },
     {
       "field": "bs4-text",
@@ -444,21 +449,29 @@ var fields = {
       "field": "bs4-text",
       "name": "value",
       "label": "Default value",
-      "value": ""
+      "value": "",
+      "help": "Set from one of the options defined above"
     },
     {
       "field": "bs4-text",
       "name": "label",
       "label": "Select label",
-      "help": "Label for the selection",
-      "value": "Select"
+      "value": "Select",
+      "help": "Label for the select element"
     },
     {
       "field": "bs4-text",
       "name": "name",
       "label": "Selection name",
       "value": "select-input",
-      "help": "Useful for mapping submission values"
+      "help": "Used for mapping submission values. Should be unique for each select field."
+    },
+    {
+      "field": "bs4-text",
+      "name": "title",
+      "label": "Set a title",
+      "value": "This is a select field",
+      "help": "Used for showing a title on mouseover."
     },
     {
       "field": "bs4-text",
@@ -466,210 +479,6 @@ var fields = {
       "label": "Help",
       "value": "select-help",
       "help": "Describe the field"
-    },
-    {
-      "label": "actions-box",
-      "name": "actions-box",
-      "field": "bs4-text",
-      "value": "false"
-    },
-    {
-      "label": "container",
-      "name": "container",
-      "field": "bs4-text",
-      "value": "false"
-    },
-    {
-      "label": "count-selected-text",
-      "name": "count-selected-text",
-      "field": "bs4-text",
-      "value": "{0} selected"
-    },
-    {
-      "label": "deselect-all-text",
-      "name": "deselect-all-text",
-      "field": "bs4-text",
-      "value": "Deselect All"
-    },
-    {
-      "label": "dropdown-align-right",
-      "name": "dropdown-align-right",
-      "field": "bs4-text",
-      "value": "false"
-    },
-    {
-      "label": "dropup-auto",
-      "name": "dropup-auto",
-      "field": "bs4-text",
-      "value": "true"
-    },
-    {
-      "label": "header",
-      "name": "header",
-      "field": "bs4-text",
-      "value": "false"
-    },
-    {
-      "label": "hide-disabled",
-      "name": "hide-disabled",
-      "field": "bs4-text",
-      "value": "false"
-    },
-    {
-      "label": "icon-base",
-      "name": "icon-base",
-      "field": "bs4-text",
-      "value": "glyphicon"
-    },
-    {
-      "label": "live-search",
-      "name": "live-search",
-      "field": "bs4-text",
-      "value": "false"
-    },
-    {
-      "label": "live-search-normalize",
-      "name": "live-search-normalize",
-      "field": "bs4-text",
-      "value": "false"
-    },
-    {
-      "label": "live-search-placeholder",
-      "name": "live-search-placeholder",
-      "field": "bs4-text",
-      "value": "null"
-    },
-    {
-      "label": "live-search-style",
-      "name": "live-search-style",
-      "field": "bs4-text",
-      "value": "contains"
-    },
-    {
-      "label": "max-options",
-      "name": "max-options",
-      "field": "bs4-text",
-      "value": "false"
-    },
-    {
-      "label": "max-options-text",
-      "name": "max-options-text",
-      "field": "bs4-text",
-      "value": "Limit Reached, {n} items selected"
-    },
-    {
-      "label": "mobile",
-      "name": "mobile",
-      "field": "bs4-text",
-      "value": "false"
-    },
-    {
-      "label": "multiple-separator",
-      "name": "multiple-separator",
-      "field": "bs4-text",
-      "value": ""
-    },
-    {
-      "label": "none-selected-text",
-      "name": "none-selected-text",
-      "field": "bs4-text",
-      "value": "Nothing selected"
-    },
-    {
-      "label": "none-results-text",
-      "name": "none-results-text",
-      "field": "bs4-text",
-      "value": "No results matched {0}"
-    },
-    {
-      "label": "select-all-text",
-      "name": "select-all-text",
-      "field": "bs4-text",
-      "value": "Select All"
-    },
-    {
-      "label": "selected-text-format",
-      "name": "selected-text-format",
-      "field": "bs4-text",
-      "value": "values"
-    },
-    {
-      "label": "select-on-tab",
-      "name": "select-on-tab",
-      "field": "bs4-text",
-      "value": "false"
-    },
-    {
-      "label": "show-content",
-      "name": "show-content",
-      "field": "bs4-text",
-      "value": "true"
-    },
-    {
-      "label": "show-icon",
-      "name": "show-icon",
-      "field": "bs4-text",
-      "value": "true"
-    },
-    {
-      "label": "show-subtext",
-      "name": "show-subtext",
-      "field": "bs4-text",
-      "value": "false"
-    },
-    {
-      "label": "show-tick",
-      "name": "show-tick",
-      "field": "bs4-text",
-      "value": "false"
-    },
-    {
-      "label": "size",
-      "name": "size",
-      "field": "bs4-text",
-      "value": "auto"
-    },
-    {
-      "label": "style",
-      "name": "style",
-      "field": "bs4-text",
-      "value": "btn-light"
-    },
-    {
-      "label": "style-base",
-      "name": "style-base",
-      "field": "bs4-text",
-      "value": "btn"
-    },
-    {
-      "label": "tick-icon",
-      "name": "tick-icon",
-      "field": "bs4-text",
-      "value": "glyphicon-ok"
-    },
-    {
-      "label": "title",
-      "name": "title",
-      "field": "bs4-text",
-      "value": "null"
-    },
-    {
-      "label": "virtual-scroll",
-      "name": "virtual-scroll",
-      "field": "bs4-text",
-      "value": "600"
-    },
-    {
-      "label": "width",
-      "name": "width",
-      "field": "bs4-text",
-      "value": "false"
-    },
-    {
-      "label": "window-padding",
-      "name": "window-padding",
-      "field": "bs4-text",
-      "value": "0"
     }
   ],
   "bs4-text": [
@@ -705,7 +514,7 @@ var fields = {
       "field": "bs4-text",
       "name": "help",
       "label": "Help",
-      "value": "",
+      "value": "Description, if any",
       "help": "Help text"
     }
   ],

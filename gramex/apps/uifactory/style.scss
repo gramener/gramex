@@ -75,7 +75,10 @@
 }
 .edit-properties {
   position: sticky;
-  top: 5%;
+  top: 2%;
+  min-height: 80%;
+  max-height: 80%;
+  overflow: auto;
 }
 // disable events while previewing the form at /form/id
 #formTabContent form {
