@@ -5,6 +5,7 @@ import os
 import re
 
 import gramex
+from gramex.transforms import build_transform
 from gramex.config import app_log, CustomJSONEncoder, locate
 from gramex import data as gdata
 from gramex.handlers import FormHandler
@@ -89,11 +90,20 @@ class MLHandler(FormHandler):
         cls.template = kwargs.pop('template', DEFAULT_TEMPLATE)
         super(MLHandler, cls).setup(**kwargs)
         try:
+            if 'transform' in data:
+                data['transform'] = build_transform(
+                    {'function': data['transform']},
+                    vars={'data': None, 'handler': None},
+                    filename='MLHandler:data', iter=False)
+                cls._built_transform = staticmethod(data['transform'])
+            else:
+                cls._built_transform = staticmethod(lambda x: x)
             data = gdata.filter(**data)
             cls.store_data(data)
         except TypeError:
             app_log.warning('MLHandler could not find training data.')
             data = None
+            cls._built_transform = staticmethod(lambda x: x)
 
         default_model_path = op.join(cls.config_dir, slugify(cls.name) + '.pkl')
         cls.model_path = model.pop('path', default_model_path)
@@ -188,6 +198,7 @@ class MLHandler(FormHandler):
         except ValueError:
             app_log.warning('Could not read data from request, reading cached data.')
             data = self.load_data()
+        data = self._built_transform(data)
 
         if _cache:
             self.store_data(data, append)

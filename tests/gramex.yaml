@@ -1149,6 +1149,17 @@ url:
     handler: MLHandler
     kwargs:
       xsrf_cookies: false
+  mlhandler/xform:
+    pattern: /mltransform
+    handler: MLHandler
+    kwargs:
+      data:
+        url: $YAMLPATH/circles.csv
+        transform: utils.transform_circles
+      model:
+        class: LogisticRegression
+        target_col: y
+      xsrf_cookies: false
 
   capture:
     pattern: /capture
@@ -2281,6 +2292,9 @@ watch:
     on_modified: nonexistent            # This should not throw an error, only report a warning
 
 schedule:
+  make-circles:
+    function: utils.make_circles
+    startup: true
   schedule-start:
     function: utils.schedule_start
     startup: true

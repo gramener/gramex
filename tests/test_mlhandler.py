@@ -35,13 +35,18 @@ class TestMLHandler(TestGramex):
             'mlhandler-config/data.h5',
             'mlhandler-incr/config.json',
             'mlhandler-incr/data.h5',
-            'mlhandler-blank/mlhandler-blank.pkl',
             'mlhandler-incr/mlhandler-incr.pkl',
+            'mlhandler-xform/config.json',
+            'mlhandler-xform/data.h5',
+            'mlhandler-xform/mlhandler-xform.pkl',
+            'mlhandler-blank/mlhandler-blank.pkl',
             'mlhandler-nopath/mlhandler-nopath.pkl',
         ]]
         paths += [op.join(folder, 'model.pkl')]
         for p in paths:
             tempfiles[p] = p
+        circles = op.join(folder, 'circles.csv')
+        tempfiles[circles] = circles
 
     def test_append(self):
         try:
@@ -461,3 +466,9 @@ class TestMLHandler(TestGramex):
             # TODO: The target_col has to be reset to species for a correct teardown.
             # But any PUT deletes an existing model and causes subsequent tests to fail.
             # Find an atomic way to reset configurations.
+
+    def test_datatransform(self):
+        with open(op.join(op.dirname(__file__), 'circles.csv'), 'r', encoding='utf8') as fin:
+            resp = self.get('/mltransform?_action=score', method='post',
+                            files={'file': ('circles.csv', fin.read())})
+        self.assertEqual(resp.json()['score'], 1)
