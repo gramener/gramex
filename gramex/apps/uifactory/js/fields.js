@@ -151,15 +151,15 @@ var fields = {
       "field": "bs4-text",
       "name": "options",
       "label": "Options",
-      "help": "List of options for the selection separated by | (pipe) delimiter",
-      "value": "One | Two"
+      "help": "List of options for the selection separated by comma. Wrap comma separated values by double quotes.",
+      "value": "One, Two"
     },
     {
       "field": "bs4-text",
       "name": "value",
       "label": "Default value",
       "value": "One",
-      "help": "One option will be selected by default. To check multiple values, separate them by | (pipe) delimiter."
+      "help": "One option will be selected by default. To check multiple values, separate them by comma."
     },
     {
       "field": "bs4-text",
@@ -362,8 +362,8 @@ var fields = {
       "field": "bs4-text",
       "name": "options",
       "label": "Options",
-      "help": "List of options for the selection separated by | (pipe) delimiter",
-      "value": "Radio one | Radio two"
+      "help": "List of options for the selection separated by comma. Wrap comma separated values by double quotes.",
+      "value": "Radio one, Radio two"
     },
     {
       "field": "bs4-text",
@@ -444,7 +444,7 @@ var fields = {
       "name": "options",
       "label": "Select options",
       "value": "",
-      "help": "List of options for the selection separated by comma"
+      "help": "List of options for the selection separated by comma. Wrap comma separated values by double quotes.",
     },{
       "field": "bs4-text",
       "name": "value",
@@ -463,7 +463,7 @@ var fields = {
       "field": "bs4-text",
       "name": "name",
       "label": "Selection name",
-      "value": "select-input",
+      "value": "select-simple",
       "help": "Used for mapping submission values. Should be unique for each select field."
     },
     {
@@ -477,8 +477,114 @@ var fields = {
       "field": "bs4-text",
       "name": "help",
       "label": "Help",
-      "value": "select-help",
+      "value": "simple select help",
       "help": "Describe the field"
+    }
+  ],
+  "bs4-multiselect": [
+    {
+      "field": "bs4-text",
+      "name": "options",
+      "label": "Select options",
+      "value": "",
+      "placeholder": "value one, value two, three",
+      "help": "List of options for the selection separated by comma. Wrap comma separated values by double quotes.",
+    },{
+      "field": "bs4-text",
+      "name": "value",
+      "label": "Default value",
+      "value": "",
+      "help": "Set from one of the options defined above"
+    },
+    {
+      "field": "bs4-text",
+      "name": "label",
+      "label": "Select label",
+      "value": "Select",
+      "help": "Label for the select element"
+    },
+    {
+      "field": "bs4-text",
+      "name": "name",
+      "label": "Selection name",
+      "value": "multiselect-input",
+      "help": "Used for mapping submission values. Should be unique for each select field."
+    },
+    {
+      "field": "bs4-text",
+      "name": "help",
+      "label": "Help",
+      "value": "multiselect help",
+      "help": "Describe the field"
+    },
+    {
+      "label": "Actions Box",
+      "name": "actions-box",
+      "field": "bs4-text",
+      "value": "false",
+      "help": "Enable select and deselect all options feature. Options: true or false (default: false)"
+    },
+    {
+      "label": "Deselect all text",
+      "name": "deselect-all-text",
+      "field": "bs4-text",
+      "value": "Deselect All",
+      "help": "Text on the button that deselects all options when `Actions Box` is true"
+    },
+    {
+      "label": "Header",
+      "name": "header",
+      "field": "bs4-text",
+      "value": "",
+      "help": "Custom text as header"
+    },
+    {
+      "label": "Live search",
+      "name": "live-search",
+      "field": "bs4-text",
+      "value": "false",
+      "help": "Search within the options. Options: true or false (default: false)"
+    },
+    {
+      "label": "Live search placeholder",
+      "name": "live-search-placeholder",
+      "field": "bs4-text",
+      "value": "",
+      "help": "Placeholder for live search field"
+    },
+    {
+      "label": "Live search style",
+      "name": "live-search-style",
+      "field": "bs4-text",
+      "value": "contains",
+      "help": "Options: contains or startswith (default: contains). Read <a target='_blank' rel='noopener' href='https://developer.snapappointments.com/bootstrap-select/options/'>bootstrap-select</a> documentation."
+    },
+    {
+      "label": "select-all-text",
+      "name": "select-all-text",
+      "field": "bs4-text",
+      "value": "Select All",
+      "help": "Text on the button that selects all options when actions-box is true"
+    },
+    {
+      "label": "size",
+      "name": "size",
+      "field": "bs4-text",
+      "value": "auto",
+      "help": "Options: auto, integer, false (default: auto)"
+    },
+    {
+      "label": "style",
+      "name": "style",
+      "field": "bs4-text",
+      "value": "btn-light",
+      "help": "Options: Bootstrap 4 friendly button class or null (default: btn-light)"
+    },
+    {
+      "label": "title",
+      "name": "title",
+      "field": "bs4-text",
+      "value": "null"
     }
   ],
   "bs4-text": [

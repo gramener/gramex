@@ -6,10 +6,11 @@ uifactory.register({
 <script type="text/html">
   <label class="d-block" data-type="select" for="<%= name %>"><%= label %></label>
   <select name="<%= name %>" id="<%= name %>">
-    <% if (typeof options !== undefined) { %>
-      <%= options.split(',').map((opt) => {
-        var selected = opt.trim() === value ? "selected" : ""
-        return '<option ' + selected + ' value="' + opt.trim() + '">' + opt.trim() + '</option>'
+    <% if (typeof options !== undefined || options !== null) { %>
+      <% let _options = options.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) %>
+      <%= _options.map(item => item.trim()).map((opt) => {
+        var selected = opt === value ? "selected" : ""
+        return '<option ' + selected + ' value="' + encodeURI(opt) + '">' + opt + '</option>'
       }).join('') %>
     <% } %>
     <% [...this.children].forEach(child => { %>

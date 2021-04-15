@@ -1,4 +1,4 @@
-/* globals user, active_form_id, _user_form_config, fields */
+/* globals user, active_form_id, _user_form_config, fields, generate_id */
 /* exported editor */
 
 let editor
@@ -11,14 +11,6 @@ $(window).on('click', function(e) {
     $('.actions').addClass('d-none')
   }
 })
-
-/**
-  * Generate identifier for components.
-  * @returns String
-*/
-function generate_id() {
-  return Math.random().toString(36).substring(7)
-}
 
 $(function() {
   // add fields to the modal which can be viewed on + click in user form on the left
@@ -36,10 +28,22 @@ $(function() {
     })
   }
 
-  window.onbeforeunload = function() {
-    return confirm("All changes will be lost. Confirm refresh.")
-  }
+  // window.onbeforeunload = function() {
+  //   return confirm("All changes will be lost. Confirm refresh.")
+  // }
 })
+
+// convert attributes (e.g. font-size) to camelCase (e.g. fontSize)
+const camelize = s => s.replace(/-./g, x => x.toUpperCase()[1])
+
+// convert attributes (e.g. fontSize) to kebab-case (e.g. font-size)
+const kebabize = str => {
+  return str.split('').map((letter, idx) => {
+    return letter.toUpperCase() === letter
+     ? `${idx !== 0 ? '-' : ''}${letter.toLowerCase()}`
+     : letter;
+  }).join('');
+}
 
 /**
   * updates configuration for an existing form
@@ -165,14 +169,15 @@ $('body').on('click', '.user-form > :not(.actions)', function () {
   $('.actions').removeClass('d-none')
 
   // Need access to field's (ex: bs4-button) JSON config to render the attributes on the right side.
-  let vals = fields[this_field]
+  let vals = Object.assign([], fields[this_field])
   let names = _.map(vals, function(item) { return item.name })
+  // __model will have attributes in camelCase (ex: actionsBox for `.selectpicker`)
   let field_properties = this_el.get(0).__model
   for(let key in field_properties) {
-    if(names.indexOf(key) !== -1) {
+    if(names.indexOf(kebabize(key)) !== -1) {
       _.each(vals, function(item) {
-        if(item.name === key) {
-          item.value = field_properties[key]
+        if(item.name === kebabize(key)) {
+          item.value = encodeURI(field_properties[key])
         }
       })
     }
@@ -198,6 +203,9 @@ $(document).on('change', '.edit-properties > [origin]', function () {
   if($(this).find('select').length > 0) {
     // we have found a select element
     vals[$($el).attr('name')] = $(this).find('select').val()
+  } else if($(this).find('.selectpicker').length > 0) {
+    // we have found a select element
+    vals[$($el).attr('name')] = $(this).find('.selectpicker').val()
   } else if(
       $current_attr.attr('field') == 'bs4-text' ||
       $current_attr.attr('field') == 'bs4-email' ||
@@ -207,6 +215,8 @@ $(document).on('change', '.edit-properties > [origin]', function () {
       if($current_attr.attr('field') == 'bs4-textarea') {
         // textarea
         vals[$($el).attr('name')] = $current_attr.find('textarea').val()
+      } else if ($current_attr.attr('field') == 'bs4-text') {
+        vals[$($el).attr('name')] = $current_attr.find('input').val()
       } else {
         // email, number, range, text
         vals[$($el).attr('name')] = $current_attr.find('input').val()

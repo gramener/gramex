@@ -94,7 +94,7 @@
     /* exported user, user_name, active_form_id, _user_form_config */
     let user = '{% raw handler.current_user.get("id") if handler.current_user else '' %}'
     let active_form_id = '{{ active_form_id }}'
-    let _user_form_config = active_form_id ? JSON.parse('{% raw json.dumps(_config).replace("'", r"\'") %}') : ''
+    let _user_form_config = active_form_id ? JSON.parse('{% raw json.dumps(_config).replace("'", r"\'").replace('"', r'\"') %}') : ''
     $('.sortable').sortable({
       start: function() {
         $('.actions').addClass('d-none')
@@ -106,6 +106,7 @@
   </script>
 
   <script src="{{ base }}/js/fields.js"></script>
+  <script src="{{ base }}/js/generate_identifier.js"></script>
   <script src="{{ base }}/node_modules/uifactory/uifactory.js"></script>
   <script src="{{ base }}/snippets/button/bs4-button.js"></script>
   <script src="{{ base }}/snippets/checkbox/bs4-checkbox.js"></script>
@@ -117,6 +118,7 @@
   <script src="{{ base }}/snippets/radio/bs4-radio.js"></script>
   <script src="{{ base }}/snippets/range/bs4-range.js"></script>
   <script src="{{ base }}/snippets/select/bs4-select.js"></script>
+  <script src="{{ base }}/snippets/multiselect/bs4-multiselect.js"></script>
   <script src="{{ base }}/snippets/text/bs4-text.js"></script>
   <script src="{{ base }}/snippets/textarea/bs4-textarea.js"></script>
   <script src="{{ base }}/js/script.js"></script>

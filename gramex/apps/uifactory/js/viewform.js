@@ -56,7 +56,7 @@ $('body').on('click', 'button[data-form]', function () {
     }
   })
 
-  $.ajax(`../analytics/?db=${form_id}&form_id=${form_id}&response=${JSON.stringify(field_vals_obj)}`, {
+  $.ajax(`../analytics/?db=${form_id}&form_id=${form_id}&response=${encodeURIComponent(JSON.stringify(field_vals_obj))}`, {
     method: 'POST',
     success: function() {
       // submit another record
