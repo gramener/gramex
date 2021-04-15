@@ -71,7 +71,7 @@
     "setuptools>=16.0":           "REQ: 16.0 has good error message support",
     "shutilwhich>=1.1.0":         "REQ: shutil.which backport (conda-forge)",
     "six":                        "REQ: Python 3 compatibility",
-    "sqlalchemy":                 "REQ: conda: gramex.data.filter()",
+    "sqlalchemy<=1.3.24":         "REQ: conda: gramex.data.filter()",
     "sqlitedict>=1.5.0":          "SRV: SQLiteStore (conda-forge)",
     "textblob":                   "OPT: Gramex Guide TwitterRESTHandler example (conda-forge)",
     "tornado==5.1.1":             "REQ: Web server",
