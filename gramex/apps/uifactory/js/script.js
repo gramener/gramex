@@ -28,9 +28,9 @@ $(function() {
     })
   }
 
-  // window.onbeforeunload = function() {
-  //   return confirm("All changes will be lost. Confirm refresh.")
-  // }
+  window.onbeforeunload = function() {
+    return confirm("Confirm refresh.")
+  }
 })
 
 // convert attributes (e.g. font-size) to camelCase (e.g. fontSize)
