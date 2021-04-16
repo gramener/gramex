@@ -149,6 +149,13 @@ var fields = {
     },
     {
       "field": "bs4-text",
+      "name": "name",
+      "label": "Checkbox name",
+      "value": "checkbox",
+      "help": "Useful for mapping submission values"
+    },
+    {
+      "field": "bs4-text",
       "name": "options",
       "label": "Options",
       "help": "List of options for the selection separated by comma. Wrap comma separated values by double quotes.",
@@ -165,14 +172,8 @@ var fields = {
       "field": "bs4-text",
       "name": "help",
       "value": "Checkbox help",
-      "label": "Help"
-    },
-    {
-      "field": "bs4-text",
-      "name": "name",
-      "label": "Checkbox name",
-      "value": "checkbox-input",
-      "help": "Useful for mapping submission values"
+      "label": "Help",
+      "help": "Checkbox help"
     }
   ],
   "bs4-email": [
@@ -185,6 +186,13 @@ var fields = {
     },
     {
       "field": "bs4-text",
+      "name": "name",
+      "label": "Email name",
+      "value": "email",
+      "help": "Useful for mapping submission values"
+    },
+    {
+      "field": "bs4-text",
       "name": "placeholder",
       "label": "Email placeholder",
       "help": "Enter text for placeholder. Enabled when no value is entered.",
@@ -193,7 +201,7 @@ var fields = {
     {
       "field": "bs4-text",
       "name": "help",
-      "help": "",
+      "help": "Help text",
       "value": "email help",
       "label": "Help text"
     },
@@ -201,15 +209,8 @@ var fields = {
       "field": "bs4-text",
       "name": "value",
       "label": "Default Value",
-      "help": "",
+      "help": "Enter default value",
       "value": ""
-    },
-    {
-      "field": "bs4-text",
-      "name": "name",
-      "label": "Email name",
-      "value": "email-input",
-      "help": "Useful for mapping submission values"
     },
     {
       "field": "bs4-text",
@@ -222,31 +223,32 @@ var fields = {
   "bs4-hidden": [
     {
       "field": "bs4-text",
-      "name": "value",
-      "label": "Default Value",
-      "value": ""
+      "name": "label",
+      "label": "Text label",
+      "help": "Label for the text field",
+      "value": "Text label - Hidden field"
     },
     {
       "field": "bs4-text",
       "name": "name",
       "label": "Hidden name",
-      "value": "hidden-input",
+      "value": "hidden",
       "help": "Useful for mapping submission values"
+    },
+    {
+      "field": "bs4-text",
+      "name": "value",
+      "label": "Default Value",
+      "value": "",
+      "help": "Enter a default value"
     }
   ],
   "bs4-html": [
     {
-      "field": "bs4-text",
-      "name": "label",
-      "label": "Text label",
-      "help": "Label for the text field",
-      "value": ""
-    },
-    {
       "field": "bs4-textarea",
       "name": "value",
       "label": "Write or paste HTML",
-      "help": "",
+      "help": "Write valid HTML",
       "value": "<h1>HTML</h1>"
     }
   ],
@@ -267,21 +269,22 @@ var fields = {
     },
     {
       "field": "bs4-text",
-      "name": "value",
-      "label": "Default Value",
-      "value": ""
-    },
-    {
-      "field": "bs4-text",
       "name": "name",
       "label": "Number name",
-      "value": "number-input",
+      "value": "number",
       "help": "Useful for mapping submission values"
     },
     {
       "field": "bs4-text",
+      "name": "value",
+      "label": "Default Value",
+      "value": "",
+      "help": "A valid integer, within minimum and maximum values"
+    },
+    {
+      "field": "bs4-text",
       "name": "help",
-      "help": "",
+      "help": "Supportive text",
       "value": "Number helper",
       "label": "Help text"
     },
@@ -317,17 +320,17 @@ var fields = {
     },
     {
       "field": "bs4-text",
+      "name": "name",
+      "label": "Password name",
+      "value": "password",
+      "help": "Useful for mapping submission values"
+    },
+    {
+      "field": "bs4-text",
       "name": "placeholder",
       "label": "Password placeholder",
       "help": "Label for the text field",
       "value": "Password placeholder"
-    },
-    {
-      "field": "bs4-text",
-      "name": "text",
-      "label": "Password name",
-      "value": "password-input",
-      "help": "Useful for mapping submission values"
     },
     {
       "field": "bs4-number",
@@ -347,7 +350,8 @@ var fields = {
       "field": "bs4-number",
       "name": "size",
       "label": "Password size limit",
-      "value": "15"
+      "value": "15",
+      "help": "Define size limit"
     }
   ],
   "bs4-radio": [
@@ -357,6 +361,13 @@ var fields = {
       "label": "Radio label",
       "help": "Label for the Radio field",
       "value": "Radio button"
+    },
+    {
+      "field": "bs4-text",
+      "name": "name",
+      "label": "Radio name",
+      "value": "radio",
+      "help": "Useful for mapping submission values"
     },
     {
       "field": "bs4-text",
@@ -374,17 +385,10 @@ var fields = {
     },
     {
       "field": "bs4-text",
-      "name": "name",
-      "label": "Radio name",
-      "value": "radio-input",
-      "help": "Useful for mapping submission values"
-    },
-    {
-      "field": "bs4-text",
       "name": "help",
       "value": "",
       "label": "Help",
-      "help": ""
+      "help": "Help text"
     }
   ],
   "bs4-range": [
@@ -396,18 +400,18 @@ var fields = {
       "value": "Range"
     },
     {
+      "field": "bs4-text",
+      "name": "name",
+      "label": "Range name",
+      "value": "range",
+      "help": "Useful for mapping submission values"
+    },
+    {
       "field": "bs4-number",
       "name": "value",
       "label": "Default Value",
       "value": "",
       "help": "Value should be within minimum and maximum values"
-    },
-    {
-      "field": "bs4-text",
-      "name": "text",
-      "label": "Range name",
-      "value": "range-input",
-      "help": "Useful for mapping submission values"
     },
     {
       "field": "bs4-text",
@@ -441,6 +445,20 @@ var fields = {
   "bs4-select": [
     {
       "field": "bs4-text",
+      "name": "label",
+      "label": "Select label",
+      "value": "Select",
+      "help": "Label for the select element"
+    },
+    {
+      "field": "bs4-text",
+      "name": "name",
+      "label": "Selection name",
+      "value": "select",
+      "help": "Unique identifier for each field."
+    },
+    {
+      "field": "bs4-text",
       "name": "options",
       "label": "Select options",
       "value": "",
@@ -451,20 +469,6 @@ var fields = {
       "label": "Default value",
       "value": "",
       "help": "Set from one of the options defined above"
-    },
-    {
-      "field": "bs4-text",
-      "name": "label",
-      "label": "Select label",
-      "value": "Select",
-      "help": "Label for the select element"
-    },
-    {
-      "field": "bs4-text",
-      "name": "name",
-      "label": "Selection name",
-      "value": "select-simple",
-      "help": "Used for mapping submission values. Should be unique for each select field."
     },
     {
       "field": "bs4-text",
@@ -484,6 +488,20 @@ var fields = {
   "bs4-multiselect": [
     {
       "field": "bs4-text",
+      "name": "label",
+      "label": "Select label",
+      "value": "Multi-select",
+      "help": "Label for the select element"
+    },
+    {
+      "field": "bs4-text",
+      "name": "name",
+      "label": "Selection name",
+      "value": "multiselect",
+      "help": "Unique identifier for each field."
+    },
+    {
+      "field": "bs4-text",
       "name": "options",
       "label": "Select options",
       "value": "",
@@ -495,20 +513,6 @@ var fields = {
       "label": "Default value",
       "value": "",
       "help": "Set from one of the options defined above"
-    },
-    {
-      "field": "bs4-text",
-      "name": "label",
-      "label": "Select label",
-      "value": "Multi-select",
-      "help": "Label for the select element"
-    },
-    {
-      "field": "bs4-text",
-      "name": "name",
-      "label": "Selection name",
-      "value": "multiselect-input",
-      "help": "Used for mapping submission values. Should be unique for each select field."
     },
     {
       "field": "bs4-text",
@@ -585,7 +589,8 @@ var fields = {
       "label": "title",
       "name": "title",
       "field": "bs4-text",
-      "value": "null"
+      "value": "",
+      "help": "Define a title"
     }
   ],
   "bs4-text": [
@@ -595,6 +600,13 @@ var fields = {
       "label": "Text label",
       "help": "Label for the text field",
       "value": "Text, is it?"
+    },
+    {
+      "field": "bs4-text",
+      "name": "name",
+      "label": "Name",
+      "value": "text",
+      "help": "Unique identifier for the field"
     },
     {
       "field": "bs4-text",
@@ -609,13 +621,6 @@ var fields = {
       "label": "Default Value",
       "value": "",
       "help": "Set value"
-    },
-    {
-      "field": "bs4-text",
-      "name": "name",
-      "label": "Name",
-      "value": "text-input",
-      "help": "Useful for mapping submission values"
     },
     {
       "field": "bs4-text",
@@ -635,6 +640,13 @@ var fields = {
     },
     {
       "field": "bs4-text",
+      "name": "name",
+      "label": "Name",
+      "value": "textarea",
+      "help": "Unique identifier for each field."
+    },
+    {
+      "field": "bs4-text",
       "name": "placeholder",
       "label": "Text placeholder",
       "help": "Label for the text field",
@@ -645,21 +657,14 @@ var fields = {
       "name": "help",
       "label": "Help",
       "value": "Textarea help",
-      "help": "",
+      "help": "Help text",
     },
     {
       "field": "bs4-text",
       "name": "value",
       "label": "Default Value",
-      "help": "",
+      "help": "Define a default value",
       "value": ""
-    },
-    {
-      "field": "bs4-text",
-      "name": "name",
-      "label": "Name",
-      "value": "textarea-input",
-      "help": "Useful for mapping submission values. Needs to be unique."
     },
     {
       "field": "bs4-text",

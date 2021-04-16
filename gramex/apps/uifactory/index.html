@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     {% set base = '.' %}
-    {% set title = 'UI Factory' %}
+    {% set title = 'Forms Builder' %}
     <title>{{ title }}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="{{ base }}/style.scss">
@@ -54,12 +54,23 @@
         </script>
       </div>
       <div class="divider"></div>
-      <h4>Recent forms</h4>
+      <section class="recent-forms-header d-none">
+        <h4>Recent forms</h4>
+        {% if 'create' not in handler.request.uri %}
+          <div class="row">
+            <div class="ml-auto col-auto">
+              <form class="my-2 my-lg-0">
+                <input class="form-control mr-sm-2" type="search" placeholder="Filter forms" data-search="@text" data-target=".form-card" data-hide-class="d-none">
+              </form>
+            </div>
+          </div>
+        {% end %}
+      </section>
       <div class="gallery-grid pt-3 pb-5">
         <script type="text/html" class="forms">
           <% _.each(forms, function(_form) { %>
             <% let _md = _form.metadata %>
-            <div class="card">
+            <div class="card form-card">
               <a href="form/<%= _form.id %>">
                 <img class="thumbnail mx-auto img-fluid" src="<%= _form.thumbnail || 'https://picsum.photos/160' %>">
               </a>

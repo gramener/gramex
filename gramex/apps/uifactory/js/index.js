@@ -16,9 +16,15 @@ function render_forms() {
       // parse metadata as JSON
       // filter forms by template type and non template type
       let _data = _.each(data, function(item) { item.metadata = JSON.parse(item.metadata); })
+      let _forms = _.filter(_data, function(item) { return Object.keys(item.metadata).indexOf('template') > -1 ? '' : item })
       let templates = _.filter(_data, function(item) { return Object.keys(item.metadata).indexOf('template') > -1 ? item : '' })
-      $('.forms').template({forms: _.filter(_data, function(item) { return Object.keys(item.metadata).indexOf('template') > -1 ? '' : item })})
+      $('.forms').template({forms: _forms})
       $('.form-templates').template({templates: templates})
+      _forms.length = 0
+      if(_forms.length > 0) {
+        $('.recent-forms-header').removeClass('d-none')
+        $('.form-card').removeClass('d-none')
+      }
     })
 }
 

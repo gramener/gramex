@@ -25,7 +25,7 @@
   filter: gray;
 }
 .gallery-grid .card:hover, .create-form:hover {
-  border: 2px solid #007bff;
+  border-color: #007bff;
 }
 .sourcecode-container {
   max-height: 30vw;
@@ -60,7 +60,7 @@
   height: 80vh;
 }
 .user-form > *,
-.analytics > * {
+#view-form form > * {
   cursor: pointer;
   display: block;
   padding: 1rem;
@@ -86,4 +86,9 @@
 .edit-properties > * {
   padding: 0.5rem;
   display: inline-grid;
+}
+.form-fields > *:not(bs4-multiselect),
+.form-fields > *:not(.divider) {
+  display: block;
+  padding: 0.5rem;
 }

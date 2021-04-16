@@ -1,4 +1,4 @@
-/* globals user, active_form_id, _user_form_config, fields, generate_id */
+/* globals user, active_form_id, _user_form_config, fields, generate_id, camelize, kebabize */
 /* exported editor */
 
 let editor
@@ -12,24 +12,30 @@ $(window).on('click', function(e) {
   }
 })
 
+function render_form_from_json(_json) {
+  _.each(_json, function(opts) {
+    let dir = opts.component
+    // _user_form_config only retains attributes from fields.js, `id` isn't captured
+    $(`<${dir} id="${generate_id()}"></${dir}>`).attr(opts)
+      .appendTo('.user-form')
+  })
+}
+
 $(function() {
   // add fields to the modal which can be viewed on + click in user form on the left
   for(let field in fields) {
     $(`<${field}></${field}>`).appendTo('.form-fields')
+    $('<div class="divider"></div>').appendTo('.form-fields')
   }
 
   // render existing form using JSON
   if(active_form_id) {
-    _.each(_user_form_config, function(opts) {
-      let dir = opts.component
-      // _user_form_config only retains attributes from fields.js, `id` isn't captured
-      $(`<${dir} id="${generate_id()}"></${dir}>`).attr(opts)
-        .appendTo('.user-form')
-    })
-  }
-
-  window.onbeforeunload = function() {
-    return confirm("Confirm refresh.")
+    $('.edit-properties-title').removeClass('d-none')
+    render_form_from_json(_user_form_config)
+  } else if(localStorage.getItem('form') !== null && localStorage.getItem('form').length > 0) {
+    let _config = JSON.parse(localStorage.getItem('form'))
+    render_form_from_json(_config)
+    $('#publish-form').removeClass('d-none')
   }
 })
 
@@ -40,8 +46,8 @@ const camelize = s => s.replace(/-./g, x => x.toUpperCase()[1])
 const kebabize = str => {
   return str.split('').map((letter, idx) => {
     return letter.toUpperCase() === letter
-     ? `${idx !== 0 ? '-' : ''}${letter.toLowerCase()}`
-     : letter;
+      ? `${idx !== 0 ? '-' : ''}${letter.toLowerCase()}`
+      : letter;
   }).join('');
 }
 
@@ -87,10 +93,25 @@ function create_new_form(form_details, $icon) {
   })
 }
 
-$('body').on('click', '#publish-form', function() {
-  let _vals = {}
-  let form_vals = []
+function prepare_form_values() {
+  let form_values = []
   let _html = ''
+  let _values = {}
+  $('.user-form > :not(.actions)').each(function(ind, item) {
+    _html += item.outerHTML
+    _values = item.__model
+    _values['component'] = item.tagName.toLowerCase()
+    if(_values.component === 'bs4-html')
+    _values.value = _values.value.replace(/\n/g, "\\n")
+    if(typeof item !== undefined) {
+      delete _values.$target
+      form_values.push(_values)
+    }
+  })
+  return {_form: form_values, _html: _html}
+}
+
+$('body').on('click', '#publish-form', function() {
   let $icon = $('<i class="fa fa-spinner fa-2x fa-fw align-middle"></i>').appendTo(this)
   let _md = {
     name: $('#form-name').text() || 'Untitled',
@@ -102,20 +123,10 @@ $('body').on('click', '#publish-form', function() {
   $('.user-form > *').removeClass('highlight')
   $('.edit-properties').empty()
 
-  $('.user-form > :not(.actions)').each(function(ind, item) {
-    _html += item.outerHTML
-    _vals = item.__model
-    _vals['component'] = item.tagName.toLowerCase()
-    if(_vals.component === 'bs4-html')
-    _vals.value = _vals.value.replace(/\n/g, "\\n")
-    if(typeof item !== undefined) {
-      delete _vals.$target
-      form_vals.push(_vals)
-    }
-  })
+  let { _form, _html } = prepare_form_values()
   let form_details = {
     data: {
-      config: JSON.stringify(form_vals),
+      config: JSON.stringify(_form),
       html: _html,
       metadata: JSON.stringify(_md),
       user: user
@@ -132,7 +143,7 @@ $('body').on('click', '#publish-form', function() {
     form_details.method = 'POST'
     create_new_form(form_details, $icon)
   }
-}).on('click', '.form-fields > *', function() {
+}).on('click', '.form-fields > *:not(.divider)', function() {
   // every field added to .user-form will have a new identifier
   this.id = generate_id()
   var _type = this.tagName.toLowerCase()
@@ -156,6 +167,9 @@ $('body').on('click', '#publish-form', function() {
   $('.edit-properties').empty()
   $('.user-form > *').removeClass('highlight')
   $('.actions').addClass('d-none')
+}).on('click', '.reset-form', function() {
+  localStorage.clear()
+  $('.user-form').empty()
 })
 
 $('body').on('click', '.user-form > :not(.actions)', function () {
@@ -164,6 +178,7 @@ $('body').on('click', '.user-form > :not(.actions)', function () {
   $('.edit-properties').empty()
     .data('editing-element', $(this))
   $('.user-form > *').removeClass('highlight')
+  $('.edit-properties-title').removeClass('d-none')
   $(this).addClass('highlight')
   $('.actions').insertBefore(this)
   $('.actions').removeClass('d-none')
@@ -189,6 +204,9 @@ $('body').on('click', '.user-form > :not(.actions)', function () {
     $(_el).attr(item)
     document.querySelector('.edit-properties').appendChild(_el)
   })
+  // retain values on accidental page refresh
+  let { _form, _html } = prepare_form_values()
+  localStorage.setItem('form', JSON.stringify(_form))
 })
 
 // use element.matches instead of tagName.toLowerCase()
@@ -242,3 +260,4 @@ $(document).on('change', '.edit-properties > [origin]', function () {
 $('.user-form').on('submit', function(e) {
   e.preventDefault()
 })
+
