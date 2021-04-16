@@ -9,6 +9,7 @@ import random
 import pandas as pd
 from collections import Counter
 from orderedattrdict import AttrDict
+from sklearn.datasets import make_circles as sk_make_circles
 from tornado import gen
 from tornado.web import RequestHandler, MissingArgumentError
 from tornado.httpclient import AsyncHTTPClient
@@ -458,6 +459,18 @@ def state(*args):
 
 def get_state_info():
     return state_info
+
+
+def make_circles():
+    X, y = sk_make_circles(noise=0.05, factor=0.4)  # NOQA: N806
+    out = os.path.join(os.path.dirname(__file__), 'circles.csv')
+    pd.DataFrame(pd.np.c_[X, y], columns=['X1', 'X2', 'y']).to_csv(
+        out, encoding='utf-8', index=False)
+
+
+def transform_circles(df, *argss, **kwargs):
+    df[['X1', 'X2']] = pd.np.exp(-df[['X1', 'X2']].values ** 2)
+    return df
 
 
 if __name__ == '__main__':
