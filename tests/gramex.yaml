@@ -1134,6 +1134,19 @@ url:
         target_col: species
       xsrf_cookies: false
 
+  mlhandler/badcol:
+    pattern: /mlhandlerbadcol
+    handler: MLHandler
+    kwargs:
+      data:
+        url: $YAMLPATH/../testlib/iris.csv
+      model:
+        path: $YAMLPATH/model.pkl
+        class: LogisticRegression
+        target_col: species
+        cats: [species]
+      xsrf_cookies: false
+
   mlhandler/nopath:
     pattern: /mlnopath
     handler: MLHandler

@@ -41,6 +41,9 @@ class TestMLHandler(TestGramex):
             'mlhandler-xform/mlhandler-xform.pkl',
             'mlhandler-blank/mlhandler-blank.pkl',
             'mlhandler-nopath/mlhandler-nopath.pkl',
+            'mlhandler-badcol/config.json',
+            'mlhandler-badcol/data.h5',
+            'mlhandler-badcol/mlhandler-badcol.pkl',
         ]]
         paths += [op.join(folder, 'model.pkl')]
         for p in paths:
@@ -272,22 +275,22 @@ class TestMLHandler(TestGramex):
         params = self.get('/mlhandler?_model').json()
         self.assertDictEqual(LogisticRegression().get_params(), params)
 
-    def test_get_predictions(self, target_col='species'):
+    def test_get_predictions(self, root="mlhandler", target_col='species'):
         resp = self.get(
-            '/mlhandler?sepal_length=5.9&sepal_width=3&petal_length=5.1&petal_width=1.8')
+            f'/{root}?sepal_length=5.9&sepal_width=3&petal_length=5.1&petal_width=1.8')
         self.assertEqual(resp.json(), [
             {'sepal_length': 5.9, 'sepal_width': 3.0,
              'petal_length': 5.1, 'petal_width': 1.8,
              target_col: 'virginica'}
         ])
         resp = self.get(
-            '/mlhandler?sepal_width=3&petal_length=5.1&sepal_length=5.9&petal_width=1.8')
+            f'/{root}?sepal_width=3&petal_length=5.1&sepal_length=5.9&petal_width=1.8')
         self.assertEqual(resp.json(), [
             {'sepal_length': 5.9, 'sepal_width': 3.0,
              'petal_length': 5.1, 'petal_width': 1.8,
              target_col: 'virginica'}
         ])
-        req = '/mlhandler?'
+        req = f'/{root}?'
         samples = []
         target = []
         for row in self.df.sample(n=5).to_dict(orient='records'):
@@ -446,7 +449,7 @@ class TestMLHandler(TestGramex):
         r = self.get('/mlhandler')
         self.assertEqual(r.status_code, OK)
         # Try getting predictions
-        self.test_get_predictions('target')
+        self.test_get_predictions(target_col='target')
         self.test_get_bulk_predictions('target')
 
     def test_train(self):
@@ -472,3 +475,6 @@ class TestMLHandler(TestGramex):
             resp = self.get('/mltransform?_action=score', method='post',
                             files={'file': ('circles.csv', fin.read())})
         self.assertEqual(resp.json()['score'], 1)
+
+    def test_invalid_category(self):
+        self.test_get_predictions('mlhandlerbadcol')

@@ -48,10 +48,13 @@ search_modelclass = lambda x: locate(x, MLCLASS_MODULES)  # NOQA: E731
 
 def _fit(model, x, y, path=None, name=None):
     app_log.info('Starting training...')
-    getattr(model, 'partial_fit', model.fit)(x, y)
-    app_log.info('Done training...')
-    joblib.dump(model, path)
-    app_log.info(f'{name}: Model saved at {path}.')
+    try:
+        getattr(model, 'partial_fit', model.fit)(x, y)
+        app_log.info('Done training...')
+        joblib.dump(model, path)
+        app_log.info(f'{name}: Model saved at {path}.')
+    except Exception as exc:
+        app_log.exception(exc)
     return model
 
 
@@ -111,9 +114,13 @@ class MLHandler(FormHandler):
         # store the model kwargs from gramex.yaml into the store
         for key in TRANSFORMS:
             cls.set_opt(key, model.get(key, cls.get_opt(key)))
+        # Remove target_col if it appears anywhere in cats or nums
+        target_col = cls.get_opt('target_col')
+        cls.set_opt('cats', list(set(cls.get_opt('cats')) - {target_col}))
+        cls.set_opt('nums', list(set(cls.get_opt('nums')) - {target_col}))
+
         cls.set_opt('class', model.get('class'))
         cls.set_opt('params', model.get('params', {}))
-        target_col = cls.get_opt('target_col')
 
         if op.exists(cls.model_path):  # If the pkl exists, load it
             cls.model = joblib.load(cls.model_path)
@@ -237,8 +244,8 @@ class MLHandler(FormHandler):
             return search_modelclass(mclass)(**params)
 
         # Else assemble the preprocessing pipeline
-        nums = set(cls.get_opt('nums', []))
-        cats = set(cls.get_opt('cats', []))
+        nums = set(cls.get_opt('nums', [])) - {cls.get_opt('target_col')}
+        cats = set(cls.get_opt('cats', [])) - {cls.get_opt('target_col')}
         both = nums.intersection(cats)
         if len(both) > 0:
             raise HTTPError(BAD_REQUEST,
@@ -282,8 +289,11 @@ class MLHandler(FormHandler):
             return self.model.score(data, target)
         except KeyError:
             # Set data in the same order as the transformer requests
-            data = data[self.model.named_steps['transform']._feature_names_in]
-            data[self.get_opt('target_col', '_prediction')] = self.model.predict(data)
+            try:
+                data = data[self.model.named_steps['transform']._feature_names_in]
+                data[self.get_opt('target_col', '_prediction')] = self.model.predict(data)
+            except Exception as exc:
+                app_log.exception(exc)
             return data
 
     def _check_model_path(self):
