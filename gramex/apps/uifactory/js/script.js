@@ -114,7 +114,7 @@ function prepare_form_values() {
 $('body').on('click', '#publish-form', function() {
   let $icon = $('<i class="fa fa-spinner fa-2x fa-fw align-middle"></i>').appendTo(this)
   let _md = {
-    name: $('#form-name').text() || 'Untitled',
+    name: $('#form-name').val() || 'Untitled',
     categories: [],
     description: $('#form-description').text().trim()
   }

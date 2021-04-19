@@ -7,8 +7,7 @@ uifactory.register({
   <label class="d-block" data-type="select" for="<%= name %>"><%= label %></label>
   <select name="<%= name %>" id="<%= name %>">
     <% if (typeof options !== undefined || options !== null) { %>
-      <% let _options = options.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || [] %>
-      <% console.log(options, _options) %>
+      <% let _options = split_options(options) || [] %>
       <%= _options.map(item => item.trim()).map((opt) => {
         var selected = opt === value ? "selected" : ""
         return '<option ' + selected + ' value="' + encodeURI(opt) + '">' + opt + '</option>'

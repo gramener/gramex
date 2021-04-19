@@ -1,4 +1,4 @@
-/* exported generate_id */
+/* exported generate_id, replace_double, split_options */
 
 /**
   * Generate identifier for components.
@@ -10,4 +10,8 @@ function generate_id() {
 
 function replace_double(value) {
   return value.replace(/"/g, '&quot;')
+}
+
+function split_options(options) {
+  return options.match(/"[^"]*"|[^,]+/g)
 }

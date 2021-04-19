@@ -152,7 +152,7 @@ var fields = {
       "name": "name",
       "label": "Checkbox name",
       "value": "checkbox",
-      "help": "Useful for mapping submission values"
+      "help": "Unique identifier for each field"
     },
     {
       "field": "bs4-text",
@@ -189,7 +189,7 @@ var fields = {
       "name": "name",
       "label": "Email name",
       "value": "email",
-      "help": "Useful for mapping submission values"
+      "help": "Unique identifier for each field"
     },
     {
       "field": "bs4-text",
@@ -233,7 +233,7 @@ var fields = {
       "name": "name",
       "label": "Hidden name",
       "value": "hidden",
-      "help": "Useful for mapping submission values"
+      "help": "Unique identifier for each field"
     },
     {
       "field": "bs4-text",
@@ -272,7 +272,7 @@ var fields = {
       "name": "name",
       "label": "Number name",
       "value": "number",
-      "help": "Useful for mapping submission values"
+      "help": "Unique identifier for each field"
     },
     {
       "field": "bs4-text",
@@ -323,7 +323,7 @@ var fields = {
       "name": "name",
       "label": "Password name",
       "value": "password",
-      "help": "Useful for mapping submission values"
+      "help": "Unique identifier for each field"
     },
     {
       "field": "bs4-text",
@@ -367,7 +367,7 @@ var fields = {
       "name": "name",
       "label": "Radio name",
       "value": "radio",
-      "help": "Useful for mapping submission values"
+      "help": "Unique identifier for each field"
     },
     {
       "field": "bs4-text",
@@ -404,7 +404,7 @@ var fields = {
       "name": "name",
       "label": "Range name",
       "value": "range",
-      "help": "Useful for mapping submission values"
+      "help": "Unique identifier for each field"
     },
     {
       "field": "bs4-number",
