@@ -5,7 +5,7 @@ uifactory.register({
   template: /* HTML */`
   <script type="text/html">
     <label data-type="text" for="<%= name %>"><%= label %></label>
-    <% let _options = options.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) %>
+    <% let _options = split_options(options) %>
     <% _options.map(item => item.trim()).forEach(function (option, ind) { %>
       <% let local_id = generate_id() %>
       <div class="form-check py-2 px-0">
