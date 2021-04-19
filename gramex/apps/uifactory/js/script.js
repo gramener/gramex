@@ -147,7 +147,8 @@ $('body').on('click', '#publish-form', function() {
   // every field added to .user-form will have a new identifier
   this.id = generate_id()
   var _type = this.tagName.toLowerCase()
-  let vals = _.mapValues(_.keyBy(fields[_type], 'name'), 'value')
+  let _local_values = Object.assign([], fields[_type])
+  let vals = _.mapValues(_.keyBy(_local_values, 'name'), 'value')
   $(`.form-fields > ${_type}`)
     .data('type', _type)
     .data('vals', vals)
