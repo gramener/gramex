@@ -4,19 +4,26 @@ var fields = {
   "bs4-button": [
     {
       "field": "bs4-select",
-      "name": "size",
-      "label": "Button size",
-      "value": "medium",
-      "options": "small, medium, large",
-      "help": "Change button size (default: medium)"
-    },
-    {
-      "field": "bs4-select",
       "name": "type",
       "label": "Button type",
       "value": "submit",
       "options": "button, submit, reset",
       "help": "Change button type (default: submit)"
+    },
+    {
+      "field": "bs4-text",
+      "name": "label",
+      "label": "Button label",
+      "value": "I'm a button!",
+      "help": "Change the text displayed on button"
+    },
+    {
+      "field": "bs4-select",
+      "name": "size",
+      "label": "Button size",
+      "value": "medium",
+      "options": "small, medium, large",
+      "help": "Change button size (default: medium)"
     },
     {
       "field": "bs4-select",
@@ -129,15 +136,7 @@ var fields = {
       "value": "",
       "options": "start, end",
       "help": "Position of Bootstrap or Font Awesome icon"
-    },
-    {
-      "field": "bs4-text",
-      "name": "label",
-      "label": "Button label",
-      "value": "I'm a button!",
-      "help": "Change the text displayed on button"
     }
-
   ],
   "bs4-checkbox": [
     {

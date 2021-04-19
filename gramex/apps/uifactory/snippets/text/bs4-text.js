@@ -12,7 +12,7 @@ uifactory.register({
     <label data-type="text" for="<%= name %>"><%= label %></label>
     <% let id = typeof this.id !== undefined ? this.id : Date.now() %>
     <input type="text" class="form-control" name="<%= name %>" id="bs4-<%= id %>" aria-describedby="text-<%= name %>" placeholder="<%= placeholder %>" value="<%= replace_double(decodeURIComponent(value)) %>">
-    <% if (typeof help != 'undefined') { %>
+    <% if (typeof help !== 'undefined' && help.length > 0) { %>
       <small id="text-input-help" class="form-text text-muted"><%= help %></small>
     <% } %>
   </script>

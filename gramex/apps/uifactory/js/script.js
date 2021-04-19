@@ -39,18 +39,6 @@ $(function() {
   }
 })
 
-// convert attributes (e.g. font-size) to camelCase (e.g. fontSize)
-const camelize = s => s.replace(/-./g, x => x.toUpperCase()[1])
-
-// convert attributes (e.g. fontSize) to kebab-case (e.g. font-size)
-const kebabize = str => {
-  return str.split('').map((letter, idx) => {
-    return letter.toUpperCase() === letter
-      ? `${idx !== 0 ? '-' : ''}${letter.toLowerCase()}`
-      : letter;
-  }).join('');
-}
-
 /**
   * updates configuration for an existing form
   * @param {Object} form_details
@@ -61,7 +49,6 @@ function update_existing_form(form_details, $icon) {
     data: form_details.data,
     success: function () {
       $('.post-publish').removeClass('d-none')
-      $('.form-link').html(`<a href="form/${active_form_id}" target="_blank">View</a>`)
     },
     error: function () {
       $('.toast-body').html('Unable to update the form. Please try again later.')
@@ -82,7 +69,8 @@ function create_new_form(form_details, $icon) {
     success: function (response) {
       form_details.id = response.data.inserted[0].id
       $('.post-publish').removeClass('d-none')
-      $('.form-link').html(`<a href="form/${form_details.id}" target="_blank">View</a>`)
+      $('.form-preview-link').html(`<a class="btn btn-info" href="form/${form_details.id}" target="_blank">Preview</a>`)
+      $('.form-view-link').html(`<a class="btn btn-success" href="view/${form_details.id}" target="_blank">View</a>`)
       window.location.href = `create?id=${form_details.id}`
     },
     error: function () {
@@ -168,9 +156,6 @@ $('body').on('click', '#publish-form', function() {
   $('.edit-properties').empty()
   $('.user-form > *').removeClass('highlight')
   $('.actions').addClass('d-none')
-}).on('click', '.reset-form', function() {
-  localStorage.clear()
-  $('.user-form').empty()
 })
 
 $('body').on('click', '.user-form > :not(.actions)', function () {
@@ -230,7 +215,8 @@ $(document).on('change', '.edit-properties > [origin]', function () {
       $current_attr.attr('field') == 'bs4-email' ||
       $current_attr.attr('field') == 'bs4-number' ||
       $current_attr.attr('field') == 'bs4-range' ||
-      $current_attr.attr('field') == 'bs4-textarea') {
+      $current_attr.attr('field') == 'bs4-textarea' ||
+      $current_attr.attr('field') == 'bs4-select') {
       if($current_attr.attr('field') == 'bs4-textarea') {
         // textarea
         vals[$($el).attr('name')] = $current_attr.find('textarea').val()

@@ -34,7 +34,7 @@
     <div class="form-details step-1 my-3 py-3 pt-2">
       <form class="needs-validation" novalidate>
         <div class="row">
-          <input type="text" class="col-12 h2 my-2 cursor-pointer underline" id="form-name" value="{{_md['name'] if active_form_id else 'Untitled form' }}" autofocus>
+          <input type="text" class="col-12 h2 my-2 cursor-pointer underline" id="form-name" placeholder="Untitled form" value="{{_md['name'] if active_form_id else '' }}" autofocus>
           <p class="col-12 my-2 cursor-pointer underline" id="form-description" contenteditable="true">
             {{_md['description'] if active_form_id else 'Form description' }}
           </p>
@@ -56,7 +56,6 @@
             <button class="btn btn-primary mb-4" data-toggle="modal" data-target="#addFieldModal" title="Add a field">
               <i class="fa fa-plus"></i>
             </button>
-            <button class="btn btn-outline-secondary mx-2 mb-4 reset-form" title="Delete all fields">Reset</button>
           </div>
         </div><!-- .card-body -->
       </div><!-- .card -->
@@ -75,13 +74,21 @@
   <template class="field-actions" src="field-actions.html"></template>
 
   <div class="floating-button m-2 p-2 position-fixed">
-    <button class="btn btn-primary ml-2 {{ '' if active_form_id else 'd-none' }}" id="publish-form">Save</button>
-    <p class="post-publish text-center d-none">
-      <span class="form-link"></span>
-      <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-up-right-square-fill" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-        <path fill-rule="evenodd" d="M2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2zm3.879 10.828a.5.5 0 1 1-.707-.707l4.096-4.096H6.5a.5.5 0 0 1 0-1h3.975a.5.5 0 0 1 .5.5V9.5a.5.5 0 0 1-1 0V6.732l-4.096 4.096z"/>
-      </svg>
-    </p>
+    <div class="btn-group-vertical" role="group" aria-label="Basic example">
+      <button type="button" class="btn btn-primary rounded my-1 {{ '' if active_form_id else 'd-none' }}" id="publish-form">Save</button>
+      {% if active_form_id %}
+      <a href="form/{{ active_form_id }}" target="_blank" class="btn btn-info rounded my-1">Preview
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-up-right-square-fill" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+          <path fill-rule="evenodd" d="M2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2zm3.879 10.828a.5.5 0 1 1-.707-.707l4.096-4.096H6.5a.5.5 0 0 1 0-1h3.975a.5.5 0 0 1 .5.5V9.5a.5.5 0 0 1-1 0V6.732l-4.096 4.096z"/>
+        </svg>
+      </a>
+      <a href="view/{{ active_form_id }}" target="_blank" class="btn btn-success rounded my-1">View
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-up-right-square-fill" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+          <path fill-rule="evenodd" d="M2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2zm3.879 10.828a.5.5 0 1 1-.707-.707l4.096-4.096H6.5a.5.5 0 0 1 0-1h3.975a.5.5 0 0 1 .5.5V9.5a.5.5 0 0 1-1 0V6.732l-4.096 4.096z"/>
+        </svg>
+      </a>
+      {% end %}
+    </div>
   </div>
 
   <script src="{{ base }}/ui/jquery/dist/jquery.min.js"></script>
@@ -106,7 +113,7 @@
   </script>
 
   <script src="{{ base }}/js/fields.js"></script>
-  <script src="{{ base }}/js/generate_identifier.js"></script>
+  <script src="{{ base }}/js/utils.js"></script>
   <script src="{{ base }}/node_modules/uifactory/uifactory.js"></script>
   <script src="{{ base }}/snippets/button/bs4-button.js"></script>
   <script src="{{ base }}/snippets/checkbox/bs4-checkbox.js"></script>
