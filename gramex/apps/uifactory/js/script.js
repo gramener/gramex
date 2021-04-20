@@ -33,11 +33,8 @@ $(function() {
   if(active_form_id) {
     $('.edit-properties-title').removeClass('d-none')
     render_form_from_json(_user_form_config)
-  } else if(localStorage.getItem('form') !== null && localStorage.getItem('form').length > 0) {
-    let _config = JSON.parse(localStorage.getItem('form'))
-    render_form_from_json(_config)
-    $('#publish-form').removeClass('d-none')
   }
+  $('body').search()
 })
 
 /**
@@ -105,7 +102,7 @@ $('body').on('click', '#publish-form', function() {
   let _md = {
     name: $('#form-name').val() || 'Untitled',
     categories: [],
-    description: $('#form-description').text().trim()
+    description: $('#form-description').val().trim() || 'Form description'
   }
 
   $('.edit-properties > input, .edit-properties > input').each(function(ind, item) { _values[item.id] = item.value })
