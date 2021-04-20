@@ -55,7 +55,8 @@ install:
   # Install conda packages
   - conda config --set always_yes yes --set changeps1 no
   # rpy2 v2.9.6 is compatible with pandas 1.0, not available on the default channel
-  - conda install -y -q colorama h5py lxml matplotlib pandas pytest seaborn sqlalchemy line_profiler tzlocal scikit-learn rpy2
+  - conda install -y -q colorama h5py lxml matplotlib pandas pytest seaborn sqlalchemy line_profiler tzlocal scikit-learn
+  - conda install -c conda-forge rpy2
   # install.packages("rmarkdown") has installation issues with numpy 1.16.6, 1.17.0, etc but is OK with 1.16.0
   # https://bitbucket.org/rpy2/rpy2/issues/572
   # Don't ask people to change the critical NumPy for the rarely used RMarkdown. Use the conda installer instead
