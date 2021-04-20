@@ -9,8 +9,9 @@ $.ajax(`../embed/${form_id}.json`, {
       if(dir === 'bs4-html') {
         opts.value = opts.value.replace(/\\n/g, "<br>")
       }
-      // console.log("viewform opts", opts, Object.assign(_.mapValues(_.keyBy(fields[opts.component], 'name'), 'value'), opts))
-      $(`<${dir}></${dir}>`).attr(opts).appendTo('#view-form form')
+      $(`<${dir}></${dir}>`)
+        .appendTo('#view-form form')
+        .attr(opts)
     })
     hljs.highlightAll()
   }

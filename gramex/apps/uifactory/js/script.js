@@ -1,4 +1,4 @@
-/* globals user, active_form_id, _user_form_config, fields, generate_id, camelize, kebabize */
+/* globals user, active_form_id, _user_form_config, fields, generate_id, kebabize */
 /* exported editor */
 
 let editor
@@ -16,8 +16,9 @@ function render_form_from_json(_json) {
   _.each(_json, function(opts) {
     let dir = opts.component
     // _user_form_config only retains attributes from fields.js, `id` isn't captured
-    $(`<${dir} id="${generate_id()}"></${dir}>`).attr(opts)
+    $(`<${dir} id="${generate_id()}"></${dir}>`)
       .appendTo('.user-form')
+      .attr(opts)
   })
 }
 
@@ -81,10 +82,9 @@ function create_new_form(form_details, $icon) {
   })
 }
 
-function prepare_form_values() {
+function prepare_form_values(_values) {
   let form_values = []
   let _html = ''
-  let _values = {}
   $('.user-form > :not(.actions)').each(function(ind, item) {
     _html += item.outerHTML
     _values = item.__model
@@ -100,6 +100,7 @@ function prepare_form_values() {
 }
 
 $('body').on('click', '#publish-form', function() {
+  let _values = {}
   let $icon = $('<i class="fa fa-spinner fa-2x fa-fw align-middle"></i>').appendTo(this)
   let _md = {
     name: $('#form-name').val() || 'Untitled',
@@ -107,11 +108,11 @@ $('body').on('click', '#publish-form', function() {
     description: $('#form-description').text().trim()
   }
 
-  $('.edit-properties > input, .edit-properties > input').each(function(ind, item) { _vals[item.id] = item.value })
+  $('.edit-properties > input, .edit-properties > input').each(function(ind, item) { _values[item.id] = item.value })
   $('.user-form > *').removeClass('highlight')
   $('.edit-properties').empty()
 
-  let { _form, _html } = prepare_form_values()
+  let { _form, _html } = prepare_form_values(_values)
   let form_details = {
     data: {
       config: JSON.stringify(_form),
@@ -135,7 +136,7 @@ $('body').on('click', '#publish-form', function() {
   // every field added to .user-form will have a new identifier
   this.id = generate_id()
   var _type = this.tagName.toLowerCase()
-  let _local_values = Object.assign([], fields[_type])
+  let _local_values = JSON.parse(JSON.stringify(fields[_type]))
   let vals = _.mapValues(_.keyBy(_local_values, 'name'), 'value')
   $(`.form-fields > ${_type}`)
     .data('type', _type)
@@ -170,28 +171,30 @@ $('body').on('click', '.user-form > :not(.actions)', function () {
   $('.actions').removeClass('d-none')
 
   // Need access to field's (ex: bs4-button) JSON config to render the attributes on the right side.
-  let vals = Object.assign([], fields[this_field])
-  let names = _.map(vals, function(item) { return item.name })
+  let values = JSON.parse(JSON.stringify(fields[this_field]))
+  let names = _.map(values, function(item) { return item.name })
   // __model will have attributes in camelCase (ex: actionsBox for `.selectpicker`)
   let field_properties = this_el.get(0).__model
   for(let key in field_properties) {
     if(names.indexOf(kebabize(key)) !== -1) {
-      _.each(vals, function(item) {
+      _.each(values, function(item) {
         if(item.name === kebabize(key)) {
           item.value = encodeURI(field_properties[key])
         }
       })
     }
   }
-  _.each(vals, function(item) {
+  _.each(values, function(item) {
     let _el = document.createElement(item.field)
     item.id = generate_id()
     item.origin = this_el.get(0).id
-    $(_el).attr(item)
     document.querySelector('.edit-properties').appendChild(_el)
+    $(_el).attr(item)
   })
   // retain values on accidental page refresh
-  let { _form, _html } = prepare_form_values()
+  /*eslint-disable no-unused-vars*/
+  let { _form, _html } = prepare_form_values({})
+  /*eslint-enable no-unused-vars*/
   localStorage.setItem('form', JSON.stringify(_form))
 })
 
@@ -204,12 +207,12 @@ $(document).on('change', '.edit-properties > [origin]', function () {
   var $current_attr = $(this)
   var edited_field = $(`#${$el.getAttribute('origin')}`)
 
-  if($(this).find('select').length > 0) {
+  if($current_attr.find('select').length > 0) {
     // we have found a select element
-    vals[$($el).attr('name')] = $(this).find('select').val()
-  } else if($(this).find('.selectpicker').length > 0) {
+    vals[$($el).attr('name')] = $current_attr.find('select').val()
+  } else if($current_attr.find('.selectpicker').length > 0) {
     // we have found a select element
-    vals[$($el).attr('name')] = $(this).find('.selectpicker').val()
+    vals[$($el).attr('name')] = $current_attr.find('.selectpicker').val()
   } else if(
       $current_attr.attr('field') == 'bs4-text' ||
       $current_attr.attr('field') == 'bs4-email' ||
@@ -238,7 +241,11 @@ $(document).on('change', '.edit-properties > [origin]', function () {
     // handle other attributes
   }
   delete vals[""]
-  $($(edited_field).get(0)).attr(vals)
+  let _local_el = document.getElementById($el.getAttribute('origin'))
+  for(let key in vals) {
+    _local_el.setAttribute(key, vals[key])
+  }
+  // $($(edited_field).get(0)).attr(vals)
   $('.field-actions').template({base: '.'})
   $('.actions').removeClass('d-none')
   $('.actions').insertBefore(edited_field)

@@ -277,7 +277,7 @@ var fields = {
       "field": "bs4-text",
       "name": "value",
       "label": "Default Value",
-      "value": "",
+      "value": "3",
       "help": "A valid integer, within minimum and maximum values"
     },
     {
@@ -609,17 +609,17 @@ var fields = {
     },
     {
       "field": "bs4-text",
-      "name": "placeholder",
-      "label": "Text placeholder",
-      "help": "Placeholder for the field",
-      "value": "Placeholder.."
-    },
-    {
-      "field": "bs4-text",
       "name": "value",
       "label": "Default Value",
       "value": "",
       "help": "Set value"
+    },
+    {
+      "field": "bs4-text",
+      "name": "placeholder",
+      "label": "Text placeholder",
+      "help": "Placeholder for the field",
+      "value": "Placeholder.."
     },
     {
       "field": "bs4-text",

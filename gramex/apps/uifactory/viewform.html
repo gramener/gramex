@@ -121,7 +121,7 @@
           .then(response => response.json())
           .then(function(response) {
             _.each(response['each_form'], function(form) {
-              for(key in form) {
+              for(let key in form) {
                 form[key] = decodeURIComponent(form[key]);
               }
             })

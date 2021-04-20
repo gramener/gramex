@@ -12,7 +12,7 @@ uifactory.register({
   <input type="number"
     class="form-control" name="<%= name %>" id="<%= name %>" aria-describedby="<%= name %>-help" placeholder="<%= placeholder %>"
     min="<%= min %>" max="<%= max %>" step="<%= step %>" value="<%= value %>">
-  <% if (typeof help != 'undefined') { %>
+  <% if (typeof help !== 'undefined' && help.length > 0) { %>
     <small id="number-help" class="form-text text-muted"><%= help %></small>
   <% } %>
   `,

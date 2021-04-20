@@ -1,4 +1,4 @@
-/* exported generate_id, replace_double, split_options, camelize, kebabize */
+/* exported generate_id, replace_double, split_options, kebabize */
 
 /**
   * Generate identifier for components.
@@ -22,11 +22,6 @@ function replace_double(value) {
 function split_options(options) {
   return options.match(/"[^"]*"|[^,]+/g)
 }
-
-/**
-  * convert attributes (e.g. font-size) to camelCase (e.g. fontSize)
-*/
-const camelize = s => s.replace(/-./g, x => x.toUpperCase()[1])
 
 /**
   * convert attributes (e.g. fontSize) to kebab-case (e.g. font-size)
