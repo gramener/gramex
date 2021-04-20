@@ -5,6 +5,7 @@ import os
 import re
 
 import gramex
+from gramex.transforms import build_transform
 from gramex.config import app_log, CustomJSONEncoder, locate
 from gramex import data as gdata
 from gramex.handlers import FormHandler
@@ -47,29 +48,14 @@ search_modelclass = lambda x: locate(x, MLCLASS_MODULES)  # NOQA: E731
 
 def _fit(model, x, y, path=None, name=None):
     app_log.info('Starting training...')
-    getattr(model, 'partial_fit', model.fit)(x, y)
-    app_log.info('Done training...')
-    joblib.dump(model, path)
-    app_log.info(f'{name}: Model saved at {path}.')
+    try:
+        getattr(model, 'partial_fit', model.fit)(x, y)
+        app_log.info('Done training...')
+        joblib.dump(model, path)
+        app_log.info(f'{name}: Model saved at {path}.')
+    except Exception as exc:
+        app_log.exception(exc)
     return model
-
-
-def is_categorical(s, num_treshold=0.1):
-    """Check if a series contains a categorical variable.
-
-    Parameters
-    ----------
-    s : pd.Series
-
-    Returns
-    -------
-    bool:
-        Whether the series is categorical.
-        uniques / count <= num_treshold / log(count)
-    """
-    if pd.api.types.is_numeric_dtype(s):
-        return s.nunique() / s.shape[0] <= num_treshold
-    return True
 
 
 class MLHandler(FormHandler):
@@ -89,11 +75,20 @@ class MLHandler(FormHandler):
         cls.template = kwargs.pop('template', DEFAULT_TEMPLATE)
         super(MLHandler, cls).setup(**kwargs)
         try:
+            if 'transform' in data:
+                data['transform'] = build_transform(
+                    {'function': data['transform']},
+                    vars={'data': None, 'handler': None},
+                    filename='MLHandler:data', iter=False)
+                cls._built_transform = staticmethod(data['transform'])
+            else:
+                cls._built_transform = staticmethod(lambda x: x)
             data = gdata.filter(**data)
             cls.store_data(data)
         except TypeError:
             app_log.warning('MLHandler could not find training data.')
             data = None
+            cls._built_transform = staticmethod(lambda x: x)
 
         default_model_path = op.join(cls.config_dir, slugify(cls.name) + '.pkl')
         cls.model_path = model.pop('path', default_model_path)
@@ -101,9 +96,13 @@ class MLHandler(FormHandler):
         # store the model kwargs from gramex.yaml into the store
         for key in TRANSFORMS:
             cls.set_opt(key, model.get(key, cls.get_opt(key)))
+        # Remove target_col if it appears anywhere in cats or nums
+        target_col = cls.get_opt('target_col')
+        cls.set_opt('cats', list(set(cls.get_opt('cats')) - {target_col}))
+        cls.set_opt('nums', list(set(cls.get_opt('nums')) - {target_col}))
+
         cls.set_opt('class', model.get('class'))
         cls.set_opt('params', model.get('params', {}))
-        target_col = cls.get_opt('target_col')
 
         if op.exists(cls.model_path):  # If the pkl exists, load it
             cls.model = joblib.load(cls.model_path)
@@ -188,6 +187,7 @@ class MLHandler(FormHandler):
         except ValueError:
             app_log.warning('Could not read data from request, reading cached data.')
             data = self.load_data()
+        data = self._built_transform(data)
 
         if _cache:
             self.store_data(data, append)
@@ -226,20 +226,20 @@ class MLHandler(FormHandler):
             return search_modelclass(mclass)(**params)
 
         # Else assemble the preprocessing pipeline
-        nums = set(cls.get_opt('nums', []))
-        cats = set(cls.get_opt('cats', []))
+        nums = set(cls.get_opt('nums', [])) - {cls.get_opt('target_col')}
+        cats = set(cls.get_opt('cats', [])) - {cls.get_opt('target_col')}
         both = nums.intersection(cats)
         if len(both) > 0:
             raise HTTPError(BAD_REQUEST,
                             reason=f"Columns {both} cannot be both numerical and categorical.")
         to_guess = set(data.columns.tolist()) - nums.union(cats) - {cls.get_opt('target_col')}
-        categoricals = [c for c in to_guess if is_categorical(data[c])]
-        for c in categoricals:
-            to_guess.remove(c)
-        numericals = [c for c in to_guess if pd.api.types.is_numeric_dtype(data[c])]
-        categoricals += list(cats)
-        numericals += list(nums)
-        assert len(set(categoricals) & set(numericals)) == 0
+        numericals = list(nums)
+        categoricals = list(cats)
+        for c in to_guess:
+            if pd.api.types.is_numeric_dtype(data[c]):
+                numericals.append(c)
+            else:
+                categoricals.append(c)
 
         ct = ColumnTransformer(
             [('ohe', OneHotEncoder(sparse=False), categoricals),
@@ -271,8 +271,11 @@ class MLHandler(FormHandler):
             return self.model.score(data, target)
         except KeyError:
             # Set data in the same order as the transformer requests
-            data = data[self.model.named_steps['transform']._feature_names_in]
-            data[self.get_opt('target_col', '_prediction')] = self.model.predict(data)
+            try:
+                data = data[self.model.named_steps['transform']._feature_names_in]
+                data[self.get_opt('target_col', '_prediction')] = self.model.predict(data)
+            except Exception as exc:
+                app_log.exception(exc)
             return data
 
     def _check_model_path(self):

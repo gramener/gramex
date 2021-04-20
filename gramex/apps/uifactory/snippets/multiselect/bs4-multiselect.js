@@ -72,7 +72,7 @@ bs4-multiselect .dropdown-menu.inner{
   <label class="d-block" data-type="select" for="select-element"><%= label %></label>
   <select class="selectpicker" multiple name="<%= name %>" id="<%= name %>">
     <% if (typeof options !== undefined) { %>
-      <% let _options = options.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || [] %>
+      <% let _options = split_options(options) || [] %>
       <%= _options.map(item => item.trim()).map((opt) => {
         var selected = opt === value ? "selected" : "";
         return '<option class="text-dark pb-1 pl-5"' + selected + ' value="' + encodeURI(opt) + '">' + opt + '</option>'

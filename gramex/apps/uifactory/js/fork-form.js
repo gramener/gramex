@@ -1,4 +1,5 @@
 /* exported initiate_copy */
+/* globals render_forms */
 
 /**
   * Make a copy of the form

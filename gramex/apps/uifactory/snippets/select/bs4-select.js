@@ -5,10 +5,9 @@ uifactory.register({
   template: /* HTML */`
 <script type="text/html">
   <label class="d-block" data-type="select" for="<%= name %>"><%= label %></label>
-  <select name="<%= name %>" id="<%= name %>">
+  <select class="custom-select" name="<%= name %>" id="<%= name %>">
     <% if (typeof options !== undefined || options !== null) { %>
-      <% let _options = options.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || [] %>
-      <% console.log(options, _options) %>
+      <% let _options = split_options(options) || [] %>
       <%= _options.map(item => item.trim()).map((opt) => {
         var selected = opt === value ? "selected" : ""
         return '<option ' + selected + ' value="' + encodeURI(opt) + '">' + opt + '</option>'
@@ -20,7 +19,7 @@ uifactory.register({
       <% } %>
     <% }) %>
   </select>
-  <% if (typeof help != 'undefined') { %>
+  <% if (typeof help !== 'undefined' && help.length > 0) { %>
     <small id="text-input-help" class="d-block text-muted"><%= help %></small>
   <% } %>
 </script>

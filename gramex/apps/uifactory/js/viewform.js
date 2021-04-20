@@ -6,11 +6,12 @@ $.ajax(`../embed/${form_id}.json`, {
   success: function(_form_config) {
     _.each(_form_config, function(opts) {
       let dir = opts.component
-      opts['view'] = '...'
       if(dir === 'bs4-html') {
         opts.value = opts.value.replace(/\\n/g, "<br>")
       }
-      $(`<${dir}></${dir}>`).attr(opts).appendTo('#view-form form')
+      $(`<${dir}></${dir}>`)
+        .appendTo('#view-form form')
+        .attr(opts)
     })
     hljs.highlightAll()
   }
