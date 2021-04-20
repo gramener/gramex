@@ -1,4 +1,4 @@
-/* globals user, active_form_id, _user_form_config, fields, generate_id */
+/* globals user, active_form_id, _user_form_config, fields, generate_id, kebabize */
 /* exported editor */
 
 let editor
@@ -12,38 +12,33 @@ $(window).on('click', function(e) {
   }
 })
 
+function render_form_from_json(_json) {
+  _.each(_json, function(opts) {
+    let dir = opts.component
+    // _user_form_config only retains attributes from fields.js, `id` isn't captured
+    $(`<${dir} id="${generate_id()}"></${dir}>`)
+      .appendTo('.user-form')
+      .attr(opts)
+  })
+}
+
 $(function() {
   // add fields to the modal which can be viewed on + click in user form on the left
   for(let field in fields) {
     $(`<${field}></${field}>`).appendTo('.form-fields')
+    $('<div class="divider"></div>').appendTo('.form-fields')
   }
 
   // render existing form using JSON
   if(active_form_id) {
-    _.each(_user_form_config, function(opts) {
-      let dir = opts.component
-      // _user_form_config only retains attributes from fields.js, `id` isn't captured
-      $(`<${dir} id="${generate_id()}"></${dir}>`).attr(opts)
-        .appendTo('.user-form')
-    })
-  }
-
-  window.onbeforeunload = function() {
-    return confirm("Confirm refresh.")
+    $('.edit-properties-title').removeClass('d-none')
+    render_form_from_json(_user_form_config)
+  } else if(localStorage.getItem('form') !== null && localStorage.getItem('form').length > 0) {
+    let _config = JSON.parse(localStorage.getItem('form'))
+    render_form_from_json(_config)
+    $('#publish-form').removeClass('d-none')
   }
 })
-
-// convert attributes (e.g. font-size) to camelCase (e.g. fontSize)
-const camelize = s => s.replace(/-./g, x => x.toUpperCase()[1])
-
-// convert attributes (e.g. fontSize) to kebab-case (e.g. font-size)
-const kebabize = str => {
-  return str.split('').map((letter, idx) => {
-    return letter.toUpperCase() === letter
-      ? `${idx !== 0 ? '-' : ''}${letter.toLowerCase()}`
-      : letter;
-  }).join('');
-}
 
 /**
   * updates configuration for an existing form
@@ -55,7 +50,6 @@ function update_existing_form(form_details, $icon) {
     data: form_details.data,
     success: function () {
       $('.post-publish').removeClass('d-none')
-      $('.form-link').html(`<a href="form/${active_form_id}" target="_blank">View</a>`)
     },
     error: function () {
       $('.toast-body').html('Unable to update the form. Please try again later.')
@@ -76,7 +70,8 @@ function create_new_form(form_details, $icon) {
     success: function (response) {
       form_details.id = response.data.inserted[0].id
       $('.post-publish').removeClass('d-none')
-      $('.form-link').html(`<a href="form/${form_details.id}" target="_blank">View</a>`)
+      $('.form-preview-link').html(`<a class="btn btn-info" href="form/${form_details.id}" target="_blank">Preview</a>`)
+      $('.form-view-link').html(`<a class="btn btn-success" href="view/${form_details.id}" target="_blank">View</a>`)
       window.location.href = `create?id=${form_details.id}`
     },
     error: function () {
@@ -87,35 +82,40 @@ function create_new_form(form_details, $icon) {
   })
 }
 
-$('body').on('click', '#publish-form', function() {
-  let _vals = {}
-  let form_vals = []
+function prepare_form_values(_values) {
+  let form_values = []
   let _html = ''
+  $('.user-form > :not(.actions)').each(function(ind, item) {
+    _html += item.outerHTML
+    _values = item.__model
+    _values['component'] = item.tagName.toLowerCase()
+    if(_values.component === 'bs4-html')
+    _values.value = _values.value.replace(/\n/g, "\\n")
+    if(typeof item !== undefined) {
+      delete _values.$target
+      form_values.push(_values)
+    }
+  })
+  return {_form: form_values, _html: _html}
+}
+
+$('body').on('click', '#publish-form', function() {
+  let _values = {}
   let $icon = $('<i class="fa fa-spinner fa-2x fa-fw align-middle"></i>').appendTo(this)
   let _md = {
-    name: $('#form-name').text() || 'Untitled',
+    name: $('#form-name').val() || 'Untitled',
     categories: [],
     description: $('#form-description').text().trim()
   }
 
-  $('.edit-properties > input, .edit-properties > input').each(function(ind, item) { _vals[item.id] = item.value })
+  $('.edit-properties > input, .edit-properties > input').each(function(ind, item) { _values[item.id] = item.value })
   $('.user-form > *').removeClass('highlight')
   $('.edit-properties').empty()
 
-  $('.user-form > :not(.actions)').each(function(ind, item) {
-    _html += item.outerHTML
-    _vals = item.__model
-    _vals['component'] = item.tagName.toLowerCase()
-    if(_vals.component === 'bs4-html')
-    _vals.value = _vals.value.replace(/\n/g, "\\n")
-    if(typeof item !== undefined) {
-      delete _vals.$target
-      form_vals.push(_vals)
-    }
-  })
+  let { _form, _html } = prepare_form_values(_values)
   let form_details = {
     data: {
-      config: JSON.stringify(form_vals),
+      config: JSON.stringify(_form),
       html: _html,
       metadata: JSON.stringify(_md),
       user: user
@@ -132,11 +132,12 @@ $('body').on('click', '#publish-form', function() {
     form_details.method = 'POST'
     create_new_form(form_details, $icon)
   }
-}).on('click', '.form-fields > *', function() {
+}).on('click', '.form-fields > *:not(.divider)', function() {
   // every field added to .user-form will have a new identifier
   this.id = generate_id()
   var _type = this.tagName.toLowerCase()
-  let vals = _.mapValues(_.keyBy(fields[_type], 'name'), 'value')
+  let _local_values = JSON.parse(JSON.stringify(fields[_type]))
+  let vals = _.mapValues(_.keyBy(_local_values, 'name'), 'value')
   $(`.form-fields > ${_type}`)
     .data('type', _type)
     .data('vals', vals)
@@ -164,31 +165,37 @@ $('body').on('click', '.user-form > :not(.actions)', function () {
   $('.edit-properties').empty()
     .data('editing-element', $(this))
   $('.user-form > *').removeClass('highlight')
+  $('.edit-properties-title').removeClass('d-none')
   $(this).addClass('highlight')
   $('.actions').insertBefore(this)
   $('.actions').removeClass('d-none')
 
   // Need access to field's (ex: bs4-button) JSON config to render the attributes on the right side.
-  let vals = Object.assign([], fields[this_field])
-  let names = _.map(vals, function(item) { return item.name })
+  let values = JSON.parse(JSON.stringify(fields[this_field]))
+  let names = _.map(values, function(item) { return item.name })
   // __model will have attributes in camelCase (ex: actionsBox for `.selectpicker`)
   let field_properties = this_el.get(0).__model
   for(let key in field_properties) {
     if(names.indexOf(kebabize(key)) !== -1) {
-      _.each(vals, function(item) {
+      _.each(values, function(item) {
         if(item.name === kebabize(key)) {
           item.value = encodeURI(field_properties[key])
         }
       })
     }
   }
-  _.each(vals, function(item) {
+  _.each(values, function(item) {
     let _el = document.createElement(item.field)
     item.id = generate_id()
     item.origin = this_el.get(0).id
-    $(_el).attr(item)
     document.querySelector('.edit-properties').appendChild(_el)
+    $(_el).attr(item)
   })
+  // retain values on accidental page refresh
+  /*eslint-disable no-unused-vars*/
+  let { _form, _html } = prepare_form_values({})
+  /*eslint-enable no-unused-vars*/
+  localStorage.setItem('form', JSON.stringify(_form))
 })
 
 // use element.matches instead of tagName.toLowerCase()
@@ -200,18 +207,19 @@ $(document).on('change', '.edit-properties > [origin]', function () {
   var $current_attr = $(this)
   var edited_field = $(`#${$el.getAttribute('origin')}`)
 
-  if($(this).find('select').length > 0) {
+  if($current_attr.find('select').length > 0) {
     // we have found a select element
-    vals[$($el).attr('name')] = $(this).find('select').val()
-  } else if($(this).find('.selectpicker').length > 0) {
+    vals[$($el).attr('name')] = $current_attr.find('select').val()
+  } else if($current_attr.find('.selectpicker').length > 0) {
     // we have found a select element
-    vals[$($el).attr('name')] = $(this).find('.selectpicker').val()
+    vals[$($el).attr('name')] = $current_attr.find('.selectpicker').val()
   } else if(
       $current_attr.attr('field') == 'bs4-text' ||
       $current_attr.attr('field') == 'bs4-email' ||
       $current_attr.attr('field') == 'bs4-number' ||
       $current_attr.attr('field') == 'bs4-range' ||
-      $current_attr.attr('field') == 'bs4-textarea') {
+      $current_attr.attr('field') == 'bs4-textarea' ||
+      $current_attr.attr('field') == 'bs4-select') {
       if($current_attr.attr('field') == 'bs4-textarea') {
         // textarea
         vals[$($el).attr('name')] = $current_attr.find('textarea').val()
@@ -233,7 +241,11 @@ $(document).on('change', '.edit-properties > [origin]', function () {
     // handle other attributes
   }
   delete vals[""]
-  $($(edited_field).get(0)).attr(vals)
+  let _local_el = document.getElementById($el.getAttribute('origin'))
+  for(let key in vals) {
+    _local_el.setAttribute(key, vals[key])
+  }
+  // $($(edited_field).get(0)).attr(vals)
   $('.field-actions').template({base: '.'})
   $('.actions').removeClass('d-none')
   $('.actions').insertBefore(edited_field)

@@ -5,9 +5,9 @@ uifactory.register({
   template: /* HTML */`
   <script type="text/html">
     <label data-type="text" for="<%= name %>"><%= label %></label>
-    <% let _options = options.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) %>
+    <% let _options = split_options(options) %>
     <% _options.map(item => item.trim()).forEach(function (option, ind) { %>
-      <% let values = value.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g).map(item => item.trim()) %>
+      <% let values = split_options(value).map(item => item.trim()) %>
       <% let local_id = generate_id() %>
       <div class="form-check p-0">
         <input type="checkbox" class="px-2" name="<%= name %>" id="<%= ind + '-' + local_id %>" value='<%= encodeURI(option) %>'
