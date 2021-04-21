@@ -19,7 +19,8 @@ def test_init():
     r('1 + 2')
     import rpy2.rinterface
     # Note: in your machine, ensure "conda" is part of your Anaconda PATH
-    ok_('conda' in rpy2.rinterface.R_HOME)
+    rpy2.rinterface.initr()
+    ok_('conda' in rpy2.rinterface_lib.openrlib.R_HOME)
 
 
 def test_command():

@@ -2,7 +2,7 @@
 
 # Run in Python 3 only. Drop Python 2 testing
 language: python
-python: '3.7'
+python: '3.8'
 
 # Python 3.7 works only in Xenial with sudo
 # https://github.com/travis-ci/travis-ci/issues/9069#issuecomment-425720905
@@ -47,7 +47,7 @@ cache:
 
 install:
   # Install miniconda
-  - wget https://repo.anaconda.com/miniconda/Miniconda3-py37_4.8.3-Linux-x86_64.sh -O $HOME/miniconda.sh
+  - wget https://repo.anaconda.com/miniconda/Miniconda3-py38_4.8.2-Linux-x86_64.sh -O $HOME/miniconda.sh
   - bash $HOME/miniconda.sh -b -u -p $HOME/miniconda
   # Add conda to path. "hash -r" rescans the $PATH
   - export PATH="$HOME/miniconda/bin:$PATH"
@@ -55,7 +55,8 @@ install:
   # Install conda packages
   - conda config --set always_yes yes --set changeps1 no
   # rpy2 v2.9.6 is compatible with pandas 1.0, not available on the default channel
-  - conda install -y -q colorama h5py lxml matplotlib pandas pytest seaborn sqlalchemy line_profiler tzlocal scikit-learn rpy2
+  - conda install -y -q colorama h5py lxml matplotlib pandas pytest seaborn sqlalchemy line_profiler tzlocal scikit-learn
+  - conda install -c conda-forge rpy2
   # install.packages("rmarkdown") has installation issues with numpy 1.16.6, 1.17.0, etc but is OK with 1.16.0
   # https://bitbucket.org/rpy2/rpy2/issues/572
   # Don't ask people to change the critical NumPy for the rarely used RMarkdown. Use the conda installer instead
