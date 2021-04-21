@@ -3,7 +3,7 @@
 
 {% set base = '.' %}
 {% set active_form_id = handler.get_argument('id', '') %}
-{% set title = 'Forms Builder' if active_form_id else 'Forms Builder - Create a form' %}
+{% set title = 'Forms Builder - Update a form' if active_form_id else 'Forms Builder - Create a form' %}
 <head>
   <meta charset="utf-8">
   <meta http-equiv="x-ua-compatible" content="ie=edge">
@@ -30,14 +30,11 @@
 
   {% include template-navbar.html %}
   <div class="container py-4">
-    <h1 class="text-center text-muted">{{ 'Updating an existing form' if active_form_id else 'Creating a new form' }}</h1>
     <div class="form-details step-1 my-3 py-3 pt-2">
       <form class="needs-validation" novalidate>
         <div class="row">
           <input type="text" class="col-12 h2 my-2 cursor-pointer underline" id="form-name" placeholder="Untitled form" value="{{_md['name'] if active_form_id else '' }}" autofocus>
-          <p class="col-12 my-2 cursor-pointer underline" id="form-description" contenteditable="true">
-            {{_md['description'] if active_form_id else 'Form description' }}
-          </p>
+          <input type="text" class="col-12 my-2 cursor-pointer underline" id="form-description" placeholder="Form description" value="{{_md['description'] if active_form_id else '' }}" >
         </div>
       </form>
     </div>
