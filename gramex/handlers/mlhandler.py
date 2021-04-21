@@ -20,6 +20,9 @@ from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from slugify import slugify
 from tornado.gen import coroutine
 from tornado.web import HTTPError
+from sklearn.metrics import accuracy_score,f1_score,recall_score,roc_auc_score
+from sklearn.metrics import r2_score, mean_squared_error
+
 
 op = os.path
 MLCLASS_MODULES = [
@@ -40,6 +43,8 @@ TRANSFORMS = {
     'nums': [],
     'cats': [],
     'target_col': None,
+    'score_pref': None,
+    'multiclass': None
 }
 ACTIONS = ['predict', 'score', 'append', 'train', 'retrain']
 DEFAULT_TEMPLATE = op.join(op.dirname(__file__), '..', 'apps', 'mlhandler', 'template.html')
@@ -103,12 +108,17 @@ class MLHandler(FormHandler):
 
         cls.set_opt('class', model.get('class'))
         cls.set_opt('params', model.get('params', {}))
+        target_col = cls.get_opt('target_col')
+        cls.score_pref = cls.get_opt('score_pref')
+        cls.multiclass = cls.get_opt('multiclass')
 
         if op.exists(cls.model_path):  # If the pkl exists, load it
             cls.model = joblib.load(cls.model_path)
         elif data is not None:
             mclass = cls.get_opt('class', model.get('class', False))
-            params = cls.get_opt('params', {})
+            params = cls.get_opt('params', {})  
+            score_pref = cls.get_opt('score_pref')
+            multiclass = cls.get_opt('multiclass')
             data = cls._filtercols(data)
             data = cls._filterrows(data)
             cls.model = cls._assemble_pipeline(data, mclass=mclass, params=params)
@@ -148,7 +158,7 @@ class MLHandler(FormHandler):
             transform[key] = value
             cls.config_store.dump('transform', transform)
             cls.config_store.update['transform'] = transform
-        elif key in ('class', 'params'):
+        elif key in ('class', 'params', 'score_pref'):
             model = cls.config_store.load('model', {})
             model[key] = value
             if key == 'class':
@@ -261,6 +271,46 @@ class MLHandler(FormHandler):
         data = self._filterrows(data, **kwargs)
         return data
 
+    def _chooseScore(self, data, target):
+        try:
+            print( 'What score are we reading here? -----> ', self.score_pref)
+            print('What class category are we reading here? -----> ', self.multiclass)
+            predict = self.model.predict(data)
+            print('PREDICT ----->', predict)
+            print('TARGET ------>', target)
+
+            #FOR CLASSIFICATION
+            if(self.score_pref == 'f1-score'):
+                return f1_score(target, predict, average= 'weighted') # can change average value
+
+            elif(self.score_pref == 'accuracy'):
+                return accuracy_score(target, predict)
+
+
+            elif(self.score_pref == 'recall'):
+                return recall_score(target, predict, average=None)
+
+            elif(self.score_pref == 'roc_auc_score'):
+                result = roc_auc_score(target, predict)
+                if(self.multiclass == 'True'):
+                    return roc_auc_score(target, predict, multi_class='ovr')
+                return result 
+
+            #FOR REGRESSION    
+            #elif(self.score_pref == 'mean_squared_error'):
+            #   return mean_squared_error(target, predict)
+
+            elif(self.score_pref == 'r2'):
+                return r2_score(target, predict)
+
+            else:
+                return self.model.score(data,target)
+
+        except ValueError:
+            print('ValueError occured. Please check if the scoring metric is appropriate for the given data!')
+
+
+
     def _predict(self, data=None, score_col=''):
         if data is None:
             data = self._parse_data(False)
@@ -268,7 +318,9 @@ class MLHandler(FormHandler):
         self.model = cache.open(self.model_path, joblib.load)
         try:
             target = data.pop(score_col)
-            return self.model.score(data, target)
+            s = self._chooseScore(data, target)
+            print('s: ',s)
+            return s
         except KeyError:
             # Set data in the same order as the transformer requests
             try:
