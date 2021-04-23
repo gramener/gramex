@@ -63,6 +63,7 @@ class MLHandler(FormHandler):
 
     @classmethod
     def setup(cls, data=None, model={}, config_dir='', **kwargs):
+    	print('hellos')
         cls.slug = slugify(cls.name)
         # Create the config store directory
         if not config_dir:
@@ -104,8 +105,6 @@ class MLHandler(FormHandler):
 
         cls.set_opt('class', model.get('class'))
         cls.set_opt('params', model.get('params', {}))
-        target_col = cls.get_opt('target_col')
-
         if op.exists(cls.model_path):  # If the pkl exists, load it
             cls.model = joblib.load(cls.model_path)
         elif data is not None:
@@ -272,9 +271,11 @@ class MLHandler(FormHandler):
         try:
             target = data.pop(score_col)
             metric = self.get_argument('_metric')
-            print('Metric: ',metric)
-            scorer = get_scorer(metric)
-            return scorer(self.model, data, target)
+            if metric not None:
+	            scorer = get_scorer(metric)
+	            return scorer(self.model, data, target)
+	        else:
+	        	return self.model.score(data, target)
         except KeyError:
             # Set data in the same order as the transformer requests
             try:
