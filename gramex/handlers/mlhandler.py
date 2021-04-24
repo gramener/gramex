@@ -63,7 +63,6 @@ class MLHandler(FormHandler):
 
     @classmethod
     def setup(cls, data=None, model={}, config_dir='', **kwargs):
-    	print('hellos')
         cls.slug = slugify(cls.name)
         # Create the config store directory
         if not config_dir:
@@ -270,8 +269,8 @@ class MLHandler(FormHandler):
         self.model = cache.open(self.model_path, joblib.load)
         try:
             target = data.pop(score_col)
-            metric = self.get_argument('_metric')
-            if metric not None:
+            metric = self.get_argument('_metric', False)
+            if metric:
 	            scorer = get_scorer(metric)
 	            return scorer(self.model, data, target)
 	        else:
