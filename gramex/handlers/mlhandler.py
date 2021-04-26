@@ -108,7 +108,7 @@ class MLHandler(FormHandler):
             cls.model = joblib.load(cls.model_path)
         elif data is not None:
             mclass = cls.get_opt('class', model.get('class', False))
-            params = cls.get_opt('params', {})  
+            params = cls.get_opt('params', {})
             data = cls._filtercols(data)
             data = cls._filterrows(data)
             cls.model = cls._assemble_pipeline(data, mclass=mclass, params=params)
@@ -261,7 +261,6 @@ class MLHandler(FormHandler):
         data = self._filterrows(data, **kwargs)
         return data
 
-
     def _predict(self, data=None, score_col=''):
         if data is None:
             data = self._parse_data(False)
@@ -271,10 +270,11 @@ class MLHandler(FormHandler):
             target = data.pop(score_col)
             metric = self.get_argument('_metric', False)
             if metric:
-	            scorer = get_scorer(metric)
-	            return scorer(self.model, data, target)
-	        else:
-	        	return self.model.score(data, target)
+                scorer = get_scorer(metric)
+                return scorer(self.model, data, target)
+
+            else:
+                return self.model.score(data, target)
         except KeyError:
             # Set data in the same order as the transformer requests
             try:
