@@ -272,9 +272,7 @@ class MLHandler(FormHandler):
             if metric:
                 scorer = get_scorer(metric)
                 return scorer(self.model, data, target)
-
-            else:
-                return self.model.score(data, target)
+            return self.model.score(data, target)
         except KeyError:
             # Set data in the same order as the transformer requests
             try:

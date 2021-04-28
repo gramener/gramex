@@ -266,6 +266,11 @@ class TestMLHandler(TestGramex):
             data=self.df.to_json(orient='records'),
             headers={'Content-Type': 'application/json'})
         self.assertGreaterEqual(resp.json()['score'], self.ACC_TOL)
+        resp = self.get(
+            '/mlhandler?_action=score&_metric=f1_weighted', method='post',
+            data=self.df.to_json(orient='records'),
+            headers={'Content-Type': 'application/json'})
+        self.assertGreaterEqual(resp.json()['score'], self.ACC_TOL)
 
     def test_get_cache(self):
         df = pd.DataFrame.from_records(self.get('/mlhandler?_cache=true').json())
