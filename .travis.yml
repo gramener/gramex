@@ -63,7 +63,10 @@ install:
   - hash -r
   # Install conda packages
   - conda config --set always_yes yes --set changeps1 no
-  - conda install -y -q colorama h5py lxml matplotlib pandas pytest seaborn sqlalchemy line_profiler tzlocal scikit-learn
+  # Install packages that Keep these versions sync-ed with gramex/release.json
+  # - conda install -y -q colorama h5py lxml matplotlib 'pandas==0.25.3' pytest seaborn 'sqlalchemy<=1.3.24' line_profiler tzlocal 'scikit-learn>=0.23.2'
+  # Install packages from gramex/release.json that require conda. Keep versions in sync with
+  - conda install -y -q line_profiler
   # rpy2 v2.9.6 is compatible with pandas 1.0, not available on the default channel
   - conda install -c conda-forge rpy2
   # install.packages("rmarkdown") has installation issues with numpy 1.16.6, 1.17.0, etc but is OK with 1.16.0
