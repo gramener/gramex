@@ -73,7 +73,7 @@ gramex_files += list(recursive_include('gramex', 'pptgen', ignore_patterns, ['*.
 gramex_files += list(recursive_include('gramex', 'apps', ignore_patterns))
 
 setup(
-    python_requires='~=3.8',
+    python_requires='>=3.7',
     long_description=long_description,
     # Auto-detect, but ignore test packages (tests, testlib)
     packages=[pkg for pkg in find_packages() if not pkg.startswith('test')],

@@ -20,7 +20,10 @@ def test_init():
     import rpy2.rinterface
     # Note: in your machine, ensure "conda" is part of your Anaconda PATH
     rpy2.rinterface.initr()
-    ok_('conda' in rpy2.rinterface_lib.openrlib.R_HOME)
+    try:
+        ok_('conda' in rpy2.rinterface.R_HOME)
+    except AttributeError:
+        ok_('conda' in rpy2.rinterface_lib.openrlib.R_HOME)
 
 
 def test_command():

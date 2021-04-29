@@ -2,12 +2,19 @@
 
 # Run in Python 3 only. Drop Python 2 testing
 language: python
-python: '3.8'
 
-# Python 3.7 works only in Xenial with sudo
-# https://github.com/travis-ci/travis-ci/issues/9069#issuecomment-425720905
-dist: xenial
-sudo: yes
+jobs:
+  include:
+    - python: 3.9
+      env: MINICONDA=https://repo.anaconda.com/miniconda/Miniconda3-py39_4.9.2-Linux-x86_64.sh
+    - python: 3.8
+      env: MINICONDA=https://repo.anaconda.com/miniconda/Miniconda3-py38_4.9.2-Linux-x86_64.sh
+    # Python 3.7 works only in Xenial with sudo
+    # https://github.com/travis-ci/travis-ci/issues/9069#issuecomment-425720905
+    - python: 3.7
+      dist: xenial  # required for Python >= 3.7 (travis-ci/travis-ci#9069)
+      sudo: yes
+      env: MINICONDA=https://repo.anaconda.com/miniconda/Miniconda3-py37_4.9.2-Linux-x86_64.sh
 
 env:
   global:
@@ -47,7 +54,7 @@ cache:
 
 install:
   # Install miniconda
-  - wget https://repo.anaconda.com/miniconda/Miniconda3-py38_4.8.2-Linux-x86_64.sh -O $HOME/miniconda.sh
+  - wget $MINICONDA -O $HOME/miniconda.sh
   - bash $HOME/miniconda.sh -b -u -p $HOME/miniconda
   # Add conda to path. "hash -r" rescans the $PATH
   - export PATH="$HOME/miniconda/bin:$PATH"
