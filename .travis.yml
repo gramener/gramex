@@ -4,14 +4,12 @@
 language: python
 python: 3.7
 
-jobs:
-  include:
-    env:
-      - MINICONDA=https://repo.anaconda.com/miniconda/Miniconda3-py39_4.9.2-Linux-x86_64.sh
-      - MINICONDA=https://repo.anaconda.com/miniconda/Miniconda3-py38_4.9.2-Linux-x86_64.sh
-      # There are package conflicts for 3.9
-      # https://travis-ci.com/github/gramener/gramex/jobs/501901704
-      # - MINICONDA=https://repo.anaconda.com/miniconda/Miniconda3-py37_4.9.2-Linux-x86_64.sh
+env:
+  # - MINICONDA=https://repo.anaconda.com/miniconda/Miniconda3-py39_4.9.2-Linux-x86_64.sh
+  - MINICONDA=https://repo.anaconda.com/miniconda/Miniconda3-py38_4.9.2-Linux-x86_64.sh
+  # There are package conflicts for 3.9
+  # https://travis-ci.com/github/gramener/gramex/jobs/501901704
+  - MINICONDA=https://repo.anaconda.com/miniconda/Miniconda3-py37_4.9.2-Linux-x86_64.sh
 
 # Python 3.7 works only in Xenial with sudo
 # https://github.com/travis-ci/travis-ci/issues/9069#issuecomment-425720905
