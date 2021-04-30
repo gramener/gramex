@@ -11,9 +11,9 @@ sudo: yes
 
 jobs:
   include:
-    # - env: MINICONDA=https://repo.anaconda.com/miniconda/Miniconda3-py39_4.9.2-Linux-x86_64.sh
-    - env: MINICONDA=https://repo.anaconda.com/miniconda/Miniconda3-py38_4.9.2-Linux-x86_64.sh
-    - env: MINICONDA=https://repo.anaconda.com/miniconda/Miniconda3-py37_4.9.2-Linux-x86_64.sh
+    - env: MINICONDA=https://repo.anaconda.com/miniconda/Miniconda3-py39_4.9.2-Linux-x86_64.sh
+    # - env: MINICONDA=https://repo.anaconda.com/miniconda/Miniconda3-py38_4.9.2-Linux-x86_64.sh
+    # - env: MINICONDA=https://repo.anaconda.com/miniconda/Miniconda3-py37_4.9.2-Linux-x86_64.sh
 
 env:
   global:
@@ -60,9 +60,7 @@ install:
   - hash -r
   # Install conda packages
   - conda config --set always_yes yes --set changeps1 no
-  # Install packages that Keep these versions sync-ed with gramex/release.json
-  # - conda install -y -q colorama h5py lxml matplotlib 'pandas==0.25.3' pytest seaborn 'sqlalchemy<=1.3.24' line_profiler tzlocal 'scikit-learn>=0.23.2'
-  # Install packages from gramex/release.json that require conda. Keep versions in sync with
+  # Install packages from gramex/release.json that require conda. Keep versions in sync
   - conda install -y -q line_profiler
   # rpy2 v2.9.6 is compatible with pandas 1.0, not available on the default channel
   - conda install -c conda-forge rpy2
