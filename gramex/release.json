@@ -45,7 +45,6 @@
     "crontab>=0.21":              "SRV: services.schedule to parse crontab entries (conda-forge)",
     "cssselect":                  "OPT: pytest gramex plugin",
     "diskcache>=2.8.3":           "SRV: services.cache for disk cache (conda-forge)",
-    "h5py<=2.9.0":                "OPT: conda: gramex.cache.HDF5Store. v2.10 raises Dataset has no .value",
     "ipdb":                       "OPT: gramex.debug (conda-forge)",
     "jmespath":                   "OPT: pytest gramex plugin",
     "joblib":                     "OPT: For gramex.ml",
@@ -92,6 +91,7 @@
 
   "conda#": "Packages that can only be installed via conda on Windows, not via pip",
   "conda": {
+    "h5py<=2.9.0":                "OPT: conda: gramex.cache.HDF5Store. v2.10 raises Dataset has no .value",
     "line_profiler":              "OPT: conda: For gramex.debug"
   }
 }
