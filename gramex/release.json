@@ -45,16 +45,18 @@
     "crontab>=0.21":              "SRV: services.schedule to parse crontab entries (conda-forge)",
     "cssselect":                  "OPT: pytest gramex plugin",
     "diskcache>=2.8.3":           "SRV: services.cache for disk cache (conda-forge)",
+    "h5py":                       "OPT: conda: gramex.cache.HDF5Store",
     "ipdb":                       "OPT: gramex.debug (conda-forge)",
     "jmespath":                   "OPT: pytest gramex plugin",
     "joblib":                     "OPT: For gramex.ml",
     "ldap3>=2.2.4":               "OPT: LDAP connections",
+    "line_profiler":              "OPT: conda: For gramex.debug",
     "lxml":                       "OPT: conda: gramex.pptgen",
     "markdown":                   "OPT: transforms, gramex.services.create_alert()",
     "matplotlib":                 "OPT: conda: gramex.data.download()",
     "numpy<=1.19.5":              "REQ: for Pandas. See pandas/issues/39520",
     "oauthlib>=1.1.2":            "SRV: OAuth request-signing",
-    "pandas==0.25.3":             "REQ: conda: gramex.data.filter()",
+    "pandas==0.25.3":             "REQ: conda: gramex.data.filter(). Use latest 0.x for compatibility",
     "passlib>=1.6.5":             "REQ: password storage (e.g. in handlers.DBAuth)",
     "pathlib":                    "REQ: Manipulate paths. Part of Python 3.3+",
     "pathtools>=0.1.1":           "REQ: dependency for watchdog",
@@ -91,7 +93,5 @@
 
   "conda#": "Packages that can only be installed via conda on Windows, not via pip",
   "conda": {
-    "h5py<=2.9.0":                "OPT: conda: gramex.cache.HDF5Store. v2.10 raises Dataset has no .value",
-    "line_profiler":              "OPT: conda: For gramex.debug"
   }
 }

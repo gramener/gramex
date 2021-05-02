@@ -60,8 +60,6 @@ install:
   - hash -r
   # Install conda packages
   - conda config --set always_yes yes --set changeps1 no
-  # Install packages from gramex/release.json that require conda. Keep versions in sync
-  # - conda install -y -q line_profiler
   # rpy2 v2.9.6 is compatible with pandas 1.0, not available on the default channel
   - conda install -c conda-forge rpy2
   # install.packages("rmarkdown") has installation issues with numpy 1.16.6, 1.17.0, etc but is OK with 1.16.0

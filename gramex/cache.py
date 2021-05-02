@@ -1107,14 +1107,12 @@ class HDF5Store(KeyStore):
         result = self.store.get(key, None)
         if result is None:
             return default
+        result = result[()]
         try:
-            return json.loads(
-                result.value,
-                object_pairs_hook=AttrDict,
-                cls=CustomJSONDecoder)
+            return json.loads(result, object_pairs_hook=AttrDict, cls=CustomJSONDecoder)
         except ValueError:
             app_log.error('HDF5Store("%s").load("%s") is not JSON ("%r..."")',
-                          self.path, key, result.value)
+                          self.path, key, result)
             return default
 
     def dump(self, key, value):
@@ -1155,8 +1153,7 @@ class HDF5Store(KeyStore):
         self.flush()
         changed = False
         items = {
-            key: json.loads(
-                val.value, object_pairs_hook=AttrDict, cls=CustomJSONDecoder)
+            key: json.loads(val[()], object_pairs_hook=AttrDict, cls=CustomJSONDecoder)
             for key, val in self.store.items()
         }
         for key in self.purge_keys(items):
