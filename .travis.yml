@@ -58,8 +58,9 @@ install:
   # Add conda to path. "hash -r" rescans the $PATH
   - export PATH="$HOME/miniconda/bin:$PATH"
   - hash -r
-  # Install conda packages
+  # Install conda packages. Keep this in sync with gramex/release.json.conda
   - conda config --set always_yes yes --set changeps1 no
+  - conda install line_profiler
   # rpy2 v2.9.6 is compatible with pandas 1.0, not available on the default channel
   - conda install -c conda-forge rpy2
   # install.packages("rmarkdown") has installation issues with numpy 1.16.6, 1.17.0, etc but is OK with 1.16.0
