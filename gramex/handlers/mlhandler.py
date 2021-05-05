@@ -20,6 +20,7 @@ from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from slugify import slugify
 from tornado.gen import coroutine
 from tornado.web import HTTPError
+from sklearn.metrics import get_scorer
 
 op = os.path
 MLCLASS_MODULES = [
@@ -39,7 +40,7 @@ TRANSFORMS = {
     'pipeline': True,
     'nums': [],
     'cats': [],
-    'target_col': None,
+    'target_col': None
 }
 ACTIONS = ['predict', 'score', 'append', 'train', 'retrain']
 DEFAULT_TEMPLATE = op.join(op.dirname(__file__), '..', 'apps', 'mlhandler', 'template.html')
@@ -103,7 +104,6 @@ class MLHandler(FormHandler):
 
         cls.set_opt('class', model.get('class'))
         cls.set_opt('params', model.get('params', {}))
-
         if op.exists(cls.model_path):  # If the pkl exists, load it
             cls.model = joblib.load(cls.model_path)
         elif data is not None:
@@ -268,6 +268,10 @@ class MLHandler(FormHandler):
         self.model = cache.open(self.model_path, joblib.load)
         try:
             target = data.pop(score_col)
+            metric = self.get_argument('_metric', False)
+            if metric:
+                scorer = get_scorer(metric)
+                return scorer(self.model, data, target)
             return self.model.score(data, target)
         except KeyError:
             # Set data in the same order as the transformer requests
