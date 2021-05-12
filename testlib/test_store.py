@@ -146,7 +146,7 @@ class TestHDF5Store(TestJSONStore):
 
     def load(self):
         return {
-            key.replace('\t', '/'): json.loads(val.value)
+            key.replace('\t', '/'): json.loads(val[()])
             for key, val in self.store.store.items()
         }
 
