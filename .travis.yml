@@ -11,9 +11,12 @@ sudo: yes
 
 jobs:
   include:
-    - env: MINICONDA=https://repo.anaconda.com/miniconda/Miniconda3-py39_4.9.2-Linux-x86_64.sh
+    - env: MINICONDA=https://repo.anaconda.com/miniconda/Miniconda3-py37_4.9.2-Linux-x86_64.sh
+    # Python 3.8 works with these dependencies, but only on Linux, not Windows.
+    #   Tornado 6.x and Pandas 1.x upgrade reqd for Windows. So drop it for Gramex 1.x
     # - env: MINICONDA=https://repo.anaconda.com/miniconda/Miniconda3-py38_4.9.2-Linux-x86_64.sh
-    # - env: MINICONDA=https://repo.anaconda.com/miniconda/Miniconda3-py37_4.9.2-Linux-x86_64.sh
+    # Python 3.9 doesn't work at all with these dependencies
+    # - env: MINICONDA=https://repo.anaconda.com/miniconda/Miniconda3-py39_4.9.2-Linux-x86_64.sh
 
 env:
   global:
