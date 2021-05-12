@@ -623,7 +623,8 @@ def _copy(source, target, template_data=None):
             result = handle.read()
             if template_data is not None:
                 from mimetypes import guess_type
-                if re.match('text/.*|application/(json|javascript)', guess_type(source)[0] or ''):
+                filetype = guess_type(source)[0] or 'text/unknown'
+                if re.match('text/.*|application/(json|javascript)', filetype):
                     result = Template(result).generate(**template_data)
         with io.open(target, 'wb') as handle:
             handle.write(result)
