@@ -21,6 +21,7 @@ from slugify import slugify
 from tornado.gen import coroutine
 from tornado.web import HTTPError
 from sklearn.metrics import get_scorer
+from sklearn.model_selection import cross_val_predict, cross_val_score
 
 op = os.path
 MLCLASS_MODULES = [
@@ -44,8 +45,7 @@ TRANSFORMS = {
 }
 ACTIONS = ['predict', 'score', 'append', 'train', 'retrain']
 DEFAULT_TEMPLATE = op.join(op.dirname(__file__), '..', 'apps', 'mlhandler', 'template.html')
-search_modelclass = lambda x: locate(x, MLCLASS_MODULES)  # NOQA: E731
-
+search_modelclass = lambda x: locate(x, MLCLASS_MODULES)  # NOQA: E731\
 
 def _fit(model, x, y, path=None, name=None):
     app_log.info('Starting training...')
@@ -112,13 +112,25 @@ class MLHandler(FormHandler):
             data = cls._filtercols(data)
             data = cls._filterrows(data)
             cls.model = cls._assemble_pipeline(data, mclass=mclass, params=params)
-
             # train the model
             target = data[target_col]
             train = data[[c for c in data if c != target_col]]
+            #ADD HERE 
+            mod = cls.modelFunction()
+            CVscore = cross_val_score(mod, train, target)    
+            CV = sum(CVscore)/len(CVscore)
+            print('CV score: ', CV)
             gramex.service.threadpool.submit(
                 _fit, cls.model, train, target, cls.model_path, cls.name)
         cls.config_store.flush()
+
+    @classmethod
+    def modelFunction(cls, mclass = ''):
+        model_kwargs = cls.config_store.load('model', {})
+        mclass = model_kwargs.get('class', False)
+        if mclass:
+            model = search_modelclass(mclass)(**model_kwargs.get('params', {}))
+            return model
 
     @classmethod
     def load_data(cls, default=pd.DataFrame()):
