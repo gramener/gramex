@@ -22,6 +22,7 @@ from tornado.gen import coroutine
 from tornado.web import HTTPError
 from sklearn.metrics import get_scorer
 from sklearn.model_selection import cross_val_predict, cross_val_score
+from sklearn.model_selection import cross_val_predict, cross_val_score
 
 op = os.path
 MLCLASS_MODULES = [
@@ -45,7 +46,8 @@ TRANSFORMS = {
 }
 ACTIONS = ['predict', 'score', 'append', 'train', 'retrain']
 DEFAULT_TEMPLATE = op.join(op.dirname(__file__), '..', 'apps', 'mlhandler', 'template.html')
-search_modelclass = lambda x: locate(x, MLCLASS_MODULES)  # NOQA: E731\
+search_modelclass = lambda x: locate(x, MLCLASS_MODULES)  # NOQA: E731
+
 
 def _fit(model, x, y, path=None, name=None):
     app_log.info('Starting training...')
@@ -115,7 +117,7 @@ class MLHandler(FormHandler):
             # train the model
             target = data[target_col]
             train = data[[c for c in data if c != target_col]]
-            #ADD HERE 
+            # cross validation
             mod = cls.modelFunction()
             CVscore = cross_val_score(mod, train, target)    
             CV = sum(CVscore)/len(CVscore)
