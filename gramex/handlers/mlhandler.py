@@ -22,7 +22,6 @@ from tornado.gen import coroutine
 from tornado.web import HTTPError
 from sklearn.metrics import get_scorer
 from sklearn.model_selection import cross_val_predict, cross_val_score
-from sklearn.model_selection import cross_val_predict, cross_val_score
 from ast import literal_eval
 
 op = os.path
@@ -45,7 +44,6 @@ TRANSFORMS = {
     'cats': [],
     'target_col': None,
     'CV': True,
-    'CVargs': []
 }
 ACTIONS = ['predict', 'score', 'append', 'train', 'retrain']
 DEFAULT_TEMPLATE = op.join(op.dirname(__file__), '..', 'apps', 'mlhandler', 'template.html')
@@ -121,9 +119,7 @@ class MLHandler(FormHandler):
             target = data[target_col]
             train = data[[c for c in data if c != target_col]]
             # cross validation
-            print('yayyy we are here')
             cls.CrossValidation(train,target)
-            print('should have printed')
             gramex.service.threadpool.submit(
                 _fit, cls.model, train, target, cls.model_path, cls.name)
         cls.config_store.flush()
@@ -139,15 +135,11 @@ class MLHandler(FormHandler):
     @classmethod
     def CrossValidation(cls,train,target):
         mod = cls.modelFunction()
-        CV = cls.get_opt('CV') #can edit to make CV true/false etc.
+        CV = cls.get_opt('CV')
         if CV:
-            CVargs = cls.get_opt('CVargs')
-            if CVargs:
-                CVscore = cross_val_score(mod, X=train, y=target, **literal_eval(json.dumps(CVargs)))
-            else:
-                CVscore = cross_val_score(mod, train, target)
-            CV = sum(CVscore)/len(CVscore)
-            print('CV score: ', CV)
+            CVscore = cross_val_score(mod, X=train, y=target, **literal_eval(json.dumps(CV)))
+            CVavg = sum(CVscore)/len(CVscore)
+            print('Cross Validation Score : ',CVavg)
             
     @classmethod
     def load_data(cls, default=pd.DataFrame()):
@@ -380,7 +372,6 @@ class MLHandler(FormHandler):
         target = data[target_col]
         train = data[[c for c in data if c != target_col]]
         self.model = self._assemble_pipeline(data, force=True)
-        print('IN TRAIN')
         self.CrossValidation(train,target)
         _fit(self.model, train, target, self.model_path)
         return {'score': self.model.score(train, target)}
@@ -392,8 +383,6 @@ class MLHandler(FormHandler):
         self._check_model_path()
         data = self._parse_data(False)
         target_col = self.get_argument('target_col', self.get_opt('target_col'))
-        print('IN _SCORE')
-        #self.CrossValidation(data,target_col)
         self.set_opt('target_col', target_col)
         return {'score': self._predict(data, target_col)}
 
