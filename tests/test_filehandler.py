@@ -194,6 +194,16 @@ class TestFileHandler(TestGramex):
         self.check('/dir/transform-sass/a.scss?primary=blue', text='.ui-import-a{color:blue}')
         self.check('/dir/transform-sass/b.scss?primary=blue', text='.ui-import-b{color:blue}')
 
+    def test_vue(self):
+        for dir in ('/dir/transform-vue', '/dir/vue-file'):
+            for name in ('a', 'b'):
+                url = f'{dir}/comp-{name}.vue'
+                text = self.check(url, timeout=30).text
+                ok_(f'Component: {name}' in text, f'{url}: has component name')
+                ok_(f'//# sourceMappingURL=comp-{name}.vue?map' in text, f'{url}: has sourcemap')
+                source = self.check(url + '?map').json()
+                eq_(source['version'], 3)
+
     def test_template(self):
         self.check('/dir/template/index-template.txt?arg=►', text='– ►')
         self.check('/dir/template/non-index-template.txt?arg=►', text='– ►')

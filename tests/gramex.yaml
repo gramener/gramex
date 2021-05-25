@@ -499,6 +499,22 @@ url:
       path: $YAMLPATH/sass/
       scss: ' missing.scss,import.scss, a.scss b.scss'
       sass: '*.sass'
+  dir/transform-vue:
+    pattern: /dir/transform-vue/(.*)
+    handler: FileHandler
+    kwargs:
+      path: vue
+      transform:
+        # Multiple globs can be separated by spaces or commas
+        " comp-a.vue, comp-b.vue":
+          encoding: utf-8
+          function: vue
+  dir/vue-file:
+    pattern: /dir/vue-file/(.*)
+    handler: FileHandler
+    kwargs:
+      path: $YAMLPATH/vue/
+      vue: '*.vue'
   dir/template:
     pattern: "/dir/template/(.*)"
     handler: FileHandler

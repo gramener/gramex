@@ -5,7 +5,7 @@
   "license": "MIT",
   "dependencies": {
     "@fortawesome/fontawesome-free": "5",
-    "bootstrap": "4.5",
+    "bootstrap": "4.6",
     "bootstrap-select": "1.13",
     "bootswatch": "4",
     "d3": "4",
@@ -34,6 +34,8 @@
     "url-search-params": "npm:@ungap/url-search-params@0.1",
     "vega": "5",
     "vega-embed": "6",
-    "vega-lite": "4"
+    "vega-lite": "4",
+    "@vue/cli": "4",
+    "@vue/cli-service-global": "4"
   }
 }
