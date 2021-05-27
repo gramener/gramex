@@ -22,7 +22,6 @@ from tornado.gen import coroutine
 from tornado.web import HTTPError
 from sklearn.metrics import get_scorer
 from sklearn.model_selection import cross_val_predict, cross_val_score
-from ast import literal_eval
 
 op = os.path
 MLCLASS_MODULES = [
@@ -43,7 +42,7 @@ TRANSFORMS = {
     'nums': [],
     'cats': [],
     'target_col': None,
-    'CV': True,
+    'cv': True,
 }
 ACTIONS = ['predict', 'score', 'append', 'train', 'retrain']
 DEFAULT_TEMPLATE = op.join(op.dirname(__file__), '..', 'apps', 'mlhandler', 'template.html')
@@ -119,25 +118,16 @@ class MLHandler(FormHandler):
             target = data[target_col]
             train = data[[c for c in data if c != target_col]]
             # cross validation
-            cls.CrossValidation(train,target)
+            cls.cross_validation(train,target)
             gramex.service.threadpool.submit(
                 _fit, cls.model, train, target, cls.model_path, cls.name)
         cls.config_store.flush()
-
+  
     @classmethod
-    def modelFunction(cls, mclass = ''):
-        model_kwargs = cls.config_store.load('model', {})
-        mclass = model_kwargs.get('class', False)
-        if mclass:
-            model = search_modelclass(mclass)(**model_kwargs.get('params', {}))
-            return model
-    
-    @classmethod
-    def CrossValidation(cls,train,target):
-        mod = cls.modelFunction()
-        CV = cls.get_opt('CV')
-        if CV:
-            CVscore = cross_val_score(mod, X=train, y=target, **literal_eval(json.dumps(CV)))
+    def cross_validation(cls,train,target):
+        cv = cls.get_opt('cv',True)
+        if cv:
+            CVscore = cross_val_score(cls.model.steps[-1][1], X=train, y=target, cv=cv)
             CVavg = sum(CVscore)/len(CVscore)
             print('Cross Validation Score : ',CVavg)
             
@@ -372,7 +362,7 @@ class MLHandler(FormHandler):
         target = data[target_col]
         train = data[[c for c in data if c != target_col]]
         self.model = self._assemble_pipeline(data, force=True)
-        self.CrossValidation(train,target)
+        self.cross_validation(train,target)
         _fit(self.model, train, target, self.model_path)
         return {'score': self.model.score(train, target)}
 
