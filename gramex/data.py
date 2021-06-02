@@ -42,6 +42,9 @@ _agg_type = {
 }
 # List of Python types returned by SQLAlchemy
 _numeric_types = {'int', 'long', 'float', 'Decimal'}
+# Data processing plugins.
+# e.g. plugins['mongodb'] = {'filter': fn, 'insert': fn, ...}
+plugins = {}
 
 
 def _transform_fn(transform, transform_kwargs):
@@ -102,7 +105,7 @@ def filter(url, args={}, meta={}, engine=None, ext=None, columns=None,
     :arg dict transform_kwargs: optional keyword arguments to be passed to the
         transform function -- apart from data
     :arg dict kwargs: Additional parameters are passed to
-        :py:func:`gramex.cache.open` or ``sqlalchemy.create_engine``
+        :py:func:`gramex.cache.open`, ``sqlalchemy.create_engine`` or the plugin's filter
     :return: a filtered DataFrame
 
     Remaining kwargs are passed to :py:func:`gramex.cache.open` if ``url`` is a file, or
@@ -225,6 +228,15 @@ def filter(url, args={}, meta={}, engine=None, ext=None, columns=None,
             raise OSError('url: %s not found' % url)
         # Get the full dataset. Then filter it
         data = gramex.cache.open(url, ext, transform=transform, **kwargs)
+        return _filter_frame(data, meta=meta, controls=controls, args=args)
+    elif engine == 'plugin':
+        dbtype = engine.split(':')[1]
+        if dbtype not in plugins:
+            raise ValueError(f'Unknown plugin:{dbtype}')
+        method = plugins[dbtype].get('filter', None)
+        if not callable(method):
+            raise ValueError(f'plugin:{dbtype}.filter not defined')
+        data = method(url, controls=controls, args=args, **kwargs)
         return _filter_frame(data, meta=meta, controls=controls, args=args)
     elif engine == 'sqlalchemy':
         table = kwargs.pop('table', None)
@@ -437,6 +449,7 @@ def get_engine(url):
 
     - ``'dataframe'`` if url is a Pandas DataFrame
     - ``'sqlalchemy'`` if url is a sqlalchemy compatible URL
+    - ``'plugin'`` if it is `plugin:<name-of-plugin>`
     - ``protocol`` if url is of the form `protocol://...`
     - ``'dir'`` if it is not a URL but a valid directory
     - ``'file'`` if it is not a URL but a valid file
@@ -445,6 +458,8 @@ def get_engine(url):
     '''
     if isinstance(url, pd.DataFrame):
         return 'dataframe'
+    if url.startswith('plugin:'):
+        return 'plugin'
     try:
         url = sa.engine.url.make_url(url)
     except sa.exc.ArgumentError:
@@ -456,9 +471,9 @@ def get_engine(url):
         return url.drivername
 
 
-def create_engine(url, **kwargs):
+def create_engine(url, create=sa.create_engine, **kwargs):
     '''
-    Cached version of sqlalchemy.create_engine.
+    Cached version of sqlalchemy.create_engine (or any custom engine).
 
     Normally, this is not required. But :py:func:`get_table` caches the engine
     *and* metadata *and* uses autoload=True. This makes sqlalchemy create a new
@@ -466,7 +481,7 @@ def create_engine(url, **kwargs):
     re-use the engine objects within this module.
     '''
     if url not in _ENGINE_CACHE:
-        _ENGINE_CACHE[url] = sa.create_engine(url, **kwargs)
+        _ENGINE_CACHE[url] = create(url, **kwargs)
     return _ENGINE_CACHE[url]
 
 
@@ -481,7 +496,7 @@ def get_table(engine, table, **kwargs):
 
 
 def _pop_controls(args):
-    '''Filter out data controls: sort, limit, offset and column (_c) from args'''
+    '''Filter out data controls: _sort, _limit, _offset, _c (column) and _by from args'''
     return {
         key: args.pop(key)
         for key in ('_sort', '_limit', '_offset', '_c', '_by')
@@ -1340,3 +1355,19 @@ def alter(url: str, table: str, columns: dict = None, **kwargs):
         # Refresh table metadata after altering
         get_table(engine, table, extend_existing=True)
     return engine
+
+
+def _filter_mongodb(url, controls, args, **kwargs):
+    import pymongo
+    create_kwargs = {key: val for key, val in kwargs.items() if key in
+                     {'port', 'document_class', 'tz_aware', 'connect'}}
+    db = create_engine(url, create=pymongo.MongoClient, **create_kwargs)
+    collection = db[kwargs['collection']]
+    # TODO: Filter based on controls
+    # TODO: Return results
+    return collection
+
+
+plugins['mongodb'] = {
+    'filter': _filter_mongodb
+}
