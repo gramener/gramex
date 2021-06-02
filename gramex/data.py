@@ -236,7 +236,7 @@ def filter(url, args={}, meta={}, engine=None, ext=None, columns=None,
         method = plugins[dbtype].get('filter', None)
         if not callable(method):
             raise ValueError(f'plugin:{dbtype}.filter not defined')
-        data = method(url, controls=controls, args=args, **kwargs)
+        data = method(url[7:], controls=controls, args=args, **kwargs)
         return _filter_frame(data, meta=meta, controls=controls, args=args)
     elif engine == 'sqlalchemy':
         table = kwargs.pop('table', None)
