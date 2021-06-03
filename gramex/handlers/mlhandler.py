@@ -21,10 +21,7 @@ from slugify import slugify
 from tornado.gen import coroutine
 from tornado.web import HTTPError
 from sklearn.metrics import get_scorer
-<<<<<<< HEAD
 from sklearn.model_selection import cross_val_predict, cross_val_score
-=======
->>>>>>> 01cef31e4559be82862ae6b0977358ac661b6a70
 
 op = os.path
 MLCLASS_MODULES = [
@@ -44,12 +41,8 @@ TRANSFORMS = {
     'pipeline': True,
     'nums': [],
     'cats': [],
-<<<<<<< HEAD
     'target_col': None,
     'cv': True,
-=======
-    'target_col': None
->>>>>>> 01cef31e4559be82862ae6b0977358ac661b6a70
 }
 ACTIONS = ['predict', 'score', 'append', 'train', 'retrain']
 DEFAULT_TEMPLATE = op.join(op.dirname(__file__), '..', 'apps', 'mlhandler', 'template.html')
