@@ -39,6 +39,8 @@ _markdown_defaults = dict(output_format='html5', extensions=[
 # A set of temporary files to delete on program exit
 _TEMP_FILES = set()
 _ID_CACHE = set()
+# In read_excel, we use range= as a parameter. Store the built-in range() to reference it
+builtin_range = range
 
 
 def _delete_temp_files():
@@ -159,7 +161,7 @@ def read_excel(io, sheet_name=0, table=None, name=None, range=None, header=_unde
         range = ws.tables[table].ref
         # Tables themselves specify whether they have a column header. Use this as default
         if header is _undef:
-            header = list(__builtins__['range'](ws.tables[table].headerRowCount))
+            header = list(builtin_range(ws.tables[table].headerRowCount))
     elif name is not None:
         # If the name is workbook-scoped, get it directly
         defined_name = wb.defined_names.get(name)
@@ -1107,14 +1109,12 @@ class HDF5Store(KeyStore):
         result = self.store.get(key, None)
         if result is None:
             return default
+        result = result[()]
         try:
-            return json.loads(
-                result.value,
-                object_pairs_hook=AttrDict,
-                cls=CustomJSONDecoder)
+            return json.loads(result, object_pairs_hook=AttrDict, cls=CustomJSONDecoder)
         except ValueError:
             app_log.error('HDF5Store("%s").load("%s") is not JSON ("%r..."")',
-                          self.path, key, result.value)
+                          self.path, key, result)
             return default
 
     def dump(self, key, value):
@@ -1155,8 +1155,7 @@ class HDF5Store(KeyStore):
         self.flush()
         changed = False
         items = {
-            key: json.loads(
-                val.value, object_pairs_hook=AttrDict, cls=CustomJSONDecoder)
+            key: json.loads(val[()], object_pairs_hook=AttrDict, cls=CustomJSONDecoder)
             for key, val in self.store.items()
         }
         for key in self.purge_keys(items):

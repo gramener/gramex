@@ -1155,7 +1155,7 @@ def dirstat(url, timeout=10, **kwargs):
     return pd.DataFrame(result)
 
 
-def filtercols(url, args={}, meta={}, engine=None, table=None, ext=None,
+def filtercols(url, args={}, meta={}, engine=None, ext=None,
                query=None, queryfile=None, transform=None, transform_kwargs={}, **kwargs):
     '''
     Filter data and extract unique values of each column using URL query parameters.
@@ -1173,8 +1173,6 @@ def filtercols(url, args={}, meta={}, engine=None, table=None, ext=None,
     :arg dict meta: this dict is updated with metadata during the course of filtering
     :arg str engine: over-rides the auto-detected engine. Can be 'dataframe', 'file',
         'http', 'https', 'sqlalchemy', 'dir'
-    :arg str table: table name (if url is an SQLAlchemy URL), ``.format``-ed
-        using ``args``.
     :arg str ext: file extension (if url is a file). Defaults to url extension
     :arg str query: optional SQL query to execute (if url is a database),
         ``.format``-ed using ``args`` and supports SQLAlchemy SQL parameters.
@@ -1262,7 +1260,7 @@ def filtercols(url, args={}, meta={}, engine=None, table=None, ext=None,
         col_args['_by'] = [col]
         col_args['_c'] = []
         col_args['_limit'] = [limit]
-        result[col] = gramex.data.filter(url, table=table, args=col_args, **kwargs)
+        result[col] = gramex.data.filter(url, args=col_args, **kwargs)
     return result
 
 

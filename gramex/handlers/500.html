@@ -9,12 +9,13 @@
   <style>
   * { box-sizing: border-box; }
   html { width: 100%; height: 100%; }
+  h1, p { text-align: center; }
   body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; font-size: 18px; }
-  .content { margin: 0 auto; width: 20rem;}
+  .content { margin: 0 auto; max-width: 40rem; }
   pre { white-space: pre-wrap; background-color: #f8f8f8; padding: 0.5em; overflow-x: auto; }
   pre code { white-space: pre; }
   #traceback { display: none; }
-  #show-traceback { position: fixed; bottom: 0; left: 50%; width: 10rem; margin-left: -5rem; padding: 0.5rem 0; text-align: center; cursor: pointer; opacity: 0.4; }
+  #show-traceback { position: fixed; bottom: 0; width: 100%; text-align: center; cursor: pointer; opacity: 0.4; }
   </style>
   <!-- htmllint tag-bans="$previous" -->
 </head>

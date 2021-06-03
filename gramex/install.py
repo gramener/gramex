@@ -3,6 +3,7 @@ Defines command line services to install, setup and run apps.
 '''
 import io
 import os
+import re
 import sys
 import time
 import yaml
@@ -620,11 +621,10 @@ def _copy(source, target, template_data=None):
         app_log.info('Copy file %s', source)
         with io.open(source, 'rb') as handle:
             result = handle.read()
-            from mimetypes import guess_type
-            filetype = guess_type(source)[0]
-            basetype = 'text' if filetype is None else filetype.split('/')[0]
             if template_data is not None:
-                if basetype in {'text'} or filetype in {'application/javascript'}:
+                from mimetypes import guess_type
+                filetype = guess_type(source)[0] or 'text/unknown'
+                if re.match('text/.*|application/(json|javascript)', filetype):
                     result = Template(result).generate(**template_data)
         with io.open(target, 'wb') as handle:
             handle.write(result)
