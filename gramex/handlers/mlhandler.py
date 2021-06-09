@@ -21,6 +21,7 @@ from slugify import slugify
 from tornado.gen import coroutine
 from tornado.web import HTTPError
 from sklearn.metrics import get_scorer
+import transformers
 
 op = os.path
 MLCLASS_MODULES = [
@@ -287,6 +288,19 @@ class MLHandler(FormHandler):
             self.model = cache.open(self.model_path, joblib.load)
         except FileNotFoundError:
             raise HTTPError(NOT_FOUND, f'No model found at {self.model_path}')
+
+    @classmethod
+    def nlp_tasks(cls, data):
+        if data is None:
+            data = cls._parse_data(False)
+        #data = pd.read_csv(data, names=['text'], header=None)
+        #data = data['text'].tolist()
+        data = pd.DataFrame(data)
+        if not cls.model:
+            cls.model = transformers.pipeline('sentiment-analysis')
+
+        results = yield gramex.service.threadpool.submit(cls.model, data)
+        return results
 
     @coroutine
     def prepare(self):
