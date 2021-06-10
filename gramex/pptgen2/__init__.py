@@ -149,12 +149,12 @@ def apply_commands(rule: Dict[str, dict], shapes, data: dict):
                     # or zoom. But we don't see a need for these yet.
                     el = copy.deepcopy(shape.element)
                     shape.element.addnext(el)
-                    shape = pptx.shapes.autoshape.Shape(el, None)
+                    shape = pptx.shapes.autoshape.Shape(el, shape._parent)
                 clones.append(AttrDict(pos=i, key=clone_key, val=clone_val, shape=shape,
                                        parent=parent_clone))
             # Run commands in the spec on all cloned shapes
             is_group = shape.element.tag.endswith('}grpSp')
-            for i, clone in enumerate(clones):
+            for clone in clones:
                 # Include shape-level `data:`. Add shape, clone as variables
                 shape_data = load_data(
                     spec.get('data', {}), _default_key='function', shape=shape, clone=clone,
