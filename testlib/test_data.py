@@ -393,6 +393,15 @@ class TestFilter(unittest.TestCase):
         self.check_filter_db('sqlite', url, na_position='first')
         self.check_filter_dates('sqlite', url)
 
+    def test_mongodb(self):
+        kwargs = {
+            'url': 'plugin:mongodb://localhost:27017',
+            'collection': 'actors',
+            'database': 'test',
+        }
+        eq_(len(gramex.data.filter(args={'rating<': ['0.5']}, **kwargs)), 9)
+        eq_(len(gramex.data.filter(args={'rating>': ['0.2']}, **kwargs)), 8)
+
     @classmethod
     def tearDownClass(cls):
         if 'mysql' in cls.db:

@@ -230,13 +230,13 @@ def filter(url, args={}, meta={}, engine=None, ext=None, columns=None,
         data = gramex.cache.open(url, ext, transform=transform, **kwargs)
         return _filter_frame(data, meta=meta, controls=controls, args=args)
     elif engine == 'plugin':
-        dbtype = engine.split(':')[1]
+        dbtype = url.split(':')[1]
         if dbtype not in plugins:
             raise ValueError(f'Unknown plugin:{dbtype}')
         method = plugins[dbtype].get('filter', None)
         if not callable(method):
             raise ValueError(f'plugin:{dbtype}.filter not defined')
-        data = method(url[7:], controls=controls, args=args, **kwargs)
+        data = method(url=url[7:], controls=controls, args=args, **kwargs)
         return _filter_frame(data, meta=meta, controls=controls, args=args)
     elif engine == 'sqlalchemy':
         table = kwargs.pop('table', None)
@@ -1357,15 +1357,120 @@ def alter(url: str, table: str, columns: dict = None, **kwargs):
     return engine
 
 
-def _filter_mongodb(url, controls, args, **kwargs):
+# NoSQL Operations
+# ----------------------------------------
+
+def _type_conversion(param_list, operations=None):
+    try:
+        converted = []
+        if operations == '<' or operations == '<=':
+            converted = min(float(v) for v in param_list)
+        if operations == '>' or operations == '>=':
+            converted = max(float(v) for v in param_list)
+        return converted
+    except ValueError:
+        raise ValueError('Value is not integer: %r' % param_list)
+
+
+# x>3&x>4&x>5 == {"$or": [{x: {$gt: 3}}, {x: {$gt: 4}}, {x: $gt: 5}]}
+# def _logical_conditions(args, meta_cols):
+#     conditions = []
+#     for key, vals in args.items():
+#         col, agg, op = _filter_col(key, meta_cols)
+#         convert = meta_cols[col].dtype.type
+#         conditions.append({col: {op: convert(val)} for val in vals})
+#     return {'$and': conditions}
+
+
+def _logical_conditions(args, meta_cols):
+    _op_mapping = {
+        '<': '$lt',
+        '<~': '$lte',
+        '>': '$gt',
+        '>~': '$gte',
+        '': '$in',
+        '!': '$nin'
+    }
+    _conditions = []
+    for key, vals in args.items():
+        col, agg, op = _filter_col(key, meta_cols)
+        if op in ['', '!']:
+            _conditions.append({col: {_op_mapping[op]: vals}})
+        elif op == '!~':
+            _conditions.append({col: {"$not": {"$regex": '|'.join(vals), "$options": 'i'}}})
+        elif op == '~':
+            _conditions.append({col: {"$regex": '|'.join(vals), "$options": 'i'}})
+        elif col and op in _op_mapping.keys():
+            convert = meta_cols[col].dtype.type
+            _conditions.append({col: {_op_mapping[op]: convert(val)} for val in vals})
+
+    if len(_conditions) > 1:
+        return {'$and': _conditions}
+    if _conditions:
+        return _conditions[0]
+    return {}
+
+
+def _controls_default(table, query=None, controls=None, meta_cols=None):
+    '''Get the controls like, _c, _sort, _offset, _limit'''
+
+    if '_c' in controls:
+        _projection = dict()
+        # _projection = {'field': 1, 'field1': -1}
+        for c in controls['_c']:
+            _projection[c] = 1
+        cursor = table.find(query, _projection)
+    else:
+        cursor = table.find(query)
+
+    if '_sort' in controls:
+        sort, ignore_sorts = _filter_sort_columns(controls['_sort'], meta_cols)
+        _sort = {key: (+1 if val else -1) for key, val in dict(sort).items()}
+
+        # sort, [('field1', 1), ('field2', -1)]
+        cursor = cursor.sort(list(_sort.items()))
+
+    if '_offset' in controls:
+        cursor = cursor.skip(int(controls['_offset'][0]))
+
+    if '_limit' in controls:
+        cursor = cursor.limit(int(controls['_limit'][0]))
+
+    return cursor
+
+
+def _filter_mongodb(url, controls, args, database=None, collection=None, query=None, **kwargs):
+    '''
+        TODO: Document function and usage
+    '''
     import pymongo
     create_kwargs = {key: val for key, val in kwargs.items() if key in
                      {'port', 'document_class', 'tz_aware', 'connect'}}
-    db = create_engine(url, create=pymongo.MongoClient, **create_kwargs)
-    collection = db[kwargs['collection']]
-    # TODO: Filter based on controls
-    # TODO: Return results
-    return collection
+
+    # Create MongoClient
+    client = create_engine(url, create=pymongo.MongoClient, **create_kwargs)
+
+    # TODO: check if database and collection exists
+
+    # client.list_databases()
+    # db.list_collection_names()
+
+    # Get Database
+    db = client[database]
+    # Get Collection
+    table = db[collection]
+
+    # TODO: Get metadata of requested document
+    meta_cols = pd.DataFrame(list(table.find().limit(100)))
+
+    if query:
+        _qbuilder = query
+    else:
+        _qbuilder = _logical_conditions(args, meta_cols)
+    cursor = _controls_default(table, query=_qbuilder, controls=controls, meta_cols=meta_cols)
+    data = pd.DataFrame(list(cursor))
+
+    return data
 
 
 plugins['mongodb'] = {
