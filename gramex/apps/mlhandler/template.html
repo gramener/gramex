@@ -1,77 +1,382 @@
-<!DOCTYPE html>
-{% from sklearn.utils import estimator_html_repr %}
-{% import json %}
+<!doctype html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
   <title>{{ handler.name }}</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/css/bootstrap.min.css"
-    rel="stylesheet"
-    integrity="sha384-giJF6kkoqNQ00vy+HMDP7azOuL0xtbfIcaT9wjKHr8RbDVddVHyTfAAsrekwKmP1"
-    crossorigin="anonymous">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="style.scss">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.14/dist/css/bootstrap-select.min.css">
 </head>
+<style>
+@keyframes donut-chart-fill {
+  to { stroke-dasharray: 0 100; }
+}
+body {
+  font-size: 16px;
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.5;
+  color: #333;
+}
+
+.svg-item {
+  width: 200px;
+  height: 200px;
+  font-size: 16px;
+}
+.donut-ring {
+  stroke: #EBEBEB;
+}
+
+.donut-segment {
+  animation: donut-chart-fill 1s reverse ease-in;
+  transform-origin: center;
+}
+
+.donut-text {
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.donut-percent {
+  font-size: 0.5em;
+  line-height: 1;
+  fill: #000000
+  transform: translateY(0.5em);
+}
+</style>
 
 <body>
-  <div class="container">
-    <h2>MLHandler</h2>
-    <p>This is a <strong>sample Tornado tempate</strong> for MLHandler. It
-      exposes the following variables:</p>
-    <ul>
-      <li><code>{{! handler }}</code> : The <code>MLHandler</code> instance.</li>
-      <li><code>{{! handler.model }}</code> : The <code>scikit-learn</code>
-        model or pipeline associated with this handler.</li>
-      <li><code>{{! data }}</code> : The <code>pandas.DataFrame</code>
-        containing the training data.</li>
-    </ul>
-    <p>You can write your own template, and specify it as the <kbd>template</kbd>
-      argument of your <code>MLHandler</code> configuration. The above
-      variables will be available to any such template.</p>
+  {% set base = '.' %}
+  {% set columns = data.columns.tolist() %}
+  {% set CLASSIFICTION_MODELS = [
+   'LogisticRegression',
+   'BernoulliNB',
+   'Perceptron',
+   'PassiveAggressiveClassifier',
+   'SVC',
+   'NuSVC',
+   'LinearSVC',
+   'KNeighborsClassifier',
+   'GaussianNB',
+   'DecisionTreeClassifier',
+   'RandomForestClassifier',
+   'MLPClassifier'] %}
+  {% set REGRESSION_MODELS = [
+   'LinearRegression',
+   'PassiveAggressiveRegressor',
+   'SVR',
+   'NuSVR',
+   'LinearSVR',
+   'KNeighborsRegressor',
+   'DecisionTreeRegressor',
+   'RandomForestRegressor',
+   'MLPRegressor'] %}
+  {% set tcol = handler.get_opt('target_col', False) %}
+  {% set CLASSIFICTION_METRICS = {
+    'Accuracy': 'accuracy',
+    'Balanced Accuracy': 'balanced_accuracy',
+    'ROC AUC': 'roc_auc',
+    'F1 Score': 'f1_weighted'
+   }%}
+   {% set REGRESSION_METRICS = {
+    'R2': 'r2',
+    'Explained Variance': 'explained_variance',
+    'Max Error': 'max_error',
+    'Negative Mean Absolute Error': 'neg_mean_absolute_error',
+    'Negative Mean Squared Error': 'neg_mean_squared_error',
+    'Negative Root Mean Squared Error': 'neg_root_mean_squared_error'
+   }%}
+  <!-- TODO: Filter bars -->
+  <div class="container-fluid py-4 px-3">
+    <div class="row pb-3 pt-3">
+      <div class="col-8 border-right border-dark">
+        <h3 class="text-center">Train the Model</h3>
+        <form class="form" id="train">
+          <div class="container">
+            <div class="row pt-3 pb-3">
+              <div class="formhandler overflow-auto"></div>
+            </div>
+            <div class="row">
+              <div class="col">
+                <label for="targetcol">Pick a Target Column:</label>
+                <select id="targetcol" class="form-control" name="target_col">
+                  {% for col in columns %}
+                  {% set selected = "selected" if col == handler.get_opt('target_col') else "" %}
+                  <option value="{{ col }}" {{ selected }}>{{ col }}</option>
+                  {% end %}
+                </select>
+              </div>
+              <div class="col">
+                <label for="exclude">Columns to Exclude:</label>
+                <select id="exclude" class="selectpicker form-control" multiple name="exclude">
+                  {% for col in columns %}
+                  {% set selected = "selected" if col in handler.get_opt('exclude', []) else "" %}
+                  <option value="{{ col }}" {{ selected }}>{{ col }}</option>
+                  {% end %}
+                </select>
+              </div>
+            </div>
+            <div class="row pb-3 pt-3">
+              <div class="col">
+                <label for="cats">Categorical Columns:</label>
+                <select id="cats" class="selectpicker form-control" multiple name="cats">
+                  {% for col in columns %}
+                  {% set selected = "selected" if col in handler.get_opt('cats', []) else "" %}
+                  <option value="{{ col }}" {{ selected }}>{{ col }}</option>
+                  {% end %}
+                </select>
+              </div>
+              <div class="col">
+                <label for="nums">Numerical Columns:</label>
+                <select id="nums" class="selectpicker form-control" multiple name="nums">
+                  {% for col in columns %}
+                  {% set selected = "selected" if col in handler.get_opt('nums', []) else "" %}
+                  <option value="{{ col }}" {{ selected }}>{{ col }}</option>
+                  {% end %}
+                </select>
+              </div>
+            </div>
+            <div class="row pb-3 pt-3">
+              <div class="col">
+                <label for="transform">Transform:</label>
+                <input class="form-control" id="transform" name="data.transform" type="text"
+                                                  value="{{ handler.get_opt('transform', '') }}">
+              </div>
+              <div class="col">
+                <label for="metric">Choose a Metric:</label>
+                <select id="metric" class="form-control selectpicker" name="metric">
+                {% if handler.get_opt('class') in CLASSIFICTION_MODELS %}
+                  {% for i, (mname, metric) in enumerate(CLASSIFICTION_METRICS.items()) %}
+                  {% set selected = "selected" if metric == "accuracy" else "" %}
+                  <option value="{{ metric }}" {{ selected }}>{{ mname }}</option>
+                    {% if i == 0 %}
+                    <option data-divider="true"></option>
+                    {% end %}
+                  {% end %}
+                {% else %}
+                  {% for i, (mname, metric) in enumerate(REGRESSION_METRICS.items()) %}
+                  {% set selected = "selected" if metric == "r2" else "" %}
+                  <option value="{{ metric }}" {{ selected }}>{{ mname }}</option>
+                    {% if i == 0 %}
+                    <option data-divider="true"></option>
+                    {% end %}
+                  {% end %}
+                {% end %}
+                </select>
+              </div>
+              <div class="col">
+                <label for="modelchoice">Pick a Model:</label>
+                <select id="modelchoice" class="form-control" name="class">
+                  <optgroup label="Classification">
+                    {% for model in CLASSIFICTION_MODELS %}
+                    {% set selected = "selected" if model == handler.get_opt('class') else "" %}
+                    <option value="{{ model }}" class="text-dark" {{ selected }}>{{ model }}</option>
+                    {% end %}
+                  </optgroup>
+                  <optgroup label="Regression">
+                    {% for model in REGRESSION_MODELS %}
+                    {% set selected = "selected" if model == handler.get_opt('class') else "" %}
+                    <option value="{{ model }}" {{ selected }}>{{ model }}</option>
+                    {% end %}
+                  </optgroup>
+                </select>
+              </div>
+            </div>
+            <div class="text-right">
+              <button class="btn btn-primary" type="submit">Train</button>
+            </div>
+          </div>
+        </form>
+        <div class="text-center divider">Results</div>
+        <div class="container" id="resultcnt">
+          <div class="row">
+            <div class="col">
+              <div class="text-center">
+                  <strong>Your model scored</strong>
+              </div>
+              <div class="text-center">
+                <svg width="20%" height="20%" viewBox="0 0 40 40" class="donut">
+                  <circle class="donut-hole" cx="20" cy="20" r="15.91549430918954" fill="#fff"></circle>
+                  <circle class="donut-ring" cx="20" cy="20" r="15.91549430918954" fill="transparent" stroke-width="3.5"></circle>
+                  <circle class="donut-segment" cx="20" cy="20" r="15.91549430918954" fill="transparent" stroke-width="3.5" stroke-dasharray="10 90" stroke-dashoffset="25"></circle>
+                  <g class="donut-text">
+                    <text y="50%" transform="translate(0, 2)">
+                      <tspan x="50%" text-anchor="middle" class="donut-percent">40%</tspan>
+                    </text>
+                  </g>
+                </svg>
+              </div>
+            </div>
+            <div class="col">
+              <div class="row">
+                <form id="testform" enctype="multipart/form-data">
+                  <div class="row pb-3">
+                    <label for="testurl">
+                      Happy with the result? <a id="downlink">Download the model.</a> Or get predictions:
+                    </label>
+                    <input name="file" type="file" id="testurl" class="form-control">
+                  </div>
+                  <div class="text-right">
+                    <button id="testbtn" class="btn btn-primary" type="submit">Predict</button>
+                  </div>
+                </form>
+              </div>
+              <div class="row">
+                <a class="ml-auto" id="downloadbtn">Download Predictions</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-4">
+        <h3 class="text-center">Make Predictions</h3>
+        <div class="row py-2">
+          <div class="col">
+            <button type="submit" form="predictform" class="btn btn-primary">Predict</button>
+          </div>
+          <div class="col">
+            <h4 id="predResult"></h4>
+          </div>
+        </div>
+        <form id="predictform" class="overflow-auto">
+          <template id="predicttabtemplate">
+            <div class="container">
+              <% COLS.forEach(function(col) { %>
+              <div class="form-group row">
+                <label for="<%= col.name %>" class="col-md-6"><%= col.name %></label>
+                <input class="form-control col-md-6" type="<%= col.type %>" name="<%= col.name %>" value="<%=row[col.name]%>">
+              </div>
+              <% }) %>
+            </div>
+          </template>
+        </form>
+      </div>
+    </div>
+  </div><!-- .container-fluid -->
 
-    <hr></hr>
-    <h3>Training Data:</h3>
-    <p>The following table shows your training data.</p>
-    <div class="formhandler"></div>
-    <ul>
-      <li>The target column is <code>{{ handler.get_opt('target_col',
-          'Undefined') }}</code></li>
-      <li>You have excluded these columns from training: <code>{{
-          handler.get_opt('exclude', []) }}</code></li>
-      <li>You have specified these columns as categorical variables: <code>{{
-          handler.get_opt('cats', []) }}</code></li>
-      <li>You have specified these columns as numerical variables: <code>{{
-          handler.get_opt('nums', []) }}</code></li>
-    </ul>
-
-    <hr></hr>
-    <h3>The Model:</h3>
-    {% raw estimator_html_repr(handler.model) %}
-    <p>Your model is a {{ handler.model.__class__.__name__ }}, with the following
-      parameters:</p>
-    <pre><code>{{ handler.model.get_params() }}</code></pre>
-    <p>Download the model <a id="downloadlink">here.</a></p>
-  </div>
-
-  <script src="https://cdn.jsdelivr.net/combine/npm/jquery,npm/lodash,npm/g1"></script>
-  <script
-    src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/js/bootstrap.bundle.min.js"
-    integrity="sha384-ygbV9kiqUc6oa4msXn9868pTtWMgiQaeYH7/t7LECLbyPA2x65Kgf80OJFdroafW"
-    crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/jquery@3.6.0/dist/jquery.js"></script>
+  <script src="https://unpkg.com/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+  <script src="https://unpkg.com/bootstrap@4.6.0/dist/js/bootstrap.js"></script>
+  <script src="https://unpkg.com/lodash@4.17.21/lodash.js"></script>
+  <script src="https://unpkg.com/morphdom@2.6.1/dist/morphdom-umd.js"></script>
+  <script src="https://unpkg.com/g1@0.17.5/dist/g1.min.js"></script>
+  <script src="https://unpkg.com/bootstrap-select@1.13.18/dist/js/bootstrap-select.js"></script>
+  <!-- Commonly used libraries:
+  <script src="ui/dayjs/dayjs.min.js"></script>
+  <script src="ui/daterangepicker/daterangepicker.js"></script>
+  <script src="ui/leaflet/dist/leaflet.js"></script>
+  <script src="ui/topojson/dist/topojson.min.js"></script>
+  -->
+</body>
   <script>
-    /* eslint-env browser, jquery */
-    /* globals g1 */
-    $('#algorithm').change(function() {
-      console.log($(this).val())
-    })
+    $.fn.selectpicker.Constructor.BootstrapVersion = '4';
+    var fh_meta = null
+    var cols = []
+    const get_score_color = function(s) {
+      let color = "#ff0000"
+      if (s > 50) { color = "#f7b100"}
+      if (s > 90) { color = "#00f700" }
+      return color
+    }
+    const get_score = function() {
+      let url = g1.url.parse(window.location)
+      $.ajax({
+        url: url + '?_action=score&_metric=' + encodeURIComponent($('#metric').val()),
+        method: 'POST',
+        success: function(resp) {
+          let score = Number.parseFloat(JSON.parse(resp).score * 100).toPrecision(4)
+          score = Number.parseFloat(score)
+          $('.donut-segment').attr('stroke-dasharray', `${score} ${100 - score}`)
+          $('tspan').html(`${score}%`)
+          $('.donut-segment').attr('stroke', get_score_color(score))
+          $('#resultcnt').show()
+          let inputcols = fh_meta.meta.columns.filter((col) => !$('#exclude').val().concat($('#targetcol').val()).includes(col.name))
+          $('#predicttabtemplate').template({COLS: inputcols.map(e => ({name: e.name, type: e.type})), row: fh_meta.formdata[0]})
+        }
+      })
+    }
+    const post_train = function (target_col) {
+      $('#resultcnt').hide()
+      let url = g1.url.parse(window.location)
+      url.hash = ""
+      $.ajax({
+        url: url + "?_action=retrain&target_col=" + encodeURIComponent(target_col) + "&_metric=" + encodeURIComponent($('#metric').val()),
+        method: 'POST',
+        success: get_score
+      })
+    }
     $(document).ready(function() {
+      $('#downloadbtn').hide()
+      $('#resultcnt').hide()
       let url = g1.url.parse(window.location)
       url.search = '_cache'
       $('.formhandler').attr('data-src', url.toString())
-      $('.formhandler').formhandler({
-        pageSize: 5
+      $('.formhandler').on('load', function(obj) {
+        fh_meta = obj
+        let inputcols = obj.meta.columns.filter((col) => !$('#exclude').val().concat($('#targetcol').val()).includes(col.name))
+        $('#predicttabtemplate').template({COLS: inputcols.map(e => ({name: e.name, type: e.type})), row: obj.formdata[0]})
+      }).formhandler({
+        pageSize: 5,
+        export: false
       })
-      url.search = '_download'
-      $('#downloadlink').attr('href', url.toString())
+      url.search = '_cache&_opts'
+      $.getJSON(url.toString()).done(function (e) { opts = e })
+
+      url.search = "_model&_download"
+      $('#downlink').attr('href', url.toString())
+
+      // Select
+      $('.selectpicker').selectpicker({
+        actionsBox: true
+      })
+
+      $('#train').submit(function(e) {
+        e.preventDefault()
+        let fd = new FormData(this)
+        let trainUrl = g1.url.parse(window.location + '?_model')
+        trainUrl.update({class: fd.get('class')})
+        trainUrl.update({exclude: fd.getAll('exclude')})
+        trainUrl.update({cats: fd.getAll('cats')})
+        $.ajax({
+          url: trainUrl.toString(),
+          method: 'PUT',
+          success: function() {
+            post_train(fd.get('target_col'))
+          }
+        })
+      })
+      $('#predictform').submit(function(e) {
+        e.preventDefault()
+        url = g1.url.parse(window.location)
+        url.search = $(this).serialize()
+        $.getJSON(url.toString()).done(function(pred) {
+          let tcol = $('#targetcol').val()
+          $('#predResult').text(`${tcol}: ${pred[0][tcol]}`)
+        })
+      })
+      $('#testform').submit(function(e) {
+        e.preventDefault()
+        let fd = new FormData(this)
+        let testUrl = g1.url.parse(window.location)
+        testUrl.hash = ""
+        testUrl.search = '_action=predict'
+        $.ajax({
+          url: testUrl.toString(),
+          method: 'POST',
+          data: fd,
+          processData: false,
+          contentType: false,
+          success: function(resp) {
+            $('#downloadbtn').show()
+            $('#downloadbtn').attr('href', 'data:text/json;charset=utf-8,' + encodeURIComponent(resp))
+            $('#downloadbtn').attr('download', 'predictions.json')
+            $('#downloadbtn').attr('_target', '_blank')
+          }
+        })
+      })
     })
   </script>
-</body>
+
 </html>
