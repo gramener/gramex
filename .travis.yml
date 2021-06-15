@@ -29,6 +29,7 @@ services:
   - postgresql
   - redis-server
   - elasticsearch
+  - mongodb
 
 # By default, Travis uses ElasticSearch 5.5.0. We want to test with 7.x
 # https://docs.travis-ci.com/user/database-setup/#installing-specific-versions-of-elasticsearch
@@ -69,7 +70,7 @@ install:
   # install.packages("rmarkdown") has installation issues with numpy 1.16.6, 1.17.0, etc but is OK with 1.16.0
   # https://bitbucket.org/rpy2/rpy2/issues/572
   # Don't ask people to change the critical NumPy for the rarely used RMarkdown. Use the conda installer instead
-  - conda install -y -q -c r r-rmarkdown
+  # - conda install -y -q -c r r-rmarkdown
   # Install node.js
   - nvm install 12
   # Set up variables

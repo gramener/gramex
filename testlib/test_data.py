@@ -19,6 +19,7 @@ from . import folder, sales_file
 server = AttrDict(
     mysql=os.environ.get('MYSQL_SERVER', 'localhost'),
     postgres=os.environ.get('POSTGRES_SERVER', 'localhost'),
+    mongodb=os.environ.get('MONGODB_SERVER', 'localhost')
 )
 
 
@@ -394,13 +395,18 @@ class TestFilter(unittest.TestCase):
         self.check_filter_dates('sqlite', url)
 
     def test_mongodb(self):
+        self.db.add('mongodb')
+        url = f'mongodb://{server.mongodb}'
+        db = 'test_filter'
+        dbutils.mongodb_create_db(url, db, **{
+            'sales': self.sales})
         kwargs = {
-            'url': 'plugin:mongodb://localhost:27017',
-            'collection': 'actors',
-            'database': 'test',
+            'url': f'plugin:{url}',
+            'collection': 'sales',
+            'database': db,
         }
-        eq_(len(gramex.data.filter(args={'rating<': ['0.5']}, **kwargs)), 9)
-        eq_(len(gramex.data.filter(args={'rating>': ['0.2']}, **kwargs)), 8)
+        eq_(len(gramex.data.filter(args={'sales<': ['100']}, **kwargs)), b=11)
+        eq_(len(gramex.data.filter(args={'growth>': ['0.1']}, **kwargs)), 5)
 
     @classmethod
     def tearDownClass(cls):
@@ -410,6 +416,8 @@ class TestFilter(unittest.TestCase):
             dbutils.postgres_drop_db(server.postgres, 'test_filter')
         if 'sqlite' in cls.db:
             dbutils.sqlite_drop_db('test_filter.db')
+        if 'mongodb' in cls.db:
+            dbutils.mongodb_drop_db(f'mongodb://{server.mongodb}', 'test_filter')
 
 
 class TestInsert(unittest.TestCase):

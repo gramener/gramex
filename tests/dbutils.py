@@ -89,3 +89,18 @@ def sqlite_drop_db(db):
     path = os.path.join(folder, db)
     if os.path.exists(path):
         os.unlink(path)
+
+
+def mongodb_create_db(url, database, **tables):
+    import pymongo
+    client = pymongo.MongoClient(url)
+    db = client[database]
+    for collection, data in tables.items():
+        db[collection].insert_many(data.to_dict('records'))
+    pass
+
+
+def mongodb_drop_db(url, database):
+    import pymongo
+    client = pymongo.MongoClient(url)
+    client.drop_database(database)
