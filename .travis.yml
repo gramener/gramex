@@ -65,13 +65,14 @@ install:
   # Install conda packages. Keep this in sync with gramex/release.json.conda
   - conda config --set always_yes yes --set changeps1 no
   - conda install line_profiler
-  # rpy2 v2.9.6 is compatible with pandas 1.0, not available on the default channel
+  # Why conda install rpy2?
+  #   rpy2 v2.9.6 is compatible with pandas 1.0, not available on the default channel
+  # Why conda install r-markdown instead of install.packages("rmarkdown")?
+  #   install.packages("rmarkdown") has installation issues with numpy 1.16.6, 1.17.0, etc but is OK with 1.16.0
+  #   https://bitbucket.org/rpy2/rpy2/issues/572
+  #   Don't ask people to change the critical NumPy for the rarely used RMarkdown. Use the conda installer instead
   - conda install -c conda-forge rpy2 r-markdown
-  # install.packages("rmarkdown") has installation issues with numpy 1.16.6, 1.17.0, etc but is OK with 1.16.0
-  # https://bitbucket.org/rpy2/rpy2/issues/572
-  # Don't ask people to change the critical NumPy for the rarely used RMarkdown. Use the conda installer instead
-  # - conda install -y -q -c r r-rmarkdown
-  # Install node.js
+  # Install a reasonably modern version of node.js for UI components to work
   - nvm install 12
   # Set up variables
   - export BRANCH=$TRAVIS_BRANCH
@@ -91,7 +92,7 @@ script:
   - coverage report --show-missing --ignore-errors
 
   # Test specific apps
-  - cd $TRAVIS_BUILD_DIR/gramex/apps/filemanager/ && yarn install && yarn test
+  - cd $TRAVIS_BUILD_DIR/gramex/apps/filemanager/ && yarn install && bash test/test.sh
 
   # TODO: Incorporate later
   # - gramex --listen.port=1234 > gramex.log 2>&1 &
