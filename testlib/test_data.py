@@ -412,10 +412,12 @@ class TestFilter(unittest.TestCase):
         eq_(len(gramex.data.filter(args={'देश': ['भारत','Singapore']}, **kwargs)), 16)
         eq_(len(gramex.data.filter(args={'product!': ['Biscuit']}, **kwargs)), 18)
         eq_(len(gramex.data.filter(args={'sales!': ['26.4', '94.4']}, **kwargs)), 22)
-        eq_(len(gramex.data.filter(args={'sales>~': ['148.2']}, **kwargs)), 11)
+        eq_(len(gramex.data.filter(args={'sales>~': ['200']}, **kwargs)), 8)
         eq_(len(gramex.data.filter(args={'sales<~': ['41.9']}, **kwargs)), 8)
         eq_(len(gramex.data.filter(args={'city~': ['South']}, **kwargs)), 4) 
         eq_(len(gramex.data.filter(args={'city!~': ['Newport']}, **kwargs)), 20)
+
+        
 
         
 
