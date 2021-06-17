@@ -19,6 +19,7 @@ from . import folder, sales_file
 server = AttrDict(
     mysql=os.environ.get('MYSQL_SERVER', 'localhost'),
     postgres=os.environ.get('POSTGRES_SERVER', 'localhost'),
+    mongodb=os.environ.get('MONGODB_SERVER', 'localhost')
 )
 
 
@@ -393,6 +394,42 @@ class TestFilter(unittest.TestCase):
         self.check_filter_db('sqlite', url, na_position='first')
         self.check_filter_dates('sqlite', url)
 
+    def test_mongodb(self):
+        self.db.add('mongodb')
+        url = f'mongodb://{server.mongodb}'
+        db = 'test_filter'
+        dbutils.mongodb_create_db(url, db, **{
+            'sales': self.sales})
+        kwargs = {
+            'url': f'plugin:{url}',
+            'collection': 'sales',
+            'database': db,
+        }
+
+        def size(b=0, **qwargs):
+            eq_(len(gramex.data.filter(**qwargs, **kwargs)), b=b)
+
+        size(args={'sales<': ['100']}, b=11)
+        size(args={'growth>': ['0.1']}, b=5)
+        size(args={'city': ['Coimbatore']}, b=4)
+        size(args={'देश': ['भारत', 'Singapore']}, b=16)
+        size(args={'product!': ['Biscuit']}, b=18)
+        size(args={'sales!': ['26.4', '94.4']}, b=22)
+        size(args={'sales>~': ['200']}, b=8)
+        size(args={'sales<~': ['41.9']}, b=8)
+        size(args={'city~': ['South']}, b=4)
+        size(args={'city!~': ['Newport']}, b=20)
+        size(args={'sales>': ['20'], 'sales<': ['500']}, b=13)
+        size(args={'city~': ['South'], 'product': ['Biscuit']}, b=1)
+        size(args={'sales!': ['']}, b=2)
+
+        size(query={'sales': {'$lt': 100}}, b=11)
+        size(query={'देश': {'$in': ['भारत', 'Singapore']}}, b=16)
+        size(query={'देश': {'$in': ['भारत', '{country}']}}, args={'country': ['Singapore']}, b=16)
+
+        # TODO: NOT NULL
+        # size({'sales': []}, b=22)
+
     @classmethod
     def tearDownClass(cls):
         if 'mysql' in cls.db:
@@ -401,6 +438,8 @@ class TestFilter(unittest.TestCase):
             dbutils.postgres_drop_db(server.postgres, 'test_filter')
         if 'sqlite' in cls.db:
             dbutils.sqlite_drop_db('test_filter.db')
+        if 'mongodb' in cls.db:
+            dbutils.mongodb_drop_db(f'mongodb://{server.mongodb}', 'test_filter')
 
 
 class TestInsert(unittest.TestCase):
