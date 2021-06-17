@@ -1,5 +1,5 @@
 '''
-The file watch service uses `watchdoc <https://pythonhosted.org/watchdog/>`_ to
+The file watch service uses `watchdog <https://pythonhosted.org/watchdog/>`_ to
 monitor files, and run functions when the file changes.
 '''
 

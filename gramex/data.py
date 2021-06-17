@@ -236,7 +236,7 @@ def filter(url, args={}, meta={}, engine=None, ext=None, columns=None,
         method = plugins[dbtype].get('filter', None)
         if not callable(method):
             raise ValueError(f'plugin:{dbtype}.filter not defined')
-        data = method(url=url[7:], controls=controls, args=args, **kwargs)
+        data = method(url=url[7:], controls=controls, args=args, query=query, **kwargs)
         return _filter_frame(data, meta=meta, controls=controls, args=args)
     elif engine == 'sqlalchemy':
         table = kwargs.pop('table', None)
@@ -1401,7 +1401,8 @@ def _logical_conditions(args, meta_cols):
         elif op == '~':
             _conditions.append({col: {"$regex": '|'.join(vals), "$options": 'i'}})
         elif col and op in _op_mapping.keys():
-            convert = int if (meta_cols[col].dtype ==  pd.np.int64) else meta_cols[col].dtype.type
+            # TODO: Improve the numpy to Python type
+            convert = int if (meta_cols[col].dtype == pd.np.int64) else meta_cols[col].dtype.type
             _conditions.append({col: {_op_mapping[op]: convert(val)} for val in vals})
 
     if len(_conditions) > 1:

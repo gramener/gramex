@@ -405,27 +405,30 @@ class TestFilter(unittest.TestCase):
             'collection': 'sales',
             'database': db,
         }
-        eq_(len(gramex.data.filter(args={'sales<': ['100']}, **kwargs)), b=11)
-        eq_(len(gramex.data.filter(args={'growth>': ['0.1']}, **kwargs)), 5)
 
-        eq_(len(gramex.data.filter(args={'city': ['Coimbatore']}, **kwargs)), 4)
-        eq_(len(gramex.data.filter(args={'देश': ['भारत','Singapore']}, **kwargs)), 16)
-        eq_(len(gramex.data.filter(args={'product!': ['Biscuit']}, **kwargs)), 18)
-        eq_(len(gramex.data.filter(args={'sales!': ['26.4', '94.4']}, **kwargs)), 22)
-        eq_(len(gramex.data.filter(args={'sales>~': ['200']}, **kwargs)), 8)
-        eq_(len(gramex.data.filter(args={'sales<~': ['41.9']}, **kwargs)), 8)
-        eq_(len(gramex.data.filter(args={'city~': ['South']}, **kwargs)), 4) 
-        eq_(len(gramex.data.filter(args={'city!~': ['Newport']}, **kwargs)), 20)
+        def size(b=0, **qwargs):
+            eq_(len(gramex.data.filter(**qwargs, **kwargs)), b=b)
 
-        #eq_(len(gramex.data.filter(args={'sales>': ['20'] & 'sales<': ['500']}  **kwargs)), 9)
-        eq_(len(gramex.data.filter(args={'sales>': ['20'], 'sales<' : ['500']}  **kwargs)), 9)
+        size(args={'sales<': ['100']}, b=11)
+        size(args={'growth>': ['0.1']}, b=5)
+        size(args={'city': ['Coimbatore']}, b=4)
+        size(args={'देश': ['भारत', 'Singapore']}, b=16)
+        size(args={'product!': ['Biscuit']}, b=18)
+        size(args={'sales!': ['26.4', '94.4']}, b=22)
+        size(args={'sales>~': ['200']}, b=8)
+        size(args={'sales<~': ['41.9']}, b=8)
+        size(args={'city~': ['South']}, b=4)
+        size(args={'city!~': ['Newport']}, b=20)
+        size(args={'sales>': ['20'], 'sales<': ['500']}, b=13)
+        size(args={'city~': ['South'], 'product': ['Biscuit']}, b=1)
+        size(args={'sales!': ['']}, b=2)
 
-        #eq_(len(gramex.data.filter(args={'city~': ['South'] AND'product':['Biscuit']}, **kwargs)), 4)
-        #eq_(len(gramex.data.filter(args={'city~': ['South'] , 'product':['Biscuit']}, **kwargs)), 4)
+        size(query={'sales': {'$lt': 100}}, b=11)
+        size(query={'देश': {'$in': ['भारत', 'Singapore']}}, b=16)
+        size(query={'देश': {'$in': ['भारत', '{country}']}}, args={'country': ['Singapore']}, b=16)
 
-        
-
-
+        # TODO: NOT NULL
+        # size({'sales': []}, b=22)
 
     @classmethod
     def tearDownClass(cls):
