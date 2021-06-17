@@ -1401,7 +1401,7 @@ def _logical_conditions(args, meta_cols):
         elif op == '~':
             _conditions.append({col: {"$regex": '|'.join(vals), "$options": 'i'}})
         elif col and op in _op_mapping.keys():
-            convert = meta_cols[col].dtype.type
+            convert = int if (meta_cols[col].dtype ==  pd.np.int64) else meta_cols[col].dtype.type
             _conditions.append({col: {_op_mapping[op]: convert(val)} for val in vals})
 
     if len(_conditions) > 1:
