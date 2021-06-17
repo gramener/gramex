@@ -417,7 +417,11 @@ class TestFilter(unittest.TestCase):
         eq_(len(gramex.data.filter(args={'city~': ['South']}, **kwargs)), 4) 
         eq_(len(gramex.data.filter(args={'city!~': ['Newport']}, **kwargs)), 20)
 
-        
+        #eq_(len(gramex.data.filter(args={'sales>': ['20'] & 'sales<': ['500']}  **kwargs)), 9)
+        eq_(len(gramex.data.filter(args={'sales>': ['20'], 'sales<' : ['500']}  **kwargs)), 9)
+
+        #eq_(len(gramex.data.filter(args={'city~': ['South'] AND'product':['Biscuit']}, **kwargs)), 4)
+        #eq_(len(gramex.data.filter(args={'city~': ['South'] , 'product':['Biscuit']}, **kwargs)), 4)
 
         
 
