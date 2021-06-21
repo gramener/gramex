@@ -27,6 +27,7 @@ try:
     from transformers import AutoModelForSequenceClassification, AutoTokenizer
     from transformers import Trainer, TrainingArguments
     from gramex.dl_utils import SentimentDataset
+    TRANSFORMERS_INSTALLED = True
 except ImportError:
     TRANSFORMERS_INSTALLED = False
 
@@ -248,6 +249,7 @@ class BaseMLHandler(FormHandler):
 
 
 class MLHandler(BaseMLHandler):
+    model_backend = ""
 
     @classmethod
     def setup(cls, data=None, model={}, backend='sklearn', config_dir='', **kwargs):
@@ -262,13 +264,11 @@ class MLHandler(BaseMLHandler):
         # elif backend == 'transformers':
         #     NLPHandler.fit(**kwargs)
         if backend != 'sklearn':
+            cls.model_backend = backend
             if not TRANSFORMERS_INSTALLED:
                 raise ImportError('pip install transformers')
             super(MLHandler, cls).setup(**kwargs)
             cls.load_transformer(task, model)
-            cls.get = NLPHandler.get
-            cls.post = NLPHandler.post
-            cls.delete = NLPHandler.delete
         else:
             super(MLHandler, cls).setup(data, model, config_dir, **kwargs)
             # Handle data if provided in the YAML config.
@@ -450,6 +450,10 @@ class MLHandler(BaseMLHandler):
             self.write(json.dumps(params, indent=2))
         elif '_cache' in self.args:
             self.write(self.load_data().to_json(orient='records'))
+        elif 'text' in self.args:
+            text = self.get_arguments('text')
+            result = yield gramex.service.threadpool.submit(self.model, text)
+            self.write(json.dumps(result, indent=2))
         else:
             self._check_model_path()
             if '_download' in self.args:
@@ -513,8 +517,24 @@ class MLHandler(BaseMLHandler):
         action = self.args.pop('_action', 'predict')
         if action not in ACTIONS:
             raise ValueError(f'Action {action} not supported.')
-        res = yield gramex.service.threadpool.submit(getattr(self, f"_{action}"))
-        self.write(json.dumps(res, indent=2, cls=CustomJSONEncoder))
+        if self.model_backend == "transformers":
+            data = self._parse_data(_cache=False)
+            move_to_cpu(self.model)
+            kwargs = {}
+            if action == 'train':
+                kwargs = self._coerce_transformers_opts()
+                kwargs['model_path'] = self.model_path
+                print(self.model_path)
+                args = _train_transformer, self.model, data
+            elif action == 'score':
+                args = _score_transformer, self.model, data
+            elif action == 'predict':
+                args = self.model, data['text'].tolist()
+            res = yield gramex.service.threadpool.submit(*args, **kwargs)
+            self.write(json.dumps(res, indent=2, cls=CustomJSONEncoder))
+        else:
+            res = yield gramex.service.threadpool.submit(getattr(self, f"_{action}"))
+            self.write(json.dumps(res, indent=2, cls=CustomJSONEncoder))      
         super(MLHandler, self).post(*path_args, **path_kwargs)
 
     def get_cached_arg(self, argname):
@@ -565,51 +585,3 @@ class MLHandler(BaseMLHandler):
                 getattr(self, f'_delete_{item}')()
             except AttributeError:
                 raise HTTPError(BAD_REQUEST, f'Cannot delete {item}.')
-
-
-class NLPHandler(BaseMLHandler):
-
-    @classmethod
-    def setup(cls, task, model={}, config_dir='', **kwargs):
-        cls.task = task
-        if not TRANSFORMERS_INSTALLED:
-            raise ImportError('pip install transformers')
-        super(NLPHandler, cls).setup(**kwargs)
-        cls.load_transformer(task, model)
-
-    @coroutine
-    def get(self, *path_args, **path_kwargs):
-        text = self.get_arguments('text')
-        result = yield gramex.service.threadpool.submit(self.model, text)
-        self.write(json.dumps(result, indent=2))
-
-    @coroutine
-    def post(self, *path_args, **path_kwargs):
-        # Data should always be present as [{'text': ..., 'label': ...}, {'text': ...}] arrays
-        data = self._parse_data(_cache=False)
-        action = self.args.get('_action', ['predict'])[0]
-        move_to_cpu(self.model)
-        kwargs = {}
-        if action == 'train':
-            if self.task == "ner":
-                raise HTTPError(BAD_REQUEST,
-                                reason="Action not yet supported for task {self.task}")
-            kwargs = self._coerce_transformers_opts()
-            kwargs['model_path'] = self.model_path
-            args = _train_transformer, self.model, data
-        elif action == 'score':
-            if self.task == "ner":
-                raise HTTPError(BAD_REQUEST,
-                                reason="Action not yet supported for task {self.task}")
-            args = _score_transformer, self.model, data
-        elif self.task == "sentiment-analysis":
-            args = self.model, data['text'].tolist()
-            res = yield gramex.service.threadpool.submit(*args, **kwargs)
-        elif self.task == "ner":
-            res = yield gramex.service.threadpool.submit(lambda x: [self.model(k) for k in x],
-                                                         data['text'].tolist())
-        self.write(json.dumps(res, indent=2, cls=CustomJSONEncoder))
-
-    @coroutine
-    def delete(self, *path_args, **path_kwargs):
-        safe_rmtree(self.model_path, gramexdata=False)
