@@ -524,7 +524,6 @@ class MLHandler(BaseMLHandler):
             if action == 'train':
                 kwargs = self._coerce_transformers_opts()
                 kwargs['model_path'] = self.model_path
-                print(self.model_path)
                 args = _train_transformer, self.model, data
             elif action == 'score':
                 args = _score_transformer, self.model, data
