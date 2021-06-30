@@ -1,0 +1,536 @@
+@import "node_modules/bootstrap5/scss/bootstrap";
+
+// opacity-30 to primary-lighten-8
+$opacity-values: (
+  10: 0.1,
+  20: 0.2,
+  30: 0.3,
+  40: 0.4,
+  50: 0.5,
+  60: 0.6,
+  70: 0.7,
+  80: 0.8,
+  90: 0.9,
+);
+@each $clr, $percent in $opacity-values {
+  .opacity-#{$clr} {
+    opacity: $percent;
+  }
+}
+
+// .modal-start - modal as overlay panel, left and right
+// --------------------------------------------------------------------------
+.modal-start .modal-dialog, .modal-end .modal-dialog {
+  position: fixed;
+  margin: auto;
+  height: 100%;
+}
+.modal-start .modal-dialog {
+  left: 0;
+}
+.modal-end .modal-dialog {
+  right: 0;
+}
+.modal-start .modal-content, .modal-end .modal-content {
+  height: 100%;
+  overflow-y: auto;
+  border: none;
+}
+
+// .cursor-* and .pointer-*
+// --------------------------------------------------------------------------
+.cursor-pointer {
+  cursor: pointer !important;
+}
+.cursor-default {
+  cursor: default !important;
+}
+.pointer-events-none {
+  pointer-events: none !important;
+}
+
+
+// .font-size-h*: font-sizes
+// --------------------------------------------------------------------------
+$font-sizes: (
+  h1: $h1-font-size,
+  h2: $h2-font-size,
+  h3: $h3-font-size,
+  h4: $h4-font-size,
+  h5: $h5-font-size,
+  h6: $h6-font-size
+);
+
+// .btn-xs: extra small button
+// BS5 supports .btn-lg, .btn-sm
+// --------------------------------------------------------------------------
+$input-btn-padding-y-xs:      .125rem !default;
+$input-btn-padding-x-xs:      .25rem !default;
+$input-btn-line-height-xs:    $line-height-sm !default;
+$font-size-xs:                ($font-size-base * .75) !default;
+$btn-border-radius-xs:        0.2rem !default;
+.btn-xs {
+  @include button-size($input-btn-padding-y-xs, $input-btn-padding-x-xs, $font-size-xs, $btn-border-radius-xs);
+}
+
+// Border utilities
+// --------------------------------------------------------------------------
+.border-2 { border-width: $border-width * 2 !important; }
+
+// Border radius utilities
+// --------------------------------------------------------------------------
+// These don't correspond to the BS4 $border-radius-sm, $border-radius-lg sizes
+// because those variations are too small.
+// TODO: add variables for these.
+.no-border-radius, .no-round { border-radius: 0; }
+.border-radius-sm { border-radius: .25rem; }
+.border-radius    { border-radius: .50rem; }
+.border-radius-lg { border-radius: .75rem; }
+.border-radius-xl { border-radius: 1rem; }
+
+// .modal-xl: full screen modal
+// --------------------------------------------------------------------------
+$modal-xl: 95% !default;
+.modal-xl {
+  max-width: $modal-xl;
+}
+
+// .round: full-round border utility
+// --------------------------------------------------------------------------
+$round-radius: 99rem !default;    // Large enough a value for most components
+.round,
+.nav-link.round {
+  border-radius: $round-radius;
+}
+
+// .shadow: shadow utilities
+// --------------------------------------------------------------------------
+$shadow-y: 0.25rem;
+$shadow-blur: 0.5rem;
+$shadow: 0 $shadow-y $shadow-blur rgba($black, .2) !default;
+.shadow {
+  box-shadow: $shadow;
+}
+.shadow-none {
+  box-shadow: none;
+}
+// After testing, consider adding larger and smaller shadows
+// .shadow-lg {}
+// .shadow-sm {}
+
+// .text-shadow adds a standarized text shadow consistent with .shadow
+// --------------------------------------------------------------------------
+.text-shadow {
+  text-shadow: $shadow;
+}
+.text-shadow-none {
+  text-shadow: none;
+}
+
+// .ls letter-spacing utilities
+// --------------------------------------------------------------------------
+$letter-spacing-1: 0.05em !default;
+$letter-spacing-2: 0.10em !default;
+$letter-spacing-3: 0.20em !default;
+$letter-spacing-4: 0.30em !default;
+.ls-1 { letter-spacing: $letter-spacing-1; }
+.ls-2 { letter-spacing: $letter-spacing-2; }
+.ls-3 { letter-spacing: $letter-spacing-3; }
+.ls-4 { letter-spacing: $letter-spacing-4; }
+$letter-spacing-n1: -0.025em !default;
+$letter-spacing-n2: -0.050em !default;
+$letter-spacing-n3: -0.100em !default;
+$letter-spacing-n4: -0.150em !default;
+.ls-n1 { letter-spacing: $letter-spacing-n1; }
+.ls-n2 { letter-spacing: $letter-spacing-n2; }
+.ls-n3 { letter-spacing: $letter-spacing-n3; }
+.ls-n4 { letter-spacing: $letter-spacing-n4; }
+
+// .lh line-height utilities
+// --------------------------------------------------------------------------
+$line-height-1: 1 !default;
+$line-height-2: 1.1 !default;
+$line-height-3: 1.25 !default;
+$line-height-4: 2.0 !default;
+.lh-1 { line-height: $line-height-1; }
+.lh-2 { line-height: $line-height-2; }
+.lh-3 { line-height: $line-height-3; }
+.lh-4 { line-height: $line-height-4; }
+
+
+// Small fonts
+// --------------------------------------------------------------------------
+$small-font-sizes: (
+  sm1: 80%,
+  sm2: 66.66666667%,
+  sm3: 50%,
+  sm4: 33.33333333%,
+  sm5: 25%,
+  sm6: 16.66666667%,
+);
+@each $class, $size in $small-font-sizes {
+  .#{$class} {
+    font-size: $size !important;
+  }
+}
+
+// hover / focus / ... state colors
+// hover-bg-primary
+// --------------------------------------------------------------------------
+@each $state in (hover, focus, active) {
+  @each $color, $value in $theme-colors {
+    .#{$state}-bg-#{$color}:#{$state} { background-color: $value; }
+    .#{$state}-fg-#{$color}:#{$state} { color: $value; }
+  }
+}
+
+
+// .pos-* absolute positioning utilities
+// --------------------------------------------------------------------------
+.pos-tl, .pos-tr, .pos-bl, .pos-br { position: absolute; }
+.pos-tl { top: 0; left: 0; }
+.pos-tr { top: 0; right: 0; }
+.pos-bl { bottom: 0; left: 0; }
+.pos-br { bottom: 0; right: 0; }
+
+.pos-tc { top: 0; left: 50%; transform: translateX(-50%); }
+.pos-bc { bottom: 0; left: 50%; transform: translateX(-50%); }
+.pos-tc, .pos-bc, .pos-cc {
+  position: absolute;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+.pos-cl { top: 50%; left: 0; transform: translateY(-50%); }
+.pos-cc { top: 50%; left: 50%; transform: translate(-50%,-50%); }
+.pos-cr { top: 50%; right: 0; transform: translateY(-50%); }
+.pos-cl, .pos-cc, .pos-cr, .pos-c {
+  position: absolute;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+.pos-t, .pos-r, .pos-b, .pos-l, .pos-c, .pos { position: absolute; }
+.pos-t { top: 0; left: 0; right: 0; }
+.pos-r { top: 0; bottom: 0; right: 0; }
+.pos-b { bottom: 0; left: 0; right: 0; }
+.pos-l { top: 0; bottom: 0; left: 0; }
+.pos-c { left: 0; right: 0; top: 50%; transform: translateY(-50%); }
+.pos { position: absolute; left: 0; right: 0; top: 0; bottom: 0; }
+
+
+// .text-middle vertically centers text in a block element
+// --------------------------------------------------------------------------
+.text-middle { display: flex; flex-direction: column; justify-content: space-between; }
+.text-middle:before { content: ''; }
+.text-middle:after { content: ''; }
+
+// .overlay-* sets a theme background with transparency of 20%
+// --------------------------------------------------------------------------
+.overlay-black { background-color: rgba(0, 0, 0, 0.5); }
+.overlay-white { background-color: rgba(255, 255, 255, 0.75); }
+
+
+
+// .divider
+// --------------------------------------------------------------------------
+$hr-border-width: $border-width !default;
+$hr-border-color: rgba($black, .1) !default;
+.divider {
+  display: flex;
+  white-space: nowrap;
+  align-items: center;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+.divider:empty {
+  border-top: $hr-border-width solid $hr-border-color;
+}
+.divider:not(:empty):before,
+.divider:not(:empty):after {
+  content: '';
+  width: 100%;
+  height: 0;
+  border-top: $hr-border-width solid $hr-border-color;
+}
+.divider:before { margin-right: 1rem; }
+.divider:after { margin-left: 1rem; }
+@each $color, $value in $theme-colors {
+  .border-#{$color}.divider:empty {
+    border-top: $hr-border-width solid $value;
+  }
+  .border-#{$color}.divider.border-#{$color}:before,
+  .border-#{$color}.divider.border-#{$color}:after {
+    border-top: $hr-border-width solid $value;
+  }
+}
+
+// .tail
+// --------------------------------------------------------------------------
+$tail-size: 15px !default;
+[class^='tail-'], [class*=' tail-'] {
+  position: relative;
+}
+[class^='tail-']:after, [class*=' tail-']:after,
+[class^='tail-']:before, [class*=' tail-']:before {
+  position: absolute;
+  border: solid transparent;
+  content: ' ';
+  height: 0;
+  width: 0;
+  border-color: transparent;
+}
+// Tail fill
+[class^='tail-']:after, [class*=' tail-']:after {
+  border-width: $tail-size;
+}
+// Tail border: 1px thickness
+[class^='tail-']:before, [class*=' tail-']:before {
+  border-width: $tail-size + 1px;
+}
+@each $color, $value in map_merge($theme-colors, (white: white)) {
+  .bg-#{$color}.tail-bl:after,
+  .bg-#{$color}.tail-bc:after,
+  .bg-#{$color}.tail-br:after,
+  .border-#{$color}.tail-bl:before,
+  .border-#{$color}.tail-bc:before,
+  .border-#{$color}.tail-br:before  { border-top-color: $value; }
+  .bg-#{$color}.tail-tl:after,
+  .bg-#{$color}.tail-tc:after,
+  .bg-#{$color}.tail-tr:after,
+  .border-#{$color}.tail-tl:before,
+  .border-#{$color}.tail-tc:before,
+  .border-#{$color}.tail-tr:before  { border-bottom-color: $value; }
+  .bg-#{$color}.tail-lt:after,
+  .bg-#{$color}.tail-lc:after,
+  .bg-#{$color}.tail-lb:after       { border-right-color: $value; }
+  .border-#{$color}.tail-lt:before,
+  .border-#{$color}.tail-lc:before,
+  .border-#{$color}.tail-lb:before  { border-left-color: $value; }
+  .bg-#{$color}.tail-rt:after,
+  .bg-#{$color}.tail-rc:after,
+  .bg-#{$color}.tail-rb:after       { border-left-color: $value; }
+  .border-#{$color}.tail-rt:before,
+  .border-#{$color}.tail-rc:before,
+  .border-#{$color}.tail-rb:before  { border-right-color: $value; }
+}
+.tail-bl:before, .tail-bl:after,
+.tail-tl:before, .tail-tl:after { left: $tail-size; }
+.tail-bc:before, .tail-bc:after,
+.tail-tc:before, .tail-tc:after { left: 50%; margin-left: -$tail-size; }
+.tail-br:before, .tail-br:after,
+.tail-tr:before, .tail-tr:after { right: $tail-size; }
+.tail-bl:before, .tail-bl:after,
+.tail-bc:before, .tail-bc:after,
+.tail-br:before, .tail-br:after { top: 100%; }
+.tail-tl:before, .tail-tl:after,
+.tail-tc:before, .tail-tc:after,
+.tail-tr:before, .tail-tr:after { bottom: 100%; }
+.tail-lt:before, .tail-lt:after,
+.tail-lc:before, .tail-lc:after,
+.tail-lb:before, .tail-lb:after { left: -$tail-size * 2; }
+.tail-rt:before, .tail-rt:after,
+.tail-rc:before, .tail-rc:after,
+.tail-rb:before, .tail-rb:after { left: 100%; }
+.tail-lt:before, .tail-lt:after,
+.tail-rt:before, .tail-rt:after { top: $tail-size; }
+.tail-lc:before, .tail-lc:after,
+.tail-rc:before, .tail-rc:after { top: 50%; margin-top: -$tail-size; }
+.tail-lb:before, .tail-lb:after,
+.tail-rb:before, .tail-rb:after { bottom: $tail-size; }
+
+// .arrow-{color}: arrow components
+// --------------------------------------------------------------------------
+$arrow-padding-y: 1rem !default;
+$arrow-height: $font-size-base + $arrow-padding-y;
+@each $color, $value in map_merge($theme-colors, (transparent: transparent)) {
+  .arrow-#{$color} {
+    color: color-yiq($value);
+    background-color: $value;
+    position: relative;
+    height: $arrow-height;
+    line-height: $arrow-height;
+    // Offset left grid gutter width
+    padding-left: $grid-gutter-width;
+    left: $grid-gutter-width / -1;
+  }
+  .arrow-#{$color}:before {
+    content: "";
+    position: absolute;
+    top: 0;
+    border-top: ($arrow-height / 2) solid transparent;
+    border-bottom: ($arrow-height / 2) solid transparent;
+    border-left: ($arrow-height / 2) solid $value;
+    right: $arrow-height / -2;
+  }
+  // When centering, do not offset it. It should look centered WITHIN the component
+  .arrow-#{$color}.text-center {
+    padding-left: 0;
+  }
+  @each $size, $height in $font-sizes {
+    $arrow-height: $height + $arrow-padding-y;
+    #{$size}.arrow-#{$color}, .#{$size}.arrow-#{$color} {
+      height: $arrow-height;
+      line-height: $arrow-height;
+    }
+    #{$size}.arrow-#{$color}:before, .#{$size}.arrow-#{$color}:before {
+      border-top: ($arrow-height / 2) solid transparent;
+      border-bottom: ($arrow-height / 2) solid transparent;
+      border-left: ($arrow-height / 2) solid $value;
+      right: $arrow-height / -2;
+    }
+  }
+  @each $size, $height in $display-font-sizes {
+    $arrow-height: $height + $arrow-padding-y;
+    .#{$size}.arrow-#{$color} {
+      height: $arrow-height;
+      line-height: $arrow-height * 0.8;     // To vertically center lower-case letters
+    }
+    .#{$size}.arrow-#{$color}.text-uppercase {
+      line-height: $arrow-height * 0.9;     // To vertically center upper-case letters
+    }
+    .#{$size}.arrow-#{$color}:before {
+      border-top: ($arrow-height / 2) solid transparent;
+      border-bottom: ($arrow-height / 2) solid transparent;
+      border-left: ($arrow-height / 2) solid $value;
+      right: $arrow-height / -2;
+    }
+  }
+}
+// TODO: define arrow-tail if size is not specified
+@each $size, $height in $font-sizes {
+  $arrow-height: $height + $arrow-padding-y;
+  #{$size}.arrow-tail {
+    padding-right: $arrow-height / 4;
+  }
+  #{$size}.arrow-tail:after, .#{$size}.arrow-tail:after {
+    border-top: ($arrow-height / 2) solid transparent;
+    border-bottom: ($arrow-height / 2) solid transparent;
+    border-left: ($arrow-height / 2) solid #fff;
+    position: absolute;
+    left: 0;
+    top: 0;
+    content: "";
+  }
+}
+.arrow-transparent {
+  color: inherit;
+}
+
+// .bg-*: background utilities
+// --------------------------------------------------------------------------
+// Set up cover and contain utilities
+// DEFAULT: indicates default behaviour, which does not require a utility class
+// USELESS: indicates an infrequently used behaviour
+.bg-cover { background-size: cover !important; }
+.bg-contain { background-size: contain !important; }
+// Typically these are centered. But you can override them.
+.bg-cover, .bg-contain { background-position: center center; }
+
+// DEFAULT: .bg-repeat { background-repeat: repeat !important; }
+.bg-no-repeat { background-repeat: no-repeat !important; }
+.bg-space { background-repeat: space !important; }
+.bg-round { background-repeat: round !important; }
+// DEFAULT: .bg-scroll { background-attachment: scroll !important; }
+.bg-fixed { background-attachment: fixed !important; }
+// USELESS: .bg-local { background-attachment: local !important; }
+
+.bg-tl { background-position: top left !important; }
+.bg-tr { background-position: top right !important; }
+.bg-bl { background-position: bottom left !important; }
+.bg-br { background-position: bottom right !important; }
+.bg-tc { background-position: top !important; }
+.bg-cc, .bg-center { background-position: center center !important; }
+.bg-cl { background-position: left !important; }
+.bg-bc { background-position: bottom !important; }
+.bg-cr { background-position: right !important; }
+
+.bg-parellax {
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-size: cover;
+}
+
+// .gradient-*: gradient utilities
+// --------------------------------------------------------------------------
+$gradient-opacity: 0.5;
+.gradient-tl { background-image: linear-gradient(to top left,     rgba(0,0,0,0), rgba(0,0,0,$gradient-opacity)); }
+.gradient-tc { background-image: linear-gradient(to top,          rgba(0,0,0,0), rgba(0,0,0,$gradient-opacity)); }
+.gradient-tr { background-image: linear-gradient(to top right,    rgba(0,0,0,0), rgba(0,0,0,$gradient-opacity)); }
+.gradient-cl { background-image: linear-gradient(to left,         rgba(0,0,0,0), rgba(0,0,0,$gradient-opacity)); }
+.gradient-cr { background-image: linear-gradient(to right,        rgba(0,0,0,0), rgba(0,0,0,$gradient-opacity)); }
+.gradient-bl { background-image: linear-gradient(to bottom left,  rgba(0,0,0,0), rgba(0,0,0,$gradient-opacity)); }
+.gradient-bc { background-image: linear-gradient(to bottom,       rgba(0,0,0,0), rgba(0,0,0,$gradient-opacity)); }
+.gradient-br { background-image: linear-gradient(to bottom right, rgba(0,0,0,0), rgba(0,0,0,$gradient-opacity)); }
+
+.gradient-tl.gradient-light { background-image: linear-gradient(to top left,     rgba(0,0,0,0), rgba(255,255,255,$gradient-opacity)); }
+.gradient-tc.gradient-light { background-image: linear-gradient(to top,          rgba(0,0,0,0), rgba(255,255,255,$gradient-opacity)); }
+.gradient-tr.gradient-light { background-image: linear-gradient(to top right,    rgba(0,0,0,0), rgba(255,255,255,$gradient-opacity)); }
+.gradient-cl.gradient-light { background-image: linear-gradient(to left,         rgba(0,0,0,0), rgba(255,255,255,$gradient-opacity)); }
+.gradient-cr.gradient-light { background-image: linear-gradient(to right,        rgba(0,0,0,0), rgba(255,255,255,$gradient-opacity)); }
+.gradient-bl.gradient-light { background-image: linear-gradient(to bottom left,  rgba(0,0,0,0), rgba(255,255,255,$gradient-opacity)); }
+.gradient-bc.gradient-light { background-image: linear-gradient(to bottom,       rgba(0,0,0,0), rgba(255,255,255,$gradient-opacity)); }
+.gradient-br.gradient-light { background-image: linear-gradient(to bottom right, rgba(0,0,0,0), rgba(255,255,255,$gradient-opacity)); }
+
+
+// .ripple: material design style ripple
+// --------------------------------------------------------------------------
+// Based on https://github.com/mladenplavsic/css-ripple-effect (MIT license)
+$ripple-duration: .5s;
+$ripple-opacity: .2;
+.ripple {
+  position: relative;
+  overflow: hidden;
+  transform: translate3d(0, 0, 0);
+  &:after {
+    content: "";
+    display: block;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    background-image: radial-gradient(circle, #000 10%, transparent 10%);
+    background-repeat: no-repeat;
+    background-position: 50%;
+    opacity: 0;
+    transform: scale(10, 10);
+    transition: transform $ripple-duration, opacity $ripple-duration * 2;
+  }
+  &:active:after {
+    transform: scale(0, 0);
+    opacity: $ripple-opacity;
+    transition: 0s;
+  }
+}
+
+// .upload: file upload
+// --------------------------------------------------------------------------
+.upload {
+  // Hide the input without removing it from display
+  opacity: 0;
+  overflow: hidden;
+  position: absolute;
+  z-index: -1;
+}
+.upload + label {
+  cursor: pointer;        // Show that label is clickable on hover
+}
+// - When hovered, active and when focused, the component should be styled consistently
+.upload:focus + label,
+.upload:hover + label,
+.upload:active + label {
+  box-shadow: 0 0 0 0.2rem $primary;
+}
+.upload + label * {
+  pointer-events: none;   // Children (e.g. buttons) should not handle their own events
+}
+
+// Other utilities
+// --------------------------------------------------------------------------
+.h-full {
+  min-height: 100vh !important;
+}
+.z-9 {
+  z-index: 9000 !important;
+}
