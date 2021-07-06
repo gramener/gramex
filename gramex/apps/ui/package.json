@@ -1,13 +1,15 @@
 {
   "name": "gramex-apps-ui",
-  "version": "1.69.3",
+  "version": "1.70.0",
   "author": "Bhanu K <bhanu.kamapantula@gramener.com>",
   "license": "MIT",
   "dependencies": {
     "@fortawesome/fontawesome-free": "5",
+    "@vue/cli": "4",
+    "@vue/cli-service-global": "4",
     "bootstrap": "4.6",
-    "bootstrap5": "npm:bootstrap@5.0",
     "bootstrap-select": "1.13",
+    "bootstrap5": "npm:bootstrap@5.0",
     "bootswatch": "4",
     "d3": "4",
     "d3-scale-chromatic": "*",
@@ -35,8 +37,6 @@
     "url-search-params": "npm:@ungap/url-search-params@0.1",
     "vega": "5",
     "vega-embed": "6",
-    "vega-lite": "4",
-    "@vue/cli": "4",
-    "@vue/cli-service-global": "4"
+    "vega-lite": "4"
   }
 }
