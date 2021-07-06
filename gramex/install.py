@@ -3,7 +3,6 @@ Defines command line services to install, setup and run apps.
 '''
 import io
 import os
-import re
 import sys
 import time
 import yaml
@@ -13,7 +12,6 @@ import string
 import shutil
 import datetime
 import requests
-from glob import glob
 from shutilwhich import which
 from pathlib import Path
 from subprocess import Popen, check_output, CalledProcessError      # nosec
@@ -125,12 +123,18 @@ service: |
         gramex service stop
 
 init: |
-    usage: gramex init [--target=DIR]
+    gramex init [--target=DIR]
+    gramex init minimal [--target=DIR]
 
     Initializes a Gramex project at the current or target dir. Specifically, it:
     - Sets up a git repo
-    - Install supporting files for a gramex project
+    - Install supporting files for a Gramex project from a template
+      - "gramex init" sets up dependencies for a local system
+      - "gramex init minimal" sets up minimal dependencies
     - Runs gramex setup (which runs yarn/npm install and other dependencies)
+
+    Options:
+      --target <path>               # Location to install at. Defaults to
 
 mail: |
     gramex mail <key>               # Send mail named <key>
@@ -607,36 +611,17 @@ def _mkdir(path):
         os.makedirs(path)
 
 
-def _copy(source, target, template_data=None):
-    '''
-    Copy single directory or file (as binary) from source to target.
-    Warn if target exists, or source is not file/directory, and exit.
-    If template_data is specified, treat source as a Tornado template.
-    '''
-    if os.path.exists(target):
-        app_log.warning('Skip existing %s', target)
-    elif os.path.isdir(source):
-        _mkdir(target)
-    elif os.path.isfile(source):
-        app_log.info('Copy file %s', source)
-        with io.open(source, 'rb') as handle:
-            result = handle.read()
-            if template_data is not None:
-                from mimetypes import guess_type
-                filetype = guess_type(source)[0] or 'text/unknown'
-                if re.match('text/.*|application/(json|javascript)', filetype):
-                    result = Template(result).generate(**template_data)
-        with io.open(target, 'wb') as handle:
-            handle.write(result)
-    else:
-        app_log.warning('Skip unknown file %s', source)
-
-
 def init(args, kwargs):
     '''Create Gramex scaffolding files.'''
-    if len(args) > 1:
+    if len(args) > 2:
         app_log.error(show_usage('init'))
         return
+    if len(args) == 0:
+        args.append('default')
+    source_dir = os.path.join(variables['GRAMEXPATH'], 'apps', 'init', args[0])
+    if not os.path.exists(source_dir):
+        app_log.error(f'Unknown init template {args[0]}')
+
     kwargs.setdefault('target', os.getcwd())
     app_log.info('Initializing Gramex project at %s', kwargs.target)
     data = {
@@ -666,22 +651,30 @@ def init(args, kwargs):
         except OSError:
             data['git_lfs'] = None
 
-    # Copy all directories & files (as templates)
-    source_dir = os.path.join(variables['GRAMEXPATH'], 'apps', 'init')
+    # Copy all directories & files. Files with '.template.' are treated as templates.
     for root, dirs, files in os.walk(source_dir):
+        relpath = os.path.relpath(root, start=source_dir)
         for name in dirs + files:
             source = os.path.join(root, name)
-            relpath = os.path.relpath(root, start=source_dir)
-            target = os.path.join(kwargs.target, relpath, name.replace('appname', appname))
-            _copy(source, target, template_data=data)
-    for empty_dir in ('img', 'data'):
-        _mkdir(os.path.join(kwargs.target, 'assets', empty_dir))
-    # Copy error files as-is (not as templates)
-    error_dir = os.path.join(kwargs.target, 'error')
-    _mkdir(error_dir)
-    for source in glob(os.path.join(variables['GRAMEXPATH'], 'handlers', '?0?.html')):
-        target = os.path.join(error_dir, os.path.basename(source))
-        _copy(source, target)
+            targetname = name.replace('$appname', appname)
+            template_data = None
+            if '.template.' in name:
+                targetname, template_data = name.replace('.template.', '.'), data
+            target = os.path.join(kwargs.target, relpath, targetname)
+            if os.path.exists(target):
+                app_log.warning('Skip existing %s', target)
+            elif os.path.isdir(source):
+                _mkdir(target)
+            elif os.path.isfile(source):
+                app_log.info('Copy file %s', source)
+                with io.open(source, 'rb') as handle:
+                    result = handle.read()
+                    if template_data is not None:
+                        result = Template(result).generate(**template_data)
+                with io.open(target, 'wb') as handle:
+                    handle.write(result)
+            else:
+                app_log.warning('Skip unknown file %s', source)
 
     run_setup(kwargs.target)
 

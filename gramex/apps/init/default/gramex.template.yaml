@@ -12,7 +12,7 @@ url:
       # See https://learn.gramener.com/guide/auth/#authorization for auth rules
       auth:
         login_url: /$YAMLURL/login/
-      template: true
+      template: ['index.html', 'template*.html']
       headers:
         # Templates may have user-specific content. Cache privately.
         # Keep max-age small (in case we log out & log in as another user.)
