@@ -6,6 +6,7 @@
   "dependencies": {
     "@fortawesome/fontawesome-free": "5",
     "bootstrap": "4.6",
+    "bootstrap5": "npm:bootstrap@5.0",
     "bootstrap-select": "1.13",
     "bootswatch": "4",
     "d3": "4",

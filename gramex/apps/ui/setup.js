@@ -8,7 +8,7 @@ const { execSync } = require('child_process')
 // Create themes
 // --------------------------------------------------------------------
 const theme_dir = mkdir(__dirname, 'theme')
-const themes = ['default']
+const themes = ['default', 'bootstrap5']
 
 // https://bootswatch.com/
 // For each bootswatch/dist/<theme>/ directory, add a theme/bootswatch/<theme>.scss that imports
