@@ -162,9 +162,10 @@ class BaseMixin(object):
             key: session_conf[key] for key in ('domain', 'httponly', 'secure')
             if key in session_conf
         }
-        cls._on_finish_methods.append(cls.save_session)
         cls._on_init_methods.append(cls.override_user)
         cls._on_finish_methods.append(cls.set_last_visited)
+        # Ensure that session is saved AFTER we set last visited
+        cls._on_finish_methods.append(cls.save_session)
 
     @classmethod
     def setup_redirect(cls, redirect):
