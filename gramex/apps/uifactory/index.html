@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    {% set base = '.' %}
+    {% set title = 'Forms Builder' %}
+    <title>{{ title }}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="{{ base }}/style.scss">
+  </head>
+
+  <body>
+    {% include template-navbar.html %}
+    {% import os %}
+    {% from form_builder import FOLDER %}
+    <div class="container">
+      <h4>Start a new form or use a template</h4>
+      <div class="gallery-grid pt-3 pb-5">
+        <div class="card m-0 align-items-center">
+          <div class="create-form m-auto border-0">
+            <a href="{{ base }}/create">
+              <div class="card-body">
+                <i class="fa fa-plus fa-3x"></i>
+              </div>
+            </a>
+          </div>
+        </div>
+        <script type="text/html" class="form-templates">
+          <% _.each(templates, function(_template) { %>
+            <% let _md = _template.metadata %>
+            <div class="card">
+              <a href="form/<%= _template.id %>">
+                <img class="thumbnail mx-auto img-fluid" src="<%= _template.thumbnail || 'https://picsum.photos/160' %>">
+              </a>
+              <div class="card-body border-top d-flex justify-content-between align-items-center">
+                <div class="font-weight-bold text-dark"><%= _md.name %></div>
+                <div class="btn-group dropdown">
+                  <button class="btn btn-link text-muted p-0" data-toggle="dropdown">
+                    <i class="fa fa-ellipsis-v"></i>
+                  </button>
+                  <div class="dropdown-menu">
+                    <button class="dropdown-item py-2 btn-link" type="button" data-formaction="copy" data-formname="<%= _md.name %>" data-form="<%= _template.id %>">
+                      <i class="fa fa-copy mr-3"></i> Make a copy
+                    </button>
+                    <a class="dropdown-item py-2" href="form/<%= _template.id %>" target="_blank">
+                      <i class="fa fa-external-link-square-alt mr-3"></i> Open in new tab
+                    </a>
+                  </div>
+                </div>
+              </div><!-- .card-body -->
+            </div>
+          <% }) %>
+        </script>
+      </div>
+      <div class="divider"></div>
+      <section class="recent-forms-header d-none">
+        <h4>Recent forms</h4>
+        {% if 'create' not in handler.request.uri %}
+          <div class="row">
+            <div class="ml-auto col-auto">
+              <form class="my-2 my-lg-0">
+                <input class="form-control mr-sm-2" type="search" placeholder="Filter forms" data-search="@text" data-target=".form-card" data-hide-class="d-none">
+              </form>
+            </div>
+          </div>
+        {% end %}
+      </section>
+      <div class="gallery-grid pt-3 pb-5">
+        <script type="text/html" class="forms">
+          <% _.each(forms, function(_form) { %>
+            <% let _md = _form.metadata %>
+            <div class="card form-card">
+              <a href="form/<%= _form.id %>">
+                <img class="thumbnail mx-auto img-fluid" src="<%= _form.thumbnail || 'https://picsum.photos/160' %>">
+              </a>
+              <div class="card-body border-top d-flex justify-content-between align-items-center">
+                <div class="font-weight-bold text-dark"><%= _md.name %></div>
+                <div class="btn-group dropdown">
+                  <button class="btn btn-link text-muted p-0" data-toggle="dropdown">
+                    <i class="fa fa-ellipsis-v"></i>
+                  </button>
+                  <div class="dropdown-menu">
+                    <button class="dropdown-item py-2 btn-link" type="button" data-toggle="modal" data-target="#renameModal" data-formaction="rename" data-formname="<%= _md.name %>" data-form="<%= _form.id %>">
+                      <i class="fa fa-text-width mr-3"></i> Rename
+                    </button>
+                    <button class="dropdown-item py-2 btn-link" type="button" data-formaction="copy" data-formname="<%= _md.name %>" data-form="<%= _form.id %>">
+                      <i class="fa fa-copy mr-3"></i> Make a copy
+                    </button>
+                    <button class="dropdown-item py-2 btn-link" type="button" data-formaction="template" data-formname="<%= _md.name %>" data-form="<%= _form.id %>">
+                      <i class="fa fa-copy mr-3"></i> Make template
+                    </button>
+                    <button class="dropdown-item py-2 btn-link" type="button" data-toggle="modal" data-target="#removeModal" data-formaction="remove" data-form="<%= _form.id %>">
+                      <i class="fa fa-trash-alt mr-3"></i> Remove
+                    </button>
+                    <a class="dropdown-item py-2" href="form/<%= _form.id %>" target="_blank">
+                      <i class="fa fa-external-link-square-alt mr-3"></i> Open in new tab
+                    </a>
+                  </div>
+                </div>
+              </div><!-- .card-body -->
+            </div><!-- .card -->
+          <% }) %>
+        </script>
+      </div><!-- .card-deck -->
+    </div><!-- .container-fluid -->
+
+    <div aria-live="polite" aria-atomic="true" class="bg-dark">
+      <div class="toast-container position-fixed">
+        <div class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-delay="3000">
+          <div class="toast-header bg-dark text-white">
+            <strong class="mr-auto">Gramex Forms</strong>
+          </div>
+          <div class="toast-body">
+            Removed form.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {% include 'modals/rename.html' %}
+    {% include 'modals/remove.html' %}
+
+    <script src="{{ base }}/ui/jquery/dist/jquery.min.js"></script>
+    <script src="{{ base }}/ui/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ base }}/ui/lodash/lodash.min.js"></script>
+    <script src="{{ base }}/ui/g1/dist/g1.min.js"></script>
+    <script src="{{ base }}/js/fork-form.js"></script>
+    <script src="{{ base }}/js/index.js"></script>
+    <script>
+      /* env: browser, jquery */
+    </script>
+  </body>
+</html>

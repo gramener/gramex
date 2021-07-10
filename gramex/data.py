@@ -42,6 +42,9 @@ _agg_type = {
 }
 # List of Python types returned by SQLAlchemy
 _numeric_types = {'int', 'long', 'float', 'Decimal'}
+# Data processing plugins.
+# e.g. plugins['mongodb'] = {'filter': fn, 'insert': fn, ...}
+plugins = {}
 
 
 def _transform_fn(transform, transform_kwargs):
@@ -102,7 +105,7 @@ def filter(url, args={}, meta={}, engine=None, ext=None, columns=None,
     :arg dict transform_kwargs: optional keyword arguments to be passed to the
         transform function -- apart from data
     :arg dict kwargs: Additional parameters are passed to
-        :py:func:`gramex.cache.open` or ``sqlalchemy.create_engine``
+        :py:func:`gramex.cache.open`, ``sqlalchemy.create_engine`` or the plugin's filter
     :return: a filtered DataFrame
 
     Remaining kwargs are passed to :py:func:`gramex.cache.open` if ``url`` is a file, or
@@ -225,6 +228,15 @@ def filter(url, args={}, meta={}, engine=None, ext=None, columns=None,
             raise OSError('url: %s not found' % url)
         # Get the full dataset. Then filter it
         data = gramex.cache.open(url, ext, transform=transform, **kwargs)
+        return _filter_frame(data, meta=meta, controls=controls, args=args)
+    elif engine == 'plugin':
+        dbtype = url.split(':')[1]
+        if dbtype not in plugins:
+            raise ValueError(f'Unknown plugin:{dbtype}')
+        method = plugins[dbtype].get('filter', None)
+        if not callable(method):
+            raise ValueError(f'plugin:{dbtype}.filter not defined')
+        data = method(url=url[7:], controls=controls, args=args, query=query, **kwargs)
         return _filter_frame(data, meta=meta, controls=controls, args=args)
     elif engine == 'sqlalchemy':
         table = kwargs.pop('table', None)
@@ -437,6 +449,7 @@ def get_engine(url):
 
     - ``'dataframe'`` if url is a Pandas DataFrame
     - ``'sqlalchemy'`` if url is a sqlalchemy compatible URL
+    - ``'plugin'`` if it is `plugin:<name-of-plugin>`
     - ``protocol`` if url is of the form `protocol://...`
     - ``'dir'`` if it is not a URL but a valid directory
     - ``'file'`` if it is not a URL but a valid file
@@ -445,6 +458,8 @@ def get_engine(url):
     '''
     if isinstance(url, pd.DataFrame):
         return 'dataframe'
+    if url.startswith('plugin:'):
+        return 'plugin'
     try:
         url = sa.engine.url.make_url(url)
     except sa.exc.ArgumentError:
@@ -456,9 +471,9 @@ def get_engine(url):
         return url.drivername
 
 
-def create_engine(url, **kwargs):
+def create_engine(url, create=sa.create_engine, **kwargs):
     '''
-    Cached version of sqlalchemy.create_engine.
+    Cached version of sqlalchemy.create_engine (or any custom engine).
 
     Normally, this is not required. But :py:func:`get_table` caches the engine
     *and* metadata *and* uses autoload=True. This makes sqlalchemy create a new
@@ -466,7 +481,7 @@ def create_engine(url, **kwargs):
     re-use the engine objects within this module.
     '''
     if url not in _ENGINE_CACHE:
-        _ENGINE_CACHE[url] = sa.create_engine(url, **kwargs)
+        _ENGINE_CACHE[url] = create(url, **kwargs)
     return _ENGINE_CACHE[url]
 
 
@@ -481,7 +496,7 @@ def get_table(engine, table, **kwargs):
 
 
 def _pop_controls(args):
-    '''Filter out data controls: sort, limit, offset and column (_c) from args'''
+    '''Filter out data controls: _sort, _limit, _offset, _c (column) and _by from args'''
     return {
         key: args.pop(key)
         for key in ('_sort', '_limit', '_offset', '_c', '_by')
@@ -1155,7 +1170,7 @@ def dirstat(url, timeout=10, **kwargs):
     return pd.DataFrame(result)
 
 
-def filtercols(url, args={}, meta={}, engine=None, table=None, ext=None,
+def filtercols(url, args={}, meta={}, engine=None, ext=None,
                query=None, queryfile=None, transform=None, transform_kwargs={}, **kwargs):
     '''
     Filter data and extract unique values of each column using URL query parameters.
@@ -1173,8 +1188,6 @@ def filtercols(url, args={}, meta={}, engine=None, table=None, ext=None,
     :arg dict meta: this dict is updated with metadata during the course of filtering
     :arg str engine: over-rides the auto-detected engine. Can be 'dataframe', 'file',
         'http', 'https', 'sqlalchemy', 'dir'
-    :arg str table: table name (if url is an SQLAlchemy URL), ``.format``-ed
-        using ``args``.
     :arg str ext: file extension (if url is a file). Defaults to url extension
     :arg str query: optional SQL query to execute (if url is a database),
         ``.format``-ed using ``args`` and supports SQLAlchemy SQL parameters.
@@ -1262,7 +1275,7 @@ def filtercols(url, args={}, meta={}, engine=None, table=None, ext=None,
         col_args['_by'] = [col]
         col_args['_c'] = []
         col_args['_limit'] = [limit]
-        result[col] = gramex.data.filter(url, table=table, args=col_args, **kwargs)
+        result[col] = gramex.data.filter(url, args=col_args, **kwargs)
     return result
 
 
@@ -1342,3 +1355,125 @@ def alter(url: str, table: str, columns: dict = None, **kwargs):
         # Refresh table metadata after altering
         get_table(engine, table, extend_existing=True)
     return engine
+
+
+# NoSQL Operations
+# ----------------------------------------
+
+def _type_conversion(param_list, operations=None):
+    try:
+        converted = []
+        if operations == '<' or operations == '<=':
+            converted = min(float(v) for v in param_list)
+        if operations == '>' or operations == '>=':
+            converted = max(float(v) for v in param_list)
+        return converted
+    except ValueError:
+        raise ValueError('Value is not integer: %r' % param_list)
+
+
+# x>3&x>4&x>5 == {"$or": [{x: {$gt: 3}}, {x: {$gt: 4}}, {x: $gt: 5}]}
+# def _logical_conditions(args, meta_cols):
+#     conditions = []
+#     for key, vals in args.items():
+#         col, agg, op = _filter_col(key, meta_cols)
+#         convert = meta_cols[col].dtype.type
+#         conditions.append({col: {op: convert(val)} for val in vals})
+#     return {'$and': conditions}
+
+
+def _logical_conditions(args, meta_cols):
+    _op_mapping = {
+        '<': '$lt',
+        '<~': '$lte',
+        '>': '$gt',
+        '>~': '$gte',
+        '': '$in',
+        '!': '$nin'
+    }
+    _conditions = []
+    for key, vals in args.items():
+        col, agg, op = _filter_col(key, meta_cols)
+        if op in ['', '!']:
+            _conditions.append({col: {_op_mapping[op]: vals}})
+        elif op == '!~':
+            _conditions.append({col: {"$not": {"$regex": '|'.join(vals), "$options": 'i'}}})
+        elif op == '~':
+            _conditions.append({col: {"$regex": '|'.join(vals), "$options": 'i'}})
+        elif col and op in _op_mapping.keys():
+            # TODO: Improve the numpy to Python type
+            convert = int if (meta_cols[col].dtype == pd.np.int64) else meta_cols[col].dtype.type
+            _conditions.append({col: {_op_mapping[op]: convert(val)} for val in vals})
+
+    if len(_conditions) > 1:
+        return {'$and': _conditions}
+    if _conditions:
+        return _conditions[0]
+    return {}
+
+
+def _controls_default(table, query=None, controls=None, meta_cols=None):
+    '''Get the controls like, _c, _sort, _offset, _limit'''
+
+    if '_c' in controls:
+        _projection = dict()
+        # _projection = {'field': 1, 'field1': -1}
+        for c in controls['_c']:
+            _projection[c] = 1
+        cursor = table.find(query, _projection)
+    else:
+        cursor = table.find(query)
+
+    if '_sort' in controls:
+        sort, ignore_sorts = _filter_sort_columns(controls['_sort'], meta_cols)
+        _sort = {key: (+1 if val else -1) for key, val in dict(sort).items()}
+
+        # sort, [('field1', 1), ('field2', -1)]
+        cursor = cursor.sort(list(_sort.items()))
+
+    if '_offset' in controls:
+        cursor = cursor.skip(int(controls['_offset'][0]))
+
+    if '_limit' in controls:
+        cursor = cursor.limit(int(controls['_limit'][0]))
+
+    return cursor
+
+
+def _filter_mongodb(url, controls, args, database=None, collection=None, query=None, **kwargs):
+    '''
+        TODO: Document function and usage
+    '''
+    import pymongo
+    create_kwargs = {key: val for key, val in kwargs.items() if key in
+                     {'port', 'document_class', 'tz_aware', 'connect'}}
+
+    # Create MongoClient
+    client = create_engine(url, create=pymongo.MongoClient, **create_kwargs)
+
+    # TODO: check if database and collection exists
+
+    # client.list_databases()
+    # db.list_collection_names()
+
+    # Get Database
+    db = client[database]
+    # Get Collection
+    table = db[collection]
+
+    # TODO: Get metadata of requested document
+    meta_cols = pd.DataFrame(list(table.find().limit(100)))
+
+    if query:
+        _qbuilder = query
+    else:
+        _qbuilder = _logical_conditions(args, meta_cols)
+    cursor = _controls_default(table, query=_qbuilder, controls=controls, meta_cols=meta_cols)
+    data = pd.DataFrame(list(cursor))
+
+    return data
+
+
+plugins['mongodb'] = {
+    'filter': _filter_mongodb
+}

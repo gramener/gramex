@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+  {% import json %}
+  {% import gramex.data %}
+  {% from gramex.config import variables as var %}
+  {% import urllib.parse %}
+  {% set base = '..' %}
+  <!-- path_args = ['form', 'id'] or ['view', 'id'] -->
+  {% set form_id = handler.path_args[1] %}
+  {% set view = 'form' %}
+  {% set metadata = json.loads(gramex.data.filter(url=var.FORMS_URL, table=var.FORMS_TABLE, args={'id': [form_id]})['metadata'].values[0]) %}
+  {% set is_template = True if 'template' in metadata else False %}
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <title>View a form - Form Builder</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="{{ base }}/style.scss?body-bg={{ urllib.parse.quote(metadata['bg'] if 'bg' in metadata else '#ffffff') }}">
+    <link rel="stylesheet"
+      href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.7.1/styles/default.min.css">
+  </head>
+  {% set title = 'Forms' %}
+  <body>
+    {% if handler.path_args[0] == 'form' %}
+      {% include 'template-navbar-view-form.html' %}
+      <div class="container my-3">
+        <ul class="nav nav-tabs" id="formTab" role="tablist">
+          <li class="nav-item" role="presentation">
+            <a class="nav-link active" id="questions-tab" data-toggle="tab" href="#questions" role="tab" aria-controls="questions" aria-selected="true">Questions</a>
+          </li>
+          <li class="nav-item" role="presentation">
+            <a class="nav-link" id="responses-tab" data-toggle="tab" href="#responses" role="tab" aria-controls="responses" aria-selected="false">Responses</a>
+          </li>
+        </ul>
+        <div class="tab-content" id="formTabContent">
+          <div class="tab-pane fade show active" id="questions" role="tabpanel" aria-labelledby="questions-tab">
+            <h3 class="mt-3">{{ metadata['name'] }}</h3>
+            <p class="text-muted"> {{ metadata['description'] }}</p>
+            <div class="my-5" id="view-form">
+              <form></form>
+            </div>
+            <h2 class="text-muted">You are currently previewing the form. Click <em>View Form</em> to submit entries.</h2>
+          </div>
+          <div class="tab-pane fade w-100" id="responses" role="tabpanel" aria-labelledby="responses-tab">
+            <div class="formhandler pt-3 mt-3" data-export="false" data-count="true" data-page-size="5"></div>
+          </div>
+        </div>
+        <p class="my-3 py-3">
+          {% if not is_template %}
+            <a class="btn btn-success" href="{{ base }}/create?id={{ form_id }}">Edit</a>
+          {% end %}
+          <a class="btn btn-primary" href="{{ base }}/view/{{ form_id }}">View form</a>
+        </p>
+        {% include 'modals/themes.html' %}
+        {% include 'modals/embed.html' %}
+        {% include 'modals/remove.html' %}
+
+      {% else %}
+      <div class="container my-3">
+        <h3 class="mt-3"> {{ metadata['name'] }}</h3>
+        <p class="text-muted"> {{ metadata['description'] }}</p>
+        <div class="my-5" id="view-form">
+          <form class="analytics"></form>
+        </div>
+        <div class="post-submission py-2 d-none">
+          <p class="my-2">
+            Thanks for submitting your inputs.
+          </p>
+          <a href="{{ base }}/form/{{ form_id }}">View responses</a> or <a href="{{ base }}/view/{{ form_id }}">submit another response</a>.
+        </div>
+      </div>
+      {% end %}
+    </div>
+    {% include 'toast.html' %}
+
+    <script src="{{ base }}/ui/jquery/dist/jquery.min.js"></script>
+    <script src="{{ base }}/ui/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ base }}/ui/lodash/lodash.min.js"></script>
+    <script src="{{ base }}/ui/g1/dist/g1.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.7.1/highlight.min.js"></script>
+    <script src="{{ base }}/node_modules/clipboard/dist/clipboard.min.js"></script>
+
+    <script src="{{ base }}/js/fields.js"></script>
+    <script src="{{ base }}/js/utils.js"></script>
+    <script src="{{ base }}/node_modules/uifactory/uifactory.js"></script>
+    <script src="{{ base }}/snippets/button/bs4-button.js"></script>
+    <script src="{{ base }}/snippets/checkbox/bs4-checkbox.js"></script>
+    <script src="{{ base }}/snippets/email/bs4-email.js"></script>
+    <script src="{{ base }}/snippets/hidden/bs4-hidden.js"></script>
+    <script src="{{ base }}/snippets/html/bs4-html.js"></script>
+    <script src="{{ base }}/snippets/number/bs4-number.js"></script>
+    <script src="{{ base }}/snippets/password/bs4-password.js"></script>
+    <script src="{{ base }}/snippets/radio/bs4-radio.js"></script>
+    <script src="{{ base }}/snippets/range/bs4-range.js"></script>
+    <script src="{{ base }}/snippets/select/bs4-select.js"></script>
+    <script src="{{ base }}/snippets/multiselect/bs4-multiselect.js"></script>
+    <script src="{{ base }}/snippets/text/bs4-text.js"></script>
+    <script src="{{ base }}/snippets/textarea/bs4-textarea.js"></script>
+    <script>
+      /* exported hljs, form_id, this_view */
+      const form_id = '{% raw form_id %}'
+      const this_view = '{% raw handler.path_args[0] %}'
+      let metadata = JSON.parse('{% raw json.dumps(metadata).replace("'", r"\'") %}')
+
+      function update_bg(bg) {
+        metadata['bg'] = bg
+        $('#themesModal').modal('hide');
+        $.ajax('../publish', {
+          method: 'PUT',
+          data: {metadata: JSON.stringify(metadata), id: form_id},
+          success: function() {
+            $('.toast-body').html('Updated background color!')
+            $('.toast').toast('show')
+            $('body').css('backgroundColor', bg)
+          }
+        })
+      }
+
+      if(this_view === 'form') {
+        fetch(`../analytics/?db=${form_id}`)
+          .then(response => response.json())
+          .then(function(response) {
+            _.each(response['each_form'], function(form) {
+              for(let key in form) {
+                form[key] = decodeURIComponent(form[key]);
+              }
+            })
+            $('.formhandler').formhandler({
+              data: response['each_form'],
+              columns: [{name: "*" }, { name: "response", hide: true}]
+            })
+          })
+
+        $(window).on('#?bg', function(e, bg) { update_bg(bg) })
+          .urlchange()
+      }
+    </script>
+    <script src="{{ base }}/js/fork-form.js"></script>
+    <script src="{{ base }}/js/viewform.js"></script>
+  </body>
+</html>

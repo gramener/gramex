@@ -306,6 +306,7 @@ url:
             default_filename: index.html    #   default filename
             index: true                     #   display the index
             sass: ['*.scss', '*.sass']      # Handle SASS files
+            vue: ['*.vue']                  # Handle Vue files
             template:                       # Handle template files
               - '*.template.html'
               - '*.tmpl.html'

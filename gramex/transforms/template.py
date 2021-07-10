@@ -55,3 +55,14 @@ def scss(content, handler):
 
 # SCSS files and SASS files are compiled exactly the same way
 sass = scss
+
+
+@tornado.gen.coroutine
+def vue(content, handler):
+    '''
+    Renders a Vue file as JS web component via @vue/cli.
+    Ignore the content provided. vue needs the file actually located at handler.path.
+    '''
+    from gramex.apps.ui import vue
+    result = yield vue(handler, handler.path)
+    return result.decode('utf-8')

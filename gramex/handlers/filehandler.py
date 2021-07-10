@@ -121,7 +121,7 @@ class FileHandler(BaseHandler):
         # Convert template: '*.html' into transform: {'*.html': {function: template}}
         # Convert sass: ['*.scss', '*.sass'] into transform: {'*.scss': {function: sass}}
         # Do this before BaseHandler setup so that it can invoke the transforms required
-        for key in ('template', 'sass', 'scss'):
+        for key in ('template', 'sass', 'scss', 'vue'):
             val = kwargs.pop(key, None)
             if val:
                 # template/sass: true is the same as template: '*'

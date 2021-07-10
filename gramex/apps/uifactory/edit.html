@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+  {% set base = '..' %}
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl" crossorigin="anonymous">
+</head>
+<body>
+  <p class="text-right">
+    <a href="/">UI Factory home</a>
+  </p>
+  <component-editor
+  name="g-repeat"
+  template="<style>
+g-repeat {
+  display: block;
+}
+</style>
+<% for (var j=0; j < +value; j++) { %>
+  <%= this.innerHTML %>
+<% } %>
+<script>
+  document.body.addEventListener('render', function(e) {
+  })
+</script>"
+
+  usage="<link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css'>
+<g-repeat value='8'>
+  <i class='fa fa-star'></i>
+</g-repeat>"
+  >
+  </component-editor>
+  <script>
+  /* exported on */
+
+  const DOCUMENT_NODE_TYPE = 9;
+  const on = function(event, selector, fn, {matchTarget, once} = {}) {
+    document.body.addEventListener(event, function(e) {
+      let isChild = false
+      //is this the element itself?
+      if (e.target.matches(selector)) {
+        isChild = true
+      }
+      if(!matchTarget) {
+        // https://github.com/zenorocha/delegate/blob/master/src/closest.js
+        let element = e.target
+        while (element && element.nodeType !== DOCUMENT_NODE_TYPE) {
+          if (typeof element.matches === 'function' &&
+              element.matches(selector)) {
+              isChild = true
+          }
+          element = element.parentNode;
+        }
+      }
+      if(isChild) {
+        fn(e)
+      }
+    }, once)
+  }
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/js/bootstrap.bundle.min.js" integrity="sha384-b5kHyXgcpbZJO/tY9Ul7kGkf1S0CWuKcCD38l8YkeH8z8QjE0GmW1gYU5S9FOnJ0" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  <script src="{{ base }}/node_modules/lodash/lodash.min.js"></script>
+  <script src="{{ base }}/node_modules/uifactory/uifactory.js"></script>
+  <script src="{{ base }}/js/fields.js"></script>
+  <script src="{{ base }}/snippets/text/g-text.js"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.23.0/min/vs/loader.js"></script>
+  <script src="{{ base }}/js/edit/monaco-editor.js"></script>
+  <script src="{{ base }}/js/edit/resizable-accordion.js"></script>
+  <script src="{{ base }}/js/edit/component-editor.js"></script>
+  <script src="{{ base }}/snippets/select/g-select.js"></script>
+</body>
+</html>

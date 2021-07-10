@@ -412,6 +412,22 @@ class TestPPTGen(TestCase):
             eq_(shape.height, pptx.util.Inches(3))
             self.assertAlmostEqual(shape.width / shape.height, aspect, places=5)
 
+    def test_image_clone_copy(self, slides=7):
+        repeat = (0, 1, 2)
+        prs = pptgen(source=self.input, rules=[
+            {'copy-slide': repeat, 'slide-number': slides, 'Group 1': {'Picture': {
+                'clone-shape': repeat,
+                'image': self.image,
+            }}}])
+        for index in repeat:
+            slide = prs.slides[slides + index - 1]
+            group = [shape for shape in slide.shapes if shape.name == 'Group 1'][0]
+            pics = [shape for shape in group.shapes if shape.name == 'Picture']
+            eq_(len(pics), len(repeat))
+            for pic in pics[1:]:
+                pic.width == pics[0].width
+                pic.height == pics[0].height
+
     def test_fill_stroke(self, slides=3):
         colors = (
             ('red', {'rgb': (255, 0, 0)}),

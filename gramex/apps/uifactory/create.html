@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+
+{% set base = '.' %}
+{% set active_form_id = handler.get_argument('id', '') %}
+{% set title = 'Forms Builder - Update a form' if active_form_id else 'Forms Builder - Create a form' %}
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <title>{{ title }}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="{{ base }}/node_modules/jqueryui/jquery-ui.css">
+  <link rel="stylesheet" href="{{ base }}/node_modules/bootstrap-icons/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="{{ base }}/style.scss">
+</head>
+<body>
+  {% import os %}
+  {% import json %}
+  {% from gramex import variables %}
+  {% from form_builder import FOLDER %}
+  {% from gramex.data import filter as gfilter %}
+  {% from gramex.config import variables as var %}
+
+  {% set form_details = gfilter(url=var.FORMS_URL, table=var.FORMS_TABLE, args={'id': [active_form_id]}) %}
+  {% set form_details = form_details %}
+  {% set _md = json.loads(form_details['metadata'].iloc[0]) if active_form_id else '' %}
+  {% set _config = form_details['config'].iloc[0] if active_form_id else '' %}
+  {% set _config = json.loads(_config) if active_form_id else {} %}
+  {% set _config.pop('undefined') if _config and 'undefined' in _config else '' %}
+
+  {% include template-navbar.html %}
+  <div class="container py-4">
+    <div class="form-details step-1 my-3 py-3 pt-2">
+      <form class="needs-validation" novalidate>
+        <div class="row">
+          <input type="text" class="col-12 h2 my-2 cursor-pointer underline" id="form-name" placeholder="Untitled form" value="{{_md['name'] if active_form_id else '' }}" autofocus>
+          <input type="text" class="col-12 my-2 cursor-pointer underline" id="form-description" placeholder="Form description" value="{{_md['description'] if active_form_id else '' }}" >
+        </div>
+      </form>
+    </div>
+    <div class="divider"></div>
+
+    <div class="card-deck step-2">
+      <div class="card border-0">
+        <div class="card-header bg-white d-flex justify-content-between">
+          <h5 class="card-title my-0">Add fields</h5>
+        </div><!-- .card-header -->
+        <div class="card-body">
+          <div id="user-form">
+            <form class="user-form sortable mt-3 w-100">
+            </form>
+            <div class="divider"></div>
+            <button class="btn btn-primary mb-4" data-toggle="modal" data-target="#addFieldModal" title="Add a field">
+              <i class="fa fa-plus"></i>
+            </button>
+          </div>
+        </div><!-- .card-body -->
+      </div><!-- .card -->
+      <div class="card border-0">
+        <div class="card-header bg-white d-flex justify-content-between">
+          <h5 class="card-title my-0 w-100 edit-properties-title d-none">Edit properties</h5>
+        </div><!-- .card-header -->
+        <div class="card-body edit-properties-container">
+          <div class="edit-properties"></div>
+        </div>
+      </div>
+    </div><!-- .card-deck -->
+  </div><!-- .container-fluid -->
+  {% include 'toast.html' %}
+  {% include 'modals/add-field.html' %}
+  <template class="field-actions" src="field-actions.html"></template>
+
+  <div class="floating-button m-2 p-2 position-fixed">
+    <div class="btn-group-vertical" role="group" aria-label="Basic example">
+      <button type="button" class="btn btn-primary rounded my-1 {{ '' if active_form_id else 'd-none' }}" id="publish-form">Save</button>
+      {% if active_form_id %}
+      <a href="form/{{ active_form_id }}" target="_blank" class="btn btn-info rounded my-1">Preview
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-up-right-square-fill" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+          <path fill-rule="evenodd" d="M2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2zm3.879 10.828a.5.5 0 1 1-.707-.707l4.096-4.096H6.5a.5.5 0 0 1 0-1h3.975a.5.5 0 0 1 .5.5V9.5a.5.5 0 0 1-1 0V6.732l-4.096 4.096z"/>
+        </svg>
+      </a>
+      <a href="view/{{ active_form_id }}" target="_blank" class="btn btn-success rounded my-1">View
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-up-right-square-fill" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+          <path fill-rule="evenodd" d="M2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2zm3.879 10.828a.5.5 0 1 1-.707-.707l4.096-4.096H6.5a.5.5 0 0 1 0-1h3.975a.5.5 0 0 1 .5.5V9.5a.5.5 0 0 1-1 0V6.732l-4.096 4.096z"/>
+        </svg>
+      </a>
+      {% end %}
+    </div>
+  </div>
+
+  <script src="{{ base }}/ui/jquery/dist/jquery.min.js"></script>
+  <script src="{{ base }}/node_modules/jqueryui/jquery-ui.min.js"></script>
+  <script src="{{ base }}/ui/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script src="{{ base }}/ui/lodash/lodash.min.js"></script>
+  <script src="{{ base }}/ui/g1/dist/g1.min.js"></script>
+  <script>
+    /* exported user, user_name, active_form_id, _user_form_config */
+    let user = '{% raw handler.current_user.get("id") if handler.current_user else '' %}'
+    let active_form_id = '{{ active_form_id }}'
+    let _user_form_config = active_form_id ? JSON.parse('{% raw json.dumps(_config).replace("'", r"\'").replace('"', r'\"') %}') : ''
+    $('.sortable').sortable({
+      start: function() {
+        $('.actions').addClass('d-none')
+      }, stop: function(e, ui) {
+        $('.actions').insertBefore(ui.item[0])
+        $('.actions').removeClass('d-none')
+      }
+    })
+  </script>
+
+  <script src="{{ base }}/js/fields.js"></script>
+  <script src="{{ base }}/js/utils.js"></script>
+  <script src="{{ base }}/node_modules/uifactory/uifactory.js"></script>
+  <script src="{{ base }}/snippets/button/bs4-button.js"></script>
+  <script src="{{ base }}/snippets/checkbox/bs4-checkbox.js"></script>
+  <script src="{{ base }}/snippets/email/bs4-email.js"></script>
+  <script src="{{ base }}/snippets/hidden/bs4-hidden.js"></script>
+  <script src="{{ base }}/snippets/html/bs4-html.js"></script>
+  <script src="{{ base }}/snippets/number/bs4-number.js"></script>
+  <script src="{{ base }}/snippets/password/bs4-password.js"></script>
+  <script src="{{ base }}/snippets/radio/bs4-radio.js"></script>
+  <script src="{{ base }}/snippets/range/bs4-range.js"></script>
+  <script src="{{ base }}/snippets/select/bs4-select.js"></script>
+  <script src="{{ base }}/snippets/multiselect/bs4-multiselect.js"></script>
+  <script src="{{ base }}/snippets/text/bs4-text.js"></script>
+  <script src="{{ base }}/snippets/textarea/bs4-textarea.js"></script>
+  <script src="{{ base }}/js/script.js"></script>
+</body>
+</html>

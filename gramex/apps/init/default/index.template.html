@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <title>{{ appname }}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="style.scss">
+</head>
+
+<body>
+  {%! set base = '.' %}
+  {%! include template-navbar.html %}
+  <!-- TODO: Filter bars -->
+  <div class="container py-4">
+    <div class="card-deck">
+      <div class="card">
+        <div class="card-header bg-white d-flex justify-content-between">
+          <h5 class="card-title my-0">Chart title</h5>
+          <div class="d-flex align-items-center small">
+            <span class="text-muted ml-2">Legend:</span>
+            <span class="ml-2"><i class="fas fa-circle text-success"></i> Good</span>
+            <span class="ml-2"><i class="fas fa-circle text-danger"></i> Bad</span>
+          </div>
+        </div><!-- .card-header -->
+        <div class="card-body">
+          <img class="img-fluid" src="https://learn.gramener.com/guide/formhandler/chart?_format=barchart" alt="" >
+        </div><!-- .card-body -->
+      </div><!-- .card -->
+      <div class="card">
+        <div class="card-header bg-white d-flex justify-content-between">
+          <h5 class="card-title my-0">Chart title</h5>
+          <div class="d-flex align-items-center small">
+            <span class="text-muted ml-2">Legend:</span>
+            <span class="ml-2"><i class="fas fa-circle text-success"></i> Good</span>
+            <span class="ml-2"><i class="fas fa-circle text-danger"></i> Bad</span>
+          </div>
+        </div><!-- .card-header -->
+        <div class="card-body">
+          <img class="img-fluid" src="https://learn.gramener.com/guide/formhandler/categorical?chart=jointplot&xcol=c1&ycol=c3&width=400&height=300" alt="" >
+        </div><!-- .card-body -->
+      </div><!-- .card -->
+    </div><!-- .card -->
+  </div><!-- .container-fluid -->
+
+  <script src="ui/jquery/dist/jquery.min.js"></script>
+  <script src="ui/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- Commonly used libraries. See https://learn.gramener.com/guide/uicomponents/
+  <script src="ui/d3v5/dist/d3.min.js"></script>
+  <script src="ui/lodash/lodash.min.js"></script>
+  <script src="ui/morphdom/dist/morphdom-umd.min.js"></script>
+  <script src="ui/g1/dist/g1.min.js"></script>
+  <script src="ui/dayjs/dayjs.min.js"></script>
+  <script src="ui/daterangepicker/daterangepicker.js"></script>
+  <script src="ui/leaflet/dist/leaflet.js"></script>
+  <script src="ui/topojson/dist/topojson.min.js"></script>
+  -->
+</body>
+
+</html>

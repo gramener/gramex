@@ -1,9 +1,9 @@
 # Create test/tape.js dynamically. It's not committed
-browserify -s tape -r tape -o test/tape.js
+node_modules/.bin/browserify -s tape -r tape -o test/tape.js
 
 cd test/
 rm -rf gramex.log drive*
-gramex --listen.port=9999 > gramex.log 2>&1 &
+gramex --listen.port=9999 2>&1 | tee gramex.log &
 GRAMEX_PID=$!
 
 # Kill gramex when process exits
@@ -23,7 +23,14 @@ case "$(uname -s)" in
 esac
 
 # Wait until Gramex starts at port 9999
-until grep 9999 gramex.log; do sleep 0.2; done
+for i in {0..100}
+do
+  if [[ $(grep 9999 gramex.log) ]]; then
+    break
+  fi
+  sleep 0.2
+  echo -n "."
+done
 
 # Run test cases
-node puppet.js | tap-merge | faucet
+node puppet.js | ../node_modules/.bin/tap-merge | ../node_modules/.bin/faucet

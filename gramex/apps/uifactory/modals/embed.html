@@ -1,0 +1,90 @@
+<!-- Send Modal -->
+<div class="modal fade" id="sendModal" tabindex="-1" aria-labelledby="sendModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content border-radius">
+      <div class="modal-header">
+        <h5 class="modal-title" id="sendModalLabel">Embed form</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        via
+        <ul class="nav nav-tabs mt-4" id="send-options-tab" role="tablist">
+          <li class="nav-item" role="presentation">
+            <a class="nav-link active" id="send-code-tab" href="#send-code" data-toggle="tab" role="tab" aria-controls="" aria-selected="true">
+              <i class="fa fa-code"></i>
+            </a>
+          </li>
+          <li class="nav-item" role="presentation">
+            <a class="nav-link" id="send-link-tab" href="#send-link" data-toggle="tab" role="tab" aria-controls="" aria-selected="true">
+              <i class="fa fa-link"></i>
+            </a>
+          </li>
+        </ul>
+        {% set _path = handler.request.uri.split('/form/')[0] %}
+        {% set _url = handler.request.protocol + '://' + handler.request.host + _path %}
+        {% set view_url = _url + "/embed/" + form_id %}
+        <div class="tab-content" id="sendModalContent">
+          <div class="tab-pane fade show active" id="send-code" role="tabpanel" aria-labelledby="send-code-tab">
+            <h3 class="mt-3">Embed form</h3>
+            <div class="divider"></div>
+            <p>
+              You can use any of the methods below to render the form. Note the file extensions in each of the approaches below.
+            </p>
+            <div class="py-3">
+              <h4>Using JavaScript</h4>
+              <p>
+                Below code renders the form in place.
+              </p>
+              <pre>
+                <code class="language-html">&lt;link rel="stylesheet" href="{{ _url }}/ui/bootstrap/dist/css/bootstrap.min.css"&gt;
+&lt;script src="{{ _url }}/ui/jquery/dist/jquery.min.js"&gt;&lt;/script&gt;
+&lt;div class="container"&gt;
+&nbsp;&nbsp;&lt;form&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;script src="{% raw view_url + '.js' %}"&gt;&lt;/script&gt;
+&nbsp;&nbsp;&lt;/form&gt;
+&lt;/div&gt;</code></pre>
+              <h4>Using HTML</h4>
+              <p>
+                Below code renders the form in <code>.form-container</code> element.
+              </p>
+              <pre>
+                <code class="language-html">&lt;link rel="stylesheet" href="{{ _url }}/ui/bootstrap/dist/css/bootstrap.min.css"&gt;
+&lt;div class="container"&gt;
+&nbsp;&nbsp;&lt;form&gt;&lt;/form&gt;
+&lt;/div&gt;
+&lt;script src="{{ _url }}/ui/jquery/dist/jquery.min.js"&gt;&lt;/script&gt;
+&lt;script&gt;
+&nbsp;&nbsp;$('.container form').load("{% raw view_url + '.html' %}")
+&lt;/script&gt;</code>
+              </pre>
+
+              <h4>Server-side rendering</h4>
+              <p>
+                Below snippet is a Gramex server-side rendering example which renders the form in place.
+              </p>
+              <pre>
+                <code class="language-python">&lt;link rel="stylesheet" href="{{ _url }}/ui/bootstrap/dist/css/bootstrap.min.css"&gt;
+                  {%! import requests %}
+                  &lt;form&gt;
+                  {%! raw requests.get('{{ view_url + '.html' }}').text %}
+                  &lt;/form&gt;
+                </code>
+              </pre>
+            </div>
+
+          </div>
+          <div class="tab-pane fade" id="send-link" role="tabpanel" aria-labelledby="send-link-tab">
+            <h3 class="mt-3">Link</h3>
+            <input type="text" class="form-control border-0" readonly value="{{ _url + '/form/' + form_id }}">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-success" data-dismiss="modal">Ok</button>
+      </div>
+    </div>
+  </div>
+</div>

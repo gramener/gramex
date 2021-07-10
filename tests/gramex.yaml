@@ -499,6 +499,22 @@ url:
       path: $YAMLPATH/sass/
       scss: ' missing.scss,import.scss, a.scss b.scss'
       sass: '*.sass'
+  dir/transform-vue:
+    pattern: /dir/transform-vue/(.*)
+    handler: FileHandler
+    kwargs:
+      path: vue
+      transform:
+        # Multiple globs can be separated by spaces or commas
+        " comp-a.vue, comp-b.vue":
+          encoding: utf-8
+          function: vue
+  dir/vue-file:
+    pattern: /dir/vue-file/(.*)
+    handler: FileHandler
+    kwargs:
+      path: $YAMLPATH/vue/
+      vue: '*.vue'
   dir/template:
     pattern: "/dir/template/(.*)"
     handler: FileHandler
@@ -1116,41 +1132,43 @@ url:
         age: {type: float, nullable: False, default: 18}
         dept: varchar(10)
 
-        # mlhandler/predict:
-        #   pattern: /mlhandler
-        #   handler: MLHandler
-        #   kwargs:
-        #     path: $YAMLPATH/iris.pkl
-        #     model_class: LogisticRegression
-        #     xsrf_cookies: false
-
   mlhandler/blank:
     pattern: /mlblank
     handler: MLHandler
     kwargs:
       xsrf_cookies: false
 
-        # mlhandler/nopath:
-        #   pattern: /mlnopath
-        #   handler: MLHandler
-        #   kwargs:
-        #     xsrf_cookies: false
   mlhandler/config:
     pattern: /mlhandler
     handler: MLHandler
     kwargs:
-      data: $YAMLPATH/../testlib/iris.csv
+      data:
+        url: $YAMLPATH/../testlib/iris.csv
       model:
         path: $YAMLPATH/model.pkl
         class: LogisticRegression
         target_col: species
       xsrf_cookies: false
 
+  mlhandler/badcol:
+    pattern: /mlhandlerbadcol
+    handler: MLHandler
+    kwargs:
+      data:
+        url: $YAMLPATH/../testlib/iris.csv
+      model:
+        path: $YAMLPATH/model.pkl
+        class: LogisticRegression
+        target_col: species
+        cats: [species]
+      xsrf_cookies: false
+
   mlhandler/nopath:
     pattern: /mlnopath
     handler: MLHandler
     kwargs:
-      data: $YAMLPATH/../testlib/iris.csv
+      data:
+        url: $YAMLPATH/../testlib/iris.csv
       model:
         class: LogisticRegression
         target_col: species
@@ -1159,6 +1177,17 @@ url:
     pattern: /mlincr
     handler: MLHandler
     kwargs:
+      xsrf_cookies: false
+  mlhandler/xform:
+    pattern: /mltransform
+    handler: MLHandler
+    kwargs:
+      data:
+        url: $YAMLPATH/circles.csv
+        transform: utils.transform_circles
+      model:
+        class: LogisticRegression
+        target_col: y
       xsrf_cookies: false
 
   capture:
@@ -2292,6 +2321,9 @@ watch:
     on_modified: nonexistent            # This should not throw an error, only report a warning
 
 schedule:
+  make-circles:
+    function: utils.make_circles
+    startup: true
   schedule-start:
     function: utils.schedule_start
     startup: true

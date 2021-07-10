@@ -70,6 +70,8 @@ test: test-setup
 
 conda:
 	# conda install conda-build
+	conda build purge
+	pip install orderedattrdict tornado==5.1.1
 	python pkg/conda/conda-setup.py
 	conda build -c conda-forge pkg/conda/
 

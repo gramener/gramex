@@ -8,6 +8,7 @@ openpyxl              # For gramex.cache.open(..., 'xlsx')
 pdfminer.six          # For CaptureHandler testing
 psycopg2 >= 2.7.1     # For PostgreSQL connections
 python-dateutil       # For schedule testing
+pymongo               # For MongoDB tests
 sphinx_rtd_theme      # For documentation
 testfixtures          # For logcapture
 websocket-client      # For websocket testing

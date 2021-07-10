@@ -2,7 +2,7 @@
 
 from .transforms import build_transform, build_log_info, condition, flattener, once, handler
 from .badgerfish import badgerfish
-from .template import template, sass, scss, CacheLoader
+from .template import template, sass, scss, vue, CacheLoader
 from .rmarkdown import rmarkdown
 from .auth import ensure_single_session
 from .twitterstream import TwitterStream
@@ -14,6 +14,7 @@ __all__ = [
     'template',
     'sass',
     'scss',
+    'vue',
     'rmarkdown',
     'ensure_single_session',
     'condition',

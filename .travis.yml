@@ -2,12 +2,21 @@
 
 # Run in Python 3 only. Drop Python 2 testing
 language: python
-python: '3.7'
+python: 3.7
 
 # Python 3.7 works only in Xenial with sudo
 # https://github.com/travis-ci/travis-ci/issues/9069#issuecomment-425720905
-dist: xenial
+dist: xenial  # required for Python >= 3.7 (travis-ci/travis-ci#9069)
 sudo: yes
+
+jobs:
+  include:
+    - env: MINICONDA=https://repo.anaconda.com/miniconda/Miniconda3-py37_4.9.2-Linux-x86_64.sh
+    # Python 3.8 works with these dependencies, but only on Linux, not Windows.
+    #   Tornado 6.x and Pandas 1.x upgrade reqd for Windows. So drop it for Gramex 1.x
+    # - env: MINICONDA=https://repo.anaconda.com/miniconda/Miniconda3-py38_4.9.2-Linux-x86_64.sh
+    # Python 3.9 doesn't work at all with these dependencies
+    # - env: MINICONDA=https://repo.anaconda.com/miniconda/Miniconda3-py39_4.9.2-Linux-x86_64.sh
 
 env:
   global:
@@ -20,6 +29,7 @@ services:
   - postgresql
   - redis-server
   - elasticsearch
+  - mongodb
 
 # By default, Travis uses ElasticSearch 5.5.0. We want to test with 7.x
 # https://docs.travis-ci.com/user/database-setup/#installing-specific-versions-of-elasticsearch
@@ -47,20 +57,22 @@ cache:
 
 install:
   # Install miniconda
-  - wget https://repo.anaconda.com/miniconda/Miniconda3-py37_4.8.3-Linux-x86_64.sh -O $HOME/miniconda.sh
+  - wget $MINICONDA -O $HOME/miniconda.sh
   - bash $HOME/miniconda.sh -b -u -p $HOME/miniconda
   # Add conda to path. "hash -r" rescans the $PATH
   - export PATH="$HOME/miniconda/bin:$PATH"
   - hash -r
-  # Install conda packages
+  # Install conda packages. Keep this in sync with gramex/release.json.conda
   - conda config --set always_yes yes --set changeps1 no
-  # rpy2 v2.9.6 is compatible with pandas 1.0, not available on the default channel
-  - conda install -y -q colorama h5py lxml matplotlib pandas pytest seaborn sqlalchemy line_profiler tzlocal scikit-learn rpy2
-  # install.packages("rmarkdown") has installation issues with numpy 1.16.6, 1.17.0, etc but is OK with 1.16.0
-  # https://bitbucket.org/rpy2/rpy2/issues/572
-  # Don't ask people to change the critical NumPy for the rarely used RMarkdown. Use the conda installer instead
-  - conda install -y -q -c r r-rmarkdown
-  # Install node.js
+  - conda install line_profiler
+  # Why conda install rpy2?
+  #   rpy2 v2.9.6 is compatible with pandas 1.0, not available on the default channel
+  # Why conda install r-markdown instead of install.packages("rmarkdown")?
+  #   install.packages("rmarkdown") has installation issues with numpy 1.16.6, 1.17.0, etc but is OK with 1.16.0
+  #   https://bitbucket.org/rpy2/rpy2/issues/572
+  #   Don't ask people to change the critical NumPy for the rarely used RMarkdown. Use the conda installer instead
+  - conda install -c conda-forge rpy2 r-markdown
+  # Install a reasonably modern version of node.js for UI components to work
   - nvm install 12
   # Set up variables
   - export BRANCH=$TRAVIS_BRANCH
@@ -80,7 +92,7 @@ script:
   - coverage report --show-missing --ignore-errors
 
   # Test specific apps
-  - cd $TRAVIS_BUILD_DIR/gramex/apps/filemanager/ && yarn install && yarn test
+  - cd $TRAVIS_BUILD_DIR/gramex/apps/filemanager/ && yarn install && bash test/test.sh
 
   # TODO: Incorporate later
   # - gramex --listen.port=1234 > gramex.log 2>&1 &

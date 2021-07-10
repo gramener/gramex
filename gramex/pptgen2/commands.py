@@ -33,7 +33,7 @@ from pptx.oxml.ns import _nsmap, qn
 from pptx.oxml.simpletypes import ST_Percentage
 from pptx.oxml.xmlchemy import OxmlElement
 from pptx.text.text import _Run
-from six.moves.urllib_parse import urlparse
+from urllib.parse import urlparse
 from typing import Union, List
 
 conf = gramex.cache.open('config.yaml', rel=True)

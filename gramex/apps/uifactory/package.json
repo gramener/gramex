@@ -1,0 +1,11 @@
+{
+  "scripts": {
+    "postinstall": "node snippets/setup.js"
+  },
+  "dependencies": {
+    "bootstrap-icons": "^1.4.1",
+    "clipboard": "^2.0.6",
+    "jqueryui": "^1.11.1",
+    "uifactory": "^0.0.4"
+  }
+}

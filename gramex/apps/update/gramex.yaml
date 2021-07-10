@@ -15,6 +15,9 @@ url:
       function: gramexupdate.gramexupdate
       # Enable POST from any Gramex instance
       xsrf_cookies: false
+      headers:
+        Cache-Control: "private, max-age=3600"
+
   gramexupdate/login:
     pattern: /$YAMLURL/login/
     handler: GoogleAuth
@@ -34,15 +37,18 @@ url:
     handler: FunctionHandler
     kwargs:
       function: gramexupdate.consolidate()
+
   gramexupdate/data:
-    pattern: /$YAMLURL/data
+    pattern: /$YAMLURL/data/(.*)
     handler: FormHandler
     kwargs:
       url: "sqlite:///$LOGDB"
-      table: logs
+      table: '{_0}'
       auth:
         hd: [gramener.com]
         login_url: /$YAMLURL/login/
+      headers:
+        Cache-Control: "private, max-age=3600"
 
 log:
   loggers:

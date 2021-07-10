@@ -1,3 +1,4 @@
+import io
 import os
 import csv
 import json
@@ -23,17 +24,6 @@ _folder = os.path.dirname(os.path.abspath(__file__))
 _auth_template = os.path.join(_folder, 'auth.template.html')
 _user_info_path = os.path.join(gramex.variables.GRAMEXDATA, 'auth.user.db')
 _user_info = gramex.cache.SQLiteStore(_user_info_path, table='user')
-
-# Python 3 csv.writer.writerow writes as str(), which is unicode in Py3.
-# Python 2 csv.writer.writerow writes as str(), which is bytes in Py2.
-# So we use cStringIO.StringIO in Py2 (which handles bytes).
-# Since Py3 doesn't have cStringIO, we use io.StringIO (which handles unicode)
-try:
-    import cStringIO
-    StringIOClass = cStringIO.StringIO
-except ImportError:
-    import io
-    StringIOClass = io.StringIO
 
 
 class AuthHandler(BaseHandler):
@@ -261,17 +251,13 @@ class GoogleAuth(AuthHandler, GoogleOAuth2Mixin):
             scope = self.kwargs.get('scope', [])
             scope = scope if isinstance(scope, list) else [scope]
             scope = list(set(scope) | {'profile', 'email'})
-            # Ensure extra_params has auto approval prompt
-            extra_params = self.kwargs.get('extra_params', {})
-            if 'approval_prompt' not in extra_params and 'prompt' not in extra_params:
-                extra_params['approval_prompt'] = 'auto'
             # Return the list
             yield self.authorize_redirect(
                 redirect_uri=self.xredirect_uri,
                 client_id=self.kwargs['key'],
                 scope=scope,
                 response_type='code',
-                extra_params=extra_params)
+                extra_params=self.kwargs.get('extra_params', {}))
 
     @classmethod
     @coroutine
@@ -445,7 +431,7 @@ def csv_encode(values, *args, **kwargs):
     Encode an array of unicode values into a comma-separated string. All
     csv.writer parameters are valid.
     '''
-    buf = StringIOClass()
+    buf = io.StringIO()
     writer = csv.writer(buf, *args, **kwargs)
     writer.writerow([
         v if isinstance(v, str) else

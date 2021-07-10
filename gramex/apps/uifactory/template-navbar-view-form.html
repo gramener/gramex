@@ -1,0 +1,41 @@
+<nav class="navbar navbar-expand-lg navbar-white bg-white mb-3">
+  <div class="container-fluid">
+    <a class="navbar-brand py-0 d-flex" href="{{ base }}">
+      <img class="pr-2" src="{{ base }}/assets/img/gramener-favicon-blue.png" alt="gramener logo">
+      <div class="text-middle d-flex-inline">{{ metadata['name'] }}</div>
+    </a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto align-items-center">
+        <li class="nav-item mx-1 px-1">
+          <button class="round border-0" title="Customize Theme" type="button" data-toggle="modal" data-target="#themesModal">
+            <i class="fa fa-palette"></i>
+          </button>
+        </li>
+        <li class="nav-item mx-1 px-1">
+          <a class="round border-0 text-dark" title="Preview form" href="{{ base }}/view/{{ form_id }}" target="_blank" rel="noopener">
+            <i class="fa fa-eye"></i>
+          </a>
+        </li>
+        <li class="nav-item mx-1 px-1">
+          <button class="round border-0" title="Make a Copy" type="button" data-formaction="copy" data-form="{{ form_id }}">
+            <i class="fa fa-copy"></i>
+          </button>
+        </li>
+        {% if not is_template %}
+          <li class="nav-item mx-1 px-1">
+            <button class="round border-0" title="Remove" type="button" data-toggle="modal" data-target="#removeModal" data-formaction="remove" data-form="{{ form_id }}">
+              <i class="fa fa-trash-alt"></i>
+            </button>
+          </li>
+        {% end %}
+        <li class="nav-item mx-2 px-1">
+          <button class="btn btn-success" type="button" data-toggle="modal" data-target="#sendModal">Embed</button>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>

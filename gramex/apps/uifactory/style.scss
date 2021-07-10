@@ -1,0 +1,92 @@
+@import "gramexui";
+@import url("ui/@fortawesome/fontawesome-free/css/all.min.css");
+
+:root {
+  --grid-width: 200px;
+}
+
+.gallery-grid {
+  /* Each chart takes up 160px + 10px gap, and expands like justified inline-blocks */
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(var(--grid-width), 1fr));
+  grid-gap: 20px;
+}
+.gallery-grid .card .thumbnail {
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  height: calc(var(--grid-width) - 2px);
+  width: calc(var(--grid-width) + 5px);
+
+  -webkit-filter: grayscale(100%);
+  -moz-filter: grayscale(100%);
+  -ms-filter: grayscale(100%);
+  -o-filter: grayscale(100%);
+  filter: gray;
+}
+.gallery-grid .card:hover, .create-form:hover {
+  border-color: #007bff;
+}
+.sourcecode-container {
+  max-height: 30vw;
+}
+.sourcecode-container pre code {
+  white-space: pre;
+}
+#editor-html {
+  width: 90%;
+  height: 30vw;
+  border:1px solid grey;
+}
+// view form
+.modal-content .form-control:focus {
+  box-shadow: none;
+}
+// themes side panel
+.modal-sm {
+  min-width: 300px;
+}
+.toast-container {
+  top: 7%;
+  right: 2%;
+  width: 200px;
+}
+.navbar-brand img {
+  height: 32px;
+}
+// create form
+#user-form {
+  width: 300px;
+  height: 80vh;
+}
+.user-form > *,
+#view-form form > * {
+  cursor: pointer;
+  display: block;
+  padding: 1rem;
+}
+.floating-button {
+  bottom: 5%;
+  right: 3%;
+}
+.highlight {
+  border: 3px solid yellow;
+  border-radius: 1em;
+}
+.edit-properties {
+  position: sticky;
+  top: 2%;
+}
+// disable events while previewing the form at /form/id
+#formTabContent form {
+  pointer-events: none;
+}
+.edit-properties > * {
+  padding: 0.5rem;
+  display: inline-grid;
+}
+.form-fields > *:not(bs4-multiselect),
+.form-fields > *:not(.divider) {
+  display: block;
+  padding: 0.5rem;
+}
