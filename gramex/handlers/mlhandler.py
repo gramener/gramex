@@ -175,7 +175,7 @@ class MLHandler(FormHandler):
                 gramex.service.threadpool.submit(
                     _fit, cls.model, train, target, cls.model_path, cls.name)
         cls.config_store.flush()
-        
+
     @classmethod
     def load_data(cls, default=pd.DataFrame()):
         try:
@@ -471,7 +471,6 @@ class MLHandler(FormHandler):
             self.write(json.dumps(res, indent=2, cls=CustomJSONEncoder))      
         super(MLHandler, self).post(*path_args, **path_kwargs)
             
-
     def get_cached_arg(self, argname):
         val = self.get_arg(argname, self.get_opt(argname))
         self.set_opt(argname, val)
