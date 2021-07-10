@@ -35,13 +35,21 @@ class TestMLHandler(TestGramex):
             'mlhandler-config/data.h5',
             'mlhandler-incr/config.json',
             'mlhandler-incr/data.h5',
-            'mlhandler-blank.pkl',
-            'mlhandler-incr.pkl',
-            'mlhandler-nopath.pkl',
+            'mlhandler-incr/mlhandler-incr.pkl',
+            'mlhandler-xform/config.json',
+            'mlhandler-xform/data.h5',
+            'mlhandler-xform/mlhandler-xform.pkl',
+            'mlhandler-blank/mlhandler-blank.pkl',
+            'mlhandler-nopath/mlhandler-nopath.pkl',
+            'mlhandler-badcol/config.json',
+            'mlhandler-badcol/data.h5',
+            'mlhandler-badcol/mlhandler-badcol.pkl',
         ]]
         paths += [op.join(folder, 'model.pkl')]
         for p in paths:
             tempfiles[p] = p
+        circles = op.join(folder, 'circles.csv')
+        tempfiles[circles] = circles
 
     def test_append(self):
         try:
@@ -118,7 +126,12 @@ class TestMLHandler(TestGramex):
             {
                 'target_col': 'species',
                 'exclude': ['petal_width'],
-                'nums': ['sepal_length', 'sepal_width', 'petal_length']
+                'nums': ['sepal_length', 'sepal_width', 'petal_length'],
+                'include': [],
+                'pipeline': True,
+                'drop_duplicates': True,
+                'dropna': True,
+                'cats': []
             }
         )
         self.assertDictEqual(
@@ -253,6 +266,11 @@ class TestMLHandler(TestGramex):
             data=self.df.to_json(orient='records'),
             headers={'Content-Type': 'application/json'})
         self.assertGreaterEqual(resp.json()['score'], self.ACC_TOL)
+        resp = self.get(
+            '/mlhandler?_action=score&_metric=f1_weighted', method='post',
+            data=self.df.to_json(orient='records'),
+            headers={'Content-Type': 'application/json'})
+        self.assertGreaterEqual(resp.json()['score'], self.ACC_TOL)
 
     def test_get_cache(self):
         df = pd.DataFrame.from_records(self.get('/mlhandler?_cache=true').json())
@@ -262,22 +280,22 @@ class TestMLHandler(TestGramex):
         params = self.get('/mlhandler?_model').json()
         self.assertDictEqual(LogisticRegression().get_params(), params)
 
-    def test_get_predictions(self, target_col='species'):
+    def test_get_predictions(self, root="mlhandler", target_col='species'):
         resp = self.get(
-            '/mlhandler?sepal_length=5.9&sepal_width=3&petal_length=5.1&petal_width=1.8')
+            f'/{root}?sepal_length=5.9&sepal_width=3&petal_length=5.1&petal_width=1.8')
         self.assertEqual(resp.json(), [
             {'sepal_length': 5.9, 'sepal_width': 3.0,
              'petal_length': 5.1, 'petal_width': 1.8,
              target_col: 'virginica'}
         ])
         resp = self.get(
-            '/mlhandler?sepal_width=3&petal_length=5.1&sepal_length=5.9&petal_width=1.8')
+            f'/{root}?sepal_width=3&petal_length=5.1&sepal_length=5.9&petal_width=1.8')
         self.assertEqual(resp.json(), [
             {'sepal_length': 5.9, 'sepal_width': 3.0,
              'petal_length': 5.1, 'petal_width': 1.8,
              target_col: 'virginica'}
         ])
-        req = '/mlhandler?'
+        req = f'/{root}?'
         samples = []
         target = []
         for row in self.df.sample(n=5).to_dict(orient='records'):
@@ -299,6 +317,18 @@ class TestMLHandler(TestGramex):
         pred = pd.DataFrame.from_records(resp.json())['species']
         self.assertGreaterEqual(accuracy_score(target, pred), self.ACC_TOL)
 
+    def test_get_predictions_duplicates(self):
+        df = self.df.drop_duplicates()
+        df = pd.concat([df, df], axis=0, ignore_index=True)
+        target = df.pop('species')
+        buff = StringIO()
+        df.to_csv(buff, index=False, encoding='utf8')
+        buff.seek(0)
+        resp = self.get('/mlhandler?_action=predict',
+                        method='post', files={'file': ('iris.csv', buff)})
+        pred = pd.DataFrame.from_records(resp.json())['species']
+        self.assertGreaterEqual(accuracy_score(target, pred), self.ACC_TOL)
+
     def test_get_predictions_post_json_file(self):
         df = self.df.drop_duplicates()
         target = df.pop('species')
@@ -311,8 +341,9 @@ class TestMLHandler(TestGramex):
         self.assertGreaterEqual(accuracy_score(target, pred), self.ACC_TOL)
 
     def test_model_default_path(self):
-        clf = joblib.load(op.join(
-            gramex.config.variables['GRAMEXDATA'], 'apps', 'mlhandler', 'mlhandler-nopath.pkl'))
+        clf = joblib.load(
+            op.join(gramex.config.variables['GRAMEXDATA'], 'apps', 'mlhandler',
+                    'mlhandler-nopath', 'mlhandler-nopath.pkl'))
         self.assertIsInstance(clf, Pipeline)
         self.assertIsInstance(clf.named_steps['transform'], ColumnTransformer)
         self.assertIsInstance(clf.named_steps['LogisticRegression'], LogisticRegression)
@@ -423,7 +454,7 @@ class TestMLHandler(TestGramex):
         r = self.get('/mlhandler')
         self.assertEqual(r.status_code, OK)
         # Try getting predictions
-        self.test_get_predictions('target')
+        self.test_get_predictions(target_col='target')
         self.test_get_bulk_predictions('target')
 
     def test_train(self):
@@ -443,3 +474,12 @@ class TestMLHandler(TestGramex):
             # TODO: The target_col has to be reset to species for a correct teardown.
             # But any PUT deletes an existing model and causes subsequent tests to fail.
             # Find an atomic way to reset configurations.
+
+    def test_datatransform(self):
+        with open(op.join(op.dirname(__file__), 'circles.csv'), 'r', encoding='utf8') as fin:
+            resp = self.get('/mltransform?_action=score', method='post',
+                            files={'file': ('circles.csv', fin.read())})
+        self.assertEqual(resp.json()['score'], 1)
+
+    def test_invalid_category(self):
+        self.test_get_predictions('mlhandlerbadcol')
