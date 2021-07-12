@@ -100,9 +100,11 @@ def evaluate(handler, code):
         context = contexts.setdefault(handler.session['id'], {})
         context['handler'] = handler
         if mode == 'eval':
-            result = eval(co, context)
+            # eval() is safe here since only admins can access this page
+            result = eval(co, context)  # nosec
         else:
-            exec(co, context)
+            # exec() is safe here since only admins can access this page
+            exec(co, context)           # nosec
             result = None
     except Exception as e:
         result = e
@@ -150,10 +152,12 @@ def system_information(handler):
 
     from gramex.cache import Subprocess
     apps = {
-        ('node', 'version'): Subprocess('node --version', shell=True),
-        ('npm', 'version'): Subprocess('npm --version', shell=True),
-        ('yarn', 'version'): Subprocess('yarn --version', shell=True),
-        ('git', 'version'): Subprocess('git --version', shell=True),
+        # shell=True is safe here since the code is constructed entirely in this function
+        # We use shell to pick up the commands' paths from the shell.
+        ('node', 'version'): Subprocess('node --version', shell=True),  # nosec
+        ('npm', 'version'): Subprocess('npm --version', shell=True),    # nosec
+        ('yarn', 'version'): Subprocess('yarn --version', shell=True),  # nosec
+        ('git', 'version'): Subprocess('git --version', shell=True),    # nosec
     }
     for key, proc in apps.items():
         stdout, stderr = yield proc.wait_for_exit()

@@ -378,7 +378,8 @@ def _yaml_open(path, default=AttrDict(), **kwargs):
             # Evaluate conditional
             base, expr = key.split(' if ', 2)
             try:
-                condition = eval(expr, globals(), frozen_vars)  # nosec - any Python expr is OK
+                # # eval() is safe here since `expr` is written by app developer
+                condition = eval(expr, globals(), frozen_vars)  # nosec
             except Exception:
                 condition = False
                 app_log.exception('Failed condition evaluation: %s', key)

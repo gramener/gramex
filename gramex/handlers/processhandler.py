@@ -124,7 +124,8 @@ class ProcessHandler(BaseHandler):
 
         proc = Subprocess(
             self.cmdargs,
-            shell=self.shell,
+            # shell=True is safe here if app developer explicitly requests it
+            shell=self.shell,  # nosec
             cwd=self.cwd,
             stream_stdout=self.stream_stdout,
             stream_stderr=self.stream_stderr,

@@ -310,7 +310,8 @@ class UITest(BaseTest):
                                    self._get(selector, must_exist=True))
 
     def python(self, expr):
-        exec(str(expr), context_global, context_local)
+        # exec() is safe here since `expr` is written by app developer
+        exec(str(expr), context_global, context_local)      # nosec
         for key, val in context_local.items():
             self.driver.execute_script(key + '=' + json.dumps(val, cls=CustomJSONEncoder))
 

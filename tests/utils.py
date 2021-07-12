@@ -310,15 +310,16 @@ def subprocess(handler):
 def argparse(handler):
     params = json.loads(handler.get_argument('_q'))
     args = params.get('args', [])
+    typemap = {'list': list, 'str': str, 'None': None, 'int': int, 'bool': bool}
     # Convert first parameter to relevant type, if required
     if len(args) > 0:
-        if args[0] in {'list', 'str', 'unicode', 'six.string_type', 'None'}:
-            args[0] = eval(args[0])
+        if args[0] in typemap:
+            args[0] = typemap[args[0]]
     # Convert type: to a Python class
     kwargs = params.get('kwargs', {})
-    for key, val in kwargs.items():
+    for val in kwargs.values():
         if 'type' in val:
-            val['type'] = eval(val['type'])
+            val['type'] = typemap[val['type']]
     return json.dumps(handler.argparse(*args, **kwargs))
 
 

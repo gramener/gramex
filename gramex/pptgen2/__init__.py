@@ -482,4 +482,5 @@ def commandline(args=None):
     # If --no-open is specified, or the OS doesn't have startfile (e.g. Linux), stop here.
     # Otherwise, open the output PPTX created
     if not rules.get('no-open', False) and hasattr(os, 'startfile'):
-        os.startfile(rules['target'])
+        # os.startfile() is safe since the target is an explicit file we've created
+        os.startfile(rules['target'])   # nosec

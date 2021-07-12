@@ -735,7 +735,10 @@ class TestPPTGen(TestCase):
 
         for index, grp in enumerate(groups):
             grpobj = data.groupby(grp)
-            frame = pd.DataFrame({'size': grpobj[grp].count(), 'seq': eval(grp_order)(grpobj)})
+            frame = pd.DataFrame({
+                'size': grpobj[grp].count(),
+                'seq': eval(grp_order)(grpobj),  # nosec -- this is just a test case
+            })
             frame['width'] = frame['size'] / float(frame['size'].sum()) * width
             frame = frame.sort_values(by=['seq'])
             get_rect_width.extend([int(i) for i in frame['width'].tolist()])

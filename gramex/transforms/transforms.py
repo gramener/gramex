@@ -242,7 +242,8 @@ def build_transform(conf, vars=None, filename='transform', cache=False, iter=Tru
         **{key: getattr(gramex.transforms, key) for key in gramex.transforms.__all__}
     )
     code = compile(''.join(body), filename=filename, mode='exec')
-    exec(code, context)         # nosec - OK to run arbitrary Python code in YAML
+    # exec() is safe here since the code is written by app developer
+    exec(code, context)         # nosec
 
     # Return the transformed function
     function = context['transform']
@@ -281,7 +282,8 @@ def condition(*args):
         pairs = zip(args[0::2], args[1::2])
     for cond, val in pairs:
         if isinstance(cond, str):
-            if eval(Template(cond).substitute(var_defaults)):    # nosec - any Python expr is OK
+            # eval() is safe here since `cond` is written by app developer
+            if eval(Template(cond).substitute(var_defaults)):    # nosec
                 return val
         elif bool(cond):
             return val
@@ -349,7 +351,8 @@ def flattener(fields, default=None, filename='flatten'):
     body.append('\treturn r')
     code = compile(''.join(body), filename='flattener:%s' % filename, mode='exec')
     context = {'AttrDict': AttrDict, 'default': default}
-    eval(code, context)     # nosec - code constructed entirely in this function
+    # eval() is safe here since the code is constructed entirely in this function
+    eval(code, context)     # nosec
     return context[filename]
 
 
@@ -553,6 +556,6 @@ def build_log_info(keys, *vars):
     code = compile('def fn(handler, %s):\n\treturn {%s}' % (', '.join(vars), ' '.join(vals)),
                    filename='log', mode='exec')
     context = {'os': os, 'time': time, 'datetime': datetime, 'conf': conf, 'AttrDict': AttrDict}
-    # The code is constructed entirely by this function. Using exec is safe
+    # exec() is safe here since the code is constructed entirely in this function
     exec(code, context)         # nosec
     return context['fn']

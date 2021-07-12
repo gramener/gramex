@@ -118,9 +118,11 @@ def evaluate(handler, code):
     try:
         context = contexts.setdefault(handler.session['id'], {})
         if mode == 'eval':
-            result = eval(co, context)
+            # eval() is safe here since only admins can access this page
+            result = eval(co, context)  # nosec
         else:
-            exec(co, context)
+            # exec() is safe here since only admins can access this page
+            exec(co, context)           # nosec
             result = None
     except Exception as e:
         result = e
