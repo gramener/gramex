@@ -6,6 +6,7 @@ import unittest
 import gramex.data
 import gramex.cache
 import pandas as pd
+import pymongo.errors
 import sqlalchemy as sa
 from orderedattrdict import AttrDict
 from nose.plugins.skip import SkipTest
@@ -394,11 +395,13 @@ class TestFilter(unittest.TestCase):
         self.check_filter_dates('sqlite', url)
 
     def test_mongodb(self):
-        self.db.add('mongodb')
         url = f'mongodb://{server.mongodb}'
         db = 'test_filter'
-        dbutils.mongodb_create_db(url, db, **{
-            'sales': self.sales})
+        try:
+            dbutils.mongodb_create_db(url, db, **{'sales': self.sales})
+        except pymongo.errors.ServerSelectionTimeoutError:
+            raise SkipTest(f'MongoDB not set up at {server.mongodb}')
+        self.db.add('mongodb')
         kwargs = {
             'url': f'plugin:{url}',
             'collection': 'sales',
