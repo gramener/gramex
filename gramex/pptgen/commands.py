@@ -18,7 +18,7 @@ from pptx.chart import data as pptxcd
 from pptx.dml.color import RGBColor
 from pptx.enum.shapes import MSO_SHAPE
 from pptx.oxml.xmlchemy import OxmlElement
-from six.moves.urllib_parse import urlparse
+from urllib.parse import urlparse
 from gramex.transforms import build_transform
 from . import utils
 from . import fontwidth

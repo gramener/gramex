@@ -1,12 +1,12 @@
 '''Test case utilities'''
 import os
 import csv
-import six
 import sys
 import json
 import time
 import random
 import pandas as pd
+from io import StringIO
 from collections import Counter
 from orderedattrdict import AttrDict
 from sklearn.datasets import make_circles as sk_make_circles
@@ -213,7 +213,7 @@ def log_format(handler):
 
 
 def log_csv(handler):
-    result = six.StringIO()
+    result = StringIO()
     writer = csv.writer(result)
     try:
         1 / 0
@@ -265,7 +265,7 @@ def increment_header(handler):
     Does not return any output. Used as a FunctionHandler in func/redirect
     '''
     counters['header'] += 1
-    handler.set_header('Increment', six.text_type(counters['header']))
+    handler.set_header('Increment', str(counters['header']))
     return 'Constant result'
 
 

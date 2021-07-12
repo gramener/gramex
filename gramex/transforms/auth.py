@@ -1,7 +1,6 @@
 '''
 Authentication transforms
 '''
-import six
 from gramex.config import app_log
 
 
@@ -15,9 +14,9 @@ def ensure_single_session(handler):
             # Ignore current session or OTP sessions
             if key == handler.session.get('id'):
                 continue
-            if isinstance(key, six.text_type) and key.startswith('otp:'):
+            if isinstance(key, str) and key.startswith('otp:'):
                 continue
-            if isinstance(key, six.binary_type) and key.startswith(b'otp:'):
+            if isinstance(key, bytes) and key.startswith(b'otp:'):
                 continue
             # Remove user from all other sessions
             other_session = handler._session_store.load(key)

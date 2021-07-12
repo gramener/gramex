@@ -4,7 +4,7 @@ import sys
 import json
 import datetime
 from cachetools import TTLCache
-from six.moves import StringIO
+from io import StringIO
 import gramex
 from gramex import variables
 from gramex.cache import SQLiteStore

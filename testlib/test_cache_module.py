@@ -1,7 +1,6 @@
 import io
 import os
 import re
-import six
 import json
 import time
 import yaml
@@ -12,7 +11,6 @@ import sqlalchemy as sa
 from lxml import etree
 from gramex.cache import hashfn
 from gramex.config import variables, str_utf8
-from six import string_types
 from markdown import markdown
 from collections import OrderedDict
 from orderedattrdict import AttrDict
@@ -282,7 +280,7 @@ class TestOpen(unittest.TestCase):
         def check(reload):
             result, reloaded = gramex.cache.open(path, 'md', _reload_status=True, encoding='utf-8')
             eq_(reloaded, reload)
-            ok_(isinstance(result, six.text_type))
+            ok_(isinstance(result, str))
             eq_(result, expected)
 
         self.check_file_cache(path, check)
@@ -426,7 +424,7 @@ class TestOpen(unittest.TestCase):
         data = gramex.cache.open(path, 'csv')
         ok_(isinstance(data, pd.DataFrame))
         text = gramex.cache.open(path, 'text')
-        ok_(isinstance(text, string_types))
+        ok_(isinstance(text, str))
         none = gramex.cache.open(path, lambda path: None)
         ok_(none is None)
 

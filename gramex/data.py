@@ -4,7 +4,6 @@ Interact with data from the browser
 import io
 import os
 import re
-import six
 import time
 import json
 import sqlalchemy as sa
@@ -58,7 +57,7 @@ def _replace(engine, args, *vars, **kwargs):
     params = {k: v[0] for k, v in args.items() if len(v) > 0 and escape(v[0])}
 
     def _format(val):
-        if isinstance(val, six.string_types):
+        if isinstance(val, str):
             return val.format(**params)
         if isinstance(val, list):
             return [_format(v) for v in val]
@@ -246,7 +245,7 @@ def filter(url, args={}, meta={}, engine=None, ext=None, columns=None,
             if queryfile:
                 query = gramex.cache.open(queryfile, 'text')
             if not state:
-                if isinstance(table, six.string_types):
+                if isinstance(table, str):
                     state = table if ' ' in table else [table]
                 elif isinstance(table, (list, tuple)):
                     state = [t for t in table]
@@ -515,9 +514,9 @@ def _pop_columns(data, cols, ignored):
 
 def _sql_safe(val):
     '''Return True if val is safe for insertion in an SQL query'''
-    if isinstance(val, six.string_types):
+    if isinstance(val, str):
         return not re.search(r'\s', val)
-    elif isinstance(val, six.integer_types) or isinstance(val, (float, bool)):
+    elif isinstance(val, (int, float, bool)):
         return True
     return False
 
@@ -525,7 +524,7 @@ def _sql_safe(val):
 def _path_safe(path):
     '''Returns True if path does not try to escape outside a given directory using .. or / etc'''
     # Ignore non-strings. These are generally not meant for paths
-    if not isinstance(path, six.string_types):
+    if not isinstance(path, str):
         return True
     return os.path.realpath(os.path.join(_path_safe_root, path)).startswith(_path_safe_root)
 
@@ -604,7 +603,7 @@ def _filter_db_col(query, method, key, col, op, vals, column, conv, meta):
     - Updates ``meta`` with the fields used for filtering (or ignored)
     '''
     # In PY2, .python_type returns str. We want unicode
-    sql_types = {six.binary_type: six.text_type, pd.datetime: six.text_type}
+    sql_types = {bytes: str, pd.datetime: str}
     conv = sql_types.get(conv, conv)
     vals = tuple(conv(val) for val in vals if val)
     if op not in {'', '!'} and len(vals) == 0:
@@ -1008,30 +1007,17 @@ def download(data, format='json', template=None, args={}, **kwargs):
     if format == 'csv':
         # csv.writer requires BytesIO in PY2 and StringIO in PY3.
         # I can't see an elegant way out of this other than writing code for each.
-        if six.PY2:
-            out = io.BytesIO()
-            kw(index=False, encoding='utf-8')
-            for index, (key, val) in enumerate(data.items()):
-                if index > 0:
-                    out.write(b'\n')
-                if multiple:
-                    out.write(key.encode('utf-8') + b'\n')
-                val.to_csv(out, **kwargs)
-            result = out.getvalue()
-            # utf-8-sig encoding returns the result with a UTF-8 BOM. Easier to open in Excel
-            return ''.encode('utf-8-sig') + result if result.strip() else result
-        else:
-            out = io.StringIO()
-            kw(index=False)
-            for index, (key, val) in enumerate(data.items()):
-                if index > 0:
-                    out.write('\n')
-                if multiple:
-                    out.write(key + '\n')
-                val.to_csv(out, **kwargs)
-            result = out.getvalue()
-            # utf-8-sig encoding returns the result with a UTF-8 BOM. Easier to open in Excel
-            return result.encode('utf-8-sig') if result.strip() else result.encode('utf-8')
+        out = io.StringIO()
+        kw(index=False)
+        for index, (key, val) in enumerate(data.items()):
+            if index > 0:
+                out.write('\n')
+            if multiple:
+                out.write(key + '\n')
+            val.to_csv(out, **kwargs)
+        result = out.getvalue()
+        # utf-8-sig encoding returns the result with a UTF-8 BOM. Easier to open in Excel
+        return result.encode('utf-8-sig') if result.strip() else result.encode('utf-8')
     elif format == 'template':
         return gramex.cache.open(template, 'template').generate(
             data=data if multiple else data['data'], **kwargs)

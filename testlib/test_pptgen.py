@@ -1,6 +1,6 @@
 import os
 import tempfile
-from six.moves.urllib_parse import urlparse
+from urllib.parse import urlparse
 import requests
 import numpy as np
 import pandas as pd

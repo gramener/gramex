@@ -1,7 +1,6 @@
 import os
 import re
 import csv
-import six
 import yaml
 import socket
 import inspect
@@ -128,7 +127,7 @@ class TestPathConfig(unittest.TestCase):
 
         # When the file is blank, config is empty
         with self.temp.open('w') as out:
-            out.write(six.text_type(''))
+            out.write('')
         eq_(+conf, {})
 
         # Once created, it is automatically reloaded

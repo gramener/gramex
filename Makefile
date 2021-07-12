@@ -48,7 +48,7 @@ lint:
 	command -v yarn >/dev/null 2>&1 || npm install -g yarn
 	command -v eclint 2>/dev/null 2>&1 || yarn global add eclint eslint htmllint-cli
 	# eclint check files, ignoring node_modules
-	find . -type f \( -name "*.html" -o -name "*.js" -o -name "*.css" -o -name "*.yaml" -o -name "*.md" \) ! -path '*/node_modules/*' ! -path '*/_build/*' ! -path '*/htmlcov/*' ! -path '*/.eggs/*' -print0 | xargs -0 eclint check
+	find . -type f \( -name "*.html" -o -name "*.js" -o -name "*.css" -o -name "*.yaml" -o -name "*.md" \) ! -path '*/node_modules/*' ! -path '*/_build/*' ! -path '*/htmlcov/*' ! -path '*/.eggs/*' ! -path '*/pkg/conda/*' -print0 | xargs -0 eclint check
 	# eslint requires eslint-plugin-* which are in package.json. yarn install them first
 	yarn install
 	eslint --ext js,html gramex/apps

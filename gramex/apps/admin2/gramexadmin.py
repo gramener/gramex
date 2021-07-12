@@ -9,7 +9,7 @@ from binascii import b2a_base64
 from cachetools import TTLCache
 from gramex.config import app_log
 from gramex.http import INTERNAL_SERVER_ERROR
-from six.moves import StringIO
+from io import StringIO
 from tornado.gen import coroutine, Return
 from tornado.web import HTTPError
 

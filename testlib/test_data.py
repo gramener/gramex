@@ -1,6 +1,5 @@
 import io
 import os
-import six
 import json
 import shutil
 import unittest
@@ -260,7 +259,7 @@ class TestFilter(unittest.TestCase):
                         midpoint = round(midpoint, 2)
                     subset = expected[expected[having] > midpoint]
                     args = {'_by': by, '_sort': by, '_c': aggs,
-                            having + '>': [six.text_type(midpoint)]}
+                            having + '>': [str(midpoint)]}
                     if query is not None:
                         args[key] = [val]
                     # When subset is empty, the SQL returned types may not match.
@@ -645,7 +644,7 @@ class TestDownload(unittest.TestCase):
         def from_json(key):
             s = json.dumps(result[key])
             # PY2 returns str (binary). PY3 returns str (unicode). Ensure it's binary
-            if isinstance(s, six.text_type):
+            if isinstance(s, str):
                 s = s.encode('utf-8')
             return pd.read_json(io.BytesIO(s))
 
@@ -666,15 +665,15 @@ class TestDownload(unittest.TestCase):
         # instead of unicde. So check column type only in PY3 not PY2
         out = gramex.data.download(self.dummy, format='html')
         result = pd.read_html(io.BytesIO(out), encoding='utf-8')[0]
-        afe(result, self.dummy, check_column_type=six.PY3)
+        afe(result, self.dummy, check_column_type=True)
 
         out = gramex.data.download(AttrDict([
             ('dummy', self.dummy),
             ('sales', self.sales)
         ]), format='html')
         result = pd.read_html(io.BytesIO(out), encoding='utf-8')
-        afe(result[0], self.dummy, check_column_type=six.PY3)
-        afe(result[1], self.sales, check_column_type=six.PY3)
+        afe(result[0], self.dummy, check_column_type=True)
+        afe(result[1], self.sales, check_column_type=True)
 
     def test_template(self):
         raise SkipTest('TODO')

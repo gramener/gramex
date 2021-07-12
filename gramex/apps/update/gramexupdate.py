@@ -1,6 +1,5 @@
 import io
 import os
-import six
 import json
 import logging
 import sqlalchemy as sa
@@ -74,7 +73,7 @@ def consolidate():
             row_data = row.pop('data')
             row_data = json.loads(row_data) if row_data else {}     # parse. Ignore missing data
             # If data is double-encoded, decode again. TODO: figure out when & why
-            if isinstance(row_data, six.string_types):
+            if isinstance(row_data, str):
                 row_data = json.loads(row_data)
             # Startup args are a list. Join with spaces
             if 'args' in row_data and isinstance(row_data['args'], list):

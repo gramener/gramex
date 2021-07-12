@@ -3,7 +3,6 @@ Debugging and profiling tools for Gramex
 '''
 import os
 import gc
-import six
 import sys
 import pprint
 import timeit
@@ -111,7 +110,7 @@ def trace(trace=True, exclude=None, **kwargs):
     '''
     if exclude is None:
         ignoredirs = (sys.prefix, )
-    elif isinstance(exclude, six.string_types):
+    elif isinstance(exclude, str):
         ignoredirs = (sys.prefix, os.path.abspath(exclude))
     elif isinstance(exclude, (list, tuple)):
         ignoredirs = [sys.prefix] + [os.path.abspath(path) for path in exclude]

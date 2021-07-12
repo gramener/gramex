@@ -1,6 +1,5 @@
 import io
 import os
-import six
 import json
 import pathlib
 import requests
@@ -22,7 +21,7 @@ def write(path, text):
 def setUpModule():
     # Create a unicode filename to test if FileHandler's directory listing shows it
     tempfiles.unicode_file = os.path.join(folder, 'dir', 'subdir', u'unicode–file.txt')
-    write(tempfiles.unicode_file, six.text_type(tempfiles.unicode_file))
+    write(tempfiles.unicode_file, str(tempfiles.unicode_file))
 
     # Create a symlink to test if these are displayed in a directory listing without errors
     # If os.symlink does not exist (Linux), raises an AttributeError

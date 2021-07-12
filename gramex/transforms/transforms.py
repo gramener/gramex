@@ -3,7 +3,6 @@ import datetime
 import importlib
 import json
 import os
-import six
 import time
 import tornado.gen
 import yaml
@@ -23,7 +22,7 @@ def _arg_repr(arg):
     values are treated as strings. For example, ``=x`` is the variable ``x`` but
     ``x`` is the string ``"x"``. ``==x`` is the string ``"=x"``.
     '''
-    if isinstance(arg, six.string_types):
+    if isinstance(arg, str):
         if arg.startswith('=='):
             return repr(arg[1:])        # "==x" becomes '"=x"'
         elif arg.startswith('='):
@@ -178,7 +177,7 @@ def build_transform(conf, vars=None, filename='transform', cache=False, iter=Tru
         raise KeyError('%s: No function in conf %s' % (filename, conf))
 
     # Get the name of the function in case it's specified as a function call
-    # expr is the full function / expression, e.g. six.text_type("abc")
+    # expr is the full function / expression, e.g. str("abc")
     # tree is the ast result
     expr = conf['function']
     tree = ast.parse(expr)
@@ -281,7 +280,7 @@ def condition(*args):
     else:
         pairs = zip(args[0::2], args[1::2])
     for cond, val in pairs:
-        if isinstance(cond, six.string_types):
+        if isinstance(cond, str):
             if eval(Template(cond).substitute(var_defaults)):    # nosec - any Python expr is OK
                 return val
         elif bool(cond):
@@ -331,10 +330,10 @@ def flattener(fields, default=None, filename='flatten'):
             body.append('\tr[%s] = %s\n' % (field, target))
 
     for field, source in fields.items():
-        if not isinstance(field, six.string_types):
+        if not isinstance(field, str):
             app_log.error('flattener:%s: key %s is not a str', filename, field)
             continue
-        if isinstance(source, six.string_types):
+        if isinstance(source, str):
             target = 'obj'
             if source:
                 for item in source.split('.'):

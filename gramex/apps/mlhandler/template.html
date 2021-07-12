@@ -42,7 +42,7 @@ body {
 .donut-percent {
   font-size: 0.5em;
   line-height: 1;
-  fill: #000000
+  fill: #000000;
   transform: translateY(0.5em);
 }
 </style>
@@ -51,43 +51,43 @@ body {
   {% set base = '.' %}
   {% set columns = data.columns.tolist() %}
   {% set CLASSIFICTION_MODELS = [
-   'LogisticRegression',
-   'BernoulliNB',
-   'Perceptron',
-   'PassiveAggressiveClassifier',
-   'SVC',
-   'NuSVC',
-   'LinearSVC',
-   'KNeighborsClassifier',
-   'GaussianNB',
-   'DecisionTreeClassifier',
-   'RandomForestClassifier',
-   'MLPClassifier'] %}
+    'LogisticRegression',
+    'BernoulliNB',
+    'Perceptron',
+    'PassiveAggressiveClassifier',
+    'SVC',
+    'NuSVC',
+    'LinearSVC',
+    'KNeighborsClassifier',
+    'GaussianNB',
+    'DecisionTreeClassifier',
+    'RandomForestClassifier',
+    'MLPClassifier'] %}
   {% set REGRESSION_MODELS = [
-   'LinearRegression',
-   'PassiveAggressiveRegressor',
-   'SVR',
-   'NuSVR',
-   'LinearSVR',
-   'KNeighborsRegressor',
-   'DecisionTreeRegressor',
-   'RandomForestRegressor',
-   'MLPRegressor'] %}
+    'LinearRegression',
+    'PassiveAggressiveRegressor',
+    'SVR',
+    'NuSVR',
+    'LinearSVR',
+    'KNeighborsRegressor',
+    'DecisionTreeRegressor',
+    'RandomForestRegressor',
+    'MLPRegressor'] %}
   {% set tcol = handler.get_opt('target_col', False) %}
   {% set CLASSIFICTION_METRICS = {
     'Accuracy': 'accuracy',
     'Balanced Accuracy': 'balanced_accuracy',
     'ROC AUC': 'roc_auc',
     'F1 Score': 'f1_weighted'
-   }%}
-   {% set REGRESSION_METRICS = {
+  }%}
+  {% set REGRESSION_METRICS = {
     'R2': 'r2',
     'Explained Variance': 'explained_variance',
     'Max Error': 'max_error',
     'Negative Mean Absolute Error': 'neg_mean_absolute_error',
     'Negative Mean Squared Error': 'neg_mean_squared_error',
     'Negative Root Mean Squared Error': 'neg_root_mean_squared_error'
-   }%}
+  }%}
   <!-- TODO: Filter bars -->
   <div class="container-fluid py-4 px-3">
     <div class="row pb-3 pt-3">
@@ -271,13 +271,15 @@ body {
   -->
 </body>
   <script>
-    $.fn.selectpicker.Constructor.BootstrapVersion = '4';
+    /* eslint-env browser */
+    /* globals $, g1 */
+    $.fn.selectpicker.Constructor.BootstrapVersion = '4'
     var fh_meta = null
-    var cols = []
+
     const get_score_color = function(s) {
-      let color = "#ff0000"
-      if (s > 50) { color = "#f7b100"}
-      if (s > 90) { color = "#00f700" }
+      let color = '#ff0000'
+      if (s > 50) { color = '#f7b100'}
+      if (s > 90) { color = '#00f700' }
       return color
     }
     const get_score = function() {
@@ -300,9 +302,9 @@ body {
     const post_train = function (target_col) {
       $('#resultcnt').hide()
       let url = g1.url.parse(window.location)
-      url.hash = ""
+      url.hash = ''
       $.ajax({
-        url: url + "?_action=retrain&target_col=" + encodeURIComponent(target_col) + "&_metric=" + encodeURIComponent($('#metric').val()),
+        url: url + '?_action=retrain&target_col=' + encodeURIComponent(target_col) + '&_metric=' + encodeURIComponent($('#metric').val()),
         method: 'POST',
         success: get_score
       })
@@ -322,9 +324,12 @@ body {
         export: false
       })
       url.search = '_cache&_opts'
-      $.getJSON(url.toString()).done(function (e) { opts = e })
+      $.getJSON(url.toString()).done(function (e) {
+        // TODO: Jaidev, please check if & why the next line is required. Anand
+        let opts = e    // eslint-disable-line no-unused-vars
+      })
 
-      url.search = "_model&_download"
+      url.search = '_model&_download'
       $('#downlink').attr('href', url.toString())
 
       // Select
@@ -360,7 +365,7 @@ body {
         e.preventDefault()
         let fd = new FormData(this)
         let testUrl = g1.url.parse(window.location)
-        testUrl.hash = ""
+        testUrl.hash = ''
         testUrl.search = '_action=predict'
         $.ajax({
           url: testUrl.toString(),

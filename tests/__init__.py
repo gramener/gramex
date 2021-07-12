@@ -1,7 +1,6 @@
 import os
 import requests
 import shutil
-import six
 import unittest
 from . import server
 from nose.tools import eq_, ok_
@@ -116,7 +115,7 @@ class TestGramex(unittest.TestCase):
             ok_(len(nodes) > 0, 'CSS %s missing' % css)
 
             # val must be a dict. Convert text values to dict. Raise error for rest
-            if isinstance(val, six.string_types):
+            if isinstance(val, str):
                 val = {'@text': val}
             elif not isinstance(val, dict):
                 raise ValueError('CSS %s has invalid value %s' % (css, val))

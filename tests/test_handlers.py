@@ -3,8 +3,8 @@ import requests
 from . import server
 from . import TestGramex
 from nose.tools import eq_, ok_
-from six.moves.urllib_request import urlopen
-from six.moves.urllib_error import HTTPError
+from urllib.request import urlopen
+from urllib.error import HTTPError
 from gramex.services import info
 from gramex.http import OK, NOT_FOUND, INTERNAL_SERVER_ERROR, FORBIDDEN
 
