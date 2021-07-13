@@ -789,8 +789,6 @@ class Subprocess(object):
 
 _daemons = {}
 _regex_type = type(re.compile(''))
-# Python 3 needs sys.stderr.buffer.write for writing binary strings
-_stderr_write = sys.stderr.buffer.write if hasattr(sys.stderr, 'buffer') else sys.stderr.write
 
 
 def daemon(args, restart=1, first_line=None, stream=True, timeout=5, buffer_size='line', **kwargs):
@@ -821,7 +819,7 @@ def daemon(args, restart=1, first_line=None, stream=True, timeout=5, buffer_size
         if first_line:
             kwargs[channel].append(queue.put)
         if stream is True:
-            kwargs[channel].append(_stderr_write)
+            kwargs[channel].append(sys.stderr.buffer.write)
         elif callable(stream):
             kwargs[channel].append(stream)
     # Buffer by line by default. This is required for the first_line check, not otherwise.
