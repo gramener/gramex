@@ -13,7 +13,6 @@ import mimetypes
 import subprocess       # nosec
 import pandas as pd
 import tornado.template
-from lxml import etree
 from threading import Thread
 from queue import Queue
 from orderedattrdict import AttrDict
@@ -235,10 +234,6 @@ open_callback = dict(
     markdown=_markdown,
     tmpl=_template,
     template=_template,
-    xml=etree.parse,
-    svg=etree.parse,
-    rss=etree.parse,
-    atom=etree.parse,
     config=PathConfig,
     yml=_yaml,
     yaml=_yaml
@@ -268,7 +263,6 @@ def open(path, callback=None, transform=None, rel=False, **kwargs):
     - ``markdown`` or ``md``: reads files using markdown.markdown via io.open
     - ``csv``, ``excel``, ``xls``, ``xlsx``, ``hdf``, ``h5``, ``html``, ``sas``,
       ``stata``, ``table``, ``parquet``, ``feather``: reads using Pandas
-    - ``xml``, ``svg``, ``rss``, ``atom``: reads using lxml.etree
 
     For example::
 
