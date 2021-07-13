@@ -53,7 +53,6 @@ class FormHandler(BaseHandler):
         cls.headers = conf_kwargs.pop('headers', {})
         # Top level formats: key is special. Don't treat it as data
         cls.formats = conf_kwargs.pop('formats', {})
-        cls.task = conf_kwargs.pop('task', {})
         default_config = conf_kwargs.pop('default', None)
         # Remove other known special keys from dataset configuration
         cls.clear_special_keys(conf_kwargs)

@@ -122,6 +122,7 @@ class MLHandler(FormHandler):
         cls.data_store = op.join(cls.config_dir, 'data.h5')
 
         cls.template = kwargs.pop('template', DEFAULT_TEMPLATE)
+        cls.task = kwargs.pop('task')
         super(MLHandler, cls).setup(**kwargs)
 
         try:
@@ -141,10 +142,9 @@ class MLHandler(FormHandler):
             cls._built_transform = staticmethod(lambda x: x)
 
         if cls.backend == "transformers":
-            task = kwargs['task']          
             if not TRANSFORMERS_INSTALLED:
                 raise ImportError('pip install transformers')
-            cls.load_transformer(task, model)
+            cls.load_transformer(cls.task, model)
         else:    
             default_model_path = op.join(cls.config_dir, slugify(cls.name) + '.pkl')
             cls.model_path = model.pop('path', default_model_path)
