@@ -121,7 +121,7 @@ def _markdown(handle, **kwargs):
 @opener
 def _yaml(handle, **kwargs):
     import yaml
-    defaults = {'Loader': yaml.FullLoader}
+    defaults = {'Loader': yaml.SafeLoader}
     return yaml.load(handle.read(), **{k: kwargs.pop(k, v) for k, v in defaults.items()})
 
 

@@ -37,7 +37,7 @@ from random import choice
 from fnmatch import fnmatch
 from collections import OrderedDict
 from pydoc import locate as _locate, ErrorDuringImport
-from yaml import Loader, MappingNode
+from yaml import SafeLoader, MappingNode
 from json import loads, JSONEncoder, JSONDecoder
 from yaml.constructor import ConstructorError
 from orderedattrdict import AttrDict, DefaultAttrDict
@@ -294,7 +294,7 @@ def _from_yaml(loader, node):
         attrdict[key] = loader.construct_object(value_node, deep=False)
 
 
-class ConfigYAMLLoader(Loader):
+class ConfigYAMLLoader(SafeLoader):
     '''
     A YAML loader that loads a YAML file into an ordered AttrDict. Usage::
 

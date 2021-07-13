@@ -239,7 +239,9 @@ class TestOpen(unittest.TestCase):
     def test_open_yaml(self):
         path = os.path.join(cache_folder, 'data.yaml')
         with io.open(path, encoding='utf-8') as handle:
-            expected = yaml.load(handle, Loader=AttrDictYAMLLoader)
+            # yaml.load() is safe to use here since we're loading from a known safe file.
+            # Specifically, we're testing whether Loader= is passed to gramex.cache.open.
+            expected = yaml.load(handle, Loader=AttrDictYAMLLoader)     # nosec
 
         def check(reload):
             result, reloaded = gramex.cache.open(path, 'yaml', _reload_status=True,

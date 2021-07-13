@@ -133,7 +133,7 @@ class TestPathConfig(unittest.TestCase):
         # Once created, it is automatically reloaded
         data = AttrDict(a=1, b=2)
         with self.temp.open('w') as out:
-            yaml.dump(data, out)
+            yaml.dump(dict(data), out)
         eq_(+conf, data)
 
         # Deleted file is detected
@@ -171,7 +171,7 @@ class TestPathConfig(unittest.TestCase):
         # Once temp file is created, it is automatically imported
         data = AttrDict(a=1, b=2)
         with self.temp.open('w') as out:
-            yaml.dump(data, out)
+            yaml.dump(dict(data), out)
         result = +conf_b
         result.update(data)
         eq_(+conf_imp, result)
