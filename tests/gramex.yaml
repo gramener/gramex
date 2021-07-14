@@ -1401,7 +1401,7 @@ url:
       data:
         x: "1"
         y: {z: 2}
-        z: [a, b, {m: 1, n: 2}]
+        z: [a, b, {m: 1, n: 2, 'x/y': 3}]
   json/write:
     pattern: /json/write/(.*)
     handler: JSONHandler
