@@ -44,6 +44,9 @@ class TestMLHandler(TestGramex):
             'mlhandler-badcol/config.json',
             'mlhandler-badcol/data.h5',
             'mlhandler-badcol/mlhandler-badcol.pkl',
+            'mlhandler-decompositions/config.json',
+            'mlhandler-decompositions/data.h5',
+            'mlhandler-decompositions/mlhandler-decompositions.pkl'
         ]]
         paths += [op.join(folder, 'model.pkl')]
         for p in paths:
@@ -483,3 +486,23 @@ class TestMLHandler(TestGramex):
 
     def test_invalid_category(self):
         self.test_get_predictions('mlhandlerbadcol')
+
+    def test_pca(self):
+        xtr, xts = train_test_split(self.df, random_state=12345)
+        # Append the training data
+        r = self.get('/mldecompose?_action=append', method='post',
+                     data=xtr.to_json(orient='records'),
+                     headers={'Content-Type': 'application/json'})
+        self.assertEqual(r.status_code, OK)
+        # Train on it and check attributes
+        r = self.get('/mldecompose?_action=train', method='post')
+        attributes = r.json()
+        sv1, sv2 = attributes['singular_values_']
+        self.assertEqual(round(sv1), 17)
+        self.assertEqual(round(sv2), 10)
+        # Check if test data is transformed
+        r = self.get('/mldecompose?_action=predict', method='post',
+                     data=xts.to_json(orient='records'),
+                     headers={'Content-Type': 'application/json'})
+        x_red = pd.np.array(r.json())
+        self.assertEqual(x_red.shape, (xts.shape[0], 2))

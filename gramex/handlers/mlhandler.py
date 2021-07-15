@@ -14,6 +14,7 @@ from gramex.install import _mkdir, safe_rmtree
 from gramex import cache
 import joblib
 import pandas as pd
+from sklearn.base import TransformerMixin
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
@@ -31,6 +32,14 @@ MLCLASS_MODULES = [
     'sklearn.neighbors',
     'sklearn.neural_network',
     'sklearn.naive_bayes',
+    'sklearn.decomposition'
+
+]
+SKLEARN_DECOMPOSE_ATTRS = [
+    "components_",
+    "explained_variance_",
+    "explained_variance_ratio_",
+    "singular_values_"
 ]
 TRANSFORMS = {
     'include': [],
@@ -47,7 +56,7 @@ DEFAULT_TEMPLATE = op.join(op.dirname(__file__), '..', 'apps', 'mlhandler', 'tem
 search_modelclass = lambda x: locate(x, MLCLASS_MODULES)  # NOQA: E731
 
 
-def _fit(model, x, y, path=None, name=None):
+def _fit(model, x, y=None, path=None, name=None):
     app_log.info('Starting training...')
     try:
         getattr(model, 'partial_fit', model.fit)(x, y)
@@ -114,8 +123,12 @@ class MLHandler(FormHandler):
             cls.model = cls._assemble_pipeline(data, mclass=mclass, params=params)
 
             # train the model
-            target = data[target_col]
-            train = data[[c for c in data if c != target_col]]
+            if issubclass(search_modelclass(mclass), TransformerMixin):
+                target = None
+                train = data
+            else:
+                target = data[target_col]
+                train = data.drop([target_col], axis=1)
             gramex.service.threadpool.submit(
                 _fit, cls.model, train, target, cls.model_path, cls.name)
         cls.config_store.flush()
@@ -272,12 +285,16 @@ class MLHandler(FormHandler):
             if metric:
                 scorer = get_scorer(metric)
                 return scorer(self.model, data, target)
-            return self.model.score(data, target)
+            score = self.model.score(data, target)
+            return score
         except KeyError:
             # Set data in the same order as the transformer requests
             try:
                 data = data[self.model.named_steps['transform']._feature_names_in]
-                data[self.get_opt('target_col', '_prediction')] = self.model.predict(data)
+                if isinstance(self.model[-1], TransformerMixin):
+                    data = self.model.transform(data)
+                else:
+                    data[self.get_opt('target_col', '_prediction')] = self.model.predict(data)
             except Exception as exc:
                 app_log.exception(exc)
             return data
@@ -348,11 +365,14 @@ class MLHandler(FormHandler):
         data = self._parse_data(False) if data is None else data
         data = self._filtercols(data)
         data = self._filterrows(data)
-        target = data[target_col]
-        train = data[[c for c in data if c != target_col]]
         self.model = self._assemble_pipeline(data, force=True)
-        _fit(self.model, train, target, self.model_path)
-        return {'score': self.model.score(train, target)}
+        if not isinstance(self.model[-1], TransformerMixin):
+            target = data[target_col]
+            train = data[[c for c in data if c != target_col]]
+            _fit(self.model, train, target, self.model_path)
+            return {'score': self.model.score(train, target)}
+        _fit(self.model, data, path=self.model_path)
+        return {k: getattr(self.model[-1], k) for k in SKLEARN_DECOMPOSE_ATTRS}
 
     def _retrain(self):
         return self._train(self.load_data())
