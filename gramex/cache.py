@@ -10,7 +10,7 @@ import inspect
 import requests
 import tempfile
 import mimetypes
-import subprocess       # nosec
+import subprocess       # nosec - only enabled via app developer
 import pandas as pd
 import tornado.template
 from threading import Thread
@@ -121,7 +121,8 @@ def _markdown(handle, **kwargs):
 def _yaml(handle, **kwargs):
     import yaml
     defaults = {'Loader': yaml.SafeLoader}
-    return yaml.load(handle.read(), **{k: kwargs.pop(k, v) for k, v in defaults.items()})
+    kwargs = {k: kwargs.pop(k, v) for k, v in defaults.items()}
+    return yaml.load(handle.read(), **kwargs)   # nosec -- we're using SafeLoader
 
 
 def _template(path, **kwargs):
@@ -440,18 +441,20 @@ def _table_status(engine, tables):
         for name in tables:
             if not name or not isinstance(name, str):
                 raise ValueError('gramex.cache.query invalid table list: %s', repr(tables))
+        # bandit security note: We use string substitution for DB and table names.
+        # But these are validated via gramex.data._sql_safe, so we're fine.
         if dialect == 'mysql':
             # https://dev.mysql.com/doc/refman/5.7/en/tables-table.html
             # Works only on MySQL 5.7 and above
-            q = ('SELECT update_time FROM information_schema.tables WHERE ' +
+            q = ('SELECT update_time FROM information_schema.tables WHERE ' +   # nosec
                  _wheres('table_schema', 'table_name', db, tables))
         elif dialect == 'mssql':
             # https://goo.gl/b4aL9m
-            q = ('SELECT last_user_update FROM sys.dm_db_index_usage_stats WHERE ' +
+            q = ('SELECT last_user_update FROM sys.dm_db_index_usage_stats WHERE ' +    # nosec
                  _wheres('database_id', 'object_id', db, tables, fn=['DB_ID', 'OBJECT_ID']))
         elif dialect == 'postgresql':
             # https://www.postgresql.org/docs/9.6/static/monitoring-stats.html
-            q = ('SELECT n_tup_ins, n_tup_upd, n_tup_del FROM pg_stat_all_tables WHERE ' +
+            q = ('SELECT n_tup_ins, n_tup_upd, n_tup_del FROM pg_stat_all_tables WHERE ' +  # nosec
                  _wheres('schemaname', 'relname', 'public', tables))
         elif dialect == 'sqlite':
             if not db:
@@ -823,14 +826,14 @@ def daemon(args, restart=1, first_line=None, stream=True, timeout=5, buffer_size
 
     # If process was never started, start it
     if key not in _daemons:
-        started = _daemons[key] = Subprocess(args, **kwargs)
+        started = _daemons[key] = Subprocess(args, **kwargs)    # nosec
 
     # Ensure that process is running. Restart if required
     proc = _daemons[key]
     restart = int(restart)
     while proc.proc.returncode is not None and restart > 0:
         restart -= 1
-        proc = started = _daemons[key] = Subprocess(args, **kwargs)
+        proc = started = _daemons[key] = Subprocess(args, **kwargs)     # nosec
     if proc.proc.returncode is not None:
         raise RuntimeError('Error %d starting %s' % (proc.proc.returncode, arg_str))
     if started:

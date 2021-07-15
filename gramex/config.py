@@ -867,8 +867,8 @@ def setup_secrets(path, max_age_days=1000000, clear=True):
         from urllib.request import urlopen
         from tornado.web import decode_signed_value
         app_log.info('Fetching remote secrets from %s', secrets_url)
-        # Load string from the URL -- but ignore comments
-        value = yaml.load(urlopen(secrets_url), Loader=yaml.SafeLoader)
+        # Load string from the URL -- but ignore comments. file:// URLs are fine too
+        value = yaml.load(urlopen(secrets_url), Loader=yaml.SafeLoader)     # nosec
         value = decode_signed_value(secrets_key, '', value, max_age_days=max_age_days)
         result.update(loads(value.decode('utf-8')))
     # If SECRETS_IMPORT: is set, fetch secrets from those file(s) as well.

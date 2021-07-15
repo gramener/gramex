@@ -7,7 +7,8 @@ import re
 import requests
 from fnmatch import fnmatch
 from gramex.config import ChainConfig, PathConfig, objectpath, variables, CustomJSONEncoder
-from lxml.html import document_fromstring
+# lxml.etree is safe on https://github.com/tiran/defusedxml/tree/main/xmltestdata
+from lxml.html import document_fromstring   # nosec
 from orderedattrdict import AttrDict
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException, TimeoutException, WebDriverException

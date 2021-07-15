@@ -3,8 +3,9 @@ import sys
 import os.path
 import sqlite3
 from glob import glob
-from lxml.etree import Element
-from lxml.html import fromstring, tostring
+# lxml.etree is safe on https://github.com/tiran/defusedxml/tree/main/xmltestdata
+from lxml.etree import Element              # nosec
+from lxml.html import fromstring, tostring  # nosec
 import numpy as np
 import pandas as pd
 import gramex.data
@@ -28,7 +29,7 @@ DB_CONFIG = {
     }
 }
 DB_CONFIG['table_columns'] = [
-    '{}_{}'.format(k, x)
+    f'{k}_{x}'
     for k, v in DB_CONFIG['metrics'].items()
     for x in v] + [
         x['key'] if isinstance(x, dict) else x
@@ -54,9 +55,8 @@ def pdagg(df, groups, aggfuncs):
 
 def table_exists(table, conn):
     '''check if table exists in sqlite db'''
-    query = ("SELECT name FROM sqlite_master "
-             "WHERE type='table' AND name='{}'".format(table))
-    return not pd.read_sql(query, conn).empty
+    query = "SELECT name FROM sqlite_master WHERE type='table' AND name=?"
+    return not pd.read_sql(query, conn, params=[table]).empty
 
 
 def add_session(df, duration=30, cutoff_buffer=0):
@@ -126,9 +126,8 @@ def summarize(transforms=[], post_transforms=[], run=True,
 
     # get this month log files if db is already created
     if table_exists(table(levels[-1]), conn):
-        max_date = pd.read_sql(
-            'SELECT MAX(time) FROM {}'.format(
-                table(levels[-1])), conn).iloc[0, 0]
+        query = 'SELECT MAX(time) FROM {}'.format(table(levels[-1]))    # nosec - table() is safe
+        max_date = pd.read_sql(query, conn).iloc[0, 0]
         app_log.info('logviewer: last processed till %s', max_date)
         this_month = max_date[:8] + '01'
         log_files = [f for f in log_files if filesince(f, this_month)]
@@ -156,7 +155,6 @@ def summarize(transforms=[], post_transforms=[], run=True,
     app_log.info('logviewer: applying transforms')
     for spec in transforms:
         apply_transform(data, spec)  # applies on copy
-    delete = 'DELETE FROM {} WHERE time >= "{}"'.format
     # levels should go from M > W > D
     for freq in levels:
         # filter dataframe for max_date.level
@@ -168,7 +166,8 @@ def summarize(transforms=[], post_transforms=[], run=True,
                 date_from -= pd.offsets.MonthBegin(1)
             data = data[data.time.ge(date_from)]
             # delete old records
-            conn.execute(delete(table(freq), date_from))
+            query = f'DELETE FROM {table(freq)} WHERE time >= ?'    # nosec - table() is safe
+            conn.execute(query, (date_from, ))
             conn.commit()
         groups[0]['freq'] = freq
         # get summary view

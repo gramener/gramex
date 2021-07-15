@@ -11,7 +11,8 @@ import numpy as np
 import pandas as pd
 import matplotlib.cm
 import matplotlib.colors
-from lxml import etree
+# lxml.etree is safe on https://github.com/tiran/defusedxml/tree/main/xmltestdata
+from lxml.etree import fromstring   # nosec
 from tornado.template import Template
 from tornado.escape import to_unicode
 from pptx.chart import data as pptxcd
@@ -73,7 +74,8 @@ def text(shape, spec, data):
     # Updating default css with css from config.
     default_css.update(style)
     default_css['color'] = default_css.get('color', '#0000000')
-    update_text = etree.fromstring('<root>{}</root>'.format(template(spec['text'], data)))
+    # lxml.etree is safe on https://github.com/tiran/defusedxml/tree/main/xmltestdata
+    update_text = fromstring('<root>{}</root>'.format(template(spec['text'], data)))    # nosec
     paragraph.runs[0].text = update_text.text if update_text.text else ''
     utils.apply_text_css(shape, paragraph.runs[0], paragraph, **default_css)
     index = 1

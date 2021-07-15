@@ -7,8 +7,9 @@ import six
 from six import iteritems
 import numpy as np
 import pandas as pd
-from lxml import objectify
-from lxml.builder import ElementMaker
+# lxml.etree is safe on https://github.com/tiran/defusedxml/tree/main/xmltestdata
+from lxml import objectify              # nosec
+from lxml.builder import ElementMaker   # nosec
 from pptx.util import Inches
 from pptx.dml.color import RGBColor
 from pptx.enum.base import EnumValue
