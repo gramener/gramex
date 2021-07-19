@@ -498,7 +498,7 @@ class TestMLHandler(TestGramex):
         r = self.get('/mldecompose?_action=train', method='post')
         attributes = r.json()
         sv1, sv2 = attributes['singular_values_']
-        self.assertEqual(round(sv1), 17)
+        self.assertEqual(round(sv1), 17)  # NOQA: E912
         self.assertEqual(round(sv2), 10)
         # Check if test data is transformed
         r = self.get('/mldecompose?_action=predict', method='post',
