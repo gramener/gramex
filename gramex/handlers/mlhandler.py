@@ -285,8 +285,7 @@ class MLHandler(FormHandler):
             if metric:
                 scorer = get_scorer(metric)
                 return scorer(self.model, data, target)
-            score = self.model.score(data, target)
-            return score
+            return self.model.score(data, target)
         except KeyError:
             # Set data in the same order as the transformer requests
             try:
@@ -370,9 +369,11 @@ class MLHandler(FormHandler):
             target = data[target_col]
             train = data[[c for c in data if c != target_col]]
             _fit(self.model, train, target, self.model_path)
-            return {'score': self.model.score(train, target)}
-        _fit(self.model, data, path=self.model_path)
-        return {k: getattr(self.model[-1], k) for k in SKLEARN_DECOMPOSE_ATTRS}
+            result = {'score': self.model.score(train, target)}
+        else:
+            _fit(self.model, data, path=self.model_path)
+            result = {k: getattr(self.model[-1], k) for k in SKLEARN_DECOMPOSE_ATTRS}
+        return result
 
     def _retrain(self):
         return self._train(self.load_data())
