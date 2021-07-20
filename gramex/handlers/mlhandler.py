@@ -35,12 +35,6 @@ MLCLASS_MODULES = [
     'sklearn.decomposition'
 
 ]
-SKLEARN_DECOMPOSE_ATTRS = [
-    "components_",
-    "explained_variance_",
-    "explained_variance_ratio_",
-    "singular_values_"
-]
 TRANSFORMS = {
     'include': [],
     'exclude': [],
@@ -372,7 +366,7 @@ class MLHandler(FormHandler):
             result = {'score': self.model.score(train, target)}
         else:
             _fit(self.model, data, path=self.model_path)
-            result = {k: getattr(self.model[-1], k) for k in SKLEARN_DECOMPOSE_ATTRS}
+            result = {k: v for k, v in vars(self.model[-1]).items() if k.endswith('_')}
         return result
 
     def _retrain(self):
