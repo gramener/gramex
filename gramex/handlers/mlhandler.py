@@ -12,6 +12,7 @@ from gramex.handlers import FormHandler
 from gramex.http import NOT_FOUND, BAD_REQUEST
 from gramex.install import _mkdir, safe_rmtree
 from gramex import cache
+from gramex.dl import SentimentDataset
 import joblib
 import pandas as pd
 from sklearn.compose import ColumnTransformer
@@ -22,14 +23,9 @@ from slugify import slugify
 from tornado.gen import coroutine
 from tornado.web import HTTPError
 from sklearn.metrics import get_scorer
-try:
-    from transformers import pipeline
-    from transformers import AutoModelForSequenceClassification, AutoTokenizer
-    from transformers import Trainer, TrainingArguments
-    from gramex.dl_utils import SentimentDataset
-    TRANSFORMERS_INSTALLED = True
-except ImportError:
-    TRANSFORMERS_INSTALLED = False
+from transformers import pipeline
+from transformers import AutoModelForSequenceClassification, AutoTokenizer
+from transformers import Trainer, TrainingArguments
 
 op = os.path
 MLCLASS_MODULES = [
@@ -142,8 +138,6 @@ class MLHandler(FormHandler):
             cls._built_transform = staticmethod(lambda x: x)
 
         if cls.backend == "transformers":
-            if not TRANSFORMERS_INSTALLED:
-                raise ImportError('pip install transformers')
             cls.load_transformer(cls.task, model)
         else:    
             default_model_path = op.join(cls.config_dir, slugify(cls.name) + '.pkl')
