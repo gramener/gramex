@@ -4,10 +4,7 @@
 
 /d/site/gramener.com/viz/async-gramex/gramex/apps/capture
 
-/d/site/gramener.com/viz/async-gramex/gramex/apps/configeditor
-
 /d/site/gramener.com/viz/async-gramex/gramex/apps/filemanager
-review	minimist	low	>=0.2.1 <1.0.0 || >=1.2.3	Prototype Pollution	https://npmjs.com/advisories/1179	faucet>minimist
 
 /d/site/gramener.com/viz/async-gramex/gramex/apps/logviewer
 

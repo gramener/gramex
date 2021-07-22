@@ -11,3 +11,6 @@ gramex/apps/admin2/schedule.js
 
 # Ignore snippets found in documentation and tutorials
 gramex/apps/guide/tutorials/*
+
+# Ignore generated files for test caes
+gramex/apps/filemanager/test/tape.js

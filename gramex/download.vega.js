@@ -29,7 +29,7 @@
         .run()
       container.vega = view
     } catch (error) {
-      container.innerHTML = error
+      container.textContent = error
     }
   })
 })(/*{conf}*/)

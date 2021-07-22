@@ -33,4 +33,4 @@ do
 done
 
 # Run test cases
-node puppet.js | ../node_modules/.bin/tap-merge | ../node_modules/.bin/faucet
+node puppet.js | ../node_modules/.bin/tap-merge

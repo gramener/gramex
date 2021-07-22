@@ -9,6 +9,7 @@ pdfminer.six          # For CaptureHandler testing
 psycopg2 >= 2.7.1     # For PostgreSQL connections
 python-dateutil       # For schedule testing
 pymongo               # For MongoDB tests
+babel >= 2.9.1        # For sphinx_rtd_theme https://snyk.io/vuln/SNYK-PYTHON-BABEL-1278589
 sphinx_rtd_theme      # For documentation
 testfixtures          # For logcapture
 websocket-client      # For websocket testing
