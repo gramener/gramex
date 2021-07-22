@@ -366,7 +366,10 @@ class MLHandler(FormHandler):
             result = {'score': self.model.score(train, target)}
         else:
             _fit(self.model, data, path=self.model_path)
-            result = {k: v for k, v in vars(self.model[-1]).items() if k.endswith('_')}
+            # Note: Fitted sklearn estimators store their parameters
+            # in attributes whose names end in an underscore. E.g. in the case of PCA,
+            # attributes are named `explained_variance_`. The `_train` action returns them.
+            result = {k: v for k, v in vars(self.model[-1]).items() if re.search(r'[^_]+_$', k)}
         return result
 
     def _retrain(self):
