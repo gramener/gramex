@@ -19,7 +19,6 @@ from orderedattrdict import AttrDict
 from orderedattrdict.yamlutils import AttrDictYAMLLoader
 from zipfile import ZipFile
 from tornado.template import Template
-from orderedattrdict.yamlutils import from_yaml         # noqa
 import gramex
 import gramex.license
 from gramex.config import ChainConfig, PathConfig, variables, app_log, slug
@@ -169,7 +168,7 @@ except NameError:
         raise exc_info[1]
 else:
     # On Windows systems, try harder
-    def _ensure_remove(function, path, exc_info):
+    def _ensure_remove(func, path, exc_info):
         '''onerror callback for rmtree that tries hard to delete files'''
         if issubclass(exc_info[0], WindowsError):
             import winerror
@@ -191,10 +190,12 @@ else:
                     except WindowsError:
                         pass
             # npm creates windows shortcuts that shutil.rmtree cannot delete.
-            # os.listdir failes with a PATH_NOT_FOUND. Delete these and try again
-            elif function == os.listdir and exc_info[1].winerror == winerror.ERROR_PATH_NOT_FOUND:
+            # os.listdir/scandir fails with a PATH_NOT_FOUND.
+            # Delete these using win32com and try again.
+            elif (exc_info[1].winerror == winerror.ERROR_PATH_NOT_FOUND and
+                  func in {os.listdir, os.scandir}):
                 app_log.error('Cannot delete %s', path)
-                from win32com.shell import shell, shellcon
+                from win32com.shell import shell, shellcon  # type:ignore
                 options = shellcon.FOF_NOCONFIRMATION | shellcon.FOF_NOERRORUI
                 code, err = shell.SHFileOperation((0, shellcon.FO_DELETE, path, None, options))
                 if code == 0:
@@ -336,30 +337,18 @@ def run_command(config):
     return proc.returncode
 
 
-# Setup file configurations.
-# Structure: {File: {exe: cmd}}
-# If File exists, then if exe exists, run cmd.
-# For example, if package.json exists:
-#   then if yarn exists, run yarn install
-#   else if npm exists, run npm install
-setup_paths = '''
-Makefile:
-    make: '"{EXE}"'
-setup.ps1:
-    powershell: '"{EXE}" -File "{FILE}"'
-setup.sh:
-    bash: '"{EXE}" "{FILE}"'
-requirements.txt:
-    pip: '"{EXE}" install -r "{FILE}"'
-setup.py:
-    python: '"{EXE}" "{FILE}"'
-package.json:
-    yarn: '"{EXE}" install --prefer-offline'
-    npm: '"{EXE}" install'
-bower.json:
-    bower: '"{EXE}" --allow-root install'
-'''
-setup_paths = yaml.load(setup_paths, Loader=AttrDictYAMLLoader)     # nosec
+# Setup file configurations. If {file} exists, then if {exe} exists, run {cmd}.
+setup_paths = [
+    {'file': 'Makefile', 'exe': 'make', 'cmd': '"{exe}"'},
+    {'file': 'setup.ps1', 'exe': 'powershell', 'cmd': '"{exe}" -File "{file}"'},
+    {'file': 'setup.sh', 'exe': 'bash', 'cmd': '"{exe}" "{file}"'},
+    {'file': 'requirements.txt', 'exe': 'pip', 'cmd': '"{exe}" install -r "{file}"'},
+    {'file': 'setup.py', 'exe': 'python', 'cmd': '"{exe}" "{file}"'},
+    {'file': 'bower.json', 'exe': 'bower', 'cmd': '"{exe}" --allow-root install'},
+    # If package.json exists, run npm install. OVERRIDE with yarn install if yarn.lock
+    {'file': 'package.json', 'exe': 'npm', 'cmd': '"{exe}" install'},
+    {'file': 'yarn.lock', 'exe': 'yarn', 'cmd': '"{exe}" install --prefer-offline'},
+]
 
 
 def run_setup(target):
@@ -389,19 +378,17 @@ def run_setup(target):
         target = app_target
     target = os.path.abspath(target)
     app_log.info('Setting up %s', target)
-    for file, runners in setup_paths.items():
-        setup_file = os.path.join(target, file)
+    for config in setup_paths:
+        setup_file = os.path.join(target, config['file'])
         if not os.path.exists(setup_file):
             continue
-        for exe, cmd in runners.items():
-            exe_path = which(exe)
-            if exe_path is not None:
-                cmd = cmd.format(FILE=setup_file, EXE=exe_path)
-                app_log.info('Running %s', cmd)
-                _run_console(cmd, cwd=target)
-                break
+        exe_path = which(config['exe'])
+        if exe_path is not None:
+            cmd = config['cmd'].format(file=setup_file, exe=exe_path)
+            app_log.info('Running %s', cmd)
+            _run_console(cmd, cwd=target)
         else:
-            app_log.warning('Skipping %s. No %s found', setup_file, exe)
+            app_log.warning('Skipping %s. No %s found', setup_file, config['exe'])
 
 
 app_dir = Path(variables.get('GRAMEXDATA')) / 'apps'
