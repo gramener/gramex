@@ -1311,7 +1311,7 @@ def alter(url: str, table: str, columns: dict = None, **kwargs):
             if isinstance(col_type, str):
                 # Use eval() to handle direct types like INTEGER *and* expressions like VARCHAR(3)
                 # eval() is safe here since `col_type` is written by app developer
-                row['type'] = eval(col_type.upper(), vars(sa.types))    # nosec
+                row['type'] = eval(col_type.upper(), vars(sa.types))    # nosec: frozen input
             row['type_'] = row.pop('type')
             if 'default' in row:
                 row['server_default'] = str(row.pop('default'))

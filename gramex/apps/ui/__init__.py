@@ -5,7 +5,7 @@ import os
 import json
 import gramex
 import gramex.cache
-import subprocess       # nosec - only used for JS compilation
+import subprocess       # nosec: only for JS compilation
 from hashlib import md5
 from tornado.gen import coroutine, Return
 from gramex.config import variables, app_log, merge
@@ -26,7 +26,7 @@ if not os.path.exists(cache_dir):
 
 def get_cache_key(state):
     cache_key = json.dumps(state, sort_keys=True, ensure_ascii=True).encode('utf-8')
-    return md5(cache_key).hexdigest()[:5]       # nosec - this is not for cryptography
+    return md5(cache_key).hexdigest()[:5]       # nosec: non-cryptographic use
 
 
 @coroutine

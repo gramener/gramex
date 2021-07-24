@@ -246,7 +246,8 @@ def register_commands(register: Dict[str, str]) -> None:
         the command. The expression can use 3 variables: ``shape`` (the Shape object to modify),
         ``spec`` (the configuration passed to your command) and ``data``.
     '''
-    assert isinstance(register, dict), 'register: must be a dict, not %s' % type(register)
+    if not isinstance(register, dict):
+        raise TypeError('register: must be a dict, not %s' % type(register))
     for key, conf in register.items():
         commands.cmdlist[key] = build_transform(
             {'function': conf}, vars={'shape': None, 'spec': None, 'data': None}, iter=False)
@@ -264,7 +265,8 @@ def pick_only_slides(prs: Presentation, only: Union[int, List[int]] = None) -> l
         return list(prs.slides)
     if isinstance(only, int):
         only = [only]
-    assert isinstance(only, list), 'pptgen(only=) takes slide number or list, not %s' % type(only)
+    if not isinstance(only, list):
+        raise TypeError('pptgen(only=) takes slide number or list, not %s' % type(only))
     all_slides = set(range(1, 1 + len(prs.slides)))
     for slide_num in reversed(sorted(all_slides - set(only))):
         rid = prs.slides._sldIdLst[slide_num - 1].rId
@@ -483,4 +485,4 @@ def commandline(args=None):
     # Otherwise, open the output PPTX created
     if not rules.get('no-open', False) and hasattr(os, 'startfile'):
         # os.startfile() is safe since the target is an explicit file we've created
-        os.startfile(rules['target'])   # nosec
+        os.startfile(rules['target'])   # nosec: developer-initiated

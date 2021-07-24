@@ -243,7 +243,7 @@ def build_transform(conf, vars=None, filename='transform', cache=False, iter=Tru
     )
     code = compile(''.join(body), filename=filename, mode='exec')
     # exec() is safe here since the code is written by app developer
-    exec(code, context)         # nosec
+    exec(code, context)     # nosec: developer-initiated
 
     # Return the transformed function
     function = context['transform']
@@ -283,7 +283,7 @@ def condition(*args):
     for cond, val in pairs:
         if isinstance(cond, str):
             # eval() is safe here since `cond` is written by app developer
-            if eval(Template(cond).substitute(var_defaults)):    # nosec
+            if eval(Template(cond).substitute(var_defaults)):    # nosec: developer-initiated
                 return val
         elif bool(cond):
             return val
@@ -352,7 +352,7 @@ def flattener(fields, default=None, filename='flatten'):
     code = compile(''.join(body), filename='flattener:%s' % filename, mode='exec')
     context = {'AttrDict': AttrDict, 'default': default}
     # eval() is safe here since the code is constructed entirely in this function
-    eval(code, context)     # nosec
+    eval(code, context)     # nosec: developer-initiated
     return context[filename]
 
 
@@ -557,5 +557,5 @@ def build_log_info(keys, *vars):
                    filename='log', mode='exec')
     context = {'os': os, 'time': time, 'datetime': datetime, 'conf': conf, 'AttrDict': AttrDict}
     # exec() is safe here since the code is constructed entirely in this function
-    exec(code, context)         # nosec
+    exec(code, context)     # nosec: developer-initiated
     return context['fn']

@@ -258,7 +258,7 @@ _valid_key_chars = string.ascii_letters + string.digits
 
 def random_string(size, chars=_valid_key_chars):
     '''Return random string of length size using chars (which defaults to alphanumeric)'''
-    return ''.join(choice(chars) for index in range(size))   # nosec - ok for non-cryptographic use
+    return ''.join(choice(chars) for index in range(size))   # nosec: non-cryptographic use
 
 
 RANDOM_KEY = r'$*'
@@ -330,7 +330,7 @@ def _yaml_open(path, default=AttrDict(), **kwargs):
     app_log.debug('Loading config: %s', path)
     with path.open(encoding='utf-8') as handle:
         try:
-            result = yaml.load(handle, Loader=ConfigYAMLLoader)     # nosec
+            result = yaml.load(handle, Loader=ConfigYAMLLoader)     # nosec: SafeLoader
         except Exception:
             app_log.exception('Config error: %s', path)
             return default
@@ -378,8 +378,8 @@ def _yaml_open(path, default=AttrDict(), **kwargs):
             # Evaluate conditional
             base, expr = key.split(' if ', 2)
             try:
-                # # eval() is safe here since `expr` is written by app developer
-                condition = eval(expr, globals(), frozen_vars)  # nosec
+                # eval() is safe here since `expr` is written by app developer
+                condition = eval(expr, globals(), frozen_vars)  # nosec: developer-initiated
             except Exception:
                 condition = False
                 app_log.exception('Failed condition evaluation: %s', key)
@@ -868,7 +868,7 @@ def setup_secrets(path, max_age_days=1000000, clear=True):
         from tornado.web import decode_signed_value
         app_log.info('Fetching remote secrets from %s', secrets_url)
         # Load string from the URL -- but ignore comments. file:// URLs are fine too
-        value = yaml.load(urlopen(secrets_url), Loader=yaml.SafeLoader)     # nosec
+        value = yaml.load(urlopen(secrets_url), Loader=yaml.SafeLoader)   # nosec: SafeLoader
         value = decode_signed_value(secrets_key, '', value, max_age_days=max_age_days)
         result.update(loads(value.decode('utf-8')))
     # If SECRETS_IMPORT: is set, fetch secrets from those file(s) as well.

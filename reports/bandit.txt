@@ -1,47 +1,21 @@
-Run started:2021-07-24 07:25:48.431763
+Run started:2021-07-24 08:43:34.336278
 
 Test results:
->> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
-   Severity: Low   Confidence: High
-   Location: gramex\handlers\drivehandler.py:122
-   More Info: https://bandit.readthedocs.io/en/latest/blacklists/blacklist_calls.html#b311-random
-121	            while os.path.exists(os.path.join(self.path, path)):
-122	                path = os.path.splitext(path)[0] + choice(digits + ascii_lowercase) + ext
-123	            self.args['file'][i] = file
-
---------------------------------------------------
->> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
-   Severity: Low   Confidence: High
-   Location: gramex\pptgen2\__init__.py:249
-   More Info: https://bandit.readthedocs.io/en/latest/plugins/b101_assert_used.html
-248	    '''
-249	    assert isinstance(register, dict), 'register: must be a dict, not %s' % type(register)
-250	    for key, conf in register.items():
-
---------------------------------------------------
->> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
-   Severity: Low   Confidence: High
-   Location: gramex\pptgen2\__init__.py:267
-   More Info: https://bandit.readthedocs.io/en/latest/plugins/b101_assert_used.html
-266	        only = [only]
-267	    assert isinstance(only, list), 'pptgen(only=) takes slide number or list, not %s' % type(only)
-268	    all_slides = set(range(1, 1 + len(prs.slides)))
-
---------------------------------------------------
+	No issues identified.
 
 Code scanned:
-	Total lines of code: 14995
-	Total lines skipped (#nosec): 65
+	Total lines of code: 14999
+	Total lines skipped (#nosec): 67
 
 Run metrics:
 	Total issues (by severity):
 		Undefined: 0.0
-		Low: 3.0
+		Low: 0.0
 		Medium: 0.0
 		High: 0.0
 	Total issues (by confidence):
 		Undefined: 0.0
 		Low: 0.0
 		Medium: 0.0
-		High: 3.0
+		High: 0.0
 Files skipped (0):

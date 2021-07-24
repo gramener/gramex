@@ -21,7 +21,7 @@ from functools import partial
 from gramex.config import app_log, objectpath
 from gramex.transforms import build_transform
 # lxml.etree is safe on https://github.com/tiran/defusedxml/tree/main/xmltestdata
-from lxml.html import fragments_fromstring, builder, HtmlElement    # nosec
+from lxml.html import fragments_fromstring, builder, HtmlElement    # nosec: lxml is safe
 from orderedattrdict import AttrDict
 from pptx.chart import data as pptxchartdata
 from pptx.dml.color import RGBColor

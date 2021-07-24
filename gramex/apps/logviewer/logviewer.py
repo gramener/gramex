@@ -4,8 +4,8 @@ import os.path
 import sqlite3
 from glob import glob
 # lxml.etree is safe on https://github.com/tiran/defusedxml/tree/main/xmltestdata
-from lxml.etree import Element              # nosec
-from lxml.html import fromstring, tostring  # nosec
+from lxml.etree import Element              # nosec: lxml is fixed
+from lxml.html import fromstring, tostring  # nosec: lxml is fixed
 import numpy as np
 import pandas as pd
 import gramex.data
@@ -126,7 +126,7 @@ def summarize(transforms=[], post_transforms=[], run=True,
 
     # get this month log files if db is already created
     if table_exists(table(levels[-1]), conn):
-        query = 'SELECT MAX(time) FROM {}'.format(table(levels[-1]))    # nosec - table() is safe
+        query = 'SELECT MAX(time) FROM {}'.format(table(levels[-1]))    # nosec: table() is safe
         max_date = pd.read_sql(query, conn).iloc[0, 0]
         app_log.info('logviewer: last processed till %s', max_date)
         this_month = max_date[:8] + '01'
@@ -166,7 +166,7 @@ def summarize(transforms=[], post_transforms=[], run=True,
                 date_from -= pd.offsets.MonthBegin(1)
             data = data[data.time.ge(date_from)]
             # delete old records
-            query = f'DELETE FROM {table(freq)} WHERE time >= ?'    # nosec - table() is safe
+            query = f'DELETE FROM {table(freq)} WHERE time >= ?'    # nosec: table() is safe
             conn.execute(query, (date_from, ))
             conn.commit()
         groups[0]['freq'] = freq

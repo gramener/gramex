@@ -617,7 +617,7 @@ def _get_cache_key(conf, name):
         'u': str                # convert to unicode
     }
     # exec() is safe here since the code is constructed entirely in this function
-    exec(method, context)       # nosec
+    exec(method, context)       # nosec: frozen input
     return context['cache_key']
 
 

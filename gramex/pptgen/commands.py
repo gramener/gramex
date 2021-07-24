@@ -12,7 +12,7 @@ import pandas as pd
 import matplotlib.cm
 import matplotlib.colors
 # lxml.etree is safe on https://github.com/tiran/defusedxml/tree/main/xmltestdata
-from lxml.etree import fromstring   # nosec
+from lxml.etree import fromstring   # nosec: lxml is fixed
 from tornado.template import Template
 from tornado.escape import to_unicode
 from pptx.chart import data as pptxcd
@@ -389,10 +389,12 @@ def chart(shape, spec, data):
                 for series_point in {'point', 'series'}:
                     # Replacing point with series to change color in legend
                     fillpoint = color_mapping[chart_name].replace('point', series_point)
-                    chart_css(eval(fillpoint).fill, point_css, point_css['color'])      # nosec
+                    chart_css(eval(fillpoint).fill,             # nosec: developer-initiaated
+                              point_css, point_css['color'])
                     # Will apply on outer line of chart shape line(like stroke in html)
                     _stroke = point_css.get('stroke', point_css['color'])
-                    chart_css(eval(fillpoint).line.fill, point_css, _stroke)            # nosec
+                    chart_css(eval(fillpoint).line.fill,        # nosec: developer-initiaated
+                              point_css, _stroke)
 
 
 # Custom Charts Functions below(Sankey, Treemap, Calendarmap).

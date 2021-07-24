@@ -9,7 +9,7 @@ import requests
 import tornado.gen
 from orderedattrdict import AttrDict
 from threading import Thread, Lock
-from subprocess import Popen, PIPE, STDOUT      # nosec
+from subprocess import Popen, PIPE, STDOUT      # nosec: only for JS compilation
 from urllib.parse import urlencode, urljoin
 from tornado.web import HTTPError
 from tornado.httpclient import AsyncHTTPClient
@@ -126,7 +126,8 @@ class Capture(object):
             app_log.info('Starting %s via %s', script, self.cmd)
             self.close()
             # self.cmd is taken from the YAML configuration. Safe to run
-            self.proc = Popen(shlex.split(self.cmd), stdout=PIPE, stderr=STDOUT)    # nosec
+            self.proc = Popen(shlex.split(self.cmd),        # nosec: frozen input
+                              stdout=PIPE, stderr=STDOUT)
             self.proc.poll()
             atexit.register(self.close)
             # TODO: what if readline() does not return quickly?

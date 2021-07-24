@@ -10,7 +10,7 @@ import inspect
 import requests
 import tempfile
 import mimetypes
-import subprocess       # nosec - only enabled via app developer
+import subprocess       # nosec: only enabled via app developer
 import pandas as pd
 import tornado.template
 from threading import Thread
@@ -122,7 +122,7 @@ def _yaml(handle, **kwargs):
     import yaml
     defaults = {'Loader': yaml.SafeLoader}
     kwargs = {k: kwargs.pop(k, v) for k, v in defaults.items()}
-    return yaml.load(handle.read(), **kwargs)   # nosec -- we're using SafeLoader
+    return yaml.load(handle.read(), **kwargs)   # nosec: SafeLoader
 
 
 def _template(path, **kwargs):
@@ -687,7 +687,7 @@ class Subprocess(object):
         # http://stackoverflow.com/a/4896288/100904
         kwargs['close_fds'] = 'posix' in sys.builtin_module_names
 
-        self.proc = subprocess.Popen(args, **kwargs)        # nosec
+        self.proc = subprocess.Popen(args, **kwargs)        # nosec - developer-initiated
         self.thread = {}        # Has the running threads
         self.future = {}        # Stores the futures indicating stream close
         self.loop = _get_current_ioloop()
@@ -826,14 +826,14 @@ def daemon(args, restart=1, first_line=None, stream=True, timeout=5, buffer_size
 
     # If process was never started, start it
     if key not in _daemons:
-        started = _daemons[key] = Subprocess(args, **kwargs)    # nosec
+        started = _daemons[key] = Subprocess(args, **kwargs)    # nosec: developer-initiated
 
     # Ensure that process is running. Restart if required
     proc = _daemons[key]
     restart = int(restart)
     while proc.proc.returncode is not None and restart > 0:
         restart -= 1
-        proc = started = _daemons[key] = Subprocess(args, **kwargs)     # nosec
+        proc = started = _daemons[key] = Subprocess(args, **kwargs)   # nosec: developer-initiated
     if proc.proc.returncode is not None:
         raise RuntimeError('Error %d starting %s' % (proc.proc.returncode, arg_str))
     if started:
