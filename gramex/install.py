@@ -42,7 +42,7 @@ install: |
     replaced by the target directory.
 
     After installation, runs "gramex setup" which runs the Makefile, setup.ps1,
-    setup.sh, requirements.txt, setup.py, yarn/npm install and bower install.
+    setup.sh, requirements.txt, setup.py, bower install, npm install, yarn install.
 
     Installed apps:
     {apps}
@@ -61,8 +61,9 @@ setup: |
         - bash setup.sh
         - pip install --upgrade -r requirements.txt
         - python setup.py
-        - yarn/npm install
-        - bower install
+        - bower --allow-root install
+        - npm install
+        - yarn install --prefer-offline
 
 run: |
     usage: gramex run <app> [--target=DIR] [--dir=DIR] [--<options>=<value>]
@@ -130,7 +131,7 @@ init: |
     - Install supporting files for a Gramex project from a template
       - "gramex init" sets up dependencies for a local system
       - "gramex init minimal" sets up minimal dependencies
-    - Runs gramex setup (which runs yarn/npm install and other dependencies)
+    - Runs gramex setup (which runs npm install and other dependencies)
 
     Options:
       --target <path>               # Location to install at. Defaults to
@@ -360,16 +361,6 @@ def run_setup(target):
     - A relative path to the Gramex apps/ folder
 
     Returns the absolute path of the final target path.
-
-    This supports:
-
-    - ``make`` (if Makefile exists)
-    - ``powershell -File setup.ps1``
-    - ``bash setup.sh``
-    - ``pip install -r requirements.txt``
-    - ``python setup.py``
-    - ``yarn install`` else ``npm install``
-    - ``bower --allow-root install``
     '''
     if not os.path.exists(target):
         app_target = os.path.join(variables['GRAMEXPATH'], 'apps', target)

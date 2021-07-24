@@ -1,6 +1,6 @@
 /* eslint-env browser, jquery */
 /* globals _ */
-// This file is compiled into schedule.js via "yarn run build".
+// This file is compiled into schedule.js via "npm run build".
 // Changing it has no impact.Compile before checking output.
 
 import {

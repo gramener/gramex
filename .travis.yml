@@ -49,6 +49,7 @@ cache:
   timeout: 1000
   pip: true
   npm: true
+  # We don't use yarn except for the test_install test cases
   yarn: true
   # Don't cache miniconda directory. It's slower. Fresh install takes ~200s.
   # But caching takes ~150s (extraction) + ~190s (re-packing) = ~340s (slower).
@@ -92,7 +93,7 @@ script:
   - coverage report --show-missing --ignore-errors
 
   # Test specific apps
-  - cd $TRAVIS_BUILD_DIR/gramex/apps/filemanager/ && yarn install && bash test/test.sh
+  - cd $TRAVIS_BUILD_DIR/gramex/apps/filemanager/ && npm install && bash test/test.sh
 
   # TODO: Incorporate later
   # - gramex --listen.port=1234 > gramex.log 2>&1 &

@@ -11,7 +11,7 @@ const WebSocket = require('ws')
 
 const context = {}
 // The env variable NODE_PATH must have a SINGLE node_modules path.
-// It's parent directory is where yarn is run.
+// It's parent directory is where npm is run.
 // Defaults to this file's node_modules.
 const node_path = process.env.NODE_PATH || path.resolve(__dirname, 'node_modules')
 
@@ -96,22 +96,23 @@ function main() {
           lib = []
         else if (!Array.isArray(lib))
           lib = [lib]
-        const add = ['add', '--prefer-offline']
+        const add = ['install']
         lib.forEach(function (library) {
           try {
             require(library)
           } catch (e) {
             add.push(library)
-            console.log('TODO: lib', JSON.stringify(library))
           }
         })
-        if (add.length > 2) {
+        if (add.length > 1) {
           try {
-            console.log('yarn ' + add.join(' '), 'CWD:', path.resolve(node_path, '..'))
-            // Run yarn add in the NODE_PATH directory. Defaults to this script's directory
-            spawn(which.sync('yarn'), add, { cwd: path.resolve(node_path, '..') })
+            console.log('npm ' + add.join(' '), 'at', path.resolve(node_path, '..'))
+            // Run npm add in the NODE_PATH directory.
+            // TODO: NODE_PATH defaults to this script's folder, which messes up our package.json.
+            // TODO: Default NODE_PATH to another standard folder. Maybe app dir or cwd.
+            spawn(which.sync('npm'), add, { cwd: path.resolve(node_path, '..') })
               .on('close', function () { execute(ws, code, args, values) })
-            // TODO: if yarn fails (e.g. invalid module, no network), report error on console
+            // TODO: if npm fails (e.g. invalid module, no network), report error on console
           } catch (e) {
             send_error(e, ws)
           }
