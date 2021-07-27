@@ -1,12 +1,12 @@
 '''Test case utilities'''
 import os
 import csv
-import six
 import sys
 import json
 import time
 import random
 import pandas as pd
+from io import StringIO
 from collections import Counter
 from orderedattrdict import AttrDict
 from sklearn.datasets import make_circles as sk_make_circles
@@ -213,7 +213,7 @@ def log_format(handler):
 
 
 def log_csv(handler):
-    result = six.StringIO()
+    result = StringIO()
     writer = csv.writer(result)
     try:
         1 / 0
@@ -265,7 +265,7 @@ def increment_header(handler):
     Does not return any output. Used as a FunctionHandler in func/redirect
     '''
     counters['header'] += 1
-    handler.set_header('Increment', six.text_type(counters['header']))
+    handler.set_header('Increment', str(counters['header']))
     return 'Constant result'
 
 
@@ -310,15 +310,16 @@ def subprocess(handler):
 def argparse(handler):
     params = json.loads(handler.get_argument('_q'))
     args = params.get('args', [])
+    typemap = {'list': list, 'str': str, 'None': None, 'int': int, 'bool': bool}
     # Convert first parameter to relevant type, if required
     if len(args) > 0:
-        if args[0] in {'list', 'str', 'unicode', 'six.string_type', 'None'}:
-            args[0] = eval(args[0])
+        if args[0] in typemap:
+            args[0] = typemap[args[0]]
     # Convert type: to a Python class
     kwargs = params.get('kwargs', {})
-    for key, val in kwargs.items():
+    for val in kwargs.values():
         if 'type' in val:
-            val['type'] = eval(val['type'])
+            val['type'] = typemap[val['type']]
     return json.dumps(handler.argparse(*args, **kwargs))
 
 

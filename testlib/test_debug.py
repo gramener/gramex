@@ -1,5 +1,4 @@
 import os
-import six
 import inspect
 import unittest
 from io import StringIO
@@ -44,10 +43,7 @@ class TestPrint(unittest.TestCase):
         self.assertIn(" .. a = True", lines)
         self.assertIn(" .. b = 1", lines)
         self.assertIn(" .. lst = [1, 2]", lines)
-        if six.PY2:
-            self.assertIn(" .. string = u'abc'", lines)
-        else:
-            self.assertIn(" .. string = 'abc'", lines)
+        self.assertIn(" .. string = 'abc'", lines)
 
 
 class TestDebug(unittest.TestCase):

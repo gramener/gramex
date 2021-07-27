@@ -1,6 +1,5 @@
 import io
 import os
-import six
 import yaml
 import inspect
 import unittest
@@ -111,11 +110,10 @@ class BuildTransform(unittest.TestCase):
         self.check_transform(transform, 'function: condition(1, 0, -1)')
 
         def transform(_val):
-            import six
-            result = six.text_type.upper(_val)
+            result = str.upper(_val)
             return result if isinstance(result, GeneratorType) else [result, ]
-        self.check_transform(transform, 'function: six.text_type.upper')
-        self.check_transform(transform, 'function: six.text_type.upper(_val)')
+        self.check_transform(transform, 'function: str.upper')
+        self.check_transform(transform, 'function: str.upper(_val)')
 
     def test_fn(self):
         def transform(_val):
@@ -315,18 +313,16 @@ class BuildTransform(unittest.TestCase):
 
     def test_import_levels(self):
         def transform(_val):
-            import six
-            result = six.text_type(_val)
+            result = str(_val)
             return result if isinstance(result, GeneratorType) else [result, ]
-        fn = self.check_transform(transform, 'function: six.text_type')
-        eq_(fn(b'abc'), [six.text_type(b'abc')])
+        fn = self.check_transform(transform, 'function: str')
+        eq_(fn(b'abc'), [str(b'abc')])
 
         def transform(content):
-            import six
-            result = six.text_type.__add__(content, '123')
+            result = str.__add__(content, '123')
             return result if isinstance(result, GeneratorType) else [result, ]
         fn = self.check_transform(transform, '''
-            function: six.text_type.__add__
+            function: str.__add__
             args: [=content, '123']
         ''', vars=AttrDict(content=None))
         eq_(fn('abc'), ['abc123'])

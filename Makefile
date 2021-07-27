@@ -44,13 +44,12 @@ clean-test:
 	rm -fr tests/.cache-url
 
 lint:
-	# Install packages using yarn (faster than npm)
-	command -v yarn >/dev/null 2>&1 || npm install -g yarn
-	command -v eclint 2>/dev/null 2>&1 || yarn global add eclint eslint htmllint-cli
+	# Install packages using npm
+	command -v eclint 2>/dev/null 2>&1 || npm install -g eclint eslint htmllint-cli
 	# eclint check files, ignoring node_modules
-	find . -type f \( -name "*.html" -o -name "*.js" -o -name "*.css" -o -name "*.yaml" -o -name "*.md" \) ! -path '*/node_modules/*' ! -path '*/_build/*' ! -path '*/htmlcov/*' ! -path '*/.eggs/*' -print0 | xargs -0 eclint check
-	# eslint requires eslint-plugin-* which are in package.json. yarn install them first
-	yarn install
+	find . -type f \( -name "*.html" -o -name "*.js" -o -name "*.css" -o -name "*.yaml" -o -name "*.md" \) ! -path '*/node_modules/*' ! -path '*/_build/*' ! -path '*/htmlcov/*' ! -path '*/.eggs/*' ! -path '*/pkg/conda/*' ! -path '*/filemanager/test/tape.js' -print0 | xargs -0 eclint check
+	# eslint requires eslint-plugin-* which are in package.json. npm install them first
+	npm install
 	eslint --ext js,html gramex/apps
 	# htmllint: ignore test coverage, node_modules, Sphinx doc _builds, forms/ (TODO: FIX)
 	find . -name '*.html' | grep -v htmlcov | grep -v node_modules | grep -v _build | grep -v forms/ | xargs htmllint
@@ -58,7 +57,7 @@ lint:
 	command -v flake8 2>/dev/null 2>&1 || $(PYTHON) -m pip install flake8 pep8-naming flake8-gramex flake8-blind-except flake8-print flake8-debugger
 	flake8 gramex testlib tests
 	command -v bandit 2>/dev/null 2>&1 || $(PYTHON) -m pip install bandit
-	bandit gramex --recursive --format csv || true    # Just run bandit as a warning
+	bandit gramex --aggregate vuln --recursive --exclude '*/node_modules/*' --quiet
 
 test-setup:
 	$(PYTHON) -m pip install -r tests/requirements.txt
@@ -67,6 +66,8 @@ test: test-setup
 	# Use python setup.py nosetests to ensure the correct Python runs.
 	# (Note: Dependencies are set up via test-setup. setup.py does not have any tests_require.)
 	$(PYTHON) setup.py nosetests
+	# Yarn is used for tests.test_install
+	command -v yarn >/dev/null 2>&1 || npm install -g yarn
 
 conda:
 	# conda install conda-build

@@ -43,6 +43,7 @@ function margin(args) {
 
 
 var fs = require('fs')
+var path = require('path')
 var system = require('system')
 var server = require('webserver').create()
 var phantom_version = phantom.version.major + '.' + phantom.version.minor + '.' + phantom.version.patch
@@ -59,9 +60,9 @@ if (phantom_version < '2.1.1') {
 function render(q, callback) {
   error = {status: '', msg: []}
   q.ext = q.ext || 'pdf'
-  q.file = (q.file || 'screenshot') + '.' + q.ext
-  if (fs.exists(q.file))
-    fs.remove(q.file)
+  q.file = path.basename(q.file || 'screenshot') + '.' + q.ext
+  if (fs.existsSync(q.file))
+    fs.unlinkSync(q.file)
 
   var page = require('webpage').create()
   if (q.ext.match(/^pdf$/i)) {
@@ -72,7 +73,7 @@ function render(q, callback) {
       header: header(q),
       footer: footer(q)
     }
-  } else {
+  } else if (q.ext.match(/^(jpg|jpeg|png|gif|bmp|ppm)$/i)) {
     var scale = parseFloat(q.scale || '1'),
         width = parseFloat(q.width || '1200'),
         height = 768

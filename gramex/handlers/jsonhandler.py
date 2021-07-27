@@ -67,7 +67,9 @@ class JSONHandler(BaseHandler):
         parent, key, data = _jsonstores, path, _jsonstores[path]
         if not jsonpath:
             return parent, key, data
-        keys = [path] + jsonpath.split('/')
+        # Split jsonpath by / -- but escape "\/" as part of the keys
+        keys = [p.replace('\udfff', '/') for p in jsonpath.replace(r'\/', '\udfff').split('/')]
+        keys.insert(0, path)
         for index, key in enumerate(keys[1:]):
             if hasattr(data, '__contains__') and key in data:
                 parent, data = data, data[key]

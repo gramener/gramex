@@ -49,6 +49,7 @@ class TestJSONHandler(TestGramex):
         self.json('get', '/json/get/z/2', data.z[2])
         self.json('get', '/json/get/z/2/m', data.z[2].m)
         self.json('get', '/json/get/z/2/n', data.z[2].n)
+        self.json('get', r'/json/get/z/2/x\/y', data.z[2]['x/y'])
 
         self.json('get', '/json/get//', None)
         self.json('get', '/json/get/0', None)

@@ -22,7 +22,6 @@ merges the YAMLs.
 import os
 import re
 import csv
-import six
 import sys
 import yaml
 import string
@@ -36,15 +35,18 @@ from pathlib import Path
 from copy import deepcopy
 from random import choice
 from fnmatch import fnmatch
-from six import string_types
 from collections import OrderedDict
 from pydoc import locate as _locate, ErrorDuringImport
-from yaml import Loader, MappingNode
+from yaml import SafeLoader, MappingNode
 from json import loads, JSONEncoder, JSONDecoder
 from yaml.constructor import ConstructorError
 from orderedattrdict import AttrDict, DefaultAttrDict
 from slugify import slugify
 from errno import EACCES, EPERM
+# We don't use six -- but import into globals() for _yaml_open().
+# This allows YAML conditionals like `key if six.text_type(...): val`
+import six      # noqa
+
 
 ERROR_SHARING_VIOLATION = 32        # from winerror.ERROR_SHARING_VIOLATION
 
@@ -127,7 +129,7 @@ def merge(old, new, mode='overwrite', warn=None, _path=''):
     '''
     for key in new:
         if key in old and hasattr(old[key], 'items') and hasattr(new[key], 'items'):
-            path_key = _path + ('.' if _path else '') + six.text_type(key)
+            path_key = _path + ('.' if _path else '') + str(key)
             if warn is not None:
                 for pattern in warn:
                     if fnmatch(path_key, pattern):
@@ -218,7 +220,7 @@ def _substitute_variable(val):
     variables['x'] without converting it to a string. Otherwise, treat it as a
     string tempate. So "/$x/" will return "/1/" if x=1.
     '''
-    if not isinstance(val, string_types):
+    if not isinstance(val, str):
         return val
     if val.startswith('$') and val[1:] in variables:
         return variables[val[1:]]
@@ -256,7 +258,7 @@ _valid_key_chars = string.ascii_letters + string.digits
 
 def random_string(size, chars=_valid_key_chars):
     '''Return random string of length size using chars (which defaults to alphanumeric)'''
-    return ''.join(choice(chars) for index in range(size))   # nosec - ok for non-cryptographic use
+    return ''.join(choice(chars) for index in range(size))   # nosec: non-cryptographic use
 
 
 RANDOM_KEY = r'$*'
@@ -275,7 +277,7 @@ def _from_yaml(loader, node):
     loader.flatten_mapping(node)
     for key_node, value_node in node.value:
         key = loader.construct_object(key_node, deep=False)
-        if isinstance(key, six.string_types) and RANDOM_KEY in key:
+        if isinstance(key, str) and RANDOM_KEY in key:
             # With k=5 there's a <0.1% chance of collision even for 1mn uses.
             # (1 - decimal.Decimal(62 ** -5)) ** 1000000 ~ 0.999
             key = key.replace(RANDOM_KEY, random_string(5))
@@ -292,7 +294,7 @@ def _from_yaml(loader, node):
         attrdict[key] = loader.construct_object(value_node, deep=False)
 
 
-class ConfigYAMLLoader(Loader):
+class ConfigYAMLLoader(SafeLoader):
     '''
     A YAML loader that loads a YAML file into an ordered AttrDict. Usage::
 
@@ -328,7 +330,7 @@ def _yaml_open(path, default=AttrDict(), **kwargs):
     app_log.debug('Loading config: %s', path)
     with path.open(encoding='utf-8') as handle:
         try:
-            result = yaml.load(handle, Loader=ConfigYAMLLoader)     # nosec
+            result = yaml.load(handle, Loader=ConfigYAMLLoader)     # nosec: SafeLoader
         except Exception:
             app_log.exception('Config error: %s', path)
             return default
@@ -351,7 +353,7 @@ def _yaml_open(path, default=AttrDict(), **kwargs):
     else:
         kwargs.setdefault('YAMLURL', yamlurl)
     # Typically, we use /$YAMLURL/url - so strip the slashes. Replace backslashes
-    if isinstance(kwargs.get('YAMLURL'), string_types):
+    if isinstance(kwargs.get('YAMLURL'), str):
         kwargs['YAMLURL'] = kwargs['YAMLURL'].replace('\\', '/').strip('/')
     variables.update(kwargs)
 
@@ -372,11 +374,12 @@ def _yaml_open(path, default=AttrDict(), **kwargs):
     remove, replace = [], []
     frozen_vars = dict(variables)
     for key, value, node in walk(result):
-        if isinstance(key, string_types) and ' if ' in key:
+        if isinstance(key, str) and ' if ' in key:
             # Evaluate conditional
             base, expr = key.split(' if ', 2)
             try:
-                condition = eval(expr, globals(), frozen_vars)  # nosec - any Python expr is OK
+                # eval() is safe here since `expr` is written by app developer
+                condition = eval(expr, globals(), frozen_vars)  # nosec: developer-initiated
             except Exception:
                 condition = False
                 app_log.exception('Failed condition evaluation: %s', key)
@@ -391,7 +394,7 @@ def _yaml_open(path, default=AttrDict(), **kwargs):
 
     # Substitute variables
     for key, value, node in walk(result):
-        if isinstance(value, string_types):
+        if isinstance(value, str):
             # Backward compatibility: before v1.0.4, we used {.} for {YAMLPATH}
             value = value.replace('{.}', '$YAMLPATH')
             # Substitute with variables in context, defaulting to ''
@@ -507,7 +510,7 @@ def load_imports(config, source, warn=None):
     imported_paths = [_pathstat(source)]
     root = source.absolute().parent
     for key, value, node in list(walk(config)):
-        if isinstance(key, six.string_types) and key.startswith('import.merge'):
+        if isinstance(key, str) and key.startswith('import.merge'):
             # Strip the top level key(s) from import.merge values
             if isinstance(value, dict):
                 for name, conf in value.items():
@@ -519,7 +522,7 @@ def load_imports(config, source, warn=None):
             del node[key]
         elif key == 'import':
             # Convert "import: path" to "import: {app: path}"
-            if isinstance(value, six.string_types):
+            if isinstance(value, str):
                 value = {'apps': value}
             # Allow "import: [path, path]" to "import: {app0: path, app1: path}"
             elif isinstance(value, list):
@@ -706,7 +709,7 @@ class CustomJSONDecoder(JSONDecoder):
 
     def convert(self, obj):
         for index, (key, val) in enumerate(obj):
-            if isinstance(val, six.string_types) and self.re_datetimeval.match(val):
+            if isinstance(val, str) and self.re_datetimeval.match(val):
                 obj[index] = (key, dateutil.parser.parse(val))
         if callable(self.old_object_pairs_hook):
             return self.old_object_pairs_hook(obj)
@@ -735,11 +738,11 @@ def recursive_encode(data, encoding='utf-8'):
     Convert all Unicode values into UTF-8 encoded byte strings in-place
     '''
     for key, value, node in walk(data):
-        if isinstance(key, six.text_type):
+        if isinstance(key, str):
             newkey = key.encode(encoding)
             node[newkey] = node.pop(key)
             key = newkey
-        if isinstance(value, six.text_type):
+        if isinstance(value, str):
             node[key] = value.encode(encoding)
 
 
@@ -864,8 +867,8 @@ def setup_secrets(path, max_age_days=1000000, clear=True):
         from urllib.request import urlopen
         from tornado.web import decode_signed_value
         app_log.info('Fetching remote secrets from %s', secrets_url)
-        # Load string from the URL -- but ignore comments
-        value = yaml.load(urlopen(secrets_url), Loader=yaml.SafeLoader)
+        # Load string from the URL -- but ignore comments. file:// URLs are fine too
+        value = yaml.load(urlopen(secrets_url), Loader=yaml.SafeLoader)   # nosec: SafeLoader
         value = decode_signed_value(secrets_key, '', value, max_age_days=max_age_days)
         result.update(loads(value.decode('utf-8')))
     # If SECRETS_IMPORT: is set, fetch secrets from those file(s) as well.

@@ -4,7 +4,7 @@ import sys
 import json
 import datetime
 from cachetools import TTLCache
-from six.moves import StringIO
+from io import StringIO
 import gramex
 from gramex import variables
 from gramex.cache import SQLiteStore
@@ -118,9 +118,9 @@ def evaluate(handler, code):
     try:
         context = contexts.setdefault(handler.session['id'], {})
         if mode == 'eval':
-            result = eval(co, context)
+            result = eval(co, context)  # nosec: only admin can run this
         else:
-            exec(co, context)
+            exec(co, context)           # nosec: only admin can run this
             result = None
     except Exception as e:
         result = e

@@ -2,3 +2,5 @@
 # yarn lockfile v1
 
 
+"gramex-npm-package@file:gramex-npm-package":
+  version "1.0.0"

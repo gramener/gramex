@@ -11,14 +11,15 @@ import numpy as np
 import pandas as pd
 import matplotlib.cm
 import matplotlib.colors
-from lxml import etree
+# lxml.etree is safe on https://github.com/tiran/defusedxml/tree/main/xmltestdata
+from lxml.etree import fromstring   # nosec: lxml is fixed
 from tornado.template import Template
 from tornado.escape import to_unicode
 from pptx.chart import data as pptxcd
 from pptx.dml.color import RGBColor
 from pptx.enum.shapes import MSO_SHAPE
 from pptx.oxml.xmlchemy import OxmlElement
-from six.moves.urllib_parse import urlparse
+from urllib.parse import urlparse
 from gramex.transforms import build_transform
 from . import utils
 from . import fontwidth
@@ -73,7 +74,8 @@ def text(shape, spec, data):
     # Updating default css with css from config.
     default_css.update(style)
     default_css['color'] = default_css.get('color', '#0000000')
-    update_text = etree.fromstring('<root>{}</root>'.format(template(spec['text'], data)))
+    # lxml.etree is safe on https://github.com/tiran/defusedxml/tree/main/xmltestdata
+    update_text = fromstring('<root>{}</root>'.format(template(spec['text'], data)))    # nosec
     paragraph.runs[0].text = update_text.text if update_text.text else ''
     utils.apply_text_css(shape, paragraph.runs[0], paragraph, **default_css)
     index = 1
@@ -387,10 +389,12 @@ def chart(shape, spec, data):
                 for series_point in {'point', 'series'}:
                     # Replacing point with series to change color in legend
                     fillpoint = color_mapping[chart_name].replace('point', series_point)
-                    chart_css(eval(fillpoint).fill, point_css, point_css['color'])      # nosec
+                    chart_css(eval(fillpoint).fill,             # nosec: developer-initiaated
+                              point_css, point_css['color'])
                     # Will apply on outer line of chart shape line(like stroke in html)
                     _stroke = point_css.get('stroke', point_css['color'])
-                    chart_css(eval(fillpoint).line.fill, point_css, _stroke)            # nosec
+                    chart_css(eval(fillpoint).line.fill,        # nosec: developer-initiaated
+                              point_css, _stroke)
 
 
 # Custom Charts Functions below(Sankey, Treemap, Calendarmap).

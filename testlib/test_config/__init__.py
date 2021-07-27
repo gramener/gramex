@@ -1,7 +1,6 @@
 import os
 import re
 import csv
-import six
 import yaml
 import socket
 import inspect
@@ -128,13 +127,13 @@ class TestPathConfig(unittest.TestCase):
 
         # When the file is blank, config is empty
         with self.temp.open('w') as out:
-            out.write(six.text_type(''))
+            out.write('')
         eq_(+conf, {})
 
         # Once created, it is automatically reloaded
         data = AttrDict(a=1, b=2)
         with self.temp.open('w') as out:
-            yaml.dump(data, out)
+            yaml.dump(dict(data), out)
         eq_(+conf, data)
 
         # Deleted file is detected
@@ -172,7 +171,7 @@ class TestPathConfig(unittest.TestCase):
         # Once temp file is created, it is automatically imported
         data = AttrDict(a=1, b=2)
         with self.temp.open('w') as out:
-            yaml.dump(data, out)
+            yaml.dump(dict(data), out)
         result = +conf_b
         result.update(data)
         eq_(+conf_imp, result)

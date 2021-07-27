@@ -1,0 +1,139 @@
+# Snyk (https://snyk.io) policy file, patches or ignores known vulnerabilities.
+version: v1.19.0
+ignore:
+
+  # @vue/cli@4.5.13 has vulnerabilities that only affects projects using Vue. Known risk.
+  # Since this only impacts developer-controlled code, it's acceptable. Wait for @vue/cli to fix.
+  SNYK-JS-DECOMPRESSTAR-559095:
+    - '*':
+        reason: No fix available. Await @vue/cli upgrade
+        expires: 2021-09-30T00:00:00.000Z
+        created: 2021-07-24T00:00:00.000Z
+  SNYK-JS-EJS-1049328:
+    - '*':
+        reason: No fix available. Await @vue/cli upgrade
+        expires: 2021-09-30T00:00:00.000Z
+        created: 2021-07-24T00:00:00.000Z
+
+  SNYK-JS-GLOBPARENT-1016905:
+    - '*':
+        reason: No fix available. Await @vue/cli upgrade
+        expires: 2021-09-30T00:00:00.000Z
+        created: 2021-07-24T00:00:00.000Z
+
+  SNYK-JS-MERGE-1040469:
+    - '*':
+        reason: No fix available. Await @vue/cli upgrade
+        expires: 2021-09-30T00:00:00.000Z
+        created: 2021-07-24T00:00:00.000Z
+
+  SNYK-JS-MERGE-1042987:
+    - '*':
+        reason: No fix available. Await @vue/cli upgrade
+        expires: 2021-09-30T00:00:00.000Z
+        created: 2021-07-24T00:00:00.000Z
+
+  SNYK-JS-CSSWHAT-1298035:
+    - '*':
+        reason: No fix available. Await @vue/cli upgrade
+        expires: 2021-09-30T00:00:00.000Z
+        created: 2021-07-24T00:00:00.000Z
+
+
+  # We need node-sass 4.x to support Node v12. But it has a set of vulnerabilities with no fixes.
+  # Retain these till end of life of Node v12 (30 Apr 2022.) Then migrate to node-sass 6+.
+  SNYK-JS-TRIMNEWLINES-1298042:
+    - '*':
+        reason: node-sass 4.x required for Node v12. Retain support till v12 end of life (2022-04-30)
+        expires: 2022-04-30T00:00:00.000Z
+        created: 2021-07-24T00:00:00.000Z
+  SNYK-JS-NODESASS-535500:
+    - '*':
+        reason: node-sass 4.x required for Node v12. Retain support till v12 end of life (2022-04-30)
+        expires: 2022-04-30T00:00:00.000Z
+        created: 2021-07-24T00:00:00.000Z
+  SNYK-JS-NODESASS-541000:
+    - '*':
+        reason: node-sass 4.x required for Node v12. Retain support till v12 end of life (2022-04-30)
+        expires: 2022-04-30T00:00:00.000Z
+        created: 2021-07-24T00:00:00.000Z
+  SNYK-JS-NODESASS-540996:
+    - '*':
+        reason: node-sass 4.x required for Node v12. Retain support till v12 end of life (2022-04-30)
+        expires: 2022-04-30T00:00:00.000Z
+        created: 2021-07-24T00:00:00.000Z
+  SNYK-JS-NODESASS-540956:
+    - '*':
+        reason: node-sass 4.x required for Node v12. Retain support till v12 end of life (2022-04-30)
+        expires: 2022-04-30T00:00:00.000Z
+        created: 2021-07-24T00:00:00.000Z
+  SNYK-JS-NODESASS-535502:
+    - '*':
+        reason: node-sass 4.x required for Node v12. Retain support till v12 end of life (2022-04-30)
+        expires: 2022-04-30T00:00:00.000Z
+        created: 2021-07-24T00:00:00.000Z
+  SNYK-JS-NODESASS-535498:
+    - '*':
+        reason: node-sass 4.x required for Node v12. Retain support till v12 end of life (2022-04-30)
+        expires: 2022-04-30T00:00:00.000Z
+        created: 2021-07-24T00:00:00.000Z
+  SNYK-JS-NODESASS-540980:
+    - '*':
+        reason: node-sass 4.x required for Node v12. Retain support till v12 end of life (2022-04-30)
+        expires: 2022-04-30T00:00:00.000Z
+        created: 2021-07-24T00:00:00.000Z
+  SNYK-JS-NODESASS-540978:
+    - '*':
+        reason: node-sass 4.x required for Node v12. Retain support till v12 end of life (2022-04-30)
+        expires: 2022-04-30T00:00:00.000Z
+        created: 2021-07-24T00:00:00.000Z
+  SNYK-JS-NODESASS-540994:
+    - '*':
+        reason: node-sass 4.x required for Node v12. Retain support till v12 end of life (2022-04-30)
+        expires: 2022-04-30T00:00:00.000Z
+        created: 2021-07-24T00:00:00.000Z
+  SNYK-JS-NODESASS-540998:
+    - '*':
+        reason: node-sass 4.x required for Node v12. Retain support till v12 end of life (2022-04-30)
+        expires: 2022-04-30T00:00:00.000Z
+        created: 2021-07-24T00:00:00.000Z
+  SNYK-JS-NODESASS-541002:
+    - '*':
+        reason: node-sass 4.x required for Node v12. Retain support till v12 end of life (2022-04-30)
+        expires: 2022-04-30T00:00:00.000Z
+        created: 2021-07-24T00:00:00.000Z
+  SNYK-JS-NODESASS-540990:
+    - '*':
+        reason: node-sass 4.x required for Node v12. Retain support till v12 end of life (2022-04-30)
+        expires: 2022-04-30T00:00:00.000Z
+        created: 2021-07-24T00:00:00.000Z
+  SNYK-JS-NODESASS-1059081:
+    - '*':
+        reason: node-sass 4.x required for Node v12. Retain support till v12 end of life (2022-04-30)
+        expires: 2022-04-30T00:00:00.000Z
+        created: 2021-07-24T00:00:00.000Z
+  SNYK-JS-NODESASS-540958:
+    - '*':
+        reason: node-sass 4.x required for Node v12. Retain support till v12 end of life (2022-04-30)
+        expires: 2022-04-30T00:00:00.000Z
+        created: 2021-07-24T00:00:00.000Z
+  SNYK-JS-NODESASS-540964:
+    - '*':
+        reason: node-sass 4.x required for Node v12. Retain support till v12 end of life (2022-04-30)
+        expires: 2022-04-30T00:00:00.000Z
+        created: 2021-07-24T00:00:00.000Z
+  SNYK-JS-NODESASS-540992:
+    - '*':
+        reason: node-sass 4.x required for Node v12. Retain support till v12 end of life (2022-04-30)
+        expires: 2022-04-30T00:00:00.000Z
+        created: 2021-07-24T00:00:00.000Z
+
+
+  # We need D3 v4 for old projects. Just retain this forever -- but newer projects won't use this
+  SNYK-JS-D3COLOR-1076592:
+    - '*':
+        reason: Retained for backward compatibility for old projects
+        expires: 2030-01-01T00:00:00.000Z
+        created: 2021-07-24T00:00:00.000Z
+
+patch: {}

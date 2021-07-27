@@ -16,7 +16,7 @@ assets/**
 {{ '.secret*' }}
 {# Added as a template to commit .secrets.yaml in THIS folder, but not in repos #}
 
-# Ignore npm and bower modules. These should be created by yarn/npm and bower.
+# Ignore npm and bower modules. These are created by npm and bower.
 node_modules/
 bower_components/
 

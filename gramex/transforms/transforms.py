@@ -3,7 +3,6 @@ import datetime
 import importlib
 import json
 import os
-import six
 import time
 import tornado.gen
 import yaml
@@ -23,7 +22,7 @@ def _arg_repr(arg):
     values are treated as strings. For example, ``=x`` is the variable ``x`` but
     ``x`` is the string ``"x"``. ``==x`` is the string ``"=x"``.
     '''
-    if isinstance(arg, six.string_types):
+    if isinstance(arg, str):
         if arg.startswith('=='):
             return repr(arg[1:])        # "==x" becomes '"=x"'
         elif arg.startswith('='):
@@ -178,7 +177,7 @@ def build_transform(conf, vars=None, filename='transform', cache=False, iter=Tru
         raise KeyError('%s: No function in conf %s' % (filename, conf))
 
     # Get the name of the function in case it's specified as a function call
-    # expr is the full function / expression, e.g. six.text_type("abc")
+    # expr is the full function / expression, e.g. str("abc")
     # tree is the ast result
     expr = conf['function']
     tree = ast.parse(expr)
@@ -243,7 +242,8 @@ def build_transform(conf, vars=None, filename='transform', cache=False, iter=Tru
         **{key: getattr(gramex.transforms, key) for key in gramex.transforms.__all__}
     )
     code = compile(''.join(body), filename=filename, mode='exec')
-    exec(code, context)         # nosec - OK to run arbitrary Python code in YAML
+    # exec() is safe here since the code is written by app developer
+    exec(code, context)     # nosec: developer-initiated
 
     # Return the transformed function
     function = context['transform']
@@ -281,8 +281,9 @@ def condition(*args):
     else:
         pairs = zip(args[0::2], args[1::2])
     for cond, val in pairs:
-        if isinstance(cond, six.string_types):
-            if eval(Template(cond).substitute(var_defaults)):    # nosec - any Python expr is OK
+        if isinstance(cond, str):
+            # eval() is safe here since `cond` is written by app developer
+            if eval(Template(cond).substitute(var_defaults)):    # nosec: developer-initiated
                 return val
         elif bool(cond):
             return val
@@ -331,10 +332,10 @@ def flattener(fields, default=None, filename='flatten'):
             body.append('\tr[%s] = %s\n' % (field, target))
 
     for field, source in fields.items():
-        if not isinstance(field, six.string_types):
+        if not isinstance(field, str):
             app_log.error('flattener:%s: key %s is not a str', filename, field)
             continue
-        if isinstance(source, six.string_types):
+        if isinstance(source, str):
             target = 'obj'
             if source:
                 for item in source.split('.'):
@@ -350,7 +351,8 @@ def flattener(fields, default=None, filename='flatten'):
     body.append('\treturn r')
     code = compile(''.join(body), filename='flattener:%s' % filename, mode='exec')
     context = {'AttrDict': AttrDict, 'default': default}
-    eval(code, context)     # nosec - code constructed entirely in this function
+    # eval() is safe here since the code is constructed entirely in this function
+    eval(code, context)     # nosec: developer-initiated
     return context[filename]
 
 
@@ -554,6 +556,6 @@ def build_log_info(keys, *vars):
     code = compile('def fn(handler, %s):\n\treturn {%s}' % (', '.join(vars), ' '.join(vals)),
                    filename='log', mode='exec')
     context = {'os': os, 'time': time, 'datetime': datetime, 'conf': conf, 'AttrDict': AttrDict}
-    # The code is constructed entirely by this function. Using exec is safe
-    exec(code, context)         # nosec
+    # exec() is safe here since the code is constructed entirely in this function
+    exec(code, context)     # nosec: developer-initiated
     return context['fn']

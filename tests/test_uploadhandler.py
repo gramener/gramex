@@ -1,6 +1,5 @@
 import os
 import re
-import six
 import shutil
 import requests
 import gramex.cache
@@ -18,7 +17,7 @@ class TestUploadHandler(TestGramex):
 
     @classmethod
     def setUpClass(cls):
-        cls.path = six.text_type(conf.url['upload'].kwargs.path)
+        cls.path = str(conf.url['upload'].kwargs.path)
         cls.info = FileUpload(cls.path)
 
     def check_upload(self, url, files, names=[], data={}, code=OK):
@@ -76,7 +75,7 @@ class TestUploadHandler(TestGramex):
         for path in ['../actors.csv', '/actors.csv', '../upload/../β']:
             r = requests.post(url, files={'text': open('actors.csv', 'rb')}, data={'save': path})
             eq_(r.status_code, FORBIDDEN)
-            msg = r.reason.decode('utf-8') if isinstance(r.reason, six.binary_type) else r.reason
+            msg = r.reason.decode('utf-8') if isinstance(r.reason, bytes) else r.reason
             ok_('outside' in msg)
 
     def test_upload_error(self):
@@ -88,7 +87,7 @@ class TestUploadHandler(TestGramex):
             eq_(r.status_code, FORBIDDEN)
             r = requests.post(url, files={'file': open('actors.csv', 'rb')}, data={'save': path})
             eq_(r.status_code, FORBIDDEN)
-            msg = r.reason.decode('utf-8') if isinstance(r.reason, six.binary_type) else r.reason
+            msg = r.reason.decode('utf-8') if isinstance(r.reason, bytes) else r.reason
             ok_('file exists' in msg)
 
     def test_upload_overwrite(self):

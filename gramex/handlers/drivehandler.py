@@ -119,7 +119,8 @@ class DriveHandler(FormHandler):
             ext = os.path.splitext(file)[1]
             path = slug.filename(file)
             while os.path.exists(os.path.join(self.path, path)):
-                path = os.path.splitext(path)[0] + choice(digits + ascii_lowercase) + ext
+                randomletter = choice(digits + ascii_lowercase)     # nosec: non-cryptographic
+                path = os.path.splitext(path)[0] + randomletter + ext
             self.args['file'][i] = file
             self.args['ext'][i] = ext.lower()
             self.args['path'][i] = path

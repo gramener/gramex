@@ -35,6 +35,7 @@
     "tether-shepherd": "1",
     "topojson": "3",
     "url-search-params": "npm:@ungap/url-search-params@0.1",
+    "uifactory": "0.0.14",
     "vega": "5",
     "vega-embed": "6",
     "vega-lite": "4"

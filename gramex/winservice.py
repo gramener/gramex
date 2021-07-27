@@ -2,7 +2,10 @@
 Install and run Gramex as a Windows service
 '''
 
+import io
 import os
+import sys
+import traceback
 import win32serviceutil
 import win32service
 import win32event
@@ -56,6 +59,8 @@ class GramexService(win32serviceutil.ServiceFramework):
             else:
                 typ = servicemanager.EVENTLOG_WARNING_TYPE
                 msg = ' at ' + os.getcwd() + '. Missing directory: ' + cwd
+            servicelogfile = os.path.join(cwd, 'service.log')
+            sys.stdout = sys.stderr = io.open(servicelogfile, 'a', encoding='utf-8')
         # Log start of service
         servicemanager.LogMsg(typ, servicemanager.PYS_SERVICE_STARTED, (self._svc_name_, msg))
         # Run Gramex
@@ -64,8 +69,9 @@ class GramexService(win32serviceutil.ServiceFramework):
             import gramex
             gramex.commandline(None if port is None else ['--listen.port=%d' % port])
         except Exception:
-            # TODO: log traceback in event log
-            pass
+            typ = servicemanager.EVENTLOG_ERROR_TYPE
+            msg = [''.join(traceback.format_exc())]
+            servicemanager.LogMsg(typ, servicemanager.PYS_SERVICE_STOPPED, (self._svc_name_, msg))
 
     @classmethod
     def setup(cls, cmd, user=None, password=None, startup='manual', cwd=None, wait=0):

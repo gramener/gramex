@@ -10,10 +10,9 @@ import inspect
 import requests
 import tempfile
 import mimetypes
-import subprocess       # nosec
+import subprocess       # nosec: only enabled via app developer
 import pandas as pd
 import tornado.template
-from lxml import etree
 from threading import Thread
 from queue import Queue
 from orderedattrdict import AttrDict
@@ -121,8 +120,9 @@ def _markdown(handle, **kwargs):
 @opener
 def _yaml(handle, **kwargs):
     import yaml
-    defaults = {'Loader': yaml.FullLoader}
-    return yaml.load(handle.read(), **{k: kwargs.pop(k, v) for k, v in defaults.items()})
+    defaults = {'Loader': yaml.SafeLoader}
+    kwargs = {k: kwargs.pop(k, v) for k, v in defaults.items()}
+    return yaml.load(handle.read(), **kwargs)   # nosec: SafeLoader
 
 
 def _template(path, **kwargs):
@@ -235,10 +235,6 @@ open_callback = dict(
     markdown=_markdown,
     tmpl=_template,
     template=_template,
-    xml=etree.parse,
-    svg=etree.parse,
-    rss=etree.parse,
-    atom=etree.parse,
     config=PathConfig,
     yml=_yaml,
     yaml=_yaml
@@ -268,7 +264,6 @@ def open(path, callback=None, transform=None, rel=False, **kwargs):
     - ``markdown`` or ``md``: reads files using markdown.markdown via io.open
     - ``csv``, ``excel``, ``xls``, ``xlsx``, ``hdf``, ``h5``, ``html``, ``sas``,
       ``stata``, ``table``, ``parquet``, ``feather``: reads using Pandas
-    - ``xml``, ``svg``, ``rss``, ``atom``: reads using lxml.etree
 
     For example::
 
@@ -446,18 +441,20 @@ def _table_status(engine, tables):
         for name in tables:
             if not name or not isinstance(name, str):
                 raise ValueError('gramex.cache.query invalid table list: %s', repr(tables))
+        # bandit security note: We use string substitution for DB and table names.
+        # But these are validated via gramex.data._sql_safe, so we're fine.
         if dialect == 'mysql':
             # https://dev.mysql.com/doc/refman/5.7/en/tables-table.html
             # Works only on MySQL 5.7 and above
-            q = ('SELECT update_time FROM information_schema.tables WHERE ' +
+            q = ('SELECT update_time FROM information_schema.tables WHERE ' +   # nosec
                  _wheres('table_schema', 'table_name', db, tables))
         elif dialect == 'mssql':
             # https://goo.gl/b4aL9m
-            q = ('SELECT last_user_update FROM sys.dm_db_index_usage_stats WHERE ' +
+            q = ('SELECT last_user_update FROM sys.dm_db_index_usage_stats WHERE ' +    # nosec
                  _wheres('database_id', 'object_id', db, tables, fn=['DB_ID', 'OBJECT_ID']))
         elif dialect == 'postgresql':
             # https://www.postgresql.org/docs/9.6/static/monitoring-stats.html
-            q = ('SELECT n_tup_ins, n_tup_upd, n_tup_del FROM pg_stat_all_tables WHERE ' +
+            q = ('SELECT n_tup_ins, n_tup_upd, n_tup_del FROM pg_stat_all_tables WHERE ' +  # nosec
                  _wheres('schemaname', 'relname', 'public', tables))
         elif dialect == 'sqlite':
             if not db:
@@ -690,7 +687,7 @@ class Subprocess(object):
         # http://stackoverflow.com/a/4896288/100904
         kwargs['close_fds'] = 'posix' in sys.builtin_module_names
 
-        self.proc = subprocess.Popen(args, **kwargs)        # nosec
+        self.proc = subprocess.Popen(args, **kwargs)        # nosec - developer-initiated
         self.thread = {}        # Has the running threads
         self.future = {}        # Stores the futures indicating stream close
         self.loop = _get_current_ioloop()
@@ -789,8 +786,6 @@ class Subprocess(object):
 
 _daemons = {}
 _regex_type = type(re.compile(''))
-# Python 3 needs sys.stderr.buffer.write for writing binary strings
-_stderr_write = sys.stderr.buffer.write if hasattr(sys.stderr, 'buffer') else sys.stderr.write
 
 
 def daemon(args, restart=1, first_line=None, stream=True, timeout=5, buffer_size='line', **kwargs):
@@ -821,7 +816,7 @@ def daemon(args, restart=1, first_line=None, stream=True, timeout=5, buffer_size
         if first_line:
             kwargs[channel].append(queue.put)
         if stream is True:
-            kwargs[channel].append(_stderr_write)
+            kwargs[channel].append(sys.stderr.buffer.write)
         elif callable(stream):
             kwargs[channel].append(stream)
     # Buffer by line by default. This is required for the first_line check, not otherwise.
@@ -831,14 +826,14 @@ def daemon(args, restart=1, first_line=None, stream=True, timeout=5, buffer_size
 
     # If process was never started, start it
     if key not in _daemons:
-        started = _daemons[key] = Subprocess(args, **kwargs)
+        started = _daemons[key] = Subprocess(args, **kwargs)    # nosec: developer-initiated
 
     # Ensure that process is running. Restart if required
     proc = _daemons[key]
     restart = int(restart)
     while proc.proc.returncode is not None and restart > 0:
         restart -= 1
-        proc = started = _daemons[key] = Subprocess(args, **kwargs)
+        proc = started = _daemons[key] = Subprocess(args, **kwargs)   # nosec: developer-initiated
     if proc.proc.returncode is not None:
         raise RuntimeError('Error %d starting %s' % (proc.proc.returncode, arg_str))
     if started:

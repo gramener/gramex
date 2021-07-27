@@ -162,9 +162,10 @@ class BaseMixin(object):
             key: session_conf[key] for key in ('domain', 'httponly', 'secure')
             if key in session_conf
         }
-        cls._on_finish_methods.append(cls.save_session)
         cls._on_init_methods.append(cls.override_user)
         cls._on_finish_methods.append(cls.set_last_visited)
+        # Ensure that session is saved AFTER we set last visited
+        cls._on_finish_methods.append(cls.save_session)
 
     @classmethod
     def setup_redirect(cls, redirect):
@@ -666,6 +667,8 @@ class BaseHandler(RequestHandler, BaseMixin):
         # the full URL WITHOUT query parameters
         self.xredirect_uri = '{0.scheme:s}://{0.netloc:s}{0.path:s}'.format(
             urlsplit(self.xrequest_full_url))
+        # If X-Gramex-Root is specified, treat that as the application's root URL
+        self.gramex_root = self.request.headers.get('X-Gramex-Root', '').rstrip('/')
         for method in self._on_init_methods:
             method(self)
 
@@ -700,7 +703,7 @@ class BaseHandler(RequestHandler, BaseMixin):
             ajax = self.request.headers.get('X-Requested-With', '').lower() == 'xmlhttprequest'
             if not ajax and self.request.method in ('GET', 'HEAD'):
                 auth = getattr(self, '_auth', {})
-                url = auth.get('login_url', self.get_login_url())
+                url = auth.get('login_url', self.gramex_root + self.get_login_url())
                 # If login_url: false, don't redirect to a login URL. Only redirect if it's a URL
                 if isinstance(url, str):
                     # Redirect to the login_url adding ?next=<X-Request-URI>

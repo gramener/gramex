@@ -63,9 +63,3 @@ url:
         function: controlpanel.evaluate(handler, message)
       auth:
         <<: *ALLOW_ONLY_ADMINS
-
-email:
-    gramex-guide-gmail:
-      type: gmail                     # Type of email used is GMail
-      email: gramex.guide@gmail.com   # Generic email ID used to test e-mails
-      password: tlpmupxnhucitpte      # App-specific password created for Gramex guide
