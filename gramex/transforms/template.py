@@ -45,8 +45,8 @@ def template(content, handler=None, **kwargs):
 @tornado.gen.coroutine
 def scss(content, handler):
     '''
-    Renders a SCSS file as CSS via node-sass.
-    Ignore the content provided. node-sass needs the file actually located at handler.path.
+    Renders a SCSS file as CSS via.
+    Ignore the content provided. sass needs the file actually located at handler.path.
     '''
     from gramex.apps.ui import sass2
     result = yield sass2(handler, handler.path)

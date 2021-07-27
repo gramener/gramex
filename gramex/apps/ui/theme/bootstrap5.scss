@@ -380,14 +380,14 @@ $arrow-height: $font-size-base + $arrow-padding-y;
   }
   @each $size, $height in $display-font-sizes {
     $arrow-height: $height + $arrow-padding-y;
-    .#{$size}.arrow-#{$color} {
+    .display-#{$size}.arrow-#{$color} {
       height: $arrow-height;
       line-height: $arrow-height * 0.8;     // To vertically center lower-case letters
     }
-    .#{$size}.arrow-#{$color}.text-uppercase {
+    .display-#{$size}.arrow-#{$color}.text-uppercase {
       line-height: $arrow-height * 0.9;     // To vertically center upper-case letters
     }
-    .#{$size}.arrow-#{$color}:before {
+    .display-#{$size}.arrow-#{$color}:before {
       border-top: ($arrow-height / 2) solid transparent;
       border-bottom: ($arrow-height / 2) solid transparent;
       border-left: ($arrow-height / 2) solid $value;
