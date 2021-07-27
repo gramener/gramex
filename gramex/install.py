@@ -343,15 +343,18 @@ def run_command(config):
 
 # Setup file configurations. If {file} exists, then if {exe} exists, run {cmd}.
 setup_paths = [
-    {'file': 'Makefile', 'exe': 'make', 'cmd': '"{exe}"'},
-    {'file': 'setup.ps1', 'exe': 'powershell', 'cmd': '"{exe}" -File "{file}"'},
-    {'file': 'setup.sh', 'exe': 'bash', 'cmd': '"{exe}" "{file}"'},
-    {'file': 'requirements.txt', 'exe': 'pip', 'cmd': '"{exe}" install -r "{file}"'},
-    {'file': 'setup.py', 'exe': 'python', 'cmd': '"{exe}" "{file}"'},
-    {'file': 'bower.json', 'exe': 'bower', 'cmd': '"{exe}" --allow-root install'},
-    # If package.json exists, run npm install. OVERRIDE with yarn install if yarn.lock
-    {'file': 'package.json', 'exe': 'npm', 'cmd': '"{exe}" install'},
-    {'file': 'yarn.lock', 'exe': 'yarn', 'cmd': '"{exe}" install --prefer-offline'},
+    [{'file': 'Makefile', 'exe': 'make', 'cmd': '"{exe}"'}],
+    [{'file': 'setup.ps1', 'exe': 'powershell', 'cmd': '"{exe}" -File "{file}"'}],
+    [{'file': 'setup.sh', 'exe': 'bash', 'cmd': '"{exe}" "{file}"'}],
+    [{'file': 'requirements.txt', 'exe': 'pip', 'cmd': '"{exe}" install -r "{file}"'}],
+    [{'file': 'setup.py', 'exe': 'python', 'cmd': '"{exe}" "{file}"'}],
+    [{'file': 'bower.json', 'exe': 'bower', 'cmd': '"{exe}" --allow-root install'}],
+    [
+        {'file': 'package-lock.json', 'exe': 'npm', 'cmd': '"{exe}" ci'},
+        {'file': 'yarn.lock', 'exe': 'yarn', 'cmd': '"{exe}" install --prefer-offline'},
+        {'file': 'package.json', 'exe': 'npm', 'cmd': '"{exe}" install'},
+        {'file': 'package.json', 'exe': 'yarn', 'cmd': '"{exe}" install --prefer-offline'},
+    ]
 ]
 
 
@@ -372,17 +375,21 @@ def run_setup(target):
         target = app_target
     target = os.path.abspath(target)
     app_log.info('Setting up %s', target)
-    for config in setup_paths:
-        setup_file = os.path.join(target, config['file'])
-        if not os.path.exists(setup_file):
-            continue
-        exe_path = which(config['exe'])
-        if exe_path is not None:
-            cmd = config['cmd'].format(file=setup_file, exe=exe_path)
-            app_log.info('Running %s', cmd)
-            _run_console(cmd, cwd=target)
-        else:
-            app_log.warning('Skipping %s. No %s found', setup_file, config['exe'])
+    for configs in setup_paths:
+        config_match, ran_cmd = None, False
+        for config in configs:
+            setup_file = os.path.join(target, config['file'])
+            exe_path = which(config['exe'])
+            if os.path.exists(setup_file):
+                config_match = config
+            if config_match and exe_path is not None:
+                cmd = config['cmd'].format(file=setup_file, exe=exe_path)
+                app_log.info('Running %s', cmd)
+                _run_console(cmd, cwd=target)
+                ran_cmd = True
+                break
+        if config_match and not ran_cmd:
+            app_log.warning('Skipping %s. No %s found', config_match['file'], config_match['exe'])
 
 
 app_dir = Path(variables.get('GRAMEXDATA')) / 'apps'
