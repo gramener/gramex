@@ -85,7 +85,7 @@ script:
   - pip install -e .
   - pip install gramexenterprise
   - gramex license accept
-  - gramex setup --all  # ensure node-sass, puppetter exists
+  - gramex setup --all  # ensure sass, puppetter exists
 
   # Run tests, explicitly showing coverage
   - make test-setup

@@ -18,7 +18,7 @@ def join(*args):
 ui_dir = os.path.dirname(os.path.abspath(__file__))
 config_file = join(ui_dir, 'config.yaml')
 cache_dir = join(variables['GRAMEXDATA'], 'apps', 'ui')
-sass_path = join(ui_dir, 'node_modules', 'node-sass', 'bin', 'node-sass')
+sass_bin = join(ui_dir, 'node_modules', 'sass', 'sass.js')
 vue_path = join(ui_dir, 'node_modules', '@vue', 'cli', 'bin', 'vue')
 if not os.path.exists(cache_dir):
     os.makedirs(cache_dir)
@@ -55,8 +55,8 @@ def sass(handler, template=join(ui_dir, 'bootstrap-theme.scss')):
 
     # Cache based on the dict and config as template.<cache-key>.css
     base = os.path.splitext(os.path.basename(template))[0] + '.' + cache_key
-    cache_path = join(cache_dir, base + '.css')
-    if not os.path.exists(cache_path) or os.stat(template).st_mtime > os.stat(cache_path).st_mtime:
+    cache_file = join(cache_dir, base + '.css')
+    if not os.path.exists(cache_file) or os.stat(template).st_mtime > os.stat(cache_file).st_mtime:
         # Create a SCSS file based on the args
         scss_path = join(cache_dir, base + '.scss')
         with io.open(scss_path, 'wb') as handle:
@@ -67,19 +67,19 @@ def sass(handler, template=join(ui_dir, 'bootstrap-theme.scss')):
             handle.write(result)
         # Run sass to generate the output
         proc = gramex.cache.Subprocess([
-            'node', sass_path, scss_path, cache_path,
-            '--output-style', 'compressed',
+            'node', sass_bin, scss_path, cache_file,
+            '--style', 'compressed',
             # Allow importing path from these paths
-            '--include-path', os.path.dirname(template),
-            '--include-path', ui_dir,
-            '--include-path', bootstrap_dir,
+            '--load-path', os.path.dirname(template),
+            '--load-path', ui_dir,
+            '--load-path', bootstrap_dir,
         ])
         out, err = yield proc.wait_for_exit()
         if proc.proc.returncode:
-            raise RuntimeError('node-sass compilation failure', err.decode('utf-8'))
+            raise RuntimeError('sass compilation failure', err.decode('utf-8'))
 
     handler.set_header('Content-Type', 'text/css')
-    raise Return(gramex.cache.open(cache_path, 'bin', mode='rb'))
+    raise Return(gramex.cache.open(cache_file, 'bin', mode='rb'))
 
 
 bootstrap_dir = join(ui_dir, 'node_modules', 'bootstrap', 'scss')
@@ -134,14 +134,15 @@ def sass2(handler, path: str = join(ui_dir, 'gramexui.scss')):
             handle.write('\n'.join(content))
         # Compile SASS file. Allow @import from template dir, UI dir, Bootstrap dir
         proc = yield gramex.service.threadpool.submit(subprocess.run, [
-            'node', sass_path, scss_path, cache_file,
-            '--output-style', 'compressed',
-            '--include-path', os.path.dirname(path),
-            '--include-path', ui_dir,
-            '--include-path', bootstrap_dir,
+            'node', sass_bin, scss_path, cache_file,
+            '--style', 'compressed',
+            '--load-path', os.path.dirname(path),
+            '--load-path', ui_dir,
+            '--load-path', bootstrap_dir,
         ], capture_output=True, input='\n'.join(content), encoding='utf-8')
         if proc.returncode:
-            raise RuntimeError('node-sass compilation failure', proc.stderr)
+            gramex.console(proc.stderr)
+            raise RuntimeError('sass compilation failure')
 
     handler.set_header('Content-Type', 'text/css')
     return gramex.cache.open(cache_file, 'bin', mode='rb')
