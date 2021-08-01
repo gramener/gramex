@@ -3,17 +3,13 @@
 // A Python Node.js bridge
 
 const package = require('./package.json')
-const path = require('path')
-const { spawn } = require('child_process')
+const child_process = require('child_process')
 const minimist = require('minimist')
 const which = require('which')
 const WebSocket = require('ws')
 
 const context = {}
-// The env variable NODE_PATH must have a SINGLE node_modules path.
-// It's parent directory is where npm is run.
-// Defaults to this file's node_modules.
-const node_path = process.env.NODE_PATH || path.resolve(__dirname, 'node_modules')
+const cwd = process.cwd()
 
 // Report the Error object to the websocket in a standard way
 function send_error(error, ws) {
@@ -30,7 +26,7 @@ function send_error(error, ws) {
 // Return a function that sends the passed result to the websocket as JSON.
 // If not parseable as JSON, send an error message to the websocket.
 function callback(ws) {
-  return function (result) {
+  return result => {
     try {
       ws.send(JSON.stringify({ error: null, result: result }))
     } catch (e) {
@@ -48,8 +44,8 @@ function execute(ws, code, args, values) {
     const fn = Function.apply(this, args)
     // Within the code, "this" refers to the context global
     const result = fn.apply(context, values)
-    if (typeof result != 'undefined')
-      ws.send(JSON.stringify({ error: null, result: result }))
+    // If the code didn't return anything, return null
+    ws.send(JSON.stringify({ error: null, result: typeof result == 'undefined' ? null: result }))
   } catch (e) {
     send_error(e, ws)
   }
@@ -62,19 +58,18 @@ function main() {
   const wss = new WebSocket.Server({
     port: port,
     // only allow connections from local host
-    verifyClient: function (info) {
+    verifyClient: info => {
       const ip = info.req.connection.remoteAddress
       return ip == '::1' || ip == '127.0.0.1'
     }
   })
 
-  // Print a message indicating versions
-  console.log('node.js: ' + process.version + ' pynode: ' + package.version +
-    ' port: ' + port + ' pid: ' + process.pid + ' NODE_PATH: ' + node_path)
+  // Print a message indicating versions. pynode.py EXPLICITLY checks for this message.
+  console.log(`node.js: ${process.version} pynode: ${package.version} port: ${port} pid: ${process.pid} cwd: ${cwd}`)
 
   // Set up the websocket server
-  wss.on('connection', function connection(ws) {
-    ws.on('message', function incoming(message) {
+  wss.on('connection', ws => {
+    ws.on('message', message => {
       'use strict'
       let exec
       try {
@@ -97,7 +92,7 @@ function main() {
         else if (!Array.isArray(lib))
           lib = [lib]
         const add = ['install']
-        lib.forEach(function (library) {
+        lib.forEach(library => {
           try {
             require(library)
           } catch (e) {
@@ -105,31 +100,24 @@ function main() {
           }
         })
         if (add.length > 1) {
+          // NOTE: In Windows, installing a library requires a restart
           try {
-            console.log('npm ' + add.join(' '), 'at', path.resolve(node_path, '..'))
-            // Run npm add in the NODE_PATH directory.
-            // TODO: NODE_PATH defaults to this script's folder, which messes up our package.json.
-            // TODO: Default NODE_PATH to another standard folder. Maybe app dir or cwd.
-            spawn(which.sync('npm'), add, { cwd: path.resolve(node_path, '..') })
-              .on('close', function () { execute(ws, code, args, values) })
-            // TODO: if npm fails (e.g. invalid module, no network), report error on console
+            console.log(`npm ${add.join(' ')} at ${cwd}`)
+            let npm = child_process.spawn(which.sync('npm'), add, { cwd: cwd })
+              .on('error', console.error)
+              .on('close', () => execute(ws, code, args, values))
+            npm.stdout.on('data', data => console.log(data.toString()))
+            npm.stderr.on('data', data => console.log(data.toString()))
           } catch (e) {
             send_error(e, ws)
           }
         }
         else
           execute(ws, code, args, values)
-      } else if (exec.path) {
-        ws.send(JSON.stringify({
-          error: 'path= is not yet supported',
-          result: null
-        }))
-      } else {
-        ws.send(JSON.stringify({
-          error: 'Neither code= nor path= was specified',
-          result: null
-        }))
-      }
+      } else if (exec.path)
+        send_error({ name: 'Unsupported argument', message: 'path= is not yet supported' }, ws)
+      else
+        send_error({ name: 'Missing arguments', message: 'Need code= or path=' }, ws)
     })
   })
 }

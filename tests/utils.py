@@ -12,6 +12,7 @@ from orderedattrdict import AttrDict
 from sklearn.datasets import make_circles as sk_make_circles
 from tornado import gen
 from tornado.web import RequestHandler, MissingArgumentError
+from tornado.gen import coroutine
 from tornado.httpclient import AsyncHTTPClient
 from concurrent.futures import ThreadPoolExecutor
 from gramex.cache import Subprocess
@@ -472,6 +473,19 @@ def make_circles():
 def transform_circles(df, *argss, **kwargs):
     df[['X1', 'X2']] = pd.np.exp(-df[['X1', 'X2']].values ** 2)
     return df
+
+
+@coroutine
+def pynode_run(handler):
+    from gramex.pynode import node
+    kwargs = {}
+    for key, vals in handler.args.items():
+        try:
+            kwargs[key] = float(vals[-1])
+        except ValueError:
+            kwargs[key] = vals[-1]
+    result = yield node.js(**kwargs)
+    return result
 
 
 if __name__ == '__main__':

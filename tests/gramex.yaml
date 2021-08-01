@@ -372,6 +372,15 @@ url:
     kwargs:
       function: functionutils.content
 
+  # TestPyNode
+  pynode/run:
+    pattern: /pynode/run
+    handler: FunctionHandler
+    kwargs:
+      function: utils.pynode_run(handler)
+      headers:
+        Content-Type: application/json
+
   # TestFileHandler
   dir/noindex:
     pattern: /dir/noindex/(.*)
