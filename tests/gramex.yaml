@@ -2220,6 +2220,10 @@ url:
           url: $TRANSLATE_XLSX
           sheet_name: translate
 
+  comic:
+    pattern: /comic
+    handler: ComicHandler
+
   variables:
     pattern: /variables
     handler: FunctionHandler
