@@ -11,6 +11,16 @@
 /d/site/gramener.com/viz/async-gramex/gramex/apps/pynode
 
 /d/site/gramener.com/viz/async-gramex/gramex/apps/ui
+review	merge	high	>=2.1.1	Prototype Pollution	https://npmjs.com/advisories/1666	@vue/cli>@vue/cli-ui>watch>exec-sh>merge
+review	glob-parent	moderate	>=5.1.2	Regular expression denial of service	https://npmjs.com/advisories/1751	@vue/cli>@vue/cli-ui>globby>fast-glob>glob-parent
+review	glob-parent	moderate	>=5.1.2	Regular expression denial of service	https://npmjs.com/advisories/1751	@vue/cli>globby>fast-glob>glob-parent
+review	glob-parent	moderate	>=5.1.2	Regular expression denial of service	https://npmjs.com/advisories/1751	@vue/cli-service-global>@vue/cli-plugin-eslint>globby>fast-glob>glob-parent
+review	glob-parent	moderate	>=5.1.2	Regular expression denial of service	https://npmjs.com/advisories/1751	@vue/cli-service-global>@vue/cli-service>globby>fast-glob>glob-parent
+review	glob-parent	moderate	>=5.1.2	Regular expression denial of service	https://npmjs.com/advisories/1751	@vue/cli-service-global>@vue/cli-plugin-babel>webpack>watchpack>watchpack-chokidar2>chokidar>glob-parent
+review	glob-parent	moderate	>=5.1.2	Regular expression denial of service	https://npmjs.com/advisories/1751	@vue/cli-service-global>@vue/cli-plugin-eslint>webpack>watchpack>watchpack-chokidar2>chokidar>glob-parent
+review	glob-parent	moderate	>=5.1.2	Regular expression denial of service	https://npmjs.com/advisories/1751	@vue/cli-service-global>@vue/cli-service>webpack>watchpack>watchpack-chokidar2>chokidar>glob-parent
+review	glob-parent	moderate	>=5.1.2	Regular expression denial of service	https://npmjs.com/advisories/1751	@vue/cli-service-global>@vue/cli-service>copy-webpack-plugin>glob-parent
+review	glob-parent	moderate	>=5.1.2	Regular expression denial of service	https://npmjs.com/advisories/1751	@vue/cli-service-global>@vue/cli-service>webpack-dev-server>chokidar>glob-parent
 
 /d/site/gramener.com/viz/async-gramex/gramex/apps/uifactory
 
