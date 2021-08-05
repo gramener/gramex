@@ -57,11 +57,9 @@ function main() {
   const port = args.port || 9800
   const wss = new WebSocket.Server({
     port: port,
-    // only allow connections from local host
-    verifyClient: info => {
-      const ip = info.req.connection.remoteAddress
-      return ip == '::1' || ip == '127.0.0.1'
-    }
+    // Only allow connections from local host.
+    // Localhost can be ::::ffff:127.0.0.1 (IPv6) or 127.0.0.1 (IPv4) or '::1'
+    verifyClient: info => info.req.connection.remoteAddress.match(/\b127.0.0.1$|^::1$/)
   })
 
   // Print a message indicating versions. pynode.py EXPLICITLY checks for this message.
@@ -75,7 +73,7 @@ function main() {
       try {
         exec = JSON.parse(message)
       } catch (e) {
-        send_error(e, ws)
+        return send_error(e, ws)
       }
       // Execute code as provided
       if (exec.code) {
