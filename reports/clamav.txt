@@ -1,4 +1,5 @@
 D:\site\gramener.com\viz\async-gramex\.editorconfig: OK
+D:\site\gramener.com\viz\async-gramex\.eggs: Excluded
 D:\site\gramener.com\viz\async-gramex\.eslintignore: OK
 D:\site\gramener.com\viz\async-gramex\.git: Excluded
 D:\site\gramener.com\viz\async-gramex\.github: Excluded
@@ -317,6 +318,7 @@ D:\site\gramener.com\viz\async-gramex\gramex\handlers\auth.template.html: OK
 D:\site\gramener.com\viz\async-gramex\gramex\handlers\authhandler.py: OK
 D:\site\gramener.com\viz\async-gramex\gramex\handlers\basehandler.py: OK
 D:\site\gramener.com\viz\async-gramex\gramex\handlers\capturehandler.py: OK
+D:\site\gramener.com\viz\async-gramex\gramex\handlers\comichandler.py: OK
 D:\site\gramener.com\viz\async-gramex\gramex\handlers\drivehandler.py: OK
 D:\site\gramener.com\viz\async-gramex\gramex\handlers\filehandler.py: OK
 D:\site\gramener.com\viz\async-gramex\gramex\handlers\filehandler.template.html: OK
@@ -422,9 +424,6 @@ D:\site\gramener.com\viz\async-gramex\testlib\autolyse.json: OK
 D:\site\gramener.com\viz\async-gramex\testlib\auto_test.csv: OK
 D:\site\gramener.com\viz\async-gramex\testlib\input.pptx: OK
 D:\site\gramener.com\viz\async-gramex\testlib\input2.pptx: OK
-D:\site\gramener.com\viz\async-gramex\testlib\insert.csv: OK
-D:\site\gramener.com\viz\async-gramex\testlib\insert.hdf: OK
-D:\site\gramener.com\viz\async-gramex\testlib\insert.xlsx: OK
 D:\site\gramener.com\viz\async-gramex\testlib\iris.csv: OK
 D:\site\gramener.com\viz\async-gramex\testlib\README.md: OK
 D:\site\gramener.com\viz\async-gramex\testlib\sales-query.sql: OK
@@ -508,7 +507,6 @@ D:\site\gramener.com\viz\async-gramex\tests\403-template.html: OK
 D:\site\gramener.com\viz\async-gramex\tests\actors.csv: OK
 D:\site\gramener.com\viz\async-gramex\tests\auth.html: OK
 D:\site\gramener.com\viz\async-gramex\tests\auth2.html: OK
-D:\site\gramener.com\viz\async-gramex\tests\circles.csv: OK
 D:\site\gramener.com\viz\async-gramex\tests\dbutils.py: OK
 D:\site\gramener.com\viz\async-gramex\tests\dir\.allow: Empty file
 D:\site\gramener.com\viz\async-gramex\tests\dir\.hidden: Empty file
@@ -557,7 +555,6 @@ D:\site\gramener.com\viz\async-gramex\tests\dir\template-handler.txt: OK
 D:\site\gramener.com\viz\async-gramex\tests\dir\template.sub.txt: OK
 D:\site\gramener.com\viz\async-gramex\tests\dir\template.txt: OK
 D:\site\gramener.com\viz\async-gramex\tests\dir\text.txt: OK
-D:\site\gramener.com\viz\async-gramex\tests\drive\.meta.db: OK
 D:\site\gramener.com\viz\async-gramex\tests\error-404.json: OK
 D:\site\gramener.com\viz\async-gramex\tests\events.db: OK
 D:\site\gramener.com\viz\async-gramex\tests\filetest.template.html: OK
@@ -569,14 +566,12 @@ D:\site\gramener.com\viz\async-gramex\tests\index.template.html: OK
 D:\site\gramener.com\viz\async-gramex\tests\install-test-flat.zip: OK
 D:\site\gramener.com\viz\async-gramex\tests\install-test.zip: OK
 D:\site\gramener.com\viz\async-gramex\tests\lookup.xlsx: OK
-D:\site\gramener.com\viz\async-gramex\tests\model.pkl: OK
 D:\site\gramener.com\viz\async-gramex\tests\processtest.py: OK
 D:\site\gramener.com\viz\async-gramex\tests\README.md: OK
 D:\site\gramener.com\viz\async-gramex\tests\remote-secrets.yaml: OK
 D:\site\gramener.com\viz\async-gramex\tests\requirements.txt: OK
 D:\site\gramener.com\viz\async-gramex\tests\sales.xlsx: OK
 D:\site\gramener.com\viz\async-gramex\tests\sales.xlsx.edit.xlsx: OK
-D:\site\gramener.com\viz\async-gramex\tests\sales.xlsx.insert.xlsx: OK
 D:\site\gramener.com\viz\async-gramex\tests\sample.png: OK
 D:\site\gramener.com\viz\async-gramex\tests\sass\a.scss: OK
 D:\site\gramener.com\viz\async-gramex\tests\sass\b.scss: OK
@@ -598,6 +593,7 @@ D:\site\gramener.com\viz\async-gramex\tests\test_auth.py: OK
 D:\site\gramener.com\viz\async-gramex\tests\test_cache.db: OK
 D:\site\gramener.com\viz\async-gramex\tests\test_cache.py: OK
 D:\site\gramener.com\viz\async-gramex\tests\test_capturehandler.py: OK
+D:\site\gramener.com\viz\async-gramex\tests\test_comichandler.py: OK
 D:\site\gramener.com\viz\async-gramex\tests\test_drivehandler.py: OK
 D:\site\gramener.com\viz\async-gramex\tests\test_filehandler.py: OK
 D:\site\gramener.com\viz\async-gramex\tests\test_filterhandler.py: OK
@@ -606,7 +602,6 @@ D:\site\gramener.com\viz\async-gramex\tests\test_functionhandler.py: OK
 D:\site\gramener.com\viz\async-gramex\tests\test_gramexlog.py: OK
 D:\site\gramener.com\viz\async-gramex\tests\test_handlers.py: OK
 D:\site\gramener.com\viz\async-gramex\tests\test_init.py: OK
-D:\site\gramener.com\viz\async-gramex\tests\test_insert.db: OK
 D:\site\gramener.com\viz\async-gramex\tests\test_install.py: OK
 D:\site\gramener.com\viz\async-gramex\tests\test_jsonhandler.py: OK
 D:\site\gramener.com\viz\async-gramex\tests\test_ldapauth.py: OK
@@ -616,6 +611,7 @@ D:\site\gramener.com\viz\async-gramex\tests\test_modelhandler.py: OK
 D:\site\gramener.com\viz\async-gramex\tests\test_pptxhandler.py: OK
 D:\site\gramener.com\viz\async-gramex\tests\test_processhandler.py: OK
 D:\site\gramener.com\viz\async-gramex\tests\test_proxyhandler.py: OK
+D:\site\gramener.com\viz\async-gramex\tests\test_pynode.py: OK
 D:\site\gramener.com\viz\async-gramex\tests\test_schedule.py: OK
 D:\site\gramener.com\viz\async-gramex\tests\test_secrets.py: OK
 D:\site\gramener.com\viz\async-gramex\tests\test_sms.py: OK
@@ -628,8 +624,6 @@ D:\site\gramener.com\viz\async-gramex\tests\test_uploadhandler.py: OK
 D:\site\gramener.com\viz\async-gramex\tests\test_watcher.py: OK
 D:\site\gramener.com\viz\async-gramex\tests\test_websockethandler.py: OK
 D:\site\gramener.com\viz\async-gramex\tests\throwerror.py: OK
-D:\site\gramener.com\viz\async-gramex\tests\translate.xlsx: OK
-D:\site\gramener.com\viz\async-gramex\tests\uploads\.meta.db: OK
 D:\site\gramener.com\viz\async-gramex\tests\userdata.csv: OK
 D:\site\gramener.com\viz\async-gramex\tests\utils.py: OK
 D:\site\gramener.com\viz\async-gramex\tests\vega-lite.yaml: OK
@@ -643,13 +637,13 @@ D:\site\gramener.com\viz\async-gramex\tests\__pycache__: Excluded
 D:\site\gramener.com\viz\async-gramex\TODO: OK
 
 ----------- SCAN SUMMARY -----------
-Known viruses: 8555475
+Known viruses: 8557619
 Engine version: 0.103.3
-Scanned directories: 84
-Scanned files: 594
+Scanned directories: 82
+Scanned files: 587
 Infected files: 0
-Data scanned: 17.98 MB
-Data read: 5.87 MB (ratio 3.06:1)
-Time: 30.093 sec (0 m 30 s)
-Start Date: 2021:07:24 17:14:47
-End Date:   2021:07:24 17:15:17
+Data scanned: 16.02 MB
+Data read: 4.81 MB (ratio 3.33:1)
+Time: 28.706 sec (0 m 28 s)
+Start Date: 2021:08:01 20:11:17
+End Date:   2021:08:01 20:11:46

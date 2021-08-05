@@ -19,6 +19,7 @@ from .modelhandler import ModelHandler
 from .mlhandler import MLHandler
 from .filterhandler import FilterHandler
 from .drivehandler import DriveHandler
+from .comichandler import ComicHandler
 
 # Aliases
 Command = ProcessHandler
@@ -34,6 +35,7 @@ Slide = PPTXHandler
 Storage = DriveHandler
 Twitter = TwitterRESTHandler
 Websocket = WebSocketHandler
+Comic = ComicHandler
 
 
 __all__ = [
@@ -42,6 +44,8 @@ __all__ = [
     'Capture',
     'CaptureHandler',
     'Command',
+    'Comic',
+    'ComicHandler',
     'Data',
     'DirectoryHandler',
     'DriveHandler',

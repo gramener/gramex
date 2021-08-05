@@ -29,6 +29,6 @@
     "glob": "7",
     "puppeteer": "3",
     "tap-merge": "0.3",
-    "tape": "4"
+    "tape": "^4.14.0"
   }
 }

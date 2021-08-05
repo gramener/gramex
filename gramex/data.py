@@ -1432,6 +1432,7 @@ def _filter_mongodb(url, controls, args, database=None, collection=None, query=N
         TODO: Document function and usage
     '''
     import pymongo
+    import bson
     create_kwargs = {key: val for key, val in kwargs.items() if key in
                      {'port', 'document_class', 'tz_aware', 'connect'}}
 
@@ -1457,6 +1458,12 @@ def _filter_mongodb(url, controls, args, database=None, collection=None, query=N
         _qbuilder = _logical_conditions(args, meta_cols)
     cursor = _controls_default(table, query=_qbuilder, controls=controls, meta_cols=meta_cols)
     data = pd.DataFrame(list(cursor))
+
+    # Convert Object IDs into strings
+    if len(data) > 0:
+        for col, val in data.iloc[0].iteritems():
+            if type(val) in {bson.objectid.ObjectId}:
+                data[col] = data[col].map(str)
 
     return data
 

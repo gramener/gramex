@@ -372,6 +372,15 @@ url:
     kwargs:
       function: functionutils.content
 
+  # TestPyNode
+  pynode/run:
+    pattern: /pynode/run
+    handler: FunctionHandler
+    kwargs:
+      function: utils.pynode_run(handler)
+      headers:
+        Content-Type: application/json
+
   # TestFileHandler
   dir/noindex:
     pattern: /dir/noindex/(.*)
@@ -2210,6 +2219,10 @@ url:
         cache:
           url: $TRANSLATE_XLSX
           sheet_name: translate
+
+  comic:
+    pattern: /comic
+    handler: ComicHandler
 
   variables:
     pattern: /variables

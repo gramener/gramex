@@ -1,6 +1,6 @@
 {
   "name": "gramex-apps-ui",
-  "version": "1.70.0",
+  "version": "1.71.0",
   "author": "Bhanu K <bhanu.kamapantula@gramener.com>",
   "license": "MIT",
   "dependencies": {
@@ -11,6 +11,7 @@
     "bootstrap-select": "1.13",
     "bootstrap5": "npm:bootstrap@5.0",
     "bootswatch": "4",
+    "comicgen": "1",
     "d3": "4",
     "d3-scale-chromatic": "*",
     "d3v5": "npm:d3@5",
@@ -21,7 +22,7 @@
     "file-saver": "2",
     "font-awesome": "*",
     "g1": "0.17",
-    "html2canvas": "1.0.0-rc.7",
+    "html2canvas": "1.1.4",
     "jquery": "~3",
     "leaflet": "1.6",
     "lodash": "4",
@@ -30,7 +31,7 @@
     "noty": "3",
     "numeral": "2",
     "popper.js": "1",
-    "sass": "1",
+    "sass": "^1.37.0",
     "select2": "4",
     "tether-shepherd": "1",
     "topojson": "3",
