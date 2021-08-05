@@ -336,8 +336,8 @@ class MLHandler(FormHandler):
         for cat in cats:
             if not data[cat].astype(str).all():
                 raise HTTPError(BAD_REQUEST,
-                            reason=f"Columns {cat} should contain string.")  
-        
+                            reason=f"Columns {cat} should contain string.")
+
         data.insert(0, column='_text', value='')
 
         for col in data:
@@ -350,8 +350,8 @@ class MLHandler(FormHandler):
             cls.sentiment_df['label'] = data['label']
         else:
             app_log.error("Column: 'label' missing, training and scoring not available!")
-        data.drop('_text', axis=1) 
-        cls.store_data(data)        
+        data.drop('_text', axis=1)
+        cls.store_data(data)
 
     def _transform(self, data, **kwargs):
         orgdata = self.load_data()
