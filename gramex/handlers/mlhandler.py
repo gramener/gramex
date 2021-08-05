@@ -73,7 +73,7 @@ def _fit(model, x, y, path=None, name=None):
 
 
 def _train_transformer(model, data, model_path, **kwargs):
-    enc = model.tokenizer(data['text'].tolist(), truncation=True, padding=True)
+    enc = model.tokenizer(data['_text'].values.tolist(), truncation=True, padding=True)
     labels = SENTIMENT_LENC.transform(data['label'])
     train_dataset = SentimentDataset(enc, labels)
     model_output_dir = op.join(op.dirname(model_path), 'results')
@@ -83,7 +83,7 @@ def _train_transformer(model, data, model_path, **kwargs):
     Trainer(model=model.model, args=trargs, train_dataset=train_dataset).train()
     model.save_pretrained(model_path)
     move_to_cpu(model)
-    pred = model(data['text'].tolist())
+    pred = model(data['_text'].values.tolist())
     res = {
         'roc_auc': roc_auc_score(
             labels, SENTIMENT_LENC.transform([c['label'] for c in pred]))
@@ -92,7 +92,7 @@ def _train_transformer(model, data, model_path, **kwargs):
 
 
 def _score_transformer(model, data):
-    pred = model(data['text'].tolist())
+    pred = model(data['_text'].values.tolist())
     score = roc_auc_score(
         *map(SENTIMENT_LENC.transform, (data['label'], [c['label'] for c in pred])))
     return {'roc_auc': score}
@@ -107,7 +107,8 @@ class MLHandler(FormHandler):
     @classmethod
     def setup(cls, data=None, model={}, backend="", config_dir='', **kwargs):
         cls.slug = slugify(cls.name)
-        cls.backend = backend
+        cls.backend = model.get('backend')
+        cls.sentiment_df = pd.DataFrame() 
         # Create the config store directory
         if not config_dir:
             config_dir = op.join(gramex.config.variables['GRAMEXDATA'], 'apps', 'mlhandler',
@@ -118,7 +119,7 @@ class MLHandler(FormHandler):
         cls.data_store = op.join(cls.config_dir, 'data.h5')
 
         cls.template = kwargs.pop('template', DEFAULT_TEMPLATE)
-        cls.task = kwargs.pop('task')
+        cls.mclass = model.get('class')
         super(MLHandler, cls).setup(**kwargs)
 
         try:
@@ -136,24 +137,28 @@ class MLHandler(FormHandler):
             app_log.warning('MLHandler could not find training data.')
             data = None
             cls._built_transform = staticmethod(lambda x: x)
+        
+        # store the model kwargs from gramex.yaml into the store
+        for key in TRANSFORMS:
+            cls.set_opt(key, model.get(key, cls.get_opt(key)))
+        # Remove target_col if it appears anywhere in cats or nums
+        target_col = cls.get_opt('target_col')
+        cls.set_opt('cats', list(set(cls.get_opt('cats')) - {target_col}))
+        cls.set_opt('nums', list(set(cls.get_opt('nums')) - {target_col}))
+
+        cls.set_opt('class', model.get('class'))
+        cls.set_opt('params', model.get('params', {}))
+
 
         if cls.backend == "transformers":
-            cls.load_transformer(cls.task, model)
-        else:    
-            default_model_path = op.join(cls.config_dir, slugify(cls.name) + '.pkl')
+            cls.load_transformer(cls.mclass, model)
+            if data is not None:
+                data = cls._filtercols(data)
+                data = cls._filterrows(data)
+                cls._concatenate(data)
+        else:
             cls.model_path = model.pop('path', default_model_path)
-
-
-            # store the model kwargs from gramex.yaml into the store
-            for key in TRANSFORMS:
-                cls.set_opt(key, model.get(key, cls.get_opt(key)))
-            # Remove target_col if it appears anywhere in cats or nums
-            target_col = cls.get_opt('target_col')
-            cls.set_opt('cats', list(set(cls.get_opt('cats')) - {target_col}))
-            cls.set_opt('nums', list(set(cls.get_opt('nums')) - {target_col}))
-
-            cls.set_opt('class', model.get('class'))
-            cls.set_opt('params', model.get('params', {}))
+            default_model_path = op.join(cls.config_dir, slugify(cls.name) + '.pkl')
             if op.exists(cls.model_path):  # If the pkl exists, load it
                 cls.model = joblib.load(cls.model_path)
             elif data is not None:
@@ -183,8 +188,7 @@ class MLHandler(FormHandler):
         default_model_path = op.join(
             gramex.config.variables['GRAMEXDATA'], 'apps', 'mlhandler',
             slugify(cls.name))
-        path = _model.get('path', default_model_path)
-        cls.model_path = path
+        cls.model_path = _model.get('path', default_model_path)
         # try loading from model_path
         kwargs = {}
         try:
@@ -326,6 +330,29 @@ class MLHandler(FormHandler):
             return Pipeline([('transform', ct), (model.__class__.__name__, model)])
         return cls.model
 
+    @classmethod
+    def _concatenate(cls, data):
+        cats = set(cls.get_opt('cats', []))
+        for cat in cats:
+            if not data[cat].astype(str).all():
+                raise HTTPError(BAD_REQUEST,
+                            reason=f"Columns {cat} should contain string.")  
+        
+        data.insert(0, column='_text', value='')
+
+        for col in data:
+            if col in cats:
+                data['_text'] += data[col]
+
+        cls.sentiment_df = data['_text'].copy()
+        cls.sentiment_df = cls.sentiment_df.to_frame(name='_text')
+        if 'label' in data.columns:
+            cls.sentiment_df['label'] = data['label']
+        else:
+            app_log.error("Column: 'label' missing, training and scoring not available!")
+        data.drop('_text', axis=1) 
+        cls.store_data(data)        
+
     def _transform(self, data, **kwargs):
         orgdata = self.load_data()
         for col in data:
@@ -383,7 +410,7 @@ class MLHandler(FormHandler):
         elif self.backend == "transformers" and 'text' in self.args:
             text = self.get_arguments('text')
             result = yield gramex.service.threadpool.submit(self.model, text)
-            self.write(json.dumps(result, indent=2))    
+            self.write(json.dumps(result, indent=2))
         else:
             self._check_model_path()
             if '_download' in self.args:
@@ -447,23 +474,30 @@ class MLHandler(FormHandler):
         if action not in ACTIONS:
             raise HTTPError(BAD_REQUEST, f'Action {action} not supported.')
         if self.backend == "transformers":
-            data = self._parse_data(_cache=False)
+            data = self.sentiment_df
             move_to_cpu(self.model)
             kwargs = {}
             if action == 'train':
+                if 'label' not in data.columns:
+                    raise HTTPError(BAD_REQUEST,
+                            reason=f"Missing column named label(target values) from data.")
                 kwargs = self._coerce_transformers_opts()
                 kwargs['model_path'] = self.model_path
                 args = _train_transformer, self.model, data
             elif action == 'score':
+                if 'label' not in data.columns:
+                    raise HTTPError(BAD_REQUEST,
+                            reason=f"Missing column named label(target values) from data.")
                 args = _score_transformer, self.model, data
             elif action == 'predict':
-                args = self.model, data['text'].tolist()
+                args = self.model, data['_text'].values.tolist()
             res = yield gramex.service.threadpool.submit(*args, **kwargs)
             self.write(json.dumps(res, indent=2, cls=CustomJSONEncoder))
         else:
             res = yield gramex.service.threadpool.submit(getattr(self, f"_{action}"))
             self.write(json.dumps(res, indent=2, cls=CustomJSONEncoder))      
         super(MLHandler, self).post(*path_args, **path_kwargs)
+            
 
     def get_cached_arg(self, argname):
         val = self.get_arg(argname, self.get_opt(argname))
