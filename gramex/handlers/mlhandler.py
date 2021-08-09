@@ -12,7 +12,6 @@ from gramex.handlers import FormHandler
 from gramex.http import NOT_FOUND, BAD_REQUEST
 from gramex.install import _mkdir, safe_rmtree
 from gramex import cache
-from gramex.dl import SentimentDataset
 import joblib
 import pandas as pd
 from sklearn.compose import ColumnTransformer
@@ -23,9 +22,6 @@ from slugify import slugify
 from tornado.gen import coroutine
 from tornado.web import HTTPError
 from sklearn.metrics import get_scorer
-from transformers import pipeline
-from transformers import AutoModelForSequenceClassification, AutoTokenizer
-from transformers import Trainer, TrainingArguments
 
 op = os.path
 MLCLASS_MODULES = [
@@ -75,9 +71,11 @@ def _fit(model, x, y, path=None, name=None):
 def _train_transformer(model, data, model_path, **kwargs):
     enc = model.tokenizer(data['_text'].values.tolist(), truncation=True, padding=True)
     labels = SENTIMENT_LENC.transform(data['label'])
+    from gramex.dl import SentimentDataset
     train_dataset = SentimentDataset(enc, labels)
     model_output_dir = op.join(op.dirname(model_path), 'results')
     model_log_dir = op.join(op.dirname(model_path), 'logs')
+    from transformers import Trainer, TrainingArguments
     trargs = TrainingArguments(
         output_dir=model_output_dir, logging_dir=model_log_dir, **kwargs)
     Trainer(model=model.model, args=trargs, train_dataset=train_dataset).train()
@@ -108,7 +106,7 @@ class MLHandler(FormHandler):
     def setup(cls, data=None, model={}, backend="", config_dir='', **kwargs):
         cls.slug = slugify(cls.name)
         cls.backend = model.get('backend')
-        cls.sentiment_df = pd.DataFrame() 
+        cls.sentiment_df = pd.DataFrame()
         # Create the config store directory
         if not config_dir:
             config_dir = op.join(gramex.config.variables['GRAMEXDATA'], 'apps', 'mlhandler',
@@ -137,7 +135,7 @@ class MLHandler(FormHandler):
             app_log.warning('MLHandler could not find training data.')
             data = None
             cls._built_transform = staticmethod(lambda x: x)
-        
+
         # store the model kwargs from gramex.yaml into the store
         for key in TRANSFORMS:
             cls.set_opt(key, model.get(key, cls.get_opt(key)))
@@ -149,7 +147,6 @@ class MLHandler(FormHandler):
         cls.set_opt('class', model.get('class'))
         cls.set_opt('params', model.get('params', {}))
 
-
         if cls.backend == "transformers":
             cls.load_transformer(cls.mclass, model)
             if data is not None:
@@ -157,8 +154,9 @@ class MLHandler(FormHandler):
                 data = cls._filterrows(data)
                 cls._concatenate(data)
         else:
-            cls.model_path = model.pop('path', default_model_path)
             default_model_path = op.join(cls.config_dir, slugify(cls.name) + '.pkl')
+            cls.model_path = model.pop('path', default_model_path)
+
             if op.exists(cls.model_path):  # If the pkl exists, load it
                 cls.model = joblib.load(cls.model_path)
             elif data is not None:
@@ -191,6 +189,8 @@ class MLHandler(FormHandler):
         cls.model_path = _model.get('path', default_model_path)
         # try loading from model_path
         kwargs = {}
+        from transformers import pipeline
+        from transformers import AutoModelForSequenceClassification, AutoTokenizer
         try:
             kwargs['model'] = AutoModelForSequenceClassification.from_pretrained(cls.model_path)
             kwargs['tokenizer'] = AutoTokenizer.from_pretrained(cls.model_path)
@@ -199,7 +199,7 @@ class MLHandler(FormHandler):
             app_log.warning(f'{err}')
         model = pipeline(task, **kwargs)
         cls.model = model
-            
+
     @classmethod
     def store_data(cls, df, append=False):
         df.to_hdf(cls.data_store, format="table", key="data", append=append)
@@ -336,7 +336,7 @@ class MLHandler(FormHandler):
         for cat in cats:
             if not data[cat].astype(str).all():
                 raise HTTPError(BAD_REQUEST,
-                            reason=f"Columns {cat} should contain string.")
+                                reason=f"Columns {cat} should contain string.")
 
         data.insert(0, column='_text', value='')
 
@@ -479,15 +479,17 @@ class MLHandler(FormHandler):
             kwargs = {}
             if action == 'train':
                 if 'label' not in data.columns:
+                    app_log.error("Column: 'label' missing, training and scoring not available!")
                     raise HTTPError(BAD_REQUEST,
-                            reason=f"Missing column named label(target values) from data.")
+                                    reason=print("Missing column named label(target values) from data."))
                 kwargs = self._coerce_transformers_opts()
                 kwargs['model_path'] = self.model_path
                 args = _train_transformer, self.model, data
             elif action == 'score':
                 if 'label' not in data.columns:
+                    app_log.error("Column: 'label' missing, training and scoring not available!")
                     raise HTTPError(BAD_REQUEST,
-                            reason=f"Missing column named label(target values) from data.")
+                                    reason=print("Missing column named label(target values) from data."))
                 args = _score_transformer, self.model, data
             elif action == 'predict':
                 args = self.model, data['_text'].values.tolist()
@@ -495,9 +497,8 @@ class MLHandler(FormHandler):
             self.write(json.dumps(res, indent=2, cls=CustomJSONEncoder))
         else:
             res = yield gramex.service.threadpool.submit(getattr(self, f"_{action}"))
-            self.write(json.dumps(res, indent=2, cls=CustomJSONEncoder))      
+            self.write(json.dumps(res, indent=2, cls=CustomJSONEncoder))
         super(MLHandler, self).post(*path_args, **path_kwargs)
-            
 
     def get_cached_arg(self, argname):
         val = self.get_arg(argname, self.get_opt(argname))
