@@ -1815,7 +1815,7 @@ url:
     handler: FunctionHandler
     kwargs:
       auth: true
-      function: six.text_type
+      function: str
       args: 'OK'
       xsrf_cookies: false
   auth/filehandler:
@@ -2223,6 +2223,30 @@ url:
   comic:
     pattern: /comic
     handler: ComicHandler
+
+  openapi/spec:
+    pattern: /openapi/spec
+    handler: OpenAPIHandler
+    kwargs:
+      info:
+        title: OpenAPI-title
+        description: OpenAPI-description
+        version: OpenAPI-version
+      servers:
+        - url: $YAMLURL
+          description: Server-description
+
+  openapi/func:
+    pattern: /openapi/func
+    handler: FunctionHandler
+    kwargs:
+      function: utils.test_function
+      methods: GET, POST
+    openapi:
+      get:
+        responses:
+          '400':
+            description: You served a bad request
 
   variables:
     pattern: /variables

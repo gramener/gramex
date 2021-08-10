@@ -20,6 +20,7 @@ from .mlhandler import MLHandler
 from .filterhandler import FilterHandler
 from .drivehandler import DriveHandler
 from .comichandler import ComicHandler
+from .openapihandler import OpenAPIHandler
 
 # Aliases
 Command = ProcessHandler
@@ -36,6 +37,7 @@ Storage = DriveHandler
 Twitter = TwitterRESTHandler
 Websocket = WebSocketHandler
 Comic = ComicHandler
+OpenAPI = OpenAPIHandler
 
 
 __all__ = [
@@ -63,6 +65,8 @@ __all__ = [
     'ModelHandler',
     'ML',
     'MLHandler',
+    'OpenAPI',
+    'OpenAPIHandler',
     'PPTXHandler',
     'ProcessHandler',
     'Proxy',
