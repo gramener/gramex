@@ -354,8 +354,13 @@ def open(path, callback=None, transform=None, rel=False, **kwargs):
         cached = {'data': data, 'stat': fstat}
         try:
             _cache[key] = cached
+        except ValueError:
+            size = sys.getsizeof(data)
+            app_log.exception(f'gramex.cache.open: {type(_cache):s} cannot cache {size} bytes. ' +
+                              'Increase cache.memory.size in gramex.yaml')
         except Exception:
-            app_log.error('gramex.cache.open: %s cannot cache %r' % (type(_cache), data))
+            app_log.exception('gramex.cache.open: %s cannot cache %r' % (type(_cache), data))
+
     result = cached['data']
     return (result, reloaded) if _reload_status else result
 

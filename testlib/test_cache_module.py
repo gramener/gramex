@@ -8,7 +8,6 @@ import unittest
 import gramex.cache
 import pandas as pd
 import sqlalchemy as sa
-from lxml import etree
 from gramex.cache import hashfn
 from gramex.config import variables, str_utf8
 from markdown import markdown
@@ -287,20 +286,6 @@ class TestOpen(unittest.TestCase):
 
         self.check_file_cache(path, check)
         eq_(gramex.cache.open(path), gramex.cache.open(path, 'md'))
-
-    def test_open_xml(self):
-        path = os.path.join(cache_folder, 'data.svg')
-        expected = etree.parse(path)
-
-        def check(reload):
-            result, reloaded = gramex.cache.open(path, 'svg', _reload_status=True)
-            eq_(reloaded, reload)
-            eq_(etree.tostring(result), etree.tostring(expected))
-
-        self.check_file_cache(path, check)
-        for ext in ['xml', 'svg', 'rss', 'atom']:
-            eq_(etree.tostring(gramex.cache.open(path)),
-                etree.tostring(gramex.cache.open(path, ext)))
 
     def test_open_custom(self):
         def img_size(path, scale=1):
