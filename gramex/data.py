@@ -228,14 +228,10 @@ def filter(url, args={}, meta={}, engine=None, ext=None, columns=None,
         # Get the full dataset. Then filter it
         data = gramex.cache.open(url, ext, transform=transform, **kwargs)
         return _filter_frame(data, meta=meta, controls=controls, args=args)
-    elif engine == 'plugin':
-        dbtype = url.split(':')[1]
-        if dbtype not in plugins:
-            raise ValueError(f'Unknown plugin:{dbtype}')
-        method = plugins[dbtype].get('filter', None)
-        if not callable(method):
-            raise ValueError(f'plugin:{dbtype}.filter not defined')
-        data = method(url=url[7:], controls=controls, args=args, query=query, **kwargs)
+    elif engine.startswith('plugin+'):
+        plugin = engine.split('+')[1]
+        method = plugins[plugin]['filter']
+        data = method(url=url, controls=controls, args=args, query=query, **kwargs)
         return _filter_frame(data, meta=meta, controls=controls, args=args)
     elif engine == 'sqlalchemy':
         table = kwargs.pop('table', None)
@@ -298,6 +294,11 @@ def delete(url, meta={}, args=None, engine=None, table=None, ext=None, id=None, 
                                       args=args, source='delete', id=id)
         gramex.cache.save(data, url, ext, index=False, **kwargs)
         return len(data_filtered)
+    elif engine.startswith('plugin+'):
+        plugin = engine.split('+')[1]
+        method = plugins[plugin]['delete']
+        return method(url=url, meta=meta, controls=controls, args=args, id=id, table=table,
+                      columns=columns, ext=ext, query=query, queryfile=queryfile, **kwargs)
     elif engine == 'sqlalchemy':
         if table is None:
             raise ValueError('No table: specified')
@@ -448,7 +449,7 @@ def get_engine(url):
 
     - ``'dataframe'`` if url is a Pandas DataFrame
     - ``'sqlalchemy'`` if url is a sqlalchemy compatible URL
-    - ``'plugin'`` if it is `plugin:<name-of-plugin>`
+    - ``'plugin'`` if it is `<valid-plugin-name>://...`
     - ``protocol`` if url is of the form `protocol://...`
     - ``'dir'`` if it is not a URL but a valid directory
     - ``'file'`` if it is not a URL but a valid file
@@ -457,8 +458,9 @@ def get_engine(url):
     '''
     if isinstance(url, pd.DataFrame):
         return 'dataframe'
-    if url.startswith('plugin:'):
-        return 'plugin'
+    for plugin_name in plugins:
+        if url.startswith(f'{plugin_name}:'):
+            return f'plugin+{plugin_name}'
     try:
         url = sa.engine.url.make_url(url)
     except sa.exc.ArgumentError:
@@ -1359,17 +1361,9 @@ def _type_conversion(param_list, operations=None):
         raise ValueError('Value is not integer: %r' % param_list)
 
 
-# x>3&x>4&x>5 == {"$or": [{x: {$gt: 3}}, {x: {$gt: 4}}, {x: $gt: 5}]}
-# def _logical_conditions(args, meta_cols):
-#     conditions = []
-#     for key, vals in args.items():
-#         col, agg, op = _filter_col(key, meta_cols)
-#         convert = meta_cols[col].dtype.type
-#         conditions.append({col: {op: convert(val)} for val in vals})
-#     return {'$and': conditions}
-
-
 def _logical_conditions(args, meta_cols):
+    # Convert a query like x>=3&x>=4&x>=5 into
+    # {"$or": [{x: {$gt: 3}}, {x: {$gt: 4}}, {x: $gt: 5}]}
     _op_mapping = {
         '<': '$lt',
         '<~': '$lte',
@@ -1378,25 +1372,22 @@ def _logical_conditions(args, meta_cols):
         '': '$in',
         '!': '$nin'
     }
-    _conditions = []
+    # TODO: ?_id= is not working
+    conditions = []
     for key, vals in args.items():
         col, agg, op = _filter_col(key, meta_cols)
         if op in ['', '!']:
-            _conditions.append({col: {_op_mapping[op]: vals}})
+            conditions.append({col: {_op_mapping[op]: vals}})
         elif op == '!~':
-            _conditions.append({col: {"$not": {"$regex": '|'.join(vals), "$options": 'i'}}})
+            conditions.append({col: {"$not": {"$regex": '|'.join(vals), "$options": 'i'}}})
         elif op == '~':
-            _conditions.append({col: {"$regex": '|'.join(vals), "$options": 'i'}})
+            conditions.append({col: {"$regex": '|'.join(vals), "$options": 'i'}})
         elif col and op in _op_mapping.keys():
             # TODO: Improve the numpy to Python type
             convert = int if (meta_cols[col].dtype == pd.np.int64) else meta_cols[col].dtype.type
-            _conditions.append({col: {_op_mapping[op]: convert(val)} for val in vals})
+            conditions.append({col: {_op_mapping[op]: convert(val)} for val in vals})
 
-    if len(_conditions) > 1:
-        return {'$and': _conditions}
-    if _conditions:
-        return _conditions[0]
-    return {}
+    return {'$and': conditions} if len(conditions) > 1 else conditions[0] if conditions else {}
 
 
 def _controls_default(table, query=None, controls=None, meta_cols=None):
@@ -1427,40 +1418,28 @@ def _controls_default(table, query=None, controls=None, meta_cols=None):
     return cursor
 
 
-def _filter_mongodb(url, controls, args, database=None, collection=None, query=None, **kwargs):
-    '''
-        TODO: Document function and usage
-    '''
+def _mongodb_collection(url, database, collection, **kwargs):
     import pymongo
-    import bson
-    create_kwargs = {key: val for key, val in kwargs.items() if key in
-                     {'port', 'document_class', 'tz_aware', 'connect'}}
 
     # Create MongoClient
+    create_kwargs = {key: val for key, val in kwargs.items() if key in
+                     {'port', 'document_class', 'tz_aware', 'connect'}}
     client = create_engine(url, create=pymongo.MongoClient, **create_kwargs)
-
-    # TODO: check if database and collection exists
-
-    # client.list_databases()
-    # db.list_collection_names()
-
-    # Get Database
     db = client[database]
-    # Get Collection
-    table = db[collection]
+    return db[collection]
 
-    # TODO: Get metadata of requested document
-    meta_cols = pd.DataFrame(list(table.find().limit(100)))
 
-    if query:
-        _qbuilder = query
-    else:
-        _qbuilder = _logical_conditions(args, meta_cols)
-    cursor = _controls_default(table, query=_qbuilder, controls=controls, meta_cols=meta_cols)
+def _filter_mongodb(url, controls, args, database=None, collection=None, query=None, **kwargs):
+    '''TODO: Document function and usage'''
+    table = _mongodb_collection(url, database, collection, **kwargs)
+    if query is None:
+        meta_cols = pd.DataFrame(list(table.find().limit(100)))
+        query = _logical_conditions(args, meta_cols)
+    cursor = _controls_default(table, query=query, controls=controls, meta_cols=meta_cols)
     data = pd.DataFrame(list(cursor))
-
-    # Convert Object IDs into strings
+    # Convert Object IDs into strings to allow JSON conversion
     if len(data) > 0:
+        import bson
         for col, val in data.iloc[0].iteritems():
             if type(val) in {bson.objectid.ObjectId}:
                 data[col] = data[col].map(str)
@@ -1468,6 +1447,21 @@ def _filter_mongodb(url, controls, args, database=None, collection=None, query=N
     return data
 
 
+def _delete_mongodb(url, controls, args, meta=None, database=None, collection=None, query=None,
+                    **kwargs):
+    table = _mongodb_collection(url, database, collection, **kwargs)
+    if query is None:
+        meta_cols = pd.DataFrame(list(table.find().limit(100)))
+        query = _logical_conditions(args, meta_cols)
+    # TODO: Update meta
+    result = table.remove(query)
+    for key, log in (('writeError', app_log.error), ('writeConcernError', app_log.warning)):
+        if key in result:
+            log(f'MongoDB {key} on {url}/{database}/{collection}: %s', result[key]['errMsg'])
+    return result['n']
+
+
 plugins['mongodb'] = {
-    'filter': _filter_mongodb
+    'filter': _filter_mongodb,
+    'delete': _delete_mongodb,
 }
