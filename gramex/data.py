@@ -396,6 +396,10 @@ def insert(url, meta={}, args=None, engine=None, table=None, ext=None, id=None, 
             data = data.append(rows, sort=False)
         gramex.cache.save(data, url, ext, index=False, **kwargs)
         return len(rows)
+    elif engine.startswith('plugin+'):
+        plugin = engine.split('+')[1]
+        method = plugins[plugin]['insert']
+        return method(url=url, rows=rows, meta=meta, args=args, table=table, **kwargs)
     elif engine == 'sqlalchemy':
         if table is None:
             raise ValueError('No table: specified')
@@ -1454,6 +1458,7 @@ def _delete_mongodb(url, controls, args, meta=None, database=None, collection=No
         meta_cols = pd.DataFrame(list(table.find().limit(100)))
         query = _logical_conditions(args, meta_cols)
     # TODO: Update meta
+    # TODO: test sub-key deletion via QUERY:
     result = table.remove(query)
     for key, log in (('writeError', app_log.error), ('writeConcernError', app_log.warning)):
         if key in result:
@@ -1461,7 +1466,18 @@ def _delete_mongodb(url, controls, args, meta=None, database=None, collection=No
     return result['n']
 
 
+def _insert_mongodb(url, rows, meta=None, database=None, collection=None, **kwargs):
+    table = _mongodb_collection(url, database, collection, **kwargs)
+    meta_cols = pd.DataFrame(list(table.find().limit(100)))
+    cols = meta_cols.columns if len(meta_cols) > 0 else rows.columns or []
+    rows = _pop_columns(rows, cols, meta['ignored'])
+    result = table.insert_many(rows.to_dict(orient='records'))
+    meta['inserted'] = [{'id': str(id) for id in result.inserted_ids}]
+    return len(result.inserted_ids)
+
+
 plugins['mongodb'] = {
     'filter': _filter_mongodb,
     'delete': _delete_mongodb,
+    'insert': _insert_mongodb,
 }
