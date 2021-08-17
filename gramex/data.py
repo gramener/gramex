@@ -339,6 +339,11 @@ def update(url, meta={}, args=None, engine=None, table=None, ext=None, id=None, 
             data, meta=meta, controls=controls, args=args, source='update', id=id)
         gramex.cache.save(data, url, ext, index=False, **kwargs)
         return len(data_updated)
+    elif engine.startswith('plugin+'):
+        plugin = engine.split('+')[1]
+        method = plugins[plugin]['update']
+        return method(url=url, meta=meta, controls=controls, args=args, id=id, table=table,
+                      columns=columns, ext=ext, query=query, queryfile=queryfile, **kwargs)
     elif engine == 'sqlalchemy':
         if table is None:
             raise ValueError('No table: specified')
@@ -1365,32 +1370,39 @@ def _type_conversion(param_list, operations=None):
         raise ValueError('Value is not integer: %r' % param_list)
 
 
-def _logical_conditions(args, meta_cols):
+_mongodb_op_map = {
+    '<': '$lt',
+    '<~': '$lte',
+    '>': '$gt',
+    '>~': '$gte',
+    '': '$in',
+    '!': '$nin'
+}
+
+
+def _filter_mongodb_col(col, op, vals, meta_cols):
+    if op in ['', '!']:
+        return {col: {_mongodb_op_map[op]: vals}}
+    elif op == '!~':
+        return {col: {"$not": {"$regex": '|'.join(vals), "$options": 'i'}}}
+    elif op == '~':
+        return {col: {"$regex": '|'.join(vals), "$options": 'i'}}
+    elif col and op in _mongodb_op_map.keys():
+        # TODO: Improve the numpy to Python type
+        convert = int if (meta_cols[col].dtype == pd.np.int64) else meta_cols[col].dtype.type
+        return {col: {_mongodb_op_map[op]: convert(val)} for val in vals}
+
+
+def _mongodb_query(args, meta_cols):
     # Convert a query like x>=3&x>=4&x>=5 into
     # {"$or": [{x: {$gt: 3}}, {x: {$gt: 4}}, {x: $gt: 5}]}
-    _op_mapping = {
-        '<': '$lt',
-        '<~': '$lte',
-        '>': '$gt',
-        '>~': '$gte',
-        '': '$in',
-        '!': '$nin'
-    }
     # TODO: ?_id= is not working
     conditions = []
     for key, vals in args.items():
         col, agg, op = _filter_col(key, meta_cols)
-        if op in ['', '!']:
-            conditions.append({col: {_op_mapping[op]: vals}})
-        elif op == '!~':
-            conditions.append({col: {"$not": {"$regex": '|'.join(vals), "$options": 'i'}}})
-        elif op == '~':
-            conditions.append({col: {"$regex": '|'.join(vals), "$options": 'i'}})
-        elif col and op in _op_mapping.keys():
-            # TODO: Improve the numpy to Python type
-            convert = int if (meta_cols[col].dtype == pd.np.int64) else meta_cols[col].dtype.type
-            conditions.append({col: {_op_mapping[op]: convert(val)} for val in vals})
-
+        if col:
+            conditions.append(_filter_mongodb_col(col, op, vals, meta_cols))
+        # TODO: add meta['ignored']
     return {'$and': conditions} if len(conditions) > 1 else conditions[0] if conditions else {}
 
 
@@ -1438,7 +1450,7 @@ def _filter_mongodb(url, controls, args, database=None, collection=None, query=N
     table = _mongodb_collection(url, database, collection, **kwargs)
     if query is None:
         meta_cols = pd.DataFrame(list(table.find().limit(100)))
-        query = _logical_conditions(args, meta_cols)
+        query = _mongodb_query(args, meta_cols)
     cursor = _controls_default(table, query=query, controls=controls, meta_cols=meta_cols)
     data = pd.DataFrame(list(cursor))
     # Convert Object IDs into strings to allow JSON conversion
@@ -1447,23 +1459,24 @@ def _filter_mongodb(url, controls, args, database=None, collection=None, query=N
         for col, val in data.iloc[0].iteritems():
             if type(val) in {bson.objectid.ObjectId}:
                 data[col] = data[col].map(str)
-
     return data
 
 
 def _delete_mongodb(url, controls, args, meta=None, database=None, collection=None, query=None,
                     **kwargs):
     table = _mongodb_collection(url, database, collection, **kwargs)
-    if query is None:
-        meta_cols = pd.DataFrame(list(table.find().limit(100)))
-        query = _logical_conditions(args, meta_cols)
-    # TODO: Update meta
-    # TODO: test sub-key deletion via QUERY:
-    result = table.remove(query)
-    for key, log in (('writeError', app_log.error), ('writeConcernError', app_log.warning)):
-        if key in result:
-            log(f'MongoDB {key} on {url}/{database}/{collection}: %s', result[key]['errMsg'])
-    return result['n']
+    meta_cols = pd.DataFrame(list(table.find().limit(100)))
+    query = _mongodb_query(args, meta_cols)
+    result = table.delete_many(query)
+    return result.deleted_count
+
+
+def _update_mongodb(url, controls, args, meta=None, database=None, collection=None, query=None,
+                    id=[], **kwargs):
+    table = _mongodb_collection(url, database, collection, **kwargs)
+    query = _mongodb_query(args, id)
+    result = table.update_many(query, {'$set': {key: val[0] for key, val in args.items()}})
+    return result.modified_count
 
 
 def _insert_mongodb(url, rows, meta=None, database=None, collection=None, **kwargs):
@@ -1480,4 +1493,5 @@ plugins['mongodb'] = {
     'filter': _filter_mongodb,
     'delete': _delete_mongodb,
     'insert': _insert_mongodb,
+    'update': _update_mongodb,
 }
