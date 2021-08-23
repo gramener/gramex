@@ -1,6 +1,7 @@
 '''
 Interact with data from the browser
 '''
+from datetime import datetime
 import io
 import os
 import re
@@ -1489,9 +1490,78 @@ def _insert_mongodb(url, rows, meta=None, database=None, collection=None, **kwar
     return len(result.inserted_ids)
 
 
+def _filter_influxdb(url, controls, args, org=None, bucket=None, query=None, **kwargs):
+    with _influxdb_client(url, org=org, **kwargs) as db:
+        q = db.query_api()
+        _range = args.pop('range')[0]
+        df = q.query_data_frame(f'from(bucket: "{bucket}")|>range(start: {_range})')
+    return df
+
+
+def _delete_influxdb():
+    raise NotImplementedError
+
+
+def _update_influxdb():
+    raise NotImplementedError
+
+
+def _influxdb_client(url, token, org, **kwargs):
+    from influxdb_client import InfluxDBClient
+    url = re.sub(r'^influxdb:', '', url)
+    return InfluxDBClient(url, token, org=org, debug=True, **kwargs)
+
+
+def _timestamp_df(df, index_col='_t'):
+    now = datetime.now()
+    if index_col not in df:
+        df[index_col] = [now] * len(df)
+    else:
+        df[index_col] = pd.to_datetime(df[index_col], errors='coerce')
+        df[index_col].fillna(value=now, inplace=True)
+    return df.set_index(index_col)
+
+
+def _get_ts_points(df, measurement, tags):
+    from influxdb_client import Point
+    points = []
+    tags = df[tags]
+    fields = df.drop(tags, axis=1)
+    for (t, field), (_, tag) in zip(fields.astype(float).iterrows(), tags.iterrows()):
+        p = Point(measurement).time(t)
+        [p.tag(t, tval) for t, tval in tag.to_dict().items()]
+        [p.field(f, fval) for f, fval in field.to_dict().items()]
+        points.append(p)
+    return points
+
+
+def _insert_influxdb(url, rows, meta, args, bucket, **kwargs):
+    measurement = rows.pop('measurement').unique()[0]
+    tags = rows.pop('tags').dropna().drop_duplicates().tolist() if 'tags' in rows else []
+
+    # Ensure that the index is timestamped
+    rows = _timestamp_df(rows)
+    rows = _get_ts_points(rows, measurement, tags)
+    from influxdb_client.client.write_api import ASYNCHRONOUS
+    with _influxdb_client(url, **kwargs) as db:
+        with db.write_api(write_options=ASYNCHRONOUS) as client:
+            client.write(
+                bucket=bucket, org=db.org, record=rows,
+                data_frame_measurement_name=measurement,
+                data_frame_tag_columns=tags
+            ).get()
+    return len(rows)
+
+
 plugins['mongodb'] = {
     'filter': _filter_mongodb,
     'delete': _delete_mongodb,
     'insert': _insert_mongodb,
     'update': _update_mongodb,
+}
+plugins['influxdb'] = {
+    'filter': _filter_influxdb,
+    'delete': _delete_influxdb,
+    'insert': _insert_influxdb,
+    'update': _update_influxdb,
 }
