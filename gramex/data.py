@@ -1445,6 +1445,17 @@ def _mongodb_collection(url, database, collection, **kwargs):
     return db[collection]
 
 
+def _mongodb_json(obj):
+    '''Parse val in keys ending with . as JSON ({"key.": val}), but retain other keys'''
+    result = {}
+    for key, val in obj.items():
+        if key.endswith('.'):
+            result[key[:-1]] = json.loads(val)
+        else:
+            result[key] = val
+    return result
+
+
 def _filter_mongodb(url, controls, args, database=None, collection=None, query=None, **kwargs):
     '''TODO: Document function and usage'''
     table = _mongodb_collection(url, database, collection, **kwargs)
@@ -1475,20 +1486,23 @@ def _update_mongodb(url, controls, args, meta=None, database=None, collection=No
                     id=[], **kwargs):
     table = _mongodb_collection(url, database, collection, **kwargs)
     query = _mongodb_query(args, id)
-    result = table.update_many(query, {'$set': {key: val[0] for key, val in args.items()}})
+    values = {key: val[0] for key, val in args.items()}
+    result = table.update_many(query, {'$set': _mongodb_json(values)})
     return result.modified_count
 
 
 def _insert_mongodb(url, rows, meta=None, database=None, collection=None, **kwargs):
     table = _mongodb_collection(url, database, collection, **kwargs)
-    meta_cols = pd.DataFrame(list(table.find().limit(100)))
-    cols = meta_cols.columns if len(meta_cols) > 0 else rows.columns or []
-    rows = _pop_columns(rows, cols, meta['ignored'])
-    result = table.insert_many(rows.to_dict(orient='records'))
+    result = table.insert_many([_mongodb_json(row) for row in rows.to_dict(orient='records')])
     meta['inserted'] = [{'id': str(id) for id in result.inserted_ids}]
     return len(result.inserted_ids)
 
 
+# add test case for inserting nested value ?parent.={child:value}
+#   curl --globoff -I -X POST 'http://127.0.0.1:9988/?x.={"2":3}&y.={"true":true}&Name=abcd'
+# add test case for updating nested value ?parent.child.={key:value}
+#   curl --globoff -I -X PUT 'http://127.0.0.1:9988/?x.2=4&y.true.=[2,3]&Name=abcd'
+# add test case for nested document query ?parent.child=value
 plugins['mongodb'] = {
     'filter': _filter_mongodb,
     'delete': _delete_mongodb,
