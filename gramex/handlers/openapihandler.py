@@ -1,3 +1,4 @@
+from fnmatch import fnmatch
 import inspect
 import json
 import re
@@ -93,6 +94,7 @@ class OpenAPIHandler(BaseHandler):
         return spec
 
     def get(self):
+        kwargs = self.conf.get('kwargs', {})
         # TODO: Set header only if not already set in the configuration.
         # This can be handled in gramex/gramex.yaml as a default configuration.
         # Switch to YAML if a YAML spec is requested
@@ -100,19 +102,19 @@ class OpenAPIHandler(BaseHandler):
 
         spec = {
             'openapi': '3.0.2',
+            'info': kwargs.get('info', {}),
+            'servers': kwargs.get('servers', {}),
+            'paths': {}
         }
 
-        # info:
-        spec['info'] = self.conf.get('kwargs', {}).get('info', {})
-
-        # servers:
-        # TODO: Verify that servers[].url can be a relative URL. Else make it absolute
-        spec['servers'] = self.conf.get('kwargs', {}).get('servers', {})
-
-        # paths:
+        key_patterns = kwargs.get('urls', ['*'])
         # Loop through every function and get the default specs
-        spec['paths'] = {}
         for key, config in gramex.conf['url'].items():
+            # Only pick up those keys that matches the key pattern.
+            # Since imports create subkeys joined with :, just use the last part
+            key_end = key.split(':')[-1]
+            if not any(fnmatch(key_end, pat) for pat in key_patterns):
+                continue
             # Normalize the pattern, e.g. /./docs -> /docs
             pattern = config['pattern'].replace('/./', '/')
             # TODO: Handle wildcards, e.g. /(.*) -> / with an arg
@@ -139,4 +141,9 @@ class OpenAPIHandler(BaseHandler):
             # User's spec definition overrides our spec definition
             merge(info, cls.conf.get('openapi', {}), mode='overwrite')
 
-        self.write(json.dumps(spec))
+        args = self.argparse(indent={'type': int, 'default': 0})
+        self.write(json.dumps(
+            spec,
+            indent=args.indent or None,
+            separators=(', ', ': ') if args.indent else (',', ':'),
+        ))

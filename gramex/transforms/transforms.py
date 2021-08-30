@@ -422,7 +422,7 @@ def convert(hint, param, args):
         return method(args[-1] if len(args) else param.default)
 
 
-class Header(object):
+class Header(str):
     pass
 
 
