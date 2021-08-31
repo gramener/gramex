@@ -1499,12 +1499,78 @@ def _insert_mongodb(url, rows, meta=None, database=None, collection=None, **kwar
     return len(result.inserted_ids)
 
 
+def _get_influxdb_schema(client, bucket):
+    imports = 'import "influxdata/influxdb/schema"\n'
+    meas = client.query_api().query(
+        imports + f'schema.measurements(bucket: "{bucket}")'
+    )[0]
+    tags = client.query_api().query(imports + f'schema.tagKeys(bucket: "{bucket}")')[0]
+    tags = [r.get_value() for r in tags.records]
+    tags = [r for r in tags if not r.startswith("_")]
+    return {
+        "_measurement": [r.get_value() for r in meas.records],
+        "_tags": tags,
+    }
+
+
+_influxdb_op_map = {"<~": "<=", ">~": ">=", "!": "!=", "": "=="}
+
+
+def _influxdb_offset_limit(controls):
+    offset = controls.pop("_offset", ["-30d"])[0]
+    limit = controls.pop("_limit", [False])[0]
+    offset = f"start: {offset}"
+    if isinstance(limit, str) and not limit.isdigit():
+        offset += f", stop: {limit}"
+        limit = False
+
+    return offset, limit
+
+
 def _filter_influxdb(url, controls, args, org=None, bucket=None, query=None, **kwargs):
+    args.pop("bucket")
     with _influxdb_client(url, org=org, **kwargs) as db:
+        schema = _get_influxdb_schema(db, bucket)
+        cols = ["_measurement"] + schema["_tags"] + schema["_measurement"]
         q = db.query_api()
-        _range = args.pop('range')[0]
-        df = q.query_data_frame(f'from(bucket: "{bucket}")|>range(start: {_range})')
-    return df
+        offset, limit = _influxdb_offset_limit(controls)
+        query = f'from(bucket: "{bucket}")|>range({offset})\n'
+        if limit:
+            query += f"|> limit(n: {limit})\n"
+
+        filters = []
+        wheres = []
+        to_drop = []
+        for col in controls.pop("_c", []):
+            if col.startswith("-"):
+                if col in schema["_measurement"]:
+                    wheres.append(f'r._field != "{col[1:]}"')
+                else:
+                    to_drop.append(col[1:])
+            elif col in schema["_measurement"]:
+                col, agg, op = _filter_col(col, cols)
+                op = _influxdb_op_map.get(op, op)
+                wheres.append(f'r._field {op} "{col}"')
+        if len(wheres):
+            wheres = " or ".join(wheres)
+            filters.append(f"|> filter(fn: (r) => {wheres})")
+        for key, vals in args.items():
+            col, agg, op = _filter_col(key, cols)
+            op = _influxdb_op_map.get(op, op)
+            if col in schema["_measurement"]:
+                where = " or ".join([f"r._value {op} {v}" for v in vals])
+            else:
+                where = " or ".join([f'r["{col}"] {op} "{v}"' for v in vals])
+            filters.append(f"|> filter(fn: (r) => {where})")
+        query += "\n".join(filters)
+        if to_drop:
+            to_drop = ",".join([f'"{k}"' for k in to_drop])
+            query += f"\n|> drop(columns: [{to_drop}])"
+
+        app_log.debug("Running InfluxDB query: \n" + query)
+
+        df = q.query_data_frame(query)
+    return df.drop(["result", "table"], axis=1, errors="ignore")
 
 
 def _delete_influxdb():
@@ -1517,22 +1583,25 @@ def _update_influxdb():
 
 def _influxdb_client(url, token, org, **kwargs):
     from influxdb_client import InfluxDBClient
-    url = re.sub(r'^influxdb:', '', url)
-    return InfluxDBClient(url, token, org=org, debug=True, **kwargs)
+
+    url = re.sub(r"^influxdb:", "", url)
+    timeout = kwargs.pop("timeout", 60_000)
+    return InfluxDBClient(url, token, org=org, timeout=timeout, **kwargs)
 
 
-def _timestamp_df(df, index_col='_t'):
+def _timestamp_df(df, index_col="_time"):
     now = datetime.now()
     if index_col not in df:
         df[index_col] = [now] * len(df)
     else:
-        df[index_col] = pd.to_datetime(df[index_col], errors='coerce')
+        df[index_col] = pd.to_datetime(df[index_col], errors="coerce")
         df[index_col].fillna(value=now, inplace=True)
     return df.set_index(index_col)
 
 
 def _get_ts_points(df, measurement, tags):
     from influxdb_client import Point
+
     points = []
     tags = df[tags]
     fields = df.drop(tags, axis=1)
@@ -1545,20 +1614,29 @@ def _get_ts_points(df, measurement, tags):
 
 
 def _insert_influxdb(url, rows, meta, args, bucket, **kwargs):
-    measurement = rows.pop('measurement').unique()[0]
-    tags = rows.pop('tags').dropna().drop_duplicates().tolist() if 'tags' in rows else []
-
+    measurement = rows.pop("measurement").unique()[0]
+    tags = (
+        rows.pop("tags").dropna().drop_duplicates().tolist() if "tags" in rows else []
+    )
     # Ensure that the index is timestamped
     rows = _timestamp_df(rows)
-    rows = _get_ts_points(rows, measurement, tags)
-    from influxdb_client.client.write_api import ASYNCHRONOUS
+    # rows = _get_ts_points(rows, measurement, tags)
+    from influxdb_client.client.write_api import ASYNCHRONOUS, WriteOptions
+
     with _influxdb_client(url, **kwargs) as db:
-        with db.write_api(write_options=ASYNCHRONOUS) as client:
+        with db.write_api(
+            write_options=WriteOptions(
+                ASYNCHRONOUS, batch_size=50_000, flush_interval=10_000
+            )
+        ) as client:
             client.write(
-                bucket=bucket, org=db.org, record=rows,
+                bucket=bucket,
+                org=db.org,
+                record=rows,
                 data_frame_measurement_name=measurement,
-                data_frame_tag_columns=tags
-            ).get()
+                data_frame_tag_columns=tags,
+            )
+    meta["inserted"] = [{"id": ix} for ix, _ in rows.iterrows()]
     return len(rows)
 
 
@@ -1567,15 +1645,15 @@ def _insert_influxdb(url, rows, meta, args, bucket, **kwargs):
 # add test case for updating nested value ?parent.child.={key:value}
 #   curl --globoff -I -X PUT 'http://127.0.0.1:9988/?x.2=4&y.true.=[2,3]&Name=abcd'
 # add test case for nested document query ?parent.child=value
-plugins['mongodb'] = {
-    'filter': _filter_mongodb,
-    'delete': _delete_mongodb,
-    'insert': _insert_mongodb,
-    'update': _update_mongodb,
+plugins["mongodb"] = {
+    "filter": _filter_mongodb,
+    "delete": _delete_mongodb,
+    "insert": _insert_mongodb,
+    "update": _update_mongodb,
 }
-plugins['influxdb'] = {
-    'filter': _filter_influxdb,
-    'delete': _delete_influxdb,
-    'insert': _insert_influxdb,
-    'update': _update_influxdb,
+plugins["influxdb"] = {
+    "filter": _filter_influxdb,
+    "delete": _delete_influxdb,
+    "insert": _insert_influxdb,
+    "update": _update_influxdb,
 }
