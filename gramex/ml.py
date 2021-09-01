@@ -190,6 +190,8 @@ def r(code=None, path=None, rel=True, conda=True, convert=True,
 def groupmeans(data, groups, numbers, cutoff=.01, quantile=.95, minsize=None,
                weight=None):
     '''
+    **DEPRECATED**. Use TopCause() instead.
+
     Yields the significant differences in average between every pair of
     groups and numbers.
 
@@ -421,7 +423,7 @@ def languagetool(handler, *args, **kwargs):
 
 @coroutine
 def languagetoolrequest(text, lang='en-us', **kwargs):
-    """Check grammar by making a request to the LanguageTool server.
+    '''Check grammar by making a request to the LanguageTool server.
 
     Parameters
     ----------
@@ -429,7 +431,7 @@ def languagetoolrequest(text, lang='en-us', **kwargs):
         Text to check
     lang : str, optional
         Language. See a list of supported languages here: https://languagetool.org/api/v2/languages
-    """
+    '''
     client = AsyncHTTPClient()
     url = kwargs['LT_URL'].format(**kwargs)
     query = six.moves.urllib_parse.urlencode({'language': lang, 'text': text})
@@ -478,3 +480,10 @@ def languagetool_download():
 
 # Gramex 1.48 spelt translater as translator. Accept both spellings.
 translator = translater
+
+
+try:
+    from .topcause import TopCause     # noqa -- F401 imported to expose
+except ImportError:
+    app_log.info('gramex.ml.TopCause not imported. pip install sklearn')
+    pass

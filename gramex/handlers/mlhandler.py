@@ -31,6 +31,7 @@ MLCLASS_MODULES = [
     'sklearn.neighbors',
     'sklearn.neural_network',
     'sklearn.naive_bayes',
+    'gramex.ml',
 ]
 TRANSFORMS = {
     'include': [],
