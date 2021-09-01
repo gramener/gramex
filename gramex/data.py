@@ -1507,9 +1507,13 @@ def _get_influxdb_schema(client, bucket):
     tags = client.query_api().query(imports + f'schema.tagKeys(bucket: "{bucket}")')[0]
     tags = [r.get_value() for r in tags.records]
     tags = [r for r in tags if not r.startswith("_")]
+    fields = client.query_api().query(
+        imports + f'schema.fieldKeys(bucket: "{bucket}")'
+    )[0]
     return {
         "_measurement": [r.get_value() for r in meas.records],
         "_tags": tags,
+        "_fields": [r.get_value() for r in fields.records]
     }
 
 
@@ -1531,7 +1535,7 @@ def _filter_influxdb(url, controls, args, org=None, bucket=None, query=None, **k
     args.pop("bucket")
     with _influxdb_client(url, org=org, **kwargs) as db:
         schema = _get_influxdb_schema(db, bucket)
-        cols = ["_measurement"] + schema["_tags"] + schema["_measurement"]
+        cols = schema["_fields"] + schema["_tags"] + schema["_measurement"]
         q = db.query_api()
         offset, limit = _influxdb_offset_limit(controls)
         query = f'from(bucket: "{bucket}")|>range({offset})\n'
@@ -1543,11 +1547,11 @@ def _filter_influxdb(url, controls, args, org=None, bucket=None, query=None, **k
         to_drop = []
         for col in controls.pop("_c", []):
             if col.startswith("-"):
-                if col in schema["_measurement"]:
+                if col[1:] in schema["_fields"]:
                     wheres.append(f'r._field != "{col[1:]}"')
                 else:
                     to_drop.append(col[1:])
-            elif col in schema["_measurement"]:
+            elif col in schema["_fields"]:
                 col, agg, op = _filter_col(col, cols)
                 op = _influxdb_op_map.get(op, op)
                 wheres.append(f'r._field {op} "{col}"')
@@ -1557,13 +1561,14 @@ def _filter_influxdb(url, controls, args, org=None, bucket=None, query=None, **k
         for key, vals in args.items():
             col, agg, op = _filter_col(key, cols)
             op = _influxdb_op_map.get(op, op)
-            if col in schema["_measurement"]:
-                where = " or ".join([f"r._value {op} {v}" for v in vals])
+            if col in schema["_fields"]:
+                where = " or ".join([f'r._field == "{col}" and r._value {op} {v}' for v in vals])
             else:
                 where = " or ".join([f'r["{col}"] {op} "{v}"' for v in vals])
             filters.append(f"|> filter(fn: (r) => {where})")
         query += "\n".join(filters)
         if to_drop:
+            print(to_drop)
             to_drop = ",".join([f'"{k}"' for k in to_drop])
             query += f"\n|> drop(columns: [{to_drop}])"
 
@@ -1624,6 +1629,8 @@ def _insert_influxdb(url, rows, meta, args, bucket, **kwargs):
     from influxdb_client.client.write_api import ASYNCHRONOUS, WriteOptions
 
     with _influxdb_client(url, **kwargs) as db:
+        schema = _get_influxdb_schema(db, bucket)
+        rows[schema['_fields']] = rows[schema['_fields']].astype(float)
         with db.write_api(
             write_options=WriteOptions(
                 ASYNCHRONOUS, batch_size=50_000, flush_interval=10_000
