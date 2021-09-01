@@ -117,15 +117,15 @@ class OpenAPIHandler(BaseHandler):
                 continue
             # Normalize the pattern, e.g. /./docs -> /docs
             pattern = config['pattern'].replace('/./', '/')
+            # Ignore invalid handlers
+            if key not in gramex.service.url or 'handler' not in config:
+                continue
             # TODO: Handle wildcards, e.g. /(.*) -> / with an arg
             info = spec['paths'][pattern] = {
                 'get': {
                     'summary': f'{url_name(pattern)}: {config["handler"]}'
                 },
             }
-            # Ignore invalid handlers
-            if key not in gramex.service.url:
-                continue
             cls = gramex.service.url[key].handler_class
             if config['handler'] == 'FunctionHandler':
                 # Ignore functions with invalid setup

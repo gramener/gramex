@@ -1,9 +1,8 @@
-import os
 import gramex.ml
 from gramex.config import variables
 from nose.tools import eq_
 from testlib.test_ml import translate_mock, _translate_count
-from . import TestGramex
+from . import TestGramex, remove_if_possible
 
 
 class TestTranslater(TestGramex):
@@ -48,5 +47,4 @@ class TestTranslater(TestGramex):
     @classmethod
     def tearDownClass(cls):
         for path in cls.caches:
-            if os.path.exists(path):
-                os.remove(path)
+            remove_if_possible(path)

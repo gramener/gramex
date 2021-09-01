@@ -409,7 +409,7 @@ def typelist(hint):
     return typ, is_list
 
 
-def convert(hint, param, args):
+def convert(hint, param, *args):
     from pandas.core.common import flatten
     args = list(flatten(args))
     typ, is_list = typelist(hint)
@@ -486,11 +486,12 @@ def handler(func):
     @wraps(func)
     def wrapper(handler, *cfg_args, **cfg_kwargs):
         # We'll create a (*args, **kwargs)
-        # College args from the config args:, then pattern /(.*)/(.*)
+        # College args from the config `args:` and then the handler pattern /(.*)/(.*)
         req_args = list(cfg_args) + handler.path_args
-        # Collect kwargs from the config kwargs:, then pattern /(?P<key>.*), then URL query params
+        # Collect kwargs from the config `kwargs:` and then the handler pattern /(?P<key>.*)
+        # and the the URL query params
         req_kwargs = {'handler': handler}
-        for d in (cfg_args, handler.path_kwargs, handler.args):
+        for d in (cfg_kwargs, handler.path_kwargs, handler.args):
             req_kwargs.update(d)
         headers = handler.request.headers
         # If POSTed with Content-Type: application/json, parse body as well
@@ -498,7 +499,6 @@ def handler(func):
             req_kwargs.update(json.loads(handler.request.body))
 
         # Map these into the signature
-        # TODO: Fix tests.test_functionhandler:TestWrapper
         args, kwargs = [], {}
         for arg, param in params.items():
             hint = hints.get(arg, identity)
@@ -506,19 +506,22 @@ def handler(func):
             if hint is Header:
                 kwargs[arg] = handler.request.headers.get(arg)
                 continue
-            # Populate positional arguments from req_args
-            # TODO: Document logic
+            # Populate positional arguments first, if any
             if len(req_args):
+                # If function takes a positional arg, assign first req_arg
                 if param.kind in {param.POSITIONAL_ONLY, param.POSITIONAL_OR_KEYWORD}:
                     args.append(convert(hint, param, req_args.pop(0)))
+                # If it's a *arg, assign all remaining req_arg
                 elif param.kind == param.VAR_POSITIONAL:
                     for val in req_args:
                         args.append(convert(hint, param, val))
                     req_args.clear()
-            # Populate keyword arguments from req_kwargs
+            # Also populate keyword arguments from req_kwargs if there's a match
             if arg in req_kwargs:
+                # Pop any keyword argument that matches the function argument
                 if param.kind in {param.KEYWORD_ONLY, param.POSITIONAL_OR_KEYWORD}:
                     kwargs[arg] = convert(hint, param, req_kwargs.pop(arg))
+                # If its a *arg, assign all remaining values
                 elif param.kind == param.VAR_POSITIONAL:
                     for val in flatten([req_kwargs.pop(arg)]):
                         args.append(convert(hint, param, val))

@@ -39,6 +39,21 @@ ignore:
         reason: No fix available. Await @vue/cli upgrade
         expires: 2021-09-30T00:00:00.000Z
         created: 2021-07-24T00:00:00.000Z
+  SNYK-JS-ANSIHTML-1296849:
+    - '*':
+        reason: No fix available. Await @vue/cli upgrade
+        expires: 2021-09-30T00:00:00.000Z
+        created: 2021-07-24T00:00:00.000Z
+  SNYK-JS-OBJECTPATH-1569453:
+    - '*':
+        reason: No fix available. Await @vue/cli upgrade
+        expires: 2021-09-30T00:00:00.000Z
+        created: 2021-07-24T00:00:00.000Z
+  SNYK-JS-REQUEST-1314897:
+    - '*':
+        reason: No fix available. Await @vue/cli upgrade
+        expires: 2021-09-30T00:00:00.000Z
+        created: 2021-07-24T00:00:00.000Z
 
   # Elasticsearch recently (Jun 2021) introduced a regex issue. Reported:
   # https://github.com/elastic/elasticsearch-py/issues/943#issuecomment-887424042
