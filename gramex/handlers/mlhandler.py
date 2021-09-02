@@ -21,6 +21,7 @@ from slugify import slugify
 from tornado.gen import coroutine
 from tornado.web import HTTPError
 from sklearn.metrics import get_scorer
+from sklearn.model_selection import cross_val_predict, cross_val_score
 
 op = os.path
 MLCLASS_MODULES = [
@@ -41,7 +42,8 @@ TRANSFORMS = {
     'pipeline': True,
     'nums': [],
     'cats': [],
-    'target_col': None
+    'target_col': None,
+    'cv': True,
 }
 ACTIONS = ['predict', 'score', 'append', 'train', 'retrain']
 DEFAULT_TEMPLATE = op.join(op.dirname(__file__), '..', 'apps', 'mlhandler', 'template.html')
@@ -113,14 +115,23 @@ class MLHandler(FormHandler):
             data = cls._filtercols(data)
             data = cls._filterrows(data)
             cls.model = cls._assemble_pipeline(data, mclass=mclass, params=params)
-
             # train the model
             target = data[target_col]
             train = data[[c for c in data if c != target_col]]
+            # cross validation
+            cls.cross_validation(train,target)
             gramex.service.threadpool.submit(
                 _fit, cls.model, train, target, cls.model_path, cls.name)
         cls.config_store.flush()
-
+  
+    @classmethod
+    def cross_validation(cls,train,target):
+        cv = cls.get_opt('cv',True)
+        if cv:
+            CVscore = cross_val_score(cls.model.steps[-1][1], X=train, y=target, cv=cv)
+            CVavg = sum(CVscore)/len(CVscore)
+            print('Cross Validation Score : ',CVavg)
+            
     @classmethod
     def load_data(cls, default=pd.DataFrame()):
         try:
@@ -352,6 +363,7 @@ class MLHandler(FormHandler):
         target = data[target_col]
         train = data[[c for c in data if c != target_col]]
         self.model = self._assemble_pipeline(data, force=True)
+        self.cross_validation(train,target)
         _fit(self.model, train, target, self.model_path)
         return {'score': self.model.score(train, target)}
 
