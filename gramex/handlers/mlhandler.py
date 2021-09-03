@@ -314,7 +314,15 @@ class MLHandler(FormHandler):
                 'opts': self.config_store.load('transform'),
                 'params': self.config_store.load('model')
             }
-            self.write(json.dumps(params, indent=2))
+            try:
+                model = cache.open(self.model_path, joblib.load)
+                attrs = {
+                    k: v for k, v in vars(model[-1]).items() if re.search(r'[^_]+_$', k)
+                }
+            except FileNotFoundError:
+                attrs = {}
+            params['attrs'] = attrs
+            self.write(json.dumps(params, indent=2, cls=CustomJSONEncoder))
         elif '_cache' in self.args:
             self.write(self.load_data().to_json(orient='records'))
         else:

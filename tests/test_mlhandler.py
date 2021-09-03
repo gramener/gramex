@@ -506,3 +506,9 @@ class TestMLHandler(TestGramex):
                      headers={'Content-Type': 'application/json'})
         x_red = pd.np.array(r.json())
         self.assertEqual(x_red.shape, (xts.shape[0], 2))
+
+        # Check that the fitted attributes are available from GET ?_params too
+        params = self.get('/mldecompose?_params').json()
+        sv1, sv2 = params['attrs']['singular_values_']
+        self.assertEqual(round(sv1), 17)  # NOQA: E912
+        self.assertEqual(round(sv2), 10)
