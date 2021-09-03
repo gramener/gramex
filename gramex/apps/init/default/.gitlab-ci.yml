@@ -13,5 +13,5 @@ validate:
 #   variables:
 #     SERVER: ubuntu@uat.gramener.com       # Deploy to uat.gramener.com/app-name/
 #     URL: app-name                         # Change this to your app-name
-#     SETUP: yarn install                   # You can use any setup script here
+#     SETUP: npm install                    # You can use any setup script here
 #     VERSION: py3v1                        # py3v1 or static

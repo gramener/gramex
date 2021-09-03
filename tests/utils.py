@@ -6,18 +6,24 @@ import json
 import time
 import random
 import pandas as pd
+import numpy as np
 from io import StringIO
 from collections import Counter
 from orderedattrdict import AttrDict
+from typing import List
+from typing_extensions import Annotated
 from sklearn.datasets import make_circles as sk_make_circles
 from tornado import gen
-from tornado.web import RequestHandler, MissingArgumentError
+from tornado.web import RequestHandler, MissingArgumentError, HTTPError
+from tornado.gen import coroutine
 from tornado.httpclient import AsyncHTTPClient
 from concurrent.futures import ThreadPoolExecutor
 from gramex.cache import Subprocess
 from gramex.services import info
 from gramex.services.emailer import SMTPStub
 from gramex.handlers import BaseHandler
+from gramex.http import OK
+from gramex.transforms import handler, Header
 
 watch_info = []
 ws_info = []
@@ -472,6 +478,44 @@ def make_circles():
 def transform_circles(df, *argss, **kwargs):
     df[['X1', 'X2']] = pd.np.exp(-df[['X1', 'X2']].values ** 2)
     return df
+
+
+@coroutine
+def pynode_run(handler):
+    from gramex.pynode import node
+    kwargs = {}
+    for key, vals in handler.args.items():
+        try:
+            kwargs[key] = float(vals[-1])
+        except ValueError:
+            kwargs[key] = vals[-1]
+    result = yield node.js(**kwargs)
+    return result
+
+
+@handler
+def test_function(
+        li1: List[int],
+        lf1: List[float],
+        li2: Annotated[List[int], 'List of ints'],  # noqa
+        lf2: Annotated[List[float], 'List of floats'],  # noqa
+        li3: List[int] = [0],
+        lf3: List[float] = [0.0],
+        l1=[],
+        i1: Annotated[int, 'First value'] = 0,  # noqa
+        i2: Annotated[int, 'Second value'] = 0,  # noqa
+        s1: str = 'Total',
+        n1: np.int = 0,
+        n2: np.int64 = 0,
+        h: Header = '',
+        code: int = OK):
+    '''
+    This is a **Markdown** docstring.
+    '''
+    if code == OK:
+        return json.dumps([li1, li2, li3, lf1, lf2, lf3, l1, i1, i2, s1, h])
+    else:
+        raise HTTPError(code, reason='Something')
 
 
 if __name__ == '__main__':

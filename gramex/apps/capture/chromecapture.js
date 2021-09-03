@@ -87,9 +87,7 @@ const browser_setup = async (args) => {
 async function render(q) {
   console.log('Opening', q.url)
 
-  let ext = q.ext || 'pdf'
-  let media = q.media || 'screen'
-  let file = (q.file || 'screenshot') + '.' + ext
+  let file = path.basename(q.file || 'screenshot') + '.' + q.ext
   let headers = q.headers || {}
   let target = tmp.tmpNameSync({ dir: render_dir, postfix: file })
   let pdf_options = {
@@ -188,17 +186,17 @@ async function render(q) {
     await page.waitForFunction('window.renderComplete')
   else if (!isNaN(+q.delay))
     await new Promise(res => setTimeout(res, +q.delay))
-  if (ext == 'pdf') {
+  if (q.ext == 'pdf') {
     // TODO: header / footer
-    if (media != 'print')
-      await page.emulateMedia(media)
+    if (q.media != 'print')
+      await page.emulateMedia(q.media)
     await page.pdf(pdf_options)
   } else {
     const options = {
       path: target,
       fullPage: !q.height && !q.selector  // If height and selector not specified, use full height
     }
-    if (ext == 'pptx') {
+    if (q.ext == 'pptx') {
       const officegen = require('officegen')
       const pptx = officegen('pptx')
       const repeat_cols = ['selector', 'title', 'title_size', 'x', 'y', 'dpi']
@@ -254,10 +252,17 @@ async function render(q) {
 }
 
 function webapp(req, res) {
-  let q = Object.assign({}, req.query, req.body)
+  function error(code, message, extra='') {
+    console.log(message, extra)
+    res.setHeader('Content-Type', 'text/plain')
+    res.status(500).send(message)
+  }
+
+  let q = Object.assign({ ext: 'pdf', media: 'screen', cookie: req.headers.cookie }, req.query, req.body)
   if (!q.url)
     return res.sendFile(homepage)
-  q.cookie = q.cookie || req.headers.cookie
+  if (!q.ext.match(/pdf|png|jpg|jpeg|pptx/i))
+    return error(400, `Invalid ext=${q.ext}.`)
   q.headers = req.headers
   render(q)
     .then((info) => {
@@ -268,16 +273,11 @@ function webapp(req, res) {
             console.error('Error sending file', err)
           fs.unlinkSync(info.path)
         })
-      } else {
-        console.error('Missing file', info.path)
-        res.setHeader('Content-Type', 'text/plain')
-        res.status(500).send('Missing output file.')
-      }
+      } else
+        error(500, `'Missing output file`, info.path)
     })
     .catch((e) => {
-      console.error(e)
-      res.setHeader('Content-Type', 'text/plain')
-      res.status(500).send(e.toString())
+      error(500, e.toString())
     })
 }
 

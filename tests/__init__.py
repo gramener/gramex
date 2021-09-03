@@ -2,6 +2,7 @@ import os
 import requests
 import shutil
 import unittest
+from lxml import etree      # nosec: lxml is safe   # noqa: F401 - other modules use this
 from . import server
 from nose.tools import eq_, ok_
 from orderedattrdict import AttrDict
@@ -146,3 +147,16 @@ class TestGramex(unittest.TestCase):
                 else:
                     raise ValueError('CSS %s: invalid how: "%s"' % (css, how))
         return tree
+
+
+def remove_if_possible(target):
+    '''
+    os.remove(file).
+    But ignore Windows antivirus software preventing deletion
+    '''
+    if not os.path.exists(target):
+        return
+    try:
+        os.remove(target)
+    except PermissionError:
+        pass

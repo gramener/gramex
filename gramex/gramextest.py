@@ -7,7 +7,8 @@ import re
 import requests
 from fnmatch import fnmatch
 from gramex.config import ChainConfig, PathConfig, objectpath, variables, CustomJSONEncoder
-from lxml.html import document_fromstring
+# lxml.etree is safe on https://github.com/tiran/defusedxml/tree/main/xmltestdata
+from lxml.html import document_fromstring   # nosec: lxml is fixed
 from orderedattrdict import AttrDict
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException, TimeoutException, WebDriverException
@@ -311,7 +312,7 @@ class UITest(BaseTest):
 
     def python(self, expr):
         # exec() is safe here since `expr` is written by app developer
-        exec(str(expr), context_global, context_local)      # nosec
+        exec(str(expr), context_global, context_local)      # nosec: developer-initiated
         for key, val in context_local.items():
             self.driver.execute_script(key + '=' + json.dumps(val, cls=CustomJSONEncoder))
 

@@ -13,8 +13,7 @@ from nose.plugins.skip import SkipTest
 from nose.tools import eq_, ok_, assert_raises
 from pandas.util.testing import assert_frame_equal as afe
 from pandas.util.testing import assert_series_equal as ase
-import dbutils
-from . import folder, sales_file
+from . import folder, sales_file, remove_if_possible, dbutils
 
 server = AttrDict(
     mysql=os.environ.get('MYSQL_SERVER', 'localhost'),
@@ -482,8 +481,7 @@ class TestInsert(unittest.TestCase):
             {'url': os.path.join(folder, 'insert.hdf'), 'key': 'test'},
         ]
         for conf in new_files:
-            if os.path.exists(conf['url']):
-                os.remove(conf['url'])
+            remove_if_possible(conf['url'])
             self.tmpfiles.append(conf['url'])
             gramex.data.insert(args=self.insert_rows, **conf)
             # Check if added rows are correct
@@ -571,8 +569,7 @@ class TestInsert(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         for path in cls.tmpfiles:
-            if os.path.exists(path):
-                os.remove(path)
+            remove_if_possible(path)
         if 'mysql' in cls.db:
             dbutils.mysql_drop_db(server.mysql, 'test_insert')
         if 'postgres' in cls.db:
@@ -606,8 +603,7 @@ class TestEdit(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         for path in cls.tmpfiles:
-            if os.path.exists(path):
-                os.remove(path)
+            remove_if_possible(path)
 
 
 class TestDownload(unittest.TestCase):

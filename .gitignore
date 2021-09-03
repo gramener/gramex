@@ -97,9 +97,6 @@ tests/translate.xlsx
 node_modules
 bower_components
 
-# Prefer yarn.lock over package-lock.json
-package-lock.json
-
 # Windows shortcut files
 *.lnk
 

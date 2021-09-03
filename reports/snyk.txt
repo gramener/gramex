@@ -1,0 +1,202 @@
+
+Testing D:\site\gramener.com\viz\async-gramex...
+
+Organization:      sanand0
+Package manager:   npm
+Target file:       package-lock.json
+Project name:      package.json
+Open source:       no
+Project path:      D:\site\gramener.com\viz\async-gramex
+Licenses:          enabled
+
+✔ Tested 20 dependencies for known issues, no vulnerable paths found.
+
+Next steps:
+- Run `snyk monitor` to be notified about new related vulnerabilities.
+- Run `snyk test` as part of your CI/test.
+
+-------------------------------------------------------
+
+Testing D:\site\gramener.com\viz\async-gramex...
+
+Organization:      sanand0
+Package manager:   npm
+Target file:       gramex\apps\admin\package-lock.json
+Project name:      controlpanel
+Open source:       no
+Project path:      D:\site\gramener.com\viz\async-gramex
+Licenses:          enabled
+
+✔ Tested D:\site\gramener.com\viz\async-gramex for known issues, no vulnerable paths found.
+
+Next steps:
+- Run `snyk monitor` to be notified about new related vulnerabilities.
+- Run `snyk test` as part of your CI/test.
+
+-------------------------------------------------------
+
+Testing D:\site\gramener.com\viz\async-gramex...
+
+Organization:      sanand0
+Package manager:   npm
+Target file:       gramex\apps\admin2\package-lock.json
+Project name:      package.json
+Open source:       no
+Project path:      D:\site\gramener.com\viz\async-gramex
+Licenses:          enabled
+
+✔ Tested 20 dependencies for known issues, no vulnerable paths found.
+
+Next steps:
+- Run `snyk monitor` to be notified about new related vulnerabilities.
+- Run `snyk test` as part of your CI/test.
+
+-------------------------------------------------------
+
+Testing D:\site\gramener.com\viz\async-gramex...
+
+Organization:      sanand0
+Package manager:   npm
+Target file:       gramex\apps\capture\package-lock.json
+Project name:      capture
+Open source:       no
+Project path:      D:\site\gramener.com\viz\async-gramex
+Licenses:          enabled
+
+✔ Tested 130 dependencies for known issues, no vulnerable paths found.
+
+Next steps:
+- Run `snyk monitor` to be notified about new related vulnerabilities.
+- Run `snyk test` as part of your CI/test.
+
+-------------------------------------------------------
+
+Testing D:\site\gramener.com\viz\async-gramex...
+
+Organization:      sanand0
+Package manager:   npm
+Target file:       gramex\apps\filemanager\package-lock.json
+Project name:      filemanager
+Open source:       no
+Project path:      D:\site\gramener.com\viz\async-gramex
+Licenses:          enabled
+
+✔ Tested 214 dependencies for known issues, no vulnerable paths found.
+
+Next steps:
+- Run `snyk monitor` to be notified about new related vulnerabilities.
+- Run `snyk test` as part of your CI/test.
+
+-------------------------------------------------------
+
+Testing D:\site\gramener.com\viz\async-gramex...
+
+Organization:      sanand0
+Package manager:   npm
+Target file:       gramex\apps\logviewer\package-lock.json
+Project name:      logviewer
+Open source:       no
+Project path:      D:\site\gramener.com\viz\async-gramex
+Licenses:          enabled
+
+✔ Tested 1 dependencies for known issues, no vulnerable paths found.
+
+Next steps:
+- Run `snyk monitor` to be notified about new related vulnerabilities.
+- Run `snyk test` as part of your CI/test.
+
+-------------------------------------------------------
+
+Testing D:\site\gramener.com\viz\async-gramex...
+
+Organization:      sanand0
+Package manager:   npm
+Target file:       gramex\apps\pynode\package-lock.json
+Project name:      pynode
+Open source:       no
+Project path:      D:\site\gramener.com\viz\async-gramex
+Licenses:          enabled
+
+✔ Tested 5 dependencies for known issues, no vulnerable paths found.
+
+Next steps:
+- Run `snyk monitor` to be notified about new related vulnerabilities.
+- Run `snyk test` as part of your CI/test.
+
+-------------------------------------------------------
+
+Testing D:\site\gramener.com\viz\async-gramex...
+
+Organization:      sanand0
+Package manager:   npm
+Target file:       gramex\apps\ui\package-lock.json
+Project name:      gramex-apps-ui
+Open source:       no
+Project path:      D:\site\gramener.com\viz\async-gramex
+Local Snyk policy: found
+Licenses:          enabled
+
+✔ Tested 1652 dependencies for known issues, no vulnerable paths found.
+
+Next steps:
+- Run `snyk monitor` to be notified about new related vulnerabilities.
+- Run `snyk test` as part of your CI/test.
+
+-------------------------------------------------------
+
+Testing D:\site\gramener.com\viz\async-gramex...
+
+Organization:      sanand0
+Package manager:   npm
+Target file:       gramex\apps\uifactory\package-lock.json
+Project name:      package.json
+Open source:       no
+Project path:      D:\site\gramener.com\viz\async-gramex
+Licenses:          enabled
+
+✔ Tested 9 dependencies for known issues, no vulnerable paths found.
+
+Next steps:
+- Run `snyk monitor` to be notified about new related vulnerabilities.
+- Run `snyk test` as part of your CI/test.
+
+-------------------------------------------------------
+
+Testing D:\site\gramener.com\viz\async-gramex...
+
+Organization:      sanand0
+Package manager:   pip
+Target file:       tests\requirements.txt
+Project name:      tests
+Open source:       no
+Project path:      D:\site\gramener.com\viz\async-gramex
+Licenses:          enabled
+
+✔ Tested 41 dependencies for known issues, no vulnerable paths found.
+
+Next steps:
+- Run `snyk monitor` to be notified about new related vulnerabilities.
+- Run `snyk test` as part of your CI/test.
+
+-------------------------------------------------------
+
+Testing D:\site\gramener.com\viz\async-gramex...
+
+Organization:      sanand0
+Package manager:   npm
+Target file:       tests\dir\install\package-lock.json
+Project name:      gramex-npm-install
+Open source:       no
+Project path:      D:\site\gramener.com\viz\async-gramex
+Licenses:          enabled
+
+✔ Tested 1 dependencies for known issues, no vulnerable paths found.
+
+Next steps:
+- Run `snyk monitor` to be notified about new related vulnerabilities.
+- Run `snyk test` as part of your CI/test.
+
+
+Tested 11 projects, no vulnerable paths were found.
+
+

@@ -176,7 +176,7 @@ class TestPPTGen(TestCase):
 
     def test_register(self, slides=3):
         # register= must be a dict
-        with assert_raises(AssertionError):
+        with assert_raises(TypeError):
             pptgen(source=self.input, only=1, register='dummy')
         # register= compiles the functions into commands.cmdlist
         prs = pptgen(source=self.input, only=slides, register={
@@ -196,9 +196,9 @@ class TestPPTGen(TestCase):
 
     def test_only(self, slides=[2, 4]):
         # Delete slides except those specified in ``only``
-        with assert_raises(AssertionError):
+        with assert_raises(TypeError):
             pptgen(source=self.input, only={})
-        with assert_raises(AssertionError):
+        with assert_raises(TypeError):
             pptgen(source=self.input, only='4')
         # Test single only= value
         only = slides[0]

@@ -1,0 +1,16 @@
+/d/site/gramener.com/viz/async-gramex/gramex/apps/admin
+
+/d/site/gramener.com/viz/async-gramex/gramex/apps/admin2
+
+/d/site/gramener.com/viz/async-gramex/gramex/apps/capture
+
+/d/site/gramener.com/viz/async-gramex/gramex/apps/filemanager
+
+/d/site/gramener.com/viz/async-gramex/gramex/apps/logviewer
+
+/d/site/gramener.com/viz/async-gramex/gramex/apps/pynode
+
+/d/site/gramener.com/viz/async-gramex/gramex/apps/ui
+
+/d/site/gramener.com/viz/async-gramex/gramex/apps/uifactory
+

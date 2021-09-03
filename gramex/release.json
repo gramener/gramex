@@ -6,7 +6,7 @@
   "info#": "Release info for setup.py to package on pypi, and gramex/__init__.py for version info",
   "info": {
     "name": "gramex",
-    "version": "1.70.0",
+    "version": "1.72.0",
     "description": "Gramex: Low Code Data Solutions Platform",
     "author": "Gramener",
     "author_email": "s.anand@gramener.com",
@@ -37,6 +37,7 @@
   "lib#3": "SRV: required for specific services",
   "lib#4": "OPT: optional packages. Not required for startup, but for optional libraries",
   "lib": {
+    "astor":                      "REQ: dependency for gramex.transforms.build_transform",
     "argh>=0.24.1":               "REQ: dependency for watchdog",
     "boto3>=1.5":                 "SRV: Amazon services",
     "cachetools>=3.0.0":          "SRV: services.cache for memory cache",

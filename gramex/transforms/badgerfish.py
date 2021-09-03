@@ -1,6 +1,6 @@
 import yaml
 import xmljson
-import lxml.html        # nosec - we use lxml.html to generate HTML, not parse
+import lxml.html        # nosec: we use lxml.html to generate HTML, not parse
 import tornado.gen
 from orderedattrdict.yamlutils import AttrDictYAMLLoader
 from gramex.config import walk, load_imports
@@ -15,7 +15,7 @@ def badgerfish(content, handler=None, mapping={}, doctype='<!DOCTYPE html>'):
 
     The specs for this function are in progress.
     '''
-    data = yaml.load(content, Loader=AttrDictYAMLLoader)    # nosec
+    data = yaml.load(content, Loader=AttrDictYAMLLoader)    # nosec: SafeLoader
     if handler is not None and hasattr(handler, 'file'):
         load_imports(data, handler.file)
     maps = {tag: build_transform(trans, vars={'val': None}, filename='badgerfish')

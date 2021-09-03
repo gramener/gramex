@@ -8,7 +8,6 @@ import unittest
 import gramex.cache
 import pandas as pd
 import sqlalchemy as sa
-from lxml import etree
 from gramex.cache import hashfn
 from gramex.config import variables, str_utf8
 from markdown import markdown
@@ -18,8 +17,7 @@ from tornado.template import Template
 from orderedattrdict.yamlutils import AttrDictYAMLLoader
 from pandas.util.testing import assert_frame_equal as afe
 from nose.tools import eq_, ok_, assert_raises
-import dbutils
-from . import folder, tests_dir
+from . import folder, tests_dir, remove_if_possible, dbutils
 
 cache_folder = os.path.join(folder, 'test_cache')
 state_file = os.path.join(cache_folder, '.state')
@@ -241,7 +239,7 @@ class TestOpen(unittest.TestCase):
         with io.open(path, encoding='utf-8') as handle:
             # yaml.load() is safe to use here since we're loading from a known safe file.
             # Specifically, we're testing whether Loader= is passed to gramex.cache.open.
-            expected = yaml.load(handle, Loader=AttrDictYAMLLoader)     # nosec
+            expected = yaml.load(handle, Loader=AttrDictYAMLLoader)     # nosec: test case
 
         def check(reload):
             result, reloaded = gramex.cache.open(path, 'yaml', _reload_status=True,
@@ -288,20 +286,6 @@ class TestOpen(unittest.TestCase):
         self.check_file_cache(path, check)
         eq_(gramex.cache.open(path), gramex.cache.open(path, 'md'))
 
-    def test_open_xml(self):
-        path = os.path.join(cache_folder, 'data.svg')
-        expected = etree.parse(path)
-
-        def check(reload):
-            result, reloaded = gramex.cache.open(path, 'svg', _reload_status=True)
-            eq_(reloaded, reload)
-            eq_(etree.tostring(result), etree.tostring(expected))
-
-        self.check_file_cache(path, check)
-        for ext in ['xml', 'svg', 'rss', 'atom']:
-            eq_(etree.tostring(gramex.cache.open(path)),
-                etree.tostring(gramex.cache.open(path, ext)))
-
     def test_open_custom(self):
         def img_size(path, scale=1):
             return tuple(v * scale for v in Image.open(path).size)
@@ -341,7 +325,7 @@ class TestOpen(unittest.TestCase):
                     result = pd.DataFrame(data)
                 afe(result, data)
             finally:
-                os.remove(target)
+                remove_if_possible(target)
 
     def test_custom_cache(self):
         path = os.path.join(cache_folder, 'data.csv')

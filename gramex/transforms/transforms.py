@@ -190,12 +190,14 @@ def build_transform(conf, vars=None, filename='transform', cache=False, iter=Tru
     # Else, use the expression as-is
     function_name = _full_name(tree.body[0].value)
     module_name = function_name.split('.')[0] if isinstance(function_name, str) else None
+    function, doc = None, expr
     # If the module or function is one of the vars themselves, return it as-is
     # _val.type will be used as-is, then, rather than looking for an "_val" module
     if module_name in vars:
         expr = function_name
     elif function_name is not None:
         function = locate(function_name, modules=['gramex.transforms'])
+        doc = function.__doc__
         if function is None:
             app_log.error('%s: Cannot load function %s' % (filename, function_name))
         # This section converts the function into an expression.
@@ -216,6 +218,10 @@ def build_transform(conf, vars=None, filename='transform', cache=False, iter=Tru
             for key, val in conf.get('kwargs', {}).items():
                 expr += '%s=%s, ' % (key, _arg_repr(val))
             expr += ')'
+    # If expr starts with a function call (e.g. module.func(...)), use it's docs
+    elif isinstance(tree.body[0].value, ast.Call):
+        from astor import to_source
+        doc = locate(to_source(tree.body[0].value.func).strip()).__doc__
 
     # Create the code
     modules = module_names(tree, vars)
@@ -243,14 +249,15 @@ def build_transform(conf, vars=None, filename='transform', cache=False, iter=Tru
     )
     code = compile(''.join(body), filename=filename, mode='exec')
     # exec() is safe here since the code is written by app developer
-    exec(code, context)         # nosec
+    exec(code, context)     # nosec: developer-initiated
 
     # Return the transformed function
-    function = context['transform']
-    function.__name__ = str(function_name or filename)
-    function.__doc__ = str(function.__doc__)
+    result = context['transform']
+    result.__name__ = str(function_name or filename)
+    result.__doc__ = str(doc)
+    result.__func__ = function
 
-    return function
+    return result
 
 
 def condition(*args):
@@ -283,7 +290,7 @@ def condition(*args):
     for cond, val in pairs:
         if isinstance(cond, str):
             # eval() is safe here since `cond` is written by app developer
-            if eval(Template(cond).substitute(var_defaults)):    # nosec
+            if eval(Template(cond).substitute(var_defaults)):    # nosec: developer-initiated
                 return val
         elif bool(cond):
             return val
@@ -352,7 +359,7 @@ def flattener(fields, default=None, filename='flatten'):
     code = compile(''.join(body), filename='flattener:%s' % filename, mode='exec')
     context = {'AttrDict': AttrDict, 'default': default}
     # eval() is safe here since the code is constructed entirely in this function
-    eval(code, context)     # nosec
+    eval(code, context)     # nosec: developer-initiated
     return context[filename]
 
 
@@ -393,18 +400,30 @@ _convert_map = {
 }
 
 
-def convert(hint, *args):
+def typelist(hint):
+    typ, is_list = hint, False
+    # If typ is an Annotation, use the native type. Else use the type.
+    while hasattr(typ, '__args__'):
+        is_list = getattr(typ, '_name', None) in ('List', 'Tuple')
+        typ = typ.__args__[0]
+    return typ, is_list
+
+
+def convert(hint, param, *args):
     from pandas.core.common import flatten
     args = list(flatten(args))
-    # If hint is List[int], Tuple[int], etc. then return a list or a tuple after type conversion
-    #   hint.__args__ = (int, )
-    #   hint.__origin__ = list or tuple
-    if hasattr(hint, '__args__'):
-        method = _convert_map.get(hint.__args__[0], hint.__args__[0])
-        return hint.__origin__(map(method, args))
-    # Otherwise, just pick the LAST value and return it
-    method = _convert_map.get(hint, hint)
-    return method(args[-1])
+    typ, is_list = typelist(hint)
+    # Convert args to the native type
+    method = _convert_map.get(typ, typ)
+    # If default is list-like or hint is List-like, return list. Else return last value
+    if is_list or isinstance(param.default, (list, tuple)):
+        return [method(arg) for arg in args]
+    else:
+        return method(args[-1] if len(args) else param.default)
+
+
+class Header(str):
+    pass
 
 
 def handler(func):
@@ -467,39 +486,49 @@ def handler(func):
     @wraps(func)
     def wrapper(handler, *cfg_args, **cfg_kwargs):
         # We'll create a (*args, **kwargs)
-        # College args from the config args:, then pattern /(.*)/(.*)
-        # Collect kwargs from the config kwargs:, then pattern /(?P<key>.*), then URL query params
-        all_args, all_kwargs = list(cfg_args), dict(cfg_kwargs)
-        all_kwargs.setdefault('handler', handler)
-        all_args.extend(handler.path_args)
-        all_kwargs.update(handler.path_kwargs)
-        all_kwargs.update(handler.args)
+        # College args from the config `args:` and then the handler pattern /(.*)/(.*)
+        req_args = list(cfg_args) + handler.path_args
+        # Collect kwargs from the config `kwargs:` and then the handler pattern /(?P<key>.*)
+        # and the the URL query params
+        req_kwargs = {'handler': handler}
+        for d in (cfg_kwargs, handler.path_kwargs, handler.args):
+            req_kwargs.update(d)
+        headers = handler.request.headers
         # If POSTed with Content-Type: application/json, parse body as well
-        if handler.request.headers.get('Content-Type', '') == 'application/json':
-            all_kwargs.update(json.loads(handler.request.body))
+        if headers.get('Content-Type', '') == 'application/json':
+            req_kwargs.update(json.loads(handler.request.body))
 
         # Map these into the signature
         args, kwargs = [], {}
         for arg, param in params.items():
             hint = hints.get(arg, identity)
-            # Populate positional arguments from all_args
-            if len(all_args):
+            # If hint says it's a header, pass the header without converting
+            if hint is Header:
+                kwargs[arg] = handler.request.headers.get(arg)
+                continue
+            # Populate positional arguments first, if any
+            if len(req_args):
+                # If function takes a positional arg, assign first req_arg
                 if param.kind in {param.POSITIONAL_ONLY, param.POSITIONAL_OR_KEYWORD}:
-                    args.append(convert(hint, all_args.pop(0)))
+                    args.append(convert(hint, param, req_args.pop(0)))
+                # If it's a *arg, assign all remaining req_arg
                 elif param.kind == param.VAR_POSITIONAL:
-                    for val in all_args:
-                        args.append(convert(hint, val))
-                    all_args.clear()
-            # Populate keyword arguments from all_kwargs
-            if arg in all_kwargs:
+                    for val in req_args:
+                        args.append(convert(hint, param, val))
+                    req_args.clear()
+            # Also populate keyword arguments from req_kwargs if there's a match
+            if arg in req_kwargs:
+                # Pop any keyword argument that matches the function argument
                 if param.kind in {param.KEYWORD_ONLY, param.POSITIONAL_OR_KEYWORD}:
-                    kwargs[arg] = convert(hint, all_kwargs.pop(arg))
+                    kwargs[arg] = convert(hint, param, req_kwargs.pop(arg))
+                # If its a *arg, assign all remaining values
                 elif param.kind == param.VAR_POSITIONAL:
-                    for val in flatten([all_kwargs.pop(arg)]):
-                        args.append(convert(hint, val))
+                    for val in flatten([req_kwargs.pop(arg)]):
+                        args.append(convert(hint, param, val))
 
         return func(*args, **kwargs)
 
+    wrapper.__func__ = func
     return wrapper
 
 
@@ -557,5 +586,5 @@ def build_log_info(keys, *vars):
                    filename='log', mode='exec')
     context = {'os': os, 'time': time, 'datetime': datetime, 'conf': conf, 'AttrDict': AttrDict}
     # exec() is safe here since the code is constructed entirely in this function
-    exec(code, context)         # nosec
+    exec(code, context)     # nosec: developer-initiated
     return context['fn']

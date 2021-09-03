@@ -101,10 +101,8 @@ class FileHandler(BaseHandler):
             HTTP headers to set on the response.
     :arg string template: ``template="*.html"`` renders all HTML files as Tornado templates.
         ``template=True`` renders all files as Tornado templates (new in Gramex 1.14).
-    :arg string sass: ``sass="*.sass"`` renders all SASS files as CSS using node-sass
-        (new in Gramex 1.66).
-    :arg string scss: ``scss="*.scss"`` renders all SCSS files as CSS using node-sass
-        (new in Gramex 1.66).
+    :arg string sass: ``sass="*.sass"`` renders all SASS files as CSS (new in Gramex 1.66).
+    :arg string scss: ``scss="*.scss"`` renders all SCSS files as CSS (new in Gramex 1.66).
 
     .. _glob patterns: https://docs.python.org/3/library/pathlib.html#pathlib.Path.glob
 

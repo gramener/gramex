@@ -57,9 +57,11 @@ class BuildTransform(unittest.TestCase):
     dummy = os.path.join(folder, 'dummy.py')
     files = set([dummy])
 
-    def check_transform(self, transform, yaml_code, vars=None, cache=True, iter=True):
+    def check_transform(self, transform, yaml_code, vars=None, cache=True, iter=True, doc=None):
         fn = build_transform(yaml_parse(yaml_code), vars=vars, cache=cache, iter=iter)
         eqfn(fn, transform)
+        if doc is not None:
+            eq_(fn.__doc__, doc)
         return fn
 
     def test_invalid_function_raises_error(self):
@@ -78,25 +80,27 @@ class BuildTransform(unittest.TestCase):
         def transform(x=0):
             result = x + 1
             return result if isinstance(result, GeneratorType) else [result, ]
-        self.check_transform(transform, 'function: x + 1', vars={'x': 0})
+        self.check_transform(transform, 'function: x + 1', vars={'x': 0}, doc='x + 1')
 
         def transform(x=0):
             result = x + 1
             return result
-        self.check_transform(transform, 'function: x + 1', vars={'x': 0}, iter=False)
+        self.check_transform(transform, 'function: x + 1', vars={'x': 0}, iter=False, doc='x + 1')
 
         def transform():
             result = "abc"
             return result if isinstance(result, GeneratorType) else [result, ]
-        self.check_transform(transform, '''function: '"abc"' ''', vars={})
+        self.check_transform(transform, '''function: '"abc"' ''', vars={}, doc='"abc"')
 
         def transform():
             import gramex.cache
             import pandas
             result = gramex.cache.open('x', pandas.read_csv).to_html()
             return result if isinstance(result, GeneratorType) else [result, ]
+        # This is a complex function. It's not clear whether we should pick up the docs from
+        # to_html() or gramex.cache.open(). Let the user specify the docs
         fn = 'function: gramex.cache.open("x", pandas.read_csv).to_html()'
-        self.check_transform(transform, fn, vars={})
+        self.check_transform(transform, fn, vars={}, doc=None)
 
         def transform(s=None):
             result = 1 if "windows" in s.lower() else 2 if "linux" in s.lower() else 0
@@ -113,7 +117,7 @@ class BuildTransform(unittest.TestCase):
             result = str.upper(_val)
             return result if isinstance(result, GeneratorType) else [result, ]
         self.check_transform(transform, 'function: str.upper')
-        self.check_transform(transform, 'function: str.upper(_val)')
+        self.check_transform(transform, 'function: str.upper(_val)', doc=str.upper.__doc__)
 
     def test_fn(self):
         def transform(_val):

@@ -1,6 +1,7 @@
 '''Functions to transform data'''
 
-from .transforms import build_transform, build_log_info, condition, flattener, once, handler
+from .transforms import build_transform, build_log_info, condition, flattener, once
+from .transforms import handler, Header
 from .badgerfish import badgerfish
 from .template import template, sass, scss, vue, CacheLoader
 from .rmarkdown import rmarkdown
@@ -22,5 +23,6 @@ __all__ = [
     'once',
     'CacheLoader',
     'TwitterStream',
-    'handler'
+    'handler',
+    'Header',
 ]
