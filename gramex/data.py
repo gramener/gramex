@@ -1582,10 +1582,6 @@ def _delete_influxdb():
     raise NotImplementedError
 
 
-def _update_influxdb():
-    raise NotImplementedError
-
-
 def _influxdb_client(url, token, org, **kwargs):
     from influxdb_client import InfluxDBClient
 
@@ -1662,5 +1658,5 @@ plugins["influxdb"] = {
     "filter": _filter_influxdb,
     "delete": _delete_influxdb,
     "insert": _insert_influxdb,
-    "update": _update_influxdb,
+    "update": _insert_influxdb,
 }
