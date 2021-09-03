@@ -198,7 +198,7 @@ class TestPPTGen(TestCase):
         # Delete slides except those specified in ``only``
         with assert_raises(TypeError):
             pptgen(source=self.input, only={})
-        with assert_raises(AssertionError):
+        with assert_raises(TypeError):
             pptgen(source=self.input, only='4')
         # Test single only= value
         only = slides[0]

@@ -17,8 +17,7 @@ from tornado.template import Template
 from orderedattrdict.yamlutils import AttrDictYAMLLoader
 from pandas.util.testing import assert_frame_equal as afe
 from nose.tools import eq_, ok_, assert_raises
-import dbutils
-from . import folder, tests_dir
+from . import folder, tests_dir, remove_if_possible, dbutils
 
 cache_folder = os.path.join(folder, 'test_cache')
 state_file = os.path.join(cache_folder, '.state')
@@ -326,7 +325,7 @@ class TestOpen(unittest.TestCase):
                     result = pd.DataFrame(data)
                 afe(result, data)
             finally:
-                os.remove(target)
+                remove_if_possible(target)
 
     def test_custom_cache(self):
         path = os.path.join(cache_folder, 'data.csv')

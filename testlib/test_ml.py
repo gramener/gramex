@@ -9,7 +9,7 @@ import gramex.ml
 import gramex.cache
 from nose.tools import eq_, ok_
 from pandas.util.testing import assert_frame_equal as afe
-from . import folder
+from . import folder, remove_if_possible
 
 
 class TestClassifier(unittest.TestCase):
@@ -176,5 +176,4 @@ class TestTranslate(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        if os.path.exists(cls.cache):
-            os.remove(cls.cache)
+        remove_if_possible(cls.cache)

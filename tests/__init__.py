@@ -147,3 +147,16 @@ class TestGramex(unittest.TestCase):
                 else:
                     raise ValueError('CSS %s: invalid how: "%s"' % (css, how))
         return tree
+
+
+def remove_if_possible(target):
+    '''
+    os.remove(file).
+    But ignore Windows antivirus software preventing deletion
+    '''
+    if not os.path.exists(target):
+        return
+    try:
+        os.remove(target)
+    except PermissionError:
+        pass

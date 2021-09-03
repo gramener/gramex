@@ -2,12 +2,13 @@ import os
 import sys
 import logging
 
-# Allow importing modules from ../tests/
-# For example, ../tests/dbutils.py us used by test_data.py
+# Import from ../tests/ folder. e.g. dbutils.py for use in test_data.py, etc.
 # This is a not elegant.
 folder = os.path.dirname(os.path.abspath(__file__))
 tests_dir = os.path.normpath(os.path.join(folder, '..', 'tests'))
 sys.path.append(tests_dir)
+import dbutils                          # noqa
+from tests import remove_if_possible    # noqa
 
 # Location of the sales data file
 sales_file = os.path.join(tests_dir, 'sales.xlsx')

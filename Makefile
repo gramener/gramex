@@ -115,6 +115,16 @@ push-pypi: clean
 	# Note: if this fails, add '-p PASSWORD'
 	twine upload -u gramener dist/*
 
+update-npm:
+	find gramex/apps/ -maxdepth 2 -name package.json | xargs dirname | xargs -L1 bash -c 'cd "$$0" && npm update'
+
+security:
+	bandit gramex --aggregate vuln --recursive --exclude '*/node_modules/*' > reports/bandit.txt
+	freshclam
+	clamscan --recursive --exclude-dir=.git --exclude-dir=__pycache__ --exclude-dir=_build --exclude-dir=.eggs --exclude-dir=node_modules > reports/clamav.txt
+	find gramex/apps/ -maxdepth 2 -name package.json | xargs dirname | xargs -L1 bash -c 'cd "$$0" && npm audit --parseable || true' > reports/npm-audit.txt
+	snyk test --dev --all-projects > reports/snyk.txt || true
+
 # Gramex test coverage is part of Travis, and no longer needs to be deployed on gramener.com
 # push-coverage:
 # 	rsync -avzP tests/htmlcov/ ubuntu@gramener.com:/mnt/gramener/demo.gramener.com/gramextestcoverage/
