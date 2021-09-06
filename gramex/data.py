@@ -1578,8 +1578,21 @@ def _filter_influxdb(url, controls, args, org=None, bucket=None, query=None, **k
     return df.drop(["result", "table"], axis=1, errors="ignore")
 
 
-def _delete_influxdb():
-    raise NotImplementedError
+def _delete_influxdb(url, controls, args, org=None, bucket=None, **kwargs):
+    # curl -X DELETE http://localhost:9988/\?_time>=0\&_time<=5
+    with _influxdb_client(url, org=org, **kwargs) as db:
+        schema = _get_influxdb_schema(db, bucket)
+        start, stop = args.pop('_time')
+        print(start, stop)
+        measurement = args.pop('_measurement', schema['_measurement'])[0]
+        predicate = f'_measurement="{measurement}"'
+        tags = [(k, v[0]) for k, v in args.items() if k in schema['_tags']]
+        if tags:
+            tag_predicate = " OR ".join([f'{k}="{v}"' for k, v in tags])
+            predicate += ' AND ' + f'({tag_predicate})'
+        db.delete_api().delete(start, stop, predicate, bucket, org)
+    # InfluxDB Python client doesn't return anything on DELETE, we return a mock number here.
+    return 0
 
 
 def _influxdb_client(url, token, org, **kwargs):
