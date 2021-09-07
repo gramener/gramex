@@ -1634,12 +1634,13 @@ def _insert_influxdb(url, rows, meta, args, bucket, **kwargs):
     )
     # Ensure that the index is timestamped
     rows = _timestamp_df(rows)
-    # rows = _get_ts_points(rows, measurement, tags)
+
+    # Ensure that all columns except tags are floats
+    field_columns = [c for c in rows if c not in tags]
+    rows[field_columns] = rows[field_columns].astype(float)
     from influxdb_client.client.write_api import ASYNCHRONOUS, WriteOptions
 
     with _influxdb_client(url, **kwargs) as db:
-        schema = _get_influxdb_schema(db, bucket)
-        rows[schema['_fields']] = rows[schema['_fields']].astype(float)
         with db.write_api(
             write_options=WriteOptions(
                 ASYNCHRONOUS, batch_size=50_000, flush_interval=10_000
