@@ -1198,6 +1198,16 @@ url:
         class: LogisticRegression
         target_col: y
       xsrf_cookies: false
+  mlhandler/decompositions:
+    pattern: /mldecompose
+    handler: MLHandler
+    kwargs:
+      model:
+        class: PCA
+        exclude: [species]
+        params:
+          n_components: 2
+      xsrf_cookies: false
 
   capture:
     pattern: /capture
