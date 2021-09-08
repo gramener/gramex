@@ -1600,7 +1600,7 @@ def _influxdb_client(url, token, org, debug=None, timeout=60_000, enable_gzip=Fa
 
     url = re.sub(r"^influxdb:", "", url)
     return InfluxDBClient(
-        url, token, org=org, debug=None, enable_gzip=False, default_tags=None,
+        url, token, org=org, debug=debug, enable_gzip=enable_gzip, default_tags=default_tags,
         timeout=timeout
     )
 
