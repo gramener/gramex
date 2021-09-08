@@ -1595,7 +1595,7 @@ def _delete_influxdb(url, controls, args, org=None, bucket=None, **kwargs):
 
 
 def _influxdb_client(url, token, org, debug=None, timeout=60_000, enable_gzip=False,
-                     default_tags=None):
+                     default_tags=None, **kwargs):
     from influxdb_client import InfluxDBClient
 
     url = re.sub(r"^influxdb:", "", url)
