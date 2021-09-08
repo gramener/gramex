@@ -1539,8 +1539,6 @@ def _filter_influxdb(url, controls, args, org=None, bucket=None, query=None, **k
         q = db.query_api()
         offset, limit = _influxdb_offset_limit(controls)
         query = f'from(bucket: "{bucket}")|>range({offset})\n'
-        if limit:
-            query += f"|> limit(n: {limit})\n"
 
         filters = []
         wheres = []
@@ -1568,9 +1566,11 @@ def _filter_influxdb(url, controls, args, org=None, bucket=None, query=None, **k
             filters.append(f"|> filter(fn: (r) => {where})")
         query += "\n".join(filters)
         if to_drop:
-            print(to_drop)
             to_drop = ",".join([f'"{k}"' for k in to_drop])
             query += f"\n|> drop(columns: [{to_drop}])"
+
+        if limit:
+            query += f"|> tail(n: {limit})\n"
 
         app_log.debug("Running InfluxDB query: \n" + query)
 
@@ -1579,11 +1579,10 @@ def _filter_influxdb(url, controls, args, org=None, bucket=None, query=None, **k
 
 
 def _delete_influxdb(url, controls, args, org=None, bucket=None, **kwargs):
-    # curl -X DELETE http://localhost:9988/\?_time>=0\&_time<=5
     with _influxdb_client(url, org=org, **kwargs) as db:
         schema = _get_influxdb_schema(db, bucket)
-        start, stop = args.pop('_time')
-        print(start, stop)
+        start = args.pop('_time>', ['0'])[0]
+        stop = args.pop('_time<', ['99999999999'])[0]
         measurement = args.pop('_measurement', schema['_measurement'])[0]
         predicate = f'_measurement="{measurement}"'
         tags = [(k, v[0]) for k, v in args.items() if k in schema['_tags']]
@@ -1595,12 +1594,15 @@ def _delete_influxdb(url, controls, args, org=None, bucket=None, **kwargs):
     return 0
 
 
-def _influxdb_client(url, token, org, **kwargs):
+def _influxdb_client(url, token, org, debug=None, timeout=60_000, enable_gzip=False,
+                     default_tags=None):
     from influxdb_client import InfluxDBClient
 
     url = re.sub(r"^influxdb:", "", url)
-    timeout = kwargs.pop("timeout", 60_000)
-    return InfluxDBClient(url, token, org=org, timeout=timeout, **kwargs)
+    return InfluxDBClient(
+        url, token, org=org, debug=None, enable_gzip=False, default_tags=None,
+        timeout=timeout
+    )
 
 
 def _timestamp_df(df, index_col="_time"):
