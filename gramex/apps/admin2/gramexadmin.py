@@ -5,6 +5,7 @@ import json
 import os
 import re
 import sys
+from textwrap import dedent
 from binascii import b2a_base64
 from cachetools import TTLCache
 from gramex.config import app_log
@@ -50,6 +51,25 @@ def get_auth_conf(kwargs):
         raise ValueError('Missing lookup: in url.%s (authhandler)' % authhandler)
 
 
+@coroutine
+def send_welcome_email(handler):
+    if handler.request.method == 'POST':
+        to = handler.get_arg('email', False)
+        if not to:
+            return
+        email = handler.auth_conf.kwargs.get('forgot', False)
+        if not email:
+            return
+        mailer = gramex.service.email[email.email_from]
+        yield gramex.service.threadpool.submit(
+            mailer.mail,
+            to=to, subject='Welcome to your Gramex app!',
+            body=dedent(f'''
+                Hello {handler.get_arg('user')},
+                You have been signed up with password {handler.get_arg('user')}.''')
+        )
+
+
 class AdminFormHandler(gramex.handlers.FormHandler):
     '''
     A customized FormHandler. Specify a "kwargs.admin_kwargs.authhandler: auth-handler".
@@ -60,7 +80,8 @@ class AdminFormHandler(gramex.handlers.FormHandler):
     def setup(cls, **kwargs):
         # admin_kwargs.authhandler is a url: key that holds an AuthHandler. Get its kwargs
         try:
-            authhandler, auth_conf, data_conf = get_auth_conf(kwargs.get('admin_kwargs', {}))
+            cls.authhandler, cls.auth_conf, data_conf = get_auth_conf(
+                kwargs.get('admin_kwargs', {}))
         except ValueError as e:
             super(gramex.handlers.FormHandler, cls).setup(**kwargs)
             app_log.warning('%s: %s', cls.name, e.args[0])
@@ -70,6 +91,7 @@ class AdminFormHandler(gramex.handlers.FormHandler):
         # Get the FormHandler configuration from lookup:
         cls.conf.kwargs = data_conf
         super(AdminFormHandler, cls).setup(**cls.conf.kwargs)
+        cls._on_finish_methods.append(send_welcome_email)
 
     def send_response(self, *args, **kwargs):
         raise HTTPError(INTERNAL_SERVER_ERROR, reason=self.reason)

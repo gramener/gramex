@@ -91,8 +91,16 @@
         </td>
       </script>
       {% if authhandler %}
-        <div class="users" data-src="users-data">
-          <i class="fa fa-spinner fa-spin fa-3x text-center d-block"></i>
+      {% set print(auth_conf) %}
+        <div class="row">
+          <div class="col">
+            <div class="users" data-src="users-data">
+              <i class="fa fa-spinner fa-spin fa-3x text-center d-block"></i>
+            </div>
+          </div>
+          <div class="col">
+            <div id="usermanage"></div>
+          </div>
         </div>
       {% else %}
         <div class="alert alert-danger">
@@ -118,7 +126,11 @@
           add: true,
           columns: [
             { name: '*' },
-            { name: password_column, hide: true },
+            {
+              name: password_column,
+              format: function(obj) { return '*'.repeat(obj.value.length) },
+              editable: {input: 'password'}
+            },
             { name: 'actions', template: $('#action-template').html() }
           ],
           actions: [{
