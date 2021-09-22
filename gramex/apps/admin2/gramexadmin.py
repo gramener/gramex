@@ -93,6 +93,31 @@ class AdminFormHandler(gramex.handlers.FormHandler):
         super(AdminFormHandler, cls).setup(**cls.conf.kwargs)
         cls._on_finish_methods.append(send_welcome_email)
 
+    @coroutine
+    def put(self, *path_args, **path_kwargs):
+        if self.args.pop('fromadmin', False):
+            col = self.get_arg('user-attr')
+            pattern = self.get_arg('pattern')
+            filter_kwargs = ['url', 'args', 'query', 'table']
+            df = gramex.data.filter(
+                **{k: v for k, v in self.auth_conf.kwargs.items() if k in filter_kwargs}
+            )
+            df = df[df[col].str.contains(pattern)]
+
+            change = self.get_arg('change')
+            to = self.get_arg('to')
+            df[change] = to
+            df.index.name = "id"
+            yield gramex.service.threadpool.submit(
+                gramex.data.update,
+                url=self.auth_conf.kwargs.url,
+                args=df.to_dict(orient='list'),
+                id=['id'],
+                table=self.auth_conf.kwargs['table']
+            )
+        else:
+            super(AdminFormHandler, self).put(*path_args, **path_kwargs)
+
     def send_response(self, *args, **kwargs):
         raise HTTPError(INTERNAL_SERVER_ERROR, reason=self.reason)
 

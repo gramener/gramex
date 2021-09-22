@@ -98,7 +98,39 @@
             </div>
           </div>
           <div class="col">
-            <div id="usermanage"></div>
+            <div id="usermanage">
+              <h3>Modify User Attributes</h3>
+              <br>
+              <form id="moduser" enctype="multipart/form-data">
+                <template id="moduser-tmpl">
+                  <div class="form-group row">
+                    <label for="attrfilter" class="col-sm-2 col-form-label">Filter:</label>
+                    <select id="attrfilter" name="user-attr" class="form-control col-sm-4">
+                      <% usercols.forEach(function(a) { %>
+                      <option value="<%= a %>"><%= a %></option>
+                      <% }) %>
+                    </select>
+                  </div>
+                  <div class="form-group row">
+                    <label for="attrpattern" class="col-sm-2 col-form-label">By:</label>
+                    <input type="text" id="attrparttern" name="pattern" class="form-control col-sm-4">
+                  </div>
+                  <div class="form-group row">
+                    <label for="attrchange" class="col-sm-2 col-form-label">Change:</label>
+                    <select id="attrchange" name="change" class="form-control col-sm-4">
+                      <% usercols.forEach(function(a) { %>
+                      <option value="<%= a %>"><%= a %></option>
+                      <% }) %>
+                    </select>
+                  </div>
+                  <div class="form-group row">
+                    <label for="attrto" class="col-sm-2 col-form-label">To:</label>
+                    <input type="text" id="attrto" name="to" class="form-control col-sm-4">
+                  </div>
+                </template>
+                <button type="submit" class="btn btn-primary mb-2">Ok</button>
+              </form>
+            </div>
           </div>
         </div>
       {% else %}
@@ -120,27 +152,44 @@
         var user_key = (kwargs.user || {}).arg || 'user'
         var user_column = (kwargs.user || {}).column || 'user'
         var password_column = (kwargs.password || {}).column || 'password'
-        $('.users').formhandler({
-          edit: true,
-          add: true,
-          columns: [
-            { name: '*' },
-            {
-              name: password_column,
-              format: function(obj) { return '*'.repeat(obj.value.length) },
-              editable: {input: 'password'}
-            },
-            { name: 'actions', template: $('#action-template').html() }
-          ],
-          actions: [{
-            'reset': function(obj) {
-              var data = {}
-              data[user_key] = obj.row[user_column]
-              return $.ajax(auth_conf.pattern + '?' + forgot_key, {method: 'POST', data: data})
-                .done(function() { obj.notify('Email sent') })
-            }
-          }]
+        const render_fh = function() {
+          $('.users')
+            .on('load', function(obj) {
+              $('#moduser-tmpl').template({usercols: _.map(obj.meta.columns, 'name')})
+            })
+            .formhandler({
+            edit: true,
+            add: true,
+            columns: [
+              { name: '*' },
+              {
+                name: password_column,
+                format: function(obj) { return '*'.repeat(obj.value.length) },
+                editable: {input: 'password'}
+              },
+              { name: 'actions', template: $('#action-template').html() }
+            ],
+            actions: [{
+              'reset': function(obj) {
+                var data = {}
+                data[user_key] = obj.row[user_column]
+                return $.ajax(auth_conf.pattern + '?' + forgot_key, {method: 'POST', data: data})
+                  .done(function() { obj.notify('Email sent') })
+              }
+            }]
+          })
+        }
+        $('#moduser').submit(function(e) {
+          e.preventDefault()
+          $.ajax({
+            method: 'PUT',
+            url: 'users-data?fromadmin=true&' + $(this).serialize(),
+            success: render_fh
+          })
         })
+        render_fh()
+
+
       </script>
 
     {% elif current_tab == 'schedule' %}
