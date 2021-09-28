@@ -102,18 +102,16 @@ class AdminFormHandler(gramex.handlers.FormHandler):
             df = gramex.data.filter(
                 **{k: v for k, v in self.auth_conf.kwargs.items() if k in filter_kwargs}
             )
-            df = df[df[col].str.contains(pattern)]
-
             change = self.get_arg('change')
             to = self.get_arg('to')
-            df[change] = to
-            df.index.name = "id"
+            df.loc[df.index[df[col].str.contains(pattern)], change] = to
+
             yield gramex.service.threadpool.submit(
                 gramex.data.update,
                 url=self.auth_conf.kwargs.url,
                 args=df.to_dict(orient='list'),
-                id=['id'],
-                table=self.auth_conf.kwargs['table']
+                id=[self.auth_conf.kwargs.user.column],
+                table=self.auth_conf.kwargs.get('table')
             )
         else:
             super(AdminFormHandler, self).put(*path_args, **path_kwargs)
