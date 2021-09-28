@@ -597,6 +597,49 @@ class TestEdit(unittest.TestCase):
         gramex.data.update(data, args=args, id=['देश', 'city', 'product'])
         ase(types_original, data.dtypes)
 
+    def test_update_multiple_file(self):
+        # Test on a file
+
+        update_file = os.path.join(folder, 'actors.update.csv')
+        shutil.copy(os.path.join(folder, '..', 'tests/actors.csv'), update_file)
+        self.tmpfiles.append(update_file)
+
+        names = ['Humphrey Bogart', 'James Stewart', 'Audrey Hepburn']
+        categories = ['Stars', 'Thespians', 'Heartthrobs']
+        ratings = [1, 0.99, 1.11]
+        gramex.data.update(
+            update_file,
+            args={
+                'name': names,
+                'category': categories,
+                'rating': ratings
+            }, id=['name']
+        )
+        df = gramex.data.filter(update_file, args={'name': names})
+        self.assertEqual(df['category'].tolist(), categories)
+        self.assertEqual(df['rating'].tolist(), ratings)
+
+    def test_update_multiple_db(self):
+        actors = gramex.cache.open(os.path.join(folder, '../tests/actors.csv'))
+        temp_db = f'sqlite:///{folder}/actors.db'
+        self.tmpfiles.append(os.path.join(folder, 'actors.db'))
+        actors.to_sql('actors', sa.create_engine(temp_db), index=False)
+
+        names = ['Humphrey Bogart', 'James Stewart', 'Audrey Hepburn']
+        categories = ['Stars', 'Thespians', 'Heartthrobs']
+        ratings = [1, 0.99, 1.11]
+        gramex.data.update(
+            temp_db,
+            args={
+                'name': names,
+                'category': categories,
+                'rating': ratings
+            }, id=['name'], table='actors'
+        )
+        df = gramex.data.filter(temp_db, args={'name': names}, table='actors')
+        self.assertEqual(df['category'].tolist(), categories)
+        self.assertEqual(df['rating'].tolist(), ratings)
+
     def test_delete(self):
         raise SkipTest('TODO: write delete test cases')
 

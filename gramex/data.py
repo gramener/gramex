@@ -741,13 +741,10 @@ def _filter_frame(data, meta, controls, args, source='select', id=[]):
             # Apply filters
             data = _filter_frame_col(data, key, col, op, vals, meta)
         elif source == 'update':
-            # Update values should only contain 1 value. 2nd onwards are ignored
             if key not in data.columns or len(vals) == 0:
                 meta['ignored'].append((key, vals))
             else:
-                cols_for_update[key] = vals[0]
-                if len(vals) > 1:
-                    meta['ignored'].append((key, vals[1:]))
+                cols_for_update[key] = vals
         else:
             meta['ignored'].append((key, vals))
     meta['count'] = len(data)
@@ -868,20 +865,24 @@ def _filter_db(engine, table, meta, controls, args, source='select', id=[]):
             query = _filter_db_col(query, query.where, key, col, op, vals,
                                    cols[col], cols[col].type.python_type, meta)
         elif source == 'update':
-            # Update values should only contain 1 value. 2nd onwards are ignored
             if key not in cols or len(vals) == 0:
                 meta['ignored'].append((key, vals))
             else:
-                cols_for_update[key] = vals[0]
-                if len(vals) > 1:
-                    meta['ignored'].append((key, vals[1:]))
+                cols_for_update[key] = vals
         else:
             meta['ignored'].append((key, vals))
     if source == 'delete':
         res = engine.execute(query)
         return res.rowcount
     elif source == 'update':
-        query = query.values(cols_for_update)
+        id_name = id[0]
+        id_col = getattr(table.c, id_name)
+        cases = {
+            k: sa.case(
+                [(id_col == i, j) for i, j in zip(args[id_name], v)]
+            ) for k, v in cols_for_update.items()
+        }
+        query = query.values(**cases)
         res = engine.execute(query)
         return res.rowcount
     else:
