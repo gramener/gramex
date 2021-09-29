@@ -598,8 +598,6 @@ class TestEdit(unittest.TestCase):
         ase(types_original, data.dtypes)
 
     def test_update_multiple_file(self):
-        # Test on a file
-
         update_file = os.path.join(folder, 'actors.update.csv')
         shutil.copy(os.path.join(folder, '..', 'tests/actors.csv'), update_file)
         self.tmpfiles.append(update_file)
@@ -619,11 +617,50 @@ class TestEdit(unittest.TestCase):
         self.assertEqual(df['category'].tolist(), categories)
         self.assertEqual(df['rating'].tolist(), ratings)
 
+    def test_update_multiple_file_uneven_args(self):
+        update_file = os.path.join(folder, 'actors.update.csv')
+        shutil.copy(os.path.join(folder, '..', 'tests/actors.csv'), update_file)
+        self.tmpfiles.append(update_file)
+
+        names = ['Humphrey Bogart', 'James Stewart', 'Audrey Hepburn']
+        categories = ['Stars', 'Thespians', 'Heartthrobs']
+        ratings = [1, 0.99]
+        gramex.data.update(
+            update_file,
+            args={
+                'name': names,
+                'category': categories,
+                'rating': ratings
+            }, id=['name']
+        )
+        df = gramex.data.filter(update_file, args={'name': names})
+        self.assertEqual(df['category'].tolist(), categories)
+        # Check that the original rating is not updated for Audrey Hepburn
+        self.assertEqual(df['rating'].tolist(), ratings + [0.120196561])
+
+        # Only two values in index, but three fields in other columns. Check if they are ignored.
+        shutil.copy(os.path.join(folder, '..', 'tests/actors.csv'), update_file)
+        names = ['Humphrey Bogart', 'James Stewart']
+        ratings = [1, 0.99, 1.11]
+        gramex.data.update(
+            update_file,
+            args={
+                'name': names,
+                'category': categories,
+                'rating': ratings
+            }, id=['name']
+        )
+        df = gramex.data.filter(update_file, args={'name': names + ['Audrey Hepburn']})
+        categories[-1] = 'Actresses'
+        self.assertEqual(df['category'].tolist(), categories)
+        ratings[-1] = 0.120196561
+        self.assertEqual(df['rating'].tolist(), ratings)
+
     def test_update_multiple_db(self):
         actors = gramex.cache.open(os.path.join(folder, '../tests/actors.csv'))
         temp_db = f'sqlite:///{folder}/actors.db'
         self.tmpfiles.append(os.path.join(folder, 'actors.db'))
-        actors.to_sql('actors', sa.create_engine(temp_db), index=False)
+        actors.to_sql('actors', sa.create_engine(temp_db), index=False, if_exists='replace')
 
         names = ['Humphrey Bogart', 'James Stewart', 'Audrey Hepburn']
         categories = ['Stars', 'Thespians', 'Heartthrobs']
@@ -639,6 +676,28 @@ class TestEdit(unittest.TestCase):
         df = gramex.data.filter(temp_db, args={'name': names}, table='actors')
         self.assertEqual(df['category'].tolist(), categories)
         self.assertEqual(df['rating'].tolist(), ratings)
+
+    def test_update_multiple_db_uneven_args(self):
+        actors = gramex.cache.open(os.path.join(folder, '../tests/actors.csv'))
+        temp_db = f'sqlite:///{folder}/actors.db'
+        self.tmpfiles.append(os.path.join(folder, 'actors.db'))
+        actors.to_sql('actors', sa.create_engine(temp_db), index=False, if_exists='replace')
+
+        names = ['Humphrey Bogart', 'James Stewart', 'Audrey Hepburn']
+        categories = ['Stars', 'Thespians', 'Heartthrobs']
+        ratings = [1, 0.99]
+        gramex.data.update(
+            temp_db,
+            args={
+                'name': names,
+                'category': categories,
+                'rating': ratings
+            }, id=['name'], table='actors'
+        )
+        df = gramex.data.filter(temp_db, args={'name': names}, table='actors')
+        self.assertEqual(df['category'].tolist(), categories)
+        # Check that the original rating is not updated for Audrey Hepburn
+        self.assertEqual(df['rating'].tolist(), ratings + [0.120196561])
 
     def test_delete(self):
         raise SkipTest('TODO: write delete test cases')

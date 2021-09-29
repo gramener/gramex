@@ -754,7 +754,8 @@ def _filter_frame(data, meta, controls, args, source='select', id=[]):
     elif source == 'update':
         conv = {k: v.type for k, v in data.dtypes.items()}
         for key, val in cols_for_update.items():
-            original_data.loc[data.index, key] = conv[key](val)
+            m = min(len(data.index), len(val))
+            original_data.loc[data.index[:m], key] = conv[key](val[:m])
         return data
     else:
         # Apply controls
@@ -877,14 +878,16 @@ def _filter_db(engine, table, meta, controls, args, source='select', id=[]):
     elif source == 'update':
         id_name = id[0]
         id_col = getattr(table.c, id_name)
-        cases = {
-            k: sa.case(
-                [(id_col == i, j) for i, j in zip(args[id_name], v)]
-            ) for k, v in cols_for_update.items()
-        }
-        query = query.values(**cases)
-        res = engine.execute(query)
-        return res.rowcount
+        rowcount = []
+        for colname, values in cols_for_update.items():
+            m = min(len(args[id_name]), len(values))
+            case = sa.case([(id_col == i, j) for i, j in zip(args[id_name][:m], values[:m])])
+            q_i = query.values(**{
+                colname: case
+            })
+            res = engine.execute(q_i).rowcount
+            rowcount.append(res)
+        return max(rowcount)
     else:
         # Apply controls
         if '_by' in controls:
