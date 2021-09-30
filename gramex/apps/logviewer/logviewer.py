@@ -94,25 +94,24 @@ def prepare_logs(df, session_threshold=15, cutoff_buffer=0, custom_dims=None):
     df = df.sort_values(by='time')
 
     for key, value in custom_dims.items():
-        fn = build_transform({'function':value}, vars={'df': None}, iter=False)
+        fn = build_transform({'function': value}, vars={'df': None}, iter=False)
         df[key] = fn(df)
 
     # add new_session
     df = add_session(df, duration=session_threshold, cutoff_buffer=cutoff_buffer)
     return df
 
+
 def create_column_if_not_exists(table, freq, conn):
     for col in extra_columns:
-        hasColumn = 0
-        for row in conn.execute('PRAGMA table_info({})'.format(table(freq))):
+        for row in conn.execute(f'PRAGMA table_info({table(freq)})'):
             if row[1] == col:
-                hasColumn = 1
                 break
-
-        if(hasColumn == 0):
-            query = 'ALTER TABLE {} ADD COLUMN "{}" TEXT DEFAULT ""'.format(table(freq), col)
+        else:
+            query = f'ALTER TABLE {table(freq)} ADD COLUMN "{col}" TEXT DEFAULT ""'
             conn.execute(query)
             conn.commit()
+
 
 def summarize(transforms=[], post_transforms=[], run=True,
               session_threshold=15, cutoff_buffer=0, custom_dims=None):
@@ -133,6 +132,7 @@ def summarize(transforms=[], post_transforms=[], run=True,
         try:
             create_column_if_not_exists(table, freq, conn)
         except sqlite3.OperationalError:
+            # Inform when table is created for the first time
             app_log.info('logviewer: OperationalError: Table does not exist')
 
     # drop agg tables from database
@@ -199,7 +199,7 @@ def summarize(transforms=[], post_transforms=[], run=True,
             data = data[data.time.ge(date_from)]
             # delete old records
             query = f'DELETE FROM {table(freq)} WHERE time >= ?'    # nosec: table() is safe
-            conn.execute(query, ("{}".format(date_from), ))
+            conn.execute(query, f'{date_from}')
             conn.commit()
         groups[0]['freq'] = freq
         # get summary view
