@@ -113,7 +113,7 @@
                   </div>
                   <div class="form-group row">
                     <label for="attrpattern" class="col-sm-2 col-form-label">By:</label>
-                    <input type="text" id="attrparttern" name="pattern" class="form-control col-sm-4">
+                    <input type="text" id="attrpattern" name="pattern" class="form-control col-sm-4">
                   </div>
                   <div class="form-group row">
                     <label for="attrchange" class="col-sm-2 col-form-label">Change:</label>
@@ -152,10 +152,28 @@
         var user_key = (kwargs.user || {}).arg || 'user'
         var user_column = (kwargs.user || {}).column || 'user'
         var password_column = (kwargs.password || {}).column || 'password'
+        var currdata = []
         const render_fh = function() {
           $('.users')
             .on('load', function(obj) {
-              $('#moduser-tmpl').template({usercols: _.map(obj.meta.columns, 'name')})
+              currdata = obj.formdata
+              let filters = _.pickBy(
+                g1.url.parse(g1.url.parse(window.location.href).hash).searchKey,
+                (val, key) => key.endsWith('~')
+              )
+              $('#moduser-tmpl').template({
+                usercols: _.map(obj.meta.columns, 'name'),
+              })
+              if (Object.keys(filters).length) {
+                let col = Object.keys(filters)[0]
+                $('#attrfilter').val(col.replace(/~$/, ''))
+                $('#attrpattern').val(filters[col])
+              }
+              $('#attrpattern').change(function() {
+                url = g1.url.parse(window.location.href)
+                url.hash = '?' + $('#attrfilter').val() + '~=' + $(this).val()
+                window.location = url.toString()
+              })
             })
             .formhandler({
             edit: true,
@@ -181,10 +199,18 @@
         }
         $('#moduser').submit(function(e) {
           e.preventDefault()
-          $.ajax({
-            method: 'PUT',
-            url: 'users-data?fromadmin=true&' + $(this).serialize(),
-            success: render_fh
+          let to_change = $('#attrchange').val()
+          let newval = $('#attrto').val()
+          opts = {method: 'PUT', url: 'users-data'}
+          currdata.forEach(function(elem, ix) {
+            elem[to_change] = newval
+            opts.data = elem
+            if (ix == currdata.length - 1) {
+              opts['success'] = render_fh
+            } else {
+              opts['success'] = console.log
+            }
+            $.ajax(opts)
           })
         })
         render_fh()

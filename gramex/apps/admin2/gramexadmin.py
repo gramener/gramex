@@ -80,8 +80,7 @@ class AdminFormHandler(gramex.handlers.FormHandler):
     def setup(cls, **kwargs):
         # admin_kwargs.authhandler is a url: key that holds an AuthHandler. Get its kwargs
         try:
-            cls.authhandler, cls.auth_conf, data_conf = get_auth_conf(
-                kwargs.get('admin_kwargs', {}))
+            authhandler, auth_conf, data_conf = get_auth_conf(kwargs.get('admin_kwargs', {}))
         except ValueError as e:
             super(gramex.handlers.FormHandler, cls).setup(**kwargs)
             app_log.warning('%s: %s', cls.name, e.args[0])
@@ -92,29 +91,6 @@ class AdminFormHandler(gramex.handlers.FormHandler):
         cls.conf.kwargs = data_conf
         super(AdminFormHandler, cls).setup(**cls.conf.kwargs)
         cls._on_finish_methods.append(send_welcome_email)
-
-    @coroutine
-    def put(self, *path_args, **path_kwargs):
-        if self.args.pop('fromadmin', False):
-            col = self.get_arg('user-attr')
-            pattern = self.get_arg('pattern')
-            filter_kwargs = ['url', 'args', 'query', 'table']
-            df = gramex.data.filter(
-                **{k: v for k, v in self.auth_conf.kwargs.items() if k in filter_kwargs}
-            )
-            change = self.get_arg('change')
-            to = self.get_arg('to')
-            df.loc[df.index[df[col].str.contains(pattern)], change] = to
-
-            yield gramex.service.threadpool.submit(
-                gramex.data.update,
-                url=self.auth_conf.kwargs.url,
-                args=df.to_dict(orient='list'),
-                id=[self.auth_conf.kwargs.user.column],
-                table=self.auth_conf.kwargs.get('table')
-            )
-        else:
-            super(AdminFormHandler, self).put(*path_args, **path_kwargs)
 
     def send_response(self, *args, **kwargs):
         raise HTTPError(INTERNAL_SERVER_ERROR, reason=self.reason)
