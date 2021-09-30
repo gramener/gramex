@@ -28,6 +28,13 @@ DB_CONFIG = {
         'session_time': ['sum']
     }
 }
+
+for key in conf.schedule:
+    if 'kwargs' in conf.schedule[key] and 'custom_dims' in conf.schedule[key].kwargs:
+        extra_columns = [dimension for dimension in conf.schedule[key].kwargs.custom_dims]
+
+DB_CONFIG['dimensions'].extend(extra_columns)
+
 DB_CONFIG['table_columns'] = [
     f'{k}_{x}'
     for k, v in DB_CONFIG['metrics'].items()
@@ -70,7 +77,7 @@ def add_session(df, duration=30, cutoff_buffer=0):
     return df
 
 
-def prepare_logs(df, session_threshold=15, cutoff_buffer=0):
+def prepare_logs(df, session_threshold=15, cutoff_buffer=0, custom_dims=None):
     '''
     - removes rows with errors in time, duration, status
     - sort by time
@@ -85,13 +92,29 @@ def prepare_logs(df, session_threshold=15, cutoff_buffer=0):
             df = df[df[col].notnull()]
     # logging via threads may not maintain order
     df = df.sort_values(by='time')
+
+    for key, value in custom_dims.items():
+        fn = build_transform({'function': value}, vars={'df': None}, iter=False)
+        df[key] = fn(df)
+
     # add new_session
     df = add_session(df, duration=session_threshold, cutoff_buffer=cutoff_buffer)
     return df
 
 
+def create_column_if_not_exists(table, freq, conn):
+    for col in extra_columns:
+        for row in conn.execute(f'PRAGMA table_info({table(freq)})'):
+            if row[1] == col:
+                break
+        else:
+            query = f'ALTER TABLE {table(freq)} ADD COLUMN "{col}" TEXT DEFAULT ""'
+            conn.execute(query)
+            conn.commit()
+
+
 def summarize(transforms=[], post_transforms=[], run=True,
-              session_threshold=15, cutoff_buffer=0):
+              session_threshold=15, cutoff_buffer=0, custom_dims=None):
     '''summarize'''
     app_log.info('logviewer: Summarize started')
     levels = DB_CONFIG['levels']
@@ -104,6 +127,14 @@ def summarize(transforms=[], post_transforms=[], run=True,
     log_file = '{0}{1}'.format(*log_file.partition('.csv'))
     folder = os.path.dirname(log_file)
     conn = sqlite3.connect(os.path.join(folder, 'logviewer.db'))
+
+    for freq in levels:
+        try:
+            create_column_if_not_exists(table, freq, conn)
+        except sqlite3.OperationalError:
+            # Inform when table is created for the first time
+            app_log.info('logviewer: OperationalError: Table does not exist')
+
     # drop agg tables from database
     if run in ['drop', 'reload']:
         droptable = 'DROP TABLE IF EXISTS {}'.format
@@ -149,7 +180,8 @@ def summarize(transforms=[], post_transforms=[], run=True,
             len(data.index), session_threshold))
     data = prepare_logs(df=data,
                         session_threshold=session_threshold,
-                        cutoff_buffer=cutoff_buffer)
+                        cutoff_buffer=cutoff_buffer,
+                        custom_dims=custom_dims)
     app_log.info('logviewer: processed and returned {} rows'.format(len(data.index)))
     # apply transforms on raw data
     app_log.info('logviewer: applying transforms')
@@ -167,7 +199,7 @@ def summarize(transforms=[], post_transforms=[], run=True,
             data = data[data.time.ge(date_from)]
             # delete old records
             query = f'DELETE FROM {table(freq)} WHERE time >= ?'    # nosec: table() is safe
-            conn.execute(query, (date_from, ))
+            conn.execute(query, f'{date_from}')
             conn.commit()
         groups[0]['freq'] = freq
         # get summary view

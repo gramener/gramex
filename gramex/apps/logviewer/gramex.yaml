@@ -149,6 +149,8 @@ schedule:
   apps/logviewer-$* if '--listen.port=' + LOGVIEWER_SCHEDULER_PORT in ''.join(sys.argv[1:]) or not LOGVIEWER_SCHEDULER_PORT:
     function: logviewer.summarize
     kwargs:
+      custom_dims:
+        import.merge: $LOGVIEWER_CUSTOM_DIMENSIONS
       session_threshold: 15
       transforms:
       - type: derive
