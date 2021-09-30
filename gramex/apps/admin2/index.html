@@ -128,7 +128,7 @@
                     <input type="text" id="attrto" name="to" class="form-control col-sm-4">
                   </div>
                 </template>
-                <button type="submit" class="btn btn-primary mb-2">Ok</button>
+                <button id='modbtn' type="submit" class="btn btn-primary mb-2" disabled>Ok</button>
               </form>
             </div>
           </div>
@@ -170,6 +170,11 @@
                 $('#attrpattern').val(filters[col])
               }
               $('#attrpattern').change(function() {
+                if ($(this).val()) {
+                  $('#modbtn').prop('disabled', false)
+                } else {
+                  $('#modbtn').prop('disabled', true)
+                }
                 url = g1.url.parse(window.location.href)
                 url.hash = '?' + $('#attrfilter').val() + '~=' + $(this).val()
                 window.location = url.toString()
