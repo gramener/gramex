@@ -2243,7 +2243,7 @@ url:
         description: OpenAPI-description
         version: OpenAPI-version
       servers:
-        - url: $YAMLURL
+        - url: ..
           description: Server-description
 
   openapi/func:
@@ -2252,6 +2252,42 @@ url:
     kwargs:
       function: utils.test_function
       methods: GET, POST
+    openapi:
+      get:
+        responses:
+          '400':
+            description: You served a bad request
+
+  openapi/form:
+    pattern: /openapi/form
+    handler: FormHandler
+    kwargs:
+      sales:
+        url: sales.xlsx
+        sheet_name: sales
+        columns:
+          - name: देश
+            type: text
+          - name: city
+            type: text
+          - name: product
+            type: text
+          - name: sales
+            type: float
+          - name: growth
+            type: float
+      dates:
+        url: sales.xlsx
+        sheet_name: sales
+        columns:
+          - name: date
+            type: date
+          - name: sales
+            type: int
+      census:
+        url: sales.xlsx
+        sheet_name: census
+        columns: [State, District, DistrictCaps]
     openapi:
       get:
         responses:

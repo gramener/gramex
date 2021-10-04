@@ -1,8 +1,11 @@
+import gramex.cache
 from . import TestGramex
 from nose.tools import eq_, ok_
 
 
 class TestOpenAPIHandler(TestGramex):
+    expected = gramex.cache.open('openapiresponse.yaml', rel=True)
+
     def has_param(self, params, **kwargs):
         items = kwargs.items()
         for param in params:
@@ -24,9 +27,14 @@ class TestOpenAPIHandler(TestGramex):
         })
         # spec.servers comes from gramex.yaml OpenAPIHandler kwargs
         eq_(spec['servers'], [{
-            'url': '.',
+            'url': '..',
             'description': 'Server-description'
         }])
+
+        self.check_functionhandler(spec)
+        self.check_formhandler(spec)
+
+    def check_functionhandler(self, spec):
         # /openapi/func path exists
         ok_('/openapi/func' in spec['paths'])
         path = spec['paths']['/openapi/func']
@@ -56,58 +64,64 @@ class TestOpenAPIHandler(TestGramex):
                 'schema': {'type': 'array', 'items': {'type': 'number'}},
             }, params['lf2'])
             self.assertDictContainsSubset({
-                'in': 'query', 'description': '', 'default': [0],
-                'schema': {'type': 'array', 'items': {'type': 'integer'}},
+                'in': 'query', 'description': '',
+                'schema': {'type': 'array', 'items': {'type': 'integer'}, 'default': [0]},
             }, params['li3'])
             self.assertDictContainsSubset({
-                'in': 'query', 'description': '', 'default': [0.0],
-                'schema': {'type': 'array', 'items': {'type': 'number'}},
+                'in': 'query', 'description': '',
+                'schema': {'type': 'array', 'items': {'type': 'number'}, 'default': [0.0]},
             }, params['lf3'])
             self.assertDictContainsSubset({
-                'in': 'query', 'description': '', 'default': [],
-                'schema': {'type': ['string']},
+                'in': 'query', 'description': '',
+                'schema': {'type': ['string'], 'default': []},
             }, params['l1'])
             self.assertDictContainsSubset({
-                'in': 'query', 'description': 'First value', 'default': 0,
-                'schema': {'type': ['integer']},
+                'in': 'query', 'description': 'First value',
+                'schema': {'type': ['integer'], 'default': 0},
             }, params['i1'])
             self.assertDictContainsSubset({
-                'in': 'query', 'description': 'Second value', 'default': 0,
-                'schema': {'type': ['integer']},
+                'in': 'query', 'description': 'Second value',
+                'schema': {'type': ['integer'], 'default': 0},
             }, params['i2'])
             self.assertDictContainsSubset({
-                'in': 'query', 'description': '', 'default': 'Total',
-                'schema': {'type': ['string']},
+                'in': 'query', 'description': '',
+                'schema': {'type': ['string'], 'default': 'Total'},
             }, params['s1'])
             self.assertDictContainsSubset({
-                'in': 'query', 'description': '', 'default': 0,
-                'schema': {'type': ['integer']},
+                'in': 'query', 'description': '',
+                'schema': {'type': ['integer'], 'default': 0},
             }, params['n1'])
             self.assertDictContainsSubset({
-                'in': 'query', 'description': '', 'default': 0,
-                'schema': {'type': ['string']},
+                'in': 'query', 'description': '',
+                'schema': {'type': ['string'], 'default': 0},
             }, params['n2'])
             self.assertDictContainsSubset({
-                'in': 'header', 'description': '', 'default': '',
-                'schema': {'type': ['string']},
+                'in': 'header', 'description': '',
+                'schema': {'type': ['string'], 'default': ''},
             }, params['h'])
             self.assertDictContainsSubset({
-                'in': 'query', 'description': '', 'default': 200,
-                'schema': {'type': ['integer']},
+                'in': 'query', 'description': '',
+                'schema': {'type': ['integer'], 'default': 200},
             }, params['code'])
 
-            resp = conf['responses']
-            # 400 response has description from gramex.yaml
-            self.assertDictContainsSubset({
-                'description': 'You served a bad request',
-                'content': {'text/html': {'example': 'Bad request'}}
-            }, resp['400'])
-            # Rest should have default error responses
-            self.assertDictContainsSubset({
-                'description': 'Successful Response',
-                'content': {'application/json': {}}
-            }, resp['200'])
-            self.assertDictContainsSubset({
-                'description': 'Not authorized',
-                'content': {'text/html': {'example': 'Not authorized'}}
-            }, resp['401'])
+            self.check_response(conf['responses'])
+
+    def check_response(self, resp):
+        # 400 response has description from gramex.yaml
+        self.assertDictContainsSubset({
+            'description': 'You served a bad request',
+            'content': {'text/html': {'example': 'Bad request'}}
+        }, resp['400'])
+        # Rest should have default error responses
+        self.assertDictContainsSubset({
+            'description': 'Successful Response',
+            'content': {'application/json': {}}
+        }, resp['200'])
+        self.assertDictContainsSubset({
+            'description': 'Not authorized',
+            'content': {'text/html': {'example': 'Not authorized'}}
+        }, resp['401'])
+
+    def check_formhandler(self, spec):
+        ok_('/openapi/form' in spec['paths'])
+        eq_(spec['paths']['/openapi/form'], self.expected['/openapi/form'])
