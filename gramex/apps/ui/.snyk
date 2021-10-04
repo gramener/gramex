@@ -4,64 +4,62 @@ ignore:
 
   # @vue/cli@4.5.13 has vulnerabilities that only affects projects using Vue. Known risk.
   # Since this only impacts developer-controlled code, it's acceptable. Wait for @vue/cli to fix.
+  SNYK-JS-ANSIHTML-1296849:
+    - '*':
+        reason: No fix available. Await @vue/cli upgrade
+        expires: 2021-11-30T00:00:00.000Z
+        created: 2021-07-24T00:00:00.000Z
+  SNYK-JS-ANSIREGEX-1583908:
+    - '*':
+        reason: No fix available. Await @vue/cli upgrade
+        expires: 2021-11-30T00:00:00.000Z
+        created: 2021-10-01T00:00:00.000Z
+  SNYK-JS-CSSWHAT-1298035:
+    - '*':
+        reason: No fix available. Await @vue/cli upgrade
+        expires: 2021-11-30T00:00:00.000Z
+        created: 2021-07-24T00:00:00.000Z
   SNYK-JS-DECOMPRESSTAR-559095:
     - '*':
         reason: No fix available. Await @vue/cli upgrade
-        expires: 2021-09-30T00:00:00.000Z
+        expires: 2021-11-30T00:00:00.000Z
         created: 2021-07-24T00:00:00.000Z
   SNYK-JS-EJS-1049328:
     - '*':
         reason: No fix available. Await @vue/cli upgrade
-        expires: 2021-09-30T00:00:00.000Z
+        expires: 2021-11-30T00:00:00.000Z
         created: 2021-07-24T00:00:00.000Z
   SNYK-JS-GLOBPARENT-1016905:
     - '*':
         reason: No fix available. Await @vue/cli upgrade
-        expires: 2021-09-30T00:00:00.000Z
+        expires: 2021-11-30T00:00:00.000Z
         created: 2021-07-24T00:00:00.000Z
-  SNYK-JS-MERGE-1040469:
+  SNYK-JS-NTHCHECK-1586032:
     - '*':
         reason: No fix available. Await @vue/cli upgrade
-        expires: 2021-09-30T00:00:00.000Z
-        created: 2021-07-24T00:00:00.000Z
-  SNYK-JS-MERGE-1042987:
-    - '*':
-        reason: No fix available. Await @vue/cli upgrade
-        expires: 2021-09-30T00:00:00.000Z
-        created: 2021-07-24T00:00:00.000Z
-  SNYK-JS-CSSWHAT-1298035:
-    - '*':
-        reason: No fix available. Await @vue/cli upgrade
-        expires: 2021-09-30T00:00:00.000Z
-        created: 2021-07-24T00:00:00.000Z
-  SNYK-JS-URLPARSE-1533425:
-    - '*':
-        reason: No fix available. Await @vue/cli upgrade
-        expires: 2021-09-30T00:00:00.000Z
-        created: 2021-07-24T00:00:00.000Z
-  SNYK-JS-ANSIHTML-1296849:
-    - '*':
-        reason: No fix available. Await @vue/cli upgrade
-        expires: 2021-09-30T00:00:00.000Z
-        created: 2021-07-24T00:00:00.000Z
+        expires: 2021-11-30T00:00:00.000Z
+        created: 2021-10-01T00:00:00.000Z
   SNYK-JS-OBJECTPATH-1569453:
     - '*':
         reason: No fix available. Await @vue/cli upgrade
-        expires: 2021-09-30T00:00:00.000Z
+        expires: 2021-11-30T00:00:00.000Z
         created: 2021-07-24T00:00:00.000Z
-  SNYK-JS-REQUEST-1314897:
+  SNYK-JS-OBJECTPATH-1585658:
     - '*':
         reason: No fix available. Await @vue/cli upgrade
-        expires: 2021-09-30T00:00:00.000Z
-        created: 2021-07-24T00:00:00.000Z
-
-  # Elasticsearch recently (Jun 2021) introduced a regex issue. Reported:
-  # https://github.com/elastic/elasticsearch-py/issues/943#issuecomment-887424042
-  SNYK-PYTHON-URLLIB3-1533435:
+        expires: 2021-11-30T00:00:00.000Z
+        created: 2021-10-01T00:00:00.000Z
+  SNYK-JS-PRISMJS-1585202:
     - '*':
-        reason: No fix available. Await elasticsearch upgrade
-        expires: 2021-09-30T00:00:00.000Z
-        created: 2021-07-24T00:00:00.000Z
+        reason: No fix available. Await @vue/cli upgrade
+        expires: 2021-11-30T00:00:00.000Z
+        created: 2021-10-01T00:00:00.000Z
+  SNYK-JS-SETVALUE-1540541:
+    - '*':
+        reason: No fix available. Await @vue/cli upgrade
+        expires: 2021-11-30T00:00:00.000Z
+        created: 2021-10-01T00:00:00.000Z
+
 
   # We need D3 v4 for old projects. Just retain this forever -- but newer projects won't use this
   SNYK-JS-D3COLOR-1076592:
