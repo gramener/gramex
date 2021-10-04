@@ -80,7 +80,8 @@ class AdminFormHandler(gramex.handlers.FormHandler):
     def setup(cls, **kwargs):
         # admin_kwargs.authhandler is a url: key that holds an AuthHandler. Get its kwargs
         try:
-            authhandler, auth_conf, data_conf = get_auth_conf(kwargs.get('admin_kwargs', {}))
+            cls.authhandler, cls.auth_conf, data_conf = get_auth_conf(
+                kwargs.get('admin_kwargs', {}))
         except ValueError as e:
             super(gramex.handlers.FormHandler, cls).setup(**kwargs)
             app_log.warning('%s: %s', cls.name, e.args[0])
