@@ -309,6 +309,7 @@ class MLHandler(FormHandler):
 
     @coroutine
     def get(self, *path_args, **path_kwargs):
+        self.set_header('Content-Type', 'application/json')
         if '_params' in self.args:
             params = {
                 'opts': self.config_store.load('transform'),
@@ -335,7 +336,6 @@ class MLHandler(FormHandler):
                     self.write(fout.read())
             elif '_model' in self.args:
                 self.write(json.dumps(self.get_opt('params'), indent=2))
-
             else:
                 try:
                     data_args = {k: v for k, v in self.args.items() if not k.startswith('_')}
@@ -347,7 +347,6 @@ class MLHandler(FormHandler):
                     app_log.debug(err.msg)
                     data = []
                 if len(data) > 0:
-                    self.set_header('Content-Type', 'application/json')
                     data = data.drop([self.get_opt('target_col')], axis=1, errors='ignore')
                     prediction = yield gramex.service.threadpool.submit(
                         self._predict, data)
@@ -396,6 +395,7 @@ class MLHandler(FormHandler):
         if action not in ACTIONS:
             raise HTTPError(BAD_REQUEST, f'Action {action} not supported.')
         res = yield gramex.service.threadpool.submit(getattr(self, f"_{action}"))
+        self.set_header('Content-Type', 'application/json')
         self.write(json.dumps(res, indent=2, cls=CustomJSONEncoder))
         super(MLHandler, self).post(*path_args, **path_kwargs)
 
