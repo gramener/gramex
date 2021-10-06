@@ -300,6 +300,7 @@ class MLHandler(FormHandler):
 
     @coroutine
     def prepare(self):
+        super(MLHandler, self).prepare()
         flattened = {}
         for k, v in self.args.items():
             if not isinstance(TRANSFORMS.get(k), list) and isinstance(v, list) and len(v) == 1:
