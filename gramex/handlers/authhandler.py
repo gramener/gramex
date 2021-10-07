@@ -2,6 +2,7 @@ import io
 import os
 import csv
 import json
+import re
 import time
 import uuid
 import logging
@@ -32,10 +33,12 @@ class AuthHandler(BaseHandler):
 
     @classmethod
     def setup(cls, prepare=None, action=None, delay=None, session_expiry=None,
-              session_inactive=None, user_key='user', lookup=None, recaptcha=None, **kwargs):
+              session_inactive=None, user_key='user', lookup=None, recaptcha=None,
+              rules=None, **kwargs):
         # Set up default redirection based on ?next=...
         if 'redirect' not in kwargs:
             kwargs['redirect'] = AttrDict([('query', 'next'), ('header', 'Referer')])
+        cls.special_keys += ['rules']
         super(AuthHandler, cls).setup(**kwargs)
 
         # Set up logging for login/logout events
@@ -69,6 +72,10 @@ class AuthHandler(BaseHandler):
                 cls.lookup_id = cls.lookup.pop('id', 'user')
             else:
                 app_log.error('%s: lookup must be a dict, not %s', cls.name, cls.lookup)
+
+        if rules:
+            rules = gramex.data.filter(**rules)
+        cls.rules = rules
 
         # Set up prepare
         cls.auth_methods = {}
@@ -162,6 +169,11 @@ class AuthHandler(BaseHandler):
         # If session_inactive: is specified, set expiry date on the session
         if self.session_inactive is not None:
             self.session['_i'] = self.session_inactive * 24 * 60 * 60
+
+        # Apply rules to the user
+        for _, rule in self.rules.iterrows():
+            if re.search(rule['pattern'], user.get(rule['selector'], '')):
+                user[rule['field']] = rule['value']
 
         # Run post-login events (e.g. ensure_single_session) specified in config
         for callback in self.actions:
