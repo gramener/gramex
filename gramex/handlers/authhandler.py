@@ -1,8 +1,8 @@
+from fnmatch import fnmatch
 import io
 import os
 import csv
 import json
-import re
 import time
 import uuid
 import logging
@@ -73,9 +73,7 @@ class AuthHandler(BaseHandler):
             else:
                 app_log.error('%s: lookup must be a dict, not %s', cls.name, cls.lookup)
 
-        if rules:
-            rules = gramex.data.filter(**rules)
-        cls.rules = rules
+        cls.rules = gramex.data.filter(**rules) if rules else gramex.data.pd.DataFrame()
 
         # Set up prepare
         cls.auth_methods = {}
@@ -172,7 +170,7 @@ class AuthHandler(BaseHandler):
 
         # Apply rules to the user
         for _, rule in self.rules.iterrows():
-            if re.search(rule['pattern'], user.get(rule['selector'], '')):
+            if fnmatch(user.get(rule['selector'], ''), rule['pattern']):
                 user[rule['field']] = rule['value']
 
         # Run post-login events (e.g. ensure_single_session) specified in config
