@@ -74,6 +74,7 @@ class AuthHandler(BaseHandler):
                 app_log.error('%s: lookup must be a dict, not %s', cls.name, cls.lookup)
 
         cls.rules = gramex.data.filter(**rules) if rules else gramex.data.pd.DataFrame()
+        cls.rules.fillna(value='', inplace=True)
 
         # Set up prepare
         cls.auth_methods = {}

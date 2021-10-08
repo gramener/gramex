@@ -1993,6 +1993,70 @@ url:
         sheet_name: userinfo
         id: userid
 
+  auth/rules:
+    pattern: /auth/rulesdb
+    handler: SimpleAuth
+    kwargs:
+      credentials:
+        alpha:
+          password: alpha
+          gender: female
+          email: jane.doe@gmail.com
+        beta:
+          password: beta
+          gender: male
+          email: john.doe@gramener.com
+          team: "ग्रामेक्स"
+        gamma:
+          password: gamma
+          gender: male
+          empty: ''
+      rules:
+        url: sqlite:///$YAMLPATH/rules.db
+        table: rules
+
+  auth/rules-files:
+    pattern: /auth/rulesfile
+    handler: SimpleAuth
+    kwargs:
+      credentials:
+        alpha:
+          password: alpha
+          gender: female
+          email: jane.doe@gmail.com
+        beta:
+          password: beta
+          gender: male
+          email: john.doe@gramener.com
+          team: "ग्रामेक्स"
+        gamma:
+          password: gamma
+          gender: male
+          empty: ''
+      rules:
+        url: $YAMLPATH/rules.xlsx
+        sheet_name: rules
+
+  auth/no-rules:
+    pattern: /auth/norules
+    handler: SimpleAuth
+    kwargs:
+      credentials:
+        alpha:
+          password: alpha
+          gender: female
+          email: jane.doe@gmail.com
+        beta:
+          password: beta
+          gender: male
+          email: john.doe@gramener.com
+          team: "ग्रामेक्स"
+        gamma:
+          password: gamma
+          gender: male
+          empty: ''
+      rules: {}
+
   pptx/source:
     pattern: /pptx/source
     handler: PPTXHandler

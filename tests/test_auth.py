@@ -483,6 +483,62 @@ class TestLookup(AuthBase):
         eq_(session['user']['gender'], 'female')
 
 
+class TestRules(AuthBase):
+
+    @classmethod
+    def setUpClass(cls):
+        AuthBase.setUpClass()
+        cls.url = server.base_url + '/auth/rulesdb'
+
+    def test_default(self):
+        self.login_ok('alpha', 'alpha', check_next='/')
+        session = self.session.get(server.base_url + '/auth/session').json()
+        eq_(session['user']['gender'], 'male')
+
+        self.login_ok('beta', 'beta', check_next='/')
+        session = self.session.get(server.base_url + '/auth/session').json()
+        eq_(session['user']['gender'], 'female')
+        eq_(session['user']['team'], 'Gramex')
+
+        # When selector is a nonexistent attribute, nothing changes
+        self.login_ok('gamma', 'gamma', check_next='/')
+        session = self.session.get(server.base_url + '/auth/session').json()
+        eq_(session['user']['gender'], 'female')
+
+        # Check if the empty string match for Gamma works
+        eq_(session['user']['email'], 'gamma@null.com')
+
+
+class TestRulesFile(TestRules):
+    @classmethod
+    def setUpClass(cls):
+        AuthBase.setUpClass()
+        cls.url = server.base_url + '/auth/rulesfile'
+
+
+class TestNoRules(AuthBase):
+    @classmethod
+    def setUpClass(cls):
+        AuthBase.setUpClass()
+        cls.url = server.base_url + '/auth/norules'
+
+    def test_default(self):
+        self.login_ok('alpha', 'alpha', check_next='/')
+        session = self.session.get(server.base_url + '/auth/session').json()
+        eq_(session['user']['gender'], 'female')
+
+        self.login_ok('beta', 'beta', check_next='/')
+        session = self.session.get(server.base_url + '/auth/session').json()
+        eq_(session['user']['gender'], 'male')
+        eq_(session['user']['team'], 'ग्रामेक्स')
+
+        # When selector is a nonexistent attribute, nothing changes
+        self.login_ok('gamma', 'gamma', check_next='/')
+        session = self.session.get(server.base_url + '/auth/session').json()
+        eq_(session['user']['gender'], 'male')
+        eq_(session['user']['empty'], '')
+
+
 class DBAuthBase(AuthBase):
     @staticmethod
     def create_database(url, table):
