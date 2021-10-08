@@ -541,7 +541,7 @@ def _sort_url_patterns(entry):
     over-ride each other in a CSS-like way.
     '''
     name, spec = entry
-    pattern = spec.pattern
+    pattern = spec.get('pattern', '')
     # URLs are resolved in this order:
     return (
         spec.get('priority', 0),    # by explicity priority: parameter
@@ -692,11 +692,14 @@ def url(conf):
         if _key in _cache:
             info.url[name] = _cache[_key]
             continue
+        if 'pattern' not in spec:
+            app_log.error('url: %s: no pattern: specified', name)
+            continue
         # service: is an alias for handler: and has higher priority
         if 'service' in spec:
             spec.handler = spec.service
         if 'handler' not in spec:
-            app_log.error('url: %s: no service: or handler: specified')
+            app_log.error('url: %s: no service: or handler: specified', name)
             continue
         app_log.debug('url: %s (%s) %s', name, spec.handler, spec.get('priority', ''))
         urlspec = AttrDict(spec)
