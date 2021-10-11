@@ -2007,7 +2007,7 @@ url:
           gender: male
           email: john.doe@gramener.com
           team: "ग्रामेक्स"
-        gamma:
+        γ:
           password: gamma
           gender: male
           empty: ''
@@ -2029,12 +2029,13 @@ url:
           gender: male
           email: john.doe@gramener.com
           team: "ग्रामेक्स"
-        gamma:
+        γ:
           password: gamma
           gender: male
           empty: ''
       rules:
-        url: $YAMLPATH/rules.csv
+        url: $YAMLPATH/rules.xlsx
+        sheet_name: rules
 
   auth/no-rules:
     pattern: /auth/norules
@@ -2050,7 +2051,7 @@ url:
           gender: male
           email: john.doe@gramener.com
           team: "ग्रामेक्स"
-        gamma:
+        γ:
           password: gamma
           gender: male
           empty: ''

@@ -7,7 +7,7 @@ import requests
 import lxml.html
 import pandas as pd
 import sqlalchemy as sa
-from nose.tools import eq_, ok_
+from nose.tools import eq_, ok_, assert_not_equal as neq_
 from nose.plugins.skip import SkipTest
 from tornado.web import create_signed_value
 from urllib.parse import urlencode, urljoin
@@ -484,11 +484,7 @@ class TestLookup(AuthBase):
 
 
 class TestRules(AuthBase):
-
-    @classmethod
-    def setUpClass(cls):
-        AuthBase.setUpClass()
-        cls.url = server.base_url + '/auth/rulesdb'
+    url = server.base_url + '/auth/rulesdb'
 
     def test_default(self):
         self.login_ok('alpha', 'alpha', check_next='/')
@@ -501,26 +497,38 @@ class TestRules(AuthBase):
         eq_(session['user']['team'], 'Gramex')
 
         # When selector is a nonexistent attribute, nothing changes
-        self.login_ok('gamma', 'gamma', check_next='/')
+        self.login_ok('γ', 'gamma', check_next='/')
         session = self.session.get(server.base_url + '/auth/session').json()
         eq_(session['user']['gender'], 'female')
 
         # Check if the empty string match for Gamma works
         eq_(session['user']['email'], 'gamma@null.com')
 
+        upass = {'γ': 'gamma'}
+        for user in 'alpha beta γ'.split():
+            self.login_ok(user, upass.get(user, user), check_next='/')
+            session = self.session.get(server.base_url + '/auth/session').json()
+            # Check that no users have attributes defined in an unreachable rule
+            neq_(session['user']['email'], 'none@none.com')
+            # Check that everyone is team: Gramex
+            eq_(session['user']['team'], 'Gramex')
+
 
 class TestRulesFile(TestRules):
-    @classmethod
-    def setUpClass(cls):
-        AuthBase.setUpClass()
-        cls.url = server.base_url + '/auth/rulesfile'
+    url = server.base_url + '/auth/rulesfile'
+
+    def test_default(self):
+        super(TestRulesFile, self).test_default()
+        upass = {'γ': 'gamma'}
+        for user in 'alpha beta γ'.split():
+            self.login_ok(user, upass.get(user, user), check_next='/')
+            session = self.session.get(server.base_url + '/auth/session').json()
+            eq_(session['user']['cookie_expires'], 3.14)
+            eq_(session['user']['expiry'], '2050-12-31T00:00:00+05:30')
 
 
 class TestNoRules(AuthBase):
-    @classmethod
-    def setUpClass(cls):
-        AuthBase.setUpClass()
-        cls.url = server.base_url + '/auth/norules'
+    url = server.base_url + '/auth/norules'
 
     def test_default(self):
         self.login_ok('alpha', 'alpha', check_next='/')
@@ -533,7 +541,7 @@ class TestNoRules(AuthBase):
         eq_(session['user']['team'], 'ग्रामेक्स')
 
         # When selector is a nonexistent attribute, nothing changes
-        self.login_ok('gamma', 'gamma', check_next='/')
+        self.login_ok('γ', 'gamma', check_next='/')
         session = self.session.get(server.base_url + '/auth/session').json()
         eq_(session['user']['gender'], 'male')
         eq_(session['user']['empty'], '')
