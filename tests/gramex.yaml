@@ -2034,8 +2034,7 @@ url:
           gender: male
           empty: ''
       rules:
-        url: $YAMLPATH/rules.xlsx
-        sheet_name: rules
+        url: $YAMLPATH/rules.csv
 
   auth/no-rules:
     pattern: /auth/norules
