@@ -44,6 +44,10 @@ cache:
   # We could test more disk caches, but they're slow
 
 url:
+  invalid-nohandler:
+    pattern: /nohandler
+  invalid-nopattern:
+    handler: NonExistent
   invalid-pattern:
     pattern: invalid\gpattern
     handler: FileHandler
