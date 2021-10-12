@@ -8,7 +8,7 @@ from gramex.config import variables
 from gramex.http import BAD_REQUEST, INTERNAL_SERVER_ERROR
 
 _info = {}
-
+default_character = {"name":"aryan","emotion":"angry","pose":"handsinpocket"}
 
 class ComicHandler(BaseHandler):
     @coroutine
@@ -17,7 +17,11 @@ class ComicHandler(BaseHandler):
             _info['node'] = Node(port=9967, cwd=os.path.join(variables['GRAMEXAPPS'], 'ui'))
         node = _info['node']
         # Take the last argument, i.e. ?name=dee&name=ava => {name: ava}
-        args = {key: vals[-1] for key, vals in self.args.items()}
+
+        if len(self.args.keys()) != 0:
+            args = {key: vals[-1] for key, vals in self.args.items()}
+        else:
+            args = default_character
         # Fetch the results via Comicgen
         result = yield node.js(code='return require("comicgen")(require("fs"))(args)', args=args)
         # If there's no error, set the header and send the result
