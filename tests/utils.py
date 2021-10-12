@@ -18,7 +18,7 @@ from tornado.web import RequestHandler, MissingArgumentError, HTTPError
 from tornado.gen import coroutine
 from tornado.httpclient import AsyncHTTPClient
 from concurrent.futures import ThreadPoolExecutor
-from gramex.cache import Subprocess
+from gramex.cache import Subprocess, CustomJSONEncoder
 from gramex.services import info
 from gramex.services.emailer import SMTPStub
 from gramex.handlers import BaseHandler
@@ -197,7 +197,7 @@ def session(handler):
     var = handler.get_argument('var', None)
     if var is not None:
         handler.session['var'] = var
-    return json.dumps(handler.session, indent=4)
+    return json.dumps(handler.session, indent=4, cls=CustomJSONEncoder)
 
 
 def encrypt(handler, content):

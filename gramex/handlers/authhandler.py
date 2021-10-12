@@ -1,3 +1,4 @@
+from fnmatch import fnmatch
 import io
 import os
 import csv
@@ -32,10 +33,12 @@ class AuthHandler(BaseHandler):
 
     @classmethod
     def setup(cls, prepare=None, action=None, delay=None, session_expiry=None,
-              session_inactive=None, user_key='user', lookup=None, recaptcha=None, **kwargs):
+              session_inactive=None, user_key='user', lookup=None, recaptcha=None,
+              rules=None, **kwargs):
         # Set up default redirection based on ?next=...
         if 'redirect' not in kwargs:
             kwargs['redirect'] = AttrDict([('query', 'next'), ('header', 'Referer')])
+        cls.special_keys += ['rules']
         super(AuthHandler, cls).setup(**kwargs)
 
         # Set up logging for login/logout events
@@ -69,6 +72,9 @@ class AuthHandler(BaseHandler):
                 cls.lookup_id = cls.lookup.pop('id', 'user')
             else:
                 app_log.error('%s: lookup must be a dict, not %s', cls.name, cls.lookup)
+
+        cls.rules = gramex.data.filter(**rules) if rules else gramex.data.pd.DataFrame()
+        cls.rules.fillna(value='', inplace=True)
 
         # Set up prepare
         cls.auth_methods = {}
@@ -162,6 +168,11 @@ class AuthHandler(BaseHandler):
         # If session_inactive: is specified, set expiry date on the session
         if self.session_inactive is not None:
             self.session['_i'] = self.session_inactive * 24 * 60 * 60
+
+        # Apply rules to the user
+        for _, rule in self.rules.iterrows():
+            if fnmatch(user.get(rule['selector'], ''), rule['pattern']):
+                user[rule['field']] = rule['value']
 
         # Run post-login events (e.g. ensure_single_session) specified in config
         for callback in self.actions:
