@@ -73,6 +73,7 @@ body {
     'DecisionTreeRegressor',
     'RandomForestRegressor',
     'MLPRegressor'] %}
+  {% set GRAINSIGHT_MODELS = ['TopCause'] %}
   {% set tcol = handler.get_opt('target_col', False) %}
   {% set CLASSIFICTION_METRICS = {
     'Accuracy': 'accuracy',
@@ -121,7 +122,7 @@ body {
             <div class="row pb-3 pt-3">
               <div class="col">
                 <label for="cats">Categorical Columns:</label>
-                <select id="cats" class="selectpicker form-control" multiple name="cats">
+                <select id="cats" class="selectpicker form-control tcdisable" multiple name="cats">
                   {% for col in columns %}
                   {% set selected = "selected" if col in handler.get_opt('cats', []) else "" %}
                   <option value="{{ col }}" {{ selected }}>{{ col }}</option>
@@ -130,7 +131,7 @@ body {
               </div>
               <div class="col">
                 <label for="nums">Numerical Columns:</label>
-                <select id="nums" class="selectpicker form-control" multiple name="nums">
+                <select id="nums" class="selectpicker form-control tcdisable" multiple name="nums">
                   {% for col in columns %}
                   {% set selected = "selected" if col in handler.get_opt('nums', []) else "" %}
                   <option value="{{ col }}" {{ selected }}>{{ col }}</option>
@@ -141,12 +142,12 @@ body {
             <div class="row pb-3 pt-3">
               <div class="col">
                 <label for="transform">Transform:</label>
-                <input class="form-control" id="transform" name="data.transform" type="text"
+                <input class="form-control tcdisable" id="transform" name="data.transform" type="text"
                                                   value="{{ handler.get_opt('transform', '') }}">
               </div>
               <div class="col">
                 <label for="metric">Choose a Metric:</label>
-                <select id="metric" class="form-control selectpicker" name="metric">
+                <select id="metric" class="form-control selectpicker tcdisable" name="metric">
                 {% if handler.get_opt('class') in CLASSIFICTION_MODELS %}
                   {% for i, (mname, metric) in enumerate(CLASSIFICTION_METRICS.items()) %}
                   {% set selected = "selected" if metric == "accuracy" else "" %}
@@ -181,6 +182,12 @@ body {
                     <option value="{{ model }}" {{ selected }}>{{ model }}</option>
                     {% end %}
                   </optgroup>
+                  <optgroup label="GrainSight">
+                    {% for model in GRAINSIGHT_MODELS %}
+                    {% set selected = "selected" if model == handler.get_opt('class') else "" %}
+                    <option value="{{ model }}" {{ selected }}>{{ model }}</option>
+                    {% end %}
+                  </optgroup>
                 </select>
               </div>
             </div>
@@ -190,6 +197,7 @@ body {
           </div>
         </form>
         <div class="text-center divider">Results</div>
+        <div id="tcresult" class="container"></div>
         <div class="container" id="resultcnt">
           <div class="row">
             <div class="col">
@@ -234,7 +242,7 @@ body {
         <h3 class="text-center">Make Predictions</h3>
         <div class="row py-2">
           <div class="col">
-            <button type="submit" form="predictform" class="btn btn-primary">Predict</button>
+            <button type="submit" form="predictform" class="btn btn-primary tcdisable">Predict</button>
           </div>
           <div class="col">
             <h4 id="predResult"></h4>
@@ -246,7 +254,7 @@ body {
               <% COLS.forEach(function(col) { %>
               <div class="form-group row">
                 <label for="<%= col.name %>" class="col-md-6"><%= col.name %></label>
-                <input class="form-control col-md-6" type="<%= col.type %>" name="<%= col.name %>" value="<%=row[col.name]%>">
+                <input class="form-control col-md-6 tcdisable" type="<%= col.type %>" name="<%= col.name %>" value="<%=row[col.name]%>">
               </div>
               <% }) %>
             </div>
@@ -276,34 +284,64 @@ body {
       if (s > 90) { color = '#00f700' }
       return color
     }
-    const get_score = function() {
-      let url = g1.url.parse(window.location)
-      $.ajax({
-        url: url + '?_action=score&_metric=' + encodeURIComponent($('#metric').val()),
-        method: 'POST',
-        success: function(resp) {
-          let score = Number.parseFloat(JSON.parse(resp).score * 100).toPrecision(4)
-          score = Number.parseFloat(score)
-          $('.donut-segment').attr('stroke-dasharray', `${score} ${100 - score}`)
-          $('tspan').html(`${score}%`)
-          $('.donut-segment').attr('stroke', get_score_color(score))
-          $('#resultcnt').show()
-          let inputcols = fh_meta.meta.columns.filter((col) => !$('#exclude').val().concat($('#targetcol').val()).includes(col.name))
-          $('#predicttabtemplate').template({COLS: inputcols.map(e => ({name: e.name, type: e.type})), row: fh_meta.formdata[0]})
-        }
-      })
+    const get_score = function(resp) {
+      if ($('#modelchoice').val() != 'TopCause') {
+        $('#tcresult').hide()
+        let url = g1.url.parse(window.location)
+        $.ajax({
+          url: url + '?_action=score&_metric=' + encodeURIComponent($('#metric').val()),
+          method: 'POST',
+          success: function(resp) {
+            let score = (resp.score * 100).toPrecision(4)
+            score = Number.parseFloat(score)
+            $('.donut-segment').attr('stroke-dasharray', `${score} ${100 - score}`)
+            $('tspan').html(`${score}%`)
+            $('.donut-segment').attr('stroke', get_score_color(score))
+            $('#resultcnt').show()
+            let inputcols = fh_meta.meta.columns.filter((col) => !$('#exclude').val().concat($('#targetcol').val()).includes(col.name))
+            $('#predicttabtemplate')
+              .on('template', modifyModelChoice)
+              .template({COLS: inputcols.map(e => ({name: e.name, type: e.type})), row: fh_meta.formdata[0]})
+          }
+        })
+      } else {
+        $('#tcresult').show()
+        $('#tcresult').formhandler({data: resp.result_})
+      }
     }
     const post_train = function (target_col) {
       $('#resultcnt').hide()
       let url = g1.url.parse(window.location)
       url.hash = ''
+      url = url + '?_action=retrain&target_col=' + encodeURIComponent(target_col)
+      if ($('#modelchoice').val() != 'TopCause') {
+        url = url + '&_metric=' + encodeURIComponent($('#metric').val())
+      }
       $.ajax({
-        url: url + '?_action=retrain&target_col=' + encodeURIComponent(target_col) + '&_metric=' + encodeURIComponent($('#metric').val()),
+        url: url,
         method: 'POST',
         success: get_score
       })
     }
+    const modifyModelChoice = function() {
+      $('.tcdisable').attr('disabled', $('#modelchoice').val() == 'TopCause')
+      $('.selectpicker').selectpicker('refresh')
+      if ($('#modelchoice').val() == 'TopCause') {
+        let url = g1.url.parse(window.location)
+        url.hash = ''
+        $.getJSON(url + '?_params').done(function(result) {
+          $('#tcresult').show()
+          $('#tcresult').formhandler({data: result.attrs.result_})
+        })
+      } else {
+        $('#tcresult').hide()
+      }
+    }
     $(document).ready(function() {
+      // If TopCause is selected, enable only some inputs
+      $('#modelchoice').change(modifyModelChoice)
+      $('#modelchoice').trigger('change')
+
       $('#downloadbtn').hide()
       $('#resultcnt').hide()
       let url = g1.url.parse(window.location)
@@ -312,7 +350,9 @@ body {
       $('.formhandler').on('load', function(obj) {
         fh_meta = obj
         let inputcols = obj.meta.columns.filter((col) => !$('#exclude').val().concat($('#targetcol').val()).includes(col.name))
-        $('#predicttabtemplate').template({COLS: inputcols.map(e => ({name: e.name, type: e.type})), row: obj.formdata[0]})
+        $('#predicttabtemplate')
+          .on('template', modifyModelChoice)
+          .template({COLS: inputcols.map(e => ({name: e.name, type: e.type})), row: obj.formdata[0]})
       }).formhandler({
         pageSize: 5,
         export: false

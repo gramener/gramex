@@ -11,6 +11,7 @@ from gramex import data as gdata
 from gramex.handlers import FormHandler
 from gramex.http import NOT_FOUND, BAD_REQUEST
 from gramex.install import _mkdir, safe_rmtree
+from gramex.ml import TopCause
 from gramex import cache
 import joblib
 import pandas as pd
@@ -224,12 +225,19 @@ class MLHandler(FormHandler):
 
     @classmethod
     def _assemble_pipeline(cls, data, force=False, mclass='', params=None):
+        if params is None:
+            params = {}
         # If the model exists, return it
         if op.exists(cls.model_path) and not force:
             return joblib.load(cls.model_path)
 
+        model_kwargs = cls.config_store.load('model', {})
+        if not mclass:
+            mclass = model_kwargs.get('class', False)
+
+        # No pipeline for TopCause
         # If preprocessing is not enabled, return the root model
-        if not cls.get_opt('pipeline', True):
+        if mclass == 'TopCause' or not cls.get_opt('pipeline', True):
             return search_modelclass(mclass)(**params)
 
         # Else assemble the preprocessing pipeline
@@ -252,8 +260,6 @@ class MLHandler(FormHandler):
             [('ohe', OneHotEncoder(sparse=False), categoricals),
              ('scaler', StandardScaler(), numericals)]
         )
-        model_kwargs = cls.config_store.load('model', {})
-        mclass = model_kwargs.get('class', False)
         if mclass:
             model = search_modelclass(mclass)(**model_kwargs.get('params', {}))
             cls.set_opt('params', model.get_params())
@@ -318,8 +324,9 @@ class MLHandler(FormHandler):
             }
             try:
                 model = cache.open(self.model_path, joblib.load)
+                estimator = model[-1] if hasattr(model, '__getitem__') else model
                 attrs = {
-                    k: v for k, v in vars(model[-1]).items() if re.search(r'[^_]+_$', k)
+                    k: v for k, v in vars(estimator).items() if re.search(r'[^_]+_$', k)
                 }
             except FileNotFoundError:
                 attrs = {}
@@ -367,17 +374,19 @@ class MLHandler(FormHandler):
         data = self._filtercols(data)
         data = self._filterrows(data)
         self.model = self._assemble_pipeline(data, force=True)
-        if not isinstance(self.model[-1], TransformerMixin):
+        estimator = self.model[-1] if hasattr(self.model, '__getitem__') else self.model
+        if not isinstance(estimator, (TransformerMixin, TopCause)):
             target = data[target_col]
             train = data[[c for c in data if c != target_col]]
             _fit(self.model, train, target, self.model_path)
             result = {'score': self.model.score(train, target)}
         else:
-            _fit(self.model, data, path=self.model_path)
+            target = data[target_col] if isinstance(estimator, TopCause) else None
+            _fit(self.model, data, target, self.model_path)
             # Note: Fitted sklearn estimators store their parameters
             # in attributes whose names end in an underscore. E.g. in the case of PCA,
             # attributes are named `explained_variance_`. The `_train` action returns them.
-            result = {k: v for k, v in vars(self.model[-1]).items() if re.search(r'[^_]+_$', k)}
+            result = {k: v for k, v in vars(estimator).items() if re.search(r'[^_]+_$', k)}
         return result
 
     def _retrain(self):
