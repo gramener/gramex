@@ -97,6 +97,22 @@ class AdminFormHandler(gramex.handlers.FormHandler):
         raise HTTPError(INTERNAL_SERVER_ERROR, reason=self.reason)
 
 
+class AuthRulesFormHandler(gramex.handlers.FormHandler):
+    @classmethod
+    def setup(cls, **kwargs):
+        try:
+            cls.authhandler, cls.auth_conf, data_conf = get_auth_conf(
+                kwargs.get('admin_kwargs', {}))
+        except ValueError as e:
+            super(gramex.handlers.FormHandler, cls).setup(**kwargs)
+            app_log.warning('%s: %s', cls.name, e.args[0])
+            cls.reason = e.args[0]
+            cls.get = cls.post = cls.put = cls.delete = cls.send_response
+            return
+        if 'rules' in cls.auth_conf.kwargs:
+            super(AuthRulesFormHandler, cls).setup(**cls.auth_conf.kwargs['rules'])
+
+
 def evaluate(handler, code):
     """Evaluates Python code in a WebSocketHandler, like a REPL"""
     retval = None

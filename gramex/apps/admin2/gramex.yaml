@@ -64,6 +64,13 @@ url:
       admin_kwargs: $ADMIN_KWARGS
       auth: $ADMIN_AUTH
 
+  apps/admin2/auth-rules-$*:
+    pattern: /$YAMLURL/auth-rules
+    handler: gramexadmin.AuthRulesFormHandler
+    kwargs:
+      admin_kwargs: $ADMIN_KWARGS
+      auth: $ADMIN_AUTH
+
   app/admin2/schedule-$*:
     pattern: /$YAMLURL/schedule-data
     handler: FunctionHandler

@@ -97,41 +97,16 @@
               <i class="fa fa-spinner fa-spin fa-3x text-center d-block"></i>
             </div>
           </div>
+          {% if auth_conf.kwargs.get('rules', False) %}
           <div class="col">
-            <div id="usermanage">
-              <h3>Modify User Attributes</h3>
-              <br>
-              <form id="moduser" enctype="multipart/form-data">
-                <template id="moduser-tmpl">
-                  <div class="form-group row">
-                    <label for="attrfilter" class="col-sm-2 col-form-label">Filter:</label>
-                    <select id="attrfilter" name="user-attr" class="form-control col-sm-4">
-                      <% usercols.forEach(function(a) { %>
-                      <option value="<%= a %>"><%= a %></option>
-                      <% }) %>
-                    </select>
-                  </div>
-                  <div class="form-group row">
-                    <label for="attrpattern" class="col-sm-2 col-form-label">By:</label>
-                    <input type="text" id="attrpattern" name="pattern" class="form-control col-sm-4">
-                  </div>
-                  <div class="form-group row">
-                    <label for="attrchange" class="col-sm-2 col-form-label">Change:</label>
-                    <select id="attrchange" name="change" class="form-control col-sm-4">
-                      <% usercols.forEach(function(a) { %>
-                      <option value="<%= a %>"><%= a %></option>
-                      <% }) %>
-                    </select>
-                  </div>
-                  <div class="form-group row">
-                    <label for="attrto" class="col-sm-2 col-form-label">To:</label>
-                    <input type="text" id="attrto" name="to" class="form-control col-sm-4">
-                  </div>
-                </template>
-                <button id='modbtn' type="submit" class="btn btn-primary mb-2" disabled>Ok</button>
-              </form>
+            <div class="row"><h3>Modify User Attributes</h3></div>
+            <div class="row">
+              <div class="auth-rules" data-src="auth-rules">
+                <i class="fa fa-spinner fa-spin fa-3x text-center d-block"></i>
+              </div>
             </div>
           </div>
+          {% end %}
         </div>
       {% else %}
         <div class="alert alert-danger">
@@ -152,75 +127,28 @@
         var user_key = (kwargs.user || {}).arg || 'user'
         var user_column = (kwargs.user || {}).column || 'user'
         var password_column = (kwargs.password || {}).column || 'password'
-        var currdata = []
-        const render_fh = function() {
-          $('.users')
-            .on('load', function(obj) {
-              currdata = obj.formdata
-              let filters = _.pickBy(
-                g1.url.parse(g1.url.parse(window.location.href).hash).searchKey,
-                (val, key) => key.endsWith('~')
-              )
-              $('#moduser-tmpl').template({
-                usercols: _.map(obj.meta.columns, 'name'),
-              })
-              if (Object.keys(filters).length) {
-                let col = Object.keys(filters)[0]
-                $('#attrfilter').val(col.replace(/~$/, ''))
-                $('#attrpattern').val(filters[col])
-              }
-              $('#attrpattern').change(function() {
-                if ($(this).val()) {
-                  $('#modbtn').prop('disabled', false)
-                } else {
-                  $('#modbtn').prop('disabled', true)
-                }
-                url = g1.url.parse(window.location.href)
-                url.hash = '?' + $('#attrfilter').val() + '~=' + $(this).val()
-                window.location = url.toString()
-              })
-            })
-            .formhandler({
-            edit: true,
-            add: true,
-            columns: [
-              { name: '*' },
-              {
-                name: password_column,
-                format: function(obj) { return '*'.repeat(obj.value.length) },
-                editable: {input: 'password'}
-              },
-              { name: 'actions', template: $('#action-template').html() }
-            ],
-            actions: [{
-              'reset': function(obj) {
-                var data = {}
-                data[user_key] = obj.row[user_column]
-                return $.ajax(auth_conf.pattern + '?' + forgot_key, {method: 'POST', data: data})
-                  .done(function() { obj.notify('Email sent') })
-              }
-            }]
-          })
-        }
-        $('#moduser').submit(function(e) {
-          e.preventDefault()
-          let to_change = $('#attrchange').val()
-          let newval = $('#attrto').val()
-          opts = {method: 'PUT', url: 'users-data'}
-          currdata.forEach(function(elem, ix) {
-            elem[to_change] = newval
-            opts.data = elem
-            if (ix == currdata.length - 1) {
-              opts['success'] = render_fh
-            } else {
-              opts['success'] = console.log
+        $('.users').formhandler({
+          edit: true,
+          add: true,
+          columns: [
+            { name: '*' },
+            {
+              name: password_column,
+              format: function(obj) { return '*'.repeat(obj.value.length) },
+              editable: {input: 'password'}
+            },
+            { name: 'actions', template: $('#action-template').html() }
+          ],
+          actions: [{
+            'reset': function(obj) {
+              var data = {}
+              data[user_key] = obj.row[user_column]
+              return $.ajax(auth_conf.pattern + '?' + forgot_key, {method: 'POST', data: data})
+                .done(function() { obj.notify('Email sent') })
             }
-            $.ajax(opts)
-          })
+          }]
         })
-        render_fh()
-
-
+      $('.auth-rules').formhandler({edit: true, add: true})
       </script>
 
     {% elif current_tab == 'schedule' %}
