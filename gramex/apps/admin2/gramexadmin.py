@@ -45,32 +45,11 @@ def get_auth_conf(kwargs):
         user_column = auth_kwargs.get('user', {}).get('column', 'user')
         data_conf = gramex.handlers.DBAuth.clear_special_keys(
             auth_kwargs.copy(), 'rules', 'user', 'password', 'forgot',
-            'signup', 'template', 'delay')
+            'signup', 'template', 'delay', 'email_column')
         data_conf['id'] = user_column
         return authhandler, auth_conf, data_conf
     else:
         raise ValueError('Missing lookup: in url.%s (authhandler)' % authhandler)
-
-
-@coroutine
-def send_welcome_email(handler):
-    if handler.request.method == 'POST':
-        to = handler.get_arg('email', False)
-        if not to:
-            app_log.warning('No email address found for new user {handler.get_arg("user")}.')
-            return
-        email = handler.auth_conf.kwargs.get('forgot', False)
-        if not email:
-            app_log.warning('No email sender found in config.')
-            return
-        mailer = gramex.service.email[email.email_from]
-        yield gramex.service.threadpool.submit(
-            mailer.mail,
-            to=to, subject='Welcome to your Gramex app!',
-            body=dedent(f'''
-                Hello {handler.get_arg('user')},
-                You have been signed up with password {handler.get_arg('user')}.''')
-        )
 
 
 class AdminFormHandler(gramex.handlers.FormHandler):
@@ -79,17 +58,52 @@ class AdminFormHandler(gramex.handlers.FormHandler):
     It lookup up "auth-handler" in the gramex config. If it has a "lookup:" or is a "DBAuth",
     creates a FormHandler using that url: and other parameters.
     '''
+
+    @coroutine
+    def send_welcome_email(self):
+        if self.request.method != 'POST':
+            return
+        email = self.auth_conf.kwargs.get('forgot', False)
+        if not email:
+            app_log.warning(f'No email config found in {self.name}.')
+            return
+        email_col = email.get('email_column', 'email')
+        to = self.get_arg(email_col, False)
+        if not to:
+            app_log.warning('No email address found for new user {handler.get_arg("user")}.')
+            return
+
+        mailer = gramex.service.email.get(email.email_from, False)
+        if not mailer:
+            app_log.warning(f'No email service named {email.email_from}.')
+            return
+        user = {k: v[0] for k, v in self.args.items()}
+        subject = email.get('email_subject', 'Welcome to your Gramex app!')
+        body = email.get(
+            'email_text',
+            dedent('Hello {user},\nYou have been signed up with password {password}.')
+        )
+        yield gramex.service.threadpool.submit(
+            mailer.mail,
+            to=to, subject=subject.format(**user),
+            body=body.format(**user)
+        )
+
     @classmethod
     def setup(cls, **kwargs):
         # admin_kwargs.authhandler is a url: key that holds an AuthHandler. Get its kwargs
         try:
             admin_kwargs = kwargs.get('admin_kwargs', {})
+            if not admin_kwargs:
+                raise ValueError(f'admin_kwargs not found in {cls.name}.')
             if kwargs.get('rules', False):
                 # Get the rules for formhandler
                 authhandler = admin_kwargs.get('authhandler', False)
                 if not authhandler:
-                    raise ValueError('Missing authhandler.')
-                data_conf = gramex.conf['url'].get(authhandler, {}).kwargs.get('rules', {}).copy()
+                    raise ValueError(f'Missing authhandler in url {cls.name}.')
+                data_conf = gramex.conf['url'].get(
+                    authhandler, {}
+                ).get('kwargs', {}).get('rules', {}).copy()
                 data_conf['id'] = ['selector', 'pattern']
             else:
                 cls.authhandler, cls.auth_conf, data_conf = get_auth_conf(
@@ -103,7 +117,7 @@ class AdminFormHandler(gramex.handlers.FormHandler):
         # Get the FormHandler configuration from lookup:
         cls.conf.kwargs = data_conf
         super(AdminFormHandler, cls).setup(**cls.conf.kwargs)
-        cls._on_finish_methods.append(send_welcome_email)
+        cls._on_finish_methods.append(cls.send_welcome_email)
 
     def send_response(self, *args, **kwargs):
         raise HTTPError(INTERNAL_SERVER_ERROR, reason=self.reason)
