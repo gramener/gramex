@@ -66,8 +66,9 @@ url:
 
   apps/admin2/auth-rules-$*:
     pattern: /$YAMLURL/auth-rules
-    handler: gramexadmin.AuthRulesFormHandler
+    handler: gramexadmin.AdminFormHandler
     kwargs:
+      rules: true
       admin_kwargs: $ADMIN_KWARGS
       auth: $ADMIN_AUTH
 

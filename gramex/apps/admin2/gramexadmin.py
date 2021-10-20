@@ -44,7 +44,8 @@ def get_auth_conf(kwargs):
         # For DBAuth, hoist the user.column into as the id: for the URL
         user_column = auth_kwargs.get('user', {}).get('column', 'user')
         data_conf = gramex.handlers.DBAuth.clear_special_keys(
-            auth_kwargs.copy(), 'user', 'password', 'forgot', 'signup', 'template', 'delay')
+            auth_kwargs.copy(), 'rules', 'user', 'password', 'forgot',
+            'signup', 'template', 'delay')
         data_conf['id'] = user_column
         return authhandler, auth_conf, data_conf
     else:
@@ -56,9 +57,11 @@ def send_welcome_email(handler):
     if handler.request.method == 'POST':
         to = handler.get_arg('email', False)
         if not to:
+            app_log.warning('No email address found for new user {handler.get_arg("user")}.')
             return
         email = handler.auth_conf.kwargs.get('forgot', False)
         if not email:
+            app_log.warning('No email sender found in config.')
             return
         mailer = gramex.service.email[email.email_from]
         yield gramex.service.threadpool.submit(
@@ -80,8 +83,17 @@ class AdminFormHandler(gramex.handlers.FormHandler):
     def setup(cls, **kwargs):
         # admin_kwargs.authhandler is a url: key that holds an AuthHandler. Get its kwargs
         try:
-            cls.authhandler, cls.auth_conf, data_conf = get_auth_conf(
-                kwargs.get('admin_kwargs', {}))
+            admin_kwargs = kwargs.get('admin_kwargs', {})
+            if kwargs.get('rules', False):
+                # Get the rules for formhandler
+                authhandler = admin_kwargs.get('authhandler', False)
+                if not authhandler:
+                    raise ValueError('Missing authhandler.')
+                data_conf = gramex.conf['url'].get(authhandler, {}).kwargs.get('rules', {}).copy()
+                data_conf['id'] = ['selector', 'pattern']
+            else:
+                cls.authhandler, cls.auth_conf, data_conf = get_auth_conf(
+                    kwargs.get('admin_kwargs', {}))
         except ValueError as e:
             super(gramex.handlers.FormHandler, cls).setup(**kwargs)
             app_log.warning('%s: %s', cls.name, e.args[0])
@@ -95,22 +107,6 @@ class AdminFormHandler(gramex.handlers.FormHandler):
 
     def send_response(self, *args, **kwargs):
         raise HTTPError(INTERNAL_SERVER_ERROR, reason=self.reason)
-
-
-class AuthRulesFormHandler(gramex.handlers.FormHandler):
-    @classmethod
-    def setup(cls, **kwargs):
-        try:
-            cls.authhandler, cls.auth_conf, data_conf = get_auth_conf(
-                kwargs.get('admin_kwargs', {}))
-        except ValueError as e:
-            super(gramex.handlers.FormHandler, cls).setup(**kwargs)
-            app_log.warning('%s: %s', cls.name, e.args[0])
-            cls.reason = e.args[0]
-            cls.get = cls.post = cls.put = cls.delete = cls.send_response
-            return
-        if 'rules' in cls.auth_conf.kwargs:
-            super(AuthRulesFormHandler, cls).setup(**cls.auth_conf.kwargs['rules'])
 
 
 def evaluate(handler, code):
