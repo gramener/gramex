@@ -70,7 +70,7 @@ class AdminFormHandler(gramex.handlers.FormHandler):
         email_col = email.get('email_column', 'email')
         to = self.get_arg(email_col, False)
         if not to:
-            app_log.warning('No email address found for new user {handler.get_arg("user")}.')
+            app_log.warning('No email address found for new user {self.get_arg("user")}.')
             return
 
         mailer = gramex.service.email.get(email.email_from, False)
