@@ -5,7 +5,6 @@ import json
 import os
 import re
 import sys
-from textwrap import dedent
 from binascii import b2a_base64
 from cachetools import TTLCache
 from gramex.config import app_log
@@ -78,11 +77,8 @@ class AdminFormHandler(gramex.handlers.FormHandler):
             app_log.warning(f'No email service named {email.email_from}.')
             return
         user = {k: v[0] for k, v in self.args.items()}
-        subject = email.get('email_subject', 'Welcome to your Gramex app!')
-        body = email.get(
-            'email_text',
-            dedent('Hello {user},\nYou have been signed up with password {password}.')
-        )
+        subject = self.signup['email_subject']
+        body = self.signup['email_text']
         yield gramex.service.threadpool.submit(
             mailer.mail,
             to=to, subject=subject.format(**user),
@@ -92,11 +88,15 @@ class AdminFormHandler(gramex.handlers.FormHandler):
     @classmethod
     def setup(cls, **kwargs):
         # admin_kwargs.authhandler is a url: key that holds an AuthHandler. Get its kwargs
+        cls.signup = kwargs.pop('signup', {})
         try:
             admin_kwargs = kwargs.get('admin_kwargs', {})
             if not admin_kwargs:
                 raise ValueError(f'admin_kwargs not found in {cls.name}.')
-            if kwargs.get('rules', False):
+            cls.signup.update(admin_kwargs.pop('signup', {}))
+            cls.authhandler, cls.auth_conf, data_conf = get_auth_conf(
+                kwargs.get('admin_kwargs', {}))
+            if kwargs.get('rules', False) and cls.auth_conf.get('rules', False):
                 # Get the rules for formhandler
                 authhandler = admin_kwargs.get('authhandler', False)
                 if not authhandler:
@@ -105,9 +105,6 @@ class AdminFormHandler(gramex.handlers.FormHandler):
                     authhandler, {}
                 ).get('kwargs', {}).get('rules', {}).copy()
                 data_conf['id'] = ['selector', 'pattern']
-            else:
-                cls.authhandler, cls.auth_conf, data_conf = get_auth_conf(
-                    kwargs.get('admin_kwargs', {}))
         except ValueError as e:
             super(gramex.handlers.FormHandler, cls).setup(**kwargs)
             app_log.warning('%s: %s', cls.name, e.args[0])

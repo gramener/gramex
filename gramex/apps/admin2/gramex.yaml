@@ -63,6 +63,11 @@ url:
     kwargs:
       admin_kwargs: $ADMIN_KWARGS
       auth: $ADMIN_AUTH
+      signup:
+        email_subject: Welcome to your Gramex app!
+        email_text: |
+          Hello {user},
+          You have been signed up with password {password}.
 
   apps/admin2/auth-rules-$*:
     pattern: /$YAMLURL/auth-rules
