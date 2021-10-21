@@ -589,6 +589,7 @@ class BaseMixin(object):
                 raise HTTPError(BAD_REQUEST, reason=reason)
             self._session_store.dump('otp:' + otp, None)
             self.session['user'] = otp_data['user']
+        # ToDo: apikey = headers.get('X-Gramex-OTP') or self.get_argument('gramex-otp', None)
 
     def set_last_visited(self):
         '''
