@@ -266,9 +266,11 @@ def init(force_reload=False, **kwargs):
         appconfig.log.root.level = logging.DEBUG
 
     # Set up a watch on config files (including imported files)
-    if appconfig.app.get('watch', True):
+    app_watch = appconfig.app.get('watch', True)
+    if app_watch:
         from services import watcher
-        watcher.watch('gramex-reconfig', paths=config_files, on_modified=lambda event: init())
+        watcher.watch('gramex-reconfig', paths=config_files if app_watch is True else app_watch,
+                      on_modified=lambda event: init())
 
     # Run all valid services. (The "+" before config_chain merges the chain)
     # Services may return callbacks to be run at the end
