@@ -447,7 +447,17 @@ def insert(url, meta={}, args=None, engine=None, table=None, ext=None, id=None, 
         # If user passes ?col= with empty value, replace with NULL. If the column is an INT/FLOAT,
         # type conversion int('') / float('') will fail.
         rows.replace('', None, inplace=True)
-        pd.io.sql.to_sql(rows, table, engine, if_exists='append', index=False, **kwargs)
+        
+        # kwargs might contain additonal unexpected values, pass expected arguments explicitly
+        pd.io.sql.to_sql(
+            rows, table, engine, if_exists='append', index=False,
+            schema = kwargs.get('schema', None),
+            index_label = kwargs.get('index_label', None),
+            chunksize = kwargs.get('chunksize', None),
+            dtype = kwargs.get('dtype', None),
+            method = kwargs.get('method', None)
+        )
+        
         return len(rows)
     else:
         raise ValueError('engine: %s invalid. Can be sqlalchemy|file|dataframe' % engine)
