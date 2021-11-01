@@ -96,13 +96,17 @@ class AdminFormHandler(gramex.handlers.FormHandler):
             cls.signup.update(admin_kwargs.pop('signup', {}))
             cls.authhandler, cls.auth_conf, data_conf = get_auth_conf(
                 kwargs.get('admin_kwargs', {}))
-            if kwargs.get('rules', False) and cls.auth_conf.get('rules', False):
+            if kwargs.get('rules', False) and cls.auth_conf.kwargs.get('rules', False):
                 # Get the rules for formhandler
                 authhandler = admin_kwargs.get('authhandler', False)
                 if not authhandler:
                     raise ValueError(f'Missing authhandler in url {cls.name}.')
+                # Find the authhandler
+                for url in gramex.conf['url']:
+                    if url.endswith(authhandler):
+                        break
                 data_conf = gramex.conf['url'].get(
-                    authhandler, {}
+                    url, {}
                 ).get('kwargs', {}).get('rules', {}).copy()
                 data_conf['id'] = ['selector', 'pattern']
         except ValueError as e:
