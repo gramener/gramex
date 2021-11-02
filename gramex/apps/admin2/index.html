@@ -93,17 +93,15 @@
       {% if authhandler %}
         <div class="row">
           <div class="col">
-            <div class="users" data-src="users-data">
+            <div class="users table-responsive" data-src="users-data">
               <i class="fa fa-spinner fa-spin fa-3x text-center d-block"></i>
             </div>
           </div>
           {% if auth_conf.kwargs.get('rules', False) %}
           <div class="col">
-            <div class="row"><h3>Modify User Attributes</h3></div>
-            <div class="row">
-              <div class="auth-rules" data-src="auth-rules">
-                <i class="fa fa-spinner fa-spin fa-3x text-center d-block"></i>
-              </div>
+            <h3>Modify User Attributes</h3>
+            <div class="auth-rules table-responsive" data-src="auth-rules">
+              <i class="fa fa-spinner fa-spin fa-3x text-center d-block"></i>
             </div>
           </div>
           {% end %}

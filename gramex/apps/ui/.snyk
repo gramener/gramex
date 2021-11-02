@@ -59,6 +59,16 @@ ignore:
         reason: No fix available. Await @vue/cli upgrade
         expires: 2021-11-30T00:00:00.000Z
         created: 2021-10-01T00:00:00.000Z
+  SNYK-JS-MERGE-1040469:
+    - '*':
+        reason: No fix available. Await @vue/cli upgrade
+        expires: 2021-11-30T00:00:00.000Z
+        created: 2021-10-01T00:00:00.000Z
+  SNYK-JS-MERGE-1042987:
+    - '*':
+        reason: No fix available. Await @vue/cli upgrade
+        expires: 2021-11-30T00:00:00.000Z
+        created: 2021-10-01T00:00:00.000Z
 
 
   # We need D3 v4 for old projects. Just retain this forever -- but newer projects won't use this
