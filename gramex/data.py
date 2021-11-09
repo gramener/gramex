@@ -1392,44 +1392,66 @@ _mongodb_op_map = {
 }
 
 
-def _filter_mongodb_col(col, op, vals, meta_cols, object_key=None):
-    import bson
+def _filter_mongodb_col(col, op, vals, results, object_keys=[]):
+    from dateutil.parser import parse
+
+    if not results:
+        return
 
     if op in ['', '!']:
-        convert = int if (meta_cols[col].dtype == pd.np.int64) else \
-            float if (meta_cols[col].dtype == pd.np.float64) else \
-            bson.objectid.ObjectId if (col == object_key) else \
-            meta_cols[col].dtype.type
+        convert = type(results[0][col])
+
+        if convert == datetime:
+            convert = parse
+
+        if convert == bool:
+            for index, val in enumerate(vals):
+                vals[index] = 0 if val in ['0', 'false', 'False'] else 1
 
         return {col: {_mongodb_op_map[op]: [convert(val) for val in vals]}}
+    elif op in ['>', '>~', '<', '<~']:
+        convert = type(results[0][col])
+
+        if convert == datetime:
+            convert = parse
+
+        vals = [convert(val) for val in vals if val]
+
+        if op == '>':
+            return {col: {_mongodb_op_map[op]: max(vals)}}
+        elif op == '<':
+            return {col: {_mongodb_op_map[op]: min(vals)}}
+        elif op == '>~':
+            return {col: {_mongodb_op_map[op]: max(vals)}}
+        elif op == '<~':
+            return {col: {_mongodb_op_map[op]: min(vals)}}
     elif op == '!~':
         return {col: {"$not": {"$regex": '|'.join(vals), "$options": 'i'}}}
     elif op == '~':
         return {col: {"$regex": '|'.join(vals), "$options": 'i'}}
     elif col and op in _mongodb_op_map.keys():
         # TODO: Improve the numpy to Python type
-        convert = int if (meta_cols[col].dtype == pd.np.int64) else meta_cols[col].dtype.type
+        convert = type(results[0][col])
         return {col: {_mongodb_op_map[op]: convert(val)} for val in vals}
 
 
-def _mongodb_query(args, meta_cols, results=None):
+def _mongodb_query(args, meta_cols, results=None, **kwargs):
     # Convert a query like x>=3&x>=4&x>=5 into
     # {"$or": [{x: {$gt: 3}}, {x: {$gt: 4}}, {x: $gt: 5}]}
     # TODO: ?_id= is not working
     import bson
 
-    object_key = None
+    object_keys = []
     if results:
         for k, v in results[0].items():
             if type(v) == bson.objectid.ObjectId:
-                object_key = k
-                break
+                object_keys.append(k)
 
     conditions = []
     for key, vals in args.items():
         col, agg, op = _filter_col(key, meta_cols)
         if col:
-            conditions.append(_filter_mongodb_col(col, op, vals, meta_cols, object_key=object_key))
+            conditions.append(_filter_mongodb_col(col, op, vals, results, object_keys=object_keys))
         # TODO: add meta['ignored']
     return {'$and': conditions} if len(conditions) > 1 else conditions[0] if conditions else {}
 
