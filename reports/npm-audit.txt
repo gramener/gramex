@@ -10,7 +10,43 @@
 
 /d/site/gramener.com/viz/async-gramex/gramex/apps/pynode
 
+# NOTE: Below npm audit issues are from @vue/cli. A fix is awaited.
+# IMPACT: https://gramener.com/gramex/guide/filehandler/#vue
 /d/site/gramener.com/viz/async-gramex/gramex/apps/ui
+review	set-value	high	>=4.0.1	Prototype Pollution in set-value	https://github.com/advisories/GHSA-4jqc-8m5r-9rpr	@vue/cli>globby>fast-glob>micromatch>snapdragon>base>cache-base>set-value
+review	set-value	high	>=4.0.1	Prototype Pollution in set-value	https://github.com/advisories/GHSA-4jqc-8m5r-9rpr	@vue/cli>globby>fast-glob>micromatch>braces>snapdragon>base>cache-base>set-value
+review	set-value	high	>=4.0.1	Prototype Pollution in set-value	https://github.com/advisories/GHSA-4jqc-8m5r-9rpr	@vue/cli>@vue/cli-ui>globby>fast-glob>micromatch>braces>snapdragon>base>cache-base>set-value
+review	set-value	high	>=4.0.1	Prototype Pollution in set-value	https://github.com/advisories/GHSA-4jqc-8m5r-9rpr	@vue/cli-service-global>@vue/cli-service>webpack-dev-server>chokidar>anymatch>micromatch>braces>snapdragon>base>cache-base>set-value
+review	set-value	high	>=4.0.1	Prototype Pollution in set-value	https://github.com/advisories/GHSA-4jqc-8m5r-9rpr	@vue/cli-service-global>@vue/cli-service>webpack-dev-server>chokidar>anymatch>micromatch>extglob>expand-brackets>snapdragon>base>cache-base>set-value
+review	set-value	high	>=4.0.1	Prototype Pollution in set-value	https://github.com/advisories/GHSA-4jqc-8m5r-9rpr	@vue/cli-service-global>@vue/cli-plugin-babel>webpack>watchpack>watchpack-chokidar2>chokidar>anymatch>micromatch>braces>snapdragon>base>cache-base>set-value
+review	set-value	high	>=4.0.1	Prototype Pollution in set-value	https://github.com/advisories/GHSA-4jqc-8m5r-9rpr	@vue/cli-service-global>@vue/cli-plugin-babel>webpack>watchpack>watchpack-chokidar2>chokidar>anymatch>micromatch>extglob>expand-brackets>snapdragon>base>cache-base>set-value
+review	set-value	high	>=4.0.1	Prototype Pollution in set-value	https://github.com/advisories/GHSA-4jqc-8m5r-9rpr	@vue/cli-service-global>@vue/cli-plugin-babel>webpack>watchpack>watchpack-chokidar2>chokidar>anymatch>micromatch>extglob>expand-brackets>snapdragon>base>cache-base>union-value>set-value
+review	ansi-html	high	No patch available	Uncontrolled Resource Consumption in ansi-html	https://github.com/advisories/GHSA-whgm-jr23-g3j9	@vue/cli-service-global>@vue/cli-service>webpack-dev-server>ansi-html
+review	glob-parent	high	>=5.1.2	Regular expression denial of service	https://github.com/advisories/GHSA-ww39-953v-wcq6	@vue/cli>globby>fast-glob>glob-parent
+review	glob-parent	high	>=5.1.2	Regular expression denial of service	https://github.com/advisories/GHSA-ww39-953v-wcq6	@vue/cli>@vue/cli-ui>globby>fast-glob>glob-parent
+review	glob-parent	high	>=5.1.2	Regular expression denial of service	https://github.com/advisories/GHSA-ww39-953v-wcq6	@vue/cli-service-global>@vue/cli-plugin-babel>webpack>watchpack>watchpack-chokidar2>chokidar>glob-parent
+review	merge	high	>=2.1.1	Prototype Pollution in merge	https://github.com/advisories/GHSA-7wpw-2hjm-89gp	@vue/cli>@vue/cli-ui>watch>exec-sh>merge
+update	ansi-regex	moderate	npm update ansi-regex --depth 9	 Inefficient Regular Expression Complexity in chalk/ansi-regex	https://github.com/advisories/GHSA-93q8-gq69-wqmw	@vue/cli>strip-ansi>ansi-regex	N
+update	ansi-regex	moderate	npm update ansi-regex --depth 9	 Inefficient Regular Expression Complexity in chalk/ansi-regex	https://github.com/advisories/GHSA-93q8-gq69-wqmw	@vue/cli>@vue/cli-shared-utils>strip-ansi>ansi-regex	N
+update	ansi-regex	moderate	npm update ansi-regex --depth 9	 Inefficient Regular Expression Complexity in chalk/ansi-regex	https://github.com/advisories/GHSA-93q8-gq69-wqmw	@vue/cli>@vue/cli-ui>@vue/cli-shared-utils>strip-ansi>ansi-regex	N
+update	ansi-regex	moderate	npm update ansi-regex --depth 9	 Inefficient Regular Expression Complexity in chalk/ansi-regex	https://github.com/advisories/GHSA-93q8-gq69-wqmw	@vue/cli-service-global>@vue/cli-service>@vue/cli-plugin-router>@vue/cli-shared-utils>strip-ansi>ansi-regex	N
+update	ansi-regex	moderate	npm update ansi-regex --depth 9	 Inefficient Regular Expression Complexity in chalk/ansi-regex	https://github.com/advisories/GHSA-93q8-gq69-wqmw	@vue/cli>vue-codemod>yargs>cliui>string-width>strip-ansi>ansi-regex	N
+update	ansi-regex	moderate	npm update ansi-regex --depth 9	 Inefficient Regular Expression Complexity in chalk/ansi-regex	https://github.com/advisories/GHSA-93q8-gq69-wqmw	@vue/cli-service-global>@vue/cli-service>cli-highlight>yargs>cliui>string-width>strip-ansi>ansi-regex	N
+update	ansi-regex	moderate	npm update ansi-regex --depth 9	 Inefficient Regular Expression Complexity in chalk/ansi-regex	https://github.com/advisories/GHSA-93q8-gq69-wqmw	@vue/cli-service-global>@vue/cli-service>cli-highlight>yargs>cliui>wrap-ansi>string-width>strip-ansi>ansi-regex	N
+review	ansi-regex	moderate	>=5.0.1	 Inefficient Regular Expression Complexity in chalk/ansi-regex	https://github.com/advisories/GHSA-93q8-gq69-wqmw	@vue/cli>@vue/cli-shared-utils>ora>strip-ansi>ansi-regex
+review	ansi-regex	moderate	>=5.0.1	 Inefficient Regular Expression Complexity in chalk/ansi-regex	https://github.com/advisories/GHSA-93q8-gq69-wqmw	@vue/cli>@vue/cli-ui>@vue/cli-shared-utils>ora>strip-ansi>ansi-regex
+review	ansi-regex	moderate	>=5.0.1	 Inefficient Regular Expression Complexity in chalk/ansi-regex	https://github.com/advisories/GHSA-93q8-gq69-wqmw	@vue/cli-service-global>@vue/cli-service>@vue/cli-plugin-router>@vue/cli-shared-utils>ora>strip-ansi>ansi-regex
+review	ansi-regex	moderate	>=5.0.1	 Inefficient Regular Expression Complexity in chalk/ansi-regex	https://github.com/advisories/GHSA-93q8-gq69-wqmw	@vue/cli-service-global>@vue/cli-service>@soda/friendly-errors-webpack-plugin>string-width>strip-ansi>ansi-regex
+review	ansi-regex	moderate	>=5.0.1	 Inefficient Regular Expression Complexity in chalk/ansi-regex	https://github.com/advisories/GHSA-93q8-gq69-wqmw	@vue/cli-service-global>@vue/cli-service>@soda/friendly-errors-webpack-plugin>strip-ansi>ansi-regex
+review	ansi-regex	moderate	>=5.0.1	 Inefficient Regular Expression Complexity in chalk/ansi-regex	https://github.com/advisories/GHSA-93q8-gq69-wqmw	@vue/cli-service-global>@vue/cli-service>webpack-dev-server>yargs>string-width>strip-ansi>ansi-regex
+review	ansi-regex	moderate	>=5.0.1	 Inefficient Regular Expression Complexity in chalk/ansi-regex	https://github.com/advisories/GHSA-93q8-gq69-wqmw	@vue/cli-service-global>@vue/cli-service>webpack-dev-server>yargs>cliui>string-width>strip-ansi>ansi-regex
+review	ansi-regex	moderate	>=5.0.1	 Inefficient Regular Expression Complexity in chalk/ansi-regex	https://github.com/advisories/GHSA-93q8-gq69-wqmw	@vue/cli-service-global>@vue/cli-service>webpack-dev-server>yargs>cliui>wrap-ansi>string-width>strip-ansi>ansi-regex
+review	ansi-regex	moderate	>=5.0.1	 Inefficient Regular Expression Complexity in chalk/ansi-regex	https://github.com/advisories/GHSA-93q8-gq69-wqmw	@vue/cli-service-global>@vue/cli-service>webpack-dev-server>yargs>cliui>strip-ansi>ansi-regex
+review	ansi-regex	moderate	>=5.0.1	 Inefficient Regular Expression Complexity in chalk/ansi-regex	https://github.com/advisories/GHSA-93q8-gq69-wqmw	@vue/cli-service-global>@vue/cli-service>webpack-dev-server>yargs>cliui>wrap-ansi>strip-ansi>ansi-regex
+review	ansi-regex	moderate	>=5.0.1	 Inefficient Regular Expression Complexity in chalk/ansi-regex	https://github.com/advisories/GHSA-93q8-gq69-wqmw	@vue/cli-service-global>eslint>strip-ansi>ansi-regex
+review	ansi-regex	moderate	>=5.0.1	 Inefficient Regular Expression Complexity in chalk/ansi-regex	https://github.com/advisories/GHSA-93q8-gq69-wqmw	@vue/cli-service-global>eslint>inquirer>string-width>strip-ansi>ansi-regex
+review	ansi-regex	moderate	>=5.0.1	 Inefficient Regular Expression Complexity in chalk/ansi-regex	https://github.com/advisories/GHSA-93q8-gq69-wqmw	@vue/cli-service-global>eslint>inquirer>strip-ansi>ansi-regex
+review	nth-check	moderate	>=2.0.1	Inefficient Regular Expression Complexity in nth-check	https://github.com/advisories/GHSA-rp65-9cf3-cjxr	@vue/cli-service-global>@vue/cli-service>cssnano>cssnano-preset-default>postcss-svgo>svgo>css-select>nth-check
+review	nth-check	moderate	>=2.0.1	Inefficient Regular Expression Complexity in nth-check	https://github.com/advisories/GHSA-rp65-9cf3-cjxr	@vue/cli-service-global>@vue/cli-service>@intervolga/optimize-cssnano-plugin>cssnano>cssnano-preset-default>postcss-svgo>svgo>css-select>nth-check
 
 /d/site/gramener.com/viz/async-gramex/gramex/apps/uifactory
-

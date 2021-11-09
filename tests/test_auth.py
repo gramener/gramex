@@ -520,10 +520,11 @@ class TestRulesFile(TestRules):
     def test_default(self):
         super(TestRulesFile, self).test_default()
         upass = {'γ': 'gamma'}
+        expires_duration = 3.14
         for user in 'alpha beta γ'.split():
             self.login_ok(user, upass.get(user, user), check_next='/')
             session = self.session.get(server.base_url + '/auth/session').json()
-            eq_(session['user']['cookie_expires'], 3.14)
+            eq_(session['user']['cookie_expires'], expires_duration)
             eq_(session['user']['expiry'], '2050-12-31T00:00:00+05:30')
 
 

@@ -43,7 +43,8 @@ def get_auth_conf(kwargs):
         # For DBAuth, hoist the user.column into as the id: for the URL
         user_column = auth_kwargs.get('user', {}).get('column', 'user')
         data_conf = gramex.handlers.DBAuth.clear_special_keys(
-            auth_kwargs.copy(), 'user', 'password', 'forgot', 'signup', 'template', 'delay')
+            auth_kwargs.copy(), 'rules', 'user', 'password', 'forgot',
+            'signup', 'template', 'delay', 'email_column')
         data_conf['id'] = user_column
         return authhandler, auth_conf, data_conf
     else:
@@ -56,11 +57,59 @@ class AdminFormHandler(gramex.handlers.FormHandler):
     It lookup up "auth-handler" in the gramex config. If it has a "lookup:" or is a "DBAuth",
     creates a FormHandler using that url: and other parameters.
     '''
+
+    @coroutine
+    def send_welcome_email(self):
+        if self.request.method != 'POST':
+            return
+        email = self.auth_conf.kwargs.get('forgot', False)
+        if not email:
+            app_log.warning(f'No email config found in {self.name}.')
+            return
+        email_col = email.get('email_column', 'email')
+        to = self.get_arg(email_col, False)
+        if not to:
+            app_log.warning('No email address found for new user {self.get_arg("user")}.')
+            return
+
+        mailer = gramex.service.email.get(email.email_from, False)
+        if not mailer:
+            app_log.warning(f'No email service named {email.email_from}.')
+            return
+        user = {k: v[0] for k, v in self.args.items()}
+        subject = self.signup['email_subject']
+        body = self.signup['email_text']
+        yield gramex.service.threadpool.submit(
+            mailer.mail,
+            to=to, subject=subject.format(**user),
+            body=body.format(**user)
+        )
+
     @classmethod
     def setup(cls, **kwargs):
         # admin_kwargs.authhandler is a url: key that holds an AuthHandler. Get its kwargs
+        cls.signup = kwargs.pop('signup', {})
         try:
-            authhandler, auth_conf, data_conf = get_auth_conf(kwargs.get('admin_kwargs', {}))
+            admin_kwargs = kwargs.get('admin_kwargs', {})
+            if not admin_kwargs:
+                raise ValueError(f'admin_kwargs not found in {cls.name}.')
+            cls.signup.update(admin_kwargs.pop('signup', {}))
+            cls.authhandler, cls.auth_conf, data_conf = get_auth_conf(
+                kwargs.get('admin_kwargs', {}))
+            # When this class is set up for rules, and the authhandler has rules...
+            if kwargs.get('rules', False) and cls.auth_conf.kwargs.get('rules', False):
+                # Get the rules for formhandler
+                authhandler = admin_kwargs.get('authhandler', False)
+                if not authhandler:
+                    raise ValueError(f'Missing authhandler in url {cls.name}.')
+                # Find the authhandler -- even if it's namespace: prefixed
+                for url in gramex.conf['url']:
+                    if url == authhandler or url.endswith(f':{authhandler}'):
+                        break
+                data_conf = gramex.conf['url'].get(
+                    url, {}
+                ).get('kwargs', {}).get('rules', {}).copy()
+                data_conf['id'] = ['selector', 'pattern']
         except ValueError as e:
             super(gramex.handlers.FormHandler, cls).setup(**kwargs)
             app_log.warning('%s: %s', cls.name, e.args[0])
@@ -70,6 +119,7 @@ class AdminFormHandler(gramex.handlers.FormHandler):
         # Get the FormHandler configuration from lookup:
         cls.conf.kwargs = data_conf
         super(AdminFormHandler, cls).setup(**cls.conf.kwargs)
+        cls._on_finish_methods.append(cls.send_welcome_email)
 
     def send_response(self, *args, **kwargs):
         raise HTTPError(INTERNAL_SERVER_ERROR, reason=self.reason)
