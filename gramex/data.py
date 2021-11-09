@@ -7,6 +7,7 @@ import os
 import re
 import time
 import json
+import copy
 import sqlalchemy as sa
 import pandas as pd
 import gramex.cache
@@ -1381,9 +1382,16 @@ _mongodb_op_map = {
 }
 
 
-def _filter_mongodb_col(col, op, vals, meta_cols):
+def _filter_mongodb_col(col, op, vals, meta_cols, object_key=None):
+    import bson
+
     if op in ['', '!']:
-        return {col: {_mongodb_op_map[op]: vals}}
+        convert = int if (meta_cols[col].dtype == pd.np.int64) else \
+            float if (meta_cols[col].dtype == pd.np.float64) else \
+            bson.objectid.ObjectId if (col == object_key) else \
+            meta_cols[col].dtype.type
+
+        return {col: {_mongodb_op_map[op]: [convert(val) for val in vals]}}
     elif op == '!~':
         return {col: {"$not": {"$regex": '|'.join(vals), "$options": 'i'}}}
     elif op == '~':
@@ -1394,15 +1402,24 @@ def _filter_mongodb_col(col, op, vals, meta_cols):
         return {col: {_mongodb_op_map[op]: convert(val)} for val in vals}
 
 
-def _mongodb_query(args, meta_cols):
+def _mongodb_query(args, meta_cols, results=None):
     # Convert a query like x>=3&x>=4&x>=5 into
     # {"$or": [{x: {$gt: 3}}, {x: {$gt: 4}}, {x: $gt: 5}]}
     # TODO: ?_id= is not working
+    import bson
+
+    object_key = None
+    if results:
+        for k, v in results[0].items():
+            if type(v) == bson.objectid.ObjectId:
+                object_key = k
+                break
+
     conditions = []
     for key, vals in args.items():
         col, agg, op = _filter_col(key, meta_cols)
         if col:
-            conditions.append(_filter_mongodb_col(col, op, vals, meta_cols))
+            conditions.append(_filter_mongodb_col(col, op, vals, meta_cols, object_key=object_key))
         # TODO: add meta['ignored']
     return {'$and': conditions} if len(conditions) > 1 else conditions[0] if conditions else {}
 
@@ -1460,9 +1477,13 @@ def _mongodb_json(obj):
 def _filter_mongodb(url, controls, args, database=None, collection=None, query=None, **kwargs):
     '''TODO: Document function and usage'''
     table = _mongodb_collection(url, database, collection, **kwargs)
-    if query is None:
-        meta_cols = pd.DataFrame(list(table.find().limit(100)))
-        query = _mongodb_query(args, meta_cols)
+
+    results = table.find().limit(100)
+    meta_cols = pd.DataFrame(list(copy.deepcopy(results)))
+    if query is not None:
+        query = dict(query)
+    else:
+        query = _mongodb_query(args, meta_cols, results=results)
     cursor = _controls_default(table, query=query, controls=controls, meta_cols=meta_cols)
     data = pd.DataFrame(list(cursor))
     # Convert Object IDs into strings to allow JSON conversion
@@ -1471,6 +1492,7 @@ def _filter_mongodb(url, controls, args, database=None, collection=None, query=N
         for col, val in data.iloc[0].iteritems():
             if type(val) in {bson.objectid.ObjectId}:
                 data[col] = data[col].map(str)
+
     return data
 
 
