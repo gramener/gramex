@@ -462,7 +462,7 @@ def text(shape, spec, data):
             # Ensure that all runs have the same color, font, etc as the first run (if any)
             r.font._rPr.attrib.update(run_defaults)
             # Set specified run attributes
-            r.text = run.text
+            r.text = run.text or ''
             for attr, val in run.attrib.items():
                 if attr in run_methods:
                     run_methods[attr](r, val, data)
@@ -688,32 +688,53 @@ def table(shape, spec, data: dict):
                     app_log.warn('pptgen2: No column: %s in table: %s', column, shape.name)
 
 
-def chart_data(shape, spec, data: dict):
+def chart(shape, spec, data: dict):
+    # Ensure that the chart is of a type we support
     if not hasattr(shape, 'chart'):
-        raise ValueError('Cannot set chart-data on shape: %s' % shape.name)
-    chartdata = pd.read_excel(io.BytesIO(shape.chart.part.chart_workbook.xlsx_part.blob),
-                              index_col=0, engine='openpyxl')
-    val = expr(spec, {'chartdata': chartdata, **data})
-    if val is not None:
-        if not isinstance(val, pd.DataFrame):
-            raise ValueError('chart-data: must be a DataFrame, not %s' % val)
-        chart_tag = shape.chart.plots._plotArea.xCharts[0].tag
-        if chart_tag not in conf['chart-type']:
-            raise ValueError('Shape %s: unsupported chart %s' % (shape.name, chart_tag))
+        raise ValueError(f'Cannot run chart: on non-chart shape: {shape.name}')
+    chart_tag = shape.chart.plots._plotArea.xCharts[0].tag
+    if chart_tag not in conf['chart-type']:
+        raise ValueError(f'Unsupported chart type {chart_tag} on shape: {shape.name}')
+
+    # Set the chart data
+    chart_data = expr(spec.get('data', None), data)
+    # If it's specified, it must be a DataFrame
+    if chart_data is not None and not isinstance(chart_data, pd.DataFrame):
+        raise ValueError(f'Chart data {chart_data:r} is not a DataFrame on shape: {shape.name}')
+    # If it's not specified, use the existing data
+    if chart_data is None:
+        chart_data = pd.read_excel(io.BytesIO(shape.chart.part.chart_workbook.xlsx_part.blob),
+                                   index_col=0, engine='openpyxl')
+    else:
         chart_type = conf['chart-type'][chart_tag]
         # Create a new instance of CategoryChartData(), XYChartData() or BubbleChartData()
         new_chart_data = getattr(pptxchartdata, chart_type + 'ChartData')()
-        new_chart_data.categories = val.index
+        new_chart_data.categories = chart_data.index
         if chart_type == 'Category':
-            for name, col in val.iteritems():
+            for name, col in chart_data.iteritems():
                 new_chart_data.add_series(name, col.values)
         # TODO: This messes up the resulting Excel sheet, and is not extensible. Rewrite via lxml
         elif chart_type == 'Xy':
-            for name, col in val.iteritems():
+            for name, col in chart_data.iteritems():
                 series = new_chart_data.add_series(name)
                 for index, v in col.iteritems():
                     series.add_data_point(index, v)
         shape.chart.replace_data(new_chart_data)
+
+    data = dict(**data, chartdata=chart_data)
+    for attrname, method in (
+        ('fill', partial(set_color, 'format.fill')),
+        ('stroke', partial(set_color, 'format.line.fill')),
+        ('text', lambda shape, spec, data: text(shape.data_label, spec, data)),
+    ):
+        val = expr(spec.get(attrname, None), data)
+        if val is not None:
+            for series in shape.chart.series:
+                if series.name in val.columns:
+                    vals = val[series.name].tolist()
+                    for point_index, point in enumerate(series.points):
+                        if point_index < len(vals) and vals[point_index] is not None:
+                            method(point, vals[point_index], data)
 
 
 cmdlist = {
@@ -765,7 +786,8 @@ cmdlist = {
     'underline': partial(set_text, 'underline', False),
     # Others
     'table': table,
-    'chart-data': chart_data,
+    'chart': chart,
+    'chart-data': lambda shape, spec, data: chart(shape, {'data': spec}, data),
     # Custom charts
     # 'sankey': sankey,
     # 'bullet': bullet,
