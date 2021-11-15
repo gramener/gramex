@@ -1542,7 +1542,6 @@ def _influxdb_offset_limit(controls):
 
 
 def _filter_influxdb(url, controls, args, org=None, bucket=None, query=None, **kwargs):
-    args.pop("bucket")
     with _influxdb_client(url, org=org, **kwargs) as db:
         schema = _get_influxdb_schema(db, bucket)
         cols = schema["_fields"] + schema["_tags"] + schema["_measurement"]
