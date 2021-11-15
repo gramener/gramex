@@ -1540,6 +1540,8 @@ def _delete_mongodb(url, controls, args, meta=None, database=None, collection=No
 
 def _update_mongodb(url, controls, args, meta=None, database=None, collection=None, query=None,
                     id=[], **kwargs):
+    from dateutil.parser import parse
+
     table = _mongodb_collection(url, database, collection, **kwargs)
     results = table.find().limit(100)
     query = _mongodb_query(args, id, results=results)
