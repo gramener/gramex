@@ -1531,8 +1531,9 @@ def _filter_mongodb(url, controls, args, database=None, collection=None, query=N
 def _delete_mongodb(url, controls, args, meta=None, database=None, collection=None, query=None,
                     **kwargs):
     table = _mongodb_collection(url, database, collection, **kwargs)
+    results = table.find().limit(100)
     meta_cols = pd.DataFrame(list(table.find().limit(100)))
-    query = _mongodb_query(args, meta_cols)
+    query = _mongodb_query(args, meta_cols, results=results)
     result = table.delete_many(query)
     return result.deleted_count
 
@@ -1540,8 +1541,10 @@ def _delete_mongodb(url, controls, args, meta=None, database=None, collection=No
 def _update_mongodb(url, controls, args, meta=None, database=None, collection=None, query=None,
                     id=[], **kwargs):
     table = _mongodb_collection(url, database, collection, **kwargs)
-    query = _mongodb_query(args, id)
-    values = {key: val[0] for key, val in args.items()}
+    results = table.find().limit(100)
+    query = _mongodb_query(args, id, results=results)
+
+    values = {key: val[0] for key, val in dict(args).items() if key not in id}
     result = table.update_many(query, {'$set': _mongodb_json(values)})
     return result.modified_count
 
