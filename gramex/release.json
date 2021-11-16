@@ -79,7 +79,7 @@
     "tornado==5.1.1":             "REQ: Web server",
     "watchdog>=0.8":              "REQ: Monitor file changes",
     "tzlocal":                    "TODO: Why is this required?",
-    "xlrd":                       "REQ: gramex.data.download()"
+    "xlrd<2":                       "REQ: gramex.data.download()"
   },
 
   "pip#": "Packages that can only be installed via pip, not via conda",
