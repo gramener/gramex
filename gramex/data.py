@@ -1670,6 +1670,29 @@ def _insert_influxdb(url, rows, meta, args, bucket, **kwargs):
     return len(rows)
 
 
+def get_query_from_args(args):
+    query = {}
+
+    for key, value in args.items():
+        query[key] = value[0]
+
+    return query
+
+
+def _filter_servicenow(url, instance, user, password, api_path, args, query=None, **kwargs):
+    import pysnow
+
+    c = pysnow.Client(instance=instance, user=user, password=password)
+    incident = c.resource(api_path=api_path)
+
+    if not query:
+        query = get_query_from_args(args)
+
+    response = incident.get(query=query)
+
+    return pd.DataFrame(response.all())
+
+
 # add test case for inserting nested value ?parent.={child:value}
 #   curl --globoff -I -X POST 'http://127.0.0.1:9988/?x.={"2":3}&y.={"true":true}&Name=abcd'
 # add test case for updating nested value ?parent.child.={key:value}
@@ -1686,4 +1709,7 @@ plugins["influxdb"] = {
     "delete": _delete_influxdb,
     "insert": _insert_influxdb,
     "update": _insert_influxdb,
+}
+plugins["servicenow"] = {
+    "filter": _filter_servicenow
 }
