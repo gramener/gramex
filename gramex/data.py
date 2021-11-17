@@ -1670,25 +1670,75 @@ def _insert_influxdb(url, rows, meta, args, bucket, **kwargs):
     return len(rows)
 
 
-def get_query_from_args(args):
-    query = {}
+def get_query_from_args(args, fields, limit, offset, kwargs):
+    import pysnow
+
+    query = pysnow.QueryBuilder()
 
     for key, value in args.items():
-        query[key] = value[0]
+        for op in operators:
+            if key.endswith(op):
+                key = key[:-len(op)]
+                break
+        else:
+            op = ''
 
-    return query
+        try:
+            query.AND()
+        except pysnow.exceptions.QueryExpressionError:
+            pass
+
+        if op == '':
+            query.field(key).equals(value)
+        elif op == '!':
+            query.field(key).not_equals(value)
+        elif op == '>':
+            query.field(key).greater_than(int(value[0]))
+        elif op == '>~':
+            query.field(key).greater_than_or_equal(int(value[0]))
+        elif op == '<':
+            query.field(key).less_than(int(value[0]))
+        elif op == '<~':
+            query.field(key).less_than_or_equal(int(value[0]))
+        elif op == '!~':
+            query.field(key).not_contains(value[0])
+        elif op == '~':
+            query.field(key).contains(value[0])
+
+    for key, value in kwargs['controls'].items():
+        if key == '_sort':
+            try:
+                query.AND()
+            except pysnow.exceptions.QueryExpressionError:
+                pass
+
+            if value[0].startswith('-'):
+                query.field(value[0][1:]).order_descending()
+            else:
+                query.field(value[0]).order_ascending()
+        elif key == '_limit':
+            limit = int(value[0])
+        elif key == '_offset':
+            offset = int(value[0])
+        elif key == '_c':
+            fields.extend(value)
+
+    return query, fields, limit, offset
 
 
-def _filter_servicenow(url, instance, user, password, api_path, args, query=None, **kwargs):
+def _filter_servicenow(url, instance, user, password, api_path, args, limit=10000,
+                       offset=0, fields=[], query=None, **kwargs):
     import pysnow
 
     c = pysnow.Client(instance=instance, user=user, password=password)
     incident = c.resource(api_path=api_path)
 
     if not query:
-        query = get_query_from_args(args)
+        query, fields, limit, offset = get_query_from_args(args, fields, limit, offset, kwargs)
+        if not len(query._query):
+            query = {}
 
-    response = incident.get(query=query)
+    response = incident.get(query=query, limit=limit, offset=offset, fields=fields)
 
     return pd.DataFrame(response.all())
 
