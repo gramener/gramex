@@ -1395,9 +1395,6 @@ _mongodb_op_map = {
 def _filter_mongodb_col(col, op, vals, results, object_keys=[]):
     from dateutil.parser import parse
 
-    if not results:
-        return
-
     if op in ['', '!']:
         convert = _convert_datatype(results, col)
 
@@ -1429,13 +1426,15 @@ def _filter_mongodb_col(col, op, vals, results, object_keys=[]):
         return {col: {_mongodb_op_map[op]: convert(val)} for val in vals}
 
 
-def _mongodb_query(args, meta_cols, results=None, **kwargs):
+def _mongodb_query(args, table, id=[], **kwargs):
     # Convert a query like x>=3&x>=4&x>=5 into
     # {"$or": [{x: {$gt: 3}}, {x: {$gt: 4}}, {x: $gt: 5}]}
     # TODO: ?_id= is not working
     import bson
 
     object_keys = []
+    results = table.find().limit(1)
+
     if results:
         for k, v in results[0].items():
             if type(v) == bson.objectid.ObjectId:
@@ -1443,9 +1442,15 @@ def _mongodb_query(args, meta_cols, results=None, **kwargs):
 
     conditions = []
     for key, vals in args.items():
-        col, agg, op = _filter_col(key, meta_cols)
+        if len(id) and key not in id:
+            continue
+
+        col_names = [k for k in results[0].keys()]
+        col, agg, op = _filter_col(key, col_names)
         if col:
-            conditions.append(_filter_mongodb_col(col, op, vals, results, object_keys=object_keys))
+            if results:
+                conditions.append(_filter_mongodb_col(col, op, vals, results,
+                                                      object_keys=object_keys))
         # TODO: add meta['ignored']
     return {'$and': conditions} if len(conditions) > 1 else conditions[0] if conditions else {}
 
@@ -1510,16 +1515,16 @@ def _convert_datatype(results, key):
 
     return convert
 
+
 def _filter_mongodb(url, controls, args, database=None, collection=None, query=None, **kwargs):
     '''TODO: Document function and usage'''
     table = _mongodb_collection(url, database, collection, **kwargs)
+    meta_cols = [k for k in table.find().limit(1)[0].keys()]
 
-    results = table.find().limit(100)
-    meta_cols = pd.DataFrame(list(copy.deepcopy(results)))
     if query is not None:
         query = dict(query)
     else:
-        query = _mongodb_query(args, meta_cols, results=results)
+        query = _mongodb_query(args, table)
     cursor = _controls_default(table, query=query, controls=controls, meta_cols=meta_cols)
     data = pd.DataFrame(list(cursor))
     # Convert Object IDs into strings to allow JSON conversion
@@ -1535,9 +1540,7 @@ def _filter_mongodb(url, controls, args, database=None, collection=None, query=N
 def _delete_mongodb(url, controls, args, meta=None, database=None, collection=None, query=None,
                     **kwargs):
     table = _mongodb_collection(url, database, collection, **kwargs)
-    results = table.find().limit(100)
-    meta_cols = pd.DataFrame(list(table.find().limit(100)))
-    query = _mongodb_query(args, meta_cols, results=results)
+    query = _mongodb_query(args, table)
     result = table.delete_many(query)
     return result.deleted_count
 
@@ -1547,8 +1550,11 @@ def _update_mongodb(url, controls, args, meta=None, database=None, collection=No
     from dateutil.parser import parse
 
     table = _mongodb_collection(url, database, collection, **kwargs)
-    results = table.find().limit(100)
-    query = _mongodb_query(args, id, results=results)
+    query = _mongodb_query(args, table, id=id)
+    results = table.find(query).limit(1)
+
+    if not results.count():
+        return 0
 
     values = {key: val[0] for key, val in dict(args).items() if key not in id}
 
