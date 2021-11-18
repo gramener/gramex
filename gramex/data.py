@@ -1399,10 +1399,7 @@ def _filter_mongodb_col(col, op, vals, results, object_keys=[]):
         return
 
     if op in ['', '!']:
-        convert = type(results[0][col])
-
-        if convert == datetime:
-            convert = parse
+        convert = _convert_datatype(results, col)
 
         if convert == bool:
             for index, val in enumerate(vals):
@@ -1410,10 +1407,7 @@ def _filter_mongodb_col(col, op, vals, results, object_keys=[]):
 
         return {col: {_mongodb_op_map[op]: [convert(val) for val in vals]}}
     elif op in ['>', '>~', '<', '<~']:
-        convert = type(results[0][col])
-
-        if convert == datetime:
-            convert = parse
+        convert = _convert_datatype(results, col)
 
         vals = [convert(val) for val in vals if val]
 
@@ -1431,7 +1425,7 @@ def _filter_mongodb_col(col, op, vals, results, object_keys=[]):
         return {col: {"$regex": '|'.join(vals), "$options": 'i'}}
     elif col and op in _mongodb_op_map.keys():
         # TODO: Improve the numpy to Python type
-        convert = type(results[0][col])
+        convert = _convert_datatype(results, col)
         return {col: {_mongodb_op_map[op]: convert(val)} for val in vals}
 
 
@@ -1506,6 +1500,16 @@ def _mongodb_json(obj):
     return result
 
 
+def _convert_datatype(results, key):
+    from dateutil.parser import parse
+
+    convert = type(results[0][key])
+
+    if convert == datetime:
+        convert = parse
+
+    return convert
+
 def _filter_mongodb(url, controls, args, database=None, collection=None, query=None, **kwargs):
     '''TODO: Document function and usage'''
     table = _mongodb_collection(url, database, collection, **kwargs)
@@ -1549,10 +1553,7 @@ def _update_mongodb(url, controls, args, meta=None, database=None, collection=No
     values = {key: val[0] for key, val in dict(args).items() if key not in id}
 
     for key, val in values.items():
-        convert = type(results[0][key])
-
-        if convert == datetime:
-            convert = parse
+        convert = _convert_datatype(results, key)
 
         if convert == bool:
             values[key] = 0 if val in ['0', 'false', 'False'] else 1
