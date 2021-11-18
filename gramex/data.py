@@ -7,7 +7,6 @@ import os
 import re
 import time
 import json
-import copy
 import sqlalchemy as sa
 import pandas as pd
 import gramex.cache
@@ -592,9 +591,19 @@ def _filter_col(col, cols):
     return None, None, None
 
 
+def _convert_datatype_pd(data, col):
+    import numpy as np
+    conv = data[col].dtype.type
+
+    if conv == np.bool_:
+        conv = lambda val: False if val in ['0', 'false', 'False'] else True
+
+    return conv
+
+
 def _filter_frame_col(data, key, col, op, vals, meta):
     # Apply type conversion for values
-    conv = data[col].dtype.type
+    conv = _convert_datatype_pd(data, col)
     vals = tuple(conv(val) for val in vals if val)
     if op not in {'', '!'} and len(vals) == 0:
         meta['ignored'].append((key, vals))
@@ -1397,15 +1406,9 @@ def _filter_mongodb_col(col, op, vals, results, object_keys=[]):
 
     if op in ['', '!']:
         convert = _convert_datatype(results, col)
-
-        if convert == bool:
-            for index, val in enumerate(vals):
-                vals[index] = 0 if val in ['0', 'false', 'False'] else 1
-
         return {col: {_mongodb_op_map[op]: [convert(val) for val in vals]}}
     elif op in ['>', '>~', '<', '<~']:
         convert = _convert_datatype(results, col)
-
         vals = [convert(val) for val in vals if val]
 
         if op == '>':
@@ -1444,13 +1447,11 @@ def _mongodb_query(args, table, id=[], **kwargs):
     for key, vals in args.items():
         if len(id) and key not in id:
             continue
-
         col_names = [k for k in results[0].keys()]
         col, agg, op = _filter_col(key, col_names)
-        if col:
-            if results:
-                conditions.append(_filter_mongodb_col(col, op, vals, results,
-                                                      object_keys=object_keys))
+        if col and results:
+            conditions.append(_filter_mongodb_col(col, op, vals, results,
+                                                  object_keys=object_keys))
         # TODO: add meta['ignored']
     return {'$and': conditions} if len(conditions) > 1 else conditions[0] if conditions else {}
 
@@ -1507,11 +1508,12 @@ def _mongodb_json(obj):
 
 def _convert_datatype(results, key):
     from dateutil.parser import parse
-
     convert = type(results[0][key])
 
     if convert == datetime:
         convert = parse
+    elif convert == bool:
+        convert = lambda val: False if val in ['0', 'false', 'False'] else True
 
     return convert
 
@@ -1560,10 +1562,6 @@ def _update_mongodb(url, controls, args, meta=None, database=None, collection=No
 
     for key, val in values.items():
         convert = _convert_datatype(results, key)
-
-        if convert == bool:
-            values[key] = 0 if val in ['0', 'false', 'False'] else 1
-
         values[key] = convert(values[key])
 
     result = table.update_many(query, {'$set': _mongodb_json(values)})
