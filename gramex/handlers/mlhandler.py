@@ -283,7 +283,9 @@ class MLHandler(FormHandler):
                 if data.index.name != index and index in data:
                     data[index] = pd.to_datetime(data[index])
                     data.set_index(index, verify_integrity=True, inplace=True)
-                data.pop(self.get_opt('target_col', None))
+                tcol = self.get_opt('target_col')
+                if tcol in data:
+                    data.pop(tcol)
                 return self.model.predict(start, end, exog=data)
             return self.model.predict(**data.iloc[0].to_dict())
         app_log.critical(type(self.model))
