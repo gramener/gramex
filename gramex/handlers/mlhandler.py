@@ -1,4 +1,4 @@
-from inspect import signature
+from inspect import signature, _empty
 from io import BytesIO
 import json
 import os
@@ -12,6 +12,7 @@ from gramex.handlers import FormHandler
 from gramex.http import NOT_FOUND, BAD_REQUEST
 from gramex.install import _mkdir, safe_rmtree
 from gramex import cache
+from gramex.sm_api import BaseModel
 import joblib
 import pandas as pd
 from sklearn.base import TransformerMixin
@@ -33,7 +34,8 @@ MLCLASS_MODULES = [
     'sklearn.neural_network',
     'sklearn.naive_bayes',
     'sklearn.decomposition',
-    'gramex.ml'
+    'gramex.ml',
+    'gramex.sm_api'
 ]
 TRANSFORMS = {
     'include': [],
@@ -50,10 +52,10 @@ DEFAULT_TEMPLATE = op.join(op.dirname(__file__), '..', 'apps', 'mlhandler', 'tem
 search_modelclass = lambda x: locate(x, MLCLASS_MODULES)  # NOQA: E731
 
 
-def _fit(model, x, y=None, path=None, name=None):
+def _fit(model, x, y=None, path=None, name=None, **kwargs):
     app_log.info('Starting training...')
     try:
-        getattr(model, 'partial_fit', model.fit)(x, y)
+        getattr(model, 'partial_fit', model.fit)(x, y, **kwargs)
         app_log.info('Done training...')
         joblib.dump(model, path)
         app_log.info(f'{name}: Model saved at {path}.')
@@ -248,16 +250,19 @@ class MLHandler(FormHandler):
             else:
                 categoricals.append(c)
 
-        ct = ColumnTransformer(
-            [('ohe', OneHotEncoder(sparse=False), categoricals),
-             ('scaler', StandardScaler(), numericals)]
-        )
         model_kwargs = cls.config_store.load('model', {})
         mclass = model_kwargs.get('class', False)
         if mclass:
             model = search_modelclass(mclass)(**model_kwargs.get('params', {}))
             cls.set_opt('params', model.get_params())
-            return Pipeline([('transform', ct), (model.__class__.__name__, model)])
+            if isinstance(model, BaseModel):
+                cls.model = model
+            else:
+                ct = ColumnTransformer(
+                    [('ohe', OneHotEncoder(sparse=False), categoricals),
+                     ('scaler', StandardScaler(), numericals)]
+                )
+                return Pipeline([('transform', ct), (model.__class__.__name__, model)])
         return cls.model
 
     def _transform(self, data, **kwargs):
@@ -269,6 +274,9 @@ class MLHandler(FormHandler):
         return data
 
     def _predict(self, data=None, score_col=''):
+        if isinstance(self.model, BaseModel):
+            return self.model.predict(**data.iloc[0].to_dict())
+        app_log.critical(type(self.model))
         if data is None:
             data = self._parse_data(False)
         data = self._transform(data, drop_duplicates=False)
@@ -367,7 +375,15 @@ class MLHandler(FormHandler):
         data = self._filtercols(data)
         data = self._filterrows(data)
         self.model = self._assemble_pipeline(data, force=True)
-        if not isinstance(self.model[-1], TransformerMixin):
+        if isinstance(self.model, BaseModel):
+            index = self.get_argument('index_col')
+            data[index] = pd.to_datetime(data[index])
+            data.set_index(index, verify_integrity=True, inplace=True)
+            result = _fit(
+                self.model, None, data, self.model_path, target_col=target_col
+            ).res.summary().as_html()
+            self.set_header('Content-Type', 'text/html')
+        elif not isinstance(self.model[-1], TransformerMixin):
             target = data[target_col]
             train = data[[c for c in data if c != target_col]]
             _fit(self.model, train, target, self.model_path)
@@ -400,11 +416,6 @@ class MLHandler(FormHandler):
         self.write(json.dumps(res, indent=2, cls=CustomJSONEncoder))
         super(MLHandler, self).post(*path_args, **path_kwargs)
 
-    def get_cached_arg(self, argname):
-        val = self.get_arg(argname, self.get_opt(argname))
-        self.set_opt(argname, val)
-        return val
-
     @coroutine
     def put(self, *path_args, **path_kwargs):
         mclass = self.args.pop('class', self.get_opt('class'))
@@ -412,9 +423,14 @@ class MLHandler(FormHandler):
         params = self.get_opt('params', {})
         if mclass:
             # parse the params as the signature dictates
-            for param in signature(search_modelclass(mclass)).parameters & self.args.keys():
-                value = self.args.pop(param)
-                params[param] = value
+            sig_params = signature(search_modelclass(mclass)).parameters
+            for param in sig_params & self.args.keys():
+                val = self.args.pop(param)
+                _sig_p = sig_params[param]
+                annotation = _sig_p.annotation
+                val = annotation(val) if annotation is not _empty else type(_sig_p.default)(val)
+                params[param] = val
+
         # Since model params are changing, remove the model on disk
         self.model = None
         safe_rmtree(self.model_path, gramexdata=False)
