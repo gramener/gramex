@@ -274,11 +274,19 @@ class MLHandler(FormHandler):
         return data
 
     def _predict(self, data=None, score_col=''):
-        if isinstance(self.model, BaseModel):
-            return self.model.predict(**data.iloc[0].to_dict())
-        app_log.critical(type(self.model))
         if data is None:
             data = self._parse_data(False)
+        if isinstance(self.model, BaseModel):
+            if not self.model.is_univariate:
+                start, end = self.get_argument('start'), self.get_argument('end')
+                index = self.get_argument('index_col')
+                if data.index.name != index and index in data:
+                    data[index] = pd.to_datetime(data[index])
+                    data.set_index(index, verify_integrity=True, inplace=True)
+                data.pop(self.get_opt('target_col', None))
+                return self.model.predict(start, end, exog=data)
+            return self.model.predict(**data.iloc[0].to_dict())
+        app_log.critical(type(self.model))
         data = self._transform(data, drop_duplicates=False)
         self.model = cache.open(self.model_path, joblib.load)
         try:
@@ -377,8 +385,9 @@ class MLHandler(FormHandler):
         self.model = self._assemble_pipeline(data, force=True)
         if isinstance(self.model, BaseModel):
             index = self.get_argument('index_col')
-            data[index] = pd.to_datetime(data[index])
-            data.set_index(index, verify_integrity=True, inplace=True)
+            if data.index.name != index and index in data:
+                data[index] = pd.to_datetime(data[index])
+                data.set_index(index, verify_integrity=True, inplace=True)
             result = _fit(
                 self.model, None, data, self.model_path, target_col=target_col
             ).res.summary().as_html()
