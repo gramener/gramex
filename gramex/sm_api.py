@@ -1,9 +1,10 @@
 import pandas as pd
-from statsmodels import api as sm
 from gramex.config import app_log
+from statsmodels import api as sm
+from sklearn.metrics import mean_absolute_error
 
 
-class BaseModel(object):
+class BaseStatsModel(object):
     mclass = None
 
     def __init__(self, **kwargs):
@@ -18,12 +19,25 @@ class BaseModel(object):
             y = y[target_col]
         return y.squeeze()
 
-    def fit(self, X, y):
-        y.index.freq = self.params.pop('freq', pd.infer_freq(y.index))
-        self.res = self.mclass(y, X, **self.params).fit()
+    def _timestamp_data(self, data, index_col):
+        if data.index.name != index_col:
+            data[index_col] = pd.to_datetime(data[index_col])
+            return data.set_index(index_col, verify_integrity=True)
+        return data
 
-    def predict(self, start, end, **kwargs):
+    def predict(self, data, start, end, index_col, target_col=None, **kwargs):
+        if not self.is_univariate:
+            data = self._timestamp_data(data, index_col)
+            exog = data
+            if target_col in data:
+                exog = data.drop(target_col, axis=1)
+            return self.res.predict(start, end, exog=exog, **kwargs)
         return self.res.predict(start, end, **kwargs)
+
+    def score(self, data, y_pred, score_col):
+        y_true = data[score_col]
+        y_true, y_pred = pd.DataFrame({'y_true': y_true, 'y_pred': y_pred}).dropna().values.T
+        return mean_absolute_error(y_true, y_pred)
 
     def forecast(self, *args):
         method = getattr(self.res, 'forecast', False)
@@ -35,7 +49,7 @@ class BaseModel(object):
         return self.params
 
 
-class AutoReg(BaseModel):
+class AutoReg(BaseStatsModel):
     mclass = sm.tsa.AutoReg
     is_univariate = True
 
@@ -43,13 +57,15 @@ class AutoReg(BaseModel):
         self.params = {'lags': lags, 'missing': missing}
         self.params.update(kwargs)
 
-    def fit(self, X, y, target_col=None):
+    def fit(self, X, y, index_col=None, target_col=None):
         if self.is_univariate:
             y = self._coerce_1d(y, target_col)
+        y = self._timestamp_data(y, index_col)
         y.index.freq = self.params.pop('freq', pd.infer_freq(y.index))
         missing = self.params.pop('missing', 'drop')
-        self.res = self.mclass(y, missing=missing, **self.params).fit()
-        return self.res
+        self.model = self.mclass(y, missing=missing, **self.params)
+        self.res = self.model.fit()
+        return self.res.summary().as_html()
 
 
 class ARIMA(AutoReg):

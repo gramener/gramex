@@ -135,7 +135,8 @@ class TestMLHandler(TestGramex):
                 'pipeline': True,
                 'drop_duplicates': True,
                 'dropna': True,
-                'cats': []
+                'cats': [],
+                'index_col': None
             }
         )
         self.assertDictEqual(

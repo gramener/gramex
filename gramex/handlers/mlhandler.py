@@ -12,7 +12,7 @@ from gramex.handlers import FormHandler
 from gramex.http import NOT_FOUND, BAD_REQUEST
 from gramex.install import _mkdir, safe_rmtree
 from gramex import cache
-from gramex.sm_api import BaseModel
+
 import joblib
 import pandas as pd
 from sklearn.base import TransformerMixin
@@ -45,11 +45,19 @@ TRANSFORMS = {
     'pipeline': True,
     'nums': [],
     'cats': [],
-    'target_col': None
+    'target_col': None,
+    'index_col': None
 }
 ACTIONS = ['predict', 'score', 'append', 'train', 'retrain']
 DEFAULT_TEMPLATE = op.join(op.dirname(__file__), '..', 'apps', 'mlhandler', 'template.html')
-search_modelclass = lambda x: locate(x, MLCLASS_MODULES)  # NOQA: E731
+is_statsmodel = lambda x: x.__module__ == 'gramex.sm_api'  # NOQA: E731
+
+
+def search_modelclass(mclass):
+    _class = locate(mclass, MLCLASS_MODULES)
+    if _class is None:
+        raise ImportError(f'{mclass} not found.')
+    return _class
 
 
 def _fit(model, x, y=None, path=None, name=None, **kwargs):
@@ -80,6 +88,7 @@ class MLHandler(FormHandler):
 
         cls.template = kwargs.pop('template', DEFAULT_TEMPLATE)
         super(MLHandler, cls).setup(**kwargs)
+        index_col = None
         try:
             if 'transform' in data:
                 data['transform'] = build_transform(
@@ -89,6 +98,8 @@ class MLHandler(FormHandler):
                 cls._built_transform = staticmethod(data['transform'])
             else:
                 cls._built_transform = staticmethod(lambda x: x)
+            index_col = data.get('index_col')
+            cls.set_opt('index_col', index_col)
             data = gdata.filter(**data)
             cls.store_data(data)
         except TypeError:
@@ -125,9 +136,11 @@ class MLHandler(FormHandler):
             else:
                 target = data[target_col]
                 train = data.drop([target_col], axis=1)
+            _fit_kwargs = {'index_col': index_col} if index_col else {}
             gramex.service.threadpool.submit(
-                _fit, cls.model, train, target, cls.model_path, cls.name)
-        cls.config_store.flush()
+                _fit, cls.model, train, target, cls.model_path, cls.name,
+                **_fit_kwargs
+            )
 
     @classmethod
     def load_data(cls, default=pd.DataFrame()):
@@ -255,7 +268,7 @@ class MLHandler(FormHandler):
         if mclass:
             model = search_modelclass(mclass)(**model_kwargs.get('params', {}))
             cls.set_opt('params', model.get_params())
-            if isinstance(model, BaseModel):
+            if is_statsmodel(model):
                 cls.model = model
             else:
                 ct = ColumnTransformer(
@@ -274,28 +287,22 @@ class MLHandler(FormHandler):
         return data
 
     def _predict(self, data=None, score_col=''):
+        metric = self.get_argument('_metric', False)
+        if metric:
+            scorer = get_scorer(metric)
         if data is None:
             data = self._parse_data(False)
-        if isinstance(self.model, BaseModel):
-            if not self.model.is_univariate:
-                start, end = self.get_argument('start'), self.get_argument('end')
-                index = self.get_argument('index_col')
-                if data.index.name != index and index in data:
-                    data[index] = pd.to_datetime(data[index])
-                    data.set_index(index, verify_integrity=True, inplace=True)
-                tcol = self.get_opt('target_col')
-                if tcol in data:
-                    data.pop(tcol)
-                return self.model.predict(start, end, exog=data)
-            return self.model.predict(**data.iloc[0].to_dict())
-        app_log.critical(type(self.model))
-        data = self._transform(data, drop_duplicates=False)
         self.model = cache.open(self.model_path, joblib.load)
+        if is_statsmodel(self.model):
+            p = self.model.predict(data, target_col=self.get_opt('target_col'), **self.args)
+            if score_col:
+                return self.model.score(data, p, score_col)
+            return p
+
+        data = self._transform(data, drop_duplicates=False)
         try:
             target = data.pop(score_col)
-            metric = self.get_argument('_metric', False)
             if metric:
-                scorer = get_scorer(metric)
                 return scorer(self.model, data, target)
             return self.model.score(data, target)
         except KeyError:
@@ -336,9 +343,12 @@ class MLHandler(FormHandler):
             }
             try:
                 model = cache.open(self.model_path, joblib.load)
-                attrs = {
-                    k: v for k, v in vars(model[-1]).items() if re.search(r'[^_]+_$', k)
-                }
+                if is_statsmodel(model):
+                    attrs = model.res.summary().as_html()
+                else:
+                    attrs = {
+                        k: v for k, v in vars(model[-1]).items() if re.search(r'[^_]+_$', k)
+                    }
             except FileNotFoundError:
                 attrs = {}
             params['attrs'] = attrs
@@ -385,14 +395,11 @@ class MLHandler(FormHandler):
         data = self._filtercols(data)
         data = self._filterrows(data)
         self.model = self._assemble_pipeline(data, force=True)
-        if isinstance(self.model, BaseModel):
-            index = self.get_argument('index_col')
-            if data.index.name != index and index in data:
-                data[index] = pd.to_datetime(data[index])
-                data.set_index(index, verify_integrity=True, inplace=True)
+        if is_statsmodel(self.model):
             result = _fit(
-                self.model, None, data, self.model_path, target_col=target_col
-            ).res.summary().as_html()
+                self.model, None, data, self.model_path, target_col=target_col,
+                index_col=self.get_argument('index_col')
+            )
             self.set_header('Content-Type', 'text/html')
         elif not isinstance(self.model[-1], TransformerMixin):
             target = data[target_col]
