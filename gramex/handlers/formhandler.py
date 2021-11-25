@@ -203,7 +203,7 @@ class FormHandler(BaseHandler):
                 raise HTTPError(BAD_REQUEST, reason='%s: need id: kwarg to %s' % (
                     self.name, self.request.method))
             missing_args = [col for col in opt.filter_kwargs['id'] if col not in opt.args]
-            if method != gramex.data.insert and len(missing_args) > 0:
+            if method not in [gramex.data.insert, gramex.data.delete] and len(missing_args) > 0:
                 raise HTTPError(BAD_REQUEST, reason='%s: missing column(s) in URL query: %s' % (
                     self.name, ', '.join(missing_args)))
             # Execute the query. This returns the count of records updated
