@@ -1670,9 +1670,8 @@ def _insert_influxdb(url, rows, meta, args, bucket, **kwargs):
     return len(rows)
 
 
-def get_query_from_args(args, fields, limit, offset, kwargs):
+def get_query_from_args(args, fields, limit, offset, controls, kwargs):
     import pysnow
-
     query = pysnow.QueryBuilder()
 
     for key, value in args.items():
@@ -1705,7 +1704,7 @@ def get_query_from_args(args, fields, limit, offset, kwargs):
         elif op == '~':
             query.field(key).contains(value[0])
 
-    for key, value in kwargs['controls'].items():
+    for key, value in controls.items():
         if key == '_sort':
             try:
                 query.AND()
@@ -1726,15 +1725,14 @@ def get_query_from_args(args, fields, limit, offset, kwargs):
     return query, fields, limit, offset
 
 
-def _filter_servicenow(url, instance, user, password, api_path, args, limit=10000,
+def _filter_servicenow(url, controls, args, instance=None, user=None, password=None, api_path=None, limit=10000,
                        offset=0, fields=[], query=None, **kwargs):
     import pysnow
 
     c = pysnow.Client(instance=instance, user=user, password=password)
     incident = c.resource(api_path=api_path)
-
     if not query:
-        query, fields, limit, offset = get_query_from_args(args, fields, limit, offset, kwargs)
+        query, fields, limit, offset = get_query_from_args(args, fields, limit, offset, controls, kwargs)
         if not len(query._query):
             query = {}
 
