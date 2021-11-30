@@ -230,6 +230,13 @@ def init(force_reload=False, **kwargs):
     except Exception as e:
         app_log.exception(e)
 
+    # Add base path locations where config files are found to sys.path.
+    # This allows variables: to import files from folder where configs are defined.
+    sys.path[:] = _sys_path + [
+        str(path.absolute()) for path in paths.values()
+        if isinstance(path, Path)
+    ]
+
     # Reset variables
     variables.clear()
     variables.update(setup_variables())
