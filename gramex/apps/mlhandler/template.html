@@ -73,6 +73,12 @@ body {
     'DecisionTreeRegressor',
     'RandomForestRegressor',
     'MLPRegressor'] %}
+  {% set FORECASTING_MODELS = [
+    'AutoReg',
+    'ARIMA',
+    'SARIMAX',
+    'ARDL'
+  ] %}
   {% set tcol = handler.get_opt('target_col', False) %}
   {% set CLASSIFICTION_METRICS = {
     'Accuracy': 'accuracy',
@@ -88,6 +94,9 @@ body {
     'Negative Mean Squared Error': 'neg_mean_squared_error',
     'Negative Root Mean Squared Error': 'neg_root_mean_squared_error'
   }%}
+  {% set modeltype = "statsmodels" if handler.model.__module__ == "gramex.sm_api" else "sklearn" %}
+  {% set sm_disabled = "disabled" if modeltype == "statsmodels" else "" %}
+  {% set index_col = handler.get_opt('index_col') %}
   <!-- TODO: Filter bars -->
   <div class="container-fluid py-4 px-3">
     <div class="row pb-3 pt-3">
@@ -110,7 +119,7 @@ body {
               </div>
               <div class="col">
                 <label for="exclude">Columns to Exclude:</label>
-                <select id="exclude" class="selectpicker form-control" multiple name="exclude">
+                <select id="exclude" class="selectpicker form-control" multiple name="exclude" {{ sm_disabled }}>
                   {% for col in columns %}
                   {% set selected = "selected" if col in handler.get_opt('exclude', []) else "" %}
                   <option value="{{ col }}" {{ selected }}>{{ col }}</option>
@@ -121,7 +130,7 @@ body {
             <div class="row pb-3 pt-3">
               <div class="col">
                 <label for="cats">Categorical Columns:</label>
-                <select id="cats" class="selectpicker form-control" multiple name="cats">
+                <select id="cats" class="selectpicker form-control" multiple name="cats" {{ sm_disabled }}>
                   {% for col in columns %}
                   {% set selected = "selected" if col in handler.get_opt('cats', []) else "" %}
                   <option value="{{ col }}" {{ selected }}>{{ col }}</option>
@@ -130,7 +139,7 @@ body {
               </div>
               <div class="col">
                 <label for="nums">Numerical Columns:</label>
-                <select id="nums" class="selectpicker form-control" multiple name="nums">
+                <select id="nums" class="selectpicker form-control" multiple name="nums" {{ sm_disabled }}>
                   {% for col in columns %}
                   {% set selected = "selected" if col in handler.get_opt('nums', []) else "" %}
                   <option value="{{ col }}" {{ selected }}>{{ col }}</option>
@@ -142,11 +151,11 @@ body {
               <div class="col">
                 <label for="transform">Transform:</label>
                 <input class="form-control" id="transform" name="data.transform" type="text"
-                                                  value="{{ handler.get_opt('transform', '') }}">
+                                                  value="{{ handler.get_opt('transform', '') }}" {{ sm_disabled }}>
               </div>
               <div class="col">
                 <label for="metric">Choose a Metric:</label>
-                <select id="metric" class="form-control selectpicker" name="metric">
+                <select id="metric" class="form-control selectpicker" name="metric" {{ sm_disabled }}>
                 {% if handler.get_opt('class') in CLASSIFICTION_MODELS %}
                   {% for i, (mname, metric) in enumerate(CLASSIFICTION_METRICS.items()) %}
                   {% set selected = "selected" if metric == "accuracy" else "" %}
@@ -181,6 +190,12 @@ body {
                     <option value="{{ model }}" {{ selected }}>{{ model }}</option>
                     {% end %}
                   </optgroup>
+                  <optgroup label="Forecasting">
+                    {% for model in FORECASTING_MODELS %}
+                    {% set selected = "selected" if model == handler.get_opt('class') else "" %}
+                    <option value="{{ model }}" {{ selected }}>{{ model }}</option>
+                    {% end %}
+                  </optgroup>
                 </select>
               </div>
             </div>
@@ -191,43 +206,11 @@ body {
         </form>
         <div class="text-center divider">Results</div>
         <div class="container" id="resultcnt">
-          <div class="row">
-            <div class="col">
-              <div class="text-center">
-                  <strong>Your model scored</strong>
-              </div>
-              <div class="text-center">
-                <svg width="20%" height="20%" viewBox="0 0 40 40" class="donut">
-                  <circle class="donut-hole" cx="20" cy="20" r="15.91549430918954" fill="#fff"></circle>
-                  <circle class="donut-ring" cx="20" cy="20" r="15.91549430918954" fill="transparent" stroke-width="3.5"></circle>
-                  <circle class="donut-segment" cx="20" cy="20" r="15.91549430918954" fill="transparent" stroke-width="3.5" stroke-dasharray="10 90" stroke-dashoffset="25"></circle>
-                  <g class="donut-text">
-                    <text y="50%" transform="translate(0, 2)">
-                      <tspan x="50%" text-anchor="middle" class="donut-percent">40%</tspan>
-                    </text>
-                  </g>
-                </svg>
-              </div>
-            </div>
-            <div class="col">
-              <div class="row">
-                <form id="testform" enctype="multipart/form-data">
-                  <div class="row pb-3">
-                    <label for="testurl">
-                      Happy with the result? <a id="downlink">Download the model.</a> Or get predictions:
-                    </label>
-                    <input name="file" type="file" id="testurl" class="form-control">
-                  </div>
-                  <div class="text-right">
-                    <button id="testbtn" class="btn btn-primary" type="submit">Predict</button>
-                  </div>
-                </form>
-              </div>
-              <div class="row">
-                <a class="ml-auto" id="downloadbtn">Download Predictions</a>
-              </div>
-            </div>
-          </div>
+          {% if handler.model.__module__ != 'gramex.sm_api' %}
+            {% include sklearn-results.html %}
+          {% else %}
+            {% include statsmodels-results.html %}
+          {% end %}
         </div>
       </div>
       <div class="col-4">
@@ -263,12 +246,16 @@ body {
   <script src="https://cdn.jsdelivr.net/npm/morphdom@2.6.1/dist/morphdom-umd.min.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/g1@0.17.5/dist/g1.min.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.18/dist/js/bootstrap-select.min.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
 </body>
   <script>
     /* eslint-env browser */
     /* globals $, g1 */
     $.fn.selectpicker.Constructor.BootstrapVersion = '4'
     var fh_meta = null
+    const MODELTYPE = "{% raw modeltype %}"
 
     const get_score_color = function(s) {
       let color = '#ff0000'
@@ -276,29 +263,60 @@ body {
       if (s > 90) { color = '#00f700' }
       return color
     }
+    const render_sm_chart = function(y_pred, df) {
+      let y_true = _.map(df, $('#targetcol').val())
+      let t = _.map(y_pred, "{% raw index_col %}")
+      y_pred = _.map(y_pred, 'predicted_mean')
+      SPEC.data = [{
+        name: "table",
+        values: _.map(_.zip(t, y_true, y_pred), function(el) {
+          return {t: el[0], yt: el[1], yp: el[2]}
+        }),
+        transform: [{
+          type: "formula", as: "time",
+          expr: "datetime(year(datum.t), month(datum.t), date(datum.t), hours(datum.t), minutes(datum.t))"
+        }]
+      }]
+      vegaEmbed('.tschart', SPEC)
+    }
+    const render_score = function(resp) {
+      if (MODELTYPE == "sklearn") {
+        let score = Number.parseFloat(JSON.parse(resp).score * 100).toPrecision(4)
+        score = Number.parseFloat(score)
+        $('.donut-segment').attr('stroke-dasharray', `${score} ${100 - score}`)
+        $('tspan').html(`${score}%`)
+        $('.donut-segment').attr('stroke', get_score_color(score))
+        let inputcols = fh_meta.meta.columns.filter((col) => !$('#exclude').val().concat($('#targetcol').val()).includes(col.name))
+        $('#predicttabtemplate').template({COLS: inputcols.map(e => ({name: e.name, type: e.type})), row: fh_meta.formdata[0]})
+      } else {
+        $('.smscore').text(resp.score.score)
+        $.getJSON('?_params').done(function (r) { $('.smhtmlresults').html(r.attrs) })
+        $.getJSON('?_cache').done(function(df) {
+          render_sm_chart(resp.score.prediction, df)
+        })
+      }
+      $('#resultcnt').show()
+    }
     const get_score = function() {
       let url = g1.url.parse(window.location)
       $.ajax({
         url: url + '?_action=score&_metric=' + encodeURIComponent($('#metric').val()),
         method: 'POST',
-        success: function(resp) {
-          let score = Number.parseFloat(JSON.parse(resp).score * 100).toPrecision(4)
-          score = Number.parseFloat(score)
-          $('.donut-segment').attr('stroke-dasharray', `${score} ${100 - score}`)
-          $('tspan').html(`${score}%`)
-          $('.donut-segment').attr('stroke', get_score_color(score))
-          $('#resultcnt').show()
-          let inputcols = fh_meta.meta.columns.filter((col) => !$('#exclude').val().concat($('#targetcol').val()).includes(col.name))
-          $('#predicttabtemplate').template({COLS: inputcols.map(e => ({name: e.name, type: e.type})), row: fh_meta.formdata[0]})
-        }
+        success: render_score
       })
     }
     const post_train = function (target_col) {
       $('#resultcnt').hide()
       let url = g1.url.parse(window.location)
       url.hash = ''
+      url.update({
+        _action: 'retrain',
+        target_col: encodeURIComponent(target_col),
+        _metric: encodeURIComponent($('#metric').val())
+      })
+      if (MODELTYPE == 'statsmodels') { url.update({index_col: "{% raw index_col %}"}) }
       $.ajax({
-        url: url + '?_action=retrain&target_col=' + encodeURIComponent(target_col) + '&_metric=' + encodeURIComponent($('#metric').val()),
+        url: url.toString(),
         method: 'POST',
         success: get_score
       })
@@ -376,6 +394,107 @@ body {
         })
       })
     })
-  </script>
 
+  var SPEC = {
+    "$schema": "https://vega.github.io/schema/vega/v5.json",
+    "description": "A basic line chart example.",
+    "width": 800,
+    "height": 300,
+    "padding": 5,
+    "scales": [
+        {
+            "name": "x",
+            "type": "utc",
+            "range": "width",
+            "domain": {
+                "data": "table",
+                "field": "time"
+            }
+        },
+        {
+            "name": "y_true",
+            "type": "linear",
+            "range": "height",
+            "nice": true,
+            "zero": true,
+            "domain": {
+                "data": "table",
+                "field": "yt"
+            }
+        },
+        {
+            "name": "y_pred",
+            "type": "linear",
+            "range": "height",
+            "nice": true,
+            "zero": true,
+            "domain": {
+                "data": "table",
+                "field": "yp"
+            }
+        }
+    ],
+    "axes": [
+        {
+            "orient": "bottom",
+            "scale": "x",
+            "grid": true
+        },
+        {
+            "orient": "left",
+            "scale": "y_true",
+            "grid": true
+        }
+    ],
+    "marks": [
+        {
+            "type": "line",
+            "from": {
+                "data": "table"
+            },
+            "point": true,
+            "encode": {
+                "enter": {
+                    "stroke": {"value": "green"},
+                    "strokeOpacity": 0.5,
+                    "x": {
+                        "scale": "x",
+                        "field": "time"
+                    },
+                    "y": {
+                        "scale": "y_true",
+                        "field": "yt"
+                    },
+                    "strokeWidth": {
+                        "value": 2
+                    }
+                }
+            }
+        },{
+            "type": "line",
+            "from": {
+                "data": "table"
+            },
+            "point": true,
+            "encode": {
+                "enter": {
+                    "stroke": {"value": "red"},
+                    "strokeOpacity": 0.5,
+                    "x": {
+                        "scale": "x",
+                        "field": "time"
+                    },
+                    "y": {
+                        "scale": "y_pred",
+                        "field": "yp"
+                    },
+                    "strokeWidth": {
+                        "value": 2
+                    }
+                }
+            }
+        }
+    ]
+}
+  </script>
 </html>

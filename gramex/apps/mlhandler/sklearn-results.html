@@ -1,0 +1,37 @@
+<div class="row">
+  <div class="col">
+    <div class="text-center">
+        <strong>Your model scored</strong>
+    </div>
+    <div class="text-center">
+      <svg width="20%" height="20%" viewBox="0 0 40 40" class="donut">
+        <circle class="donut-hole" cx="20" cy="20" r="15.91549430918954" fill="#fff"></circle>
+        <circle class="donut-ring" cx="20" cy="20" r="15.91549430918954" fill="transparent" stroke-width="3.5"></circle>
+        <circle class="donut-segment" cx="20" cy="20" r="15.91549430918954" fill="transparent" stroke-width="3.5" stroke-dasharray="10 90" stroke-dashoffset="25"></circle>
+        <g class="donut-text">
+          <text y="50%" transform="translate(0, 2)">
+            <tspan x="50%" text-anchor="middle" class="donut-percent">40%</tspan>
+          </text>
+        </g>
+      </svg>
+    </div>
+  </div>
+  <div class="col">
+    <div class="row">
+      <form id="testform" enctype="multipart/form-data">
+        <div class="row pb-3">
+          <label for="testurl">
+            Happy with the result? <a id="downlink">Download the model.</a> Or get predictions:
+          </label>
+          <input name="file" type="file" id="testurl" class="form-control">
+        </div>
+        <div class="text-right">
+          <button id="testbtn" class="btn btn-primary" type="submit">Predict</button>
+        </div>
+      </form>
+    </div>
+    <div class="row">
+      <a class="ml-auto" id="downloadbtn">Download Predictions</a>
+    </div>
+  </div>
+</div>
