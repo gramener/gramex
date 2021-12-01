@@ -63,13 +63,13 @@ def search_modelclass(mclass):
 def _fit(model, x, y=None, path=None, name=None, **kwargs):
     app_log.info('Starting training...')
     try:
-        getattr(model, 'partial_fit', model.fit)(x, y, **kwargs)
+        result = getattr(model, 'partial_fit', model.fit)(x, y, **kwargs)
         app_log.info('Done training...')
         joblib.dump(model, path)
         app_log.info(f'{name}: Model saved at {path}.')
+        return result
     except Exception as exc:
         app_log.exception(exc)
-    return model
 
 
 class MLHandler(FormHandler):
@@ -86,7 +86,9 @@ class MLHandler(FormHandler):
         cls.config_store = cache.JSONStore(op.join(cls.config_dir, 'config.json'), flush=None)
         cls.data_store = op.join(cls.config_dir, 'data.h5')
 
-        cls.template = kwargs.pop('template', DEFAULT_TEMPLATE)
+        template_file = kwargs.pop('template', DEFAULT_TEMPLATE)
+        cls.template_path = op.dirname(template_file)
+        cls.template = op.basename(template_file)
         super(MLHandler, cls).setup(**kwargs)
         index_col = None
         try:
@@ -136,7 +138,9 @@ class MLHandler(FormHandler):
             else:
                 target = data[target_col]
                 train = data.drop([target_col], axis=1)
-            _fit_kwargs = {'index_col': index_col} if index_col else {}
+            _fit_kwargs = {'target_col': target_col}
+            if index_col:
+                _fit_kwargs['index_col'] = index_col
             gramex.service.threadpool.submit(
                 _fit, cls.model, train, target, cls.model_path, cls.name,
                 **_fit_kwargs
@@ -180,6 +184,9 @@ class MLHandler(FormHandler):
             cls.config_store.update['model'] = model
         cls.config_store.changed = True
         cls.config_store.flush()
+
+    def get_template_path(self):
+        return self.template_path
 
     def _parse_multipart_form_data(self):
         dfs = []
@@ -294,9 +301,12 @@ class MLHandler(FormHandler):
             data = self._parse_data(False)
         self.model = cache.open(self.model_path, joblib.load)
         if is_statsmodel(self.model):
-            p = self.model.predict(data, target_col=self.get_opt('target_col'), **self.args)
+            prediction = self.model.predict(
+                data, index_col=self.get_opt('index_col'),
+                target_col=self.get_opt('target_col'), **self.args)
+            p = {'prediction': prediction.reset_index()}
             if score_col:
-                return self.model.score(data, p, score_col)
+                p['score'] = self.model.score(data, prediction, score_col)
             return p
 
         data = self._transform(data, drop_duplicates=False)
@@ -397,10 +407,10 @@ class MLHandler(FormHandler):
         self.model = self._assemble_pipeline(data, force=True)
         if is_statsmodel(self.model):
             result = _fit(
-                self.model, None, data, self.model_path, target_col=target_col,
+                self.model, data, path=self.model_path, target_col=target_col,
                 index_col=self.get_argument('index_col')
             )
-            self.set_header('Content-Type', 'text/html')
+            result = json.dumps(result)
         elif not isinstance(self.model[-1], TransformerMixin):
             target = data[target_col]
             train = data[[c for c in data if c != target_col]]
