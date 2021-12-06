@@ -1725,14 +1725,16 @@ def get_query_from_args(args, fields, limit, offset, controls, kwargs):
     return query, fields, limit, offset
 
 
-def _filter_servicenow(url, controls, args, instance=None, user=None, password=None, api_path=None, limit=10000,
-                       offset=0, fields=[], query=None, **kwargs):
+def _filter_servicenow(url, controls, args, instance=None, user=None, password=None, api_path=None,
+                       limit=10000, offset=0, query=None, **kwargs):
     import pysnow
 
     c = pysnow.Client(instance=instance, user=user, password=password)
     incident = c.resource(api_path=api_path)
+    fields = []
     if not query:
-        query, fields, limit, offset = get_query_from_args(args, fields, limit, offset, controls, kwargs)
+        query, fields, limit, offset = get_query_from_args(args, fields, limit, offset,
+                                                           controls, kwargs)
         if not len(query._query):
             query = {}
 
