@@ -24,6 +24,10 @@ from tornado.gen import coroutine
 from tornado.web import HTTPError
 from sklearn.metrics import get_scorer
 
+
+# TODO: Redesign the template for usecases
+# MLHandler2 - API is more streamlined.
+
 op = os.path
 MLCLASS_MODULES = [
     'sklearn.linear_model',

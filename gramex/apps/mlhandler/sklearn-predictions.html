@@ -1,0 +1,20 @@
+<div class="row py-2">
+  <div class="col">
+    <button type="submit" form="predictform" class="btn btn-primary">Predict</button>
+  </div>
+  <div class="col">
+    <h4 id="predResult"></h4>
+  </div>
+</div>
+<form id="predictform" class="overflow-auto">
+  <template id="predicttabtemplate">
+    <div class="container">
+      <% COLS.forEach(function(col) { %>
+      <div class="form-group row">
+        <label for="<%= col.name %>" class="col-md-6"><%= col.name %></label>
+        <input class="form-control col-md-6" type="<%= col.type %>" name="<%= col.name %>" value="<%=row[col.name]%>">
+      </div>
+      <% }) %>
+    </div>
+  </template>
+</form>

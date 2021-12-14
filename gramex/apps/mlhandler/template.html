@@ -215,26 +215,11 @@ body {
       </div>
       <div class="col-4">
         <h3 class="text-center">Make Predictions</h3>
-        <div class="row py-2">
-          <div class="col">
-            <button type="submit" form="predictform" class="btn btn-primary">Predict</button>
-          </div>
-          <div class="col">
-            <h4 id="predResult"></h4>
-          </div>
-        </div>
-        <form id="predictform" class="overflow-auto">
-          <template id="predicttabtemplate">
-            <div class="container">
-              <% COLS.forEach(function(col) { %>
-              <div class="form-group row">
-                <label for="<%= col.name %>" class="col-md-6"><%= col.name %></label>
-                <input class="form-control col-md-6" type="<%= col.type %>" name="<%= col.name %>" value="<%=row[col.name]%>">
-              </div>
-              <% }) %>
-            </div>
-          </template>
-        </form>
+        {% if handler.model.__module__ != 'gramex.sm_api' %}
+          {% include sklearn-predictions.html %}
+        {% else %}
+          {% include statsmodels-predictions.html %}
+        {% end %}
       </div>
     </div>
   </div><!-- .container-fluid -->
@@ -249,6 +234,7 @@ body {
   <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
   <script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
   <script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
+  <script src="https://unpkg.com/dayjs@1.8.21/dayjs.min.js"></script>
 </body>
   <script>
     /* eslint-env browser */
@@ -266,6 +252,14 @@ body {
     const render_sm_chart = function(y_pred, df) {
       let y_true = _.map(df, $('#targetcol').val())
       let t = _.map(y_pred, "{% raw index_col %}")
+      let tmin = dayjs(t[0])
+      let tmax = dayjs(t[t.length - 1])
+      $('#startForecast').val(tmax.format('YYYY-MM-DDThh:mm:ss'))
+      $('#endForecast').val(tmax.add(tmax - tmin).format('YYYY-MM-DDThh:mm:ss'))
+      $('#forecastSlider').attr('max', tmax.diff(tmin, 'minute'))
+      $('#forecastSlider').attr('min', 1)
+      $('#forecastSlider').val(tmax.diff(tmin, 'minute'))
+      console.log(tmin, tmax)
       y_pred = _.map(y_pred, 'predicted_mean')
       SPEC.data = [{
         name: "table",
@@ -278,6 +272,17 @@ body {
         }]
       }]
       vegaEmbed('.tschart', SPEC)
+      $('#forecastSlider').off('change')
+      $('#forecastSlider').on('change', function(evt) {
+        let cur_minutes = $(this).val()
+        console.log(cur_minutes)
+        $('#endForecast').val(tmax.add(cur_minutes, 'm').format('YYYY-MM-DDThh:mm:ss'))
+      })
+      $('#endForecast').off('change')
+      $('#endForecast').on('change', function(evt) {
+        let cur_minutes = dayjs($(this).val()).diff(tmax, 'minute')
+        $('#forecastSlider').val(cur_minutes)
+      })
     }
     const render_score = function(resp) {
       if (MODELTYPE == "sklearn") {
