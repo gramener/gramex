@@ -37,9 +37,9 @@ class BaseStatsModel(object):
         return self.res.predict(start, end, **kwargs)
 
     def score(self, data, y_pred, score_col):
-        y_true = data[score_col]
+        y_true = data[score_col].values
         y_true, y_pred = (
-            pd.DataFrame({"y_true": y_true, "y_pred": y_pred}).dropna().values.T
+            pd.DataFrame({"y_true": y_true, "y_pred": y_pred.values}).dropna().values.T
         )
         return mean_absolute_error(y_true, y_pred)
 
