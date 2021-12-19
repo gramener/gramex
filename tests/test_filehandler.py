@@ -135,6 +135,10 @@ class TestFileHandler(TestGramex):
         self.check('/dir/indextemplate/subdir/', text='text.txt</a>')
         # Non-existent index templates default to Gramex filehandler.template.html
         self.check('/dir/no-indextemplate/', text='File list by Gramex')
+        # Add non-existent template and check live load
+        tempfiles.index_template = os.path.join(folder, 'nonexistent.template.html')
+        write(tempfiles.index_template, 'newtemplate: $path $body')
+        self.check('/dir/no-indextemplate/', text='newtemplate')
 
     def test_url_normalize(self):
         self.check('/dir/normalize/slash/index.html/', path='dir/index.html')
