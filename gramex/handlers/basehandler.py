@@ -88,9 +88,11 @@ class BaseMixin(object):
     def setup_default_kwargs(cls):
         '''
         Use default config from handlers.<Class>.* and handlers.BaseHandler.
-        Called by gramex.services.url().
+        Called directly by gramex.services.url().
+        NOTE: This updates the kwargs for setup() -- so it must be called BEFORE setup()
+        and can't be merged into setup() or called from setup().
         '''
-        c = cls.conf.setdefault('kwargs', {})
+        c = cls.conf.kwargs
         merge(c, objectpath(conf, 'handlers.' + cls.conf.handler, {}), mode='setdefault')
         merge(c, objectpath(conf, 'handlers.BaseHandler', {}), mode='setdefault')
 

@@ -702,48 +702,51 @@ def url(conf):
             app_log.error('url: %s: no service: or handler: specified', name)
             continue
         app_log.debug('url: %s (%s) %s', name, spec.handler, spec.get('priority', ''))
-        urlspec = AttrDict(spec)
-        handler = locate(spec.handler, modules=['gramex.handlers'])
-        if handler is None:
+        handler_class = locate(str(spec.handler), modules=['gramex.handlers'])
+        if handler_class is None:
             app_log.error('url: %s: ignoring missing handler %s', name, spec.handler)
             continue
 
         # Create a subclass of the handler with additional attributes.
         class_vars = {'name': name, 'conf': spec}
         # If there's a cache section, get the cache method for use by BaseHandler
-        if 'cache' in urlspec:
-            class_vars['cache'] = _cache_generator(urlspec['cache'], name=name)
+        if 'cache' in spec:
+            class_vars['cache'] = _cache_generator(spec['cache'], name=name)
         else:
             class_vars['cache'] = None
-        # PY27 type() requires the class name to be a string, not unicode
-        urlspec.handler = type(str(spec.handler), (handler, ), class_vars)
+        handler = type(spec.handler, (handler_class, ), class_vars)
 
+        # Ensure that there's a kwargs: dict in the spec
+        spec.setdefault('kwargs', AttrDict())
+        if not isinstance(spec.kwargs, dict):
+            app_log.error('url: %s kwargs must be a dict, not %r', name, spec.kwargs)
+            spec.kwargs = AttrDict()
         # If there's a setup method, call it to initialize the class
-        kwargs = urlspec.get('kwargs', {})
-        if hasattr(handler, 'setup'):
+        if hasattr(handler_class, 'setup'):
             try:
-                urlspec.handler.setup_default_kwargs()
-                urlspec.handler.setup(**kwargs)
+                handler.setup_default_kwargs()      # Updates spec.kwargs with base handlers
+                handler.setup(**spec.kwargs)
             except Exception:
-                app_log.exception('url: %s: setup exception in handler %s', name, spec.handler)
+                app_log.exception('url: %s (%s) invalid configuration', name, spec.handler)
                 # Since we can't set up the handler, all requests must report the error instead
                 class_vars['exc_info'] = sys.exc_info()
                 error_handler = locate('SetupFailedHandler', modules=['gramex.handlers'])
-                urlspec.handler = type(str(spec.handler), (error_handler, ), class_vars)
-                urlspec.handler.setup(**kwargs)
+                handler = type(spec.handler, (error_handler, ), class_vars)
+                spec.kwargs = {}
+                handler.setup(**spec.kwargs)
 
         try:
             handler_entry = tornado.web.URLSpec(
                 name=name,
-                pattern=_url_normalize(urlspec.pattern),
-                handler=urlspec.handler,
-                kwargs=kwargs,
+                pattern=_url_normalize(spec.pattern),
+                handler=handler,
+                kwargs=spec.kwargs,
             )
         except re.error:
-            app_log.error('url: %s: pattern: %s is invalid', name, urlspec.pattern)
+            app_log.error('url: %s: pattern: %r is invalid', name, spec.pattern)
             continue
         except Exception:
-            app_log.exception('url: %s: invalid', name)
+            app_log.exception('url: %s: setup failed', name)
             continue
         info.url[name] = _cache[_key] = handler_entry
 
