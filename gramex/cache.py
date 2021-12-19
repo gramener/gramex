@@ -1119,6 +1119,7 @@ class HDF5Store(KeyStore):
 
     def dump(self, key, value):
         key = self._escape(key)
+        # TODO: BUG. Rewrite like JSONStore.dump()
         if self.store.get(key) != value:
             if key in self.store:
                 del self.store[key]
@@ -1190,9 +1191,13 @@ class JSONStore(KeyStore):
     def __init__(self, path, *args, **kwargs):
         super(JSONStore, self).__init__(*args, **kwargs)
         self.path = _create_path(path)
-        self.store = self._read_json()
-        self.changed = False
-        self.update = {}  # key-values added since flush
+        self._init_store(self._read_json())
+
+    def _init_store(self, contents):
+        self.store = contents
+        self._original = json.loads(json.dumps(self.store))     # copy of original contents
+        self.changed = False    # boolean: has the store contents changed?
+        self.update = {}        # all key-values added since flush
 
     def _read_json(self):
         try:
@@ -1202,52 +1207,41 @@ class JSONStore(KeyStore):
             return {}
 
     def _write_json(self, data):
-        json_value = json.dumps(
-            data,
-            ensure_ascii=True,
-            separators=(',', ':'),
-            cls=CustomJSONEncoder)
+        json_value = json.dumps(data, ensure_ascii=True, separators=(',', ':'),
+                                cls=CustomJSONEncoder)
         with io.open(self.path, 'w') as handle:     # noqa: no encoding for json
             handle.write(json_value)
 
     def dump(self, key, value):
         '''Same as store[key] = value'''
         key = self._escape(key)
-        if self.store.get(key) != value:
-            self.store[key] = value
-            self.update[key] = value
+        # Update contents only if the value is different from the original
+        if self._original.get(key) != value:
+            self.store[key] = self.update[key] = value
             self.changed = True
 
-    def flush(self):
+    def flush(self, purge=False):
         super(JSONStore, self).flush()
-        if self.changed:
-            app_log.debug('Flushing %s', self.path)
+        if self.changed or purge:
+            app_log.debug('%s %s', 'Purging' if purge else 'Flushing', self.path)
+            # Don't dump contents. That can overwrite other instances' updates.
+            # Instead: read, apply updates, and save.
             store = self._read_json()
             store.update(self.update)
+            for key in self.purge_keys(store):
+                del store[key]
             self._write_json(store)
-            self.store = store
-            self.update = {}
-            self.changed = False
+            self._init_store(store)
 
     def purge(self):
-        '''
-        Load all keys into self.store. Delete what's required. Save.
-        '''
-        self.flush()
-        changed = False
-        for key in self.purge_keys(self.store):
-            del self.store[key]
-            changed = True
-        if changed:
-            app_log.debug('Purging %s', self.path)
-            self._write_json(self.store)
+        self.flush(purge=True)
 
     def close(self):
         try:
             self.flush()
         # This has happened when the directory was deleted. Log & ignore.
         except OSError:
-            app_log.error('Cannot flush %s', self.path)
+            app_log.exception('Cannot flush %s', self.path)
 
 
 def _create_path(path):
