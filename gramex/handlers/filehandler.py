@@ -1,9 +1,11 @@
+import os
 import re
 import string
 import datetime
 import mimetypes
 import tornado.web
 import tornado.gen
+import gramex.cache
 from pathlib import Path
 from fnmatch import fnmatch
 from tornado.escape import utf8
@@ -17,7 +19,9 @@ from gramex import conf as gramex_conf
 from gramex.http import FORBIDDEN, NOT_FOUND
 
 # Directory indices are served using this template by default
-_default_index_template = Path(__file__).absolute().parent / 'filehandler.template.html'
+_folder = os.path.dirname(os.path.abspath(__file__))
+_default_index_template = os.path.join(_folder, 'filehandler.template.html')
+_tmpl_opener = gramex.cache.opener(string.Template, read=True, encoding='utf-8')
 
 
 def _match(path, pat):
@@ -25,15 +29,6 @@ def _match(path, pat):
     Check if path matches pattern -- case insensitively.
     '''
     return fnmatch(str(path).lower(), '*/' + pat.lower())
-
-
-def read_template(path):
-    if not path.exists():
-        app_log.warning('Missing directory template "%s". Using "%s"' %
-                        (path, _default_index_template))
-        path = _default_index_template
-    with path.open(encoding='utf-8') as handle:
-        return string.Template(handle.read())
 
 
 class FileHandler(BaseHandler):
@@ -142,8 +137,7 @@ class FileHandler(BaseHandler):
         cls.ignore = cls.set(cls.kwargs.ignore)
         cls.allow = cls.set(cls.kwargs.allow)
         cls.default = default
-        cls.index_template = read_template(
-            Path(index_template) if index_template is not None else _default_index_template)
+        cls.index_template = index_template or _default_index_template
         cls.headers = AttrDict(objectpath(gramex_conf, 'handlers.FileHandler.headers', {}))
         cls.headers.update(headers)
         cls.post = cls.put = cls.delete = cls.patch = cls.options = cls.get
@@ -269,7 +263,12 @@ class FileHandler(BaseHandler):
                 except UnicodeDecodeError:
                     app_log.warning("FileHandler can't show unicode file {!r:s}".format(path))
             content.append(u'</ul>')
-            self.content = self.index_template.substitute(path=self.path, body=''.join(content))
+            try:
+                tmpl = gramex.cache.open(self.index_template, _tmpl_opener)
+            except OSError:
+                app_log.exception('%s: index_template: %s failed', self.name, self.index_template)
+                tmpl = gramex.cache.open(_default_index_template, _tmpl_opener)
+            self.content = tmpl.substitute(path=self.path, body=''.join(content))
 
         else:
             modified = self.file.stat().st_mtime
