@@ -27,7 +27,6 @@ import json
 import yaml
 import logging
 import logging.config
-import tornado.ioloop
 from pathlib import Path
 from orderedattrdict import AttrDict
 from gramex.config import ChainConfig, PathConfig, app_log, variables, setup_variables
@@ -299,10 +298,12 @@ def init(force_reload=False, **kwargs):
 
 def shutdown():
     '''Shut down this instance'''
-    ioloop = tornado.ioloop.IOLoop.current()
+    from . import services
+    ioloop = services.info._main_ioloop
     if ioloop_running(ioloop):
         app_log.info('Shutting down Gramex...')
-        ioloop.stop()
+        # Shut down Gramex in a thread-safe way. add_callback is the ONLY thread-safe method
+        ioloop.add_callback(ioloop.stop)
 
 
 def log(*args, **kwargs):

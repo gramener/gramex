@@ -140,7 +140,7 @@ def app(conf):
             port_used_codes = dict(windows=10048, linux=98)
             if e.errno not in port_used_codes.values():
                 raise
-            logging.error('Port %d is busy. Use --listen.port= for a different port',
+            logging.error('Port %d is busy. Use --listen.port=<new-port>. Stopping Gramex',
                           conf.listen.port)
             sys.exit(1)
 

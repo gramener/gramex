@@ -803,13 +803,7 @@ class TimedRotatingCSVHandler(logging.handlers.TimedRotatingFileHandler):
 
 def ioloop_running(loop):
     '''Returns whether the Tornado ioloop is running on not'''
-    # Python 2.7 and Tornado < 5.0 use this
-    if hasattr(loop, '_running'):
-        return loop._running
-    # Python 3 on Tornado >= 5.0 delegates to asyncio
-    if hasattr(loop, 'asyncio_loop'):
-        return loop.asyncio_loop.is_running()
-    raise NotImplementedError('Cannot determine tornado.ioloop is running')
+    return loop.asyncio_loop.is_running()
 
 
 def used_kwargs(method, kwargs, ignore_keywords=False):
