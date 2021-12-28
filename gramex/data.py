@@ -591,19 +591,33 @@ def _filter_col(col, cols):
     return None, None, None
 
 
-def _convert_datatype_pd(data, col):
-    import numpy as np
-    conv = data[col].dtype.type
+def _convert_datatype(data, col):
+    '''
+    Return a type conversion function for column col in data.
 
-    if conv == np.bool_:
-        conv = lambda val: False if val in ['0', 'false', 'False'] else True
+    If data is a DataFrame, it uses the Pandas datatype.
+    If data is an array of records, it uses the first element's type.
 
+    Booleans are converted treating '', '0', 'n', 'no', 'f', 'false' (in any case) as False
+    Datetimes are converted using dateutil parser
+    '''
+    if isinstance(data, pd.DataFrame):
+        conv = data[col].dtype.type
+    else:
+        conv = type(data[0][col]) if len(data) else lambda v: v
+
+    # Convert based on Pandas datatype. But for boolean, convert from string as below
+    if conv in {pd.np.bool_, bool}:
+        conv = lambda v: False if v.lower() in {'', '0', 'n', 'no', 'f', 'false'} else True # noqa
+    elif conv in {pd.np.datetime64, datetime}:
+        from dateutil.parser import parse
+        conv = parse
     return conv
 
 
 def _filter_frame_col(data, key, col, op, vals, meta):
     # Apply type conversion for values
-    conv = _convert_datatype_pd(data, col)
+    conv = _convert_datatype(data, col)
     vals = tuple(conv(val) for val in vals if val)
     if op not in {'', '!'} and len(vals) == 0:
         meta['ignored'].append((key, vals))
@@ -1402,15 +1416,12 @@ _mongodb_op_map = {
 
 
 def _filter_mongodb_col(col, op, vals, results, object_keys=[]):
-    from dateutil.parser import parse
-
-    if op in ['', '!']:
+    if op in {'', '!'}:
         convert = _convert_datatype(results, col)
         return {col: {_mongodb_op_map[op]: [convert(val) for val in vals]}}
-    elif op in ['>', '>~', '<', '<~']:
+    elif op in {'>', '>~', '<', '<~'}:
         convert = _convert_datatype(results, col)
         vals = [convert(val) for val in vals if val]
-
         if op == '>':
             return {col: {_mongodb_op_map[op]: max(vals)}}
         elif op == '<':
@@ -1424,7 +1435,6 @@ def _filter_mongodb_col(col, op, vals, results, object_keys=[]):
     elif op == '~':
         return {col: {"$regex": '|'.join(vals), "$options": 'i'}}
     elif col and op in _mongodb_op_map.keys():
-        # TODO: Improve the numpy to Python type
         convert = _convert_datatype(results, col)
         return {col: {_mongodb_op_map[op]: convert(val)} for val in vals}
 
@@ -1506,18 +1516,6 @@ def _mongodb_json(obj):
     return result
 
 
-def _convert_datatype(results, key):
-    from dateutil.parser import parse
-    convert = type(results[0][key])
-
-    if convert == datetime:
-        convert = parse
-    elif convert == bool:
-        convert = lambda val: False if val in ['0', 'false', 'False'] else True
-
-    return convert
-
-
 def _filter_mongodb(url, controls, args, database=None, collection=None, query=None, **kwargs):
     '''TODO: Document function and usage'''
     table = _mongodb_collection(url, database, collection, **kwargs)
@@ -1549,8 +1547,6 @@ def _delete_mongodb(url, controls, args, meta=None, database=None, collection=No
 
 def _update_mongodb(url, controls, args, meta=None, database=None, collection=None, query=None,
                     id=[], **kwargs):
-    from dateutil.parser import parse
-
     table = _mongodb_collection(url, database, collection, **kwargs)
     query = _mongodb_query(args, table, id=id)
     results = table.find(query).limit(1)
@@ -1558,9 +1554,8 @@ def _update_mongodb(url, controls, args, meta=None, database=None, collection=No
     if not results.count():
         return 0
 
-    values = {key: val[0] for key, val in dict(args).items() if key not in id}
-
-    for key, val in values.items():
+    values = {key: val[-1] for key, val in dict(args).items() if key not in id}
+    for key in values.keys():
         convert = _convert_datatype(results, key)
         values[key] = convert(values[key])
 
