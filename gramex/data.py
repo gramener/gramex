@@ -232,7 +232,8 @@ def filter(url, args={}, meta={}, engine=None, ext=None, columns=None,
     elif engine.startswith('plugin+'):
         plugin = engine.split('+')[1]
         method = plugins[plugin]['filter']
-        data = method(url=url, controls=controls, args=args, query=query, **kwargs)
+        data = method(url=url, controls=controls, args=args, query=query,
+                      columns=columns, **kwargs)
         return _filter_frame(data, meta=meta, controls=controls, args=args)
     elif engine == 'sqlalchemy':
         table = kwargs.pop('table', None)
@@ -1669,10 +1670,21 @@ def _insert_influxdb(url, rows, meta, args, bucket, **kwargs):
     return len(rows)
 
 
-def get_query_from_args(args, fields, limit, offset, controls, kwargs):
+def convert_servicenow_val(key, value, result):
+    from dateutil.parser import parse
+    conv = lambda key, value: str(value) if result['columns'][key] == 'TEXT' else \
+        int(value) if result['columns'][key] == 'INTEGER' else \
+        parse(value) if result['columns'][key] == 'DATETIME' else str(value) # NOQA
+    value = [conv(key, val) for val in value]
+
+    return value
+
+
+def get_query_from_args(args, fields, limit, offset, controls, result, kwargs):
     import pysnow
     query = pysnow.QueryBuilder()
 
+    # Not using _filter_col to extract operator since we don't have all cols from schema
     for key, value in args.items():
         for op in operators:
             if key.endswith(op):
@@ -1680,6 +1692,11 @@ def get_query_from_args(args, fields, limit, offset, controls, kwargs):
                 break
         else:
             op = ''
+
+        if kwargs['columns'] is not None and key in kwargs['columns'].keys():
+            value = convert_servicenow_val(key, value, kwargs)
+        else:
+            value = convert_servicenow_val(key, value, result)
 
         try:
             query.AND()
@@ -1691,19 +1708,21 @@ def get_query_from_args(args, fields, limit, offset, controls, kwargs):
         elif op == '!':
             query.field(key).not_equals(value)
         elif op == '>':
-            query.field(key).greater_than(int(value[0]))
+            query.field(key).greater_than(min(value))
         elif op == '>~':
-            query.field(key).greater_than_or_equal(int(value[0]))
+            query.field(key).greater_than_or_equal(min(value))
         elif op == '<':
-            query.field(key).less_than(int(value[0]))
+            query.field(key).less_than(max(value))
         elif op == '<~':
-            query.field(key).less_than_or_equal(int(value[0]))
+            query.field(key).less_than_or_equal(max(value))
         elif op == '!~':
             query.field(key).not_contains(value[0])
         elif op == '~':
             query.field(key).contains(value[0])
 
     for key, value in controls.items():
+        # We can't handle the case where _c=!col -- ie. excluding the column
+        # since there's no schema
         if key == '_sort':
             try:
                 query.AND()
@@ -1727,13 +1746,18 @@ def get_query_from_args(args, fields, limit, offset, controls, kwargs):
 def _filter_servicenow(url, controls, args, instance=None, user=None, password=None, api_path=None,
                        limit=10000, offset=0, query=None, **kwargs):
     import pysnow
+    import yaml
+    from gramex import config
+    path = os.path.join(config.variables["GRAMEXPATH"], 'servicenow.yaml')
+    with open(path, encoding='utf-8') as handle:
+        result = yaml.load(handle, Loader=yaml.SafeLoader)
 
     c = pysnow.Client(instance=instance, user=user, password=password)
     incident = c.resource(api_path=api_path)
     fields = []
     if not query:
         query, fields, limit, offset = get_query_from_args(args, fields, limit, offset,
-                                                           controls, kwargs)
+                                                           controls, result, kwargs)
         if not len(query._query):
             query = {}
 
