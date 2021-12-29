@@ -232,8 +232,8 @@ def filter(url, args={}, meta={}, engine=None, ext=None, columns=None,
     elif engine.startswith('plugin+'):
         plugin = engine.split('+')[1]
         method = plugins[plugin]['filter']
-        data = method(url=url, controls=controls, args=args, query=query, **kwargs)
-        return _filter_frame(data, meta=meta, controls=controls, args=args)
+        return method(url=url, controls=controls, args=args, meta=meta, query=query,
+                      columns=columns, **kwargs)
     elif engine == 'sqlalchemy':
         table = kwargs.pop('table', None)
         state = kwargs.pop('state', None)
@@ -604,12 +604,12 @@ def _convert_datatype(data, col):
     if isinstance(data, pd.DataFrame):
         conv = data[col].dtype.type
     else:
-        conv = type(data[0][col]) if len(data) else lambda v: v
+        conv = type(data[0][col]) if data else lambda v: v
 
     # Convert based on Pandas datatype. But for boolean, convert from string as below
     if conv in {pd.np.bool_, bool}:
         conv = lambda v: False if v.lower() in {'', '0', 'n', 'no', 'f', 'false'} else True # noqa
-    elif conv in {pd.np.datetime64, datetime}:
+    elif conv in {datetime}:
         from dateutil.parser import parse
         conv = parse
     return conv
@@ -676,27 +676,40 @@ def _filter_db_col(query, method, key, col, op, vals, column, conv, meta):
     return query
 
 
-def _filter_sort_columns(sort_filter, cols):
+def _filter_sort_columns(controls, cols, meta):
+    '''
+    Checks ?_sort=col&_sort=-col. Returns list of (columns to sort by, ascending/not).
+
+    Updates meta['sort'] with columns to sort by,
+    and meta['ignored'] with unrecognized sort column names as ('_sort', columns)
+    '''
     sorts, ignore_sorts = [], []
-    for col in sort_filter:
-        if col in cols:
-            sorts.append((col, True))
-        elif col.startswith('-') and col[1:] in cols:
-            sorts.append((col[1:], False))
-        else:
-            ignore_sorts.append(col)
-    return sorts, ignore_sorts
+    if '_sort' in controls:
+        for col in controls['_sort']:
+            if col in cols:
+                sorts.append((col, True))
+            elif col.startswith('-') and col[1:] in cols:
+                sorts.append((col[1:], False))
+            else:
+                ignore_sorts.append(col)
+        if len(ignore_sorts) > 0:
+            meta['ignored'].append(('_sort', ignore_sorts))
+        meta['sort'] = sorts
+    return sorts
 
 
-def _filter_select_columns(col_filter, cols, meta):
+def _filter_select_columns(controls, cols, meta):
     '''
-    Checks ?_c=col&_c=-col for filter(). Takes values of ?_c= as col_filter and
-    data column names as cols. Returns 2 lists: show_cols as columns to show.
-    ignored_cols has column names not in the list, i.e. the ?_c= parameters that
-    are ignored.
+    Checks ?_c=col&_c=-col. Takes values of ?_c= as col_filter and
+    data column names as cols. Returns list of columns to show.
+
+    Updates meta['excluded'] with columns explicitly excluded,
+    and meta['ignored'] with unrecognized column names.
     '''
+    if '_c' not in controls:
+        return cols
     selected_cols, excluded_cols, ignored_cols = [], set(), []
-    for col in col_filter:
+    for col in controls['_c']:
         if col in cols:
             selected_cols.append(col)
         elif col.startswith('-') and col[1:] in cols:
@@ -707,7 +720,26 @@ def _filter_select_columns(col_filter, cols, meta):
         selected_cols = cols
     show_cols = [col for col in selected_cols if col not in excluded_cols]
     meta['excluded'] = list(excluded_cols)
-    return show_cols, ignored_cols
+    if ignored_cols:
+        meta['ignored'].append(('_c', ignored_cols))
+    return show_cols
+
+
+def _filter_offset_limit(controls, meta):
+    offset, limit = None, None
+    if '_offset' in controls:
+        try:
+            offset = min(int(v) for v in controls['_offset'])
+        except ValueError:
+            raise ValueError('_offset not integer: %r' % controls['_offset'])
+        meta['offset'] = offset
+    if '_limit' in controls:
+        try:
+            limit = min(int(v) for v in controls['_limit'])
+        except ValueError:
+            raise ValueError('_limit not integer: %r' % controls['_limit'])
+        meta['limit'] = limit
+    return offset, limit
 
 
 def _filter_groupby_columns(by, cols, meta):
@@ -832,31 +864,17 @@ def _filter_frame(data, meta, controls, args, source='select', id=[]):
                 row = [data[col].agg(op) for col, ops in agg_dict.items() for op in ops]
                 data = pd.DataFrame([row], columns=agg_cols)
         elif '_c' in controls:
-            show_cols, hide_cols = _filter_select_columns(controls['_c'], data.columns, meta)
+            show_cols = _filter_select_columns(controls, data.columns, meta)
             data = data[show_cols]
-            if len(hide_cols) > 0:
-                meta['ignored'].append(('_c', hide_cols))
-        if '_sort' in controls:
-            meta['sort'], ignore_sorts = _filter_sort_columns(controls['_sort'], data.columns)
-            if len(meta['sort']) > 0:
-                data = data.sort_values(by=[c[0] for c in meta['sort']],
-                                        ascending=[c[1] for c in meta['sort']])
-            if len(ignore_sorts) > 0:
-                meta['ignored'].append(('_sort', ignore_sorts))
-        if '_offset' in controls:
-            try:
-                offset = min(int(v) for v in controls['_offset'])
-            except ValueError:
-                raise ValueError('_offset not integer: %r' % controls['_offset'])
+        sorts = _filter_sort_columns(controls, data.columns, meta)
+        if sorts:
+            data = data.sort_values(by=[c[0] for c in sorts],
+                                    ascending=[c[1] for c in sorts])
+        offset, limit = _filter_offset_limit(controls, meta)
+        if offset is not None:
             data = data.iloc[offset:]
-            meta['offset'] = offset
-        if '_limit' in controls:
-            try:
-                limit = min(int(v) for v in controls['_limit'])
-            except ValueError:
-                raise ValueError('_limit not integer: %r' % controls['_limit'])
+        if limit is not None:
             data = data.iloc[:limit]
-            meta['limit'] = limit
         return data
 
 
@@ -947,34 +965,19 @@ def _filter_db(engine, table, meta, controls, args, source='select', id=[]):
                 query = _filter_db_col(query, query.having, key, col, op, vals,
                                        agg_cols[col], typ[col], meta)
         elif '_c' in controls:
-            show_cols, hide_cols = _filter_select_columns(controls['_c'], colslist, meta)
+            show_cols = _filter_select_columns(controls, colslist, meta)
             query = query.with_only_columns([cols[col] for col in show_cols])
-            if len(hide_cols) > 0:
-                meta['ignored'].append(('_c', hide_cols))
             if len(show_cols) == 0:
                 return pd.DataFrame()
-        if '_sort' in controls:
-            meta['sort'], ignore_sorts = _filter_sort_columns(
-                controls['_sort'], colslist + query.columns.keys())
-            for col, asc in meta['sort']:
-                orderby = sa.asc if asc else sa.desc
-                query = query.order_by(orderby(col))
-            if len(ignore_sorts) > 0:
-                meta['ignored'].append(('_sort', ignore_sorts))
-        if '_offset' in controls:
-            try:
-                offset = min(int(v) for v in controls['_offset'])
-            except ValueError:
-                raise ValueError('_offset not integer: %r' % controls['_offset'])
+        sorts = _filter_sort_columns(controls, colslist + query.columns.keys(), meta)
+        for col, asc in sorts:
+            orderby = sa.asc if asc else sa.desc
+            query = query.order_by(orderby(col))
+        offset, limit = _filter_offset_limit(controls, meta)
+        if offset is not None:
             query = query.offset(offset)
-            meta['offset'] = offset
-        if '_limit' in controls:
-            try:
-                limit = min(int(v) for v in controls['_limit'])
-            except ValueError:
-                raise ValueError('_limit not integer: %r' % controls['_limit'])
+        if limit is not None:
             query = query.limit(limit)
-            meta['limit'] = limit
         return pd.read_sql(query, engine)
 
 
@@ -1390,20 +1393,8 @@ def alter(url: str, table: str, columns: dict = None, **kwargs):
     return engine
 
 
-# NoSQL Operations
+# MongoDB Operations
 # ----------------------------------------
-
-def _type_conversion(param_list, operations=None):
-    try:
-        converted = []
-        if operations == '<' or operations == '<=':
-            converted = min(float(v) for v in param_list)
-        if operations == '>' or operations == '>=':
-            converted = max(float(v) for v in param_list)
-        return converted
-    except ValueError:
-        raise ValueError('Value is not integer: %r' % param_list)
-
 
 _mongodb_op_map = {
     '<': '$lt',
@@ -1415,83 +1406,44 @@ _mongodb_op_map = {
 }
 
 
-def _filter_mongodb_col(col, op, vals, results, object_keys=[]):
-    if op in {'', '!'}:
-        convert = _convert_datatype(results, col)
-        return {col: {_mongodb_op_map[op]: [convert(val) for val in vals]}}
-    elif op in {'>', '>~', '<', '<~'}:
-        convert = _convert_datatype(results, col)
-        vals = [convert(val) for val in vals if val]
-        if op == '>':
-            return {col: {_mongodb_op_map[op]: max(vals)}}
-        elif op == '<':
-            return {col: {_mongodb_op_map[op]: min(vals)}}
-        elif op == '>~':
-            return {col: {_mongodb_op_map[op]: max(vals)}}
-        elif op == '<~':
-            return {col: {_mongodb_op_map[op]: min(vals)}}
-    elif op == '!~':
-        return {col: {"$not": {"$regex": '|'.join(vals), "$options": 'i'}}}
-    elif op == '~':
-        return {col: {"$regex": '|'.join(vals), "$options": 'i'}}
-    elif col and op in _mongodb_op_map.keys():
-        convert = _convert_datatype(results, col)
-        return {col: {_mongodb_op_map[op]: convert(val)} for val in vals}
-
-
 def _mongodb_query(args, table, id=[], **kwargs):
     # Convert a query like x>=3&x>=4&x>=5 into
     # {"$or": [{x: {$gt: 3}}, {x: {$gt: 4}}, {x: $gt: 5}]}
     # TODO: ?_id= is not working
-    import bson
-
-    object_keys = []
     results = table.find().limit(1)
-
-    if results:
-        for k, v in results[0].items():
-            if type(v) == bson.objectid.ObjectId:
-                object_keys.append(k)
-
     conditions = []
     for key, vals in args.items():
         if len(id) and key not in id:
             continue
         col_names = [k for k in results[0].keys()]
         col, agg, op = _filter_col(key, col_names)
-        if col and results:
-            conditions.append(_filter_mongodb_col(col, op, vals, results,
-                                                  object_keys=object_keys))
+        add = lambda v: conditions.append({col: v})     # noqa
+        convert = _convert_datatype(results, col)
+        if not col or not results:
+            continue
+        if op in {'', '!'}:
+            add({_mongodb_op_map[op]: [convert(val) for val in vals if val]})
+            if any(not val for val in vals):
+                add({'$eq' if op == '!' else '$ne': None})
+        elif op in {'>', '>~', '<', '<~'}:
+            vals = [convert(val) for val in vals if val]
+            if op == '>':
+                add({_mongodb_op_map[op]: max(vals)})
+            elif op == '<':
+                add({_mongodb_op_map[op]: min(vals)})
+            elif op == '>~':
+                add({_mongodb_op_map[op]: max(vals)})
+            elif op == '<~':
+                add({_mongodb_op_map[op]: min(vals)})
+        elif op == '!~':
+            add({"$not": {"$regex": '|'.join(vals), "$options": 'i'}})
+        elif op == '~':
+            add({"$regex": '|'.join(vals), "$options": 'i'})
+        elif col and op in _mongodb_op_map.keys():
+            add({_mongodb_op_map[op]: convert(val)} for val in vals)
+        # TODO: Handle agg
         # TODO: add meta['ignored']
     return {'$and': conditions} if len(conditions) > 1 else conditions[0] if conditions else {}
-
-
-def _controls_default(table, query=None, controls=None, meta_cols=None):
-    '''Get the controls like, _c, _sort, _offset, _limit'''
-
-    if '_c' in controls:
-        _projection = dict()
-        # _projection = {'field': 1, 'field1': -1}
-        for c in controls['_c']:
-            _projection[c] = 1
-        cursor = table.find(query, _projection)
-    else:
-        cursor = table.find(query)
-
-    if '_sort' in controls:
-        sort, ignore_sorts = _filter_sort_columns(controls['_sort'], meta_cols)
-        _sort = {key: (+1 if val else -1) for key, val in dict(sort).items()}
-
-        # sort, [('field1', 1), ('field2', -1)]
-        cursor = cursor.sort(list(_sort.items()))
-
-    if '_offset' in controls:
-        cursor = cursor.skip(int(controls['_offset'][0]))
-
-    if '_limit' in controls:
-        cursor = cursor.limit(int(controls['_limit'][0]))
-
-    return cursor
 
 
 def _mongodb_collection(url, database, collection, **kwargs):
@@ -1516,16 +1468,29 @@ def _mongodb_json(obj):
     return result
 
 
-def _filter_mongodb(url, controls, args, database=None, collection=None, query=None, **kwargs):
+def _filter_mongodb(url, controls, args, meta, database=None, collection=None, query=None,
+                    columns=None, **kwargs):
     '''TODO: Document function and usage'''
     table = _mongodb_collection(url, database, collection, **kwargs)
-    meta_cols = [k for k in table.find().limit(1)[0].keys()]
+    # TODO: If data is missing, create using columns
+    cols = [k for k in table.find().limit(1)[0].keys()]
 
-    if query is not None:
-        query = dict(query)
+    query = dict(query) if query else _mongodb_query(args, table)
+
+    show_cols = _filter_select_columns(controls, cols, meta)
+    if show_cols:
+        cursor = table.find(query, show_cols)
     else:
-        query = _mongodb_query(args, table)
-    cursor = _controls_default(table, query=query, controls=controls, meta_cols=meta_cols)
+        cursor = table.find(query)
+    sorts = _filter_sort_columns(controls, cols, meta)
+    if sorts:
+        cursor = cursor.sort([(key, +1 if val else -1) for key, val in sorts])
+    offset, limit = _filter_offset_limit(controls, meta)
+    if offset is not None:
+        cursor = cursor.skip(offset)
+    if limit is not None:
+        cursor = cursor.limit(limit)
+
     data = pd.DataFrame(list(cursor))
     # Convert Object IDs into strings to allow JSON conversion
     if len(data) > 0:
@@ -1537,7 +1502,7 @@ def _filter_mongodb(url, controls, args, database=None, collection=None, query=N
     return data
 
 
-def _delete_mongodb(url, controls, args, meta=None, database=None, collection=None, query=None,
+def _delete_mongodb(url, controls, args, meta, database=None, collection=None, query=None,
                     **kwargs):
     table = _mongodb_collection(url, database, collection, **kwargs)
     query = _mongodb_query(args, table)
@@ -1545,7 +1510,7 @@ def _delete_mongodb(url, controls, args, meta=None, database=None, collection=No
     return result.deleted_count
 
 
-def _update_mongodb(url, controls, args, meta=None, database=None, collection=None, query=None,
+def _update_mongodb(url, controls, args, meta, database=None, collection=None, query=None,
                     id=[], **kwargs):
     table = _mongodb_collection(url, database, collection, **kwargs)
     query = _mongodb_query(args, table, id=id)
@@ -1568,6 +1533,10 @@ def _insert_mongodb(url, rows, meta=None, database=None, collection=None, **kwar
     result = table.insert_many([_mongodb_json(row) for row in rows.to_dict(orient='records')])
     meta['inserted'] = [{'id': str(id) for id in result.inserted_ids}]
     return len(result.inserted_ids)
+
+
+# InfluxDB Operations
+# ----------------------------------------
 
 
 def _get_influxdb_schema(client, bucket):
