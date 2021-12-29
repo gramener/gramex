@@ -126,7 +126,14 @@ def callback_commandline(commands):
 
     # If --help or -V --version is specified, print a message and end
     if kwargs.get('V') is True or kwargs.get('version') is True:
-        return console, {'msg': 'Gramex %s' % __version__}
+        pyver = '{0}.{1}.{2}'.format(*sys.version_info[:3])
+        msg = [
+            f'Gramex version: {__version__}',
+            f'Gramex path: {paths["source"]}',
+            f'Python version: {pyver}',
+            f'Python path: {sys.executable}',
+        ]
+        return console, {'msg': '\n'.join(msg)}
 
     # Any positional argument is treated as a gramex command
     if len(args) > 0:
