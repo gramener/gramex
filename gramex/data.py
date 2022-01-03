@@ -591,21 +591,13 @@ def _filter_col(col, cols):
     return None, None, None
 
 
-def _convert_datatype(data, col):
+def _convertor(conv):
     '''
-    Return a type conversion function for column col in data.
+    Updates a type conversion function.
 
-    If data is a DataFrame, it uses the Pandas datatype.
-    If data is an array of records, it uses the first element's type.
-
-    Booleans are converted treating '', '0', 'n', 'no', 'f', 'false' (in any case) as False
-    Datetimes are converted using dateutil parser
+    Booleans are converted treating '', '0', 'n', 'no', 'f', 'false' (in any case) as False.
+    Datetimes are converted using dateutil parser.
     '''
-    if isinstance(data, pd.DataFrame):
-        conv = data[col].dtype.type
-    else:
-        conv = type(data[0][col]) if data else lambda v: v
-
     # Convert based on Pandas datatype. But for boolean, convert from string as below
     if conv in {pd.np.bool_, bool}:
         conv = lambda v: False if v.lower() in {'', '0', 'n', 'no', 'f', 'false'} else True # noqa
@@ -617,7 +609,7 @@ def _convert_datatype(data, col):
 
 def _filter_frame_col(data, key, col, op, vals, meta):
     # Apply type conversion for values
-    conv = _convert_datatype(data, col)
+    conv = _convertor(data[col].dtype.type)
     vals = tuple(conv(val) for val in vals if val)
     if op not in {'', '!'} and len(vals) == 0:
         meta['ignored'].append((key, vals))
@@ -726,7 +718,7 @@ def _filter_select_columns(controls, cols, meta):
 
 
 def _filter_offset_limit(controls, meta):
-    offset, limit = None, None
+    offset, limit = 0, None
     if '_offset' in controls:
         try:
             offset = min(int(v) for v in controls['_offset'])
@@ -1418,7 +1410,7 @@ def _mongodb_query(args, table, id=[], **kwargs):
         col_names = [k for k in results[0].keys()]
         col, agg, op = _filter_col(key, col_names)
         add = lambda v: conditions.append({col: v})     # noqa
-        convert = _convert_datatype(results, col)
+        convert = _convertor(type(results[0][col])) if results else lambda v: v
         if not col or not results:
             continue
         if op in {'', '!'}:
@@ -1521,7 +1513,7 @@ def _update_mongodb(url, controls, args, meta, database=None, collection=None, q
 
     values = {key: val[-1] for key, val in dict(args).items() if key not in id}
     for key in values.keys():
-        convert = _convert_datatype(results, key)
+        convert = _convertor(type(results[0][key])) if results else lambda v: v
         values[key] = convert(values[key])
 
     result = table.update_many(query, {'$set': _mongodb_json(values)})
@@ -1699,6 +1691,79 @@ def _insert_influxdb(url, rows, meta, args, bucket, **kwargs):
     return len(rows)
 
 
+# ServiceNow Operations
+# ----------------------------------------
+
+def _filter_servicenow(url, controls, args, meta, columns=None, query=None, **kwargs):
+    import pysnow
+    from gramex.config import locate
+    from urllib.parse import urlparse
+
+    urlinfo = urlparse(url)
+    c = pysnow.Client(instance=urlinfo.hostname, user=urlinfo.username, password=urlinfo.password)
+
+    config = gramex.cache.open('servicenow.yaml', 'config', rel=True)
+    table = c.resource(api_path=urlinfo.path)
+
+    # Identify column types. Take the default ServiceNow column types. Override based on user
+    table_columns = json.loads(json.dumps(config.columns[urlinfo.path]))
+    for col, colinfo in (columns or {}).items():
+        table_columns.setdefault(col, {}).update(
+            colinfo if isinstance(colinfo, dict) else {'type': colinfo})
+    for col, colinfo in table_columns.items():
+        colinfo['_convert'] = _convertor(locate(colinfo['type'], modules=['datetime']))
+    col_names = table_columns.keys()
+
+    fields = []
+    if not query:
+        offset, limit = _filter_offset_limit(controls, meta)
+        query = pysnow.QueryBuilder()
+        query_initiated = False
+
+        for key, value in args.items():
+            col, agg, op = _filter_col(key, col_names)
+            value = [table_columns[col]['_convert'](val) for val in value]
+            if query_initiated:
+                query.AND()
+            query_initiated = True
+            if op == '':
+                query.field(col).equals(value)
+            elif op == '!':
+                query.field(col).not_equals(value)
+            elif op == '>':
+                query.field(col).greater_than(min(value))
+            elif op == '>~':
+                query.field(col).greater_than_or_equal(min(value))
+            elif op == '<':
+                query.field(col).less_than(max(value))
+            elif op == '<~':
+                query.field(col).less_than_or_equal(max(value))
+            elif op == '!~':
+                query.field(col).not_contains(value[0])
+            elif op == '~':
+                query.field(col).contains(value[0])
+            else:
+                raise ValueError(f'Unknown ServiceNow operator: {op}')
+
+    offset, limit = _filter_offset_limit(controls, meta)
+    sorts = _filter_sort_columns(controls, col_names, meta)
+    for col, asc in sorts:
+        if query_initiated:
+            query.AND()
+        query_initiated = True
+        if asc:
+            query.field(col).order_ascending()
+        else:
+            query.field(col).order_descending()
+    fields.extend(_filter_select_columns(controls, col_names, meta))
+
+    if not len(query._query):
+        query = {}
+
+    response = table.get(query=query, limit=limit, offset=offset, fields=fields)
+    return pd.DataFrame(response.all())
+
+
 # add test case for inserting nested value ?parent.={child:value}
 #   curl --globoff -I -X POST 'http://127.0.0.1:9988/?x.={"2":3}&y.={"true":true}&Name=abcd'
 # add test case for updating nested value ?parent.child.={key:value}
@@ -1715,4 +1780,7 @@ plugins["influxdb"] = {
     "delete": _delete_influxdb,
     "insert": _insert_influxdb,
     "update": _insert_influxdb,
+}
+plugins["servicenow"] = {
+    "filter": _filter_servicenow
 }
