@@ -29,7 +29,8 @@ DB_CONFIG = {
     }
 }
 
-for key in conf.schedule:
+extra_columns = []
+for key in conf.get('schedule', []):
     if 'kwargs' in conf.schedule[key] and 'custom_dims' in conf.schedule[key].kwargs:
         extra_columns = [dimension for dimension in conf.schedule[key].kwargs.custom_dims]
 
@@ -77,7 +78,7 @@ def add_session(df, duration=30, cutoff_buffer=0):
     return df
 
 
-def prepare_logs(df, session_threshold=15, cutoff_buffer=0, custom_dims=None):
+def prepare_logs(df, session_threshold=15, cutoff_buffer=0, custom_dims={}):
     '''
     - removes rows with errors in time, duration, status
     - sort by time
@@ -199,7 +200,7 @@ def summarize(transforms=[], post_transforms=[], run=True,
             data = data[data.time.ge(date_from)]
             # delete old records
             query = f'DELETE FROM {table(freq)} WHERE time >= ?'    # nosec: table() is safe
-            conn.execute(query, f'{date_from}')
+            conn.execute(query, (f'{date_from}',))
             conn.commit()
         groups[0]['freq'] = freq
         # get summary view
