@@ -151,10 +151,10 @@ class TestPPTGen(TestCase):
         for unit in units:
             eq_(length('3.2' + unit), getattr(pptx.util, unit.title())(3.2))
             eq_(length('3.2  ' + unit), getattr(pptx.util, unit.title())(3.2))
+            eq_(length('+3.2 ' + unit), getattr(pptx.util, unit.title())(3.2))
+            eq_(length('-3.2 ' + unit), getattr(pptx.util, unit.title())(-3.2))
         with assert_raises(ValueError):
             length('3.4 nonunits')
-        with assert_raises(ValueError):
-            length('-3.4')
         with assert_raises(ValueError):
             length(None)
         length_class = commands.length_class

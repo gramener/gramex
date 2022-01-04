@@ -77,7 +77,7 @@ def assign(convert, path: str):
 # ---------------------------------------------------------------------
 length_unit = pptx.util.Inches          # The default length unit is inches. This is exposed
 _length_expr = re.compile(r'''          # A length expression can be:ex
-    ([\d\.]+)                           #   Any integer or floating point (without + or -)
+    ((?:[+-]?)[\d\.]+)                  #   Any integer or floating point (with + or -)
     \s*                                 #   optionally followed by spaces
     ("|in|inch|inches|cm|mm|pt|cp|centipoint|centipoints|emu|)  # and a unit that may be blank
     $                                   # with nothing after that
