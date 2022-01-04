@@ -1,17 +1,18 @@
 '''Caching utilities'''
-import io
-import os
-import re
-import sys
-import json
-import time
 import atexit
+import copy
 import inspect
-import requests
-import tempfile
+import io
+import json
 import mimetypes
-import subprocess       # nosec: only enabled via app developer
+import os
 import pandas as pd
+import re
+import requests
+import subprocess       # nosec: only enabled via app developer
+import sys
+import tempfile
+import time
 import tornado.template
 from threading import Thread
 from queue import Queue
@@ -553,13 +554,6 @@ def reload_module(*modules):
         if name is None or path is None or not os.path.exists(path):
             app_log.warning('Path for module %s is %s: not found', name, path)
             continue
-        # On Python 3, __file__ points to the .py file. In Python 2, it's the .pyc file
-        # https://www.python.org/dev/peps/pep-3147/#file
-        if path.lower().endswith('.pyc'):
-            path = path[:-1]
-            if not os.path.exists(path):
-                app_log.warning('Path for module %s is %s: not found', name, path)
-                continue
         # The first time, don't reload it. Thereafter, if it's older or resized, reload it
         fstat = stat(path)
         if fstat != _MODULE_CACHE.get(name, fstat):
@@ -1195,7 +1189,7 @@ class JSONStore(KeyStore):
 
     def _init_store(self, contents):
         self.store = contents
-        self._original = json.loads(json.dumps(self.store))     # copy of original contents
+        self._original = copy.deepcopy(self.store)  # copy of original contents
         self.changed = False    # boolean: has the store contents changed?
         self.update = {}        # all key-values added since flush
 
