@@ -1164,9 +1164,11 @@ class HDF5Store(KeyStore):
         try:
             self.store.close()
         # h5py.h5f.get_obj_ids often raises a ValueError: Not a file id.
-        # This is presumably if the file handle has been closed. Log & ignore.
-        except ValueError:
-            app_log.debug('HDF5Store("%s").close() error ignored', self.path)
+        #   This is presumably if the file handle has been closed. Log & ignore.
+        # import h5py may fil. If so, self.store is a dict, and has no .close().
+        #   This raises an AttributeError. Log & ignore
+        except (AttributeError, ValueError) as e:
+            app_log.debug('HDF5Store("%s").close() error (%s) ignored', self.path, e)
 
 
 class JSONStore(KeyStore):
@@ -1209,9 +1211,10 @@ class JSONStore(KeyStore):
     def dump(self, key, value):
         '''Same as store[key] = value'''
         key = self._escape(key)
+        self.store[key] = value
         # Update contents only if the value is different from the original
         if self._original.get(key) != value:
-            self.store[key] = self.update[key] = value
+            self.update[key] = value
             self.changed = True
 
     def flush(self, purge=False):

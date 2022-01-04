@@ -97,6 +97,7 @@ class TestJSONStore(unittest.TestCase):
         ok_('λ' in result)
 
     def test_store(self):
+        self.store.purge()
         data = self.load()
         expiry = time.time() + 1000
         self.store.dump('►', {'_t': expiry, 'α': True})
