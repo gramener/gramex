@@ -133,11 +133,11 @@ class OpenAPIHandler(BaseHandler):
             key_end = key.split(':')[-1]
             if not any(fnmatch(key_end, pat) for pat in key_patterns):
                 continue
+            # Ignore invalid handlers
+            if key not in gramex.service.url or 'handler' not in config or 'pattern' not in config:
+                continue
             # Normalize the pattern, e.g. /./docs -> /docs
             pattern = config['pattern'].replace('/./', '/')
-            # Ignore invalid handlers
-            if key not in gramex.service.url or 'handler' not in config:
-                continue
             summary = f'{url_name(pattern)}: {config["handler"]}'
             # TODO: Handle wildcards, e.g. /(.*) -> / with an arg
             info = spec['paths'][pattern] = {
