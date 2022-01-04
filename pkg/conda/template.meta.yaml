@@ -33,7 +33,6 @@ requirements:
     - lxml
     - matplotlib
     - pandas
-    - pytest
     - seaborn
     - sqlalchemy
     - tzlocal

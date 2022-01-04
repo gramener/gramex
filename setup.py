@@ -90,8 +90,7 @@ setup(
     install_requires=[req for part in ('lib', 'pip') for req in release[part]],
     zip_safe=False,
     entry_points={
-        'console_scripts': release['console'],
-        'pytest11': ['gramextest = gramex.gramextest']
+        'console_scripts': release['console']
     },
     test_suite='tests',
     # NOTE: Don't use tests_require. setup.py can't install nose plugins like coverage.
