@@ -43,6 +43,7 @@ Target file:       gramex\apps\admin2\package-lock.json
 Project name:      package.json
 Open source:       no
 Project path:      D:\site\gramener.com\viz\async-gramex
+Local Snyk policy: found
 Licenses:          enabled
 
 ✔ Tested 20 dependencies for known issues, no vulnerable paths found.
@@ -63,7 +64,7 @@ Open source:       no
 Project path:      D:\site\gramener.com\viz\async-gramex
 Licenses:          enabled
 
-✔ Tested 130 dependencies for known issues, no vulnerable paths found.
+✔ Tested 129 dependencies for known issues, no vulnerable paths found.
 
 Next steps:
 - Run `snyk monitor` to be notified about new related vulnerabilities.
@@ -116,6 +117,7 @@ Target file:       gramex\apps\pynode\package-lock.json
 Project name:      pynode
 Open source:       no
 Project path:      D:\site\gramener.com\viz\async-gramex
+Local Snyk policy: found
 Licenses:          enabled
 
 ✔ Tested 5 dependencies for known issues, no vulnerable paths found.
@@ -137,7 +139,7 @@ Project path:      D:\site\gramener.com\viz\async-gramex
 Local Snyk policy: found
 Licenses:          enabled
 
-✔ Tested 1662 dependencies for known issues, no vulnerable paths found.
+✔ Tested 1667 dependencies for known issues, no vulnerable paths found.
 
 Next steps:
 - Run `snyk monitor` to be notified about new related vulnerabilities.
