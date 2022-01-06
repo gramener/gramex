@@ -116,7 +116,7 @@ push-pypi: clean
 	twine upload -u gramener dist/*
 
 update-npm:
-	find gramex/apps/ -maxdepth 2 -name package.json | xargs dirname | xargs -L1 bash -c 'cd "$$0" && npm update'
+	find gramex/apps/ -maxdepth 2 -name package.json | xargs dirname | xargs -L1 bash -c 'cd "$$0" && npm update && npm audit fix'
 
 security:
 	bandit gramex --aggregate vuln --recursive --exclude '*/node_modules/*' > reports/bandit.txt
