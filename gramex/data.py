@@ -210,6 +210,7 @@ def filter(url, args={}, meta={}, engine=None, ext=None, columns=None,
         'limit': None,      # Limit as integer - None if not applied
         'by': [],           # Group by columns as [col, ...]
     })
+    args = dict(args)       # Do not modify the args -- keep a copy
     controls = _pop_controls(args)
     transform = _transform_fn(transform, transform_kwargs)
     url, ext, query, queryfile, kwargs = _replace(
@@ -282,6 +283,7 @@ def delete(url, meta={}, args=None, engine=None, table=None, ext=None, id=None, 
     if engine is None:
         engine = get_engine(url)
     meta.update({'filters': [], 'ignored': []})
+    args = dict(args)  # Do not modify the args -- keep a copy
     controls = _pop_controls(args)
     url, table, ext, query, queryfile, kwargs = _replace(
         engine, args, url, table, ext, query, queryfile, **kwargs)
@@ -327,6 +329,7 @@ def update(url, meta={}, args=None, engine=None, table=None, ext=None, id=None, 
     if engine is None:
         engine = get_engine(url)
     meta.update({'filters': [], 'ignored': []})
+    args = dict(args)  # Do not modify the args -- keep a copy
     controls = _pop_controls(args)
     url, table, ext, query, queryfile, kwargs = _replace(
         engine, args, url, table, ext, query, queryfile, **kwargs)
@@ -373,6 +376,7 @@ def insert(url, meta={}, args=None, engine=None, table=None, ext=None, id=None, 
     '''
     if engine is None:
         engine = get_engine(url)
+    args = dict(args)       # Do not modify the args -- keep a copy
     _pop_controls(args)
     if not args:
         raise ValueError('No args: specified')
@@ -1508,12 +1512,12 @@ def _update_mongodb(url, controls, args, meta, database=None, collection=None, q
     query = _mongodb_query(args, table, id=id)
     results = table.find(query).limit(1)
 
-    if not results.count():
+    if not results.count_documents():
         return 0
 
     values = {key: val[-1] for key, val in dict(args).items() if key not in id}
     for key in values.keys():
-        convert = _convertor(type(results[0][key])) if results else lambda v: v
+        convert = _convertor(type(results[0].get(key, ''))) if results else lambda v: v
         values[key] = convert(values[key])
 
     result = table.update_many(query, {'$set': _mongodb_json(values)})
