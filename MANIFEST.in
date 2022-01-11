@@ -3,6 +3,7 @@
 # Include package specific files
 include gramex/gramex.yaml
 include gramex/deploy.yaml
+include gramex/servicenow.yaml
 include gramex/apps.yaml
 include gramex/favicon.ico
 include gramex/release.json
