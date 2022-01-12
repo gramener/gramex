@@ -1468,7 +1468,7 @@ def _filter_mongodb(url, controls, args, meta, database=None, collection=None, q
                     columns=None, **kwargs):
     '''TODO: Document function and usage'''
     table = _mongodb_collection(url, database, collection, **kwargs)
-    # TODO: If data is missing, create using columns
+    # TODO: If data is missing, identify columns using columns:
     cols = [k for k in table.find().limit(1)[0].keys()]
 
     query = dict(query) if query else _mongodb_query(args, table)
@@ -1510,9 +1510,8 @@ def _update_mongodb(url, controls, args, meta, database=None, collection=None, q
                     id=[], **kwargs):
     table = _mongodb_collection(url, database, collection, **kwargs)
     query = _mongodb_query(args, table, id=id)
-    results = table.find(query).limit(1)
-
-    if not results.count_documents():
+    results = list(table.find(query).limit(1))
+    if not results:
         return 0
 
     values = {key: val[-1] for key, val in dict(args).items() if key not in id}
