@@ -893,7 +893,7 @@ class BaseWebSocketHandler(WebSocketHandler, BaseMixin):
     def get(self, *args, **kwargs):
         for method in self._on_init_methods:
             method(self)
-        super(BaseWebSocketHandler, self).get(*args, **kwargs)
+        yield super(BaseWebSocketHandler, self).get(*args, **kwargs)
 
     def on_close(self):
         # Loop through class-level callbacks
