@@ -4,6 +4,7 @@ import json
 import inspect
 import threading
 import joblib
+import numpy as np
 import pandas as pd
 from tornado.gen import coroutine, Return, sleep
 from tornado.httpclient import AsyncHTTPClient
@@ -237,8 +238,8 @@ def groupmeans(data, groups, numbers, cutoff=.01, quantile=.95, minsize=None,
             lo = data[number][grouped.groups[sorted_cats.index[0]]].values
             hi = data[number][grouped.groups[sorted_cats.index[-1]]].values
             _, prob = ttest_ind(
-                pd.np.ma.masked_array(lo, pd.np.isnan(lo)),
-                pd.np.ma.masked_array(hi, pd.np.isnan(hi))
+                np.ma.masked_array(lo, np.isnan(lo)),
+                np.ma.masked_array(hi, np.isnan(hi))
             )
             if prob > cutoff:
                 continue

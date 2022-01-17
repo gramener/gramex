@@ -5,6 +5,7 @@ import joblib
 import gramex
 from gramex.config import variables
 from gramex.http import OK, NOT_FOUND
+import numpy as np
 import pandas as pd
 from sklearn.datasets import make_classification
 from sklearn.linear_model import LogisticRegression
@@ -504,7 +505,7 @@ class TestMLHandler(TestGramex):
         r = self.get('/mldecompose?_action=predict', method='post',
                      data=xts.to_json(orient='records'),
                      headers={'Content-Type': 'application/json'})
-        x_red = pd.np.array(r.json())
+        x_red = np.array(r.json())
         self.assertEqual(x_red.shape, (xts.shape[0], 2))
 
         # Check that the fitted attributes are available from GET ?_params too

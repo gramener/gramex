@@ -121,7 +121,7 @@ def async_calc(handler):
     rows = 1000
     cols = ['A', 'B', 'C']
     df = pd.DataFrame(
-        pd.np.arange(rows * len(cols)).reshape((rows, len(cols))),
+        np.arange(rows * len(cols)).reshape((rows, len(cols))),
         columns=cols)
     df = df % 4
     counts = yield [thread_pool.submit(count_group, df, col) for col in cols]
@@ -407,7 +407,7 @@ def numpytypes(handler):
         'uint8', 'uint16', 'uint32', 'uint64',
         'float16', 'float32', 'float64',
         'bool_', 'object_', 'string_', 'unicode_'}
-    result = {t: getattr(pd.np, t)(1) for t in supported_types}
+    result = {t: getattr(np, t)(1) for t in supported_types}
     return result
 
 
@@ -476,12 +476,12 @@ def get_state_info():
 def make_circles():
     X, y = sk_make_circles(noise=0.05, factor=0.4)  # NOQA: N806
     out = os.path.join(os.path.dirname(__file__), 'circles.csv')
-    pd.DataFrame(pd.np.c_[X, y], columns=['X1', 'X2', 'y']).to_csv(
+    pd.DataFrame(np.c_[X, y], columns=['X1', 'X2', 'y']).to_csv(
         out, encoding='utf-8', index=False)
 
 
 def transform_circles(df, *argss, **kwargs):
-    df[['X1', 'X2']] = pd.np.exp(-df[['X1', 'X2']].values ** 2)
+    df[['X1', 'X2']] = np.exp(-df[['X1', 'X2']].values ** 2)
     return df
 
 

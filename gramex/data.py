@@ -8,6 +8,7 @@ import re
 import time
 import json
 import sqlalchemy as sa
+import numpy as np
 import pandas as pd
 import gramex.cache
 from tornado.escape import json_encode
@@ -605,7 +606,7 @@ def _convertor(conv):
     Datetimes are converted using dateutil parser.
     '''
     # Convert based on Pandas datatype. But for boolean, convert from string as below
-    if conv in {pd.np.bool_, bool}:
+    if conv in {np.bool_, bool}:
         conv = lambda v: False if v.lower() in {'', '0', 'n', 'no', 'f', 'false'} else True # noqa
     elif conv in {datetime}:
         from dateutil.parser import parse

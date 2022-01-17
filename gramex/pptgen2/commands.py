@@ -11,6 +11,7 @@ import io
 import matplotlib.cm
 import matplotlib.colors
 import os
+import numpy as np
 import pandas as pd
 import pptx
 import pptx.util
@@ -104,7 +105,7 @@ def length(val: Union[str, int, float]) -> pptx.util.Length:
         match = _length_expr.match(val)
         if match:
             return length_class(match.group(2))(float(match.group(1)))
-    elif isinstance(val, (int, float, pd.np.number)):
+    elif isinstance(val, (int, float, np.number)):
         return length_unit(val)
     raise ValueError('Invalid length: %r' % val)
 

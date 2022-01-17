@@ -534,7 +534,7 @@ def treemap(shape, spec, data):
                 text = '{}'.format(v[1])
             rectstyle = {'fill': rect_color, 'stroke': stroke}
             rect_css(shp, **rectstyle)
-            font_size = min(h, w * font_aspect / fontwidth.fontwidth('{}'.format(text)), pd.np.Inf)
+            font_size = min(h, w * font_aspect / fontwidth.fontwidth('{}'.format(text)), np.Inf)
             text_style = {}
             text_style['color'] = _color.contrast(rect_color)
             text_style.update(spec.get('style', {}))
@@ -581,7 +581,7 @@ def calendarmap(shape, spec, data):
     fill_rect = style.get('fill', '#cccccc')
     text_color = style.get('color', '#000000')
     # Treat infinities as nans when calculating scale
-    scaledata = pd.Series(data).replace([pd.np.inf, -pd.np.inf], pd.np.nan)
+    scaledata = pd.Series(data).replace([np.inf, -np.inf], np.nan)
     for key in {'lo', 'hi', 'weekstart'}:
         if isinstance(spec.get(key), (dict,)) and 'function' in spec.get(key):
             spec[key] = compile_function(spec, key, data, handler)
@@ -786,7 +786,7 @@ def bullet(shape, spec, data):
         # Setting default font-size
         font_size = (text_width / pixel_inch) * font_aspect / fontwidth.fontwidth(
             '{}'.format(_data_text))
-        font_size = min(text_width / pixel_inch, font_size, pd.np.Inf)
+        font_size = min(text_width / pixel_inch, font_size, np.Inf)
         data_txt_style['font-size'] = data_txt_style.get('font-size', font_size)
         add_text_to_shape(parent, _data_text, **data_txt_style)
 
@@ -818,7 +818,7 @@ def bullet(shape, spec, data):
             # Setting default font-size
             font_size = font_aspect / fontwidth.fontwidth('{}'.format(_target_text))
             font_size = min(text_width / pixel_inch,
-                            (text_width / pixel_inch) * font_size, pd.np.Inf)
+                            (text_width / pixel_inch) * font_size, np.Inf)
             target_txt_style['font-size'] = target_txt_style.get('font-size', font_size)
             add_text_to_shape(parent, _target_text, **target_txt_style)
 

@@ -5,6 +5,7 @@ import shutil
 import unittest
 import gramex.data
 import gramex.cache
+import numpy as np
 import pandas as pd
 import pymongo.errors
 import sqlalchemy as sa
@@ -75,7 +76,7 @@ class TestFilter(unittest.TestCase):
         if sum_na:
             for col in columns:
                 if col.lower().endswith('|sum'):
-                    expected[col].replace({0.0: pd.np.nan}, inplace=True)
+                    expected[col].replace({0.0: np.nan}, inplace=True)
         expected.sort_values(by, inplace=True)
 
     def check_filter(self, df=None, na_position='last', sum_na=False, **kwargs):
@@ -273,7 +274,7 @@ class TestFilter(unittest.TestCase):
             columns=aggs
         )
         eq({'_by': [], '_c': aggs}, expected)
-        expected = (sales.select_dtypes(include=pd.np.number).agg('sum')
+        expected = (sales.select_dtypes(include=np.number).agg('sum')
                     .to_frame().T.add_suffix('|sum'))
         eq({'_by': []}, expected)
         for _c in [[], ['']]:
@@ -470,7 +471,7 @@ class TestInsert(unittest.TestCase):
         # Check if added rows are correct
         added_rows = pd.DataFrame(self.insert_rows)
         added_rows['sales'] = added_rows['sales'].astype(float)
-        added_rows['growth'] = pd.np.nan
+        added_rows['growth'] = np.nan
         added_rows.index = new_data.tail(2).index
         afe(new_data.tail(2), added_rows, check_like=True)
 
@@ -490,7 +491,7 @@ class TestInsert(unittest.TestCase):
             except ValueError:
                 # TODO: This is a temporary fix for NumPy 1.16.2, Tables 3.4.4
                 # https://github.com/pandas-dev/pandas/issues/24839
-                if conf['url'].endswith('.hdf') and pd.np.__version__.startswith('1.16'):
+                if conf['url'].endswith('.hdf') and np.__version__.startswith('1.16'):
                     raise SkipTest('Ignore NumPy 1.16.2 / PyTables 3.4.4 quirk')
             else:
                 expected = pd.DataFrame(self.insert_rows)

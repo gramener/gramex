@@ -2,6 +2,7 @@ import json
 import unittest
 import datetime
 import dateutil
+import numpy as np
 import pandas as pd
 from orderedattrdict import AttrDict
 from gramex.config import CustomJSONEncoder, CustomJSONDecoder
@@ -37,7 +38,7 @@ class TestJSON(unittest.TestCase):
             json.dumps(result, sort_keys=True))
 
         # numpy types are converted to python standard types
-        data = {'x': pd.np.arange(1), 'y': pd.np.int64(1), 'z': pd.np.float32(1)}
+        data = {'x': np.arange(1), 'y': np.int64(1), 'z': np.float32(1)}
         result = {'x': [0], 'y': 1, 'z': 1.0}
         eq_(
             json.dumps(data, cls=CustomJSONEncoder, sort_keys=True),
