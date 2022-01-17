@@ -43,7 +43,6 @@ function margin(args) {
 
 
 var fs = require('fs')
-var path = require('path')
 var system = require('system')
 var server = require('webserver').create()
 var phantom_version = phantom.version.major + '.' + phantom.version.minor + '.' + phantom.version.patch
@@ -60,9 +59,11 @@ if (phantom_version < '2.1.1') {
 function render(q, callback) {
   error = {status: '', msg: []}
   q.ext = q.ext || 'pdf'
-  q.file = path.basename(q.file || 'screenshot') + '.' + q.ext
-  if (fs.existsSync(q.file))
-    fs.unlinkSync(q.file)
+
+  // q.file = path.basename(q.file || 'screenshot') + '.' + q.ext
+  q.file = (q.file || 'screenshot').split('/').reverse()[0] + '.' + q.ext
+  if (fs.exists(q.file))
+    fs.remove(q.file)
 
   var page = require('webpage').create()
   if (q.ext.match(/^pdf$/i)) {
@@ -106,7 +107,7 @@ function render(q, callback) {
   }
 
   // In case PhantomJS is unable to load the page, log the error
-  page.onResourceError = function(r) {
+  page.onResourceError = page.onResourceTimeout = function(r) {
     error.msg.push(r)
     console.error('ERR:', r.errorCode, r.url, r.errorString)
   }
