@@ -1697,7 +1697,7 @@ def _insert_influxdb(url, rows, meta, args, bucket, **kwargs):
 # ServiceNow Operations
 # ----------------------------------------
 
-def _filter_servicenow(url, controls, args, meta, columns=None, query=None, **kwargs):
+def _filter_servicenow(url, controls, args, meta, table=None, columns=None, query=None, **kwargs):
     import pysnow
     from gramex.config import locate
     from urllib.parse import urlparse
@@ -1706,7 +1706,8 @@ def _filter_servicenow(url, controls, args, meta, columns=None, query=None, **kw
     c = pysnow.Client(instance=urlinfo.hostname, user=urlinfo.username, password=urlinfo.password)
 
     config = gramex.cache.open('servicenow.yaml', 'config', rel=True)
-    table = c.resource(api_path=urlinfo.path)
+    if table is None:
+        table = c.resource(api_path=urlinfo.path)
 
     # Identify column types. Take the default ServiceNow column types. Override based on user
     table_columns = json.loads(json.dumps(config.columns[urlinfo.path]))
