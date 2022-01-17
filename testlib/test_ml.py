@@ -8,8 +8,7 @@ from sklearn.naive_bayes import BernoulliNB
 import gramex.ml
 import gramex.cache
 from nose.tools import eq_, ok_
-from pandas.util.testing import assert_frame_equal as afe
-from . import folder, remove_if_possible
+from . import folder, remove_if_possible, afe
 
 
 class TestClassifier(unittest.TestCase):

@@ -16,9 +16,8 @@ from pptx.enum.shapes import MSO_SHAPE, MSO_SHAPE_TYPE
 from unittest import TestCase
 from nose.tools import eq_, ok_, assert_raises
 from nose.plugins.skip import SkipTest
-from pandas.util.testing import assert_frame_equal
 from gramex import pptgen
-from . import folder, sales_file
+from . import folder, sales_file, afe
 
 
 class TestPPTGen(TestCase):
@@ -31,7 +30,7 @@ class TestPPTGen(TestCase):
         cls.input = os.path.join(folder, 'input.pptx')
         cls.output = os.path.join(folder, 'output.pptx')
         cls.image = os.path.join(folder, 'small-image.jpg')
-        cls.data = pd.read_excel(sales_file, encoding='utf-8', engine='openpyxl')
+        cls.data = pd.read_excel(sales_file, engine='openpyxl')
         if os.path.exists(cls.output):
             os.remove(cls.output)
 
@@ -397,7 +396,7 @@ class TestPPTGen(TestCase):
         for c in table_data:
             table_data[c] = table_data[c].astype(self.data[c].dtype)
         # Comparinig `dataframe` from table with original `dataframe`
-        assert_frame_equal(table_data, self.data, check_names=True)
+        afe(table_data, self.data, check_names=True)
 
     def test_change_chart(self):
         # Test case for all native charts charts.
@@ -501,7 +500,7 @@ class TestPPTGen(TestCase):
         # Creating a new dataframe from treemap chart
         treemapdata = pd.DataFrame({'city': text, 'sales': width})
         # Treemap data should to exactly in same order as per data
-        assert_frame_equal(data, treemapdata[['city']], check_names=True)
+        afe(data, treemapdata[['city']], check_names=True)
 
     def test_horizontal_vertical_bullet_chart(self):
         # Test case for horizontal and vertical bullet chart

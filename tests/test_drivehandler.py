@@ -12,8 +12,7 @@ from gramex.http import (OK, BAD_REQUEST, NOT_FOUND, REQUEST_ENTITY_TOO_LARGE,
                          UNSUPPORTED_MEDIA_TYPE)
 from gramex.install import _ensure_remove
 from nose.tools import eq_, ok_
-from pandas.util.testing import assert_frame_equal as afe
-from . import server, TestGramex
+from . import server, TestGramex, afe
 
 
 class TestDriveHandler(TestGramex):
@@ -114,8 +113,8 @@ class TestDriveHandler(TestGramex):
         ), data={'tag': ['t1'], 'cat': ['c1', 'c2', 'c3'], 'rand': ['x', 'y']})
         eq_(r.status_code, OK)
         data = gramex.data.filter(self.con, table='drive').sort_values('id').tail(2)
-        # If there are insufficient tags, they become empty strings
-        eq_(data.tag.tolist(), ['t1', ''])
+        # If there are insufficient tags, they become NULL
+        eq_(data.tag.tolist(), ['t1', None])
         # If there are more tags, they're truncated
         eq_(data.cat.tolist(), ['c1', 'c2'])
         # If there are irrelevant fields, they're ignored

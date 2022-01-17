@@ -448,9 +448,11 @@ def insert(url, meta={}, args=None, engine=None, table=None, ext=None, id=None, 
                     meta['inserted'].append(dict(zip(id_cols, row)))
 
         kwargs['method'] = insert_method
-        # If user passes ?col= with empty value, replace with NULL. If the column is an INT/FLOAT,
-        # type conversion int('') / float('') will fail.
-        rows.replace('', None, inplace=True)
+        # If user passes ?col= with an empty string, replace with NULL;
+        # because, if the column is an INT/FLOAT, type conversion int('') / float('') will fail.
+        for col in rows.columns:
+            if rows[col].dtype == object:
+                rows[col].replace({'': None}, inplace=True)
 
         # kwargs might contain additonal unexpected values, pass expected arguments explicitly
         pd.io.sql.to_sql(
@@ -637,6 +639,11 @@ def _filter_frame_col(data, key, col, op, vals, meta):
     return data
 
 
+# Treat SQL type datetime as str when converting URL arguments to values.
+# Don't try to convert ?date=2022-01-01 to datetime(2022, 1, 1).
+_sql_types = {datetime: str}
+
+
 def _filter_db_col(query, method, key, col, op, vals, column, conv, meta):
     '''
     - Updates ``query`` with a method (WHERE/HAVING) that sets '<key> <op> <vals>'
@@ -644,9 +651,7 @@ def _filter_db_col(query, method, key, col, op, vals, column, conv, meta):
     - ``conv`` is a type conversion function that converts ``vals`` to the correct type
     - Updates ``meta`` with the fields used for filtering (or ignored)
     '''
-    # In PY2, .python_type returns str. We want unicode
-    sql_types = {bytes: str, pd.datetime: str}
-    conv = sql_types.get(conv, conv)
+    conv = _sql_types.get(conv, conv)
     vals = tuple(conv(val) for val in vals if val)
     if op not in {'', '!'} and len(vals) == 0:
         meta['ignored'].append((key, vals))

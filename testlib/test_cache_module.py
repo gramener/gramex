@@ -15,9 +15,8 @@ from collections import OrderedDict
 from orderedattrdict import AttrDict
 from tornado.template import Template
 from orderedattrdict.yamlutils import AttrDictYAMLLoader
-from pandas.util.testing import assert_frame_equal as afe
 from nose.tools import eq_, ok_, assert_raises
-from . import folder, tests_dir, remove_if_possible, dbutils
+from . import folder, tests_dir, remove_if_possible, dbutils, afe
 
 cache_folder = os.path.join(folder, 'test_cache')
 state_file = os.path.join(cache_folder, '.state')

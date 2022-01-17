@@ -8,7 +8,6 @@ from gramex.config import objectpath
 from gramex.pptgen2 import pptgen, load_data, commands, commandline
 from nose.tools import eq_, ok_, assert_raises
 from orderedattrdict import AttrDict
-from pandas.util.testing import assert_frame_equal as afe
 from pptx import Presentation
 from pptx.dml.color import _NoneColor
 from pptx.enum.dml import MSO_THEME_COLOR, MSO_FILL
@@ -16,7 +15,7 @@ from pptx.enum.text import PP_ALIGN, MSO_VERTICAL_ANCHOR as MVA
 from pptx.oxml.ns import _nsmap, qn
 from testfixtures import LogCapture, OutputCapture
 from unittest import TestCase
-from . import folder, sales_file
+from . import folder, sales_file, afe
 
 units = ('inches', 'cm', 'mm', 'pt', 'emu', 'centipoints')
 aeq_ = lambda a, b: ok_(abs(a - b) <= 1)        # noqa
@@ -33,7 +32,7 @@ class TestPPTGen(TestCase):
         cls.prs = Presentation(cls.input)
         cls.output = os.path.join(folder, 'output.pptx')
         cls.image = os.path.join(folder, 'small-image.jpg')
-        cls.data = pd.read_excel(sales_file, encoding='utf-8', engine='openpyxl')
+        cls.data = pd.read_excel(sales_file, engine='openpyxl')
         if os.path.exists(cls.output):
             os.remove(cls.output)
 

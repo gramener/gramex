@@ -1,6 +1,8 @@
 import os
 import sys
 import logging
+from pandas.util.testing import assert_frame_equal as afe   # noqa: F401 - other modules use this
+from pandas.util.testing import assert_series_equal as ase  # noqa: F401 - other modules use this
 
 # Import from ../tests/ folder. e.g. dbutils.py for use in test_data.py, etc.
 # This is a not elegant.

@@ -12,8 +12,7 @@ from gramex.http import BAD_REQUEST, FOUND, METHOD_NOT_ALLOWED
 from gramex.config import variables, objectpath, merge
 from gramex.data import _replace
 from orderedattrdict import AttrDict, DefaultAttrDict
-from pandas.util.testing import assert_frame_equal as afe
-from . import etree, folder, TestGramex, dbutils, tempfiles
+from . import etree, folder, TestGramex, dbutils, tempfiles, afe
 
 xlsx_mime_type = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 

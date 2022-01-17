@@ -1,9 +1,8 @@
 import json
 import gramex.cache
 import pandas as pd
-from . import TestGramex
 from gramex.http import FOUND
-from pandas.util.testing import assert_frame_equal as afe
+from . import TestGramex, afe
 
 
 class TestFunctionHandler(TestGramex):

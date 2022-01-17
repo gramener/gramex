@@ -11,9 +11,7 @@ import sqlalchemy as sa
 from orderedattrdict import AttrDict
 from nose.plugins.skip import SkipTest
 from nose.tools import eq_, ok_, assert_raises
-from pandas.util.testing import assert_frame_equal as afe
-from pandas.util.testing import assert_series_equal as ase
-from . import folder, sales_file, remove_if_possible, dbutils
+from . import folder, sales_file, remove_if_possible, dbutils, afe, ase
 
 server = AttrDict(
     mysql=os.environ.get('MYSQL_SERVER', 'localhost'),
@@ -254,9 +252,11 @@ class TestFilter(unittest.TestCase):
                     # Apply HAVING at the mid-point of aggregated data.
                     # Cannot use .median() since data may not be numeric.
                     midpoint = expected[having].sort_values().iloc[len(expected) // 2]
-                    # Floating point bugs surface unless we round it off
+                    # Floating point bugs surface unless we round it off.
+                    # In Pandas 1.x, we need a small additional buffer.
                     if isinstance(midpoint, float):
-                        midpoint = round(midpoint, 2)
+                        buffer = 0.001
+                        midpoint = round(midpoint, 2) + buffer
                     subset = expected[expected[having] > midpoint]
                     args = {'_by': by, '_sort': by, '_c': aggs,
                             having + '>': [str(midpoint)]}

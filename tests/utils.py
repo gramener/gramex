@@ -510,7 +510,7 @@ def test_function(
         i1: Annotated[int, 'First value'] = 0,  # noqa
         i2: Annotated[int, 'Second value'] = 0,  # noqa
         s1: str = 'Total',
-        n1: np.int = 0,
+        n1: int = 0,
         n2: np.int64 = 0,
         h: Header = '',
         code: int = OK):
