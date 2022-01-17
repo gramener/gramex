@@ -188,10 +188,12 @@ class LoginMixin(object):
 class LoginFailureMixin(object):
     def check_delay(self, start, min=None, max=None):
         t = time.time()
+        # Give a 0.1s buffer in case of timing delays
+        buffer = 0.1
         if min is not None and min > 0:
-            self.assertGreaterEqual(t - start, min)
+            self.assertGreaterEqual(t - start, min - buffer)
         if max is not None and max > 0:
-            self.assertLessEqual(t - start, max)
+            self.assertLessEqual(t - start, max + buffer)
         return t
 
     def test_slow_down_attacks(self, retries=3):
