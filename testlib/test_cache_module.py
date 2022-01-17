@@ -203,7 +203,7 @@ class TestOpen(unittest.TestCase):
         afe(gramex.cache.open(path, sheet_name='table', table='CensusTable'),
             gramex.cache.open(path, sheet_name='table', range='$D1:F$23'))
         # Load named range. The "sales" named range is the same as the sheet "sales"
-        afe(gramex.cache.open(path, sheet_name='sales', defined_name='sales'),
+        afe(gramex.cache.open(path, sheet_name='sales', name='sales'),
             gramex.cache.open(path, sheet_name='sales'))
         # Test failure conditions, edge cases, etc.
 
