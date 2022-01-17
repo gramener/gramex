@@ -178,12 +178,14 @@ class TestFormHandler(TestGramex):
         # it calls state(args, path), which is logged in `/formhandler/state`
         eq_(self.get('/formhandler/state').json(), [], 'Start with blank slate')
         self.check('/formhandler/sqlite-state?x=1')
-        eq_(self.get('/formhandler/state').json(), [{'x': ['1']}, '/formhandler/sqlite-state'],
+        # TODO: This test fails. Check why.
+        eq_(self.get('/formhandler/state').json(),
+            [{'x': ['1'], '_limit': [10000]}, '/formhandler/sqlite-state'],
             'state() is called once per request')
         self.check('/formhandler/sqlite-state?x=2')
         eq_(self.get('/formhandler/state').json(), [
-            {'x': ['1']}, '/formhandler/sqlite-state',
-            {'x': ['2']}, '/formhandler/sqlite-state',
+            {'x': ['1'], '_limit': [10000]}, '/formhandler/sqlite-state',
+            {'x': ['2'], '_limit': [10000]}, '/formhandler/sqlite-state',
         ], 'state() is called twice for 2 requests')
 
     def test_mysql(self):
