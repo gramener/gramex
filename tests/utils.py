@@ -16,6 +16,7 @@ from sklearn.datasets import make_circles as sk_make_circles
 from tornado import gen
 from tornado.web import RequestHandler, MissingArgumentError, HTTPError
 from tornado.gen import coroutine
+from tornado.concurrent import Future
 from tornado.httpclient import AsyncHTTPClient
 from concurrent.futures import ThreadPoolExecutor
 from gramex.cache import Subprocess, CustomJSONEncoder
@@ -76,14 +77,18 @@ def str_callback(value, callback):
 
 def iterator_async(handler):
     for val in handler.get_arguments('x'):
-        future = gen.Task(str_callback, val)
+        future = Future()
+        str_callback(val, callback=future.set_result)
         yield future
 
 
 @gen.coroutine
 def async_args(*args, **kwargs):
     '''Run params_as_json asynchronously'''
-    result = yield gen.Task(params_as_json, *args, **kwargs)
+    future = Future()
+    kwargs['callback'] = future.set_result
+    params_as_json(*args, **kwargs)
+    result = yield future
     raise gen.Return(result)
 
 

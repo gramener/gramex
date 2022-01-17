@@ -5,7 +5,7 @@ import inspect
 import unittest
 from dis import dis
 from types import GeneratorType
-from tornado.gen import coroutine, Task
+from tornado.gen import coroutine, sleep
 from orderedattrdict import AttrDict
 from orderedattrdict.yamlutils import AttrDictYAMLLoader
 from gramex.transforms import build_transform, flattener, badgerfish, template, once
@@ -27,7 +27,8 @@ def remove(path):
 @coroutine
 def gen_str(val):
     '''Sample coroutine method'''
-    yield Task(str, val)
+    yield sleep(duration=0.01)
+    return val
 
 
 def eqfn(actual, expected):
