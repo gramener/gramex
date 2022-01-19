@@ -136,8 +136,8 @@ class MLHandler(FormHandler):
         return df
 
     @classmethod
-    def store_data(cls, df, append=False):
-        df.to_hdf(cls.data_store, format="table", key="data", append=append)
+    def store_data(cls, df, append=False, **kwargs):
+        df.to_hdf(cls.data_store, format="table", key="data", append=append, **kwargs)
         return cls.load_data(df)
 
     @classmethod
@@ -429,7 +429,7 @@ class MLHandler(FormHandler):
         self.config_store.purge()
 
     def _delete_cache(self):
-        self.store_data(pd.DataFrame())
+        self.store_data(pd.DataFrame(), mode="w")
 
     def _delete_opts(self):
         for opt in set(self.get_arguments('_opts')) & TRANSFORMS.keys():
