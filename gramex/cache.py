@@ -552,7 +552,7 @@ def reload_module(*modules):
         if name in {'sys'}:
             continue
         if name is None or path is None or not os.path.exists(path):
-            app_log.warning('Path for module %s is %s: not found', name, path)
+            app_log.warning('Cannot locate path for module "%s". Got path: %s', name, path)
             continue
         # The first time, don't reload it. Thereafter, if it's older or resized, reload it
         fstat = stat(path)

@@ -23,3 +23,5 @@ class TestSchedule(TestGramex):
         eq_((date.hour, date.minute, date.second), (5, 0, 0))
         date = datetime.utcfromtimestamp(info.schedule['schedule-timed-utc'].next)
         eq_((date.hour, date.minute, date.second), (5, 0, 0))
+        # schedule-every runs every 1.5 hours 1.5m 2.5 sec = 5400 + 90 + 2.5 = 5492.5s
+        eq_(info.schedule['schedule-every'].every, b=5492.5)

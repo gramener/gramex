@@ -2490,6 +2490,9 @@ schedule:
     hours: 5
     minutes: 0
     utc: true
+  schedule-every:
+    function: gramex.config.app_log.info('schedule-every-90s ran now')
+    every: 1.5 hours 1.5m 2.5 sec
 
 email:
   smtps_stub:
