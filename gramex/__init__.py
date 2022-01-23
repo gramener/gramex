@@ -27,6 +27,7 @@ import json
 import yaml
 import logging
 import logging.config
+from packaging import version
 from pathlib import Path
 from orderedattrdict import AttrDict
 from gramex.config import ChainConfig, PathConfig, app_log, variables, setup_variables
@@ -202,12 +203,13 @@ def gramex_update(url):
     r = requests.post(url, data=json.dumps(logs))
     r.raise_for_status()
     update = r.json()
-    version = update['version']
-    if version > __version__:
-        app_log.error('Gramex %s is available. See https://learn.gramener.com/guide/', version)
-    elif version < __version__:
+    server_version = update['version']
+    if version.parse(server_version) > version.parse(__version__):
+        app_log.error('Gramex %s is available. See https://learn.gramener.com/guide/',
+                      server_version)
+    elif version.parse(server_version) < version.parse(__version__):
         app_log.warning('Gramex update: your version %s is ahead of the stable %s',
-                        __version__, version)
+                        __version__, server_version)
     else:
         app_log.debug('Gramex version %s is up to date', __version__)
     services.info.eventlog.add('update', update)

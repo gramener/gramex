@@ -11,6 +11,7 @@ import sqlalchemy as sa
 import numpy as np
 import pandas as pd
 import gramex.cache
+from packaging import version
 from tornado.escape import json_encode
 from gramex.config import merge, app_log
 from orderedattrdict import AttrDict
@@ -423,9 +424,15 @@ def insert(url, meta={}, args=None, engine=None, table=None, ext=None, id=None, 
             rows = _pop_columns(rows, [col.name for col in cols], meta['ignored'])
         if '.' in table:
             kwargs['schema'], table = table.rsplit('.', 1)
+        # SQLAlchemy 1.4+ only allows sa.inspect() for all table introspection
+        if version.parse(sa.__version__) >= version.parse('1.4'):
+            has_table = sa.inspect(engine).has_table(table, schema=kwargs.get('schema'))
+        # SQLAlchemy 1.3- does not have .has_table()
+        else:
+            has_table = engine.dialect.has_table(engine, table, schema=kwargs.get('schema'))
         # If the DB doesn't yet have the table, create it WITH THE PRIMARY KEYS.
-        # Note: pandas does not document engine.dialect.has_table so it might change.
-        if not engine.dialect.has_table(engine, table) and id:
+        if not has_table and id:
+            # Note: pandas does not document get_schema, so it might change.
             engine.execute(pd.io.sql.get_schema(rows, name=table, keys=id, con=engine))
 
         def insert_method(tbl, conn, keys, data_iter):
@@ -438,10 +445,14 @@ def insert(url, meta={}, args=None, engine=None, table=None, ext=None, id=None, 
             sa_table = sa.Table(table, tbl.table.metadata,
                                 extend_existing=True, autoload_with=engine)
             r = conn.execute(sa_table.insert(), data)
-            # SQLAlchemy 1.4+ supports inserted_primary_key_rows, but is in beta (Nov 2020).
-            # ids = getattr(r, 'inserted_primary_key_rows', [])
-            # If we have SQLAlchemy 1.3, only single inserts have an inserted_primary_key.
-            ids = [r.inserted_primary_key] if hasattr(r, 'inserted_primary_key') else []
+            # SQLAlchemy 1.4+ supports inserted_primary_key_rows.
+            if hasattr(r, 'inserted_primary_key_rows'):
+                ids = r.inserted_primary_key_rows
+            # In SQLAlchemy 1.3, only single inserts have an inserted_primary_key.
+            elif hasattr(r, 'inserted_primary_key'):
+                ids = [r.inserted_primary_key]
+            else:
+                ids = []
             # Add non-empty IDs as a dict with associated keys
             id_cols = [col.name for col in sa_table.primary_key]
             for row in ids:
@@ -961,7 +972,12 @@ def _filter_db(engine, table, meta, controls, args, source='select', id=[]):
                     agg_cols[key] = agg_func(cols[col]).label(key)
             if not agg_cols:
                 return pd.DataFrame()
-            query = query.with_only_columns(agg_cols.values())
+            # SQLAlchemy 1.4+ only accepts positional arguments for .with_only_columns()
+            if version.parse(sa.__version__) >= version.parse('1.4'):
+                query = query.with_only_columns(*agg_cols.values())
+            # SQLAlchemy 1.3- only accepts a list for .with_only_columns()
+            else:
+                query = query.with_only_columns(agg_cols.values())
             # Apply HAVING operators
             for key, col, op, vals in cols_having:
                 query = _filter_db_col(query, query.having, key, col, op, vals,
