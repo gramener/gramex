@@ -167,11 +167,6 @@ def vue(handler, path: str):
             'node', '--unhandled-rejections=strict',
             vue_path, 'build', '--target', 'wc', filename, '--dest', target_dir
         ], cwd=cwd, capture_output=True, encoding='utf-8')
-        print(' '.join([
-            # unhandled-rejections ensures that returncode != 0 on error
-            'node', '--unhandled-rejections=strict',
-            vue_path, 'build', '--target', 'wc', filename, '--dest', target_dir
-        ]))
         if proc.returncode:
             raise RuntimeError(f'Vue compilation failure:\n{proc.stderr}')
 

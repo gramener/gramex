@@ -1,4 +1,9 @@
 {
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gramener/gramex/"
+  },
+  "license": "ISC",
   "devDependencies": {
     "eslint-plugin-html": "^6.2.0",
     "eslint-plugin-template": "0.4"
