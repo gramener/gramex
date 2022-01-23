@@ -433,7 +433,12 @@ class BaseMixin(object):
 
     def debug_exception(self, typ, value, tb):
         super(BaseHandler, self).log_exception(typ, value, tb)
-        import ipdb as pdb              # noqa
+        try:
+            import ipdb as pdb  # noqa: T100
+        except ImportError:
+            import pdb  # noqa: T100
+            import warnings
+            warnings.warn('"pip install ipdb" for better debugging')
         pdb.post_mortem(tb)
 
     def _write_custom_error(self, status_code, **kwargs):

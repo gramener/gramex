@@ -193,8 +193,13 @@ def app(conf):
                     # If Ctrl-D is pressed, run the Python debugger
                     char = debug.getch()
                     if char == b'\x04':
-                        import ipdb as pdb      # noqa
-                        pdb.set_trace()         # noqa
+                        try:
+                            import ipdb as pdb  # noqa: T100
+                        except ImportError:
+                            import pdb          # noqa: T100
+                            import warnings
+                            warnings.warn('"pip install ipdb" for better debugging')
+                        pdb.set_trace()  # noqa: T100
                     # If Ctrl-B is pressed, start the browser
                     if char == b'\x02':
                         browser = webbrowser.get()
@@ -898,7 +903,10 @@ def sms(conf):
         notifier_type = config.pop('type')
         if notifier_type not in sms_notifiers:
             raise ValueError('sms: %s: Unknown type: %s' % (name, notifier_type))
-        info.sms[name] = _cache[_key] = sms_notifiers[notifier_type](**config)
+        try:
+            info.sms[name] = _cache[_key] = sms_notifiers[notifier_type](**config)
+        except Exception:
+            app_log.exception('sms: %s: Cannot setup %s' % (name, notifier_type))
 
 
 def encrypt(conf):
