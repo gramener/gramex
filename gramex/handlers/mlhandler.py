@@ -74,7 +74,7 @@ class MLHandler(FormHandler):
         _mkdir(config_dir)
         cls.config_dir = config_dir
         cls.config_store = cache.JSONStore(op.join(cls.config_dir, 'config.json'), flush=None)
-        cls.data_store = op.join(cls.config_dir, 'data.h5')
+        cls.data_store = op.join(cls.config_dir, 'data.xlsx')
 
         cls.template = kwargs.pop('template', DEFAULT_TEMPLATE)
         super(MLHandler, cls).setup(**kwargs)
@@ -130,14 +130,22 @@ class MLHandler(FormHandler):
     @classmethod
     def load_data(cls, default=pd.DataFrame()):
         try:
-            df = gramex.cache.open(cls.data_store, key="data")
+            df = gramex.cache.open(cls.data_store)
         except (KeyError, FileNotFoundError):
             df = default
         return df
 
     @classmethod
     def store_data(cls, df, append=False, **kwargs):
-        df.to_hdf(cls.data_store, format="table", key="data", append=append, **kwargs)
+        if append and op.isfile(cls.data_store):
+            n_rows = cls.load_data().shape[0]
+            startrow = n_rows + 1 if n_rows else 0
+            write_header = startrow == 0
+            with pd.ExcelWriter(cls.data_store, mode='a', engine='openpyxl',
+                    if_sheet_exists='overlay') as xl:  # NOQA: E128
+                df.to_excel(xl, index=False, header=write_header, startrow=startrow, **kwargs)
+        else:
+            df.to_excel(cls.data_store, index=False)
         return cls.load_data(df)
 
     @classmethod
@@ -429,7 +437,7 @@ class MLHandler(FormHandler):
         self.config_store.purge()
 
     def _delete_cache(self):
-        self.store_data(pd.DataFrame(), mode="w")
+        self.store_data(pd.DataFrame())
 
     def _delete_opts(self):
         for opt in set(self.get_arguments('_opts')) & TRANSFORMS.keys():
