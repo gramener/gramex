@@ -364,7 +364,7 @@ class TestConfig(unittest.TestCase):
             a: 1
             a: 2
         '''
-        eq_(yaml.load(dup_keys), {'a': 2})
+        eq_(yaml.load(dup_keys, Loader=yaml.SafeLoader), {'a': 2})
         with self.assertRaises(ConstructorError):
             yaml.load(dup_keys, Loader=ConfigYAMLLoader)
 
