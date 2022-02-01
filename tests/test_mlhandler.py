@@ -29,24 +29,24 @@ class TestMLHandler(TestGramex):
         root = op.join(gramex.config.variables['GRAMEXDATA'], 'apps', 'mlhandler')
         paths = [op.join(root, f) for f in [
             'mlhandler-nopath/config.json',
-            'mlhandler-nopath/data.xlsx',
+            'mlhandler-nopath/data.h5',
             'mlhandler-blank/config.json',
-            'mlhandler-blank/data.xlsx',
+            'mlhandler-blank/data.h5',
             'mlhandler-config/config.json',
-            'mlhandler-config/data.xlsx',
+            'mlhandler-config/data.h5',
             'mlhandler-incr/config.json',
-            'mlhandler-incr/data.xlsx',
+            'mlhandler-incr/data.h5',
             'mlhandler-incr/mlhandler-incr.pkl',
             'mlhandler-xform/config.json',
-            'mlhandler-xform/data.xlsx',
+            'mlhandler-xform/data.h5',
             'mlhandler-xform/mlhandler-xform.pkl',
             'mlhandler-blank/mlhandler-blank.pkl',
             'mlhandler-nopath/mlhandler-nopath.pkl',
             'mlhandler-badcol/config.json',
-            'mlhandler-badcol/data.xlsx',
+            'mlhandler-badcol/data.h5',
             'mlhandler-badcol/mlhandler-badcol.pkl',
             'mlhandler-decompositions/config.json',
-            'mlhandler-decompositions/data.xlsx',
+            'mlhandler-decompositions/data.h5',
             'mlhandler-decompositions/mlhandler-decompositions.pkl'
         ]]
         paths += [op.join(folder, 'model.pkl')]
