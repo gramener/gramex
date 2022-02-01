@@ -3,8 +3,8 @@
     "postinstall": "node snippets/setup.js"
   },
   "dependencies": {
-    "bootstrap-icons": "^1.7.2",
-    "clipboard": "^2.0.6",
+    "bootstrap-icons": "^1.8.0",
+    "clipboard": "^2.0.9",
     "jqueryui": "^1.11.1",
     "uifactory": "^0.0.4"
   }

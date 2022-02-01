@@ -79,6 +79,21 @@ ignore:
         reason: No fix available. Await @vue/cli upgrade
         expires: 2022-03-31T00:00:00.000Z
         created: 2022-01-01T00:00:00.000Z
+  SNYK-JS-NODEFORGE-2330875:
+    - '*':
+        reason: No fix available. Await @vue/cli upgrade
+        expires: 2022-03-31T00:00:00.000Z
+        created: 2022-02-01T00:00:00.000Z
+  SNYK-JS-NODEFORGE-2331908:
+    - '*':
+        reason: No fix available. Await @vue/cli upgrade
+        expires: 2022-03-31T00:00:00.000Z
+        created: 2022-02-01T00:00:00.000Z
+  SNYK-JS-SIMPLEGET-2361683:
+    - '*':
+        reason: No fix available. Await comicgen > sharp upgrade
+        expires: 2022-03-31T00:00:00.000Z
+        created: 2022-02-01T00:00:00.000Z
 
   # We need D3 v4 for old projects. Just retain this forever -- but newer projects won't use this
   SNYK-JS-D3COLOR-1076592:
