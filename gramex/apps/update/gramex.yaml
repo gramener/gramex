@@ -24,7 +24,7 @@ url:
     kwargs:
       # Credentials for s.anand/gramex-guide
       # https://console.developers.google.com/apis/credentials/oauthclient/817932882244-gdr59t3mpqh5554d1bgdjuh38g6a7ahh.apps.googleusercontent.com?project=gramex-guide
-      # callback: /auth/google on localhost:9988/, localhost:9999/, learn.gramener.com/guide/
+      # callback: /auth/google on localhost:9988/, localhost:9999/, gramener.com/gramex/guide/
       key: 817932882244-gdr59t3mpqh5554d1bgdjuh38g6a7ahh.apps.googleusercontent.com
       secret: lwArXkw21KCqDPuJrel-WeQO
       redirect:

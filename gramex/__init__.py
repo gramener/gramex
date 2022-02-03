@@ -1,6 +1,6 @@
 '''
 Gramex {__version__} Copyright (c) 2017 by Gramener
-Help: https://learn.gramener.com/guide/
+Help: https://gramener.com/gramex/guide/
 
 Common startup options
   --listen.port=9090            Starts Gramex at port 9090
@@ -154,7 +154,7 @@ def callback_commandline(commands):
 
     # Use current dir as base (where gramex is run from) if there's a gramex.yaml.
     if not os.path.isfile('gramex.yaml'):
-        return console, {'msg': 'No gramex.yaml. See https://learn.gramener.com/guide/'}
+        return console, {'msg': 'No gramex.yaml. See https://gramener.com/gramex/guide/'}
 
     # Run gramex.init(cmd={command line arguments like YAML variables})
     app_log.info('Gramex %s | %s | Python %s', __version__, os.getcwd(),
@@ -205,7 +205,7 @@ def gramex_update(url):
     update = r.json()
     server_version = update['version']
     if version.parse(server_version) > version.parse(__version__):
-        app_log.error('Gramex %s is available. See https://learn.gramener.com/guide/',
+        app_log.error('Gramex %s is available. See https://gramener.com/gramex/guide/',
                       server_version)
     elif version.parse(server_version) < version.parse(__version__):
         app_log.warning('Gramex update: your version %s is ahead of the stable %s',

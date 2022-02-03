@@ -9,7 +9,7 @@ url:
     handler: FileHandler
     kwargs:
       path: $YAMLPATH/index.html
-      # See https://learn.gramener.com/guide/auth/#authorization for auth rules
+      # See https://gramener.com/gramex/guide/auth/#authorization for auth rules
       auth:
         login_url: /$YAMLURL/login/
       template: ['index.html', 'template*.html']
@@ -22,7 +22,7 @@ url:
   {{ appname }}-login:
     pattern: /$YAMLURL/login/
     # You MUST change the auth before deploying. DBAuth is commonly used.
-    # See https://learn.gramener.com/guide/auth/#database-auth
+    # See https://gramener.com/gramex/guide/auth/#database-auth
     handler: SimpleAuth
     kwargs:
       template: $YAMLPATH/login.html
@@ -47,7 +47,7 @@ import:
   # To secure application for production,
   # replace 'YOUR-PROD-SERVER-NAME' with your production server host name.
   deploy if socket.gethostname() in {'YOUR-PROD-SERVER-NAME'}: $GRAMEXPATH/deploy.yaml
-  # For alternate methods, see https://learn.gramener.com/guide/config/#conditions
+  # For alternate methods, see https://gramener.com/gramex/guide/config/#conditions
 
   # /ui/ has Gramex UI components -- use this like the node_modules/ directory
   ui:

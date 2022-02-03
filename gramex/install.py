@@ -670,7 +670,7 @@ def init(args, kwargs):
 default_mail_config = r'''# Gramex mail configuration at
 # List keys with "gramex mail --list --conf={confpath}"
 
-# See https://learn.gramener.com/guide/email/ for help
+# See https://gramener.com/gramex/guide/email/ for help
 email:
   default-email:
     type: gmail
@@ -679,7 +679,7 @@ email:
     # Uncomment the next line to test the application without sending mails
     # stub: log
 
-# See https://learn.gramener.com/guide/alert/
+# See https://gramener.com/gramex/guide/alert/
 alert:
   hello-world:
     to: admin@example.org

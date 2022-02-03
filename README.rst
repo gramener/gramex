@@ -17,8 +17,8 @@ This needs fewer steps, takes less time, and builds apps with fewer bugs.
 Getting Started
 ---------------
 
-- `Online Documentation <https://learn.gramener.com/guide/>`_
-- `Set up Gramex <https://learn.gramener.com/guide/install/>`_
+- `Online Documentation <https://gramener.com/gramex/guide/>`_
+- `Set up Gramex <https://gramener.com/gramex/guide/install/>`_
 
 Contributing
 ------------
@@ -32,7 +32,7 @@ If it is a security issue, please email to security@gramener.com, rather
 than publicly sharing the vulnerability.
 
 **Want to fix a bug or add a feature?**
-`Read the contributing guidelines <https://learn.gramener.com/guide/contributing/>`_.
+`Read the contributing guidelines <https://gramener.com/gramex/guide/contributing/>`_.
 Fork this repo, make changes, test it, and send a pull request.
 
 
